@@ -145,7 +145,6 @@ Guidelines:
 - [ ] No secrets, no debug prints, no commented-out code
 - [ ] API change -> OpenAPI client regenerated (`just codegen`)
 - [ ] DB change -> Alembic migration included
-- [ ] At least **1 approval** (2 for changes to `agents/` core or DB schema)
 
 ### Code Review
 

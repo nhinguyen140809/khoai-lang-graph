@@ -292,7 +292,8 @@ Rules that make results defensible in a thesis. Complements the experiment workf
 ## 10. Setup checklist (Phase 0)
 
 ### Repository
-- [ ] Create GitHub repo, protect `main` (require PR, 1 approval, CI green, linear history)
+- [x] Create GitHub repo, protect `main` (require PR, squash merge only, linear history, no force push or deletion, no bypass)
+- [ ] Add CI jobs as required status checks on `main` once `ci.yml` exists
 - [ ] `LICENSE`, `CODE_OF_CONDUCT.md` (Contributor Covenant), `SECURITY.md`, `CITATION.cff`
 - [ ] `.editorconfig`, `.gitignore`, `.gitattributes` (LF endings), `.env.example`
 - [ ] Issue templates (bug, feature, experiment), PR template, `CODEOWNERS`
