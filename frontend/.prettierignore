@@ -1,0 +1,9 @@
+dist
+coverage
+playwright-report
+test-results
+pnpm-lock.yaml
+openapi.json
+src/api/generated
+src/routeTree.gen.ts
+public/mockServiceWorker.js
