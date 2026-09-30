@@ -227,14 +227,27 @@ Conventions:
 Conventions:
 - **No `any`** - use `unknown` + narrowing. No non-null assertions (`!`) without a comment.
 - **Feature-based structure:** code for a feature lives in `src/features/<feature>/`. Shared UI in `src/components/`. Features don't import each other's internals.
-- **Components:** function components, named exports, one component per file, `PascalCase.tsx`. Hooks are `useSomething.ts`.
+- **Components:** function components, named exports, one component per file.
 - **Server state** via TanStack Query only - don't copy server data into Zustand/`useState`.
 - **Validation** with Zod at boundaries (forms, untrusted data).
-- **UI components:** use shadcn/ui primitives from `src/components/ui/` before building custom ones. Style with Tailwind utilities; avoid ad-hoc CSS files. Use `cn()` (clsx + tailwind-merge) to combine classes.
+- **UI components:** use shadcn/ui primitives from `src/components/ui/` before building custom ones. Style with Tailwind utilities; avoid ad-hoc CSS files. Use `cn()` from `@/lib/utils` (re-exports shadcn's `cn` package, a clsx + tailwind-merge replacement) to combine classes.
 - **Heavy components** (CodeMirror, React Flow, PDF viewer) are lazy-loaded with `React.lazy` so the initial bundle stays small.
 - **Untrusted content** (LLM-generated HTML/Markdown) is never rendered with `dangerouslySetInnerHTML`; HTML artifacts go in a sandboxed iframe.
 - **Accessibility:** semantic HTML, labels on inputs, keyboard navigable. `jsx-a11y` must pass.
 - Path alias: `@/` -> `src/`.
+
+**File naming** (enforced by `eslint-plugin-check-file` in `pnpm lint`):
+
+| File | Pattern | Examples |
+|---|---|---|
+| Component (`.tsx`) | `PascalCase.tsx`, name = the exported component | `ChatPage.tsx`, `ChatPage.test.tsx` |
+| Hook (`.ts` in a `hooks/` folder) | `useSomething.ts`, name = the exported hook | `useRunStream.ts` |
+| Any other `.ts` | `<subject>.<kind>.ts` | `chat.api.ts`, `settings.store.ts`, `run-events.reducer.test.ts` |
+| E2E test | `<subject>.spec.ts` | `tests/e2e/chat.spec.ts` |
+
+- **Subject** (before the first dot): what the file is about, in kebab-case. Always include it, even when the folder already says it (`features/chat/chat.api.ts`), so names are unique in search results and editor tabs.
+- **Kind** (after the dot): the role of the file, one of `api`, `types`, `schema`, `store`, `reducer`, `config`, `constants`, `utils`, `handlers`, `setup`, `spec`. Tests append `.test`. Need a new kind? Add it to the list here and in `eslint.config.js` in the same PR.
+- **Exceptions** (names set by a tool or convention): `src/components/ui/**` and `src/hooks/use-mobile.ts` (shadcn CLI), `src/lib/utils.ts` (shadcn alias), `src/routes/**` (TanStack Router file-based routes: the file name is the URL), `src/routeTree.gen.ts`, `index.ts` barrels, `main.tsx`, `*.d.ts`, and root config files (`vite.config.ts`, ...).
 
 ### API Contract
 

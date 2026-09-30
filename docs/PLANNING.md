@@ -317,15 +317,17 @@ Rules that make results defensible in a thesis. Complements the experiment workf
 - [ ] Dockerfile (multi-stage, non-root user)
 
 ### Frontend
-- [ ] `pnpm create vite frontend --template react-ts`
-- [ ] Strict `tsconfig`, ESLint flat config, Prettier, path alias `@/`
-- [ ] Tailwind CSS v4 setup (+ `prettier-plugin-tailwindcss`)
-- [ ] Init shadcn/ui and companion libraries (section 4)
-- [ ] App shell: sidebar + resizable chat / artifact panels
-- [ ] TanStack Router + Query, API client codegen script (writes `frontend/openapi.json` + `src/api/generated/`)
-- [ ] Zustand store for user settings (model choices, theme, etc.)
-- [ ] Chat page consuming the SSE endpoint
-- [ ] Vitest + MSW + Playwright setup
+- [x] `pnpm create vite frontend --template react-ts`
+- [x] Strict `tsconfig`, ESLint flat config, Prettier, path alias `@/`
+- [x] Tailwind CSS v4 setup (+ `prettier-plugin-tailwindcss`)
+- [x] Init shadcn/ui and companion libraries (section 4)
+- [x] App shell: sidebar + resizable chat / artifact panels
+- [x] TanStack Router + Query, API client codegen script (writes `frontend/openapi.json` + `src/api/generated/`)
+- [ ] Generate the first client once the backend exports `openapi.json`, then replace the hand-written types in `features/chat/chat.types.ts`
+- [x] Zustand store for user settings (model choices, theme, etc.)
+- [x] Chat page consuming the SSE endpoint (against MSW mocks until the backend exists)
+- [x] Vitest + MSW + Playwright setup
+- [x] File naming rules enforced by ESLint (CONTRIBUTING: TypeScript / React)
 
 ### Research
 - [ ] `research/README.md` with RQs and reproduction steps
