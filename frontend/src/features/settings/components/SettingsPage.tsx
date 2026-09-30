@@ -1,0 +1,52 @@
+import { MonitorIcon, MoonIcon, SunIcon } from 'lucide-react'
+
+import { Button } from '@/components/ui/button'
+import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card'
+
+import { type Theme, useSettingsStore } from '../settings.store'
+
+const themeOptions: { value: Theme; label: string; Icon: typeof SunIcon }[] = [
+  { value: 'light', label: 'Light', Icon: SunIcon },
+  { value: 'dark', label: 'Dark', Icon: MoonIcon },
+  { value: 'system', label: 'System', Icon: MonitorIcon },
+]
+
+export function SettingsPage() {
+  const theme = useSettingsStore((state) => state.theme)
+  const setTheme = useSettingsStore((state) => state.setTheme)
+
+  return (
+    <div className="mx-auto flex max-w-2xl flex-col gap-4 p-6">
+      <h1 className="text-xl font-semibold">Settings</h1>
+      <Card>
+        <CardHeader>
+          <CardTitle>Theme</CardTitle>
+          <CardDescription>Stored in this browser only.</CardDescription>
+        </CardHeader>
+        <CardContent className="flex gap-2" role="group" aria-label="Theme">
+          {themeOptions.map(({ value, label, Icon }) => (
+            <Button
+              key={value}
+              variant={theme === value ? 'default' : 'outline'}
+              aria-pressed={theme === value}
+              onClick={() => {
+                setTheme(value)
+              }}
+            >
+              <Icon aria-hidden />
+              {label}
+            </Button>
+          ))}
+        </CardContent>
+      </Card>
+      <Card>
+        <CardHeader>
+          <CardTitle>Models</CardTitle>
+          <CardDescription>
+            Per-role model selection arrives with GET /api/v1/models (docs/PLANNING.md section 5).
+          </CardDescription>
+        </CardHeader>
+      </Card>
+    </div>
+  )
+}
