@@ -1,5 +1,5 @@
-import { Link } from '@tanstack/react-router'
 import { FolderIcon, MessageSquareIcon, SettingsIcon } from 'lucide-react'
+import Link from 'next/link'
 
 import {
   Sidebar,
@@ -26,7 +26,7 @@ export function AppSidebar() {
             <SidebarMenu>
               <SidebarMenuItem>
                 <SidebarMenuButton asChild tooltip="New thread">
-                  <Link to="/">
+                  <Link href="/">
                     <MessageSquareIcon aria-hidden />
                     <span>New thread</span>
                   </Link>
@@ -53,7 +53,7 @@ export function AppSidebar() {
         <SidebarMenu>
           <SidebarMenuItem>
             <SidebarMenuButton asChild tooltip="Settings">
-              <Link to="/settings">
+              <Link href="/settings">
                 <SettingsIcon aria-hidden />
                 <span>Settings</span>
               </Link>

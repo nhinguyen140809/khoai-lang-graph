@@ -1,6 +1,6 @@
 import { defineConfig, devices } from '@playwright/test'
 
-const PORT = 4173
+const PORT = 3100
 
 export default defineConfig({
   testDir: './tests/e2e',
@@ -15,9 +15,9 @@ export default defineConfig({
   projects: [{ name: 'chromium', use: { ...devices['Desktop Chrome'] } }],
   // E2E runs against the MSW mocks so it does not need the backend.
   webServer: {
-    command: `pnpm exec vite --port ${String(PORT)} --strictPort`,
+    command: `pnpm exec next dev --port ${String(PORT)}`,
     url: `http://localhost:${String(PORT)}`,
     reuseExistingServer: !process.env.CI,
-    env: { VITE_API_MOCKING: 'enabled' },
+    env: { NEXT_PUBLIC_API_MOCKING: 'enabled' },
   },
 })

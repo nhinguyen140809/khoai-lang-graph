@@ -1,3 +1,5 @@
+'use client'
+
 import { useMutation } from '@tanstack/react-query'
 import { SendIcon } from 'lucide-react'
 import { type SubmitEvent, useState } from 'react'

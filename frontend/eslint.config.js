@@ -1,21 +1,21 @@
 import js from '@eslint/js'
 import { defineConfig, globalIgnores } from 'eslint/config'
+import nextPlugin from '@next/eslint-plugin-next'
 import checkFile from 'eslint-plugin-check-file'
 import jsxA11y from 'eslint-plugin-jsx-a11y'
 import reactHooks from 'eslint-plugin-react-hooks'
-import reactRefresh from 'eslint-plugin-react-refresh'
 import simpleImportSort from 'eslint-plugin-simple-import-sort'
 import globals from 'globals'
 import tseslint from 'typescript-eslint'
 
 export default defineConfig([
   globalIgnores([
-    'dist',
+    '.next',
+    'next-env.d.ts',
     'coverage',
     'playwright-report',
     'test-results',
     'src/api/generated',
-    'src/routeTree.gen.ts',
     'public/mockServiceWorker.js',
   ]),
   {
@@ -25,7 +25,7 @@ export default defineConfig([
       tseslint.configs.strictTypeChecked,
       tseslint.configs.stylisticTypeChecked,
       reactHooks.configs.flat['recommended-latest'],
-      reactRefresh.configs.vite,
+      nextPlugin.configs['core-web-vitals'],
       jsxA11y.flatConfigs.recommended,
     ],
     languageOptions: {
@@ -49,17 +49,19 @@ export default defineConfig([
   },
   {
     // File naming (CONTRIBUTING: TypeScript / React > Naming). Files whose names are set by
-    // a tool (shadcn CLI, TanStack Router, Vite) or by convention (index.ts) are ignored.
+    // a tool (shadcn CLI, Next.js) or by convention (index.ts) are ignored.
     files: ['src/**/*.{ts,tsx}', 'tests/**/*.ts'],
     ignores: [
       'src/components/ui/**',
       'src/hooks/use-mobile.ts',
       'src/lib/utils.ts',
-      'src/routes/**',
-      'src/main.tsx',
+      // Next.js file conventions: routing files, metadata files, and src-level entry points.
+      'src/app/**/@(page|layout|loading|error|not-found|global-error|template|default).tsx',
+      'src/app/**/@(icon|apple-icon|opengraph-image|twitter-image).tsx',
+      'src/app/**/@(route|sitemap|robots|manifest).ts',
+      'src/@(proxy|instrumentation|instrumentation-client).ts',
       'src/**/index.ts',
-      'src/routeTree.gen.ts',
-      'src/vite-env.d.ts',
+      'src/**/*.d.ts',
     ],
     plugins: { 'check-file': checkFile },
     rules: {
@@ -82,7 +84,6 @@ export default defineConfig([
     // `shadcn add --overwrite` diffs stay small; only relax stylistic type rules here.
     files: ['src/components/ui/**/*.{ts,tsx}', 'src/hooks/use-mobile.ts'],
     rules: {
-      'react-refresh/only-export-components': 'off',
       'react-hooks/set-state-in-effect': 'off',
       '@typescript-eslint/consistent-type-definitions': 'off',
       '@typescript-eslint/restrict-template-expressions': 'off',
@@ -100,20 +101,13 @@ export default defineConfig([
     },
   },
   {
-    // TanStack Router route files export `Route`, not components.
-    files: ['src/routes/**/*.{ts,tsx}'],
-    rules: {
-      'react-refresh/only-export-components': 'off',
-    },
-  },
-  {
-    files: ['*.config.{ts,js}', 'tests/e2e/**/*.ts'],
+    files: ['*.config.{ts,js,mjs}', 'tests/e2e/**/*.ts'],
     languageOptions: {
       globals: globals.node,
     },
   },
   {
-    files: ['**/*.js'],
+    files: ['**/*.{js,mjs}'],
     extends: [tseslint.configs.disableTypeChecked],
   },
 ])

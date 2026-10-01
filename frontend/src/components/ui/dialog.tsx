@@ -1,3 +1,5 @@
+'use client'
+
 import { cn } from 'cn'
 import { XIcon } from 'lucide-react'
 import { Dialog as DialogPrimitive } from 'radix-ui'

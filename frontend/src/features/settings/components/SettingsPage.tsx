@@ -1,19 +1,27 @@
+'use client'
+
 import { MonitorIcon, MoonIcon, SunIcon } from 'lucide-react'
+import { useTheme } from 'next-themes'
+import { useSyncExternalStore } from 'react'
 
 import { Button } from '@/components/ui/button'
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card'
 
-import { type Theme, useSettingsStore } from '../settings.store'
-
-const themeOptions: { value: Theme; label: string; Icon: typeof SunIcon }[] = [
+const themeOptions: { value: string; label: string; Icon: typeof SunIcon }[] = [
   { value: 'light', label: 'Light', Icon: SunIcon },
   { value: 'dark', label: 'Dark', Icon: MoonIcon },
   { value: 'system', label: 'System', Icon: MonitorIcon },
 ]
 
+const subscribeNever = () => () => undefined
+const isClient = () => true
+const isServer = () => false
+
 export function SettingsPage() {
-  const theme = useSettingsStore((state) => state.theme)
-  const setTheme = useSettingsStore((state) => state.setTheme)
+  const { theme, setTheme } = useTheme()
+  // The stored theme is only known in the browser; until hydration no option is marked active.
+  const hydrated = useSyncExternalStore(subscribeNever, isClient, isServer)
+  const activeTheme = hydrated ? theme : undefined
 
   return (
     <div className="mx-auto flex max-w-2xl flex-col gap-4 p-6">
@@ -27,8 +35,8 @@ export function SettingsPage() {
           {themeOptions.map(({ value, label, Icon }) => (
             <Button
               key={value}
-              variant={theme === value ? 'default' : 'outline'}
-              aria-pressed={theme === value}
+              variant={activeTheme === value ? 'default' : 'outline'}
+              aria-pressed={activeTheme === value}
               onClick={() => {
                 setTheme(value)
               }}

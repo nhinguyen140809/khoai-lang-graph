@@ -1,3 +1,5 @@
+'use client'
+
 import { LoaderCircleIcon } from 'lucide-react'
 import { Streamdown } from 'streamdown'
 
