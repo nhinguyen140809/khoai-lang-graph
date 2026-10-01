@@ -2,10 +2,10 @@
 
 import { MonitorIcon, MoonIcon, SunIcon } from 'lucide-react'
 import { useTheme } from 'next-themes'
-import { useSyncExternalStore } from 'react'
 
 import { Button } from '@/components/ui/button'
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card'
+import { useIsHydrated } from '@/hooks/useIsHydrated'
 
 const themeOptions: { value: string; label: string; Icon: typeof SunIcon }[] = [
   { value: 'light', label: 'Light', Icon: SunIcon },
@@ -13,14 +13,10 @@ const themeOptions: { value: string; label: string; Icon: typeof SunIcon }[] = [
   { value: 'system', label: 'System', Icon: MonitorIcon },
 ]
 
-const subscribeNever = () => () => undefined
-const isClient = () => true
-const isServer = () => false
-
 export function SettingsPage() {
   const { theme, setTheme } = useTheme()
   // The stored theme is only known in the browser; until hydration no option is marked active.
-  const hydrated = useSyncExternalStore(subscribeNever, isClient, isServer)
+  const hydrated = useIsHydrated()
   const activeTheme = hydrated ? theme : undefined
 
   return (
