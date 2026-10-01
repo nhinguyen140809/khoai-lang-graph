@@ -8,29 +8,31 @@ It applies to all team members and to both the **engineering** and **research** 
 
 ## Table of Contents
 
-- [Code of Conduct](#code-of-conduct)
-- [Ways to Contribute](#ways-to-contribute)
-- [Development Setup](#development-setup)
-- [Workflow](#workflow)
-  - [Issues](#issues)
-  - [Branching](#branching)
-  - [Commits](#commits)
-  - [Pull Requests](#pull-requests)
-  - [Code Review](#code-review)
-- [Coding Conventions](#coding-conventions)
-  - [General](#general)
-  - [Python (backend)](#python-backend)
-  - [LangGraph / Agents](#langgraph--agents)
-  - [TypeScript / React (frontend)](#typescript--react-frontend)
-  - [API Contract](#api-contract)
-  - [Database & Migrations](#database--migrations)
-- [Logging & Errors](#logging--errors)
-- [Testing](#testing)
-- [Research Contributions](#research-contributions)
-- [Documentation & ADRs](#documentation--adrs)
-- [Security & Secrets](#security--secrets)
-- [Releases](#releases)
-- [Getting Help](#getting-help)
+- [Contributing to Khoailanggraph](#contributing-to-khoailanggraph)
+  - [Table of Contents](#table-of-contents)
+  - [Code of Conduct](#code-of-conduct)
+  - [Ways to Contribute](#ways-to-contribute)
+  - [Development Setup](#development-setup)
+  - [Workflow](#workflow)
+    - [Issues](#issues)
+    - [Branching](#branching)
+    - [Commits](#commits)
+    - [Pull Requests](#pull-requests)
+    - [Code Review](#code-review)
+  - [Coding Conventions](#coding-conventions)
+    - [General](#general)
+    - [Python (backend)](#python-backend)
+    - [LangGraph / Agents](#langgraph--agents)
+    - [TypeScript / React (frontend)](#typescript--react-frontend)
+    - [API Contract](#api-contract)
+    - [Database \& Migrations](#database--migrations)
+  - [Logging \& Errors](#logging--errors)
+  - [Testing](#testing)
+  - [Research Contributions](#research-contributions)
+  - [Documentation \& ADRs](#documentation--adrs)
+  - [Security \& Secrets](#security--secrets)
+  - [Releases](#releases)
+  - [Getting Help](#getting-help)
 
 ---
 
@@ -220,18 +222,21 @@ Conventions:
 | Tool | Config |
 |---|---|
 | Type checker | `tsc` with `strict`, `noUncheckedIndexedAccess`, `exactOptionalPropertyTypes`, `noImplicitOverride`, `verbatimModuleSyntax` |
-| Linter | **ESLint** flat config: `typescript-eslint` (strict-type-checked), `react-hooks`, `react-refresh`, `jsx-a11y`, `import` sorting |
+| Linter | **ESLint** flat config: `typescript-eslint` (strict-type-checked), `react-hooks`, `@next/next` (core web vitals), `jsx-a11y`, `import` sorting |
 | Formatter | **Prettier** (+ `prettier-plugin-tailwindcss`) |
 | Package manager | **pnpm** - commit `pnpm-lock.yaml` |
 
 Conventions:
 - **No `any`** - use `unknown` + narrowing. No non-null assertions (`!`) without a comment.
 - **Feature-based structure:** code for a feature lives in `src/features/<feature>/`. Shared UI in `src/components/`. Features don't import each other's internals.
-- **Components:** function components, named exports, one component per file.
+- **Feature public API:** each feature has an `index.ts` that exports only what other code needs (page and shared components, hooks, types). Code outside the feature imports from `@/features/<feature>`, never from a file inside it (enforced by ESLint `no-restricted-imports`); code inside the feature uses relative imports. Anything not exported from `index.ts` is private and can change freely.
+- **Components:** function components, named exports, one component per file. Next.js routing files (`page.tsx`, `layout.tsx`, `error.tsx`, ...) are the exception: they must use a default export.
+- **Routes stay thin:** `src/app/` holds only Next.js routing files. A `page.tsx` renders a component from `src/features/`; shared layout lives in `src/components/layout/`, global providers in `src/providers/`.
+- **Server and Client Components:** files in `src/app/` are Server Components by default. Add `'use client'` at the top of a component file that uses state, effects, event handlers, or browser APIs. Code that reads `window`, `document`, or `localStorage` runs in an effect or event handler, never during render, so the server-rendered HTML matches the first client render.
 - **Server state** via TanStack Query only - don't copy server data into Zustand/`useState`.
 - **Validation** with Zod at boundaries (forms, untrusted data).
 - **UI components:** use shadcn/ui primitives from `src/components/ui/` before building custom ones. Style with Tailwind utilities; avoid ad-hoc CSS files. Use `cn()` from `@/lib/utils` (re-exports shadcn's `cn` package, a clsx + tailwind-merge replacement) to combine classes.
-- **Heavy components** (CodeMirror, React Flow, PDF viewer) are lazy-loaded with `React.lazy` so the initial bundle stays small.
+- **Heavy components** (CodeMirror, React Flow, PDF viewer) are lazy-loaded with `next/dynamic` (`ssr: false` for components that need the browser) so the initial bundle stays small.
 - **Untrusted content** (LLM-generated HTML/Markdown) is never rendered with `dangerouslySetInnerHTML`; HTML artifacts go in a sandboxed iframe.
 - **Accessibility:** semantic HTML, labels on inputs, keyboard navigable. `jsx-a11y` must pass.
 - Path alias: `@/` -> `src/`.
@@ -246,8 +251,22 @@ Conventions:
 | E2E test | `<subject>.spec.ts` | `tests/e2e/chat.spec.ts` |
 
 - **Subject** (before the first dot): what the file is about, in kebab-case. Always include it, even when the folder already says it (`features/chat/chat.api.ts`), so names are unique in search results and editor tabs.
-- **Kind** (after the dot): the role of the file, one of `api`, `types`, `schema`, `store`, `reducer`, `config`, `constants`, `utils`, `handlers`, `setup`, `spec`. Tests append `.test`. Need a new kind? Add it to the list here and in `eslint.config.js` in the same PR.
-- **Exceptions** (names set by a tool or convention): `src/components/ui/**` and `src/hooks/use-mobile.ts` (shadcn CLI), `src/lib/utils.ts` (shadcn alias), `src/routes/**` (TanStack Router file-based routes: the file name is the URL), `src/routeTree.gen.ts`, `index.ts` barrels, `main.tsx`, `*.d.ts`, and root config files (`vite.config.ts`, ...).
+- **Kind** (after the dot): the role of the file, one of `api`, `types`, `schema`, `store`, `reducer`, `config`, `constants`, `utils`, `handlers`, `fixtures`, `setup`, `spec`. Tests append `.test`. Need a new kind? Add it to the list here and in `eslint.config.js` in the same PR.
+- **Exceptions** (names set by a tool or convention): `src/components/ui/**` and `src/hooks/use-mobile.ts` (shadcn CLI), `src/lib/utils.ts` (shadcn alias), Next.js file conventions (below), `index.ts` barrels, `*.d.ts`, and root config files (`next.config.ts`, ...).
+- **Next.js file conventions** keep the names the framework requires:
+  - Routing files in `src/app/**`: `page.tsx`, `layout.tsx`, `loading.tsx`, `error.tsx`, `not-found.tsx`, `global-error.tsx`, `template.tsx`, `default.tsx`, `route.ts`.
+  - Metadata files in `src/app/**`: `icon.tsx`, `apple-icon.tsx`, `opengraph-image.tsx`, `twitter-image.tsx`, `sitemap.ts`, `robots.ts`, `manifest.ts`.
+  - Entry points directly in `src/`: `proxy.ts`, `instrumentation.ts`, `instrumentation-client.ts`.
+  - Any other file placed in `src/app/**` follows the table above.
+
+**Folder naming** (enforced by the same plugin):
+
+| Folder | Pattern | Examples |
+|---|---|---|
+| Inside `src/app/` (route segments) | kebab-case segment, or a Next.js form: `(group)`, `[param]`, `[...param]`, `[[...param]]`, `_private`, `@slot` | `settings/`, `(app)/`, `threads/[threadId]/` |
+| Everywhere else in `src/` and `tests/` | kebab-case | `features/chat/`, `components/layout/` |
+
+A folder name in `src/app/` is a URL segment, so renaming it changes the URL.
 
 ### API Contract
 

@@ -100,7 +100,7 @@ Fill this in with the team and the supervisor first: everything else depends on 
 | 4 | Streaming | **SSE** | WebSocket | One-directional token streaming is enough; simpler, works through proxies |
 | 5 | Database | **PostgreSQL + pgvector** | Separate vector DB (Qdrant, Chroma) | One database for app data, checkpoints, and vectors = less infra |
 | 6 | Logging | **structlog** | stdlib logging, loguru | Structured JSON logs, context binding (request_id / thread_id) |
-| 7 | Frontend build | **Vite + React SPA** | Next.js | No SEO/SSR need; backend is Python anyway; simpler mental model |
+| 7 | Frontend framework | **Next.js (App Router)**, used as the web app in front of the FastAPI API; no business logic in Next.js server code | Vite + React SPA, TanStack Start, React Router framework mode | Largest ecosystem and documentation; statically rendered pages with metadata for a future public landing page; shadcn/ui documentation targets it first. Trade-offs we accept: a heavier dev server, a Node.js server in deployment, and browser-only libraries need `'use client'` or dynamic import |
 | 8 | Component library | **shadcn/ui on Tailwind v4**, see [section 4](#4-ui-component-library) | HeroUI, React Aria Components, Headless UI, Ark UI, DaisyUI, Flowbite | Tailwind-native, you own the code; the chat and graph libraries (assistant-ui, AI Elements, React Flow UI) are built on it; artifact viewers are headless or themeable |
 | 9 | API typing | **OpenAPI -> generated TS client** | Hand-written types | Frontend and backend types can't drift apart |
 | 10 | Tracing | **Langfuse** (self-hosted) | LangSmith | Free & open source, works in Docker; LangSmith has a free tier and tighter LangGraph integration. Pick one |
@@ -110,6 +110,7 @@ Fill this in with the team and the supervisor first: everything else depends on 
 | 14 | Artifact storage | **Postgres metadata + S3-compatible object storage** (MinIO locally) | Local disk only, blobs in Postgres | Same code in dev and prod; versioned artifacts; large files stay out of the DB |
 | 15 | API versioning | **`/api/v1` prefix** | Header-based versioning | Simple and explicit; lets us make breaking changes behind `/api/v2` |
 | 16 | Backend structure | **Modular monolith**: `features/<name>/` vertical slices + shared `agents/`, `llm/`, `tools/`, `platform/`, `core/`; dependency rules enforced by import-linter; ports (`Protocol`) only at planned replacement points | Layered by technical type (`api/`, `services/`, `db/`); full Clean Architecture (entities, use cases, adapters, DTO mapping per layer) | Adding a feature touches one folder; graphs stay free of HTTP/DB so `research/` can import them; full Clean Architecture adds ceremony a small team cannot afford and LangGraph is already a framework we cannot abstract away |
+| 17 | Session & deployment origin | **httpOnly session cookie set by FastAPI** (`HttpOnly; Secure; SameSite=Lax`); frontend and API served from the **same origin** (Next.js rewrite of `/api` in dev, reverse proxy routing `/api` in prod) | Token in `localStorage`; cross-origin API with CORS credentials | JavaScript cannot read the session; the cookie is sent automatically on REST and SSE requests; no CORS or third-party cookie issues. Requires CSRF protection on state-changing requests (CSRF token or `Origin` check) |
 
 ## 4. UI component library
 
@@ -317,17 +318,17 @@ Rules that make results defensible in a thesis. Complements the experiment workf
 - [ ] Dockerfile (multi-stage, non-root user)
 
 ### Frontend
-- [x] `pnpm create vite frontend --template react-ts`
+- [x] Next.js app (App Router, Turbopack) in `frontend/`
 - [x] Strict `tsconfig`, ESLint flat config, Prettier, path alias `@/`
 - [x] Tailwind CSS v4 setup (+ `prettier-plugin-tailwindcss`)
 - [x] Init shadcn/ui and companion libraries (section 4)
 - [x] App shell: sidebar + resizable chat / artifact panels
-- [x] TanStack Router + Query, API client codegen script (writes `frontend/openapi.json` + `src/api/generated/`)
+- [x] App Router routes + TanStack Query, API client codegen script (writes `frontend/openapi.json` + `src/api/generated/`)
 - [ ] Generate the first client once the backend exports `openapi.json`, then replace the hand-written types in `features/chat/chat.types.ts`
 - [x] Zustand store for user settings (model choices, theme, etc.)
 - [x] Chat page consuming the SSE endpoint (against MSW mocks until the backend exists)
 - [x] Vitest + MSW + Playwright setup
-- [x] File naming rules enforced by ESLint (CONTRIBUTING: TypeScript / React)
+- [x] File and folder naming rules enforced by ESLint (CONTRIBUTING: TypeScript / React)
 
 ### Research
 - [ ] `research/README.md` with RQs and reproduction steps
