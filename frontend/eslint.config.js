@@ -87,7 +87,7 @@ export default defineConfig([
           '**/hooks/*.ts': 'use+([A-Z])*([a-zA-Z0-9])?(.test)',
           // Everything else: <subject>.<kind>.ts, subject in kebab-case
           '**/!(hooks)/*.ts':
-            '+([a-z0-9])*(-+([a-z0-9])).@(api|types|schema|store|reducer|config|constants|utils|handlers|setup|spec)?(.test)',
+            '+([a-z0-9])*(-+([a-z0-9])).@(api|types|schema|store|reducer|config|constants|utils|handlers|fixtures|setup|spec)?(.test)',
         },
       ],
       'check-file/folder-naming-convention': [

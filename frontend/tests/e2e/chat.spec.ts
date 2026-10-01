@@ -13,6 +13,15 @@ test('sends a message and streams the agent reply', async ({ page }) => {
   await expect(page.getByText('mock', { exact: true })).toBeVisible()
 })
 
+test('lists the threads and opens one', async ({ page }) => {
+  await page.goto('/')
+
+  await page.getByRole('link', { name: 'Compare agent topologies' }).click()
+
+  await expect(page).toHaveURL(/\/threads\/thread-mock-2$/)
+  await expect(page.getByRole('textbox', { name: 'Message' })).toBeVisible()
+})
+
 test('navigates to settings and switches theme', async ({ page }) => {
   await page.goto('/')
   await page.getByRole('link', { name: 'Settings' }).click()

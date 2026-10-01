@@ -1,9 +1,6 @@
-import { type CreateRunResponse, createRunResponseSchema } from './chat.types'
+import { apiUrl } from '@/lib/api-url.utils'
 
-// Absolute URL so the same code works in the browser and in Node-based tests.
-function apiUrl(path: string): string {
-  return new URL(path, window.location.origin).toString()
-}
+import { type CreateRunResponse, createRunResponseSchema } from './chat.types'
 
 // TODO: switch to the generated client in src/api/generated/ once the backend exists.
 export async function createRun(threadId: string, input: string): Promise<CreateRunResponse> {

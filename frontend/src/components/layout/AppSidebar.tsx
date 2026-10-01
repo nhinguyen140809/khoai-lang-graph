@@ -14,6 +14,7 @@ import {
   SidebarMenuItem,
   SidebarRail,
 } from '@/components/ui/sidebar'
+import { ThreadList } from '@/features/threads'
 
 export function AppSidebar() {
   return (
@@ -32,6 +33,7 @@ export function AppSidebar() {
                   </Link>
                 </SidebarMenuButton>
               </SidebarMenuItem>
+              <ThreadList />
             </SidebarMenu>
           </SidebarGroupContent>
         </SidebarGroup>
