@@ -118,13 +118,18 @@ export default defineConfig([
       'check-file/filename-naming-convention': [
         'error',
         {
-          // Components: PascalCase, optionally .test
-          '**/*.tsx': '+([A-Z])*([a-zA-Z0-9])?(.test)',
+          // Components: PascalCase
+          '**/!(__tests__)/*.tsx': '+([A-Z])*([a-zA-Z0-9])',
           // Hooks: useSomething.ts
-          '**/hooks/*.ts': 'use+([A-Z])*([a-zA-Z0-9])?(.test)',
+          '**/hooks/*.ts': 'use+([A-Z])*([a-zA-Z0-9])',
           // Everything else: <subject>.<kind>.ts, subject in kebab-case
-          '**/!(hooks)/*.ts':
-            '+([a-z0-9])*(-+([a-z0-9])).@(api|types|schema|store|reducer|config|constants|utils|handlers|fixtures|setup|spec)?(.test)',
+          '**/!(hooks|__tests__)/*.ts':
+            '+([a-z0-9])*(-+([a-z0-9])).@(api|types|schema|store|reducer|config|constants|utils|handlers|fixtures|setup|spec)',
+          // Unit tests: only in a __tests__ folder, named after the file under test plus .test
+          '**/__tests__/*.tsx': '+([A-Z])*([a-zA-Z0-9]).test',
+          '**/hooks/__tests__/*.ts': 'use+([A-Z])*([a-zA-Z0-9]).test',
+          '**/!(hooks)/__tests__/*.ts':
+            '+([a-z0-9])*(-+([a-z0-9])).@(api|types|schema|store|reducer|config|constants|utils|handlers|fixtures|setup).test',
         },
       ],
       'check-file/folder-naming-convention': [
@@ -132,8 +137,8 @@ export default defineConfig([
         {
           // Route folders: kebab-case segments plus (groups), [params], _private, @slots
           'src/app/**': 'NEXT_JS_APP_ROUTER_CASE',
-          // Every other folder: kebab-case
-          'src/!(app)/**': 'KEBAB_CASE',
+          // Every other folder: kebab-case, or __tests__ for unit tests
+          'src/!(app)/**': '@(__tests__|+([a-z0-9])*(-+([a-z0-9])))',
           'tests/**': 'KEBAB_CASE',
         },
       ],

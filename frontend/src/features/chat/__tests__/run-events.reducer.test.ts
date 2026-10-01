@@ -1,7 +1,7 @@
 import { describe, expect, it } from 'vitest'
 
-import type { RunEvent } from './chat.types'
-import { applyRunEvent, initialRunState, parseRunEvent } from './run-events.reducer'
+import type { RunEvent } from '../chat.types'
+import { applyRunEvent, initialRunState, parseRunEvent } from '../run-events.reducer'
 
 function replay(events: RunEvent[]) {
   return events.reduce(applyRunEvent, initialRunState)

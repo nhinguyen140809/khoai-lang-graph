@@ -4,7 +4,7 @@ import { describe, expect, it } from 'vitest'
 import { server } from '@/mocks/msw-server.setup'
 import { MOCK_RUN_ID } from '@/mocks/runs.handlers'
 
-import { createRun } from './chat.api'
+import { createRun } from '../chat.api'
 
 describe('createRun', () => {
   it('returns the run id from the API', async () => {

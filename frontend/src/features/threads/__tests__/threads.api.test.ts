@@ -4,7 +4,7 @@ import { describe, expect, it } from 'vitest'
 import { server } from '@/mocks/msw-server.setup'
 import { mockThreads } from '@/mocks/threads.fixtures'
 
-import { listThreads } from './threads.api'
+import { listThreads } from '../threads.api'
 
 describe('listThreads', () => {
   it('returns the threads from the API', async () => {
