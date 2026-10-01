@@ -61,6 +61,43 @@ export default defineConfig([
     },
   },
   {
+    // Shared code never depends on features or on the app layer (CONTRIBUTING: Import direction).
+    files: ['src/@(components|hooks|lib|api)/**/*.{ts,tsx}'],
+    rules: {
+      'no-restricted-imports': [
+        'error',
+        {
+          patterns: [
+            {
+              group: ['@/features', '@/features/**', '@/app/**', '@/providers/**'],
+              message:
+                'Shared code must not import features or the app layer. Pass feature components in as props from src/app/.',
+            },
+          ],
+        },
+      ],
+    },
+  },
+  {
+    // A feature never depends on another feature or on the app layer. Files of the same
+    // feature use relative imports.
+    files: ['src/features/**/*.{ts,tsx}'],
+    rules: {
+      'no-restricted-imports': [
+        'error',
+        {
+          patterns: [
+            {
+              group: ['@/features', '@/features/**', '@/app/**', '@/providers/**'],
+              message:
+                'A feature must not import another feature or the app layer. Compose features in src/app/, or move the shared code to src/components, src/hooks, or src/lib.',
+            },
+          ],
+        },
+      ],
+    },
+  },
+  {
     // File naming (CONTRIBUTING: TypeScript / React > Naming). Files whose names are set by
     // a tool (shadcn CLI, Next.js) or by convention (index.ts) are ignored.
     files: ['src/**/*.{ts,tsx}', 'tests/**/*.ts'],
