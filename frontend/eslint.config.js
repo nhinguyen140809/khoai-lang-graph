@@ -112,6 +112,8 @@ export default defineConfig([
       '@typescript-eslint/restrict-template-expressions': 'off',
       '@typescript-eslint/no-confusing-void-expression': 'off',
       '@typescript-eslint/no-unnecessary-condition': 'off',
+      '@typescript-eslint/prefer-nullish-coalescing': 'off',
+      'jsx-a11y/anchor-has-content': 'off',
     },
   },
   {
