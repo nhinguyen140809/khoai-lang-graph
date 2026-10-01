@@ -224,6 +224,19 @@ To mock a new endpoint:
 3. Register the list in `msw-browser.setup.ts` (dev mocking, E2E) and `msw-server.setup.ts` (unit tests).
 4. In a test that needs other data or an error, override the handler for that test only with `server.use(...)`; it is reset after each test.
 
+### Mock scenarios
+
+A handler can answer differently depending on a parameter in the page URL, so every state of a screen can be seen in `pnpm dev:mock`:
+
+| URL                      | The threads handler returns        |
+| ------------------------ | ---------------------------------- |
+| `/`                      | The fixtures                       |
+| `/?mock-threads=empty`   | An empty list                      |
+| `/?mock-threads=error`   | HTTP 500                           |
+| `/?mock-threads=loading` | Nothing; the request stays pending |
+
+The parameter name is `mock-<resource>`. A handler reads it with `mockScenario('<resource>')` from `src/mocks/mock-scenario.utils.ts` and supports the scenarios: `empty`, `error`, `loading`. Without the parameter it returns the fixtures. Unit tests do not use scenarios; they override a handler with `server.use(...)`.
+
 Components never import fixtures. They call the API functions of their feature, and MSW answers the request, so switching to the real backend changes no component code. Handlers that need a browser-only API (the SSE stream) are registered only in `msw-browser.setup.ts`.
 
 ## Troubleshooting
