@@ -22,6 +22,21 @@ test('lists the threads and opens one', async ({ page }) => {
   await expect(page.getByRole('textbox', { name: 'Message' })).toBeVisible()
 })
 
+test('shows an error with a retry when the threads fail to load', async ({ page }) => {
+  await page.goto('/?mock-threads=error')
+
+  // Next.js adds its own empty role="alert" element (the route announcer), so match by text.
+  const alert = page.getByRole('alert').filter({ hasText: 'Failed to load threads' })
+  await expect(alert).toBeVisible()
+  await expect(alert.getByRole('button', { name: 'Try again' })).toBeVisible()
+})
+
+test('shows the empty state when there are no threads', async ({ page }) => {
+  await page.goto('/?mock-threads=empty')
+
+  await expect(page.getByText('No threads yet')).toBeVisible()
+})
+
 test('navigates to settings and switches theme', async ({ page }) => {
   await page.goto('/')
   await page.getByRole('link', { name: 'Settings' }).click()

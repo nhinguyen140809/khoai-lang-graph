@@ -4,10 +4,13 @@ import { MessageSquareTextIcon } from 'lucide-react'
 import Link from 'next/link'
 import { usePathname } from 'next/navigation'
 
+import { EmptyState, ErrorState, LoadingState } from '@/components/state'
 import { SidebarMenuButton, SidebarMenuItem } from '@/components/ui/sidebar'
-import { Skeleton } from '@/components/ui/skeleton'
 
 import { useThreads } from '../hooks/useThreads'
+
+// The state messages are text, so they are hidden when the sidebar is collapsed to icons.
+const stateItemClassName = 'group-data-[collapsible=icon]:hidden'
 
 /** Existing threads as sidebar menu items; render inside a <SidebarMenu>. */
 export function ThreadList() {
@@ -16,23 +19,30 @@ export function ThreadList() {
 
   if (threads.isPending) {
     return (
-      <li className="flex flex-col gap-2 px-2 py-1" aria-busy="true" aria-label="Loading threads">
-        <Skeleton className="h-4 w-4/5" />
-        <Skeleton className="h-4 w-3/5" />
-      </li>
+      <SidebarMenuItem className={stateItemClassName}>
+        <LoadingState label="Loading threads" rows={3} size="compact" />
+      </SidebarMenuItem>
     )
   }
 
   if (threads.isError) {
     return (
-      <li role="alert" className="px-2 py-1 text-xs text-destructive">
-        {threads.error.message}
-      </li>
+      <SidebarMenuItem className={stateItemClassName}>
+        <ErrorState
+          message={threads.error.message}
+          onRetry={() => void threads.refetch()}
+          size="compact"
+        />
+      </SidebarMenuItem>
     )
   }
 
   if (threads.data.length === 0) {
-    return <li className="px-2 py-1 text-xs text-muted-foreground">No threads yet</li>
+    return (
+      <SidebarMenuItem className={stateItemClassName}>
+        <EmptyState title="No threads yet" size="compact" />
+      </SidebarMenuItem>
+    )
   }
 
   return threads.data.map((thread) => {
