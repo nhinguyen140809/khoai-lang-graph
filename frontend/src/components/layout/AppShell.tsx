@@ -2,19 +2,18 @@ import type { ReactNode } from 'react'
 
 import { ResizableHandle, ResizablePanel, ResizablePanelGroup } from '@/components/ui/resizable'
 import { SidebarInset, SidebarProvider, SidebarTrigger } from '@/components/ui/sidebar'
-import { ArtifactPanel } from '@/features/artifacts'
-
-import { AppSidebar } from './AppSidebar'
 
 interface AppShellProps {
+  sidebar: ReactNode
+  artifactPanel: ReactNode
   children: ReactNode
 }
 
 /** Sidebar | chat / workflow | artifact panel (docs/PLANNING.md section 4, target layout). */
-export function AppShell({ children }: AppShellProps) {
+export function AppShell({ sidebar, artifactPanel, children }: AppShellProps) {
   return (
     <SidebarProvider>
-      <AppSidebar />
+      {sidebar}
       <SidebarInset className="h-svh">
         <header className="flex h-12 shrink-0 items-center border-b px-2">
           <SidebarTrigger />
@@ -26,7 +25,7 @@ export function AppShell({ children }: AppShellProps) {
           <ResizableHandle withHandle />
           <ResizablePanel defaultSize="40" minSize="20" collapsible>
             <aside className="h-full" aria-label="Artifacts">
-              <ArtifactPanel />
+              {artifactPanel}
             </aside>
           </ResizablePanel>
         </ResizablePanelGroup>
