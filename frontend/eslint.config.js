@@ -45,6 +45,19 @@ export default defineConfig([
       'no-console': 'error',
       '@typescript-eslint/no-explicit-any': 'error',
       '@typescript-eslint/consistent-type-imports': 'error',
+      // A feature is used through its index.ts only (CONTRIBUTING: Feature public API).
+      'no-restricted-imports': [
+        'error',
+        {
+          patterns: [
+            {
+              group: ['@/features/*/**'],
+              message:
+                "Import from the feature's index (@/features/<feature>). Inside the same feature, use a relative import.",
+            },
+          ],
+        },
+      ],
     },
   },
   {
@@ -75,6 +88,16 @@ export default defineConfig([
           // Everything else: <subject>.<kind>.ts, subject in kebab-case
           '**/!(hooks)/*.ts':
             '+([a-z0-9])*(-+([a-z0-9])).@(api|types|schema|store|reducer|config|constants|utils|handlers|setup|spec)?(.test)',
+        },
+      ],
+      'check-file/folder-naming-convention': [
+        'error',
+        {
+          // Route folders: kebab-case segments plus (groups), [params], _private, @slots
+          'src/app/**': 'NEXT_JS_APP_ROUTER_CASE',
+          // Every other folder: kebab-case
+          'src/!(app)/**': 'KEBAB_CASE',
+          'tests/**': 'KEBAB_CASE',
         },
       ],
     },
