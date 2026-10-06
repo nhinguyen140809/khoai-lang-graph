@@ -195,7 +195,7 @@ The core mechanism (single entry point `get_chat_model(role, config)`, `provider
 GET  /api/v1/models                -> allowlisted models + capabilities
 GET  /api/v1/me/model-settings     -> user's current choices per role
 PUT  /api/v1/me/model-settings     -> save choices (validated against allowlist)
-POST /api/v1/threads/{id}/runs     -> body may include one-off "models" override (see section 6)
+POST /api/v1/threads/{id}/messages -> body may include one-off "models" override (see section 6)
 ```
 
 The backend merges these into `config["configurable"]["models"]` before invoking the graph.
@@ -216,7 +216,7 @@ Multi-step workflows can take minutes and may pause for human approval, so a run
 **Run as a resource**
 
 ```text
-POST /api/v1/threads/{thread_id}/runs      -> create run (returns run_id), optional "models" override
+POST /api/v1/threads/{thread_id}/messages  -> send a message: starts a run, or is delivered into the unfinished run
 GET  /api/v1/runs/{run_id}                 -> status + summary
 GET  /api/v1/runs/{run_id}/stream          -> SSE, resumable with Last-Event-ID
 POST /api/v1/runs/{run_id}/resume          -> answer an interrupt (human-in-the-loop)
@@ -224,16 +224,16 @@ POST /api/v1/runs/{run_id}/cancel          -> cancel a running run
 POST /api/v1/runs/{run_id}/retry           -> re-run from a checkpoint (retry a step)
 ```
 
-Status: `queued` -> `running` -> (`interrupted` <-> `running`) -> `succeeded` | `failed` | `cancelled`.
+Status: `queued` -> `running` -> (`interrupted` <-> `running`) -> `succeeded` | `failed` | `cancelled`. Each transition and its trigger is listed in [Runtime: lifecycle](architecture/runtime.md#3-lifecycle).
 
 **Design points**
 
-- **Background execution:** runs execute outside the request handler. Start with an in-process task manager (asyncio tasks + a `runs` table in Postgres); move to a queue (arq / Celery + Redis) if we need multiple workers or restarts without losing runs.
+- **Background execution:** runs execute outside the request handler. Start with an in-process task manager (asyncio tasks + a `runs` table in Postgres); move to a queue (arq / Celery + Redis) if we need multiple workers or restarts without losing runs. With the in-process manager, a restart fails the runs that were in a step (error `server_restarted`), restarts the queued ones and leaves the interrupted ones waiting; the user retries a failed run from its last completed step. Details: [Runtime: failures, cancellation and restarts](architecture/runtime.md#7-failures-cancellation-and-restarts).
 - **Event stream:** one SSE stream per run carries `node_start`, `node_end`, `token`, `tool_call`, `artifact_created`, `artifact_delta`, `interrupt`, `error`, `done`. This is the single place the event schema is defined.
 - **Resumable streaming:** every SSE event has an incrementing `id`; events are persisted (or buffered) so a client that reconnects with `Last-Event-ID` gets what it missed. Page reloads do not lose progress.
 - **Human-in-the-loop:** a node calls LangGraph `interrupt()`, the run becomes `interrupted`, the UI shows the approval, and `/resume` continues with `Command(resume=...)`.
 - **Retry / time travel:** LangGraph checkpoints let us re-run from any earlier step (fork from a checkpoint), which powers "retry this step" in the UI.
-- **Concurrency:** one active run per thread (new requests are rejected or queued).
+- **Concurrency:** one unfinished run per thread. A message sent while it is unfinished is not rejected: at the next safe point the intent router decides which node handles it; see [Runtime: messages during a run](architecture/runtime.md#5-messages-during-a-run).
 - **Limits:** `recursion_limit`, per-node and per-tool timeouts, max tokens / cost per run; exceeding them fails the run with a clear error event.
 - **Trade-off:** LangGraph Agent Server provides much of this out of the box. We chose FastAPI for control (decision 3); if building this ourselves costs too much, revisit that decision.
 

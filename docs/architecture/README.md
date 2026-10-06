@@ -39,6 +39,7 @@ The structure diagrams follow the building block view of arc42 (the C4 model cal
 | [Deployment: production](#production) | Deployment | Physical | Which process runs on which machine and over which protocol they talk |
 | [Deployment: local development](#local-development) | Deployment | Physical | The same, on a developer machine |
 | [Database](#7-database) | - | Logical (data) | Which tables exist and how they reference each other |
+| [Runtime](runtime.md) | Runtime | Process | How a run starts, pauses, loops and ends; what happens to a message sent during a run; what happens when something fails or the process stops |
 
 ### Diagram files
 
@@ -178,7 +179,7 @@ The ports are the defaults of each product and can change in the Compose file.
 Constraints that follow from this layout:
 
 - **Same origin.** The browser reaches the web app and the API through one host name, so the session cookie is sent on every API and event stream request and no cross-origin configuration is needed.
-- **One API process.** Runs execute inside the API process. A second API process or a restart loses the runs in progress. Running more than one process requires moving run execution to a queue with separate workers first.
+- **One API process.** Runs execute as tasks inside the API process, so there is exactly one API process, and a stop, a crash or a deploy ends the runs that are in a step. On startup the API sets those runs to `failed` with error code `server_restarted`, starts again the runs that were still `queued`, and leaves `interrupted` runs waiting for the user. The user retries a failed run from its last completed step; only the step that was in progress is lost. A planned deploy waits, up to a configured time limit, for steps in progress to finish before stopping. The full table is in [Runtime: failures, cancellation and restarts](runtime.md#7-failures-cancellation-and-restarts). Running more than one process requires moving run execution to a queue with separate workers first.
 - **Long-lived responses.** The reverse proxy must not buffer or cache the event stream and must allow connections that stay open for minutes. The API sends a heartbeat every 15 seconds so that an idle stream is not closed while a run waits.
 - **HTTP/2 to the browser.** Over HTTP/1.1 a browser opens about 6 connections per host, so several tabs with an open event stream block further requests. The reverse proxy serves HTTP/2.
 - **Path to separate workers.** When runs must survive a restart or more than one process is needed, run execution moves to a `worker` service fed by a queue, with a publish and subscribe channel for live events. Because events already pass through the event log, the API and the web app do not change.
@@ -282,10 +283,10 @@ The agent runtime and a graph database are unrelated despite the name: the runti
 | Entities, fields and traceability | [Data shape](../DATA_SHAPE.md) |
 | Exact content schema of each artifact kind and item kind | [Content schemas](../schemas/README.md) |
 | Endpoints, event stream format, request flows | [API design](../API.md) |
-| Run lifecycle, event types, resume and retry | [Planning: Agent run lifecycle](../PLANNING.md#6-agent-run-lifecycle) |
+| Run lifecycle, messages during a run, failures and restarts | [Runtime](runtime.md) |
 | Model and provider selection | [README: Model Configuration](../../README.md#model-configuration) |
 | Reasons for each technology choice | [Planning: Key decisions](../PLANNING.md#3-key-decisions--rationale-to-become-adrs) |
-| Sequence diagrams of a run (process view) | Not written yet |
+| Request sequences of a run | [API design: main flows](../API.md#7-main-flows) and [Runtime](runtime.md) |
 
 ## 9. Open points
 
