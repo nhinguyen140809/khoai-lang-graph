@@ -17,6 +17,7 @@ Diagrams of the system, from the outside in, followed by where it runs.
     - [Local development](#local-development)
   - [7. Database](#7-database)
     - [Artifact storage](#artifact-storage)
+    - [Workflow vocabulary](#workflow-vocabulary)
     - [Relational or graph database](#relational-or-graph-database)
     - [Other choices](#other-choices)
   - [8. Not covered here](#8-not-covered-here)
@@ -92,7 +93,7 @@ The API application is one deployable unit (a modular monolith). This diagram sh
 |---|---|
 | `api/` | Mounts the feature routers under `/api/v1`; shared dependencies; maps domain errors to HTTP responses |
 | `features/` | One package per business feature: `auth`, `projects`, `threads`, `runs`, `artifacts`, `model_settings`. Each has a router, schemas, a service, a repository and models |
-| `agents/` | The workflow graph: state, nodes, prompts, and the interfaces (ports) the graph needs from outside |
+| `agents/` | The workflow graph: state, nodes, prompts, the interfaces (ports) the graph needs from outside, and the versioned workflow definition (agent roles, stages, checkpoint options, directive kinds, run parameters) |
 | `llm/` | The only place that creates chat models. Resolves an agent role to a provider and model, and gives the rest of the code one format for messages, tool calls and token usage whatever the provider |
 | `tools/` | Tools that agents can call |
 | `integrations/` | Clients for external APIs other than LLM providers |
@@ -201,13 +202,13 @@ In mock mode the web app answers API requests from mocked handlers in the browse
 
 The schema is written in DBML in [`database.dbml`](database.dbml). To see the diagram, paste the file content into dbdiagram.io. No migration exists yet.
 
-It is the storage form of [Data shape](../DATA_SHAPE.md): 35 tables in 5 groups.
+It is the storage form of [Data shape](../DATA_SHAPE.md): 34 tables in 5 groups.
 
 | Table group | Tables |
 |---|---|
 | `identity_and_settings` | `users`, `auth_identities`, `sessions`, `user_settings`, `model_settings`, `provider_credentials` |
 | `workspace` | `projects`, `project_members`, `project_key_counters`, `source_documents` |
-| `conversation_and_execution` | `threads`, `messages`, `message_artifacts`, `message_items`, `runs`, `run_steps`, `run_events`, `interrupts`, `interrupt_artifacts`, `human_decisions`, `human_decision_items`, `rework_directives`, `rework_directive_personas`, `rework_directive_items` |
+| `conversation_and_execution` | `threads`, `messages`, `message_artifacts`, `message_items`, `runs`, `run_steps`, `run_events`, `interrupts`, `interrupt_artifacts`, `human_decisions`, `human_decision_items`, `directives`, `directive_items` |
 | `artifacts_and_trace` | `artifacts`, `artifact_items`, `artifact_revisions`, `item_revisions`, `trace_links` |
 | `supporting` | `exports`, `export_artifacts`, `comments`, `activity_events`, `notifications`, `idempotency_keys` |
 
@@ -230,6 +231,18 @@ Options considered for the artifact fields:
 | Generic table plus typed columns for a few fields | Fast filters on the chosen fields | Two places define a field | A content field becomes a frequent filter |
 
 Decision: generic tables, one per level. Trade-off: correctness of content and links is the job of the application, through the checks listed in [Data shape: integrity rules](../DATA_SHAPE.md#integrity-rules). The fields of each kind are still defined up front, as version 1 of the content schema of that kind.
+
+### Workflow vocabulary
+
+Names that belong to one version of the workflow (agent roles, stages, node names, checkpoint options, directive kinds and item roles, artifact kinds, item kinds, link types, export templates) change from one experiment to the next. The question is where the list of allowed values lives.
+
+| Option | Advantage | Disadvantage | Fits when |
+|---|---|---|---|
+| Database enum types | The database rejects an unknown value | Every new value is a migration; a value cannot be removed while old rows use it; the same list must also be kept in code | The list never changes |
+| Lookup tables with foreign keys | The database rejects an unknown value; values are data, not migrations | The list still has to match the graph in code; values per workflow version need a version column on every lookup table | Values are managed by users at run time |
+| Text checked against a versioned workflow definition in code | One list, next to the graph that uses it; a new experiment is a new definition version, with no migration; old runs stay readable with the version they ran with | The database does not check the values; the application must check every write | The values change with the code, which is this project |
+
+Decision: text checked against the workflow definition. Every run stores `workflow_name` and `workflow_version`. The tables for human review and directives hold no name of a particular workflow: an interrupt stores the node that paused and the options it offered, a decision stores the key of the chosen option, and a directive stores its kind, its target node and its items with their roles. The checks are listed in [Data shape: integrity rules](../DATA_SHAPE.md#integrity-rules).
 
 ### Relational or graph database
 
@@ -259,7 +272,7 @@ The agent runtime and a graph database are unrelated despite the name: the runti
 - **Keys come from a counter table.** `project_key_counters` holds the last number used per project and prefix, so a number is never reused.
 - **Two levels, two tables.** An artifact (persona catalog, requirements analysis, requirement specification, product backlog, interview transcript, validation report, elicitation plan) is a row of `artifacts`. Each entry inside it is a row of `artifact_items` that points at the artifact through `artifact_id`. Items nest through `parent_item_id`, so sections can contain sections and items, ordered by `position` among siblings; the subtree of an item is read with a recursive query. Items are not copied into the artifact's `content`, and ordering needs no JSON expression. A revision of an artifact stores the versions of its items, which gives the state of the whole artifact at any earlier point.
 - **Only items are traced.** Trace links connect items, so the graph has one node table. An artifact is reached from an item through `artifact_id`.
-- **Lists of references from execution records are join tables**: to artifacts (`interrupt_artifacts`, `message_artifacts`, `export_artifacts`) and to items (`human_decision_items`, `message_items`, `rework_directive_items`, `rework_directive_personas`).
+- **Lists of references from execution records are join tables**: to artifacts (`interrupt_artifacts`, `message_artifacts`, `export_artifacts`) and to items (`human_decision_items`, `message_items`, `directive_items`). A join table that holds items of different roles says so in a `role` column instead of one table per role.
 - **Not in the schema:** the workflow checkpoint tables, which the agent runtime creates and owns, keyed by `threads.id`; the model catalog, which is server configuration; `item_counts`, which is derived.
 
 ## 8. Not covered here
