@@ -134,7 +134,7 @@ The user cancels with `POST /runs/{run_id}/cancel`. The open call to the LLM pro
 
 ### Retry
 
-`POST /runs/{run_id}/retry` with a step starts a new run from the workflow checkpoint saved before that step. The steps before it are not run again, so their LLM calls are not paid twice.
+`POST /runs/{run_id}/retry` with a step starts a new run from the workflow checkpoint saved before that step. The steps before it are not run again, so their LLM calls are not paid twice. The state saved after each step can be read with `GET /runs/{run_id}/steps/{step_id}/state`, which helps choose the step to retry from.
 
 ### When the API process stops or restarts
 
