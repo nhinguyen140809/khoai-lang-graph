@@ -101,7 +101,7 @@ flowchart LR
 ```
 
 - **Frontend** talks to the backend only through a typed API client generated from the backend's OpenAPI schema.
-- **Backend** is a modular monolith: business features live in `features/<name>/` (router, schemas, service, repository), on top of shared modules `agents/`, `llm/`, `tools/`, `platform/`, `core/`. Graphs in `agents/` never depend on features or HTTP, so `research/` can run them without the API. Dependency rules: [CONTRIBUTING: Python](CONTRIBUTING.md#python-backend).
+- **Backend** is a modular monolith: business features live in `features/<name>/` (router, schemas, service, repository), on top of shared modules `agents/`, `llm/`, `tools/`, `platform/`, `domain/`, `settings/`. Graphs in `agents/` never depend on features or HTTP, so `research/` can run them without the API. `domain/` holds the business rules that need no infrastructure (content schemas of artifacts and items, integrity rules, domain errors) and imports no other package; both the graphs and the features import it, so what an agent produces and what the API validates use the same definition. Dependency rules: [CONTRIBUTING: Python](CONTRIBUTING.md#python-backend).
 - **Model layer** (`llm/`) is the only place that creates chat models. Agents ask for a *role* (e.g. `supervisor`), never a hard-coded model, so models and providers can be switched by config. See [Model Configuration](#model-configuration).
 - **Research** never duplicates agent code; it imports `khoailanggraph` as a library and runs it against datasets.
 
@@ -193,14 +193,15 @@ khoailanggraph/
 │   │   │   ├── runs/                # same files as threads/, plus:
 │   │   │   │   ├── events.py        # SSE event models (exported to OpenAPI for codegen)
 │   │   │   │   └── executor.py      # run executor wiring (starts / cancels runs)
-│   │   │   ├── artifacts/           # + ArtifactSink implementation (object storage)
+│   │   │   ├── projects/            # projects that own threads and artifacts
+│   │   │   ├── artifacts/           # artifacts, items, trace links; + ArtifactSink implementation
 │   │   │   ├── model_settings/      # allowlisted models, per-user model choices
 │   │   │   └── auth/                # (later)
 │   │   ├── api/                     # HTTP wiring shared by all features
 │   │   │   ├── router.py            # mounts feature routers under /api/v1
 │   │   │   ├── deps.py              # shared dependencies (DB session, current user)
 │   │   │   ├── schemas.py           # shared schemas (Problem Details errors, pagination)
-│   │   │   └── errors.py            # maps core.errors exceptions to HTTP responses
+│   │   │   └── errors.py            # maps domain.errors exceptions to HTTP responses
 │   │   ├── agents/                  # LangGraph graphs; never imports features/ or api/
 │   │   │   ├── <graph_name>/        # one package per graph
 │   │   │   │   ├── graph.py         # StateGraph definition & compile
@@ -219,10 +220,17 @@ khoailanggraph/
 │   │   │   ├── db.py                # async engine, session, declarative Base
 │   │   │   ├── storage.py           # S3-compatible object storage client
 │   │   │   └── executor.py          # background run executor (in-process first)
-│   │   ├── core/
-│   │   │   ├── config.py            # pydantic-settings
-│   │   │   ├── logging.py           # structlog setup
+│   │   ├── domain/                  # business rules with no infrastructure; imports no other package
+│   │   │   ├── artifacts/           # one Pydantic model per artifact kind and schema version
+│   │   │   ├── items/               # one Pydantic model per item kind and schema version
+│   │   │   ├── registry.py          # kind + schema version -> model; exports JSON Schema
+│   │   │   ├── links.py             # link types and the allowed pairs of item kinds
+│   │   │   ├── rules.py             # integrity rules: item in artifact, no cycle, conditional fields
+│   │   │   ├── keys.py              # key prefixes and key format per item kind
 │   │   │   └── errors.py            # domain exceptions
+│   │   ├── settings/
+│   │   │   ├── base.py              # Settings class (pydantic-settings)
+│   │   │   └── logging.py           # structlog setup
 │   │   └── main.py                  # FastAPI app factory
 │   ├── config/
 │   │   └── models.yaml              # model profiles + role defaults
