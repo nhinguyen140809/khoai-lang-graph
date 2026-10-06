@@ -136,6 +136,9 @@ One workflow graph covers the whole requirements engineering process: elicitatio
 | `checkpoint_spec` | Human review | Decision on the specification. The proposed architecture labels this node `checkpoint_analysis` too; it is named separately here |
 | `backlog_manager` | LLM agent | Product backlog |
 | `validator` | LLM agent | Validation report |
+| `intent_router` | LLM agent | Directive that sends a message the user sent to the node that should handle it |
+
+The node names, agent roles and checkpoint options in this section are those of workflow definition version 1. An experiment that changes them publishes a new definition version; the database and the API stay as they are, see [Workflow vocabulary](#workflow-vocabulary).
 
 Reading the diagram: blue boxes are LLM agent nodes, orange boxes are human review checkpoints where the run pauses, and the grey square box is a control node. Dashed arrows are assumed and listed in [Open points](#9-open-points); every other node and arrow is taken from the proposed architecture.
 
@@ -144,6 +147,7 @@ Behavior:
 - **Interview loop.** `interviewer` and `persona_agent` alternate until the turn limit is reached for the persona, then the next persona is interviewed. When all personas are done, the workflow moves to `analyst`.
 - **Automatic rework.** When the analyst's result is not OK, because issues need a stakeholder's answer, `rework_elicitation` writes a directive and the interview continues with the personas it names. When it is OK, the run goes to the analysis checkpoint.
 - **Human review.** At a checkpoint the run pauses and waits for the user. At the analysis checkpoint the user accepts, which moves on to the requirement engineer; rejects with re-analyse, which runs the analyst again; or rejects with re-interview, which goes through `rework_elicitation` back to the interview. At the specification checkpoint, OK moves on to the backlog manager and not OK sends the specification back to the requirement engineer.
+- **Incremental intent.** A message the user sends while the run works is taken in at the next safe point, after a node finishes: the intent router decides which node should handle it and the run continues there. A later run of the thread starts at the intent router; only the first run of a project starts at the planner. The diagram draws these entries and the five targets of the router; the entry into the router after any node, when messages are pending, is not drawn. See [Runtime: messages during a run](runtime.md#5-messages-during-a-run).
 - **Limits.** The number of personas, turns per persona and rework loops are bounded by the run configuration.
 
 Prompt and cost rules that apply to every LLM agent node:
