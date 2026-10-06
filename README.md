@@ -207,7 +207,8 @@ khoailanggraph/
 │   │   │   │   ├── graph.py         # StateGraph definition & compile
 │   │   │   │   ├── state.py         # TypedDict / Pydantic state
 │   │   │   │   ├── nodes.py         # node functions
-│   │   │   │   └── prompts.py       # (or prompts/*.md)
+│   │   │   │   ├── prompts.py       # (or prompts/*.md)
+│   │   │   │   └── definition.py    # versioned workflow definition: roles, stages, checkpoint options
 │   │   │   ├── ports.py             # Protocols graphs need from outside (e.g. ArtifactSink)
 │   │   │   └── registry.py          # name -> compiled graph
 │   │   ├── llm/                     # provider-agnostic model layer
