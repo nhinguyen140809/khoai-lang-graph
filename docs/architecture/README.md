@@ -72,7 +72,7 @@ Besides the web app, the researcher runs experiments on datasets through the eva
 
 | Building block | Responsibility |
 |---|---|
-| Web app | Chat, workflow graph, artifact panel, settings. Holds no business logic |
+| Web app | Chat, workflow graph, artifact panel, settings. Holds no business logic; draws the workflow and the artifacts from data the API provides, see [Web app](web-app.md) |
 | API application | REST and event stream API; authentication; runs the agent workflow as background tasks; calls the LLM providers |
 | Database | Application data, run events, workflow checkpoints, vectors |
 | File storage | Exported documents and uploaded files |
@@ -288,6 +288,7 @@ The agent runtime and a graph database are unrelated despite the name: the runti
 | Exact content schema of each artifact kind and item kind | [Content schemas](../schemas/README.md) |
 | Endpoints, event stream format, request flows | [API design](../API.md) |
 | Run lifecycle, messages during a run, failures and restarts | [Runtime](runtime.md) |
+| How the web app draws the workflow and the artifacts from backend data | [Web app](web-app.md) |
 | Model and provider selection | [README: Model Configuration](../../README.md#model-configuration) |
 | Reasons for each technology choice | [Planning: Key decisions](../PLANNING.md#3-key-decisions--rationale-to-become-adrs) |
 | Request sequences of a run | [API design: main flows](../API.md#7-main-flows) and [Runtime](runtime.md) |
