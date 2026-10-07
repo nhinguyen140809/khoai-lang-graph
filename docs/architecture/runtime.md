@@ -50,7 +50,7 @@ Where a run begins in the workflow:
 
 ![Where a run begins](diagrams/runtime-run-entry.drawio.svg)
 
-The message of the first run is the initial intent of the project. Every later run begins at the intent router, which decides which node should handle the message, see [section 5](#5-messages-during-a-run).
+The message of the first run is the initial intent of the project: when a run starts while `initial_message_id` of the project is null, the backend sets it to the message in the same transaction, with a conditional update so that only one run can set it, and the run begins at the planner. Every later run, in any thread of the project, begins at the intent router, which decides which node should handle the message, see [section 5](#5-messages-during-a-run). The workflow state of every run carries the content of that first message as `initial_intent`, so the planner can read it when the router sends a later run back to it.
 
 ## 3. Lifecycle
 
@@ -69,10 +69,11 @@ What happens around every node of a run:
 - **Steps.** Nodes execute one after another. Each execution of a node is a run step, with the model it used, its tokens and its cost.
 - **Events.** Every step appends events to the event log of the run: node start and end, generated text, tool calls, artifact changes, interrupts, delivered messages, errors, and the end. The event stream sends them to every open page, and a page that reconnects gets what it missed.
 - **Artifacts.** Steps create and change items; every change adds a version.
-- **Human review.** A checkpoint node creates an interrupt with its options. The run stays `interrupted` until the user chooses an option, and continues along the edge of that option.
+- **Human review.** A checkpoint node creates an interrupt with its options and questions, linked to its step. The run stays `interrupted` until the user chooses an option and answers the questions, and continues along the edge of that option. A checkpoint that is not in `review_checkpoints` of the run does not pause: its interrupt is resolved at once with the default option and the default answers, recorded as a decision without a user, so an automatic run, such as an experiment, still shows what it assumed.
+- **Steps, events and interrupts.** Every event of a step, and the interrupt of a checkpoint step, point at their step. The sequence of the events and the sequence of the steps are separate counters of the run.
 - **Rework.** A node, or the user's choice at a checkpoint, issues a directive that sends the workflow back to an earlier node. Each such loop increases the iteration count.
 - **Safe points.** After every node, once its checkpoint is saved, the workflow checks the thread for pending messages, see [section 5](#5-messages-during-a-run).
-- **Limits.** Before every LLM call the backend checks the cost limit of the run and the monthly budget of the user. The number of steps, the number of rework loops, and the time a node or a tool may take are bounded as well.
+- **Limits.** Before every LLM call the backend checks the cost limit of the run and the monthly budget of the user, and after it records the usage, in one place of the model layer, see [README: usage and cost control](../../README.md#model-configuration). The number of steps, the number of rework loops, and the time a node or a tool may take are bounded as well.
 
 ## 5. Messages during a run
 
@@ -136,6 +137,14 @@ The user cancels with `POST /runs/{run_id}/cancel`. The open call to the LLM pro
 
 `POST /runs/{run_id}/retry` with a step starts a new run from the workflow checkpoint saved before that step. The steps before it are not run again, so their LLM calls are not paid twice. The state saved after each step can be read with `GET /runs/{run_id}/steps/{step_id}/state`, which helps choose the step to retry from.
 
+The steps after the chosen one changed the artifacts that the saved state does not know about, so before the new run starts, in one transaction, the backend brings the project back to that point:
+
+1. Every artifact and item that the saved state references is set back to the referenced version, as a new version with change reason `restored`, when its current version differs.
+2. Every item that a later step of the original run created is deleted, as a new version with change reason `deleted`.
+3. Every trace link that a later step created is removed, and every link that a later step removed is created again.
+
+Nothing is lost: every version stays in the revisions, so the original run can still be shown step by step. A retry answers `409 run_already_active` while any run of the project is unfinished, since that run could be changing the same artifacts.
+
 ### When the API process stops or restarts
 
 Runs execute as tasks inside the API process, see [the deployment constraints](README.md#production). A stop, a crash or a deploy ends the tasks of the runs in progress. Everything already stored remains: the run rows, the event log, the items already written, the pending messages, and the workflow checkpoint saved after every completed step.
@@ -156,6 +165,8 @@ The backend does not resume a `running` run by itself after a restart. The step 
 2. **A chat message that answers the pending review.** While a run is `interrupted`, the user may type an answer to the review in the chat box instead of choosing an option. This design keeps such a message pending until the review is answered; reading it as the answer would need the router to run before the checkpoint continues.
 3. **Retries after an item conflict.** Two more attempts is an assumption.
 4. **Reaching the rework loop limit.** This design continues forward with the current artifacts. The alternative is to fail the run, which stops the user from getting any specification at all.
+5. **Budgets in an LLM gateway.** The application enforces the monthly budget of each user itself. When the product opens to users outside the team, the check can move to an LLM gateway between the API and the providers, which would also hold the provider keys and per-user rate limits. The rules of [README: usage and cost control](../../README.md#model-configuration) keep that move inside the model layer and the deployment.
+6. **A first message that is not clear enough.** Every first message starts a run today. The chosen direction, not designed yet: the planner goes to a checkpoint node `clarify_intent` without options when the intent is unclear, the user answers in the chat box, the answer resumes the run and the planner runs again. The message still starts the first run, so `initial_message_id` does not change, and the intent of the project is that message with its clarifying answers. A chat message that answers a question without options is then taken as the answer, which settles open point 2 for that case.
 
 ## 9. Review checklist
 
