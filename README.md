@@ -74,7 +74,7 @@ Both tracks share **one codebase**: research experiments import the same agent g
 
 ## Key Features
 
-- [TODO] Multi-agent workflow orchestrated with **LangGraph** (supervisor / specialized agents / tools)
+- [TODO] Multi-agent workflow orchestrated with **LangGraph** (specialized agents, simulated stakeholder interviews, human review checkpoints)
 - [TODO] Real-time streaming of agent steps and tokens to the UI (Server-Sent Events)
 - [TODO] Persistent conversation state and human-in-the-loop checkpoints
 - [TODO] Full LLM tracing and observability (every agent step is inspectable)
@@ -102,7 +102,7 @@ flowchart LR
 
 - **Frontend** talks to the backend only through a typed API client generated from the backend's OpenAPI schema.
 - **Backend** is a modular monolith: business features live in `features/<name>/` (router, schemas, service, repository), on top of shared modules `agents/`, `llm/`, `tools/`, `platform/`, `domain/`, `settings/`. Graphs in `agents/` never depend on features or HTTP, so `research/` can run them without the API. `domain/` holds the business rules that need no infrastructure (content schemas of artifacts and items, integrity rules, domain errors) and imports no other package; both the graphs and the features import it, so what an agent produces and what the API validates use the same definition. Dependency rules: [CONTRIBUTING: Python](CONTRIBUTING.md#python-backend).
-- **Model layer** (`llm/`) is the only place that creates chat models. Agents ask for a *role* (e.g. `supervisor`), never a hard-coded model, so models and providers can be switched by config. See [Model Configuration](#model-configuration).
+- **Model layer** (`llm/`) is the only place that creates chat models. Agents ask for a *role* (e.g. `analyst`), never a hard-coded model, so models and providers can be switched by config. See [Model Configuration](#model-configuration).
 - **Research** never duplicates agent code; it imports `khoailanggraph` as a library and runs it against datasets.
 
 Details: [`docs/architecture/`](docs/architecture/) | Decisions: [`docs/adr/`](docs/adr/)
@@ -214,7 +214,8 @@ khoailanggraph/
 │   │   ├── llm/                     # provider-agnostic model layer
 │   │   │   ├── registry.py          # loads model profiles, allowlist, capabilities
 │   │   │   ├── factory.py           # get_chat_model(role, config) -> BaseChatModel
-│   │   │   └── resolver.py          # merges defaults / .env / user settings / request
+│   │   │   ├── resolver.py          # merges defaults / .env / user / project / run override
+│   │   │   └── usage.py             # usage guard interface: cost limits before a call, usage after
 │   │   ├── tools/                   # tools callable by agents
 │   │   ├── integrations/            # external API clients (non-LLM), used by tools
 │   │   ├── platform/                # shared infrastructure
@@ -225,7 +226,7 @@ khoailanggraph/
 │   │   │   ├── artifacts/           # one Pydantic model per artifact kind and schema version
 │   │   │   ├── items/               # one Pydantic model per item kind and schema version
 │   │   │   ├── registry.py          # kind + schema version -> model; exports JSON Schema
-│   │   │   ├── links.py             # link types and the allowed pairs of item kinds
+│   │   │   ├── links.py             # checks a link against the allowed pairs of the workflow definition
 │   │   │   ├── rules.py             # integrity rules: item in artifact, no cycle, conditional fields
 │   │   │   ├── keys.py              # key prefixes and key format per item kind
 │   │   │   └── errors.py            # domain exceptions
@@ -394,7 +395,7 @@ ollama:llama3.1
 ```
 
 **2. Agents request a role, not a model.** Each agent node calls
-`get_chat_model(role="supervisor", config=config)` from `khoailanggraph.llm`. Roles let you use a cheap, fast model for routing and a stronger one for reasoning.
+`get_chat_model(role="analyst", config=config)` from `khoailanggraph.llm`. Roles let you use a cheap, fast model for routing and a stronger one for reasoning. The roles are the agent roles of the workflow definition, see [Data shape: agent roles](docs/DATA_SHAPE.md#agent-roles).
 
 **3. Profiles live in `backend/config/models.yaml`:**
 
@@ -405,35 +406,54 @@ defaults:
   max_retries: 2
   fallbacks: [openai:gpt-4.1-mini]
 
-roles:                         # which model each agent role uses
-  supervisor: anthropic:claude-haiku-4-5
-  researcher: anthropic:claude-sonnet-5
-  writer: openai:gpt-4.1-mini
+roles:                         # which model each agent role uses; a role not listed uses defaults.model
+  planner: anthropic:claude-sonnet-5
+  persona_generator: anthropic:claude-sonnet-5
+  interviewer: openai:gpt-4.1-mini
+  persona_agent: openai:gpt-4.1-mini
+  analyst: anthropic:claude-sonnet-5
+  requirement_engineer: anthropic:claude-sonnet-5
+  backlog_manager: openai:gpt-4.1-mini
+  validator: anthropic:claude-sonnet-5
+  intent_router: anthropic:claude-haiku-4-5
 
 allowlist:                     # models a user may pick in the UI
   - id: anthropic:claude-sonnet-5
     label: Claude Sonnet 5
-    capabilities: [tools, structured_output, vision]
+    capabilities: [tool_calling, structured_output, vision]
   - id: ollama:llama3.1
     label: Llama 3.1 (local)
-    capabilities: [tools]
+    capabilities: [tool_calling]
 ```
 
 **4. Resolution order** (later wins):
 
 ```text
 models.yaml defaults
-  -> .env overrides        (LLM__DEFAULT_MODEL, LLM__ROLES__SUPERVISOR, ...)
-    -> user settings       (chosen in the UI, stored in DB, must be in allowlist)
-      -> per-request       (LangGraph config["configurable"]["models"], used by research/evals)
+  -> .env overrides          (LLM__DEFAULT_MODEL, LLM__ROLES__ANALYST, ...)
+    -> user settings         (chosen in the UI, stored in DB, must be in allowlist)
+      -> project settings    (model overrides of the project, stored in DB)
+        -> per-run override  (in the request that starts the run, or in an experiment config;
+                              passed as LangGraph config["configurable"]["models"])
 ```
 
 **5. Rules**
 
 - API keys stay **server-side** in `.env`. The UI only chooses among allowlisted models returned by `GET /api/v1/models`.
-- The resolver checks capabilities (e.g. a role that needs tool calling cannot be assigned a model without `tools`).
+- The resolver checks capabilities (e.g. a role that needs tool calling cannot be assigned a model without `tool_calling`).
 - Every trace/log records the resolved `provider:model`, so results stay comparable.
 - Adding a provider = install its `langchain-*` package, add its key to `.env`, add entries to `models.yaml`. No agent code changes.
+
+**6. Usage and cost control**
+
+The application itself enforces the cost limit of each run and the monthly budget of each user. Four rules keep that control in one place, so that it can later move to an LLM gateway between the API and the providers with changes only in `llm/` and the deployment:
+
+1. **One place.** Every model call goes through a usage guard: before the call it checks the cost limit of the run and the monthly budget of the user, after the call it records the usage. `llm/usage.py` declares the guard as a `Protocol`, and the model layer calls it around every model call. The implementation that reads the database is supplied by the runs feature when a run starts, like the other ports; research supplies its own. Nodes, tools and features never check or record usage themselves.
+2. **A contract that does not name the enforcer.** A spent budget fails the run with the error code `budget_exceeded`. The early `429 budget_exceeded` when a message is sent or a review is answered is a convenience: clients handle both answers, so the early check can be dropped.
+3. **The application records its own usage.** The tokens and the cost of every step come from the provider's response, never from a gateway's figures. They feed the cost limit of the run, `GET /api/v1/me/usage` and the research records.
+4. **Every call carries its user and its run.** The config passed to `llm/` holds the user id and the run id, so that a gateway can charge each call to a user's budget and trace it to a run.
+
+Moving to a gateway then means deploying it, pointing `llm/` at it, adding a guard implementation that only translates the gateway's refusal into `budget_exceeded`, moving the budget values, and updating the docs. Nodes, features, the API and the web app stay as they are.
 
 ## Development
 

@@ -97,8 +97,8 @@ The API application is one deployable unit (a modular monolith). This diagram sh
 |---|---|
 | `api/` | Mounts the feature routers under `/api/v1`; shared dependencies; maps domain errors to HTTP responses |
 | `features/` | One package per business feature: `auth`, `projects`, `threads`, `runs`, `artifacts`, `model_settings`. Each has a router, schemas, a service, a repository and models |
-| `agents/` | The workflow graph: state, nodes, prompts, the interfaces (ports) the graph needs from outside, and the versioned workflow definition (agent roles, stages, checkpoint options, directive kinds, run parameters) |
-| `llm/` | The only place that creates chat models. Resolves an agent role to a provider and model, and gives the rest of the code one format for messages, tool calls and token usage whatever the provider |
+| `agents/` | The workflow graph: state, nodes, prompts, the interfaces (ports) the graph needs from outside, and the versioned workflow definition (entry nodes, agent roles, stages, checkpoints with their options, artifact kinds and item kinds with their schema versions, link types, directive kinds, export templates, and the schemas of the run parameters and of the state), see [Workflow definitions](../workflow/README.md) |
+| `llm/` | The only place that creates chat models. Resolves an agent role to a provider and model, gives the rest of the code one format for messages, tool calls and token usage whatever the provider, and calls the usage guard around every model call: cost limits are checked before it and usage is recorded after it |
 | `tools/` | Tools that agents can call |
 | `integrations/` | Clients for external APIs other than LLM providers |
 | `platform/` | Database session, object storage client, background run executor |
