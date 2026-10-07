@@ -303,7 +303,7 @@ A folder name in `src/app/` is a URL segment, so renaming it changes the URL.
 - Request/response schemas live in `features/<name>/schemas.py`; schemas shared across features (error shape, pagination) live in `api/schemas.py`.
 - FastAPI cannot describe SSE payloads on its own. Register the event models from `features/runs/events.py` as OpenAPI components so the frontend gets generated types for them too.
 - Breaking API changes require a `BREAKING CHANGE:` footer and coordination with frontend.
-- Streaming endpoints use **SSE** with the event schema defined in [PLANNING: Agent run lifecycle](docs/PLANNING.md#6-agent-run-lifecycle).
+- Streaming endpoints use **SSE** with the event schema defined in [API design: run event stream](docs/API.md#6-run-event-stream).
 - Errors follow a single shape (e.g. RFC 9457 Problem Details).
 
 ### Database & Migrations

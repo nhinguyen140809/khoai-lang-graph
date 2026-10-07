@@ -45,7 +45,7 @@ Fill this in with the team and the supervisor first: everything else depends on 
 - [ ] User starts a thread and gives a task
 - [ ] The multi-agent workflow runs with live streaming of tokens and agent steps
 - [ ] User sees the agent graph with the currently running node highlighted
-- [ ] Agents produce artifacts (files) that the user can open and read
+- [ ] Agents produce artifacts (structured documents such as the requirement specification) that the user can open, edit and export
 - [ ] User approves or rejects at least one human-in-the-loop step
 - [ ] User can switch models / providers per role
 - [ ] <TODO: domain-specific features>
@@ -107,7 +107,7 @@ Fill this in with the team and the supervisor first: everything else depends on 
 | 11 | Git flow | **GitHub Flow + squash merge + Conventional Commits** | Git Flow | Simple for a small team; clean history; automatic changelog |
 | 12 | Model abstraction | **`init_chat_model` + role-based registry** (see [section 5](#5-flexible-model--provider-configuration)) | LiteLLM SDK/proxy, OpenRouter, hand-written wrappers | Native to LangGraph, no extra service; LiteLLM/OpenRouter can be plugged in later as just another provider |
 | 13 | Run execution | **Runs as background tasks** with resumable SSE (see [section 6](#6-agent-run-lifecycle)) | Run inside the HTTP request; arq / Celery + Redis; LangGraph Agent Server | Workflows can take minutes and must survive client disconnects; start with an in-process task manager, move to a queue only when needed |
-| 14 | Artifact storage | **Postgres metadata + S3-compatible object storage** (MinIO locally) | Local disk only, blobs in Postgres | Same code in dev and prod; versioned artifacts; large files stay out of the DB |
+| 14 | File storage | **S3-compatible object storage** (MinIO locally) for exported documents and uploaded files, with their metadata in Postgres. Artifacts and items are structured data in Postgres, see [Data shape](DATA_SHAPE.md) | Local disk only, blobs in Postgres | Same code in dev and prod; large files stay out of the DB |
 | 15 | API versioning | **`/api/v1` prefix** | Header-based versioning | Simple and explicit; lets us make breaking changes behind `/api/v2` |
 | 16 | Backend structure | **Modular monolith**: `features/<name>/` vertical slices + shared `agents/`, `llm/`, `tools/`, `platform/`, `domain/`, `settings/`; `domain/` holds the business rules that need no infrastructure (content schemas, integrity rules, domain errors) and imports no other package; dependency rules enforced by import-linter; ports (`Protocol`) only at planned replacement points | Layered by technical type (`api/`, `services/`, `db/`); full Clean Architecture (entities, use cases, adapters, DTO mapping per layer) | Adding a feature touches one folder; graphs stay free of HTTP/DB so `research/` can import them; full Clean Architecture adds ceremony a small team cannot afford and LangGraph is already a framework we cannot abstract away |
 | 17 | Session & deployment origin | **httpOnly session cookie set by FastAPI** (`HttpOnly; Secure; SameSite=Lax`); frontend and API served from the **same origin** (Next.js rewrite of `/api` in dev, reverse proxy routing `/api` in prod) | Token in `localStorage`; cross-origin API with CORS credentials | JavaScript cannot read the session; the cookie is sent automatically on REST and SSE requests; no CORS or third-party cookie issues. Requires CSRF protection on state-changing requests (CSRF token or `Origin` check) |
@@ -179,7 +179,7 @@ Build the core surfaces early to catch integration issues: app shell + streaming
 ### Backend implications
 
 - The chat, graph, and artifact panels all update from one SSE stream per run, so events must cover more than tokens (event types in [section 6](#6-agent-run-lifecycle)).
-- Artifacts get their own API and storage (decision 14), identified by id and version.
+- Artifacts and items get their own API, identified by id and version; exported files use the file storage of decision 14.
 
 ## 5. Flexible model / provider configuration
 
@@ -229,7 +229,7 @@ Status: `queued` -> `running` -> (`interrupted` <-> `running`) -> `succeeded` | 
 **Design points**
 
 - **Background execution:** runs execute outside the request handler. Start with an in-process task manager (asyncio tasks + a `runs` table in Postgres); move to a queue (arq / Celery + Redis) if we need multiple workers or restarts without losing runs. With the in-process manager, a restart fails the runs that were in a step (error `server_restarted`), restarts the queued ones and leaves the interrupted ones waiting; the user retries a failed run from its last completed step. Details: [Runtime: failures, cancellation and restarts](architecture/runtime.md#7-failures-cancellation-and-restarts).
-- **Event stream:** one SSE stream per run carries `node_start`, `node_end`, `token`, `tool_call`, `artifact_created`, `artifact_delta`, `interrupt`, `error`, `done`. This is the single place the event schema is defined.
+- **Event stream:** one SSE stream per run carries `node_start`, `node_end`, `token`, `tool_call`, `artifact_created`, `artifact_delta`, `interrupt`, `message_delivered`, `error`, `done`. The payload of each type is defined in [API design: run event stream](API.md#6-run-event-stream).
 - **Resumable streaming:** every SSE event has an incrementing `id`; events are persisted (or buffered) so a client that reconnects with `Last-Event-ID` gets what it missed. Page reloads do not lose progress.
 - **Human-in-the-loop:** a node calls LangGraph `interrupt()`, the run becomes `interrupted`, the UI shows the approval, and `/resume` continues with `Command(resume=...)`.
 - **Retry / time travel:** LangGraph checkpoints let us re-run from any earlier step (fork from a checkpoint), which powers "retry this step" in the UI.
