@@ -1,0 +1,17 @@
+{
+  "name": "db-diagram",
+  "private": true,
+  "type": "module",
+  "packageManager": "pnpm@11.5.2",
+  "engines": {
+    "node": ">=22"
+  },
+  "description": "Renders the database diagrams from the DBML schema",
+  "scripts": {
+    "render": "node render.mjs"
+  },
+  "dependencies": {
+    "@dbml/core": "^10.2.0",
+    "@viz-js/viz": "^3.31.0"
+  }
+}
