@@ -309,7 +309,7 @@ khoailanggraph/
 │   ├── docker-compose.yml           # local dev services
 │   └── docker-compose.prod.yml
 │
-├── scripts/                         # one-off dev scripts (seed data, codegen)
+├── scripts/                         # dev scripts (seed data, codegen, database diagrams)
 ├── .editorconfig
 ├── .env.example
 ├── .nvmrc                           # Node version (22)

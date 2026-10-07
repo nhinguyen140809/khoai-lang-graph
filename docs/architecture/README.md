@@ -45,11 +45,14 @@ The structure diagrams follow the building block view of arc42 (the C4 model cal
 
 Every diagram is a `.drawio.svg` file in [`diagrams/`](diagrams/). The file is an SVG image and also holds the editable draw.io model.
 
+The database diagrams in [`diagrams/database/`](diagrams/database/) are the exception: plain SVG images rendered from [`database.dbml`](database.dbml) by the script in [`scripts/db-diagram/`](../../scripts/db-diagram/). They are not edited by hand.
+
 | Task | How |
 |---|---|
 | View | Open the file, or read this page |
 | Edit | Open the file in VS Code with the Draw.io Integration extension, or in the draw.io desktop app, then save. The image is updated on save |
 | Add a diagram | Create `diagrams/<name>.drawio.svg` and add a section to this page |
+| Update the database diagrams | Edit `database.dbml`, then run `pnpm install` and `pnpm render` in `scripts/db-diagram/` |
 
 
 ## 2. System context
@@ -205,17 +208,26 @@ In mock mode the web app answers API requests from mocked handlers in the browse
 
 ## 7. Database
 
-The schema is written in DBML in [`database.dbml`](database.dbml). To see the diagram, paste the file content into dbdiagram.io. No migration exists yet.
+The schema is written in DBML in [`database.dbml`](database.dbml). No migration exists yet.
 
-It is the storage form of [Data shape](../DATA_SHAPE.md): 34 tables in 5 groups.
+It is the storage form of [Data shape](../DATA_SHAPE.md): 36 tables in 5 groups.
 
 | Table group | Tables |
 |---|---|
-| `identity_and_settings` | `users`, `auth_identities`, `sessions`, `user_settings`, `model_settings`, `provider_credentials` |
-| `workspace` | `projects`, `project_members`, `project_key_counters`, `source_documents` |
-| `conversation_and_execution` | `threads`, `messages`, `message_artifacts`, `message_items`, `runs`, `run_steps`, `run_events`, `interrupts`, `interrupt_artifacts`, `human_decisions`, `human_decision_items`, `directives`, `directive_items` |
-| `artifacts_and_trace` | `artifacts`, `artifact_items`, `artifact_revisions`, `item_revisions`, `trace_links` |
-| `supporting` | `exports`, `export_artifacts`, `comments`, `activity_events`, `notifications`, `idempotency_keys` |
+| [`identity_and_settings`](diagrams/database/identity-and-settings.svg) | `users`, `auth_identities`, `sessions`, `user_settings`, `model_settings`, `provider_credentials` |
+| [`workspace`](diagrams/database/workspace.svg) | `projects`, `project_members`, `project_key_counters`, `source_documents`, `document_chunks` |
+| [`conversation_and_execution`](diagrams/database/conversation-and-execution.svg) | `threads`, `messages`, `message_artifacts`, `message_items`, `runs`, `run_steps`, `run_events`, `interrupts`, `interrupt_artifacts`, `human_decisions`, `human_decision_items`, `directives`, `directive_items` |
+| [`artifacts_and_trace`](diagrams/database/artifacts-and-trace.svg) | `artifacts`, `artifact_items`, `artifact_revisions`, `item_revisions`, `item_embeddings`, `trace_links` |
+| [`supporting`](diagrams/database/supporting.svg) | `exports`, `export_artifacts`, `comments`, `activity_events`, `notifications`, `idempotency_keys` |
+
+![Database overview](diagrams/database/overview.svg)
+
+The overview lists the tables of each group, with one line from a group to each group that its tables reference; the number on a line counts those foreign keys, leaving out the origin columns. The diagram of each group, linked from the table above, shows the columns of its tables and the lines between them:
+
+- `?` after a type marks a nullable column. A type in italics is an enum, and the values of the enums are listed in the Enums box.
+- A dashed box is a table of another group. A table marked Later belongs to a later phase.
+- A line runs from the row of a foreign key to the table it references. At the foreign key end, a crow's foot with a circle and `*` mean that any number of rows may point at one row; in a one-to-one reference it is a bar with a circle and `0..1`. At the referenced end, two bars and `1` mean that the foreign key is NOT NULL, and a bar with a circle and `0..1` that it is nullable.
+- Each foreign key is drawn in the diagram of the group that holds it. The foreign keys of the origin columns (`created_*`, `updated_*`, `changed_*`, `deleted_*`) are written in the row without a line, because nearly every table has them.
 
 ### Artifact storage
 
