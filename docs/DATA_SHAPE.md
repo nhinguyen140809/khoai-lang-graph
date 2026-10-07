@@ -1357,6 +1357,10 @@ Append-only record of who did what in a project.
 6. **Value lists not in the deck** (`quality_category`, `ambiguity_type`, `conflict_type`, `validation_category`) are proposals. They are value lists of the workflow definition, so an experiment can change them with a new definition version; their values need to match the prompts and the evaluation metrics of the research track.
 7. **Uploads and retention.** SourceDocument depends on the open question in PLANNING about private user files.
 8. **Workflow versions within one project.** Items written under one definition version stay readable through schema conversion, but a newer version may drop a kind or a link type that the project already uses. Whether a project is pinned to one definition version or may move to a newer one is not decided.
+9. **`change_reason` in a rework round.** `generated` and `rework` are not defined yet. Open: which one the first revision of an item created in a rework round gets, and which one the revision of the old item that becomes `superseded` gets.
+10. **History view of an item.** `GET /items/{item_id}/trace` has no `link_type` filter, so the `supersedes` chain cannot be read alone. It also leaves out removed links, so a branch dropped by a retry is not shown, although its rows remain. A history view may need its own endpoint that returns the `supersedes` links together with the revisions of each item.
+11. **Reason of a rework.** The reason is reached only indirectly: new item -> step in `created_by` -> `iteration` of the step -> Directive of the same run and iteration -> `feedback` of its HumanDecision, or the step that issued it. Options: a `directive_id` on the `supersedes` link or in Origin, or the agent writes the reason in `note`.
+12. **Diff across a split or a merge.** A diff works when one item replaces one item. When a split or a merge replaces several items, the history view shows the old and the new items side by side; whether a diff is needed there is open.
 
 ## 12. Review checklist
 
