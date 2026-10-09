@@ -118,10 +118,11 @@ pnpm fix                           # apply this repo's ESLint and Prettier style
 - `menuColor` is `default`: menus are opaque, and a highlighted menu item uses `accent`, the selection color of Night Owl. The translucent menu colors tint the highlighted item with the foreground at 10% instead, which overrides `accent`.
 - Existing files are kept unless `--overwrite` is passed. Overwriting removes the local edits below, so check the result with `--diff` and re-apply them:
 
-  | File              | Local edit                                                                 |
-  | ----------------- | -------------------------------------------------------------------------- |
-  | `command.tsx`     | The selected item uses `accent`, like the other menus, instead of `muted`  |
-  | `input-group.tsx` | The `eslint-disable-next-line` comment on the addon that focuses the input |
+  | File              | Local edit                                                                                                                                                    |
+  | ----------------- | ------------------------------------------------------------------------------------------------------------------------------------------------------------- |
+  | `command.tsx`     | The selected item uses `accent`, like the other menus, instead of `muted`                                                                                     |
+  | `sonner.tsx`      | `theme` is cast to `NonNullable<ToasterProps['theme']>`; the success, info, warning, and error icons take the `-strong` color of their status (info: primary) |
+  | `input-group.tsx` | The `eslint-disable-next-line` comment on the addon that focuses the input                                                                                    |
 
 ### Applying a theme preset
 
