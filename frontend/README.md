@@ -113,9 +113,15 @@ pnpm fix                           # apply this repo's ESLint and Prettier style
 
 - Files are written to `src/components/ui/` according to the aliases in `components.json` (`@/components/ui`, `@/lib/utils`, `@/hooks`). They are regular project source and can be edited.
 - The CLI writes code in its own style (double quotes, its own import order). `pnpm fix` converts it to the repo style; afterwards `pnpm check` should pass.
-- Existing files are kept unless `--overwrite` is passed. Before overwriting a component that has local edits, check the result with `--diff`.
-- The configured style is `radix-maia` and the icon library is Lucide (`lucide-react`).
 - The list of available components is at https://ui.shadcn.com/docs/components.
+- The configured style is `radix-mira`, the compact style meant for dense interfaces, and the icon library is Lucide (`lucide-react`).
+- `menuColor` is `default`: menus are opaque, and a highlighted menu item uses `accent`, the selection color of Night Owl. The translucent menu colors tint the highlighted item with the foreground at 10% instead, which overrides `accent`.
+- Existing files are kept unless `--overwrite` is passed. Overwriting removes the local edits below, so check the result with `--diff` and re-apply them:
+
+  | File              | Local edit                                                                 |
+  | ----------------- | -------------------------------------------------------------------------- |
+  | `command.tsx`     | The selected item uses `accent`, like the other menus, instead of `muted`  |
+  | `input-group.tsx` | The `eslint-disable-next-line` comment on the addon that focuses the input |
 
 ### Applying a theme preset
 
