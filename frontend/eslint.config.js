@@ -8,6 +8,36 @@ import simpleImportSort from 'eslint-plugin-simple-import-sort'
 import globals from 'globals'
 import tseslint from 'typescript-eslint'
 
+// The visible parts of these libraries are wrapped in src/components/ui, where they take the
+// design system tokens. Code outside that folder uses the wrappers.
+const wrappedLibraryImports = [
+  { name: 'streamdown', message: 'Use Markdown from @/components/ui/markdown.' },
+  { name: '@streamdown/code', message: 'Use Markdown from @/components/ui/markdown.' },
+  {
+    name: 'react-resizable-panels',
+    message: 'Use the components in @/components/ui/resizable.',
+  },
+  {
+    name: '@xyflow/react',
+    importNames: ['default', 'ReactFlow', 'Handle', 'BaseEdge'],
+    message:
+      'Use Flow from @/components/ui/flow, Handle from @/components/ui/handle, and Edge from @/components/ui/edge.',
+  },
+  {
+    name: 'recharts',
+    importNames: ['ResponsiveContainer', 'Tooltip', 'Legend'],
+    message: 'Use ChartContainer, ChartTooltip, and ChartLegend from @/components/ui/chart.',
+  },
+]
+
+const sharedCodePatterns = [
+  {
+    group: ['@/features', '@/features/**', '@/app/**', '@/providers/**'],
+    message:
+      'Shared code must not import features or the app layer. Pass feature components in as props from src/app/.',
+  },
+]
+
 export default defineConfig([
   globalIgnores([
     '.next',
@@ -49,6 +79,7 @@ export default defineConfig([
       'no-restricted-imports': [
         'error',
         {
+          paths: wrappedLibraryImports,
           patterns: [
             {
               group: ['@/features/*/**'],
@@ -66,16 +97,15 @@ export default defineConfig([
     rules: {
       'no-restricted-imports': [
         'error',
-        {
-          patterns: [
-            {
-              group: ['@/features', '@/features/**', '@/app/**', '@/providers/**'],
-              message:
-                'Shared code must not import features or the app layer. Pass feature components in as props from src/app/.',
-            },
-          ],
-        },
+        { paths: wrappedLibraryImports, patterns: sharedCodePatterns },
       ],
+    },
+  },
+  {
+    // The wrappers in src/components/ui import the libraries they wrap.
+    files: ['src/components/ui/**/*.{ts,tsx}'],
+    rules: {
+      'no-restricted-imports': ['error', { patterns: sharedCodePatterns }],
     },
   },
   {
@@ -86,6 +116,7 @@ export default defineConfig([
       'no-restricted-imports': [
         'error',
         {
+          paths: wrappedLibraryImports,
           patterns: [
             {
               group: ['@/features', '@/features/**', '@/app/**', '@/providers/**'],
