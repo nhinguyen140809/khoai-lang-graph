@@ -20,7 +20,7 @@ interface ProvidersProps {
 export function Providers({ children }: ProvidersProps) {
   return (
     // ThemeProvider stays outermost: its theme script must be part of the server-rendered HTML.
-    <ThemeProvider attribute="class" defaultTheme="system" enableSystem>
+    <ThemeProvider attribute="class" defaultTheme="dark" enableSystem>
       <MockingProvider>
         <QueryProvider>
           <TooltipProvider>

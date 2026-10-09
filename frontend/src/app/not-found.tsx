@@ -1,12 +1,26 @@
+'use client'
+
 import Link from 'next/link'
+import { usePathname } from 'next/navigation'
+
+import { NotFoundState } from '@/components/state'
+import { Button } from '@/components/ui/button'
 
 export default function NotFound() {
+  const pathname = usePathname()
+
   return (
-    <div className="flex flex-col items-start gap-3 p-6">
-      <p>Page not found.</p>
-      <Link href="/" className="text-sm underline">
-        Back to the app
-      </Link>
-    </div>
+    <main className="flex min-h-svh items-center justify-center p-6">
+      <NotFoundState
+        className="w-full max-w-md p-0"
+        reference={pathname}
+        description="No page exists at this address. Check the link, or go back to the app."
+        action={
+          <Button asChild>
+            <Link href="/">Back to the app</Link>
+          </Button>
+        }
+      />
+    </main>
   )
 }

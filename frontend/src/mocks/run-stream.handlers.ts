@@ -1,7 +1,8 @@
 import { delay, sse } from 'msw'
 
-// Kept out of handlers.ts because sse() needs a global EventSource, which jsdom does not
-// provide. Only the browser worker loads this file; Playwright covers streaming.
+// Kept out of runs.handlers.ts, which the unit tests also load, because sse() needs a global
+// EventSource, which jsdom does not provide. Only the browser worker loads this file; Playwright
+// covers streaming.
 
 const MOCK_TOKENS = ['Hello', ' from', ' the', ' **mock**', ' agent.']
 

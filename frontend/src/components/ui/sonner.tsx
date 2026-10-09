@@ -17,11 +17,12 @@ const Toaster = ({ ...props }: ToasterProps) => {
     <Sonner
       theme={theme as NonNullable<ToasterProps['theme']>}
       className="toaster group"
+      // Each icon takes the text color of its status; the toast itself stays neutral.
       icons={{
-        success: <CircleCheckIcon className="size-4" />,
-        info: <InfoIcon className="size-4" />,
-        warning: <TriangleAlertIcon className="size-4" />,
-        error: <OctagonXIcon className="size-4" />,
+        success: <CircleCheckIcon className="size-4 text-success-strong" />,
+        info: <InfoIcon className="size-4 text-primary" />,
+        warning: <TriangleAlertIcon className="size-4 text-warning-strong" />,
+        error: <OctagonXIcon className="size-4 text-destructive-strong" />,
         loading: <Loader2Icon className="size-4 animate-spin" />,
       }}
       style={
