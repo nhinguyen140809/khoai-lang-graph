@@ -1,7 +1,8 @@
 'use client'
 
 import { LoaderCircleIcon } from 'lucide-react'
-import { Streamdown } from 'streamdown'
+
+import { Markdown } from '@/components/ui/markdown'
 
 import { useRunStream } from '../hooks/useRunStream'
 
@@ -20,8 +21,8 @@ export function AssistantMessage({ runId }: AssistantMessageProps) {
           Running <span className="font-mono">{run.activeNode}</span>
         </p>
       )}
-      {/* Streamdown renders Markdown safely while tokens are still arriving. */}
-      <Streamdown>{run.text}</Streamdown>
+      {/* Markdown renders safely while tokens are still arriving. */}
+      <Markdown>{run.text}</Markdown>
       {run.error !== null && (
         <p role="alert" className="text-sm text-destructive">
           {run.error}
