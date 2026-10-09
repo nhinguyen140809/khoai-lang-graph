@@ -1,4 +1,4 @@
-/** The colors that Badge, Button, Progress, and Spinner take. */
+/** The colors that Badge, Button, Alert, Marker, Progress, and Spinner take. */
 export const tones = ['neutral', 'primary', 'success', 'warning', 'destructive'] as const
 
 export type Tone = (typeof tones)[number]
