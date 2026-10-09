@@ -1,11 +1,18 @@
 @import 'tailwindcss';
 @import 'tw-animate-css';
 @import 'shadcn/tailwind.css';
+/* React Flow's own styles go in the components layer, so that utility classes override them. */
+@import '@xyflow/react/dist/style.css' layer(components);
 
 /* Streamdown ships Tailwind classes that must be scanned. */
 @source '../../node_modules/streamdown/dist/*.js';
 
 @custom-variant dark (&:is(.dark *));
+
+/* Inside a React Flow node or edge that is selected or focused from the keyboard. React Flow
+   removes the focus outline of nodes and edges, so the selected look also marks the focus. The
+   selector is more specific than `hover:`, so the selected look stays while hovered. */
+@custom-variant flow-selected (&:is(:is(.react-flow__node, .react-flow__edge):is(.selected, :focus-visible) *));
 
 /*
  * Surfaces, text, lines, the selection and hover color (accent), and the success green come from
@@ -236,4 +243,43 @@
   pre {
     font-family: var(--font-mono);
   }
+}
+
+/*
+ * React Flow reads these variables for the canvas, edges, handles, nodes, controls, and minimap.
+ * Each one points to a design token, so a graph follows the light and dark theme. The canvas
+ * itself stays transparent and shows the surface it is placed on.
+ */
+.react-flow {
+  --xy-background-color: transparent;
+  --xy-background-pattern-color: var(--border);
+  --xy-edge-stroke: var(--muted-foreground);
+  --xy-edge-stroke-selected: var(--primary);
+  --xy-edge-label-background-color: var(--background);
+  --xy-edge-label-color: var(--foreground);
+  --xy-connectionline-stroke: var(--primary);
+  --xy-handle-background-color: var(--card);
+  --xy-handle-border-color: var(--muted-foreground);
+  --xy-node-background-color: var(--card);
+  --xy-node-color: var(--card-foreground);
+  --xy-node-border: 1px solid var(--border);
+  --xy-node-border-radius: var(--radius-md);
+  --xy-node-boxshadow-hover: 0 0 0 1px var(--muted-foreground);
+  --xy-node-boxshadow-selected: 0 0 0 1px var(--ring);
+  --xy-node-group-background-color: color-mix(in oklab, var(--muted) 50%, transparent);
+  --xy-selection-background-color: color-mix(in oklab, var(--primary) 8%, transparent);
+  --xy-selection-border: 1px dotted var(--primary);
+  --xy-resize-background-color: var(--primary);
+  --xy-controls-box-shadow: var(--shadow-sm);
+  --xy-controls-button-background-color: var(--popover);
+  --xy-controls-button-background-color-hover: var(--accent);
+  --xy-controls-button-color: var(--popover-foreground);
+  --xy-controls-button-color-hover: var(--accent-foreground);
+  --xy-controls-button-border-color: var(--border);
+  --xy-minimap-background-color: var(--popover);
+  --xy-minimap-mask-background-color: color-mix(in oklab, var(--background) 60%, transparent);
+  --xy-minimap-mask-stroke-color: var(--border);
+  --xy-minimap-node-background-color: var(--muted);
+  --xy-minimap-node-stroke-color: var(--border);
+  --xy-attribution-background-color: color-mix(in oklab, var(--background) 50%, transparent);
 }
