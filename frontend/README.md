@@ -55,28 +55,28 @@ In code, read variables through `process.env.<NAME>`. Declare each new variable 
 
 ## Scripts
 
-| Command                | What it does                                                                                         |
-| ---------------------- | ---------------------------------------------------------------------------------------------------- |
-| `pnpm dev`             | Start the Next.js dev server on port 3000, proxying `/api` to `http://localhost:8000`.               |
-| `pnpm dev:mock`        | Same as `dev`, with the API served from MSW mocks.                                                   |
-| `pnpm build`           | Type-check, then build the production app into `.next/`.                                             |
-| `pnpm start`           | Serve the production build. Run `pnpm build` first.                                                  |
-| `pnpm typecheck`       | Generate the route types (`next typegen`), then run the TypeScript compiler without emitting files.  |
-| `pnpm typecheck:watch` | Re-run the type check on every file change.                                                          |
-| `pnpm lint`            | Run ESLint on the whole project.                                                                     |
-| `pnpm lint:fix`        | Run ESLint and apply automatic fixes (import order, unnecessary assertions, ...).                    |
-| `pnpm format`          | Format all files with Prettier.                                                                      |
-| `pnpm format:check`    | Report files that Prettier would change, without writing.                                            |
-| `pnpm fix`             | `lint:fix` followed by `format`.                                                                     |
-| `pnpm check`           | `typecheck`, `lint`, `format:check`, and `test`, one after another. Run it before opening a PR.      |
-| `pnpm test`            | Run the unit tests once (Vitest).                                                                    |
-| `pnpm test:watch`      | Run the unit tests in watch mode.                                                                    |
-| `pnpm e2e`             | Run the Playwright tests. They start their own dev server on port 3100 with mocks enabled.           |
-| `pnpm e2e:install`     | Download the Chromium build used by Playwright. Needed once per machine before the first `pnpm e2e`. |
-| `pnpm ui:add <name>`   | Add a shadcn/ui component, see [Adding shadcn/ui components](#adding-shadcnui-components).           |
-| `pnpm codegen`         | Generate the typed API client from `openapi.json`.                                                   |
+| Command                | What it does                                                                                                           |
+| ---------------------- | ---------------------------------------------------------------------------------------------------------------------- |
+| `pnpm dev`             | Start the Next.js dev server on port 3000, proxying `/api` to `http://localhost:8000`.                                 |
+| `pnpm dev:mock`        | Same as `dev`, with the API served from MSW mocks.                                                                     |
+| `pnpm build`           | Type-check, then build the production app into `.next/`.                                                               |
+| `pnpm start`           | Serve the production build. Run `pnpm build` first.                                                                    |
+| `pnpm typecheck`       | Generate the route types (`next typegen`), then run the TypeScript compiler without emitting files.                    |
+| `pnpm typecheck:watch` | Re-run the type check on every file change.                                                                            |
+| `pnpm lint`            | Run ESLint on the whole project.                                                                                       |
+| `pnpm lint:fix`        | Run ESLint and apply automatic fixes (import order, unnecessary assertions, ...).                                      |
+| `pnpm format`          | Format all files with Prettier.                                                                                        |
+| `pnpm format:check`    | Report files that Prettier would change, without writing.                                                              |
+| `pnpm fix`             | `lint:fix` followed by `format`.                                                                                       |
+| `pnpm check`           | `typecheck`, `lint`, `format:check`, and `test`, one after another to keep memory use low. Run it before opening a PR. |
+| `pnpm test`            | Run the unit tests once (Vitest).                                                                                      |
+| `pnpm test:watch`      | Run the unit tests in watch mode.                                                                                      |
+| `pnpm e2e`             | Run the Playwright tests. They start their own dev server on port 3100 with mocks enabled.                             |
+| `pnpm e2e:install`     | Download the Chromium build used by Playwright. Needed once per machine before the first `pnpm e2e`.                   |
+| `pnpm ui:add <name>`   | Add a shadcn/ui component, see [Adding shadcn/ui components](#adding-shadcnui-components).                             |
+| `pnpm codegen`         | Generate the typed API client from `openapi.json`.                                                                     |
 
-`check` runs its steps sequentially, which keeps memory use low. Stop `pnpm dev` before `pnpm e2e` or `pnpm build`: Next.js allows one dev server per project folder, and each of these is a heavy process (see [Low-memory development](#low-memory-development)).
+Stop `pnpm dev` before `pnpm e2e`: Next.js allows one dev server per project folder.
 
 ## Project layout
 
@@ -96,8 +96,6 @@ frontend/
 │   └── test/                # Vitest setup
 └── tests/e2e/               # Playwright specs
 ```
-
-The full repository tree is in the [root README](../README.md#repository-structure).
 
 ## Adding shadcn/ui components
 
@@ -214,12 +212,12 @@ Vietnamese text needs a font that ships the `vietnamese` subset. The subsets of 
 - `(app)` is a route group: the name in parentheses is not part of the URL. Its `layout.tsx` wraps every page of the group in the app shell, and its `error.tsx` is the error boundary for those pages. A page that must not show the app shell (for example a public landing page) goes in another group with its own layout.
 - `src/app/` holds only routing files. A `page.tsx` renders a component from `src/features/`.
 - Files in `src/app/` are Server Components: they render on the server and cannot use state, effects, or event handlers. A component that needs those starts with `'use client'`. Most feature components are Client Components.
-- Links use `<Link href="...">` from `next/link`. `href` is type-checked against the existing routes (`typedRoutes` in `next.config.ts`); the route types are regenerated by `pnpm dev`, `pnpm build`, and `pnpm typecheck`.
+- Links use `<Link href="...">` from `next/link`. `href` is type-checked against the existing routes (`typedRoutes` in `next.config.ts`); `pnpm dev` and `pnpm build` regenerate the route types.
 - A library that touches `window` or `document` while it loads (PDF viewer, code editor, graph layout worker) is imported with `next/dynamic` and `ssr: false` from a Client Component.
 
 ## Low-memory development
 
-Measured on this project with a warm cache: the dev server uses about 300 MB when idle and about 700 MB right after compiling a page; the first compile after deleting `.next/` peaks above 1 GB.
+Measured on this project with a warm cache: the dev server uses about 300 MB when idle and about 700 MB right after compiling a page.
 
 Already configured in `next.config.ts`:
 
@@ -234,9 +232,9 @@ Turbopack compiles a route only when it is first requested, and releases memory 
 Habits that help:
 
 - Run one heavy process at a time: `pnpm dev`, `pnpm build`, `pnpm e2e`, and `pnpm check` are each heavy.
-- Keep `.next/`: it holds the compile cache, and deleting it makes the next start slow and memory-hungry.
+- Keep `.next/`: it holds the compile cache, and the first compile after deleting it is slow and peaks above 1 GB.
 - Restart `pnpm dev` after a long session if its memory keeps growing.
-- `eslint.editor.config.js` is a variant of the ESLint config for the editor: it leaves out the rules that need type information. Those rules load the whole TypeScript project and are the most memory-hungry part of the editor setup. To use it in VS Code, set `"eslint.options": { "overrideConfigFile": "eslint.editor.config.js" }` and `"eslint.workingDirectories": [{ "directory": "frontend", "changeProcessCWD": true }]` in your workspace settings (`.vscode/` is git-ignored), then restart the ESLint server after every change to `eslint.config.js`. The type-aware rules still run in `pnpm lint`, so run `pnpm check` before opening a PR.
+- `eslint.editor.config.js` is a variant of the ESLint config for the editor: it leaves out the rules that need type information. Those rules load the whole TypeScript project and are the most memory-hungry part of the editor setup. To use it in VS Code, set `"eslint.options": { "overrideConfigFile": "eslint.editor.config.js" }` and `"eslint.workingDirectories": [{ "directory": "frontend", "changeProcessCWD": true }]` in your workspace settings (`.vscode/` is git-ignored), then restart the ESLint server after every change to `eslint.config.js`. The type-aware rules still run in `pnpm lint` and `pnpm check`.
 - In VS Code, exclude build output from the editor's file watcher and search, and cap the TypeScript server, in your user or workspace settings:
   ```json
   {
@@ -279,7 +277,7 @@ A handler can answer differently depending on a parameter in the page URL, so ev
 | `/?mock-threads=error`   | HTTP 500                           |
 | `/?mock-threads=loading` | Nothing; the request stays pending |
 
-The parameter name is `mock-<resource>`. A handler reads it with `mockScenario('<resource>')` from `src/mocks/mock-scenario.utils.ts` and supports the scenarios: `empty`, `error`, `loading`. Without the parameter it returns the fixtures. Unit tests do not use scenarios; they override a handler with `server.use(...)`.
+The parameter name is `mock-<resource>`. A handler reads it with `mockScenario('<resource>')` from `src/mocks/mock-scenario.utils.ts` and supports the scenarios: `empty`, `error`, `loading`. Without the parameter it returns the fixtures.
 
 Components never import fixtures. They call the API functions of their feature, and MSW answers the request, so switching to the real backend changes no component code. Handlers that need a browser-only API (the SSE stream) are registered only in `msw-browser.setup.ts`.
 
