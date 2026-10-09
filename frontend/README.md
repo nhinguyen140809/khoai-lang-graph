@@ -165,15 +165,16 @@ With `--only theme`, only the theme variables in `src/app/styles.css` change. Wi
 
 ### Fonts
 
-| Role                    | Font         | Package                                              | CSS variable                           |
-| ----------------------- | ------------ | ---------------------------------------------------- | -------------------------------------- |
-| Headings (`h1` to `h6`) | Lato         | `@fontsource/lato` (weights 100, 300, 400, 700, 900) | `--font-heading` -> `--font-lato`      |
-| Body text               | Merriweather | `@fontsource-variable/merriweather`                  | `--font-body` -> `--font-merriweather` |
-| Code (`code`, `pre`)    | Roboto Mono  | `@fontsource-variable/roboto-mono`                   | `--font-mono` -> `--font-roboto-mono`  |
+The app uses the same fonts as VS Code with its default settings: the system UI font for the interface and the default editor font for code.
 
-Fonts are self-hosted through [Fontsource](https://fontsource.org) packages and bundled with the app CSS. Each package declares every subset with a `unicode-range`, so the browser only downloads the subsets a page uses.
+| Role                              | Windows  | macOS                           | Linux                           | CSS variable                                              |
+| --------------------------------- | -------- | ------------------------------- | ------------------------------- | --------------------------------------------------------- |
+| Interface, body text, headings    | Segoe UI | San Francisco (`-apple-system`) | `system-ui`, Ubuntu, Droid Sans | `--font-ui`, mapped to `--font-sans` and `--font-heading` |
+| Code (`code`, `pre`, `font-mono`) | Consolas | Menlo, Monaco                   | Droid Sans Mono                 | `--font-code`, mapped to `--font-mono`                    |
 
-To add or replace a font:
+Both are font stacks of installed system fonts, so no font file is downloaded. A family that lacks a glyph falls back to the next family in the stack.
+
+To use a web font instead, self-host it through a [Fontsource](https://fontsource.org) package:
 
 1. Install the package. Prefer the variable version when it exists (`@fontsource-variable/<name>`); otherwise use `@fontsource/<name>` and import each weight.
    ```bash
@@ -187,9 +188,9 @@ To add or replace a font:
    ```css
    --font-inter: 'Inter Variable', sans-serif;
    ```
-4. Point a role at it (`--font-heading`, `--font-body`, or `--font-mono` in the `@layer base` block) or a Tailwind token (`--font-sans`, `--font-serif`, `--font-mono` in `@theme inline`).
+4. Point a Tailwind token at it (`--font-sans`, `--font-heading`, or `--font-mono` in `@theme inline`).
 
-Vietnamese text needs a font that ships the `vietnamese` subset. Merriweather and Roboto Mono include it; Lato does not, so Vietnamese headings fall back to another font for characters such as `ư`, `ơ`, and `ạ`. The subsets of a package are listed on its Fontsource page and in its `files/` directory.
+Vietnamese text needs a font that ships the `vietnamese` subset. The subsets of a package are listed on its Fontsource page and in its `files/` directory.
 
 ## Routes, Server and Client Components
 

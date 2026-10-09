@@ -1,13 +1,6 @@
 @import 'tailwindcss';
 @import 'tw-animate-css';
 @import 'shadcn/tailwind.css';
-@import '@fontsource/lato/100.css';
-@import '@fontsource/lato/300.css';
-@import '@fontsource/lato/400.css';
-@import '@fontsource/lato/700.css';
-@import '@fontsource/lato/900.css';
-@import '@fontsource-variable/merriweather';
-@import '@fontsource-variable/roboto-mono';
 
 /* Streamdown ships Tailwind classes that must be scanned. */
 @source '../../node_modules/streamdown/dist/*.js';
@@ -35,9 +28,10 @@
  * as labels.
  */
 :root {
-  --font-lato: 'Lato', sans-serif;
-  --font-merriweather: 'Merriweather Variable', serif;
-  --font-roboto-mono: 'Roboto Mono Variable', monospace;
+  --font-ui:
+    -apple-system, BlinkMacSystemFont, 'Segoe WPC', 'Segoe UI', system-ui, Ubuntu, 'Droid Sans',
+    sans-serif;
+  --font-code: Consolas, Menlo, Monaco, 'Droid Sans Mono', 'Courier New', monospace;
 
   --background: #fbfbfb;
   --foreground: #403f53;
@@ -142,10 +136,9 @@
 }
 
 @theme inline {
-  --font-sans: var(--font-lato);
-  --font-serif: var(--font-merriweather);
-  --font-mono: var(--font-roboto-mono);
-  --font-heading: var(--font-lato);
+  --font-sans: var(--font-ui);
+  --font-mono: var(--font-code);
+  --font-heading: var(--font-ui);
   --color-background: var(--background);
   --color-foreground: var(--foreground);
   --color-card: var(--card);
@@ -214,11 +207,6 @@
   html {
     @apply font-sans;
   }
-  :root {
-    --font-heading: var(--font-lato);
-    --font-body: var(--font-merriweather);
-    --font-mono: var(--font-roboto-mono);
-  }
 
   /* Heading sizes follow mira: its largest title is text-lg, card and dialog titles are text-sm,
      and text inside components is text-xs. */
@@ -241,8 +229,7 @@
   }
 
   body {
-    font-family: var(--font-body);
-    line-height: 1.65;
+    line-height: 1.5;
   }
 
   code,
