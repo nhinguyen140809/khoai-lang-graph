@@ -29,6 +29,40 @@ export const toneClasses = {
 } as const satisfies Record<Tone, string>
 
 /**
+ * The chart colors, for graph parts that show order or magnitude rather than a status, for
+ * example how often a node of the workflow ran. Node and Edge take them besides the tones.
+ */
+export const chartTones = ['chart-1', 'chart-2', 'chart-3', 'chart-4', 'chart-5'] as const
+
+export type ChartTone = (typeof chartTones)[number]
+
+/** The colors that the graph components (Node and Edge) take. */
+export const graphTones = [...tones, ...chartTones] as const
+
+export type GraphTone = Tone | ChartTone
+
+/**
+ * The classes that a `color` prop of Node or Edge adds: those of the tones and the chart colors.
+ * A chart color fills, outlines and strokes. Some chart colors read poorly as text on the page
+ * (light chart-4 and chart-5 are below 2:1), so text keeps the text color: `--tone-text`, which
+ * the graph components read before `--tone-strong`. The classes are written out in full, so that
+ * Tailwind finds them.
+ */
+export const graphToneClasses = {
+  ...toneClasses,
+  'chart-1':
+    '[--tone:var(--chart-1)] [--tone-foreground:var(--chart-1-foreground)] [--tone-strong:var(--chart-1)] [--tone-soft:color-mix(in_oklab,var(--chart-1)_20%,transparent)] [--tone-border:var(--chart-1)] [--tone-text:var(--foreground)]',
+  'chart-2':
+    '[--tone:var(--chart-2)] [--tone-foreground:var(--chart-2-foreground)] [--tone-strong:var(--chart-2)] [--tone-soft:color-mix(in_oklab,var(--chart-2)_20%,transparent)] [--tone-border:var(--chart-2)] [--tone-text:var(--foreground)]',
+  'chart-3':
+    '[--tone:var(--chart-3)] [--tone-foreground:var(--chart-3-foreground)] [--tone-strong:var(--chart-3)] [--tone-soft:color-mix(in_oklab,var(--chart-3)_20%,transparent)] [--tone-border:var(--chart-3)] [--tone-text:var(--foreground)]',
+  'chart-4':
+    '[--tone:var(--chart-4)] [--tone-foreground:var(--chart-4-foreground)] [--tone-strong:var(--chart-4)] [--tone-soft:color-mix(in_oklab,var(--chart-4)_20%,transparent)] [--tone-border:var(--chart-4)] [--tone-text:var(--foreground)]',
+  'chart-5':
+    '[--tone:var(--chart-5)] [--tone-foreground:var(--chart-5-foreground)] [--tone-strong:var(--chart-5)] [--tone-soft:color-mix(in_oklab,var(--chart-5)_20%,transparent)] [--tone-border:var(--chart-5)] [--tone-text:var(--foreground)]',
+} as const satisfies Record<GraphTone, string>
+
+/**
  * How a component reads its `variant` (the fill) and `color` props. `legacy` maps each variant
  * name of shadcn/ui to a fill and a color, so that examples from its documentation keep working.
  * `defaultColors` gives the color of each fill when no color is set.

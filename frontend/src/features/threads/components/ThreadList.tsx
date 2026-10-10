@@ -1,61 +1,75 @@
 'use client'
 
-import { MessageSquareTextIcon } from 'lucide-react'
 import Link from 'next/link'
 import { usePathname } from 'next/navigation'
 
 import { EmptyState, ErrorState, LoadingState } from '@/components/state'
-import { SidebarMenuButton, SidebarMenuItem } from '@/components/ui/sidebar'
+import { Badge } from '@/components/ui/badge'
 
-import { useThreads } from '../hooks/useThreads'
+import { useProjectThreads } from '../hooks/useProjectThreads'
+import { threadTitle } from '../threads.utils'
 
-// The state messages are text, so they are hidden when the sidebar is collapsed to icons.
-const stateItemClassName = 'group-data-[collapsible=icon]:hidden'
+interface ThreadListProps {
+  projectId: string
+}
 
-/** Existing threads as sidebar menu items; render inside a <SidebarMenu>. */
-export function ThreadList() {
+/** The threads of a project, newest first, each with the stage of its latest run. */
+export function ThreadList({ projectId }: ThreadListProps) {
   const pathname = usePathname()
-  const threads = useThreads()
+  const threads = useProjectThreads(projectId)
 
   if (threads.isPending) {
-    return (
-      <SidebarMenuItem className={stateItemClassName}>
-        <LoadingState label="Loading threads" rows={3} size="compact" />
-      </SidebarMenuItem>
-    )
+    return <LoadingState label="Loading threads" rows={4} size="compact" className="px-3" />
   }
 
   if (threads.isError) {
     return (
-      <SidebarMenuItem className={stateItemClassName}>
-        <ErrorState
-          message={threads.error.message}
-          onRetry={() => void threads.refetch()}
-          size="compact"
-        />
-      </SidebarMenuItem>
+      <ErrorState
+        message={threads.error.message}
+        onRetry={() => void threads.refetch()}
+        size="compact"
+        className="px-3"
+      />
     )
   }
 
   if (threads.data.length === 0) {
-    return (
-      <SidebarMenuItem className={stateItemClassName}>
-        <EmptyState title="No threads yet" size="compact" />
-      </SidebarMenuItem>
-    )
+    return <EmptyState title="No threads yet" size="compact" className="px-3" />
   }
 
-  return threads.data.map((thread) => {
-    const href = `/threads/${encodeURIComponent(thread.id)}` as const
-    return (
-      <SidebarMenuItem key={thread.id}>
-        <SidebarMenuButton asChild tooltip={thread.title} isActive={pathname === href}>
-          <Link href={href}>
-            <MessageSquareTextIcon aria-hidden />
-            <span>{thread.title}</span>
-          </Link>
-        </SidebarMenuButton>
-      </SidebarMenuItem>
-    )
-  })
+  return (
+    <ul className="flex flex-col gap-px px-1 pb-2">
+      {threads.data.map((thread) => {
+        const href =
+          `/projects/${encodeURIComponent(projectId)}/chat/${encodeURIComponent(thread.id)}` as const
+        const waiting = thread.active_run_status === 'interrupted'
+        return (
+          <li key={thread.id}>
+            <Link
+              href={href}
+              aria-current={pathname === href ? 'page' : undefined}
+              className="flex flex-col gap-0.5 rounded-md px-2 py-1.5 outline-none hover:bg-sidebar-accent focus-visible:ring-2 focus-visible:ring-ring/50 aria-[current=page]:bg-sidebar-accent"
+            >
+              <span className="flex items-center gap-2">
+                <span className="truncate text-xs font-medium text-foreground">
+                  {threadTitle(thread)}
+                </span>
+                {waiting && (
+                  <>
+                    <Badge aria-hidden variant="soft" color="warning" className="ml-auto">
+                      1
+                    </Badge>
+                    <span className="sr-only">, 1 review waiting</span>
+                  </>
+                )}
+              </span>
+              <span className="truncate font-mono text-[0.625rem] text-muted-foreground">
+                {thread.current_stage ?? 'No run yet'}
+              </span>
+            </Link>
+          </li>
+        )
+      })}
+    </ul>
+  )
 }

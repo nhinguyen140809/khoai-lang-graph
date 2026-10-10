@@ -7,3 +7,5 @@ pnpm-lock.yaml
 openapi.json
 src/api/generated
 public/mockServiceWorker.js
+# Copies of the workflow definition and content schemas, kept identical to the specification
+src/mocks/data

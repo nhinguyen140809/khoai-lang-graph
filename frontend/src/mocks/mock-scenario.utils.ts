@@ -1,13 +1,56 @@
+import { delay } from 'msw'
+
+import { problem } from './problem.utils'
+
 export type MockScenario = 'default' | 'empty' | 'error' | 'loading'
 
 const SCENARIOS: readonly string[] = ['empty', 'error', 'loading']
 
+/** A parameter of the page address, for scenarios that are not a query state. */
+export function pageParam(name: string): string | null {
+  if (typeof window === 'undefined') return null
+  return new URLSearchParams(window.location.search).get(name)
+}
+
 /**
  * Scenario for one mocked resource, chosen in the page URL: `?mock-threads=error` makes the
  * threads handlers answer with an error. Without the parameter, handlers return their fixtures.
+ * For an endpoint that returns one record, `empty` answers 404.
  */
 export function mockScenario(resource: string): MockScenario {
-  if (typeof window === 'undefined') return 'default'
-  const value = new URLSearchParams(window.location.search).get(`mock-${resource}`)
+  const value = pageParam(`mock-${resource}`)
   return value !== null && SCENARIOS.includes(value) ? (value as MockScenario) : 'default'
+}
+
+/**
+ * Answers the `error` and `loading` scenarios, which every handler answers the same way: HTTP 500,
+ * or a request that never ends. Returns null for the scenarios each handler answers itself.
+ */
+export async function answerScenario(scenario: MockScenario): Promise<Response | null> {
+  if (scenario === 'error') return problem(500, 'internal_error', 'Internal error')
+  if (scenario === 'loading') await delay('infinite')
+  return null
+}
+
+/** The state of the run of the API examples: running, waiting for review, failed, or done. */
+export type MockRunState = 'running' | 'waiting' | 'failed' | 'done'
+
+const RUN_STATES: readonly string[] = ['running', 'waiting', 'failed', 'done']
+
+/**
+ * Whether several runs of the mentor platform are unfinished at once, chosen in the page URL with
+ * `?mock-parallel-runs=many`: besides the main thread, "Booking rules" has a running run and
+ * "Export formats" a queued one.
+ */
+export function mockParallelRuns(): boolean {
+  return pageParam('mock-parallel-runs') === 'many'
+}
+
+/**
+ * The state of the mock run that waits at the analysis review by default, chosen in the page URL
+ * with `?mock-run-state=running` (or `failed`, `done`). The threads and runs handlers read it.
+ */
+export function mockRunState(): MockRunState {
+  const value = pageParam('mock-run-state')
+  return value !== null && RUN_STATES.includes(value) ? (value as MockRunState) : 'waiting'
 }

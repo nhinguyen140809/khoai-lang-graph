@@ -61,10 +61,11 @@ export default defineConfig([
     languageOptions: {
       ecmaVersion: 2023,
       globals: globals.browser,
-      parserOptions: {
-        projectService: true,
-        tsconfigRootDir: import.meta.dirname,
-      },
+      // scripts/lint.mjs lints one group of folders per process and names a TypeScript project of
+      // that group only; ESLint run by itself, or in the editor, finds the tsconfig.json of the file.
+      parserOptions: process.env.ESLINT_TSCONFIG
+        ? { project: process.env.ESLINT_TSCONFIG, tsconfigRootDir: import.meta.dirname }
+        : { projectService: true, tsconfigRootDir: import.meta.dirname },
     },
     plugins: {
       'simple-import-sort': simpleImportSort,
@@ -88,6 +89,31 @@ export default defineConfig([
             },
           ],
         },
+      ],
+    },
+  },
+  {
+    // Browser storage is read and written through src/lib/browser-storage.utils.ts only, which
+    // handles storage that is missing, blocked or full.
+    files: ['src/**/*.{ts,tsx}', 'tests/**/*.ts'],
+    ignores: ['src/lib/browser-storage.utils.ts'],
+    rules: {
+      'no-restricted-globals': [
+        'error',
+        ...['localStorage', 'sessionStorage'].map((name) => ({
+          name,
+          message: 'Use browserStorage or persistStorage from @/lib/browser-storage.utils.',
+        })),
+      ],
+      'no-restricted-properties': [
+        'error',
+        ...['window', 'globalThis', 'self'].flatMap((object) =>
+          ['localStorage', 'sessionStorage'].map((property) => ({
+            object,
+            property,
+            message: 'Use browserStorage or persistStorage from @/lib/browser-storage.utils.',
+          })),
+        ),
       ],
     },
   },

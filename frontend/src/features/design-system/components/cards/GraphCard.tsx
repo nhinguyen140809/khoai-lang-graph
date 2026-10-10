@@ -18,7 +18,7 @@ import { Flow } from '@/components/ui/flow'
 import { Handle } from '@/components/ui/handle'
 import { Node, NodeContent, NodeHeader, NodeHeaderTitle } from '@/components/ui/node'
 import { NodeStatusIndicator } from '@/components/ui/node-status-indicator'
-import { tones } from '@/lib/tone.constants'
+import { graphTones } from '@/lib/tone.constants'
 
 import {
   type TraceEdge,
@@ -118,7 +118,7 @@ const edgeSampleNodes: (SamplePoint | SampleCaption)[] = [
   ...edgeVariants.map((variant, column) =>
     caption(variant, column * columnWidth + edgeLength / 2, -12, [0.5, 1]),
   ),
-  ...tones.flatMap((color, row) => [
+  ...graphTones.flatMap((color, row) => [
     caption(color, -16, row * rowHeight, [1, 0.5]),
     ...edgeVariants.flatMap((variant, column) => [
       point(`${variant}-${color}-from`, column * columnWidth, row * rowHeight),
@@ -127,7 +127,7 @@ const edgeSampleNodes: (SamplePoint | SampleCaption)[] = [
   ]),
 ]
 
-const edgeSampleEdges: TraceEdge[] = tones.flatMap((color) =>
+const edgeSampleEdges: TraceEdge[] = graphTones.flatMap((color) =>
   edgeVariants.map((variant) => ({
     id: `${variant}-${color}`,
     type: 'link',
@@ -144,7 +144,8 @@ export function GraphCard() {
         <CardTitle>Trace graph</CardTitle>
         <CardDescription>
           Nodes take <Code>variant</Code> and <Code>color</Code> like badges, edges a line style and
-          a color; the ring shows the run status (REQ-001 is loading).
+          a color; besides the tones they take the five chart colors. The ring shows the run status
+          (REQ-001 is loading).
         </CardDescription>
       </CardHeader>
       <CardContent className="flex flex-col gap-3 p-0">
@@ -163,7 +164,7 @@ export function GraphCard() {
         {nodeVariants.map((variant) => (
           <SampleGroup key={variant} label={variant} className="px-4">
             <div className="flex flex-wrap gap-1.5">
-              {tones.map((color) => (
+              {graphTones.map((color) => (
                 <Node key={color} variant={variant} color={color}>
                   <NodeHeader className="mb-0 px-2 py-1">
                     <NodeHeaderTitle>{color}</NodeHeaderTitle>
@@ -174,7 +175,7 @@ export function GraphCard() {
           </SampleGroup>
         ))}
         <SampleGroup label="edges" className="px-4">
-          <div className="h-52 rounded-md border bg-background">
+          <div className="h-80 rounded-md border bg-background">
             <Flow
               defaultNodes={edgeSampleNodes}
               defaultEdges={edgeSampleEdges}

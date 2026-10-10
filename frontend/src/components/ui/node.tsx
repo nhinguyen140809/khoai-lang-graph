@@ -2,9 +2,10 @@ import { cva } from 'class-variance-authority'
 import { cn } from 'cn'
 import type * as React from 'react'
 
-import { type Tone, toneClasses } from '@/lib/tone.constants'
+import { type GraphTone, graphToneClasses } from '@/lib/tone.constants'
 
-// `variant` is the fill and `color` the meaning; the color sets the --tone variables these read.
+// `variant` is the fill and `color` the meaning, a tone or a chart color; the color sets the
+// --tone variables these read. The header text of a chart color keeps the text color.
 // Hover and selection keep the color of the node: a ring of the strong color surrounds it, light
 // on hover and darker while selected, and the border of outline and soft nodes takes that color.
 const nodeVariants = cva(
@@ -21,13 +22,13 @@ const nodeVariants = cva(
         soft: 'bg-[linear-gradient(var(--tone-soft),var(--tone-soft))]',
         solid: 'border-transparent bg-(--tone) text-(--tone-foreground)',
       },
-      color: toneClasses,
+      color: graphToneClasses,
     },
     compoundVariants: [
       {
         variant: ['outline', 'soft'],
         class:
-          'border-(--tone-border) bg-card text-card-foreground hover:border-(--tone-strong) *:data-[slot=node-header]:text-(--tone-strong) flow-selected:border-(--tone-strong)',
+          'border-(--tone-border) bg-card text-card-foreground hover:border-(--tone-strong) *:data-[slot=node-header]:text-[var(--tone-text,var(--tone-strong))] flow-selected:border-(--tone-strong)',
       },
     ],
   },
@@ -42,7 +43,7 @@ function Node({
   ...props
 }: Omit<React.ComponentProps<'div'>, 'color'> & {
   variant?: NodeVariant | undefined
-  color?: Tone | undefined
+  color?: GraphTone | undefined
 }) {
   return (
     <div

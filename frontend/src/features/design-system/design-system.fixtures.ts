@@ -5,7 +5,7 @@ import type { Edge, Node } from '@xyflow/react'
 import type { EdgeVariant } from '@/components/ui/edge'
 import type { NodeVariant } from '@/components/ui/node'
 import type { NodeStatus } from '@/components/ui/node-status-indicator'
-import type { Tone } from '@/lib/tone.constants'
+import type { GraphTone } from '@/lib/tone.constants'
 
 export type Priority = 'must' | 'should' | 'could' | 'wont'
 
@@ -104,7 +104,7 @@ export interface TraceNodeData extends Record<string, unknown> {
   key: string
   title: string
   variant: NodeVariant
-  color: Tone
+  color: GraphTone
   status: NodeStatus
 }
 
@@ -163,7 +163,7 @@ export const traceNodes: TraceNode[] = [
 
 export interface TraceEdgeData extends Record<string, unknown> {
   variant: EdgeVariant
-  color: Tone
+  color: GraphTone
 }
 
 export type TraceEdge = Edge<TraceEdgeData, 'link'>

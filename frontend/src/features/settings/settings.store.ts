@@ -1,6 +1,8 @@
 import { create } from 'zustand'
 import { persist } from 'zustand/middleware'
 
+import { persistStorage } from '@/lib/browser-storage.utils'
+
 interface SettingsState {
   /**
    * One-off model overrides per agent role (`provider:model`), sent with the next run as the
@@ -28,6 +30,6 @@ export const useSettingsStore = create<SettingsState>()(
         })
       },
     }),
-    { name: 'khoailanggraph-settings' },
+    { name: 'khoailanggraph-settings', storage: persistStorage() },
   ),
 )

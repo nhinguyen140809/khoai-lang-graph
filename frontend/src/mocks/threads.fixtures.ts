@@ -1,9 +1,117 @@
 import type { Thread } from '@/features/threads'
 
-// Mock data returned by threads.handlers.ts. Values are fixed (no random ids, no Date.now()) so
-// dev mocking, unit tests, and E2E tests all see the same data.
-export const mockThreads: Thread[] = [
-  { id: 'thread-mock-1', title: 'Summarize the project plan', updated_at: '2026-09-30T09:15:00Z' },
-  { id: 'thread-mock-2', title: 'Compare agent topologies', updated_at: '2026-09-29T16:40:00Z' },
-  { id: 'thread-mock-3', title: 'Draft the evaluation rubric', updated_at: '2026-09-27T08:05:00Z' },
-]
+import { PROJECT_IDS, RUN_IDS, THREAD_IDS, USER_ID } from './mock-ids.constants'
+import { mockParallelRuns, type MockRunState } from './mock-scenario.utils'
+
+// Mock threads. The main thread of the mentor platform holds the run of the API examples, so its
+// stage and its unfinished run follow the `mock-run-state` scenario.
+
+function thread(fields: Partial<Thread> & Pick<Thread, 'id' | 'project_id'>): Thread {
+  return {
+    created_by: USER_ID,
+    title: 'Main thread',
+    status: 'active',
+    current_stage: 'done',
+    active_run_id: null,
+    active_run_status: null,
+    last_message_at: '2026-10-01T09:00:00Z',
+    created_at: '2026-10-01T09:00:00Z',
+    updated_at: '2026-10-01T09:00:00Z',
+    ...fields,
+  }
+}
+
+const mentorMainStages = {
+  running: {
+    current_stage: 'analysis',
+    active_run_id: RUN_IDS.mentorMain3,
+    active_run_status: 'running',
+  },
+  waiting: {
+    current_stage: 'analysis_review',
+    active_run_id: RUN_IDS.mentorMain3,
+    active_run_status: 'interrupted',
+  },
+  failed: { current_stage: 'analysis', active_run_id: null, active_run_status: null },
+  done: { current_stage: 'done', active_run_id: null, active_run_status: null },
+} as const satisfies Record<
+  MockRunState,
+  Pick<Thread, 'current_stage' | 'active_run_id' | 'active_run_status'>
+>
+
+/** Every thread of the mock data, newest message first. */
+export function mockThreads(state: MockRunState): Thread[] {
+  const parallel = mockParallelRuns()
+  return [
+    thread({
+      id: THREAD_IDS.mentorMain,
+      project_id: PROJECT_IDS.mentor,
+      ...mentorMainStages[state],
+      last_message_at: '2026-10-06T08:41:12Z',
+      created_at: '2026-10-02T08:09:30Z',
+      updated_at: '2026-10-06T08:41:12Z',
+    }),
+    thread({
+      id: THREAD_IDS.campusMain,
+      project_id: PROJECT_IDS.campus,
+      last_message_at: '2026-10-05T16:20:00Z',
+      created_at: '2026-10-05T15:49:30Z',
+      updated_at: '2026-10-05T16:20:00Z',
+    }),
+    thread({
+      id: THREAD_IDS.mentorBooking,
+      project_id: PROJECT_IDS.mentor,
+      title: 'Booking rules',
+      ...(parallel && {
+        current_stage: 'interviewing',
+        active_run_id: RUN_IDS.mentorBooking1,
+        active_run_status: 'running',
+      }),
+      last_message_at: '2026-10-04T14:05:00Z',
+      created_at: '2026-10-04T13:39:00Z',
+      updated_at: '2026-10-04T14:05:00Z',
+    }),
+    ...(parallel
+      ? [
+          thread({
+            id: THREAD_IDS.mentorExport,
+            project_id: PROJECT_IDS.mentor,
+            title: 'Export formats',
+            current_stage: 'planning',
+            active_run_id: RUN_IDS.mentorExport1,
+            active_run_status: 'queued',
+            last_message_at: '2026-10-04T11:00:00Z',
+            created_at: '2026-10-04T11:00:00Z',
+            updated_at: '2026-10-04T11:00:00Z',
+          }),
+        ]
+      : []),
+    thread({
+      id: THREAD_IDS.libraryMain,
+      project_id: PROJECT_IDS.library,
+      current_stage: 'interviewing',
+      active_run_id: RUN_IDS.libraryMain1,
+      active_run_status: 'running',
+      last_message_at: '2026-10-03T10:12:00Z',
+      created_at: '2026-10-03T10:09:30Z',
+      updated_at: '2026-10-03T10:12:00Z',
+    }),
+    thread({
+      id: THREAD_IDS.laundryMain,
+      project_id: PROJECT_IDS.laundry,
+      last_message_at: '2026-09-20T09:00:00Z',
+      created_at: '2026-09-20T08:39:00Z',
+      updated_at: '2026-09-20T09:00:00Z',
+    }),
+  ]
+}
+
+/** The threads as they are before any run: no stage and no unfinished run. */
+export function withoutRuns(threads: Thread[]): Thread[] {
+  return threads.map((item) => ({
+    ...item,
+    current_stage: null,
+    active_run_id: null,
+    active_run_status: null,
+  }))
+}

@@ -1,7 +1,7 @@
 import { BaseEdge, type BaseEdgeProps } from '@xyflow/react'
 import { cn } from 'cn'
 
-import { type Tone, toneClasses } from '@/lib/tone.constants'
+import { type GraphTone, graphToneClasses } from '@/lib/tone.constants'
 
 const lineStyles = {
   solid: '',
@@ -14,7 +14,8 @@ type EdgeVariant = keyof typeof lineStyles
 /**
  * An edge path: `variant` is the line style and `color` the meaning. React Flow draws the path
  * and the label with the --xy-edge-* variables set here, and switches to the selected stroke
- * itself. A neutral edge is muted at rest and takes the text color while selected.
+ * itself. A neutral edge is muted at rest and takes the text color while selected. A chart color
+ * strokes the line; the label keeps the text color.
  */
 function Edge({
   path,
@@ -24,7 +25,7 @@ function Edge({
   ...props
 }: Omit<BaseEdgeProps, 'color'> & {
   variant?: EdgeVariant | undefined
-  color?: Tone | undefined
+  color?: GraphTone | undefined
 }) {
   return (
     <g
@@ -32,8 +33,8 @@ function Edge({
       data-variant={variant}
       data-color={color}
       className={cn(
-        'group/edge [--xy-edge-label-color:var(--tone-strong)] [--xy-edge-stroke-selected:var(--tone-strong)]',
-        toneClasses[color],
+        'group/edge [--xy-edge-label-color:var(--tone-text,var(--tone-strong))] [--xy-edge-stroke-selected:var(--tone-strong)]',
+        graphToneClasses[color],
         color === 'neutral'
           ? '[--xy-edge-stroke:var(--muted-foreground)]'
           : '[--xy-edge-stroke:var(--tone-strong)]',

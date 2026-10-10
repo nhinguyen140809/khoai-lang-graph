@@ -1,1 +1,1 @@
-export { ArtifactPanel } from './components/ArtifactPanel'
+export type { ArtifactKindsSummary } from './artifacts.types'

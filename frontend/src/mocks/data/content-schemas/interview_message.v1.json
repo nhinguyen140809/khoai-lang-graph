@@ -1,0 +1,69 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "$id": "items/interview_message/v1",
+  "title": "Interview message",
+  "description": "One question or answer in an interview. Its key is the persona key, '#', and its position.",
+  "x-level": "item",
+  "x-kind": "interview_message",
+  "x-schema-version": 1,
+  "x-ui-display": "transcript",
+  "x-ui-title-field": "content",
+  "x-ui-list-fields": [
+    "turn",
+    "role",
+    "content"
+  ],
+  "x-ui-field-order": [
+    "turn",
+    "role",
+    "content",
+    "iteration",
+    "topic"
+  ],
+  "type": "object",
+  "additionalProperties": false,
+  "properties": {
+    "turn": {
+      "type": "integer",
+      "minimum": 1,
+      "description": "A question and its answer share a turn.",
+      "x-ui-widget": "number"
+    },
+    "role": {
+      "type": "string",
+      "enum": [
+        "interviewer",
+        "persona"
+      ],
+      "description": "Who wrote the message.",
+      "x-ui-widget": "select"
+    },
+    "content": {
+      "type": "string",
+      "description": "The text of the message.",
+      "x-ui-widget": "textarea"
+    },
+    "iteration": {
+      "type": "integer",
+      "minimum": 0,
+      "description": "0 for the first interview, higher for rework rounds.",
+      "x-ui-widget": "number"
+    },
+    "topic": {
+      "type": [
+        "string",
+        "null"
+      ],
+      "x-value-from": "elicitation_plan.topics",
+      "description": "The plan topic the question targets.",
+      "x-ui-widget": "select"
+    }
+  },
+  "required": [
+    "turn",
+    "role",
+    "content",
+    "iteration",
+    "topic"
+  ]
+}

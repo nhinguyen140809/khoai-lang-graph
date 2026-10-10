@@ -32,7 +32,8 @@
  * The five chart colors are yellow, from lemon to amber, in steps of lightness, so they encode
  * order or magnitude: chart-1 stands out most, chart-5 sits closest to the background. In the
  * light theme chart-4 and chart-5 are below 2:1 on the background, so charts show their values
- * as labels.
+ * as labels. Each chart color also has a -foreground for text on it, at 4.5:1 or more: the navy
+ * #011627 of Night Owl, or black where the navy stays below 4.5:1 (light chart-1, dark chart-5).
  */
 :root {
   --font-ui:
@@ -71,6 +72,11 @@
   --chart-3: #dc9e08;
   --chart-4: #edb90c;
   --chart-5: #fbd509;
+  --chart-1-foreground: #000000;
+  --chart-2-foreground: #011627;
+  --chart-3-foreground: #011627;
+  --chart-4-foreground: #011627;
+  --chart-5-foreground: #011627;
   --sidebar: #f0f0f0;
   --sidebar-foreground: #403f53;
   --sidebar-primary: #3460be;
@@ -123,6 +129,11 @@
   --chart-3: #e7a807;
   --chart-4: #cd8505;
   --chart-5: #b06505;
+  --chart-1-foreground: #011627;
+  --chart-2-foreground: #011627;
+  --chart-3-foreground: #011627;
+  --chart-4-foreground: #011627;
+  --chart-5-foreground: #000000;
   --sidebar: #011627;
   --sidebar-foreground: #89a4bb;
   --sidebar-primary: #82aaff;
@@ -177,6 +188,11 @@
   --color-chart-3: var(--chart-3);
   --color-chart-4: var(--chart-4);
   --color-chart-5: var(--chart-5);
+  --color-chart-1-foreground: var(--chart-1-foreground);
+  --color-chart-2-foreground: var(--chart-2-foreground);
+  --color-chart-3-foreground: var(--chart-3-foreground);
+  --color-chart-4-foreground: var(--chart-4-foreground);
+  --color-chart-5-foreground: var(--chart-5-foreground);
   --color-sidebar: var(--sidebar);
   --color-sidebar-foreground: var(--sidebar-foreground);
   --color-sidebar-primary: var(--sidebar-primary);

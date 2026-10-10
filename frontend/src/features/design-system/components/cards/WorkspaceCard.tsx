@@ -100,7 +100,7 @@ export function WorkspaceCard() {
               </div>
             </ScrollArea>
           </ResizablePanel>
-          <ResizableHandle />
+          <ResizableHandle className="w-px bg-border" />
           <ResizablePanel defaultSize="46" minSize="30">
             <div className="flex h-full flex-col">
               <div className="flex h-8 items-stretch border-b bg-sidebar text-xs">
@@ -136,7 +136,7 @@ export function WorkspaceCard() {
               </div>
             </div>
           </ResizablePanel>
-          <ResizableHandle />
+          <ResizableHandle className="w-px bg-border" />
           <ResizablePanel defaultSize="30" minSize="20">
             <div className="flex h-full flex-col gap-1 p-3 font-mono text-xs">
               {chatLines.map((line) => (
