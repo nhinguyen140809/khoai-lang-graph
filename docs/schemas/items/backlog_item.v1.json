@@ -1,0 +1,139 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "$id": "items/backlog_item/v1",
+  "title": "Backlog item",
+  "description": "An epic or a user story. Its order in the backlog is the position of the item.",
+  "x-level": "item",
+  "x-kind": "backlog_item",
+  "x-schema-version": 1,
+  "x-key-prefix": "US for a user story, EP for an epic",
+  "x-ui-display": "table",
+  "x-ui-title-field": "title",
+  "x-ui-list-fields": [
+    "title",
+    "item_type",
+    "priority",
+    "story_points",
+    "delivery_status"
+  ],
+  "x-ui-field-order": [
+    "item_type",
+    "title",
+    "as_a",
+    "i_want",
+    "so_that",
+    "acceptance_criteria",
+    "priority",
+    "story_points",
+    "delivery_status"
+  ],
+  "type": "object",
+  "additionalProperties": false,
+  "properties": {
+    "item_type": {
+      "type": "string",
+      "enum": [
+        "epic",
+        "user_story"
+      ],
+      "description": "Epic or user story.",
+      "x-ui-widget": "select"
+    },
+    "title": {
+      "type": "string",
+      "description": "Short name.",
+      "x-ui-widget": "text"
+    },
+    "as_a": {
+      "type": [
+        "string",
+        "null"
+      ],
+      "description": "Role of the user. Required for a user story, null for an epic.",
+      "x-ui-widget": "text"
+    },
+    "i_want": {
+      "type": [
+        "string",
+        "null"
+      ],
+      "description": "What the user wants to do. Required for a user story, null for an epic.",
+      "x-ui-widget": "text"
+    },
+    "so_that": {
+      "type": [
+        "string",
+        "null"
+      ],
+      "description": "The benefit. Required for a user story, null for an epic.",
+      "x-ui-widget": "text"
+    },
+    "acceptance_criteria": {
+      "type": "array",
+      "description": "Scenarios that show the item is done.",
+      "items": {
+        "type": "object",
+        "additionalProperties": false,
+        "properties": {
+          "given": {
+            "type": "string",
+            "description": "Starting situation.",
+            "x-ui-widget": "text"
+          },
+          "when": {
+            "type": "string",
+            "description": "Action.",
+            "x-ui-widget": "text"
+          },
+          "then": {
+            "type": "string",
+            "description": "Expected result.",
+            "x-ui-widget": "text"
+          }
+        },
+        "required": [
+          "given",
+          "when",
+          "then"
+        ]
+      },
+      "x-ui-widget": "object-list"
+    },
+    "priority": {
+      "type": "string",
+      "x-value-list": "priority",
+      "description": "Importance.",
+      "x-ui-widget": "select"
+    },
+    "story_points": {
+      "type": [
+        "integer",
+        "null"
+      ],
+      "minimum": 0,
+      "description": "Relative size. Null when not estimated.",
+      "x-ui-widget": "number"
+    },
+    "delivery_status": {
+      "type": "string",
+      "enum": [
+        "todo",
+        "in_progress",
+        "done"
+      ],
+      "description": "Progress of the work. Set by the user.",
+      "x-ui-widget": "select"
+    }
+  },
+  "required": [
+    "item_type",
+    "title",
+    "as_a",
+    "i_want",
+    "so_that",
+    "acceptance_criteria",
+    "priority",
+    "story_points",
+    "delivery_status"
+  ]
+}

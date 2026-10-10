@@ -1,0 +1,861 @@
+// Database diagram in DBML. Paste into https://dbdiagram.io to render.
+// Target design: no migration exists yet.
+
+Project khoailanggraph {
+  database_type: 'PostgreSQL'
+  Note: '''
+  Relational schema for application data.
+  Requirements engineering output has two levels: "artifacts" (work products) and "artifact_items" (the entries inside them).
+  Items and trace links form a property graph: "artifact_items" are the nodes, "trace_links" are the edges.
+  Every kind uses the same row shape; the fields of a kind are in the "content" JSON column and are validated by the application.
+  Names that an experiment may change are text, not enums: agent_role, stage, node, kind, link_type, option, role, template.
+  The application checks them against the workflow definition version recorded on the run (runs.workflow_name, runs.workflow_version).
+  Workflow checkpoint tables are created and owned by the agent runtime and are not listed here; they are keyed by threads.id.
+  The model catalog is server configuration, not a table.
+  '''
+}
+
+// ---------------------------------------------------------------- enums
+
+Enum user_role {
+  user
+  admin
+}
+
+Enum user_status {
+  active
+  disabled
+}
+
+Enum auth_provider {
+  google
+  github
+}
+
+Enum theme {
+  light
+  dark
+  system
+}
+
+Enum language {
+  en
+  vi
+}
+
+Enum project_status {
+  active
+  archived
+}
+
+Enum member_role {
+  owner
+  editor
+  viewer
+}
+
+Enum extraction_status {
+  pending
+  ready
+  failed
+}
+
+Enum thread_status {
+  active
+  archived
+}
+
+Enum message_delivery {
+  started_run
+  pending
+  delivered
+  undelivered
+}
+
+Enum message_author {
+  user
+  agent
+  system
+}
+
+Enum run_status {
+  queued
+  running
+  interrupted
+  succeeded
+  failed
+  cancelled
+}
+
+Enum step_status {
+  running
+  succeeded
+  failed
+  skipped
+}
+
+Enum run_event_type {
+  node_start
+  node_end
+  token
+  tool_call
+  artifact_created
+  artifact_delta
+  interrupt
+  message_delivered
+  error
+  done
+}
+
+Enum interrupt_status {
+  pending
+  resolved
+  cancelled
+}
+
+Enum actor {
+  agent
+  user
+}
+
+Enum review_status {
+  draft
+  approved
+  rejected
+  superseded
+}
+
+Enum change_reason {
+  generated
+  user_edit
+  rework
+  restored
+  deleted
+}
+
+Enum export_format {
+  markdown
+  pdf
+  docx
+  csv
+  json
+}
+
+Enum export_status {
+  pending
+  ready
+  failed
+}
+
+Enum activity_action {
+  created
+  updated
+  deleted
+  restored
+  approved
+  rejected
+  exported
+  run_started
+  run_finished
+}
+
+Enum notification_type {
+  review_needed
+  run_succeeded
+  run_failed
+  export_ready
+}
+
+// ---------------------------------------------------------------- identity and settings
+
+Table users {
+  id uuid [pk]
+  email text [not null, unique, note: 'Lower-cased']
+  password_hash text [note: 'Server-only. Null when the user signs in only through an external provider']
+  display_name text [not null]
+  avatar_url text
+  role user_role [not null, default: 'user']
+  status user_status [not null, default: 'active']
+  email_verified_at timestamptz
+  last_login_at timestamptz
+  monthly_budget_usd numeric [note: 'Null means the server default']
+  created_at timestamptz [not null]
+  updated_at timestamptz [not null]
+  deleted_at timestamptz
+}
+
+Table auth_identities {
+  id uuid [pk]
+  user_id uuid [not null, ref: > users.id]
+  provider auth_provider [not null]
+  provider_subject text [not null]
+  created_at timestamptz [not null]
+
+  indexes {
+    (provider, provider_subject) [unique]
+  }
+  Note: 'Later phase'
+}
+
+Table sessions {
+  id uuid [pk]
+  user_id uuid [not null, ref: > users.id]
+  token_hash text [not null, unique, note: 'Server-only. The token itself is not stored']
+  expires_at timestamptz [not null]
+  last_seen_at timestamptz [not null]
+  user_agent text
+  ip_address inet
+  revoked_at timestamptz
+  created_at timestamptz [not null]
+  updated_at timestamptz [not null]
+
+  indexes {
+    user_id
+  }
+}
+
+Table user_settings {
+  user_id uuid [pk, ref: - users.id]
+  theme theme [not null, default: 'system']
+  ui_language language [not null, default: 'en']
+  default_output_language language [not null, default: 'en']
+  default_run_config jsonb [not null, default: '{}', note: 'RunDefaults: every field optional']
+  notify_on_interrupt boolean [not null, default: true]
+  notify_on_run_finished boolean [not null, default: true]
+  updated_at timestamptz [not null]
+  created_at timestamptz [not null]
+}
+
+Table model_settings {
+  id uuid [pk]
+  user_id uuid [not null, ref: > users.id]
+  agent_role text [not null]
+  model_id text [not null, note: 'provider:model, checked against the model catalog']
+  temperature numeric
+  updated_at timestamptz [not null]
+  created_at timestamptz [not null]
+
+  indexes {
+    (user_id, agent_role) [unique]
+  }
+}
+
+Table provider_credentials {
+  id uuid [pk]
+  user_id uuid [not null, ref: > users.id]
+  provider text [not null]
+  label text [not null]
+  encrypted_key bytea [not null, note: 'Server-only']
+  encryption_key_id text [not null, note: 'Server-only. Id of the master key, kept in the server environment, that encrypted encrypted_key']
+  key_last4 text [not null]
+  last_used_at timestamptz
+  created_at timestamptz [not null]
+  updated_at timestamptz [not null]
+
+  Note: 'Later phase'
+}
+
+// ---------------------------------------------------------------- workspace
+
+Table projects {
+  id uuid [pk]
+  owner_id uuid [not null, ref: > users.id]
+  name text [not null]
+  description text
+  status project_status [not null, default: 'active']
+  output_language language [not null, default: 'en']
+  run_config jsonb [not null, default: '{}', note: 'RunDefaults: every field optional']
+  model_overrides jsonb [not null, note: 'Map of agent role to provider:model']
+  initial_message_id uuid [ref: >? messages.id, note: 'The user message that started the first run of the project; null until the first run starts']
+  last_activity_at timestamptz [not null]
+  created_at timestamptz [not null]
+  updated_at timestamptz [not null]
+  deleted_at timestamptz
+
+  indexes {
+    (owner_id, last_activity_at)
+  }
+}
+
+Table project_members {
+  project_id uuid [not null, ref: > projects.id]
+  user_id uuid [not null, ref: > users.id]
+  role member_role [not null]
+  invited_by uuid [not null, ref: > users.id]
+  created_at timestamptz [not null]
+  updated_at timestamptz [not null]
+
+  indexes {
+    (project_id, user_id) [pk]
+  }
+  Note: 'Later phase'
+}
+
+Table project_key_counters {
+  project_id uuid [not null, ref: > projects.id]
+  prefix text [not null, note: 'PER, RAW, AR, LN, ASM, AMB, CONF, REQ, US, EP, VAL, SEC']
+  last_number int [not null, default: 0]
+
+  indexes {
+    (project_id, prefix) [pk]
+  }
+  Note: 'Source of the running number in artifact keys. Numbers are never reused'
+}
+
+Table source_documents {
+  id uuid [pk]
+  project_id uuid [not null, ref: > projects.id]
+  uploaded_by uuid [not null, ref: > users.id]
+  first_version_id uuid [not null, ref: > source_documents.id, note: 'The first version of the document, shared by all its versions; equal to id on version 1']
+  version int [not null, default: 1]
+  file_name text [not null]
+  media_type text [not null]
+  size_bytes bigint [not null]
+  storage_key text [not null, note: 'Server-only']
+  extraction_status extraction_status [not null, default: 'pending']
+  summary text
+  created_at timestamptz [not null]
+  deleted_at timestamptz
+  updated_at timestamptz [not null]
+
+  indexes {
+    (first_version_id, version) [unique]
+  }
+  Note: 'Later phase'
+}
+
+Table document_chunks {
+  id uuid [pk]
+  source_document_id uuid [not null, ref: > source_documents.id]
+  project_id uuid [not null, ref: > projects.id]
+  position int [not null]
+  text text [not null]
+  token_count int [not null]
+  embedding_model text [not null, note: 'provider:model of the embedding model']
+  embedding vector [not null, note: 'pgvector column; its dimension is that of the embedding model']
+  created_at timestamptz [not null]
+
+  indexes {
+    (source_document_id, position) [unique]
+    (project_id, embedding_model)
+  }
+  Note: 'Later phase. Written once when the extraction of a document version succeeds. A similarity search uses an approximate nearest neighbour index on embedding, per embedding model'
+}
+
+// ---------------------------------------------------------------- conversation and execution
+
+Table threads {
+  id uuid [pk, note: 'Also the thread id of the workflow checkpoints']
+  project_id uuid [not null, ref: > projects.id]
+  created_by uuid [not null, ref: > users.id]
+  title text [note: 'Given at creation or generated from the first message; null until one of the two']
+  status thread_status [not null, default: 'active']
+  current_stage text [note: 'Set by the application from the workflow definition; null before the first run starts']
+  active_run_id uuid [unique, ref: -? runs.id]
+  last_message_at timestamptz [not null, note: 'The creation time while the thread has no message']
+  created_at timestamptz [not null]
+  updated_at timestamptz [not null]
+  deleted_at timestamptz
+
+  indexes {
+    (project_id, last_message_at)
+  }
+}
+
+Table messages {
+  id uuid [pk]
+  thread_id uuid [not null, ref: > threads.id]
+  sequence int [not null, note: 'Order of the message in the thread, from 1, without gaps']
+  run_id uuid [ref: >? runs.id]
+  author message_author [not null]
+  agent_role text
+  content text [not null]
+  delivery message_delivery [note: 'User messages only: whether the message started a run or was delivered into the unfinished run']
+  delivered_in_step_id uuid [ref: >? run_steps.id, note: 'The step that took the message in']
+  created_at timestamptz [not null]
+  updated_at timestamptz [not null]
+
+  indexes {
+    (thread_id, sequence) [unique]
+    (run_id, delivery)
+  }
+}
+
+Table message_artifacts {
+  message_id uuid [not null, ref: > messages.id]
+  artifact_id uuid [not null, ref: > artifacts.id]
+  version int [not null]
+
+  indexes {
+    (message_id, artifact_id) [pk]
+  }
+}
+
+Table message_items {
+  message_id uuid [not null, ref: > messages.id]
+  item_id uuid [not null, ref: > artifact_items.id]
+  version int [not null]
+
+  indexes {
+    (message_id, item_id) [pk]
+  }
+}
+
+Table runs {
+  id uuid [pk]
+  thread_id uuid [not null, ref: > threads.id]
+  project_id uuid [not null, ref: > projects.id]
+  started_by uuid [not null, ref: > users.id]
+  workflow_name text [not null]
+  workflow_version int [not null]
+  status run_status [not null, default: 'queued']
+  current_stage text [not null, note: 'First stage of the workflow definition when the run is created']
+  iteration_count int [not null, default: 0]
+  run_config jsonb [not null, note: 'Frozen copy taken when the run starts']
+  retry_of_run_id uuid [ref: >? runs.id]
+  error_code text
+  error_message text
+  error_stage text
+  input_tokens bigint [not null, default: 0, note: 'Input not read from the provider prompt cache']
+  output_tokens bigint [not null, default: 0]
+  cache_read_tokens bigint [not null, default: 0]
+  cache_write_tokens bigint [not null, default: 0]
+  cost_usd numeric [not null, default: 0]
+  duration_ms bigint [not null, default: 0]
+  trace_id text
+  started_at timestamptz
+  finished_at timestamptz
+  created_at timestamptz [not null]
+  updated_at timestamptz [not null]
+
+  indexes {
+    (thread_id, created_at)
+    (project_id, status)
+  }
+}
+
+Table run_steps {
+  id uuid [pk]
+  run_id uuid [not null, ref: > runs.id]
+  sequence int [not null]
+  node text [not null]
+  agent_role text
+  stage text [not null]
+  status step_status [not null]
+  iteration int [not null, default: 0]
+  subject_item_id uuid [ref: >? artifact_items.id, note: 'The item the step works on, for example the persona interviewed']
+  model_id text
+  llm_calls int [not null, default: 0]
+  input_tokens bigint [not null, default: 0]
+  output_tokens bigint [not null, default: 0]
+  cache_read_tokens bigint [not null, default: 0]
+  cache_write_tokens bigint [not null, default: 0]
+  cost_usd numeric [not null, default: 0]
+  duration_ms bigint [not null, default: 0]
+  error text
+  started_at timestamptz [not null]
+  finished_at timestamptz
+  created_at timestamptz [not null]
+  updated_at timestamptz [not null]
+
+  indexes {
+    (run_id, sequence) [unique]
+  }
+  Note: 'Items produced by a step are found through item_revisions.changed_step_id'
+}
+
+Table run_events {
+  run_id uuid [not null, ref: > runs.id]
+  sequence bigint [not null]
+  step_id uuid [ref: >? run_steps.id, note: 'The step the event belongs to; null for an event of the whole run, such as done']
+  type run_event_type [not null]
+  data jsonb [not null]
+  created_at timestamptz [not null]
+
+  indexes {
+    (run_id, sequence) [pk]
+    step_id
+  }
+}
+
+Table interrupts {
+  id uuid [pk]
+  run_id uuid [not null, ref: > runs.id]
+  step_id uuid [not null, ref: > run_steps.id, note: 'The step of the checkpoint node that created it']
+  node text [not null, note: 'The node that paused the run']
+  prompt text [not null]
+  options jsonb [not null, note: 'List of key, label, requires_feedback, approves, is_default; empty when the interrupt only asks questions']
+  questions jsonb [not null, default: '[]', note: 'List of key, type, prompt, required, choices, min_selected, max_selected, default_answer, source; each choice has key, label, requires_text; default_answer has the shape of an answer']
+  allow_edits boolean [not null, default: false]
+  status interrupt_status [not null, default: 'pending']
+  created_at timestamptz [not null]
+  resolved_at timestamptz
+  updated_at timestamptz [not null]
+
+  indexes {
+    (run_id, status)
+  }
+}
+
+Table interrupt_artifacts {
+  interrupt_id uuid [not null, ref: > interrupts.id]
+  artifact_id uuid [not null, ref: > artifacts.id]
+  version int [not null, note: 'Version shown to the user']
+
+  indexes {
+    (interrupt_id, artifact_id) [pk]
+  }
+}
+
+Table human_decisions {
+  id uuid [pk]
+  interrupt_id uuid [not null, unique, ref: - interrupts.id]
+  run_id uuid [not null, ref: > runs.id]
+  decided_by uuid [ref: >? users.id, note: 'Null when the run took the defaults without asking']
+  option text [note: 'Key of the chosen option of the interrupt; null only when the interrupt has no options']
+  feedback text
+  answers jsonb [not null, default: '{}', note: 'Map of question key to choice_keys, text and number']
+  created_at timestamptz [not null]
+}
+
+Table human_decision_items {
+  human_decision_id uuid [not null, ref: > human_decisions.id]
+  item_id uuid [not null, ref: > artifact_items.id]
+  version int [not null, note: 'Version created by the user edit']
+
+  indexes {
+    (human_decision_id, item_id) [pk]
+  }
+}
+
+Table directives {
+  id uuid [pk]
+  run_id uuid [not null, ref: > runs.id]
+  kind text [not null, note: 'Directive kind from the workflow definition, for example rework']
+  issued_by_step_id uuid [ref: >? run_steps.id, note: 'Set when an agent node issued it']
+  human_decision_id uuid [ref: >? human_decisions.id, note: 'Set when the user issued it']
+  target_node text [not null]
+  iteration int [not null]
+  instruction text [not null]
+  details jsonb [not null, note: 'Further fields of the kind; validated against its schema']
+  created_at timestamptz [not null]
+
+  indexes {
+    (run_id, iteration)
+  }
+  Note: 'Exactly one of issued_by_step_id and human_decision_id is set'
+}
+
+Table directive_items {
+  directive_id uuid [not null, ref: > directives.id]
+  item_id uuid [not null, ref: > artifact_items.id]
+  role text [not null, note: 'Role from the directive kind, for example addressed_to or about']
+  version int [not null, note: 'Version of the item when the directive was issued']
+
+  indexes {
+    (directive_id, item_id, role) [pk]
+  }
+}
+
+// ---------------------------------------------------------------- artifacts and trace links
+
+Table artifacts {
+  id uuid [pk]
+  project_id uuid [not null, ref: > projects.id]
+  kind text [not null]
+  title text [not null]
+  summary text
+  schema_version int [not null, default: 1, note: 'Version of the content schema of this kind']
+  content jsonb [not null, note: 'Fields of the artifact kind; an empty object for kinds with no fields']
+  subject_item_id uuid [ref: >? artifact_items.id, note: 'For an interview_transcript: the persona interviewed']
+  version int [not null, default: 1, note: 'Increases when the artifact or any of its items changes']
+  review_status review_status [not null, default: 'draft']
+  created_actor actor [not null]
+  created_agent_role text
+  created_by_user_id uuid [ref: >? users.id]
+  created_run_id uuid [ref: >? runs.id]
+  created_step_id uuid [ref: >? run_steps.id]
+  updated_actor actor [not null]
+  updated_agent_role text
+  updated_by_user_id uuid [ref: >? users.id]
+  updated_run_id uuid [ref: >? runs.id]
+  updated_step_id uuid [ref: >? run_steps.id]
+  created_at timestamptz [not null]
+  updated_at timestamptz [not null]
+  deleted_at timestamptz
+
+  indexes {
+    (project_id, kind)
+  }
+  Note: 'Upper level: a work product of one stage, for example the requirement specification'
+}
+
+Table artifact_items {
+  id uuid [pk]
+  artifact_id uuid [not null, ref: > artifacts.id]
+  project_id uuid [not null, ref: > projects.id, note: 'Same as the artifact project; kept here for the unique key']
+  kind text [not null]
+  key text [not null, note: 'For example REQ-001, or PER-001#4 for an interview message']
+  parent_item_id uuid [ref: >? artifact_items.id, note: 'The section the item is in, or the epic of a user story. Null at the top level']
+  position int [not null, note: 'Order among the items with the same parent']
+  schema_version int [not null, default: 1, note: 'Version of the content schema of this kind']
+  content jsonb [not null, note: 'Fields of the item kind. Plain values only, no ids of other items']
+  version int [not null, default: 1]
+  review_status review_status [not null, default: 'draft']
+  created_actor actor [not null]
+  created_agent_role text
+  created_by_user_id uuid [ref: >? users.id]
+  created_run_id uuid [ref: >? runs.id]
+  created_step_id uuid [ref: >? run_steps.id]
+  updated_actor actor [not null]
+  updated_agent_role text
+  updated_by_user_id uuid [ref: >? users.id]
+  updated_run_id uuid [ref: >? runs.id]
+  updated_step_id uuid [ref: >? run_steps.id]
+  created_at timestamptz [not null]
+  updated_at timestamptz [not null]
+  deleted_at timestamptz
+
+  indexes {
+    (project_id, key) [unique]
+    (artifact_id, parent_item_id, position)
+    (project_id, kind)
+    parent_item_id
+  }
+  Note: 'Lower level and node of the trace graph: one entry inside an artifact, for example one requirement'
+}
+
+Table item_embeddings {
+  id uuid [pk]
+  item_id uuid [not null, ref: > artifact_items.id]
+  project_id uuid [not null, ref: > projects.id]
+  item_version int [not null, note: 'Version of the item that the embedding reflects']
+  embedding_model text [not null, note: 'provider:model of the embedding model']
+  text_hash text [not null, note: 'Hash of the embedded text; unchanged text keeps the embedding']
+  embedding vector [not null, note: 'pgvector column; its dimension is that of the embedding model']
+  created_at timestamptz [not null]
+  updated_at timestamptz [not null]
+
+  indexes {
+    (item_id, embedding_model) [unique]
+    (project_id, embedding_model)
+  }
+  Note: 'Later phase. One row per item and embedding model, replaced when the embedded text of the item changes. A similarity search uses an approximate nearest neighbour index on embedding, per embedding model'
+}
+
+Table trace_links {
+  id uuid [pk]
+  project_id uuid [not null, ref: > projects.id]
+  link_type text [not null]
+  source_item_id uuid [not null, ref: > artifact_items.id]
+  target_item_id uuid [not null, ref: > artifact_items.id]
+  target_version int [not null, note: 'Version of the target item when the link was created']
+  quote text [note: 'For evidenced_by: the exact words in the interview message']
+  "note" text
+  created_actor actor [not null]
+  created_agent_role text
+  created_by_user_id uuid [ref: >? users.id]
+  created_run_id uuid [ref: >? runs.id]
+  created_step_id uuid [ref: >? run_steps.id]
+  created_at timestamptz [not null]
+  deleted_at timestamptz [note: 'Set when the link is removed; the row stays']
+  deleted_actor actor
+  deleted_agent_role text
+  deleted_by_user_id uuid [ref: >? users.id]
+  deleted_run_id uuid [ref: >? runs.id]
+  deleted_step_id uuid [ref: >? run_steps.id]
+
+  indexes {
+    (source_item_id, target_item_id, link_type) [unique, note: 'Partial index over links whose deleted_at is null']
+    (target_item_id, link_type)
+    (project_id, link_type)
+  }
+  Note: 'Edge of the trace graph, from the later item to the earlier one. Allowed kind pairs per link type are checked by the application'
+}
+
+Table artifact_revisions {
+  id uuid [pk]
+  artifact_id uuid [not null, ref: > artifacts.id]
+  version int [not null]
+  snapshot jsonb [not null, note: 'Title, summary, content and review status at this version, and whether the artifact is deleted']
+  item_versions jsonb [not null, note: 'Ordered list of item id and item version at this version of the artifact']
+  change_reason change_reason [not null]
+  changed_actor actor [not null]
+  changed_agent_role text
+  changed_by_user_id uuid [ref: >? users.id]
+  changed_run_id uuid [ref: >? runs.id]
+  changed_step_id uuid [ref: >? run_steps.id]
+  human_decision_id uuid [ref: >? human_decisions.id]
+  created_at timestamptz [not null]
+
+  indexes {
+    (artifact_id, version) [unique]
+  }
+  Note: 'Never updated or deleted, also after the item, the artifact or the project is deleted; the saved workflow state references these versions'
+}
+
+Table item_revisions {
+  id uuid [pk]
+  item_id uuid [not null, ref: > artifact_items.id]
+  version int [not null]
+  snapshot jsonb [not null, note: 'Content, position, parent item and review status at this version, and whether the item is deleted']
+  change_reason change_reason [not null]
+  changed_actor actor [not null]
+  changed_agent_role text
+  changed_by_user_id uuid [ref: >? users.id]
+  changed_run_id uuid [ref: >? runs.id]
+  changed_step_id uuid [ref: >? run_steps.id]
+  human_decision_id uuid [ref: >? human_decisions.id]
+  created_at timestamptz [not null]
+
+  indexes {
+    (item_id, version) [unique]
+    changed_step_id
+  }
+  Note: 'Never updated or deleted, also after the item, the artifact or the project is deleted; the saved workflow state references these versions'
+}
+
+// ---------------------------------------------------------------- supporting
+
+Table exports {
+  id uuid [pk]
+  project_id uuid [not null, ref: > projects.id]
+  requested_by uuid [not null, ref: > users.id]
+  template text [not null, note: 'Export template from the workflow definition']
+  format export_format [not null]
+  status export_status [not null, default: 'pending']
+  file_name text [not null]
+  size_bytes bigint
+  storage_key text [note: 'Server-only. Set when the export is ready']
+  created_at timestamptz [not null]
+  updated_at timestamptz [not null]
+}
+
+Table export_artifacts {
+  export_id uuid [not null, ref: > exports.id]
+  artifact_id uuid [not null, ref: > artifacts.id]
+  version int [not null]
+
+  indexes {
+    (export_id, artifact_id) [pk]
+  }
+}
+
+Table comments {
+  id uuid [pk]
+  project_id uuid [not null, ref: > projects.id]
+  artifact_id uuid [not null, ref: > artifacts.id]
+  item_id uuid [ref: >? artifact_items.id, note: 'Null when the comment is on the artifact as a whole']
+  version int [not null, note: 'Version of the item, or of the artifact, the comment was written on']
+  author_id uuid [not null, ref: > users.id]
+  body text [not null]
+  parent_id uuid [ref: >? comments.id]
+  resolved_at timestamptz
+  created_at timestamptz [not null]
+  updated_at timestamptz [not null]
+
+  Note: 'Later phase'
+}
+
+Table activity_events {
+  id uuid [pk]
+  project_id uuid [not null, ref: > projects.id]
+  actor actor [not null]
+  agent_role text
+  user_id uuid [ref: >? users.id]
+  run_id uuid [ref: >? runs.id]
+  step_id uuid [ref: >? run_steps.id]
+  action activity_action [not null]
+  subject_kind text [not null]
+  subject_id uuid [not null]
+  summary text [not null]
+  created_at timestamptz [not null]
+
+  indexes {
+    (project_id, created_at)
+  }
+  Note: 'Later phase. Append-only'
+}
+
+Table notifications {
+  id uuid [pk]
+  user_id uuid [not null, ref: > users.id]
+  type notification_type [not null]
+  project_id uuid [not null, ref: > projects.id]
+  run_id uuid [ref: >? runs.id]
+  read_at timestamptz
+  created_at timestamptz [not null]
+  updated_at timestamptz [not null]
+
+  indexes {
+    (user_id, read_at)
+  }
+  Note: 'Later phase'
+}
+
+Table idempotency_keys {
+  user_id uuid [not null, ref: > users.id]
+  key text [not null]
+  request_hash text [not null, note: 'Hash of method, path and body']
+  response_status int [not null]
+  response_body jsonb [not null]
+  created_at timestamptz [not null]
+
+  indexes {
+    (user_id, key) [pk]
+  }
+  Note: 'Stored responses of requests that start work. Rows older than 24 hours are deleted'
+}
+
+// ---------------------------------------------------------------- groups
+
+TableGroup identity_and_settings {
+  users
+  auth_identities
+  sessions
+  user_settings
+  model_settings
+  provider_credentials
+}
+
+TableGroup workspace {
+  projects
+  project_members
+  project_key_counters
+  source_documents
+  document_chunks
+}
+
+TableGroup conversation_and_execution {
+  threads
+  messages
+  message_artifacts
+  message_items
+  runs
+  run_steps
+  run_events
+  interrupts
+  interrupt_artifacts
+  human_decisions
+  human_decision_items
+  directives
+  directive_items
+}
+
+TableGroup artifacts_and_trace {
+  artifacts
+  artifact_items
+  artifact_revisions
+  item_revisions
+  item_embeddings
+  trace_links
+}
+
+TableGroup supporting {
+  exports
+  export_artifacts
+  comments
+  activity_events
+  notifications
+  idempotency_keys
+}

@@ -189,17 +189,19 @@ Conventions:
 - **Dependency rules** (enforced by import-linter in `just lint` and CI):
 
   ```text
-  features/*    -> agents, llm, tools, integrations, platform, core
-  api/          -> features/* (routers only), core
-  agents        -> llm, tools, core          (never features/, api/, fastapi, platform.db)
-  tools         -> agents.ports, integrations, platform, core
-  llm           -> core
-  research/     -> agents, llm, tools, core  (runs graphs without the API)
+  features/*    -> agents, llm, tools, integrations, platform, domain, settings
+  api/          -> features/* (routers only), domain, settings
+  agents        -> llm, tools, domain, settings  (never features/, api/, fastapi, platform.db)
+  tools         -> agents.ports, integrations, platform, domain, settings
+  llm           -> settings
+  domain        -> nothing                       (standard library and Pydantic only; no I/O, no settings)
+  research/     -> agents, llm, tools, domain, settings  (runs graphs without the API)
   ```
 
 - **Features don't import each other's internals.** Use the other feature's public service (exported from its `__init__.py`). Cross-feature DB links are foreign keys referenced by id, not ORM relationships.
+- **Business rules live in `domain/`:** content schemas, the integrity rules of artifacts, items and trace links, key generation, and domain exceptions. They are pure functions and models: no database, no HTTP, no LangGraph, no settings. Features and graphs call them; they never call back.
 - **Ports only where things change:** when a graph needs something from outside (e.g. storing artifacts), define a `Protocol` in `agents/ports.py` and inject the implementation at run time (LangGraph runtime context or `config["configurable"]`). Research and tests inject fakes. Do not add interfaces for things that have one implementation and no planned replacement.
-- **Configuration** only via `khoailanggraph.core.config.Settings` (pydantic-settings). No `os.getenv` scattered in code.
+- **Configuration** only via `khoailanggraph.settings.Settings` (pydantic-settings). No `os.getenv` scattered in code.
 - **Docstrings:** Google style for public modules, classes, and functions.
 - Naming: `snake_case` functions/variables/modules, `PascalCase` classes, `UPPER_SNAKE_CASE` constants.
 - Imports: absolute (`from khoailanggraph.agents...`), sorted by Ruff.
@@ -301,7 +303,7 @@ A folder name in `src/app/` is a URL segment, so renaming it changes the URL.
 - Request/response schemas live in `features/<name>/schemas.py`; schemas shared across features (error shape, pagination) live in `api/schemas.py`.
 - FastAPI cannot describe SSE payloads on its own. Register the event models from `features/runs/events.py` as OpenAPI components so the frontend gets generated types for them too.
 - Breaking API changes require a `BREAKING CHANGE:` footer and coordination with frontend.
-- Streaming endpoints use **SSE** with the event schema defined in [PLANNING: Agent run lifecycle](docs/PLANNING.md#6-agent-run-lifecycle).
+- Streaming endpoints use **SSE** with the event schema defined in [API design: run event stream](docs/API.md#6-run-event-stream).
 - Errors follow a single shape (e.g. RFC 9457 Problem Details).
 
 ### Database & Migrations
@@ -318,7 +320,7 @@ A folder name in `src/app/` is a URL segment, so renaming it changes the URL.
 - Bind `request_id` and `thread_id` in middleware so all logs for one request are correlated.
 - **Never log** API keys, tokens, passwords, or full user content in production.
 - LLM calls and agent steps are traced separately in Langfuse/LangSmith; application logs and LLM traces complement each other.
-- Raise domain exceptions (`khoailanggraph.core.errors`); map them to HTTP responses in one place (exception handlers), not in every route.
+- Raise domain exceptions (`khoailanggraph.domain.errors`); map them to HTTP responses in one place (exception handlers), not in every route.
 - Frontend: use an error boundary per route; no `console.log` left in committed code (ESLint `no-console`).
 
 ## Testing

@@ -1,0 +1,75 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "$id": "items/validation_issue/v1",
+  "title": "Validation issue",
+  "description": "A problem the validator found.",
+  "x-level": "item",
+  "x-kind": "validation_issue",
+  "x-schema-version": 1,
+  "x-key-prefix": "VAL",
+  "x-ui-display": "table",
+  "x-ui-title-field": "description",
+  "x-ui-list-fields": [
+    "description",
+    "category",
+    "severity",
+    "status"
+  ],
+  "x-ui-field-order": [
+    "category",
+    "severity",
+    "description",
+    "suggestion",
+    "status"
+  ],
+  "type": "object",
+  "additionalProperties": false,
+  "properties": {
+    "category": {
+      "type": "string",
+      "x-value-list": "validation_category",
+      "description": "The part of the output the issue is about.",
+      "x-ui-widget": "select"
+    },
+    "severity": {
+      "type": "string",
+      "enum": [
+        "low",
+        "medium",
+        "high"
+      ],
+      "description": "How serious the issue is.",
+      "x-ui-widget": "select"
+    },
+    "description": {
+      "type": "string",
+      "description": "What is wrong.",
+      "x-ui-widget": "textarea"
+    },
+    "suggestion": {
+      "type": [
+        "string",
+        "null"
+      ],
+      "description": "How to fix it.",
+      "x-ui-widget": "textarea"
+    },
+    "status": {
+      "type": "string",
+      "enum": [
+        "open",
+        "fixed",
+        "dismissed"
+      ],
+      "description": "State of the issue.",
+      "x-ui-widget": "select"
+    }
+  },
+  "required": [
+    "category",
+    "severity",
+    "description",
+    "suggestion",
+    "status"
+  ]
+}

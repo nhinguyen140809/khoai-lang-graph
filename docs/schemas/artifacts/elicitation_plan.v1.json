@@ -1,0 +1,80 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "$id": "artifacts/elicitation_plan/v1",
+  "title": "Elicitation plan",
+  "description": "What the interviews must find out and how.",
+  "x-level": "artifact",
+  "x-kind": "elicitation_plan",
+  "x-schema-version": 1,
+  "x-ui-display": "document",
+  "x-ui-field-order": [
+    "objectives",
+    "topics",
+    "information_gaps",
+    "stakeholder_types",
+    "strategies",
+    "stopping_conditions"
+  ],
+  "type": "object",
+  "additionalProperties": false,
+  "properties": {
+    "objectives": {
+      "type": "array",
+      "items": {
+        "type": "string"
+      },
+      "description": "What the elicitation must achieve.",
+      "minItems": 1,
+      "x-ui-widget": "list"
+    },
+    "topics": {
+      "type": "array",
+      "items": {
+        "type": "string"
+      },
+      "description": "Subjects to cover in the interviews.",
+      "x-ui-widget": "tags"
+    },
+    "information_gaps": {
+      "type": "array",
+      "items": {
+        "type": "string"
+      },
+      "description": "What is not known yet and must be asked.",
+      "x-ui-widget": "list"
+    },
+    "stakeholder_types": {
+      "type": "array",
+      "items": {
+        "type": "string"
+      },
+      "description": "Types of stakeholder to interview. Personas are generated from this list.",
+      "minItems": 1,
+      "x-ui-widget": "tags"
+    },
+    "strategies": {
+      "type": "array",
+      "items": {
+        "type": "string"
+      },
+      "description": "How to ask: question styles and techniques.",
+      "x-ui-widget": "list"
+    },
+    "stopping_conditions": {
+      "type": "array",
+      "items": {
+        "type": "string"
+      },
+      "description": "When the interviews have gathered enough.",
+      "x-ui-widget": "list"
+    }
+  },
+  "required": [
+    "objectives",
+    "topics",
+    "information_gaps",
+    "stakeholder_types",
+    "strategies",
+    "stopping_conditions"
+  ]
+}
