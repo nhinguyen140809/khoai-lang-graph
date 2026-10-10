@@ -1,0 +1,70 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "$id": "items/analyzed_requirement/v1",
+  "title": "Analyzed requirement",
+  "description": "A requirement after analysis: merged, classified and prioritized.",
+  "x-level": "item",
+  "x-kind": "analyzed_requirement",
+  "x-schema-version": 1,
+  "x-key-prefix": "AR",
+  "x-ui-display": "table",
+  "x-ui-title-field": "statement",
+  "x-ui-list-fields": [
+    "statement",
+    "type",
+    "priority"
+  ],
+  "x-ui-field-order": [
+    "statement",
+    "type",
+    "quality_category",
+    "priority",
+    "rationale"
+  ],
+  "type": "object",
+  "additionalProperties": false,
+  "properties": {
+    "statement": {
+      "type": "string",
+      "description": "The requirement, rewritten to be clear and atomic.",
+      "x-ui-widget": "textarea"
+    },
+    "type": {
+      "type": "string",
+      "enum": [
+        "functional",
+        "non_functional",
+        "constraint"
+      ],
+      "description": "Kind of requirement.",
+      "x-ui-widget": "select"
+    },
+    "quality_category": {
+      "type": [
+        "string",
+        "null"
+      ],
+      "x-value-list": "quality_category",
+      "description": "Quality attribute. Required when type is non_functional, null otherwise.",
+      "x-ui-widget": "select"
+    },
+    "priority": {
+      "type": "string",
+      "x-value-list": "priority",
+      "description": "Importance.",
+      "x-ui-widget": "select"
+    },
+    "rationale": {
+      "type": "string",
+      "description": "Why it matters.",
+      "x-ui-widget": "textarea"
+    }
+  },
+  "required": [
+    "statement",
+    "type",
+    "quality_category",
+    "priority",
+    "rationale"
+  ]
+}
