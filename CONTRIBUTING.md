@@ -240,7 +240,7 @@ Conventions:
   | App | `src/app/`, `src/providers/` | Features (through their `index.ts`) and shared code |
 
   - A feature never imports another feature. When two features appear together, the app layer composes them; code both need moves to the shared layer.
-  - A shared component that shows feature content receives it as a prop (`children` or a named `ReactNode` prop) from `src/app/`. Example: `src/app/(app)/layout.tsx` passes the thread list and the artifact panel into `AppShell`.
+  - A shared component that shows feature content receives it as a prop (`children` or a named `ReactNode` prop) from `src/app/`. Example: `src/app/(project)/projects/[projectId]/layout.tsx` passes the project menu, the review badge and the run status into `AppFrame`, `ActivityBar` and `StatusBar`.
   - `src/mocks/` and `src/test/` are test infrastructure and may import feature types.
 - **Feature public API:** each feature has an `index.ts` that exports only what other code needs (page and shared components, hooks, types). Code outside the feature imports from `@/features/<feature>`, never from a file inside it (enforced by ESLint `no-restricted-imports`); code inside the feature uses relative imports. Anything not exported from `index.ts` is private and can change freely.
 - **Components:** function components, named exports, one component per file. Next.js routing files (`page.tsx`, `layout.tsx`, `error.tsx`, ...) are the exception: they must use a default export.

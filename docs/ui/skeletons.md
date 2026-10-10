@@ -98,10 +98,10 @@ The only screen outside a project, so it has no activity bar.
 +-----+--------------------------+-------------------------------------------------------------+
 |     | THREADS          [+ New] | Main thread  x                                              |
 | [C] |                          +-------------------------------------------------------------+
-|  A  | [Main thread         (1)]| > I want to build an online platform for university         |
-|  W  |  analysis_review         |   students to find mentors.                                 |
-|  T  |                          |                                                             |
-|  S  |  Booking rules           | * planner             Elicitation plan v1           0:21    |
+|  A  | [Main thread         (1)]|   ...                                                       |
+|  W  |  analysis_review         |   Run 2 failed: its cost limit of $2.00 was reached.        |
+|  T  |                          |   Run 3 retries run 2 from its planner step.                |
+|  S  |  Booking rules           | * planner             Elicitation plan v2           0:21    |
 |     |  done                    | * persona_generator   PER-001  PER-002  PER-003     0:35    |
 |     |                          |   Personas approved by you                                  |
 |     |                          | * interview           PER-001 Student, 12 turns     2:10    |
@@ -129,7 +129,7 @@ The only screen outside a project, so it has no activity bar.
 | Threads | The threads of the project, newest first, each with the stage of its latest run. A badge counts the reviews waiting in the thread |
 | `>` line | A message of the user. A message sent while a run is busy shows its delivery until a step reads it |
 | `*` line | One step, or a group of steps such as one interview, with the agent role, the keys of the items it produced, and its duration. Keys open the item; `ctrl+o` expands a group into its steps |
-| Plain line | A message of an agent, in Markdown; item keys are links |
+| Plain line | A message of an agent or of the system, in Markdown; item keys are links |
 | `?` line | A review that waits for the user, see [section 4](#4-review) |
 | Input box | The message; the first message of a thread starts a run. `@` mentions an item by key. `/` lists the commands `/stop`, `/retry`, `/export` and `/run-settings`, the last one for the run settings sent with the next message. `Esc` stops the run |
 
@@ -165,7 +165,7 @@ When a run pauses at a checkpoint, the artifact under review opens on the left h
 +----------------------------------------------------------------------------------------------+
 ```
 
-- The options of the checkpoint are a numbered list, chosen with the arrow keys or the number, as in Claude Code. The feedback box appears when the chosen option requires feedback.
+- The options of the checkpoint are a numbered list, chosen with the arrow keys or the number. The feedback box appears when the chosen option requires feedback.
 - Items edited before answering are marked `M` in the artifact and listed in the review; they are sent as `modified_items`.
 - Questions, when a definition version adds them, appear under the options: a numbered list for `single_select`, `[ ]` check boxes for `multi_select`, a text box for `free_text` and a number box for `number`, each filled with its default answer.
 - `Esc` keeps the review in the thread, to answer later.
@@ -182,7 +182,7 @@ The side panel is a tree like the explorer of VS Code: artifacts, their sections
 |  C  |                          +-------------------------------------------------------------+
 | [A] | > Elicitation plan       | Requirement specification > 3 Functional > 3.1 > REQ-001    |
 |  W  | v Personas               |                                                             |
-|  T  |     PER-001 Student      | REQ-001  Search mentors              v3  approved  [Edit]   |
+|  T  |     PER-001 Student      | REQ-001  Search mentors              v3  approved           |
 |  S  |     PER-002 Mentor       |                                                             |
 |     |     PER-003 Admin        | Statement     The system shall let a student search         |
 |     | > Interviews             |               mentors by field and availability.            |
