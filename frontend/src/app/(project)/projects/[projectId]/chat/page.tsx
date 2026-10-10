@@ -1,13 +1,6 @@
-import { MessageSquareIcon } from 'lucide-react'
+import { ChatPage } from '@/features/chat'
 
-import { EmptyState } from '@/components/state'
-
-export default function Page() {
-  return (
-    <EmptyState
-      icon={MessageSquareIcon}
-      title="No thread open"
-      description="Open a thread from the side panel."
-    />
-  )
+export default async function Page({ params }: PageProps<'/projects/[projectId]/chat'>) {
+  const { projectId } = await params
+  return <ChatPage projectId={projectId} />
 }

@@ -39,7 +39,7 @@ describe('NewProjectForm', () => {
     expect(routerMock.push).not.toHaveBeenCalled()
   })
 
-  it('creates the project and its first thread, then opens the chat of that thread', async () => {
+  it('creates the project, then opens its chat', async () => {
     let created: unknown
     server.use(
       http.post('/api/v1/projects', async ({ request }) => {
@@ -69,12 +69,6 @@ describe('NewProjectForm', () => {
           { status: 201 },
         )
       }),
-      http.post('/api/v1/projects/p-new/threads', () =>
-        HttpResponse.json(
-          { id: 't-new', project_id: 'p-new', active_run_id: null },
-          { status: 201 },
-        ),
-      ),
     )
     const onCreated = renderForm()
 
@@ -82,7 +76,7 @@ describe('NewProjectForm', () => {
     await userEvent.click(screen.getByRole('button', { name: 'Create project' }))
 
     await vi.waitFor(() => {
-      expect(routerMock.push).toHaveBeenCalledWith('/projects/p-new/chat/t-new')
+      expect(routerMock.push).toHaveBeenCalledWith('/projects/p-new/chat')
     })
     expect(created).toEqual({ name: 'Thesis tracker', description: null, output_language: 'vi' })
     expect(onCreated).toHaveBeenCalledOnce()

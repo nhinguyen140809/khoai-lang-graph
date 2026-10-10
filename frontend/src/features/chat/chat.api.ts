@@ -1,6 +1,7 @@
+import { apiRequest, fetchAllPages } from '@/lib/api-fetch.utils'
 import { apiUrl } from '@/lib/api-url.utils'
 
-import { type CreateRunResponse, createRunResponseSchema } from './chat.types'
+import { chatThreadIdSchema, type CreateRunResponse, createRunResponseSchema } from './chat.types'
 
 // TODO: switch to the generated client in src/api/generated/ once the backend exists.
 export async function createRun(threadId: string, input: string): Promise<CreateRunResponse> {
@@ -17,4 +18,29 @@ export async function createRun(threadId: string, input: string): Promise<Create
 
 export function runStreamUrl(runId: string): string {
   return apiUrl(`/api/v1/runs/${encodeURIComponent(runId)}/stream`)
+}
+
+async function createThread(projectId: string): Promise<string> {
+  const thread = await apiRequest(
+    `/api/v1/projects/${encodeURIComponent(projectId)}/threads`,
+    chatThreadIdSchema,
+    { action: 'create the conversation thread', method: 'POST', body: {} },
+  )
+  return thread.id
+}
+
+/**
+ * The id of the thread that holds the conversation of the project: the thread that exists, or an
+ * empty one created on the first visit. The chat feature reads the thread endpoints itself,
+ * because a feature may not import another one; a project has one conversation, so the first
+ * thread is the one.
+ */
+export async function getChatThreadId(projectId: string): Promise<string> {
+  const threads = await fetchAllPages(
+    `/api/v1/projects/${encodeURIComponent(projectId)}/threads`,
+    chatThreadIdSchema,
+    'load the conversation',
+  )
+  const existing = threads.at(0)
+  return existing === undefined ? createThread(projectId) : existing.id
 }

@@ -1,7 +1,6 @@
 import { apiRequest, fetchAllPages } from '@/lib/api-fetch.utils'
 
 import {
-  createdThreadSchema,
   type CreateProjectBody,
   type Project,
   projectDefaultsSchema,
@@ -27,15 +26,6 @@ export function createProject(body: CreateProjectBody): Promise<Project> {
     method: 'POST',
     body,
   })
-}
-
-/** Creates the empty thread that a new project opens on; its first message starts a run. */
-export function createThread(projectId: string) {
-  return apiRequest(
-    `/api/v1/projects/${encodeURIComponent(projectId)}/threads`,
-    createdThreadSchema,
-    { action: 'create a thread', method: 'POST', body: {} },
-  )
 }
 
 export function getProjectDefaults() {

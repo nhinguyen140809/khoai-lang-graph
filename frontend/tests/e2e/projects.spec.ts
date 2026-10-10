@@ -14,7 +14,7 @@ test('opens a project from the list at Chat, with its run on the status bar', as
   await expect(page.getByRole('link', { name: /^Chat\b.*1 review waiting/ })).toBeVisible()
 })
 
-test('creates a project and opens its empty thread', async ({ page }) => {
+test('creates a project and opens its chat', async ({ page }) => {
   await page.goto('/projects')
 
   await page.getByRole('main').getByRole('button', { name: 'New project' }).click()
@@ -22,7 +22,7 @@ test('creates a project and opens its empty thread', async ({ page }) => {
   await dialog.getByRole('textbox', { name: 'Name' }).fill('Thesis tracker')
   await dialog.getByRole('button', { name: 'Create project' }).click()
 
-  await expect(page).toHaveURL(/\/projects\/[^/]+\/chat\/[^/]+$/)
+  await expect(page).toHaveURL(/\/projects\/[^/]+\/chat$/)
   await expect(
     page.getByRole('banner').getByRole('button', { name: 'Thesis tracker' }),
   ).toBeVisible()

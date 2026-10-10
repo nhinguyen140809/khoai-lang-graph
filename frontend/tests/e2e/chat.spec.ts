@@ -1,54 +1,38 @@
 import { expect, test } from '@playwright/test'
 
-import { PROJECT_IDS, THREAD_IDS } from '../../src/mocks/mock-ids.constants'
+import { PROJECT_IDS } from '../../src/mocks/mock-ids.constants'
 
 const chat = `/projects/${PROJECT_IDS.mentor}/chat`
-const mainThread = `${chat}/${THREAD_IDS.mentorMain}`
 
-test('sends a message and streams the agent reply', async ({ page }) => {
-  await page.goto(mainThread)
+test('sends a message and streams the run log of the reply', async ({ page }) => {
+  await page.goto(chat)
 
   await page.getByRole('textbox', { name: 'Message' }).fill('Summarize the plan')
   await page.getByRole('button', { name: 'Send' }).click()
 
+  // The prompt prints as a terminal line, then the run follows: a node, its text and artifact,
+  // and the mark the run ends with.
   await expect(page.getByText('Summarize the plan')).toBeVisible()
-  await expect(page.getByText(/Hello from the/)).toBeVisible()
-  await expect(page.getByText('mock', { exact: true })).toBeVisible()
+  await expect(page.getByText('planner').first()).toBeVisible()
+  await expect(page.getByText(/An elicitation plan for the/)).toBeVisible()
+  await expect(page.getByText(/created Elicitation plan/)).toBeVisible()
+  await expect(page.getByText('✓ done')).toBeVisible()
 })
 
-test('lists the threads and opens one in a tab', async ({ page }) => {
-  await page.goto(mainThread)
-  const tabs = page.getByRole('navigation', { name: 'Open editors' })
-  await expect(tabs.getByRole('link', { name: 'Main thread' })).toBeVisible()
-
-  await page
-    .getByRole('complementary', { name: 'Threads' })
-    .getByRole('link', { name: /Booking rules/ })
-    .click()
-
-  // The dev server renders the page of another thread on the first visit, which can be slow.
-  await expect(page).toHaveURL(new RegExp(`${THREAD_IDS.mentorBooking}$`), { timeout: 15_000 })
-  await expect(tabs.getByRole('link', { name: 'Booking rules' })).toHaveAttribute(
-    'aria-current',
-    'page',
-  )
-  await expect(tabs.getByRole('link', { name: 'Main thread' })).toBeVisible()
-})
-
-test('shows an error with a retry when the threads fail to load', async ({ page }) => {
+test('shows an error with a retry when the conversation fails to load', async ({ page }) => {
   await page.goto(`${chat}?mock-threads=error`)
 
   // Next.js adds its own empty role="alert" element (the route announcer), so match by text.
-  const threads = page.getByRole('complementary', { name: 'Threads' })
-  const alert = threads.getByRole('alert').filter({ hasText: 'Failed to load threads' })
+  const alert = page.getByRole('alert').filter({ hasText: 'Failed to load the conversation' })
   await expect(alert).toBeVisible()
   await expect(alert.getByRole('button', { name: 'Try again' })).toBeVisible()
 })
 
-test('shows the empty state when there are no threads', async ({ page }) => {
+test('starts an empty conversation when the project has no thread', async ({ page }) => {
   await page.goto(`${chat}?mock-threads=empty`)
 
-  await expect(page.getByText('No threads yet')).toBeVisible()
+  await expect(page.getByRole('textbox', { name: 'Message' })).toBeVisible()
+  await expect(page.getByPlaceholder('Give the agents a task...')).toBeVisible()
 })
 
 test('switches the theme from the account menu', async ({ page }) => {

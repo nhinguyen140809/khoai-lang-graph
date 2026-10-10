@@ -8,7 +8,7 @@ import {
   THREAD_IDS,
   USER_ID,
 } from './mock-ids.constants'
-import { mockParallelRuns, type MockRunState } from './mock-scenario.utils'
+import { type MockRunState } from './mock-scenario.utils'
 
 // Mock runs and run steps. The third run of the main thread of the mentor platform is the run of
 // the API examples: it retries the second run from its planner step and waits at the analysis
@@ -103,14 +103,6 @@ const finishedRuns: Run[] = [
     usage: usage(1.98, 380_000, 140_000),
     started_at: '2026-10-04T10:00:00Z',
     finished_at: '2026-10-04T10:21:15Z',
-  }),
-  run({
-    id: RUN_IDS.mentorBooking1,
-    number: 1,
-    thread_id: THREAD_IDS.mentorBooking,
-    project_id: PROJECT_IDS.mentor,
-    started_at: '2026-10-04T13:40:00Z',
-    finished_at: '2026-10-04T14:05:00Z',
   }),
   run({
     id: RUN_IDS.campusMain1,
@@ -363,37 +355,7 @@ const libraryRunSteps = buildSteps(RUN_IDS.libraryMain1, 6, '2026-10-03T10:10:00
 
 /** Every run of the mock data, with the run of the API examples in the given state. */
 export function mockRuns(state: MockRunState): Run[] {
-  if (!mockParallelRuns()) return [...finishedRuns, mentorRun3(state)]
-  // Two more runs of the mentor platform that are unfinished.
-  const runs = finishedRuns.map((item) =>
-    item.id === RUN_IDS.mentorBooking1
-      ? {
-          ...item,
-          status: 'running' as const,
-          current_stage: 'interviewing',
-          step_count: 5,
-          usage: usage(0.11, 90_000, 9_000),
-          finished_at: null,
-        }
-      : item,
-  )
-  return [
-    ...runs,
-    run({
-      id: RUN_IDS.mentorExport1,
-      number: 1,
-      thread_id: THREAD_IDS.mentorExport,
-      project_id: PROJECT_IDS.mentor,
-      status: 'queued',
-      current_stage: 'planning',
-      step_count: 0,
-      usage: noUsage,
-      last_event_id: 0,
-      started_at: null,
-      finished_at: null,
-    }),
-    mentorRun3(state),
-  ]
+  return [...finishedRuns, mentorRun3(state)]
 }
 
 /** The steps of a run. Runs other than the run of the API examples and the running run have none. */

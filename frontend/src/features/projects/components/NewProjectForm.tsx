@@ -65,11 +65,9 @@ export function NewProjectForm({ defaultLanguage, onCreated }: NewProjectFormPro
         output_language: values.output_language,
       },
       {
-        onSuccess: ({ projectId, threadId }) => {
+        onSuccess: ({ projectId }) => {
           onCreated()
-          router.push(
-            `/projects/${encodeURIComponent(projectId)}/chat/${encodeURIComponent(threadId)}`,
-          )
+          router.push(`/projects/${encodeURIComponent(projectId)}/chat`)
         },
         onError: (error) => {
           if (!(error instanceof ApiError)) return

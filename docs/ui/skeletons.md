@@ -48,7 +48,7 @@ Every screen inside a project uses this frame.
 |---|---|
 | Top bar | The logo, the project name with a menu to switch project or go back to the project list, a box to search items and run commands (`Ctrl+K`), the user menu |
 | Activity bar | One icon per feature of the project: `C` Chat, `A` Artifacts, `W` Workflow, `T` Traceability, `S` Sources (Later), and `*` Settings at the bottom. A badge shows a count, such as the reviews waiting on Chat |
-| Side panel | Navigation inside the chosen feature: the threads, the artifact tree, the runs and their steps, the coverage counts. `Ctrl+B` hides and shows it |
+| Side panel | Navigation inside the chosen feature: the artifact tree, the runs and their steps, the coverage counts. Chat has no side panel; its editor shows the single conversation. `Ctrl+B` hides and shows the panel |
 | Editor | What was opened from the side panel, in tabs. Two tabs can be shown side by side, for example an artifact and the chat during a review |
 | Panel | An optional area under the editor: the trace and the timeline of the open item, or the detail of the selected step |
 | Status bar | The active run of the project: its state, stage, step, cost against `max_cost_usd`, and the workflow version. A click opens the run in Workflow |
@@ -62,9 +62,11 @@ Marks used in the skeletons:
 | `[REQ-001 ...]` | The selected row of a list or a tree |
 | `x` after a tab name | The tab can be closed |
 | `!` | Needs review: the item was made from an older version of an item it links to |
+| `⏺` | A step of a running workflow, printed as it starts (after Claude Code's CLI) |
+| `⎿` | A detail under a step, printed while the step runs: text, a tool call, an item produced |
 | `...` | More rows of the same kind |
 
-Unlike the current web app, there is no sidebar that lists every thread of the user. The threads of a project are one feature of the project, under Chat.
+Threads stay in the API — a thread maps one-to-one to a workflow session and holds at most one unfinished run — but the web app never shows them: there is no sidebar of threads, and the first version keeps every project on a single conversation, shown as one flow, with the one input box at the bottom. The thread of a project is created when its chat is first opened.
 
 ## 2. Project list
 
@@ -88,50 +90,52 @@ The only screen outside a project, so it has no activity bar.
 ```
 
 - A row opens the project at Chat. Items are the `item_counts` of the project.
-- `New project` asks for a name, a description and the output language, then opens Chat on an empty thread; the first message starts the first run.
+- `New project` asks for a name, a description and the output language, then opens Chat on an empty conversation; the first message starts the first run.
 
 ## 3. Chat
+
+The chat is the single conversation of the project: one flow of messages and steps, with the input at the bottom. No side panel, no tabs — the editor is the conversation.
 
 ```text
 +----------------------------------------------------------------------------------------------+
 | (K) khoai / Mentor platform v            [ Search or run a command   Ctrl+K ]         (user) |
-+-----+--------------------------+-------------------------------------------------------------+
-|     | THREADS          [+ New] | Main thread  x                                              |
-| [C] |                          +-------------------------------------------------------------+
-|  A  | [Main thread         (1)]|   ...                                                       |
-|  W  |  analysis_review         |   Run 2 failed: its cost limit of $2.00 was reached.        |
-|  T  |                          |   Run 3 retries run 2 from its planner step.                |
-|  S  |  Booking rules           | * planner             Elicitation plan v2           0:21    |
-|     |  done                    | * persona_generator   PER-001  PER-002  PER-003     0:35    |
-|     |                          |   Personas approved by you                                  |
-|     |                          | * interview           PER-001 Student, 12 turns     2:10    |
-|     |                          | * interview           PER-002 Mentor, 9 turns       1:48    |
-|     |                          | > Also ask about group sessions.                            |
-|     |                          |   queued, read at the next step                             |
-|     |                          | * interview           PER-003 Admin, 10 turns       1:55    |
-|     |                          | * analyst             24 AR  3 AMB  1 CONF          0:52    |
-|     |                          |   PER-001 and PER-003 disagree on who approves a booking,   |
-|     |                          |   see CONF-001.                                             |
-|     |                          |                                                             |
-|     |                          | ? Review: Requirements analysis v4                          |
-|     |                          |                                                             |
-|     |                          | +---------------------------------------------------------+ |
-|     |                          | | > Message, @ to mention an item, / for a command        | |
-|     |                          | +---------------------------------------------------------+ |
-|  *  |                          |   ctrl+o expand step    esc stop run                        |
-+-----+--------------------------+-------------------------------------------------------------+
++-----+----------------------------------------------------------------------------------------+
+| [C] |   ...                                                                                    |
+|  A  |   Run 2 failed: its cost limit of $2.00 was reached.                                     |
+|  W  |   Run 3 retries run 2 from its planner step.                                             |
+|  T  | ⏺ planner                                                                      0:21      |
+|  S  |   ⎿ Elicitation plan v2 created                                                          |
+|     | ⏺ persona_generator                                                            0:35      |
+|     |   ⎿ PER-001  PER-002  PER-003                                                             |
+|     |   ⎿ Personas approved by you                                                             |
+|     | ⏺ interview  PER-001 Student, 12 turns                                         2:10      |
+|     | ⏺ interview  PER-002 Mentor, 9 turns                                           1:48      |
+|     | > Also ask about group sessions.                                                          |
+|     |   ⎿ queued, read at the next step                                                         |
+|     | ⏺ interview  PER-003 Admin, 10 turns                                          1:55      |
+|     | ⏺ analyst                                                                      0:52      |
+|     |   ⎿ 24 AR  3 AMB  1 CONF                                                                  |
+|     |   ⎿ PER-001 and PER-003 disagree on who approves a booking, see CONF-001.               |
+|     |                                                                                        |
+|     | ? Review: Requirements analysis v4                                                      |
+|     |                                                                                        |
+|     | +------------------------------------------------------------------------------------+ |
+|     | | > Message, @ to mention an item, / for a command                                    | |
+|     | +------------------------------------------------------------------------------------+ |
+|  *  |   ctrl+o expand step    esc stop run                                                   |
++-----+----------------------------------------------------------------------------------------+
 | Run 3: waiting for review | analysis_review | step 67 | $0.42 of $2.00 | workflow v1         |
 +----------------------------------------------------------------------------------------------+
 ```
 
 | Element | Content |
 |---|---|
-| Threads | The threads of the project, newest first, each with the stage of its latest run. A badge counts the reviews waiting in the thread |
 | `>` line | A message of the user. A message sent while a run is busy shows its delivery until a step reads it |
-| `*` line | One step, or a group of steps such as one interview, with the agent role, the keys of the items it produced, and its duration. Keys open the item; `ctrl+o` expands a group into its steps |
+| `⏺` line | A step of the workflow, printed as the node starts, with its agent role and duration. The marks follow Claude Code's CLI: a running step, `⎿` a detail under it, the run's end mark. Keys open the item |
+| `⎿` line | A detail under the step, printed while it runs: the text it wrote (Markdown), a tool it called, the items it produced, grouped such as one interview. `ctrl+o` expands a group into its steps |
 | Plain line | A message of an agent or of the system, in Markdown; item keys are links |
 | `?` line | A review that waits for the user, see [section 4](#4-review) |
-| Input box | The message; the first message of a thread starts a run. `@` mentions an item by key. `/` lists the commands `/stop`, `/retry`, `/export` and `/run-settings`, the last one for the run settings sent with the next message. `Esc` stops the run |
+| Input box | The message; the first message starts the first run. `@` mentions an item by key. `/` lists the commands `/stop`, `/retry`, `/export` and `/run-settings`, the last one for the run settings sent with the next message. `Esc` stops the run |
 
 ## 4. Review
 
@@ -141,7 +145,7 @@ When a run pauses at a checkpoint, the artifact under review opens on the left h
 +----------------------------------------------------------------------------------------------+
 | (K) khoai / Mentor platform v            [ Search or run a command   Ctrl+K ]         (user) |
 +-----+--------------------------------------------+-------------------------------------------+
-|     | Requirements analysis v4  x                | Main thread  x                            |
+|     | Requirements analysis v4  x                |                                            |
 | [C] +--------------------------------------------+-------------------------------------------+
 |  A  | Requirements analysis   v4   draft         | * analyst      24 AR  3 AMB  1 CONF  0:52 |
 |  W  |                                            |                                           |
@@ -168,7 +172,7 @@ When a run pauses at a checkpoint, the artifact under review opens on the left h
 - The options of the checkpoint are a numbered list, chosen with the arrow keys or the number. The feedback box appears when the chosen option requires feedback.
 - Items edited before answering are marked `M` in the artifact and listed in the review; they are sent as `modified_items`.
 - Questions, when a definition version adds them, appear under the options: a numbered list for `single_select`, `[ ]` check boxes for `multi_select`, a text box for `free_text` and a number box for `number`, each filled with its default answer.
-- `Esc` keeps the review in the thread, to answer later.
+- `Esc` leaves the review waiting in the conversation, to answer later.
 
 ## 5. Artifacts
 
@@ -250,13 +254,13 @@ Interview: PER-001 Student   iteration 0   12 turns
 
 ## 7. Workflow
 
-The side panel lists the runs of a thread and their steps; the editor shows the graph of the workflow version of the selected run, with the state of each node; the panel shows the selected step.
+The side panel lists the runs of the project and their steps (they live in the project's single conversation thread, but the thread is never shown, as in [Chat](#3-chat)); the editor shows the graph of the workflow version of the selected run, with the state of each node; the panel shows the selected step.
 
 ```text
 +----------------------------------------------------------------------------------------------+
 | (K) khoai / Mentor platform v            [ Search or run a command   Ctrl+K ]         (user) |
 +-----+--------------------------+-------------------------------------------------------------+
-|     | RUNS      Main thread v  | Run 3  x                                                    |
+|     | RUNS                     | Run 3  x                                                    |
 |  C  |                          +-------------------------------------------------------------+
 |  A  | v Run 3   waiting review |              [start]                                        |
 | [W] |     1  planner      done |                 |                                           |
@@ -346,7 +350,7 @@ The side panel lists the runs of a thread and their steps; the editor shows the 
 
 ## 10. Open points
 
-1. **Several runs in one project.** Each thread has at most one active run, so a project can have several. Open: what the status bar shows then, or whether a project allows only one.
+1. **Several runs or conversations in one project.** The API keeps threads, and each can hold at most one unfinished run, so a project could have several. The first version shows one conversation per project. Open: when to open a second conversation, and what the status bar shows when more than one run is unfinished.
 2. **Grouping in the explorer.** Grouping an artifact without sections by item kind is a choice of the web app, not data. Open: whether it fits every artifact kind.
 3. **Narrow screens.** The frame targets a desktop browser. On a narrow screen the activity bar could become a bottom tab bar and the side panel a drawer.
 4. **Font of the chat.** A monospace font for the whole chat, like a terminal, or only for the step lines.

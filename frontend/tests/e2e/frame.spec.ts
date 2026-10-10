@@ -1,12 +1,11 @@
 import { expect, test } from '@playwright/test'
 
-import { PROJECT_IDS, THREAD_IDS } from '../../src/mocks/mock-ids.constants'
+import { PROJECT_IDS } from '../../src/mocks/mock-ids.constants'
 
-const mainThread = `/projects/${PROJECT_IDS.mentor}/chat/${THREAD_IDS.mentorMain}`
+const chat = `/projects/${PROJECT_IDS.mentor}/chat`
 
 test('Ctrl+K opens the command palette, which goes to a feature', async ({ page }) => {
-  await page.goto(mainThread)
-  await expect(page.getByRole('complementary', { name: 'Threads' })).toBeVisible()
+  await page.goto(chat)
 
   await page.keyboard.press('Control+k')
   const palette = page.getByRole('dialog', { name: 'Command palette' })
@@ -21,8 +20,8 @@ test('Ctrl+K opens the command palette, which goes to a feature', async ({ page 
 })
 
 test('Ctrl+B hides and shows the side panel', async ({ page }) => {
-  await page.goto(mainThread)
-  const sidePanel = page.getByRole('complementary', { name: 'Threads' })
+  await page.goto(`/projects/${PROJECT_IDS.mentor}/search`)
+  const sidePanel = page.getByRole('complementary', { name: 'Search' })
   await expect(sidePanel).toBeVisible()
 
   await page.keyboard.press('Control+b')
@@ -32,16 +31,15 @@ test('Ctrl+B hides and shows the side panel', async ({ page }) => {
   await expect(sidePanel).toBeVisible()
 })
 
-test('the activity bar returns to the thread last open in Chat', async ({ page }) => {
-  await page.goto(mainThread)
-  await expect(page.getByRole('complementary', { name: 'Threads' })).toBeVisible()
+test('the activity bar returns to the last page open in Chat', async ({ page }) => {
+  await page.goto(chat)
 
   const features = page.getByRole('navigation', { name: 'Features' })
   await features.getByRole('link', { name: 'Workflow' }).click()
   await expect(page.getByRole('complementary', { name: 'Runs' })).toBeVisible()
   await features.getByRole('link', { name: /^Chat/ }).click()
 
-  await expect(page).toHaveURL(new RegExp(`${THREAD_IDS.mentorMain}$`))
+  await expect(page).toHaveURL(new RegExp(`/projects/${PROJECT_IDS.mentor}/chat$`))
 })
 
 for (const [state, label] of [
@@ -50,7 +48,7 @@ for (const [state, label] of [
   ['done', 'Run 3: done'],
 ] as const) {
   test(`the status bar shows a run that is ${state}`, async ({ page }) => {
-    await page.goto(`${mainThread}?mock-run-state=${state}`)
+    await page.goto(`${chat}?mock-run-state=${state}`)
 
     await expect(
       page.getByRole('contentinfo').getByRole('link', { name: new RegExp(label) }),

@@ -12,7 +12,7 @@ vi.mock('next/navigation', async () => (await import('@/test/next-mocks.utils'))
 vi.mock('next/link', async () => (await import('@/test/next-mocks.utils')).linkMock)
 
 beforeEach(() => {
-  setPathname('/projects/p1/chat/t1')
+  setPathname('/projects/p1/chat')
   useEditorTabsStore.setState({ groups: {}, lastHrefs: {} })
   useFrameStore.setState({ sidePanelVisible: true })
 })
@@ -33,6 +33,19 @@ describe('Workbench', () => {
     expect(screen.getByRole('main')).toHaveTextContent('editor')
   })
 
+  it('fills the workbench with the editor when the feature has no side panel', () => {
+    render(
+      <Workbench projectId="p1" feature="chat">
+        <p>editor</p>
+      </Workbench>,
+    )
+
+    expect(screen.getByRole('main')).toHaveTextContent('editor')
+    // Ctrl+B is a feature of the side panel, so without one it does nothing.
+    fireEvent.keyDown(document, { key: 'b', ctrlKey: true })
+    expect(screen.getByRole('main')).toHaveTextContent('editor')
+  })
+
   it('hides and shows the side panel with Ctrl+B', () => {
     renderWorkbench()
 
@@ -46,6 +59,6 @@ describe('Workbench', () => {
   it('remembers the page on screen for the activity bar', () => {
     renderWorkbench()
 
-    expect(useEditorTabsStore.getState().lastHrefs['p1:chat']).toBe('/projects/p1/chat/t1')
+    expect(useEditorTabsStore.getState().lastHrefs['p1:chat']).toBe('/projects/p1/chat')
   })
 })

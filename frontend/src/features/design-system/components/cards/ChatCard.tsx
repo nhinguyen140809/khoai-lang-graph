@@ -154,7 +154,7 @@ export function ChatCard() {
   return (
     <Card className="gap-0 pb-0">
       <CardHeader className="border-b pb-3">
-        <CardTitle>Main thread</CardTitle>
+        <CardTitle>Mentor platform</CardTitle>
         <CardDescription>Message, bubble, marker, attachment, message scroller.</CardDescription>
       </CardHeader>
       <CardContent className="p-0">

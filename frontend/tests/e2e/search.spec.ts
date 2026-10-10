@@ -16,13 +16,3 @@ test('searches the items and opens one in a tab', async ({ page }) => {
   const tabs = page.getByRole('navigation', { name: 'Open editors' })
   await expect(tabs.getByRole('link', { name: 'REQ-001' })).toBeVisible()
 })
-
-test('shows the status bar with several unfinished runs', async ({ page }) => {
-  await page.goto(`/projects/${PROJECT_IDS.mentor}/chat?mock-parallel-runs=many`)
-
-  await page.getByRole('button', { name: '+2 unfinished runs' }).click()
-
-  await expect(page.getByRole('dialog').getByRole('link', { name: /Booking rules/ })).toContainText(
-    'running',
-  )
-})

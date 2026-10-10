@@ -215,18 +215,18 @@ Vietnamese text needs a font that ships the `vietnamese` subset. The subsets of 
 - `(auth)`, `(home)` and `(project)` are route groups: the name in parentheses is not part of the URL. `(auth)` holds the pages that need no session, `(home)` the screens outside a project, and `(project)` the screens of a project. The `layout.tsx` of each group wraps its pages in the frame (`AppFrame`), and its `error.tsx` is the error boundary for those pages. Inside a project, each feature folder has a `layout.tsx` that puts the side panel of the feature next to the editor (`Workbench`).
 - The routes:
 
-  | URL                                                      | Screen                                                           |
-  | -------------------------------------------------------- | ---------------------------------------------------------------- |
-  | `/`                                                      | Redirects to `/projects`                                         |
-  | `/login`, `/register`                                    | Sign in; create an account. `?next=` gives the page to return to |
-  | `/projects`                                              | Project list                                                     |
-  | `/projects/{projectId}`                                  | Redirects to Chat                                                |
-  | `/projects/{projectId}/chat`, `.../chat/{threadId}`      | Chat: the threads and the chat of one thread                     |
-  | `/projects/{projectId}/artifacts`                        | Artifacts (not built yet)                                        |
-  | `/projects/{projectId}/workflow`, `.../workflow/{runId}` | Workflow and one run (not built yet)                             |
-  | `/projects/{projectId}/traceability`                     | Traceability (not built yet)                                     |
-  | `/projects/{projectId}/settings`                         | Project settings (not built yet)                                 |
-  | `/design-system`                                         | Design system, in development only                               |
+  | URL                                                      | Screen                                                                        |
+  | -------------------------------------------------------- | ----------------------------------------------------------------------------- |
+  | `/`                                                      | Redirects to `/projects`                                                      |
+  | `/login`, `/register`                                    | Sign in; create an account. `?next=` gives the page to return to              |
+  | `/projects`                                              | Project list                                                                  |
+  | `/projects/{projectId}`                                  | Redirects to Chat                                                             |
+  | `/projects/{projectId}/chat`                             | Chat: the conversation of the project and its runs (one flow, no thread list) |
+  | `/projects/{projectId}/artifacts`                        | Artifacts (not built yet)                                                     |
+  | `/projects/{projectId}/workflow`, `.../workflow/{runId}` | Workflow and one run (not built yet)                                          |
+  | `/projects/{projectId}/traceability`                     | Traceability (not built yet)                                                  |
+  | `/projects/{projectId}/settings`                         | Project settings (not built yet)                                              |
+  | `/design-system`                                         | Design system, in development only                                            |
 
 - `src/app/` holds only routing files. A `page.tsx` renders a component from `src/features/`.
 - Every endpoint except register, login and health answers 401 without a session. The query client (`src/lib/query-client.config.ts`) then opens `/login?next=<the page>`, which returns to the page after signing in; `next` is kept only when it is a path of this app. Signing out (account menu) ends the session and clears the query cache.
@@ -246,7 +246,7 @@ Every screen uses the frame in `src/components/layout/`, after the layout of an 
 
 `Cmd` works in place of `Ctrl` on macOS.
 
-Each feature of a project has its own editor tabs. A tab shows the icon of what it opens (`editor-tabs.config.ts`: a thread, an artifact, an item, a run, a view, settings), or the icon of its feature when it names none, and a new tab opens next to the tab of the page shown before it.
+Each feature of a project has its own editor tabs. A tab shows the icon of what it opens (`editor-tabs.config.ts`: an artifact, an item, a run, a view, settings), or the icon of its feature when it names none, and a new tab opens next to the tab of the page shown before it. The Chat feature has no tabs: it shows the single conversation of the project, so its editor has no tab strip.
 
 ### Browser storage
 

@@ -4,7 +4,7 @@ import { delay, sse } from 'msw'
 // EventSource, which jsdom does not provide. Only the browser worker loads this file; Playwright
 // covers streaming.
 
-const MOCK_TOKENS = ['Hello', ' from', ' the', ' **mock**', ' agent.']
+const MOCK_TOKENS = ['An elicitation plan', ' for', ' the', ' **mentor', ' platform.']
 
 export const streamHandlers = [
   sse('/api/v1/runs/:runId/stream', async ({ client }) => {
@@ -14,12 +14,17 @@ export const streamHandlers = [
       client.send({ id: String(id), event, data: JSON.stringify(data) } as never)
     }
 
-    send('node_start', { node: 'agent' })
+    send('node_start', { node: 'planner' })
     for (const text of MOCK_TOKENS) {
       await delay(50)
-      send('token', { node: 'agent', text })
+      send('token', { node: 'planner', text })
     }
-    send('node_end', { node: 'agent' })
+    send('artifact_created', {
+      artifact_id: 'c3d10000-0000-4000-8000-000000000001',
+      name: 'Elicitation plan',
+      version: 1,
+    })
+    send('node_end', { node: 'planner' })
     send('done', {})
   }),
 ]

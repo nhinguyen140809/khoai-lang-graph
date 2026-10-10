@@ -38,15 +38,6 @@ export type MockRunState = 'running' | 'waiting' | 'failed' | 'done'
 const RUN_STATES: readonly string[] = ['running', 'waiting', 'failed', 'done']
 
 /**
- * Whether several runs of the mentor platform are unfinished at once, chosen in the page URL with
- * `?mock-parallel-runs=many`: besides the main thread, "Booking rules" has a running run and
- * "Export formats" a queued one.
- */
-export function mockParallelRuns(): boolean {
-  return pageParam('mock-parallel-runs') === 'many'
-}
-
-/**
  * The state of the mock run that waits at the analysis review by default, chosen in the page URL
  * with `?mock-run-state=running` (or `failed`, `done`). The threads and runs handlers read it.
  */

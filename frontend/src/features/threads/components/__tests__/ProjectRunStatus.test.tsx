@@ -3,7 +3,7 @@ import userEvent from '@testing-library/user-event'
 import { http, HttpResponse } from 'msw'
 import { describe, expect, it, vi } from 'vitest'
 
-import { PROJECT_IDS, RUN_IDS, THREAD_IDS } from '@/mocks/mock-ids.constants'
+import { PROJECT_IDS, RUN_IDS } from '@/mocks/mock-ids.constants'
 import { server } from '@/mocks/msw-server.setup'
 import { TestProviders } from '@/test/TestProviders'
 
@@ -24,22 +24,6 @@ describe('ProjectRunStatus', () => {
     expect(link).toHaveTextContent('step 67')
     expect(link).toHaveTextContent('$0.42 of $2.00')
     expect(link).toHaveTextContent('workflow v1')
-  })
-
-  it('lists the threads of the other unfinished runs', async () => {
-    window.history.pushState({}, '', '/?mock-parallel-runs=many')
-    render(<ProjectRunStatus projectId={PROJECT_IDS.mentor} />, { wrapper: TestProviders })
-
-    await userEvent.click(await screen.findByRole('button', { name: '+2 unfinished runs' }))
-
-    const running = await screen.findByRole('link', { name: /Booking rules/ })
-    expect(running).toHaveTextContent('running')
-    expect(running).toHaveAttribute(
-      'href',
-      `/projects/${PROJECT_IDS.mentor}/chat/${THREAD_IDS.mentorBooking}`,
-    )
-    expect(screen.getByRole('link', { name: /Export formats/ })).toHaveTextContent('queued')
-    window.history.pushState({}, '', '/')
   })
 
   it('shows the latest run when no run is unfinished', async () => {

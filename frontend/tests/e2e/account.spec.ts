@@ -22,7 +22,7 @@ test('signing out leads to the sign-in page, which returns to the page asked for
   await page.getByRole('button', { name: 'Sign in' }).click()
 
   await expect(page).toHaveURL(new RegExp(`/projects/${PROJECT_IDS.mentor}/chat$`))
-  await expect(page.getByRole('complementary', { name: 'Threads' })).toBeVisible()
+  await expect(page.getByRole('textbox', { name: 'Message' })).toBeVisible()
 })
 
 test('creates an account and opens the projects with it', async ({ page }) => {

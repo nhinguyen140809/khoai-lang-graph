@@ -33,6 +33,9 @@ export const createRunResponseSchema = z.object({ run_id: z.string() })
 
 export type CreateRunResponse = z.infer<typeof createRunResponseSchema>
 
+// The thread of the conversation of a project; only its id is read, whatever else the list returns.
+export const chatThreadIdSchema = z.object({ id: z.string() })
+
 export interface ChatTurn {
   id: string
   prompt: string

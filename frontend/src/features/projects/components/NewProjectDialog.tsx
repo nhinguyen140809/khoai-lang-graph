@@ -25,8 +25,8 @@ export function NewProjectDialog() {
         <DialogHeader>
           <DialogTitle>New project</DialogTitle>
           <DialogDescription>
-            A project holds the requirements of one product. It opens on an empty thread: the first
-            message starts the first run.
+            A project holds the requirements of one product. It opens on an empty conversation: the
+            first message starts the first run.
           </DialogDescription>
         </DialogHeader>
         <NewProjectForm
