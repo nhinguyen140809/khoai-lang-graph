@@ -58,21 +58,87 @@ async def list_project_artifacts(
     return Page(items=artifacts, next_cursor=next_cursor)
 
 
-@router.get("/projects/{project_id}/links")
+@router.get("/projects/{project_id}/trace-links")
 async def list_project_trace_links(
     project_id: UUID,
     user: deps.CurrentUser,
     db: deps.DbSession,
     *,
+    link_type: Annotated[str | None, Query()] = None,
+    source_item_id: Annotated[UUID | None, Query()] = None,
+    target_item_id: Annotated[UUID | None, Query()] = None,
     cursor: Annotated[int, Query(ge=0)] = 0,
     limit: Annotated[int, Query(ge=1, le=MAX_LIMIT)] = 200,
 ) -> Page[schemas.TraceLink]:
-    """The trace links of the project, both ends resolved (§5 Traceability)."""
+    """Current links of the project, both ends resolved (API.md §5); the
+    optional filters keep one link type or one link end."""
     await get_project_row(db, project_id)
-    links, next_cursor = await service.list_project_links(
-        db, project_id, limit=limit, cursor=cursor
+    links, _all_fetched = await service.list_project_links(
+        db, project_id, limit=10_000, cursor=0
     )
-    return Page(items=links, next_cursor=next_cursor)
+    if link_type is not None:
+        links = [link for link in links if link.link_type == link_type]
+    if source_item_id is not None:
+        links = [link for link in links if link.source.id == str(source_item_id)]
+    if target_item_id is not None:
+        links = [link for link in links if link.target.id == str(target_item_id)]
+    window = links[cursor : cursor + limit]
+    next_cursor = cursor + len(window) if cursor + len(window) < len(links) else None
+    return Page(items=window, next_cursor=next_cursor)
+
+
+@router.get("/projects/{project_id}/traceability/matrix")
+async def traceability_matrix(
+    project_id: UUID,
+    user: deps.CurrentUser,
+    db: deps.DbSession,
+) -> dict[str, list[schemas.MatrixChainRow]]:
+    """Rows of `derived_from` chains from backlog item down to raw requirement
+    (API.md; the Traceability matrix view)."""
+    await get_project_row(db, project_id)
+    rows = await service.traceability_matrix(db, project_id)
+    return {"rows": rows}
+
+
+@router.get("/projects/{project_id}/traceability/coverage")
+async def traceability_coverage(
+    project_id: UUID,
+    user: deps.CurrentUser,
+    db: deps.DbSession,
+) -> schemas.TraceCoverage:
+    """Counts and lists (API.md): requirements with no backlog item,
+    requirements with no source, items that need review after a source
+    changed."""
+    await get_project_row(db, project_id)
+    return await service.traceability_coverage(db, project_id)
+
+
+@router.get("/items/{item_id}/revisions")
+async def item_revisions(
+    item_id: UUID,
+    user: deps.CurrentUser,
+    db: deps.DbSession,
+) -> Page[schemas.ItemRevision]:
+    """Version history of the item, newest first (the TIMELINE view)."""
+    revisions = await service.item_revisions(db, item_id)
+    return Page(items=revisions, next_cursor=None)
+
+
+@router.get("/items/{item_id}/trace")
+async def item_trace(
+    item_id: UUID,
+    user: deps.CurrentUser,
+    db: deps.DbSession,
+    *,
+    direction: Annotated[str, Query()] = "both",
+    depth: Annotated[int, Query(ge=1, le=10)] = 5,
+) -> dict[str, Any]:
+    """The chain of one item: `nodes` and their `links`, walked `depth`
+    hops backward, forward or both (API.md §5)."""
+    nodes, links = await service.item_trace(
+        db, item_id, direction=direction, depth=depth
+    )
+    return {"nodes": nodes, "links": links}
 
 
 @router.get("/items/{item_id}")

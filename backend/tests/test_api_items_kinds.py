@@ -111,7 +111,7 @@ async def test_list_project_artifacts_tree(client: AsyncClient) -> None:
 async def test_list_project_links_resolves_both_ends(client: AsyncClient) -> None:
     project_id, _thread_id = await seeded_run(client)
 
-    response = await client.get(f"/api/v1/projects/{project_id}/links")
+    response = await client.get(f"/api/v1/projects/{project_id}/trace-links")
 
     body = response.json()
     assert response.status_code == 200
@@ -131,6 +131,69 @@ async def test_list_project_links_resolves_both_ends(client: AsyncClient) -> Non
         assert set(link[end]) == {"id", "key", "kind", "review_status"}
     types = {entry["link_type"] for entry in body["items"]}
     assert "derived_from" in types
+
+
+async def test_traceability_matrix_rows(client: AsyncClient) -> None:
+    project_id, _thread_id = await seeded_run(client)
+
+    response = await client.get(f"/api/v1/projects/{project_id}/traceability/matrix")
+
+    rows = response.json()["rows"]
+    assert response.status_code == 200
+    assert rows, "the workflow writes derived_from chains"
+    first = rows[0]
+    assert set(first) == {"backlog", "spec", "analyzed", "source", "evidence"}
+    assert first["backlog"] is not None
+    assert first["backlog"]["kind"] == "backlog_item"
+    assert first["spec"] is not None
+    assert first["spec"]["kind"] == "spec_requirement"
+    assert first["analyzed"] is not None
+    expected_sources = {"raw_requirement", "latent_need"}
+    assert any(entry["kind"] in expected_sources for entry in first["source"])
+
+
+async def test_traceability_coverage_lists(client: AsyncClient) -> None:
+    project_id, _thread_id = await seeded_run(client)
+
+    response = await client.get(f"/api/v1/projects/{project_id}/traceability/coverage")
+
+    body = response.json()
+    assert response.status_code == 200
+    entry_fields = {"id", "key", "kind", "review_status"}
+    for key in ("no_backlog_item", "no_source", "needs_review"):
+        assert body[key]["count"] == len(body[key]["items"])
+        for entry in body[key]["items"]:
+            assert set(entry) == entry_fields
+
+
+async def test_item_revisions_desc(client: AsyncClient) -> None:
+    project_id, _thread_id = await seeded_run(client)
+    items = await client.get(f"/api/v1/projects/{project_id}/items", params={"q": "REQ-00"})
+    item_id = items.json()["items"][0]["id"]
+
+    response = await client.get(f"/api/v1/items/{item_id}/revisions")
+
+    body = response.json()
+    assert response.status_code == 200
+    assert body["items"], "the sink writes a revision per version"
+    first = body["items"][0]
+    assert set(first) == {"item_id", "version", "change_reason", "snapshot", "created_at"}
+    versions = [entry["version"] for entry in body["items"]]
+    assert versions == sorted(versions, reverse=True)
+
+
+async def test_item_trace_walks_both_directions(client: AsyncClient) -> None:
+    project_id, _thread_id = await seeded_run(client)
+    items = await client.get(f"/api/v1/projects/{project_id}/items", params={"q": "US-0"})
+    item_id = items.json()["items"][0]["id"]
+
+    response = await client.get(f"/api/v1/items/{item_id}/trace")
+
+    body = response.json()
+    assert response.status_code == 200
+    assert body["nodes"], "the chain resolves items"
+    assert body["links"], "the chain carries links"
+    assert any(link["link_type"] == "derived_from" for link in body["links"])
 
 
 async def test_search_finds_spec_requirements(client: AsyncClient) -> None:

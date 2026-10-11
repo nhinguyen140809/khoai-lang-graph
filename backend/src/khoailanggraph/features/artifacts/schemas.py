@@ -2,7 +2,7 @@
 
 from __future__ import annotations
 
-from typing import Any
+from typing import Any, Literal
 
 from pydantic import BaseModel, ConfigDict
 
@@ -17,6 +17,7 @@ class Item(BaseModel):
     id: str
     project_id: str
     artifact_id: str
+    parent_item_id: str | None
     key: str
     kind: str
     review_status: str
@@ -50,6 +51,62 @@ class ItemLinkRef(BaseModel):
     key: str
     kind: str
     review_status: str
+
+
+class ItemRevision(BaseModel):
+    """One version of an item (GET /items/{id}/revisions, DATA_SHAPE §7)."""
+
+    model_config = ConfigDict(extra="forbid")
+
+    item_id: str
+    version: int
+    change_reason: Literal[
+        "generated", "user_edit", "rework", "restored", "deleted"
+    ]
+    snapshot: dict[str, Any]
+    created_at: IsoDatetime
+
+
+class MatrixChainRef(BaseModel):
+    model_config = ConfigDict(extra="forbid")
+
+    id: str
+    key: str
+    kind: str
+    review_status: str
+
+
+class MatrixChainRow(BaseModel):
+    """One row of the coverage matrix (API.md: 'derived_from chains from
+    backlog item down to raw requirement'); source and evidence may be
+    several per skeleton's comma-joined cells."""
+
+    model_config = ConfigDict(extra="forbid")
+
+    backlog: MatrixChainRef | None
+    spec: MatrixChainRef | None
+    analyzed: MatrixChainRef | None
+    source: list[MatrixChainRef]
+    evidence: list[MatrixChainRef]
+
+
+class CoverageEntry(BaseModel):
+    model_config = ConfigDict(extra="forbid")
+
+    count: int
+    items: list[MatrixChainRef]
+
+
+class TraceCoverage(BaseModel):
+    """The three coverage lists of API.md: requirements with no backlog
+    item, requirements with no source, items that need review after a
+    source changed."""
+
+    model_config = ConfigDict(extra="forbid")
+
+    no_backlog_item: CoverageEntry
+    no_source: CoverageEntry
+    needs_review: CoverageEntry
 
 
 class TraceLink(BaseModel):
