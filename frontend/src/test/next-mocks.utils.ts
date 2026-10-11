@@ -10,9 +10,15 @@ import { vi } from 'vitest'
 // and sets the current address with `setPathname('/projects/p1/console')`.
 
 let pathname = '/'
+let search = ''
 
 export function setPathname(next: string) {
   pathname = next
+}
+
+/** Sets the query of the current address, such as `step=abc`. */
+export function setSearch(next: string) {
+  search = next
 }
 
 export const routerMock = {
@@ -26,7 +32,7 @@ export const routerMock = {
 export const navigationMock = {
   usePathname: () => pathname,
   useRouter: () => routerMock,
-  useSearchParams: () => new URLSearchParams(),
+  useSearchParams: () => new URLSearchParams(search),
   useParams: () => ({}),
 }
 
