@@ -184,20 +184,21 @@ export function WorkflowGraph({
   }))
 
   return (
-    <Flow<WorkflowFlowNode, WorkflowFlowEdge>
-      nodes={flowNodes}
-      edges={flowEdges}
-      nodeTypes={nodeTypes}
-      edgeTypes={edgeTypes}
-      onNodeClick={(_event, node) => {
-        onNodeSelect(node.id)
-      }}
-      fitView
-      fitViewOptions={{ padding: 0.08, maxZoom: 0.9 }}
-      className="h-[560px] w-full"
-    >
-      <Background variant={BackgroundVariant.Dots} gap={24} />
-      <Controls showInteractive={false} />
-    </Flow>
+    <div style={{ height: 560 }} className="w-full overflow-hidden rounded-lg border">
+      <Flow<WorkflowFlowNode, WorkflowFlowEdge>
+        nodes={flowNodes}
+        edges={flowEdges}
+        nodeTypes={nodeTypes}
+        edgeTypes={edgeTypes}
+        onNodeClick={(_event, node) => {
+          onNodeSelect(node.id)
+        }}
+        fitView
+        fitViewOptions={{ padding: 0.08, maxZoom: 0.9 }}
+      >
+        <Background variant={BackgroundVariant.Dots} gap={24} />
+        <Controls showInteractive={false} />
+      </Flow>
+    </div>
   )
 }
