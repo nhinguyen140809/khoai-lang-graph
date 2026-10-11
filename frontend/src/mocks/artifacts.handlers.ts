@@ -1,12 +1,12 @@
 import { http, HttpResponse } from 'msw'
 
-import type { ArtifactItem, Export, Revision, Trace } from '@/features/artifacts'
+import type { Artifact, ArtifactItem, Export, Revision, Trace } from '@/features/artifacts'
 import { fieldViews, validateContent } from '@/features/artifacts'
 
 import { mockArtifactKinds } from './artifact-kinds.fixtures'
 import { mockArtifactItems, mockArtifacts, mockTraceLinks } from './artifacts.fixtures'
 import definition from './data/workflow/requirements_engineering.v1.json'
-import { createdExports, type ItemEdit, itemEdits } from './mock-artifacts.store'
+import { artifactStatuses, createdExports, type ItemEdit, itemEdits } from './mock-artifacts.store'
 import { createdId, USER_ID } from './mock-ids.constants'
 import { answerScenario, mockScenario } from './mock-scenario.utils'
 import { paginate } from './pagination.utils'
@@ -36,6 +36,14 @@ function current(item: ArtifactItem): ArtifactItem {
     updated_by: userOrigin,
     updated_at: edit.updated_at,
   }
+}
+
+/** An artifact with the status that an approval gave it. */
+function currentArtifact(artifact: Artifact): Artifact {
+  const status = artifactStatuses.get()[artifact.id]
+  return status === undefined
+    ? artifact
+    : { ...artifact, review_status: status as Artifact['review_status'] }
 }
 
 function allItems(): ArtifactItem[] {
@@ -187,6 +195,7 @@ export const artifactHandlers = [
     const query = new URL(request.url).searchParams
     const kinds = definition.artifact_kinds.map(({ kind }) => kind)
     const artifacts = mockArtifacts
+      .map(currentArtifact)
       .filter((artifact) => artifact.project_id === projectId)
       .filter((artifact) => query.get('kind') === null || artifact.kind === query.get('kind'))
       .filter(
@@ -205,7 +214,9 @@ export const artifactHandlers = [
     const answered = await answerScenario(mockScenario('artifact'))
     if (answered !== null) return answered
     const artifact = mockArtifacts.find(({ id }) => id === params.artifactId)
-    return artifact === undefined ? notFound('The artifact') : HttpResponse.json(artifact)
+    return artifact === undefined
+      ? notFound('The artifact')
+      : HttpResponse.json(currentArtifact(artifact))
   }),
 
   http.get('/api/v1/artifacts/:artifactId/items', async ({ params, request }) => {

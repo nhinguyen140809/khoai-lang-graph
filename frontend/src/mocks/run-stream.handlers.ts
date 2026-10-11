@@ -4,6 +4,7 @@ import type { RunStep } from '@/features/threads'
 
 import { createdId } from './mock-ids.constants'
 import { changeRun, createdRuns, createdSteps } from './mock-runs.store'
+import { pageParam } from './mock-scenario.utils'
 import { findMockRun } from './runs.handlers'
 
 // Kept out of runs.handlers.ts, which the unit tests also load, because sse() needs a global
@@ -66,6 +67,11 @@ function stepRecord(
 export const streamHandlers = [
   sse('/api/v1/runs/:runId/stream', async ({ client, params }) => {
     let id = 0
+    // The mock stream reaches the page when the handler returns, so a run that waits does not
+    // hold it open: it says when to try again, a long time from now, and closes.
+    const wait = () => {
+      client.send({ retry: 3_600_000 })
+    }
     const send = (event: string, data: unknown) => {
       id += 1
       client.send({ id: String(id), event, data: JSON.stringify(data) } as never)
@@ -85,13 +91,13 @@ export const streamHandlers = [
     if (run.status === 'interrupted') {
       send('node_start', { node: 'checkpoint_analysis' })
       send('interrupt', { node: 'checkpoint_analysis', payload: {} })
-      await delay('infinite')
+      wait()
       return
     }
 
     if (!played) {
       send('node_start', { node: run.current_stage })
-      await delay('infinite')
+      wait()
       return
     }
 
@@ -128,6 +134,13 @@ export const streamHandlers = [
         ),
       })
       send('node_end', { node: step.node })
+    }
+    // With `?mock-play=review`, the played run stops at the review of the personas.
+    if (pageParam('mock-play') === 'review') {
+      changeRun(runId, { status: 'interrupted', current_stage: 'persona_review' })
+      send('interrupt', { node: 'checkpoint_personas', payload: {} })
+      wait()
+      return
     }
     changeRun(runId, {
       status: 'succeeded',

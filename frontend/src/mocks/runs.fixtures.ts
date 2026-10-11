@@ -422,12 +422,16 @@ const scriptedStepCounts = { running: 6, interrupted: 67, failed: 20, cancelled:
  * step failed, and one that runs has its last step running.
  */
 export function scriptedSteps(runItem: Run, runIndex: number): RunStep[] {
+  const waitsAtPersonas =
+    runItem.status === 'interrupted' && runItem.current_stage === 'persona_review'
   const count =
     runItem.status === 'succeeded'
       ? mentorRun3Specs.length
       : runItem.status === 'queued'
         ? 0
-        : scriptedStepCounts[runItem.status]
+        : waitsAtPersonas
+          ? 3
+          : scriptedStepCounts[runItem.status]
   const steps = buildSteps(
     runItem.id,
     runIndex,

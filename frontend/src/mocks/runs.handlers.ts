@@ -52,42 +52,6 @@ export function startMockRun(thread: { id: string; project_id: string }, retryOf
   return run
 }
 
-// The pending review of a run that waits at the analysis review.
-const pendingReview = {
-  id: '7b0c0000-0000-4000-8000-000000000001',
-  run_id: '',
-  node: 'checkpoint_analysis',
-  status: 'pending',
-  prompt: 'Review the requirements analysis. Accept it, or reject it with feedback.',
-  options: [
-    { key: 'accept', label: 'Accept', requires_feedback: false, approves: true, is_default: true },
-    {
-      key: 'reject_reanalyse',
-      label: 'Reject and re-analyse',
-      requires_feedback: true,
-      approves: false,
-      is_default: false,
-    },
-    {
-      key: 'reject_reinterview',
-      label: 'Reject and re-interview',
-      requires_feedback: true,
-      approves: false,
-      is_default: false,
-    },
-  ],
-  questions: [],
-  allow_edits: true,
-  review_artifacts: [
-    {
-      artifact_id: 'b2100000-0000-4000-8000-000000000001',
-      kind: 'requirements_analysis',
-      title: 'Requirements analysis',
-      version: 4,
-    },
-  ],
-}
-
 export const runHandlers = [
   http.get('/api/v1/threads/:threadId/runs', async ({ params, request }) => {
     const answered = await answerScenario(mockScenario('runs'))
@@ -111,18 +75,6 @@ export const runHandlers = [
     const runId = String(params.runId)
     if (findMockRun(runId) === undefined) return notFound('The run')
     return HttpResponse.json(paginate(stepsOfRun(runId), request))
-  }),
-
-  http.get('/api/v1/runs/:runId/interrupts', async ({ params, request }) => {
-    const answered = await answerScenario(mockScenario('runs'))
-    if (answered !== null) return answered
-    const run = findMockRun(String(params.runId))
-    if (run === undefined) return notFound('The run')
-    const pending = run.status === 'interrupted' ? [{ ...pendingReview, run_id: run.id }] : []
-    const status = new URL(request.url).searchParams.get('status')
-    return HttpResponse.json(
-      paginate(status === 'pending' || status === null ? pending : [], request),
-    )
   }),
 
   http.post('/api/v1/runs/:runId/cancel', ({ params }) => {

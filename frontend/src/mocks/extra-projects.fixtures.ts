@@ -26,7 +26,7 @@ function runsOf(spec: ExtraProjectSpec): Run[] {
   const stage = {
     succeeded: 'done',
     running: 'interviewing',
-    interrupted: 'analysis_review',
+    interrupted: 'persona_review',
     failed: 'analysis',
     cancelled: 'interviewing',
     queued: 'planning',
@@ -50,7 +50,7 @@ function runsOf(spec: ExtraProjectSpec): Run[] {
       step_count: {
         succeeded: 71,
         running: 6,
-        interrupted: 67,
+        interrupted: 3,
         failed: 20,
         cancelled: 9,
         queued: 0,

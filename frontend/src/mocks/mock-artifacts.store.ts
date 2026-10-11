@@ -15,4 +15,6 @@ export interface ItemEdit {
 }
 
 export const itemEdits = mockRecord<Record<string, ItemEdit>>('item-edits', () => ({}))
+/** The review status that an approval gave to artifacts, by artifact id. */
+export const artifactStatuses = mockRecord<Record<string, string>>('artifact-statuses', () => ({}))
 export const createdExports = mockRecord<Export[]>('created-exports', () => [])
