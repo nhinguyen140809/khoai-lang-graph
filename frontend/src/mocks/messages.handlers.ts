@@ -1,6 +1,6 @@
 import { http, HttpResponse } from 'msw'
 
-import type { Message } from '@/features/session'
+import type { Message } from '@/features/console'
 
 import { extraMessages } from './extra-projects.fixtures'
 import { mockMessages } from './messages.fixtures'

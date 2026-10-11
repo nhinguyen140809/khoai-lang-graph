@@ -3,7 +3,7 @@ import type { Thread } from '@/features/threads'
 import { PROJECT_IDS, RUN_IDS, THREAD_IDS, USER_ID } from './mock-ids.constants'
 import { type MockRunState } from './mock-scenario.utils'
 
-// Mock threads. Every project has one thread, the session of the project; the thread of the
+// Mock threads. Every project has one thread, the console of the project; the thread of the
 // mentor platform holds the run of the API examples, so its stage and its unfinished run follow
 // the `mock-run-state` scenario.
 

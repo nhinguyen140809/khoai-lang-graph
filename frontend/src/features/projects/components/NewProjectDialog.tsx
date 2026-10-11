@@ -12,7 +12,7 @@ import { useProjectDefaults } from '../hooks/useProjectDefaults'
 import { useNewProjectDialogStore } from '../new-project.store'
 import { NewProjectForm } from './NewProjectForm'
 
-/** Asks for the name, description and output language of a project, then opens its session. */
+/** Asks for the name, description and output language of a project, then opens its console. */
 export function NewProjectDialog() {
   const open = useNewProjectDialogStore((state) => state.open)
   const setOpen = useNewProjectDialogStore((state) => state.setOpen)
@@ -25,7 +25,7 @@ export function NewProjectDialog() {
         <DialogHeader>
           <DialogTitle>New project</DialogTitle>
           <DialogDescription>
-            A project holds the requirements of one product. It opens on an empty session: the first
+            A project holds the requirements of one product. It opens on an empty console: the first
             message starts the first run.
           </DialogDescription>
         </DialogHeader>

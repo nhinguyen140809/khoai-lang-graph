@@ -1,6 +1,6 @@
 # Screen Skeletons
 
-ASCII skeletons of the main screens of the web app. The layout follows VS Code: a top bar with the app and the project, an activity bar with the features of the project on the left, a side panel to navigate inside the chosen feature, an editor with tabs, and a status bar. The session shows the event log of the runs of the project, with an input box at the bottom.
+ASCII skeletons of the main screens of the web app. The layout follows VS Code: a top bar with the app and the project, an activity bar with the features of the project on the left, a side panel to navigate inside the chosen feature, an editor with tabs, and a status bar. The console shows the event log of the runs of the project, with an input box at the bottom.
 
 The skeletons fix the regions and what each one holds; sizes, colors and components come later. The apps behind this layout are in [UI Reference Apps](reference-apps.md), and the data each region draws is in [Web App](../architecture/web-app.md) and [API design](../API.md). The examples use the project of the API examples: an online platform where university students find mentors.
 
@@ -10,7 +10,7 @@ The skeletons fix the regions and what each one holds; sizes, colors and compone
   - [Contents](#contents)
   - [1. Frame](#1-frame)
   - [2. Project list](#2-project-list)
-  - [3. Session](#3-session)
+  - [3. Console](#3-console)
   - [4. Review](#4-review)
   - [5. Artifacts](#5-artifacts)
   - [6. Artifact as a document](#6-artifact-as-a-document)
@@ -33,7 +33,7 @@ Every screen inside a project uses this frame.
 | [E] |                          +-------------------------------------------------------------+
 |  A  | Navigation inside the    | EDITOR                                                      |
 |  W  | feature chosen on the    |                                                             |
-|  T  | activity bar             | The session, an artifact, an item, the graph or a table,       |
+|  T  | activity bar             | The console, an artifact, an item, the graph or a table,       |
 |  S  |                          | opened from the side panel                                  |
 |     |                          |                                                             |
 |     |                          +-------------------------------------------------------------+
@@ -47,9 +47,9 @@ Every screen inside a project uses this frame.
 | Region | Holds |
 |---|---|
 | Top bar | The logo, the project name with a menu to switch project or go back to the project list, a box to search items and run commands (`Ctrl+K`), the user menu |
-| Activity bar | One icon per feature of the project: `E` Session, `A` Artifacts, `W` Workflow, `T` Traceability, `S` Sources (Later), and `*` Settings at the bottom. A badge shows a count, such as the reviews waiting on Session |
-| Side panel | Navigation inside the chosen feature: the artifact tree, the runs and their steps, the coverage counts. Session has an outline of its event log and the list of sessions. `Ctrl+B` hides and shows the panel |
-| Editor | What was opened from the side panel, in tabs. Two tabs can be shown side by side, for example an artifact and the session during a review |
+| Activity bar | One icon per feature of the project: `E` Console, `A` Artifacts, `W` Workflow, `T` Traceability, `S` Sources (Later), and `*` Settings at the bottom. A badge shows a count, such as the reviews waiting on Console |
+| Side panel | Navigation inside the chosen feature: the artifact tree, the runs and their steps, the coverage counts. Console has an outline of its event log and the list of consoles. `Ctrl+B` hides and shows the panel |
+| Editor | What was opened from the side panel, in tabs. Two tabs can be shown side by side, for example an artifact and the console during a review |
 | Panel | An optional area under the editor: the trace and the timeline of the open item, or the detail of the selected step |
 | Status bar | The active run of the project: its state, stage, step, cost against `max_cost_usd`, and the workflow version. A click opens the run in Workflow |
 
@@ -66,7 +66,7 @@ Marks used in the skeletons:
 | `-` | A detail under a step, printed while the step runs: text, a tool call, an item produced |
 | `...` | More rows of the same kind |
 
-Threads stay in the API: a thread maps one-to-one to a workflow session and holds at most one unfinished run. The web app never shows them: there is no sidebar of threads, and every project has a single session, shown as one event log with the one input box at the bottom. The thread of a project is created when its session is first opened.
+Threads stay in the API: a thread maps one-to-one to a workflow session and holds at most one unfinished run. The web app never shows them: there is no sidebar of threads, and every project has a single console, shown as one event log with the one input box at the bottom. The thread of a project is created when its session is first opened.
 
 ## 2. Project list
 
@@ -89,19 +89,19 @@ The only screen outside a project, so it has no activity bar.
 +----------------------------------------------------------------------------------------------+
 ```
 
-- A row opens the project at Session. Items are the `item_counts` of the project.
-- `New project` asks for a name, a description and the output language, then opens Session on an empty event log; the first message starts the first run.
+- A row opens the project at Console. Items are the `item_counts` of the project.
+- `New project` asks for a name, a description and the output language, then opens Console on an empty event log; the first message starts the first run.
 
-## 3. Session
+## 3. Console
 
-The session is the working view of the project: the event log of its runs, with an input at the bottom. The side panel has two views: the outline of the session on screen, which goes to each message or command that the user typed, and the list of the sessions of the project. The editor is the log, without tabs.
+The console is the working view of the project: the event log of its runs, with an input at the bottom. The side panel has two views: the outline of the console on screen, which goes to each message or command that the user typed, and the list of the consoles of the project. The editor is the log, without tabs.
 
 ```text
 +----------------------------------------------------------------------------------------------+
 | (K) khoai / Mentor platform v            [ Search or run a command   Ctrl+K ]         (user) |
 +-----+--------------------------+-------------------------------------------------------------+
-|     | SESSION                  | 2026-10-06                                                  |
-| [E] | [Outline] Sessions       | 08:30:01  run     Run 3 started, retrying run 2             |
+|     | CONSOLE                  | 2026-10-06                                                  |
+| [E] | [Outline] Consoles       | 08:30:01  run     Run 3 started, retrying run 2             |
 |  A  |                          | 08:30:01  step    planner                            0:09   |
 |  W  | 08:10:00  I want to      | 08:30:10  step    persona_generator  PER-001  PER-002 0:18  |
 |  T  |           build an on... | 08:30:28  step    checkpoint_personas                1:35   |
@@ -123,8 +123,8 @@ The session is the working view of the project: the event log of its runs, with 
 
 | Part | Content |
 |---|---|
-| Outline | Each time the user typed a message or ran a command in the session, oldest first, with its time. Choosing one scrolls the event log to it |
-| Sessions | The sessions of the project, each with the stage of its latest run and a badge for the reviews waiting. A project has one session today, so the list has one entry |
+| Outline | Each time the user typed a message or ran a command in the console, oldest first, with its time. Choosing one scrolls the event log to it |
+| Consoles | The consoles of the project, each with the stage of its latest run and a badge for the reviews waiting. A project has one console today, so the list has one entry |
 
 Every row of the log has the same columns: the time, the kind of event, what happened, and how long it took. The log shows only events: what the user typed, and what the runs do.
 
@@ -137,11 +137,11 @@ Every row of the log has the same columns: the time, the kind of event, what hap
 | `step` | A step of the workflow with its node, the keys of the items it produced, and its duration. A step in progress shows `running` and its time; a review checkpoint shows `waiting`. Keys open the item |
 | `steps` | Consecutive steps on one subject, such as the turns of one interview, as one row with the keys they produced. `ctrl+o` or `/expand` opens every group into its steps |
 | `review` | A review that waits for the user, see [section 4](#4-review) |
-| Input box | A message starts a run when no run is unfinished; while a run is unfinished the box takes commands only. `@` mentions an item by key. `/` lists the commands `/stop`, `/retry`, `/expand` and `/collapse`. `Esc` pressed twice stops the run |
+| Input box | A message starts a run when no run is unfinished; while a run is unfinished the box takes commands only. `@` mentions an item by key. `/` lists the commands `/stop`, `/retry`, `/expand`, `/collapse`, `/export` and `/run-settings`; the last two open the export of the artifacts and the run settings sent with the next run. `Esc` pressed twice stops the run |
 
 ## 4. Review
 
-When a run pauses at a checkpoint, the artifact under review opens on the left half of the editor and the session on the right half. The side panel is hidden to make room.
+When a run pauses at a checkpoint, the artifact under review opens on the left half of the editor and the console on the right half. The side panel is hidden to make room.
 
 ```text
 +----------------------------------------------------------------------------------------------+
@@ -256,7 +256,7 @@ Interview: PER-001 Student   iteration 0   12 turns
 
 ## 7. Workflow
 
-The side panel lists the runs of the project and their steps (they live in the thread of the session of the project, which is never shown, as in [Session](#3-session)); the editor shows the graph of the workflow version of the selected run, with the state of each node; the panel shows the selected step.
+The side panel lists the runs of the project and their steps (they live in the thread of the console of the project, which is never shown, as in [Console](#3-console)); the editor shows the graph of the workflow version of the selected run, with the state of each node; the panel shows the selected step.
 
 ```text
 +----------------------------------------------------------------------------------------------+
@@ -352,7 +352,7 @@ The side panel lists the runs of the project and their steps (they live in the t
 
 ## 10. Open points
 
-1. **Several runs or sessions in one project.** The API keeps threads, and each can hold at most one unfinished run, so a project could have several. The first version shows one session per project. Open: when to open a second session, and what the status bar shows when more than one run is unfinished.
+1. **Several runs or consoles in one project.** The API keeps threads, and each can hold at most one unfinished run, so a project could have several. The first version shows one console per project. Open: when to open a second console, and what the status bar shows when more than one run is unfinished.
 2. **Grouping in the explorer.** Grouping an artifact without sections by item kind is a choice of the web app, not data. Open: whether it fits every artifact kind.
 3. **Narrow screens.** The frame targets a desktop browser. On a narrow screen the activity bar could become a bottom tab bar and the side panel a drawer.
 4. **Sources (Later).** Uploaded documents become a feature on the activity bar once SourceDocument is in scope.

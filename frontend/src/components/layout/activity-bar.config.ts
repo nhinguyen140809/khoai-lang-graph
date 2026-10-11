@@ -12,7 +12,7 @@ import type { Route } from 'next'
 
 /** The features of a project; each is a URL segment under /projects/{projectId}/. */
 export const projectFeatures = [
-  'session',
+  'console',
   'search',
   'artifacts',
   'workflow',
@@ -33,7 +33,7 @@ export interface ActivityItemConfig {
 
 /** The items of the activity bar, top to bottom. */
 export const activityItems: ActivityItemConfig[] = [
-  { label: 'Session', icon: SquareChevronRightIcon, feature: 'session' },
+  { label: 'Console', icon: SquareChevronRightIcon, feature: 'console' },
   { label: 'Search', icon: SearchIcon, feature: 'search' },
   { label: 'Artifacts', icon: FileStackIcon, feature: 'artifacts' },
   { label: 'Workflow', icon: NetworkIcon, feature: 'workflow' },

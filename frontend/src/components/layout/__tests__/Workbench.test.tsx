@@ -12,14 +12,14 @@ vi.mock('next/navigation', async () => (await import('@/test/next-mocks.utils'))
 vi.mock('next/link', async () => (await import('@/test/next-mocks.utils')).linkMock)
 
 beforeEach(() => {
-  setPathname('/projects/p1/session')
+  setPathname('/projects/p1/console')
   useEditorTabsStore.setState({ groups: {}, lastHrefs: {} })
   useFrameStore.setState({ sidePanelVisible: true })
 })
 
 function renderWorkbench() {
   render(
-    <Workbench projectId="p1" feature="session" side={<SidePanel title="Threads">list</SidePanel>}>
+    <Workbench projectId="p1" feature="console" side={<SidePanel title="Threads">list</SidePanel>}>
       <p>editor</p>
     </Workbench>,
   )
@@ -35,7 +35,7 @@ describe('Workbench', () => {
 
   it('fills the workbench with the editor when the feature has no side panel', () => {
     render(
-      <Workbench projectId="p1" feature="session">
+      <Workbench projectId="p1" feature="console">
         <p>editor</p>
       </Workbench>,
     )
@@ -59,6 +59,6 @@ describe('Workbench', () => {
   it('remembers the page on screen for the activity bar', () => {
     renderWorkbench()
 
-    expect(useEditorTabsStore.getState().lastHrefs['p1:session']).toBe('/projects/p1/session')
+    expect(useEditorTabsStore.getState().lastHrefs['p1:console']).toBe('/projects/p1/console')
   })
 })

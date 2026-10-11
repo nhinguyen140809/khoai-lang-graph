@@ -14,14 +14,15 @@ test('signing out leads to the sign-in page, which returns to the page asked for
   await page.goto('/projects')
   await signOut(page)
 
-  await page.goto(`/projects/${PROJECT_IDS.mentor}/session`)
-  await expect(page).toHaveURL(/\/login\?next=%2Fprojects%2F/)
+  await page.goto(`/projects/${PROJECT_IDS.mentor}/console`)
+  // The dev server renders the page on the first visit, which can be slow.
+  await expect(page).toHaveURL(/\/login\?next=%2Fprojects%2F/, { timeout: 20_000 })
 
   await page.getByLabel('Email').fill('linh.pham@example.com')
   await page.getByLabel('Password').fill('secret')
   await page.getByRole('button', { name: 'Sign in' }).click()
 
-  await expect(page).toHaveURL(new RegExp(`/projects/${PROJECT_IDS.mentor}/session$`))
+  await expect(page).toHaveURL(new RegExp(`/projects/${PROJECT_IDS.mentor}/console$`))
   await expect(page.getByRole('combobox', { name: 'Message' })).toBeVisible()
 })
 

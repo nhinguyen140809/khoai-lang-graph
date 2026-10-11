@@ -9,20 +9,20 @@ export type ProjectRunStatus =
   | { state: 'empty' }
   | { state: 'ready'; run: Run }
 
-/** The thread of the session of the project; with one session, the first thread is it. */
-function sessionThread(threads: ReturnType<typeof useProjectThreads>['data']) {
+/** The thread of the console of the project; with one console, the first thread is it. */
+function consoleThread(threads: ReturnType<typeof useProjectThreads>['data']) {
   // A thread with an unfinished run comes first, so the status bar follows the run that needs
   // the user most even if the API one day returns more than one.
   return threads?.find(({ active_run_status }) => active_run_status !== null) ?? threads?.at(0)
 }
 
 /**
- * The run that the status bar of a project shows: the unfinished run of the session, or,
+ * The run that the status bar of a project shows: the unfinished run of the console, or,
  * when no run is unfinished, the latest run.
  */
 export function useProjectRunStatus(projectId: string): ProjectRunStatus {
   const threads = useProjectThreads(projectId)
-  const thread = sessionThread(threads.data)
+  const thread = consoleThread(threads.data)
   const activeRun = useRun(thread?.active_run_id)
   // The runs of the thread, for the latest run when no run is unfinished.
   const threadRuns = useThreadRuns(thread?.id)

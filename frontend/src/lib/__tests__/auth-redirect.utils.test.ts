@@ -4,8 +4,8 @@ import { authHref, safeNextPath } from '../auth-redirect.utils'
 
 describe('safeNextPath', () => {
   it('keeps a path of the app', () => {
-    expect(safeNextPath('/projects/p1/session?mock-run-state=done')).toBe(
-      '/projects/p1/session?mock-run-state=done',
+    expect(safeNextPath('/projects/p1/console?mock-run-state=done')).toBe(
+      '/projects/p1/console?mock-run-state=done',
     )
   })
 
@@ -29,8 +29,8 @@ describe('safeNextPath', () => {
 
 describe('authHref', () => {
   it('carries the page to return to', () => {
-    expect(authHref('/login', '/projects/p1/session')).toBe(
-      '/login?next=%2Fprojects%2Fp1%2Fsession',
+    expect(authHref('/login', '/projects/p1/console')).toBe(
+      '/login?next=%2Fprojects%2Fp1%2Fconsole',
     )
     expect(authHref('/register', null)).toBe('/register')
   })

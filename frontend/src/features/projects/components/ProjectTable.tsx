@@ -56,7 +56,7 @@ export function ProjectTable({ status }: ProjectTableProps) {
       <EmptyState
         icon={FolderIcon}
         title="No projects yet"
-        description="A project holds the requirements of one product. After creating it, describe the product in the session to start the first run."
+        description="A project holds the requirements of one product. After creating it, describe the product in the console to start the first run."
         action={
           <Button
             onClick={() => {
@@ -90,7 +90,7 @@ export function ProjectTable({ status }: ProjectTableProps) {
               <TableCell className="font-medium">
                 {/* The link covers the row, so that the whole row opens the project. */}
                 <Link
-                  href={`/projects/${encodeURIComponent(project.id)}/session`}
+                  href={`/projects/${encodeURIComponent(project.id)}/console`}
                   className="outline-none after:absolute after:inset-0 focus-visible:after:ring-2 focus-visible:after:ring-ring/50 focus-visible:after:ring-inset"
                 >
                   {project.name}

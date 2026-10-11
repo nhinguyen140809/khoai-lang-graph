@@ -13,7 +13,7 @@ vi.mock('next/navigation', async () => (await import('@/test/next-mocks.utils'))
 vi.mock('next/link', async () => (await import('@/test/next-mocks.utils')).linkMock)
 
 beforeEach(() => {
-  setPathname('/projects/p1/session/t1')
+  setPathname('/projects/p1/console/t1')
   useEditorTabsStore.setState({ groups: {}, lastHrefs: {} })
   useFrameStore.setState({ sidePanelVisible: true })
 })
@@ -24,7 +24,7 @@ describe('ActivityBar', () => {
       wrapper: TestProviders,
     })
 
-    expect(screen.getByRole('link', { name: 'Session' })).toHaveAttribute('aria-current', 'page')
+    expect(screen.getByRole('link', { name: 'Console' })).toHaveAttribute('aria-current', 'page')
     expect(screen.getByRole('link', { name: 'Artifacts' })).toHaveAttribute(
       'href',
       '/projects/p1/artifacts',
@@ -53,7 +53,7 @@ describe('ActivityBar', () => {
       wrapper: TestProviders,
     })
 
-    await userEvent.click(screen.getByRole('link', { name: 'Session' }))
+    await userEvent.click(screen.getByRole('link', { name: 'Console' }))
     expect(useFrameStore.getState().sidePanelVisible).toBe(false)
 
     await userEvent.click(screen.getByRole('link', { name: 'Artifacts' }))
@@ -67,7 +67,7 @@ describe('ActivityBar', () => {
 
     expect(screen.getByRole('button', { name: 'Account' })).toBeInTheDocument()
     expect(screen.queryByRole('link')).not.toBeInTheDocument()
-    expect(screen.getByRole('button', { name: /Session, select a project first/ })).toHaveAttribute(
+    expect(screen.getByRole('button', { name: /Console, select a project first/ })).toHaveAttribute(
       'aria-disabled',
       'true',
     )
@@ -78,11 +78,11 @@ describe('ActivityBar', () => {
       <ActivityBar
         projectId="p1"
         user={null}
-        badges={{ session: <span className="sr-only">, 1 review waiting</span> }}
+        badges={{ console: <span className="sr-only">, 1 review waiting</span> }}
       />,
       { wrapper: TestProviders },
     )
 
-    expect(screen.getByRole('link', { name: 'Session, 1 review waiting' })).toBeInTheDocument()
+    expect(screen.getByRole('link', { name: 'Console, 1 review waiting' })).toBeInTheDocument()
   })
 })

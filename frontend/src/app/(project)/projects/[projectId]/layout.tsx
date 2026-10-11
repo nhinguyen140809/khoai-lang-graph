@@ -66,7 +66,7 @@ export default async function ProjectLayout({
             <ActivityBar
               projectId={projectId}
               user={<UserMenu />}
-              badges={{ session: <PendingReviewBadge projectId={projectId} /> }}
+              badges={{ console: <PendingReviewBadge projectId={projectId} /> }}
             />
           }
           sidePanel

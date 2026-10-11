@@ -25,7 +25,7 @@ interface ActivityBarProps {
   projectId?: string
   /** The account menu, at the bottom. */
   user: ReactNode
-  /** A count shown on an item, such as the reviews waiting on Session. */
+  /** A count shown on an item, such as the reviews waiting on Console. */
   badges?: Partial<Record<ProjectFeature, ReactNode>>
 }
 

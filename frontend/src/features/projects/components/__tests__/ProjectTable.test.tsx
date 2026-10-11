@@ -17,7 +17,7 @@ describe('ProjectTable', () => {
     render(<ProjectTable status="active" />, { wrapper: TestProviders })
 
     const mentor = await screen.findByRole('link', { name: 'Mentor platform' })
-    expect(mentor).toHaveAttribute('href', `/projects/${PROJECT_IDS.mentor}/session`)
+    expect(mentor).toHaveAttribute('href', `/projects/${PROJECT_IDS.mentor}/console`)
     const mentorRow = mentor.closest('tr')
     if (mentorRow === null) throw new Error('The project has no row')
 

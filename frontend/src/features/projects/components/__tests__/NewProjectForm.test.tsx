@@ -39,7 +39,7 @@ describe('NewProjectForm', () => {
     expect(routerMock.push).not.toHaveBeenCalled()
   })
 
-  it('creates the project, then opens its session', async () => {
+  it('creates the project, then opens its console', async () => {
     let created: unknown
     server.use(
       http.post('/api/v1/projects', async ({ request }) => {
@@ -76,7 +76,7 @@ describe('NewProjectForm', () => {
     await userEvent.click(screen.getByRole('button', { name: 'Create project' }))
 
     await vi.waitFor(() => {
-      expect(routerMock.push).toHaveBeenCalledWith('/projects/p-new/session')
+      expect(routerMock.push).toHaveBeenCalledWith('/projects/p-new/console')
     })
     expect(created).toEqual({ name: 'Thesis tracker', description: null, output_language: 'vi' })
     expect(onCreated).toHaveBeenCalledOnce()

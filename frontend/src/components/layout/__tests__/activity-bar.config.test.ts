@@ -4,7 +4,7 @@ import { featureHref, featureOfPathname, featureTabGroup } from '../activity-bar
 
 describe('featureOfPathname', () => {
   it('is the feature segment of a project page', () => {
-    expect(featureOfPathname('/projects/p1/session')).toBe('session')
+    expect(featureOfPathname('/projects/p1/console')).toBe('console')
     expect(featureOfPathname('/projects/p1/artifacts/items/i1')).toBe('artifacts')
   })
 
@@ -18,6 +18,6 @@ describe('featureOfPathname', () => {
 describe('featureHref and featureTabGroup', () => {
   it('build the address and the tab group of a feature', () => {
     expect(featureHref('p 1', 'workflow')).toBe('/projects/p%201/workflow')
-    expect(featureTabGroup('p1', 'session')).toBe('p1:session')
+    expect(featureTabGroup('p1', 'console')).toBe('p1:console')
   })
 })

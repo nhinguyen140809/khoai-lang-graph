@@ -1,4 +1,4 @@
-import type { Message } from '@/features/session'
+import type { Message } from '@/features/console'
 import type { Run, RunStep } from '@/features/threads'
 
 import { mockRecord } from './mock-db.utils'

@@ -17,7 +17,8 @@ How the mocks work (fixtures, handlers, adding an endpoint) is in [Mock data](..
   - [Account](#account)
   - [Project list](#project-list)
   - [Frame of a project](#frame-of-a-project)
-  - [Session](#session)
+  - [Console](#console)
+  - [Search](#search)
   - [Run states](#run-states)
   - [Features not built yet](#features-not-built-yet)
   - [Development pages](#development-pages)
@@ -33,7 +34,7 @@ The data is the project of the API examples, an online platform where university
 | Project "Library booking"            | `90aa0000-0000-4000-8000-000000000003`                   | A running run, at the interviews                                                                                                                                                                                                                                                                    |
 | Project "Dorm laundry booking"       | `90aa0000-0000-4000-8000-000000000004`                   | Archived                                                                                                                                                                                                                                                                                            |
 | Eleven more projects                 | `90aa0000-0000-4000-8000-0000000000NN`, NN from 05 to 16 | Each in one state of a run: done, waiting for review, running, failed, stopped, no run yet, or archived; two are in Vietnamese. Each has one thread and at most one run, with the message that started it, its steps and a few items. They are generated from the specs in `extra-projects.data.ts` |
-| Thread "Main thread" of each project | `7f3a0000-0000-4000-8000-000000000001`                   | Every project has one thread, the thread of the session of the project; the mentor thread holds runs 1, 2 and 3                                                                                                                                                                                     |
+| Thread "Main thread" of each project | `7f3a0000-0000-4000-8000-000000000001`                   | Every project has one thread, the thread of the console of the project; the mentor thread holds runs 1, 2 and 3                                                                                                                                                                                     |
 | Run 3 of the mentor thread           | `5f2d0000-0000-4000-8000-000000000001`                   | The run of the API examples: it retries run 2 from its planner step and waits at the analysis review, step 67                                                                                                                                                                                       |
 
 The mock server keeps the session, the user, the user settings, and the projects and threads created with `POST` in browser storage, so they survive a reload. Add `?mock-reset` to any address to start again from the fixtures, for example http://localhost:3000/projects?mock-reset.
@@ -96,36 +97,36 @@ A parameter in the page address changes what a group of endpoints answers. Param
 
 | State                                          | Address                                                                                          |
 | ---------------------------------------------- | ------------------------------------------------------------------------------------------------ |
-| Frame of the mentor platform                   | http://localhost:3000/projects/90aa0000-0000-4000-8000-000000000001/session                      |
-| Project not found                              | http://localhost:3000/projects/missing/session                                                   |
-| Project not found (404 from the API)           | http://localhost:3000/projects/90aa0000-0000-4000-8000-000000000001/session?mock-project=empty   |
-| Project menu error                             | http://localhost:3000/projects/90aa0000-0000-4000-8000-000000000001/session?mock-project=error   |
-| Project menu loading                           | http://localhost:3000/projects/90aa0000-0000-4000-8000-000000000001/session?mock-project=loading |
-| Status bar loading                             | http://localhost:3000/projects/90aa0000-0000-4000-8000-000000000001/session?mock-runs=loading    |
-| Status bar error                               | http://localhost:3000/projects/90aa0000-0000-4000-8000-000000000001/session?mock-runs=error      |
-| Status bar without runs                        | http://localhost:3000/projects/90aa0000-0000-4000-8000-000000000001/session?mock-runs=empty      |
-| Status bar of a running run in another project | http://localhost:3000/projects/90aa0000-0000-4000-8000-000000000003/session                      |
+| Frame of the mentor platform                   | http://localhost:3000/projects/90aa0000-0000-4000-8000-000000000001/console                      |
+| Project not found                              | http://localhost:3000/projects/missing/console                                                   |
+| Project not found (404 from the API)           | http://localhost:3000/projects/90aa0000-0000-4000-8000-000000000001/console?mock-project=empty   |
+| Project menu error                             | http://localhost:3000/projects/90aa0000-0000-4000-8000-000000000001/console?mock-project=error   |
+| Project menu loading                           | http://localhost:3000/projects/90aa0000-0000-4000-8000-000000000001/console?mock-project=loading |
+| Status bar loading                             | http://localhost:3000/projects/90aa0000-0000-4000-8000-000000000001/console?mock-runs=loading    |
+| Status bar error                               | http://localhost:3000/projects/90aa0000-0000-4000-8000-000000000001/console?mock-runs=error      |
+| Status bar without runs                        | http://localhost:3000/projects/90aa0000-0000-4000-8000-000000000001/console?mock-runs=empty      |
+| Status bar of a running run in another project | http://localhost:3000/projects/90aa0000-0000-4000-8000-000000000003/console                      |
 
-The command palette opens with `Ctrl+K`; the side panel hides with `Ctrl+B` on a feature that has one (Session has none).
+The command palette opens with `Ctrl+K`; the side panel hides with `Ctrl+B` on a feature that has one (Console has none).
 
-## Session
+## Console
 
-The side panel has the outline of the session and the list of the sessions (one per project). A command that you run appears in the log and in the outline; the commands are kept in this browser.
+The side panel has the outline of the console and the list of the consoles (one per project). A command that you run appears in the log and in the outline; the commands are kept in this browser.
 
-The session shows the event log of the project and an input for a message that starts a run, or a command. A project whose thread does not exist yet gets one created on first open, so the empty scenario still ends on the session.
+The console shows the event log of the project and an input for a message that starts a run, or a command. A project whose thread does not exist yet gets one created on first open, so the empty scenario still ends on the console.
 
 | State                                                    | Address                                                                                                          |
 | -------------------------------------------------------- | ---------------------------------------------------------------------------------------------------------------- |
-| Run 3 waiting at the review (default)                    | http://localhost:3000/projects/90aa0000-0000-4000-8000-000000000001/session                                      |
-| Run 3 running (a message is not sent; use a command)     | http://localhost:3000/projects/90aa0000-0000-4000-8000-000000000001/session?mock-run-state=running               |
-| Run 3 failed (use `/retry`)                              | http://localhost:3000/projects/90aa0000-0000-4000-8000-000000000001/session?mock-run-state=failed                |
-| No unfinished run (a message starts and plays a new run) | http://localhost:3000/projects/90aa0000-0000-4000-8000-000000000002/session                                      |
-| Event log without messages                               | http://localhost:3000/projects/90aa0000-0000-4000-8000-000000000001/session?mock-messages=empty                  |
-| Messages error                                           | http://localhost:3000/projects/90aa0000-0000-4000-8000-000000000001/session?mock-messages=error                  |
-| One session by its id                                    | http://localhost:3000/projects/90aa0000-0000-4000-8000-000000000001/session/7f3a0000-0000-4000-8000-000000000001 |
-| Session loading                                          | http://localhost:3000/projects/90aa0000-0000-4000-8000-000000000001/session?mock-threads=loading                 |
-| Session error                                            | http://localhost:3000/projects/90aa0000-0000-4000-8000-000000000001/session?mock-threads=error                   |
-| Thread created on open                                   | http://localhost:3000/projects/90aa0000-0000-4000-8000-000000000001/session?mock-threads=empty                   |
+| Run 3 waiting at the review (default)                    | http://localhost:3000/projects/90aa0000-0000-4000-8000-000000000001/console                                      |
+| Run 3 running (a message is not sent; use a command)     | http://localhost:3000/projects/90aa0000-0000-4000-8000-000000000001/console?mock-run-state=running               |
+| Run 3 failed (use `/retry`)                              | http://localhost:3000/projects/90aa0000-0000-4000-8000-000000000001/console?mock-run-state=failed                |
+| No unfinished run (a message starts and plays a new run) | http://localhost:3000/projects/90aa0000-0000-4000-8000-000000000002/console                                      |
+| Event log without messages                               | http://localhost:3000/projects/90aa0000-0000-4000-8000-000000000001/console?mock-messages=empty                  |
+| Messages error                                           | http://localhost:3000/projects/90aa0000-0000-4000-8000-000000000001/console?mock-messages=error                  |
+| One console by its id                                    | http://localhost:3000/projects/90aa0000-0000-4000-8000-000000000001/console/7f3a0000-0000-4000-8000-000000000001 |
+| Console loading                                          | http://localhost:3000/projects/90aa0000-0000-4000-8000-000000000001/console?mock-threads=loading                 |
+| Console error                                            | http://localhost:3000/projects/90aa0000-0000-4000-8000-000000000001/console?mock-threads=error                   |
+| Thread created on open                                   | http://localhost:3000/projects/90aa0000-0000-4000-8000-000000000001/console?mock-threads=empty                   |
 
 ## Search
 
@@ -144,14 +145,14 @@ The search state is typed in the box, so open the address and then type.
 
 ## Run states
 
-Run 3 of the mentor platform in each state. The status bar, the review badge on Session and the project list follow it.
+Run 3 of the mentor platform in each state. The status bar, the review badge on Console and the project list follow it.
 
 | State                        | Address                                                                                            |
 | ---------------------------- | -------------------------------------------------------------------------------------------------- |
-| Waiting for review (default) | http://localhost:3000/projects/90aa0000-0000-4000-8000-000000000001/session                        |
-| Running                      | http://localhost:3000/projects/90aa0000-0000-4000-8000-000000000001/session?mock-run-state=running |
-| Failed                       | http://localhost:3000/projects/90aa0000-0000-4000-8000-000000000001/session?mock-run-state=failed  |
-| Done                         | http://localhost:3000/projects/90aa0000-0000-4000-8000-000000000001/session?mock-run-state=done    |
+| Waiting for review (default) | http://localhost:3000/projects/90aa0000-0000-4000-8000-000000000001/console                        |
+| Running                      | http://localhost:3000/projects/90aa0000-0000-4000-8000-000000000001/console?mock-run-state=running |
+| Failed                       | http://localhost:3000/projects/90aa0000-0000-4000-8000-000000000001/console?mock-run-state=failed  |
+| Done                         | http://localhost:3000/projects/90aa0000-0000-4000-8000-000000000001/console?mock-run-state=done    |
 
 ## Features not built yet
 

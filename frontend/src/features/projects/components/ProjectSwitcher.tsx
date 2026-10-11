@@ -72,7 +72,7 @@ export function ProjectSwitcher({ projectId }: ProjectSwitcherProps) {
         {projects.data?.length === 0 && <DropdownMenuItem disabled>No projects</DropdownMenuItem>}
         {projects.data?.map(({ id, name }) => (
           <DropdownMenuItem key={id} asChild>
-            <Link href={`/projects/${encodeURIComponent(id)}/session`}>
+            <Link href={`/projects/${encodeURIComponent(id)}/console`}>
               <CheckIcon aria-hidden className={cn(id !== projectId && 'invisible')} />
               <span className="truncate">{name}</span>
               {id === projectId && <span className="sr-only">(open)</span>}

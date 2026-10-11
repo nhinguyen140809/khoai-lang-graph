@@ -1,6 +1,6 @@
+import type { Message } from '@/features/console'
 import type { Project } from '@/features/projects'
 import type { Item } from '@/features/search'
-import type { Message } from '@/features/session'
 import type { Run, RunStep, Thread } from '@/features/threads'
 
 import { type ExtraProjectSpec, extraProjectSpecs } from './extra-project-specs.constants'

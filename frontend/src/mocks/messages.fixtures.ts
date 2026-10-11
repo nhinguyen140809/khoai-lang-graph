@@ -1,8 +1,8 @@
-import type { Message } from '@/features/session'
+import type { Message } from '@/features/console'
 
 import { RUN_IDS, stepId, THREAD_IDS } from './mock-ids.constants'
 
-// Mock messages. The session of the mentor platform follows the runs of the API examples:
+// Mock messages. The console of the mentor platform follows the runs of the API examples:
 // the first message started run 1, a second one started run 2, and a third was read by run 3
 // while it ran. The other projects have their first message only.
 

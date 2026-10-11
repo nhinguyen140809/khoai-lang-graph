@@ -28,7 +28,7 @@ import { Tooltip, TooltipContent, TooltipTrigger } from '@/components/ui/tooltip
 import { ArtifactTree } from '../ArtifactTree'
 
 const features = [
-  { label: 'Session', Icon: SquareChevronRightIcon },
+  { label: 'Console', Icon: SquareChevronRightIcon },
   { label: 'Artifacts', Icon: FileStackIcon, active: true },
   { label: 'Workflow', Icon: NetworkIcon },
   { label: 'Traceability', Icon: GitForkIcon },

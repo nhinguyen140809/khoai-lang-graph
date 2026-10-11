@@ -4,7 +4,7 @@ import { createProject } from '../projects.api'
 import type { CreateProjectBody } from '../projects.types'
 import { projectsQueryKey } from './useProjects'
 
-/** Creates a project; the session creates its thread on the first visit. */
+/** Creates a project; the console creates its thread on the first visit. */
 export function useCreateProject() {
   const queryClient = useQueryClient()
 

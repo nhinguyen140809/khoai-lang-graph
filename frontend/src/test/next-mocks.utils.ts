@@ -7,7 +7,7 @@ import { vi } from 'vitest'
 //   vi.mock('next/navigation', async () => (await import('@/test/next-mocks.utils')).navigationMock)
 //   vi.mock('next/link', async () => (await import('@/test/next-mocks.utils')).linkMock)
 //
-// and sets the current address with `setPathname('/projects/p1/session')`.
+// and sets the current address with `setPathname('/projects/p1/console')`.
 
 let pathname = '/'
 

@@ -211,7 +211,7 @@ Vietnamese text needs a font that ships the `vietnamese` subset. The subsets of 
 
 ## Routes, Server and Client Components
 
-- A route is a folder in `src/app/` with a `page.tsx`. The folder path is the URL: `src/app/(project)/projects/[projectId]/session/page.tsx` is `/projects/{projectId}/session`.
+- A route is a folder in `src/app/` with a `page.tsx`. The folder path is the URL: `src/app/(project)/projects/[projectId]/console/page.tsx` is `/projects/{projectId}/console`.
 - `(auth)`, `(home)` and `(project)` are route groups: the name in parentheses is not part of the URL. `(auth)` holds the pages that need no session, `(home)` the screens outside a project, and `(project)` the screens of a project. The `layout.tsx` of each group wraps its pages in the frame (`AppFrame`), and its `error.tsx` is the error boundary for those pages. Inside a project, each feature folder has a `layout.tsx` that puts the side panel of the feature next to the editor (`Workbench`).
 - The routes:
 
@@ -220,8 +220,8 @@ Vietnamese text needs a font that ships the `vietnamese` subset. The subsets of 
   | `/`                                                      | Redirects to `/projects`                                                                     |
   | `/login`, `/register`                                    | Sign in; create an account. `?next=` gives the page to return to                             |
   | `/projects`                                              | Project list                                                                                 |
-  | `/projects/{projectId}`                                  | Redirects to Session                                                                         |
-  | `/projects/{projectId}/session`                          | Session: the event log of the project and its runs, with an input for a message or a command |
+  | `/projects/{projectId}`                                  | Redirects to Console                                                                         |
+  | `/projects/{projectId}/console`                          | Console: the event log of the project and its runs, with an input for a message or a command |
   | `/projects/{projectId}/artifacts`                        | Artifacts (not built yet)                                                                    |
   | `/projects/{projectId}/workflow`, `.../workflow/{runId}` | Workflow and one run (not built yet)                                                         |
   | `/projects/{projectId}/traceability`                     | Traceability (not built yet)                                                                 |
@@ -246,7 +246,7 @@ Every screen uses the frame in `src/components/layout/`, after the layout of an 
 
 `Cmd` works in place of `Ctrl` on macOS.
 
-Each feature of a project has its own editor tabs. A tab shows the icon of what it opens (`editor-tabs.config.ts`: an artifact, an item, a run, a view, settings), or the icon of its feature when it names none, and a new tab opens next to the tab of the page shown before it. The Session feature has no tabs: it shows the single conversation of the project, so its editor has no tab strip.
+Each feature of a project has its own editor tabs. A tab shows the icon of what it opens (`editor-tabs.config.ts`: an artifact, an item, a run, a view, settings), or the icon of its feature when it names none, and a new tab opens next to the tab of the page shown before it. The Console feature has no tabs: it shows the event log of the project, so its editor has no tab strip.
 
 ### Browser storage
 

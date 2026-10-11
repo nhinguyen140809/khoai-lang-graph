@@ -2,10 +2,10 @@ import { expect, test } from '@playwright/test'
 
 import { PROJECT_IDS } from '../../src/mocks/mock-ids.constants'
 
-const session = `/projects/${PROJECT_IDS.mentor}/session`
+const console = `/projects/${PROJECT_IDS.mentor}/console`
 
 test('Ctrl+K opens the command palette, which goes to a feature', async ({ page }) => {
-  await page.goto(session)
+  await page.goto(console)
   // The page listens for the shortcut once it has loaded its event log.
   await expect(page.getByRole('log', { name: 'Event log' })).toBeVisible()
 
@@ -33,15 +33,15 @@ test('Ctrl+B hides and shows the side panel', async ({ page }) => {
   await expect(sidePanel).toBeVisible()
 })
 
-test('the activity bar returns to the last page open in Session', async ({ page }) => {
-  await page.goto(session)
+test('the activity bar returns to the last page open in Console', async ({ page }) => {
+  await page.goto(console)
 
   const features = page.getByRole('navigation', { name: 'Features' })
   await features.getByRole('link', { name: 'Workflow' }).click()
   await expect(page.getByRole('complementary', { name: 'Runs' })).toBeVisible()
-  await features.getByRole('link', { name: /^Session/ }).click()
+  await features.getByRole('link', { name: /^Console/ }).click()
 
-  await expect(page).toHaveURL(new RegExp(`/projects/${PROJECT_IDS.mentor}/session$`), {
+  await expect(page).toHaveURL(new RegExp(`/projects/${PROJECT_IDS.mentor}/console$`), {
     // The dev server renders the page of another feature on the first visit, which can be slow.
     timeout: 15_000,
   })
@@ -53,7 +53,7 @@ for (const [state, label] of [
   ['done', 'Run 3: done'],
 ] as const) {
   test(`the status bar shows a run that is ${state}`, async ({ page }) => {
-    await page.goto(`${session}?mock-run-state=${state}`)
+    await page.goto(`${console}?mock-run-state=${state}`)
 
     await expect(
       page.getByRole('contentinfo').getByRole('link', { name: new RegExp(label) }),
