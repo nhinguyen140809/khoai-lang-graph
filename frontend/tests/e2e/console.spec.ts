@@ -2,7 +2,7 @@ import { expect, test } from '@playwright/test'
 
 import { PROJECT_IDS, THREAD_IDS } from '../../src/mocks/mock-ids.constants'
 
-const console = `/projects/${PROJECT_IDS.mentor}/console`
+const consolePath = `/projects/${PROJECT_IDS.mentor}/console`
 const campusConsole = `/projects/${PROJECT_IDS.campus}/console`
 
 test('starts a run with a message and follows its events', async ({ page }) => {
@@ -22,7 +22,7 @@ test('starts a run with a message and follows its events', async ({ page }) => {
 })
 
 test('does not send a message while a run waits for its review', async ({ page }) => {
-  await page.goto(console)
+  await page.goto(consolePath)
   const log = page.getByRole('log', { name: 'Event log' })
   await expect(log.getByText(/Requirements analysis v4 waits for your review/)).toBeVisible()
 
@@ -34,7 +34,7 @@ test('does not send a message while a run waits for its review', async ({ page }
 })
 
 test('stops the run with Esc pressed twice', async ({ page }) => {
-  await page.goto(console)
+  await page.goto(consolePath)
   const input = page.getByRole('combobox', { name: 'Message' })
   await expect(page.getByText('esc stop run')).toBeVisible()
 
@@ -47,7 +47,7 @@ test('stops the run with Esc pressed twice', async ({ page }) => {
 })
 
 test('stops the run with a command', async ({ page }) => {
-  await page.goto(console)
+  await page.goto(consolePath)
   const input = page.getByRole('combobox', { name: 'Message' })
 
   await input.fill('/')
@@ -68,7 +68,7 @@ test('stops the run with a command', async ({ page }) => {
 test('goes to a message of the user from the outline', async ({ page }) => {
   // A short window, so that the log is longer than what it shows.
   await page.setViewportSize({ width: 1280, height: 420 })
-  await page.goto(console)
+  await page.goto(consolePath)
   const log = page.getByRole('log', { name: 'Event log' })
   await expect(log.getByText(/Requirements analysis v4 waits for your review/)).toBeVisible()
   // The log follows its newest row, so the first message is out of view.
@@ -83,12 +83,12 @@ test('goes to a message of the user from the outline', async ({ page }) => {
 })
 
 test('lists the consoles of the project in the second view', async ({ page }) => {
-  await page.goto(console)
+  await page.goto(consolePath)
   const panel = page.getByRole('complementary', { name: 'Console' })
 
   await panel.getByRole('tab', { name: 'Consoles' }).click()
   const main = panel.getByRole('link', { name: /Main thread/ })
-  await expect(main).toHaveAttribute('href', `${console}/${THREAD_IDS.mentorMain}`)
+  await expect(main).toHaveAttribute('href', `${consolePath}/${THREAD_IDS.mentorMain}`)
   await main.click()
 
   await expect(page).toHaveURL(new RegExp(`${THREAD_IDS.mentorMain}$`), { timeout: 15_000 })
@@ -108,7 +108,7 @@ test('mentions an item in the message that starts a run', async ({ page }) => {
 })
 
 test('shows an error with a retry when the console fails to open', async ({ page }) => {
-  await page.goto(`${console}?mock-threads=error`)
+  await page.goto(`${consolePath}?mock-threads=error`)
 
   // Next.js adds its own empty role="alert" element (the route announcer), so match by text.
   // The outline in the side panel fails the same way, so the first alert is the one of the page.
@@ -118,14 +118,14 @@ test('shows an error with a retry when the console fails to open', async ({ page
 })
 
 test('opens an empty console when the project has no thread', async ({ page }) => {
-  await page.goto(`${console}?mock-threads=empty`)
+  await page.goto(`${consolePath}?mock-threads=empty`)
 
   await expect(page.getByRole('combobox', { name: 'Message' })).toBeVisible()
   await expect(page.getByPlaceholder(/Describe what to build/)).toBeVisible()
 })
 
 test('switches the theme from the account menu', async ({ page }) => {
-  await page.goto(console)
+  await page.goto(consolePath)
 
   await page.getByRole('button', { name: /Account/ }).click()
   await page.getByRole('menuitemradio', { name: 'Light' }).click()

@@ -2,10 +2,10 @@ import { expect, test } from '@playwright/test'
 
 import { PROJECT_IDS } from '../../src/mocks/mock-ids.constants'
 
-const console = `/projects/${PROJECT_IDS.mentor}/console`
+const consolePath = `/projects/${PROJECT_IDS.mentor}/console`
 
 test('Ctrl+K opens the command palette, which goes to a feature', async ({ page }) => {
-  await page.goto(console)
+  await page.goto(consolePath)
   // The page listens for the shortcut once it has loaded its event log.
   await expect(page.getByRole('log', { name: 'Event log' })).toBeVisible()
 
@@ -34,7 +34,7 @@ test('Ctrl+B hides and shows the side panel', async ({ page }) => {
 })
 
 test('the activity bar returns to the last page open in Console', async ({ page }) => {
-  await page.goto(console)
+  await page.goto(consolePath)
 
   const features = page.getByRole('navigation', { name: 'Features' })
   await features.getByRole('link', { name: 'Workflow' }).click()
@@ -53,7 +53,7 @@ for (const [state, label] of [
   ['done', 'Run 3: done'],
 ] as const) {
   test(`the status bar shows a run that is ${state}`, async ({ page }) => {
-    await page.goto(`${console}?mock-run-state=${state}`)
+    await page.goto(`${consolePath}?mock-run-state=${state}`)
 
     await expect(
       page.getByRole('contentinfo').getByRole('link', { name: new RegExp(label) }),
