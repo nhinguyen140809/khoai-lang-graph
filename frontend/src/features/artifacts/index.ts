@@ -13,6 +13,7 @@ export type {
   TraceNode,
 } from './artifacts.types'
 export { ArtifactDocument } from './components/ArtifactDocument'
+export { ArtifactPanel } from './components/ArtifactPanel'
 export { ArtifactTree } from './components/ArtifactTree'
 export { ExportButton } from './components/ExportButton'
 export { ItemPage } from './components/ItemPage'

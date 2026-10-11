@@ -1,6 +1,6 @@
 'use client'
 
-import { PencilIcon } from 'lucide-react'
+import { ArrowLeftIcon, PencilIcon } from 'lucide-react'
 import type { Route } from 'next'
 import Link from 'next/link'
 import { useState } from 'react'
@@ -30,10 +30,13 @@ import { ReviewStatusBadge } from './ReviewStatusBadge'
 interface ItemPageProps {
   projectId: string
   itemId: string
+  /** Drawn inside another view: no tab, and a button back instead of the breadcrumb. */
+  embedded?: boolean
+  onBack?: () => void
 }
 
 /** One item: its fields drawn by its schema, an edit form, and its trace and versions below. */
-export function ItemPage({ projectId, itemId }: ItemPageProps) {
+export function ItemPage({ projectId, itemId, embedded = false, onBack }: ItemPageProps) {
   const item = useItem(itemId)
   const { schema } = useItemSchema(item.data)
   const artifact = useArtifact(item.data?.artifact_id ?? '')
@@ -44,7 +47,7 @@ export function ItemPage({ projectId, itemId }: ItemPageProps) {
 
   useEditorTab(
     featureTabGroup(projectId, 'artifacts'),
-    item.isSuccess
+    item.isSuccess && !embedded
       ? { id: itemId, title: item.data.key, href: itemHref(projectId, itemId), icon: 'item' }
       : null,
   )
@@ -68,12 +71,14 @@ export function ItemPage({ projectId, itemId }: ItemPageProps) {
   const chain = ancestorsOf(item.data, siblings.data ?? [])
   const sectionFor = (id: string) => siblings.data?.find((entry) => entry.id === id)
 
-  return (
-    <EditorWithPanel
-      panelLabel="Trace and timeline"
-      panel={<ItemPanel item={item.data} schema={schema} />}
-    >
-      <article className="mx-auto flex max-w-3xl flex-col gap-5 p-6">
+  const article = (
+    <article className="mx-auto flex max-w-3xl flex-col gap-5 p-6">
+      {embedded ? (
+        <Button variant="ghost" size="xs" className="self-start" onClick={onBack}>
+          <ArrowLeftIcon aria-hidden />
+          Back to {artifact.data?.title ?? 'the artifact'}
+        </Button>
+      ) : (
         <nav
           aria-label="Breadcrumb"
           className="flex flex-wrap items-center gap-1 text-xs text-muted-foreground"
@@ -104,60 +109,80 @@ export function ItemPage({ projectId, itemId }: ItemPageProps) {
           <span aria-hidden>/</span>
           <span className="font-mono text-foreground">{item.data.key}</span>
         </nav>
+      )}
 
-        <header className="flex flex-col gap-2">
-          <div className="flex items-center gap-2">
-            <h1 className="text-lg font-semibold">
-              <span className="mr-3 font-mono text-muted-foreground">{item.data.key}</span>
-              {itemTitle(schema, item.data)}
-            </h1>
-            <span className="font-mono text-xs text-muted-foreground">v{item.data.version}</span>
-            <ReviewStatusBadge status={item.data.review_status} />
-            {!editing && (
-              <Button
-                className="ml-auto"
-                variant="outline"
-                size="xs"
-                onClick={() => {
-                  setEditing(true)
-                }}
-              >
-                <PencilIcon aria-hidden />
-                Edit
-              </Button>
-            )}
-          </div>
-          <p className="text-xs text-muted-foreground">
-            {item.data.updated_by.actor === 'user'
-              ? 'Edited by you'
-              : `Written by ${item.data.updated_by.agent_role ?? 'an agent'}`}{' '}
-            <time dateTime={item.data.updated_at}>
-              {formatRelativeTime(item.data.updated_at, now)}
-            </time>
-          </p>
-        </header>
+      <header className="flex flex-col gap-2">
+        <div className="flex items-center gap-2">
+          <h1 className="text-lg font-semibold">
+            <span className="mr-3 font-mono text-muted-foreground">{item.data.key}</span>
+            {itemTitle(schema, item.data)}
+          </h1>
+          <span className="font-mono text-xs text-muted-foreground">v{item.data.version}</span>
+          <ReviewStatusBadge status={item.data.review_status} />
+          {!editing && (
+            <Button
+              className="ml-auto"
+              variant="outline"
+              size="xs"
+              onClick={() => {
+                setEditing(true)
+              }}
+            >
+              <PencilIcon aria-hidden />
+              Edit
+            </Button>
+          )}
+        </div>
+        <p className="text-xs text-muted-foreground">
+          {item.data.updated_by.actor === 'user'
+            ? 'Edited by you'
+            : `Written by ${item.data.updated_by.agent_role ?? 'an agent'}`}{' '}
+          <time dateTime={item.data.updated_at}>
+            {formatRelativeTime(item.data.updated_at, now)}
+          </time>
+        </p>
+      </header>
 
-        {editing ? (
-          <ItemForm
-            item={item.data}
-            schema={schema}
-            onDone={() => {
-              setEditing(false)
-            }}
-          />
-        ) : (
-          <dl className="grid grid-cols-[10rem_1fr] gap-x-4 gap-y-3 text-sm">
-            {views.map((view) => (
-              <div key={view.name} className="contents">
-                <dt className="text-muted-foreground">{view.label}</dt>
-                <dd>
-                  <FieldValue view={view} value={item.data.content[view.name]} />
-                </dd>
-              </div>
-            ))}
-          </dl>
-        )}
-      </article>
+      {editing ? (
+        <ItemForm
+          item={item.data}
+          schema={schema}
+          onDone={() => {
+            setEditing(false)
+          }}
+        />
+      ) : (
+        <dl className="grid grid-cols-[10rem_1fr] gap-x-4 gap-y-3 text-sm">
+          {views.map((view) => (
+            <div key={view.name} className="contents">
+              <dt className="text-muted-foreground">{view.label}</dt>
+              <dd>
+                <FieldValue view={view} value={item.data.content[view.name]} />
+              </dd>
+            </div>
+          ))}
+        </dl>
+      )}
+    </article>
+  )
+
+  if (embedded) {
+    return (
+      <div className="flex flex-col">
+        {article}
+        <div className="h-72 border-t">
+          <ItemPanel item={item.data} schema={schema} />
+        </div>
+      </div>
+    )
+  }
+
+  return (
+    <EditorWithPanel
+      panelLabel="Trace and timeline"
+      panel={<ItemPanel item={item.data} schema={schema} />}
+    >
+      {article}
     </EditorWithPanel>
   )
 }

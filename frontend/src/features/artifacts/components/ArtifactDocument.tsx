@@ -23,6 +23,7 @@ import { schemasByKind } from '../kinds.utils'
 import { ExportButton } from './ExportButton'
 import { FieldValue } from './FieldValue'
 import { ItemLink } from './ItemLink'
+import { ItemOpenContext } from './ItemOpenContext'
 import { ReviewStatusBadge } from './ReviewStatusBadge'
 
 type Block =
@@ -58,10 +59,22 @@ function blocksOf(items: OutlineItem[], schemas: Map<string, ContentSchema>): Bl
 interface ArtifactDocumentProps {
   projectId: string
   artifactId: string
+  /** Drawn inside another view: no tab of its own, no export button. */
+  embedded?: boolean
+  /** Marks, with an `M`, the items that the user changed since an agent wrote them. */
+  markEdited?: boolean
+  /** Called with an item when it is clicked, instead of leaving for the page of the item. */
+  onOpenItem?: (itemId: string) => void
 }
 
 /** An artifact as one document: its own fields, then its items drawn by the display of their kind. */
-export function ArtifactDocument({ projectId, artifactId }: ArtifactDocumentProps) {
+export function ArtifactDocument({
+  projectId,
+  artifactId,
+  embedded = false,
+  markEdited = false,
+  onOpenItem,
+}: ArtifactDocumentProps) {
   const artifact = useArtifact(artifactId)
   const items = useArtifactItems(artifactId)
   const kinds = useArtifactKinds()
@@ -69,7 +82,7 @@ export function ArtifactDocument({ projectId, artifactId }: ArtifactDocumentProp
 
   useEditorTab(
     featureTabGroup(projectId, 'artifacts'),
-    artifact.isSuccess
+    artifact.isSuccess && !embedded
       ? {
           id: artifactId,
           title: artifact.data.title,
@@ -95,61 +108,68 @@ export function ArtifactDocument({ projectId, artifactId }: ArtifactDocumentProp
   const schema = schemas.get(artifact.data.kind)
   const fields = schema === undefined ? [] : fieldViews(schema)
   return (
-    <article className="mx-auto flex max-w-4xl flex-col gap-5 p-6">
-      <header className="flex flex-col gap-2">
-        <div className="flex items-center gap-2">
-          <h1 className="text-lg font-semibold">{artifact.data.title}</h1>
-          <span className="font-mono text-xs text-muted-foreground">v{artifact.data.version}</span>
-          <ReviewStatusBadge status={artifact.data.review_status} />
-          <div className="ml-auto">
-            <ExportButton projectId={projectId} />
+    <ItemOpenContext.Provider value={onOpenItem ?? null}>
+      <article className="mx-auto flex max-w-4xl flex-col gap-5 p-6">
+        <header className="flex flex-col gap-2">
+          <div className="flex items-center gap-2">
+            <h1 className="text-lg font-semibold">{artifact.data.title}</h1>
+            <span className="font-mono text-xs text-muted-foreground">
+              v{artifact.data.version}
+            </span>
+            <ReviewStatusBadge status={artifact.data.review_status} />
+            {!embedded && (
+              <div className="ml-auto">
+                <ExportButton projectId={projectId} />
+              </div>
+            )}
           </div>
-        </div>
-        {artifact.data.summary !== null && (
-          <p className="text-sm text-muted-foreground">{artifact.data.summary}</p>
-        )}
-      </header>
+          {artifact.data.summary !== null && (
+            <p className="text-sm text-muted-foreground">{artifact.data.summary}</p>
+          )}
+        </header>
 
-      {fields.length > 0 && (
-        <dl className="grid grid-cols-[10rem_1fr] gap-x-4 gap-y-3 text-sm">
-          {fields.map((field) => (
-            <div key={field.name} className="contents">
-              <dt className="text-muted-foreground">{field.label}</dt>
-              <dd>
-                <FieldValue view={field} value={artifact.data.content[field.name]} />
-              </dd>
-            </div>
-          ))}
-        </dl>
-      )}
-
-      {items.isPending && <LoadingState label="Loading the items" rows={4} className="p-0" />}
-      {items.isError && (
-        <ErrorState
-          message={items.error.message}
-          onRetry={() => void items.refetch()}
-          size="compact"
-        />
-      )}
-      {items.isSuccess &&
-        blocksOf(items.data, schemas).map((block) =>
-          block.type === 'heading' ? (
-            <Heading
-              key={block.item.id}
-              projectId={projectId}
-              item={block.item}
-              schema={schemas.get(block.item.kind)}
-            />
-          ) : (
-            <ItemRun
-              key={block.items[0]?.id}
-              projectId={projectId}
-              block={block}
-              schema={schemas.get(block.kind)}
-            />
-          ),
+        {fields.length > 0 && (
+          <dl className="grid grid-cols-[10rem_1fr] gap-x-4 gap-y-3 text-sm">
+            {fields.map((field) => (
+              <div key={field.name} className="contents">
+                <dt className="text-muted-foreground">{field.label}</dt>
+                <dd>
+                  <FieldValue view={field} value={artifact.data.content[field.name]} />
+                </dd>
+              </div>
+            ))}
+          </dl>
         )}
-    </article>
+
+        {items.isPending && <LoadingState label="Loading the items" rows={4} className="p-0" />}
+        {items.isError && (
+          <ErrorState
+            message={items.error.message}
+            onRetry={() => void items.refetch()}
+            size="compact"
+          />
+        )}
+        {items.isSuccess &&
+          blocksOf(items.data, schemas).map((block) =>
+            block.type === 'heading' ? (
+              <Heading
+                key={block.item.id}
+                projectId={projectId}
+                item={block.item}
+                schema={schemas.get(block.item.kind)}
+              />
+            ) : (
+              <ItemRun
+                key={block.items[0]?.id}
+                projectId={projectId}
+                block={block}
+                markEdited={markEdited}
+                schema={schemas.get(block.kind)}
+              />
+            ),
+          )}
+      </article>
+    </ItemOpenContext.Provider>
   )
 }
 
@@ -188,12 +208,15 @@ function Heading({ projectId, item, schema }: HeadingProps) {
 
 interface ItemRunProps {
   projectId: string
+  markEdited: boolean
   block: Extract<Block, { type: 'run' }>
   schema: ContentSchema | undefined
 }
 
-function ItemRun({ projectId, block, schema }: ItemRunProps) {
+function ItemRun({ projectId, markEdited, block, schema }: ItemRunProps) {
   if (schema === undefined) return null
+  const edited = (item: OutlineItem) =>
+    markEdited && item.updated_by.actor === 'user' && item.version > 1
   const columns = listFieldViews(schema)
   const titleName = schema['x-ui-title-field']
 
@@ -219,7 +242,14 @@ function ItemRun({ projectId, block, schema }: ItemRunProps) {
         {block.items.map((item) => (
           <li key={item.id} className="flex flex-col gap-2 rounded-lg border p-3 text-sm">
             <p className="flex items-baseline gap-2 font-medium">
-              <span className="font-mono text-xs text-muted-foreground">{item.key}</span>
+              <span className="font-mono text-xs text-muted-foreground">
+                {edited(item) && (
+                  <abbr title="Edited by you" className="mr-1 text-warning-strong no-underline">
+                    M
+                  </abbr>
+                )}
+                {item.key}
+              </span>
               <ItemLink projectId={projectId} itemId={item.id}>
                 {itemTitle(schema, item)}
               </ItemLink>
@@ -253,7 +283,14 @@ function ItemRun({ projectId, block, schema }: ItemRunProps) {
       <TableBody>
         {block.items.map((item) => (
           <TableRow key={item.id}>
-            <TableCell className="font-mono text-xs text-muted-foreground">{item.key}</TableCell>
+            <TableCell className="font-mono text-xs text-muted-foreground">
+              {edited(item) && (
+                <abbr title="Edited by you" className="mr-1 text-warning-strong no-underline">
+                  M
+                </abbr>
+              )}
+              {item.key}
+            </TableCell>
             {columns.map((column) => (
               <TableCell key={column.name} className="max-w-md whitespace-normal">
                 {column.name === titleName ? (
