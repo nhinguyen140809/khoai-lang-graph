@@ -99,19 +99,33 @@ could never hit:
    renders only after it finishes. Moving the walk to a background task
    keeps the same contract (the SSE endpoint replays whatever was
    recorded while it runs).
-5. **Real-model vocabulary guards beyond persona generation** — the same
+5. **Single-shot writer calls vs the gateway proxy ceiling (top blocker of
+   full real runs).** Live evidence (2026-10-11, glm-5.2 via BioTuring):
+   with the conversational roles on `-No-Think`, retries and the
+   transcript tail-trim, a run completed all 39 steps of elicitation —
+   planner, 3 personas, 34 interview messages — and then died at
+   `analyst` because its one big structured completion runs past the
+   gateway's ~100s proxy timeout (retrying cannot fix an operation that
+   itself exceeds the ceiling). Options, in order of preference:
+   stream-and-aggregate in `_invoke` (token streaming keeps proxy
+   connections alive; needs langchain structured-output streaming),
+   batched analysis (the analyst walks the raw requirements in slices),
+   or `-No-Think` for the writer roles as a quality tradeoff configured
+   purely in models.yaml. A gateway-side timeout uplift would also fix
+   it outright.
+6. **Real-model vocabulary guards beyond persona generation** — the same
    `match_plan_value` normalization will likely be wanted for
    interviewer/persona_agent topic lists and analyzer enumerations as
    real runs exercise them.
-6. **`PATCH /items/{id}` conflict behavior vs. an active run** — answers
+7. **`PATCH /items/{id}` conflict behavior vs. an active run** — answers
    `409 invalid_state` while a run of the project is unfinished; the mock
    handlers have no equivalent scenario, so no frontend path covers it.
-7. **Seed parity notes** — the seed mirrors the fixture ids for the user,
+8. **Seed parity notes** — the seed mirrors the fixture ids for the user,
    4 projects, and the thread; `initial_message_id` and `item_counts` come
    from the real entities instead of the fixture constants (only Mentor
    platform has a run). The dorm-laundry project is `archived` like the
    fixture; switching to the "Archived" tab shows it.
-8. **Frontend placeholders found while reviewing (frontend/ is read-only,
+9. **Frontend placeholders found while reviewing (frontend/ is read-only,
    listed for awareness)** — the run view page is an intentional stub
    ("The run view is not built yet"), the Sources tab is disabled by
    design, and the frontend keeps chat turns in local state (a reload
