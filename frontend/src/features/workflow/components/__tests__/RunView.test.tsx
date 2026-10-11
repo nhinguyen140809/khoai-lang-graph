@@ -8,6 +8,9 @@ import { RunView } from '../RunView'
 
 vi.mock('next/navigation', async () => (await import('@/test/next-mocks.utils')).navigationMock)
 vi.mock('next/link', async () => (await import('@/test/next-mocks.utils')).linkMock)
+vi.mock('../../graph/graph-layout.utils', () => ({
+  layoutGraph: vi.fn(() => ({ planner: { x: 0, y: 0 } })),
+}))
 
 describe('RunView', () => {
   it('renders the header and the timeline of the run', async () => {

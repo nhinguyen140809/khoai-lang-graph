@@ -1,6 +1,7 @@
 'use client'
 
 import Link from 'next/link'
+import { useState } from 'react'
 
 import { featureTabGroup } from '@/components/layout/activity-bar.config'
 import { useEditorTab } from '@/components/layout/hooks/useEditorTab'
@@ -8,11 +9,15 @@ import { EmptyState, ErrorState, LoadingState, NotFoundState } from '@/component
 import { Badge } from '@/components/ui/badge'
 import { isNotFoundError } from '@/lib/api-fetch.utils'
 import { runStatusLabels, runStatusTones } from '@/lib/run-status.constants'
-import { cn } from '@/lib/utils'
 
+import { replaySteps } from '../graph/node-status.reducer'
+import { useGraphLayout } from '../graph/run-layout.utils'
+import { usePendingInterrupt } from '../hooks/usePendingInterrupt'
 import { useRun } from '../hooks/useRun'
 import { useRunSteps } from '../hooks/useRunSteps'
+import { useWorkflowDefinition } from '../hooks/useWorkflowDefinition'
 import { formatCost, formatStepDuration } from '../workflow.utils'
+import { WorkflowGraph } from './WorkflowGraph'
 
 interface RunViewProps {
   projectId: string
@@ -27,13 +32,18 @@ const stepMark = {
 } as const
 
 /**
- * The run in the editor: its header (state, stage, cost, limits), the error it
- * ended with, then the timeline of its steps in the terminal style of Chat —
- * `⏺ node` per step, the items it produced as chips under it.
+ * The run in the editor (skeleton §7): the header of the run, the graph of
+ * the workflow version it ran with — every node with its state and visit
+ * count, the last edge taken emphasized — then its error when it failed and
+ * the timeline of its steps; clicking a node opens its steps below.
  */
 export function RunView({ projectId, runId }: RunViewProps) {
   const run = useRun(runId)
   const steps = useRunSteps(runId)
+  const interrupt = usePendingInterrupt(runId)
+  const definition = useWorkflowDefinition(run.data?.workflow_version ?? null)
+  const layout = useGraphLayout(definition.data?.nodes ?? [], definition.data?.edges ?? [])
+  const [selectedNode, setSelectedNode] = useState<string | null>(null)
 
   useEditorTab(featureTabGroup(projectId, 'workflow'), {
     id: runId,
@@ -54,10 +64,18 @@ export function RunView({ projectId, runId }: RunViewProps) {
     )
   }
 
+  const progress =
+    steps.data && interrupt.data !== undefined
+      ? replaySteps(steps.data, interrupt.data?.node ?? null)
+      : null
+  const nodeSteps = selectedNode
+    ? (steps.data ?? []).filter((step) => step.node === selectedNode)
+    : []
+
   return (
-    <article className="mx-auto flex max-w-3xl flex-col gap-5 p-6">
+    <article className="mx-auto flex max-w-4xl flex-col gap-5 p-6">
       <header className="flex flex-wrap items-center gap-2">
-        <h1 className="text-lg font-semibold">Run {run.data.number}</h1>
+        <h1 className="text-lg font-semibold">Run {String(run.data.number)}</h1>
         <Badge variant="soft" color={runStatusTones[run.data.status]}>
           {runStatusLabels[run.data.status]}
         </Badge>
@@ -72,6 +90,45 @@ export function RunView({ projectId, runId }: RunViewProps) {
           · workflow v{String(run.data.workflow_version)}
         </span>
       </header>
+
+      {selectedNode === null ? null : (
+        <section
+          aria-label={`Steps of ${selectedNode}`}
+          className="rounded-lg border bg-background p-3"
+        >
+          <h2 className="mb-2 text-[0.6875rem] font-medium tracking-wide text-muted-foreground uppercase">
+            {selectedNode} · {String(nodeSteps.length)} step{nodeSteps.length === 1 ? '' : 's'}
+          </h2>
+          {nodeSteps.length === 0 ? (
+            <p className="text-sm text-muted-foreground">This node did not run.</p>
+          ) : (
+            <ul className="flex flex-col gap-1.5 text-sm">
+              {nodeSteps.map((step) => (
+                <li key={step.id} className="flex flex-wrap items-baseline gap-x-2">
+                  <span className="font-mono text-xs">{String(step.sequence)}</span>
+                  <span className="text-muted-foreground">{step.model_id ?? '-'}</span>
+                  <span className="ml-auto text-xs text-muted-foreground">
+                    {formatStepDuration(step.started_at, step.finished_at)}
+                  </span>
+                </li>
+              ))}
+            </ul>
+          )}
+        </section>
+      )}
+
+      {definition.data && layout && progress ? (
+        <WorkflowGraph
+          nodes={definition.data.nodes}
+          edges={definition.data.edges}
+          progress={progress}
+          steps={steps.isSuccess ? steps.data : []}
+          layout={layout}
+          onNodeSelect={setSelectedNode}
+        />
+      ) : (
+        <LoadingState label="Laying out the graph" rows={5} />
+      )}
 
       {run.data.error ? (
         <p role="alert" className="font-mono text-sm text-destructive-strong">
@@ -96,12 +153,11 @@ export function RunView({ projectId, runId }: RunViewProps) {
                 {stepMark[step.status] === '' ? null : (
                   <span
                     role="status"
-                    className={cn(
-                      'text-[0.8125rem]',
+                    className={
                       step.status === 'failed'
-                        ? 'text-destructive-strong'
-                        : 'text-muted-foreground',
-                    )}
+                        ? 'text-[0.8125rem] text-destructive-strong'
+                        : 'text-[0.8125rem] text-muted-foreground'
+                    }
                   >
                     {stepMark[step.status]}
                   </span>
