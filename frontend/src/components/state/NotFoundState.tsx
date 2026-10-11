@@ -4,7 +4,7 @@ import type { ReactNode } from 'react'
 import { cn } from '@/lib/utils'
 
 import { EmptyState } from './EmptyState'
-import type { StateSize } from './state.types'
+import { pageClassName, type StateSize } from './state.types'
 
 interface NotFoundStateProps {
   /** What does not exist, e.g. "Thread not found". */
@@ -43,13 +43,15 @@ export function NotFoundState({
   }
 
   return (
-    <div className={cn('flex flex-col items-start gap-5 p-6', className)}>
-      {reference !== undefined && <DanglingLink reference={reference} />}
-      <div className="flex flex-col gap-1.5">
-        <h2 className="text-lg font-semibold">{title}</h2>
-        <p className="max-w-sm text-sm text-balance text-muted-foreground">{description}</p>
+    <div className={cn(pageClassName, className)}>
+      <div className="flex w-full flex-col items-center gap-5 text-center">
+        {reference !== undefined && <DanglingLink reference={reference} />}
+        <div className="flex flex-col items-center gap-1.5">
+          <h2 className="text-lg font-semibold">{title}</h2>
+          <p className="max-w-sm text-sm text-balance text-muted-foreground">{description}</p>
+        </div>
+        {action}
       </div>
-      {action}
     </div>
   )
 }

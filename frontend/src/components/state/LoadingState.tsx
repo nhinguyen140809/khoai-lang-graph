@@ -1,7 +1,7 @@
 import { Skeleton } from '@/components/ui/skeleton'
 import { cn } from '@/lib/utils'
 
-import type { StateSize } from './state.types'
+import { pageClassName, type StateSize } from './state.types'
 
 // Fixed widths, cycled per row: random widths would differ between server and client render.
 const ROW_WIDTHS = ['w-4/5', 'w-3/5', 'w-2/3']
@@ -23,17 +23,23 @@ export function LoadingState({ label, rows = 3, size = 'page', className }: Load
       aria-busy="true"
       aria-label={label}
       className={cn(
-        'flex flex-col',
-        size === 'compact' ? 'gap-2 px-2 py-1' : 'gap-3 p-6',
+        size === 'compact' ? 'flex flex-col gap-2 px-2 py-1' : pageClassName,
         className,
       )}
     >
-      {Array.from({ length: rows }, (_, index) => (
-        <Skeleton
-          key={index}
-          className={cn(size === 'compact' ? 'h-4' : 'h-5', ROW_WIDTHS[index % ROW_WIDTHS.length])}
-        />
-      ))}
+      <div
+        className={cn('flex flex-col', size === 'compact' ? 'contents' : 'w-full max-w-md gap-3')}
+      >
+        {Array.from({ length: rows }, (_, index) => (
+          <Skeleton
+            key={index}
+            className={cn(
+              size === 'compact' ? 'h-4' : 'h-5',
+              ROW_WIDTHS[index % ROW_WIDTHS.length],
+            )}
+          />
+        ))}
+      </div>
     </div>
   )
 }
