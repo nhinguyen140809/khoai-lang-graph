@@ -19,6 +19,7 @@ How the mocks work (fixtures, handlers, adding an endpoint) is in [Mock data](..
   - [Frame of a project](#frame-of-a-project)
   - [Console](#console)
   - [Search](#search)
+  - [Artifacts](#artifacts)
   - [Run states](#run-states)
   - [Features not built yet](#features-not-built-yet)
   - [Development pages](#development-pages)
@@ -27,15 +28,15 @@ How the mocks work (fixtures, handlers, adding an endpoint) is in [Mock data](..
 
 The data is the project of the API examples, an online platform where university students find mentors.
 
-| Record                               | Id                                                       | What it holds                                                                                                                                                                                                                                                                                       |
-| ------------------------------------ | -------------------------------------------------------- | --------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
-| Project "Mentor platform"            | `90aa0000-0000-4000-8000-000000000001`                   | The project of the API examples                                                                                                                                                                                                                                                                     |
-| Project "Campus food ordering"       | `90aa0000-0000-4000-8000-000000000002`                   | Finished runs only                                                                                                                                                                                                                                                                                  |
-| Project "Library booking"            | `90aa0000-0000-4000-8000-000000000003`                   | A running run, at the interviews                                                                                                                                                                                                                                                                    |
-| Project "Dorm laundry booking"       | `90aa0000-0000-4000-8000-000000000004`                   | Archived                                                                                                                                                                                                                                                                                            |
-| Eleven more projects                 | `90aa0000-0000-4000-8000-0000000000NN`, NN from 05 to 16 | Each in one state of a run: done, waiting for review, running, failed, stopped, no run yet, or archived; two are in Vietnamese. Each has one thread and at most one run, with the message that started it, its steps and a few items. They are generated from the specs in `extra-projects.data.ts` |
-| Thread "Main thread" of each project | `7f3a0000-0000-4000-8000-000000000001`                   | Every project has one thread, the thread of the console of the project; the mentor thread holds runs 1, 2 and 3                                                                                                                                                                                     |
-| Run 3 of the mentor thread           | `5f2d0000-0000-4000-8000-000000000001`                   | The run of the API examples: it retries run 2 from its planner step and waits at the analysis review, step 67                                                                                                                                                                                       |
+| Record                               | Id                                                       | What it holds                                                                                                                                                                                                                                                                                                 |
+| ------------------------------------ | -------------------------------------------------------- | ------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
+| Project "Mentor platform"            | `90aa0000-0000-4000-8000-000000000001`                   | The project of the API examples                                                                                                                                                                                                                                                                               |
+| Project "Campus food ordering"       | `90aa0000-0000-4000-8000-000000000002`                   | Finished runs only                                                                                                                                                                                                                                                                                            |
+| Project "Library booking"            | `90aa0000-0000-4000-8000-000000000003`                   | A running run, at the interviews                                                                                                                                                                                                                                                                              |
+| Project "Dorm laundry booking"       | `90aa0000-0000-4000-8000-000000000004`                   | Archived                                                                                                                                                                                                                                                                                                      |
+| Eleven more projects                 | `90aa0000-0000-4000-8000-0000000000NN`, NN from 05 to 16 | Each in one state of a run: done, waiting for review, running, failed, stopped, no run yet, or archived; two are in Vietnamese. Each has one thread and at most one run, with the message that started it, its steps and a few items. They are generated from the specs in `extra-project-specs.constants.ts` |
+| Thread "Main thread" of each project | `7f3a0000-0000-4000-8000-000000000001`                   | Every project has one thread, the thread of the console of the project; the mentor thread holds runs 1, 2 and 3                                                                                                                                                                                               |
+| Run 3 of the mentor thread           | `5f2d0000-0000-4000-8000-000000000001`                   | The run of the API examples: it retries run 2 from its planner step and waits at the analysis review, step 67                                                                                                                                                                                                 |
 
 The mock server keeps the session, the user, the user settings, and the projects and threads created with `POST` in browser storage, so they survive a reload. Add `?mock-reset` to any address to start again from the fixtures, for example http://localhost:3000/projects?mock-reset.
 
@@ -54,6 +55,9 @@ A parameter in the page address changes what a group of endpoints answers. Param
 | `mock-run-state`      | `running`, `waiting` (default), `failed`, `done`                                | The state of run 3 of the mentor thread, and of everything derived from it: the thread, the counts of the project |
 | `mock-items`          | `empty`, `error`, `loading`                                                     | `GET /projects/{project_id}/items` (the search)                                                                   |
 | `mock-item`           | `empty` (404), `error`, `loading`                                               | `GET /items/{item_id}`                                                                                            |
+| `mock-artifacts`      | `empty`, `error`, `loading`                                                     | `GET /projects/{project_id}/artifacts`                                                                            |
+| `mock-artifact`       | `error`, `loading`                                                              | `GET /artifacts/{artifact_id}`, `GET /artifacts/{artifact_id}/items`                                              |
+| `mock-trace`          | `error`, `loading`                                                              | `GET /items/{item_id}/trace`                                                                                      |
 | `mock-artifact-kinds` | `empty`, `error`, `loading`                                                     | `GET /artifact-kinds`                                                                                             |
 | `mock-me`             | `empty` (404), `error`, `loading`                                               | `GET /me`                                                                                                         |
 | `mock-settings`       | `empty` (404), `error`, `loading`, `save-error` (loads, then `PUT` answers 500) | `GET /me/settings`, `PUT /me/settings`                                                                            |
@@ -130,18 +134,36 @@ The console shows the event log of the project and an input for a message that s
 
 ## Search
 
-Type in the search box of the panel; try `REQ`, `search` or `mentor`.
+Type in the search box of the panel; try `REQ`, `search` or `mentor`. A result opens in Artifacts.
 
-| State          | Address                                                                                                                         |
-| -------------- | ------------------------------------------------------------------------------------------------------------------------------- |
-| Search         | http://localhost:3000/projects/90aa0000-0000-4000-8000-000000000001/search                                                      |
-| An item        | http://localhost:3000/projects/90aa0000-0000-4000-8000-000000000001/search/c41e0000-0000-4000-8000-000000000006                 |
-| Item not found | http://localhost:3000/projects/90aa0000-0000-4000-8000-000000000001/search/c41e0000-0000-4000-8000-000000000006?mock-item=empty |
-| Search loading | http://localhost:3000/projects/90aa0000-0000-4000-8000-000000000001/search?mock-items=loading                                   |
-| Search error   | http://localhost:3000/projects/90aa0000-0000-4000-8000-000000000001/search?mock-items=error                                     |
-| No matches     | http://localhost:3000/projects/90aa0000-0000-4000-8000-000000000001/search?mock-items=empty                                     |
+| State          | Address                                                                                       |
+| -------------- | --------------------------------------------------------------------------------------------- |
+| Search         | http://localhost:3000/projects/90aa0000-0000-4000-8000-000000000001/search                    |
+| Search loading | http://localhost:3000/projects/90aa0000-0000-4000-8000-000000000001/search?mock-items=loading |
+| Search error   | http://localhost:3000/projects/90aa0000-0000-4000-8000-000000000001/search?mock-items=error   |
+| No matches     | http://localhost:3000/projects/90aa0000-0000-4000-8000-000000000001/search?mock-items=empty   |
 
 The search state is typed in the box, so open the address and then type.
+
+## Artifacts
+
+The tree lists the artifacts of the project; open one to see its sections or its items by kind. Each project of the API examples has an elicitation plan, personas and a specification; the mentor platform has the whole set of artifacts that a run makes, with trace links, and `REQ-003` is made from an older version of `AR-007`.
+
+| State                                        | Address                                                                                                                                   |
+| -------------------------------------------- | ----------------------------------------------------------------------------------------------------------------------------------------- |
+| Requirement specification (sections, tables) | http://localhost:3000/projects/90aa0000-0000-4000-8000-000000000001/artifacts/a7f30000-0000-4000-8000-000000000107                        |
+| Requirements analysis (items by kind)        | http://localhost:3000/projects/90aa0000-0000-4000-8000-000000000001/artifacts/a7f30000-0000-4000-8000-000000000106                        |
+| Interview with PER-001 (transcript)          | http://localhost:3000/projects/90aa0000-0000-4000-8000-000000000001/artifacts/a7f30000-0000-4000-8000-000000000103                        |
+| Persona catalog (cards)                      | http://localhost:3000/projects/90aa0000-0000-4000-8000-000000000001/artifacts/a7f30000-0000-4000-8000-000000000102                        |
+| An item, with its trace and versions         | http://localhost:3000/projects/90aa0000-0000-4000-8000-000000000001/artifacts/items/c41e0000-0000-4000-8000-000000001057                  |
+| Item not found                               | http://localhost:3000/projects/90aa0000-0000-4000-8000-000000000001/artifacts/items/c41e0000-0000-4000-8000-000000001057?mock-item=empty  |
+| Trace error                                  | http://localhost:3000/projects/90aa0000-0000-4000-8000-000000000001/artifacts/items/c41e0000-0000-4000-8000-000000001057?mock-trace=error |
+| Artifacts loading                            | http://localhost:3000/projects/90aa0000-0000-4000-8000-000000000001/artifacts?mock-artifacts=loading                                      |
+| Artifacts error                              | http://localhost:3000/projects/90aa0000-0000-4000-8000-000000000001/artifacts?mock-artifacts=error                                        |
+| No artifacts                                 | http://localhost:3000/projects/90aa0000-0000-4000-8000-000000000001/artifacts?mock-artifacts=empty                                        |
+| Export dialog open                           | http://localhost:3000/projects/90aa0000-0000-4000-8000-000000000001/artifacts?export                                                      |
+
+An edit of an item is a `PATCH` that the mock server keeps, with the versions that it makes; `?mock-reset` forgets it. An export is made a moment after it is asked for, and its file is a plain text of the artifacts.
 
 ## Run states
 
@@ -160,7 +182,6 @@ These addresses show the frame with an empty state until their feature is built.
 
 | Feature           | Address                                                                                                           |
 | ----------------- | ----------------------------------------------------------------------------------------------------------------- |
-| Artifacts         | http://localhost:3000/projects/90aa0000-0000-4000-8000-000000000001/artifacts                                     |
 | Workflow          | http://localhost:3000/projects/90aa0000-0000-4000-8000-000000000001/workflow                                      |
 | Run 3 in Workflow | http://localhost:3000/projects/90aa0000-0000-4000-8000-000000000001/workflow/5f2d0000-0000-4000-8000-000000000001 |
 | Traceability      | http://localhost:3000/projects/90aa0000-0000-4000-8000-000000000001/traceability                                  |
