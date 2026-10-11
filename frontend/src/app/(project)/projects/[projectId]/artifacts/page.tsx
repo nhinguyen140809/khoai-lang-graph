@@ -6,8 +6,8 @@ export default function Page() {
   return (
     <EmptyState
       icon={FileStackIcon}
-      title="Artifacts are not built yet"
-      description="The explorer of artifacts and items, the item view and the documents come in a later version."
+      title="Open an artifact or an item"
+      description="Choose one in the tree to read it here. An item opens with its trace and its versions."
     />
   )
 }

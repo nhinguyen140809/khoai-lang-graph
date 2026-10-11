@@ -45,6 +45,16 @@ if (!('scrollIntoView' in Element.prototype)) {
   })
 }
 
+// jsdom has no pointer capture, which the select of Radix UI asks for when it opens.
+for (const method of ['hasPointerCapture', 'setPointerCapture', 'releasePointerCapture'] as const) {
+  if (!(method in Element.prototype)) {
+    Object.defineProperty(Element.prototype, method, {
+      value: () => false,
+      writable: true,
+    })
+  }
+}
+
 beforeAll(() => {
   server.listen({ onUnhandledRequest: 'error' })
 })
