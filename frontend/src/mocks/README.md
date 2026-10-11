@@ -22,6 +22,7 @@ How the mocks work (fixtures, handlers, adding an endpoint) is in [Mock data](..
   - [Artifacts](#artifacts)
   - [Review](#review)
   - [Workflow](#workflow)
+  - [Traceability](#traceability)
   - [Run states](#run-states)
   - [Features not built yet](#features-not-built-yet)
   - [Development pages](#development-pages)
@@ -60,6 +61,8 @@ A parameter in the page address changes what a group of endpoints answers. Param
 | `mock-artifacts`      | `empty`, `error`, `loading`                                                                             | `GET /projects/{project_id}/artifacts`                                                                            |
 | `mock-artifact`       | `error`, `loading`                                                                                      | `GET /artifacts/{artifact_id}`, `GET /artifacts/{artifact_id}/items`                                              |
 | `mock-trace`          | `error`, `loading`                                                                                      | `GET /items/{item_id}/trace`                                                                                      |
+| `mock-traceability`   | `empty` (a matrix with no row), `error`, `loading`                                                      | `GET /projects/{project_id}/traceability/matrix`                                                                  |
+| `mock-coverage`       | `error`, `loading`                                                                                      | `GET /projects/{project_id}/traceability/coverage`                                                                |
 | `mock-review`         | `questions` (the checkpoint asks questions, not options), `empty` (no review waits), `error`, `loading` | `GET /runs/{run_id}/interrupts`                                                                                   |
 | `mock-play`           | `review` (a run that a message starts stops at the review of the personas)                              | The stream of a run that a message starts                                                                         |
 | `mock-artifact-kinds` | `empty`, `error`, `loading`                                                                             | `GET /artifact-kinds`                                                                                             |
@@ -198,6 +201,21 @@ The side panel lists the runs of the project, newest first, each opening into it
 | Run not found                          | http://localhost:3000/projects/90aa0000-0000-4000-8000-000000000001/workflow/missing                                                     |
 
 "Retry from this step" starts a new run with a `POST`; it is offered when no run of the project is unfinished, so open it with `?mock-run-state=done`. Open the address with the state in it, as a step of the side panel drops it from the address.
+
+## Traceability
+
+The matrix has one row for each chain from a backlog item down to its sources and the interview messages they came from; its columns come from the response. The side panel counts the gaps of the trace: specified requirements with no backlog item, requirements with no source, and items derived from a version of another item that has changed since (`REQ-003` is derived from `AR-007`, which the user edited). A gap in the side panel keeps the rows with its items. Issues lists the open ambiguity issues, conflicts and validation issues, with the items they are about.
+
+| State              | Address                                                                                                  |
+| ------------------ | -------------------------------------------------------------------------------------------------------- |
+| Matrix             | http://localhost:3000/projects/90aa0000-0000-4000-8000-000000000001/traceability                         |
+| Rows of one gap    | http://localhost:3000/projects/90aa0000-0000-4000-8000-000000000001/traceability?gap=no_source           |
+| Issues             | http://localhost:3000/projects/90aa0000-0000-4000-8000-000000000001/traceability?view=issues             |
+| Matrix with no row | http://localhost:3000/projects/90aa0000-0000-4000-8000-000000000001/traceability?mock-traceability=empty |
+| Matrix error       | http://localhost:3000/projects/90aa0000-0000-4000-8000-000000000001/traceability?mock-traceability=error |
+| Coverage error     | http://localhost:3000/projects/90aa0000-0000-4000-8000-000000000001/traceability?mock-coverage=error     |
+
+The API documentation does not fix the shape of the matrix and coverage responses. The mock server answers `{ columns: [{ key, label, kinds }], rows: [{ cells: { <column key>: [item] } }] }` for the matrix and `{ gaps: [{ key, label, description, items }] }` for the coverage, an item being `{ item_id, key, kind, title }`. The client draws whatever columns and gaps it receives.
 
 ## Run states
 

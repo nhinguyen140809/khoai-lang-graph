@@ -228,7 +228,7 @@ Vietnamese text needs a font that ships the `vietnamese` subset. The subsets of 
   | `/projects/{projectId}/artifacts/items/{itemId}`         | One item, with its edit form, trace and versions                                                                |
   | `/projects/{projectId}/review/{runId}`                   | The review of a run at a checkpoint: its artifact beside the event log, and the options, feedback and questions |
   | `/projects/{projectId}/workflow`, `.../workflow/{runId}` | Workflow: the runs in the side panel, the graph of one run, and the chosen step under it                        |
-  | `/projects/{projectId}/traceability`                     | Traceability (not built yet)                                                                                    |
+  | `/projects/{projectId}/traceability`                     | Traceability: the matrix of chains, the gaps of the trace, and the open issues                                  |
   | `/projects/{projectId}/settings`                         | Project settings (not built yet)                                                                                |
   | `/design-system`                                         | Design system, in development only                                                                              |
 
