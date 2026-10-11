@@ -7,7 +7,8 @@
   },
   "features": {
     "ghcr.io/devcontainers/features/python:1": { "version": "3.12" },
-    "ghcr.io/devcontainers/features/docker-in-docker:2": {}
+    "ghcr.io/devcontainers/features/docker-in-docker:2": {},
+    "ghcr.io/devcontainers/features/github-cli:1": {}
   },
   "forwardPorts": [3000, 8000],
   "portsAttributes": {
@@ -20,7 +21,7 @@
       "onAutoForward": "silent"
     }
   },
-  "onCreateCommand": "corepack enable && pipx install uv && pipx install rust-just",
+  "onCreateCommand": "sudo corepack enable && pipx install uv && pipx install rust-just",
   // Runs after creation and again whenever the repo content is updated (prebuilds), so a
   // changed lockfile is picked up without a manual install.
   "updateContentCommand": "cd frontend && pnpm install --frozen-lockfile",
