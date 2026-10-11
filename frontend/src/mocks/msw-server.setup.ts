@@ -1,5 +1,6 @@
 import { setupServer } from 'msw/node'
 
+import { accountHandlers } from './account.handlers'
 import { artifactKindHandlers } from './artifact-kinds.handlers'
 import { artifactHandlers } from './artifacts.handlers'
 import { authHandlers } from './auth.handlers'
@@ -16,6 +17,7 @@ export const server = setupServer(
   ...authHandlers,
   ...artifactKindHandlers,
   ...meHandlers,
+  ...accountHandlers,
   ...modelHandlers,
   ...projectHandlers,
   ...artifactHandlers,
