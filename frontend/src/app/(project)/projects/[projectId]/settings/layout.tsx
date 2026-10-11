@@ -1,6 +1,6 @@
 import { SidePanel } from '@/components/layout/SidePanel'
 import { Workbench } from '@/components/layout/Workbench'
-import { EmptyState } from '@/components/state'
+import { SettingsNav } from '@/features/project-settings'
 
 export default async function Layout({
   children,
@@ -13,7 +13,7 @@ export default async function Layout({
       feature="settings"
       side={
         <SidePanel title="Project settings">
-          <EmptyState title="Not built yet" size="compact" className="px-3" />
+          <SettingsNav projectId={projectId} />
         </SidePanel>
       }
     >
