@@ -24,6 +24,7 @@ How the mocks work (fixtures, handlers, adding an endpoint) is in [Mock data](..
   - [Workflow](#workflow)
   - [Traceability](#traceability)
   - [Project settings](#project-settings)
+  - [Settings of the user](#settings-of-the-user)
   - [Run states](#run-states)
   - [Development pages](#development-pages)
 
@@ -62,6 +63,10 @@ A parameter in the page address changes what a group of endpoints answers. Param
 | `mock-artifact`       | `error`, `loading`                                                                                      | `GET /artifacts/{artifact_id}`, `GET /artifacts/{artifact_id}/items`                                              |
 | `mock-trace`          | `error`, `loading`                                                                                      | `GET /items/{item_id}/trace`                                                                                      |
 | `mock-models`         | `empty`, `error`, `loading`                                                                             | `GET /models`                                                                                                     |
+| `mock-usage`          | `empty`, `error`, `loading`                                                                             | `GET /me/usage`                                                                                                   |
+| `mock-sessions`       | `empty`, `error`, `loading`                                                                             | `GET /me/sessions`                                                                                                |
+| `mock-model-settings` | `empty`, `error`, `loading`                                                                             | `GET /me/model-settings`                                                                                          |
+| `mock-password`       | `error` (422, the current password is wrong)                                                            | `POST /me/password`                                                                                               |
 | `mock-traceability`   | `empty` (a matrix with no row), `error`, `loading`                                                      | `GET /projects/{project_id}/traceability/matrix`                                                                  |
 | `mock-coverage`       | `error`, `loading`                                                                                      | `GET /projects/{project_id}/traceability/coverage`                                                                |
 | `mock-review`         | `questions` (the checkpoint asks questions, not options), `empty` (no review waits), `error`, `loading` | `GET /runs/{run_id}/interrupts`                                                                                   |
@@ -231,6 +236,24 @@ Three sections, chosen in the side panel: General (name, description, output lan
 | Project not found         | http://localhost:3000/projects/90aa0000-0000-4000-8000-000000000001/settings?mock-project=empty               |
 
 `/run-settings` in the console opens the Runs section.
+
+## Settings of the user
+
+The page is outside a project, at `/settings`, and opens from "Your settings" in the account menu. A section is chosen in the list at its left: Profile, Password, Preferences (theme, languages, notifications, and the run settings every project starts from), Models (the model and the temperature of each agent role), Usage (tokens and cost, grouped by day, project, agent role or model) and Login sessions. What is saved is kept by the mock server; `?mock-reset` forgets it.
+
+| Section                            | Address                                                               |
+| ---------------------------------- | --------------------------------------------------------------------- |
+| Profile                            | http://localhost:3000/settings                                        |
+| Password                           | http://localhost:3000/settings?section=password                       |
+| Password, the current one is wrong | http://localhost:3000/settings?section=password&mock-password=error   |
+| Preferences                        | http://localhost:3000/settings?section=preferences                    |
+| Models                             | http://localhost:3000/settings?section=models                         |
+| Usage                              | http://localhost:3000/settings?section=usage                          |
+| Usage, none                        | http://localhost:3000/settings?section=usage&mock-usage=empty         |
+| Login sessions                     | http://localhost:3000/settings?section=sessions                       |
+| Login sessions, loading            | http://localhost:3000/settings?section=sessions&mock-sessions=loading |
+
+The API documentation does not fix these response shapes, so the mock server answers: `GET /me/sessions` a page of `{ id, created_at, last_used_at, ip_address, user_agent, current }`; `GET` and `PUT /me/model-settings` a page of `{ agent_role, model_id, temperature }` (`PUT` takes `{ items: [...] }`); and `GET /me/usage?group_by=` `{ group_by, total, items: [{ key, input_tokens, output_tokens, cache_read_tokens, cache_write_tokens, cost_usd }] }`.
 
 ## Run states
 

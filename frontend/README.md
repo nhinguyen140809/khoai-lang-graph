@@ -229,6 +229,7 @@ Vietnamese text needs a font that ships the `vietnamese` subset. The subsets of 
   | `/projects/{projectId}/review/{runId}`                   | The review of a run at a checkpoint: its artifact beside the event log, and the options, feedback and questions |
   | `/projects/{projectId}/workflow`, `.../workflow/{runId}` | Workflow: the runs in the side panel, the graph of one run, and the chosen step under it                        |
   | `/projects/{projectId}/traceability`                     | Traceability: the matrix of chains, the gaps of the trace, and the open issues                                  |
+  | `/settings`                                              | Settings of the user: profile, password, preferences, models, usage and login sessions (`?section=`)            |
   | `/projects/{projectId}/settings`                         | Project settings: general, run settings and models (`?section=runs`, `?section=models`)                         |
   | `/design-system`                                         | Design system, in development only                                                                              |
 
