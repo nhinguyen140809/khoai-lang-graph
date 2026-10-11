@@ -9,6 +9,7 @@ import { messageHandlers } from './messages.handlers'
 import { projectHandlers } from './projects.handlers'
 import { runHandlers } from './runs.handlers'
 import { threadHandlers } from './threads.handlers'
+import { traceabilityHandlers } from './traceability.handlers'
 
 export const server = setupServer(
   ...authHandlers,
@@ -16,6 +17,7 @@ export const server = setupServer(
   ...meHandlers,
   ...projectHandlers,
   ...artifactHandlers,
+  ...traceabilityHandlers,
   ...interruptHandlers,
   ...threadHandlers,
   ...messageHandlers,

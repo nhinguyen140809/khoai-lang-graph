@@ -46,7 +46,7 @@ function currentArtifact(artifact: Artifact): Artifact {
     : { ...artifact, review_status: status as Artifact['review_status'] }
 }
 
-function allItems(): ArtifactItem[] {
+export function allItems(): ArtifactItem[] {
   return mockArtifactItems.map(current)
 }
 
