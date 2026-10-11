@@ -2,21 +2,41 @@ import { http, HttpResponse } from 'msw'
 
 import type { Thread } from '@/features/threads'
 
+import { extraThreads } from './extra-projects.fixtures'
 import { mockRecord } from './mock-db.utils'
 import { createdId, USER_ID } from './mock-ids.constants'
+import { unfinishedStatuses } from './mock-runs.store'
 import { answerScenario, mockRunState, mockScenario } from './mock-scenario.utils'
 import { paginate } from './pagination.utils'
 import { notFound } from './problem.utils'
 import { findProject } from './projects.handlers'
+import { allRuns } from './runs.handlers'
 import { mockThreads, withoutRuns } from './threads.fixtures'
 
 // Threads created with POST /projects/{project_id}/threads.
 const createdThreads = mockRecord<Thread[]>('created-threads', () => [])
 
 // With `?mock-runs=empty`, no thread has a run yet.
-function allThreads(): Thread[] {
-  const threads = [...createdThreads.get(), ...mockThreads(mockRunState())]
-  return mockScenario('runs') === 'empty' ? withoutRuns(threads) : threads
+export function allThreads(): Thread[] {
+  const threads = [...createdThreads.get(), ...mockThreads(mockRunState()), ...extraThreads()]
+  return mockScenario('runs') === 'empty' ? withoutRuns(threads) : threads.map(withRunsOfThread)
+}
+
+// The unfinished run of a thread follows the runs: one that was started, stopped or finished
+// while the mock server runs changes the thread.
+function withRunsOfThread(thread: Thread): Thread {
+  const active = allRuns()
+    .filter((run) => run.thread_id === thread.id && unfinishedStatuses.includes(run.status))
+    .toSorted((a, b) => b.number - a.number)[0]
+  if (active === undefined) {
+    return { ...thread, active_run_id: null, active_run_status: null }
+  }
+  return {
+    ...thread,
+    current_stage: active.current_stage,
+    active_run_id: active.id,
+    active_run_status: active.status as NonNullable<Thread['active_run_status']>,
+  }
 }
 
 export const threadHandlers = [

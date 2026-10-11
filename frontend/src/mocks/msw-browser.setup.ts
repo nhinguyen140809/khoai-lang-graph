@@ -4,6 +4,7 @@ import { artifactKindHandlers } from './artifact-kinds.handlers'
 import { authHandlers } from './auth.handlers'
 import { itemHandlers } from './items.handlers'
 import { meHandlers } from './me.handlers'
+import { messageHandlers } from './messages.handlers'
 import { keepMockDataInBrowser, resetMockData } from './mock-db.utils'
 import { projectHandlers } from './projects.handlers'
 import { streamHandlers } from './run-stream.handlers'
@@ -21,6 +22,7 @@ export const worker = setupWorker(
   ...projectHandlers,
   ...itemHandlers,
   ...threadHandlers,
+  ...messageHandlers,
   ...runHandlers,
   ...streamHandlers,
 )

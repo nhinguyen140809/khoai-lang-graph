@@ -2,32 +2,34 @@ import { http, HttpResponse } from 'msw'
 
 import type { CreateProjectBody, Project } from '@/features/projects'
 
+import { bulkProjectCount } from './extra-project-specs.constants'
+import { bulkProjects, extraProjects } from './extra-projects.fixtures'
 import { mockRecord } from './mock-db.utils'
 import { createdId, USER_ID } from './mock-ids.constants'
-import { answerScenario, mockRunState, mockScenario } from './mock-scenario.utils'
+import { answerScenario, mockScenario, pageParam } from './mock-scenario.utils'
 import { paginate } from './pagination.utils'
 import { notFound, problem } from './problem.utils'
 import { mockProjects } from './projects.fixtures'
-import { mockThreads } from './threads.fixtures'
+import { allRuns } from './runs.handlers'
 
 // Projects created with POST /projects.
 const createdProjects = mockRecord<Project[]>('created-projects', () => [])
 
-// The unfinished runs of a project, counted from the unfinished run of each of its threads, as the
-// API derives them. Threads created since have no run.
+// The unfinished runs of a project, counted by status, as the API derives them.
 function withRunCounts(project: Project): Project {
-  const threads = mockScenario('runs') === 'empty' ? [] : mockThreads(mockRunState())
   const counts = { queued: 0, running: 0, interrupted: 0 }
-  for (const thread of threads) {
-    if (thread.project_id === project.id && thread.active_run_status !== null) {
-      counts[thread.active_run_status] += 1
+  for (const run of allRuns()) {
+    if (run.project_id === project.id && run.status in counts) {
+      counts[run.status as keyof typeof counts] += 1
     }
   }
   return { ...project, unfinished_run_counts: counts }
 }
 
+// With `?mock-projects=many`, the list is long: the projects of the fixtures, and many more.
 function allProjects(): Project[] {
-  return [...createdProjects.get(), ...mockProjects].map(withRunCounts)
+  const many = pageParam('mock-projects') === 'many' ? bulkProjects(bulkProjectCount) : []
+  return [...createdProjects.get(), ...mockProjects, ...extraProjects(), ...many].map(withRunCounts)
 }
 
 /** A project of the fixtures or one created since. */
