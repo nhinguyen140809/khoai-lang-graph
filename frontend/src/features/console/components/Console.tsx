@@ -1,5 +1,7 @@
 'use client'
 
+import type { Route } from 'next'
+import { useRouter } from 'next/navigation'
 import { useEffect, useRef, useState } from 'react'
 
 import { ErrorState, LoadingState } from '@/components/state'
@@ -27,6 +29,7 @@ interface ConsoleProps {
  * and an input at the bottom for a message that starts a run or a command.
  */
 export function Console({ projectId, threadId }: ConsoleProps) {
+  const router = useRouter()
   const eventLog = useEventLog(threadId)
   const { activeRun, latestRun, stepsByRun } = eventLog
   const sendMessage = useSendMessage(threadId)
@@ -66,6 +69,7 @@ export function Console({ projectId, threadId }: ConsoleProps) {
     retry: failedStep === undefined ? 'no failed run' : null,
     expand: null,
     collapse: null,
+    export: null,
   }
 
   const runCommand = (name: CommandName) => {
@@ -85,6 +89,9 @@ export function Console({ projectId, threadId }: ConsoleProps) {
         return
       case 'collapse':
         setExpandAll(false)
+        return
+      case 'export':
+        router.push(`/projects/${encodeURIComponent(projectId)}/artifacts?export` as Route)
         return
     }
   }

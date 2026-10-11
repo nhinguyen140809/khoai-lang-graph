@@ -91,7 +91,7 @@ function Results({ projectId, text, search }: ResultsProps) {
       <ul className="flex flex-col gap-px px-1">
         {search.data.items.map((item) => {
           const href =
-            `/projects/${encodeURIComponent(projectId)}/search/${encodeURIComponent(item.id)}` as const
+            `/projects/${encodeURIComponent(projectId)}/artifacts/items/${encodeURIComponent(item.id)}` as const
           return (
             <li key={item.id}>
               <Link

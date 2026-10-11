@@ -14,9 +14,3 @@ export function searchItems(projectId: string, q: string) {
     { action: 'search the items' },
   )
 }
-
-export function getItem(itemId: string) {
-  return apiRequest(`/api/v1/items/${encodeURIComponent(itemId)}`, itemSchema, {
-    action: 'load the item',
-  })
-}

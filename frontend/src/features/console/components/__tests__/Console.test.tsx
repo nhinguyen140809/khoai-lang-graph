@@ -8,6 +8,7 @@ import { TestProviders } from '@/test/TestProviders'
 import { useCommandHistoryStore } from '../../command-history.store'
 import { Console } from '../Console'
 
+vi.mock('next/navigation', async () => (await import('@/test/next-mocks.utils')).navigationMock)
 vi.mock('next/link', async () => (await import('@/test/next-mocks.utils')).linkMock)
 
 beforeEach(() => {
@@ -91,7 +92,7 @@ describe('Console', () => {
     await userEvent.type(input, '/')
 
     const list = screen.getByRole('listbox', { name: 'Commands' })
-    expect(within(list).getAllByRole('option')).toHaveLength(4)
+    expect(within(list).getAllByRole('option')).toHaveLength(5)
     expect(within(list).getByRole('option', { name: /retry/ })).toHaveTextContent('no failed run')
     expect(within(list).getByRole('option', { name: /retry/ })).toHaveAttribute(
       'aria-disabled',
