@@ -16,6 +16,7 @@ import { usePendingInterrupt } from '../hooks/usePendingInterrupt'
 import { useRun } from '../hooks/useRun'
 import { useRunSteps } from '../hooks/useRunSteps'
 import { useWorkflowDefinition } from '../hooks/useWorkflowDefinition'
+import { retryFromStep } from '../workflow.api'
 import { formatCost, formatStepDuration } from '../workflow.utils'
 import { WorkflowGraph } from './WorkflowGraph'
 
@@ -104,15 +105,31 @@ export function RunView({ projectId, runId }: RunViewProps) {
           ) : (
             <ul className="flex flex-col gap-1.5 text-sm">
               {nodeSteps.map((step) => (
-                <li key={step.id} className="flex flex-wrap items-baseline gap-x-2">
+                <li key={step.id} className="flex flex-wrap items-baseline gap-x-2 gap-y-1">
                   <span className="font-mono text-xs">{String(step.sequence)}</span>
                   <span className="text-muted-foreground">{step.model_id ?? '-'}</span>
                   <span className="ml-auto text-xs text-muted-foreground">
                     {formatStepDuration(step.started_at, step.finished_at)}
                   </span>
+                  <button
+                    type="button"
+                    onClick={() =>
+                      void retryFromStep(runId, step.id).then(() => {
+                        window.location.reload()
+                      })
+                    }
+                    className="rounded-sm px-1.5 py-0.5 text-xs underline underline-offset-2 outline-none hover:bg-sidebar-accent focus-visible:ring-2 focus-visible:ring-ring/50"
+                  >
+                    Retry from this step
+                  </button>
                 </li>
               ))}
             </ul>
+          )}
+          {run.data.trace_id === null ? null : (
+            <p className="text-xs text-muted-foreground">
+              Trace: <span className="font-mono">{run.data.trace_id.slice(0, 8)}…</span>
+            </p>
           )}
         </section>
       )}

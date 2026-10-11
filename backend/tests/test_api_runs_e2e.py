@@ -171,3 +171,47 @@ async def test_items_written_by_the_workflow_are_searchable(
     assert counts["spec_requirement"] == 6  # 5 + the reworked one superseding REQ-004
     assert counts["backlog_item"] == 5
     assert counts["validation_issue"] == 1  # the failing iteration's issue
+
+
+async def test_retry_creates_queued_run_with_lineage(client: AsyncClient) -> None:
+    """POST /runs/{id}/retry records lineage and queues the new run."""
+    await client.post("/api/v1/auth/register", json=REGISTER)
+    await client.post(
+        "/api/v1/auth/login", json={"email": REGISTER["email"], "password": "secret"}
+    )
+    project = await client.post("/api/v1/projects", json=PROJECT_BODY)
+    project_id = project.json()["id"]
+    thread = await client.post(f"/api/v1/projects/{project_id}/threads")
+    message = await client.post(
+        f"/api/v1/threads/{thread.json()['id']}/messages", json={"content": TASK}
+    )
+    run_id = message.json()["run"]["id"]
+    steps = await client.get(f"/api/v1/runs/{run_id}/steps")
+    step_id = steps.json()["items"][0]["id"]
+
+    retry = await client.post(f"/api/v1/runs/{run_id}/retry", json={"from_step_id": step_id})
+
+    body = retry.json()
+    assert retry.status_code == 202
+    assert body["retry_of_run_id"] == run_id
+    assert body["status"] == "queued"
+    assert body["number"] == 2
+
+
+async def test_retry_rejects_step_of_another_run(client: AsyncClient) -> None:
+    await client.post("/api/v1/auth/register", json=REGISTER)
+    await client.post(
+        "/api/v1/auth/login", json={"email": REGISTER["email"], "password": "secret"}
+    )
+    project = await client.post("/api/v1/projects", json=PROJECT_BODY)
+    project_id = project.json()["id"]
+    thread = await client.post(f"/api/v1/projects/{project_id}/threads")
+    message = await client.post(
+        f"/api/v1/threads/{thread.json()['id']}/messages", json={"content": TASK}
+    )
+    run_id = message.json()["run"]["id"]
+
+    other = "00000000-0000-4000-8000-000000000001"
+    retry = await client.post(f"/api/v1/runs/{run_id}/retry", json={"from_step_id": other})
+
+    assert retry.status_code == 422

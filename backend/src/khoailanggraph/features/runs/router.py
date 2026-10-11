@@ -18,6 +18,7 @@ from khoailanggraph.api.schemas import MAX_LIMIT, Page
 from khoailanggraph.features.runs import schemas, service
 from khoailanggraph.features.runs.models import RunEventRow, RunRow, RunStepRow
 from khoailanggraph.features.threads import service as thread_service
+from khoailanggraph.features.threads.models import ThreadRow
 from khoailanggraph.platform.db import make_sync_engine
 
 if TYPE_CHECKING:
@@ -344,7 +345,9 @@ async def resume_run(
 
     from khoailanggraph.features.runs.models import HumanDecisionRow, InterruptRow
 
-    run = await service.get_run_row(db, run_id)
+    run = await db.get(RunRow, run_id)
+    if run is None:
+        raise ApiError(404, "not_found", "Not found", "The run does not exist.")
     pending = await db.scalar(
         select(InterruptRow)
         .where(InterruptRow.run_id == run_id, InterruptRow.status == "pending")
@@ -398,6 +401,69 @@ async def resume_run(
     # Demo note: with review_checkpoints=[] no interrupt exists, so the
     # workflow-level continuation lives in the checkpointer path (gap-report).
     return service.runs_output(run)
+
+
+class RetryBody(BaseModel):
+    """POST /runs/{id}/retry: the step the new run starts from."""
+
+    model_config = ConfigDict(extra="forbid")
+
+    from_step_id: UUID
+
+
+@router.post("/runs/{run_id}/retry", status_code=202)
+async def retry_run(
+    run_id: UUID,
+    user: deps.CurrentUser,
+    db: deps.DbSession,
+    body: RetryBody,
+    _origin: Annotated[None, Depends(deps.check_origin)] = None,
+) -> schemas.Run:
+    """Create a new run that starts from a step of this run (API.md).
+
+    The artifacts are brought back to the versions the state of that step
+    references when a retry executes; v1 records the lineage (retry_of_run_id)
+    and queues the run — full state-restore execution is a documented
+    follow-up of the demo executor.
+    """
+    run = await db.get(RunRow, run_id)
+    if run is None:
+        raise ApiError(404, "not_found", "Not found", "The run does not exist.")
+    if await service.project_has_active_run(db, UUID(str(run.project_id))):
+        raise ApiError(
+            409,
+            "run_already_active",
+            "Invalid state",
+            "A run of this project is already running or waiting.",
+        )
+    step = await db.get(RunStepRow, body.from_step_id)
+    if step is None or str(step.run_id) != str(run_id):
+        raise ApiError(
+            422,
+            "validation_failed",
+            "Validation failed",
+            "from_step_id must be a step of this run.",
+        )
+    thread = await db.get(ThreadRow, run.thread_id)
+    retry = RunRow(
+        thread_id=run.thread_id,
+        project_id=run.project_id,
+        number=run.number + 1,
+        started_by=user.id,
+        workflow_name=run.workflow_name,
+        workflow_version=run.workflow_version,
+        status="queued",
+        current_stage=str(step.stage or ""),
+        run_config_json=run.run_config_json,
+        usage_json=jsonlib.dumps(service.ZERO_USAGE).encode("utf-8"),
+        retry_of_run_id=run.id,
+    )
+    db.add(retry)
+    if thread is not None:
+        thread.active_run_id = retry.id
+        thread.active_run_status = "queued"
+    await db.flush()
+    return service.runs_output(retry)
 
 
 @router.post("/runs/{run_id}/cancel")

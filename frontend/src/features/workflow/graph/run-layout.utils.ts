@@ -15,7 +15,7 @@ export function useGraphLayout(nodes: WorkflowDefinitionNode[], edges: WorkflowD
     return () => {
       cancelled = true
     }
-    // eslint-disable-next-line react-hooks/exhaustive-deps -- keyed by the definition itself
+     
   }, [nodes, edges])
   return layout
 }

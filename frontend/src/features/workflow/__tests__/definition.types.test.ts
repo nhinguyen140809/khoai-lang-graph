@@ -1,4 +1,5 @@
 import { describe, expect, it } from 'vitest'
+
 import definition from '@/mocks/data/workflow/requirements_engineering.v1.json'
 
 import { workflowDefinitionSchema } from '../definition.types'

@@ -68,3 +68,18 @@ export function listSubjectKeys(projectId: string): Promise<Map<string, string>>
     'load the persona keys',
   ).then((items): Map<string, string> => new Map(items.map((item) => [item.id, item.key])))
 }
+
+const createRunResponseSchema = z.object({
+  id: z.string(),
+})
+export type CreatedRun = z.infer<typeof createRunResponseSchema>
+
+/** POST /runs/{id}/retry {from_step_id} — starts a new run from a step. */
+export function retryFromStep(runId: string, fromStepId: string): Promise<CreatedRun> {
+  return apiRequest(`/api/v1/runs/${encodeURIComponent(runId)}/retry`, createRunResponseSchema, {
+    action: 'retry the run from this step',
+    method: 'POST',
+    headers: { 'content-type': 'application/json' },
+    body: { from_step_id: fromStepId },
+  })
+}
