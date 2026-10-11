@@ -15,7 +15,7 @@ from khoailanggraph.api import deps
 from khoailanggraph.api.errors import ApiError
 from khoailanggraph.api.schemas import MAX_LIMIT, Page
 from khoailanggraph.features.artifacts import schemas, service
-from khoailanggraph.features.artifacts.models import ArtifactItemRow
+from khoailanggraph.features.artifacts.models import ArtifactItemRow, ArtifactRow
 from khoailanggraph.features.projects.service import get_project_row
 from khoailanggraph.features.runs.service import project_has_active_run
 from khoailanggraph.llm.registry import default_registry
@@ -139,6 +139,26 @@ async def item_trace(
         db, item_id, direction=direction, depth=depth
     )
     return {"nodes": nodes, "links": links}
+
+
+@router.get("/artifacts/{artifact_id}/items")
+async def list_artifact_items(
+    artifact_id: UUID,
+    user: deps.CurrentUser,
+    db: deps.DbSession,
+    *,
+    kind: Annotated[str | None, Query()] = None,
+    cursor: Annotated[int, Query(ge=0)] = 0,
+    limit: Annotated[int, Query(ge=1, le=MAX_LIMIT)] = 200,
+) -> Page[schemas.Item]:
+    """The items of one artifact in outline order (API.md §5)."""
+    row = await db.get(ArtifactRow, artifact_id)
+    if row is None or row.deleted_at is not None:
+        raise ApiError(404, "not_found", "Not found", "The artifact does not exist.")
+    items, next_cursor = await service.list_artifact_items(
+        db, artifact_id, kind=kind, limit=limit, cursor=cursor
+    )
+    return Page(items=items, next_cursor=next_cursor)
 
 
 @router.get("/items/{item_id}")

@@ -39,6 +39,7 @@ class ArtifactSummary(BaseModel):
     schema_version: int
     version: int
     review_status: str
+    content: dict[str, Any]
     updated_at: IsoDatetime
 
 

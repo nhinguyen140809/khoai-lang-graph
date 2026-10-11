@@ -572,6 +572,7 @@ def artifact_view(row: ArtifactRow) -> schemas.ArtifactSummary:
         schema_version=row.schema_version,
         version=row.version,
         review_status=row.review_status,
+        content=_loads(row.content_json or b"{}"),
         updated_at=row.updated_at,
     )
 
@@ -949,6 +950,36 @@ async def item_trace(
     )
     nodes = [item_view(node) for node in node_rows]
     return nodes, found
+
+
+async def list_artifact_items(
+    session: AsyncSession,
+    artifact_id: UUID,
+    *,
+    kind: str | None,
+    limit: int,
+    cursor: int,
+) -> tuple[list[schemas.Item], int | None]:
+    """The live items of one artifact in outline order (sections first,
+    then their items, top level last); a kind filter keeps one item kind."""
+    rows = list(
+        (
+            await session.scalars(
+                select(ArtifactItemRow)
+                .where(
+                    ArtifactItemRow.artifact_id == artifact_id,
+                    ArtifactItemRow.deleted_at.is_(None),
+                )
+                .order_by(ArtifactItemRow.kind.desc(), ArtifactItemRow.key)
+            )
+        ).all()
+    )
+    if kind is not None:
+        rows = [row for row in rows if row.kind == kind]
+    views = [item_view(row) for row in rows]
+    window = views[cursor : cursor + limit]
+    next_cursor = cursor + len(window) if cursor + len(window) < len(views) else None
+    return window, next_cursor
 
 
 async def get_item(session: AsyncSession, item_id: UUID) -> schemas.Item:

@@ -82,7 +82,10 @@ export function ArtifactsPanel({ projectId }: ArtifactsPanelProps) {
             )}
           </Link>
           {items.data
-            .filter((item) => item.artifact_id === artifact.id)
+            .filter(
+              (item) =>
+                item.artifact_id === artifact.id && item.review_status !== 'superseded',
+            )
             .map((item) => (
               <Link
                 key={item.id}

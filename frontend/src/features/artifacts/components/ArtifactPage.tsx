@@ -19,6 +19,7 @@ import {
 import { artifactTitle, itemsOfArtifact } from '../artifacts.utils'
 import { useProjectArtifacts } from '../hooks/useProjectArtifacts'
 import { useProjectTreeItems } from '../hooks/useProjectTreeItems'
+import { ArtifactDocumentFields } from './ArtifactDocumentFields'
 
 interface ArtifactPageProps {
   projectId: string
@@ -86,6 +87,10 @@ export function ArtifactPage({ projectId, artifactId }: ArtifactPageProps) {
       {artifact.summary ? (
         <p className="text-sm text-muted-foreground">{artifact.summary}</p>
       ) : null}
+      <ArtifactDocumentFields
+        kind={artifact.kind}
+        content={artifact.content}
+      />
       {groups.length === 0 ? (
         <EmptyState title="This artifact has no items" size="compact" />
       ) : (

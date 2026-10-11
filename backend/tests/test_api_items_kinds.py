@@ -101,6 +101,7 @@ async def test_list_project_artifacts_tree(client: AsyncClient) -> None:
         "schema_version",
         "version",
         "review_status",
+        "content",
         "updated_at",
     }
     artifact_ids = {artifact["id"] for artifact in body["items"]}
@@ -301,3 +302,32 @@ async def test_patch_item_and_version_conflict(client: AsyncClient) -> None:
     )
     assert stale.status_code == 409
     assert stale.json()["code"] == "version_conflict"
+
+
+async def test_artifact_items_outline(client: AsyncClient) -> None:
+    project_id, _thread_id = await seeded_run(client)
+
+    artifacts = await client.get(f"/api/v1/projects/{project_id}/artifacts")
+    spec_id = next(
+        (a["id"] for a in artifacts.json()["items"] if a["kind"] == "requirement_specification"),
+        None,
+    )
+    assert spec_id is not None
+
+    response = await client.get(f"/api/v1/artifacts/{spec_id}/items")
+
+    items = response.json()["items"]
+    assert response.status_code == 200
+    assert items, "the spec artifact carries its requirements"
+    assert all(entry["artifact_id"] == spec_id for entry in items)
+    assert response.json()["next_cursor"] is None
+
+
+async def test_artifact_content_in_summary(client: AsyncClient) -> None:
+    project_id, _thread_id = await seeded_run(client)
+
+    artifacts = await client.get(f"/api/v1/projects/{project_id}/artifacts")
+
+    kinds = {a["kind"]: a for a in artifacts.json()["items"]}
+    assert "content" in kinds["elicitation_plan"], "document fields served"
+    assert isinstance(kinds["elicitation_plan"]["content"], dict)

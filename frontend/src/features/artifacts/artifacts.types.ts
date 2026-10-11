@@ -39,6 +39,7 @@ export const artifactSummarySchema = z.object({
   schema_version: z.number().int(),
   version: z.number().int(),
   review_status: z.string(),
+  content: z.record(z.string(), z.unknown()),
   updated_at: isoDatetime,
 })
 export type ArtifactSummary = z.infer<typeof artifactSummarySchema>
