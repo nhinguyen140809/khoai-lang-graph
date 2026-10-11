@@ -2,7 +2,7 @@
 
 import type { Route } from 'next'
 import { useRouter } from 'next/navigation'
-import { useEffect, useRef, useState } from 'react'
+import { type ReactNode, useEffect, useRef, useState } from 'react'
 
 import { ErrorState, LoadingState } from '@/components/state'
 import { ScrollArea } from '@/components/ui/scroll-area'
@@ -22,13 +22,17 @@ import { RunWatcher } from './RunWatcher'
 interface ConsoleProps {
   projectId: string
   threadId: string
+  /** What follows the last event of the log; the review, when it is open. */
+  afterLog?: ReactNode
+  /** The review is open beside the console, so the console does not offer it. */
+  reviewOpen?: boolean
 }
 
 /**
  * The console of a project: the event log of its runs, printed row by row as the events happen,
  * and an input at the bottom for a message that starts a run or a command.
  */
-export function Console({ projectId, threadId }: ConsoleProps) {
+export function Console({ projectId, threadId, afterLog, reviewOpen = false }: ConsoleProps) {
   const router = useRouter()
   const eventLog = useEventLog(threadId)
   const { activeRun, latestRun, stepsByRun } = eventLog
@@ -47,6 +51,18 @@ export function Console({ projectId, threadId }: ConsoleProps) {
     },
     { mod: true },
   )
+
+  // The review opens by itself when a run that was running stops at a checkpoint.
+  const previousStatus = useRef(activeRun?.status)
+  useEffect(() => {
+    const status = activeRun?.status
+    if (!reviewOpen && previousStatus.current === 'running' && status === 'interrupted') {
+      router.push(
+        `/projects/${encodeURIComponent(projectId)}/review/${encodeURIComponent(activeRun?.id ?? '')}` as Route,
+      )
+    }
+    previousStatus.current = status
+  }, [activeRun?.id, activeRun?.status, projectId, reviewOpen, router])
 
   useEffect(() => {
     // A console opens at its newest row.
@@ -122,7 +138,10 @@ export function Console({ projectId, threadId }: ConsoleProps) {
             />
           ))}
           {activeRun !== null && <RunWatcher key={activeRun.id} runId={activeRun.id} />}
-          {activeRun?.status === 'interrupted' && <ReviewLine runId={activeRun.id} />}
+          {activeRun?.status === 'interrupted' && !reviewOpen && (
+            <ReviewLine projectId={projectId} runId={activeRun.id} />
+          )}
+          {afterLog}
           <div ref={endRef} />
         </div>
       </ScrollArea>

@@ -1,5 +1,7 @@
 'use client'
 
+import type { ReactNode } from 'react'
+
 import { ErrorState, LoadingState } from '@/components/state'
 
 import { useConsoleThread } from '../hooks/useConsoleThread'
@@ -9,17 +11,33 @@ interface ConsolePageProps {
   projectId: string
   /** The console to show; without it, the console that the project has. */
   threadId?: string
+  /** What follows the last event of the log; the review, when it is open. */
+  afterLog?: ReactNode
+  /** The review is open beside the console, so the console does not offer it. */
+  reviewOpen?: boolean
 }
 
 /**
  * The console of a project: its event log and an input at the bottom. Without a console named,
  * the page resolves the thread that holds the console of the project, then renders it.
  */
-export function ConsolePage({ projectId, threadId }: ConsolePageProps) {
+export function ConsolePage({
+  projectId,
+  threadId,
+  afterLog,
+  reviewOpen = false,
+}: ConsolePageProps) {
   const resolved = useConsoleThread(projectId, threadId === undefined)
 
   if (threadId !== undefined) {
-    return <Console projectId={projectId} threadId={threadId} />
+    return (
+      <Console
+        projectId={projectId}
+        threadId={threadId}
+        afterLog={afterLog}
+        reviewOpen={reviewOpen}
+      />
+    )
   }
 
   if (resolved.isPending) {
@@ -30,5 +48,12 @@ export function ConsolePage({ projectId, threadId }: ConsolePageProps) {
     return <ErrorState message={resolved.error.message} onRetry={() => void resolved.refetch()} />
   }
 
-  return <Console projectId={projectId} threadId={resolved.data} />
+  return (
+    <Console
+      projectId={projectId}
+      threadId={resolved.data}
+      afterLog={afterLog}
+      reviewOpen={reviewOpen}
+    />
+  )
 }
