@@ -23,8 +23,8 @@ How the mocks work (fixtures, handlers, adding an endpoint) is in [Mock data](..
   - [Review](#review)
   - [Workflow](#workflow)
   - [Traceability](#traceability)
+  - [Project settings](#project-settings)
   - [Run states](#run-states)
-  - [Features not built yet](#features-not-built-yet)
   - [Development pages](#development-pages)
 
 ## Mock data
@@ -61,6 +61,7 @@ A parameter in the page address changes what a group of endpoints answers. Param
 | `mock-artifacts`      | `empty`, `error`, `loading`                                                                             | `GET /projects/{project_id}/artifacts`                                                                            |
 | `mock-artifact`       | `error`, `loading`                                                                                      | `GET /artifacts/{artifact_id}`, `GET /artifacts/{artifact_id}/items`                                              |
 | `mock-trace`          | `error`, `loading`                                                                                      | `GET /items/{item_id}/trace`                                                                                      |
+| `mock-models`         | `empty`, `error`, `loading`                                                                             | `GET /models`                                                                                                     |
 | `mock-traceability`   | `empty` (a matrix with no row), `error`, `loading`                                                      | `GET /projects/{project_id}/traceability/matrix`                                                                  |
 | `mock-coverage`       | `error`, `loading`                                                                                      | `GET /projects/{project_id}/traceability/coverage`                                                                |
 | `mock-review`         | `questions` (the checkpoint asks questions, not options), `empty` (no review waits), `error`, `loading` | `GET /runs/{run_id}/interrupts`                                                                                   |
@@ -217,6 +218,20 @@ The matrix has one row for each chain from a backlog item down to its sources an
 
 The API documentation does not fix the shape of the matrix and coverage responses. The mock server answers `{ columns: [{ key, label, kinds }], rows: [{ cells: { <column key>: [item] } }] }` for the matrix and `{ gaps: [{ key, label, description, items }] }` for the coverage, an item being `{ item_id, key, kind, title }`. The client draws whatever columns and gaps it receives.
 
+## Project settings
+
+Three sections, chosen in the side panel: General (name, description, output language, archive), Runs (the checkpoints to review at, the limits, and a field for each parameter of `run_parameters_schema`) and Models (one model per agent role, from the catalog, only the models that can serve the role). A save is a `PATCH /projects/{project_id}` that the mock server keeps; `?mock-reset` forgets it. The server rejects a limit that is out of range, and a `max_personas` below `target_personas_num`.
+
+| Section                   | Address                                                                                                       |
+| ------------------------- | ------------------------------------------------------------------------------------------------------------- |
+| General                   | http://localhost:3000/projects/90aa0000-0000-4000-8000-000000000001/settings                                  |
+| Runs                      | http://localhost:3000/projects/90aa0000-0000-4000-8000-000000000001/settings?section=runs                     |
+| Models                    | http://localhost:3000/projects/90aa0000-0000-4000-8000-000000000001/settings?section=models                   |
+| Models, the catalog fails | http://localhost:3000/projects/90aa0000-0000-4000-8000-000000000001/settings?section=models&mock-models=error |
+| Project not found         | http://localhost:3000/projects/90aa0000-0000-4000-8000-000000000001/settings?mock-project=empty               |
+
+`/run-settings` in the console opens the Runs section.
+
 ## Run states
 
 Run 3 of the mentor platform in each state. The status bar, the review badge on Console and the project list follow it.
@@ -227,15 +242,6 @@ Run 3 of the mentor platform in each state. The status bar, the review badge on 
 | Running                      | http://localhost:3000/projects/90aa0000-0000-4000-8000-000000000001/console?mock-run-state=running |
 | Failed                       | http://localhost:3000/projects/90aa0000-0000-4000-8000-000000000001/console?mock-run-state=failed  |
 | Done                         | http://localhost:3000/projects/90aa0000-0000-4000-8000-000000000001/console?mock-run-state=done    |
-
-## Features not built yet
-
-This address shows the frame with an empty state until its feature is built.
-
-| Feature          | Address                                                                          |
-| ---------------- | -------------------------------------------------------------------------------- |
-| Traceability     | http://localhost:3000/projects/90aa0000-0000-4000-8000-000000000001/traceability |
-| Project settings | http://localhost:3000/projects/90aa0000-0000-4000-8000-000000000001/settings     |
 
 ## Development pages
 
