@@ -1,6 +1,5 @@
 import type { Message } from '@/features/console'
 import type { Project } from '@/features/projects'
-import type { Item } from '@/features/search'
 import type { Run, RunStep, Thread } from '@/features/threads'
 
 import { type ExtraProjectSpec, extraProjectSpecs } from './extra-project-specs.constants'
@@ -15,7 +14,6 @@ const projectId = (n: number) => mockId('90aa', n)
 const threadId = (n: number) => mockId('7f3a', n)
 const runId = (n: number, number: number) => mockId('5f2d', n * 10 + number)
 const messageId = (n: number, number: number) => mockId('c2a1', n * 10 + number)
-const itemId = (n: number, k: number) => mockId('c41e', 1000 + n * 10 + k)
 
 const at = (day: string, time: string) => `${day}T${time}Z`
 const runStart = (spec: ExtraProjectSpec) => at(spec.day, '09:00:00')
@@ -136,55 +134,6 @@ export function extraMessages(): Message[] {
           },
         ],
   )
-}
-
-/** A few items of each extra project: two personas, three requirements and an analysis result. */
-export function extraItems(): Item[] {
-  return extraProjectSpecs.flatMap((spec) => {
-    if (spec.lastRun === 'none') return []
-    const base = {
-      project_id: projectId(spec.n),
-      review_status: 'draft',
-      updated_at: at(spec.day, '10:00:00'),
-    }
-    const personas = ['Regular user', 'Administrator'].map((name, index) => ({
-      ...base,
-      id: itemId(spec.n, index + 1),
-      key: `PER-00${String(index + 1)}`,
-      kind: 'persona',
-      content: {
-        name,
-        role: `${name} of ${spec.name}`,
-        goals: [spec.requirements[index] ?? spec.requirements[0]],
-      },
-    }))
-    const requirements = spec.requirements.map((title, index) => ({
-      ...base,
-      id: itemId(spec.n, index + 3),
-      key: `REQ-00${String(index + 1)}`,
-      kind: 'spec_requirement',
-      review_status: index === 0 ? 'approved' : 'draft',
-      content: {
-        title,
-        statement: `The system shall let the user: ${title.toLowerCase()}.`,
-        type: 'functional',
-        priority: index === 2 ? 'should' : 'must',
-        verification_method: 'test',
-      },
-    }))
-    const analysis = {
-      ...base,
-      id: itemId(spec.n, 6),
-      key: 'AR-001',
-      kind: 'analysis_result',
-      content: {
-        title: `${spec.requirements[0]} is the main need`,
-        statement: `Interviewees of ${spec.name} named "${spec.requirements[0].toLowerCase()}" first.`,
-        category: 'need',
-      },
-    }
-    return [...personas, ...requirements, analysis]
-  })
 }
 
 /** The projects that `?mock-projects=many` adds: plain rows, for a long list. */

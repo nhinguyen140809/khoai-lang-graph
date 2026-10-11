@@ -1,4 +1,4 @@
-import type { ArtifactKindsSummary } from '@/features/artifacts'
+import type { ArtifactKinds, ContentSchema } from '@/features/artifacts'
 
 import ambiguityIssue from './data/content-schemas/ambiguity_issue.v1.json'
 import analyzedRequirement from './data/content-schemas/analyzed_requirement.v1.json'
@@ -75,14 +75,11 @@ function withValueLists(schema: JsonValue): JsonValue {
   }
 }
 
-type ContentSchema = ArtifactKindsSummary['artifact_kinds'][number]['schema']
-
 function servedSchema(kind: string): ContentSchema {
   const schema = withValueLists(contentSchemas[kind])
   if (!isObject(schema) || typeof schema.title !== 'string') {
     throw new Error(`No content schema for the kind ${kind}`)
   }
-  // The whole schema is served; the type names only what the project list reads.
   return schema as ContentSchema
 }
 
@@ -90,7 +87,7 @@ function itemKindVersion(kind: string): number {
   return definition.item_kinds.find((itemKind) => itemKind.kind === kind)?.schema_version ?? 1
 }
 
-export const mockArtifactKinds: ArtifactKindsSummary = {
+export const mockArtifactKinds: ArtifactKinds = {
   workflow_version: definition.version,
   artifact_kinds: definition.artifact_kinds.map((artifactKind) => ({
     kind: artifactKind.kind,

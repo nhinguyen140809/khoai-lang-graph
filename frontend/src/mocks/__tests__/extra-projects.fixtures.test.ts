@@ -1,16 +1,15 @@
 import { describe, expect, it } from 'vitest'
 
+import { mockArtifactItems, mockArtifacts } from '../artifacts.fixtures'
 import { bulkProjectCount, extraProjectSpecs } from '../extra-project-specs.constants'
 import {
   bulkProjects,
-  extraItems,
   extraMessages,
   extraProjects,
   extraRuns,
   extraRunSteps,
   extraThreads,
 } from '../extra-projects.fixtures'
-import { mockItems } from '../items.fixtures'
 import { mockProjects } from '../projects.fixtures'
 
 function unique(ids: string[]) {
@@ -69,13 +68,17 @@ describe('the extra projects of the mock data', () => {
     expect(extraRunSteps('no-such-run')).toBeUndefined()
   })
 
-  it('have items of their own, and every item id is unique', () => {
-    const projectIds = new Set(extraItems().map(({ project_id }) => project_id))
+  it('have artifacts and items of their own, and every id is unique', () => {
+    const withRun = extraProjectSpecs.filter(({ lastRun }) => lastRun !== 'none')
+    const projectIds = new Set(mockArtifacts.map(({ project_id }) => project_id))
 
-    expect(projectIds.size).toBe(
-      extraProjectSpecs.filter(({ lastRun }) => lastRun !== 'none').length,
-    )
-    expect(unique(mockItems.map(({ id }) => id))).toBe(true)
+    expect(
+      withRun.every(({ n }) =>
+        projectIds.has(`90aa0000-0000-4000-8000-${String(n).padStart(12, '0')}`),
+      ),
+    ).toBe(true)
+    expect(unique(mockArtifacts.map(({ id }) => id))).toBe(true)
+    expect(unique(mockArtifactItems.map(({ id }) => id))).toBe(true)
   })
 })
 

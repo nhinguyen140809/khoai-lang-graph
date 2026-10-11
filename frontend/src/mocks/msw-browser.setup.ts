@@ -1,8 +1,8 @@
 import { setupWorker } from 'msw/browser'
 
 import { artifactKindHandlers } from './artifact-kinds.handlers'
+import { artifactHandlers } from './artifacts.handlers'
 import { authHandlers } from './auth.handlers'
-import { itemHandlers } from './items.handlers'
 import { meHandlers } from './me.handlers'
 import { messageHandlers } from './messages.handlers'
 import { keepMockDataInBrowser, resetMockData } from './mock-db.utils'
@@ -20,7 +20,7 @@ export const worker = setupWorker(
   ...artifactKindHandlers,
   ...meHandlers,
   ...projectHandlers,
-  ...itemHandlers,
+  ...artifactHandlers,
   ...threadHandlers,
   ...messageHandlers,
   ...runHandlers,

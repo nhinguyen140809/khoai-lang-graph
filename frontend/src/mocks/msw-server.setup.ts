@@ -1,8 +1,8 @@
 import { setupServer } from 'msw/node'
 
 import { artifactKindHandlers } from './artifact-kinds.handlers'
+import { artifactHandlers } from './artifacts.handlers'
 import { authHandlers } from './auth.handlers'
-import { itemHandlers } from './items.handlers'
 import { meHandlers } from './me.handlers'
 import { messageHandlers } from './messages.handlers'
 import { projectHandlers } from './projects.handlers'
@@ -14,7 +14,7 @@ export const server = setupServer(
   ...artifactKindHandlers,
   ...meHandlers,
   ...projectHandlers,
-  ...itemHandlers,
+  ...artifactHandlers,
   ...threadHandlers,
   ...messageHandlers,
   ...runHandlers,
