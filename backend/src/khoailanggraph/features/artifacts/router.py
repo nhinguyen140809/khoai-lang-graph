@@ -41,6 +41,40 @@ async def search_items(
     return Page(items=items, next_cursor=next_cursor)
 
 
+@router.get("/projects/{project_id}/artifacts")
+async def list_project_artifacts(
+    project_id: UUID,
+    user: deps.CurrentUser,
+    db: deps.DbSession,
+    *,
+    cursor: Annotated[int, Query(ge=0)] = 0,
+    limit: Annotated[int, Query(ge=1, le=MAX_LIMIT)] = 50,
+) -> Page[schemas.ArtifactSummary]:
+    """The artifacts of the project, for the Artifacts tree (§5)."""
+    await get_project_row(db, project_id)
+    artifacts, next_cursor = await service.list_project_artifacts(
+        db, project_id, limit=limit, cursor=cursor
+    )
+    return Page(items=artifacts, next_cursor=next_cursor)
+
+
+@router.get("/projects/{project_id}/links")
+async def list_project_trace_links(
+    project_id: UUID,
+    user: deps.CurrentUser,
+    db: deps.DbSession,
+    *,
+    cursor: Annotated[int, Query(ge=0)] = 0,
+    limit: Annotated[int, Query(ge=1, le=MAX_LIMIT)] = 200,
+) -> Page[schemas.TraceLink]:
+    """The trace links of the project, both ends resolved (§5 Traceability)."""
+    await get_project_row(db, project_id)
+    links, next_cursor = await service.list_project_links(
+        db, project_id, limit=limit, cursor=cursor
+    )
+    return Page(items=links, next_cursor=next_cursor)
+
+
 @router.get("/items/{item_id}")
 async def get_item(
     item_id: UUID,

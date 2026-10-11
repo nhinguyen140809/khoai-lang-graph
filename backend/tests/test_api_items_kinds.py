@@ -70,6 +70,69 @@ async def seeded_run(client: AsyncClient) -> tuple[str, str]:
     return project_id, thread.json()["id"]
 
 
+async def test_items_carry_artifact_id(client: AsyncClient) -> None:
+    project_id, _thread_id = await seeded_run(client)
+
+    response = await client.get(
+        f"/api/v1/projects/{project_id}/items", params={"q": "PER-001"}
+    )
+
+    item = response.json()["items"][0]
+    assert response.status_code == 200
+    assert item["artifact_id"], "items resolve to their artifact for the tree"
+
+
+async def test_list_project_artifacts_tree(client: AsyncClient) -> None:
+    project_id, _thread_id = await seeded_run(client)
+
+    response = await client.get(f"/api/v1/projects/{project_id}/artifacts")
+
+    body = response.json()
+    assert response.status_code == 200
+    kinds = {artifact["kind"] for artifact in body["items"]}
+    assert {"elicitation_plan", "persona_catalog", "requirement_specification"} <= kinds
+    first = body["items"][0]
+    assert set(first) == {
+        "id",
+        "project_id",
+        "kind",
+        "title",
+        "summary",
+        "schema_version",
+        "version",
+        "review_status",
+        "updated_at",
+    }
+    artifact_ids = {artifact["id"] for artifact in body["items"]}
+    assert project_id not in artifact_ids
+    assert len(artifact_ids) > 1
+
+
+async def test_list_project_links_resolves_both_ends(client: AsyncClient) -> None:
+    project_id, _thread_id = await seeded_run(client)
+
+    response = await client.get(f"/api/v1/projects/{project_id}/links")
+
+    body = response.json()
+    assert response.status_code == 200
+    assert body["items"], "the workflow writes trace links"
+    link = body["items"][0]
+    assert set(link) == {
+        "id",
+        "project_id",
+        "link_type",
+        "source",
+        "target",
+        "target_version",
+        "quote",
+        "note",
+    }
+    for end in ("source", "target"):
+        assert set(link[end]) == {"id", "key", "kind", "review_status"}
+    types = {entry["link_type"] for entry in body["items"]}
+    assert "derived_from" in types
+
+
 async def test_search_finds_spec_requirements(client: AsyncClient) -> None:
     project_id, _thread_id = await seeded_run(client)
 

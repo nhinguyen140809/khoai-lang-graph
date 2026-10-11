@@ -17,7 +17,7 @@ from typing import TYPE_CHECKING, Any, cast
 from uuid import UUID, uuid4
 
 from sqlalchemy import func, select, update
-from sqlalchemy.orm import Session
+from sqlalchemy.orm import Session, aliased
 
 from khoailanggraph.agents.requirements_engineering import definition as wf
 from khoailanggraph.agents.requirements_engineering.ports import (
@@ -550,12 +550,38 @@ def item_view(row: ArtifactItemRow) -> schemas.Item:
     return schemas.Item(
         id=str(row.id),
         project_id=str(row.project_id),
+        artifact_id=str(row.artifact_id),
         key=row.key,
         kind=row.kind,
         review_status=row.review_status,
         content=payload,
         version=row.version,
         updated_at=row.updated_at,
+    )
+
+
+def artifact_view(row: ArtifactRow) -> schemas.ArtifactSummary:
+    """The artifact row as the project tree reads it (Artifacts tab)."""
+    return schemas.ArtifactSummary(
+        id=str(row.id),
+        project_id=str(row.project_id),
+        kind=row.kind,
+        title=row.title,
+        summary=row.summary,
+        schema_version=row.schema_version,
+        version=row.version,
+        review_status=row.review_status,
+        updated_at=row.updated_at,
+    )
+
+
+def _ref_view(row: ArtifactItemRow | None) -> schemas.ItemLinkRef:
+    """A link end resolved to its item; links never dangle by construction."""
+    if row is None:
+        msg = "trace link end does not resolve to a live item"
+        raise ValueError(msg)
+    return schemas.ItemLinkRef(
+        id=str(row.id), key=row.key, kind=row.kind, review_status=row.review_status
     )
 
 
@@ -591,6 +617,76 @@ async def search_project_items(
     views = [item_view(row) for row in rows]
     if query.strip():
         views = [view for view in views if matches(view, query.strip())]
+    window = views[cursor : cursor + limit]
+    next_cursor = cursor + len(window) if cursor + len(window) < len(views) else None
+    return window, next_cursor
+
+
+async def list_project_artifacts(
+    session: AsyncSession,
+    project_id: UUID,
+    *,
+    limit: int,
+    cursor: int,
+) -> tuple[list[schemas.ArtifactSummary], int | None]:
+    """The artifacts of a project (Artifacts tab tree), in creation order."""
+    rows = list(
+        (
+            await session.scalars(
+                select(ArtifactRow)
+                .where(
+                    ArtifactRow.project_id == project_id,
+                    ArtifactRow.deleted_at.is_(None),
+                )
+                .order_by(ArtifactRow.created_at, ArtifactRow.id)
+            )
+        ).all()
+    )
+    views = [artifact_view(row) for row in rows]
+    window = views[cursor : cursor + limit]
+    next_cursor = cursor + len(window) if cursor + len(window) < len(views) else None
+    return window, next_cursor
+
+
+async def list_project_links(
+    session: AsyncSession,
+    project_id: UUID,
+    *,
+    limit: int,
+    cursor: int,
+) -> tuple[list[schemas.TraceLink], int | None]:
+    """The trace links of a project with both ends resolved (Traceability tab)."""
+    source = aliased(ArtifactItemRow, name="source_item")
+    target = aliased(ArtifactItemRow, name="target_item")
+    rows = list(
+        (
+            await session.execute(
+                select(TraceLinkRow, source, target)
+                .join(source, source.id == TraceLinkRow.source_item_id)
+                .join(target, target.id == TraceLinkRow.target_item_id)
+                .where(
+                    TraceLinkRow.project_id == project_id,
+                    TraceLinkRow.deleted_at.is_(None),
+                    source.deleted_at.is_(None),
+                    target.deleted_at.is_(None),
+                )
+                .order_by(source.key, TraceLinkRow.link_type, target.key)
+            )
+        ).all()
+    )
+    views = [
+        schemas.TraceLink(
+            id=str(link.id),
+            project_id=str(link.project_id),
+            link_type=link.link_type,
+            source=_ref_view(source_row),
+            target=_ref_view(target_row),
+            target_version=link.target_version,
+            quote=link.quote,
+            note=link.note,
+        )
+        for link, source_row, target_row in rows
+    ]
     window = views[cursor : cursor + limit]
     next_cursor = cursor + len(window) if cursor + len(window) < len(views) else None
     return window, next_cursor

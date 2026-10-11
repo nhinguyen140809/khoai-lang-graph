@@ -92,7 +92,10 @@ could never hit:
    Flipping a checkpoint on needs this plus the state freeze semantics.
 3. **Usage aggregation.** `fake:demo` emits no token counts and the
    executor records zeros; `ChatOpenAI` already returns `usage_metadata`,
-   summing it per run/step is a small follow-up.
+   summing it per run/step is a small follow-up. `RunStep.produced` is
+   likewise empty on real runs (the executor writes step rows without the
+   item refs); the Workflow timeline shows the steps, and the produced
+   chips await it.
 4. **The synchronous executor** — `POST /threads/{id}/messages` runs the
    whole workflow before answering (documented in `runs/service.py`); a
    real 15-node run holds the POST for minutes and the terminal log
