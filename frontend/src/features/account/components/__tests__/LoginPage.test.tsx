@@ -24,12 +24,12 @@ async function signIn(email: string, password: string) {
 
 describe('LoginPage', () => {
   it('signs in and returns to the page that asked for it', async () => {
-    render(<LoginPage next="/projects/p1/chat" />, { wrapper: TestProviders })
+    render(<LoginPage next="/projects/p1/session" />, { wrapper: TestProviders })
 
     await signIn('linh.pham@example.com', 'secret')
 
     await vi.waitFor(() => {
-      expect(routerMock.replace).toHaveBeenCalledWith('/projects/p1/chat')
+      expect(routerMock.replace).toHaveBeenCalledWith('/projects/p1/session')
     })
   })
 
@@ -69,11 +69,11 @@ describe('LoginPage', () => {
   })
 
   it('links to the account page, keeping the page to return to', () => {
-    render(<LoginPage next="/projects/p1/chat" />, { wrapper: TestProviders })
+    render(<LoginPage next="/projects/p1/session" />, { wrapper: TestProviders })
 
     expect(screen.getByRole('link', { name: 'Create an account' })).toHaveAttribute(
       'href',
-      '/register?next=%2Fprojects%2Fp1%2Fchat',
+      '/register?next=%2Fprojects%2Fp1%2Fsession',
     )
   })
 })

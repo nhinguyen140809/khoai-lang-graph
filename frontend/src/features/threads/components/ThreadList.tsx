@@ -13,13 +13,13 @@ interface ThreadListProps {
   projectId: string
 }
 
-/** The threads of a project, newest first, each with the stage of its latest run. */
+/** The sessions of a project, newest first, each with the stage of its latest run. */
 export function ThreadList({ projectId }: ThreadListProps) {
   const pathname = usePathname()
   const threads = useProjectThreads(projectId)
 
   if (threads.isPending) {
-    return <LoadingState label="Loading threads" rows={4} size="compact" className="px-3" />
+    return <LoadingState label="Loading sessions" rows={4} size="compact" className="px-3" />
   }
 
   if (threads.isError) {
@@ -34,14 +34,14 @@ export function ThreadList({ projectId }: ThreadListProps) {
   }
 
   if (threads.data.length === 0) {
-    return <EmptyState title="No threads yet" size="compact" className="px-3" />
+    return <EmptyState title="No sessions yet" size="compact" className="px-3" />
   }
 
   return (
     <ul className="flex flex-col gap-px px-1 pb-2">
       {threads.data.map((thread) => {
         const href =
-          `/projects/${encodeURIComponent(projectId)}/chat/${encodeURIComponent(thread.id)}` as const
+          `/projects/${encodeURIComponent(projectId)}/session/${encodeURIComponent(thread.id)}` as const
         const waiting = thread.active_run_status === 'interrupted'
         return (
           <li key={thread.id}>

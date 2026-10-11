@@ -3,10 +3,10 @@
 import {
   FileStackIcon,
   GitForkIcon,
-  MessageSquareIcon,
   NetworkIcon,
   SearchIcon,
   SettingsIcon,
+  SquareChevronRightIcon,
   XIcon,
 } from 'lucide-react'
 
@@ -28,7 +28,7 @@ import { Tooltip, TooltipContent, TooltipTrigger } from '@/components/ui/tooltip
 import { ArtifactTree } from '../ArtifactTree'
 
 const features = [
-  { label: 'Chat', Icon: MessageSquareIcon },
+  { label: 'Session', Icon: SquareChevronRightIcon },
   { label: 'Artifacts', Icon: FileStackIcon, active: true },
   { label: 'Workflow', Icon: NetworkIcon },
   { label: 'Traceability', Icon: GitForkIcon },

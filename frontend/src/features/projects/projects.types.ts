@@ -61,9 +61,6 @@ export interface CreateProjectBody {
   output_language: OutputLanguage
 }
 
-/** The fields of a created thread that the new project form reads. */
-export const createdThreadSchema = z.object({ id: z.string() })
-
 /** The user setting that the new project form starts from. */
 export const projectDefaultsSchema = z.object({
   default_output_language: outputLanguageSchema,

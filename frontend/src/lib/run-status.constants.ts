@@ -30,16 +30,3 @@ export const runStatusTones = {
   failed: 'destructive',
   cancelled: 'neutral',
 } as const satisfies Record<RunStatus, Tone>
-
-/**
- * Which run needs the user most, lowest first: a run waiting for review, then a running one, then
- * a queued one. Finished runs come last.
- */
-export const runStatusUrgency = {
-  interrupted: 0,
-  running: 1,
-  queued: 2,
-  failed: 3,
-  succeeded: 4,
-  cancelled: 5,
-} as const satisfies Record<RunStatus, number>

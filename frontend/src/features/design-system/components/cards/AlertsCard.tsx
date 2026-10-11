@@ -3,7 +3,7 @@ import {
   CircleCheckIcon,
   InfoIcon,
   type LucideIcon,
-  MessageSquareIcon,
+  SquareChevronRightIcon,
   TriangleAlertIcon,
 } from 'lucide-react'
 
@@ -15,7 +15,11 @@ import { SampleCard, SampleGroup } from '../Sample'
 const variants = ['outline', 'soft', 'solid'] as const
 
 const messages: { color: Tone; Icon: LucideIcon; title: string }[] = [
-  { color: 'neutral', Icon: MessageSquareIcon, title: 'Message queued, read at the next step' },
+  {
+    color: 'neutral',
+    Icon: SquareChevronRightIcon,
+    title: 'Message queued, read at the next step',
+  },
   { color: 'primary', Icon: InfoIcon, title: 'The run paused at checkpoint_analysis' },
   { color: 'success', Icon: CircleCheckIcon, title: 'Specification v2 approved' },
   { color: 'warning', Icon: TriangleAlertIcon, title: 'US-004 was made from REQ-001 v2' },

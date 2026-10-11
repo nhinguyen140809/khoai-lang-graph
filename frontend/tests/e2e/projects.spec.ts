@@ -2,19 +2,22 @@ import { expect, test } from '@playwright/test'
 
 import { PROJECT_IDS } from '../../src/mocks/mock-ids.constants'
 
-test('opens a project from the list at Chat, with its run on the status bar', async ({ page }) => {
+test('opens a project from the list at Session, with its run on the status bar', async ({
+  page,
+}) => {
   await page.goto('/')
 
   await expect(page).toHaveURL(/\/projects$/)
-  await expect(page.getByRole('cell', { name: 'Waiting for review' })).toBeVisible()
+  const mentor = page.getByRole('row', { name: /Mentor platform/ })
+  await expect(mentor.getByRole('cell', { name: 'Waiting for review' })).toBeVisible()
   await page.getByRole('link', { name: 'Mentor platform' }).click()
 
-  await expect(page).toHaveURL(new RegExp(`/projects/${PROJECT_IDS.mentor}/chat$`))
+  await expect(page).toHaveURL(new RegExp(`/projects/${PROJECT_IDS.mentor}/session$`))
   await expect(page.getByRole('link', { name: /Run 3: waiting for review/ })).toBeVisible()
-  await expect(page.getByRole('link', { name: /^Chat\b.*1 review waiting/ })).toBeVisible()
+  await expect(page.getByRole('link', { name: /^Session\b.*1 review waiting/ })).toBeVisible()
 })
 
-test('creates a project and opens its empty thread', async ({ page }) => {
+test('creates a project and opens its session', async ({ page }) => {
   await page.goto('/projects')
 
   await page.getByRole('main').getByRole('button', { name: 'New project' }).click()
@@ -22,7 +25,7 @@ test('creates a project and opens its empty thread', async ({ page }) => {
   await dialog.getByRole('textbox', { name: 'Name' }).fill('Thesis tracker')
   await dialog.getByRole('button', { name: 'Create project' }).click()
 
-  await expect(page).toHaveURL(/\/projects\/[^/]+\/chat\/[^/]+$/)
+  await expect(page).toHaveURL(/\/projects\/[^/]+\/session$/)
   await expect(
     page.getByRole('banner').getByRole('button', { name: 'Thesis tracker' }),
   ).toBeVisible()
@@ -39,7 +42,7 @@ test('lists the archived projects', async ({ page }) => {
 })
 
 test('shows a project that does not exist as not found', async ({ page }) => {
-  await page.goto('/projects/missing/chat')
+  await page.goto('/projects/missing/session')
 
   await expect(page.getByRole('heading', { name: 'Project not found' })).toBeVisible()
   await page.getByRole('link', { name: 'All projects' }).click()

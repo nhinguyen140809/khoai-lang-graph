@@ -2,6 +2,7 @@ import { render, screen } from '@testing-library/react'
 import userEvent from '@testing-library/user-event'
 import { beforeEach, describe, expect, it, vi } from 'vitest'
 
+import { searchMockItems } from '@/mocks/items.fixtures'
 import { itemId, PROJECT_IDS } from '@/mocks/mock-ids.constants'
 import { setPathname } from '@/test/next-mocks.utils'
 import { TestProviders } from '@/test/TestProviders'
@@ -30,7 +31,9 @@ describe('SearchPanel', () => {
     const result = await screen.findByRole('link', { name: /REQ-001/ })
     expect(result).toHaveTextContent('Search mentors')
     expect(result).toHaveAttribute('href', `/projects/${PROJECT_IDS.mentor}/search/${itemId(6)}`)
-    expect(await screen.findByRole('status')).toHaveTextContent('3 results')
+    expect(await screen.findByRole('status')).toHaveTextContent(
+      `${String(searchMockItems('search', PROJECT_IDS.mentor).length)} results`,
+    )
   })
 
   it('says when nothing matches', async () => {

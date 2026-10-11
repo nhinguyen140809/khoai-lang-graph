@@ -39,7 +39,7 @@ export function ProjectCommands({ currentProjectId }: ProjectCommandsProps) {
             value={`Open project ${name} ${id}`}
             onSelect={() => {
               setPaletteOpen(false)
-              router.push(`/projects/${encodeURIComponent(id)}/chat`)
+              router.push(`/projects/${encodeURIComponent(id)}/session`)
             }}
           >
             <FolderIcon aria-hidden />

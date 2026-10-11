@@ -22,8 +22,8 @@ import { surfaceClassName } from './surface.config'
 interface WorkbenchProps {
   projectId: string
   feature: ProjectFeature
-  /** The side panel of the feature, usually a SidePanel. */
-  side: ReactNode
+  /** The side panel of the feature, usually a SidePanel. Without one, the editor fills the workbench. */
+  side?: ReactNode
   /** The editor: the page opened from the side panel. */
   children: ReactNode
 }
@@ -44,7 +44,7 @@ export function Workbench({ projectId, feature, side, children }: WorkbenchProps
   const setLastHref = useEditorTabsStore((state) => state.setLastHref)
   const group = featureTabGroup(projectId, feature)
 
-  useHotkey('b', toggleSidePanel, { mod: true })
+  useHotkey('b', toggleSidePanel, { mod: true, enabled: side !== undefined })
 
   useEffect(() => {
     setLastHref(group, pathname)
@@ -57,7 +57,7 @@ export function Workbench({ projectId, feature, side, children }: WorkbenchProps
       orientation="horizontal"
       className="min-h-0 flex-1"
     >
-      {sidePanelVisible && (
+      {sidePanelVisible && side !== undefined && (
         <>
           <ResizablePanel
             id="side-panel"

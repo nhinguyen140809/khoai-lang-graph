@@ -5,9 +5,14 @@ import { browserStorage } from '@/lib/browser-storage.utils'
 import { neighborTab, useEditorTabsStore } from '../editor-tabs.store'
 
 const STORAGE_KEY = 'khoailanggraph-editor-tabs'
-const main = { id: 't1', title: 'Main thread', href: '/projects/p1/chat/t1' }
-const booking = { id: 't2', title: 'Booking rules', href: '/projects/p1/chat/t2' }
-const rules = { id: 't3', title: 'Rules', href: '/projects/p1/chat/t3', icon: 'thread' as const }
+const req = { id: 'i1', title: 'REQ-001', href: '/projects/p1/search/i1' }
+const ambiguity = { id: 'i2', title: 'AMB-001', href: '/projects/p1/search/i2' }
+const conflict = {
+  id: 'i3',
+  title: 'CONF-001',
+  href: '/projects/p1/search/i3',
+  icon: 'item' as const,
+}
 
 beforeEach(() => {
   browserStorage.removeItem(STORAGE_KEY)
@@ -18,57 +23,63 @@ describe('useEditorTabsStore', () => {
   it('opens a tab once and updates its title', () => {
     const { openTab } = useEditorTabsStore.getState()
 
-    openTab('p1:chat', main)
-    openTab('p1:chat', booking)
-    openTab('p1:chat', { ...main, title: 'Renamed' })
+    openTab('p1:search', req)
+    openTab('p1:search', ambiguity)
+    openTab('p1:search', { ...req, title: 'Renamed' })
 
-    expect(useEditorTabsStore.getState().groups['p1:chat']).toEqual([
-      { ...main, title: 'Renamed' },
-      booking,
+    expect(useEditorTabsStore.getState().groups['p1:search']).toEqual([
+      { ...req, title: 'Renamed' },
+      ambiguity,
     ])
   })
 
   it('opens a new tab next to the tab of the page shown before', () => {
     const { openTab } = useEditorTabsStore.getState()
-    openTab('p1:chat', main)
-    openTab('p1:chat', booking)
+    openTab('p1:search', req)
+    openTab('p1:search', ambiguity)
 
-    openTab('p1:chat', rules, { after: main.href })
+    openTab('p1:search', conflict, { after: req.href })
 
-    expect(useEditorTabsStore.getState().groups['p1:chat']?.map(({ id }) => id)).toEqual([
-      't1',
-      't3',
-      't2',
+    expect(useEditorTabsStore.getState().groups['p1:search']?.map(({ id }) => id)).toEqual([
+      'i1',
+      'i3',
+      'i2',
     ])
   })
 
   it('forgets the last address of a group when its tab closes', () => {
     const { openTab, setLastHref, closeTab } = useEditorTabsStore.getState()
-    openTab('p1:chat', main)
-    setLastHref('p1:chat', main.href)
+    openTab('p1:search', req)
+    setLastHref('p1:search', req.href)
 
-    closeTab('p1:chat', main.id)
+    closeTab('p1:search', req.id)
 
-    expect(useEditorTabsStore.getState().groups['p1:chat']).toEqual([])
-    expect(useEditorTabsStore.getState().lastHrefs['p1:chat']).toBeUndefined()
+    expect(useEditorTabsStore.getState().groups['p1:search']).toEqual([])
+    expect(useEditorTabsStore.getState().lastHrefs['p1:search']).toBeUndefined()
   })
 
   it('keeps tabs opened before the stored tabs were read', async () => {
     browserStorage.setItem(
       STORAGE_KEY,
-      JSON.stringify({ state: { groups: { 'p1:chat': [booking] }, lastHrefs: {} }, version: 0 }),
+      JSON.stringify({
+        state: { groups: { 'p1:search': [ambiguity] }, lastHrefs: {} },
+        version: 0,
+      }),
     )
-    useEditorTabsStore.getState().openTab('p1:chat', main)
+    useEditorTabsStore.getState().openTab('p1:search', req)
 
     await useEditorTabsStore.persist.rehydrate()
 
-    expect(useEditorTabsStore.getState().groups['p1:chat']).toEqual([booking, main])
+    expect(useEditorTabsStore.getState().groups['p1:search']).toEqual([ambiguity, req])
   })
 
   it('drops stored tabs that do not have the expected shape', async () => {
     browserStorage.setItem(
       STORAGE_KEY,
-      JSON.stringify({ state: { groups: { 'p1:chat': [{ id: 1 }] }, lastHrefs: {} }, version: 0 }),
+      JSON.stringify({
+        state: { groups: { 'p1:search': [{ id: 1 }] }, lastHrefs: {} },
+        version: 0,
+      }),
     )
 
     await useEditorTabsStore.persist.rehydrate()
@@ -79,8 +90,8 @@ describe('useEditorTabsStore', () => {
 
 describe('neighborTab', () => {
   it('is the next tab, else the previous one', () => {
-    expect(neighborTab([main, booking], main.id)).toBe(booking)
-    expect(neighborTab([main, booking], booking.id)).toBe(main)
-    expect(neighborTab([main], main.id)).toBeUndefined()
+    expect(neighborTab([req, ambiguity], req.id)).toBe(ambiguity)
+    expect(neighborTab([req, ambiguity], ambiguity.id)).toBe(req)
+    expect(neighborTab([req], req.id)).toBeUndefined()
   })
 })

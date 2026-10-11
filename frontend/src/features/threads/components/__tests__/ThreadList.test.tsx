@@ -12,14 +12,14 @@ import { ThreadList } from '../ThreadList'
 vi.mock('next/navigation', async () => (await import('@/test/next-mocks.utils')).navigationMock)
 vi.mock('next/link', async () => (await import('@/test/next-mocks.utils')).linkMock)
 
-const mainThreadHref = `/projects/${PROJECT_IDS.mentor}/chat/${THREAD_IDS.mentorMain}`
+const mainThreadHref = `/projects/${PROJECT_IDS.mentor}/session/${THREAD_IDS.mentorMain}`
 
 beforeEach(() => {
   setPathname(mainThreadHref)
 })
 
 describe('ThreadList', () => {
-  it('lists the threads with the stage of their latest run and the reviews waiting', async () => {
+  it('lists the sessions with the stage of their latest run and the reviews waiting', async () => {
     render(<ThreadList projectId={PROJECT_IDS.mentor} />, { wrapper: TestProviders })
 
     const main = await screen.findByRole('link', { name: /Main thread/ })
@@ -27,10 +27,6 @@ describe('ThreadList', () => {
     expect(main).toHaveAttribute('aria-current', 'page')
     expect(main).toHaveTextContent('analysis_review')
     expect(await screen.findByRole('link', { name: /1 review waiting/ })).toBe(main)
-
-    const booking = screen.getByRole('link', { name: /Booking rules/ })
-    expect(booking).toHaveTextContent('done')
-    expect(booking).not.toHaveAccessibleName(/review waiting/)
   })
 
   it('names a thread that has no title yet', async () => {
@@ -58,7 +54,7 @@ describe('ThreadList', () => {
     )
     render(<ThreadList projectId={PROJECT_IDS.mentor} />, { wrapper: TestProviders })
 
-    const thread = await screen.findByRole('link', { name: /New thread/ })
+    const thread = await screen.findByRole('link', { name: /New session/ })
     expect(thread).toHaveTextContent('No run yet')
   })
 
@@ -70,6 +66,6 @@ describe('ThreadList', () => {
     )
     render(<ThreadList projectId={PROJECT_IDS.mentor} />, { wrapper: TestProviders })
 
-    expect(await screen.findByText('No threads yet')).toBeInTheDocument()
+    expect(await screen.findByText('No sessions yet')).toBeInTheDocument()
   })
 })

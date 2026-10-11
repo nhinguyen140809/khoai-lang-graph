@@ -13,7 +13,7 @@ vi.mock('next/navigation', async () => (await import('@/test/next-mocks.utils'))
 vi.mock('next/link', async () => (await import('@/test/next-mocks.utils')).linkMock)
 
 beforeEach(() => {
-  setPathname('/projects/p1/chat/t1')
+  setPathname('/projects/p1/session/t1')
   useEditorTabsStore.setState({ groups: {}, lastHrefs: {} })
   useFrameStore.setState({ sidePanelVisible: true })
 })
@@ -24,7 +24,7 @@ describe('ActivityBar', () => {
       wrapper: TestProviders,
     })
 
-    expect(screen.getByRole('link', { name: 'Chat' })).toHaveAttribute('aria-current', 'page')
+    expect(screen.getByRole('link', { name: 'Session' })).toHaveAttribute('aria-current', 'page')
     expect(screen.getByRole('link', { name: 'Artifacts' })).toHaveAttribute(
       'href',
       '/projects/p1/artifacts',
@@ -53,7 +53,7 @@ describe('ActivityBar', () => {
       wrapper: TestProviders,
     })
 
-    await userEvent.click(screen.getByRole('link', { name: 'Chat' }))
+    await userEvent.click(screen.getByRole('link', { name: 'Session' }))
     expect(useFrameStore.getState().sidePanelVisible).toBe(false)
 
     await userEvent.click(screen.getByRole('link', { name: 'Artifacts' }))
@@ -67,7 +67,7 @@ describe('ActivityBar', () => {
 
     expect(screen.getByRole('button', { name: 'Account' })).toBeInTheDocument()
     expect(screen.queryByRole('link')).not.toBeInTheDocument()
-    expect(screen.getByRole('button', { name: /Chat, select a project first/ })).toHaveAttribute(
+    expect(screen.getByRole('button', { name: /Session, select a project first/ })).toHaveAttribute(
       'aria-disabled',
       'true',
     )
@@ -78,11 +78,11 @@ describe('ActivityBar', () => {
       <ActivityBar
         projectId="p1"
         user={null}
-        badges={{ chat: <span className="sr-only">, 1 review waiting</span> }}
+        badges={{ session: <span className="sr-only">, 1 review waiting</span> }}
       />,
       { wrapper: TestProviders },
     )
 
-    expect(screen.getByRole('link', { name: 'Chat, 1 review waiting' })).toBeInTheDocument()
+    expect(screen.getByRole('link', { name: 'Session, 1 review waiting' })).toBeInTheDocument()
   })
 })
