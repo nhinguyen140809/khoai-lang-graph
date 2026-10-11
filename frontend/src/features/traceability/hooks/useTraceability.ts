@@ -1,16 +1,20 @@
 import { useQuery } from '@tanstack/react-query'
 
-import { listProjectItems, listProjectLinks } from '../traceability.api'
+import { getCoverage, getMatrix, listProjectItems } from '../traceability.api'
 
-/** The links and the items of the project, the two halves of the matrix. */
+/** The matrix rows, the coverage lists and the items of the project. */
 export function useProjectTrace(projectId: string) {
-  const links = useQuery({
-    queryKey: ['traceability', 'links', projectId],
-    queryFn: () => listProjectLinks(projectId),
+  const matrix = useQuery({
+    queryKey: ['traceability', 'matrix', projectId],
+    queryFn: () => getMatrix(projectId),
+  })
+  const coverage = useQuery({
+    queryKey: ['traceability', 'coverage', projectId],
+    queryFn: () => getCoverage(projectId),
   })
   const items = useQuery({
     queryKey: ['traceability', 'items', projectId],
     queryFn: () => listProjectItems(projectId),
   })
-  return { links, items }
+  return { matrix, coverage, items }
 }

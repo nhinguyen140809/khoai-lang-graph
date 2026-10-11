@@ -160,9 +160,9 @@ Artifacts, Workflow (with one open run) and Traceability read their own mock dat
 
 ## Features not built yet
 
-| Feature           | Address                                                                                                           |
-| ----------------- | ----------------------------------------------------------------------------------------------------------------- |
-| Project settings  | http://localhost:3000/projects/90aa0000-0000-4000-8000-000000000001/settings                                      |
+| Feature          | Address                                                                      |
+| ---------------- | ---------------------------------------------------------------------------- |
+| Project settings | http://localhost:3000/projects/90aa0000-0000-4000-8000-000000000001/settings |
 
 ## Development pages
 

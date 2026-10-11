@@ -9,12 +9,14 @@ import { meHandlers } from './me.handlers'
 import { projectHandlers } from './projects.handlers'
 import { runHandlers } from './runs.handlers'
 import { threadHandlers } from './threads.handlers'
+import { traceabilityHandlers } from './traceability.handlers'
 
 export const server = setupServer(
   ...authHandlers,
   ...artifactKindHandlers,
   ...artifactHandlers,
   ...linkHandlers,
+  ...traceabilityHandlers,
   ...meHandlers,
   ...projectHandlers,
   ...itemHandlers,

@@ -17,8 +17,7 @@ import {
 } from '@/components/ui/table'
 
 import { useProjectTrace } from '../hooks/useTraceability'
-import type { MatrixRow } from '../traceability.utils'
-import { buildMatrix } from '../traceability.utils'
+import type { MatrixRow } from '../traceability.api'
 
 interface MatrixPageProps {
   projectId: string
@@ -38,7 +37,7 @@ const columns = [
  * key opens the item.
  */
 export function MatrixPage({ projectId }: MatrixPageProps) {
-  const { links, items } = useProjectTrace(projectId)
+  const { matrix } = useProjectTrace(projectId)
   const searchParams = useSearchParams()
   const gap = searchParams.get('gap')
   const onlyGaps = searchParams.get('gaps') === '1'
@@ -50,40 +49,32 @@ export function MatrixPage({ projectId }: MatrixPageProps) {
     icon: 'view',
   })
 
-  if (links.isPending || items.isPending) {
+  if (matrix.isPending) {
     return <LoadingState label="Loading the matrix" rows={6} className="p-6" />
   }
-  if (links.isError) {
+  if (matrix.isError) {
     return (
       <ErrorState
-        message={links.error.message}
-        onRetry={() => void links.refetch()}
-        className="p-6"
-      />
-    )
-  }
-  if (items.isError) {
-    return (
-      <ErrorState
-        message={items.error.message}
-        onRetry={() => void items.refetch()}
+        message={matrix.error.message}
+        onRetry={() => void matrix.refetch()}
         className="p-6"
       />
     )
   }
 
-  const { rows } = buildMatrix(links.data, items.data)
+  const rows = matrix.data.rows
   const visible = rows.filter((row) => {
     if (gap === 'backlog' && row.spec !== null) return false
     if (gap === 'spec' && !(row.spec !== null && row.backlog === null)) return false
     if (gap === 'analyzed' && !(row.spec !== null && row.analyzed === null)) return false
-    if (gap === 'source' && !(row.analyzed !== null && row.source === null)) return false
+    if (gap === 'source' && !(row.analyzed !== null && row.source.length === 0)) return false
     if (
       onlyGaps &&
       row.backlog !== null &&
       row.spec !== null &&
       row.analyzed !== null &&
-      row.source !== null
+      row.source.length > 0 &&
+      row.evidence.length > 0
     )
       return false
     return true
@@ -126,8 +117,8 @@ function rowKey(row: MatrixRow): string {
     row.backlog?.id ??
     row.spec?.id ??
     row.analyzed?.id ??
-    row.source?.id ??
-    row.evidence?.id ??
+    row.source[0]?.id ??
+    row.evidence[0]?.id ??
     'row'
   )
 }
@@ -136,18 +127,29 @@ function MatrixRowView({ row, projectId }: { row: MatrixRow; projectId: string }
   return (
     <TableRow>
       {columns.map((column) => {
-        const item = row[column.field]
+        const value = row[column.field]
+        const entries =
+          value === null
+            ? []
+            : Array.isArray(value)
+              ? (value as { id: string; key: string }[])
+              : [value as { id: string; key: string }]
         return (
           <TableCell key={column.field} className="font-mono text-sm">
-            {item === null ? (
+            {entries.length === 0 ? (
               <span className="text-muted-foreground">-</span>
             ) : (
-              <Link
-                href={`/projects/${encodeURIComponent(projectId)}/search/${encodeURIComponent(item.id)}`}
-                className="static z-0 underline-offset-2 hover:underline"
-              >
-                {item.key}
-              </Link>
+              entries.map((entry, index) => (
+                <span key={entry.id}>
+                  {index > 0 ? ', ' : ''}
+                  <Link
+                    href={`/projects/${encodeURIComponent(projectId)}/search/${encodeURIComponent(entry.id)}`}
+                    className="static z-0 underline-offset-2 hover:underline"
+                  >
+                    {entry.key}
+                  </Link>
+                </span>
+              ))
             )}
           </TableCell>
         )

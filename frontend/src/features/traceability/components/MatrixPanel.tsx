@@ -6,42 +6,39 @@ import { usePathname, useRouter, useSearchParams } from 'next/navigation'
 
 import { ErrorState, LoadingState } from '@/components/state'
 import { Switch } from '@/components/ui/switch'
-import { cn } from '@/lib/utils'
 
 import { useProjectTrace } from '../hooks/useTraceability'
-import { buildMatrix } from '../traceability.utils'
 
 interface MatrixPanelProps {
   projectId: string
 }
 
-const gapLabels = {
-  backlog: 'Backlog item without a spec',
-  spec: 'Spec without a backlog item',
-  analyzed: 'Analyzed without a spec',
-  source: 'Source without an analysis',
-} as const
+const gapEntries = [
+  { key: 'backlog', label: 'No backlog item' },
+  { key: 'spec', label: 'No source' },
+  { key: 'analyzed', label: 'Needs review' },
+] as const
 
 /**
- * The side panel of the Traceability tab: the coverage counts (a click filters
- * the matrix to the rows with that gap), the "only rows with a gap" switch,
- * and the open issues of the project.
+ * The side panel of the Traceability tab: the coverage counts from the
+ * coverage endpoint (a click filters the matrix to that gap), the
+ * "only rows with a gap" switch, and the open issues of the project.
  */
 export function MatrixPanel({ projectId }: MatrixPanelProps) {
-  const { links, items } = useProjectTrace(projectId)
+  const { coverage, items } = useProjectTrace(projectId)
   const router = useRouter()
   const pathname = usePathname()
   const searchParams = useSearchParams()
   const onlyGaps = searchParams.get('gaps') === '1'
 
-  if (links.isPending || items.isPending) {
+  if (coverage.isPending || items.isPending) {
     return <LoadingState label="Loading coverage" rows={4} className="px-2" />
   }
-  if (links.isError) {
+  if (coverage.isError) {
     return (
       <ErrorState
-        message={links.error.message}
-        onRetry={() => void links.refetch()}
+        message={coverage.error.message}
+        onRetry={() => void coverage.refetch()}
         className="px-2"
       />
     )
@@ -56,7 +53,17 @@ export function MatrixPanel({ projectId }: MatrixPanelProps) {
     )
   }
 
-  const { gaps, issues } = buildMatrix(links.data, items.data)
+  const counts = {
+    backlog: coverage.data.no_backlog_item.count,
+    spec: coverage.data.no_source.count,
+    analyzed: coverage.data.needs_review.count,
+  }
+  const issues = items.data.filter(
+    (item) =>
+      item.kind === 'ambiguity_issue' ||
+      item.kind === 'conflict' ||
+      item.kind === 'validation_issue',
+  )
 
   return (
     <div className="flex flex-col gap-4 px-2 py-3 text-sm">
@@ -68,23 +75,21 @@ export function MatrixPanel({ projectId }: MatrixPanelProps) {
           Coverage
         </h2>
         <ul className="flex flex-col">
-          {Object.entries(gapLabels).map(([gap, label]) => (
-            <li key={gap}>
+          {gapEntries.map(({ key, label }) => (
+            <li key={key}>
               <Link
-                href={`/projects/${encodeURIComponent(projectId)}/traceability?gap=${gap}`}
-                aria-current={searchParams.get('gap') === gap ? 'page' : undefined}
+                href={`/projects/${encodeURIComponent(projectId)}/traceability?gap=${key}`}
+                aria-current={searchParams.get('gap') === key ? 'page' : undefined}
                 className="flex min-w-0 items-center gap-2 rounded-sm px-2 py-1 outline-none hover:bg-sidebar-accent focus-visible:ring-2 focus-visible:ring-ring/50 aria-[current=page]:bg-sidebar-accent"
               >
-                {gaps[gap as keyof typeof gaps] === 0 ? null : (
+                {counts[key] === 0 ? null : (
                   <span
                     aria-hidden
                     className="size-1.5 shrink-0 rounded-full bg-(--tone-warning-strong)"
                   />
                 )}
                 <span className="min-w-0 truncate text-muted-foreground">{label}</span>
-                <span className="ml-auto shrink-0 tabular-nums">
-                  {gaps[gap as keyof typeof gaps]}
-                </span>
+                <span className="ml-auto shrink-0 tabular-nums">{counts[key]}</span>
               </Link>
             </li>
           ))}
@@ -119,9 +124,7 @@ export function MatrixPanel({ projectId }: MatrixPanelProps) {
               <li key={issue.id}>
                 <Link
                   href={`/projects/${encodeURIComponent(projectId)}/search/${encodeURIComponent(issue.id)}`}
-                  className={cn(
-                    'flex min-w-0 items-center gap-2 rounded-sm px-2 py-1 outline-none hover:bg-sidebar-accent focus-visible:ring-2 focus-visible:ring-ring/50',
-                  )}
+                  className="flex min-w-0 items-center gap-2 rounded-sm px-2 py-1 outline-none hover:bg-sidebar-accent focus-visible:ring-2 focus-visible:ring-ring/50"
                 >
                   <span className="shrink-0 font-mono text-xs">{issue.key}</span>
                   <span className="min-w-0 truncate text-xs text-muted-foreground">
