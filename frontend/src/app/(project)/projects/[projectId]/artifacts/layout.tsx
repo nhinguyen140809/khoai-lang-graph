@@ -1,6 +1,6 @@
 import { SidePanel } from '@/components/layout/SidePanel'
 import { Workbench } from '@/components/layout/Workbench'
-import { EmptyState } from '@/components/state'
+import { ArtifactsPanel } from '@/features/artifacts'
 
 export default async function Layout({
   children,
@@ -13,7 +13,7 @@ export default async function Layout({
       feature="artifacts"
       side={
         <SidePanel title="Artifacts">
-          <EmptyState title="Not built yet" size="compact" className="px-3" />
+          <ArtifactsPanel projectId={projectId} />
         </SidePanel>
       }
     >

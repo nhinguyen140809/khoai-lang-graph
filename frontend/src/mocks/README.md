@@ -19,6 +19,7 @@ How the mocks work (fixtures, handlers, adding an endpoint) is in [Mock data](..
   - [Frame of a project](#frame-of-a-project)
   - [Chat](#chat)
   - [Run states](#run-states)
+  - [The new tabs](#the-new-tabs)
   - [Features not built yet](#features-not-built-yet)
   - [Development pages](#development-pages)
 
@@ -51,6 +52,8 @@ A parameter in the page address changes what a group of endpoints answers. Param
 | `mock-run-state`      | `running`, `waiting` (default), `failed`, `done`                                | The state of run 3 of the mentor thread, and of everything derived from it: the thread, the counts of the project |
 | `mock-items`          | `empty`, `error`, `loading`                                                     | `GET /projects/{project_id}/items` (the search)                                                                   |
 | `mock-item`           | `empty` (404), `error`, `loading`                                               | `GET /items/{item_id}`                                                                                            |
+| `mock-artifacts`      | `empty`, `error`, `loading`                                                     | `GET /projects/{project_id}/artifacts` (the Artifacts tree)                                                       |
+| `mock-links`          | `empty`, `error`, `loading`                                                     | `GET /projects/{project_id}/links` (the Traceability matrix)                                                      |
 | `mock-artifact-kinds` | `empty`, `error`, `loading`                                                     | `GET /artifact-kinds`                                                                                             |
 | `mock-me`             | `empty` (404), `error`, `loading`                                               | `GET /me`                                                                                                         |
 | `mock-settings`       | `empty` (404), `error`, `loading`, `save-error` (loads, then `PUT` answers 500) | `GET /me/settings`, `PUT /me/settings`                                                                            |
@@ -142,9 +145,9 @@ Run 3 of the mentor platform in each state. The status bar, the review badge on 
 | Failed                       | http://localhost:3000/projects/90aa0000-0000-4000-8000-000000000001/chat?mock-run-state=failed  |
 | Done                         | http://localhost:3000/projects/90aa0000-0000-4000-8000-000000000001/chat?mock-run-state=done    |
 
-## Features not built yet
+## The new tabs
 
-These addresses show the frame with an empty state until their feature is built.
+Artifacts, Workflow (with one open run) and Traceability read their own mock data, so every state is visitable with `mock-artifacts` and `mock-links`.
 
 | Feature           | Address                                                                                                           |
 | ----------------- | ----------------------------------------------------------------------------------------------------------------- |
@@ -152,6 +155,13 @@ These addresses show the frame with an empty state until their feature is built.
 | Workflow          | http://localhost:3000/projects/90aa0000-0000-4000-8000-000000000001/workflow                                      |
 | Run 3 in Workflow | http://localhost:3000/projects/90aa0000-0000-4000-8000-000000000001/workflow/5f2d0000-0000-4000-8000-000000000001 |
 | Traceability      | http://localhost:3000/projects/90aa0000-0000-4000-8000-000000000001/traceability                                  |
+| Artifact empty    | http://localhost:3000/projects/90aa0000-0000-4000-8000-000000000001/artifacts?mock-artifacts=empty                |
+| Links error       | http://localhost:3000/projects/90aa0000-0000-4000-8000-000000000001/traceability?mock-links=error                 |
+
+## Features not built yet
+
+| Feature           | Address                                                                                                           |
+| ----------------- | ----------------------------------------------------------------------------------------------------------------- |
 | Project settings  | http://localhost:3000/projects/90aa0000-0000-4000-8000-000000000001/settings                                      |
 
 ## Development pages

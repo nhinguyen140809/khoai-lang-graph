@@ -6,12 +6,16 @@ import { z } from 'zod'
 export const itemSchema = z.object({
   id: z.string(),
   project_id: z.string(),
+  /** The artifact the item belongs to; the Artifacts tree hangs on it. */
+  artifact_id: z.string(),
   /** The readable id of the item, such as "REQ-001". */
   key: z.string(),
   kind: z.string(),
   review_status: z.string(),
   /** The fields of the item; they differ by kind. */
   content: z.record(z.string(), z.unknown()),
+  /** The item's own version, bumped by every edit. */
+  version: z.number().int(),
   updated_at: z.iso.datetime(),
 })
 

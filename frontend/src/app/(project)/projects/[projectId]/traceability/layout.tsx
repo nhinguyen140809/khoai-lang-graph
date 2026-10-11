@@ -1,6 +1,6 @@
 import { SidePanel } from '@/components/layout/SidePanel'
 import { Workbench } from '@/components/layout/Workbench'
-import { EmptyState } from '@/components/state'
+import { MatrixPanel } from '@/features/traceability'
 
 export default async function Layout({
   children,
@@ -13,7 +13,7 @@ export default async function Layout({
       feature="traceability"
       side={
         <SidePanel title="Traceability">
-          <EmptyState title="Not built yet" size="compact" className="px-3" />
+          <MatrixPanel projectId={projectId} />
         </SidePanel>
       }
     >

@@ -222,9 +222,9 @@ Vietnamese text needs a font that ships the `vietnamese` subset. The subsets of 
   | `/projects`                                              | Project list                                                                  |
   | `/projects/{projectId}`                                  | Redirects to Chat                                                             |
   | `/projects/{projectId}/chat`                             | Chat: the conversation of the project and its runs (one flow, no thread list) |
-  | `/projects/{projectId}/artifacts`                        | Artifacts (not built yet)                                                     |
-  | `/projects/{projectId}/workflow`, `.../workflow/{runId}` | Workflow and one run (not built yet)                                          |
-  | `/projects/{projectId}/traceability`                     | Traceability (not built yet)                                                  |
+  | `/projects/{projectId}/artifacts`, `.../artifacts/{artifactId}`, `.../{itemId}` | Artifacts: the tree, an artifact as a document, one item |
+  | `/projects/{projectId}/workflow`, `.../workflow/{runId}` | Workflow: the runs of the project, one run and its steps |
+  | `/projects/{projectId}/traceability`                     | Traceability: the coverage matrix and its gaps |
   | `/projects/{projectId}/settings`                         | Project settings (not built yet)                                              |
   | `/design-system`                                         | Design system, in development only                                            |
 

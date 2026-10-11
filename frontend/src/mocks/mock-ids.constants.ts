@@ -37,6 +37,16 @@ export function itemId(n: number): string {
   return id('c41e', n)
 }
 
+/** Ids of the artifact fixtures, one per artifact of the mentor project. */
+export function artifactId(n: number): string {
+  return id('a2b3', n)
+}
+
+/** Ids of the trace link fixtures. */
+export function linkId(n: number): string {
+  return id('d409', n)
+}
+
 export const PERSONA_IDS = [id('8c20', 1), id('8c20', 2), id('8c20', 3)] as const
 
 export function stepId(runIndex: number, sequence: number): string {

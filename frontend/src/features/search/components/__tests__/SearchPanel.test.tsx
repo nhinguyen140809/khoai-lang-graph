@@ -30,7 +30,7 @@ describe('SearchPanel', () => {
     const result = await screen.findByRole('link', { name: /REQ-001/ })
     expect(result).toHaveTextContent('Search mentors')
     expect(result).toHaveAttribute('href', `/projects/${PROJECT_IDS.mentor}/search/${itemId(6)}`)
-    expect(await screen.findByRole('status')).toHaveTextContent('3 results')
+    expect(await screen.findByRole('status')).toHaveTextContent('5 results')
   })
 
   it('says when nothing matches', async () => {
