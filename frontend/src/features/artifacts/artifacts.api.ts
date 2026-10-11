@@ -112,9 +112,7 @@ export type ItemTraceBody = z.infer<typeof itemTraceBodySchema>
 
 /** The chain of one item: `nodes` and `links` (API.md ?direction/depth). */
 export function getItemTrace(itemId: string): Promise<ItemTraceBody> {
-  return apiRequest(
-    `/api/v1/items/${encodeURIComponent(itemId)}/trace`,
-    itemTraceBodySchema,
-    { action: 'load the trace of the item' },
-  )
+  return apiRequest(`/api/v1/items/${encodeURIComponent(itemId)}/trace`, itemTraceBodySchema, {
+    action: 'load the trace of the item',
+  })
 }

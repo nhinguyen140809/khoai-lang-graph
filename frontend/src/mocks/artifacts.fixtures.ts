@@ -37,17 +37,11 @@ export const mockArtifacts: ArtifactSummary[] = [
     selection_rationale: 'Three stakeholder types of the platform.',
     uncovered_stakeholder_types: [],
   }),
-  artifact(
-    3,
-    'interview_transcript',
-    'Interview of PER-001',
-    'The student interview',
-    {
-      status: 'completed',
-      turn_count: 1,
-      stop_reason: 'topics_covered',
-    },
-  ),
+  artifact(3, 'interview_transcript', 'Interview of PER-001', 'The student interview', {
+    status: 'completed',
+    turn_count: 1,
+    stop_reason: 'topics_covered',
+  }),
   artifact(4, 'requirements_analysis', 'Requirements analysis', 'Needs, sources, issues', {
     key_findings: ['Students pick a mentor by field of study'],
     open_questions: ['How fast must search be?'],

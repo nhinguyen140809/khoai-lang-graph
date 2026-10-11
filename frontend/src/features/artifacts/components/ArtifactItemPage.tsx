@@ -12,7 +12,7 @@ import { isNotFoundError } from '@/lib/api-fetch.utils'
 
 import { fieldLabel, formatFieldValue, itemTitle } from '../artifacts.utils'
 import { useArtifactItem } from '../hooks/useArtifactItem'
-import { ItemTimelinePanel,ItemTracePanel } from './ItemTracePanels'
+import { ItemTimelinePanel, ItemTracePanel } from './ItemTracePanels'
 
 interface ArtifactItemPageProps {
   projectId: string
@@ -43,17 +43,14 @@ export function ArtifactItemPage({ projectId, artifactId, itemId }: ArtifactItem
   async function save() {
     if (draft === null) return
     try {
-      const response = await fetch(
-        `/api/v1/items/${encodeURIComponent(itemId)}`,
-        {
-          method: 'PATCH',
-          headers: {
-            'content-type': 'application/json',
-            'if-match': item.data ? String(item.data.version) : '',
-          },
-          body: JSON.stringify({ content: draft }),
+      const response = await fetch(`/api/v1/items/${encodeURIComponent(itemId)}`, {
+        method: 'PATCH',
+        headers: {
+          'content-type': 'application/json',
+          'if-match': item.data ? String(item.data.version) : '',
         },
-      )
+        body: JSON.stringify({ content: draft }),
+      })
       if (response.status === 409) {
         setSavingError('The item changed since you read it (version conflict).')
         return
@@ -79,7 +76,11 @@ export function ArtifactItemPage({ projectId, artifactId, itemId }: ArtifactItem
       return <NotFoundState title="Item not found" description="It may have been deleted." />
     }
     return (
-      <ErrorState message={item.error.message} onRetry={() => void item.refetch()} className="p-6" />
+      <ErrorState
+        message={item.error.message}
+        onRetry={() => void item.refetch()}
+        className="p-6"
+      />
     )
   }
 
@@ -88,7 +89,10 @@ export function ArtifactItemPage({ projectId, artifactId, itemId }: ArtifactItem
   return (
     <article className="flex min-h-0 flex-1 flex-col">
       <div className="mx-auto flex w-full max-w-3xl flex-col gap-4 p-6">
-        <nav className="flex items-center gap-1 text-xs text-muted-foreground" aria-label="Breadcrumb">
+        <nav
+          className="flex items-center gap-1 text-xs text-muted-foreground"
+          aria-label="Breadcrumb"
+        >
           <Link
             href={`/projects/${encodeURIComponent(projectId)}/artifacts/${encodeURIComponent(artifactId)}`}
             className="underline underline-offset-2"
@@ -113,7 +117,7 @@ export function ArtifactItemPage({ projectId, artifactId, itemId }: ArtifactItem
               setEditing(true)
               setDraft({ ...item.data.content })
             }}
-            className="ml-auto rounded-sm px-2 py-0.5 text-xs outline-none underline underline-offset-2 focus-visible:ring-2 focus-visible:ring-ring/50"
+            className="ml-auto rounded-sm px-2 py-0.5 text-xs underline underline-offset-2 outline-none focus-visible:ring-2 focus-visible:ring-ring/50"
           >
             Edit
           </button>
@@ -182,24 +186,24 @@ export function ArtifactItemPage({ projectId, artifactId, itemId }: ArtifactItem
         )}
       </div>
       <div className="mx-auto flex w-full max-w-3xl flex-col gap-2 border-t px-6 py-3">
-        <div className="flex items-center gap-3 text-[0.6875rem] font-medium tracking-wide uppercase text-muted-foreground">
+        <div className="flex items-center gap-3 text-[0.6875rem] font-medium tracking-wide text-muted-foreground uppercase">
           <button
             type="button"
-            onClick={() => { setSelectedPanel('trace'); }}
+            onClick={() => {
+              setSelectedPanel('trace')
+            }}
             aria-pressed={selectedPanel === 'trace'}
-            className={
-              selectedPanel === 'trace' ? 'text-foreground' : 'text-muted-foreground'
-            }
+            className={selectedPanel === 'trace' ? 'text-foreground' : 'text-muted-foreground'}
           >
             Trace
           </button>
           <button
             type="button"
-            onClick={() => { setSelectedPanel('timeline'); }}
+            onClick={() => {
+              setSelectedPanel('timeline')
+            }}
             aria-pressed={selectedPanel === 'timeline'}
-            className={
-              selectedPanel === 'timeline' ? 'text-foreground' : 'text-muted-foreground'
-            }
+            className={selectedPanel === 'timeline' ? 'text-foreground' : 'text-muted-foreground'}
           >
             Timeline
           </button>

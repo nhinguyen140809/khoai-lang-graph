@@ -40,7 +40,7 @@ export function ItemTracePanel({ itemId, projectId }: PanelProps & { projectId: 
     <dl className="flex flex-col gap-2 px-1 py-2 text-xs">
       {outgoing.length > 0 ? (
         <div className="flex flex-col gap-0.5">
-          <dt className="text-[0.6875rem] uppercase tracking-wide text-muted-foreground">
+          <dt className="text-[0.6875rem] tracking-wide text-muted-foreground uppercase">
             Outgoing
           </dt>
           {outgoing.map((link) => (
@@ -58,7 +58,7 @@ export function ItemTracePanel({ itemId, projectId }: PanelProps & { projectId: 
       ) : null}
       {incoming.length > 0 ? (
         <div className="flex flex-col gap-0.5">
-          <dt className="text-[0.6875rem] uppercase tracking-wide text-muted-foreground">
+          <dt className="text-[0.6875rem] tracking-wide text-muted-foreground uppercase">
             Incoming
           </dt>
           {incoming.map((link) => (
@@ -114,10 +114,7 @@ export function ItemTimelinePanel({ itemId }: PanelProps) {
         <li key={String(entry.version)} className="flex items-baseline gap-2">
           <span className="font-mono">v{String(entry.version)}</span>
           <span className="text-muted-foreground">{entry.change_reason}</span>
-          <time
-            dateTime={entry.created_at}
-            className="ml-auto shrink-0 text-muted-foreground"
-          >
+          <time dateTime={entry.created_at} className="ml-auto shrink-0 text-muted-foreground">
             {formatRelativeTime(entry.created_at, now)}
           </time>
         </li>

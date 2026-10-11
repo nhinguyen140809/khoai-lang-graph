@@ -16,9 +16,8 @@ export function ArtifactDocumentFields({ kind, content }: ArtifactDocumentFields
   if (!kinds.isSuccess) return null
   const entry = kinds.data.artifact_kinds.find((candidate) => candidate.kind === kind)
   const order: string[] =
-    (entry?.schema as { 'x-ui-field-order'?: string[] } | undefined)?.[
-      'x-ui-field-order'
-    ] ?? Object.keys(content)
+    (entry?.schema as { 'x-ui-field-order'?: string[] } | undefined)?.['x-ui-field-order'] ??
+    Object.keys(content)
   const entries = order.filter((field) => field in content)
   if (entries.length === 0) return null
   return (
@@ -37,7 +36,6 @@ function fieldValue(value: unknown): string {
   if (value === null || value === undefined || value === '') return '-'
   if (typeof value === 'string') return value
   if (typeof value === 'number' || typeof value === 'boolean') return String(value)
-  if (Array.isArray(value))
-    return value.map((entry) => fieldValue(entry)).join('\n')
+  if (Array.isArray(value)) return value.map((entry) => fieldValue(entry)).join('\n')
   return JSON.stringify(value)
 }

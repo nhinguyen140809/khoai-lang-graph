@@ -15,7 +15,6 @@ export function useGraphLayout(nodes: WorkflowDefinitionNode[], edges: WorkflowD
     return () => {
       cancelled = true
     }
-     
   }, [nodes, edges])
   return layout
 }
