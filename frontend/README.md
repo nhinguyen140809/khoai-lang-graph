@@ -50,6 +50,7 @@ Copy `.env.example` to `.env.local` (git-ignored) to set variables for `pnpm dev
 | ------------------------- | ---------------------- | -------------------------------------------------------------------------------------------------------------- |
 | `NEXT_PUBLIC_API_MOCKING` | `enabled` / `disabled` | `enabled` starts the MSW worker and serves `/api` from `src/mocks/`. `pnpm dev:mock` sets it for a single run. |
 | `API_PROXY_TARGET`        | URL                    | Origin that `/api` requests are proxied to. Defaults to `http://localhost:8000`.                               |
+| `NEXT_PUBLIC_TRACE_URL`   | URL                    | Address of a trace viewer. A run with a trace id links to `<URL>/<trace id>`; unset, the id is shown as text.  |
 
 In code, read variables through `process.env.<NAME>`. Declare each new variable in `src/env.d.ts`.
 
@@ -87,7 +88,7 @@ frontend/
 ├── src/
 │   ├── app/                 # routes (Next.js App Router) and styles.css
 │   ├── providers/           # global providers: query client, theme, API mocking
-│   ├── features/            # one folder per feature: chat, artifacts, settings, ...
+│   ├── features/            # one folder per feature: console, artifacts, settings, ...
 │   ├── components/layout/   # the frame: top bar, activity bar, side panel, editor tabs, status bar
 │   ├── components/ui/       # shadcn/ui components (project source, editable)
 │   ├── api/generated/       # generated API client (do not edit)
@@ -226,7 +227,7 @@ Vietnamese text needs a font that ships the `vietnamese` subset. The subsets of 
   | `/projects/{projectId}/artifacts/{artifactId}`           | One artifact as a document                                                                                      |
   | `/projects/{projectId}/artifacts/items/{itemId}`         | One item, with its edit form, trace and versions                                                                |
   | `/projects/{projectId}/review/{runId}`                   | The review of a run at a checkpoint: its artifact beside the event log, and the options, feedback and questions |
-  | `/projects/{projectId}/workflow`, `.../workflow/{runId}` | Workflow and one run (not built yet)                                                                            |
+  | `/projects/{projectId}/workflow`, `.../workflow/{runId}` | Workflow: the runs in the side panel, the graph of one run, and the chosen step under it                        |
   | `/projects/{projectId}/traceability`                     | Traceability (not built yet)                                                                                    |
   | `/projects/{projectId}/settings`                         | Project settings (not built yet)                                                                                |
   | `/design-system`                                         | Design system, in development only                                                                              |

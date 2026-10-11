@@ -21,6 +21,7 @@ How the mocks work (fixtures, handlers, adding an endpoint) is in [Mock data](..
   - [Search](#search)
   - [Artifacts](#artifacts)
   - [Review](#review)
+  - [Workflow](#workflow)
   - [Run states](#run-states)
   - [Features not built yet](#features-not-built-yet)
   - [Development pages](#development-pages)
@@ -183,6 +184,21 @@ A run that waits at a checkpoint has a review: the artifact under review on the 
 
 An answer is kept by the mock server: the run goes on at the next stage, and an approval makes the artifact and its draft items approved. `?mock-reset` forgets it. To see the review open by itself, open http://localhost:3000/projects/90aa0000-0000-4000-8000-000000000002/console?mock-play=review and send a message.
 
+## Workflow
+
+The side panel lists the runs of the project, newest first, each opening into its steps; the steps of an interview turn into one row. A run opens as the graph of its workflow, with the state of every node, and the step that is chosen under it. A step is chosen in the side panel, on the graph or with `?step=`.
+
+| State                                  | Address                                                                                                                                  |
+| -------------------------------------- | ---------------------------------------------------------------------------------------------------------------------------------------- |
+| Runs, none chosen                      | http://localhost:3000/projects/90aa0000-0000-4000-8000-000000000001/workflow                                                             |
+| Run 3, waiting at the analysis review  | http://localhost:3000/projects/90aa0000-0000-4000-8000-000000000001/workflow/5f2d0000-0000-4000-8000-000000000001                        |
+| Run 1, which went through the workflow | http://localhost:3000/projects/90aa0000-0000-4000-8000-000000000001/workflow/3b900000-0000-4000-8000-000000000001                        |
+| Run 2, which failed at its cost limit  | http://localhost:3000/projects/90aa0000-0000-4000-8000-000000000001/workflow/3b900000-0000-4000-8000-000000000002                        |
+| Run 3 running                          | http://localhost:3000/projects/90aa0000-0000-4000-8000-000000000001/workflow/5f2d0000-0000-4000-8000-000000000001?mock-run-state=running |
+| Run not found                          | http://localhost:3000/projects/90aa0000-0000-4000-8000-000000000001/workflow/missing                                                     |
+
+"Retry from this step" starts a new run with a `POST`; it is offered when no run of the project is unfinished, so open it with `?mock-run-state=done`. Open the address with the state in it, as a step of the side panel drops it from the address.
+
 ## Run states
 
 Run 3 of the mentor platform in each state. The status bar, the review badge on Console and the project list follow it.
@@ -196,14 +212,12 @@ Run 3 of the mentor platform in each state. The status bar, the review badge on 
 
 ## Features not built yet
 
-These addresses show the frame with an empty state until their feature is built.
+This address shows the frame with an empty state until its feature is built.
 
-| Feature           | Address                                                                                                           |
-| ----------------- | ----------------------------------------------------------------------------------------------------------------- |
-| Workflow          | http://localhost:3000/projects/90aa0000-0000-4000-8000-000000000001/workflow                                      |
-| Run 3 in Workflow | http://localhost:3000/projects/90aa0000-0000-4000-8000-000000000001/workflow/5f2d0000-0000-4000-8000-000000000001 |
-| Traceability      | http://localhost:3000/projects/90aa0000-0000-4000-8000-000000000001/traceability                                  |
-| Project settings  | http://localhost:3000/projects/90aa0000-0000-4000-8000-000000000001/settings                                      |
+| Feature          | Address                                                                          |
+| ---------------- | -------------------------------------------------------------------------------- |
+| Traceability     | http://localhost:3000/projects/90aa0000-0000-4000-8000-000000000001/traceability |
+| Project settings | http://localhost:3000/projects/90aa0000-0000-4000-8000-000000000001/settings     |
 
 ## Development pages
 
