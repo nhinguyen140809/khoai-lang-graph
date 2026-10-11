@@ -5,30 +5,32 @@ import {
   BackgroundVariant,
   Controls,
   type EdgeProps,
-  getBezierPath,
+  getSmoothStepPath,
+  MiniMap,
   type Node as FlowNode,
   type NodeProps,
   Position,
 } from '@xyflow/react'
 
+import { Badge } from '@/components/ui/badge'
 import { Edge } from '@/components/ui/edge'
 import { Flow } from '@/components/ui/flow'
 import { Handle } from '@/components/ui/handle'
 import { Node, NodeContent, NodeHeader, NodeHeaderTitle } from '@/components/ui/node'
-import {
-  type NodeStatus as RingStatus,
-  NodeStatusIndicator,
-} from '@/components/ui/node-status-indicator'
+import { NodeStatusIndicator } from '@/components/ui/node-status-indicator'
 import { cn } from '@/lib/utils'
+import type { Tone } from '@/lib/tone.constants'
 
 import type { WorkflowDefinitionEdge, WorkflowDefinitionNode } from '../definition.types'
 import type { NodeProgress, RunProgress } from '../graph/node-status.reducer'
 import type { RunStep } from '../workflow.types'
 
-// The graph of the run (skeletons §7): `[ ]` an agent node, `< >` a
-// checkpoint, `( )` a control node, with the state of each node and its
-// visit count when it ran more than once. The last edge taken is drawn
-// emphasized; clicking a node opens its steps.
+// The graph of the run (skeletons §7), drawn with the design system's
+// Node, Edge, Handle and status ring components: an agent card colored
+// primary, a checkpoint card colored warning, a control node neutral,
+// each ringed with its state and carrying its visit count as a badge in
+// the header — the last edge taken painted solid success, conditional
+// edges dashed with their option as label.
 
 export interface WorkflowNodeData extends Record<string, unknown> {
   definition: WorkflowDefinitionNode
@@ -43,52 +45,52 @@ export interface WorkflowEdgeData extends Record<string, unknown> {
 }
 
 type WorkflowFlowNode = FlowNode<WorkflowNodeData, 'workflow'>
-import { type Edge as FlowEdge } from '@xyflow/react'
+type WorkflowFlowEdge = import('@xyflow/react').Edge<WorkflowEdgeData, 'workflow'>
 
-type WorkflowFlowEdge = FlowEdge<WorkflowEdgeData, 'workflow'>
+function kindTone(kind: string): Tone {
+  if (kind === 'checkpoint') return 'warning'
+  if (kind === 'control') return 'neutral'
+  if (kind === 'start' || kind === 'end') return 'success'
+  return 'primary'
+}
 
-function statusOf(progress: NodeProgress | undefined) {
-  if (progress === undefined) return 'idle' as const
-  return progress.status
+const ringStatus: Record<string, 'initial' | 'loading' | 'warning' | 'success' | 'error'> = {
+  idle: 'initial',
+  running: 'loading',
+  waiting: 'warning',
+  done: 'success',
+  failed: 'error',
 }
 
 function WorkflowNodeView({ data, selected }: NodeProps<WorkflowFlowNode>) {
   const { definition, progress } = data
-  const status = statusOf(progress)
   const visited = progress.visits
-  const ring: Record<typeof status, RingStatus> = {
-    idle: 'initial',
-    running: 'loading',
-    waiting: 'warning',
-    done: 'success',
-    failed: 'error',
-  }
+  const status = progress.status
+  const tone = kindTone(definition.kind)
+  const open = definition.kind === 'checkpoint' ? '< ' : definition.kind === 'control' ? '( ' : '[ '
+  const close = definition.kind === 'checkpoint' ? ' >' : definition.kind === 'control' ? ' )' : ' ]'
+
   return (
-    <NodeStatusIndicator status={ring[status]}>
+    <NodeStatusIndicator status={ringStatus[status] ?? 'initial'}>
       <Node
-        variant="soft"
-        color="primary"
-        className={cn(
-          'w-44',
-          definition.kind === 'checkpoint' && 'w-52',
-          selected && 'ring-2 ring-ring/50',
-        )}
+        variant={status === 'idle' ? 'outline' : 'soft'}
+        color={tone}
+        className={cn('w-44', definition.kind === 'checkpoint' && 'w-52', selected && 'flow-selected')}
       >
         <NodeHeader>
           <NodeHeaderTitle className="font-mono text-xs">
-            {definition.kind === 'agent' ? `[ ${definition.label} ]` : null}
-            {definition.kind === 'checkpoint' ? `< ${definition.label} >` : null}
-            {definition.kind === 'control' ? `( ${definition.label} )` : null}
-            {definition.kind === 'start' || definition.kind === 'end'
-              ? `[ ${definition.label} ]`
-              : null}
-            {visited > 1 ? (
-              <span className="ml-1 text-muted-foreground">x{String(visited)}</span>
-            ) : null}
+            {open}
+            {definition.label}
+            {close}
           </NodeHeaderTitle>
+          {visited > 1 ? (
+            <Badge variant="outline" className="ml-auto shrink-0 text-[0.5625rem]">
+              x{String(visited)}
+            </Badge>
+          ) : null}
         </NodeHeader>
         {definition.stage ? (
-          <NodeContent className="pt-1 text-xs text-muted-foreground">
+          <NodeContent className="pt-0.5 text-[0.6875rem] text-muted-foreground">
             {definition.stage}
           </NodeContent>
         ) : null}
@@ -100,36 +102,38 @@ function WorkflowNodeView({ data, selected }: NodeProps<WorkflowFlowNode>) {
 }
 
 function WorkflowEdgeView({
-  id: _id,
+  id: edgeId,
   sourceX,
   sourceY,
+  sourcePosition,
   targetX,
   targetY,
-  sourcePosition,
   targetPosition,
   label,
   data,
 }: EdgeProps<WorkflowFlowEdge>) {
-  const [path, labelX, labelY] = getBezierPath({
+  const [path, labelX, labelY] = getSmoothStepPath({
     sourceX,
     sourceY,
     sourcePosition,
     targetX,
     targetY,
     targetPosition,
+    borderRadius: 8,
   })
+  const isLast = data?.last ?? false
+  const isConditional = data?.conditional ?? false
   return (
-    <>
-      <Edge
-        id={_id}
-        path={path}
-        label={label}
-        labelX={labelX}
-        labelY={labelY}
-        variant={data?.conditional ? 'dashed' : 'solid'}
-        className={data?.last ? 'stroke-2' : undefined}
-      />
-    </>
+    <Edge
+      id={edgeId}
+      path={path}
+      label={isConditional ? label : null}
+      labelX={labelX}
+      labelY={labelY}
+      variant={isLast ? 'solid' : isConditional ? 'dashed' : 'solid'}
+      color={isLast ? 'success' : undefined}
+      className={isLast ? 'stroke-2' : !isLast && !isConditional && 'opacity-30'}
+    />
   )
 }
 
@@ -160,7 +164,7 @@ export function WorkflowGraph({
     data: {
       definition,
       progress: progress.nodes[definition.id] ?? {
-        status: 'idle',
+        status: 'idle' as const,
         visits: 0,
         lastStepId: null,
       },
@@ -184,7 +188,7 @@ export function WorkflowGraph({
   }))
 
   return (
-    <div style={{ height: 560 }} className="w-full overflow-hidden rounded-lg border">
+    <div style={{ height: 640 }} className="w-full overflow-hidden rounded-lg border bg-card">
       <Flow<WorkflowFlowNode, WorkflowFlowEdge>
         nodes={flowNodes}
         edges={flowEdges}
@@ -194,10 +198,16 @@ export function WorkflowGraph({
           onNodeSelect(node.id)
         }}
         fitView
-        fitViewOptions={{ padding: 0.08, maxZoom: 0.9 }}
+        fitViewOptions={{ padding: 0.1, maxZoom: 0.75 }}
       >
-        <Background variant={BackgroundVariant.Dots} gap={24} />
+        <Background variant={BackgroundVariant.Dots} gap={32} size={1.2} />
         <Controls showInteractive={false} />
+        <MiniMap
+          className="!bottom-2 !left-2 rounded-md"
+          maskColor="color-mix(in oklab, var(--background) 75%, transparent)"
+          pannable
+          zoomable
+        />
       </Flow>
     </div>
   )
