@@ -135,6 +135,27 @@ could never hit:
    starts an empty log; history lives in Workflow/Search). Nothing was
    changed there.
 
+## 3b. Tab-fidelity status (2026-10-12, design contract DESIGN_CONTRACT_TABS.md)
+
+Shipped per the contract: the Workflow graph of skeletons §7 (React Flow +
+elkjs, node states and visit counts, pending interrupt, last edge),
+`POST /runs/{id}/retry` (202, lineage, 409 run_already_active), the
+Artifacts document (artifact content in `x-ui-field-order`, superseded
+hidden), the item page with breadcrumb + Edit (PATCH + If-Match +
+409) and the TRACE/TIMELINE panel (`GET /items/{id}/trace`,
+`GET /items/{id}/revisions`), and the Traceability matrix + coverage
+server-side.
+
+Still open from the same contract: exports (`POST/GET /exports`) and
+their worker; run-state endpoints (`GET /runs/{id}/state`,
+`GET /runs/{id}/steps/{id}/state`); a true retry executor (state restore);
+x-ui-widget-aware edit inputs (the first cut uses generic textareas and
+JSON parsing in the browser); `GET /artifacts/{id}` detail + PATCH and
+item move/delete/restore; `GET /threads`; columns for `Origin`
+(changed_by/human_decision_id) on item revisions; a `content-schemas`
+endpoint for older schema versions; and `x-value-from` values (e.g.
+persona_catalog.uncovered_stakeholder_types from the elicitation plan).
+
 ## 4. Docs observations (no edits made to docs/)
 
 - `docs/API.md` §5 describes `PATCH /projects/{id}` with a replaceable
