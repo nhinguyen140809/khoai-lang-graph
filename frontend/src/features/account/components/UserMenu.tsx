@@ -1,7 +1,8 @@
 'use client'
 
 import { useMutation, useQueryClient } from '@tanstack/react-query'
-import { LogOutIcon, RotateCcwIcon, UserIcon } from 'lucide-react'
+import { LogOutIcon, RotateCcwIcon, SettingsIcon, UserIcon } from 'lucide-react'
+import Link from 'next/link'
 import { useRouter } from 'next/navigation'
 import { useTheme } from 'next-themes'
 import { toast } from 'sonner'
@@ -93,6 +94,13 @@ export function UserMenu() {
             <span className="truncate font-normal">{me.data.email}</span>
           </DropdownMenuLabel>
         )}
+        <DropdownMenuSeparator />
+        <DropdownMenuItem asChild>
+          <Link href="/settings">
+            <SettingsIcon aria-hidden />
+            Your settings
+          </Link>
+        </DropdownMenuItem>
         <DropdownMenuSeparator />
         <DropdownMenuLabel>Theme</DropdownMenuLabel>
         <DropdownMenuRadioGroup

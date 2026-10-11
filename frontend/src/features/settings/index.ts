@@ -1,3 +1,4 @@
 export { ThemeSync } from './components/ThemeSync'
+export { UserSettingsPage } from './components/UserSettingsPage'
 export { useSettingsStore } from './settings.store'
 export type { UserSettings } from './settings.types'
