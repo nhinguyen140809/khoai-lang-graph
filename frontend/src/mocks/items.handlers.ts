@@ -15,7 +15,7 @@ export const itemHandlers = [
     if (findProject(projectId) === undefined) return notFound('The project')
     if (scenario === 'empty') return HttpResponse.json({ items: [], next_cursor: null })
     const q = new URL(request.url).searchParams.get('q') ?? ''
-    const items = searchMockItems(q).filter((entry) => entry.project_id === projectId)
+    const items = searchMockItems(q, projectId)
     return HttpResponse.json(paginate(items, request))
   }),
 

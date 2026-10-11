@@ -1,9 +1,12 @@
 // Fixed ids of the mock data, shared by the fixture files. Each id starts like the id of the same
 // record in the API examples, so that the examples and the mock data are easy to match.
 
-function id(prefix: string, n: number): string {
+/** An id of the mock data: the prefix of its kind and a number. */
+export function mockId(prefix: string, n: number): string {
   return `${prefix}0000-0000-4000-8000-${String(n).padStart(12, '0')}`
 }
+
+const id = mockId
 
 export const USER_ID = id('11b7', 1)
 
@@ -16,25 +19,21 @@ export const PROJECT_IDS = {
 
 export const THREAD_IDS = {
   mentorMain: id('7f3a', 1),
-  mentorBooking: id('7f3a', 2),
   campusMain: id('7f3a', 3),
   libraryMain: id('7f3a', 4),
   laundryMain: id('7f3a', 5),
-  mentorExport: id('7f3a', 6),
 }
 
 export const RUN_IDS = {
-  /** Run 1 of the main thread: its first message started it, and it went through the whole workflow. */
+  /** Run 1 of the mentor thread: its first message started it, and it went through the whole workflow. */
   mentorMain1: id('3b90', 1),
-  /** Run 2 of the main thread: it failed at its cost limit. */
+  /** Run 2 of the mentor thread: it failed at its cost limit. */
   mentorMain2: id('4c18', 1),
-  /** Run 3 of the main thread, the run of the API examples: it retries run 2 and waits at the analysis review. */
+  /** Run 3 of the mentor thread, the run of the API examples: it retries run 2 and waits at the analysis review. */
   mentorMain3: id('5f2d', 1),
-  mentorBooking1: id('7e10', 1),
   campusMain1: id('7e10', 2),
   libraryMain1: id('7e10', 3),
   laundryMain1: id('7e10', 4),
-  mentorExport1: id('7e10', 5),
 }
 
 export function itemId(n: number): string {

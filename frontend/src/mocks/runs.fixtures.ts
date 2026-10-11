@@ -8,7 +8,7 @@ import {
   THREAD_IDS,
   USER_ID,
 } from './mock-ids.constants'
-import { mockParallelRuns, type MockRunState } from './mock-scenario.utils'
+import { type MockRunState } from './mock-scenario.utils'
 
 // Mock runs and run steps. The third run of the main thread of the mentor platform is the run of
 // the API examples: it retries the second run from its planner step and waits at the analysis
@@ -91,7 +91,7 @@ const finishedRuns: Run[] = [
     thread_id: THREAD_IDS.mentorMain,
     project_id: PROJECT_IDS.mentor,
     number: 2,
-    step_count: 70,
+    step_count: 68,
     last_event_id: 262,
     status: 'failed',
     current_stage: 'specification',
@@ -103,14 +103,6 @@ const finishedRuns: Run[] = [
     usage: usage(1.98, 380_000, 140_000),
     started_at: '2026-10-04T10:00:00Z',
     finished_at: '2026-10-04T10:21:15Z',
-  }),
-  run({
-    id: RUN_IDS.mentorBooking1,
-    number: 1,
-    thread_id: THREAD_IDS.mentorBooking,
-    project_id: PROJECT_IDS.mentor,
-    started_at: '2026-10-04T13:40:00Z',
-    finished_at: '2026-10-04T14:05:00Z',
   }),
   run({
     id: RUN_IDS.campusMain1,
@@ -363,42 +355,97 @@ const libraryRunSteps = buildSteps(RUN_IDS.libraryMain1, 6, '2026-10-03T10:10:00
 
 /** Every run of the mock data, with the run of the API examples in the given state. */
 export function mockRuns(state: MockRunState): Run[] {
-  if (!mockParallelRuns()) return [...finishedRuns, mentorRun3(state)]
-  // Two more runs of the mentor platform that are unfinished.
-  const runs = finishedRuns.map((item) =>
-    item.id === RUN_IDS.mentorBooking1
-      ? {
-          ...item,
-          status: 'running' as const,
-          current_stage: 'interviewing',
-          step_count: 5,
-          usage: usage(0.11, 90_000, 9_000),
-          finished_at: null,
-        }
-      : item,
-  )
-  return [
-    ...runs,
-    run({
-      id: RUN_IDS.mentorExport1,
-      number: 1,
-      thread_id: THREAD_IDS.mentorExport,
-      project_id: PROJECT_IDS.mentor,
-      status: 'queued',
-      current_stage: 'planning',
-      step_count: 0,
-      usage: noUsage,
-      last_event_id: 0,
-      started_at: null,
-      finished_at: null,
-    }),
-    mentorRun3(state),
-  ]
+  return [...finishedRuns, mentorRun3(state)]
 }
 
-/** The steps of a run. Runs other than the run of the API examples and the running run have none. */
+// The first run went through the whole workflow; the second failed at the specification.
+const mentorRun1Steps = buildSteps(RUN_IDS.mentorMain1, 1, '2026-10-02T08:10:01Z', mentorRun3Specs)
+const mentorRun2Steps = buildSteps(
+  RUN_IDS.mentorMain2,
+  2,
+  '2026-10-04T10:00:01Z',
+  mentorRun3Specs.slice(0, 68),
+).map((step) =>
+  step.sequence === 68
+    ? {
+        ...step,
+        status: 'failed' as const,
+        error: 'The next model call would exceed the cost limit of the run.',
+      }
+    : step,
+)
+
+/** The steps of a run. Runs without a script here have none. */
 export function mockRunSteps(runId: string, state: MockRunState): RunStep[] {
+  if (runId === RUN_IDS.mentorMain1) return mentorRun1Steps
+  if (runId === RUN_IDS.mentorMain2) return mentorRun2Steps
   if (runId === RUN_IDS.mentorMain3) return mentorRun3Steps(state)
   if (runId === RUN_IDS.libraryMain1) return libraryRunSteps
-  return []
+  const finished = finishedRuns.find(({ id }) => id === runId)
+  return finished === undefined ? [] : scriptedSteps(finished, 50 + finishedRuns.indexOf(finished))
+}
+
+/** A run that was just started, running at its first stage. */
+export function newMockRun(fields: {
+  id: string
+  threadId: string
+  projectId: string
+  number: number
+  retryOfRunId: string | null
+}): Run {
+  return run({
+    id: fields.id,
+    thread_id: fields.threadId,
+    project_id: fields.projectId,
+    number: fields.number,
+    status: 'running',
+    current_stage: 'planning',
+    retry_of_run_id: fields.retryOfRunId,
+    usage: noUsage,
+    step_count: 0,
+    last_event_id: 0,
+    started_at: new Date().toISOString().replace(/\.\d+Z$/, 'Z'),
+    finished_at: null,
+  })
+}
+
+/** A run of the mock data with the usual fields; `fields` change what differs. */
+export const buildMockRun = run
+
+// The step counts at which a scripted run of each kind stops, in the specs of the main run: the
+// planner, the interviews, the analysis review, or the whole workflow.
+const scriptedStepCounts = { running: 6, interrupted: 67, failed: 20, cancelled: 9 } as const
+
+/**
+ * The steps of a run that has no script of its own: the first steps of the workflow, as many as
+ * the state of the run reached. A run that ended well has them all; one that failed has its last
+ * step failed, and one that runs has its last step running.
+ */
+export function scriptedSteps(runItem: Run, runIndex: number): RunStep[] {
+  const count =
+    runItem.status === 'succeeded'
+      ? mentorRun3Specs.length
+      : runItem.status === 'queued'
+        ? 0
+        : scriptedStepCounts[runItem.status]
+  const steps = buildSteps(
+    runItem.id,
+    runIndex,
+    runItem.started_at ?? '2026-10-01T09:00:00Z',
+    mentorRun3Specs.slice(0, count),
+  )
+  return steps.map((step) => {
+    if (step.sequence !== count) return step
+    if (runItem.status === 'failed') {
+      return {
+        ...step,
+        status: 'failed' as const,
+        error: runItem.error?.message ?? 'The step failed.',
+      }
+    }
+    if (runItem.status === 'running' || runItem.status === 'interrupted') {
+      return { ...step, status: 'running' as const, finished_at: null }
+    }
+    return step
+  })
 }

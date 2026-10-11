@@ -1,10 +1,11 @@
 import type { Thread } from '@/features/threads'
 
 import { PROJECT_IDS, RUN_IDS, THREAD_IDS, USER_ID } from './mock-ids.constants'
-import { mockParallelRuns, type MockRunState } from './mock-scenario.utils'
+import { type MockRunState } from './mock-scenario.utils'
 
-// Mock threads. The main thread of the mentor platform holds the run of the API examples, so its
-// stage and its unfinished run follow the `mock-run-state` scenario.
+// Mock threads. Every project has one thread, the session of the project; the thread of the
+// mentor platform holds the run of the API examples, so its stage and its unfinished run follow
+// the `mock-run-state` scenario.
 
 function thread(fields: Partial<Thread> & Pick<Thread, 'id' | 'project_id'>): Thread {
   return {
@@ -41,7 +42,6 @@ const mentorMainStages = {
 
 /** Every thread of the mock data, newest message first. */
 export function mockThreads(state: MockRunState): Thread[] {
-  const parallel = mockParallelRuns()
   return [
     thread({
       id: THREAD_IDS.mentorMain,
@@ -58,34 +58,6 @@ export function mockThreads(state: MockRunState): Thread[] {
       created_at: '2026-10-05T15:49:30Z',
       updated_at: '2026-10-05T16:20:00Z',
     }),
-    thread({
-      id: THREAD_IDS.mentorBooking,
-      project_id: PROJECT_IDS.mentor,
-      title: 'Booking rules',
-      ...(parallel && {
-        current_stage: 'interviewing',
-        active_run_id: RUN_IDS.mentorBooking1,
-        active_run_status: 'running',
-      }),
-      last_message_at: '2026-10-04T14:05:00Z',
-      created_at: '2026-10-04T13:39:00Z',
-      updated_at: '2026-10-04T14:05:00Z',
-    }),
-    ...(parallel
-      ? [
-          thread({
-            id: THREAD_IDS.mentorExport,
-            project_id: PROJECT_IDS.mentor,
-            title: 'Export formats',
-            current_stage: 'planning',
-            active_run_id: RUN_IDS.mentorExport1,
-            active_run_status: 'queued',
-            last_message_at: '2026-10-04T11:00:00Z',
-            created_at: '2026-10-04T11:00:00Z',
-            updated_at: '2026-10-04T11:00:00Z',
-          }),
-        ]
-      : []),
     thread({
       id: THREAD_IDS.libraryMain,
       project_id: PROJECT_IDS.library,
