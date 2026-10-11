@@ -75,7 +75,7 @@ function WorkflowNodeView({ data, selected }: NodeProps<WorkflowFlowNode>) {
       <Node
         variant={status === 'idle' ? 'outline' : 'soft'}
         color={tone}
-        className={cn('w-44', definition.kind === 'checkpoint' && 'w-52', selected && 'flow-selected')}
+        className={cn('w-48', definition.kind === 'checkpoint' && 'w-56', selected && 'flow-selected')}
       >
         <NodeHeader>
           <NodeHeaderTitle className="font-mono text-xs">
@@ -198,7 +198,7 @@ export function WorkflowGraph({
           onNodeSelect(node.id)
         }}
         fitView
-        fitViewOptions={{ padding: 0.1, maxZoom: 0.75 }}
+        fitViewOptions={{ padding: 0.12, maxZoom: 1 }}
       >
         <Background variant={BackgroundVariant.Dots} gap={32} size={1.2} />
         <Controls showInteractive={false} />

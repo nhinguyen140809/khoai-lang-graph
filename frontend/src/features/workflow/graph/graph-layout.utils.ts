@@ -11,8 +11,8 @@ export interface Position {
   y: number
 }
 
-const ROW_HEIGHT = 120
-const NODE_WIDTH = 200
+const ROW_HEIGHT = 100
+const NODE_WIDTH = 192
 const IN_ROW_GAP = 48
 const CENTER_X = 320
 
