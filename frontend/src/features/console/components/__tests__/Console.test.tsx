@@ -3,6 +3,7 @@ import userEvent from '@testing-library/user-event'
 import { beforeEach, describe, expect, it, vi } from 'vitest'
 
 import { PROJECT_IDS, THREAD_IDS } from '@/mocks/mock-ids.constants'
+import { routerMock } from '@/test/next-mocks.utils'
 import { TestProviders } from '@/test/TestProviders'
 
 import { useCommandHistoryStore } from '../../command-history.store'
@@ -92,7 +93,7 @@ describe('Console', () => {
     await userEvent.type(input, '/')
 
     const list = screen.getByRole('listbox', { name: 'Commands' })
-    expect(within(list).getAllByRole('option')).toHaveLength(5)
+    expect(within(list).getAllByRole('option')).toHaveLength(6)
     expect(within(list).getByRole('option', { name: /retry/ })).toHaveTextContent('no failed run')
     expect(within(list).getByRole('option', { name: /retry/ })).toHaveAttribute(
       'aria-disabled',
@@ -119,6 +120,19 @@ describe('Console', () => {
     expect(
       within(screen.getByRole('log', { name: 'Event log' })).getByText('/expand'),
     ).toBeVisible()
+  })
+
+  it('opens the settings of the runs with /run-settings', async () => {
+    renderConsole()
+
+    await userEvent.type(
+      await screen.findByRole('combobox', { name: 'Message' }),
+      '/run-settings {Enter}',
+    )
+
+    expect(routerMock.push).toHaveBeenCalledWith(
+      `/projects/${PROJECT_IDS.mentor}/settings?section=runs`,
+    )
   })
 
   it('mentions an item by its key in a message', async () => {

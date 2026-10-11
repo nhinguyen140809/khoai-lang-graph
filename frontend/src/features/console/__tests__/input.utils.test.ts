@@ -19,9 +19,9 @@ describe('commandPrefix', () => {
 
 describe('matchingCommands', () => {
   it('lists the commands that start with the prefix', () => {
-    expect(matchingCommands('r').map(({ name }) => name)).toEqual(['retry'])
+    expect(matchingCommands('r').map(({ name }) => name)).toEqual(['retry', 'run-settings'])
     expect(matchingCommands('e').map(({ name }) => name)).toEqual(['expand', 'export'])
-    expect(matchingCommands('')).toHaveLength(5)
+    expect(matchingCommands('')).toHaveLength(6)
     expect(matchingCommands('x')).toEqual([])
   })
 })

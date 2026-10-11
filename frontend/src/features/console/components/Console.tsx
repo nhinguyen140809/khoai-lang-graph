@@ -86,6 +86,7 @@ export function Console({ projectId, threadId, afterLog, reviewOpen = false }: C
     expand: null,
     collapse: null,
     export: null,
+    'run-settings': null,
   }
 
   const runCommand = (name: CommandName) => {
@@ -108,6 +109,9 @@ export function Console({ projectId, threadId, afterLog, reviewOpen = false }: C
         return
       case 'export':
         router.push(`/projects/${encodeURIComponent(projectId)}/artifacts?export` as Route)
+        return
+      case 'run-settings':
+        router.push(`/projects/${encodeURIComponent(projectId)}/settings?section=runs` as Route)
         return
     }
   }

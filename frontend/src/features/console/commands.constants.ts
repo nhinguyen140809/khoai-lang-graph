@@ -1,5 +1,12 @@
 /** The names of the commands of the console. */
-export const commandNames = ['stop', 'retry', 'expand', 'collapse', 'export'] as const
+export const commandNames = [
+  'stop',
+  'retry',
+  'expand',
+  'collapse',
+  'export',
+  'run-settings',
+] as const
 
 export type CommandName = (typeof commandNames)[number]
 
@@ -9,6 +16,7 @@ const descriptions = {
   expand: 'Show the steps of every group',
   collapse: 'Hide the steps of every group',
   export: 'Export the artifacts',
+  'run-settings': 'Change the settings of the runs',
 } as const satisfies Record<CommandName, string>
 
 /** The commands that `/` lists in the input box, in this order. */
