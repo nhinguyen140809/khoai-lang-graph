@@ -1,0 +1,38 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "$id": "artifacts/requirements_analysis/v1",
+  "title": "Requirements analysis",
+  "description": "The result of analyzing the interviews. The findings are the items of the artifact.",
+  "x-level": "artifact",
+  "x-kind": "requirements_analysis",
+  "x-schema-version": 1,
+  "x-ui-display": "document",
+  "x-ui-field-order": [
+    "key_findings",
+    "open_questions"
+  ],
+  "type": "object",
+  "additionalProperties": false,
+  "properties": {
+    "key_findings": {
+      "type": "array",
+      "items": {
+        "type": "string"
+      },
+      "description": "The most important results of the analysis, one sentence each.",
+      "x-ui-widget": "list"
+    },
+    "open_questions": {
+      "type": "array",
+      "items": {
+        "type": "string"
+      },
+      "description": "Questions the analysis could not answer from the interviews.",
+      "x-ui-widget": "list"
+    }
+  },
+  "required": [
+    "key_findings",
+    "open_questions"
+  ]
+}

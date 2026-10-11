@@ -1,0 +1,1217 @@
+"""The nodes of the requirements engineering graph (version 1).
+
+The topology follows `definition.v1.json` exactly (mapping §2.1): planner →
+persona_generator → checkpoint_personas → the interview loop → analyst →
+(rework_elicitation | checkpoint_analysis) → requirement_engineer →
+checkpoint_spec → backlog_manager → validator. Checkpoint options walk the
+conditional edges named after them; the analyst verdict decides whether the
+stakeholders are interviewed again; the validator ends a still-failing run
+at the iteration limit instead of failing the run.
+
+Every agent node calls `llm.get_chat_model(role, config)` — never a
+hard-coded model — and returns a structured output model, never prose. Every
+artifact and link goes through the `ArtifactSink` of the run, which enforces
+the domain rules; the state keeps references only. A node failure becomes an
+error update that drains the run to the graph exit (the safe_node pattern of
+the prototype); LangGraph control flow (a checkpoint's `interrupt`) passes
+through untouched. Nothing here imports FastAPI or the features layer.
+"""
+
+import json
+from collections.abc import Callable, Mapping
+from functools import wraps
+from typing import TYPE_CHECKING, Any, TypeVar, cast
+
+from langchain_core.runnables import RunnableConfig
+from langgraph.types import interrupt
+from pydantic import BaseModel
+
+from khoailanggraph.agents import prompts as prompt_loader
+from khoailanggraph.agents.requirements_engineering import orchestrator
+from khoailanggraph.agents.requirements_engineering.definition import nodes as definition_nodes
+from khoailanggraph.agents.requirements_engineering.outputs import (
+    AnalystOutput,
+    BacklogOutput,
+    EngineerOutput,
+    GeneratorOutput,
+    IntentDirectiveOutput,
+    InterviewerTurnOutput,
+    PersonaAnswerOutput,
+    PlannerOutput,
+    ValidatorOutput,
+)
+from khoailanggraph.agents.requirements_engineering.ports import (
+    ArtifactSink,
+    DirectiveSink,
+    ItemRecord,
+)
+from khoailanggraph.agents.requirements_engineering.state import REState
+from khoailanggraph.agents.requirements_engineering.views import (
+    prompt_view,
+    prompt_views,
+    transcript_lines,
+)
+from khoailanggraph.domain.run_config import RunConfig
+from khoailanggraph.llm import get_chat_model
+
+if TYPE_CHECKING:
+    from langchain_core.language_models.chat_models import BaseChatModel
+
+PROMPTS_PACKAGE = "khoailanggraph.agents.requirements_engineering"
+PROMPT_VERSION = 1
+
+_T = TypeVar("_T", bound=BaseModel)
+NodeFn = Callable[..., dict[str, Any]]
+
+ItemRefDict = dict[str, Any]
+Known = dict[str, ItemRefDict]
+
+
+# ---------------------------------------------------------------------------
+# Config access and the one LLM call helper
+
+
+def _configurable(config: Mapping[str, Any] | RunnableConfig | None) -> Mapping[str, Any]:
+    value = dict(config or {}).get("configurable", {})
+    return value if isinstance(value, dict) else {}
+
+
+def _sink(config: Mapping[str, Any] | RunnableConfig | None) -> ArtifactSink:
+    sink = _configurable(config).get("artifact_sink")
+    if sink is None:
+        msg = "the run config must provide an artifact_sink"
+        raise RuntimeError(msg)
+    return sink  # type: ignore[no-any-return]
+
+
+def _directive_sink(config: Mapping[str, Any] | RunnableConfig | None) -> DirectiveSink:
+    sink = _configurable(config).get("directive_sink")
+    if sink is None:
+        msg = "the run config must provide a directive_sink"
+        raise RuntimeError(msg)
+    return sink  # type: ignore[no-any-return]
+
+
+def _run_id(config: Mapping[str, Any] | RunnableConfig | None) -> str:
+    return str(_configurable(config).get("run_id", ""))
+
+
+def _run_config(state: REState) -> RunConfig:
+    return RunConfig.model_validate(state["run_config"])
+
+
+def _language(run_config: RunConfig) -> str:
+    return "English" if run_config.output_language == "en" else "Vietnamese"
+
+
+def _invoke[T: BaseModel](
+    role: str,
+    config: Mapping[str, Any] | None,
+    schema: type[T],
+    prompt_values: Mapping[str, str],
+) -> T:
+    """Assemble the role's prompt, ask its model, and parse the structured output."""
+    prompt = prompt_loader.load_cached(PROMPTS_PACKAGE, role, PROMPT_VERSION)
+    messages = prompt_loader.assemble_prompt(prompt, prompt_values)
+    model: BaseChatModel = get_chat_model(role, config)
+    answer = model.with_structured_output(schema).invoke(messages)
+    if not isinstance(answer, schema):
+        msg = f"{role} returned {type(answer).__name__}, expected {schema.__name__}"
+        raise TypeError(msg)
+    return answer
+
+
+# ---------------------------------------------------------------------------
+# The safe_node wrapper (kept from the prototype)
+
+
+def safe_node(fn: NodeFn) -> NodeFn:
+    """Turn any node failure into an error update instead of a crash.
+
+    Any exception becomes `error` + `status: failed`, so the conditional
+    edges drain the run to the graph exit. LangGraph control flow (a
+    checkpoint's `interrupt`) is re-raised untouched.
+    """
+
+    @wraps(fn)
+    def wrapper(state: REState, config: RunnableConfig | None = None) -> dict[str, Any]:
+        try:
+            return fn(state, config or {})
+        except Exception as exc:
+            return {
+                "error": {
+                    "code": "node_failed",
+                    "message": f"{fn.__name__}: {exc}",
+                    "stage": str(state.get("current_stage", "")),
+                },
+                "status": "failed",
+            }
+
+    return wrapper
+
+
+def match_plan_value(value: str, allowed: list[str]) -> str | None:
+    """The plan term `value` stands for, verbatim; None when it matches none.
+
+    The controlled vocabulary of the plan is the one the artifacts must
+    reuse. A model that names the term exactly comes back untouched; one
+    that decorates it ("Students (commuter and resident) ...") resolves to
+    the longest plan term the wording contains; a true stranger stays
+    None so the caller can reject it honestly.
+    """
+    if value in allowed:
+        return value
+    lowered = value.strip().casefold()
+    candidates = [(term, term.strip().casefold()) for term in allowed]
+    for original, candidate in candidates:
+        if candidate == lowered:
+            return original
+    best_pair = max(
+        ((original, candidate) for original, candidate in candidates if candidate),
+        key=lambda pair: len(pair[1]),
+        default=("", ""),
+    )
+    best_term, best_candidate = best_pair
+    if best_candidate and best_candidate in lowered:
+        return best_term
+    return None
+
+
+# ---------------------------------------------------------------------------
+# Shared helpers: known items, links, superseding
+
+
+def _known_of(sink: ArtifactSink, state: REState) -> Known:
+    """Every persona and interview message by key, for link resolution."""
+    known: Known = {}
+    for ref in state["personas"]:
+        persona = sink.read_item(ref["item_id"])
+        known[persona["key"]] = {
+            "item_id": persona["item_id"],
+            "kind": persona["kind"],
+            "key": persona["key"],
+            "version": persona["version"],
+        }
+        record = sink.read_artifact(
+            state["project_id"], "interview_transcript", subject_id=persona["item_id"]
+        )
+        if record is None:
+            continue
+        for message in sink.read_items(record["artifact_id"]):
+            known[message["key"]] = {
+                "item_id": message["item_id"],
+                "kind": message["kind"],
+                "key": message["key"],
+                "version": message["version"],
+            }
+    return known
+
+
+def _must_find(known: Known, value: str) -> ItemRefDict:
+    target = known.get(value)
+    if target is None:
+        msg = f"no known item for the reference {value}"
+        raise ValueError(msg)
+    return target
+
+
+def _link_each(
+    sink: ArtifactSink,
+    source_id: str,
+    link_type: str,
+    known: Known,
+    references: list[str],
+) -> None:
+    """One link of `link_type` per referenced key; an unknown key fails loudly."""
+    for value in references:
+        target = _must_find(known, value)
+        sink.add_link(source_id=source_id, target_id=target["item_id"], link_type=link_type)
+
+
+def _evidence_links(
+    sink: ArtifactSink,
+    source_id: str,
+    known: Known,
+    evidence: list[Any],
+) -> None:
+    seen: set[str] = set()
+    for entry in evidence:
+        if entry.message in seen:
+            continue
+        seen.add(entry.message)
+        target = _must_find(known, entry.message)
+        sink.add_link(
+            source_id=source_id,
+            target_id=target["item_id"],
+            link_type="evidenced_by",
+            quote=entry.quote,
+        )
+
+
+def _supersede_each(
+    sink: ArtifactSink,
+    current: Known,
+    source_id: str,
+    supersedes: list[str],
+) -> None:
+    """Link a new item to what it replaces and mark the old ones superseded."""
+    for key in supersedes:
+        replaced = _must_find(current, key)
+        sink.add_link(source_id=source_id, target_id=replaced["item_id"], link_type="supersedes")
+        sink.mark_item_superseded(replaced["item_id"])
+
+
+def _directive_for(
+    state: REState,
+    config: Mapping[str, Any] | None,
+    checkpoint: str,
+) -> str:
+    """The rework instruction of a re-entering stage: the review feedback, or
+    the latest rework directive of the run, or empty on a first pass."""
+    for outcome in reversed(state["checkpoint_outcomes"]):
+        if outcome["node"] == checkpoint and outcome["feedback"]:
+            return outcome["feedback"]
+    directives = state["rework_directives"]
+    if directives:
+        directive = _directive_sink(config).read_directive(directives[-1])
+        if directive is not None:
+            return str(directive["instruction"])
+    return ""
+
+
+# ---------------------------------------------------------------------------
+# The elicitation nodes
+
+
+@safe_node
+def planner_node(
+    state: REState,
+    config: RunnableConfig | None = None,
+) -> dict[str, Any]:
+    cfg = _run_config(state)
+    plan: PlannerOutput = _invoke(
+        "planner",
+        config or {},
+        PlannerOutput,
+        {"output_language": _language(cfg), "intent": state["initial_intent"]},
+    )
+    created = _sink(config or {}).create_artifact(
+        state["project_id"],
+        "elicitation_plan",
+        title="Elicitation plan",
+        content=plan.model_dump(mode="json"),
+    )
+    return {"elicitation_plan": dict(created), "current_stage": "planning"}
+
+
+@safe_node
+def persona_generator_node(
+    state: REState,
+    config: RunnableConfig | None = None,
+) -> dict[str, Any]:
+    cfg = _run_config(state)
+    sink = _sink(config or {})
+    plan_record = sink.read_artifact(state["project_id"], "elicitation_plan")
+    plan_lines = (
+        json.dumps(plan_record["content"], ensure_ascii=False)
+        if plan_record is not None
+        else "(no plan; interview from the intent directly)"
+    )
+    draft: GeneratorOutput = _invoke(
+        "persona_generator",
+        config or {},
+        GeneratorOutput,
+        {
+            "output_language": _language(cfg),
+            "intent": state["initial_intent"],
+            "plan": str(plan_lines),
+            "target_personas_num": str(cfg.parameters.target_personas_num),
+        },
+    )
+    if plan_record is not None:
+        plan_content = cast("dict[str, list[str]]", plan_record["content"])
+        allowed = plan_content.get("stakeholder_types", [])
+        outside = [value for value in draft.uncovered_stakeholder_types if value not in allowed]
+        if outside:
+            msg = f"personas listed unknown stakeholder types: {outside}"
+            raise ValueError(msg)
+
+    catalog = sink.create_artifact(
+        state["project_id"],
+        "persona_catalog",
+        title="Persona catalog",
+        content={
+            "selection_rationale": draft.selection_rationale,
+            "uncovered_stakeholder_types": draft.uncovered_stakeholder_types,
+        },
+        summary=f"{len(draft.personas)} personas",
+    )
+    allowed_types: list[str] = (
+        [str(entry) for entry in plan_content.get("stakeholder_types", [])]
+        if plan_record is not None
+        else []
+    )
+    personas: list[dict[str, Any]] = []
+    for persona_draft in draft.personas:
+        content = persona_draft.model_dump(mode="json", exclude={"ref"})
+        if allowed_types:
+            matched = match_plan_value(str(content.get("stakeholder_type", "")), allowed_types)
+            if matched is None:
+                msg = (
+                    f"persona '{content.get('name', '?')}': stakeholder_type "
+                    f"'{content.get('stakeholder_type')}' matches none of the "
+                    "plan's stakeholder_types"
+                )
+                raise ValueError(msg)
+            content["stakeholder_type"] = matched
+        content["interview_status"] = "not_started"
+        item = sink.add_item(catalog["artifact_id"], "persona", content, ref=persona_draft.ref)
+        personas.append(dict(item))
+    return {
+        "personas": personas,
+        "interview_transcripts": [],
+        "interview_turn": 0,
+        "active_persona_index": 0,
+        "interviewer_stop": False,
+        "current_stage": "persona_generation",
+    }
+
+
+def _transcript_of(
+    state: REState,
+    sink: ArtifactSink,
+    persona: ItemRecord,
+) -> tuple[dict[str, Any], list[ItemRecord]]:
+    """The interview transcript of one persona, created on the first question."""
+    record = sink.read_artifact(
+        state["project_id"], "interview_transcript", subject_id=persona["item_id"]
+    )
+    if record is not None:
+        return dict(record), sink.read_items(record["artifact_id"])
+    created = sink.create_artifact(
+        state["project_id"],
+        "interview_transcript",
+        title=f"Interview of {persona['key']}",
+        content={"status": "in_progress", "turn_count": 0, "stop_reason": None},
+        subject_id=persona["item_id"],
+    )
+    return dict(created), []
+
+
+def _merge_transcripts(state: REState, transcript: dict[str, Any]) -> list[dict[str, Any]]:
+    """The transcript refs of the state, with `transcript` added or refreshed."""
+    kept = [
+        dict(existing)
+        for existing in state.get("interview_transcripts", [])
+        if existing["artifact_id"] != transcript["artifact_id"]
+    ]
+    kept.append(transcript)
+    return kept
+
+
+def _merged(state: REState, updates: Mapping[str, Any]) -> REState:
+    """The state with a partial update applied (LangGraph merges these the same way)."""
+    return {**state, **updates}  # type: ignore[typeddict-item]
+
+
+# ---------------------------------------------------------------------------
+# The interview loop
+
+
+@safe_node
+def interviewer_node(
+    state: REState,
+    config: RunnableConfig | None = None,
+) -> dict[str, Any]:
+    cfg = _run_config(state)
+    sink = _sink(config or {})
+    runnable_config = config or {}
+    # Cursor changes survive this invocation: they all go into one update dict.
+    cursor: dict[str, Any] = {}
+    if orchestrator.interviews_complete(state):
+        cursor.update(orchestrator.open_cycle_update())
+        state = _merged(state, cursor)
+
+    while True:
+        if orchestrator.exceeded_max_turns(state, turns_per_persona=cfg.parameters.max_turns):
+            if int(state["active_persona_index"]) + 1 >= len(state["personas"]):
+                return {
+                    **cursor,
+                    "interviewer_stop": True,
+                    "current_stage": "interviewing",
+                }
+            cursor.update(orchestrator.advance_update(state))
+            state = _merged(state, cursor)
+            continue
+
+        persona = orchestrator.active_persona(state, sink)
+        transcript, messages = _transcript_of(state, sink, persona)
+        turn_no = int(state["interview_turn"]) + 1
+
+        transcript_rendered = (
+            "\n".join(transcript_lines(persona["key"], messages[-TRANSCRIPT_TAIL:]))
+            or "(none yet; this is the opening turn)"
+        )
+        plan_record = sink.read_artifact(state["project_id"], "elicitation_plan")
+        plan_lines = "(no plan)"
+        if plan_record is not None:
+            plan_content = cast("dict[str, list[str]]", plan_record["content"])
+            plan_lines = "\n".join(
+                [
+                    *(f"topic: {topic}" for topic in plan_content.get("topics", [])),
+                    *(
+                        f"stop when: {condition}"
+                        for condition in plan_content.get("stopping_conditions", [])
+                    ),
+                ]
+            )
+
+        turn: InterviewerTurnOutput = _invoke(
+            "interviewer",
+            runnable_config,
+            InterviewerTurnOutput,
+            {
+                "output_language": _language(cfg),
+                "plan": plan_lines,
+                "persona": json.dumps(prompt_view(persona), ensure_ascii=False),
+                "transcript": transcript_rendered,
+                "turn": str(turn_no),
+                "directive": _directive_for(state, runnable_config, "checkpoint_analysis"),
+            },
+        )
+
+        if turn.stop:
+            closed = sink.update_artifact_content(
+                transcript["artifact_id"],
+                dict(transcript["content"])
+                | {"status": "completed", "stop_reason": "interviewer_stopped"},
+            )
+            if int(state["active_persona_index"]) + 1 >= len(state["personas"]):
+                return {
+                    **cursor,
+                    "interviewer_stop": True,
+                    "interview_transcripts": _merge_transcripts(state, dict(closed)),
+                    "current_stage": "interviewing",
+                }
+            cursor.update(orchestrator.advance_update(state))
+            state = _merged(state, cursor)
+            continue
+
+        sink.add_item(
+            transcript["artifact_id"],
+            "interview_message",
+            {
+                "turn": turn_no,
+                "role": "interviewer",
+                "content": turn.question,
+                "iteration": int(state["iteration_count"]),
+                "topic": None,
+            },
+        )
+        return {
+            **cursor,
+            "interview_transcripts": _merge_transcripts(state, transcript),
+            "current_stage": "interviewing",
+        }
+
+
+@safe_node
+def persona_agent_node(
+    state: REState,
+    config: RunnableConfig | None = None,
+) -> dict[str, Any]:
+    cfg = _run_config(state)
+    sink = _sink(config or {})
+    persona = orchestrator.active_persona(state, sink)
+    transcript, messages = _transcript_of(state, sink, persona)
+    turn_no = int(state["interview_turn"]) + 1
+
+    question = next(
+        (
+            str(entry["content"]["content"])
+            for entry in reversed(messages)
+            if entry["content"]["role"] == "interviewer"
+        ),
+        None,
+    )
+    if question is None:
+        msg = f"no interviewer question to answer for persona {persona['key']}"
+        raise ValueError(msg)
+
+    answer: PersonaAnswerOutput = _invoke(
+        "persona_agent",
+        config or {},
+        PersonaAnswerOutput,
+        {
+            "output_language": _language(cfg),
+            "persona": json.dumps(prompt_view(persona), ensure_ascii=False),
+            "question": question,
+            "conversation": "\n".join(transcript_lines(persona["key"], messages[-TRANSCRIPT_TAIL:]))
+            or "(none)",
+        },
+    )
+
+    sink.add_item(
+        transcript["artifact_id"],
+        "interview_message",
+        {
+            "turn": turn_no,
+            "role": "persona",
+            "content": answer.answer,
+            "iteration": int(state["iteration_count"]),
+            "topic": None,
+        },
+    )
+    closed = sink.update_artifact_content(
+        transcript["artifact_id"],
+        dict(transcript["content"]) | {"turn_count": turn_no},
+    )
+    return {
+        "interview_transcripts": _merge_transcripts(state, dict(closed)),
+        "interview_turn": turn_no,
+    }
+
+
+# ---------------------------------------------------------------------------
+# The analyst and the rework control node
+
+
+@safe_node
+def analyst_node(
+    state: REState,
+    config: RunnableConfig | None = None,
+) -> dict[str, Any]:
+    cfg = _run_config(state)
+    sink = _sink(config or {})
+    runnable_config = config or {}
+    known = _known_of(sink, state)
+
+    personas = [sink.read_item(entry["item_id"]) for entry in state["personas"]]
+    transcript_rendered = (
+        "\n".join(
+            line
+            for persona in personas
+            for line in transcript_lines(
+                persona["key"],
+                sink.read_items(_transcript_of(state, sink, persona)[0]["artifact_id"]),
+            )
+        )
+        or "(no interviews yet)"
+    )
+    plan_record = sink.read_artifact(state["project_id"], "elicitation_plan")
+    topics = ""
+    if plan_record is not None:
+        plan_topics = cast("dict[str, list[str]]", plan_record["content"])["topics"]
+        topics = "\n".join(plan_topics)
+
+    analysis_record = sink.read_artifact(state["project_id"], "requirements_analysis")
+    current_items = (
+        sink.read_items(analysis_record["artifact_id"]) if analysis_record is not None else []
+    )
+    current_keys = {entry["key"]: dict(entry) for entry in current_items}
+    current_lines = prompt_views(current_items) if current_items else "(empty)"
+
+    analysis: AnalystOutput = _invoke(
+        "analyst",
+        runnable_config,
+        AnalystOutput,
+        {
+            "output_language": _language(cfg),
+            "topics": topics,
+            "personas": prompt_views(personas),
+            "transcripts": str(transcript_rendered),
+            "current_analysis": current_lines,
+            "directive": _directive_for(state, runnable_config, "checkpoint_analysis"),
+        },
+    )
+
+    if analysis_record is not None:
+        analysis_ref = sink.update_artifact_content(
+            analysis_record["artifact_id"],
+            {
+                "key_findings": analysis.key_findings,
+                "open_questions": analysis.open_questions,
+            },
+        )
+        artifact_id: str = str(analysis_ref["artifact_id"])
+    else:
+        created = sink.create_artifact(
+            state["project_id"],
+            "requirements_analysis",
+            title="Requirements analysis",
+            content={
+                "key_findings": analysis.key_findings,
+                "open_questions": analysis.open_questions,
+            },
+        )
+        artifact_id = str(created["artifact_id"])
+
+    refs: dict[str, list[dict[str, Any]]] = {
+        "raw_requirements": [],
+        "analyzed_requirements": [],
+        "latent_needs": [],
+        "assumptions": [],
+        "ambiguities": [],
+        "conflicts": [],
+    }
+
+    def write(
+        kind: str,
+        draft: Any,
+        content: dict[str, Any],
+        slot: str,
+    ) -> dict[str, Any]:
+        item = dict(sink.add_item(artifact_id, kind, content, ref=draft.ref))
+        known[str(draft.ref)] = item
+        known[str(item["key"])] = item
+        refs[slot].append(item)
+        return item
+
+    for draft in analysis.raw_requirements:
+        item = write(
+            "raw_requirement",
+            draft,
+            draft.model_dump(
+                mode="json", exclude={"ref", "supersedes", "stated_by", "evidenced_by"}
+            ),
+            "raw_requirements",
+        )
+        _link_each(sink, item["item_id"], "stated_by", known, [draft.stated_by])
+        _evidence_links(sink, item["item_id"], known, draft.evidenced_by)
+        _supersede_each(sink, current_keys, item["item_id"], draft.supersedes)
+
+    for latent in analysis.latent_needs:
+        item = write(
+            "latent_need",
+            latent,
+            latent.model_dump(
+                mode="json", exclude={"ref", "supersedes", "evidenced_by", "involves"}
+            ),
+            "latent_needs",
+        )
+        _evidence_links(sink, item["item_id"], known, latent.evidenced_by)
+        _link_each(sink, item["item_id"], "involves", known, latent.involves)
+        _supersede_each(sink, current_keys, item["item_id"], latent.supersedes)
+
+    for analyzed_draft in analysis.analyzed_requirements:
+        item = write(
+            "analyzed_requirement",
+            analyzed_draft,
+            analyzed_draft.model_dump(
+                mode="json", exclude={"ref", "supersedes", "derived_from", "involves"}
+            ),
+            "analyzed_requirements",
+        )
+        _link_each(sink, item["item_id"], "derived_from", known, analyzed_draft.derived_from)
+        _link_each(sink, item["item_id"], "involves", known, analyzed_draft.involves)
+        _supersede_each(sink, current_keys, item["item_id"], analyzed_draft.supersedes)
+
+    for assumption in analysis.assumptions:
+        item = write(
+            "assumption",
+            assumption,
+            assumption.model_dump(mode="json", exclude={"ref", "supersedes", "concerns"}),
+            "assumptions",
+        )
+        _link_each(sink, item["item_id"], "concerns", known, assumption.concerns)
+        _supersede_each(sink, current_keys, item["item_id"], assumption.supersedes)
+
+    for ambiguity in analysis.ambiguity_issues:
+        content = ambiguity.model_dump(
+            mode="json", exclude={"ref", "supersedes", "concerns", "resolved_by"}
+        )
+        item = write("ambiguity_issue", ambiguity, content, "ambiguities")
+        _link_each(sink, item["item_id"], "concerns", known, ambiguity.concerns)
+        if ambiguity.resolved_by is not None:
+            _link_each(sink, item["item_id"], "resolved_by", known, [ambiguity.resolved_by])
+        _supersede_each(sink, current_keys, item["item_id"], ambiguity.supersedes)
+
+    for conflict in analysis.conflicts:
+        content = conflict.model_dump(
+            mode="json", exclude={"ref", "supersedes", "concerns", "involves", "resolved_by"}
+        )
+        item = write("conflict", conflict, content, "conflicts")
+        _link_each(sink, item["item_id"], "concerns", known, conflict.concerns)
+        _link_each(sink, item["item_id"], "involves", known, conflict.involves)
+        if conflict.resolved_by is not None:
+            _link_each(sink, item["item_id"], "resolved_by", known, [conflict.resolved_by])
+        _supersede_each(sink, current_keys, item["item_id"], conflict.supersedes)
+
+    unresolved = [
+        issue
+        for issue in analysis.conflicts
+        if issue.status == "open" and not issue.proposed_resolutions
+    ]
+    return {
+        **refs,
+        "response_analyst_status": "needs_interviews" if unresolved else "ok",
+        "current_stage": "analysis",
+    }
+
+
+@safe_node
+def rework_elicitation_node(
+    state: REState,
+    config: RunnableConfig | None = None,
+) -> dict[str, Any]:
+    """The control node behind `analyst --not OK-->` (mapping §2.1).
+
+    Gathers the open issues of the requirements analysis and records a rework
+    directive for the interviewer; every later round of the interview appends
+    to the same artifacts (the state gains the directive id only).
+    """
+    sink = _sink(config or {})
+    analysis = sink.read_artifact(state["project_id"], "requirements_analysis")
+    open_issues: list[dict[str, Any]] = []
+    if analysis is not None:
+        open_issues = [
+            dict(entry)
+            for entry in sink.read_items(analysis["artifact_id"])
+            if str(entry["content"].get("status")) == "open"
+        ]
+
+    if open_issues:
+        listing = "; ".join(
+            f"{entry['key']} ({entry['content'].get('description', '')})" for entry in open_issues
+        )
+        instruction = f"Interview the stakeholders again to settle the open issues: {listing}."
+    else:
+        instruction = "Interview the stakeholders again to gather more evidence."
+    directive_id = _directive_sink(config or {}).create_directive(
+        _run_id(config or {}),
+        "rework",
+        target_node="interviewer",
+        iteration=int(state["iteration_count"]),
+        instruction=instruction,
+        item_ids=[str(entry["item_id"]) for entry in open_issues],
+    )
+    return {"rework_directives": [directive_id], "current_stage": "rework_planning"}
+
+
+@safe_node
+def requirement_engineer_node(
+    state: REState,
+    config: RunnableConfig | None = None,
+) -> dict[str, Any]:
+    cfg = _run_config(state)
+    sink = _sink(config or {})
+    runnable_config = config or {}
+    known = _known_of(sink, state)
+
+    analysis_items: list[ItemRecord] = []
+    analysis_record = sink.read_artifact(state["project_id"], "requirements_analysis")
+    if analysis_record is not None:
+        analysis_items = sink.read_items(analysis_record["artifact_id"])
+    for entry in analysis_items:
+        known[entry["key"]] = {
+            "item_id": entry["item_id"],
+            "kind": entry["kind"],
+            "key": entry["key"],
+            "version": entry["version"],
+        }
+
+    spec_record = sink.read_artifact(state["project_id"], "requirement_specification")
+    current_items = sink.read_items(spec_record["artifact_id"]) if spec_record else []
+    current_keys = {entry["key"]: dict(entry) for entry in current_items}
+    current_lines = prompt_views(current_items) if current_items else "(empty)"
+
+    # Only verified analysis flows back into the law the way analyst.v1 demands.
+    verified_lines = prompt_views(analysis_items) if analysis_items else "(none)"
+
+    draft: EngineerOutput = _invoke(
+        "requirement_engineer",
+        runnable_config,
+        EngineerOutput,
+        {
+            "output_language": _language(cfg),
+            "analyzed_requirements": verified_lines,
+            "latent_needs": prompt_views(
+                [
+                    entry
+                    for entry in analysis_items
+                    if entry["kind"] == "latent_need"
+                    and entry["content"].get("disposition") == "open"
+                ]
+            )
+            or "(none)",
+            "assumptions": prompt_views(
+                [entry for entry in analysis_items if entry["kind"] == "assumption"]
+            )
+            or "(none)",
+            "conflicts": prompt_views(
+                [
+                    entry
+                    for entry in analysis_items
+                    if entry["kind"] == "conflict" and entry["content"].get("status") == "open"
+                ]
+            )
+            or "(none)",
+            "current_specification": current_lines,
+            "directive": _directive_for(state, runnable_config, "checkpoint_spec"),
+        },
+    )
+
+    if spec_record is not None:
+        ref = sink.update_artifact_content(
+            spec_record["artifact_id"],
+            {
+                "purpose": draft.purpose,
+                "scope": draft.scope,
+                "out_of_scope": draft.out_of_scope,
+                "definitions": [item.model_dump(mode="json") for item in draft.definitions],
+            },
+        )
+        artifact_id: str = str(ref["artifact_id"])
+    else:
+        created = sink.create_artifact(
+            state["project_id"],
+            "requirement_specification",
+            title="Requirement specification",
+            content={
+                "purpose": draft.purpose,
+                "scope": draft.scope,
+                "out_of_scope": draft.out_of_scope,
+                "definitions": [item.model_dump(mode="json") for item in draft.definitions],
+            },
+        )
+        artifact_id = str(created["artifact_id"])
+
+    written: list[dict[str, Any]] = []
+    placeholder: dict[str, dict[str, Any]] = {}
+    for spec_draft in draft.requirements:
+        content = spec_draft.model_dump(
+            mode="json",
+            exclude={"ref", "supersedes", "derived_from", "depends_on"},
+        )
+        item_ref = sink.add_item(artifact_id, "spec_requirement", content, ref=spec_draft.ref)
+        item = dict(item_ref)
+        known[str(spec_draft.ref)] = item
+        known[str(item["key"])] = item
+        placeholder[spec_draft.ref] = item
+        written.append(item)
+        _link_each(sink, str(item["item_id"]), "derived_from", known, spec_draft.derived_from)
+        _supersede_each(sink, current_keys, str(item["item_id"]), spec_draft.supersedes)
+    # depends_on links need every ref → key mapping: attach them after all writes.
+    for spec_draft, item in zip(draft.requirements, written, strict=True):
+        _link_each(sink, str(item["item_id"]), "depends_on", placeholder, spec_draft.depends_on)
+
+    return {"requirement_specification": written, "current_stage": "specification"}
+
+
+@safe_node
+def backlog_manager_node(
+    state: REState,
+    config: RunnableConfig | None = None,
+) -> dict[str, Any]:
+    cfg = _run_config(state)
+    sink = _sink(config or {})
+    runnable_config = config or {}
+    spec_record = sink.read_artifact(state["project_id"], "requirement_specification")
+    spec_items: list[ItemRecord] = []
+    if spec_record is not None:
+        spec_items = sink.read_items(spec_record["artifact_id"])
+    spec_lines = prompt_views(spec_items) if spec_items else "(none)"
+
+    backlog_record = sink.read_artifact(state["project_id"], "product_backlog")
+    current_items = sink.read_items(backlog_record["artifact_id"]) if backlog_record else []
+    current_keys = {entry["key"]: dict(entry) for entry in current_items}
+    current_lines = prompt_views(current_items) if current_items else "(empty)"
+
+    draft: BacklogOutput = _invoke(
+        "backlog_manager",
+        runnable_config,
+        BacklogOutput,
+        {
+            "output_language": _language(cfg),
+            "specification": spec_lines,
+            "current_backlog": current_lines,
+            "directive": _directive_for(state, runnable_config, "checkpoint_spec"),
+        },
+    )
+
+    known: Known = {
+        entry["key"]: {
+            "item_id": entry["item_id"],
+            "kind": entry["kind"],
+            "key": entry["key"],
+            "version": entry["version"],
+        }
+        for entry in spec_items
+    }
+
+    if backlog_record is not None:
+        ref = sink.update_artifact_content(
+            backlog_record["artifact_id"],
+            dict(backlog_record["content"])
+            | {
+                "product_goal": draft.product_goal,
+                "prioritization_notes": draft.prioritization_notes,
+            },
+        )
+        artifact_id: str = str(ref["artifact_id"])
+    else:
+        created = sink.create_artifact(
+            state["project_id"],
+            "product_backlog",
+            title="Product backlog",
+            content={
+                "product_goal": draft.product_goal,
+                "prioritization_notes": draft.prioritization_notes,
+            },
+        )
+        artifact_id = str(created["artifact_id"])
+
+    written: list[dict[str, Any]] = []
+    placeholder: dict[str, dict[str, Any]] = {}
+    for draft_item in draft.items:
+        content = draft_item.model_dump(
+            mode="json",
+            exclude={"ref", "supersedes", "derived_from", "depends_on"},
+        )
+        content["delivery_status"] = "todo"
+        item_ref = sink.add_item(artifact_id, "backlog_item", content, ref=draft_item.ref)
+        item = dict(item_ref)
+        known[str(draft_item.ref)] = item
+        known[str(item["key"])] = item
+        placeholder[draft_item.ref] = item
+        written.append(item)
+        _link_each(sink, str(item["item_id"]), "derived_from", known, draft_item.derived_from)
+        _supersede_each(sink, current_keys, str(item["item_id"]), draft_item.supersedes)
+    for draft_item, item in zip(draft.items, written, strict=True):
+        _link_each(sink, str(item["item_id"]), "depends_on", placeholder, draft_item.depends_on)
+
+    return {"product_backlog": written, "current_stage": "backlog"}
+
+
+@safe_node
+def validator_node(
+    state: REState,
+    config: RunnableConfig | None = None,
+) -> dict[str, Any]:
+    cfg = _run_config(state)
+    sink = _sink(config or {})
+    runnable_config = config or {}
+
+    spec_record = sink.read_artifact(state["project_id"], "requirement_specification")
+    backlog_record = sink.read_artifact(state["project_id"], "product_backlog")
+    spec_items = sink.read_items(spec_record["artifact_id"]) if spec_record else []
+    backlog_items = sink.read_items(backlog_record["artifact_id"]) if backlog_record else []
+    analysis_items: list[ItemRecord] = []
+    analysis_record = sink.read_artifact(state["project_id"], "requirements_analysis")
+    if analysis_record is not None:
+        analysis_items = sink.read_items(analysis_record["artifact_id"])
+    open_issues = [
+        entry
+        for entry in analysis_items
+        if entry["kind"] in {"ambiguity_issue", "conflict"}
+        and str(entry["content"].get("status")) == "open"
+    ]
+
+    iteration = int(state["iteration_count"]) + 1
+    draft: ValidatorOutput = _invoke(
+        "validator",
+        runnable_config,
+        ValidatorOutput,
+        {
+            "output_language": _language(cfg),
+            "specification": prompt_views(spec_items) if spec_items else "(none)",
+            "backlog": prompt_views(backlog_items) if backlog_items else "(none)",
+            "open_issues": prompt_views(open_issues) if open_issues else "(empty)",
+            "iteration": str(iteration),
+        },
+    )
+
+    known: Known = {
+        entry["key"]: {
+            "item_id": entry["item_id"],
+            "kind": entry["kind"],
+            "key": entry["key"],
+            "version": entry["version"],
+        }
+        for entry in spec_items + backlog_items
+    }
+    report = sink.create_artifact(
+        state["project_id"],
+        "validation_report",
+        title=f"Validation report, iteration {iteration}",
+        content={"iteration": iteration, "status": draft.status},
+        summary=f"{len(draft.issues)} issue(s)",
+    )
+    for issue in draft.issues:
+        content = issue.model_dump(mode="json", exclude={"ref", "flags"})
+        content["status"] = "open"  # the schema's readOnly lifecycle field (§2.3)
+        item_ref = sink.add_item(
+            report["artifact_id"],
+            "validation_issue",
+            content,
+            ref=issue.ref,
+        )
+        item = dict(item_ref)
+        _link_each(sink, str(item["item_id"]), "flags", known, issue.flags)
+
+    updates: dict[str, Any] = {
+        "validation_report": dict(report),
+        "iteration_count": iteration,
+    }
+    if draft.status == "pass":
+        updates["status"] = "succeeded"
+        updates["current_stage"] = "done"
+    elif iteration >= cfg.parameters.max_iterations:
+        # §2.1: the guard ends a still-failing run quietly, without failing it.
+        updates["status"] = "succeeded"
+        updates["current_stage"] = "done"
+    else:
+        updates["current_stage"] = "validation"
+    return {**updates, "response_validator_status": draft.status}
+
+
+# ---------------------------------------------------------------------------
+# The checkpoint factory (HITL per the v1 option keys: approval or feedback)
+
+
+def make_checkpoint(
+    node_id: str,
+    artifact_kind: str,
+) -> NodeFn:
+    """Build one human-review checkpoint node from the definition's node.
+
+    When the checkpoint is off (not in `run_config.review_checkpoints`, what
+    experiment runs use), or its default option approves, the artifacts under
+    review turn approved at once. Otherwise, LangGraph's `interrupt` pauses
+    the run with the checkpoint payload of the v1 API and resumes with the
+    human decision; the resolved option walks the conditional edge of the
+    same key, and `checkpoint_outcomes` carries it to the routing functions
+    (the API layer may also read the stored decision).
+    """
+    spec = definition_nodes()[node_id]
+    stage = str(spec.get("stage", ""))
+    options = list(spec.get("options", []))
+
+    def is_review_on(cfg: RunConfig) -> bool:
+        return node_id in cfg.review_checkpoints
+
+    @safe_node
+    def node(
+        state: REState,
+        config: RunnableConfig | None = None,
+    ) -> dict[str, Any]:
+        sink = _sink(config or {})
+        cfg = _run_config(state)
+        record = sink.read_artifact(state["project_id"], artifact_kind)
+        [
+            dict(record)
+            for record in [sink.read_artifact(state["project_id"], artifact_kind, subject_id=None)]
+            if record is not None
+        ]
+        # Spec exceptions — validation reports are per validator execution, we
+        # keep them out of the checkpoint payload; only spec/backlog show all.
+        subjectless_review = [dict(record)] if record is not None else []
+
+        prompt = str(spec.get("prompt", ""))
+        allow_edits = bool(spec.get("allow_edits", False))
+
+        if not is_review_on(cfg):
+            chosen_option = next(opt for opt in options if opt.get("is_default"))
+            option_key = str(chosen_option["key"])
+            feedback = "auto-approved (checkpoint not in review_checkpoints)"
+        else:
+            payload: dict[str, Any] = {
+                "interrupt_id": "pending",
+                "node": node_id,
+                "prompt": prompt,
+                "options": options,
+                "questions": [],
+                "allow_edits": allow_edits,
+                "review_artifacts": subjectless_review,
+            }
+            decision = interrupt(dict(payload))
+            option_key = str(decision["option"])
+            feedback = str(decision.get("feedback") or "")
+            for item in decision.get("modified_items", []):
+                target = sink.read_item(str(item["item_id"]))
+                patch = dict(target["content"])
+                patch.update(item.get("content", {}))
+                sink.update_item_content(target["item_id"], patch)
+
+        outcome = {"node": node_id, "option": option_key, "feedback": feedback}
+        chosen = next(opt for opt in options if str(opt["key"]) == option_key)
+        if bool(chosen.get("approves")) and record is not None:
+            sink.approve_artifact(record["artifact_id"])
+        return {"checkpoint_outcomes": [outcome], "current_stage": stage}
+
+    node.__name__ = node_id  # safe_node logs the wrapper under the node id
+    return node
+
+
+checkpoint_personas = make_checkpoint("checkpoint_personas", "persona_catalog")
+checkpoint_analysis = make_checkpoint("checkpoint_analysis", "requirements_analysis")
+checkpoint_spec = make_checkpoint("checkpoint_spec", "requirement_specification")
+
+
+# The gateway in front of the models expires single completions that take too
+# long (its proxy answers 504 at ~100s). Late interview turns resend the
+# transcript each turn, so prompts (and their generation time) grow linearly;
+# keeping only this tail bounds them: the conversational nodes answer coherently
+# from the recent lines, and no late turn can outgrow the ceiling.
+TRANSCRIPT_TAIL = 8
+
+
+# ---------------------------------------------------------------------------
+# The intent router and the state bookkeeping of later runs
+
+
+@safe_node
+def intent_router_node(
+    state: REState,
+    config: RunnableConfig | None = None,
+) -> dict[str, Any]:
+    cfg = _run_config(state)
+    sink = _sink(config or {})
+    runnable_config = config or {}
+    pending = [dict(entry) for entry in _configurable(runnable_config).get("pending_messages", [])]
+    if not pending:
+        msg = (
+            "intent_router reached with no pending message; the executor "
+            "must route first runs at the planner"
+        )
+        raise ValueError(msg)
+    messages = "\n".join(
+        f"{index}. {entry['content']}" for index, entry in enumerate(pending, start=1)
+    )
+    spec_record = sink.read_artifact(state["project_id"], "requirement_specification")
+    spec_items = sink.read_items(spec_record["artifact_id"]) if spec_record is not None else []
+    backlog_record = sink.read_artifact(state["project_id"], "product_backlog")
+    backlog_items = sink.read_items(backlog_record["artifact_id"]) if backlog_record else []
+    listed_lines_spec = (
+        "\n".join(f"{entry['key']} {entry['content'].get('statement', '')}" for entry in spec_items)
+        or "(none yet)"
+    )
+    listed_lines_backlog = (
+        "\n".join(f"{entry['key']} {entry['content'].get('title', '')}" for entry in backlog_items)
+        or "(none yet)"
+    )
+
+    directive: IntentDirectiveOutput = _invoke(
+        "intent_router",
+        runnable_config,
+        IntentDirectiveOutput,
+        {
+            "output_language": _language(cfg),
+            "messages": messages,
+            "specification": listed_lines_spec,
+            "backlog": listed_lines_backlog,
+        },
+    )
+    directive_id = _directive_sink(runnable_config).create_directive(
+        _run_id(runnable_config),
+        "intent",
+        target_node=directive.target_node,
+        iteration=int(state["iteration_count"]),
+        instruction=directive.instruction,
+        item_ids=[],
+    )
+    return {
+        "rework_directives": [directive_id],
+        "current_stage": "intent_routing",
+        "routed_target": directive.target_node,
+    }

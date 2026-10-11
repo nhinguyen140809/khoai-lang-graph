@@ -1,0 +1,57 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "$id": "items/assumption/v1",
+  "title": "Assumption",
+  "description": "Something taken as true without confirmation.",
+  "x-level": "item",
+  "x-kind": "assumption",
+  "x-schema-version": 1,
+  "x-key-prefix": "ASM",
+  "x-ui-display": "table",
+  "x-ui-title-field": "statement",
+  "x-ui-list-fields": [
+    "statement",
+    "validation_status"
+  ],
+  "x-ui-field-order": [
+    "statement",
+    "reasoning",
+    "impact_if_wrong",
+    "validation_status"
+  ],
+  "type": "object",
+  "additionalProperties": false,
+  "properties": {
+    "statement": {
+      "type": "string",
+      "description": "What is assumed.",
+      "x-ui-widget": "textarea"
+    },
+    "reasoning": {
+      "type": "string",
+      "description": "Why it was assumed.",
+      "x-ui-widget": "textarea"
+    },
+    "impact_if_wrong": {
+      "type": "string",
+      "description": "What changes if the assumption does not hold.",
+      "x-ui-widget": "textarea"
+    },
+    "validation_status": {
+      "type": "string",
+      "enum": [
+        "unverified",
+        "confirmed",
+        "invalidated"
+      ],
+      "description": "Whether the assumption was checked.",
+      "x-ui-widget": "select"
+    }
+  },
+  "required": [
+    "statement",
+    "reasoning",
+    "impact_if_wrong",
+    "validation_status"
+  ]
+}

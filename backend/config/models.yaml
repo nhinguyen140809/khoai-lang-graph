@@ -1,0 +1,36 @@
+# Model profiles of the backend (README.md: Model Configuration).
+#
+# Agents ask the llm layer for a role, never for a model; the resolver merges
+# this file with environment overrides (LLM__DEFAULT_MODEL, LLM__ROLES__<ROLE>),
+# user settings and run requests, in that order (later wins).
+#
+# The default targets an OpenAI-compatible gateway (BioTuring) via
+# OPENAI_BASE_URL + OPENAI_API_KEY; list a different `provider:model` per role
+# to split cheap and strong models.
+
+defaults:
+  model: openai:glm-5.2
+  temperature: 0.2
+  # Agent conversations span dozens of gateway calls; transient 5xx
+  # timeouts retry instead of failing the whole run.
+  max_retries: 4
+
+# A role not listed uses defaults.model (glm-5.2, deep reasoning). The two
+# conversational roles answer in-character turn by turn; a thinking model
+# there can exceed the gateway's ~90s upstream ceiling (seen as 504s in
+# real runs), so they take the fast No-Think variant of the same family.
+roles:
+  interviewer: openai:glm-5.2-No-Think
+  persona_agent: openai:glm-5.2-No-Think
+
+# Models a user may pick in the UI (GET /api/v1/models serves this catalog).
+allowlist:
+  - id: openai:glm-5.2
+    label: GLM 5.2 (gateway)
+    capabilities: [tool_calling, structured_output, streaming]
+  - id: anthropic:claude-sonnet-5
+    label: Claude Sonnet 5
+    capabilities: [tool_calling, structured_output, streaming, vision]
+  - id: openai:gpt-4.1-mini
+    label: GPT-4.1 mini
+    capabilities: [tool_calling, structured_output, streaming]
