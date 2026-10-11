@@ -7,7 +7,7 @@ import { matrixItemSchema, traceLinkSchema } from './traceability.types'
 /** The trace links of the project, both ends resolved. */
 export function listProjectLinks(projectId: string) {
   return fetchAllPages(
-    `/api/v1/projects/${encodeURIComponent(projectId)}/links`,
+    `/api/v1/projects/${encodeURIComponent(projectId)}/trace-links`,
     traceLinkSchema,
     'load the trace links',
   )

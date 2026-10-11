@@ -7,7 +7,7 @@ import { notFound } from './problem.utils'
 import { findProject } from './projects.handlers'
 
 export const linkHandlers = [
-  http.get('/api/v1/projects/:projectId/links', async ({ params, request }) => {
+  http.get('/api/v1/projects/:projectId/trace-links', async ({ params, request }) => {
     const scenario = mockScenario('links')
     const answered = await answerScenario(scenario)
     if (answered !== null) return answered

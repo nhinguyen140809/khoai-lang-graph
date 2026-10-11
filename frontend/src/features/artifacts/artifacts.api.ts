@@ -39,7 +39,7 @@ export function getArtifactItem(itemId: string): Promise<TreeItem> {
 /** Convenience for components that need only the trace links of a project. */
 export function listProjectLinks(projectId: string): Promise<TraceLink[]> {
   return fetchAllPages(
-    `/api/v1/projects/${encodeURIComponent(projectId)}/links`,
+    `/api/v1/projects/${encodeURIComponent(projectId)}/trace-links`,
     traceLinkSchema,
     'load the trace links',
   )
