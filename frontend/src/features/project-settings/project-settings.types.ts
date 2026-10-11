@@ -1,5 +1,7 @@
 import { z } from 'zod'
 
+import { runConfigSchema } from '@/components/run-config'
+
 // Temporary hand-written schemas for what the settings of a project read and write.
 // TODO: replace with the types generated into src/api/generated/ once they exist.
 
@@ -9,15 +11,6 @@ export const outputLanguageLabels = { en: 'English', vi: 'Vietnamese' } as const
   (typeof outputLanguages)[number],
   string
 >
-
-export const runConfigSchema = z.object({
-  review_checkpoints: z.array(z.string()).nullable(),
-  max_steps: z.number().int().nullable(),
-  max_cost_usd: z.number().nullable(),
-  parameters: z.record(z.string(), z.unknown()).nullable(),
-})
-
-export type RunConfig = z.infer<typeof runConfigSchema>
 
 export const settingsProjectSchema = z.looseObject({
   id: z.string(),
@@ -38,29 +31,6 @@ export type ProjectPatch = Partial<
     'name' | 'description' | 'status' | 'output_language' | 'run_config' | 'model_overrides'
   >
 >
-
-/** One property of the schema of the run parameters. */
-export const parameterSchemaSchema = z.looseObject({
-  type: z.string().optional(),
-  minimum: z.number().optional(),
-  maximum: z.number().optional(),
-  default: z.unknown().optional(),
-  description: z.string().optional(),
-})
-
-export type ParameterSchema = z.infer<typeof parameterSchemaSchema>
-
-/** The parts of the workflow definition that the settings of a project need. */
-export const settingsDefinitionSchema = z.looseObject({
-  version: z.number().int(),
-  nodes: z.array(z.looseObject({ id: z.string(), kind: z.string(), label: z.string() })),
-  agent_roles: z.array(z.object({ key: z.string(), label: z.string(), description: z.string() })),
-  run_parameters_schema: z.looseObject({
-    properties: z.record(z.string(), parameterSchemaSchema),
-  }),
-})
-
-export type SettingsDefinition = z.infer<typeof settingsDefinitionSchema>
 
 export const modelEntrySchema = z.looseObject({
   model_id: z.string(),

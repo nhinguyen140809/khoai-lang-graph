@@ -1,9 +1,9 @@
+import { runConfigDefinitionSchema } from '@/components/run-config'
 import { apiRequest, fetchAllPages } from '@/lib/api-fetch.utils'
 
 import {
   modelEntrySchema,
   type ProjectPatch,
-  settingsDefinitionSchema,
   settingsProjectSchema,
 } from './project-settings.types'
 
@@ -27,7 +27,7 @@ export function patchProject(projectId: string, patch: ProjectPatch) {
 
 /** The current version of the workflow definition. */
 export function getCurrentDefinition() {
-  return apiRequest('/api/v1/workflow/definition', settingsDefinitionSchema, {
+  return apiRequest('/api/v1/workflow/definition', runConfigDefinitionSchema, {
     action: 'load the workflow definition',
   })
 }

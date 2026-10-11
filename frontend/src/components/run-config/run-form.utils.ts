@@ -1,4 +1,4 @@
-import type { ParameterSchema, RunConfig, SettingsDefinition } from './project-settings.types'
+import type { ParameterSchema, RunConfig, RunConfigDefinition } from './run-config.types'
 
 export interface ParameterField {
   key: string
@@ -23,7 +23,7 @@ function kindOf(schema: ParameterSchema): ParameterField['kind'] {
 }
 
 /** The fields of the run parameters, in the order that the schema lists them. */
-export function parameterFields(definition: SettingsDefinition): ParameterField[] {
+export function parameterFields(definition: RunConfigDefinition): ParameterField[] {
   return Object.entries(definition.run_parameters_schema.properties).map(([key, schema]) => ({
     key,
     label: humanize(key),

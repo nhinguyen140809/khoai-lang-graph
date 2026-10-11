@@ -2,17 +2,18 @@
 
 import { useState } from 'react'
 
+import type { RunConfigDefinition } from '@/components/run-config'
 import { Field, FieldDescription, FieldError, FieldGroup, FieldLabel } from '@/components/ui/field'
 import { NativeSelect, NativeSelectOption } from '@/components/ui/native-select'
 
 import { formErrorMessage, serverFieldErrors } from '../form-errors.utils'
 import { useUpdateProject } from '../hooks/useUpdateProject'
-import type { ModelEntry, SettingsDefinition, SettingsProject } from '../project-settings.types'
+import type { ModelEntry, SettingsProject } from '../project-settings.types'
 import { SaveBar } from './SaveBar'
 
 interface ModelsFormProps {
   project: SettingsProject
-  definition: SettingsDefinition
+  definition: RunConfigDefinition
   models: ModelEntry[]
 }
 

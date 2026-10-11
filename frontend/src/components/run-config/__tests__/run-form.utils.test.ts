@@ -1,9 +1,9 @@
 import { describe, expect, it } from 'vitest'
 
-import type { SettingsDefinition } from '../project-settings.types'
+import type { RunConfigDefinition } from '../run-config.types'
 import { parameterFields, runFormOf, toRunConfig, validateRunForm } from '../run-form.utils'
 
-const definition: SettingsDefinition = {
+const definition: RunConfigDefinition = {
   version: 1,
   nodes: [],
   agent_roles: [],
