@@ -7,6 +7,7 @@ import { interruptHandlers } from './interrupts.handlers'
 import { meHandlers } from './me.handlers'
 import { messageHandlers } from './messages.handlers'
 import { keepMockDataInBrowser, resetMockData } from './mock-db.utils'
+import { modelHandlers } from './models.handlers'
 import { projectHandlers } from './projects.handlers'
 import { streamHandlers } from './run-stream.handlers'
 import { runHandlers } from './runs.handlers'
@@ -21,6 +22,7 @@ export const worker = setupWorker(
   ...authHandlers,
   ...artifactKindHandlers,
   ...meHandlers,
+  ...modelHandlers,
   ...projectHandlers,
   ...artifactHandlers,
   ...traceabilityHandlers,

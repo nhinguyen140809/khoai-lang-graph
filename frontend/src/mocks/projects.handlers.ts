@@ -2,11 +2,13 @@ import { http, HttpResponse } from 'msw'
 
 import type { CreateProjectBody, Project } from '@/features/projects'
 
+import definition from './data/workflow/requirements_engineering.v1.json'
 import { bulkProjectCount } from './extra-project-specs.constants'
 import { bulkProjects, extraProjects } from './extra-projects.fixtures'
 import { mockRecord } from './mock-db.utils'
 import { createdId, USER_ID } from './mock-ids.constants'
 import { answerScenario, mockScenario, pageParam } from './mock-scenario.utils'
+import { mockModels } from './models.fixtures'
 import { paginate } from './pagination.utils'
 import { notFound, problem } from './problem.utils'
 import { mockProjects } from './projects.fixtures'
@@ -14,6 +16,9 @@ import { allRuns } from './runs.handlers'
 
 // Projects created with POST /projects.
 const createdProjects = mockRecord<Project[]>('created-projects', () => [])
+
+// What PATCH /projects/{project_id} changed, by project.
+const projectEdits = mockRecord<Record<string, Partial<Project>>>('project-edits', () => ({}))
 
 // The unfinished runs of a project, counted by status, as the API derives them.
 function withRunCounts(project: Project): Project {
@@ -29,7 +34,10 @@ function withRunCounts(project: Project): Project {
 // With `?mock-projects=many`, the list is long: the projects of the fixtures, and many more.
 function allProjects(): Project[] {
   const many = pageParam('mock-projects') === 'many' ? bulkProjects(bulkProjectCount) : []
-  return [...createdProjects.get(), ...mockProjects, ...extraProjects(), ...many].map(withRunCounts)
+  const edits = projectEdits.get()
+  return [...createdProjects.get(), ...mockProjects, ...extraProjects(), ...many]
+    .map((project) => ({ ...project, ...edits[project.id] }))
+    .map(withRunCounts)
 }
 
 /** A project of the fixtures or one created since. */
@@ -39,6 +47,120 @@ export function findProject(projectId: string): Project | undefined {
 
 function isCreateProjectBody(body: unknown): body is Partial<CreateProjectBody> {
   return typeof body === 'object' && body !== null
+}
+
+interface FieldProblem {
+  field: string
+  message: string
+}
+
+interface Schema {
+  type?: string
+  minimum?: number
+  maximum?: number
+  default?: unknown
+}
+
+const parameterSchemas = definition.run_parameters_schema.properties as Record<string, Schema>
+const checkpointIds = definition.nodes
+  .filter(({ kind }) => kind === 'checkpoint')
+  .map(({ id }) => id)
+const roleKeys = definition.agent_roles.map(({ key }) => key)
+
+function isRecord(value: unknown): value is Record<string, unknown> {
+  return typeof value === 'object' && value !== null && !Array.isArray(value)
+}
+
+function runConfigProblems(config: Record<string, unknown>): FieldProblem[] {
+  const problems: FieldProblem[] = []
+  const at = (name: string, message: string) =>
+    problems.push({ field: `run_config.${name}`, message })
+  const checkpoints = config.review_checkpoints
+  if (checkpoints !== null && checkpoints !== undefined) {
+    if (
+      !Array.isArray(checkpoints) ||
+      checkpoints.some((id) => !checkpointIds.includes(String(id)))
+    ) {
+      at('review_checkpoints', 'Choose checkpoints of the workflow.')
+    }
+  }
+  if (config.max_steps !== null && config.max_steps !== undefined) {
+    if (!Number.isInteger(config.max_steps) || Number(config.max_steps) < 1) {
+      at('max_steps', 'Enter a whole number, 1 or more.')
+    }
+  }
+  if (config.max_cost_usd !== null && config.max_cost_usd !== undefined) {
+    if (typeof config.max_cost_usd !== 'number' || config.max_cost_usd <= 0) {
+      at('max_cost_usd', 'Enter an amount above 0.')
+    }
+  }
+  const parameters = config.parameters
+  if (parameters !== null && parameters !== undefined) {
+    if (!isRecord(parameters)) {
+      at('parameters', 'Parameters are an object.')
+      return problems
+    }
+    for (const [name, value] of Object.entries(parameters)) {
+      const schema = parameterSchemas[name]
+      if (schema === undefined) {
+        at(`parameters.${name}`, 'The workflow has no such parameter.')
+      } else if (
+        typeof value !== 'number' ||
+        (schema.type === 'integer' && !Number.isInteger(value))
+      ) {
+        at(`parameters.${name}`, 'Enter a whole number.')
+      } else if (value < (schema.minimum ?? -Infinity) || value > (schema.maximum ?? Infinity)) {
+        at(
+          `parameters.${name}`,
+          `Enter a value from ${String(schema.minimum)} to ${String(schema.maximum)}.`,
+        )
+      }
+    }
+    const valueOf = (name: string) => Number(parameters[name] ?? parameterSchemas[name]?.default)
+    if (problems.length === 0 && valueOf('max_personas') < valueOf('target_personas_num')) {
+      at('parameters.max_personas', 'Must not be lower than target_personas_num.')
+    }
+  }
+  return problems
+}
+
+function projectPatchProblems(body: Record<string, unknown>): FieldProblem[] {
+  const problems: FieldProblem[] = []
+  if ('name' in body && (typeof body.name !== 'string' || body.name.trim() === '')) {
+    problems.push({ field: 'name', message: 'Enter a name.' })
+  }
+  if ('output_language' in body && body.output_language !== 'en' && body.output_language !== 'vi') {
+    problems.push({ field: 'output_language', message: 'Choose a language.' })
+  }
+  if ('status' in body && body.status !== 'active' && body.status !== 'archived') {
+    problems.push({ field: 'status', message: 'Choose active or archived.' })
+  }
+  if ('run_config' in body) {
+    if (isRecord(body.run_config)) problems.push(...runConfigProblems(body.run_config))
+    else problems.push({ field: 'run_config', message: 'The run settings are an object.' })
+  }
+  if ('model_overrides' in body) {
+    const overrides = body.model_overrides
+    if (!isRecord(overrides)) {
+      problems.push({ field: 'model_overrides', message: 'The models are an object.' })
+    } else {
+      for (const [role, model] of Object.entries(overrides)) {
+        const entry = mockModels.find(({ model_id }) => model_id === model)
+        if (!roleKeys.includes(role)) {
+          problems.push({
+            field: `model_overrides.${role}`,
+            message: 'The workflow has no such role.',
+          })
+        } else if (!entry?.allowed_roles.includes(role)) {
+          problems.push({
+            field: `model_overrides.${role}`,
+            message: 'This model cannot serve this role.',
+          })
+        }
+      }
+    }
+  }
+  return problems
 }
 
 export const projectHandlers = [
@@ -98,5 +220,35 @@ export const projectHandlers = [
       status: 201,
       headers: { Location: `/api/v1/projects/${project.id}` },
     })
+  }),
+
+  http.patch('/api/v1/projects/:projectId', async ({ params, request }) => {
+    const projectId = String(params.projectId)
+    const project = findProject(projectId)
+    if (project === undefined) return notFound('The project')
+    const body: unknown = await request.json()
+    if (!isRecord(body))
+      return problem(422, 'validation_failed', 'Validation failed', 'The body is an object.')
+    const problems = projectPatchProblems(body)
+    if (problems.length > 0) {
+      return problem(422, 'validation_failed', 'Validation failed', null, problems)
+    }
+    const fields: Partial<Project> = {}
+    for (const name of [
+      'name',
+      'description',
+      'status',
+      'output_language',
+      'run_config',
+      'model_overrides',
+    ] as const) {
+      if (name in body) Object.assign(fields, { [name]: body[name] })
+    }
+    const edits = projectEdits.get()
+    projectEdits.set({
+      ...edits,
+      [projectId]: { ...edits[projectId], ...fields, updated_at: new Date().toISOString() },
+    })
+    return HttpResponse.json(findProject(projectId))
   }),
 ]
