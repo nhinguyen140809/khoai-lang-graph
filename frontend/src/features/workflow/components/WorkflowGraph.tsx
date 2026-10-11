@@ -193,7 +193,8 @@ export function WorkflowGraph({
         onNodeSelect(node.id)
       }}
       fitView
-      className="h-[420px] w-full"
+      fitViewOptions={{ padding: 0.08, maxZoom: 0.9 }}
+      className="h-[560px] w-full"
     >
       <Background variant={BackgroundVariant.Dots} gap={24} />
       <Controls showInteractive={false} />

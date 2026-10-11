@@ -31,9 +31,15 @@ const exportTemplateSchema = z.object({
   formats: z.array(z.string()),
 })
 
+export const workflowDefinitionStageSchema = z.object({
+  key: z.string(),
+  label: z.string().optional(),
+})
+
 export const workflowDefinitionSchema = z.object({
   name: z.string(),
   version: z.number().int(),
+  stages: z.array(workflowDefinitionStageSchema).optional(),
   nodes: z.array(workflowDefinitionNodeSchema),
   edges: z.array(workflowDefinitionEdgeSchema),
   export_templates: z.array(exportTemplateSchema).optional(),

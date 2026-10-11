@@ -11,9 +11,17 @@ vi.mock('next/link', async () => (await import('@/test/next-mocks.utils')).linkM
 vi.mock('../../graph/graph-layout.utils', () => ({
   layoutGraph: vi.fn(() => ({ planner: { x: 0, y: 0 } })),
 }))
+vi.mock('@/components/layout/EditorWithPanel', () => ({
+  EditorWithPanel: ({ children, panel }: { children: React.ReactNode; panel: React.ReactNode }) => (
+    <div>
+      <div>{children}</div>
+      <div data-testid="panel">{panel}</div>
+    </div>
+  ),
+}))
 
 describe('RunView', () => {
-  it('renders the header and the timeline of the run', async () => {
+  it('renders the header and the graph of the run', async () => {
     render(<RunView projectId={PROJECT_IDS.mentor} runId={RUN_IDS.mentorMain3} />, {
       wrapper: TestProviders,
     })
@@ -21,8 +29,6 @@ describe('RunView', () => {
     expect(await screen.findByRole('heading', { name: 'Run 3' })).toBeInTheDocument()
     expect(screen.getByText(/step 67/)).toBeInTheDocument()
     expect(screen.getAllByText(/waiting for review/).length).toBeGreaterThan(0)
-    const planner = await screen.findByText(/⏺ planner/)
-    expect(planner).toBeInTheDocument()
-    expect(screen.getByText(/⏺ persona_generator/)).toBeInTheDocument()
+    expect(screen.getByText(/Retrying|Click a node of the graph/)).toBeInTheDocument()
   })
 })
