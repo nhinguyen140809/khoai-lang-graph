@@ -114,6 +114,17 @@ The order follows the imports of section 2 and avoids dead links:
 4. `search` after `artifacts` (read): a result opens an item page.
 5. Settings last: they reuse the model and workflow definition handlers and the run configuration fields of each other.
 
+### D7. Search in the command palette
+
+The box of the top bar reads "Search or run a command", and section 1 of `docs/ui/skeletons.md` says it searches items and runs commands. The palette lists only the commands (show a side panel, open or create a project, the side panel and the theme) and filters them by name; items are searched in the Search side panel only.
+
+| Option | Evaluation |
+|---|---|
+| a. Search while typing: inside a project, the palette asks `GET /projects/{id}/items` for the text and shows the results in a group "Items", next to the commands whose name matches | One box for everything, as in Linear or GitHub, with no syntax to learn. Commands and items share one list |
+| b. Modes by prefix, as in VS Code: plain text searches items, `>` runs commands | Commands and items stay apart when the commands grow, but the user has to know the prefix |
+
+Decision: a (2026-10-12). It is built with P10, which brings the search of the items.
+
 ## 4. PR sequence
 
 Branch names are `<type>/fe/<name>`: `<type>` is the Conventional Commits type of the change (`feat` for a new feature, `chore` for tooling and CI, `docs` for documentation), and `fe` shows the scope. No issue number until issues exist.
@@ -279,6 +290,14 @@ Suggested reading order: `event-log.utils.ts` and `run-events.reducer.ts` (the m
 
 Endpoint: `GET /projects/{id}/items` with the query. Files: `src/features/search/` (api, types, utils, `useItemSearch`, `SearchPanel`, tests), `search/page.tsx`, `tests/e2e/search.spec.ts`, `search-frame.config.tsx` and the Search entry of `layout.tsx`.
 
+Search in the command palette (decision D7). Not built yet: build it on `feat/fe/mock` before the cut.
+
+- `command-palette.store.ts` keeps the text typed (`query`); `CommandPalette` reads it into its input and clears it when the palette closes. These are hunks of P3 files.
+- The search feature adds `ItemCommands`, passed by the project `layout.tsx` in `commands`. From `MIN_QUERY_LENGTH` (2) characters, it calls `useItemSearch` with the deferred text, so the cache is shared with the side panel, and lists the first results in a group "Items", each with its key and its title. The server already matched them, so they stay in the list whatever the filter of the palette says (`forceMount` of `CommandItem`). A line shows while the search runs and when it fails.
+- Enter on an item closes the palette and opens the page of the item, which opens its tab.
+- The description of the palette names items too.
+- Tests: a unit test of `ItemCommands`, and a case of `search.spec.ts`: Ctrl+K, type the key of an item, Enter opens its tab.
+
 ### P11. Edit an item
 
 Endpoint: `PATCH /items/{id}`. Files: `ItemForm.tsx`, `FieldInput.tsx`, `hooks/useItemMutations.ts` (edit part), the edit hunks of `ItemPage.tsx`, `artifacts.api.ts`, `artifacts.handlers.ts`, the edit part of `artifacts.spec.ts`.
@@ -337,6 +356,7 @@ These cannot be copied whole with `git checkout feat/fe/mock -- <path>`: the bra
 | `frontend/README.md`, `frontend/src/mocks/README.md` | P3 to P18 | The tokens line (P3); the mock scenario addresses of a screen when the screen is built |
 | `src/app/(project)/projects/[projectId]/layout.tsx` | P6, P7, P8, P10, P13, P14, P15, P16, P17, P18 | P6: the frame with no activity. Then one activity and its tab icons per feature (D3), the status bar run (P7), `ThemeSync` (P18) |
 | `src/mocks/msw-browser.setup.ts`, `msw-server.setup.ts` | P4 to P18 | One import and one entry per handler group |
+| `src/components/layout/CommandPalette.tsx`, `command-palette.store.ts` | P3, P10 | P3: the palette. P10: the text typed, kept in the store for the item search (D7) |
 | `src/test/vitest.setup.ts` | P3, P4, first test with a select | P3: browser stubs. P4: `resetMockData`. The pointer capture stub with the first test that opens a select |
 | `tests/e2e/frame.spec.ts` | P9, P10, P15 | P9: Ctrl+K and the run on the status bar. P10: Ctrl+B. P15: the activity bar and the tabs with the review |
 | `src/features/console/components/Console.tsx`, `commands.constants.ts` | P9, P13, P14, P17 | P9: the base commands. Later: `/export`, the review link, `/run-settings` |
