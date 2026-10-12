@@ -23,19 +23,26 @@ interface TopBarProps {
 export function TopBar({ crumb }: TopBarProps) {
   return (
     <header className="flex h-10 shrink-0 items-center gap-3 bg-sidebar px-2 text-xs text-sidebar-foreground">
-      <Breadcrumb className="min-w-0 flex-1">
-        <BreadcrumbList className="flex-nowrap">
-          <BreadcrumbItem className="shrink-0">
-            <HomeLink />
-          </BreadcrumbItem>
-          <BreadcrumbSeparator>/</BreadcrumbSeparator>
-          <BreadcrumbItem className="min-w-0 font-medium text-foreground">{crumb}</BreadcrumbItem>
-        </BreadcrumbList>
-      </Breadcrumb>
+      <Trail crumb={crumb} />
       <SearchButton />
       {/* As wide as the trail, so that the search box stays in the middle of the bar. */}
       <div aria-hidden className="flex-1" />
     </header>
+  )
+}
+
+/** Where the user is: "khoai /", then the crumb. It takes the free width at the left of the bar. */
+function Trail({ crumb }: TopBarProps) {
+  return (
+    <Breadcrumb className="min-w-0 flex-1">
+      <BreadcrumbList className="flex-nowrap">
+        <BreadcrumbItem className="shrink-0">
+          <HomeLink />
+        </BreadcrumbItem>
+        <BreadcrumbSeparator>/</BreadcrumbSeparator>
+        <BreadcrumbItem className="min-w-0 font-medium text-foreground">{crumb}</BreadcrumbItem>
+      </BreadcrumbList>
+    </Breadcrumb>
   )
 }
 

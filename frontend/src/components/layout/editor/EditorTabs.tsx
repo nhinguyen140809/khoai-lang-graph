@@ -6,8 +6,6 @@ import Link from 'next/link'
 import { usePathname, useRouter } from 'next/navigation'
 import { useEffect } from 'react'
 
-import { cn } from '@/lib/utils'
-
 import { useActivities } from '../activity-bar/ActivitiesContext'
 import { activityOfHref } from '../activity-bar/activity.utils'
 import { type EditorTab, neighborTab, useEditorTabsStore } from './editor-tabs.store'
@@ -33,7 +31,6 @@ export function EditorTabs({ group, rootHref }: EditorTabsProps) {
   const tabs = useEditorTabsStore((state) => state.groups[group]) ?? noTabs
   const closeTab = useEditorTabsStore((state) => state.closeTab)
   const setLastHref = useEditorTabsStore((state) => state.setLastHref)
-  const { activities, tabIcons } = useActivities()
 
   useEffect(() => {
     setLastHref(group, pathname)
@@ -53,56 +50,85 @@ export function EditorTabs({ group, rootHref }: EditorTabsProps) {
       className="flex h-9 shrink-0 scrollbar-none overflow-x-auto border-b bg-sidebar"
     >
       <ul className="flex">
-        {tabs.map((tab) => {
-          const active = tab.href === pathname
-          const named = tab.icon === undefined ? undefined : tabIcons[tab.icon]
-          const icon = named ?? activityOfHref(activities, tab.href)?.icon ?? <FileIcon />
-          return (
-            <li
-              key={tab.id}
-              className={cn(
-                'group/tab relative flex items-center border-r text-xs',
-                active
-                  ? 'bg-background text-foreground before:absolute before:inset-x-0 before:top-0 before:h-px before:bg-primary'
-                  : 'text-muted-foreground hover:bg-sidebar-accent/60 hover:text-foreground',
-              )}
-            >
-              <Link
-                href={tab.href as Route}
-                aria-current={active ? 'page' : undefined}
-                title={tab.title}
-                onAuxClick={(event) => {
-                  if (event.button !== 1) return
-                  event.preventDefault()
-                  close(tab)
-                }}
-                className="flex h-full max-w-56 items-center gap-1.5 pr-1 pl-3 outline-none focus-visible:ring-2 focus-visible:ring-ring/50 focus-visible:ring-inset"
-              >
-                <span
-                  aria-hidden
-                  className={cn('flex shrink-0 [&_svg]:size-3.5', active && 'text-primary')}
-                >
-                  {icon}
-                </span>
-                <span className="truncate">{tab.title}</span>
-              </Link>
-              <button
-                type="button"
-                aria-label={`Close ${tab.title}`}
-                onClick={() => {
-                  close(tab)
-                }}
-                className={cn(
-                  'mr-1 flex size-5 items-center justify-center rounded-sm outline-none group-hover/tab:opacity-100 hover:bg-muted focus-visible:opacity-100 focus-visible:ring-2 focus-visible:ring-ring/50',
-                  !active && 'opacity-0',
-                )}
-              >
-                <XIcon aria-hidden className="size-3" />
-              </button>
-            </li>
-          )
-        })}
+        {tabs.map((tab) => (
+          <Tab
+            key={tab.id}
+            tab={tab}
+            active={tab.href === pathname}
+            onClose={() => {
+              close(tab)
+            }}
+          />
+        ))}
       </ul>
     </nav>
+  )
+}
+
+interface TabProps {
+  tab: EditorTab
+  /** The tab of the page on screen. */
+  active: boolean
+  onClose: () => void
+}
+
+/** A link to the page of the tab, and a close button; a middle click closes the tab too. */
+function Tab({ tab, active, onClose }: TabProps) {
+  return (
+    <li
+      data-active={active}
+      className="group/tab relative flex items-center border-r text-xs data-[active=false]:text-muted-foreground data-[active=false]:hover:bg-sidebar-accent/60 data-[active=false]:hover:text-foreground data-[active=true]:bg-background data-[active=true]:text-foreground data-[active=true]:before:absolute data-[active=true]:before:inset-x-0 data-[active=true]:before:top-0 data-[active=true]:before:h-px data-[active=true]:before:bg-primary"
+    >
+      <Link
+        href={tab.href as Route}
+        aria-current={active ? 'page' : undefined}
+        title={tab.title}
+        onAuxClick={(event) => {
+          if (event.button !== 1) return
+          event.preventDefault()
+          onClose()
+        }}
+        className="flex h-full max-w-56 items-center gap-1.5 pr-1 pl-3 outline-none focus-visible:ring-2 focus-visible:ring-ring/50 focus-visible:ring-inset"
+      >
+        <TabIcon tab={tab} />
+        <span className="truncate">{tab.title}</span>
+      </Link>
+      <CloseTabButton title={tab.title} onClick={onClose} />
+    </li>
+  )
+}
+
+/** The icon that the page of the tab names, else the icon of the feature it belongs to. */
+function TabIcon({ tab }: { tab: EditorTab }) {
+  const { activities, tabIcons } = useActivities()
+  const named = tab.icon === undefined ? undefined : tabIcons[tab.icon]
+  const icon = named ?? activityOfHref(activities, tab.href)?.icon ?? <FileIcon />
+
+  return (
+    <span
+      aria-hidden
+      className="flex shrink-0 group-data-[active=true]/tab:text-primary [&_svg]:size-3.5"
+    >
+      {icon}
+    </span>
+  )
+}
+
+interface CloseTabButtonProps {
+  title: string
+  onClick: () => void
+}
+
+/** Shown on the active tab, on the tab under the pointer, and when it has the focus. */
+function CloseTabButton({ title, onClick }: CloseTabButtonProps) {
+  return (
+    <button
+      type="button"
+      aria-label={`Close ${title}`}
+      onClick={onClick}
+      className="mr-1 flex size-5 items-center justify-center rounded-sm opacity-0 outline-none group-hover/tab:opacity-100 group-data-[active=true]/tab:opacity-100 hover:bg-muted focus-visible:opacity-100 focus-visible:ring-2 focus-visible:ring-ring/50"
+    >
+      <XIcon aria-hidden className="size-3" />
+    </button>
   )
 }
