@@ -248,6 +248,8 @@ The folder is split by region: `activity-bar/`, `side-panel/`, `editor/`, `top-b
 
 The regions of the frame do not scroll: the editor, the panel under it, and the main area of the screens outside a project only clip what they hold. A page or a panel whose content flows scrolls itself with a `ScrollArea` (`h-full`); one that fills its region, such as the console, a review or the graph of a run, sizes itself with `h-full` and scrolls its own parts. A `ScrollArea` cannot hold content that fills it, because Radix wraps its content in an element without a height.
 
+A side panel (`SidePanel`) holds the parts of its feature in sections (`SidePanelSection`): each collapses to its title, and a line divides it from the next one. `Ctrl+B` hides the side panel with the `Activity` component of React instead of unmounting it, so the panel keeps its state, such as the text of a search or a collapsed section, and the group of resizable panels gives it back its last width.
+
 | Shortcut     | Action                                                                       |
 | ------------ | ---------------------------------------------------------------------------- |
 | `Ctrl+K`     | Open or close the command palette (also the search box of the top bar)       |
@@ -256,7 +258,7 @@ The regions of the frame do not scroll: the editor, the panel under it, and the 
 
 `Cmd` works in place of `Ctrl` on macOS.
 
-The editor tabs belong to the project, not to a feature: choosing a feature on the activity bar changes the side panel only. A page opens its tab with `useEditorTab` and may name an icon (`item`, `run`, ...); the tab shows that icon from `tabIcons`, else the icon of the feature the page belongs to. A new tab opens next to the tab of the page shown before it.
+The editor tabs belong to the project, not to a feature: choosing a feature on the activity bar changes the side panel only. A page opens its tab with `useEditorTab` and may name an icon (`item`, `run`, ...); the tab shows that icon from `tabIcons`, else the icon of the feature the page belongs to. A new tab opens next to the tab of the page shown before it, and a tab shows its close button when it is active or under the pointer.
 
 ### Browser storage
 

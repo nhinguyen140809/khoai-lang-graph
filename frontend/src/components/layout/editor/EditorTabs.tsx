@@ -22,7 +22,8 @@ const noTabs: EditorTab[] = []
 /**
  * The open editors of a project, whichever feature they belong to. A tab shows the icon its page
  * names among the tab icons of the frame, else the icon of the feature it belongs to. A middle
- * click or the close button closes a tab.
+ * click or the close button closes a tab; the close button shows on the active tab and on the tab
+ * under the pointer.
  */
 export function EditorTabs({ group, rootHref }: EditorTabsProps) {
   const pathname = usePathname()

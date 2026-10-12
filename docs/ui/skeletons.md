@@ -49,7 +49,7 @@ Every screen inside a project uses this frame.
 |---|---|
 | Top bar | The logo, the project name with a menu to switch project or go back to the project list, a box to search items and run commands (`Ctrl+K`), the user menu |
 | Activity bar | One icon per feature of the project: `E` Console, `A` Artifacts, `W` Workflow, `T` Traceability, `S` Sources (Later), and `*` Settings at the bottom. A badge shows a count, such as the reviews waiting on Console. An icon shows the side panel of its feature and nothing else: the editor and its tabs are not changed. The icon of the panel on screen hides the panel |
-| Side panel | Navigation inside the chosen feature: the artifact tree, the runs and their steps, the coverage counts. Console has a section with the outline of its event log. A section collapses to its title, and a line divides it from the next section. `Ctrl+B` hides and shows the panel |
+| Side panel | Navigation inside the chosen feature: the artifact tree, the runs and their steps, the coverage counts. The panel of any feature can hold several parts, each in a section: a section collapses to its title, and a line divides it from the next one. Console has one section today, the outline of its event log. `Ctrl+B` hides and shows the panel, which keeps its state and its width while hidden |
 | Editor | What was opened from the side panel, in tabs. The tabs belong to the project, not to a feature: choosing a feature on the activity bar does not close or change them, and a page opened from any side panel, such as a result of Search, is added to the same strip as a new tab. The console, a review, an artifact, an item, a run, a view of traceability and the settings each open as one tab. A review is one tab with the artifact and the console split inside it |
 | Panel | An optional area under the editor: the trace and the timeline of the open item, or the detail of the selected step |
 | Status bar | The active run of the project: its state, stage, step, cost against `max_cost_usd`, and the workflow version. A click opens the run in Workflow |
@@ -61,7 +61,7 @@ Marks used in the skeletons:
 | `[C]` | The feature on the activity bar whose side panel is shown |
 | `v` and `>` | An expanded and a collapsed node of a tree |
 | `[REQ-001 ...]` | The selected row of a list or a tree |
-| `x` after a tab name | The tab can be closed |
+| `x` after a tab name | The close button of the tab, shown on the active tab and on a tab under the pointer |
 | `!` | Needs review: the item was made from an older version of an item it links to |
 | `*` | A step of a running workflow, printed as it starts |
 | `-` | A detail under a step, printed while the step runs: text, a tool call, an item produced |
@@ -95,7 +95,7 @@ A screen outside a project: its activity bar has no feature yet, only the accoun
 
 ## 3. Console
 
-The console is the working view of the project: the event log of its runs, with an input at the bottom. The side panel has one section today, the outline of the console on screen, which goes to each message or command that the user typed. A section collapses to its title and a line divides it from the next; a new part of the panel is a new section. The editor is the log, in the tab Console.
+The console is the working view of the project: the event log of its runs, with an input at the bottom. The side panel has one section today, the outline of the console on screen, which goes to each message or command that the user typed. The editor is the log, in the tab Console.
 
 ```text
 +----------------------------------------------------------------------------------------------+
@@ -186,7 +186,7 @@ The side panel is a tree like the explorer of VS Code: artifacts, their sections
 +----------------------------------------------------------------------------------------------+
 | (K) khoai / Mentor platform v            [ Search or run a command   Ctrl+K ]         (user) |
 +-----+--------------------------+-------------------------------------------------------------+
-|     | ARTIFACTS       [Export] | REQ-001 Search mentors  x | Requirement specification  x    |
+|     | ARTIFACTS       [Export] | REQ-001 Search mentors  x | Requirement specification       |
 |  E  |                          +-------------------------------------------------------------+
 | [A] | > Elicitation plan       | Requirement specification > 3 Functional > 3.1 > REQ-001    |
 |  W  | v Personas               |                                                             |
