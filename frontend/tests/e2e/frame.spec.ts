@@ -23,19 +23,23 @@ test('Ctrl+K opens the command palette, which shows the side panel of a feature'
   await expect(page).toHaveURL(new RegExp(`/projects/${PROJECT_IDS.mentor}/console$`))
 })
 
-test('Ctrl+B hides and shows the side panel', async ({ page }) => {
+test('Ctrl+B hides the side panel and shows it again as it was', async ({ page }) => {
   await page.goto(`/projects/${PROJECT_IDS.mentor}/search`)
   const sidePanel = page.getByRole('complementary', { name: 'Search' })
-  await expect(sidePanel).toBeVisible()
+  await sidePanel.getByRole('searchbox', { name: 'Search items' }).fill('REQ-001')
+  await expect(sidePanel.getByRole('link', { name: /REQ-001/ })).toBeVisible()
 
   await page.keyboard.press('Control+b')
-  await expect(sidePanel).toHaveCount(0)
+  await expect(sidePanel).toBeHidden()
 
   await page.keyboard.press('Control+b')
   await expect(sidePanel).toBeVisible()
+  // The panel was hidden, not unmounted: the search and its results are still there.
+  await expect(sidePanel.getByRole('searchbox', { name: 'Search items' })).toHaveValue('REQ-001')
+  await expect(sidePanel.getByRole('link', { name: /REQ-001/ })).toBeVisible()
 })
 
-test('drags the edge of the side panel to make it wider', async ({ page }) => {
+test('drags the edge of the side panel to make it wider, which Ctrl+B keeps', async ({ page }) => {
   await page.goto(`/projects/${PROJECT_IDS.mentor}/search`)
   const sidePanel = page.getByRole('complementary', { name: 'Search' })
   await expect(sidePanel).toBeVisible()
@@ -54,6 +58,14 @@ test('drags the edge of the side panel to make it wider', async ({ page }) => {
   await expect
     .poll(async () => (await sidePanel.boundingBox())?.width ?? 0)
     .toBeGreaterThan(before + 80)
+  const dragged = (await sidePanel.boundingBox())?.width ?? 0
+
+  await page.keyboard.press('Control+b')
+  await expect(sidePanel).toBeHidden()
+  await page.keyboard.press('Control+b')
+  await expect
+    .poll(async () => Math.round((await sidePanel.boundingBox())?.width ?? 0))
+    .toBe(Math.round(dragged))
 })
 
 test('the activity bar changes the side panel and leaves the editor as it is', async ({ page }) => {

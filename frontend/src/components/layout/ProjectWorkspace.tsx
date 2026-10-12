@@ -1,7 +1,7 @@
 'use client'
 
 import { usePathname } from 'next/navigation'
-import { type ReactNode, useEffect, useState } from 'react'
+import { Activity, type ReactNode, useEffect, useState } from 'react'
 
 import { ResizableHandle, ResizablePanel, ResizablePanelGroup } from '@/components/ui/resizable'
 import { Surface } from '@/components/ui/surface'
@@ -57,12 +57,16 @@ export function ProjectWorkspace({ projectId, children }: ProjectWorkspaceProps)
       orientation="horizontal"
       className="min-h-0 flex-1"
     >
-      {sidePanelVisible && sideFeature !== undefined && (
-        <>
-          <SidePanelArea>{sideFeature.panel}</SidePanelArea>
-          <ResizableHandle />
-        </>
-      )}
+      {/* Ctrl+B hides the side panel without unmounting it: it keeps its state, such as the text
+          of a search or a collapsed section, and the group gives it back its last width. */}
+      <Activity mode={sidePanelVisible ? 'visible' : 'hidden'}>
+        {sideFeature !== undefined && (
+          <>
+            <SidePanelArea>{sideFeature.panel}</SidePanelArea>
+            <ResizableHandle />
+          </>
+        )}
+      </Activity>
       <ResizablePanel id="editor" minSize="30%">
         <Surface className="flex h-full min-w-0 flex-col">
           <EditorTabs group={group} rootHref={sideFeature?.href} />

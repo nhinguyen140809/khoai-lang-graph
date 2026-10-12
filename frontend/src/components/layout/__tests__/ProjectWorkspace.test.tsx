@@ -10,6 +10,7 @@ import { useEditorTabsStore } from '../editor/editor-tabs.store'
 import { useFrameStore } from '../frame.store'
 import { ProjectWorkspace } from '../ProjectWorkspace'
 import { SidePanel } from '../side-panel/SidePanel'
+import { SidePanelSection } from '../side-panel/SidePanelSection'
 
 vi.mock('next/navigation', async () => (await import('@/test/next-mocks.utils')).navigationMock)
 vi.mock('next/link', async () => (await import('@/test/next-mocks.utils')).linkMock)
@@ -80,14 +81,29 @@ describe('ProjectWorkspace', () => {
     expect(screen.getByRole('complementary', { name: 'Artifacts' })).toBeInTheDocument()
   })
 
-  it('hides and shows the side panel with Ctrl+B', () => {
-    renderProjectWorkspace()
+  it('hides the side panel with Ctrl+B and shows it again as it was', () => {
+    renderProjectWorkspace([
+      {
+        ...feature('artifacts', 'Artifacts', ''),
+        panel: (
+          <SidePanel title="Artifacts">
+            <SidePanelSection title="Outline">tree</SidePanelSection>
+          </SidePanel>
+        ),
+      },
+    ])
+    fireEvent.click(screen.getByRole('button', { name: 'Outline' }))
 
     fireEvent.keyDown(document, { key: 'b', ctrlKey: true })
-    expect(screen.queryByRole('complementary', { name: 'Artifacts' })).not.toBeInTheDocument()
+    expect(screen.getByRole('complementary', { name: 'Artifacts', hidden: true })).not.toBeVisible()
 
     fireEvent.keyDown(document, { key: 'b', ctrlKey: true })
-    expect(screen.getByRole('complementary', { name: 'Artifacts' })).toBeInTheDocument()
+    expect(screen.getByRole('complementary', { name: 'Artifacts' })).toBeVisible()
+    // Hidden, not unmounted: the section is still collapsed.
+    expect(screen.getByRole('button', { name: 'Outline' })).toHaveAttribute(
+      'aria-expanded',
+      'false',
+    )
   })
 
   it('has no side panel without features', () => {
