@@ -54,9 +54,6 @@ function mergeGroups(
   return merged
 }
 
-// Changes are stored only once the stored tabs have been read.
-let storageRead = false
-
 /**
  * The editor tabs of every project on this device; a group is one project, and holds the tabs of
  * every feature. Workbench reads them after the first render.
@@ -113,10 +110,10 @@ export const useEditorTabsStore = create<EditorTabsState>()(
     {
       name: 'khoailanggraph-editor-tabs',
       skipHydration: true,
-      storage: persistStorage<PersistedTabs>({ ready: () => storageRead }),
-      onRehydrateStorage: () => () => {
-        storageRead = true
-      },
+      // Changes are stored only once the stored tabs have been read.
+      storage: persistStorage<PersistedTabs>({
+        ready: (): boolean => useEditorTabsStore.persist.hasHydrated(),
+      }),
       partialize: ({ groups, lastHrefs }): PersistedTabs => ({ groups, lastHrefs }),
       merge: (persisted, current) => {
         const stored = parseStored(persistedTabsSchema, persisted)

@@ -31,9 +31,6 @@ interface FrameState extends PersistedFrame {
   setBottomPanelHeight: (height: number) => void
 }
 
-// Changes are stored only once the stored state has been read.
-let storageRead = false
-
 /**
  * Sizes and visibility of the frame regions. They are device-local, so they are kept in the
  * browser and not on the server. Workbench reads them after the first render, so the server HTML
@@ -72,10 +69,10 @@ export const useFrameStore = create<FrameState>()(
     {
       name: 'khoailanggraph-frame',
       skipHydration: true,
-      storage: persistStorage<PersistedFrame>({ ready: () => storageRead }),
-      onRehydrateStorage: () => () => {
-        storageRead = true
-      },
+      // Changes are stored only once the stored state has been read.
+      storage: persistStorage<PersistedFrame>({
+        ready: (): boolean => useFrameStore.persist.hasHydrated(),
+      }),
       partialize: ({
         sidePanelVisible,
         sideFeature,

@@ -19,12 +19,20 @@ describe('persistStorage', () => {
     let ready = false
     const storage = persistStorage<{ count: number }>({ ready: () => ready })
 
-    await storage?.setItem('test-store', { state: { count: 1 }, version: 0 })
+    await storage.setItem('test-store', { state: { count: 1 }, version: 0 })
     expect(browserStorage.getItem('test-store')).toBeNull()
 
     ready = true
-    await storage?.setItem('test-store', { state: { count: 2 }, version: 0 })
-    expect(await storage?.getItem('test-store')).toEqual({ state: { count: 2 }, version: 0 })
+    await storage.setItem('test-store', { state: { count: 2 }, version: 0 })
+    expect(await storage.getItem('test-store')).toEqual({ state: { count: 2 }, version: 0 })
+    browserStorage.removeItem('test-store')
+  })
+
+  it('reads a stored value that is not JSON as nothing stored', async () => {
+    browserStorage.setItem('test-store', '{not json')
+    const storage = persistStorage<{ count: number }>()
+
+    expect(await storage.getItem('test-store')).toBeNull()
     browserStorage.removeItem('test-store')
   })
 })

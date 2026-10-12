@@ -29,9 +29,6 @@ interface CommandHistoryState extends PersistedHistory {
   record: (threadId: string, name: CommandRecord['name']) => void
 }
 
-// Changes are stored only once the stored state has been read.
-let storageRead = false
-
 /**
  * The commands that the user ran in each console. The API keeps no record of a command, only of
  * the messages and the runs, so the event log reads them from here; they live on this device.
@@ -54,10 +51,10 @@ export const useCommandHistoryStore = create<CommandHistoryState>()(
     {
       name: 'khoailanggraph-command-history',
       skipHydration: true,
-      storage: persistStorage<PersistedHistory>({ ready: () => storageRead }),
-      onRehydrateStorage: () => () => {
-        storageRead = true
-      },
+      // Changes are stored only once the stored state has been read.
+      storage: persistStorage<PersistedHistory>({
+        ready: (): boolean => useCommandHistoryStore.persist.hasHydrated(),
+      }),
       partialize: ({ commands }): PersistedHistory => ({ commands }),
       merge: (persisted, current) => {
         const stored = parseStored(persistedHistorySchema, persisted)
