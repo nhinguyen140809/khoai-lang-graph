@@ -4,6 +4,7 @@ import { useSearchParams } from 'next/navigation'
 
 import { projectTabGroup, useEditorTab } from '@/components/layout'
 import { ErrorState, LoadingState, NotFoundState } from '@/components/state'
+import { ScrollArea } from '@/components/ui/scroll-area'
 import { isNotFoundError } from '@/lib/api-fetch.utils'
 
 import { useModels } from '../hooks/useModels'
@@ -44,32 +45,37 @@ export function SettingsPage({ projectId }: { projectId: string }) {
   }
 
   return (
-    <div className="flex flex-col gap-4 p-6">
-      <h1 className="text-sm font-medium">{sectionLabels[section]}</h1>
-      {section === 'general' && <GeneralForm key={project.data.id} project={project.data} />}
-      {section !== 'general' && definition.isPending && (
-        <LoadingState label="Loading the workflow" rows={4} />
-      )}
-      {section !== 'general' && definition.isError && (
-        <ErrorState message={definition.error.message} onRetry={() => void definition.refetch()} />
-      )}
-      {section === 'runs' && definition.data !== undefined && (
-        <RunsForm key={project.data.id} project={project.data} definition={definition.data} />
-      )}
-      {section === 'models' && definition.data !== undefined && models.isError && (
-        <ErrorState message={models.error.message} onRetry={() => void models.refetch()} />
-      )}
-      {section === 'models' && definition.data !== undefined && models.data !== undefined && (
-        <ModelsForm
-          key={project.data.id}
-          project={project.data}
-          definition={definition.data}
-          models={models.data}
-        />
-      )}
-      {section === 'models' && definition.data !== undefined && models.isPending && (
-        <LoadingState label="Loading the models" rows={4} />
-      )}
-    </div>
+    <ScrollArea className="h-full">
+      <div className="flex flex-col gap-4 p-6">
+        <h1 className="text-sm font-medium">{sectionLabels[section]}</h1>
+        {section === 'general' && <GeneralForm key={project.data.id} project={project.data} />}
+        {section !== 'general' && definition.isPending && (
+          <LoadingState label="Loading the workflow" rows={4} />
+        )}
+        {section !== 'general' && definition.isError && (
+          <ErrorState
+            message={definition.error.message}
+            onRetry={() => void definition.refetch()}
+          />
+        )}
+        {section === 'runs' && definition.data !== undefined && (
+          <RunsForm key={project.data.id} project={project.data} definition={definition.data} />
+        )}
+        {section === 'models' && definition.data !== undefined && models.isError && (
+          <ErrorState message={models.error.message} onRetry={() => void models.refetch()} />
+        )}
+        {section === 'models' && definition.data !== undefined && models.data !== undefined && (
+          <ModelsForm
+            key={project.data.id}
+            project={project.data}
+            definition={definition.data}
+            models={models.data}
+          />
+        )}
+        {section === 'models' && definition.data !== undefined && models.isPending && (
+          <LoadingState label="Loading the models" rows={4} />
+        )}
+      </div>
+    </ScrollArea>
   )
 }

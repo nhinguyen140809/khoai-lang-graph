@@ -8,6 +8,7 @@ import { useState } from 'react'
 import { EditorWithPanel, projectTabGroup, useEditorTab } from '@/components/layout'
 import { ErrorState, LoadingState, NotFoundState } from '@/components/state'
 import { Button } from '@/components/ui/button'
+import { ScrollArea } from '@/components/ui/scroll-area'
 import { useNow } from '@/hooks/useNow'
 import { isNotFoundError } from '@/lib/api-fetch.utils'
 import { formatRelativeTime } from '@/lib/relative-time.utils'
@@ -180,7 +181,7 @@ export function ItemPage({ projectId, itemId, embedded = false, onBack }: ItemPa
       panelLabel="Trace and timeline"
       panel={<ItemPanel item={item.data} schema={schema} />}
     >
-      {article}
+      <ScrollArea className="h-full">{article}</ScrollArea>
     </EditorWithPanel>
   )
 }

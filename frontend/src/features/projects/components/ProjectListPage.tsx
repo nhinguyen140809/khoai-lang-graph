@@ -4,6 +4,7 @@ import { ArchiveIcon, PlusIcon } from 'lucide-react'
 import { useState } from 'react'
 
 import { Button } from '@/components/ui/button'
+import { ScrollArea } from '@/components/ui/scroll-area'
 import { Toggle } from '@/components/ui/toggle'
 
 import { useNewProjectDialogStore } from '../new-project.store'
@@ -16,7 +17,7 @@ export function ProjectListPage() {
   const openNewProject = useNewProjectDialogStore((state) => state.setOpen)
 
   return (
-    <main className="min-h-0 flex-1 overflow-auto">
+    <ScrollArea className="h-full">
       <div className="mx-auto flex w-full max-w-6xl flex-col gap-4 px-6 py-6">
         <div className="flex flex-wrap items-center gap-2">
           <h1 className="text-lg font-semibold">Projects</h1>
@@ -43,6 +44,6 @@ export function ProjectListPage() {
         </div>
         <ProjectTable status={status} />
       </div>
-    </main>
+    </ScrollArea>
   )
 }

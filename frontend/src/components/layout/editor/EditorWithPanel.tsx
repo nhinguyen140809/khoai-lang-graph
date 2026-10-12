@@ -5,11 +5,10 @@ import { type ReactNode, useState } from 'react'
 
 import { Button } from '@/components/ui/button'
 import { ResizableHandle, ResizablePanel, ResizablePanelGroup } from '@/components/ui/resizable'
-import { cn } from '@/lib/utils'
+import { Surface } from '@/components/ui/surface'
 
 import { useFrameStore } from '../frame.store'
 import { useFrameHydrated } from '../hooks/useFrameHydrated'
-import { surfaceClassName } from '../surface.config'
 
 interface EditorWithPanelProps {
   /** The content of the panel under the editor, such as the trace of an item. */
@@ -21,7 +20,10 @@ interface EditorWithPanelProps {
 
 const PANEL_MIN_HEIGHT = 96
 
-/** An editor with a panel under it. The panel can be resized and hidden; both are remembered. */
+/**
+ * An editor with a panel under it. The panel can be resized and hidden; both are remembered.
+ * Neither scrolls: the editor content and the panel content each scroll themselves when they flow.
+ */
 export function EditorWithPanel({ panel, panelLabel, children }: EditorWithPanelProps) {
   const hydrated = useFrameHydrated()
   const visible = useFrameStore((state) => state.bottomPanelVisible)
@@ -30,13 +32,11 @@ export function EditorWithPanel({ panel, panelLabel, children }: EditorWithPanel
   if (!visible) {
     return (
       <div className="flex h-full flex-col gap-1.5">
-        <div className={cn(surfaceClassName, 'min-h-0 flex-1 overflow-auto')}>{children}</div>
-        <section
+        <Surface className="min-h-0 flex-1">{children}</Surface>
+        <Surface
+          as="section"
           aria-label={panelLabel}
-          className={cn(
-            surfaceClassName,
-            'flex h-8 shrink-0 items-center justify-between pr-1 pl-3',
-          )}
+          className="flex h-8 shrink-0 items-center justify-between pr-1 pl-3"
         >
           <span className="text-2xs font-medium tracking-wide text-muted-foreground uppercase">
             {panelLabel}
@@ -50,7 +50,7 @@ export function EditorWithPanel({ panel, panelLabel, children }: EditorWithPanel
           >
             <ChevronUpIcon aria-hidden />
           </Button>
-        </section>
+        </Surface>
       </div>
     )
   }
@@ -58,14 +58,11 @@ export function EditorWithPanel({ panel, panelLabel, children }: EditorWithPanel
   return (
     <ResizablePanelGroup key={hydrated ? 'stored' : 'default'} orientation="vertical">
       <ResizablePanel id="editor-body" minSize="20%">
-        <div className={cn(surfaceClassName, 'h-full overflow-auto')}>{children}</div>
+        <Surface className="h-full">{children}</Surface>
       </ResizablePanel>
       <ResizableHandle />
       <BottomPanelArea>
-        <section
-          aria-label={panelLabel}
-          className={cn(surfaceClassName, 'relative h-full overflow-auto')}
-        >
+        <Surface as="section" aria-label={panelLabel} className="relative h-full">
           <Button
             variant="ghost"
             size="icon-xs"
@@ -77,7 +74,7 @@ export function EditorWithPanel({ panel, panelLabel, children }: EditorWithPanel
             <ChevronDownIcon aria-hidden />
           </Button>
           {panel}
-        </section>
+        </Surface>
       </BottomPanelArea>
     </ResizablePanelGroup>
   )

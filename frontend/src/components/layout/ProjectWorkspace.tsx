@@ -4,15 +4,14 @@ import { usePathname } from 'next/navigation'
 import { type ReactNode, useEffect, useState } from 'react'
 
 import { ResizableHandle, ResizablePanel, ResizablePanelGroup } from '@/components/ui/resizable'
+import { Surface } from '@/components/ui/surface'
 import { useHotkey } from '@/hooks/useHotkey'
-import { cn } from '@/lib/utils'
 
 import { useSideFeature } from './activity-bar/hooks/useSideFeature'
 import { projectTabGroup, useEditorTabsStore } from './editor/editor-tabs.store'
 import { EditorTabs } from './editor/EditorTabs'
 import { useFrameStore } from './frame.store'
 import { useFrameHydrated } from './hooks/useFrameHydrated'
-import { surfaceClassName } from './surface.config'
 
 interface ProjectWorkspaceProps {
   projectId: string
@@ -65,10 +64,11 @@ export function ProjectWorkspace({ projectId, children }: ProjectWorkspaceProps)
         </>
       )}
       <ResizablePanel id="editor" minSize="30%">
-        <div className={cn(surfaceClassName, 'flex h-full min-w-0 flex-col')}>
+        <Surface className="flex h-full min-w-0 flex-col">
           <EditorTabs group={group} rootHref={sideFeature?.href} />
-          <main className="min-h-0 flex-1 overflow-auto editor-text">{children}</main>
-        </div>
+          {/* The page fills the editor and scrolls itself: a ScrollArea when its content flows. */}
+          <main className="min-h-0 flex-1 editor-text">{children}</main>
+        </Surface>
       </ResizablePanel>
     </ResizablePanelGroup>
   )

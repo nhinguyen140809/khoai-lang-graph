@@ -5,6 +5,7 @@ import Link from 'next/link'
 import { useSearchParams } from 'next/navigation'
 
 import { ErrorState, LoadingState } from '@/components/state'
+import { ScrollArea } from '@/components/ui/scroll-area'
 import { cn } from '@/lib/utils'
 
 import { useCatalog, useDefinition, useModelChoices } from '../hooks/useAccountQueries'
@@ -82,15 +83,17 @@ export function UserSettingsPage() {
           </Link>
         ))}
       </nav>
-      <div className="flex min-w-0 flex-1 flex-col gap-4 overflow-auto p-6">
-        <h1 className="text-sm font-medium">{settingsSectionLabels[section]}</h1>
-        {section === 'profile' && <ProfileSection />}
-        {section === 'password' && <PasswordForm />}
-        {section === 'preferences' && <PreferencesSection />}
-        {section === 'models' && <ModelsSection />}
-        {section === 'usage' && <UsageView />}
-        {section === 'sessions' && <SessionsList />}
-      </div>
+      <ScrollArea className="min-w-0 flex-1">
+        <div className="flex flex-col gap-4 p-6">
+          <h1 className="text-sm font-medium">{settingsSectionLabels[section]}</h1>
+          {section === 'profile' && <ProfileSection />}
+          {section === 'password' && <PasswordForm />}
+          {section === 'preferences' && <PreferencesSection />}
+          {section === 'models' && <ModelsSection />}
+          {section === 'usage' && <UsageView />}
+          {section === 'sessions' && <SessionsList />}
+        </div>
+      </ScrollArea>
     </div>
   )
 }

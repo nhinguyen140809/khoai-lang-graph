@@ -2,15 +2,10 @@ import { FolderInputIcon } from 'lucide-react'
 import Link from 'next/link'
 
 import type { Activity, TabIcons } from '@/components/layout'
-import {
-  ActivityBar,
-  ProjectWorkspace,
-  surfaceClassName,
-  TopBar,
-  Workbench,
-} from '@/components/layout'
+import { ActivityBar, ProjectWorkspace, TopBar, Workbench } from '@/components/layout'
 import { NotFoundState } from '@/components/state'
 import { Button } from '@/components/ui/button'
+import { Surface } from '@/components/ui/surface'
 import { UserMenu } from '@/features/account'
 import { artifactsActivity, artifactTabIcons } from '@/features/artifacts'
 import { consoleActivity, consoleTabIcons } from '@/features/console'
@@ -28,7 +23,6 @@ import { ThemeSync } from '@/features/settings'
 import { ProjectRunStatus } from '@/features/threads'
 import { traceabilityActivity, traceabilityTabIcons } from '@/features/traceability'
 import { workflowActivity, workflowTabIcons } from '@/features/workflow'
-import { cn } from '@/lib/utils'
 
 /** The icons that the pages of the features name for their tabs. */
 const tabIcons: TabIcons = {
@@ -86,7 +80,7 @@ export default async function ProjectLayout({
             commands={<ProjectCommands />}
             dialogs={dialogs}
           >
-            <main className={cn(surfaceClassName, 'flex flex-1 items-center justify-center p-6')}>
+            <Surface as="main" className="flex flex-1 items-center justify-center p-6">
               <NotFoundState
                 className="w-full max-w-md p-0"
                 title="Project not found"
@@ -98,7 +92,7 @@ export default async function ProjectLayout({
                   </Button>
                 }
               />
-            </main>
+            </Surface>
           </Workbench>
         }
       >

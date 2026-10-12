@@ -3,6 +3,7 @@
 import { useSearchParams } from 'next/navigation'
 
 import { projectTabGroup, useEditorTab } from '@/components/layout'
+import { ScrollArea } from '@/components/ui/scroll-area'
 
 import { traceabilityHref } from '../traceability-links.utils'
 import { IssuesView } from './IssuesView'
@@ -20,9 +21,13 @@ export function TraceabilityPage({ projectId }: { projectId: string }) {
     icon: 'view',
   })
 
-  return issues ? (
-    <IssuesView projectId={projectId} />
-  ) : (
-    <MatrixView projectId={projectId} gap={params.get('gap')} />
+  return (
+    <ScrollArea className="h-full">
+      {issues ? (
+        <IssuesView projectId={projectId} />
+      ) : (
+        <MatrixView projectId={projectId} gap={params.get('gap')} />
+      )}
+    </ScrollArea>
   )
 }

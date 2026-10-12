@@ -1,10 +1,10 @@
 import type { ReactNode } from 'react'
 
-import { ActivityBar, PageCrumb, surfaceClassName, TopBar, Workbench } from '@/components/layout'
+import { ActivityBar, PageCrumb, TopBar, Workbench } from '@/components/layout'
+import { Surface } from '@/components/ui/surface'
 import { UserMenu } from '@/features/account'
 import { NewProjectDialog, ProjectCommands } from '@/features/projects'
 import { ThemeSync } from '@/features/settings'
-import { cn } from '@/lib/utils'
 
 interface HomeLayoutProps {
   children: ReactNode
@@ -24,7 +24,9 @@ export default function HomeLayout({ children }: HomeLayoutProps) {
         commands={<ProjectCommands />}
         dialogs={<NewProjectDialog />}
       >
-        <main className={cn(surfaceClassName, 'min-h-0 flex-1 overflow-auto')}>{children}</main>
+        <Surface as="main" className="min-h-0 flex-1">
+          {children}
+        </Surface>
       </Workbench>
     </>
   )

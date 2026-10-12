@@ -3,16 +3,12 @@
 import { useRouter } from 'next/navigation'
 import { type ComponentType, type ReactNode, useEffect, useState } from 'react'
 
-import {
-  projectTabGroup,
-  surfaceClassName,
-  useEditorTab,
-  useEditorTabsStore,
-} from '@/components/layout'
+import { projectTabGroup, useEditorTab, useEditorTabsStore } from '@/components/layout'
 import { EmptyState, ErrorState, LoadingState } from '@/components/state'
 import { Button } from '@/components/ui/button'
 import { ResizableHandle, ResizablePanel, ResizablePanelGroup } from '@/components/ui/resizable'
-import { cn } from '@/lib/utils'
+import { ScrollArea } from '@/components/ui/scroll-area'
+import { Surface } from '@/components/ui/surface'
 
 import { usePendingInterrupt } from '../hooks/usePendingInterrupt'
 import { reviewsPath } from '../review-frame.config'
@@ -83,26 +79,28 @@ export function ReviewPage({ projectId, runId, Artifacts, Console }: ReviewPageP
   return (
     <ResizablePanelGroup orientation="horizontal" className="h-full">
       <ResizablePanel id="review-artifacts" defaultSize="50%" minSize="25%">
-        <div className={cn(surfaceClassName, 'h-full overflow-auto')}>
-          <Artifacts
-            projectId={projectId}
-            artifacts={current.review_artifacts.map(({ artifact_id, title, version }) => ({
-              id: artifact_id,
-              title,
-              version,
-            }))}
-          />
-        </div>
+        <Surface className="h-full">
+          <ScrollArea className="h-full">
+            <Artifacts
+              projectId={projectId}
+              artifacts={current.review_artifacts.map(({ artifact_id, title, version }) => ({
+                id: artifact_id,
+                title,
+                version,
+              }))}
+            />
+          </ScrollArea>
+        </Surface>
       </ResizablePanel>
       <ResizableHandle />
       <ResizablePanel id="review-console" defaultSize="50%" minSize="25%">
-        <div className={cn(surfaceClassName, 'h-full')}>
+        <Surface className="h-full">
           <Console
             projectId={projectId}
             reviewOpen
             afterLog={<ReviewCard interrupt={current} onDone={backToConsole} />}
           />
-        </div>
+        </Surface>
       </ResizablePanel>
     </ResizablePanelGroup>
   )

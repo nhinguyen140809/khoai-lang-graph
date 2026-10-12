@@ -6,6 +6,7 @@ import { useMemo } from 'react'
 
 import { EditorWithPanel, projectTabGroup, useEditorTab } from '@/components/layout'
 import { ErrorState, LoadingState, NotFoundState } from '@/components/state'
+import { ScrollArea } from '@/components/ui/scroll-area'
 import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs'
 import { runStatusLabels } from '@/lib/run-status.constants'
 
@@ -94,22 +95,26 @@ export function RunPage({ projectId, runId }: RunPageProps) {
     <EditorWithPanel
       panelLabel="Details"
       panel={
-        <Tabs defaultValue="step" className="gap-0">
+        <Tabs defaultValue="step" className="h-full gap-0">
           <TabsList variant="line" className="px-2">
             <TabsTrigger value="step">Step</TabsTrigger>
             <TabsTrigger value="state">State</TabsTrigger>
           </TabsList>
-          <TabsContent value="step">
-            <StepPanel
-              projectId={projectId}
-              run={run}
-              definition={definition.data}
-              step={step}
-              nodeLabel={step === null ? nodeLabel : null}
-            />
+          <TabsContent value="step" className="min-h-0">
+            <ScrollArea className="h-full">
+              <StepPanel
+                projectId={projectId}
+                run={run}
+                definition={definition.data}
+                step={step}
+                nodeLabel={step === null ? nodeLabel : null}
+              />
+            </ScrollArea>
           </TabsContent>
-          <TabsContent value="state">
-            <StatePanel projectId={projectId} runId={runId} stepId={step?.id ?? null} active />
+          <TabsContent value="state" className="min-h-0">
+            <ScrollArea className="h-full">
+              <StatePanel projectId={projectId} runId={runId} stepId={step?.id ?? null} active />
+            </ScrollArea>
           </TabsContent>
         </Tabs>
       }

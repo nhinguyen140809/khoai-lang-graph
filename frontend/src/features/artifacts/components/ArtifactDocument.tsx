@@ -2,6 +2,7 @@
 
 import { projectTabGroup, useEditorTab } from '@/components/layout'
 import { ErrorState, LoadingState, NotFoundState } from '@/components/state'
+import { ScrollArea } from '@/components/ui/scroll-area'
 import {
   Table,
   TableBody,
@@ -106,7 +107,7 @@ export function ArtifactDocument({
 
   const schema = schemas.get(artifact.data.kind)
   const fields = schema === undefined ? [] : fieldViews(schema)
-  return (
+  const content = (
     <ItemOpenContext.Provider value={onOpenItem ?? null}>
       <article className="mx-auto flex max-w-4xl flex-col gap-5 p-6">
         <header className="flex flex-col gap-2">
@@ -170,6 +171,8 @@ export function ArtifactDocument({
       </article>
     </ItemOpenContext.Provider>
   )
+  // Drawn inside another view, the document scrolls with that view.
+  return embedded ? content : <ScrollArea className="h-full">{content}</ScrollArea>
 }
 
 interface HeadingProps {

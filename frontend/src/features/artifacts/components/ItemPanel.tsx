@@ -5,6 +5,7 @@ import { toast } from 'sonner'
 
 import { ErrorState, LoadingState } from '@/components/state'
 import { Button } from '@/components/ui/button'
+import { ScrollArea } from '@/components/ui/scroll-area'
 import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs'
 import { useNow } from '@/hooks/useNow'
 import { formatRelativeTime } from '@/lib/relative-time.utils'
@@ -32,11 +33,19 @@ export function ItemPanel({ item, schema }: ItemPanelProps) {
         <TabsTrigger value="trace">Trace</TabsTrigger>
         <TabsTrigger value="timeline">Timeline</TabsTrigger>
       </TabsList>
-      <TabsContent value="trace" className="overflow-auto px-3 pb-3">
-        <TraceTab item={item} />
+      <TabsContent value="trace" className="min-h-0">
+        <ScrollArea className="h-full">
+          <div className="px-3 pb-3">
+            <TraceTab item={item} />
+          </div>
+        </ScrollArea>
       </TabsContent>
-      <TabsContent value="timeline" className="overflow-auto px-3 pb-3">
-        <TimelineTab item={item} schema={schema} />
+      <TabsContent value="timeline" className="min-h-0">
+        <ScrollArea className="h-full">
+          <div className="px-3 pb-3">
+            <TimelineTab item={item} schema={schema} />
+          </div>
+        </ScrollArea>
       </TabsContent>
     </Tabs>
   )
