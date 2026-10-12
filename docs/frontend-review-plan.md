@@ -38,11 +38,11 @@ State on 2026-10-12.
 
 | Branch | State |
 |---|---|
-| `main` | Five product commits plus two devcontainer commits. A Next.js app with the chat feature (`features/chat`), the old shell (`components/layout/AppShell.tsx`, `app-sidebar/`), the routes under `app/(app)/`, the design system page, and MSW mocks for threads and runs only. No `.github/`, no `justfile`, no pre-commit or commitlint configuration, although CONTRIBUTING describes them |
+| `main` | Five product commits plus two devcontainer commits. A Next.js app with the chat feature (`features/chat`), the old shell (`components/layout/AppShell.tsx`, `app-sidebar/`), the routes under `app/(app)/`, the design system page, and MSW mocks for threads and runs only. No `.github/` before P0, no `justfile`, no pre-commit or commitlint configuration, although CONTRIBUTING describes them |
 | `feat/fe/mock` | 56 commits ahead of the merge base `cd22abe`, the last twelve of them made on 2026-10-12 (the last two add this plan and `backend/.gitignore`): the side panel apart from the editor tabs, the console redesign, the text size tokens, flex rows instead of arbitrary grid columns, the CONTRIBUTING rule on bracket values. All screens of the frame with mocks. It lacks the two devcontainer commits of `main`, so a diff against `main` shows `.devcontainer/` as deleted; that is not a change of the branch |
 | `feat/fe/workflow-review` | 29 commits, diverged from `feat/fe/mock` at `20c8e18`. Its own version of the workflow view, plus backend commits. See [open points](#8-open-points) |
 | `feat/frontend/temp` | 5 commits: the backend port (147 files under `backend/`) and a redesign of the chat. `backend/` is untracked in the current checkout |
-| `feat/fe/layout` | Equal to `main` at `cd22abe`, no commits of its own |
+| `feat/fe/layout` | At `cd22abe`, no commits of its own; `main` has moved on to `33635d6` (the two devcontainer commits), so the branch is moved to `origin/main` before P3 is cut on it (a fast-forward) |
 
 Size of the change against `main` (`frontend/`, `docs/`, `scripts/`), measured before the last ten commits and the lone `backend/.gitignore`: 416 files, 338 added, 50 modified, 23 deleted, 3 untracked. No dependency is added; `package.json` changes only the `lint` scripts. `src/api/generated/` holds only `.gitkeep`; every feature has hand-written `*.types.ts`. `backend/src/` has no Python files in this checkout, so no endpoint exists on a server: each one is exercised through the MSW mocks and follows `docs/API.md`.
 
@@ -115,29 +115,29 @@ The order follows the imports of section 2 and avoids dead links:
 
 ## 4. PR sequence
 
-Branch names follow CONTRIBUTING (`<type>/<issue-number>-<short-kebab>`); `<n>` is the issue number, to be created per PR.
+Branch names are `<type>/fe/<name>`: `<type>` is the Conventional Commits type of the change (`feat` for a new feature, `chore` for tooling and CI, `docs` for documentation), and `fe` shows the scope. No issue number until issues exist.
 
 | # | Branch | PR title | Depends on | Files | Changed lines |
 |---|---|---|---|---|---|
-| P0 | `chore/<n>-frontend-ci` | `ci(frontend): run the checks on pull requests` | none | 1 to 2 | about 100 |
-| P1 | `chore/<n>-frontend-tooling` | `build(frontend): lint in groups of folders to bound memory` | none | 4 | about 130 |
-| P2 | `docs/<n>-api-run-and-project-fields` | `docs(api): add the fields that the screens read` | none | 5 | about 550 |
-| P3 | `feat/<n>-frontend-frame` | `feat(frontend): add the frame: workbench, activity bar, tabs, top bar, status bar and command palette` | none | 47 | about 2000 |
-| P4 | `feat/<n>-frontend-account` | `feat(frontend): add sign in, registration and the session` | P3 | 31 | about 1800 |
-| P5 | `feat/<n>-frontend-project-mocks` | `feat(mocks): serve projects and runs` | P4 | 8 | about 1400 |
-| P6 | `feat/<n>-frontend-projects` | `feat(frontend): add the project list and the project frame, and remove the old shell` | P3, P4, P5 | 48 | about 1700 |
-| P7 | `feat/<n>-frontend-threads` | `feat(frontend): read the threads of a project and show the run in the status bar` | P6 | 18 | about 800 |
-| P8 | `feat/<n>-frontend-artifacts-read` | `feat(frontend): read artifacts and items` | P6 | about 40 | about 3500 |
-| P9 | `feat/<n>-frontend-console` | `feat(frontend): add the console, its outline and commands, and remove the chat` | P7, P8 | 46 | about 3400 |
-| P10 | `feat/<n>-frontend-search` | `feat(frontend): search the items of a project` | P8 | 10 | about 300 |
-| P11 | `feat/<n>-frontend-item-edit` | `feat(frontend): edit an item` | P8 | about 6 | about 600 |
-| P12 | `feat/<n>-frontend-item-history` | `feat(frontend): show the revisions and the trace of an item` | P8 | about 8 | about 900 |
-| P13 | `feat/<n>-frontend-export` | `feat(frontend): export the artifacts of a project` | P8, P9 | about 6 | about 500 |
-| P14 | `feat/<n>-frontend-review` | `feat(frontend): review a run at a checkpoint` | P8, P9 | 17 | about 1500 |
-| P15 | `feat/<n>-frontend-workflow` | `feat(frontend): show the workflow of a run, its steps and its state` | P7, P8 | about 35 | about 2400 |
-| P16 | `feat/<n>-frontend-traceability` | `feat(frontend): add the traceability matrix, gaps and issues` | P8 | 21 | about 900 |
-| P17 | `feat/<n>-frontend-project-settings` | `feat(frontend): add the settings of a project` | P6, P15 | 26 | about 1300 |
-| P18 | `feat/<n>-frontend-user-settings` | `feat(frontend): add the settings of the user` | P4, P17 | 25 | about 1800 |
+| P0 | `chore/fe/ci` | `ci(frontend): run the checks on pull requests` | none | 2 | about 150 |
+| P1 | `chore/fe/lint-groups` | `build(frontend): lint in groups of folders to bound memory` | none | 4 | about 130 |
+| P2 | `docs/fe/api-fields` | `docs(api): add the fields that the screens read` | none | 5 | about 550 |
+| P3 | `feat/fe/layout` | `feat(frontend): add the frame: workbench, activity bar, tabs, top bar, status bar and command palette` | none | 47 | about 2000 |
+| P4 | `feat/fe/account` | `feat(frontend): add sign in, registration and the session` | P3 | 31 | about 1800 |
+| P5 | `feat/fe/project-mocks` | `feat(mocks): serve projects and runs` | P4 | 8 | about 1400 |
+| P6 | `feat/fe/projects` | `feat(frontend): add the project list and the project frame, and remove the old shell` | P3, P4, P5 | 48 | about 1700 |
+| P7 | `feat/fe/threads` | `feat(frontend): read the threads of a project and show the run in the status bar` | P6 | 18 | about 800 |
+| P8 | `feat/fe/artifacts-read` | `feat(frontend): read artifacts and items` | P6 | about 40 | about 3500 |
+| P9 | `feat/fe/console` | `feat(frontend): add the console, its outline and commands, and remove the chat` | P7, P8 | 46 | about 3400 |
+| P10 | `feat/fe/search` | `feat(frontend): search the items of a project` | P8 | 10 | about 300 |
+| P11 | `feat/fe/item-edit` | `feat(frontend): edit an item` | P8 | about 6 | about 600 |
+| P12 | `feat/fe/item-history` | `feat(frontend): show the revisions and the trace of an item` | P8 | about 8 | about 900 |
+| P13 | `feat/fe/export` | `feat(frontend): export the artifacts of a project` | P8, P9 | about 6 | about 500 |
+| P14 | `feat/fe/review` | `feat(frontend): review a run at a checkpoint` | P8, P9 | 17 | about 1500 |
+| P15 | `feat/fe/workflow` | `feat(frontend): show the workflow of a run, its steps and its state` | P7, P8 | about 35 | about 2400 |
+| P16 | `feat/fe/traceability` | `feat(frontend): add the traceability matrix, gaps and issues` | P8 | 21 | about 900 |
+| P17 | `feat/fe/project-settings` | `feat(frontend): add the settings of a project` | P6, P15 | 26 | about 1300 |
+| P18 | `feat/fe/user-settings` | `feat(frontend): add the settings of the user` | P4, P17 | 25 | about 1800 |
 
 P0, P1 and P2 do not depend on anything and can be open at the same time as P3. File counts and line counts are measured on the branch (files added, modified or deleted against `main`); the artifacts rows are estimates because the slice is cut by hunks.
 
@@ -147,85 +147,28 @@ Paths are under `frontend/` unless they start with `docs/` or `.github/`. `ls` o
 
 ### P0. CI for the frontend
 
-Files: `.github/workflows/frontend.yml`; optionally `.github/pull_request_template.md` with the fields that CONTRIBUTING asks for (what, why, how to test, screenshots, linked issue).
+State: draft PR #9 from `chore/fe/ci`.
 
-Design of the workflow:
+Files: `.github/workflows/frontend-ci.yml` (workflow "Frontend CI") and `.github/pull_request_template.md` (the fields and the definition of done of CONTRIBUTING).
+
+| Job | What it does |
+|---|---|
+| `Changed files` | On a pull request, reads the changed files from the API and answers whether `frontend/`, `.nvmrc` or the workflow changed. On a push or a manual run it answers yes |
+| `Checks` | In order: `pnpm typecheck`, `pnpm lint`, `pnpm format:check`, `pnpm test`, `pnpm build`. Skipped when the frontend did not change |
+| `E2E` | `pnpm exec playwright install --with-deps chromium`, then `pnpm e2e` (`next dev` with the mocks on port 3100; in CI, 2 retries and the `github` reporter). Uploads `test-results` (traces and error context) when it fails, because the `github` reporter writes no HTML report. Skipped when the frontend did not change |
+| `Frontend CI result` | Always runs; fails when a job above failed or was cancelled, passes when they passed or were skipped |
 
 | Item | Choice |
 |---|---|
-| Trigger | `pull_request` and `push` to `main`, with `paths: [frontend/**, .nvmrc, .github/workflows/frontend.yml]` |
-| Runtime | Node from `.nvmrc` (22); pnpm from `packageManager` in `frontend/package.json` (`pnpm/action-setup`); the pnpm store cached by `actions/setup-node` with `cache-dependency-path: frontend/pnpm-lock.yaml` |
-| Install | `pnpm install --frozen-lockfile` in `frontend/` |
-| Job `check` | In order: `pnpm typecheck`, `pnpm lint`, `pnpm format:check`, `pnpm test`, `pnpm build` |
-| Job `e2e` | `pnpm e2e:install` (Chromium with system dependencies), then `pnpm e2e`. The Playwright config already starts `next dev` with the mocks on port 3100, uses 2 retries and the `github` reporter when `CI` is set. Upload `playwright-report/` when it fails. On a cold `next dev` the first tests of a spec can time out while their routes compile (seen locally, section 7); the retries cover it |
-| Hygiene | `permissions: contents: read`, `concurrency` with `cancel-in-progress`, `timeout-minutes` on each job |
+| Trigger | Every `pull_request`; `push` to `main` with `paths: [frontend/**, .nvmrc, .github/workflows/frontend-ci.yml]`; `workflow_dispatch` |
+| Actions | `actions/checkout@v7`, `pnpm/action-setup@v6` (pnpm from `packageManager`), `actions/setup-node@v7` (Node from `.nvmrc`, pnpm store cached on `frontend/pnpm-lock.yaml`), `actions/upload-artifact@v7` |
+| Hygiene | `permissions: contents: read` (and `pull-requests: read` for `Changed files`), `persist-credentials: false`, `concurrency` that cancels the older runs of a pull request but not those of `main`, `timeout-minutes` on each job, Next.js telemetry off |
 
-Options for the jobs: one job `check` with the five steps (one install, simple, a failure hides the later steps) or one job per step (parallel, clear red step, five installs from the cache). Recommendation: one `check` job and one `e2e` job at first; split when the run time hurts.
+Required check: the ruleset `protect-main` of `main` requires `Frontend CI result`, reported by GitHub Actions, with no bypass (added on 2026-10-12). A workflow skipped by a `paths` filter never reports and leaves a required check pending, so pull requests are filtered by the `Changed files` job instead: a pull request that changes nothing under `frontend/` skips `Checks` and `E2E` and merges normally. A branch cut from `main` before P0 merges has no workflow, so its pull request is blocked until the branch is rebased on `main`.
 
-Two cautions. If `check` and `e2e` become required status checks, a workflow that is skipped by `paths` never reports and blocks the PR; either keep the filter and accept it, or drop the filter while the repository holds only the frontend. Branch protection itself is a GitHub setting, not a file.
+`main` before P0, run on 2026-10-12 (`origin/main` at `33635d6`, extracted with `git archive` into a scratch directory, one step at a time): typecheck, lint (about 950 MB RSS), format check, unit tests (18 passed) and build pass. `chat.spec.ts` passes 5 of 5 on a warm dev server; on a cold one the first tests time out while their routes compile, which the CI retries cover. The workflow passes `actionlint` 1.7.12.
 
-Sketch, not tested:
-
-```yaml
-name: frontend
-on:
-  pull_request:
-    paths: ['frontend/**', '.nvmrc', '.github/workflows/frontend.yml']
-  push:
-    branches: [main]
-    paths: ['frontend/**', '.nvmrc', '.github/workflows/frontend.yml']
-concurrency:
-  group: frontend-${{ github.ref }}
-  cancel-in-progress: true
-permissions:
-  contents: read
-defaults:
-  run:
-    working-directory: frontend
-jobs:
-  check:
-    runs-on: ubuntu-latest
-    timeout-minutes: 20
-    steps:
-      - uses: actions/checkout@v4
-      - uses: pnpm/action-setup@v4
-        with:
-          package_json_file: frontend/package.json
-      - uses: actions/setup-node@v4
-        with:
-          node-version-file: .nvmrc
-          cache: pnpm
-          cache-dependency-path: frontend/pnpm-lock.yaml
-      - run: pnpm install --frozen-lockfile
-      - run: pnpm typecheck
-      - run: pnpm lint
-      - run: pnpm format:check
-      - run: pnpm test
-      - run: pnpm build
-  e2e:
-    runs-on: ubuntu-latest
-    timeout-minutes: 30
-    steps:
-      - uses: actions/checkout@v4
-      - uses: pnpm/action-setup@v4
-        with:
-          package_json_file: frontend/package.json
-      - uses: actions/setup-node@v4
-        with:
-          node-version-file: .nvmrc
-          cache: pnpm
-          cache-dependency-path: frontend/pnpm-lock.yaml
-      - run: pnpm install --frozen-lockfile
-      - run: pnpm exec playwright install --with-deps chromium
-      - run: pnpm e2e
-      - if: failure()
-        uses: actions/upload-artifact@v4
-        with:
-          name: playwright-report
-          path: frontend/playwright-report
-```
-
-Before writing the workflow, learn what `main` does today: extract `main` into a scratch directory with `git archive origin/main frontend | tar -x -C <dir>` (no worktree, the checkout stays as it is), install, and run the five steps once, one at a time. If a step is red on `main`, fix it in P0 or leave that step out and say so in the PR. This has not been run yet. On the branch, `pnpm build` passes since the fix of section 7.
+First run, on PR #9 (2026-10-12): the four jobs pass in about 2 minutes, `Checks` and `E2E` in about 1.5 minutes each; `chat.spec.ts` passes 5 of 5 without a retry, and the pull request shows the required check as passed.
 
 Out of scope for P0: the backend workflow, the codegen check from CONTRIBUTING (the backend has no routes yet), commitlint, a check of the PR title (for example `amannn/action-semantic-pull-request`, a one-file addition if wanted).
 
@@ -416,7 +359,7 @@ Once, before P0 and P3:
 
 For every PR:
 
-1. `git fetch`, then `git switch -c <branch> origin/main`. Never merge `main` into the branch; rebase it.
+1. `git fetch`, then `git switch --no-track -c <branch> origin/main` (without `--no-track` the branch tracks `main`). Never merge `main` into the branch; rebase it.
 2. `git checkout feat/fe/mock -- <paths of the slice>`, then cut the shared files of section 6.
 3. Run the checks one at a time, in this order, stopping the dev server first: `pnpm typecheck`, `pnpm lint`, `pnpm format:check`, the unit tests of the slice (`pnpm test <folder>`; the full `pnpm test` before opening the PR), `pnpm build`, the e2e spec of the slice (`pnpm e2e tests/e2e/<spec>`; needs `pnpm e2e:install` once).
 4. Open the screens of the slice with `pnpm dev:mock` and the addresses of `src/mocks/README.md`.
@@ -431,8 +374,8 @@ For every PR:
 | `feat/fe/workflow-review` | It holds a second workflow view (graph spacing, steps grouped by subject, state of a node) and backend commits such as "number a retried run after the last run of its thread". Take nothing, take the graph fixes into P15, or merge the branch line first | Compare its `WorkflowGraph` and `step-groups` with the branch of this plan before P15; the backend commits belong with the backend port |
 | Types written by hand | Keep until the backend publishes `openapi.json`, then replace with the generated client in a PR of its own | Keep; the generated folder is empty |
 | `GET /artifacts/{id}/revisions` mock without a caller | Drop it or keep it for a later screen | Drop from P8 |
-| Required status checks | Make `check` and `e2e` required after P0 has run green once | Yes, with the `paths` caveat of P0 |
-| Issue numbers for the branch names | One issue per PR, as CONTRIBUTING asks, or one tracking issue with a task list | One tracking issue with a task list, to avoid 19 issues |
+| Required status checks | Decided: `Frontend CI result` is required by the ruleset `protect-main`; pull requests that do not change the frontend skip the checks (see P0) | Done |
+| Issue numbers for the branch names | Decided: no issue number; branches are `<type>/fe/<name>` (section 4) | Done |
 | E2E in CI before all specs exist | Run only the specs of merged features (each PR brings its spec) | Run all; each PR adds its own |
 | `features/agents/.gitkeep` | An empty folder with no code | Leave alone |
 
@@ -441,8 +384,9 @@ For every PR:
 - [x] Uncommitted work committed on `feat/fe/mock` (to be reviewed)
 - [x] E2E specs of the side panel change and `pnpm build` run on `feat/fe/mock`; the `/settings` build fix to be committed
 - [ ] Section 8 decided (at least the workflow-review line)
-- [ ] `main` run through the five checks in a scratch directory
-- [ ] P0 CI merged, `check` and `e2e` required
+- [x] `main` run through the five checks in a scratch directory
+- [x] `Frontend CI result` required on `main` (ruleset `protect-main`)
+- [ ] P0 CI merged
 - [ ] P1 tooling merged
 - [ ] P2 API docs merged
 - [ ] P3 frame merged
