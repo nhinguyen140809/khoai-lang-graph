@@ -33,4 +33,43 @@ describe('useHotkey', () => {
 
     expect(handler).not.toHaveBeenCalled()
   })
+
+  it('leaves a key without the modifier to a field the user types in', () => {
+    const plain = vi.fn()
+    const withMod = vi.fn()
+    renderHook(() => {
+      useHotkey('?', plain)
+      useHotkey('k', withMod, { mod: true })
+    })
+    const input = document.createElement('input')
+    const textarea = document.createElement('textarea')
+    document.body.append(input, textarea)
+
+    const typed = fireEvent.keyDown(input, { key: '?' })
+    fireEvent.keyDown(textarea, { key: '?' })
+    fireEvent.keyDown(input, { key: 'k', ctrlKey: true })
+    fireEvent.keyDown(document.body, { key: '?' })
+
+    expect(typed).toBe(true)
+    expect(plain).toHaveBeenCalledTimes(1)
+    expect(withMod).toHaveBeenCalledTimes(1)
+    input.remove()
+    textarea.remove()
+  })
+
+  it('matches by the character on a Latin layout, else by the place of the key', () => {
+    const handler = vi.fn()
+    renderHook(() => {
+      useHotkey('k', handler, { mod: true })
+    })
+
+    // Cyrillic layout: the K key types a letter that is not Latin.
+    fireEvent.keyDown(document, { key: '\u043b', code: 'KeyK', ctrlKey: true })
+    // Dvorak: the key labeled K sits where V is on a US keyboard.
+    fireEvent.keyDown(document, { key: 'k', code: 'KeyV', ctrlKey: true })
+    // Dvorak: the key at the place of K types T, which is not the hotkey.
+    fireEvent.keyDown(document, { key: 't', code: 'KeyK', ctrlKey: true })
+
+    expect(handler).toHaveBeenCalledTimes(2)
+  })
 })
