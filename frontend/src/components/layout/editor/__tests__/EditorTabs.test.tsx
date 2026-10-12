@@ -50,6 +50,12 @@ describe('EditorTabs', () => {
     expect(screen.getByRole('link', { name: 'AMB-001' })).not.toHaveAttribute('aria-current')
   })
 
+  it('remembers the page on screen, so that a tab a page opens goes next to its tab', () => {
+    renderTabs('p1:search')
+
+    expect(useEditorTabsStore.getState().lastHrefs['p1:search']).toBe(req.href)
+  })
+
   it('shows the next tab after closing the tab on screen', async () => {
     renderTabs('p1:search')
 

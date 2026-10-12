@@ -1,14 +1,14 @@
 'use client'
 
-import { usePathname } from 'next/navigation'
-import { Activity, type ReactNode, useEffect, useState } from 'react'
+import { Activity, type ReactNode, useState } from 'react'
 
 import { ResizableHandle, ResizablePanel, ResizablePanelGroup } from '@/components/ui/resizable'
 import { Surface } from '@/components/ui/surface'
 import { useHotkey } from '@/hooks/useHotkey'
 
+import { usePinSideFeature } from './activity-bar/hooks/usePinSideFeature'
 import { useSideFeature } from './activity-bar/hooks/useSideFeature'
-import { projectTabGroup, useEditorTabsStore } from './editor/editor-tabs.store'
+import { projectTabGroup } from './editor/editor-tabs.store'
 import { EditorTabs } from './editor/EditorTabs'
 import { useFrameStore } from './frame.store'
 import { useFrameHydrated } from './hooks/useFrameHydrated'
@@ -27,28 +27,14 @@ const SIDE_PANEL_MIN_WIDTH = 180
  * hides and shows the side panel, which keeps its width in pixels when the window is resized.
  */
 export function ProjectWorkspace({ projectId, children }: ProjectWorkspaceProps) {
-  const pathname = usePathname()
   const hydrated = useFrameHydrated()
   const sidePanelVisible = useFrameStore((state) => state.sidePanelVisible)
-  const sideFeature = useSideFeature()
-  const sideFeatureId = sideFeature?.id
-  const sideFeatureChosen = useFrameStore((state) => state.sideFeature !== null)
-  const setSideFeature = useFrameStore((state) => state.setSideFeature)
   const toggleSidePanel = useFrameStore((state) => state.toggleSidePanel)
-  const setLastHref = useEditorTabsStore((state) => state.setLastHref)
+  const sideFeature = useSideFeature()
   const group = projectTabGroup(projectId)
 
   useHotkey('b', toggleSidePanel, { mod: true })
-
-  useEffect(() => {
-    setLastHref(group, pathname)
-  }, [group, pathname, setLastHref])
-
-  // The first side panel is the one of the page opened; from then on it stays until another is
-  // chosen.
-  useEffect(() => {
-    if (hydrated && !sideFeatureChosen && sideFeatureId !== undefined) setSideFeature(sideFeatureId)
-  }, [hydrated, sideFeatureId, sideFeatureChosen, setSideFeature])
+  usePinSideFeature(sideFeature?.id)
 
   return (
     // The stored width is read after the first render; the new key mounts the group with it.

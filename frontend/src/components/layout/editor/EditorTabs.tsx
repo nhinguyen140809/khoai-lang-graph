@@ -4,6 +4,7 @@ import { FileIcon, XIcon } from 'lucide-react'
 import type { Route } from 'next'
 import Link from 'next/link'
 import { usePathname, useRouter } from 'next/navigation'
+import { useEffect } from 'react'
 
 import { cn } from '@/lib/utils'
 
@@ -23,14 +24,20 @@ const noTabs: EditorTab[] = []
  * The open editors of a project, whichever feature they belong to. A tab shows the icon its page
  * names among the tab icons of the frame, else the icon of the feature it belongs to. A middle
  * click or the close button closes a tab; the close button shows on the active tab and on the tab
- * under the pointer.
+ * under the pointer. The strip remembers the page on screen, so that a tab a page opens goes next
+ * to the tab of that page.
  */
 export function EditorTabs({ group, rootHref }: EditorTabsProps) {
   const pathname = usePathname()
   const router = useRouter()
   const tabs = useEditorTabsStore((state) => state.groups[group]) ?? noTabs
   const closeTab = useEditorTabsStore((state) => state.closeTab)
+  const setLastHref = useEditorTabsStore((state) => state.setLastHref)
   const { activities, tabIcons } = useActivities()
+
+  useEffect(() => {
+    setLastHref(group, pathname)
+  }, [group, pathname, setLastHref])
 
   if (tabs.length === 0) return null
 

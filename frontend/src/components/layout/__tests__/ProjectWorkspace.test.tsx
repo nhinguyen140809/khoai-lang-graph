@@ -112,10 +112,4 @@ describe('ProjectWorkspace', () => {
     expect(screen.queryByRole('complementary')).not.toBeInTheDocument()
     expect(screen.getByRole('main')).toHaveTextContent('editor')
   })
-
-  it('remembers the page on screen for the tabs', () => {
-    renderProjectWorkspace()
-
-    expect(useEditorTabsStore.getState().lastHrefs.p1).toBe('/projects/p1/artifacts')
-  })
 })
