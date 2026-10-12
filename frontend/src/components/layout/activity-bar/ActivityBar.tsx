@@ -1,9 +1,8 @@
 'use client'
 
-import type { ReactNode } from 'react'
+import type { ComponentProps, ReactNode } from 'react'
 
 import { Tooltip, TooltipContent, TooltipTrigger } from '@/components/ui/tooltip'
-import { cn } from '@/lib/utils'
 
 import { useFrameStore } from '../frame.store'
 import { useActivities } from './ActivitiesContext'
@@ -15,9 +14,6 @@ interface ActivityBarProps {
   /** The account menu, at the bottom. */
   account: ReactNode
 }
-
-const itemClassName =
-  'relative flex size-9 items-center justify-center rounded-md text-muted-foreground outline-none transition-colors hover:text-foreground focus-visible:ring-2 focus-visible:ring-ring/50 [&_svg]:size-5'
 
 /**
  * One icon per feature that the screen gives Workbench, then the account menu; a screen that gives
@@ -62,53 +58,56 @@ function ActivityItem({ activity }: { activity: Activity }) {
 
   if (!isFeatureActivity(activity)) {
     return (
-      <Tooltip>
-        <TooltipTrigger asChild>
-          <button
-            type="button"
-            aria-disabled="true"
-            className={cn(itemClassName, 'cursor-default opacity-50 hover:text-muted-foreground')}
-          >
-            {icon}
-            <span className="sr-only">
-              {activity.label}, {activity.note}
-            </span>
-          </button>
-        </TooltipTrigger>
-        <TooltipContent side="right">
-          {activity.label} ({activity.note})
-        </TooltipContent>
-      </Tooltip>
+      <ActivityButton aria-disabled="true" tooltip={`${activity.label} (${activity.note})`}>
+        {icon}
+        <span className="sr-only">
+          {activity.label}, {activity.note}
+        </span>
+      </ActivityButton>
     )
   }
 
   const active = sideFeature?.id === activity.id
 
   return (
+    <ActivityButton
+      aria-pressed={active}
+      tooltip={activity.label}
+      onClick={() => {
+        // Like an editor: the item of the open panel toggles it.
+        if (active) toggleSidePanel()
+        else showSideFeature(activity.id)
+      }}
+    >
+      {icon}
+      <span className="sr-only">{activity.label}</span>
+      {activity.badge !== undefined && (
+        <span className="absolute -top-0.5 -right-0.5">{activity.badge}</span>
+      )}
+    </ActivityButton>
+  )
+}
+
+interface ActivityButtonProps extends ComponentProps<'button'> {
+  /** The name of the item, shown on the right while the pointer is over it. */
+  tooltip: string
+}
+
+/**
+ * An icon button of the activity bar. Its look follows its state: `aria-pressed` marks the
+ * feature whose side panel is shown, and `aria-disabled` a feature planned for later.
+ */
+function ActivityButton({ tooltip, ...props }: ActivityButtonProps) {
+  return (
     <Tooltip>
       <TooltipTrigger asChild>
         <button
           type="button"
-          aria-pressed={active}
-          onClick={() => {
-            // Like an editor: the item of the open panel toggles it.
-            if (active) toggleSidePanel()
-            else showSideFeature(activity.id)
-          }}
-          className={cn(
-            itemClassName,
-            active &&
-              'text-foreground before:absolute before:inset-y-1.5 before:-left-1.5 before:w-0.5 before:rounded-full before:bg-primary',
-          )}
-        >
-          {icon}
-          <span className="sr-only">{activity.label}</span>
-          {activity.badge !== undefined && (
-            <span className="absolute -top-0.5 -right-0.5">{activity.badge}</span>
-          )}
-        </button>
+          className="relative flex size-9 items-center justify-center rounded-md text-muted-foreground transition-colors outline-none not-aria-disabled:hover:text-foreground focus-visible:ring-2 focus-visible:ring-ring/50 aria-disabled:opacity-50 aria-pressed:text-foreground aria-pressed:before:absolute aria-pressed:before:inset-y-1.5 aria-pressed:before:-left-1.5 aria-pressed:before:w-0.5 aria-pressed:before:rounded-full aria-pressed:before:bg-primary [&_svg]:size-5"
+          {...props}
+        />
       </TooltipTrigger>
-      <TooltipContent side="right">{activity.label}</TooltipContent>
+      <TooltipContent side="right">{tooltip}</TooltipContent>
     </Tooltip>
   )
 }
