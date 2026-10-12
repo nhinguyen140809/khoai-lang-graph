@@ -2,7 +2,7 @@
 
 import { useSearchParams } from 'next/navigation'
 
-import { featureTabGroup } from '@/components/layout/activity-bar.config'
+import { projectTabGroup } from '@/components/layout/activity-bar.config'
 import { useEditorTab } from '@/components/layout/hooks/useEditorTab'
 import { ErrorState, LoadingState, NotFoundState } from '@/components/state'
 import { isNotFoundError } from '@/lib/api-fetch.utils'
@@ -24,7 +24,7 @@ export function SettingsPage({ projectId }: { projectId: string }) {
   const definition = useSettingsDefinition()
   const models = useModels()
 
-  useEditorTab(featureTabGroup(projectId, 'settings'), {
+  useEditorTab(projectTabGroup(projectId), {
     id: 'settings',
     title: 'Settings',
     href: settingsHref(projectId, section),

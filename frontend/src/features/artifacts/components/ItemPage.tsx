@@ -5,7 +5,7 @@ import type { Route } from 'next'
 import Link from 'next/link'
 import { useState } from 'react'
 
-import { featureTabGroup } from '@/components/layout/activity-bar.config'
+import { projectTabGroup } from '@/components/layout/activity-bar.config'
 import { EditorWithPanel } from '@/components/layout/EditorWithPanel'
 import { useEditorTab } from '@/components/layout/hooks/useEditorTab'
 import { ErrorState, LoadingState, NotFoundState } from '@/components/state'
@@ -46,7 +46,7 @@ export function ItemPage({ projectId, itemId, embedded = false, onBack }: ItemPa
   const now = useNow()
 
   useEditorTab(
-    featureTabGroup(projectId, 'artifacts'),
+    projectTabGroup(projectId),
     item.isSuccess && !embedded
       ? { id: itemId, title: item.data.key, href: itemHref(projectId, itemId), icon: 'item' }
       : null,

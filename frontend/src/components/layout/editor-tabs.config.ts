@@ -1,21 +1,31 @@
 import {
+  ClipboardCheckIcon,
   FileIcon,
   FileTextIcon,
   type LucideIcon,
   PlayIcon,
   SettingsIcon,
+  SquareChevronRightIcon,
   TableIcon,
 } from 'lucide-react'
 
 /** What an editor tab can show; each has its icon. */
-export const editorTabIconNames = ['artifact', 'item', 'run', 'view', 'settings'] as const
+export const editorTabIconNames = [
+  'artifact',
+  'item',
+  'run',
+  'view',
+  'settings',
+  'console',
+  'review',
+] as const
 
 export type EditorTabIcon = (typeof editorTabIconNames)[number]
 
 /**
  * The icon of a tab by what it shows: an artifact as a document, one item, a run, a view such as
- * the traceability matrix, or settings. A tab without an icon name shows the icon of its feature
- * on the activity bar.
+ * the traceability matrix, settings, the console or a review. A tab without an icon name shows the
+ * icon of its feature on the activity bar.
  */
 export const editorTabIcons = {
   artifact: FileTextIcon,
@@ -23,4 +33,6 @@ export const editorTabIcons = {
   run: PlayIcon,
   view: TableIcon,
   settings: SettingsIcon,
+  console: SquareChevronRightIcon,
+  review: ClipboardCheckIcon,
 } as const satisfies Record<EditorTabIcon, LucideIcon>

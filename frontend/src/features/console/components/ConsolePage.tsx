@@ -1,7 +1,10 @@
 'use client'
 
+import { usePathname } from 'next/navigation'
 import type { ReactNode } from 'react'
 
+import { projectTabGroup } from '@/components/layout/activity-bar.config'
+import { useEditorTab } from '@/components/layout/hooks/useEditorTab'
 import { ErrorState, LoadingState } from '@/components/state'
 
 import { useConsoleThread } from '../hooks/useConsoleThread'
@@ -28,6 +31,13 @@ export function ConsolePage({
   reviewOpen = false,
 }: ConsolePageProps) {
   const resolved = useConsoleThread(projectId, threadId === undefined)
+  const pathname = usePathname()
+
+  // The console in a review is a part of the tab of the review.
+  useEditorTab(
+    projectTabGroup(projectId),
+    reviewOpen ? null : { id: 'console', title: 'Console', href: pathname, icon: 'console' },
+  )
 
   if (threadId !== undefined) {
     return (

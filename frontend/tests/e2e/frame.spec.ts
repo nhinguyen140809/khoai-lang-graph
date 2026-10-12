@@ -60,3 +60,26 @@ for (const [state, label] of [
     ).toBeVisible()
   })
 }
+
+test('the tabs of a project stay open when the feature changes, and the review is one tab', async ({
+  page,
+}) => {
+  await page.goto(`/projects/${PROJECT_IDS.mentor}/console`)
+  const tabs = page.getByRole('navigation', { name: 'Open editors' })
+  await expect(tabs.getByRole('link', { name: 'Console' })).toBeVisible({ timeout: 20_000 })
+
+  await page.getByRole('link', { name: 'Open the review' }).click()
+  await expect(tabs.getByRole('link', { name: 'Review' })).toBeVisible({ timeout: 20_000 })
+
+  const features = page.getByRole('navigation', { name: 'Features' })
+  await features.getByRole('link', { name: 'Workflow' }).click()
+  await expect(page).toHaveURL(/\/workflow/, { timeout: 20_000 })
+
+  // The tabs of Console and of the review are still there, in the strip of Workflow.
+  await expect(tabs.getByRole('link', { name: 'Console' })).toBeVisible()
+  await expect(tabs.getByRole('link', { name: 'Review' })).toBeVisible()
+
+  await tabs.getByRole('link', { name: 'Review' }).click()
+  await expect(page).toHaveURL(/\/review\//, { timeout: 20_000 })
+  await expect(page.getByRole('region', { name: 'Review' })).toBeVisible({ timeout: 20_000 })
+})

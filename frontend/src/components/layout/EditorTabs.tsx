@@ -1,30 +1,29 @@
 'use client'
 
-import { type LucideIcon, XIcon } from 'lucide-react'
+import { XIcon } from 'lucide-react'
 import type { Route } from 'next'
 import Link from 'next/link'
 import { usePathname, useRouter } from 'next/navigation'
 
 import { cn } from '@/lib/utils'
 
+import { featureIcon, featureOfPathname } from './activity-bar.config'
 import { editorTabIcons } from './editor-tabs.config'
 import { type EditorTab, neighborTab, useEditorTabsStore } from './editor-tabs.store'
 
 interface EditorTabsProps {
   group: string
-  /** Shown after the last tab is closed. */
+  /** Shown after the last tab is closed: the page of the feature in view. */
   rootHref: Route
-  /** The icon of a tab that names none: the icon of the feature. */
-  defaultIcon: LucideIcon
 }
 
 const noTabs: EditorTab[] = []
 
 /**
- * The open editors of one tab group, each with the icon of what it shows. A middle click or the
+ * The open editors of a project, whichever feature they belong to, each with the icon of what it shows. A middle click or the
  * close button closes a tab.
  */
-export function EditorTabs({ group, rootHref, defaultIcon }: EditorTabsProps) {
+export function EditorTabs({ group, rootHref }: EditorTabsProps) {
   const pathname = usePathname()
   const router = useRouter()
   const tabs = useEditorTabsStore((state) => state.groups[group]) ?? noTabs
@@ -47,7 +46,13 @@ export function EditorTabs({ group, rootHref, defaultIcon }: EditorTabsProps) {
       <ul className="flex">
         {tabs.map((tab) => {
           const active = tab.href === pathname
-          const Icon = tab.icon === undefined ? defaultIcon : editorTabIcons[tab.icon]
+          const feature = featureOfPathname(tab.href)
+          const Icon =
+            tab.icon !== undefined
+              ? editorTabIcons[tab.icon]
+              : feature === null
+                ? editorTabIcons.item
+                : featureIcon(feature)
           return (
             <li
               key={tab.id}

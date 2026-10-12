@@ -7,7 +7,7 @@ import { parseStored, persistStorage } from '@/lib/browser-storage.utils'
 import { editorTabIconNames } from './editor-tabs.config'
 
 const editorTabSchema = z.object({
-  /** Unique in its group, for example the id of the thread or the item. */
+  /** Unique in its group, for example the id of the run or the item. */
   id: z.string(),
   title: z.string(),
   href: z.string(),
@@ -57,7 +57,7 @@ function mergeGroups(
 let storageRead = false
 
 /**
- * The editor tabs of every project on this device; a group is one feature of one project.
+ * The editor tabs of every project on this device; a group is one project, and holds the tabs of every feature.
  * AppFrame reads them after the first render.
  */
 export const useEditorTabsStore = create<EditorTabsState>()(
@@ -91,9 +91,10 @@ export const useEditorTabsStore = create<EditorTabsState>()(
         set((state) => {
           const tabs = state.groups[group] ?? []
           const closed = tabs.find((tab) => tab.id === id)
-          const lastHrefs = { ...state.lastHrefs }
-          // eslint-disable-next-line @typescript-eslint/no-dynamic-delete -- keyed by group name
-          if (closed !== undefined && lastHrefs[group] === closed.href) delete lastHrefs[group]
+          // A page that is closed is not the page to return to.
+          const lastHrefs = Object.fromEntries(
+            Object.entries(state.lastHrefs).filter(([, href]) => href !== closed?.href),
+          )
           return {
             groups: { ...state.groups, [group]: tabs.filter((tab) => tab.id !== id) },
             lastHrefs,

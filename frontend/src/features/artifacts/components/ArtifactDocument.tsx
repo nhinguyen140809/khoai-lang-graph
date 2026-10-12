@@ -1,6 +1,6 @@
 'use client'
 
-import { featureTabGroup } from '@/components/layout/activity-bar.config'
+import { projectTabGroup } from '@/components/layout/activity-bar.config'
 import { useEditorTab } from '@/components/layout/hooks/useEditorTab'
 import { ErrorState, LoadingState, NotFoundState } from '@/components/state'
 import {
@@ -81,7 +81,7 @@ export function ArtifactDocument({
   const schemas = schemasByKind(kinds.data)
 
   useEditorTab(
-    featureTabGroup(projectId, 'artifacts'),
+    projectTabGroup(projectId),
     artifact.isSuccess && !embedded
       ? {
           id: artifactId,

@@ -4,7 +4,7 @@ import type { Route } from 'next'
 import { useRouter, useSearchParams } from 'next/navigation'
 import { useMemo, useState } from 'react'
 
-import { featureTabGroup } from '@/components/layout/activity-bar.config'
+import { projectTabGroup } from '@/components/layout/activity-bar.config'
 import { EditorWithPanel } from '@/components/layout/EditorWithPanel'
 import { useEditorTab } from '@/components/layout/hooks/useEditorTab'
 import { ErrorState, LoadingState, NotFoundState } from '@/components/state'
@@ -36,7 +36,7 @@ export function RunPage({ projectId, runId }: RunPageProps) {
   const [pickedNode, setPickedNode] = useState<string | null>(null)
 
   useEditorTab(
-    featureTabGroup(projectId, 'workflow'),
+    projectTabGroup(projectId),
     run === undefined
       ? null
       : {

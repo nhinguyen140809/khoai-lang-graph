@@ -3,6 +3,9 @@
 import { useRouter } from 'next/navigation'
 import type { ComponentType, ReactNode } from 'react'
 
+import { projectTabGroup } from '@/components/layout/activity-bar.config'
+import { useEditorTabsStore } from '@/components/layout/editor-tabs.store'
+import { useEditorTab } from '@/components/layout/hooks/useEditorTab'
 import { surfaceClassName } from '@/components/layout/surface.config'
 import { EmptyState, ErrorState, LoadingState } from '@/components/state'
 import { Button } from '@/components/ui/button'
@@ -31,7 +34,20 @@ interface ReviewPageProps {
 export function ReviewPage({ projectId, runId, Artifacts, Console }: ReviewPageProps) {
   const router = useRouter()
   const interrupt = usePendingInterrupt(runId)
+  const closeTab = useEditorTabsStore((state) => state.closeTab)
+  const href = `/projects/${encodeURIComponent(projectId)}/review/${encodeURIComponent(runId)}`
+
+  // The review is one tab, with the artifact and the console split inside it.
+  useEditorTab(projectTabGroup(projectId), {
+    id: `review:${runId}`,
+    title: 'Review',
+    href,
+    icon: 'review',
+  })
+
   const backToConsole = () => {
+    // An answered review has nothing left to show, so its tab closes.
+    closeTab(projectTabGroup(projectId), `review:${runId}`)
     router.push(`/projects/${encodeURIComponent(projectId)}/console`)
   }
 
@@ -53,7 +69,7 @@ export function ReviewPage({ projectId, runId, Artifacts, Console }: ReviewPageP
 
   const current = interrupt.data
   return (
-    <ResizablePanelGroup orientation="horizontal" className="min-h-0 flex-1">
+    <ResizablePanelGroup orientation="horizontal" className="h-full">
       <ResizablePanel id="review-artifacts" defaultSize="50%" minSize="25%">
         <div className={cn(surfaceClassName, 'h-full overflow-auto')}>
           <Artifacts

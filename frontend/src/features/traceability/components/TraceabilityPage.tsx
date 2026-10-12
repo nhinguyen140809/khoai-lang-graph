@@ -2,7 +2,7 @@
 
 import { useSearchParams } from 'next/navigation'
 
-import { featureTabGroup } from '@/components/layout/activity-bar.config'
+import { projectTabGroup } from '@/components/layout/activity-bar.config'
 import { useEditorTab } from '@/components/layout/hooks/useEditorTab'
 
 import { traceabilityHref } from '../traceability-links.utils'
@@ -14,7 +14,7 @@ export function TraceabilityPage({ projectId }: { projectId: string }) {
   const params = useSearchParams()
   const issues = params.get('view') === 'issues'
 
-  useEditorTab(featureTabGroup(projectId, 'traceability'), {
+  useEditorTab(projectTabGroup(projectId), {
     id: issues ? 'issues' : 'matrix',
     title: issues ? 'Issues' : 'Matrix',
     href: traceabilityHref(projectId, issues ? { view: 'issues' } : {}),

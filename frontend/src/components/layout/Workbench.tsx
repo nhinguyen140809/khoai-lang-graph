@@ -9,9 +9,9 @@ import { cn } from '@/lib/utils'
 
 import {
   featureHref,
-  featureIcon,
   featureTabGroup,
   type ProjectFeature,
+  projectTabGroup,
 } from './activity-bar.config'
 import { useEditorTabsStore } from './editor-tabs.store'
 import { EditorTabs } from './EditorTabs'
@@ -42,13 +42,15 @@ export function Workbench({ projectId, feature, side, children }: WorkbenchProps
   const setSidePanelWidth = useFrameStore((state) => state.setSidePanelWidth)
   const toggleSidePanel = useFrameStore((state) => state.toggleSidePanel)
   const setLastHref = useEditorTabsStore((state) => state.setLastHref)
-  const group = featureTabGroup(projectId, feature)
+  const featureGroup = featureTabGroup(projectId, feature)
+  const group = projectTabGroup(projectId)
 
   useHotkey('b', toggleSidePanel, { mod: true, enabled: side !== undefined })
 
   useEffect(() => {
+    setLastHref(featureGroup, pathname)
     setLastHref(group, pathname)
-  }, [group, pathname, setLastHref])
+  }, [featureGroup, group, pathname, setLastHref])
 
   return (
     // The stored width is read after the first render; the new key mounts the group with it.
@@ -76,11 +78,7 @@ export function Workbench({ projectId, feature, side, children }: WorkbenchProps
       )}
       <ResizablePanel id="editor" minSize="30%">
         <div className={cn(surfaceClassName, 'flex h-full min-w-0 flex-col')}>
-          <EditorTabs
-            group={group}
-            rootHref={featureHref(projectId, feature)}
-            defaultIcon={featureIcon(feature)}
-          />
+          <EditorTabs group={group} rootHref={featureHref(projectId, feature)} />
           <main className="min-h-0 flex-1 overflow-auto">{children}</main>
         </div>
       </ResizablePanel>

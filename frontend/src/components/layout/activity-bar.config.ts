@@ -50,7 +50,12 @@ export function featureHref(projectId: string, feature: ProjectFeature): Route {
   return `/projects/${encodeURIComponent(projectId)}/${feature}` as Route
 }
 
-/** The editor tab group of one feature of one project. */
+/** The editor tabs of one project: one strip for every feature, so a tab stays open when the feature changes. */
+export function projectTabGroup(projectId: string): string {
+  return projectId
+}
+
+/** The key under which the last page of one feature of one project is remembered. */
 export function featureTabGroup(projectId: string, feature: ProjectFeature): string {
   return `${projectId}:${feature}`
 }
@@ -58,6 +63,8 @@ export function featureTabGroup(projectId: string, feature: ProjectFeature): str
 /** The feature of a project page, from its pathname. */
 export function featureOfPathname(pathname: string): ProjectFeature | null {
   const segment = /^\/projects\/[^/]+\/([^/]+)/.exec(pathname)?.[1]
+  // The review of a run is a page of the console.
+  if (segment === 'review') return 'console'
   return projectFeatures.find((feature) => feature === segment) ?? null
 }
 
