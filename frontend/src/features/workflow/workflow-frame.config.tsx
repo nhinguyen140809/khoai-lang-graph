@@ -1,8 +1,8 @@
 import { NetworkIcon, PlayIcon } from 'lucide-react'
 import type { Route } from 'next'
 
-import type { FeatureActivity, TabIcons } from '@/components/layout/activity.types'
-import { SidePanel } from '@/components/layout/SidePanel'
+import type { FeatureActivity, TabIcons } from '@/components/layout'
+import { SidePanel } from '@/components/layout'
 
 import { RunTree } from './components/RunTree'
 

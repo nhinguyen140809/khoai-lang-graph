@@ -1,9 +1,9 @@
 import { usePathname } from 'next/navigation'
 
+import { useFrameStore } from '../../frame.store'
 import { useActivities } from '../ActivitiesContext'
 import type { FeatureActivity } from '../activity.types'
 import { activityOfHref, isFeatureActivity } from '../activity.utils'
-import { useFrameStore } from '../frame.store'
 
 /**
  * The feature whose side panel is shown. It is the one the user chose on the activity bar; until

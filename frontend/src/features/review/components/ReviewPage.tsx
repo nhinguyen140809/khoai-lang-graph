@@ -3,9 +3,12 @@
 import { useRouter } from 'next/navigation'
 import { type ComponentType, type ReactNode, useEffect, useState } from 'react'
 
-import { projectTabGroup, useEditorTabsStore } from '@/components/layout/editor-tabs.store'
-import { useEditorTab } from '@/components/layout/hooks/useEditorTab'
-import { surfaceClassName } from '@/components/layout/surface.config'
+import {
+  projectTabGroup,
+  surfaceClassName,
+  useEditorTab,
+  useEditorTabsStore,
+} from '@/components/layout'
 import { EmptyState, ErrorState, LoadingState } from '@/components/state'
 import { Button } from '@/components/ui/button'
 import { ResizableHandle, ResizablePanel, ResizablePanelGroup } from '@/components/ui/resizable'

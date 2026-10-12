@@ -16,8 +16,8 @@ import {
 } from '@/components/ui/command'
 import { useHotkey } from '@/hooks/useHotkey'
 
+import { useFrameStore } from '../frame.store'
 import { useCommandPaletteStore } from './command-palette.store'
-import { useFrameStore } from './frame.store'
 
 const themes = [
   { value: 'light', label: 'Light', Icon: SunIcon },

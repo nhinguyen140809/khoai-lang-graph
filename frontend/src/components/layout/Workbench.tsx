@@ -2,14 +2,14 @@
 
 import { type ReactNode, useEffect, useMemo } from 'react'
 
-import { ActivitiesContext } from './ActivitiesContext'
-import type { Activity, TabIcons } from './activity.types'
-import { isFeatureActivity } from './activity.utils'
-import { CommandPalette } from './CommandPalette'
-import { useEditorTabsStore } from './editor-tabs.store'
-import { FeatureCommands } from './FeatureCommands'
+import { ActivitiesContext } from './activity-bar/ActivitiesContext'
+import type { Activity, TabIcons } from './activity-bar/activity.types'
+import { isFeatureActivity } from './activity-bar/activity.utils'
+import { CommandPalette } from './command-palette/CommandPalette'
+import { FeatureCommands } from './command-palette/FeatureCommands'
+import { useEditorTabsStore } from './editor/editor-tabs.store'
 import { useFrameStore } from './frame.store'
-import { StatusBar } from './StatusBar'
+import { StatusBar } from './status-bar/StatusBar'
 
 interface WorkbenchProps {
   topBar: ReactNode

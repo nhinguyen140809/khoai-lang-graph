@@ -1,10 +1,6 @@
 import type { ReactNode } from 'react'
 
-import { ActivityBar } from '@/components/layout/ActivityBar'
-import { PageCrumb } from '@/components/layout/PageCrumb'
-import { surfaceClassName } from '@/components/layout/surface.config'
-import { TopBar } from '@/components/layout/TopBar'
-import { Workbench } from '@/components/layout/Workbench'
+import { ActivityBar, PageCrumb, surfaceClassName, TopBar, Workbench } from '@/components/layout'
 import { UserMenu } from '@/features/account'
 import { NewProjectDialog, ProjectCommands } from '@/features/projects'
 import { ThemeSync } from '@/features/settings'

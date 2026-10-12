@@ -2,8 +2,8 @@ import { render, screen } from '@testing-library/react'
 import userEvent from '@testing-library/user-event'
 import { beforeEach, describe, expect, it } from 'vitest'
 
+import { useFrameStore } from '../../frame.store'
 import { EditorWithPanel } from '../EditorWithPanel'
-import { useFrameStore } from '../frame.store'
 
 beforeEach(() => {
   useFrameStore.setState({ bottomPanelVisible: true })

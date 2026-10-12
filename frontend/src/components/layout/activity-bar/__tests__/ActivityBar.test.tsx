@@ -14,10 +14,10 @@ import { beforeEach, describe, expect, it, vi } from 'vitest'
 import { setPathname } from '@/test/next-mocks.utils'
 import { TestProviders } from '@/test/TestProviders'
 
+import { useFrameStore } from '../../frame.store'
 import { ActivitiesContext } from '../ActivitiesContext'
 import type { Activity } from '../activity.types'
 import { ActivityBar } from '../ActivityBar'
-import { useFrameStore } from '../frame.store'
 
 vi.mock('next/navigation', async () => (await import('@/test/next-mocks.utils')).navigationMock)
 

@@ -3,7 +3,7 @@
 import { FolderIcon, LayoutListIcon, PlusIcon, RotateCcwIcon } from 'lucide-react'
 import { useRouter } from 'next/navigation'
 
-import { useCommandPaletteStore } from '@/components/layout/command-palette.store'
+import { useCommandPaletteStore } from '@/components/layout'
 import { CommandGroup, CommandItem } from '@/components/ui/command'
 
 import { useProjects } from '../hooks/useProjects'

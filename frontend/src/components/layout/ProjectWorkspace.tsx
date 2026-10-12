@@ -7,11 +7,11 @@ import { ResizableHandle, ResizablePanel, ResizablePanelGroup } from '@/componen
 import { useHotkey } from '@/hooks/useHotkey'
 import { cn } from '@/lib/utils'
 
-import { projectTabGroup, useEditorTabsStore } from './editor-tabs.store'
-import { EditorTabs } from './EditorTabs'
+import { useSideFeature } from './activity-bar/hooks/useSideFeature'
+import { projectTabGroup, useEditorTabsStore } from './editor/editor-tabs.store'
+import { EditorTabs } from './editor/EditorTabs'
 import { useFrameStore } from './frame.store'
 import { useFrameHydrated } from './hooks/useFrameHydrated'
-import { useSideFeature } from './hooks/useSideFeature'
 import { surfaceClassName } from './surface.config'
 
 interface ProjectWorkspaceProps {

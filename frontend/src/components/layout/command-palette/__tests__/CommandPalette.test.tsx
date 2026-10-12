@@ -4,9 +4,9 @@ import { beforeEach, describe, expect, it } from 'vitest'
 
 import { CommandGroup, CommandItem } from '@/components/ui/command'
 
+import { useFrameStore } from '../../frame.store'
 import { useCommandPaletteStore } from '../command-palette.store'
 import { CommandPalette } from '../CommandPalette'
-import { useFrameStore } from '../frame.store'
 
 beforeEach(() => {
   useCommandPaletteStore.setState({ open: false })

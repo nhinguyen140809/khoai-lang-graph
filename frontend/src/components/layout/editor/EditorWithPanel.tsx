@@ -7,9 +7,9 @@ import { Button } from '@/components/ui/button'
 import { ResizableHandle, ResizablePanel, ResizablePanelGroup } from '@/components/ui/resizable'
 import { cn } from '@/lib/utils'
 
-import { useFrameStore } from './frame.store'
-import { useFrameHydrated } from './hooks/useFrameHydrated'
-import { surfaceClassName } from './surface.config'
+import { useFrameStore } from '../frame.store'
+import { useFrameHydrated } from '../hooks/useFrameHydrated'
+import { surfaceClassName } from '../surface.config'
 
 interface EditorWithPanelProps {
   /** The content of the panel under the editor, such as the trace of an item. */

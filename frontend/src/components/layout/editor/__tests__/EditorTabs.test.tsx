@@ -7,8 +7,8 @@ import { beforeEach, describe, expect, it, vi } from 'vitest'
 
 import { routerMock, setPathname } from '@/test/next-mocks.utils'
 
-import { ActivitiesContext } from '../ActivitiesContext'
-import type { Activity, TabIcons } from '../activity.types'
+import { ActivitiesContext } from '../../activity-bar/ActivitiesContext'
+import type { Activity, TabIcons } from '../../activity-bar/activity.types'
 import { useEditorTabsStore } from '../editor-tabs.store'
 import { EditorTabs } from '../EditorTabs'
 

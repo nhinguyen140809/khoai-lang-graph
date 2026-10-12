@@ -4,7 +4,7 @@ import type { Route } from 'next'
 import { useRouter } from 'next/navigation'
 import { type ReactNode, useEffect, useRef, useState } from 'react'
 
-import { useFrameStore } from '@/components/layout/frame.store'
+import { useFrameStore } from '@/components/layout'
 import { ErrorState, LoadingState } from '@/components/state'
 import { ScrollArea } from '@/components/ui/scroll-area'
 import { useHotkey } from '@/hooks/useHotkey'

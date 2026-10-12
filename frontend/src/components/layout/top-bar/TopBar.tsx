@@ -6,7 +6,7 @@ import type { ReactNode } from 'react'
 
 import { Kbd, KbdGroup } from '@/components/ui/kbd'
 
-import { useCommandPaletteStore } from './command-palette.store'
+import { useCommandPaletteStore } from '../command-palette/command-palette.store'
 
 interface TopBarProps {
   /** What follows "khoai /": a page name, or the menu of the current project. */

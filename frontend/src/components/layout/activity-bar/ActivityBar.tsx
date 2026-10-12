@@ -5,10 +5,10 @@ import type { ReactNode } from 'react'
 import { Tooltip, TooltipContent, TooltipTrigger } from '@/components/ui/tooltip'
 import { cn } from '@/lib/utils'
 
+import { useFrameStore } from '../frame.store'
 import { useActivities } from './ActivitiesContext'
 import type { Activity } from './activity.types'
 import { isFeatureActivity } from './activity.utils'
-import { useFrameStore } from './frame.store'
 import { useSideFeature } from './hooks/useSideFeature'
 
 interface ActivityBarProps {

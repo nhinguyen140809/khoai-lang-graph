@@ -1,12 +1,14 @@
 import { FolderInputIcon } from 'lucide-react'
 import Link from 'next/link'
 
-import type { Activity, TabIcons } from '@/components/layout/activity.types'
-import { ActivityBar } from '@/components/layout/ActivityBar'
-import { ProjectWorkspace } from '@/components/layout/ProjectWorkspace'
-import { surfaceClassName } from '@/components/layout/surface.config'
-import { TopBar } from '@/components/layout/TopBar'
-import { Workbench } from '@/components/layout/Workbench'
+import type { Activity, TabIcons } from '@/components/layout'
+import {
+  ActivityBar,
+  ProjectWorkspace,
+  surfaceClassName,
+  TopBar,
+  Workbench,
+} from '@/components/layout'
 import { NotFoundState } from '@/components/state'
 import { Button } from '@/components/ui/button'
 import { UserMenu } from '@/features/account'

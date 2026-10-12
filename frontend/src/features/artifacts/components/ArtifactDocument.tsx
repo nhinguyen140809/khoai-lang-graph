@@ -1,7 +1,6 @@
 'use client'
 
-import { projectTabGroup } from '@/components/layout/editor-tabs.store'
-import { useEditorTab } from '@/components/layout/hooks/useEditorTab'
+import { projectTabGroup, useEditorTab } from '@/components/layout'
 import { ErrorState, LoadingState, NotFoundState } from '@/components/state'
 import {
   Table,

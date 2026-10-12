@@ -2,10 +2,10 @@
 
 import { CommandGroup, CommandItem } from '@/components/ui/command'
 
-import { useActivities } from './ActivitiesContext'
-import { isFeatureActivity } from './activity.utils'
+import { useActivities } from '../activity-bar/ActivitiesContext'
+import { isFeatureActivity } from '../activity-bar/activity.utils'
+import { useFrameStore } from '../frame.store'
 import { useCommandPaletteStore } from './command-palette.store'
-import { useFrameStore } from './frame.store'
 
 /** Commands that show the side panel of each feature of the screen, like the activity bar. */
 export function FeatureCommands() {

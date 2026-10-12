@@ -41,6 +41,11 @@ const sharedCodePatterns = [
     message:
       'Shared code must not import features or the app layer. Pass feature components in as props from src/app/.',
   },
+  {
+    group: ['@/components/layout', '@/components/layout/**'],
+    message:
+      'Shared code does not import the frame. Inside src/components/layout, use relative imports.',
+  },
 ]
 
 const featurePatterns = [
@@ -48,6 +53,10 @@ const featurePatterns = [
     group: ['@/features', '@/features/**', '@/app/**', '@/providers/**'],
     message:
       'A feature must not import another feature or the app layer. Compose features in src/app/, or move the shared code to src/components, src/hooks, or src/lib.',
+  },
+  {
+    group: ['@/components/layout/**'],
+    message: 'Import the frame from @/components/layout, its index.',
   },
 ]
 
@@ -129,6 +138,10 @@ export default defineConfig([
             {
               regex: '^(\\.\\./)+(src/)?features/[^/]+/',
               message: "Import from the feature's index (@/features/<feature>).",
+            },
+            {
+              group: ['@/components/layout/**'],
+              message: 'Import the frame from @/components/layout, its index.',
             },
           ],
         },

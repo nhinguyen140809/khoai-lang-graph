@@ -7,8 +7,8 @@ import { usePathname, useRouter } from 'next/navigation'
 
 import { cn } from '@/lib/utils'
 
-import { useActivities } from './ActivitiesContext'
-import { activityOfHref } from './activity.utils'
+import { useActivities } from '../activity-bar/ActivitiesContext'
+import { activityOfHref } from '../activity-bar/activity.utils'
 import { type EditorTab, neighborTab, useEditorTabsStore } from './editor-tabs.store'
 
 interface EditorTabsProps {
