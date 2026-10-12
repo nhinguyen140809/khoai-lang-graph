@@ -270,6 +270,13 @@
   pre {
     font-family: var(--font-mono);
   }
+
+  /* Tailwind 4 gives buttons the arrow cursor of the browser. A button that can be pressed shows
+     the hand, like a link; a disabled one keeps the arrow, and a cursor-* class still wins. */
+  button:not(:disabled, [aria-disabled='true']),
+  [role='button']:not([aria-disabled='true']) {
+    cursor: pointer;
+  }
 }
 
 /*
