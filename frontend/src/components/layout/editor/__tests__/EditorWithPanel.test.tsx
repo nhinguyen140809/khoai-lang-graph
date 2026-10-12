@@ -1,4 +1,4 @@
-import { render, screen } from '@testing-library/react'
+import { fireEvent, render, screen } from '@testing-library/react'
 import userEvent from '@testing-library/user-event'
 import { beforeEach, describe, expect, it } from 'vitest'
 
@@ -22,11 +22,33 @@ describe('EditorWithPanel', () => {
 
     await userEvent.click(screen.getByRole('button', { name: 'Hide Trace and timeline' }))
 
-    expect(screen.queryByText('trace of REQ-001')).not.toBeInTheDocument()
-    expect(screen.getByText('REQ-001 Search mentors')).toBeInTheDocument()
+    expect(screen.getByText('trace of REQ-001')).not.toBeVisible()
+    expect(screen.getByText('REQ-001 Search mentors')).toBeVisible()
 
     await userEvent.click(screen.getByRole('button', { name: 'Show Trace and timeline' }))
 
-    expect(screen.getByText('trace of REQ-001')).toBeInTheDocument()
+    expect(screen.getByText('trace of REQ-001')).toBeVisible()
+    expect(
+      screen.queryByRole('button', { name: 'Show Trace and timeline' }),
+    ).not.toBeInTheDocument()
+  })
+
+  it('keeps the editor and the panel as they were while the panel is hidden', async () => {
+    render(
+      <EditorWithPanel panelLabel="Trace" panel={<input aria-label="Filter" />}>
+        <input aria-label="Title" />
+      </EditorWithPanel>,
+    )
+    // Without layout in jsdom, a click in the group of panels lands on its handle.
+    fireEvent.change(screen.getByRole('textbox', { name: 'Title' }), {
+      target: { value: 'Search mentors' },
+    })
+    fireEvent.change(screen.getByRole('textbox', { name: 'Filter' }), { target: { value: 'REQ' } })
+
+    await userEvent.click(screen.getByRole('button', { name: 'Hide Trace' }))
+    await userEvent.click(screen.getByRole('button', { name: 'Show Trace' }))
+
+    expect(screen.getByRole('textbox', { name: 'Title' })).toHaveValue('Search mentors')
+    expect(screen.getByRole('textbox', { name: 'Filter' })).toHaveValue('REQ')
   })
 })
