@@ -10,6 +10,12 @@ interface HomeLayoutProps {
   children: ReactNode
 }
 
+/** The name of each screen on the top bar, by the start of its address. */
+const pages = [
+  { path: '/settings', name: 'Settings' },
+  { path: '/projects', name: 'Projects' },
+]
+
 /**
  * Screens outside a project: the frame, with the account menu on the activity bar. They have no
  * feature yet; a feature shown outside a project would be passed to Workbench here as an activity.
@@ -19,7 +25,7 @@ export default function HomeLayout({ children }: HomeLayoutProps) {
     <>
       <ThemeSync />
       <Workbench
-        crumb={<PageCrumb />}
+        crumb={<PageCrumb pages={pages} fallback="Projects" />}
         account={<UserMenu />}
         commands={
           <>

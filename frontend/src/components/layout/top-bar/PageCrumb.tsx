@@ -2,7 +2,16 @@
 
 import { usePathname } from 'next/navigation'
 
-/** The name of a screen outside a project, for the top bar. */
-export function PageCrumb() {
-  return usePathname().startsWith('/settings') ? 'Settings' : 'Projects'
+interface PageCrumbProps {
+  /** The name of each page, by the start of its address; the first that matches is shown. */
+  pages: readonly { path: string; name: string }[]
+  /** The name shown when no page matches. */
+  fallback: string
+}
+
+/** The name of the page on screen, after "khoai /" on the top bar. */
+export function PageCrumb({ pages, fallback }: PageCrumbProps) {
+  const pathname = usePathname()
+  const page = pages.find(({ path }) => pathname === path || pathname.startsWith(`${path}/`))
+  return page?.name ?? fallback
 }
