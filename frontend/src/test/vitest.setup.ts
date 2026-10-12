@@ -1,10 +1,15 @@
 import '@testing-library/jest-dom/vitest'
 
 import { cleanup } from '@testing-library/react'
-import { afterAll, afterEach, beforeAll } from 'vitest'
+import { afterAll, afterEach, beforeAll, vi } from 'vitest'
 
 import { resetMockData } from '@/mocks/mock-db.utils'
 import { server } from '@/mocks/msw-server.setup'
+
+// Unit tests run without the Next.js router, so every test gets the stand-in of next/navigation
+// (src/test/next-mocks.utils.ts). The mock handlers loaded here import modules that read the
+// router; mocked in a test file instead, the real router would already be bound to them.
+vi.mock('next/navigation', async () => (await import('@/test/next-mocks.utils')).navigationMock)
 
 // Browser APIs that jsdom lacks: resizable panels observe their size, the command palette
 // scrolls the selected command into view, and the theme provider asks for the system theme.
