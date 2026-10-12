@@ -1,3 +1,4 @@
+export { ThemeCommands } from './components/ThemeCommands'
 export { ThemeSync } from './components/ThemeSync'
 export { UserSettingsPage } from './components/UserSettingsPage'
 export { useSettingsStore } from './settings.store'

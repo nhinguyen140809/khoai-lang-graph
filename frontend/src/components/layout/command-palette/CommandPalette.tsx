@@ -1,9 +1,5 @@
 'use client'
 
-import { MonitorIcon, MoonIcon, PanelLeftIcon, SunIcon } from 'lucide-react'
-import { useTheme } from 'next-themes'
-import type { ReactNode } from 'react'
-
 import {
   Command,
   CommandDialog,
@@ -16,29 +12,19 @@ import {
 } from '@/components/ui/command'
 import { useHotkey } from '@/hooks/useHotkey'
 
-import { useFrameStore } from '../frame.store'
+import { commandGroups, hotkeyLabel } from './command.utils'
 import { useCommandPaletteStore } from './command-palette.store'
+import { useCommandRegistryStore } from './command-registry.store'
 
-const themes = [
-  { value: 'light', label: 'Light', Icon: SunIcon },
-  { value: 'dark', label: 'Dark', Icon: MoonIcon },
-  { value: 'system', label: 'System', Icon: MonitorIcon },
-]
-
-interface CommandPaletteProps {
-  /** Command groups of the screen, shown before the View group. Each closes the palette. */
-  children?: ReactNode
-  /** Offers the command that hides and shows the side panel. */
-  sidePanelCommand?: boolean
-}
-
-/** Search and commands, opened with Ctrl+K or the search box of the top bar. */
-export function CommandPalette({ children, sidePanelCommand = false }: CommandPaletteProps) {
+/**
+ * Search and commands, opened with Ctrl+K or the search box of the top bar. It lists the commands
+ * that the components on screen register with `useCommands`, and closes when one is chosen.
+ */
+export function CommandPalette() {
   const open = useCommandPaletteStore((state) => state.open)
   const setOpen = useCommandPaletteStore((state) => state.setOpen)
   const toggle = useCommandPaletteStore((state) => state.toggle)
-  const toggleSidePanel = useFrameStore((state) => state.toggleSidePanel)
-  const { setTheme } = useTheme()
+  const sources = useCommandRegistryStore((state) => state.sources)
 
   useHotkey('k', toggle, { mod: true })
 
@@ -54,34 +40,30 @@ export function CommandPalette({ children, sidePanelCommand = false }: CommandPa
         <CommandInput placeholder="Search or run a command" />
         <CommandList>
           <CommandEmpty>Nothing found.</CommandEmpty>
-          {children}
-          <CommandGroup heading="View">
-            {sidePanelCommand && (
-              <CommandItem
-                onSelect={() => {
-                  setOpen(false)
-                  toggleSidePanel()
-                }}
-              >
-                <PanelLeftIcon aria-hidden />
-                Toggle side panel
-                <CommandShortcut>Ctrl+B</CommandShortcut>
-              </CommandItem>
-            )}
-            {themes.map(({ value, label, Icon }) => (
-              <CommandItem
-                key={value}
-                value={`Theme ${label}`}
-                onSelect={() => {
-                  setOpen(false)
-                  setTheme(value)
-                }}
-              >
-                <Icon aria-hidden />
-                Theme: {label}
-              </CommandItem>
-            ))}
-          </CommandGroup>
+          {commandGroups(sources.values()).map(({ heading, commands }) => (
+            <CommandGroup key={heading} heading={heading}>
+              {commands.map(({ id, label, group, icon, hotkey, run }) => (
+                <CommandItem
+                  key={id}
+                  // The search matches the group too; the id keeps two equal labels apart.
+                  value={`${group} ${label} ${id}`}
+                  disabled={run === undefined}
+                  onSelect={() => {
+                    setOpen(false)
+                    run?.()
+                  }}
+                >
+                  {icon !== undefined && (
+                    <span aria-hidden className="flex">
+                      {icon}
+                    </span>
+                  )}
+                  {label}
+                  {hotkey !== undefined && <CommandShortcut>{hotkeyLabel(hotkey)}</CommandShortcut>}
+                </CommandItem>
+              ))}
+            </CommandGroup>
+          ))}
         </CommandList>
       </Command>
     </CommandDialog>

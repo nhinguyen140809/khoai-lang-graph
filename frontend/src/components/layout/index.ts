@@ -6,7 +6,8 @@ export type {
   PlannedActivity,
   TabIcons,
 } from './activity-bar/activity.types'
-export { useCommandPaletteStore } from './command-palette/command-palette.store'
+export type { Command, CommandHotkey } from './command-palette/command.types'
+export { useCommands } from './command-palette/hooks/useCommands'
 export { projectTabGroup, useEditorTabsStore } from './editor/editor-tabs.store'
 export { EditorWithPanel } from './editor/EditorWithPanel'
 export { useEditorTab } from './editor/hooks/useEditorTab'

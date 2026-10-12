@@ -1,13 +1,15 @@
 'use client'
 
+import { PanelLeftIcon } from 'lucide-react'
 import { Activity, type ReactNode, useState } from 'react'
 
 import { ResizableHandle, ResizablePanel, ResizablePanelGroup } from '@/components/ui/resizable'
 import { Surface } from '@/components/ui/surface'
-import { useHotkey } from '@/hooks/useHotkey'
 
 import { usePinSideFeature } from './activity-bar/hooks/usePinSideFeature'
 import { useSideFeature } from './activity-bar/hooks/useSideFeature'
+import type { Command } from './command-palette/command.types'
+import { useCommands } from './command-palette/hooks/useCommands'
 import { projectTabGroup } from './editor/editor-tabs.store'
 import { EditorTabs } from './editor/EditorTabs'
 import { useFrameStore } from './frame.store'
@@ -21,6 +23,19 @@ interface ProjectWorkspaceProps {
 
 const SIDE_PANEL_MIN_WIDTH = 180
 
+const workspaceCommands: Command[] = [
+  {
+    id: 'view.toggleSidePanel',
+    label: 'Toggle side panel',
+    group: 'View',
+    icon: <PanelLeftIcon />,
+    hotkey: { key: 'b', mod: true },
+    run: () => {
+      useFrameStore.getState().toggleSidePanel()
+    },
+  },
+]
+
 /**
  * The side panel and the editor. The side panel is the one of the feature chosen on the activity
  * bar, and the editor follows the tabs, so choosing a feature does not change the editor. Ctrl+B
@@ -29,11 +44,10 @@ const SIDE_PANEL_MIN_WIDTH = 180
 export function ProjectWorkspace({ projectId, children }: ProjectWorkspaceProps) {
   const hydrated = useFrameHydrated()
   const sidePanelVisible = useFrameStore((state) => state.sidePanelVisible)
-  const toggleSidePanel = useFrameStore((state) => state.toggleSidePanel)
   const sideFeature = useSideFeature()
   const group = projectTabGroup(projectId)
 
-  useHotkey('b', toggleSidePanel, { mod: true })
+  useCommands(workspaceCommands)
   usePinSideFeature(sideFeature?.id)
 
   return (

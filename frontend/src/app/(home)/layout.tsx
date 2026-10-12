@@ -4,7 +4,7 @@ import { PageCrumb, Workbench } from '@/components/layout'
 import { Surface } from '@/components/ui/surface'
 import { UserMenu } from '@/features/account'
 import { NewProjectDialog, ProjectCommands } from '@/features/projects'
-import { ThemeSync } from '@/features/settings'
+import { ThemeCommands, ThemeSync } from '@/features/settings'
 
 interface HomeLayoutProps {
   children: ReactNode
@@ -21,7 +21,12 @@ export default function HomeLayout({ children }: HomeLayoutProps) {
       <Workbench
         crumb={<PageCrumb />}
         account={<UserMenu />}
-        commands={<ProjectCommands />}
+        commands={
+          <>
+            <ProjectCommands />
+            <ThemeCommands />
+          </>
+        }
         dialogs={<NewProjectDialog />}
       >
         <Surface as="main" className="min-h-0 flex-1">

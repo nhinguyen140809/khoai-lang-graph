@@ -1,0 +1,31 @@
+import type { Command, CommandHotkey } from './command.types'
+
+interface CommandGroup {
+  heading: string
+  commands: Command[]
+}
+
+/**
+ * The commands by group. The groups are in alphabetical order, so that the list does not depend on
+ * the order in which the components that register them mount; a group keeps the order of its
+ * commands.
+ */
+export function commandGroups(sources: Iterable<readonly Command[]>): CommandGroup[] {
+  const groups = new Map<string, Command[]>()
+  for (const commands of sources) {
+    for (const command of commands) {
+      const group = groups.get(command.group)
+      if (group === undefined) groups.set(command.group, [command])
+      else group.push(command)
+    }
+  }
+  return [...groups]
+    .sort(([a], [b]) => a.localeCompare(b))
+    .map(([heading, commands]) => ({ heading, commands }))
+}
+
+/** The text of a hotkey, such as `Ctrl+B`. */
+export function hotkeyLabel({ key, mod = false }: CommandHotkey): string {
+  const name = key.length === 1 ? key.toUpperCase() : key
+  return mod ? `Ctrl+${name}` : name
+}

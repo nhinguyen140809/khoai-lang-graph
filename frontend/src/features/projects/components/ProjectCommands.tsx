@@ -3,8 +3,7 @@
 import { FolderIcon, LayoutListIcon, PlusIcon, RotateCcwIcon } from 'lucide-react'
 import { useRouter } from 'next/navigation'
 
-import { useCommandPaletteStore } from '@/components/layout'
-import { CommandGroup, CommandItem } from '@/components/ui/command'
+import { type Command, useCommands } from '@/components/layout'
 
 import { useProjects } from '../hooks/useProjects'
 import { useNewProjectDialogStore } from '../new-project.store'
@@ -14,58 +13,59 @@ interface ProjectCommandsProps {
   currentProjectId?: string
 }
 
-/** Commands of the command palette that open a project or create one. */
+/** Registers the commands that open a project or create one. Renders nothing. */
 export function ProjectCommands({ currentProjectId }: ProjectCommandsProps) {
   const router = useRouter()
   const projects = useProjects('active')
-  const setPaletteOpen = useCommandPaletteStore((state) => state.setOpen)
   const openNewProject = useNewProjectDialogStore((state) => state.setOpen)
+  const commands: Command[] = []
 
-  return (
-    <CommandGroup heading="Projects">
-      {projects.isPending && <CommandItem disabled>Loading projects...</CommandItem>}
-      {projects.isError && (
-        <CommandItem onSelect={() => void projects.refetch()}>
-          <RotateCcwIcon aria-hidden />
-          Failed to load projects. Try again
-        </CommandItem>
-      )}
-      {projects.data
-        ?.filter(({ id }) => id !== currentProjectId)
-        .map(({ id, name }) => (
-          <CommandItem
-            key={id}
-            // The id keeps the value unique when two projects share a name.
-            value={`Open project ${name} ${id}`}
-            onSelect={() => {
-              setPaletteOpen(false)
-              router.push(`/projects/${encodeURIComponent(id)}/console`)
-            }}
-          >
-            <FolderIcon aria-hidden />
-            Open {name}
-          </CommandItem>
-        ))}
-      <CommandItem
-        value="All projects"
-        onSelect={() => {
-          setPaletteOpen(false)
-          router.push('/projects')
-        }}
-      >
-        <LayoutListIcon aria-hidden />
-        All projects
-      </CommandItem>
-      <CommandItem
-        value="New project"
-        onSelect={() => {
-          setPaletteOpen(false)
-          openNewProject(true)
-        }}
-      >
-        <PlusIcon aria-hidden />
-        New project
-      </CommandItem>
-    </CommandGroup>
+  if (projects.isPending) {
+    commands.push({ id: 'projects.loading', label: 'Loading projects...', group: 'Projects' })
+  }
+  if (projects.isError) {
+    commands.push({
+      id: 'projects.retry',
+      label: 'Failed to load projects. Try again',
+      group: 'Projects',
+      icon: <RotateCcwIcon />,
+      run: () => void projects.refetch(),
+    })
+  }
+  for (const { id, name } of projects.data ?? []) {
+    if (id === currentProjectId) continue
+    commands.push({
+      id: `projects.open.${id}`,
+      label: `Open ${name}`,
+      group: 'Projects',
+      icon: <FolderIcon />,
+      run: () => {
+        router.push(`/projects/${encodeURIComponent(id)}/console`)
+      },
+    })
+  }
+  commands.push(
+    {
+      id: 'projects.all',
+      label: 'All projects',
+      group: 'Projects',
+      icon: <LayoutListIcon />,
+      run: () => {
+        router.push('/projects')
+      },
+    },
+    {
+      id: 'projects.new',
+      label: 'New project',
+      group: 'Projects',
+      icon: <PlusIcon />,
+      run: () => {
+        openNewProject(true)
+      },
+    },
   )
+
+  useCommands(commands)
+
+  return null
 }

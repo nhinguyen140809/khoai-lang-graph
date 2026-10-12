@@ -1,13 +1,13 @@
 'use client'
 
+import { ChevronsDownUpIcon, ChevronsUpDownIcon } from 'lucide-react'
 import type { Route } from 'next'
 import { useRouter } from 'next/navigation'
 import { type ReactNode, useEffect, useRef, useState } from 'react'
 
-import { useFrameStore } from '@/components/layout'
+import { useCommands, useFrameStore } from '@/components/layout'
 import { ErrorState, LoadingState } from '@/components/state'
 import { ScrollArea } from '@/components/ui/scroll-area'
-import { useHotkey } from '@/hooks/useHotkey'
 import { useNow } from '@/hooks/useNow'
 
 import { useCommandHistoryStore } from '../command-history.store'
@@ -47,13 +47,18 @@ export function Console({ projectId, threadId, afterLog, reviewOpen = false }: C
   const now = useNow(activeRun === null ? 60_000 : 1000).getTime()
   const endRef = useRef<HTMLDivElement>(null)
 
-  useHotkey(
-    'o',
-    () => {
-      setExpandAll((previous) => !previous)
+  useCommands([
+    {
+      id: 'console.toggleSteps',
+      label: expandAll ? 'Collapse steps' : 'Expand steps',
+      group: 'Console',
+      icon: expandAll ? <ChevronsDownUpIcon /> : <ChevronsUpDownIcon />,
+      hotkey: { key: 'o', mod: true },
+      run: () => {
+        setExpandAll((previous) => !previous)
+      },
     },
-    { mod: true },
-  )
+  ])
 
   // The review opens by itself when a run that was running stops at a checkpoint.
   const previousStatus = useRef(activeRun?.status)

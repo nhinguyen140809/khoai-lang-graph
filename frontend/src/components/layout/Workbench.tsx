@@ -4,7 +4,6 @@ import { type ReactNode, useEffect, useMemo } from 'react'
 
 import { ActivitiesContext } from './activity-bar/ActivitiesContext'
 import type { Activity, TabIcons } from './activity-bar/activity.types'
-import { isFeatureActivity } from './activity-bar/activity.utils'
 import { ActivityBar } from './activity-bar/ActivityBar'
 import { CommandPalette } from './command-palette/CommandPalette'
 import { FeatureCommands } from './command-palette/FeatureCommands'
@@ -27,7 +26,11 @@ interface WorkbenchProps {
   tabIcons?: TabIcons
   /** What the status bar reports at its left; the bar is always shown. */
   status?: ReactNode
-  /** Command groups for the command palette, after the commands that show a feature. */
+  /**
+   * Components that register the commands of the screen with `useCommands`, such as the projects
+   * to open; they render nothing. The frame registers its own, and a page registers the commands
+   * that act on it.
+   */
   commands?: ReactNode
   /** Dialogs that commands or pages open, such as the new project dialog. */
   dialogs?: ReactNode
@@ -53,7 +56,6 @@ export function Workbench({
   children,
 }: WorkbenchProps) {
   const frameActivities = useMemo(() => ({ activities, tabIcons }), [activities, tabIcons])
-  const hasFeatures = activities.some(isFeatureActivity)
 
   useEffect(() => {
     // Read after the first render, so that it matches the server HTML.
@@ -70,10 +72,9 @@ export function Workbench({
           <div className="flex min-w-0 flex-1 flex-col pr-1.5 pb-1.5">{children}</div>
         </div>
         <StatusBar>{status}</StatusBar>
-        <CommandPalette sidePanelCommand={hasFeatures}>
-          {hasFeatures && <FeatureCommands />}
-          {commands}
-        </CommandPalette>
+        <CommandPalette />
+        <FeatureCommands />
+        {commands}
         {dialogs}
       </div>
     </ActivitiesContext>

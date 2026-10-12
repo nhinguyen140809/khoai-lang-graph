@@ -204,8 +204,8 @@ The first PR of the product, as planned. It is additive: nothing on `main` impor
 
 | Group | Files |
 |---|---|
-| Frame | `src/components/layout/`, by region: the root (`Workbench.tsx`, `ProjectWorkspace.tsx`, `frame.store.ts`, `hooks/useFrameHydrated.ts`, `index.ts`), `activity-bar/` (`ActivityBar.tsx`, `ActivitiesContext.tsx`, `activity.types.ts`, `activity.utils.ts`, `hooks/useSideFeature.ts`, `hooks/usePinSideFeature.ts`), `side-panel/` (`SidePanel.tsx`, `SidePanelSection.tsx`), `editor/` (`EditorTabs.tsx`, `EditorWithPanel.tsx`, `editor-tabs.store.ts`, `hooks/useEditorTab.ts`), `top-bar/` (`TopBar.tsx`, `PageCrumb.tsx`), `status-bar/` (`StatusBar.tsx`), `command-palette/` (`CommandPalette.tsx`, `FeatureCommands.tsx`, `command-palette.store.ts`) |
-| Unit tests | In the `__tests__/` folder of each region: ProjectWorkspace; ActivityBar, `activity.utils`; SidePanelSection; EditorTabs, EditorWithPanel, `editor-tabs.store`; StatusBar; CommandPalette |
+| Frame | `src/components/layout/`, by region: the root (`Workbench.tsx`, `ProjectWorkspace.tsx`, `frame.store.ts`, `hooks/useFrameHydrated.ts`, `index.ts`), `activity-bar/` (`ActivityBar.tsx`, `ActivitiesContext.tsx`, `activity.types.ts`, `activity.utils.ts`, `hooks/useSideFeature.ts`, `hooks/usePinSideFeature.ts`), `side-panel/` (`SidePanel.tsx`, `SidePanelSection.tsx`), `editor/` (`EditorTabs.tsx`, `EditorWithPanel.tsx`, `editor-tabs.store.ts`, `hooks/useEditorTab.ts`), `top-bar/` (`TopBar.tsx`, `PageCrumb.tsx`), `status-bar/` (`StatusBar.tsx`), `command-palette/` (`CommandPalette.tsx`, `FeatureCommands.tsx`, `command-palette.store.ts`, `command-registry.store.ts`, `command.types.ts`, `command.utils.ts`, `hooks/useCommands.ts`) |
+| Unit tests | In the `__tests__/` folder of each region: ProjectWorkspace; ActivityBar, `activity.utils`; SidePanelSection; EditorTabs, EditorWithPanel, `editor-tabs.store`; StatusBar; CommandPalette, `command.utils`, and `useCommands` in `command-palette/hooks/__tests__/` |
 | Needed by the frame | `src/hooks/useHotkey.ts` and its test, `src/lib/browser-storage.utils.ts` and its test, `src/components/ui/resizable.tsx`, `src/components/ui/surface.tsx`, `src/test/TestProviders.tsx`, `src/test/next-mocks.utils.ts`, the browser stubs of `src/test/vitest.setup.ts` (hunk: ResizeObserver, matchMedia, scrollIntoView; the pointer capture stub waits for the first test with a select), the storage rule, the `<subject>.config.tsx` naming rule the patterns against relative imports across features and shared code, and the patterns that make `@/components/layout` the only way into the frame, in `eslint.config.js` (hunks), with the naming row and the import lines of CONTRIBUTING |
 | Design tokens | `src/app/styles.css`: `text-2xs`, `text-3xs`, `text-4xs`, the `editor-text` and `caret-block` utilities. The design system files that use the tokens (`Sample.tsx`, `CodeCard.tsx`, `WorkspaceCard.tsx`, `OverlaysCard.tsx`, `AlertsCard.tsx`, `ChatCard.tsx`); `GraphCard.tsx` and `design-system.fixtures.ts` use the graph tones and go with P15. The CONTRIBUTING rule on bracket values and the token line of `frontend/README.md` |
 | Docs | Section 1 (Frame) of `docs/ui/skeletons.md` |
@@ -248,7 +248,7 @@ Endpoints read: `GET /projects` (all pages, by status), `POST /projects`, `GET /
 | Removed | `src/app/(app)/` (4 files), `components/layout/AppShell.tsx`, `components/layout/app-sidebar/` (4 files) |
 | E2E and docs | `tests/e2e/projects.spec.ts`, section 2 of `docs/ui/skeletons.md` |
 
-The project `layout.tsx` is cut for this PR: the frame with an empty list of activities (decision D3), so no side panel yet, the top bar and the status bar. Its `page.tsx` redirects to the console address written in place until P9 brings `consoleHref`. The run status of the status bar is a placeholder until P7; `ThemeSync` is added by P18.
+The project `layout.tsx` is cut for this PR: the frame with an empty list of activities (decision D3), so no side panel yet, the top bar and the status bar. Its `page.tsx` redirects to the console address written in place until P9 brings `consoleHref`. The run status of the status bar is a placeholder until P7; `ThemeSync` and `ThemeCommands` are added by P18.
 
 ### P7. Threads and the run status
 
@@ -292,7 +292,7 @@ Endpoint: `GET /projects/{id}/items` with the query. Files: `src/features/search
 Search in the command palette (decision D7). Not built yet: build it on `feat/fe/mock` before the cut.
 
 - `command-palette.store.ts` keeps the text typed (`query`); `CommandPalette` reads it into its input and clears it when the palette closes. These are hunks of P3 files.
-- The search feature adds `ItemCommands`, passed by the project `layout.tsx` in `commands`. From `MIN_QUERY_LENGTH` (2) characters, it calls `useItemSearch` with the deferred text, so the cache is shared with the side panel, and lists the first results in a group "Items", each with its key and its title. The server already matched them, so they stay in the list whatever the filter of the palette says (`forceMount` of `CommandItem`). A line shows while the search runs and when it fails.
+- The search feature adds `ItemCommands`, passed by the project `layout.tsx` in `commands`. From `MIN_QUERY_LENGTH` (2) characters, it calls `useItemSearch` with the deferred text, so the cache is shared with the side panel, and registers the first results with `useCommands` in a group "Items", each with its key and its title. The server already matched them, so they stay in the list whatever the filter of the palette says: `Command` gets a field for that, which the palette passes to `forceMount` of `CommandItem`. A command without `run` shows while the search runs and when it fails.
 - Enter on an item closes the palette and opens the page of the item, which opens its tab.
 - The description of the palette names items too.
 - Tests: a unit test of `ItemCommands`, and a case of `search.spec.ts`: Ctrl+K, type the key of an item, Enter opens its tab.
@@ -343,7 +343,7 @@ Files: `src/features/project-settings/` (api, types, `section.utils.ts`, `form-e
 
 Endpoints: `GET /me`, `PATCH /me`, `POST /me/password`, `GET /me/sessions`, `DELETE /me/sessions/{id}`, `GET /me/model-settings`, `PUT /me/model-settings`, `GET /me/usage?group_by=`, `GET /me/settings`, `PUT /me/settings`, `GET /models`, `GET /workflow/definition`.
 
-Files: `src/features/settings/` (api, types, store, `section.utils.ts`, `form-errors.utils.ts`, hooks, `ProfileForm`, `PasswordForm`, `PreferencesForm`, `ModelChoicesForm`, `SessionsList`, `UsageView`, `ThemeSync`, `SaveBar`, `UserSettingsPage`, tests), `src/app/(home)/settings/page.tsx`, the `ThemeSync` lines of the two layouts, `src/mocks/account.handlers.ts`, `account.fixtures.ts`, `tests/e2e/user-settings.spec.ts`, section 10 of `docs/ui/skeletons.md`.
+Files: `src/features/settings/` (api, types, store, `section.utils.ts`, `form-errors.utils.ts`, hooks, `ProfileForm`, `PasswordForm`, `PreferencesForm`, `ModelChoicesForm`, `SessionsList`, `UsageView`, `ThemeSync`, `ThemeCommands`, `SaveBar`, `UserSettingsPage`, tests), `src/app/(home)/settings/page.tsx`, the `ThemeSync` and `ThemeCommands` lines of the two layouts, `src/mocks/account.handlers.ts`, `account.fixtures.ts`, `tests/e2e/user-settings.spec.ts`, section 10 of `docs/ui/skeletons.md`.
 
 ## 6. Files that several PRs touch
 
@@ -353,7 +353,7 @@ These cannot be copied whole with `git checkout feat/fe/mock -- <path>`: the bra
 |---|---|---|
 | `docs/ui/skeletons.md` | P3, P6, P8, P9, P14, P15, P16, P17, P18 | One numbered section per screen (1 Frame, 2 Project list, 3 Console, 4 Review, 5 and 6 Artifacts, 7 Workflow, 8 Traceability, 9 Project settings, 10 User settings) and its entries in the contents and open points |
 | `frontend/README.md`, `frontend/src/mocks/README.md` | P3 to P18 | The tokens line (P3); the mock scenario addresses of a screen when the screen is built |
-| `src/app/(project)/projects/[projectId]/layout.tsx` | P6, P7, P8, P10, P13, P14, P15, P16, P17, P18 | P6: the frame with no activity. Then one activity and its tab icons per feature (D3), the status bar run (P7), `ThemeSync` (P18) |
+| `src/app/(project)/projects/[projectId]/layout.tsx` | P6, P7, P8, P10, P13, P14, P15, P16, P17, P18 | P6: the frame with no activity. Then one activity and its tab icons per feature (D3), the status bar run (P7), `ThemeSync` and `ThemeCommands` (P18) |
 | `src/mocks/msw-browser.setup.ts`, `msw-server.setup.ts` | P4 to P18 | One import and one entry per handler group |
 | `src/components/layout/command-palette/CommandPalette.tsx`, `command-palette.store.ts` | P3, P10 | P3: the palette. P10: the text typed, kept in the store for the item search (D7) |
 | `src/test/vitest.setup.ts` | P3, P4, first test with a select | P3: browser stubs. P4: `resetMockData`. The pointer capture stub with the first test that opens a select |

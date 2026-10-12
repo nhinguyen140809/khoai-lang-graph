@@ -19,7 +19,7 @@ import {
 } from '@/features/projects'
 import { reviewsPath, reviewTabIcons } from '@/features/review'
 import { searchActivity } from '@/features/search'
-import { ThemeSync } from '@/features/settings'
+import { ThemeCommands, ThemeSync } from '@/features/settings'
 import { ProjectRunStatus } from '@/features/threads'
 import { traceabilityActivity, traceabilityTabIcons } from '@/features/traceability'
 import { workflowActivity, workflowTabIcons } from '@/features/workflow'
@@ -77,7 +77,12 @@ export default async function ProjectLayout({
           <Workbench
             crumb={crumb}
             account={<UserMenu />}
-            commands={<ProjectCommands />}
+            commands={
+              <>
+                <ProjectCommands />
+                <ThemeCommands />
+              </>
+            }
             dialogs={dialogs}
           >
             <Surface as="main" className="flex flex-1 items-center justify-center p-6">
@@ -102,7 +107,12 @@ export default async function ProjectLayout({
           activities={activities}
           tabIcons={tabIcons}
           status={<ProjectRunStatus projectId={projectId} />}
-          commands={<ProjectCommands currentProjectId={projectId} />}
+          commands={
+            <>
+              <ProjectCommands currentProjectId={projectId} />
+              <ThemeCommands />
+            </>
+          }
           dialogs={dialogs}
         >
           <ProjectWorkspace projectId={projectId}>{children}</ProjectWorkspace>
