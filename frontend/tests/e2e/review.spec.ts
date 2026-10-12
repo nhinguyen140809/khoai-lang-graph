@@ -51,7 +51,16 @@ test('accepts the analysis with Enter, which approves the artifact', async ({ pa
 
   await expect(page).toHaveURL(new RegExp(`${consolePath}$`), { timeout: 20_000 })
   await page.goto(`/projects/${PROJECT_IDS.mentor}/artifacts`)
-  await expect(page.getByRole('link', { name: /Requirements analysis/ })).toBeVisible()
+  // The side panel stays the one shown with the review, the console, until another is chosen.
+  await page
+    .getByRole('navigation', { name: 'Features' })
+    .getByRole('button', { name: 'Artifacts' })
+    .click()
+  await expect(
+    page
+      .getByRole('complementary', { name: 'Artifacts' })
+      .getByRole('link', { name: /Requirements analysis/ }),
+  ).toBeVisible()
 })
 
 test('leaves the review for later with Esc', async ({ page }) => {
