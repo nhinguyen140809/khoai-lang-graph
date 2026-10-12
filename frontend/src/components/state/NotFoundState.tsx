@@ -56,8 +56,8 @@ export function NotFoundState({
   )
 }
 
-// The reference as a node, and a dashed edge (the 6/4 dashes of a dashed Edge) that ends at an
-// empty node: the link points to nothing.
+// The reference as a node, and a dashed edge that ends at an empty node: the link points to
+// nothing.
 function DanglingLink({ reference }: { reference: string }) {
   return (
     <div className="flex w-full max-w-sm items-center text-muted-foreground">
@@ -67,10 +67,7 @@ function DanglingLink({ reference }: { reference: string }) {
       >
         {reference}
       </span>
-      <span
-        aria-hidden
-        className="h-px min-w-10 flex-1 bg-[repeating-linear-gradient(90deg,currentColor_0_6px,transparent_6px_10px)]"
-      />
+      <span aria-hidden className="min-w-10 flex-1 border-t border-dashed border-current" />
       <ChevronRightIcon aria-hidden className="-ml-1.5 size-3.5 shrink-0" />
       <span
         aria-hidden

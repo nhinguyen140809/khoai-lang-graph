@@ -3,10 +3,12 @@
 import type { Route } from 'next'
 import Link from 'next/link'
 import { useRouter } from 'next/navigation'
+import type { ReactNode } from 'react'
 import { toast } from 'sonner'
 
 import { Button } from '@/components/ui/button'
 import { Spinner } from '@/components/ui/spinner'
+import { cn } from '@/lib/utils'
 
 import { useProjectRuns } from '../hooks/useProjectRuns'
 import { useRetryFromStep } from '../hooks/useRetryFromStep'
@@ -26,6 +28,24 @@ interface StepPanelProps {
 }
 
 const dash = '-'
+
+/** A name and its value, in a list that shows two of them on each line. */
+function Pair({
+  label,
+  className,
+  children,
+}: {
+  label: string
+  className?: string
+  children: ReactNode
+}) {
+  return (
+    <div className="flex gap-x-3">
+      <dt className="w-28 shrink-0 text-muted-foreground">{label}</dt>
+      <dd className={cn('min-w-0 flex-1', className)}>{children}</dd>
+    </div>
+  )
+}
 
 /** Under the graph: one step, with what it cost, what it made, and what can be done with it. */
 export function StepPanel({ projectId, run, definition, step, nodeLabel }: StepPanelProps) {
@@ -65,26 +85,20 @@ export function StepPanel({ projectId, run, definition, step, nodeLabel }: StepP
         {waiting && <span className="text-warning-strong">waiting for review</span>}
       </header>
 
-      <dl className="grid grid-cols-[7rem_1fr_7rem_1fr] gap-x-3 gap-y-1">
-        <dt className="text-muted-foreground">Stage</dt>
-        <dd>{stage}</dd>
-        <dt className="text-muted-foreground">Agent</dt>
-        <dd>{role ?? dash}</dd>
-        <dt className="text-muted-foreground">Model</dt>
-        <dd className="font-mono">{step.model_id ?? dash}</dd>
-        <dt className="text-muted-foreground">Calls</dt>
-        <dd>{step.llm_calls}</dd>
-        <dt className="text-muted-foreground">Tokens</dt>
-        <dd>
+      <dl className="grid grid-cols-2 gap-x-3 gap-y-1">
+        <Pair label="Stage">{stage}</Pair>
+        <Pair label="Agent">{role ?? dash}</Pair>
+        <Pair label="Model" className="font-mono">
+          {step.model_id ?? dash}
+        </Pair>
+        <Pair label="Calls">{step.llm_calls}</Pair>
+        <Pair label="Tokens">
           {step.usage.input_tokens.toLocaleString('en-US')} in,{' '}
           {step.usage.output_tokens.toLocaleString('en-US')} out
-        </dd>
-        <dt className="text-muted-foreground">Cost</dt>
-        <dd>${step.usage.cost_usd.toFixed(3)}</dd>
-        <dt className="text-muted-foreground">Duration</dt>
-        <dd>{(step.usage.duration_ms / 1000).toFixed(1)} s</dd>
-        <dt className="text-muted-foreground">Status</dt>
-        <dd>{step.status}</dd>
+        </Pair>
+        <Pair label="Cost">${step.usage.cost_usd.toFixed(3)}</Pair>
+        <Pair label="Duration">{(step.usage.duration_ms / 1000).toFixed(1)} s</Pair>
+        <Pair label="Status">{step.status}</Pair>
       </dl>
 
       {step.error !== null && (

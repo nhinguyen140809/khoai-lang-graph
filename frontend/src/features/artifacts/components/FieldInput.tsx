@@ -183,11 +183,8 @@ function ObjectList({ id, view, entries, onChange }: ObjectListProps) {
       {entries.map((entry, index) => (
         <div key={index} className="flex flex-col gap-1.5 rounded-md border p-2">
           {view.entryFields.map((field) => (
-            <label
-              key={field.name}
-              className="grid grid-cols-[6rem_1fr] items-center gap-2 text-xs"
-            >
-              <span className="text-muted-foreground">{field.label}</span>
+            <label key={field.name} className="flex items-center gap-2 text-xs">
+              <span className="w-24 shrink-0 text-muted-foreground">{field.label}</span>
               <Input
                 value={typeof entry[field.name] === 'string' ? (entry[field.name] as string) : ''}
                 onChange={(event) => {

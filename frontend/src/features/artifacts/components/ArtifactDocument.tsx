@@ -129,11 +129,11 @@ export function ArtifactDocument({
         </header>
 
         {fields.length > 0 && (
-          <dl className="grid grid-cols-[10rem_1fr] gap-x-4 gap-y-3 text-sm">
+          <dl className="flex flex-col gap-y-3 text-sm">
             {fields.map((field) => (
-              <div key={field.name} className="contents">
-                <dt className="text-muted-foreground">{field.label}</dt>
-                <dd>
+              <div key={field.name} className="flex gap-x-4">
+                <dt className="w-40 shrink-0 text-muted-foreground">{field.label}</dt>
+                <dd className="min-w-0 flex-1">
                   <FieldValue view={field} value={artifact.data.content[field.name]} />
                 </dd>
               </div>
@@ -224,12 +224,16 @@ function ItemRun({ projectId, markEdited, block, schema }: ItemRunProps) {
     return (
       <ol aria-label={schema.title} className="flex flex-col gap-1 font-mono text-xs">
         {block.items.map((item) => (
-          <li key={item.id} className="grid grid-cols-[3rem_6rem_1fr] gap-2">
-            <ItemLink projectId={projectId} itemId={item.id}>
+          <li key={item.id} className="flex gap-2">
+            <ItemLink projectId={projectId} itemId={item.id} className="w-12 shrink-0">
               #{formatValue(item.content.turn)}
             </ItemLink>
-            <span className="text-muted-foreground">{formatValue(item.content.role)}</span>
-            <span className="whitespace-pre-wrap">{formatValue(item.content.content)}</span>
+            <span className="w-24 shrink-0 text-muted-foreground">
+              {formatValue(item.content.role)}
+            </span>
+            <span className="min-w-0 flex-1 whitespace-pre-wrap">
+              {formatValue(item.content.content)}
+            </span>
           </li>
         ))}
       </ol>
@@ -254,13 +258,13 @@ function ItemRun({ projectId, markEdited, block, schema }: ItemRunProps) {
                 {itemTitle(schema, item)}
               </ItemLink>
             </p>
-            <dl className="grid grid-cols-[7rem_1fr] gap-x-2 gap-y-1 text-xs">
+            <dl className="flex flex-col gap-y-1 text-xs">
               {columns
                 .filter((column) => column.name !== titleName)
                 .map((column) => (
-                  <div key={column.name} className="contents">
-                    <dt className="text-muted-foreground">{column.label}</dt>
-                    <dd>{formatValue(item.content[column.name])}</dd>
+                  <div key={column.name} className="flex gap-x-2">
+                    <dt className="w-28 shrink-0 text-muted-foreground">{column.label}</dt>
+                    <dd className="min-w-0 flex-1">{formatValue(item.content[column.name])}</dd>
                   </div>
                 ))}
             </dl>

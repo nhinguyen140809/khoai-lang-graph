@@ -20,6 +20,9 @@ import { groupByKind, isNested, schemasByKind } from '../kinds.utils'
 const rowClassName =
   'flex min-w-0 items-center gap-1.5 rounded-md py-1 pr-2 text-xs outline-none hover:bg-sidebar-accent focus-visible:ring-2 focus-visible:ring-ring/50 aria-[current=page]:bg-sidebar-accent'
 
+// How far each level of items is set in, in rem.
+const INDENT_REM = 0.75
+
 interface ArtifactTreeProps {
   projectId: string
 }
@@ -97,7 +100,7 @@ function ArtifactNode({ projectId, artifact, schemas }: ArtifactNodeProps) {
           className={cn(rowClassName, 'flex-1 pl-1 font-medium text-foreground')}
         >
           <span className="truncate">{artifact.title}</span>
-          <span className="ml-auto shrink-0 font-mono text-[0.625rem] font-normal text-muted-foreground">
+          <span className="ml-auto shrink-0 font-mono text-3xs font-normal text-muted-foreground">
             v{artifact.version}
           </span>
         </Link>
@@ -139,7 +142,7 @@ function ItemTree({ projectId, artifactId, schemas }: ItemTreeProps) {
     <div className="flex flex-col gap-1 pb-1 pl-6">
       {groupByKind(items.data).map((group) => (
         <div key={group.kind}>
-          <p className="px-2 py-0.5 text-[0.625rem] font-medium tracking-wide text-muted-foreground uppercase">
+          <p className="px-2 py-0.5 text-3xs font-medium tracking-wide text-muted-foreground uppercase">
             {schemas.get(group.kind)?.title ?? group.kind}
           </p>
           <ul>
@@ -182,7 +185,7 @@ function NestedItems({ projectId, items, schemas }: NestedItemsProps) {
         .map((item) => (
           <li
             key={item.id}
-            style={{ paddingLeft: `${String(item.depth * 0.75)}rem` }}
+            style={{ paddingLeft: `${String(item.depth * INDENT_REM)}rem` }}
             className="flex items-center"
           >
             {parents.has(item.id) ? (
@@ -230,7 +233,7 @@ function ItemRow({ projectId, item, schema }: ItemRowProps) {
       aria-current={pathname === href ? 'page' : undefined}
       className={cn(rowClassName, 'min-w-0 flex-1 pl-2')}
     >
-      <span className="shrink-0 font-mono text-[0.6875rem] text-muted-foreground">
+      <span className="shrink-0 font-mono text-2xs text-muted-foreground">
         {item.number ?? item.key}
       </span>
       <span className="truncate">{itemTitle(schema, item)}</span>

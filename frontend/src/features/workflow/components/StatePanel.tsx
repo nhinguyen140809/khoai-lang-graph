@@ -72,11 +72,11 @@ function Value({ projectId, value }: { projectId: string; value: unknown }) {
 
 function Tree({ projectId, values }: { projectId: string; values: Record<string, unknown> }) {
   return (
-    <dl className="grid grid-cols-[minmax(8rem,14rem)_1fr] gap-x-3 gap-y-1">
+    <dl className="flex flex-col gap-y-1">
       {Object.entries(values).map(([name, value]) => (
-        <div key={name} className="col-span-2 grid grid-cols-subgrid">
-          <dt className="text-muted-foreground">{name}</dt>
-          <dd>
+        <div key={name} className="flex gap-x-3">
+          <dt className="w-40 shrink-0 break-words text-muted-foreground">{name}</dt>
+          <dd className="min-w-0 flex-1">
             <Value projectId={projectId} value={value} />
           </dd>
         </div>

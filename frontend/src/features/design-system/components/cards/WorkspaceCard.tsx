@@ -54,7 +54,7 @@ export function WorkspaceCard() {
   return (
     <Card className="gap-0 overflow-hidden py-0">
       <div className="flex h-9 items-center gap-3 border-b bg-sidebar px-3 text-xs">
-        <span className="flex size-5 items-center justify-center rounded-sm bg-primary text-[0.625rem] font-semibold text-primary-foreground">
+        <span className="flex size-5 items-center justify-center rounded-sm bg-primary text-3xs font-semibold text-primary-foreground">
           K
         </span>
         <span className="text-muted-foreground">khoai /</span>
@@ -93,7 +93,7 @@ export function WorkspaceCard() {
           <ResizablePanel defaultSize="24" minSize="15">
             <ScrollArea className="h-full bg-sidebar">
               <div className="flex flex-col py-2 text-sidebar-foreground">
-                <span className="px-3 pb-1 text-[0.625rem] font-medium tracking-wide uppercase">
+                <span className="px-3 pb-1 text-3xs font-medium tracking-wide uppercase">
                   Artifacts
                 </span>
                 <ArtifactTree className="px-1" />
@@ -125,11 +125,11 @@ export function WorkspaceCard() {
                   </BreadcrumbList>
                 </Breadcrumb>
                 <h2>REQ-001 Search mentors</h2>
-                <dl className="grid grid-cols-[7rem_1fr] gap-x-3 gap-y-1.5 text-xs">
+                <dl className="flex flex-col gap-y-1.5 text-xs">
                   {fields.map(([label, value]) => (
-                    <div key={label} className="contents">
-                      <dt className="text-muted-foreground">{label}</dt>
-                      <dd>{value}</dd>
+                    <div key={label} className="flex gap-x-3">
+                      <dt className="w-28 shrink-0 text-muted-foreground">{label}</dt>
+                      <dd className="min-w-0 flex-1">{value}</dd>
                     </div>
                   ))}
                 </dl>
@@ -160,7 +160,7 @@ export function WorkspaceCard() {
         </ResizablePanelGroup>
       </div>
       <Separator />
-      <div className="flex h-6 items-center gap-3 bg-sidebar px-3 font-mono text-[0.625rem] text-sidebar-foreground">
+      <div className="flex h-6 items-center gap-3 bg-sidebar px-3 font-mono text-3xs text-sidebar-foreground">
         <span className="flex items-center gap-1.5">
           <span className="size-1.5 rounded-full bg-warning-strong" aria-hidden />
           Run 3: waiting for review

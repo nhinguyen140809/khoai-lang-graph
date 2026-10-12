@@ -41,6 +41,10 @@ interface NodeData extends Record<string, unknown> {
 
 type GraphNode = FlowNode<NodeData, 'workflow'>
 
+// The start and end nodes are smaller than the others.
+const TERMINAL_NODE_WIDTH = 110
+const TERMINAL_NODE_HEIGHT = 28
+
 interface EdgeData extends Record<string, unknown> {
   conditional: boolean
   last: boolean
@@ -84,16 +88,19 @@ function WorkflowNodeView({ data, selected }: NodeProps<GraphNode>) {
         color={style.color}
         data-selected={selected}
         aria-label={`${data.label}, ${statusLabels[data.status]}${data.visits > 1 ? `, ${String(data.visits)} visits` : ''}`}
-        style={{ width: terminal ? 110 : NODE_WIDTH, minHeight: terminal ? 28 : NODE_HEIGHT }}
+        style={{
+          width: terminal ? TERMINAL_NODE_WIDTH : NODE_WIDTH,
+          minHeight: terminal ? TERMINAL_NODE_HEIGHT : NODE_HEIGHT,
+        }}
       >
         <NodeHeader className={terminal ? 'mb-0 justify-center' : undefined}>
           <NodeHeaderTitle className="truncate font-mono">{data.label}</NodeHeaderTitle>
           {data.visits > 1 && (
-            <span className="font-mono text-[0.625rem] text-muted-foreground">x{data.visits}</span>
+            <span className="font-mono text-3xs text-muted-foreground">x{data.visits}</span>
           )}
         </NodeHeader>
         {!terminal && (
-          <NodeContent className="pt-0.5 text-[0.6875rem] text-muted-foreground">
+          <NodeContent className="pt-0.5 text-2xs text-muted-foreground">
             {data.detail} {data.status !== 'idle' && <>- {statusLabels[data.status]}</>}
           </NodeContent>
         )}

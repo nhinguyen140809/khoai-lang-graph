@@ -48,11 +48,13 @@ export function FieldValue({ view, value }: FieldValueProps) {
           >
           return (
             <li key={String(index)} className="rounded-md border px-2 py-1.5">
-              <dl className="grid grid-cols-[6rem_1fr] gap-x-2 text-xs">
+              <dl className="flex flex-col text-xs">
                 {view.entryFields.map((field) => (
-                  <div key={field.name} className="contents">
-                    <dt className="text-muted-foreground">{field.label}</dt>
-                    <dd className="whitespace-pre-line">{formatValue(record[field.name])}</dd>
+                  <div key={field.name} className="flex gap-x-2">
+                    <dt className="w-24 shrink-0 text-muted-foreground">{field.label}</dt>
+                    <dd className="min-w-0 flex-1 whitespace-pre-line">
+                      {formatValue(record[field.name])}
+                    </dd>
                   </div>
                 ))}
               </dl>

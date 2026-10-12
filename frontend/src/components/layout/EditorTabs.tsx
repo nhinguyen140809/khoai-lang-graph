@@ -41,7 +41,7 @@ export function EditorTabs({ group, rootHref }: EditorTabsProps) {
   return (
     <nav
       aria-label="Open editors"
-      className="flex h-9 shrink-0 [scrollbar-width:none] overflow-x-auto border-b bg-sidebar"
+      className="flex h-9 shrink-0 scrollbar-none overflow-x-auto border-b bg-sidebar"
     >
       <ul className="flex">
         {tabs.map((tab) => {

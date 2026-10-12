@@ -71,15 +71,15 @@ function TraceTab({ item }: { item: ArtifactItem }) {
 
   const row = (linkId: string, label: string, node: TraceNode | undefined, stale: number | null) =>
     node === undefined ? null : (
-      <li key={linkId} className="grid grid-cols-[8rem_5rem_1fr_auto] items-baseline gap-2 py-0.5">
-        <span className="text-muted-foreground">{label}</span>
-        <ItemLink projectId={item.project_id} itemId={node.id} className="font-mono">
+      <li key={linkId} className="flex items-baseline gap-2 py-0.5">
+        <span className="w-32 shrink-0 text-muted-foreground">{label}</span>
+        <ItemLink projectId={item.project_id} itemId={node.id} className="w-20 shrink-0 font-mono">
           {node.key}
         </ItemLink>
-        <span className="truncate">{itemTitle(schemas.get(node.kind), node)}</span>
+        <span className="min-w-0 flex-1 truncate">{itemTitle(schemas.get(node.kind), node)}</span>
         {stale !== null && (
           <span
-            className="text-warning-strong"
+            className="shrink-0 text-warning-strong"
             title={`Made from version ${String(stale)}; now version ${String(node.version)}`}
           >
             ! made from v{stale}
@@ -218,16 +218,16 @@ function TimelineTab({ item, schema }: { item: ArtifactItem; schema: ContentSche
                 {changed.length === 0 ? (
                   <p className="text-muted-foreground">No field changed.</p>
                 ) : (
-                  <dl className="grid grid-cols-[8rem_1fr_1fr] gap-x-3 gap-y-1">
+                  <dl className="flex flex-col gap-y-1">
                     {changed.map((name) => (
-                      <div key={name} className="contents">
-                        <dt className="text-muted-foreground">
+                      <div key={name} className="flex gap-x-3">
+                        <dt className="w-32 shrink-0 text-muted-foreground">
                           {views.find((view) => view.name === name)?.label ?? name}
                         </dt>
-                        <dd className="text-destructive-strong line-through">
+                        <dd className="min-w-0 flex-1 text-destructive-strong line-through">
                           {formatValue(previous.content[name])}
                         </dd>
-                        <dd className="text-success-strong">
+                        <dd className="min-w-0 flex-1 text-success-strong">
                           {formatValue(revision.content[name])}
                         </dd>
                       </div>

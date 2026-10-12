@@ -152,11 +152,11 @@ export function ItemPage({ projectId, itemId, embedded = false, onBack }: ItemPa
           }}
         />
       ) : (
-        <dl className="grid grid-cols-[10rem_1fr] gap-x-4 gap-y-3 text-sm">
+        <dl className="flex flex-col gap-y-3 text-sm">
           {views.map((view) => (
-            <div key={view.name} className="contents">
-              <dt className="text-muted-foreground">{view.label}</dt>
-              <dd>
+            <div key={view.name} className="flex gap-x-4">
+              <dt className="w-40 shrink-0 text-muted-foreground">{view.label}</dt>
+              <dd className="min-w-0 flex-1">
                 <FieldValue view={view} value={item.data.content[view.name]} />
               </dd>
             </div>
