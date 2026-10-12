@@ -13,7 +13,7 @@ import { useSideFeature } from './hooks/useSideFeature'
 
 interface ActivityBarProps {
   /** The account menu, at the bottom. */
-  user: ReactNode
+  account: ReactNode
 }
 
 const itemClassName =
@@ -25,7 +25,7 @@ const itemClassName =
  * the side panel of its feature and leaves the editor as it is; the item of the side panel on
  * screen hides the panel instead.
  */
-export function ActivityBar({ user }: ActivityBarProps) {
+export function ActivityBar({ account }: ActivityBarProps) {
   const { activities } = useActivities()
 
   return (
@@ -44,7 +44,7 @@ export function ActivityBar({ user }: ActivityBarProps) {
           .map((activity) => (
             <ActivityItem key={activity.id} activity={activity} />
           ))}
-        {user}
+        {account}
       </div>
     </nav>
   )

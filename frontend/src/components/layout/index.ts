@@ -6,7 +6,6 @@ export type {
   PlannedActivity,
   TabIcons,
 } from './activity-bar/activity.types'
-export { ActivityBar } from './activity-bar/ActivityBar'
 export { useCommandPaletteStore } from './command-palette/command-palette.store'
 export { projectTabGroup, useEditorTabsStore } from './editor/editor-tabs.store'
 export { EditorWithPanel } from './editor/EditorWithPanel'
@@ -16,5 +15,4 @@ export { ProjectWorkspace } from './ProjectWorkspace'
 export { SidePanel } from './side-panel/SidePanel'
 export { SidePanelSection } from './side-panel/SidePanelSection'
 export { PageCrumb } from './top-bar/PageCrumb'
-export { TopBar } from './top-bar/TopBar'
 export { Workbench } from './Workbench'

@@ -73,7 +73,7 @@ function withActivities(given: Activity[]) {
 }
 
 function renderBar(given: Activity[] = activities) {
-  render(<ActivityBar user={<button type="button">Account</button>} />, {
+  render(<ActivityBar account={<button type="button">Account</button>} />, {
     wrapper: withActivities(given),
   })
 }

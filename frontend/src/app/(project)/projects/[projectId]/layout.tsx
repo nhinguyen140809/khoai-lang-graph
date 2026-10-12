@@ -2,7 +2,7 @@ import { FolderInputIcon } from 'lucide-react'
 import Link from 'next/link'
 
 import type { Activity, TabIcons } from '@/components/layout'
-import { ActivityBar, ProjectWorkspace, TopBar, Workbench } from '@/components/layout'
+import { ProjectWorkspace, Workbench } from '@/components/layout'
 import { NotFoundState } from '@/components/state'
 import { Button } from '@/components/ui/button'
 import { Surface } from '@/components/ui/surface'
@@ -46,7 +46,7 @@ export default async function ProjectLayout({
   params,
 }: LayoutProps<'/projects/[projectId]'>) {
   const { projectId } = await params
-  const topBar = <TopBar crumb={<ProjectSwitcher projectId={projectId} />} />
+  const crumb = <ProjectSwitcher projectId={projectId} />
   const dialogs = <NewProjectDialog />
   const activities: Activity[] = [
     {
@@ -75,8 +75,8 @@ export default async function ProjectLayout({
         projectId={projectId}
         notFound={
           <Workbench
-            topBar={topBar}
-            activityBar={<ActivityBar user={<UserMenu />} />}
+            crumb={crumb}
+            account={<UserMenu />}
             commands={<ProjectCommands />}
             dialogs={dialogs}
           >
@@ -97,8 +97,8 @@ export default async function ProjectLayout({
         }
       >
         <Workbench
-          topBar={topBar}
-          activityBar={<ActivityBar user={<UserMenu />} />}
+          crumb={crumb}
+          account={<UserMenu />}
           activities={activities}
           tabIcons={tabIcons}
           status={<ProjectRunStatus projectId={projectId} />}

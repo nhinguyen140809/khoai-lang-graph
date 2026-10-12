@@ -5,16 +5,19 @@ import { type ReactNode, useEffect, useMemo } from 'react'
 import { ActivitiesContext } from './activity-bar/ActivitiesContext'
 import type { Activity, TabIcons } from './activity-bar/activity.types'
 import { isFeatureActivity } from './activity-bar/activity.utils'
+import { ActivityBar } from './activity-bar/ActivityBar'
 import { CommandPalette } from './command-palette/CommandPalette'
 import { FeatureCommands } from './command-palette/FeatureCommands'
 import { useEditorTabsStore } from './editor/editor-tabs.store'
 import { useFrameStore } from './frame.store'
 import { StatusBar } from './status-bar/StatusBar'
+import { TopBar } from './top-bar/TopBar'
 
 interface WorkbenchProps {
-  topBar: ReactNode
-  /** The bar of features and the account. */
-  activityBar?: ReactNode
+  /** What follows "khoai /" on the top bar: a page name, or the menu of the current project. */
+  crumb: ReactNode
+  /** The account menu, at the bottom of the activity bar. */
+  account: ReactNode
   /**
    * The features of the screen, top to bottom on the activity bar, each with its side panel.
    * Without a feature, the screen has no side panel.
@@ -36,12 +39,12 @@ const noTabIcons: TabIcons = {}
 
 /**
  * The frame of every screen: top bar, activity bar, content, status bar, and the command
- * palette. Feature content, the features themselves included, is passed in as props from
- * src/app/.
+ * palette. The frame renders its bars itself; what they show from the features, the features
+ * themselves included, is passed in as props from src/app/.
  */
 export function Workbench({
-  topBar,
-  activityBar,
+  crumb,
+  account,
   activities = noActivities,
   tabIcons = noTabIcons,
   status,
@@ -61,9 +64,9 @@ export function Workbench({
   return (
     <ActivitiesContext value={frameActivities}>
       <div className="flex h-svh flex-col bg-sidebar text-foreground">
-        {topBar}
+        <TopBar crumb={crumb} />
         <div className="flex min-h-0 flex-1">
-          {activityBar}
+          <ActivityBar account={account} />
           <div className="flex min-w-0 flex-1 flex-col pr-1.5 pb-1.5">{children}</div>
         </div>
         <StatusBar>{status}</StatusBar>

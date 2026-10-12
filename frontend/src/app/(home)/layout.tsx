@@ -1,6 +1,6 @@
 import type { ReactNode } from 'react'
 
-import { ActivityBar, PageCrumb, TopBar, Workbench } from '@/components/layout'
+import { PageCrumb, Workbench } from '@/components/layout'
 import { Surface } from '@/components/ui/surface'
 import { UserMenu } from '@/features/account'
 import { NewProjectDialog, ProjectCommands } from '@/features/projects'
@@ -19,8 +19,8 @@ export default function HomeLayout({ children }: HomeLayoutProps) {
     <>
       <ThemeSync />
       <Workbench
-        topBar={<TopBar crumb={<PageCrumb />} />}
-        activityBar={<ActivityBar user={<UserMenu />} />}
+        crumb={<PageCrumb />}
+        account={<UserMenu />}
         commands={<ProjectCommands />}
         dialogs={<NewProjectDialog />}
       >
