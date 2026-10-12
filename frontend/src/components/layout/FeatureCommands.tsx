@@ -2,30 +2,31 @@
 
 import { CommandGroup, CommandItem } from '@/components/ui/command'
 
-import { activityFooterItems, activityItems } from './activity-bar.config'
+import { useActivities } from './ActivitiesContext'
+import { isFeatureActivity } from './activity.utils'
 import { useCommandPaletteStore } from './command-palette.store'
 import { useFrameStore } from './frame.store'
 
-/** Commands that show the side panel of each feature of the project, like the activity bar. */
+/** Commands that show the side panel of each feature of the screen, like the activity bar. */
 export function FeatureCommands() {
+  const { activities } = useActivities()
   const setOpen = useCommandPaletteStore((state) => state.setOpen)
   const showSideFeature = useFrameStore((state) => state.showSideFeature)
-  const features = [...activityItems, ...activityFooterItems].flatMap(({ feature, ...item }) =>
-    feature === undefined ? [] : [{ ...item, feature }],
-  )
 
   return (
     <CommandGroup heading="Show">
-      {features.map(({ label, icon: Icon, feature }) => (
+      {activities.filter(isFeatureActivity).map(({ id, label, icon }) => (
         <CommandItem
-          key={feature}
+          key={id}
           value={`Show ${label}`}
           onSelect={() => {
             setOpen(false)
-            showSideFeature(feature)
+            showSideFeature(id)
           }}
         >
-          <Icon aria-hidden />
+          <span aria-hidden className="flex">
+            {icon}
+          </span>
           {label}
         </CommandItem>
       ))}

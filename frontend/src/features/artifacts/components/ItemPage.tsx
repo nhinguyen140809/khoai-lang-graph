@@ -5,7 +5,7 @@ import type { Route } from 'next'
 import Link from 'next/link'
 import { useState } from 'react'
 
-import { projectTabGroup } from '@/components/layout/activity-bar.config'
+import { projectTabGroup } from '@/components/layout/editor-tabs.store'
 import { EditorWithPanel } from '@/components/layout/EditorWithPanel'
 import { useEditorTab } from '@/components/layout/hooks/useEditorTab'
 import { ErrorState, LoadingState, NotFoundState } from '@/components/state'

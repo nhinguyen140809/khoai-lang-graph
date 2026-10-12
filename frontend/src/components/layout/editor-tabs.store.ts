@@ -4,15 +4,16 @@ import { persist } from 'zustand/middleware'
 
 import { parseStored, persistStorage } from '@/lib/browser-storage.utils'
 
-import { editorTabIconNames } from './editor-tabs.config'
-
 const editorTabSchema = z.object({
   /** Unique in its group, for example the id of the run or the item. */
   id: z.string(),
   title: z.string(),
   href: z.string(),
-  /** What the tab shows; without it, the tab shows the icon of its feature. */
-  icon: z.enum(editorTabIconNames).optional(),
+  /**
+   * The name of the icon of what the tab shows, among the tab icons of the frame; without it, the
+   * tab shows the icon of its feature.
+   */
+  icon: z.string().optional(),
 })
 
 /** One open editor: what a tab shows and the address it opens. */
@@ -128,6 +129,14 @@ export const useEditorTabsStore = create<EditorTabsState>()(
     },
   ),
 )
+
+/**
+ * The tab group of a project: one strip for every feature, so a tab stays open when the side
+ * panel changes.
+ */
+export function projectTabGroup(projectId: string): string {
+  return projectId
+}
 
 /** The tab to show after closing tab `id`: the next one, else the previous one. */
 export function neighborTab(tabs: EditorTab[], id: string): EditorTab | undefined {

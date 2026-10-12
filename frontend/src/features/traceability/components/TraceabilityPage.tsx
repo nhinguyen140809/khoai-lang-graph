@@ -2,7 +2,7 @@
 
 import { useSearchParams } from 'next/navigation'
 
-import { projectTabGroup } from '@/components/layout/activity-bar.config'
+import { projectTabGroup } from '@/components/layout/editor-tabs.store'
 import { useEditorTab } from '@/components/layout/hooks/useEditorTab'
 
 import { traceabilityHref } from '../traceability-links.utils'

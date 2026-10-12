@@ -3,7 +3,7 @@
 import { usePathname } from 'next/navigation'
 import type { ReactNode } from 'react'
 
-import { projectTabGroup } from '@/components/layout/activity-bar.config'
+import { projectTabGroup } from '@/components/layout/editor-tabs.store'
 import { useEditorTab } from '@/components/layout/hooks/useEditorTab'
 import { ErrorState, LoadingState } from '@/components/state'
 

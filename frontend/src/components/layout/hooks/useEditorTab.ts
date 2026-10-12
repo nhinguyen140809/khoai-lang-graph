@@ -1,6 +1,5 @@
 import { useEffect } from 'react'
 
-import type { EditorTabIcon } from '../editor-tabs.config'
 import { type EditorTab, useEditorTabsStore } from '../editor-tabs.store'
 
 /**
@@ -12,7 +11,7 @@ export function useEditorTab(group: string, tab: EditorTab | null) {
   const id = tab?.id
   const title = tab?.title
   const href = tab?.href
-  const icon: EditorTabIcon | undefined = tab?.icon
+  const icon = tab?.icon
 
   useEffect(() => {
     if (id === undefined || title === undefined || href === undefined) return

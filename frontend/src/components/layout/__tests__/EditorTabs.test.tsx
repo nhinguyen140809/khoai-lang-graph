@@ -1,23 +1,39 @@
 import { fireEvent, render, screen } from '@testing-library/react'
 import userEvent from '@testing-library/user-event'
+import { FileTextIcon, PlayIcon, SearchIcon } from 'lucide-react'
+import type { Route } from 'next'
+import type { ReactNode } from 'react'
 import { beforeEach, describe, expect, it, vi } from 'vitest'
 
 import { routerMock, setPathname } from '@/test/next-mocks.utils'
 
-import { featureHref } from '../activity-bar.config'
+import { ActivitiesContext } from '../ActivitiesContext'
+import type { Activity, TabIcons } from '../activity.types'
 import { useEditorTabsStore } from '../editor-tabs.store'
 import { EditorTabs } from '../EditorTabs'
 
 vi.mock('next/navigation', async () => (await import('@/test/next-mocks.utils')).navigationMock)
 vi.mock('next/link', async () => (await import('@/test/next-mocks.utils')).linkMock)
 
-const searchHref = featureHref('p1', 'search')
+const searchHref = '/projects/p1/search' as Route
+const activities: Activity[] = [
+  { id: 'search', label: 'Search', icon: <SearchIcon />, href: searchHref, panel: null },
+]
+const tabIcons: TabIcons = { artifact: <FileTextIcon />, run: <PlayIcon /> }
+
+function Providers({ children }: { children: ReactNode }) {
+  return <ActivitiesContext value={{ activities, tabIcons }}>{children}</ActivitiesContext>
+}
+
+function renderTabs(group: string) {
+  render(<EditorTabs group={group} rootHref={searchHref} />, { wrapper: Providers })
+}
 const req = { id: 'i1', title: 'REQ-001', href: '/projects/p1/search/i1' }
 const ambiguity = {
   id: 'i2',
   title: 'AMB-001',
   href: '/projects/p1/search/i2',
-  icon: 'item' as const,
+  icon: 'artifact',
 }
 
 beforeEach(() => {
@@ -28,14 +44,14 @@ beforeEach(() => {
 
 describe('EditorTabs', () => {
   it('lists the open editors and marks the one on screen', () => {
-    render(<EditorTabs group="p1:search" rootHref={searchHref} />)
+    renderTabs('p1:search')
 
     expect(screen.getByRole('link', { name: 'REQ-001' })).toHaveAttribute('aria-current', 'page')
     expect(screen.getByRole('link', { name: 'AMB-001' })).not.toHaveAttribute('aria-current')
   })
 
   it('shows the next tab after closing the tab on screen', async () => {
-    render(<EditorTabs group="p1:search" rootHref={searchHref} />)
+    renderTabs('p1:search')
 
     await userEvent.click(screen.getByRole('button', { name: 'Close REQ-001' }))
 
@@ -45,7 +61,7 @@ describe('EditorTabs', () => {
 
   it('goes to the feature after closing the last tab, and closes a tab on middle click', () => {
     useEditorTabsStore.setState({ groups: { 'p1:search': [req] } })
-    render(<EditorTabs group="p1:search" rootHref={searchHref} />)
+    renderTabs('p1:search')
 
     fireEvent(
       screen.getByRole('link', { name: 'REQ-001' }),
@@ -56,28 +72,35 @@ describe('EditorTabs', () => {
     expect(screen.queryByRole('navigation')).not.toBeInTheDocument()
   })
 
-  it('shows the icon of what a tab shows, else the icon of the feature', () => {
-    render(<EditorTabs group="p1:search" rootHref={searchHref} />)
+  it('shows the icon that a tab names, else the icon of its feature, else a file', () => {
+    useEditorTabsStore.setState({
+      groups: {
+        'p1:search': [req, ambiguity, { id: 'x', title: 'Elsewhere', href: '/projects/p1/other' }],
+      },
+    })
+    renderTabs('p1:search')
 
     const reqTab = screen.getByRole('link', { name: 'REQ-001' })
     const ambiguityTab = screen.getByRole('link', { name: 'AMB-001' })
+    const otherTab = screen.getByRole('link', { name: 'Elsewhere' })
     expect(reqTab.querySelector('svg.lucide-search')).toBeInTheDocument()
-    expect(ambiguityTab.querySelector('svg.lucide-file')).toBeInTheDocument()
+    expect(ambiguityTab.querySelector('svg.lucide-file-text')).toBeInTheDocument()
+    expect(otherTab.querySelector('svg.lucide-file')).toBeInTheDocument()
   })
 
   it('keeps the tabs of every feature of a project in one strip', () => {
     useEditorTabsStore.setState({
       groups: {
         p1: [
-          { id: 'console', title: 'Console', href: '/projects/p1/console', icon: 'console' },
-          { id: 'review:r1', title: 'Review', href: '/projects/p1/review/r1', icon: 'review' },
+          { id: 'console', title: 'Console', href: '/projects/p1/console' },
+          { id: 'review:r1', title: 'Review', href: '/projects/p1/review/r1' },
           { id: 'run', title: 'Run 1', href: '/projects/p1/workflow/r1', icon: 'run' },
         ],
       },
       lastHrefs: {},
     })
     setPathname('/projects/p1/workflow/r1')
-    render(<EditorTabs group="p1" rootHref={searchHref} />)
+    renderTabs('p1')
 
     expect(screen.getAllByRole('link').map((link) => link.textContent)).toEqual([
       'Console',
@@ -88,7 +111,7 @@ describe('EditorTabs', () => {
   })
 
   it('does not navigate when a tab that is not on screen closes', async () => {
-    render(<EditorTabs group="p1:search" rootHref={searchHref} />)
+    renderTabs('p1:search')
 
     await userEvent.click(screen.getByRole('button', { name: 'Close AMB-001' }))
 

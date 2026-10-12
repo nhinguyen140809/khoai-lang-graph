@@ -3,8 +3,7 @@
 import { useRouter } from 'next/navigation'
 import { type ComponentType, type ReactNode, useEffect, useState } from 'react'
 
-import { projectTabGroup } from '@/components/layout/activity-bar.config'
-import { useEditorTabsStore } from '@/components/layout/editor-tabs.store'
+import { projectTabGroup, useEditorTabsStore } from '@/components/layout/editor-tabs.store'
 import { useEditorTab } from '@/components/layout/hooks/useEditorTab'
 import { surfaceClassName } from '@/components/layout/surface.config'
 import { EmptyState, ErrorState, LoadingState } from '@/components/state'
@@ -13,6 +12,7 @@ import { ResizableHandle, ResizablePanel, ResizablePanelGroup } from '@/componen
 import { cn } from '@/lib/utils'
 
 import { usePendingInterrupt } from '../hooks/usePendingInterrupt'
+import { reviewsPath } from '../review-frame.config'
 import { ReviewCard } from './ReviewCard'
 
 interface ReviewPageProps {
@@ -35,7 +35,7 @@ export function ReviewPage({ projectId, runId, Artifacts, Console }: ReviewPageP
   const router = useRouter()
   const interrupt = usePendingInterrupt(runId)
   const closeTab = useEditorTabsStore((state) => state.closeTab)
-  const href = `/projects/${encodeURIComponent(projectId)}/review/${encodeURIComponent(runId)}`
+  const href = `${reviewsPath(projectId)}/${encodeURIComponent(runId)}`
 
   // The review is one tab, with the artifact and the console split inside it.
   useEditorTab(projectTabGroup(projectId), {

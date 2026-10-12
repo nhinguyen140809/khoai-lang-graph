@@ -1,18 +1,18 @@
+import { FolderInputIcon } from 'lucide-react'
 import Link from 'next/link'
 
+import type { Activity, TabIcons } from '@/components/layout/activity.types'
 import { ActivityBar } from '@/components/layout/ActivityBar'
 import { AppFrame } from '@/components/layout/AppFrame'
-import { FeatureCommands } from '@/components/layout/FeatureCommands'
-import { SidePanel } from '@/components/layout/SidePanel'
 import { surfaceClassName } from '@/components/layout/surface.config'
 import { TopBar } from '@/components/layout/TopBar'
 import { Workbench } from '@/components/layout/Workbench'
 import { NotFoundState } from '@/components/state'
 import { Button } from '@/components/ui/button'
 import { UserMenu } from '@/features/account'
-import { ArtifactTree, ExportButton } from '@/features/artifacts'
-import { ConsoleNavigator } from '@/features/console'
-import { SettingsNav } from '@/features/project-settings'
+import { artifactsActivity, artifactTabIcons } from '@/features/artifacts'
+import { consoleActivity, consoleTabIcons } from '@/features/console'
+import { projectSettingsActivity, projectSettingsTabIcons } from '@/features/project-settings'
 import {
   NewProjectDialog,
   PendingReviewBadge,
@@ -20,18 +20,30 @@ import {
   ProjectGate,
   ProjectSwitcher,
 } from '@/features/projects'
-import { SearchPanel } from '@/features/search'
+import { reviewsPath, reviewTabIcons } from '@/features/review'
+import { searchActivity } from '@/features/search'
 import { ThemeSync } from '@/features/settings'
 import { ProjectRunStatus } from '@/features/threads'
-import { TraceabilityNav } from '@/features/traceability'
-import { RunTree } from '@/features/workflow'
+import { traceabilityActivity, traceabilityTabIcons } from '@/features/traceability'
+import { workflowActivity, workflowTabIcons } from '@/features/workflow'
 import { cn } from '@/lib/utils'
+
+/** The icons that the pages of the features name for their tabs. */
+const tabIcons: TabIcons = {
+  ...consoleTabIcons,
+  ...reviewTabIcons,
+  ...artifactTabIcons,
+  ...workflowTabIcons,
+  ...traceabilityTabIcons,
+  ...projectSettingsTabIcons,
+}
 
 /**
  * Every screen of a project: the frame with the features of the project on the activity bar and
- * the run of the project on the status bar, and the workbench with the side panel of each feature
- * and the editor. The frame is shared layout, so the feature components it shows are passed in
- * from here.
+ * the run of the project on the status bar, and the workbench with the side panel of the feature
+ * chosen and the editor. The frame is shared layout, so the features it shows are passed in from
+ * here: each feature describes its item, and this list sets which features a project has and in
+ * which order.
  */
 export default async function ProjectLayout({
   children,
@@ -40,38 +52,25 @@ export default async function ProjectLayout({
   const { projectId } = await params
   const topBar = <TopBar crumb={<ProjectSwitcher projectId={projectId} />} />
   const dialogs = <NewProjectDialog />
-  const sidePanels = {
-    console: (
-      <SidePanel title="Console">
-        <ConsoleNavigator projectId={projectId} />
-      </SidePanel>
-    ),
-    search: (
-      <SidePanel title="Search">
-        <SearchPanel projectId={projectId} />
-      </SidePanel>
-    ),
-    artifacts: (
-      <SidePanel title="Artifacts" actions={<ExportButton projectId={projectId} openFromAddress />}>
-        <ArtifactTree projectId={projectId} />
-      </SidePanel>
-    ),
-    workflow: (
-      <SidePanel title="Runs">
-        <RunTree projectId={projectId} />
-      </SidePanel>
-    ),
-    traceability: (
-      <SidePanel title="Traceability">
-        <TraceabilityNav projectId={projectId} />
-      </SidePanel>
-    ),
-    settings: (
-      <SidePanel title="Project settings">
-        <SettingsNav projectId={projectId} />
-      </SidePanel>
-    ),
-  }
+  const activities: Activity[] = [
+    {
+      ...consoleActivity(projectId),
+      // A review is a page of the console: its tab keeps the console as the side panel.
+      paths: [reviewsPath(projectId)],
+      badge: <PendingReviewBadge projectId={projectId} />,
+    },
+    searchActivity(projectId),
+    artifactsActivity(projectId),
+    workflowActivity(projectId),
+    traceabilityActivity(projectId),
+    {
+      id: 'sources',
+      label: 'Sources',
+      icon: <FolderInputIcon />,
+      note: 'Uploaded documents, planned for later',
+    },
+    projectSettingsActivity(projectId),
+  ]
 
   return (
     <>
@@ -103,26 +102,14 @@ export default async function ProjectLayout({
       >
         <AppFrame
           topBar={topBar}
-          activityBar={
-            <ActivityBar
-              projectId={projectId}
-              user={<UserMenu />}
-              badges={{ console: <PendingReviewBadge projectId={projectId} /> }}
-            />
-          }
-          sidePanel
+          activityBar={<ActivityBar user={<UserMenu />} />}
+          activities={activities}
+          tabIcons={tabIcons}
           status={<ProjectRunStatus projectId={projectId} />}
-          commands={
-            <>
-              <FeatureCommands />
-              <ProjectCommands currentProjectId={projectId} />
-            </>
-          }
+          commands={<ProjectCommands currentProjectId={projectId} />}
           dialogs={dialogs}
         >
-          <Workbench projectId={projectId} sidePanels={sidePanels}>
-            {children}
-          </Workbench>
+          <Workbench projectId={projectId}>{children}</Workbench>
         </AppFrame>
       </ProjectGate>
     </>

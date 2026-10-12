@@ -4,15 +4,13 @@ import { persist } from 'zustand/middleware'
 
 import { parseStored, persistStorage } from '@/lib/browser-storage.utils'
 
-import { type ProjectFeature, projectFeatures } from './activity-bar.config'
-
 export const SIDE_PANEL_DEFAULT_WIDTH = 260
 export const BOTTOM_PANEL_DEFAULT_HEIGHT = 240
 
 const persistedFrameSchema = z.object({
   sidePanelVisible: z.boolean(),
-  /** The feature whose side panel is shown, once chosen; the editor is not tied to it. */
-  sideFeature: z.enum(projectFeatures).nullable().default(null),
+  /** The id of the feature whose side panel is shown, once chosen; the editor is not tied to it. */
+  sideFeature: z.string().nullable().default(null),
   /** Width of the side panel in pixels; it keeps its width when the window is resized. */
   sidePanelWidth: z.number().positive(),
   bottomPanelVisible: z.boolean(),
@@ -24,9 +22,9 @@ type PersistedFrame = z.infer<typeof persistedFrameSchema>
 
 interface FrameState extends PersistedFrame {
   toggleSidePanel: () => void
-  setSideFeature: (feature: ProjectFeature) => void
+  setSideFeature: (id: string) => void
   /** Shows the side panel of a feature, and the side panel if it was hidden. */
-  showSideFeature: (feature: ProjectFeature) => void
+  showSideFeature: (id: string) => void
   setSidePanelVisible: (visible: boolean) => void
   setSidePanelWidth: (width: number) => void
   toggleBottomPanel: () => void
