@@ -220,6 +220,17 @@
   --shadow-2xl: var(--shadow-2xl);
 }
 
+/*
+ * Text sizes below text-xs, for the labels at the edge of the frame: titles of panels and
+ * sections, the status bar, counts, and captions. Each step is one pixel smaller than the one
+ * above: 11px, 10px, and 9px.
+ */
+@theme {
+  --text-2xs: 0.6875rem;
+  --text-3xs: 0.625rem;
+  --text-4xs: 0.5625rem;
+}
+
 @layer base {
   * {
     @apply border-border outline-ring/50;
@@ -259,6 +270,25 @@
   pre {
     font-family: var(--font-mono);
   }
+}
+
+/*
+ * The editor reads one step larger than the panels around it. Mira sets component text to
+ * text-xs, so inside the editor text-xs resolves to 13px (was 12px) and text-sm to 15px (was
+ * 14px). Dialogs and popovers render outside the editor and keep the base sizes.
+ */
+@utility editor-text {
+  --text-xs: 0.8125rem;
+  --text-sm: 0.9375rem;
+}
+
+/*
+ * A text caret that is a steady block, as in a terminal. A browser without these properties keeps
+ * its own caret.
+ */
+@utility caret-block {
+  caret-shape: block;
+  caret-animation: manual;
 }
 
 /*
