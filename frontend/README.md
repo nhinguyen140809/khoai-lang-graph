@@ -242,7 +242,7 @@ Vietnamese text needs a font that ships the `vietnamese` subset. The subsets of 
 
 ## Frame
 
-Every screen uses the frame in `src/components/layout/`, after the layout of an editor: a top bar (`TopBar`), an activity bar with one item per feature of the project (`ActivityBar`, items in `activity-bar.config.ts`), the side panel and the editor of the feature (`Workbench`, `SidePanel`, `EditorTabs`), an optional panel under the editor (`EditorWithPanel`), a status bar (`StatusBar`), and the command palette (`CommandPalette`). The frame is shared code, so the feature components it shows are passed in as props from the layouts in `src/app/`.
+Every screen uses the frame in `src/components/layout/`, after the layout of an editor: a top bar (`TopBar`), an activity bar with one item per feature of the project (`ActivityBar`), the side panel of the feature chosen and the editor (`Workbench`, `SidePanel`, `EditorTabs`), an optional panel under the editor (`EditorWithPanel`), a status bar (`StatusBar`), and the command palette (`CommandPalette`). The frame is shared code and names no feature: each feature describes its item (`FeatureActivity` in `activity.types.ts`: id, label, icon, start page, side panel) and the icons of its tabs in `<feature>-frame.config.tsx`, and the layout of a project passes the list to `AppFrame` as `activities` and `tabIcons`. The list sets which features a project has and their order; a feature planned for later is a `PlannedActivity`, shown disabled.
 
 | Shortcut     | Action                                                                       |
 | ------------ | ---------------------------------------------------------------------------- |
@@ -252,7 +252,7 @@ Every screen uses the frame in `src/components/layout/`, after the layout of an 
 
 `Cmd` works in place of `Ctrl` on macOS.
 
-Each feature of a project has its own editor tabs. A tab shows the icon of what it opens (`editor-tabs.config.ts`: an artifact, an item, a run, a view, settings), or the icon of its feature when it names none, and a new tab opens next to the tab of the page shown before it. The Console feature has no tabs: it shows the event log of the project, so its editor has no tab strip.
+The editor tabs belong to the project, not to a feature: choosing a feature on the activity bar changes the side panel only. A page opens its tab with `useEditorTab` and may name an icon (`item`, `run`, ...); the tab shows that icon from `tabIcons`, else the icon of the feature the page belongs to. A new tab opens next to the tab of the page shown before it.
 
 ### Browser storage
 
