@@ -17,7 +17,8 @@ The skeletons fix the regions and what each one holds; sizes, colors and compone
   - [7. Workflow](#7-workflow)
   - [8. Traceability](#8-traceability)
   - [9. Project settings](#9-project-settings)
-  - [10. Open points](#10-open-points)
+  - [10. User settings](#10-user-settings)
+  - [11. Open points](#11-open-points)
 
 ---
 
@@ -350,7 +351,30 @@ The side panel lists the runs of the project and their steps (they live in the t
 - General holds the fields of the project. Runs holds `run_config` of the project; the fields under `parameters` come from `run_parameters_schema`, so a new parameter appears without a client change. A field left empty takes the value of the user.
 - Models holds `model_overrides`: one model per agent role, empty for the default of the user.
 
-## 10. Open points
+## 10. User settings
+
+The settings of the user are outside a project, at `/settings`, and open from "Your settings" in the account menu.
+
+```text
++----------------------------------------------------------------------------------------------+
+| (K) khoai / Settings                     [ Search or run a command   Ctrl+K ]         (user) |
++-----+--------------------------+-------------------------------------------------------------+
+|     | Profile                  | Preferences                                                 |
+|     | Password                 |   Theme              [ Dark v ]                             |
+|     | [Preferences]            |   Language of the app [ English v ]                         |
+|     | Models                   |   Output language of new projects [ English v ]             |
+|     | Usage                    |   Notify me when     [x] a run waits for my review          |
+|     | Login sessions           |                      [x] a run has finished                 |
+|     |                          |   Run settings of every project ...                         |
++-----+--------------------------+-------------------------------------------------------------+
+```
+
+- Profile holds the name and the picture; the email is shown and cannot be changed. Password changes the password with the current one.
+- Preferences holds `UserSettings`: the theme, the languages, the notifications and `default_run_config`, which uses the same fields as the Runs section of the project settings.
+- Models holds one model and one temperature for each agent role, from the model catalog.
+- Usage shows tokens and cost grouped by day, project, agent role or model. Login sessions lists the sessions of the user and signs out the ones that are not this device.
+
+## 11. Open points
 
 1. **Several runs or consoles in one project.** The API keeps threads, and each can hold at most one unfinished run, so a project could have several. The first version shows one console per project. Open: when to open a second console, and what the status bar shows when more than one run is unfinished.
 2. **Grouping in the explorer.** Grouping an artifact without sections by item kind is a choice of the web app, not data. Open: whether it fits every artifact kind.
