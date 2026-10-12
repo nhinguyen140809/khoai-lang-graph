@@ -10,7 +10,7 @@ import { useNewProjectDialogStore } from '../new-project.store'
 import type { ProjectStatus } from '../projects.types'
 import { ProjectTable } from './ProjectTable'
 
-/** The projects of the user: the only screen outside a project. A row opens the project. */
+/** The projects of the user, outside a project. A row opens the project. */
 export function ProjectListPage() {
   const [status, setStatus] = useState<ProjectStatus>('active')
   const openNewProject = useNewProjectDialogStore((state) => state.setOpen)

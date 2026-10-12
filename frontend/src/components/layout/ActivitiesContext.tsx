@@ -5,7 +5,7 @@ import { createContext, useContext } from 'react'
 import type { Activity, TabIcons } from './activity.types'
 
 interface FrameActivities {
-  /** The items of the activity bar, top to bottom; empty outside a project. */
+  /** The items of the activity bar, top to bottom; empty on a screen that gives none. */
   activities: readonly Activity[]
   tabIcons: TabIcons
 }

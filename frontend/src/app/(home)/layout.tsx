@@ -14,7 +14,10 @@ interface HomeLayoutProps {
   children: ReactNode
 }
 
-/** Screens outside a project: the frame with a disabled activity bar. */
+/**
+ * Screens outside a project: the frame, with the account menu on the activity bar. They have no
+ * feature yet; a feature shown outside a project would be passed to AppFrame here as an activity.
+ */
 export default function HomeLayout({ children }: HomeLayoutProps) {
   return (
     <>

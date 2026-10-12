@@ -71,7 +71,7 @@ Threads stay in the API: a thread maps one-to-one to a workflow session and hold
 
 ## 2. Project list
 
-The only screen outside a project, so it has no activity bar.
+A screen outside a project: its activity bar has no feature yet, only the account menu. A feature shown outside a project would be added to it.
 
 ```text
 +----------------------------------------------------------------------------------------------+
