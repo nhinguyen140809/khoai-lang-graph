@@ -1,4 +1,4 @@
-import { render, screen, within } from '@testing-library/react'
+import { fireEvent, render, screen, within } from '@testing-library/react'
 import { beforeEach, describe, expect, it, vi } from 'vitest'
 
 import { PROJECT_IDS, RUN_IDS } from '@/mocks/mock-ids.constants'
@@ -84,5 +84,31 @@ describe('RunPage', () => {
       `/projects/${PROJECT_IDS.mentor}/review/${RUN_IDS.mentorMain3}`,
     )
     expect(screen.getByRole('button', { name: 'Retry from this step' })).toBeDisabled()
+  })
+
+  it('shows the state of the workflow after the chosen step, with links to what it refers to', async () => {
+    const step = mockRunSteps(RUN_IDS.mentorMain1, 'waiting').at(-1)
+    setSearch(`step=${step?.id ?? ''}`)
+    render(<RunPage projectId={PROJECT_IDS.mentor} runId={RUN_IDS.mentorMain1} />, {
+      wrapper: TestProviders,
+    })
+    fireEvent.mouseDown(await screen.findByRole('tab', { name: 'State' }))
+
+    const state = await screen.findByRole('region', { name: 'Workflow state' })
+
+    expect(await within(state).findByText('current_stage')).toBeInTheDocument()
+    expect(await within(state).findByRole('link', { name: /^REQ-001/ })).toHaveAttribute(
+      'href',
+      expect.stringContaining('/artifacts/items/'),
+    )
+  })
+
+  it('says that a node of the graph was not reached, when the address chooses it', async () => {
+    setSearch('node=validator')
+    render(<RunPage projectId={PROJECT_IDS.mentor} runId={RUN_IDS.mentorMain3} />, {
+      wrapper: TestProviders,
+    })
+
+    expect(await screen.findByText(/was not reached in this run/)).toBeInTheDocument()
   })
 })

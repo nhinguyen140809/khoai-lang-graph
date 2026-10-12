@@ -2,12 +2,13 @@
 
 import type { Route } from 'next'
 import { useRouter, useSearchParams } from 'next/navigation'
-import { useMemo, useState } from 'react'
+import { useMemo } from 'react'
 
 import { projectTabGroup } from '@/components/layout/activity-bar.config'
 import { EditorWithPanel } from '@/components/layout/EditorWithPanel'
 import { useEditorTab } from '@/components/layout/hooks/useEditorTab'
 import { ErrorState, LoadingState, NotFoundState } from '@/components/state'
+import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs'
 import { runStatusLabels } from '@/lib/run-status.constants'
 
 import { useGraphLayout } from '../hooks/useGraphLayout'
@@ -15,7 +16,8 @@ import { useProjectRuns } from '../hooks/useProjectRuns'
 import { useRunSteps } from '../hooks/useRunSteps'
 import { useWorkflowDefinition } from '../hooks/useWorkflowDefinition'
 import { runProgress } from '../run-progress.utils'
-import { isActive, runHref } from '../workflow-links.utils'
+import { isActive, runHref, runNodeHref } from '../workflow-links.utils'
+import { StatePanel } from './StatePanel'
 import { StepPanel } from './StepPanel'
 import { WorkflowGraph } from './WorkflowGraph'
 
@@ -33,7 +35,6 @@ export function RunPage({ projectId, runId }: RunPageProps) {
   const steps = useRunSteps(runId, run !== undefined && isActive(run.status))
   const definition = useWorkflowDefinition(run?.workflow_version)
   const layout = useGraphLayout(definition.data)
-  const [pickedNode, setPickedNode] = useState<string | null>(null)
 
   useEditorTab(
     projectTabGroup(projectId),
@@ -79,31 +80,40 @@ export function RunPage({ projectId, runId }: RunPageProps) {
 
   const stepId = searchParams.get('step')
   const step = steps.data.find(({ id }) => id === stepId) ?? null
-  const shownNode = step?.node ?? pickedNode
+  const shownNode = step?.node ?? searchParams.get('node')
   const nodeLabel = definition.data.nodes.find(({ id }) => id === shownNode)?.label ?? shownNode
 
   const chooseNode = (nodeId: string) => {
     const last = progress.nodes[nodeId]?.lastStepId
     if (last === undefined || last === null) {
-      setPickedNode(nodeId)
-      router.replace(runHref(projectId, runId) as Route, { scroll: false })
+      router.replace(runNodeHref(projectId, runId, nodeId) as Route, { scroll: false })
       return
     }
-    setPickedNode(null)
     router.replace(runHref(projectId, runId, last) as Route, { scroll: false })
   }
 
   return (
     <EditorWithPanel
-      panelLabel="Step"
+      panelLabel="Details"
       panel={
-        <StepPanel
-          projectId={projectId}
-          run={run}
-          definition={definition.data}
-          step={step}
-          nodeLabel={step === null ? nodeLabel : null}
-        />
+        <Tabs defaultValue="step" className="gap-0">
+          <TabsList variant="line" className="px-2">
+            <TabsTrigger value="step">Step</TabsTrigger>
+            <TabsTrigger value="state">State</TabsTrigger>
+          </TabsList>
+          <TabsContent value="step">
+            <StepPanel
+              projectId={projectId}
+              run={run}
+              definition={definition.data}
+              step={step}
+              nodeLabel={step === null ? nodeLabel : null}
+            />
+          </TabsContent>
+          <TabsContent value="state">
+            <StatePanel projectId={projectId} runId={runId} stepId={step?.id ?? null} active />
+          </TabsContent>
+        </Tabs>
       }
     >
       <div className="relative h-full min-h-64">

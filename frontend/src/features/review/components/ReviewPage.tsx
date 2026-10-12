@@ -1,7 +1,7 @@
 'use client'
 
 import { useRouter } from 'next/navigation'
-import type { ComponentType, ReactNode } from 'react'
+import { type ComponentType, type ReactNode, useEffect, useState } from 'react'
 
 import { projectTabGroup } from '@/components/layout/activity-bar.config'
 import { useEditorTabsStore } from '@/components/layout/editor-tabs.store'
@@ -51,7 +51,16 @@ export function ReviewPage({ projectId, runId, Artifacts, Console }: ReviewPageP
     router.push(`/projects/${encodeURIComponent(projectId)}/console`)
   }
 
-  if (interrupt.isPending) {
+  // A review that was open and is gone has been answered: the page goes back to the console at
+  // once, without the message that no review waits.
+  const [hadReview, setHadReview] = useState(false)
+  if (!hadReview && interrupt.data !== undefined && interrupt.data !== null) setHadReview(true)
+  const answered = hadReview && interrupt.data === null
+  useEffect(() => {
+    if (answered) backToConsole()
+  })
+
+  if (interrupt.isPending || answered) {
     return <LoadingState label="Loading the review" />
   }
   if (interrupt.isError) {
