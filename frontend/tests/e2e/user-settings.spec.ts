@@ -8,6 +8,7 @@ test('opens the settings of the user from the account menu, and saves the name',
   await page.getByRole('menuitem', { name: 'Your settings' }).click()
 
   await expect(page).toHaveURL(/\/settings$/, { timeout: 20_000 })
+  await expect(page.getByRole('banner')).toContainText('Settings')
   const name = page.getByLabel('Name')
   await expect(name).toHaveValue('Linh Pham', { timeout: 20_000 })
   await name.fill('Linh P.')

@@ -2,6 +2,7 @@ import type { ReactNode } from 'react'
 
 import { ActivityBar } from '@/components/layout/ActivityBar'
 import { AppFrame } from '@/components/layout/AppFrame'
+import { PageCrumb } from '@/components/layout/PageCrumb'
 import { surfaceClassName } from '@/components/layout/surface.config'
 import { TopBar } from '@/components/layout/TopBar'
 import { UserMenu } from '@/features/account'
@@ -19,7 +20,7 @@ export default function HomeLayout({ children }: HomeLayoutProps) {
     <>
       <ThemeSync />
       <AppFrame
-        topBar={<TopBar crumb="Projects" />}
+        topBar={<TopBar crumb={<PageCrumb />} />}
         activityBar={<ActivityBar user={<UserMenu />} />}
         commands={<ProjectCommands />}
         dialogs={<NewProjectDialog />}
