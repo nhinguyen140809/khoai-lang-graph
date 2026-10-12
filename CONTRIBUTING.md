@@ -260,7 +260,7 @@ Conventions:
   - Unexpected errors (a bug while rendering) are caught by the route error boundary (`error.tsx`). Slow routes show a `loading.tsx`.
   - Every state must be reachable in `pnpm dev:mock` through a mock scenario (frontend README: Mock data).
 - **Validation** with Zod at boundaries (forms, untrusted data).
-- **UI components:** use shadcn/ui primitives from `src/components/ui/` before building custom ones. Style with Tailwind utilities; avoid ad-hoc CSS files. Use `cn()` from `@/lib/utils` (re-exports shadcn's `cn` package, a clsx + tailwind-merge replacement) to combine classes.
+- **UI components:** use shadcn/ui primitives from `src/components/ui/` before building custom ones. Style with Tailwind utilities; avoid ad-hoc CSS files. Use `cn()` from `@/lib/utils` (re-exports shadcn's `cn` package, a clsx + tailwind-merge replacement) to combine classes. Outside `src/components/ui/`, a class has no CSS value of its own in brackets (`text-[0.625rem]`, `grid-cols-[8rem_1fr]`, `[scrollbar-width:none]`; state selectors such as `data-[state=open]` are fine): use a token or utility of the scale, or add a token or `@utility` to `src/app/styles.css`. A `style` prop is for a value that comes from data, such as the depth of a tree row.
 - **Heavy components** (CodeMirror, React Flow, PDF viewer) are lazy-loaded with `next/dynamic` (`ssr: false` for components that need the browser) so the initial bundle stays small.
 - **Untrusted content** (LLM-generated HTML/Markdown) is never rendered with `dangerouslySetInnerHTML`; HTML artifacts go in a sandboxed iframe.
 - **Accessibility:** semantic HTML, labels on inputs, keyboard navigable. `jsx-a11y` must pass.

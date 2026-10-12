@@ -151,6 +151,7 @@ With `--only theme`, only the theme variables in `src/app/styles.css` change. Wi
 ### Colors, radius, and dark mode
 
 - All design tokens are CSS variables in `src/app/styles.css`: `:root` holds the light theme, `.dark` the dark theme, and `@theme inline` maps them to Tailwind utilities (`bg-background`, `text-muted-foreground`, `border-border`, ...).
+- Text sizes below `text-xs` are tokens in `@theme`: `text-2xs` (11px), `text-3xs` (10px), and `text-4xs` (9px), for titles of panels, the status bar, counts, and captions. The `editor-text` utility makes `text-xs` and `text-sm` one step larger inside the editor.
 - `--radius` is the base corner radius. The `rounded-sm` ... `rounded-4xl` utilities are derived from it, so changing this one value rounds every component more or less.
 - The palette:
 
