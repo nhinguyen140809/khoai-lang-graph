@@ -64,8 +64,13 @@ could never hit:
 
 ## 2. Not ported (per the mission brief, remaining follow-ups)
 
-- **decisions.py (PARK)** — the decision catalogue of the source backend
-  stays parked intentionally. Nothing references it.
+- **decisions.py** — the bounded AI decision layer IS ported
+  (agents/requirements_engineering/decisions.py): DecisionSpec/Answer/Result
+  models, Mock + Jev providers, the 0.7/0.4 confidence policy, and
+  DECISION_PROVIDER/MOCK/JEV env switches. The checkpoint in-line veto
+  wiring (interview_turn_policy, spec_type_priority_review,
+  validation_status_review reading the decision result before writing
+  the state) is the next step.
 - **checkpoint_validation node / checkpoint_personas reject branches /
   business_rule / embedded traceability / regenerate-all-id-restart** —
   out of scope by the mission; the definition-driven vocabulary does not
