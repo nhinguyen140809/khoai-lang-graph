@@ -157,7 +157,7 @@ Design of the workflow:
 | Runtime | Node from `.nvmrc` (22); pnpm from `packageManager` in `frontend/package.json` (`pnpm/action-setup`); the pnpm store cached by `actions/setup-node` with `cache-dependency-path: frontend/pnpm-lock.yaml` |
 | Install | `pnpm install --frozen-lockfile` in `frontend/` |
 | Job `check` | In order: `pnpm typecheck`, `pnpm lint`, `pnpm format:check`, `pnpm test`, `pnpm build` |
-| Job `e2e` | `pnpm e2e:install` (Chromium with system dependencies), then `pnpm e2e`. The Playwright config already starts `next dev` with the mocks on port 3100, uses 2 retries and the `github` reporter when `CI` is set. Upload `playwright-report/` when it fails |
+| Job `e2e` | `pnpm e2e:install` (Chromium with system dependencies), then `pnpm e2e`. The Playwright config already starts `next dev` with the mocks on port 3100, uses 2 retries and the `github` reporter when `CI` is set. Upload `playwright-report/` when it fails. On a cold `next dev` the first tests of a spec can time out while their routes compile (seen locally, section 7); the retries cover it |
 | Hygiene | `permissions: contents: read`, `concurrency` with `cancel-in-progress`, `timeout-minutes` on each job |
 
 Options for the jobs: one job `check` with the five steps (one install, simple, a failure hides the later steps) or one job per step (parallel, clear red step, five installs from the cache). Recommendation: one `check` job and one `e2e` job at first; split when the run time hurts.
@@ -225,7 +225,7 @@ jobs:
           path: frontend/playwright-report
 ```
 
-Before writing the workflow, learn what `main` does today: extract `main` into a scratch directory with `git archive origin/main frontend | tar -x -C <dir>` (no worktree, the checkout stays as it is), install, and run the five steps once, one at a time. If a step is red on `main`, fix it in P0 or leave that step out and say so in the PR. This has not been run yet; `pnpm build` has not been run on the branch either.
+Before writing the workflow, learn what `main` does today: extract `main` into a scratch directory with `git archive origin/main frontend | tar -x -C <dir>` (no worktree, the checkout stays as it is), install, and run the five steps once, one at a time. If a step is red on `main`, fix it in P0 or leave that step out and say so in the PR. This has not been run yet. On the branch, `pnpm build` passes since the fix of section 7.
 
 Out of scope for P0: the backend workflow, the codegen check from CONTRIBUTING (the backend has no routes yet), commitlint, a check of the PR title (for example `amannn/action-semantic-pull-request`, a one-file addition if wanted).
 
@@ -258,7 +258,7 @@ The first PR of the product, as planned. It is additive: nothing on `main` impor
 
 Not in P3: the deletion of `AppShell.tsx` and `app-sidebar/` (P6, decision D2).
 
-Check: `pnpm test src/components/layout src/hooks src/lib`, `pnpm e2e tests/e2e/frame.spec.ts` (edited for the side panel change and not run since), a look at `/design-system`.
+Check: `pnpm test src/components/layout src/hooks src/lib`, `pnpm e2e tests/e2e/frame.spec.ts`, a look at `/design-system`.
 
 ### P4. Account
 
@@ -288,7 +288,7 @@ Endpoints read: `GET /projects` (all pages, by status), `POST /projects`, `GET /
 | Routes | `src/app/page.tsx`, `src/app/(home)/layout.tsx`, `(home)/projects/page.tsx`, `(home)/error.tsx` (renamed from `(app)/error.tsx`), `src/app/(project)/projects/[projectId]/layout.tsx`, `error.tsx`, `page.tsx` |
 | Shared code | `src/components/state/*` (compact size), `src/lib/relative-time.utils.ts`, `src/lib/run-status.constants.ts`, `src/hooks/useNow.ts`, with their tests |
 | Removed | `src/app/(app)/` (4 files), `components/layout/AppShell.tsx`, `components/layout/app-sidebar/` (4 files) |
-| E2E and docs | `tests/e2e/projects.spec.ts` (edited for the side panel change and not run since), section 2 of `docs/ui/skeletons.md` |
+| E2E and docs | `tests/e2e/projects.spec.ts`, section 2 of `docs/ui/skeletons.md` |
 
 The project `layout.tsx` is cut for this PR: the frame, the top bar, the status bar, and a placeholder for every side panel (decision D3). The run status of the status bar is a placeholder until P7; `ThemeSync` is added by P18.
 
@@ -321,7 +321,7 @@ Endpoints: `GET /threads/{id}/messages`, `POST /threads/{id}/messages`, `POST /p
 | Routes | `console/page.tsx`, `console/[threadId]/page.tsx` |
 | Mocks | `messages.handlers.ts`, `messages.fixtures.ts`, `run-stream.handlers.ts` |
 | Removed | `src/features/chat/` (8 files deleted, its tests included; `useRunStream.ts` moves to `console/hooks/useRunStream.ts`), `tests/e2e/chat.spec.ts` |
-| E2E and docs | `tests/e2e/console.spec.ts` (edited and not run since the side panel change), section 3 of `docs/ui/skeletons.md` |
+| E2E and docs | `tests/e2e/console.spec.ts`, section 3 of `docs/ui/skeletons.md` |
 
 Held back, to be added by the PR that owns the target: the `/export` command (P13), the `/run-settings` command (P17) and the link to a review (P14), all in `Console.tsx` and `commands.constants.ts`.
 
@@ -329,7 +329,7 @@ Suggested reading order: `event-log.utils.ts` and `run-events.reducer.ts` (the m
 
 ### P10. Search
 
-Endpoint: `GET /projects/{id}/items` with the query. Files: `src/features/search/` (api, types, utils, `useItemSearch`, `SearchPanel`, tests), `search/page.tsx`, `tests/e2e/search.spec.ts` (edited and not run), the Search panel entry of `layout.tsx`.
+Endpoint: `GET /projects/{id}/items` with the query. Files: `src/features/search/` (api, types, utils, `useItemSearch`, `SearchPanel`, tests), `search/page.tsx`, `tests/e2e/search.spec.ts`, the Search panel entry of `layout.tsx`.
 
 ### P11. Edit an item
 
@@ -411,7 +411,7 @@ First consumer of shared code:
 Once, before P0 and P3:
 
 1. Done: the work that was uncommitted (the side panel decoupling, the tokens, the flex rows, the CONTRIBUTING and README lines) is committed on `feat/fe/mock`. Review those commits before the first cut, because the path cut copies them.
-2. Run the e2e specs that the side panel change touched and that have not been run since: `frame`, `console`, `projects`, `search`. Run `pnpm build` once; it has not been run on the branch.
+2. Done on 2026-10-12: the e2e specs that the side panel change touched (`frame`, `console`, `projects`, `search`) pass, run one at a time with one worker. On a cold dev server three tests timed out while their routes compiled (the first test of `console`, the first two of `projects`) and passed on a second run. `pnpm build` failed on `/settings`, because `UserSettingsPage` reads `useSearchParams()` outside a `Suspense` boundary and the route is prerendered; `src/app/(home)/settings/page.tsx` now wraps it, the build passes, and `user-settings.spec.ts` passes. The fix belongs to P18 and must be committed on `feat/fe/mock` before that cut. The first build peaked at about 1.9 GB RSS (Turbopack is outside the Node heap limit) and took about 3 minutes; a build with the cache takes about 1 minute.
 3. Decide the points of section 8.
 
 For every PR:
@@ -439,6 +439,7 @@ For every PR:
 ## 9. Checklist
 
 - [x] Uncommitted work committed on `feat/fe/mock` (to be reviewed)
+- [x] E2E specs of the side panel change and `pnpm build` run on `feat/fe/mock`; the `/settings` build fix to be committed
 - [ ] Section 8 decided (at least the workflow-review line)
 - [ ] `main` run through the five checks in a scratch directory
 - [ ] P0 CI merged, `check` and `e2e` required
