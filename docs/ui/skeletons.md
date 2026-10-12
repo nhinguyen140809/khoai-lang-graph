@@ -50,7 +50,7 @@ Every screen inside a project uses this frame.
 | Top bar | The logo, the project name with a menu to switch project or go back to the project list, a box to search items and run commands (`Ctrl+K`), the user menu |
 | Activity bar | One icon per feature of the project: `E` Console, `A` Artifacts, `W` Workflow, `T` Traceability, `S` Sources (Later), and `*` Settings at the bottom. A badge shows a count, such as the reviews waiting on Console |
 | Side panel | Navigation inside the chosen feature: the artifact tree, the runs and their steps, the coverage counts. Console has an outline of its event log and the list of consoles. `Ctrl+B` hides and shows the panel |
-| Editor | What was opened from the side panel, in tabs. Two tabs can be shown side by side, for example an artifact and the console during a review |
+| Editor | What was opened from the side panel, in tabs. The tabs belong to the project, not to a feature: changing the feature on the activity bar does not close them, and every feature shows the same strip, like the open files of VS Code. The console, a review, an artifact, an item, a run, a view of traceability and the settings each open as one tab. A review is one tab with the artifact and the console split inside it |
 | Panel | An optional area under the editor: the trace and the timeline of the open item, or the detail of the selected step |
 | Status bar | The active run of the project: its state, stage, step, cost against `max_cost_usd`, and the workflow version. A click opens the run in Workflow |
 
@@ -95,7 +95,7 @@ The only screen outside a project, so it has no activity bar.
 
 ## 3. Console
 
-The console is the working view of the project: the event log of its runs, with an input at the bottom. The side panel has two views: the outline of the console on screen, which goes to each message or command that the user typed, and the list of the consoles of the project. The editor is the log, without tabs.
+The console is the working view of the project: the event log of its runs, with an input at the bottom. The side panel has two views: the outline of the console on screen, which goes to each message or command that the user typed, and the list of the consoles of the project. The editor is the log, in the tab Console.
 
 ```text
 +----------------------------------------------------------------------------------------------+
