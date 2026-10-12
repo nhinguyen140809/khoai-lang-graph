@@ -8,8 +8,8 @@ import { ActivitiesContext } from '../ActivitiesContext'
 import type { Activity } from '../activity.types'
 import { useEditorTabsStore } from '../editor-tabs.store'
 import { useFrameStore } from '../frame.store'
+import { ProjectWorkspace } from '../ProjectWorkspace'
 import { SidePanel } from '../SidePanel'
-import { Workbench } from '../Workbench'
 
 vi.mock('next/navigation', async () => (await import('@/test/next-mocks.utils')).navigationMock)
 vi.mock('next/link', async () => (await import('@/test/next-mocks.utils')).linkMock)
@@ -36,19 +36,19 @@ beforeEach(() => {
   useFrameStore.setState({ sidePanelVisible: true, sideFeature: null })
 })
 
-function renderWorkbench(given: Activity[] = activities) {
+function renderProjectWorkspace(given: Activity[] = activities) {
   render(
     <ActivitiesContext value={{ activities: given, tabIcons: {} }}>
-      <Workbench projectId="p1">
+      <ProjectWorkspace projectId="p1">
         <p>editor</p>
-      </Workbench>
+      </ProjectWorkspace>
     </ActivitiesContext>,
   )
 }
 
-describe('Workbench', () => {
+describe('ProjectWorkspace', () => {
   it('shows the side panel of the page opened, next to the editor', () => {
-    renderWorkbench()
+    renderProjectWorkspace()
 
     expect(screen.getByRole('complementary', { name: 'Artifacts' })).toBeInTheDocument()
     expect(screen.getByRole('main')).toHaveTextContent('editor')
@@ -56,13 +56,13 @@ describe('Workbench', () => {
 
   it('shows the first feature when the page belongs to none', () => {
     setPathname('/projects/p1/unknown')
-    renderWorkbench()
+    renderProjectWorkspace()
 
     expect(screen.getByRole('complementary', { name: 'Console' })).toBeInTheDocument()
   })
 
   it('keeps the editor when another side panel is shown', () => {
-    renderWorkbench()
+    renderProjectWorkspace()
 
     act(() => {
       useFrameStore.getState().showSideFeature('search')
@@ -75,13 +75,13 @@ describe('Workbench', () => {
 
   it('falls back to the page on screen when the chosen feature is not given', () => {
     useFrameStore.setState({ sideFeature: 'traceability' })
-    renderWorkbench()
+    renderProjectWorkspace()
 
     expect(screen.getByRole('complementary', { name: 'Artifacts' })).toBeInTheDocument()
   })
 
   it('hides and shows the side panel with Ctrl+B', () => {
-    renderWorkbench()
+    renderProjectWorkspace()
 
     fireEvent.keyDown(document, { key: 'b', ctrlKey: true })
     expect(screen.queryByRole('complementary', { name: 'Artifacts' })).not.toBeInTheDocument()
@@ -91,14 +91,14 @@ describe('Workbench', () => {
   })
 
   it('has no side panel without features', () => {
-    renderWorkbench([])
+    renderProjectWorkspace([])
 
     expect(screen.queryByRole('complementary')).not.toBeInTheDocument()
     expect(screen.getByRole('main')).toHaveTextContent('editor')
   })
 
   it('remembers the page on screen for the tabs', () => {
-    renderWorkbench()
+    renderProjectWorkspace()
 
     expect(useEditorTabsStore.getState().lastHrefs.p1).toBe('/projects/p1/artifacts')
   })

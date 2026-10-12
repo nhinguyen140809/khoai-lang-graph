@@ -78,13 +78,13 @@ Decision: b.
 
 ### D3. Side panels of features that have not merged yet
 
-Before 2026-10-12 the frame listed the six features in `activity-bar.config.ts` (a `ProjectFeature` union used by seven shared files) and `Workbench` took `sidePanels: Record<ProjectFeature, ReactNode>`.
+Before 2026-10-12 the frame listed the six features in `activity-bar.config.ts` (a `ProjectFeature` union used by seven shared files) and `Workbench` (now `ProjectWorkspace`) took `sidePanels: Record<ProjectFeature, ReactNode>`.
 
 | Option | Evaluation |
 |---|---|
 | a. The activity bar config lists only merged features; every feature PR adds its entry | `main` never shows a dead icon, but six PRs edit `activity-bar.config.ts`, the zod enum in `frame.store.ts` and their tests |
 | b. The config lists all six from the layout PR; the project `layout.tsx` shows a placeholder (`EmptyState`, "Not built yet") for a panel whose feature has not merged, and each feature PR replaces its placeholder | The layout PR is final; each feature PR changes one entry of `layout.tsx`. `main` shows an icon with a placeholder for a while, which is acceptable because nothing is deployed |
-| c. The frame names no feature: each feature describes its item (`FeatureActivity`: id, label, icon, start page, side panel) and the icons of its tabs in `<feature>-frame.config.tsx`, and the project `layout.tsx` passes the list to `AppFrame` as `activities` and `tabIcons` | Shared code follows the import direction of CONTRIBUTING, with no feature names in it; `main` never shows a dead icon and needs no placeholder; each feature PR adds its frame config and one entry of `layout.tsx`. Feature ids become strings, checked at run time against the list |
+| c. The frame names no feature: each feature describes its item (`FeatureActivity`: id, label, icon, start page, side panel) and the icons of its tabs in `<feature>-frame.config.tsx`, and the project `layout.tsx` passes the list to `Workbench` as `activities` and `tabIcons` | Shared code follows the import direction of CONTRIBUTING, with no feature names in it; `main` never shows a dead icon and needs no placeholder; each feature PR adds its frame config and one entry of `layout.tsx`. Feature ids become strings, checked at run time against the list |
 
 Decision: c (2026-10-12, replacing b). A runtime registration (a hook that each feature calls) was rejected: the activity bar needs every item at its first render, also for features whose components are not mounted, so items would appear after hydration and in mount order.
 
@@ -123,7 +123,7 @@ Branch names are `<type>/fe/<name>`: `<type>` is the Conventional Commits type o
 | P0 | `chore/fe/ci` | `ci(frontend): run the checks on pull requests` | none | 2 | about 150 |
 | P1 | `chore/fe/lint-groups` | `build(frontend): lint in groups of folders to bound memory` | none | 4 | about 130 |
 | P2 | `docs/fe/api-fields` | `docs(api): add the fields that the screens read` | none | 5 | about 550 |
-| P3 | `feat/fe/layout` | `feat(frontend): add the frame: workbench, activity bar, tabs, top bar, status bar and command palette` | none | 47 | about 2000 |
+| P3 | `feat/fe/layout` | `feat(frontend): add the workbench: activity bar, project workspace, tabs, top bar, status bar and command palette` | none | 47 | about 2000 |
 | P4 | `feat/fe/account` | `feat(frontend): add sign in, registration and the session` | P3 | 31 | about 1800 |
 | P5 | `feat/fe/project-mocks` | `feat(mocks): serve projects and runs` | P4 | 8 | about 1400 |
 | P6 | `feat/fe/projects` | `feat(frontend): add the project list and the project frame, and remove the old shell` | P3, P4, P5 | 48 | about 1700 |
@@ -193,9 +193,9 @@ The first PR of the product, as planned. It is additive: nothing on `main` impor
 
 | Group | Files |
 |---|---|
-| Frame | `src/components/layout/`: `Workbench.tsx`, `ActivityBar.tsx`, `ActivitiesContext.tsx`, `EditorTabs.tsx`, `EditorWithPanel.tsx`, `SidePanel.tsx`, `SidePanelSection.tsx`, `TopBar.tsx`, `StatusBar.tsx`, `PageCrumb.tsx`, `AppFrame.tsx`, `CommandPalette.tsx`, `FeatureCommands.tsx` |
+| Frame | `src/components/layout/`: `ProjectWorkspace.tsx`, `ActivityBar.tsx`, `ActivitiesContext.tsx`, `EditorTabs.tsx`, `EditorWithPanel.tsx`, `SidePanel.tsx`, `SidePanelSection.tsx`, `TopBar.tsx`, `StatusBar.tsx`, `PageCrumb.tsx`, `Workbench.tsx`, `CommandPalette.tsx`, `FeatureCommands.tsx` |
 | State and types | `activity.types.ts`, `activity.utils.ts`, `frame.store.ts`, `editor-tabs.store.ts`, `command-palette.store.ts`, `surface.config.ts`, `hooks/useEditorTab.ts`, `hooks/useFrameHydrated.ts`, `hooks/useSideFeature.ts` |
-| Unit tests | `src/components/layout/__tests__/`: ActivityBar, CommandPalette, EditorTabs, EditorWithPanel, SidePanelSection, StatusBar, Workbench, `activity.utils`, `editor-tabs.store` |
+| Unit tests | `src/components/layout/__tests__/`: ActivityBar, CommandPalette, EditorTabs, EditorWithPanel, SidePanelSection, StatusBar, ProjectWorkspace, `activity.utils`, `editor-tabs.store` |
 | Needed by the frame | `src/hooks/useHotkey.ts` and its test, `src/lib/browser-storage.utils.ts` and its test, `src/components/ui/resizable.tsx`, `src/test/TestProviders.tsx`, `src/test/next-mocks.utils.ts`, the browser stubs of `src/test/vitest.setup.ts` (hunk: ResizeObserver, matchMedia, scrollIntoView; the pointer capture stub waits for the first test with a select), the storage rule and the `<subject>.config.tsx` naming rule of `eslint.config.js` (hunks) with the naming row of CONTRIBUTING |
 | Design tokens | `src/app/styles.css`: `text-2xs`, `text-3xs`, `text-4xs`, the `editor-text` and `caret-block` utilities. The design system files that use the tokens (`Sample.tsx`, `CodeCard.tsx`, `WorkspaceCard.tsx`, `OverlaysCard.tsx`, `AlertsCard.tsx`, `ChatCard.tsx`); `GraphCard.tsx` and `design-system.fixtures.ts` use the graph tones and go with P15. The CONTRIBUTING rule on bracket values and the token line of `frontend/README.md` |
 | Docs | Section 1 (Frame) of `docs/ui/skeletons.md` |

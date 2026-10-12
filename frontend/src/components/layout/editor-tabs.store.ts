@@ -58,8 +58,8 @@ function mergeGroups(
 let storageRead = false
 
 /**
- * The editor tabs of every project on this device; a group is one project, and holds the tabs of every feature.
- * AppFrame reads them after the first render.
+ * The editor tabs of every project on this device; a group is one project, and holds the tabs of
+ * every feature. Workbench reads them after the first render.
  */
 export const useEditorTabsStore = create<EditorTabsState>()(
   persist(

@@ -20,7 +20,7 @@ const itemClassName =
   'relative flex size-9 items-center justify-center rounded-md text-muted-foreground outline-none transition-colors hover:text-foreground focus-visible:ring-2 focus-visible:ring-ring/50 [&_svg]:size-5'
 
 /**
- * One icon per feature that the screen gives AppFrame, then the account menu; a screen that gives
+ * One icon per feature that the screen gives Workbench, then the account menu; a screen that gives
  * none, such as the screens outside a project today, shows the account menu only. An item shows
  * the side panel of its feature and leaves the editor as it is; the item of the side panel on
  * screen hides the panel instead.

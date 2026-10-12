@@ -6,7 +6,7 @@ const subscribe = (onChange: () => void) => useFrameStore.persist.onFinishHydrat
 const hasHydrated = () => useFrameStore.persist.hasHydrated()
 const onServer = () => false
 
-/** False until the frame sizes have been read from localStorage (AppFrame reads them). */
+/** False until the frame sizes have been read from localStorage (Workbench reads them). */
 export function useFrameHydrated(): boolean {
   return useSyncExternalStore(subscribe, hasHydrated, onServer)
 }

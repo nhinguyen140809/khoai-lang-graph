@@ -1,87 +1,78 @@
 'use client'
 
-import { usePathname } from 'next/navigation'
-import { type ReactNode, useEffect } from 'react'
+import { type ReactNode, useEffect, useMemo } from 'react'
 
-import { ResizableHandle, ResizablePanel, ResizablePanelGroup } from '@/components/ui/resizable'
-import { useHotkey } from '@/hooks/useHotkey'
-import { cn } from '@/lib/utils'
-
-import { projectTabGroup, useEditorTabsStore } from './editor-tabs.store'
-import { EditorTabs } from './EditorTabs'
+import { ActivitiesContext } from './ActivitiesContext'
+import type { Activity, TabIcons } from './activity.types'
+import { isFeatureActivity } from './activity.utils'
+import { CommandPalette } from './CommandPalette'
+import { useEditorTabsStore } from './editor-tabs.store'
+import { FeatureCommands } from './FeatureCommands'
 import { useFrameStore } from './frame.store'
-import { useFrameHydrated } from './hooks/useFrameHydrated'
-import { useSideFeature } from './hooks/useSideFeature'
-import { surfaceClassName } from './surface.config'
+import { StatusBar } from './StatusBar'
 
 interface WorkbenchProps {
-  projectId: string
-  /** The editor: the page of the tab in view, whichever side panel is shown. */
+  topBar: ReactNode
+  /** The bar of features and the account. */
+  activityBar?: ReactNode
+  /**
+   * The features of the screen, top to bottom on the activity bar, each with its side panel.
+   * Without a feature, the screen has no side panel.
+   */
+  activities?: readonly Activity[]
+  /** The icons that the pages of the features name for their tabs. */
+  tabIcons?: TabIcons
+  /** What the status bar reports at its left; the bar is always shown. */
+  status?: ReactNode
+  /** Command groups for the command palette, after the commands that show a feature. */
+  commands?: ReactNode
+  /** Dialogs that commands or pages open, such as the new project dialog. */
+  dialogs?: ReactNode
   children: ReactNode
 }
 
-const SIDE_PANEL_MIN_WIDTH = 180
+const noActivities: readonly Activity[] = []
+const noTabIcons: TabIcons = {}
 
 /**
- * The side panel and the editor. The side panel is the one of the feature chosen on the activity
- * bar, and the editor follows the tabs, so choosing a feature does not change the editor. Ctrl+B
- * hides and shows the side panel, which keeps its width in pixels when the window is resized.
+ * The frame of every screen: top bar, activity bar, content, status bar, and the command
+ * palette. Feature content, the features themselves included, is passed in as props from
+ * src/app/.
  */
-export function Workbench({ projectId, children }: WorkbenchProps) {
-  const pathname = usePathname()
-  const hydrated = useFrameHydrated()
-  const sidePanelVisible = useFrameStore((state) => state.sidePanelVisible)
-  const sideFeature = useSideFeature()
-  const sideFeatureId = sideFeature?.id
-  const sideFeatureChosen = useFrameStore((state) => state.sideFeature !== null)
-  const setSideFeature = useFrameStore((state) => state.setSideFeature)
-  const sidePanelWidth = useFrameStore((state) => state.sidePanelWidth)
-  const setSidePanelWidth = useFrameStore((state) => state.setSidePanelWidth)
-  const toggleSidePanel = useFrameStore((state) => state.toggleSidePanel)
-  const setLastHref = useEditorTabsStore((state) => state.setLastHref)
-  const group = projectTabGroup(projectId)
-
-  useHotkey('b', toggleSidePanel, { mod: true })
+export function Workbench({
+  topBar,
+  activityBar,
+  activities = noActivities,
+  tabIcons = noTabIcons,
+  status,
+  commands,
+  dialogs,
+  children,
+}: WorkbenchProps) {
+  const frameActivities = useMemo(() => ({ activities, tabIcons }), [activities, tabIcons])
+  const hasFeatures = activities.some(isFeatureActivity)
 
   useEffect(() => {
-    setLastHref(group, pathname)
-  }, [group, pathname, setLastHref])
-
-  // The first side panel is the one of the page opened; from then on it stays until another is chosen.
-  useEffect(() => {
-    if (hydrated && !sideFeatureChosen && sideFeatureId !== undefined) setSideFeature(sideFeatureId)
-  }, [hydrated, sideFeatureId, sideFeatureChosen, setSideFeature])
+    // Read after the first render, so that it matches the server HTML.
+    void useFrameStore.persist.rehydrate()
+    void useEditorTabsStore.persist.rehydrate()
+  }, [])
 
   return (
-    // The stored width is read after the first render; the new key mounts the group with it.
-    <ResizablePanelGroup
-      key={hydrated ? 'stored' : 'default'}
-      orientation="horizontal"
-      className="min-h-0 flex-1"
-    >
-      {sidePanelVisible && sideFeature !== undefined && (
-        <>
-          <ResizablePanel
-            id="side-panel"
-            defaultSize={sidePanelWidth}
-            minSize={SIDE_PANEL_MIN_WIDTH}
-            maxSize="50%"
-            groupResizeBehavior="preserve-pixel-size"
-            onResize={(size) => {
-              setSidePanelWidth(Math.round(size.inPixels))
-            }}
-          >
-            {sideFeature.panel}
-          </ResizablePanel>
-          <ResizableHandle />
-        </>
-      )}
-      <ResizablePanel id="editor" minSize="30%">
-        <div className={cn(surfaceClassName, 'flex h-full min-w-0 flex-col')}>
-          <EditorTabs group={group} rootHref={sideFeature?.href} />
-          <main className="min-h-0 flex-1 overflow-auto editor-text">{children}</main>
+    <ActivitiesContext value={frameActivities}>
+      <div className="flex h-svh flex-col bg-sidebar text-foreground">
+        {topBar}
+        <div className="flex min-h-0 flex-1">
+          {activityBar}
+          <div className="flex min-w-0 flex-1 flex-col pr-1.5 pb-1.5">{children}</div>
         </div>
-      </ResizablePanel>
-    </ResizablePanelGroup>
+        <StatusBar>{status}</StatusBar>
+        <CommandPalette sidePanelCommand={hasFeatures}>
+          {hasFeatures && <FeatureCommands />}
+          {commands}
+        </CommandPalette>
+        {dialogs}
+      </div>
+    </ActivitiesContext>
   )
 }

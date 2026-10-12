@@ -3,7 +3,7 @@ import Link from 'next/link'
 
 import type { Activity, TabIcons } from '@/components/layout/activity.types'
 import { ActivityBar } from '@/components/layout/ActivityBar'
-import { AppFrame } from '@/components/layout/AppFrame'
+import { ProjectWorkspace } from '@/components/layout/ProjectWorkspace'
 import { surfaceClassName } from '@/components/layout/surface.config'
 import { TopBar } from '@/components/layout/TopBar'
 import { Workbench } from '@/components/layout/Workbench'
@@ -40,10 +40,10 @@ const tabIcons: TabIcons = {
 
 /**
  * Every screen of a project: the frame with the features of the project on the activity bar and
- * the run of the project on the status bar, and the workbench with the side panel of the feature
- * chosen and the editor. The frame is shared layout, so the features it shows are passed in from
- * here: each feature describes its item, and this list sets which features a project has and in
- * which order.
+ * the run of the project on the status bar, and the project workspace with the side panel of the
+ * feature chosen and the editor. The frame is shared layout, so the features it shows are passed
+ * in from here: each feature describes its item, and this list sets which features a project has
+ * and in which order.
  */
 export default async function ProjectLayout({
   children,
@@ -78,7 +78,7 @@ export default async function ProjectLayout({
       <ProjectGate
         projectId={projectId}
         notFound={
-          <AppFrame
+          <Workbench
             topBar={topBar}
             activityBar={<ActivityBar user={<UserMenu />} />}
             commands={<ProjectCommands />}
@@ -97,10 +97,10 @@ export default async function ProjectLayout({
                 }
               />
             </main>
-          </AppFrame>
+          </Workbench>
         }
       >
-        <AppFrame
+        <Workbench
           topBar={topBar}
           activityBar={<ActivityBar user={<UserMenu />} />}
           activities={activities}
@@ -109,8 +109,8 @@ export default async function ProjectLayout({
           commands={<ProjectCommands currentProjectId={projectId} />}
           dialogs={dialogs}
         >
-          <Workbench projectId={projectId}>{children}</Workbench>
-        </AppFrame>
+          <ProjectWorkspace projectId={projectId}>{children}</ProjectWorkspace>
+        </Workbench>
       </ProjectGate>
     </>
   )

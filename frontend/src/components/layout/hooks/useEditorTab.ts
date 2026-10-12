@@ -15,8 +15,8 @@ export function useEditorTab(group: string, tab: EditorTab | null) {
 
   useEffect(() => {
     if (id === undefined || title === undefined || href === undefined) return
-    // The page shown before is still the last one of the group: the Workbench records the new
-    // page after its children have run their effects.
+    // The page shown before is still the last one of the group: the ProjectWorkspace records the
+    // new page after its children have run their effects.
     const after = useEditorTabsStore.getState().lastHrefs[group]
     openTab(group, { id, title, href, ...(icon !== undefined && { icon }) }, { after })
   }, [group, id, title, href, icon, openTab])

@@ -11,7 +11,7 @@ interface FrameActivities {
 }
 
 /**
- * The features of the screen and the icons of their tabs. AppFrame provides them; the activity
+ * The features of the screen and the icons of their tabs. Workbench provides them; the activity
  * bar, the side panel, the tabs and the command palette read them.
  */
 export const ActivitiesContext = createContext<FrameActivities>({ activities: [], tabIcons: {} })
