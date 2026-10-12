@@ -176,7 +176,9 @@ export default defineConfig([
         'error',
         {
           // Components: PascalCase
-          '**/!(__tests__)/*.tsx': '+([A-Z])*([a-zA-Z0-9])',
+          '**/!(__tests__)/!(*.config).tsx': '+([A-Z])*([a-zA-Z0-9])',
+          // Configs that hold React elements, such as the item of a feature on the activity bar
+          '**/!(__tests__)/*.config.tsx': '+([a-z0-9])*(-+([a-z0-9])).config',
           // Hooks: useSomething.ts
           '**/hooks/*.ts': 'use+([A-Z])*([a-zA-Z0-9])',
           // Everything else: <subject>.<kind>.ts, subject in kebab-case

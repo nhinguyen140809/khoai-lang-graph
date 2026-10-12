@@ -273,6 +273,7 @@ Conventions:
 | Component (`.tsx`) | `PascalCase.tsx`, name = the exported component | `ChatPage.tsx` |
 | Hook (`.ts` in a `hooks/` folder) | `useSomething.ts`, name = the exported hook | `useRunStream.ts` |
 | Any other `.ts` | `<subject>.<kind>.ts` | `chat.api.ts`, `settings.store.ts`, `run-events.reducer.ts` |
+| Config that holds React elements (`.tsx`) | `<subject>.config.tsx` | `console-frame.config.tsx` |
 | Unit test | `<file under test>.test.ts(x)`, in a `__tests__/` folder next to the file under test | `features/chat/__tests__/chat.api.test.ts`, `components/state/__tests__/ErrorState.test.tsx` |
 | E2E test | `<subject>.spec.ts` | `tests/e2e/chat.spec.ts` |
 
