@@ -1,7 +1,7 @@
 'use client'
 
 import { usePathname } from 'next/navigation'
-import { type ReactNode, useEffect } from 'react'
+import { type ReactNode, useEffect, useState } from 'react'
 
 import { ResizableHandle, ResizablePanel, ResizablePanelGroup } from '@/components/ui/resizable'
 import { useHotkey } from '@/hooks/useHotkey'
@@ -35,8 +35,6 @@ export function ProjectWorkspace({ projectId, children }: ProjectWorkspaceProps)
   const sideFeatureId = sideFeature?.id
   const sideFeatureChosen = useFrameStore((state) => state.sideFeature !== null)
   const setSideFeature = useFrameStore((state) => state.setSideFeature)
-  const sidePanelWidth = useFrameStore((state) => state.sidePanelWidth)
-  const setSidePanelWidth = useFrameStore((state) => state.setSidePanelWidth)
   const toggleSidePanel = useFrameStore((state) => state.toggleSidePanel)
   const setLastHref = useEditorTabsStore((state) => state.setLastHref)
   const group = projectTabGroup(projectId)
@@ -62,18 +60,7 @@ export function ProjectWorkspace({ projectId, children }: ProjectWorkspaceProps)
     >
       {sidePanelVisible && sideFeature !== undefined && (
         <>
-          <ResizablePanel
-            id="side-panel"
-            defaultSize={sidePanelWidth}
-            minSize={SIDE_PANEL_MIN_WIDTH}
-            maxSize="50%"
-            groupResizeBehavior="preserve-pixel-size"
-            onResize={(size) => {
-              setSidePanelWidth(Math.round(size.inPixels))
-            }}
-          >
-            {sideFeature.panel}
-          </ResizablePanel>
+          <SidePanelArea>{sideFeature.panel}</SidePanelArea>
           <ResizableHandle />
         </>
       )}
@@ -84,5 +71,31 @@ export function ProjectWorkspace({ projectId, children }: ProjectWorkspaceProps)
         </div>
       </ResizablePanel>
     </ResizablePanelGroup>
+  )
+}
+
+/**
+ * The side panel in the group, sized in pixels. Its width is read from the store when it mounts
+ * and saved while it is resized.
+ */
+function SidePanelArea({ children }: { children: ReactNode }) {
+  const setSidePanelWidth = useFrameStore((state) => state.setSidePanelWidth)
+  // Read once: a stored width passed back while the user drags makes the panel register again,
+  // which ends the drag after its first step.
+  const [defaultWidth] = useState(() => useFrameStore.getState().sidePanelWidth)
+
+  return (
+    <ResizablePanel
+      id="side-panel"
+      defaultSize={defaultWidth}
+      minSize={SIDE_PANEL_MIN_WIDTH}
+      maxSize="50%"
+      groupResizeBehavior="preserve-pixel-size"
+      onResize={(size) => {
+        setSidePanelWidth(Math.round(size.inPixels))
+      }}
+    >
+      {children}
+    </ResizablePanel>
   )
 }

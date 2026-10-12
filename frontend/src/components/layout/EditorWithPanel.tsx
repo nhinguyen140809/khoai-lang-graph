@@ -1,7 +1,7 @@
 'use client'
 
 import { ChevronDownIcon, ChevronUpIcon } from 'lucide-react'
-import type { ReactNode } from 'react'
+import { type ReactNode, useState } from 'react'
 
 import { Button } from '@/components/ui/button'
 import { ResizableHandle, ResizablePanel, ResizablePanelGroup } from '@/components/ui/resizable'
@@ -25,8 +25,6 @@ const PANEL_MIN_HEIGHT = 96
 export function EditorWithPanel({ panel, panelLabel, children }: EditorWithPanelProps) {
   const hydrated = useFrameHydrated()
   const visible = useFrameStore((state) => state.bottomPanelVisible)
-  const height = useFrameStore((state) => state.bottomPanelHeight)
-  const setHeight = useFrameStore((state) => state.setBottomPanelHeight)
   const toggle = useFrameStore((state) => state.toggleBottomPanel)
 
   if (!visible) {
@@ -63,16 +61,7 @@ export function EditorWithPanel({ panel, panelLabel, children }: EditorWithPanel
         <div className={cn(surfaceClassName, 'h-full overflow-auto')}>{children}</div>
       </ResizablePanel>
       <ResizableHandle />
-      <ResizablePanel
-        id="bottom-panel"
-        defaultSize={height}
-        minSize={PANEL_MIN_HEIGHT}
-        maxSize="80%"
-        groupResizeBehavior="preserve-pixel-size"
-        onResize={(size) => {
-          setHeight(Math.round(size.inPixels))
-        }}
-      >
+      <BottomPanelArea>
         <section
           aria-label={panelLabel}
           className={cn(surfaceClassName, 'relative h-full overflow-auto')}
@@ -89,7 +78,33 @@ export function EditorWithPanel({ panel, panelLabel, children }: EditorWithPanel
           </Button>
           {panel}
         </section>
-      </ResizablePanel>
+      </BottomPanelArea>
     </ResizablePanelGroup>
+  )
+}
+
+/**
+ * The panel under the editor in the group, sized in pixels. Its height is read from the store when
+ * it mounts and saved while it is resized.
+ */
+function BottomPanelArea({ children }: { children: ReactNode }) {
+  const setHeight = useFrameStore((state) => state.setBottomPanelHeight)
+  // Read once: a stored height passed back while the user drags makes the panel register again,
+  // which ends the drag after its first step.
+  const [defaultHeight] = useState(() => useFrameStore.getState().bottomPanelHeight)
+
+  return (
+    <ResizablePanel
+      id="bottom-panel"
+      defaultSize={defaultHeight}
+      minSize={PANEL_MIN_HEIGHT}
+      maxSize="80%"
+      groupResizeBehavior="preserve-pixel-size"
+      onResize={(size) => {
+        setHeight(Math.round(size.inPixels))
+      }}
+    >
+      {children}
+    </ResizablePanel>
   )
 }
