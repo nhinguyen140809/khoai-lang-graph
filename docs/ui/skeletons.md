@@ -48,9 +48,9 @@ Every screen inside a project uses this frame.
 | Region | Holds |
 |---|---|
 | Top bar | The logo, the project name with a menu to switch project or go back to the project list, a box to search items and run commands (`Ctrl+K`), the user menu |
-| Activity bar | One icon per feature of the project: `E` Console, `A` Artifacts, `W` Workflow, `T` Traceability, `S` Sources (Later), and `*` Settings at the bottom. A badge shows a count, such as the reviews waiting on Console |
-| Side panel | Navigation inside the chosen feature: the artifact tree, the runs and their steps, the coverage counts. Console has an outline of its event log and the list of consoles. `Ctrl+B` hides and shows the panel |
-| Editor | What was opened from the side panel, in tabs. The tabs belong to the project, not to a feature: changing the feature on the activity bar does not close them, and every feature shows the same strip, like the open files of VS Code. The console, a review, an artifact, an item, a run, a view of traceability and the settings each open as one tab. A review is one tab with the artifact and the console split inside it |
+| Activity bar | One icon per feature of the project: `E` Console, `A` Artifacts, `W` Workflow, `T` Traceability, `S` Sources (Later), and `*` Settings at the bottom. A badge shows a count, such as the reviews waiting on Console. An icon shows the side panel of its feature and nothing else: the editor and its tabs are not changed. The icon of the panel on screen hides the panel |
+| Side panel | Navigation inside the chosen feature: the artifact tree, the runs and their steps, the coverage counts. Console has a section with the outline of its event log. A section collapses to its title, and a line divides it from the next section. `Ctrl+B` hides and shows the panel |
+| Editor | What was opened from the side panel, in tabs. The tabs belong to the project, not to a feature: choosing a feature on the activity bar does not close or change them, and a page opened from any side panel, such as a result of Search, is added to the same strip as a new tab. The console, a review, an artifact, an item, a run, a view of traceability and the settings each open as one tab. A review is one tab with the artifact and the console split inside it |
 | Panel | An optional area under the editor: the trace and the timeline of the open item, or the detail of the selected step |
 | Status bar | The active run of the project: its state, stage, step, cost against `max_cost_usd`, and the workflow version. A click opens the run in Workflow |
 
@@ -58,7 +58,7 @@ Marks used in the skeletons:
 
 | Mark | Meaning |
 |---|---|
-| `[C]` | The active feature on the activity bar |
+| `[C]` | The feature on the activity bar whose side panel is shown |
 | `v` and `>` | An expanded and a collapsed node of a tree |
 | `[REQ-001 ...]` | The selected row of a list or a tree |
 | `x` after a tab name | The tab can be closed |
