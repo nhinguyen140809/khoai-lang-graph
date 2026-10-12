@@ -6,58 +6,53 @@ import { setPathname } from '@/test/next-mocks.utils'
 import { TestProviders } from '@/test/TestProviders'
 
 import { ActivityBar } from '../ActivityBar'
-import { useEditorTabsStore } from '../editor-tabs.store'
 import { useFrameStore } from '../frame.store'
 
 vi.mock('next/navigation', async () => (await import('@/test/next-mocks.utils')).navigationMock)
-vi.mock('next/link', async () => (await import('@/test/next-mocks.utils')).linkMock)
 
 beforeEach(() => {
   setPathname('/projects/p1/console/t1')
-  useEditorTabsStore.setState({ groups: {}, lastHrefs: {} })
-  useFrameStore.setState({ sidePanelVisible: true })
+  useFrameStore.setState({ sidePanelVisible: true, sideFeature: null })
 })
 
-describe('ActivityBar', () => {
-  it('links every feature of the project and marks the one on screen', () => {
-    render(<ActivityBar user={<button type="button">Account</button>} projectId="p1" />, {
-      wrapper: TestProviders,
-    })
+function renderBar() {
+  render(<ActivityBar user={<button type="button">Account</button>} projectId="p1" />, {
+    wrapper: TestProviders,
+  })
+}
 
-    expect(screen.getByRole('link', { name: 'Console' })).toHaveAttribute('aria-current', 'page')
-    expect(screen.getByRole('link', { name: 'Artifacts' })).toHaveAttribute(
-      'href',
-      '/projects/p1/artifacts',
-    )
-    expect(screen.getByRole('link', { name: 'Settings' })).toHaveAttribute(
-      'href',
-      '/projects/p1/settings',
+describe('ActivityBar', () => {
+  it('lists every feature of the project and marks the one whose side panel is shown', () => {
+    renderBar()
+
+    // Until one is chosen, the side panel is the one of the page on screen.
+    expect(screen.getByRole('button', { name: 'Console' })).toHaveAttribute('aria-pressed', 'true')
+    expect(screen.getByRole('button', { name: 'Artifacts' })).toHaveAttribute(
+      'aria-pressed',
+      'false',
     )
     expect(screen.getByRole('button', { name: /Sources/ })).toHaveAttribute('aria-disabled', 'true')
   })
 
-  it('returns to the page last shown in a feature', () => {
-    useEditorTabsStore.setState({ lastHrefs: { 'p1:workflow': '/projects/p1/workflow/r3' } })
-    render(<ActivityBar user={<button type="button">Account</button>} projectId="p1" />, {
-      wrapper: TestProviders,
-    })
+  it('shows the side panel of a feature without leaving the page on screen', async () => {
+    renderBar()
 
-    expect(screen.getByRole('link', { name: 'Workflow' })).toHaveAttribute(
-      'href',
-      '/projects/p1/workflow/r3',
-    )
+    await userEvent.click(screen.getByRole('button', { name: 'Search' }))
+
+    expect(useFrameStore.getState().sideFeature).toBe('search')
+    expect(screen.getByRole('button', { name: 'Search' })).toHaveAttribute('aria-pressed', 'true')
+    expect(screen.getByRole('button', { name: 'Console' })).toHaveAttribute('aria-pressed', 'false')
   })
 
-  it('hides and shows the side panel from the item of the feature on screen', async () => {
-    render(<ActivityBar user={<button type="button">Account</button>} projectId="p1" />, {
-      wrapper: TestProviders,
-    })
+  it('hides and shows the side panel from the item of the panel on screen', async () => {
+    renderBar()
 
-    await userEvent.click(screen.getByRole('link', { name: 'Console' }))
+    await userEvent.click(screen.getByRole('button', { name: 'Console' }))
     expect(useFrameStore.getState().sidePanelVisible).toBe(false)
 
-    await userEvent.click(screen.getByRole('link', { name: 'Artifacts' }))
+    await userEvent.click(screen.getByRole('button', { name: 'Artifacts' }))
     expect(useFrameStore.getState().sidePanelVisible).toBe(true)
+    expect(useFrameStore.getState().sideFeature).toBe('artifacts')
   })
 
   it('disables the features outside a project', () => {
@@ -66,7 +61,6 @@ describe('ActivityBar', () => {
     })
 
     expect(screen.getByRole('button', { name: 'Account' })).toBeInTheDocument()
-    expect(screen.queryByRole('link')).not.toBeInTheDocument()
     expect(screen.getByRole('button', { name: /Console, select a project first/ })).toHaveAttribute(
       'aria-disabled',
       'true',
@@ -83,6 +77,6 @@ describe('ActivityBar', () => {
       { wrapper: TestProviders },
     )
 
-    expect(screen.getByRole('link', { name: 'Console, 1 review waiting' })).toBeInTheDocument()
+    expect(screen.getByRole('button', { name: 'Console, 1 review waiting' })).toBeInTheDocument()
   })
 })

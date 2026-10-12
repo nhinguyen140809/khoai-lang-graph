@@ -1,8 +1,5 @@
 'use client'
 
-import type { Route } from 'next'
-import Link from 'next/link'
-import { usePathname } from 'next/navigation'
 import type { ReactNode } from 'react'
 
 import { Tooltip, TooltipContent, TooltipTrigger } from '@/components/ui/tooltip'
@@ -12,13 +9,10 @@ import {
   activityFooterItems,
   type ActivityItemConfig,
   activityItems,
-  featureHref,
-  featureOfPathname,
-  featureTabGroup,
   type ProjectFeature,
 } from './activity-bar.config'
-import { useEditorTabsStore } from './editor-tabs.store'
 import { useFrameStore } from './frame.store'
+import { useSideFeature } from './hooks/useSideFeature'
 
 interface ActivityBarProps {
   /** The project whose features are listed; absent outside a project. */
@@ -33,8 +27,9 @@ const itemClassName =
   'relative flex size-9 items-center justify-center rounded-md text-muted-foreground outline-none transition-colors hover:text-foreground focus-visible:ring-2 focus-visible:ring-ring/50 [&_svg]:size-5'
 
 /**
- * One icon per feature of the project; the icons are disabled until a project is open. An item opens the page last shown in its feature; the
- * item of the feature on screen shows or hides the side panel instead.
+ * One icon per feature of the project; the icons are disabled until a project is open. An item
+ * shows the side panel of its feature and leaves the editor as it is; the item of the side panel
+ * on screen hides the panel instead.
  */
 export function ActivityBar({ projectId, user, badges = {} }: ActivityBarProps) {
   return (
@@ -62,10 +57,9 @@ interface ActivityItemProps {
 }
 
 function ActivityItem({ item, projectId, badges }: ActivityItemProps) {
-  const pathname = usePathname()
-  const lastHrefs = useEditorTabsStore((state) => state.lastHrefs)
+  const sideFeature = useSideFeature()
   const toggleSidePanel = useFrameStore((state) => state.toggleSidePanel)
-  const setSidePanelVisible = useFrameStore((state) => state.setSidePanelVisible)
+  const showSideFeature = useFrameStore((state) => state.showSideFeature)
   const { label, icon: Icon, feature, note } = item
 
   if (feature === undefined || projectId === undefined) {
@@ -91,24 +85,18 @@ function ActivityItem({ item, projectId, badges }: ActivityItemProps) {
     )
   }
 
-  const active = featureOfPathname(pathname) === feature
-  const href = (lastHrefs[featureTabGroup(projectId, feature)] ??
-    featureHref(projectId, feature)) as Route
+  const active = sideFeature === feature
 
   return (
     <Tooltip>
       <TooltipTrigger asChild>
-        <Link
-          href={href}
-          aria-current={active ? 'page' : undefined}
-          onClick={(event) => {
-            if (active) {
-              // Like an editor: the item of the open feature toggles its side panel.
-              event.preventDefault()
-              toggleSidePanel()
-            } else {
-              setSidePanelVisible(true)
-            }
+        <button
+          type="button"
+          aria-pressed={active}
+          onClick={() => {
+            // Like an editor: the item of the open panel toggles it.
+            if (active) toggleSidePanel()
+            else showSideFeature(feature)
           }}
           className={cn(
             itemClassName,
@@ -121,7 +109,7 @@ function ActivityItem({ item, projectId, badges }: ActivityItemProps) {
           {badges[feature] !== undefined && (
             <span className="absolute -top-0.5 -right-0.5">{badges[feature]}</span>
           )}
-        </Link>
+        </button>
       </TooltipTrigger>
       <TooltipContent side="right">{label}</TooltipContent>
     </Tooltip>

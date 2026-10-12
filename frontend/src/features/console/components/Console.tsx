@@ -4,6 +4,7 @@ import type { Route } from 'next'
 import { useRouter } from 'next/navigation'
 import { type ReactNode, useEffect, useRef, useState } from 'react'
 
+import { useFrameStore } from '@/components/layout/frame.store'
 import { ErrorState, LoadingState } from '@/components/state'
 import { ScrollArea } from '@/components/ui/scroll-area'
 import { useHotkey } from '@/hooks/useHotkey'
@@ -41,6 +42,7 @@ export function Console({ projectId, threadId, afterLog, reviewOpen = false }: C
   const stopRun = useStopRun()
   const retryRun = useRetryRun()
   const recordCommand = useCommandHistoryStore((state) => state.record)
+  const showSideFeature = useFrameStore((state) => state.showSideFeature)
   const [expandAll, setExpandAll] = useState(false)
   const now = useNow(activeRun === null ? 60_000 : 1000).getTime()
   const endRef = useRef<HTMLDivElement>(null)
@@ -109,9 +111,12 @@ export function Console({ projectId, threadId, afterLog, reviewOpen = false }: C
         setExpandAll(false)
         return
       case 'export':
+        // The export dialog is opened by the side panel of the artifacts.
+        showSideFeature('artifacts')
         router.push(`/projects/${encodeURIComponent(projectId)}/artifacts?export` as Route)
         return
       case 'run-settings':
+        showSideFeature('settings')
         router.push(`/projects/${encodeURIComponent(projectId)}/settings?section=runs` as Route)
         return
     }

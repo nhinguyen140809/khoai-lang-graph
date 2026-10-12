@@ -13,7 +13,7 @@ import { type EditorTab, neighborTab, useEditorTabsStore } from './editor-tabs.s
 
 interface EditorTabsProps {
   group: string
-  /** Shown after the last tab is closed: the page of the feature in view. */
+  /** Shown after the last tab is closed: the start page of the feature whose side panel is shown. */
   rootHref: Route
 }
 

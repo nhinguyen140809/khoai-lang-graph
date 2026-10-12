@@ -50,14 +50,9 @@ export function featureHref(projectId: string, feature: ProjectFeature): Route {
   return `/projects/${encodeURIComponent(projectId)}/${feature}` as Route
 }
 
-/** The editor tabs of one project: one strip for every feature, so a tab stays open when the feature changes. */
+/** The editor tabs of one project: one strip for every feature, so a tab stays open when the side panel changes. */
 export function projectTabGroup(projectId: string): string {
   return projectId
-}
-
-/** The key under which the last page of one feature of one project is remembered. */
-export function featureTabGroup(projectId: string, feature: ProjectFeature): string {
-  return `${projectId}:${feature}`
 }
 
 /** The feature of a project page, from its pathname. */
