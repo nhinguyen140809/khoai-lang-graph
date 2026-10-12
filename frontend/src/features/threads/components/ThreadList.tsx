@@ -63,7 +63,7 @@ export function ThreadList({ projectId }: ThreadListProps) {
                   </>
                 )}
               </span>
-              <span className="truncate font-mono text-[0.625rem] text-muted-foreground">
+              <span className="truncate font-mono text-3xs text-muted-foreground">
                 {thread.current_stage ?? 'No run yet'}
               </span>
             </Link>

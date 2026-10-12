@@ -13,7 +13,7 @@ const codeVariants = [
 
 // Each size in a sentence of the text size it matches.
 const codeSizes = [
-  { size: 'sm', text: 'text-[0.625rem]' },
+  { size: 'sm', text: 'text-3xs' },
   { size: 'default', text: 'text-xs' },
   { size: 'lg', text: 'text-sm' },
 ] as const satisfies readonly { size: CodeSize; text: string }[]

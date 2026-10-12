@@ -23,7 +23,7 @@ export function TraceabilityNav({ projectId }: { projectId: string }) {
   return (
     <nav aria-label="Traceability" className="flex flex-col gap-3 px-1 pb-2">
       <section aria-label="Coverage" className="flex flex-col gap-px">
-        <h3 className="px-2 text-[0.625rem] font-medium tracking-wide text-muted-foreground uppercase">
+        <h3 className="px-2 text-3xs font-medium tracking-wide text-muted-foreground uppercase">
           Coverage
         </h3>
         {coverage.isPending && <LoadingState label="Loading coverage" rows={3} size="compact" />}
@@ -50,7 +50,7 @@ export function TraceabilityNav({ projectId }: { projectId: string }) {
         ))}
       </section>
       <section aria-label="Views" className="flex flex-col gap-px">
-        <h3 className="px-2 text-[0.625rem] font-medium tracking-wide text-muted-foreground uppercase">
+        <h3 className="px-2 text-3xs font-medium tracking-wide text-muted-foreground uppercase">
           Views
         </h3>
         <Link

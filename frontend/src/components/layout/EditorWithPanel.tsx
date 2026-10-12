@@ -40,7 +40,7 @@ export function EditorWithPanel({ panel, panelLabel, children }: EditorWithPanel
             'flex h-8 shrink-0 items-center justify-between pr-1 pl-3',
           )}
         >
-          <span className="text-[0.6875rem] font-medium tracking-wide text-muted-foreground uppercase">
+          <span className="text-2xs font-medium tracking-wide text-muted-foreground uppercase">
             {panelLabel}
           </span>
           <Button

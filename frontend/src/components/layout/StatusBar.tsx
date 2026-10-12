@@ -13,7 +13,7 @@ interface StatusBarProps {
 /** The bar at the bottom of every screen: what the screen reports, and the notifications. */
 export function StatusBar({ children }: StatusBarProps) {
   return (
-    <footer className="flex h-6 shrink-0 items-center gap-4 bg-sidebar px-2 text-[0.6875rem] text-sidebar-foreground">
+    <footer className="flex h-6 shrink-0 items-center gap-4 bg-sidebar px-2 text-2xs text-sidebar-foreground">
       <div className="flex min-w-0 flex-1 items-center gap-4 overflow-hidden">{children}</div>
       <Popover>
         <PopoverTrigger asChild>
