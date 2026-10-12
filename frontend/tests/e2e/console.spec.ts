@@ -1,6 +1,6 @@
 import { expect, test } from '@playwright/test'
 
-import { PROJECT_IDS, THREAD_IDS } from '../../src/mocks/mock-ids.constants'
+import { PROJECT_IDS } from '../../src/mocks/mock-ids.constants'
 
 const consolePath = `/projects/${PROJECT_IDS.mentor}/console`
 const campusConsole = `/projects/${PROJECT_IDS.campus}/console`
@@ -82,19 +82,19 @@ test('goes to a message of the user from the outline', async ({ page }) => {
   await expect(log.getByText(/online platform for university students/)).toBeInViewport()
 })
 
-test('lists the consoles of the project in the second view', async ({ page }) => {
+test('collapses the outline section of the side panel', async ({ page }) => {
   await page.goto(consolePath)
   const panel = page.getByRole('complementary', { name: 'Console' })
+  const outline = panel.getByRole('button', { name: 'Outline' })
+  const entry = panel.getByRole('button', { name: /online platform/ })
 
-  await panel.getByRole('tab', { name: 'Consoles' }).click()
-  const main = panel.getByRole('link', { name: /Main thread/ })
-  await expect(main).toHaveAttribute('href', `${consolePath}/${THREAD_IDS.mentorMain}`)
-  await main.click()
+  await expect(outline).toHaveAttribute('aria-expanded', 'true')
+  await expect(entry).toBeVisible()
 
-  await expect(page).toHaveURL(new RegExp(`${THREAD_IDS.mentorMain}$`), { timeout: 15_000 })
-  await expect(
-    page.getByRole('log', { name: 'Event log' }).getByText(/Requirements analysis v4 waits/),
-  ).toBeVisible()
+  await outline.click()
+
+  await expect(outline).toHaveAttribute('aria-expanded', 'false')
+  await expect(entry).toBeHidden()
 })
 
 test('mentions an item in the message that starts a run', async ({ page }) => {

@@ -14,7 +14,7 @@ test('opens a project from the list at Console, with its run on the status bar',
 
   await expect(page).toHaveURL(new RegExp(`/projects/${PROJECT_IDS.mentor}/console$`))
   await expect(page.getByRole('link', { name: /Run 3: waiting for review/ })).toBeVisible()
-  await expect(page.getByRole('link', { name: /^Console\b.*1 review waiting/ })).toBeVisible()
+  await expect(page.getByRole('button', { name: /^Console\b.*1 review waiting/ })).toBeVisible()
 })
 
 test('creates a project and opens its console', async ({ page }) => {

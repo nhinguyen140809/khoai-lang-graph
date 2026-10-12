@@ -4,7 +4,9 @@ import { PROJECT_IDS } from '../../src/mocks/mock-ids.constants'
 
 const consolePath = `/projects/${PROJECT_IDS.mentor}/console`
 
-test('Ctrl+K opens the command palette, which goes to a feature', async ({ page }) => {
+test('Ctrl+K opens the command palette, which shows the side panel of a feature', async ({
+  page,
+}) => {
   await page.goto(consolePath)
   // The page listens for the shortcut once it has loaded its event log.
   await expect(page.getByRole('log', { name: 'Event log' })).toBeVisible()
@@ -14,11 +16,11 @@ test('Ctrl+K opens the command palette, which goes to a feature', async ({ page 
   await palette.getByRole('combobox').fill('artifacts')
   await page.keyboard.press('Enter')
 
-  await expect(page).toHaveURL(new RegExp(`/projects/${PROJECT_IDS.mentor}/artifacts$`), {
-    // The dev server renders the page of another feature on the first visit, which can be slow.
+  await expect(page.getByRole('complementary', { name: 'Artifacts' })).toBeVisible({
     timeout: 15_000,
   })
-  await expect(page.getByRole('complementary', { name: 'Artifacts' })).toBeVisible()
+  // The editor stays on the page it showed.
+  await expect(page).toHaveURL(new RegExp(`/projects/${PROJECT_IDS.mentor}/console$`))
 })
 
 test('Ctrl+B hides and shows the side panel', async ({ page }) => {
@@ -33,18 +35,19 @@ test('Ctrl+B hides and shows the side panel', async ({ page }) => {
   await expect(sidePanel).toBeVisible()
 })
 
-test('the activity bar returns to the last page open in Console', async ({ page }) => {
+test('the activity bar changes the side panel and leaves the editor as it is', async ({ page }) => {
   await page.goto(consolePath)
+  const tabs = page.getByRole('navigation', { name: 'Open editors' })
+  await expect(tabs.getByRole('link', { name: 'Console' })).toBeVisible({ timeout: 20_000 })
 
   const features = page.getByRole('navigation', { name: 'Features' })
-  await features.getByRole('link', { name: 'Workflow' }).click()
+  await features.getByRole('button', { name: 'Workflow' }).click()
   await expect(page.getByRole('complementary', { name: 'Runs' })).toBeVisible()
-  await features.getByRole('link', { name: /^Console/ }).click()
+  await features.getByRole('button', { name: /^Console/ }).click()
+  await expect(page.getByRole('complementary', { name: 'Console' })).toBeVisible()
 
-  await expect(page).toHaveURL(new RegExp(`/projects/${PROJECT_IDS.mentor}/console$`), {
-    // The dev server renders the page of another feature on the first visit, which can be slow.
-    timeout: 15_000,
-  })
+  await expect(page).toHaveURL(new RegExp(`/projects/${PROJECT_IDS.mentor}/console$`))
+  await expect(tabs.getByRole('link', { name: 'Console' })).toBeVisible()
 })
 
 for (const [state, label] of [
@@ -61,7 +64,7 @@ for (const [state, label] of [
   })
 }
 
-test('the tabs of a project stay open when the feature changes, and the review is one tab', async ({
+test('the tabs of a project stay open when the side panel changes, and the review is one tab', async ({
   page,
 }) => {
   await page.goto(`/projects/${PROJECT_IDS.mentor}/console`)
@@ -72,10 +75,11 @@ test('the tabs of a project stay open when the feature changes, and the review i
   await expect(tabs.getByRole('link', { name: 'Review' })).toBeVisible({ timeout: 20_000 })
 
   const features = page.getByRole('navigation', { name: 'Features' })
-  await features.getByRole('link', { name: 'Workflow' }).click()
-  await expect(page).toHaveURL(/\/workflow/, { timeout: 20_000 })
+  await features.getByRole('button', { name: 'Workflow' }).click()
+  await expect(page.getByRole('complementary', { name: 'Runs' })).toBeVisible()
 
-  // The tabs of Console and of the review are still there, in the strip of Workflow.
+  // The tabs of Console and of the review are still there, and so is the page of the review.
+  await expect(page).toHaveURL(/\/review\//)
   await expect(tabs.getByRole('link', { name: 'Console' })).toBeVisible()
   await expect(tabs.getByRole('link', { name: 'Review' })).toBeVisible()
 
