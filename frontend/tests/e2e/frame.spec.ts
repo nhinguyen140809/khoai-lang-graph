@@ -35,6 +35,27 @@ test('Ctrl+B hides and shows the side panel', async ({ page }) => {
   await expect(sidePanel).toBeVisible()
 })
 
+test('drags the edge of the side panel to make it wider', async ({ page }) => {
+  await page.goto(`/projects/${PROJECT_IDS.mentor}/search`)
+  const sidePanel = page.getByRole('complementary', { name: 'Search' })
+  await expect(sidePanel).toBeVisible()
+  const before = (await sidePanel.boundingBox())?.width ?? 0
+  const edge = await page.getByRole('separator').first().boundingBox()
+  if (edge === null) throw new Error('The side panel has no edge to drag')
+
+  // Every step of the drag moves the edge, not only the first one.
+  const x = edge.x + edge.width / 2
+  const y = edge.y + edge.height / 2
+  await page.mouse.move(x, y)
+  await page.mouse.down()
+  await page.mouse.move(x + 120, y, { steps: 10 })
+  await page.mouse.up()
+
+  await expect
+    .poll(async () => (await sidePanel.boundingBox())?.width ?? 0)
+    .toBeGreaterThan(before + 80)
+})
+
 test('the activity bar changes the side panel and leaves the editor as it is', async ({ page }) => {
   await page.goto(consolePath)
   const tabs = page.getByRole('navigation', { name: 'Open editors' })
