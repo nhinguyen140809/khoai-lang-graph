@@ -38,7 +38,15 @@ interface ExportButtonProps {
 /** A button that asks for a document made from the artifacts: a template and a format. */
 export function ExportButton({ projectId, openFromAddress = false }: ExportButtonProps) {
   const searchParams = useSearchParams()
-  const [open, setOpen] = useState(openFromAddress && searchParams.has('export'))
+  const asked = openFromAddress && searchParams.has('export')
+  const [open, setOpen] = useState(asked)
+  // The side panel can be on screen before the address asks for the export, as after the /export
+  // command of the console, so the dialog also opens when the address starts to ask.
+  const [askedBefore, setAskedBefore] = useState(asked)
+  if (asked !== askedBefore) {
+    setAskedBefore(asked)
+    if (asked) setOpen(true)
+  }
 
   return (
     <Dialog open={open} onOpenChange={setOpen}>
