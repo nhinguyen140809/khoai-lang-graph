@@ -63,6 +63,7 @@ A parameter in the page address changes what a group of endpoints answers. Param
 | `mock-artifact`       | `error`, `loading`                                                                                      | `GET /artifacts/{artifact_id}`, `GET /artifacts/{artifact_id}/items`                                              |
 | `mock-trace`          | `error`, `loading`                                                                                      | `GET /items/{item_id}/trace`                                                                                      |
 | `mock-models`         | `empty`, `error`, `loading`                                                                             | `GET /models`                                                                                                     |
+| `mock-state`          | `error`, `loading`                                                                                      | `GET /runs/{run_id}/state`, `GET /runs/{run_id}/steps/{step_id}/state`                                            |
 | `mock-usage`          | `empty`, `error`, `loading`                                                                             | `GET /me/usage`                                                                                                   |
 | `mock-sessions`       | `empty`, `error`, `loading`                                                                             | `GET /me/sessions`                                                                                                |
 | `mock-model-settings` | `empty`, `error`, `loading`                                                                             | `GET /me/model-settings`                                                                                          |
@@ -206,7 +207,7 @@ The side panel lists the runs of the project, newest first, each opening into it
 | Run 3 running                          | http://localhost:3000/projects/90aa0000-0000-4000-8000-000000000001/workflow/5f2d0000-0000-4000-8000-000000000001?mock-run-state=running |
 | Run not found                          | http://localhost:3000/projects/90aa0000-0000-4000-8000-000000000001/workflow/missing                                                     |
 
-"Retry from this step" starts a new run with a `POST`; it is offered when no run of the project is unfinished, so open it with `?mock-run-state=done`. Open the address with the state in it, as a step of the side panel drops it from the address.
+The State tab under the graph shows the workflow state after the chosen step as a tree, where an item or an artifact is a link; a stage that the step has not reached has empty lists. A node of the graph that has no step is chosen with `?node=`. "Retry from this step" starts a new run with a `POST`; it is offered when no run of the project is unfinished, so open it with `?mock-run-state=done`. Open the address with the state in it, as a step of the side panel drops it from the address.
 
 ## Traceability
 

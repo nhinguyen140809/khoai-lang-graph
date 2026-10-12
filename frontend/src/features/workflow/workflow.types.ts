@@ -111,3 +111,13 @@ export interface RunProgress {
   nodes: Record<string, NodeProgress>
   lastEdge: { source: string; target: string } | null
 }
+
+/** The workflow state after a step; `values` follows the state schema of the definition. */
+export const workflowStateSchema = z.object({
+  run_id: z.string(),
+  step_id: z.string().nullable(),
+  workflow_version: z.number().int(),
+  values: z.record(z.string(), z.unknown()),
+})
+
+export type WorkflowState = z.infer<typeof workflowStateSchema>

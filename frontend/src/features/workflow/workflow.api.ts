@@ -4,6 +4,7 @@ import {
   threadIdSchema,
   workflowDefinitionSchema,
   workflowRunSchema,
+  workflowStateSchema,
   workflowStepSchema,
 } from './workflow.types'
 
@@ -51,4 +52,13 @@ export function retryFromStep(runId: string, stepId: string) {
     body: { from_step_id: stepId },
     headers: { 'Idempotency-Key': crypto.randomUUID() },
   })
+}
+
+/** The state after a step of a run; without a step, the current state of the run. */
+export function getWorkflowState(runId: string, stepId: string | null) {
+  const path =
+    stepId === null
+      ? `/api/v1/runs/${id(runId)}/state`
+      : `/api/v1/runs/${id(runId)}/steps/${id(stepId)}/state`
+  return apiRequest(path, workflowStateSchema, { action: 'load the workflow state' })
 }

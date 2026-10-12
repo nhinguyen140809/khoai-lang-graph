@@ -12,6 +12,7 @@ import { projectHandlers } from './projects.handlers'
 import { runHandlers } from './runs.handlers'
 import { threadHandlers } from './threads.handlers'
 import { traceabilityHandlers } from './traceability.handlers'
+import { workflowStateHandlers } from './workflow-state.handlers'
 
 export const server = setupServer(
   ...authHandlers,
@@ -26,4 +27,5 @@ export const server = setupServer(
   ...threadHandlers,
   ...messageHandlers,
   ...runHandlers,
+  ...workflowStateHandlers,
 )
