@@ -53,10 +53,13 @@ export function ConsoleOutline({ threadId }: ConsoleOutlineProps) {
             onClick={() => {
               scrollToEvent(input.id)
             }}
-            className="flex w-full items-baseline gap-2 rounded-md px-2 py-1.5 text-left font-mono text-xs outline-none hover:bg-sidebar-accent focus-visible:ring-2 focus-visible:ring-ring/50"
+            className="group/entry flex w-full items-baseline gap-2 rounded-md px-2 py-1.5 text-left font-mono text-xs outline-none hover:bg-sidebar-accent focus-visible:ring-2 focus-visible:ring-ring/50"
           >
-            <span className="shrink-0 text-muted-foreground">{formatClock(input.time)}</span>
-            <span className="min-w-0 truncate text-foreground">{input.text}</span>
+            <span className="min-w-0 flex-1 truncate text-foreground">{input.text}</span>
+            {/* The time shows on hover or focus, so the text keeps the width of the panel. */}
+            <span className="hidden shrink-0 text-muted-foreground group-hover/entry:inline group-focus-visible/entry:inline">
+              {formatClock(input.time)}
+            </span>
           </button>
         </li>
       ))}

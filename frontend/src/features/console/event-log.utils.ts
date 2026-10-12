@@ -3,7 +3,7 @@ import type { ConsoleRun, ConsoleStep, Message } from './console.types'
 
 /**
  * One event of the log, before it is drawn. Every event but a day mark has a time, and the log
- * prints each as `time  kind  text`.
+ * prints each as a row.
  */
 export type LogEvent =
   /** The date that the events below it happened on, printed when the date changes. */
@@ -48,6 +48,23 @@ function groupSteps(steps: ConsoleStep[]): (ConsoleStep | ConsoleStep[])[] {
     }
   }
   return result
+}
+
+/**
+ * The log cut into turns: each turn starts at a message of the user and holds the events that
+ * follow it, up to the next message. Events before the first message form a turn of their own.
+ */
+export function groupTurns(log: LogEvent[]): LogEvent[][] {
+  const turns: LogEvent[][] = []
+  for (const event of log) {
+    const last = turns.at(-1)
+    if (last === undefined || event.kind === 'input') {
+      turns.push([event])
+    } else {
+      last.push(event)
+    }
+  }
+  return turns
 }
 
 /** The id of the element of an event in the page, for the navigation to it. */

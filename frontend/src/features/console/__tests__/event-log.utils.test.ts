@@ -5,7 +5,13 @@ import { RUN_IDS, THREAD_IDS } from '@/mocks/mock-ids.constants'
 import { mockRuns, mockRunSteps } from '@/mocks/runs.fixtures'
 
 import type { ConsoleStep, Message } from '../console.types'
-import { buildEventLog, formatClock, formatDay, formatDuration } from '../event-log.utils'
+import {
+  buildEventLog,
+  formatClock,
+  formatDay,
+  formatDuration,
+  groupTurns,
+} from '../event-log.utils'
 
 const runs = mockRuns('waiting').filter(({ thread_id }) => thread_id === THREAD_IDS.mentorMain)
 const messages = mockMessages.filter(({ thread_id }) => thread_id === THREAD_IDS.mentorMain)
@@ -108,5 +114,23 @@ describe('buildEventLog', () => {
     const withLate = buildEventLog({ messages: [...messages, late], runs, stepsByRun })
 
     expect(withLate.at(-1)).toMatchObject({ kind: 'input', id: 'late' })
+  })
+})
+
+describe('groupTurns', () => {
+  const log = buildEventLog({ messages, runs, stepsByRun })
+
+  it('starts each turn at a message of the user and keeps every event', () => {
+    const turns = groupTurns(log)
+
+    expect(turns.flat()).toEqual(log)
+    // The day mark before the first message forms a turn of its own.
+    expect(turns[0]?.map(({ kind }) => kind)).toEqual(['day'])
+    for (const turn of turns.slice(1)) expect(turn[0]?.kind).toBe('input')
+    expect(turns).toHaveLength(1 + log.filter(({ kind }) => kind === 'input').length)
+  })
+
+  it('gives no turns for an empty log', () => {
+    expect(groupTurns([])).toEqual([])
   })
 })

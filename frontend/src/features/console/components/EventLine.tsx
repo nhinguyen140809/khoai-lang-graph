@@ -1,19 +1,14 @@
 'use client'
 
+import { CornerDownRightIcon } from 'lucide-react'
 import Link from 'next/link'
-import { useState } from 'react'
+import { type ReactNode, useState } from 'react'
 
 import { cn } from '@/lib/utils'
 
 import type { ConsoleStep } from '../console.types'
-import {
-  eventDomId,
-  formatClock,
-  formatDuration,
-  type LogEvent,
-  stepDurationMs,
-} from '../event-log.utils'
-import { EventRow } from './EventRow'
+import { eventDomId, formatDuration, type LogEvent, stepDurationMs } from '../event-log.utils'
+import { EventRow, PromptMark, type RowTone, StatusDot } from './EventRow'
 
 interface EventLineProps {
   event: LogEvent
@@ -27,7 +22,7 @@ interface EventLineProps {
 // How many keys a row lists before it says how many more there are.
 const MAX_KEYS = 3
 
-/** One event of the log, printed as the rows of a table: time, kind, what happened, duration. */
+/** One event of the log, printed as rows: a mark, what happened, and how long it took. */
 export function EventLine({ event, projectId, expandAll, now }: EventLineProps) {
   switch (event.kind) {
     case 'day':
@@ -38,19 +33,24 @@ export function EventLine({ event, projectId, expandAll, now }: EventLineProps) 
       )
     case 'input':
       return (
-        <EventRow id={eventDomId(event.id)} time={formatClock(event.time)} kind="input">
+        // A message stays at the top of the log while its turn is in view.
+        <EventRow
+          id={eventDomId(event.id)}
+          mark={<PromptMark />}
+          className="sticky top-0 z-10 bg-background py-1"
+        >
           {event.text}
         </EventRow>
       )
     case 'command':
       return (
-        <EventRow id={eventDomId(event.id)} time={formatClock(event.time)} kind="command">
+        <EventRow id={eventDomId(event.id)} mark={<PromptMark />}>
           /{event.name}
         </EventRow>
       )
     case 'run-start':
       return (
-        <EventRow time={formatClock(event.time)} kind="run">
+        <EventRow mark={<StatusDot />}>
           Run {event.run.number} started
           {event.retryOf !== null && `, retrying run ${String(event.retryOf.number)}`}
         </EventRow>
@@ -59,7 +59,6 @@ export function EventLine({ event, projectId, expandAll, now }: EventLineProps) 
       return (
         <StepRows
           step={event.step}
-          time={event.time}
           durationMs={stepDurationMs(event.step, now)}
           projectId={projectId}
         />
@@ -69,9 +68,7 @@ export function EventLine({ event, projectId, expandAll, now }: EventLineProps) 
     case 'run-end':
       return (
         <EventRow
-          time={formatClock(event.time)}
-          kind="run"
-          tone={event.run.status === 'succeeded' ? 'success' : 'failure'}
+          mark={<StatusDot tone={event.run.status === 'succeeded' ? 'success' : 'failure'} />}
         >
           Run {event.run.number}{' '}
           {event.run.status === 'succeeded'
@@ -112,29 +109,38 @@ function Keys({ items, projectId }: KeysProps) {
 
 interface StepRowsProps {
   step: ConsoleStep
-  time: number
   durationMs: number
   projectId: string
 }
 
-function StepRows({ step, time, durationMs, projectId }: StepRowsProps) {
-  const failed = step.status === 'failed'
-  const running = step.status === 'running'
-  // A step that no agent runs, such as a review checkpoint, waits for the user while it runs.
-  const waiting = running && step.agent_role === null
+function stepTone(step: ConsoleStep): RowTone {
+  switch (step.status) {
+    case 'failed':
+      return 'failure'
+    case 'succeeded':
+      return 'success'
+    case 'skipped':
+      return 'default'
+    case 'running':
+      // A step that no agent runs, such as a review checkpoint, waits for the user while it runs.
+      return step.agent_role === null ? 'warning' : 'running'
+  }
+}
+
+function StepRows({ step, durationMs, projectId }: StepRowsProps) {
+  const tone = stepTone(step)
+  const failed = tone === 'failure'
   return (
     <>
       <EventRow
-        time={formatClock(time)}
-        kind="step"
-        tone={failed ? 'failure' : 'default'}
+        mark={<StatusDot tone={tone} />}
         trailing={
-          waiting ? (
-            <span className="animate-pulse text-warning-strong" role="status">
+          tone === 'warning' ? (
+            <span className="text-warning-strong" role="status">
               waiting
             </span>
-          ) : running ? (
-            <span className="animate-pulse text-primary" role="status">
+          ) : tone === 'running' ? (
+            <span className="text-primary" role="status">
               running {formatDuration(durationMs)}
             </span>
           ) : (
@@ -142,16 +148,38 @@ function StepRows({ step, time, durationMs, projectId }: StepRowsProps) {
           )
         }
       >
-        <span className={cn('font-medium', !failed && 'text-foreground')}>{step.node}</span>{' '}
+        <span className={cn('font-medium', failed ? 'text-destructive-strong' : 'text-foreground')}>
+          {step.node}
+        </span>{' '}
         <Keys items={step.produced} projectId={projectId} />
       </EventRow>
       {failed && step.error !== null && (
-        <EventRow kind="step" tone="failure" continued>
-          {step.error}
+        <EventRow>
+          <span className="text-destructive-strong">{step.error}</span>
         </EventRow>
       )}
     </>
   )
+}
+
+/** Rows that belong to the row above them: set in, with a corner icon before the first one. */
+function NestedRows({ children }: { children: ReactNode }) {
+  return (
+    <div className="flex gap-x-1 pl-4">
+      <span className="flex h-lh w-4 shrink-0 items-center justify-center">
+        <CornerDownRightIcon aria-hidden className="size-3.5 text-muted-foreground" />
+      </span>
+      <div className="min-w-0 flex-1">{children}</div>
+    </div>
+  )
+}
+
+// The state that stands for a group: the one that needs attention first.
+const GROUP_TONES: RowTone[] = ['failure', 'warning', 'running', 'success']
+
+function groupTone(steps: ConsoleStep[]): RowTone {
+  const tones = new Set(steps.map(stepTone))
+  return GROUP_TONES.find((tone) => tones.has(tone)) ?? 'default'
 }
 
 interface GroupRowsProps {
@@ -161,7 +189,7 @@ interface GroupRowsProps {
   now: number
 }
 
-/** Steps on one subject as a single row; it opens into the steps. */
+/** Steps on one subject as a single row; it opens into the steps, set in under the row. */
 function GroupRows({ event, projectId, expandAll, now }: GroupRowsProps) {
   const [opened, setOpened] = useState<boolean | null>(null)
   const open = opened ?? expandAll
@@ -173,37 +201,40 @@ function GroupRows({ event, projectId, expandAll, now }: GroupRowsProps) {
   return (
     <>
       <EventRow
-        time={formatClock(event.time)}
-        kind="steps"
+        mark={<StatusDot tone={groupTone(event.steps)} />}
         trailing={`${running ? 'running ' : ''}${formatDuration(event.durationMs)}`}
       >
+        {/* The button covers the whole row, so the mark and the empty space open the group too. */}
         <button
           type="button"
           aria-expanded={open}
           onClick={() => {
             setOpened(!open)
           }}
-          className="rounded-sm text-left outline-none focus-visible:ring-2 focus-visible:ring-ring/50"
+          className="text-left outline-none after:absolute after:inset-0 focus-visible:after:ring-2 focus-visible:after:ring-ring/50"
         >
           <span className="font-medium text-foreground">{event.label}</span>{' '}
           <span className="text-muted-foreground">{event.steps.length} steps</span>
         </button>
       </EventRow>
-      {!open && items.length > 0 && (
-        <EventRow kind="steps" continued>
-          <Keys items={items} projectId={projectId} />
-        </EventRow>
+      {(open || items.length > 0) && (
+        <NestedRows>
+          {open ? (
+            event.steps.map((step) => (
+              <StepRows
+                key={step.id}
+                step={step}
+                durationMs={stepDurationMs(step, now)}
+                projectId={projectId}
+              />
+            ))
+          ) : (
+            <EventRow>
+              <Keys items={items} projectId={projectId} />
+            </EventRow>
+          )}
+        </NestedRows>
       )}
-      {open &&
-        event.steps.map((step) => (
-          <StepRows
-            key={step.id}
-            step={step}
-            time={Date.parse(step.started_at)}
-            durationMs={stepDurationMs(step, now)}
-            projectId={projectId}
-          />
-        ))}
     </>
   )
 }

@@ -95,27 +95,30 @@ The only screen outside a project, so it has no activity bar.
 
 ## 3. Console
 
-The console is the working view of the project: the event log of its runs, with an input at the bottom. The side panel has two views: the outline of the console on screen, which goes to each message or command that the user typed, and the list of the consoles of the project. The editor is the log, in the tab Console.
+The console is the working view of the project: the event log of its runs, with an input at the bottom. The side panel has one section today, the outline of the console on screen, which goes to each message or command that the user typed. A section collapses to its title and a line divides it from the next; a new part of the panel is a new section. The editor is the log, in the tab Console.
 
 ```text
 +----------------------------------------------------------------------------------------------+
 | (K) khoai / Mentor platform v            [ Search or run a command   Ctrl+K ]         (user) |
 +-----+--------------------------+-------------------------------------------------------------+
 |     | CONSOLE                  | 2026-10-06                                                  |
-| [E] | [Outline] Consoles       | 08:30:01  run     Run 3 started, retrying run 2             |
-|  A  |                          | 08:30:01  step    planner                            0:09   |
-|  W  | 08:10:00  I want to      | 08:30:10  step    persona_generator  PER-001  PER-002 0:18  |
-|  T  |           build an on... | 08:30:28  step    checkpoint_personas                1:35   |
-|  S  | 10:00:00  Group sessi... | 08:32:03  steps   interviewing  24 steps             3:12   |
-|     | 08:30:40  Also ask th... |                   PER-001#1  PER-001#2  PER-001#3  +21      |
-|     | 08:44:02  /expand        | 08:35:15  steps   interviewing  18 steps             2:24   |
-|     |                          | 08:40:19  step    analyst                            0:53   |
-|     |                          | 08:41:12  step    checkpoint_analysis             waiting   |
-|     |                          |           review  Requirements analysis v4 waits for review |
+| [E] | v OUTLINE                |   > I want to build an online platform                      |
+|  A  |   08:10:00  I want to    | * Run 3 started, retrying run 2                             |
+|  W  |             build an on..| * planner                                              0:09 |
+|  T  |   10:00:00  Group sessi..| * persona_generator  PER-001  PER-002                  0:18 |
+|  S  |   08:30:40  Also ask th..| * checkpoint_personas                                  1:35 |
+|     |   08:44:02  /expand      | v interviewing  24 steps                               3:12 |
+|     |                          |       * interviewer  PER-001#1                         0:08 |
+|     |                          |       * interviewer  PER-001#2                         0:07 |
+|     |                          | > interviewing  18 steps                               2:24 |
+|     |                          |   PER-001#1  PER-001#2  PER-001#3  +15                       |
+|     |                          | * analyst                                              0:53 |
+|     |                          | * checkpoint_analysis                              waiting  |
+|     |                          | * Requirements analysis v4 waits for your review            |
 |     |                          |                                                             |
-|     |                          | +---------------------------------------------------------+ |
-|     |                          | | > / for a command                                       | |
-|     |                          | +---------------------------------------------------------+ |
+|     |                          | ----------------------------------------------------------- |
+|     |                          |   > / for a command                                         |
+|     |                          | ----------------------------------------------------------- |
 |  *  |                          |   ctrl+o expand steps    esc stop run                       |
 +-----+--------------------------+-------------------------------------------------------------+
 | Run 3: waiting for review | analysis_review | step 67 | $0.42 of $2.00 | workflow v1         |
@@ -124,21 +127,19 @@ The console is the working view of the project: the event log of its runs, with 
 
 | Part | Content |
 |---|---|
-| Outline | Each time the user typed a message or ran a command in the console, oldest first, with its time. Choosing one scrolls the event log to it |
-| Consoles | The consoles of the project, each with the stage of its latest run and a badge for the reviews waiting. A project has one console today, so the list has one entry |
+| Outline | Each time the user typed a message or ran a command in the console, oldest first; its time shows when the pointer is over it. Choosing one scrolls the event log to it |
 
-Every row of the log has the same columns: the time, the kind of event, what happened, and how long it took. The log shows only events: what the user typed, and what the runs do.
+A row of the log has a mark, what happened, and how long it took; there is no time column. The mark is a chevron for what the user typed, and a dot for a run, a step or a group of steps, whose color is its state. The rows under a group, which are its steps or, when it is closed, its keys, are set in, and a corner icon (drawn as `|_` in the sketch above) stands before the first of them only. The log shows only events: what the user typed, and what the runs do.
 
 | Row | Content |
 |---|---|
 | Date | The date, printed before the first event of each day |
-| `input` | What the user typed to start a run |
-| `command` | A command that the user ran |
-| `run` | A run started (naming the run it retries), or ended: done, failed with its error, or stopped |
-| `step` | A step of the workflow with its node, the keys of the items it produced, and its duration. A step in progress shows `running` and its time; a review checkpoint shows `waiting`. Keys open the item |
-| `steps` | Consecutive steps on one subject, such as the turns of one interview, as one row with the keys they produced. `ctrl+o` or `/expand` opens every group into its steps |
-| `review` | A review that waits for the user, see [section 4](#4-review) |
-| Input box | A message starts a run when no run is unfinished; while a run is unfinished the box takes commands only. `@` mentions an item by key. `/` lists the commands `/stop`, `/retry`, `/expand`, `/collapse`, `/export` and `/run-settings`; the last two open the export of the artifacts and the run settings sent with the next run. `Esc` pressed twice stops the run |
+| Input | A chevron and what the user typed to start a run, or the command that the user ran. While the log scrolls, the latest message above the top of the log stays pinned there until the next message replaces it |
+| Run | A dot and a run started (naming the run it retries), or ended: done (green), failed (red) with its error, or stopped |
+| Step | A dot and a step of the workflow with its node, the keys of the items it produced, and its duration. The dot is green for a step done, red for a failed step, blue and pulsing for a step in progress, which shows `running` and its time, and amber for a review checkpoint, which shows `waiting`. Keys open the item |
+| Group | Consecutive steps on one subject, such as the turns of one interview, as one row with a dot (red if a step failed, amber if one waits, blue if one runs, else green) and, under it, the keys they produced. Opening the row, or `ctrl+o` or `/expand` for every group, shows its steps under it, each with its own dot |
+| Review | A review that waits for the user, see [section 4](#4-review) |
+| Input box | A chevron and a field on a filled band between two lines, with no frame at the sides; the field has a block caret that does not blink. A message starts a run when no run is unfinished; while a run is unfinished the box takes commands only. `@` mentions an item by key. `/` lists the commands `/stop`, `/retry`, `/expand`, `/collapse`, `/export` and `/run-settings`; the last two open the export of the artifacts and the run settings sent with the next run. `Esc` pressed twice stops the run |
 
 ## 4. Review
 

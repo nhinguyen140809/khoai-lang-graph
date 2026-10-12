@@ -11,6 +11,7 @@ import { useNow } from '@/hooks/useNow'
 
 import { useCommandHistoryStore } from '../command-history.store'
 import type { CommandName } from '../commands.constants'
+import { groupTurns } from '../event-log.utils'
 import { followLog, isFollowingLog } from '../event-scroll.utils'
 import { useRetryRun, useSendMessage, useStopRun } from '../hooks/useConsoleActions'
 import { useEventLog } from '../hooks/useEventLog'
@@ -132,14 +133,19 @@ export function Console({ projectId, threadId, afterLog, reviewOpen = false }: C
               No events yet. Describe what to build to start the first run.
             </p>
           )}
-          {eventLog.log.map((event) => (
-            <EventLine
-              key={event.id}
-              event={event}
-              projectId={projectId}
-              expandAll={expandAll}
-              now={now}
-            />
+          {/* A turn is the box that holds a pinned message, so the next message replaces it. */}
+          {groupTurns(eventLog.log).map((turn) => (
+            <div key={turn[0]?.id}>
+              {turn.map((event) => (
+                <EventLine
+                  key={event.id}
+                  event={event}
+                  projectId={projectId}
+                  expandAll={expandAll}
+                  now={now}
+                />
+              ))}
+            </div>
           ))}
           {activeRun !== null && <RunWatcher key={activeRun.id} runId={activeRun.id} />}
           {activeRun?.status === 'interrupted' && !reviewOpen && (

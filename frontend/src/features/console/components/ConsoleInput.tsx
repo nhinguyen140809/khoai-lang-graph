@@ -13,6 +13,7 @@ import {
   matchingCommands,
   mentionAtCursor,
 } from '../input.utils'
+import { PromptMark } from './EventRow'
 
 // How long a first Esc waits for the second one that stops the run.
 const STOP_CONFIRM_MS = 3000
@@ -229,9 +230,9 @@ export function ConsoleInput({
                 : 'No item matches.'}
           </p>
         )}
-        <div className="flex items-start gap-2 rounded-md border bg-background px-3 py-2 font-mono text-xs focus-within:border-ring focus-within:ring-2 focus-within:ring-ring/30">
-          <span aria-hidden className="pt-px text-muted-foreground">
-            {'>'}
+        <div className="flex items-start gap-2 border-y bg-muted py-2 pr-2 font-mono text-xs">
+          <span className="flex h-lh w-4 shrink-0 items-center justify-center">
+            <PromptMark />
           </span>
           <label htmlFor={`${listId}-input`} className="sr-only">
             Message
@@ -264,7 +265,7 @@ export function ConsoleInput({
               setCursor(event.currentTarget.selectionStart)
             }}
             onKeyDown={handleKeyDown}
-            className="[field-sizing:content] max-h-40 min-h-4 flex-1 resize-none bg-transparent leading-snug outline-none placeholder:text-muted-foreground"
+            className="field-sizing-content max-h-40 min-h-4 flex-1 resize-none bg-transparent leading-snug caret-block outline-none placeholder:text-muted-foreground"
           />
         </div>
       </div>
@@ -273,7 +274,7 @@ export function ConsoleInput({
           {notice}
         </p>
       )}
-      <p className="flex gap-4 px-1 font-mono text-[0.6875rem] text-muted-foreground">
+      <p className="flex gap-4 px-1 font-mono text-2xs text-muted-foreground">
         <span>ctrl+o {expandAll ? 'collapse' : 'expand'} steps</span>
         {canStop && (
           <span className={cn(armed && 'text-warning-strong')}>
