@@ -21,7 +21,7 @@ export function TopBar({ crumb }: TopBarProps) {
     <header className="flex h-10 shrink-0 items-center gap-3 bg-sidebar px-2 text-xs text-sidebar-foreground">
       <div className="flex min-w-0 flex-1 items-center gap-1.5">
         <Link
-          href="/projects"
+          href="/"
           className="flex shrink-0 items-center gap-2 rounded-md px-1 py-0.5 outline-none hover:bg-sidebar-accent focus-visible:ring-2 focus-visible:ring-ring/50"
         >
           <span
