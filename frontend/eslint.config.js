@@ -36,7 +36,46 @@ const sharedCodePatterns = [
     message:
       'Shared code must not import features or the app layer. Pass feature components in as props from src/app/.',
   },
+  {
+    regex: '^(\\.\\./)+(features|app|providers)(/|$)',
+    message:
+      'Shared code must not import features or the app layer. Pass feature components in as props from src/app/.',
+  },
 ]
+
+const featurePatterns = [
+  {
+    group: ['@/features', '@/features/**', '@/app/**', '@/providers/**'],
+    message:
+      'A feature must not import another feature or the app layer. Compose features in src/app/, or move the shared code to src/components, src/hooks, or src/lib.',
+  },
+]
+
+// The deepest folder of a feature that gets its own rule below, counted from the feature folder.
+const FEATURE_FOLDER_DEPTH = 5
+
+// A relative import that climbs out of its feature folder reaches another feature, the app layer
+// or shared code. How many `../` that takes depends on how deep the file is, so each depth of
+// folder gets its own block.
+const featureFolderBlocks = Array.from({ length: FEATURE_FOLDER_DEPTH + 1 }, (_, depth) => ({
+  files: [`src/features/*/${'*/'.repeat(depth)}*.{ts,tsx}`],
+  rules: {
+    'no-restricted-imports': [
+      'error',
+      {
+        paths: wrappedLibraryImports,
+        patterns: [
+          ...featurePatterns,
+          {
+            regex: `^(\\.\\./){${String(depth + 1)},}`,
+            message:
+              'A relative import stays inside its feature. Import shared code with @/components, @/hooks or @/lib; another feature or the app layer is not imported.',
+          },
+        ],
+      },
+    ],
+  },
+}))
 
 export default defineConfig([
   globalIgnores([
@@ -86,6 +125,10 @@ export default defineConfig([
               group: ['@/features/*/**'],
               message:
                 "Import from the feature's index (@/features/<feature>). Inside the same feature, use a relative import.",
+            },
+            {
+              regex: '^(\\.\\./)+(src/)?features/[^/]+/',
+              message: "Import from the feature's index (@/features/<feature>).",
             },
           ],
         },
@@ -141,19 +184,11 @@ export default defineConfig([
     rules: {
       'no-restricted-imports': [
         'error',
-        {
-          paths: wrappedLibraryImports,
-          patterns: [
-            {
-              group: ['@/features', '@/features/**', '@/app/**', '@/providers/**'],
-              message:
-                'A feature must not import another feature or the app layer. Compose features in src/app/, or move the shared code to src/components, src/hooks, or src/lib.',
-            },
-          ],
-        },
+        { paths: wrappedLibraryImports, patterns: featurePatterns },
       ],
     },
   },
+  ...featureFolderBlocks,
   {
     // File naming (CONTRIBUTING: TypeScript / React > Naming). Files whose names are set by
     // a tool (shadcn CLI, Next.js) or by convention (index.ts) are ignored.
