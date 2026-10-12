@@ -1,33 +1,43 @@
 import type { z } from 'zod'
 import type { PersistStorage, StorageValue } from 'zustand/middleware'
 
+// The failures that come from the browser and not from the app: storage blocked or full.
+const STORAGE_ERRORS = new Set(['SecurityError', 'QuotaExceededError'])
+
+/**
+ * Calls `run` with the localStorage, or returns `fallback` when there is none (server rendering) or
+ * the browser refuses the call. Any other error is thrown, so a bug is not hidden.
+ */
+function withStorage<T>(fallback: T, run: (storage: Storage) => T): T {
+  if (typeof window === 'undefined') return fallback
+  try {
+    return run(window.localStorage)
+  } catch (error) {
+    if (error instanceof DOMException && STORAGE_ERRORS.has(error.name)) return fallback
+    throw error
+  }
+}
+
 /**
  * The only module that reads and writes the localStorage of the browser (ESLint reports any other
- * use). Everything kept there is device-local: sizes of the frame regions, open editor tabs.
- * Storage can be missing (server rendering, tests in Node.js), blocked, or full, so a read that
- * fails returns null and a write that fails is dropped; the app works without the stored values.
+ * use). It is for data the app can lose: sizes of the frame regions, open editor tabs, the
+ * history of commands. Storage can be missing, blocked or full; then a read returns null and a
+ * write is dropped, without a message, and the app works without the stored values. Data that
+ * must not be lost does not go through it.
  */
 export const browserStorage = {
   getItem(key: string): string | null {
-    try {
-      return window.localStorage.getItem(key)
-    } catch {
-      return null
-    }
+    return withStorage(null, (storage) => storage.getItem(key))
   },
   setItem(key: string, value: string): void {
-    try {
-      window.localStorage.setItem(key, value)
-    } catch {
-      // Not stored: the value is a convenience of this device.
-    }
+    withStorage(undefined, (storage) => {
+      storage.setItem(key, value)
+    })
   },
   removeItem(key: string): void {
-    try {
-      window.localStorage.removeItem(key)
-    } catch {
-      // Nothing to remove.
-    }
+    withStorage(undefined, (storage) => {
+      storage.removeItem(key)
+    })
   },
 }
 
