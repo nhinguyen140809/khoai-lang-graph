@@ -4,9 +4,9 @@ import { ScrollArea } from '@/components/ui/scroll-area'
 import { Surface } from '@/components/ui/surface'
 
 interface SidePanelProps {
-  /** The name of the panel, such as "Threads"; shown in capitals. */
+  /** The name of the panel, such as "Artifacts"; shown in capitals. */
   title: string
-  /** Buttons at the right of the title, such as a button that adds a thread. */
+  /** Buttons at the right of the title, such as a button that collapses every node of a tree. */
   actions?: ReactNode
   children: ReactNode
 }

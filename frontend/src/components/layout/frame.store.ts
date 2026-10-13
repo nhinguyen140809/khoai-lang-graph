@@ -30,9 +30,9 @@ interface FrameState extends PersistedFrame {
 }
 
 /**
- * Sizes and visibility of the frame regions. They are device-local, so they are kept in the
- * browser and not on the server. Workbench reads them after the first render, so the server HTML
- * and the first client render use the defaults.
+ * The feature whose side panel is shown, and the size and visibility of the panels. They are
+ * device-local, so they are kept in the browser and not on the server. Workbench reads them after
+ * the first render, so the server HTML and the first client render use the defaults.
  */
 export const useFrameStore = create<FrameState>()(
   persist(
