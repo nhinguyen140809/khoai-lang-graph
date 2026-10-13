@@ -213,6 +213,8 @@ The `svg` is rendered from the `dbml` (`pnpm install`, then `pnpm render` in `sc
 
 ### P2b. Shared layer
 
+State: draft PR #11 from `refactor/fe/shared`. Once it merges, `main` is merged into `feat/fe/layout` and P3 is cut again at the new paths.
+
 Branch `refactor/fe/shared` from `origin/main`, decision D8. Moves only, plus the paths that name them: `src/components/ui/` to `src/shared/ui/`, `src/components/state/` to `src/shared/components/state/`, `src/components/layout/` to `src/frame/`, `src/hooks/` to `src/shared/hooks/`, `src/lib/utils.ts` and `tone.*` to `src/shared/lib/`, `src/lib/api-url.utils.ts` and `query-client.config.ts` to `src/shared/api/`, `src/api/generated/` to `src/shared/api/generated/`; the imports, `components.json` (shadcn aliases), `openapi-ts.config.ts`, `.prettierignore`, the layer rules of `eslint.config.js`, `frontend/README.md` and CONTRIBUTING.
 
 Check: `pnpm typecheck`, `pnpm lint`, `pnpm format:check`, `pnpm test`; `pnpm ui:add <component> --dry-run` writes to `src/shared/ui/`.
