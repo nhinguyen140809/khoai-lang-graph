@@ -15,6 +15,7 @@ import { isNotFoundError } from '@/lib/api-fetch.utils'
 
 import { artifactHref } from '../artifact-links.utils'
 import type { ContentSchema, OutlineItem } from '../artifacts.types'
+import { ArtifactTabIcon } from '../artifacts-frame.config'
 import { fieldViews, formatValue, itemTitle, listFieldViews } from '../field-view.utils'
 import { useArtifact } from '../hooks/useArtifact'
 import { useArtifactItems } from '../hooks/useArtifactItems'
@@ -87,7 +88,7 @@ export function ArtifactDocument({
           id: artifactId,
           title: artifact.data.title,
           href: artifactHref(projectId, artifactId),
-          icon: 'artifact',
+          icon: ArtifactTabIcon.Artifact,
         }
       : null,
   )

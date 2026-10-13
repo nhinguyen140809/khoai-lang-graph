@@ -14,6 +14,7 @@ import { useProjectRuns } from '../hooks/useProjectRuns'
 import { useRunSteps } from '../hooks/useRunSteps'
 import { useWorkflowDefinition } from '../hooks/useWorkflowDefinition'
 import { runProgress } from '../run-progress.utils'
+import { WorkflowTabIcon } from '../workflow-frame.config'
 import { isActive, runHref, runNodeHref } from '../workflow-links.utils'
 import { StatePanel } from './StatePanel'
 import { StepPanel } from './StepPanel'
@@ -42,7 +43,7 @@ export function RunPage({ projectId, runId }: RunPageProps) {
           id: runId,
           title: `Run ${String(run.number)}`,
           href: runHref(projectId, runId),
-          icon: 'run',
+          icon: WorkflowTabIcon.Run,
         },
   )
 

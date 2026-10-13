@@ -30,5 +30,8 @@ export interface PlannedActivity extends ActivityBase {
 
 export type Activity = FeatureActivity | PlannedActivity
 
-/** The icons of editor tabs, by the name that a page gives its tab, such as `item`. */
+/**
+ * The icons of editor tabs, by the name that a page gives its tab, such as `artifacts.item`. A
+ * feature starts the names of its icons with its own name, so that two features never share one.
+ */
 export type TabIcons = Readonly<Record<string, ReactNode>>

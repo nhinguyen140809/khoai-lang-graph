@@ -21,4 +21,7 @@ export function workflowActivity(projectId: string): FeatureActivity {
   }
 }
 
-export const workflowTabIcons: TabIcons = { run: <PlayIcon /> }
+/** The name of the tab icon of a run, which its page gives `useEditorTab`. */
+export const WorkflowTabIcon = { Run: 'workflow.run' } as const
+
+export const workflowTabIcons: TabIcons = { [WorkflowTabIcon.Run]: <PlayIcon /> }

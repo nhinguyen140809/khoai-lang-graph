@@ -11,7 +11,7 @@ import { ScrollArea } from '@/components/ui/scroll-area'
 import { Surface } from '@/components/ui/surface'
 
 import { usePendingInterrupt } from '../hooks/usePendingInterrupt'
-import { reviewsPath } from '../review-frame.config'
+import { reviewsPath, ReviewTabIcon } from '../review-frame.config'
 import { ReviewCard } from './ReviewCard'
 
 interface ReviewPageProps {
@@ -41,7 +41,7 @@ export function ReviewPage({ projectId, runId, Artifacts, Console }: ReviewPageP
     id: `review:${runId}`,
     title: 'Review',
     href,
-    icon: 'review',
+    icon: ReviewTabIcon.Review,
   })
 
   const backToConsole = () => {

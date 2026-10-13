@@ -14,6 +14,7 @@ import { isNotFoundError } from '@/lib/api-fetch.utils'
 import { formatRelativeTime } from '@/lib/relative-time.utils'
 
 import { artifactHref, itemHref } from '../artifact-links.utils'
+import { ArtifactTabIcon } from '../artifacts-frame.config'
 import { fieldViews, itemTitle } from '../field-view.utils'
 import { useArtifact } from '../hooks/useArtifact'
 import { useArtifactItems } from '../hooks/useArtifactItems'
@@ -47,7 +48,12 @@ export function ItemPage({ projectId, itemId, embedded = false, onBack }: ItemPa
   useEditorTab(
     projectTabGroup(projectId),
     item.isSuccess && !embedded
-      ? { id: itemId, title: item.data.key, href: itemHref(projectId, itemId), icon: 'item' }
+      ? {
+          id: itemId,
+          title: item.data.key,
+          href: itemHref(projectId, itemId),
+          icon: ArtifactTabIcon.Item,
+        }
       : null,
   )
 

@@ -21,5 +21,8 @@ export function traceabilityActivity(projectId: string): FeatureActivity {
   }
 }
 
+/** The name of the tab icon of a view, which its page gives `useEditorTab`. */
+export const TraceabilityTabIcon = { View: 'traceability.view' } as const
+
 /** The tab of a view, the matrix or the issues. */
-export const traceabilityTabIcons: TabIcons = { view: <TableIcon /> }
+export const traceabilityTabIcons: TabIcons = { [TraceabilityTabIcon.View]: <TableIcon /> }

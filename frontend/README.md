@@ -262,7 +262,7 @@ A side panel (`SidePanel`) holds the parts of its feature in sections (`SidePane
 
 `Cmd` works in place of `Ctrl` on macOS, where the shortcuts shown name `Cmd` (`useModifierKeyName`), except for ``Ctrl+` ``: macOS keeps ``Cmd+` `` to switch windows.
 
-The editor tabs belong to the project, not to a feature: choosing a feature on the activity bar changes the side panel only. A page opens its tab with `useEditorTab` and may name an icon (`item`, `run`, ...); the tab shows that icon from `tabIcons`, else the icon of the feature the page belongs to. The active tab is the one that the page on screen opened, whatever its address holds, such as a query. A new tab opens next to the tab shown last, and a tab shows its close button when it is active or under the pointer, and always on a touch screen.
+The editor tabs belong to the project, not to a feature: choosing a feature on the activity bar changes the side panel only. A page opens its tab with `useEditorTab` and may name an icon, with a constant of the config of its feature such as `ArtifactTabIcon.Item` (`artifacts.item`: a feature starts the names of its icons with its own name); the tab shows that icon from `tabIcons`, else the icon of the feature the page belongs to. The active tab is the one that the page on screen opened, whatever its address holds, such as a query. A new tab opens next to the tab shown last, and a tab shows its close button when it is active or under the pointer, and always on a touch screen.
 
 ### Browser storage
 

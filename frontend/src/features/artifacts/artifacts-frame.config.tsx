@@ -22,5 +22,11 @@ export function artifactsActivity(projectId: string): FeatureActivity {
   }
 }
 
+/** The names of the tab icons of the artifacts, which their pages give `useEditorTab`. */
+export const ArtifactTabIcon = { Artifact: 'artifacts.artifact', Item: 'artifacts.item' } as const
+
 /** The tab of an artifact shown as a document, and the tab of one item. */
-export const artifactTabIcons: TabIcons = { artifact: <FileTextIcon />, item: <FileIcon /> }
+export const artifactTabIcons: TabIcons = {
+  [ArtifactTabIcon.Artifact]: <FileTextIcon />,
+  [ArtifactTabIcon.Item]: <FileIcon />,
+}

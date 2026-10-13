@@ -6,6 +6,7 @@ import type { ReactNode } from 'react'
 import { projectTabGroup, useEditorTab } from '@/components/layout'
 import { ErrorState, LoadingState } from '@/components/state'
 
+import { ConsoleTabIcon } from '../console-frame.config'
 import { useConsoleThread } from '../hooks/useConsoleThread'
 import { Console } from './Console'
 
@@ -35,7 +36,9 @@ export function ConsolePage({
   // The console in a review is a part of the tab of the review.
   useEditorTab(
     projectTabGroup(projectId),
-    reviewOpen ? null : { id: 'console', title: 'Console', href: pathname, icon: 'console' },
+    reviewOpen
+      ? null
+      : { id: 'console', title: 'Console', href: pathname, icon: ConsoleTabIcon.Console },
   )
 
   if (threadId !== undefined) {

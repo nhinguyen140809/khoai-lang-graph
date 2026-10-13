@@ -11,6 +11,7 @@ import { useModels } from '../hooks/useModels'
 import { useSettingsDefinition } from '../hooks/useSettingsDefinition'
 import { useSettingsProject } from '../hooks/useSettingsProject'
 import { sectionLabels } from '../project-settings.types'
+import { ProjectSettingsTabIcon } from '../project-settings-frame.config'
 import { sectionOf } from '../section.utils'
 import { settingsHref } from '../settings-links.utils'
 import { GeneralForm } from './GeneralForm'
@@ -28,7 +29,7 @@ export function SettingsPage({ projectId }: { projectId: string }) {
     id: 'settings',
     title: 'Settings',
     href: settingsHref(projectId, section),
-    icon: 'settings',
+    icon: ProjectSettingsTabIcon.Settings,
   })
 
   if (project.isPending) return <LoadingState label="Loading the settings" rows={5} />

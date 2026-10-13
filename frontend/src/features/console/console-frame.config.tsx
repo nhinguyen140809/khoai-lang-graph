@@ -26,4 +26,7 @@ export function consoleActivity(projectId: string): FeatureActivity {
   }
 }
 
-export const consoleTabIcons: TabIcons = { console: <SquareChevronRightIcon /> }
+/** The name of the tab icon of the console, which its page gives `useEditorTab`. */
+export const ConsoleTabIcon = { Console: 'console.console' } as const
+
+export const consoleTabIcons: TabIcons = { [ConsoleTabIcon.Console]: <SquareChevronRightIcon /> }
