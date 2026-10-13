@@ -2,6 +2,7 @@
 // between its folders; files inside the folder import each other with relative paths.
 export type { Activity, FeatureActivity, TabIcons } from './activities/activity.types'
 export { useOpenPage } from './activities/hooks/useOpenPage'
+export { LogoMark } from './bars/LogoMark'
 export { PageCrumb } from './bars/PageCrumb'
 export { PaletteGroup } from './commands/command.constants'
 export type { PaletteCommand } from './commands/command.types'

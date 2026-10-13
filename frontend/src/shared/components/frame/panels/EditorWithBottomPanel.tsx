@@ -77,11 +77,9 @@ function CollapsedPanel({ label }: { label: string }) {
     <Surface
       as="section"
       aria-label={label}
-      className="flex h-8 shrink-0 items-center justify-between pr-1 pl-3"
+      className="flex h-9 shrink-0 items-center justify-between pr-1 pl-3"
     >
-      <span className="text-2xs font-medium tracking-wide text-muted-foreground uppercase">
-        {label}
-      </span>
+      <span className="text-xs font-medium text-muted-foreground">{label}</span>
       <PanelToggle label={label} expanded={false} />
     </Surface>
   )

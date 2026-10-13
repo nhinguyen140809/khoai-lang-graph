@@ -221,14 +221,12 @@
 }
 
 /*
- * Text sizes below text-xs, for the labels at the edge of the frame: titles of panels and
- * sections, the status bar, counts, and captions. Each step is one pixel smaller than the one
- * above: 11px, 10px, and 9px.
+ * text-xs, the size of the text inside components, is 13px instead of 12px, with an 18px line:
+ * the smallest size for text that people read. text-sm stays 14px.
  */
 @theme {
-  --text-2xs: 0.6875rem;
-  --text-3xs: 0.625rem;
-  --text-4xs: 0.5625rem;
+  --text-xs: 0.8125rem;
+  --text-xs--line-height: calc(1.125 / 0.8125);
 }
 
 @layer base {
@@ -280,13 +278,13 @@
 }
 
 /*
- * The editor reads one step larger than the panels around it. Mira sets component text to
- * text-xs, so inside the editor text-xs resolves to 13px (was 12px) and text-sm to 15px (was
- * 14px). Dialogs and popovers render outside the editor and keep the base sizes.
+ * The editor reads one step larger than the panels around it, for documents that are read at
+ * length. Mira sets component text to text-xs, so inside the editor text-xs resolves to 14px and
+ * text-sm to 16px. Dialogs and popovers render outside the editor and keep the base sizes.
  */
 @utility editor-text {
-  --text-xs: 0.8125rem;
-  --text-sm: 0.9375rem;
+  --text-xs: 0.875rem;
+  --text-sm: 1rem;
 }
 
 /*

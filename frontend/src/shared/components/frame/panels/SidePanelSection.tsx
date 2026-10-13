@@ -10,7 +10,7 @@ import {
 } from '@/shared/components/ui/collapsible'
 
 interface SidePanelSectionProps {
-  /** The name of the section, such as "Outline"; shown in capitals. */
+  /** The name of the section, such as "Outline". */
   title: string
   /**
    * Buttons at the right of the title, such as a button that refreshes the section. They show
@@ -35,7 +35,7 @@ export function SidePanelSection({
 }: SidePanelSectionProps) {
   return (
     <Collapsible defaultOpen={defaultOpen} className="border-t first:border-t-0">
-      <div className="group/header flex h-6 items-center hover:bg-sidebar-accent">
+      <div className="group/header flex h-8 items-center hover:bg-sidebar-accent">
         <SectionTitle title={title} />
         {actions !== undefined && (
           <div className="flex items-center gap-0.5 pr-1 opacity-0 group-hover/header:opacity-100 focus-within:opacity-100 pointer-coarse:opacity-100">
@@ -51,7 +51,7 @@ export function SidePanelSection({
 /** The title, which opens and collapses the section. */
 function SectionTitle({ title }: { title: string }) {
   return (
-    <CollapsibleTrigger className="group/title flex h-full min-w-0 flex-1 items-center gap-0.5 px-1 text-2xs font-semibold tracking-wide uppercase outline-none focus-visible:ring-2 focus-visible:ring-ring/50 focus-visible:ring-inset">
+    <CollapsibleTrigger className="group/title flex h-full min-w-0 flex-1 items-center gap-0.5 px-1 text-xs font-semibold outline-none focus-visible:ring-2 focus-visible:ring-ring/50 focus-visible:ring-inset">
       <ChevronRight
         aria-hidden
         className="size-4 shrink-0 transition-transform group-data-[state=open]/title:rotate-90 motion-reduce:transition-none"

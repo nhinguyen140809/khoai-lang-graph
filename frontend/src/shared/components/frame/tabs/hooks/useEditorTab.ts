@@ -1,4 +1,4 @@
-import { useEffect } from 'react'
+import { useEffect, useMemo } from 'react'
 
 import { type EditorTab, useEditorTabsStore } from '../editor-tabs.store'
 
@@ -7,11 +7,15 @@ import { type EditorTab, useEditorTabsStore } from '../editor-tabs.store'
  * the page is on screen, its tab is the active one, whatever the address of the page holds. Pass
  * `null` while the title is not known yet.
  *
- * @returns `close`, which closes the tab of the page, such as when the page has nothing left to
- * show.
+ * The tab opens as the preview tab of its group, which the next page opened replaces, unless the
+ * page was asked to be kept with `keepPage`.
+ *
+ * @returns `keep`, which keeps the tab, called by the page when the user changes something on it,
+ * and `close`, which closes the tab, such as when the page has nothing left to show.
  */
 export function useEditorTab(group: string, tab: EditorTab | null) {
   const openTab = useEditorTabsStore((state) => state.openTab)
+  const keepTab = useEditorTabsStore((state) => state.keepTab)
   const leaveTab = useEditorTabsStore((state) => state.leaveTab)
   const closeTab = useEditorTabsStore((state) => state.closeTab)
   const id = tab?.id
@@ -31,9 +35,15 @@ export function useEditorTab(group: string, tab: EditorTab | null) {
     }
   }, [group, id, leaveTab])
 
-  return {
-    close: () => {
-      if (id !== undefined) closeTab(group, id)
-    },
-  }
+  return useMemo(
+    () => ({
+      keep: () => {
+        if (id !== undefined) keepTab(group, id)
+      },
+      close: () => {
+        if (id !== undefined) closeTab(group, id)
+      },
+    }),
+    [group, id, keepTab, closeTab],
+  )
 }

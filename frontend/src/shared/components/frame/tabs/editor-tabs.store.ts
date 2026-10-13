@@ -21,23 +21,49 @@ export type EditorTab = z.infer<typeof editorTabSchema>
 
 const persistedTabsSchema = z.object({
   groups: z.record(z.string(), z.array(editorTabSchema)),
+  preview: z.record(z.string(), z.string()).optional(),
 })
 
 type PersistedTabs = z.infer<typeof persistedTabsSchema>
 
-interface EditorTabsState extends PersistedTabs {
+interface OpenTabOptions {
+  /** Opens the tab as a kept tab instead of the preview tab of its group. */
+  keep?: boolean
+}
+
+interface EditorTabsState {
+  /** By group, the open tabs in the order of the strip. */
+  groups: Record<string, EditorTab[]>
+  /**
+   * By group, the id of its preview tab: the tab that the next page opened replaces, until the
+   * user keeps it. A group has one preview tab at most.
+   */
+  preview: Record<string, string>
   /** By group, the id of the tab whose page is on screen; none while a page without a tab is. */
   onScreen: Record<string, string>
   /** By group, the id of the tab whose page was on screen last, kept after the page leaves. */
   lastShown: Record<string, string>
+  /** The address of a page asked to be kept before its tab opened; the next tab of it is kept. */
+  keepNext: string | null
   /**
-   * Opens the tab of the page on screen, or gives an open tab its new title. A new tab goes after
-   * the tab shown last, as an editor opens a file next to the one in view, else at the end.
+   * Opens the tab of the page on screen, or gives an open tab its new title. A new tab is the
+   * preview tab of its group: it takes the place of the preview tab open, else it goes after the
+   * tab shown last, as an editor opens a file next to the one in view, else at the end. A new
+   * kept tab goes after the tab shown last too, and leaves the preview tab as it is.
    */
-  openTab: (group: string, tab: EditorTab) => void
+  openTab: (group: string, tab: EditorTab, options?: OpenTabOptions) => void
+  /** Keeps tab `id` open when it is the preview tab of its group. */
+  keepTab: (group: string, id: string) => void
+  /**
+   * Keeps the tab of the page at `href`: at once when it is the preview tab of its group, else when
+   * its tab opens, for a double click whose first click is still opening the page.
+   */
+  keepPage: (href: string) => void
   /** The page of the tab leaves the screen. */
   leaveTab: (group: string, id: string) => void
   closeTab: (group: string, id: string) => void
+  /** Closes the tabs `ids` of the group at once, such as every tab but one. */
+  closeTabs: (group: string, ids: readonly string[]) => void
 }
 
 /** The record with the entry of `key` set to `value`, or the same record when it has it already. */
@@ -77,38 +103,108 @@ function mergeGroups(
 }
 
 /**
+ * The tabs and the preview tabs once the stored ones are read. A page opened before that has a
+ * preview tab: when the stored tabs kept it, it stays kept; otherwise it is the preview tab of its
+ * group, and the stored preview tab leaves the strip, as the next page opened would replace it.
+ */
+function mergeTabs(
+  stored: PersistedTabs | undefined,
+  current: Pick<EditorTabsState, 'groups' | 'preview'>,
+): Pick<EditorTabsState, 'groups' | 'preview'> {
+  const groups = mergeGroups(stored?.groups ?? {}, current.groups)
+  const storedPreview = stored?.preview ?? {}
+  const preview: Record<string, string> = {}
+  for (const group of new Set([...Object.keys(storedPreview), ...Object.keys(current.preview)])) {
+    const storedId = storedPreview[group]
+    const currentId = current.preview[group]
+    const keptBefore =
+      currentId !== storedId && (stored?.groups[group] ?? []).some(({ id }) => id === currentId)
+    if (currentId === undefined || keptBefore) {
+      if (storedId !== undefined) preview[group] = storedId
+      continue
+    }
+    preview[group] = currentId
+    if (storedId !== undefined && storedId !== currentId) {
+      groups[group] = (groups[group] ?? []).filter(({ id }) => id !== storedId)
+    }
+  }
+  // A stored preview tab that is not among the stored tabs is dropped.
+  const open = Object.entries(preview).filter(([group, id]) =>
+    (groups[group] ?? []).some((tab) => tab.id === id),
+  )
+  return { groups, preview: Object.fromEntries(open) }
+}
+
+/**
  * The editor tabs of every project on this device; a group is one project, and holds the tabs of
  * every feature. Workbench reads them after the first render.
  */
 export const useEditorTabsStore = create<EditorTabsState>()(
   persist(
-    (set) => ({
+    (set, get) => ({
       groups: {},
+      preview: {},
       onScreen: {},
       lastShown: {},
-      openTab: (group, tab) => {
+      keepNext: null,
+      openTab: (group, tab, options = {}) => {
         set((state) => {
+          const asked = state.keepNext === tab.href
+          const keep = options.keep === true || asked
           const tabs = state.groups[group] ?? []
-          const placed = placeTab(tabs, tab, state.lastShown[group])
+          const isOpen = tabs.some(({ id }) => id === tab.id)
+          const previewId = state.preview[group]
+          const replaces = !isOpen && !keep && tabs.some(({ id }) => id === previewId)
+          const placed = replaces
+            ? tabs.map((open) => (open.id === previewId ? tab : open))
+            : placeTab(tabs, tab, state.lastShown[group])
+          let preview = state.preview
+          if (keep) preview = withoutEntry(preview, group, tab.id)
+          else if (!isOpen) preview = withEntry(preview, group, tab.id)
           return {
             groups: placed === tabs ? state.groups : { ...state.groups, [group]: placed },
+            preview,
+            keepNext: asked ? null : state.keepNext,
             onScreen: withEntry(state.onScreen, group, tab.id),
             lastShown: withEntry(state.lastShown, group, tab.id),
           }
+        })
+      },
+      keepTab: (group, id) => {
+        set((state) => ({ preview: withoutEntry(state.preview, group, id) }))
+      },
+      keepPage: (href) => {
+        set((state) => {
+          for (const [group, tabs] of Object.entries(state.groups)) {
+            const open = tabs.find((tab) => tab.href === href)
+            if (open !== undefined) return { preview: withoutEntry(state.preview, group, open.id) }
+          }
+          return { keepNext: href }
         })
       },
       leaveTab: (group, id) => {
         set((state) => ({ onScreen: withoutEntry(state.onScreen, group, id) }))
       },
       closeTab: (group, id) => {
-        set((state) => ({
-          groups: {
-            ...state.groups,
-            [group]: (state.groups[group] ?? []).filter((tab) => tab.id !== id),
-          },
-          // A closed tab is not the tab to open the next one after.
-          lastShown: withoutEntry(state.lastShown, group, id),
-        }))
+        get().closeTabs(group, [id])
+      },
+      closeTabs: (group, ids) => {
+        set((state) => {
+          const closing = new Set(ids)
+          const withoutClosed = (record: Record<string, string>) => {
+            const id = record[group]
+            return id !== undefined && closing.has(id) ? withoutEntry(record, group, id) : record
+          }
+          return {
+            groups: {
+              ...state.groups,
+              [group]: (state.groups[group] ?? []).filter((tab) => !closing.has(tab.id)),
+            },
+            preview: withoutClosed(state.preview),
+            // A closed tab is not the tab to open the next one after.
+            lastShown: withoutClosed(state.lastShown),
+          }
+        })
       },
     }),
     {
@@ -118,14 +214,11 @@ export const useEditorTabsStore = create<EditorTabsState>()(
       storage: persistStorage<PersistedTabs>({
         ready: (): boolean => useEditorTabsStore.persist.hasHydrated(),
       }),
-      partialize: ({ groups }): PersistedTabs => ({ groups }),
-      merge: (persisted, current) => {
-        const stored = parseStored(persistedTabsSchema, persisted)
-        return {
-          ...current,
-          groups: mergeGroups(stored?.groups ?? {}, current.groups),
-        }
-      },
+      partialize: ({ groups, preview }): PersistedTabs => ({ groups, preview }),
+      merge: (persisted, current) => ({
+        ...current,
+        ...mergeTabs(parseStored(persistedTabsSchema, persisted), current),
+      }),
     },
   ),
 )
@@ -138,9 +231,17 @@ export function projectTabGroup(projectId: string): string {
   return projectId
 }
 
-/** The tab to show after closing tab `id`: the next one, else the previous one. */
-export function neighborTab(tabs: EditorTab[], id: string): EditorTab | undefined {
+/**
+ * The tab to show after closing the tabs `closing`, among them tab `id`: the next tab that stays
+ * open, else the previous one.
+ */
+export function neighborTab(
+  tabs: EditorTab[],
+  id: string,
+  closing: readonly string[] = [id],
+): EditorTab | undefined {
   const index = tabs.findIndex((tab) => tab.id === id)
   if (index === -1) return undefined
-  return tabs[index + 1] ?? tabs[index - 1]
+  const stays = (tab: EditorTab) => !closing.includes(tab.id)
+  return tabs.slice(index + 1).find(stays) ?? tabs.slice(0, index).findLast(stays)
 }

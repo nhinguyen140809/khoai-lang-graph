@@ -159,7 +159,10 @@ describe('ProjectWorkspace', () => {
       ),
     )
 
-    expect(screen.getByRole('link', { name: 'Settings' })).toHaveAttribute('aria-current', 'page')
+    expect(screen.getByRole('link', { name: 'Settings, preview' })).toHaveAttribute(
+      'aria-current',
+      'page',
+    )
   })
 
   it('has no side panel without features', () => {

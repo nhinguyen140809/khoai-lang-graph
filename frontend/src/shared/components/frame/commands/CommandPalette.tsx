@@ -20,7 +20,8 @@ import { useCommandRegistryStore } from './command-registry.store'
 
 /**
  * Search and commands, opened with Ctrl+K or the search box of the top bar. It lists the commands
- * that the components on screen register with `useCommands`, and closes when one is chosen.
+ * that the components on screen register with `useCommands`, and closes when one is chosen. Its
+ * rows use the text size of the frame, one step larger than the menus of the components.
  */
 export function CommandPalette() {
   const open = useCommandPaletteStore((state) => state.open)
@@ -40,7 +41,7 @@ export function CommandPalette() {
     >
       {/* This CommandDialog does not render the Command root itself. */}
       <Command>
-        <CommandInput placeholder="Search or run a command" />
+        <CommandInput placeholder="Search or run a command" className="text-sm" />
         <CommandList>
           <CommandEmpty>Nothing found.</CommandEmpty>
           {commandGroups(sources.values()).map(({ heading, commands }) => (
@@ -51,6 +52,7 @@ export function CommandPalette() {
                   // The search matches the group too; the id keeps two equal labels apart.
                   value={`${group} ${label} ${id}`}
                   disabled={run === undefined}
+                  className="min-h-9 text-sm [&_svg:not([class*='size-'])]:size-4"
                   onSelect={() => {
                     setOpen(false)
                     run?.()
@@ -63,7 +65,9 @@ export function CommandPalette() {
                   )}
                   {label}
                   {hotkey !== undefined && (
-                    <CommandShortcut>{hotkeyLabel(hotkey, modifier)}</CommandShortcut>
+                    <CommandShortcut className="text-xs">
+                      {hotkeyLabel(hotkey, modifier)}
+                    </CommandShortcut>
                   )}
                 </CommandItem>
               ))}

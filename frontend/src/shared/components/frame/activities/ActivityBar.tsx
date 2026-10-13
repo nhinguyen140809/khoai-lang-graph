@@ -17,10 +17,10 @@ interface ActivityBarProps {
 }
 
 /**
- * One icon per feature that the screen gives Workbench, then the account menu; a screen that gives
+ * One item per feature that the screen gives Workbench, then the account menu; a screen that gives
  * none, such as the screens outside a project today, shows the account menu only. An item shows
- * the side panel of its feature and leaves the editor as it is; the item of the side panel on
- * screen hides the panel instead.
+ * the icon of its feature with the name under it. It shows the side panel of its feature and
+ * leaves the editor as it is; the item of the side panel on screen hides the panel instead.
  */
 export function ActivityBar({ account }: ActivityBarProps) {
   const { activities } = useActivities()
@@ -28,7 +28,7 @@ export function ActivityBar({ account }: ActivityBarProps) {
   return (
     <nav
       aria-label="Features"
-      className="flex w-12 shrink-0 flex-col items-center gap-1 bg-sidebar py-1.5"
+      className="flex w-16 shrink-0 flex-col items-center gap-1 bg-sidebar py-2"
     >
       {activities
         .filter((activity) => activity.placement !== 'bottom')
@@ -51,20 +51,18 @@ function ActivityItem({ activity }: { activity: Activity }) {
   const sideFeature = useSideFeature()
   const togglePanel = useFrameStore((state) => state.togglePanel)
   const showSideFeature = useFrameStore((state) => state.showSideFeature)
-  const icon = (
-    <span aria-hidden className="flex">
-      {activity.icon}
-    </span>
-  )
 
   if (!isFeatureActivity(activity)) {
+    // The name is on the item; the reason it is not there yet shows beside it.
     return (
-      <ActivityButton aria-disabled="true" tooltip={`${activity.label} (${activity.note})`}>
-        {icon}
-        <span className="sr-only">
-          {activity.label}, {activity.note}
-        </span>
-      </ActivityButton>
+      <Tooltip>
+        <TooltipTrigger asChild>
+          <ActivityButton aria-disabled="true" icon={activity.icon} label={activity.label}>
+            <span className="sr-only">, {activity.note}</span>
+          </ActivityButton>
+        </TooltipTrigger>
+        <TooltipContent side="right">{activity.note}</TooltipContent>
+      </Tooltip>
     )
   }
 
@@ -73,42 +71,48 @@ function ActivityItem({ activity }: { activity: Activity }) {
   return (
     <ActivityButton
       aria-pressed={active}
-      tooltip={activity.label}
+      icon={activity.icon}
+      label={activity.label}
       onClick={() => {
         // Like an editor: the item of the open panel toggles it.
         if (active) togglePanel(PanelRegion.Side)
         else showSideFeature(activity.id)
       }}
     >
-      {icon}
-      <span className="sr-only">{activity.label}</span>
       {activity.badge !== undefined && (
-        <span className="absolute -top-0.5 -right-0.5">{activity.badge}</span>
+        <span className="absolute top-0.5 right-2">{activity.badge}</span>
       )}
     </ActivityButton>
   )
 }
 
 interface ActivityButtonProps extends ComponentProps<'button'> {
-  /** The name of the item, shown on the right while the pointer is over it. */
-  tooltip: string
+  icon: ReactNode
+  /** The name of the feature, under the icon; cut with an ellipsis when it is wider than the bar. */
+  label: string
 }
 
 /**
- * An icon button of the activity bar. Its look follows its state: `aria-pressed` marks the
- * feature whose side panel is shown, and `aria-disabled` a feature planned for later.
+ * An item of the activity bar: the icon in a rounded shape, the name under it, then what the item
+ * adds, such as a badge. Its look follows its state: `aria-pressed` fills the shape of the feature
+ * whose side panel is shown and sets its name in medium weight, the pointer over another item
+ * fills its shape lighter, and `aria-disabled` dims a feature planned for later.
  */
-function ActivityButton({ tooltip, ...props }: ActivityButtonProps) {
+function ActivityButton({ icon, label, children, ...props }: ActivityButtonProps) {
   return (
-    <Tooltip>
-      <TooltipTrigger asChild>
-        <button
-          type="button"
-          className="relative flex size-9 items-center justify-center rounded-md text-muted-foreground transition-colors outline-none not-aria-disabled:hover:text-foreground focus-visible:ring-2 focus-visible:ring-ring/50 aria-disabled:opacity-50 aria-pressed:text-foreground aria-pressed:before:absolute aria-pressed:before:inset-y-1.5 aria-pressed:before:-left-1.5 aria-pressed:before:w-0.5 aria-pressed:before:rounded-full aria-pressed:before:bg-primary [&_svg]:size-5"
-          {...props}
-        />
-      </TooltipTrigger>
-      <TooltipContent side="right">{tooltip}</TooltipContent>
-    </Tooltip>
+    <button
+      type="button"
+      className="group/item relative flex w-14 flex-col items-center gap-1 rounded-md py-1 text-muted-foreground outline-none not-aria-disabled:hover:text-foreground focus-visible:ring-2 focus-visible:ring-ring/50 aria-disabled:opacity-50 aria-pressed:font-medium aria-pressed:text-foreground"
+      {...props}
+    >
+      <span
+        aria-hidden
+        className="flex h-7 w-10 items-center justify-center rounded-full transition-colors group-hover/item:group-not-aria-pressed/item:group-not-aria-disabled/item:bg-sidebar-accent/60 group-aria-pressed/item:bg-sidebar-accent motion-reduce:transition-none [&_svg]:size-5"
+      >
+        {icon}
+      </span>
+      <span className="max-w-full truncate px-0.5 text-xs">{label}</span>
+      {children}
+    </button>
   )
 }

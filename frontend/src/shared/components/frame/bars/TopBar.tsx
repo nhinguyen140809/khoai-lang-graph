@@ -16,6 +16,7 @@ import { useModifierKeyName } from '@/shared/hooks/useModifierKeyName'
 import { paletteHotkey } from '../commands/command.constants'
 import { ariaKeyShortcuts, hotkeyKeys } from '../commands/command.utils'
 import { useCommandPaletteStore } from '../commands/command-palette.store'
+import { LogoMark } from './LogoMark'
 
 interface TopBarProps {
   /** What follows "khoai /": a page name, or the menu of the current project. */
@@ -25,7 +26,7 @@ interface TopBarProps {
 /** The bar at the top of every screen: the app, where the user is, and search. */
 export function TopBar({ crumb }: TopBarProps) {
   return (
-    <header className="flex h-10 shrink-0 items-center gap-3 bg-sidebar px-2 text-xs text-sidebar-foreground">
+    <header className="flex h-14 shrink-0 items-center gap-3 bg-sidebar px-3 text-sm text-sidebar-foreground">
       <Trail crumb={crumb} />
       <SearchButton />
       {/* As wide as the trail, so that the search box stays in the middle of the bar. */}
@@ -56,12 +57,7 @@ function HomeLink() {
       href="/"
       className="flex items-center gap-2 rounded-md px-1 py-0.5 outline-none hover:bg-sidebar-accent focus-visible:ring-2 focus-visible:ring-ring/50"
     >
-      <span
-        aria-hidden
-        className="flex size-4 items-center justify-center rounded-sm bg-primary text-4xs leading-none font-semibold text-primary-foreground"
-      >
-        K
-      </span>
+      <LogoMark />
       khoai
     </Link>
   )
@@ -79,9 +75,9 @@ function SearchButton() {
       onClick={() => {
         setPaletteOpen(true)
       }}
-      className="flex h-7 w-md min-w-0 items-center gap-2 rounded-md border border-input bg-background px-2 text-muted-foreground transition-colors outline-none hover:bg-muted focus-visible:border-ring focus-visible:ring-2 focus-visible:ring-ring/30"
+      className="flex h-9 w-md min-w-0 items-center gap-2 rounded-md border border-input bg-background px-3 text-muted-foreground transition-colors outline-none hover:bg-muted focus-visible:border-ring focus-visible:ring-2 focus-visible:ring-ring/30"
     >
-      <SearchIcon aria-hidden className="size-3.5 shrink-0" />
+      <SearchIcon aria-hidden className="size-4 shrink-0" />
       <span className="truncate">Search or run a command</span>
       <KbdGroup className="ml-auto" aria-hidden>
         {hotkeyKeys(paletteHotkey, modifier).map((key) => (

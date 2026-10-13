@@ -1,8 +1,10 @@
 'use client'
 
 import {
+  BellIcon,
   FileStackIcon,
   GitForkIcon,
+  type LucideIcon,
   NetworkIcon,
   SearchIcon,
   SettingsIcon,
@@ -10,6 +12,7 @@ import {
   XIcon,
 } from 'lucide-react'
 
+import { LogoMark } from '@/shared/components/frame'
 import {
   Breadcrumb,
   BreadcrumbItem,
@@ -17,7 +20,6 @@ import {
   BreadcrumbPage,
   BreadcrumbSeparator,
 } from '@/shared/components/ui/breadcrumb'
-import { Button } from '@/shared/components/ui/button'
 import { Card } from '@/shared/components/ui/card'
 import { Kbd } from '@/shared/components/ui/kbd'
 import {
@@ -27,7 +29,6 @@ import {
 } from '@/shared/components/ui/resizable'
 import { ScrollArea } from '@/shared/components/ui/scroll-area'
 import { Separator } from '@/shared/components/ui/separator'
-import { Tooltip, TooltipContent, TooltipTrigger } from '@/shared/components/ui/tooltip'
 
 import { ArtifactTree } from '../ArtifactTree'
 
@@ -57,14 +58,12 @@ const chatLines = [
 export function WorkspaceCard() {
   return (
     <Card className="gap-0 overflow-hidden py-0">
-      <div className="flex h-9 items-center gap-3 border-b bg-sidebar px-3 text-xs">
-        <span className="flex size-5 items-center justify-center rounded-sm bg-primary text-3xs font-semibold text-primary-foreground">
-          K
-        </span>
+      <div className="flex h-12 items-center gap-3 border-b bg-sidebar px-3 text-sm">
+        <LogoMark />
         <span className="text-muted-foreground">khoai /</span>
         <span className="font-medium">Mentor platform</span>
-        <div className="ml-auto flex h-6 w-72 items-center gap-2 rounded-md border bg-background px-2 text-muted-foreground">
-          <SearchIcon className="size-3.5" />
+        <div className="ml-auto flex h-8 w-72 items-center gap-2 rounded-md border bg-background px-3 text-muted-foreground">
+          <SearchIcon className="size-4" />
           Search or run a command
           <Kbd className="ml-auto">Ctrl K</Kbd>
         </div>
@@ -72,34 +71,20 @@ export function WorkspaceCard() {
       <div className="flex h-80">
         <nav
           aria-label="Features"
-          className="flex w-11 flex-col items-center gap-1 border-r bg-sidebar py-2"
+          className="flex w-16 flex-col items-center gap-1 border-r bg-sidebar py-2"
         >
           {features.map(({ label, Icon, active }) => (
-            <Tooltip key={label}>
-              <TooltipTrigger asChild>
-                <Button
-                  variant={active ? 'solid' : 'ghost'}
-                  color="neutral"
-                  size="icon-sm"
-                  aria-label={label}
-                >
-                  <Icon />
-                </Button>
-              </TooltipTrigger>
-              <TooltipContent side="right">{label}</TooltipContent>
-            </Tooltip>
+            <FeatureItem key={label} label={label} Icon={Icon} active={active === true} />
           ))}
-          <Button variant="ghost" size="icon-sm" aria-label="Settings" className="mt-auto">
-            <SettingsIcon />
-          </Button>
+          <div className="mt-auto">
+            <FeatureItem label="Settings" Icon={SettingsIcon} active={false} />
+          </div>
         </nav>
         <ResizablePanelGroup orientation="horizontal" className="min-w-0 flex-1">
           <ResizablePanel defaultSize="24" minSize="15">
             <ScrollArea className="h-full bg-sidebar">
               <div className="flex flex-col py-2 text-sidebar-foreground">
-                <span className="px-3 pb-1 text-3xs font-medium tracking-wide uppercase">
-                  Artifacts
-                </span>
+                <span className="px-3 pb-1 text-sm font-semibold">Artifacts</span>
                 <ArtifactTree className="px-1" />
               </div>
             </ScrollArea>
@@ -107,13 +92,15 @@ export function WorkspaceCard() {
           <ResizableHandle className="w-px bg-border" />
           <ResizablePanel defaultSize="46" minSize="30">
             <div className="flex h-full flex-col">
-              <div className="flex h-8 items-stretch border-b bg-sidebar text-xs">
+              <div className="flex h-10 items-stretch border-b bg-sidebar text-sm">
                 <span className="flex items-center gap-2 border-r bg-background px-3">
                   REQ-001 Search mentors
-                  <XIcon className="size-3 text-muted-foreground" />
+                  <XIcon className="size-3.5 text-muted-foreground" />
                 </span>
-                <span className="flex items-center px-3 text-muted-foreground">
-                  Requirement specification
+                {/* The preview tab: the next page opened replaces it. */}
+                <span className="flex items-center gap-2 border-r px-3 text-muted-foreground">
+                  <span className="italic">Requirement specification</span>
+                  <XIcon className="size-3.5" />
                 </span>
               </div>
               <div className="flex flex-col gap-3 p-3">
@@ -164,16 +151,39 @@ export function WorkspaceCard() {
         </ResizablePanelGroup>
       </div>
       <Separator />
-      <div className="flex h-6 items-center gap-3 bg-sidebar px-3 font-mono text-3xs text-sidebar-foreground">
+      <div className="flex h-8 items-center gap-3 bg-sidebar px-3 text-xs text-sidebar-foreground">
         <span className="flex items-center gap-1.5">
           <span className="size-1.5 rounded-full bg-warning-strong" aria-hidden />
-          Run 3: waiting for review
+          Waiting for you: Analysis review
         </span>
-        <span>analysis_review</span>
-        <span>step 67</span>
-        <span className="ml-auto">$0.42 of $2.00</span>
-        <span>workflow v1</span>
+        <BellIcon aria-hidden className="ml-auto size-4 text-muted-foreground" />
       </div>
     </Card>
+  )
+}
+
+interface FeatureItemProps {
+  label: string
+  Icon: LucideIcon
+  /** The feature whose side panel is shown. */
+  active: boolean
+}
+
+/** An item of the activity bar: the icon in a rounded shape, the name under it. */
+function FeatureItem({ label, Icon, active }: FeatureItemProps) {
+  return (
+    <button
+      type="button"
+      aria-pressed={active}
+      className="group/item flex w-14 flex-col items-center gap-1 rounded-md py-1 text-muted-foreground outline-none hover:text-foreground focus-visible:ring-2 focus-visible:ring-ring/50 aria-pressed:font-medium aria-pressed:text-foreground"
+    >
+      <span
+        aria-hidden
+        className="flex h-7 w-10 items-center justify-center rounded-full group-hover/item:group-not-aria-pressed/item:bg-sidebar-accent/60 group-aria-pressed/item:bg-sidebar-accent"
+      >
+        <Icon className="size-5" />
+      </span>
+      <span className="max-w-full truncate px-0.5 text-xs">{label}</span>
+    </button>
   )
 }

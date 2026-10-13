@@ -65,6 +65,63 @@ describe('EditorTabs', () => {
     expect(screen.getByRole('link', { name: 'Settings' })).toHaveAttribute('aria-current', 'page')
   })
 
+  it('names the preview tab as such, and keeps it on a double click', async () => {
+    useEditorTabsStore.setState({ preview: { 'p1:search': ambiguity.id } })
+    renderTabs('p1:search')
+
+    const previewTab = screen.getByRole('link', { name: 'AMB-001, preview' })
+    expect(previewTab.closest('li')).toHaveAttribute('data-preview', 'true')
+    await userEvent.dblClick(previewTab)
+
+    expect(useEditorTabsStore.getState().preview['p1:search']).toBeUndefined()
+    expect(screen.getByRole('link', { name: 'AMB-001' }).closest('li')).toHaveAttribute(
+      'data-preview',
+      'false',
+    )
+  })
+
+  it('closes the other tabs from the menu of a tab, and shows the tab that stays', async () => {
+    renderTabs('p1:search')
+
+    fireEvent.contextMenu(screen.getByRole('link', { name: 'AMB-001' }))
+    expect(await screen.findByRole('menuitem', { name: 'Keep open' })).toHaveAttribute(
+      'aria-disabled',
+      'true',
+    )
+    await userEvent.click(screen.getByRole('menuitem', { name: 'Close other tabs' }))
+
+    expect(useEditorTabsStore.getState().groups['p1:search']).toEqual([ambiguity])
+    expect(routerMock.push).toHaveBeenCalledWith(ambiguity.href)
+  })
+
+  it('keeps a preview tab from its menu', async () => {
+    useEditorTabsStore.setState({ preview: { 'p1:search': req.id } })
+    renderTabs('p1:search')
+
+    fireEvent.contextMenu(screen.getByRole('link', { name: 'REQ-001, preview' }))
+    await userEvent.click(await screen.findByRole('menuitem', { name: 'Keep open' }))
+
+    expect(useEditorTabsStore.getState().preview['p1:search']).toBeUndefined()
+  })
+
+  it('lists every open tab at the end of the strip, and closes them all from there', async () => {
+    renderTabs('p1:search')
+
+    await userEvent.click(screen.getByRole('button', { name: 'All open tabs' }))
+    expect((await screen.findAllByRole('menuitem')).map((item) => item.textContent)).toEqual([
+      'REQ-001',
+      'AMB-001',
+      'Close all tabs',
+    ])
+    await userEvent.click(screen.getByRole('menuitem', { name: 'AMB-001' }))
+    expect(routerMock.push).toHaveBeenCalledWith(ambiguity.href)
+
+    await userEvent.click(screen.getByRole('button', { name: 'All open tabs' }))
+    await userEvent.click(await screen.findByRole('menuitem', { name: 'Close all tabs' }))
+    expect(routerMock.push).toHaveBeenLastCalledWith(searchHref)
+    expect(screen.queryByRole('navigation')).not.toBeInTheDocument()
+  })
+
   it('shows the next tab after closing the tab on screen', async () => {
     renderTabs('p1:search')
 

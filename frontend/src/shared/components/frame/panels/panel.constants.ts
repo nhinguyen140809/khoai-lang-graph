@@ -28,8 +28,8 @@ export const panelLayouts: Record<PanelRegion, PanelLayout> = {
   [PanelRegion.Side]: {
     orientation: 'horizontal',
     position: 'before',
-    defaultSize: 260,
-    minSize: 180,
+    defaultSize: 280,
+    minSize: 220,
     maxSize: '50%',
     editorMinSize: '30%',
   },

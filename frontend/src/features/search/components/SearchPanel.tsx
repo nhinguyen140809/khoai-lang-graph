@@ -82,7 +82,7 @@ function Results({ projectId, text, search }: ResultsProps) {
 
   return (
     <div className="flex flex-col gap-1 pb-2">
-      <p className="px-3 text-2xs text-muted-foreground" role="status">
+      <p className="px-3 text-xs text-muted-foreground" role="status">
         {search.data.items.length}
         {search.data.next_cursor !== null && '+'}{' '}
         {search.data.items.length === 1 ? 'result' : 'results'}

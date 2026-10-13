@@ -22,9 +22,7 @@ export function TraceabilityNav({ projectId }: { projectId: string }) {
   return (
     <nav aria-label="Traceability" className="flex flex-col gap-3 px-1 pb-2">
       <section aria-label="Coverage" className="flex flex-col gap-px">
-        <h3 className="px-2 text-3xs font-medium tracking-wide text-muted-foreground uppercase">
-          Coverage
-        </h3>
+        <h3 className="px-2 text-xs font-medium text-muted-foreground">Coverage</h3>
         {coverage.isPending && <LoadingState label="Loading coverage" rows={3} size="compact" />}
         {coverage.isError && (
           <ErrorState
@@ -49,9 +47,7 @@ export function TraceabilityNav({ projectId }: { projectId: string }) {
         ))}
       </section>
       <section aria-label="Views" className="flex flex-col gap-px">
-        <h3 className="px-2 text-3xs font-medium tracking-wide text-muted-foreground uppercase">
-          Views
-        </h3>
+        <h3 className="px-2 text-xs font-medium text-muted-foreground">Views</h3>
         <Link
           href={traceabilityHref(projectId)}
           aria-current={view === null && gap === null ? 'page' : undefined}

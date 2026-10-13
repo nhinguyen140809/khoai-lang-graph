@@ -4,7 +4,7 @@ import { ScrollArea } from '@/shared/components/ui/scroll-area'
 import { Surface } from '@/shared/components/ui/surface'
 
 interface SidePanelProps {
-  /** The name of the panel, such as "Artifacts"; shown in capitals. */
+  /** The name of the panel, such as "Artifacts". */
   title: string
   /** Buttons at the right of the title, such as a button that collapses every node of a tree. */
   actions?: ReactNode
@@ -15,8 +15,8 @@ interface SidePanelProps {
 export function SidePanel({ title, actions, children }: SidePanelProps) {
   return (
     <Surface as="aside" aria-label={title} className="flex h-full flex-col text-sidebar-foreground">
-      <div className="flex h-9 shrink-0 items-center justify-between gap-2 pr-1 pl-3">
-        <h2 className="truncate text-2xs font-medium tracking-wide uppercase">{title}</h2>
+      <div className="flex h-10 shrink-0 items-center justify-between gap-2 pr-1 pl-3">
+        <h2 className="truncate text-sm font-semibold">{title}</h2>
         {actions !== undefined && <div className="flex items-center gap-0.5">{actions}</div>}
       </div>
       <ScrollArea className="min-h-0 flex-1">{children}</ScrollArea>

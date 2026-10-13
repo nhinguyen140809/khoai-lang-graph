@@ -7,6 +7,7 @@ import { routerMock } from '@/test/next-mocks.utils'
 
 import { useFrameStore } from '../../../frame.store'
 import { PanelRegion } from '../../../panels/panel.constants'
+import { useEditorTabsStore } from '../../../tabs/editor-tabs.store'
 import { ActivitiesContext } from '../../ActivitiesContext'
 import type { Activity } from '../../activity.types'
 import { useOpenPage } from '../useOpenPage'
@@ -30,6 +31,7 @@ function wrapper({ children }: { children: ReactNode }) {
 beforeEach(() => {
   routerMock.push.mockClear()
   useFrameStore.setState(useFrameStore.getInitialState())
+  useEditorTabsStore.setState(useEditorTabsStore.getInitialState())
 })
 
 describe('useOpenPage', () => {
@@ -51,5 +53,14 @@ describe('useOpenPage', () => {
 
     expect(routerMock.push).toHaveBeenCalledWith('/')
     expect(useFrameStore.getState().sideFeature).toBeNull()
+  })
+
+  it('asks to keep the tab of the page when told to keep it', () => {
+    const { result } = renderHook(() => useOpenPage(), { wrapper })
+
+    result.current('/projects/p1/artifacts/a1' as Route, { keep: true })
+
+    expect(useEditorTabsStore.getState().keepNext).toBe('/projects/p1/artifacts/a1')
+    expect(routerMock.push).toHaveBeenCalledWith('/projects/p1/artifacts/a1')
   })
 })
