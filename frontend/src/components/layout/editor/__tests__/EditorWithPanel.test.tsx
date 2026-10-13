@@ -6,7 +6,7 @@ import { useFrameStore } from '../../frame.store'
 import { EditorWithPanel } from '../EditorWithPanel'
 
 beforeEach(() => {
-  useFrameStore.setState({ bottomPanelVisible: true })
+  useFrameStore.setState(useFrameStore.getInitialState())
 })
 
 describe('EditorWithPanel', () => {

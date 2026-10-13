@@ -36,7 +36,7 @@ const activities: Activity[] = [
 beforeEach(() => {
   setPathname('/projects/p1/artifacts')
   useEditorTabsStore.setState({ groups: {}, lastHrefs: {} })
-  useFrameStore.setState({ sidePanelVisible: true, sideFeature: null })
+  useFrameStore.setState(useFrameStore.getInitialState())
 })
 
 function tab(id: string): EditorTab {

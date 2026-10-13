@@ -4,31 +4,29 @@ import { persist } from 'zustand/middleware'
 
 import { parseStored, persistStorage } from '@/lib/browser-storage.utils'
 
-export const SIDE_PANEL_DEFAULT_WIDTH = 260
-export const BOTTOM_PANEL_DEFAULT_HEIGHT = 240
+/** The panels of the frame that the user resizes and hides. */
+export type PanelRegion = 'side' | 'bottom'
+
+const panelSchema = z.object({
+  visible: z.boolean(),
+  /** In pixels: the width of the side panel, the height of the panel under the editor. */
+  size: z.number().positive(),
+})
 
 const persistedFrameSchema = z.object({
-  sidePanelVisible: z.boolean(),
   /** The id of the feature whose side panel is shown, once chosen; the editor is not tied to it. */
   sideFeature: z.string().nullable().default(null),
-  /** Width of the side panel in pixels; it keeps its width when the window is resized. */
-  sidePanelWidth: z.number().positive(),
-  bottomPanelVisible: z.boolean(),
-  /** Height of the panel under the editor in pixels. */
-  bottomPanelHeight: z.number().positive(),
+  panels: z.object({ side: panelSchema, bottom: panelSchema }),
 })
 
 type PersistedFrame = z.infer<typeof persistedFrameSchema>
 
 interface FrameState extends PersistedFrame {
-  toggleSidePanel: () => void
   setSideFeature: (id: string) => void
   /** Shows the side panel of a feature, and the side panel if it was hidden. */
   showSideFeature: (id: string) => void
-  setSidePanelVisible: (visible: boolean) => void
-  setSidePanelWidth: (width: number) => void
-  toggleBottomPanel: () => void
-  setBottomPanelHeight: (height: number) => void
+  togglePanel: (region: PanelRegion) => void
+  setPanelSize: (region: PanelRegion, size: number) => void
 }
 
 /**
@@ -39,31 +37,30 @@ interface FrameState extends PersistedFrame {
 export const useFrameStore = create<FrameState>()(
   persist(
     (set) => ({
-      sidePanelVisible: true,
       sideFeature: null,
-      sidePanelWidth: SIDE_PANEL_DEFAULT_WIDTH,
-      bottomPanelVisible: true,
-      bottomPanelHeight: BOTTOM_PANEL_DEFAULT_HEIGHT,
-      toggleSidePanel: () => {
-        set((state) => ({ sidePanelVisible: !state.sidePanelVisible }))
+      panels: {
+        side: { visible: true, size: 260 },
+        bottom: { visible: true, size: 240 },
       },
       setSideFeature: (sideFeature) => {
         set({ sideFeature })
       },
       showSideFeature: (sideFeature) => {
-        set({ sideFeature, sidePanelVisible: true })
+        set((state) => ({
+          sideFeature,
+          panels: { ...state.panels, side: { ...state.panels.side, visible: true } },
+        }))
       },
-      setSidePanelVisible: (sidePanelVisible) => {
-        set({ sidePanelVisible })
+      togglePanel: (region) => {
+        set((state) => {
+          const panel = state.panels[region]
+          return { panels: { ...state.panels, [region]: { ...panel, visible: !panel.visible } } }
+        })
       },
-      setSidePanelWidth: (sidePanelWidth) => {
-        set({ sidePanelWidth })
-      },
-      toggleBottomPanel: () => {
-        set((state) => ({ bottomPanelVisible: !state.bottomPanelVisible }))
-      },
-      setBottomPanelHeight: (bottomPanelHeight) => {
-        set({ bottomPanelHeight })
+      setPanelSize: (region, size) => {
+        set((state) => ({
+          panels: { ...state.panels, [region]: { ...state.panels[region], size } },
+        }))
       },
     }),
     {
@@ -73,19 +70,7 @@ export const useFrameStore = create<FrameState>()(
       storage: persistStorage<PersistedFrame>({
         ready: (): boolean => useFrameStore.persist.hasHydrated(),
       }),
-      partialize: ({
-        sidePanelVisible,
-        sideFeature,
-        sidePanelWidth,
-        bottomPanelVisible,
-        bottomPanelHeight,
-      }): PersistedFrame => ({
-        sidePanelVisible,
-        sideFeature,
-        sidePanelWidth,
-        bottomPanelVisible,
-        bottomPanelHeight,
-      }),
+      partialize: ({ sideFeature, panels }): PersistedFrame => ({ sideFeature, panels }),
       merge: (persisted, current) => ({
         ...current,
         ...parseStored(persistedFrameSchema, persisted),

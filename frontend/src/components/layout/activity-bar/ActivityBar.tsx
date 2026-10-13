@@ -48,7 +48,7 @@ export function ActivityBar({ account }: ActivityBarProps) {
 
 function ActivityItem({ activity }: { activity: Activity }) {
   const sideFeature = useSideFeature()
-  const toggleSidePanel = useFrameStore((state) => state.toggleSidePanel)
+  const togglePanel = useFrameStore((state) => state.togglePanel)
   const showSideFeature = useFrameStore((state) => state.showSideFeature)
   const icon = (
     <span aria-hidden className="flex">
@@ -75,7 +75,7 @@ function ActivityItem({ activity }: { activity: Activity }) {
       tooltip={activity.label}
       onClick={() => {
         // Like an editor: the item of the open panel toggles it.
-        if (active) toggleSidePanel()
+        if (active) togglePanel('side')
         else showSideFeature(activity.id)
       }}
     >

@@ -57,7 +57,7 @@ const activities: Activity[] = [
 
 beforeEach(() => {
   setPathname('/projects/p1/console/t1')
-  useFrameStore.setState({ sidePanelVisible: true, sideFeature: null })
+  useFrameStore.setState(useFrameStore.getInitialState())
 })
 
 function withActivities(given: Activity[]) {
@@ -116,10 +116,10 @@ describe('ActivityBar', () => {
     renderBar()
 
     await userEvent.click(screen.getByRole('button', { name: /^Console/ }))
-    expect(useFrameStore.getState().sidePanelVisible).toBe(false)
+    expect(useFrameStore.getState().panels.side.visible).toBe(false)
 
     await userEvent.click(screen.getByRole('button', { name: 'Artifacts' }))
-    expect(useFrameStore.getState().sidePanelVisible).toBe(true)
+    expect(useFrameStore.getState().panels.side.visible).toBe(true)
     expect(useFrameStore.getState().sideFeature).toBe('artifacts')
   })
 
