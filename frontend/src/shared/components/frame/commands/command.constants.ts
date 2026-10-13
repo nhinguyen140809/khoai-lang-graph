@@ -1,4 +1,4 @@
-import type { CommandHotkey } from './command.types'
+import type { Hotkey } from '@/shared/lib/hotkey.utils'
 
 /**
  * The groups of the palette that the frame and the features share. A feature names a group of its
@@ -12,4 +12,4 @@ export const PaletteGroup = {
 } as const
 
 /** Opens and closes the palette, as the search box of the top bar does. */
-export const paletteHotkey: CommandHotkey = { key: 'k', mod: true }
+export const paletteHotkey: Hotkey = { key: 'k', mod: true }

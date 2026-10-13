@@ -1,17 +1,21 @@
 // The frame of every screen. Code outside this folder imports it from here, so the files can move
-// between its folders; files inside the folder import each other with relative paths.
+// between its folders; files inside the folder import each other with relative paths. The index
+// gives components, hooks and types; the stores stay inside the frame, behind its hooks.
 export type { Activity, FeatureActivity, TabIcons } from './activities/activity.types'
-export { useOpenPage } from './activities/hooks/useOpenPage'
-export { LogoMark } from './bars/LogoMark'
-export { PageCrumb } from './bars/PageCrumb'
+export { LogoMark } from './bars/components/LogoMark'
+export { PageCrumb } from './bars/components/PageCrumb'
 export { PaletteGroup } from './commands/command.constants'
 export type { PaletteCommand } from './commands/command.types'
 export { useCommands } from './commands/hooks/useCommands'
-export { type BottomPanelSection, BottomPanelSections } from './panels/BottomPanelSections'
-export { EditorWithBottomPanel } from './panels/EditorWithBottomPanel'
-export { SidePanel } from './panels/SidePanel'
-export { SidePanelSection } from './panels/SidePanelSection'
-export { ProjectWorkspace } from './ProjectWorkspace'
-export { projectTabGroup } from './tabs/editor-tabs.store'
+export { ProjectWorkspace } from './components/ProjectWorkspace'
+export { Workbench } from './components/Workbench'
+export { useOpenPage } from './hooks/useOpenPage'
+export {
+  type BottomPanelSection,
+  BottomPanelSections,
+} from './panels/components/BottomPanelSections'
+export { EditorWithBottomPanel } from './panels/components/EditorWithBottomPanel'
+export { SidePanel } from './panels/components/SidePanel'
+export { SidePanelSection } from './panels/components/SidePanelSection'
+export { projectTabGroup } from './tabs/editor-tabs.utils'
 export { useEditorTab } from './tabs/hooks/useEditorTab'
-export { Workbench } from './Workbench'

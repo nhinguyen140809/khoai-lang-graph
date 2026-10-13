@@ -2,7 +2,8 @@ import { beforeEach, describe, expect, it } from 'vitest'
 
 import { browserStorage } from '@/shared/lib/browser-storage.utils'
 
-import { neighborTab, useEditorTabsStore } from '../editor-tabs.store'
+import { useEditorTabsStore } from '../editor-tabs.store'
+import { neighborTab } from '../editor-tabs.utils'
 
 const STORAGE_KEY = useEditorTabsStore.persist.getOptions().name ?? ''
 const req = { id: 'i1', title: 'REQ-001', href: '/projects/p1/search/i1' }

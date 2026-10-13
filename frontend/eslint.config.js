@@ -48,6 +48,40 @@ const sharedCodePatterns = [
   },
 ]
 
+// The layers of the frame (README: Frame). A component reaches the state of the frame through
+// hooks, a store stands alone so that hooks are the one place that combines stores, and the pure
+// files hold no React and no state.
+const frameComponentPattern = {
+  regex: '\\.store$',
+  allowTypeImports: true,
+  message:
+    'A component of the frame reads and changes its state through the hooks of its folder, not a store.',
+}
+
+const frameStorePattern = {
+  regex: '\\.store$|/hooks/',
+  message: 'A store of the frame imports no other store and no hook. Combine stores in a hook.',
+}
+
+const frameHookPattern = {
+  regex: '/components/(?!ui/)',
+  message: 'A hook of the frame imports no component.',
+}
+
+const framePurePaths = [
+  {
+    name: 'react',
+    allowTypeImports: true,
+    message: 'A pure file of the frame holds no React code.',
+  },
+  { name: 'zustand', message: 'A pure file of the frame holds no state.' },
+]
+
+const framePurePattern = {
+  regex: '\\.store$|/hooks/',
+  message: 'A pure file of the frame imports no store and no hook.',
+}
+
 const featurePatterns = [
   {
     group: ['@/features', '@/features/**', '@/app/**', '@/providers/**'],
@@ -181,6 +215,50 @@ export default defineConfig([
       'no-restricted-imports': [
         'error',
         { paths: wrappedLibraryImports, patterns: sharedCodePatterns },
+      ],
+    },
+  },
+  {
+    // The layers of the frame: components (README: Frame).
+    files: ['src/shared/components/frame/**/*.tsx'],
+    ignores: ['**/__tests__/**'],
+    rules: {
+      'no-restricted-imports': [
+        'error',
+        { paths: wrappedLibraryImports, patterns: [...sharedCodePatterns, frameComponentPattern] },
+      ],
+    },
+  },
+  {
+    // The layers of the frame: hooks.
+    files: ['src/shared/components/frame/**/hooks/*.ts'],
+    rules: {
+      'no-restricted-imports': [
+        'error',
+        { paths: wrappedLibraryImports, patterns: [...sharedCodePatterns, frameHookPattern] },
+      ],
+    },
+  },
+  {
+    // The layers of the frame: stores.
+    files: ['src/shared/components/frame/**/*.store.ts'],
+    rules: {
+      'no-restricted-imports': [
+        'error',
+        { paths: wrappedLibraryImports, patterns: [...sharedCodePatterns, frameStorePattern] },
+      ],
+    },
+  },
+  {
+    // The layers of the frame: pure files.
+    files: ['src/shared/components/frame/**/*.@(utils|constants|types|schema).ts'],
+    rules: {
+      'no-restricted-imports': [
+        'error',
+        {
+          paths: [...wrappedLibraryImports, ...framePurePaths],
+          patterns: [...sharedCodePatterns, framePurePattern],
+        },
       ],
     },
   },

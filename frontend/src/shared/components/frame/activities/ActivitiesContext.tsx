@@ -1,6 +1,6 @@
 'use client'
 
-import { createContext, useContext } from 'react'
+import { createContext } from 'react'
 
 import type { Activity, TabIcons } from './activity.types'
 
@@ -11,11 +11,7 @@ interface FrameActivities {
 }
 
 /**
- * The features of the screen and the icons of their tabs. Workbench provides them; the activity
- * bar, the side panel, the tabs and the command palette read them.
+ * The features of the screen and the icons of their tabs. Workbench provides them, and
+ * `useActivities` reads them.
  */
 export const ActivitiesContext = createContext<FrameActivities>({ activities: [], tabIcons: {} })
-
-export function useActivities() {
-  return useContext(ActivitiesContext)
-}

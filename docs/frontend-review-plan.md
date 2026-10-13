@@ -163,42 +163,41 @@ Requirements: the folder and the name of a file tell where a piece of state live
 | Option | Evaluation |
 |---|---|
 | a. Keep the code, write the rules in CONTRIBUTING | No change to review, but nothing checks the rules and problems 1 to 6 stay |
-| b. One store per folder (panels, activities, tabs, commands), each behind its hooks | Each folder owns its state, but showing a feature becomes a hook over two stores, and a third stored key is read after the first render: five stores |
-| c. Layers by kind of file across the frame: pure code, stores, hooks, components. The stores are private to the frame; each folder is reached through one or two hooks, which combine stores, the router and the context (the custom hooks over zustand of [Working with Zustand](https://tkdodo.eu/blog/working-with-zustand)) | Three stores instead of four, each rule of a change in one hook, the layers checked by ESLint; the hooks are thin, and the files move |
+| b. Layers by kind of file across the frame, with one store at the root for the layout (the side feature and the panels); the stores reached through hooks | Three stores, but the layout store belongs to two folders, and a folder no longer holds all of its own code |
+| c. Folders by part of the frame, as today, each split into the same layers (`components/`, `hooks/`, its store, its pure files); the root holds only what several folders use. The stores are private to the frame and reached through the hooks of their folder (the custom hooks over zustand of [Working with Zustand](https://tkdodo.eu/blog/working-with-zustand)) | Each folder owns its state and the rules of its changes; showing a feature becomes a hook over two folders; a third stored key is read after the first render |
 | d. Keep the panel sizes in a cookie that the layout reads on the server | Removes the second render and the remount of the split, but the project layout reads cookies on every request, and the tabs and the side feature still live in localStorage |
 
-Decision: c. The layers, each importing only the layers above it in this table:
+Decision: c (2026-10-13; b at first, then c at the owner's request, to keep the folders by part and split the layers inside each). The layers, in every folder, each importing only the layers above it in this table:
 
 | Layer | Files | May import | Must not |
 |---|---|---|---|
-| Pure | `*.types.ts`, `*.constants.ts`, `*.utils.ts` | Other pure files, `shared/lib` | Import React or zustand |
-| Store | `*.store.ts` | Pure files, `shared/lib` | Import another store, a hook, the router or a context |
+| Pure | `*.types.ts`, `*.constants.ts`, `*.utils.ts`, `*.schema.ts` | Other pure files, `shared/lib` | Import React other than `import type`, or zustand |
+| Store | `*.store.ts` | Pure files, `shared/lib` | Import another store or a hook |
 | Hook | `hooks/use*.ts` | Stores, pure files, other hooks, the router, the activities context | Import a component |
-| Component | `*.tsx` | Hooks, pure files, `shared/components/ui` | Import a store other than `import type`, call `getState()` |
+| Component | `components/*.tsx` | Hooks, pure files, `shared/components/ui` | Import a store other than `import type` |
 
-- Stores: `frame.store.ts` (the layout of the frame: the side feature and the panels; stored), `tabs/editor-tabs.store.ts` (the tabs; the stored fields and the session fields apart in its type), and `commands/commands.store.ts` (the palette open and the commands registered; not stored), which replaces the two command stores. The index exports components, hooks and types, never a store.
+- Stores, each in the folder that owns it: `panels/panels.store.ts` (the size and visibility of the panels; stored), `activities/side-feature.store.ts` (the chosen feature; stored), `tabs/editor-tabs.store.ts` (the tabs; its stored part is `TabStrips`), and `commands/commands.store.ts` (the palette open and the commands registered; not stored), which replaces the two command stores. `frame.store.ts` goes. The index exports components, hooks and types, never a store.
+- The root holds what several folders use: `components/` (`Workbench`, `ProjectWorkspace`) and `hooks/`, with `useRestoreFrame` (`Workbench` reads the three stored stores once after the first render, then stores the side feature shown when none was chosen; it replaces the effect of `Workbench` and `usePinSideFeature`) and `useOpenPage` (moved from `activities/`).
 - Hooks, one or two per folder:
-  - `hooks/useRestoreFrame` (root): `Workbench` reads both stored stores once after the first render, then stores the side feature shown when none was chosen. It replaces the effect of `Workbench` and `usePinSideFeature`.
-  - `hooks/useOpenPage` (root, moved from `activities/`): it changes the side feature and the tabs, so it sits above both folders.
-  - `activities/hooks/useSideFeature`: the feature shown, `show(id)`, and `toggle(id)` (the item of the feature shown hides the side panel). `FeatureCommands` moves to `activities/`.
-  - `panels/hooks/usePanel(region)`: whether the panel is shown, its stored size read once, whether the stored state is read, `toggle` and `resize`. It replaces `useFrameHydrated`; the commands that toggle a panel take `toggle` from it.
-  - `tabs/hooks/useEditorTab` (for pages) and `tabs/hooks/useEditorTabs(group, rootHref)` (for the strip: the tabs, the tab on screen, the preview tab, `keep`, `close`). It replaces `useCloseTabs` and the selectors of `EditorTabs`.
-  - `commands/hooks/useCommands` (registers) and `commands/hooks/useCommandPalette` (open, toggle, the commands by group), for `TopBar` and `CommandPalette`.
-- The stores and the pure files are under every folder, so any hook may read them. Between folders, hooks and components import in one direction: the root, then `tabs/`, `activities/`, `panels/`, `commands/`.
-- Hotkeys: Ctrl+K is a command that `CommandPalette` registers, so `useHotkey` goes; `matchesHotkey`, `hotkeyKeys`, `hotkeyLabel` and `ariaKeyShortcuts` move to `shared/lib/hotkey.utils.ts`, with one `Hotkey` type.
-- The pure functions of the tabs store (`placeTab`, `mergeTabs`, `neighborTab`, `projectTabGroup`, `withEntry`, `withoutEntry`) move to `tabs/editor-tabs.utils.ts`, with their tests.
-- ESLint reports, in `src/shared/components/frame/**/*.tsx`, an import of a `*.store` file that is not `import type`, and in `*.store.ts`, an import of another store or of a hook.
+  - `activities/hooks/useActivities` (the context), `useSideFeature`: the feature shown, `show(id)` and `toggle(id)` (the item of the feature shown hides the side panel). `FeatureCommands` moves to `activities/`.
+  - `panels/hooks/usePanel(region)`: whether the panel is shown, whether the stored state is read, its stored size read once, `show`, `toggle` and `resize`. It replaces `useFrameHydrated`; the commands that toggle a panel take `toggle` from it.
+  - `tabs/hooks/useEditorTab` (for pages) and `useEditorTabs(group, rootHref)` (for the strip: the tabs, the tab on screen, the preview tab, `keep`, `close`), which replaces `useCloseTabs`.
+  - `commands/hooks/useCommands` (registers) and `useCommandPalette` (open, toggle, the commands by group), for `TopBar` and `CommandPalette`.
+- A store is used by the hooks of its folder, and by the two hooks of the root; another folder uses those hooks. Between folders, hooks and components import in one direction, each folder only the ones after it: the root, `tabs/` and `bars/`, `activities/`, `panels/`, `commands/`.
+- Hotkeys: Ctrl+K is a command that `CommandPalette` registers (Show all commands), so `useHotkey` goes; `matchesHotkey`, `hotkeyKeys`, `hotkeyLabel` and `ariaKeyShortcuts` move to `shared/lib/hotkey.utils.ts`, with one `Hotkey` type.
+- The tabs: the schema and `EditorTab` in `tabs/editor-tabs.schema.ts`, the pure functions of the store (`placeTab`, `mergeTabs`, `neighborTab`, `projectTabGroup`, `withEntry`, `withoutEntry`) in `tabs/editor-tabs.utils.ts`.
+- ESLint checks the four layers in `src/shared/components/frame/`: a component imports no store other than `import type`, a hook no component, a store no other store and no hook, a pure file no React code, no zustand, no store and no hook.
 
-Trade-offs: the frame keeps eight hooks (seven of its own and `useHotkey` today), but they replace the 36 direct reads of a store; Ctrl+K is listed in the palette as a command; the tests of the moved files change their paths; the README section Frame and the file list of P3 change with the code.
+Trade-offs: the stored keys `panels` and `side-feature` replace `frame`, so the sizes and the side feature stored before are dropped once; the frame has nine hooks (eight with `useHotkey` before), which replace the 36 direct reads of a store; Ctrl+K is listed in the palette; the tests move with their files.
 
-Tasks, on `feat/fe/layout` (unstaged, for review) and then on `feat/fe/mock`:
+Done on 2026-10-13, on `feat/fe/layout` (unstaged, for review) and on `feat/fe/mock`:
 
-1. Hotkeys: `shared/lib/hotkey.utils.ts` and its test; Ctrl+K as a command; remove `useHotkey`.
+1. Hotkeys: `shared/lib/hotkey.utils.ts` and its test; Ctrl+K as a command; `useHotkey` removed.
 2. Commands: `commands.store.ts`, `useCommandPalette`; `TopBar` and `CommandPalette` use the hook.
-3. Panels: `usePanel`; `EditorSplit`, `EditorWithBottomPanel`, `ProjectWorkspace` and the activity bar use it; remove `useFrameHydrated`.
-4. Side feature: `useSideFeature` with `show` and `toggle`; `useRestoreFrame`; remove `usePinSideFeature`; move `FeatureCommands` to `activities/`.
-5. Tabs: `editor-tabs.utils.ts`; `useEditorTabs`; remove `useCloseTabs`; move `useOpenPage` to the root `hooks/`.
-6. Index without stores; the ESLint rules of the layers; the README section Frame; the file lists of P3 and P10.
+3. Panels: `panels.store.ts`, `usePanel`; `EditorSplit`, `EditorWithBottomPanel` and `ProjectWorkspace` use it; `useFrameHydrated` removed.
+4. Side feature: `side-feature.store.ts`, `useActivities`, `useSideFeature` with `show` and `toggle`, `useRestoreFrame` and its test; `usePinSideFeature` removed; `FeatureCommands` in `activities/`.
+5. Tabs: `editor-tabs.schema.ts`, `editor-tabs.utils.ts`, `useEditorTabs`; `useCloseTabs` removed; `useOpenPage` in the root `hooks/`.
+6. Components moved into the `components/` folder of their folder; the index without stores; the ESLint rules of the layers; the README section Frame.
 7. Checks: typecheck, lint of the changed files, `pnpm test src/shared`.
 
 ## 4. PR sequence
@@ -289,9 +288,9 @@ The first PR of the product, as planned. It is additive: nothing on `main` impor
 
 | Group | Files |
 |---|---|
-| Frame | `src/shared/components/frame/`, by what its parts do: the root (`Workbench.tsx`, `ProjectWorkspace.tsx`, `frame.store.ts`, `hooks/useFrameHydrated.ts`, `index.ts`), `activities/` (`ActivityBar.tsx`, `ActivitiesContext.tsx`, `activity.types.ts`, `activity.utils.ts`, `hooks/useSideFeature.ts`, `hooks/usePinSideFeature.ts`, `hooks/useOpenPage.ts`), `panels/` (`EditorSplit.tsx`, `panel.constants.ts`, `SidePanel.tsx`, `SidePanelSection.tsx`, `EditorWithBottomPanel.tsx`, `BottomPanelSections.tsx`), `tabs/` (`EditorTabs.tsx`, `editor-tabs.store.ts`, `hooks/useEditorTab.ts`), `commands/` (`CommandPalette.tsx`, `FeatureCommands.tsx`, `command-palette.store.ts`, `command-registry.store.ts`, `command.constants.ts`, `command.types.ts`, `command.utils.ts`, `hooks/useCommands.ts`), `bars/` (`TopBar.tsx`, `PageCrumb.tsx`, `StatusBar.tsx`) |
-| Unit tests | In the `__tests__/` folder of each folder: ProjectWorkspace; ActivityBar, `activity.utils`, and `useOpenPage` in `activities/hooks/__tests__/`; SidePanelSection, EditorWithBottomPanel, BottomPanelSections; EditorTabs, `editor-tabs.store`, and `useEditorTab` in `tabs/hooks/__tests__/`; TopBar, StatusBar; CommandPalette, `command.utils`, and `useCommands` in `commands/hooks/__tests__/` |
-| Needed by the frame | `src/shared/hooks/useHotkey.ts` and `src/shared/hooks/useModifierKeyName.ts` with their tests, `src/shared/lib/browser-storage.utils.ts` and `src/shared/lib/path.utils.ts` with their tests, `src/shared/components/ui/resizable.tsx`, `src/shared/components/ui/surface.tsx`, `src/test/TestProviders.tsx`, `src/test/next-mocks.utils.ts`, the browser stubs of `src/test/vitest.setup.ts` (hunk: ResizeObserver, matchMedia, scrollIntoView; the pointer capture stub waits for the first test with a select), the storage rule, the `<subject>.config.tsx` naming rule the patterns against relative imports across features and shared code, and the patterns that make `@/shared/components/frame` the only way into the frame, in `eslint.config.js` (hunks), with the naming row and the import lines of CONTRIBUTING |
+| Frame | `src/shared/components/frame/`, by what its parts do, each folder in layers (decision D9): the root (`index.ts`, `components/Workbench.tsx`, `components/ProjectWorkspace.tsx`, `hooks/useRestoreFrame.ts`, `hooks/useOpenPage.ts`), `activities/` (`ActivitiesContext.tsx`, `activity.types.ts`, `activity.utils.ts`, `side-feature.store.ts`, `hooks/useActivities.ts`, `hooks/useSideFeature.ts`, `components/ActivityBar.tsx`, `components/FeatureCommands.tsx`), `panels/` (`panel.constants.ts`, `panels.store.ts`, `hooks/usePanel.ts`, `components/EditorSplit.tsx`, `SidePanel.tsx`, `SidePanelSection.tsx`, `EditorWithBottomPanel.tsx`, `BottomPanelSections.tsx`), `tabs/` (`editor-tabs.schema.ts`, `editor-tabs.utils.ts`, `editor-tabs.store.ts`, `hooks/useEditorTab.ts`, `hooks/useEditorTabs.ts`, `components/EditorTabs.tsx`, `TabItem.tsx`, `TabLabel.tsx`, `OpenTabsMenu.tsx`), `commands/` (`command.constants.ts`, `command.types.ts`, `command.utils.ts`, `commands.store.ts`, `hooks/useCommands.ts`, `hooks/useCommandPalette.ts`, `components/CommandPalette.tsx`), `bars/` (`components/TopBar.tsx`, `PageCrumb.tsx`, `StatusBar.tsx`, `LogoMark.tsx`) |
+| Unit tests | In the `__tests__/` folder next to the file under test: ProjectWorkspace; `useOpenPage` and `useRestoreFrame` in `hooks/__tests__/`; ActivityBar, `activity.utils`; SidePanelSection, EditorWithBottomPanel, BottomPanelSections; EditorTabs, `editor-tabs.store`, and `useEditorTab` in `tabs/hooks/__tests__/`; TopBar, StatusBar; CommandPalette, `command.utils`, and `useCommands` in `commands/hooks/__tests__/` |
+| Needed by the frame | `src/shared/lib/hotkey.utils.ts` and `src/shared/hooks/useModifierKeyName.ts` with their tests, `src/shared/lib/browser-storage.utils.ts` and `src/shared/lib/path.utils.ts` with their tests, `src/shared/components/ui/resizable.tsx`, `src/shared/components/ui/surface.tsx`, `src/test/TestProviders.tsx`, `src/test/next-mocks.utils.ts`, the browser stubs of `src/test/vitest.setup.ts` (hunk: ResizeObserver, matchMedia, scrollIntoView; the pointer capture stub waits for the first test with a select), the storage rule, the `<subject>.config.tsx` naming rule the patterns against relative imports across features and shared code, and the patterns that make `@/shared/components/frame` the only way into the frame and the rules of its layers, in `eslint.config.js` (hunks), with the naming row and the import lines of CONTRIBUTING |
 | Design tokens | `src/app/styles.css`: `text-xs` at 13px with an 18px line, `text-2xs`, `text-3xs` and `text-4xs` (12, 11 and 10px) for labels and indicators, the `editor-text` and `caret-block` utilities. The design system files that use the tokens (`Sample.tsx`, `CodeCard.tsx`, `WorkspaceCard.tsx`, `OverlaysCard.tsx`, `AlertsCard.tsx`, `ChatCard.tsx`); `GraphCard.tsx` and `design-system.fixtures.ts` use the graph tones and go with P15. The CONTRIBUTING rule on bracket values and the token line of `frontend/README.md` |
 | Docs | Section 1 (Frame) of `docs/ui/skeletons.md`, and the Frame section of `frontend/README.md` without what the features bring: the item of a feature in its config, the commands of the console, the projects and the theme |
 
@@ -378,7 +377,7 @@ Endpoint: `GET /projects/{id}/items` with the query. Files: `src/features/search
 
 Search in the command palette (decision D7). Not built yet: build it on `feat/fe/mock` before the cut.
 
-- `command-palette.store.ts` keeps the text typed (`query`); `CommandPalette` reads it into its input and clears it when the palette closes. These are hunks of P3 files.
+- `commands.store.ts` keeps the text typed (`query`), and `useCommandPalette` gives it; `CommandPalette` reads it into its input and clears it when the palette closes. These are hunks of P3 files.
 - The search feature adds `ItemCommands`, passed by the project `layout.tsx` in `commands`. From `MIN_QUERY_LENGTH` (2) characters, it calls `useItemSearch` with the deferred text, so the cache is shared with the side panel, and registers the first results with `useCommands` in a group "Items", each with its key and its title. The server already matched them, so they stay in the list whatever the filter of the palette says: `PaletteCommand` gets a field for that, which the palette passes to `forceMount` of `CommandItem`. A command without `run` shows while the search runs and when it fails.
 - Enter on an item closes the palette and opens the page of the item, which opens its tab.
 - The description of the palette names items too.
@@ -442,7 +441,7 @@ These cannot be copied whole with `git checkout feat/fe/mock -- <path>`: the bra
 | `frontend/README.md`, `frontend/src/mocks/README.md` | P3 to P18 | The tokens line (P3); the mock scenario addresses of a screen when the screen is built |
 | `src/app/(project)/projects/[projectId]/layout.tsx` | P6, P7, P8, P10, P13, P14, P15, P16, P17, P18 | P6: the frame with no activity. Then one activity and its tab icons per feature (D3), the status bar run (P7), `ThemeSync` and `ThemeCommands` (P18) |
 | `src/mocks/msw-browser.setup.ts`, `msw-server.setup.ts` | P4 to P18 | One import and one entry per handler group |
-| `src/shared/components/frame/commands/CommandPalette.tsx`, `command-palette.store.ts` | P3, P10 | P3: the palette. P10: the text typed, kept in the store for the item search (D7) |
+| `src/shared/components/frame/commands/components/CommandPalette.tsx`, `commands.store.ts`, `hooks/useCommandPalette.ts` | P3, P10 | P3: the palette. P10: the text typed, kept in the store for the item search (D7) |
 | `src/test/vitest.setup.ts` | P3, P4, first test with a select | P3: browser stubs. P4: `resetMockData`. The pointer capture stub with the first test that opens a select |
 | `tests/e2e/frame.spec.ts` | P9, P10, P15 | P9: Ctrl+K and the run on the status bar. P10: Ctrl+B. P15: the activity bar and the tabs with the review |
 | `src/features/console/components/Console.tsx`, `commands.constants.ts` | P9, P13, P14, P17 | P9: the base commands. Later: `/export`, the review link, `/run-settings` |
@@ -456,7 +455,7 @@ First consumer of shared code:
 | Code | PR |
 |---|---|
 | `lib/api-fetch.utils`, `lib/auth-redirect.utils`, `lib/query-client.config` | P4 |
-| `shared/lib/browser-storage.utils`, `shared/hooks/useHotkey`, `shared/components/ui/resizable`, `test/TestProviders`, `test/next-mocks.utils` | P3 |
+| `shared/lib/browser-storage.utils`, `shared/lib/hotkey.utils`, `shared/components/ui/resizable`, `test/TestProviders`, `test/next-mocks.utils` | P3 |
 | `shared/lib/relative-time.utils`, `shared/config/run-status.constants`, `shared/hooks/useNow`, `shared/components/state/*` | P6 |
 | `shared/components/ui/edge`, `shared/components/ui/node`, `shared/lib/tone.constants` | P15 |
 | `shared/components/run-config` | P17 |
@@ -496,7 +495,7 @@ For every PR:
 - [x] Uncommitted work committed on `feat/fe/mock` (to be reviewed)
 - [x] E2E specs of the side panel change and `pnpm build` run on `feat/fe/mock`; the `/settings` build fix to be committed
 - [ ] Section 8 decided (at least the workflow-review line)
-- [ ] Decision D9 applied to the frame on `feat/fe/layout` and `feat/fe/mock`
+- [x] Decision D9 applied to the frame on `feat/fe/layout` (to be reviewed) and `feat/fe/mock`
 - [x] `main` run through the five checks in a scratch directory
 - [x] `Frontend CI result` required on `main` (ruleset `protect-main`)
 - [ ] P0 CI merged

@@ -1,6 +1,7 @@
 import { useEffect, useMemo } from 'react'
 
-import { type EditorTab, useEditorTabsStore } from '../editor-tabs.store'
+import type { EditorTab } from '../editor-tabs.schema'
+import { useEditorTabsStore } from '../editor-tabs.store'
 
 /**
  * Opens a tab for the page that calls it, next to the tab shown last, or updates its title. While

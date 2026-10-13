@@ -1,9 +1,9 @@
 import { useEffect, useEffectEvent, useId, useLayoutEffect, useRef } from 'react'
 
-import { matchesHotkey } from '@/shared/hooks/useHotkey'
+import { matchesHotkey } from '@/shared/lib/hotkey.utils'
 
 import type { PaletteCommand } from '../command.types'
-import { useCommandRegistryStore } from '../command-registry.store'
+import { useCommandsStore } from '../commands.store'
 
 /** What the palette shows of the commands, as text: when it changes, they register again. */
 function shownKey(commands: readonly PaletteCommand[]): string {
@@ -28,8 +28,8 @@ function shownKey(commands: readonly PaletteCommand[]): string {
  */
 export function useCommands(commands: readonly PaletteCommand[]) {
   const source = useId()
-  const setCommands = useCommandRegistryStore((state) => state.setCommands)
-  const removeCommands = useCommandRegistryStore((state) => state.removeCommands)
+  const setCommands = useCommandsStore((state) => state.setCommands)
+  const removeCommands = useCommandsStore((state) => state.removeCommands)
   const latest = useRef(commands)
   const shown = shownKey(commands)
 
@@ -63,7 +63,7 @@ export function useCommands(commands: readonly PaletteCommand[]) {
   const onKeyDown = useEffectEvent((event: KeyboardEvent) => {
     const command = commands.find(
       ({ hotkey, run }) =>
-        hotkey !== undefined && run !== undefined && matchesHotkey(event, hotkey.key, hotkey),
+        hotkey !== undefined && run !== undefined && matchesHotkey(event, hotkey),
     )
     if (command?.run === undefined) return
     event.preventDefault()
