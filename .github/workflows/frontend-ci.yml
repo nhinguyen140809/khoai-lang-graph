@@ -1,0 +1,126 @@
+name: Frontend CI
+
+# Runs on every pull request so that the required check "Frontend CI result" always reports. A pull
+# request that changes nothing under frontend/ skips the checks, and a skipped job counts as passed.
+on:
+  pull_request:
+  push:
+    branches: [main]
+    paths: ['frontend/**', '.nvmrc', '.github/workflows/frontend-ci.yml']
+  workflow_dispatch:
+
+concurrency:
+  group: frontend-ci-${{ github.ref }}
+  # A new push to a pull request cancels its older run; a run on main always finishes.
+  cancel-in-progress: ${{ github.event_name == 'pull_request' }}
+
+permissions:
+  contents: read
+
+env:
+  NEXT_TELEMETRY_DISABLED: '1'
+
+jobs:
+  changes:
+    name: Changed files
+    runs-on: ubuntu-latest
+    timeout-minutes: 5
+    permissions:
+      contents: read
+      pull-requests: read
+    outputs:
+      frontend: ${{ steps.diff.outputs.frontend }}
+    steps:
+      - id: diff
+        env:
+          GH_TOKEN: ${{ github.token }}
+          EVENT: ${{ github.event_name }}
+          PR_NUMBER: ${{ github.event.pull_request.number }}
+        run: |
+          # A push to main is already filtered by paths, and a manual run checks everything.
+          if [ "$EVENT" != pull_request ]; then
+            echo frontend=true >> "$GITHUB_OUTPUT"
+            exit 0
+          fi
+          files=$(gh api --paginate "repos/$GITHUB_REPOSITORY/pulls/$PR_NUMBER/files" --jq '.[].filename')
+          if grep -qE '^(frontend/|\.nvmrc$|\.github/workflows/frontend-ci\.yml$)' <<< "$files"; then
+            echo frontend=true >> "$GITHUB_OUTPUT"
+          else
+            echo frontend=false >> "$GITHUB_OUTPUT"
+          fi
+
+  check:
+    name: Checks
+    needs: changes
+    if: needs.changes.outputs.frontend == 'true'
+    runs-on: ubuntu-latest
+    timeout-minutes: 20
+    defaults:
+      run:
+        working-directory: frontend
+    steps:
+      - uses: actions/checkout@v7
+        with:
+          persist-credentials: false
+      # The pnpm version comes from packageManager in package.json.
+      - uses: pnpm/action-setup@v6
+        with:
+          package_json_file: frontend/package.json
+      - uses: actions/setup-node@v7
+        with:
+          node-version-file: .nvmrc
+          cache: pnpm
+          cache-dependency-path: frontend/pnpm-lock.yaml
+      - run: pnpm install --frozen-lockfile
+      # Typecheck first: it generates the route types that the type-aware lint rules read.
+      - run: pnpm typecheck
+      - run: pnpm lint
+      - run: pnpm format:check
+      - run: pnpm test
+      - run: pnpm build
+
+  e2e:
+    name: E2E
+    needs: changes
+    if: needs.changes.outputs.frontend == 'true'
+    runs-on: ubuntu-latest
+    timeout-minutes: 30
+    defaults:
+      run:
+        working-directory: frontend
+    steps:
+      - uses: actions/checkout@v7
+        with:
+          persist-credentials: false
+      - uses: pnpm/action-setup@v6
+        with:
+          package_json_file: frontend/package.json
+      - uses: actions/setup-node@v7
+        with:
+          node-version-file: .nvmrc
+          cache: pnpm
+          cache-dependency-path: frontend/pnpm-lock.yaml
+      - run: pnpm install --frozen-lockfile
+      - run: pnpm exec playwright install --with-deps chromium
+      # Starts the dev server with the API mocks. On a cold server the first tests of a spec can
+      # time out while their routes compile; the retries of the Playwright config cover them.
+      - run: pnpm e2e
+      # The CI reporter writes no HTML report; the traces of retried tests are in test-results.
+      - if: failure()
+        uses: actions/upload-artifact@v7
+        with:
+          name: e2e-test-results
+          path: frontend/test-results
+          retention-days: 7
+
+  # The only required check of main: it fails when a job above failed or was cancelled, and
+  # passes when they passed or were skipped.
+  result:
+    name: Frontend CI result
+    needs: [changes, check, e2e]
+    if: always()
+    runs-on: ubuntu-latest
+    timeout-minutes: 5
+    steps:
+      - if: contains(needs.*.result, 'failure') || contains(needs.*.result, 'cancelled')
+        run: exit 1
