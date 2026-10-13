@@ -241,6 +241,8 @@ Conventions:
 
   - A feature never imports another feature. When two features appear together, the app layer composes them; code both need moves to the shared layer.
   - A shared component that shows feature content receives it as a prop (`children` or a named `ReactNode` prop) from `src/app/`. Example: `src/app/(app)/layout.tsx` passes the thread list and the artifact panel into `AppShell`.
+  - The rule covers relative paths too: shared code does not reach `features/`, `app/` or `providers/` with `../`, and a relative import inside a feature never climbs out of the feature folder (shared code is imported with `@/`).
+  - Code outside `src/shared/components/frame/` imports the frame from `@/shared/components/frame`, its `index.ts`; files inside the folder use relative imports, and the rest of the shared code does not import the frame.
   - `src/mocks/` and `src/test/` are test infrastructure and may import feature types.
 - **Feature public API:** each feature has an `index.ts` that exports only what other code needs (page and shared components, hooks, types). Code outside the feature imports from `@/features/<feature>`, never from a file inside it (enforced by ESLint `no-restricted-imports`); code inside the feature uses relative imports. Anything not exported from `index.ts` is private and can change freely.
 - **Components:** function components, named exports, one component per file. Next.js routing files (`page.tsx`, `layout.tsx`, `error.tsx`, ...) are the exception: they must use a default export.
@@ -260,7 +262,7 @@ Conventions:
   - Unexpected errors (a bug while rendering) are caught by the route error boundary (`error.tsx`). Slow routes show a `loading.tsx`.
   - Every state must be reachable in `pnpm dev:mock` through a mock scenario (frontend README: Mock data).
 - **Validation** with Zod at boundaries (forms, untrusted data).
-- **UI components:** use shadcn/ui primitives from `src/shared/components/ui/` before building custom ones. Style with Tailwind utilities; avoid ad-hoc CSS files. Use `cn()` from `@/shared/lib/utils` (re-exports shadcn's `cn` package, a clsx + tailwind-merge replacement) to combine classes.
+- **UI components:** use shadcn/ui primitives from `src/shared/components/ui/` before building custom ones. Style with Tailwind utilities; avoid ad-hoc CSS files. Use `cn()` from `@/shared/lib/utils` (re-exports shadcn's `cn` package, a clsx + tailwind-merge replacement) to combine classes. Outside `src/shared/components/ui/`, a class has no CSS value of its own in brackets (`text-[0.625rem]`, `grid-cols-[8rem_1fr]`, `[scrollbar-width:none]`; state selectors such as `data-[state=open]` are fine): use a token or utility of the scale, or add a token or `@utility` to `src/app/styles.css`. A `style` prop is for a value that comes from data, such as the depth of a tree row.
 - **Heavy components** (CodeMirror, React Flow, PDF viewer) are lazy-loaded with `next/dynamic` (`ssr: false` for components that need the browser) so the initial bundle stays small.
 - **Untrusted content** (LLM-generated HTML/Markdown) is never rendered with `dangerouslySetInnerHTML`; HTML artifacts go in a sandboxed iframe.
 - **Accessibility:** semantic HTML, labels on inputs, keyboard navigable. `jsx-a11y` must pass.
@@ -273,6 +275,7 @@ Conventions:
 | Component (`.tsx`) | `PascalCase.tsx`, name = the exported component | `ChatPage.tsx` |
 | Hook (`.ts` in a `hooks/` folder) | `useSomething.ts`, name = the exported hook | `useRunStream.ts` |
 | Any other `.ts` | `<subject>.<kind>.ts` | `chat.api.ts`, `settings.store.ts`, `run-events.reducer.ts` |
+| Config that holds React elements (`.tsx`) | `<subject>.config.tsx` | `console-frame.config.tsx` |
 | Unit test | `<file under test>.test.ts(x)`, in a `__tests__/` folder next to the file under test | `features/chat/__tests__/chat.api.test.ts`, `shared/components/state/__tests__/ErrorState.test.tsx` |
 | E2E test | `<subject>.spec.ts` | `tests/e2e/chat.spec.ts` |
 
