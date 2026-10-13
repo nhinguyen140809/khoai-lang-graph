@@ -3,21 +3,23 @@ import userEvent from '@testing-library/user-event'
 import { beforeEach, describe, expect, it } from 'vitest'
 
 import { useFrameStore } from '../../frame.store'
-import { EditorWithPanel } from '../EditorWithPanel'
-import type { PanelSection } from '../PanelSections'
+import type { BottomPanelSection } from '../BottomPanelSections'
+import { EditorWithBottomPanel } from '../EditorWithBottomPanel'
 
-const trace: PanelSection[] = [{ id: 'trace', title: 'Trace', content: <p>trace of REQ-001</p> }]
+const trace: BottomPanelSection[] = [
+  { id: 'trace', title: 'Trace', content: <p>trace of REQ-001</p> },
+]
 
 beforeEach(() => {
   useFrameStore.setState(useFrameStore.getInitialState())
 })
 
-describe('EditorWithPanel', () => {
+describe('EditorWithBottomPanel', () => {
   it('shows the panel under the editor, and hides and shows it', async () => {
     render(
-      <EditorWithPanel panelLabel="Trace and timeline" sections={trace}>
+      <EditorWithBottomPanel panelLabel="Trace and timeline" sections={trace}>
         <p>REQ-001 Search mentors</p>
-      </EditorWithPanel>,
+      </EditorWithBottomPanel>,
     )
     expect(screen.getByRole('region', { name: 'Trace and timeline' })).toHaveTextContent(
       'trace of REQ-001',
@@ -38,9 +40,9 @@ describe('EditorWithPanel', () => {
 
   it('hides and shows the panel with Ctrl+`', () => {
     render(
-      <EditorWithPanel panelLabel="Trace" sections={trace}>
+      <EditorWithBottomPanel panelLabel="Trace" sections={trace}>
         <p>REQ-001 Search mentors</p>
-      </EditorWithPanel>,
+      </EditorWithBottomPanel>,
     )
 
     fireEvent.keyDown(document, { key: '`', ctrlKey: true })
@@ -52,12 +54,12 @@ describe('EditorWithPanel', () => {
 
   it('keeps the editor and the panel as they were while the panel is hidden', async () => {
     render(
-      <EditorWithPanel
+      <EditorWithBottomPanel
         panelLabel="Trace"
         sections={[{ id: 'trace', title: 'Trace', content: <input aria-label="Filter" /> }]}
       >
         <input aria-label="Title" />
-      </EditorWithPanel>,
+      </EditorWithBottomPanel>,
     )
     // Without layout in jsdom, a click in the group of panels lands on its handle.
     fireEvent.change(screen.getByRole('textbox', { name: 'Title' }), {

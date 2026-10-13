@@ -3,7 +3,7 @@
 import { useRouter, useSearchParams } from 'next/navigation'
 import { useMemo } from 'react'
 
-import { EditorWithPanel, projectTabGroup, useEditorTab } from '@/components/layout'
+import { EditorWithBottomPanel, projectTabGroup, useEditorTab } from '@/components/layout'
 import { ErrorState, LoadingState, NotFoundState } from '@/components/state'
 import { ScrollArea } from '@/components/ui/scroll-area'
 import { RouteParam, runHref, runNodeHref } from '@/lib/routes.utils'
@@ -92,7 +92,7 @@ export function RunPage({ projectId, runId }: RunPageProps) {
   }
 
   return (
-    <EditorWithPanel
+    <EditorWithBottomPanel
       panelLabel="Details"
       sections={[
         {
@@ -134,6 +134,6 @@ export function RunPage({ projectId, runId }: RunPageProps) {
           onSelectNode={chooseNode}
         />
       </div>
-    </EditorWithPanel>
+    </EditorWithBottomPanel>
   )
 }

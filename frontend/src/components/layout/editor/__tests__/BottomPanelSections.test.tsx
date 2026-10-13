@@ -2,9 +2,9 @@ import { render, screen } from '@testing-library/react'
 import userEvent from '@testing-library/user-event'
 import { describe, expect, it } from 'vitest'
 
-import { type PanelSection, PanelSections } from '../PanelSections'
+import { type BottomPanelSection, BottomPanelSections } from '../BottomPanelSections'
 
-const sections: PanelSection[] = [
+const sections: BottomPanelSection[] = [
   { id: 'step', title: 'Step', content: <p>the step</p> },
   {
     id: 'state',
@@ -14,9 +14,9 @@ const sections: PanelSection[] = [
   },
 ]
 
-describe('PanelSections', () => {
+describe('BottomPanelSections', () => {
   it('shows the first section, and another one from its tab', async () => {
-    render(<PanelSections sections={sections} />)
+    render(<BottomPanelSections sections={sections} />)
 
     expect(screen.getByRole('tab', { name: 'Step' })).toHaveAttribute('aria-selected', 'true')
     expect(screen.getByRole('tabpanel')).toHaveTextContent('the step')
@@ -28,7 +28,7 @@ describe('PanelSections', () => {
 
   it('keeps a section as it was while another one is shown', async () => {
     render(
-      <PanelSections
+      <BottomPanelSections
         sections={[
           { id: 'step', title: 'Step', content: <input aria-label="Filter" /> },
           { id: 'state', title: 'State', content: <p>the state</p> },
@@ -45,7 +45,9 @@ describe('PanelSections', () => {
   })
 
   it('shows the actions of the section shown, then the controls', async () => {
-    render(<PanelSections sections={sections} controls={<button type="button">Hide</button>} />)
+    render(
+      <BottomPanelSections sections={sections} controls={<button type="button">Hide</button>} />,
+    )
     expect(screen.queryByRole('button', { name: 'Copy the state' })).not.toBeInTheDocument()
 
     await userEvent.click(screen.getByRole('tab', { name: 'State' }))

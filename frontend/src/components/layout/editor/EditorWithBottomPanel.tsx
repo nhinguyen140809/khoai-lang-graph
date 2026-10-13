@@ -12,11 +12,11 @@ import { useCommands } from '../command-palette/hooks/useCommands'
 import { EditorSplit } from '../EditorSplit'
 import { useFrameStore } from '../frame.store'
 import { PanelRegion } from '../panel.constants'
-import { type PanelSection, PanelSections } from './PanelSections'
+import { type BottomPanelSection, BottomPanelSections } from './BottomPanelSections'
 
-interface EditorWithPanelProps {
+interface EditorWithBottomPanelProps {
   /** The sections of the panel under the editor, one tab each, such as the trace of an item. */
-  sections: readonly PanelSection[]
+  sections: readonly BottomPanelSection[]
   /** The name of the panel, for the landmark and the show and hide buttons. */
   panelLabel: string
   children: ReactNode
@@ -40,7 +40,11 @@ const panelCommands: PaletteCommand[] = [
  * hidden, with the button at the end of its tabs or Ctrl+`; both are remembered. Neither scrolls:
  * the editor content and each section scroll themselves when they flow.
  */
-export function EditorWithPanel({ sections, panelLabel, children }: EditorWithPanelProps) {
+export function EditorWithBottomPanel({
+  sections,
+  panelLabel,
+  children,
+}: EditorWithBottomPanelProps) {
   const visible = useFrameStore((state) => state.panels[PanelRegion.Bottom].visible)
 
   useCommands(panelCommands)
@@ -51,7 +55,7 @@ export function EditorWithPanel({ sections, panelLabel, children }: EditorWithPa
         region={PanelRegion.Bottom}
         panel={
           <Surface as="section" aria-label={panelLabel} className="h-full">
-            <PanelSections
+            <BottomPanelSections
               sections={sections}
               controls={<PanelToggle label={panelLabel} expanded />}
             />

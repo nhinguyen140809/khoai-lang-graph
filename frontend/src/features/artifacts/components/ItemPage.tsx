@@ -4,7 +4,12 @@ import { ArrowLeftIcon, PencilIcon } from 'lucide-react'
 import Link from 'next/link'
 import { useState } from 'react'
 
-import { EditorWithPanel, PanelSections, projectTabGroup, useEditorTab } from '@/components/layout'
+import {
+  BottomPanelSections,
+  EditorWithBottomPanel,
+  projectTabGroup,
+  useEditorTab,
+} from '@/components/layout'
 import { ErrorState, LoadingState, NotFoundState } from '@/components/state'
 import { Button } from '@/components/ui/button'
 import { ScrollArea } from '@/components/ui/scroll-area'
@@ -175,18 +180,18 @@ export function ItemPage({ projectId, itemId, embedded = false, onBack }: ItemPa
       <div className="flex flex-col">
         {article}
         <div className="h-72 border-t">
-          <PanelSections sections={itemPanelSections(item.data, schema)} />
+          <BottomPanelSections sections={itemPanelSections(item.data, schema)} />
         </div>
       </div>
     )
   }
 
   return (
-    <EditorWithPanel
+    <EditorWithBottomPanel
       panelLabel="Trace and timeline"
       sections={itemPanelSections(item.data, schema)}
     >
       <ScrollArea className="h-full">{article}</ScrollArea>
-    </EditorWithPanel>
+    </EditorWithBottomPanel>
   )
 }

@@ -3,7 +3,7 @@
 import { type ReactNode, useState } from 'react'
 import { toast } from 'sonner'
 
-import type { PanelSection } from '@/components/layout'
+import type { BottomPanelSection } from '@/components/layout'
 import { ErrorState, LoadingState } from '@/components/state'
 import { Button } from '@/components/ui/button'
 import { ScrollArea } from '@/components/ui/scroll-area'
@@ -21,7 +21,7 @@ import { schemasByKind } from '../kinds.utils'
 import { ItemLink } from './ItemLink'
 
 /** Under the editor: the links of the item (Trace) and the versions of the item (Timeline). */
-export function itemPanelSections(item: ArtifactItem, schema: ContentSchema): PanelSection[] {
+export function itemPanelSections(item: ArtifactItem, schema: ContentSchema): BottomPanelSection[] {
   return [
     {
       id: 'trace',

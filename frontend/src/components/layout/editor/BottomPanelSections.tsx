@@ -4,8 +4,8 @@ import { Activity, type ReactNode, useState } from 'react'
 
 import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs'
 
-/** A part of a panel, shown in its own tab. */
-export interface PanelSection {
+/** A part of the panel under the editor, shown in its own tab. */
+export interface BottomPanelSection {
   /** Unique in the panel. */
   id: string
   title: string
@@ -15,18 +15,19 @@ export interface PanelSection {
   content: ReactNode
 }
 
-interface PanelSectionsProps {
-  sections: readonly PanelSection[]
+interface BottomPanelSectionsProps {
+  sections: readonly BottomPanelSection[]
   /** Buttons at the end of the row of tabs, after the actions of the section shown. */
   controls?: ReactNode
 }
 
 /**
- * The sections of a panel, one tab each, in a row at the top; the first section shows first. The
- * row ends with the actions of the section shown. A section that another one replaces on screen is
- * hidden, not unmounted, so it keeps its state, such as where it was scrolled to.
+ * The sections of the panel under the editor, one tab each, in a row at the top; the first section
+ * shows first. The row ends with the actions of the section shown. A section that another one
+ * replaces on screen is hidden, not unmounted, so it keeps its state, such as where it was scrolled
+ * to.
  */
-export function PanelSections({ sections, controls }: PanelSectionsProps) {
+export function BottomPanelSections({ sections, controls }: BottomPanelSectionsProps) {
   const [selected, setSelected] = useState(sections[0]?.id)
   const shown = sections.find(({ id }) => id === selected) ?? sections[0]
 
