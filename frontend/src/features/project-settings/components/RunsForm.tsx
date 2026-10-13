@@ -10,7 +10,7 @@ import {
   runFormOf,
   toRunConfig,
   validateRunForm,
-} from '@/components/run-config'
+} from '@/shared/components/run-config'
 
 import { formErrorMessage, serverFieldErrors } from '../form-errors.utils'
 import { useUpdateProject } from '../hooks/useUpdateProject'

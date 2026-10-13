@@ -1,6 +1,6 @@
 import { useQuery } from '@tanstack/react-query'
 
-import { apiRequest } from '@/lib/api-fetch.utils'
+import { apiRequest } from '@/shared/api/api-fetch.utils'
 
 import { profileSchema } from '../settings.types'
 

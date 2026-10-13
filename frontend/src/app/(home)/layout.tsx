@@ -1,10 +1,10 @@
 import type { ReactNode } from 'react'
 
-import { PageCrumb, Workbench } from '@/components/layout'
-import { Surface } from '@/components/ui/surface'
 import { UserMenu } from '@/features/account'
 import { NewProjectDialog, ProjectCommands } from '@/features/projects'
 import { ThemeCommands, ThemeSync } from '@/features/settings'
+import { PageCrumb, Workbench } from '@/frame'
+import { Surface } from '@/shared/ui/surface'
 
 interface HomeLayoutProps {
   children: ReactNode

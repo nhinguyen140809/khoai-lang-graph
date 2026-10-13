@@ -3,7 +3,7 @@
 import { MonitorIcon, MoonIcon, SunIcon } from 'lucide-react'
 import { useTheme } from 'next-themes'
 
-import { PaletteGroup, useCommands } from '@/components/layout'
+import { PaletteGroup, useCommands } from '@/frame'
 
 const themes = [
   { value: 'light', label: 'Light', Icon: SunIcon },

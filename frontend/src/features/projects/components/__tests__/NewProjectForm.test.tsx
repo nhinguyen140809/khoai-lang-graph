@@ -3,8 +3,8 @@ import userEvent from '@testing-library/user-event'
 import { http, HttpResponse } from 'msw'
 import { beforeEach, describe, expect, it, vi } from 'vitest'
 
-import { Dialog, DialogContent, DialogTitle } from '@/components/ui/dialog'
 import { server } from '@/mocks/msw-server.setup'
+import { Dialog, DialogContent, DialogTitle } from '@/shared/ui/dialog'
 import { routerMock } from '@/test/next-mocks.utils'
 import { TestProviders } from '@/test/TestProviders'
 

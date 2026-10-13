@@ -9,6 +9,7 @@ import {
   XIcon,
 } from 'lucide-react'
 
+import type { Tone } from '@/shared/lib/tone.constants'
 import {
   Attachment,
   AttachmentAction,
@@ -17,27 +18,26 @@ import {
   AttachmentDescription,
   AttachmentMedia,
   AttachmentTitle,
-} from '@/components/ui/attachment'
-import { Avatar, AvatarFallback } from '@/components/ui/avatar'
-import { Bubble, BubbleContent } from '@/components/ui/bubble'
-import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card'
-import { Marker, MarkerContent, MarkerIcon } from '@/components/ui/marker'
+} from '@/shared/ui/attachment'
+import { Avatar, AvatarFallback } from '@/shared/ui/avatar'
+import { Bubble, BubbleContent } from '@/shared/ui/bubble'
+import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/shared/ui/card'
+import { Marker, MarkerContent, MarkerIcon } from '@/shared/ui/marker'
 import {
   Message,
   MessageAvatar,
   MessageContent,
   MessageFooter,
   MessageHeader,
-} from '@/components/ui/message'
+} from '@/shared/ui/message'
 import {
   MessageScroller,
   MessageScrollerButton,
   MessageScrollerContent,
   MessageScrollerProvider,
   MessageScrollerViewport,
-} from '@/components/ui/message-scroller'
-import { Spinner } from '@/components/ui/spinner'
-import type { Tone } from '@/lib/tone.constants'
+} from '@/shared/ui/message-scroller'
+import { Spinner } from '@/shared/ui/spinner'
 
 /**
  * An entry of the thread. A message without an author is the user's, at the end of the row; a

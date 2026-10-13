@@ -1,4 +1,4 @@
-import { apiRequest, fetchAllPages, listPageSchema } from '@/lib/api-fetch.utils'
+import { apiRequest, fetchAllPages, listPageSchema } from '@/shared/api/api-fetch.utils'
 
 import {
   interruptSchema,

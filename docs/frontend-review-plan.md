@@ -38,19 +38,19 @@ State on 2026-10-12.
 
 | Branch | State |
 |---|---|
-| `main` | Five product commits plus two devcontainer commits. A Next.js app with the chat feature (`features/chat`), the old shell (`components/layout/AppShell.tsx`, `app-sidebar/`), the routes under `app/(app)/`, the design system page, and MSW mocks for threads and runs only. No `.github/` before P0, no `justfile`, no pre-commit or commitlint configuration, although CONTRIBUTING describes them |
+| `main` | Five product commits plus two devcontainer commits. A Next.js app with the chat feature (`features/chat`), the old shell (`frame/AppShell.tsx`, `app-sidebar/`), the routes under `app/(app)/`, the design system page, and MSW mocks for threads and runs only. No `.github/` before P0, no `justfile`, no pre-commit or commitlint configuration, although CONTRIBUTING describes them |
 | `feat/fe/mock` | 56 commits ahead of the merge base `cd22abe`, the last twelve of them made on 2026-10-12 (the last two add this plan and `backend/.gitignore`): the side panel apart from the editor tabs, the console redesign, the text size tokens, flex rows instead of arbitrary grid columns, the CONTRIBUTING rule on bracket values. All screens of the frame with mocks. It lacks the two devcontainer commits of `main`, so a diff against `main` shows `.devcontainer/` as deleted; that is not a change of the branch |
 | `feat/fe/workflow-review` | 29 commits, diverged from `feat/fe/mock` at `20c8e18`. Its own version of the workflow view, plus backend commits. See [open points](#8-open-points) |
 | `feat/frontend/temp` | 5 commits: the backend port (147 files under `backend/`) and a redesign of the chat. `backend/` is untracked in the current checkout |
 | `feat/fe/layout` | At `cd22abe`, no commits of its own; `main` has moved on to `33635d6` (the two devcontainer commits), so the branch is moved to `origin/main` before P3 is cut on it (a fast-forward) |
 
-Size of the change against `main` (`frontend/`, `docs/`, `scripts/`), measured before the last ten commits and the lone `backend/.gitignore`: 416 files, 338 added, 50 modified, 23 deleted, 3 untracked. No dependency is added; `package.json` changes only the `lint` scripts. `src/api/generated/` holds only `.gitkeep`; every feature has hand-written `*.types.ts`. `backend/src/` has no Python files in this checkout, so no endpoint exists on a server: each one is exercised through the MSW mocks and follows `docs/API.md`.
+Size of the change against `main` (`frontend/`, `docs/`, `scripts/`), measured before the last ten commits and the lone `backend/.gitignore`: 416 files, 338 added, 50 modified, 23 deleted, 3 untracked. No dependency is added; `package.json` changes only the `lint` scripts. `src/shared/api/generated/` holds only `.gitkeep`; every feature has hand-written `*.types.ts`. `backend/src/` has no Python files in this checkout, so no endpoint exists on a server: each one is exercised through the MSW mocks and follows `docs/API.md`.
 
 What imports what, from the code:
 
 - Features do not import each other. `src/app/` composes them: the project `layout.tsx` imports ten features, `review/[runId]/page.tsx` imports `artifacts`, `console` and `review`.
 - The mocks do import each other, and that sets the order: `projects.handlers` <- `runs.handlers`; `threads.handlers` <- `projects.handlers` and `runs.handlers`; `artifacts.handlers` <- `runs.handlers` and `projects.handlers`; `messages.handlers` <- `runs.handlers`, `threads.handlers`, `mock-runs.store`; `interrupts.handlers`, `traceability.handlers`, `workflow-state.handlers` <- `artifacts.handlers` or `artifacts.fixtures`.
-- `src/components/layout/` imports no feature.
+- `src/frame/` imports no feature.
 
 ## 3. Decisions
 
@@ -125,6 +125,18 @@ The box of the top bar reads "Search or run a command", and section 1 of `docs/u
 
 Decision: a (2026-10-12). It is built with P10, which brings the search of the items.
 
+### D8. Layers of `src/`
+
+The frame was shared code in `src/components/layout/`, next to `components/ui`, `components/state`, `hooks/` and `lib/`, which mixed generic helpers with code of this app.
+
+| Option | Evaluation |
+|---|---|
+| a. Keep the folders | No move, but generic helpers, the API client and app settings stay mixed in `lib/`, and the frame sits among the shared components it is built on |
+| b. Clean Architecture: domain, application, infrastructure, presentation | Splits each feature over four folders and asks for interfaces and adapters that nothing swaps; it was not made for UI code |
+| c. Feature-Sliced Design: layers by scope, each importing only the layers under it | Made for frontends; the repo already follows its import direction, so the change is mostly moves |
+
+Decision: c. The layers are `app` -> `features` -> `frame` -> `shared`. The frame is a layer of its own under the features, because the features use it and it knows none of them. `shared/` holds `ui/` (shadcn/ui), `components/`, `hooks/`, `lib/` (generic helpers), `api/` (server access) and `config/` (page addresses, run statuses). An `entities/` layer for the concepts that several features share, such as a run, comes later; until then the run statuses and the run settings fields stay in `shared/`. The move is its own PR, P2b, merged before P3.
+
 ## 4. PR sequence
 
 Branch names are `<type>/fe/<name>`: `<type>` is the Conventional Commits type of the change (`feat` for a new feature, `chore` for tooling and CI, `docs` for documentation), and `fe` shows the scope. No issue number until issues exist.
@@ -133,8 +145,9 @@ Branch names are `<type>/fe/<name>`: `<type>` is the Conventional Commits type o
 |---|---|---|---|---|---|
 | P0 | `chore/fe/ci` | `ci(frontend): run the checks on pull requests` | none | 2 | about 150 |
 | P1 | `chore/fe/lint-groups` | `build(frontend): lint in groups of folders to bound memory` | none | 4 | about 130 |
+| P2b | `refactor/fe/shared` | `refactor(frontend): move the shared code to src/shared and the frame to src/frame, as the layers of feature-sliced design` | none | 136 | about 520 (mostly moves) |
 | P2 | `docs/fe/api-fields` | `docs(api): add the fields that the screens read` | none | 5 | about 550 |
-| P3 | `feat/fe/layout` | `feat(frontend): add the workbench: activity bar, project workspace, tabs, top bar, status bar and command palette` | none | 47 | about 2000 |
+| P3 | `feat/fe/layout` | `feat(frontend): add the workbench: activity bar, project workspace, tabs, top bar, status bar and command palette` | P2b | 47 | about 2000 |
 | P4 | `feat/fe/account` | `feat(frontend): add sign in, registration and the session` | P3 | 31 | about 1800 |
 | P5 | `feat/fe/project-mocks` | `feat(mocks): serve projects and runs` | P4 | 8 | about 1400 |
 | P6 | `feat/fe/projects` | `feat(frontend): add the project list and the project frame, and remove the old shell` | P3, P4, P5 | 48 | about 1700 |
@@ -151,7 +164,7 @@ Branch names are `<type>/fe/<name>`: `<type>` is the Conventional Commits type o
 | P17 | `feat/fe/project-settings` | `feat(frontend): add the settings of a project` | P6, P15 | 26 | about 1300 |
 | P18 | `feat/fe/user-settings` | `feat(frontend): add the settings of the user` | P4, P17 | 25 | about 1800 |
 
-P0, P1 and P2 do not depend on anything and can be open at the same time as P3. File counts and line counts are measured on the branch (files added, modified or deleted against `main`); the artifacts rows are estimates because the slice is cut by hunks.
+P0, P1, P2 and P2b do not depend on anything; P2b merges before P3, which is cut on top of it. File counts and line counts are measured on the branch (files added, modified or deleted against `main`); the artifacts rows are estimates because the slice is cut by hunks.
 
 ## 5. PR details
 
@@ -198,15 +211,21 @@ Files: `docs/API.md` (`unfinished_run_counts` on a project, `active_run_status` 
 
 The `svg` is rendered from the `dbml` (`pnpm install`, then `pnpm render` in `scripts/db-diagram/`); do not edit it by hand. The fields come first because P5 to P7 read them.
 
+### P2b. Shared layer
+
+Branch `refactor/fe/shared` from `origin/main`, decision D8. Moves only, plus the paths that name them: `src/components/ui/` to `src/shared/ui/`, `src/components/state/` to `src/shared/components/state/`, `src/components/layout/` to `src/frame/`, `src/hooks/` to `src/shared/hooks/`, `src/lib/utils.ts` and `tone.*` to `src/shared/lib/`, `src/lib/api-url.utils.ts` and `query-client.config.ts` to `src/shared/api/`, `src/api/generated/` to `src/shared/api/generated/`; the imports, `components.json` (shadcn aliases), `openapi-ts.config.ts`, `.prettierignore`, the layer rules of `eslint.config.js`, `frontend/README.md` and CONTRIBUTING.
+
+Check: `pnpm typecheck`, `pnpm lint`, `pnpm format:check`, `pnpm test`; `pnpm ui:add <component> --dry-run` writes to `src/shared/ui/`.
+
 ### P3. The frame (layout components)
 
 The first PR of the product, as planned. It is additive: nothing on `main` imports it until P6, so it is reviewed from its tests and from the dev server.
 
 | Group | Files |
 |---|---|
-| Frame | `src/components/layout/`, by region: the root (`Workbench.tsx`, `ProjectWorkspace.tsx`, `EditorSplit.tsx`, `panel.constants.ts`, `frame.store.ts`, `path.utils.ts`, `hooks/useFrameHydrated.ts`, `index.ts`), `activity-bar/` (`ActivityBar.tsx`, `ActivitiesContext.tsx`, `activity.types.ts`, `activity.utils.ts`, `hooks/useSideFeature.ts`, `hooks/usePinSideFeature.ts`, `hooks/useOpenPage.ts`), `side-panel/` (`SidePanel.tsx`, `SidePanelSection.tsx`), `editor/` (`EditorTabs.tsx`, `EditorWithBottomPanel.tsx`, `BottomPanelSections.tsx`, `editor-tabs.store.ts`, `hooks/useEditorTab.ts`), `top-bar/` (`TopBar.tsx`, `PageCrumb.tsx`), `status-bar/` (`StatusBar.tsx`), `command-palette/` (`CommandPalette.tsx`, `FeatureCommands.tsx`, `command-palette.store.ts`, `command-registry.store.ts`, `command.types.ts`, `command.utils.ts`, `hooks/useCommands.ts`) |
+| Frame | `src/frame/`, by region: the root (`Workbench.tsx`, `ProjectWorkspace.tsx`, `EditorSplit.tsx`, `panel.constants.ts`, `frame.store.ts`, `path.utils.ts`, `hooks/useFrameHydrated.ts`, `index.ts`), `activity-bar/` (`ActivityBar.tsx`, `ActivitiesContext.tsx`, `activity.types.ts`, `activity.utils.ts`, `hooks/useSideFeature.ts`, `hooks/usePinSideFeature.ts`, `hooks/useOpenPage.ts`), `side-panel/` (`SidePanel.tsx`, `SidePanelSection.tsx`), `editor/` (`EditorTabs.tsx`, `EditorWithBottomPanel.tsx`, `BottomPanelSections.tsx`, `editor-tabs.store.ts`, `hooks/useEditorTab.ts`), `top-bar/` (`TopBar.tsx`, `PageCrumb.tsx`), `status-bar/` (`StatusBar.tsx`), `command-palette/` (`CommandPalette.tsx`, `FeatureCommands.tsx`, `command-palette.store.ts`, `command-registry.store.ts`, `command.types.ts`, `command.utils.ts`, `hooks/useCommands.ts`) |
 | Unit tests | In the `__tests__/` folder of each region: ProjectWorkspace, `path.utils`; ActivityBar, `activity.utils`, and `useOpenPage` in `activity-bar/hooks/__tests__/`; SidePanelSection; EditorTabs, EditorWithBottomPanel, BottomPanelSections, `editor-tabs.store`; TopBar; StatusBar; CommandPalette, `command.utils`, and `useCommands` in `command-palette/hooks/__tests__/` |
-| Needed by the frame | `src/hooks/useHotkey.ts` and `src/hooks/useModifierKeyName.ts` with their tests, `src/lib/browser-storage.utils.ts` and its test, `src/components/ui/resizable.tsx`, `src/components/ui/surface.tsx`, `src/test/TestProviders.tsx`, `src/test/next-mocks.utils.ts`, the browser stubs of `src/test/vitest.setup.ts` (hunk: ResizeObserver, matchMedia, scrollIntoView; the pointer capture stub waits for the first test with a select), the storage rule, the `<subject>.config.tsx` naming rule the patterns against relative imports across features and shared code, and the patterns that make `@/components/layout` the only way into the frame, in `eslint.config.js` (hunks), with the naming row and the import lines of CONTRIBUTING |
+| Needed by the frame | `src/shared/hooks/useHotkey.ts` and `src/shared/hooks/useModifierKeyName.ts` with their tests, `src/shared/lib/browser-storage.utils.ts` and its test, `src/shared/ui/resizable.tsx`, `src/shared/ui/surface.tsx`, `src/test/TestProviders.tsx`, `src/test/next-mocks.utils.ts`, the browser stubs of `src/test/vitest.setup.ts` (hunk: ResizeObserver, matchMedia, scrollIntoView; the pointer capture stub waits for the first test with a select), the storage rule, the `<subject>.config.tsx` naming rule the patterns against relative imports across features and shared code, and the patterns that make `@/frame` the only way into the frame, in `eslint.config.js` (hunks), with the naming row and the import lines of CONTRIBUTING |
 | Design tokens | `src/app/styles.css`: `text-2xs`, `text-3xs`, `text-4xs`, the `editor-text` and `caret-block` utilities. The design system files that use the tokens (`Sample.tsx`, `CodeCard.tsx`, `WorkspaceCard.tsx`, `OverlaysCard.tsx`, `AlertsCard.tsx`, `ChatCard.tsx`); `GraphCard.tsx` and `design-system.fixtures.ts` use the graph tones and go with P15. The CONTRIBUTING rule on bracket values and the token line of `frontend/README.md` |
 | Docs | Section 1 (Frame) of `docs/ui/skeletons.md`, and the Frame section of `frontend/README.md` without what the features bring: the item of a feature in its config, the commands of the console, the projects and the theme |
 
@@ -216,7 +235,7 @@ The logo of `TopBar.tsx` links to `/`, which exists on `main`; from P6, `/` redi
 
 No e2e spec: every test of `frame.spec.ts` opens a project page and needs the mocks, the routes and the features. Its tests go with the PR that brings the last thing they need: Ctrl+K and the run on the status bar with P9, Ctrl+B with P10, the activity bar and the tabs with the review with P15.
 
-Check: `pnpm test src/components/layout src/hooks src/lib`, a look at `/design-system`.
+Check: `pnpm test src/frame src/shared`, a look at `/design-system`.
 
 ### P4. Account
 
@@ -226,7 +245,7 @@ Endpoints: `POST /auth/login`, `POST /auth/register`, `POST /auth/logout`, `GET 
 |---|---|
 | Feature | `src/features/account/` (api, types, `AuthCard`, `LoginPage`, `RegisterPage`, `UserMenu`, `useMe`, tests) |
 | Routes | `src/app/(auth)/layout.tsx`, `login/page.tsx`, `register/page.tsx` |
-| Shared code | `src/lib/api-fetch.utils.ts`, `src/lib/auth-redirect.utils.ts` and their tests, `src/lib/query-client.config.ts` (a 401 goes to sign in, no retry for 4xx) |
+| Shared code | `src/shared/api/api-fetch.utils.ts`, `src/shared/api/auth-redirect.utils.ts` and their tests, `src/shared/api/query-client.config.ts` (a 401 goes to sign in, no retry for 4xx) |
 | Mock infrastructure | `src/mocks/mock-db.utils.ts`, `mock-ids.constants.ts`, `pagination.utils.ts`, `problem.utils.ts`, `mock-scenario.utils.ts`, `msw-browser.setup.ts`, `msw-server.setup.ts`, `auth.handlers.ts`, `me.handlers.ts`, `me.fixtures.ts`, `__tests__/auth.handlers.test.ts`, `README.md` (mock scenarios), and the `resetMockData` hunk of `src/test/vitest.setup.ts` |
 | E2E | `tests/e2e/account.spec.ts` |
 
@@ -244,11 +263,11 @@ Endpoints read: `GET /projects` (all pages, by status), `POST /projects`, `GET /
 |---|---|
 | Feature | `src/features/projects/` (list, table, run cell, pending review badge, gate, switcher, commands, new project dialog and form, store, hooks, tests) |
 | Routes | `src/app/page.tsx`, `src/app/(home)/layout.tsx`, `(home)/projects/page.tsx`, `(home)/error.tsx` (renamed from `(app)/error.tsx`), `src/app/(project)/projects/[projectId]/layout.tsx`, `error.tsx`, `page.tsx` |
-| Shared code | `src/components/state/*` (compact size), `src/lib/relative-time.utils.ts`, `src/lib/run-status.constants.ts`, `src/hooks/useNow.ts`, `src/lib/routes.utils.ts` (`consoleHref`), with their tests |
-| Removed | `src/app/(app)/` (4 files), `components/layout/AppShell.tsx`, `components/layout/app-sidebar/` (4 files) |
+| Shared code | `src/shared/components/state/*` (compact size), `src/shared/lib/relative-time.utils.ts`, `src/shared/config/run-status.constants.ts`, `src/shared/hooks/useNow.ts`, `src/shared/config/routes.utils.ts` (`consoleHref`), with their tests |
+| Removed | `src/app/(app)/` (4 files), `frame/AppShell.tsx`, `frame/app-sidebar/` (4 files) |
 | E2E and docs | `tests/e2e/projects.spec.ts`, section 2 of `docs/ui/skeletons.md` |
 
-The project `layout.tsx` is cut for this PR: the frame with an empty list of activities (decision D3), so no side panel yet, the top bar and the status bar. Its `page.tsx` redirects to `consoleHref`. From P6 on, `src/lib/routes.utils.ts` builds the addresses of the pages of a project: each later PR adds, as hunks, the addresses and the query parameters (`RouteParam`) that its files use, so that no feature writes the address of another. The run status of the status bar is a placeholder until P7; `ThemeSync` and `ThemeCommands` are added by P18.
+The project `layout.tsx` is cut for this PR: the frame with an empty list of activities (decision D3), so no side panel yet, the top bar and the status bar. Its `page.tsx` redirects to `consoleHref`. From P6 on, `src/shared/config/routes.utils.ts` builds the addresses of the pages of a project: each later PR adds, as hunks, the addresses and the query parameters (`RouteParam`) that its files use, so that no feature writes the address of another. The run status of the status bar is a placeholder until P7; `ThemeSync` and `ThemeCommands` are added by P18.
 
 ### P7. Threads and the run status
 
@@ -324,7 +343,7 @@ Endpoints: `GET /workflow/definition?version=`, `GET /projects/{id}/threads`, `G
 | Feature | `src/features/workflow/`: api, types, `graph-layout.utils.ts`, `run-progress.utils.ts`, `step-groups.utils.ts`, `run-status.utils.ts`, hooks, components (`RunPage`, `RunTree`, `WorkflowGraph`, `WorkflowHome`, `StepPanel`, `StatePanel`), tests, `workflow-frame.config.tsx` and its entry in the project `layout.tsx` |
 | Routes | `workflow/page.tsx`, `workflow/[runId]/page.tsx` |
 | Mocks | `workflow-state.handlers.ts` |
-| Shared code | `src/components/ui/edge.tsx`, `node.tsx`, `src/lib/tone.constants.ts` and its test (graph tones), `GraphCard.tsx` and `design-system.fixtures.ts`, `src/env.d.ts` and `.env.example` (`NEXT_PUBLIC_TRACE_URL`) |
+| Shared code | `src/shared/ui/edge.tsx`, `node.tsx`, `src/shared/lib/tone.constants.ts` and its test (graph tones), `GraphCard.tsx` and `design-system.fixtures.ts`, `src/env.d.ts` and `.env.example` (`NEXT_PUBLIC_TRACE_URL`) |
 | E2E and docs | `tests/e2e/workflow.spec.ts`, section 7 of `docs/ui/skeletons.md` |
 
 ### P16. Traceability
@@ -337,7 +356,7 @@ Files: `src/features/traceability/` (api, types, `issues.utils.ts`, `matrix-filt
 
 Endpoints: `GET /projects/{id}`, `PATCH /projects/{id}`, `GET /models`, `GET /workflow/definition`.
 
-Files: `src/features/project-settings/` (api, types, `section.utils.ts`, `form-errors.utils.ts`, hooks, `GeneralForm`, `RunsForm`, `ModelsForm`, `SaveBar`, `SettingsNav`, `SettingsPage`, tests, `project-settings-frame.config.tsx`), its entry in the project `layout.tsx`, `src/components/run-config/` (shared with P18), `settings/page.tsx`, `src/mocks/models.handlers.ts`, `models.fixtures.ts`, the `/run-settings` command of the console, `tests/e2e/project-settings.spec.ts`, section 9 of `docs/ui/skeletons.md`.
+Files: `src/features/project-settings/` (api, types, `section.utils.ts`, `form-errors.utils.ts`, hooks, `GeneralForm`, `RunsForm`, `ModelsForm`, `SaveBar`, `SettingsNav`, `SettingsPage`, tests, `project-settings-frame.config.tsx`), its entry in the project `layout.tsx`, `src/shared/components/run-config/` (shared with P18), `settings/page.tsx`, `src/mocks/models.handlers.ts`, `models.fixtures.ts`, the `/run-settings` command of the console, `tests/e2e/project-settings.spec.ts`, section 9 of `docs/ui/skeletons.md`.
 
 ### P18. Settings of the user
 
@@ -355,7 +374,7 @@ These cannot be copied whole with `git checkout feat/fe/mock -- <path>`: the bra
 | `frontend/README.md`, `frontend/src/mocks/README.md` | P3 to P18 | The tokens line (P3); the mock scenario addresses of a screen when the screen is built |
 | `src/app/(project)/projects/[projectId]/layout.tsx` | P6, P7, P8, P10, P13, P14, P15, P16, P17, P18 | P6: the frame with no activity. Then one activity and its tab icons per feature (D3), the status bar run (P7), `ThemeSync` and `ThemeCommands` (P18) |
 | `src/mocks/msw-browser.setup.ts`, `msw-server.setup.ts` | P4 to P18 | One import and one entry per handler group |
-| `src/components/layout/command-palette/CommandPalette.tsx`, `command-palette.store.ts` | P3, P10 | P3: the palette. P10: the text typed, kept in the store for the item search (D7) |
+| `src/frame/command-palette/CommandPalette.tsx`, `command-palette.store.ts` | P3, P10 | P3: the palette. P10: the text typed, kept in the store for the item search (D7) |
 | `src/test/vitest.setup.ts` | P3, P4, first test with a select | P3: browser stubs. P4: `resetMockData`. The pointer capture stub with the first test that opens a select |
 | `tests/e2e/frame.spec.ts` | P9, P10, P15 | P9: Ctrl+K and the run on the status bar. P10: Ctrl+B. P15: the activity bar and the tabs with the review |
 | `src/features/console/components/Console.tsx`, `commands.constants.ts` | P9, P13, P14, P17 | P9: the base commands. Later: `/export`, the review link, `/run-settings` |
@@ -369,10 +388,10 @@ First consumer of shared code:
 | Code | PR |
 |---|---|
 | `lib/api-fetch.utils`, `lib/auth-redirect.utils`, `lib/query-client.config` | P4 |
-| `lib/browser-storage.utils`, `hooks/useHotkey`, `components/ui/resizable`, `test/TestProviders`, `test/next-mocks.utils` | P3 |
-| `lib/relative-time.utils`, `lib/run-status.constants`, `hooks/useNow`, `components/state/*` | P6 |
-| `components/ui/edge`, `components/ui/node`, `lib/tone.constants` | P15 |
-| `components/run-config` | P17 |
+| `shared/lib/browser-storage.utils`, `shared/hooks/useHotkey`, `shared/ui/resizable`, `test/TestProviders`, `test/next-mocks.utils` | P3 |
+| `shared/lib/relative-time.utils`, `shared/config/run-status.constants`, `shared/hooks/useNow`, `shared/components/state/*` | P6 |
+| `shared/ui/edge`, `shared/ui/node`, `shared/lib/tone.constants` | P15 |
+| `shared/components/run-config` | P17 |
 
 ## 7. Before cutting a PR
 

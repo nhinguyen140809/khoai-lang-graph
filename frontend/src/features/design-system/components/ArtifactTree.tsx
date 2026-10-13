@@ -3,7 +3,7 @@
 import { hotkeysCoreFeature, selectionFeature, syncDataLoaderFeature } from '@headless-tree/core'
 import { useTree } from '@headless-tree/react'
 
-import { Tree, TreeItem, TreeItemLabel } from '@/components/ui/tree'
+import { Tree, TreeItem, TreeItemLabel } from '@/shared/ui/tree'
 
 import { type ExplorerNode, explorerNodes } from '../design-system.fixtures'
 

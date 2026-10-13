@@ -3,9 +3,9 @@
 import Link from 'next/link'
 import { useSearchParams } from 'next/navigation'
 
-import { ErrorState, LoadingState } from '@/components/state'
-import { RouteParam, traceabilityHref } from '@/lib/routes.utils'
-import { cn } from '@/lib/utils'
+import { ErrorState, LoadingState } from '@/shared/components/state'
+import { RouteParam, traceabilityHref } from '@/shared/config/routes.utils'
+import { cn } from '@/shared/lib/utils'
 
 import { useCoverage } from '../hooks/useCoverage'
 

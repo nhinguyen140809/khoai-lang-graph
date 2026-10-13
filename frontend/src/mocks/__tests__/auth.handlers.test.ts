@@ -1,6 +1,6 @@
 import { describe, expect, it } from 'vitest'
 
-import { apiUrl } from '@/lib/api-url.utils'
+import { apiUrl } from '@/shared/api/api-url.utils'
 
 const post = (path: string, body?: unknown) =>
   fetch(apiUrl(path), {

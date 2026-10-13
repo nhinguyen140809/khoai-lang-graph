@@ -2,8 +2,8 @@
 
 import { useState } from 'react'
 
-import { EmptyState, ErrorState, LoadingState } from '@/components/state'
-import { NativeSelect, NativeSelectOption } from '@/components/ui/native-select'
+import { EmptyState, ErrorState, LoadingState } from '@/shared/components/state'
+import { NativeSelect, NativeSelectOption } from '@/shared/ui/native-select'
 import {
   Table,
   TableBody,
@@ -12,7 +12,7 @@ import {
   TableHead,
   TableHeader,
   TableRow,
-} from '@/components/ui/table'
+} from '@/shared/ui/table'
 
 import { useUsage } from '../hooks/useAccountQueries'
 import { type UsageGroup, usageGroupLabels, usageGroups } from '../settings.types'

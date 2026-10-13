@@ -3,8 +3,8 @@
 import { CircleCheckIcon } from 'lucide-react'
 import Link from 'next/link'
 
-import { EmptyState, ErrorState, LoadingState } from '@/components/state'
-import { itemHref } from '@/lib/routes.utils'
+import { EmptyState, ErrorState, LoadingState } from '@/shared/components/state'
+import { itemHref } from '@/shared/config/routes.utils'
 
 import { useIssues } from '../hooks/useIssues'
 

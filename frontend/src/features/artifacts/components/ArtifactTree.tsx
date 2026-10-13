@@ -5,9 +5,9 @@ import Link from 'next/link'
 import { usePathname } from 'next/navigation'
 import { useState } from 'react'
 
-import { EmptyState, ErrorState, LoadingState } from '@/components/state'
-import { artifactHref, itemHref } from '@/lib/routes.utils'
-import { cn } from '@/lib/utils'
+import { EmptyState, ErrorState, LoadingState } from '@/shared/components/state'
+import { artifactHref, itemHref } from '@/shared/config/routes.utils'
+import { cn } from '@/shared/lib/utils'
 
 import type { Artifact, ContentSchema, OutlineItem } from '../artifacts.types'
 import { itemTitle } from '../field-view.utils'

@@ -139,7 +139,7 @@ Target layout (like Claude / ChatGPT canvas, plus a workflow view):
 
 ### Why shadcn/ui
 
-- Tailwind-native, built on Radix or Base UI primitives; components are copied into the repo (`src/components/ui/`), so we own and can edit them.
+- Tailwind-native, built on Radix or Base UI primitives; components are copied into the repo (`src/shared/ui/`), so we own and can edit them.
 - Largest ecosystem: the chat and graph libraries we need (assistant-ui, AI Elements, React Flow UI) are built on it; the rest are headless or themeable.
 - Ships the building blocks for our layout: Sidebar, Resizable, Tabs, Command, Data Table, Charts.
 - Custom components for agent steps and artifacts fit in naturally.
@@ -323,7 +323,7 @@ Rules that make results defensible in a thesis. Complements the experiment workf
 - [x] Tailwind CSS v4 setup (+ `prettier-plugin-tailwindcss`)
 - [x] Init shadcn/ui and companion libraries (section 4)
 - [x] App shell: sidebar + resizable chat / artifact panels
-- [x] App Router routes + TanStack Query, API client codegen script (writes `frontend/openapi.json` + `src/api/generated/`)
+- [x] App Router routes + TanStack Query, API client codegen script (writes `frontend/openapi.json` + `src/shared/api/generated/`)
 - [ ] Generate the first client once the backend exports `openapi.json`, then replace the hand-written types in the `*.types.ts` files of the features
 - [x] Zustand store for user settings (model choices, theme, etc.)
 - [x] Chat page consuming the SSE endpoint (against MSW mocks until the backend exists)
@@ -341,7 +341,7 @@ Rules that make results defensible in a thesis. Complements the experiment workf
 ### Infra & CI
 - [ ] `infra/docker-compose.yml`: postgres (+pgvector), langfuse (+ its deps), MinIO (S3-compatible storage); Redis only if we adopt a queue
 - [ ] GitHub Actions `ci.yml`: path-filtered jobs for backend (ruff, mypy, import-linter, pytest) and frontend (eslint, tsc, vitest, build)
-- [ ] Codegen drift check in CI: rerun `just codegen`, then `git diff --exit-code` on `frontend/openapi.json` and `src/api/generated/`
+- [ ] Codegen drift check in CI: rerun `just codegen`, then `git diff --exit-code` on `frontend/openapi.json` and `src/shared/api/generated/`
 - [ ] Smoke eval workflow triggered by the `run-eval` label
 - [ ] Secrets in GitHub Actions secrets, never in workflow files
 - [ ] Renovate/Dependabot, release-please

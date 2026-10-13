@@ -2,9 +2,9 @@
 
 import { useSearchParams } from 'next/navigation'
 
-import { projectTabGroup, useEditorTab } from '@/components/layout'
-import { ScrollArea } from '@/components/ui/scroll-area'
-import { RouteParam, traceabilityHref } from '@/lib/routes.utils'
+import { projectTabGroup, useEditorTab } from '@/frame'
+import { RouteParam, traceabilityHref } from '@/shared/config/routes.utils'
+import { ScrollArea } from '@/shared/ui/scroll-area'
 
 import { TraceabilityTabIcon } from '../traceability-frame.config'
 import { IssuesView } from './IssuesView'

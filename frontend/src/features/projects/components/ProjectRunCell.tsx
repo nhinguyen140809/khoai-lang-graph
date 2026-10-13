@@ -1,5 +1,5 @@
-import { Badge } from '@/components/ui/badge'
-import { runStatusLabels, runStatusTones } from '@/lib/run-status.constants'
+import { runStatusLabels, runStatusTones } from '@/shared/config/run-status.constants'
+import { Badge } from '@/shared/ui/badge'
 
 import { mostUrgentRunStatus } from '../project-list.utils'
 import type { UnfinishedRunCounts } from '../projects.types'

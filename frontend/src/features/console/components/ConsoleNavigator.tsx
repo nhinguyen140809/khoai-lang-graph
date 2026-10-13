@@ -2,8 +2,8 @@
 
 import { useParams } from 'next/navigation'
 
-import { SidePanelSection } from '@/components/layout'
-import { ErrorState, LoadingState } from '@/components/state'
+import { SidePanelSection } from '@/frame'
+import { ErrorState, LoadingState } from '@/shared/components/state'
 
 import { useConsoleThread } from '../hooks/useConsoleThread'
 import { ConsoleOutline } from './ConsoleOutline'

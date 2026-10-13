@@ -2,11 +2,11 @@
 
 import { useSearchParams } from 'next/navigation'
 
-import { projectTabGroup, useEditorTab } from '@/components/layout'
-import { ErrorState, LoadingState, NotFoundState } from '@/components/state'
-import { ScrollArea } from '@/components/ui/scroll-area'
-import { isNotFoundError } from '@/lib/api-fetch.utils'
-import { RouteParam, settingsHref } from '@/lib/routes.utils'
+import { projectTabGroup, useEditorTab } from '@/frame'
+import { isNotFoundError } from '@/shared/api/api-fetch.utils'
+import { ErrorState, LoadingState, NotFoundState } from '@/shared/components/state'
+import { RouteParam, settingsHref } from '@/shared/config/routes.utils'
+import { ScrollArea } from '@/shared/ui/scroll-area'
 
 import { useModels } from '../hooks/useModels'
 import { useSettingsDefinition } from '../hooks/useSettingsDefinition'

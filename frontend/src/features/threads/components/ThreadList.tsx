@@ -3,9 +3,9 @@
 import Link from 'next/link'
 import { usePathname } from 'next/navigation'
 
-import { EmptyState, ErrorState, LoadingState } from '@/components/state'
-import { Badge } from '@/components/ui/badge'
-import { threadHref } from '@/lib/routes.utils'
+import { EmptyState, ErrorState, LoadingState } from '@/shared/components/state'
+import { threadHref } from '@/shared/config/routes.utils'
+import { Badge } from '@/shared/ui/badge'
 
 import { useProjectThreads } from '../hooks/useProjectThreads'
 import { threadTitle } from '../threads.utils'

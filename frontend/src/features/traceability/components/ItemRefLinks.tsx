@@ -1,6 +1,6 @@
 import Link from 'next/link'
 
-import { itemHref } from '@/lib/routes.utils'
+import { itemHref } from '@/shared/config/routes.utils'
 
 import type { ItemRef } from '../traceability.types'
 

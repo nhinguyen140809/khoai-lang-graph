@@ -1,6 +1,6 @@
 import { z } from 'zod'
 
-import { runStatuses } from '@/lib/run-status.constants'
+import { runStatuses } from '@/shared/config/run-status.constants'
 
 // Temporary hand-written schemas for the run event stream and the console API.
 // TODO: replace with types generated into src/api/generated/ once the run events are

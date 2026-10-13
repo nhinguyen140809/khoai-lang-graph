@@ -1,8 +1,8 @@
 import { NetworkIcon, PlayIcon } from 'lucide-react'
 
-import type { FeatureActivity, TabIcons } from '@/components/layout'
-import { SidePanel } from '@/components/layout'
-import { workflowHref } from '@/lib/routes.utils'
+import type { FeatureActivity, TabIcons } from '@/frame'
+import { SidePanel } from '@/frame'
+import { workflowHref } from '@/shared/config/routes.utils'
 
 import { RunTree } from './components/RunTree'
 

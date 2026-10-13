@@ -1,18 +1,11 @@
 'use client'
 
-import { projectTabGroup, useEditorTab } from '@/components/layout'
-import { ErrorState, LoadingState, NotFoundState } from '@/components/state'
-import { ScrollArea } from '@/components/ui/scroll-area'
-import {
-  Table,
-  TableBody,
-  TableCell,
-  TableHead,
-  TableHeader,
-  TableRow,
-} from '@/components/ui/table'
-import { isNotFoundError } from '@/lib/api-fetch.utils'
-import { artifactHref } from '@/lib/routes.utils'
+import { projectTabGroup, useEditorTab } from '@/frame'
+import { isNotFoundError } from '@/shared/api/api-fetch.utils'
+import { ErrorState, LoadingState, NotFoundState } from '@/shared/components/state'
+import { artifactHref } from '@/shared/config/routes.utils'
+import { ScrollArea } from '@/shared/ui/scroll-area'
+import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from '@/shared/ui/table'
 
 import type { ContentSchema, OutlineItem } from '../artifacts.types'
 import { ArtifactTabIcon } from '../artifacts-frame.config'

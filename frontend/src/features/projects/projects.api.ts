@@ -1,4 +1,4 @@
-import { apiRequest, fetchAllPages } from '@/lib/api-fetch.utils'
+import { apiRequest, fetchAllPages } from '@/shared/api/api-fetch.utils'
 
 import {
   type CreateProjectBody,

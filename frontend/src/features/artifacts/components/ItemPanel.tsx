@@ -3,12 +3,12 @@
 import { type ReactNode, useState } from 'react'
 import { toast } from 'sonner'
 
-import type { BottomPanelSection } from '@/components/layout'
-import { ErrorState, LoadingState } from '@/components/state'
-import { Button } from '@/components/ui/button'
-import { ScrollArea } from '@/components/ui/scroll-area'
-import { useNow } from '@/hooks/useNow'
-import { formatRelativeTime } from '@/lib/relative-time.utils'
+import type { BottomPanelSection } from '@/frame'
+import { ErrorState, LoadingState } from '@/shared/components/state'
+import { useNow } from '@/shared/hooks/useNow'
+import { formatRelativeTime } from '@/shared/lib/relative-time.utils'
+import { Button } from '@/shared/ui/button'
+import { ScrollArea } from '@/shared/ui/scroll-area'
 
 import type { ArtifactItem, ContentSchema, Revision, TraceNode } from '../artifacts.types'
 import { changedFields, fieldViews, formatValue, itemTitle } from '../field-view.utils'

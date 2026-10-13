@@ -1,7 +1,7 @@
 'use client'
 
-import { Input } from '@/components/ui/input'
-import { Textarea } from '@/components/ui/textarea'
+import { Input } from '@/shared/ui/input'
+import { Textarea } from '@/shared/ui/textarea'
 
 import type { Answer, Question } from '../review.types'
 import { ChoiceList } from './ChoiceList'

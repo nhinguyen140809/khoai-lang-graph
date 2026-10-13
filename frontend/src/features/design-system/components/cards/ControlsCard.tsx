@@ -3,23 +3,23 @@
 import { LayoutGridIcon, ListIcon, PinIcon, ScrollTextIcon, SearchIcon } from 'lucide-react'
 import { useState } from 'react'
 
+import type { Tone } from '@/shared/lib/tone.constants'
 import {
   InputGroup,
   InputGroupAddon,
   InputGroupInput,
   InputGroupText,
-} from '@/components/ui/input-group'
-import { InputOTP, InputOTPGroup, InputOTPSeparator, InputOTPSlot } from '@/components/ui/input-otp'
-import { Kbd } from '@/components/ui/kbd'
-import { Label } from '@/components/ui/label'
-import { NativeSelect, NativeSelectOption } from '@/components/ui/native-select'
-import { Progress } from '@/components/ui/progress'
-import { RadioGroup, RadioGroupItem } from '@/components/ui/radio-group'
-import { Slider } from '@/components/ui/slider'
-import { Spinner } from '@/components/ui/spinner'
-import { Toggle } from '@/components/ui/toggle'
-import { ToggleGroup, ToggleGroupItem } from '@/components/ui/toggle-group'
-import type { Tone } from '@/lib/tone.constants'
+} from '@/shared/ui/input-group'
+import { InputOTP, InputOTPGroup, InputOTPSeparator, InputOTPSlot } from '@/shared/ui/input-otp'
+import { Kbd } from '@/shared/ui/kbd'
+import { Label } from '@/shared/ui/label'
+import { NativeSelect, NativeSelectOption } from '@/shared/ui/native-select'
+import { Progress } from '@/shared/ui/progress'
+import { RadioGroup, RadioGroupItem } from '@/shared/ui/radio-group'
+import { Slider } from '@/shared/ui/slider'
+import { Spinner } from '@/shared/ui/spinner'
+import { Toggle } from '@/shared/ui/toggle'
+import { ToggleGroup, ToggleGroupItem } from '@/shared/ui/toggle-group'
 
 import { SampleCard } from '../Sample'
 

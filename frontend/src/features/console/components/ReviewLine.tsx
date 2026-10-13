@@ -2,7 +2,7 @@
 
 import Link from 'next/link'
 
-import { reviewHref } from '@/lib/routes.utils'
+import { reviewHref } from '@/shared/config/routes.utils'
 
 import { isFollowingLog } from '../event-scroll.utils'
 import { usePendingReview } from '../hooks/usePendingReview'

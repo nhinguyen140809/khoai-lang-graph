@@ -1,5 +1,5 @@
-import { runConfigDefinitionSchema } from '@/components/run-config'
-import { apiRequest, fetchAllPages } from '@/lib/api-fetch.utils'
+import { apiRequest, fetchAllPages } from '@/shared/api/api-fetch.utils'
+import { runConfigDefinitionSchema } from '@/shared/components/run-config'
 
 import {
   modelEntrySchema,

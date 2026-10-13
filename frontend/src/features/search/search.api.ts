@@ -1,4 +1,4 @@
-import { apiRequest, listPageSchema } from '@/lib/api-fetch.utils'
+import { apiRequest, listPageSchema } from '@/shared/api/api-fetch.utils'
 
 import { itemSchema } from './search.types'
 

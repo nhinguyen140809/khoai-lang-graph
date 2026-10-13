@@ -7,7 +7,7 @@ import {
   ChartContainer,
   ChartTooltip,
   ChartTooltipContent,
-} from '@/components/ui/chart'
+} from '@/shared/ui/chart'
 
 import { priorityCounts, priorityLabels } from '../../design-system.fixtures'
 import { SampleCard } from '../Sample'

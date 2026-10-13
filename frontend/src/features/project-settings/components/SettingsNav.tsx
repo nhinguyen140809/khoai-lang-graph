@@ -3,7 +3,7 @@
 import Link from 'next/link'
 import { useSearchParams } from 'next/navigation'
 
-import { RouteParam, settingsHref } from '@/lib/routes.utils'
+import { RouteParam, settingsHref } from '@/shared/config/routes.utils'
 
 import { sectionLabels, sections } from '../project-settings.types'
 import { sectionOf } from '../section.utils'

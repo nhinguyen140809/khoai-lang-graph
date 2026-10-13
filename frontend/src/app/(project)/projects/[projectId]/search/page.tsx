@@ -1,6 +1,6 @@
 import { SearchIcon } from 'lucide-react'
 
-import { EmptyState } from '@/components/state'
+import { EmptyState } from '@/shared/components/state'
 
 export default function Page() {
   return (

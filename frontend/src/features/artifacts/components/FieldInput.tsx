@@ -2,16 +2,10 @@
 
 import { PlusIcon, XIcon } from 'lucide-react'
 
-import { Button } from '@/components/ui/button'
-import { Input } from '@/components/ui/input'
-import {
-  Select,
-  SelectContent,
-  SelectItem,
-  SelectTrigger,
-  SelectValue,
-} from '@/components/ui/select'
-import { Textarea } from '@/components/ui/textarea'
+import { Button } from '@/shared/ui/button'
+import { Input } from '@/shared/ui/input'
+import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/shared/ui/select'
+import { Textarea } from '@/shared/ui/textarea'
 
 import type { FieldView } from '../field-view.utils'
 import { useValueOptions } from '../hooks/useValueOptions'

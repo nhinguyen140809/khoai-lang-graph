@@ -10,8 +10,8 @@ import {
   runFormOf,
   toRunConfig,
   validateRunForm,
-} from '@/components/run-config'
-import { Checkbox } from '@/components/ui/checkbox'
+} from '@/shared/components/run-config'
+import { Checkbox } from '@/shared/ui/checkbox'
 import {
   Field,
   FieldDescription,
@@ -19,8 +19,8 @@ import {
   FieldLabel,
   FieldLegend,
   FieldSet,
-} from '@/components/ui/field'
-import { NativeSelect, NativeSelectOption } from '@/components/ui/native-select'
+} from '@/shared/ui/field'
+import { NativeSelect, NativeSelectOption } from '@/shared/ui/native-select'
 
 import { formErrorMessage } from '../form-errors.utils'
 import { useSavePreferences } from '../hooks/useAccountQueries'

@@ -1,11 +1,6 @@
 import { FolderInputIcon } from 'lucide-react'
 import Link from 'next/link'
 
-import type { Activity, TabIcons } from '@/components/layout'
-import { ProjectWorkspace, Workbench } from '@/components/layout'
-import { NotFoundState } from '@/components/state'
-import { Button } from '@/components/ui/button'
-import { Surface } from '@/components/ui/surface'
 import { UserMenu } from '@/features/account'
 import { artifactsActivity, artifactTabIcons } from '@/features/artifacts'
 import { consoleActivity, consoleTabIcons } from '@/features/console'
@@ -23,7 +18,12 @@ import { ThemeCommands, ThemeSync } from '@/features/settings'
 import { ProjectRunStatus } from '@/features/threads'
 import { traceabilityActivity, traceabilityTabIcons } from '@/features/traceability'
 import { workflowActivity, workflowTabIcons } from '@/features/workflow'
-import { reviewsPath } from '@/lib/routes.utils'
+import type { Activity, TabIcons } from '@/frame'
+import { ProjectWorkspace, Workbench } from '@/frame'
+import { NotFoundState } from '@/shared/components/state'
+import { reviewsPath } from '@/shared/config/routes.utils'
+import { Button } from '@/shared/ui/button'
+import { Surface } from '@/shared/ui/surface'
 
 /** The icons that the pages of the features name for their tabs. */
 const tabIcons: TabIcons = {

@@ -1,8 +1,8 @@
 import { SettingsIcon } from 'lucide-react'
 
-import type { FeatureActivity, TabIcons } from '@/components/layout'
-import { SidePanel } from '@/components/layout'
-import { settingsHref } from '@/lib/routes.utils'
+import type { FeatureActivity, TabIcons } from '@/frame'
+import { SidePanel } from '@/frame'
+import { settingsHref } from '@/shared/config/routes.utils'
 
 import { SettingsNav } from './components/SettingsNav'
 

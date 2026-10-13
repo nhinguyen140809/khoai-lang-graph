@@ -2,11 +2,11 @@
 
 import { useState } from 'react'
 
-import { Button } from '@/components/ui/button'
-import { Field, FieldDescription, FieldError, FieldGroup, FieldLabel } from '@/components/ui/field'
-import { Input } from '@/components/ui/input'
-import { NativeSelect, NativeSelectOption } from '@/components/ui/native-select'
-import { Textarea } from '@/components/ui/textarea'
+import { Button } from '@/shared/ui/button'
+import { Field, FieldDescription, FieldError, FieldGroup, FieldLabel } from '@/shared/ui/field'
+import { Input } from '@/shared/ui/input'
+import { NativeSelect, NativeSelectOption } from '@/shared/ui/native-select'
+import { Textarea } from '@/shared/ui/textarea'
 
 import { formErrorMessage, serverFieldErrors } from '../form-errors.utils'
 import { useUpdateProject } from '../hooks/useUpdateProject'

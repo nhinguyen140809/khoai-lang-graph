@@ -5,21 +5,15 @@ import { useRouter } from 'next/navigation'
 import { Controller, useForm } from 'react-hook-form'
 import { z } from 'zod'
 
-import { Button } from '@/components/ui/button'
-import { DialogClose, DialogFooter } from '@/components/ui/dialog'
-import { Field, FieldDescription, FieldError, FieldGroup, FieldLabel } from '@/components/ui/field'
-import { Input } from '@/components/ui/input'
-import {
-  Select,
-  SelectContent,
-  SelectItem,
-  SelectTrigger,
-  SelectValue,
-} from '@/components/ui/select'
-import { Spinner } from '@/components/ui/spinner'
-import { Textarea } from '@/components/ui/textarea'
-import { ApiError } from '@/lib/api-fetch.utils'
-import { consoleHref } from '@/lib/routes.utils'
+import { ApiError } from '@/shared/api/api-fetch.utils'
+import { consoleHref } from '@/shared/config/routes.utils'
+import { Button } from '@/shared/ui/button'
+import { DialogClose, DialogFooter } from '@/shared/ui/dialog'
+import { Field, FieldDescription, FieldError, FieldGroup, FieldLabel } from '@/shared/ui/field'
+import { Input } from '@/shared/ui/input'
+import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/shared/ui/select'
+import { Spinner } from '@/shared/ui/spinner'
+import { Textarea } from '@/shared/ui/textarea'
 
 import { useCreateProject } from '../hooks/useCreateProject'
 import {

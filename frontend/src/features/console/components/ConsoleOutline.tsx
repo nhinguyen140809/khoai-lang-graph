@@ -1,7 +1,7 @@
 'use client'
 
-import { ErrorState, LoadingState } from '@/components/state'
-import { EmptyState } from '@/components/state'
+import { ErrorState, LoadingState } from '@/shared/components/state'
+import { EmptyState } from '@/shared/components/state'
 
 import { formatClock } from '../event-log.utils'
 import { scrollToEvent } from '../event-scroll.utils'

@@ -1,7 +1,7 @@
 import Link from 'next/link'
 
-import { itemHref } from '@/lib/routes.utils'
-import { cn } from '@/lib/utils'
+import { itemHref } from '@/shared/config/routes.utils'
+import { cn } from '@/shared/lib/utils'
 
 import { useItemOpen } from './ItemOpenContext'
 

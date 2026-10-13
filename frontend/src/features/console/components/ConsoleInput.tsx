@@ -2,8 +2,8 @@
 
 import { type KeyboardEvent, useEffect, useId, useRef, useState } from 'react'
 
-import { useModifierKeyName } from '@/hooks/useModifierKeyName'
-import { cn } from '@/lib/utils'
+import { useModifierKeyName } from '@/shared/hooks/useModifierKeyName'
+import { cn } from '@/shared/lib/utils'
 
 import { type CommandName, findCommand } from '../commands.constants'
 import { useMentionItems } from '../hooks/useMentionItems'

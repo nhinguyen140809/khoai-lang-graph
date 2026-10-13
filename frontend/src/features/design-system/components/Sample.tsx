@@ -1,7 +1,7 @@
 import { cn } from 'cn'
 import type { ComponentProps, ReactNode } from 'react'
 
-import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card'
+import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/shared/ui/card'
 
 /** A card of the page: a title, a short description, and the samples. */
 export function SampleCard({

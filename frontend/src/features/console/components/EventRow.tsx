@@ -1,7 +1,7 @@
 import { ChevronRight } from 'lucide-react'
 import type { ReactNode } from 'react'
 
-import { cn } from '@/lib/utils'
+import { cn } from '@/shared/lib/utils'
 
 export type RowTone = 'default' | 'success' | 'failure' | 'warning' | 'running'
 

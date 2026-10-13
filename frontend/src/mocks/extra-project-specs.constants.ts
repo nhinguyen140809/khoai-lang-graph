@@ -1,4 +1,4 @@
-import type { RunStatus } from '@/lib/run-status.constants'
+import type { RunStatus } from '@/shared/config/run-status.constants'
 
 /** What a mock project is in: the state of its last run, or no run yet. */
 export type ExtraRunState = RunStatus | 'none'

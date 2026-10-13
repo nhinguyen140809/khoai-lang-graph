@@ -2,7 +2,7 @@ import { z } from 'zod'
 import { create } from 'zustand'
 import { persist } from 'zustand/middleware'
 
-import { parseStored, persistStorage, storageKey } from '@/lib/browser-storage.utils'
+import { parseStored, persistStorage, storageKey } from '@/shared/lib/browser-storage.utils'
 
 import { commandNames } from './commands.constants'
 

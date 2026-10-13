@@ -1,4 +1,4 @@
-import { RouteParam } from '@/lib/routes.utils'
+import { RouteParam } from '@/shared/config/routes.utils'
 
 import { type SettingsSection, settingsSections } from './settings.types'
 

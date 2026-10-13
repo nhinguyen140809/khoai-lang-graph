@@ -5,8 +5,9 @@ import { DownloadIcon } from 'lucide-react'
 import { useSearchParams } from 'next/navigation'
 import { useState } from 'react'
 
-import { ErrorState, LoadingState } from '@/components/state'
-import { Button } from '@/components/ui/button'
+import { ErrorState, LoadingState } from '@/shared/components/state'
+import { RouteParam } from '@/shared/config/routes.utils'
+import { Button } from '@/shared/ui/button'
 import {
   Dialog,
   DialogContent,
@@ -14,17 +15,10 @@ import {
   DialogHeader,
   DialogTitle,
   DialogTrigger,
-} from '@/components/ui/dialog'
-import { Field, FieldLabel } from '@/components/ui/field'
-import {
-  Select,
-  SelectContent,
-  SelectItem,
-  SelectTrigger,
-  SelectValue,
-} from '@/components/ui/select'
-import { Spinner } from '@/components/ui/spinner'
-import { RouteParam } from '@/lib/routes.utils'
+} from '@/shared/ui/dialog'
+import { Field, FieldLabel } from '@/shared/ui/field'
+import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/shared/ui/select'
+import { Spinner } from '@/shared/ui/spinner'
 
 import { createExport, getExport } from '../artifacts.api'
 import { artifactKeys } from '../artifacts-keys.constants'

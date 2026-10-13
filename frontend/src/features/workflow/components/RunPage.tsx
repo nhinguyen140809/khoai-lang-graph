@@ -3,11 +3,11 @@
 import { useRouter, useSearchParams } from 'next/navigation'
 import { useMemo } from 'react'
 
-import { EditorWithBottomPanel, projectTabGroup, useEditorTab } from '@/components/layout'
-import { ErrorState, LoadingState, NotFoundState } from '@/components/state'
-import { ScrollArea } from '@/components/ui/scroll-area'
-import { RouteParam, runHref, runNodeHref } from '@/lib/routes.utils'
-import { runStatusLabels } from '@/lib/run-status.constants'
+import { EditorWithBottomPanel, projectTabGroup, useEditorTab } from '@/frame'
+import { ErrorState, LoadingState, NotFoundState } from '@/shared/components/state'
+import { RouteParam, runHref, runNodeHref } from '@/shared/config/routes.utils'
+import { runStatusLabels } from '@/shared/config/run-status.constants'
+import { ScrollArea } from '@/shared/ui/scroll-area'
 
 import { useGraphLayout } from '../hooks/useGraphLayout'
 import { useProjectRuns } from '../hooks/useProjectRuns'

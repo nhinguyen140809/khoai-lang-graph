@@ -1,5 +1,5 @@
-import { apiCommand, apiRequest, fetchAllPages, listPageSchema } from '@/lib/api-fetch.utils'
-import { apiUrl } from '@/lib/api-url.utils'
+import { apiCommand, apiRequest, fetchAllPages, listPageSchema } from '@/shared/api/api-fetch.utils'
+import { apiUrl } from '@/shared/api/api-url.utils'
 
 import {
   type ConsoleRun,

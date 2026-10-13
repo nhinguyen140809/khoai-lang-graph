@@ -4,8 +4,8 @@ import { CornerDownRightIcon } from 'lucide-react'
 import Link from 'next/link'
 import { type ReactNode, useState } from 'react'
 
-import { itemHref } from '@/lib/routes.utils'
-import { cn } from '@/lib/utils'
+import { itemHref } from '@/shared/config/routes.utils'
+import { cn } from '@/shared/lib/utils'
 
 import type { ConsoleStep } from '../console.types'
 import { eventDomId, formatDuration, type LogEvent, stepDurationMs } from '../event-log.utils'

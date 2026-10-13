@@ -19,7 +19,7 @@ import {
   QuestionnaireSkip,
   QuestionnaireSubmit,
   QuestionnaireTitle,
-} from '@/components/ui/questionnaire'
+} from '@/shared/ui/questionnaire'
 
 import { personas } from '../../design-system.fixtures'
 import { SampleCard } from '../Sample'

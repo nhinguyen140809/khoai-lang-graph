@@ -1,6 +1,6 @@
 import { useQuery } from '@tanstack/react-query'
 
-import { isNotFoundError } from '@/lib/api-fetch.utils'
+import { isNotFoundError } from '@/shared/api/api-fetch.utils'
 
 import { getSettingsProject } from '../project-settings.api'
 

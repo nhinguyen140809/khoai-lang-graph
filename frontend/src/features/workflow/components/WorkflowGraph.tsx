@@ -12,21 +12,15 @@ import {
 } from '@xyflow/react'
 import { useMemo } from 'react'
 
-import { Edge } from '@/components/ui/edge'
-import { Flow } from '@/components/ui/flow'
-import { Handle } from '@/components/ui/handle'
-import {
-  Node,
-  NodeContent,
-  NodeHeader,
-  NodeHeaderTitle,
-  type NodeVariant,
-} from '@/components/ui/node'
+import type { GraphTone } from '@/shared/lib/tone.constants'
+import { Edge } from '@/shared/ui/edge'
+import { Flow } from '@/shared/ui/flow'
+import { Handle } from '@/shared/ui/handle'
+import { Node, NodeContent, NodeHeader, NodeHeaderTitle, type NodeVariant } from '@/shared/ui/node'
 import {
   type NodeStatus as RingStatus,
   NodeStatusIndicator,
-} from '@/components/ui/node-status-indicator'
-import type { GraphTone } from '@/lib/tone.constants'
+} from '@/shared/ui/node-status-indicator'
 
 import { edgeId, type GraphLayout, NODE_HEIGHT, NODE_WIDTH } from '../graph-layout.utils'
 import type { NodeKind, NodeStatus, RunProgress, WorkflowDefinition } from '../workflow.types'

@@ -16,14 +16,14 @@ import {
   BreadcrumbList,
   BreadcrumbPage,
   BreadcrumbSeparator,
-} from '@/components/ui/breadcrumb'
-import { Button } from '@/components/ui/button'
-import { Card } from '@/components/ui/card'
-import { Kbd } from '@/components/ui/kbd'
-import { ResizableHandle, ResizablePanel, ResizablePanelGroup } from '@/components/ui/resizable'
-import { ScrollArea } from '@/components/ui/scroll-area'
-import { Separator } from '@/components/ui/separator'
-import { Tooltip, TooltipContent, TooltipTrigger } from '@/components/ui/tooltip'
+} from '@/shared/ui/breadcrumb'
+import { Button } from '@/shared/ui/button'
+import { Card } from '@/shared/ui/card'
+import { Kbd } from '@/shared/ui/kbd'
+import { ResizableHandle, ResizablePanel, ResizablePanelGroup } from '@/shared/ui/resizable'
+import { ScrollArea } from '@/shared/ui/scroll-area'
+import { Separator } from '@/shared/ui/separator'
+import { Tooltip, TooltipContent, TooltipTrigger } from '@/shared/ui/tooltip'
 
 import { ArtifactTree } from '../ArtifactTree'
 

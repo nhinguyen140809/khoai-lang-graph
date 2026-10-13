@@ -1,13 +1,13 @@
 'use client'
 
-import { AspectRatio } from '@/components/ui/aspect-ratio'
+import { AspectRatio } from '@/shared/ui/aspect-ratio'
 import {
   Carousel,
   CarouselContent,
   CarouselItem,
   CarouselNext,
   CarouselPrevious,
-} from '@/components/ui/carousel'
+} from '@/shared/ui/carousel'
 
 import { personas } from '../../design-system.fixtures'
 import { SampleCard } from '../Sample'

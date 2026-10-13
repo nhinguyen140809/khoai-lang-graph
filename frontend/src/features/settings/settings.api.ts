@@ -1,5 +1,5 @@
-import { runConfigDefinitionSchema } from '@/components/run-config'
-import { apiCommand, apiRequest, fetchAllPages, listPageSchema } from '@/lib/api-fetch.utils'
+import { apiCommand, apiRequest, fetchAllPages, listPageSchema } from '@/shared/api/api-fetch.utils'
+import { runConfigDefinitionSchema } from '@/shared/components/run-config'
 
 import {
   catalogModelSchema,

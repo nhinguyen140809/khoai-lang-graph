@@ -4,19 +4,14 @@ import { ArrowLeftIcon, PencilIcon } from 'lucide-react'
 import Link from 'next/link'
 import { useState } from 'react'
 
-import {
-  BottomPanelSections,
-  EditorWithBottomPanel,
-  projectTabGroup,
-  useEditorTab,
-} from '@/components/layout'
-import { ErrorState, LoadingState, NotFoundState } from '@/components/state'
-import { Button } from '@/components/ui/button'
-import { ScrollArea } from '@/components/ui/scroll-area'
-import { useNow } from '@/hooks/useNow'
-import { isNotFoundError } from '@/lib/api-fetch.utils'
-import { formatRelativeTime } from '@/lib/relative-time.utils'
-import { artifactHref, itemHref } from '@/lib/routes.utils'
+import { BottomPanelSections, EditorWithBottomPanel, projectTabGroup, useEditorTab } from '@/frame'
+import { isNotFoundError } from '@/shared/api/api-fetch.utils'
+import { ErrorState, LoadingState, NotFoundState } from '@/shared/components/state'
+import { artifactHref, itemHref } from '@/shared/config/routes.utils'
+import { useNow } from '@/shared/hooks/useNow'
+import { formatRelativeTime } from '@/shared/lib/relative-time.utils'
+import { Button } from '@/shared/ui/button'
+import { ScrollArea } from '@/shared/ui/scroll-area'
 
 import { ArtifactTabIcon } from '../artifacts-frame.config'
 import { fieldViews, itemTitle } from '../field-view.utils'

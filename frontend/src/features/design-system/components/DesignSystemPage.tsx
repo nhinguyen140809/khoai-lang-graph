@@ -1,4 +1,4 @@
-import { ScrollArea } from '@/components/ui/scroll-area'
+import { ScrollArea } from '@/shared/ui/scroll-area'
 
 import { AlertsCard } from './cards/AlertsCard'
 import { ArtifactTableCard } from './cards/ArtifactTableCard'

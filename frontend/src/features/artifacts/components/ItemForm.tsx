@@ -3,10 +3,10 @@
 import { useState } from 'react'
 import { Controller, useForm } from 'react-hook-form'
 
-import { Button } from '@/components/ui/button'
-import { Field, FieldDescription, FieldError, FieldGroup, FieldLabel } from '@/components/ui/field'
-import { Spinner } from '@/components/ui/spinner'
-import { ApiError } from '@/lib/api-fetch.utils'
+import { ApiError } from '@/shared/api/api-fetch.utils'
+import { Button } from '@/shared/ui/button'
+import { Field, FieldDescription, FieldError, FieldGroup, FieldLabel } from '@/shared/ui/field'
+import { Spinner } from '@/shared/ui/spinner'
 
 import type { ArtifactItem, ContentSchema } from '../artifacts.types'
 import { emptyValue, fieldViews, toStoredContent, validateContent } from '../field-view.utils'

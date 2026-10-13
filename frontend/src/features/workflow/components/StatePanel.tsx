@@ -3,8 +3,8 @@
 import type { Route } from 'next'
 import Link from 'next/link'
 
-import { ErrorState, LoadingState } from '@/components/state'
-import { artifactHref, itemHref } from '@/lib/routes.utils'
+import { ErrorState, LoadingState } from '@/shared/components/state'
+import { artifactHref, itemHref } from '@/shared/config/routes.utils'
 
 import { useWorkflowState } from '../hooks/useWorkflowState'
 

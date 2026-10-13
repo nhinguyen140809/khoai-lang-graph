@@ -3,7 +3,10 @@
 import { CheckIcon, ChevronDownIcon, LayoutListIcon, PlusIcon, RotateCcwIcon } from 'lucide-react'
 import Link from 'next/link'
 
-import { Button } from '@/components/ui/button'
+import { isNotFoundError } from '@/shared/api/api-fetch.utils'
+import { consoleHref } from '@/shared/config/routes.utils'
+import { cn } from '@/shared/lib/utils'
+import { Button } from '@/shared/ui/button'
 import {
   DropdownMenu,
   DropdownMenuContent,
@@ -11,11 +14,8 @@ import {
   DropdownMenuLabel,
   DropdownMenuSeparator,
   DropdownMenuTrigger,
-} from '@/components/ui/dropdown-menu'
-import { Skeleton } from '@/components/ui/skeleton'
-import { isNotFoundError } from '@/lib/api-fetch.utils'
-import { consoleHref } from '@/lib/routes.utils'
-import { cn } from '@/lib/utils'
+} from '@/shared/ui/dropdown-menu'
+import { Skeleton } from '@/shared/ui/skeleton'
 
 import { useProject } from '../hooks/useProject'
 import { useProjects } from '../hooks/useProjects'

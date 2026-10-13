@@ -2,10 +2,10 @@
 
 import { type KeyboardEvent, useState } from 'react'
 
-import { Button } from '@/components/ui/button'
-import { Spinner } from '@/components/ui/spinner'
-import { Textarea } from '@/components/ui/textarea'
-import { ApiError } from '@/lib/api-fetch.utils'
+import { ApiError } from '@/shared/api/api-fetch.utils'
+import { Button } from '@/shared/ui/button'
+import { Spinner } from '@/shared/ui/spinner'
+import { Textarea } from '@/shared/ui/textarea'
 
 import { useResumeRun } from '../hooks/useResumeRun'
 import { useReviewedItems } from '../hooks/useReviewedItems'

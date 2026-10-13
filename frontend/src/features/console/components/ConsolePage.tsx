@@ -3,8 +3,8 @@
 import { usePathname } from 'next/navigation'
 import type { ReactNode } from 'react'
 
-import { projectTabGroup, useEditorTab } from '@/components/layout'
-import { ErrorState, LoadingState } from '@/components/state'
+import { projectTabGroup, useEditorTab } from '@/frame'
+import { ErrorState, LoadingState } from '@/shared/components/state'
 
 import { ConsoleTabIcon } from '../console-frame.config'
 import { useConsoleThread } from '../hooks/useConsoleThread'

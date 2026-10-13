@@ -2,7 +2,7 @@
 
 import type { ReactNode } from 'react'
 
-import { isNotFoundError } from '@/lib/api-fetch.utils'
+import { isNotFoundError } from '@/shared/api/api-fetch.utils'
 
 import { useProject } from '../hooks/useProject'
 

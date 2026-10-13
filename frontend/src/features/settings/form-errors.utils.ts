@@ -1,4 +1,4 @@
-import { ApiError } from '@/lib/api-fetch.utils'
+import { ApiError } from '@/shared/api/api-fetch.utils'
 
 /** The problems that the server found, by field; a failure without fields has none. */
 export function serverFieldErrors(error: unknown): Record<string, string> {

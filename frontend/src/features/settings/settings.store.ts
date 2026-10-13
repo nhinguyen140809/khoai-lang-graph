@@ -1,7 +1,7 @@
 import { create } from 'zustand'
 import { persist } from 'zustand/middleware'
 
-import { persistStorage, storageKey } from '@/lib/browser-storage.utils'
+import { persistStorage, storageKey } from '@/shared/lib/browser-storage.utils'
 
 interface SettingsState {
   /**

@@ -2,10 +2,10 @@
 
 import { useState } from 'react'
 
-import type { RunConfigDefinition } from '@/components/run-config'
-import { Field, FieldDescription, FieldError, FieldGroup, FieldLabel } from '@/components/ui/field'
-import { Input } from '@/components/ui/input'
-import { NativeSelect, NativeSelectOption } from '@/components/ui/native-select'
+import type { RunConfigDefinition } from '@/shared/components/run-config'
+import { Field, FieldDescription, FieldError, FieldGroup, FieldLabel } from '@/shared/ui/field'
+import { Input } from '@/shared/ui/input'
+import { NativeSelect, NativeSelectOption } from '@/shared/ui/native-select'
 
 import { formErrorMessage, serverFieldErrors } from '../form-errors.utils'
 import { useSaveModelChoices } from '../hooks/useAccountQueries'

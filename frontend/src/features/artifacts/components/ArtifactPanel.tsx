@@ -2,7 +2,7 @@
 
 import { useState } from 'react'
 
-import { cn } from '@/lib/utils'
+import { cn } from '@/shared/lib/utils'
 
 import { ArtifactDocument } from './ArtifactDocument'
 import { ItemOpenContext } from './ItemOpenContext'

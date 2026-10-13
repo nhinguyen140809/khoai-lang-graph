@@ -1,8 +1,8 @@
 import { FileIcon, FileStackIcon, FileTextIcon } from 'lucide-react'
 
-import type { FeatureActivity, TabIcons } from '@/components/layout'
-import { SidePanel } from '@/components/layout'
-import { artifactsHref } from '@/lib/routes.utils'
+import type { FeatureActivity, TabIcons } from '@/frame'
+import { SidePanel } from '@/frame'
+import { artifactsHref } from '@/shared/config/routes.utils'
 
 import { ArtifactTree } from './components/ArtifactTree'
 import { ExportButton } from './components/ExportButton'
