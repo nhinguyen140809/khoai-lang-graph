@@ -27,7 +27,7 @@ export default function HomeLayout({ children }: HomeLayoutProps) {
       <Workbench
         crumb={<PageCrumb pages={pages} fallback="Projects" />}
         account={<UserMenu />}
-        commands={
+        contributions={
           <>
             <ProjectCommands />
             <ThemeCommands />

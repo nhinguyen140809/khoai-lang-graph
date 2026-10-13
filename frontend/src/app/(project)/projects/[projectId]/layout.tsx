@@ -15,7 +15,7 @@ import {
 import { reviewTabIcons } from '@/features/review'
 import { searchActivity } from '@/features/search'
 import { ThemeCommands, ThemeSync } from '@/features/settings'
-import { ProjectRunStatus } from '@/features/threads'
+import { ProjectRunStatusItem } from '@/features/threads'
 import { traceabilityActivity, traceabilityTabIcons } from '@/features/traceability'
 import { workflowActivity, workflowTabIcons } from '@/features/workflow'
 import type { Activity, TabIcons } from '@/shared/components/frame'
@@ -78,7 +78,7 @@ export default async function ProjectLayout({
           <Workbench
             crumb={crumb}
             account={<UserMenu />}
-            commands={
+            contributions={
               <>
                 <ProjectCommands />
                 <ThemeCommands />
@@ -107,9 +107,9 @@ export default async function ProjectLayout({
           account={<UserMenu />}
           activities={activities}
           tabIcons={tabIcons}
-          status={<ProjectRunStatus projectId={projectId} />}
-          commands={
+          contributions={
             <>
+              <ProjectRunStatusItem projectId={projectId} />
               <ProjectCommands currentProjectId={projectId} />
               <ThemeCommands />
             </>

@@ -23,14 +23,13 @@ interface WorkbenchProps {
   activities?: readonly Activity[]
   /** The icons that the pages of the features name for their tabs. */
   tabIcons?: TabIcons
-  /** What the status bar reports at its left; the bar is always shown. */
-  status?: ReactNode
   /**
-   * Components that register the commands of the screen with `useCommands`, such as the projects
-   * to open; they render nothing. The frame registers its own, and a page registers the commands
-   * that act on it.
+   * Components that render nothing and add to the frame what belongs to no page: commands with
+   * `useCommands`, such as the projects to open, and items of the status bar with
+   * `useStatusBarItem`, such as the run of the project. The frame registers its own, and a page
+   * registers what acts on it.
    */
-  commands?: ReactNode
+  contributions?: ReactNode
   /** Dialogs that commands or pages open, such as the new project dialog. */
   dialogs?: ReactNode
   children: ReactNode
@@ -49,8 +48,7 @@ export function Workbench({
   account,
   activities = noActivities,
   tabIcons = noTabIcons,
-  status,
-  commands,
+  contributions,
   dialogs,
   children,
 }: WorkbenchProps) {
@@ -66,10 +64,10 @@ export function Workbench({
           <ActivityBar account={account} />
           <div className="flex min-w-0 flex-1 flex-col pr-1.5 pb-1.5">{children}</div>
         </div>
-        <StatusBar>{status}</StatusBar>
+        <StatusBar />
         <CommandPalette />
         <FeatureCommands />
-        {commands}
+        {contributions}
         {dialogs}
       </div>
     </ActivitiesContext>
