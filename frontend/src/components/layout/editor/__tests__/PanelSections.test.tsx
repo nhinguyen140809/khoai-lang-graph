@@ -26,6 +26,24 @@ describe('PanelSections', () => {
     expect(screen.getByRole('tabpanel')).toHaveTextContent('the state')
   })
 
+  it('keeps a section as it was while another one is shown', async () => {
+    render(
+      <PanelSections
+        sections={[
+          { id: 'step', title: 'Step', content: <input aria-label="Filter" /> },
+          { id: 'state', title: 'State', content: <p>the state</p> },
+        ]}
+      />,
+    )
+    await userEvent.type(screen.getByRole('textbox', { name: 'Filter' }), 'REQ')
+
+    await userEvent.click(screen.getByRole('tab', { name: 'State' }))
+    expect(screen.getByLabelText('Filter')).not.toBeVisible()
+    await userEvent.click(screen.getByRole('tab', { name: 'Step' }))
+
+    expect(screen.getByRole('textbox', { name: 'Filter' })).toHaveValue('REQ')
+  })
+
   it('shows the actions of the section shown, then the controls', async () => {
     render(<PanelSections sections={sections} controls={<button type="button">Hide</button>} />)
     expect(screen.queryByRole('button', { name: 'Copy the state' })).not.toBeInTheDocument()

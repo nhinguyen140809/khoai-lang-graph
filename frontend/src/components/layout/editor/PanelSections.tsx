@@ -1,6 +1,6 @@
 'use client'
 
-import { type ReactNode, useState } from 'react'
+import { Activity, type ReactNode, useState } from 'react'
 
 import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs'
 
@@ -23,7 +23,8 @@ interface PanelSectionsProps {
 
 /**
  * The sections of a panel, one tab each, in a row at the top; the first section shows first. The
- * row ends with the actions of the section shown.
+ * row ends with the actions of the section shown. A section that another one replaces on screen is
+ * hidden, not unmounted, so it keeps its state, such as where it was scrolled to.
  */
 export function PanelSections({ sections, controls }: PanelSectionsProps) {
   const [selected, setSelected] = useState(sections[0]?.id)
@@ -47,8 +48,8 @@ export function PanelSections({ sections, controls }: PanelSectionsProps) {
         </div>
       </div>
       {sections.map(({ id, content }) => (
-        <TabsContent key={id} value={id} className="min-h-0">
-          {content}
+        <TabsContent key={id} value={id} forceMount hidden={id !== shown.id} className="min-h-0">
+          <Activity mode={id === shown.id ? 'visible' : 'hidden'}>{content}</Activity>
         </TabsContent>
       ))}
     </Tabs>
