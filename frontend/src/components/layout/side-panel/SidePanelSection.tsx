@@ -23,7 +23,7 @@ export function SidePanelSection({ title, defaultOpen = true, children }: SidePa
       <CollapsibleTrigger className="group/section flex h-6 w-full items-center gap-0.5 px-1 text-2xs font-semibold tracking-wide uppercase outline-none hover:bg-sidebar-accent focus-visible:ring-2 focus-visible:ring-ring/50 focus-visible:ring-inset">
         <ChevronRight
           aria-hidden
-          className="size-4 shrink-0 transition-transform group-data-[state=open]/section:rotate-90"
+          className="size-4 shrink-0 transition-transform group-data-[state=open]/section:rotate-90 motion-reduce:transition-none"
         />
         <span className="truncate">{title}</span>
       </CollapsibleTrigger>
