@@ -21,7 +21,7 @@ const noTabs: EditorTab[] = []
  * The open editors of a project, whichever feature they belong to. A tab shows the icon its page
  * names among the tab icons of the frame, else the icon of the feature it belongs to. A middle
  * click or the close button closes a tab; the close button shows on the active tab and on the tab
- * under the pointer. The active tab is the one that the page on screen opened with `useEditorTab`.
+ * under the pointer, and always on a touch screen. The active tab is the one that the page on screen opened with `useEditorTab`.
  */
 export function EditorTabs({ group, rootHref }: EditorTabsProps) {
   const router = useRouter()
@@ -112,14 +112,17 @@ interface CloseTabButtonProps {
   onClick: () => void
 }
 
-/** Shown on the active tab, on the tab under the pointer, and when it has the focus. */
+/**
+ * Shown on the active tab, on the tab under the pointer, and when it has the focus; always on a
+ * touch screen, which has no pointer to hover with.
+ */
 function CloseTabButton({ title, onClick }: CloseTabButtonProps) {
   return (
     <button
       type="button"
       aria-label={`Close ${title}`}
       onClick={onClick}
-      className="mr-1 flex size-5 items-center justify-center rounded-sm opacity-0 outline-none group-hover/tab:opacity-100 group-data-[active=true]/tab:opacity-100 hover:bg-muted focus-visible:opacity-100 focus-visible:ring-2 focus-visible:ring-ring/50"
+      className="mr-1 flex size-5 items-center justify-center rounded-sm opacity-0 outline-none group-hover/tab:opacity-100 group-data-[active=true]/tab:opacity-100 hover:bg-muted focus-visible:opacity-100 focus-visible:ring-2 focus-visible:ring-ring/50 pointer-coarse:opacity-100"
     >
       <XIcon aria-hidden className="size-3" />
     </button>

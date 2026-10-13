@@ -10,7 +10,8 @@ interface SidePanelSectionProps {
   title: string
   /**
    * Buttons at the right of the title, such as a button that refreshes the section. They show
-   * while the pointer is over the title or the focus is on one of them.
+   * while the pointer is over the title or the focus is on one of them, and always on a touch
+   * screen.
    */
   actions?: ReactNode
   /** Whether the section starts open. */
@@ -33,7 +34,7 @@ export function SidePanelSection({
       <div className="group/header flex h-6 items-center hover:bg-sidebar-accent">
         <SectionTitle title={title} />
         {actions !== undefined && (
-          <div className="flex items-center gap-0.5 pr-1 opacity-0 group-hover/header:opacity-100 focus-within:opacity-100">
+          <div className="flex items-center gap-0.5 pr-1 opacity-0 group-hover/header:opacity-100 focus-within:opacity-100 pointer-coarse:opacity-100">
             {actions}
           </div>
         )}
