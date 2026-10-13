@@ -5,7 +5,7 @@ import type { Route } from 'next'
 import type { ReactNode } from 'react'
 import { beforeEach, describe, expect, it, vi } from 'vitest'
 
-import { routerMock, setPathname } from '@/test/next-mocks.utils'
+import { routerMock } from '@/test/next-mocks.utils'
 
 import { ActivitiesContext } from '../../activity-bar/ActivitiesContext'
 import type { Activity, TabIcons } from '../../activity-bar/activity.types'
@@ -38,8 +38,11 @@ const ambiguity = {
 
 beforeEach(() => {
   routerMock.push.mockClear()
-  useEditorTabsStore.setState({ groups: { 'p1:search': [req, ambiguity] }, lastHrefs: {} })
-  setPathname(req.href)
+  useEditorTabsStore.setState({
+    ...useEditorTabsStore.getInitialState(),
+    groups: { 'p1:search': [req, ambiguity] },
+    onScreen: { 'p1:search': req.id },
+  })
 })
 
 describe('EditorTabs', () => {
@@ -50,10 +53,16 @@ describe('EditorTabs', () => {
     expect(screen.getByRole('link', { name: 'AMB-001' })).not.toHaveAttribute('aria-current')
   })
 
-  it('remembers the page on screen, so that a tab a page opens goes next to its tab', () => {
-    renderTabs('p1:search')
+  it('marks the tab of the page on screen, whatever its address holds', () => {
+    useEditorTabsStore.setState({
+      groups: {
+        p1: [{ id: 'settings', title: 'Settings', href: '/projects/p1/settings?section=members' }],
+      },
+      onScreen: { p1: 'settings' },
+    })
+    renderTabs('p1')
 
-    expect(useEditorTabsStore.getState().lastHrefs['p1:search']).toBe(req.href)
+    expect(screen.getByRole('link', { name: 'Settings' })).toHaveAttribute('aria-current', 'page')
   })
 
   it('shows the next tab after closing the tab on screen', async () => {
@@ -103,9 +112,8 @@ describe('EditorTabs', () => {
           { id: 'run', title: 'Run 1', href: '/projects/p1/workflow/r1', icon: 'run' },
         ],
       },
-      lastHrefs: {},
+      onScreen: { p1: 'run' },
     })
-    setPathname('/projects/p1/workflow/r1')
     renderTabs('p1')
 
     expect(screen.getAllByRole('link').map((link) => link.textContent)).toEqual([

@@ -21,24 +21,46 @@ export type EditorTab = z.infer<typeof editorTabSchema>
 
 const persistedTabsSchema = z.object({
   groups: z.record(z.string(), z.array(editorTabSchema)),
-  lastHrefs: z.record(z.string(), z.string()),
 })
 
 type PersistedTabs = z.infer<typeof persistedTabsSchema>
 
-interface OpenTabOptions {
-  /** The address of the tab to open the new tab after; without it, the tab opens last. */
-  after?: string | undefined
+interface EditorTabsState extends PersistedTabs {
+  /** By group, the id of the tab whose page is on screen; none while a page without a tab is. */
+  onScreen: Record<string, string>
+  /** By group, the id of the tab whose page was on screen last, kept after the page leaves. */
+  lastShown: Record<string, string>
+  /**
+   * Opens the tab of the page on screen, or gives an open tab its new title. A new tab goes after
+   * the tab shown last, as an editor opens a file next to the one in view, else at the end.
+   */
+  openTab: (group: string, tab: EditorTab) => void
+  /** The page of the tab leaves the screen. */
+  leaveTab: (group: string, id: string) => void
+  closeTab: (group: string, id: string) => void
 }
 
-interface EditorTabsState extends PersistedTabs {
-  /**
-   * Adds the tab after the tab of `options.after`, like an editor opens a file next to the one in
-   * view, or at the end. A tab that is open already keeps its place and takes the new title.
-   */
-  openTab: (group: string, tab: EditorTab, options?: OpenTabOptions) => void
-  closeTab: (group: string, id: string) => void
-  setLastHref: (group: string, href: string) => void
+/** The record with the entry of `key` set to `value`, or the same record when it has it already. */
+function withEntry(record: Record<string, string>, key: string, value: string) {
+  return record[key] === value ? record : { ...record, [key]: value }
+}
+
+/** The record without the entry of `key` when it holds `value`, else the same record. */
+function withoutEntry(record: Record<string, string>, key: string, value: string) {
+  if (record[key] !== value) return record
+  return Object.fromEntries(Object.entries(record).filter(([entry]) => entry !== key))
+}
+
+/** The tabs with `tab` in them: in place of the open tab of the same id, else after `after`. */
+function placeTab(tabs: EditorTab[], tab: EditorTab, after: string | undefined): EditorTab[] {
+  const index = tabs.findIndex(({ id }) => id === tab.id)
+  const open = index === -1 ? undefined : tabs[index]
+  if (open !== undefined) {
+    const same = open.title === tab.title && open.href === tab.href && open.icon === tab.icon
+    return same ? tabs : tabs.with(index, tab)
+  }
+  const afterIndex = tabs.findIndex(({ id }) => id === after)
+  return afterIndex === -1 ? [...tabs, tab] : tabs.toSpliced(afterIndex + 1, 0, tab)
 }
 
 // Tabs opened before the stored ones were read are kept, after the stored ones.
@@ -62,49 +84,31 @@ export const useEditorTabsStore = create<EditorTabsState>()(
   persist(
     (set) => ({
       groups: {},
-      lastHrefs: {},
-      openTab: (group, tab, { after } = {}) => {
+      onScreen: {},
+      lastShown: {},
+      openTab: (group, tab) => {
         set((state) => {
           const tabs = state.groups[group] ?? []
-          const index = tabs.findIndex(({ id }) => id === tab.id)
-          const current = index === -1 ? undefined : tabs[index]
-          if (
-            current?.title === tab.title &&
-            current.href === tab.href &&
-            current.icon === tab.icon
-          ) {
-            return state
+          const placed = placeTab(tabs, tab, state.lastShown[group])
+          return {
+            groups: placed === tabs ? state.groups : { ...state.groups, [group]: placed },
+            onScreen: withEntry(state.onScreen, group, tab.id),
+            lastShown: withEntry(state.lastShown, group, tab.id),
           }
-          let next: EditorTab[]
-          if (index !== -1) {
-            next = tabs.with(index, tab)
-          } else {
-            const afterIndex = tabs.findIndex(({ href }) => href === after)
-            next = afterIndex === -1 ? [...tabs, tab] : tabs.toSpliced(afterIndex + 1, 0, tab)
-          }
-          return { groups: { ...state.groups, [group]: next } }
         })
+      },
+      leaveTab: (group, id) => {
+        set((state) => ({ onScreen: withoutEntry(state.onScreen, group, id) }))
       },
       closeTab: (group, id) => {
-        set((state) => {
-          const tabs = state.groups[group] ?? []
-          const closed = tabs.find((tab) => tab.id === id)
-          // A page that is closed is not the page to return to.
-          const lastHrefs = Object.fromEntries(
-            Object.entries(state.lastHrefs).filter(([, href]) => href !== closed?.href),
-          )
-          return {
-            groups: { ...state.groups, [group]: tabs.filter((tab) => tab.id !== id) },
-            lastHrefs,
-          }
-        })
-      },
-      setLastHref: (group, href) => {
-        set((state) =>
-          state.lastHrefs[group] === href
-            ? state
-            : { lastHrefs: { ...state.lastHrefs, [group]: href } },
-        )
+        set((state) => ({
+          groups: {
+            ...state.groups,
+            [group]: (state.groups[group] ?? []).filter((tab) => tab.id !== id),
+          },
+          // A closed tab is not the tab to open the next one after.
+          lastShown: withoutEntry(state.lastShown, group, id),
+        }))
       },
     }),
     {
@@ -114,13 +118,12 @@ export const useEditorTabsStore = create<EditorTabsState>()(
       storage: persistStorage<PersistedTabs>({
         ready: (): boolean => useEditorTabsStore.persist.hasHydrated(),
       }),
-      partialize: ({ groups, lastHrefs }): PersistedTabs => ({ groups, lastHrefs }),
+      partialize: ({ groups }): PersistedTabs => ({ groups }),
       merge: (persisted, current) => {
         const stored = parseStored(persistedTabsSchema, persisted)
         return {
           ...current,
           groups: mergeGroups(stored?.groups ?? {}, current.groups),
-          lastHrefs: { ...stored?.lastHrefs, ...current.lastHrefs },
         }
       },
     },

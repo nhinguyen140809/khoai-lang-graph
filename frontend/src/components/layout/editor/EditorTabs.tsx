@@ -3,8 +3,7 @@
 import { FileIcon, XIcon } from 'lucide-react'
 import type { Route } from 'next'
 import Link from 'next/link'
-import { usePathname, useRouter } from 'next/navigation'
-import { useEffect } from 'react'
+import { useRouter } from 'next/navigation'
 
 import { useActivities } from '../activity-bar/ActivitiesContext'
 import { activityOfHref } from '../activity-bar/activity.utils'
@@ -22,25 +21,19 @@ const noTabs: EditorTab[] = []
  * The open editors of a project, whichever feature they belong to. A tab shows the icon its page
  * names among the tab icons of the frame, else the icon of the feature it belongs to. A middle
  * click or the close button closes a tab; the close button shows on the active tab and on the tab
- * under the pointer. The strip remembers the page on screen, so that a tab a page opens goes next
- * to the tab of that page.
+ * under the pointer. The active tab is the one that the page on screen opened with `useEditorTab`.
  */
 export function EditorTabs({ group, rootHref }: EditorTabsProps) {
-  const pathname = usePathname()
   const router = useRouter()
   const tabs = useEditorTabsStore((state) => state.groups[group]) ?? noTabs
+  const onScreen = useEditorTabsStore((state) => state.onScreen[group])
   const closeTab = useEditorTabsStore((state) => state.closeTab)
-  const setLastHref = useEditorTabsStore((state) => state.setLastHref)
-
-  useEffect(() => {
-    setLastHref(group, pathname)
-  }, [group, pathname, setLastHref])
 
   if (tabs.length === 0) return null
 
   const close = (tab: EditorTab) => {
     const next = neighborTab(tabs, tab.id)?.href ?? rootHref
-    if (tab.href === pathname && next !== undefined) router.push(next as Route)
+    if (tab.id === onScreen && next !== undefined) router.push(next as Route)
     closeTab(group, tab.id)
   }
 
@@ -54,7 +47,7 @@ export function EditorTabs({ group, rootHref }: EditorTabsProps) {
           <Tab
             key={tab.id}
             tab={tab}
-            active={tab.href === pathname}
+            active={tab.id === onScreen}
             onClose={() => {
               close(tab)
             }}

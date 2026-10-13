@@ -16,7 +16,7 @@ const conflict = {
 
 beforeEach(() => {
   browserStorage.removeItem(STORAGE_KEY)
-  useEditorTabsStore.setState({ groups: {}, lastHrefs: {} })
+  useEditorTabsStore.setState(useEditorTabsStore.getInitialState())
 })
 
 describe('useEditorTabsStore', () => {
@@ -33,35 +33,43 @@ describe('useEditorTabsStore', () => {
     ])
   })
 
-  it('opens a new tab next to the tab of the page shown before', () => {
-    const { openTab } = useEditorTabsStore.getState()
+  it('opens a new tab next to the tab shown last, also after its page left the screen', () => {
+    const { openTab, leaveTab } = useEditorTabsStore.getState()
     openTab('p1:search', req)
     openTab('p1:search', ambiguity)
+    openTab('p1:search', req)
 
-    openTab('p1:search', conflict, { after: req.href })
+    leaveTab('p1:search', req.id)
+    expect(useEditorTabsStore.getState().onScreen['p1:search']).toBeUndefined()
+    openTab('p1:search', conflict)
 
     expect(useEditorTabsStore.getState().groups['p1:search']?.map(({ id }) => id)).toEqual([
       'i1',
       'i3',
       'i2',
     ])
+    expect(useEditorTabsStore.getState().onScreen['p1:search']).toBe(conflict.id)
   })
 
-  it('forgets the last address of a group when its tab closes', () => {
-    const { openTab, setLastHref, closeTab } = useEditorTabsStore.getState()
+  it('opens a new tab last once the tab shown last is closed', () => {
+    const { openTab, closeTab } = useEditorTabsStore.getState()
+    openTab('p1:search', ambiguity)
     openTab('p1:search', req)
-    setLastHref('p1:search', req.href)
 
     closeTab('p1:search', req.id)
+    openTab('p1:search', conflict)
 
-    expect(useEditorTabsStore.getState().groups['p1:search']).toEqual([])
-    expect(useEditorTabsStore.getState().lastHrefs['p1:search']).toBeUndefined()
+    expect(useEditorTabsStore.getState().groups['p1:search']?.map(({ id }) => id)).toEqual([
+      'i2',
+      'i3',
+    ])
   })
 
   it('keeps tabs opened before the stored tabs were read', async () => {
     browserStorage.setItem(
       STORAGE_KEY,
       JSON.stringify({
+        // lastHrefs is a field of an older version, which the store leaves out.
         state: { groups: { 'p1:search': [ambiguity] }, lastHrefs: {} },
         version: 0,
       }),
@@ -77,7 +85,7 @@ describe('useEditorTabsStore', () => {
     browserStorage.setItem(
       STORAGE_KEY,
       JSON.stringify({
-        state: { groups: { 'p1:search': [{ id: 1 }] }, lastHrefs: {} },
+        state: { groups: { 'p1:search': [{ id: 1 }] } },
         version: 0,
       }),
     )

@@ -35,7 +35,7 @@ const activities: Activity[] = [
 
 beforeEach(() => {
   setPathname('/projects/p1/artifacts')
-  useEditorTabsStore.setState({ groups: {}, lastHrefs: {} })
+  useEditorTabsStore.setState(useEditorTabsStore.getInitialState())
   useFrameStore.setState(useFrameStore.getInitialState())
 })
 
@@ -147,6 +147,19 @@ describe('ProjectWorkspace', () => {
     rerender(workspace(<Page key="b" tab={tab('b')} />))
 
     expect(useEditorTabsStore.getState().groups.p1?.map(({ id }) => id)).toEqual(['a', 'b', 'c'])
+  })
+
+  it('marks the tab of the page on screen, though its address has a query', () => {
+    setPathname('/projects/p1/settings')
+    render(
+      workspace(
+        <Page
+          tab={{ id: 'settings', title: 'Settings', href: '/projects/p1/settings?section=members' }}
+        />,
+      ),
+    )
+
+    expect(screen.getByRole('link', { name: 'Settings' })).toHaveAttribute('aria-current', 'page')
   })
 
   it('has no side panel without features', () => {
