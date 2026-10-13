@@ -24,6 +24,7 @@ describe('commandGroups', () => {
 describe('hotkeyLabel', () => {
   it('writes the modifier as Ctrl and a letter in capitals', () => {
     expect(hotkeyLabel({ key: 'b', mod: true })).toBe('Ctrl+B')
+    expect(hotkeyLabel({ key: '`', ctrl: true })).toBe('Ctrl+`')
     expect(hotkeyLabel({ key: 'Escape' })).toBe('Escape')
   })
 })

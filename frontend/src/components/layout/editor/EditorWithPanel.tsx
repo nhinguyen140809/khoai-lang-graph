@@ -1,12 +1,14 @@
 'use client'
 
-import { ChevronDownIcon, ChevronUpIcon } from 'lucide-react'
+import { ChevronDownIcon, ChevronUpIcon, PanelBottomIcon } from 'lucide-react'
 import { Activity, type ReactNode } from 'react'
 
 import { Button } from '@/components/ui/button'
 import { ResizablePanel } from '@/components/ui/resizable'
 import { Surface } from '@/components/ui/surface'
 
+import type { Command } from '../command-palette/command.types'
+import { useCommands } from '../command-palette/hooks/useCommands'
 import { useFrameStore } from '../frame.store'
 import { StoredPanel, StoredPanelGroup } from '../StoredPanel'
 
@@ -20,12 +22,28 @@ interface EditorWithPanelProps {
 
 const PANEL_MIN_HEIGHT = 96
 
+const panelCommands: Command[] = [
+  {
+    id: 'view.toggleBottomPanel',
+    label: 'Toggle bottom panel',
+    group: 'View',
+    icon: <PanelBottomIcon />,
+    hotkey: { key: '`', ctrl: true },
+    run: () => {
+      useFrameStore.getState().togglePanel('bottom')
+    },
+  },
+]
+
 /**
- * An editor with a panel under it. The panel can be resized and hidden; both are remembered.
- * Neither scrolls: the editor content and the panel content each scroll themselves when they flow.
+ * An editor with a panel under it. The panel can be resized and hidden, with its button or Ctrl+`;
+ * both are remembered. Neither scrolls: the editor content and the panel content each scroll
+ * themselves when they flow.
  */
 export function EditorWithPanel({ panel, panelLabel, children }: EditorWithPanelProps) {
   const visible = useFrameStore((state) => state.panels.bottom.visible)
+
+  useCommands(panelCommands)
 
   return (
     <div className="flex h-full flex-col gap-1.5">

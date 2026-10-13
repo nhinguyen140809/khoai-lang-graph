@@ -17,6 +17,19 @@ describe('useHotkey', () => {
     expect(handler).toHaveBeenCalledTimes(2)
   })
 
+  it('takes Ctrl only, for a hotkey that needs Ctrl on every platform', () => {
+    const handler = vi.fn()
+    renderHook(() => {
+      useHotkey('`', handler, { ctrl: true })
+    })
+
+    fireEvent.keyDown(document, { key: '`', metaKey: true })
+    fireEvent.keyDown(document, { key: '`' })
+    fireEvent.keyDown(document, { key: '`', ctrlKey: true })
+
+    expect(handler).toHaveBeenCalledOnce()
+  })
+
   it('ignores the key without the modifier, with Alt, or when disabled', () => {
     const handler = vi.fn()
     const { rerender } = renderHook(

@@ -6,6 +6,11 @@ interface HotkeyOptions {
    * it, the key matches only when neither is held.
    */
   mod?: boolean
+  /**
+   * Requires Ctrl on every platform instead, for a key whose Cmd shortcut macOS keeps for itself,
+   * such as Cmd+` that switches windows.
+   */
+  ctrl?: boolean
   /** Listens only while true. */
   enabled?: boolean
 }
@@ -33,14 +38,19 @@ function isTypingTarget(target: EventTarget | null): boolean {
  *
  * The key matches by the character it types, so the label on the keyboard counts on any Latin
  * layout. When it types no Latin letter or digit, as on a Cyrillic layout, it matches by its place
- * on a US keyboard instead. A hotkey without `mod` does not match while the user types in a field,
- * so it never takes a character away from the text. Alt never matches.
+ * on a US keyboard instead. A hotkey without a modifier does not match while the user types in a
+ * field, so it never takes a character away from the text. Alt never matches.
  *
  * @param key A character, such as `k` or `?`, or a key name, such as `Escape`.
  */
-export function matchesHotkey(event: KeyboardEvent, key: string, { mod = false }: HotkeyOptions) {
-  if (event.altKey || (event.ctrlKey || event.metaKey) !== mod) return false
-  if (!mod && isTypingTarget(event.target)) return false
+export function matchesHotkey(
+  event: KeyboardEvent,
+  key: string,
+  { mod = false, ctrl = false }: HotkeyOptions,
+) {
+  const held = ctrl ? event.ctrlKey && !event.metaKey : event.ctrlKey || event.metaKey
+  if (event.altKey || held !== (mod || ctrl)) return false
+  if (!mod && !ctrl && isTypingTarget(event.target)) return false
   if (event.key.toLowerCase() === key.toLowerCase()) return true
   const code = codeOf(key)
   return code !== null && event.code === code && !/^[a-z0-9]$/i.test(event.key)
@@ -56,10 +66,10 @@ export function matchesHotkey(event: KeyboardEvent, key: string, { mod = false }
 export function useHotkey(
   key: string,
   handler: (event: KeyboardEvent) => void,
-  { mod = false, enabled = true }: HotkeyOptions = {},
+  { mod = false, ctrl = false, enabled = true }: HotkeyOptions = {},
 ) {
   const onKeyDown = useEffectEvent((event: KeyboardEvent) => {
-    if (!matchesHotkey(event, key, { mod })) return
+    if (!matchesHotkey(event, key, { mod, ctrl })) return
     event.preventDefault()
     handler(event)
   })

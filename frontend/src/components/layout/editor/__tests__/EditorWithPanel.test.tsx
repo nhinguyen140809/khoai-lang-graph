@@ -33,6 +33,20 @@ describe('EditorWithPanel', () => {
     ).not.toBeInTheDocument()
   })
 
+  it('hides and shows the panel with Ctrl+`', () => {
+    render(
+      <EditorWithPanel panelLabel="Trace" panel={<p>trace of REQ-001</p>}>
+        <p>REQ-001 Search mentors</p>
+      </EditorWithPanel>,
+    )
+
+    fireEvent.keyDown(document, { key: '`', ctrlKey: true })
+    expect(screen.getByText('trace of REQ-001')).not.toBeVisible()
+
+    fireEvent.keyDown(document, { key: '`', ctrlKey: true })
+    expect(screen.getByText('trace of REQ-001')).toBeVisible()
+  })
+
   it('keeps the editor and the panel as they were while the panel is hidden', async () => {
     render(
       <EditorWithPanel panelLabel="Trace" panel={<input aria-label="Filter" />}>

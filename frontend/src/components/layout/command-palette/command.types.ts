@@ -6,6 +6,8 @@ export interface CommandHotkey {
   key: string
   /** Requires Ctrl, or Cmd on macOS. */
   mod?: boolean
+  /** Requires Ctrl on every platform, for a key whose Cmd shortcut macOS keeps, such as `` ` ``. */
+  ctrl?: boolean
 }
 
 /** A command of the command palette, registered with `useCommands`. */

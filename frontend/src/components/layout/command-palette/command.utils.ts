@@ -25,7 +25,7 @@ export function commandGroups(sources: Iterable<readonly Command[]>): CommandGro
 }
 
 /** The text of a hotkey, such as `Ctrl+B`. */
-export function hotkeyLabel({ key, mod = false }: CommandHotkey): string {
+export function hotkeyLabel({ key, mod = false, ctrl = false }: CommandHotkey): string {
   const name = key.length === 1 ? key.toUpperCase() : key
-  return mod ? `Ctrl+${name}` : name
+  return mod || ctrl ? `Ctrl+${name}` : name
 }

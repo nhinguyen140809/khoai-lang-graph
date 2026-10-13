@@ -256,9 +256,10 @@ A side panel (`SidePanel`) holds the parts of its feature in sections (`SidePane
 | ------------ | ---------------------------------------------------------------------------- |
 | `Ctrl+K`     | Open or close the command palette (also the search box of the top bar)       |
 | `Ctrl+B`     | Hide or show the side panel (also the activity bar item of the open feature) |
+| ``Ctrl+` ``  | Hide or show the panel under the editor (also its button)                    |
 | Middle click | Close an editor tab                                                          |
 
-`Cmd` works in place of `Ctrl` on macOS.
+`Cmd` works in place of `Ctrl` on macOS, except for ``Ctrl+` ``: macOS keeps ``Cmd+` `` to switch windows.
 
 The editor tabs belong to the project, not to a feature: choosing a feature on the activity bar changes the side panel only. A page opens its tab with `useEditorTab` and may name an icon (`item`, `run`, ...); the tab shows that icon from `tabIcons`, else the icon of the feature the page belongs to. A new tab opens next to the tab of the page shown before it, and a tab shows its close button when it is active or under the pointer.
 
