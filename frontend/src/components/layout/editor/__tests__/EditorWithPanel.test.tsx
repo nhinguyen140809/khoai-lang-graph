@@ -4,6 +4,9 @@ import { beforeEach, describe, expect, it } from 'vitest'
 
 import { useFrameStore } from '../../frame.store'
 import { EditorWithPanel } from '../EditorWithPanel'
+import type { PanelSection } from '../PanelSections'
+
+const trace: PanelSection[] = [{ id: 'trace', title: 'Trace', content: <p>trace of REQ-001</p> }]
 
 beforeEach(() => {
   useFrameStore.setState(useFrameStore.getInitialState())
@@ -12,7 +15,7 @@ beforeEach(() => {
 describe('EditorWithPanel', () => {
   it('shows the panel under the editor, and hides and shows it', async () => {
     render(
-      <EditorWithPanel panelLabel="Trace and timeline" panel={<p>trace of REQ-001</p>}>
+      <EditorWithPanel panelLabel="Trace and timeline" sections={trace}>
         <p>REQ-001 Search mentors</p>
       </EditorWithPanel>,
     )
@@ -35,7 +38,7 @@ describe('EditorWithPanel', () => {
 
   it('hides and shows the panel with Ctrl+`', () => {
     render(
-      <EditorWithPanel panelLabel="Trace" panel={<p>trace of REQ-001</p>}>
+      <EditorWithPanel panelLabel="Trace" sections={trace}>
         <p>REQ-001 Search mentors</p>
       </EditorWithPanel>,
     )
@@ -49,7 +52,10 @@ describe('EditorWithPanel', () => {
 
   it('keeps the editor and the panel as they were while the panel is hidden', async () => {
     render(
-      <EditorWithPanel panelLabel="Trace" panel={<input aria-label="Filter" />}>
+      <EditorWithPanel
+        panelLabel="Trace"
+        sections={[{ id: 'trace', title: 'Trace', content: <input aria-label="Filter" /> }]}
+      >
         <input aria-label="Title" />
       </EditorWithPanel>,
     )

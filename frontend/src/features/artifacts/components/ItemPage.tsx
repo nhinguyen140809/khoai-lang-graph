@@ -5,7 +5,7 @@ import type { Route } from 'next'
 import Link from 'next/link'
 import { useState } from 'react'
 
-import { EditorWithPanel, projectTabGroup, useEditorTab } from '@/components/layout'
+import { EditorWithPanel, PanelSections, projectTabGroup, useEditorTab } from '@/components/layout'
 import { ErrorState, LoadingState, NotFoundState } from '@/components/state'
 import { Button } from '@/components/ui/button'
 import { ScrollArea } from '@/components/ui/scroll-area'
@@ -23,7 +23,7 @@ import { useItemSchema } from '../hooks/useItemSchema'
 import { ancestorsOf, schemasByKind } from '../kinds.utils'
 import { FieldValue } from './FieldValue'
 import { ItemForm } from './ItemForm'
-import { ItemPanel } from './ItemPanel'
+import { itemPanelSections } from './ItemPanel'
 import { ReviewStatusBadge } from './ReviewStatusBadge'
 
 interface ItemPageProps {
@@ -170,7 +170,7 @@ export function ItemPage({ projectId, itemId, embedded = false, onBack }: ItemPa
       <div className="flex flex-col">
         {article}
         <div className="h-72 border-t">
-          <ItemPanel item={item.data} schema={schema} />
+          <PanelSections sections={itemPanelSections(item.data, schema)} />
         </div>
       </div>
     )
@@ -179,7 +179,7 @@ export function ItemPage({ projectId, itemId, embedded = false, onBack }: ItemPa
   return (
     <EditorWithPanel
       panelLabel="Trace and timeline"
-      panel={<ItemPanel item={item.data} schema={schema} />}
+      sections={itemPanelSections(item.data, schema)}
     >
       <ScrollArea className="h-full">{article}</ScrollArea>
     </EditorWithPanel>

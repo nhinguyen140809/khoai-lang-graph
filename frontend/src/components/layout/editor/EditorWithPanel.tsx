@@ -11,10 +11,11 @@ import type { Command } from '../command-palette/command.types'
 import { useCommands } from '../command-palette/hooks/useCommands'
 import { useFrameStore } from '../frame.store'
 import { StoredPanel, StoredPanelGroup } from '../StoredPanel'
+import { type PanelSection, PanelSections } from './PanelSections'
 
 interface EditorWithPanelProps {
-  /** The content of the panel under the editor, such as the trace of an item. */
-  panel: ReactNode
+  /** The sections of the panel under the editor, one tab each, such as the trace of an item. */
+  sections: readonly PanelSection[]
   /** The name of the panel, for the landmark and the show and hide buttons. */
   panelLabel: string
   children: ReactNode
@@ -36,11 +37,11 @@ const panelCommands: Command[] = [
 ]
 
 /**
- * An editor with a panel under it. The panel can be resized and hidden, with its button or Ctrl+`;
- * both are remembered. Neither scrolls: the editor content and the panel content each scroll
- * themselves when they flow.
+ * An editor with a panel under it, whose sections show as tabs. The panel can be resized and
+ * hidden, with the button at the end of its tabs or Ctrl+`; both are remembered. Neither scrolls:
+ * the editor content and each section scroll themselves when they flow.
  */
-export function EditorWithPanel({ panel, panelLabel, children }: EditorWithPanelProps) {
+export function EditorWithPanel({ sections, panelLabel, children }: EditorWithPanelProps) {
   const visible = useFrameStore((state) => state.panels.bottom.visible)
 
   useCommands(panelCommands)
@@ -52,9 +53,11 @@ export function EditorWithPanel({ panel, panelLabel, children }: EditorWithPanel
           <Surface className="h-full">{children}</Surface>
         </ResizablePanel>
         <StoredPanel region="bottom" minSize={PANEL_MIN_HEIGHT} maxSize="80%" handle="before">
-          <Surface as="section" aria-label={panelLabel} className="relative h-full">
-            <PanelToggle label={panelLabel} expanded className="absolute top-1.5 right-1 z-10" />
-            {panel}
+          <Surface as="section" aria-label={panelLabel} className="h-full">
+            <PanelSections
+              sections={sections}
+              controls={<PanelToggle label={panelLabel} expanded />}
+            />
           </Surface>
         </StoredPanel>
       </StoredPanelGroup>
@@ -86,11 +89,10 @@ interface PanelToggleProps {
   label: string
   /** The panel is shown, so the button hides it. */
   expanded: boolean
-  className?: string
 }
 
 /** Hides or shows the panel under the editor. */
-function PanelToggle({ label, expanded, className }: PanelToggleProps) {
+function PanelToggle({ label, expanded }: PanelToggleProps) {
   const togglePanel = useFrameStore((state) => state.togglePanel)
   const Icon = expanded ? ChevronDownIcon : ChevronUpIcon
 
@@ -103,7 +105,6 @@ function PanelToggle({ label, expanded, className }: PanelToggleProps) {
       onClick={() => {
         togglePanel('bottom')
       }}
-      className={className}
     >
       <Icon aria-hidden />
     </Button>

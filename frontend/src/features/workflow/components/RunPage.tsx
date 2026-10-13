@@ -7,7 +7,6 @@ import { useMemo } from 'react'
 import { EditorWithPanel, projectTabGroup, useEditorTab } from '@/components/layout'
 import { ErrorState, LoadingState, NotFoundState } from '@/components/state'
 import { ScrollArea } from '@/components/ui/scroll-area'
-import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs'
 import { runStatusLabels } from '@/lib/run-status.constants'
 
 import { useGraphLayout } from '../hooks/useGraphLayout'
@@ -94,13 +93,11 @@ export function RunPage({ projectId, runId }: RunPageProps) {
   return (
     <EditorWithPanel
       panelLabel="Details"
-      panel={
-        <Tabs defaultValue="step" className="h-full gap-0">
-          <TabsList variant="line" className="px-2">
-            <TabsTrigger value="step">Step</TabsTrigger>
-            <TabsTrigger value="state">State</TabsTrigger>
-          </TabsList>
-          <TabsContent value="step" className="min-h-0">
+      sections={[
+        {
+          id: 'step',
+          title: 'Step',
+          content: (
             <ScrollArea className="h-full">
               <StepPanel
                 projectId={projectId}
@@ -110,14 +107,18 @@ export function RunPage({ projectId, runId }: RunPageProps) {
                 nodeLabel={step === null ? nodeLabel : null}
               />
             </ScrollArea>
-          </TabsContent>
-          <TabsContent value="state" className="min-h-0">
+          ),
+        },
+        {
+          id: 'state',
+          title: 'State',
+          content: (
             <ScrollArea className="h-full">
               <StatePanel projectId={projectId} runId={runId} stepId={step?.id ?? null} active />
             </ScrollArea>
-          </TabsContent>
-        </Tabs>
-      }
+          ),
+        },
+      ]}
     >
       <div className="relative h-full min-h-64">
         <p className="absolute top-2 left-3 z-10 font-mono text-xs text-muted-foreground">

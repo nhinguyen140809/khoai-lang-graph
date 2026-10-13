@@ -1,12 +1,12 @@
 'use client'
 
-import { useState } from 'react'
+import { type ReactNode, useState } from 'react'
 import { toast } from 'sonner'
 
+import type { PanelSection } from '@/components/layout'
 import { ErrorState, LoadingState } from '@/components/state'
 import { Button } from '@/components/ui/button'
 import { ScrollArea } from '@/components/ui/scroll-area'
-import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs'
 import { useNow } from '@/hooks/useNow'
 import { formatRelativeTime } from '@/lib/relative-time.utils'
 
@@ -20,34 +20,35 @@ import { useItemTrace } from '../hooks/useItemTrace'
 import { schemasByKind } from '../kinds.utils'
 import { ItemLink } from './ItemLink'
 
-interface ItemPanelProps {
-  item: ArtifactItem
-  schema: ContentSchema
+/** Under the editor: the links of the item (Trace) and the versions of the item (Timeline). */
+export function itemPanelSections(item: ArtifactItem, schema: ContentSchema): PanelSection[] {
+  return [
+    {
+      id: 'trace',
+      title: 'Trace',
+      content: (
+        <SectionScroll>
+          <TraceTab item={item} />
+        </SectionScroll>
+      ),
+    },
+    {
+      id: 'timeline',
+      title: 'Timeline',
+      content: (
+        <SectionScroll>
+          <TimelineTab item={item} schema={schema} />
+        </SectionScroll>
+      ),
+    },
+  ]
 }
 
-/** Under the editor: the links of the item (TRACE) and the versions of the item (TIMELINE). */
-export function ItemPanel({ item, schema }: ItemPanelProps) {
+function SectionScroll({ children }: { children: ReactNode }) {
   return (
-    <Tabs defaultValue="trace" className="h-full gap-0">
-      <TabsList variant="line" className="px-3">
-        <TabsTrigger value="trace">Trace</TabsTrigger>
-        <TabsTrigger value="timeline">Timeline</TabsTrigger>
-      </TabsList>
-      <TabsContent value="trace" className="min-h-0">
-        <ScrollArea className="h-full">
-          <div className="px-3 pb-3">
-            <TraceTab item={item} />
-          </div>
-        </ScrollArea>
-      </TabsContent>
-      <TabsContent value="timeline" className="min-h-0">
-        <ScrollArea className="h-full">
-          <div className="px-3 pb-3">
-            <TimelineTab item={item} schema={schema} />
-          </div>
-        </ScrollArea>
-      </TabsContent>
-    </Tabs>
+    <ScrollArea className="h-full">
+      <div className="px-3 pb-3">{children}</div>
+    </ScrollArea>
   )
 }
 
