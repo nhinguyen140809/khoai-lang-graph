@@ -23,7 +23,11 @@ describe('TopBar', () => {
   it('opens the command palette from the search box', async () => {
     render(<TopBar crumb="Projects" />)
 
-    await userEvent.click(screen.getByRole('button', { name: /Search or run a command/ }))
+    const search = screen.getByRole('button', { name: /Search or run a command/ })
+    expect(search).toHaveAttribute('aria-keyshortcuts', 'Control+K Meta+K')
+    expect(search).toHaveTextContent('CtrlK')
+
+    await userEvent.click(search)
 
     expect(useCommandPaletteStore.getState().open).toBe(true)
   })

@@ -13,6 +13,7 @@ import {
 import { useHotkey } from '@/hooks/useHotkey'
 import { useModifierKeyName } from '@/hooks/useModifierKeyName'
 
+import { paletteHotkey } from './command.constants'
 import { commandGroups, hotkeyLabel } from './command.utils'
 import { useCommandPaletteStore } from './command-palette.store'
 import { useCommandRegistryStore } from './command-registry.store'
@@ -28,7 +29,7 @@ export function CommandPalette() {
   const sources = useCommandRegistryStore((state) => state.sources)
   const modifier = useModifierKeyName()
 
-  useHotkey('k', toggle, { mod: true })
+  useHotkey(paletteHotkey.key, toggle, paletteHotkey)
 
   return (
     <CommandDialog

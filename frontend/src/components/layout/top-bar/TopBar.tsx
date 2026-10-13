@@ -13,6 +13,8 @@ import {
 import { Kbd, KbdGroup } from '@/components/ui/kbd'
 import { useModifierKeyName } from '@/hooks/useModifierKeyName'
 
+import { paletteHotkey } from '../command-palette/command.constants'
+import { ariaKeyShortcuts, hotkeyKeys } from '../command-palette/command.utils'
 import { useCommandPaletteStore } from '../command-palette/command-palette.store'
 
 interface TopBarProps {
@@ -65,7 +67,7 @@ function HomeLink() {
   )
 }
 
-/** Looks like a search box and opens the command palette, as Ctrl+K does. */
+/** Looks like a search box and opens the command palette, as its hotkey does. */
 function SearchButton() {
   const setPaletteOpen = useCommandPaletteStore((state) => state.setOpen)
   const modifier = useModifierKeyName()
@@ -73,7 +75,7 @@ function SearchButton() {
   return (
     <button
       type="button"
-      aria-keyshortcuts="Control+K Meta+K"
+      aria-keyshortcuts={ariaKeyShortcuts(paletteHotkey)}
       onClick={() => {
         setPaletteOpen(true)
       }}
@@ -82,8 +84,9 @@ function SearchButton() {
       <SearchIcon aria-hidden className="size-3.5 shrink-0" />
       <span className="truncate">Search or run a command</span>
       <KbdGroup className="ml-auto" aria-hidden>
-        <Kbd>{modifier}</Kbd>
-        <Kbd>K</Kbd>
+        {hotkeyKeys(paletteHotkey, modifier).map((key) => (
+          <Kbd key={key}>{key}</Kbd>
+        ))}
       </KbdGroup>
     </button>
   )
