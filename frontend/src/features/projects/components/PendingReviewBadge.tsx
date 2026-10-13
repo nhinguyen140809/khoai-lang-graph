@@ -17,7 +17,7 @@ export function PendingReviewBadge({ projectId }: PendingReviewBadgeProps) {
 
   return (
     <>
-      <Badge aria-hidden color="warning" className="h-5 min-w-5 px-1 text-xs">
+      <Badge aria-hidden color="warning" className="h-4 min-w-4 px-1 text-4xs">
         {count}
       </Badge>
       <span className="sr-only">

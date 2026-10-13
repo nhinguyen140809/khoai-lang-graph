@@ -276,7 +276,7 @@ export function ConsoleInput({
           {notice}
         </p>
       )}
-      <p className="flex gap-4 px-1 font-mono text-xs text-muted-foreground">
+      <p className="flex gap-4 px-1 font-mono text-2xs text-muted-foreground">
         <span>
           {modifier}+o {expandAll ? 'collapse' : 'expand'} steps
         </span>

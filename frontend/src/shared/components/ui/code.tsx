@@ -20,7 +20,7 @@ const codeVariants = cva(
         plain: 'text-(--tone-strong)',
       },
       size: {
-        sm: 'min-h-4 px-1 text-[0.625rem]/3',
+        sm: 'min-h-4 px-1 text-4xs',
         default: 'min-h-5 px-1.5 text-xs',
         lg: 'min-h-6 px-2 text-sm',
       },

@@ -96,11 +96,11 @@ function WorkflowNodeView({ data, selected }: NodeProps<GraphNode>) {
         <NodeHeader className={terminal ? 'mb-0 justify-center' : undefined}>
           <NodeHeaderTitle className="truncate font-mono">{data.label}</NodeHeaderTitle>
           {data.visits > 1 && (
-            <span className="font-mono text-xs text-muted-foreground">x{data.visits}</span>
+            <span className="font-mono text-3xs text-muted-foreground">x{data.visits}</span>
           )}
         </NodeHeader>
         {!terminal && (
-          <NodeContent className="pt-0.5 text-xs text-muted-foreground">
+          <NodeContent className="pt-0.5 text-2xs text-muted-foreground">
             {data.detail} {data.status !== 'idle' && <>- {statusLabels[data.status]}</>}
           </NodeContent>
         )}
