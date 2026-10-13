@@ -7,6 +7,7 @@ import { Surface } from '@/components/ui/surface'
 
 import { usePinSideFeature } from './activity-bar/hooks/usePinSideFeature'
 import { useSideFeature } from './activity-bar/hooks/useSideFeature'
+import { PaletteGroup } from './command-palette/command.constants'
 import type { PaletteCommand } from './command-palette/command.types'
 import { useCommands } from './command-palette/hooks/useCommands'
 import { projectTabGroup } from './editor/editor-tabs.store'
@@ -25,7 +26,7 @@ const workspaceCommands: PaletteCommand[] = [
   {
     id: 'view.toggleSidePanel',
     label: 'Toggle side panel',
-    group: 'View',
+    group: PaletteGroup.View,
     icon: <PanelLeftIcon />,
     hotkey: { key: 'b', mod: true },
     run: () => {

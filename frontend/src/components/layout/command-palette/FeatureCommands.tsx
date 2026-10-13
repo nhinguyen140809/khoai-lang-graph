@@ -3,6 +3,7 @@
 import { useActivities } from '../activity-bar/ActivitiesContext'
 import { isFeatureActivity } from '../activity-bar/activity.utils'
 import { useFrameStore } from '../frame.store'
+import { PaletteGroup } from './command.constants'
 import { useCommands } from './hooks/useCommands'
 
 /**
@@ -17,7 +18,7 @@ export function FeatureCommands() {
     activities.filter(isFeatureActivity).map(({ id, label, icon }) => ({
       id: `show.${id}`,
       label,
-      group: 'Show',
+      group: PaletteGroup.Show,
       icon,
       run: () => {
         showSideFeature(id)

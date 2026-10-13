@@ -3,7 +3,7 @@
 import { MonitorIcon, MoonIcon, SunIcon } from 'lucide-react'
 import { useTheme } from 'next-themes'
 
-import { useCommands } from '@/components/layout'
+import { PaletteGroup, useCommands } from '@/components/layout'
 
 const themes = [
   { value: 'light', label: 'Light', Icon: SunIcon },
@@ -19,7 +19,7 @@ export function ThemeCommands() {
     themes.map(({ value, label, Icon }) => ({
       id: `view.theme.${value}`,
       label: `Theme: ${label}`,
-      group: 'View',
+      group: PaletteGroup.View,
       icon: <Icon />,
       run: () => {
         setTheme(value)

@@ -1,6 +1,6 @@
 import type { CommandHotkey, PaletteCommand } from './command.types'
 
-interface PaletteGroup {
+interface GroupOfCommands {
   heading: string
   commands: PaletteCommand[]
 }
@@ -10,7 +10,7 @@ interface PaletteGroup {
  * the order in which the components that register them mount; a group keeps the order of its
  * commands.
  */
-export function commandGroups(sources: Iterable<readonly PaletteCommand[]>): PaletteGroup[] {
+export function commandGroups(sources: Iterable<readonly PaletteCommand[]>): GroupOfCommands[] {
   const groups = new Map<string, PaletteCommand[]>()
   for (const commands of sources) {
     for (const command of commands) {

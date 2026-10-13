@@ -6,6 +6,7 @@ import { Activity, type ReactNode } from 'react'
 import { Button } from '@/components/ui/button'
 import { Surface } from '@/components/ui/surface'
 
+import { PaletteGroup } from '../command-palette/command.constants'
 import type { PaletteCommand } from '../command-palette/command.types'
 import { useCommands } from '../command-palette/hooks/useCommands'
 import { EditorSplit } from '../EditorSplit'
@@ -25,7 +26,7 @@ const panelCommands: PaletteCommand[] = [
   {
     id: 'view.toggleBottomPanel',
     label: 'Toggle bottom panel',
-    group: 'View',
+    group: PaletteGroup.View,
     icon: <PanelBottomIcon />,
     hotkey: { key: '`', ctrl: true },
     run: () => {

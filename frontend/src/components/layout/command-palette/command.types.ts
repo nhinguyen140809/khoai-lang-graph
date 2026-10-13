@@ -15,7 +15,7 @@ export interface PaletteCommand {
   /** Unique among the commands of the screen, such as `view.toggleSidePanel`. */
   id: string
   label: string
-  /** The heading that the palette lists the command under, such as `View`. */
+  /** The heading that the palette lists the command under, such as `PaletteGroup.View`. */
   group: string
   /** An icon element, such as `<SunIcon />`. */
   icon?: ReactNode

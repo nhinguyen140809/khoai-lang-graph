@@ -13,6 +13,8 @@ interface ProjectCommandsProps {
   currentProjectId?: string
 }
 
+const GROUP = 'Projects'
+
 /** Registers the commands that open a project or create one. Renders nothing. */
 export function ProjectCommands({ currentProjectId }: ProjectCommandsProps) {
   const router = useRouter()
@@ -21,13 +23,13 @@ export function ProjectCommands({ currentProjectId }: ProjectCommandsProps) {
   const commands: PaletteCommand[] = []
 
   if (projects.isPending) {
-    commands.push({ id: 'projects.loading', label: 'Loading projects...', group: 'Projects' })
+    commands.push({ id: 'projects.loading', label: 'Loading projects...', group: GROUP })
   }
   if (projects.isError) {
     commands.push({
       id: 'projects.retry',
       label: 'Failed to load projects. Try again',
-      group: 'Projects',
+      group: GROUP,
       icon: <RotateCcwIcon />,
       run: () => void projects.refetch(),
     })
@@ -37,7 +39,7 @@ export function ProjectCommands({ currentProjectId }: ProjectCommandsProps) {
     commands.push({
       id: `projects.open.${id}`,
       label: `Open ${name}`,
-      group: 'Projects',
+      group: GROUP,
       icon: <FolderIcon />,
       run: () => {
         router.push(`/projects/${encodeURIComponent(id)}/console`)
@@ -48,7 +50,7 @@ export function ProjectCommands({ currentProjectId }: ProjectCommandsProps) {
     {
       id: 'projects.all',
       label: 'All projects',
-      group: 'Projects',
+      group: GROUP,
       icon: <LayoutListIcon />,
       run: () => {
         router.push('/projects')
@@ -57,7 +59,7 @@ export function ProjectCommands({ currentProjectId }: ProjectCommandsProps) {
     {
       id: 'projects.new',
       label: 'New project',
-      group: 'Projects',
+      group: GROUP,
       icon: <PlusIcon />,
       run: () => {
         openNewProject(true)
