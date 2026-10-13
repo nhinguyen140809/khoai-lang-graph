@@ -37,9 +37,14 @@ export function TypographyCard() {
       <p className="text-xs/relaxed">
         Component text, text-xs: buttons, inputs, menus, and table cells use this size.
       </p>
-      <p className="text-xs text-muted-foreground">
-        Muted text for descriptions, hints, and timestamps.
+      <p className="text-xs text-muted-foreground">Muted text for descriptions.</p>
+      <p className="text-2xs text-muted-foreground">
+        Label, text-2xs: the title of a group in a side panel, a caption, a hint.
       </p>
+      <p className="font-mono text-3xs text-muted-foreground">
+        Indicator, text-3xs: 12 items, REQ-001, 08:10
+      </p>
+      <p className="text-4xs text-muted-foreground">Badge, text-4xs: the count inside a badge.</p>
       <p className="text-xs">
         Inline code <Code>REQ-001</Code> and keys{' '}
         <KbdGroup>
