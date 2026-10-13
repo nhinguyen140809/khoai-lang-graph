@@ -14,6 +14,7 @@ This file covers running and working on the frontend. For the overall architectu
 - [Adding shadcn/ui components](#adding-shadcnui-components)
 - [Theming and fonts](#theming-and-fonts)
 - [Routes, Server and Client Components](#routes-server-and-client-components)
+- [Frame](#frame)
 - [Low-memory development](#low-memory-development)
 - [API client](#api-client)
 - [Mock data](#mock-data)
