@@ -22,9 +22,13 @@ describe('commandGroups', () => {
 })
 
 describe('hotkeyLabel', () => {
-  it('writes the modifier as Ctrl and a letter in capitals', () => {
-    expect(hotkeyLabel({ key: 'b', mod: true })).toBe('Ctrl+B')
-    expect(hotkeyLabel({ key: '`', ctrl: true })).toBe('Ctrl+`')
-    expect(hotkeyLabel({ key: 'Escape' })).toBe('Escape')
+  it('names the modifier of the platform, and a letter in capitals', () => {
+    expect(hotkeyLabel({ key: 'b', mod: true }, 'Ctrl')).toBe('Ctrl+B')
+    expect(hotkeyLabel({ key: 'b', mod: true }, 'Cmd')).toBe('Cmd+B')
+    expect(hotkeyLabel({ key: 'Escape' }, 'Cmd')).toBe('Escape')
+  })
+
+  it('names Ctrl on every platform for a hotkey that needs it', () => {
+    expect(hotkeyLabel({ key: '`', ctrl: true }, 'Cmd')).toBe('Ctrl+`')
   })
 })

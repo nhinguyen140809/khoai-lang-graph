@@ -11,6 +11,7 @@ import {
   BreadcrumbSeparator,
 } from '@/components/ui/breadcrumb'
 import { Kbd, KbdGroup } from '@/components/ui/kbd'
+import { useModifierKeyName } from '@/hooks/useModifierKeyName'
 
 import { useCommandPaletteStore } from '../command-palette/command-palette.store'
 
@@ -67,6 +68,7 @@ function HomeLink() {
 /** Looks like a search box and opens the command palette, as Ctrl+K does. */
 function SearchButton() {
   const setPaletteOpen = useCommandPaletteStore((state) => state.setOpen)
+  const modifier = useModifierKeyName()
 
   return (
     <button
@@ -80,7 +82,7 @@ function SearchButton() {
       <SearchIcon aria-hidden className="size-3.5 shrink-0" />
       <span className="truncate">Search or run a command</span>
       <KbdGroup className="ml-auto" aria-hidden>
-        <Kbd>Ctrl</Kbd>
+        <Kbd>{modifier}</Kbd>
         <Kbd>K</Kbd>
       </KbdGroup>
     </button>

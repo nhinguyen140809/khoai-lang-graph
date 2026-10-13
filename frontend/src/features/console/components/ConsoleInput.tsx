@@ -2,6 +2,7 @@
 
 import { type KeyboardEvent, useEffect, useId, useRef, useState } from 'react'
 
+import { useModifierKeyName } from '@/hooks/useModifierKeyName'
 import { cn } from '@/lib/utils'
 
 import { type CommandName, findCommand } from '../commands.constants'
@@ -55,6 +56,7 @@ export function ConsoleInput({
   expandAll,
 }: ConsoleInputProps) {
   const listId = useId()
+  const modifier = useModifierKeyName().toLowerCase()
   const inputRef = useRef<HTMLTextAreaElement>(null)
   const [value, setValue] = useState('')
   const [cursor, setCursor] = useState(0)
@@ -275,7 +277,9 @@ export function ConsoleInput({
         </p>
       )}
       <p className="flex gap-4 px-1 font-mono text-2xs text-muted-foreground">
-        <span>ctrl+o {expandAll ? 'collapse' : 'expand'} steps</span>
+        <span>
+          {modifier}+o {expandAll ? 'collapse' : 'expand'} steps
+        </span>
         {canStop && (
           <span className={cn(armed && 'text-warning-strong')}>
             {armed ? 'press esc again to stop the run' : 'esc stop run'}

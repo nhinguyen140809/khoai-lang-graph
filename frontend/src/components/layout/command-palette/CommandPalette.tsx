@@ -11,6 +11,7 @@ import {
   CommandShortcut,
 } from '@/components/ui/command'
 import { useHotkey } from '@/hooks/useHotkey'
+import { useModifierKeyName } from '@/hooks/useModifierKeyName'
 
 import { commandGroups, hotkeyLabel } from './command.utils'
 import { useCommandPaletteStore } from './command-palette.store'
@@ -25,6 +26,7 @@ export function CommandPalette() {
   const setOpen = useCommandPaletteStore((state) => state.setOpen)
   const toggle = useCommandPaletteStore((state) => state.toggle)
   const sources = useCommandRegistryStore((state) => state.sources)
+  const modifier = useModifierKeyName()
 
   useHotkey('k', toggle, { mod: true })
 
@@ -59,7 +61,9 @@ export function CommandPalette() {
                     </span>
                   )}
                   {label}
-                  {hotkey !== undefined && <CommandShortcut>{hotkeyLabel(hotkey)}</CommandShortcut>}
+                  {hotkey !== undefined && (
+                    <CommandShortcut>{hotkeyLabel(hotkey, modifier)}</CommandShortcut>
+                  )}
                 </CommandItem>
               ))}
             </CommandGroup>
