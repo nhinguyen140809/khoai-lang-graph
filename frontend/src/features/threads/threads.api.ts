@@ -1,4 +1,4 @@
-import { apiUrl } from '@/lib/api-url.utils'
+import { apiUrl } from '@/shared/api/api-url.utils'
 
 import { listThreadsResponseSchema, type Thread } from './threads.types'
 

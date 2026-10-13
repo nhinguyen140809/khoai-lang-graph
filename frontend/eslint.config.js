@@ -8,25 +8,25 @@ import simpleImportSort from 'eslint-plugin-simple-import-sort'
 import globals from 'globals'
 import tseslint from 'typescript-eslint'
 
-// The visible parts of these libraries are wrapped in src/components/ui, where they take the
-// design system tokens. Code outside that folder uses the wrappers.
+// The visible parts of these libraries are wrapped in src/shared/components/ui, where they take
+// the design system tokens. Code outside that folder uses the wrappers.
 const wrappedLibraryImports = [
-  { name: 'streamdown', message: 'Use Markdown from @/components/ui/markdown.' },
-  { name: '@streamdown/code', message: 'Use Markdown from @/components/ui/markdown.' },
+  { name: 'streamdown', message: 'Use Markdown from @/shared/components/ui/markdown.' },
+  { name: '@streamdown/code', message: 'Use Markdown from @/shared/components/ui/markdown.' },
   {
     name: 'react-resizable-panels',
-    message: 'Use the components in @/components/ui/resizable.',
+    message: 'Use the components in @/shared/components/ui/resizable.',
   },
   {
     name: '@xyflow/react',
     importNames: ['default', 'ReactFlow', 'Handle', 'BaseEdge'],
     message:
-      'Use Flow from @/components/ui/flow, Handle from @/components/ui/handle, and Edge from @/components/ui/edge.',
+      'Use Flow from @/shared/components/ui/flow, Handle from @/shared/components/ui/handle, and Edge from @/shared/components/ui/edge.',
   },
   {
     name: 'recharts',
     importNames: ['ResponsiveContainer', 'Tooltip', 'Legend'],
-    message: 'Use ChartContainer, ChartTooltip, and ChartLegend from @/components/ui/chart.',
+    message: 'Use ChartContainer, ChartTooltip, and ChartLegend from @/shared/components/ui/chart.',
   },
 ]
 
@@ -45,7 +45,7 @@ export default defineConfig([
     'coverage',
     'playwright-report',
     'test-results',
-    'src/api/generated',
+    'src/shared/api/generated',
     'public/mockServiceWorker.js',
   ]),
   {
@@ -93,7 +93,7 @@ export default defineConfig([
   },
   {
     // Shared code never depends on features or on the app layer (CONTRIBUTING: Import direction).
-    files: ['src/@(components|hooks|lib|api)/**/*.{ts,tsx}'],
+    files: ['src/shared/**/*.{ts,tsx}'],
     rules: {
       'no-restricted-imports': [
         'error',
@@ -102,8 +102,8 @@ export default defineConfig([
     },
   },
   {
-    // The wrappers in src/components/ui import the libraries they wrap.
-    files: ['src/components/ui/**/*.{ts,tsx}'],
+    // The wrappers in src/shared/components/ui import the libraries they wrap.
+    files: ['src/shared/components/ui/**/*.{ts,tsx}'],
     rules: {
       'no-restricted-imports': ['error', { patterns: sharedCodePatterns }],
     },
@@ -121,7 +121,7 @@ export default defineConfig([
             {
               group: ['@/features', '@/features/**', '@/app/**', '@/providers/**'],
               message:
-                'A feature must not import another feature or the app layer. Compose features in src/app/, or move the shared code to src/components, src/hooks, or src/lib.',
+                'A feature must not import another feature or the app layer. Compose features in src/app/, or move the shared code to src/shared.',
             },
           ],
         },
@@ -133,9 +133,9 @@ export default defineConfig([
     // a tool (shadcn CLI, Next.js) or by convention (index.ts) are ignored.
     files: ['src/**/*.{ts,tsx}', 'tests/**/*.ts'],
     ignores: [
-      'src/components/ui/**',
-      'src/hooks/use-mobile.ts',
-      'src/lib/utils.ts',
+      'src/shared/components/ui/**',
+      'src/shared/hooks/use-mobile.ts',
+      'src/shared/lib/utils.ts',
       // Next.js file conventions: routing files, metadata files, and src-level entry points.
       'src/app/**/@(page|layout|loading|error|not-found|global-error|template|default).tsx',
       'src/app/**/@(icon|apple-icon|opengraph-image|twitter-image).tsx',
@@ -178,7 +178,7 @@ export default defineConfig([
   {
     // shadcn/ui code is copied from the registry. Keep it close to upstream so
     // `shadcn add --overwrite` diffs stay small; only relax stylistic type rules here.
-    files: ['src/components/ui/**/*.{ts,tsx}', 'src/hooks/use-mobile.ts'],
+    files: ['src/shared/components/ui/**/*.{ts,tsx}', 'src/shared/hooks/use-mobile.ts'],
     rules: {
       'react-hooks/set-state-in-effect': 'off',
       '@typescript-eslint/consistent-type-definitions': 'off',
@@ -191,7 +191,7 @@ export default defineConfig([
   },
   {
     // Recharts payloads are typed as `any` upstream.
-    files: ['src/components/ui/chart.tsx'],
+    files: ['src/shared/components/ui/chart.tsx'],
     rules: {
       '@typescript-eslint/no-unsafe-assignment': 'off',
       '@typescript-eslint/no-unsafe-member-access': 'off',

@@ -3,8 +3,8 @@
 import Link from 'next/link'
 import { usePathname } from 'next/navigation'
 
-import { NotFoundState } from '@/components/state'
-import { Button } from '@/components/ui/button'
+import { NotFoundState } from '@/shared/components/state'
+import { Button } from '@/shared/components/ui/button'
 
 export default function NotFound() {
   const pathname = usePathname()

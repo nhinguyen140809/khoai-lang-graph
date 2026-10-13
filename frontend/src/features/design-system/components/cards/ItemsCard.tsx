@@ -1,8 +1,13 @@
 import { FolderOpenIcon, InfoIcon, TriangleAlertIcon } from 'lucide-react'
 
-import { Alert, AlertDescription, AlertTitle } from '@/components/ui/alert'
-import { Avatar, AvatarFallback, AvatarGroup, AvatarGroupCount } from '@/components/ui/avatar'
-import { Button } from '@/components/ui/button'
+import { Alert, AlertDescription, AlertTitle } from '@/shared/components/ui/alert'
+import {
+  Avatar,
+  AvatarFallback,
+  AvatarGroup,
+  AvatarGroupCount,
+} from '@/shared/components/ui/avatar'
+import { Button } from '@/shared/components/ui/button'
 import {
   Empty,
   EmptyContent,
@@ -10,7 +15,7 @@ import {
   EmptyHeader,
   EmptyMedia,
   EmptyTitle,
-} from '@/components/ui/empty'
+} from '@/shared/components/ui/empty'
 import {
   Item,
   ItemActions,
@@ -19,7 +24,7 @@ import {
   ItemGroup,
   ItemMedia,
   ItemTitle,
-} from '@/components/ui/item'
+} from '@/shared/components/ui/item'
 
 import { personas } from '../../design-system.fixtures'
 import { SampleCard } from '../Sample'

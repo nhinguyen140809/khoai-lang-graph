@@ -3,8 +3,8 @@
 import { MonitorIcon, MoonIcon, SunIcon } from 'lucide-react'
 import { useTheme } from 'next-themes'
 
-import { ToggleGroup, ToggleGroupItem } from '@/components/ui/toggle-group'
-import { useIsHydrated } from '@/hooks/useIsHydrated'
+import { ToggleGroup, ToggleGroupItem } from '@/shared/components/ui/toggle-group'
+import { useIsHydrated } from '@/shared/hooks/useIsHydrated'
 
 export function ThemeToggle() {
   const { theme, setTheme } = useTheme()

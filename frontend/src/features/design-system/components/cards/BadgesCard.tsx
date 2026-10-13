@@ -1,6 +1,6 @@
-import { Badge } from '@/components/ui/badge'
-import { Code } from '@/components/ui/code'
-import { fills, tones } from '@/lib/tone.constants'
+import { Badge } from '@/shared/components/ui/badge'
+import { Code } from '@/shared/components/ui/code'
+import { fills, tones } from '@/shared/lib/tone.constants'
 
 import { toneIcons } from '../../design-system.constants'
 import { SampleCard, SampleGroup } from '../Sample'
