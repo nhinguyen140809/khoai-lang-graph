@@ -2,10 +2,10 @@
 
 import type { Edge, Node } from '@xyflow/react'
 
-import type { EdgeVariant } from '@/components/ui/edge'
-import type { NodeVariant } from '@/components/ui/node'
-import type { NodeStatus } from '@/components/ui/node-status-indicator'
-import type { Tone } from '@/lib/tone.constants'
+import type { EdgeVariant } from '@/shared/components/ui/edge'
+import type { NodeVariant } from '@/shared/components/ui/node'
+import type { NodeStatus } from '@/shared/components/ui/node-status-indicator'
+import type { Tone } from '@/shared/lib/tone.constants'
 
 export type Priority = 'must' | 'should' | 'could' | 'wont'
 

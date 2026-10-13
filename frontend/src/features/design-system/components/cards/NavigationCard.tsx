@@ -7,7 +7,7 @@ import {
   BreadcrumbList,
   BreadcrumbPage,
   BreadcrumbSeparator,
-} from '@/components/ui/breadcrumb'
+} from '@/shared/components/ui/breadcrumb'
 import {
   Menubar,
   MenubarContent,
@@ -16,7 +16,7 @@ import {
   MenubarSeparator,
   MenubarShortcut,
   MenubarTrigger,
-} from '@/components/ui/menubar'
+} from '@/shared/components/ui/menubar'
 import {
   NavigationMenu,
   NavigationMenuContent,
@@ -24,8 +24,8 @@ import {
   NavigationMenuLink,
   NavigationMenuList,
   NavigationMenuTrigger,
-} from '@/components/ui/navigation-menu'
-import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs'
+} from '@/shared/components/ui/navigation-menu'
+import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/shared/components/ui/tabs'
 
 import { SampleCard } from '../Sample'
 

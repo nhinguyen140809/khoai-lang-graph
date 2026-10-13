@@ -4,8 +4,8 @@ import { MessageSquareTextIcon } from 'lucide-react'
 import Link from 'next/link'
 import { usePathname } from 'next/navigation'
 
-import { EmptyState, ErrorState, LoadingState } from '@/components/state'
-import { SidebarMenuButton, SidebarMenuItem } from '@/components/ui/sidebar'
+import { EmptyState, ErrorState, LoadingState } from '@/shared/components/state'
+import { SidebarMenuButton, SidebarMenuItem } from '@/shared/components/ui/sidebar'
 
 import { useThreads } from '../hooks/useThreads'
 

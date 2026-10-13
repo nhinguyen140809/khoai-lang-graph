@@ -2,7 +2,7 @@
 
 import { LoaderCircleIcon } from 'lucide-react'
 
-import { Markdown } from '@/components/ui/markdown'
+import { Markdown } from '@/shared/components/ui/markdown'
 
 import { useRunStream } from '../hooks/useRunStream'
 

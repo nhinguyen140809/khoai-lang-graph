@@ -5,9 +5,9 @@ import { SendIcon } from 'lucide-react'
 import { type SubmitEvent, useState } from 'react'
 import { toast } from 'sonner'
 
-import { Button } from '@/components/ui/button'
-import { ScrollArea } from '@/components/ui/scroll-area'
-import { Textarea } from '@/components/ui/textarea'
+import { Button } from '@/shared/components/ui/button'
+import { ScrollArea } from '@/shared/components/ui/scroll-area'
+import { Textarea } from '@/shared/components/ui/textarea'
 
 import { createRun } from '../chat.api'
 import type { ChatTurn } from '../chat.types'

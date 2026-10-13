@@ -1,4 +1,4 @@
-import { Markdown } from '@/components/ui/markdown'
+import { Markdown } from '@/shared/components/ui/markdown'
 
 import { sampleMarkdown } from '../../design-system.fixtures'
 import { SampleCard } from '../Sample'

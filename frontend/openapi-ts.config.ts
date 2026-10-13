@@ -4,6 +4,6 @@ import { defineConfig } from '@hey-api/openapi-ts'
 // create_app().openapi() (CONTRIBUTING: API Contract). Never edit either side by hand.
 export default defineConfig({
   input: './openapi.json',
-  output: 'src/api/generated',
+  output: 'src/shared/api/generated',
   plugins: ['@hey-api/client-fetch', '@tanstack/react-query'],
 })

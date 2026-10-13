@@ -1,6 +1,6 @@
 import type { ComponentProps } from 'react'
 
-import { Badge } from '@/components/ui/badge'
+import { Badge } from '@/shared/components/ui/badge'
 import {
   Pagination,
   PaginationContent,
@@ -9,7 +9,7 @@ import {
   PaginationLink,
   PaginationNext,
   PaginationPrevious,
-} from '@/components/ui/pagination'
+} from '@/shared/components/ui/pagination'
 import {
   Table,
   TableBody,
@@ -17,7 +17,7 @@ import {
   TableHead,
   TableHeader,
   TableRow,
-} from '@/components/ui/table'
+} from '@/shared/components/ui/table'
 
 import { type SpecRequirementRow, specRequirements } from '../../design-system.fixtures'
 import { SampleCard } from '../Sample'

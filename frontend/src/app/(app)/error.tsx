@@ -1,6 +1,6 @@
 'use client'
 
-import { ErrorState } from '@/components/state'
+import { ErrorState } from '@/shared/components/state'
 
 interface RouteErrorProps {
   error: Error

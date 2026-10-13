@@ -2,7 +2,7 @@
 
 import { useState } from 'react'
 
-import { Calendar } from '@/components/ui/calendar'
+import { Calendar } from '@/shared/components/ui/calendar'
 
 import { SampleCard } from '../Sample'
 

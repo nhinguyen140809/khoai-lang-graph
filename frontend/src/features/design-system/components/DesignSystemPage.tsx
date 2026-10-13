@@ -1,4 +1,4 @@
-import { ScrollArea } from '@/components/ui/scroll-area'
+import { ScrollArea } from '@/shared/components/ui/scroll-area'
 
 import { AlertsCard } from './cards/AlertsCard'
 import { ArtifactTableCard } from './cards/ArtifactTableCard'
@@ -26,7 +26,7 @@ import { TypographyCard } from './cards/TypographyCard'
 import { WorkspaceCard } from './cards/WorkspaceCard'
 import { ThemeToggle } from './ThemeToggle'
 
-/** Every component of src/components/ui on one page, as cards, to review the design system. */
+/** Every component of src/shared/components/ui on one page, as cards, to review the design system. */
 export function DesignSystemPage() {
   return (
     // The header stays at the top and the cards scroll below it, in a ScrollArea instead of the

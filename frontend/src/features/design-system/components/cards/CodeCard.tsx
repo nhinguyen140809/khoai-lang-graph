@@ -1,5 +1,5 @@
-import { Code, type CodeSize, type CodeVariant } from '@/components/ui/code'
-import { tones } from '@/lib/tone.constants'
+import { Code, type CodeSize, type CodeVariant } from '@/shared/components/ui/code'
+import { tones } from '@/shared/lib/tone.constants'
 
 import { SampleCard, SampleGroup, SampleLabel } from '../Sample'
 

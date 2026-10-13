@@ -1,6 +1,6 @@
 import { FileTextIcon, ListTreeIcon, WorkflowIcon } from 'lucide-react'
 
-import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs'
+import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/shared/components/ui/tabs'
 
 // Placeholders until the artifact viewers, workflow graph, and trace view are built.
 export function ArtifactPanel() {
