@@ -1,7 +1,7 @@
 import { afterEach, describe, expect, it, vi } from 'vitest'
 import { z } from 'zod'
 
-import { browserStorage, parseStored, persistStorage } from '../browser-storage.utils'
+import { browserStorage, parseStored, persistStorage, storageKey } from '../browser-storage.utils'
 
 afterEach(() => {
   vi.restoreAllMocks()
@@ -70,5 +70,11 @@ describe('parseStored', () => {
     expect(parseStored(schema, { width: 260 })).toEqual({ width: 260 })
     expect(parseStored(schema, { width: '260' })).toBeUndefined()
     expect(parseStored(schema, undefined)).toBeUndefined()
+  })
+})
+
+describe('storageKey', () => {
+  it('starts the key with the name of the app', () => {
+    expect(storageKey('frame')).toBe('khoailanggraph-frame')
   })
 })

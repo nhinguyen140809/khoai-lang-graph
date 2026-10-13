@@ -2,7 +2,7 @@ import { z } from 'zod'
 import { create } from 'zustand'
 import { persist } from 'zustand/middleware'
 
-import { parseStored, persistStorage } from '@/lib/browser-storage.utils'
+import { parseStored, persistStorage, storageKey } from '@/lib/browser-storage.utils'
 
 const editorTabSchema = z.object({
   /** Unique in its group, for example the id of the run or the item. */
@@ -112,7 +112,7 @@ export const useEditorTabsStore = create<EditorTabsState>()(
       },
     }),
     {
-      name: 'khoailanggraph-editor-tabs',
+      name: storageKey('editor-tabs'),
       skipHydration: true,
       // Changes are stored only once the stored tabs have been read.
       storage: persistStorage<PersistedTabs>({

@@ -5,6 +5,14 @@ import type { PersistStorage, StorageValue } from 'zustand/middleware'
 const STORAGE_ERRORS = new Set(['SecurityError', 'QuotaExceededError'])
 
 /**
+ * The key of a value of the app in browser storage. Every key starts with the name of the app, so
+ * that it never meets the keys of another app on the same origin.
+ */
+export function storageKey(name: string): string {
+  return `khoailanggraph-${name}`
+}
+
+/**
  * Calls `run` with the localStorage, or returns `fallback` when there is none (server rendering) or
  * the browser refuses the call. Any other error is thrown, so a bug is not hidden.
  */

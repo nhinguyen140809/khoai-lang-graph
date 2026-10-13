@@ -2,7 +2,7 @@ import { z } from 'zod'
 import { create } from 'zustand'
 import { persist } from 'zustand/middleware'
 
-import { parseStored, persistStorage } from '@/lib/browser-storage.utils'
+import { parseStored, persistStorage, storageKey } from '@/lib/browser-storage.utils'
 
 import { panelLayouts, PanelRegion } from './panel.constants'
 
@@ -66,7 +66,7 @@ export const useFrameStore = create<FrameState>()(
       },
     }),
     {
-      name: 'khoailanggraph-frame',
+      name: storageKey('frame'),
       skipHydration: true,
       // Changes are stored only once the stored state has been read.
       storage: persistStorage<PersistedFrame>({

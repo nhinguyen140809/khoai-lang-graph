@@ -268,6 +268,7 @@ The editor tabs belong to the project, not to a feature: choosing a feature on t
 
 The size and visibility of the regions and the open editor tabs are device-local state, kept in the browser by the zustand stores `frame.store.ts` and `editor/editor-tabs.store.ts` with the `persist` middleware. Browser storage is read and written only through `src/lib/browser-storage.utils.ts` (ESLint reports any other use of `localStorage` or `sessionStorage`):
 
+- `storageKey(name)` names a key: every key starts with the name of the app.
 - `browserStorage` reads and writes keys, and fails quietly where storage is missing, blocked or full.
 - `persistStorage()` is the storage of a persisted store. With `ready`, it drops writes until the store has read what was stored: the frame stores read after the first render, so that the server HTML matches the first client render, and `persist` writes on every change.
 - `parseStored()` checks stored state with a Zod schema before a store uses it, so that a value of an older version of the app is dropped instead of breaking the store.

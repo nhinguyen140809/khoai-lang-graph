@@ -2,7 +2,7 @@ import { z } from 'zod'
 import { create } from 'zustand'
 import { persist } from 'zustand/middleware'
 
-import { parseStored, persistStorage } from '@/lib/browser-storage.utils'
+import { parseStored, persistStorage, storageKey } from '@/lib/browser-storage.utils'
 
 import { commandNames } from './commands.constants'
 
@@ -49,7 +49,7 @@ export const useCommandHistoryStore = create<CommandHistoryState>()(
       },
     }),
     {
-      name: 'khoailanggraph-command-history',
+      name: storageKey('command-history'),
       skipHydration: true,
       // Changes are stored only once the stored state has been read.
       storage: persistStorage<PersistedHistory>({

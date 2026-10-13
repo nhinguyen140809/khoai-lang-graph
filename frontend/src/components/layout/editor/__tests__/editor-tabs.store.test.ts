@@ -4,7 +4,7 @@ import { browserStorage } from '@/lib/browser-storage.utils'
 
 import { neighborTab, useEditorTabsStore } from '../editor-tabs.store'
 
-const STORAGE_KEY = 'khoailanggraph-editor-tabs'
+const STORAGE_KEY = useEditorTabsStore.persist.getOptions().name ?? ''
 const req = { id: 'i1', title: 'REQ-001', href: '/projects/p1/search/i1' }
 const ambiguity = { id: 'i2', title: 'AMB-001', href: '/projects/p1/search/i2' }
 const conflict = {

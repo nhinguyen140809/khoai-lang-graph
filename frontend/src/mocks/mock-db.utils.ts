@@ -1,10 +1,10 @@
-import { browserStorage } from '@/lib/browser-storage.utils'
+import { browserStorage, storageKey } from '@/lib/browser-storage.utils'
 
 // Records that the mock server keeps between requests: the session, the user and the settings,
 // and what POST requests create. The browser worker keeps them in browser storage, so that they
 // survive a reload as data on a server would; unit tests keep them in memory only.
 
-const KEY_PREFIX = 'khoailanggraph-mock:'
+const KEY_PREFIX = storageKey('mock:')
 
 let persistent = false
 const memory = new Map<string, unknown>()

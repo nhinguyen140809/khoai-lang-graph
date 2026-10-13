@@ -1,7 +1,7 @@
 import { create } from 'zustand'
 import { persist } from 'zustand/middleware'
 
-import { persistStorage } from '@/lib/browser-storage.utils'
+import { persistStorage, storageKey } from '@/lib/browser-storage.utils'
 
 interface SettingsState {
   /**
@@ -30,6 +30,6 @@ export const useSettingsStore = create<SettingsState>()(
         })
       },
     }),
-    { name: 'khoailanggraph-settings', storage: persistStorage() },
+    { name: storageKey('settings'), storage: persistStorage() },
   ),
 )
