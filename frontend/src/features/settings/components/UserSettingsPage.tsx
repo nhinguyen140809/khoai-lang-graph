@@ -5,9 +5,9 @@ import Link from 'next/link'
 import { useSearchParams } from 'next/navigation'
 
 import { ErrorState, LoadingState } from '@/shared/components/state'
+import { ScrollArea } from '@/shared/components/ui/scroll-area'
 import { RouteParam } from '@/shared/config/routes.utils'
 import { cn } from '@/shared/lib/utils'
-import { ScrollArea } from '@/shared/ui/scroll-area'
 
 import { useCatalog, useDefinition, useModelChoices } from '../hooks/useAccountQueries'
 import { useProfile } from '../hooks/useProfile'

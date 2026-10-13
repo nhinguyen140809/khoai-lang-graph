@@ -3,9 +3,9 @@
 import { type KeyboardEvent, useState } from 'react'
 
 import { ApiError } from '@/shared/api/api-fetch.utils'
-import { Button } from '@/shared/ui/button'
-import { Spinner } from '@/shared/ui/spinner'
-import { Textarea } from '@/shared/ui/textarea'
+import { Button } from '@/shared/components/ui/button'
+import { Spinner } from '@/shared/components/ui/spinner'
+import { Textarea } from '@/shared/components/ui/textarea'
 
 import { useResumeRun } from '../hooks/useResumeRun'
 import { useReviewedItems } from '../hooks/useReviewedItems'

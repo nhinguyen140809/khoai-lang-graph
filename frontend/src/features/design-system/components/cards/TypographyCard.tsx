@@ -1,6 +1,6 @@
-import { Code } from '@/shared/ui/code'
-import { Kbd, KbdGroup } from '@/shared/ui/kbd'
-import { Separator } from '@/shared/ui/separator'
+import { Code } from '@/shared/components/ui/code'
+import { Kbd, KbdGroup } from '@/shared/components/ui/kbd'
+import { Separator } from '@/shared/components/ui/separator'
 
 import { SampleCard, SampleLabel } from '../Sample'
 

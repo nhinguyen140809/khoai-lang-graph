@@ -1,7 +1,7 @@
 import { GitForkIcon, TableIcon } from 'lucide-react'
 
-import type { FeatureActivity, TabIcons } from '@/frame'
-import { SidePanel } from '@/frame'
+import type { FeatureActivity, TabIcons } from '@/shared/components/frame'
+import { SidePanel } from '@/shared/components/frame'
 import { traceabilityHref } from '@/shared/config/routes.utils'
 
 import { TraceabilityNav } from './components/TraceabilityNav'

@@ -4,9 +4,15 @@ import { useState } from 'react'
 import { Controller, useForm } from 'react-hook-form'
 
 import { ApiError } from '@/shared/api/api-fetch.utils'
-import { Button } from '@/shared/ui/button'
-import { Field, FieldDescription, FieldError, FieldGroup, FieldLabel } from '@/shared/ui/field'
-import { Spinner } from '@/shared/ui/spinner'
+import { Button } from '@/shared/components/ui/button'
+import {
+  Field,
+  FieldDescription,
+  FieldError,
+  FieldGroup,
+  FieldLabel,
+} from '@/shared/components/ui/field'
+import { Spinner } from '@/shared/components/ui/spinner'
 
 import type { ArtifactItem, ContentSchema } from '../artifacts.types'
 import { emptyValue, fieldViews, toStoredContent, validateContent } from '../field-view.utils'

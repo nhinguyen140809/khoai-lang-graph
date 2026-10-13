@@ -2,7 +2,7 @@
 
 import { useMemo } from 'react'
 
-import { Checkbox } from '@/shared/ui/checkbox'
+import { Checkbox } from '@/shared/components/ui/checkbox'
 import {
   Field,
   FieldDescription,
@@ -11,8 +11,8 @@ import {
   FieldLabel,
   FieldLegend,
   FieldSet,
-} from '@/shared/ui/field'
-import { Input } from '@/shared/ui/input'
+} from '@/shared/components/ui/field'
+import { Input } from '@/shared/components/ui/input'
 
 import type { RunConfigDefinition } from './run-config.types'
 import { parameterFields, type RunForm, scalarText } from './run-form.utils'

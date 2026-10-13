@@ -1,6 +1,6 @@
 import { ClipboardCheckIcon } from 'lucide-react'
 
-import type { TabIcons } from '@/frame'
+import type { TabIcons } from '@/shared/components/frame'
 
 /** The name of the tab icon of a review, which its page gives `useEditorTab`. */
 export const ReviewTabIcon = { Review: 'review.review' } as const

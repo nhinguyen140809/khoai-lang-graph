@@ -4,10 +4,7 @@ import { ArchiveIcon, FolderIcon, PlusIcon } from 'lucide-react'
 import Link from 'next/link'
 
 import { EmptyState, ErrorState, LoadingState } from '@/shared/components/state'
-import { consoleHref } from '@/shared/config/routes.utils'
-import { useNow } from '@/shared/hooks/useNow'
-import { formatRelativeTime } from '@/shared/lib/relative-time.utils'
-import { Button } from '@/shared/ui/button'
+import { Button } from '@/shared/components/ui/button'
 import {
   Table,
   TableBody,
@@ -16,7 +13,10 @@ import {
   TableHead,
   TableHeader,
   TableRow,
-} from '@/shared/ui/table'
+} from '@/shared/components/ui/table'
+import { consoleHref } from '@/shared/config/routes.utils'
+import { useNow } from '@/shared/hooks/useNow'
+import { formatRelativeTime } from '@/shared/lib/relative-time.utils'
 
 import { useProjects } from '../hooks/useProjects'
 import { useNewProjectDialogStore } from '../new-project.store'

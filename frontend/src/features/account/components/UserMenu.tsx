@@ -7,9 +7,8 @@ import { useRouter } from 'next/navigation'
 import { useTheme } from 'next-themes'
 import { toast } from 'sonner'
 
-import { useIsHydrated } from '@/shared/hooks/useIsHydrated'
-import { Avatar, AvatarFallback, AvatarImage } from '@/shared/ui/avatar'
-import { Button } from '@/shared/ui/button'
+import { Avatar, AvatarFallback, AvatarImage } from '@/shared/components/ui/avatar'
+import { Button } from '@/shared/components/ui/button'
 import {
   DropdownMenu,
   DropdownMenuContent,
@@ -19,8 +18,9 @@ import {
   DropdownMenuRadioItem,
   DropdownMenuSeparator,
   DropdownMenuTrigger,
-} from '@/shared/ui/dropdown-menu'
-import { Skeleton } from '@/shared/ui/skeleton'
+} from '@/shared/components/ui/dropdown-menu'
+import { Skeleton } from '@/shared/components/ui/skeleton'
+import { useIsHydrated } from '@/shared/hooks/useIsHydrated'
 
 import { logout } from '../account.api'
 import { useMe } from '../hooks/useMe'

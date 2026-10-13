@@ -3,9 +3,15 @@
 import { useState } from 'react'
 
 import type { RunConfigDefinition } from '@/shared/components/run-config'
-import { Field, FieldDescription, FieldError, FieldGroup, FieldLabel } from '@/shared/ui/field'
-import { Input } from '@/shared/ui/input'
-import { NativeSelect, NativeSelectOption } from '@/shared/ui/native-select'
+import {
+  Field,
+  FieldDescription,
+  FieldError,
+  FieldGroup,
+  FieldLabel,
+} from '@/shared/components/ui/field'
+import { Input } from '@/shared/components/ui/input'
+import { NativeSelect, NativeSelectOption } from '@/shared/components/ui/native-select'
 
 import { formErrorMessage, serverFieldErrors } from '../form-errors.utils'
 import { useSaveModelChoices } from '../hooks/useAccountQueries'

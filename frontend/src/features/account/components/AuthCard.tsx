@@ -1,6 +1,12 @@
 import type { ReactNode } from 'react'
 
-import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/shared/ui/card'
+import {
+  Card,
+  CardContent,
+  CardDescription,
+  CardHeader,
+  CardTitle,
+} from '@/shared/components/ui/card'
 
 interface AuthCardProps {
   title: string

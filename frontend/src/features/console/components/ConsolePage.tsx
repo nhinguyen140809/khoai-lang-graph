@@ -3,7 +3,7 @@
 import { usePathname } from 'next/navigation'
 import type { ReactNode } from 'react'
 
-import { projectTabGroup, useEditorTab } from '@/frame'
+import { projectTabGroup, useEditorTab } from '@/shared/components/frame'
 import { ErrorState, LoadingState } from '@/shared/components/state'
 
 import { ConsoleTabIcon } from '../console-frame.config'

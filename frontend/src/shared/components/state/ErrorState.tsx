@@ -1,7 +1,7 @@
 import { CircleAlertIcon } from 'lucide-react'
 
+import { Button } from '@/shared/components/ui/button'
 import { cn } from '@/shared/lib/utils'
-import { Button } from '@/shared/ui/button'
 
 import { pageClassName, type StateSize } from './state.types'
 

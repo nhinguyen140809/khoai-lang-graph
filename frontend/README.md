@@ -90,10 +90,12 @@ frontend/
 │   ├── app/                 # routes (Next.js App Router) and styles.css
 │   ├── providers/           # global providers: query client, theme, API mocking
 │   ├── features/            # one folder per feature: console, artifacts, settings, ...
-│   ├── frame/               # the frame: top bar, activity bar, side panel, editor tabs, status bar
-│   ├── shared/              # code that knows no feature and no frame
-│   │   ├── ui/              # shadcn/ui components (project source, editable)
-│   │   ├── components/      # components of the app built on ui/: query states, run settings
+│   ├── shared/              # code that knows no feature
+│   │   ├── components/
+│   │   │   ├── ui/          # shadcn/ui components (project source, editable)
+│   │   │   ├── frame/       # the frame: top bar, activity bar, side panel, editor tabs, status bar
+│   │   │   ├── state/       # query states: loading, error, empty, not found
+│   │   │   └── run-config/  # the settings of a run
 │   │   ├── hooks/, lib/     # generic hooks and utilities
 │   │   ├── api/             # fetch and its errors, query client, generated/: generated API client (do not edit)
 │   │   └── config/          # what the app sets once: the addresses of its pages, the labels of run statuses
@@ -114,16 +116,16 @@ pnpm ui:add dialog --diff          # compare the local file with the registry ve
 pnpm fix                           # apply this repo's ESLint and Prettier style
 ```
 
-- Files are written to `src/shared/ui/` according to the aliases in `components.json` (`@/shared/ui`, `@/shared/lib/utils`, `@/shared/hooks`). They are regular project source and can be edited.
+- Files are written to `src/shared/components/ui/` according to the aliases in `components.json` (`@/shared/components/ui`, `@/shared/lib/utils`, `@/shared/hooks`). They are regular project source and can be edited.
 - The CLI writes code in its own style (double quotes, its own import order). `pnpm fix` converts it to the repo style; afterwards `pnpm check` should pass.
 - The configured style is `radix-mira`, the compact style meant for dense interfaces, and the icon library is Lucide (`lucide-react`).
 - `menuColor` is `default`: menus are opaque, and a highlighted menu item uses `accent`, the selection color of Night Owl. The translucent menu colors tint the highlighted item with the foreground at 10% instead, which overrides `accent`.
 - Every component of the registry is installed except `toast`, which exists only for Base UI projects (`sonner` is used instead), and `form`, which the registry replaced with `field`. The list is at https://ui.shadcn.com/docs/components.
 - The page `/design-system` shows the installed components as cards, with the color tokens and the type scale, in both themes; `sidebar` is not shown (the frame has its own activity bar and side panel) and `direction` has no visible part. It exists only in development (`pnpm dev`, then open http://localhost:3000/design-system); production builds answer 404.
 - `tree.tsx` is not part of shadcn/ui: it comes from the Origin UI registry (`pnpm ui:add https://coss.com/origin/r/tree.json`, MIT) and wraps [Headless Tree](https://headless-tree.lukasbach.com) (`@headless-tree/core`, `@headless-tree/react`).
-- `node.tsx`, `handle.tsx`, and `node-status-indicator.tsx` come from the [React Flow UI](https://reactflow.dev/ui) registry (`pnpm ui:add https://ui.reactflow.dev/base-node`, and so on). The CLI writes them to `src/shared/components/`; move them to `src/shared/ui/`, and rename `base-node.tsx` and `base-handle.tsx` to `node.tsx` and `handle.tsx`, with the components `Node` and `Handle`: like the other components, they have no `Base` prefix.
+- `node.tsx`, `handle.tsx`, and `node-status-indicator.tsx` come from the [React Flow UI](https://reactflow.dev/ui) registry (`pnpm ui:add https://ui.reactflow.dev/base-node`, and so on). The CLI writes them to `src/shared/components/`; move them to `src/shared/components/ui/`, and rename `base-node.tsx` and `base-handle.tsx` to `node.tsx` and `handle.tsx`, with the components `Node` and `Handle`: like the other components, they have no `Base` prefix.
 - `code.tsx`, `flow.tsx`, `edge.tsx`, `markdown.tsx`, and `surface.tsx` are written for this project. `Code` shows inline code, after the [Code](https://chakra-ui.com/docs/components/code) component of Chakra UI. Its fills are `solid`, `surface`, `soft`, `outline`, and `plain`, and its `size` (`sm`, `default`, `lg`) matches a text size: captions, component text, and body text. `Flow` is the React Flow canvas (`@xyflow/react`) with the color mode of the current theme, light until hydration so that the server HTML matches. `Edge` draws an edge path in the line style of its `variant` (`solid`, `dashed`, `dotted`); it sets the `--xy-edge-*` variables of its edge, so React Flow still handles selection and animation. `Markdown` renders Markdown with [Streamdown](https://streamdown.ai) and its code plugin (`@streamdown/code`), with the heading sizes of the page. Inline code is a `Code` of the body text size (`lg`). Code blocks keep the frame, header, and buttons of Streamdown, and show the highlighted lines in a ScrollArea instead of a native scroll container. `Surface` is a rounded area on the background of the frame, such as the side panel or the editor; its `as` prop renders it as a `div`, `main`, `section`, or `aside`.
-- The libraries wrapped in `src/shared/ui/` are not imported directly elsewhere; ESLint (`no-restricted-imports`) reports `streamdown`, `@streamdown/code`, `react-resizable-panels`, `ReactFlow` and `Handle` from `@xyflow/react`, and `ResponsiveContainer`, `Tooltip`, and `Legend` from `recharts`. Their hooks, types, and other parts (for example `Background`, `Controls`, `Bar`) can be imported directly, because they take their colors from the tokens. Headless Tree has no visible parts, so it is not restricted.
+- The libraries wrapped in `src/shared/components/ui/` are not imported directly elsewhere; ESLint (`no-restricted-imports`) reports `streamdown`, `@streamdown/code`, `react-resizable-panels`, `ReactFlow` and `Handle` from `@xyflow/react`, and `ResponsiveContainer`, `Tooltip`, and `Legend` from `recharts`. Their hooks, types, and other parts (for example `Background`, `Controls`, `Bar`) can be imported directly, because they take their colors from the tokens. Headless Tree has no visible parts, so it is not restricted.
 - Existing files are kept unless `--overwrite` is passed. Overwriting removes the local edits below, so check the result with `--diff` and re-apply them:
 
   | File                                                                                 | Local edit                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                      |
@@ -148,7 +150,7 @@ pnpm exec shadcn apply <preset> --only theme
 pnpm fix
 ```
 
-With `--only theme`, only the theme variables in `src/app/styles.css` change. Without `--only`, the CLI can also rewrite the components in `src/shared/ui/` in the preset's style; in that case review the diff of each component and run `pnpm fix` and `pnpm check`. Fonts are configured manually, see [Fonts](#fonts).
+With `--only theme`, only the theme variables in `src/app/styles.css` change. Without `--only`, the CLI can also rewrite the components in `src/shared/components/ui/` in the preset's style; in that case review the diff of each component and run `pnpm fix` and `pnpm check`. Fonts are configured manually, see [Fonts](#fonts).
 
 ## Theming and fonts
 
@@ -247,7 +249,7 @@ Vietnamese text needs a font that ships the `vietnamese` subset. The subsets of 
 
 ## Frame
 
-Every screen uses the frame (`Workbench`) in `src/frame/`, after the layout of an editor: a top bar (`TopBar`), an activity bar with one item per feature of the project (`ActivityBar`), the side panel of the feature chosen and the editor (`ProjectWorkspace`, `SidePanel`, `EditorTabs`), an optional panel under the editor (`EditorWithBottomPanel`), a status bar (`StatusBar`), and the command palette (`CommandPalette`). The frame is a layer under the features and names none of them: each feature describes its item (`FeatureActivity` in `activities/activity.types.ts`: id, label, icon, start page, side panel) and the icons of its tabs in `<feature>-frame.config.tsx`, and a layout passes the list to `Workbench` as `activities` and `tabIcons`. `Workbench` renders the bars itself and takes, the same way, what they show from the features: the crumb of the top bar (`crumb`), the account menu (`account`), the status (`status`), the components that register commands (`commands`) and the dialogs (`dialogs`). The list sets which features a screen has and their order; an item with a `note` and no start page is a feature planned for later, shown disabled. Today only the layout of a project passes features; the screens outside a project show the account menu alone on the activity bar, and a feature shown outside a project would be passed by their layout.
+Every screen uses the frame (`Workbench`) in `src/shared/components/frame/`, after the layout of an editor: a top bar (`TopBar`), an activity bar with one item per feature of the project (`ActivityBar`), the side panel of the feature chosen and the editor (`ProjectWorkspace`, `SidePanel`, `EditorTabs`), an optional panel under the editor (`EditorWithBottomPanel`), a status bar (`StatusBar`), and the command palette (`CommandPalette`). The frame is shared code and names no feature: each feature describes its item (`FeatureActivity` in `activities/activity.types.ts`: id, label, icon, start page, side panel) and the icons of its tabs in `<feature>-frame.config.tsx`, and a layout passes the list to `Workbench` as `activities` and `tabIcons`. `Workbench` renders the bars itself and takes, the same way, what they show from the features: the crumb of the top bar (`crumb`), the account menu (`account`), the status (`status`), the components that register commands (`commands`) and the dialogs (`dialogs`). The list sets which features a screen has and their order; an item with a `note` and no start page is a feature planned for later, shown disabled. Today only the layout of a project passes features; the screens outside a project show the account menu alone on the activity bar, and a feature shown outside a project would be passed by their layout.
 
 The folder is split by what its parts do, with `Workbench`, `ProjectWorkspace` and the state that the frame keeps in the browser (`frame.store.ts`) at its root:
 
@@ -259,7 +261,7 @@ The folder is split by what its parts do, with `Workbench`, `ProjectWorkspace` a
 | `commands/`   | The command palette, its registry and `useCommands`                                                                                                                                |
 | `bars/`       | The top bar, its crumb, and the status bar                                                                                                                                         |
 
-Code outside the folder imports the frame from `@/frame`, its `index.ts`; files inside the folder import each other with relative paths. ESLint reports an import of a file inside the folder from outside it.
+Code outside the folder imports the frame from `@/shared/components/frame`, its `index.ts`; files inside the folder import each other with relative paths. ESLint reports an import of a file inside the folder from outside it.
 
 The regions of the frame do not scroll: the editor, the panel under it, and the main area of the screens outside a project only clip what they hold. A page or a panel whose content flows scrolls itself with a `ScrollArea` (`h-full`); one that fills its region, such as the console, a review or the graph of a run, sizes itself with `h-full` and scrolls its own parts. A `ScrollArea` cannot hold content that fills it, because Radix wraps its content in an element without a height.
 
@@ -367,12 +369,12 @@ Components never import fixtures. They call the API functions of their feature, 
 
 ## Troubleshooting
 
-| Symptom                                                                            | Cause and fix                                                                                                                                |
-| ---------------------------------------------------------------------------------- | -------------------------------------------------------------------------------------------------------------------------------------------- |
-| Requests to `/api` hang or fail                                                    | The backend is not running on port 8000. Use `pnpm dev:mock`.                                                                                |
-| `Another next dev server is already running`                                       | `pnpm dev` and `pnpm e2e` cannot run at the same time in this folder. Stop the first one.                                                    |
-| `You're importing a component that needs useState` (or another hook)               | The file uses a client-only API. Add `'use client'` as its first line.                                                                       |
-| A hydration mismatch warning in the browser console                                | A component rendered something on the server that differs in the browser (theme, `localStorage`, window size). Read that value in an effect. |
-| `pnpm lint` reports import order errors in `src/shared/ui/` after a shadcn command | Run `pnpm fix`.                                                                                                                              |
-| `pnpm e2e` fails with a missing browser executable                                 | Run `pnpm e2e:install` once.                                                                                                                 |
-| A heading shows mixed fonts in Vietnamese text                                     | The heading font lacks the `vietnamese` subset, see [Fonts](#fonts).                                                                         |
+| Symptom                                                                                       | Cause and fix                                                                                                                                |
+| --------------------------------------------------------------------------------------------- | -------------------------------------------------------------------------------------------------------------------------------------------- |
+| Requests to `/api` hang or fail                                                               | The backend is not running on port 8000. Use `pnpm dev:mock`.                                                                                |
+| `Another next dev server is already running`                                                  | `pnpm dev` and `pnpm e2e` cannot run at the same time in this folder. Stop the first one.                                                    |
+| `You're importing a component that needs useState` (or another hook)                          | The file uses a client-only API. Add `'use client'` as its first line.                                                                       |
+| A hydration mismatch warning in the browser console                                           | A component rendered something on the server that differs in the browser (theme, `localStorage`, window size). Read that value in an effect. |
+| `pnpm lint` reports import order errors in `src/shared/components/ui/` after a shadcn command | Run `pnpm fix`.                                                                                                                              |
+| `pnpm e2e` fails with a missing browser executable                                            | Run `pnpm e2e:install` once.                                                                                                                 |
+| A heading shows mixed fonts in Vietnamese text                                                | The heading font lacks the `vietnamese` subset, see [Fonts](#fonts).                                                                         |

@@ -2,8 +2,14 @@
 
 import { useState } from 'react'
 
-import { Field, FieldDescription, FieldError, FieldGroup, FieldLabel } from '@/shared/ui/field'
-import { Input } from '@/shared/ui/input'
+import {
+  Field,
+  FieldDescription,
+  FieldError,
+  FieldGroup,
+  FieldLabel,
+} from '@/shared/components/ui/field'
+import { Input } from '@/shared/components/ui/input'
 
 import { formErrorMessage, serverFieldErrors } from '../form-errors.utils'
 import { useChangeProfile } from '../hooks/useAccountQueries'

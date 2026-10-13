@@ -1,5 +1,5 @@
-import { Button } from '@/shared/ui/button'
-import { Spinner } from '@/shared/ui/spinner'
+import { Button } from '@/shared/components/ui/button'
+import { Spinner } from '@/shared/components/ui/spinner'
 
 interface SaveBarProps {
   pending: boolean

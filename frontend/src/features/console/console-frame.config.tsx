@@ -1,7 +1,7 @@
 import { SquareChevronRightIcon } from 'lucide-react'
 
-import type { FeatureActivity, TabIcons } from '@/frame'
-import { SidePanel } from '@/frame'
+import type { FeatureActivity, TabIcons } from '@/shared/components/frame'
+import { SidePanel } from '@/shared/components/frame'
 import { consoleHref } from '@/shared/config/routes.utils'
 
 import { ConsoleNavigator } from './components/ConsoleNavigator'

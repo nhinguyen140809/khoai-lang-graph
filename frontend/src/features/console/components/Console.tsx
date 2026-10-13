@@ -4,11 +4,11 @@ import { ChevronsDownUpIcon, ChevronsUpDownIcon } from 'lucide-react'
 import { useRouter } from 'next/navigation'
 import { type ReactNode, useEffect, useRef, useState } from 'react'
 
-import { useCommands, useOpenPage } from '@/frame'
+import { useCommands, useOpenPage } from '@/shared/components/frame'
 import { ErrorState, LoadingState } from '@/shared/components/state'
+import { ScrollArea } from '@/shared/components/ui/scroll-area'
 import { artifactsExportHref, reviewHref, settingsHref } from '@/shared/config/routes.utils'
 import { useNow } from '@/shared/hooks/useNow'
-import { ScrollArea } from '@/shared/ui/scroll-area'
 
 import { useCommandHistoryStore } from '../command-history.store'
 import type { CommandName } from '../commands.constants'

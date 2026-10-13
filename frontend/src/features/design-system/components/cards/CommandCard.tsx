@@ -3,7 +3,7 @@
 import { FileTextIcon, HistoryIcon, RotateCcwIcon, SquareIcon, UploadIcon } from 'lucide-react'
 import { useEffect, useState } from 'react'
 
-import { Button } from '@/shared/ui/button'
+import { Button } from '@/shared/components/ui/button'
 import {
   Command,
   CommandDialog,
@@ -14,8 +14,8 @@ import {
   CommandList,
   CommandSeparator,
   CommandShortcut,
-} from '@/shared/ui/command'
-import { Kbd, KbdGroup } from '@/shared/ui/kbd'
+} from '@/shared/components/ui/command'
+import { Kbd, KbdGroup } from '@/shared/components/ui/kbd'
 
 import { specRequirements } from '../../design-system.fixtures'
 import { SampleCard } from '../Sample'

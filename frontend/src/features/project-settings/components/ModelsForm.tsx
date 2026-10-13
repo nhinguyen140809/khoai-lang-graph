@@ -3,8 +3,14 @@
 import { useState } from 'react'
 
 import type { RunConfigDefinition } from '@/shared/components/run-config'
-import { Field, FieldDescription, FieldError, FieldGroup, FieldLabel } from '@/shared/ui/field'
-import { NativeSelect, NativeSelectOption } from '@/shared/ui/native-select'
+import {
+  Field,
+  FieldDescription,
+  FieldError,
+  FieldGroup,
+  FieldLabel,
+} from '@/shared/components/ui/field'
+import { NativeSelect, NativeSelectOption } from '@/shared/components/ui/native-select'
 
 import { formErrorMessage, serverFieldErrors } from '../form-errors.utils'
 import { useUpdateProject } from '../hooks/useUpdateProject'

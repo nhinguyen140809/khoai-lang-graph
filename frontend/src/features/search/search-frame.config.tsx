@@ -1,7 +1,7 @@
 import { SearchIcon } from 'lucide-react'
 
-import type { FeatureActivity } from '@/frame'
-import { SidePanel } from '@/frame'
+import type { FeatureActivity } from '@/shared/components/frame'
+import { SidePanel } from '@/shared/components/frame'
 import { searchHref } from '@/shared/config/routes.utils'
 
 import { SearchPanel } from './components/SearchPanel'

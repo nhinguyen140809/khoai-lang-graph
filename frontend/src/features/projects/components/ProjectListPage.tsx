@@ -3,9 +3,9 @@
 import { ArchiveIcon, PlusIcon } from 'lucide-react'
 import { useState } from 'react'
 
-import { Button } from '@/shared/ui/button'
-import { ScrollArea } from '@/shared/ui/scroll-area'
-import { Toggle } from '@/shared/ui/toggle'
+import { Button } from '@/shared/components/ui/button'
+import { ScrollArea } from '@/shared/components/ui/scroll-area'
+import { Toggle } from '@/shared/components/ui/toggle'
 
 import { useNewProjectDialogStore } from '../new-project.store'
 import type { ProjectStatus } from '../projects.types'

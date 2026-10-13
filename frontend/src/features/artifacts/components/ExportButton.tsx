@@ -6,8 +6,7 @@ import { useSearchParams } from 'next/navigation'
 import { useState } from 'react'
 
 import { ErrorState, LoadingState } from '@/shared/components/state'
-import { RouteParam } from '@/shared/config/routes.utils'
-import { Button } from '@/shared/ui/button'
+import { Button } from '@/shared/components/ui/button'
 import {
   Dialog,
   DialogContent,
@@ -15,10 +14,17 @@ import {
   DialogHeader,
   DialogTitle,
   DialogTrigger,
-} from '@/shared/ui/dialog'
-import { Field, FieldLabel } from '@/shared/ui/field'
-import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/shared/ui/select'
-import { Spinner } from '@/shared/ui/spinner'
+} from '@/shared/components/ui/dialog'
+import { Field, FieldLabel } from '@/shared/components/ui/field'
+import {
+  Select,
+  SelectContent,
+  SelectItem,
+  SelectTrigger,
+  SelectValue,
+} from '@/shared/components/ui/select'
+import { Spinner } from '@/shared/components/ui/spinner'
+import { RouteParam } from '@/shared/config/routes.utils'
 
 import { createExport, getExport } from '../artifacts.api'
 import { artifactKeys } from '../artifacts-keys.constants'

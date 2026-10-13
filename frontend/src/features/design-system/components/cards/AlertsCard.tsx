@@ -7,8 +7,8 @@ import {
   TriangleAlertIcon,
 } from 'lucide-react'
 
+import { Alert, AlertDescription, AlertTitle } from '@/shared/components/ui/alert'
 import type { Tone } from '@/shared/lib/tone.constants'
-import { Alert, AlertDescription, AlertTitle } from '@/shared/ui/alert'
 
 import { SampleCard, SampleGroup } from '../Sample'
 

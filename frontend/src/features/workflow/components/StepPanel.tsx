@@ -5,10 +5,10 @@ import { useRouter } from 'next/navigation'
 import type { ReactNode } from 'react'
 import { toast } from 'sonner'
 
+import { Button } from '@/shared/components/ui/button'
+import { Spinner } from '@/shared/components/ui/spinner'
 import { itemHref, reviewHref, runHref } from '@/shared/config/routes.utils'
 import { cn } from '@/shared/lib/utils'
-import { Button } from '@/shared/ui/button'
-import { Spinner } from '@/shared/ui/spinner'
 
 import { useProjectRuns } from '../hooks/useProjectRuns'
 import { useRetryFromStep } from '../hooks/useRetryFromStep'

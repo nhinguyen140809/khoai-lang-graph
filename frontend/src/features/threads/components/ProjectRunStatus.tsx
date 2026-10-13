@@ -2,12 +2,12 @@
 
 import Link from 'next/link'
 
+import { Separator } from '@/shared/components/ui/separator'
+import { Spinner } from '@/shared/components/ui/spinner'
 import { runHref } from '@/shared/config/routes.utils'
 import { runStatusLabels, runStatusTones } from '@/shared/config/run-status.constants'
 import { toneClasses } from '@/shared/lib/tone.constants'
 import { cn } from '@/shared/lib/utils'
-import { Separator } from '@/shared/ui/separator'
-import { Spinner } from '@/shared/ui/spinner'
 
 import { useProjectRunStatus } from '../hooks/useProjectRunStatus'
 import { formatCost } from '../run-status.utils'

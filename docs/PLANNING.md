@@ -139,7 +139,7 @@ Target layout (like Claude / ChatGPT canvas, plus a workflow view):
 
 ### Why shadcn/ui
 
-- Tailwind-native, built on Radix or Base UI primitives; components are copied into the repo (`src/shared/ui/`), so we own and can edit them.
+- Tailwind-native, built on Radix or Base UI primitives; components are copied into the repo (`src/shared/components/ui/`), so we own and can edit them.
 - Largest ecosystem: the chat and graph libraries we need (assistant-ui, AI Elements, React Flow UI) are built on it; the rest are headless or themeable.
 - Ships the building blocks for our layout: Sidebar, Resizable, Tabs, Command, Data Table, Charts.
 - Custom components for agent steps and artifacts fit in naturally.

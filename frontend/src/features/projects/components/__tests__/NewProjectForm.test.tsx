@@ -4,7 +4,7 @@ import { http, HttpResponse } from 'msw'
 import { beforeEach, describe, expect, it, vi } from 'vitest'
 
 import { server } from '@/mocks/msw-server.setup'
-import { Dialog, DialogContent, DialogTitle } from '@/shared/ui/dialog'
+import { Dialog, DialogContent, DialogTitle } from '@/shared/components/ui/dialog'
 import { routerMock } from '@/test/next-mocks.utils'
 import { TestProviders } from '@/test/TestProviders'
 

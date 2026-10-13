@@ -3,7 +3,7 @@
 import { FolderIcon, LayoutListIcon, PlusIcon, RotateCcwIcon } from 'lucide-react'
 import { useRouter } from 'next/navigation'
 
-import { type PaletteCommand, useCommands } from '@/frame'
+import { type PaletteCommand, useCommands } from '@/shared/components/frame'
 import { consoleHref } from '@/shared/config/routes.utils'
 
 import { useProjects } from '../hooks/useProjects'

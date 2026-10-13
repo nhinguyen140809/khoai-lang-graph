@@ -4,9 +4,7 @@ import { CheckIcon, ChevronDownIcon, LayoutListIcon, PlusIcon, RotateCcwIcon } f
 import Link from 'next/link'
 
 import { isNotFoundError } from '@/shared/api/api-fetch.utils'
-import { consoleHref } from '@/shared/config/routes.utils'
-import { cn } from '@/shared/lib/utils'
-import { Button } from '@/shared/ui/button'
+import { Button } from '@/shared/components/ui/button'
 import {
   DropdownMenu,
   DropdownMenuContent,
@@ -14,8 +12,10 @@ import {
   DropdownMenuLabel,
   DropdownMenuSeparator,
   DropdownMenuTrigger,
-} from '@/shared/ui/dropdown-menu'
-import { Skeleton } from '@/shared/ui/skeleton'
+} from '@/shared/components/ui/dropdown-menu'
+import { Skeleton } from '@/shared/components/ui/skeleton'
+import { consoleHref } from '@/shared/config/routes.utils'
+import { cn } from '@/shared/lib/utils'
 
 import { useProject } from '../hooks/useProject'
 import { useProjects } from '../hooks/useProjects'

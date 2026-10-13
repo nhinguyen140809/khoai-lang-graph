@@ -1,4 +1,4 @@
-import { Badge } from '@/shared/ui/badge'
+import { Badge } from '@/shared/components/ui/badge'
 
 import { type FieldView, formatValue } from '../field-view.utils'
 

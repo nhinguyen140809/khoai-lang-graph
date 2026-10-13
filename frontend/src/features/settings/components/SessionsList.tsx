@@ -1,10 +1,10 @@
 'use client'
 
 import { EmptyState, ErrorState, LoadingState } from '@/shared/components/state'
+import { Badge } from '@/shared/components/ui/badge'
+import { Button } from '@/shared/components/ui/button'
 import { useNow } from '@/shared/hooks/useNow'
 import { formatRelativeTime } from '@/shared/lib/relative-time.utils'
-import { Badge } from '@/shared/ui/badge'
-import { Button } from '@/shared/ui/button'
 
 import { useRevokeSession, useSessions } from '../hooks/useAccountQueries'
 

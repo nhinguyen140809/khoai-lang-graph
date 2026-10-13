@@ -6,9 +6,9 @@ import { usePathname } from 'next/navigation'
 import { useDeferredValue, useState } from 'react'
 
 import { EmptyState, ErrorState, LoadingState } from '@/shared/components/state'
+import { Badge } from '@/shared/components/ui/badge'
+import { Input } from '@/shared/components/ui/input'
 import { itemHref } from '@/shared/config/routes.utils'
-import { Badge } from '@/shared/ui/badge'
-import { Input } from '@/shared/ui/input'
 
 import { MIN_QUERY_LENGTH, useItemSearch } from '../hooks/useItemSearch'
 import { SEARCH_RESULT_LIMIT } from '../search.api'

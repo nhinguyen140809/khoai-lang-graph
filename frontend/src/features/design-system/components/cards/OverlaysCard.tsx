@@ -12,8 +12,8 @@ import {
   AlertDialogHeader,
   AlertDialogTitle,
   AlertDialogTrigger,
-} from '@/shared/ui/alert-dialog'
-import { Button } from '@/shared/ui/button'
+} from '@/shared/components/ui/alert-dialog'
+import { Button } from '@/shared/components/ui/button'
 import {
   ContextMenu,
   ContextMenuContent,
@@ -21,7 +21,7 @@ import {
   ContextMenuSeparator,
   ContextMenuShortcut,
   ContextMenuTrigger,
-} from '@/shared/ui/context-menu'
+} from '@/shared/components/ui/context-menu'
 import {
   Dialog,
   DialogClose,
@@ -31,7 +31,7 @@ import {
   DialogHeader,
   DialogTitle,
   DialogTrigger,
-} from '@/shared/ui/dialog'
+} from '@/shared/components/ui/dialog'
 import {
   Drawer,
   DrawerClose,
@@ -41,7 +41,7 @@ import {
   DrawerHeader,
   DrawerTitle,
   DrawerTrigger,
-} from '@/shared/ui/drawer'
+} from '@/shared/components/ui/drawer'
 import {
   DropdownMenu,
   DropdownMenuContent,
@@ -50,9 +50,9 @@ import {
   DropdownMenuSeparator,
   DropdownMenuShortcut,
   DropdownMenuTrigger,
-} from '@/shared/ui/dropdown-menu'
-import { HoverCard, HoverCardContent, HoverCardTrigger } from '@/shared/ui/hover-card'
-import { Popover, PopoverContent, PopoverTrigger } from '@/shared/ui/popover'
+} from '@/shared/components/ui/dropdown-menu'
+import { HoverCard, HoverCardContent, HoverCardTrigger } from '@/shared/components/ui/hover-card'
+import { Popover, PopoverContent, PopoverTrigger } from '@/shared/components/ui/popover'
 import {
   Sheet,
   SheetContent,
@@ -60,8 +60,8 @@ import {
   SheetHeader,
   SheetTitle,
   SheetTrigger,
-} from '@/shared/ui/sheet'
-import { Tooltip, TooltipContent, TooltipTrigger } from '@/shared/ui/tooltip'
+} from '@/shared/components/ui/sheet'
+import { Tooltip, TooltipContent, TooltipTrigger } from '@/shared/components/ui/tooltip'
 
 import { SampleCard } from '../Sample'
 

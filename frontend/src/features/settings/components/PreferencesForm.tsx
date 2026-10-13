@@ -11,7 +11,7 @@ import {
   toRunConfig,
   validateRunForm,
 } from '@/shared/components/run-config'
-import { Checkbox } from '@/shared/ui/checkbox'
+import { Checkbox } from '@/shared/components/ui/checkbox'
 import {
   Field,
   FieldDescription,
@@ -19,8 +19,8 @@ import {
   FieldLabel,
   FieldLegend,
   FieldSet,
-} from '@/shared/ui/field'
-import { NativeSelect, NativeSelectOption } from '@/shared/ui/native-select'
+} from '@/shared/components/ui/field'
+import { NativeSelect, NativeSelectOption } from '@/shared/components/ui/native-select'
 
 import { formErrorMessage } from '../form-errors.utils'
 import { useSavePreferences } from '../hooks/useAccountQueries'

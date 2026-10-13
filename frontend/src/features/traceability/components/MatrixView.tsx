@@ -5,9 +5,16 @@ import Link from 'next/link'
 import { useMemo } from 'react'
 
 import { EmptyState, ErrorState, LoadingState } from '@/shared/components/state'
+import { Button } from '@/shared/components/ui/button'
+import {
+  Table,
+  TableBody,
+  TableCell,
+  TableHead,
+  TableHeader,
+  TableRow,
+} from '@/shared/components/ui/table'
 import { traceabilityHref } from '@/shared/config/routes.utils'
-import { Button } from '@/shared/ui/button'
-import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from '@/shared/ui/table'
 
 import { useCoverage } from '../hooks/useCoverage'
 import { useMatrix } from '../hooks/useMatrix'

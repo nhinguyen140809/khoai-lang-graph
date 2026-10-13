@@ -2,8 +2,8 @@
 
 import { useState } from 'react'
 
-import { Field, FieldError, FieldGroup, FieldLabel } from '@/shared/ui/field'
-import { Input } from '@/shared/ui/input'
+import { Field, FieldError, FieldGroup, FieldLabel } from '@/shared/components/ui/field'
+import { Input } from '@/shared/components/ui/input'
 
 import { formErrorMessage, serverFieldErrors } from '../form-errors.utils'
 import { useChangePassword } from '../hooks/useAccountQueries'

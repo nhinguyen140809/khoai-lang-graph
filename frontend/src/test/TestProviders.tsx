@@ -1,7 +1,7 @@
 import { QueryClient, QueryClientProvider } from '@tanstack/react-query'
 import { type ReactNode, useState } from 'react'
 
-import { TooltipProvider } from '@/shared/ui/tooltip'
+import { TooltipProvider } from '@/shared/components/ui/tooltip'
 
 interface TestProvidersProps {
   children: ReactNode

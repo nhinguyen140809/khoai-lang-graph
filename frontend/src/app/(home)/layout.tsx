@@ -3,8 +3,8 @@ import type { ReactNode } from 'react'
 import { UserMenu } from '@/features/account'
 import { NewProjectDialog, ProjectCommands } from '@/features/projects'
 import { ThemeCommands, ThemeSync } from '@/features/settings'
-import { PageCrumb, Workbench } from '@/frame'
-import { Surface } from '@/shared/ui/surface'
+import { PageCrumb, Workbench } from '@/shared/components/frame'
+import { Surface } from '@/shared/components/ui/surface'
 
 interface HomeLayoutProps {
   children: ReactNode

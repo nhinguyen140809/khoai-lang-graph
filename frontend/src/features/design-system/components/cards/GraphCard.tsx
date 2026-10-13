@@ -11,14 +11,20 @@ import {
   Position,
 } from '@xyflow/react'
 
+import {
+  Card,
+  CardContent,
+  CardDescription,
+  CardHeader,
+  CardTitle,
+} from '@/shared/components/ui/card'
+import { Code } from '@/shared/components/ui/code'
+import { Edge } from '@/shared/components/ui/edge'
+import { Flow } from '@/shared/components/ui/flow'
+import { Handle } from '@/shared/components/ui/handle'
+import { Node, NodeContent, NodeHeader, NodeHeaderTitle } from '@/shared/components/ui/node'
+import { NodeStatusIndicator } from '@/shared/components/ui/node-status-indicator'
 import { graphTones } from '@/shared/lib/tone.constants'
-import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/shared/ui/card'
-import { Code } from '@/shared/ui/code'
-import { Edge } from '@/shared/ui/edge'
-import { Flow } from '@/shared/ui/flow'
-import { Handle } from '@/shared/ui/handle'
-import { Node, NodeContent, NodeHeader, NodeHeaderTitle } from '@/shared/ui/node'
-import { NodeStatusIndicator } from '@/shared/ui/node-status-indicator'
 
 import {
   type TraceEdge,

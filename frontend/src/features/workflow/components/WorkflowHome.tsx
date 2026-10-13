@@ -4,8 +4,8 @@ import { NetworkIcon } from 'lucide-react'
 import Link from 'next/link'
 
 import { EmptyState, ErrorState, LoadingState } from '@/shared/components/state'
+import { Button } from '@/shared/components/ui/button'
 import { runHref } from '@/shared/config/routes.utils'
-import { Button } from '@/shared/ui/button'
 
 import { useProjectRuns } from '../hooks/useProjectRuns'
 

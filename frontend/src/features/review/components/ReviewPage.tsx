@@ -3,13 +3,17 @@
 import { useRouter } from 'next/navigation'
 import { type ComponentType, type ReactNode, useEffect, useState } from 'react'
 
-import { projectTabGroup, useEditorTab } from '@/frame'
+import { projectTabGroup, useEditorTab } from '@/shared/components/frame'
 import { EmptyState, ErrorState, LoadingState } from '@/shared/components/state'
+import { Button } from '@/shared/components/ui/button'
+import {
+  ResizableHandle,
+  ResizablePanel,
+  ResizablePanelGroup,
+} from '@/shared/components/ui/resizable'
+import { ScrollArea } from '@/shared/components/ui/scroll-area'
+import { Surface } from '@/shared/components/ui/surface'
 import { consoleHref, reviewHref } from '@/shared/config/routes.utils'
-import { Button } from '@/shared/ui/button'
-import { ResizableHandle, ResizablePanel, ResizablePanelGroup } from '@/shared/ui/resizable'
-import { ScrollArea } from '@/shared/ui/scroll-area'
-import { Surface } from '@/shared/ui/surface'
 
 import { usePendingInterrupt } from '../hooks/usePendingInterrupt'
 import { ReviewTabIcon } from '../review-frame.config'

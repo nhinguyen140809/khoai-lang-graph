@@ -1,6 +1,6 @@
 'use client'
 
-import { Button } from '@/shared/ui/button'
+import { Button } from '@/shared/components/ui/button'
 import {
   Card,
   CardContent,
@@ -8,8 +8,8 @@ import {
   CardFooter,
   CardHeader,
   CardTitle,
-} from '@/shared/ui/card'
-import { Checkbox } from '@/shared/ui/checkbox'
+} from '@/shared/components/ui/card'
+import { Checkbox } from '@/shared/components/ui/checkbox'
 import {
   Combobox,
   ComboboxContent,
@@ -17,7 +17,7 @@ import {
   ComboboxInput,
   ComboboxItem,
   ComboboxList,
-} from '@/shared/ui/combobox'
+} from '@/shared/components/ui/combobox'
 import {
   Field,
   FieldDescription,
@@ -25,11 +25,17 @@ import {
   FieldLabel,
   FieldLegend,
   FieldSet,
-} from '@/shared/ui/field'
-import { Input } from '@/shared/ui/input'
-import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/shared/ui/select'
-import { Switch } from '@/shared/ui/switch'
-import { Textarea } from '@/shared/ui/textarea'
+} from '@/shared/components/ui/field'
+import { Input } from '@/shared/components/ui/input'
+import {
+  Select,
+  SelectContent,
+  SelectItem,
+  SelectTrigger,
+  SelectValue,
+} from '@/shared/components/ui/select'
+import { Switch } from '@/shared/components/ui/switch'
+import { Textarea } from '@/shared/components/ui/textarea'
 
 const agentRoles = [
   'planner',

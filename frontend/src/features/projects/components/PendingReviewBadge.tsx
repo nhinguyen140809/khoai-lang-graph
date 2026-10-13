@@ -1,6 +1,6 @@
 'use client'
 
-import { Badge } from '@/shared/ui/badge'
+import { Badge } from '@/shared/components/ui/badge'
 
 import { useProject } from '../hooks/useProject'
 

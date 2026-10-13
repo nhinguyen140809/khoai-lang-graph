@@ -1,5 +1,5 @@
+import { Skeleton } from '@/shared/components/ui/skeleton'
 import { cn } from '@/shared/lib/utils'
-import { Skeleton } from '@/shared/ui/skeleton'
 
 import { pageClassName, type StateSize } from './state.types'
 

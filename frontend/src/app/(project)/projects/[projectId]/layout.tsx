@@ -18,12 +18,12 @@ import { ThemeCommands, ThemeSync } from '@/features/settings'
 import { ProjectRunStatus } from '@/features/threads'
 import { traceabilityActivity, traceabilityTabIcons } from '@/features/traceability'
 import { workflowActivity, workflowTabIcons } from '@/features/workflow'
-import type { Activity, TabIcons } from '@/frame'
-import { ProjectWorkspace, Workbench } from '@/frame'
+import type { Activity, TabIcons } from '@/shared/components/frame'
+import { ProjectWorkspace, Workbench } from '@/shared/components/frame'
 import { NotFoundState } from '@/shared/components/state'
+import { Button } from '@/shared/components/ui/button'
+import { Surface } from '@/shared/components/ui/surface'
 import { reviewsPath } from '@/shared/config/routes.utils'
-import { Button } from '@/shared/ui/button'
-import { Surface } from '@/shared/ui/surface'
 
 /** The icons that the pages of the features name for their tabs. */
 const tabIcons: TabIcons = {

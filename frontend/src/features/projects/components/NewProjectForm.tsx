@@ -6,14 +6,26 @@ import { Controller, useForm } from 'react-hook-form'
 import { z } from 'zod'
 
 import { ApiError } from '@/shared/api/api-fetch.utils'
+import { Button } from '@/shared/components/ui/button'
+import { DialogClose, DialogFooter } from '@/shared/components/ui/dialog'
+import {
+  Field,
+  FieldDescription,
+  FieldError,
+  FieldGroup,
+  FieldLabel,
+} from '@/shared/components/ui/field'
+import { Input } from '@/shared/components/ui/input'
+import {
+  Select,
+  SelectContent,
+  SelectItem,
+  SelectTrigger,
+  SelectValue,
+} from '@/shared/components/ui/select'
+import { Spinner } from '@/shared/components/ui/spinner'
+import { Textarea } from '@/shared/components/ui/textarea'
 import { consoleHref } from '@/shared/config/routes.utils'
-import { Button } from '@/shared/ui/button'
-import { DialogClose, DialogFooter } from '@/shared/ui/dialog'
-import { Field, FieldDescription, FieldError, FieldGroup, FieldLabel } from '@/shared/ui/field'
-import { Input } from '@/shared/ui/input'
-import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/shared/ui/select'
-import { Spinner } from '@/shared/ui/spinner'
-import { Textarea } from '@/shared/ui/textarea'
 
 import { useCreateProject } from '../hooks/useCreateProject'
 import {

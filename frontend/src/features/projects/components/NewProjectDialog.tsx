@@ -6,7 +6,7 @@ import {
   DialogDescription,
   DialogHeader,
   DialogTitle,
-} from '@/shared/ui/dialog'
+} from '@/shared/components/ui/dialog'
 
 import { useProjectDefaults } from '../hooks/useProjectDefaults'
 import { useNewProjectDialogStore } from '../new-project.store'

@@ -8,25 +8,25 @@ import simpleImportSort from 'eslint-plugin-simple-import-sort'
 import globals from 'globals'
 import tseslint from 'typescript-eslint'
 
-// The visible parts of these libraries are wrapped in src/shared/ui, where they take the
+// The visible parts of these libraries are wrapped in src/shared/components/ui, where they take the
 // design system tokens. Code outside that folder uses the wrappers.
 const wrappedLibraryImports = [
-  { name: 'streamdown', message: 'Use Markdown from @/shared/ui/markdown.' },
-  { name: '@streamdown/code', message: 'Use Markdown from @/shared/ui/markdown.' },
+  { name: 'streamdown', message: 'Use Markdown from @/shared/components/ui/markdown.' },
+  { name: '@streamdown/code', message: 'Use Markdown from @/shared/components/ui/markdown.' },
   {
     name: 'react-resizable-panels',
-    message: 'Use the components in @/shared/ui/resizable.',
+    message: 'Use the components in @/shared/components/ui/resizable.',
   },
   {
     name: '@xyflow/react',
     importNames: ['default', 'ReactFlow', 'Handle', 'BaseEdge'],
     message:
-      'Use Flow from @/shared/ui/flow, Handle from @/shared/ui/handle, and Edge from @/shared/ui/edge.',
+      'Use Flow from @/shared/components/ui/flow, Handle from @/shared/components/ui/handle, and Edge from @/shared/components/ui/edge.',
   },
   {
     name: 'recharts',
     importNames: ['ResponsiveContainer', 'Tooltip', 'Legend'],
-    message: 'Use ChartContainer, ChartTooltip, and ChartLegend from @/shared/ui/chart.',
+    message: 'Use ChartContainer, ChartTooltip, and ChartLegend from @/shared/components/ui/chart.',
   },
 ]
 
@@ -37,30 +37,14 @@ const sharedCodePatterns = [
       'Shared code must not import features or the app layer. Pass feature components in as props from src/app/.',
   },
   {
-    regex: '^(\\.\\./)+(features|app|providers|frame)(/|$)',
+    regex: '^(\\.\\./)+(features|app|providers)(/|$)',
     message:
       'Shared code must not import features or the app layer. Pass feature components in as props from src/app/.',
   },
   {
-    group: ['@/frame', '@/frame/**'],
-    message: 'Shared code does not import the frame, which is built on it.',
-  },
-]
-
-const framePatterns = [
-  {
-    group: ['@/features', '@/features/**', '@/app/**', '@/providers/**'],
+    group: ['@/shared/components/frame', '@/shared/components/frame/**'],
     message:
-      'The frame must not import features or the app layer. Pass feature components in as props from src/app/.',
-  },
-  {
-    regex: '^(\\.\\./)+(features|app|providers)(/|$)',
-    message:
-      'The frame must not import features or the app layer. Pass feature components in as props from src/app/.',
-  },
-  {
-    group: ['@/frame', '@/frame/**'],
-    message: 'Inside src/frame, use relative imports.',
+      'Shared code does not import the frame. Inside src/shared/components/frame, use relative imports.',
   },
 ]
 
@@ -71,8 +55,8 @@ const featurePatterns = [
       'A feature must not import another feature or the app layer. Compose features in src/app/, or move the shared code to src/shared.',
   },
   {
-    group: ['@/frame/**'],
-    message: 'Import the frame from @/frame, its index.',
+    group: ['@/shared/components/frame/**'],
+    message: 'Import the frame from @/shared/components/frame, its index.',
   },
 ]
 
@@ -94,7 +78,7 @@ const featureFolderBlocks = Array.from({ length: FEATURE_FOLDER_DEPTH + 1 }, (_,
           {
             regex: `^(\\.\\./){${String(depth + 1)},}`,
             message:
-              'A relative import stays inside its feature. Import shared code with @/shared and the frame with @/frame; another feature or the app layer is not imported.',
+              'A relative import stays inside its feature. Import shared code with @/shared; another feature or the app layer is not imported.',
           },
         ],
       },
@@ -156,8 +140,8 @@ export default defineConfig([
               message: "Import from the feature's index (@/features/<feature>).",
             },
             {
-              group: ['@/frame/**'],
-              message: 'Import the frame from @/frame, its index.',
+              group: ['@/shared/components/frame/**'],
+              message: 'Import the frame from @/shared/components/frame, its index.',
             },
           ],
         },
@@ -191,8 +175,7 @@ export default defineConfig([
     },
   },
   {
-    // Shared code never depends on the frame, features or the app layer (CONTRIBUTING: Import
-    // direction).
+    // Shared code never depends on features or on the app layer (CONTRIBUTING: Import direction).
     files: ['src/shared/**/*.{ts,tsx}'],
     rules: {
       'no-restricted-imports': [
@@ -202,15 +185,8 @@ export default defineConfig([
     },
   },
   {
-    // The frame depends on shared code only (CONTRIBUTING: Import direction).
-    files: ['src/frame/**/*.{ts,tsx}'],
-    rules: {
-      'no-restricted-imports': ['error', { paths: wrappedLibraryImports, patterns: framePatterns }],
-    },
-  },
-  {
-    // The wrappers in src/shared/ui import the libraries they wrap.
-    files: ['src/shared/ui/**/*.{ts,tsx}'],
+    // The wrappers in src/shared/components/ui import the libraries they wrap.
+    files: ['src/shared/components/ui/**/*.{ts,tsx}'],
     rules: {
       'no-restricted-imports': ['error', { patterns: sharedCodePatterns }],
     },
@@ -232,7 +208,7 @@ export default defineConfig([
     // a tool (shadcn CLI, Next.js) or by convention (index.ts) are ignored.
     files: ['src/**/*.{ts,tsx}', 'tests/**/*.ts'],
     ignores: [
-      'src/shared/ui/**',
+      'src/shared/components/ui/**',
       'src/shared/hooks/use-mobile.ts',
       'src/shared/lib/utils.ts',
       // Next.js file conventions: routing files, metadata files, and src-level entry points.
@@ -279,7 +255,7 @@ export default defineConfig([
   {
     // shadcn/ui code is copied from the registry. Keep it close to upstream so
     // `shadcn add --overwrite` diffs stay small; only relax stylistic type rules here.
-    files: ['src/shared/ui/**/*.{ts,tsx}', 'src/shared/hooks/use-mobile.ts'],
+    files: ['src/shared/components/ui/**/*.{ts,tsx}', 'src/shared/hooks/use-mobile.ts'],
     rules: {
       'react-hooks/set-state-in-effect': 'off',
       '@typescript-eslint/consistent-type-definitions': 'off',
@@ -292,7 +268,7 @@ export default defineConfig([
   },
   {
     // Recharts payloads are typed as `any` upstream.
-    files: ['src/shared/ui/chart.tsx'],
+    files: ['src/shared/components/ui/chart.tsx'],
     rules: {
       '@typescript-eslint/no-unsafe-assignment': 'off',
       '@typescript-eslint/no-unsafe-member-access': 'off',
