@@ -24,6 +24,7 @@ import {
   SelectValue,
 } from '@/components/ui/select'
 import { Spinner } from '@/components/ui/spinner'
+import { RouteParam } from '@/lib/routes.utils'
 
 import { createExport, getExport } from '../artifacts.api'
 import { artifactKeys } from '../artifacts-keys.constants'
@@ -38,7 +39,7 @@ interface ExportButtonProps {
 /** A button that asks for a document made from the artifacts: a template and a format. */
 export function ExportButton({ projectId, openFromAddress = false }: ExportButtonProps) {
   const searchParams = useSearchParams()
-  const asked = openFromAddress && searchParams.has('export')
+  const asked = openFromAddress && searchParams.has(RouteParam.Export)
   const [open, setOpen] = useState(asked)
   // The side panel can be on screen before the address asks for the export, as after the /export
   // command of the console, so the dialog also opens when the address starts to ask.

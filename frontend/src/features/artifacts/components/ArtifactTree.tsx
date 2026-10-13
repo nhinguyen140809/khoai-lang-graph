@@ -1,15 +1,14 @@
 'use client'
 
 import { ChevronRightIcon } from 'lucide-react'
-import type { Route } from 'next'
 import Link from 'next/link'
 import { usePathname } from 'next/navigation'
 import { useState } from 'react'
 
 import { EmptyState, ErrorState, LoadingState } from '@/components/state'
+import { artifactHref, itemHref } from '@/lib/routes.utils'
 import { cn } from '@/lib/utils'
 
-import { artifactHref, itemHref } from '../artifact-links.utils'
 import type { Artifact, ContentSchema, OutlineItem } from '../artifacts.types'
 import { itemTitle } from '../field-view.utils'
 import { useArtifactItems } from '../hooks/useArtifactItems'
@@ -95,7 +94,7 @@ function ArtifactNode({ projectId, artifact, schemas }: ArtifactNodeProps) {
           />
         </button>
         <Link
-          href={href as Route}
+          href={href}
           aria-current={pathname === href ? 'page' : undefined}
           className={cn(rowClassName, 'flex-1 pl-1 font-medium text-foreground')}
         >
@@ -229,7 +228,7 @@ function ItemRow({ projectId, item, schema }: ItemRowProps) {
   const href = itemHref(projectId, item.id)
   return (
     <Link
-      href={href as Route}
+      href={href}
       aria-current={pathname === href ? 'page' : undefined}
       className={cn(rowClassName, 'min-w-0 flex-1 pl-2')}
     >

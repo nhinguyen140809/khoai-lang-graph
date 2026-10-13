@@ -1,7 +1,6 @@
 'use client'
 
 import { GitForkIcon } from 'lucide-react'
-import type { Route } from 'next'
 import Link from 'next/link'
 import { useMemo } from 'react'
 
@@ -15,11 +14,11 @@ import {
   TableHeader,
   TableRow,
 } from '@/components/ui/table'
+import { traceabilityHref } from '@/lib/routes.utils'
 
 import { useCoverage } from '../hooks/useCoverage'
 import { useMatrix } from '../hooks/useMatrix'
 import { rowsWithItems } from '../matrix-filter.utils'
-import { traceabilityHref } from '../traceability-links.utils'
 import { ItemRefLinks } from './ItemRefLinks'
 
 interface MatrixViewProps {
@@ -65,7 +64,7 @@ export function MatrixView({ projectId, gap }: MatrixViewProps) {
             Only rows of <strong>{chosen.label}</strong>: {chosen.description}
           </span>
           <Button asChild size="xs" variant="outline">
-            <Link href={traceabilityHref(projectId) as Route}>Show all rows</Link>
+            <Link href={traceabilityHref(projectId)}>Show all rows</Link>
           </Button>
         </div>
       )}

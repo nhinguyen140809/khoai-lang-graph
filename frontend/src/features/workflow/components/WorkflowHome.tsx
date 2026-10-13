@@ -1,14 +1,13 @@
 'use client'
 
 import { NetworkIcon } from 'lucide-react'
-import type { Route } from 'next'
 import Link from 'next/link'
 
 import { EmptyState, ErrorState, LoadingState } from '@/components/state'
 import { Button } from '@/components/ui/button'
+import { runHref } from '@/lib/routes.utils'
 
 import { useProjectRuns } from '../hooks/useProjectRuns'
-import { runHref } from '../workflow-links.utils'
 
 /** What the workflow shows before a run is chosen: a way to the newest run. */
 export function WorkflowHome({ projectId }: { projectId: string }) {
@@ -35,7 +34,7 @@ export function WorkflowHome({ projectId }: { projectId: string }) {
       description="Choose a run in the side panel to see its workflow: the graph, the state of each node and the steps."
       action={
         <Button asChild>
-          <Link href={runHref(projectId, newest.id) as Route}>Open Run {newest.number}</Link>
+          <Link href={runHref(projectId, newest.id)}>Open Run {newest.number}</Link>
         </Button>
       }
     />

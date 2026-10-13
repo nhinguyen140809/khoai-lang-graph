@@ -1,6 +1,5 @@
 'use client'
 
-import type { Route } from 'next'
 import Link from 'next/link'
 import { useRouter } from 'next/navigation'
 import type { ReactNode } from 'react'
@@ -8,12 +7,13 @@ import { toast } from 'sonner'
 
 import { Button } from '@/components/ui/button'
 import { Spinner } from '@/components/ui/spinner'
+import { itemHref, reviewHref, runHref } from '@/lib/routes.utils'
 import { cn } from '@/lib/utils'
 
 import { useProjectRuns } from '../hooks/useProjectRuns'
 import { useRetryFromStep } from '../hooks/useRetryFromStep'
+import { isActive } from '../run-status.utils'
 import type { WorkflowDefinition, WorkflowRun, WorkflowStep } from '../workflow.types'
-import { isActive, runHref } from '../workflow-links.utils'
 
 const traceUrl = process.env.NEXT_PUBLIC_TRACE_URL
 
@@ -116,9 +116,7 @@ export function StepPanel({ projectId, run, definition, step, nodeLabel }: StepP
             {step.produced.map((item) => (
               <li key={item.item_id}>
                 <Link
-                  href={
-                    `/projects/${encodeURIComponent(projectId)}/artifacts/items/${encodeURIComponent(item.item_id)}` as Route
-                  }
+                  href={itemHref(projectId, item.item_id)}
                   className="rounded-sm text-primary underline-offset-2 outline-none hover:underline focus-visible:ring-2 focus-visible:ring-ring/50"
                 >
                   {item.key}
@@ -133,13 +131,7 @@ export function StepPanel({ projectId, run, definition, step, nodeLabel }: StepP
       <footer className="flex flex-wrap items-center gap-2">
         {waiting && (
           <Button asChild size="xs">
-            <Link
-              href={
-                `/projects/${encodeURIComponent(projectId)}/review/${encodeURIComponent(run.id)}` as Route
-              }
-            >
-              Open review
-            </Link>
+            <Link href={reviewHref(projectId, run.id)}>Open review</Link>
           </Button>
         )}
         <Button
@@ -156,7 +148,7 @@ export function StepPanel({ projectId, run, definition, step, nodeLabel }: StepP
               { runId: run.id, stepId: step.id },
               {
                 onSuccess: (started) => {
-                  router.push(runHref(projectId, started.id) as Route)
+                  router.push(runHref(projectId, started.id))
                 },
                 onError: (error) => {
                   toast.error(error.message)

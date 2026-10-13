@@ -12,8 +12,8 @@ import {
   TableRow,
 } from '@/components/ui/table'
 import { isNotFoundError } from '@/lib/api-fetch.utils'
+import { artifactHref } from '@/lib/routes.utils'
 
-import { artifactHref } from '../artifact-links.utils'
 import type { ContentSchema, OutlineItem } from '../artifacts.types'
 import { ArtifactTabIcon } from '../artifacts-frame.config'
 import { fieldViews, formatValue, itemTitle, listFieldViews } from '../field-view.utils'

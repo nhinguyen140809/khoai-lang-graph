@@ -1,8 +1,8 @@
 import { SearchIcon } from 'lucide-react'
-import type { Route } from 'next'
 
 import type { FeatureActivity } from '@/components/layout'
 import { SidePanel } from '@/components/layout'
+import { searchHref } from '@/lib/routes.utils'
 
 import { SearchPanel } from './components/SearchPanel'
 
@@ -15,7 +15,7 @@ export function searchActivity(projectId: string): FeatureActivity {
     id: 'search',
     label: 'Search',
     icon: <SearchIcon />,
-    href: `/projects/${encodeURIComponent(projectId)}/search` as Route,
+    href: searchHref(projectId),
     panel: (
       <SidePanel title="Search">
         <SearchPanel projectId={projectId} />

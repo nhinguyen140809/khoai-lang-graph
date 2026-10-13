@@ -239,6 +239,7 @@ Vietnamese text needs a font that ships the `vietnamese` subset. The subsets of 
 - Every endpoint except register, login and health answers 401 without a session. The query client (`src/lib/query-client.config.ts`) then opens `/login?next=<the page>`, which returns to the page after signing in; `next` is kept only when it is a path of this app. Signing out (account menu) ends the session and clears the query cache.
 - Files in `src/app/` are Server Components: they render on the server and cannot use state, effects, or event handlers. A component that needs those starts with `'use client'`. Most feature components are Client Components.
 - Links use `<Link href="...">` from `next/link`. `href` is type-checked against the existing routes (`typedRoutes` in `next.config.ts`); `pnpm dev` and `pnpm build` regenerate the route types.
+- The addresses of the pages of a project are built by `src/lib/routes.utils.ts` (`consoleHref`, `itemHref`, `runHref`, ...), which also names their query parameters (`RouteParam`). A feature links to a page of another feature through it, never with an address written in place, and a page reads its query parameters by the same names.
 - A library that touches `window` or `document` while it loads (PDF viewer, code editor, graph layout worker) is imported with `next/dynamic` and `ssr: false` from a Client Component.
 
 ## Frame
@@ -261,6 +262,8 @@ A side panel (`SidePanel`) holds the parts of its feature in sections (`SidePane
 | Middle click | Close an editor tab                                                          |
 
 `Cmd` works in place of `Ctrl` on macOS, where the shortcuts shown name `Cmd` (`useModifierKeyName`), except for ``Ctrl+` ``: macOS keeps ``Cmd+` `` to switch windows.
+
+A feature opens a page of another feature together with the side panel of that feature with `useOpenPage()`, which finds the feature from the address, so the feature that opens it names neither the other feature nor its id.
 
 The editor tabs belong to the project, not to a feature: choosing a feature on the activity bar changes the side panel only. A page opens its tab with `useEditorTab` and may name an icon, with a constant of the config of its feature such as `ArtifactTabIcon.Item` (`artifacts.item`: a feature starts the names of its icons with its own name); the tab shows that icon from `tabIcons`, else the icon of the feature the page belongs to. The active tab is the one that the page on screen opened, whatever its address holds, such as a query. A new tab opens next to the tab shown last, and a tab shows its close button when it is active or under the pointer, and always on a touch screen.
 

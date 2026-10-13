@@ -1,21 +1,21 @@
 'use client'
 
 import { ChevronRightIcon } from 'lucide-react'
-import type { Route } from 'next'
 import Link from 'next/link'
 import { usePathname, useSearchParams } from 'next/navigation'
 import { useState } from 'react'
 
 import { EmptyState, ErrorState, LoadingState } from '@/components/state'
+import { RouteParam, runHref } from '@/lib/routes.utils'
 import { runStatusLabels, runStatusTones } from '@/lib/run-status.constants'
 import { toneClasses } from '@/lib/tone.constants'
 import { cn } from '@/lib/utils'
 
 import { useProjectRuns } from '../hooks/useProjectRuns'
 import { useRunSteps } from '../hooks/useRunSteps'
+import { isActive } from '../run-status.utils'
 import { groupSteps } from '../step-groups.utils'
 import type { WorkflowRun, WorkflowStep } from '../workflow.types'
-import { isActive, runHref } from '../workflow-links.utils'
 
 const rowClassName =
   'flex min-w-0 items-center gap-2 rounded-md px-2 py-1 text-xs outline-none hover:bg-sidebar-accent focus-visible:ring-2 focus-visible:ring-ring/50 aria-[current=page]:bg-sidebar-accent'
@@ -77,7 +77,7 @@ function RunNode({ projectId, run }: { projectId: string; run: WorkflowRun }) {
           />
         </button>
         <Link
-          href={href as Route}
+          href={href}
           aria-current={pathname === href ? 'page' : undefined}
           className={cn(rowClassName, 'flex-1 font-medium text-foreground')}
         >
@@ -153,11 +153,11 @@ function StepRow({
   runId: string
   step: WorkflowStep
 }) {
-  const selected = useSearchParams().get('step') === step.id
+  const selected = useSearchParams().get(RouteParam.Step) === step.id
   const pathname = usePathname()
   return (
     <Link
-      href={runHref(projectId, runId, step.id) as Route}
+      href={runHref(projectId, runId, step.id)}
       aria-current={selected && pathname === runHref(projectId, runId) ? 'page' : undefined}
       className={cn(rowClassName, 'gap-2 font-mono')}
     >

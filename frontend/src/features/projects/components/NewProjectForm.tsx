@@ -19,6 +19,7 @@ import {
 import { Spinner } from '@/components/ui/spinner'
 import { Textarea } from '@/components/ui/textarea'
 import { ApiError } from '@/lib/api-fetch.utils'
+import { consoleHref } from '@/lib/routes.utils'
 
 import { useCreateProject } from '../hooks/useCreateProject'
 import {
@@ -67,7 +68,7 @@ export function NewProjectForm({ defaultLanguage, onCreated }: NewProjectFormPro
       {
         onSuccess: ({ projectId }) => {
           onCreated()
-          router.push(`/projects/${encodeURIComponent(projectId)}/console`)
+          router.push(consoleHref(projectId))
         },
         onError: (error) => {
           if (!(error instanceof ApiError)) return

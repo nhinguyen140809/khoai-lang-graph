@@ -4,6 +4,7 @@ import type { Route } from 'next'
 import Link from 'next/link'
 
 import { ErrorState, LoadingState } from '@/components/state'
+import { artifactHref, itemHref } from '@/lib/routes.utils'
 
 import { useWorkflowState } from '../hooks/useWorkflowState'
 
@@ -17,16 +18,15 @@ function isRecord(value: unknown): value is Record<string, unknown> {
 /** The address of what a reference points to, and its name; null when the value is no reference. */
 function referenceOf(projectId: string, value: unknown): { href: string; label: string } | null {
   if (!isRecord(value)) return null
-  const base = `/projects/${encodeURIComponent(projectId)}/artifacts`
   if (typeof value.item_id === 'string' && typeof value.key === 'string') {
     return {
-      href: `${base}/items/${encodeURIComponent(value.item_id)}`,
+      href: itemHref(projectId, value.item_id),
       label: `${value.key} v${String(value.version)}`,
     }
   }
   if (typeof value.artifact_id === 'string' && typeof value.title === 'string') {
     return {
-      href: `${base}/${encodeURIComponent(value.artifact_id)}`,
+      href: artifactHref(projectId, value.artifact_id),
       label: `${value.title} v${String(value.version)}`,
     }
   }

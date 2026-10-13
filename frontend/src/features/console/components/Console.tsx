@@ -1,14 +1,14 @@
 'use client'
 
 import { ChevronsDownUpIcon, ChevronsUpDownIcon } from 'lucide-react'
-import type { Route } from 'next'
 import { useRouter } from 'next/navigation'
 import { type ReactNode, useEffect, useRef, useState } from 'react'
 
-import { useCommands, useFrameStore } from '@/components/layout'
+import { useCommands, useOpenPage } from '@/components/layout'
 import { ErrorState, LoadingState } from '@/components/state'
 import { ScrollArea } from '@/components/ui/scroll-area'
 import { useNow } from '@/hooks/useNow'
+import { artifactsExportHref, reviewHref, settingsHref } from '@/lib/routes.utils'
 
 import { useCommandHistoryStore } from '../command-history.store'
 import type { CommandName } from '../commands.constants'
@@ -42,7 +42,7 @@ export function Console({ projectId, threadId, afterLog, reviewOpen = false }: C
   const stopRun = useStopRun()
   const retryRun = useRetryRun()
   const recordCommand = useCommandHistoryStore((state) => state.record)
-  const showSideFeature = useFrameStore((state) => state.showSideFeature)
+  const openPage = useOpenPage()
   const [expandAll, setExpandAll] = useState(false)
   const now = useNow(activeRun === null ? 60_000 : 1000).getTime()
   const endRef = useRef<HTMLDivElement>(null)
@@ -65,9 +65,7 @@ export function Console({ projectId, threadId, afterLog, reviewOpen = false }: C
   useEffect(() => {
     const status = activeRun?.status
     if (!reviewOpen && previousStatus.current === 'running' && status === 'interrupted') {
-      router.push(
-        `/projects/${encodeURIComponent(projectId)}/review/${encodeURIComponent(activeRun?.id ?? '')}` as Route,
-      )
+      router.push(reviewHref(projectId, activeRun?.id ?? ''))
     }
     previousStatus.current = status
   }, [activeRun?.id, activeRun?.status, projectId, reviewOpen, router])
@@ -116,13 +114,11 @@ export function Console({ projectId, threadId, afterLog, reviewOpen = false }: C
         setExpandAll(false)
         return
       case 'export':
-        // The export dialog is opened by the side panel of the artifacts.
-        showSideFeature('artifacts')
-        router.push(`/projects/${encodeURIComponent(projectId)}/artifacts?export` as Route)
+        // The side panel of the artifacts opens the export dialog that the address asks for.
+        openPage(artifactsExportHref(projectId))
         return
       case 'run-settings':
-        showSideFeature('settings')
-        router.push(`/projects/${encodeURIComponent(projectId)}/settings?section=runs` as Route)
+        openPage(settingsHref(projectId, 'runs'))
         return
     }
   }

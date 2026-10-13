@@ -1,2 +1,2 @@
 export { ReviewPage } from './components/ReviewPage'
-export { reviewsPath, reviewTabIcons } from './review-frame.config'
+export { reviewTabIcons } from './review-frame.config'

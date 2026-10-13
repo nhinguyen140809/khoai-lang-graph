@@ -17,12 +17,13 @@ import {
   ProjectGate,
   ProjectSwitcher,
 } from '@/features/projects'
-import { reviewsPath, reviewTabIcons } from '@/features/review'
+import { reviewTabIcons } from '@/features/review'
 import { searchActivity } from '@/features/search'
 import { ThemeCommands, ThemeSync } from '@/features/settings'
 import { ProjectRunStatus } from '@/features/threads'
 import { traceabilityActivity, traceabilityTabIcons } from '@/features/traceability'
 import { workflowActivity, workflowTabIcons } from '@/features/workflow'
+import { reviewsPath } from '@/lib/routes.utils'
 
 /** The icons that the pages of the features name for their tabs. */
 const tabIcons: TabIcons = {

@@ -1,7 +1,6 @@
 'use client'
 
 import { ArrowLeftIcon, PencilIcon } from 'lucide-react'
-import type { Route } from 'next'
 import Link from 'next/link'
 import { useState } from 'react'
 
@@ -12,8 +11,8 @@ import { ScrollArea } from '@/components/ui/scroll-area'
 import { useNow } from '@/hooks/useNow'
 import { isNotFoundError } from '@/lib/api-fetch.utils'
 import { formatRelativeTime } from '@/lib/relative-time.utils'
+import { artifactHref, itemHref } from '@/lib/routes.utils'
 
-import { artifactHref, itemHref } from '../artifact-links.utils'
 import { ArtifactTabIcon } from '../artifacts-frame.config'
 import { fieldViews, itemTitle } from '../field-view.utils'
 import { useArtifact } from '../hooks/useArtifact'
@@ -90,7 +89,7 @@ export function ItemPage({ projectId, itemId, embedded = false, onBack }: ItemPa
         >
           {artifact.isSuccess && (
             <Link
-              href={artifactHref(projectId, artifact.data.id) as Route}
+              href={artifactHref(projectId, artifact.data.id)}
               className="rounded-sm underline-offset-2 outline-none hover:underline focus-visible:ring-2 focus-visible:ring-ring/50"
             >
               {artifact.data.title}
@@ -102,7 +101,7 @@ export function ItemPage({ projectId, itemId, embedded = false, onBack }: ItemPa
               <span key={link.id} className="flex items-center gap-1">
                 <span aria-hidden>/</span>
                 <Link
-                  href={itemHref(projectId, section.id) as Route}
+                  href={itemHref(projectId, section.id)}
                   className="rounded-sm underline-offset-2 outline-none hover:underline focus-visible:ring-2 focus-visible:ring-ring/50"
                 >
                   {section.number !== null && `${section.number} `}

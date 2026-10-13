@@ -14,6 +14,7 @@ import {
 } from '@/components/ui/dropdown-menu'
 import { Skeleton } from '@/components/ui/skeleton'
 import { isNotFoundError } from '@/lib/api-fetch.utils'
+import { consoleHref } from '@/lib/routes.utils'
 import { cn } from '@/lib/utils'
 
 import { useProject } from '../hooks/useProject'
@@ -72,7 +73,7 @@ export function ProjectSwitcher({ projectId }: ProjectSwitcherProps) {
         {projects.data?.length === 0 && <DropdownMenuItem disabled>No projects</DropdownMenuItem>}
         {projects.data?.map(({ id, name }) => (
           <DropdownMenuItem key={id} asChild>
-            <Link href={`/projects/${encodeURIComponent(id)}/console`}>
+            <Link href={consoleHref(id)}>
               <CheckIcon aria-hidden className={cn(id !== projectId && 'invisible')} />
               <span className="truncate">{name}</span>
               {id === projectId && <span className="sr-only">(open)</span>}

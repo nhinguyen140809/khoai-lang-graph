@@ -16,6 +16,7 @@ import {
 } from '@/components/ui/table'
 import { useNow } from '@/hooks/useNow'
 import { formatRelativeTime } from '@/lib/relative-time.utils'
+import { consoleHref } from '@/lib/routes.utils'
 
 import { useProjects } from '../hooks/useProjects'
 import { useNewProjectDialogStore } from '../new-project.store'
@@ -90,7 +91,7 @@ export function ProjectTable({ status }: ProjectTableProps) {
               <TableCell className="font-medium">
                 {/* The link covers the row, so that the whole row opens the project. */}
                 <Link
-                  href={`/projects/${encodeURIComponent(project.id)}/console`}
+                  href={consoleHref(project.id)}
                   className="outline-none after:absolute after:inset-0 focus-visible:after:ring-2 focus-visible:after:ring-ring/50 focus-visible:after:ring-inset"
                 >
                   {project.name}

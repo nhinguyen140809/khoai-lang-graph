@@ -1,6 +1,6 @@
 import { redirect } from 'next/navigation'
 
-import { consoleHref } from '@/features/console'
+import { consoleHref } from '@/lib/routes.utils'
 
 /** A project opens at Console. */
 export default async function Page({ params }: PageProps<'/projects/[projectId]'>) {

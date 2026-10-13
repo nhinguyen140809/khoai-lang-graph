@@ -4,16 +4,16 @@ import { useSearchParams } from 'next/navigation'
 
 import { projectTabGroup, useEditorTab } from '@/components/layout'
 import { ScrollArea } from '@/components/ui/scroll-area'
+import { RouteParam, traceabilityHref } from '@/lib/routes.utils'
 
 import { TraceabilityTabIcon } from '../traceability-frame.config'
-import { traceabilityHref } from '../traceability-links.utils'
 import { IssuesView } from './IssuesView'
 import { MatrixView } from './MatrixView'
 
 /** The matrix, or the issues; the address says which, and which gap filters the matrix. */
 export function TraceabilityPage({ projectId }: { projectId: string }) {
   const params = useSearchParams()
-  const issues = params.get('view') === 'issues'
+  const issues = params.get(RouteParam.View) === 'issues'
 
   useEditorTab(projectTabGroup(projectId), {
     id: issues ? 'issues' : 'matrix',
@@ -27,7 +27,7 @@ export function TraceabilityPage({ projectId }: { projectId: string }) {
       {issues ? (
         <IssuesView projectId={projectId} />
       ) : (
-        <MatrixView projectId={projectId} gap={params.get('gap')} />
+        <MatrixView projectId={projectId} gap={params.get(RouteParam.Gap)} />
       )}
     </ScrollArea>
   )

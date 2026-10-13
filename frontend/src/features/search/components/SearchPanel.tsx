@@ -8,6 +8,7 @@ import { useDeferredValue, useState } from 'react'
 import { EmptyState, ErrorState, LoadingState } from '@/components/state'
 import { Badge } from '@/components/ui/badge'
 import { Input } from '@/components/ui/input'
+import { itemHref } from '@/lib/routes.utils'
 
 import { MIN_QUERY_LENGTH, useItemSearch } from '../hooks/useItemSearch'
 import { SEARCH_RESULT_LIMIT } from '../search.api'
@@ -90,8 +91,7 @@ function Results({ projectId, text, search }: ResultsProps) {
       </p>
       <ul className="flex flex-col gap-px px-1">
         {search.data.items.map((item) => {
-          const href =
-            `/projects/${encodeURIComponent(projectId)}/artifacts/items/${encodeURIComponent(item.id)}` as const
+          const href = itemHref(projectId, item.id)
           return (
             <li key={item.id}>
               <Link

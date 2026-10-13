@@ -1,12 +1,12 @@
 'use client'
 
-import type { Route } from 'next'
 import { useRouter, useSearchParams } from 'next/navigation'
 import { useMemo } from 'react'
 
 import { EditorWithPanel, projectTabGroup, useEditorTab } from '@/components/layout'
 import { ErrorState, LoadingState, NotFoundState } from '@/components/state'
 import { ScrollArea } from '@/components/ui/scroll-area'
+import { RouteParam, runHref, runNodeHref } from '@/lib/routes.utils'
 import { runStatusLabels } from '@/lib/run-status.constants'
 
 import { useGraphLayout } from '../hooks/useGraphLayout'
@@ -14,8 +14,8 @@ import { useProjectRuns } from '../hooks/useProjectRuns'
 import { useRunSteps } from '../hooks/useRunSteps'
 import { useWorkflowDefinition } from '../hooks/useWorkflowDefinition'
 import { runProgress } from '../run-progress.utils'
+import { isActive } from '../run-status.utils'
 import { WorkflowTabIcon } from '../workflow-frame.config'
-import { isActive, runHref, runNodeHref } from '../workflow-links.utils'
 import { StatePanel } from './StatePanel'
 import { StepPanel } from './StepPanel'
 import { WorkflowGraph } from './WorkflowGraph'
@@ -77,18 +77,18 @@ export function RunPage({ projectId, runId }: RunPageProps) {
     return <LoadingState label="Loading the graph" rows={4} />
   }
 
-  const stepId = searchParams.get('step')
+  const stepId = searchParams.get(RouteParam.Step)
   const step = steps.data.find(({ id }) => id === stepId) ?? null
-  const shownNode = step?.node ?? searchParams.get('node')
+  const shownNode = step?.node ?? searchParams.get(RouteParam.Node)
   const nodeLabel = definition.data.nodes.find(({ id }) => id === shownNode)?.label ?? shownNode
 
   const chooseNode = (nodeId: string) => {
     const last = progress.nodes[nodeId]?.lastStepId
     if (last === undefined || last === null) {
-      router.replace(runNodeHref(projectId, runId, nodeId) as Route, { scroll: false })
+      router.replace(runNodeHref(projectId, runId, nodeId), { scroll: false })
       return
     }
-    router.replace(runHref(projectId, runId, last) as Route, { scroll: false })
+    router.replace(runHref(projectId, runId, last), { scroll: false })
   }
 
   return (

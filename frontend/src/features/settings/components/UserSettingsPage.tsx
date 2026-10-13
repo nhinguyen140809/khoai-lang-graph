@@ -6,6 +6,7 @@ import { useSearchParams } from 'next/navigation'
 
 import { ErrorState, LoadingState } from '@/components/state'
 import { ScrollArea } from '@/components/ui/scroll-area'
+import { RouteParam } from '@/lib/routes.utils'
 import { cn } from '@/lib/utils'
 
 import { useCatalog, useDefinition, useModelChoices } from '../hooks/useAccountQueries'
@@ -64,7 +65,7 @@ function ProfileSection() {
 
 /** The settings of the user, outside a project: one section at a time, chosen in the address. */
 export function UserSettingsPage() {
-  const section = settingsSectionOf(useSearchParams().get('section'))
+  const section = settingsSectionOf(useSearchParams().get(RouteParam.Section))
 
   return (
     <div className="flex h-full min-h-0">

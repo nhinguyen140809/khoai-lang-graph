@@ -1,6 +1,7 @@
 import { z } from 'zod'
 
 import { runConfigSchema } from '@/components/run-config'
+import { type ProjectSettingsSection, projectSettingsSections } from '@/lib/routes.utils'
 
 // Temporary hand-written schemas for what the settings of a project read and write.
 // TODO: replace with the types generated into src/api/generated/ once they exist.
@@ -41,9 +42,9 @@ export const modelEntrySchema = z.looseObject({
 
 export type ModelEntry = z.infer<typeof modelEntrySchema>
 
-export const sections = ['general', 'runs', 'models'] as const
+export const sections = projectSettingsSections
 
-export type Section = (typeof sections)[number]
+export type Section = ProjectSettingsSection
 
 export const sectionLabels = {
   general: 'General',

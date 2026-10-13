@@ -6,6 +6,7 @@ import { projectTabGroup, useEditorTab } from '@/components/layout'
 import { ErrorState, LoadingState, NotFoundState } from '@/components/state'
 import { ScrollArea } from '@/components/ui/scroll-area'
 import { isNotFoundError } from '@/lib/api-fetch.utils'
+import { RouteParam, settingsHref } from '@/lib/routes.utils'
 
 import { useModels } from '../hooks/useModels'
 import { useSettingsDefinition } from '../hooks/useSettingsDefinition'
@@ -13,14 +14,13 @@ import { useSettingsProject } from '../hooks/useSettingsProject'
 import { sectionLabels } from '../project-settings.types'
 import { ProjectSettingsTabIcon } from '../project-settings-frame.config'
 import { sectionOf } from '../section.utils'
-import { settingsHref } from '../settings-links.utils'
 import { GeneralForm } from './GeneralForm'
 import { ModelsForm } from './ModelsForm'
 import { RunsForm } from './RunsForm'
 
 /** One section of the settings of a project, chosen in the address. */
 export function SettingsPage({ projectId }: { projectId: string }) {
-  const section = sectionOf(useSearchParams().get('section'))
+  const section = sectionOf(useSearchParams().get(RouteParam.Section))
   const project = useSettingsProject(projectId)
   const definition = useSettingsDefinition()
   const models = useModels()

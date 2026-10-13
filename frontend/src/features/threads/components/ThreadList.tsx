@@ -5,6 +5,7 @@ import { usePathname } from 'next/navigation'
 
 import { EmptyState, ErrorState, LoadingState } from '@/components/state'
 import { Badge } from '@/components/ui/badge'
+import { threadHref } from '@/lib/routes.utils'
 
 import { useProjectThreads } from '../hooks/useProjectThreads'
 import { threadTitle } from '../threads.utils'
@@ -40,8 +41,7 @@ export function ThreadList({ projectId }: ThreadListProps) {
   return (
     <ul className="flex flex-col gap-px px-1 pb-2">
       {threads.data.map((thread) => {
-        const href =
-          `/projects/${encodeURIComponent(projectId)}/console/${encodeURIComponent(thread.id)}` as const
+        const href = threadHref(projectId, thread.id)
         const waiting = thread.active_run_status === 'interrupted'
         return (
           <li key={thread.id}>

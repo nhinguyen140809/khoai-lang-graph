@@ -1,8 +1,8 @@
 import { FileIcon, FileStackIcon, FileTextIcon } from 'lucide-react'
-import type { Route } from 'next'
 
 import type { FeatureActivity, TabIcons } from '@/components/layout'
 import { SidePanel } from '@/components/layout'
+import { artifactsHref } from '@/lib/routes.utils'
 
 import { ArtifactTree } from './components/ArtifactTree'
 import { ExportButton } from './components/ExportButton'
@@ -13,7 +13,7 @@ export function artifactsActivity(projectId: string): FeatureActivity {
     id: 'artifacts',
     label: 'Artifacts',
     icon: <FileStackIcon />,
-    href: `/projects/${encodeURIComponent(projectId)}/artifacts` as Route,
+    href: artifactsHref(projectId),
     panel: (
       <SidePanel title="Artifacts" actions={<ExportButton projectId={projectId} openFromAddress />}>
         <ArtifactTree projectId={projectId} />

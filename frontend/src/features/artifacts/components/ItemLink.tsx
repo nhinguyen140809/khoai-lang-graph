@@ -1,9 +1,8 @@
-import type { Route } from 'next'
 import Link from 'next/link'
 
+import { itemHref } from '@/lib/routes.utils'
 import { cn } from '@/lib/utils'
 
-import { itemHref } from '../artifact-links.utils'
 import { useItemOpen } from './ItemOpenContext'
 
 interface ItemLinkProps {
@@ -34,7 +33,7 @@ export function ItemLink({ projectId, itemId, className, children }: ItemLinkPro
     )
   }
   return (
-    <Link href={itemHref(projectId, itemId) as Route} className={style}>
+    <Link href={itemHref(projectId, itemId)} className={style}>
       {children}
     </Link>
   )

@@ -9,9 +9,10 @@ import { Button } from '@/components/ui/button'
 import { ResizableHandle, ResizablePanel, ResizablePanelGroup } from '@/components/ui/resizable'
 import { ScrollArea } from '@/components/ui/scroll-area'
 import { Surface } from '@/components/ui/surface'
+import { consoleHref, reviewHref } from '@/lib/routes.utils'
 
 import { usePendingInterrupt } from '../hooks/usePendingInterrupt'
-import { reviewsPath, ReviewTabIcon } from '../review-frame.config'
+import { ReviewTabIcon } from '../review-frame.config'
 import { ReviewCard } from './ReviewCard'
 
 interface ReviewPageProps {
@@ -34,7 +35,7 @@ export function ReviewPage({ projectId, runId, Artifacts, Console }: ReviewPageP
   const router = useRouter()
   const interrupt = usePendingInterrupt(runId)
   const closeTab = useEditorTabsStore((state) => state.closeTab)
-  const href = `${reviewsPath(projectId)}/${encodeURIComponent(runId)}`
+  const href = reviewHref(projectId, runId)
 
   // The review is one tab, with the artifact and the console split inside it.
   useEditorTab(projectTabGroup(projectId), {
@@ -47,7 +48,7 @@ export function ReviewPage({ projectId, runId, Artifacts, Console }: ReviewPageP
   const backToConsole = () => {
     // An answered review has nothing left to show, so its tab closes.
     closeTab(projectTabGroup(projectId), `review:${runId}`)
-    router.push(`/projects/${encodeURIComponent(projectId)}/console`)
+    router.push(consoleHref(projectId))
   }
 
   // A review that was open and is gone has been answered: the page goes back to the console at

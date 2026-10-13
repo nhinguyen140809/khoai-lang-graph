@@ -4,6 +4,7 @@ import { CornerDownRightIcon } from 'lucide-react'
 import Link from 'next/link'
 import { type ReactNode, useState } from 'react'
 
+import { itemHref } from '@/lib/routes.utils'
 import { cn } from '@/lib/utils'
 
 import type { ConsoleStep } from '../console.types'
@@ -96,7 +97,7 @@ function Keys({ items, projectId }: KeysProps) {
       {shown.map((item) => (
         <Link
           key={item.item_id}
-          href={`/projects/${encodeURIComponent(projectId)}/artifacts/items/${encodeURIComponent(item.item_id)}`}
+          href={itemHref(projectId, item.item_id)}
           className="mr-2 rounded-sm text-primary underline-offset-2 outline-none hover:underline focus-visible:ring-2 focus-visible:ring-ring/50"
         >
           {item.key}

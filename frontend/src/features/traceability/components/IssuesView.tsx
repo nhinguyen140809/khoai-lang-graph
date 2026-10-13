@@ -1,13 +1,12 @@
 'use client'
 
 import { CircleCheckIcon } from 'lucide-react'
-import type { Route } from 'next'
 import Link from 'next/link'
 
 import { EmptyState, ErrorState, LoadingState } from '@/components/state'
+import { itemHref } from '@/lib/routes.utils'
 
 import { useIssues } from '../hooks/useIssues'
-import { itemHref } from '../traceability-links.utils'
 
 function textOf(value: unknown): string {
   return typeof value === 'string' ? value : ''
@@ -45,7 +44,7 @@ export function IssuesView({ projectId }: { projectId: string }) {
                 <li key={issue.id} className="flex flex-col gap-1 rounded-md border p-3 text-xs">
                   <div className="flex flex-wrap items-baseline gap-x-2">
                     <Link
-                      href={itemHref(projectId, issue.id) as Route}
+                      href={itemHref(projectId, issue.id)}
                       className="font-mono text-primary underline-offset-2 hover:underline"
                     >
                       {issue.key}
@@ -58,7 +57,7 @@ export function IssuesView({ projectId }: { projectId: string }) {
                       {about.map((item) => (
                         <Link
                           key={item.id}
-                          href={itemHref(projectId, item.id) as Route}
+                          href={itemHref(projectId, item.id)}
                           className="font-mono text-primary underline-offset-2 hover:underline"
                         >
                           {item.key}

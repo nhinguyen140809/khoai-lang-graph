@@ -4,6 +4,7 @@ import Link from 'next/link'
 
 import { Separator } from '@/components/ui/separator'
 import { Spinner } from '@/components/ui/spinner'
+import { runHref } from '@/lib/routes.utils'
 import { runStatusLabels, runStatusTones } from '@/lib/run-status.constants'
 import { toneClasses } from '@/lib/tone.constants'
 import { cn } from '@/lib/utils'
@@ -52,7 +53,7 @@ export function ProjectRunStatus({ projectId }: ProjectRunStatusProps) {
       const maxCost = run.run_config.max_cost_usd
       return (
         <Link
-          href={`/projects/${encodeURIComponent(projectId)}/workflow/${encodeURIComponent(run.id)}`}
+          href={runHref(projectId, run.id)}
           title={run.error?.message}
           className="flex min-w-0 items-center gap-2 rounded-sm px-1 outline-none hover:bg-sidebar-accent focus-visible:ring-2 focus-visible:ring-ring/50"
         >

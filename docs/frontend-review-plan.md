@@ -204,8 +204,8 @@ The first PR of the product, as planned. It is additive: nothing on `main` impor
 
 | Group | Files |
 |---|---|
-| Frame | `src/components/layout/`, by region: the root (`Workbench.tsx`, `ProjectWorkspace.tsx`, `EditorSplit.tsx`, `panel.constants.ts`, `frame.store.ts`, `path.utils.ts`, `hooks/useFrameHydrated.ts`, `index.ts`), `activity-bar/` (`ActivityBar.tsx`, `ActivitiesContext.tsx`, `activity.types.ts`, `activity.utils.ts`, `hooks/useSideFeature.ts`, `hooks/usePinSideFeature.ts`), `side-panel/` (`SidePanel.tsx`, `SidePanelSection.tsx`), `editor/` (`EditorTabs.tsx`, `EditorWithPanel.tsx`, `PanelSections.tsx`, `editor-tabs.store.ts`, `hooks/useEditorTab.ts`), `top-bar/` (`TopBar.tsx`, `PageCrumb.tsx`), `status-bar/` (`StatusBar.tsx`), `command-palette/` (`CommandPalette.tsx`, `FeatureCommands.tsx`, `command-palette.store.ts`, `command-registry.store.ts`, `command.types.ts`, `command.utils.ts`, `hooks/useCommands.ts`) |
-| Unit tests | In the `__tests__/` folder of each region: ProjectWorkspace, `path.utils`; ActivityBar, `activity.utils`; SidePanelSection; EditorTabs, EditorWithPanel, PanelSections, `editor-tabs.store`; TopBar; StatusBar; CommandPalette, `command.utils`, and `useCommands` in `command-palette/hooks/__tests__/` |
+| Frame | `src/components/layout/`, by region: the root (`Workbench.tsx`, `ProjectWorkspace.tsx`, `EditorSplit.tsx`, `panel.constants.ts`, `frame.store.ts`, `path.utils.ts`, `hooks/useFrameHydrated.ts`, `index.ts`), `activity-bar/` (`ActivityBar.tsx`, `ActivitiesContext.tsx`, `activity.types.ts`, `activity.utils.ts`, `hooks/useSideFeature.ts`, `hooks/usePinSideFeature.ts`, `hooks/useOpenPage.ts`), `side-panel/` (`SidePanel.tsx`, `SidePanelSection.tsx`), `editor/` (`EditorTabs.tsx`, `EditorWithPanel.tsx`, `PanelSections.tsx`, `editor-tabs.store.ts`, `hooks/useEditorTab.ts`), `top-bar/` (`TopBar.tsx`, `PageCrumb.tsx`), `status-bar/` (`StatusBar.tsx`), `command-palette/` (`CommandPalette.tsx`, `FeatureCommands.tsx`, `command-palette.store.ts`, `command-registry.store.ts`, `command.types.ts`, `command.utils.ts`, `hooks/useCommands.ts`) |
+| Unit tests | In the `__tests__/` folder of each region: ProjectWorkspace, `path.utils`; ActivityBar, `activity.utils`, and `useOpenPage` in `activity-bar/hooks/__tests__/`; SidePanelSection; EditorTabs, EditorWithPanel, PanelSections, `editor-tabs.store`; TopBar; StatusBar; CommandPalette, `command.utils`, and `useCommands` in `command-palette/hooks/__tests__/` |
 | Needed by the frame | `src/hooks/useHotkey.ts` and `src/hooks/useModifierKeyName.ts` with their tests, `src/lib/browser-storage.utils.ts` and its test, `src/components/ui/resizable.tsx`, `src/components/ui/surface.tsx`, `src/test/TestProviders.tsx`, `src/test/next-mocks.utils.ts`, the browser stubs of `src/test/vitest.setup.ts` (hunk: ResizeObserver, matchMedia, scrollIntoView; the pointer capture stub waits for the first test with a select), the storage rule, the `<subject>.config.tsx` naming rule the patterns against relative imports across features and shared code, and the patterns that make `@/components/layout` the only way into the frame, in `eslint.config.js` (hunks), with the naming row and the import lines of CONTRIBUTING |
 | Design tokens | `src/app/styles.css`: `text-2xs`, `text-3xs`, `text-4xs`, the `editor-text` and `caret-block` utilities. The design system files that use the tokens (`Sample.tsx`, `CodeCard.tsx`, `WorkspaceCard.tsx`, `OverlaysCard.tsx`, `AlertsCard.tsx`, `ChatCard.tsx`); `GraphCard.tsx` and `design-system.fixtures.ts` use the graph tones and go with P15. The CONTRIBUTING rule on bracket values and the token line of `frontend/README.md` |
 | Docs | Section 1 (Frame) of `docs/ui/skeletons.md`, and the Frame section of `frontend/README.md` without what the features bring: the item of a feature in its config, the commands of the console, the projects and the theme |
@@ -244,11 +244,11 @@ Endpoints read: `GET /projects` (all pages, by status), `POST /projects`, `GET /
 |---|---|
 | Feature | `src/features/projects/` (list, table, run cell, pending review badge, gate, switcher, commands, new project dialog and form, store, hooks, tests) |
 | Routes | `src/app/page.tsx`, `src/app/(home)/layout.tsx`, `(home)/projects/page.tsx`, `(home)/error.tsx` (renamed from `(app)/error.tsx`), `src/app/(project)/projects/[projectId]/layout.tsx`, `error.tsx`, `page.tsx` |
-| Shared code | `src/components/state/*` (compact size), `src/lib/relative-time.utils.ts`, `src/lib/run-status.constants.ts`, `src/hooks/useNow.ts`, with their tests |
+| Shared code | `src/components/state/*` (compact size), `src/lib/relative-time.utils.ts`, `src/lib/run-status.constants.ts`, `src/hooks/useNow.ts`, `src/lib/routes.utils.ts` (`consoleHref`), with their tests |
 | Removed | `src/app/(app)/` (4 files), `components/layout/AppShell.tsx`, `components/layout/app-sidebar/` (4 files) |
 | E2E and docs | `tests/e2e/projects.spec.ts`, section 2 of `docs/ui/skeletons.md` |
 
-The project `layout.tsx` is cut for this PR: the frame with an empty list of activities (decision D3), so no side panel yet, the top bar and the status bar. Its `page.tsx` redirects to the console address written in place until P9 brings `consoleHref`. The run status of the status bar is a placeholder until P7; `ThemeSync` and `ThemeCommands` are added by P18.
+The project `layout.tsx` is cut for this PR: the frame with an empty list of activities (decision D3), so no side panel yet, the top bar and the status bar. Its `page.tsx` redirects to `consoleHref`. From P6 on, `src/lib/routes.utils.ts` builds the addresses of the pages of a project: each later PR adds, as hunks, the addresses and the query parameters (`RouteParam`) that its files use, so that no feature writes the address of another. The run status of the status bar is a placeholder until P7; `ThemeSync` and `ThemeCommands` are added by P18.
 
 ### P7. Threads and the run status
 
@@ -262,7 +262,7 @@ Endpoints: `GET /artifact-kinds`, `GET /workflow/definition`, `GET /content-sche
 
 | Group | Files |
 |---|---|
-| Feature | `src/features/artifacts/`: `artifacts.api.ts`, types, keys, `artifact-links.utils.ts`, `field-view.utils.ts`, `kinds.utils.ts`, hooks (`useArtifact`, `useArtifactItems`, `useArtifactKinds`, `useDefinitionSummary`, `useItem`, `useItemSchema`, `useProjectArtifacts`, `useValueOptions`), components (`ArtifactTree`, `ArtifactDocument`, `ArtifactPanel`, `FieldValue`, `ItemLink`, `ItemOpenContext`, `ItemPage`, `ReviewStatusBadge`) and their tests, `artifacts-frame.config.tsx` without the export action, and its entry in the project `layout.tsx` |
+| Feature | `src/features/artifacts/`: `artifacts.api.ts`, types, keys, `field-view.utils.ts`, `kinds.utils.ts`, hooks (`useArtifact`, `useArtifactItems`, `useArtifactKinds`, `useDefinitionSummary`, `useItem`, `useItemSchema`, `useProjectArtifacts`, `useValueOptions`), components (`ArtifactTree`, `ArtifactDocument`, `ArtifactPanel`, `FieldValue`, `ItemLink`, `ItemOpenContext`, `ItemPage`, `ReviewStatusBadge`) and their tests, `artifacts-frame.config.tsx` without the export action, and its entry in the project `layout.tsx` |
 | Routes | `artifacts/page.tsx`, `artifacts/[artifactId]/page.tsx`, `artifacts/items/[itemId]/page.tsx` |
 | Mocks | `artifact-kinds.handlers.ts`, `artifact-kinds.fixtures.ts`, `artifacts.handlers.ts` (read part), `artifacts.fixtures.ts`, `mentor-artifacts.fixtures.ts`, `artifact-builder.utils.ts`, `mock-artifacts.store.ts`, `src/mocks/data/content-schemas/`, `src/mocks/data/workflow/`, `__tests__/artifact-kinds.fixtures.test.ts`, the `src/mocks/data` line of `.prettierignore` |
 | E2E and docs | the read part of `tests/e2e/artifacts.spec.ts`, sections 5 and 6 of `docs/ui/skeletons.md` |
@@ -321,7 +321,7 @@ Endpoints: `GET /workflow/definition?version=`, `GET /projects/{id}/threads`, `G
 
 | Group | Files |
 |---|---|
-| Feature | `src/features/workflow/`: api, types, `graph-layout.utils.ts`, `run-progress.utils.ts`, `step-groups.utils.ts`, `workflow-links.utils.ts`, hooks, components (`RunPage`, `RunTree`, `WorkflowGraph`, `WorkflowHome`, `StepPanel`, `StatePanel`), tests, `workflow-frame.config.tsx` and its entry in the project `layout.tsx` |
+| Feature | `src/features/workflow/`: api, types, `graph-layout.utils.ts`, `run-progress.utils.ts`, `step-groups.utils.ts`, `run-status.utils.ts`, hooks, components (`RunPage`, `RunTree`, `WorkflowGraph`, `WorkflowHome`, `StepPanel`, `StatePanel`), tests, `workflow-frame.config.tsx` and its entry in the project `layout.tsx` |
 | Routes | `workflow/page.tsx`, `workflow/[runId]/page.tsx` |
 | Mocks | `workflow-state.handlers.ts` |
 | Shared code | `src/components/ui/edge.tsx`, `node.tsx`, `src/lib/tone.constants.ts` and its test (graph tones), `GraphCard.tsx` and `design-system.fixtures.ts`, `src/env.d.ts` and `.env.example` (`NEXT_PUBLIC_TRACE_URL`) |
@@ -331,13 +331,13 @@ Endpoints: `GET /workflow/definition?version=`, `GET /projects/{id}/threads`, `G
 
 Endpoints: `GET /projects/{id}/traceability/matrix`, `GET /projects/{id}/traceability/coverage`, `GET /projects/{id}/trace-links`, `GET /projects/{id}/items`.
 
-Files: `src/features/traceability/` (api, types, `issues.utils.ts`, `matrix-filter.utils.ts`, `traceability-links.utils.ts`, `issue-kinds.constants.ts`, hooks, `MatrixView`, `IssuesView`, `ItemRefLinks`, `TraceabilityNav`, `TraceabilityPage`, tests, `traceability-frame.config.tsx`), its entry in the project `layout.tsx`, `traceability/page.tsx`, `traceability.handlers.ts`, `tests/e2e/traceability.spec.ts`, section 8 of `docs/ui/skeletons.md`.
+Files: `src/features/traceability/` (api, types, `issues.utils.ts`, `matrix-filter.utils.ts`, `issue-kinds.constants.ts`, hooks, `MatrixView`, `IssuesView`, `ItemRefLinks`, `TraceabilityNav`, `TraceabilityPage`, tests, `traceability-frame.config.tsx`), its entry in the project `layout.tsx`, `traceability/page.tsx`, `traceability.handlers.ts`, `tests/e2e/traceability.spec.ts`, section 8 of `docs/ui/skeletons.md`.
 
 ### P17. Settings of a project
 
 Endpoints: `GET /projects/{id}`, `PATCH /projects/{id}`, `GET /models`, `GET /workflow/definition`.
 
-Files: `src/features/project-settings/` (api, types, `section.utils.ts`, `form-errors.utils.ts`, `settings-links.utils.ts`, hooks, `GeneralForm`, `RunsForm`, `ModelsForm`, `SaveBar`, `SettingsNav`, `SettingsPage`, tests, `project-settings-frame.config.tsx`), its entry in the project `layout.tsx`, `src/components/run-config/` (shared with P18), `settings/page.tsx`, `src/mocks/models.handlers.ts`, `models.fixtures.ts`, the `/run-settings` command of the console, `tests/e2e/project-settings.spec.ts`, section 9 of `docs/ui/skeletons.md`.
+Files: `src/features/project-settings/` (api, types, `section.utils.ts`, `form-errors.utils.ts`, hooks, `GeneralForm`, `RunsForm`, `ModelsForm`, `SaveBar`, `SettingsNav`, `SettingsPage`, tests, `project-settings-frame.config.tsx`), its entry in the project `layout.tsx`, `src/components/run-config/` (shared with P18), `settings/page.tsx`, `src/mocks/models.handlers.ts`, `models.fixtures.ts`, the `/run-settings` command of the console, `tests/e2e/project-settings.spec.ts`, section 9 of `docs/ui/skeletons.md`.
 
 ### P18. Settings of the user
 
