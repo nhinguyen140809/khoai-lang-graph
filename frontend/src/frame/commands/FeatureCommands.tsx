@@ -1,7 +1,7 @@
 'use client'
 
-import { useActivities } from '../activity-bar/ActivitiesContext'
-import { isFeatureActivity } from '../activity-bar/activity.utils'
+import { useActivities } from '../activities/ActivitiesContext'
+import { isFeatureActivity } from '../activities/activity.utils'
 import { useFrameStore } from '../frame.store'
 import { PaletteGroup } from './command.constants'
 import { useCommands } from './hooks/useCommands'

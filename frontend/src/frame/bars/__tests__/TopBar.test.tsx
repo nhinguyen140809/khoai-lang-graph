@@ -2,7 +2,7 @@ import { render, screen, within } from '@testing-library/react'
 import userEvent from '@testing-library/user-event'
 import { beforeEach, describe, expect, it, vi } from 'vitest'
 
-import { useCommandPaletteStore } from '../../command-palette/command-palette.store'
+import { useCommandPaletteStore } from '../../commands/command-palette.store'
 import { TopBar } from '../TopBar'
 
 vi.mock('next/link', async () => (await import('@/test/next-mocks.utils')).linkMock)

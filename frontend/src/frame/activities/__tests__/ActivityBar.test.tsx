@@ -15,7 +15,7 @@ import { setPathname } from '@/test/next-mocks.utils'
 import { TestProviders } from '@/test/TestProviders'
 
 import { useFrameStore } from '../../frame.store'
-import { PanelRegion } from '../../panel.constants'
+import { PanelRegion } from '../../panels/panel.constants'
 import { ActivitiesContext } from '../ActivitiesContext'
 import type { Activity } from '../activity.types'
 import { ActivityBar } from '../ActivityBar'

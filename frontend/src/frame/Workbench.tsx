@@ -2,15 +2,15 @@
 
 import { type ReactNode, useEffect, useMemo } from 'react'
 
-import { ActivitiesContext } from './activity-bar/ActivitiesContext'
-import type { Activity, TabIcons } from './activity-bar/activity.types'
-import { ActivityBar } from './activity-bar/ActivityBar'
-import { CommandPalette } from './command-palette/CommandPalette'
-import { FeatureCommands } from './command-palette/FeatureCommands'
-import { useEditorTabsStore } from './editor/editor-tabs.store'
+import { ActivitiesContext } from './activities/ActivitiesContext'
+import type { Activity, TabIcons } from './activities/activity.types'
+import { ActivityBar } from './activities/ActivityBar'
+import { StatusBar } from './bars/StatusBar'
+import { TopBar } from './bars/TopBar'
+import { CommandPalette } from './commands/CommandPalette'
+import { FeatureCommands } from './commands/FeatureCommands'
 import { useFrameStore } from './frame.store'
-import { StatusBar } from './status-bar/StatusBar'
-import { TopBar } from './top-bar/TopBar'
+import { useEditorTabsStore } from './tabs/editor-tabs.store'
 
 interface WorkbenchProps {
   /** What follows "khoai /" on the top bar: a page name, or the menu of the current project. */

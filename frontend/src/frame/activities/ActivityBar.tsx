@@ -5,7 +5,7 @@ import type { ComponentProps, ReactNode } from 'react'
 import { Tooltip, TooltipContent, TooltipTrigger } from '@/shared/ui/tooltip'
 
 import { useFrameStore } from '../frame.store'
-import { PanelRegion } from '../panel.constants'
+import { PanelRegion } from '../panels/panel.constants'
 import { useActivities } from './ActivitiesContext'
 import type { Activity } from './activity.types'
 import { isFeatureActivity } from './activity.utils'

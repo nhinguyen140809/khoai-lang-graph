@@ -6,7 +6,7 @@ import { beforeEach, describe, expect, it, vi } from 'vitest'
 import { routerMock } from '@/test/next-mocks.utils'
 
 import { useFrameStore } from '../../../frame.store'
-import { PanelRegion } from '../../../panel.constants'
+import { PanelRegion } from '../../../panels/panel.constants'
 import { ActivitiesContext } from '../../ActivitiesContext'
 import type { Activity } from '../../activity.types'
 import { useOpenPage } from '../useOpenPage'

@@ -5,16 +5,16 @@ import type { ReactNode } from 'react'
 
 import { Surface } from '@/shared/ui/surface'
 
-import { usePinSideFeature } from './activity-bar/hooks/usePinSideFeature'
-import { useSideFeature } from './activity-bar/hooks/useSideFeature'
-import { PaletteGroup } from './command-palette/command.constants'
-import type { PaletteCommand } from './command-palette/command.types'
-import { useCommands } from './command-palette/hooks/useCommands'
-import { projectTabGroup } from './editor/editor-tabs.store'
-import { EditorTabs } from './editor/EditorTabs'
-import { EditorSplit } from './EditorSplit'
+import { usePinSideFeature } from './activities/hooks/usePinSideFeature'
+import { useSideFeature } from './activities/hooks/useSideFeature'
+import { PaletteGroup } from './commands/command.constants'
+import type { PaletteCommand } from './commands/command.types'
+import { useCommands } from './commands/hooks/useCommands'
 import { useFrameStore } from './frame.store'
-import { PanelRegion } from './panel.constants'
+import { EditorSplit } from './panels/EditorSplit'
+import { PanelRegion } from './panels/panel.constants'
+import { projectTabGroup } from './tabs/editor-tabs.store'
+import { EditorTabs } from './tabs/EditorTabs'
 
 interface ProjectWorkspaceProps {
   projectId: string

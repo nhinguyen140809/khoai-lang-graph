@@ -3,7 +3,7 @@
 import { useRouter } from 'next/navigation'
 import { type ComponentType, type ReactNode, useEffect, useState } from 'react'
 
-import { projectTabGroup, useEditorTab, useEditorTabsStore } from '@/frame'
+import { projectTabGroup, useEditorTab } from '@/frame'
 import { EmptyState, ErrorState, LoadingState } from '@/shared/components/state'
 import { consoleHref, reviewHref } from '@/shared/config/routes.utils'
 import { Button } from '@/shared/ui/button'
@@ -34,11 +34,10 @@ interface ReviewPageProps {
 export function ReviewPage({ projectId, runId, Artifacts, Console }: ReviewPageProps) {
   const router = useRouter()
   const interrupt = usePendingInterrupt(runId)
-  const closeTab = useEditorTabsStore((state) => state.closeTab)
   const href = reviewHref(projectId, runId)
 
   // The review is one tab, with the artifact and the console split inside it.
-  useEditorTab(projectTabGroup(projectId), {
+  const tab = useEditorTab(projectTabGroup(projectId), {
     id: `review:${runId}`,
     title: 'Review',
     href,
@@ -47,7 +46,7 @@ export function ReviewPage({ projectId, runId, Artifacts, Console }: ReviewPageP
 
   const backToConsole = () => {
     // An answered review has nothing left to show, so its tab closes.
-    closeTab(projectTabGroup(projectId), `review:${runId}`)
+    tab.close()
     router.push(consoleHref(projectId))
   }
 

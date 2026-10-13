@@ -5,8 +5,8 @@ import type { Route } from 'next'
 import Link from 'next/link'
 import { useRouter } from 'next/navigation'
 
-import { useActivities } from '../activity-bar/ActivitiesContext'
-import { activityOfHref } from '../activity-bar/activity.utils'
+import { useActivities } from '../activities/ActivitiesContext'
+import { activityOfHref } from '../activities/activity.utils'
 import { type EditorTab, neighborTab, useEditorTabsStore } from './editor-tabs.store'
 
 interface EditorTabsProps {

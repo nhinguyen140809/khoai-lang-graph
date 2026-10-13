@@ -6,13 +6,13 @@ import { Activity, type ReactNode } from 'react'
 import { Button } from '@/shared/ui/button'
 import { Surface } from '@/shared/ui/surface'
 
-import { PaletteGroup } from '../command-palette/command.constants'
-import type { PaletteCommand } from '../command-palette/command.types'
-import { useCommands } from '../command-palette/hooks/useCommands'
-import { EditorSplit } from '../EditorSplit'
+import { PaletteGroup } from '../commands/command.constants'
+import type { PaletteCommand } from '../commands/command.types'
+import { useCommands } from '../commands/hooks/useCommands'
 import { useFrameStore } from '../frame.store'
-import { PanelRegion } from '../panel.constants'
 import { type BottomPanelSection, BottomPanelSections } from './BottomPanelSections'
+import { EditorSplit } from './EditorSplit'
+import { PanelRegion } from './panel.constants'
 
 interface EditorWithBottomPanelProps {
   /** The sections of the panel under the editor, one tab each, such as the trace of an item. */

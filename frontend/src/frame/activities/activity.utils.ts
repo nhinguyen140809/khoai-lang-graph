@@ -1,4 +1,5 @@
-import { isAtOrUnder, pathOf } from '../path.utils'
+import { isAtOrUnder, pathOf } from '@/shared/lib/path.utils'
+
 import type { Activity, FeatureActivity } from './activity.types'
 
 export function isFeatureActivity(activity: Activity): activity is FeatureActivity {

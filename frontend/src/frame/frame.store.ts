@@ -4,7 +4,7 @@ import { persist } from 'zustand/middleware'
 
 import { parseStored, persistStorage, storageKey } from '@/shared/lib/browser-storage.utils'
 
-import { panelLayouts, PanelRegion } from './panel.constants'
+import { panelLayouts, PanelRegion } from './panels/panel.constants'
 
 const panelSchema = z.object({
   visible: z.boolean(),

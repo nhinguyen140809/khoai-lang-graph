@@ -5,14 +5,14 @@ import { beforeEach, describe, expect, it, vi } from 'vitest'
 
 import { setPathname } from '@/test/next-mocks.utils'
 
-import { ActivitiesContext } from '../activity-bar/ActivitiesContext'
-import type { Activity } from '../activity-bar/activity.types'
-import { type EditorTab, useEditorTabsStore } from '../editor/editor-tabs.store'
-import { useEditorTab } from '../editor/hooks/useEditorTab'
+import { ActivitiesContext } from '../activities/ActivitiesContext'
+import type { Activity } from '../activities/activity.types'
 import { useFrameStore } from '../frame.store'
+import { SidePanel } from '../panels/SidePanel'
+import { SidePanelSection } from '../panels/SidePanelSection'
 import { ProjectWorkspace } from '../ProjectWorkspace'
-import { SidePanel } from '../side-panel/SidePanel'
-import { SidePanelSection } from '../side-panel/SidePanelSection'
+import { type EditorTab, useEditorTabsStore } from '../tabs/editor-tabs.store'
+import { useEditorTab } from '../tabs/hooks/useEditorTab'
 
 vi.mock('next/navigation', async () => (await import('@/test/next-mocks.utils')).navigationMock)
 vi.mock('next/link', async () => (await import('@/test/next-mocks.utils')).linkMock)

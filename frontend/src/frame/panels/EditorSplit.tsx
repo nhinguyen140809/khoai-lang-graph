@@ -4,8 +4,8 @@ import { Activity, type ReactNode, useState } from 'react'
 
 import { ResizableHandle, ResizablePanel, ResizablePanelGroup } from '@/shared/ui/resizable'
 
-import { useFrameStore } from './frame.store'
-import { useFrameHydrated } from './hooks/useFrameHydrated'
+import { useFrameStore } from '../frame.store'
+import { useFrameHydrated } from '../hooks/useFrameHydrated'
 import { panelLayouts, type PanelRegion } from './panel.constants'
 
 interface EditorSplitProps {

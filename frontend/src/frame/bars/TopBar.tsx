@@ -13,9 +13,9 @@ import {
 } from '@/shared/ui/breadcrumb'
 import { Kbd, KbdGroup } from '@/shared/ui/kbd'
 
-import { paletteHotkey } from '../command-palette/command.constants'
-import { ariaKeyShortcuts, hotkeyKeys } from '../command-palette/command.utils'
-import { useCommandPaletteStore } from '../command-palette/command-palette.store'
+import { paletteHotkey } from '../commands/command.constants'
+import { ariaKeyShortcuts, hotkeyKeys } from '../commands/command.utils'
+import { useCommandPaletteStore } from '../commands/command-palette.store'
 
 interface TopBarProps {
   /** What follows "khoai /": a page name, or the menu of the current project. */

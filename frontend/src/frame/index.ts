@@ -1,22 +1,16 @@
 // The frame of every screen. Code outside this folder imports it from here, so the files can move
-// between the region folders; files inside the folder import each other with relative paths.
-export type {
-  Activity,
-  FeatureActivity,
-  PlannedActivity,
-  TabIcons,
-} from './activity-bar/activity.types'
-export { useOpenPage } from './activity-bar/hooks/useOpenPage'
-export { PaletteGroup } from './command-palette/command.constants'
-export type { CommandHotkey, PaletteCommand } from './command-palette/command.types'
-export { useCommands } from './command-palette/hooks/useCommands'
-export { type BottomPanelSection, BottomPanelSections } from './editor/BottomPanelSections'
-export { projectTabGroup, useEditorTabsStore } from './editor/editor-tabs.store'
-export { EditorWithBottomPanel } from './editor/EditorWithBottomPanel'
-export { useEditorTab } from './editor/hooks/useEditorTab'
-export { useFrameStore } from './frame.store'
+// between its folders; files inside the folder import each other with relative paths.
+export type { Activity, FeatureActivity, TabIcons } from './activities/activity.types'
+export { useOpenPage } from './activities/hooks/useOpenPage'
+export { PageCrumb } from './bars/PageCrumb'
+export { PaletteGroup } from './commands/command.constants'
+export type { PaletteCommand } from './commands/command.types'
+export { useCommands } from './commands/hooks/useCommands'
+export { type BottomPanelSection, BottomPanelSections } from './panels/BottomPanelSections'
+export { EditorWithBottomPanel } from './panels/EditorWithBottomPanel'
+export { SidePanel } from './panels/SidePanel'
+export { SidePanelSection } from './panels/SidePanelSection'
 export { ProjectWorkspace } from './ProjectWorkspace'
-export { SidePanel } from './side-panel/SidePanel'
-export { SidePanelSection } from './side-panel/SidePanelSection'
-export { PageCrumb } from './top-bar/PageCrumb'
+export { projectTabGroup } from './tabs/editor-tabs.store'
+export { useEditorTab } from './tabs/hooks/useEditorTab'
 export { Workbench } from './Workbench'

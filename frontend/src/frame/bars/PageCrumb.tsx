@@ -2,7 +2,7 @@
 
 import { usePathname } from 'next/navigation'
 
-import { isAtOrUnder } from '../path.utils'
+import { isAtOrUnder } from '@/shared/lib/path.utils'
 
 interface PageCrumbProps {
   /** The name of each page, by the start of its address; the first that matches is shown. */

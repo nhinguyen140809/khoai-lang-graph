@@ -1,6 +1,6 @@
 import { describe, expect, it } from 'vitest'
 
-import { isAtOrUnder, pathOf } from '../path.utils'
+import { isAtOrUnder, pathOf } from '@/shared/lib/path.utils'
 
 describe('pathOf', () => {
   it('leaves out the query and the fragment', () => {
