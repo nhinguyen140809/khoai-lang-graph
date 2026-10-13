@@ -4,13 +4,13 @@ import { ChevronDownIcon, ChevronUpIcon, PanelBottomIcon } from 'lucide-react'
 import { Activity, type ReactNode } from 'react'
 
 import { Button } from '@/components/ui/button'
-import { ResizablePanel } from '@/components/ui/resizable'
 import { Surface } from '@/components/ui/surface'
 
 import type { PaletteCommand } from '../command-palette/command.types'
 import { useCommands } from '../command-palette/hooks/useCommands'
+import { EditorSplit } from '../EditorSplit'
 import { useFrameStore } from '../frame.store'
-import { StoredPanel, StoredPanelGroup } from '../StoredPanel'
+import { PanelRegion } from '../panel.constants'
 import { type PanelSection, PanelSections } from './PanelSections'
 
 interface EditorWithPanelProps {
@@ -21,8 +21,6 @@ interface EditorWithPanelProps {
   children: ReactNode
 }
 
-const PANEL_MIN_HEIGHT = 96
-
 const panelCommands: PaletteCommand[] = [
   {
     id: 'view.toggleBottomPanel',
@@ -31,7 +29,7 @@ const panelCommands: PaletteCommand[] = [
     icon: <PanelBottomIcon />,
     hotkey: { key: '`', ctrl: true },
     run: () => {
-      useFrameStore.getState().togglePanel('bottom')
+      useFrameStore.getState().togglePanel(PanelRegion.Bottom)
     },
   },
 ]
@@ -42,25 +40,25 @@ const panelCommands: PaletteCommand[] = [
  * the editor content and each section scroll themselves when they flow.
  */
 export function EditorWithPanel({ sections, panelLabel, children }: EditorWithPanelProps) {
-  const visible = useFrameStore((state) => state.panels.bottom.visible)
+  const visible = useFrameStore((state) => state.panels[PanelRegion.Bottom].visible)
 
   useCommands(panelCommands)
 
   return (
     <div className="flex h-full flex-col gap-1.5">
-      <StoredPanelGroup orientation="vertical" className="min-h-0 flex-1">
-        <ResizablePanel id="editor-body" minSize="20%">
-          <Surface className="h-full">{children}</Surface>
-        </ResizablePanel>
-        <StoredPanel region="bottom" minSize={PANEL_MIN_HEIGHT} maxSize="80%" handle="before">
+      <EditorSplit
+        region={PanelRegion.Bottom}
+        panel={
           <Surface as="section" aria-label={panelLabel} className="h-full">
             <PanelSections
               sections={sections}
               controls={<PanelToggle label={panelLabel} expanded />}
             />
           </Surface>
-        </StoredPanel>
-      </StoredPanelGroup>
+        }
+      >
+        <Surface className="h-full">{children}</Surface>
+      </EditorSplit>
       <Activity mode={visible ? 'hidden' : 'visible'}>
         <CollapsedPanel label={panelLabel} />
       </Activity>
@@ -103,7 +101,7 @@ function PanelToggle({ label, expanded }: PanelToggleProps) {
       aria-label={`${expanded ? 'Hide' : 'Show'} ${label}`}
       aria-expanded={expanded}
       onClick={() => {
-        togglePanel('bottom')
+        togglePanel(PanelRegion.Bottom)
       }}
     >
       <Icon aria-hidden />

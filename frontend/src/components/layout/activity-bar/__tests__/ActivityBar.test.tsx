@@ -15,6 +15,7 @@ import { setPathname } from '@/test/next-mocks.utils'
 import { TestProviders } from '@/test/TestProviders'
 
 import { useFrameStore } from '../../frame.store'
+import { PanelRegion } from '../../panel.constants'
 import { ActivitiesContext } from '../ActivitiesContext'
 import type { Activity } from '../activity.types'
 import { ActivityBar } from '../ActivityBar'
@@ -116,10 +117,10 @@ describe('ActivityBar', () => {
     renderBar()
 
     await userEvent.click(screen.getByRole('button', { name: /^Console/ }))
-    expect(useFrameStore.getState().panels.side.visible).toBe(false)
+    expect(useFrameStore.getState().panels[PanelRegion.Side].visible).toBe(false)
 
     await userEvent.click(screen.getByRole('button', { name: 'Artifacts' }))
-    expect(useFrameStore.getState().panels.side.visible).toBe(true)
+    expect(useFrameStore.getState().panels[PanelRegion.Side].visible).toBe(true)
     expect(useFrameStore.getState().sideFeature).toBe('artifacts')
   })
 

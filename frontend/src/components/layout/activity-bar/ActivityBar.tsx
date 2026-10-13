@@ -5,6 +5,7 @@ import type { ComponentProps, ReactNode } from 'react'
 import { Tooltip, TooltipContent, TooltipTrigger } from '@/components/ui/tooltip'
 
 import { useFrameStore } from '../frame.store'
+import { PanelRegion } from '../panel.constants'
 import { useActivities } from './ActivitiesContext'
 import type { Activity } from './activity.types'
 import { isFeatureActivity } from './activity.utils'
@@ -75,7 +76,7 @@ function ActivityItem({ activity }: { activity: Activity }) {
       tooltip={activity.label}
       onClick={() => {
         // Like an editor: the item of the open panel toggles it.
-        if (active) togglePanel('side')
+        if (active) togglePanel(PanelRegion.Side)
         else showSideFeature(activity.id)
       }}
     >

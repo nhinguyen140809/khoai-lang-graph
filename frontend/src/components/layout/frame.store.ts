@@ -4,8 +4,7 @@ import { persist } from 'zustand/middleware'
 
 import { parseStored, persistStorage } from '@/lib/browser-storage.utils'
 
-/** The panels of the frame that the user resizes and hides. */
-export type PanelRegion = 'side' | 'bottom'
+import { panelLayouts, PanelRegion } from './panel.constants'
 
 const panelSchema = z.object({
   visible: z.boolean(),
@@ -16,7 +15,7 @@ const panelSchema = z.object({
 const persistedFrameSchema = z.object({
   /** The id of the feature whose side panel is shown, once chosen; the editor is not tied to it. */
   sideFeature: z.string().nullable().default(null),
-  panels: z.object({ side: panelSchema, bottom: panelSchema }),
+  panels: z.object({ [PanelRegion.Side]: panelSchema, [PanelRegion.Bottom]: panelSchema }),
 })
 
 type PersistedFrame = z.infer<typeof persistedFrameSchema>
@@ -39,8 +38,8 @@ export const useFrameStore = create<FrameState>()(
     (set) => ({
       sideFeature: null,
       panels: {
-        side: { visible: true, size: 260 },
-        bottom: { visible: true, size: 240 },
+        [PanelRegion.Side]: { visible: true, size: panelLayouts[PanelRegion.Side].defaultSize },
+        [PanelRegion.Bottom]: { visible: true, size: panelLayouts[PanelRegion.Bottom].defaultSize },
       },
       setSideFeature: (sideFeature) => {
         set({ sideFeature })
@@ -48,7 +47,10 @@ export const useFrameStore = create<FrameState>()(
       showSideFeature: (sideFeature) => {
         set((state) => ({
           sideFeature,
-          panels: { ...state.panels, side: { ...state.panels.side, visible: true } },
+          panels: {
+            ...state.panels,
+            [PanelRegion.Side]: { ...state.panels[PanelRegion.Side], visible: true },
+          },
         }))
       },
       togglePanel: (region) => {

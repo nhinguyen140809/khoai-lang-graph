@@ -3,7 +3,6 @@
 import { PanelLeftIcon } from 'lucide-react'
 import type { ReactNode } from 'react'
 
-import { ResizablePanel } from '@/components/ui/resizable'
 import { Surface } from '@/components/ui/surface'
 
 import { usePinSideFeature } from './activity-bar/hooks/usePinSideFeature'
@@ -12,16 +11,15 @@ import type { PaletteCommand } from './command-palette/command.types'
 import { useCommands } from './command-palette/hooks/useCommands'
 import { projectTabGroup } from './editor/editor-tabs.store'
 import { EditorTabs } from './editor/EditorTabs'
+import { EditorSplit } from './EditorSplit'
 import { useFrameStore } from './frame.store'
-import { StoredPanel, StoredPanelGroup } from './StoredPanel'
+import { PanelRegion } from './panel.constants'
 
 interface ProjectWorkspaceProps {
   projectId: string
   /** The editor: the page of the tab in view, whichever side panel is shown. */
   children: ReactNode
 }
-
-const SIDE_PANEL_MIN_WIDTH = 180
 
 const workspaceCommands: PaletteCommand[] = [
   {
@@ -31,7 +29,7 @@ const workspaceCommands: PaletteCommand[] = [
     icon: <PanelLeftIcon />,
     hotkey: { key: 'b', mod: true },
     run: () => {
-      useFrameStore.getState().togglePanel('side')
+      useFrameStore.getState().togglePanel(PanelRegion.Side)
     },
   },
 ]
@@ -49,19 +47,12 @@ export function ProjectWorkspace({ projectId, children }: ProjectWorkspaceProps)
   usePinSideFeature(sideFeature?.id)
 
   return (
-    <StoredPanelGroup orientation="horizontal" className="min-h-0 flex-1">
-      {sideFeature !== undefined && (
-        <StoredPanel region="side" minSize={SIDE_PANEL_MIN_WIDTH} maxSize="50%" handle="after">
-          {sideFeature.panel}
-        </StoredPanel>
-      )}
-      <ResizablePanel id="editor" minSize="30%">
-        <Surface className="flex h-full min-w-0 flex-col">
-          <EditorTabs group={group} rootHref={sideFeature?.href} />
-          {/* The page fills the editor and scrolls itself: a ScrollArea when its content flows. */}
-          <main className="min-h-0 flex-1 editor-text">{children}</main>
-        </Surface>
-      </ResizablePanel>
-    </StoredPanelGroup>
+    <EditorSplit region={PanelRegion.Side} panel={sideFeature?.panel}>
+      <Surface className="flex h-full min-w-0 flex-col">
+        <EditorTabs group={group} rootHref={sideFeature?.href} />
+        {/* The page fills the editor and scrolls itself: a ScrollArea when its content flows. */}
+        <main className="min-h-0 flex-1 editor-text">{children}</main>
+      </Surface>
+    </EditorSplit>
   )
 }
