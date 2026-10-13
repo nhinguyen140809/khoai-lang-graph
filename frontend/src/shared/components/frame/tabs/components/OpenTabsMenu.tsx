@@ -10,22 +10,16 @@ import {
   DropdownMenuTrigger,
 } from '@/shared/components/ui/dropdown-menu'
 
-import type { EditorTab } from '../editor-tabs.schema'
+import { useTabStrip } from '../hooks/useTabStrip'
 import { TabLabel } from './TabLabel'
-
-interface OpenTabsMenuProps {
-  tabs: EditorTab[]
-  onScreen: string | undefined
-  previewId: string | undefined
-  onCloseAll: () => void
-}
 
 /**
  * The button at the end of the strip: a menu of every open tab, for a strip too long to show them
  * all, then closing them all.
  */
-export function OpenTabsMenu({ tabs, onScreen, previewId, onCloseAll }: OpenTabsMenuProps) {
+export function OpenTabsMenu() {
   const router = useRouter()
+  const { tabs, onScreen, previewId, close } = useTabStrip()
 
   return (
     <DropdownMenu>
@@ -54,7 +48,13 @@ export function OpenTabsMenu({ tabs, onScreen, previewId, onCloseAll }: OpenTabs
           </DropdownMenuItem>
         ))}
         <DropdownMenuSeparator />
-        <DropdownMenuItem onSelect={onCloseAll}>Close all tabs</DropdownMenuItem>
+        <DropdownMenuItem
+          onSelect={() => {
+            close(tabs.map(({ id }) => id))
+          }}
+        >
+          Close all tabs
+        </DropdownMenuItem>
       </DropdownMenuContent>
     </DropdownMenu>
   )

@@ -18,7 +18,7 @@ export function useEditorTab(group: string, tab: EditorTab | null) {
   const openTab = useEditorTabsStore((state) => state.openTab)
   const keepTab = useEditorTabsStore((state) => state.keepTab)
   const leaveTab = useEditorTabsStore((state) => state.leaveTab)
-  const closeTab = useEditorTabsStore((state) => state.closeTab)
+  const closeTabs = useEditorTabsStore((state) => state.closeTabs)
   const id = tab?.id
   const title = tab?.title
   const href = tab?.href
@@ -42,9 +42,9 @@ export function useEditorTab(group: string, tab: EditorTab | null) {
         if (id !== undefined) keepTab(group, id)
       },
       close: () => {
-        if (id !== undefined) closeTab(group, id)
+        if (id !== undefined) closeTabs(group, [id])
       },
     }),
-    [group, id, keepTab, closeTab],
+    [group, id, keepTab, closeTabs],
   )
 }

@@ -4,15 +4,22 @@ import { persist } from 'zustand/middleware'
 import { parseStored, persistStorage, storageKey } from '@/shared/lib/browser-storage.utils'
 
 import { type EditorTab, type PersistedTabs, persistedTabsSchema } from './editor-tabs.schema'
-import { mergeTabs, placeTab, type TabStrips, withEntry, withoutEntry } from './editor-tabs.utils'
+import { placeTab, withEntry, withoutEntry } from './editor-tabs.utils'
 
 interface OpenTabOptions {
   /** Opens the tab as a kept tab instead of the preview tab of its group. */
   keep?: boolean
 }
 
-/** The tab strips, which are stored, and what the tabs keep for the session only. */
-interface EditorTabsState extends TabStrips {
+/** The tab strips of every group, which are stored, and what the tabs keep for the session only. */
+interface EditorTabsState {
+  /** By group, the open tabs in the order of the strip. Stored. */
+  groups: Record<string, EditorTab[]>
+  /**
+   * By group, the id of its preview tab: the tab that the next page opened replaces, until the
+   * user keeps it. A group has one preview tab at most. Stored.
+   */
+  preview: Record<string, string>
   /** By group, the id of the tab whose page is on screen; none while a page without a tab is. */
   onScreen: Record<string, string>
   /** By group, the id of the tab whose page was on screen last, kept after the page leaves. */
@@ -35,18 +42,17 @@ interface EditorTabsState extends TabStrips {
   keepPage: (href: string) => void
   /** The page of the tab leaves the screen. */
   leaveTab: (group: string, id: string) => void
-  closeTab: (group: string, id: string) => void
-  /** Closes the tabs `ids` of the group at once, such as every tab but one. */
+  /** Closes the tabs `ids` of the group at once: one tab, every tab but one, or all of them. */
   closeTabs: (group: string, ids: readonly string[]) => void
 }
 
 /**
  * The editor tabs of every project on this device; a group is one project, and holds the tabs of
- * every feature. `useRestoreFrame` reads them after the first render.
+ * every feature. `useRestoreFrame` reads them after the first render, before the pages open theirs.
  */
 export const useEditorTabsStore = create<EditorTabsState>()(
   persist(
-    (set, get) => ({
+    (set) => ({
       groups: {},
       preview: {},
       onScreen: {},
@@ -90,9 +96,6 @@ export const useEditorTabsStore = create<EditorTabsState>()(
       leaveTab: (group, id) => {
         set((state) => ({ onScreen: withoutEntry(state.onScreen, group, id) }))
       },
-      closeTab: (group, id) => {
-        get().closeTabs(group, [id])
-      },
       closeTabs: (group, ids) => {
         set((state) => {
           const closing = new Set(ids)
@@ -120,10 +123,11 @@ export const useEditorTabsStore = create<EditorTabsState>()(
         ready: (): boolean => useEditorTabsStore.persist.hasHydrated(),
       }),
       partialize: ({ groups, preview }): PersistedTabs => ({ groups, preview }),
-      merge: (persisted, current) => ({
-        ...current,
-        ...mergeTabs(parseStored(persistedTabsSchema, persisted), current),
-      }),
+      merge: (persisted, current) => {
+        const stored = parseStored(persistedTabsSchema, persisted)
+        if (stored === undefined) return current
+        return { ...current, groups: stored.groups, preview: stored.preview ?? {} }
+      },
     },
   ),
 )

@@ -53,11 +53,11 @@ describe('useEditorTabsStore', () => {
   })
 
   it('opens a new tab last once the tab shown last is closed', () => {
-    const { openTab, closeTab } = useEditorTabsStore.getState()
+    const { openTab, closeTabs } = useEditorTabsStore.getState()
     openTab('p1:search', ambiguity, { keep: true })
     openTab('p1:search', req, { keep: true })
 
-    closeTab('p1:search', req.id)
+    closeTabs('p1:search', [req.id])
     openTab('p1:search', conflict)
 
     expect(useEditorTabsStore.getState().groups['p1:search']?.map(({ id }) => id)).toEqual([
@@ -132,38 +132,24 @@ describe('useEditorTabsStore', () => {
   })
 
   it('has no preview tab once the preview tab is closed', () => {
-    const { openTab, closeTab } = useEditorTabsStore.getState()
+    const { openTab, closeTabs } = useEditorTabsStore.getState()
     openTab('p1:search', req)
 
-    closeTab('p1:search', req.id)
+    closeTabs('p1:search', [req.id])
 
     expect(useEditorTabsStore.getState().preview['p1:search']).toBeUndefined()
   })
 
-  it('keeps tabs opened before the stored tabs were read', async () => {
+  it('reads the stored tabs and preview tabs, without the fields of an older version', async () => {
     browserStorage.setItem(
       STORAGE_KEY,
       JSON.stringify({
         // lastHrefs is a field of an older version, which the store leaves out.
-        state: { groups: { 'p1:search': [ambiguity] }, lastHrefs: {} },
-        version: 0,
-      }),
-    )
-    useEditorTabsStore.getState().openTab('p1:search', req)
-
-    await useEditorTabsStore.persist.rehydrate()
-
-    expect(useEditorTabsStore.getState().groups['p1:search']).toEqual([ambiguity, req])
-  })
-
-  it('opens the page opened before the stored tabs were read in place of the stored preview tab', async () => {
-    useEditorTabsStore.getState().openTab('p1:search', req)
-    // Stored after the tab opened: once an earlier test has read the stored tabs, opening a tab
-    // stores the tabs.
-    browserStorage.setItem(
-      STORAGE_KEY,
-      JSON.stringify({
-        state: { groups: { 'p1:search': [ambiguity, conflict] }, preview: { 'p1:search': 'i3' } },
+        state: {
+          groups: { 'p1:search': [ambiguity, conflict] },
+          preview: { 'p1:search': conflict.id },
+          lastHrefs: {},
+        },
         version: 0,
       }),
     )
@@ -171,27 +157,9 @@ describe('useEditorTabsStore', () => {
     await useEditorTabsStore.persist.rehydrate()
 
     const state = useEditorTabsStore.getState()
-    expect(state.groups['p1:search']?.map(({ id }) => id)).toEqual(['i2', 'i1'])
-    expect(state.preview['p1:search']).toBe(req.id)
-  })
-
-  it('leaves a stored kept tab kept when its page opened before the stored tabs were read', async () => {
-    useEditorTabsStore.getState().openTab('p1:search', req)
-    // Stored after the tab opened: once an earlier test has read the stored tabs, opening a tab
-    // stores the tabs.
-    browserStorage.setItem(
-      STORAGE_KEY,
-      JSON.stringify({
-        state: { groups: { 'p1:search': [req, conflict] }, preview: { 'p1:search': 'i3' } },
-        version: 0,
-      }),
-    )
-
-    await useEditorTabsStore.persist.rehydrate()
-
-    const state = useEditorTabsStore.getState()
-    expect(state.groups['p1:search']?.map(({ id }) => id)).toEqual(['i1', 'i3'])
+    expect(state.groups['p1:search']).toEqual([ambiguity, conflict])
     expect(state.preview['p1:search']).toBe(conflict.id)
+    expect(state).not.toHaveProperty('lastHrefs')
   })
 
   it('drops stored tabs that do not have the expected shape', async () => {

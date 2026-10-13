@@ -4,6 +4,7 @@ import { useRouter } from 'next/navigation'
 import type { EditorTab } from '../editor-tabs.schema'
 import { useEditorTabsStore } from '../editor-tabs.store'
 import { neighborTab } from '../editor-tabs.utils'
+import type { TabStrip } from '../TabStripContext'
 
 const noTabs: EditorTab[] = []
 
@@ -12,7 +13,7 @@ const noTabs: EditorTab[] = []
  * actions of the strip. Closing the tab on screen shows the tab next to it that stays open, else
  * `rootHref`: the start page of the feature whose side panel is shown.
  */
-export function useEditorTabs(group: string, rootHref: Route | undefined) {
+export function useEditorTabs(group: string, rootHref: Route | undefined): TabStrip {
   const router = useRouter()
   const tabs = useEditorTabsStore((state) => state.groups[group]) ?? noTabs
   const onScreen = useEditorTabsStore((state) => state.onScreen[group])

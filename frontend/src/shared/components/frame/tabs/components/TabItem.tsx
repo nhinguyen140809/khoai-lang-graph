@@ -11,20 +11,11 @@ import {
 } from '@/shared/components/ui/context-menu'
 
 import type { EditorTab } from '../editor-tabs.schema'
+import { useTabStrip } from '../hooks/useTabStrip'
 import { TabLabel } from './TabLabel'
 
 interface TabItemProps {
   tab: EditorTab
-  /** The tab of the page on screen. */
-  active: boolean
-  /** The preview tab of the group, which the next page opened replaces. */
-  preview: boolean
-  /** The only open tab, so its menu has no other tabs to close. */
-  alone: boolean
-  onKeep: () => void
-  onClose: () => void
-  onCloseOthers: () => void
-  onCloseAll: () => void
 }
 
 /**
@@ -32,16 +23,18 @@ interface TabItemProps {
  * every tab, so that closing never needs the pointer over it. A middle click closes the tab too,
  * and a double click keeps a preview tab.
  */
-export function TabItem({
-  tab,
-  active,
-  preview,
-  alone,
-  onKeep,
-  onClose,
-  onCloseOthers,
-  onCloseAll,
-}: TabItemProps) {
+export function TabItem({ tab }: TabItemProps) {
+  const { tabs, onScreen, previewId, keep, close } = useTabStrip()
+  const active = tab.id === onScreen
+  const preview = tab.id === previewId
+  const ids = tabs.map(({ id }) => id)
+  const onKeep = () => {
+    keep(tab.id)
+  }
+  const onClose = () => {
+    close([tab.id])
+  }
+
   return (
     <ContextMenu>
       <ContextMenuTrigger asChild>
@@ -80,10 +73,22 @@ export function TabItem({
         </ContextMenuItem>
         <ContextMenuSeparator />
         <ContextMenuItem onSelect={onClose}>Close</ContextMenuItem>
-        <ContextMenuItem disabled={alone} onSelect={onCloseOthers}>
+        <ContextMenuItem
+          // The only open tab has no other tabs to close.
+          disabled={tabs.length === 1}
+          onSelect={() => {
+            close(ids.filter((id) => id !== tab.id))
+          }}
+        >
           Close other tabs
         </ContextMenuItem>
-        <ContextMenuItem onSelect={onCloseAll}>Close all tabs</ContextMenuItem>
+        <ContextMenuItem
+          onSelect={() => {
+            close(ids)
+          }}
+        >
+          Close all tabs
+        </ContextMenuItem>
       </ContextMenuContent>
     </ContextMenu>
   )

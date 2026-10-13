@@ -1,5 +1,5 @@
 import { usePathname } from 'next/navigation'
-import { useEffect, useEffectEvent } from 'react'
+import { useEffectEvent, useLayoutEffect } from 'react'
 
 import type { Activity } from '../activities/activity.types'
 import { activityOfHref, isFeatureActivity } from '../activities/activity.utils'
@@ -9,9 +9,11 @@ import { useEditorTabsStore } from '../tabs/editor-tabs.store'
 
 /**
  * Reads what the frame keeps in the browser after the first render, so that the server HTML and
- * the first client render use the defaults: the panels, the side feature and the tabs. When no
- * feature was chosen yet, the feature shown then becomes the chosen one, so that its side panel
- * stays until the user chooses another, instead of following the pages opened.
+ * the first client render use the defaults: the panels, the side feature and the tabs. It reads
+ * them in a layout effect, which runs before the effects of the pages, so a page opens its tab
+ * among the stored tabs, and the stored sizes show before the browser paints. When no feature was
+ * chosen yet, the feature shown then becomes the chosen one, so that its side panel stays until
+ * the user chooses another, instead of following the pages opened.
  *
  * @param activities The features of the screen, as Workbench gets them.
  */
@@ -26,13 +28,11 @@ export function useRestoreFrame(activities: readonly Activity[]) {
     if (shown !== undefined) choose(shown.id)
   })
 
-  useEffect(() => {
-    void Promise.all([
-      usePanelsStore.persist.rehydrate(),
-      useSideFeatureStore.persist.rehydrate(),
-      useEditorTabsStore.persist.rehydrate(),
-    ]).then(() => {
-      keepSideFeature()
-    })
+  useLayoutEffect(() => {
+    // The stores read localStorage, which answers at once, so they are read when these return.
+    void usePanelsStore.persist.rehydrate()
+    void useSideFeatureStore.persist.rehydrate()
+    void useEditorTabsStore.persist.rehydrate()
+    keepSideFeature()
   }, [])
 }
