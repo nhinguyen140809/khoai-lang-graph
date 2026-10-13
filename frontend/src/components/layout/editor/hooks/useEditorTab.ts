@@ -1,4 +1,4 @@
-import { useEffect } from 'react'
+import { useEffect, useState } from 'react'
 
 import { type EditorTab, useEditorTabsStore } from '../editor-tabs.store'
 
@@ -8,6 +8,9 @@ import { type EditorTab, useEditorTabsStore } from '../editor-tabs.store'
  */
 export function useEditorTab(group: string, tab: EditorTab | null) {
   const openTab = useEditorTabsStore((state) => state.openTab)
+  // The page shown before this one, read while this page renders for the first time: the tab strip
+  // records the new page in an effect, and the title of the page may come in a later render.
+  const [after] = useState(() => useEditorTabsStore.getState().lastHrefs[group])
   const id = tab?.id
   const title = tab?.title
   const href = tab?.href
@@ -15,9 +18,6 @@ export function useEditorTab(group: string, tab: EditorTab | null) {
 
   useEffect(() => {
     if (id === undefined || title === undefined || href === undefined) return
-    // The page shown before is still the last one of the group: the ProjectWorkspace records the
-    // new page after its children have run their effects.
-    const after = useEditorTabsStore.getState().lastHrefs[group]
     openTab(group, { id, title, href, ...(icon !== undefined && { icon }) }, { after })
-  }, [group, id, title, href, icon, openTab])
+  }, [group, id, title, href, icon, after, openTab])
 }

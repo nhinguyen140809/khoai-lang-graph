@@ -1,12 +1,14 @@
 import { act, fireEvent, render, screen } from '@testing-library/react'
 import type { Route } from 'next'
+import type { ReactNode } from 'react'
 import { beforeEach, describe, expect, it, vi } from 'vitest'
 
 import { setPathname } from '@/test/next-mocks.utils'
 
 import { ActivitiesContext } from '../activity-bar/ActivitiesContext'
 import type { Activity } from '../activity-bar/activity.types'
-import { useEditorTabsStore } from '../editor/editor-tabs.store'
+import { type EditorTab, useEditorTabsStore } from '../editor/editor-tabs.store'
+import { useEditorTab } from '../editor/hooks/useEditorTab'
 import { useFrameStore } from '../frame.store'
 import { ProjectWorkspace } from '../ProjectWorkspace'
 import { SidePanel } from '../side-panel/SidePanel'
@@ -36,6 +38,24 @@ beforeEach(() => {
   useEditorTabsStore.setState({ groups: {}, lastHrefs: {} })
   useFrameStore.setState({ sidePanelVisible: true, sideFeature: null })
 })
+
+function tab(id: string): EditorTab {
+  return { id, title: id, href: `/projects/p1/${id}` }
+}
+
+/** A page that opens its tab, once its title is known. */
+function Page({ tab }: { tab: EditorTab | null }) {
+  useEditorTab('p1', tab)
+  return null
+}
+
+function workspace(page: ReactNode) {
+  return (
+    <ActivitiesContext value={{ activities, tabIcons: {} }}>
+      <ProjectWorkspace projectId="p1">{page}</ProjectWorkspace>
+    </ActivitiesContext>
+  )
+}
 
 function renderProjectWorkspace(given: Activity[] = activities) {
   render(
@@ -104,6 +124,29 @@ describe('ProjectWorkspace', () => {
       'aria-expanded',
       'false',
     )
+  })
+
+  it('opens the tab of a new page next to the tab of the page shown before', () => {
+    useEditorTabsStore.setState({ groups: { p1: [tab('a'), tab('c')] } })
+    setPathname('/projects/p1/a')
+    const { rerender } = render(workspace(<Page key="a" tab={tab('a')} />))
+
+    setPathname('/projects/p1/b')
+    rerender(workspace(<Page key="b" tab={tab('b')} />))
+
+    expect(useEditorTabsStore.getState().groups.p1?.map(({ id }) => id)).toEqual(['a', 'b', 'c'])
+  })
+
+  it('opens it there too when the page knows its title after a while', () => {
+    useEditorTabsStore.setState({ groups: { p1: [tab('a'), tab('c')] } })
+    setPathname('/projects/p1/a')
+    const { rerender } = render(workspace(<Page key="a" tab={tab('a')} />))
+
+    setPathname('/projects/p1/b')
+    rerender(workspace(<Page key="b" tab={null} />))
+    rerender(workspace(<Page key="b" tab={tab('b')} />))
+
+    expect(useEditorTabsStore.getState().groups.p1?.map(({ id }) => id)).toEqual(['a', 'b', 'c'])
   })
 
   it('has no side panel without features', () => {
