@@ -47,9 +47,9 @@ describe('useOpenPage', () => {
   it('opens a page that belongs to no feature, and leaves the side panel', () => {
     const { result } = renderHook(() => useOpenPage(), { wrapper })
 
-    result.current('/projects')
+    result.current('/')
 
-    expect(routerMock.push).toHaveBeenCalledWith('/projects')
+    expect(routerMock.push).toHaveBeenCalledWith('/')
     expect(useFrameStore.getState().sideFeature).toBeNull()
   })
 })
