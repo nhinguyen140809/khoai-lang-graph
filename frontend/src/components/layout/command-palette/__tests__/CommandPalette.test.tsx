@@ -2,12 +2,12 @@ import { fireEvent, render, screen, within } from '@testing-library/react'
 import userEvent from '@testing-library/user-event'
 import { beforeEach, describe, expect, it, vi } from 'vitest'
 
-import type { Command } from '../command.types'
+import type { PaletteCommand } from '../command.types'
 import { useCommandPaletteStore } from '../command-palette.store'
 import { CommandPalette } from '../CommandPalette'
 import { useCommands } from '../hooks/useCommands'
 
-function Commands({ commands }: { commands: Command[] }) {
+function Commands({ commands }: { commands: PaletteCommand[] }) {
   useCommands(commands)
   return null
 }

@@ -1,9 +1,9 @@
 import { describe, expect, it } from 'vitest'
 
-import type { Command } from '../command.types'
+import type { PaletteCommand } from '../command.types'
 import { commandGroups, hotkeyLabel } from '../command.utils'
 
-function command(id: string, group: string): Command {
+function command(id: string, group: string): PaletteCommand {
   return { id, label: id, group }
 }
 

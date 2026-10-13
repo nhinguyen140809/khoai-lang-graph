@@ -1,8 +1,8 @@
-import type { Command, CommandHotkey } from './command.types'
+import type { CommandHotkey, PaletteCommand } from './command.types'
 
-interface CommandGroup {
+interface PaletteGroup {
   heading: string
-  commands: Command[]
+  commands: PaletteCommand[]
 }
 
 /**
@@ -10,8 +10,8 @@ interface CommandGroup {
  * the order in which the components that register them mount; a group keeps the order of its
  * commands.
  */
-export function commandGroups(sources: Iterable<readonly Command[]>): CommandGroup[] {
-  const groups = new Map<string, Command[]>()
+export function commandGroups(sources: Iterable<readonly PaletteCommand[]>): PaletteGroup[] {
+  const groups = new Map<string, PaletteCommand[]>()
   for (const commands of sources) {
     for (const command of commands) {
       const group = groups.get(command.group)

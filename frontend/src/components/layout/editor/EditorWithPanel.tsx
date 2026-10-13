@@ -7,7 +7,7 @@ import { Button } from '@/components/ui/button'
 import { ResizablePanel } from '@/components/ui/resizable'
 import { Surface } from '@/components/ui/surface'
 
-import type { Command } from '../command-palette/command.types'
+import type { PaletteCommand } from '../command-palette/command.types'
 import { useCommands } from '../command-palette/hooks/useCommands'
 import { useFrameStore } from '../frame.store'
 import { StoredPanel, StoredPanelGroup } from '../StoredPanel'
@@ -23,7 +23,7 @@ interface EditorWithPanelProps {
 
 const PANEL_MIN_HEIGHT = 96
 
-const panelCommands: Command[] = [
+const panelCommands: PaletteCommand[] = [
   {
     id: 'view.toggleBottomPanel',
     label: 'Toggle bottom panel',

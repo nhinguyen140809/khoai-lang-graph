@@ -1,11 +1,11 @@
 import { create } from 'zustand'
 
-import type { Command } from './command.types'
+import type { PaletteCommand } from './command.types'
 
 interface CommandRegistryState {
   /** The commands of each component that registers some, in the order the components came. */
-  sources: ReadonlyMap<string, readonly Command[]>
-  setCommands: (source: string, commands: readonly Command[]) => void
+  sources: ReadonlyMap<string, readonly PaletteCommand[]>
+  setCommands: (source: string, commands: readonly PaletteCommand[]) => void
   removeCommands: (source: string) => void
 }
 

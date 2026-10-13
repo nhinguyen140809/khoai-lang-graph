@@ -11,7 +11,7 @@ export interface CommandHotkey {
 }
 
 /** A command of the command palette, registered with `useCommands`. */
-export interface Command {
+export interface PaletteCommand {
   /** Unique among the commands of the screen, such as `view.toggleSidePanel`. */
   id: string
   label: string

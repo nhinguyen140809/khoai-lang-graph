@@ -1,15 +1,15 @@
 import { fireEvent, renderHook } from '@testing-library/react'
 import { describe, expect, it, vi } from 'vitest'
 
-import type { Command } from '../../command.types'
+import type { PaletteCommand } from '../../command.types'
 import { useCommandRegistryStore } from '../../command-registry.store'
 import { useCommands } from '../useCommands'
 
-function registered(): Command[] {
+function registered(): PaletteCommand[] {
   return [...useCommandRegistryStore.getState().sources.values()].flat()
 }
 
-function command(id: string, overrides: Partial<Command> = {}): Command {
+function command(id: string, overrides: Partial<PaletteCommand> = {}): PaletteCommand {
   return { id, label: id, group: 'View', run: vi.fn(), ...overrides }
 }
 

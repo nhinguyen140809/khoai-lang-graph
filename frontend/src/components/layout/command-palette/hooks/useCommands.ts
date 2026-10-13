@@ -2,11 +2,11 @@ import { useEffect, useEffectEvent, useId, useLayoutEffect, useRef } from 'react
 
 import { matchesHotkey } from '@/hooks/useHotkey'
 
-import type { Command } from '../command.types'
+import type { PaletteCommand } from '../command.types'
 import { useCommandRegistryStore } from '../command-registry.store'
 
 /** What the palette shows of the commands, as text: when it changes, they register again. */
-function shownKey(commands: readonly Command[]): string {
+function shownKey(commands: readonly PaletteCommand[]): string {
   return JSON.stringify(
     commands.map(({ id, label, group, hotkey, run }) => [
       id,
@@ -26,7 +26,7 @@ function shownKey(commands: readonly Command[]): string {
  * the commands again, icons included, when a label, a group, a hotkey or whether a command runs
  * changes.
  */
-export function useCommands(commands: readonly Command[]) {
+export function useCommands(commands: readonly PaletteCommand[]) {
   const source = useId()
   const setCommands = useCommandRegistryStore((state) => state.setCommands)
   const removeCommands = useCommandRegistryStore((state) => state.removeCommands)

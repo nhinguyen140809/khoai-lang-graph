@@ -3,7 +3,7 @@
 import { FolderIcon, LayoutListIcon, PlusIcon, RotateCcwIcon } from 'lucide-react'
 import { useRouter } from 'next/navigation'
 
-import { type Command, useCommands } from '@/components/layout'
+import { type PaletteCommand, useCommands } from '@/components/layout'
 
 import { useProjects } from '../hooks/useProjects'
 import { useNewProjectDialogStore } from '../new-project.store'
@@ -18,7 +18,7 @@ export function ProjectCommands({ currentProjectId }: ProjectCommandsProps) {
   const router = useRouter()
   const projects = useProjects('active')
   const openNewProject = useNewProjectDialogStore((state) => state.setOpen)
-  const commands: Command[] = []
+  const commands: PaletteCommand[] = []
 
   if (projects.isPending) {
     commands.push({ id: 'projects.loading', label: 'Loading projects...', group: 'Projects' })

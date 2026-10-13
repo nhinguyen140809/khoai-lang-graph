@@ -8,7 +8,7 @@ import { Surface } from '@/components/ui/surface'
 
 import { usePinSideFeature } from './activity-bar/hooks/usePinSideFeature'
 import { useSideFeature } from './activity-bar/hooks/useSideFeature'
-import type { Command } from './command-palette/command.types'
+import type { PaletteCommand } from './command-palette/command.types'
 import { useCommands } from './command-palette/hooks/useCommands'
 import { projectTabGroup } from './editor/editor-tabs.store'
 import { EditorTabs } from './editor/EditorTabs'
@@ -23,7 +23,7 @@ interface ProjectWorkspaceProps {
 
 const SIDE_PANEL_MIN_WIDTH = 180
 
-const workspaceCommands: Command[] = [
+const workspaceCommands: PaletteCommand[] = [
   {
     id: 'view.toggleSidePanel',
     label: 'Toggle side panel',
