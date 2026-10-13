@@ -1,15 +1,8 @@
+import { isAtOrUnder, pathOf } from '../path.utils'
 import type { Activity, FeatureActivity } from './activity.types'
 
 export function isFeatureActivity(activity: Activity): activity is FeatureActivity {
   return 'href' in activity
-}
-
-function pathOf(href: string): string {
-  return href.split(/[?#]/)[0] ?? href
-}
-
-function isAtOrUnder(pathname: string, path: string): boolean {
-  return pathname === path || pathname.startsWith(`${path}/`)
 }
 
 /**
