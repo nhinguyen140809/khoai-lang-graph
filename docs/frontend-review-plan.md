@@ -346,6 +346,8 @@ The fixtures are typed with the types of the features, which come later, so P5 b
 - `src/features/threads/threads.types.ts` in its new shape (`Thread`, `Run`, `RunStep`, `Usage`); the old thread list reads it through a list schema in `threads.api.ts` and shows "Untitled thread" for a thread without a title, until P7 replaces them.
 - `src/shared/config/run-status.constants.ts` with `runStatuses` only; P6 adds the labels and tones.
 
+A review of the cut, also applied on `feat/fe/mock`: `unfinishedRunStatuses` and `isUnfinishedRunStatus` in `run-status.constants.ts` replace five copies of the three statuses and their casts; `IdPrefix` in `mock-ids.constants.ts` names the prefix of the ids of each kind of record; `invalidState` joins the shared problems; `POST /projects` answers 422 for a body that is not JSON, a description that is not text and a language it does not have, instead of a 500 or a project of the wrong shape; the run states of `mock-scenario.utils.ts` are one list; the comments no longer name the console or runs that a message starts.
+
 Left to later PRs: `PATCH /projects/{id}` and its checks of the run settings and models go with P17, which reads the workflow definition (P8) and the models (P17); `POST /projects/{id}/threads`, the runs that a message starts (`startMockRun`, `newMockRun`, the created runs and steps) and the messages of the extra projects go with P9; the check that the extra projects have artifacts goes with P8. `POST /threads/{id}/runs` of the chat stays in `runs.handlers.ts` until P9 removes the chat, and `chat.spec.ts` opens the first "Main thread".
 
 ### P6. Project list and project frame
