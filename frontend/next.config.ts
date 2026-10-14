@@ -7,15 +7,21 @@ const nextConfig: NextConfig = {
   typedRoutes: true,
   // Do not write AGENTS.md / CLAUDE.md into the project on `next dev`.
   agentRules: false,
+  // The top right is free; the other corners would cover the account or notifications button.
+  devIndicators: { position: 'top-right' },
   turbopack: {
     // Pin the root to this folder so the rest of the monorepo is neither resolved nor watched.
     root: import.meta.dirname,
   },
+  // The dev server is also opened through a forwarded port at 127.0.0.1.
+  allowedDevOrigins: ['127.0.0.1'],
   experimental: {
     // Run PostCSS in worker threads instead of a pool of child Node.js processes.
     turbopackPluginRuntimeStrategy: 'workerThreads',
     // Load each page's modules on first request instead of all of them at server start.
     preloadEntriesOnStart: false,
+    // Source maps of the dev build cost memory and compile time; stack traces show compiled code.
+    turbopackSourceMaps: false,
   },
   // Same-origin API in development: the browser only talks to this server.
   rewrites() {

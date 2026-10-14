@@ -281,11 +281,12 @@ Measured on this project with a warm cache: the dev server uses about 300 MB whe
 
 Already configured in `next.config.ts`:
 
-| Setting                                                        | Effect                                                                                              |
-| -------------------------------------------------------------- | --------------------------------------------------------------------------------------------------- |
-| `turbopack.root`                                               | Only this folder is resolved and watched, not the rest of the monorepo.                             |
-| `experimental.turbopackPluginRuntimeStrategy: 'workerThreads'` | PostCSS runs in worker threads instead of a pool of child Node.js processes.                        |
-| `experimental.preloadEntriesOnStart: false`                    | `pnpm start` loads a page's modules on its first request instead of loading every page at start-up. |
+| Setting                                                        | Effect                                                                                                                                                                 |
+| -------------------------------------------------------------- | ---------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
+| `turbopack.root`                                               | Only this folder is resolved and watched, not the rest of the monorepo.                                                                                                |
+| `experimental.turbopackPluginRuntimeStrategy: 'workerThreads'` | PostCSS runs in worker threads instead of a pool of child Node.js processes.                                                                                           |
+| `experimental.preloadEntriesOnStart: false`                    | `pnpm start` loads a page's modules on its first request instead of loading every page at start-up.                                                                    |
+| `experimental.turbopackSourceMaps: false`                      | `pnpm dev` writes no source maps, which saves memory and compile time; stack traces and the browser devtools show the compiled code. Set it to `true` while debugging. |
 
 Turbopack compiles a route only when it is first requested, and releases memory on its own after each compile (`experimental.turbopackMemoryEviction`, default `auto`).
 
