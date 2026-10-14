@@ -20,7 +20,7 @@ const nextConfig: NextConfig = {
     turbopackPluginRuntimeStrategy: 'workerThreads',
     // Load each page's modules on first request instead of all of them at server start.
     preloadEntriesOnStart: false,
-    // Source maps of the dev build cost memory and compile time; browser devtools show compiled code.
+    // Source maps of the dev build cost memory and compile time; stack traces show compiled code.
     turbopackSourceMaps: false,
   },
   // Same-origin API in development: the browser only talks to this server.

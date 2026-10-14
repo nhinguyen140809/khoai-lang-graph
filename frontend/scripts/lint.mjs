@@ -31,7 +31,7 @@ function entries(folder) {
   }))
 }
 
-const features = entries('src/features').filter((entry) => entry.isDirectory)
+const features = entries('src/features')
 const isDesignSystem = (entry) => entry.path === 'src/features/design-system'
 
 // Every file is in exactly one group: the folders of src/ are listed as they are on disk, and the
