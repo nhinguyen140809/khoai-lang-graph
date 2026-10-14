@@ -28,6 +28,11 @@ const wrappedLibraryImports = [
     importNames: ['ResponsiveContainer', 'Tooltip', 'Legend'],
     message: 'Use ChartContainer, ChartTooltip, and ChartLegend from @/shared/components/ui/chart.',
   },
+  {
+    name: 'sonner',
+    importNames: ['Toaster'],
+    message: 'Use Toaster from @/shared/components/ui/sonner.',
+  },
 ]
 
 const sharedCodePatterns = [

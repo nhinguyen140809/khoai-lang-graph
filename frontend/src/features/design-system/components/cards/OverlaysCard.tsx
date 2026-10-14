@@ -1,5 +1,6 @@
 'use client'
 
+import { ArchiveIcon } from 'lucide-react'
 import { toast } from 'sonner'
 
 import {
@@ -14,6 +15,7 @@ import {
   AlertDialogTrigger,
 } from '@/shared/components/ui/alert-dialog'
 import { Button } from '@/shared/components/ui/button'
+import { ConfirmDialog } from '@/shared/components/ui/confirm-dialog'
 import {
   ContextMenu,
   ContextMenuContent,
@@ -136,6 +138,19 @@ export function OverlaysCard() {
           </AlertDialogFooter>
         </AlertDialogContent>
       </AlertDialog>
+      <ConfirmDialog
+        trigger={<Button variant="outline">Confirm dialog</Button>}
+        icon={<ArchiveIcon />}
+        title="Archive the project?"
+        description="It leaves the list of projects. Restore it from its settings."
+        confirmLabel="Archive"
+        // The action takes a moment, so the dialog shows that it waits.
+        onConfirm={() =>
+          new Promise<void>((resolve) => {
+            setTimeout(resolve, 1500)
+          })
+        }
+      />
       <Sheet>
         <SheetTrigger asChild>
           <Button variant="outline">Sheet</Button>
