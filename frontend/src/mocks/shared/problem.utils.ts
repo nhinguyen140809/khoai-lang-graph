@@ -37,6 +37,11 @@ export function validationFailed(errors: FieldProblem[]) {
   )
 }
 
+/** A request that the state of the record does not allow, such as stopping a run that ended. */
+export function invalidState(detail: string) {
+  return problem(HttpStatus.Conflict, ApiErrorCode.InvalidState, 'Invalid state', detail)
+}
+
 export function internalError() {
   return problem(HttpStatus.InternalServerError, ApiErrorCode.InternalError, 'Internal error')
 }

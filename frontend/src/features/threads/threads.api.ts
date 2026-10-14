@@ -1,8 +1,13 @@
+import { z } from 'zod'
+
 import { apiUrl } from '@/shared/api/api-url.utils'
 
-import { listThreadsResponseSchema, type Thread } from './threads.types'
+import { type Thread, threadSchema } from './threads.types'
 
-// TODO: switch to the generated client in src/api/generated/ once the threads API exists.
+// The first page of the threads; later pages are not read.
+const listThreadsResponseSchema = z.object({ items: z.array(threadSchema) })
+
+// TODO: switch to the generated client in src/shared/api/generated/ once the threads API exists.
 export async function listThreads(): Promise<Thread[]> {
   const response = await fetch(apiUrl('/api/v1/threads'))
   if (!response.ok) {
