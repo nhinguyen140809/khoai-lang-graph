@@ -207,7 +207,7 @@ Branch names are `<type>/fe/<name>`: `<type>` is the Conventional Commits type o
 | # | Branch | PR title | Depends on | Files | Changed lines |
 |---|---|---|---|---|---|
 | P0 | `chore/fe/ci` | `ci(frontend): run the checks on pull requests` | none | 2 | about 150 |
-| P1 | `chore/fe/lint-groups` | `build(frontend): lint in groups of folders to bound memory` | none | 4 | about 130 |
+| P1 | `chore/fe/lint-groups` | `build(frontend): lint in groups of folders to bound memory` | none | 5 | about 170 |
 | P2b | `refactor/fe/shared` | `refactor(frontend): move the shared code, shadcn/ui and the frame to src/shared` | none | 136 | about 520 (mostly moves) |
 | P2 | `docs/fe/api-fields` | `docs(api): add the fields that the screens read` | none | 5 | about 550 |
 | P3 | `feat/fe/layout` | `feat(frontend): add the workbench: activity bar, project workspace, tabs, top bar, status bar and command palette` | P2b | 47 | about 2000 |
@@ -235,7 +235,7 @@ Paths are under `frontend/` unless they start with `docs/` or `.github/`. `ls` o
 
 ### P0. CI for the frontend
 
-State: draft PR #9 from `chore/fe/ci`.
+State: merged as PR #9 on 2026-10-12.
 
 Files: `.github/workflows/frontend-ci.yml` (workflow "Frontend CI") and `.github/pull_request_template.md` (the fields and the definition of done of CONTRIBUTING).
 
@@ -262,11 +262,13 @@ Out of scope for P0: the backend workflow, the codegen check from CONTRIBUTING (
 
 ### P1. Tooling
 
-Files: `scripts/lint.mjs` (new: lints four groups of folders in separate processes, each with its own TypeScript program), `eslint.config.js` (only the `parserOptions` switch on `ESLINT_TSCONFIG`), `package.json` (the `lint` and `lint:fix` scripts), `next.config.ts` (`allowedDevOrigins`, `devIndicators`, `turbopackSourceMaps: false`).
+State: cut on `chore/fe/lint-groups` from `origin/main` on 2026-10-14, in the working tree for review.
+
+Files: `scripts/lint.mjs` (new: lints four groups of folders in separate processes, each with its own TypeScript program), `eslint.config.js` (only the `parserOptions` switch on `ESLINT_TSCONFIG`), `package.json` (the `lint` and `lint:fix` scripts), `next.config.ts` (`allowedDevOrigins`, `devIndicators`, `turbopackSourceMaps: false`), `frontend/README.md` (the `lint` rows of the scripts table; in Low-memory development, the source maps row and the lint bullet).
 
 Held back for other PRs: the storage rule of `eslint.config.js` goes with P3 (its target `browser-storage.utils.ts` lands there); `.prettierignore` (`src/mocks/data`) goes with P8; `src/env.d.ts` and `.env.example` (trace address) go with P15.
 
-Check: `pnpm lint` (about 100 s, about 1.4 GB); `pnpm lint:fix` still works.
+Check: `pnpm lint` (on 2026-10-14 with the 768 MB heap limit: about 55 s, the largest group at about 930 MB RSS; `eslint .` in one process runs out of that heap after about 40 s); `pnpm lint:fix` still works.
 
 ### P2. API documentation
 
@@ -283,6 +285,8 @@ Branch `refactor/fe/shared` from `origin/main`, decision D8. Moves only, plus th
 Check: `pnpm typecheck`, `pnpm lint`, `pnpm format:check`, `pnpm test`; `pnpm ui:add <component> --dry-run` writes to `src/shared/components/ui/`.
 
 ### P3. The frame (layout components)
+
+State: merged as PR #12 on 2026-10-14.
 
 The first PR of the product, as planned. It is additive: nothing on `main` imports it until P6, so it is reviewed from its tests and from the dev server.
 
@@ -498,10 +502,10 @@ For every PR:
 - [x] Decision D9 applied to the frame on `feat/fe/layout` (to be reviewed) and `feat/fe/mock`
 - [x] `main` run through the five checks in a scratch directory
 - [x] `Frontend CI result` required on `main` (ruleset `protect-main`)
-- [ ] P0 CI merged
+- [x] P0 CI merged
 - [ ] P1 tooling merged
 - [ ] P2 API docs merged
-- [ ] P3 frame merged
+- [x] P3 frame merged
 - [ ] P4 account merged
 - [ ] P5 project and run mocks merged
 - [ ] P6 projects merged, old shell removed
