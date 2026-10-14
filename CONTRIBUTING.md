@@ -235,7 +235,7 @@ Conventions:
 
   | Layer | Folders | May import |
   |---|---|---|
-  | Shared | `src/shared/`: `components/` (`ui/` for shadcn/ui, `frame/` for the frame of the screens, `state/` for query states, `form/` for the fields of forms), `hooks/`, `lib/` (generic utilities), `api/` (server access, `generated/`), `config/` (page addresses) | Other shared code only |
+  | Shared | `src/shared/`: `components/` (`ui/` for shadcn/ui, `frame/` for the frame of the screens, `state/` for query states, `form/` for the fields of forms), `hooks/`, `lib/` (generic utilities), `api/` (server access, `generated/`), `domain/` (the vocabulary of the product that several features share, one folder per topic: `run-status/`, `output-language/`), `config/` (page addresses) | Other shared code only |
   | Features | `src/features/<feature>/` | Shared code |
   | App | `src/app/`, `src/providers/` | Features (through their `index.ts`) and shared code |
 
@@ -243,6 +243,7 @@ Conventions:
   - A shared component that shows feature content receives it as a prop (`children` or a named `ReactNode` prop) from `src/app/`. Example: `src/app/(app)/layout.tsx` passes the thread list and the artifact panel into `AppShell`.
   - The rule covers relative paths too: shared code does not reach `features/`, `app/` or `providers/` with `../`, and a relative import inside a feature never climbs out of the feature folder (shared code is imported with `@/`).
   - Code outside `src/shared/components/frame/` imports the frame from `@/shared/components/frame`, its `index.ts`; files inside the folder use relative imports, and the rest of the shared code does not import the frame.
+  - A topic of `src/shared/domain/` holds the values, types and helpers of one subject of the product, with an `index.ts` that exports them. Code outside the topic imports it from that index (`@/shared/domain/run-status`); files of the topic use relative imports (enforced by ESLint `no-restricted-imports`).
   - `src/mocks/` and `src/test/` are test infrastructure and may import feature types.
 - **Feature public API:** each feature has an `index.ts` that exports only what other code needs (page and shared components, hooks, types). Code outside the feature imports from `@/features/<feature>`, never from a file inside it (enforced by ESLint `no-restricted-imports`); code inside the feature uses relative imports. Anything not exported from `index.ts` is private and can change freely.
 - **Inside a feature:** components render and handle events. Hooks (`hooks/`) hold the queries and the mutations and what follows a call: navigation, the cache, a toast, and the errors of the API turned into what the page shows, such as a message or the problems at the fields of a form. `<feature>.api.ts` sends the requests. A component imports no `*.api` module and no `api-fetch.utils` (enforced by ESLint); it calls a hook. `<feature>.utils.ts` holds pure helpers that know nothing of the API, and `<feature>.schema.ts` the schemas of the forms, with unit tests. The words that a feature shows for the answers of the API, such as a toast or the message of an error by its status or code, are values of `<feature>.constants.ts`; a hook turns an error into its message with `errorMessageOf` of `api-error.utils`, so no hook writes such words itself.

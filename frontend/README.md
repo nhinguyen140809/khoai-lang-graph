@@ -96,6 +96,7 @@ frontend/
 │   │   │   └── state/       # query states: loading, error, empty, not found
 │   │   ├── hooks/, lib/     # generic hooks and utilities
 │   │   ├── api/             # fetch and its errors, query client, API URL, generated/: generated API client (do not edit)
+│   │   ├── domain/          # the vocabulary that several features share, one folder per topic, such as run-status/
 │   │   └── config/          # what the app sets once: the addresses of its pages
 │   ├── mocks/               # MSW handlers shared by dev mocking, unit tests, and E2E
 │   └── test/                # Vitest setup

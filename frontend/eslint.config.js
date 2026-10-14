@@ -35,6 +35,19 @@ const wrappedLibraryImports = [
   },
 ]
 
+// A topic of the domain is used through its index.ts only, as a feature is.
+const domainPatterns = [
+  {
+    group: ['@/shared/domain/*/**'],
+    message:
+      'Import a topic of the domain from its index (@/shared/domain/<topic>). Inside the same topic, use a relative import.',
+  },
+  {
+    regex: '^(\\.\\./)+(shared/)?domain/[^/]+/',
+    message: 'Import a topic of the domain from its index (@/shared/domain/<topic>).',
+  },
+]
+
 const sharedCodePatterns = [
   {
     group: ['@/features', '@/features/**', '@/app/**', '@/providers/**'],
@@ -51,6 +64,7 @@ const sharedCodePatterns = [
     message:
       'Shared code does not import the frame. Inside src/shared/components/frame, use relative imports.',
   },
+  ...domainPatterns,
 ]
 
 // The layers of the frame (README: Frame). A component reaches the state of the frame through
@@ -97,6 +111,7 @@ const featurePatterns = [
     group: ['@/shared/components/frame/**'],
     message: 'Import the frame from @/shared/components/frame, its index.',
   },
+  ...domainPatterns,
 ]
 
 // The deepest folder of a feature that gets its own rule below, counted from the feature folder.
@@ -204,6 +219,7 @@ export default defineConfig([
               group: ['@/shared/components/frame/**'],
               message: 'Import the frame from @/shared/components/frame, its index.',
             },
+            ...domainPatterns,
           ],
         },
       ],
