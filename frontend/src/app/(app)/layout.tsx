@@ -2,8 +2,7 @@ import type { ReactNode } from 'react'
 
 import { ArtifactPanel } from '@/features/artifacts'
 import { ThreadList } from '@/features/threads'
-import { AppSidebar } from '@/shared/components/frame/app-sidebar'
-import { AppShell } from '@/shared/components/frame/AppShell'
+import { AppShell, AppSidebar } from '@/shared/components/frame'
 
 interface AppLayoutProps {
   children: ReactNode

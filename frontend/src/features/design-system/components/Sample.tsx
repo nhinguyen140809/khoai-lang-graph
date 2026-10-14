@@ -35,9 +35,7 @@ export function SampleCard({
 
 /** A small monospaced caption that names the sample next to it: a variant, a token, a tag. */
 export function SampleLabel({ className, ...props }: ComponentProps<'span'>) {
-  return (
-    <span className={cn('font-mono text-[0.625rem] text-muted-foreground', className)} {...props} />
-  )
+  return <span className={cn('font-mono text-3xs text-muted-foreground', className)} {...props} />
 }
 
 /** A captioned group of samples, for example one variant of a component in every color. */

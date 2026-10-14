@@ -36,7 +36,89 @@ const sharedCodePatterns = [
     message:
       'Shared code must not import features or the app layer. Pass feature components in as props from src/app/.',
   },
+  {
+    regex: '^(\\.\\./)+(features|app|providers)(/|$)',
+    message:
+      'Shared code must not import features or the app layer. Pass feature components in as props from src/app/.',
+  },
+  {
+    group: ['@/shared/components/frame', '@/shared/components/frame/**'],
+    message:
+      'Shared code does not import the frame. Inside src/shared/components/frame, use relative imports.',
+  },
 ]
+
+// The layers of the frame (README: Frame). A component reaches the state of the frame through
+// hooks, a store stands alone so that hooks are the one place that combines stores, and the pure
+// files hold no React and no state.
+const frameComponentPattern = {
+  regex: '\\.store$',
+  allowTypeImports: true,
+  message:
+    'A component of the frame reads and changes its state through the hooks of its folder, not a store.',
+}
+
+const frameStorePattern = {
+  regex: '\\.store$|/hooks/',
+  message: 'A store of the frame imports no other store and no hook. Combine stores in a hook.',
+}
+
+const frameHookPattern = {
+  regex: '/components/(?!ui/)',
+  message: 'A hook of the frame imports no component.',
+}
+
+const framePurePaths = [
+  {
+    name: 'react',
+    allowTypeImports: true,
+    message: 'A pure file of the frame holds no React code.',
+  },
+  { name: 'zustand', message: 'A pure file of the frame holds no state.' },
+]
+
+const framePurePattern = {
+  regex: '\\.store$|/hooks/',
+  message: 'A pure file of the frame imports no store and no hook.',
+}
+
+const featurePatterns = [
+  {
+    group: ['@/features', '@/features/**', '@/app/**', '@/providers/**'],
+    message:
+      'A feature must not import another feature or the app layer. Compose features in src/app/, or move the shared code to src/shared.',
+  },
+  {
+    group: ['@/shared/components/frame/**'],
+    message: 'Import the frame from @/shared/components/frame, its index.',
+  },
+]
+
+// The deepest folder of a feature that gets its own rule below, counted from the feature folder.
+const FEATURE_FOLDER_DEPTH = 5
+
+// A relative import that climbs out of its feature folder reaches another feature, the app layer
+// or shared code. How many `../` that takes depends on how deep the file is, so each depth of
+// folder gets its own block.
+const featureFolderBlocks = Array.from({ length: FEATURE_FOLDER_DEPTH + 1 }, (_, depth) => ({
+  files: [`src/features/*/${'*/'.repeat(depth)}*.{ts,tsx}`],
+  rules: {
+    'no-restricted-imports': [
+      'error',
+      {
+        paths: wrappedLibraryImports,
+        patterns: [
+          ...featurePatterns,
+          {
+            regex: `^(\\.\\./){${String(depth + 1)},}`,
+            message:
+              'A relative import stays inside its feature. Import shared code with @/shared; another feature or the app layer is not imported.',
+          },
+        ],
+      },
+    ],
+  },
+}))
 
 export default defineConfig([
   globalIgnores([
@@ -86,8 +168,42 @@ export default defineConfig([
               message:
                 "Import from the feature's index (@/features/<feature>). Inside the same feature, use a relative import.",
             },
+            {
+              regex: '^(\\.\\./)+(src/)?features/[^/]+/',
+              message: "Import from the feature's index (@/features/<feature>).",
+            },
+            {
+              group: ['@/shared/components/frame/**'],
+              message: 'Import the frame from @/shared/components/frame, its index.',
+            },
           ],
         },
+      ],
+    },
+  },
+  {
+    // Browser storage is read and written through src/shared/lib/browser-storage.utils.ts only, which
+    // handles storage that is missing, blocked or full.
+    files: ['src/**/*.{ts,tsx}', 'tests/**/*.ts'],
+    ignores: ['src/shared/lib/browser-storage.utils.ts'],
+    rules: {
+      'no-restricted-globals': [
+        'error',
+        ...['localStorage', 'sessionStorage'].map((name) => ({
+          name,
+          message: 'Use browserStorage or persistStorage from @/shared/lib/browser-storage.utils.',
+        })),
+      ],
+      'no-restricted-properties': [
+        'error',
+        ...['window', 'globalThis', 'self'].flatMap((object) =>
+          ['localStorage', 'sessionStorage'].map((property) => ({
+            object,
+            property,
+            message:
+              'Use browserStorage or persistStorage from @/shared/lib/browser-storage.utils.',
+          })),
+        ),
       ],
     },
   },
@@ -98,6 +214,50 @@ export default defineConfig([
       'no-restricted-imports': [
         'error',
         { paths: wrappedLibraryImports, patterns: sharedCodePatterns },
+      ],
+    },
+  },
+  {
+    // The layers of the frame: components (README: Frame).
+    files: ['src/shared/components/frame/**/*.tsx'],
+    ignores: ['**/__tests__/**'],
+    rules: {
+      'no-restricted-imports': [
+        'error',
+        { paths: wrappedLibraryImports, patterns: [...sharedCodePatterns, frameComponentPattern] },
+      ],
+    },
+  },
+  {
+    // The layers of the frame: hooks.
+    files: ['src/shared/components/frame/**/hooks/*.ts'],
+    rules: {
+      'no-restricted-imports': [
+        'error',
+        { paths: wrappedLibraryImports, patterns: [...sharedCodePatterns, frameHookPattern] },
+      ],
+    },
+  },
+  {
+    // The layers of the frame: stores.
+    files: ['src/shared/components/frame/**/*.store.ts'],
+    rules: {
+      'no-restricted-imports': [
+        'error',
+        { paths: wrappedLibraryImports, patterns: [...sharedCodePatterns, frameStorePattern] },
+      ],
+    },
+  },
+  {
+    // The layers of the frame: pure files.
+    files: ['src/shared/components/frame/**/*.@(utils|constants|types|schema).ts'],
+    rules: {
+      'no-restricted-imports': [
+        'error',
+        {
+          paths: [...wrappedLibraryImports, ...framePurePaths],
+          patterns: [...sharedCodePatterns, framePurePattern],
+        },
       ],
     },
   },
@@ -115,19 +275,11 @@ export default defineConfig([
     rules: {
       'no-restricted-imports': [
         'error',
-        {
-          paths: wrappedLibraryImports,
-          patterns: [
-            {
-              group: ['@/features', '@/features/**', '@/app/**', '@/providers/**'],
-              message:
-                'A feature must not import another feature or the app layer. Compose features in src/app/, or move the shared code to src/shared.',
-            },
-          ],
-        },
+        { paths: wrappedLibraryImports, patterns: featurePatterns },
       ],
     },
   },
+  ...featureFolderBlocks,
   {
     // File naming (CONTRIBUTING: TypeScript / React > Naming). Files whose names are set by
     // a tool (shadcn CLI, Next.js) or by convention (index.ts) are ignored.
@@ -150,7 +302,9 @@ export default defineConfig([
         'error',
         {
           // Components: PascalCase
-          '**/!(__tests__)/*.tsx': '+([A-Z])*([a-zA-Z0-9])',
+          '**/!(__tests__)/!(*.config).tsx': '+([A-Z])*([a-zA-Z0-9])',
+          // Configs that hold React elements, such as the item of a feature on the activity bar
+          '**/!(__tests__)/*.config.tsx': '+([a-z0-9])*(-+([a-z0-9])).config',
           // Hooks: useSomething.ts
           '**/hooks/*.ts': 'use+([A-Z])*([a-zA-Z0-9])',
           // Everything else: <subject>.<kind>.ts, subject in kebab-case

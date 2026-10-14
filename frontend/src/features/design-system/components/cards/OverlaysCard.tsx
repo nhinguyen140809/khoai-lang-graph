@@ -106,8 +106,8 @@ export function OverlaysCard() {
         </DialogTrigger>
         <DialogContent>
           <DialogHeader>
-            <DialogTitle>Rename the thread</DialogTitle>
-            <DialogDescription>The title shows in the thread list.</DialogDescription>
+            <DialogTitle>Rename the project</DialogTitle>
+            <DialogDescription>The name shows in the project list.</DialogDescription>
           </DialogHeader>
           <DialogFooter>
             <DialogClose asChild>
