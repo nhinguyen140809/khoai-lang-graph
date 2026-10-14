@@ -11,6 +11,7 @@ import {
   BreadcrumbSeparator,
 } from '@/shared/components/ui/breadcrumb'
 import { Kbd, KbdGroup } from '@/shared/components/ui/kbd'
+import { routes } from '@/shared/config/routes'
 import { useModifierKeyName } from '@/shared/hooks/useModifierKeyName'
 import { ariaKeyShortcuts, hotkeyKeys } from '@/shared/lib/hotkey.utils'
 
@@ -54,7 +55,7 @@ function Trail({ crumb }: TopBarProps) {
 function HomeLink() {
   return (
     <Link
-      href="/"
+      href={routes.home()}
       className="flex items-center gap-2 rounded-md px-1 py-0.5 outline-none hover:bg-sidebar-accent focus-visible:ring-2 focus-visible:ring-ring/50"
     >
       <LogoMark />

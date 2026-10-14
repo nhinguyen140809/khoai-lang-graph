@@ -95,7 +95,8 @@ frontend/
 │   │   │   ├── frame/       # the frame of every screen: app shell, sidebar, resizable panels
 │   │   │   └── state/       # query states: loading, error, empty, not found
 │   │   ├── hooks/, lib/     # generic hooks and utilities
-│   │   └── api/             # fetch and its errors, query client, API URL, generated/: generated API client (do not edit)
+│   │   ├── api/             # fetch and its errors, query client, API URL, generated/: generated API client (do not edit)
+│   │   └── config/          # what the app sets once: the addresses of its pages
 │   ├── mocks/               # MSW handlers shared by dev mocking, unit tests, and E2E
 │   └── test/                # Vitest setup
 └── tests/e2e/               # Playwright specs
