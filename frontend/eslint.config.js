@@ -100,21 +100,43 @@ const FEATURE_FOLDER_DEPTH = 5
 // A relative import that climbs out of its feature folder reaches another feature, the app layer
 // or shared code. How many `../` that takes depends on how deep the file is, so each depth of
 // folder gets its own block.
+function featureFolderPatterns(depth) {
+  return [
+    ...featurePatterns,
+    {
+      regex: `^(\\.\\./){${String(depth + 1)},}`,
+      message:
+        'A relative import stays inside its feature. Import shared code with @/shared; another feature or the app layer is not imported.',
+    },
+  ]
+}
+
 const featureFolderBlocks = Array.from({ length: FEATURE_FOLDER_DEPTH + 1 }, (_, depth) => ({
   files: [`src/features/*/${'*/'.repeat(depth)}*.{ts,tsx}`],
   rules: {
     'no-restricted-imports': [
       'error',
+      { paths: wrappedLibraryImports, patterns: featureFolderPatterns(depth) },
+    ],
+  },
+}))
+
+// A component of a feature calls the API through a hook of the feature, which holds what follows
+// the call. The blocks repeat the rules above, since a later block replaces the whole rule.
+const featureComponentPattern = {
+  regex: '\\.api$|/shared/api/api-fetch\\.utils$',
+  message: 'A component calls the API through a hook of its feature, which calls <feature>.api.ts.',
+}
+
+const featureComponentBlocks = Array.from({ length: FEATURE_FOLDER_DEPTH }, (_, depth) => ({
+  files: [`src/features/*/components/${'*/'.repeat(depth)}*.{ts,tsx}`],
+  ignores: ['**/__tests__/**'],
+  rules: {
+    'no-restricted-imports': [
+      'error',
       {
         paths: wrappedLibraryImports,
-        patterns: [
-          ...featurePatterns,
-          {
-            regex: `^(\\.\\./){${String(depth + 1)},}`,
-            message:
-              'A relative import stays inside its feature. Import shared code with @/shared; another feature or the app layer is not imported.',
-          },
-        ],
+        patterns: [...featureFolderPatterns(depth + 1), featureComponentPattern],
       },
     ],
   },
@@ -281,6 +303,7 @@ export default defineConfig([
     },
   },
   ...featureFolderBlocks,
+  ...featureComponentBlocks,
   {
     // File naming (CONTRIBUTING: TypeScript / React > Naming). Files whose names are set by
     // a tool (shadcn CLI, Next.js) or by convention (index.ts) are ignored.
@@ -310,12 +333,12 @@ export default defineConfig([
           '**/hooks/*.ts': 'use+([A-Z])*([a-zA-Z0-9])',
           // Everything else: <subject>.<kind>.ts, subject in kebab-case
           '**/!(hooks|__tests__)/*.ts':
-            '+([a-z0-9])*(-+([a-z0-9])).@(api|types|schema|store|reducer|config|constants|utils|handlers|fixtures|setup|spec)',
+            '+([a-z0-9])*(-+([a-z0-9])).@(api|keys|queries|types|schema|store|reducer|config|constants|utils|handlers|fixtures|setup|spec)',
           // Unit tests: only in a __tests__ folder, named after the file under test plus .test
           '**/__tests__/*.tsx': '+([A-Z])*([a-zA-Z0-9]).test',
           '**/hooks/__tests__/*.ts': 'use+([A-Z])*([a-zA-Z0-9]).test',
           '**/!(hooks)/__tests__/*.ts':
-            '+([a-z0-9])*(-+([a-z0-9])).@(api|types|schema|store|reducer|config|constants|utils|handlers|fixtures|setup).test',
+            '+([a-z0-9])*(-+([a-z0-9])).@(api|keys|queries|types|schema|store|reducer|config|constants|utils|handlers|fixtures|setup).test',
         },
       ],
       'check-file/folder-naming-convention': [

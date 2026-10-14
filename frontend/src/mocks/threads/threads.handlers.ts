@@ -1,6 +1,6 @@
 import { delay, http, HttpResponse } from 'msw'
 
-import { mockScenario } from './mock-scenario.utils'
+import { mockScenario } from '../shared/mock-scenario.utils'
 import { mockThreads } from './threads.fixtures'
 
 export const threadHandlers = [

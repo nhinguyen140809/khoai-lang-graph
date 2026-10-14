@@ -235,7 +235,7 @@ Conventions:
 
   | Layer | Folders | May import |
   |---|---|---|
-  | Shared | `src/shared/`: `components/` (`ui/` for shadcn/ui, `frame/` for the frame of the screens, `state/` for query states), `hooks/`, `lib/` (generic utilities), `api/` (server access, `generated/`) | Other shared code only |
+  | Shared | `src/shared/`: `components/` (`ui/` for shadcn/ui, `frame/` for the frame of the screens, `state/` for query states), `hooks/`, `lib/` (generic utilities), `api/` (server access, `generated/`), `config/` (page addresses) | Other shared code only |
   | Features | `src/features/<feature>/` | Shared code |
   | App | `src/app/`, `src/providers/` | Features (through their `index.ts`) and shared code |
 
@@ -245,10 +245,14 @@ Conventions:
   - Code outside `src/shared/components/frame/` imports the frame from `@/shared/components/frame`, its `index.ts`; files inside the folder use relative imports, and the rest of the shared code does not import the frame.
   - `src/mocks/` and `src/test/` are test infrastructure and may import feature types.
 - **Feature public API:** each feature has an `index.ts` that exports only what other code needs (page and shared components, hooks, types). Code outside the feature imports from `@/features/<feature>`, never from a file inside it (enforced by ESLint `no-restricted-imports`); code inside the feature uses relative imports. Anything not exported from `index.ts` is private and can change freely.
+- **Inside a feature:** components render and handle events. Hooks (`hooks/`) hold the queries and the mutations and what follows a call: navigation, the cache, a toast, and the errors of the API turned into what the page shows, such as a message or the problems at the fields of a form. `<feature>.api.ts` sends the requests. A component imports no `*.api` module and no `api-fetch.utils` (enforced by ESLint); it calls a hook. `<feature>.utils.ts` holds pure helpers that know nothing of the API, and `<feature>.schema.ts` the schemas of the forms, with unit tests. The words that a feature shows for the answers of the API, such as a toast or the message of an error by its status or code, are values of `<feature>.constants.ts`; a hook turns an error into its message with `errorMessageOf` of `api-error.utils`, so no hook writes such words itself.
 - **Components:** function components, named exports, one component per file. Next.js routing files (`page.tsx`, `layout.tsx`, `error.tsx`, ...) are the exception: they must use a default export.
 - **Routes stay thin:** `src/app/` holds only Next.js routing files. A `page.tsx` renders a component from `src/features/`; the frame lives in `src/shared/components/frame/`, global providers in `src/providers/`.
 - **Server and Client Components:** files in `src/app/` are Server Components by default. Add `'use client'` at the top of a component file that uses state, effects, event handlers, or browser APIs. Code that reads `window`, `document`, or `localStorage` runs in an effect or event handler, never during render, so the server-rendered HTML matches the first client render.
 - **Server state** via TanStack Query only - don't copy server data into Zustand/`useState`.
+- **Addresses of pages** come from `routes` of `@/shared/config/routes`, a factory grouped as the folders of `src/app/` are (`routes.home()`, `routes.settings()`); a page with an id gets a group that takes the id once. Code writes no path as a literal. Each leaf writes its whole path in one template given to `checkedRoute`, so that the route types check it.
+- **Query keys** come from the key factory of the feature, `<feature>.keys.ts`: an object of functions from the widest key to the narrowest, each key starting with the one above. A query and every invalidation of it call the same function; no key is written as an inline array.
+- **Query options:** a query used by one hook keeps its `queryFn` and options in that hook. A query that is also read or written elsewhere (`setQueryData`, `getQueryData`, `useQueries`, a prefetch) is defined once with `queryOptions` in `<feature>.queries.ts`, on a key of the key factory, and every use calls it, so that they share the key, the function and the type of the data.
 - **Query states:** a component that shows data from a query handles four states, in this order: loading (`isPending`), error (`isError`), empty (success with no data), success. The first three use the shared components from `@/shared/components/state`:
 
   | State | Component | Rules |
@@ -280,7 +284,7 @@ Conventions:
 | E2E test | `<subject>.spec.ts` | `tests/e2e/chat.spec.ts` |
 
 - **Subject** (before the first dot): what the file is about, in kebab-case. Always include it, even when the folder already says it (`features/chat/chat.api.ts`), so names are unique in search results and editor tabs.
-- **Kind** (after the dot): the role of the file, one of `api`, `types`, `schema`, `store`, `reducer`, `config`, `constants`, `utils`, `handlers`, `fixtures`, `setup`, `spec`. Need a new kind? Add it to the list here and in `eslint.config.js` in the same PR.
+- **Kind** (after the dot): the role of the file, one of `api`, `keys`, `queries`, `types`, `schema`, `store`, `reducer`, `config`, `constants`, `utils`, `handlers`, `fixtures`, `setup`, `spec`. Need a new kind? Add it to the list here and in `eslint.config.js` in the same PR.
 - **Exceptions** (names set by a tool or convention): `src/shared/components/ui/**` and `src/shared/hooks/use-mobile.ts` (shadcn CLI), `src/shared/lib/utils.ts` (shadcn alias), Next.js file conventions (below), `index.ts` barrels, `*.d.ts`, and root config files (`next.config.ts`, ...).
 - **Next.js file conventions** keep the names the framework requires:
   - Routing files in `src/app/**`: `page.tsx`, `layout.tsx`, `loading.tsx`, `error.tsx`, `not-found.tsx`, `global-error.tsx`, `template.tsx`, `default.tsx`, `route.ts`.
