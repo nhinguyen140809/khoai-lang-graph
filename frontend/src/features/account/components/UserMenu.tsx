@@ -70,7 +70,7 @@ export function UserMenu() {
           ) : me.isError ? (
             <UserIcon aria-hidden />
           ) : (
-            <Avatar size="sm">
+            <Avatar size="sm" aria-hidden>
               {me.data.avatar_url !== null && <AvatarImage src={me.data.avatar_url} alt="" />}
               <AvatarFallback>{initials(me.data.display_name)}</AvatarFallback>
             </Avatar>
