@@ -1,6 +1,7 @@
 import { render, screen } from '@testing-library/react'
 import userEvent from '@testing-library/user-event'
 import { http, HttpResponse } from 'msw'
+import { toast } from 'sonner'
 import { afterEach, beforeEach, describe, expect, it, vi } from 'vitest'
 
 import { server } from '@/mocks/msw-server.setup'
@@ -47,11 +48,14 @@ describe('RegisterPage', () => {
     server.use(http.post('/api/v1/auth/login', () => new HttpResponse(null, { status: 500 })))
     render(<RegisterPage next="/projects/p1/console" />, { wrapper: TestProviders })
 
+    const info = vi.spyOn(toast, 'info')
     await fillForm()
 
     await vi.waitFor(() => {
       expect(routerMock.replace).toHaveBeenCalledWith('/login?next=%2Fprojects%2Fp1%2Fconsole')
     })
+    expect(info).toHaveBeenCalledWith('The account is created. Sign in with it.')
+    info.mockRestore()
   })
 
   it('shows a field problem of the API at its field', async () => {
@@ -101,5 +105,58 @@ describe('RegisterPage', () => {
     await userEvent.click(screen.getByRole('button', { name: 'Create account' }))
 
     expect(await screen.findByText('Enter an email address.')).toBeInTheDocument()
+  })
+  it('asks for the name, the email and the password', async () => {
+    render(<RegisterPage next={null} />, { wrapper: TestProviders })
+
+    await userEvent.click(screen.getByRole('button', { name: 'Create account' }))
+
+    expect(await screen.findByText('Enter your name.')).toBeInTheDocument()
+    expect(screen.getByText('Enter an email address.')).toBeInTheDocument()
+    expect(screen.getByText('Enter a password.')).toBeInTheDocument()
+  })
+
+  it('shows a failure without field problems under the form', async () => {
+    server.use(http.post('/api/v1/auth/register', () => new HttpResponse(null, { status: 500 })))
+    render(<RegisterPage next={null} />, { wrapper: TestProviders })
+
+    await fillForm()
+
+    expect(await screen.findByRole('alert')).toHaveTextContent(
+      'Failed to create the account (HTTP 500)',
+    )
+    expect(routerMock.replace).not.toHaveBeenCalled()
+  })
+
+  it('links to the sign-in page, keeping the page to return to', () => {
+    render(<RegisterPage next="/threads/t1" />, { wrapper: TestProviders })
+
+    expect(screen.getByRole('link', { name: 'Sign in' })).toHaveAttribute(
+      'href',
+      '/login?next=%2Fthreads%2Ft1',
+    )
+  })
+
+  it('disables the button while the account is created', async () => {
+    let answer: (() => void) | undefined
+    const answered = new Promise<void>((resolve) => {
+      answer = resolve
+    })
+    server.use(
+      http.post('/api/v1/auth/register', async () => {
+        await answered
+        return new HttpResponse(null, { status: 201 })
+      }),
+    )
+    render(<RegisterPage next={null} />, { wrapper: TestProviders })
+
+    await fillForm()
+
+    expect(await screen.findByLabelText('Creating the account')).toBeInTheDocument()
+    expect(screen.getByRole('button', { name: /Create account/ })).toBeDisabled()
+    answer?.()
+    await vi.waitFor(() => {
+      expect(routerMock.replace).toHaveBeenCalledWith('/projects')
+    })
   })
 })

@@ -76,4 +76,80 @@ describe('LoginPage', () => {
       '/register?next=%2Fprojects%2Fp1%2Fconsole',
     )
   })
+  it('says to wait after too many attempts', async () => {
+    server.use(http.post('/api/v1/auth/login', () => new HttpResponse(null, { status: 429 })))
+    render(<LoginPage next={null} />, { wrapper: TestProviders })
+
+    await signIn('linh.pham@example.com', 'secret')
+
+    expect(await screen.findByRole('alert')).toHaveTextContent(
+      'Too many attempts. Wait a moment, then try again.',
+    )
+  })
+
+  it('shows another failure with its message', async () => {
+    server.use(
+      http.post('/api/v1/auth/login', () =>
+        HttpResponse.json({ status: 503, detail: 'Down for maintenance.' }, { status: 503 }),
+      ),
+    )
+    render(<LoginPage next={null} />, { wrapper: TestProviders })
+
+    await signIn('linh.pham@example.com', 'secret')
+
+    expect(await screen.findByRole('alert')).toHaveTextContent(
+      'Failed to sign in (HTTP 503): Down for maintenance.',
+    )
+    expect(routerMock.replace).not.toHaveBeenCalled()
+  })
+
+  it('shows a failure of the network', async () => {
+    server.use(http.post('/api/v1/auth/login', () => HttpResponse.error()))
+    render(<LoginPage next={null} />, { wrapper: TestProviders })
+
+    await signIn('linh.pham@example.com', 'secret')
+
+    expect((await screen.findByRole('alert')).textContent).not.toBe('')
+    expect(routerMock.replace).not.toHaveBeenCalled()
+  })
+
+  it('sends the email without the spaces around it', async () => {
+    let sent: unknown = null
+    server.use(
+      http.post('/api/v1/auth/login', async ({ request }) => {
+        sent = await request.json()
+        return new HttpResponse(null, { status: 204 })
+      }),
+    )
+    render(<LoginPage next={null} />, { wrapper: TestProviders })
+
+    await signIn('  linh.pham@example.com  ', 'secret')
+
+    await vi.waitFor(() => {
+      expect(sent).toEqual({ email: 'linh.pham@example.com', password: 'secret' })
+    })
+  })
+
+  it('disables the button while signing in', async () => {
+    let answer: (() => void) | undefined
+    const answered = new Promise<void>((resolve) => {
+      answer = resolve
+    })
+    server.use(
+      http.post('/api/v1/auth/login', async () => {
+        await answered
+        return new HttpResponse(null, { status: 204 })
+      }),
+    )
+    render(<LoginPage next={null} />, { wrapper: TestProviders })
+
+    await signIn('linh.pham@example.com', 'secret')
+
+    expect(await screen.findByLabelText('Signing in')).toBeInTheDocument()
+    expect(screen.getByRole('button', { name: /Sign in/ })).toBeDisabled()
+    answer?.()
+    await vi.waitFor(() => {
+      expect(routerMock.replace).toHaveBeenCalledWith('/projects')
+    })
+  })
 })
