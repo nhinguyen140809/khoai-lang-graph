@@ -216,7 +216,9 @@ Vietnamese text needs a font that ships the `vietnamese` subset. The subsets of 
 
 - A route is a folder in `src/app/` with a `page.tsx`. The folder path is the URL: `src/app/(app)/settings/page.tsx` is `/settings`.
 - `(app)` is a route group: the name in parentheses is not part of the URL. Its `layout.tsx` wraps every page of the group in the app shell, and its `error.tsx` is the error boundary for those pages. A page that must not show the app shell (for example a public landing page) goes in another group with its own layout.
+- `(auth)` is the group of the pages that need no session: `/login` signs in and `/register` creates an account. `?next=` gives the page to return to afterwards.
 - `src/app/` holds only routing files. A `page.tsx` renders a component from `src/features/`.
+- Every endpoint except register, login and health answers 401 without a session. When a request sent with `apiRequest` or `apiCommand` (`src/shared/api/api-fetch.utils.ts`) answers 401, the query client (`src/shared/api/query-client.config.ts`) opens `/login?next=<the page>`, which returns to the page after signing in; `next` is kept only when it is a path of this app. Signing out (`UserMenu` of `features/account`) ends the session, then loads the sign-in page in full, which drops what the app kept in memory.
 - Files in `src/app/` are Server Components: they render on the server and cannot use state, effects, or event handlers. A component that needs those starts with `'use client'`. Most feature components are Client Components.
 - Links use `<Link href="...">` from `next/link`. `href` is type-checked against the existing routes (`typedRoutes` in `next.config.ts`); `pnpm dev` and `pnpm build` regenerate the route types.
 - A library that touches `window` or `document` while it loads (PDF viewer, code editor, graph layout worker) is imported with `next/dynamic` and `ssr: false` from a Client Component.
@@ -324,7 +326,8 @@ All mock code lives in `src/mocks/`, in one folder per part of the API, named li
 src/mocks/
 ├── msw-browser.setup.ts  # the handlers of the browser worker (dev mocking, E2E)
 ├── msw-server.setup.ts   # the handlers of the unit tests
-├── shared/               # scenarios
+├── shared/               # records, ids, scenarios, error answers
+├── account/              # /auth, /me
 ├── threads/              # threads
 └── runs/                 # runs, the stream
 ```
@@ -338,6 +341,17 @@ Each folder holds a pair of files per API resource:
 
 The same handlers serve `pnpm dev:mock`, the unit tests, and the E2E tests, so a fixture is written once. Example: `threads/threads.fixtures.ts` and `threads/threads.handlers.ts` back `GET /api/v1/threads`.
 
+| Resource     | Endpoints                                                                                                            |
+| ------------ | -------------------------------------------------------------------------------------------------------------------- |
+| `threads`    | `GET /threads`                                                                                                       |
+| `runs`       | `POST /threads/{thread_id}/runs`                                                                                     |
+| `run-stream` | `GET /runs/{run_id}/stream` (browser only)                                                                           |
+| `auth`       | `POST /auth/register`, `POST /auth/login`, `POST /auth/logout`, and a 401 for every other endpoint without a session |
+| `me`         | `GET /me`                                                                                                            |
+
+- The ids of the mock data are in `shared/mock-ids.constants.ts`; each starts like the id of the same record in the API examples.
+- The mock server keeps the session and the user as records (`shared/mock-db.utils.ts`). The browser worker keeps them in browser storage, so they survive a reload; `?mock-reset` in the page address starts again from the fixtures. Unit tests keep them in memory, and the test setup resets them after each test.
+
 To mock a new endpoint:
 
 1. Add the data to `src/mocks/<folder>/<resource>.fixtures.ts`, typed with the type from `src/features/<feature>/`.
@@ -347,16 +361,9 @@ To mock a new endpoint:
 
 ### Mock scenarios
 
-A handler can answer differently depending on a parameter in the page URL, so every state of a screen can be seen in `pnpm dev:mock`:
+A handler can answer differently depending on a parameter in the page URL, so every state of a screen can be seen in `pnpm dev:mock`. The parameter name is `mock-<resource>`: `?mock-threads=error` makes the threads handlers answer with an error. A handler reads it with `mockScenario('<resource>')` from `src/mocks/shared/mock-scenario.utils.ts` and supports the scenarios `empty`, `error`, and `loading`; without the parameter it returns the fixtures. For an endpoint that returns one record, `empty` answers 404.
 
-| URL                      | The threads handler returns        |
-| ------------------------ | ---------------------------------- |
-| `/`                      | The fixtures                       |
-| `/?mock-threads=empty`   | An empty list                      |
-| `/?mock-threads=error`   | HTTP 500                           |
-| `/?mock-threads=loading` | Nothing; the request stays pending |
-
-The parameter name is `mock-<resource>`. A handler reads it with `mockScenario('<resource>')` from `src/mocks/shared/mock-scenario.utils.ts` and supports the scenarios: `empty`, `error`, `loading`. Without the parameter it returns the fixtures.
+The parameters and the address of every state of every screen are listed in [Mock scenarios](src/mocks/README.md). Add the addresses of a screen there when the screen is built.
 
 Components never import fixtures. They call the API functions of their feature, and MSW answers the request, so switching to the real backend changes no component code. Handlers that need a browser-only API (the SSE stream) are registered only in `msw-browser.setup.ts`.
 
