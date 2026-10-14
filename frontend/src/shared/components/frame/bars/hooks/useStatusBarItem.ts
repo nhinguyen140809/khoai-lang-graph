@@ -1,3 +1,5 @@
+'use client'
+
 import { useEffect, useId } from 'react'
 
 import { useStatusBarStore } from '../status-bar.store'

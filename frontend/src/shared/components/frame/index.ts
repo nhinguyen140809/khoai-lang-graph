@@ -1,6 +1,7 @@
 // The frame of every screen. Code outside this folder imports it from here, so the files can move
 // between its folders; files inside the folder import each other with relative paths. The index
-// gives components, hooks and types; the stores stay inside the frame, behind its hooks.
+// gives components, hooks and types; the stores stay inside the frame, behind its hooks. Server
+// Components import the index too, so every hook it gives starts with 'use client'.
 export type { Activity, FeatureActivity, TabIcons } from './activities/activity.types'
 export { LogoMark } from './bars/components/LogoMark'
 export { PageCrumb } from './bars/components/PageCrumb'
