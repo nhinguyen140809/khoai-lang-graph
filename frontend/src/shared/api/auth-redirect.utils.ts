@@ -56,11 +56,20 @@ export function nextParam(query: Record<string, string | string[] | undefined>):
   return typeof value === 'string' ? value : null
 }
 
+/** The sign-in page that returns to `location` afterwards; null on a sign-in or account page. */
+export function signInHref({
+  pathname,
+  search,
+  hash,
+}: Pick<Location, 'pathname' | 'search' | 'hash'>): Route | null {
+  if (authPages.includes(pathname)) return null
+  return authHref(AuthPage.Login, `${pathname}${search}${hash}`)
+}
+
 /** Leaves the page for the sign-in page, which returns here afterwards. */
 export function redirectToSignIn() {
-  const { pathname, search, hash } = window.location
-  if (authPages.includes(pathname)) return
-  loadPage(authHref(AuthPage.Login, `${pathname}${search}${hash}`))
+  const href = signInHref(window.location)
+  if (href !== null) loadPage(href)
 }
 
 /**

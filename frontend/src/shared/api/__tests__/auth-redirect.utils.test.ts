@@ -1,6 +1,6 @@
 import { describe, expect, it } from 'vitest'
 
-import { authHref, nextParam, safeNextPath } from '../auth-redirect.utils'
+import { authHref, nextParam, safeNextPath, signInHref } from '../auth-redirect.utils'
 
 describe('safeNextPath', () => {
   it('keeps a path of the app', () => {
@@ -39,6 +39,29 @@ describe('authHref', () => {
       '/login?next=%2Fprojects%2Fp1%2Fconsole',
     )
     expect(authHref('/register', null)).toBe('/register')
+  })
+
+  it('drops a page to return to that is not of this app, or is the project list', () => {
+    expect(authHref('/login', 'https://example.com')).toBe('/login')
+    expect(authHref('/login', '/projects')).toBe('/login')
+    expect(authHref('/register', '/login')).toBe('/register')
+  })
+})
+
+describe('signInHref', () => {
+  it('returns to the whole address: path, query and fragment', () => {
+    expect(signInHref({ pathname: '/threads/t1', search: '?tab=runs', hash: '#step-3' })).toBe(
+      '/login?next=%2Fthreads%2Ft1%3Ftab%3Druns%23step-3',
+    )
+  })
+
+  it('needs no page to return to from the project list', () => {
+    expect(signInHref({ pathname: '/projects', search: '', hash: '' })).toBe('/login')
+  })
+
+  it('stays on a sign-in or account page', () => {
+    expect(signInHref({ pathname: '/login', search: '?next=%2Fsettings', hash: '' })).toBeNull()
+    expect(signInHref({ pathname: '/register', search: '', hash: '' })).toBeNull()
   })
 })
 
