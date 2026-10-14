@@ -1,12 +1,13 @@
 'use client'
 
-import { useMutation, useQueryClient } from '@tanstack/react-query'
+import { useMutation } from '@tanstack/react-query'
 import { LogOutIcon, RotateCcwIcon, SettingsIcon, UserIcon } from 'lucide-react'
 import Link from 'next/link'
-import { useRouter } from 'next/navigation'
 import { useTheme } from 'next-themes'
 import { toast } from 'sonner'
 
+import { ApiError } from '@/shared/api/api-fetch.utils'
+import { openPage } from '@/shared/api/auth-redirect.utils'
 import { Avatar, AvatarFallback, AvatarImage } from '@/shared/components/ui/avatar'
 import { Button } from '@/shared/components/ui/button'
 import {
@@ -41,22 +42,21 @@ function initials(name: string): string {
   )
 }
 
-/** The account of the signed-in user, the theme, and signing out, at the bottom of the activity bar. */
+/** The account of the signed-in user, the theme, and signing out, for the bottom of the activity bar. */
 export function UserMenu() {
   const me = useMe()
   const { theme, setTheme } = useTheme()
   // The stored theme is only known in the browser; until hydration no option is marked.
   const hydrated = useIsHydrated()
-  const router = useRouter()
-  const queryClient = useQueryClient()
   const signOut = useMutation({
     mutationFn: logout,
     onSuccess: () => {
-      router.replace('/login')
-      // The data of this session must not show to whoever signs in next on this page.
-      queryClient.clear()
+      // A full page load: the data of this session must not show to whoever signs in next.
+      openPage('/login')
     },
     onError: (error) => {
+      // Without a session the query client already opens the sign-in page.
+      if (error instanceof ApiError && error.status === 401) return
       toast.error(error.message)
     },
   })

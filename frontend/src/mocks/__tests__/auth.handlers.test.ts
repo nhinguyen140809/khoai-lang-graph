@@ -25,6 +25,12 @@ describe('auth handlers', () => {
     expect((await fetch(apiUrl('/api/v1/projects'))).status).toBe(200)
   })
 
+  it('answers 401 to signing out without a session', async () => {
+    expect((await post('/api/v1/auth/logout')).status).toBe(204)
+
+    expect((await post('/api/v1/auth/logout')).status).toBe(401)
+  })
+
   it('creates an account that GET /me then returns', async () => {
     const created = await post('/api/v1/auth/register', {
       email: 'An@Example.com',

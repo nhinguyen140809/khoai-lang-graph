@@ -1,11 +1,12 @@
 'use client'
 
 import { zodResolver } from '@hookform/resolvers/zod'
-import { useMutation } from '@tanstack/react-query'
+import { useMutation, useQueryClient } from '@tanstack/react-query'
 import type { Route } from 'next'
 import Link from 'next/link'
 import { useRouter } from 'next/navigation'
 import { useForm } from 'react-hook-form'
+import { toast } from 'sonner'
 import { z } from 'zod'
 
 import { ApiError } from '@/shared/api/api-fetch.utils'
@@ -41,10 +42,17 @@ interface RegisterPageProps {
 /** Creates an account, then signs in with it: creating an account does not start a session. */
 export function RegisterPage({ next }: RegisterPageProps) {
   const router = useRouter()
+  const queryClient = useQueryClient()
   const createAccount = useMutation({
+    // Resolves to whether signing in worked too.
     mutationFn: async (body: RegisterBody) => {
       await register(body)
-      await login({ email: body.email, password: body.password })
+      try {
+        await login({ email: body.email, password: body.password })
+      } catch {
+        return false
+      }
+      return true
     },
   })
   const form = useForm<FormValues>({
@@ -55,8 +63,16 @@ export function RegisterPage({ next }: RegisterPageProps) {
 
   const onSubmit = form.handleSubmit((values) => {
     createAccount.mutate(values, {
-      onSuccess: () => {
-        router.replace(safeNextPath(next) as Route)
+      onSuccess: (signedIn) => {
+        // Nothing cached for an earlier session shows to the new account.
+        queryClient.removeQueries()
+        if (signedIn) {
+          router.replace(safeNextPath(next) as Route)
+          return
+        }
+        // The account exists, so creating it again would fail: sign in with it instead.
+        toast.info('The account is created. Sign in with it.')
+        router.replace(authHref('/login', next) as Route)
       },
       onError: (error) => {
         if (!(error instanceof ApiError)) return
@@ -67,12 +83,12 @@ export function RegisterPage({ next }: RegisterPageProps) {
     })
   })
 
-  // Field problems are shown at their field; any other failure under the form.
-  const formError =
-    createAccount.isError &&
-    !(createAccount.error instanceof ApiError && createAccount.error.fieldErrors.length > 0)
-      ? createAccount.error.message
-      : null
+  // Field problems are shown at their field; any other failure, or a problem of a field the form
+  // does not have, under the form.
+  const shownAtField =
+    createAccount.error instanceof ApiError &&
+    createAccount.error.fieldErrors.some(({ field }) => isFormField(field))
+  const formError = createAccount.isError && !shownAtField ? createAccount.error.message : null
 
   return (
     <AuthCard

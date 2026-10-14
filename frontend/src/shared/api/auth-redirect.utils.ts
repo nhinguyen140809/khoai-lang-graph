@@ -7,17 +7,27 @@ export const authPaths: readonly string[] = ['/login', '/register']
 /** The page to return to after signing in, when none is given. */
 export const DEFAULT_AFTER_SIGN_IN = '/projects'
 
+// Any origin works here: only a `next` that stays on it is kept.
+const BASE = 'http://app.invalid'
+
 /**
  * The page to return to after signing in: a path of this app only, never another origin, so that
- * a link cannot send the user elsewhere after they sign in.
+ * a link cannot send the user elsewhere after they sign in. The check runs on the parsed address,
+ * because the URL parser drops tabs and line breaks and reads a backslash as a slash.
  */
 export function safeNextPath(next: string | null | undefined): string {
-  if (next == null || !next.startsWith('/') || next.startsWith('//') || next.startsWith('/\\')) {
+  if (!next?.startsWith('/')) return DEFAULT_AFTER_SIGN_IN
+  let url: URL
+  try {
+    url = new URL(next, BASE)
+  } catch {
     return DEFAULT_AFTER_SIGN_IN
   }
-  return authPaths.some((path) => next === path || next.startsWith(`${path}?`))
+  if (url.origin !== BASE) return DEFAULT_AFTER_SIGN_IN
+  const page = url.pathname.replace(/(.)\/+$/, '$1')
+  return authPaths.includes(page)
     ? DEFAULT_AFTER_SIGN_IN
-    : next
+    : `${url.pathname}${url.search}${url.hash}`
 }
 
 /** The address of a sign-in or account page that returns to `next` afterwards. */
@@ -26,12 +36,17 @@ export function authHref(page: '/login' | '/register', next: string | null | und
   return target === DEFAULT_AFTER_SIGN_IN ? page : `${page}?next=${encodeURIComponent(target)}`
 }
 
-/**
- * Leaves the page for the sign-in page, which returns here afterwards. A full page load also
- * drops what the app kept in memory for the previous session.
- */
+/** Leaves the page for the sign-in page, which returns here afterwards. */
 export function redirectToSignIn() {
-  const { pathname, search } = window.location
+  const { pathname, search, hash } = window.location
   if (authPaths.includes(pathname)) return
-  window.location.assign(authHref('/login', `${pathname}${search}`))
+  openPage(authHref('/login', `${pathname}${search}${hash}`))
+}
+
+/**
+ * Opens `href` with a full page load, which drops what the app kept in memory, such as the query
+ * cache, so that nothing of the previous session shows on the next page.
+ */
+export function openPage(href: string) {
+  window.location.assign(href)
 }

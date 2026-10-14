@@ -11,7 +11,7 @@ import { problem } from './problem.utils'
 const sessionRecord = mockRecord('session', () => ({ signedIn: true }))
 
 // Endpoints that answer without a session.
-const PUBLIC_PATHS = ['/api/v1/auth/register', '/api/v1/auth/login', '/api/v1/auth/logout']
+const PUBLIC_PATHS = ['/api/v1/auth/register', '/api/v1/auth/login', '/api/v1/health']
 
 interface Credentials {
   email?: unknown
@@ -35,13 +35,19 @@ function missingFields(credentials: Credentials, fields: (keyof Credentials)[]) 
 }
 
 export const authHandlers = [
-  // Every other endpoint answers 401 without a session, as the API does. Returning nothing passes
-  // the request on to the handler of its endpoint.
-  http.all('/api/v1/*', ({ request }) => {
-    const { pathname } = new URL(request.url)
-    if (PUBLIC_PATHS.includes(pathname) || sessionRecord.get().signedIn) return undefined
-    return problem(401, 'unauthenticated', 'Unauthenticated', 'Sign in to continue.')
-  }),
+  // Every other endpoint answers 401 without a session, as the API does. The handler matches only
+  // then, so that a request with no handler of its own is still reported as unhandled.
+  http.all(
+    ({ request }) => {
+      const { pathname } = new URL(request.url)
+      return (
+        pathname.startsWith('/api/v1/') &&
+        !PUBLIC_PATHS.includes(pathname) &&
+        !sessionRecord.get().signedIn
+      )
+    },
+    () => problem(401, 'unauthenticated', 'Unauthenticated', 'Sign in to continue.'),
+  ),
 
   http.post('/api/v1/auth/login', async ({ request }) => {
     const credentials = await readCredentials(request)

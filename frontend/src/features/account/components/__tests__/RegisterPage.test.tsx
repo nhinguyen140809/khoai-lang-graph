@@ -1,7 +1,7 @@
 import { render, screen } from '@testing-library/react'
 import userEvent from '@testing-library/user-event'
 import { http, HttpResponse } from 'msw'
-import { beforeEach, describe, expect, it, vi } from 'vitest'
+import { afterEach, beforeEach, describe, expect, it, vi } from 'vitest'
 
 import { server } from '@/mocks/msw-server.setup'
 import { routerMock } from '@/test/next-mocks.utils'
@@ -14,6 +14,10 @@ vi.mock('next/link', async () => (await import('@/test/next-mocks.utils')).linkM
 
 beforeEach(() => {
   routerMock.replace.mockClear()
+})
+
+afterEach(() => {
+  server.events.removeAllListeners()
 })
 
 async function fillForm() {
@@ -37,7 +41,17 @@ describe('RegisterPage', () => {
       expect(routerMock.replace).toHaveBeenCalledWith('/projects')
     })
     expect(requests).toEqual(['POST /api/v1/auth/register', 'POST /api/v1/auth/login'])
-    server.events.removeAllListeners()
+  })
+
+  it('opens the sign-in page when signing in with the new account fails', async () => {
+    server.use(http.post('/api/v1/auth/login', () => new HttpResponse(null, { status: 500 })))
+    render(<RegisterPage next="/projects/p1/console" />, { wrapper: TestProviders })
+
+    await fillForm()
+
+    await vi.waitFor(() => {
+      expect(routerMock.replace).toHaveBeenCalledWith('/login?next=%2Fprojects%2Fp1%2Fconsole')
+    })
   })
 
   it('shows a field problem of the API at its field', async () => {
@@ -60,6 +74,24 @@ describe('RegisterPage', () => {
     expect(await screen.findByText('An account with this email exists.')).toBeInTheDocument()
     expect(screen.getByLabelText('Email')).toHaveAttribute('aria-invalid', 'true')
     expect(routerMock.replace).not.toHaveBeenCalled()
+  })
+
+  it('shows a problem of a field the form does not have under the form', async () => {
+    server.use(
+      http.post('/api/v1/auth/register', () =>
+        HttpResponse.json(
+          { status: 422, errors: [{ field: 'body', message: 'Malformed JSON.' }] },
+          { status: 422 },
+        ),
+      ),
+    )
+    render(<RegisterPage next={null} />, { wrapper: TestProviders })
+
+    await fillForm()
+
+    expect(await screen.findByRole('alert')).toHaveTextContent(
+      'Failed to create the account (HTTP 422)',
+    )
   })
 
   it('checks the email before sending', async () => {

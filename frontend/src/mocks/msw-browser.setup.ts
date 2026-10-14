@@ -8,6 +8,7 @@ import { interruptHandlers } from './interrupts.handlers'
 import { meHandlers } from './me.handlers'
 import { messageHandlers } from './messages.handlers'
 import { keepMockDataInBrowser, resetMockData } from './mock-db.utils'
+import { pageParam } from './mock-scenario.utils'
 import { modelHandlers } from './models.handlers'
 import { projectHandlers } from './projects.handlers'
 import { streamHandlers } from './run-stream.handlers'
@@ -18,7 +19,7 @@ import { workflowStateHandlers } from './workflow-state.handlers'
 
 // The records of the mock server survive a reload; `?mock-reset` starts again from the fixtures.
 keepMockDataInBrowser()
-if (new URLSearchParams(window.location.search).has('mock-reset')) resetMockData()
+if (pageParam('mock-reset') !== null) resetMockData()
 
 export const worker = setupWorker(
   ...authHandlers,

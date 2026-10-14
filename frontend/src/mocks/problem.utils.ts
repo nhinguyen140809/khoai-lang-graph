@@ -1,9 +1,6 @@
 import { HttpResponse } from 'msw'
 
-interface FieldProblem {
-  field: string
-  message: string
-}
+import type { FieldProblem } from '@/shared/api/api-fetch.utils'
 
 /** An error response in the Problem Details format of the API. */
 export function problem(

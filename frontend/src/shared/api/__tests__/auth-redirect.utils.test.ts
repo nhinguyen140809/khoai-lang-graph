@@ -7,6 +7,7 @@ describe('safeNextPath', () => {
     expect(safeNextPath('/projects/p1/console?mock-run-state=done')).toBe(
       '/projects/p1/console?mock-run-state=done',
     )
+    expect(safeNextPath('/projects/p1/console#step-3')).toBe('/projects/p1/console#step-3')
   })
 
   it.each([
@@ -17,13 +18,18 @@ describe('safeNextPath', () => {
     '//example.com/x',
     '/\\example.com',
     'projects',
-  ])('replaces %s with the project list', (next) => {
+    '/\t/example.com',
+    '/\n/example.com',
+    '/\r/example.com',
+  ])('replaces %j with the project list', (next) => {
     expect(safeNextPath(next)).toBe('/projects')
   })
 
   it('does not return to the sign-in pages', () => {
     expect(safeNextPath('/login?next=%2Fprojects')).toBe('/projects')
     expect(safeNextPath('/register')).toBe('/projects')
+    expect(safeNextPath('/login/')).toBe('/projects')
+    expect(safeNextPath('/register#top')).toBe('/projects')
   })
 })
 

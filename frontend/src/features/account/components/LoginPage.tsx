@@ -1,7 +1,7 @@
 'use client'
 
 import { zodResolver } from '@hookform/resolvers/zod'
-import { useMutation } from '@tanstack/react-query'
+import { useMutation, useQueryClient } from '@tanstack/react-query'
 import type { Route } from 'next'
 import Link from 'next/link'
 import { useRouter } from 'next/navigation'
@@ -41,6 +41,7 @@ function errorMessage(error: Error): string {
 
 export function LoginPage({ next }: LoginPageProps) {
   const router = useRouter()
+  const queryClient = useQueryClient()
   const signIn = useMutation({ mutationFn: login })
   const form = useForm<FormValues>({
     resolver: zodResolver(formSchema),
@@ -51,6 +52,8 @@ export function LoginPage({ next }: LoginPageProps) {
   const onSubmit = form.handleSubmit((values) => {
     signIn.mutate(values, {
       onSuccess: () => {
+        // Nothing cached for an earlier session shows to the user who signs in.
+        queryClient.removeQueries()
         router.replace(safeNextPath(next) as Route)
       },
     })
