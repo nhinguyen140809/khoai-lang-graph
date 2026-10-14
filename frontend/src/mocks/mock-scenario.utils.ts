@@ -2,9 +2,14 @@ import { delay } from 'msw'
 
 import { internalError } from './problem.utils'
 
-export type MockScenario = 'default' | 'empty' | 'error' | 'loading'
+const mockScenarios = ['empty', 'error', 'loading'] as const
 
-const SCENARIOS: readonly string[] = ['empty', 'error', 'loading']
+/** What a mocked resource answers: its fixtures by default, or a scenario of the page URL. */
+export type MockScenario = 'default' | (typeof mockScenarios)[number]
+
+function isMockScenario(value: string): value is (typeof mockScenarios)[number] {
+  return (mockScenarios as readonly string[]).includes(value)
+}
 
 /** A parameter of the page address; null outside the browser, such as in unit tests. */
 export function pageParam(name: string): string | null {
@@ -19,7 +24,7 @@ export function pageParam(name: string): string | null {
  */
 export function mockScenario(resource: string): MockScenario {
   const value = pageParam(`mock-${resource}`)
-  return value !== null && SCENARIOS.includes(value) ? (value as MockScenario) : 'default'
+  return value !== null && isMockScenario(value) ? value : 'default'
 }
 
 /**
