@@ -4,7 +4,7 @@ import { ArrowLeftIcon, PencilIcon } from 'lucide-react'
 import Link from 'next/link'
 import { useState } from 'react'
 
-import { isNotFoundError } from '@/shared/api/api-fetch.utils'
+import { isNotFoundError } from '@/shared/api/api-error.utils'
 import {
   BottomPanelSections,
   EditorWithBottomPanel,

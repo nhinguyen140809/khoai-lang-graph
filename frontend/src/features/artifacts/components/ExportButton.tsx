@@ -27,7 +27,7 @@ import { Spinner } from '@/shared/components/ui/spinner'
 import { RouteParam } from '@/shared/config/routes.utils'
 
 import { createExport, getExport } from '../artifacts.api'
-import { artifactKeys } from '../artifacts-keys.constants'
+import { artifactKeys } from '../artifacts.keys'
 import { useDefinitionSummary } from '../hooks/useDefinitionSummary'
 
 interface ExportButtonProps {

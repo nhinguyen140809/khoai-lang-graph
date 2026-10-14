@@ -1,6 +1,7 @@
 import { HttpResponse } from 'msw'
 
-import type { FieldProblem } from '@/shared/api/api-fetch.utils'
+import { ApiErrorCode, HttpStatus } from '@/shared/api/api-error.constants'
+import type { FieldProblem } from '@/shared/api/api-error.utils'
 
 /** An error response in the Problem Details format of the API. */
 export function problem(
@@ -17,24 +18,30 @@ export function problem(
 }
 
 export function notFound(what: string) {
-  return problem(404, 'not_found', 'Not found', `${what} does not exist.`)
+  return problem(HttpStatus.NotFound, ApiErrorCode.NotFound, 'Not found', `${what} does not exist.`)
 }
 
 /** No valid session. */
 export function unauthenticated(detail: string) {
-  return problem(401, 'unauthenticated', 'Unauthenticated', detail)
+  return problem(HttpStatus.Unauthorized, ApiErrorCode.Unauthenticated, 'Unauthenticated', detail)
 }
 
 /** A body that breaks the rules of its fields, one problem per field. */
 export function validationFailed(errors: FieldProblem[]) {
-  return problem(422, 'validation_failed', 'Validation failed', null, errors)
+  return problem(
+    HttpStatus.UnprocessableContent,
+    ApiErrorCode.ValidationFailed,
+    'Validation failed',
+    null,
+    errors,
+  )
 }
 
 /** A request that the state of the record does not allow, such as stopping a run that ended. */
 export function invalidState(detail: string) {
-  return problem(409, 'invalid_state', 'Invalid state', detail)
+  return problem(HttpStatus.Conflict, ApiErrorCode.InvalidState, 'Invalid state', detail)
 }
 
 export function internalError() {
-  return problem(500, 'internal_error', 'Internal error')
+  return problem(HttpStatus.InternalServerError, ApiErrorCode.InternalError, 'Internal error')
 }

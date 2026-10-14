@@ -3,7 +3,7 @@
 import { useState } from 'react'
 import { Controller, useForm } from 'react-hook-form'
 
-import { ApiError } from '@/shared/api/api-fetch.utils'
+import { ApiError } from '@/shared/api/api-error.utils'
 import { Button } from '@/shared/components/ui/button'
 import {
   Field,

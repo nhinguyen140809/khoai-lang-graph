@@ -2,7 +2,7 @@
 
 import { useSearchParams } from 'next/navigation'
 
-import { isNotFoundError } from '@/shared/api/api-fetch.utils'
+import { isNotFoundError } from '@/shared/api/api-error.utils'
 import { projectTabGroup, useEditorTab } from '@/shared/components/frame'
 import { ErrorState, LoadingState, NotFoundState } from '@/shared/components/state'
 import { ScrollArea } from '@/shared/components/ui/scroll-area'

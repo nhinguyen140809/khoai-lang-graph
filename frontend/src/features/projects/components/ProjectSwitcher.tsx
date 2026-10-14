@@ -3,7 +3,7 @@
 import { CheckIcon, ChevronDownIcon, LayoutListIcon, PlusIcon, RotateCcwIcon } from 'lucide-react'
 import Link from 'next/link'
 
-import { isNotFoundError } from '@/shared/api/api-fetch.utils'
+import { isNotFoundError } from '@/shared/api/api-error.utils'
 import { Button } from '@/shared/components/ui/button'
 import {
   DropdownMenu,

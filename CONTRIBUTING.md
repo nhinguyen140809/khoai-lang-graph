@@ -249,6 +249,7 @@ Conventions:
 - **Routes stay thin:** `src/app/` holds only Next.js routing files. A `page.tsx` renders a component from `src/features/`; the frame lives in `src/shared/components/frame/`, global providers in `src/providers/`.
 - **Server and Client Components:** files in `src/app/` are Server Components by default. Add `'use client'` at the top of a component file that uses state, effects, event handlers, or browser APIs. Code that reads `window`, `document`, or `localStorage` runs in an effect or event handler, never during render, so the server-rendered HTML matches the first client render.
 - **Server state** via TanStack Query only - don't copy server data into Zustand/`useState`.
+- **Query keys** come from the key factory of the feature, `<feature>.keys.ts`: an object of functions from the widest key to the narrowest, each key starting with the one above (`accountKeys.all()`, `accountKeys.me()`). A query and every invalidation of it call the same function; no key is written as an inline array.
 - **Query states:** a component that shows data from a query handles four states, in this order: loading (`isPending`), error (`isError`), empty (success with no data), success. The first three use the shared components from `@/shared/components/state`:
 
   | State | Component | Rules |
@@ -280,7 +281,7 @@ Conventions:
 | E2E test | `<subject>.spec.ts` | `tests/e2e/chat.spec.ts` |
 
 - **Subject** (before the first dot): what the file is about, in kebab-case. Always include it, even when the folder already says it (`features/chat/chat.api.ts`), so names are unique in search results and editor tabs.
-- **Kind** (after the dot): the role of the file, one of `api`, `types`, `schema`, `store`, `reducer`, `config`, `constants`, `utils`, `handlers`, `fixtures`, `setup`, `spec`. Need a new kind? Add it to the list here and in `eslint.config.js` in the same PR.
+- **Kind** (after the dot): the role of the file, one of `api`, `keys`, `types`, `schema`, `store`, `reducer`, `config`, `constants`, `utils`, `handlers`, `fixtures`, `setup`, `spec`. Need a new kind? Add it to the list here and in `eslint.config.js` in the same PR.
 - **Exceptions** (names set by a tool or convention): `src/shared/components/ui/**` and `src/shared/hooks/use-mobile.ts` (shadcn CLI), `src/shared/lib/utils.ts` (shadcn alias), Next.js file conventions (below), `index.ts` barrels, `*.d.ts`, and root config files (`next.config.ts`, ...).
 - **Next.js file conventions** keep the names the framework requires:
   - Routing files in `src/app/**`: `page.tsx`, `layout.tsx`, `loading.tsx`, `error.tsx`, `not-found.tsx`, `global-error.tsx`, `template.tsx`, `default.tsx`, `route.ts`.

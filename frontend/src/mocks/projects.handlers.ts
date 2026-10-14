@@ -1,7 +1,7 @@
 import { http, HttpResponse } from 'msw'
 
 import { outputLanguages, type Project } from '@/features/projects'
-import type { FieldProblem } from '@/shared/api/api-fetch.utils'
+import type { FieldProblem } from '@/shared/api/api-error.utils'
 import { isUnfinishedRunStatus } from '@/shared/config/run-status.constants'
 
 import definition from './data/workflow/requirements_engineering.v1.json'

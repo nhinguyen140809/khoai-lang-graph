@@ -2,7 +2,7 @@
 
 import { type KeyboardEvent, useState } from 'react'
 
-import { ApiError } from '@/shared/api/api-fetch.utils'
+import { ApiError } from '@/shared/api/api-error.utils'
 import { Button } from '@/shared/components/ui/button'
 import { Spinner } from '@/shared/components/ui/spinner'
 import { Textarea } from '@/shared/components/ui/textarea'

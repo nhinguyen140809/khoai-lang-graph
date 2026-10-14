@@ -1,6 +1,6 @@
 import { beforeEach, describe, expect, it, vi } from 'vitest'
 
-import { ApiError } from '../api-fetch.utils'
+import { ApiError } from '../api-error.utils'
 import type * as authRedirect from '../auth-redirect.utils'
 import { createQueryClient } from '../query-client.config'
 

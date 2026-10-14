@@ -1,6 +1,7 @@
 import { MutationCache, QueryCache, QueryClient } from '@tanstack/react-query'
 
-import { ApiError, HttpStatus } from './api-fetch.utils'
+import { HttpStatus } from './api-error.constants'
+import { ApiError } from './api-error.utils'
 import { redirectToSignIn } from './auth-redirect.utils'
 
 // A request without a session goes to the sign-in page, whichever query or mutation sent it.
@@ -18,7 +19,8 @@ export function createQueryClient(): QueryClient {
         // An answer such as 401 or 404 does not change on a second try; a network error or a
         // server error may.
         retry: (failureCount, error) =>
-          !(error instanceof ApiError && error.status < 500) && failureCount < 1,
+          !(error instanceof ApiError && error.status < HttpStatus.InternalServerError) &&
+          failureCount < 1,
       },
     },
   })

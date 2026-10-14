@@ -5,7 +5,7 @@ import { useRouter } from 'next/navigation'
 import { Controller, useForm } from 'react-hook-form'
 import { z } from 'zod'
 
-import { ApiError } from '@/shared/api/api-fetch.utils'
+import { ApiError } from '@/shared/api/api-error.utils'
 import { Button } from '@/shared/components/ui/button'
 import { DialogClose, DialogFooter } from '@/shared/components/ui/dialog'
 import {

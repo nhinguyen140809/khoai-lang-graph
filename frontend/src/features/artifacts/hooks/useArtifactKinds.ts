@@ -1,7 +1,7 @@
 import { useQuery } from '@tanstack/react-query'
 
 import { getArtifactKinds } from '../artifacts.api'
-import { artifactKeys } from '../artifacts-keys.constants'
+import { artifactKeys } from '../artifacts.keys'
 
 /** The content schemas of every kind; they change only with the workflow definition. */
 export function useArtifactKinds() {

@@ -7,7 +7,7 @@ import { useForm } from 'react-hook-form'
 import { toast } from 'sonner'
 import { z } from 'zod'
 
-import { ApiError } from '@/shared/api/api-fetch.utils'
+import { ApiError } from '@/shared/api/api-error.utils'
 import { authHref, AuthPage } from '@/shared/api/auth-redirect.utils'
 import { Button } from '@/shared/components/ui/button'
 import { Field, FieldError, FieldGroup, FieldLabel } from '@/shared/components/ui/field'

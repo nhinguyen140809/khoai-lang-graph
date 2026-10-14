@@ -5,7 +5,8 @@ import { useMutation } from '@tanstack/react-query'
 import { useForm } from 'react-hook-form'
 import { z } from 'zod'
 
-import { ApiError, HttpStatus } from '@/shared/api/api-fetch.utils'
+import { ApiErrorCode, HttpStatus } from '@/shared/api/api-error.constants'
+import { ApiError } from '@/shared/api/api-error.utils'
 import { authHref, AuthPage } from '@/shared/api/auth-redirect.utils'
 import { Button } from '@/shared/components/ui/button'
 import { Field, FieldError, FieldGroup, FieldLabel } from '@/shared/components/ui/field'
@@ -30,14 +31,11 @@ interface LoginPageProps {
 
 function errorMessage(error: Error): string {
   if (!(error instanceof ApiError)) return error.message
-  switch (error.status) {
-    case HttpStatus.Unauthorized:
-      return 'The email or the password is wrong.'
-    case HttpStatus.TooManyRequests:
-      return 'Too many attempts. Wait a moment, then try again.'
-    default:
-      return error.message
+  if (error.status === HttpStatus.Unauthorized) return 'The email or the password is wrong.'
+  if (error.code === ApiErrorCode.RateLimited) {
+    return 'Too many attempts. Wait a moment, then try again.'
   }
+  return error.message
 }
 
 export function LoginPage({ next }: LoginPageProps) {

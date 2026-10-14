@@ -4,13 +4,8 @@ import { z, ZodError } from 'zod'
 
 import { server } from '@/mocks/msw-server.setup'
 
-import {
-  apiCommand,
-  ApiError,
-  apiRequest,
-  fetchAllPages,
-  isNotFoundError,
-} from '../api-fetch.utils'
+import { ApiError, isNotFoundError } from '../api-error.utils'
+import { apiCommand, apiRequest, fetchAllPages } from '../api-fetch.utils'
 
 const itemSchema = z.object({ id: z.string() })
 

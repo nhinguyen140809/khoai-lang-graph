@@ -77,13 +77,35 @@ describe('LoginPage', () => {
     )
   })
   it('says to wait after too many attempts', async () => {
-    server.use(http.post('/api/v1/auth/login', () => new HttpResponse(null, { status: 429 })))
+    server.use(
+      http.post('/api/v1/auth/login', () =>
+        HttpResponse.json({ status: 429, code: 'rate_limited' }, { status: 429 }),
+      ),
+    )
     render(<LoginPage next={null} />, { wrapper: TestProviders })
 
     await signIn('linh.pham@example.com', 'secret')
 
     expect(await screen.findByRole('alert')).toHaveTextContent(
       'Too many attempts. Wait a moment, then try again.',
+    )
+  })
+
+  it('shows another 429 with its own message', async () => {
+    server.use(
+      http.post('/api/v1/auth/login', () =>
+        HttpResponse.json(
+          { status: 429, code: 'budget_exceeded', detail: 'The monthly budget is reached.' },
+          { status: 429 },
+        ),
+      ),
+    )
+    render(<LoginPage next={null} />, { wrapper: TestProviders })
+
+    await signIn('linh.pham@example.com', 'secret')
+
+    expect(await screen.findByRole('alert')).toHaveTextContent(
+      'Failed to sign in (HTTP 429): The monthly budget is reached.',
     )
   })
 

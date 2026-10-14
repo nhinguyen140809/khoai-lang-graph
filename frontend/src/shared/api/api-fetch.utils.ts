@@ -1,49 +1,7 @@
 import { z } from 'zod'
 
+import { type ApiError, toApiError } from './api-error.utils'
 import { apiUrl } from './api-url.utils'
-
-// The error body of the API (RFC 9457 Problem Details). Fields are optional so that an error from
-// a proxy, which has no such body, still becomes an ApiError.
-const problemSchema = z.object({
-  title: z.string().optional(),
-  code: z.string().optional(),
-  detail: z.string().nullable().optional(),
-  errors: z.array(z.object({ field: z.string(), message: z.string() })).optional(),
-})
-
-/** The statuses of an answer that the app handles in a way of its own. */
-export const HttpStatus = {
-  /** No valid session: the app opens the sign-in page. */
-  Unauthorized: 401,
-  /** The record does not exist, or the user may not see it. */
-  NotFound: 404,
-  /** Too many attempts, such as signing in. */
-  TooManyRequests: 429,
-} as const
-
-export interface FieldProblem {
-  field: string
-  message: string
-}
-
-/** A response with an error status. `code` is the stable value to branch on, when the body has one. */
-export class ApiError extends Error {
-  readonly status: number
-  readonly code: string | null
-  readonly fieldErrors: FieldProblem[]
-
-  constructor(message: string, status: number, code: string | null, fieldErrors: FieldProblem[]) {
-    super(message)
-    this.name = 'ApiError'
-    this.status = status
-    this.code = code
-    this.fieldErrors = fieldErrors
-  }
-}
-
-export function isNotFoundError(error: unknown): boolean {
-  return error instanceof ApiError && error.status === HttpStatus.NotFound
-}
 
 interface ApiRequestOptions {
   /** What the request does, for the error message: "load projects" gives "Failed to load projects". */
@@ -53,23 +11,15 @@ interface ApiRequestOptions {
   headers?: Record<string, string>
 }
 
-async function toApiError(response: Response, action: string): Promise<ApiError> {
-  const fallback = `Failed to ${action} (HTTP ${String(response.status)})`
-  let json: unknown = null
+// The ApiError of an answer with an error status; its body is read when it is JSON.
+async function readError(response: Response, action: string): Promise<ApiError> {
+  let body: unknown = null
   try {
-    json = await response.json()
+    body = await response.json()
   } catch {
-    // No JSON body: keep the fallback message.
+    // No JSON body: the error keeps the plain message.
   }
-  const problem = problemSchema.safeParse(json)
-  if (!problem.success) return new ApiError(fallback, response.status, null, [])
-  const { detail, code, errors } = problem.data
-  return new ApiError(
-    detail != null && detail !== '' ? `${fallback}: ${detail}` : fallback,
-    response.status,
-    code ?? null,
-    errors ?? [],
-  )
+  return toApiError(response.status, body, `Failed to ${action} (HTTP ${String(response.status)})`)
 }
 
 // Sends one request; an error status becomes an ApiError.
@@ -83,7 +33,7 @@ async function send(
     init.body = JSON.stringify(body)
   }
   const response = await fetch(apiUrl(path), init)
-  if (!response.ok) throw await toApiError(response, action)
+  if (!response.ok) throw await readError(response, action)
   return response
 }
 

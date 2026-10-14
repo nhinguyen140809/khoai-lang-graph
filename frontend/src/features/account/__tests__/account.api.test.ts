@@ -2,7 +2,7 @@ import { http, HttpResponse } from 'msw'
 import { afterEach, describe, expect, it, vi } from 'vitest'
 
 import { server } from '@/mocks/msw-server.setup'
-import { ApiError } from '@/shared/api/api-fetch.utils'
+import { ApiError } from '@/shared/api/api-error.utils'
 
 import { getMe, login, logout, register } from '../account.api'
 

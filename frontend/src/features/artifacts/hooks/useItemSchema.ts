@@ -1,8 +1,8 @@
 import { useQuery } from '@tanstack/react-query'
 
 import { getContentSchema } from '../artifacts.api'
+import { artifactKeys } from '../artifacts.keys'
 import type { ArtifactItem, ContentSchema } from '../artifacts.types'
-import { artifactKeys } from '../artifacts-keys.constants'
 import { useArtifactKinds } from './useArtifactKinds'
 
 /**
