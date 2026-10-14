@@ -310,12 +310,12 @@ export default defineConfig([
           '**/hooks/*.ts': 'use+([A-Z])*([a-zA-Z0-9])',
           // Everything else: <subject>.<kind>.ts, subject in kebab-case
           '**/!(hooks|__tests__)/*.ts':
-            '+([a-z0-9])*(-+([a-z0-9])).@(api|keys|types|schema|store|reducer|config|constants|utils|handlers|fixtures|setup|spec)',
+            '+([a-z0-9])*(-+([a-z0-9])).@(api|keys|queries|types|schema|store|reducer|config|constants|utils|handlers|fixtures|setup|spec)',
           // Unit tests: only in a __tests__ folder, named after the file under test plus .test
           '**/__tests__/*.tsx': '+([A-Z])*([a-zA-Z0-9]).test',
           '**/hooks/__tests__/*.ts': 'use+([A-Z])*([a-zA-Z0-9]).test',
           '**/!(hooks)/__tests__/*.ts':
-            '+([a-z0-9])*(-+([a-z0-9])).@(api|keys|types|schema|store|reducer|config|constants|utils|handlers|fixtures|setup).test',
+            '+([a-z0-9])*(-+([a-z0-9])).@(api|keys|queries|types|schema|store|reducer|config|constants|utils|handlers|fixtures|setup).test',
         },
       ],
       'check-file/folder-naming-convention': [
