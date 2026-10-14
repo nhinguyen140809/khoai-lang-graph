@@ -262,7 +262,7 @@ Out of scope for P0: the backend workflow, the codegen check from CONTRIBUTING (
 
 ### P1. Tooling
 
-State: cut on `chore/fe/lint-groups` from `origin/main` on 2026-10-14, in the working tree for review.
+State: merged as PR #13 on 2026-10-14.
 
 Files: `scripts/lint.mjs` (new: lints four groups of folders in separate processes, each with its own TypeScript program), `eslint.config.js` (only the `parserOptions` switch on `ESLINT_TSCONFIG`), `package.json` (the `lint` and `lint:fix` scripts), `next.config.ts` (`allowedDevOrigins`, `devIndicators`, `turbopackSourceMaps: false`), `frontend/README.md` (the `lint` rows of the scripts table; in Low-memory development, the source maps row and the lint bullet).
 
@@ -271,6 +271,8 @@ Held back for other PRs: the storage rule of `eslint.config.js` goes with P3 (it
 Check: `pnpm lint` (on 2026-10-14 with the 768 MB heap limit: about 55 s, the largest group at about 930 MB RSS; `eslint .` in one process runs out of that heap after about 40 s); `pnpm lint:fix` still works.
 
 ### P2. API documentation
+
+State: cut on `docs/fe/api-fields` from `origin/main` on 2026-10-14, in the working tree for review. The rendered SVG is the same as the one on `feat/fe/mock`.
 
 Files: `docs/API.md` (`unfinished_run_counts` on a project, `active_run_status` on a thread, `number` and `step_count` on a run, example ids), `docs/DATA_SHAPE.md`, `docs/PLANNING.md`, `docs/architecture/database.dbml`, `docs/architecture/diagrams/database/conversation-and-execution.svg`.
 
@@ -503,7 +505,7 @@ For every PR:
 - [x] `main` run through the five checks in a scratch directory
 - [x] `Frontend CI result` required on `main` (ruleset `protect-main`)
 - [x] P0 CI merged
-- [ ] P1 tooling merged
+- [x] P1 tooling merged
 - [ ] P2 API docs merged
 - [x] P3 frame merged
 - [ ] P4 account merged
