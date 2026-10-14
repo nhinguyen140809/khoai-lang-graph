@@ -292,7 +292,7 @@ Rules:
 |---|---|---|
 | `GET /projects` | Projects of the user; `?status=`; ordered by `last_activity_at` descending | MVP |
 | `POST /projects` | Create; body `name`, `description`, `output_language` | MVP |
-| `GET /projects/{project_id}` | One project, with `item_counts` | MVP |
+| `GET /projects/{project_id}` | One project, with `item_counts` and `unfinished_run_counts` | MVP |
 | `PATCH /projects/{project_id}` | Change name, description, status, `run_config`, `model_overrides` | MVP |
 | `DELETE /projects/{project_id}` | Soft delete | MVP |
 
@@ -303,7 +303,7 @@ Rules:
 | `GET /projects/{project_id}/threads` | Threads of a project; ordered by `last_message_at` descending | MVP |
 | `GET /threads` | Threads of the user across projects; `?project_id=` | MVP |
 | `POST /projects/{project_id}/threads` | Create an empty thread; body optional `title`. The first message of the thread starts the work. The message that starts the first run of the project becomes the initial intent of the project, see [Data shape: Project](DATA_SHAPE.md#project-mvp) | MVP |
-| `GET /threads/{thread_id}` | One thread, with `active_run_id` | MVP |
+| `GET /threads/{thread_id}` | One thread, with `active_run_id` and `active_run_status` | MVP |
 | `PATCH /threads/{thread_id}` | Change `title`, `status` | MVP |
 | `DELETE /threads/{thread_id}` | Soft delete | MVP |
 | `GET /threads/{thread_id}/messages` | Chat messages; ordered by `sequence` ascending. User messages carry `delivery` | MVP |
@@ -333,7 +333,7 @@ Response `201`:
     "id": "c2a1...",
     "thread_id": "7f3a...",
     "sequence": 1,
-    "run_id": "5f2d...",
+    "run_id": "3b90...",
     "author": "user",
     "agent_role": null,
     "content": "I want to build an online platform for university students to find mentors.",
@@ -341,11 +341,12 @@ Response `201`:
     "item_refs": [],
     "delivery": "started_run",
     "delivered_in_step_id": null,
-    "created_at": "2026-10-06T08:30:00Z"
+    "created_at": "2026-10-02T08:10:00Z"
   },
   "run": {
-    "id": "5f2d...",
+    "id": "3b90...",
     "thread_id": "7f3a...",
+    "number": 1,
     "status": "queued",
     "workflow_name": "requirements_engineering",
     "workflow_version": 1,
@@ -355,14 +356,14 @@ Response `201`:
 }
 ```
 
-`run` is the run body, shown here with only some of its fields; the full body is in [Runs](#runs). The web app then opens `GET /api/v1/runs/5f2d.../stream` to follow the run. A message sent while this run is unfinished gets the same response shape, with `delivery` `pending` and `run` being the unfinished run.
+`run` is the run body, shown here with only some of its fields; the full body is in [Runs](#runs). The message starts the first run of the thread, so its `number` is 1. The web app then opens `GET /api/v1/runs/3b90.../stream` to follow the run. A message sent while this run is unfinished gets the same response shape, with `delivery` `pending` and `run` being the unfinished run.
 
 ### Runs
 
 | Method and path | Purpose | Phase |
 |---|---|---|
 | `GET /threads/{thread_id}/runs` | Runs of a thread; ordered by `created_at` descending | MVP |
-| `GET /runs/{run_id}` | Status, stage, iteration, usage, error, `workflow_name`, `workflow_version`, `last_event_id`. The status transitions are listed in [Runtime: lifecycle](architecture/runtime.md#3-lifecycle) | MVP |
+| `GET /runs/{run_id}` | Number in the thread, status, stage, iteration, step count, usage, error, `workflow_name`, `workflow_version`, `last_event_id`. The status transitions are listed in [Runtime: lifecycle](architecture/runtime.md#3-lifecycle) | MVP |
 | `GET /runs/{run_id}/steps` | Run steps; ordered by `sequence` | MVP |
 | `GET /runs/{run_id}/state` | The current workflow state of the run, see [workflow state](#workflow-state) | MVP |
 | `GET /runs/{run_id}/steps/{step_id}/state` | The workflow state saved after that step; the starting point of a retry from the next step | MVP |
@@ -373,13 +374,14 @@ Response `201`:
 | `POST /runs/{run_id}/cancel` | Stop the run. The open call to the LLM provider is closed. `202` | MVP |
 | `POST /runs/{run_id}/retry` | Create a new run that starts from a step of this run; body `from_step_id`. Before it starts, the artifacts, items and trace links of the project are brought back to the versions that the state of that step references, see [Runtime: retry](architecture/runtime.md#retry). Returns the new run | MVP |
 
-Run body, `GET /runs/5f2d...`, while the run waits at the analysis review. `models` is shortened to two of the roles:
+Run body, `GET /runs/5f2d...`, while the run waits at the analysis review. It is the third run of the thread: the first run went through the whole workflow, the second failed at its cost limit, and this run retries the second from its planner step, so its steps start again at the planner. `models` is shortened to two of the roles:
 
 ```json
 {
   "id": "5f2d...",
   "thread_id": "7f3a...",
   "project_id": "90aa...",
+  "number": 3,
   "started_by": "11b7...",
   "workflow_name": "requirements_engineering",
   "workflow_version": 1,
@@ -392,13 +394,14 @@ Run body, `GET /runs/5f2d...`, while the run waits at the analysis review. `mode
     "output_language": "en",
     "max_steps": 80,
     "max_cost_usd": 2.0,
-    "parameters": { "target_personas_num": 3, "max_personas": 3, "max_turns": 6, "max_iterations": 2 }
+    "parameters": { "target_personas_num": 3, "max_personas": 3, "max_turns": 12, "max_iterations": 2 }
   },
-  "retry_of_run_id": null,
+  "retry_of_run_id": "4c18...",
   "error": null,
   "usage": { "input_tokens": 48210, "output_tokens": 9930, "cache_read_tokens": 31500, "cache_write_tokens": 6200, "cost_usd": 0.42, "duration_ms": 214000 },
   "trace_id": "b81c...",
-  "last_event_id": 46,
+  "step_count": 67,
+  "last_event_id": 246,
   "started_at": "2026-10-06T08:30:01Z",
   "finished_at": null
 }
@@ -588,7 +591,7 @@ Artifact body:
   "version": 9,
   "review_status": "draft",
   "item_count": 16,
-  "created_by": { "actor": "agent", "agent_role": "requirement_engineer", "user_id": null, "run_id": "5f2d...", "step_id": "e7c0..." },
+  "created_by": { "actor": "agent", "agent_role": "requirement_engineer", "user_id": null, "run_id": "3b90...", "step_id": "e7c0..." },
   "updated_by": { "actor": "user", "agent_role": null, "user_id": "11b7...", "run_id": null, "step_id": null },
   "created_at": "2026-10-02T08:30:00Z",
   "updated_at": "2026-10-02T09:02:11Z"
@@ -610,7 +613,7 @@ Item body:
   "schema_version": 1,
   "version": 3,
   "review_status": "draft",
-  "created_by": { "actor": "agent", "agent_role": "requirement_engineer", "user_id": null, "run_id": "5f2d...", "step_id": "e7c0..." },
+  "created_by": { "actor": "agent", "agent_role": "requirement_engineer", "user_id": null, "run_id": "3b90...", "step_id": "e7c0..." },
   "updated_by": { "actor": "user", "agent_role": null, "user_id": "11b7...", "run_id": null, "step_id": null },
   "created_at": "2026-10-02T08:30:00Z",
   "updated_at": "2026-10-02T09:02:11Z",
@@ -790,27 +793,27 @@ The stream to the browser and the call to the LLM provider are two separate conn
 The last events of the run in the run body example: the analyst finishes, then the analysis review pauses the run. Every event has an `id`, a type after `event:`, and a JSON payload after `data:`; a line that starts with `:` is a heartbeat.
 
 ```text
-id: 41
+id: 241
 event: node_start
 data: {"node":"analyst","step_id":"e9d1...","agent_role":"analyst","stage":"analysis","iteration":0,"persona_key":null}
 
-id: 42
+id: 242
 event: token
 data: {"node":"analyst","step_id":"e9d1...","text":"Grouping the raw requirements by topic. "}
 
-id: 43
+id: 243
 event: artifact_delta
 data: {"artifact_id":"b210...","delta":"AR-007 created","version":4,"item_id":"d3f9...","item_key":"AR-007","change":"item_created"}
 
-id: 44
+id: 244
 event: node_end
 data: {"node":"analyst","step_id":"e9d1...","status":"succeeded","usage":{"input_tokens":6100,"output_tokens":2300,"cache_read_tokens":4800,"cache_write_tokens":0,"cost_usd":0.05,"duration_ms":31000}}
 
-id: 45
+id: 245
 event: node_start
 data: {"node":"checkpoint_analysis","step_id":"e9d2...","agent_role":null,"stage":"analysis_review","iteration":0,"persona_key":null}
 
-id: 46
+id: 246
 event: interrupt
 data: {"node":"checkpoint_analysis","step_id":"e9d2...","payload":{"interrupt_id":"7b0c...","prompt":"Review the requirements analysis. Accept it, or reject it with feedback.","options":[{"key":"accept","label":"Accept","requires_feedback":false,"approves":true,"is_default":true}],"questions":[],"allow_edits":true,"review_artifacts":[{"artifact_id":"b210...","kind":"requirements_analysis","title":"Requirements analysis","version":4}]}}
 

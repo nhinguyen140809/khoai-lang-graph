@@ -292,7 +292,10 @@ The master keys are kept in the server environment, never in the database, each 
 | `initial_message_id` | ref\<Message\>? | The user message that started the first run of the project, for example "I want to build an online platform for university students to find mentors." Its content is the initial intent of the project. Null until the first run starts, so a run that starts while it is null is the first run of the project and begins at the planner |
 | `model_overrides` | map\<AgentRole, string\> | Optional `provider:model` per role for this project |
 | `item_counts` | map\<ItemKind, int\> | Derived, read-only. Shown on the project card |
+| `unfinished_run_counts` | RunCounts | Derived, read-only. The number of unfinished runs of the project in each status, see below. `interrupted` counts the reviews that wait for the user |
 | `last_activity_at` | datetime | Derived, stored. Kept in a column so that the project list can be sorted by it |
+
+`RunCounts` is `{ queued: int, running: int, interrupted: int }`, one count per status of an unfinished run.
 
 ### ProjectMember (Later)
 
@@ -372,6 +375,7 @@ A passage of the extracted text of a source document, with its embedding, so tha
 | `status` | enum | `active`, `archived` |
 | `current_stage` | Stage? | Stage of the latest run. Null before the first run |
 | `active_run_id` | ref\<Run\>? | The unfinished run of the thread (`queued`, `running` or `interrupted`); at most one, see [Runtime: lifecycle](architecture/runtime.md#3-lifecycle) |
+| `active_run_status` | enum? | Derived, read-only. The status of the run in `active_run_id`: `queued`, `running`, `interrupted`. Null when the thread has no unfinished run |
 | `last_message_at` | datetime | Time of the newest message; the creation time while the thread has no message |
 
 Deck: `project_id`, `current_stage`. The deck's `initial_intent` belongs to the project, see `Project.initial_message_id`.
@@ -448,6 +452,7 @@ Each choice therefore has one place per level: models are chosen in ModelSetting
 |---|---|---|
 | `thread_id` | ref\<Thread\> | |
 | `project_id` | ref\<Project\> | Repeated for direct filtering |
+| `number` | int | Order of the run in its thread, from 1, without gaps; unique per thread. Names the run, for example "Run 3" |
 | `started_by` | ref\<User\> | |
 | `workflow_name` | string | Name of the workflow definition the run uses |
 | `workflow_version` | int | Version of that definition, fixed for the whole run |
@@ -459,6 +464,7 @@ Each choice therefore has one place per level: models are chosen in ModelSetting
 | `error` | RunError? | `{ code: string, message: string, stage: Stage }` |
 | `usage` | Usage | Totals over all steps, see below |
 | `trace_id` | string? | Id in the tracing tool |
+| `step_count` | int | Derived. Number of steps of the run so far, which is also the `sequence` of its latest step; 0 before the first step |
 | `last_event_id` | int | Derived. Sequence of the newest event of the run; a client continues the event stream from it |
 | `started_at` | datetime? | |
 | `finished_at` | datetime? | |

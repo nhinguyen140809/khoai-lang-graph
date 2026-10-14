@@ -324,7 +324,7 @@ Rules that make results defensible in a thesis. Complements the experiment workf
 - [x] Init shadcn/ui and companion libraries (section 4)
 - [x] App shell: sidebar + resizable chat / artifact panels
 - [x] App Router routes + TanStack Query, API client codegen script (writes `frontend/openapi.json` + `src/shared/api/generated/`)
-- [ ] Generate the first client once the backend exports `openapi.json`, then replace the hand-written types in `features/chat/chat.types.ts`
+- [ ] Generate the first client once the backend exports `openapi.json`, then replace the hand-written types in the `*.types.ts` files of the features
 - [x] Zustand store for user settings (model choices, theme, etc.)
 - [x] Chat page consuming the SSE endpoint (against MSW mocks until the backend exists)
 - [x] Vitest + MSW + Playwright setup

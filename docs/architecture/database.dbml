@@ -405,6 +405,7 @@ Table runs {
   id uuid [pk]
   thread_id uuid [not null, ref: > threads.id]
   project_id uuid [not null, ref: > projects.id]
+  number int [not null, note: 'Order of the run in its thread, from 1']
   started_by uuid [not null, ref: > users.id]
   workflow_name text [not null]
   workflow_version int [not null]
@@ -430,6 +431,7 @@ Table runs {
 
   indexes {
     (thread_id, created_at)
+    (thread_id, number) [unique]
     (project_id, status)
   }
 }
