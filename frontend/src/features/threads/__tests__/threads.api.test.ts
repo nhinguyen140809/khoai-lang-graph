@@ -2,7 +2,7 @@ import { http, HttpResponse } from 'msw'
 import { describe, expect, it } from 'vitest'
 
 import { server } from '@/mocks/msw-server.setup'
-import { mockThreads } from '@/mocks/threads.fixtures'
+import { mockThreads } from '@/mocks/threads/threads.fixtures'
 
 import { listThreads } from '../threads.api'
 

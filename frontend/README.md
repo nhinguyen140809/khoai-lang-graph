@@ -312,19 +312,30 @@ Habits that help:
 
 ## Mock data
 
-All mock code lives in `src/mocks/`, one pair of files per API resource:
+All mock code lives in `src/mocks/`, in one folder per part of the API, named like the backend feature that serves it. A file may read the data of another folder, as the resources of the API refer to each other; `shared/` holds what every handler uses.
+
+```text
+src/mocks/
+├── msw-browser.setup.ts  # the handlers of the browser worker (dev mocking, E2E)
+├── msw-server.setup.ts   # the handlers of the unit tests
+├── shared/               # scenarios
+├── threads/              # threads
+└── runs/                 # runs, the stream
+```
+
+Each folder holds a pair of files per API resource:
 
 | File                     | Content                                                                                       |
 | ------------------------ | --------------------------------------------------------------------------------------------- |
 | `<resource>.fixtures.ts` | The data: typed with the feature's types, fixed values only (no random ids, no current time). |
 | `<resource>.handlers.ts` | MSW handlers that answer the endpoints of that resource with the fixtures.                    |
 
-The same handlers serve `pnpm dev:mock`, the unit tests, and the E2E tests, so a fixture is written once. Example: `threads.fixtures.ts` and `threads.handlers.ts` back `GET /api/v1/threads`.
+The same handlers serve `pnpm dev:mock`, the unit tests, and the E2E tests, so a fixture is written once. Example: `threads/threads.fixtures.ts` and `threads/threads.handlers.ts` back `GET /api/v1/threads`.
 
 To mock a new endpoint:
 
-1. Add the data to `src/mocks/<resource>.fixtures.ts`, typed with the type from `src/features/<feature>/`.
-2. Add the handler to `src/mocks/<resource>.handlers.ts` and export the handler list.
+1. Add the data to `src/mocks/<folder>/<resource>.fixtures.ts`, typed with the type from `src/features/<feature>/`.
+2. Add the handler to `src/mocks/<folder>/<resource>.handlers.ts` and export the handler list.
 3. Register the list in `msw-browser.setup.ts` (dev mocking, E2E) and `msw-server.setup.ts` (unit tests).
 4. In a test that needs other data or an error, override the handler for that test only with `server.use(...)`; it is reset after each test.
 
@@ -339,7 +350,7 @@ A handler can answer differently depending on a parameter in the page URL, so ev
 | `/?mock-threads=error`   | HTTP 500                           |
 | `/?mock-threads=loading` | Nothing; the request stays pending |
 
-The parameter name is `mock-<resource>`. A handler reads it with `mockScenario('<resource>')` from `src/mocks/mock-scenario.utils.ts` and supports the scenarios: `empty`, `error`, `loading`. Without the parameter it returns the fixtures.
+The parameter name is `mock-<resource>`. A handler reads it with `mockScenario('<resource>')` from `src/mocks/shared/mock-scenario.utils.ts` and supports the scenarios: `empty`, `error`, `loading`. Without the parameter it returns the fixtures.
 
 Components never import fixtures. They call the API functions of their feature, and MSW answers the request, so switching to the real backend changes no component code. Handlers that need a browser-only API (the SSE stream) are registered only in `msw-browser.setup.ts`.
 

@@ -2,7 +2,7 @@ import { http, HttpResponse } from 'msw'
 import { describe, expect, it } from 'vitest'
 
 import { server } from '@/mocks/msw-server.setup'
-import { MOCK_RUN_ID } from '@/mocks/runs.handlers'
+import { MOCK_RUN_ID } from '@/mocks/runs/runs.handlers'
 
 import { createRun } from '../chat.api'
 
