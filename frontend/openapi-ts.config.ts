@@ -5,5 +5,11 @@ import { defineConfig } from '@hey-api/openapi-ts'
 export default defineConfig({
   input: './openapi.json',
   output: 'src/shared/api/generated',
-  plugins: ['@hey-api/client-fetch', '@tanstack/react-query'],
+  plugins: [
+    // A call throws on an error status, as apiRequest of src/shared/api does.
+    { name: '@hey-api/client-fetch', throwOnError: true },
+    // Answers are checked with zod at run time, as the hand-written schemas check them.
+    'zod',
+    { name: '@hey-api/sdk', validator: true },
+  ],
 })
