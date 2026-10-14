@@ -212,7 +212,7 @@ Branch names are `<type>/fe/<name>`: `<type>` is the Conventional Commits type o
 | P2 | `docs/fe/api-fields` | `docs(api): add the fields that the screens read` | none | 5 | about 550 |
 | P3 | `feat/fe/layout` | `feat(frontend): add the workbench: activity bar, project workspace, tabs, top bar, status bar and command palette` | P2b | 47 | about 2000 |
 | P4 | `feat/fe/account` | `feat(frontend): add sign in, registration and the session` | P3 | 31 | about 1800 |
-| P5 | `feat/fe/project-mocks` | `feat(mocks): serve projects and runs` | P4 | 8 | about 1400 |
+| P5 | `feat/fe/project-mocks` | `feat(mocks): serve projects, threads and runs` | P4 | 29 | about 2100 |
 | P6 | `feat/fe/projects` | `feat(frontend): add the project list and the project frame, and remove the old shell` | P3, P4, P5 | 48 | about 1700 |
 | P7 | `feat/fe/threads` | `feat(frontend): read the threads of a project and show the run in the status bar` | P6 | 18 | about 800 |
 | P8 | `feat/fe/artifacts-read` | `feat(frontend): read artifacts and items` | P6 | about 40 | about 3500 |
@@ -334,9 +334,19 @@ Endpoints: `POST /auth/login`, `POST /auth/register`, `POST /auth/logout`, `GET 
 
 ### P5. Mocks of projects and runs
 
-Endpoints: `GET /projects` (paged, filter by status), `POST /projects`, `GET /projects/{id}`, `PATCH /projects/{id}` (no caller until P17), `GET /threads/{id}/runs`, `GET /runs/{id}`, `GET /runs/{id}/steps`, `POST /runs/{id}/cancel`.
+State: cut on `feat/fe/project-mocks` on 2026-10-14, in the worktree `.claude/worktrees/fe-project-mocks`. The cut of P4 is staged there as its base and P5 is in the working tree, until P4 is committed; then the base becomes that commit.
 
-Files: `src/mocks/projects.handlers.ts`, `projects.fixtures.ts`, `extra-projects.fixtures.ts`, `extra-project-specs.constants.ts`, `runs.handlers.ts`, `runs.fixtures.ts`, `mock-runs.store.ts`, `__tests__/extra-projects.fixtures.test.ts`. They are one PR because `projects.handlers` reads the runs for the unfinished counts. Review as data: the fixtures are the project of the API examples plus generated projects.
+Endpoints: `GET /projects` (paged, filter by status), `POST /projects`, `GET /projects/{id}`, `GET /threads`, `GET /projects/{id}/threads`, `GET /threads/{id}`, `GET /threads/{id}/runs`, `GET /runs/{id}`, `GET /runs/{id}/steps`, `POST /runs/{id}/cancel`.
+
+Files: `src/mocks/projects.handlers.ts`, `projects.fixtures.ts`, `extra-projects.fixtures.ts`, `extra-project-specs.constants.ts`, `threads.handlers.ts`, `threads.fixtures.ts`, `runs.handlers.ts`, `runs.fixtures.ts`, `mock-runs.store.ts`, `pagination.utils.ts`, the ids of projects, threads and runs in `mock-ids.constants.ts`, `mockRunState` in `mock-scenario.utils.ts`, the handlers in the two setups, and tests of the fixtures and of the three handler groups. They are one PR because `projects.handlers` reads the runs for the unfinished counts, and threads follow their runs. Review as data: the fixtures are the project of the API examples plus generated projects.
+
+The fixtures are typed with the types of the features, which come later, so P5 brings the types of the API that it serves (decided on 2026-10-14, against a P5 of the mocks only or mocks that wait for P6 and P7):
+
+- `src/features/projects/projects.types.ts`, with an index that gives only `Project` and `CreateProjectBody`; P6 adds the components, `outputLanguageLabels`, `UnfinishedRunCounts` and `projectDefaultsSchema`.
+- `src/features/threads/threads.types.ts` in its new shape (`Thread`, `Run`, `RunStep`, `Usage`); the old thread list reads it through a list schema in `threads.api.ts` and shows "Untitled thread" for a thread without a title, until P7 replaces them.
+- `src/shared/config/run-status.constants.ts` with `runStatuses` only; P6 adds the labels and tones.
+
+Left to later PRs: `PATCH /projects/{id}` and its checks of the run settings and models go with P17, which reads the workflow definition (P8) and the models (P17); `POST /projects/{id}/threads`, the runs that a message starts (`startMockRun`, `newMockRun`, the created runs and steps) and the messages of the extra projects go with P9; the check that the extra projects have artifacts goes with P8. `POST /threads/{id}/runs` of the chat stays in `runs.handlers.ts` until P9 removes the chat, and `chat.spec.ts` opens the first "Main thread".
 
 ### P6. Project list and project frame
 
