@@ -6,7 +6,7 @@ import { usePathname } from 'next/navigation'
 import { useState } from 'react'
 
 import { EmptyState, ErrorState, LoadingState } from '@/shared/components/state'
-import { artifactHref, itemHref } from '@/shared/config/routes.utils'
+import { routes } from '@/shared/config/routes'
 import { cn } from '@/shared/lib/utils'
 
 import type { Artifact, ContentSchema, OutlineItem } from '../artifacts.types'
@@ -71,7 +71,7 @@ interface ArtifactNodeProps {
 
 function ArtifactNode({ projectId, artifact, schemas }: ArtifactNodeProps) {
   const pathname = usePathname()
-  const href = artifactHref(projectId, artifact.id)
+  const href = routes.project(projectId).artifact(artifact.id)
   const [open, setOpen] = useState(false)
   const hasItems = artifact.item_count > 0
 
@@ -225,7 +225,7 @@ interface ItemRowProps {
 
 function ItemRow({ projectId, item, schema }: ItemRowProps) {
   const pathname = usePathname()
-  const href = itemHref(projectId, item.id)
+  const href = routes.project(projectId).item(item.id)
   return (
     <Link
       href={href}

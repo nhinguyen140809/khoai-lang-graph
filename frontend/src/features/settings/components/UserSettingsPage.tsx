@@ -1,18 +1,17 @@
 'use client'
 
-import type { Route } from 'next'
 import Link from 'next/link'
 import { useSearchParams } from 'next/navigation'
 
 import { ErrorState, LoadingState } from '@/shared/components/state'
 import { ScrollArea } from '@/shared/components/ui/scroll-area'
-import { RouteParam } from '@/shared/config/routes.utils'
+import { RouteParam, routes } from '@/shared/config/routes'
 import { cn } from '@/shared/lib/utils'
 
 import { useCatalog, useDefinition, useModelChoices } from '../hooks/useAccountQueries'
 import { useProfile } from '../hooks/useProfile'
 import { useUserSettings } from '../hooks/useUserSettings'
-import { settingsSectionOf, userSettingsHref } from '../section.utils'
+import { settingsSectionOf } from '../section.utils'
 import { settingsSectionLabels, settingsSections } from '../settings.types'
 import { ModelChoicesForm } from './ModelChoicesForm'
 import { PasswordForm } from './PasswordForm'
@@ -73,7 +72,7 @@ export function UserSettingsPage() {
         {settingsSections.map((entry) => (
           <Link
             key={entry}
-            href={userSettingsHref(entry) as Route}
+            href={routes.settings(entry)}
             aria-current={entry === section ? 'page' : undefined}
             className={cn(
               'rounded-md px-2 py-1 text-xs outline-none hover:bg-accent focus-visible:ring-2 focus-visible:ring-ring/50',

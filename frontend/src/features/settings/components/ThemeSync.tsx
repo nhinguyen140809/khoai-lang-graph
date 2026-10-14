@@ -1,37 +1,16 @@
 'use client'
 
-import { useMutation, useQueryClient } from '@tanstack/react-query'
 import { useTheme } from 'next-themes'
 import { useEffect, useEffectEvent, useRef } from 'react'
-import { toast } from 'sonner'
 
-import { userSettingsQueryKey, useUserSettings } from '../hooks/useUserSettings'
-import { replaceUserSettings, type UserSettingsBody } from '../settings.api'
+import { useSaveTheme } from '../hooks/useSaveTheme'
+import { useUserSettings } from '../hooks/useUserSettings'
 import type { UserSettings } from '../settings.types'
 
 type Theme = UserSettings['theme']
 
 function isTheme(value: string): value is Theme {
   return value === 'light' || value === 'dark' || value === 'system'
-}
-
-function settingsBody(settings: UserSettings): UserSettingsBody {
-  const {
-    theme,
-    ui_language,
-    default_output_language,
-    default_run_config,
-    notify_on_interrupt,
-    notify_on_run_finished,
-  } = settings
-  return {
-    theme,
-    ui_language,
-    default_output_language,
-    default_run_config,
-    notify_on_interrupt,
-    notify_on_run_finished,
-  }
 }
 
 /**
@@ -44,16 +23,7 @@ function settingsBody(settings: UserSettings): UserSettingsBody {
 export function ThemeSync() {
   const { theme, setTheme } = useTheme()
   const settings = useUserSettings()
-  const queryClient = useQueryClient()
-  const save = useMutation({
-    mutationFn: replaceUserSettings,
-    onSuccess: (saved) => {
-      queryClient.setQueryData(userSettingsQueryKey, saved)
-    },
-    onError: (error) => {
-      toast.error(`The theme was not saved. ${error.message}`)
-    },
-  })
+  const saveTheme = useSaveTheme()
   // The theme known to be the same on the page and in the settings.
   const synced = useRef<Theme | null>(null)
   const stored = settings.data?.theme
@@ -64,9 +34,8 @@ export function ThemeSync() {
     setTheme(stored)
   }, [stored, setTheme])
 
-  const saveTheme = useEffectEvent((value: Theme) => {
-    if (settings.data === undefined) return
-    save.mutate({ ...settingsBody(settings.data), theme: value })
+  const saveThemeOfPage = useEffectEvent((value: Theme) => {
+    saveTheme(value)
   })
 
   useEffect(() => {
@@ -74,7 +43,7 @@ export function ThemeSync() {
     if (theme === undefined || synced.current === null || theme === synced.current) return
     if (!isTheme(theme)) return
     synced.current = theme
-    saveTheme(theme)
+    saveThemeOfPage(theme)
   }, [theme])
 
   return null

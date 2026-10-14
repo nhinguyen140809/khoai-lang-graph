@@ -1,5 +1,7 @@
 import { z } from 'zod'
 
+import { type UserSettingsSection, userSettingsSections } from '@/shared/config/routes'
+
 // Temporary hand-written schemas for the settings API.
 // TODO: replace with the types generated into src/api/generated/ once they exist.
 
@@ -90,16 +92,9 @@ export const usageSchema = z.object({
 
 export type UserUsage = z.infer<typeof usageSchema>
 
-export const settingsSections = [
-  'profile',
-  'password',
-  'preferences',
-  'models',
-  'usage',
-  'sessions',
-] as const
+export const settingsSections = userSettingsSections
 
-export type SettingsSection = (typeof settingsSections)[number]
+export type SettingsSection = UserSettingsSection
 
 export const settingsSectionLabels = {
   profile: 'Profile',

@@ -1,89 +1,33 @@
 'use client'
 
 import { zodResolver } from '@hookform/resolvers/zod'
-import { useMutation } from '@tanstack/react-query'
-import { useRouter } from 'next/navigation'
 import { useForm } from 'react-hook-form'
-import { toast } from 'sonner'
-import { z } from 'zod'
 
-import { ApiError } from '@/shared/api/api-error.utils'
-import { authHref, AuthPage } from '@/shared/api/auth-redirect.utils'
+import { TextField } from '@/shared/components/form'
 import { Button } from '@/shared/components/ui/button'
-import { Field, FieldError, FieldGroup, FieldLabel } from '@/shared/components/ui/field'
-import { Input } from '@/shared/components/ui/input'
+import { FieldGroup } from '@/shared/components/ui/field'
 import { Spinner } from '@/shared/components/ui/spinner'
+import { routes } from '@/shared/config/routes'
 
-import { login, register } from '../account.api'
-import type { RegisterBody } from '../account.types'
-import { useOpenAfterSignIn } from '../hooks/useOpenAfterSignIn'
+import { type AccountForm, accountFormSchema } from '../account.schema'
+import { useCreateAccount } from '../hooks/useCreateAccount'
 import { AuthCard } from './AuthCard'
-
-const formSchema = z.object({
-  display_name: z.string().trim().min(1, 'Enter your name.'),
-  email: z.email('Enter an email address.'),
-  password: z.string().min(1, 'Enter a password.'),
-})
-
-type FormValues = z.infer<typeof formSchema>
-
-function isFormField(field: string): field is keyof FormValues {
-  return Object.hasOwn(formSchema.shape, field)
-}
 
 interface RegisterPageProps {
   /** The page to open after the account is created. */
   next: string | null
 }
 
-/** Creates an account, then signs in with it: creating an account does not start a session. */
 export function RegisterPage({ next }: RegisterPageProps) {
-  const router = useRouter()
-  const openAfterSignIn = useOpenAfterSignIn(next)
-  const createAccount = useMutation({
-    // Resolves to whether signing in worked too.
-    mutationFn: async (body: RegisterBody) => {
-      await register(body)
-      try {
-        await login({ email: body.email, password: body.password })
-      } catch {
-        return false
-      }
-      return true
-    },
-  })
-  const form = useForm<FormValues>({
-    resolver: zodResolver(formSchema),
+  const form = useForm<AccountForm>({
+    resolver: zodResolver(accountFormSchema),
     defaultValues: { display_name: '', email: '', password: '' },
   })
-  const { errors } = form.formState
+  const createAccount = useCreateAccount(next, form.setError)
 
   const onSubmit = form.handleSubmit((values) => {
-    createAccount.mutate(values, {
-      onSuccess: (signedIn) => {
-        if (signedIn) {
-          openAfterSignIn()
-          return
-        }
-        // The account exists, so creating it again would fail: sign in with it instead.
-        toast.info('The account is created. Sign in with it.')
-        router.replace(authHref(AuthPage.Login, next))
-      },
-      onError: (error) => {
-        if (!(error instanceof ApiError)) return
-        for (const { field, message } of error.fieldErrors) {
-          if (isFormField(field)) form.setError(field, { message })
-        }
-      },
-    })
+    createAccount.mutate(values)
   })
-
-  // Field problems are shown at their field; any other failure, or a problem of a field the form
-  // does not have, under the form.
-  const shownAtField =
-    createAccount.error instanceof ApiError &&
-    createAccount.error.fieldErrors.some(({ field }) => isFormField(field))
-  const formError = createAccount.isError && !shownAtField ? createAccount.error.message : null
 
   return (
     <AuthCard
@@ -92,7 +36,7 @@ export function RegisterPage({ next }: RegisterPageProps) {
       switchTo={{
         prompt: 'Have an account?',
         label: 'Sign in',
-        href: authHref(AuthPage.Login, next),
+        href: routes.signIn(next),
       }}
     >
       <form
@@ -102,41 +46,24 @@ export function RegisterPage({ next }: RegisterPageProps) {
         }}
       >
         <FieldGroup>
-          <Field data-invalid={errors.display_name !== undefined}>
-            <FieldLabel htmlFor="register-name">Name</FieldLabel>
-            <Input
-              id="register-name"
-              autoComplete="name"
-              aria-invalid={errors.display_name !== undefined}
-              {...form.register('display_name')}
-            />
-            <FieldError errors={[errors.display_name]} />
-          </Field>
-          <Field data-invalid={errors.email !== undefined}>
-            <FieldLabel htmlFor="register-email">Email</FieldLabel>
-            <Input
-              id="register-email"
-              type="email"
-              autoComplete="email"
-              aria-invalid={errors.email !== undefined}
-              {...form.register('email')}
-            />
-            <FieldError errors={[errors.email]} />
-          </Field>
-          <Field data-invalid={errors.password !== undefined}>
-            <FieldLabel htmlFor="register-password">Password</FieldLabel>
-            <Input
-              id="register-password"
-              type="password"
-              autoComplete="new-password"
-              aria-invalid={errors.password !== undefined}
-              {...form.register('password')}
-            />
-            <FieldError errors={[errors.password]} />
-          </Field>
-          {formError !== null && (
+          <TextField control={form.control} name="display_name" label="Name" autoComplete="name" />
+          <TextField
+            control={form.control}
+            name="email"
+            label="Email"
+            type="email"
+            autoComplete="email"
+          />
+          <TextField
+            control={form.control}
+            name="password"
+            label="Password"
+            type="password"
+            autoComplete="new-password"
+          />
+          {createAccount.formError !== null && (
             <p role="alert" className="text-xs text-destructive">
-              {formError}
+              {createAccount.formError}
             </p>
           )}
           <Button type="submit" disabled={createAccount.isPending} className="w-full">

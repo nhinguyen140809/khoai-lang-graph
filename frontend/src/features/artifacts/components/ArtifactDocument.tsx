@@ -12,7 +12,7 @@ import {
   TableHeader,
   TableRow,
 } from '@/shared/components/ui/table'
-import { artifactHref } from '@/shared/config/routes.utils'
+import { routes } from '@/shared/config/routes'
 
 import type { ContentSchema, OutlineItem } from '../artifacts.types'
 import { ArtifactTabIcon } from '../artifacts-frame.config'
@@ -87,7 +87,7 @@ export function ArtifactDocument({
       ? {
           id: artifactId,
           title: artifact.data.title,
-          href: artifactHref(projectId, artifactId),
+          href: routes.project(projectId).artifact(artifactId),
           icon: ArtifactTabIcon.Artifact,
         }
       : null,

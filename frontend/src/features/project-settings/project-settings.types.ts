@@ -1,7 +1,7 @@
 import { z } from 'zod'
 
 import { runConfigSchema } from '@/shared/components/run-config'
-import { type ProjectSettingsSection, projectSettingsSections } from '@/shared/config/routes.utils'
+import { type ProjectSettingsSection, projectSettingsSections } from '@/shared/config/routes'
 
 // Temporary hand-written schemas for what the settings of a project read and write.
 // TODO: replace with the types generated into src/api/generated/ once they exist.

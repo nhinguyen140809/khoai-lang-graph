@@ -14,7 +14,7 @@ import {
   TableHeader,
   TableRow,
 } from '@/shared/components/ui/table'
-import { traceabilityHref } from '@/shared/config/routes.utils'
+import { routes } from '@/shared/config/routes'
 
 import { useCoverage } from '../hooks/useCoverage'
 import { useMatrix } from '../hooks/useMatrix'
@@ -64,7 +64,7 @@ export function MatrixView({ projectId, gap }: MatrixViewProps) {
             Only rows of <strong>{chosen.label}</strong>: {chosen.description}
           </span>
           <Button asChild size="xs" variant="outline">
-            <Link href={traceabilityHref(projectId)}>Show all rows</Link>
+            <Link href={routes.project(projectId).traceability()}>Show all rows</Link>
           </Button>
         </div>
       )}

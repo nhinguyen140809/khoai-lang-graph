@@ -6,7 +6,7 @@ import { usePathname, useSearchParams } from 'next/navigation'
 import { useState } from 'react'
 
 import { EmptyState, ErrorState, LoadingState } from '@/shared/components/state'
-import { RouteParam, runHref } from '@/shared/config/routes.utils'
+import { RouteParam, routes } from '@/shared/config/routes'
 import { runStatusLabels, runStatusTones } from '@/shared/config/run-status.constants'
 import { toneClasses } from '@/shared/lib/tone.constants'
 import { cn } from '@/shared/lib/utils'
@@ -56,7 +56,7 @@ export function RunTree({ projectId }: RunTreeProps) {
 
 function RunNode({ projectId, run }: { projectId: string; run: WorkflowRun }) {
   const pathname = usePathname()
-  const href = runHref(projectId, run.id)
+  const href = routes.project(projectId).run(run.id)
   const [open, setOpen] = useState(pathname === href)
 
   return (
@@ -157,8 +157,10 @@ function StepRow({
   const pathname = usePathname()
   return (
     <Link
-      href={runHref(projectId, runId, step.id)}
-      aria-current={selected && pathname === runHref(projectId, runId) ? 'page' : undefined}
+      href={routes.project(projectId).run(runId, step.id)}
+      aria-current={
+        selected && pathname === routes.project(projectId).run(runId) ? 'page' : undefined
+      }
       className={cn(rowClassName, 'gap-2 font-mono')}
     >
       <span className="w-6 shrink-0 text-right text-muted-foreground">{step.sequence}</span>

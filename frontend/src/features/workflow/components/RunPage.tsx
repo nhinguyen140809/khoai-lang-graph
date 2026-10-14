@@ -6,7 +6,7 @@ import { useMemo } from 'react'
 import { EditorWithBottomPanel, projectTabGroup, useEditorTab } from '@/shared/components/frame'
 import { ErrorState, LoadingState, NotFoundState } from '@/shared/components/state'
 import { ScrollArea } from '@/shared/components/ui/scroll-area'
-import { RouteParam, runHref, runNodeHref } from '@/shared/config/routes.utils'
+import { RouteParam, routes } from '@/shared/config/routes'
 import { runStatusLabels } from '@/shared/config/run-status.constants'
 
 import { useGraphLayout } from '../hooks/useGraphLayout'
@@ -42,7 +42,7 @@ export function RunPage({ projectId, runId }: RunPageProps) {
       : {
           id: runId,
           title: `Run ${String(run.number)}`,
-          href: runHref(projectId, runId),
+          href: routes.project(projectId).run(runId),
           icon: WorkflowTabIcon.Run,
         },
   )
@@ -85,10 +85,10 @@ export function RunPage({ projectId, runId }: RunPageProps) {
   const chooseNode = (nodeId: string) => {
     const last = progress.nodes[nodeId]?.lastStepId
     if (last === undefined || last === null) {
-      router.replace(runNodeHref(projectId, runId, nodeId), { scroll: false })
+      router.replace(routes.project(projectId).runNode(runId, nodeId), { scroll: false })
       return
     }
-    router.replace(runHref(projectId, runId, last), { scroll: false })
+    router.replace(routes.project(projectId).run(runId, last), { scroll: false })
   }
 
   return (

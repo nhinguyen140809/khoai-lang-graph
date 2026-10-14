@@ -2,7 +2,7 @@ import { NetworkIcon, PlayIcon } from 'lucide-react'
 
 import type { FeatureActivity, TabIcons } from '@/shared/components/frame'
 import { SidePanel } from '@/shared/components/frame'
-import { workflowHref } from '@/shared/config/routes.utils'
+import { routes } from '@/shared/config/routes'
 
 import { RunTree } from './components/RunTree'
 
@@ -12,7 +12,7 @@ export function workflowActivity(projectId: string): FeatureActivity {
     id: 'workflow',
     label: 'Workflow',
     icon: <NetworkIcon />,
-    href: workflowHref(projectId),
+    href: routes.project(projectId).workflow(),
     panel: (
       <SidePanel title="Runs">
         <RunTree projectId={projectId} />

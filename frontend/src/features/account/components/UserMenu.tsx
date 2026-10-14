@@ -1,14 +1,9 @@
 'use client'
 
-import { useMutation } from '@tanstack/react-query'
 import { LogOutIcon, RotateCcwIcon, SettingsIcon, UserIcon } from 'lucide-react'
 import Link from 'next/link'
 import { useTheme } from 'next-themes'
-import { toast } from 'sonner'
 
-import { HttpStatus } from '@/shared/api/api-error.constants'
-import { ApiError } from '@/shared/api/api-error.utils'
-import { AuthPage, loadPage } from '@/shared/api/auth-redirect.utils'
 import { Avatar, AvatarFallback, AvatarImage } from '@/shared/components/ui/avatar'
 import { Button } from '@/shared/components/ui/button'
 import {
@@ -22,11 +17,12 @@ import {
   DropdownMenuTrigger,
 } from '@/shared/components/ui/dropdown-menu'
 import { Skeleton } from '@/shared/components/ui/skeleton'
+import { routes } from '@/shared/config/routes'
 import { useIsHydrated } from '@/shared/hooks/useIsHydrated'
 
-import { logout } from '../account.api'
 import { initials } from '../account.utils'
 import { useMe } from '../hooks/useMe'
+import { useSignOut } from '../hooks/useSignOut'
 
 const themeOptions = [
   { value: 'light', label: 'Light' },
@@ -40,18 +36,7 @@ export function UserMenu() {
   const { theme, setTheme } = useTheme()
   // The stored theme is only known in the browser; until hydration no option is marked.
   const hydrated = useIsHydrated()
-  const signOut = useMutation({
-    mutationFn: logout,
-    onSuccess: () => {
-      // A full page load: the data of this session must not show to whoever signs in next.
-      loadPage(AuthPage.Login)
-    },
-    onError: (error) => {
-      // Without a session the query client already opens the sign-in page.
-      if (error instanceof ApiError && error.status === HttpStatus.Unauthorized) return
-      toast.error(error.message)
-    },
-  })
+  const signOut = useSignOut()
 
   return (
     <DropdownMenu>
@@ -88,7 +73,7 @@ export function UserMenu() {
         )}
         <DropdownMenuSeparator />
         <DropdownMenuItem asChild>
-          <Link href="/settings">
+          <Link href={routes.settings()}>
             <SettingsIcon aria-hidden />
             Your settings
           </Link>

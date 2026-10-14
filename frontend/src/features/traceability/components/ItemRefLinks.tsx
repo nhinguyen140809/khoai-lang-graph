@@ -1,6 +1,6 @@
 import Link from 'next/link'
 
-import { itemHref } from '@/shared/config/routes.utils'
+import { routes } from '@/shared/config/routes'
 
 import type { ItemRef } from '../traceability.types'
 
@@ -12,7 +12,7 @@ export function ItemRefLinks({ projectId, items }: { projectId: string; items: I
       {items.map((item) => (
         <Link
           key={item.item_id}
-          href={itemHref(projectId, item.item_id)}
+          href={routes.project(projectId).item(item.item_id)}
           title={item.title}
           className="rounded-sm text-primary underline-offset-2 outline-none hover:underline focus-visible:ring-2 focus-visible:ring-ring/50"
         >

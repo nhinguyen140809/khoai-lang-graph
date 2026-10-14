@@ -14,7 +14,7 @@ import {
   DropdownMenuTrigger,
 } from '@/shared/components/ui/dropdown-menu'
 import { Skeleton } from '@/shared/components/ui/skeleton'
-import { consoleHref } from '@/shared/config/routes.utils'
+import { routes } from '@/shared/config/routes'
 import { cn } from '@/shared/lib/utils'
 
 import { useProject } from '../hooks/useProject'
@@ -73,7 +73,7 @@ export function ProjectSwitcher({ projectId }: ProjectSwitcherProps) {
         {projects.data?.length === 0 && <DropdownMenuItem disabled>No projects</DropdownMenuItem>}
         {projects.data?.map(({ id, name }) => (
           <DropdownMenuItem key={id} asChild>
-            <Link href={consoleHref(id)}>
+            <Link href={routes.project(id).console()}>
               <CheckIcon aria-hidden className={cn(id !== projectId && 'invisible')} />
               <span className="truncate">{name}</span>
               {id === projectId && <span className="sr-only">(open)</span>}
@@ -82,7 +82,7 @@ export function ProjectSwitcher({ projectId }: ProjectSwitcherProps) {
         ))}
         <DropdownMenuSeparator />
         <DropdownMenuItem asChild>
-          <Link href="/projects">
+          <Link href={routes.projects()}>
             <LayoutListIcon aria-hidden />
             All projects
           </Link>

@@ -2,7 +2,7 @@ import { SettingsIcon } from 'lucide-react'
 
 import type { FeatureActivity, TabIcons } from '@/shared/components/frame'
 import { SidePanel } from '@/shared/components/frame'
-import { settingsHref } from '@/shared/config/routes.utils'
+import { routes } from '@/shared/config/routes'
 
 import { SettingsNav } from './components/SettingsNav'
 
@@ -16,7 +16,7 @@ export function projectSettingsActivity(projectId: string): FeatureActivity {
     label: 'Settings',
     icon: <SettingsIcon />,
     placement: 'bottom',
-    href: settingsHref(projectId),
+    href: routes.project(projectId).settings(),
     panel: (
       <SidePanel title="Project settings">
         <SettingsNav projectId={projectId} />

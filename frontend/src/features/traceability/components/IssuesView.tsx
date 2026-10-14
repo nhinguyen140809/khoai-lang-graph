@@ -4,7 +4,7 @@ import { CircleCheckIcon } from 'lucide-react'
 import Link from 'next/link'
 
 import { EmptyState, ErrorState, LoadingState } from '@/shared/components/state'
-import { itemHref } from '@/shared/config/routes.utils'
+import { routes } from '@/shared/config/routes'
 
 import { useIssues } from '../hooks/useIssues'
 
@@ -44,7 +44,7 @@ export function IssuesView({ projectId }: { projectId: string }) {
                 <li key={issue.id} className="flex flex-col gap-1 rounded-md border p-3 text-xs">
                   <div className="flex flex-wrap items-baseline gap-x-2">
                     <Link
-                      href={itemHref(projectId, issue.id)}
+                      href={routes.project(projectId).item(issue.id)}
                       className="font-mono text-primary underline-offset-2 hover:underline"
                     >
                       {issue.key}
@@ -57,7 +57,7 @@ export function IssuesView({ projectId }: { projectId: string }) {
                       {about.map((item) => (
                         <Link
                           key={item.id}
-                          href={itemHref(projectId, item.id)}
+                          href={routes.project(projectId).item(item.id)}
                           className="font-mono text-primary underline-offset-2 hover:underline"
                         >
                           {item.key}

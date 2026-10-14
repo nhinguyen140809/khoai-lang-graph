@@ -23,7 +23,7 @@ import { ProjectWorkspace, Workbench } from '@/shared/components/frame'
 import { NotFoundState } from '@/shared/components/state'
 import { Button } from '@/shared/components/ui/button'
 import { Surface } from '@/shared/components/ui/surface'
-import { reviewsPath } from '@/shared/config/routes.utils'
+import { routes } from '@/shared/config/routes'
 
 /** The icons that the pages of the features name for their tabs. */
 const tabIcons: TabIcons = {
@@ -53,7 +53,7 @@ export default async function ProjectLayout({
     {
       ...consoleActivity(projectId),
       // A review is a page of the console: its tab keeps the console as the side panel.
-      paths: [reviewsPath(projectId)],
+      paths: [routes.project(projectId).reviewsPath()],
       badge: <PendingReviewBadge projectId={projectId} />,
     },
     searchActivity(projectId),
@@ -94,7 +94,7 @@ export default async function ProjectLayout({
                 reference={projectId}
                 action={
                   <Button asChild>
-                    <Link href="/projects">All projects</Link>
+                    <Link href={routes.projects()}>All projects</Link>
                   </Button>
                 }
               />

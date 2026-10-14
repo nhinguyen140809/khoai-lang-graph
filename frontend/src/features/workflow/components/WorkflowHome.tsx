@@ -5,7 +5,7 @@ import Link from 'next/link'
 
 import { EmptyState, ErrorState, LoadingState } from '@/shared/components/state'
 import { Button } from '@/shared/components/ui/button'
-import { runHref } from '@/shared/config/routes.utils'
+import { routes } from '@/shared/config/routes'
 
 import { useProjectRuns } from '../hooks/useProjectRuns'
 
@@ -34,7 +34,7 @@ export function WorkflowHome({ projectId }: { projectId: string }) {
       description="Choose a run in the side panel to see its workflow: the graph, the state of each node and the steps."
       action={
         <Button asChild>
-          <Link href={runHref(projectId, newest.id)}>Open Run {newest.number}</Link>
+          <Link href={routes.project(projectId).run(newest.id)}>Open Run {newest.number}</Link>
         </Button>
       }
     />

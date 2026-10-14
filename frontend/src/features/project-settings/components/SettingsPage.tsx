@@ -6,7 +6,7 @@ import { isNotFoundError } from '@/shared/api/api-error.utils'
 import { projectTabGroup, useEditorTab } from '@/shared/components/frame'
 import { ErrorState, LoadingState, NotFoundState } from '@/shared/components/state'
 import { ScrollArea } from '@/shared/components/ui/scroll-area'
-import { RouteParam, settingsHref } from '@/shared/config/routes.utils'
+import { RouteParam, routes } from '@/shared/config/routes'
 
 import { useModels } from '../hooks/useModels'
 import { useSettingsDefinition } from '../hooks/useSettingsDefinition'
@@ -28,7 +28,7 @@ export function SettingsPage({ projectId }: { projectId: string }) {
   useEditorTab(projectTabGroup(projectId), {
     id: 'settings',
     title: 'Settings',
-    href: settingsHref(projectId, section),
+    href: routes.project(projectId).settings(section),
     icon: ProjectSettingsTabIcon.Settings,
   })
 

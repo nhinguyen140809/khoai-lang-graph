@@ -4,7 +4,7 @@ import { useSearchParams } from 'next/navigation'
 
 import { projectTabGroup, useEditorTab } from '@/shared/components/frame'
 import { ScrollArea } from '@/shared/components/ui/scroll-area'
-import { RouteParam, traceabilityHref } from '@/shared/config/routes.utils'
+import { RouteParam, routes } from '@/shared/config/routes'
 
 import { TraceabilityTabIcon } from '../traceability-frame.config'
 import { IssuesView } from './IssuesView'
@@ -18,7 +18,7 @@ export function TraceabilityPage({ projectId }: { projectId: string }) {
   useEditorTab(projectTabGroup(projectId), {
     id: issues ? 'issues' : 'matrix',
     title: issues ? 'Issues' : 'Matrix',
-    href: traceabilityHref(projectId, issues ? { view: 'issues' } : {}),
+    href: routes.project(projectId).traceability(issues ? { view: 'issues' } : {}),
     icon: TraceabilityTabIcon.View,
   })
 

@@ -8,10 +8,10 @@ import { useDeferredValue, useState } from 'react'
 import { EmptyState, ErrorState, LoadingState } from '@/shared/components/state'
 import { Badge } from '@/shared/components/ui/badge'
 import { Input } from '@/shared/components/ui/input'
-import { itemHref } from '@/shared/config/routes.utils'
+import { routes } from '@/shared/config/routes'
 
 import { MIN_QUERY_LENGTH, useItemSearch } from '../hooks/useItemSearch'
-import { SEARCH_RESULT_LIMIT } from '../search.api'
+import { SEARCH_RESULT_LIMIT } from '../search.constants'
 import { itemTitle } from '../search.utils'
 
 interface SearchPanelProps {
@@ -91,7 +91,7 @@ function Results({ projectId, text, search }: ResultsProps) {
       </p>
       <ul className="flex flex-col gap-px px-1">
         {search.data.items.map((item) => {
-          const href = itemHref(projectId, item.id)
+          const href = routes.project(projectId).item(item.id)
           return (
             <li key={item.id}>
               <Link

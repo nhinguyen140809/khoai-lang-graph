@@ -1,6 +1,6 @@
 import Link from 'next/link'
 
-import { itemHref } from '@/shared/config/routes.utils'
+import { routes } from '@/shared/config/routes'
 import { cn } from '@/shared/lib/utils'
 
 import { useItemOpen } from './ItemOpenContext'
@@ -33,7 +33,7 @@ export function ItemLink({ projectId, itemId, className, children }: ItemLinkPro
     )
   }
   return (
-    <Link href={itemHref(projectId, itemId)} className={style}>
+    <Link href={routes.project(projectId).item(itemId)} className={style}>
       {children}
     </Link>
   )

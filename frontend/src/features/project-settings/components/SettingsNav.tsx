@@ -3,7 +3,7 @@
 import Link from 'next/link'
 import { useSearchParams } from 'next/navigation'
 
-import { RouteParam, settingsHref } from '@/shared/config/routes.utils'
+import { RouteParam, routes } from '@/shared/config/routes'
 
 import { sectionLabels, sections } from '../project-settings.types'
 import { sectionOf } from '../section.utils'
@@ -16,7 +16,7 @@ export function SettingsNav({ projectId }: { projectId: string }) {
       {sections.map((section) => (
         <Link
           key={section}
-          href={settingsHref(projectId, section)}
+          href={routes.project(projectId).settings(section)}
           aria-current={section === current ? 'page' : undefined}
           className="rounded-md px-2 py-1 text-xs outline-none hover:bg-sidebar-accent focus-visible:ring-2 focus-visible:ring-ring/50 aria-[current=page]:bg-sidebar-accent aria-[current=page]:font-medium"
         >

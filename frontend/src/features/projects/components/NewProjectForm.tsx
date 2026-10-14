@@ -25,7 +25,7 @@ import {
 } from '@/shared/components/ui/select'
 import { Spinner } from '@/shared/components/ui/spinner'
 import { Textarea } from '@/shared/components/ui/textarea'
-import { consoleHref } from '@/shared/config/routes.utils'
+import { routes } from '@/shared/config/routes'
 
 import { useCreateProject } from '../hooks/useCreateProject'
 import {
@@ -74,7 +74,7 @@ export function NewProjectForm({ defaultLanguage, onCreated }: NewProjectFormPro
       {
         onSuccess: ({ projectId }) => {
           onCreated()
-          router.push(consoleHref(projectId))
+          router.push(routes.project(projectId).console())
         },
         onError: (error) => {
           if (!(error instanceof ApiError)) return

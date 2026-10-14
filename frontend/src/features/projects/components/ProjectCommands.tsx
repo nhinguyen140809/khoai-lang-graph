@@ -4,7 +4,7 @@ import { FolderIcon, LayoutListIcon, PlusIcon, RotateCcwIcon } from 'lucide-reac
 import { useRouter } from 'next/navigation'
 
 import { type PaletteCommand, useCommands } from '@/shared/components/frame'
-import { consoleHref } from '@/shared/config/routes.utils'
+import { routes } from '@/shared/config/routes'
 
 import { useProjects } from '../hooks/useProjects'
 import { useNewProjectDialogStore } from '../new-project.store'
@@ -43,7 +43,7 @@ export function ProjectCommands({ currentProjectId }: ProjectCommandsProps) {
       group: GROUP,
       icon: <FolderIcon />,
       run: () => {
-        router.push(consoleHref(id))
+        router.push(routes.project(id).console())
       },
     })
   }
@@ -54,7 +54,7 @@ export function ProjectCommands({ currentProjectId }: ProjectCommandsProps) {
       group: GROUP,
       icon: <LayoutListIcon />,
       run: () => {
-        router.push('/projects')
+        router.push(routes.projects())
       },
     },
     {

@@ -4,7 +4,7 @@ import type { Route } from 'next'
 import Link from 'next/link'
 
 import { ErrorState, LoadingState } from '@/shared/components/state'
-import { artifactHref, itemHref } from '@/shared/config/routes.utils'
+import { routes } from '@/shared/config/routes'
 
 import { useWorkflowState } from '../hooks/useWorkflowState'
 
@@ -20,13 +20,13 @@ function referenceOf(projectId: string, value: unknown): { href: string; label: 
   if (!isRecord(value)) return null
   if (typeof value.item_id === 'string' && typeof value.key === 'string') {
     return {
-      href: itemHref(projectId, value.item_id),
+      href: routes.project(projectId).item(value.item_id),
       label: `${value.key} v${String(value.version)}`,
     }
   }
   if (typeof value.artifact_id === 'string' && typeof value.title === 'string') {
     return {
-      href: artifactHref(projectId, value.artifact_id),
+      href: routes.project(projectId).artifact(value.artifact_id),
       label: `${value.title} v${String(value.version)}`,
     }
   }

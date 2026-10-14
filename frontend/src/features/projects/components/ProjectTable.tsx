@@ -14,7 +14,7 @@ import {
   TableHeader,
   TableRow,
 } from '@/shared/components/ui/table'
-import { consoleHref } from '@/shared/config/routes.utils'
+import { routes } from '@/shared/config/routes'
 import { useNow } from '@/shared/hooks/useNow'
 import { formatRelativeTime } from '@/shared/lib/relative-time.utils'
 
@@ -91,7 +91,7 @@ export function ProjectTable({ status }: ProjectTableProps) {
               <TableCell className="font-medium">
                 {/* The link covers the row, so that the whole row opens the project. */}
                 <Link
-                  href={consoleHref(project.id)}
+                  href={routes.project(project.id).console()}
                   className="outline-none after:absolute after:inset-0 focus-visible:after:ring-2 focus-visible:after:ring-ring/50 focus-visible:after:ring-inset"
                 >
                   {project.name}

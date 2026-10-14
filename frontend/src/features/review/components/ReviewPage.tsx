@@ -13,7 +13,7 @@ import {
 } from '@/shared/components/ui/resizable'
 import { ScrollArea } from '@/shared/components/ui/scroll-area'
 import { Surface } from '@/shared/components/ui/surface'
-import { consoleHref, reviewHref } from '@/shared/config/routes.utils'
+import { routes } from '@/shared/config/routes'
 
 import { usePendingInterrupt } from '../hooks/usePendingInterrupt'
 import { ReviewTabIcon } from '../review-frame.config'
@@ -38,7 +38,7 @@ interface ReviewPageProps {
 export function ReviewPage({ projectId, runId, Artifacts, Console }: ReviewPageProps) {
   const router = useRouter()
   const interrupt = usePendingInterrupt(runId)
-  const href = reviewHref(projectId, runId)
+  const href = routes.project(projectId).review(runId)
 
   // The review is one tab, with the artifact and the console split inside it.
   const tab = useEditorTab(projectTabGroup(projectId), {
@@ -51,7 +51,7 @@ export function ReviewPage({ projectId, runId, Artifacts, Console }: ReviewPageP
   const backToConsole = () => {
     // An answered review has nothing left to show, so its tab closes.
     tab.close()
-    router.push(consoleHref(projectId))
+    router.push(routes.project(projectId).console())
   }
 
   // A review that was open and is gone has been answered: the page goes back to the console at

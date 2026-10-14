@@ -2,7 +2,7 @@ import { GitForkIcon, TableIcon } from 'lucide-react'
 
 import type { FeatureActivity, TabIcons } from '@/shared/components/frame'
 import { SidePanel } from '@/shared/components/frame'
-import { traceabilityHref } from '@/shared/config/routes.utils'
+import { routes } from '@/shared/config/routes'
 
 import { TraceabilityNav } from './components/TraceabilityNav'
 
@@ -12,7 +12,7 @@ export function traceabilityActivity(projectId: string): FeatureActivity {
     id: 'traceability',
     label: 'Traceability',
     icon: <GitForkIcon />,
-    href: traceabilityHref(projectId),
+    href: routes.project(projectId).traceability(),
     panel: (
       <SidePanel title="Traceability">
         <TraceabilityNav projectId={projectId} />

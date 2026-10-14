@@ -7,7 +7,7 @@ import { toast } from 'sonner'
 
 import { Button } from '@/shared/components/ui/button'
 import { Spinner } from '@/shared/components/ui/spinner'
-import { itemHref, reviewHref, runHref } from '@/shared/config/routes.utils'
+import { routes } from '@/shared/config/routes'
 import { cn } from '@/shared/lib/utils'
 
 import { useProjectRuns } from '../hooks/useProjectRuns'
@@ -116,7 +116,7 @@ export function StepPanel({ projectId, run, definition, step, nodeLabel }: StepP
             {step.produced.map((item) => (
               <li key={item.item_id}>
                 <Link
-                  href={itemHref(projectId, item.item_id)}
+                  href={routes.project(projectId).item(item.item_id)}
                   className="rounded-sm text-primary underline-offset-2 outline-none hover:underline focus-visible:ring-2 focus-visible:ring-ring/50"
                 >
                   {item.key}
@@ -131,7 +131,7 @@ export function StepPanel({ projectId, run, definition, step, nodeLabel }: StepP
       <footer className="flex flex-wrap items-center gap-2">
         {waiting && (
           <Button asChild size="xs">
-            <Link href={reviewHref(projectId, run.id)}>Open review</Link>
+            <Link href={routes.project(projectId).review(run.id)}>Open review</Link>
           </Button>
         )}
         <Button
@@ -148,7 +148,7 @@ export function StepPanel({ projectId, run, definition, step, nodeLabel }: StepP
               { runId: run.id, stepId: step.id },
               {
                 onSuccess: (started) => {
-                  router.push(runHref(projectId, started.id))
+                  router.push(routes.project(projectId).run(started.id))
                 },
                 onError: (error) => {
                   toast.error(error.message)

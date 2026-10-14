@@ -1,7 +1,7 @@
 import { useQueryClient } from '@tanstack/react-query'
 import { useRouter } from 'next/navigation'
 
-import { safeNextPath } from '@/shared/api/auth-redirect.utils'
+import { safeNextPath } from '@/shared/config/routes'
 
 /**
  * Opens the page to return to after signing in: `next` when it is a page of this app. The queries

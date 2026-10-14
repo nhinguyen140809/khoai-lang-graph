@@ -7,7 +7,7 @@ import { type ReactNode, useEffect, useRef, useState } from 'react'
 import { useCommands, useOpenPage } from '@/shared/components/frame'
 import { ErrorState, LoadingState } from '@/shared/components/state'
 import { ScrollArea } from '@/shared/components/ui/scroll-area'
-import { artifactsExportHref, reviewHref, settingsHref } from '@/shared/config/routes.utils'
+import { routes } from '@/shared/config/routes'
 import { useNow } from '@/shared/hooks/useNow'
 
 import { useCommandHistoryStore } from '../command-history.store'
@@ -65,7 +65,7 @@ export function Console({ projectId, threadId, afterLog, reviewOpen = false }: C
   useEffect(() => {
     const status = activeRun?.status
     if (!reviewOpen && previousStatus.current === 'running' && status === 'interrupted') {
-      router.push(reviewHref(projectId, activeRun?.id ?? ''))
+      router.push(routes.project(projectId).review(activeRun?.id ?? ''))
     }
     previousStatus.current = status
   }, [activeRun?.id, activeRun?.status, projectId, reviewOpen, router])
@@ -115,10 +115,10 @@ export function Console({ projectId, threadId, afterLog, reviewOpen = false }: C
         return
       case 'export':
         // The side panel of the artifacts opens the export dialog that the address asks for.
-        openPage(artifactsExportHref(projectId))
+        openPage(routes.project(projectId).artifacts({ exporting: true }))
         return
       case 'run-settings':
-        openPage(settingsHref(projectId, 'runs'))
+        openPage(routes.project(projectId).settings('runs'))
         return
     }
   }

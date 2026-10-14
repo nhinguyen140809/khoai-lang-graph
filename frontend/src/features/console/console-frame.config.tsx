@@ -2,7 +2,7 @@ import { SquareChevronRightIcon } from 'lucide-react'
 
 import type { FeatureActivity, TabIcons } from '@/shared/components/frame'
 import { SidePanel } from '@/shared/components/frame'
-import { consoleHref } from '@/shared/config/routes.utils'
+import { routes } from '@/shared/config/routes'
 
 import { ConsoleNavigator } from './components/ConsoleNavigator'
 
@@ -12,7 +12,7 @@ export function consoleActivity(projectId: string): FeatureActivity {
     id: 'console',
     label: 'Console',
     icon: <SquareChevronRightIcon />,
-    href: consoleHref(projectId),
+    href: routes.project(projectId).console(),
     panel: (
       <SidePanel title="Console">
         <ConsoleNavigator projectId={projectId} />

@@ -1,9 +1,7 @@
 import { apiRequest, listPageSchema } from '@/shared/api/api-fetch.utils'
 
+import { SEARCH_RESULT_LIMIT } from './search.constants'
 import { itemSchema } from './search.types'
-
-// The most results the panel lists; a longer list asks for a narrower search.
-export const SEARCH_RESULT_LIMIT = 50
 
 /** The items of a project whose key or content contain `q`, ordered by key. */
 export function searchItems(projectId: string, q: string) {

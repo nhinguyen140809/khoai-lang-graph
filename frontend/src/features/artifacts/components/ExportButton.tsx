@@ -1,6 +1,5 @@
 'use client'
 
-import { useMutation, useQuery } from '@tanstack/react-query'
 import { DownloadIcon } from 'lucide-react'
 import { useSearchParams } from 'next/navigation'
 import { useState } from 'react'
@@ -24,11 +23,10 @@ import {
   SelectValue,
 } from '@/shared/components/ui/select'
 import { Spinner } from '@/shared/components/ui/spinner'
-import { RouteParam } from '@/shared/config/routes.utils'
+import { RouteParam } from '@/shared/config/routes'
 
-import { createExport, getExport } from '../artifacts.api'
-import { artifactKeys } from '../artifacts.keys'
 import { useDefinitionSummary } from '../hooks/useDefinitionSummary'
+import { useExport } from '../hooks/useExport'
 
 interface ExportButtonProps {
   projectId: string
@@ -75,18 +73,7 @@ function ExportForm({ projectId }: { projectId: string }) {
   const [template, setTemplate] = useState<string | null>(null)
   const [format, setFormat] = useState<string | null>(null)
 
-  const asked = useMutation({
-    mutationFn: ({ key, chosen }: { key: string; chosen: string }) =>
-      createExport(projectId, key, chosen),
-  })
-  const exported = useQuery({
-    queryKey: artifactKeys.export(asked.data?.id ?? ''),
-    queryFn: () => getExport(asked.data?.id ?? ''),
-    enabled: asked.data !== undefined,
-    // Ask again until the file is made.
-    refetchInterval: (query) => (query.state.data?.status === 'pending' ? 600 : false),
-    initialData: asked.data,
-  })
+  const { asked, exported } = useExport(projectId)
 
   if (definition.isPending)
     return <LoadingState label="Loading the templates" rows={2} size="compact" />

@@ -4,7 +4,7 @@ import Link from 'next/link'
 import { useSearchParams } from 'next/navigation'
 
 import { ErrorState, LoadingState } from '@/shared/components/state'
-import { RouteParam, traceabilityHref } from '@/shared/config/routes.utils'
+import { RouteParam, routes } from '@/shared/config/routes'
 import { cn } from '@/shared/lib/utils'
 
 import { useCoverage } from '../hooks/useCoverage'
@@ -34,7 +34,7 @@ export function TraceabilityNav({ projectId }: { projectId: string }) {
         {coverage.data?.gaps.map((entry) => (
           <Link
             key={entry.key}
-            href={traceabilityHref(projectId, { gap: entry.key })}
+            href={routes.project(projectId).traceability({ gap: entry.key })}
             title={entry.description}
             aria-current={view === null && gap === entry.key ? 'page' : undefined}
             className={rowClassName}
@@ -49,14 +49,14 @@ export function TraceabilityNav({ projectId }: { projectId: string }) {
       <section aria-label="Views" className="flex flex-col gap-px">
         <h3 className="px-2 text-2xs font-medium text-muted-foreground">Views</h3>
         <Link
-          href={traceabilityHref(projectId)}
+          href={routes.project(projectId).traceability()}
           aria-current={view === null && gap === null ? 'page' : undefined}
           className={rowClassName}
         >
           Matrix
         </Link>
         <Link
-          href={traceabilityHref(projectId, { view: 'issues' })}
+          href={routes.project(projectId).traceability({ view: 'issues' })}
           aria-current={view === 'issues' ? 'page' : undefined}
           className={rowClassName}
         >

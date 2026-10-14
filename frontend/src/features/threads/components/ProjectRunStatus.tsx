@@ -4,7 +4,7 @@ import Link from 'next/link'
 
 import { Separator } from '@/shared/components/ui/separator'
 import { Spinner } from '@/shared/components/ui/spinner'
-import { runHref } from '@/shared/config/routes.utils'
+import { routes } from '@/shared/config/routes'
 import { runStatusLabels, runStatusTones } from '@/shared/config/run-status.constants'
 import { toneClasses } from '@/shared/lib/tone.constants'
 import { cn } from '@/shared/lib/utils'
@@ -53,7 +53,7 @@ export function ProjectRunStatus({ projectId }: ProjectRunStatusProps) {
       const maxCost = run.run_config.max_cost_usd
       return (
         <Link
-          href={runHref(projectId, run.id)}
+          href={routes.project(projectId).run(run.id)}
           title={run.error?.message}
           className="flex min-w-0 items-center gap-2 rounded-sm px-1 outline-none hover:bg-sidebar-accent focus-visible:ring-2 focus-visible:ring-ring/50"
         >

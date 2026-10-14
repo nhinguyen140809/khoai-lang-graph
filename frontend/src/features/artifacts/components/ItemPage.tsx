@@ -14,7 +14,7 @@ import {
 import { ErrorState, LoadingState, NotFoundState } from '@/shared/components/state'
 import { Button } from '@/shared/components/ui/button'
 import { ScrollArea } from '@/shared/components/ui/scroll-area'
-import { artifactHref, itemHref } from '@/shared/config/routes.utils'
+import { routes } from '@/shared/config/routes'
 import { useNow } from '@/shared/hooks/useNow'
 import { formatRelativeTime } from '@/shared/lib/relative-time.utils'
 
@@ -55,7 +55,7 @@ export function ItemPage({ projectId, itemId, embedded = false, onBack }: ItemPa
       ? {
           id: itemId,
           title: item.data.key,
-          href: itemHref(projectId, itemId),
+          href: routes.project(projectId).item(itemId),
           icon: ArtifactTabIcon.Item,
         }
       : null,
@@ -94,7 +94,7 @@ export function ItemPage({ projectId, itemId, embedded = false, onBack }: ItemPa
         >
           {artifact.isSuccess && (
             <Link
-              href={artifactHref(projectId, artifact.data.id)}
+              href={routes.project(projectId).artifact(artifact.data.id)}
               className="rounded-sm underline-offset-2 outline-none hover:underline focus-visible:ring-2 focus-visible:ring-ring/50"
             >
               {artifact.data.title}
@@ -106,7 +106,7 @@ export function ItemPage({ projectId, itemId, embedded = false, onBack }: ItemPa
               <span key={link.id} className="flex items-center gap-1">
                 <span aria-hidden>/</span>
                 <Link
-                  href={itemHref(projectId, section.id)}
+                  href={routes.project(projectId).item(section.id)}
                   className="rounded-sm underline-offset-2 outline-none hover:underline focus-visible:ring-2 focus-visible:ring-ring/50"
                 >
                   {section.number !== null && `${section.number} `}

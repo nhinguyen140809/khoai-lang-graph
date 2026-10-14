@@ -5,6 +5,7 @@ import { usePathname } from 'next/navigation'
 
 import { NotFoundState } from '@/shared/components/state'
 import { Button } from '@/shared/components/ui/button'
+import { routes } from '@/shared/config/routes'
 
 export default function NotFound() {
   const pathname = usePathname()
@@ -17,7 +18,7 @@ export default function NotFound() {
         description="No page exists at this address. Check the link, or go back to the app."
         action={
           <Button asChild>
-            <Link href="/">Back to the app</Link>
+            <Link href={routes.home()}>Back to the app</Link>
           </Button>
         }
       />

@@ -1,9 +1,9 @@
 import { redirect } from 'next/navigation'
 
-import { consoleHref } from '@/shared/config/routes.utils'
+import { routes } from '@/shared/config/routes'
 
 /** A project opens at Console. */
 export default async function Page({ params }: PageProps<'/projects/[projectId]'>) {
   const { projectId } = await params
-  redirect(consoleHref(projectId))
+  redirect(routes.project(projectId).console())
 }

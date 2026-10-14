@@ -2,7 +2,7 @@
 
 import Link from 'next/link'
 
-import { reviewHref } from '@/shared/config/routes.utils'
+import { routes } from '@/shared/config/routes'
 
 import { isFollowingLog } from '../event-scroll.utils'
 import { usePendingReview } from '../hooks/usePendingReview'
@@ -46,7 +46,7 @@ export function ReviewLine({ projectId, runId }: ReviewLineProps) {
       </EventRow>
       <EventRow>
         <Link
-          href={reviewHref(projectId, runId)}
+          href={routes.project(projectId).review(runId)}
           className="rounded-sm text-primary underline-offset-2 outline-none hover:underline focus-visible:ring-2 focus-visible:ring-ring/50"
         >
           Open the review
