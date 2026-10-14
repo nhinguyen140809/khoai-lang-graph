@@ -312,6 +312,15 @@ Check: `pnpm test src/shared`, a look at `/design-system`.
 
 ### P4. Account
 
+State: cut on `feat/fe/account` from `origin/main` on 2026-10-14, in the working tree for review. It is additive, as P3: no route renders `UserMenu` until P6, so the menu is reviewed from its unit test. The cut differs from the table below:
+
+- `DEFAULT_AFTER_SIGN_IN` is `/`, which exists on `main`; P6 sets it to `/projects`.
+- `GET /me/settings`, `PUT /me/settings` and `mockUserSettings` go with their first consumer, the new project form of P6, with the `UserSettings` type; `pagination.utils.ts` goes with P5; `mock-ids.constants.ts` holds only `USER_ID`, and P5 adds the ids of projects, threads and runs; `mockRunState` of `mock-scenario.utils.ts` goes with P5.
+- `api-fetch.utils.ts` is whole, with `isNotFoundError`, `listPageSchema` and `fetchAllPages`, which only its tests use until P5 and P6.
+- `account.spec.ts` covers what `main` has: signing in and creating an account, each returning to `?next=`, and the wrong password. Its two tests that sign out from the account menu and open `/projects` go with P6.
+- `UserMenu.test.tsx` is new: the user in the menu, signing out, and a failed `GET /me`. It found that the initials of the avatar were part of the name of the account button; the avatar is now hidden from screen readers, on `feat/fe/mock` too.
+- `src/mocks/README.md` lists the user, the parameters and the addresses of the account pages only; `frontend/README.md` gains the `(auth)` group, the 401 rule, the `auth` and `me` resources and the mock records.
+
 Endpoints: `POST /auth/login`, `POST /auth/register`, `POST /auth/logout`, `GET /me`, and from `me.handlers.ts` `GET /me/settings` and `PUT /me/settings` (read by the new project form in P6, written by P18).
 
 | Group | Files |
