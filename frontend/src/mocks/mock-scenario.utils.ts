@@ -6,7 +6,7 @@ export type MockScenario = 'default' | 'empty' | 'error' | 'loading'
 
 const SCENARIOS: readonly string[] = ['empty', 'error', 'loading']
 
-/** A parameter of the page address, for scenarios that are not a query state. */
+/** A parameter of the page address; null outside the browser, such as in unit tests. */
 export function pageParam(name: string): string | null {
   if (typeof window === 'undefined') return null
   return new URLSearchParams(window.location.search).get(name)
