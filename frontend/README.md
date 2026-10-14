@@ -308,11 +308,12 @@ Measured on this project with a warm cache: the dev server uses about 300 MB whe
 
 Already configured in `next.config.ts`:
 
-| Setting                                                        | Effect                                                                                              |
-| -------------------------------------------------------------- | --------------------------------------------------------------------------------------------------- |
-| `turbopack.root`                                               | Only this folder is resolved and watched, not the rest of the monorepo.                             |
-| `experimental.turbopackPluginRuntimeStrategy: 'workerThreads'` | PostCSS runs in worker threads instead of a pool of child Node.js processes.                        |
-| `experimental.preloadEntriesOnStart: false`                    | `pnpm start` loads a page's modules on its first request instead of loading every page at start-up. |
+| Setting                                                        | Effect                                                                                                              |
+| -------------------------------------------------------------- | ------------------------------------------------------------------------------------------------------------------- |
+| `turbopack.root`                                               | Only this folder is resolved and watched, not the rest of the monorepo.                                             |
+| `experimental.turbopackPluginRuntimeStrategy: 'workerThreads'` | PostCSS runs in worker threads instead of a pool of child Node.js processes.                                        |
+| `experimental.preloadEntriesOnStart: false`                    | `pnpm start` loads a page's modules on its first request instead of loading every page at start-up.                 |
+| `experimental.turbopackSourceMaps: false`                      | `pnpm dev` writes no source maps, which saves memory and compile time; the browser devtools show the compiled code. |
 
 Turbopack compiles a route only when it is first requested, and releases memory on its own after each compile (`experimental.turbopackMemoryEviction`, default `auto`).
 
@@ -321,7 +322,7 @@ Habits that help:
 - Run one heavy process at a time: `pnpm dev`, `pnpm build`, `pnpm e2e`, and `pnpm check` are each heavy.
 - Keep `.next/`: it holds the compile cache, and the first compile after deleting it is slow and peaks above 1 GB.
 - Restart `pnpm dev` after a long session if its memory keeps growing.
-- `pnpm lint` runs ESLint in four processes, one after another (`scripts/lint.mjs`): the design system page, the other features, the app layer and the shared code, then the tests and the config files. Each process builds a TypeScript program of its group only (its files, what they import, and the declarations every file needs), through a tsconfig written to `node_modules/.cache/lint-groups/` and passed in `ESLINT_TSCONFIG`. With `NODE_OPTIONS=--max-old-space-size=768`, the largest group peaks at about 930 MB of resident memory and the whole run takes about 50 seconds; a single ESLint process for the whole project ran out of that heap. When a group grows past the limit, split it in `scripts/lint.mjs`.
+- `pnpm lint` runs ESLint in four processes, one after another (`scripts/lint.mjs`): the design system page, the other features, the app layer and the shared code, then the tests and the config files. Each process builds a TypeScript program of its group only (its files, what they import, and the declarations every file needs), through a tsconfig written to `node_modules/.cache/lint-groups/` and passed in `ESLINT_TSCONFIG`. With `NODE_OPTIONS=--max-old-space-size=768`, the largest group peaks at about 930 MB of resident memory and the whole run takes about 55 seconds; a single ESLint process for the whole project runs out of that heap. When a group grows past the limit, split it in `scripts/lint.mjs`.
 - `eslint.editor.config.js` is a variant of the ESLint config for the editor: it leaves out the rules that need type information. Those rules load the whole TypeScript project and are the most memory-hungry part of the editor setup. To use it in VS Code, set `"eslint.options": { "overrideConfigFile": "eslint.editor.config.js" }` and `"eslint.workingDirectories": [{ "directory": "frontend", "changeProcessCWD": true }]` in your workspace settings (`.vscode/` is git-ignored), then restart the ESLint server after every change to `eslint.config.js`. The type-aware rules still run in `pnpm lint` and `pnpm check`.
 - In VS Code, exclude build output from the editor's file watcher and search, and cap the TypeScript server, in your user or workspace settings:
   ```json
