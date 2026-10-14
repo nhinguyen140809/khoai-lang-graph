@@ -5,6 +5,7 @@ import { server } from '@/mocks/msw-server.setup'
 import { mockThreads } from '@/mocks/threads/threads.fixtures'
 
 import { listThreads } from '../threads.api'
+import { failedListCases } from './threads.api.data'
 
 describe('listThreads', () => {
   it('returns the threads from the API', async () => {
@@ -18,15 +19,9 @@ describe('listThreads', () => {
     await expect(listThreads()).resolves.toEqual([])
   })
 
-  it('throws on an HTTP error', async () => {
-    server.use(http.get('/api/v1/threads', () => new HttpResponse(null, { status: 500 })))
+  it.each(failedListCases)('throws on $name', async ({ answer, error }) => {
+    server.use(http.get('/api/v1/threads', answer))
 
-    await expect(listThreads()).rejects.toThrow('HTTP 500')
-  })
-
-  it('rejects a response that does not match the schema', async () => {
-    server.use(http.get('/api/v1/threads', () => HttpResponse.json({ items: [{ id: 1 }] })))
-
-    await expect(listThreads()).rejects.toThrow()
+    await expect(listThreads()).rejects.toThrow(error)
   })
 })

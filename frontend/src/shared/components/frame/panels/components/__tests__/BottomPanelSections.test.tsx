@@ -3,6 +3,7 @@ import userEvent from '@testing-library/user-event'
 import { describe, expect, it } from 'vitest'
 
 import { type BottomPanelSection, BottomPanelSections } from '../BottomPanelSections'
+import { sectionTabCases } from './BottomPanelSections.data'
 
 const sections: BottomPanelSection[] = [
   { id: 'step', title: 'Step', content: <p>the step</p> },
@@ -15,15 +16,20 @@ const sections: BottomPanelSection[] = [
 ]
 
 describe('BottomPanelSections', () => {
-  it('shows the first section, and another one from its tab', async () => {
+  it('shows the first section first', () => {
     render(<BottomPanelSections sections={sections} />)
 
     expect(screen.getByRole('tab', { name: 'Step' })).toHaveAttribute('aria-selected', 'true')
     expect(screen.getByRole('tabpanel')).toHaveTextContent('the step')
+  })
 
-    await userEvent.click(screen.getByRole('tab', { name: 'State' }))
+  it.each(sectionTabCases)('shows the section of the $tab tab', async ({ tab, text }) => {
+    render(<BottomPanelSections sections={sections} />)
 
-    expect(screen.getByRole('tabpanel')).toHaveTextContent('the state')
+    await userEvent.click(screen.getByRole('tab', { name: tab }))
+
+    expect(screen.getByRole('tab', { name: tab })).toHaveAttribute('aria-selected', 'true')
+    expect(screen.getByRole('tabpanel')).toHaveTextContent(text)
   })
 
   it('keeps a section as it was while another one is shown', async () => {

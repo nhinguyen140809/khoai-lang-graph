@@ -6,6 +6,7 @@ import type { PaletteCommand } from '../../command.types'
 import { useCommandsStore } from '../../commands.store'
 import { useCommands } from '../../hooks/useCommands'
 import { CommandPalette } from '../CommandPalette'
+import { searchCases } from './CommandPalette.data'
 
 function Commands({ commands }: { commands: PaletteCommand[] }) {
   useCommands(commands)
@@ -98,31 +99,31 @@ describe('CommandPalette', () => {
     )
   })
 
-  it('filters the commands by the search text and by their group', async () => {
-    useCommandsStore.setState({ open: true })
-    render(
-      <>
-        <CommandPalette />
-        <Commands
-          commands={[
-            { id: 'view.light', label: 'Theme: Light', group: 'View', run: vi.fn() },
-            { id: 'view.dark', label: 'Theme: Dark', group: 'View', run: vi.fn() },
-            { id: 'projects.new', label: 'New project', group: 'Projects', run: vi.fn() },
-          ]}
-        />
-      </>,
-    )
+  it.each(searchCases)(
+    'filters the commands by their label and their group for $search',
+    async ({ search, shown, hidden }) => {
+      useCommandsStore.setState({ open: true })
+      render(
+        <>
+          <CommandPalette />
+          <Commands
+            commands={[
+              { id: 'view.light', label: 'Theme: Light', group: 'View', run: vi.fn() },
+              { id: 'view.dark', label: 'Theme: Dark', group: 'View', run: vi.fn() },
+              { id: 'projects.new', label: 'New project', group: 'Projects', run: vi.fn() },
+            ]}
+          />
+        </>,
+      )
 
-    await userEvent.type(screen.getByRole('combobox'), 'light')
+      await userEvent.type(screen.getByRole('combobox'), search)
 
-    expect(screen.getByRole('option', { name: 'Theme: Light' })).toBeInTheDocument()
-    expect(screen.queryByRole('option', { name: 'Theme: Dark' })).not.toBeInTheDocument()
-
-    await userEvent.clear(screen.getByRole('combobox'))
-    await userEvent.type(screen.getByRole('combobox'), 'view')
-
-    // The two themes and the command of the palette itself.
-    expect(screen.getAllByRole('option')).toHaveLength(3)
-    expect(screen.queryByRole('option', { name: 'New project' })).not.toBeInTheDocument()
-  })
+      for (const label of shown) {
+        expect(screen.getByRole('option', { name: label })).toBeInTheDocument()
+      }
+      for (const label of hidden) {
+        expect(screen.queryByRole('option', { name: label })).not.toBeInTheDocument()
+      }
+    },
+  )
 })

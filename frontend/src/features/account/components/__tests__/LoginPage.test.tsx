@@ -8,6 +8,7 @@ import { routerMock } from '@/test/next-mocks.utils'
 import { TestProviders } from '@/test/TestProviders'
 
 import { LoginPage } from '../LoginPage'
+import { missingFieldCases, refusedSignInCases, returnCases } from './LoginPage.data'
 
 vi.mock('next/navigation', async () => (await import('@/test/next-mocks.utils')).navigationMock)
 vi.mock('next/link', async () => (await import('@/test/next-mocks.utils')).linkMock)
@@ -23,49 +24,35 @@ async function signIn(email: string, password: string) {
 }
 
 describe('LoginPage', () => {
-  it('signs in and returns to the page that asked for it', async () => {
-    render(<LoginPage next="/projects/p1/console" />, { wrapper: TestProviders })
+  it.each(returnCases)('signs in and opens $opens for $next', async ({ next, opens }) => {
+    render(<LoginPage next={next} />, { wrapper: TestProviders })
 
     await signIn('linh.pham@example.com', 'secret')
 
     await vi.waitFor(() => {
-      expect(routerMock.replace).toHaveBeenCalledWith('/projects/p1/console')
+      expect(routerMock.replace).toHaveBeenCalledWith(opens)
     })
   })
 
-  it('goes to the home page when the page to return to is another site', async () => {
-    render(<LoginPage next="https://example.com" />, { wrapper: TestProviders })
-
-    await signIn('linh.pham@example.com', 'secret')
-
-    await vi.waitFor(() => {
-      expect(routerMock.replace).toHaveBeenCalledWith('/')
-    })
-  })
-
-  it('says when the email or the password is wrong', async () => {
-    server.use(
-      http.post('/api/v1/auth/login', () =>
-        HttpResponse.json({ status: 401, code: 'unauthenticated' }, { status: 401 }),
-      ),
-    )
+  it.each(refusedSignInCases)('says $name, and stays', async ({ answer, alert }) => {
+    server.use(http.post('/api/v1/auth/login', answer))
     render(<LoginPage next={null} />, { wrapper: TestProviders })
 
-    await signIn('linh.pham@example.com', 'wrong')
+    await signIn('linh.pham@example.com', 'secret')
 
-    expect(await screen.findByRole('alert')).toHaveTextContent(
-      'The email or the password is wrong.',
-    )
+    expect(await screen.findByRole('alert')).toHaveTextContent(alert)
     expect(routerMock.replace).not.toHaveBeenCalled()
   })
 
-  it('asks for the email and the password', async () => {
+  it.each(missingFieldCases)('asks for $name before sending', async ({ typed, messages }) => {
     render(<LoginPage next={null} />, { wrapper: TestProviders })
 
+    for (const [label, value] of Object.entries(typed)) {
+      await userEvent.type(screen.getByLabelText(label), value)
+    }
     await userEvent.click(screen.getByRole('button', { name: 'Sign in' }))
 
-    expect(await screen.findByText('Enter your email.')).toBeInTheDocument()
-    expect(screen.getByText('Enter your password.')).toBeInTheDocument()
+    for (const message of messages) expect(await screen.findByText(message)).toBeInTheDocument()
   })
 
   it('links to the account page, keeping the page to return to', () => {
@@ -84,55 +71,6 @@ describe('LoginPage', () => {
       'aria-disabled',
       'true',
     )
-  })
-
-  it('says to wait after too many attempts', async () => {
-    server.use(
-      http.post('/api/v1/auth/login', () =>
-        HttpResponse.json({ status: 429, code: 'rate_limited' }, { status: 429 }),
-      ),
-    )
-    render(<LoginPage next={null} />, { wrapper: TestProviders })
-
-    await signIn('linh.pham@example.com', 'secret')
-
-    expect(await screen.findByRole('alert')).toHaveTextContent(
-      'Too many attempts. Wait a moment, then try again.',
-    )
-  })
-
-  it('shows another 429 with its own message', async () => {
-    server.use(
-      http.post('/api/v1/auth/login', () =>
-        HttpResponse.json(
-          { status: 429, code: 'budget_exceeded', detail: 'The monthly budget is reached.' },
-          { status: 429 },
-        ),
-      ),
-    )
-    render(<LoginPage next={null} />, { wrapper: TestProviders })
-
-    await signIn('linh.pham@example.com', 'secret')
-
-    expect(await screen.findByRole('alert')).toHaveTextContent(
-      'Failed to sign in (HTTP 429): The monthly budget is reached.',
-    )
-  })
-
-  it('shows another failure with its message', async () => {
-    server.use(
-      http.post('/api/v1/auth/login', () =>
-        HttpResponse.json({ status: 503, detail: 'Down for maintenance.' }, { status: 503 }),
-      ),
-    )
-    render(<LoginPage next={null} />, { wrapper: TestProviders })
-
-    await signIn('linh.pham@example.com', 'secret')
-
-    expect(await screen.findByRole('alert')).toHaveTextContent(
-      'Failed to sign in (HTTP 503): Down for maintenance.',
-    )
-    expect(routerMock.replace).not.toHaveBeenCalled()
   })
 
   it('shows a failure of the network', async () => {

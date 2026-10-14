@@ -339,11 +339,12 @@ export default defineConfig([
           // Everything else: <subject>.<kind>.ts, subject in kebab-case
           '**/!(hooks|__tests__)/*.ts':
             '+([a-z0-9])*(-+([a-z0-9])).@(api|keys|queries|types|schema|store|reducer|config|constants|utils|handlers|fixtures|setup|spec)',
-          // Unit tests: only in a __tests__ folder, named after the file under test plus .test
+          // Unit tests: only in a __tests__ folder, named after the file under test plus .test,
+          // and the cases of a data-driven test after the file under test plus .data
           '**/__tests__/*.tsx': '+([A-Z])*([a-zA-Z0-9]).test',
-          '**/hooks/__tests__/*.ts': 'use+([A-Z])*([a-zA-Z0-9]).test',
+          '**/hooks/__tests__/*.ts': 'use+([A-Z])*([a-zA-Z0-9]).@(test|data)',
           '**/!(hooks)/__tests__/*.ts':
-            '+([a-z0-9])*(-+([a-z0-9])).@(api|keys|queries|types|schema|store|reducer|config|constants|utils|handlers|fixtures|setup).test',
+            '@(+([A-Z])*([a-zA-Z0-9]).data|+([a-z0-9])*(-+([a-z0-9])).@(api|keys|queries|types|schema|store|reducer|config|constants|utils|handlers|fixtures|setup).@(test|data))',
         },
       ],
       'check-file/folder-naming-convention': [

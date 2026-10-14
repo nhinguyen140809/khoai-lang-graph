@@ -6,6 +6,7 @@ import { beforeEach, describe, expect, it, vi } from 'vitest'
 import { routerMock } from '@/test/next-mocks.utils'
 
 import { useOpenAfterSignIn } from '../useOpenAfterSignIn'
+import { returnCases } from './useOpenAfterSignIn.data'
 
 vi.mock('next/navigation', async () => (await import('@/test/next-mocks.utils')).navigationMock)
 
@@ -23,20 +24,15 @@ beforeEach(() => {
 })
 
 describe('useOpenAfterSignIn', () => {
-  it('drops the cached queries, then opens the page to return to', () => {
-    const { client, open } = renderWithCache('/threads/t1')
+  it.each(returnCases)(
+    'drops the cached queries, then opens $opens for $next',
+    ({ next, opens }) => {
+      const { client, open } = renderWithCache(next)
 
-    open()
+      open()
 
-    expect(client.getQueryCache().getAll()).toHaveLength(0)
-    expect(routerMock.replace).toHaveBeenCalledWith('/threads/t1')
-  })
-
-  it('opens the home page when the page to return to is not of this app', () => {
-    const { open } = renderWithCache('//example.com')
-
-    open()
-
-    expect(routerMock.replace).toHaveBeenCalledWith('/')
-  })
+      expect(client.getQueryCache().getAll()).toHaveLength(0)
+      expect(routerMock.replace).toHaveBeenCalledExactlyOnceWith(opens)
+    },
+  )
 })

@@ -15,6 +15,7 @@ import type { EditorTab } from '../../tabs/editor-tabs.schema'
 import { useEditorTabsStore } from '../../tabs/editor-tabs.store'
 import { useEditorTab } from '../../tabs/hooks/useEditorTab'
 import { ProjectWorkspace } from '../ProjectWorkspace'
+import { newTabCases, sidePanelCases, tab } from './ProjectWorkspace.data'
 
 vi.mock('next/navigation', async () => (await import('@/test/next-mocks.utils')).navigationMock)
 vi.mock('next/link', async () => (await import('@/test/next-mocks.utils')).linkMock)
@@ -42,10 +43,6 @@ beforeEach(() => {
   useSideFeatureStore.setState(useSideFeatureStore.getInitialState())
 })
 
-function tab(id: string): EditorTab {
-  return { id, title: id, href: `/projects/p1/${id}` }
-}
-
 /** A page that opens its tab, once its title is known. */
 function Page({ tab }: { tab: EditorTab | null }) {
   useEditorTab('p1', tab)
@@ -71,18 +68,15 @@ function renderProjectWorkspace(given: Activity[] = activities) {
 }
 
 describe('ProjectWorkspace', () => {
-  it('shows the side panel of the page opened, next to the editor', () => {
+  it.each(sidePanelCases)('shows $name, next to the editor', ({ pathname, chosen, panel }) => {
+    setPathname(pathname)
+    useSideFeatureStore.setState({ chosen })
     renderProjectWorkspace()
 
-    expect(screen.getByRole('complementary', { name: 'Artifacts' })).toBeInTheDocument()
+    expect(
+      screen.getAllByRole('complementary').map((aside) => aside.getAttribute('aria-label')),
+    ).toEqual([panel])
     expect(screen.getByRole('main')).toHaveTextContent('editor')
-  })
-
-  it('shows the first feature when the page belongs to none', () => {
-    setPathname('/projects/p1/unknown')
-    renderProjectWorkspace()
-
-    expect(screen.getByRole('complementary', { name: 'Console' })).toBeInTheDocument()
   })
 
   it('keeps the editor when another side panel is shown', () => {
@@ -95,13 +89,6 @@ describe('ProjectWorkspace', () => {
     expect(screen.getByRole('complementary', { name: 'Search' })).toBeInTheDocument()
     expect(screen.queryByRole('complementary', { name: 'Artifacts' })).not.toBeInTheDocument()
     expect(screen.getByRole('main')).toHaveTextContent('editor')
-  })
-
-  it('falls back to the page on screen when the chosen feature is not given', () => {
-    useSideFeatureStore.setState({ chosen: 'traceability' })
-    renderProjectWorkspace()
-
-    expect(screen.getByRole('complementary', { name: 'Artifacts' })).toBeInTheDocument()
   })
 
   it('hides the side panel with Ctrl+B and shows it again as it was', () => {
@@ -129,28 +116,19 @@ describe('ProjectWorkspace', () => {
     )
   })
 
-  it('opens the tab of a new page next to the tab of the page shown before', () => {
-    useEditorTabsStore.setState({ groups: { p1: [tab('a'), tab('c')] } })
-    setPathname('/projects/p1/a')
-    const { rerender } = render(workspace(<Page key="a" tab={tab('a')} />))
+  it.each(newTabCases)(
+    'opens the tab of a new page next to the tab of the page shown before, $name',
+    ({ open, renders }) => {
+      useEditorTabsStore.setState({ groups: { p1: open } })
+      setPathname('/projects/p1/a')
+      const { rerender } = render(workspace(<Page key="a" tab={tab('a')} />))
 
-    setPathname('/projects/p1/b')
-    rerender(workspace(<Page key="b" tab={tab('b')} />))
+      setPathname('/projects/p1/b')
+      for (const rendered of renders) rerender(workspace(<Page key="b" tab={rendered} />))
 
-    expect(useEditorTabsStore.getState().groups.p1?.map(({ id }) => id)).toEqual(['a', 'b', 'c'])
-  })
-
-  it('opens it there too when the page knows its title after a while', () => {
-    useEditorTabsStore.setState({ groups: { p1: [tab('a'), tab('c')] } })
-    setPathname('/projects/p1/a')
-    const { rerender } = render(workspace(<Page key="a" tab={tab('a')} />))
-
-    setPathname('/projects/p1/b')
-    rerender(workspace(<Page key="b" tab={null} />))
-    rerender(workspace(<Page key="b" tab={tab('b')} />))
-
-    expect(useEditorTabsStore.getState().groups.p1?.map(({ id }) => id)).toEqual(['a', 'b', 'c'])
-  })
+      expect(useEditorTabsStore.getState().groups.p1?.map(({ id }) => id)).toEqual(['a', 'b', 'c'])
+    },
+  )
 
   it('marks the tab of the page on screen, though its address has a query', () => {
     setPathname('/projects/p1/settings')

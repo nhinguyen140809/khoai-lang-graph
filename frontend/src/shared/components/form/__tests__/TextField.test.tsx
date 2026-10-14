@@ -6,6 +6,7 @@ import { describe, expect, it } from 'vitest'
 import { z } from 'zod'
 
 import { TextField } from '../TextField'
+import { blankNames, typedNameCases } from './TextField.data'
 
 const schema = z.object({ name: z.string().trim().min(1, 'Enter a name.') })
 
@@ -25,6 +26,13 @@ function NameForm({ onSubmit }: { onSubmit: (values: z.infer<typeof schema>) => 
   )
 }
 
+/** Types the name as a paste, which takes an empty text too, then saves. */
+async function enterName(text: string) {
+  await userEvent.click(screen.getByLabelText('Name'))
+  await userEvent.paste(text)
+  await userEvent.click(screen.getByRole('button', { name: 'Save' }))
+}
+
 describe('TextField', () => {
   it('ties the input to its label and its description', () => {
     render(<NameForm onSubmit={() => undefined} />)
@@ -35,22 +43,24 @@ describe('TextField', () => {
     expect(screen.getByText('As others see it.')).toBeInTheDocument()
   })
 
-  it('shows the error of the field and marks the input invalid', async () => {
-    render(<NameForm onSubmit={() => undefined} />)
+  it.each(blankNames)(
+    'shows the error of the field for %j and marks the input invalid',
+    async (typed) => {
+      render(<NameForm onSubmit={() => undefined} />)
 
-    await userEvent.click(screen.getByRole('button', { name: 'Save' }))
+      await enterName(typed)
 
-    expect(await screen.findByRole('alert')).toHaveTextContent('Enter a name.')
-    expect(screen.getByLabelText('Name')).toHaveAttribute('aria-invalid', 'true')
-  })
+      expect(await screen.findByRole('alert')).toHaveTextContent('Enter a name.')
+      expect(screen.getByLabelText('Name')).toHaveAttribute('aria-invalid', 'true')
+    },
+  )
 
-  it('gives the form what was typed', async () => {
+  it.each(typedNameCases)('gives the form $value for $typed', async ({ typed, value }) => {
     const submitted: unknown[] = []
     render(<NameForm onSubmit={(values) => submitted.push(values)} />)
 
-    await userEvent.type(screen.getByLabelText('Name'), '  Linh  ')
-    await userEvent.click(screen.getByRole('button', { name: 'Save' }))
+    await enterName(typed)
 
-    await expect.poll(() => submitted).toEqual([{ name: 'Linh' }])
+    await expect.poll(() => submitted).toEqual([{ name: value }])
   })
 })

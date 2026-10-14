@@ -2,6 +2,7 @@ import { afterEach, describe, expect, it, vi } from 'vitest'
 import { z } from 'zod'
 
 import { browserStorage, parseStored, persistStorage, storageKey } from '../browser-storage.utils'
+import { parseStoredCases } from './browser-storage.utils.data'
 
 afterEach(() => {
   vi.restoreAllMocks()
@@ -64,12 +65,8 @@ describe('persistStorage', () => {
 })
 
 describe('parseStored', () => {
-  it('returns stored state of the expected shape, and undefined otherwise', () => {
-    const schema = z.object({ width: z.number() })
-
-    expect(parseStored(schema, { width: 260 })).toEqual({ width: 260 })
-    expect(parseStored(schema, { width: '260' })).toBeUndefined()
-    expect(parseStored(schema, undefined)).toBeUndefined()
+  it.each(parseStoredCases)('reads $name', ({ value, parsed }) => {
+    expect(parseStored(z.object({ width: z.number() }), value)).toEqual(parsed)
   })
 })
 

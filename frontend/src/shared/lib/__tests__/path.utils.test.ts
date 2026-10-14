@@ -1,17 +1,19 @@
 import { describe, expect, it } from 'vitest'
 
 import { isAtOrUnder, pathOf } from '../path.utils'
+import { isAtOrUnderCases, pathOfCases } from './path.utils.data'
 
 describe('pathOf', () => {
-  it('leaves out the query and the fragment', () => {
-    expect(pathOf('/projects/p1/search?q=REQ#top')).toBe('/projects/p1/search')
+  it.each(pathOfCases)('gives the path of %j', (href, path) => {
+    expect(pathOf(href)).toBe(path)
   })
 })
 
 describe('isAtOrUnder', () => {
-  it('holds the path itself and the pages under it, not a path that only starts the same', () => {
-    expect(isAtOrUnder('/settings', '/settings')).toBe(true)
-    expect(isAtOrUnder('/settings/profile', '/settings')).toBe(true)
-    expect(isAtOrUnder('/settings-old', '/settings')).toBe(false)
-  })
+  it.each(isAtOrUnderCases)(
+    '$pathname is at or under $path: $holds',
+    ({ pathname, path, holds }) => {
+      expect(isAtOrUnder(pathname, path)).toBe(holds)
+    },
+  )
 })

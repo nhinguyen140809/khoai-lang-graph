@@ -11,6 +11,7 @@ import type * as authRedirect from '@/shared/api/auth-redirect.utils'
 import { TestProviders } from '@/test/TestProviders'
 
 import { UserMenu } from '../UserMenu'
+import { plannedItems } from './UserMenu.data'
 
 const { loadPage } = vi.hoisted(() => ({ loadPage: vi.fn() }))
 
@@ -120,16 +121,12 @@ describe('UserMenu', () => {
     ).toHaveAttribute('href', '/settings')
   })
 
-  it('offers help and feedback disabled until they exist', async () => {
+  it.each(plannedItems)('offers %s disabled until it exists', async (item) => {
     render(<UserMenu />, { wrapper: TestProviders })
 
     await openMenu('Linh Pham')
 
-    expect(screen.getByRole('menuitem', { name: 'Help' })).toHaveAttribute('aria-disabled', 'true')
-    expect(screen.getByRole('menuitem', { name: 'Send feedback' })).toHaveAttribute(
-      'aria-disabled',
-      'true',
-    )
+    expect(screen.getByRole('menuitem', { name: item })).toHaveAttribute('aria-disabled', 'true')
   })
 
   it('asks before signing out, and keeps the session when cancelled', async () => {
