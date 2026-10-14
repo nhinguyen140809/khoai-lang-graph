@@ -56,26 +56,26 @@ In code, read variables through `process.env.<NAME>`. Declare each new variable 
 
 ## Scripts
 
-| Command                | What it does                                                                                                           |
-| ---------------------- | ---------------------------------------------------------------------------------------------------------------------- |
-| `pnpm dev`             | Start the Next.js dev server on port 3000, proxying `/api` to `http://localhost:8000`.                                 |
-| `pnpm dev:mock`        | Same as `dev`, with the API served from MSW mocks.                                                                     |
-| `pnpm build`           | Type-check, then build the production app into `.next/`.                                                               |
-| `pnpm start`           | Serve the production build. Run `pnpm build` first.                                                                    |
-| `pnpm typecheck`       | Generate the route types (`next typegen`), then run the TypeScript compiler without emitting files.                    |
-| `pnpm typecheck:watch` | Re-run the type check on every file change.                                                                            |
-| `pnpm lint`            | Run ESLint on the whole project.                                                                                       |
-| `pnpm lint:fix`        | Run ESLint and apply automatic fixes (import order, unnecessary assertions, ...).                                      |
-| `pnpm format`          | Format all files with Prettier.                                                                                        |
-| `pnpm format:check`    | Report files that Prettier would change, without writing.                                                              |
-| `pnpm fix`             | `lint:fix` followed by `format`.                                                                                       |
-| `pnpm check`           | `typecheck`, `lint`, `format:check`, and `test`, one after another to keep memory use low. Run it before opening a PR. |
-| `pnpm test`            | Run the unit tests once (Vitest).                                                                                      |
-| `pnpm test:watch`      | Run the unit tests in watch mode.                                                                                      |
-| `pnpm e2e`             | Run the Playwright tests. They start their own dev server on port 3100 with mocks enabled.                             |
-| `pnpm e2e:install`     | Download the Chromium build used by Playwright. Needed once per machine before the first `pnpm e2e`.                   |
-| `pnpm ui:add <name>`   | Add a shadcn/ui component, see [Adding shadcn/ui components](#adding-shadcnui-components).                             |
-| `pnpm codegen`         | Generate the typed API client from `openapi.json`.                                                                     |
+| Command                | What it does                                                                                                                                   |
+| ---------------------- | ---------------------------------------------------------------------------------------------------------------------------------------------- |
+| `pnpm dev`             | Start the Next.js dev server on port 3000, proxying `/api` to `http://localhost:8000`.                                                         |
+| `pnpm dev:mock`        | Same as `dev`, with the API served from MSW mocks.                                                                                             |
+| `pnpm build`           | Type-check, then build the production app into `.next/`.                                                                                       |
+| `pnpm start`           | Serve the production build. Run `pnpm build` first.                                                                                            |
+| `pnpm typecheck`       | Generate the route types (`next typegen`), then run the TypeScript compiler without emitting files.                                            |
+| `pnpm typecheck:watch` | Re-run the type check on every file change.                                                                                                    |
+| `pnpm lint`            | Run ESLint on the whole project, one group of folders per process (`scripts/lint.mjs`, see [Low-memory development](#low-memory-development)). |
+| `pnpm lint:fix`        | Run ESLint the same way and apply automatic fixes (import order, unnecessary assertions, ...).                                                 |
+| `pnpm format`          | Format all files with Prettier.                                                                                                                |
+| `pnpm format:check`    | Report files that Prettier would change, without writing.                                                                                      |
+| `pnpm fix`             | `lint:fix` followed by `format`.                                                                                                               |
+| `pnpm check`           | `typecheck`, `lint`, `format:check`, and `test`, one after another to keep memory use low. Run it before opening a PR.                         |
+| `pnpm test`            | Run the unit tests once (Vitest).                                                                                                              |
+| `pnpm test:watch`      | Run the unit tests in watch mode.                                                                                                              |
+| `pnpm e2e`             | Run the Playwright tests. They start their own dev server on port 3100 with mocks enabled.                                                     |
+| `pnpm e2e:install`     | Download the Chromium build used by Playwright. Needed once per machine before the first `pnpm e2e`.                                           |
+| `pnpm ui:add <name>`   | Add a shadcn/ui component, see [Adding shadcn/ui components](#adding-shadcnui-components).                                                     |
+| `pnpm codegen`         | Generate the typed API client from `openapi.json`.                                                                                             |
 
 Stop `pnpm dev` before `pnpm e2e`: Next.js allows one dev server per project folder.
 
@@ -294,6 +294,7 @@ Habits that help:
 - Run one heavy process at a time: `pnpm dev`, `pnpm build`, `pnpm e2e`, and `pnpm check` are each heavy.
 - Keep `.next/`: it holds the compile cache, and the first compile after deleting it is slow and peaks above 1 GB.
 - Restart `pnpm dev` after a long session if its memory keeps growing.
+- `pnpm lint` runs ESLint in four processes, one after another (`scripts/lint.mjs`): the design system page, the other features, the rest of `src/`, then everything outside `src/` (the tests, the scripts and the config files). Each process builds a TypeScript program of its group only (its files, what they import, and the declarations every file needs), through a tsconfig written to `node_modules/.cache/lint-groups/` and passed in `ESLINT_TSCONFIG`. With `NODE_OPTIONS=--max-old-space-size=768`, the largest group peaks at about 930 MB of resident memory and the whole run takes about 55 seconds; a single ESLint process for the whole project runs out of that heap. When a group grows past the limit, split it in `scripts/lint.mjs`.
 - `eslint.editor.config.js` is a variant of the ESLint config for the editor: it leaves out the rules that need type information. Those rules load the whole TypeScript project and are the most memory-hungry part of the editor setup. To use it in VS Code, set `"eslint.options": { "overrideConfigFile": "eslint.editor.config.js" }` and `"eslint.workingDirectories": [{ "directory": "frontend", "changeProcessCWD": true }]` in your workspace settings (`.vscode/` is git-ignored), then restart the ESLint server after every change to `eslint.config.js`. The type-aware rules still run in `pnpm lint` and `pnpm check`.
 - In VS Code, exclude build output from the editor's file watcher and search, and cap the TypeScript server, in your user or workspace settings:
   ```json
