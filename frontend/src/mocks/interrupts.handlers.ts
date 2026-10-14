@@ -6,7 +6,7 @@ import { mockArtifacts } from './artifacts.fixtures'
 import { mockArtifactItems } from './artifacts.fixtures'
 import definition from './data/workflow/requirements_engineering.v1.json'
 import { artifactStatuses, type ItemEdit, itemEdits } from './mock-artifacts.store'
-import { mockId } from './mock-ids.constants'
+import { IdPrefix, mockId } from './mock-ids.constants'
 import { changeRun } from './mock-runs.store'
 import { answerScenario, mockScenario, pageParam } from './mock-scenario.utils'
 import { paginate } from './pagination.utils'
@@ -120,7 +120,7 @@ export function pendingInterrupt(run: Run) {
   const kinds = node.review_artifact_kinds
   const asksQuestions = pageParam('mock-review') === 'questions'
   return {
-    id: mockId('7b0c', Number(run.id.slice(-12)) || 1),
+    id: mockId(IdPrefix.Interrupt, Number(run.id.slice(-12)) || 1),
     run_id: run.id,
     step_id: null,
     node: node.id,

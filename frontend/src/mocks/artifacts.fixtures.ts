@@ -9,7 +9,7 @@ import {
 } from './artifact-builder.utils'
 import { extraProjectSpecs } from './extra-project-specs.constants'
 import { mentorArtifactSpecs, mentorEditedKeys, mentorLinkSpecs } from './mentor-artifacts.fixtures'
-import { mockId, PROJECT_IDS, RUN_IDS } from './mock-ids.constants'
+import { IdPrefix, mockId, PROJECT_IDS, RUN_IDS } from './mock-ids.constants'
 
 // The artifacts, the items and the trace links of the mock projects. The mentor platform has the
 // whole set that the run of the API examples made; the other projects have a plan, personas and a
@@ -153,8 +153,8 @@ const projects: BuiltProject[] = [
     .map((spec) =>
       simple({
         n: spec.n,
-        projectId: mockId('90aa', spec.n),
-        runId: mockId('5f2d', spec.n * 10 + 1),
+        projectId: mockId(IdPrefix.Project, spec.n),
+        runId: mockId(IdPrefix.Run, spec.n * 10 + 1),
         day: spec.day,
         personas: ['Regular user', 'Administrator'],
         requirements: spec.requirements,

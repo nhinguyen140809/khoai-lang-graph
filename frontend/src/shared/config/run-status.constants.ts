@@ -12,6 +12,19 @@ export const runStatuses = [
 
 export type RunStatus = (typeof runStatuses)[number]
 
+/** The statuses of a run that has not ended; a thread has at most one such run. */
+export const unfinishedRunStatuses = [
+  'queued',
+  'running',
+  'interrupted',
+] as const satisfies readonly RunStatus[]
+
+export type UnfinishedRunStatus = (typeof unfinishedRunStatuses)[number]
+
+export function isUnfinishedRunStatus(status: RunStatus): status is UnfinishedRunStatus {
+  return (unfinishedRunStatuses as readonly RunStatus[]).includes(status)
+}
+
 /** How a run status reads in a sentence, for example "Run 3: waiting for review". */
 export const runStatusLabels = {
   queued: 'queued',

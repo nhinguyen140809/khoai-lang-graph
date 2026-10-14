@@ -1,19 +1,20 @@
 import type { Message } from '@/features/console'
 import type { Project } from '@/features/projects'
 import type { Run, RunStep, Thread } from '@/features/threads'
+import { isUnfinishedRunStatus } from '@/shared/config/run-status.constants'
 
 import { type ExtraProjectSpec, extraProjectSpecs } from './extra-project-specs.constants'
-import { mockId, USER_ID } from './mock-ids.constants'
+import { IdPrefix, mockId, USER_ID } from './mock-ids.constants'
 import { buildMockRun, scriptedSteps } from './runs.fixtures'
 
 // Mock projects beyond the four of the API examples: each has a thread, runs in one of the states
 // of a run, the messages that started them, a few items, and steps. They are generated from the
 // specs, so that a spec is all it takes to add a project.
 
-const projectId = (n: number) => mockId('90aa', n)
-const threadId = (n: number) => mockId('7f3a', n)
-const runId = (n: number, number: number) => mockId('5f2d', n * 10 + number)
-const messageId = (n: number, number: number) => mockId('c2a1', n * 10 + number)
+const projectId = (n: number) => mockId(IdPrefix.Project, n)
+const threadId = (n: number) => mockId(IdPrefix.Thread, n)
+const runId = (n: number, number: number) => mockId(IdPrefix.Run, n * 10 + number)
+const messageId = (n: number, number: number) => mockId(IdPrefix.Message, n * 10 + number)
 
 const at = (day: string, time: string) => `${day}T${time}Z`
 const runStart = (spec: ExtraProjectSpec) => at(spec.day, '09:00:00')
@@ -22,7 +23,7 @@ const runStart = (spec: ExtraProjectSpec) => at(spec.day, '09:00:00')
 function runsOf(spec: ExtraProjectSpec): Run[] {
   const status = spec.lastRun
   if (status === 'none') return []
-  const finished = status === 'succeeded' || status === 'failed' || status === 'cancelled'
+  const finished = !isUnfinishedRunStatus(status)
   const stage = {
     succeeded: 'done',
     running: 'interviewing',
@@ -97,7 +98,7 @@ export function extraThreads(): Thread[] {
   return extraProjectSpecs.map((spec) => {
     const last = runsOf(spec).at(-1)
     const status = last?.status
-    const unfinished = status === 'queued' || status === 'running' || status === 'interrupted'
+    const unfinished = status !== undefined && isUnfinishedRunStatus(status)
     return {
       id: threadId(spec.n),
       project_id: projectId(spec.n),

@@ -30,6 +30,11 @@ export function validationFailed(errors: FieldProblem[]) {
   return problem(422, 'validation_failed', 'Validation failed', null, errors)
 }
 
+/** A request that the state of the record does not allow, such as stopping a run that ended. */
+export function invalidState(detail: string) {
+  return problem(409, 'invalid_state', 'Invalid state', detail)
+}
+
 export function internalError() {
   return problem(500, 'internal_error', 'Internal error')
 }

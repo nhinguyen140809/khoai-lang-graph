@@ -1,12 +1,14 @@
 import { http, HttpResponse } from 'msw'
 
-import type { CreateProjectBody, Project } from '@/features/projects'
+import { outputLanguages, type Project } from '@/features/projects'
+import type { FieldProblem } from '@/shared/api/api-fetch.utils'
+import { isUnfinishedRunStatus } from '@/shared/config/run-status.constants'
 
 import definition from './data/workflow/requirements_engineering.v1.json'
 import { bulkProjectCount } from './extra-project-specs.constants'
 import { bulkProjects, extraProjects } from './extra-projects.fixtures'
 import { mockRecord } from './mock-db.utils'
-import { createdId, USER_ID } from './mock-ids.constants'
+import { createdId, IdPrefix, USER_ID } from './mock-ids.constants'
 import { answerScenario, mockScenario, pageParam } from './mock-scenario.utils'
 import { mockModels } from './models.fixtures'
 import { paginate } from './pagination.utils'
@@ -22,11 +24,9 @@ const projectEdits = mockRecord<Record<string, Partial<Project>>>('project-edits
 
 // The unfinished runs of a project, counted by status, as the API derives them.
 function withRunCounts(project: Project): Project {
-  const counts = { queued: 0, running: 0, interrupted: 0 }
+  const counts: Project['unfinished_run_counts'] = { queued: 0, running: 0, interrupted: 0 }
   for (const run of allRuns()) {
-    if (run.project_id === project.id && run.status in counts) {
-      counts[run.status as keyof typeof counts] += 1
-    }
+    if (run.project_id === project.id && isUnfinishedRunStatus(run.status)) counts[run.status] += 1
   }
   return { ...project, unfinished_run_counts: counts }
 }
@@ -45,15 +45,6 @@ export function findProject(projectId: string): Project | undefined {
   return allProjects().find(({ id }) => id === projectId)
 }
 
-function isCreateProjectBody(body: unknown): body is Partial<CreateProjectBody> {
-  return typeof body === 'object' && body !== null
-}
-
-interface FieldProblem {
-  field: string
-  message: string
-}
-
 interface Schema {
   type?: string
   minimum?: number
@@ -69,6 +60,43 @@ const roleKeys = definition.agent_roles.map(({ key }) => key)
 
 function isRecord(value: unknown): value is Record<string, unknown> {
   return typeof value === 'object' && value !== null && !Array.isArray(value)
+}
+
+function isOutputLanguage(value: unknown): value is Project['output_language'] {
+  return (outputLanguages as readonly unknown[]).includes(value)
+}
+
+type NewProject = Pick<Project, 'name' | 'description' | 'output_language'>
+
+// The fields of a new project read from the body; a field given wrong reads as undefined.
+function readNewProject(body: unknown): { project: NewProject } | { problems: FieldProblem[] } {
+  const given = isRecord(body) ? body : {}
+  const name =
+    typeof given.name === 'string' && given.name.trim() !== '' ? given.name.trim() : undefined
+  const description =
+    given.description == null
+      ? null
+      : typeof given.description === 'string'
+        ? given.description
+        : undefined
+  const language =
+    given.output_language === undefined
+      ? 'en'
+      : isOutputLanguage(given.output_language)
+        ? given.output_language
+        : undefined
+  if (name !== undefined && description !== undefined && language !== undefined) {
+    return { project: { name, description, output_language: language } }
+  }
+  const problems: FieldProblem[] = []
+  if (name === undefined) problems.push({ field: 'name', message: 'Enter a name.' })
+  if (description === undefined) {
+    problems.push({ field: 'description', message: 'Enter text, or nothing.' })
+  }
+  if (language === undefined) {
+    problems.push({ field: 'output_language', message: 'Choose a language.' })
+  }
+  return { problems }
 }
 
 function runConfigProblems(config: Record<string, unknown>): FieldProblem[] {
@@ -185,22 +213,14 @@ export const projectHandlers = [
   }),
 
   http.post('/api/v1/projects', async ({ request }) => {
-    const body: unknown = await request.json()
-    const fields = isCreateProjectBody(body) ? body : {}
-    const name = typeof fields.name === 'string' ? fields.name.trim() : ''
-    if (name === '') {
-      return problem(422, 'validation_failed', 'Validation failed', 'The name is missing.', [
-        { field: 'name', message: 'Enter a name.' },
-      ])
-    }
+    const read = readNewProject(await request.json().catch(() => null))
+    if ('problems' in read) return validationFailed(read.problems)
     const now = new Date().toISOString()
     const project: Project = {
-      id: createdId('90aa', createdProjects.get().length + 1),
+      id: createdId(IdPrefix.Project, createdProjects.get().length + 1),
       owner_id: USER_ID,
-      name,
-      description: fields.description ?? null,
+      ...read.project,
       status: 'active',
-      output_language: fields.output_language ?? 'en',
       run_config: {
         review_checkpoints: null,
         max_steps: null,

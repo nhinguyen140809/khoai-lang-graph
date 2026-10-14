@@ -1,19 +1,14 @@
 import { http, HttpResponse } from 'msw'
 
 import type { Run, RunStep } from '@/features/threads'
+import { isUnfinishedRunStatus } from '@/shared/config/run-status.constants'
 
 import { extraRuns, extraRunSteps } from './extra-projects.fixtures'
-import { createdId } from './mock-ids.constants'
-import {
-  changeRun,
-  createdRuns,
-  createdSteps,
-  unfinishedStatuses,
-  withRunChanges,
-} from './mock-runs.store'
+import { createdId, IdPrefix } from './mock-ids.constants'
+import { changeRun, createdRuns, createdSteps, withRunChanges } from './mock-runs.store'
 import { answerScenario, mockRunState, mockScenario } from './mock-scenario.utils'
 import { paginate } from './pagination.utils'
-import { notFound, problem } from './problem.utils'
+import { invalidState, notFound } from './problem.utils'
 import { mockRuns, mockRunSteps, newMockRun } from './runs.fixtures'
 
 // With `?mock-runs=empty`, no run exists.
@@ -42,7 +37,7 @@ export function startMockRun(thread: { id: string; project_id: string }, retryOf
         .map(({ number: n }) => n),
     ) + 1
   const run = newMockRun({
-    id: createdId('5f2d', created.length + 1),
+    id: createdId(IdPrefix.Run, created.length + 1),
     threadId: thread.id,
     projectId: thread.project_id,
     number,
@@ -57,7 +52,7 @@ export const runHandlers = [
     const answered = await answerScenario(mockScenario('runs'))
     if (answered !== null) return answered
     const runs = allRuns()
-      .filter((run) => run.thread_id === params.threadId)
+      .filter((run) => run.thread_id === String(params.threadId))
       .toSorted((a, b) => b.number - a.number)
     return HttpResponse.json(paginate(runs, request))
   }),
@@ -80,9 +75,7 @@ export const runHandlers = [
   http.post('/api/v1/runs/:runId/cancel', ({ params }) => {
     const run = findMockRun(String(params.runId))
     if (run === undefined) return notFound('The run')
-    if (!unfinishedStatuses.includes(run.status)) {
-      return problem(409, 'invalid_state', 'Invalid state', 'The run has already ended.')
-    }
+    if (!isUnfinishedRunStatus(run.status)) return invalidState('The run has already ended.')
     changeRun(run.id, { status: 'cancelled', finished_at: new Date().toISOString() })
     return new HttpResponse(null, { status: 202 })
   }),

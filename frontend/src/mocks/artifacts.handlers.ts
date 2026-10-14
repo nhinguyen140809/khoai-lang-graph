@@ -7,7 +7,7 @@ import { mockArtifactKinds } from './artifact-kinds.fixtures'
 import { mockArtifactItems, mockArtifacts, mockTraceLinks } from './artifacts.fixtures'
 import definition from './data/workflow/requirements_engineering.v1.json'
 import { artifactStatuses, createdExports, type ItemEdit, itemEdits } from './mock-artifacts.store'
-import { createdId, USER_ID } from './mock-ids.constants'
+import { createdId, IdPrefix, USER_ID } from './mock-ids.constants'
 import { answerScenario, mockScenario } from './mock-scenario.utils'
 import { paginate } from './pagination.utils'
 import { notFound, problem, validationFailed } from './problem.utils'
@@ -392,7 +392,7 @@ export const artifactHandlers = [
       ])
     }
     const entry: Export = {
-      id: createdId('e8d0', createdExports.get().length + 1),
+      id: createdId(IdPrefix.Export, createdExports.get().length + 1),
       project_id: projectId,
       template: template.key,
       format: body.format ?? 'markdown',

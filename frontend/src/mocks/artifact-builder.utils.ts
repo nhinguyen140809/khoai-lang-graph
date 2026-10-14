@@ -1,6 +1,6 @@
 import type { Artifact, ArtifactItem, Origin, TraceLink } from '@/features/artifacts'
 
-import { mockId, USER_ID } from './mock-ids.constants'
+import { IdPrefix, mockId, USER_ID } from './mock-ids.constants'
 
 // A small way to write the artifacts of a project as trees, and to turn them into the records that
 // the API serves: ids, positions, outline numbers and trace links.
@@ -95,7 +95,7 @@ export function buildProject(
   let itemNumber = 0
 
   specs.forEach((spec, artifactIndex) => {
-    const artifactId = mockId('a7f3', n * 100 + artifactIndex + 1)
+    const artifactId = mockId(IdPrefix.Artifact, n * 100 + artifactIndex + 1)
     const origin = agentOrigin(roleOfKind[spec.kind] ?? 'planner', runId)
     const time = `${day}T09:${String(10 + artifactIndex).padStart(2, '0')}:00Z`
     const hasParents = spec.items.some((entry) => (entry.children ?? []).length > 0)
@@ -104,7 +104,7 @@ export function buildProject(
     const walk = (list: ItemSpec[], parentId: string | null, numberPrefix: string) => {
       list.forEach((entry, index) => {
         itemNumber += 1
-        const id = mockId('c41e', n * 1000 + itemNumber)
+        const id = mockId(IdPrefix.Item, n * 1000 + itemNumber)
         const outline = `${numberPrefix}${String(index + 1)}`
         const edited = editedKeys[entry.key]
         built.push({
@@ -161,7 +161,7 @@ export function buildProject(
     if (source === undefined || target === undefined) return []
     return [
       {
-        id: mockId('d7a1', n * 1000 + index + 1),
+        id: mockId(IdPrefix.TraceLink, n * 1000 + index + 1),
         source_item_id: source.id,
         target_item_id: target.id,
         link_type: link.type,

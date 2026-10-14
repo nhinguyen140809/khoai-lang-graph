@@ -21,5 +21,3 @@ export function withRunChanges(runs: Run[]): Run[] {
 export function changeRun(runId: string, change: Partial<Run>) {
   runChanges.set({ ...runChanges.get(), [runId]: { ...runChanges.get()[runId], ...change } })
 }
-
-export const unfinishedStatuses: readonly Run['status'][] = ['queued', 'running', 'interrupted']

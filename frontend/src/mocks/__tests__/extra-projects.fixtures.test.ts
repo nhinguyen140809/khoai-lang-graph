@@ -1,5 +1,7 @@
 import { describe, expect, it } from 'vitest'
 
+import { isUnfinishedRunStatus } from '@/shared/config/run-status.constants'
+
 import { mockArtifactItems, mockArtifacts } from '../artifacts.fixtures'
 import { bulkProjectCount, extraProjectSpecs } from '../extra-project-specs.constants'
 import {
@@ -43,8 +45,7 @@ describe('the extra projects of the mock data', () => {
       const last = extraRuns()
         .filter((run) => run.thread_id === thread.id)
         .toSorted((a, b) => b.number - a.number)[0]
-      const unfinished =
-        last?.status === 'queued' || last?.status === 'running' || last?.status === 'interrupted'
+      const unfinished = last !== undefined && isUnfinishedRunStatus(last.status)
 
       expect(thread.active_run_id).toBe(unfinished ? last.id : null)
     }

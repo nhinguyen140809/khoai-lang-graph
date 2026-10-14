@@ -1,11 +1,14 @@
 import { http, HttpResponse } from 'msw'
 
-import type { Thread } from '@/features/threads'
+import type { Run, Thread } from '@/features/threads'
+import {
+  isUnfinishedRunStatus,
+  type UnfinishedRunStatus,
+} from '@/shared/config/run-status.constants'
 
 import { extraThreads } from './extra-projects.fixtures'
 import { mockRecord } from './mock-db.utils'
-import { createdId, USER_ID } from './mock-ids.constants'
-import { unfinishedStatuses } from './mock-runs.store'
+import { createdId, IdPrefix, USER_ID } from './mock-ids.constants'
 import { answerScenario, mockRunState, mockScenario } from './mock-scenario.utils'
 import { paginate } from './pagination.utils'
 import { notFound } from './problem.utils'
@@ -22,12 +25,17 @@ export function allThreads(): Thread[] {
   return mockScenario('runs') === 'empty' ? withoutRuns(threads) : threads.map(withRunsOfThread)
 }
 
+function isUnfinishedRun(run: Run): run is Run & { status: UnfinishedRunStatus } {
+  return isUnfinishedRunStatus(run.status)
+}
+
 // The unfinished run of a thread follows the runs: one that was started, stopped or finished
 // while the mock server runs changes the thread.
 function withRunsOfThread(thread: Thread): Thread {
   const active = allRuns()
-    .filter((run) => run.thread_id === thread.id && unfinishedStatuses.includes(run.status))
-    .toSorted((a, b) => b.number - a.number)[0]
+    .filter((run) => run.thread_id === thread.id)
+    .toSorted((a, b) => b.number - a.number)
+    .find(isUnfinishedRun)
   if (active === undefined) {
     return { ...thread, active_run_id: null, active_run_status: null }
   }
@@ -35,7 +43,7 @@ function withRunsOfThread(thread: Thread): Thread {
     ...thread,
     current_stage: active.current_stage,
     active_run_id: active.id,
-    active_run_status: active.status as NonNullable<Thread['active_run_status']>,
+    active_run_status: active.status,
   }
 }
 
@@ -68,7 +76,7 @@ export const threadHandlers = [
     if (findProject(projectId) === undefined) return notFound('The project')
     const now = new Date().toISOString()
     const thread: Thread = {
-      id: createdId('7f3a', createdThreads.get().length + 1),
+      id: createdId(IdPrefix.Thread, createdThreads.get().length + 1),
       project_id: projectId,
       created_by: USER_ID,
       title: null,
@@ -92,7 +100,9 @@ export const threadHandlers = [
     const answered = await answerScenario(scenario)
     if (answered !== null) return answered
     const thread =
-      scenario === 'empty' ? undefined : allThreads().find(({ id }) => id === params.threadId)
+      scenario === 'empty'
+        ? undefined
+        : allThreads().find(({ id }) => id === String(params.threadId))
     return thread === undefined ? notFound('The thread') : HttpResponse.json(thread)
   }),
 ]

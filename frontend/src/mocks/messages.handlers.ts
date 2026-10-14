@@ -1,14 +1,15 @@
 import { http, HttpResponse } from 'msw'
 
 import type { Message } from '@/features/console'
+import { isUnfinishedRunStatus } from '@/shared/config/run-status.constants'
 
 import { extraMessages } from './extra-projects.fixtures'
 import { mockMessages } from './messages.fixtures'
-import { createdId } from './mock-ids.constants'
-import { createdMessages, unfinishedStatuses } from './mock-runs.store'
+import { createdId, IdPrefix } from './mock-ids.constants'
+import { createdMessages } from './mock-runs.store'
 import { answerScenario, mockScenario } from './mock-scenario.utils'
 import { paginate } from './pagination.utils'
-import { notFound, problem, validationFailed } from './problem.utils'
+import { invalidState, notFound, validationFailed } from './problem.utils'
 import { allRuns, findMockRun, startMockRun } from './runs.handlers'
 import { allThreads } from './threads.handlers'
 
@@ -39,11 +40,11 @@ export const messageHandlers = [
 
     // A message sent while a run is unfinished waits for the run; otherwise it starts a run.
     const unfinished = allRuns()
-      .filter((run) => run.thread_id === thread.id && unfinishedStatuses.includes(run.status))
+      .filter((run) => run.thread_id === thread.id && isUnfinishedRunStatus(run.status))
       .toSorted((a, b) => b.number - a.number)[0]
     const run = unfinished ?? startMockRun(thread, null)
     const message: Message = {
-      id: createdId('c2a1', createdMessages.get().length + 1),
+      id: createdId(IdPrefix.Message, createdMessages.get().length + 1),
       thread_id: thread.id,
       sequence: allMessages(thread.id).length + 1,
       run_id: run.id,
@@ -64,7 +65,7 @@ export const messageHandlers = [
     const thread = allThreads().find(({ id }) => id === run.thread_id)
     if (thread === undefined) return notFound('The thread')
     if (thread.active_run_id !== null) {
-      return problem(409, 'invalid_state', 'Invalid state', 'The thread has an unfinished run.')
+      return invalidState('The thread has an unfinished run.')
     }
     return HttpResponse.json(startMockRun(thread, run.id), { status: 201 })
   }),

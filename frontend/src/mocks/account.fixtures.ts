@@ -1,4 +1,4 @@
-import { mockId } from './mock-ids.constants'
+import { IdPrefix, mockId } from './mock-ids.constants'
 import { mockModels } from './models.fixtures'
 
 // The login sessions of the user, the model choices of the user, and the usage of their runs.
@@ -14,7 +14,7 @@ export interface MockSession {
 
 export const mockSessions: MockSession[] = [
   {
-    id: mockId('5e55', 1),
+    id: mockId(IdPrefix.Session, 1),
     created_at: '2026-10-06T08:20:00Z',
     last_used_at: '2026-10-06T09:41:00Z',
     ip_address: '203.0.113.24',
@@ -22,7 +22,7 @@ export const mockSessions: MockSession[] = [
     current: true,
   },
   {
-    id: mockId('5e55', 2),
+    id: mockId(IdPrefix.Session, 2),
     created_at: '2026-10-03T19:02:00Z',
     last_used_at: '2026-10-05T21:15:00Z',
     ip_address: '198.51.100.7',
@@ -30,7 +30,7 @@ export const mockSessions: MockSession[] = [
     current: false,
   },
   {
-    id: mockId('5e55', 3),
+    id: mockId(IdPrefix.Session, 3),
     created_at: '2026-09-21T07:45:00Z',
     last_used_at: '2026-09-30T10:03:00Z',
     ip_address: '192.0.2.130',

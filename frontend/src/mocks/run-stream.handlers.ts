@@ -2,7 +2,7 @@ import { delay, sse } from 'msw'
 
 import type { RunStep } from '@/features/threads'
 
-import { createdId } from './mock-ids.constants'
+import { createdId, IdPrefix } from './mock-ids.constants'
 import { changeRun, createdRuns, createdSteps } from './mock-runs.store'
 import { pageParam } from './mock-scenario.utils'
 import { findMockRun } from './runs.handlers'
@@ -38,7 +38,7 @@ function stepRecord(
   startedAt: string,
 ): RunStep {
   return {
-    id: createdId('e1a0', sequence + 100 * createdRuns.get().length),
+    id: createdId(IdPrefix.Step, sequence + 100 * createdRuns.get().length),
     run_id: runId,
     sequence,
     node: played.node,

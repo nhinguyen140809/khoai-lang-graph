@@ -32,10 +32,14 @@ export async function answerScenario(scenario: MockScenario): Promise<Response |
   return null
 }
 
-/** The state of the run of the API examples: running, waiting for review, failed, or done. */
-export type MockRunState = 'running' | 'waiting' | 'failed' | 'done'
+const mockRunStates = ['running', 'waiting', 'failed', 'done'] as const
 
-const RUN_STATES: readonly string[] = ['running', 'waiting', 'failed', 'done']
+/** The state of the run of the API examples: running, waiting for review, failed, or done. */
+export type MockRunState = (typeof mockRunStates)[number]
+
+function isMockRunState(value: string): value is MockRunState {
+  return (mockRunStates as readonly string[]).includes(value)
+}
 
 /**
  * The state of the mock run that waits at the analysis review by default, chosen in the page URL
@@ -43,5 +47,5 @@ const RUN_STATES: readonly string[] = ['running', 'waiting', 'failed', 'done']
  */
 export function mockRunState(): MockRunState {
   const value = pageParam('mock-run-state')
-  return value !== null && RUN_STATES.includes(value) ? (value as MockRunState) : 'waiting'
+  return value !== null && isMockRunState(value) ? value : 'waiting'
 }

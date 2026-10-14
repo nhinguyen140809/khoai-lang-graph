@@ -175,7 +175,7 @@ describe('POST /projects', () => {
     expect(created.body).toMatchObject({ description: null, output_language: 'en' })
   })
 
-  it.each([{}, { name: '   ' }, { name: 3 }])(
+  it.each([{}, { name: '   ' }, { name: 3 }, null])(
     'asks for a name when the body is %j',
     async (body) => {
       const answer = await post('/api/v1/projects', body)
@@ -184,4 +184,26 @@ describe('POST /projects', () => {
       expect(answer.body).toMatchObject({ errors: [{ field: 'name', message: 'Enter a name.' }] })
     },
   )
+
+  it('asks for a language it has, and a description that is text', async () => {
+    const answer = await post('/api/v1/projects', {
+      name: 'Clinic booking',
+      description: 42,
+      output_language: 'fr',
+    })
+
+    expect(answer.status).toBe(422)
+    expect(answer.body).toMatchObject({
+      errors: [
+        { field: 'description', message: 'Enter text, or nothing.' },
+        { field: 'output_language', message: 'Choose a language.' },
+      ],
+    })
+  })
+
+  it('reads a body that is not JSON as a body without fields', async () => {
+    const answer = await call('/api/v1/projects', { method: 'POST', body: 'not json' })
+
+    expect(answer.status).toBe(422)
+  })
 })

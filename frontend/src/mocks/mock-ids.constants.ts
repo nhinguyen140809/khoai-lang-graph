@@ -6,22 +6,39 @@ export function mockId(prefix: string, n: number): string {
   return `${prefix}0000-0000-4000-8000-${String(n).padStart(12, '0')}`
 }
 
+/** The prefix of the ids of each kind of record, as in the API examples. */
+export const IdPrefix = {
+  User: '11b7',
+  Project: '90aa',
+  Thread: '7f3a',
+  Run: '5f2d',
+  Message: 'c2a1',
+  Persona: '8c20',
+  Step: 'e1a0',
+  Artifact: 'a7f3',
+  Item: 'c41e',
+  TraceLink: 'd7a1',
+  Interrupt: '7b0c',
+  Export: 'e8d0',
+  Session: '5e55',
+} as const
+
 const id = mockId
 
-export const USER_ID = id('11b7', 1)
+export const USER_ID = id(IdPrefix.User, 1)
 
 export const PROJECT_IDS = {
-  mentor: id('90aa', 1),
-  campus: id('90aa', 2),
-  library: id('90aa', 3),
-  laundry: id('90aa', 4),
+  mentor: id(IdPrefix.Project, 1),
+  campus: id(IdPrefix.Project, 2),
+  library: id(IdPrefix.Project, 3),
+  laundry: id(IdPrefix.Project, 4),
 }
 
 export const THREAD_IDS = {
-  mentorMain: id('7f3a', 1),
-  campusMain: id('7f3a', 3),
-  libraryMain: id('7f3a', 4),
-  laundryMain: id('7f3a', 5),
+  mentorMain: id(IdPrefix.Thread, 1),
+  campusMain: id(IdPrefix.Thread, 3),
+  libraryMain: id(IdPrefix.Thread, 4),
+  laundryMain: id(IdPrefix.Thread, 5),
 }
 
 export const RUN_IDS = {
@@ -30,20 +47,24 @@ export const RUN_IDS = {
   /** Run 2 of the mentor thread: it failed at its cost limit. */
   mentorMain2: id('4c18', 1),
   /** Run 3 of the mentor thread, the run of the API examples: it retries run 2 and waits at the analysis review. */
-  mentorMain3: id('5f2d', 1),
+  mentorMain3: id(IdPrefix.Run, 1),
   campusMain1: id('7e10', 2),
   libraryMain1: id('7e10', 3),
   laundryMain1: id('7e10', 4),
 }
 
 export function itemId(n: number): string {
-  return id('c41e', n)
+  return id(IdPrefix.Item, n)
 }
 
-export const PERSONA_IDS = [id('8c20', 1), id('8c20', 2), id('8c20', 3)] as const
+export const PERSONA_IDS = [
+  id(IdPrefix.Persona, 1),
+  id(IdPrefix.Persona, 2),
+  id(IdPrefix.Persona, 3),
+] as const
 
 export function stepId(runIndex: number, sequence: number): string {
-  return id('e1a0', runIndex * 1000 + sequence)
+  return id(IdPrefix.Step, runIndex * 1000 + sequence)
 }
 
 /** Ids of records created while the mock server runs, apart from the ids of the fixtures. */

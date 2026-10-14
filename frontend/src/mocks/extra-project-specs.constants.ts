@@ -1,3 +1,4 @@
+import type { Project } from '@/features/projects'
 import type { RunStatus } from '@/shared/config/run-status.constants'
 
 /** What a mock project is in: the state of its last run, or no run yet. */
@@ -8,7 +9,7 @@ export interface ExtraProjectSpec {
   n: number
   name: string
   description: string
-  language?: 'en' | 'vi'
+  language?: Project['output_language']
   archived?: boolean
   /** The state of the one run of the project. */
   lastRun: ExtraRunState
@@ -198,5 +199,5 @@ export const extraProjectSpecs: ExtraProjectSpec[] = [
   },
 ]
 
-/** The titles of the bulk projects that `?mock-projects=many` adds to the list. */
+/** How many projects `?mock-projects=many` adds to the list. */
 export const bulkProjectCount = 60
