@@ -1,16 +1,14 @@
 'use client'
 
 import { zodResolver } from '@hookform/resolvers/zod'
-import { useMutation, useQueryClient } from '@tanstack/react-query'
-import type { Route } from 'next'
-import Link from 'next/link'
+import { useMutation } from '@tanstack/react-query'
 import { useRouter } from 'next/navigation'
 import { useForm } from 'react-hook-form'
 import { toast } from 'sonner'
 import { z } from 'zod'
 
 import { ApiError } from '@/shared/api/api-fetch.utils'
-import { authHref, safeNextPath } from '@/shared/api/auth-redirect.utils'
+import { authHref, AuthPage } from '@/shared/api/auth-redirect.utils'
 import { Button } from '@/shared/components/ui/button'
 import { Field, FieldError, FieldGroup, FieldLabel } from '@/shared/components/ui/field'
 import { Input } from '@/shared/components/ui/input'
@@ -18,6 +16,7 @@ import { Spinner } from '@/shared/components/ui/spinner'
 
 import { login, register } from '../account.api'
 import type { RegisterBody } from '../account.types'
+import { useOpenAfterSignIn } from '../hooks/useOpenAfterSignIn'
 import { AuthCard } from './AuthCard'
 
 const formSchema = z.object({
@@ -28,10 +27,8 @@ const formSchema = z.object({
 
 type FormValues = z.infer<typeof formSchema>
 
-const formFields = ['display_name', 'email', 'password'] as const
-
 function isFormField(field: string): field is keyof FormValues {
-  return formFields.some((name) => name === field)
+  return Object.hasOwn(formSchema.shape, field)
 }
 
 interface RegisterPageProps {
@@ -42,7 +39,7 @@ interface RegisterPageProps {
 /** Creates an account, then signs in with it: creating an account does not start a session. */
 export function RegisterPage({ next }: RegisterPageProps) {
   const router = useRouter()
-  const queryClient = useQueryClient()
+  const openAfterSignIn = useOpenAfterSignIn(next)
   const createAccount = useMutation({
     // Resolves to whether signing in worked too.
     mutationFn: async (body: RegisterBody) => {
@@ -64,15 +61,13 @@ export function RegisterPage({ next }: RegisterPageProps) {
   const onSubmit = form.handleSubmit((values) => {
     createAccount.mutate(values, {
       onSuccess: (signedIn) => {
-        // Nothing cached for an earlier session shows to the new account.
-        queryClient.removeQueries()
         if (signedIn) {
-          router.replace(safeNextPath(next) as Route)
+          openAfterSignIn()
           return
         }
         // The account exists, so creating it again would fail: sign in with it instead.
         toast.info('The account is created. Sign in with it.')
-        router.replace(authHref('/login', next) as Route)
+        router.replace(authHref(AuthPage.Login, next))
       },
       onError: (error) => {
         if (!(error instanceof ApiError)) return
@@ -94,17 +89,11 @@ export function RegisterPage({ next }: RegisterPageProps) {
     <AuthCard
       title="Create an account"
       description="An account keeps your projects, your settings and the models you choose."
-      footer={
-        <>
-          Have an account?{' '}
-          <Link
-            href={authHref('/login', next) as Route}
-            className="text-primary underline-offset-4 hover:underline"
-          >
-            Sign in
-          </Link>
-        </>
-      }
+      switchTo={{
+        prompt: 'Have an account?',
+        label: 'Sign in',
+        href: authHref(AuthPage.Login, next),
+      }}
     >
       <form
         noValidate

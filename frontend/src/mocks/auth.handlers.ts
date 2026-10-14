@@ -5,7 +5,7 @@ import type { Me } from '@/features/account'
 import { meRecord } from './me.handlers'
 import { mockRecord } from './mock-db.utils'
 import { mockScenario } from './mock-scenario.utils'
-import { problem } from './problem.utils'
+import { unauthenticated, validationFailed } from './problem.utils'
 
 // The session of the mock server: signed in until the user signs out.
 const sessionRecord = mockRecord('session', () => ({ signedIn: true }))
@@ -46,23 +46,16 @@ export const authHandlers = [
         !sessionRecord.get().signedIn
       )
     },
-    () => problem(401, 'unauthenticated', 'Unauthenticated', 'Sign in to continue.'),
+    () => unauthenticated('Sign in to continue.'),
   ),
 
   http.post('/api/v1/auth/login', async ({ request }) => {
     const credentials = await readCredentials(request)
     const missing = missingFields(credentials, ['email', 'password'])
-    if (missing.length > 0) {
-      return problem(422, 'validation_failed', 'Validation failed', null, missing)
-    }
+    if (missing.length > 0) return validationFailed(missing)
     // The same answer for an unknown email and a wrong password.
     if (mockScenario('login') === 'error') {
-      return problem(
-        401,
-        'unauthenticated',
-        'Unauthenticated',
-        'The email or the password is wrong.',
-      )
+      return unauthenticated('The email or the password is wrong.')
     }
     sessionRecord.set({ signedIn: true })
     return new HttpResponse(null, { status: 204 })
@@ -71,13 +64,9 @@ export const authHandlers = [
   http.post('/api/v1/auth/register', async ({ request }) => {
     const credentials = await readCredentials(request)
     const missing = missingFields(credentials, ['email', 'password', 'display_name'])
-    if (missing.length > 0) {
-      return problem(422, 'validation_failed', 'Validation failed', null, missing)
-    }
+    if (missing.length > 0) return validationFailed(missing)
     if (mockScenario('register') === 'error') {
-      return problem(422, 'validation_failed', 'Validation failed', null, [
-        { field: 'email', message: 'An account with this email exists.' },
-      ])
+      return validationFailed([{ field: 'email', message: 'An account with this email exists.' }])
     }
     const now = new Date().toISOString()
     const me: Me = {

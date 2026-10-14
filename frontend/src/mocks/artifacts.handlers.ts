@@ -10,7 +10,7 @@ import { artifactStatuses, createdExports, type ItemEdit, itemEdits } from './mo
 import { createdId, USER_ID } from './mock-ids.constants'
 import { answerScenario, mockScenario } from './mock-scenario.utils'
 import { paginate } from './pagination.utils'
-import { notFound, problem } from './problem.utils'
+import { notFound, problem, validationFailed } from './problem.utils'
 import { findProject } from './projects.handlers'
 import { allRuns } from './runs.handlers'
 
@@ -310,11 +310,7 @@ export const artifactHandlers = [
       const problems = validateContent(fieldViews(kind.schema), content)
       const fields = Object.entries(problems)
       if (fields.length > 0) {
-        return problem(
-          422,
-          'validation_failed',
-          'Validation failed',
-          null,
+        return validationFailed(
           fields.map(([field, message]) => ({ field: `content.${field}`, message })),
         )
       }
@@ -353,9 +349,7 @@ export const artifactHandlers = [
     const body = (await request.json()) as { version?: number }
     const target = revisionsOf(item).find(({ version }) => version === body.version)
     if (target === undefined) {
-      return problem(422, 'validation_failed', 'Validation failed', null, [
-        { field: 'version', message: 'No such version.' },
-      ])
+      return validationFailed([{ field: 'version', message: 'No such version.' }])
     }
     const version = item.version + 1
     const updatedAt = now()
@@ -390,7 +384,7 @@ export const artifactHandlers = [
     const body = (await request.json()) as { template?: string; format?: string }
     const template = definition.export_templates.find(({ key }) => key === body.template)
     if (!template?.formats.includes(body.format ?? '')) {
-      return problem(422, 'validation_failed', 'Validation failed', null, [
+      return validationFailed([
         {
           field: template === undefined ? 'template' : 'format',
           message: 'Not offered by the workflow.',

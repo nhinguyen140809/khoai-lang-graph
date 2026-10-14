@@ -8,7 +8,7 @@ import { createdId } from './mock-ids.constants'
 import { createdMessages, unfinishedStatuses } from './mock-runs.store'
 import { answerScenario, mockScenario } from './mock-scenario.utils'
 import { paginate } from './pagination.utils'
-import { notFound, problem } from './problem.utils'
+import { notFound, problem, validationFailed } from './problem.utils'
 import { allRuns, findMockRun, startMockRun } from './runs.handlers'
 import { allThreads } from './threads.handlers'
 
@@ -34,9 +34,7 @@ export const messageHandlers = [
     const body = (await request.json()) as { content?: unknown }
     const content = typeof body.content === 'string' ? body.content.trim() : ''
     if (content === '') {
-      return problem(422, 'validation_failed', 'Validation failed', null, [
-        { field: 'content', message: 'The message is empty.' },
-      ])
+      return validationFailed([{ field: 'content', message: 'The message is empty.' }])
     }
 
     // A message sent while a run is unfinished waits for the run; otherwise it starts a run.

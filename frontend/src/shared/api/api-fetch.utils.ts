@@ -11,6 +11,16 @@ const problemSchema = z.object({
   errors: z.array(z.object({ field: z.string(), message: z.string() })).optional(),
 })
 
+/** The statuses of an answer that the app handles in a way of its own. */
+export const HttpStatus = {
+  /** No valid session: the app opens the sign-in page. */
+  Unauthorized: 401,
+  /** The record does not exist, or the user may not see it. */
+  NotFound: 404,
+  /** Too many attempts, such as signing in. */
+  TooManyRequests: 429,
+} as const
+
 export interface FieldProblem {
   field: string
   message: string
@@ -32,7 +42,7 @@ export class ApiError extends Error {
 }
 
 export function isNotFoundError(error: unknown): boolean {
-  return error instanceof ApiError && error.status === 404
+  return error instanceof ApiError && error.status === HttpStatus.NotFound
 }
 
 interface ApiRequestOptions {

@@ -5,7 +5,7 @@ import type { UserSettings } from '@/features/settings'
 import { mockMe, mockUserSettings } from './me.fixtures'
 import { mockRecord } from './mock-db.utils'
 import { answerScenario, mockScenario, pageParam } from './mock-scenario.utils'
-import { notFound, problem } from './problem.utils'
+import { internalError, notFound, problem, validationFailed } from './problem.utils'
 
 /** The signed-in user; registering an account replaces it. */
 export const meRecord = mockRecord('me', () => mockMe)
@@ -40,7 +40,7 @@ export const meHandlers = [
   http.put('/api/v1/me/settings', async ({ request }) => {
     // `?mock-settings=save-error` loads the settings but fails to save them.
     if (mockScenario('settings') === 'error' || pageParam('mock-settings') === 'save-error') {
-      return problem(500, 'internal_error', 'Internal error')
+      return internalError()
     }
     const body: unknown = await request.json().catch(() => null)
     if (typeof body !== 'object' || body === null) {
@@ -48,13 +48,7 @@ export const meHandlers = [
     }
     const missing = settingsFields.filter((field) => !(field in body))
     if (missing.length > 0) {
-      return problem(
-        422,
-        'validation_failed',
-        'Validation failed',
-        null,
-        missing.map((field) => ({ field, message: 'Required.' })),
-      )
+      return validationFailed(missing.map((field) => ({ field, message: 'Required.' })))
     }
     const replaced: UserSettings = {
       ...settingsRecord.get(),

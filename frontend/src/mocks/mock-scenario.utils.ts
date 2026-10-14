@@ -1,6 +1,6 @@
 import { delay } from 'msw'
 
-import { problem } from './problem.utils'
+import { internalError } from './problem.utils'
 
 export type MockScenario = 'default' | 'empty' | 'error' | 'loading'
 
@@ -27,7 +27,7 @@ export function mockScenario(resource: string): MockScenario {
  * or a request that never ends. Returns null for the scenarios each handler answers itself.
  */
 export async function answerScenario(scenario: MockScenario): Promise<Response | null> {
-  if (scenario === 'error') return problem(500, 'internal_error', 'Internal error')
+  if (scenario === 'error') return internalError()
   if (scenario === 'loading') await delay('infinite')
   return null
 }

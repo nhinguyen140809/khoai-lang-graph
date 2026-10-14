@@ -1,6 +1,6 @@
 import { describe, expect, it } from 'vitest'
 
-import { authHref, safeNextPath } from '../auth-redirect.utils'
+import { authHref, nextParam, safeNextPath } from '../auth-redirect.utils'
 
 describe('safeNextPath', () => {
   it('keeps a path of the app', () => {
@@ -39,5 +39,13 @@ describe('authHref', () => {
       '/login?next=%2Fprojects%2Fp1%2Fconsole',
     )
     expect(authHref('/register', null)).toBe('/register')
+  })
+})
+
+describe('nextParam', () => {
+  it('reads one value of next from the query', () => {
+    expect(nextParam({ next: '/settings' })).toBe('/settings')
+    expect(nextParam({ next: ['/a', '/b'] })).toBeNull()
+    expect(nextParam({})).toBeNull()
   })
 })

@@ -1,7 +1,7 @@
 import { z } from 'zod'
 
 // Temporary hand-written schemas for the authentication and account API.
-// TODO: replace with the types generated into src/api/generated/ once they exist.
+// TODO: replace with the types generated into src/shared/api/generated/ once they exist.
 
 export const meSchema = z.object({
   id: z.string(),
@@ -24,8 +24,6 @@ export interface LoginBody {
   password: string
 }
 
-export interface RegisterBody {
-  email: string
-  password: string
+export interface RegisterBody extends LoginBody {
   display_name: string
 }

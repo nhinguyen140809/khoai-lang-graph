@@ -12,7 +12,7 @@ import { mockRecord } from './mock-db.utils'
 import { answerScenario, mockScenario } from './mock-scenario.utils'
 import { mockModels } from './models.fixtures'
 import { paginate } from './pagination.utils'
-import { notFound, problem } from './problem.utils'
+import { notFound, problem, validationFailed } from './problem.utils'
 
 // What the user changed: the sessions that were revoked, and the model choices.
 const revokedSessions = mockRecord<string[]>('revoked-sessions', () => [])
@@ -47,9 +47,7 @@ export const accountHandlers = [
       'display_name' in body &&
       (typeof body.display_name !== 'string' || body.display_name.trim() === '')
     ) {
-      return problem(422, 'validation_failed', 'Validation failed', null, [
-        { field: 'display_name', message: 'Enter your name.' },
-      ])
+      return validationFailed([{ field: 'display_name', message: 'Enter your name.' }])
     }
     const me = meRecord.get()
     const changed = {
@@ -70,14 +68,12 @@ export const accountHandlers = [
     const current = isRecord(body) ? body.current_password : undefined
     const next = isRecord(body) ? body.new_password : undefined
     if (mockScenario('password') === 'error' || typeof current !== 'string' || current === '') {
-      return problem(422, 'validation_failed', 'Validation failed', null, [
+      return validationFailed([
         { field: 'current_password', message: 'The current password is wrong.' },
       ])
     }
     if (typeof next !== 'string' || next.length < 8) {
-      return problem(422, 'validation_failed', 'Validation failed', null, [
-        { field: 'new_password', message: 'Use at least 8 characters.' },
-      ])
+      return validationFailed([{ field: 'new_password', message: 'Use at least 8 characters.' }])
     }
     return new HttpResponse(null, { status: 204 })
   }),
@@ -112,9 +108,7 @@ export const accountHandlers = [
     const body: unknown = await request.json().catch(() => null)
     const items = isRecord(body) && Array.isArray(body.items) ? body.items : null
     if (items === null) {
-      return problem(422, 'validation_failed', 'Validation failed', null, [
-        { field: 'items', message: 'Send the choices.' },
-      ])
+      return validationFailed([{ field: 'items', message: 'Send the choices.' }])
     }
     const problems = items.flatMap((item, index) => {
       if (!isRecord(item)) return [{ field: `items.${String(index)}`, message: 'Not a choice.' }]
@@ -133,8 +127,7 @@ export const accountHandlers = [
       }
       return []
     })
-    if (problems.length > 0)
-      return problem(422, 'validation_failed', 'Validation failed', null, problems)
+    if (problems.length > 0) return validationFailed(problems)
     const saved = items.map((item) => {
       const choice = item as Record<string, unknown>
       return {
@@ -152,7 +145,7 @@ export const accountHandlers = [
     if (answered !== null) return answered
     const groupBy = new URL(request.url).searchParams.get('group_by') ?? 'day'
     if (!(groupBy in groupKeys)) {
-      return problem(422, 'validation_failed', 'Validation failed', null, [
+      return validationFailed([
         { field: 'group_by', message: 'Use day, project, agent_role or model.' },
       ])
     }

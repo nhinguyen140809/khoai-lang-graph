@@ -10,16 +10,16 @@ import { TestProviders } from '@/test/TestProviders'
 
 import { UserMenu } from '../UserMenu'
 
-const { openPage } = vi.hoisted(() => ({ openPage: vi.fn() }))
+const { loadPage } = vi.hoisted(() => ({ loadPage: vi.fn() }))
 
 vi.mock('next/link', async () => (await import('@/test/next-mocks.utils')).linkMock)
 vi.mock('@/shared/api/auth-redirect.utils', async (importOriginal) => ({
   ...(await importOriginal<typeof authRedirect>()),
-  openPage,
+  loadPage,
 }))
 
 beforeEach(() => {
-  openPage.mockClear()
+  loadPage.mockClear()
 })
 
 describe('UserMenu', () => {
@@ -40,9 +40,9 @@ describe('UserMenu', () => {
     await userEvent.click(screen.getByRole('menuitem', { name: 'Sign out' }))
 
     await vi.waitFor(() => {
-      expect(openPage).toHaveBeenCalledWith('/login')
+      expect(loadPage).toHaveBeenCalledWith('/login')
     })
-    expect(openPage).toHaveBeenCalledTimes(1)
+    expect(loadPage).toHaveBeenCalledTimes(1)
     expect((await fetch(apiUrl('/api/v1/me'))).status).toBe(401)
   })
 

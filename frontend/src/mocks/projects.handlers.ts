@@ -10,7 +10,7 @@ import { createdId, USER_ID } from './mock-ids.constants'
 import { answerScenario, mockScenario, pageParam } from './mock-scenario.utils'
 import { mockModels } from './models.fixtures'
 import { paginate } from './pagination.utils'
-import { notFound, problem } from './problem.utils'
+import { notFound, problem, validationFailed } from './problem.utils'
 import { mockProjects } from './projects.fixtures'
 import { allRuns } from './runs.handlers'
 
@@ -231,7 +231,7 @@ export const projectHandlers = [
       return problem(422, 'validation_failed', 'Validation failed', 'The body is an object.')
     const problems = projectPatchProblems(body)
     if (problems.length > 0) {
-      return problem(422, 'validation_failed', 'Validation failed', null, problems)
+      return validationFailed(problems)
     }
     const fields: Partial<Project> = {}
     for (const name of [

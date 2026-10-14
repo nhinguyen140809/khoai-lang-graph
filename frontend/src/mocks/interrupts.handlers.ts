@@ -10,7 +10,7 @@ import { mockId } from './mock-ids.constants'
 import { changeRun } from './mock-runs.store'
 import { answerScenario, mockScenario, pageParam } from './mock-scenario.utils'
 import { paginate } from './pagination.utils'
-import { notFound, problem } from './problem.utils'
+import { notFound, problem, validationFailed } from './problem.utils'
 import { allRuns, findMockRun } from './runs.handlers'
 
 // The pauses of the runs, as the workflow definition describes its checkpoints: a run that is
@@ -241,7 +241,7 @@ export const interruptHandlers = [
       errors.push({ field: 'modified_items', message: 'This review does not accept edits.' })
     }
     if (errors.length > 0) {
-      return problem(422, 'validation_failed', 'Validation failed', null, errors)
+      return validationFailed(errors)
     }
 
     const approves = option?.approves ?? true

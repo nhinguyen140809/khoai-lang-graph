@@ -1,21 +1,19 @@
 'use client'
 
 import { zodResolver } from '@hookform/resolvers/zod'
-import { useMutation, useQueryClient } from '@tanstack/react-query'
-import type { Route } from 'next'
-import Link from 'next/link'
-import { useRouter } from 'next/navigation'
+import { useMutation } from '@tanstack/react-query'
 import { useForm } from 'react-hook-form'
 import { z } from 'zod'
 
-import { ApiError } from '@/shared/api/api-fetch.utils'
-import { authHref, safeNextPath } from '@/shared/api/auth-redirect.utils'
+import { ApiError, HttpStatus } from '@/shared/api/api-fetch.utils'
+import { authHref, AuthPage } from '@/shared/api/auth-redirect.utils'
 import { Button } from '@/shared/components/ui/button'
 import { Field, FieldError, FieldGroup, FieldLabel } from '@/shared/components/ui/field'
 import { Input } from '@/shared/components/ui/input'
 import { Spinner } from '@/shared/components/ui/spinner'
 
 import { login } from '../account.api'
+import { useOpenAfterSignIn } from '../hooks/useOpenAfterSignIn'
 import { AuthCard } from './AuthCard'
 
 const formSchema = z.object({
@@ -31,17 +29,19 @@ interface LoginPageProps {
 }
 
 function errorMessage(error: Error): string {
-  if (error instanceof ApiError && error.status === 401)
-    return 'The email or the password is wrong.'
-  if (error instanceof ApiError && error.status === 429) {
-    return 'Too many attempts. Wait a moment, then try again.'
+  if (!(error instanceof ApiError)) return error.message
+  switch (error.status) {
+    case HttpStatus.Unauthorized:
+      return 'The email or the password is wrong.'
+    case HttpStatus.TooManyRequests:
+      return 'Too many attempts. Wait a moment, then try again.'
+    default:
+      return error.message
   }
-  return error.message
 }
 
 export function LoginPage({ next }: LoginPageProps) {
-  const router = useRouter()
-  const queryClient = useQueryClient()
+  const openAfterSignIn = useOpenAfterSignIn(next)
   const signIn = useMutation({ mutationFn: login })
   const form = useForm<FormValues>({
     resolver: zodResolver(formSchema),
@@ -50,30 +50,18 @@ export function LoginPage({ next }: LoginPageProps) {
   const { errors } = form.formState
 
   const onSubmit = form.handleSubmit((values) => {
-    signIn.mutate(values, {
-      onSuccess: () => {
-        // Nothing cached for an earlier session shows to the user who signs in.
-        queryClient.removeQueries()
-        router.replace(safeNextPath(next) as Route)
-      },
-    })
+    signIn.mutate(values, { onSuccess: openAfterSignIn })
   })
 
   return (
     <AuthCard
       title="Sign in"
       description="Sign in to open your projects."
-      footer={
-        <>
-          No account yet?{' '}
-          <Link
-            href={authHref('/register', next) as Route}
-            className="text-primary underline-offset-4 hover:underline"
-          >
-            Create an account
-          </Link>
-        </>
-      }
+      switchTo={{
+        prompt: 'No account yet?',
+        label: 'Create an account',
+        href: authHref(AuthPage.Register, next),
+      }}
     >
       <form
         noValidate

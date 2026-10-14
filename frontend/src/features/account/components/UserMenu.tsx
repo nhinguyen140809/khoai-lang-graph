@@ -6,8 +6,8 @@ import Link from 'next/link'
 import { useTheme } from 'next-themes'
 import { toast } from 'sonner'
 
-import { ApiError } from '@/shared/api/api-fetch.utils'
-import { openPage } from '@/shared/api/auth-redirect.utils'
+import { ApiError, HttpStatus } from '@/shared/api/api-fetch.utils'
+import { AuthPage, loadPage } from '@/shared/api/auth-redirect.utils'
 import { Avatar, AvatarFallback, AvatarImage } from '@/shared/components/ui/avatar'
 import { Button } from '@/shared/components/ui/button'
 import {
@@ -24,6 +24,7 @@ import { Skeleton } from '@/shared/components/ui/skeleton'
 import { useIsHydrated } from '@/shared/hooks/useIsHydrated'
 
 import { logout } from '../account.api'
+import { initials } from '../account.utils'
 import { useMe } from '../hooks/useMe'
 
 const themeOptions = [
@@ -31,16 +32,6 @@ const themeOptions = [
   { value: 'dark', label: 'Dark' },
   { value: 'system', label: 'System' },
 ]
-
-function initials(name: string): string {
-  const letters = name
-    .split(/\s+/)
-    .filter((word) => word !== '')
-    .map((word) => word.charAt(0).toUpperCase())
-  return (
-    (letters.length > 1 ? `${letters[0] ?? ''}${letters.at(-1) ?? ''}` : (letters[0] ?? '')) || '?'
-  )
-}
 
 /** The account of the signed-in user, the theme, and signing out, for the bottom of the activity bar. */
 export function UserMenu() {
@@ -52,11 +43,11 @@ export function UserMenu() {
     mutationFn: logout,
     onSuccess: () => {
       // A full page load: the data of this session must not show to whoever signs in next.
-      openPage('/login')
+      loadPage(AuthPage.Login)
     },
     onError: (error) => {
       // Without a session the query client already opens the sign-in page.
-      if (error instanceof ApiError && error.status === 401) return
+      if (error instanceof ApiError && error.status === HttpStatus.Unauthorized) return
       toast.error(error.message)
     },
   })
