@@ -1,3 +1,5 @@
+'use client'
+
 import { useCallback, useEffect } from 'react'
 
 import type { EditorTab } from '../editor-tabs.schema'

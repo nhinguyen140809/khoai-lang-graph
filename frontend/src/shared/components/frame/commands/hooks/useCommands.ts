@@ -1,3 +1,5 @@
+'use client'
+
 import { useEffect, useEffectEvent, useId, useLayoutEffect, useRef } from 'react'
 
 import { matchesHotkey } from '@/shared/lib/hotkey.utils'
