@@ -1,5 +1,7 @@
 import { expect, test } from '@playwright/test'
 
+import { THREAD_IDS } from '../../src/mocks/shared/mock-ids.constants'
+
 test('sends a message and streams the agent reply', async ({ page }) => {
   await page.goto('/')
 
@@ -16,9 +18,10 @@ test('sends a message and streams the agent reply', async ({ page }) => {
 test('lists the threads and opens one', async ({ page }) => {
   await page.goto('/')
 
-  await page.getByRole('link', { name: 'Compare agent topologies' }).click()
+  // Every project of the mock data has one thread, named Main thread; the mentor platform's is first.
+  await page.getByRole('link', { name: 'Main thread' }).first().click()
 
-  await expect(page).toHaveURL(/\/threads\/thread-mock-2$/)
+  await expect(page).toHaveURL(new RegExp(`/threads/${THREAD_IDS.mentorMain}$`))
   await expect(page.getByRole('textbox', { name: 'Message' })).toBeVisible()
 })
 

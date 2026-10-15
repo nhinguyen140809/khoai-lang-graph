@@ -47,12 +47,13 @@ export function ThreadList() {
 
   return threads.data.map((thread) => {
     const href = `/threads/${encodeURIComponent(thread.id)}` as const
+    const title = thread.title ?? 'Untitled thread'
     return (
       <SidebarMenuItem key={thread.id}>
-        <SidebarMenuButton asChild tooltip={thread.title} isActive={pathname === href}>
+        <SidebarMenuButton asChild tooltip={title} isActive={pathname === href}>
           <Link href={href}>
             <MessageSquareTextIcon aria-hidden />
-            <span>{thread.title}</span>
+            <span>{title}</span>
           </Link>
         </SidebarMenuButton>
       </SidebarMenuItem>

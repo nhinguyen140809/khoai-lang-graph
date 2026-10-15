@@ -328,8 +328,9 @@ All mock code lives in `src/mocks/`, in one folder per part of the API, named li
 src/mocks/
 ├── msw-browser.setup.ts  # the handlers of the browser worker (dev mocking, E2E)
 ├── msw-server.setup.ts   # the handlers of the unit tests
-├── shared/               # records, ids, scenarios, error answers
+├── shared/               # records, ids, scenarios, pages of a list, error answers
 ├── account/              # /auth, /me
+├── projects/             # /projects
 ├── threads/              # threads
 └── runs/                 # runs, the stream
 ```
@@ -341,18 +342,19 @@ Each folder holds a pair of files per API resource:
 | `<resource>.fixtures.ts` | The data: typed with the feature's types, fixed values only (no random ids, no current time). |
 | `<resource>.handlers.ts` | MSW handlers that answer the endpoints of that resource with the fixtures.                    |
 
-The same handlers serve `pnpm dev:mock`, the unit tests, and the E2E tests, so a fixture is written once. Example: `threads/threads.fixtures.ts` and `threads/threads.handlers.ts` back `GET /api/v1/threads`.
+The same handlers serve `pnpm dev:mock`, the unit tests, and the E2E tests, so a fixture is written once. Example: `threads/threads.fixtures.ts` and `threads/threads.handlers.ts` back `GET /api/v1/threads` and `GET /api/v1/projects/{project_id}/threads`.
 
-| Resource     | Endpoints                                                                                                            |
-| ------------ | -------------------------------------------------------------------------------------------------------------------- |
-| `threads`    | `GET /threads`                                                                                                       |
-| `runs`       | `POST /threads/{thread_id}/runs`                                                                                     |
-| `run-stream` | `GET /runs/{run_id}/stream` (browser only)                                                                           |
-| `auth`       | `POST /auth/register`, `POST /auth/login`, `POST /auth/logout`, and a 401 for every other endpoint without a session |
-| `me`         | `GET /me`                                                                                                            |
+| Resource     | Endpoints                                                                                                                                                         |
+| ------------ | ----------------------------------------------------------------------------------------------------------------------------------------------------------------- |
+| `projects`   | `GET /projects`, `GET /projects/{project_id}`, `POST /projects`                                                                                                   |
+| `threads`    | `GET /threads`, `GET /projects/{project_id}/threads`, `GET /threads/{thread_id}`                                                                                  |
+| `runs`       | `GET /threads/{thread_id}/runs`, `GET /runs/{run_id}`, `GET /runs/{run_id}/steps`, `POST /runs/{run_id}/cancel`, and `POST /threads/{thread_id}/runs` of the chat |
+| `run-stream` | `GET /runs/{run_id}/stream` (browser only)                                                                                                                        |
+| `auth`       | `POST /auth/register`, `POST /auth/login`, `POST /auth/logout`, and a 401 for every other endpoint without a session                                              |
+| `me`         | `GET /me`                                                                                                                                                         |
 
 - The ids of the mock data are in `shared/mock-ids.constants.ts`; each starts like the id of the same record in the API examples.
-- The mock server keeps the session and the user as records (`shared/mock-db.utils.ts`). The browser worker keeps them in browser storage, so they survive a reload; `?mock-reset` in the page address starts again from the fixtures. Unit tests keep them in memory, and the test setup resets them after each test.
+- The mock server keeps the session, the user, the projects that `POST` creates and the runs that are stopped as records (`shared/mock-db.utils.ts`). The browser worker keeps them in browser storage, so they survive a reload; `?mock-reset` in the page address starts again from the fixtures. Unit tests keep them in memory, and the test setup resets them after each test.
 
 To mock a new endpoint:
 
@@ -363,7 +365,7 @@ To mock a new endpoint:
 
 ### Mock scenarios
 
-A handler can answer differently depending on a parameter in the page URL, so every state of a screen can be seen in `pnpm dev:mock`. The parameter name is `mock-<resource>`: `?mock-threads=error` makes the threads handlers answer with an error. A handler reads it with `mockScenario('<resource>')` from `src/mocks/shared/mock-scenario.utils.ts` and supports the scenarios `empty`, `error`, and `loading`; without the parameter it returns the fixtures. For an endpoint that returns one record, `empty` answers 404.
+A handler can answer differently depending on a parameter in the page URL, so every state of a screen can be seen in `pnpm dev:mock`. The parameter name is `mock-<resource>`: `?mock-threads=error` makes the threads handlers answer with an error. A handler reads it with `mockScenario('<resource>')` from `src/mocks/shared/mock-scenario.utils.ts` and supports the scenarios `empty`, `error`, and `loading`; without the parameter it returns the fixtures. For an endpoint that returns one record, `empty` answers 404. Scenarios that are not a query state, such as the state of a run, read their own parameter, for example `?mock-run-state=failed`.
 
 The parameters and the address of every state of every screen are listed in [Mock scenarios](src/mocks/README.md). Add the addresses of a screen there when the screen is built.
 
