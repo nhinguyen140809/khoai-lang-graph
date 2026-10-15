@@ -291,7 +291,7 @@ Rules:
 | Method and path | Purpose | Phase |
 |---|---|---|
 | `GET /projects` | Projects of the user; `?status=`; ordered by `last_activity_at` descending | MVP |
-| `POST /projects` | Create; body `name`, `description`, `output_language` | MVP |
+| `POST /projects` | Create; body `name`, `description`, `output_language`. `name` is optional: without it, the first run names the project from its initial intent, and the event stream of that run sends `project_named` | MVP |
 | `GET /projects/{project_id}` | One project, with `item_counts` and `unfinished_run_counts` | MVP |
 | `PATCH /projects/{project_id}` | Change name, description, status, `run_config`, `model_overrides` | MVP |
 | `DELETE /projects/{project_id}` | Soft delete | MVP |
@@ -835,6 +835,7 @@ The type names are the ones defined in [Planning: agent run lifecycle](PLANNING.
 | `artifact_created` | A new artifact was saved | `artifact_id`, `name`, `version` | `kind` |
 | `artifact_delta` | An artifact changed: an item was added, changed or removed, or a field of the artifact changed | `artifact_id`, `delta` | `version`, `item_id`, `item_key`, `change` with one of `item_created`, `item_updated`, `item_deleted`, `artifact_updated` |
 | `message_delivered` | A pending user message was taken in by a step | - | `message_id`, `step_id`, `node` |
+| `project_named` | The run named its project, which was created without a name | - | `step_id`, `project_id`, `name` |
 | `interrupt` | The run paused for input. Not sent for an interrupt resolved at once with the defaults | `node`, `payload` | `step_id`; `payload` contains `interrupt_id`, `prompt`, `options`, `questions`, `allow_edits`, `review_artifacts` |
 | `error` | The run failed | `message` | `code`, one of the codes in [Runtime: failures](architecture/runtime.md#failures); `stage` |
 | `done` | The run ended | - | `status` with one of `succeeded`, `failed`, `cancelled` |
@@ -844,6 +845,7 @@ The type names are the ones defined in [Planning: agent run lifecycle](PLANNING.
 Rules:
 
 - **Events carry references, not content.** An artifact event gives the ids and versions; the client fetches the artifact or the item when it needs the content. A reconnecting client therefore never applies a stale copy. `name` in `artifact_created` is the title of the artifact.
+- **A name is a record of the step.** `project_named` gives the name that the run chose. The client reads the current name from the project, which the user may have changed since, so a replayed event never brings back an old name.
 - **Token text is grouped.** The server stores and sends token text in chunks of at most 200 ms of output, not one event per token, so the event log stays small and a replay is fast.
 - **Unknown types are ignored.** A client skips an event type it does not know, so a type can be added without a new API version.
 
@@ -972,6 +974,7 @@ Decision: the event log in the database now. Because events already pass through
 4. **Token event retention.** Grouped token events are kept with the run. Deleting them after a run ends, while keeping the final message, makes the log smaller but removes word-by-word replay.
 5. **Reasoning text.** No event type carries the model's reasoning text. If the product shows it, a `thinking` type is added; the web app already ignores unknown types.
 6. **Search by meaning.** `q` on the item list matches text only. With the item embeddings of the data shape (Later), the same endpoint can rank items by meaning; the parameter that selects it is not designed.
+7. **The node that names a project.** A project created without a name is named by its first run. The planner, which reads the initial intent first, can return the name with its plan, or a node of its own can run before it; either choice changes the workflow definition and the prompts.
 
 ## 10. Review checklist
 

@@ -284,7 +284,7 @@ The master keys are kept in the server environment, never in the database, each 
 | Field | Type | Notes |
 |---|---|---|
 | `owner_id` | ref\<User\> | |
-| `name` | string | |
+| `name` | string? | Null when the project is created without a name, until its first run names it from the initial intent. The user can change it at any time |
 | `description` | string? | Free text about the product and its domain |
 | `status` | enum | `active`, `archived` |
 | `output_language` | enum | `en`, `vi` |
@@ -508,7 +508,7 @@ One entry of the resumable event stream. The payload of each event type is defin
 | `run_id` | ref\<Run\> | |
 | `sequence` | int | Increasing per run; the client resumes from the last one it saw. A counter of its own, not related to the sequence of the steps |
 | `step_id` | ref\<RunStep\>? | The step the event belongs to. Null for an event of the whole run, such as `done` |
-| `type` | enum | `node_start`, `node_end`, `token`, `tool_call`, `artifact_created`, `artifact_delta`, `interrupt`, `message_delivered`, `error`, `done` |
+| `type` | enum | `node_start`, `node_end`, `token`, `tool_call`, `artifact_created`, `artifact_delta`, `interrupt`, `message_delivered`, `project_named`, `error`, `done` |
 | `data` | object | Depends on `type` |
 
 The event log is the durable record of a run: the stream endpoint replays it after a reconnect, and the workflow never writes into an HTTP response. Token text is stored in grouped chunks, not one event per token. Payload fields are listed in [API design: run event stream](API.md#6-run-event-stream).
