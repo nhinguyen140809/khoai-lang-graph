@@ -3,9 +3,10 @@ import userEvent from '@testing-library/user-event'
 import { describe, expect, it, vi } from 'vitest'
 
 import { ErrorState } from '../ErrorState'
+import { stateSizes } from './ErrorState.data'
 
 describe('ErrorState', () => {
-  it.each(['compact', 'page'] as const)('shows the message and retries (%s)', async (size) => {
+  it.each(stateSizes)('shows the message and retries (%s)', async (size) => {
     const onRetry = vi.fn()
     render(<ErrorState message="Failed to load threads" onRetry={onRetry} size={size} />)
 

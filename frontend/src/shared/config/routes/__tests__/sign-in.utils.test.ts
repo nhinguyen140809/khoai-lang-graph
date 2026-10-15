@@ -1,72 +1,38 @@
 import { describe, expect, it } from 'vitest'
 
-import { nextParam, registerHref, safeNextPath, signInHref, signInHrefFor } from '../sign-in.utils'
+import { nextParam, safeNextPath, signInHrefFor } from '../sign-in.utils'
+import {
+  authHrefCases,
+  keptNextPaths,
+  nextParamCases,
+  replacedNextPaths,
+  signInHrefForCases,
+} from './sign-in.utils.data'
 
 describe('safeNextPath', () => {
-  it('keeps a path of the app', () => {
-    expect(safeNextPath('/projects/p1/console?mock-run-state=done')).toBe(
-      '/projects/p1/console?mock-run-state=done',
-    )
-    expect(safeNextPath('/projects/p1/console#step-3')).toBe('/projects/p1/console#step-3')
+  it.each(keptNextPaths)('keeps %j', (next) => {
+    expect(safeNextPath(next)).toBe(next)
   })
 
-  it.each([
-    null,
-    undefined,
-    '',
-    'https://example.com',
-    '//example.com/x',
-    '/\\example.com',
-    'projects',
-    '/\t/example.com',
-    '/\n/example.com',
-    '/\r/example.com',
-  ])('replaces %j with the home page', (next) => {
+  it.each(replacedNextPaths)('replaces %j with the home page', (next) => {
     expect(safeNextPath(next)).toBe('/')
-  })
-
-  it('does not return to the sign-in pages', () => {
-    expect(safeNextPath('/login?next=%2Fprojects')).toBe('/')
-    expect(safeNextPath('/register')).toBe('/')
-    expect(safeNextPath('/login/')).toBe('/')
-    expect(safeNextPath('/register#top')).toBe('/')
   })
 })
 
 describe('signInHref and registerHref', () => {
-  it('carries the page to return to', () => {
-    expect(signInHref('/projects/p1/console')).toBe('/login?next=%2Fprojects%2Fp1%2Fconsole')
-    expect(registerHref(null)).toBe('/register')
-  })
-
-  it('drops a page to return to that is not of this app, or is the home page', () => {
-    expect(signInHref('https://example.com')).toBe('/login')
-    expect(signInHref('/')).toBe('/login')
-    expect(registerHref('/login')).toBe('/register')
+  it.each(authHrefCases)('$name gives $href', ({ build, next, href }) => {
+    expect(build(next)).toBe(href)
   })
 })
 
 describe('signInHrefFor', () => {
-  it('returns to the whole address: path, query and fragment', () => {
-    expect(signInHrefFor({ pathname: '/threads/t1', search: '?tab=runs', hash: '#step-3' })).toBe(
-      '/login?next=%2Fthreads%2Ft1%3Ftab%3Druns%23step-3',
-    )
-  })
-
-  it('needs no page to return to from the home page', () => {
-    expect(signInHrefFor({ pathname: '/', search: '', hash: '' })).toBe('/login')
-  })
-
-  it('stays on a sign-in or account page', () => {
-    expect(signInHrefFor({ pathname: '/login', search: '?next=%2Fsettings', hash: '' })).toBeNull()
-    expect(signInHrefFor({ pathname: '/register', search: '', hash: '' })).toBeNull()
+  it.each(signInHrefForCases)('$name', ({ location, href }) => {
+    expect(signInHrefFor(location)).toBe(href)
   })
 })
 
 describe('nextParam', () => {
-  it('reads one value of next from the query', () => {
-    expect(nextParam({ next: '/settings' })).toBe('/settings')
-    expect(nextParam({ next: ['/a', '/b'] })).toBeNull()
-    expect(nextParam({})).toBeNull()
+  it.each(nextParamCases)('reads $name of next', ({ query, next }) => {
+    expect(nextParam(query)).toBe(next)
   })
 })

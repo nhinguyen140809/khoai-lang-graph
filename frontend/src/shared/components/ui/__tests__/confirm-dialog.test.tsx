@@ -1,11 +1,11 @@
 import { render, screen, waitFor } from '@testing-library/react'
 import userEvent from '@testing-library/user-event'
-import { ArchiveIcon } from 'lucide-react'
 import { useState } from 'react'
 import { describe, expect, it, vi } from 'vitest'
 
 import { Button } from '../button'
 import { ConfirmDialog } from '../confirm-dialog'
+import { iconCases } from './confirm-dialog.data'
 
 function renderWithTrigger(onConfirm: () => unknown) {
   render(
@@ -18,6 +18,13 @@ function renderWithTrigger(onConfirm: () => unknown) {
       onConfirm={onConfirm}
     />,
   )
+}
+
+/** The lucide class of the icon over the title, or null without one. */
+function shownIcon() {
+  const svg = document.querySelector('[data-slot="alert-dialog-media"] svg')
+  if (svg === null) return null
+  return ['lucide-triangle-alert', 'lucide-archive'].find((name) => svg.classList.contains(name))
 }
 
 async function openAndConfirm() {
@@ -117,41 +124,18 @@ describe('ConfirmDialog', () => {
     expect(screen.queryByRole('alertdialog')).not.toBeInTheDocument()
   })
 
-  it('shows a warning sign for a destructive action, the icon given, or none', async () => {
-    const icon = () => document.querySelector('[data-slot="alert-dialog-media"] svg')
-    const { rerender } = render(
+  it.each(iconCases)('shows $name', async ({ props, icon }) => {
+    render(
       <ConfirmDialog
         open
-        title="Delete the item?"
-        confirmLabel="Delete"
-        destructive
+        title="Archive the item?"
+        confirmLabel="Archive"
         onConfirm={vi.fn()}
+        {...props}
       />,
     )
     await screen.findByRole('alertdialog')
-    expect(icon()).toHaveClass('lucide-triangle-alert')
 
-    rerender(
-      <ConfirmDialog
-        open
-        title="Archive the project?"
-        confirmLabel="Archive"
-        icon={<ArchiveIcon />}
-        onConfirm={vi.fn()}
-      />,
-    )
-    expect(icon()).toHaveClass('lucide-archive')
-
-    rerender(
-      <ConfirmDialog
-        open
-        title="Delete the item?"
-        confirmLabel="Delete"
-        destructive
-        icon={null}
-        onConfirm={vi.fn()}
-      />,
-    )
-    expect(icon()).toBeNull()
+    expect(shownIcon()).toBe(icon)
   })
 })

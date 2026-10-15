@@ -1,10 +1,10 @@
-import { http, HttpResponse } from 'msw'
 import { afterEach, describe, expect, it, vi } from 'vitest'
 
 import { server } from '@/mocks/msw-server.setup'
 import { ApiError } from '@/shared/api/api-error.utils'
 
-import { getMe, login, logout, register } from '../account.api'
+import { getMe } from '../account.api'
+import { refusedCallCases, sentRequestCases } from './account.api.data'
 
 /** Records the method, path and JSON body of every request until the test ends. */
 function recordRequests() {
@@ -34,42 +34,22 @@ describe('account api', () => {
     })
   })
 
-  it('sends the credentials to sign in, register and sign out', async () => {
+  it.each(sentRequestCases)('$name', async ({ call, request }) => {
     const requests = recordRequests()
 
-    await login({ email: 'linh.pham@example.com', password: 'secret' })
-    await register({ email: 'an@example.com', password: 'secret', display_name: 'An Tran' })
-    await logout()
+    await call()
 
     await vi.waitFor(() => {
-      expect(requests).toEqual([
-        {
-          method: 'POST',
-          path: '/api/v1/auth/login',
-          body: { email: 'linh.pham@example.com', password: 'secret' },
-        },
-        {
-          method: 'POST',
-          path: '/api/v1/auth/register',
-          body: { email: 'an@example.com', password: 'secret', display_name: 'An Tran' },
-        },
-        { method: 'POST', path: '/api/v1/auth/logout', body: null },
-      ])
+      expect(requests).toEqual([request])
     })
   })
 
-  it('turns a refused sign-in into an ApiError', async () => {
-    server.use(
-      http.post('/api/v1/auth/login', () =>
-        HttpResponse.json({ status: 401, code: 'unauthenticated' }, { status: 401 }),
-      ),
-    )
+  it.each(refusedCallCases)('turns $name into an ApiError', async ({ refuse, call, error }) => {
+    server.use(refuse())
 
-    const error: unknown = await login({ email: 'a@example.com', password: 'x' }).catch(
-      (caught: unknown) => caught,
-    )
+    const caught: unknown = await call().catch((thrown: unknown) => thrown)
 
-    expect(error).toBeInstanceOf(ApiError)
-    expect(error).toMatchObject({ status: 401, message: 'Failed to sign in (HTTP 401)' })
+    expect(caught).toBeInstanceOf(ApiError)
+    expect(caught).toMatchObject(error)
   })
 })

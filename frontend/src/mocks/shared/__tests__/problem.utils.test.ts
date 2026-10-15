@@ -1,12 +1,7 @@
 import { describe, expect, it } from 'vitest'
 
-import {
-  internalError,
-  notFound,
-  problem,
-  unauthenticated,
-  validationFailed,
-} from '../problem.utils'
+import { problem } from '../problem.utils'
+import { sharedProblemCases } from './problem.utils.data'
 
 describe('problem', () => {
   it('answers in the Problem Details format', async () => {
@@ -35,18 +30,10 @@ describe('problem', () => {
 })
 
 describe('the problems the handlers share', () => {
-  it.each([
-    [notFound('The user'), 404, 'not_found', { detail: 'The user does not exist.' }],
-    [unauthenticated('Sign in.'), 401, 'unauthenticated', { detail: 'Sign in.' }],
-    [
-      validationFailed([{ field: 'email', message: 'Enter a value.' }]),
-      422,
-      'validation_failed',
-      { errors: [{ field: 'email', message: 'Enter a value.' }] },
-    ],
-    [internalError(), 500, 'internal_error', { detail: null }],
-  ])('answers %#', async (answer, status, code, fields) => {
-    expect(answer.status).toBe(status)
-    expect(await answer.json()).toMatchObject({ status, code, ...fields })
+  it.each(sharedProblemCases)('$name answers $status', async ({ answer, status, fields }) => {
+    const response = answer()
+
+    expect(response.status).toBe(status)
+    expect(await response.json()).toMatchObject({ status, ...fields })
   })
 })

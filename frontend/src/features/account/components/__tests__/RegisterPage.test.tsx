@@ -9,6 +9,7 @@ import { routerMock } from '@/test/next-mocks.utils'
 import { TestProviders } from '@/test/TestProviders'
 
 import { RegisterPage } from '../RegisterPage'
+import { failedRegisterCases, missingFieldCases, returnCases } from './RegisterPage.data'
 
 vi.mock('next/navigation', async () => (await import('@/test/next-mocks.utils')).navigationMock)
 vi.mock('next/link', async () => (await import('@/test/next-mocks.utils')).linkMock)
@@ -29,20 +30,23 @@ async function fillForm() {
 }
 
 describe('RegisterPage', () => {
-  it('creates the account, signs in with it, and opens the home page', async () => {
-    const requests: string[] = []
-    server.events.on('request:start', ({ request }) => {
-      requests.push(`${request.method} ${new URL(request.url).pathname}`)
-    })
-    render(<RegisterPage next={null} />, { wrapper: TestProviders })
+  it.each(returnCases)(
+    'creates the account, signs in with it, and opens $opens for $next',
+    async ({ next, opens }) => {
+      const requests: string[] = []
+      server.events.on('request:start', ({ request }) => {
+        requests.push(`${request.method} ${new URL(request.url).pathname}`)
+      })
+      render(<RegisterPage next={next} />, { wrapper: TestProviders })
 
-    await fillForm()
+      await fillForm()
 
-    await vi.waitFor(() => {
-      expect(routerMock.replace).toHaveBeenCalledWith('/')
-    })
-    expect(requests).toEqual(['POST /api/v1/auth/register', 'POST /api/v1/auth/login'])
-  })
+      await vi.waitFor(() => {
+        expect(routerMock.replace).toHaveBeenCalledWith(opens)
+      })
+      expect(requests).toEqual(['POST /api/v1/auth/register', 'POST /api/v1/auth/login'])
+    },
+  )
 
   it('opens the sign-in page when signing in with the new account fails', async () => {
     server.use(http.post('/api/v1/auth/login', () => new HttpResponse(null, { status: 500 })))
@@ -80,53 +84,30 @@ describe('RegisterPage', () => {
     expect(routerMock.replace).not.toHaveBeenCalled()
   })
 
-  it('shows a problem of a field the form does not have under the form', async () => {
-    server.use(
-      http.post('/api/v1/auth/register', () =>
-        HttpResponse.json(
-          { status: 422, errors: [{ field: 'body', message: 'Malformed JSON.' }] },
-          { status: 422 },
-        ),
-      ),
-    )
+  it.each(failedRegisterCases)('shows $name under the form', async ({ answer, alert }) => {
+    server.use(http.post('/api/v1/auth/register', answer))
     render(<RegisterPage next={null} />, { wrapper: TestProviders })
 
     await fillForm()
 
-    expect(await screen.findByRole('alert')).toHaveTextContent(
-      'Failed to create the account (HTTP 422)',
-    )
-  })
-
-  it('checks the email before sending', async () => {
-    render(<RegisterPage next={null} />, { wrapper: TestProviders })
-
-    await userEvent.type(screen.getByLabelText('Email'), 'not an email')
-    await userEvent.click(screen.getByRole('button', { name: 'Create account' }))
-
-    expect(await screen.findByText('Enter an email address.')).toBeInTheDocument()
-  })
-
-  it('asks for the name, the email and the password', async () => {
-    render(<RegisterPage next={null} />, { wrapper: TestProviders })
-
-    await userEvent.click(screen.getByRole('button', { name: 'Create account' }))
-
-    expect(await screen.findByText('Enter your name.')).toBeInTheDocument()
-    expect(screen.getByText('Enter an email address.')).toBeInTheDocument()
-    expect(screen.getByText('Enter a password.')).toBeInTheDocument()
-  })
-
-  it('shows a failure without field problems under the form', async () => {
-    server.use(http.post('/api/v1/auth/register', () => new HttpResponse(null, { status: 500 })))
-    render(<RegisterPage next={null} />, { wrapper: TestProviders })
-
-    await fillForm()
-
-    expect(await screen.findByRole('alert')).toHaveTextContent(
-      'Failed to create the account (HTTP 500)',
-    )
+    expect(await screen.findByRole('alert')).toHaveTextContent(alert)
     expect(routerMock.replace).not.toHaveBeenCalled()
+  })
+
+  it.each(missingFieldCases)('asks for $name before sending', async ({ typed, messages }) => {
+    const requests: string[] = []
+    server.events.on('request:start', ({ request }) => {
+      requests.push(request.url)
+    })
+    render(<RegisterPage next={null} />, { wrapper: TestProviders })
+
+    for (const [label, value] of Object.entries(typed)) {
+      await userEvent.type(screen.getByLabelText(label), value)
+    }
+    await userEvent.click(screen.getByRole('button', { name: 'Create account' }))
+
+    for (const message of messages) expect(await screen.findByText(message)).toBeInTheDocument()
+    expect(requests).toEqual([])
   })
 
   it('links to the sign-in page, keeping the page to return to', () => {

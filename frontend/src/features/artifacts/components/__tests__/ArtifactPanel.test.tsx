@@ -3,16 +3,21 @@ import userEvent from '@testing-library/user-event'
 import { describe, expect, it } from 'vitest'
 
 import { ArtifactPanel } from '../ArtifactPanel'
+import { panelTabCases } from './ArtifactPanel.data'
 
 describe('ArtifactPanel', () => {
-  it('switches between the file, graph, and trace tabs', async () => {
-    const user = userEvent.setup()
+  it('opens on the file tab', () => {
     render(<ArtifactPanel />)
 
-    expect(screen.getByText(/artifacts produced by agents/i)).toBeVisible()
+    expect(screen.getByRole('tab', { name: 'File' })).toHaveAttribute('aria-selected', 'true')
+  })
 
-    await user.click(screen.getByRole('tab', { name: /graph/i }))
+  it.each(panelTabCases)('shows the $tab tab', async ({ tab, text }) => {
+    render(<ArtifactPanel />)
 
-    expect(screen.getByText(/live agent graph/i)).toBeVisible()
+    await userEvent.click(screen.getByRole('tab', { name: tab }))
+
+    expect(screen.getByRole('tab', { name: tab })).toHaveAttribute('aria-selected', 'true')
+    expect(screen.getByRole('tabpanel')).toHaveTextContent(text)
   })
 })

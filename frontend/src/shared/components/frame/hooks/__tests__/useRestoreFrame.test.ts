@@ -12,6 +12,7 @@ import { usePanelsStore } from '../../panels/panels.store'
 import { useEditorTabsStore } from '../../tabs/editor-tabs.store'
 import { useEditorTab } from '../../tabs/hooks/useEditorTab'
 import { useRestoreFrame } from '../useRestoreFrame'
+import { chosenFeatureCases } from './useRestoreFrame.data'
 
 vi.mock('next/navigation', async () => (await import('@/test/next-mocks.utils')).navigationMock)
 
@@ -46,28 +47,15 @@ describe('useRestoreFrame', () => {
     expect(useEditorTabsStore.persist.hasHydrated()).toBe(true)
   })
 
-  it('keeps the side panel of the page on screen when no feature was chosen', async () => {
-    renderHook(() => {
-      useRestoreFrame(activities)
-    })
-
-    await waitFor(() => {
-      expect(useSideFeatureStore.getState().chosen).toBe('artifacts')
-    })
-  })
-
-  it('leaves the feature that the user chose before', async () => {
-    browserStorage.setItem(
-      SIDE_FEATURE_KEY,
-      JSON.stringify({ state: { chosen: 'search' }, version: 0 }),
-    )
+  it.each(chosenFeatureCases)('keeps $name', async ({ chosen, shows }) => {
+    browserStorage.setItem(SIDE_FEATURE_KEY, JSON.stringify({ state: { chosen }, version: 0 }))
 
     renderHook(() => {
       useRestoreFrame(activities)
     })
 
     await waitFor(() => {
-      expect(useSideFeatureStore.getState().chosen).toBe('search')
+      expect(useSideFeatureStore.getState().chosen).toBe(shows)
     })
   })
 

@@ -1,6 +1,13 @@
 import { afterEach, describe, expect, it } from 'vitest'
 
 import { answerScenario, mockScenario, pageParam } from '../mock-scenario.utils'
+import {
+  addressWithParams,
+  chosenScenarios,
+  fixtureScenarioCases,
+  handlerScenarios,
+  pageParamCases,
+} from './mock-scenario.utils.data'
 
 function openPage(address: string) {
   window.history.replaceState(null, '', address)
@@ -11,29 +18,23 @@ afterEach(() => {
 })
 
 describe('pageParam', () => {
-  it('reads a parameter of the page address', () => {
-    openPage('/login?mock-reset&next=%2Fsettings')
+  it.each(pageParamCases)('reads $name', ({ param, value }) => {
+    openPage(addressWithParams)
 
-    expect(pageParam('next')).toBe('/settings')
-    expect(pageParam('mock-reset')).toBe('')
-    expect(pageParam('mock-me')).toBeNull()
+    expect(pageParam(param)).toBe(value)
   })
 })
 
 describe('mockScenario', () => {
-  it.each(['empty', 'error', 'loading'])('reads the %s scenario of a resource', (scenario) => {
+  it.each(chosenScenarios)('reads the %s scenario of a resource', (scenario) => {
     openPage(`/?mock-me=${scenario}`)
 
     expect(mockScenario('me')).toBe(scenario)
   })
 
-  it('answers the fixtures without a parameter, with an unknown value, or for another resource', () => {
-    expect(mockScenario('me')).toBe('default')
+  it.each(fixtureScenarioCases)('answers the fixtures $name', ({ address }) => {
+    openPage(address)
 
-    openPage('/?mock-me=broken')
-    expect(mockScenario('me')).toBe('default')
-
-    openPage('/?mock-threads=error')
     expect(mockScenario('me')).toBe('default')
   })
 })
@@ -46,12 +47,9 @@ describe('answerScenario', () => {
     expect(await answer?.json()).toMatchObject({ code: 'internal_error' })
   })
 
-  it.each(['default', 'empty'] as const)(
-    'leaves the %s scenario to the handler',
-    async (scenario) => {
-      await expect(answerScenario(scenario)).resolves.toBeNull()
-    },
-  )
+  it.each(handlerScenarios)('leaves the %s scenario to the handler', async (scenario) => {
+    await expect(answerScenario(scenario)).resolves.toBeNull()
+  })
 
   it('never answers the loading scenario', async () => {
     const first = await Promise.race([

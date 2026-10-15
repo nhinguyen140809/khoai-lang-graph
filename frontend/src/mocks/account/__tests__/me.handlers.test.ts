@@ -2,6 +2,8 @@ import { afterEach, describe, expect, it } from 'vitest'
 
 import { apiUrl } from '@/shared/api/api-url.utils'
 
+import { meCases } from './me.handlers.data'
+
 // A scenario of the mocks is chosen in the page address.
 function openPage(address: string) {
   window.history.replaceState(null, '', address)
@@ -12,35 +14,13 @@ afterEach(() => {
 })
 
 describe('me handlers', () => {
-  it('answers the signed-in user', async () => {
-    const answer = await fetch(apiUrl('/api/v1/me'))
-
-    expect(answer.status).toBe(200)
-    expect(await answer.json()).toMatchObject({
-      email: 'linh.pham@example.com',
-      display_name: 'Linh Pham',
-    })
-  })
-
-  it('answers 500 in the error scenario', async () => {
-    openPage('/?mock-me=error')
+  it.each(meCases)('answers $name', async ({ address, status, body }) => {
+    openPage(address)
 
     const answer = await fetch(apiUrl('/api/v1/me'))
 
-    expect(answer.status).toBe(500)
-    expect(await answer.json()).toMatchObject({ code: 'internal_error' })
-  })
-
-  it('answers 404 in the empty scenario', async () => {
-    openPage('/?mock-me=empty')
-
-    const answer = await fetch(apiUrl('/api/v1/me'))
-
-    expect(answer.status).toBe(404)
-    expect(await answer.json()).toMatchObject({
-      code: 'not_found',
-      detail: 'The user does not exist.',
-    })
+    expect(answer.status).toBe(status)
+    expect(await answer.json()).toMatchObject(body)
   })
 
   it('never answers in the loading scenario', async () => {

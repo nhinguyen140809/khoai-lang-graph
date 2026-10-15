@@ -35,6 +35,19 @@ const wrappedLibraryImports = [
   },
 ]
 
+// A topic of the domain is used through its index.ts only, as a feature is.
+const domainPatterns = [
+  {
+    group: ['@/shared/domain/*/**'],
+    message:
+      'Import a topic of the domain from its index (@/shared/domain/<topic>). Inside the same topic, use a relative import.',
+  },
+  {
+    regex: '^(\\.\\./)+(shared/)?domain/[^/]+/',
+    message: 'Import a topic of the domain from its index (@/shared/domain/<topic>).',
+  },
+]
+
 const sharedCodePatterns = [
   {
     group: ['@/features', '@/features/**', '@/app/**', '@/providers/**'],
@@ -51,6 +64,7 @@ const sharedCodePatterns = [
     message:
       'Shared code does not import the frame. Inside src/shared/components/frame, use relative imports.',
   },
+  ...domainPatterns,
 ]
 
 // The layers of the frame (README: Frame). A component reaches the state of the frame through
@@ -97,6 +111,7 @@ const featurePatterns = [
     group: ['@/shared/components/frame/**'],
     message: 'Import the frame from @/shared/components/frame, its index.',
   },
+  ...domainPatterns,
 ]
 
 // The deepest folder of a feature that gets its own rule below, counted from the feature folder.
@@ -204,6 +219,7 @@ export default defineConfig([
               group: ['@/shared/components/frame/**'],
               message: 'Import the frame from @/shared/components/frame, its index.',
             },
+            ...domainPatterns,
           ],
         },
       ],
@@ -339,11 +355,12 @@ export default defineConfig([
           // Everything else: <subject>.<kind>.ts, subject in kebab-case
           '**/!(hooks|__tests__)/*.ts':
             '+([a-z0-9])*(-+([a-z0-9])).@(api|keys|queries|types|schema|store|reducer|config|constants|utils|handlers|fixtures|setup|spec)',
-          // Unit tests: only in a __tests__ folder, named after the file under test plus .test
+          // Unit tests: only in a __tests__ folder, named after the file under test plus .test,
+          // and the cases of a data-driven test after the file under test plus .data
           '**/__tests__/*.tsx': '+([A-Z])*([a-zA-Z0-9]).test',
-          '**/hooks/__tests__/*.ts': 'use+([A-Z])*([a-zA-Z0-9]).test',
+          '**/hooks/__tests__/*.ts': 'use+([A-Z])*([a-zA-Z0-9]).@(test|data)',
           '**/!(hooks)/__tests__/*.ts':
-            '+([a-z0-9])*(-+([a-z0-9])).@(api|keys|queries|types|schema|store|reducer|config|constants|utils|handlers|fixtures|setup).test',
+            '@(+([A-Z])*([a-zA-Z0-9]).data|+([a-z0-9])*(-+([a-z0-9])).@(api|keys|queries|types|schema|store|reducer|config|constants|utils|handlers|fixtures|setup).@(test|data))',
         },
       ],
       'check-file/folder-naming-convention': [

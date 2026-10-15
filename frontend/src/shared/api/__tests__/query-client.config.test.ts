@@ -1,8 +1,8 @@
 import { beforeEach, describe, expect, it, vi } from 'vitest'
 
-import { ApiError } from '../api-error.utils'
 import type * as authRedirect from '../auth-redirect.utils'
 import { createQueryClient } from '../query-client.config'
+import { keptPageCases, retryCases, unauthorizedError } from './query-client.config.data'
 
 const { redirectToSignIn } = vi.hoisted(() => ({ redirectToSignIn: vi.fn() }))
 
@@ -11,7 +11,11 @@ vi.mock('../auth-redirect.utils', async (importOriginal) => ({
   redirectToSignIn,
 }))
 
-const apiError = (status: number) => new ApiError('Failed', status, null, [])
+function failQuery(error: Error) {
+  return createQueryClient()
+    .query({ queryKey: ['x'], queryFn: () => Promise.reject(error), retry: false })
+    .catch(() => undefined)
+}
 
 beforeEach(() => {
   redirectToSignIn.mockClear()
@@ -19,11 +23,7 @@ beforeEach(() => {
 
 describe('createQueryClient', () => {
   it('opens the sign-in page when a query answers 401', async () => {
-    const client = createQueryClient()
-
-    await client
-      .query({ queryKey: ['x'], queryFn: () => Promise.reject(apiError(401)), retry: false })
-      .catch(() => undefined)
+    await failQuery(unauthorizedError)
 
     expect(redirectToSignIn).toHaveBeenCalledTimes(1)
   })
@@ -32,35 +32,23 @@ describe('createQueryClient', () => {
     const client = createQueryClient()
     const mutation = client
       .getMutationCache()
-      .build(client, { mutationFn: () => Promise.reject(apiError(401)) })
+      .build(client, { mutationFn: () => Promise.reject(unauthorizedError) })
 
     await mutation.execute(undefined).catch(() => undefined)
 
     expect(redirectToSignIn).toHaveBeenCalledTimes(1)
   })
 
-  it.each([
-    ['another status', apiError(403)],
-    ['an error that is not of the API', new Error('offline')],
-  ])('stays on the page for %s', async (_name, error) => {
-    const client = createQueryClient()
-
-    await client
-      .query({ queryKey: ['x'], queryFn: () => Promise.reject(error), retry: false })
-      .catch(() => undefined)
+  it.each(keptPageCases)('stays on the page for $name', async ({ error }) => {
+    await failQuery(error)
 
     expect(redirectToSignIn).not.toHaveBeenCalled()
   })
 
-  it('tries a failed query once more, unless the API answered with a 4xx status', () => {
+  it.each(retryCases)('tries once more after $name: $retries', ({ failures, error, retries }) => {
     const retry = createQueryClient().getDefaultOptions().queries?.retry
     if (typeof retry !== 'function') throw new Error('retry is not a function')
 
-    expect(retry(0, apiError(404))).toBe(false)
-    expect(retry(0, apiError(401))).toBe(false)
-    expect(retry(0, apiError(500))).toBe(true)
-    expect(retry(1, apiError(500))).toBe(false)
-    expect(retry(0, new Error('offline'))).toBe(true)
-    expect(retry(1, new Error('offline'))).toBe(false)
+    expect(retry(failures, error)).toBe(retries)
   })
 })

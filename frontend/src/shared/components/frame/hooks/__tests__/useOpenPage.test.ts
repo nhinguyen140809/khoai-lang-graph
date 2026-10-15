@@ -12,6 +12,7 @@ import { PanelRegion } from '../../panels/panel.constants'
 import { usePanelsStore } from '../../panels/panels.store'
 import { useEditorTabsStore } from '../../tabs/editor-tabs.store'
 import { useOpenPage } from '../useOpenPage'
+import { openPageCases } from './useOpenPage.data'
 
 vi.mock('next/navigation', async () => (await import('@/test/next-mocks.utils')).navigationMock)
 
@@ -37,32 +38,15 @@ beforeEach(() => {
 })
 
 describe('useOpenPage', () => {
-  it('opens the page and shows the side panel of its feature, even when hidden', () => {
+  it.each(openPageCases)('opens $name', ({ href, options, chosen, sideVisible, keepNext }) => {
     usePanelsStore.getState().togglePanel(PanelRegion.Side)
     const { result } = renderHook(() => useOpenPage(), { wrapper })
 
-    result.current('/projects/p1/artifacts?export=' as Route)
+    result.current(href, options)
 
-    expect(routerMock.push).toHaveBeenCalledWith('/projects/p1/artifacts?export=')
-    expect(useSideFeatureStore.getState().chosen).toBe('artifacts')
-    expect(usePanelsStore.getState().panels[PanelRegion.Side].visible).toBe(true)
-  })
-
-  it('opens a page that belongs to no feature, and leaves the side panel', () => {
-    const { result } = renderHook(() => useOpenPage(), { wrapper })
-
-    result.current('/')
-
-    expect(routerMock.push).toHaveBeenCalledWith('/')
-    expect(useSideFeatureStore.getState().chosen).toBeNull()
-  })
-
-  it('asks to keep the tab of the page when told to keep it', () => {
-    const { result } = renderHook(() => useOpenPage(), { wrapper })
-
-    result.current('/projects/p1/artifacts/a1' as Route, { keep: true })
-
-    expect(useEditorTabsStore.getState().keepNext).toBe('/projects/p1/artifacts/a1')
-    expect(routerMock.push).toHaveBeenCalledWith('/projects/p1/artifacts/a1')
+    expect(routerMock.push).toHaveBeenCalledExactlyOnceWith(href)
+    expect(useSideFeatureStore.getState().chosen).toBe(chosen)
+    expect(usePanelsStore.getState().panels[PanelRegion.Side].visible).toBe(sideVisible)
+    expect(useEditorTabsStore.getState().keepNext).toBe(keepNext)
   })
 })
