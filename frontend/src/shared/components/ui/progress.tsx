@@ -17,7 +17,7 @@ function Progress({
       data-slot="progress"
       data-color={color}
       className={cn(
-        'relative flex h-1 w-full items-center overflow-x-hidden rounded-md bg-muted',
+        'relative flex h-1 w-full items-center overflow-x-hidden rounded-full bg-muted',
         toneClasses[color],
         className,
       )}

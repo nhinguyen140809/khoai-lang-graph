@@ -40,7 +40,7 @@ export function AuthCard({ title, description, switchTo, children }: AuthCardPro
         </CardHeader>
         <CardContent>{children}</CardContent>
       </Card>
-      <p className="text-xs text-muted-foreground">
+      <p className="text-sm text-muted-foreground">
         {switchTo.prompt}{' '}
         <Link href={switchTo.href} className="text-primary underline-offset-4 hover:underline">
           {switchTo.label}

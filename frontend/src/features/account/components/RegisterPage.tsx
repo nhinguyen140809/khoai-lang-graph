@@ -62,7 +62,7 @@ export function RegisterPage({ next }: RegisterPageProps) {
             autoComplete="new-password"
           />
           {createAccount.formError !== null && (
-            <p role="alert" className="text-xs text-destructive">
+            <p role="alert" className="text-sm text-destructive">
               {createAccount.formError}
             </p>
           )}

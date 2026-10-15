@@ -116,7 +116,8 @@ pnpm fix                           # apply this repo's ESLint and Prettier style
 
 - Files are written to `src/shared/components/ui/` according to the aliases in `components.json` (`@/shared/components/ui`, `@/shared/lib/utils`, `@/shared/hooks`). They are regular project source and can be edited.
 - The CLI writes code in its own style (double quotes, its own import order). `pnpm fix` converts it to the repo style; afterwards `pnpm check` should pass.
-- The configured style is `radix-mira`, the compact style meant for dense interfaces, and the icon library is Lucide (`lucide-react`).
+- The configured style is `radix-nova`: controls 32px high with `text-sm` text, and inputs in `text-base` on small screens so that phones do not zoom on them. The icon library is Lucide (`lucide-react`).
+- The components came from `radix-mira` and took the classes that `radix-nova` changes, string by string, so the changes of this project stay in them. `pnpm ui:add <name> --diff` shows how a local file differs from its Nova version in the registry.
 - `menuColor` is `default`: menus are opaque, and a highlighted menu item uses `accent`, the selection color of Night Owl. The translucent menu colors tint the highlighted item with the foreground at 10% instead, which overrides `accent`.
 - Every component of the registry is installed except `toast`, which exists only for Base UI projects (`sonner` is used instead), and `form`, which the registry replaced with `field`. The list is at https://ui.shadcn.com/docs/components.
 - The page `/design-system` shows the installed components as cards, with the color tokens and the type scale, in both themes; `sidebar` is shown by the app shell and `direction` has no visible part. It exists only in development (`pnpm dev`, then open http://localhost:3000/design-system); production builds answer 404.
@@ -155,7 +156,7 @@ With `--only theme`, only the theme variables in `src/app/styles.css` change. Wi
 ### Colors, radius, and dark mode
 
 - All design tokens are CSS variables in `src/app/styles.css`: `:root` holds the light theme, `.dark` the dark theme, and `@theme inline` maps them to Tailwind utilities (`bg-background`, `text-muted-foreground`, `border-border`, ...).
-- `text-xs` is 13px with an 18px line, set in `@theme`: the smallest size for text that people read, also for the titles of panels and the status bar. `text-sm` stays 14px. Below it, three sizes in `@theme` are for labels and indicators, which people glance at: `text-2xs` (12px, 16px line) for labels, captions, and hints, `text-3xs` (11px, 14px line) for counts, ids, and times, and `text-4xs` (10px, 12px line) for the count inside a badge. The `editor-text` utility makes `text-xs` 14px and `text-sm` 16px inside the editor, for documents read at length.
+- The text sizes are the ones of Tailwind, as the Nova style of shadcn/ui uses them: `text-sm` (14px) for the text of components and pages, which people read, and `text-xs` (12px) for labels, captions, hints, the status bar and the titles of panels, which people glance at. Below them, two sizes in `@theme` are for indicators: `text-3xs` (11px, 14px line) for counts, ids, and times, and `text-4xs` (10px, 12px line) for the count inside a badge.
 - `--radius` is the base corner radius. The `rounded-sm` ... `rounded-4xl` utilities are derived from it, so changing this one value rounds every component more or less.
 - The palette:
 

@@ -46,7 +46,7 @@ export function ProjectWorkspace({ projectId, children }: ProjectWorkspaceProps)
       <Surface className="flex h-full min-w-0 flex-col">
         <EditorTabs group={group} rootHref={feature?.href} />
         {/* The page fills the editor and scrolls itself: a ScrollArea when its content flows. */}
-        <main className="min-h-0 flex-1 editor-text">{children}</main>
+        <main className="min-h-0 flex-1">{children}</main>
       </Surface>
     </EditorSplit>
   )

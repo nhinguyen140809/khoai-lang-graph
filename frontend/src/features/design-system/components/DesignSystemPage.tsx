@@ -36,7 +36,7 @@ export function DesignSystemPage() {
         <div className="flex flex-col gap-0.5">
           <h1>Design system</h1>
           <p className="text-xs text-muted-foreground">
-            shadcn/ui radix-mira | Night Owl surfaces | Segoe UI and Consolas
+            shadcn/ui radix-nova | Night Owl surfaces | Segoe UI and Consolas
           </p>
         </div>
         <ThemeToggle />

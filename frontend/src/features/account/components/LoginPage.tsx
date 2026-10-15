@@ -61,7 +61,7 @@ export function LoginPage({ next }: LoginPageProps) {
             autoComplete="current-password"
           />
           {signIn.errorMessage !== null && (
-            <p role="alert" className="text-xs text-destructive">
+            <p role="alert" className="text-sm text-destructive">
               {signIn.errorMessage}
             </p>
           )}
