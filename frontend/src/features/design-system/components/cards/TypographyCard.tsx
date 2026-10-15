@@ -34,12 +34,12 @@ export function TypographyCard() {
       <p className="text-sm">
         Body, text-sm: the system shall let a student search mentors by field and availability.
       </p>
-      <p className="text-xs/relaxed">
-        Component text, text-xs: buttons, inputs, menus, and table cells use this size.
+      <p className="text-sm">
+        Component text, text-sm: buttons, inputs, menus, and table cells use this size.
       </p>
-      <p className="text-xs text-muted-foreground">Muted text for descriptions.</p>
-      <p className="text-2xs text-muted-foreground">
-        Label, text-2xs: the title of a group in a side panel, a caption, a hint.
+      <p className="text-sm text-muted-foreground">Muted text for descriptions.</p>
+      <p className="text-xs text-muted-foreground">
+        Label, text-xs: the title of a group in a side panel, a caption, a hint.
       </p>
       <p className="font-mono text-3xs text-muted-foreground">
         Indicator, text-3xs: 12 items, REQ-001, 08:10

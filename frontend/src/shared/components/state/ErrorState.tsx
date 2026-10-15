@@ -19,7 +19,7 @@ export function ErrorState({ message, onRetry, size = 'page', className }: Error
   if (size === 'compact') {
     return (
       <div role="alert" className={cn('flex flex-col items-start gap-1 px-2 py-1', className)}>
-        <p className="text-xs text-destructive">{message}</p>
+        <p className="text-sm text-destructive">{message}</p>
         {onRetry && (
           <Button variant="link" size="xs" className="h-auto p-0" onClick={onRetry}>
             Try again

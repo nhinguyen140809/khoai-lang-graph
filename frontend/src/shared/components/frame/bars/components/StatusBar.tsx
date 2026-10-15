@@ -39,8 +39,8 @@ export function StatusBar() {
             </button>
           </PopoverTrigger>
           <PopoverContent side="top" align="end" className="w-64 gap-1 p-3">
-            <p className="text-xs font-medium">Notifications</p>
-            <p className="text-xs text-muted-foreground">Nothing new.</p>
+            <p className="text-sm font-medium">Notifications</p>
+            <p className="text-sm text-muted-foreground">Nothing new.</p>
           </PopoverContent>
         </Popover>
       </Stack>

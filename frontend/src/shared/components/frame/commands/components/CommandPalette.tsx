@@ -23,7 +23,7 @@ import { useCommands } from '../hooks/useCommands'
  * Search and commands, opened with Ctrl+K or the search box of the top bar. It lists the commands
  * that the components on screen register with `useCommands`, its own included: Show all commands,
  * whose hotkey Ctrl+K opens and closes it. It closes when a command is chosen. Its rows use the
- * text size of the frame, one step larger than the menus of the components.
+ * text size of the menus of the components.
  */
 export function CommandPalette() {
   const { open, setOpen, toggle, groups } = useCommandPalette()

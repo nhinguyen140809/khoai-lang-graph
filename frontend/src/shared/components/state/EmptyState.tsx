@@ -30,7 +30,7 @@ export function EmptyState({
   if (size === 'compact') {
     return (
       <div className={cn('flex flex-col items-start gap-1 px-2 py-1', className)}>
-        <p className="text-xs text-muted-foreground">{title}</p>
+        <p className="text-sm text-muted-foreground">{title}</p>
         {action}
       </div>
     )

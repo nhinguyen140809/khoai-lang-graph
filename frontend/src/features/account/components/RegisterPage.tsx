@@ -11,7 +11,7 @@ import { routes } from '@/shared/config/routes'
 
 import { type AccountForm, accountFormSchema } from '../account.schema'
 import { useCreateAccount } from '../hooks/useCreateAccount'
-import { AuthCard } from './AuthCard'
+import { AuthScreen } from './AuthScreen'
 
 interface RegisterPageProps {
   /** The page to open after the account is created. */
@@ -30,7 +30,7 @@ export function RegisterPage({ next }: RegisterPageProps) {
   })
 
   return (
-    <AuthCard
+    <AuthScreen
       title="Create an account"
       description="An account keeps your projects, your settings and the models you choose."
       switchTo={{
@@ -62,7 +62,7 @@ export function RegisterPage({ next }: RegisterPageProps) {
             autoComplete="new-password"
           />
           {createAccount.formError !== null && (
-            <p role="alert" className="text-xs text-destructive">
+            <p role="alert" className="text-sm text-destructive">
               {createAccount.formError}
             </p>
           )}
@@ -72,6 +72,6 @@ export function RegisterPage({ next }: RegisterPageProps) {
           </Button>
         </FieldGroup>
       </form>
-    </AuthCard>
+    </AuthScreen>
   )
 }

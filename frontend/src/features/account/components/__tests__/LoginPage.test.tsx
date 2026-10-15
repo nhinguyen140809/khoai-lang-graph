@@ -77,6 +77,15 @@ describe('LoginPage', () => {
     )
   })
 
+  it('has the place of the link that resets a password, not available yet', () => {
+    render(<LoginPage next={null} />, { wrapper: TestProviders })
+
+    expect(screen.getByRole('button', { name: 'Forgot password?' })).toHaveAttribute(
+      'aria-disabled',
+      'true',
+    )
+  })
+
   it('says to wait after too many attempts', async () => {
     server.use(
       http.post('/api/v1/auth/login', () =>
