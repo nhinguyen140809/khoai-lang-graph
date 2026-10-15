@@ -7,11 +7,12 @@ import { TextField } from '@/shared/components/form'
 import { Button } from '@/shared/components/ui/button'
 import { FieldGroup } from '@/shared/components/ui/field'
 import { Spinner } from '@/shared/components/ui/spinner'
+import { Tooltip, TooltipContent, TooltipTrigger } from '@/shared/components/ui/tooltip'
 import { routes } from '@/shared/config/routes'
 
 import { type SignInForm, signInFormSchema } from '../account.schema'
 import { useSignIn } from '../hooks/useSignIn'
-import { AuthCard } from './AuthCard'
+import { AuthScreen } from './AuthScreen'
 
 interface LoginPageProps {
   /** The page to return to after signing in. */
@@ -30,7 +31,7 @@ export function LoginPage({ next }: LoginPageProps) {
   })
 
   return (
-    <AuthCard
+    <AuthScreen
       title="Sign in"
       description="Sign in to open your projects."
       switchTo={{
@@ -60,6 +61,10 @@ export function LoginPage({ next }: LoginPageProps) {
             type="password"
             autoComplete="current-password"
           />
+          {/* Under the password, at the end of its field. */}
+          <div className="-mt-2 flex justify-end">
+            <ForgotPassword />
+          </div>
           {signIn.errorMessage !== null && (
             <p role="alert" className="text-sm text-destructive">
               {signIn.errorMessage}
@@ -71,6 +76,26 @@ export function LoginPage({ next }: LoginPageProps) {
           </Button>
         </FieldGroup>
       </form>
-    </AuthCard>
+    </AuthScreen>
+  )
+}
+
+// TODO: open the reset of a password once the API can send a reset link.
+/** The place of the link that resets a password, which says that it is not available yet. */
+function ForgotPassword() {
+  return (
+    <Tooltip>
+      <TooltipTrigger asChild>
+        <Button
+          type="button"
+          variant="link"
+          aria-disabled
+          className="h-auto p-0 text-sm aria-disabled:cursor-not-allowed"
+        >
+          Forgot password?
+        </Button>
+      </TooltipTrigger>
+      <TooltipContent>Resetting a password is not available yet.</TooltipContent>
+    </Tooltip>
   )
 }
