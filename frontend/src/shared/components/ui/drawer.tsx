@@ -86,7 +86,7 @@ function DrawerTitle({ className, ...props }: React.ComponentProps<typeof Drawer
   return (
     <DrawerPrimitive.Title
       data-slot="drawer-title"
-      className={cn('font-heading text-base font-medium text-foreground', className)}
+      className={cn('font-heading text-lg font-semibold text-foreground', className)}
       {...props}
     />
   )

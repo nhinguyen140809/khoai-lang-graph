@@ -115,10 +115,13 @@ function ConfirmDialog({
       >
         <AlertDialogHeader>
           {shownIcon !== undefined && shownIcon !== null && (
+            // The icon takes the color of the action without a fill, which would hardly stand
+            // out from the dialog.
             <AlertDialogMedia
               aria-hidden
               className={cn(
-                destructive && [toneClasses.destructive, 'bg-(--tone-soft) text-(--tone-strong)'],
+                'bg-transparent',
+                destructive ? [toneClasses.destructive, 'text-(--tone-strong)'] : 'text-primary',
               )}
             >
               {shownIcon}

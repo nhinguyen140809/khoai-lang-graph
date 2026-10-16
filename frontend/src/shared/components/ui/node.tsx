@@ -70,7 +70,7 @@ function NodeHeaderTitle({ className, children, ...props }: React.ComponentProps
   return (
     <h3
       data-slot="node-title"
-      className={cn('flex-1 text-xs font-medium select-none', className)}
+      className={cn('flex-1 text-xs font-semibold select-none', className)}
       {...props}
     >
       {children}

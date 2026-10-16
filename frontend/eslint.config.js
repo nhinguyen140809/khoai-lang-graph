@@ -399,7 +399,7 @@ export default defineConfig([
     },
   },
   {
-    files: ['*.config.{ts,js,mjs}', 'tests/e2e/**/*.ts'],
+    files: ['*.config.{ts,js,mjs}', 'tests/**/*.ts'],
     languageOptions: {
       globals: globals.node,
     },
