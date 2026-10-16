@@ -757,6 +757,7 @@ Editing rule: while a run is `running`, artifacts and items are read-only for th
 | `GET`, `POST /artifacts/{artifact_id}/comments`; `GET`, `POST /items/{item_id}/comments`; `PATCH`, `DELETE /comments/{comment_id}` | Comment on an artifact or on one item |
 | `GET /projects/{project_id}/activity` | Activity feed |
 | `GET /me/notifications`; `POST /me/notifications/{notification_id}/read` | Notifications |
+| `GET /projects/{project_id}/stream` | Event stream of the runs of a project, for a screen that shows the status of the whole project, see [open point 8](#9-open-points) |
 | `GET`, `POST /me/provider-credentials`; `DELETE /me/provider-credentials/{credential_id}` | User-supplied provider keys |
 
 ### Operations
@@ -975,6 +976,7 @@ Decision: the event log in the database now. Because events already pass through
 5. **Reasoning text.** No event type carries the model's reasoning text. If the product shows it, a `thinking` type is added; the web app already ignores unknown types.
 6. **Search by meaning.** `q` on the item list matches text only. With the item embeddings of the data shape (Later), the same endpoint can rank items by meaning; the parameter that selects it is not designed.
 7. **The node that names a project.** A project created without a name is named by its first run. The planner, which reads the initial intent first, can return the name with its plan, or a node of its own can run before it; either choice changes the workflow definition and the prompts.
+8. **A stream per project.** Each run has a stream of its own (D4). A screen that shows the status of a whole project, such as the status bar of the web app, opens one stream per unfinished run and reads the threads of the project again at each event that changes a status, so a run that starts in a thread without an unfinished run shows only when the threads load again. `GET /projects/{project_id}/stream` (Later) would send, with the transport of the run stream, an event each time a run of the project starts, changes its status, its stage or its cost, or ends, with the `rollup_run_status` of the project after it. Open: the payload of its events, and whether it is a second kind of stream beside D4 or replaces the run streams for that screen.
 
 ## 10. Review checklist
 
