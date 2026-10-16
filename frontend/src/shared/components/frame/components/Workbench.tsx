@@ -62,7 +62,7 @@ export function Workbench({
         <TopBar crumb={crumb} />
         <div className="flex min-h-0 flex-1">
           <ActivityBar account={account} />
-          <div className="flex min-w-0 flex-1 flex-col pr-1.5 pb-1.5">{children}</div>
+          <div className="flex min-w-0 flex-1 flex-col pr-1.5">{children}</div>
         </div>
         <StatusBar />
         <CommandPalette />
