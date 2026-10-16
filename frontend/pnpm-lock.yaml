@@ -17,6 +17,12 @@ importers:
       '@codemirror/merge':
         specifier: ^6.12.2
         version: 6.12.2
+      '@fontsource-variable/mona-sans':
+        specifier: ^5.3.0
+        version: 5.3.0
+      '@fontsource-variable/noto-sans-mono':
+        specifier: ^5.3.0
+        version: 5.3.0
       '@headless-tree/core':
         specifier: ^1.7.0
         version: 1.7.0
@@ -596,6 +602,12 @@ packages:
 
   '@floating-ui/utils@0.2.12':
     resolution: {integrity: sha512-HpCo8tmWzLVad5s2d19EhAz5zqrrQ6s69qd6moPMQvkOuSwDT1YgRfWSVuc4ennqrgv3OHppiOGMQ7oC13yIww==}
+
+  '@fontsource-variable/mona-sans@5.3.0':
+    resolution: {integrity: sha512-PkxRB3KI4z9Gjpk7vVqgO3GMSyQuOIIj4TaRDbvbcDj8SzWwI38jvLTQxJM/cTRorhcT7h8qjcllR+qjRtM/Fg==}
+
+  '@fontsource-variable/noto-sans-mono@5.3.0':
+    resolution: {integrity: sha512-EgozyWG4nG2U1OT+zfdyHP1L8O0fUFMUBOilVF9urTshqIdfeGV9/FUQxaNHdPvHtV1cQCs1Ql0W1q93SiPK2w==}
 
   '@headless-tree/core@1.7.0':
     resolution: {integrity: sha512-LxcX7LNepwfOPrZcs4PNfDwCzbi326uCAX5jYBfw94jI+pZQA7ANaE/No3LW0XFgcBcQtK/G2bInbVEhLF1C/Q==}
@@ -6172,6 +6184,10 @@ snapshots:
       react-dom: 19.3.0(react@19.3.0)
 
   '@floating-ui/utils@0.2.12': {}
+
+  '@fontsource-variable/mona-sans@5.3.0': {}
+
+  '@fontsource-variable/noto-sans-mono@5.3.0': {}
 
   '@headless-tree/core@1.7.0': {}
 

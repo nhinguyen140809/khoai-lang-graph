@@ -190,16 +190,16 @@ With `--only theme`, only the theme variables in `src/app/styles.css` change. Wi
 
 ### Fonts
 
-The app uses the same fonts as VS Code with its default settings: the system UI font for the interface and the default editor font for code.
+The app self-hosts its two fonts through [Fontsource](https://fontsource.org) packages, imported at the top of `src/app/styles.css`, so that the screens look the same on every system and in the screenshots of CI:
 
-| Role                              | Windows  | macOS                           | Linux                           | CSS variable                                              |
-| --------------------------------- | -------- | ------------------------------- | ------------------------------- | --------------------------------------------------------- |
-| Interface, body text, headings    | Segoe UI | San Francisco (`-apple-system`) | `system-ui`, Ubuntu, Droid Sans | `--font-ui`, mapped to `--font-sans` and `--font-heading` |
-| Code (`code`, `pre`, `font-mono`) | Consolas | Menlo, Monaco                   | Droid Sans Mono                 | `--font-code`, mapped to `--font-mono`                    |
+| Role                              | Font                                                          | Package                               | CSS variable                                              |
+| --------------------------------- | ------------------------------------------------------------- | ------------------------------------- | --------------------------------------------------------- |
+| Interface, body text, headings    | [Mona Sans](https://fontsource.org/fonts/mona-sans)           | `@fontsource-variable/mona-sans`      | `--font-ui`, mapped to `--font-sans` and `--font-heading` |
+| Code (`code`, `pre`, `font-mono`) | [Noto Sans Mono](https://fontsource.org/fonts/noto-sans-mono) | `@fontsource-variable/noto-sans-mono` | `--font-code`, mapped to `--font-mono`                    |
 
-Both are font stacks of installed system fonts, so no font file is downloaded. A family that lacks a glyph falls back to the next family in the stack.
+Both are open source (SIL Open Font License), variable from weight 200 to 900, and ship a `vietnamese` subset. Their lowercase letters are almost as high at the same size (x-height 0.525 and 0.536 of the font size), so code in a sentence does not look larger or smaller than the text around it. The browser downloads a subset only when the page shows a character of it. The system fonts after them in each stack show until the files load, and for a character that neither font has.
 
-To use a web font instead, self-host it through a [Fontsource](https://fontsource.org) package:
+To change a font, self-host another one the same way:
 
 1. Install the package. Prefer the variable version when it exists (`@fontsource-variable/<name>`); otherwise use `@fontsource/<name>` and import each weight.
    ```bash
@@ -209,11 +209,12 @@ To use a web font instead, self-host it through a [Fontsource](https://fontsourc
    ```css
    @import '@fontsource-variable/inter';
    ```
-3. Declare the family in `:root`. Variable packages register the family as `'<Name> Variable'`:
+3. Put its family first in `--font-ui` or `--font-code` in `:root`, in place of the one it replaces. Variable packages register the family as `'<Name> Variable'`:
    ```css
-   --font-inter: 'Inter Variable', sans-serif;
+   --font-ui:
+     'Inter Variable', -apple-system, BlinkMacSystemFont, 'Segoe UI', system-ui, sans-serif;
    ```
-4. Point a Tailwind token at it (`--font-sans`, `--font-heading`, or `--font-mono` in `@theme inline`).
+4. Remove the import and the package of the font it replaces.
 
 Vietnamese text needs a font that ships the `vietnamese` subset. The subsets of a package are listed on its Fontsource page and in its `files/` directory.
 

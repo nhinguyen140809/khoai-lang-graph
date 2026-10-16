@@ -17,7 +17,7 @@ export function TypographyCard() {
   return (
     <SampleCard
       title="Typography"
-      description="Segoe UI for the interface, Consolas for code."
+      description="Mona Sans for the interface, Noto Sans Mono for code."
       className="flex flex-col gap-3"
     >
       <div className="flex flex-col gap-1.5">
