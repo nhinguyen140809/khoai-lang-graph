@@ -186,7 +186,7 @@ Scoping rules:
 | `status` | enum | `active`, `disabled` |
 | `email_verified_at` | datetime? | |
 | `last_login_at` | datetime? | |
-| `monthly_budget_usd` | number? | Cost limit per calendar month, set by an admin. Null means the server default |
+| `monthly_budget_usd` | number? | Cost limit per calendar month in UTC, set by an admin. Null means the server default |
 | `password_hash` | server-only string? | Hash of the password. Null when the user signs in only through an external provider |
 
 ### AuthIdentity (Later)

@@ -143,7 +143,7 @@ An artifact and an item each carry `version`. An update sends the version it was
 | Requests per minute | Per user | `429 rate_limited` |
 | Unfinished runs | One per thread | A message sent meanwhile is delivered into that run. A retry answers `409 run_already_active` while any run of the project is unfinished |
 | Cost per run | `max_cost_usd` in the run configuration | The run fails with an `error` event, code `cost_limit_exceeded` |
-| Cost per user per month | `monthly_budget_usd` of the user | `429 budget_exceeded` on send message and resume; a run that reaches it while working fails with code `budget_exceeded` |
+| Cost per user per calendar month in UTC | `monthly_budget_usd` of the user | `429 budget_exceeded` on send message and resume; a run that reaches it while working fails with code `budget_exceeded` |
 
 The budget is checked before every LLM call, not only when the run starts. A client handles both answers to a spent budget: the early `429 budget_exceeded` and a run that fails with `budget_exceeded`.
 
@@ -228,8 +228,25 @@ Login and register answer the same way for a wrong password and an unknown email
 | `GET /me/model-settings` | The chosen model per agent role | MVP |
 | `PUT /me/model-settings` | Replace the choices; each is validated against the catalog | MVP |
 | `GET /models` | Model catalog: allowed models, capabilities, prices | MVP |
-| `GET /me/usage` | Tokens and cost of the user, grouped by `?group_by=` with one of `day`, `project`, `agent_role`, `model` | MVP |
+| `GET /me/usage` | Tokens and cost of the user in one calendar month in UTC, `?month=YYYY-MM`, the current month by default: the total, the budget of the month, and, with `?group_by=` one of `day`, `project`, `agent_role`, `model`, the groups. See the example below | MVP |
 | `GET /workflow/definition` | One version of the workflow definition, see [workflow definition](#workflow-definition). `?version=` reads an older version, so a past run is shown with the definition it ran with | MVP |
+
+Usage of the current month, `GET /me/usage?group_by=project`:
+
+```json
+{
+  "month": "2026-10",
+  "budget_usd": 20.0,
+  "total": { "input_tokens": 412000, "output_tokens": 61000, "cache_read_tokens": 180000, "cache_write_tokens": 24000, "cost_usd": 3.07, "duration_ms": 1650000 },
+  "groups": [
+    { "key": "90aa...", "usage": { "input_tokens": 395000, "output_tokens": 58000, "cache_read_tokens": 176000, "cache_write_tokens": 23000, "cost_usd": 3.01, "duration_ms": 1580000 } },
+    { "key": "7c41...", "usage": { "input_tokens": 17000, "output_tokens": 3000, "cache_read_tokens": 4000, "cache_write_tokens": 1000, "cost_usd": 0.06, "duration_ms": 70000 } }
+  ]
+}
+```
+
+- `budget_usd` is the budget that applies to the month: `monthly_budget_usd` of the user, or the server default when it is null. It is null when the month has no limit.
+- `total` and each `usage` are a [Usage](DATA_SHAPE.md#run-mvp); `groups` is empty without `group_by`, and `key` is the id, the day (`YYYY-MM-DD`), the role or the model of the group.
 
 ### Workflow definition
 
@@ -976,7 +993,7 @@ Decision: the event log in the database now. Because events already pass through
 5. **Reasoning text.** No event type carries the model's reasoning text. If the product shows it, a `thinking` type is added; the web app already ignores unknown types.
 6. **Search by meaning.** `q` on the item list matches text only. With the item embeddings of the data shape (Later), the same endpoint can rank items by meaning; the parameter that selects it is not designed.
 7. **The node that names a project.** A project created without a name is named by its first run. The planner, which reads the initial intent first, can return the name with its plan, or a node of its own can run before it; either choice changes the workflow definition and the prompts.
-8. **A stream per project.** Each run has a stream of its own (D4). A screen that shows the status of a whole project, such as the status bar of the web app, opens one stream per unfinished run and reads the threads of the project again at each event that changes a status, so a run that starts in a thread without an unfinished run shows only when the threads load again. `GET /projects/{project_id}/stream` (Later) would send, with the transport of the run stream, an event each time a run of the project starts, changes its status, its stage or its cost, or ends, with the `rollup_run_status` of the project after it. Open: the payload of its events, and whether it is a second kind of stream beside D4 or replaces the run streams for that screen.
+8. **A stream per project.** Each run has a stream of its own (D4). A screen that shows the status of a whole project, such as the status bar of the web app, opens one stream per unfinished run and reads the threads of the project again at each event that changes a status, so a run that starts in a thread without an unfinished run shows only when the threads load again. `GET /projects/{project_id}/stream` (Later) would send, with the transport of the run stream, an event each time a run of the project starts, changes its status, its stage or its cost, or ends, with the `rollup_run_status` of the project after it. Open: the payload of its events, and whether it is a second kind of stream beside D4 or replaces the run streams for that screen. The budget of the month belongs to the user, across projects, so it stays out of this stream: a screen that shows it reads `GET /me/usage` again when a run of the user changes its cost.
 
 ## 10. Review checklist
 
