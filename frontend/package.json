@@ -24,6 +24,7 @@
     "test:watch": "vitest",
     "e2e": "playwright test",
     "e2e:install": "playwright install chromium",
+    "screenshots": "playwright test --config playwright.screenshots.config.ts",
     "ui:add": "shadcn add",
     "codegen": "openapi-ts"
   },

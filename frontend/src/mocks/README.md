@@ -6,7 +6,7 @@ The addresses that show each state of each screen with `pnpm dev:mock`. Start th
 pnpm dev:mock
 ```
 
-How the mocks work (fixtures, handlers, adding an endpoint) is in [Mock data](../../README.md#mock-data). Add the addresses of a screen here when the screen is built.
+How the mocks work (fixtures, handlers, adding an endpoint) is in [Mock data](../../README.md#mock-data). Add the addresses of a screen here when the screen is built, and its states to the screenshots, see [Screenshots](../../README.md#screenshots).
 
 ## Contents
 

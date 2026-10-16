@@ -74,10 +74,11 @@ In code, read variables through `process.env.<NAME>`. Declare each new variable 
 | `pnpm test:watch`      | Run the unit tests in watch mode.                                                                                                              |
 | `pnpm e2e`             | Run the Playwright tests. They start their own dev server on port 3100 with mocks enabled.                                                     |
 | `pnpm e2e:install`     | Download the Chromium build used by Playwright. Needed once per machine before the first `pnpm e2e`.                                           |
+| `pnpm screenshots`     | Take a screenshot of each mock state of each screen, in both themes, see [Screenshots](#screenshots).                                          |
 | `pnpm ui:add <name>`   | Add a shadcn/ui component, see [Adding shadcn/ui components](#adding-shadcnui-components).                                                     |
 | `pnpm codegen`         | Generate the typed API client from `openapi.json`.                                                                                             |
 
-Stop `pnpm dev` before `pnpm e2e`: Next.js allows one dev server per project folder.
+Stop `pnpm dev` before `pnpm e2e` or `pnpm screenshots`, since Next.js allows one dev server per project folder, or start it with mocks on their port: `pnpm dev:mock --port 3100`. They use a server that runs there.
 
 ## Project layout
 
@@ -100,7 +101,9 @@ frontend/
 │   │   └── config/          # what the app sets once: the addresses of its pages
 │   ├── mocks/               # MSW handlers shared by dev mocking, unit tests, and E2E
 │   └── test/                # Vitest setup
-└── tests/e2e/               # Playwright specs
+└── tests/
+    ├── e2e/                 # Playwright specs
+    └── screenshots/         # the screenshots of the mock states
 ```
 
 ## Adding shadcn/ui components
@@ -297,7 +300,7 @@ Turbopack compiles a route only when it is first requested, and releases memory 
 
 Habits that help:
 
-- Run one heavy process at a time: `pnpm dev`, `pnpm build`, `pnpm e2e`, and `pnpm check` are each heavy.
+- Run one heavy process at a time: `pnpm dev`, `pnpm build`, `pnpm e2e`, `pnpm screenshots`, and `pnpm check` are each heavy.
 - Keep `.next/`: it holds the compile cache, and the first compile after deleting it is slow and peaks above 1 GB.
 - Restart `pnpm dev` after a long session if its memory keeps growing.
 - `pnpm lint` runs ESLint in four processes, one after another (`scripts/lint.mjs`): the design system page, the other features, the rest of `src/`, then everything outside `src/` (the tests, the scripts and the config files). Each process builds a TypeScript program of its group only (its files, what they import, and the declarations every file needs), through a tsconfig written to `node_modules/.cache/lint-groups/` and passed in `ESLINT_TSCONFIG`. With `NODE_OPTIONS=--max-old-space-size=768`, the largest group peaks at about 930 MB of resident memory and the whole run takes about 55 seconds; a single ESLint process for the whole project runs out of that heap. When a group grows past the limit, split it in `scripts/lint.mjs`.
@@ -371,15 +374,44 @@ The parameters and the address of every state of every screen are listed in [Moc
 
 Components never import fixtures. They call the API functions of their feature, and MSW answers the request, so switching to the real backend changes no component code. Handlers that need a browser-only API (the SSE stream) are registered only in `msw-browser.setup.ts`.
 
+### Screenshots
+
+`pnpm screenshots` takes a screenshot of each state of each page, in each window below and in each theme, into `screenshots/<window>-<theme>/`. Each page has a spec in `tests/screenshots/` (`account`, `design-system`) with the list of its states: the steps from a new browser page to the state, such as an address of [Mock scenarios](src/mocks/README.md), then a submit that shows the errors of a form. A state that changes one part of the page, such as the status bar, is taken as that part alone. A file is named `<page>--<number>-<state>.png`, so that the files of a page sort in the order of its states.
+
+| Window   | Size in CSS pixels                                                                                                         |
+| -------- | -------------------------------------------------------------------------------------------------------------------------- |
+| `wide`   | 1920 by 1080                                                                                                               |
+| `laptop` | 1536 by 730, a laptop screen of 1920 by 1080 at a scale of 125% in a maximized browser, at 1.25 image pixels per CSS pixel |
+| `small`  | 1024 by 768                                                                                                                |
+| `phone`  | 412 by 839, the Pixel 7 of Playwright: a touch screen, at 2.625 image pixels per CSS pixel                                 |
+
+Each window is taken in `light` and in `dark`, as a Playwright project named `<window>-<theme>`. `--project` picks some of them, with `*` for any part of the name, and `--grep` picks states by the name of their page and their own:
+
+```bash
+pnpm screenshots --project 'laptop-*' --grep 'Account'
+```
+
+On a developer machine it runs one browser at a time. It needs the browser of `pnpm e2e:install`, and starts the same dev server with mocks as `pnpm e2e`, on port 3100, unless a server runs there already. To keep the dev server you work with, start it on that port instead of 3000: `pnpm dev:mock --port 3100`.
+
+To see the screens without running them on your machine, let the workflow Frontend screenshots take them on GitHub, then download them:
+
+```bash
+gh workflow run frontend-screenshots.yml --ref <branch> -f projects='laptop-* phone-dark'
+gh run list --workflow frontend-screenshots.yml --limit 1   # the id of the run
+gh run download <run-id> --name screenshots --dir screenshots
+```
+
+`projects` takes the names of the projects, separated by spaces; without it, the workflow takes every window and theme. `gh workflow run` finds the workflow once it is on `main`. On a pull request, add the label `screenshots` instead: the workflow takes every window and theme then, and again at each push while the label stays. GitHub keeps the screenshots for 7 days.
+
 ## Troubleshooting
 
-| Symptom                                                                                       | Cause and fix                                                                                                                                |
-| --------------------------------------------------------------------------------------------- | -------------------------------------------------------------------------------------------------------------------------------------------- |
-| Requests to `/api` hang or fail                                                               | The backend is not running on port 8000. Use `pnpm dev:mock`.                                                                                |
-| `Another next dev server is already running`                                                  | `pnpm dev` and `pnpm e2e` cannot run at the same time in this folder. Stop the first one.                                                    |
-| `You're importing a component that needs useState` (or another hook)                          | The file uses a client-only API. Add `'use client'` as its first line.                                                                       |
-| `You're importing a module that depends on useEffect into a React Server Component module`    | A Server Component imports an index that gives a hook without `'use client'`. Add `'use client'` as the first line of the hook file.         |
-| A hydration mismatch warning in the browser console                                           | A component rendered something on the server that differs in the browser (theme, `localStorage`, window size). Read that value in an effect. |
-| `pnpm lint` reports import order errors in `src/shared/components/ui/` after a shadcn command | Run `pnpm fix`.                                                                                                                              |
-| `pnpm e2e` fails with a missing browser executable                                            | Run `pnpm e2e:install` once.                                                                                                                 |
-| A heading shows mixed fonts in Vietnamese text                                                | The heading font lacks the `vietnamese` subset, see [Fonts](#fonts).                                                                         |
+| Symptom                                                                                       | Cause and fix                                                                                                                                                                                          |
+| --------------------------------------------------------------------------------------------- | ------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------ |
+| Requests to `/api` hang or fail                                                               | The backend is not running on port 8000. Use `pnpm dev:mock`.                                                                                                                                          |
+| `Another next dev server is already running`                                                  | `pnpm dev`, `pnpm e2e` and `pnpm screenshots` cannot each start a dev server in this folder at the same time. Stop the first one, or run it with `pnpm dev:mock --port 3100`, which the other two use. |
+| `You're importing a component that needs useState` (or another hook)                          | The file uses a client-only API. Add `'use client'` as its first line.                                                                                                                                 |
+| `You're importing a module that depends on useEffect into a React Server Component module`    | A Server Component imports an index that gives a hook without `'use client'`. Add `'use client'` as the first line of the hook file.                                                                   |
+| A hydration mismatch warning in the browser console                                           | A component rendered something on the server that differs in the browser (theme, `localStorage`, window size). Read that value in an effect.                                                           |
+| `pnpm lint` reports import order errors in `src/shared/components/ui/` after a shadcn command | Run `pnpm fix`.                                                                                                                                                                                        |
+| `pnpm e2e` fails with a missing browser executable                                            | Run `pnpm e2e:install` once.                                                                                                                                                                           |
+| A heading shows mixed fonts in Vietnamese text                                                | The heading font lacks the `vietnamese` subset, see [Fonts](#fonts).                                                                                                                                   |
