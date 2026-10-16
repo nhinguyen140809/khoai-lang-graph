@@ -290,9 +290,9 @@ Rules:
 
 | Method and path | Purpose | Phase |
 |---|---|---|
-| `GET /projects` | Projects of the user; `?status=`; ordered by `last_activity_at` descending | MVP |
+| `GET /projects` | Projects of the user; `?status=`; ordered by `last_activity_at` descending. Each item has `rollup_run_status`, which the project list shows; `item_counts` comes only with `GET /projects/{project_id}` | MVP |
 | `POST /projects` | Create; body `name`, `description`, `output_language`. `name` is optional: without it, the first run names the project from its initial intent, and the event stream of that run sends `project_named` | MVP |
-| `GET /projects/{project_id}` | One project, with `item_counts` and `unfinished_run_counts` | MVP |
+| `GET /projects/{project_id}` | One project, with `item_counts`, `unfinished_run_counts` and `rollup_run_status` | MVP |
 | `PATCH /projects/{project_id}` | Change name, description, status, `run_config`, `model_overrides` | MVP |
 | `DELETE /projects/{project_id}` | Soft delete | MVP |
 

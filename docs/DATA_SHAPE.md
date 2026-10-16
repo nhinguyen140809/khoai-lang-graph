@@ -293,6 +293,7 @@ The master keys are kept in the server environment, never in the database, each 
 | `model_overrides` | map\<AgentRole, string\> | Optional `provider:model` per role for this project |
 | `item_counts` | map\<ItemKind, int\> | Derived, read-only. Shown on the project card |
 | `unfinished_run_counts` | RunCounts | Derived, read-only. The number of unfinished runs of the project in each status, see below. `interrupted` counts the reviews that wait for the user |
+| `rollup_run_status` | enum? | Derived, read-only. The status that the latest [Run](#run-mvp) of each thread of the project rolls up to: the one that needs the user most, in the order `interrupted`, `failed`, `running`, `queued`, `cancelled`, `succeeded`. A run that a later run of its thread replaced no longer counts, so a failed run that was run again does not show. Null before the first run. The project list shows it |
 | `last_activity_at` | datetime | Derived, stored. Kept in a column so that the project list can be sorted by it |
 
 `RunCounts` is `{ queued: int, running: int, interrupted: int }`, one count per status of an unfinished run.
