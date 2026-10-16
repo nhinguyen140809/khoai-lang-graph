@@ -376,7 +376,7 @@ A passage of the extracted text of a source document, with its embedding, so tha
 | `status` | enum | `active`, `archived` |
 | `current_stage` | Stage? | Stage of the latest run. Null before the first run |
 | `active_run_id` | ref\<Run\>? | The unfinished run of the thread (`queued`, `running` or `interrupted`); at most one, see [Runtime: lifecycle](architecture/runtime.md#3-lifecycle) |
-| `active_run_status` | enum? | Derived, read-only. The status of the run in `active_run_id`: `queued`, `running`, `interrupted`. Null when the thread has no unfinished run |
+| `latest_run_status` | enum? | Derived, read-only. The status of the latest [Run](#run-mvp) of the thread, unfinished or ended. The unfinished run of a thread is always its latest, so while `active_run_id` is set, this is its status. Null before the first run of the thread |
 | `last_message_at` | datetime | Time of the newest message; the creation time while the thread has no message |
 
 Deck: `project_id`, `current_stage`. The deck's `initial_intent` belongs to the project, see `Project.initial_message_id`.

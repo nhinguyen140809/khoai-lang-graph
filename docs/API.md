@@ -303,7 +303,7 @@ Rules:
 | `GET /projects/{project_id}/threads` | Threads of a project; ordered by `last_message_at` descending | MVP |
 | `GET /threads` | Threads of the user across projects; `?project_id=` | MVP |
 | `POST /projects/{project_id}/threads` | Create an empty thread; body optional `title`. The first message of the thread starts the work. The message that starts the first run of the project becomes the initial intent of the project, see [Data shape: Project](DATA_SHAPE.md#project-mvp) | MVP |
-| `GET /threads/{thread_id}` | One thread, with `active_run_id` and `active_run_status` | MVP |
+| `GET /threads/{thread_id}` | One thread, with `active_run_id` and `latest_run_status` | MVP |
 | `PATCH /threads/{thread_id}` | Change `title`, `status` | MVP |
 | `DELETE /threads/{thread_id}` | Soft delete | MVP |
 | `GET /threads/{thread_id}/messages` | Chat messages; ordered by `sequence` ascending. User messages carry `delivery` | MVP |
