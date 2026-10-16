@@ -1,6 +1,7 @@
 import { zodResolver } from '@hookform/resolvers/zod'
 import { render, screen } from '@testing-library/react'
 import userEvent from '@testing-library/user-event'
+import type { ReactNode } from 'react'
 import { useForm } from 'react-hook-form'
 import { describe, expect, it } from 'vitest'
 import { z } from 'zod'
@@ -10,7 +11,12 @@ import { blankNames, typedNameCases } from './TextField.data'
 
 const schema = z.object({ name: z.string().trim().min(1, 'Enter a name.') })
 
-function NameForm({ onSubmit }: { onSubmit: (values: z.infer<typeof schema>) => void }) {
+interface NameFormProps {
+  onSubmit: (values: z.infer<typeof schema>) => void
+  action?: ReactNode
+}
+
+function NameForm({ onSubmit, action }: NameFormProps) {
   const form = useForm({ resolver: zodResolver(schema), defaultValues: { name: '' } })
   return (
     <form noValidate onSubmit={(event) => void form.handleSubmit(onSubmit)(event)}>
@@ -20,6 +26,7 @@ function NameForm({ onSubmit }: { onSubmit: (values: z.infer<typeof schema>) => 
         label="Name"
         description="As others see it."
         autoComplete="name"
+        action={action}
       />
       <button type="submit">Save</button>
     </form>
@@ -54,6 +61,15 @@ describe('TextField', () => {
       expect(screen.getByLabelText('Name')).toHaveAttribute('aria-invalid', 'true')
     },
   )
+
+  it('keeps the action of the field beside its error', async () => {
+    render(<NameForm onSubmit={() => undefined} action={<button type="button">Help</button>} />)
+
+    await enterName('')
+
+    expect(await screen.findByRole('alert')).toHaveTextContent('Enter a name.')
+    expect(screen.getByRole('button', { name: 'Help' })).toBeInTheDocument()
+  })
 
   it.each(typedNameCases)('gives the form $value for $typed', async ({ typed, value }) => {
     const submitted: unknown[] = []

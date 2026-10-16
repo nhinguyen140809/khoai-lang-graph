@@ -60,11 +60,8 @@ export function LoginPage({ next }: LoginPageProps) {
             label="Password"
             type="password"
             autoComplete="current-password"
+            action={<ForgotPassword />}
           />
-          {/* Under the password, at the end of its field. */}
-          <div className="-mt-2 flex justify-end">
-            <ForgotPassword />
-          </div>
           {signIn.errorMessage !== null && (
             <p role="alert" className="text-sm text-destructive">
               {signIn.errorMessage}
