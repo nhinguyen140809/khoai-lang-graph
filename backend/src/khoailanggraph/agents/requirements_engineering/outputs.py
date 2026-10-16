@@ -54,6 +54,88 @@ class GeneratorOutput(_Output):
     personas: list[NewPersona]
 
 
+class NewSource(_Output):
+    """A curated research document draft; the system assigns the key."""
+
+    ref: str
+    title: str
+    url: str
+    publisher: str
+    year: str = ""
+    excerpt: str
+    text: str = ""
+    relevance_reason: str
+
+
+class CorpusBuilderOutput(_Output):
+    """The kept documents of the research corpus, with the reason each was kept."""
+
+    selection_rationale: str
+    sources: list[NewSource]
+
+
+class NewObservation(_Output):
+    """One mined stakeholder perspective; the system assigns the key."""
+
+    ref: str
+    stakeholder_name: str
+    description: str
+    dimension: str
+    evidence: str
+    source: str
+
+
+class MinerOutput(_Output):
+    """The stakeholder observations mined from one source document."""
+
+    observations: list[NewObservation]
+
+
+class PersonaEvidence(_Output):
+    """One research quote a persona was built from: its observation, document, quote."""
+
+    observation: str
+    source: str
+    quote: str
+
+
+class NewPersonaV2(_Output):
+    """A persona draft grounded in mined observations; the system assigns the key."""
+
+    ref: str
+    name: str
+    stakeholder_type: str
+    evaluative_dimension: str
+    grounded_in: list[str] = Field(min_length=1)
+    background: str
+    expertise: str
+    goals: list[str]
+    interests: list[str]
+    constraints: list[str]
+    priorities: list[str]
+    concerns: list[str]
+    behavioral_tendencies: str
+    evidence: list[PersonaEvidence] = Field(min_length=1)
+
+
+class StakeholderGroup(_Output):
+    """One consolidated group of mined observations."""
+
+    ref: str
+    name: str
+    description: str
+    observations: list[str] = Field(min_length=1)
+
+
+class GeneratorOutputV2(_Output):
+    """The frame of the evidence-grounded persona catalog plus its personas."""
+
+    selection_rationale: str
+    stakeholder_groups: list[StakeholderGroup]
+    uncovered_stakeholder_types: list[str]
+    personas: list[NewPersonaV2]
+
+
 class PlannerOutput(ElicitationPlanContent):
     """The plan content verbatim; the planner produces no items."""
 

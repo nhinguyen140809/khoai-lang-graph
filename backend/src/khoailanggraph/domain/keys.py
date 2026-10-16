@@ -7,11 +7,13 @@ application, not here. The domain only owns the format.
 
 from __future__ import annotations
 
-# The key prefix of every item kind of workflow definition version 1. The
+# The key prefix of every item kind of workflow definition version 2. The
 # prefix table itself belongs to the definition (worksheets may change it);
-# this constant serves the version-1 keys the product writes today.
+# this constant serves the version-2 keys the product writes today.
 KEY_PREFIXES: dict[str, str] = {
     "section": "SEC",
+    "source_document": "SRC",
+    "stakeholder_observation": "OBS",
     "persona": "PER",
     "interview_message": "PER",  # <persona key>#<position>, see interview_message_key
     "raw_requirement": "RAW",

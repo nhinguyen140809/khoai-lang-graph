@@ -15,10 +15,11 @@ from pydantic import BaseModel, ConfigDict, Field
 
 
 class RunParameters(BaseModel):
-    """The parameter set of workflow definition version 1, resolved per run."""
+    """The parameter set of workflow definition version 2, resolved per run."""
 
     model_config = ConfigDict(extra="forbid")
 
+    target_sources_num: int = Field(default=3, ge=1, le=10)
     target_personas_num: int = Field(default=3, ge=1, le=10)
     max_personas: int = Field(default=3, ge=1, le=10)
     max_turns: int = Field(default=6, ge=1, le=20)
