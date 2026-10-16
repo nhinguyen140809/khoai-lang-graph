@@ -93,7 +93,7 @@ Every list endpoint uses cursor pagination and the same envelope.
 | Request | `?limit=` (default 50, maximum 200) and `?cursor=` (opaque string from the previous page) |
 | Response | `{ "items": [...], "next_cursor": "..." }`; `next_cursor` is `null` on the last page |
 | Order | Stated per endpoint and stable; ties are broken by `id` |
-| Filters | Query parameters named after the field, for example `?kind=spec_requirement&review_status=draft` |
+| Filters | Query parameters named after the field, for example `?kind=spec_requirement&review_status=draft`. A filter given several times matches any of its values, for example `?rollup_run_status=interrupted&rollup_run_status=failed`. A filter on a time is the name of the field with `_after` and an ISO 8601 time, and keeps the items after that time, for example `?last_activity_after=2026-10-15T00:00:00Z` |
 
 ### Errors
 
@@ -307,7 +307,7 @@ Rules:
 
 | Method and path | Purpose | Phase |
 |---|---|---|
-| `GET /projects` | Projects of the user; `?status=`; ordered by `last_activity_at` descending. Each item has `rollup_run_status`, which the project list shows; `item_counts` comes only with `GET /projects/{project_id}` | MVP |
+| `GET /projects` | Projects of the user; filters `status`, `rollup_run_status` (one or more values; `none` matches a project without a run) and `last_activity_after`; ordered by `last_activity_at` descending. Each item has `rollup_run_status`, which the project list shows; `item_counts` comes only with `GET /projects/{project_id}` | MVP |
 | `POST /projects` | Create; body `name`, `description`, `output_language`. `name` is optional: without it, the first run names the project from its initial intent, and the event stream of that run sends `project_named` | MVP |
 | `GET /projects/{project_id}` | One project, with `item_counts`, `unfinished_run_counts` and `rollup_run_status` | MVP |
 | `PATCH /projects/{project_id}` | Change name, description, status, `run_config`, `model_overrides` | MVP |
