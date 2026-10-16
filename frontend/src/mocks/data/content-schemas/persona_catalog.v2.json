@@ -1,0 +1,65 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "$id": "artifacts/persona_catalog/v2",
+  "title": "Persona catalog",
+  "description": "The set of evidence-grounded personas generated for the project, with their stakeholder groups.",
+  "x-level": "artifact",
+  "x-kind": "persona_catalog",
+  "x-schema-version": 2,
+  "x-ui-display": "document",
+  "x-ui-field-order": [
+    "selection_rationale",
+    "stakeholder_groups",
+    "uncovered_stakeholder_types"
+  ],
+  "type": "object",
+  "additionalProperties": false,
+  "properties": {
+    "selection_rationale": {
+      "type": "string",
+      "description": "Why these personas were chosen for the stakeholder types of the plan.",
+      "x-ui-widget": "textarea"
+    },
+    "stakeholder_groups": {
+      "type": "array",
+      "items": {
+        "type": "object",
+        "additionalProperties": false,
+        "properties": {
+          "name": {
+            "type": "string",
+            "description": "Name of the consolidated stakeholder group."
+          },
+          "description": {
+            "type": "string",
+            "description": "What this group is, consolidated from the observations."
+          },
+          "observations": {
+            "type": "array",
+            "items": {
+              "type": "string"
+            },
+            "description": "Keys of the stakeholder observations consolidated into this group."
+          }
+        },
+        "required": ["name", "description", "observations"]
+      },
+      "description": "How the mined observations were consolidated before the personas were built.",
+      "x-ui-widget": "list"
+    },
+    "uncovered_stakeholder_types": {
+      "type": "array",
+      "items": {
+        "type": "string"
+      },
+      "x-value-from": "elicitation_plan.stakeholder_types",
+      "description": "Stakeholder types of the plan that no persona represents.",
+      "x-ui-widget": "tags"
+    }
+  },
+  "required": [
+    "selection_rationale",
+    "stakeholder_groups",
+    "uncovered_stakeholder_types"
+  ]
+}

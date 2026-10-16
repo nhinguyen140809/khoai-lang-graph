@@ -2,11 +2,12 @@
 
 With `review_checkpoints = []` the gateway checkpoints auto-take their
 default options (§2.4), so the run must walk every stage end-to-end and close
-itself: elicitation plan → personas → interviews → analysis → specification →
-backlog → validation, the validator failing once on a backlog-category issue
-and passing after the engineer and backlog reworks (the demo dataset). Every
-artifact, item and link the run wrote must hold against the domain rules
-with the version-1 definition.
+itself: elicitation plan → research corpus → mined observations → grounded
+personas → interviews → analysis → specification → backlog → validation, the
+validator failing once on a backlog-category issue and passing after the
+engineer and backlog reworks (the demo dataset). Every artifact, item and
+link the run wrote must hold against the domain rules with the version-2
+definition.
 """
 
 from __future__ import annotations
@@ -33,6 +34,7 @@ from khoailanggraph.domain import rules as domain_rules
 from khoailanggraph.llm import reset_model_cache
 from khoailanggraph.llm.demo import DEMO_INTENT, DemoData
 from khoailanggraph.llm.fake import FakeChatModel
+from khoailanggraph.tools.research import demo_research_search
 from support.in_memory_sinks import InMemoryArtifactSink, InMemoryDirectiveSink
 
 ROLES = sorted(agent_roles())
@@ -45,6 +47,7 @@ def fake_config(sink: ArtifactSink, directives: InMemoryDirectiveSink) -> Runnab
             "artifact_sink": sink,
             "directive_sink": directives,
             "models": {role: "fake:demo" for role in ROLES},
+            "research_search": demo_research_search,
         }
     }
 
@@ -60,6 +63,7 @@ def run_state() -> REState:
             "max_steps": 200,
             "max_cost_usd": None,
             "parameters": {
+                "target_sources_num": 3,
                 "target_personas_num": 3,
                 "max_personas": 3,
                 "max_turns": 6,
@@ -101,9 +105,48 @@ def test_full_workflow_succeeds_and_passes_domain_rules() -> None:
     assert spec
     assert backlog
 
-    # Three personas, and a transcript artifact per persona with its messages.
+    # — the research stage: corpus, observations, evidence chains —
+    corpus = sink.read_artifact("project-1", "research_corpus")
+    assert corpus
+    sources = [entry for entry in sink.items if entry["kind"] == "source_document"]
+    assert len(sources) == 3
+    assert {entry["key"] for entry in sources} == {"SRC-001", "SRC-002", "SRC-003"}
+    observations = [entry for entry in sink.items if entry["kind"] == "stakeholder_observation"]
+    assert len(observations) == 6
+    assert {entry["key"] for entry in observations} == {f"OBS-00{i}" for i in range(1, 7)}
+    # Every observation quotes its source text word for word, and links to it.
+    source_by_key = {entry["key"]: entry for entry in sources}
+    for entry in observations:
+        source = source_by_key[entry["content"]["source"]]
+        assert entry["content"]["evidence"] in str(source["content"]["text"])
+    obs_evidence_sources = {
+        link["source_key"]
+        for link in sink.links
+        if link["link_type"] == "evidenced_by" and link["source_key"].startswith("OBS")
+    }
+    assert obs_evidence_sources == {f"OBS-00{i}" for i in range(1, 7)}
+
+    # Three personas grounded in the observations, each with exact evidence.
     personas = [entry for entry in sink.items if entry["kind"] == "persona"]
     assert len(personas) == 3
+    obs_by_key = {entry["key"]: entry for entry in observations}
+    grounded_rows = [row for row in sink.links if row["link_type"] == "grounded_in"]
+    assert {row["source_key"] for row in grounded_rows} == {"PER-001", "PER-002", "PER-003"}
+    assert len(grounded_rows) == 6, "two grounded_in links per persona"
+    for persona in personas:
+        content = persona["content"]
+        assert content["evaluative_dimension"]
+        assert content["grounded_in"], "every persona is grounded in observations"
+        assert all(key in obs_by_key for key in content["grounded_in"])
+        for entry in content["evidence"]:
+            assert entry["quote"] == str(obs_by_key[entry["observation"]]["content"]["evidence"])
+            assert entry["source"] == str(obs_by_key[entry["observation"]]["content"]["source"])
+    catalog_groups = list(catalog["content"]["stakeholder_groups"])
+    assert len(catalog_groups) == 3
+    assert all(group["observations"] for group in catalog_groups), (
+        "every consolidated group cites its observations"
+    )
+
     transcripts = [
         artifact for artifact in sink.artifacts if artifact["kind"] == "interview_transcript"
     ]
@@ -184,7 +227,7 @@ def test_full_workflow_succeeds_and_passes_domain_rules() -> None:
     assert kinds <= {"rework", "intent"}
 
 
-def test_get_graph_topology_matches_definition_v1() -> None:
+def test_get_graph_topology_matches_definition() -> None:
     graph = build_re_graph()
     drawn = graph.get_graph()
 
@@ -193,8 +236,10 @@ def test_get_graph_topology_matches_definition_v1() -> None:
         if isinstance(drawn, dict)
         else {getattr(node, "id", node) for node in drawn.nodes}
     )
-    assert len(node_ids) == 15
+    assert len(node_ids) == 17
     assert "planner" in node_ids
+    assert "corpus_builder" in node_ids
+    assert "stakeholder_miner" in node_ids
     assert "validator" in node_ids
     assert "intent_router" in node_ids
 
@@ -204,7 +249,7 @@ def test_get_graph_topology_matches_definition_v1() -> None:
         else [(edge.source, edge.target) for edge in drawn.edges]
     )
     edges = {tuple(pair) for pair in edge_pairs}
-    # The definition's 25 rows, error drains aside (backend-only, routing.py).
+    # The definition's 27 rows, error drains aside (backend-only, routing.py).
     definition_pairs = {(str(row["source"]), str(row["target"])) for row in wf.edges()}
     application_edges = {
         pair for pair in edges if not (pair[1] == "__end__" and pair[0] != "validator")
@@ -212,11 +257,15 @@ def test_get_graph_topology_matches_definition_v1() -> None:
     assert application_edges == definition_pairs
 
 
-@pytest.mark.parametrize("role", ROLES)
-def test_every_prompt_loads_and_validates(role: str) -> None:
-    prompt = prompt_loader.load_cached(PROMPTS_PACKAGE, role, 1)
+@pytest.mark.parametrize(
+    "case",
+    sorted((role, int(entry["prompt_version"])) for role, entry in agent_roles().items()),
+)
+def test_every_prompt_loads_and_validates(case: tuple[str, int]) -> None:
+    role, version = case
+    prompt = prompt_loader.load_cached(PROMPTS_PACKAGE, role, version)
     assert prompt.role == role
-    assert prompt.version == 1
+    assert prompt.version == version
     text = prompt.system + prompt.user
     assert "# System" not in text
     assert "# User" not in text

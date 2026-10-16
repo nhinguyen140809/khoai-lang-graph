@@ -19,17 +19,14 @@ from khoailanggraph.domain import registry
 REPO_ROOT = Path(__file__).resolve().parents[2]
 BACKEND_ROOT = REPO_ROOT / "backend"
 DOCS_SCHEMAS = REPO_ROOT / "docs" / "schemas"
-DOCS_DEFINITION = REPO_ROOT / "docs" / "workflow" / "requirements_engineering.v1.json"
 MOCKS_SCHEMAS = REPO_ROOT / "frontend" / "src" / "mocks" / "data" / "content-schemas"
-MOCKS_DEFINITION = (
-    REPO_ROOT
-    / "frontend"
-    / "src"
-    / "mocks"
-    / "data"
-    / "workflow"
-    / "requirements_engineering.v1.json"
-)
+# The current definition version, exported under its own name; older files,
+# like requirements_engineering.v1.json, stay in place as history.
+_DEFINITION_EXPORT_BASE = REPO_ROOT / "docs" / "workflow"
+_MOCKS_EXPORT_BASE = REPO_ROOT / "frontend" / "src" / "mocks" / "data" / "workflow"
+_EXPORT_NAME = f"requirements_engineering.v{workflow.WORKFLOW_VERSION}.json"
+DOCS_DEFINITION = _DEFINITION_EXPORT_BASE / _EXPORT_NAME
+MOCKS_DEFINITION = _MOCKS_EXPORT_BASE / _EXPORT_NAME
 EXPORT_SCRIPT = BACKEND_ROOT / "scripts" / "export_content_schemas.py"
 
 
@@ -40,7 +37,7 @@ def _docs_schema(kind: str) -> Path:
 
 def test_every_kind_has_a_docs_and_a_mocks_copy() -> None:
     kinds = registry.all_kinds()
-    assert len(kinds) == 19
+    assert len(kinds) == 22
 
     for kind in kinds:
         assert _docs_schema(kind).is_file(), f"docs copy missing for {kind}"
@@ -77,11 +74,11 @@ def test_export_script_writes_the_same_bytes(tmp_path: Path) -> None:
     export = _load_export_module().export
     written: list[Path] = export(tmp_path)
 
-    assert len(written) == 20
+    assert len(written) == 23
+    kind_by_filename = {registry.schema_filename(kind): kind for kind in registry.all_kinds()}
     for path in written:
-        expected = (
-            workflow.definition_bytes()
-            if path.name == "requirements_engineering.v1.json"
-            else registry.schema_bytes(path.name.removesuffix(".v1.json"))
-        )
+        if path.name == f"requirements_engineering.v{workflow.WORKFLOW_VERSION}.json":
+            expected = workflow.definition_bytes()
+        else:
+            expected = registry.schema_bytes(kind_by_filename[path.name])
         assert path.read_bytes() == expected, f"exported file diverged: {path.name}"

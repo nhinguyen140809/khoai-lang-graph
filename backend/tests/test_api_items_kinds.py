@@ -73,9 +73,7 @@ async def seeded_run(client: AsyncClient) -> tuple[str, str]:
 async def test_items_carry_artifact_id(client: AsyncClient) -> None:
     project_id, _thread_id = await seeded_run(client)
 
-    response = await client.get(
-        f"/api/v1/projects/{project_id}/items", params={"q": "PER-001"}
-    )
+    response = await client.get(f"/api/v1/projects/{project_id}/items", params={"q": "PER-001"})
 
     item = response.json()["items"][0]
     assert response.status_code == 200
@@ -243,11 +241,25 @@ async def test_artifact_kinds_full_contract(client: AsyncClient) -> None:
 
     body = response.json()
     assert response.status_code == 200
-    assert body["workflow_version"] == 1
+    assert body["workflow_version"] == 2
     kinds = [k["kind"] for k in body["artifact_kinds"]]
     assert "elicitation_plan" in kinds
+    assert "research_corpus" in kinds
     assert "requirements_analysis" in kinds
-    assert len(kinds) == 7
+    assert len(kinds) == 8
+    # The kinds of definition v2: persona + persona_catalog moved to v2, and
+    # the served schema_version of every item kind follows the definition.
+    catalog = next(k for k in body["artifact_kinds"] if k["kind"] == "persona_catalog")
+    assert catalog["schema_version"] == 2
+    persona = next(item for item in catalog["item_kinds"] if item["kind"] == "persona")
+    assert persona["schema_version"] == 2
+    assert "evaluative_dimension" in persona["schema"]["properties"]
+    assert "evidence" in persona["schema"]["properties"]
+    research = next(k for k in body["artifact_kinds"] if k["kind"] == "research_corpus")
+    assert {item["kind"] for item in research["item_kinds"]} == {
+        "source_document",
+        "stakeholder_observation",
+    }
     # enum của x-value-list được fill (như mocks' withValueLists)
     spec_kind = next(k for k in body["artifact_kinds"] if k["kind"] == "requirements_analysis")
     raw = next(item for item in spec_kind["item_kinds"] if item["kind"] == "analyzed_requirement")

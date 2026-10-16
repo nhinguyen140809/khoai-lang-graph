@@ -11,6 +11,7 @@ from typing import Any, get_args, get_type_hints
 import pytest
 from pydantic import BaseModel
 
+from khoailanggraph.agents.requirements_engineering import definition as wf
 from khoailanggraph.domain import registry
 
 _JSON_TYPE_TO_PY = {"string": "str", "integer": "int", "array": "list", "object": "dict"}
@@ -72,5 +73,12 @@ def test_every_model_is_strict() -> None:
         assert model.model_config.get("extra") == "forbid", f"{kind} must reject unknown fields"
 
 
-def test_schema_version_is_one() -> None:
-    assert registry.SCHEMA_VERSION == 1
+def test_schema_versions_mirror_the_definition() -> None:
+    kinds = wf.DEFINITION["artifact_kinds"] + wf.DEFINITION["item_kinds"]
+    for entry in kinds:
+        kind = str(entry["kind"])
+        version = int(entry["schema_version"])
+        assert registry.schema_version(kind) == version, f"{kind} diverged from the definition"
+    known = {str(entry["kind"]) for entry in kinds}
+    unheard = set(registry.SCHEMA_VERSIONS) - known
+    assert not unheard, f"SCHEMA_VERSIONS names unknown kinds: {unheard}"

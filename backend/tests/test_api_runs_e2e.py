@@ -101,7 +101,7 @@ async def test_send_message_runs_the_workflow_end_to_end(
     run = body["run"]
     assert run["status"] == "succeeded", run
     assert run["workflow_name"] == "requirements_engineering"
-    assert run["workflow_version"] == 1
+    assert run["workflow_version"] == 2
     assert run["run_config"]["models"], "per-role models resolved"
     assert run["usage"]["cost_usd"] == 0  # fake provider reports zero tokens
     assert run["step_count"] > 0
@@ -176,9 +176,7 @@ async def test_items_written_by_the_workflow_are_searchable(
 async def test_retry_creates_queued_run_with_lineage(client: AsyncClient) -> None:
     """POST /runs/{id}/retry records lineage and queues the new run."""
     await client.post("/api/v1/auth/register", json=REGISTER)
-    await client.post(
-        "/api/v1/auth/login", json={"email": REGISTER["email"], "password": "secret"}
-    )
+    await client.post("/api/v1/auth/login", json={"email": REGISTER["email"], "password": "secret"})
     project = await client.post("/api/v1/projects", json=PROJECT_BODY)
     project_id = project.json()["id"]
     thread = await client.post(f"/api/v1/projects/{project_id}/threads")
@@ -200,9 +198,7 @@ async def test_retry_creates_queued_run_with_lineage(client: AsyncClient) -> Non
 
 async def test_retry_rejects_step_of_another_run(client: AsyncClient) -> None:
     await client.post("/api/v1/auth/register", json=REGISTER)
-    await client.post(
-        "/api/v1/auth/login", json={"email": REGISTER["email"], "password": "secret"}
-    )
+    await client.post("/api/v1/auth/login", json={"email": REGISTER["email"], "password": "secret"})
     project = await client.post("/api/v1/projects", json=PROJECT_BODY)
     project_id = project.json()["id"]
     thread = await client.post(f"/api/v1/projects/{project_id}/threads")

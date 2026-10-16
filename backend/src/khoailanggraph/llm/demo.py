@@ -1,11 +1,16 @@
 """The demo dataset behind `fake:demo` — the mentor platform scenario.
 
 Everything the fake model answers when a run resolves its roles to the demo
-provider, ported from the prototype's dataset to the version-1 output models:
+provider, ported from the prototype's dataset to the version-2 output models:
 items carry a `ref` instead of ids, links are key/ref fields, personas carry
 `stakeholder_type` and `background`, backlogs split into epics and user
-stories with Given/When/Then criteria, and rework passes return only the
-changed items with a `supersedes` field (§2.3).
+stories with Given/When/Then criteria, and rework passes pass only the
+changed items with a `supersedes` field (§2.3). The research stage answers
+with the offline corpus of `tools/research.py`: the corpus builder keeps the
+three documents that carry stakeholder voices, the miner extracts two
+observations from each — their quotes are the exact sentences of the fixture
+texts, asserted at import time — and the persona generator grounds the three
+personas in those six observations (MAJ-EVAL, arXiv:2507.21028).
 
 Method names are the schema names (`PlannerOutput`, ...); each answers one
 node request. A second pass of the engineer or the backlog manager patches
@@ -16,11 +21,163 @@ measurable, and the second validation passes.
 
 from __future__ import annotations
 
+import re
 from typing import Any
 
 from khoailanggraph.llm.fake import DemoCalls
+from khoailanggraph.tools.research import DEMO_SEARCH_HITS
 
 DEMO_INTENT = "I want to build an online platform for university students to find mentors."
+
+# The fixture texts the demo dataset keeps as the corpus; entries in the
+# exact order the corpus builder keeps them: students, mentors, admins.
+_STUDENT_TEXT = str(DEMO_SEARCH_HITS[0]["text"])
+_MENTOR_TEXT = str(DEMO_SEARCH_HITS[1]["text"])
+_ADMIN_TEXT = str(DEMO_SEARCH_HITS[2]["text"])
+
+_STUDENT_Q1 = (
+    "61% said they would stop using a tool that needs more than a few taps to book a chat."  # noqa: E501
+)
+_STUDENT_Q2 = (
+    '"I don\'t want my career questions visible to everyone," wrote one third-year respondent.'  # noqa: E501
+)
+_MENTOR_Q1 = (
+    '"Spam requests with no agenda make me decline everything," one senior engineer reported.'  # noqa: E501
+)
+_MENTOR_Q2 = '"If I cannot say no without an awkward exchange, I just stop logging in."'
+_ADMIN_Q1 = "Every mentoring profile must be verified before it goes live."
+_ADMIN_Q2 = (
+    '"I will not approve the platform without verification and reporting," the review states.'  # noqa: E501
+)
+
+# The verbatim-evidence contract of the research stage, checked at import
+# time: every quote the fixtures use is a sentence of the fixture it cites,
+# so the demo corpus, observations and personas can never drift apart.
+for _quote, _text in (
+    (_STUDENT_Q1, _STUDENT_TEXT),
+    (_STUDENT_Q2, _STUDENT_TEXT),
+    (_MENTOR_Q1, _MENTOR_TEXT),
+    (_MENTOR_Q2, _MENTOR_TEXT),
+    (_ADMIN_Q1, _ADMIN_TEXT),
+    (_ADMIN_Q2, _ADMIN_TEXT),
+):
+    if _quote not in _text:
+        msg = f"demo quote drifted from the fixture text: {_quote!r}"
+        raise RuntimeError(msg)
+
+
+def _corpus(system: str, user: str, call_number: int) -> dict[str, Any]:
+    """The curated corpus (CorpusBuilderOutput): the three documents that
+    carry stakeholder voices, texts verbatim from the demo search hits."""
+    relevance = (
+        "Student survey on discovery, booking and privacy",
+        "Mentor perspective on filtering, agendas and declining",
+        "Administrator needs: verification, moderation and reporting",
+    )
+    kept = DEMO_SEARCH_HITS[: len(relevance)]
+    sources: list[dict[str, Any]] = []
+    for number, hit in enumerate(kept, start=1):
+        sources.append(
+            {
+                "ref": f"S{number}",
+                "title": str(hit["title"]),
+                "url": str(hit["url"]),
+                "publisher": str(hit["publisher"]),
+                "year": str(hit["year"]),
+                "excerpt": f"SRC excerpt {number}: {kept[number - 1]['title']}.",
+                "text": str(hit["text"]),
+                "relevance_reason": relevance[number - 1],
+            }
+        )
+    return {
+        "selection_rationale": (
+            "Three documents cover the three stakeholder types of the plan, "
+            "each quoting its stakeholders directly; the vendor page and the "
+            "matching report were left out — the first has no stakeholder voice."
+        ),
+        "sources": sources,
+    }
+
+
+# Shared descriptions of the mined stakeholder groups, worded per source.
+_STUDENT_DESC = (
+    "Undergraduates looking for career guidance through short, mostly written exchanges."
+)
+_MENTOR_DESC = (
+    "Experienced engineers mentoring a few students a month within a tight weekly budget."
+)
+_ADMIN_DESC = "University staff responsible for the platform's safe, auditable operation."
+
+
+# The observations the miner returns per source document key: OBS content for
+# the two dimensions kept per stakeholder group, quotes exactly as mined.
+_MINED_BY_SOURCE: dict[str, list[dict[str, Any]]] = {
+    "SRC-001": [
+        {
+            "ref": "O1",
+            "stakeholder_name": "students",
+            "description": _STUDENT_DESC,
+            "dimension": "simplicity and speed of booking",
+            "evidence": _STUDENT_Q1,
+            "source": "SRC-001",
+        },
+        {
+            "ref": "O2",
+            "stakeholder_name": "students",
+            "description": _STUDENT_DESC,
+            "dimension": "privacy of career questions",
+            "evidence": _STUDENT_Q2,
+            "source": "SRC-001",
+        },
+    ],
+    "SRC-002": [
+        {
+            "ref": "O1",
+            "stakeholder_name": "volunteer mentors",
+            "description": _MENTOR_DESC,
+            "dimension": "filtering low-effort requests",
+            "evidence": _MENTOR_Q1,
+            "source": "SRC-002",
+        },
+        {
+            "ref": "O2",
+            "stakeholder_name": "volunteer mentors",
+            "description": _MENTOR_DESC,
+            "dimension": "clear agenda before accepting",
+            "evidence": _MENTOR_Q2,
+            "source": "SRC-002",
+        },
+    ],
+    "SRC-003": [
+        {
+            "ref": "O1",
+            "stakeholder_name": "administrators",
+            "description": _ADMIN_DESC,
+            "dimension": "verification before go-live",
+            "evidence": _ADMIN_Q1,
+            "source": "SRC-003",
+        },
+        {
+            "ref": "O2",
+            "stakeholder_name": "administrators",
+            "description": _ADMIN_DESC,
+            "dimension": "approval workflows, reporting and moderation",
+            "evidence": _ADMIN_Q2,
+            "source": "SRC-003",
+        },
+    ],
+}
+
+
+def _mined(system: str, user: str, call_number: int) -> dict[str, Any]:
+    """The observations of one source document (MinerOutput), keyed by the
+    SRC key the node's `<source>` carries; unknown sources fail loudly."""
+    match = re.search(r"SRC-\d{3}", user)
+    key = match.group(0) if match is not None else ""
+    if key not in _MINED_BY_SOURCE:
+        msg = f"the demo miner has no fixture for source '{key}'"
+        raise LookupError(msg)
+    return {"observations": [dict(entry) for entry in _MINED_BY_SOURCE[key]]}
 
 
 def _plain(system: str, user: str, call_number: int) -> dict[str, Any]:
@@ -60,19 +217,63 @@ def _plain(system: str, user: str, call_number: int) -> dict[str, Any]:
 
 
 def _personas(system: str, user: str, call_number: int) -> dict[str, Any]:
-    """The three personas of the mentor platform (GeneratorOutput)."""
+    """The three evidence-grounded personas (GeneratorOutputV2).
 
+    The observations arrive in the prompt sorted by key — OBS-001..006
+    exactly as the demo miner minted them (two per source, sources in
+    insertion order) — so the fixture keys stay in sync with the store.
+    """
+    student_evidence = [
+        {"observation": "OBS-001", "source": "SRC-001", "quote": _STUDENT_Q1},
+        {"observation": "OBS-002", "source": "SRC-001", "quote": _STUDENT_Q2},
+    ]
+    mentor_evidence = [
+        {"observation": "OBS-003", "source": "SRC-002", "quote": _MENTOR_Q1},
+        {"observation": "OBS-004", "source": "SRC-002", "quote": _MENTOR_Q2},
+    ]
+    admin_evidence = [
+        {"observation": "OBS-005", "source": "SRC-003", "quote": _ADMIN_Q1},
+        {"observation": "OBS-006", "source": "SRC-003", "quote": _ADMIN_Q2},
+    ]
     return {
         "selection_rationale": (
-            "Three personas cover every stakeholder type of the plan; each "
-            "brings conflicting priorities the platform must reconcile."
+            "Three personas cover every stakeholder type of the plan; each is "
+            "grounded in the mined observations and brings conflicting "
+            "priorities the platform must reconcile."
         ),
+        "stakeholder_groups": [
+            {
+                "ref": "G1",
+                "name": "Students",
+                "description": (
+                    "Undergraduates seeking career guidance with little time "
+                    "and real privacy worries."
+                ),
+                "observations": ["OBS-001", "OBS-002"],
+            },
+            {
+                "ref": "G2",
+                "name": "Volunteer mentors",
+                "description": "Experienced engineers guarding a small weekly mentoring budget.",
+                "observations": ["OBS-003", "OBS-004"],
+            },
+            {
+                "ref": "G3",
+                "name": "Administrators",
+                "description": (
+                    "University staff answerable for the platform's safety and reporting."
+                ),
+                "observations": ["OBS-005", "OBS-006"],
+            },
+        ],
         "uncovered_stakeholder_types": [],
         "personas": [
             {
                 "ref": "P1",
                 "name": "Minh — 3rd-year CS student",
                 "stakeholder_type": "Student",
+                "evaluative_dimension": "simplicity and speed of booking",
+                "grounded_in": ["OBS-001", "OBS-002"],
                 "background": (
                     "A busy undergraduate who wants career guidance and "
                     "internship preparation, prefers quick asynchronous steps."
@@ -98,11 +299,14 @@ def _personas(system: str, user: str, call_number: int) -> dict[str, Any]:
                 "behavioral_tendencies": (
                     "Direct, concise answers; grows impatient with long forms."
                 ),
+                "evidence": student_evidence,
             },
             {
                 "ref": "P2",
                 "name": "Dr. Lan — senior engineer, part-time mentor",
                 "stakeholder_type": "Mentor",
+                "evaluative_dimension": "filtering low-effort requests, clear agendas",
+                "grounded_in": ["OBS-003", "OBS-004"],
                 "background": (
                     "An experienced engineer willing to mentor a few students "
                     "per month if requests are well-prepared and bounded."
@@ -124,11 +328,14 @@ def _personas(system: str, user: str, call_number: int) -> dict[str, Any]:
                 "behavioral_tendencies": (
                     "Asks clarifying questions before accepting anything; sets firm boundaries."
                 ),
+                "evidence": mentor_evidence,
             },
             {
                 "ref": "P3",
                 "name": "Mr. Bao — platform administrator",
                 "stakeholder_type": "Administrator",
+                "evaluative_dimension": "verification and reporting before go-live",
+                "grounded_in": ["OBS-005", "OBS-006"],
                 "background": (
                     "Responsible for the platform's safe operation and its "
                     "acceptance by the university administration."
@@ -150,6 +357,7 @@ def _personas(system: str, user: str, call_number: int) -> dict[str, Any]:
                 "behavioral_tendencies": (
                     "Formal, policy-oriented; wants every rule written down."
                 ),
+                "evidence": admin_evidence,
             },
         ],
     }
@@ -808,7 +1016,9 @@ class DemoData:
         self.calls = DemoCalls()
 
     PlannerOutput = staticmethod(_plain)
-    GeneratorOutput = staticmethod(_personas)
+    CorpusBuilderOutput = staticmethod(_corpus)
+    MinerOutput = staticmethod(_mined)
+    GeneratorOutputV2 = staticmethod(_personas)
     InterviewerTurnOutput = staticmethod(_interviewer_turn)
     PersonaAnswerOutput = staticmethod(_persona_answer)
     AnalystOutput = staticmethod(_analyst)

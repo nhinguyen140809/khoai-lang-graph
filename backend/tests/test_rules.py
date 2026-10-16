@@ -22,6 +22,8 @@ from khoailanggraph.domain.rules import (
 VALID_PERSONA: dict[str, Any] = {
     "name": "Minh — 3rd-year CS student",
     "stakeholder_type": "Student",
+    "evaluative_dimension": "simplicity and speed of booking",
+    "grounded_in": ["OBS-001"],
     "background": "A busy undergraduate.",
     "expertise": "Basic programming",
     "goals": ["Find a mentor"],
@@ -30,6 +32,16 @@ VALID_PERSONA: dict[str, Any] = {
     "priorities": ["Relevant matches"],
     "concerns": ["Mentors who never reply"],
     "behavioral_tendencies": "Direct, concise answers.",
+    "evidence": [
+        {
+            "observation": "OBS-001",
+            "source": "SRC-001",
+            "quote": (
+                "61% said they would stop using a tool that needs more "
+                "than a few taps to book a chat."
+            ),
+        }
+    ],
     "interview_status": "not_started",
 }
 

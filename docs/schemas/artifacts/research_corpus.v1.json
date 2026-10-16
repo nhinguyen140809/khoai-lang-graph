@@ -1,0 +1,25 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "$id": "artifacts/research_corpus/v1",
+  "title": "Research corpus",
+  "description": "The curated research documents of the project, mined for evidence-backed stakeholder perspectives.",
+  "x-level": "artifact",
+  "x-kind": "research_corpus",
+  "x-schema-version": 1,
+  "x-ui-display": "document",
+  "x-ui-field-order": [
+    "selection_rationale"
+  ],
+  "type": "object",
+  "additionalProperties": false,
+  "properties": {
+    "selection_rationale": {
+      "type": "string",
+      "description": "Why these documents were kept for the stakeholder types of the plan.",
+      "x-ui-widget": "textarea"
+    }
+  },
+  "required": [
+    "selection_rationale"
+  ]
+}
