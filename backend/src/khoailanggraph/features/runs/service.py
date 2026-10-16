@@ -24,6 +24,7 @@ from uuid import UUID, uuid4
 from sqlalchemy import func, select
 from sqlalchemy.orm import Session, sessionmaker  # noqa: TC002 - runtime types
 
+from khoailanggraph.agents.requirements_engineering import definition as workflow_definition
 from khoailanggraph.agents.requirements_engineering.definition import agent_roles
 from khoailanggraph.agents.requirements_engineering.graph import build_re_graph
 from khoailanggraph.agents.requirements_engineering.state import make_initial_state
@@ -33,6 +34,7 @@ from khoailanggraph.features.threads.models import MessageRow, ThreadRow
 from khoailanggraph.llm import reset_model_cache
 from khoailanggraph.platform.db import make_sync_session_factory
 from khoailanggraph.settings import get_settings
+from khoailanggraph.tools.research import make_research_search
 
 if TYPE_CHECKING:
     from sqlalchemy.ext.asyncio import AsyncSession
@@ -47,7 +49,7 @@ from khoailanggraph.features.runs.models import (
 )
 
 WF_NAME = "requirements_engineering"
-WF_VERSION = 1
+WF_VERSION = workflow_definition.WORKFLOW_VERSION
 FALLBACK_ROLE_MODEL = "fake:demo"
 
 
@@ -80,6 +82,7 @@ DEFAULT_RUN_CONFIG: dict[str, Any] = {
     "max_steps": 400,
     "max_cost_usd": None,
     "parameters": {
+        "target_sources_num": 3,
         "target_personas_num": 3,
         "max_personas": 3,
         "max_turns": 6,
@@ -299,6 +302,7 @@ def start_run_blocking(
                         "artifact_sink": sink,
                         "directive_sink": DirectiveSink(session),
                         "models": config["models"],
+                        "research_search": make_research_search(get_settings()),
                     }
                 },
             ):

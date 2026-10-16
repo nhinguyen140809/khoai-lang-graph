@@ -1,12 +1,17 @@
-"""The nodes of the requirements engineering graph (version 1).
+"""The nodes of the requirements engineering graph (version 2).
 
-The topology follows `definition.v1.json` exactly (mapping §2.1): planner →
-persona_generator → checkpoint_personas → the interview loop → analyst →
-(rework_elicitation | checkpoint_analysis) → requirement_engineer →
-checkpoint_spec → backlog_manager → validator. Checkpoint options walk the
-conditional edges named after them; the analyst verdict decides whether the
-stakeholders are interviewed again; the validator ends a still-failing run
-at the iteration limit instead of failing the run.
+The topology follows `definition.v2.json` exactly (mapping §2.1): planner →
+corpus_builder → stakeholder_miner → persona_generator → checkpoint_personas
+→ the interview loop → analyst → (rework_elicitation | checkpoint_analysis) →
+requirement_engineer → checkpoint_spec → backlog_manager → validator. The
+research stage (MAJ-EVAL, arXiv:2507.21028) grounds the personas in real
+documents: the corpus builder curates search hits into source documents, the
+miner pulls stakeholder observations with verbatim evidence out of them, and
+the persona generator builds every persona from the observations, rejecting
+any evidence quote that does not appear in the mined record. Checkpoint
+options walk the conditional edges named after them; the analyst verdict
+decides whether the stakeholders are interviewed again; the validator ends a
+still-failing run at the iteration limit instead of failing the run.
 
 Every agent node calls `llm.get_chat_model(role, config)` — never a
 hard-coded model — and returns a structured output model, never prose. Every
@@ -28,14 +33,19 @@ from pydantic import BaseModel
 
 from khoailanggraph.agents import prompts as prompt_loader
 from khoailanggraph.agents.requirements_engineering import orchestrator
+from khoailanggraph.agents.requirements_engineering.definition import (
+    agent_roles as definition_agent_roles,
+)
 from khoailanggraph.agents.requirements_engineering.definition import nodes as definition_nodes
 from khoailanggraph.agents.requirements_engineering.outputs import (
     AnalystOutput,
     BacklogOutput,
+    CorpusBuilderOutput,
     EngineerOutput,
-    GeneratorOutput,
+    GeneratorOutputV2,
     IntentDirectiveOutput,
     InterviewerTurnOutput,
+    MinerOutput,
     PersonaAnswerOutput,
     PlannerOutput,
     ValidatorOutput,
@@ -53,12 +63,12 @@ from khoailanggraph.agents.requirements_engineering.views import (
 )
 from khoailanggraph.domain.run_config import RunConfig
 from khoailanggraph.llm import get_chat_model
+from khoailanggraph.tools.research import research_queries, research_search_of
 
 if TYPE_CHECKING:
     from langchain_core.language_models.chat_models import BaseChatModel
 
 PROMPTS_PACKAGE = "khoailanggraph.agents.requirements_engineering"
-PROMPT_VERSION = 1
 
 _T = TypeVar("_T", bound=BaseModel)
 NodeFn = Callable[..., dict[str, Any]]
@@ -106,12 +116,22 @@ def _language(run_config: RunConfig) -> str:
 
 def _invoke[T: BaseModel](
     role: str,
-    config: Mapping[str, Any] | None,
+    config: Mapping[str, Any] | RunnableConfig | None,
     schema: type[T],
     prompt_values: Mapping[str, str],
 ) -> T:
-    """Assemble the role's prompt, ask its model, and parse the structured output."""
-    prompt = prompt_loader.load_cached(PROMPTS_PACKAGE, role, PROMPT_VERSION)
+    """Assemble the role's prompt, ask its model, and parse the structured output.
+
+    The prompt version comes from the workflow definition's `agent_roles`
+    entry of the role, so one role can move to a new prompt (the persona
+    generator's v2) while every other role keeps the version it shipped.
+    """
+    roles = definition_agent_roles()
+    entry = roles.get(role)
+    if entry is None:
+        msg = f"role '{role}' has no agent_roles entry in the workflow definition"
+        raise ValueError(msg)
+    prompt = prompt_loader.load_cached(PROMPTS_PACKAGE, role, int(entry["prompt_version"]))
     messages = prompt_loader.assemble_prompt(prompt, prompt_values)
     model: BaseChatModel = get_chat_model(role, config)
     answer = model.with_structured_output(schema).invoke(messages)
@@ -304,30 +324,240 @@ def planner_node(
     return {"elicitation_plan": dict(created), "current_stage": "planning"}
 
 
+def _plan_terms(
+    sink: ArtifactSink,
+    state: REState,
+) -> tuple[dict[str, Any] | None, list[str], list[str]]:
+    """The plan record with its topics and stakeholder types, if the plan exists."""
+    plan_record = sink.read_artifact(state["project_id"], "elicitation_plan")
+    if plan_record is None:
+        return None, [], []
+    plan_content = cast("dict[str, list[str]]", plan_record["content"])
+    return (
+        dict(plan_record),
+        [str(topic) for topic in plan_content.get("topics", [])],
+        [str(name) for name in plan_content.get("stakeholder_types", [])],
+    )
+
+
+@safe_node
+def corpus_builder_node(
+    state: REState,
+    config: RunnableConfig | None = None,
+) -> dict[str, Any]:
+    """The corpus step (MAJ-EVAL): search the world, keep what carries voices.
+
+    The queries are built in node code from the plan's topics and stakeholder
+    types — no LLM round trip — and the injected search tool runs them; the
+    one structured call curates the hits into source documents. Anything the
+    model invents beyond the hits is refused by the prompt contract, and the
+    honest-mode check below keeps only hits the tool actually returned.
+    """
+    cfg = _run_config(state)
+    sink = _sink(config or {})
+    plan_record, topics, stakeholder_types = _plan_terms(sink, state)
+
+    search = research_search_of(config or {})
+    hits = search(research_queries(topics, stakeholder_types))
+    known_urls = {str(hit.get("url", "")) for hit in hits}
+    hits_lines = "\n".join(json.dumps(hit, ensure_ascii=False) for hit in hits) or "(no hits)"
+
+    draft: CorpusBuilderOutput = _invoke(
+        "corpus_builder",
+        config or {},
+        CorpusBuilderOutput,
+        {
+            "output_language": _language(cfg),
+            "intent": state["initial_intent"],
+            "plan": (
+                json.dumps(plan_record["content"], ensure_ascii=False)
+                if plan_record is not None
+                else "(no plan; cover the intent's obvious stakeholder types)"
+            ),
+            "target_sources_num": str(cfg.parameters.target_sources_num),
+            "search_results": hits_lines,
+        },
+    )
+    outside = [source.url for source in draft.sources if source.url not in known_urls]
+    if outside:
+        msg = f"corpus builder selected invented documents: {outside}"
+        raise ValueError(msg)
+
+    corpus = sink.create_artifact(
+        state["project_id"],
+        "research_corpus",
+        title="Research corpus",
+        content={"selection_rationale": draft.selection_rationale},
+        summary=f"{len(draft.sources)} documents",
+    )
+    sources: list[ItemRefDict] = []
+    for source in draft.sources:
+        item = sink.add_item(
+            corpus["artifact_id"],
+            "source_document",
+            source.model_dump(mode="json", exclude={"ref"}),
+            ref=source.ref,
+        )
+        sources.append(dict(item))
+    return {
+        "research_corpus": dict(corpus),
+        "current_stage": "research",
+    }
+
+
+@safe_node
+def stakeholder_miner_node(
+    state: REState,
+    config: RunnableConfig | None = None,
+) -> dict[str, Any]:
+    """The mining step (MAJ-EVAL): stakeholder tuples with verbatim evidence.
+
+    One structured call per source document; every observation must quote the
+    document word for word and name the document's key, or the node fails —
+    a fabricated quote never enters the store. Refs are renumbered across the
+    whole node response, unique per response as the sink contract demands.
+    """
+    cfg = _run_config(state)
+    sink = _sink(config or {})
+    corpus = state.get("research_corpus")
+    if corpus is None:
+        msg = "no research corpus to mine; run the corpus builder first"
+        raise ValueError(msg)
+    source_records = [
+        record
+        for record in sink.read_items(corpus["artifact_id"])
+        if record["kind"] == "source_document"
+    ]
+
+    observations: list[ItemRefDict] = []
+    ref_number = 0
+    for record in source_records:
+        document = str(record["content"].get("text", ""))
+        draft: MinerOutput = _invoke(
+            "stakeholder_miner",
+            config or {},
+            MinerOutput,
+            {
+                "output_language": _language(cfg),
+                "intent": state["initial_intent"],
+                "source": json.dumps(prompt_view(record), ensure_ascii=False),
+                "document": document,
+            },
+        )
+        for mined in draft.observations:
+            ref_number += 1
+            if str(mined.source) != str(record["key"]):
+                msg = (
+                    f"observation '{mined.dimension}' cites source "
+                    f"'{mined.source}', but was mined from '{record['key']}'"
+                )
+                raise ValueError(msg)
+            if mined.evidence not in document:
+                msg = (
+                    f"observation '{mined.dimension}' does not quote {record['key']} word for word"
+                )
+                raise ValueError(msg)
+            item = sink.add_item(
+                corpus["artifact_id"],
+                "stakeholder_observation",
+                mined.model_dump(mode="json", exclude={"ref"}),
+                ref=f"O{ref_number}",
+            )
+            sink.add_link(
+                source_id=item["item_id"],
+                target_id=record["item_id"],
+                link_type="evidenced_by",
+            )
+            observations.append(dict(item))
+    return {
+        "observations": observations,
+        "current_stage": "research",
+    }
+
+
+def _check_groups(
+    draft: GeneratorOutputV2,
+    known_observations: dict[str, ItemRecord],
+) -> None:
+    """Every consolidated group cites observation keys that exist."""
+    for group in draft.stakeholder_groups:
+        for key in group.observations:
+            if key not in known_observations:
+                msg = f"group '{group.name}' consolidates unknown observation key '{key}'"
+                raise ValueError(msg)
+
+
+def _check_persona_grounding(
+    persona: Any,
+    known_observations: dict[str, ItemRecord],
+) -> None:
+    """A persona's evidence is the mined record, word for word, and its
+    `grounded_in` keys exist — nothing invented reaches the store."""
+    if not persona.evidence:
+        msg = f"persona '{persona.name}' carries no evidence"
+        raise ValueError(msg)
+    for entry in persona.evidence:
+        record = known_observations.get(entry.observation)
+        if record is None:
+            msg = f"persona '{persona.name}' cites unknown observation key '{entry.observation}'"
+            raise ValueError(msg)
+        content = cast("dict[str, Any]", record["content"])
+        if entry.quote != str(content["evidence"]):
+            msg = f"persona '{persona.name}' altered the evidence quote of {entry.observation}"
+            raise ValueError(msg)
+        if entry.source != str(content["source"]):
+            msg = (
+                f"persona '{persona.name}' names source '{entry.source}' but "
+                f"{entry.observation} was mined from '{content['source']}'"
+            )
+            raise ValueError(msg)
+    for key in persona.grounded_in:
+        if key not in known_observations:
+            msg = f"persona '{persona.name}' is grounded in unknown observation '{key}'"
+            raise ValueError(msg)
+
+
 @safe_node
 def persona_generator_node(
     state: REState,
     config: RunnableConfig | None = None,
 ) -> dict[str, Any]:
+    """The persona step (MAJ-EVAL step 2): ground every persona in evidence.
+
+    The clusters of the mined observations, the personas built on them, and
+    every evidence quote are checked against the observation record — a quote
+    that drifted from what was mined, or an observation key that does not
+    exist, fails the run instead of entering the store.
+    """
     cfg = _run_config(state)
     sink = _sink(config or {})
-    plan_record = sink.read_artifact(state["project_id"], "elicitation_plan")
-    plan_lines = (
-        json.dumps(plan_record["content"], ensure_ascii=False)
-        if plan_record is not None
-        else "(no plan; interview from the intent directly)"
+    plan_record, _topics, _stakeholder_types = _plan_terms(sink, state)
+
+    observation_records: list[ItemRecord] = [
+        sink.read_item(reference["item_id"]) for reference in state.get("observations", [])
+    ]
+    known_observations = {record["key"]: record for record in observation_records}
+    observations_lines = (
+        prompt_views(observation_records) or "(none mined; fall back to the intent)"
     )
-    draft: GeneratorOutput = _invoke(
+
+    draft: GeneratorOutputV2 = _invoke(
         "persona_generator",
         config or {},
-        GeneratorOutput,
+        GeneratorOutputV2,
         {
             "output_language": _language(cfg),
             "intent": state["initial_intent"],
-            "plan": str(plan_lines),
+            "plan": (
+                json.dumps(plan_record["content"], ensure_ascii=False)
+                if plan_record is not None
+                else "(no plan; cover the intent's obvious stakeholder types)"
+            ),
+            "observations": observations_lines,
             "target_personas_num": str(cfg.parameters.target_personas_num),
         },
     )
+
     if plan_record is not None:
         plan_content = cast("dict[str, list[str]]", plan_record["content"])
         allowed = plan_content.get("stakeholder_types", [])
@@ -335,6 +565,9 @@ def persona_generator_node(
         if outside:
             msg = f"personas listed unknown stakeholder types: {outside}"
             raise ValueError(msg)
+    else:
+        allowed = []
+    _check_groups(draft, known_observations)
 
     catalog = sink.create_artifact(
         state["project_id"],
@@ -342,20 +575,21 @@ def persona_generator_node(
         title="Persona catalog",
         content={
             "selection_rationale": draft.selection_rationale,
+            "stakeholder_groups": [
+                group.model_dump(mode="json", exclude={"ref"}) for group in draft.stakeholder_groups
+            ],
             "uncovered_stakeholder_types": draft.uncovered_stakeholder_types,
         },
-        summary=f"{len(draft.personas)} personas",
+        summary=(
+            f"{len(draft.personas)} personas, grounded in {len(observation_records)} observations"
+        ),
     )
-    allowed_types: list[str] = (
-        [str(entry) for entry in plan_content.get("stakeholder_types", [])]
-        if plan_record is not None
-        else []
-    )
-    personas: list[dict[str, Any]] = []
+    personas: list[ItemRefDict] = []
     for persona_draft in draft.personas:
+        _check_persona_grounding(persona_draft, known_observations)
         content = persona_draft.model_dump(mode="json", exclude={"ref"})
-        if allowed_types:
-            matched = match_plan_value(str(content.get("stakeholder_type", "")), allowed_types)
+        if allowed:
+            matched = match_plan_value(str(content.get("stakeholder_type", "")), allowed)
             if matched is None:
                 msg = (
                     f"persona '{content.get('name', '?')}': stakeholder_type "
@@ -367,6 +601,12 @@ def persona_generator_node(
         content["interview_status"] = "not_started"
         item = sink.add_item(catalog["artifact_id"], "persona", content, ref=persona_draft.ref)
         personas.append(dict(item))
+        for key in persona_draft.grounded_in:
+            sink.add_link(
+                source_id=item["item_id"],
+                target_id=known_observations[key]["item_id"],
+                link_type="grounded_in",
+            )
     return {
         "personas": personas,
         "interview_transcripts": [],

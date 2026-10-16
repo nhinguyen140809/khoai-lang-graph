@@ -700,9 +700,7 @@ def _chain_ref(row: ArtifactItemRow) -> schemas.MatrixChainRef:
     )
 
 
-async def _live_items_of_project(
-    session: AsyncSession, project_id: UUID
-) -> list[ArtifactItemRow]:
+async def _live_items_of_project(session: AsyncSession, project_id: UUID) -> list[ArtifactItemRow]:
     return list(
         (
             await session.scalars(
@@ -729,11 +727,7 @@ def _no_source_of(
 ) -> list[schemas.MatrixChainRef]:
     """Spec or analyzed requirements with no outgoing derived_from."""
     with_source = {link.source.id for link in links if link.link_type == "derived_from"}
-    return [
-        _chain_ref(item)
-        for item in items
-        if item.kind == kind and item.id not in with_source
-    ]
+    return [_chain_ref(item) for item in items if item.kind == kind and item.id not in with_source]
 
 
 def _staleness_of_links(
@@ -821,9 +815,7 @@ async def traceability_matrix(
     return rows
 
 
-async def traceability_coverage(
-    session: AsyncSession, project_id: UUID
-) -> schemas.TraceCoverage:
+async def traceability_coverage(session: AsyncSession, project_id: UUID) -> schemas.TraceCoverage:
     """The three coverage lists of API.md, each with its items."""
     items = await _live_items_of_project(session, project_id)
     links, _ = await list_project_links(session, project_id, limit=10_000, cursor=0)
@@ -836,9 +828,7 @@ async def traceability_coverage(
             incoming_target[link.target.id] = None
 
     specs = [item for item in items if item.kind == "spec_requirement"]
-    no_backlog = [
-        _chain_ref(item) for item in specs if str(item.id) not in incoming_target
-    ]
+    no_backlog = [_chain_ref(item) for item in specs if str(item.id) not in incoming_target]
     no_source = [
         _chain_ref(item)
         for item in items
@@ -855,21 +845,15 @@ async def traceability_coverage(
         for item in items
         if item.kind in open_kinds and item.review_status != "superseded"
     ]
-    needs_review = stale + [
-        entry for entry in open_issues if entry.id not in stale_ids
-    ]
+    needs_review = stale + [entry for entry in open_issues if entry.id not in stale_ids]
     return schemas.TraceCoverage(
         no_backlog_item=schemas.CoverageEntry(count=len(no_backlog), items=no_backlog),
         no_source=schemas.CoverageEntry(count=len(no_source), items=no_source),
-        needs_review=schemas.CoverageEntry(
-            count=len(needs_review), items=needs_review
-        ),
+        needs_review=schemas.CoverageEntry(count=len(needs_review), items=needs_review),
     )
 
 
-async def item_revisions(
-    session: AsyncSession, item_id: UUID
-) -> list[schemas.ItemRevision]:
+async def item_revisions(session: AsyncSession, item_id: UUID) -> list[schemas.ItemRevision]:
     """The versions of one item, newest first (TIMELINE)."""
     row = await session.get(ArtifactItemRow, item_id)
     if row is None or row.deleted_at is not None:
@@ -907,13 +891,15 @@ async def item_trace(
     row = await session.get(ArtifactItemRow, item_id)
     if row is None or row.deleted_at is not None:
         raise ApiError(404, "not_found", "Not found", "The item does not exist.")
-    links, _ = await list_project_links(
-        session, UUID(str(row.project_id)), limit=10_000, cursor=0
-    )
+    links, _ = await list_project_links(session, UUID(str(row.project_id)), limit=10_000, cursor=0)
     directions: set[str] = {"both", "forward", "backward"}
     if direction not in directions:
-        raise ApiError(422, "validation_failed", "Validation failed",
-                        "direction must be backward, forward or both.")
+        raise ApiError(
+            422,
+            "validation_failed",
+            "Validation failed",
+            "direction must be backward, forward or both.",
+        )
 
     reachable: dict[str, None] = {str(item_id): None}
     found: list[schemas.TraceLink] = []
@@ -925,9 +911,9 @@ async def item_trace(
         for link in links:
             if link.id in seen_links:
                 continue
-            follows = (
-                direction in {"forward", "both"} and link.source.id == current
-            ) or (direction in {"backward", "both"} and link.target.id == current)
+            follows = (direction in {"forward", "both"} and link.source.id == current) or (
+                direction in {"backward", "both"} and link.target.id == current
+            )
             if not follows:
                 continue
             seen_links.add(link.id)
@@ -1013,6 +999,10 @@ def _with_value_lists(kind: str, value_lists: dict[str, Any]) -> dict[str, Any]:
 def artifact_kinds_response(workflow: Any) -> dict[str, Any]:
     """The artifact-kinds of the definition, the shape mocks serve (§5)."""
     value_lists = {k: v for k, v in workflow.value_lists().items()}
+    item_versions = {
+        str(kind): int(entry.get("schema_version", 1))
+        for kind, entry in workflow.item_kinds().items()
+    }
     artifact_kinds: list[dict[str, Any]] = []
     for artifact in workflow.DEFINITION["artifact_kinds"]:
         item_kinds = []
@@ -1020,7 +1010,7 @@ def artifact_kinds_response(workflow: Any) -> dict[str, Any]:
             item_kinds.append(
                 {
                     "kind": str(item_kind),
-                    "schema_version": 1,
+                    "schema_version": item_versions[str(item_kind)],
                     "schema": _with_value_lists(str(item_kind), value_lists),
                 }
             )

@@ -19,9 +19,12 @@ defaults:
 # conversational roles answer in-character turn by turn; a thinking model
 # there can exceed the gateway's ~90s upstream ceiling (seen as 504s in
 # real runs), so they take the fast No-Think variant of the same family.
+# The stakeholder miner is extraction over document text — No-Think suits it
+# too; the corpus builder curates and judges, so it keeps the reasoning default.
 roles:
   interviewer: openai:glm-5.2-No-Think
   persona_agent: openai:glm-5.2-No-Think
+  stakeholder_miner: openai:glm-5.2-No-Think
 
 # Models a user may pick in the UI (GET /api/v1/models serves this catalog).
 allowlist:

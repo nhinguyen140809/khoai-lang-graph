@@ -5,7 +5,7 @@ the version the step used, as an ArtifactRef or ItemRef; the content lives in
 the artifact store, and a version is never rewritten, so any saved checkpoint
 stays readable. Pending messages are NOT part of the state (runtime.md: the
 executor hands them to the intent router through the config). The runtime
-channels the executor and the conditional edges share beyond the 24 schema
+channels the executor and the conditional edges share beyond the 26 schema
 fields: `first_run` (the entry routing §2.1), the analyst's and the
 validator's verdicts of the latest pass, the resolved checkpoint outcomes and
 the run's routed target, so the edges stay pure functions of the state.
@@ -46,7 +46,7 @@ class CheckpointOutcome(TypedDict):
 
 
 class REState(TypedDict):
-    """The 24 schema fields of `state_schema`, plus the runtime channels."""
+    """The 26 schema fields of `state_schema`, plus the runtime channels."""
 
     # — run inputs, set before the graph runs and never rewritten —
     project_id: str
@@ -56,6 +56,8 @@ class REState(TypedDict):
 
     # — artifact references, at the version the run produced them —
     elicitation_plan: ArtifactRef | None
+    research_corpus: ArtifactRef | None
+    observations: list[ItemRef]
     personas: list[ItemRef]
     interview_transcripts: list[ArtifactRef]
     raw_requirements: list[ItemRef]
@@ -106,6 +108,8 @@ def make_initial_state(
         run_config=run_config,
         first_run=first_run,
         elicitation_plan=None,
+        research_corpus=None,
+        observations=[],
         personas=[],
         interview_transcripts=[],
         raw_requirements=[],

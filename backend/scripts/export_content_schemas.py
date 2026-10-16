@@ -19,11 +19,13 @@ from pathlib import Path
 from khoailanggraph.agents.requirements_engineering import definition as workflow
 from khoailanggraph.domain import registry
 
-_DEFINITION_EXPORT_NAME = "requirements_engineering.v1.json"
+# The export always carries the current definition version's name — the same
+# file `GET /workflow/definition` serves and the parity gates compare.
+_DEFINITION_EXPORT_NAME = f"requirements_engineering.v{workflow.WORKFLOW_VERSION}.json"
 
 
 def export(target: Path) -> list[Path]:
-    """Write all 20 canonical files into `target`, returning what it wrote."""
+    """Write every canonical file into `target`, returning what it wrote."""
     target.mkdir(parents=True, exist_ok=True)
     written: list[Path] = []
     for kind in registry.all_kinds():

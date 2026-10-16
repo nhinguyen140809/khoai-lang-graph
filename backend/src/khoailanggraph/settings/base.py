@@ -47,6 +47,10 @@ class Settings(BaseSettings):
     # OPENAI_API_KEY / OPENAI_BASE_URL itself when these are unset).
     openai_api_key: str | None = None
     openai_base_url: str | None = None
+    # The research-search provider key of the corpus builder (Tavily), read
+    # from the same .env as the gateway keys and never committed. Demo mode
+    # never needs it: the demo search tool serves fixture documents offline.
+    tavily_api_key: str | None = None
     # The interactive API docs (/docs, /redoc, /openapi.json) are developer
     # tooling. None (the default) serves them outside `production` only;
     # API_DOCS_ENABLED=true|false sets the rule explicitly.

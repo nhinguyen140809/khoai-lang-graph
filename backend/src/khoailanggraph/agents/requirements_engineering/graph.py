@@ -1,11 +1,14 @@
-"""Graph assembly of the requirements engineering workflow (version 1).
+"""Graph assembly of the requirements engineering workflow (version 2).
 
-The 15 nodes and 25 conditional/plain edges below are `definition.v1.json`
+The 17 nodes and 27 conditional/plain edges below are `definition.v2.json`
 mapped onto LangGraph under the §2.1 mapping: `__start__ → {planner |
-intent_router}`, the interview loop under the in-node orchestrator, the
-analyst with the rework control node, the v1 checkpoint options on the
-conditional edges that carry their keys, and the iteration guard on the
-validator (a still-failing run closes at `max_iterations`; it never fails).
+intent_router}`, the research stage of the evidence-grounded persona pipeline
+(`planner → corpus_builder → stakeholder_miner → persona_generator`, the
+MAJ-EVAL mechanism of arXiv:2507.21028), the interview loop under the in-node
+orchestrator, the analyst with the rework control node, the v1 checkpoint
+options on the conditional edges that carry their keys, and the iteration
+guard on the validator (a still-failing run closes at `max_iterations`; it
+never fails).
 
 Checkpoint prompts and their options are read from the definition — not
 re-declared in Python — and the graph runs without the API: agents get their
@@ -26,6 +29,7 @@ from khoailanggraph.agents.requirements_engineering.nodes import (
     checkpoint_analysis,
     checkpoint_personas,
     checkpoint_spec,
+    corpus_builder_node,
     intent_router_node,
     interviewer_node,
     persona_agent_node,
@@ -33,6 +37,7 @@ from khoailanggraph.agents.requirements_engineering.nodes import (
     planner_node,
     requirement_engineer_node,
     rework_elicitation_node,
+    stakeholder_miner_node,
     validator_node,
 )
 from khoailanggraph.agents.requirements_engineering.state import REState
@@ -44,6 +49,8 @@ if TYPE_CHECKING:
 NODE_NAMES = (
     "__start__",
     "planner",
+    "corpus_builder",
+    "stakeholder_miner",
     "persona_generator",
     "checkpoint_personas",
     "interviewer",
@@ -59,7 +66,7 @@ NODE_NAMES = (
     "__end__",
 )
 
-EDGE_COUNT = 25
+EDGE_COUNT = 27
 
 
 def build_re_graph(
@@ -69,6 +76,8 @@ def build_re_graph(
     builder = StateGraph(REState)
 
     builder.add_node("planner", planner_node)
+    builder.add_node("corpus_builder", corpus_builder_node)
+    builder.add_node("stakeholder_miner", stakeholder_miner_node)
     builder.add_node("persona_generator", persona_generator_node)
     builder.add_node("checkpoint_personas", checkpoint_personas)
     builder.add_node("interviewer", interviewer_node)
@@ -92,7 +101,9 @@ def build_re_graph(
         routing.route_after_intent_router,
         ["planner", "interviewer", "analyst", "requirement_engineer", "backlog_manager"],
     )
-    builder.add_edge("planner", "persona_generator")
+    builder.add_edge("planner", "corpus_builder")
+    builder.add_edge("corpus_builder", "stakeholder_miner")
+    builder.add_edge("stakeholder_miner", "persona_generator")
     builder.add_edge("persona_generator", "checkpoint_personas")
     builder.add_conditional_edges(
         "checkpoint_personas",
