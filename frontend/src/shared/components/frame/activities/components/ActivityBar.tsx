@@ -101,12 +101,12 @@ function ActivityButton({ icon, label, children, ...props }: ActivityButtonProps
   return (
     <button
       type="button"
-      className="group/item relative flex w-14 flex-col items-center gap-1 rounded-md py-1 text-muted-foreground outline-none not-aria-disabled:hover:text-foreground focus-visible:ring-2 focus-visible:ring-ring/50 aria-disabled:opacity-50 aria-pressed:font-medium aria-pressed:text-foreground"
+      className="group/item relative flex w-14 flex-col items-center gap-1 rounded-md py-1 text-muted-foreground outline-none not-aria-disabled:hover:text-foreground focus-visible:ring-2 focus-visible:ring-ring/50 aria-disabled:opacity-50 aria-pressed:font-bold aria-pressed:text-foreground"
       {...props}
     >
       <span
         aria-hidden
-        className="flex h-7 w-10 items-center justify-center rounded-full transition-colors group-hover/item:group-not-aria-pressed/item:group-not-aria-disabled/item:bg-sidebar-accent/60 group-aria-pressed/item:bg-sidebar-accent motion-reduce:transition-none [&_svg]:size-5"
+        className="flex h-7 w-10 items-center justify-center rounded-md transition-colors group-hover/item:group-not-aria-pressed/item:group-not-aria-disabled/item:bg-sidebar-accent/60 group-aria-pressed/item:bg-sidebar-accent motion-reduce:transition-none [&_svg]:size-5"
       >
         {icon}
       </span>

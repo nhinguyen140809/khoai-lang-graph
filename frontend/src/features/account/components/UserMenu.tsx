@@ -108,7 +108,7 @@ function AccountItem() {
   if (me.isPending) return <DropdownMenuItem disabled>Loading your account...</DropdownMenuItem>
   if (me.isError) {
     return (
-      <DropdownMenuItem onSelect={() => void me.refetch()}>
+      <DropdownMenuItem variant="destructive" onSelect={() => void me.refetch()}>
         <RotateCcwIcon aria-hidden />
         Failed to load your account. Try again
       </DropdownMenuItem>
@@ -121,7 +121,7 @@ function AccountItem() {
         <span className="flex min-w-0 flex-1 flex-col">
           {/* The spaces between the lines keep the words apart in the name of the item. */}
           <span className="sr-only">Your profile:</span>{' '}
-          <span className="truncate font-medium">{me.data.display_name}</span>{' '}
+          <span className="truncate font-bold">{me.data.display_name}</span>{' '}
           <span className="truncate text-muted-foreground">{me.data.email}</span>
         </span>
         <ChevronRightIcon aria-hidden />
