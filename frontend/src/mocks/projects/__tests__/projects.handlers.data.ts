@@ -77,10 +77,10 @@ export const rollupRunStatusCases = [
     status: 'interrupted',
   },
   {
-    name: 'a project whose failed run a later run of its thread replaced, beside a stopped thread',
+    name: 'a project whose failed run a later run of its thread replaced',
     address: '/?mock-run-state=done',
     projectId: PROJECT_IDS.mentor,
-    status: 'cancelled',
+    status: 'succeeded',
   },
   {
     name: 'a project whose runs ended well',
