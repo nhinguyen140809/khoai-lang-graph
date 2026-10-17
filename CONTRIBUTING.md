@@ -264,7 +264,7 @@ Conventions:
 
   - Each component has two sizes: `compact` for narrow containers (sidebar, cards) and `page` (default) for a panel or a whole page.
   - Queries use `useQuery`, not `useSuspenseQuery`: a suspended query would run on the server during rendering, where the API is not reachable with the user's session.
-  - Unexpected errors (a bug while rendering) are caught by the route error boundary (`error.tsx`). Slow routes show a `loading.tsx`.
+  - Unexpected errors (a bug while rendering) are caught by the route error boundary (`error.tsx`). An item that a component registers on the frame has a boundary of its own, so that it fails alone. Slow routes show a `loading.tsx`.
   - Every state must be reachable in `pnpm dev:mock` through a mock scenario (frontend README: Mock data).
 - **Validation** with Zod at boundaries (forms, untrusted data).
 - **Forms** use react-hook-form with a Zod schema in `<feature>.schema.ts`, whose fields are named after the fields of the request. A field is a `TextField`, or a `FormField` around any other control, from `@/shared/components/form`: they tie the label, `aria-invalid`, `data-invalid` and the error to the control. When the request fails, the hook of the mutation shows the problems of the API at their fields with `showFieldProblems` and the `setError` of the form, and gives the message for under the form with `formErrorOf`.

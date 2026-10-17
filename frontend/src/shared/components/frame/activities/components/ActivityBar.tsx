@@ -1,27 +1,26 @@
 'use client'
 
 import type { ComponentProps, ReactNode } from 'react'
+import { ErrorBoundary } from 'react-error-boundary'
 
 import { Tooltip, TooltipContent, TooltipTrigger } from '@/shared/components/ui/tooltip'
 
 import type { Activity } from '../activity.types'
 import { isFeatureActivity } from '../activity.utils'
 import { useActivities } from '../hooks/useActivities'
+import { useRegisteredActivityBarItems } from '../hooks/useRegisteredActivityBarItems'
 import { useSideFeature } from '../hooks/useSideFeature'
 
-interface ActivityBarProps {
-  /** The account menu, at the bottom. */
-  account: ReactNode
-}
-
 /**
- * One item per feature that the screen gives Workbench, then the account menu; a screen that gives
- * none, such as the screens outside a project today, shows the account menu only. An item shows
- * the icon of its feature with the name under it. It shows the side panel of its feature and
- * leaves the editor as it is; the item of the side panel on screen hides the panel instead.
+ * One item per feature that the screen gives Workbench, then the items registered with
+ * `useActivityBarItem`, such as the account menu; a screen that gives no feature, such as the
+ * screens outside a project today, shows those items only. The item of a feature shows its icon
+ * with the name under it. It shows the side panel of its feature and leaves the editor as it is;
+ * the item of the side panel on screen hides the panel instead.
  */
-export function ActivityBar({ account }: ActivityBarProps) {
+export function ActivityBar() {
   const { activities } = useActivities()
+  const items = useRegisteredActivityBarItems()
 
   return (
     <nav
@@ -39,7 +38,13 @@ export function ActivityBar({ account }: ActivityBarProps) {
           .map((activity) => (
             <ActivityItem key={activity.id} activity={activity} />
           ))}
-        {account}
+        {/* An item that fails to render leaves the bar, not the screen, and comes back when it
+            registers a new content. */}
+        {items.map(({ key, content }) => (
+          <ErrorBoundary key={key} fallback={null} resetKeys={[content]}>
+            {content}
+          </ErrorBoundary>
+        ))}
       </div>
     </nav>
   )

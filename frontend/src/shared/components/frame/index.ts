@@ -4,10 +4,12 @@
 // Components import the index too, so every hook it gives starts with 'use client'.
 export type {
   Activity,
+  ActivityBarItem,
   FeatureActivity,
   PlannedActivity,
   TabIcons,
 } from './activities/activity.types'
+export { useActivityBarItem } from './activities/hooks/useActivityBarItem'
 export { AppSidebar } from './app-sidebar'
 export { AppShell } from './AppShell'
 export { LogoMark } from './bars/components/LogoMark'

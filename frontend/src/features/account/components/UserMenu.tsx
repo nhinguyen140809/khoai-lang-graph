@@ -9,8 +9,9 @@ import {
   UserIcon,
 } from 'lucide-react'
 import Link from 'next/link'
-import { type ComponentProps, useState } from 'react'
+import { type ComponentProps, useMemo, useState } from 'react'
 
+import { useActivityBarItem } from '@/shared/components/frame'
 import { Avatar, AvatarFallback, AvatarImage } from '@/shared/components/ui/avatar'
 import { Button } from '@/shared/components/ui/button'
 import { ConfirmDialog } from '@/shared/components/ui/confirm-dialog'
@@ -28,6 +29,15 @@ import type { Me } from '../account.types'
 import { initials } from '../account.utils'
 import { useMe } from '../hooks/useMe'
 import { useSignOut } from '../hooks/useSignOut'
+
+/** Shows the account menu at the bottom of the activity bar while it is mounted. */
+export function AccountMenuItem() {
+  const content = useMemo(() => <UserMenu />, [])
+
+  useActivityBarItem({ content })
+
+  return null
+}
 
 /**
  * The account of the signed-in user, for the bottom of the activity bar: the user, who opens the

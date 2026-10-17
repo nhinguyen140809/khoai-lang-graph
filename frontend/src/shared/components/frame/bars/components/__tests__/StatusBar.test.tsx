@@ -1,6 +1,6 @@
 import { render, screen } from '@testing-library/react'
 import userEvent from '@testing-library/user-event'
-import { beforeEach, describe, expect, it } from 'vitest'
+import { afterEach, beforeEach, describe, expect, it, vi } from 'vitest'
 
 import { useStatusBarItem } from '../../hooks/useStatusBarItem'
 import { StatusBarSide } from '../../status-bar.constants'
@@ -14,11 +14,36 @@ function Reports({ item }: { item: StatusBarItem }) {
   return null
 }
 
+/** An item whose content fails to render. */
+function Broken(): never {
+  throw new Error('The item failed.')
+}
+
 beforeEach(() => {
   useStatusBarStore.setState(useStatusBarStore.getInitialState())
 })
 
+afterEach(() => {
+  vi.restoreAllMocks()
+})
+
 describe('StatusBar', () => {
+  it('leaves out an item that fails to render, and keeps the others', () => {
+    // React reports the error that the boundary catches.
+    vi.spyOn(console, 'error').mockImplementation(() => undefined)
+
+    render(
+      <>
+        <StatusBar />
+        <Reports item={{ side: StatusBarSide.Left, content: <Broken /> }} />
+        <Reports item={{ side: StatusBarSide.Left, content: <span>Run 1: running</span> }} />
+      </>,
+    )
+
+    expect(screen.getByText('Run 1: running')).toBeInTheDocument()
+    expect(screen.getByRole('button', { name: 'Notifications' })).toBeInTheDocument()
+  })
+
   it('shows the items registered, each on its side and in its order', () => {
     render(
       <>
