@@ -4,6 +4,17 @@ import { routes } from '../routes.utils'
 export const routeCases = [
   { page: 'the home page', href: () => routes.home(), path: '/' },
   { page: 'the settings', href: () => routes.settings(), path: '/settings' },
+  { page: 'the list of the projects', href: () => routes.projects(), path: '/projects' },
+  {
+    page: 'the activity of a project',
+    href: () => routes.project('p1').activity(),
+    path: '/projects/p1/activity',
+  },
+  {
+    page: 'the activity of a project whose id needs encoding',
+    href: () => routes.project('a/b c').activity(),
+    path: '/projects/a%2Fb%20c/activity',
+  },
   {
     page: 'the sign-in page, which returns to the page asked for',
     href: () => routes.signIn('/settings'),
