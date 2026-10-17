@@ -45,7 +45,8 @@ function Trail({ crumb }: TopBarProps) {
           <HomeLink />
         </BreadcrumbItem>
         <BreadcrumbSeparator>/</BreadcrumbSeparator>
-        <BreadcrumbItem className="min-w-0 font-medium text-foreground">{crumb}</BreadcrumbItem>
+        {/* Bold, as the menu of a project that a crumb can be, which sets its own weight. */}
+        <BreadcrumbItem className="min-w-0 font-bold text-foreground">{crumb}</BreadcrumbItem>
       </BreadcrumbList>
     </Breadcrumb>
   )
@@ -76,7 +77,7 @@ function SearchButton() {
       onClick={() => {
         setPaletteOpen(true)
       }}
-      className="flex h-9 w-md min-w-0 items-center gap-2 rounded-md border border-input bg-background px-3 text-muted-foreground transition-colors outline-none hover:bg-muted focus-visible:border-ring focus-visible:ring-2 focus-visible:ring-ring/30"
+      className="flex h-9 w-md min-w-0 items-center gap-2 rounded-lg border border-input bg-background px-3 text-muted-foreground transition-colors outline-none hover:bg-muted focus-visible:border-ring focus-visible:ring-2 focus-visible:ring-ring/30"
     >
       <SearchIcon aria-hidden className="size-4 shrink-0" />
       <span className="truncate">Search or run a command</span>

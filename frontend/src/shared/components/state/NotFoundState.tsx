@@ -1,8 +1,7 @@
 import { ChevronRightIcon } from 'lucide-react'
 import type { ReactNode } from 'react'
 
-import { cn } from '@/shared/lib/utils'
-
+import { CenteredState } from './CenteredState'
 import { EmptyState } from './EmptyState'
 import type { StateSize } from './state.types'
 
@@ -43,19 +42,21 @@ export function NotFoundState({
   }
 
   return (
-    <div className={cn('flex flex-col items-start gap-5 p-6', className)}>
-      {reference !== undefined && <DanglingLink reference={reference} />}
-      <div className="flex flex-col gap-1.5">
-        <h2 className="text-lg font-semibold">{title}</h2>
-        <p className="max-w-sm text-sm text-balance text-muted-foreground">{description}</p>
+    <CenteredState className={className}>
+      <div className="flex w-full flex-col items-center gap-5 text-center">
+        {reference !== undefined && <DanglingLink reference={reference} />}
+        <div className="flex flex-col items-center gap-1.5">
+          <h2 className="text-lg font-semibold">{title}</h2>
+          <p className="max-w-sm text-sm text-balance text-muted-foreground">{description}</p>
+        </div>
+        {action}
       </div>
-      {action}
-    </div>
+    </CenteredState>
   )
 }
 
-// The reference as a node, and a dashed edge (the 6/4 dashes of a dashed Edge) that ends at an
-// empty node: the link points to nothing.
+// The reference as a node, and a dashed edge that ends at an empty node: the link points to
+// nothing.
 function DanglingLink({ reference }: { reference: string }) {
   return (
     <div className="flex w-full max-w-sm items-center text-muted-foreground">
@@ -65,10 +66,7 @@ function DanglingLink({ reference }: { reference: string }) {
       >
         {reference}
       </span>
-      <span
-        aria-hidden
-        className="h-px min-w-10 flex-1 bg-[repeating-linear-gradient(90deg,currentColor_0_6px,transparent_6px_10px)]"
-      />
+      <span aria-hidden className="min-w-10 flex-1 border-t border-dashed border-current" />
       <ChevronRightIcon aria-hidden className="-ml-1.5 size-3.5 shrink-0" />
       <span
         aria-hidden

@@ -14,8 +14,6 @@ import { useRestoreFrame } from '../hooks/useRestoreFrame'
 interface WorkbenchProps {
   /** What follows "khoai /" on the top bar: a page name, or the menu of the current project. */
   crumb: ReactNode
-  /** The account menu, at the bottom of the activity bar. */
-  account: ReactNode
   /**
    * The features of the screen, top to bottom on the activity bar, each with its side panel.
    * Without a feature, the screen has no side panel.
@@ -25,13 +23,11 @@ interface WorkbenchProps {
   tabIcons?: TabIcons
   /**
    * Components that render nothing and add to the frame what belongs to no page: commands with
-   * `useCommands`, such as the projects to open, and items of the status bar with
-   * `useStatusBarItem`, such as the run of the project. The frame registers its own, and a page
-   * registers what acts on it.
+   * `useCommands`, such as the projects to open, items of the status bar with `useStatusBarItem`,
+   * such as the run of the project, and items of the activity bar with `useActivityBarItem`, such
+   * as the account menu. The frame registers its own, and a page registers what acts on it.
    */
   contributions?: ReactNode
-  /** Dialogs that commands or pages open, such as the new project dialog. */
-  dialogs?: ReactNode
   children: ReactNode
 }
 
@@ -41,15 +37,14 @@ const noTabIcons: TabIcons = {}
 /**
  * The frame of every screen: top bar, activity bar, content, status bar, and the command
  * palette. The frame renders its bars itself; what they show from the features, the features
- * themselves included, is passed in as props from src/app/.
+ * themselves included, is passed in as props from src/app/, or registered with hooks by the
+ * components in `contributions`, such as the account menu with `useActivityBarItem`.
  */
 export function Workbench({
   crumb,
-  account,
   activities = noActivities,
   tabIcons = noTabIcons,
   contributions,
-  dialogs,
   children,
 }: WorkbenchProps) {
   const frameActivities = useMemo(() => ({ activities, tabIcons }), [activities, tabIcons])
@@ -61,14 +56,13 @@ export function Workbench({
       <div className="flex h-svh flex-col bg-sidebar text-foreground">
         <TopBar crumb={crumb} />
         <div className="flex min-h-0 flex-1">
-          <ActivityBar account={account} />
+          <ActivityBar />
           <div className="flex min-w-0 flex-1 flex-col pr-1.5">{children}</div>
         </div>
         <StatusBar />
         <CommandPalette />
         <FeatureCommands />
         {contributions}
-        {dialogs}
       </div>
     </ActivitiesContext>
   )

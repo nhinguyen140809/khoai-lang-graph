@@ -1,11 +1,12 @@
-import { delay } from 'msw'
-
 import { internalError } from './problem.utils'
 
 const mockScenarios = ['empty', 'error', 'loading'] as const
 
 /** What a mocked resource answers: its fixtures by default, or a scenario of the page URL. */
 export type MockScenario = 'default' | (typeof mockScenarios)[number]
+
+/** The scenarios that each handler answers itself. */
+export type HandlerScenario = Exclude<MockScenario, 'error' | 'loading'>
 
 function isMockScenario(value: string): value is (typeof mockScenarios)[number] {
   return (mockScenarios as readonly string[]).includes(value)
@@ -27,14 +28,24 @@ export function mockScenario(resource: string): MockScenario {
   return value !== null && isMockScenario(value) ? value : 'default'
 }
 
+/** An answer that never comes, so that the request never ends, as in a `loading` scenario. */
+export function neverAnswer(): Promise<never> {
+  return new Promise<never>(() => undefined)
+}
+
 /**
- * Answers the `error` and `loading` scenarios, which every handler answers the same way: HTTP 500,
- * or a request that never ends. Returns null for the scenarios each handler answers itself.
+ * Answers the `error` and `loading` scenarios of `resource`, which every handler answers the same
+ * way: it throws HTTP 500, which MSW sends as the response, or never settles, so that the request
+ * never ends. Returns the scenario that the handler answers itself.
  */
-export async function answerScenario(scenario: MockScenario): Promise<Response | null> {
-  if (scenario === 'error') return internalError()
-  if (scenario === 'loading') await delay('infinite')
-  return null
+export async function answerScenario(resource: string): Promise<HandlerScenario> {
+  const scenario = mockScenario(resource)
+  if (scenario === 'error') {
+    // eslint-disable-next-line @typescript-eslint/only-throw-error -- MSW answers a thrown Response
+    throw internalError()
+  }
+  if (scenario === 'loading') return neverAnswer()
+  return scenario
 }
 
 const mockRunStates = ['running', 'waiting', 'failed', 'done'] as const

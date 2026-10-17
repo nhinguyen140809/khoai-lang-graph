@@ -60,7 +60,7 @@ Marks used in the skeletons:
 | `[C]` | The feature on the activity bar whose side panel is shown |
 | `v` and `>` | An expanded and a collapsed node of a tree |
 | `[REQ-001 ...]` | The selected row of a list or a tree |
-| `x` after a tab name | The close button of the tab, shown on the active tab and on a tab under the pointer, and on every tab on a touch screen |
+| `x` after a tab name | The close button of the tab, shown on the active tab and on a tab under the pointer or with the focus, and on every tab on a touch screen |
 | `!` | Needs review: the item was made from an older version of an item it links to |
 | `*` | A step of a running workflow, printed as it starts |
 | `-` | A detail under a step, printed while the step runs: text, a tool call, an item produced |

@@ -2,7 +2,7 @@ import { useMutation } from '@tanstack/react-query'
 import { toast } from 'sonner'
 
 import { HttpStatus } from '@/shared/api/api-error.constants'
-import { ApiError } from '@/shared/api/api-error.utils'
+import { ApiError, errorMessageOf } from '@/shared/api/api-error.utils'
 import { loadPage } from '@/shared/api/auth-redirect.utils'
 import { routes } from '@/shared/config/routes'
 
@@ -21,7 +21,7 @@ export function useSignOut() {
     onError: (error) => {
       // Without a session the query client opens the sign-in page already.
       if (error instanceof ApiError && error.status === HttpStatus.Unauthorized) return
-      toast.error(error.message)
+      toast.error(errorMessageOf(error, {}))
     },
   })
 }

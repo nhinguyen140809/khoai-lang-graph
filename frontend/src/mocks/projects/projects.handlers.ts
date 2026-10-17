@@ -9,7 +9,7 @@ import { isUnfinishedRunStatus } from '@/shared/domain/run-status'
 import { allRuns } from '../runs/runs.handlers'
 import { mockRecord } from '../shared/mock-db.utils'
 import { createdId, IdPrefix, USER_ID } from '../shared/mock-ids.constants'
-import { answerScenario, mockScenario, pageParam } from '../shared/mock-scenario.utils'
+import { answerScenario, pageParam } from '../shared/mock-scenario.utils'
 import { paginate } from '../shared/pagination.utils'
 import { notFound, validationFailed } from '../shared/problem.utils'
 import { bulkProjectCount } from './extra-project-specs.constants'
@@ -85,9 +85,7 @@ function readNewProject(body: unknown): { project: NewProject } | { problems: Fi
 
 export const projectHandlers = [
   http.get('/api/v1/projects', async ({ request }) => {
-    const scenario = mockScenario('projects')
-    const answered = await answerScenario(scenario)
-    if (answered !== null) return answered
+    const scenario = await answerScenario('projects')
     if (scenario === 'empty') return HttpResponse.json({ items: [], next_cursor: null })
     const status = new URL(request.url).searchParams.get('status')
     const projects = allProjects()
@@ -97,9 +95,7 @@ export const projectHandlers = [
   }),
 
   http.get('/api/v1/projects/:projectId', async ({ params }) => {
-    const scenario = mockScenario('project')
-    const answered = await answerScenario(scenario)
-    if (answered !== null) return answered
+    const scenario = await answerScenario('project')
     const project = scenario === 'empty' ? undefined : findProject(String(params.projectId))
     return project === undefined ? notFound('The project') : HttpResponse.json(project)
   }),

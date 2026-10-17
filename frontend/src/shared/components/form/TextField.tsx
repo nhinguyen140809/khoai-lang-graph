@@ -13,15 +13,28 @@ type TextFieldProps<T extends FieldValues, N extends FieldPath<T>, TContext, TOu
 > &
   Omit<ComponentProps<typeof Input>, 'id' | 'name' | 'value' | 'onChange' | 'onBlur' | 'children'>
 
-/** A text field of a form: an input with its label, its description and its error. */
+/** A text field of a form: an input with its label, its description, its error and its action. */
 export function TextField<
   T extends FieldValues,
   N extends FieldPath<T>,
   TContext = unknown,
   TOutput = T,
->({ control, name, label, description, ...inputProps }: TextFieldProps<T, N, TContext, TOutput>) {
+>({
+  control,
+  name,
+  label,
+  description,
+  action,
+  ...inputProps
+}: TextFieldProps<T, N, TContext, TOutput>) {
   return (
-    <FormField control={control} name={name} label={label} description={description}>
+    <FormField
+      control={control}
+      name={name}
+      label={label}
+      description={description}
+      action={action}
+    >
       {(field, controlProps) => (
         <Input
           {...inputProps}

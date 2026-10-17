@@ -2,6 +2,7 @@ import { ChevronDownIcon } from 'lucide-react'
 import type { Route } from 'next'
 import { useRouter } from 'next/navigation'
 
+import { Button } from '@/shared/components/ui/button'
 import {
   DropdownMenu,
   DropdownMenuContent,
@@ -24,13 +25,14 @@ export function OpenTabsMenu() {
   return (
     <DropdownMenu>
       <DropdownMenuTrigger asChild>
-        <button
-          type="button"
+        <Button
+          variant="ghost"
+          size="icon"
           aria-label="All open tabs"
-          className="mx-1 flex size-8 shrink-0 items-center justify-center self-center rounded-sm text-muted-foreground outline-none hover:bg-muted hover:text-foreground focus-visible:ring-2 focus-visible:ring-ring/50"
+          className="mx-1 self-center text-muted-foreground"
         >
-          <ChevronDownIcon aria-hidden className="size-4" />
-        </button>
+          <ChevronDownIcon aria-hidden />
+        </Button>
       </DropdownMenuTrigger>
       <DropdownMenuContent align="end" className="w-64">
         {tabs.map((tab) => (

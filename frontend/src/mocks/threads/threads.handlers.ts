@@ -43,9 +43,7 @@ function withRunsOfThread(thread: Thread, runs: Run[]): Thread {
 
 export const threadHandlers = [
   http.get('/api/v1/threads', async ({ request }) => {
-    const scenario = mockScenario('threads')
-    const answered = await answerScenario(scenario)
-    if (answered !== null) return answered
+    const scenario = await answerScenario('threads')
     if (scenario === 'empty') return HttpResponse.json({ items: [], next_cursor: null })
     const projectId = new URL(request.url).searchParams.get('project_id')
     const threads = allThreads().filter(
@@ -55,9 +53,7 @@ export const threadHandlers = [
   }),
 
   http.get('/api/v1/projects/:projectId/threads', async ({ params, request }) => {
-    const scenario = mockScenario('threads')
-    const answered = await answerScenario(scenario)
-    if (answered !== null) return answered
+    const scenario = await answerScenario('threads')
     const projectId = String(params.projectId)
     if (findProject(projectId) === undefined) return notFound('The project')
     if (scenario === 'empty') return HttpResponse.json({ items: [], next_cursor: null })
@@ -68,9 +64,7 @@ export const threadHandlers = [
   }),
 
   http.get('/api/v1/threads/:threadId', async ({ params }) => {
-    const scenario = mockScenario('thread')
-    const answered = await answerScenario(scenario)
-    if (answered !== null) return answered
+    const scenario = await answerScenario('thread')
     const thread =
       scenario === 'empty'
         ? undefined

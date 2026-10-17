@@ -9,7 +9,7 @@ import {
 } from 'lucide-react'
 import type { Route } from 'next'
 import type { ReactNode } from 'react'
-import { beforeEach, describe, expect, it, vi } from 'vitest'
+import { afterEach, beforeEach, describe, expect, it, vi } from 'vitest'
 
 import { setPathname } from '@/test/next-mocks.utils'
 import { TestProviders } from '@/test/TestProviders'
@@ -18,6 +18,8 @@ import { PanelRegion } from '../../../panels/panel.constants'
 import { usePanelsStore } from '../../../panels/panels.store'
 import { ActivitiesContext } from '../../ActivitiesContext'
 import type { Activity } from '../../activity.types'
+import { useActivityBarStore } from '../../activity-bar.store'
+import { useActivityBarItem } from '../../hooks/useActivityBarItem'
 import { useSideFeatureStore } from '../../side-feature.store'
 import { ActivityBar } from '../ActivityBar'
 
@@ -61,6 +63,11 @@ beforeEach(() => {
   setPathname('/projects/p1/console/t1')
   usePanelsStore.setState(usePanelsStore.getInitialState())
   useSideFeatureStore.setState(useSideFeatureStore.getInitialState())
+  useActivityBarStore.setState(useActivityBarStore.getInitialState())
+})
+
+afterEach(() => {
+  vi.restoreAllMocks()
 })
 
 function withActivities(given: Activity[]) {
@@ -75,10 +82,34 @@ function withActivities(given: Activity[]) {
   }
 }
 
+const accountButton = <button type="button">Account</button>
+
+/** Registers a stand-in of the account menu, as the account feature registers its own. */
+function AccountItem() {
+  useActivityBarItem({ content: accountButton })
+  return null
+}
+
+function Broken(): never {
+  throw new Error('The item failed.')
+}
+
+/** Registers an item whose content fails to render. */
+function BrokenItem() {
+  useActivityBarItem({ content: brokenContent })
+  return null
+}
+
+const brokenContent = <Broken />
+
 function renderBar(given: Activity[] = activities) {
-  render(<ActivityBar account={<button type="button">Account</button>} />, {
-    wrapper: withActivities(given),
-  })
+  render(
+    <>
+      <AccountItem />
+      <ActivityBar />
+    </>,
+    { wrapper: withActivities(given) },
+  )
 }
 
 describe('ActivityBar', () => {
@@ -132,7 +163,23 @@ describe('ActivityBar', () => {
     expect(screen.getByRole('button', { name: 'Console, 1 review waiting' })).toBeInTheDocument()
   })
 
-  it('shows the account menu only, without features', () => {
+  it('leaves out an item that fails to render, and keeps the others', () => {
+    // React reports the error that the boundary catches.
+    vi.spyOn(console, 'error').mockImplementation(() => undefined)
+
+    render(
+      <>
+        <BrokenItem />
+        <AccountItem />
+        <ActivityBar />
+      </>,
+      { wrapper: withActivities([]) },
+    )
+
+    expect(screen.getAllByRole('button').map((button) => button.textContent)).toEqual(['Account'])
+  })
+
+  it('shows the items registered with it only, without features', () => {
     renderBar([])
 
     expect(screen.getAllByRole('button').map((button) => button.textContent)).toEqual(['Account'])

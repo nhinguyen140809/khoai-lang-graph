@@ -2,6 +2,7 @@ import { XIcon } from 'lucide-react'
 import type { Route } from 'next'
 import Link from 'next/link'
 
+import { Button } from '@/shared/components/ui/button'
 import {
   ContextMenu,
   ContextMenuContent,
@@ -57,14 +58,18 @@ export function TabItem({ tab }: TabItemProps) {
           >
             <TabLabel tab={tab} preview={preview} />
           </Link>
-          <button
-            type="button"
+          {/* On the active tab, under the pointer and with the focus, and on every tab of a touch
+              screen, which has no pointer to show it. It keeps its place while hidden, so that the
+              tab does not move when it shows. */}
+          <Button
+            variant="ghost"
+            size="icon-xs"
             aria-label={`Close ${tab.title}`}
             onClick={onClose}
-            className="mr-1 flex size-6 items-center justify-center rounded-sm text-muted-foreground outline-none hover:bg-muted hover:text-foreground focus-visible:ring-2 focus-visible:ring-ring/50"
+            className="mr-1 text-muted-foreground opacity-0 group-focus-within/tab:opacity-100 group-hover/tab:opacity-100 group-data-[active=true]/tab:opacity-100 pointer-coarse:opacity-100"
           >
             <XIcon aria-hidden className="size-3.5" />
-          </button>
+          </Button>
         </li>
       </ContextMenuTrigger>
       <ContextMenuContent>

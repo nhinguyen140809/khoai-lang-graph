@@ -48,6 +48,15 @@ const domainPatterns = [
   },
 ]
 
+// A topic of the domain is plain data and functions of the product, so that every layer can
+// import it: no React, no state, no call to the API, and no other shared code. How a value is
+// shown, such as the color of a status, belongs to a component.
+const domainPurePattern = {
+  regex: '^(?!\\.|@/shared/domain/)',
+  message:
+    'A topic of the domain imports only its own files and other topics of the domain (@/shared/domain/<topic>).',
+}
+
 const sharedCodePatterns = [
   {
     group: ['@/features', '@/features/**', '@/app/**', '@/providers/**'],
@@ -141,12 +150,28 @@ const featureFolderBlocks = Array.from({ length: FEATURE_FOLDER_DEPTH + 1 }, (_,
   },
 }))
 
-// A component of a feature calls the API through a hook of the feature, which holds what follows
-// the call. The blocks repeat the rules above, since a later block replaces the whole rule.
-const featureComponentPattern = {
-  regex: '\\.api$|/shared/api/api-fetch\\.utils$',
-  message: 'A component calls the API through a hook of its feature, which calls <feature>.api.ts.',
-}
+// A component of a feature reaches the API, the cache of the queries and the stores of the
+// feature through its hooks, which hold what follows a call. The blocks repeat the rules above,
+// since a later block replaces the whole rule.
+const featureComponentPatterns = [
+  {
+    regex: '\\.api$|/shared/api/api-fetch\\.utils$',
+    message:
+      'A component calls the API through a hook of its feature, which calls <feature>.api.ts.',
+  },
+  {
+    regex: '\\.store$',
+    message: 'A component reads and changes a store through a hook of its feature.',
+  },
+]
+
+const featureComponentPaths = [
+  ...wrappedLibraryImports,
+  {
+    name: '@tanstack/react-query',
+    message: 'A component reads the queries and the mutations through a hook of its feature.',
+  },
+]
 
 const featureComponentBlocks = Array.from({ length: FEATURE_FOLDER_DEPTH }, (_, depth) => ({
   files: [`src/features/*/components/${'*/'.repeat(depth)}*.{ts,tsx}`],
@@ -155,8 +180,8 @@ const featureComponentBlocks = Array.from({ length: FEATURE_FOLDER_DEPTH }, (_, 
     'no-restricted-imports': [
       'error',
       {
-        paths: wrappedLibraryImports,
-        patterns: [...featureFolderPatterns(depth + 1), featureComponentPattern],
+        paths: featureComponentPaths,
+        patterns: [...featureFolderPatterns(depth + 1), ...featureComponentPatterns],
       },
     ],
   },
@@ -262,6 +287,17 @@ export default defineConfig([
     },
   },
   {
+    // The topics of the domain stay pure (CONTRIBUTING: Import direction).
+    files: ['src/shared/domain/**/*.{ts,tsx}'],
+    ignores: ['**/__tests__/**'],
+    rules: {
+      'no-restricted-imports': [
+        'error',
+        { paths: wrappedLibraryImports, patterns: [...sharedCodePatterns, domainPurePattern] },
+      ],
+    },
+  },
+  {
     // The layers of the frame: components (README: Frame).
     files: ['src/shared/components/frame/**/*.tsx'],
     ignores: ['**/__tests__/**'],
@@ -353,11 +389,13 @@ export default defineConfig([
           // Hooks: useSomething.ts
           '**/hooks/*.ts': 'use+([A-Z])*([a-zA-Z0-9])',
           // Everything else: <subject>.<kind>.ts, subject in kebab-case
-          '**/!(hooks|__tests__)/*.ts':
+          'src/**/!(hooks|__tests__)/*.ts':
             '+([a-z0-9])*(-+([a-z0-9])).@(api|keys|queries|types|schema|store|reducer|config|constants|utils|handlers|fixtures|setup|spec)',
           // Unit tests: only in a __tests__ folder, named after the file under test plus .test,
           // and the cases of a data-driven test after the file under test plus .data
           '**/__tests__/*.tsx': '+([A-Z])*([a-zA-Z0-9]).test',
+          // Playwright: a spec, the cases of its tests beside it, and the helpers of a folder
+          'tests/**/*.ts': '+([a-z0-9])*(-+([a-z0-9])).@(spec|data|utils)',
           '**/hooks/__tests__/*.ts': 'use+([A-Z])*([a-zA-Z0-9]).@(test|data)',
           '**/!(hooks)/__tests__/*.ts':
             '@(+([A-Z])*([a-zA-Z0-9]).data|+([a-z0-9])*(-+([a-z0-9])).@(api|keys|queries|types|schema|store|reducer|config|constants|utils|handlers|fixtures|setup).@(test|data))',

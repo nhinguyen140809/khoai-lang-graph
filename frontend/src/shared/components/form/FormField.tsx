@@ -31,12 +31,18 @@ export interface FormFieldProps<
   name: N
   label: ReactNode
   description?: ReactNode
+  /**
+   * An action of the field, such as the link that resets a password, at the end of the line under
+   * the control. The error of the field takes the start of that line, so it never moves the action.
+   */
+  action?: ReactNode
   /** The control of the field, such as a textarea or a select. */
   children: (field: ControllerRenderProps<T, N>, control: FieldControlProps) => ReactNode
 }
 
 /**
- * One field of a form of react-hook-form: its label, its control, its description and its error.
+ * One field of a form of react-hook-form: its label, its control, its description, its error and
+ * its action.
  * The control gets the id of the label and `aria-invalid`, and the field `data-invalid`, from the
  * state of the field, so that no form repeats them.
  */
@@ -45,7 +51,14 @@ export function FormField<
   N extends FieldPath<T>,
   TContext = unknown,
   TOutput = T,
->({ control, name, label, description, children }: FormFieldProps<T, N, TContext, TOutput>) {
+>({
+  control,
+  name,
+  label,
+  description,
+  action,
+  children,
+}: FormFieldProps<T, N, TContext, TOutput>) {
   const id = useId()
   return (
     <Controller
@@ -56,7 +69,14 @@ export function FormField<
           <FieldLabel htmlFor={id}>{label}</FieldLabel>
           {children(field, { id, 'aria-invalid': fieldState.invalid })}
           {description !== undefined && <FieldDescription>{description}</FieldDescription>}
-          <FieldError errors={[fieldState.error]} />
+          {action === undefined ? (
+            <FieldError errors={[fieldState.error]} />
+          ) : (
+            <div className="flex items-baseline gap-4">
+              <FieldError errors={[fieldState.error]} className="min-w-0 flex-1" />
+              <div className="ml-auto shrink-0">{action}</div>
+            </div>
+          )}
         </Field>
       )}
     />

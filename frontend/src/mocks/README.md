@@ -45,21 +45,24 @@ A parameter in the page address changes what a group of endpoints answers. Param
 | `mock-runs`      | `empty` (no run, and no thread has one), `error`, `loading`             | `GET /threads/{thread_id}/runs`, `GET /runs/{run_id}`, `GET /runs/{run_id}/steps`                                 |
 | `mock-run-state` | `running`, `waiting` (default), `failed`, `done`                        | The state of run 3 of the mentor thread, and of everything derived from it: the thread, the counts of the project |
 | `mock-me`        | `empty` (404), `error`, `loading`                                       | `GET /me`                                                                                                         |
-| `mock-login`     | `error` (401, wrong email or password)                                  | `POST /auth/login`                                                                                                |
-| `mock-register`  | `error` (422, the email has an account)                                 | `POST /auth/register`                                                                                             |
+| `mock-login`     | `error` (401, wrong email or password), `loading`                       | `POST /auth/login`                                                                                                |
+| `mock-register`  | `error` (422, the email has an account), `loading`                      | `POST /auth/register`                                                                                             |
 | `mock-reset`     | none                                                                    | Forgets the records the mock server kept                                                                          |
 
 `error` answers HTTP 500 and `loading` never answers, unless the table says otherwise.
 
 ## Account
 
-| State                                     | Address                                            |
-| ----------------------------------------- | -------------------------------------------------- |
-| Sign-in page                              | http://localhost:3000/login                        |
-| Sign-in page that returns to the settings | http://localhost:3000/login?next=%2Fsettings       |
-| Wrong email or password                   | http://localhost:3000/login?mock-login=error       |
-| Create an account                         | http://localhost:3000/register                     |
-| The email has an account                  | http://localhost:3000/register?mock-register=error |
+| State                                                                       | Address                                                                          |
+| --------------------------------------------------------------------------- | -------------------------------------------------------------------------------- |
+| Sign-in page                                                                | http://localhost:3000/login                                                      |
+| Sign-in page that returns to the settings                                   | http://localhost:3000/login?next=%2Fsettings                                     |
+| Wrong email or password                                                     | http://localhost:3000/login?mock-login=error                                     |
+| Signing in                                                                  | Open http://localhost:3000/login?mock-login=loading and sign in                  |
+| Create an account                                                           | http://localhost:3000/register                                                   |
+| The email has an account                                                    | http://localhost:3000/register?mock-register=error                               |
+| Creating an account                                                         | Open http://localhost:3000/register?mock-register=loading and create the account |
+| The account is created, but signing in fails: the sign-in page with a toast | Open http://localhost:3000/register?mock-login=error and create the account      |
 
 ## Development pages
 

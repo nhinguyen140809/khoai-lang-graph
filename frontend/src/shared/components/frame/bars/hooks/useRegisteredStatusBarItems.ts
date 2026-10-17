@@ -10,7 +10,7 @@ interface PlacedItem {
 }
 
 /** The items registered with `useStatusBarItem`, by side, in their order. */
-export function useStatusBarItems(): Record<StatusBarSide, PlacedItem[]> {
+export function useRegisteredStatusBarItems(): Record<StatusBarSide, PlacedItem[]> {
   const items = useStatusBarStore((state) => state.items)
 
   return useMemo(() => {

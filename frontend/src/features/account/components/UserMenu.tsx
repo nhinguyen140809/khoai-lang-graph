@@ -9,8 +9,9 @@ import {
   UserIcon,
 } from 'lucide-react'
 import Link from 'next/link'
-import { type ComponentProps, useState } from 'react'
+import { type ComponentProps, useMemo, useState } from 'react'
 
+import { useActivityBarItem } from '@/shared/components/frame'
 import { Avatar, AvatarFallback, AvatarImage } from '@/shared/components/ui/avatar'
 import { Button } from '@/shared/components/ui/button'
 import { ConfirmDialog } from '@/shared/components/ui/confirm-dialog'
@@ -28,6 +29,15 @@ import type { Me } from '../account.types'
 import { initials } from '../account.utils'
 import { useMe } from '../hooks/useMe'
 import { useSignOut } from '../hooks/useSignOut'
+
+/** Shows the account menu at the bottom of the activity bar while it is mounted. */
+export function AccountMenuItem() {
+  const content = useMemo(() => <UserMenu />, [])
+
+  useActivityBarItem({ content })
+
+  return null
+}
 
 /**
  * The account of the signed-in user, for the bottom of the activity bar: the user, who opens the
@@ -98,7 +108,7 @@ function AccountItem() {
   if (me.isPending) return <DropdownMenuItem disabled>Loading your account...</DropdownMenuItem>
   if (me.isError) {
     return (
-      <DropdownMenuItem onSelect={() => void me.refetch()}>
+      <DropdownMenuItem variant="destructive" onSelect={() => void me.refetch()}>
         <RotateCcwIcon aria-hidden />
         Failed to load your account. Try again
       </DropdownMenuItem>
@@ -111,7 +121,7 @@ function AccountItem() {
         <span className="flex min-w-0 flex-1 flex-col">
           {/* The spaces between the lines keep the words apart in the name of the item. */}
           <span className="sr-only">Your profile:</span>{' '}
-          <span className="truncate font-medium">{me.data.display_name}</span>{' '}
+          <span className="truncate font-bold">{me.data.display_name}</span>{' '}
           <span className="truncate text-muted-foreground">{me.data.email}</span>
         </span>
         <ChevronRightIcon aria-hidden />
