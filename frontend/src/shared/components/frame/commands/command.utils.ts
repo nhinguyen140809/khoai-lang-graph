@@ -1,6 +1,8 @@
+import { defaultFilter } from 'cmdk'
+
 import type { PaletteCommand } from './command.types'
 
-interface GroupOfCommands {
+export interface GroupOfCommands {
   heading: string
   commands: PaletteCommand[]
 }
@@ -22,4 +24,25 @@ export function commandGroups(sources: Iterable<readonly PaletteCommand[]>): Gro
   return [...groups]
     .sort(([a], [b]) => a.localeCompare(b))
     .map(([heading, commands]) => ({ heading, commands }))
+}
+
+/** The text that the search of the palette matches: the group, the label, and the id, which keeps two equal labels apart. */
+export function commandValue({ group, label, id }: PaletteCommand): string {
+  return `${group} ${label} ${id}`
+}
+
+/**
+ * The groups while the palette searches: first the group of the command that matches best, with
+ * the score of the search of the palette, so that the best match shows at the top of the list.
+ * Groups that match as well keep their order, and without a search the order stays. The palette
+ * orders its groups itself: the search of cmdk orders the commands of a group, not the groups.
+ */
+export function groupsBySearch(groups: GroupOfCommands[], search: string): GroupOfCommands[] {
+  if (search.trim() === '') return groups
+  const best = ({ commands }: GroupOfCommands) =>
+    Math.max(0, ...commands.map((command) => defaultFilter(commandValue(command), search)))
+  return groups
+    .map((group) => ({ group, score: best(group) }))
+    .toSorted((a, b) => b.score - a.score)
+    .map(({ group }) => group)
 }

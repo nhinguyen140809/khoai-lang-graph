@@ -1,5 +1,6 @@
-import { fireEvent, render, screen, within } from '@testing-library/react'
+import { fireEvent, render, screen, waitFor, within } from '@testing-library/react'
 import userEvent from '@testing-library/user-event'
+import { useEffect, useRef, useState } from 'react'
 import { beforeEach, describe, expect, it, vi } from 'vitest'
 
 import type { PaletteCommand } from '../../command.types'
@@ -11,6 +12,31 @@ import { searchCases } from './CommandPalette.data'
 function Commands({ commands }: { commands: PaletteCommand[] }) {
   useCommands(commands)
   return null
+}
+
+/** A page with a command that puts the focus in its field once the command has run. */
+function FocusPage() {
+  const target = useRef<HTMLInputElement>(null)
+  const [focusTarget, setFocusTarget] = useState(false)
+  useEffect(() => {
+    if (focusTarget) target.current?.focus()
+  }, [focusTarget])
+  useCommands([
+    {
+      id: 'view.go',
+      label: 'Go',
+      group: 'View',
+      run: () => {
+        setFocusTarget(true)
+      },
+    },
+  ])
+  return (
+    <>
+      <button type="button">Before</button>
+      <input ref={target} aria-label="Target" />
+    </>
+  )
 }
 
 beforeEach(() => {
@@ -99,6 +125,28 @@ describe('CommandPalette', () => {
     )
   })
 
+  it('leaves the focus where the command chosen put it', async () => {
+    render(
+      <>
+        <CommandPalette />
+        <FocusPage />
+      </>,
+    )
+    screen.getByRole('button', { name: 'Before' }).focus()
+    fireEvent.keyDown(document, { key: 'k', ctrlKey: true })
+
+    await userEvent.click(await screen.findByRole('option', { name: 'Go' }))
+
+    await waitFor(() => {
+      expect(screen.queryByRole('dialog')).not.toBeInTheDocument()
+    })
+    // A dialog that closes moves the focus, if it does, in a task after it is gone.
+    await new Promise((resolve) => {
+      setTimeout(resolve, 0)
+    })
+    expect(screen.getByRole('textbox', { name: 'Target' })).toHaveFocus()
+  })
+
   it.each(searchCases)(
     'filters the commands by their label and their group for $search',
     async ({ search, shown, hidden }) => {
@@ -126,4 +174,32 @@ describe('CommandPalette', () => {
       }
     },
   )
+
+  it('lists first, and selects, the best match of a search, whatever its group', async () => {
+    useCommandsStore.setState({ open: true })
+    render(
+      <>
+        <CommandPalette />
+        <Commands
+          commands={[
+            {
+              id: 'projects.open',
+              label: 'Open Student club manager',
+              group: 'Projects',
+              run: vi.fn(),
+            },
+            { id: 'run.stop', label: 'Stop run', group: 'Run', run: vi.fn() },
+          ]}
+        />
+      </>,
+    )
+
+    await userEvent.type(screen.getByRole('combobox'), 'stop')
+
+    const [first] = screen.getAllByRole('option')
+    expect(first).toHaveAccessibleName('Stop run')
+    await waitFor(() => {
+      expect(first).toHaveAttribute('aria-selected', 'true')
+    })
+  })
 })
