@@ -52,9 +52,7 @@ export function SettingsPage() {
       <Card>
         <CardHeader>
           <CardTitle>Models</CardTitle>
-          <CardDescription>
-            Per-role model selection arrives with GET /api/v1/models (docs/PLANNING.md section 5).
-          </CardDescription>
+          <CardDescription>The model that each agent uses cannot be chosen yet.</CardDescription>
         </CardHeader>
       </Card>
     </div>
