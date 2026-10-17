@@ -86,13 +86,16 @@ function PaletteSearch({ groups, onChosen }: PaletteSearchProps) {
         {groupsBySearch(groups, search).map(({ heading, commands }) => (
           <CommandGroup key={heading} heading={heading}>
             {commands.map((command) => {
-              const { id, label, icon, hotkey, run } = command
+              const { id, label, icon, variant = 'default', hotkey, run } = command
               return (
                 <CommandItem
                   key={id}
                   value={commandValue(command)}
                   disabled={run === undefined}
-                  className="min-h-9 text-sm [&_svg:not([class*='size-'])]:size-4"
+                  data-variant={variant}
+                  // A destructive command keeps the color of an error when it is selected, as a
+                  // destructive item of a menu does.
+                  className="min-h-9 text-sm data-[variant=destructive]:text-destructive data-[variant=destructive]:data-selected:bg-destructive/10 data-[variant=destructive]:data-selected:text-destructive dark:data-[variant=destructive]:data-selected:bg-destructive/20 [&_svg:not([class*='size-'])]:size-4"
                   onSelect={() => {
                     onChosen()
                     run?.()
