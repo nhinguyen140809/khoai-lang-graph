@@ -7,13 +7,13 @@ import { extraRuns, extraRunSteps } from '../projects/extra-projects.fixtures'
 import { answerScenario, mockRunState, mockScenario } from '../shared/mock-scenario.utils'
 import { paginate } from '../shared/pagination.utils'
 import { invalidState, notFound } from '../shared/problem.utils'
-import { changeRun, withRunChanges } from './mock-runs.store'
+import { changeRun, createdRuns, withRunChanges } from './mock-runs.store'
 import { mockRuns, mockRunSteps } from './runs.fixtures'
 
 // With `?mock-runs=empty`, no run exists.
 export function allRuns(): Run[] {
   if (mockScenario('runs') === 'empty') return []
-  return withRunChanges([...mockRuns(mockRunState()), ...extraRuns()])
+  return withRunChanges([...createdRuns.get(), ...mockRuns(mockRunState()), ...extraRuns()])
 }
 
 export function findMockRun(runId: string): Run | undefined {
