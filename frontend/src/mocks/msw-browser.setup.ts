@@ -2,6 +2,7 @@ import { setupWorker } from 'msw/browser'
 
 import { authHandlers } from './account/auth.handlers'
 import { meHandlers } from './account/me.handlers'
+import { messageHandlers } from './messages/messages.handlers'
 import { projectHandlers } from './projects/projects.handlers'
 import { streamHandlers } from './runs/run-stream.handlers'
 import { runHandlers } from './runs/runs.handlers'
@@ -18,6 +19,7 @@ export const worker = setupWorker(
   ...meHandlers,
   ...projectHandlers,
   ...threadHandlers,
+  ...messageHandlers,
   ...runHandlers,
   ...streamHandlers,
 )

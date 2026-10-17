@@ -16,5 +16,8 @@ export default defineConfig({
     setupFiles: ['./src/test/vitest.setup.ts'],
     include: ['src/**/*.test.{ts,tsx}'],
     css: true,
+    // Dates show in the time zone of the machine; the tests fix it, so that they give the same
+    // result on every machine.
+    env: { TZ: 'UTC' },
   },
 })

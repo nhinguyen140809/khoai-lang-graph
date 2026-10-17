@@ -20,7 +20,20 @@ async function showFieldErrors(page: Page, submit: string) {
   await expect(page.locator('[aria-invalid="true"]').first()).toBeVisible()
 }
 
-/** The states of the sign-in and registration pages, and the steps to each. */
+// The account menu is the button of the user on the activity bar, named "Account" until the user loads.
+async function openAccountMenu(page: Page, address: string, button: string) {
+  await page.goto(address)
+  await page.getByRole('button', { name: button }).click()
+  await expect(page.getByRole('menu')).toBeVisible()
+}
+
+async function askToSignOut(page: Page) {
+  await openAccountMenu(page, '/projects', 'Linh Pham')
+  await page.getByRole('menuitem', { name: 'Sign out' }).click()
+  await expect(page.getByRole('alertdialog')).toBeVisible()
+}
+
+/** The states of the sign-in and registration pages and of the account menu, and the steps to each. */
 export const accountShots: Shot[] = [
   { name: 'Sign-in page', steps: visit('/login') },
   {
@@ -76,5 +89,33 @@ export const accountShots: Shot[] = [
       await expect(page).toHaveURL(/\/login/)
     },
     ready: (page) => page.getByText('The account is created. Sign in with it.'),
+  },
+  {
+    name: 'Account menu',
+    steps: async (page) => {
+      await openAccountMenu(page, '/projects', 'Linh Pham')
+    },
+  },
+  {
+    name: 'Account menu loading',
+    steps: async (page) => {
+      await openAccountMenu(page, '/projects?mock-me=loading', 'Account')
+    },
+  },
+  {
+    name: 'Account menu error',
+    steps: async (page) => {
+      await openAccountMenu(page, '/projects?mock-me=error', 'Account')
+    },
+    ready: (page) => page.getByRole('menuitem', { name: /Failed to load your account/ }),
+  },
+  { name: 'Sign out?', steps: askToSignOut },
+  {
+    name: 'Signed out, back at the sign-in page',
+    steps: async (page) => {
+      await askToSignOut(page)
+      await page.getByRole('alertdialog').getByRole('button', { name: 'Sign out' }).click()
+      await expect(page).toHaveURL(/\/login/)
+    },
   },
 ]

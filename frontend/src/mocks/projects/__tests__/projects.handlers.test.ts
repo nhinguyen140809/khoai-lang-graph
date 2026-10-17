@@ -6,9 +6,15 @@ import { apiUrl } from '@/shared/api/api-url.utils'
 import { PROJECT_IDS } from '../../shared/mock-ids.constants'
 import {
   createProjectCases,
+  createProjectScenarioCases,
   invalidProjectCases,
+  invalidProjectChangeCases,
+  pendingProjectCases,
   projectErrorCases,
+  projectFilterCases,
   projectListCases,
+  projectStatusChangeCases,
+  rollupRunStatusCases,
   unfinishedRunCountCases,
 } from './projects.handlers.data'
 
@@ -36,8 +42,17 @@ async function call(path: string, init?: RequestInit) {
 }
 
 // The body goes as it is, so a case can also send text that is not JSON.
+function send(method: string, path: string, body: string) {
+  return call(path, { method, headers: { 'Content-Type': 'application/json' }, body })
+}
+
 function post(path: string, body: string) {
-  return call(path, { method: 'POST', headers: { 'Content-Type': 'application/json' }, body })
+  return send('POST', path, body)
+}
+
+async function listedIds(query: string) {
+  const { body } = (await call(`/api/v1/projects?${query}&limit=200`)) as Answer<Page<Project>>
+  return body.items.map(({ id }) => id)
 }
 
 afterEach(() => {
@@ -62,6 +77,15 @@ describe('GET /projects', () => {
     expect(times).toEqual(times.toSorted().reverse())
   })
 
+  it.each(projectFilterCases)('filters by $name', async ({ query, keeps }) => {
+    const all = (await call('/api/v1/projects?limit=200')) as Answer<Page<Project>>
+    const { body } = (await call(`/api/v1/projects${query}&limit=200`)) as Answer<Page<Project>>
+
+    expect(body.items.length).toBeGreaterThan(0)
+    expect(body.items.length).toBeLessThan(all.body.items.length)
+    expect(body.items.every(keeps)).toBe(true)
+  })
+
   it('filters by status', async () => {
     const { body } = (await call('/api/v1/projects?status=archived')) as Answer<Page<Project>>
 
@@ -78,6 +102,19 @@ describe('GET /projects', () => {
       const { body } = (await call('/api/v1/projects')) as Answer<Page<Project>>
 
       expect(body.items.find(({ id }) => id === projectId)?.unfinished_run_counts).toEqual(counts)
+    },
+  )
+})
+
+describe('the rollup run status of a project', () => {
+  it.each(rollupRunStatusCases)(
+    'is in GET /projects for $name',
+    async ({ address, projectId, status }) => {
+      openPage(address)
+
+      const { body } = (await call('/api/v1/projects')) as Answer<Page<Project>>
+
+      expect(body.items.find(({ id }) => id === projectId)?.rollup_run_status).toBe(status)
     },
   )
 })
@@ -124,15 +161,82 @@ describe('POST /projects', () => {
   it.each(invalidProjectCases)('answers 422 for $name', async ({ body, errors }) => {
     expect(await post('/api/v1/projects', body)).toMatchObject({ status: 422, body: { errors } })
   })
+
+  it.each(createProjectScenarioCases)('answers $name', async ({ address, answer }) => {
+    openPage(address)
+
+    expect(await post('/api/v1/projects', '{"name": "Clinic booking"}')).toMatchObject(answer)
+  })
+})
+
+describe('PATCH /projects/{project_id}', () => {
+  it.each(projectStatusChangeCases)('$name', async ({ projectId, status }) => {
+    const path = `/api/v1/projects/${projectId}`
+
+    expect(await send('PATCH', path, JSON.stringify({ status }))).toMatchObject({
+      status: 200,
+      body: { id: projectId, status },
+    })
+    expect(await listedIds(`status=${status}`)).toContain(projectId)
+  })
+
+  it('renames a project, without the spaces around its name', async () => {
+    const path = `/api/v1/projects/${PROJECT_IDS.mentor}`
+
+    expect(await send('PATCH', path, '{"name": " Mentor finder "}')).toMatchObject({
+      status: 200,
+      body: { name: 'Mentor finder', status: 'active' },
+    })
+    expect(await call(path)).toMatchObject({ body: { name: 'Mentor finder' } })
+  })
+
+  it.each(invalidProjectChangeCases)('answers 422 for $name', async ({ body, errors }) => {
+    const path = `/api/v1/projects/${PROJECT_IDS.mentor}`
+
+    expect(await send('PATCH', path, body)).toMatchObject({ status: 422, body: { errors } })
+  })
+})
+
+describe('DELETE /projects/{project_id}', () => {
+  it('removes a project whose runs ended from the lists and from its address', async () => {
+    const path = `/api/v1/projects/${PROJECT_IDS.campus}`
+
+    expect((await call(path, { method: 'DELETE' })).status).toBe(204)
+    expect((await call(path)).status).toBe(404)
+    expect(await listedIds('status=active')).not.toContain(PROJECT_IDS.campus)
+  })
+
+  it('keeps a project with a run that is not finished', async () => {
+    const path = `/api/v1/projects/${PROJECT_IDS.mentor}`
+
+    expect(await call(path, { method: 'DELETE' })).toMatchObject({
+      status: 409,
+      body: { code: 'invalid_state' },
+    })
+    expect((await call(path)).status).toBe(200)
+  })
+})
+
+describe('scenarios that never answer', () => {
+  it.each(pendingProjectCases)('never answers $request', async ({ address, send }) => {
+    openPage(address)
+    const body = send.method === 'POST' ? '{}' : null
+    const first = await Promise.race([
+      call(send.path, { method: send.method, body }).then(() => 'answered'),
+      new Promise((resolve) => setTimeout(resolve, 100, 'pending')),
+    ])
+
+    expect(first).toBe('pending')
+  })
 })
 
 describe('errors', () => {
   it.each(projectErrorCases)(
     'answers $status to $request',
-    async ({ address, path, status, code }) => {
+    async ({ address, method, path, status, code }) => {
       openPage(address)
 
-      expect(await call(path)).toMatchObject({ status, body: { code } })
+      expect(await call(path, { method })).toMatchObject({ status, body: { code } })
     },
   )
 })

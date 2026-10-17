@@ -29,6 +29,8 @@ interface ConfirmDialogProps {
    */
   open?: boolean
   onOpenChange?: (open: boolean) => void
+  /** Runs once the dialog has closed, after its animation. */
+  onClosed?: (() => void) | undefined
   /** A question that names the action, such as "Sign out?". */
   title: React.ReactNode
   /** What the action does, and whether it can be undone. */
@@ -61,6 +63,7 @@ function ConfirmDialog({
   trigger,
   open,
   onOpenChange,
+  onClosed,
   title,
   description,
   icon,
@@ -110,6 +113,7 @@ function ConfirmDialog({
       {trigger !== undefined && <AlertDialogTrigger asChild>{trigger}</AlertDialogTrigger>}
       <AlertDialogContent
         size={size}
+        onCloseAutoFocus={() => onClosed?.()}
         // Without a description, the dialog is named by its title alone.
         {...(description === undefined && { 'aria-describedby': undefined })}
       >

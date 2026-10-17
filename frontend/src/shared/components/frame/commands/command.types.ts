@@ -11,6 +11,11 @@ export interface PaletteCommand {
   group: string
   /** An icon element, such as `<SunIcon />`. */
   icon?: ReactNode
+  /**
+   * `destructive` shows the command in the color of an error, for a command about a failure, such
+   * as loading a list again after it failed to load.
+   */
+  variant?: 'default' | 'destructive'
   /** Runs the command while it is registered; the palette shows it next to the label. */
   hotkey?: Hotkey
   /**

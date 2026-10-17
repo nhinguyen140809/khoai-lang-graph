@@ -5,8 +5,10 @@ import { LoadingState } from '../LoadingState'
 import { loadingCases } from './LoadingState.data'
 
 describe('LoadingState', () => {
-  it.each(loadingCases)('shows $name', ({ size, rows, skeletons }) => {
-    const { container } = render(<LoadingState label="Loading things" size={size} rows={rows} />)
+  it.each(loadingCases)('shows $name', ({ size, rows, columns, skeletons }) => {
+    const { container } = render(
+      <LoadingState label="Loading things" size={size} rows={rows} columns={columns} />,
+    )
 
     expect(screen.getByRole('status', { name: 'Loading things' })).toHaveAttribute(
       'aria-busy',

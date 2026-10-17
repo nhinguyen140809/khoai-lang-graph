@@ -2,8 +2,11 @@ import type { Run } from '@/features/threads'
 
 import { mockRecord } from '../shared/mock-db.utils'
 
-// What the mock server changes about runs while the app runs: the runs that were stopped. The
-// changes are kept apart from the fixtures, which never change.
+// What the mock server changes about runs while the app runs: the runs that messages started, and
+// the runs that were stopped. The changes are kept apart from the fixtures, which never change.
+
+/** The runs that the messages sent with POST /threads/{thread_id}/messages started. */
+export const createdRuns = mockRecord<Run[]>('created-runs', () => [])
 
 export const runChanges = mockRecord<Record<string, Partial<Run>>>('run-changes', () => ({}))
 

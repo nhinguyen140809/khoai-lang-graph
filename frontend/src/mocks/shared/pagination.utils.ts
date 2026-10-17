@@ -15,3 +15,6 @@ export function paginate<T>(
   const end = offset + limit
   return { items: items.slice(offset, end), next_cursor: end < items.length ? String(end) : null }
 }
+
+/** The list envelope of the API without items. */
+export const emptyPage = { items: [], next_cursor: null }

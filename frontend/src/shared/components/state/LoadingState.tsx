@@ -12,12 +12,44 @@ interface LoadingStateProps {
   label: string
   /** Number of placeholder rows; match the expected content roughly. */
   rows?: number
+  /**
+   * Cells of each row, for content that shows as a table: the rows line up as its rows do, at the
+   * top of the container, in either size.
+   */
+  columns?: number | undefined
   size?: StateSize
   className?: string
 }
 
 /** Placeholder shown while a query has no data yet. */
-export function LoadingState({ label, rows = 3, size = 'page', className }: LoadingStateProps) {
+export function LoadingState({
+  label,
+  rows = 3,
+  columns,
+  size = 'page',
+  className,
+}: LoadingStateProps) {
+  if (columns !== undefined) {
+    return (
+      <div
+        role="status"
+        aria-busy="true"
+        aria-label={label}
+        className={cn('flex w-full flex-col', className)}
+      >
+        {Array.from({ length: rows }, (_, row) => (
+          <div key={row} className="flex items-center gap-4 border-b p-2">
+            {Array.from({ length: columns }, (_, column) => (
+              <div key={column} className="flex-1">
+                <Skeleton className={cn('h-4', ROW_WIDTHS[(row + column) % ROW_WIDTHS.length])} />
+              </div>
+            ))}
+          </div>
+        ))}
+      </div>
+    )
+  }
+
   const skeletons = Array.from({ length: rows }, (_, index) => (
     <Skeleton
       key={index}

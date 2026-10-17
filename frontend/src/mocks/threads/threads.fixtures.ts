@@ -21,6 +21,9 @@ function thread(fields: Partial<Thread> & Pick<Thread, 'id' | 'project_id'>): Th
   }
 }
 
+/** A thread of the mock data with the usual fields; `fields` change what differs. */
+export const buildMockThread = thread
+
 const mentorMainStages = {
   running: {
     current_stage: 'analysis',

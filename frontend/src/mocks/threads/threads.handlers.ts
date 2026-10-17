@@ -6,14 +6,20 @@ import { isUnfinishedRunStatus, type UnfinishedRunStatus } from '@/shared/domain
 import { extraThreads } from '../projects/extra-projects.fixtures'
 import { findProject } from '../projects/projects.handlers'
 import { allRuns } from '../runs/runs.handlers'
+import { mockRecord } from '../shared/mock-db.utils'
+import { createdId, IdPrefix } from '../shared/mock-ids.constants'
 import { answerScenario, mockRunState, mockScenario } from '../shared/mock-scenario.utils'
 import { paginate } from '../shared/pagination.utils'
 import { notFound } from '../shared/problem.utils'
-import { mockThreads, withoutRuns } from './threads.fixtures'
+import { readBodyFields } from '../shared/request-body.utils'
+import { buildMockThread, mockThreads, withoutRuns } from './threads.fixtures'
+
+// Threads created with POST /projects/{project_id}/threads.
+const createdThreads = mockRecord<Thread[]>('created-threads', () => [])
 
 // With `?mock-runs=empty`, no thread has a run yet.
 export function allThreads(): Thread[] {
-  const threads = [...mockThreads(mockRunState()), ...extraThreads()]
+  const threads = [...createdThreads.get(), ...mockThreads(mockRunState()), ...extraThreads()]
   if (mockScenario('runs') === 'empty') return withoutRuns(threads)
   const runs = allRuns()
   return threads.map((thread) => withRunsOfThread(thread, runs))
@@ -61,6 +67,27 @@ export const threadHandlers = [
       .filter((thread) => thread.project_id === projectId)
       .toSorted((a, b) => b.last_message_at.localeCompare(a.last_message_at))
     return HttpResponse.json(paginate(threads, request))
+  }),
+
+  http.post('/api/v1/projects/:projectId/threads', async ({ params, request }) => {
+    const projectId = String(params.projectId)
+    if (findProject(projectId) === undefined) return notFound('The project')
+    const { title } = await readBodyFields(request)
+    const now = new Date().toISOString()
+    const thread = buildMockThread({
+      id: createdId(IdPrefix.Thread, createdThreads.get().length + 1),
+      project_id: projectId,
+      title: typeof title === 'string' && title.trim() !== '' ? title.trim() : null,
+      current_stage: null,
+      last_message_at: now,
+      created_at: now,
+      updated_at: now,
+    })
+    createdThreads.set([thread, ...createdThreads.get()])
+    return HttpResponse.json(thread, {
+      status: 201,
+      headers: { Location: `/api/v1/threads/${thread.id}` },
+    })
   }),
 
   http.get('/api/v1/threads/:threadId', async ({ params }) => {

@@ -36,7 +36,8 @@ const runConfig: Run['run_config'] = {
   parameters: { target_personas_num: 3, max_personas: 3, max_turns: 12, max_iterations: 2 },
 }
 
-const noUsage: Run['usage'] = {
+/** The usage of a run that has not called a model yet. */
+export const noUsage: Run['usage'] = {
   input_tokens: 0,
   output_tokens: 0,
   cache_read_tokens: 0,

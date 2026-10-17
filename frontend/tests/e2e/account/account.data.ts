@@ -19,6 +19,13 @@ export const sentFormCases: {
     opens: /\/settings$/,
   },
   {
+    name: 'signs in and opens the project list without a page asked for',
+    address: '/login',
+    fields: linh,
+    submit: 'Sign in',
+    opens: /\/projects$/,
+  },
+  {
     name: 'creates an account, signs in with it, and returns to the page asked for',
     address: '/register?next=%2Fsettings',
     fields: { Name: 'An Tran', Email: 'an@example.com', Password: 'secret' },
