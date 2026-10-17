@@ -5,8 +5,13 @@ import { z, ZodError } from 'zod'
 import { server } from '@/mocks/msw-server.setup'
 
 import { ApiError } from '../api-error.utils'
-import { apiCommand, apiRequest } from '../api-fetch.utils'
-import { commandMethodCases, failedRequestCases, sentRequestCases } from './api-fetch.utils.data'
+import { apiCommand, apiRequest, fetchPage } from '../api-fetch.utils'
+import {
+  commandMethodCases,
+  failedRequestCases,
+  pageCases,
+  sentRequestCases,
+} from './api-fetch.utils.data'
 
 const itemSchema = z.object({ id: z.string() })
 
@@ -86,5 +91,30 @@ describe('apiCommand', () => {
     await expect(
       apiCommand('/api/v1/things/1/archive', { action: 'archive the thing' }),
     ).rejects.toMatchObject({ name: 'ApiError', status: 409, code: 'invalid_state' })
+  })
+})
+
+describe('fetchPage', () => {
+  it.each(pageCases)('reads $name', async ({ path, limit, cursor, query }) => {
+    const queries: string[] = []
+    server.use(
+      http.get('/api/v1/things', ({ request }) => {
+        queries.push(new URL(request.url).search)
+        return HttpResponse.json({ items: [{ id: 'a', extra: true }], next_cursor: 'next' })
+      }),
+    )
+
+    await expect(
+      fetchPage(path, itemSchema, { limit, cursor, action: 'load things' }),
+    ).resolves.toEqual({ items: [{ id: 'a' }], next_cursor: 'next' })
+    expect(queries).toEqual([query])
+  })
+
+  it('turns a failed page into an ApiError', async () => {
+    server.use(http.get('/api/v1/things', () => new HttpResponse(null, { status: 500 })))
+
+    await expect(
+      fetchPage('/api/v1/things', itemSchema, { limit: 10, cursor: null, action: 'load things' }),
+    ).rejects.toMatchObject({ name: 'ApiError', message: 'Failed to load things (HTTP 500)' })
   })
 })

@@ -96,3 +96,19 @@ export const errorMessageCases = [
     message: 'Network down',
   },
 ]
+
+/** An error, and whether it says that what the request asked for does not exist. */
+export const notFoundCases = [
+  {
+    name: 'an ApiError with status 404',
+    error: new ApiError('x', 404, 'not_found', []),
+    notFound: true,
+  },
+  {
+    name: 'an ApiError with another status',
+    error: new ApiError('x', 500, null, []),
+    notFound: false,
+  },
+  { name: 'an error that is not of the API', error: new Error('x'), notFound: false },
+  { name: 'a value that is not an error', error: 'not found', notFound: false },
+]
