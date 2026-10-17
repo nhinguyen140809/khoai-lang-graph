@@ -797,7 +797,7 @@ These two are outside `/api/v1`.
 | Client | The browser `EventSource`; the session cookie is sent automatically |
 | Response headers | `Content-Type: text/event-stream`, `Cache-Control: no-cache`, `X-Accel-Buffering: no` |
 | Event id | The `sequence` of the event in the run event log, increasing by one |
-| Reconnect | The client sends `Last-Event-ID`; the server first replays every stored event with a higher sequence, then continues live. `?after=` does the same for a client that cannot set the header |
+| Reconnect | The client sends `Last-Event-ID`; the server first replays every stored event with a higher sequence, then continues live. `?after=` does the same for a client that cannot set the header. When a request has both, `Last-Event-ID` wins: `EventSource` reconnects by itself to the address it opened, `?after=` included, with the last event it read in the header, so `?after=` would send again the events it has |
 | First connect | Without `Last-Event-ID`, the stream starts from the first event of the run |
 | Heartbeat | A comment line `: ping` every 15 seconds when no event was sent |
 | End | After the `done` event the server closes the stream. A run that already finished replays its events and closes |
