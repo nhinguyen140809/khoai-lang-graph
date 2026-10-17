@@ -3,10 +3,9 @@
 import { zodResolver } from '@hookform/resolvers/zod'
 import { useForm } from 'react-hook-form'
 
-import { TextField } from '@/shared/components/form'
-import { Button } from '@/shared/components/ui/button'
-import { FieldGroup } from '@/shared/components/ui/field'
-import { Spinner } from '@/shared/components/ui/spinner'
+import { Form, TextField } from '@/shared/components/form'
+import { FieldError, FieldGroup } from '@/shared/components/ui/field'
+import { PendingButton } from '@/shared/components/ui/pending-button'
 import { routes } from '@/shared/config/routes'
 
 import { type AccountForm, accountFormSchema } from '../account.schema'
@@ -39,12 +38,7 @@ export function RegisterPage({ next }: RegisterPageProps) {
         href: routes.signIn(next),
       }}
     >
-      <form
-        noValidate
-        onSubmit={(event) => {
-          void onSubmit(event)
-        }}
-      >
+      <Form onSubmit={onSubmit}>
         <FieldGroup>
           <TextField control={form.control} name="display_name" label="Name" autoComplete="name" />
           <TextField
@@ -61,17 +55,17 @@ export function RegisterPage({ next }: RegisterPageProps) {
             type="password"
             autoComplete="new-password"
           />
-          {createAccount.formError !== null && (
-            <p role="alert" className="text-sm text-destructive">
-              {createAccount.formError}
-            </p>
-          )}
-          <Button type="submit" disabled={createAccount.isPending} className="w-full">
-            {createAccount.isPending && <Spinner aria-label="Creating the account" />}
+          <FieldError>{createAccount.formError}</FieldError>
+          <PendingButton
+            type="submit"
+            pending={createAccount.isPending}
+            pendingLabel="Creating the account"
+            className="w-full"
+          >
             Create account
-          </Button>
+          </PendingButton>
         </FieldGroup>
-      </form>
+      </Form>
     </AuthScreen>
   )
 }

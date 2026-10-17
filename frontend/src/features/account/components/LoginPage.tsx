@@ -3,10 +3,10 @@
 import { zodResolver } from '@hookform/resolvers/zod'
 import { useForm } from 'react-hook-form'
 
-import { TextField } from '@/shared/components/form'
+import { Form, TextField } from '@/shared/components/form'
 import { Button } from '@/shared/components/ui/button'
-import { FieldGroup } from '@/shared/components/ui/field'
-import { Spinner } from '@/shared/components/ui/spinner'
+import { FieldError, FieldGroup } from '@/shared/components/ui/field'
+import { PendingButton } from '@/shared/components/ui/pending-button'
 import { Tooltip, TooltipContent, TooltipTrigger } from '@/shared/components/ui/tooltip'
 import { routes } from '@/shared/config/routes'
 
@@ -40,12 +40,7 @@ export function LoginPage({ next }: LoginPageProps) {
         href: routes.register(next),
       }}
     >
-      <form
-        noValidate
-        onSubmit={(event) => {
-          void onSubmit(event)
-        }}
-      >
+      <Form onSubmit={onSubmit}>
         <FieldGroup>
           <TextField
             control={form.control}
@@ -62,17 +57,17 @@ export function LoginPage({ next }: LoginPageProps) {
             autoComplete="current-password"
             action={<ForgotPassword />}
           />
-          {signIn.errorMessage !== null && (
-            <p role="alert" className="text-sm text-destructive">
-              {signIn.errorMessage}
-            </p>
-          )}
-          <Button type="submit" disabled={signIn.isPending} className="w-full">
-            {signIn.isPending && <Spinner aria-label="Signing in" />}
+          <FieldError>{signIn.errorMessage}</FieldError>
+          <PendingButton
+            type="submit"
+            pending={signIn.isPending}
+            pendingLabel="Signing in"
+            className="w-full"
+          >
             Sign in
-          </Button>
+          </PendingButton>
         </FieldGroup>
-      </form>
+      </Form>
     </AuthScreen>
   )
 }
