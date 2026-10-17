@@ -17,12 +17,16 @@ function project(fields: Partial<Project> & Pick<Project, 'id' | 'name'>): Proje
     item_counts: {},
     // Derived from the runs by the handlers, which follow the scenarios.
     unfinished_run_counts: { queued: 0, running: 0, interrupted: 0 },
+    rollup_run_status: null,
     last_activity_at: '2026-10-01T09:00:00Z',
     created_at: '2026-10-01T09:00:00Z',
     updated_at: '2026-10-01T09:00:00Z',
     ...fields,
   }
 }
+
+/** A project of the mock data with the usual fields; `fields` change what differs. */
+export const buildMockProject = project
 
 export const mockProjects: Project[] = [
   project({
