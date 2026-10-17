@@ -10,6 +10,7 @@ import type { Activity } from '../../activities/activity.types'
 import { useSideFeatureStore } from '../../activities/side-feature.store'
 import { SidePanel } from '../../panels/components/SidePanel'
 import { SidePanelSection } from '../../panels/components/SidePanelSection'
+import { PanelRegion } from '../../panels/panel.constants'
 import { usePanelsStore } from '../../panels/panels.store'
 import type { EditorTab } from '../../tabs/editor-tabs.schema'
 import { useEditorTabsStore } from '../../tabs/editor-tabs.store'
@@ -146,10 +147,13 @@ describe('ProjectWorkspace', () => {
     )
   })
 
-  it('has no side panel without features', () => {
+  it('has no side panel without features, and leaves Ctrl+B alone', () => {
     renderProjectWorkspace([])
 
     expect(screen.queryByRole('complementary')).not.toBeInTheDocument()
     expect(screen.getByRole('main')).toHaveTextContent('editor')
+    const ctrlB = fireEvent.keyDown(document, { key: 'b', ctrlKey: true })
+    expect(ctrlB).toBe(true)
+    expect(usePanelsStore.getState().panels[PanelRegion.Side].visible).toBe(true)
   })
 })
