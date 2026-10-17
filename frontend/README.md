@@ -103,8 +103,8 @@ frontend/
 │   ├── mocks/               # MSW handlers shared by dev mocking, unit tests, and E2E
 │   └── test/                # Vitest setup
 └── tests/
-    ├── e2e/                 # Playwright specs
-    └── screenshots/         # the screenshots of the mock states
+    ├── e2e/                 # Playwright specs, one folder per feature, their cases in .data.ts
+    └── screenshots/         # the screenshots of the mock states, one folder per feature
 ```
 
 ## Adding shadcn/ui components
@@ -379,7 +379,7 @@ Components never import fixtures. They call the API functions of their feature, 
 
 ### Screenshots
 
-`pnpm screenshots` takes a screenshot of each state of each page, in each window below and in each theme, into `screenshots/<window>-<theme>/`. Each page has a spec in `tests/screenshots/` (`account`, `design-system`) with the list of its states: the steps from a new browser page to the state, such as an address of [Mock scenarios](src/mocks/README.md), then a submit that shows the errors of a form. A state that changes one part of the page, such as the status bar, is taken as that part alone. A file is named `<page>--<number>-<state>.png`, so that the files of a page sort in the order of its states.
+`pnpm screenshots` takes a screenshot of each state of each page, in each window below and in each theme, into `screenshots/<window>-<theme>/`. Each page has a spec in the folder of its feature in `tests/screenshots/` (`account/account`, `design-system/design-system`), and the list of its states in the `.data.ts` beside the spec: the steps from a new browser page to the state, such as an address of [Mock scenarios](src/mocks/README.md), then a submit that shows the errors of a form. A state that changes one part of the page, such as the status bar, is taken as that part alone. A file is named `<page>--<number>-<state>.png`, so that the files of a page sort in the order of its states.
 
 | Window   | Size in CSS pixels                                                                                                         |
 | -------- | -------------------------------------------------------------------------------------------------------------------------- |

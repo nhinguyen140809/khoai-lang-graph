@@ -285,7 +285,9 @@ Conventions:
 | Config that holds React elements (`.tsx`) | `<subject>.config.tsx` | `console-frame.config.tsx` |
 | Unit test | `<file under test>.test.ts(x)`, in a `__tests__/` folder next to the file under test | `features/chat/__tests__/chat.api.test.ts`, `shared/components/state/__tests__/ErrorState.test.tsx` |
 | Cases of a data-driven unit test | `<file under test>.data.ts`, beside its test | `shared/api/__tests__/api-error.utils.data.ts` |
-| E2E test | `<subject>.spec.ts` | `tests/e2e/chat.spec.ts` |
+| E2E test | `<subject>.spec.ts`, in a folder per feature | `tests/e2e/account/account.spec.ts` |
+| Screenshot spec | `<page>.spec.ts`, in a folder per feature | `tests/screenshots/account/account.spec.ts` |
+| Cases of an E2E test or of a screenshot spec | `<subject>.data.ts`, beside its spec | `tests/e2e/account/account.data.ts` |
 
 - **Subject** (before the first dot): what the file is about, in kebab-case. Always include it, even when the folder already says it (`features/chat/chat.api.ts`), so names are unique in search results and editor tabs.
 - **Kind** (after the dot): the role of the file, one of `api`, `keys`, `queries`, `types`, `schema`, `store`, `reducer`, `config`, `constants`, `utils`, `handlers`, `fixtures`, `setup`, `spec`. Need a new kind? Add it to the list here and in `eslint.config.js` in the same PR.
@@ -339,7 +341,7 @@ A folder name in `src/app/` is a URL segment, so renaming it changes the URL.
 - **Backend:** `pytest`. Unit tests mock LLMs (LangChain fake chat models) - tests must be **deterministic and free**.
 - Mark tests calling real LLMs with `@pytest.mark.llm`; they're excluded from default CI runs.
 - **Frontend:** Vitest + Testing Library; test behavior, not implementation. Mock HTTP with MSW.
-- **Data-driven tests:** cases that share one flow and differ only in their data are one `it.each` over a table of cases, and the table lives in `<file under test>.data.ts` beside the test. A test with its own flow stays a plain `it`.
+- **Data-driven tests:** cases that share one flow and differ only in their data are one `it.each` over a table of cases, and the table lives in `<file under test>.data.ts` beside the test. A test with its own flow stays a plain `it`. The Playwright tests (E2E and screenshots) follow the same rule: a flow that takes several cases runs over a table of them in the `.data.ts` beside the spec, one `test` per case, and a flow of its own stays a plain `test`.
 - **E2E:** Playwright for critical flows only.
 - Coverage target: **>= 80%** for `features/*/service.py`, `agents/`, `tools/` (not a hard gate for UI).
 - Test file naming: `test_<module>.py` / `<Component>.test.tsx`. Frontend unit tests live in a `__tests__/` folder next to the file under test, never beside it (enforced by ESLint).

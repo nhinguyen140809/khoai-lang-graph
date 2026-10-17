@@ -1,6 +1,6 @@
 import { expect, type Page } from '@playwright/test'
 
-import { takeShots, visit } from './screenshot.utils'
+import { type Shot, visit } from '../screenshot.utils'
 
 async function signIn(page: Page) {
   await page.getByLabel('Email').fill('linh.pham@example.com')
@@ -20,7 +20,8 @@ async function showFieldErrors(page: Page, submit: string) {
   await expect(page.locator('[aria-invalid="true"]').first()).toBeVisible()
 }
 
-takeShots('Account', [
+/** The states of the sign-in and registration pages, and the steps to each. */
+export const accountShots: Shot[] = [
   { name: 'Sign-in page', steps: visit('/login') },
   {
     name: 'Sign-in page with the errors of its fields',
@@ -35,6 +36,14 @@ takeShots('Account', [
       await page.goto('/login?mock-login=error')
       await signIn(page)
     },
+  },
+  {
+    name: 'Signing in',
+    steps: async (page) => {
+      await page.goto('/login?mock-login=loading')
+      await signIn(page)
+    },
+    ready: (page) => page.getByLabel('Signing in'),
   },
   { name: 'Create an account', steps: visit('/register') },
   {
@@ -51,4 +60,21 @@ takeShots('Account', [
       await register(page)
     },
   },
-])
+  {
+    name: 'Creating an account',
+    steps: async (page) => {
+      await page.goto('/register?mock-register=loading')
+      await register(page)
+    },
+    ready: (page) => page.getByLabel('Creating the account'),
+  },
+  {
+    name: 'The account is created, but signing in fails',
+    steps: async (page) => {
+      await page.goto('/register?mock-login=error')
+      await register(page)
+      await expect(page).toHaveURL(/\/login/)
+    },
+    ready: (page) => page.getByText('The account is created. Sign in with it.'),
+  },
+]
