@@ -5,7 +5,7 @@ import {
   addressWithParams,
   chosenScenarios,
   fixtureScenarioCases,
-  handlerScenarios,
+  handlerScenarioCases,
   pageParamCases,
 } from './mock-scenario.utils.data'
 
@@ -40,20 +40,26 @@ describe('mockScenario', () => {
 })
 
 describe('answerScenario', () => {
-  it('answers the error scenario with HTTP 500', async () => {
-    const answer = await answerScenario('error')
+  it('throws HTTP 500 for the error scenario, which MSW sends as the response', async () => {
+    openPage('/?mock-me=error')
 
-    expect(answer?.status).toBe(500)
-    expect(await answer?.json()).toMatchObject({ code: 'internal_error' })
+    const thrown: unknown = await answerScenario('me').catch((error: unknown) => error)
+
+    expect(thrown).toBeInstanceOf(Response)
+    expect((thrown as Response).status).toBe(500)
+    expect(await (thrown as Response).json()).toMatchObject({ code: 'internal_error' })
   })
 
-  it.each(handlerScenarios)('leaves the %s scenario to the handler', async (scenario) => {
-    await expect(answerScenario(scenario)).resolves.toBeNull()
+  it.each(handlerScenarioCases)('leaves $name to the handler', async ({ address, scenario }) => {
+    openPage(address)
+
+    await expect(answerScenario('me')).resolves.toBe(scenario)
   })
 
   it('never answers the loading scenario', async () => {
+    openPage('/?mock-me=loading')
     const first = await Promise.race([
-      answerScenario('loading').then(() => 'answered'),
+      answerScenario('me').then(() => 'answered'),
       new Promise((resolve) => setTimeout(resolve, 100, 'pending')),
     ])
 

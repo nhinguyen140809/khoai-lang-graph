@@ -371,7 +371,7 @@ To mock a new endpoint:
 
 ### Mock scenarios
 
-A handler can answer differently depending on a parameter in the page URL, so every state of a screen can be seen in `pnpm dev:mock`. The parameter name is `mock-<resource>`: `?mock-threads=error` makes the threads handlers answer with an error. A handler reads it with `mockScenario('<resource>')` from `src/mocks/shared/mock-scenario.utils.ts` and supports the scenarios `empty`, `error`, and `loading`; without the parameter it returns the fixtures. For an endpoint that returns one record, `empty` answers 404. Scenarios that are not a query state, such as the state of a run, read their own parameter, for example `?mock-run-state=failed`.
+A handler can answer differently depending on a parameter in the page URL, so every state of a screen can be seen in `pnpm dev:mock`. The parameter name is `mock-<resource>`: `?mock-threads=error` makes the threads handlers answer with an error. A handler starts with `answerScenario('<resource>')` from `src/mocks/shared/mock-scenario.utils.ts`, which answers `error` (HTTP 500) and `loading` (a request that never ends) for every handler, and returns `default` or `empty` for the handler to answer: without the parameter the handler returns the fixtures, and with `empty` an empty list, or 404 for an endpoint that returns one record. Scenarios that are not a query state, such as the state of a run, read their own parameter, for example `?mock-run-state=failed`.
 
 The parameters and the address of every state of every screen are listed in [Mock scenarios](src/mocks/README.md). Add the addresses of a screen there when the screen is built.
 

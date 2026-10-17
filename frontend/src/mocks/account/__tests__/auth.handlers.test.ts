@@ -2,7 +2,7 @@ import { afterEach, describe, expect, it } from 'vitest'
 
 import { apiUrl } from '@/shared/api/api-url.utils'
 
-import { authProblemCases } from './auth.handlers.data'
+import { authLoadingCases, authProblemCases } from './auth.handlers.data'
 
 // The body goes as it is, so a case can also send text that is not JSON.
 const send = (path: string, body: string) =>
@@ -66,6 +66,19 @@ describe('auth handlers', () => {
 
       expect(answer.status).toBe(status)
       expect(await answer.json()).toMatchObject(problem)
+    },
+  )
+
+  it.each(authLoadingCases)(
+    'never answers $request in the loading scenario',
+    async ({ address, path }) => {
+      openPage(address)
+      const first = await Promise.race([
+        post(path).then(() => 'answered'),
+        new Promise((resolve) => setTimeout(resolve, 100, 'pending')),
+      ])
+
+      expect(first).toBe('pending')
     },
   )
 

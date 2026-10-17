@@ -1,5 +1,15 @@
 const enterValue = (field: string) => ({ field, message: 'Enter a value.' })
 
+/** A request that never answers in the loading scenario of the page address. */
+export const authLoadingCases = [
+  { request: 'POST /auth/login', address: '/?mock-login=loading', path: '/api/v1/auth/login' },
+  {
+    request: 'POST /auth/register',
+    address: '/?mock-register=loading',
+    path: '/api/v1/auth/register',
+  },
+]
+
 /** A request in the scenario of the page address, with its body as text, and the problem it answers. */
 export const authProblemCases = [
   {

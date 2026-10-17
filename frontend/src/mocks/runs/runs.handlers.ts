@@ -32,8 +32,7 @@ export const runHandlers = [
   http.post('/api/v1/threads/:threadId/runs', () => HttpResponse.json({ run_id: MOCK_RUN_ID })),
 
   http.get('/api/v1/threads/:threadId/runs', async ({ params, request }) => {
-    const answered = await answerScenario(mockScenario('runs'))
-    if (answered !== null) return answered
+    await answerScenario('runs')
     const runs = allRuns()
       .filter((run) => run.thread_id === String(params.threadId))
       .toSorted((a, b) => b.number - a.number)
@@ -41,15 +40,13 @@ export const runHandlers = [
   }),
 
   http.get('/api/v1/runs/:runId', async ({ params }) => {
-    const answered = await answerScenario(mockScenario('runs'))
-    if (answered !== null) return answered
+    await answerScenario('runs')
     const run = findMockRun(String(params.runId))
     return run === undefined ? notFound('The run') : HttpResponse.json(run)
   }),
 
   http.get('/api/v1/runs/:runId/steps', async ({ params, request }) => {
-    const answered = await answerScenario(mockScenario('runs'))
-    if (answered !== null) return answered
+    await answerScenario('runs')
     const runId = String(params.runId)
     if (findMockRun(runId) === undefined) return notFound('The run')
     return HttpResponse.json(paginate(stepsOfRun(runId), request))

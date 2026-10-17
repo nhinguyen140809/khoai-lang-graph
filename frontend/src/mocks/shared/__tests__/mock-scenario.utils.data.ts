@@ -18,5 +18,8 @@ export const fixtureScenarioCases = [
   { name: 'with a scenario for another resource', address: '/?mock-threads=error' },
 ]
 
-/** The scenarios that each handler answers itself. */
-export const handlerScenarios = ['default', 'empty'] as const
+/** A page address, and the scenario that the handler of the user answers itself there. */
+export const handlerScenarioCases = [
+  { name: 'the fixtures', address: '/', scenario: 'default' },
+  { name: 'the empty scenario', address: '/?mock-me=empty', scenario: 'empty' },
+]
