@@ -1,4 +1,4 @@
-import type { Run, RunStep } from '@/features/threads'
+import type { Run, RunStep } from '@/modules/run/entities'
 
 import {
   PERSONA_IDS,
@@ -134,9 +134,23 @@ const finishedRuns: Run[] = [
     started_at: '2026-09-20T08:40:00Z',
     finished_at: '2026-09-20T09:00:00Z',
   }),
+  run({
+    id: RUN_IDS.mentorPricing1,
+    number: 1,
+    thread_id: THREAD_IDS.mentorPricing,
+    project_id: PROJECT_IDS.mentor,
+    status: 'cancelled',
+    current_stage: 'interviewing',
+    step_count: 9,
+    last_event_id: 31,
+    usage: usage(0.08, 96_000, 11_000),
+    started_at: '2026-10-04T13:41:00Z',
+    finished_at: '2026-10-04T14:05:00Z',
+  }),
 ]
 
 const mentorRun3Statuses = {
+  queued: { status: 'queued', current_stage: 'planning' },
   running: { status: 'running', current_stage: 'analysis' },
   waiting: { status: 'interrupted', current_stage: 'analysis_review' },
   failed: { status: 'failed', current_stage: 'analysis' },
@@ -145,6 +159,7 @@ const mentorRun3Statuses = {
 
 // The last event of the run of the API examples: 246 while it waits, as in the examples.
 const mentorRun3LastEventIds = {
+  queued: 0,
   running: 241,
   waiting: 246,
   failed: 243,
@@ -170,18 +185,22 @@ export function mentorRun3(state: MockRunState): Run {
             stage: 'analysis',
           }
         : null,
-    usage: {
-      input_tokens: 48210,
-      output_tokens: 9930,
-      cache_read_tokens: 31500,
-      cache_write_tokens: 6200,
-      cost_usd: state === 'done' ? 0.71 : 0.42,
-      duration_ms: 214000,
-    },
+    // A run about to start has called no model yet.
+    usage:
+      state === 'queued'
+        ? noUsage
+        : {
+            input_tokens: 48210,
+            output_tokens: 9930,
+            cache_read_tokens: 31500,
+            cache_write_tokens: 6200,
+            cost_usd: state === 'done' ? 0.71 : 0.42,
+            duration_ms: 214000,
+          },
     trace_id: 'b81c0000-0000-4000-8000-000000000001',
     step_count: steps.length,
     last_event_id: mentorRun3LastEventIds[state],
-    started_at: '2026-10-06T08:30:01Z',
+    started_at: state === 'queued' ? null : '2026-10-06T08:30:01Z',
     finished_at: state === 'failed' || state === 'done' ? (last?.finished_at ?? null) : null,
   })
 }
@@ -304,6 +323,8 @@ const ANALYSIS_CHECKPOINT_STEP = 67
 export function mentorRun3Steps(state: MockRunState): RunStep[] {
   const all = buildSteps(RUN_IDS.mentorMain3, 3, '2026-10-06T08:30:01Z', mentorRun3Specs)
   switch (state) {
+    case 'queued':
+      return []
     case 'done':
       return all
     case 'waiting':

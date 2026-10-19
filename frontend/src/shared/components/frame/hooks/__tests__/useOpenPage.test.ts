@@ -5,9 +5,9 @@ import { beforeEach, describe, expect, it, vi } from 'vitest'
 
 import { routerMock } from '@/test/next-mocks.utils'
 
-import { ActivitiesContext } from '../../activities/ActivitiesContext'
-import type { Activity } from '../../activities/activity.types'
-import { useSideFeatureStore } from '../../activities/side-feature.store'
+import type { Destination } from '../../destinations/destination.types'
+import { DestinationsContext } from '../../destinations/DestinationsContext'
+import { useSideFeatureStore } from '../../destinations/side-feature.store'
 import { PanelRegion } from '../../panels/panel.constants'
 import { usePanelsStore } from '../../panels/panels.store'
 import { useEditorTabsStore } from '../../tabs/editor-tabs.store'
@@ -16,7 +16,7 @@ import { openPageCases } from './useOpenPage.data'
 
 vi.mock('next/navigation', async () => (await import('@/test/next-mocks.utils')).navigationMock)
 
-const activities: Activity[] = [
+const destinations: Destination[] = [
   {
     id: 'artifacts',
     label: 'Artifacts',
@@ -27,7 +27,7 @@ const activities: Activity[] = [
 ]
 
 function wrapper({ children }: { children: ReactNode }) {
-  return createElement(ActivitiesContext, { value: { activities, tabIcons: {} } }, children)
+  return createElement(DestinationsContext, { value: { destinations, tabIcons: {} } }, children)
 }
 
 beforeEach(() => {

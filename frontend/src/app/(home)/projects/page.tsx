@@ -1,4 +1,4 @@
-import { ProjectListPage } from '@/features/projects'
+import { ProjectListPage } from '@/modules/project/widgets/list'
 
 export default function Page() {
   return <ProjectListPage />

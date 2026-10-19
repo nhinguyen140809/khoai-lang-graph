@@ -1,11 +1,12 @@
 import { afterEach, describe, expect, it } from 'vitest'
 
-import type { Project } from '@/features/projects'
-import type { Run, Thread } from '@/features/threads'
+import type { Project } from '@/modules/project/entities'
+import type { Run } from '@/modules/run/entities'
+import type { Message, Thread } from '@/modules/thread/entities'
 import { apiUrl } from '@/shared/api/api-url.utils'
 
 import { RUN_IDS, THREAD_IDS } from '../../shared/mock-ids.constants'
-import { nameFromMessage, type SentMessage } from '../messages.handlers'
+import { nameFromMessage } from '../messages.handlers'
 import {
   firstMessageCases,
   invalidMessageCases,
@@ -18,7 +19,7 @@ interface Answer<T> {
 }
 
 interface Sent {
-  message: SentMessage
+  message: Message
   run: Run
 }
 
@@ -86,7 +87,7 @@ describe('POST /threads/{thread_id}/messages', () => {
       expect((await call(`/api/v1/threads/${threadId}`)).body).toMatchObject({
         current_stage: 'planning',
         active_run_id: sent.body.run.id,
-        active_run_status: 'running',
+        latest_run_status: 'running',
       })
     },
   )

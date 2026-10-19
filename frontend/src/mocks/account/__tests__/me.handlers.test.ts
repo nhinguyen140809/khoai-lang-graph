@@ -2,7 +2,7 @@ import { afterEach, describe, expect, it } from 'vitest'
 
 import { apiUrl } from '@/shared/api/api-url.utils'
 
-import { meCases } from './me.handlers.data'
+import { meCases, monthlyUsageCases } from './me.handlers.data'
 
 // A scenario of the mocks is chosen in the page address.
 function openPage(address: string) {
@@ -39,5 +39,25 @@ describe('me handlers', () => {
 
     expect(first).toBe('pending')
     expect(await request).toBe('aborted')
+  })
+})
+
+describe('GET /me/usage', () => {
+  it.each(monthlyUsageCases)('answers $name', async ({ address, status, body }) => {
+    openPage(address)
+
+    const answer = await fetch(apiUrl('/api/v1/me/usage'))
+
+    expect(answer.status).toBe(status)
+    expect(await answer.json()).toMatchObject(body)
+  })
+
+  it('counts the runs of the month of the mock data only, under 80% of the budget', async () => {
+    const { total } = (await (await fetch(apiUrl('/api/v1/me/usage'))).json()) as {
+      total: { cost_usd: number }
+    }
+
+    expect(total.cost_usd).toBeGreaterThan(0)
+    expect(total.cost_usd).toBeLessThan(20 * 0.8)
   })
 })

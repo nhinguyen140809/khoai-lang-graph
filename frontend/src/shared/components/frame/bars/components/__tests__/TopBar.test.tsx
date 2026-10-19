@@ -13,7 +13,7 @@ beforeEach(() => {
 
 describe('TopBar', () => {
   it('shows where the user is, after a link to the home page', () => {
-    render(<TopBar crumb="Settings" />)
+    render(<TopBar crumb="Settings" homeHref="/" />)
 
     const trail = screen.getByRole('navigation', { name: 'breadcrumb' })
     expect(within(trail).getByRole('link', { name: 'khoai' })).toHaveAttribute('href', '/')
@@ -21,7 +21,7 @@ describe('TopBar', () => {
   })
 
   it('opens the command palette from the search box', async () => {
-    render(<TopBar crumb="Projects" />)
+    render(<TopBar crumb="Projects" homeHref="/" />)
 
     const search = screen.getByRole('button', { name: /Search or run a command/ })
     expect(search).toHaveAttribute('aria-keyshortcuts', 'Control+K Meta+K')

@@ -7,8 +7,8 @@ import { beforeEach, describe, expect, it, vi } from 'vitest'
 
 import { routerMock } from '@/test/next-mocks.utils'
 
-import { ActivitiesContext } from '../../../activities/ActivitiesContext'
-import type { Activity, TabIcons } from '../../../activities/activity.types'
+import type { Destination, TabIcons } from '../../../destinations/destination.types'
+import { DestinationsContext } from '../../../destinations/DestinationsContext'
 import { useEditorTabsStore } from '../../editor-tabs.store'
 import { EditorTabs } from '../EditorTabs'
 import { ambiguity, closeTabCases, onScreenCases, req, tabIconCases } from './EditorTabs.data'
@@ -17,13 +17,13 @@ vi.mock('next/navigation', async () => (await import('@/test/next-mocks.utils'))
 vi.mock('next/link', async () => (await import('@/test/next-mocks.utils')).linkMock)
 
 const searchHref = '/projects/p1/search' as Route
-const activities: Activity[] = [
+const destinations: Destination[] = [
   { id: 'search', label: 'Search', icon: <SearchIcon />, href: searchHref, panel: null },
 ]
 const tabIcons: TabIcons = { artifact: <FileTextIcon />, run: <PlayIcon /> }
 
 function Providers({ children }: { children: ReactNode }) {
-  return <ActivitiesContext value={{ activities, tabIcons }}>{children}</ActivitiesContext>
+  return <DestinationsContext value={{ destinations, tabIcons }}>{children}</DestinationsContext>
 }
 
 function renderTabs(group: string) {

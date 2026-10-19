@@ -14,7 +14,7 @@ interface EditorTabsProps {
 }
 
 /**
- * The open editors of a project, whichever feature they belong to. A tab shows the icon its page
+ * The open editors of a tab group, whichever feature they belong to. A tab shows the icon its page
  * names among the tab icons of the frame, else the icon of the feature it belongs to. A middle
  * click or the close button closes a tab; every tab shows its close button. The active tab is the
  * one that the page on screen opened with `useEditorTab`. The preview tab, which the next page

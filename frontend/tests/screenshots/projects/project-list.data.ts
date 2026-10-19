@@ -207,6 +207,11 @@ export const projectListShots: Shot[] = [
     ready: (page) => page.getByLabel('Loading more projects'),
   },
   {
+    name: 'The mentor platform about to start',
+    steps: visit('/projects?mock-run-state=queued'),
+    part: table,
+  },
+  {
     name: 'The mentor platform running',
     steps: visit('/projects?mock-run-state=running'),
     part: table,

@@ -28,14 +28,6 @@ export function placeTab(
 }
 
 /**
- * The tab group of a project: one strip for every feature, so a tab stays open when the side
- * panel changes.
- */
-export function projectTabGroup(projectId: string): string {
-  return projectId
-}
-
-/**
  * The tab to show after closing the tabs `closing`, among them tab `id`: the next tab that stays
  * open, else the previous one.
  */

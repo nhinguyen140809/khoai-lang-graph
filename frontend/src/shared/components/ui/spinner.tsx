@@ -1,7 +1,7 @@
 import { cn } from 'cn'
 import { Loader2Icon } from 'lucide-react'
 
-import { type Tone, toneClasses } from '@/shared/lib/tone.constants'
+import { type Tone, toneClasses } from '@/shared/lib/tone'
 
 // Without a color the spinner takes the text color around it.
 function Spinner({

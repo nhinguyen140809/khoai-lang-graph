@@ -1,7 +1,7 @@
 import { http, HttpResponse } from 'msw'
 
-import type { Run, Thread } from '@/features/threads'
-import { isUnfinishedRunStatus, type UnfinishedRunStatus } from '@/shared/domain/run-status'
+import { isUnfinishedRunStatus, type Run } from '@/modules/run/entities'
+import type { Thread } from '@/modules/thread/entities'
 
 import { extraThreads } from '../projects/extra-projects.fixtures'
 import { findProject } from '../projects/projects.handlers'
@@ -9,7 +9,7 @@ import { allRuns } from '../runs/runs.handlers'
 import { mockRecord } from '../shared/mock-db.utils'
 import { createdId, IdPrefix } from '../shared/mock-ids.constants'
 import { answerScenario, mockRunState, mockScenario } from '../shared/mock-scenario.utils'
-import { paginate } from '../shared/pagination.utils'
+import { emptyPage, paginate } from '../shared/pagination.utils'
 import { notFound } from '../shared/problem.utils'
 import { readBodyFields } from '../shared/request-body.utils'
 import { buildMockThread, mockThreads, withoutRuns } from './threads.fixtures'
@@ -25,32 +25,25 @@ export function allThreads(): Thread[] {
   return threads.map((thread) => withRunsOfThread(thread, runs))
 }
 
-function isUnfinishedRun(run: Run): run is Run & { status: UnfinishedRunStatus } {
-  return isUnfinishedRunStatus(run.status)
-}
-
-// The unfinished run of a thread follows the runs: a run stopped while the mock server runs
-// leaves its thread without one.
+// A thread follows its latest run, which gives its status and its stage: a run stopped while the
+// mock server runs leaves its thread without an unfinished run.
 function withRunsOfThread(thread: Thread, runs: Run[]): Thread {
-  const active = runs
+  const latest = runs
     .filter((run) => run.thread_id === thread.id)
-    .toSorted((a, b) => b.number - a.number)
-    .find(isUnfinishedRun)
-  if (active === undefined) {
-    return { ...thread, active_run_id: null, active_run_status: null }
-  }
+    .toSorted((a, b) => b.number - a.number)[0]
+  if (latest === undefined) return { ...thread, active_run_id: null, latest_run_status: null }
   return {
     ...thread,
-    current_stage: active.current_stage,
-    active_run_id: active.id,
-    active_run_status: active.status,
+    current_stage: latest.current_stage,
+    active_run_id: isUnfinishedRunStatus(latest.status) ? latest.id : null,
+    latest_run_status: latest.status,
   }
 }
 
 export const threadHandlers = [
   http.get('/api/v1/threads', async ({ request }) => {
     const scenario = await answerScenario('threads')
-    if (scenario === 'empty') return HttpResponse.json({ items: [], next_cursor: null })
+    if (scenario === 'empty') return HttpResponse.json(emptyPage)
     const projectId = new URL(request.url).searchParams.get('project_id')
     const threads = allThreads().filter(
       (thread) => projectId === null || thread.project_id === projectId,
@@ -62,7 +55,7 @@ export const threadHandlers = [
     const scenario = await answerScenario('threads')
     const projectId = String(params.projectId)
     if (findProject(projectId) === undefined) return notFound('The project')
-    if (scenario === 'empty') return HttpResponse.json({ items: [], next_cursor: null })
+    if (scenario === 'empty') return HttpResponse.json(emptyPage)
     const threads = allThreads()
       .filter((thread) => thread.project_id === projectId)
       .toSorted((a, b) => b.last_message_at.localeCompare(a.last_message_at))

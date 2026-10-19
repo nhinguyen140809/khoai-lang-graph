@@ -1,10 +1,9 @@
 import { http, HttpResponse } from 'msw'
 
-import type { Project } from '@/features/projects'
-import type { Run } from '@/features/threads'
+import type { Project } from '@/modules/project/entities'
+import { isUnfinishedRunStatus, rollupRunStatus, type Run } from '@/modules/run/entities'
 import type { FieldProblem } from '@/shared/api/api-error.utils'
-import { outputLanguages } from '@/shared/domain/output-language'
-import { isUnfinishedRunStatus, rollupRunStatus } from '@/shared/domain/run-status'
+import { outputLanguages } from '@/shared/config/output-language'
 
 import { allRuns } from '../runs/runs.handlers'
 import { mockRecord } from '../shared/mock-db.utils'

@@ -3,7 +3,7 @@ import { cn } from 'cn'
 import { Slot } from 'radix-ui'
 import type * as React from 'react'
 
-import { type Tone, toneClasses } from '@/shared/lib/tone.constants'
+import { type Tone, toneClasses } from '@/shared/lib/tone'
 
 // `variant` is the fill and `color` the meaning; the color sets the --tone variables these read.
 // Each size matches a text size of the page: captions, component text, and body text. A code

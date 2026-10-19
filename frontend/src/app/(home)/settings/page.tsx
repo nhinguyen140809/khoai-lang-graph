@@ -1,4 +1,4 @@
-import { SettingsPage } from '@/features/settings'
+import { SettingsPage } from '@/modules/user/widgets/settings'
 
 export default function Page() {
   return <SettingsPage />

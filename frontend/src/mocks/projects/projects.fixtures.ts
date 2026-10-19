@@ -1,4 +1,4 @@
-import type { Project } from '@/features/projects'
+import type { Project } from '@/modules/project/entities'
 
 import { PROJECT_IDS, USER_ID } from '../shared/mock-ids.constants'
 

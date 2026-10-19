@@ -1,6 +1,6 @@
 import { afterEach, describe, expect, it } from 'vitest'
 
-import type { Project } from '@/features/projects'
+import type { Project } from '@/modules/project/entities'
 import { apiUrl } from '@/shared/api/api-url.utils'
 
 import { PROJECT_IDS } from '../../shared/mock-ids.constants'

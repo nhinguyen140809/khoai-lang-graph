@@ -1,12 +1,17 @@
 import { afterEach, describe, expect, it } from 'vitest'
 
-import type { Thread } from '@/features/threads'
+import type { Thread } from '@/modules/thread/entities'
 import { apiUrl } from '@/shared/api/api-url.utils'
 
 import { extraProjectSpecs } from '../../projects/extra-project-specs.constants'
 import { mockProjects } from '../../projects/projects.fixtures'
-import { RUN_IDS, THREAD_IDS } from '../../shared/mock-ids.constants'
-import { threadErrorCases, threadListCases, threadRunStateCases } from './threads.handlers.data'
+import { PROJECT_IDS, RUN_IDS, THREAD_IDS } from '../../shared/mock-ids.constants'
+import {
+  createThreadCases,
+  threadErrorCases,
+  threadListCases,
+  threadRunStateCases,
+} from './threads.handlers.data'
 
 interface Page<T> {
   items: T[]
@@ -39,10 +44,10 @@ afterEach(() => {
 })
 
 describe('the lists of threads', () => {
-  it('GET /threads lists one thread per project', async () => {
+  it('GET /threads lists one thread per project, and the second thread of the mentor platform', async () => {
     const { body } = (await call('/api/v1/threads')) as Answer<Page<Thread>>
 
-    expect(body.items).toHaveLength(mockProjects.length + extraProjectSpecs.length)
+    expect(body.items).toHaveLength(mockProjects.length + extraProjectSpecs.length + 1)
   })
 
   it.each(threadListCases)('lists the threads for $request', async ({ address, path, ids }) => {
@@ -64,7 +69,10 @@ describe('GET /threads/{thread_id}', () => {
   it('has no unfinished run once its run is stopped', async () => {
     await call(`/api/v1/runs/${RUN_IDS.mentorMain3}/cancel`, { method: 'POST' })
 
-    expect(await mentorThread()).toMatchObject({ active_run_id: null, active_run_status: null })
+    expect(await mentorThread()).toMatchObject({
+      active_run_id: null,
+      latest_run_status: 'cancelled',
+    })
   })
 
   it('has no run in the scenario without runs', async () => {
@@ -76,13 +84,34 @@ describe('GET /threads/{thread_id}', () => {
   })
 })
 
+describe('POST /projects/{project_id}/threads', () => {
+  it.each(createThreadCases)(
+    'creates an empty thread of the project from $name',
+    async ({ body, title }) => {
+      const path = `/api/v1/projects/${PROJECT_IDS.campus}/threads`
+      const created = (await call(path, {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify(body),
+      })) as Answer<Thread>
+
+      expect(created).toMatchObject({
+        status: 201,
+        body: { project_id: PROJECT_IDS.campus, title, active_run_id: null, current_stage: null },
+      })
+      const list = (await call(path)) as Answer<Page<Thread>>
+      expect(list.body.items.map(({ id }) => id)).toContain(created.body.id)
+    },
+  )
+})
+
 describe('errors', () => {
   it.each(threadErrorCases)(
     'answers $status to $request',
-    async ({ address, path, status, code }) => {
+    async ({ address, method, path, status, code }) => {
       openPage(address)
 
-      expect(await call(path)).toMatchObject({ status, body: { code } })
+      expect(await call(path, { method })).toMatchObject({ status, body: { code } })
     },
   )
 })

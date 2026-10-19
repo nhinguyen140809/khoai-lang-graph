@@ -28,9 +28,11 @@ export const PROJECT_IDS = {
   laundry: id(IdPrefix.Project, 4),
 }
 
-/** The main thread of a project has the number of its project. */
+/** The main thread of a project has the number of its project, a second thread 100 more. */
 export const THREAD_IDS = {
   mentorMain: id(IdPrefix.Thread, 1),
+  /** The second thread of the mentor platform: its only run was stopped. */
+  mentorPricing: id(IdPrefix.Thread, 101),
   campusMain: id(IdPrefix.Thread, 2),
   libraryMain: id(IdPrefix.Thread, 3),
   laundryMain: id(IdPrefix.Thread, 4),
@@ -46,6 +48,8 @@ export const RUN_IDS = {
   campusMain1: id('7e10', 2),
   libraryMain1: id('7e10', 3),
   laundryMain1: id('7e10', 4),
+  /** Run 1 of the second thread of the mentor platform: it was stopped at the interviews. */
+  mentorPricing1: id('7e10', 101),
 }
 
 export const PERSONA_IDS = [

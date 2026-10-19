@@ -1,7 +1,6 @@
 import { http, HttpResponse } from 'msw'
 
-import type { Run, RunStep } from '@/features/threads'
-import { isUnfinishedRunStatus } from '@/shared/domain/run-status'
+import { isUnfinishedRunStatus, type Run, type RunStep } from '@/modules/run/entities'
 
 import { extraRuns, extraRunSteps } from '../projects/extra-projects.fixtures'
 import { answerScenario, mockRunState, mockScenario } from '../shared/mock-scenario.utils'
@@ -25,7 +24,8 @@ export function stepsOfRun(runId: string): RunStep[] {
   return extraRunSteps(runId) ?? mockRunSteps(runId, mockRunState())
 }
 
-// The chat starts a run with this endpoint, which is not part of the API; it goes with the chat.
+// The activity starts a run with this endpoint, which is not part of the API; it goes when the
+// activity sends messages instead.
 export const MOCK_RUN_ID = 'run-mock-1'
 
 export const runHandlers = [
@@ -52,7 +52,8 @@ export const runHandlers = [
     return HttpResponse.json(paginate(stepsOfRun(runId), request))
   }),
 
-  http.post('/api/v1/runs/:runId/cancel', ({ params }) => {
+  http.post('/api/v1/runs/:runId/cancel', async ({ params }) => {
+    await answerScenario('cancel-run')
     const run = findMockRun(String(params.runId))
     if (run === undefined) return notFound('The run')
     if (!isUnfinishedRunStatus(run.status)) return invalidState('The run has already ended.')

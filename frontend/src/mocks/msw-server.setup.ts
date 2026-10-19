@@ -6,6 +6,7 @@ import { messageHandlers } from './messages/messages.handlers'
 import { projectHandlers } from './projects/projects.handlers'
 import { runHandlers } from './runs/runs.handlers'
 import { threadHandlers } from './threads/threads.handlers'
+import { workflowHandlers } from './workflow/workflow.handlers'
 
 export const server = setupServer(
   ...authHandlers,
@@ -14,4 +15,5 @@ export const server = setupServer(
   ...threadHandlers,
   ...messageHandlers,
   ...runHandlers,
+  ...workflowHandlers,
 )

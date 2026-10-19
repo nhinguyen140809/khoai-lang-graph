@@ -23,6 +23,7 @@ export const runListCases = [
 
 /** A state of the run of the API examples, and what GET /runs/{run_id} answers in it. */
 export const runStateCases = [
+  { state: 'queued', status: 'queued', stepCount: 0, finished: false },
   { state: 'waiting', status: 'interrupted', stepCount: 67, finished: false },
   { state: 'running', status: 'running', stepCount: 66, finished: false },
   { state: 'failed', status: 'failed', stepCount: 66, finished: true },
@@ -30,7 +31,7 @@ export const runStateCases = [
 ]
 
 /** The states of the run of the API examples in which it has not ended. */
-export const unfinishedRunStates = ['waiting', 'running']
+export const unfinishedRunStates = ['queued', 'waiting', 'running']
 
 /** A request in the scenario of the page address, and the error it answers. */
 export const runErrorCases = [
@@ -81,5 +82,13 @@ export const runErrorCases = [
     path: `/api/v1/runs/${RUN_IDS.mentorMain2}/cancel`,
     status: 409,
     code: 'invalid_state',
+  },
+  {
+    request: 'POST /runs/{run_id}/cancel in the error scenario',
+    address: '/?mock-cancel-run=error',
+    method: 'POST',
+    path: `/api/v1/runs/${RUN_IDS.mentorMain3}/cancel`,
+    status: 500,
+    code: 'internal_error',
   },
 ]

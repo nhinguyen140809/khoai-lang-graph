@@ -269,15 +269,6 @@
 }
 
 /*
- * A text caret that is a steady block, as in a terminal. A browser without these properties keeps
- * its own caret.
- */
-@utility caret-block {
-  caret-shape: block;
-  caret-animation: manual;
-}
-
-/*
  * React Flow reads these variables for the canvas, edges, handles, nodes, controls, and minimap.
  * Each one points to a design token, so a graph follows the light and dark theme. The canvas
  * itself stays transparent and shows the surface it is placed on.

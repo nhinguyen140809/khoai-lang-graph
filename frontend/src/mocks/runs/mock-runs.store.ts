@@ -1,4 +1,4 @@
-import type { Run } from '@/features/threads'
+import type { Run } from '@/modules/run/entities'
 
 import { mockRecord } from '../shared/mock-db.utils'
 

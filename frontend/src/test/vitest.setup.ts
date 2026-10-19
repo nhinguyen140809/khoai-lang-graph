@@ -5,6 +5,7 @@ import { afterAll, afterEach, beforeAll, vi } from 'vitest'
 
 import { server } from '@/mocks/msw-server.setup'
 import { resetMockData } from '@/mocks/shared/mock-db.utils'
+import { EventSourceStub, resetEventSources } from '@/test/event-source.utils'
 
 // Unit tests run without the Next.js router, so every test gets the stand-in of next/navigation
 // (src/test/next-mocks.utils.ts). The mock handlers loaded here import modules that read the
@@ -43,6 +44,11 @@ Object.defineProperty(window, 'matchMedia', {
     }) as MediaQueryList,
 })
 
+// jsdom has no EventSource: a test sends the events of a stream through the stand-in.
+if (!('EventSource' in globalThis)) {
+  Object.defineProperty(globalThis, 'EventSource', { value: EventSourceStub, writable: true })
+}
+
 if (!('scrollIntoView' in Element.prototype)) {
   Object.defineProperty(Element.prototype, 'scrollIntoView', {
     value: () => undefined,
@@ -67,6 +73,7 @@ beforeAll(() => {
 afterEach(() => {
   server.resetHandlers()
   resetMockData()
+  resetEventSources()
   cleanup()
 })
 

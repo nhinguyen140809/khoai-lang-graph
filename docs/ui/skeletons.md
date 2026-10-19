@@ -40,7 +40,7 @@ Every screen inside a project uses this frame.
 |     |                          | PANEL (optional)                                            |
 |  *  |                          | Trace and timeline of an item, or the detail of a step      |
 +-----+--------------------------+-------------------------------------------------------------+
-| STATUS BAR   run state | stage | step | cost of the run | workflow version                   |
+| STATUS BAR  [|| Waiting for you: Analysis review]  [ Stop ]  [======--] 86%                  |
 +----------------------------------------------------------------------------------------------+
 ```
 
@@ -51,7 +51,7 @@ Every screen inside a project uses this frame.
 | Side panel | Navigation inside the chosen feature: the artifact tree, the runs and their steps, the coverage counts. The panel of any feature can hold several parts, each in a section: a section collapses to its title, may have actions at the right of its title, shown while the pointer is over the title and always on a touch screen, and a line divides it from the next one. Console has one section today, the outline of its event log. `Ctrl+B` hides and shows the panel, which keeps its state and its width while hidden |
 | Editor | What was opened from the side panel, in tabs. The tabs belong to the project, not to a feature: choosing a feature on the activity bar does not close or change them, and a page opened from any side panel, such as a result of Search, is added to the same strip as a new tab. The console, a review, an artifact, an item, a run, a view of traceability and the settings each open as one tab. A review is one tab with the artifact and the console split inside it |
 | Panel | An optional area under the editor, split into sections shown as tabs: the trace and the timeline of the open item, or the step and the state of the selected step. The actions of the section shown and the button that hides the panel sit at the end of the tabs. ``Ctrl+` `` hides and shows the panel |
-| Status bar | The active run of the project: its state, stage, step, cost against `max_cost_usd`, and the workflow version. A click opens the run in Workflow |
+| Status bar | The status of the project in the words of the user view: the status of the latest run of the thread that needs the user most, in the order Waiting for you, Failed, Working, Starting, Stopped, Done, with the label of the stage where the run works, waits, failed or was stopped ("Working: Interviewing", "Waiting for you: Analysis review", "Done"), or "Not started". It is a pill in the color of the status with a plain sign: three dots for Starting, a lightning bolt for Working, pause for Waiting for you, a check for Done, a cross for Failed, stop for Stopped, and a dashed circle for Not started. The pill is larger than a badge, with a solid fill when the user has to act (a review that waits, a failed run) and a soft fill otherwise; it does not blink. While the status loads, the pill is neutral with a spinner and "Loading status". The status follows the event stream of every unfinished run of the project. A run that failed says why in the tooltip of the pill, with the message of its error. The pill opens the activity of the thread whose status it shows, which is the activity of the project while a project has one thread. A list of every thread of the project with the status of its latest run, in the same order and without the titles of the threads, is built for when a project has several; the pill does not open it yet, since with one thread it would only repeat the pill. Once the user has spent 80% of the budget of the month, which stops the work of every project when it is spent, the share of it shows beside the pill with no fill: a gauge, a bar and the percent, rounded down, in amber from 80% and in red from 90%. While the run that the pill shows has not finished (Starting, Working, Waiting for you), `Stop` stands beside the pill, a small button with a soft red fill and the stop sign. It asks first, in a dialog that says that the agents stop at once, that the step in progress is lost and that a new message starts a new run; `Stop run` in the command palette opens the same dialog. Once the run has stopped, the pill shows Stopped and a toast says Run stopped. The cost of a run against its own limit belongs to the Activity of its thread. The step, the budget below 80% and the workflow version belong to the developer view |
 
 Marks used in the skeletons:
 
@@ -136,7 +136,7 @@ A screen outside a project: its activity bar has no feature yet, only the accoun
 |     |                          | +---------------------------------------------------------+ |
 |  *  |                          |   ctrl+o expand step    esc stop run                        |
 +-----+--------------------------+-------------------------------------------------------------+
-| Run 3: waiting for review | analysis_review | step 67 | $0.42 of $2.00 | workflow v1         |
+| [|| Waiting for you: Analysis review]                                                        |
 +----------------------------------------------------------------------------------------------+
 ```
 
@@ -148,6 +148,8 @@ A screen outside a project: its activity bar has no feature yet, only the accoun
 | Plain line | A message of an agent, in Markdown; item keys are links |
 | `?` line | A review that waits for the user, see [section 4](#4-review) |
 | Input box | The message; the first message of a thread starts a run. `@` mentions an item by key. `/` lists the commands `/stop`, `/retry`, `/export` and `/run-settings`, the last one for the run settings sent with the next message. `Esc` stops the run |
+
+Every line of the sketch is one entry, a message or an event of a run, and every entry has the same shape: it spans the width of the conversation, in the text font, without an avatar or a bubble, with a small mark at its start (`>` for the user, a dot for the agents). The messages of the user have a fill of their own. A row of actions under an entry, such as Copy, shows while the pointer is over the entry. The input box uses the text font and the caret of the browser too; monospace is only for keys and code.
 
 ## 4. Review
 
@@ -177,7 +179,7 @@ When a run pauses at a checkpoint, the artifact under review opens on the left h
 |     |                                            |   +-------------------------------------+ |
 |  *  |                                            |   enter send   up/down choose  esc later  |
 +-----+--------------------------------------------+-------------------------------------------+
-| Run 3: waiting for review | analysis_review | step 67 | $0.42 of $2.00 | workflow v1         |
+| [|| Waiting for you: Analysis review]                                                        |
 +----------------------------------------------------------------------------------------------+
 ```
 
@@ -216,7 +218,7 @@ The side panel is a tree like the explorer of VS Code: artifacts, their sections
 |     | > Product backlog      ! |            AMB-002        concerns                          |
 |  *  | > Validation reports     |                                                             |
 +-----+--------------------------+-------------------------------------------------------------+
-| Run 3: waiting for review | analysis_review | step 67 | $0.42 of $2.00 | workflow v1         |
+| [|| Waiting for you: Analysis review]                                                        |
 +----------------------------------------------------------------------------------------------+
 ```
 
@@ -295,7 +297,7 @@ The side panel lists the runs of a thread and their steps; the editor shows the 
 |     |                          | Waiting for review since 10:42               [Open review]  |
 |  *  |                          | [Retry from this step]             [Open trace in Langfuse] |
 +-----+--------------------------+-------------------------------------------------------------+
-| Run 3: waiting for review | analysis_review | step 67 | $0.42 of $2.00 | workflow v1         |
+| [|| Waiting for you: Analysis review]                                                        |
 +----------------------------------------------------------------------------------------------+
 ```
 
@@ -323,7 +325,7 @@ The side panel lists the runs of a thread and their steps; the editor shows the 
 |     |                          | [ Only gaps ]                                               |
 |  *  |                          |                                                             |
 +-----+--------------------------+-------------------------------------------------------------+
-| Run 3: waiting for review | analysis_review | step 67 | $0.42 of $2.00 | workflow v1         |
+| [|| Waiting for you: Analysis review]                                                        |
 +----------------------------------------------------------------------------------------------+
 ```
 
@@ -353,7 +355,7 @@ The side panel lists the runs of a thread and their steps; the editor shows the 
 |     |                          |   Max iterations    [ 2 ]                                   |
 | [*] |                          |   ...                                                       |
 +-----+--------------------------+-------------------------------------------------------------+
-| Run 3: waiting for review | analysis_review | step 67 | $0.42 of $2.00 | workflow v1         |
+| [|| Waiting for you: Analysis review]                                                        |
 +----------------------------------------------------------------------------------------------+
 ```
 
@@ -365,5 +367,4 @@ The side panel lists the runs of a thread and their steps; the editor shows the 
 1. **Several runs in one project.** Each thread has at most one active run, so a project can have several. Open: what the status bar shows then, or whether a project allows only one.
 2. **Grouping in the explorer.** Grouping an artifact without sections by item kind is a choice of the web app, not data. Open: whether it fits every artifact kind.
 3. **Narrow screens.** The frame targets a desktop browser. On a narrow screen the activity bar could become a bottom tab bar and the side panel a drawer.
-4. **Font of the chat.** A monospace font for the whole chat, like a terminal, or only for the step lines.
-5. **Sources (Later).** Uploaded documents become a feature on the activity bar once SourceDocument is in scope.
+4. **Sources (Later).** Uploaded documents become a feature on the activity bar once SourceDocument is in scope.
