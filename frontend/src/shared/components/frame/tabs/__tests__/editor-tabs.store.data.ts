@@ -172,27 +172,27 @@ export const tabStepsCases: TabStepsCase[] = [
 ]
 
 /** The state stored by a version of the store, and the tabs and preview tabs read from it. */
+/** The other group of the cases on stored tabs. */
+export const otherGroup = 'p2:search'
+
+/** What the storage holds for each group, and the tabs and preview tabs that the store reads. */
 export const storedTabsCases = [
   {
-    name: 'the tabs and preview tabs, without the fields of an older version',
-    stored: {
-      groups: { [group]: [ambiguity, conflict] },
-      preview: { [group]: conflict.id },
-      lastHrefs: {},
-    },
+    name: 'the tabs and preview tab of a group, without the fields of an older version',
+    stored: { [group]: { tabs: [ambiguity, conflict], preview: conflict.id, lastHref: '/' } },
     groups: { [group]: [ambiguity, conflict] },
     preview: { [group]: conflict.id },
   },
   {
-    name: 'the tabs of a version without preview tabs',
-    stored: { groups: { [group]: [ambiguity] } },
+    name: 'the tabs of a group without a preview tab',
+    stored: { [group]: { tabs: [ambiguity] } },
     groups: { [group]: [ambiguity] },
     preview: {},
   },
   {
-    name: 'nothing of tabs that do not have the expected shape',
-    stored: { groups: { [group]: [{ id: 1 }] } },
-    groups: {},
+    name: 'the groups of the expected shape only',
+    stored: { [group]: { tabs: [{ id: 1 }] }, [otherGroup]: { tabs: [req] } },
+    groups: { [otherGroup]: [req] },
     preview: {},
   },
 ]

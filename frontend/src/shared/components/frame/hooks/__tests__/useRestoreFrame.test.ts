@@ -28,7 +28,7 @@ const destinations = [feature('console'), feature('search'), feature('artifacts'
 
 beforeEach(() => {
   browserStorage.removeItem(SIDE_FEATURE_KEY)
-  browserStorage.removeItem(TABS_KEY)
+  useEditorTabsStore.persist.clearStorage()
   setPathname('/projects/p1/artifacts')
   usePanelsStore.setState(usePanelsStore.getInitialState())
   useSideFeatureStore.setState(useSideFeatureStore.getInitialState())
@@ -62,10 +62,7 @@ describe('useRestoreFrame', () => {
 
   it('reads the stored tabs before a page opens its tab', () => {
     const stored = { id: 'a', title: 'a', href: '/projects/p1/artifacts/a' }
-    browserStorage.setItem(
-      TABS_KEY,
-      JSON.stringify({ state: { groups: { p1: [stored] } }, version: 0 }),
-    )
+    browserStorage.setItem(`${TABS_KEY}:p1`, JSON.stringify({ tabs: [stored] }))
     function Page() {
       useEditorTab({ id: 'b', title: 'b', href: '/projects/p1/artifacts/b' })
       return null

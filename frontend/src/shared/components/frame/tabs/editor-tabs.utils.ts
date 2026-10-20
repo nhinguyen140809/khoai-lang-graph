@@ -1,4 +1,9 @@
-import type { EditorTab } from './editor-tabs.schema'
+import {
+  type EditorTab,
+  type PersistedTabs,
+  type StoredTabGroup,
+  storedTabGroupSchema,
+} from './editor-tabs.schema'
 
 /** The record with the entry of `key` set to `value`, or the same record when it has it already. */
 export function withEntry(record: Record<string, string>, key: string, value: string) {
@@ -40,4 +45,28 @@ export function neighborTab(
   if (index === -1) return undefined
   const stays = (tab: EditorTab) => !closing.includes(tab.id)
   return tabs.slice(index + 1).find(stays) ?? tabs.slice(0, index).findLast(stays)
+}
+
+/** The stored tabs of each group that has tabs open, with the id of its preview tab. */
+export function splitTabGroups({ groups, preview = {} }: PersistedTabs) {
+  const entries: Record<string, StoredTabGroup> = {}
+  for (const [group, tabs] of Object.entries(groups)) {
+    if (tabs.length === 0) continue
+    const previewId = preview[group]
+    entries[group] = previewId === undefined ? { tabs } : { tabs, preview: previewId }
+  }
+  return entries
+}
+
+/** The tabs of the groups read from storage, without the groups of another shape. */
+export function joinTabGroups(entries: Record<string, unknown>): PersistedTabs {
+  const groups: Record<string, EditorTab[]> = {}
+  const preview: Record<string, string> = {}
+  for (const [group, entry] of Object.entries(entries)) {
+    const stored = storedTabGroupSchema.safeParse(entry)
+    if (!stored.success) continue
+    groups[group] = stored.data.tabs
+    if (stored.data.preview !== undefined) preview[group] = stored.data.preview
+  }
+  return { groups, preview }
 }

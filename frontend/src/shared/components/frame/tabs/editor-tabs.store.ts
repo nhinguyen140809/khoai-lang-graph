@@ -1,10 +1,21 @@
 import { create } from 'zustand'
 import { persist } from 'zustand/middleware'
 
-import { parseStored, persistStorage, storageKey } from '@/shared/lib/browser-storage.utils'
+import { parseStored, persistStorageByEntry, storageKey } from '@/shared/lib/browser-storage.utils'
 
-import { type EditorTab, type PersistedTabs, persistedTabsSchema } from './editor-tabs.schema'
-import { placeTab, withEntry, withoutEntry } from './editor-tabs.utils'
+import {
+  type EditorTab,
+  type PersistedTabs,
+  persistedTabsSchema,
+  type StoredTabGroup,
+} from './editor-tabs.schema'
+import {
+  joinTabGroups,
+  placeTab,
+  splitTabGroups,
+  withEntry,
+  withoutEntry,
+} from './editor-tabs.utils'
 
 interface OpenTabOptions {
   /** Opens the tab as a kept tab instead of the preview tab of its group. */
@@ -49,7 +60,9 @@ interface EditorTabsState {
 /**
  * The editor tabs of every tab group on this device; a group is the strip of one `Workspace`,
  * named by its layout, and holds the tabs of every feature. `useRestoreFrame` reads them after the
- * first render, before the pages open theirs.
+ * first render, before the pages open theirs. Each group is stored under a key of its own, and a
+ * browser tab writes only the groups it changed, so that a browser tab on one project never writes
+ * its old copy of another project over the tabs opened there since.
  */
 export const useEditorTabsStore = create<EditorTabsState>()(
   persist(
@@ -120,7 +133,9 @@ export const useEditorTabsStore = create<EditorTabsState>()(
       name: storageKey('editor-tabs'),
       skipHydration: true,
       // Changes are stored only once the stored tabs have been read.
-      storage: persistStorage<PersistedTabs>({
+      storage: persistStorageByEntry<PersistedTabs, StoredTabGroup>({
+        split: splitTabGroups,
+        join: joinTabGroups,
         ready: (): boolean => useEditorTabsStore.persist.hasHydrated(),
       }),
       partialize: ({ groups, preview }): PersistedTabs => ({ groups, preview }),
