@@ -1,6 +1,7 @@
-import type { Project } from '@/features/projects'
-import type { Run, RunStep, Thread } from '@/features/threads'
-import { isUnfinishedRunStatus } from '@/shared/domain/run-status'
+import type { Project } from '@/modules/project/entities'
+import type { Run, RunStep } from '@/modules/run/entities'
+import { isUnfinishedRunStatus } from '@/modules/run/entities'
+import type { Thread } from '@/modules/thread/entities'
 
 import { buildMockRun, scriptedSteps } from '../runs/runs.fixtures'
 import { IdPrefix, mockId, USER_ID } from '../shared/mock-ids.constants'

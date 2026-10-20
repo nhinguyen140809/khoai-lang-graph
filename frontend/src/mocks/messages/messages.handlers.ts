@@ -1,6 +1,7 @@
 import { http, HttpResponse } from 'msw'
 
-import type { Run, Thread } from '@/features/threads'
+import type { Run } from '@/modules/run/entities'
+import type { Thread } from '@/modules/thread/entities'
 
 import { changeProject, findProject } from '../projects/projects.handlers'
 import { createdRuns } from '../runs/mock-runs.store'

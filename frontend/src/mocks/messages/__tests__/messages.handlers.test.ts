@@ -1,7 +1,8 @@
 import { afterEach, describe, expect, it } from 'vitest'
 
-import type { Project } from '@/features/projects'
-import type { Run, Thread } from '@/features/threads'
+import type { Project } from '@/modules/project/entities'
+import type { Run } from '@/modules/run/entities'
+import type { Thread } from '@/modules/thread/entities'
 import { apiUrl } from '@/shared/api/api-url.utils'
 
 import { RUN_IDS, THREAD_IDS } from '../../shared/mock-ids.constants'

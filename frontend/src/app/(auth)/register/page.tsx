@@ -1,4 +1,4 @@
-import { RegisterPage } from '@/features/account'
+import { RegisterPage } from '@/modules/auth/features/sign-up'
 import { nextParam } from '@/shared/config/routes'
 
 export default async function Page({ searchParams }: PageProps<'/register'>) {

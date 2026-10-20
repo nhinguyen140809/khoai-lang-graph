@@ -1,6 +1,6 @@
 import { notFound } from 'next/navigation'
 
-import { DesignSystemPage } from '@/features/design-system'
+import { DesignSystemPage } from '@/modules/design-system/widgets/showcase'
 
 export default function Page() {
   // A page for reviewing the design system while developing; production builds answer 404.

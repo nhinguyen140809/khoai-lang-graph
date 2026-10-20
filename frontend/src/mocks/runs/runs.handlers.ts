@@ -1,7 +1,7 @@
 import { http, HttpResponse } from 'msw'
 
-import type { Run, RunStep } from '@/features/threads'
-import { isUnfinishedRunStatus } from '@/shared/domain/run-status'
+import type { Run, RunStep } from '@/modules/run/entities'
+import { isUnfinishedRunStatus } from '@/modules/run/entities'
 
 import { extraRuns, extraRunSteps } from '../projects/extra-projects.fixtures'
 import { answerScenario, mockRunState, mockScenario } from '../shared/mock-scenario.utils'
