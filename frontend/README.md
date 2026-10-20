@@ -2,7 +2,7 @@
 
 Next.js 16 (App Router) + React 19 + TypeScript app. It talks to the backend over REST and SSE and can run on its own against mocked API responses.
 
-This file covers running and working on the frontend. For the overall architecture, tech stack, and repository layout see the [root README](../README.md); for coding conventions, file naming, and the API contract see [CONTRIBUTING](../CONTRIBUTING.md).
+This file covers running and working on the frontend. For the overall architecture, tech stack, and repository layout see the [root README](../README.md); for coding conventions and file naming see [CONTRIBUTING](CONTRIBUTING.md), and for the API contract the [root CONTRIBUTING](../CONTRIBUTING.md#api-contract).
 
 ## Contents
 

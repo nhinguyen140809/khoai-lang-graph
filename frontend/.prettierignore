@@ -7,3 +7,6 @@ pnpm-lock.yaml
 openapi.json
 src/shared/api/generated
 public/mockServiceWorker.js
+
+# Moved from the root CONTRIBUTING.md, which keeps its own layout of tables and lists
+CONTRIBUTING.md
