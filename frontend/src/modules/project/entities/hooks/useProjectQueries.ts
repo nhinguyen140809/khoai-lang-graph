@@ -11,7 +11,7 @@ import type { ListPage } from '@/shared/api/api-fetch.utils'
 
 import { getProject, listProjects } from '../projects.api'
 import { projectKeys } from '../projects.keys'
-import type { Project, ProjectFilters, ProjectStatus } from '../projects.types'
+import type { Project, ProjectFilters, ProjectStatus } from '../types/projects.types'
 
 // How many projects a page of the list holds; the next page loads on demand.
 const PAGE_SIZE = 50

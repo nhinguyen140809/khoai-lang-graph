@@ -1,7 +1,7 @@
 import { http, HttpResponse } from 'msw'
 
 import type { Run } from '@/modules/run/entities'
-import type { Thread } from '@/modules/thread/entities'
+import type { Message, Thread } from '@/modules/thread/entities'
 
 import { changeProject, findProject } from '../projects/projects.handlers'
 import { createdRuns } from '../runs/mock-runs.store'
@@ -14,29 +14,8 @@ import { notFound, validationFailed } from '../shared/problem.utils'
 import { readBodyFields } from '../shared/request-body.utils'
 import { allThreads } from '../threads/threads.handlers'
 
-/**
- * A message as POST /threads/{thread_id}/messages answers it, since the threads feature has no type
- * of a message yet.
- */
-export interface SentMessage {
-  id: string
-  thread_id: string
-  /** Order of the message in its thread, from 1, without gaps. */
-  sequence: number
-  /** The run that the message started or belongs to. */
-  run_id: string | null
-  author: 'user' | 'agent' | 'system'
-  agent_role: string | null
-  content: string
-  artifact_refs: { artifact_id: string; kind: string; title: string; version: number }[]
-  item_refs: { item_id: string; kind: string; key: string; version: number }[]
-  delivery: 'started_run' | 'pending' | 'delivered' | 'undelivered' | null
-  delivered_in_step_id: string | null
-  created_at: string
-}
-
 // Messages sent with POST /threads/{thread_id}/messages.
-const sentMessages = mockRecord<SentMessage[]>('sent-messages', () => [])
+const sentMessages = mockRecord<Message[]>('sent-messages', () => [])
 
 // How many words of its first message name a project created without a name.
 const NAME_WORDS = 5
@@ -90,7 +69,7 @@ export const messageHandlers = [
     const unfinished = thread.active_run_id === null ? undefined : findMockRun(thread.active_run_id)
     const run = unfinished ?? startRun(thread, now)
     const messages = sentMessages.get()
-    const message: SentMessage = {
+    const message: Message = {
       id: createdId(IdPrefix.Message, messages.length + 1),
       thread_id: thread.id,
       sequence: messages.filter(({ thread_id }) => thread_id === thread.id).length + 1,

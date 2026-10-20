@@ -21,6 +21,8 @@ function Progress({
         toneClasses[color],
         className,
       )}
+      // The root takes the value too, so that assistive technology reads it.
+      {...(value !== undefined && { value })}
       {...props}
     >
       <ProgressPrimitive.Indicator

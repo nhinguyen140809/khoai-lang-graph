@@ -1,4 +1,4 @@
-import type { Project, ProjectFilters } from './projects.types'
+import type { Project, ProjectFilters } from '../types/projects.types'
 
 const UNTITLED = 'Untitled project'
 

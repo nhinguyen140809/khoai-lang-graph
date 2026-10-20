@@ -7,7 +7,7 @@ import {
   parseRunEvent,
   type RunState,
 } from '../run-events.reducer'
-import { runStreamUrl } from '../runs.api'
+import { runEventsUrl } from '../runs.api'
 import { RUN_EVENT_TYPES } from '../types/run-events.types'
 
 /**
@@ -19,7 +19,8 @@ export function useRunStream(runId: string): RunState {
   const [state, dispatch] = useReducer(applyRunEvent, initialRunState)
 
   useEffect(() => {
-    const source = new EventSource(runStreamUrl(runId))
+    // From the first event of the run: its ids start at 1.
+    const source = new EventSource(runEventsUrl(runId, 0))
     for (const type of RUN_EVENT_TYPES) {
       source.addEventListener(type, (message: MessageEvent<string>) => {
         const event = parseRunEvent(type, message.lastEventId, message.data)

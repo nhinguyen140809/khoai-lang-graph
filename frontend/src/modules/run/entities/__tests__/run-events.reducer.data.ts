@@ -10,6 +10,17 @@ interface RunEventCase {
 /** The events of a run, in order, and the state they leave. */
 export const runEventCases: RunEventCase[] = [
   {
+    name: 'leaves out the events applied already, which a replay sends again',
+    events: [
+      { type: 'token', id: '1', data: { node: 'agent', text: 'Hello' } },
+      { type: 'token', id: '2', data: { node: 'agent', text: ' world' } },
+      { type: 'token', id: '2', data: { node: 'agent', text: ' world' } },
+      { type: 'token', id: '1', data: { node: 'agent', text: 'Hello' } },
+      { type: 'token', id: '3', data: { node: 'agent', text: '!' } },
+    ],
+    state: { text: 'Hello world!', lastEventId: '3' },
+  },
+  {
     name: 'accumulates tokens and tracks the active node',
     events: [
       { type: 'node_start', id: '1', data: { node: 'agent' } },

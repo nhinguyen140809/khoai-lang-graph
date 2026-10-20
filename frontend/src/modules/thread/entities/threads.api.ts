@@ -1,20 +1,20 @@
-import { z } from 'zod'
-
-import { apiRequest } from '@/shared/api/api-fetch.utils'
-import { apiUrl } from '@/shared/api/api-url.utils'
+import { apiRequest, fetchPage } from '@/shared/api/api-fetch.utils'
 
 import { createdThreadSchema, sentMessageSchema, type Thread, threadSchema } from './threads.types'
 
-// The first page of the threads; later pages are not read.
-const listThreadsResponseSchema = z.object({ items: z.array(threadSchema) })
+// TODO: switch to the generated client in src/shared/api/generated/ once it is generated.
 
-// TODO: switch to the generated client in src/shared/api/generated/ once the threads API exists.
-export async function listThreads(): Promise<Thread[]> {
-  const response = await fetch(apiUrl('/api/v1/threads'))
-  if (!response.ok) {
-    throw new Error(`Failed to load threads (HTTP ${String(response.status)})`)
-  }
-  return listThreadsResponseSchema.parse(await response.json()).items
+// How many threads of a project are read: the first page, since a project has one thread.
+const THREAD_PAGE_SIZE = 20
+
+/** The threads of a project, the latest message first. */
+export async function listProjectThreads(projectId: string): Promise<Thread[]> {
+  const page = await fetchPage(
+    `/api/v1/projects/${encodeURIComponent(projectId)}/threads`,
+    threadSchema,
+    { limit: THREAD_PAGE_SIZE, cursor: null, action: 'load the threads' },
+  )
+  return page.items
 }
 
 /** Sends the idea of a new project as the first message of a new thread, which starts its first run. */

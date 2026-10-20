@@ -48,9 +48,12 @@ export async function answerScenario(resource: string): Promise<HandlerScenario>
   return scenario
 }
 
-const mockRunStates = ['running', 'waiting', 'failed', 'done'] as const
+const mockRunStates = ['queued', 'running', 'waiting', 'failed', 'done'] as const
 
-/** The state of the run of the API examples: running, waiting for review, failed, or done. */
+/**
+ * The state of the run of the API examples: about to start, running, waiting for review, failed,
+ * or done.
+ */
 export type MockRunState = (typeof mockRunStates)[number]
 
 function isMockRunState(value: string): value is MockRunState {
@@ -59,7 +62,8 @@ function isMockRunState(value: string): value is MockRunState {
 
 /**
  * The state of the mock run that waits at the analysis review by default, chosen in the page URL
- * with `?mock-run-state=running` (or `failed`, `done`). The threads and runs handlers read it.
+ * with `?mock-run-state=running` (or `queued`, `failed`, `done`). The threads and runs handlers
+ * read it.
  */
 export function mockRunState(): MockRunState {
   const value = pageParam('mock-run-state')

@@ -5,10 +5,16 @@ import { server } from '@/mocks/msw-server.setup'
 import { MOCK_RUN_ID } from '@/mocks/runs/runs.handlers'
 
 import { createRun } from '../runs.api'
-import { failedRunCases } from './runs.api.data'
+import { failedRunCases, readCases } from './runs.api.data'
 
 afterEach(() => {
   server.events.removeAllListeners()
+})
+
+describe('the runs API', () => {
+  it.each(readCases)('reads $name', async ({ read, expected }) => {
+    await expect(read()).resolves.toEqual(expected)
+  })
 })
 
 describe('createRun', () => {

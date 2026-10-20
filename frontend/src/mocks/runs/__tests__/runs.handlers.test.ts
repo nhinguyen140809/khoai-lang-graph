@@ -116,7 +116,7 @@ describe('POST /runs/{run_id}/cancel', () => {
   })
 })
 
-describe('the run of the chat', () => {
+describe('the run of the activity', () => {
   it('answers the id of the mock run', async () => {
     const { body } = (await call('/api/v1/threads/t1/runs', { method: 'POST' })) as Answer<{
       run_id: string

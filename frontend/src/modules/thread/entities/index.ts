@@ -1,2 +1,3 @@
+export { useProjectThreads } from './hooks/useThreadQueries'
 export { sendFirstMessage } from './threads.api'
-export type { Thread } from './threads.types'
+export type { Message, Thread } from './threads.types'

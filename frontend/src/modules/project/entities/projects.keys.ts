@@ -1,4 +1,4 @@
-import type { ProjectFilters, ProjectStatus } from './projects.types'
+import type { ProjectFilters, ProjectStatus } from './types/projects.types'
 
 /**
  * The query keys of the projects, from the widest to the narrowest; each starts with the one above.

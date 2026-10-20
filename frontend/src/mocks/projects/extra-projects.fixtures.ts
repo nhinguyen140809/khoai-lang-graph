@@ -1,6 +1,5 @@
 import type { Project } from '@/modules/project/entities'
-import type { Run, RunStep } from '@/modules/run/entities'
-import { isUnfinishedRunStatus } from '@/modules/run/entities'
+import { isUnfinishedRunStatus, type Run, type RunStep } from '@/modules/run/entities'
 import type { Thread } from '@/modules/thread/entities'
 
 import { buildMockRun, scriptedSteps } from '../runs/runs.fixtures'
@@ -97,7 +96,7 @@ export function extraThreads(): Thread[] {
       status: 'active',
       current_stage: last?.current_stage ?? null,
       active_run_id: unfinished ? (last?.id ?? null) : null,
-      active_run_status: unfinished ? status : null,
+      latest_run_status: status ?? null,
       last_message_at: at(spec.day, '09:00:00'),
       created_at: at(spec.day, '07:55:00'),
       updated_at: at(spec.day, '11:00:00'),

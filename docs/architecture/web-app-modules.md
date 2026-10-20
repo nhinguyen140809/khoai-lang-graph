@@ -34,6 +34,8 @@ The objects come from [Data Shape](../DATA_SHAPE.md), the endpoints from [API de
 src/
 ├── app/                        # routes, layouts, providers; they place the widgets of a screen
 ├── modules/
+│   ├── workflow/
+│   │   └── entities/           # the stages of the workflow and their labels
 │   ├── artifact/
 │   │   └── widgets/            # panel/, a placeholder
 │   ├── run/
@@ -41,31 +43,34 @@ src/
 │   │   │   ├── @x/             # the files for the entities of other modules: project.ts, thread.ts
 │   │   │   ├── components/     # RunStatusBadge
 │   │   │   ├── constants/
-│   │   │   ├── hooks/          # useRunStream.ts
+│   │   │   ├── hooks/          # useRunQueries.ts, useRunStream.ts
 │   │   │   ├── types/
 │   │   │   ├── utils/
 │   │   │   ├── run-events.reducer.ts
 │   │   │   ├── runs.api.ts
+│   │   │   ├── runs.keys.ts
 │   │   │   └── index.ts
-│   │   └── features/           # start/
+│   │   └── features/           # stop/, start/
 │   ├── thread/
-│   │   └── entities/           # Thread
+│   │   └── entities/           # Thread, Message
 │   ├── project/
-│   │   ├── entities/           # Project
+│   │   ├── entities/           # Project, the run that its status shows, the streams of its runs
 │   │   ├── features/           # create/, rename/, archive/, delete/
-│   │   └── widgets/            # list/, menu/, commands/, dialogs/
+│   │   └── widgets/            # list/, menu/, commands/, dialogs/, status/
 │   ├── activity/
 │   │   └── widgets/            # chat/; steps/ later
 │   ├── auth/
 │   │   ├── entities/           # the calls that start and end a session
 │   │   └── features/           # sign-in/, sign-up/, sign-out/
 │   ├── user/
-│   │   ├── entities/           # User
+│   │   ├── entities/           # User, UserSettings
 │   │   └── widgets/            # menu/, settings/
+│   ├── usage/
+│   │   └── entities/           # the usage of the month, MonthlyBudgetItem
 │   └── design-system/
 │       └── widgets/            # showcase/
 └── shared/                     # api/, components/ (ui/, frame/ with frame/layouts/, ...), hooks/,
-                                # lib/ (view/, tone/, formatters/), config/ (routes/, output-language/)
+                                # lib/ (view/, tone/, cost/, formatters/), config/ (routes/, output-language/)
 ```
 
 Dividing by module first keeps a subject in one folder. In exchange, the modules keep an order between them ([section 4](#4-order-of-the-modules)), and the linter of Feature-Sliced Design (Steiger), which expects the layers first, does not apply; the rules are the ESLint rules of the repository.
@@ -91,7 +96,7 @@ A slice holds its components in `components/`, its hooks in `hooks/`, and its ot
 | Kind | File | Entities | Features | Widgets |
 |---|---|---|---|---|
 | Component | `components/PascalCase.tsx` | The small components that show an object (`RunStatusBadge`) | The form, the dialog or the button of the action | The block |
-| Hook | `hooks/useSomething.ts` | The queries (`use<Resource>Queries.ts`) and the streams | The mutations, and the hooks of a store | The hooks of the block (`useChat`) |
+| Hook | `hooks/useSomething.ts` | The queries (`use<Resource>Queries.ts`) and the streams | The mutations, and the hooks of a store | The hooks of the block (`useActivity`) |
 | `api` | `<resource>.api.ts` | The calls of the endpoints of the objects | - | - |
 | `keys` | `<resource>.keys.ts` | The query keys | - | - |
 | `queries` | `<resource>.queries.ts` | A query that several places read or write | - | - |
@@ -100,7 +105,7 @@ A slice holds its components in `components/`, its hooks in `hooks/`, and its ot
 | `store` | `<topic>.store.ts` | - | The state of a dialog or of a prompt | The state of the block |
 | `reducer` | `<topic>.reducer.ts` | The events of a stream | A state that events change | A state that events change |
 | `constants` | `<topic>.constants.ts` | The labels of the values | The words of the action | The words of the block |
-| `utils` | `<topic>.utils.ts` | The pure rules of the objects | The rules of the action | The pure helpers of the block |
+| `utils` | `<topic>.utils.ts` | The pure rules of the objects | The rules of the action (`stoppableRun`) | The pure helpers of the block |
 | `fixtures` | `<subject>.fixtures.ts` | - | - | Sample data, as in the design system page |
 | `@x/` | `<module>.ts` | The files for the entities of other modules | - | - |
 
@@ -116,7 +121,15 @@ ESLint checks the kinds of each place (`FILE_KINDS` of `frontend/eslint.config.j
 
 `usage`, `design-system`
 
-A module imports only the modules under it in its line: `project` reads `thread` and `run`; `activity` sits beside `project`, so it may read the same modules, and neither of the two reads the other; `thread` reads `run`, and `user` reads `auth`. `usage` and `design-system` read no other module. The order is `MODULE_IMPORTS` of `frontend/eslint.config.js`, which lists the modules of today and the ones planned next; a new module gets its place there before its first code.
+A module imports only the modules under it in its line: `project` reads `thread` and `run`; `activity` sits beside `project`, so it may read the same modules, and neither of the two reads the other; `thread` reads `run`, `run` reads `workflow`, and `user` reads `auth`. `usage` and `design-system` read no other module. The order is `MODULE_IMPORTS` of `frontend/eslint.config.js`, which lists the modules of today and the ones planned next; a new module gets its place there before its first code.
+
+Three parts of the code were written to keep this order:
+
+| Part | Where | Why |
+|---|---|---|
+| `stoppableRun(run)` takes a run, and `shownRun(project)` gives the run that the status of a project shows | `run/features/stop`, `project/entities` | `run` does not read `project` |
+| `useStageLabel(version, stage)` gives the label of a stage, and `useRunStageLabel` decides when the status of a run shows it | `workflow/entities`, `run/entities` | `workflow` does not read `run` |
+| The status of a project: the run it shows (`useProjectRun`, `ProjectRun`) and the streams that keep it fresh (`useRunStatusStream`, `ProjectRunStreams`) | `project/entities` | They read the threads and the runs of a project, so they sit in the module above both |
 
 `itemRefSchema`, the reference to an item that a step produced or a message names, sits in `run` until the module `artifact` exists.
 
@@ -163,8 +176,10 @@ The links between entities today:
 
 | Entity that uses | Entity used | What it takes |
 |---|---|---|
-| `project` | `run` | The run statuses |
-| `thread` | `run` | The unfinished run statuses |
+| `project` | `run` | The run statuses, the latest run of a thread, the run keys and the address of the event stream |
+| `project` | `thread` | The threads of a project, their keys and their order by attention |
+| `thread` | `run` | The run statuses and `itemRefSchema` |
+| `run` | `workflow` | `useStageLabel` |
 
 A unit test may also import another slice of its layer, from its index, to show slices together, such as the project table with the dialogs that its rows open.
 
@@ -172,16 +187,16 @@ A unit test may also import another slice of its layer, from its index, to show 
 
 | Module | Entities | Features | Widgets | State |
 |---|---|---|---|---|
-| `workflow` | Workflow definition (graph, agent roles, stages in their order, checkpoints and their options), workflow state | - | - | Next |
+| `workflow` | Workflow definition (graph, agent roles, stages in their order, checkpoints and their options), workflow state | - | - | The stages, in order, and their labels today |
 | `artifact` | Artifact, ArtifactItem and their revisions; artifact kinds and content schemas | `edit` | `panel` | The placeholder of `panel` today; the rest with the documents |
-| `run` | Run and RunStep, each with its usage; RunEvent, Directive, the event stream of a run; the run statuses and their badge | `stop`, `start` (the first chat); `retry` later | `graph`, the workflow graph of a run, later | The run statuses, the stream of a run and `start` today |
+| `run` | Run and RunStep, each with its usage; RunEvent, Directive, the event stream of a run; the run statuses and their badge | `stop`, `start` (the first chat); `retry` later | `graph`, the workflow graph of a run, later | Entities, `stop` and `start` today |
 | `review` | Interrupt, HumanDecision | `answer` | `panel` | With the activity |
-| `thread` | Thread, Message | `send-message` | - | The threads today; `send-message` with the activity |
-| `project` | Project, the run that its status shows, the streams of its runs | `create`, `rename`, `archive` (with restore and Undo), `delete` | `list`, `menu`, `commands`, `dialogs`, `status` | Today, except `status` and the runs in the entities, which come with the threads |
+| `thread` | Thread, Message | `send-message` | - | Entities today; `send-message` with the activity |
+| `project` | Project, the run that its status shows, the streams of its runs | `create`, `rename`, `archive` (with restore and Undo), `delete` | `list`, `menu`, `commands`, `dialogs`, `status` | Today |
 | `activity` | ActivityEvent later, the record of who did what in a project | - | `steps`, the stages of the workflow as a tree in the side panel of Activity, with the item of the feature on the activity bar; `chat`, the chat in its tab | The chat of the first version today; the rest with the activity |
 | `auth` | The calls that start a session, create an account and end a session; the page that opens after signing in | `sign-in`, `sign-up`, `sign-out` | - | Today |
-| `user` | User, UserSettings | - | `menu`, `settings` | User, `menu` and `settings` today |
-| `usage` | Usage of the user in a calendar month, with the budget of the month | - | - | Next |
+| `user` | User, UserSettings | - | `menu`, `settings` | Today |
+| `usage` | Usage of the user in a calendar month, with the budget of the month | - | - | Today |
 | `trace-link` | TraceLink, the traceability views | - | - | Later |
 | `llm-model` | ModelCatalogEntry, ModelSettings | - | - | Later |
 | `design-system` | - | - | `showcase`, the page of the UI components and the tokens | Today |
@@ -204,7 +219,7 @@ The endpoints of the entities:
 
 `auth` and `user` are two modules, as the identity and access of a user usually are: signing in, signing up and signing out need nothing of the user, and the user menu uses Sign out, so `user` sits above `auth`.
 
-The usage sits in two places. The usage of a run, `Run.usage` and `RunStep.usage`, belongs to `run`; its limit is `max_cost_usd` of the run config, which the user sets in the run settings. The usage of the user in a month is the module `usage`; its limit is `monthly_budget_usd` of the user, which an admin sets, and `/me/usage` returns it with the usage as `budget_usd`, so `usage` needs nothing of `user`. The rule that compares a cost with its limit serves both and goes to shared code ([section 8](#8-shared-code)).
+The usage sits in two places. The usage of a run, `Run.usage` and `RunStep.usage`, belongs to `run`; its limit is `max_cost_usd` of the run config, which the user sets in the run settings. The usage of the user in a month is the module `usage`; its limit is `monthly_budget_usd` of the user, which an admin sets, and `/me/usage` returns it with the usage as `budget_usd`, so `usage` needs nothing of `user`. The rule that compares a cost with its limit serves both and sits in shared code ([section 8](#8-shared-code)).
 
 The entity of the models is named `llm-model`, not `model`, because "model" alone also names the data of any object.
 
@@ -227,6 +242,7 @@ Shared code knows no object of the product. What several modules read without be
 | The two views of the app, the `Wording` of a value, and `ViewContext` with `useView` | `shared/lib/view/` | Every layer reads them; `Providers` of `src/providers/`, in the app layer, gives the app its view |
 | The addresses of the pages (`routes`) | `shared/config/routes/` | Every module links to the pages of other modules; the folders of `src/app/` are the routes themselves, and the route types of Next.js check each address |
 | The tones of a status and their classes | `shared/lib/tone/` | The UI components and the marks of every module color a state with them |
+| `costPercent`, `costLevel`, their types and the thresholds of the levels | `shared/lib/cost/` | They read only an amount and its limit, for the cost of a run and the cost of a month; `CostMeter` of `shared/components/status/cost/` shows them |
 | The languages of the documents | `shared/config/output-language/` | The app offers them, today in the dialog that creates a project; project, the run config and the user settings all carry one, and in `project` it would make `run` read `project` |
 | `AuthScreen`, the frame of the sign-in and sign-up screens | `shared/components/frame/layouts/`, with the other layouts of whole screens | It holds no object and no action |
 

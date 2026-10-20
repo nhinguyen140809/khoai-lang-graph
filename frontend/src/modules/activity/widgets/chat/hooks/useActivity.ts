@@ -2,14 +2,14 @@ import { useState } from 'react'
 
 import { useStartRun } from '@/modules/run/features/start'
 
-import type { ChatTurn } from '../chat.types'
+import type { ActivityTurn } from '../activity.types'
 
 /**
- * The turns of the chat and the message being written. `send` starts a run with the message, then
+ * The turns of the activity and the message being written. `send` starts a run with the message, then
  * adds its turn and clears the message; a blank message is not sent.
  */
-export function useChat(threadId: string) {
-  const [turns, setTurns] = useState<ChatTurn[]>([])
+export function useActivity(threadId: string) {
+  const [turns, setTurns] = useState<ActivityTurn[]>([])
   const [draft, setDraft] = useState('')
   const startRun = useStartRun(threadId)
 

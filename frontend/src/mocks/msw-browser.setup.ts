@@ -9,6 +9,7 @@ import { runHandlers } from './runs/runs.handlers'
 import { keepMockDataInBrowser, resetMockData } from './shared/mock-db.utils'
 import { pageParam } from './shared/mock-scenario.utils'
 import { threadHandlers } from './threads/threads.handlers'
+import { workflowHandlers } from './workflow/workflow.handlers'
 
 // The records of the mock server survive a reload; `?mock-reset` starts again from the fixtures.
 keepMockDataInBrowser()
@@ -21,5 +22,6 @@ export const worker = setupWorker(
   ...threadHandlers,
   ...messageHandlers,
   ...runHandlers,
+  ...workflowHandlers,
   ...streamHandlers,
 )

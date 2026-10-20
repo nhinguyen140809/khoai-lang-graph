@@ -2,6 +2,7 @@ import type { ReactNode } from 'react'
 
 import { ProjectCommands } from '@/modules/project/widgets/commands'
 import { ProjectDialogs } from '@/modules/project/widgets/dialogs'
+import { MonthlyBudgetItem } from '@/modules/usage/entities'
 import { AccountMenuItem } from '@/modules/user/widgets/menu'
 import { PageCrumb, PageWorkspace, Workbench } from '@/shared/components/frame'
 import { homePageFallback, homePageNames, routes } from '@/shared/config/routes'
@@ -12,7 +13,7 @@ interface HomeLayoutProps {
 
 /**
  * Screens outside a project: the frame, with the commands that open or create a project, the
- * dialogs of the projects and the account menu, and the page.
+ * dialogs of the projects, the account menu and the budget of the month, and the page.
  */
 export default function HomeLayout({ children }: HomeLayoutProps) {
   return (
@@ -24,6 +25,7 @@ export default function HomeLayout({ children }: HomeLayoutProps) {
           <ProjectCommands />
           <ProjectDialogs />
           <AccountMenuItem />
+          <MonthlyBudgetItem />
         </>
       }
     >

@@ -8,8 +8,8 @@ import {
   type ProjectFilters,
   projectSchema,
   type ProjectStatus,
-} from './projects.types'
-import { noProjectFilters } from './projects.utils'
+} from './types/projects.types'
+import { noProjectFilters } from './utils/projects.utils'
 
 // TODO: switch to the generated client in src/shared/api/generated/ once it is generated.
 

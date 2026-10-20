@@ -4,11 +4,11 @@ import { describe, expect, it } from 'vitest'
 import { MOCK_RUN_ID } from '@/mocks/runs/runs.handlers'
 import { TestProviders } from '@/test/TestProviders'
 
-import { useChat } from '../useChat'
-import { blankDrafts, sentDraftCases } from './useChat.data'
+import { useActivity } from '../useActivity'
+import { blankDrafts, sentDraftCases } from './useActivity.data'
 
 function typeAndSend(draft: string) {
-  const { result } = renderHook(() => useChat('t1'), { wrapper: TestProviders })
+  const { result } = renderHook(() => useActivity('t1'), { wrapper: TestProviders })
   act(() => {
     result.current.setDraft(draft)
   })
@@ -18,7 +18,7 @@ function typeAndSend(draft: string) {
   return result
 }
 
-describe('useChat', () => {
+describe('useActivity', () => {
   it.each(sentDraftCases)(
     'starts a run with $draft as $prompt, then adds its turn and clears the message',
     async ({ draft, prompt }) => {

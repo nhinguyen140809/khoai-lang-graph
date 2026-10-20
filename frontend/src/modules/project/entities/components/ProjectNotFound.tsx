@@ -4,7 +4,7 @@ import { NotFoundState } from '@/shared/components/state'
 import { Button } from '@/shared/components/ui/button'
 import { routes } from '@/shared/config/routes'
 
-import { projectMessages } from '../projects.constants'
+import { projectMessages } from '../constants/projects.constants'
 
 /** The page of an address whose project does not exist, with the way to every project. */
 export function ProjectNotFound({ projectId }: { projectId: string }) {

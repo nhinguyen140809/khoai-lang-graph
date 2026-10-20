@@ -33,7 +33,13 @@ export function parseRunEvent(type: RunEventType, id: string, raw: string): RunE
   return result.success ? ({ type, id, data: result.data } as RunEvent) : null
 }
 
+/**
+ * The state of the run after one event. An event whose id is not after the last one applied is
+ * left out: a stream that replays from too early sends events again, and the text of a token
+ * applied twice would show twice.
+ */
 export function applyRunEvent(state: RunState, event: RunEvent): RunState {
+  if (state.lastEventId !== null && Number(event.id) <= Number(state.lastEventId)) return state
   const next = { ...state, lastEventId: event.id }
   switch (event.type) {
     case 'node_start':
