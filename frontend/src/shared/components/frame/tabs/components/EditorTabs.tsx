@@ -3,18 +3,18 @@
 import type { Route } from 'next'
 
 import { useEditorTabs } from '../hooks/useEditorTabs'
-import { TabStripContext } from '../TabStripContext'
+import { useTabGroup } from '../hooks/useTabGroup'
+import { TabStripContext } from '../hooks/useTabStrip'
 import { OpenTabsMenu } from './OpenTabsMenu'
 import { TabItem } from './TabItem'
 
 interface EditorTabsProps {
-  group: string
   /** Shown after the last tab is closed: the start page of the feature whose side panel is shown. */
   rootHref: Route | undefined
 }
 
 /**
- * The open editors of a project, whichever feature they belong to. A tab shows the icon its page
+ * The open editors of a tab group, whichever feature they belong to. A tab shows the icon its page
  * names among the tab icons of the frame, else the icon of the feature it belongs to. A middle
  * click or the close button closes a tab; every tab shows its close button. The active tab is the
  * one that the page on screen opened with `useEditorTab`. The preview tab, which the next page
@@ -23,8 +23,22 @@ interface EditorTabsProps {
  * A right click or the menu key on a tab opens its menu: keep it, close it, close the others, or
  * close them all. The button at the end of the strip lists every open tab, for a strip too long
  * to show them all.
+ *
+ * The group is the one of the workspace around the strip; outside a workspace with tabs, there is
+ * no strip.
  */
-export function EditorTabs({ group, rootHref }: EditorTabsProps) {
+export function EditorTabs({ rootHref }: EditorTabsProps) {
+  const group = useTabGroup()
+  if (group === null) return null
+  return <GroupTabs group={group} rootHref={rootHref} />
+}
+
+interface GroupTabsProps extends EditorTabsProps {
+  group: string
+}
+
+/** The strip of one tab group, once the group has a tab. */
+function GroupTabs({ group, rootHref }: GroupTabsProps) {
   const strip = useEditorTabs(group, rootHref)
 
   if (strip.tabs.length === 0) return null

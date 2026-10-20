@@ -4,7 +4,7 @@ import { cn } from 'cn'
 import { Progress as ProgressPrimitive } from 'radix-ui'
 import * as React from 'react'
 
-import { type Tone, toneClasses } from '@/shared/lib/tone.constants'
+import { type Tone, toneClasses } from '@/shared/lib/tone'
 
 function Progress({
   className,

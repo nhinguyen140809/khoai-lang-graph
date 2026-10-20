@@ -1,7 +1,7 @@
 import { FileIcon } from 'lucide-react'
 
-import { activityOfHref } from '../../activities/activity.utils'
-import { useActivities } from '../../activities/hooks/useActivities'
+import { destinationOfHref } from '../../destinations/destination.utils'
+import { useDestinations } from '../../destinations/hooks/useDestinations'
 import type { EditorTab } from '../editor-tabs.schema'
 
 interface TabLabelProps {
@@ -17,9 +17,9 @@ interface TabLabelProps {
  * `data-preview` sets the title in italics.
  */
 export function TabLabel({ tab, preview }: TabLabelProps) {
-  const { activities, tabIcons } = useActivities()
+  const { destinations, tabIcons } = useDestinations()
   const named = tab.icon === undefined ? undefined : tabIcons[tab.icon]
-  const icon = named ?? activityOfHref(activities, tab.href)?.icon ?? <FileIcon />
+  const icon = named ?? destinationOfHref(destinations, tab.href)?.icon ?? <FileIcon />
 
   return (
     <>

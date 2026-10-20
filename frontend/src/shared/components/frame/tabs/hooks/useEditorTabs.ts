@@ -4,7 +4,7 @@ import { useRouter } from 'next/navigation'
 import type { EditorTab } from '../editor-tabs.schema'
 import { useEditorTabsStore } from '../editor-tabs.store'
 import { neighborTab } from '../editor-tabs.utils'
-import type { TabStrip } from '../TabStripContext'
+import type { TabStrip } from './useTabStrip'
 
 const noTabs: EditorTab[] = []
 

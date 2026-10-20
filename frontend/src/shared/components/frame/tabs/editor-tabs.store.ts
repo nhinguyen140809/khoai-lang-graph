@@ -47,8 +47,9 @@ interface EditorTabsState {
 }
 
 /**
- * The editor tabs of every project on this device; a group is one project, and holds the tabs of
- * every feature. `useRestoreFrame` reads them after the first render, before the pages open theirs.
+ * The editor tabs of every tab group on this device; a group is the strip of one `Workspace`,
+ * named by its layout, and holds the tabs of every feature. `useRestoreFrame` reads them after the
+ * first render, before the pages open theirs.
  */
 export const useEditorTabsStore = create<EditorTabsState>()(
   persist(
