@@ -1,6 +1,6 @@
 import type { Page } from '@playwright/test'
 
-import { PROJECT_IDS } from '../../../src/mocks/shared/mock-ids.constants'
+import { projectIds } from '../../../src/mocks/shared/mock-ids.constants'
 import { type Shot, visit } from '../screenshot.utils'
 
 const failed = (page: Page) => page.getByRole('heading', { name: 'Something went wrong' })
@@ -19,7 +19,7 @@ export const appShots: Shot[] = [
   },
   {
     name: 'A screen of a project that fails to render',
-    steps: visit(`/projects/${PROJECT_IDS.mentor}/render-error`),
+    steps: visit(`/projects/${projectIds.mentor}/render-error`),
     ready: failed,
   },
 ]

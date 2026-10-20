@@ -1,9 +1,9 @@
 import type { Me } from '@/modules/user/entities'
 
-import { USER_ID } from '../shared/mock-ids.constants'
+import { userId } from '../shared/mock-ids.constants'
 
 export const mockMe: Me = {
-  id: USER_ID,
+  id: userId,
   email: 'linh.pham@example.com',
   display_name: 'Linh Pham',
   avatar_url: null,

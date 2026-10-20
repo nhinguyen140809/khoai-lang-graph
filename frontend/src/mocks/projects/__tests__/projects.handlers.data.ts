@@ -1,6 +1,6 @@
 import type { Project } from '@/modules/project/entities'
 
-import { IdPrefix, mockId, PROJECT_IDS } from '../../shared/mock-ids.constants'
+import { IdPrefix, mockId, projectIds } from '../../shared/mock-ids.constants'
 import { bulkProjectCount, extraProjectSpecs } from '../extra-project-specs.constants'
 import { mockProjects } from '../projects.fixtures'
 
@@ -45,25 +45,25 @@ export const unfinishedRunCountCases = [
   {
     name: 'a project waiting for review',
     address: '/',
-    projectId: PROJECT_IDS.mentor,
+    projectId: projectIds.mentor,
     counts: { queued: 0, running: 0, interrupted: 1 },
   },
   {
     name: 'a project with a running run',
     address: '/',
-    projectId: PROJECT_IDS.library,
+    projectId: projectIds.library,
     counts: { queued: 0, running: 1, interrupted: 0 },
   },
   {
     name: 'a project whose runs ended',
     address: '/',
-    projectId: PROJECT_IDS.campus,
+    projectId: projectIds.campus,
     counts: { queued: 0, running: 0, interrupted: 0 },
   },
   {
     name: 'a project whose run the scenario sets running',
     address: '/?mock-run-state=running',
-    projectId: PROJECT_IDS.mentor,
+    projectId: projectIds.mentor,
     counts: { queued: 0, running: 1, interrupted: 0 },
   },
 ]
@@ -73,19 +73,19 @@ export const rollupRunStatusCases = [
   {
     name: 'a project waiting for review',
     address: '/',
-    projectId: PROJECT_IDS.mentor,
+    projectId: projectIds.mentor,
     status: 'interrupted',
   },
   {
     name: 'a project whose failed run a later run of its thread replaced',
     address: '/?mock-run-state=done',
-    projectId: PROJECT_IDS.mentor,
+    projectId: projectIds.mentor,
     status: 'succeeded',
   },
   {
     name: 'a project whose runs ended well',
     address: '/',
-    projectId: PROJECT_IDS.campus,
+    projectId: projectIds.campus,
     status: 'succeeded',
   },
   {
@@ -179,7 +179,7 @@ export const pendingProjectCases = [
   {
     request: 'DELETE /projects/{project_id} in the loading scenario',
     address: '/?mock-delete-project=loading',
-    send: { path: `/api/v1/projects/${PROJECT_IDS.mentor}`, method: 'DELETE' },
+    send: { path: `/api/v1/projects/${projectIds.mentor}`, method: 'DELETE' },
   },
 ]
 
@@ -221,7 +221,7 @@ export const projectErrorCases = [
     request: 'GET /projects/{project_id} in the empty scenario',
     address: '/?mock-project=empty',
     method: 'GET',
-    path: `/api/v1/projects/${PROJECT_IDS.mentor}`,
+    path: `/api/v1/projects/${projectIds.mentor}`,
     status: 404,
     code: 'not_found',
   },
@@ -229,7 +229,7 @@ export const projectErrorCases = [
     request: 'GET /projects/{project_id} in the error scenario',
     address: '/?mock-project=error',
     method: 'GET',
-    path: `/api/v1/projects/${PROJECT_IDS.mentor}`,
+    path: `/api/v1/projects/${projectIds.mentor}`,
     status: 500,
     code: 'internal_error',
   },
@@ -245,7 +245,7 @@ export const projectErrorCases = [
     request: 'PATCH /projects/{project_id} in the error scenario',
     address: '/?mock-update-project=error',
     method: 'PATCH',
-    path: `/api/v1/projects/${PROJECT_IDS.mentor}`,
+    path: `/api/v1/projects/${projectIds.mentor}`,
     status: 500,
     code: 'internal_error',
   },
@@ -261,7 +261,7 @@ export const projectErrorCases = [
     request: 'DELETE /projects/{project_id} in the error scenario',
     address: '/?mock-delete-project=error',
     method: 'DELETE',
-    path: `/api/v1/projects/${PROJECT_IDS.mentor}`,
+    path: `/api/v1/projects/${projectIds.mentor}`,
     status: 500,
     code: 'internal_error',
   },
@@ -269,8 +269,8 @@ export const projectErrorCases = [
 
 /** PATCH /projects/{project_id} with a status: the project, which the list of that status then has. */
 export const projectStatusChangeCases = [
-  { name: 'archives an active project', projectId: PROJECT_IDS.mentor, status: 'archived' },
-  { name: 'restores an archived project', projectId: PROJECT_IDS.laundry, status: 'active' },
+  { name: 'archives an active project', projectId: projectIds.mentor, status: 'archived' },
+  { name: 'restores an archived project', projectId: projectIds.laundry, status: 'active' },
 ]
 
 /** PATCH /projects/{project_id} with a body that the API does not take, and the problems it says. */

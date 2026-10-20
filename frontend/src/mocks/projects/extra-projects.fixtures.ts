@@ -4,7 +4,7 @@ import { isUnfinishedRunStatus } from '@/modules/run/entities'
 import type { Thread } from '@/modules/thread/entities'
 
 import { buildMockRun, scriptedSteps } from '../runs/runs.fixtures'
-import { IdPrefix, mockId, USER_ID } from '../shared/mock-ids.constants'
+import { IdPrefix, mockId, userId } from '../shared/mock-ids.constants'
 import { type ExtraProjectSpec, extraProjectSpecs } from './extra-project-specs.constants'
 
 // Mock projects beyond the four of `projects.fixtures.ts`: each has a thread, a run in one of the
@@ -67,7 +67,7 @@ export function extraRunSteps(id: string): RunStep[] | undefined {
 export function extraProjects(): Project[] {
   return extraProjectSpecs.map((spec) => ({
     id: projectId(spec.n),
-    owner_id: USER_ID,
+    owner_id: userId,
     name: spec.name,
     description: spec.description,
     status: spec.archived === true ? 'archived' : 'active',
@@ -92,7 +92,7 @@ export function extraThreads(): Thread[] {
     return {
       id: threadId(spec.n),
       project_id: projectId(spec.n),
-      created_by: USER_ID,
+      created_by: userId,
       title: 'Main thread',
       status: 'active',
       current_stage: last?.current_stage ?? null,
@@ -112,7 +112,7 @@ export function bulkProjects(count: number): Project[] {
     const day = `2026-09-${String(1 + (index % 28)).padStart(2, '0')}`
     return {
       id: projectId(n),
-      owner_id: USER_ID,
+      owner_id: userId,
       name: `Sample project ${String(index + 1).padStart(3, '0')}`,
       description: `One of the ${String(count)} projects that make the list long.`,
       status: index % 9 === 8 ? ('archived' as const) : ('active' as const),

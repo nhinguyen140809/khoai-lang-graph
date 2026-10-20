@@ -1,12 +1,12 @@
 import type { Run, RunStep } from '@/modules/run/entities'
 
 import {
-  PERSONA_IDS,
-  PROJECT_IDS,
-  RUN_IDS,
+  personaIds,
+  projectIds,
+  runIds,
   stepId,
-  THREAD_IDS,
-  USER_ID,
+  threadIds,
+  userId,
 } from '../shared/mock-ids.constants'
 import { type MockRunState } from '../shared/mock-scenario.utils'
 
@@ -59,7 +59,7 @@ function usage(costUsd: number, durationMs: number, inputTokens: number): Run['u
 
 function run(fields: Partial<Run> & Pick<Run, 'id' | 'thread_id' | 'project_id' | 'number'>): Run {
   return {
-    started_by: USER_ID,
+    started_by: userId,
     workflow_name: 'requirements_engineering',
     workflow_version: 1,
     status: 'succeeded',
@@ -80,17 +80,17 @@ function run(fields: Partial<Run> & Pick<Run, 'id' | 'thread_id' | 'project_id' 
 
 const finishedRuns: Run[] = [
   run({
-    id: RUN_IDS.mentorMain1,
-    thread_id: THREAD_IDS.mentorMain,
-    project_id: PROJECT_IDS.mentor,
+    id: runIds.mentorMain1,
+    thread_id: threadIds.mentorMain,
+    project_id: projectIds.mentor,
     number: 1,
     started_at: '2026-10-02T08:10:01Z',
     finished_at: '2026-10-02T08:52:40Z',
   }),
   run({
-    id: RUN_IDS.mentorMain2,
-    thread_id: THREAD_IDS.mentorMain,
-    project_id: PROJECT_IDS.mentor,
+    id: runIds.mentorMain2,
+    thread_id: threadIds.mentorMain,
+    project_id: projectIds.mentor,
     number: 2,
     step_count: 68,
     last_event_id: 262,
@@ -106,19 +106,19 @@ const finishedRuns: Run[] = [
     finished_at: '2026-10-04T10:21:15Z',
   }),
   run({
-    id: RUN_IDS.campusMain1,
+    id: runIds.campusMain1,
     number: 1,
-    thread_id: THREAD_IDS.campusMain,
-    project_id: PROJECT_IDS.campus,
+    thread_id: threadIds.campusMain,
+    project_id: projectIds.campus,
     started_at: '2026-10-05T15:50:00Z',
     finished_at: '2026-10-05T16:20:00Z',
   }),
   run({
-    id: RUN_IDS.libraryMain1,
+    id: runIds.libraryMain1,
     number: 1,
     step_count: 4,
-    thread_id: THREAD_IDS.libraryMain,
-    project_id: PROJECT_IDS.library,
+    thread_id: threadIds.libraryMain,
+    project_id: projectIds.library,
     status: 'running',
     current_stage: 'interviewing',
     usage: usage(0.06, 125_000, 6_400),
@@ -127,10 +127,10 @@ const finishedRuns: Run[] = [
     finished_at: null,
   }),
   run({
-    id: RUN_IDS.laundryMain1,
+    id: runIds.laundryMain1,
     number: 1,
-    thread_id: THREAD_IDS.laundryMain,
-    project_id: PROJECT_IDS.laundry,
+    thread_id: threadIds.laundryMain,
+    project_id: projectIds.laundry,
     started_at: '2026-09-20T08:40:00Z',
     finished_at: '2026-09-20T09:00:00Z',
   }),
@@ -156,12 +156,12 @@ export function mentorRun3(state: MockRunState): Run {
   const steps = mentorRun3Steps(state)
   const last = steps.at(-1)
   return run({
-    id: RUN_IDS.mentorMain3,
-    thread_id: THREAD_IDS.mentorMain,
-    project_id: PROJECT_IDS.mentor,
+    id: runIds.mentorMain3,
+    thread_id: threadIds.mentorMain,
+    project_id: projectIds.mentor,
     number: 3,
     ...mentorRun3Statuses[state],
-    retry_of_run_id: RUN_IDS.mentorMain2,
+    retry_of_run_id: runIds.mentorMain2,
     error:
       state === 'failed'
         ? {
@@ -233,7 +233,7 @@ function buildSteps(
 
 function interviewSpecs(personaIndex: number, turns: number): StepSpec[] {
   const personaKey = `PER-00${String(personaIndex + 1)}`
-  const subject = PERSONA_IDS[personaIndex]
+  const subject = personaIds[personaIndex]
   return Array.from({ length: turns * 2 }, (_, index) => {
     const asking = index % 2 === 0
     return {
@@ -256,7 +256,7 @@ function interviewSpecs(personaIndex: number, turns: number): StepSpec[] {
 }
 
 const personas = ['PER-001', 'PER-002', 'PER-003'].map((key, index) => ({
-  item_id: PERSONA_IDS[index] ?? key,
+  item_id: personaIds[index] ?? key,
   kind: 'persona',
   key,
   version: 1,
@@ -302,7 +302,7 @@ const ANALYSIS_CHECKPOINT_STEP = 67
 
 /** The steps of the run of the API examples, in the given state. */
 export function mentorRun3Steps(state: MockRunState): RunStep[] {
-  const all = buildSteps(RUN_IDS.mentorMain3, 3, '2026-10-06T08:30:01Z', mentorRun3Specs)
+  const all = buildSteps(runIds.mentorMain3, 3, '2026-10-06T08:30:01Z', mentorRun3Specs)
   switch (state) {
     case 'done':
       return all
@@ -333,7 +333,7 @@ export function mentorRun3Steps(state: MockRunState): RunStep[] {
   }
 }
 
-const libraryRunSteps = buildSteps(RUN_IDS.libraryMain1, 6, '2026-10-03T10:10:00Z', [
+const libraryRunSteps = buildSteps(runIds.libraryMain1, 6, '2026-10-03T10:10:00Z', [
   { node: 'planner', agentRole: 'planner', stage: 'planning', seconds: 11, costUsd: 0.016 },
   {
     node: 'persona_generator',
@@ -360,9 +360,9 @@ export function mockRuns(state: MockRunState): Run[] {
 }
 
 // The first run went through the whole workflow; the second failed at the specification.
-const mentorRun1Steps = buildSteps(RUN_IDS.mentorMain1, 1, '2026-10-02T08:10:01Z', mentorRun3Specs)
+const mentorRun1Steps = buildSteps(runIds.mentorMain1, 1, '2026-10-02T08:10:01Z', mentorRun3Specs)
 const mentorRun2Steps = buildSteps(
-  RUN_IDS.mentorMain2,
+  runIds.mentorMain2,
   2,
   '2026-10-04T10:00:01Z',
   mentorRun3Specs.slice(0, 68),
@@ -378,10 +378,10 @@ const mentorRun2Steps = buildSteps(
 
 /** The steps of a run. Runs without a script here have none. */
 export function mockRunSteps(runId: string, state: MockRunState): RunStep[] {
-  if (runId === RUN_IDS.mentorMain1) return mentorRun1Steps
-  if (runId === RUN_IDS.mentorMain2) return mentorRun2Steps
-  if (runId === RUN_IDS.mentorMain3) return mentorRun3Steps(state)
-  if (runId === RUN_IDS.libraryMain1) return libraryRunSteps
+  if (runId === runIds.mentorMain1) return mentorRun1Steps
+  if (runId === runIds.mentorMain2) return mentorRun2Steps
+  if (runId === runIds.mentorMain3) return mentorRun3Steps(state)
+  if (runId === runIds.libraryMain1) return libraryRunSteps
   const finished = finishedRuns.find(({ id }) => id === runId)
   return finished === undefined ? [] : scriptedSteps(finished, 50 + finishedRuns.indexOf(finished))
 }

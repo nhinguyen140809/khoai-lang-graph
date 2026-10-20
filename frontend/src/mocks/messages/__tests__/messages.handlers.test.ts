@@ -5,7 +5,7 @@ import type { Run } from '@/modules/run/entities'
 import type { Thread } from '@/modules/thread/entities'
 import { apiUrl } from '@/shared/api/api-url.utils'
 
-import { RUN_IDS, THREAD_IDS } from '../../shared/mock-ids.constants'
+import { runIds, threadIds } from '../../shared/mock-ids.constants'
 import { nameFromMessage, type SentMessage } from '../messages.handlers'
 import {
   firstMessageCases,
@@ -94,15 +94,15 @@ describe('POST /threads/{thread_id}/messages', () => {
 
   it('leaves a message for the unfinished run of the thread', async () => {
     const sent = (await post(
-      `/api/v1/threads/${THREAD_IDS.mentorMain}/messages`,
+      `/api/v1/threads/${threadIds.mentorMain}/messages`,
       JSON.stringify({ content: 'Also ask about group sessions.' }),
     )) as Answer<Sent>
 
     expect(sent).toMatchObject({
       status: 201,
       body: {
-        message: { delivery: 'pending', run_id: RUN_IDS.mentorMain3 },
-        run: { id: RUN_IDS.mentorMain3 },
+        message: { delivery: 'pending', run_id: runIds.mentorMain3 },
+        run: { id: runIds.mentorMain3 },
       },
     })
   })

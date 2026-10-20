@@ -14,7 +14,7 @@ const AuthPage = {
 const authPages: readonly string[] = Object.values(AuthPage)
 
 /** The page to return to after signing in, when none is given. */
-export const DEFAULT_AFTER_SIGN_IN: Route = '/'
+export const defaultAfterSignIn: Route = '/'
 
 // Any origin works here: only a `next` that stays on it is kept.
 const BASE = 'http://app.invalid'
@@ -25,16 +25,16 @@ const BASE = 'http://app.invalid'
  * because the URL parser drops tabs and line breaks and reads a backslash as a slash.
  */
 export function safeNextPath(next: string | null | undefined): Route {
-  if (!next?.startsWith('/')) return DEFAULT_AFTER_SIGN_IN
+  if (!next?.startsWith('/')) return defaultAfterSignIn
   let url: URL
   try {
     url = new URL(next, BASE)
   } catch {
-    return DEFAULT_AFTER_SIGN_IN
+    return defaultAfterSignIn
   }
-  if (url.origin !== BASE) return DEFAULT_AFTER_SIGN_IN
+  if (url.origin !== BASE) return defaultAfterSignIn
   const page = url.pathname.replace(/(.)\/+$/, '$1')
-  if (authPages.includes(page)) return DEFAULT_AFTER_SIGN_IN
+  if (authPages.includes(page)) return defaultAfterSignIn
   // A path of this app that came from an address, so the route types cannot check it.
   return `${url.pathname}${url.search}${url.hash}` as Route
 }
@@ -42,7 +42,7 @@ export function safeNextPath(next: string | null | undefined): Route {
 // A page of the account that returns to `next` afterwards; the default page needs no `next`.
 function authHref(page: (typeof AuthPage)[keyof typeof AuthPage], next: string | null | undefined) {
   const target = safeNextPath(next)
-  const query = search({ [RouteParam.Next]: target === DEFAULT_AFTER_SIGN_IN ? undefined : target })
+  const query = search({ [RouteParam.Next]: target === defaultAfterSignIn ? undefined : target })
   return `${page}${query}` as Route
 }
 

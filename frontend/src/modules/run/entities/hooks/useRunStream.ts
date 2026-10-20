@@ -8,7 +8,7 @@ import {
   type RunState,
 } from '../run-events.reducer'
 import { runStreamUrl } from '../runs.api'
-import { RUN_EVENT_TYPES } from '../types/run-events.types'
+import { runEventTypes } from '../types/run-events.types'
 
 /**
  * Subscribes to the SSE stream of one run. EventSource reconnects on its own and sends
@@ -20,7 +20,7 @@ export function useRunStream(runId: string): RunState {
 
   useEffect(() => {
     const source = new EventSource(runStreamUrl(runId))
-    for (const type of RUN_EVENT_TYPES) {
+    for (const type of runEventTypes) {
       source.addEventListener(type, (message: MessageEvent<string>) => {
         const event = parseRunEvent(type, message.lastEventId, message.data)
         if (event) dispatch(event)

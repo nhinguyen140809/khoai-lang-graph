@@ -1,9 +1,9 @@
 import { expect, type Page } from '@playwright/test'
 
-import { PROJECT_IDS } from '../../../src/mocks/shared/mock-ids.constants'
+import { projectIds } from '../../../src/mocks/shared/mock-ids.constants'
 import { type Shot, visit } from '../screenshot.utils'
 
-const mentor = `/projects/${PROJECT_IDS.mentor}/activity`
+const mentor = `/projects/${projectIds.mentor}/activity`
 
 async function openProjectMenu(page: Page, address: string) {
   await page.goto(address)

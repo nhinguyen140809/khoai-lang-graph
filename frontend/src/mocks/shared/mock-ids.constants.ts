@@ -19,9 +19,9 @@ export const IdPrefix = {
 
 const id = mockId
 
-export const USER_ID = id(IdPrefix.User, 1)
+export const userId = id(IdPrefix.User, 1)
 
-export const PROJECT_IDS = {
+export const projectIds = {
   mentor: id(IdPrefix.Project, 1),
   campus: id(IdPrefix.Project, 2),
   library: id(IdPrefix.Project, 3),
@@ -29,14 +29,14 @@ export const PROJECT_IDS = {
 }
 
 /** The main thread of a project has the number of its project. */
-export const THREAD_IDS = {
+export const threadIds = {
   mentorMain: id(IdPrefix.Thread, 1),
   campusMain: id(IdPrefix.Thread, 2),
   libraryMain: id(IdPrefix.Thread, 3),
   laundryMain: id(IdPrefix.Thread, 4),
 }
 
-export const RUN_IDS = {
+export const runIds = {
   /** Run 1 of the mentor thread: its first message started it, and it went through the whole workflow. */
   mentorMain1: id('3b90', 1),
   /** Run 2 of the mentor thread: it failed at its cost limit. */
@@ -48,7 +48,7 @@ export const RUN_IDS = {
   laundryMain1: id('7e10', 4),
 }
 
-export const PERSONA_IDS = [
+export const personaIds = [
   id(IdPrefix.Persona, 1),
   id(IdPrefix.Persona, 2),
   id(IdPrefix.Persona, 3),

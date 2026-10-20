@@ -26,10 +26,10 @@ export function stepsOfRun(runId: string): RunStep[] {
 }
 
 // The chat starts a run with this endpoint, which is not part of the API; it goes with the chat.
-export const MOCK_RUN_ID = 'run-mock-1'
+export const mockRunId = 'run-mock-1'
 
 export const runHandlers = [
-  http.post('/api/v1/threads/:threadId/runs', () => HttpResponse.json({ run_id: MOCK_RUN_ID })),
+  http.post('/api/v1/threads/:threadId/runs', () => HttpResponse.json({ run_id: mockRunId })),
 
   http.get('/api/v1/threads/:threadId/runs', async ({ params, request }) => {
     await answerScenario('runs')

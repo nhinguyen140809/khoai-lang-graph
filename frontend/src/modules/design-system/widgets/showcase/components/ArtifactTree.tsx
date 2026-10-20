@@ -7,7 +7,7 @@ import { Tree, TreeItem, TreeItemLabel } from '@/shared/components/ui/tree'
 
 import { type ExplorerNode, explorerNodes } from '../design-system.fixtures'
 
-const indent = 16
+const INDENT = 16
 
 function getNode(id: string): ExplorerNode {
   return explorerNodes[id] ?? { name: id }
@@ -20,7 +20,7 @@ function getNode(id: string): ExplorerNode {
 export function ArtifactTree({ className }: { className?: string }) {
   const tree = useTree<ExplorerNode>({
     rootItemId: 'root',
-    indent,
+    indent: INDENT,
     initialState: {
       expandedItems: ['personas', 'spec', 'sec-3', 'sec-3-1'],
       selectedItems: ['req-1'],
@@ -35,7 +35,7 @@ export function ArtifactTree({ className }: { className?: string }) {
   })
 
   return (
-    <Tree indent={indent} tree={tree} aria-label="Artifacts" className={className}>
+    <Tree indent={INDENT} tree={tree} aria-label="Artifacts" className={className}>
       {tree.getItems().map((item) => (
         <TreeItem key={item.getId()} item={item}>
           <TreeItemLabel />

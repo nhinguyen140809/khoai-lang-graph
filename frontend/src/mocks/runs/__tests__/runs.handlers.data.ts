@@ -1,11 +1,11 @@
-import { RUN_IDS, THREAD_IDS } from '../../shared/mock-ids.constants'
+import { runIds, threadIds } from '../../shared/mock-ids.constants'
 
 /** GET /threads/{thread_id}/runs in the scenario of the page address: the runs it lists. */
 export const runListCases = [
   {
     name: 'the runs of a thread, the latest first',
     address: '/',
-    threadId: THREAD_IDS.mentorMain,
+    threadId: threadIds.mentorMain,
     runs: [
       { number: 3, status: 'interrupted' },
       { number: 2, status: 'failed' },
@@ -16,7 +16,7 @@ export const runListCases = [
   {
     name: 'no run in the empty scenario',
     address: '/?mock-runs=empty',
-    threadId: THREAD_IDS.mentorMain,
+    threadId: threadIds.mentorMain,
     runs: [],
   },
 ]
@@ -38,7 +38,7 @@ export const runErrorCases = [
     request: 'GET /threads/{thread_id}/runs in the error scenario',
     address: '/?mock-runs=error',
     method: 'GET',
-    path: `/api/v1/threads/${THREAD_IDS.mentorMain}/runs`,
+    path: `/api/v1/threads/${threadIds.mentorMain}/runs`,
     status: 500,
     code: 'internal_error',
   },
@@ -70,7 +70,7 @@ export const runErrorCases = [
     request: 'POST /runs/{run_id}/cancel of a run that succeeded',
     address: '/',
     method: 'POST',
-    path: `/api/v1/runs/${RUN_IDS.mentorMain1}/cancel`,
+    path: `/api/v1/runs/${runIds.mentorMain1}/cancel`,
     status: 409,
     code: 'invalid_state',
   },
@@ -78,7 +78,7 @@ export const runErrorCases = [
     request: 'POST /runs/{run_id}/cancel of a run that failed',
     address: '/',
     method: 'POST',
-    path: `/api/v1/runs/${RUN_IDS.mentorMain2}/cancel`,
+    path: `/api/v1/runs/${runIds.mentorMain2}/cancel`,
     status: 409,
     code: 'invalid_state',
   },

@@ -20,7 +20,7 @@ export const runEventSchemas = {
 
 export type RunEventType = keyof typeof runEventSchemas
 
-export const RUN_EVENT_TYPES = Object.keys(runEventSchemas) as RunEventType[]
+export const runEventTypes = Object.keys(runEventSchemas) as RunEventType[]
 
 export type RunEvent = {
   [K in RunEventType]: { type: K; id: string; data: z.infer<(typeof runEventSchemas)[K]> }

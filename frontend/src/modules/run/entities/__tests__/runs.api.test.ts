@@ -2,7 +2,7 @@ import { http } from 'msw'
 import { afterEach, describe, expect, it } from 'vitest'
 
 import { server } from '@/mocks/msw-server.setup'
-import { MOCK_RUN_ID } from '@/mocks/runs/runs.handlers'
+import { mockRunId } from '@/mocks/runs/runs.handlers'
 
 import { createRun } from '../runs.api'
 import { failedRunCases } from './runs.api.data'
@@ -13,7 +13,7 @@ afterEach(() => {
 
 describe('createRun', () => {
   it('returns the run id from the API', async () => {
-    await expect(createRun('thread-1', 'hi')).resolves.toEqual({ run_id: MOCK_RUN_ID })
+    await expect(createRun('thread-1', 'hi')).resolves.toEqual({ run_id: mockRunId })
   })
 
   it('sends the message as the input of a run of the thread, its id encoded', async () => {

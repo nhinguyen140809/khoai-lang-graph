@@ -1,13 +1,13 @@
 import type { Project } from '@/modules/project/entities'
 
-import { PROJECT_IDS, USER_ID } from '../shared/mock-ids.constants'
+import { projectIds, userId } from '../shared/mock-ids.constants'
 
 // Mock projects, after the project of the API examples: an online platform where university
 // students find mentors.
 
 function project(fields: Partial<Project> & Pick<Project, 'id' | 'name'>): Project {
   return {
-    owner_id: USER_ID,
+    owner_id: userId,
     description: null,
     status: 'active',
     output_language: 'en',
@@ -30,7 +30,7 @@ export const buildMockProject = project
 
 export const mockProjects: Project[] = [
   project({
-    id: PROJECT_IDS.mentor,
+    id: projectIds.mentor,
     name: 'Mentor platform',
     description: 'Online platform where university students find mentors.',
     run_config: { review_checkpoints: null, max_steps: null, max_cost_usd: 2.0, parameters: null },
@@ -54,7 +54,7 @@ export const mockProjects: Project[] = [
     updated_at: '2026-10-06T08:41:12Z',
   }),
   project({
-    id: PROJECT_IDS.campus,
+    id: projectIds.campus,
     name: 'Campus food ordering',
     description: 'Students order food from campus canteens and pick it up between classes.',
     initial_message_id: 'c2a10000-0000-4000-8000-000000000002',
@@ -77,7 +77,7 @@ export const mockProjects: Project[] = [
     updated_at: '2026-10-05T16:20:00Z',
   }),
   project({
-    id: PROJECT_IDS.library,
+    id: projectIds.library,
     name: 'Library booking',
     description: 'Book study rooms and seats in the university library.',
     output_language: 'vi',
@@ -88,7 +88,7 @@ export const mockProjects: Project[] = [
     updated_at: '2026-10-03T10:12:00Z',
   }),
   project({
-    id: PROJECT_IDS.laundry,
+    id: projectIds.laundry,
     name: 'Dorm laundry booking',
     status: 'archived',
     initial_message_id: 'c2a10000-0000-4000-8000-000000000004',
