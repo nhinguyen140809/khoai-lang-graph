@@ -220,6 +220,21 @@
   --text-4xs--line-height: calc(0.75 / 0.625);
 }
 
+/*
+ * Sizes that follow the window instead of the spacing scale: a dialog grows to 80% of the window
+ * height at most, a popover keeps 1rem from each side of the window, and the prompt of the project
+ * list starts 18% of the window height below the top on wider screens. The rows of a dialog, and
+ * of the form inside it, give the space left to the part between the header and the buttons,
+ * which scrolls.
+ */
+@theme {
+  --max-height-dialog: 80dvh;
+  --max-width-popover: calc(100vw - 2rem);
+  --padding-prompt-top: 18vh;
+  --grid-template-rows-header-body: auto minmax(0, 1fr);
+  --grid-template-rows-body-footer: minmax(0, 1fr) auto;
+}
+
 @layer base {
   * {
     @apply border-border outline-ring/50;

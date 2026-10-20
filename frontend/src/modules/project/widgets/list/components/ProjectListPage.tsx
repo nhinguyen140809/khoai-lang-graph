@@ -26,7 +26,7 @@ export function ProjectListPage() {
     <>
       <ScrollArea className="h-full">
         {/* The prompt keeps its place under the top, whatever the length of the list. */}
-        <div className="mx-auto flex w-full max-w-3xl flex-col gap-12 px-6 pt-16 pb-8 sm:pt-[18vh]">
+        <div className="mx-auto flex w-full max-w-3xl flex-col gap-12 px-6 pt-16 pb-8 sm:pt-prompt-top">
           <NewProjectPrompt
             onStart={(idea) => {
               setNewProject({ open: true, idea })

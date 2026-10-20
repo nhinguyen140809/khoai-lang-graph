@@ -63,7 +63,7 @@ export function NewProjectForm({ idea, defaultLanguage, onCreated }: NewProjectF
   })
 
   return (
-    <Form onSubmit={onSubmit} className="grid min-h-0 grid-rows-[minmax(0,1fr)_auto] gap-6">
+    <Form onSubmit={onSubmit} className="grid min-h-0 grid-rows-body-footer gap-6">
       {/* The fields scroll and the buttons stay. The padding keeps the focus rings of the fields
           inside the area, which clips what overflows it, and leaves the right edge to its
           scrollbar, in the padding of the dialog. */}
