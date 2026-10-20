@@ -29,6 +29,8 @@ export function ThemePicker() {
             <Button
               variant={chosen === value ? 'default' : 'outline'}
               size="icon"
+              // The fill also covers the border, so the chosen button is as large as the outlined ones.
+              className="bg-clip-border"
               aria-label={label}
               aria-pressed={chosen === value}
               onClick={() => {
