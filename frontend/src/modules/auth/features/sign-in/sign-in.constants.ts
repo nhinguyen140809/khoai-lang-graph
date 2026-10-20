@@ -1,4 +1,4 @@
-import { ApiErrorCode, HttpStatus } from '@/shared/api/api-error.constants'
+import { ApiErrorCode, HttpStatus } from '@/shared/api/api-error.types'
 import type { ErrorMessages } from '@/shared/api/api-error.utils'
 
 // The words that the sign-in page shows for the answers of the API.

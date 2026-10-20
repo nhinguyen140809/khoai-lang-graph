@@ -46,3 +46,16 @@ export function groupsBySearch(groups: GroupOfCommands[], search: string): Group
     .toSorted((a, b) => b.score - a.score)
     .map(({ group }) => group)
 }
+
+/** What the palette shows of the commands, as text: when it changes, they register again. */
+export function shownKey(commands: readonly PaletteCommand[]): string {
+  return JSON.stringify(
+    commands.map(({ id, label, group, hotkey, run }) => [
+      id,
+      label,
+      group,
+      hotkey,
+      run !== undefined,
+    ]),
+  )
+}

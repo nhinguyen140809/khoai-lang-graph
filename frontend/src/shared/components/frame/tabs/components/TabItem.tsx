@@ -11,7 +11,7 @@ import {
   ContextMenuTrigger,
 } from '@/shared/components/ui/context-menu'
 
-import type { EditorTab } from '../editor-tabs.schema'
+import type { EditorTab } from '../editor-tabs.types'
 import { useTabStrip } from '../hooks/useTabStrip'
 import { TabLabel } from './TabLabel'
 

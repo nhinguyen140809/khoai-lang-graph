@@ -8,7 +8,7 @@ import {
   type PersistedTabs,
   persistedTabsSchema,
   type StoredTabGroup,
-} from './editor-tabs.schema'
+} from './editor-tabs.types'
 import {
   joinTabGroups,
   placeTab,

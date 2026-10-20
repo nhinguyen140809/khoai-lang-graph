@@ -1,20 +1,22 @@
 import { http, HttpResponse } from 'msw'
 
 import type { Project } from '@/modules/project/entities'
-import { isUnfinishedRunStatus, rollupRunStatus, type Run } from '@/modules/run/entities'
+import { isUnfinishedRunStatus, type Run } from '@/modules/run/entities'
 import type { FieldProblem } from '@/shared/api/api-error.utils'
 import { outputLanguages } from '@/shared/config/output-language'
 
 import { allRuns } from '../runs/runs.handlers'
 import { mockRecord } from '../shared/mock-db.utils'
-import { createdId, IdPrefix } from '../shared/mock-ids.constants'
+import { IdPrefix } from '../shared/mock-ids.constants'
+import { createdId } from '../shared/mock-ids.utils'
 import { answerScenario, neverAnswer, pageParam } from '../shared/mock-scenario.utils'
 import { emptyPage, paginate } from '../shared/pagination.utils'
 import { invalidState, notFound, validationFailed } from '../shared/problem.utils'
 import { readBodyFields } from '../shared/request-body.utils'
-import { bulkProjectCount } from './extra-project-specs.constants'
 import { bulkProjects, extraProjects } from './extra-projects.fixtures'
+import { bulkProjectCount } from './projects.constants'
 import { buildMockProject, mockProjects } from './projects.fixtures'
+import { rollupRunStatus } from './run-status-rollup.utils'
 
 // Projects created with POST /projects.
 const createdProjects = mockRecord<Project[]>('created-projects', () => [])

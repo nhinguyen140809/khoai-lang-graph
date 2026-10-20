@@ -3,7 +3,7 @@ import { afterEach, describe, expect, it } from 'vitest'
 import type { Thread } from '@/modules/thread/entities'
 import { apiUrl } from '@/shared/api/api-url.utils'
 
-import { extraProjectSpecs } from '../../projects/extra-project-specs.constants'
+import { extraProjectSpecs } from '../../projects/extra-project-specs.fixtures'
 import { mockProjects } from '../../projects/projects.fixtures'
 import { runIds, threadIds } from '../../shared/mock-ids.constants'
 import { threadErrorCases, threadListCases, threadRunStateCases } from './threads.handlers.data'

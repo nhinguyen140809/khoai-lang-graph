@@ -9,8 +9,8 @@ import { Surface } from '@/shared/components/ui/surface'
 import { PaletteGroup } from '../../commands/command.constants'
 import { useCommands } from '../../commands/hooks/useCommands'
 import { usePanel } from '../hooks/usePanel'
-import { PanelRegion } from '../panel.constants'
-import { type BottomPanelSection, BottomPanelSections } from './BottomPanelSections'
+import { type BottomPanelSection, PanelRegion } from '../panel.types'
+import { BottomPanelSections } from './BottomPanelSections'
 import { EditorSplit } from './EditorSplit'
 
 interface EditorWithBottomPanelProps {

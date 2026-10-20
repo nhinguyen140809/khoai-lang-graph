@@ -3,7 +3,7 @@ import {
   type PersistedTabs,
   type StoredTabGroup,
   storedTabGroupSchema,
-} from './editor-tabs.schema'
+} from './editor-tabs.types'
 
 /** The record with the entry of `key` set to `value`, or the same record when it has it already. */
 export function withEntry(record: Record<string, string>, key: string, value: string) {

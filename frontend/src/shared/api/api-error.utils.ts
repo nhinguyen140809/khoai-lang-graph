@@ -1,6 +1,6 @@
 import { z } from 'zod'
 
-import { type ApiErrorCode, HttpStatus } from './api-error.constants'
+import { type ApiErrorCode, HttpStatus } from './api-error.types'
 
 // The error body of the API (RFC 9457 Problem Details). Fields are optional so that an error from
 // a proxy, which has no such body, still becomes an ApiError.

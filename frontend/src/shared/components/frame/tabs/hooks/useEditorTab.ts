@@ -2,8 +2,8 @@
 
 import { useCallback, useEffect } from 'react'
 
-import type { EditorTab } from '../editor-tabs.schema'
 import { useEditorTabsStore } from '../editor-tabs.store'
+import type { EditorTab } from '../editor-tabs.types'
 import { useTabGroup } from './useTabGroup'
 
 /**

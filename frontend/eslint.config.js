@@ -275,7 +275,7 @@ const FILE_KINDS = {
   entities: ['api', 'keys', 'queries', 'types', 'reducer', 'constants', 'utils'],
   features: ['types', 'schema', 'store', 'reducer', 'constants', 'utils'],
   widgets: ['types', 'store', 'reducer', 'constants', 'utils', 'fixtures'],
-  shared: ['types', 'schema', 'store', 'reducer', 'config', 'constants', 'utils'],
+  shared: ['types', 'store', 'reducer', 'config', 'constants', 'utils'],
   mocks: ['types', 'store', 'constants', 'utils', 'handlers', 'fixtures', 'setup'],
   test: ['utils', 'setup'],
 }
@@ -434,7 +434,7 @@ export default defineConfig([
   },
   {
     // The layers of the frame: pure files.
-    files: ['src/shared/components/frame/**/*.@(utils|constants|types|schema).ts'],
+    files: ['src/shared/components/frame/**/*.@(utils|constants|types).ts'],
     rules: {
       'no-restricted-imports': [
         'error',

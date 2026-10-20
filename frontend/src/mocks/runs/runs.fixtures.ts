@@ -1,14 +1,15 @@
 import type { Run, RunStep } from '@/modules/run/entities'
 
 import {
+  IdPrefix,
   personaIds,
   projectIds,
   runIds,
-  stepId,
   threadIds,
   userId,
 } from '../shared/mock-ids.constants'
-import { type MockRunState } from '../shared/mock-scenario.utils'
+import { mockId } from '../shared/mock-ids.utils'
+import type { MockRunState } from '../shared/mock-scenario.types'
 
 // Mock runs and run steps. The third run of the main thread of the mentor platform is the run of
 // the API examples: it retries the second run from its planner step and waits at the analysis
@@ -16,6 +17,10 @@ import { type MockRunState } from '../shared/mock-scenario.utils'
 
 const SONNET = 'anthropic:claude-sonnet-5'
 const MINI = 'openai:gpt-4.1-mini'
+
+// The id of a step: the number of its run, then its sequence in the run.
+const stepId = (runIndex: number, sequence: number) =>
+  mockId(IdPrefix.Step, runIndex * 1000 + sequence)
 
 const runConfig: Run['run_config'] = {
   models: {

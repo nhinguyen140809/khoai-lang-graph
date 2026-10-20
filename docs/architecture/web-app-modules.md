@@ -96,16 +96,16 @@ A slice holds its components in `components/`, its hooks in `hooks/`, and its ot
 | `api` | `<resource>.api.ts` | The calls of the endpoints of the objects | - | - |
 | `keys` | `<resource>.keys.ts` | The query keys | - | - |
 | `queries` | `<resource>.queries.ts` | A query that several places read or write | - | - |
-| `types` | `<subject>.types.ts` | The schemas and the types of the responses | The types of the action | The types of the block |
+| `types` | `<subject>.types.ts` | The schemas and the types of the responses, and the lists of values that a type is made from | The types of the action | The types of the block |
 | `schema` | `<form>.schema.ts` | - | The schema of a form | - |
 | `store` | `<topic>.store.ts` | - | The state of a dialog or of a prompt | The state of the block |
 | `reducer` | `<topic>.reducer.ts` | The events of a stream | A state that events change | A state that events change |
-| `constants` | `<topic>.constants.ts` | The labels of the values | The words of the action | The words of the block |
+| `constants` | `<topic>.constants.ts` | The labels and the looks of the values, and the defaults | The words of the action | The words of the block |
 | `utils` | `<topic>.utils.ts` | The pure rules of the objects | The rules of the action | The pure helpers of the block |
 | `fixtures` | `<subject>.fixtures.ts` | - | - | Sample data, as in the design system page |
 | `@x/` | `<module>.ts` | The files for the entities of other modules | - | - |
 
-Outside the modules, shared code holds `types`, `schema`, `store`, `reducer`, `config`, `constants` and `utils` files; `src/mocks/` holds `types`, `store`, `constants`, `utils`, `handlers`, `fixtures` and `setup` files; `src/test/` holds `utils` and `setup` files; and `tests/` holds the `spec`, `data` and `utils` files of Playwright. A config made of React elements is a `<subject>.config.tsx`.
+Outside the modules, shared code holds `types`, `store`, `reducer`, `config`, `constants` and `utils` files; `src/mocks/` holds `types`, `store`, `constants`, `utils`, `handlers`, `fixtures` and `setup` files, its `fixtures` the records of the mock data and its `constants` their fixed ids and counts; `src/test/` holds `utils` and `setup` files; and `tests/` holds the `spec`, `data` and `utils` files of Playwright. A config made of React elements is a `<subject>.config.tsx`.
 
 ESLint checks the kinds of each place (`FILE_KINDS` of `frontend/eslint.config.js`), the layers inside a module, and the folders at the root of a slice: one for each kind that the layer holds, `components/`, `hooks/`, `__tests__/`, and `@x/` in the entities.
 
@@ -156,8 +156,8 @@ modules/
 
 ```ts
 // modules/run/entities/@x/project.ts
-export { runStatuses } from '../constants/run-status.constants'
-export type { RunStatus } from '../types/run-status.types'
+export { runDefaultsSchema } from '../types/run-config.types'
+export { type RunStatus, runStatuses } from '../types/run-status.types'
 ```
 
 The links between entities today:

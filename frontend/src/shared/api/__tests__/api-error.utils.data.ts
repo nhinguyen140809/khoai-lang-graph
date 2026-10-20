@@ -1,4 +1,4 @@
-import { ApiErrorCode, HttpStatus } from '../api-error.constants'
+import { ApiErrorCode, HttpStatus } from '../api-error.types'
 import { ApiError } from '../api-error.utils'
 
 /** A status, a body and the plain message, and the error that `toApiError` makes of them. */

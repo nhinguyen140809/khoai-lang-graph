@@ -1,8 +1,9 @@
 import { describe, expect, it } from 'vitest'
 
-import { runStatuses, runStatusesByAttention } from '../../constants/run-status.constants'
-import { isUnfinishedRunStatus, rollupRunStatus, runStatusLabel } from '../run-status.utils'
-import { labelCases, rollupCases, unfinishedCases } from './run-status.utils.data'
+import { runStatusesByAttention } from '../../constants/run-status.constants'
+import { runStatuses } from '../../types/run-status.types'
+import { isUnfinishedRunStatus, runStatusLabel } from '../run-status.utils'
+import { labelCases, unfinishedCases } from './run-status.utils.data'
 
 describe('isUnfinishedRunStatus', () => {
   it.each(unfinishedCases)('tells whether a %s run has not ended: %s', (status, unfinished) => {
@@ -10,11 +11,7 @@ describe('isUnfinishedRunStatus', () => {
   })
 })
 
-describe('rollupRunStatus', () => {
-  it.each(rollupCases)('gives $name', ({ statuses, rollup }) => {
-    expect(rollupRunStatus(statuses)).toBe(rollup)
-  })
-
+describe('runStatusesByAttention', () => {
   it('ranks every status of a run once', () => {
     expect(runStatusesByAttention.toSorted()).toEqual(runStatuses.toSorted())
   })

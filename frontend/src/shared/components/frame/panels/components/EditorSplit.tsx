@@ -9,7 +9,8 @@ import {
 } from '@/shared/components/ui/resizable'
 
 import { usePanel } from '../hooks/usePanel'
-import { panelLayouts, type PanelRegion } from '../panel.constants'
+import { panelLayouts } from '../panel.constants'
+import type { PanelRegion } from '../panel.types'
 
 interface EditorSplitProps {
   region: PanelRegion

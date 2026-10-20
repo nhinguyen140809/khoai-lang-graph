@@ -1,23 +1,14 @@
 import type { Wording } from '@/shared/lib/view'
 
+import { noRunLabel, runStatusLabels } from '../constants/run-status.constants'
 import {
-  noRunLabel,
-  runStatusesByAttention,
-  runStatusLabels,
+  type RunStatus,
+  type UnfinishedRunStatus,
   unfinishedRunStatuses,
-} from '../constants/run-status.constants'
-import type { RunStatus, UnfinishedRunStatus } from '../types/run-status.types'
+} from '../types/run-status.types'
 
 export function isUnfinishedRunStatus(status: RunStatus): status is UnfinishedRunStatus {
   return (unfinishedRunStatuses as readonly RunStatus[]).includes(status)
-}
-
-/**
- * The status that several runs roll up to, such as the latest runs of the threads of a project:
- * the one that needs the user most, in the order of `runStatusesByAttention`. Null without a run.
- */
-export function rollupRunStatus(statuses: readonly RunStatus[]): RunStatus | null {
-  return runStatusesByAttention.find((status) => statuses.includes(status)) ?? null
 }
 
 /** The label of a run status in each view, or of no run yet for a project or a thread without one. */

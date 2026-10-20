@@ -1,7 +1,9 @@
 import type { Project } from '@/modules/project/entities'
 
-import { IdPrefix, mockId, projectIds } from '../../shared/mock-ids.constants'
-import { bulkProjectCount, extraProjectSpecs } from '../extra-project-specs.constants'
+import { IdPrefix, projectIds } from '../../shared/mock-ids.constants'
+import { mockId } from '../../shared/mock-ids.utils'
+import { extraProjectSpecs } from '../extra-project-specs.fixtures'
+import { bulkProjectCount } from '../projects.constants'
 import { mockProjects } from '../projects.fixtures'
 
 const projectCount = mockProjects.length + extraProjectSpecs.length

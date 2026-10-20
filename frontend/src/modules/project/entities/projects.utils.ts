@@ -1,4 +1,4 @@
-import type { Project, ProjectFilters } from './projects.types'
+import type { Project } from './projects.types'
 
 const UNTITLED = 'Untitled project'
 
@@ -12,6 +12,3 @@ export function unfinishedRunCount(project: Pick<Project, 'unfinished_run_counts
   const { queued, running, interrupted } = project.unfinished_run_counts
   return queued + running + interrupted
 }
-
-/** The filters of a list of projects that narrow nothing. */
-export const noProjectFilters: ProjectFilters = { runStatuses: [], activeWithinDays: null }

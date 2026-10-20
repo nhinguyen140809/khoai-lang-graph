@@ -1,7 +1,7 @@
 import { z } from 'zod'
 
-import { runStatuses } from '../constants/run-status.constants'
 import { runConfigSchema } from './run-config.types'
+import { runStatuses } from './run-status.types'
 
 // Temporary hand-written schemas for the runs API: the runs and their steps.
 // TODO: replace with the types generated into src/shared/api/generated/ once they exist.

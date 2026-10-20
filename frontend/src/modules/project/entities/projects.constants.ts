@@ -1,4 +1,6 @@
-// The words of the projects: their lists and their states.
+import type { ProjectFilters } from './projects.types'
+
+// The words of the projects, for their lists and their states, and the filters that narrow nothing.
 
 export const projectMessages = {
   /** The way to the list of every project. */
@@ -15,3 +17,6 @@ export const projectMessages = {
   /** The project failed to load for another reason. */
   unavailable: 'Project unavailable',
 }
+
+/** The filters of a list of projects that narrow nothing. */
+export const noProjectFilters: ProjectFilters = { runStatuses: [], activeWithinDays: null }

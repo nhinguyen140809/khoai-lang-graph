@@ -2,7 +2,7 @@ import { FileIcon } from 'lucide-react'
 
 import { destinationOfHref } from '../../destinations/destination.utils'
 import { useDestinations } from '../../destinations/hooks/useDestinations'
-import type { EditorTab } from '../editor-tabs.schema'
+import type { EditorTab } from '../editor-tabs.types'
 
 interface TabLabelProps {
   tab: EditorTab

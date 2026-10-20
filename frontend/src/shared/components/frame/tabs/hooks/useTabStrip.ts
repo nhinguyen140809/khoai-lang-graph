@@ -2,7 +2,7 @@
 
 import { createContext, useContext } from 'react'
 
-import type { EditorTab } from '../editor-tabs.schema'
+import type { EditorTab } from '../editor-tabs.types'
 
 /** The tab strip of a group: what `useEditorTabs` gives, shared with the tabs and the menu. */
 export interface TabStrip {

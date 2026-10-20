@@ -1,10 +1,7 @@
+import { mockId } from './mock-ids.utils'
+
 // Fixed ids of the mock data, shared by the fixture files. Each id starts like the id of the same
 // record in the API examples, so that the examples and the mock data are easy to match.
-
-/** An id of the mock data: the prefix of its kind and a number. */
-export function mockId(prefix: string, n: number): string {
-  return `${prefix}0000-0000-4000-8000-${String(n).padStart(12, '0')}`
-}
 
 /** The prefix of the ids of each kind of record, as in the API examples. */
 export const IdPrefix = {
@@ -53,12 +50,3 @@ export const personaIds = [
   id(IdPrefix.Persona, 2),
   id(IdPrefix.Persona, 3),
 ] as const
-
-export function stepId(runIndex: number, sequence: number): string {
-  return id(IdPrefix.Step, runIndex * 1000 + sequence)
-}
-
-/** Ids of records created while the mock server runs, apart from the ids of the fixtures. */
-export function createdId(prefix: string, n: number): string {
-  return id(prefix, 9000 + n)
-}

@@ -1,6 +1,7 @@
 import { HttpResponse } from 'msw'
 
-import { createdId, IdPrefix } from '@/mocks/shared/mock-ids.constants'
+import { IdPrefix } from '@/mocks/shared/mock-ids.constants'
+import { createdId } from '@/mocks/shared/mock-ids.utils'
 
 const projectId = createdId(IdPrefix.Project, 1)
 const threadId = createdId(IdPrefix.Thread, 1)

@@ -1,5 +1,5 @@
-import type { EditorTab } from '../editor-tabs.schema'
 import type { useEditorTabsStore } from '../editor-tabs.store'
+import type { EditorTab } from '../editor-tabs.types'
 
 type Store = ReturnType<typeof useEditorTabsStore.getState>
 

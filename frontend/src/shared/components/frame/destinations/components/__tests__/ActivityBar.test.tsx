@@ -14,7 +14,7 @@ import { afterEach, beforeEach, describe, expect, it, vi } from 'vitest'
 import { setPathname } from '@/test/next-mocks.utils'
 import { TestProviders } from '@/test/TestProviders'
 
-import { PanelRegion } from '../../../panels/panel.constants'
+import { PanelRegion } from '../../../panels/panel.types'
 import { usePanelsStore } from '../../../panels/panels.store'
 import { useActivityBarStore } from '../../activity-bar.store'
 import type { Destination } from '../../destination.types'

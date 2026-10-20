@@ -1,8 +1,7 @@
 import { useMemo } from 'react'
 
-import { StatusBarSide } from '../status-bar.constants'
 import { useStatusBarStore } from '../status-bar.store'
-import type { StatusBarItem } from '../status-bar.types'
+import { type StatusBarItem, StatusBarSide } from '../status-bar.types'
 
 interface PlacedItem {
   key: string
