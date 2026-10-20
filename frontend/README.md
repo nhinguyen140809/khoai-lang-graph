@@ -305,7 +305,7 @@ The size and visibility of the regions and the open editor tabs are device-local
 
 - `storageKey(name)` names a key: every key starts with the name of the app.
 - `browserStorage` reads and writes keys, and fails quietly where storage is missing, blocked or full.
-- `persistStorage()` is the storage of a persisted store. With `ready`, it drops writes until the store has read what was stored: the frame stores read after the first render, so that the server HTML matches the first client render, and `persist` writes on every change.
+- `persistStorage()` is the storage of a persisted store; ESLint reports a `persist` store without a `storage` or without a key named by `storageKey`. With `ready`, it drops writes until the store has read what was stored: the frame stores read after the first render, so that the server HTML matches the first client render, and `persist` writes on every change.
 - `persistStorageByEntry()` is the storage of a persisted store whose state divides into entries: each entry has a key of its own, and a write stores only the entries that changed since the page read or wrote them, so that two browser tabs that change different entries keep each other's changes. The editor tabs store each tab group so: a browser tab on one project never writes over the tabs opened in another project since it loaded.
 - `parseStored()` checks stored state with a Zod schema before a store uses it, so that a value of an older version of the app is dropped instead of breaking the store.
 
