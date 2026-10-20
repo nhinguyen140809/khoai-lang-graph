@@ -31,18 +31,18 @@ function entries(folder) {
   }))
 }
 
-const features = entries('src/features')
-const isDesignSystem = (entry) => entry.path === 'src/features/design-system'
+const modules = entries('src/modules')
+const isDesignSystem = (entry) => entry.path === 'src/modules/design-system'
 
 // Every file is in exactly one group: the folders of src/ are listed as they are on disk, and the
 // last group takes everything outside src/.
 const groups = [
   // The design system page imports every UI component, so it has a process of its own.
-  { name: 'design-system', lint: features.filter(isDesignSystem) },
-  { name: 'features', lint: features.filter((entry) => !isDesignSystem(entry)) },
+  { name: 'design-system', lint: modules.filter(isDesignSystem) },
+  { name: 'modules', lint: modules.filter((entry) => !isDesignSystem(entry)) },
   {
     name: 'app-and-shared',
-    lint: entries('src').filter((entry) => entry.path !== 'src/features'),
+    lint: entries('src').filter((entry) => entry.path !== 'src/modules'),
   },
   {
     name: 'tests-and-config',
@@ -77,7 +77,7 @@ for (const group of groups) {
     eslintBin,
     ...group.lint.map((entry) => entry.path),
     ...(group.ignore ?? []).flatMap((pattern) => ['--ignore-pattern', pattern]),
-    // A feature folder can be empty until its feature is built.
+    // A folder can be empty until its first code.
     '--no-error-on-unmatched-pattern',
     ...eslintOptions,
   ]
