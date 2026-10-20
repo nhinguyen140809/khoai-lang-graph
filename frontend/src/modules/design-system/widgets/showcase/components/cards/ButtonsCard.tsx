@@ -4,7 +4,7 @@ import { Button } from '@/shared/components/ui/button'
 import { ButtonGroup } from '@/shared/components/ui/button-group'
 import { Code } from '@/shared/components/ui/code'
 import { Spinner } from '@/shared/components/ui/spinner'
-import { fills, tones } from '@/shared/lib/tone.constants'
+import { fills, tones } from '@/shared/lib/tone'
 
 import { toneIcons } from '../../design-system.constants'
 import { SampleCard, SampleGroup } from '../Sample'

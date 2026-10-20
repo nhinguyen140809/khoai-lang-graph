@@ -8,7 +8,7 @@ import {
 } from 'lucide-react'
 
 import { Alert, AlertDescription, AlertTitle } from '@/shared/components/ui/alert'
-import type { Tone } from '@/shared/lib/tone.constants'
+import type { Tone } from '@/shared/lib/tone'
 
 import { SampleCard, SampleGroup } from '../Sample'
 

@@ -24,7 +24,7 @@ import { Flow } from '@/shared/components/ui/flow'
 import { Handle } from '@/shared/components/ui/handle'
 import { Node, NodeContent, NodeHeader, NodeHeaderTitle } from '@/shared/components/ui/node'
 import { NodeStatusIndicator } from '@/shared/components/ui/node-status-indicator'
-import { tones } from '@/shared/lib/tone.constants'
+import { tones } from '@/shared/lib/tone'
 
 import {
   type TraceEdge,

@@ -24,7 +24,7 @@ import { Slider } from '@/shared/components/ui/slider'
 import { Spinner } from '@/shared/components/ui/spinner'
 import { Toggle } from '@/shared/components/ui/toggle'
 import { ToggleGroup, ToggleGroupItem } from '@/shared/components/ui/toggle-group'
-import type { Tone } from '@/shared/lib/tone.constants'
+import type { Tone } from '@/shared/lib/tone'
 
 import { SampleCard } from '../Sample'
 

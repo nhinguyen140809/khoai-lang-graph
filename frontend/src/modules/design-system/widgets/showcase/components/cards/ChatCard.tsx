@@ -43,7 +43,7 @@ import {
   MessageScrollerViewport,
 } from '@/shared/components/ui/message-scroller'
 import { Spinner } from '@/shared/components/ui/spinner'
-import type { Tone } from '@/shared/lib/tone.constants'
+import type { Tone } from '@/shared/lib/tone'
 
 /**
  * An entry of the thread. A message without an author is the user's, at the end of the row; a
