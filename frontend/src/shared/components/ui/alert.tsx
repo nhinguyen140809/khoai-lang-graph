@@ -2,8 +2,12 @@ import { cva } from 'class-variance-authority'
 import { cn } from 'cn'
 import * as React from 'react'
 
-import { toneClasses, type ToneVariantProps, type ToneVariants } from '@/shared/lib/tone.constants'
-import { resolveToneVariant } from '@/shared/lib/tone.utils'
+import {
+  resolveToneVariant,
+  toneClasses,
+  type ToneVariantProps,
+  type ToneVariants,
+} from '@/shared/lib/tone'
 
 // `variant` is the fill and `color` the meaning; the color sets the --tone variables these read.
 const alertStyles = cva(

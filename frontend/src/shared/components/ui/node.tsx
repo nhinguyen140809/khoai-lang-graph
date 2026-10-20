@@ -2,7 +2,7 @@ import { cva } from 'class-variance-authority'
 import { cn } from 'cn'
 import type * as React from 'react'
 
-import { type Tone, toneClasses } from '@/shared/lib/tone.constants'
+import { type Tone, toneClasses } from '@/shared/lib/tone'
 
 // `variant` is the fill and `color` the meaning; the color sets the --tone variables these read.
 // Hover and selection keep the color of the node: a ring of the strong color surrounds it, light

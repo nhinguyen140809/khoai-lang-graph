@@ -1,7 +1,7 @@
 import { BaseEdge, type BaseEdgeProps } from '@xyflow/react'
 import { cn } from 'cn'
 
-import { type Tone, toneClasses } from '@/shared/lib/tone.constants'
+import { type Tone, toneClasses } from '@/shared/lib/tone'
 
 const lineStyles = {
   solid: '',

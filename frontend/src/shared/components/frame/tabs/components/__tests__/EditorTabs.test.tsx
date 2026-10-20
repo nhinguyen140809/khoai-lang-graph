@@ -7,9 +7,10 @@ import { beforeEach, describe, expect, it, vi } from 'vitest'
 
 import { routerMock } from '@/test/next-mocks.utils'
 
-import { ActivitiesContext } from '../../../activities/ActivitiesContext'
-import type { Activity, TabIcons } from '../../../activities/activity.types'
+import type { Destination, TabIcons } from '../../../destinations/destination.types'
+import { DestinationsContext } from '../../../destinations/hooks/useDestinations'
 import { useEditorTabsStore } from '../../editor-tabs.store'
+import { TabGroupContext } from '../../hooks/useTabGroup'
 import { EditorTabs } from '../EditorTabs'
 import { ambiguity, closeTabCases, onScreenCases, req, tabIconCases } from './EditorTabs.data'
 
@@ -17,17 +18,23 @@ vi.mock('next/navigation', async () => (await import('@/test/next-mocks.utils'))
 vi.mock('next/link', async () => (await import('@/test/next-mocks.utils')).linkMock)
 
 const searchHref = '/projects/p1/search' as Route
-const activities: Activity[] = [
+const destinations: Destination[] = [
   { id: 'search', label: 'Search', icon: <SearchIcon />, href: searchHref, panel: null },
 ]
 const tabIcons: TabIcons = { artifact: <FileTextIcon />, run: <PlayIcon /> }
 
 function Providers({ children }: { children: ReactNode }) {
-  return <ActivitiesContext value={{ activities, tabIcons }}>{children}</ActivitiesContext>
+  return <DestinationsContext value={{ destinations, tabIcons }}>{children}</DestinationsContext>
 }
 
+/** The strip, in the workspace of `group`. */
 function renderTabs(group: string) {
-  render(<EditorTabs group={group} rootHref={searchHref} />, { wrapper: Providers })
+  render(
+    <TabGroupContext value={group}>
+      <EditorTabs rootHref={searchHref} />
+    </TabGroupContext>,
+    { wrapper: Providers },
+  )
 }
 
 beforeEach(() => {
@@ -51,6 +58,12 @@ describe('EditorTabs', () => {
         .filter((link) => link.getAttribute('aria-current') === 'page')
         .map((link) => link.textContent),
     ).toEqual([current])
+  })
+
+  it('shows no strip outside a workspace with tabs', () => {
+    render(<EditorTabs rootHref={searchHref} />, { wrapper: Providers })
+
+    expect(screen.queryByRole('navigation')).not.toBeInTheDocument()
   })
 
   it('names the preview tab as such, and keeps it on a double click', async () => {

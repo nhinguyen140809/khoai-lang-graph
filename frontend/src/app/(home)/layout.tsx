@@ -1,9 +1,10 @@
 import type { ReactNode } from 'react'
 
-import { AccountMenuItem } from '@/features/account'
-import { ProjectCommands, ProjectDialogs } from '@/features/projects'
+import { ProjectCommands } from '@/modules/project/widgets/commands'
+import { ProjectDialogs } from '@/modules/project/widgets/dialogs'
+import { AccountMenuItem } from '@/modules/user/widgets/menu'
 import { PageCrumb, PageWorkspace, Workbench } from '@/shared/components/frame'
-import { homePageFallback, homePageNames } from '@/shared/config/routes'
+import { homePageFallback, homePageNames, routes } from '@/shared/config/routes'
 
 interface HomeLayoutProps {
   children: ReactNode
@@ -17,6 +18,7 @@ export default function HomeLayout({ children }: HomeLayoutProps) {
   return (
     <Workbench
       crumb={<PageCrumb pages={homePageNames} fallback={homePageFallback} />}
+      homeHref={routes.home()}
       contributions={
         <>
           <ProjectCommands />

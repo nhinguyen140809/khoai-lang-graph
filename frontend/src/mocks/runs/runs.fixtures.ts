@@ -1,4 +1,4 @@
-import type { Run, RunStep } from '@/features/threads'
+import type { Run, RunStep } from '@/modules/run/entities'
 
 import {
   PERSONA_IDS,

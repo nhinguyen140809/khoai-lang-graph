@@ -1,6 +1,6 @@
 import { describe, expect, it } from 'vitest'
 
-import { isUnfinishedRunStatus } from '@/shared/domain/run-status'
+import { isUnfinishedRunStatus } from '@/modules/run/entities'
 
 import { bulkProjectCount, extraProjectSpecs } from '../extra-project-specs.constants'
 import {

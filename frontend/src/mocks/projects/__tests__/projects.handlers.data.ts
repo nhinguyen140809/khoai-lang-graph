@@ -1,4 +1,4 @@
-import type { Project } from '@/features/projects'
+import type { Project } from '@/modules/project/entities'
 
 import { IdPrefix, mockId, PROJECT_IDS } from '../../shared/mock-ids.constants'
 import { bulkProjectCount, extraProjectSpecs } from '../extra-project-specs.constants'

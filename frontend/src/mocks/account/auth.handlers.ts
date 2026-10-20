@@ -1,6 +1,6 @@
 import { http, HttpResponse } from 'msw'
 
-import type { Me } from '@/features/account'
+import type { Me } from '@/modules/user/entities'
 
 import { mockRecord } from '../shared/mock-db.utils'
 import { mockScenario, neverAnswer } from '../shared/mock-scenario.utils'

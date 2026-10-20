@@ -11,7 +11,7 @@ import {
 import { useTheme } from 'next-themes'
 import { Toaster as Sonner, type ToasterProps } from 'sonner'
 
-import { toneClasses } from '@/shared/lib/tone.constants'
+import { toneClasses } from '@/shared/lib/tone'
 
 const Toaster = ({ ...props }: ToasterProps) => {
   const { theme = 'system' } = useTheme()

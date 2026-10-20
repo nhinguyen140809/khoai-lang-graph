@@ -1,5 +1,5 @@
-import type { Project } from '@/features/projects'
-import type { RunStatus } from '@/shared/domain/run-status'
+import type { Project } from '@/modules/project/entities'
+import type { RunStatus } from '@/modules/run/entities'
 
 /** What a mock project is in: the state of its last run, or no run yet. */
 export type ExtraRunState = RunStatus | 'none'

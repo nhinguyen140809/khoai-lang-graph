@@ -46,7 +46,7 @@ export function CommandPalette() {
       open={open}
       onOpenChange={setOpen}
       title="Command palette"
-      description="Go to a page or a project, or run a command."
+      description="Go to a page or run a command."
     >
       <PaletteSearch
         groups={groups}

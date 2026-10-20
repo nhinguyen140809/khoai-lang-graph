@@ -1,4 +1,4 @@
-import type { Thread } from '@/features/threads'
+import type { Thread } from '@/modules/thread/entities'
 
 import { PROJECT_IDS, RUN_IDS, THREAD_IDS, USER_ID } from '../shared/mock-ids.constants'
 import { type MockRunState } from '../shared/mock-scenario.utils'

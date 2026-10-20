@@ -3,8 +3,12 @@ import { cn } from 'cn'
 import { Slot } from 'radix-ui'
 import * as React from 'react'
 
-import { fillTones, toneClasses, type ToneVariantProps } from '@/shared/lib/tone.constants'
-import { resolveToneVariant } from '@/shared/lib/tone.utils'
+import {
+  fillTones,
+  resolveToneVariant,
+  toneClasses,
+  type ToneVariantProps,
+} from '@/shared/lib/tone'
 
 // `variant` is the fill and `color` the meaning; the color sets the --tone variables these read.
 const badgeStyles = cva(

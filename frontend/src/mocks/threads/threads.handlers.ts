@@ -1,7 +1,8 @@
 import { http, HttpResponse } from 'msw'
 
-import type { Run, Thread } from '@/features/threads'
-import { isUnfinishedRunStatus, type UnfinishedRunStatus } from '@/shared/domain/run-status'
+import type { Run } from '@/modules/run/entities'
+import { isUnfinishedRunStatus, type UnfinishedRunStatus } from '@/modules/run/entities'
+import type { Thread } from '@/modules/thread/entities'
 
 import { extraThreads } from '../projects/extra-projects.fixtures'
 import { findProject } from '../projects/projects.handlers'

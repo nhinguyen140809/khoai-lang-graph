@@ -4,7 +4,7 @@ import { cn } from 'cn'
 import { TriangleAlertIcon } from 'lucide-react'
 import * as React from 'react'
 
-import { toneClasses } from '@/shared/lib/tone.constants'
+import { toneClasses } from '@/shared/lib/tone'
 
 import {
   AlertDialog,

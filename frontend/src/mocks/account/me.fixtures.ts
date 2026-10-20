@@ -1,4 +1,4 @@
-import type { Me } from '@/features/account'
+import type { Me } from '@/modules/user/entities'
 
 import { USER_ID } from '../shared/mock-ids.constants'
 
