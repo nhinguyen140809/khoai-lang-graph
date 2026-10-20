@@ -28,7 +28,7 @@ The objects come from [Data Shape](../DATA_SHAPE.md), the endpoints from [API de
 - **Level 3, the kinds of file** inside a slice: `components/`, `hooks/`, `types/`, `constants/`, `utils/` and the other kinds of the contributing guide. A kind gets a folder once it has two files or more; a kind with one file stays at the root of the slice.
 - `src/shared/` and `src/app/`, with `src/providers/`, stay outside the modules.
 - Activity is a feature of the activity bar, as Documents or Workflow are, and a module of its own, `activity`. Its side panel shows the stages of the workflow as a tree, in the order of the definition, marked as the events of the run arrive: the widget `steps`, with the item of the feature on the activity bar, not built yet. Its page, which opens in a tab, is the chat: the widget `chat`. Until it is rebuilt, the route of its page shows a placeholder, and `chat` holds the code of the first chat, with the events of the stream of a run and their reducer in `run/entities` and the action that starts a run with an input in `run/features/start`. The rebuilt chat sends a message instead, from `thread/features/send-message`.
-- Three modules hold no object of the product yet: `artifact` holds the placeholder of the artifact panel (`artifact/widgets/panel`), `user` the settings page (`user/widgets/settings`), and `design-system` the page that shows the UI components and the tokens (`design-system/widgets/showcase`).
+- Three modules hold no object of the product yet: `artifact` holds the placeholder of the artifact panel (`artifact/widgets/panel`), `user` the settings page (`user/widgets/settings`), with the feature that chooses the theme (`user/features/theme`), and `design-system` the page that shows the UI components and the tokens (`design-system/widgets/showcase`).
 
 ```text
 src/
@@ -61,6 +61,7 @@ src/
 │   │   └── features/           # sign-in/, sign-up/, sign-out/
 │   ├── user/
 │   │   ├── entities/           # User
+│   │   ├── features/           # theme/
 │   │   └── widgets/            # menu/, settings/
 │   └── design-system/
 │       └── widgets/            # showcase/
@@ -213,7 +214,7 @@ The entity of the models is named `llm-model`, not `model`, because "model" alon
 | Object | Where it goes |
 |---|---|
 | Session, AuthIdentity | The entities of `auth`, through the calls that start and end a session; the web app keeps no session object |
-| RunConfig, RunDefaults | Value objects inside Run, Project and UserSettings, so part of those entities |
+| RunConfig, RunDefaults | Value objects of the runs, in `run/entities`: Run holds a RunConfig, and Project and UserSettings hold RunDefaults, which `project` reads through `@x/project` |
 | ArtifactRevision, ItemRevision, the artifact and item kinds of [Data Shape: section 7](../DATA_SHAPE.md#7-requirements-engineering-artifacts) | Part of `artifact` |
 | Export | One action: a feature that requests a document and downloads it |
 | ProviderCredential, ProjectMember, SourceDocument, DocumentChunk, ItemEmbedding, Comment, Notification | Later phase of the data shape; placed when the phase starts |

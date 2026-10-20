@@ -15,3 +15,8 @@ export function projectFiltersOf(values: FilterValues): ProjectFilters {
     activeWithinDays: days === undefined ? null : Number(days),
   }
 }
+
+/** Whether the filters narrow the list. */
+export function isFiltered(filters: ProjectFilters): boolean {
+  return filters.runStatuses.length > 0 || filters.activeWithinDays !== null
+}
