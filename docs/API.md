@@ -722,18 +722,18 @@ Kinds and their schemas, `GET /artifact-kinds`. The display name of a kind is th
 | `GET /projects/{project_id}/artifacts` | Artifacts of a project; filters `kind`, `review_status`; ordered by the stage that produces the kind | MVP |
 | `GET /artifacts/{artifact_id}` | One artifact; `?version=` reads any version, also of a deleted artifact, which answers `404` without `?version=` | MVP |
 | `PATCH /artifacts/{artifact_id}` | Change `title`, `summary`, `content` or `review_status`; requires `If-Match` | MVP |
-| `GET /artifacts/{artifact_id}/revisions` | Version history of the artifact; ordered by `version` descending | MVP |
-| `POST /artifacts/{artifact_id}/restore` | Make an old version of the artifact and of its items current again; body `version`. Creates new versions | MVP |
+| `GET /artifacts/{artifact_id}/revisions` | Version history of the artifact; ordered by `version` descending. Each entry has `version`, `change_reason`, `changed_by`, `created_at` and `content`, the content of the artifact at that version | MVP |
+| `POST /artifacts/{artifact_id}/restore` | Make an old version of the artifact and of its items current again; body `version`. Creates new versions and answers the artifact | MVP |
 | `GET /artifacts/{artifact_id}/items` | Items of the artifact in outline order (a section, then what it contains); each item carries `number` and `depth`. `?shape=tree` nests children under their parent instead. Filters `kind`, `review_status`, `parent_item_id`. `?version=` gives the items as they were at that version of the artifact | MVP |
-| `POST /artifacts/{artifact_id}/items` | Create an item or a section by hand; body `kind`, `content`, optional `parent_item_id`. The server assigns the key and puts the item last under its parent | MVP |
-| `POST /artifacts/{artifact_id}/items/reorder` | Change the order of the items under one parent; body `parent_item_id` (null for the top level) and `ids` in the new order | MVP |
-| `POST /items/{item_id}/move` | Move an item, with everything inside it, under another parent of the same artifact; body `parent_item_id`, `position`. A move that breaks a tree rule answers `422 validation_failed` | MVP |
+| `POST /artifacts/{artifact_id}/items` | Create an item or a section by hand; body `kind`, `content`, optional `parent_item_id`. The server assigns the key and puts the item last under its parent. Answers `201` with the item | MVP |
+| `POST /artifacts/{artifact_id}/items/reorder` | Change the order of the items under one parent; body `parent_item_id` (null for the top level) and `ids`, every item under that parent once in the new order, otherwise `422 validation_failed`. Answers `204` | MVP |
+| `POST /items/{item_id}/move` | Move an item, with everything inside it, under another parent of the same artifact; body `parent_item_id`, `position`. A move that breaks a tree rule answers `422 validation_failed`. Answers the moved item | MVP |
 | `GET /projects/{project_id}/items` | Items across all artifacts of a project; filters `kind`, `review_status`, `run_id` (created or changed by that run), `q` (text search in key and content); ordered by `key` | MVP |
 | `GET /items/{item_id}` | One item; `?version=` reads any version, also of a deleted item, which answers `404` without `?version=` | MVP |
 | `PATCH /items/{item_id}` | Change `content` fields or `review_status`; requires `If-Match` | MVP |
-| `DELETE /items/{item_id}` | Soft delete: the item gets a new version with change reason `deleted` and is left out of lists; its versions stay readable with `?version=`, and trace links to it stay readable. Deleting a section that still contains items answers `409 invalid_state` | MVP |
-| `GET /items/{item_id}/revisions` | Version history of the item; ordered by `version` descending | MVP |
-| `POST /items/{item_id}/restore` | Make an old version current again; body `version`. Creates a new version | MVP |
+| `DELETE /items/{item_id}` | Soft delete: the item gets a new version with change reason `deleted` and is left out of lists; its versions stay readable with `?version=`, and trace links to it stay readable. Deleting a section that still contains items answers `409 invalid_state`. Answers `204` | MVP |
+| `GET /items/{item_id}/revisions` | Version history of the item; ordered by `version` descending. Each entry has the fields of an entry of the history of an artifact | MVP |
+| `POST /items/{item_id}/restore` | Make an old version current again; body `version`. Creates a new version and answers the item; it also brings back an item that was deleted | MVP |
 
 Artifacts are created by the workflow, one per kind as listed in the data shape; there is no endpoint to create or delete one by hand.
 
@@ -744,7 +744,7 @@ Content rules:
 - `content` never holds the id of an item. Relations between items are created through the trace link endpoints.
 - The client renders and edits an artifact and its items from the schemas returned by `GET /artifact-kinds`, and an artifact or item stored with an older schema version from `GET /content-schemas/{kind}/{schema_version}`, so a field added to a schema appears in the client with no client change. A kind can still have its own component where a generic form is not enough, for example a persona card or an interview transcript.
 
-Editing rule: while a run is `running`, artifacts and items are read-only for the user and `PATCH` answers `409 invalid_state`. They can be edited when the run is `interrupted` or when the thread has no active run.
+Editing rule: while a run is `running`, artifacts and items are read-only for the user, and every change (`PATCH`, create, delete, move, reorder and restore) answers `409 invalid_state`. They can be edited when the run is `interrupted` or when the thread has no active run.
 
 ### Traceability
 
