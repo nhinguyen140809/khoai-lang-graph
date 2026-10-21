@@ -2,6 +2,7 @@ import { z } from 'zod'
 
 import { type ApiError, toApiError } from './api-error.utils'
 import { apiUrl } from './api-url.utils'
+import { idempotencyKeyHeader } from './idempotency.constants'
 
 interface ApiRequestOptions {
   /** What the request does, for the error message: "load projects" gives "Failed to load projects". */
@@ -9,6 +10,8 @@ interface ApiRequestOptions {
   method?: 'GET' | 'POST' | 'PATCH' | 'PUT' | 'DELETE'
   body?: unknown
   headers?: Record<string, string>
+  /** For a request that starts work: a repeat with the same key does not do the work again. */
+  idempotencyKey?: string
 }
 
 // The ApiError of an answer with an error status; its body is read when it is JSON.
@@ -25,13 +28,13 @@ async function readError(response: Response, action: string): Promise<ApiError> 
 // Sends one request; an error status becomes an ApiError.
 async function send(
   path: string,
-  { action, method = 'GET', body, headers = {} }: ApiRequestOptions,
+  { action, method = 'GET', body, headers = {}, idempotencyKey }: ApiRequestOptions,
 ): Promise<Response> {
-  const init: RequestInit = { method, headers }
-  if (body !== undefined) {
-    init.headers = { 'Content-Type': 'application/json', ...headers }
-    init.body = JSON.stringify(body)
-  }
+  const requestHeaders: Record<string, string> =
+    body === undefined ? { ...headers } : { 'Content-Type': 'application/json', ...headers }
+  if (idempotencyKey !== undefined) requestHeaders[idempotencyKeyHeader] = idempotencyKey
+  const init: RequestInit = { method, headers: requestHeaders }
+  if (body !== undefined) init.body = JSON.stringify(body)
   const response = await fetch(apiUrl(path), init)
   if (!response.ok) throw await readError(response, action)
   return response

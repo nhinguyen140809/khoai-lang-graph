@@ -56,7 +56,13 @@ export const failedRequestCases: {
 export const sentRequestCases: {
   name: string
   options: Options
-  sent: { method: string; type: string | null; trace: string | null; body: unknown }
+  sent: {
+    method: string
+    type: string | null
+    trace: string | null
+    key: string | null
+    body: unknown
+  }
 }[] = [
   {
     name: 'a body as JSON, with the headers given',
@@ -66,12 +72,22 @@ export const sentRequestCases: {
       body: { name: 'A' },
       headers: { 'X-Trace': 't1' },
     },
-    sent: { method: 'PUT', type: 'application/json', trace: 't1', body: { name: 'A' } },
+    sent: { method: 'PUT', type: 'application/json', trace: 't1', key: null, body: { name: 'A' } },
   },
   {
     name: 'no content type without a body',
     options: { action: 'load the thing' },
-    sent: { method: 'GET', type: null, trace: null, body: null },
+    sent: { method: 'GET', type: null, trace: null, key: null, body: null },
+  },
+  {
+    name: 'an idempotency key as a header, with the body',
+    options: { action: 'send the thing', method: 'POST', body: { a: 1 }, idempotencyKey: 'k1' },
+    sent: { method: 'POST', type: 'application/json', trace: null, key: 'k1', body: { a: 1 } },
+  },
+  {
+    name: 'an idempotency key without a body',
+    options: { action: 'retry the thing', method: 'POST', idempotencyKey: 'k2' },
+    sent: { method: 'POST', type: null, trace: null, key: 'k2', body: null },
   },
 ]
 

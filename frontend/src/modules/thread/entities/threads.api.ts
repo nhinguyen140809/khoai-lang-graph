@@ -17,8 +17,15 @@ export async function listThreads(): Promise<Thread[]> {
   return listThreadsResponseSchema.parse(await response.json()).items
 }
 
-/** Sends the idea of a new project as the first message of a new thread, which starts its first run. */
-export async function sendFirstMessage(projectId: string, content: string): Promise<void> {
+/**
+ * Sends the idea of a new project as the first message of a new thread, which starts its first
+ * run. The message goes with `idempotencyKey`, so that sending it again starts no second run.
+ */
+export async function sendFirstMessage(
+  projectId: string,
+  content: string,
+  idempotencyKey: string,
+): Promise<void> {
   const thread = await apiRequest(
     `/api/v1/projects/${encodeURIComponent(projectId)}/threads`,
     createdThreadSchema,
@@ -28,5 +35,6 @@ export async function sendFirstMessage(projectId: string, content: string): Prom
     action: 'send the idea',
     method: 'POST',
     body: { content },
+    idempotencyKey,
   })
 }

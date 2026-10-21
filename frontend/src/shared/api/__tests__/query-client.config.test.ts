@@ -1,8 +1,9 @@
 import { beforeEach, describe, expect, it, vi } from 'vitest'
 
+import { retryOnce } from '../api-retry.utils'
 import type * as authRedirect from '../auth-redirect.utils'
 import { createQueryClient } from '../query-client.config'
-import { keptPageCases, retryCases, unauthorizedError } from './query-client.config.data'
+import { keptPageCases, unauthorizedError } from './query-client.config.data'
 
 const { redirectToSignIn } = vi.hoisted(() => ({ redirectToSignIn: vi.fn() }))
 
@@ -45,10 +46,7 @@ describe('createQueryClient', () => {
     expect(redirectToSignIn).not.toHaveBeenCalled()
   })
 
-  it.each(retryCases)('tries once more after $name: $retries', ({ failures, error, retries }) => {
-    const retry = createQueryClient().getDefaultOptions().queries?.retry
-    if (typeof retry !== 'function') throw new Error('retry is not a function')
-
-    expect(retry(failures, error)).toBe(retries)
+  it('tries a failed query once more only when it may answer otherwise', () => {
+    expect(createQueryClient().getDefaultOptions().queries?.retry).toBe(retryOnce)
   })
 })

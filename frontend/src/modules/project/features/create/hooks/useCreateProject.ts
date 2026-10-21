@@ -6,6 +6,7 @@ import { toast } from 'sonner'
 import { createProject, projectKeys } from '@/modules/project/entities'
 import { sendFirstMessage } from '@/modules/thread/entities'
 import { errorMessageOf } from '@/shared/api/api-error.utils'
+import { newIdempotencyKey } from '@/shared/api/idempotency.utils'
 import { formErrorOf, showFieldProblems } from '@/shared/components/form'
 import { routes } from '@/shared/config/routes'
 
@@ -26,9 +27,12 @@ export function useCreateProject(setError: UseFormSetError<NewProjectForm>, onCr
     mutationKey: projectKeys.create(),
     // Resolves to the project and the error that sending the idea threw, if any.
     mutationFn: async ({ idea, ...body }: NewProject) => {
+      // One key for each submit. The mutation never runs twice for one submit, so the key can be
+      // made here; a mutation that retries must make it before, and pass it in its variables.
+      const idempotencyKey = newIdempotencyKey()
       const project = await createProject(body)
       try {
-        await sendFirstMessage(project.id, idea)
+        await sendFirstMessage(project.id, idea, idempotencyKey)
       } catch (error) {
         return { project, sendError: error }
       }

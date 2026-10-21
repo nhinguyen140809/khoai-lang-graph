@@ -47,6 +47,7 @@ describe('apiRequest', () => {
           method: request.method,
           type: request.headers.get('Content-Type'),
           trace: request.headers.get('X-Trace'),
+          key: request.headers.get('Idempotency-Key'),
           body: text === '' ? null : (JSON.parse(text) as unknown),
         }
         return HttpResponse.json({ id: '1' })
