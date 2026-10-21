@@ -70,6 +70,24 @@ for (const name of modules) {
   }
 }
 
+// The rule of each module allows the modules of its list, so two lists that reach each other
+// would let two modules import each other. Following the lists from any module never comes back
+// to it, and every module that a list names has a list of its own.
+const orderedModules = new Set()
+function checkModuleOrder(name, trail) {
+  if (trail.includes(name)) {
+    const cycle = [...trail.slice(trail.indexOf(name)), name].join(' -> ')
+    throw new Error(`MODULE_IMPORTS of eslint.config.js has a cycle: ${cycle}.`)
+  }
+  if (orderedModules.has(name)) return
+  if (!(name in MODULE_IMPORTS)) {
+    throw new Error(`${String(trail.at(-1))} lists ${name}, which MODULE_IMPORTS does not have.`)
+  }
+  for (const imported of MODULE_IMPORTS[name]) checkModuleOrder(imported, [...trail, name])
+  orderedModules.add(name)
+}
+for (const name of Object.keys(MODULE_IMPORTS)) checkModuleOrder(name, [])
+
 // The layers of a module, from the lowest: one slice of entities, then one slice for each feature
 // and for each widget.
 const MODULE_LAYERS = ['entities', 'features', 'widgets']
@@ -232,6 +250,110 @@ function restrict(paths, patterns) {
   return { 'no-restricted-imports': ['error', { paths, patterns }] }
 }
 
+// The end of a class whose value is in brackets, such as `text-[0.625rem]` or
+// `[scrollbar-width:none]`, with an opacity or an important mark after it. A variant in brackets,
+// such as `data-[state=open]:` or `group-data-[active=true]/tab:`, ends with a colon instead.
+// esquery reads a regex up to the next slash, so the slash is written \x2F.
+const bracketValue = String.raw`/\](?=$|\s|!|\x2F[\w.%-]*(?:\s|$))/`
+
+// The props that take classes, and the calls of cn outside them, so that a class is reported once.
+const classAttribute = 'JSXAttribute[name.name=/[cC]lassName$/]'
+
+// Conventions that no plugin checks, as no-restricted-syntax selectors. A later block replaces the
+// whole list of the rule, so each block spreads the groups it keeps.
+const syntax = {
+  persistStorage: [
+    {
+      selector:
+        "CallExpression[callee.name='persist'] > ObjectExpression:not(:has(> Property[key.name='storage']))",
+      message:
+        'A persisted store passes storage: persistStorage(...) or persistStorageByEntry(...) of @/shared/lib/browser-storage.utils, which handles storage that is missing, blocked or full.',
+    },
+    {
+      selector:
+        "CallExpression[callee.name='persist'] > ObjectExpression > Property[key.name='name']:not([value.callee.name='storageKey'])",
+      message:
+        'Name the key of a persisted store with storageKey(...) of @/shared/lib/browser-storage.utils.',
+    },
+  ],
+  bracketClasses: [
+    `${classAttribute} Literal[value=${bracketValue}]`,
+    `${classAttribute} TemplateElement[value.raw=${bracketValue}]`,
+    `CallExpression[callee.name='cn']:not(${classAttribute} *) Literal[value=${bracketValue}]`,
+    `CallExpression[callee.name='cn']:not(${classAttribute} *) TemplateElement[value.raw=${bracketValue}]`,
+  ].map((selector) => ({
+    selector,
+    message:
+      'A class has no CSS value of its own in brackets outside src/shared/components/ui/. Use a token or a utility of the scale, or add one to src/app/styles.css (CONTRIBUTING: UI components).',
+  })),
+  innerHtml: [
+    {
+      selector: "JSXAttribute[name.name='dangerouslySetInnerHTML']",
+      message:
+        'Never render content as HTML: put HTML artifacts in a sandboxed iframe (CONTRIBUTING: Untrusted content).',
+    },
+  ],
+  inlineKeys: [
+    {
+      selector: "Property[key.name=/^(queryKey|mutationKey)$/][value.type='ArrayExpression']",
+      message:
+        'Take the key from the key factory of the resource, <resource>.keys.ts (CONTRIBUTING: Query keys).',
+    },
+  ],
+  hooksInComponents: [
+    'FunctionDeclaration[id.name=/^use[A-Z]/]',
+    'VariableDeclarator[id.name=/^use[A-Z]/][init.type=/^(Arrow)?FunctionExpression$/]',
+  ].map((selector) => ({
+    selector,
+    message:
+      'A hook lives in hooks/use<Name>.ts of its slice, not in the file of a component (CONTRIBUTING: Hooks of a slice).',
+  })),
+  defaultExport: ['ExportDefaultDeclaration', "ExportSpecifier[exported.name='default']"].map(
+    (selector) => ({
+      selector,
+      message: 'Use a named export; only the routing files of Next.js export a default.',
+    }),
+  ),
+  // A constants file holds only the words of the screens and the settings.
+  valuesInConstants: [
+    ...['TSInterfaceDeclaration', 'TSTypeAliasDeclaration'].map((type) => ({
+      selector: `ExportNamedDeclaration > ${type}`,
+      message:
+        'A constants file exports no type: a type that others use goes in the types file of its subject (CONTRIBUTING: Types and constants).',
+    })),
+    ...[
+      ':matches(Program, ExportNamedDeclaration) > FunctionDeclaration',
+      ':matches(Program, ExportNamedDeclaration) > VariableDeclaration > VariableDeclarator[init.type=/^(Arrow)?FunctionExpression$/]',
+    ].map((selector) => ({
+      selector,
+      message:
+        'A constants file holds no function: a function goes in the utils file of its topic (CONTRIBUTING: Types and constants).',
+    })),
+  ],
+  // A types file holds a list of values with the type made from it, so it never reads a constants
+  // file, and the two never import each other.
+  constantsInTypes: [
+    'ImportDeclaration[source.value=/\\.constants$/]',
+    'ExportNamedDeclaration[source.value=/\\.constants$/]',
+    'ExportAllDeclaration[source.value=/\\.constants$/]',
+  ].map((selector) => ({
+    selector,
+    message:
+      'A types file imports no constants file: a list of values and the type made from it go in the types file (CONTRIBUTING: Types and constants).',
+  })),
+}
+
+function restrictSyntax(...groups) {
+  return { 'no-restricted-syntax': ['error', ...groups.flatMap((group) => syntax[group])] }
+}
+
+// The files of src/app/ whose default export Next.js reads.
+const nextRoutingFiles = [
+  'src/app/**/@(page|layout|loading|error|not-found|global-error|template|default).tsx',
+  'src/app/**/@(icon|apple-icon|opengraph-image|twitter-image).tsx',
+  'src/app/**/@(route|sitemap|robots|manifest).ts',
+]
+
 // The slices that share their rules: the entities of a module, its features and its widgets.
 const sliceSets = [
   ...modules.flatMap((module) =>
@@ -275,7 +397,7 @@ const FILE_KINDS = {
   entities: ['api', 'keys', 'queries', 'types', 'reducer', 'constants', 'utils'],
   features: ['types', 'schema', 'store', 'reducer', 'constants', 'utils'],
   widgets: ['types', 'store', 'reducer', 'constants', 'utils', 'fixtures'],
-  shared: ['types', 'schema', 'store', 'reducer', 'config', 'constants', 'utils'],
+  shared: ['types', 'store', 'reducer', 'config', 'constants', 'utils'],
   mocks: ['types', 'store', 'constants', 'utils', 'handlers', 'fixtures', 'setup'],
   test: ['utils', 'setup'],
 }
@@ -392,6 +514,87 @@ export default defineConfig([
     },
   },
   {
+    // An exported value is camelCase, or PascalCase for a component, a context or an object used
+    // as an enum; UPPER_SNAKE_CASE is for a setting private to its file (CONTRIBUTING: Identifier
+    // naming).
+    files: ['src/**/*.{ts,tsx}', 'tests/**/*.ts'],
+    rules: {
+      '@typescript-eslint/naming-convention': [
+        'error',
+        { selector: 'variable', modifiers: ['exported'], format: ['camelCase', 'PascalCase'] },
+      ],
+    },
+  },
+  // The groups of `syntax` that each place of src/ follows. The UI components, copied from
+  // shadcn/ui, keep their classes in brackets and their hooks beside their components; a test
+  // writes its keys and declares its hooks where it uses them.
+  {
+    files: ['src/**/*.ts'],
+    rules: restrictSyntax(
+      'persistStorage',
+      'bracketClasses',
+      'innerHtml',
+      'inlineKeys',
+      'defaultExport',
+    ),
+  },
+  {
+    files: ['src/**/*.constants.ts'],
+    rules: restrictSyntax(
+      'persistStorage',
+      'bracketClasses',
+      'innerHtml',
+      'inlineKeys',
+      'defaultExport',
+      'valuesInConstants',
+    ),
+  },
+  {
+    files: ['src/**/*.types.ts'],
+    rules: restrictSyntax(
+      'persistStorage',
+      'bracketClasses',
+      'innerHtml',
+      'inlineKeys',
+      'defaultExport',
+      'constantsInTypes',
+    ),
+  },
+  {
+    files: ['src/**/*.tsx'],
+    rules: restrictSyntax(
+      'persistStorage',
+      'bracketClasses',
+      'innerHtml',
+      'inlineKeys',
+      'hooksInComponents',
+      'defaultExport',
+    ),
+  },
+  {
+    files: ['src/**/__tests__/**/*.{ts,tsx}'],
+    rules: restrictSyntax('persistStorage', 'bracketClasses', 'innerHtml', 'defaultExport'),
+  },
+  {
+    files: ['src/shared/components/ui/**/*.{ts,tsx}'],
+    rules: restrictSyntax('persistStorage', 'innerHtml', 'inlineKeys', 'defaultExport'),
+  },
+  {
+    // The charts of shadcn/ui write the CSS variables of their colors into a style element.
+    files: ['src/shared/components/ui/chart.tsx'],
+    rules: restrictSyntax('persistStorage', 'inlineKeys', 'defaultExport'),
+  },
+  {
+    files: nextRoutingFiles,
+    rules: restrictSyntax(
+      'persistStorage',
+      'bracketClasses',
+      'innerHtml',
+      'inlineKeys',
+      'hooksInComponents',
+    ),
+  },
+  {
     // Shared code never depends on the layers above it (CONTRIBUTING: Modules).
     files: ['src/shared/**/*.{ts,tsx}'],
     rules: {
@@ -434,7 +637,7 @@ export default defineConfig([
   },
   {
     // The layers of the frame: pure files.
-    files: ['src/shared/components/frame/**/*.@(utils|constants|types|schema).ts'],
+    files: ['src/shared/components/frame/**/*.@(utils|constants|types).ts'],
     rules: {
       'no-restricted-imports': [
         'error',
@@ -464,9 +667,7 @@ export default defineConfig([
       'src/shared/hooks/use-mobile.ts',
       'src/shared/lib/utils.ts',
       // Next.js file conventions: routing files, metadata files, and src-level entry points.
-      'src/app/**/@(page|layout|loading|error|not-found|global-error|template|default).tsx',
-      'src/app/**/@(icon|apple-icon|opengraph-image|twitter-image).tsx',
-      'src/app/**/@(route|sitemap|robots|manifest).ts',
+      ...nextRoutingFiles,
       'src/@(proxy|instrumentation|instrumentation-client).ts',
       'src/**/index.ts',
       'src/**/*.d.ts',

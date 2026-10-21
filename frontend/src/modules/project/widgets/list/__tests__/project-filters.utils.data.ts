@@ -1,3 +1,5 @@
+import { noProjectFilters, type ProjectFilters } from '@/modules/project/entities'
+
 /** The values chosen in the filters of the project list, and the filters they give. */
 export const projectFiltersCases = [
   { name: 'no value', values: {}, filters: { runStatuses: [], activeWithinDays: null } },
@@ -12,3 +14,14 @@ export const projectFiltersCases = [
     filters: { runStatuses: ['failed'], activeWithinDays: null },
   },
 ]
+
+/** Filters of the project list, and whether they narrow it. */
+export const isFilteredCases = [
+  { name: 'no filter', filters: noProjectFilters, filtered: false },
+  { name: 'a period', filters: { runStatuses: [], activeWithinDays: 1 }, filtered: true },
+  {
+    name: 'a status',
+    filters: { runStatuses: ['failed'], activeWithinDays: null },
+    filtered: true,
+  },
+] satisfies { name: string; filters: ProjectFilters; filtered: boolean }[]

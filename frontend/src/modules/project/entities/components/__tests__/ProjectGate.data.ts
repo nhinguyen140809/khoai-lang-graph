@@ -1,12 +1,12 @@
 import { http, HttpResponse } from 'msw'
 
-import { PROJECT_IDS } from '@/mocks/shared/mock-ids.constants'
+import { projectIds } from '@/mocks/shared/mock-ids.constants'
 
 /** A project, the answer about it, and what the gate shows once the project is loaded or failed. */
 export const gateCases = [
   {
     name: 'the screens of a project that exists',
-    projectId: PROJECT_IDS.mentor,
+    projectId: projectIds.mentor,
     answer: null,
     shows: 'Project screens, success',
     hides: 'Project not found',
@@ -20,7 +20,7 @@ export const gateCases = [
   },
   {
     name: 'the screens when the project fails to load for another reason',
-    projectId: PROJECT_IDS.mentor,
+    projectId: projectIds.mentor,
     answer: () =>
       http.get('/api/v1/projects/:projectId', () => new HttpResponse(null, { status: 500 })),
     shows: 'Project screens, error',

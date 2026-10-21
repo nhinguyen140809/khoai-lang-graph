@@ -1,18 +1,18 @@
-import { PROJECT_IDS, RUN_IDS, THREAD_IDS } from '../../shared/mock-ids.constants'
+import { projectIds, runIds, threadIds } from '../../shared/mock-ids.constants'
 
 /** A request for a list of threads in the scenario of the page address: the ids it lists. */
 export const threadListCases = [
   {
     request: 'GET /threads?project_id={project_id}',
     address: '/',
-    path: `/api/v1/threads?project_id=${PROJECT_IDS.library}`,
-    ids: [THREAD_IDS.libraryMain],
+    path: `/api/v1/threads?project_id=${projectIds.library}`,
+    ids: [threadIds.libraryMain],
   },
   {
     request: 'GET /projects/{project_id}/threads',
     address: '/',
-    path: `/api/v1/projects/${PROJECT_IDS.mentor}/threads`,
-    ids: [THREAD_IDS.mentorMain],
+    path: `/api/v1/projects/${projectIds.mentor}/threads`,
+    ids: [threadIds.mentorMain],
   },
   {
     request: 'GET /threads in the empty scenario',
@@ -23,7 +23,7 @@ export const threadListCases = [
   {
     request: 'GET /projects/{project_id}/threads in the empty scenario',
     address: '/?mock-threads=empty',
-    path: `/api/v1/projects/${PROJECT_IDS.mentor}/threads`,
+    path: `/api/v1/projects/${projectIds.mentor}/threads`,
     ids: [],
   },
 ]
@@ -34,8 +34,8 @@ export const threadRunStateCases = [
     name: 'waits for review',
     address: '/',
     thread: {
-      project_id: PROJECT_IDS.mentor,
-      active_run_id: RUN_IDS.mentorMain3,
+      project_id: projectIds.mentor,
+      active_run_id: runIds.mentorMain3,
       active_run_status: 'interrupted',
       current_stage: 'analysis_review',
     },
@@ -43,7 +43,7 @@ export const threadRunStateCases = [
   {
     name: 'is running',
     address: '/?mock-run-state=running',
-    thread: { active_run_id: RUN_IDS.mentorMain3, active_run_status: 'running' },
+    thread: { active_run_id: runIds.mentorMain3, active_run_status: 'running' },
   },
   {
     name: 'failed',
@@ -83,14 +83,14 @@ export const threadErrorCases = [
   {
     request: 'GET /threads/{thread_id} in the empty scenario',
     address: '/?mock-thread=empty',
-    path: `/api/v1/threads/${THREAD_IDS.mentorMain}`,
+    path: `/api/v1/threads/${threadIds.mentorMain}`,
     status: 404,
     code: 'not_found',
   },
   {
     request: 'GET /threads/{thread_id} in the error scenario',
     address: '/?mock-thread=error',
-    path: `/api/v1/threads/${THREAD_IDS.mentorMain}`,
+    path: `/api/v1/threads/${threadIds.mentorMain}`,
     status: 500,
     code: 'internal_error',
   },

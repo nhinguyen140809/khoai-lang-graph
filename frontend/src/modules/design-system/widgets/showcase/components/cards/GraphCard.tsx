@@ -107,9 +107,9 @@ const edgeTypes = { link: LinkEdge }
 
 // One row per color and one column per line style, each edge between two points. The grid is
 // narrow enough for the card to show it at 1x zoom or more, so that the 1px lines stay sharp.
-const columnWidth = 80
-const edgeLength = 56
-const rowHeight = 24
+const COLUMN_WIDTH = 80
+const EDGE_LENGTH = 56
+const ROW_HEIGHT = 24
 
 function point(id: string, x: number, y: number): SamplePoint {
   return { id, type: 'point', position: { x, y }, data: {}, selectable: false }
@@ -122,13 +122,13 @@ function caption(label: string, x: number, y: number, origin: NodeOrigin): Sampl
 
 const edgeSampleNodes: (SamplePoint | SampleCaption)[] = [
   ...edgeVariants.map((variant, column) =>
-    caption(variant, column * columnWidth + edgeLength / 2, -12, [0.5, 1]),
+    caption(variant, column * COLUMN_WIDTH + EDGE_LENGTH / 2, -12, [0.5, 1]),
   ),
   ...tones.flatMap((color, row) => [
-    caption(color, -16, row * rowHeight, [1, 0.5]),
+    caption(color, -16, row * ROW_HEIGHT, [1, 0.5]),
     ...edgeVariants.flatMap((variant, column) => [
-      point(`${variant}-${color}-from`, column * columnWidth, row * rowHeight),
-      point(`${variant}-${color}-to`, column * columnWidth + edgeLength, row * rowHeight),
+      point(`${variant}-${color}-from`, column * COLUMN_WIDTH, row * ROW_HEIGHT),
+      point(`${variant}-${color}-to`, column * COLUMN_WIDTH + EDGE_LENGTH, row * ROW_HEIGHT),
     ]),
   ]),
 ]

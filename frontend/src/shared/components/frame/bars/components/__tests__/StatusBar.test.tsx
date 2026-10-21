@@ -3,9 +3,8 @@ import userEvent from '@testing-library/user-event'
 import { afterEach, beforeEach, describe, expect, it, vi } from 'vitest'
 
 import { useStatusBarItem } from '../../hooks/useStatusBarItem'
-import { StatusBarSide } from '../../status-bar.constants'
 import { useStatusBarStore } from '../../status-bar.store'
-import type { StatusBarItem } from '../../status-bar.types'
+import { type StatusBarItem, StatusBarSide } from '../../status-bar.types'
 import { StatusBar } from '../StatusBar'
 
 /** A component that reports `item` in the status bar while it is mounted. */

@@ -2,7 +2,7 @@
 
 Next.js 16 (App Router) + React 19 + TypeScript app. It talks to the backend over REST and SSE and can run on its own against mocked API responses.
 
-This file covers running and working on the frontend. For the overall architecture, tech stack, and repository layout see the [root README](../README.md); for coding conventions, file naming, and the API contract see [CONTRIBUTING](../CONTRIBUTING.md).
+This file covers running and working on the frontend. For the overall architecture, tech stack, and repository layout see the [root README](../README.md); for coding conventions and file naming see [CONTRIBUTING](CONTRIBUTING.md), and for the API contract the [root CONTRIBUTING](../CONTRIBUTING.md#api-contract).
 
 ## Contents
 
@@ -261,13 +261,13 @@ The frame (`Workbench`) in `src/shared/components/frame/` lays out a screen afte
 
 The folder is split by what its parts do. Each folder keeps its own code in layers, and the root of the frame holds what several folders use: in `components/`, `Workbench`, `Workspace` (the side panel, and the editor with the tabs of the group that the layout names, `tabGroup`), `PageWorkspace` (the side panel and the page of a screen outside a project, which has no tabs) and `SideFeatureSplit` (the side panel of the feature chosen beside the editor, which both use); in `hooks/`, `useRestoreFrame` (reads the stored state after the first render) and `useOpenPage`.
 
-| Folder          | Holds                                                                                                                                                                                                                                                                                      |
-| --------------- | ------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------ |
-| `destinations/` | The features of the screen and which one shows its side panel: their types and context, the chosen feature (`side-feature.store.ts`), `useSideFeature`, the activity bar, and the commands that show a feature                                                                             |
-| `panels/`       | The panels that the user resizes and hides, by region (`PanelRegion` and `panelLayouts` in `panel.constants.ts`, with their sizes): their size and visibility (`panels.store.ts`), `usePanel`, `EditorSplit`, the side panel and its sections, the panel under the editor and its sections |
-| `tabs/`         | The editor tabs: their schema, store and pure functions, `useEditorTab` for a page, `useEditorTabs` for the strip, and the strip, which shares it with its tabs and its menu through `TabStripContext` (`useTabStrip`)                                                                     |
-| `commands/`     | The command palette: the commands registered and whether it is open (`commands.store.ts`), `useCommands`, `useCommandPalette`, and the palette                                                                                                                                             |
-| `bars/`         | The top bar, its crumb and logo, and the status bar: its items (`status-bar.store.ts`), `useStatusBarItem` for a feature and `useRegisteredStatusBarItems` for the bar                                                                                                                     |
+| Folder          | Holds                                                                                                                                                                                                                                                                                                            |
+| --------------- | ---------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
+| `destinations/` | The features of the screen and which one shows its side panel: their types and context, the chosen feature (`side-feature.store.ts`), `useSideFeature`, the activity bar, and the commands that show a feature                                                                                                   |
+| `panels/`       | The panels that the user resizes and hides, by region (`PanelRegion` in `panel.types.ts`, and `panelLayouts`, with their sizes, in `panel.constants.ts`): their size and visibility (`panels.store.ts`), `usePanel`, `EditorSplit`, the side panel and its sections, the panel under the editor and its sections |
+| `tabs/`         | The editor tabs: their types, store and pure functions, `useEditorTab` for a page, `useEditorTabs` for the strip, and the strip, which shares it with its tabs and its menu through `TabStripContext` (`useTabStrip`)                                                                                            |
+| `commands/`     | The command palette: the commands registered and whether it is open (`commands.store.ts`), `useCommands`, `useCommandPalette`, and the palette                                                                                                                                                                   |
+| `bars/`         | The top bar, its crumb and logo, and the status bar: its items (`status-bar.store.ts`), `useStatusBarItem` for a feature and `useRegisteredStatusBarItems` for the bar                                                                                                                                           |
 
 | Layer     | Files                                                       | Imports                                                      |
 | --------- | ----------------------------------------------------------- | ------------------------------------------------------------ |
@@ -305,7 +305,8 @@ The size and visibility of the regions and the open editor tabs are device-local
 
 - `storageKey(name)` names a key: every key starts with the name of the app.
 - `browserStorage` reads and writes keys, and fails quietly where storage is missing, blocked or full.
-- `persistStorage()` is the storage of a persisted store. With `ready`, it drops writes until the store has read what was stored: the frame stores read after the first render, so that the server HTML matches the first client render, and `persist` writes on every change.
+- `persistStorage()` is the storage of a persisted store; ESLint reports a `persist` store without a `storage` or without a key named by `storageKey`. With `ready`, it drops writes until the store has read what was stored: the frame stores read after the first render, so that the server HTML matches the first client render, and `persist` writes on every change.
+- `persistStorageByEntry()` is the storage of a persisted store whose state divides into entries: each entry has a key of its own, and a write stores only the entries that changed since the page read or wrote them, so that two browser tabs that change different entries keep each other's changes. The editor tabs store each tab group so: a browser tab on one project never writes over the tabs opened in another project since it loaded.
 - `parseStored()` checks stored state with a Zod schema before a store uses it, so that a value of an older version of the app is dropped instead of breaking the store.
 
 `next-themes` keeps its own copy of the theme in the browser, inside the library.

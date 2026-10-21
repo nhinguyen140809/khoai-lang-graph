@@ -1,4 +1,4 @@
-import type { EditorTab } from '../../editor-tabs.schema'
+import type { EditorTab } from '../../editor-tabs.types'
 
 export const req: EditorTab = { id: 'i1', title: 'REQ-001', href: '/projects/p1/search/i1' }
 export const ambiguity: EditorTab = {

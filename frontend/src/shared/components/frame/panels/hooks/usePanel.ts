@@ -1,6 +1,6 @@
 import { useSyncExternalStore } from 'react'
 
-import type { PanelRegion } from '../panel.constants'
+import type { PanelRegion } from '../panel.types'
 import { usePanelsStore } from '../panels.store'
 
 const subscribe = (onChange: () => void) => usePanelsStore.persist.onFinishHydration(onChange)

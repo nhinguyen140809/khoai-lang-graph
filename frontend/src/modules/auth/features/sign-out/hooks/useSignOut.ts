@@ -2,7 +2,7 @@ import { useMutation } from '@tanstack/react-query'
 import { toast } from 'sonner'
 
 import { logout } from '@/modules/auth/entities'
-import { HttpStatus } from '@/shared/api/api-error.constants'
+import { HttpStatus } from '@/shared/api/api-error.types'
 import { ApiError, errorMessageOf } from '@/shared/api/api-error.utils'
 import { loadPage } from '@/shared/api/auth-redirect.utils'
 import { routes } from '@/shared/config/routes'

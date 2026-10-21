@@ -4,16 +4,7 @@ import { Activity, type ReactNode, useState } from 'react'
 
 import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/shared/components/ui/tabs'
 
-/** A part of the panel under the editor, shown in its own tab. */
-export interface BottomPanelSection {
-  /** Unique in the panel. */
-  id: string
-  title: string
-  /** Buttons at the right of the tabs while the section is shown, such as a filter. */
-  actions?: ReactNode
-  /** Fills the section, and scrolls itself when it flows. */
-  content: ReactNode
-}
+import type { BottomPanelSection } from '../panel.types'
 
 interface BottomPanelSectionsProps {
   sections: readonly BottomPanelSection[]

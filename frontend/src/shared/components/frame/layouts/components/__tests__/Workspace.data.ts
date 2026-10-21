@@ -1,4 +1,4 @@
-import type { EditorTab } from '../../../tabs/editor-tabs.schema'
+import type { EditorTab } from '../../../tabs/editor-tabs.types'
 
 /** The path of the page on screen, the side feature chosen, and the side panel shown. */
 export const sidePanelCases = [

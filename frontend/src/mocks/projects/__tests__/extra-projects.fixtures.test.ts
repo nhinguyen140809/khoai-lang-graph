@@ -2,7 +2,7 @@ import { describe, expect, it } from 'vitest'
 
 import { isUnfinishedRunStatus } from '@/modules/run/entities'
 
-import { bulkProjectCount, extraProjectSpecs } from '../extra-project-specs.constants'
+import { extraProjectSpecs } from '../extra-project-specs.fixtures'
 import {
   bulkProjects,
   extraProjects,
@@ -10,6 +10,7 @@ import {
   extraRunSteps,
   extraThreads,
 } from '../extra-projects.fixtures'
+import { bulkProjectCount } from '../projects.constants'
 import { extraProjectCases, lastStepCases, recordIdCases } from './extra-projects.fixtures.data'
 
 function unique(ids: string[]) {

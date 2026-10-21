@@ -5,20 +5,8 @@ import { useEffect, useEffectEvent, useId, useLayoutEffect, useRef } from 'react
 import { matchesHotkey } from '@/shared/lib/hotkey.utils'
 
 import type { PaletteCommand } from '../command.types'
+import { shownKey } from '../command.utils'
 import { useCommandsStore } from '../commands.store'
-
-/** What the palette shows of the commands, as text: when it changes, they register again. */
-function shownKey(commands: readonly PaletteCommand[]): string {
-  return JSON.stringify(
-    commands.map(({ id, label, group, hotkey, run }) => [
-      id,
-      label,
-      group,
-      hotkey,
-      run !== undefined,
-    ]),
-  )
-}
 
 /**
  * Registers commands in the command palette while the calling component is mounted, and runs each

@@ -1,9 +1,9 @@
-import { PROJECT_IDS } from '../../../src/mocks/shared/mock-ids.constants'
+import { projectIds } from '../../../src/mocks/shared/mock-ids.constants'
 
 /** A project opened from the list: the address of the list, the status of the project there, and its id. */
 export const openedProjectCases = [
-  { name: 'Mentor platform', from: '/', status: 'Waiting for you', id: PROJECT_IDS.mentor },
-  { name: 'Campus food ordering', from: '/projects', status: 'Done', id: PROJECT_IDS.campus },
+  { name: 'Mentor platform', from: '/', status: 'Waiting for you', id: projectIds.mentor },
+  { name: 'Campus food ordering', from: '/projects', status: 'Done', id: projectIds.campus },
 ]
 
 /** A project created from an idea, the name typed in the dialog, and the name it gets. */
@@ -43,6 +43,6 @@ export const notFoundCases = [
   { name: 'a project that does not exist', address: '/projects/missing/activity' },
   {
     name: 'a project that the API does not find',
-    address: `/projects/${PROJECT_IDS.mentor}/activity?mock-project=empty`,
+    address: `/projects/${projectIds.mentor}/activity?mock-project=empty`,
   },
 ]

@@ -1,8 +1,7 @@
 import { z } from 'zod'
 
-import { outputLanguages } from '@/shared/config/output-language'
-
-import { runStatuses } from '../constants/run-status.constants'
+import { runConfigSchema } from './run-config.types'
+import { runStatuses } from './run-status.types'
 
 // Temporary hand-written schemas for the runs API: the runs and their steps.
 // TODO: replace with the types generated into src/shared/api/generated/ once they exist.
@@ -30,14 +29,7 @@ export const runSchema = z.object({
   status: z.enum(runStatuses),
   current_stage: z.string(),
   iteration_count: z.number().int(),
-  run_config: z.object({
-    models: z.record(z.string(), z.string()),
-    review_checkpoints: z.array(z.string()),
-    output_language: z.enum(outputLanguages),
-    max_steps: z.number().int(),
-    max_cost_usd: z.number().nullable(),
-    parameters: z.record(z.string(), z.unknown()),
-  }),
+  run_config: runConfigSchema,
   retry_of_run_id: z.string().nullable(),
   error: z.object({ code: z.string(), message: z.string(), stage: z.string() }).nullable(),
   usage: usageSchema,

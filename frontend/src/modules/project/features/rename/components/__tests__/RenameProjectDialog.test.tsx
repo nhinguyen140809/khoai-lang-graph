@@ -3,7 +3,7 @@ import userEvent from '@testing-library/user-event'
 import { describe, expect, it, vi } from 'vitest'
 
 import { server } from '@/mocks/msw-server.setup'
-import { PROJECT_IDS } from '@/mocks/shared/mock-ids.constants'
+import { projectIds } from '@/mocks/shared/mock-ids.constants'
 import { TestProviders } from '@/test/TestProviders'
 
 import { RenameProjectDialog } from '../RenameProjectDialog'
@@ -13,7 +13,7 @@ function renderDialog(name: string | null = 'Mentor platform') {
   const onOpenChange = vi.fn()
   render(
     <RenameProjectDialog
-      project={{ id: PROJECT_IDS.mentor, name }}
+      project={{ id: projectIds.mentor, name }}
       open
       onOpenChange={onOpenChange}
     />,

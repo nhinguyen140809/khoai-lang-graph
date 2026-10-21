@@ -2,6 +2,7 @@ import { subDays } from 'date-fns'
 
 import { apiCommand, apiRequest, fetchPage, type ListPage } from '@/shared/api/api-fetch.utils'
 
+import { noProjectFilters } from './projects.constants'
 import {
   type CreateProjectBody,
   type Project,
@@ -9,7 +10,6 @@ import {
   projectSchema,
   type ProjectStatus,
 } from './projects.types'
-import { noProjectFilters } from './projects.utils'
 
 // TODO: switch to the generated client in src/shared/api/generated/ once it is generated.
 

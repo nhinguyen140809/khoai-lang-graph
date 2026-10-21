@@ -1,6 +1,6 @@
 import { MutationCache, QueryCache, QueryClient } from '@tanstack/react-query'
 
-import { HttpStatus } from './api-error.constants'
+import { HttpStatus } from './api-error.types'
 import { ApiError } from './api-error.utils'
 import { redirectToSignIn } from './auth-redirect.utils'
 

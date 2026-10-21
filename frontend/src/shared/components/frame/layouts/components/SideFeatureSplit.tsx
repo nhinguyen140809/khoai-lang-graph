@@ -8,7 +8,7 @@ import { useCommands } from '../../commands/hooks/useCommands'
 import { useSideFeature } from '../../destinations/hooks/useSideFeature'
 import { EditorSplit } from '../../panels/components/EditorSplit'
 import { usePanel } from '../../panels/hooks/usePanel'
-import { PanelRegion } from '../../panels/panel.constants'
+import { PanelRegion } from '../../panels/panel.types'
 
 interface SideFeatureSplitProps {
   /** The editor, or the page of a screen without tabs. */

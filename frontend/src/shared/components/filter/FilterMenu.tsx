@@ -57,7 +57,7 @@ export function FilterMenu({ fields, values, onApply }: FilterMenuProps) {
       <PopoverContent
         align="end"
         aria-label={filterMessages.title}
-        className="w-96 max-w-[calc(100vw-2rem)] gap-0 p-0"
+        className="w-96 max-w-popover gap-0 p-0"
       >
         <form
           onSubmit={(event) => {

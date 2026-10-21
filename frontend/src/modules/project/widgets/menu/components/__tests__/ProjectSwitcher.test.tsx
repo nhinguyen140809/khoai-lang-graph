@@ -6,7 +6,7 @@ import { afterEach, beforeEach, describe, expect, it, vi } from 'vitest'
 
 import { server } from '@/mocks/msw-server.setup'
 import { mockProjects } from '@/mocks/projects/projects.fixtures'
-import { PROJECT_IDS } from '@/mocks/shared/mock-ids.constants'
+import { projectIds } from '@/mocks/shared/mock-ids.constants'
 import { useProjectPromptStore } from '@/modules/project/features/create'
 import { useRenameProjectDialogStore } from '@/modules/project/features/rename'
 import { ProjectDialogs } from '@/modules/project/widgets/dialogs'
@@ -41,7 +41,7 @@ describe('ProjectSwitcher', () => {
     // The menu opens the dialog that the layout holds.
     render(
       <>
-        <ProjectSwitcher projectId={PROJECT_IDS.mentor} />
+        <ProjectSwitcher projectId={projectIds.mentor} />
         <ProjectDialogs />
       </>,
       { wrapper: TestProviders },
@@ -64,21 +64,21 @@ describe('ProjectSwitcher', () => {
     server.use(
       http.get('/api/v1/projects', ({ request }) => {
         queries.push(new URL(request.url).search)
-        const recent = mockProjects.filter(({ id }) => id !== PROJECT_IDS.laundry)
+        const recent = mockProjects.filter(({ id }) => id !== projectIds.laundry)
         return HttpResponse.json({ items: recent, next_cursor: 'more' })
       }),
     )
-    render(<ProjectSwitcher projectId={PROJECT_IDS.mentor} />, { wrapper: TestProviders })
+    render(<ProjectSwitcher projectId={projectIds.mentor} />, { wrapper: TestProviders })
 
     await userEvent.click(await screen.findByRole('button', { name: 'Mentor platform' }))
     const menu = await screen.findByRole('menu')
 
     expect(
       await within(menu).findByRole('menuitem', { name: 'Mentor platform, open' }),
-    ).toHaveAttribute('href', `/projects/${PROJECT_IDS.mentor}/activity`)
+    ).toHaveAttribute('href', `/projects/${projectIds.mentor}/activity`)
     expect(within(menu).getByRole('menuitem', { name: 'Library booking' })).toHaveAttribute(
       'href',
-      `/projects/${PROJECT_IDS.library}/activity`,
+      `/projects/${projectIds.library}/activity`,
     )
     expect(
       within(menu).queryByRole('menuitem', { name: 'Dorm laundry booking' }),
@@ -92,7 +92,7 @@ describe('ProjectSwitcher', () => {
   })
 
   it('opens the prompt of the project list from the menu, to start a project', async () => {
-    render(<ProjectSwitcher projectId={PROJECT_IDS.mentor} />, { wrapper: TestProviders })
+    render(<ProjectSwitcher projectId={projectIds.mentor} />, { wrapper: TestProviders })
 
     await userEvent.click(await screen.findByRole('button', { name: 'Mentor platform' }))
     await userEvent.click(await screen.findByRole('menuitem', { name: 'Create project' }))
@@ -102,7 +102,7 @@ describe('ProjectSwitcher', () => {
   })
 
   it('keeps the name of the project when loading it again fails', async () => {
-    render(<ProjectSwitcher projectId={PROJECT_IDS.mentor} />, { wrapper: TestProviders })
+    render(<ProjectSwitcher projectId={projectIds.mentor} />, { wrapper: TestProviders })
     await screen.findByRole('button', { name: 'Mentor platform' })
     server.use(
       http.get('/api/v1/projects/:projectId', () => new HttpResponse(null, { status: 500 })),

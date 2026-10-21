@@ -328,7 +328,7 @@ Rules that make results defensible in a thesis. Complements the experiment workf
 - [x] Zustand store for user settings (model choices, theme, etc.)
 - [x] Chat page consuming the SSE endpoint (against MSW mocks until the backend exists)
 - [x] Vitest + MSW + Playwright setup
-- [x] File and folder naming rules enforced by ESLint (CONTRIBUTING: TypeScript / React)
+- [x] File and folder naming rules enforced by ESLint (frontend/CONTRIBUTING: TypeScript / React)
 
 ### Research
 - [ ] `research/README.md` with RQs and reproduction steps

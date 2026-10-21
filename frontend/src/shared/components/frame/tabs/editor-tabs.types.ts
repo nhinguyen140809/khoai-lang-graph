@@ -21,3 +21,11 @@ export const persistedTabsSchema = z.object({
 })
 
 export type PersistedTabs = z.infer<typeof persistedTabsSchema>
+
+/** The tabs of one group, as stored under a key of their own, with the id of its preview tab. */
+export const storedTabGroupSchema = z.object({
+  tabs: z.array(editorTabSchema),
+  preview: z.string().optional(),
+})
+
+export type StoredTabGroup = z.infer<typeof storedTabGroupSchema>

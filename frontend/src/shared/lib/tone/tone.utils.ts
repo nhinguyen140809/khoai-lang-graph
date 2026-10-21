@@ -1,4 +1,4 @@
-import type { Tone, ToneVariants } from './tone.constants'
+import type { Tone, ToneVariants } from './tone.types'
 
 // `Object.hasOwn` instead of `in`, so that inherited names such as `toString` do not count.
 function isLegacyVariant<Legacy extends string>(

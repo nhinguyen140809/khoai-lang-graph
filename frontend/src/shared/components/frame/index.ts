@@ -5,8 +5,7 @@
 export { LogoMark } from './bars/components/LogoMark'
 export { PageCrumb } from './bars/components/PageCrumb'
 export { useStatusBarItem } from './bars/hooks/useStatusBarItem'
-export { StatusBarSide } from './bars/status-bar.constants'
-export type { StatusBarItem } from './bars/status-bar.types'
+export { type StatusBarItem, StatusBarSide } from './bars/status-bar.types'
 export { PaletteGroup } from './commands/command.constants'
 export type { PaletteCommand } from './commands/command.types'
 export { useCommands } from './commands/hooks/useCommands'
@@ -23,11 +22,9 @@ export { AuthScreen } from './layouts/components/AuthScreen'
 export { PageWorkspace } from './layouts/components/PageWorkspace'
 export { Workbench } from './layouts/components/Workbench'
 export { Workspace } from './layouts/components/Workspace'
-export {
-  type BottomPanelSection,
-  BottomPanelSections,
-} from './panels/components/BottomPanelSections'
+export { BottomPanelSections } from './panels/components/BottomPanelSections'
 export { EditorWithBottomPanel } from './panels/components/EditorWithBottomPanel'
 export { SidePanel } from './panels/components/SidePanel'
 export { SidePanelSection } from './panels/components/SidePanelSection'
+export type { BottomPanelSection } from './panels/panel.types'
 export { useEditorTab } from './tabs/hooks/useEditorTab'

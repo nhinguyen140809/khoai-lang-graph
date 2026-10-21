@@ -31,7 +31,7 @@ export function NewProjectDialog({ open, idea, onOpenChange }: NewProjectDialogP
       {/* The title says it all: a description would only repeat the button. At most 80% of the
           window high, so that the open agent settings scroll between the title and the buttons. */}
       <DialogContent
-        className="max-h-[80dvh] grid-rows-[auto_minmax(0,1fr)] sm:max-w-lg"
+        className="max-h-dialog grid-rows-header-body sm:max-w-lg"
         aria-describedby={undefined}
       >
         <DialogHeader>

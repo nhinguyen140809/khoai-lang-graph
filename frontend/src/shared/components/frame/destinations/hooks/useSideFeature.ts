@@ -1,7 +1,7 @@
 import { usePathname } from 'next/navigation'
 
 import { usePanel } from '../../panels/hooks/usePanel'
-import { PanelRegion } from '../../panels/panel.constants'
+import { PanelRegion } from '../../panels/panel.types'
 import type { FeatureDestination } from '../destination.types'
 import { destinationOfHref, isFeatureDestination } from '../destination.utils'
 import { useSideFeatureStore } from '../side-feature.store'

@@ -1,11 +1,10 @@
+export { fillTones, toneClasses } from './tone.constants'
 export {
   type Fill,
   fills,
-  fillTones,
   type Tone,
-  toneClasses,
   tones,
   type ToneVariantProps,
   type ToneVariants,
-} from './tone.constants'
+} from './tone.types'
 export { resolveToneVariant } from './tone.utils'

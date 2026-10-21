@@ -1,5 +1,5 @@
+import { noProjectFilters } from '../projects.constants'
 import { projectKeys } from '../projects.keys'
-import { noProjectFilters } from '../projects.utils'
 
 /** A key, and the wider key it starts with. */
 export const keyCases = [

@@ -1,7 +1,4 @@
-/** The colors that Badge, Button, Alert, Code, Node, Edge, Marker, Progress, and Spinner take. */
-export const tones = ['neutral', 'primary', 'success', 'warning', 'destructive'] as const
-
-export type Tone = (typeof tones)[number]
+import type { Fill, Tone, ToneVariants } from './tone.types'
 
 /**
  * The classes that a `color` prop adds. Each color sets five CSS variables that the variant
@@ -27,28 +24,6 @@ export const toneClasses = {
   destructive:
     '[--tone:var(--destructive)] [--tone-foreground:var(--destructive-foreground)] [--tone-strong:var(--destructive-strong)] [--tone-soft:color-mix(in_oklab,var(--destructive)_15%,transparent)] [--tone-border:color-mix(in_oklab,var(--destructive-strong)_50%,transparent)] dark:[--tone-soft:color-mix(in_oklab,var(--destructive)_20%,transparent)]',
 } as const satisfies Record<Tone, string>
-
-/**
- * How a component reads its `variant` (the fill) and `color` props. `legacy` maps each variant
- * name of shadcn/ui to a fill and a color, so that examples from its documentation keep working.
- * `defaultColors` gives the color of each fill when no color is set.
- */
-export interface ToneVariants<Variant extends string, Legacy extends string> {
-  defaultVariant: NoInfer<Variant>
-  legacy: Record<Legacy, { variant: NoInfer<Variant>; color: Tone }>
-  defaultColors: Record<Variant, Tone>
-}
-
-/** The `variant` and `color` props of a component that reads them through `ToneVariants`. */
-export interface ToneVariantProps<Config extends ToneVariants<string, string>> {
-  variant?: Extract<keyof Config['defaultColors'] | keyof Config['legacy'], string> | undefined
-  color?: Tone | undefined
-}
-
-/** The fills of Badge and Button, from the strongest to the weakest. */
-export const fills = ['solid', 'soft', 'outline', 'ghost', 'link'] as const
-
-export type Fill = (typeof fills)[number]
 
 // Badge and Button read their props the same way. Without a color, solid and link take the
 // primary color and the others stay neutral.

@@ -8,7 +8,7 @@ import { Popover, PopoverContent, PopoverTrigger } from '@/shared/components/ui/
 import { Stack } from '@/shared/components/ui/stack'
 
 import { useRegisteredStatusBarItems } from '../hooks/useRegisteredStatusBarItems'
-import { StatusBarSide } from '../status-bar.constants'
+import { StatusBarSide } from '../status-bar.types'
 
 /**
  * The bar at the bottom of every screen. The items that components register with

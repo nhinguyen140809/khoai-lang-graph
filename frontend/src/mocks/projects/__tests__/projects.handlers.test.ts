@@ -3,7 +3,7 @@ import { afterEach, describe, expect, it } from 'vitest'
 import type { Project } from '@/modules/project/entities'
 import { apiUrl } from '@/shared/api/api-url.utils'
 
-import { PROJECT_IDS } from '../../shared/mock-ids.constants'
+import { projectIds } from '../../shared/mock-ids.constants'
 import {
   createProjectCases,
   createProjectScenarioCases,
@@ -91,7 +91,7 @@ describe('GET /projects', () => {
 
     expect(body.items.length).toBeGreaterThan(0)
     expect(body.items.every(({ status }) => status === 'archived')).toBe(true)
-    expect(body.items.map(({ id }) => id)).toContain(PROJECT_IDS.laundry)
+    expect(body.items.map(({ id }) => id)).toContain(projectIds.laundry)
   })
 
   it.each(unfinishedRunCountCases)(
@@ -122,7 +122,7 @@ describe('the rollup run status of a project', () => {
 describe('GET /projects/{project_id}', () => {
   it('answers one project, with its unfinished runs', async () => {
     const { status, body } = (await call(
-      `/api/v1/projects/${PROJECT_IDS.mentor}`,
+      `/api/v1/projects/${projectIds.mentor}`,
     )) as Answer<Project>
 
     expect(status).toBe(200)
@@ -181,7 +181,7 @@ describe('PATCH /projects/{project_id}', () => {
   })
 
   it('renames a project, without the spaces around its name', async () => {
-    const path = `/api/v1/projects/${PROJECT_IDS.mentor}`
+    const path = `/api/v1/projects/${projectIds.mentor}`
 
     expect(await send('PATCH', path, '{"name": " Mentor finder "}')).toMatchObject({
       status: 200,
@@ -191,7 +191,7 @@ describe('PATCH /projects/{project_id}', () => {
   })
 
   it.each(invalidProjectChangeCases)('answers 422 for $name', async ({ body, errors }) => {
-    const path = `/api/v1/projects/${PROJECT_IDS.mentor}`
+    const path = `/api/v1/projects/${projectIds.mentor}`
 
     expect(await send('PATCH', path, body)).toMatchObject({ status: 422, body: { errors } })
   })
@@ -199,15 +199,15 @@ describe('PATCH /projects/{project_id}', () => {
 
 describe('DELETE /projects/{project_id}', () => {
   it('removes a project whose runs ended from the lists and from its address', async () => {
-    const path = `/api/v1/projects/${PROJECT_IDS.campus}`
+    const path = `/api/v1/projects/${projectIds.campus}`
 
     expect((await call(path, { method: 'DELETE' })).status).toBe(204)
     expect((await call(path)).status).toBe(404)
-    expect(await listedIds('status=active')).not.toContain(PROJECT_IDS.campus)
+    expect(await listedIds('status=active')).not.toContain(projectIds.campus)
   })
 
   it('keeps a project with a run that is not finished', async () => {
-    const path = `/api/v1/projects/${PROJECT_IDS.mentor}`
+    const path = `/api/v1/projects/${projectIds.mentor}`
 
     expect(await call(path, { method: 'DELETE' })).toMatchObject({
       status: 409,

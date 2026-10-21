@@ -28,7 +28,7 @@ The objects come from [Data Shape](../DATA_SHAPE.md), the endpoints from [API de
 - **Level 3, the kinds of file** inside a slice: `components/`, `hooks/`, `types/`, `constants/`, `utils/` and the other kinds of the contributing guide. A kind gets a folder once it has two files or more; a kind with one file stays at the root of the slice.
 - `src/shared/` and `src/app/`, with `src/providers/`, stay outside the modules.
 - Activity is a feature of the activity bar, as Documents or Workflow are, and a module of its own, `activity`. Its side panel shows the stages of the workflow as a tree, in the order of the definition, marked as the events of the run arrive: the widget `steps`, with the item of the feature on the activity bar, not built yet. Its page, which opens in a tab, is the chat: the widget `chat`. Until it is rebuilt, the route of its page shows a placeholder, and `chat` holds the code of the first chat, with the events of the stream of a run and their reducer in `run/entities` and the action that starts a run with an input in `run/features/start`. The rebuilt chat sends a message instead, from `thread/features/send-message`.
-- Three modules hold no object of the product yet: `artifact` holds the placeholder of the artifact panel (`artifact/widgets/panel`), `user` the settings page (`user/widgets/settings`), and `design-system` the page that shows the UI components and the tokens (`design-system/widgets/showcase`).
+- Three modules hold no object of the product yet: `artifact` holds the placeholder of the artifact panel (`artifact/widgets/panel`), `user` the settings page (`user/widgets/settings`), with the feature that chooses the theme (`user/features/theme`), and `design-system` the page that shows the UI components and the tokens (`design-system/widgets/showcase`).
 
 ```text
 src/
@@ -61,6 +61,7 @@ src/
 │   │   └── features/           # sign-in/, sign-up/, sign-out/
 │   ├── user/
 │   │   ├── entities/           # User
+│   │   ├── features/           # theme/
 │   │   └── widgets/            # menu/, settings/
 │   └── design-system/
 │       └── widgets/            # showcase/
@@ -95,18 +96,18 @@ A slice holds its components in `components/`, its hooks in `hooks/`, and its ot
 | `api` | `<resource>.api.ts` | The calls of the endpoints of the objects | - | - |
 | `keys` | `<resource>.keys.ts` | The query keys | - | - |
 | `queries` | `<resource>.queries.ts` | A query that several places read or write | - | - |
-| `types` | `<subject>.types.ts` | The schemas and the types of the responses | The types of the action | The types of the block |
+| `types` | `<subject>.types.ts` | The schemas and the types of the responses, and the lists of values that a type is made from | The types of the action | The types of the block |
 | `schema` | `<form>.schema.ts` | - | The schema of a form | - |
 | `store` | `<topic>.store.ts` | - | The state of a dialog or of a prompt | The state of the block |
 | `reducer` | `<topic>.reducer.ts` | The events of a stream | A state that events change | A state that events change |
-| `constants` | `<topic>.constants.ts` | The labels of the values | The words of the action | The words of the block |
+| `constants` | `<topic>.constants.ts` | The labels and the looks of the values, and the defaults | The words of the action | The words of the block |
 | `utils` | `<topic>.utils.ts` | The pure rules of the objects | The rules of the action | The pure helpers of the block |
 | `fixtures` | `<subject>.fixtures.ts` | - | - | Sample data, as in the design system page |
 | `@x/` | `<module>.ts` | The files for the entities of other modules | - | - |
 
-Outside the modules, shared code holds `types`, `schema`, `store`, `reducer`, `config`, `constants` and `utils` files; `src/mocks/` holds `types`, `store`, `constants`, `utils`, `handlers`, `fixtures` and `setup` files; `src/test/` holds `utils` and `setup` files; and `tests/` holds the `spec`, `data` and `utils` files of Playwright. A config made of React elements is a `<subject>.config.tsx`.
+Outside the modules, shared code holds `types`, `store`, `reducer`, `config`, `constants` and `utils` files; `src/mocks/` holds `types`, `store`, `constants`, `utils`, `handlers`, `fixtures` and `setup` files, its `fixtures` the records of the mock data and its `constants` their fixed ids and counts; `src/test/` holds `utils` and `setup` files; and `tests/` holds the `spec`, `data` and `utils` files of Playwright. A config made of React elements is a `<subject>.config.tsx`.
 
-ESLint checks the kinds of each place (`FILE_KINDS` of `frontend/eslint.config.js`), the layers inside a module, and the folders at the root of a slice: one for each kind that the layer holds, `components/`, `hooks/`, `__tests__/`, and `@x/` in the entities.
+ESLint checks the kinds of each place (`FILE_KINDS` of `frontend/eslint.config.js`), the layers inside a module, and the folders at the root of a slice: one for each kind that the layer holds, `components/`, `hooks/`, `__tests__/`, and `@x/` in the entities. It also checks that a `constants` file exports no type and declares no function, and that a `types` file imports no `constants` file.
 
 ## 4. Order of the modules
 
@@ -116,7 +117,7 @@ ESLint checks the kinds of each place (`FILE_KINDS` of `frontend/eslint.config.j
 
 `usage`, `design-system`
 
-A module imports only the modules under it in its line: `project` reads `thread` and `run`; `activity` sits beside `project`, so it may read the same modules, and neither of the two reads the other; `thread` reads `run`, and `user` reads `auth`. `usage` and `design-system` read no other module. The order is `MODULE_IMPORTS` of `frontend/eslint.config.js`, which lists the modules of today and the ones planned next; a new module gets its place there before its first code.
+A module imports only the modules under it in its line: `project` reads `thread` and `run`; `activity` sits beside `project`, so it may read the same modules, and neither of the two reads the other; `thread` reads `run`, and `user` reads `auth`. `usage` and `design-system` read no other module. The order is `MODULE_IMPORTS` of `frontend/eslint.config.js`, which lists the modules of today and the ones planned next; a new module gets its place there before its first code. ESLint does not load when the lists form a cycle, or name a module that has no list.
 
 `itemRefSchema`, the reference to an item that a step produced or a message names, sits in `run` until the module `artifact` exists.
 
@@ -155,8 +156,8 @@ modules/
 
 ```ts
 // modules/run/entities/@x/project.ts
-export { runStatuses } from '../constants/run-status.constants'
-export type { RunStatus } from '../types/run-status.types'
+export { runDefaultsSchema } from '../types/run-config.types'
+export { type RunStatus, runStatuses } from '../types/run-status.types'
 ```
 
 The links between entities today:
@@ -213,7 +214,7 @@ The entity of the models is named `llm-model`, not `model`, because "model" alon
 | Object | Where it goes |
 |---|---|
 | Session, AuthIdentity | The entities of `auth`, through the calls that start and end a session; the web app keeps no session object |
-| RunConfig, RunDefaults | Value objects inside Run, Project and UserSettings, so part of those entities |
+| RunConfig, RunDefaults | Value objects of the runs, in `run/entities`: Run holds a RunConfig, and Project and UserSettings hold RunDefaults, which `project` reads through `@x/project` |
 | ArtifactRevision, ItemRevision, the artifact and item kinds of [Data Shape: section 7](../DATA_SHAPE.md#7-requirements-engineering-artifacts) | Part of `artifact` |
 | Export | One action: a feature that requests a document and downloads it |
 | ProviderCredential, ProjectMember, SourceDocument, DocumentChunk, ItemEmbedding, Comment, Notification | Later phase of the data shape; placed when the phase starts |

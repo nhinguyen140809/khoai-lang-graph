@@ -4,7 +4,7 @@ import { http, HttpResponse } from 'msw'
 import { afterEach, describe, expect, it, vi } from 'vitest'
 
 import { server } from '@/mocks/msw-server.setup'
-import { PROJECT_IDS } from '@/mocks/shared/mock-ids.constants'
+import { projectIds } from '@/mocks/shared/mock-ids.constants'
 import {
   noProjectFilters,
   type ProjectFilters,
@@ -101,7 +101,7 @@ describe('ProjectTable', () => {
 
     expect(await screen.findByRole('link', { name: 'Mentor platform' })).toHaveAttribute(
       'href',
-      `/projects/${PROJECT_IDS.mentor}/activity`,
+      `/projects/${projectIds.mentor}/activity`,
     )
   })
 
@@ -162,7 +162,7 @@ describe('ProjectTable', () => {
 
     await userEvent.click(within(dialog).getByRole('button', { name: 'Open project' }))
 
-    expect(routerMock.push).toHaveBeenCalledWith(`/projects/${PROJECT_IDS.mentor}/activity`)
+    expect(routerMock.push).toHaveBeenCalledWith(`/projects/${projectIds.mentor}/activity`)
     expect(within(dialog).queryByRole('button', { name: 'Delete project' })).not.toBeInTheDocument()
   })
 

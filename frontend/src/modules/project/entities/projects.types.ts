@@ -1,6 +1,6 @@
 import { z } from 'zod'
 
-import { type RunStatus, runStatuses } from '@/modules/run/entities/@x/project'
+import { runDefaultsSchema, type RunStatus, runStatuses } from '@/modules/run/entities/@x/project'
 import { type OutputLanguage, outputLanguages } from '@/shared/config/output-language'
 
 // Temporary hand-written schemas for the projects API.
@@ -9,16 +9,6 @@ import { type OutputLanguage, outputLanguages } from '@/shared/config/output-lan
 export const projectStatusSchema = z.enum(['active', 'archived'])
 
 export type ProjectStatus = z.infer<typeof projectStatusSchema>
-
-/** Settings that runs start from; a field left empty takes the value of the next level. */
-export const runDefaultsSchema = z.object({
-  review_checkpoints: z.array(z.string()).nullable(),
-  max_steps: z.number().int().nullable(),
-  max_cost_usd: z.number().nullable(),
-  parameters: z.record(z.string(), z.unknown()).nullable(),
-})
-
-export type RunDefaults = z.infer<typeof runDefaultsSchema>
 
 export const projectSchema = z.object({
   id: z.string(),

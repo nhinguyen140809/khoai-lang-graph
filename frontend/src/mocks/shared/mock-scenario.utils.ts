@@ -1,12 +1,11 @@
+import {
+  type HandlerScenario,
+  type MockRunState,
+  mockRunStates,
+  type MockScenario,
+  mockScenarios,
+} from './mock-scenario.types'
 import { internalError } from './problem.utils'
-
-const mockScenarios = ['empty', 'error', 'loading'] as const
-
-/** What a mocked resource answers: its fixtures by default, or a scenario of the page URL. */
-export type MockScenario = 'default' | (typeof mockScenarios)[number]
-
-/** The scenarios that each handler answers itself. */
-export type HandlerScenario = Exclude<MockScenario, 'error' | 'loading'>
 
 function isMockScenario(value: string): value is (typeof mockScenarios)[number] {
   return (mockScenarios as readonly string[]).includes(value)
@@ -47,11 +46,6 @@ export async function answerScenario(resource: string): Promise<HandlerScenario>
   if (scenario === 'loading') return neverAnswer()
   return scenario
 }
-
-const mockRunStates = ['running', 'waiting', 'failed', 'done'] as const
-
-/** The state of the run of the API examples: running, waiting for review, failed, or done. */
-export type MockRunState = (typeof mockRunStates)[number]
 
 function isMockRunState(value: string): value is MockRunState {
   return (mockRunStates as readonly string[]).includes(value)

@@ -3,9 +3,9 @@ import { afterEach, describe, expect, it } from 'vitest'
 import type { Thread } from '@/modules/thread/entities'
 import { apiUrl } from '@/shared/api/api-url.utils'
 
-import { extraProjectSpecs } from '../../projects/extra-project-specs.constants'
+import { extraProjectSpecs } from '../../projects/extra-project-specs.fixtures'
 import { mockProjects } from '../../projects/projects.fixtures'
-import { RUN_IDS, THREAD_IDS } from '../../shared/mock-ids.constants'
+import { runIds, threadIds } from '../../shared/mock-ids.constants'
 import { threadErrorCases, threadListCases, threadRunStateCases } from './threads.handlers.data'
 
 interface Page<T> {
@@ -31,7 +31,7 @@ async function call(path: string, init?: RequestInit) {
 }
 
 async function mentorThread() {
-  return ((await call(`/api/v1/threads/${THREAD_IDS.mentorMain}`)) as Answer<Thread>).body
+  return ((await call(`/api/v1/threads/${threadIds.mentorMain}`)) as Answer<Thread>).body
 }
 
 afterEach(() => {
@@ -62,7 +62,7 @@ describe('GET /threads/{thread_id}', () => {
   })
 
   it('has no unfinished run once its run is stopped', async () => {
-    await call(`/api/v1/runs/${RUN_IDS.mentorMain3}/cancel`, { method: 'POST' })
+    await call(`/api/v1/runs/${runIds.mentorMain3}/cancel`, { method: 'POST' })
 
     expect(await mentorThread()).toMatchObject({ active_run_id: null, active_run_status: null })
   })
