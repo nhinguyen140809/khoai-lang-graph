@@ -134,7 +134,7 @@ An artifact and an item each carry `version`. An update sends the version it was
 
 ### Idempotency
 
-`POST` requests that start work accept an `Idempotency-Key` header: send message, resume, retry, create export. Repeating a request with the same key within 24 hours returns the first response without doing the work again. This makes a retry after a network failure safe.
+`POST` requests that start work, and the request that creates a project, accept an `Idempotency-Key` header: send message, resume, retry, create export, create project. Repeating a request with the same key within 24 hours returns the first response without doing the work again. This makes a retry after a network failure safe.
 
 ### Rate limits and budgets
 
@@ -308,7 +308,7 @@ Rules:
 | Method and path | Purpose | Phase |
 |---|---|---|
 | `GET /projects` | Projects of the user; filters `status`, `rollup_run_status` (one or more values; `none` matches a project without a run) and `last_activity_after`; ordered by `last_activity_at` descending. Each item has `rollup_run_status`, which the project list shows; `item_counts` comes only with `GET /projects/{project_id}` | MVP |
-| `POST /projects` | Create; body `name`, `description`, `output_language`. `name` is optional: without it, the first run names the project from its initial intent, and the event stream of that run sends `project_named` | MVP |
+| `POST /projects` | Create; body `name`, `description`, `output_language`. `name` is optional: without it, the first run names the project from its initial intent, and the event stream of that run sends `project_named`. Accepts an `Idempotency-Key`, so that a retry after a lost answer creates no second project | MVP |
 | `GET /projects/{project_id}` | One project, with `item_counts`, `unfinished_run_counts` and `rollup_run_status` | MVP |
 | `PATCH /projects/{project_id}` | Change name, description, status, `run_config`, `model_overrides` | MVP |
 | `DELETE /projects/{project_id}` | Soft delete: the project is left out of lists, and its endpoints answer `404`. A project with an unfinished run (`queued`, `running` or `interrupted`) answers `409 invalid_state`; the run is stopped first | MVP |
