@@ -7,6 +7,7 @@ import { changeProject, findProject } from '../projects/projects.handlers'
 import { createdRuns } from '../runs/mock-runs.store'
 import { buildMockRun, noUsage } from '../runs/runs.fixtures'
 import { allRuns, findMockRun } from '../runs/runs.handlers'
+import { idempotent } from '../shared/idempotency.utils'
 import { mockRecord } from '../shared/mock-db.utils'
 import { IdPrefix } from '../shared/mock-ids.constants'
 import { createdId } from '../shared/mock-ids.utils'
@@ -79,44 +80,48 @@ function startRun(thread: Thread, now: string): Run {
 }
 
 export const messageHandlers = [
-  http.post('/api/v1/threads/:threadId/messages', async ({ params, request }) => {
-    await answerScenario('send-message')
-    const thread = allThreads().find(({ id }) => id === String(params.threadId))
-    if (thread === undefined) return notFound('The thread')
-    const { content } = await readBodyFields(request)
-    if (typeof content !== 'string' || content.trim() === '') {
-      return validationFailed([{ field: 'content', message: 'Enter a message.' }])
-    }
-    const now = new Date().toISOString()
-    const unfinished = thread.active_run_id === null ? undefined : findMockRun(thread.active_run_id)
-    const run = unfinished ?? startRun(thread, now)
-    const messages = sentMessages.get()
-    const message: SentMessage = {
-      id: createdId(IdPrefix.Message, messages.length + 1),
-      thread_id: thread.id,
-      sequence: messages.filter(({ thread_id }) => thread_id === thread.id).length + 1,
-      run_id: run.id,
-      author: 'user',
-      agent_role: null,
-      content,
-      artifact_refs: [],
-      item_refs: [],
-      delivery: unfinished === undefined ? 'started_run' : 'pending',
-      delivered_in_step_id: null,
-      created_at: now,
-    }
-    sentMessages.set([...messages, message])
-    // The message that starts the first run of a project is its idea, which names it if it has
-    // no name.
-    changeProject(thread.project_id, (project) =>
-      project.initial_message_id === null && unfinished === undefined
-        ? {
-            initial_message_id: message.id,
-            name: project.name ?? nameFromMessage(content),
-            last_activity_at: now,
-          }
-        : { last_activity_at: now },
-    )
-    return HttpResponse.json({ message, run }, { status: 201 })
-  }),
+  http.post(
+    '/api/v1/threads/:threadId/messages',
+    idempotent(async ({ params, request }) => {
+      await answerScenario('send-message')
+      const thread = allThreads().find(({ id }) => id === String(params.threadId))
+      if (thread === undefined) return notFound('The thread')
+      const { content } = await readBodyFields(request)
+      if (typeof content !== 'string' || content.trim() === '') {
+        return validationFailed([{ field: 'content', message: 'Enter a message.' }])
+      }
+      const now = new Date().toISOString()
+      const unfinished =
+        thread.active_run_id === null ? undefined : findMockRun(thread.active_run_id)
+      const run = unfinished ?? startRun(thread, now)
+      const messages = sentMessages.get()
+      const message: SentMessage = {
+        id: createdId(IdPrefix.Message, messages.length + 1),
+        thread_id: thread.id,
+        sequence: messages.filter(({ thread_id }) => thread_id === thread.id).length + 1,
+        run_id: run.id,
+        author: 'user',
+        agent_role: null,
+        content,
+        artifact_refs: [],
+        item_refs: [],
+        delivery: unfinished === undefined ? 'started_run' : 'pending',
+        delivered_in_step_id: null,
+        created_at: now,
+      }
+      sentMessages.set([...messages, message])
+      // The message that starts the first run of a project is its idea, which names it if it has
+      // no name.
+      changeProject(thread.project_id, (project) =>
+        project.initial_message_id === null && unfinished === undefined
+          ? {
+              initial_message_id: message.id,
+              name: project.name ?? nameFromMessage(content),
+              last_activity_at: now,
+            }
+          : { last_activity_at: now },
+      )
+      return HttpResponse.json({ message, run }, { status: 201 })
+    }),
+  ),
 ]

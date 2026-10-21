@@ -33,8 +33,10 @@ async function call(path: string, init?: RequestInit) {
 }
 
 // The body goes as it is, so a case can also send text that is not JSON.
-function post(path: string, body: string) {
-  return call(path, { method: 'POST', headers: { 'Content-Type': 'application/json' }, body })
+function post(path: string, body: string, idempotencyKey?: string) {
+  const headers: Record<string, string> = { 'Content-Type': 'application/json' }
+  if (idempotencyKey !== undefined) headers['Idempotency-Key'] = idempotencyKey
+  return call(path, { method: 'POST', headers, body })
 }
 
 // A scenario of the mocks is chosen in the page address.
@@ -104,6 +106,30 @@ describe('POST /threads/{thread_id}/messages', () => {
         message: { delivery: 'pending', run_id: runIds.mentorMain3 },
         run: { id: runIds.mentorMain3 },
       },
+    })
+  })
+
+  it('starts no second run for a message sent again with its key', async () => {
+    const { threadId } = await newThread()
+    const path = `/api/v1/threads/${threadId}/messages`
+    const body = JSON.stringify({ content: IDEA })
+
+    const first = (await post(path, body, 'key-1')) as Answer<Sent>
+    const again = (await post(path, body, 'key-1')) as Answer<Sent>
+
+    expect(again).toEqual(first)
+    const runs = (await call(`/api/v1/threads/${threadId}/runs`)).body as { items: Run[] }
+    expect(runs.items).toHaveLength(1)
+  })
+
+  it('answers 409 to a message sent again with its key and other words', async () => {
+    const { threadId } = await newThread()
+    const path = `/api/v1/threads/${threadId}/messages`
+    await post(path, JSON.stringify({ content: IDEA }), 'key-1')
+
+    expect(await post(path, JSON.stringify({ content: 'Another idea.' }), 'key-1')).toMatchObject({
+      status: 409,
+      body: { code: 'idempotency_conflict' },
     })
   })
 
