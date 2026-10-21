@@ -19,3 +19,9 @@ export const failedListCases = [
     error: SyntaxError,
   },
 ]
+
+/** The answer of POST /projects/{project_id}/threads. */
+export const createdThread = { id: 't1' }
+
+/** The answer of POST /threads/{thread_id}/messages. */
+export const sentMessage = { message: { id: 'm1' }, run: { id: 'r1' } }
