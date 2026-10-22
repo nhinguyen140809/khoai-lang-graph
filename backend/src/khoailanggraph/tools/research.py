@@ -426,10 +426,39 @@ def _head_keywords(sentence: str, limit: int = 4) -> str:
     """The leading content words of one plan sentence — plans type their
     terms as whole sentences, and search engines answer keywords, not prose."""
     stopwords = frozenset(
-        "a an and are as at be both by for from in into of on or that the "
-        "their them these they this to under who would with such".split()
+        {
+            "a",
+            "an",
+            "and",
+            "are",
+            "as",
+            "at",
+            "be",
+            "both",
+            "by",
+            "for",
+            "from",
+            "in",
+            "into",
+            "of",
+            "on",
+            "or",
+            "that",
+            "the",
+            "their",
+            "them",
+            "these",
+            "they",
+            "this",
+            "to",
+            "under",
+            "who",
+            "would",
+            "with",
+            "such",
+        }
     )
-    words = re.findall(r"[A-Za-z][A-Za-z'’-]{2,}", sentence)
+    words = re.compile("[A-Za-z][A-Za-z'\\u2019-]{2,}").findall(sentence)
     kept = [word for word in words if word.casefold() not in stopwords][:limit]
     return " ".join(kept)
 

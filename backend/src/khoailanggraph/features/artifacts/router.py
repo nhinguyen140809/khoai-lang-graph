@@ -77,9 +77,7 @@ async def list_project_trace_links(
     """Current links of the project, both ends resolved (API.md §5); the
     optional filters keep one link type or one link end."""
     await get_project_row(db, project_id)
-    links, _all_fetched = await service.list_project_links(
-        db, project_id, limit=10_000, cursor=0
-    )
+    links, _all_fetched = await service.list_project_links(db, project_id, limit=10_000, cursor=0)
     if link_type is not None:
         links = [link for link in links if link.link_type == link_type]
     if source_item_id is not None:
@@ -139,9 +137,7 @@ async def item_trace(
 ) -> dict[str, Any]:
     """The chain of one item: `nodes` and their `links`, walked `depth`
     hops backward, forward or both (API.md §5)."""
-    nodes, links = await service.item_trace(
-        db, item_id, direction=direction, depth=depth
-    )
+    nodes, links = await service.item_trace(db, item_id, direction=direction, depth=depth)
     return {"nodes": nodes, "links": links}
 
 
@@ -205,7 +201,9 @@ async def get_workflow_definition(
         else:
             raw_or_none = workflow.definition_bytes_for(version)
             if raw_or_none is None:
-                raise ApiError(404, "not_found", "Not found", "The workflow version does not exist.")
+                raise ApiError(
+                    404, "not_found", "Not found", "The workflow version does not exist."
+                )
             raw = raw_or_none
     return JSONResponse(content=jsonlib.loads(raw.decode("utf-8")), headers=headers)
 

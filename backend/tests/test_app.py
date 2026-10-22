@@ -56,7 +56,11 @@ async def test_docs_hidden_in_production() -> None:
         )
     )
     transport = ASGITransport(app=production)
-    async with AsyncClient(transport=transport, base_url="http://test", headers={"Origin": "http://localhost:3000"}) as http:
+    async with AsyncClient(
+        transport=transport,
+        base_url="http://test",
+        headers={"Origin": "http://localhost:3000"},
+    ) as http:
         assert (await http.get("/docs")).status_code == 404
         assert (await http.get("/redoc")).status_code == 404
         assert (await http.get("/openapi.json")).status_code == 404
@@ -73,5 +77,9 @@ async def test_docs_served_in_production_when_enabled() -> None:
         )
     )
     transport = ASGITransport(app=production)
-    async with AsyncClient(transport=transport, base_url="http://test", headers={"Origin": "http://localhost:3000"}) as http:
+    async with AsyncClient(
+        transport=transport,
+        base_url="http://test",
+        headers={"Origin": "http://localhost:3000"},
+    ) as http:
         assert (await http.get("/docs")).status_code == 200

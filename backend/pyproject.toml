@@ -14,6 +14,7 @@ dependencies = [
     "langgraph>=1.2",
     "langchain-core>=0.3",
     "pyyaml>=6.0",
+    "python-multipart>=0.0.9",
     "sqlalchemy[asyncio]>=2.0",
     "aiosqlite>=0.20",
     "alembic>=1.13",
@@ -76,6 +77,10 @@ select = ["E", "F", "W", "I", "N", "UP", "B", "SIM", "RUF", "ASYNC", "S", "PL", 
 # The demo executor is one narrative worker; its wires are the §5 contract.
 "src/khoailanggraph/features/runs/service.py" = ["PLR0912", "PLR0913", "PLR0915", "PLR0917"]
 "src/khoailanggraph/features/runs/router.py" = ["PLC0415"]
+# The documents feature follows the same §5 contract shape as its siblings.
+"src/khoailanggraph/features/documents/router.py" = ["PLR0913", "PLR0917", "TC003"]
+"src/khoailanggraph/features/documents/service.py" = ["PLR0913"]
+"src/khoailanggraph/features/documents/schemas.py" = ["TC001", "TC003"]
 "src/khoailanggraph/features/artifacts/service.py" = ["PLR0913", "PLR0917", "TC002"]
 "src/khoailanggraph/features/artifacts/router.py" = ["PLR0913", "PLR0917"]
 # uv scripts may print to stdout; they are developer tools.
