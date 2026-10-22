@@ -413,6 +413,17 @@ def test_uploaded_documents_lead_the_corpus_and_ground_the_persona() -> None:
     grounded = [row for row in sink.links if row["link_type"] == "grounded_in"]
     assert {row["source_key"] for row in grounded} == {persona["key"]}
 
-    # The store kept the honest chain end to end: stress-test beyond status.
+    # The whole run settles green on the one-persona fixtures: analysis,
+    # specification, backlog and a passing validation all in the store.
+    assert final["status"] == "succeeded", (final.get("error"), final.get("current_stage"))
+    for kind in (
+        "requirements_analysis",
+        "requirement_specification",
+        "product_backlog",
+    ):
+        assert sink.read_artifact("project-1", kind) is not None, kind
+    assert [entry for entry in sink.items if entry["kind"] == "spec_requirement"]
     assert sink.read_artifact("project-1", "research_corpus") is not None
-    final["status"]  # the run settles either way downstream of the fixtures
+    reports = [a for a in sink.artifacts if a["kind"] == "validation_report"]
+    assert len(reports) == 1
+    assert reports[0]["content"]["status"] == "pass"

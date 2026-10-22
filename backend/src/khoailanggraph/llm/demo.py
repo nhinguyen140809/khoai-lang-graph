@@ -633,8 +633,89 @@ _EVIDENCE = {
 }
 
 
+def _upload_flow_analysis() -> dict[str, Any]:
+    """The one-persona analysis of an upload-driven run: the student-shape
+    subset of the fixture evidence, every key existing in a one-persona
+    store, statements answering the uploaded record."""
+    rows = _EVIDENCE["Student"]
+    raw_requirements = [
+        {
+            "ref": f"R{position}",
+            "statement": row[0],
+            "topic": row[1],
+            "stated_by": "PER-001",
+            "evidenced_by": [{"message": f"PER-001#{position + 1}", "quote": row[2]}],
+        }
+        for position, row in enumerate(rows, start=1)
+    ]
+    return {
+        "raw_requirements": raw_requirements,
+        "analyzed_requirements": [
+            {
+                "ref": "A1",
+                "statement": (
+                    "Students shall be able to search for mentors by skill and career field."
+                ),
+                "type": "functional",
+                "quality_category": None,
+                "priority": "must",
+                "rationale": "The core discovery need, asked in the uploaded record.",
+                "derived_from": ["R1"],
+                "involves": ["PER-001"],
+            },
+            {
+                "ref": "A2",
+                "statement": "Students shall be able to book a short session in a few taps.",
+                "type": "functional",
+                "quality_category": None,
+                "priority": "must",
+                "rationale": "The record asks for quick, uncomplicated booking.",
+                "derived_from": ["R2"],
+                "involves": ["PER-001"],
+            },
+            {
+                "ref": "A3",
+                "statement": "Student questions shall stay private to the conversation.",
+                "type": "functional",
+                "quality_category": None,
+                "priority": "should",
+                "rationale": "Privacy worries come straight from the record.",
+                "derived_from": ["R3"],
+                "involves": ["PER-001"],
+            },
+        ],
+        "latent_needs": [
+            {
+                "ref": "LN1",
+                "description": "Students want a safe space for career questions, only implied.",
+                "reasoning": "Inferred from the privacy worries, never stated outright.",
+                "confidence": "medium",
+                "disposition": "open",
+                "evidenced_by": [{"message": "PER-001#6", "quote": rows[2][2]}],
+                "involves": ["PER-001"],
+            }
+        ],
+        "assumptions": [
+            {
+                "ref": "ASM1",
+                "statement": "Mentors reply to student requests within a few days.",
+                "reasoning": "The record never says how long a reply may take.",
+                "impact_if_wrong": "Students lose interest before an answer arrives.",
+                "validation_status": "unverified",
+                "concerns": ["A1"],
+            }
+        ],
+        "ambiguity_issues": [],
+        "conflicts": [],
+        "key_findings": ["The uploaded record asks for search, quick booking and privacy."],
+        "open_questions": [],
+    }
+
+
 def _analyst(system: str, user: str, call_number: int) -> dict[str, Any]:
     """The full analysis of the three interviews (AnalystOutput)."""
+    if '"Uploaded voice"' in user or "uploaded record" in user:
+        return _upload_flow_analysis()
     raw_requirements: list[dict[str, Any]] = []
     for index, statements in enumerate(_EVIDENCE.items(), start=1):
         entries = statements[1]
@@ -829,8 +910,80 @@ def _analyst(system: str, user: str, call_number: int) -> dict[str, Any]:
     }
 
 
+def _upload_flow_spec() -> dict[str, Any]:
+    """The one-persona specification of an upload-driven run: three
+    requirements derived from the analysis the uploaded record shaped."""
+
+    def requirement(
+        ref: str,
+        title: str,
+        statement: str,
+        spec_type: str,
+        priority: str,
+        quality: str | None,
+        rationale: str,
+        verification: str,
+    ) -> dict[str, Any]:
+        return {
+            "ref": ref,
+            "title": title,
+            "statement": statement,
+            "type": spec_type,
+            "quality_category": quality,
+            "priority": priority,
+            "rationale": rationale,
+            "acceptance_criteria": [f"{title} works as asked in the uploaded record."],
+            "fit_criterion": None,
+            "verification_method": verification,
+            "derived_from": [f"AR-00{ref[-1]}"],
+            "depends_on": [],
+            "supersedes": [],
+        }
+
+    return {
+        "purpose": "Let students find and book mentors, with questions kept private.",
+        "scope": "Search, short bookings, and privacy of conversations.",
+        "out_of_scope": ["Payments"],
+        "definitions": [{"term": "Mentor", "definition": "A volunteer offering guidance."}],
+        "requirements": [
+            requirement(
+                "Q1",
+                "Search mentors",
+                "Students shall search for mentors by skill and career field.",
+                "functional",
+                "must",
+                None,
+                "The discovery need the uploaded record leads with.",
+                "test",
+            ),
+            requirement(
+                "Q2",
+                "Book a session",
+                "Students shall book a short mentoring session in a few taps.",
+                "functional",
+                "must",
+                None,
+                "Quick booking is asked for the uploaded record.",
+                "test",
+            ),
+            requirement(
+                "Q3",
+                "Keep questions private",
+                "Student questions shall remain private to their conversation.",
+                "non_functional",
+                "should",
+                "security",
+                "Privacy worries come straight from the uploaded record.",
+                "inspection",
+            ),
+        ],
+    }
+
+
 def _engineer(system: str, user: str, call_number: int) -> dict[str, Any]:
     """The specification (EngineerOutput); the rework pass supersedes REQ-004."""
+    if "uploaded record" in user:
+        return _upload_flow_spec()
 
     def requirement(
         ref: str,
@@ -978,8 +1131,43 @@ def _engineer(system: str, user: str, call_number: int) -> dict[str, Any]:
     )
 
 
+def _upload_flow_backlog() -> dict[str, Any]:
+    """The one-persona backlog of an upload-driven run: one story per
+    specified requirement, each inheriting its record-shaped criteria."""
+
+    def story(ref: str, number: int, title: str, want: str) -> dict[str, Any]:
+        return {
+            "ref": ref,
+            "item_type": "user_story",
+            "title": title,
+            "as_a": "student",
+            "i_want": want,
+            "so_that": "the uploaded record's ask is met",
+            "acceptance_criteria": [
+                {"given": "the platform", "when": f"I {want}", "then": f"{title} works"}
+            ],
+            "priority": "must",
+            "story_points": 2,
+            "derived_from": [f"REQ-00{number}"],
+            "depends_on": [],
+        }
+
+    # BacklogItemContent fields per the schema; delivery_status set by user.
+    return {
+        "product_goal": "Answer the uploaded record: find, book, stay private.",
+        "prioritization_notes": "One story per requirement of the record.",
+        "items": [
+            story("B1", 1, "Search mentors", "search mentors by skill and field"),
+            story("B2", 2, "Book a session", "book a short mentoring session in a few taps"),
+            story("B3", 3, "Keep questions private", "keep my questions private"),
+        ],
+    }
+
+
 def _backlog(system: str, user: str, call_number: int) -> dict[str, Any]:
     """The product backlog (BacklogOutput); pass two adds the fixed story."""
+    if "uploaded record" in user:
+        return _upload_flow_backlog()
 
     def story(
         ref: str,
@@ -1125,6 +1313,8 @@ def _backlog(system: str, user: str, call_number: int) -> dict[str, Any]:
 
 def _validation(system: str, user: str, call_number: int) -> dict[str, Any]:
     """The validator: one backlog-category failure, then a pass."""
+    if "uploaded record" in user:
+        return {"status": "pass", "issues": []}
     if call_number <= 1:
         return {
             "status": "fail",
