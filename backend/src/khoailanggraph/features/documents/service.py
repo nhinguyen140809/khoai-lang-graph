@@ -4,11 +4,12 @@ from __future__ import annotations
 
 import contextlib
 import json
-from typing import TYPE_CHECKING
+from typing import TYPE_CHECKING, Any
 from uuid import uuid4
 
 from anyio import to_thread
 from sqlalchemy import select
+from sqlalchemy.orm import Session
 
 from khoailanggraph.api.errors import ApiError
 from khoailanggraph.features.documents.models import (
@@ -217,6 +218,46 @@ async def delete_document(session: AsyncSession, document_id: UUID) -> None:
     if document is None or document.deleted_at is not None:
         raise ApiError(404, "not_found", "Not found", "The document does not exist.")
     document.deleted_at = utcnow()
+
+
+def sync_latest_texts(engine: Any, project_id: UUID) -> list[dict[str, str]]:
+    """The upload half of the corpus hits, for the sync run executor.
+
+    Renders every live document's latest extracted text as a search hit with
+    an `upload://` url — the corpus builder treats uploads as given hits,
+    never as invented documents.
+    """
+    seeds: list[dict[str, str]] = []
+    with Session(engine) as session:
+        documents = list(
+            session.scalars(
+                select(SourceDocumentRow)
+                .where(
+                    SourceDocumentRow.project_id == project_id,
+                    SourceDocumentRow.deleted_at.is_(None),
+                )
+                .order_by(SourceDocumentRow.created_at.desc())
+            ).all()
+        )
+        for document in documents:
+            version = session.scalar(
+                select(DocumentVersionRow).where(
+                    DocumentVersionRow.document_id == document.id,
+                    DocumentVersionRow.version == document.latest_version,
+                )
+            )
+            if version is None:  # pragma: no cover - every document has one
+                continue
+            seeds.append(
+                {
+                    "title": document.title,
+                    "url": f"upload://{document.filename}",
+                    "publisher": "upload",
+                    "year": "",
+                    "text": version.text_extract,
+                }
+            )
+    return seeds
 
 
 async def project_documents_text(session: AsyncSession, project_id: UUID) -> list[dict[str, str]]:

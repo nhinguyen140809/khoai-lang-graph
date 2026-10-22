@@ -30,6 +30,7 @@ from khoailanggraph.agents.requirements_engineering.graph import build_re_graph
 from khoailanggraph.agents.requirements_engineering.state import make_initial_state
 from khoailanggraph.api.errors import ApiError
 from khoailanggraph.features.artifacts.service import SqlArtifactSink
+from khoailanggraph.features.documents.service import sync_latest_texts
 from khoailanggraph.features.threads.models import MessageRow, ThreadRow
 from khoailanggraph.llm import reset_model_cache
 from khoailanggraph.platform.db import make_sync_session_factory
@@ -303,6 +304,9 @@ def start_run_blocking(
                         "directive_sink": DirectiveSink(session),
                         "models": config["models"],
                         "research_search": make_research_search(get_settings()),
+                        "project_documents": lambda project_id: sync_latest_texts(
+                            engine, UUID(str(project_id))
+                        ),
                     }
                 },
             ):

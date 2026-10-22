@@ -119,7 +119,7 @@ The entities are grouped into six areas. An area is a group that changes togethe
 |---|---|---|
 | Identity and account | User, AuthIdentity, Session | MVP: User, Session. Later: AuthIdentity for external login |
 | Settings | UserSettings, ModelSettings, ModelCatalogEntry, ProviderCredential | MVP: first three. Later: ProviderCredential |
-| Workspace | Project, ProjectMember, SourceDocument, DocumentChunk | MVP: Project. Later: the other three |
+| Workspace | Project, ProjectMember, SourceDocument, DocumentChunk | MVP: Project, SourceDocument. Later: the other two |
 | Conversation and execution | Thread, Message, Run, RunStep, RunEvent, Interrupt, HumanDecision, Directive | MVP |
 | Requirements engineering artifacts | Artifact (7 kinds), ArtifactItem (12 kinds), ItemEmbedding | MVP: Artifact, ArtifactItem. Later: ItemEmbedding |
 | Cross-cutting | ArtifactRevision, ItemRevision, TraceLink, Comment, Export, ActivityEvent, Notification | MVP: ArtifactRevision, ItemRevision, TraceLink, Export. Later: the other three |

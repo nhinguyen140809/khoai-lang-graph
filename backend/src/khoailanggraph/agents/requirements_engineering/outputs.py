@@ -65,6 +65,7 @@ class NewSource(_Output):
     excerpt: str
     text: str = ""
     relevance_reason: str
+    origin: Literal["web", "upload"] = "web"
 
 
 class CorpusBuilderOutput(_Output):

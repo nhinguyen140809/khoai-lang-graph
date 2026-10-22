@@ -12,7 +12,6 @@ from khoailanggraph.agents.requirements_engineering.decisions import (
     MockDecisionModel,
     apply_confidence_policy,
     get_decision_model,
-    policy_from_environment,
     run_decision,
 )
 
@@ -90,10 +89,18 @@ def test_env_off_stops_decisions() -> None:
 
 def test_env_mock_runs() -> None:
     os.environ["DECISION_PROVIDER"] = "mock"
-    result = run_decision("t", {}, [
-        DecisionSpec(name="x", kind="choice", default="approve",
-                      options=[{"value": "approve"}, {"value": "reject"}]),
-    ])
+    result = run_decision(
+        "t",
+        {},
+        [
+            DecisionSpec(
+                name="x",
+                kind="choice",
+                default="approve",
+                options=[{"value": "approve"}, {"value": "reject"}],
+            ),
+        ],
+    )
     assert result is not None
     assert result.provider == "mock"
     assert result.answers["x"].value == "approve"

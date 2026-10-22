@@ -772,6 +772,10 @@ Rules:
   follow.
 - The storage location of the bytes is `server-only` (§3): it never appears
   in a response.
+- An uploaded document joins the research corpus of the workspace's later
+  runs as a `source_document` item with `origin: "upload"`: its extracted
+  text is quoted verbatim by the mining stage, like any web hit (runs already
+  in flight keep the corpus they started with).
 - `html` uploads are reduced to their readable text; a future workflow run
   draws on the extracted `text` exactly as it draws on the live-search hits.
 

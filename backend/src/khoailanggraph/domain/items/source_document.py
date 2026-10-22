@@ -2,6 +2,8 @@
 
 from __future__ import annotations
 
+from typing import Literal
+
 from pydantic import BaseModel, ConfigDict
 
 
@@ -22,4 +24,5 @@ class SourceDocumentContent(BaseModel):
     year: str
     excerpt: str
     text: str
+    origin: Literal["web", "upload"]
     relevance_reason: str

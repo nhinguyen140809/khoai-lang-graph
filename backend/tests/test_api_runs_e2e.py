@@ -105,7 +105,7 @@ async def test_send_message_runs_the_workflow_end_to_end(
     run = body["run"]
     assert run["status"] == "succeeded", run
     assert run["workflow_name"] == "requirements_engineering"
-    assert run["workflow_version"] == 2
+    assert run["workflow_version"] == 3
     assert run["run_config"]["models"], "per-role models resolved"
     assert run["usage"]["cost_usd"] == 0  # fake provider reports zero tokens
     assert run["step_count"] > 0

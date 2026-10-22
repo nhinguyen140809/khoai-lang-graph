@@ -51,6 +51,7 @@ def fake_config(sink: ArtifactSink, directives: InMemoryDirectiveSink) -> Runnab
             "directive_sink": directives,
             "models": {role: "fake:demo" for role in ROLES},
             "research_search": demo_research_search,
+            "project_documents": lambda _project_id: [],
         }
     }
 
@@ -345,3 +346,73 @@ def test_research_gates_fail_the_run_at_the_lying_node() -> None:
         message = str(final["error"]["message"])
         assert message.startswith(node_prefix), message
         assert needle in message, message
+
+
+def test_uploaded_documents_lead_the_corpus_and_ground_the_persona() -> None:
+    """The upload half of the research corpus (docs/API.md §5): member
+    documents render as `upload://` hits the curator keeps first, mining
+    quotes their text verbatim, and the persona agent answers on the record
+    the upload produced — origin `upload` stamped on the SRC item."""
+    sink = InMemoryArtifactSink()
+    directives = InMemoryDirectiveSink()
+    upload_text = (
+        "Parents report that 70% of mentoring questions repeat weekly. "
+        "Staff answer the same ten questions every term."
+    )
+
+    def project_documents(project_id: str) -> list[dict[str, object]]:
+        return [
+            {
+                "title": "Mentoring inbox notes",
+                "url": "upload://mentoring-inbox.md",
+                "publisher": "upload",
+                "year": "",
+                "text": upload_text,
+            }
+        ]
+
+    base = fake_config(sink, directives)
+    config = {
+        "configurable": {
+            **base["configurable"],
+            "project_documents": project_documents,
+        }
+    }
+    graph = build_re_graph()
+    final = graph.invoke(run_state(), config=config)
+
+    sources = [entry for entry in sink.items if entry["kind"] == "source_document"]
+    by_url = {entry["content"]["url"]: entry for entry in sources}
+    upload = by_url["upload://mentoring-inbox.md"]
+    assert upload["content"]["origin"] == "upload"
+    assert upload["content"]["text"] == upload_text
+    assert (
+        by_url["https://forum.example.edu/threads/mentoring-survey"]["content"]["origin"] == "web"
+    )
+
+    observations = [entry for entry in sink.items if entry["kind"] == "stakeholder_observation"]
+    uploaded_obs = next(
+        entry for entry in observations if entry["content"]["source"] == upload["key"]
+    )
+    expected_quote = "Parents report that 70% of mentoring questions repeat weekly."
+    assert uploaded_obs["content"]["evidence"] == expected_quote
+
+    personas = [entry for entry in sink.items if entry["kind"] == "persona"]
+    assert len(personas) == 1
+    persona = personas[0]
+    assert persona["content"]["grounded_in"] == [uploaded_obs["key"]]
+    assert persona["content"]["evidence"] == [
+        {
+            "observation": uploaded_obs["key"],
+            "source": upload["key"],
+            "quote": expected_quote,
+        }
+    ]
+    assert persona["content"]["stakeholder_type"] == "Student"
+
+    grounded = [row for row in sink.links if row["link_type"] == "grounded_in"]
+    assert {row["source_key"] for row in grounded} == {persona["key"]}
+
+    # The store kept the honest chain end to end: stress-test beyond status.
+    assert sink.read_artifact("project-1", "research_corpus") is not None
+    final["status"]  # the run settles either way downstream of the fixtures

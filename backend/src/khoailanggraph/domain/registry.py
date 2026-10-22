@@ -52,6 +52,7 @@ _DEFAULT_SCHEMA_VERSION = 1
 SCHEMA_VERSIONS: dict[str, int] = {
     "persona": 2,
     "persona_catalog": 2,
+    "source_document": 2,
 }
 
 ARTIFACT_CONTENT_MODELS: dict[str, type[BaseModel]] = {

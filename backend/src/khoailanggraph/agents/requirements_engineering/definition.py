@@ -1,6 +1,6 @@
-"""Workflow definition version 2: the canonical JSON file, with accessors.
+"""Workflow definition version 3: the canonical JSON file, with accessors.
 
-The committed `definition.v2.json` beside this module is the single description
+The committed `definition.v3.json` beside this module is the single description
 of the graph: the name a run records, the entry points, the agent roles and
 their prompt versions, the stages, the nodes with their checkpoint options,
 the edges, the artifact and item kinds, the link types, the value lists, the
@@ -8,11 +8,14 @@ directive kinds, the export templates, and the schemas of the run parameters
 and the workflow state. A never-published file apart, the file never changes
 (runs and clients cache a version forever); version N+1 is a new file.
 
-Version 2 adds the research stage between the planner and the persona
+Version 2 added the research stage between the planner and the persona
 generator (MAJ-EVAL, arXiv:2507.21028): a corpus builder curates real
 documents, a miner extracts stakeholder observations with verbatim evidence,
 and the persona generator (prompt v2) grounds every persona in those
-observations. `definition.v1.json` stays committed unchanged as history.
+observations. Version 3 grows the `source_document` content schema to v2
+with an `origin` field (`web` from live search, `upload` from a member
+document) so the corpus builder can draw on the documents feature.
+`definition.v1.json` and `definition.v2.json` stay committed as history.
 
 The raw lists of the file are keyed here into the mappings the checks in
 `domain/rules.py` and `domain/links.py` take, so no caller re-keys them.
@@ -25,7 +28,7 @@ from importlib import resources
 from typing import Any
 
 _PACKAGE = "khoailanggraph.agents.requirements_engineering"
-_DEFINITION_FILE = "definition.v2.json"
+_DEFINITION_FILE = "definition.v3.json"
 
 DEFINITION: dict[str, Any] = json.loads(
     (resources.files(_PACKAGE) / _DEFINITION_FILE).read_text(encoding="utf-8")

@@ -383,7 +383,9 @@ def corpus_builder_node(
     plan_record, topics, stakeholder_types = _plan_terms(sink, state)
 
     search = research_search_of(config or {})
-    hits = search(research_queries(topics, stakeholder_types))
+    documents_tool = (dict(config or {}).get("configurable") or {}).get("project_documents")
+    uploaded = documents_tool(str(state["project_id"])) if documents_tool is not None else []
+    hits = [*uploaded, *search(research_queries(topics, stakeholder_types))]
     known_urls = {str(hit.get("url", "")) for hit in hits}
     hits_lines = "\n".join(json.dumps(hit, ensure_ascii=False) for hit in hits) or "(no hits)"
 
@@ -417,10 +419,14 @@ def corpus_builder_node(
     )
     sources: list[ItemRefDict] = []
     for source in draft.sources:
+        content = source.model_dump(mode="json", exclude={"ref"})
+        content["origin"] = (
+            "upload" if str(content.get("url", "")).startswith("upload://") else "web"
+        )
         item = sink.add_item(
             corpus["artifact_id"],
             "source_document",
-            source.model_dump(mode="json", exclude={"ref"}),
+            content,
             ref=source.ref,
         )
         sources.append(dict(item))

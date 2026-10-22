@@ -21,6 +21,7 @@ measurable, and the second validation passes.
 
 from __future__ import annotations
 
+import json
 import re
 from typing import Any
 
@@ -66,17 +67,68 @@ for _quote, _text in (
         raise RuntimeError(msg)
 
 
+def _hit_lines(user: str) -> tuple[list[dict[str, Any]], list[dict[str, Any]]]:
+    """The `<search_results>` lines of a corpus prompt, split into the
+    member uploads (`upload://`) and the live web hits."""
+    uploads: list[dict[str, Any]] = []
+    web: list[dict[str, Any]] = []
+    for raw_line in user.splitlines():
+        line = raw_line.strip()
+        if not line.startswith("{"):
+            continue
+        try:
+            hit = dict(json.loads(line))
+        except ValueError:
+            continue
+        if str(hit.get("url", "")).startswith("upload://"):
+            uploads.append(hit)
+        else:
+            web.append(hit)
+    return uploads, web
+
+
+def _observation_lines(user: str) -> list[dict[str, Any]]:
+    """The `<observations>` JSONL of a persona prompt as parsed objects."""
+    found: list[dict[str, Any]] = []
+    for raw_line in user.splitlines():
+        line = raw_line.strip()
+        if not line.startswith("{"):
+            continue
+        try:
+            entry = dict(json.loads(line))
+        except ValueError:
+            continue
+        if {"key", "evidence", "source", "dimension"} <= set(entry):
+            found.append(entry)
+    return found
+
+
 def _corpus(system: str, user: str, call_number: int) -> dict[str, Any]:
-    """The curated corpus (CorpusBuilderOutput): the three documents that
-    carry stakeholder voices, texts verbatim from the demo search hits."""
+    """The curated corpus (CorpusBuilderOutput): member uploads first, then
+    the web documents that carry stakeholder voices, texts verbatim."""
     relevance = (
         "Student survey on discovery, booking and privacy",
         "Mentor perspective on filtering, agendas and declining",
         "Administrator needs: verification, moderation and reporting",
     )
-    kept = DEMO_SEARCH_HITS[: len(relevance)]
+    uploads, _web_hits = _hit_lines(user)
     sources: list[dict[str, Any]] = []
-    for number, hit in enumerate(kept, start=1):
+    for number, hit in enumerate(uploads, start=1):
+        sources.append(
+            {
+                "ref": f"S{number}",
+                "title": str(hit["title"]),
+                "url": str(hit["url"]),
+                "publisher": str(hit.get("publisher", "upload")),
+                "year": str(hit.get("year", "")),
+                "excerpt": str(hit["text"])[:120],
+                "text": str(hit["text"]),
+                "relevance_reason": "Member upload: a trusted hand-picked source.",
+            }
+        )
+    kept = DEMO_SEARCH_HITS[: max(0, 3 - len(uploads))]
+    for index, hit in enumerate(kept):
+        number = len(uploads) + index + 1
         sources.append(
             {
                 "ref": f"S{number}",
@@ -84,22 +136,70 @@ def _corpus(system: str, user: str, call_number: int) -> dict[str, Any]:
                 "url": str(hit["url"]),
                 "publisher": str(hit["publisher"]),
                 "year": str(hit["year"]),
-                "excerpt": f"SRC excerpt {number}: {kept[number - 1]['title']}.",
+                "excerpt": f"SRC excerpt {number}: {hit['title']}.",
                 "text": str(hit["text"]),
-                "relevance_reason": relevance[number - 1],
+                "relevance_reason": relevance[index],
             }
         )
+    rationale = (
+        "Three documents cover the three stakeholder types of the plan, "
+        "each quoting its stakeholders directly; the vendor page and the "
+        "matching report were left out — the first has no stakeholder voice."
+    )
+    if uploads:
+        rationale = (
+            f"{len(uploads)} member upload(s) lead the corpus as the most "
+            "trusted voices; web documents fill the stakeholder types."
+        )
+    return {"selection_rationale": rationale, "sources": sources}
+
+
+def _upload_grounded_personas(observations: list[dict[str, Any]]) -> dict[str, Any]:
+    """A single persona built on the first observation the upload produced."""
+    first = observations[0] if observations else None
+    if first is None:  # pragma: no cover - persona gen never runs unmined
+        raise LookupError("the upload persona fixture needs one observation")
+    key = str(first.get("key", "OBS-001"))
+    source = str(first.get("source", "SRC-001"))
+    quote = str(first.get("evidence", ""))
+    dimension = str(first.get("dimension", "the first concern the upload records"))
     return {
         "selection_rationale": (
-            "Three documents cover the three stakeholder types of the plan, "
-            "each quoting its stakeholders directly; the vendor page and the "
-            "matching report were left out — the first has no stakeholder voice."
+            "The member upload leads the corpus; one persona speaks its voice, "
+            "grounded on the observation mined from its text."
         ),
-        "sources": sources,
+        "stakeholder_groups": [
+            {
+                "ref": "G1",
+                "name": "Members quoted in the upload",
+                "description": "Voices recorded in the uploaded document.",
+                "observations": [key],
+            }
+        ],
+        "uncovered_stakeholder_types": [],
+        "personas": [
+            {
+                "ref": "P1",
+                "name": "Uploaded voice",
+                "stakeholder_type": "Student",
+                "evaluative_dimension": dimension,
+                "grounded_in": [key],
+                "background": "A stakeholder speaking through a member-uploaded document.",
+                "expertise": "Everyday experience of the platform's domain.",
+                "goals": ["Make the recorded concerns heard in the plan"],
+                "interests": ["The topics the upload raises"],
+                "constraints": ["Answers only from what the upload records"],
+                "priorities": [dimension],
+                "concerns": ["Being misquoted beyond the uploaded record"],
+                "behavioral_tendencies": "Speaks plainly from the uploaded record.",
+                "evidence": [{"observation": key, "source": source, "quote": quote}],
+            }
+        ],
     }
 
 
 # Shared descriptions of the mined stakeholder groups, worded per source.
+_MIN_QUOTE_CHARS = 25
 _STUDENT_DESC = (
     "Undergraduates looking for career guidance through short, mostly written exchanges."
 )
@@ -169,14 +269,55 @@ _MINED_BY_SOURCE: dict[str, list[dict[str, Any]]] = {
 }
 
 
+def _first_recorded_sentence(document: str) -> str:
+    """The first full-sentence quote of an uploaded document (>= 25 chars),
+    verbatim — the mining gate proves it against the document's text."""
+    for raw_candidate in re.split(r"(?<=[.!?])\s+", document):
+        candidate = raw_candidate.strip()
+        if len(candidate) >= _MIN_QUOTE_CHARS:
+            return candidate
+    return document.strip()[:200]
+
+
 def _mined(system: str, user: str, call_number: int) -> dict[str, Any]:
-    """The observations of one source document (MinerOutput), keyed by the
-    SRC key the node's `<source>` carries; unknown sources fail loudly."""
+    """The observations of one source document (MinerOutput).
+
+    Web hits answer from the per-source fixtures; a member upload
+    (`upload://` in its `<source>`) is mined from its own document text."""
     match = re.search(r"SRC-\d{3}", user)
     key = match.group(0) if match is not None else ""
+    document = user.split("<document>", 1)[-1].split("</document>", 1)[0].strip()
+    if "upload://" in user:
+        return {
+            "observations": [
+                {
+                    "ref": "O1",
+                    "stakeholder_name": "members quoted in the upload",
+                    "description": "Voices recorded in the uploaded document.",
+                    "dimension": "the first concern the upload records",
+                    "evidence": _first_recorded_sentence(document),
+                    "source": key,
+                }
+            ]
+        }
+
+    # Web hits answer from the fixture of their own page — keyed by url, so
+    # an upload ahead of them never shifts the mapping; every observation
+    # cites the key the node actually minted for this hit.
+    def _fixture(page_key: str) -> dict[str, Any]:
+        rows = [dict(entry) for entry in _MINED_BY_SOURCE[page_key]]
+        for row in rows:
+            row["source"] = key
+        return {"observations": rows}
+
+    if "forum.example.edu" in user:
+        return _fixture("SRC-001")
+    if "engineering-blogs" in user:
+        return _fixture("SRC-002")
+    if "it-policy" in user:
+        return _fixture("SRC-003")
     if key not in _MINED_BY_SOURCE:
-        msg = f"the demo miner has no fixture for source '{key}'"
-        raise LookupError(msg)
+        raise LookupError(f"the demo miner has no fixture for source '{key}'")
     return {"observations": [dict(entry) for entry in _MINED_BY_SOURCE[key]]}
 
 
@@ -219,10 +360,22 @@ def _plain(system: str, user: str, call_number: int) -> dict[str, Any]:
 def _personas(system: str, user: str, call_number: int) -> dict[str, Any]:
     """The three evidence-grounded personas (GeneratorOutputV2).
 
-    The observations arrive in the prompt sorted by key — OBS-001..006
-    exactly as the demo miner minted them (two per source, sources in
-    insertion order) — so the fixture keys stay in sync with the store.
+    The observations arrive in the prompt sorted by key. The standard corpus
+    (six web fixtures) answers with the three mentor-platform personas; an
+    upload-driven corpus answers with one persona grounded on the first
+    observation the upload produced, quoting it exactly.
     """
+    observations = _observation_lines(user)
+    fixture_quotes = {
+        _STUDENT_Q1,
+        _STUDENT_Q2,
+        _MENTOR_Q1,
+        _MENTOR_Q2,
+        _ADMIN_Q1,
+        _ADMIN_Q2,
+    }
+    if not {str(entry.get("evidence", "")) for entry in observations} <= fixture_quotes:
+        return _upload_grounded_personas(observations)
     student_evidence = [
         {"observation": "OBS-001", "source": "SRC-001", "quote": _STUDENT_Q1},
         {"observation": "OBS-002", "source": "SRC-001", "quote": _STUDENT_Q2},
