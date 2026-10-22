@@ -12,9 +12,12 @@ definition.
 
 from __future__ import annotations
 
-from typing import TYPE_CHECKING
+from typing import TYPE_CHECKING, cast
+from unittest.mock import patch
 
 import pytest
+
+import khoailanggraph.llm.factory as llm_factory
 
 if TYPE_CHECKING:
     from collections.abc import Generator
@@ -32,7 +35,7 @@ from khoailanggraph.agents.requirements_engineering.outputs import InterviewerTu
 from khoailanggraph.agents.requirements_engineering.state import REState, make_initial_state
 from khoailanggraph.domain import rules as domain_rules
 from khoailanggraph.llm import reset_model_cache
-from khoailanggraph.llm.demo import DEMO_INTENT, DemoData
+from khoailanggraph.llm.demo import DEMO_INTENT, DemoData, _corpus, _mined, _personas
 from khoailanggraph.llm.fake import FakeChatModel
 from khoailanggraph.tools.research import demo_research_search
 from support.in_memory_sinks import InMemoryArtifactSink, InMemoryDirectiveSink
@@ -283,3 +286,62 @@ def test_fake_model_returns_instead_of_providers() -> None:
     assert isinstance(result, InterviewerTurnOutput)
     assert result.stop is False
     assert result.question
+
+
+def test_research_gates_fail_the_run_at_the_lying_node() -> None:
+    """Every honesty gate fires at the node that lied (the V5 contract).
+
+    The research chain is plain edges, so a failing node's successors would
+    run anyway and their own surface error would overwrite the root cause's;
+    the `_stop_prior_failure` guard keeps the kept error on the first failing
+    node. Each variant of the demo dataset lies in one place and the run must
+    fail on exactly that node's gate message.
+    """
+
+    class DriftingQuotesData(DemoData):
+        @staticmethod
+        def MinerOutput(system: str, user: str, call_number: int) -> dict[str, object]:  # noqa: N802 - schema name
+            answer = _mined(system, user, call_number)
+            for observation in cast("list[dict[str, object]]", answer["observations"]):
+                observation["evidence"] = str(observation["evidence"]) + " plus absent words"
+            return answer
+
+    class InventedUrlsData(DemoData):
+        @staticmethod
+        def CorpusBuilderOutput(system: str, user: str, call_number: int) -> dict[str, object]:  # noqa: N802 - schema name
+            answer = _corpus(system, user, call_number)
+            sources = cast("list[dict[str, object]]", answer["sources"])
+            fake = dict(sources[0])
+            fake.update(
+                {"ref": "S9", "title": "Fabricated study", "url": "https://invented.test/doc"}
+            )
+            sources.append(fake)
+            return answer
+
+    class AlteredEvidenceData(DemoData):
+        @staticmethod
+        def GeneratorOutputV2(system: str, user: str, call_number: int) -> dict[str, object]:  # noqa: N802 - schema name
+            answer = _personas(system, user, call_number)
+            first = cast("list[dict[str, object]]", answer["personas"])[0]
+            evidence = cast("list[dict[str, object]]", first["evidence"])[0]
+            evidence["quote"] = str(evidence["quote"]) + " drifted"
+            return answer
+
+    cases = [
+        (DriftingQuotesData, "stakeholder_miner_node: ", "does not quote SRC-001 word for word"),
+        (InventedUrlsData, "corpus_builder_node: ", "selected invented documents"),
+        (AlteredEvidenceData, "persona_generator_node: ", "altered the evidence quote of OBS-001"),
+    ]
+    for dataset_class, node_prefix, needle in cases:
+        with patch.object(llm_factory, "make_demo_data", lambda _name, cls=dataset_class: cls()):
+            reset_model_cache()
+            graph = build_re_graph()
+            final = graph.invoke(
+                run_state(),
+                config=fake_config(InMemoryArtifactSink(), InMemoryDirectiveSink()),
+            )
+        reset_model_cache()
+        assert final["status"] == "failed", (dataset_class.__name__, final)
+        message = str(final["error"]["message"])
+        assert message.startswith(node_prefix), message
+        assert needle in message, message

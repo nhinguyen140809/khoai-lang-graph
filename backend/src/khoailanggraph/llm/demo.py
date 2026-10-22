@@ -36,18 +36,18 @@ _MENTOR_TEXT = str(DEMO_SEARCH_HITS[1]["text"])
 _ADMIN_TEXT = str(DEMO_SEARCH_HITS[2]["text"])
 
 _STUDENT_Q1 = (
-    "61% said they would stop using a tool that needs more than a few taps to book a chat."  # noqa: E501
+    "61% said they would stop using a tool that needs more than a few taps to book a chat."
 )
 _STUDENT_Q2 = (
-    '"I don\'t want my career questions visible to everyone," wrote one third-year respondent.'  # noqa: E501
+    '"I don\'t want my career questions visible to everyone," wrote one third-year respondent.'
 )
 _MENTOR_Q1 = (
-    '"Spam requests with no agenda make me decline everything," one senior engineer reported.'  # noqa: E501
+    '"Spam requests with no agenda make me decline everything," one senior engineer reported.'
 )
 _MENTOR_Q2 = '"If I cannot say no without an awkward exchange, I just stop logging in."'
 _ADMIN_Q1 = "Every mentoring profile must be verified before it goes live."
 _ADMIN_Q2 = (
-    '"I will not approve the platform without verification and reporting," the review states.'  # noqa: E501
+    '"I will not approve the platform without verification and reporting," the review states.'
 )
 
 # The verbatim-evidence contract of the research stage, checked at import

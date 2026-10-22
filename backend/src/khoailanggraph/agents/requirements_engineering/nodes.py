@@ -170,6 +170,16 @@ def safe_node(fn: NodeFn) -> NodeFn:
     return wrapper
 
 
+def _plan_term(value: str) -> str:
+    """A plan term as compared: trimmed and without sentence punctuation.
+
+    Real plans type their stakeholder types as short sentences ("…staff."),
+    and models copy them with or without the trailing period — the term is
+    the words, the punctuation is not.
+    """
+    return value.strip().strip(".,;:").casefold()
+
+
 def match_plan_value(value: str, allowed: list[str]) -> str | None:
     """The plan term `value` stands for, verbatim; None when it matches none.
 
@@ -177,12 +187,13 @@ def match_plan_value(value: str, allowed: list[str]) -> str | None:
     reuse. A model that names the term exactly comes back untouched; one
     that decorates it ("Students (commuter and resident) ...") resolves to
     the longest plan term the wording contains; a true stranger stays
-    None so the caller can reject it honestly.
+    None so the caller can reject it honestly. Sentence punctuation around
+    either side never decides the match.
     """
     if value in allowed:
         return value
-    lowered = value.strip().casefold()
-    candidates = [(term, term.strip().casefold()) for term in allowed]
+    lowered = _plan_term(value)
+    candidates = [(term, _plan_term(term)) for term in allowed]
     for original, candidate in candidates:
         if candidate == lowered:
             return original
@@ -340,6 +351,18 @@ def _plan_terms(
     )
 
 
+def _stop_prior_failure(state: REState) -> bool:
+    """True when a node earlier in the plain-edge chain already failed.
+
+    The research stage sits on plain edges (`planner → corpus_builder →
+    stakeholder_miner → persona_generator → checkpoint_personas`), and
+    conditional routing reads `status` only at routing points — so without
+    this guard, a failed node's plain successors still execute and their
+    own surface error would overwrite the root cause's.
+    """
+    return bool(state.get("status") == "failed")
+
+
 @safe_node
 def corpus_builder_node(
     state: REState,
@@ -353,6 +376,8 @@ def corpus_builder_node(
     model invents beyond the hits is refused by the prompt contract, and the
     honest-mode check below keeps only hits the tool actually returned.
     """
+    if _stop_prior_failure(state):
+        return {}
     cfg = _run_config(state)
     sink = _sink(config or {})
     plan_record, topics, stakeholder_types = _plan_terms(sink, state)
@@ -417,6 +442,8 @@ def stakeholder_miner_node(
     a fabricated quote never enters the store. Refs are renumbered across the
     whole node response, unique per response as the sink contract demands.
     """
+    if _stop_prior_failure(state):
+        return {}
     cfg = _run_config(state)
     sink = _sink(config or {})
     corpus = state.get("research_corpus")
@@ -529,6 +556,8 @@ def persona_generator_node(
     that drifted from what was mined, or an observation key that does not
     exist, fails the run instead of entering the store.
     """
+    if _stop_prior_failure(state):
+        return {}
     cfg = _run_config(state)
     sink = _sink(config or {})
     plan_record, _topics, _stakeholder_types = _plan_terms(sink, state)
