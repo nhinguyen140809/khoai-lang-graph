@@ -1,6 +1,7 @@
 'use client'
 
 import { useArtifactKinds } from '../hooks/useArtifactKinds'
+import { EvidenceField, GroupField, isEvidenceList, isGroupList } from './FieldEvidence'
 
 interface ArtifactDocumentFieldsProps {
   kind: string
@@ -9,7 +10,8 @@ interface ArtifactDocumentFieldsProps {
 
 /**
  * The `document` drawing (web-app.md §6): the fields of the artifact in
- * `x-ui-field-order`, each value printed as text.
+ * `x-ui-field-order`, each value printed as text. Evidence lists and
+ * stakeholder groups render as their own blocks instead of raw JSON.
  */
 export function ArtifactDocumentFields({ kind, content }: ArtifactDocumentFieldsProps) {
   const kinds = useArtifactKinds()
@@ -22,12 +24,23 @@ export function ArtifactDocumentFields({ kind, content }: ArtifactDocumentFields
   if (entries.length === 0) return null
   return (
     <dl className="grid grid-cols-[10rem_1fr] gap-x-4 gap-y-3 text-sm">
-      {entries.map((field) => (
-        <div key={field} className="contents">
-          <dt className="text-muted-foreground">{field.replaceAll('_', ' ')}</dt>
-          <dd className="whitespace-pre-line">{fieldValue(content[field])}</dd>
-        </div>
-      ))}
+      {entries.map((field) => {
+        const value: unknown = content[field]
+        return (
+          <div key={field} className="contents">
+            <dt className="text-muted-foreground">{field.replaceAll('_', ' ')}</dt>
+            <dd className="whitespace-pre-line">
+              {isEvidenceList(value) ? (
+                <EvidenceField entries={value} />
+              ) : isGroupList(value) ? (
+                <GroupField entries={value} />
+              ) : (
+                fieldValue(value)
+              )}
+            </dd>
+          </div>
+        )
+      })}
     </dl>
   )
 }

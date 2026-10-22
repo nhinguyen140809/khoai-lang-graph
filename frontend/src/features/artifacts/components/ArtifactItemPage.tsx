@@ -12,6 +12,7 @@ import { isNotFoundError } from '@/lib/api-fetch.utils'
 
 import { fieldLabel, formatFieldValue, itemTitle } from '../artifacts.utils'
 import { useArtifactItem } from '../hooks/useArtifactItem'
+import { EvidenceField, GroupField, isEvidenceList, isGroupList } from './FieldEvidence'
 import { ItemTimelinePanel, ItemTracePanel } from './ItemTracePanels'
 
 interface ArtifactItemPageProps {
@@ -179,7 +180,15 @@ export function ArtifactItemPage({ projectId, artifactId, itemId }: ArtifactItem
             {fields.map(([field, value]) => (
               <div key={field} className="contents">
                 <dt className="text-muted-foreground">{fieldLabel(field)}</dt>
-                <dd className="whitespace-pre-line">{formatFieldValue(value)}</dd>
+                <dd className="whitespace-pre-line">
+                  {isEvidenceList(value) ? (
+                    <EvidenceField entries={value} />
+                  ) : isGroupList(value) ? (
+                    <GroupField entries={value} />
+                  ) : (
+                    formatFieldValue(value)
+                  )}
+                </dd>
               </div>
             ))}
           </dl>
