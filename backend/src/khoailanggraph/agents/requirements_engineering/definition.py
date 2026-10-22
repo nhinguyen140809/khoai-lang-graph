@@ -40,6 +40,19 @@ def definition_bytes() -> bytes:
     return (resources.files(_PACKAGE) / _DEFINITION_FILE).read_bytes()
 
 
+def definition_bytes_for(version: int) -> bytes | None:
+    """The exact bytes of one published definition version, None when absent.
+
+    GET /workflow/definition serves any version a run may have used
+    (API.md §5: `?version=` reads an older one, cached immutably), so the
+    published files stay readable beside the current one.
+    """
+    try:
+        return (resources.files(_PACKAGE) / f"definition.v{version}.json").read_bytes()
+    except FileNotFoundError:
+        return None
+
+
 def _keyed(name: str) -> dict[str, dict[str, Any]]:
     """A list of `{key: ...}` entries of the definition, keyed by that key."""
     return {str(entry["key"]): entry for entry in DEFINITION[name]}

@@ -30,13 +30,17 @@ async def search_items(
     db: deps.DbSession,
     *,
     q: Annotated[str, Query()] = "",
+    kind: Annotated[str | None, Query()] = None,
+    review_status: Annotated[str | None, Query()] = None,
     cursor: Annotated[int, Query(ge=0)] = 0,
     limit: Annotated[int, Query(ge=1, le=MAX_LIMIT)] = 50,
 ) -> Page[schemas.Item]:
-    """Search the items of a project by key or text (§5)."""
+    """Search the items of a project by key or text, with the filters of
+    docs/API.md §5: `kind` and `review_status` (filtering by `run_id` needs
+    the actor tables and stays a follow-up)."""
     await get_project_row(db, project_id)
     items, next_cursor = await service.search_project_items(
-        db, project_id, query=q, limit=limit, cursor=cursor
+        db, project_id, query=q, kind=kind, review_status=review_status, limit=limit, cursor=cursor
     )
     return Page(items=items, next_cursor=next_cursor)
 
@@ -184,11 +188,25 @@ async def get_workflow_definition(
     user: deps.CurrentUser,
     version: Annotated[int | None, Query()] = None,
 ) -> Any:
-    """The definition JSON; immutable cache when ?version= is given (§5)."""
-    raw = workflow.definition_bytes()
+    """The definition JSON; immutable cache when ?version= pins one (§5).
+
+    API.md: a past run is shown with the definition it ran with — the
+    pinned version serves that definition's own file, 404 when the version
+    was never published.
+    """
+    raw: bytes
     headers: dict[str, str] = {}
-    if version is not None:
+    if version is None:
+        raw = workflow.definition_bytes()
+    else:
         headers["Cache-Control"] = "public, max-age=31536000, immutable"
+        if version == workflow.WORKFLOW_VERSION:
+            raw = workflow.definition_bytes()
+        else:
+            raw_or_none = workflow.definition_bytes_for(version)
+            if raw_or_none is None:
+                raise ApiError(404, "not_found", "Not found", "The workflow version does not exist.")
+            raw = raw_or_none
     return JSONResponse(content=jsonlib.loads(raw.decode("utf-8")), headers=headers)
 
 
@@ -249,6 +267,17 @@ async def patch_item(
             f"The item is at version {current.version}.",
         )
     merged = {**current.content, **(body.content or {})}
+    if body.content is not None:
+        plan_values = await service.plan_values_of(db, UUID(str(row.project_id)))
+        errors = service.validate_item_content(str(row.kind), merged, plan_values)
+        if errors:
+            raise ApiError(
+                422,
+                "validation_failed",
+                "Validation failed",
+                "The item content fails its schema or the plan vocabulary.",
+                errors=errors,
+            )
     row.content_json = jsonlib.dumps(merged, ensure_ascii=False).encode("utf-8")
     if body.review_status is not None:
         row.review_status = body.review_status

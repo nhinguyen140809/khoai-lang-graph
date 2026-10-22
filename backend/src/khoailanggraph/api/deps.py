@@ -50,9 +50,13 @@ def check_origin(
     The `Origin` must equal the application origin: the backend's own request
     host, or one of the configured `csrf_allowed_origins` (dev proxies /api
     from the Next.js server, so the application origin is the frontend's).
+    §3: every request with a method other than GET or HEAD must carry the
+    header — a missing Origin is a 403, not a pass.
     """
-    if request.method in {"GET", "HEAD", "OPTIONS"} or origin is None:
+    if request.method in {"GET", "HEAD", "OPTIONS"}:
         return
+    if origin is None:
+        raise ApiError(403, "forbidden", "Forbidden", "Origin check failed.")
     settings = get_settings()
     request_host = request.url.netloc
     origin_host = origin.removeprefix("https://").removeprefix("http://")

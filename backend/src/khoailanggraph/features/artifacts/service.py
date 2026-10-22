@@ -600,19 +600,25 @@ async def search_project_items(
     project_id: UUID,
     *,
     query: str,
+    kind: str | None = None,
+    review_status: str | None = None,
     limit: int,
     cursor: int,
 ) -> tuple[list[schemas.Item], int | None]:
-    """The items of a project by text; ordered by key, cursor pagination."""
+    """The items of a project by text, filtered by kind and review status;
+    ordered by key, cursor pagination."""
+    conditions = [
+        ArtifactItemRow.project_id == project_id,
+        ArtifactItemRow.deleted_at.is_(None),
+    ]
+    if kind is not None:
+        conditions.append(ArtifactItemRow.kind == kind)
+    if review_status is not None:
+        conditions.append(ArtifactItemRow.review_status == review_status)
     rows = list(
         (
             await session.scalars(
-                select(ArtifactItemRow)
-                .where(
-                    ArtifactItemRow.project_id == project_id,
-                    ArtifactItemRow.deleted_at.is_(None),
-                )
-                .order_by(ArtifactItemRow.key)
+                select(ArtifactItemRow).where(*conditions).order_by(ArtifactItemRow.key)
             )
         ).all()
     )
@@ -622,6 +628,46 @@ async def search_project_items(
     window = views[cursor : cursor + limit]
     next_cursor = cursor + len(window) if cursor + len(window) < len(views) else None
     return window, next_cursor
+
+
+async def plan_values_of(session: AsyncSession, project_id: UUID) -> dict[str, list[str]]:
+    """The `x-value-from` choices of the project's elicitation plan (API.md
+    §5: a referenced field accepts only the values the plan holds)."""
+    plan = await session.scalar(
+        select(ArtifactRow).where(
+            ArtifactRow.project_id == project_id,
+            ArtifactRow.kind == "elicitation_plan",
+            ArtifactRow.deleted_at.is_(None),
+        )
+    )
+    if plan is None:
+        return {"elicitation_plan.topics": [], "elicitation_plan.stakeholder_types": []}
+    content = _loads(plan.content_json)
+
+    def as_str_list(name: str) -> list[str]:
+        return [str(value) for value in content.get(name, [])]
+
+    return {
+        "elicitation_plan.topics": as_str_list("topics"),
+        "elicitation_plan.stakeholder_types": as_str_list("stakeholder_types"),
+    }
+
+
+def validate_item_content(
+    kind: str,
+    content: dict[str, Any],
+    plan_values: dict[str, list[str]],
+) -> list[dict[str, str]]:
+    """The violations of an item edit against its canonical schema and the
+    plan vocabulary — the same rules the agent writes go through, so what
+    an agent produces and what the API accepts cannot disagree."""
+    violations = domain_rules.validate_content(
+        kind, content, value_lists=wf.value_lists(), plan_values=plan_values
+    )
+    return [
+        {"field": violation.path or "content", "message": violation.message}
+        for violation in violations
+    ]
 
 
 async def list_project_artifacts(
