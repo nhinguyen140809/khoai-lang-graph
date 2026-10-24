@@ -2,7 +2,7 @@ import { z } from 'zod'
 import { create } from 'zustand'
 import { persist } from 'zustand/middleware'
 
-import { parseStored, persistStorage, storageKey } from '@/shared/lib/browser-storage.utils'
+import { parseStored, persistStorage, storageKey } from '@/shared/lib/storage/browser-storage.utils'
 
 const persistedSideFeatureSchema = z.object({
   /** The id of the feature whose side panel is shown, once chosen; the editor is not tied to it. */

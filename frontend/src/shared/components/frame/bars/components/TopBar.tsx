@@ -12,8 +12,8 @@ import {
   BreadcrumbSeparator,
 } from '@/shared/components/ui/breadcrumb'
 import { Kbd, KbdGroup } from '@/shared/components/ui/kbd'
-import { useModifierKeyName } from '@/shared/hooks/useModifierKeyName'
-import { ariaKeyShortcuts, hotkeyKeys } from '@/shared/lib/hotkey.utils'
+import { useModifierKeyName } from '@/shared/lib/hotkey/hooks/useModifierKeyName'
+import { ariaKeyShortcuts, hotkeyKeys } from '@/shared/lib/hotkey/hotkey.utils'
 
 import { paletteHotkey } from '../../commands/command.constants'
 import { useCommandPalette } from '../../commands/hooks/useCommandPalette'

@@ -5,7 +5,7 @@ import { cn } from 'cn'
 import { useTheme } from 'next-themes'
 import { useId } from 'react'
 
-import { useIsHydrated } from '@/shared/hooks/useIsHydrated'
+import { useIsHydrated } from '@/shared/lib/hydration/hooks/useIsHydrated'
 
 /**
  * A React Flow canvas in the colors of the design system. The colors come from the --xy-*

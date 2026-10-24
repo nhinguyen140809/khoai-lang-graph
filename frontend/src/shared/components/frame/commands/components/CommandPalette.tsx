@@ -13,8 +13,8 @@ import {
   CommandList,
   CommandShortcut,
 } from '@/shared/components/ui/command'
-import { useModifierKeyName } from '@/shared/hooks/useModifierKeyName'
-import { hotkeyLabel } from '@/shared/lib/hotkey.utils'
+import { useModifierKeyName } from '@/shared/lib/hotkey/hooks/useModifierKeyName'
+import { hotkeyLabel } from '@/shared/lib/hotkey/hotkey.utils'
 
 import { PaletteGroup, paletteHotkey } from '../command.constants'
 import { commandValue, type GroupOfCommands, groupsBySearch } from '../command.utils'

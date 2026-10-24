@@ -1,6 +1,6 @@
 import type { ComponentProps } from 'react'
 
-import { cn } from '@/shared/lib/utils'
+import { cn } from '@/shared/lib/cn/index'
 
 /**
  * The container of a state in the `page` size: it fills the container it is in and puts the state

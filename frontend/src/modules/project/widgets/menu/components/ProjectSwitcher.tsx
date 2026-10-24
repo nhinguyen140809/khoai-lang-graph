@@ -33,7 +33,7 @@ import {
 } from '@/shared/components/ui/dropdown-menu'
 import { Skeleton } from '@/shared/components/ui/skeleton'
 import { routes } from '@/shared/config/routes'
-import { cn } from '@/shared/lib/utils'
+import { cn } from '@/shared/lib/cn/index'
 
 interface ProjectSwitcherProps {
   projectId: string

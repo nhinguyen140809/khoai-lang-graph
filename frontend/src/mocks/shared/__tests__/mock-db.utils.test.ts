@@ -1,6 +1,6 @@
 import { afterEach, describe, expect, it, vi } from 'vitest'
 
-import { browserStorage, storageKey } from '@/shared/lib/browser-storage.utils'
+import { browserStorage, storageKey } from '@/shared/lib/storage/browser-storage.utils'
 
 import type * as mockDb from '../mock-db.utils'
 

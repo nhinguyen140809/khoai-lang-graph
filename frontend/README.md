@@ -98,7 +98,7 @@ frontend/
 │   │   │   ├── state/       # query states: loading, error, empty, not found
 │   │   │   ├── form/        # the fields of forms
 │   │   │   └── filter/      # the filters of a list: the button, the form it opens, the reducer of their values and its hooks
-│   │   ├── hooks/, lib/     # generic hooks and utilities; lib/ also has a folder per topic: view/ (the view of the app, useView), tone/, formatters/
+│   │   ├── lib/             # generic utilities, a folder per topic, each with its hooks in hooks/: view/ (the view of the app, useView), tone/, formatters/, hotkey/, timing/, url/, storage/, hydration/, viewport/, cn/
 │   │   ├── api/             # fetch and its errors, query client, API URL, generated/: generated API client (do not edit)
 │   │   └── config/          # what the app sets once: routes/ (the addresses of the pages), output-language/
 │   ├── mocks/               # MSW handlers shared by dev mocking, unit tests, and E2E
@@ -120,7 +120,7 @@ pnpm ui:add dialog --diff          # compare the local file with the registry ve
 pnpm fix                           # apply this repo's ESLint and Prettier style
 ```
 
-- Files are written to `src/shared/components/ui/` according to the aliases in `components.json` (`@/shared/components/ui`, `@/shared/lib/utils`, `@/shared/hooks`). They are regular project source and can be edited.
+- Files are written to `src/shared/components/ui/` according to the aliases in `components.json` (`@/shared/components/ui`, `@/shared/lib/cn`, `@/shared/lib/viewport`). They are regular project source and can be edited.
 - The CLI writes code in its own style (double quotes, its own import order). `pnpm fix` converts it to the repo style; afterwards `pnpm check` should pass.
 - The configured style is `radix-nova`: controls 32px high with `text-sm` text, and inputs in `text-base` on small screens so that phones do not zoom on them. The icon library is Lucide (`lucide-react`).
 - The components came from `radix-mira` and took the classes that `radix-nova` changes, string by string, so the changes of this project stay in them. `pnpm ui:add <name> --diff` shows how a local file differs from its Nova version in the registry.
