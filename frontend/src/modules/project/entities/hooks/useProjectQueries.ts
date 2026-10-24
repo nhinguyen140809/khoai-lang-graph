@@ -7,7 +7,7 @@ import {
   useQueryClient,
 } from '@tanstack/react-query'
 
-import type { ListPage } from '@/shared/api/api-fetch.utils'
+import type { ListPage } from '@/shared/api/request/api-fetch.utils'
 
 import { getProject, listProjects } from '../projects.api'
 import { projectKeys } from '../projects.keys'

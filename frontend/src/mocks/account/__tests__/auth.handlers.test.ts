@@ -1,6 +1,6 @@
 import { afterEach, describe, expect, it } from 'vitest'
 
-import { apiUrl } from '@/shared/api/api-url.utils'
+import { apiUrl } from '@/shared/api/request/api-url.utils'
 
 import { authLoadingCases, authProblemCases } from './auth.handlers.data'
 

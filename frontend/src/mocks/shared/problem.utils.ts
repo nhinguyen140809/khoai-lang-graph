@@ -1,7 +1,7 @@
 import { HttpResponse } from 'msw'
 
-import { ApiErrorCode, HttpStatus } from '@/shared/api/api-error.types'
-import type { FieldProblem } from '@/shared/api/api-error.utils'
+import { ApiErrorCode, HttpStatus } from '@/shared/api/error/api-error.types'
+import type { FieldProblem } from '@/shared/api/error/api-error.utils'
 
 /** An error response in the Problem Details format of the API. */
 export function problem(

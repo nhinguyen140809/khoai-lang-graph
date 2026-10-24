@@ -1,8 +1,8 @@
 import { z } from 'zod'
 
-import { type ApiError, toApiError } from './api-error.utils'
+import { type ApiError, toApiError } from '../error/api-error.utils'
+import { idempotencyKeyHeader } from '../idempotency.constants'
 import { apiUrl } from './api-url.utils'
-import { idempotencyKeyHeader } from './idempotency.constants'
 
 interface ApiRequestOptions {
   /** What the request does, for the error message: "load projects" gives "Failed to load projects". */

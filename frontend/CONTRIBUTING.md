@@ -78,7 +78,7 @@ Conventions:
 | Any other `.ts` | `<subject>.<kind>.ts` | `projects.api.ts`, `settings.store.ts`, `run-events.reducer.ts` |
 | Config that holds React elements (`.tsx`) | `<subject>.config.tsx` | `activity-frame.config.tsx` |
 | Unit test | `<file under test>.test.ts(x)`, in a `__tests__/` folder next to the file under test | `modules/user/entities/__tests__/user.api.test.ts`, `shared/components/state/__tests__/ErrorState.test.tsx` |
-| Cases of a data-driven unit test | `<file under test>.data.ts`, beside its test | `shared/api/__tests__/api-error.utils.data.ts` |
+| Cases of a data-driven unit test | `<file under test>.data.ts`, beside its test | `shared/api/error/__tests__/api-error.utils.data.ts` |
 | E2E test | `<subject>.spec.ts`, in a folder per feature | `tests/e2e/projects/projects.spec.ts` |
 | Screenshot spec | `<page>.spec.ts`, in a folder per feature | `tests/screenshots/projects/project-list.spec.ts` |
 | Cases of an E2E test or of a screenshot spec | `<subject>.data.ts`, beside its spec | `tests/e2e/projects/projects.data.ts` |

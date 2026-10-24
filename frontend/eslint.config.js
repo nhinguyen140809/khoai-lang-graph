@@ -229,7 +229,7 @@ function climbPattern(depth) {
 // hooks of its slice, which hold what follows a call.
 const componentPatterns = [
   {
-    regex: '\\.api$|/shared/api/api-fetch\\.utils$',
+    regex: '\\.api$|/shared/api/request/api-fetch\\.utils$',
     message: 'A component calls the API through a hook, which calls <subject>.api.ts.',
   },
   {

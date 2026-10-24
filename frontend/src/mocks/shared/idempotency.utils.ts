@@ -1,6 +1,6 @@
 import { HttpResponse, type HttpResponseResolver } from 'msw'
 
-import { ApiErrorCode, HttpStatus } from '@/shared/api/api-error.types'
+import { ApiErrorCode, HttpStatus } from '@/shared/api/error/api-error.types'
 import { idempotencyKeyHeader } from '@/shared/api/idempotency.constants'
 
 import { mockRecord } from './mock-db.utils'

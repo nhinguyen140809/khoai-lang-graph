@@ -1,4 +1,4 @@
-import { apiUrl } from '@/shared/api/api-url.utils'
+import { apiUrl } from '@/shared/api/request/api-url.utils'
 
 import { type CreateRunResponse, createRunResponseSchema } from './types/runs.types'
 

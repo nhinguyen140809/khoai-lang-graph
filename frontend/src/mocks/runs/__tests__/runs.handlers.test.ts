@@ -1,7 +1,7 @@
 import { afterEach, describe, expect, it } from 'vitest'
 
 import type { Run, RunStep } from '@/modules/run/entities'
-import { apiUrl } from '@/shared/api/api-url.utils'
+import { apiUrl } from '@/shared/api/request/api-url.utils'
 
 import { runIds } from '../../shared/mock-ids.constants'
 import { mockRunId } from '../runs.handlers'

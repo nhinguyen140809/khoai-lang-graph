@@ -4,7 +4,7 @@ import { z, ZodError } from 'zod'
 
 import { server } from '@/mocks/msw-server.setup'
 
-import { ApiError } from '../api-error.utils'
+import { ApiError } from '../../error/api-error.utils'
 import { apiCommand, apiRequest, fetchPage } from '../api-fetch.utils'
 import {
   commandMethodCases,

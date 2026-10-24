@@ -1,4 +1,4 @@
-import { ApiError } from '../api-error.utils'
+import { ApiError } from '../../error/api-error.utils'
 
 const apiError = (status: number) => new ApiError('Failed', status, null, [])
 

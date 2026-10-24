@@ -1,9 +1,9 @@
 import { MutationCache, QueryCache, QueryClient } from '@tanstack/react-query'
 
-import { HttpStatus } from './api-error.types'
-import { ApiError } from './api-error.utils'
+import { redirectToSignIn } from '../auth-redirect.utils'
+import { HttpStatus } from '../error/api-error.types'
+import { ApiError } from '../error/api-error.utils'
 import { retryOnce } from './api-retry.utils'
-import { redirectToSignIn } from './auth-redirect.utils'
 
 // A request without a session goes to the sign-in page, whichever query or mutation sent it.
 function onError(error: Error) {

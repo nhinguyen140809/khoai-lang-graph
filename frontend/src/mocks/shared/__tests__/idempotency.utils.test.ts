@@ -2,7 +2,7 @@ import { http, HttpResponse } from 'msw'
 import { describe, expect, it } from 'vitest'
 
 import { server } from '@/mocks/msw-server.setup'
-import { apiUrl } from '@/shared/api/api-url.utils'
+import { apiUrl } from '@/shared/api/request/api-url.utils'
 
 import { idempotent } from '../idempotency.utils'
 import { type KeyedRequest, separateRequestCases } from './idempotency.utils.data'

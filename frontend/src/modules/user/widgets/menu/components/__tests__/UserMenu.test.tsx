@@ -6,8 +6,8 @@ import { toast } from 'sonner'
 import { beforeEach, describe, expect, it, vi } from 'vitest'
 
 import { server } from '@/mocks/msw-server.setup'
-import { apiUrl } from '@/shared/api/api-url.utils'
 import type * as authRedirect from '@/shared/api/auth-redirect.utils'
+import { apiUrl } from '@/shared/api/request/api-url.utils'
 import { TestProviders } from '@/test/TestProviders'
 
 import { UserMenu } from '../UserMenu'

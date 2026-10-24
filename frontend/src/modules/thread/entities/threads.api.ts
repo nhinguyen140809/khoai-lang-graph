@@ -1,7 +1,7 @@
 import { z } from 'zod'
 
-import { apiRequest } from '@/shared/api/api-fetch.utils'
-import { apiUrl } from '@/shared/api/api-url.utils'
+import { apiRequest } from '@/shared/api/request/api-fetch.utils'
+import { apiUrl } from '@/shared/api/request/api-url.utils'
 
 import { createdThreadSchema, sentMessageSchema, type Thread, threadSchema } from './threads.types'
 
