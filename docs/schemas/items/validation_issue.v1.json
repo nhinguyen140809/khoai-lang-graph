@@ -26,12 +26,14 @@
   "additionalProperties": false,
   "properties": {
     "category": {
+      "title": "Category",
       "type": "string",
       "x-value-list": "validation_category",
       "description": "The part of the output the issue is about.",
       "x-ui-widget": "select"
     },
     "severity": {
+      "title": "Severity",
       "type": "string",
       "enum": [
         "low",
@@ -42,11 +44,13 @@
       "x-ui-widget": "select"
     },
     "description": {
+      "title": "Description",
       "type": "string",
       "description": "What is wrong.",
       "x-ui-widget": "textarea"
     },
     "suggestion": {
+      "title": "Suggestion",
       "type": [
         "string",
         "null"
@@ -55,6 +59,7 @@
       "x-ui-widget": "textarea"
     },
     "status": {
+      "title": "Status",
       "type": "string",
       "enum": [
         "open",

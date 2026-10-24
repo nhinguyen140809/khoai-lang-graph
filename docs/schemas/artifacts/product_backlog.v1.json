@@ -15,11 +15,13 @@
   "additionalProperties": false,
   "properties": {
     "product_goal": {
+      "title": "Product goal",
       "type": "string",
       "description": "The long-term objective the backlog works toward.",
       "x-ui-widget": "textarea"
     },
     "prioritization_notes": {
+      "title": "Prioritization notes",
       "type": [
         "string",
         "null"

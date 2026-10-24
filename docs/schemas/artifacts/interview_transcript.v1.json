@@ -16,6 +16,7 @@
   "additionalProperties": false,
   "properties": {
     "status": {
+      "title": "Status",
       "type": "string",
       "enum": [
         "in_progress",
@@ -26,6 +27,7 @@
       "readOnly": true
     },
     "turn_count": {
+      "title": "Turn count",
       "type": "integer",
       "minimum": 0,
       "description": "Number of question and answer turns so far.",
@@ -33,6 +35,7 @@
       "readOnly": true
     },
     "stop_reason": {
+      "title": "Stop reason",
       "type": [
         "string",
         "null"

@@ -26,17 +26,20 @@
   "additionalProperties": false,
   "properties": {
     "description": {
+      "title": "Description",
       "type": "string",
       "description": "What conflicts.",
       "x-ui-widget": "textarea"
     },
     "conflict_type": {
+      "title": "Conflict type",
       "type": "string",
       "x-value-list": "conflict_type",
       "description": "Kind of conflict.",
       "x-ui-widget": "select"
     },
     "severity": {
+      "title": "Severity",
       "type": "string",
       "enum": [
         "low",
@@ -47,6 +50,7 @@
       "x-ui-widget": "select"
     },
     "proposed_resolutions": {
+      "title": "Proposed resolutions",
       "type": "array",
       "items": {
         "type": "string"
@@ -55,6 +59,7 @@
       "x-ui-widget": "list"
     },
     "status": {
+      "title": "Status",
       "type": "string",
       "enum": [
         "open",
@@ -65,6 +70,7 @@
       "x-ui-widget": "select"
     },
     "resolution": {
+      "title": "Resolution",
       "type": [
         "string",
         "null"

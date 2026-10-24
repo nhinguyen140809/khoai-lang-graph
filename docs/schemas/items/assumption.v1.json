@@ -23,21 +23,25 @@
   "additionalProperties": false,
   "properties": {
     "statement": {
+      "title": "Statement",
       "type": "string",
       "description": "What is assumed.",
       "x-ui-widget": "textarea"
     },
     "reasoning": {
+      "title": "Reasoning",
       "type": "string",
       "description": "Why it was assumed.",
       "x-ui-widget": "textarea"
     },
     "impact_if_wrong": {
+      "title": "Impact if wrong",
       "type": "string",
       "description": "What changes if the assumption does not hold.",
       "x-ui-widget": "textarea"
     },
     "validation_status": {
+      "title": "Validation status",
       "type": "string",
       "enum": [
         "unverified",

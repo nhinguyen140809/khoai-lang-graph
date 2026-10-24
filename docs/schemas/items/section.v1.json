@@ -20,11 +20,13 @@
   "additionalProperties": false,
   "properties": {
     "title": {
+      "title": "Title",
       "type": "string",
       "description": "Heading text, without its number. The number, for example 3.2, is derived from the position of the section.",
       "x-ui-widget": "text"
     },
     "introduction": {
+      "title": "Introduction",
       "type": [
         "string",
         "null"

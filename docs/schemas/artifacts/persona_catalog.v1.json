@@ -15,11 +15,13 @@
   "additionalProperties": false,
   "properties": {
     "selection_rationale": {
+      "title": "Selection rationale",
       "type": "string",
       "description": "Why these personas were chosen for the stakeholder types of the plan.",
       "x-ui-widget": "textarea"
     },
     "uncovered_stakeholder_types": {
+      "title": "Uncovered stakeholder types",
       "type": "array",
       "items": {
         "type": "string"

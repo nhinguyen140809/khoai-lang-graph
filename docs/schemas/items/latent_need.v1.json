@@ -24,16 +24,19 @@
   "additionalProperties": false,
   "properties": {
     "description": {
+      "title": "Description",
       "type": "string",
       "description": "The need.",
       "x-ui-widget": "textarea"
     },
     "reasoning": {
+      "title": "Reasoning",
       "type": "string",
       "description": "Why the analyst inferred it.",
       "x-ui-widget": "textarea"
     },
     "confidence": {
+      "title": "Confidence",
       "type": "string",
       "enum": [
         "low",
@@ -44,6 +47,7 @@
       "x-ui-widget": "select"
     },
     "disposition": {
+      "title": "Disposition",
       "type": "string",
       "enum": [
         "open",
