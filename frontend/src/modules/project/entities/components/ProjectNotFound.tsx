@@ -2,7 +2,7 @@ import Link from 'next/link'
 
 import { NotFoundState } from '@/shared/components/state'
 import { Button } from '@/shared/components/ui/button'
-import { routes } from '@/shared/config/routes'
+import { routes } from '@/shared/routes'
 
 import { projectMessages } from '../projects.constants'
 

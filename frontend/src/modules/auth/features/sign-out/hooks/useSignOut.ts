@@ -5,7 +5,7 @@ import { logout } from '@/modules/auth/entities'
 import { loadPage } from '@/shared/api/auth-redirect.utils'
 import { HttpStatus } from '@/shared/api/error/api-error.types'
 import { ApiError, errorMessageOf } from '@/shared/api/error/api-error.utils'
-import { routes } from '@/shared/config/routes'
+import { routes } from '@/shared/routes'
 
 /**
  * Ends the session, then loads the sign-in page in full, so that the data of this session does not

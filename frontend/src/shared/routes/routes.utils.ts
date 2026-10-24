@@ -1,6 +1,6 @@
+import { registerHref, signInHref } from './auth/sign-in.utils'
+import { checkedRoute } from './builder/route-builder.utils'
 import { projectRoutes } from './project-routes.utils'
-import { checkedRoute } from './route-builder.utils'
-import { registerHref, signInHref } from './sign-in.utils'
 
 /**
  * The addresses of the pages, grouped as the folders of `src/app/` are. Each leaf writes its whole

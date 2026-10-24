@@ -7,7 +7,7 @@ import { Form, TextField } from '@/shared/components/form'
 import { AuthScreen } from '@/shared/components/frame'
 import { FieldError, FieldGroup } from '@/shared/components/ui/field'
 import { PendingButton } from '@/shared/components/ui/pending-button'
-import { routes } from '@/shared/config/routes'
+import { routes } from '@/shared/routes'
 
 import { useCreateAccount } from '../hooks/useCreateAccount'
 import { type AccountForm, accountFormSchema } from '../sign-up.schema'

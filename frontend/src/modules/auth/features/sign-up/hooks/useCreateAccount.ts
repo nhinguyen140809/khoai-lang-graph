@@ -5,7 +5,7 @@ import { toast } from 'sonner'
 
 import { login, register, type RegisterBody, useOpenAfterSignIn } from '@/modules/auth/entities'
 import { formErrorOf, showFieldProblems } from '@/shared/components/form'
-import { routes } from '@/shared/config/routes'
+import { routes } from '@/shared/routes'
 
 import { signUpMessages } from '../sign-up.constants'
 import { type AccountForm, accountFormSchema } from '../sign-up.schema'

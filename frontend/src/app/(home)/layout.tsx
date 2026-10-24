@@ -4,7 +4,8 @@ import { ProjectCommands } from '@/modules/project/widgets/commands'
 import { ProjectDialogs } from '@/modules/project/widgets/dialogs'
 import { AccountMenuItem } from '@/modules/user/widgets/menu'
 import { PageCrumb, PageWorkspace, Workbench } from '@/shared/components/frame'
-import { homePageFallback, homePageNames, routes } from '@/shared/config/routes'
+import { homePageFallback, homePageNames } from '@/shared/config/page-names'
+import { routes } from '@/shared/routes'
 
 interface HomeLayoutProps {
   children: ReactNode

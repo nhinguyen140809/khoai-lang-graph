@@ -5,7 +5,7 @@ import { usePathname } from 'next/navigation'
 
 import { NotFoundState } from '@/shared/components/state'
 import { Button } from '@/shared/components/ui/button'
-import { routes } from '@/shared/config/routes'
+import { routes } from '@/shared/routes'
 
 export default function NotFound() {
   const pathname = usePathname()

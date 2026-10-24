@@ -5,7 +5,7 @@
 import { useRouter } from 'next/navigation'
 import { type RefObject, useEffect } from 'react'
 
-import { routes } from '@/shared/config/routes'
+import { routes } from '@/shared/routes'
 
 import { useProjectPromptStore } from '../project-prompt.store'
 

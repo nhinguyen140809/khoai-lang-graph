@@ -100,7 +100,8 @@ frontend/
 │   │   │   └── filter/      # the filters of a list: the button, the form it opens, the reducer of their values and its hooks
 │   │   ├── lib/             # generic utilities, a folder per topic, each with its hooks in hooks/: view/ (the view of the app, useView), tone/, formatters/, hotkey/, timing/, url/, storage/, hydration/, viewport/, cn/
 │   │   ├── api/             # fetch and its errors, query client, API URL, generated/: generated API client (do not edit)
-│   │   └── config/          # what the app sets once: routes/ (the addresses of the pages), output-language/
+│   │   ├── routes/          # the addresses of the pages: routes, the builder of an address, the pages of the sign-in
+│   │   └── config/          # what the app sets once: page-names/ (the names of the home page), output-language/
 │   ├── mocks/               # MSW handlers shared by dev mocking, unit tests, and E2E
 │   └── test/                # Vitest setup
 └── tests/

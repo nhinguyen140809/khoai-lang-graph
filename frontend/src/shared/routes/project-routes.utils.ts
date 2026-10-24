@@ -1,4 +1,4 @@
-import { checkedRoute } from './route-builder.utils'
+import { checkedRoute } from './builder/route-builder.utils'
 
 /** The pages of one project. Each leaf writes its whole path, so that the route types check it. */
 export function projectRoutes(projectId: string) {

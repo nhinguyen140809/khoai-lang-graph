@@ -1,4 +1,4 @@
-import { signInHrefFor } from '@/shared/config/routes'
+import { signInHrefFor } from '@/shared/routes'
 
 // Where the app goes when a request answers 401: every endpoint except register, login and health
 // requires a session.

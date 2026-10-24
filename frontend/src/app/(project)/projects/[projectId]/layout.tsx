@@ -4,7 +4,7 @@ import { ProjectDialogs } from '@/modules/project/widgets/dialogs'
 import { ProjectSwitcher } from '@/modules/project/widgets/menu'
 import { AccountMenuItem } from '@/modules/user/widgets/menu'
 import { PageWorkspace, Workbench, Workspace } from '@/shared/components/frame'
-import { routes } from '@/shared/config/routes'
+import { routes } from '@/shared/routes'
 
 /**
  * Every screen of a project: the frame with the menu of the project on the top bar, its dialogs
