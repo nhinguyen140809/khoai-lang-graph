@@ -378,11 +378,11 @@ All mock code lives in `src/mocks/`, in one folder per part of the API, named li
 src/mocks/
 ├── msw-browser.setup.ts  # the handlers of the browser worker (dev mocking, E2E)
 ├── msw-server.setup.ts   # the handlers of the unit tests
-├── shared/               # records, ids, scenarios, pages of a list, error answers
+├── shared/               # db/ (records, ids), http/ (request/, response/: pages of a list, error answers, idempotency), scenario/
 ├── account/              # /auth, /me
 ├── projects/             # /projects
 ├── threads/              # threads
-└── runs/                 # runs, the stream
+└── runs/                 # runs, the stream (handlers/)
 ```
 
 Each folder holds a pair of files per API resource:
@@ -404,8 +404,8 @@ The same handlers serve `pnpm dev:mock`, the unit tests, and the E2E tests, so a
 | `auth`       | `POST /auth/register`, `POST /auth/login`, `POST /auth/logout`, and a 401 for every other endpoint without a session                                              |
 | `me`         | `GET /me`                                                                                                                                                         |
 
-- The ids of the mock data are in `shared/mock-ids.constants.ts`; each starts like the id of the same record in the API examples.
-- The mock server keeps the session, the user, the projects, threads, messages and runs that `POST` creates, and the runs that are stopped, as records (`shared/mock-db.utils.ts`). The browser worker keeps them in browser storage, so they survive a reload; `?mock-reset` in the page address starts again from the fixtures. Unit tests keep them in memory, and the test setup resets them after each test.
+- The ids of the mock data are in `shared/db/mock-ids.constants.ts`; each starts like the id of the same record in the API examples.
+- The mock server keeps the session, the user, the projects, threads, messages and runs that `POST` creates, and the runs that are stopped, as records (`shared/db/mock-db.utils.ts`). The browser worker keeps them in browser storage, so they survive a reload; `?mock-reset` in the page address starts again from the fixtures. Unit tests keep them in memory, and the test setup resets them after each test.
 
 To mock a new endpoint:
 

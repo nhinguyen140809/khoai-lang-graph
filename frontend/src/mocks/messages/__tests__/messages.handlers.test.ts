@@ -5,7 +5,7 @@ import type { Run } from '@/modules/run/entities'
 import type { Thread } from '@/modules/thread/entities'
 import { apiUrl } from '@/shared/api/request/api-url.utils'
 
-import { runIds, threadIds } from '../../shared/mock-ids.constants'
+import { runIds, threadIds } from '../../shared/db/mock-ids.constants'
 import { nameFromMessage, type SentMessage } from '../messages.handlers'
 import {
   firstMessageCases,

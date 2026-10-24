@@ -1,4 +1,4 @@
-import { runIds, threadIds } from '../../shared/mock-ids.constants'
+import { runIds, threadIds } from '../../../shared/db/mock-ids.constants'
 
 /** GET /threads/{thread_id}/runs in the scenario of the page address: the runs it lists. */
 export const runListCases = [

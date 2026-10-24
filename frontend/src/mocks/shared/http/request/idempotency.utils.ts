@@ -3,8 +3,8 @@ import { HttpResponse, type HttpResponseResolver } from 'msw'
 import { ApiErrorCode, HttpStatus } from '@/shared/api/error/api-error.types'
 import { idempotencyKeyHeader } from '@/shared/api/idempotency.constants'
 
-import { mockRecord } from './mock-db.utils'
-import { problem } from './problem.utils'
+import { mockRecord } from '../../db/mock-db.utils'
+import { problem } from '../response/problem.utils'
 
 interface StoredAnswer {
   /** The body of the request that the key came with. */

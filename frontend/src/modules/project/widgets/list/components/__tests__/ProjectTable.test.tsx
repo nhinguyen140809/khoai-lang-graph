@@ -4,7 +4,7 @@ import { http, HttpResponse } from 'msw'
 import { afterEach, describe, expect, it, vi } from 'vitest'
 
 import { server } from '@/mocks/msw-server.setup'
-import { projectIds } from '@/mocks/shared/mock-ids.constants'
+import { projectIds } from '@/mocks/shared/db/mock-ids.constants'
 import {
   noProjectFilters,
   type ProjectFilters,

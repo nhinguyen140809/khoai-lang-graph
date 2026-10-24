@@ -1,3 +1,4 @@
+import { internalError } from '../http/response/problem.utils'
 import {
   type HandlerScenario,
   type MockRunState,
@@ -5,7 +6,6 @@ import {
   type MockScenario,
   mockScenarios,
 } from './mock-scenario.types'
-import { internalError } from './problem.utils'
 
 function isMockScenario(value: string): value is (typeof mockScenarios)[number] {
   return (mockScenarios as readonly string[]).includes(value)

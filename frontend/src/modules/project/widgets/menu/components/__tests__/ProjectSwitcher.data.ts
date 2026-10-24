@@ -1,6 +1,6 @@
 import { http, HttpResponse } from 'msw'
 
-import { projectIds } from '@/mocks/shared/mock-ids.constants'
+import { projectIds } from '@/mocks/shared/db/mock-ids.constants'
 
 /** The open project, the answer about it, and what the button on the top bar says. */
 export const switcherLabelCases = [

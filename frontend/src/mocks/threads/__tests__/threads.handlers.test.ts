@@ -5,7 +5,7 @@ import { apiUrl } from '@/shared/api/request/api-url.utils'
 
 import { extraProjectSpecs } from '../../projects/extra-project-specs.fixtures'
 import { mockProjects } from '../../projects/projects.fixtures'
-import { runIds, threadIds } from '../../shared/mock-ids.constants'
+import { runIds, threadIds } from '../../shared/db/mock-ids.constants'
 import { threadErrorCases, threadListCases, threadRunStateCases } from './threads.handlers.data'
 
 interface Page<T> {

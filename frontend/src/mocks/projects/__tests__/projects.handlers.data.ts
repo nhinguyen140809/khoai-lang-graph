@@ -1,7 +1,7 @@
 import type { Project } from '@/modules/project/entities'
 
-import { IdPrefix, projectIds } from '../../shared/mock-ids.constants'
-import { mockId } from '../../shared/mock-ids.utils'
+import { IdPrefix, projectIds } from '../../shared/db/mock-ids.constants'
+import { mockId } from '../../shared/db/mock-ids.utils'
 import { extraProjectSpecs } from '../extra-project-specs.fixtures'
 import { bulkProjectCount } from '../projects.constants'
 import { mockProjects } from '../projects.fixtures'

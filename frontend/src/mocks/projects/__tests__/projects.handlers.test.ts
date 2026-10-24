@@ -3,7 +3,7 @@ import { afterEach, describe, expect, it } from 'vitest'
 import type { Project } from '@/modules/project/entities'
 import { apiUrl } from '@/shared/api/request/api-url.utils'
 
-import { projectIds } from '../../shared/mock-ids.constants'
+import { projectIds } from '../../shared/db/mock-ids.constants'
 import {
   createProjectCases,
   createProjectScenarioCases,
