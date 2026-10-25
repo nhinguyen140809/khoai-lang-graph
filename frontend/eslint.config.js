@@ -398,8 +398,20 @@ const FILE_KINDS = {
   features: ['types', 'schema', 'store', 'reducer', 'constants', 'utils'],
   widgets: ['types', 'store', 'reducer', 'constants', 'utils', 'fixtures'],
   shared: ['types', 'store', 'reducer', 'config', 'constants', 'utils'],
-  mocks: ['types', 'store', 'constants', 'utils', 'handlers', 'fixtures', 'setup'],
-  test: ['utils', 'setup'],
+  mocks: [
+    'types',
+    'store',
+    'constants',
+    'utils',
+    'handlers',
+    'fixtures',
+    'lookup',
+    'changes',
+    'problems',
+    'validators',
+    'setup',
+  ],
+  test: ['utils', 'types', 'setup'],
 }
 const ALL_FILE_KINDS = [...new Set(Object.values(FILE_KINDS).flat())]
 const KIND_FOLDERS = {
@@ -698,8 +710,9 @@ export default defineConfig([
           // Unit tests: only in a __tests__ folder, named after the file under test plus .test,
           // and the cases of a data-driven test after the file under test plus .data
           '**/__tests__/*.tsx': '+([A-Z])*([a-zA-Z0-9]).test',
-          // Playwright: a spec, the cases of its tests beside it, and the helpers of a folder
-          'tests/**/*.ts': '+([a-z0-9])*(-+([a-z0-9])).@(spec|data|utils)',
+          // Playwright: a spec, the cases of its tests beside it, the helpers of a folder, and the
+          // values that several specs share
+          'tests/**/*.ts': '@(index|+([a-z0-9])*(-+([a-z0-9])).@(spec|data|utils|constants))',
           '**/hooks/__tests__/*.ts': 'use+([A-Z])*([a-zA-Z0-9]).@(test|data)',
           '**/!(hooks)/__tests__/*.ts': `@(+([A-Z])*([a-zA-Z0-9]).data|${kindFileName(ALL_FILE_KINDS)}.@(test|data))`,
         },
