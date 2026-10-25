@@ -1,4 +1,4 @@
-import { ApiError } from '@/shared/api/api-error.utils'
+import { ApiError } from '@/shared/api/error/api-error.utils'
 
 /** An API error with the field problems given, as a form gets it. */
 export const failed = (fieldErrors: ApiError['fieldErrors']) =>

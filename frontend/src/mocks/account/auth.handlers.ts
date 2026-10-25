@@ -2,10 +2,10 @@ import { http, HttpResponse } from 'msw'
 
 import type { Me } from '@/modules/user/entities'
 
-import { mockRecord } from '../shared/mock-db.utils'
-import { mockScenario, neverAnswer } from '../shared/mock-scenario.utils'
-import { unauthenticated, validationFailed } from '../shared/problem.utils'
-import { readBodyFields } from '../shared/request-body.utils'
+import { mockRecord } from '../shared/db/mock-db.utils'
+import { readBodyFields } from '../shared/http/request/request-body.utils'
+import { unauthenticated, validationFailed } from '../shared/http/response/problem.utils'
+import { mockScenario, neverAnswer } from '../shared/scenario/mock-scenario.utils'
 import { meRecord } from './me.handlers'
 
 // The session of the mock server: signed in until the user signs out.

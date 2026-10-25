@@ -2,7 +2,7 @@ import { http } from 'msw'
 import { afterEach, describe, expect, it } from 'vitest'
 
 import { server } from '@/mocks/msw-server.setup'
-import { mockRunId } from '@/mocks/runs/runs.handlers'
+import { mockRunId } from '@/mocks/runs/handlers/runs.handlers'
 
 import { createRun } from '../runs.api'
 import { failedRunCases } from './runs.api.data'

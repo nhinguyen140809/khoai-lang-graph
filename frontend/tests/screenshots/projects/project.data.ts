@@ -1,6 +1,6 @@
 import { expect, type Page } from '@playwright/test'
 
-import { projectIds } from '../../../src/mocks/shared/mock-ids.constants'
+import { projectIds } from '../../../src/mocks/shared/db/mock-ids.constants'
 import { type Shot, visit } from '../screenshot.utils'
 
 const mentor = `/projects/${projectIds.mentor}/activity`

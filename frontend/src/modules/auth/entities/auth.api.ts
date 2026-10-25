@@ -1,4 +1,4 @@
-import { apiCommand } from '@/shared/api/api-fetch.utils'
+import { apiCommand } from '@/shared/api/request/api-fetch.utils'
 
 import type { LoginBody, RegisterBody } from './auth.types'
 

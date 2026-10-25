@@ -5,7 +5,7 @@ import { useRouter } from 'next/navigation'
 
 import { type Project, projectName, unfinishedRunCount } from '@/modules/project/entities'
 import { ConfirmDialog } from '@/shared/components/ui/confirm-dialog'
-import { routes } from '@/shared/config/routes'
+import { routes } from '@/shared/routes'
 
 import { useDeleteProject } from '../hooks/useDeleteProject'
 

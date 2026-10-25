@@ -1,8 +1,8 @@
 import { http, HttpResponse } from 'msw'
 
-import { mockRecord } from '../shared/mock-db.utils'
-import { answerScenario } from '../shared/mock-scenario.utils'
-import { notFound } from '../shared/problem.utils'
+import { mockRecord } from '../shared/db/mock-db.utils'
+import { notFound } from '../shared/http/response/problem.utils'
+import { answerScenario } from '../shared/scenario/mock-scenario.utils'
 import { mockMe } from './me.fixtures'
 
 /** The signed-in user; registering an account replaces it. */

@@ -1,6 +1,6 @@
 import type { Page } from '@playwright/test'
 
-import { projectIds } from '../../../src/mocks/shared/mock-ids.constants'
+import { projectIds } from '../../../src/mocks/shared/db/mock-ids.constants'
 import { type Shot, visit } from '../screenshot.utils'
 
 const failed = (page: Page) => page.getByRole('heading', { name: 'Something went wrong' })

@@ -1,4 +1,4 @@
-import { projectIds } from '../../../src/mocks/shared/mock-ids.constants'
+import { projectIds } from '../../../src/mocks/shared/db/mock-ids.constants'
 
 /** A project opened from the list: the address of the list, the status of the project there, and its id. */
 export const openedProjectCases = [

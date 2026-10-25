@@ -1,6 +1,6 @@
 import { useTheme } from 'next-themes'
 
-import { useIsHydrated } from '@/shared/hooks/useIsHydrated'
+import { useIsHydrated } from '@/shared/lib/hydration/hooks/useIsHydrated'
 
 /**
  * The theme chosen, and the function that chooses one. The theme is stored in this browser, so it

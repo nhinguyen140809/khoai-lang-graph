@@ -1,6 +1,6 @@
 import { beforeEach, describe, expect, it } from 'vitest'
 
-import { browserStorage } from '@/shared/lib/browser-storage.utils'
+import { browserStorage } from '@/shared/lib/storage/browser-storage.utils'
 
 import { useEditorTabsStore } from '../editor-tabs.store'
 import { neighborTab } from '../editor-tabs.utils'

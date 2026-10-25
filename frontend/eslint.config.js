@@ -229,7 +229,7 @@ function climbPattern(depth) {
 // hooks of its slice, which hold what follows a call.
 const componentPatterns = [
   {
-    regex: '\\.api$|/shared/api/api-fetch\\.utils$',
+    regex: '\\.api$|/shared/api/request/api-fetch\\.utils$',
     message: 'A component calls the API through a hook, which calls <subject>.api.ts.',
   },
   {
@@ -267,13 +267,13 @@ const syntax = {
       selector:
         "CallExpression[callee.name='persist'] > ObjectExpression:not(:has(> Property[key.name='storage']))",
       message:
-        'A persisted store passes storage: persistStorage(...) or persistStorageByEntry(...) of @/shared/lib/browser-storage.utils, which handles storage that is missing, blocked or full.',
+        'A persisted store passes storage: persistStorage(...) or persistStorageByEntry(...) of @/shared/lib/storage/browser-storage.utils, which handles storage that is missing, blocked or full.',
     },
     {
       selector:
         "CallExpression[callee.name='persist'] > ObjectExpression > Property[key.name='name']:not([value.callee.name='storageKey'])",
       message:
-        'Name the key of a persisted store with storageKey(...) of @/shared/lib/browser-storage.utils.',
+        'Name the key of a persisted store with storageKey(...) of @/shared/lib/storage/browser-storage.utils.',
     },
   ],
   bracketClasses: [
@@ -488,16 +488,17 @@ export default defineConfig([
     },
   },
   {
-    // Browser storage is read and written through src/shared/lib/browser-storage.utils.ts only, which
+    // Browser storage is read and written through src/shared/lib/storage/browser-storage.utils.ts only, which
     // handles storage that is missing, blocked or full.
     files: ['src/**/*.{ts,tsx}', 'tests/**/*.ts'],
-    ignores: ['src/shared/lib/browser-storage.utils.ts'],
+    ignores: ['src/shared/lib/storage/browser-storage.utils.ts'],
     rules: {
       'no-restricted-globals': [
         'error',
         ...['localStorage', 'sessionStorage'].map((name) => ({
           name,
-          message: 'Use browserStorage or persistStorage from @/shared/lib/browser-storage.utils.',
+          message:
+            'Use browserStorage or persistStorage from @/shared/lib/storage/browser-storage.utils.',
         })),
       ],
       'no-restricted-properties': [
@@ -507,7 +508,7 @@ export default defineConfig([
             object,
             property,
             message:
-              'Use browserStorage or persistStorage from @/shared/lib/browser-storage.utils.',
+              'Use browserStorage or persistStorage from @/shared/lib/storage/browser-storage.utils.',
           })),
         ),
       ],
@@ -664,8 +665,8 @@ export default defineConfig([
     files: ['src/**/*.{ts,tsx}', 'tests/**/*.ts'],
     ignores: [
       'src/shared/components/ui/**',
-      'src/shared/hooks/use-mobile.ts',
-      'src/shared/lib/utils.ts',
+      'src/shared/lib/viewport/hooks/use-mobile.ts',
+      'src/shared/lib/cn/index.ts',
       // Next.js file conventions: routing files, metadata files, and src-level entry points.
       ...nextRoutingFiles,
       'src/@(proxy|instrumentation|instrumentation-client).ts',
@@ -721,7 +722,10 @@ export default defineConfig([
   {
     // shadcn/ui code is copied from the registry. Keep it close to upstream so
     // `shadcn add --overwrite` diffs stay small; only relax stylistic type rules here.
-    files: ['src/shared/components/ui/**/*.{ts,tsx}', 'src/shared/hooks/use-mobile.ts'],
+    files: [
+      'src/shared/components/ui/**/*.{ts,tsx}',
+      'src/shared/lib/viewport/hooks/use-mobile.ts',
+    ],
     rules: {
       'react-hooks/set-state-in-effect': 'off',
       '@typescript-eslint/consistent-type-definitions': 'off',

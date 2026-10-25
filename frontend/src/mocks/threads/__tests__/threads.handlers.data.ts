@@ -1,4 +1,4 @@
-import { projectIds, runIds, threadIds } from '../../shared/mock-ids.constants'
+import { projectIds, runIds, threadIds } from '../../shared/db/mock-ids.constants'
 
 /** A request for a list of threads in the scenario of the page address: the ids it lists. */
 export const threadListCases = [

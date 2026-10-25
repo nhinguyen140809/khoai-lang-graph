@@ -2,7 +2,7 @@
 
 import type { ReactNode } from 'react'
 
-import { isNotFoundError } from '@/shared/api/api-error.utils'
+import { isNotFoundError } from '@/shared/api/error/api-error.utils'
 
 import { useProject } from '../hooks/useProjectQueries'
 

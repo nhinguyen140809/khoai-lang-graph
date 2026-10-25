@@ -1,6 +1,6 @@
 import type { Project } from '@/modules/project/entities'
 
-import { projectIds, userId } from '../shared/mock-ids.constants'
+import { projectIds, userId } from '../shared/db/mock-ids.constants'
 
 // Mock projects, after the project of the API examples: an online platform where university
 // students find mentors.

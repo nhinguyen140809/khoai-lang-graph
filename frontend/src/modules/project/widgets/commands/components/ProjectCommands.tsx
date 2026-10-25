@@ -15,7 +15,7 @@ import {
   useOpenRenameProjectDialog,
 } from '@/modules/project/features/rename'
 import { type PaletteCommand, useCommands } from '@/shared/components/frame'
-import { routes } from '@/shared/config/routes'
+import { routes } from '@/shared/routes'
 
 interface ProjectCommandsProps {
   /** The open project, left out of the projects to open. */

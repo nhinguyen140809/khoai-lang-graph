@@ -1,5 +1,5 @@
 import { Skeleton } from '@/shared/components/ui/skeleton'
-import { cn } from '@/shared/lib/utils'
+import { cn } from '@/shared/lib/cn/index'
 
 import { CenteredState } from './CenteredState'
 import type { StateSize } from './state.types'

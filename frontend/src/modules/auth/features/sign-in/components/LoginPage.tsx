@@ -9,7 +9,7 @@ import { Button } from '@/shared/components/ui/button'
 import { FieldError, FieldGroup } from '@/shared/components/ui/field'
 import { PendingButton } from '@/shared/components/ui/pending-button'
 import { Tooltip, TooltipContent, TooltipTrigger } from '@/shared/components/ui/tooltip'
-import { routes } from '@/shared/config/routes'
+import { routes } from '@/shared/routes'
 
 import { useSignIn } from '../hooks/useSignIn'
 import { type SignInForm, signInFormSchema } from '../sign-in.schema'

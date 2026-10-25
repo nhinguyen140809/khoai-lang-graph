@@ -6,7 +6,7 @@ import { afterEach, beforeEach, describe, expect, it, vi } from 'vitest'
 
 import { server } from '@/mocks/msw-server.setup'
 import { mockProjects } from '@/mocks/projects/projects.fixtures'
-import { projectIds } from '@/mocks/shared/mock-ids.constants'
+import { projectIds } from '@/mocks/shared/db/mock-ids.constants'
 import { useProjectPromptStore } from '@/modules/project/features/create'
 import { useRenameProjectDialogStore } from '@/modules/project/features/rename'
 import { ProjectDialogs } from '@/modules/project/widgets/dialogs'

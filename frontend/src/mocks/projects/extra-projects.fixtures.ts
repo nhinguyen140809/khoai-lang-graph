@@ -4,8 +4,8 @@ import { isUnfinishedRunStatus } from '@/modules/run/entities'
 import type { Thread } from '@/modules/thread/entities'
 
 import { buildMockRun, scriptedSteps } from '../runs/runs.fixtures'
-import { IdPrefix, userId } from '../shared/mock-ids.constants'
-import { mockId } from '../shared/mock-ids.utils'
+import { IdPrefix, userId } from '../shared/db/mock-ids.constants'
+import { mockId } from '../shared/db/mock-ids.utils'
 import { extraProjectSpecs } from './extra-project-specs.fixtures'
 import type { ExtraProjectSpec } from './extra-project-specs.types'
 

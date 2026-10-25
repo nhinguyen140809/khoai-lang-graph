@@ -226,7 +226,7 @@ Shared code knows no object of the product. What several modules read without be
 | Code | Where | Why |
 |---|---|---|
 | The two views of the app, the `Wording` of a value, and `ViewContext` with `useView` | `shared/lib/view/` | Every layer reads them; `Providers` of `src/providers/`, in the app layer, gives the app its view |
-| The addresses of the pages (`routes`) | `shared/config/routes/` | Every module links to the pages of other modules; the folders of `src/app/` are the routes themselves, and the route types of Next.js check each address |
+| The addresses of the pages (`routes`) | `shared/routes/` | Every module links to the pages of other modules; the folders of `src/app/` are the routes themselves, and the route types of Next.js check each address |
 | The tones of a status and their classes | `shared/lib/tone/` | The UI components and the marks of every module color a state with them |
 | The languages of the documents | `shared/config/output-language/` | The app offers them, today in the dialog that creates a project; project, the run config and the user settings all carry one, and in `project` it would make `run` read `project` |
 | `AuthScreen`, the frame of the sign-in and sign-up screens | `shared/components/frame/layouts/`, with the other layouts of whole screens | It holds no object and no action |

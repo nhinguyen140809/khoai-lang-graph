@@ -5,10 +5,10 @@ import { toast } from 'sonner'
 
 import { createProject, projectKeys } from '@/modules/project/entities'
 import { sendFirstMessage } from '@/modules/thread/entities'
-import { errorMessageOf } from '@/shared/api/api-error.utils'
-import { newIdempotencyKey } from '@/shared/api/idempotency.utils'
+import { errorMessageOf } from '@/shared/api/error/api-error.utils'
+import { newIdempotencyKey } from '@/shared/api/idempotency/idempotency.utils'
 import { formErrorOf, showFieldProblems } from '@/shared/components/form'
-import { routes } from '@/shared/config/routes'
+import { routes } from '@/shared/routes'
 
 import { createProjectMessages } from '../new-project.constants'
 import { type NewProject, type NewProjectForm, newProjectFormSchema } from '../new-project.schema'

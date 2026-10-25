@@ -98,9 +98,10 @@ frontend/
 │   │   │   ├── state/       # query states: loading, error, empty, not found
 │   │   │   ├── form/        # the fields of forms
 │   │   │   └── filter/      # the filters of a list: the button, the form it opens, the reducer of their values and its hooks
-│   │   ├── hooks/, lib/     # generic hooks and utilities; lib/ also has a folder per topic: view/ (the view of the app, useView), tone/, formatters/
+│   │   ├── lib/             # generic utilities, a folder per topic, each with its hooks in hooks/: view/ (the view of the app, useView), tone/, formatters/, hotkey/, timing/, url/, storage/, hydration/, viewport/, cn/
 │   │   ├── api/             # fetch and its errors, query client, API URL, generated/: generated API client (do not edit)
-│   │   └── config/          # what the app sets once: routes/ (the addresses of the pages), output-language/
+│   │   ├── routes/          # the addresses of the pages: routes, the builder of an address, the pages of the sign-in
+│   │   └── config/          # what the app sets once: page-names/ (the names of the home page), output-language/
 │   ├── mocks/               # MSW handlers shared by dev mocking, unit tests, and E2E
 │   └── test/                # Vitest setup
 └── tests/
@@ -120,7 +121,7 @@ pnpm ui:add dialog --diff          # compare the local file with the registry ve
 pnpm fix                           # apply this repo's ESLint and Prettier style
 ```
 
-- Files are written to `src/shared/components/ui/` according to the aliases in `components.json` (`@/shared/components/ui`, `@/shared/lib/utils`, `@/shared/hooks`). They are regular project source and can be edited.
+- Files are written to `src/shared/components/ui/` according to the aliases in `components.json` (`@/shared/components/ui`, `@/shared/lib/cn`, `@/shared/lib/viewport`). They are regular project source and can be edited.
 - The CLI writes code in its own style (double quotes, its own import order). `pnpm fix` converts it to the repo style; afterwards `pnpm check` should pass.
 - The configured style is `radix-nova`: controls 32px high with `text-sm` text, and inputs in `text-base` on small screens so that phones do not zoom on them. The icon library is Lucide (`lucide-react`).
 - The components came from `radix-mira` and took the classes that `radix-nova` changes, string by string, so the changes of this project stay in them. `pnpm ui:add <name> --diff` shows how a local file differs from its Nova version in the registry.
@@ -250,7 +251,7 @@ Vietnamese text needs a font that ships the `vietnamese` subset. The subsets of 
 - `src/app/` holds only routing files. A `page.tsx` renders a component of a widget or a feature.
 - An `error.tsx` catches what fails to render under its folder, inside the layout of that folder, so the frame stays around the error: the one of `(home)` and the one of a project. What fails in a layout, such as the frame, falls to the `error.tsx` of the folder above: `src/app/error.tsx` catches the frames and the pages without their own, such as the sign-in page, and shows the error alone on the page. `src/app/global-error.tsx` catches what fails in the root layout, such as its providers; it replaces the root layout, so it renders the document itself, without the providers. Each item on the activity bar and the status bar has an `ErrorBoundary` of `react-error-boundary` of its own: an item that fails to render leaves the bar, not the screen. The boundaries call `retry`, which loads the data of the page again and renders it again.
 - `/render-error` and `/projects/<project_id>/render-error` are pages that fail to render on purpose, to show the `error.tsx` of `(home)` and of a project. Like `/design-system`, they exist only in development; production builds answer 404.
-- Every endpoint except register, login and health answers 401 without a session. When a request sent with `apiRequest` or `apiCommand` (`src/shared/api/api-fetch.utils.ts`) answers 401, the query client (`src/shared/api/query-client.config.ts`) opens `/login?next=<the page>`, which returns to the page after signing in; `next` is kept only when it is a path of this app. Signing out (`UserMenu` of `modules/user/widgets/menu`) ends the session, then loads the sign-in page in full, which drops what the app kept in memory.
+- Every endpoint except register, login and health answers 401 without a session. When a request sent with `apiRequest` or `apiCommand` (`src/shared/api/request/api-fetch.utils.ts`) answers 401, the query client (`src/shared/api/query-client/query-client.config.ts`) opens `/login?next=<the page>`, which returns to the page after signing in; `next` is kept only when it is a path of this app. Signing out (`UserMenu` of `modules/user/widgets/menu`) ends the session, then loads the sign-in page in full, which drops what the app kept in memory.
 - Files in `src/app/` are Server Components: they render on the server and cannot use state, effects, or event handlers. A component that needs those starts with `'use client'`. Most feature components are Client Components.
 - Links use `<Link href="...">` from `next/link`. `href` is type-checked against the existing routes (`typedRoutes` in `next.config.ts`); `pnpm dev` and `pnpm build` regenerate the route types.
 - A library that touches `window` or `document` while it loads (PDF viewer, code editor, graph layout worker) is imported with `next/dynamic` and `ssr: false` from a Client Component.
@@ -361,7 +362,7 @@ Habits that help:
 
 ## API client
 
-- A feature calls the API through its `*.api.ts` files, one for each resource it reads, with `apiRequest` or `apiCommand` of `src/shared/api/api-fetch.utils.ts`, and its hooks name their queries with the key factory of `<feature>.keys.ts`. An answer with an error status throws an `ApiError` of `api-error.utils.ts`: the status, the `code` of the body (the stable value to branch on), the field problems, and a message. `api-error.types.ts` lists the statuses (`HttpStatus`) and the codes (`ApiErrorCode`) of the API. The query client retries a failed query once unless the answer was a 4xx (`retryOnce` of `api-retry.utils.ts`), and opens the sign-in page on a 401.
+- A feature calls the API through its `*.api.ts` files, one for each resource it reads, with `apiRequest` or `apiCommand` of `src/shared/api/request/api-fetch.utils.ts`, and its hooks name their queries with the key factory of `<feature>.keys.ts`. An answer with an error status throws an `ApiError` of `api-error.utils.ts`: the status, the `code` of the body (the stable value to branch on), the field problems, and a message. `api-error.types.ts` lists the statuses (`HttpStatus`) and the codes (`ApiErrorCode`) of the API. The query client retries a failed query once unless the answer was a 4xx (`retryOnce` of `api-retry.utils.ts`), and opens the sign-in page on a 401.
 - A request that starts work (sending a message, and later resume, retry and export) carries an idempotency key: the hook makes it once for the action of the user with `newIdempotencyKey()` (`idempotency.utils.ts`), before the first request, and gives it to the API function, which passes it as the `idempotencyKey` option of `apiRequest` or `apiCommand`. A retry of the action sends the same key, so the server does the work once; a mutation of such an action may retry with `retry: retryOnce`.
 - The typed API client in `src/shared/api/generated/` is generated by `pnpm codegen` from `frontend/openapi.json`, which the backend exports (`just codegen` at the repo root runs both steps). Both are committed and never edited by hand. The schema file does not exist yet, so `pnpm codegen` fails until the backend is in place.
 - `openapi-ts.config.ts` already asks for a fetch client whose calls throw on an error status, and zod checks of the answers. It generates no query options or query keys: the keys stay in `<feature>.keys.ts`, where they keep their hierarchy for invalidation, and the generated query options read the request from their own key. When the first client is generated:
@@ -377,11 +378,11 @@ All mock code lives in `src/mocks/`, in one folder per part of the API, named li
 src/mocks/
 ├── msw-browser.setup.ts  # the handlers of the browser worker (dev mocking, E2E)
 ├── msw-server.setup.ts   # the handlers of the unit tests
-├── shared/               # records, ids, scenarios, pages of a list, error answers
+├── shared/               # db/ (records, ids), http/ (request/, response/: pages of a list, error answers, idempotency), scenario/
 ├── account/              # /auth, /me
 ├── projects/             # /projects
 ├── threads/              # threads
-└── runs/                 # runs, the stream
+└── runs/                 # runs, the stream (handlers/)
 ```
 
 Each folder holds a pair of files per API resource:
@@ -403,8 +404,8 @@ The same handlers serve `pnpm dev:mock`, the unit tests, and the E2E tests, so a
 | `auth`       | `POST /auth/register`, `POST /auth/login`, `POST /auth/logout`, and a 401 for every other endpoint without a session                                              |
 | `me`         | `GET /me`                                                                                                                                                         |
 
-- The ids of the mock data are in `shared/mock-ids.constants.ts`; each starts like the id of the same record in the API examples.
-- The mock server keeps the session, the user, the projects, threads, messages and runs that `POST` creates, and the runs that are stopped, as records (`shared/mock-db.utils.ts`). The browser worker keeps them in browser storage, so they survive a reload; `?mock-reset` in the page address starts again from the fixtures. Unit tests keep them in memory, and the test setup resets them after each test.
+- The ids of the mock data are in `shared/db/mock-ids.constants.ts`; each starts like the id of the same record in the API examples.
+- The mock server keeps the session, the user, the projects, threads, messages and runs that `POST` creates, and the runs that are stopped, as records (`shared/db/mock-db.utils.ts`). The browser worker keeps them in browser storage, so they survive a reload; `?mock-reset` in the page address starts again from the fixtures. Unit tests keep them in memory, and the test setup resets them after each test.
 
 To mock a new endpoint:
 

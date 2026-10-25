@@ -2,7 +2,7 @@
 
 import { useEffect, useEffectEvent, useId, useLayoutEffect, useRef } from 'react'
 
-import { matchesHotkey } from '@/shared/lib/hotkey.utils'
+import { matchesHotkey } from '@/shared/lib/hotkey/hotkey.utils'
 
 import type { PaletteCommand } from '../command.types'
 import { shownKey } from '../command.utils'

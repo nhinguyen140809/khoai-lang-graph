@@ -7,9 +7,9 @@ import {
   runIds,
   threadIds,
   userId,
-} from '../shared/mock-ids.constants'
-import { mockId } from '../shared/mock-ids.utils'
-import type { MockRunState } from '../shared/mock-scenario.types'
+} from '../shared/db/mock-ids.constants'
+import { mockId } from '../shared/db/mock-ids.utils'
+import type { MockRunState } from '../shared/scenario/mock-scenario.types'
 
 // Mock runs and run steps. The third run of the main thread of the mentor platform is the run of
 // the API examples: it retries the second run from its planner step and waits at the analysis
