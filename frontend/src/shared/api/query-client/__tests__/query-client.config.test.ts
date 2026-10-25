@@ -1,8 +1,8 @@
 import { beforeEach, describe, expect, it, vi } from 'vitest'
 
 import type * as authRedirect from '../../../lib/url/reload.utils'
-import { retryOnce } from '../api-retry.utils'
 import { createQueryClient } from '../query-client.config'
+import { retryOnce } from '../query-retry.utils'
 import { keptPageCases, unauthorizedError } from './query-client.config.data'
 
 const { redirectToSignIn } = vi.hoisted(() => ({ redirectToSignIn: vi.fn() }))

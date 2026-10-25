@@ -5,13 +5,13 @@ import { z, ZodError } from 'zod'
 import { server } from '@/mocks/msw-server.setup'
 
 import { ApiError } from '../../error/api-error.utils'
-import { apiCommand, apiRequest, fetchPage } from '../api-fetch.utils'
+import { apiCommand, apiRequest, fetchPage } from '../api-request.utils'
 import {
   commandMethodCases,
   failedRequestCases,
   pageCases,
   sentRequestCases,
-} from './api-fetch.utils.data'
+} from './api-request.utils.data'
 
 const itemSchema = z.object({ id: z.string() })
 

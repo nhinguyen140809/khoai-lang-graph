@@ -1,6 +1,6 @@
 import { HttpResponse } from 'msw'
 
-import type { apiCommand } from '../api-fetch.utils'
+import type { apiCommand } from '../api-request.utils'
 
 type Options = Parameters<typeof apiCommand>[1]
 
