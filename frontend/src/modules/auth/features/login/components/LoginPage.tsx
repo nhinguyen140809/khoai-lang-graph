@@ -11,8 +11,8 @@ import { PendingButton } from '@/shared/components/ui/pending-button'
 import { Tooltip, TooltipContent, TooltipTrigger } from '@/shared/components/ui/tooltip'
 import { routes } from '@/shared/routes'
 
-import { useSignIn } from '../hooks/useSignIn'
-import { type SignInForm, signInFormSchema } from '../sign-in.schema'
+import { useSignIn } from '../hooks/useLogin'
+import { type SignInForm, signInFormSchema } from '../login.schema'
 
 interface LoginPageProps {
   /** The page to return to after signing in. */

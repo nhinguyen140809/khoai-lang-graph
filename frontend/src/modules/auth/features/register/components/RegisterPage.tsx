@@ -9,8 +9,8 @@ import { FieldError, FieldGroup } from '@/shared/components/ui/field'
 import { PendingButton } from '@/shared/components/ui/pending-button'
 import { routes } from '@/shared/routes'
 
-import { useCreateAccount } from '../hooks/useCreateAccount'
-import { type AccountForm, accountFormSchema } from '../sign-up.schema'
+import { useCreateAccount } from '../hooks/useRegister'
+import { type AccountForm, accountFormSchema } from '../register.schema'
 
 interface RegisterPageProps {
   /** The page to open after the account is created. */

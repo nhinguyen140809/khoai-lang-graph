@@ -7,8 +7,8 @@ import { login, register, type RegisterBody, useOpenAfterSignIn } from '@/module
 import { formErrorOf, showFieldProblems } from '@/shared/components/form'
 import { routes } from '@/shared/routes'
 
-import { signUpMessages } from '../sign-up.constants'
-import { type AccountForm, accountFormSchema } from '../sign-up.schema'
+import { signUpMessages } from '../register.constants'
+import { type AccountForm, accountFormSchema } from '../register.schema'
 
 /**
  * Creates an account, then signs in with it, since creating an account does not start a session,
