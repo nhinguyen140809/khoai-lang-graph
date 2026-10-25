@@ -72,6 +72,8 @@ In `src/`, read variables through `env` of `@/shared/config/env`, which checks t
 | `pnpm fix`             | `lint:fix` followed by `format`.                                                                                                               |
 | `pnpm check`           | `typecheck`, `lint`, `format:check`, and `test`, one after another to keep memory use low. Run it before opening a PR.                         |
 | `pnpm test`            | Run the unit tests once (Vitest).                                                                                                              |
+| `pnpm test:coverage`   | Run the unit tests with a coverage report (text summary and `coverage/coverage-summary.json`).                                                 |
+| `pnpm coverage:report` | Print the coverage of `coverage/coverage-summary.json` as a Markdown table by module and folder; the CI posts it on the pull request.          |
 | `pnpm test:watch`      | Run the unit tests in watch mode.                                                                                                              |
 | `pnpm e2e`             | Run the Playwright tests. They start their own dev server on port 3100 with mocks enabled.                                                     |
 | `pnpm e2e:install`     | Download the Chromium build used by Playwright. Needed once per machine before the first `pnpm e2e`.                                           |
