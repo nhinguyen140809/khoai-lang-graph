@@ -5,16 +5,20 @@ import { isUnfinishedRunStatus, type Run } from '@/modules/run/entities'
 import type { FieldProblem } from '@/shared/api/error/api-error.utils'
 import { outputLanguages } from '@/shared/config/output-language'
 
+import { bulkProjects, extraProjects } from '../generated/fixtures/generated-projects.fixtures'
+import { bulkProjectCount } from '../generated/generated.constants'
 import { allRuns } from '../runs/handlers/runs.handlers'
-import { mockRecord } from '../shared/db/mock-db.utils'
 import { IdPrefix } from '../shared/db/mock-ids.constants'
 import { createdId } from '../shared/db/mock-ids.utils'
+import { mockRecord } from '../shared/db/mock-state.utils'
 import { readBodyFields } from '../shared/http/request/request-body.utils'
+import {
+  invalidState,
+  notFound,
+  validationFailed,
+} from '../shared/http/response/error-response.utils'
 import { emptyPage, paginate } from '../shared/http/response/pagination.utils'
-import { invalidState, notFound, validationFailed } from '../shared/http/response/problem.utils'
 import { answerScenario, neverAnswer, pageParam } from '../shared/scenario/mock-scenario.utils'
-import { bulkProjects, extraProjects } from './extra-projects.fixtures'
-import { bulkProjectCount } from './projects.constants'
 import { buildMockProject, mockProjects } from './projects.fixtures'
 import { rollupRunStatus } from './run-status-rollup.utils'
 

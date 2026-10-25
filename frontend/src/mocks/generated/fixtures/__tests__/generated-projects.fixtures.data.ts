@@ -1,7 +1,7 @@
-import { mockRuns } from '../../runs/runs.fixtures'
-import { mockThreads } from '../../threads/threads.fixtures'
-import { extraProjects, extraRuns, extraThreads } from '../extra-projects.fixtures'
-import { mockProjects } from '../projects.fixtures'
+import { mockProjects } from '../../../projects/projects.fixtures'
+import { mockRuns } from '../../../runs/runs.fixtures'
+import { mockThreads } from '../../../threads/threads.fixtures'
+import { extraProjects, extraRuns, extraThreads } from '../generated-projects.fixtures'
 
 /** The ids of each kind of record: those of the fixtures, then those of the extra projects. */
 export const recordIdCases = [

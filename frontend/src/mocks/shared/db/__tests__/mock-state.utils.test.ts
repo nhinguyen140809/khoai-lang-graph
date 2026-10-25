@@ -2,12 +2,12 @@ import { afterEach, describe, expect, it, vi } from 'vitest'
 
 import { browserStorage, storageKey } from '@/shared/lib/storage/browser-storage.utils'
 
-import type * as mockDb from '../mock-db.utils'
+import type * as mockDb from '../mock-state.utils'
 
 // The module keeps whether records go to browser storage, so each test loads its own copy.
 async function loadMockDb(): Promise<typeof mockDb> {
   vi.resetModules()
-  return import('../mock-db.utils')
+  return import('../mock-state.utils')
 }
 
 const storedKey = storageKey('mock:counter')

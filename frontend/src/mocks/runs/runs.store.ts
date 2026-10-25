@@ -1,6 +1,6 @@
 import type { Run } from '@/modules/run/entities'
 
-import { mockRecord } from '../shared/db/mock-db.utils'
+import { mockRecord } from '../shared/db/mock-state.utils'
 
 // What the mock server changes about runs while the app runs: the runs that messages started, and
 // the runs that were stopped. The changes are kept apart from the fixtures, which never change.

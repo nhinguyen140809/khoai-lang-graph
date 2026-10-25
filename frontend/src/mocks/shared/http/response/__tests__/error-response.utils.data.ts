@@ -1,4 +1,4 @@
-import { internalError, notFound, unauthenticated, validationFailed } from '../problem.utils'
+import { internalError, notFound, unauthenticated, validationFailed } from '../error-response.utils'
 
 /** A problem that the handlers share, and the status, code and fields it answers with. */
 export const sharedProblemCases = [

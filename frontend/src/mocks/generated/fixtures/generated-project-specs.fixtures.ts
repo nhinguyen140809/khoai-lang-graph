@@ -1,4 +1,4 @@
-import type { ExtraProjectSpec } from './extra-project-specs.types'
+import type { ExtraProjectSpec } from '../generated-project-specs.types'
 
 // A project of the mock data beyond the four of `projects.fixtures.ts`, and not a bulk row.
 export const extraProjectSpecs: ExtraProjectSpec[] = [

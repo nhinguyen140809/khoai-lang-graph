@@ -3,11 +3,11 @@ import type { Run, RunStep } from '@/modules/run/entities'
 import { isUnfinishedRunStatus } from '@/modules/run/entities'
 import type { Thread } from '@/modules/thread/entities'
 
-import { buildMockRun, scriptedSteps } from '../runs/runs.fixtures'
-import { IdPrefix, userId } from '../shared/db/mock-ids.constants'
-import { mockId } from '../shared/db/mock-ids.utils'
-import { extraProjectSpecs } from './extra-project-specs.fixtures'
-import type { ExtraProjectSpec } from './extra-project-specs.types'
+import { buildMockRun, scriptedSteps } from '../../runs/runs.fixtures'
+import { IdPrefix, userId } from '../../shared/db/mock-ids.constants'
+import { mockId } from '../../shared/db/mock-ids.utils'
+import type { ExtraProjectSpec } from '../generated-project-specs.types'
+import { extraProjectSpecs } from './generated-project-specs.fixtures'
 
 // Mock projects beyond the four of `projects.fixtures.ts`: each has a thread, a run in one of the
 // states of a run, and its steps. They are generated from the specs, so that a spec is all it takes to add

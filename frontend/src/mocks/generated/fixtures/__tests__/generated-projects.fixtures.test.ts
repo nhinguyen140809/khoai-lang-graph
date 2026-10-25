@@ -2,16 +2,16 @@ import { describe, expect, it } from 'vitest'
 
 import { isUnfinishedRunStatus } from '@/modules/run/entities'
 
-import { extraProjectSpecs } from '../extra-project-specs.fixtures'
+import { bulkProjectCount } from '../../generated.constants'
+import { extraProjectSpecs } from '../generated-project-specs.fixtures'
 import {
   bulkProjects,
   extraProjects,
   extraRuns,
   extraRunSteps,
   extraThreads,
-} from '../extra-projects.fixtures'
-import { bulkProjectCount } from '../projects.constants'
-import { extraProjectCases, lastStepCases, recordIdCases } from './extra-projects.fixtures.data'
+} from '../generated-projects.fixtures'
+import { extraProjectCases, lastStepCases, recordIdCases } from './generated-projects.fixtures.data'
 
 function unique(ids: string[]) {
   return new Set(ids).size === ids.length

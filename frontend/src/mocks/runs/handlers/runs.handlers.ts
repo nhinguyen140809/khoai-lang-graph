@@ -3,16 +3,16 @@ import { http, HttpResponse } from 'msw'
 import type { Run, RunStep } from '@/modules/run/entities'
 import { isUnfinishedRunStatus } from '@/modules/run/entities'
 
-import { extraRuns, extraRunSteps } from '../../projects/extra-projects.fixtures'
+import { extraRuns, extraRunSteps } from '../../generated/fixtures/generated-projects.fixtures'
+import { invalidState, notFound } from '../../shared/http/response/error-response.utils'
 import { paginate } from '../../shared/http/response/pagination.utils'
-import { invalidState, notFound } from '../../shared/http/response/problem.utils'
 import {
   answerScenario,
   mockRunState,
   mockScenario,
 } from '../../shared/scenario/mock-scenario.utils'
-import { changeRun, createdRuns, withRunChanges } from '../mock-runs.store'
 import { mockRuns, mockRunSteps } from '../runs.fixtures'
+import { changeRun, createdRuns, withRunChanges } from '../runs.store'
 
 // With `?mock-runs=empty`, no run exists.
 export function allRuns(): Run[] {

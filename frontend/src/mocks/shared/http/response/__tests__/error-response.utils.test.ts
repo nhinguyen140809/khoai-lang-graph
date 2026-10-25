@@ -1,7 +1,7 @@
 import { describe, expect, it } from 'vitest'
 
-import { problem } from '../problem.utils'
-import { sharedProblemCases } from './problem.utils.data'
+import { problem } from '../error-response.utils'
+import { sharedProblemCases } from './error-response.utils.data'
 
 describe('problem', () => {
   it('answers in the Problem Details format', async () => {
