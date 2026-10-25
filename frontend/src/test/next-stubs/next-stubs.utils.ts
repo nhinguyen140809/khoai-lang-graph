@@ -4,8 +4,8 @@ import { vi } from 'vitest'
 // Stand-ins for next/navigation and next/link in unit tests, which run without the Next.js
 // router. A test file sets them up with:
 //
-//   vi.mock('next/navigation', async () => (await import('@/test/next-mocks.utils')).navigationMock)
-//   vi.mock('next/link', async () => (await import('@/test/next-mocks.utils')).linkMock)
+//   vi.mock('next/navigation', async () => (await import('@/test/next-stubs/next-stubs.utils')).navigationMock)
+//   vi.mock('next/link', async () => (await import('@/test/next-stubs/next-stubs.utils')).linkMock)
 //
 // and sets the current address with `setPathname('/projects/p1/console')`.
 

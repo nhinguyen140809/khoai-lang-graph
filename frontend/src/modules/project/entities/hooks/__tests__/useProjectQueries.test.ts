@@ -1,7 +1,7 @@
 import { renderHook, waitFor } from '@testing-library/react'
 import { describe, expect, it } from 'vitest'
 
-import { TestProviders } from '@/test/TestProviders'
+import { TestProviders } from '@/test/render/TestProviders'
 
 import { useProject, useRecentProjects } from '../useProjectQueries'
 

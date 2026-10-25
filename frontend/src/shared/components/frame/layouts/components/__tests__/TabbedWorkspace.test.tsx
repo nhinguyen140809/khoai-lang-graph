@@ -3,7 +3,7 @@ import type { Route } from 'next'
 import type { ReactNode } from 'react'
 import { beforeEach, describe, expect, it, vi } from 'vitest'
 
-import { setPathname } from '@/test/next-mocks.utils'
+import { setPathname } from '@/test/next-stubs/next-stubs.utils'
 
 import type { Destination } from '../../../destinations/destination.types'
 import { DestinationsContext } from '../../../destinations/hooks/useDestinations'
@@ -18,8 +18,11 @@ import { useEditorTab } from '../../../tabs/hooks/useEditorTab'
 import { Workspace } from '../TabbedWorkspace'
 import { newTabCases, sidePanelCases, tab } from './TabbedWorkspace.data'
 
-vi.mock('next/navigation', async () => (await import('@/test/next-mocks.utils')).navigationMock)
-vi.mock('next/link', async () => (await import('@/test/next-mocks.utils')).linkMock)
+vi.mock(
+  'next/navigation',
+  async () => (await import('@/test/next-stubs/next-stubs.utils')).navigationMock,
+)
+vi.mock('next/link', async () => (await import('@/test/next-stubs/next-stubs.utils')).linkMock)
 
 function feature(id: string, title: string, content: string): Destination {
   return {

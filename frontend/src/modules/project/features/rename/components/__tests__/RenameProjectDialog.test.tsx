@@ -4,7 +4,7 @@ import { describe, expect, it, vi } from 'vitest'
 
 import { server } from '@/mocks/msw-server.setup'
 import { projectIds } from '@/mocks/shared/db/mock-ids.constants'
-import { TestProviders } from '@/test/TestProviders'
+import { TestProviders } from '@/test/render/TestProviders'
 
 import { RenameProjectDialog } from '../RenameProjectDialog'
 import { renameProblemCases } from './RenameProjectDialog.data'

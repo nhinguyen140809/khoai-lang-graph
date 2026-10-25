@@ -4,14 +4,17 @@ import { http, HttpResponse } from 'msw'
 import { beforeEach, describe, expect, it, vi } from 'vitest'
 
 import { server } from '@/mocks/msw-server.setup'
-import { routerMock } from '@/test/next-mocks.utils'
-import { TestProviders } from '@/test/TestProviders'
+import { routerMock } from '@/test/next-stubs/next-stubs.utils'
+import { TestProviders } from '@/test/render/TestProviders'
 
 import { LoginPage } from '../LoginPage'
 import { missingFieldCases, refusedSignInCases, returnCases } from './LoginPage.data'
 
-vi.mock('next/navigation', async () => (await import('@/test/next-mocks.utils')).navigationMock)
-vi.mock('next/link', async () => (await import('@/test/next-mocks.utils')).linkMock)
+vi.mock(
+  'next/navigation',
+  async () => (await import('@/test/next-stubs/next-stubs.utils')).navigationMock,
+)
+vi.mock('next/link', async () => (await import('@/test/next-stubs/next-stubs.utils')).linkMock)
 
 beforeEach(() => {
   routerMock.replace.mockClear()

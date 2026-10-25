@@ -11,8 +11,8 @@ import type { Route } from 'next'
 import type { ReactNode } from 'react'
 import { afterEach, beforeEach, describe, expect, it, vi } from 'vitest'
 
-import { setPathname } from '@/test/next-mocks.utils'
-import { TestProviders } from '@/test/TestProviders'
+import { setPathname } from '@/test/next-stubs/next-stubs.utils'
+import { TestProviders } from '@/test/render/TestProviders'
 
 import { PanelRegion } from '../../../panels/panel.types'
 import { usePanelsStore } from '../../../panels/panels.store'
@@ -23,7 +23,10 @@ import { DestinationsContext } from '../../hooks/useDestinations'
 import { useSideFeatureStore } from '../../side-feature.store'
 import { ActivityBar } from '../ActivityBar'
 
-vi.mock('next/navigation', async () => (await import('@/test/next-mocks.utils')).navigationMock)
+vi.mock(
+  'next/navigation',
+  async () => (await import('@/test/next-stubs/next-stubs.utils')).navigationMock,
+)
 
 const destinations: Destination[] = [
   {

@@ -2,7 +2,7 @@ import { act, renderHook, waitFor } from '@testing-library/react'
 import { describe, expect, it } from 'vitest'
 
 import { mockRunId } from '@/mocks/runs/handlers/runs.handlers'
-import { TestProviders } from '@/test/TestProviders'
+import { TestProviders } from '@/test/render/TestProviders'
 
 import { useChat } from '../useChat'
 import { blankDrafts, sentDraftCases } from './useChat.data'

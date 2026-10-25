@@ -4,7 +4,7 @@ import { createElement, type ReactNode } from 'react'
 import { beforeEach, describe, expect, it, vi } from 'vitest'
 
 import { browserStorage } from '@/shared/lib/storage/browser-storage.utils'
-import { setPathname } from '@/test/next-mocks.utils'
+import { setPathname } from '@/test/next-stubs/next-stubs.utils'
 
 import type { Destination } from '../../destinations/destination.types'
 import { useSideFeatureStore } from '../../destinations/side-feature.store'
@@ -15,7 +15,10 @@ import { TabGroupContext } from '../../tabs/hooks/useTabGroup'
 import { useRestoreFrame } from '../useRestoreFrame'
 import { chosenFeatureCases } from './useRestoreFrame.data'
 
-vi.mock('next/navigation', async () => (await import('@/test/next-mocks.utils')).navigationMock)
+vi.mock(
+  'next/navigation',
+  async () => (await import('@/test/next-stubs/next-stubs.utils')).navigationMock,
+)
 
 const SIDE_FEATURE_KEY = useSideFeatureStore.persist.getOptions().name ?? ''
 const TABS_KEY = useEditorTabsStore.persist.getOptions().name ?? ''

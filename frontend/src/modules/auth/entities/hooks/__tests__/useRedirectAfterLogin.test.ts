@@ -3,12 +3,15 @@ import { renderHook } from '@testing-library/react'
 import { createElement, type ReactNode } from 'react'
 import { beforeEach, describe, expect, it, vi } from 'vitest'
 
-import { routerMock } from '@/test/next-mocks.utils'
+import { routerMock } from '@/test/next-stubs/next-stubs.utils'
 
 import { useOpenAfterSignIn } from '../useRedirectAfterLogin'
 import { returnCases } from './useRedirectAfterLogin.data'
 
-vi.mock('next/navigation', async () => (await import('@/test/next-mocks.utils')).navigationMock)
+vi.mock(
+  'next/navigation',
+  async () => (await import('@/test/next-stubs/next-stubs.utils')).navigationMock,
+)
 
 function renderWithCache(next: string | null) {
   const client = new QueryClient()

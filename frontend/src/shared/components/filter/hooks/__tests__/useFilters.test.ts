@@ -1,7 +1,7 @@
 import { act, renderHook } from '@testing-library/react'
 import { afterEach, describe, expect, it } from 'vitest'
 
-import { routerMock, setPathname, setSearch } from '@/test/next-mocks.utils'
+import { routerMock, setPathname, setSearch } from '@/test/next-stubs/next-stubs.utils'
 
 import { testFields } from '../../__tests__/filter.reducer.data'
 import { useFilters } from '../useFilters'

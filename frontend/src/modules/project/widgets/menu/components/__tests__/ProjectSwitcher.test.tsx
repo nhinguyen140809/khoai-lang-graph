@@ -10,14 +10,17 @@ import { projectIds } from '@/mocks/shared/db/mock-ids.constants'
 import { useProjectPromptStore } from '@/modules/project/features/create'
 import { useRenameProjectDialogStore } from '@/modules/project/features/rename'
 import { ProjectDialogs } from '@/modules/project/widgets/dialogs'
-import { routerMock } from '@/test/next-mocks.utils'
-import { TestProviders } from '@/test/TestProviders'
+import { routerMock } from '@/test/next-stubs/next-stubs.utils'
+import { TestProviders } from '@/test/render/TestProviders'
 
 import { ProjectSwitcher } from '../ProjectSwitcher'
 import { switcherLabelCases } from './ProjectSwitcher.data'
 
-vi.mock('next/link', async () => (await import('@/test/next-mocks.utils')).linkMock)
-vi.mock('next/navigation', async () => (await import('@/test/next-mocks.utils')).navigationMock)
+vi.mock('next/link', async () => (await import('@/test/next-stubs/next-stubs.utils')).linkMock)
+vi.mock(
+  'next/navigation',
+  async () => (await import('@/test/next-stubs/next-stubs.utils')).navigationMock,
+)
 
 beforeEach(() => {
   useProjectPromptStore.setState({ focusRequested: false })

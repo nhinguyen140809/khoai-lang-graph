@@ -8,13 +8,16 @@ import { server } from '@/mocks/msw-server.setup'
 import { IdPrefix } from '@/mocks/shared/db/mock-ids.constants'
 import { createdId } from '@/mocks/shared/db/mock-ids.utils'
 import { Dialog, DialogContent, DialogTitle } from '@/shared/components/ui/dialog'
-import { routerMock } from '@/test/next-mocks.utils'
-import { TestProviders } from '@/test/TestProviders'
+import { routerMock } from '@/test/next-stubs/next-stubs.utils'
+import { TestProviders } from '@/test/render/TestProviders'
 
 import { NewProjectForm } from '../NewProjectForm'
 import { blankIdeas, createCases, failedCreateCases, failedSendCases } from './NewProjectForm.data'
 
-vi.mock('next/navigation', async () => (await import('@/test/next-mocks.utils')).navigationMock)
+vi.mock(
+  'next/navigation',
+  async () => (await import('@/test/next-stubs/next-stubs.utils')).navigationMock,
+)
 
 const IDEA = 'Mentor platform for students.'
 const activity = `/projects/${createdId(IdPrefix.Project, 1)}/activity`

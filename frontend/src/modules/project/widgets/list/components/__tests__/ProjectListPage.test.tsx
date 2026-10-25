@@ -4,13 +4,16 @@ import { delay, http } from 'msw'
 import { afterEach, describe, expect, it, vi } from 'vitest'
 
 import { server } from '@/mocks/msw-server.setup'
-import { routerMock, setPathname, setSearch } from '@/test/next-mocks.utils'
-import { TestProviders } from '@/test/TestProviders'
+import { routerMock, setPathname, setSearch } from '@/test/next-stubs/next-stubs.utils'
+import { TestProviders } from '@/test/render/TestProviders'
 
 import { ProjectListPage } from '../ProjectListPage'
 
-vi.mock('next/navigation', async () => (await import('@/test/next-mocks.utils')).navigationMock)
-vi.mock('next/link', async () => (await import('@/test/next-mocks.utils')).linkMock)
+vi.mock(
+  'next/navigation',
+  async () => (await import('@/test/next-stubs/next-stubs.utils')).navigationMock,
+)
+vi.mock('next/link', async () => (await import('@/test/next-stubs/next-stubs.utils')).linkMock)
 
 function renderPage() {
   return render(<ProjectListPage />, { wrapper: TestProviders })
