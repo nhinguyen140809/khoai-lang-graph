@@ -15,8 +15,8 @@ import { usePanelsStore } from '../../../panels/panels.store'
 import { useEditorTabsStore } from '../../../tabs/editor-tabs.store'
 import type { EditorTab } from '../../../tabs/editor-tabs.types'
 import { useEditorTab } from '../../../tabs/hooks/useEditorTab'
-import { Workspace } from '../Workspace'
-import { newTabCases, sidePanelCases, tab } from './Workspace.data'
+import { Workspace } from '../TabbedWorkspace'
+import { newTabCases, sidePanelCases, tab } from './TabbedWorkspace.data'
 
 vi.mock('next/navigation', async () => (await import('@/test/next-mocks.utils')).navigationMock)
 vi.mock('next/link', async () => (await import('@/test/next-mocks.utils')).linkMock)
