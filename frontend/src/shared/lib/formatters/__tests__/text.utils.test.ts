@@ -1,7 +1,7 @@
 import { describe, expect, it } from 'vitest'
 
-import { initials } from '../user.utils'
-import { initialsCases } from './user.utils.data'
+import { initials } from '../text.utils'
+import { initialsCases } from './text.utils.data'
 
 describe('initials', () => {
   it.each(initialsCases)('%j gives %j', (name, expected) => {

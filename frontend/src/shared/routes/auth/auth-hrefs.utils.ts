@@ -1,7 +1,7 @@
 import type { Route } from 'next'
 
-import { search } from '../builder/route-builder.utils'
-import { RouteParam } from '../builder/route-params.constants'
+import { RouteParam } from '../route-params/route-params.constants'
+import { search } from '../typed-route/typed-route.utils'
 
 // The pages that need no session, and the page to return to that every other page can be. A link
 // may carry any `next`, so it is checked before the app opens it.
