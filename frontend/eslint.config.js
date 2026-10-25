@@ -648,6 +648,11 @@ export default defineConfig([
       ],
       'no-restricted-properties': [
         'error',
+        {
+          object: 'process',
+          property: 'env',
+          message: 'Read an environment variable through env of @/shared/config/env.',
+        },
         ...['window', 'globalThis', 'self'].flatMap((object) =>
           ['localStorage', 'sessionStorage'].map((property) => ({
             object,

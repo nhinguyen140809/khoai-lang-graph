@@ -53,7 +53,7 @@ Copy `.env.example` to `.env.local` (git-ignored) to set variables for `pnpm dev
 | `NEXT_PUBLIC_API_MOCKING` | `enabled` / `disabled` | `enabled` starts the MSW worker and serves `/api` from `src/mocks/`. `pnpm dev:mock` sets it for a single run. |
 | `API_PROXY_TARGET`        | URL                    | Origin that `/api` requests are proxied to. Defaults to `http://localhost:8000`.                               |
 
-In code, read variables through `process.env.<NAME>`. Declare each new variable in `src/env.d.ts`.
+In `src/`, read variables through `env` of `@/shared/config/env`, which checks them when the app starts. Declare each new variable in `src/shared/config/env/env.types.ts` and read it by name in `env.config.ts`, and in `src/env.d.ts`. The root tools (`next.config.ts`, Playwright, ESLint) read `process.env` themselves.
 
 ## Scripts
 
@@ -101,7 +101,7 @@ frontend/
 │   │   ├── lib/             # generic utilities, a folder per topic (the list is in CONTRIBUTING.md)
 │   │   ├── routes/          # the addresses of the pages
 │   │   ├── api/             # request and error, http/ (statuses, methods, headers), query client, API URL, generated/: generated API client (do not edit)
-│   │   └── config/          # what the app sets once: page-names/, output-language/
+│   │   └── config/          # what the app sets once: env/ (the checked environment variables), page-names/, output-language/
 │   ├── mocks/               # MSW handlers shared by dev mocking, unit tests, and E2E
 │   └── test/                # Vitest setup and the helpers of the unit tests: msw/ (calls to the mock server and the requests it records), suites/ (the tests that several files share, as `it*` functions; `requests/`: the request each API function sends and the error it throws, the requests the mock server refuses; `screens/`: the dialog an action asks with before it runs, the fields a form refuses, the states of a query, the toast of a result), next-stubs/ (the router and links of Next.js), render/ (providers and components for rendering), steps/ (what a test does after it has rendered: waiting for a query, answering the dialog of an action, typing in a form, reading a toast, checking what shows on the screen and the page the router was sent to, checking accessibility with axe)
 └── tests/
