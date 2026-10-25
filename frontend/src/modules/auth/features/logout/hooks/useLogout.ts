@@ -2,9 +2,9 @@ import { useMutation } from '@tanstack/react-query'
 import { toast } from 'sonner'
 
 import { logout } from '@/modules/auth/entities'
-import { loadPage } from '@/shared/api/auth-redirect.utils'
 import { HttpStatus } from '@/shared/api/error/api-error.types'
 import { ApiError, errorMessageOf } from '@/shared/api/error/api-error.utils'
+import { loadPage } from '@/shared/lib/url/reload.utils'
 import { routes } from '@/shared/routes'
 
 /**

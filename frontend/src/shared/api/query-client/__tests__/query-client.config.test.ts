@@ -1,13 +1,13 @@
 import { beforeEach, describe, expect, it, vi } from 'vitest'
 
-import type * as authRedirect from '../../auth-redirect.utils'
+import type * as authRedirect from '../../../lib/url/reload.utils'
 import { retryOnce } from '../api-retry.utils'
 import { createQueryClient } from '../query-client.config'
 import { keptPageCases, unauthorizedError } from './query-client.config.data'
 
 const { redirectToSignIn } = vi.hoisted(() => ({ redirectToSignIn: vi.fn() }))
 
-vi.mock('../../auth-redirect.utils', async (importOriginal) => ({
+vi.mock('../../../lib/url/reload.utils', async (importOriginal) => ({
   ...(await importOriginal<typeof authRedirect>()),
   redirectToSignIn,
 }))

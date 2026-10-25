@@ -1,13 +1,13 @@
 import { describe, expect, it } from 'vitest'
 
-import { nextParam, safeNextPath, signInHrefFor } from '../sign-in.utils'
+import { nextParam, safeNextPath, signInHrefFor } from '../auth-hrefs.utils'
 import {
   authHrefCases,
   keptNextPaths,
   nextParamCases,
   replacedNextPaths,
   signInHrefForCases,
-} from './sign-in.utils.data'
+} from './auth-hrefs.utils.data'
 
 describe('safeNextPath', () => {
   it.each(keptNextPaths)('keeps %j', (next) => {

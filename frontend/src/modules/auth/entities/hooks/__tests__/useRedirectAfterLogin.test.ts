@@ -5,8 +5,8 @@ import { beforeEach, describe, expect, it, vi } from 'vitest'
 
 import { routerMock } from '@/test/next-mocks.utils'
 
-import { useOpenAfterSignIn } from '../useOpenAfterSignIn'
-import { returnCases } from './useOpenAfterSignIn.data'
+import { useOpenAfterSignIn } from '../useRedirectAfterLogin'
+import { returnCases } from './useRedirectAfterLogin.data'
 
 vi.mock('next/navigation', async () => (await import('@/test/next-mocks.utils')).navigationMock)
 

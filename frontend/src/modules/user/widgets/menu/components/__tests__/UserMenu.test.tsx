@@ -6,8 +6,8 @@ import { toast } from 'sonner'
 import { beforeEach, describe, expect, it, vi } from 'vitest'
 
 import { server } from '@/mocks/msw-server.setup'
-import type * as authRedirect from '@/shared/api/auth-redirect.utils'
 import { apiUrl } from '@/shared/api/request/api-url.utils'
+import type * as authRedirect from '@/shared/lib/url/reload.utils'
 import { TestProviders } from '@/test/TestProviders'
 
 import { UserMenu } from '../UserMenu'
@@ -16,7 +16,7 @@ import { plannedItems } from './UserMenu.data'
 const { loadPage } = vi.hoisted(() => ({ loadPage: vi.fn() }))
 
 vi.mock('next/link', async () => (await import('@/test/next-mocks.utils')).linkMock)
-vi.mock('@/shared/api/auth-redirect.utils', async (importOriginal) => ({
+vi.mock('@/shared/lib/url/reload.utils', async (importOriginal) => ({
   ...(await importOriginal<typeof authRedirect>()),
   loadPage,
 }))

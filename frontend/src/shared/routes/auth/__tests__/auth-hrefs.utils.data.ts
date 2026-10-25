@@ -1,4 +1,4 @@
-import { registerHref, signInHref } from '../sign-in.utils'
+import { registerHref, signInHref } from '../auth-hrefs.utils'
 
 /** A page of the app to return to, kept as it is. */
 export const keptNextPaths = [
