@@ -17,7 +17,7 @@ import { hotkeyLabel, useModifierKeyName } from '@/shared/lib/hotkey'
 
 import { PaletteGroup, paletteHotkey } from '../command.constants'
 import type { PaletteCommandGroup } from '../command.types'
-import { commandSearchText, groupsBySearch } from '../command.utils'
+import { commandMatchScore, commandSearchText, groupsBySearch } from '../command.utils'
 import { useCommandPalette } from '../hooks/useCommandPalette'
 import { useCommands } from '../hooks/useCommands'
 
@@ -74,7 +74,7 @@ function PaletteSearch({ groups, onChosen }: PaletteSearchProps) {
 
   return (
     // This CommandDialog does not render the Command root itself.
-    <Command>
+    <Command filter={commandMatchScore}>
       <CommandInput
         placeholder="Search or run a command"
         className="text-sm"

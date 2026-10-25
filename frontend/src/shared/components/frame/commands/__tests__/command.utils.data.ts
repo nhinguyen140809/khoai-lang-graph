@@ -34,6 +34,10 @@ const projects = {
   ],
 }
 const run = { heading: 'Run', commands: [{ id: 'run.stop', label: 'Stop run', group: 'Run' }] }
+const accented = {
+  heading: 'Accented',
+  commands: [{ id: 'projects.open.p2', label: 'Mở dự án Nguyễn Văn', group: 'Accented' }],
+}
 const view = {
   heading: 'View',
   commands: [{ id: 'view.commandPalette', label: 'Show all commands', group: 'View' }],
@@ -50,6 +54,12 @@ export const groupsBySearchCases = [
     name: 'keeps the order of groups that match as well',
     search: 'zzz',
     headings: ['Projects', 'Run', 'View'],
+  },
+  {
+    name: 'finds a command with accents by a search without them',
+    search: 'nguyen',
+    headings: ['Accented', 'Projects', 'Run', 'View'],
+    groups: [projects, run, view, accented],
   },
   { name: 'keeps the order without a search', search: ' ', headings: ['Projects', 'Run', 'View'] },
 ].map((testCase) => ({ groups: [projects, run, view], ...testCase }))

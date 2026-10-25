@@ -46,7 +46,7 @@ Conventions:
   |---|---|---|
   | `guards/` | Checks of a value, in two files (`guards`, `presence`): `isRecord`, `isOneOf`, `isString`, `isBlank`, `isEmpty`, `hasText`, `assertPresent` | Parsing an unknown value: `zod` |
   | `collections/` | A copy of a map or a record with an entry set or dropped, and the comparison of two JSON-shaped values: `setEntry`, `removeEntry`, `omit`, `sameValue` | `pick`, `mapValues`, `groupBy`, `shallowEqual`: `Object.groupBy`, `Object.fromEntries`, `useShallow` of zustand, or `es-toolkit` once five of them are needed |
-  | `text/` | How a text is matched, whatever its case and accents: `foldText`, `includesText` | How a text reads: `formatters/` |
+  | `text/` | How a text is matched, whatever its case and accents: `foldText`, `includesText`; the palette scores its search with `foldText` too | How a text reads: `formatters/` |
   | `formatters/` | How a number, a date and a length read, in the fixed locale `formatLocale`: `formatNumber`, `formatPercent`, `formatCurrency`, `formatDate`, `formatDateTime`, `formatDuration`, `formatRelativeTime`, and `initialsOf` for the initials of a name, `capitalize` | A month name or a time zone: `date-fns` |
   | `timing/` | `debounce`, `sleep`, `useNow`, `actionToastDuration` | `throttle` and `retry` when a use appears (queries retry through `canRetryOnce` of `shared/api/query-client`); a time limit on a request: `AbortSignal.timeout` |
   | `url/` | `pathOf`, `isAtOrUnder`, `encodeId`, `reloadTo`, `queryString`, `queryStringOf` | Parsing a query: `URLSearchParams`; the addresses of pages: `routes` |

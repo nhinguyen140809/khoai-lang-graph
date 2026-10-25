@@ -1,6 +1,7 @@
 import { defaultFilter } from 'cmdk'
 
 import { hasText } from '@/shared/lib/guards'
+import { foldText } from '@/shared/lib/text'
 
 import type { PaletteCommand, PaletteCommandGroup } from './command.types'
 
@@ -29,6 +30,14 @@ export function commandSearchText({ group, label, id }: PaletteCommand): string 
 }
 
 /**
+ * How well a command matches a search, with the score of cmdk, but whatever the case and the
+ * accents: "nguyen" finds "Nguyễn". Zero means no match.
+ */
+export function commandMatchScore(value: string, search: string): number {
+  return defaultFilter(foldText(value), foldText(search))
+}
+
+/**
  * The groups while the palette searches: first the group of the command that matches best, with
  * the score of the search of the palette, so that the best match shows at the top of the list.
  * Groups that match as well keep their order, and without a search the order stays. The palette
@@ -40,7 +49,7 @@ export function groupsBySearch(
 ): PaletteCommandGroup[] {
   if (!hasText(search)) return groups
   const best = ({ commands }: PaletteCommandGroup) =>
-    Math.max(0, ...commands.map((command) => defaultFilter(commandSearchText(command), search)))
+    Math.max(0, ...commands.map((command) => commandMatchScore(commandSearchText(command), search)))
   return groups
     .map((group) => ({ group, score: best(group) }))
     .toSorted((a, b) => b.score - a.score)
