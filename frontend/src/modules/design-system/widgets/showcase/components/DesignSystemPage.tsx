@@ -18,6 +18,7 @@ import { GraphCard } from './cards/GraphCard'
 import { ItemsCard } from './cards/ItemsCard'
 import { MarkdownCard } from './cards/MarkdownCard'
 import { NavigationCard } from './cards/NavigationCard'
+import { NumbersCard } from './cards/NumbersCard'
 import { OverlaysCard } from './cards/OverlaysCard'
 import { ReviewCard } from './cards/ReviewCard'
 import { SkeletonCard } from './cards/SkeletonCard'
@@ -54,6 +55,7 @@ export function DesignSystemPage() {
             <CodeCard />
             <AlertsCard />
             <FormCard />
+            <NumbersCard />
             <ExplorerTreeCard />
             <GraphCard />
             <ArtifactTableCard />
