@@ -17,16 +17,19 @@
   "additionalProperties": false,
   "properties": {
     "purpose": {
+      "title": "Purpose",
       "type": "string",
       "description": "What the product is for and who it serves.",
       "x-ui-widget": "textarea"
     },
     "scope": {
+      "title": "Scope",
       "type": "string",
       "description": "What the product covers.",
       "x-ui-widget": "textarea"
     },
     "out_of_scope": {
+      "title": "Out of scope",
       "type": "array",
       "items": {
         "type": "string"
@@ -35,6 +38,7 @@
       "x-ui-widget": "list"
     },
     "definitions": {
+      "title": "Definitions",
       "type": "array",
       "description": "Terms used in the requirements.",
       "items": {
@@ -42,11 +46,13 @@
         "additionalProperties": false,
         "properties": {
           "term": {
+            "title": "Term",
             "type": "string",
             "description": "The term.",
             "x-ui-widget": "text"
           },
           "definition": {
+            "title": "Definition",
             "type": "string",
             "description": "Its meaning in this specification.",
             "x-ui-widget": "textarea"

@@ -21,11 +21,13 @@
   "additionalProperties": false,
   "properties": {
     "statement": {
+      "title": "Statement",
       "type": "string",
       "description": "The requirement, close to the persona's own words.",
       "x-ui-widget": "textarea"
     },
     "topic": {
+      "title": "Topic",
       "type": [
         "string",
         "null"
