@@ -964,7 +964,7 @@ export default defineConfig([
     files: ['src/**/*.{ts,tsx}', 'tests/**/*.ts'],
     ignores: [
       'src/shared/components/ui/**',
-      'src/shared/lib/viewport/hooks/use-mobile.ts',
+      'src/shared/lib/viewport/hooks/useIsMobile.ts',
       // Next.js file conventions: routing files, metadata files, and src-level entry points.
       ...nextRoutingFiles,
       'src/@(proxy|instrumentation|instrumentation-client).ts',
@@ -1023,7 +1023,7 @@ export default defineConfig([
     // `shadcn add --overwrite` diffs stay small; only relax stylistic type rules here.
     files: [
       'src/shared/components/ui/**/*.{ts,tsx}',
-      'src/shared/lib/viewport/hooks/use-mobile.ts',
+      'src/shared/lib/viewport/hooks/useIsMobile.ts',
     ],
     rules: {
       'react-hooks/set-state-in-effect': 'off',
