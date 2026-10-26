@@ -4,7 +4,7 @@ import { toast } from 'sonner'
 import { logout } from '@/modules/auth/entities'
 import { HttpStatus } from '@/shared/api/error/api-error.types'
 import { ApiError, errorMessageOf } from '@/shared/api/error/api-error.utils'
-import { reloadTo } from '@/shared/lib/url/reload.utils'
+import { reloadTo } from '@/shared/lib/url'
 import { routes } from '@/shared/routes'
 
 /**

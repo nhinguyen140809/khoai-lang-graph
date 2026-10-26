@@ -1,3 +1,8 @@
+/** The text with its first letter in upper case: "acceptance criteria" as "Acceptance criteria". */
+export function capitalize(text: string): string {
+  return `${text.charAt(0).toUpperCase()}${text.slice(1)}`
+}
+
 /** The initials of a name for an avatar: the first letters of its first and last words. */
 export function initialsOf(name: string): string {
   const letters = name

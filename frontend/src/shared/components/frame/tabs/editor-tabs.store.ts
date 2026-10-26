@@ -1,11 +1,7 @@
 import { create } from 'zustand'
 import { persist } from 'zustand/middleware'
 
-import {
-  parseStored,
-  persistStorageByEntry,
-  storageKey,
-} from '@/shared/lib/storage/browser-storage.utils'
+import { parseStored, persistStorageByEntry, storageKey } from '@/shared/lib/storage'
 
 import {
   type EditorTab,

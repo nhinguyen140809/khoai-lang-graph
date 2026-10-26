@@ -7,7 +7,7 @@ import { beforeEach, describe, expect, it, vi } from 'vitest'
 
 import { server } from '@/mocks/msw-server.setup'
 import { apiUrl } from '@/shared/api/request/api-url.utils'
-import type * as authRedirect from '@/shared/lib/url/reload.utils'
+import type * as urlModule from '@/shared/lib/url'
 import { TestProviders } from '@/test/render/TestProviders'
 
 import { UserMenu } from '../UserMenu'
@@ -16,8 +16,8 @@ import { plannedItems } from './UserMenu.data'
 const { reloadTo } = vi.hoisted(() => ({ reloadTo: vi.fn() }))
 
 vi.mock('next/link', async () => (await import('@/test/next-stubs/next-stubs.utils')).linkMock)
-vi.mock('@/shared/lib/url/reload.utils', async (importOriginal) => ({
-  ...(await importOriginal<typeof authRedirect>()),
+vi.mock('@/shared/lib/url', async (importOriginal) => ({
+  ...(await importOriginal<typeof urlModule>()),
   reloadTo,
 }))
 

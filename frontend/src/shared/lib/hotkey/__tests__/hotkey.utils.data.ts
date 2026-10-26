@@ -1,4 +1,4 @@
-import type { Hotkey } from '../hotkey.utils'
+import type { Hotkey } from '../hotkey.types'
 
 /** Where a key is pressed: the document, the page body, or a new field of this kind. */
 export type KeyTarget = 'document' | 'body' | 'input' | 'textarea' | 'select'

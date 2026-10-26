@@ -32,7 +32,7 @@ import {
   DropdownMenuTrigger,
 } from '@/shared/components/ui/dropdown-menu'
 import { Skeleton } from '@/shared/components/ui/skeleton'
-import { cn } from '@/shared/lib/cn/index'
+import { cn } from '@/shared/lib/cn'
 import { routes } from '@/shared/routes'
 
 interface ProjectSwitcherProps {

@@ -2,7 +2,7 @@
 
 import { useEffect, useEffectEvent, useId, useLayoutEffect, useRef } from 'react'
 
-import { isHotkeyPressed } from '@/shared/lib/hotkey/hotkey.utils'
+import { isHotkeyPressed } from '@/shared/lib/hotkey'
 
 import type { PaletteCommand } from '../command.types'
 import { shownCommandsKey } from '../command.utils'

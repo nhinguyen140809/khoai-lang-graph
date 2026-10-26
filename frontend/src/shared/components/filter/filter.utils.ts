@@ -1,3 +1,5 @@
+import { queryStringOf } from '@/shared/lib/url'
+
 import type { FilterField, FilterValues } from './filter.types'
 
 /** How many filters have a value, which the button that opens the filters shows. */
@@ -37,6 +39,5 @@ export function filterQuery(
     next.delete(field.key)
     for (const value of values[field.key] ?? []) next.append(field.key, value)
   }
-  const text = next.toString()
-  return text === '' ? '' : `?${text}`
+  return queryStringOf(next)
 }

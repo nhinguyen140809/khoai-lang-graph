@@ -3,7 +3,7 @@ import type { Route } from 'next'
 import { createElement, type ReactNode } from 'react'
 import { beforeEach, describe, expect, it, vi } from 'vitest'
 
-import { browserStorage } from '@/shared/lib/storage/browser-storage.utils'
+import { browserStorage } from '@/shared/lib/storage'
 import { setPathname } from '@/test/next-stubs/next-stubs.utils'
 
 import type { Destination } from '../../destinations/destination.types'

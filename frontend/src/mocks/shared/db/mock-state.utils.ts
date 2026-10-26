@@ -1,4 +1,4 @@
-import { browserStorage, storageKey } from '@/shared/lib/storage/browser-storage.utils'
+import { browserStorage, storageKey } from '@/shared/lib/storage'
 
 // Records that the mock server keeps between requests: the session, the user and the settings,
 // and what POST requests create. The browser worker keeps them in browser storage, so that they
