@@ -64,6 +64,7 @@ import {
   SheetTrigger,
 } from '@/shared/components/ui/sheet'
 import { Tooltip, TooltipContent, TooltipTrigger } from '@/shared/components/ui/tooltip'
+import { sleep } from '@/shared/lib/timing'
 
 import { SampleCard } from '../Sample'
 
@@ -145,11 +146,7 @@ export function OverlaysCard() {
         description="It leaves the list of projects. Restore it from its settings."
         confirmLabel="Archive"
         // The action takes a moment, so the dialog shows that it waits.
-        onConfirm={() =>
-          new Promise<void>((resolve) => {
-            setTimeout(resolve, 1500)
-          })
-        }
+        onConfirm={() => sleep(1500)}
       />
       <Sheet>
         <SheetTrigger asChild>
