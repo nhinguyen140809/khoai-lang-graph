@@ -27,7 +27,7 @@ export function filterValuesOf(
  * The query of an address with the values of the filters in place of those it has, which keeps
  * its other parameters; empty when it has none.
  */
-export function filterSearch(
+export function filterQuery(
   params: URLSearchParams,
   fields: readonly FilterField[],
   values: FilterValues,

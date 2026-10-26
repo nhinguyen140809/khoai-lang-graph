@@ -40,7 +40,7 @@ function isTypingTarget(target: EventTarget | null): boolean {
  * on a US keyboard instead. A hotkey without a modifier does not match while the user types in a
  * field, so it never takes a character away from the text. Alt never matches.
  */
-export function matchesHotkey(event: KeyboardEvent, { key, mod = false, ctrl = false }: Hotkey) {
+export function isHotkeyPressed(event: KeyboardEvent, { key, mod = false, ctrl = false }: Hotkey) {
   const held = ctrl ? event.ctrlKey && !event.metaKey : event.ctrlKey || event.metaKey
   if (event.altKey || held !== (mod || ctrl)) return false
   if (!mod && !ctrl && isTypingTarget(event.target)) return false

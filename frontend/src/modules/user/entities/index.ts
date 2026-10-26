@@ -1,3 +1,3 @@
 export { useMe } from './hooks/useMe'
 export type { Me } from './user.types'
-export { initials } from '@/shared/lib/formatters/text.utils'
+export { initialsOf } from '@/shared/lib/formatters/text.utils'

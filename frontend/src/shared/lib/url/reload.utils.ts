@@ -6,13 +6,13 @@ import { loginHrefFor } from '@/shared/routes'
 /** Leaves the page for the login page, which returns here afterwards. */
 export function redirectToLogin() {
   const href = loginHrefFor(window.location)
-  if (href !== null) loadPage(href)
+  if (href !== null) reloadTo(href)
 }
 
 /**
  * Opens `href` with a full page load, which drops what the app kept in memory, such as the query
  * cache, so that nothing of the previous session shows on the next page.
  */
-export function loadPage(href: string) {
+export function reloadTo(href: string) {
   window.location.assign(href)
 }

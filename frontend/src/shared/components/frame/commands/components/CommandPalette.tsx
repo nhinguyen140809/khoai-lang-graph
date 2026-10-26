@@ -17,7 +17,7 @@ import { useModifierKeyName } from '@/shared/lib/hotkey/hooks/useModifierKeyName
 import { hotkeyLabel } from '@/shared/lib/hotkey/hotkey.utils'
 
 import { PaletteGroup, paletteHotkey } from '../command.constants'
-import { commandValue, type GroupOfCommands, groupsBySearch } from '../command.utils'
+import { commandSearchText, type GroupOfCommands, groupsBySearch } from '../command.utils'
 import { useCommandPalette } from '../hooks/useCommandPalette'
 import { useCommands } from '../hooks/useCommands'
 
@@ -90,7 +90,7 @@ function PaletteSearch({ groups, onChosen }: PaletteSearchProps) {
               return (
                 <CommandItem
                   key={id}
-                  value={commandValue(command)}
+                  value={commandSearchText(command)}
                   disabled={run === undefined}
                   data-variant={variant}
                   // A destructive command keeps the color of an error when it is selected, as a

@@ -21,7 +21,7 @@ interface WorkspaceProps {
  * bar, and the editor follows the tabs, so choosing a feature does not change the editor. The
  * panel keeps its width in pixels when the window is resized.
  */
-export function Workspace({ tabGroup, children }: WorkspaceProps) {
+export function TabbedWorkspace({ tabGroup, children }: WorkspaceProps) {
   const { feature } = useSideFeature()
 
   return (

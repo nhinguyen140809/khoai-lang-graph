@@ -12,7 +12,7 @@ import Link from 'next/link'
 import { type ComponentProps, useMemo, useState } from 'react'
 
 import { useLogout } from '@/modules/auth/features/logout'
-import { initials, type Me, useMe } from '@/modules/user/entities'
+import { initialsOf, type Me, useMe } from '@/modules/user/entities'
 import { useActivityBarItem } from '@/shared/components/frame'
 import { Avatar, AvatarFallback, AvatarImage } from '@/shared/components/ui/avatar'
 import { Button } from '@/shared/components/ui/button'
@@ -75,7 +75,7 @@ function UserAvatar({ me }: { me: Me }) {
   return (
     <Avatar size="sm" aria-hidden>
       {me.avatar_url !== null && <AvatarImage src={me.avatar_url} alt="" />}
-      <AvatarFallback>{initials(me.display_name)}</AvatarFallback>
+      <AvatarFallback>{initialsOf(me.display_name)}</AvatarFallback>
     </Avatar>
   )
 }

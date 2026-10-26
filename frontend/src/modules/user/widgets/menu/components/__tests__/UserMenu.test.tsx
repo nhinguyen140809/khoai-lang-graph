@@ -13,16 +13,16 @@ import { TestProviders } from '@/test/render/TestProviders'
 import { UserMenu } from '../UserMenu'
 import { plannedItems } from './UserMenu.data'
 
-const { loadPage } = vi.hoisted(() => ({ loadPage: vi.fn() }))
+const { reloadTo } = vi.hoisted(() => ({ reloadTo: vi.fn() }))
 
 vi.mock('next/link', async () => (await import('@/test/next-stubs/next-stubs.utils')).linkMock)
 vi.mock('@/shared/lib/url/reload.utils', async (importOriginal) => ({
   ...(await importOriginal<typeof authRedirect>()),
-  loadPage,
+  reloadTo,
 }))
 
 beforeEach(() => {
-  loadPage.mockClear()
+  reloadTo.mockClear()
 })
 
 async function openMenu(name: string | RegExp) {
@@ -54,9 +54,9 @@ describe('UserMenu', () => {
     await confirmLogout()
 
     await vi.waitFor(() => {
-      expect(loadPage).toHaveBeenCalledWith('/login')
+      expect(reloadTo).toHaveBeenCalledWith('/login')
     })
-    expect(loadPage).toHaveBeenCalledTimes(1)
+    expect(reloadTo).toHaveBeenCalledTimes(1)
     expect((await fetch(apiUrl('/api/v1/me'))).status).toBe(401)
   })
 
@@ -138,7 +138,7 @@ describe('UserMenu', () => {
     await userEvent.click(within(dialog).getByRole('button', { name: 'Cancel' }))
 
     expect(screen.queryByRole('alertdialog')).not.toBeInTheDocument()
-    expect(loadPage).not.toHaveBeenCalled()
+    expect(reloadTo).not.toHaveBeenCalled()
     expect((await fetch(apiUrl('/api/v1/me'))).status).toBe(200)
   })
 
@@ -153,7 +153,7 @@ describe('UserMenu', () => {
     await vi.waitFor(() => {
       expect(error).toHaveBeenCalledWith('Failed to sign out (HTTP 500)')
     })
-    expect(loadPage).not.toHaveBeenCalled()
+    expect(reloadTo).not.toHaveBeenCalled()
     // The dialog stays, so that the user can try again or cancel.
     expect(screen.getByRole('alertdialog', { name: 'Sign out?' })).toBeInTheDocument()
     error.mockRestore()
@@ -177,7 +177,7 @@ describe('UserMenu', () => {
       expect(client.getMutationCache().getAll()[0]?.state.status).toBe('error')
     })
     expect(error).not.toHaveBeenCalled()
-    expect(loadPage).not.toHaveBeenCalled()
+    expect(reloadTo).not.toHaveBeenCalled()
     error.mockRestore()
   })
 })

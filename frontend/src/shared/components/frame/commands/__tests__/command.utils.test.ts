@@ -1,6 +1,6 @@
 import { describe, expect, it } from 'vitest'
 
-import { commandGroups, groupsBySearch, shownKey } from '../command.utils'
+import { commandGroups, groupsBySearch, shownCommandsKey } from '../command.utils'
 import {
   commandGroupCases,
   groupsBySearchCases,
@@ -27,6 +27,6 @@ describe('groupsBySearch', () => {
 
 describe('shownKey', () => {
   it.each(shownKeyCases)('$name', ({ command, same }) => {
-    expect(shownKey([command]) === shownKey([shownCommand])).toBe(same)
+    expect(shownCommandsKey([command]) === shownCommandsKey([shownCommand])).toBe(same)
   })
 })

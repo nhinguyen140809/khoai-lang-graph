@@ -4,7 +4,7 @@ import { toast } from 'sonner'
 import { logout } from '@/modules/auth/entities'
 import { HttpStatus } from '@/shared/api/error/api-error.types'
 import { ApiError, errorMessageOf } from '@/shared/api/error/api-error.utils'
-import { loadPage } from '@/shared/lib/url/reload.utils'
+import { reloadTo } from '@/shared/lib/url/reload.utils'
 import { routes } from '@/shared/routes'
 
 /**
@@ -15,7 +15,7 @@ export function useLogout() {
   return useMutation({
     mutationFn: logout,
     onSuccess: () => {
-      loadPage(routes.login())
+      reloadTo(routes.login())
     },
     onError: (error) => {
       // Without a session the query client opens the login page already.

@@ -6,12 +6,12 @@ import {
 } from './editor-tabs.types'
 
 /** The record with the entry of `key` set to `value`, or the same record when it has it already. */
-export function withEntry(record: Record<string, string>, key: string, value: string) {
+export function setGroupTab(record: Record<string, string>, key: string, value: string) {
   return record[key] === value ? record : { ...record, [key]: value }
 }
 
 /** The record without the entry of `key` when it holds `value`, else the same record. */
-export function withoutEntry(record: Record<string, string>, key: string, value: string) {
+export function clearGroupTab(record: Record<string, string>, key: string, value: string) {
   if (record[key] !== value) return record
   return Object.fromEntries(Object.entries(record).filter(([entry]) => entry !== key))
 }

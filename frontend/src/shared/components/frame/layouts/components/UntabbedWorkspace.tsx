@@ -16,7 +16,7 @@ interface PageWorkspaceProps {
  * panel is the one of the feature chosen on the activity bar, else of the page on screen, else of
  * the first feature.
  */
-export function PageWorkspace({ children }: PageWorkspaceProps) {
+export function UntabbedWorkspace({ children }: PageWorkspaceProps) {
   return (
     <SideFeatureSplit>
       <Surface as="main" className="h-full min-w-0">

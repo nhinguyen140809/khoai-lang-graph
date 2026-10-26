@@ -15,7 +15,7 @@ import { usePanelsStore } from '../../../panels/panels.store'
 import { useEditorTabsStore } from '../../../tabs/editor-tabs.store'
 import type { EditorTab } from '../../../tabs/editor-tabs.types'
 import { useEditorTab } from '../../../tabs/hooks/useEditorTab'
-import { Workspace } from '../TabbedWorkspace'
+import { TabbedWorkspace } from '../TabbedWorkspace'
 import { newTabCases, sidePanelCases, tab } from './TabbedWorkspace.data'
 
 vi.mock(
@@ -56,7 +56,7 @@ function Page({ tab }: { tab: EditorTab | null }) {
 function workspace(page: ReactNode) {
   return (
     <DestinationsContext value={{ destinations, tabIcons: {} }}>
-      <Workspace tabGroup="p1">{page}</Workspace>
+      <TabbedWorkspace tabGroup="p1">{page}</TabbedWorkspace>
     </DestinationsContext>
   )
 }
@@ -64,9 +64,9 @@ function workspace(page: ReactNode) {
 function renderWorkspace(given: Destination[] = destinations) {
   render(
     <DestinationsContext value={{ destinations: given, tabIcons: {} }}>
-      <Workspace tabGroup="p1">
+      <TabbedWorkspace tabGroup="p1">
         <p>editor</p>
-      </Workspace>
+      </TabbedWorkspace>
     </DestinationsContext>,
   )
 }

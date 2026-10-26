@@ -1,7 +1,7 @@
 import { fireEvent } from '@testing-library/react'
 import { afterEach, describe, expect, it } from 'vitest'
 
-import { ariaKeyShortcuts, hotkeyKeys, hotkeyLabel, matchesHotkey } from '../hotkey.utils'
+import { ariaKeyShortcuts, hotkeyKeys, hotkeyLabel, isHotkeyPressed } from '../hotkey.utils'
 import {
   ariaKeyShortcutsCases,
   hotkeyKeysCases,
@@ -35,7 +35,7 @@ afterEach(() => {
 
 describe('matchesHotkey', () => {
   it.each(matchesHotkeyCases)('$name: $matches', ({ init, target, hotkey, matches }) => {
-    expect(matchesHotkey(press(init, target), hotkey)).toBe(matches)
+    expect(isHotkeyPressed(press(init, target), hotkey)).toBe(matches)
   })
 })
 

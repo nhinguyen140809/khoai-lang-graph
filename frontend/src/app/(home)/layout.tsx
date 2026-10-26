@@ -3,7 +3,7 @@ import type { ReactNode } from 'react'
 import { ProjectCommands } from '@/modules/project/widgets/commands'
 import { ProjectDialogs } from '@/modules/project/widgets/dialogs'
 import { AccountMenuItem } from '@/modules/user/widgets/menu'
-import { PageCrumb, PageWorkspace, Workbench } from '@/shared/components/frame'
+import { PageCrumb, UntabbedWorkspace, Workbench } from '@/shared/components/frame'
 import { homePageFallback, homePageNames } from '@/shared/config/page-names'
 import { routes } from '@/shared/routes'
 
@@ -28,7 +28,7 @@ export default function HomeLayout({ children }: HomeLayoutProps) {
         </>
       }
     >
-      <PageWorkspace>{children}</PageWorkspace>
+      <UntabbedWorkspace>{children}</UntabbedWorkspace>
     </Workbench>
   )
 }

@@ -2,7 +2,7 @@ import { beforeEach, describe, expect, it, vi } from 'vitest'
 
 import type * as authRedirect from '../../../lib/url/reload.utils'
 import { createQueryClient } from '../query-client.config'
-import { retryOnce } from '../query-retry.utils'
+import { canRetryOnce } from '../query-retry.utils'
 import { keptPageCases, unauthorizedError } from './query-client.config.data'
 
 const { redirectToLogin } = vi.hoisted(() => ({ redirectToLogin: vi.fn() }))
@@ -47,6 +47,6 @@ describe('createQueryClient', () => {
   })
 
   it('tries a failed query once more only when it may answer otherwise', () => {
-    expect(createQueryClient().getDefaultOptions().queries?.retry).toBe(retryOnce)
+    expect(createQueryClient().getDefaultOptions().queries?.retry).toBe(canRetryOnce)
   })
 })

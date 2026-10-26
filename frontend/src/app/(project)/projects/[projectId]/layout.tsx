@@ -3,7 +3,7 @@ import { ProjectCommands } from '@/modules/project/widgets/commands'
 import { ProjectDialogs } from '@/modules/project/widgets/dialogs'
 import { ProjectSwitcher } from '@/modules/project/widgets/menu'
 import { AccountMenuItem } from '@/modules/user/widgets/menu'
-import { PageWorkspace, Workbench, Workspace } from '@/shared/components/frame'
+import { TabbedWorkspace, UntabbedWorkspace, Workbench } from '@/shared/components/frame'
 import { routes } from '@/shared/routes'
 
 /**
@@ -33,9 +33,9 @@ export default async function ProjectLayout({
             </>
           }
         >
-          <PageWorkspace>
+          <UntabbedWorkspace>
             <ProjectNotFound projectId={projectId} />
-          </PageWorkspace>
+          </UntabbedWorkspace>
         </Workbench>
       }
     >
@@ -50,7 +50,7 @@ export default async function ProjectLayout({
           </>
         }
       >
-        <Workspace tabGroup={projectId}>{children}</Workspace>
+        <TabbedWorkspace tabGroup={projectId}>{children}</TabbedWorkspace>
       </Workbench>
     </ProjectGate>
   )

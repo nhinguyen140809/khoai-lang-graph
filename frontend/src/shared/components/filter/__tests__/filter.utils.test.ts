@@ -1,6 +1,6 @@
 import { describe, expect, it } from 'vitest'
 
-import { activeFilterCount, filterSearch, filterValuesOf } from '../filter.utils'
+import { activeFilterCount, filterQuery, filterValuesOf } from '../filter.utils'
 import { testFields } from './filter.reducer.data'
 import { addressSearchCases, addressValuesCases, countCases } from './filter.utils.data'
 
@@ -18,6 +18,6 @@ describe('filterValuesOf', () => {
 
 describe('filterSearch', () => {
   it.each(addressSearchCases)('$name', ({ search, values, query }) => {
-    expect(filterSearch(new URLSearchParams(search), testFields, values)).toBe(query)
+    expect(filterQuery(new URLSearchParams(search), testFields, values)).toBe(query)
   })
 })
