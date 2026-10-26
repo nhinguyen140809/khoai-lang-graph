@@ -2,7 +2,7 @@ import { render, screen } from '@testing-library/react'
 import { describe, expect, it } from 'vitest'
 
 import { server } from '@/mocks/msw-server.setup'
-import { TestProviders } from '@/test/TestProviders'
+import { TestProviders } from '@/test/render/TestProviders'
 
 import { useProject } from '../../hooks/useProjectQueries'
 import { ProjectGate } from '../ProjectGate'

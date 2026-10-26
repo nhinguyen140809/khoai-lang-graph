@@ -1,4 +1,4 @@
-import { LoginPage } from '@/modules/auth/features/sign-in'
+import { LoginPage } from '@/modules/auth/features/login'
 import { nextParam } from '@/shared/routes'
 
 export default async function Page({ searchParams }: PageProps<'/login'>) {

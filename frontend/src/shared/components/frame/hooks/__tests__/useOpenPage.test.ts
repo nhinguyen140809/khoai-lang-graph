@@ -3,7 +3,7 @@ import type { Route } from 'next'
 import { createElement, type ReactNode } from 'react'
 import { beforeEach, describe, expect, it, vi } from 'vitest'
 
-import { routerMock } from '@/test/next-mocks.utils'
+import { routerMock } from '@/test/next-stubs/next-stubs.utils'
 
 import type { Destination } from '../../destinations/destination.types'
 import { DestinationsContext } from '../../destinations/hooks/useDestinations'
@@ -14,7 +14,10 @@ import { useEditorTabsStore } from '../../tabs/editor-tabs.store'
 import { useOpenPage } from '../useOpenPage'
 import { openPageCases } from './useOpenPage.data'
 
-vi.mock('next/navigation', async () => (await import('@/test/next-mocks.utils')).navigationMock)
+vi.mock(
+  'next/navigation',
+  async () => (await import('@/test/next-stubs/next-stubs.utils')).navigationMock,
+)
 
 const destinations: Destination[] = [
   {

@@ -5,7 +5,7 @@ import {
   apiRequest,
   fetchPage,
   type ListPage,
-} from '@/shared/api/request/api-fetch.utils'
+} from '@/shared/api/request/api-request.utils'
 
 import { noProjectFilters } from './projects.constants'
 import {

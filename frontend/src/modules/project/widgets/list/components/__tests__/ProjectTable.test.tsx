@@ -13,8 +13,8 @@ import {
 import { useDeleteProjectDialogStore } from '@/modules/project/features/delete'
 import { useRenameProjectDialogStore } from '@/modules/project/features/rename'
 import { ProjectDialogs } from '@/modules/project/widgets/dialogs'
-import { routerMock } from '@/test/next-mocks.utils'
-import { TestProviders } from '@/test/TestProviders'
+import { routerMock } from '@/test/next-stubs/next-stubs.utils'
+import { TestProviders } from '@/test/render/TestProviders'
 
 import { ProjectTable } from '../ProjectTable'
 import {
@@ -25,8 +25,11 @@ import {
   rowRunCases,
 } from './ProjectTable.data'
 
-vi.mock('next/link', async () => (await import('@/test/next-mocks.utils')).linkMock)
-vi.mock('next/navigation', async () => (await import('@/test/next-mocks.utils')).navigationMock)
+vi.mock('next/link', async () => (await import('@/test/next-stubs/next-stubs.utils')).linkMock)
+vi.mock(
+  'next/navigation',
+  async () => (await import('@/test/next-stubs/next-stubs.utils')).navigationMock,
+)
 
 function renderTable(status: ProjectStatus, filters: ProjectFilters = noProjectFilters) {
   const onClearFilters = vi.fn()

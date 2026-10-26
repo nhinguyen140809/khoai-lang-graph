@@ -5,7 +5,7 @@ import type { Route } from 'next'
 import type { ReactNode } from 'react'
 import { beforeEach, describe, expect, it, vi } from 'vitest'
 
-import { routerMock } from '@/test/next-mocks.utils'
+import { routerMock } from '@/test/next-stubs/next-stubs.utils'
 
 import type { Destination, TabIcons } from '../../../destinations/destination.types'
 import { DestinationsContext } from '../../../destinations/hooks/useDestinations'
@@ -14,8 +14,11 @@ import { TabGroupContext } from '../../hooks/useTabGroup'
 import { EditorTabs } from '../EditorTabs'
 import { ambiguity, closeTabCases, onScreenCases, req, tabIconCases } from './EditorTabs.data'
 
-vi.mock('next/navigation', async () => (await import('@/test/next-mocks.utils')).navigationMock)
-vi.mock('next/link', async () => (await import('@/test/next-mocks.utils')).linkMock)
+vi.mock(
+  'next/navigation',
+  async () => (await import('@/test/next-stubs/next-stubs.utils')).navigationMock,
+)
+vi.mock('next/link', async () => (await import('@/test/next-stubs/next-stubs.utils')).linkMock)
 
 const searchHref = '/projects/p1/search' as Route
 const destinations: Destination[] = [

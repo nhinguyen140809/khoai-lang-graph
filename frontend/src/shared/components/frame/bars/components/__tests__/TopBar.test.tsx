@@ -5,7 +5,7 @@ import { beforeEach, describe, expect, it, vi } from 'vitest'
 import { useCommandsStore } from '../../../commands/commands.store'
 import { TopBar } from '../TopBar'
 
-vi.mock('next/link', async () => (await import('@/test/next-mocks.utils')).linkMock)
+vi.mock('next/link', async () => (await import('@/test/next-stubs/next-stubs.utils')).linkMock)
 
 beforeEach(() => {
   useCommandsStore.setState({ open: false })

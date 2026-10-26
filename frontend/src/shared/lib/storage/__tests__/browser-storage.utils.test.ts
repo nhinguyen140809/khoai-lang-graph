@@ -8,7 +8,7 @@ import {
   persistStorageByEntry,
   storageKey,
 } from '../browser-storage.utils'
-import { parseStoredCases } from './browser-storage.utils.data'
+import { parseStoredCases } from './persist-storage.utils.data'
 
 afterEach(() => {
   vi.restoreAllMocks()

@@ -1,4 +1,4 @@
-import { internalError } from '../http/response/problem.utils'
+import { internalError } from '../http/response/error-response.utils'
 import {
   type HandlerScenario,
   type MockRunState,

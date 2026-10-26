@@ -6,7 +6,7 @@ import { messageHandlers } from './messages/messages.handlers'
 import { projectHandlers } from './projects/projects.handlers'
 import { streamHandlers } from './runs/handlers/run-stream.handlers'
 import { runHandlers } from './runs/handlers/runs.handlers'
-import { keepMockDataInBrowser, resetMockData } from './shared/db/mock-db.utils'
+import { keepMockDataInBrowser, resetMockData } from './shared/db/mock-state.utils'
 import { pageParam } from './shared/scenario/mock-scenario.utils'
 import { threadHandlers } from './threads/threads.handlers'
 

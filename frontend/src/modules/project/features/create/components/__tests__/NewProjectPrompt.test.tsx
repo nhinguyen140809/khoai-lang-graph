@@ -2,7 +2,7 @@ import { act, render, screen } from '@testing-library/react'
 import userEvent from '@testing-library/user-event'
 import { beforeEach, describe, expect, it, vi } from 'vitest'
 
-import { TestProviders } from '@/test/TestProviders'
+import { TestProviders } from '@/test/render/TestProviders'
 
 import { useProjectPromptStore } from '../../project-prompt.store'
 import { NewProjectPrompt } from '../NewProjectPrompt'

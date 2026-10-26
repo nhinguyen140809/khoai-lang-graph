@@ -2,7 +2,7 @@ import { afterEach, describe, expect, it, vi } from 'vitest'
 
 import { server } from '@/mocks/msw-server.setup'
 import { ApiError } from '@/shared/api/error/api-error.utils'
-import { recordRequests, stopRecordingRequests } from '@/test/recorded-requests.utils'
+import { recordRequests, stopRecordingRequests } from '@/test/msw/request-recording.utils'
 
 import { refusedCallCases, sentRequestCases } from './auth.api.data'
 

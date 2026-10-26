@@ -11,7 +11,7 @@ import {
 import Link from 'next/link'
 import { type ComponentProps, useMemo, useState } from 'react'
 
-import { useSignOut } from '@/modules/auth/features/sign-out'
+import { useSignOut } from '@/modules/auth/features/logout'
 import { initials, type Me, useMe } from '@/modules/user/entities'
 import { useActivityBarItem } from '@/shared/components/frame'
 import { Avatar, AvatarFallback, AvatarImage } from '@/shared/components/ui/avatar'

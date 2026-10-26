@@ -3,7 +3,7 @@ import userEvent from '@testing-library/user-event'
 import { ThemeProvider } from 'next-themes'
 import { describe, expect, it } from 'vitest'
 
-import { TestProviders } from '@/test/TestProviders'
+import { TestProviders } from '@/test/render/TestProviders'
 
 import { ThemePicker } from '../ThemePicker'
 

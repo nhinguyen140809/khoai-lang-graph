@@ -2,9 +2,9 @@ import { http, HttpResponse } from 'msw'
 
 import type { Me } from '@/modules/user/entities'
 
-import { mockRecord } from '../shared/db/mock-db.utils'
+import { mockRecord } from '../shared/db/mock-state.utils'
 import { readBodyFields } from '../shared/http/request/request-body.utils'
-import { unauthenticated, validationFailed } from '../shared/http/response/problem.utils'
+import { unauthenticated, validationFailed } from '../shared/http/response/error-response.utils'
 import { mockScenario, neverAnswer } from '../shared/scenario/mock-scenario.utils'
 import { meRecord } from './me.handlers'
 
