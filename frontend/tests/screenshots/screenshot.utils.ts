@@ -1,36 +1,39 @@
 import path from 'node:path'
 
-import { expect, type Locator, type Page, test } from '@playwright/test'
+import type { Locator, Page } from '@playwright/test'
+
+import { test } from '../shared/fixtures.utils'
+import type { UserSteps } from '../shared/steps'
 
 const SCREENSHOTS = path.join(import.meta.dirname, '../../screenshots')
 
 // The badge and the error overlay of the dev server.
 const HIDDEN = 'nextjs-portal { display: none !important; }'
 
-/** A state of a page to take, and the steps to it. */
-export interface Shot {
-  /** What the state shows, such as "Loading"; it names the test and the file. */
-  name: string
-  /** The steps from a new browser page to the state. */
-  steps: (page: Page) => Promise<void>
-  /**
-   * What shows once the state is reached, when the network goes quiet before it: an error shows
-   * after the app tries again, a second later.
-   */
-  ready?: (page: Page) => Locator
+/** What a screenshot takes, when it is not the window as it is. */
+interface ShootOptions {
   /** The part of the page to take, when the state changes only that part, such as the status bar. */
-  part?: (page: Page) => Locator
+  part?: Locator
   /** What the pointer is over when the state is taken. */
-  hover?: (page: Page) => Locator
+  hover?: Locator
   /** Takes the whole length of the page instead of the window. */
   fullPage?: boolean
 }
 
-/** The steps to a state that an address alone shows. */
-export function visit(address: string): Shot['steps'] {
-  return async (page) => {
-    await page.goto(address)
-  }
+/** What the test of a state gets: the page, the user on it, and `shoot` that takes the state. */
+interface ShotFixtures {
+  page: Page
+  user: UserSteps
+  shoot: (options?: ShootOptions) => Promise<void>
+}
+
+/**
+ * Declares the test of one state of a page; the states of a page are numbered in the order
+ * declared. `at` declares a state that an address alone shows.
+ */
+interface ShotTest {
+  (name: string, body: (fixtures: ShotFixtures) => Promise<void>): void
+  at: (name: string, address: string, options?: Pick<ShootOptions, 'fullPage'>) => void
 }
 
 /**
@@ -54,31 +57,46 @@ function slug(text: string) {
 }
 
 /**
- * Takes each state of a page in a test of its own, into screenshots/<window>-<theme>/. A file
+ * Declares the states of a page. Each one is a test of the same shape as an E2E test, which
+ * reaches the state and calls `shoot()` to take it into screenshots/<window>-<theme>/. A file
  * starts with the name of the page and the number of the state, so that the files of a page sort
- * in the order of its states.
+ * in the order in which its states are declared. A state waits for what it shows before `shoot()`,
+ * such as an error that appears after the app tries again.
  */
-export function takeShots(pageName: string, shots: Shot[]) {
+export function screenshots(pageName: string, declare: (shot: ShotTest) => void) {
   test.describe(pageName, () => {
-    for (const [index, shot] of shots.entries()) {
-      test(shot.name, async ({ page }, testInfo) => {
-        await shot.steps(page)
-        if (shot.ready !== undefined)
-          await expect(shot.ready(page)).toBeVisible({ timeout: 20_000 })
-        await settle(page)
-        // A step that clicks leaves the pointer over a row or a button, which would show it hovered.
-        await page.mouse.move(0, 0)
-        await shot.hover?.(page).hover()
+    // The tests of a file are declared in the same order in every worker, so the numbers agree.
+    let count = 0
+    const shot: ShotTest = Object.assign(declareOne, { at })
+    declare(shot)
 
-        const file = `${slug(pageName)}--${String(index + 1).padStart(2, '0')}-${slug(shot.name)}.png`
-        const options = {
-          path: path.join(SCREENSHOTS, testInfo.project.name, file),
-          animations: 'disabled',
-          style: HIDDEN,
-        } as const
-        await (shot.part === undefined
-          ? page.screenshot({ ...options, fullPage: shot.fullPage ?? false })
-          : shot.part(page).screenshot(options))
+    function at(name: string, address: string, options?: Pick<ShootOptions, 'fullPage'>) {
+      declareOne(name, async ({ page, shoot }) => {
+        await page.goto(address)
+
+        await shoot(options)
+      })
+    }
+
+    function declareOne(name: string, body: (fixtures: ShotFixtures) => Promise<void>) {
+      count += 1
+      const file = `${slug(pageName)}--${String(count).padStart(2, '0')}-${slug(name)}.png`
+      test(name, async ({ page, user }, testInfo) => {
+        const shoot = async ({ part, hover, fullPage = false }: ShootOptions = {}) => {
+          await settle(page)
+          // A step that clicks leaves the pointer over a row or a button, which would show it hovered.
+          await page.mouse.move(0, 0)
+          await hover?.hover()
+          const options = {
+            path: path.join(SCREENSHOTS, testInfo.project.name, file),
+            animations: 'disabled',
+            style: HIDDEN,
+          } as const
+          await (part === undefined
+            ? page.screenshot({ ...options, fullPage })
+            : part.screenshot(options))
+        }
+        await body({ page, user, shoot })
       })
     }
   })
