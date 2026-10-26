@@ -16,7 +16,7 @@ export const routeCases = [
     path: '/projects/a%2Fb%20c/activity',
   },
   {
-    page: 'the sign-in page, which returns to the page asked for',
+    page: 'the login page, which returns to the page asked for',
     href: () => routes.login('/settings'),
     path: '/login?next=%2Fsettings',
   },

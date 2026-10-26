@@ -1,8 +1,9 @@
 'use client'
 
-import type { Route } from 'next'
 import { usePathname, useRouter, useSearchParams } from 'next/navigation'
 import { useMemo } from 'react'
+
+import { routeOfAddress } from '@/shared/routes'
 
 import { noFilters } from '../filter.reducer'
 import type { FilterField, FilterValues } from '../filter.types'
@@ -23,7 +24,7 @@ export function useFilters(fields: readonly FilterField[]) {
 
   const apply = (next: FilterValues) => {
     // The address of the page on screen, which is a page of the app.
-    const href = `${pathname}${filterQuery(params, fields, next)}` as Route
+    const href = routeOfAddress(`${pathname}${filterQuery(params, fields, next)}`)
     router.replace(href, { scroll: false })
   }
 

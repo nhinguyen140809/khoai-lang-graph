@@ -1,5 +1,4 @@
 import { XIcon } from 'lucide-react'
-import type { Route } from 'next'
 import Link from 'next/link'
 
 import { Button } from '@/shared/components/ui/button'
@@ -10,6 +9,7 @@ import {
   ContextMenuSeparator,
   ContextMenuTrigger,
 } from '@/shared/components/ui/context-menu'
+import { routeOfAddress } from '@/shared/routes'
 
 import type { EditorTab } from '../editor-tabs.types'
 import { useTabStrip } from '../hooks/useTabStrip'
@@ -45,7 +45,7 @@ export function TabItem({ tab }: TabItemProps) {
           className="group/tab relative flex shrink-0 items-center border-r text-sm data-[active=false]:text-muted-foreground data-[active=false]:hover:bg-sidebar-accent/60 data-[active=false]:hover:text-foreground data-[active=true]:bg-background data-[active=true]:text-foreground data-[active=true]:before:absolute data-[active=true]:before:inset-x-0 data-[active=true]:before:top-0 data-[active=true]:before:h-px data-[active=true]:before:bg-primary"
         >
           <Link
-            href={tab.href as Route}
+            href={routeOfAddress(tab.href)}
             aria-current={active ? 'page' : undefined}
             title={tab.title}
             onAuxClick={(event) => {

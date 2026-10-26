@@ -8,12 +8,11 @@ export function checkedRoute<T extends string>(href: Route<T>): Route {
   return href as Route
 }
 
-/** The query of an address, from the parameters given; empty when none is. */
-export function search(params: Readonly<Record<string, string | undefined>>): '' | `?${string}` {
-  const query = new URLSearchParams()
-  for (const [name, value] of Object.entries(params)) {
-    if (value !== undefined) query.set(name, value)
-  }
-  const text = query.toString()
-  return text === '' ? '' : `?${text}`
+/**
+ * An address that comes from data, such as a path in the address bar or a stored tab, as the type
+ * of the addresses of the pages. The route types cannot check it: what it names is not known until
+ * the app runs. Use `checkedRoute` for an address written in the code.
+ */
+export function routeOfAddress(address: string): Route {
+  return address as Route
 }

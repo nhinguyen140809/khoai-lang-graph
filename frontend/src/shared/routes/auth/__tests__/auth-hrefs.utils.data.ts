@@ -48,7 +48,7 @@ export const authHrefCases = [
   },
   { name: 'loginHref of the home page', build: loginHref, next: '/', href: '/login' },
   {
-    name: 'registerHref of a sign-in page',
+    name: 'registerHref of a login page',
     build: registerHref,
     next: '/login',
     href: '/register',
@@ -68,7 +68,7 @@ export const loginHrefForCases = [
     href: '/login',
   },
   {
-    name: 'stays on the sign-in page',
+    name: 'stays on the login page',
     location: { pathname: '/login', search: '?next=%2Fsettings', hash: '' },
     href: null,
   },
@@ -77,11 +77,4 @@ export const loginHrefForCases = [
     location: { pathname: '/register', search: '', hash: '' },
     href: null,
   },
-]
-
-/** The query of a page, and the one page to return to that it names. */
-export const nextParamCases = [
-  { name: 'one value', query: { next: '/settings' }, next: '/settings' },
-  { name: 'several values', query: { next: ['/a', '/b'] }, next: null },
-  { name: 'no value', query: {}, next: null },
 ]

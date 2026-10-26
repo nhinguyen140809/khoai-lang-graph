@@ -1,7 +1,9 @@
 import type { Route } from 'next'
 
-import { RouteParam } from '../route-params/route-params.constants'
-import { search } from '../typed-route/typed-route.utils'
+import { queryString } from '@/shared/lib/url'
+
+import { RouteParam } from '../route-params'
+import { routeOfAddress } from '../typed-route'
 
 // The pages that need no session, and the page to return to that every other page can be. A link
 // may carry any `next`, so it is checked before the app opens it.
@@ -35,15 +37,16 @@ export function afterLoginPath(next: string | null | undefined): Route {
   if (url.origin !== BASE) return defaultAfterLogin
   const page = url.pathname.replace(/(.)\/+$/, '$1')
   if (authPages.includes(page)) return defaultAfterLogin
-  // A path of this app that came from an address, so the route types cannot check it.
-  return `${url.pathname}${url.search}${url.hash}` as Route
+  return routeOfAddress(`${url.pathname}${url.search}${url.hash}`)
 }
 
 // A page of the account that returns to `next` afterwards; the default page needs no `next`.
 function authHref(page: (typeof AuthPage)[keyof typeof AuthPage], next: string | null | undefined) {
   const target = afterLoginPath(next)
-  const query = search({ [RouteParam.Next]: target === defaultAfterLogin ? undefined : target })
-  return `${page}${query}` as Route
+  const query = queryString({
+    [RouteParam.Next]: target === defaultAfterLogin ? undefined : target,
+  })
+  return routeOfAddress(`${page}${query}`)
 }
 
 /** The login page, which returns to `next` afterwards. */
@@ -66,8 +69,5 @@ export function loginHrefFor({
   return loginHref(`${pathname}${query}${hash}`)
 }
 
-/** The page to return to, read from the query of a login or account page. */
-export function nextParam(query: Record<string, string | string[] | undefined>): string | null {
-  const value = query[RouteParam.Next]
-  return typeof value === 'string' ? value : null
-}
+// Kept until the callers use the new name.
+export { nextParam } from '../route-params/route-params.utils'

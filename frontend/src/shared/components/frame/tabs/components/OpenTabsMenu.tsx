@@ -1,5 +1,4 @@
 import { ChevronDownIcon } from 'lucide-react'
-import type { Route } from 'next'
 import { useRouter } from 'next/navigation'
 
 import { Button } from '@/shared/components/ui/button'
@@ -10,6 +9,7 @@ import {
   DropdownMenuSeparator,
   DropdownMenuTrigger,
 } from '@/shared/components/ui/dropdown-menu'
+import { routeOfAddress } from '@/shared/routes'
 
 import { useTabStrip } from '../hooks/useTabStrip'
 import { TabLabel } from './TabLabel'
@@ -42,7 +42,7 @@ export function OpenTabsMenu() {
             data-preview={tab.id === previewId}
             aria-current={tab.id === onScreen ? 'page' : undefined}
             onSelect={() => {
-              router.push(tab.href as Route)
+              router.push(routeOfAddress(tab.href))
             }}
             className="group/tab"
           >

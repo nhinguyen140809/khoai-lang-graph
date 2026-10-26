@@ -1,15 +1,14 @@
 import { describe, expect, it } from 'vitest'
 
-import { afterLoginPath, loginHrefFor, nextParam } from '../auth-hrefs.utils'
+import { afterLoginPath, loginHrefFor } from '../auth-hrefs.utils'
 import {
   authHrefCases,
   keptNextPaths,
-  nextParamCases,
-  replacedNextPaths,
   loginHrefForCases,
+  replacedNextPaths,
 } from './auth-hrefs.utils.data'
 
-describe('safeNextPath', () => {
+describe('afterLoginPath', () => {
   it.each(keptNextPaths)('keeps %j', (next) => {
     expect(afterLoginPath(next)).toBe(next)
   })
@@ -28,11 +27,5 @@ describe('loginHref and registerHref', () => {
 describe('loginHrefFor', () => {
   it.each(loginHrefForCases)('$name', ({ location, href }) => {
     expect(loginHrefFor(location)).toBe(href)
-  })
-})
-
-describe('nextParam', () => {
-  it.each(nextParamCases)('reads $name of next', ({ query, next }) => {
-    expect(nextParam(query)).toBe(next)
   })
 })
