@@ -1,7 +1,7 @@
-import type { ExtraProjectSpec } from '../generated-project-specs.types'
+import type { GeneratedProjectSpec } from '../generated-project-specs.types'
 
 // A project of the mock data beyond the four of `projects.fixtures.ts`, and not a bulk row.
-export const extraProjectSpecs: ExtraProjectSpec[] = [
+export const generatedProjectSpecs: GeneratedProjectSpec[] = [
   {
     n: 5,
     name: 'Clinic appointment booking',

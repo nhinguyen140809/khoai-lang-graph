@@ -2,14 +2,14 @@ import { http, HttpResponse } from 'msw'
 
 import type { Me } from '@/modules/user/entities'
 
-import { mockRecord } from '../shared/db/mock-state.utils'
+import { mockState } from '../shared/db/mock-state.utils'
 import { readBodyFields } from '../shared/http/request/request-body.utils'
 import { unauthenticated, validationFailed } from '../shared/http/response/error-response.utils'
-import { mockScenario, neverAnswer } from '../shared/scenario/mock-scenario.utils'
+import { mockScenario, pendingForever } from '../shared/scenario/mock-scenario.utils'
 import { meRecord } from './me.handlers'
 
 // The session of the mock server: logged in until the user signs out.
-const sessionRecord = mockRecord('session', () => ({ signedIn: true }))
+const sessionRecord = mockState('session', () => ({ signedIn: true }))
 
 // Endpoints that answer without a session.
 const PUBLIC_PATHS = ['/api/v1/auth/register', '/api/v1/auth/login', '/api/v1/health']
@@ -41,7 +41,7 @@ export const authHandlers = [
 
   http.post('/api/v1/auth/login', async ({ request }) => {
     const scenario = mockScenario('login')
-    if (scenario === 'loading') return neverAnswer()
+    if (scenario === 'loading') return pendingForever()
     const credentials = await readBodyFields(request)
     const missing = missingFields(credentials, ['email', 'password'])
     if (missing.length > 0) return validationFailed(missing)
@@ -55,7 +55,7 @@ export const authHandlers = [
 
   http.post('/api/v1/auth/register', async ({ request }) => {
     const scenario = mockScenario('register')
-    if (scenario === 'loading') return neverAnswer()
+    if (scenario === 'loading') return pendingForever()
     const credentials = await readBodyFields(request)
     const missing = missingFields(credentials, ['email', 'password', 'display_name'])
     if (missing.length > 0) return validationFailed(missing)

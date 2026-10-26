@@ -27,7 +27,7 @@ export interface MockRecord<T> {
 }
 
 /** One record of the mock server, starting from `initial` until it is set. */
-export function mockRecord<T>(name: string, initial: () => T): MockRecord<T> {
+export function mockState<T>(name: string, initial: () => T): MockRecord<T> {
   const key = `${KEY_PREFIX}${name}`
   keys.add(key)
   return {

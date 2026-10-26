@@ -2,14 +2,14 @@ import { describe, expect, it } from 'vitest'
 
 import { isUnfinishedRunStatus } from '@/modules/run/entities'
 
-import { bulkProjectCount } from '../../generated.constants'
-import { extraProjectSpecs } from '../generated-project-specs.fixtures'
+import { manyProjectCount } from '../../generated.constants'
+import { generatedProjectSpecs } from '../generated-project-specs.fixtures'
 import {
-  bulkProjects,
-  extraProjects,
-  extraRuns,
-  extraRunSteps,
-  extraThreads,
+  generatedProjects,
+  generatedRuns,
+  generatedRunSteps,
+  generatedThreads,
+  manyProjects,
 } from '../generated-projects.fixtures'
 import { extraProjectCases, lastStepCases, recordIdCases } from './generated-projects.fixtures.data'
 
@@ -23,11 +23,11 @@ describe('the extra projects of the mock data', () => {
   })
 
   it('have a thread each, and one run at most', () => {
-    const threads = extraThreads()
-    const runs = extraRuns()
+    const threads = generatedThreads()
+    const runs = generatedRuns()
 
-    expect(extraProjects()).toHaveLength(extraProjectSpecs.length)
-    expect(threads).toHaveLength(extraProjectSpecs.length)
+    expect(generatedProjects()).toHaveLength(generatedProjectSpecs.length)
+    expect(threads).toHaveLength(generatedProjectSpecs.length)
     for (const run of runs) {
       expect(threads.some((thread) => thread.id === run.thread_id)).toBe(true)
     }
@@ -37,8 +37,8 @@ describe('the extra projects of the mock data', () => {
   it.each(extraProjectCases)(
     'show the unfinished run of $name on its thread, and none once its run ended',
     ({ projectId }) => {
-      const thread = extraThreads().find((candidate) => candidate.project_id === projectId)
-      const last = extraRuns()
+      const thread = generatedThreads().find((candidate) => candidate.project_id === projectId)
+      const last = generatedRuns()
         .filter((run) => run.project_id === projectId)
         .toSorted((a, b) => b.number - a.number)[0]
       const unfinished = last !== undefined && isUnfinishedRunStatus(last.status)
@@ -48,20 +48,20 @@ describe('the extra projects of the mock data', () => {
   )
 
   it('cover every state of a run, and a project without a run', () => {
-    const statuses = new Set(extraRuns().map(({ status }) => status))
+    const statuses = new Set(generatedRuns().map(({ status }) => status))
 
     expect(statuses).toEqual(
       new Set(['succeeded', 'running', 'interrupted', 'failed', 'cancelled']),
     )
-    expect(extraProjectSpecs.some(({ lastRun }) => lastRun === 'none')).toBe(true)
+    expect(generatedProjectSpecs.some(({ lastRun }) => lastRun === 'none')).toBe(true)
   })
 
   it.each(lastStepCases)(
     'end the steps of a $runStatus run at its stage, with a $stepStatus step',
     ({ runStatus, stepStatus }) => {
-      const run = extraRuns().find(({ status }) => status === runStatus)
+      const run = generatedRuns().find(({ status }) => status === runStatus)
 
-      expect(extraRunSteps(run?.id ?? '')?.at(-1)).toMatchObject({
+      expect(generatedRunSteps(run?.id ?? '')?.at(-1)).toMatchObject({
         stage: run?.current_stage,
         status: stepStatus,
       })
@@ -69,15 +69,15 @@ describe('the extra projects of the mock data', () => {
   )
 
   it('have no steps for a run that is not one of them', () => {
-    expect(extraRunSteps('no-such-run')).toBeUndefined()
+    expect(generatedRunSteps('no-such-run')).toBeUndefined()
   })
 })
 
 describe('bulkProjects', () => {
   it('makes as many projects as asked, with different ids, some archived', () => {
-    const projects = bulkProjects(bulkProjectCount)
+    const projects = manyProjects(manyProjectCount)
 
-    expect(projects).toHaveLength(bulkProjectCount)
+    expect(projects).toHaveLength(manyProjectCount)
     expect(unique(projects.map(({ id }) => id))).toBe(true)
     expect(projects.some(({ status }) => status === 'archived')).toBe(true)
   })

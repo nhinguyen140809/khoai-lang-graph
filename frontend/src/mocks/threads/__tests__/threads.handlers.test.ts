@@ -3,8 +3,8 @@ import { afterEach, describe, expect, it } from 'vitest'
 import type { Thread } from '@/modules/thread/entities'
 import { apiUrl } from '@/shared/api/request/api-url.utils'
 
-import { extraProjectSpecs } from '../../generated/fixtures/generated-project-specs.fixtures'
-import { mockProjects } from '../../projects/projects.fixtures'
+import { generatedProjectSpecs } from '../../generated/fixtures/generated-project-specs.fixtures'
+import { projectFixtures } from '../../projects/projects.fixtures'
 import { runIds, threadIds } from '../../shared/db/mock-ids.constants'
 import { threadErrorCases, threadListCases, threadRunStateCases } from './threads.handlers.data'
 
@@ -42,7 +42,7 @@ describe('the lists of threads', () => {
   it('GET /threads lists one thread per project', async () => {
     const { body } = (await call('/api/v1/threads')) as Answer<Page<Thread>>
 
-    expect(body.items).toHaveLength(mockProjects.length + extraProjectSpecs.length)
+    expect(body.items).toHaveLength(projectFixtures.length + generatedProjectSpecs.length)
   })
 
   it.each(threadListCases)('lists the threads for $request', async ({ address, path, ids }) => {

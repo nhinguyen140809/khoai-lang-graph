@@ -5,11 +5,11 @@ import type { Thread } from '@/modules/thread/entities'
 
 import { changeProject, findProject } from '../projects/projects.handlers'
 import { allRuns, findMockRun } from '../runs/handlers/runs.handlers'
-import { buildMockRun, noUsage } from '../runs/runs.fixtures'
+import { buildRun, noUsage } from '../runs/runs.fixtures'
 import { createdRuns } from '../runs/runs.store'
 import { IdPrefix } from '../shared/db/mock-ids.constants'
 import { createdId } from '../shared/db/mock-ids.utils'
-import { mockRecord } from '../shared/db/mock-state.utils'
+import { mockState } from '../shared/db/mock-state.utils'
 import { idempotent } from '../shared/http/request/idempotency.utils'
 import { readBodyFields } from '../shared/http/request/request-body.utils'
 import { notFound, validationFailed } from '../shared/http/response/error-response.utils'
@@ -38,7 +38,7 @@ export interface SentMessage {
 }
 
 // Messages sent with POST /threads/{thread_id}/messages.
-const sentMessages = mockRecord<SentMessage[]>('sent-messages', () => [])
+const sentMessages = mockState<SentMessage[]>('sent-messages', () => [])
 
 // How many words of its first message name a project created without a name.
 const NAME_WORDS = 5
@@ -60,7 +60,7 @@ export function nameFromMessage(content: string): string {
 // A message to a thread without an unfinished run starts a run, which goes on until it is stopped.
 function startRun(thread: Thread, now: string): Run {
   const runs = createdRuns.get()
-  const run = buildMockRun({
+  const run = buildRun({
     id: createdId(IdPrefix.Run, runs.length + 1),
     thread_id: thread.id,
     project_id: thread.project_id,

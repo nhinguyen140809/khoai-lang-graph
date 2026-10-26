@@ -5,12 +5,12 @@ import { isUnfinishedRunStatus, type Run } from '@/modules/run/entities'
 import type { FieldProblem } from '@/shared/api/error/api-error.utils'
 import { outputLanguages } from '@/shared/config/output-language'
 
-import { bulkProjects, extraProjects } from '../generated/fixtures/generated-projects.fixtures'
-import { bulkProjectCount } from '../generated/generated.constants'
+import { generatedProjects, manyProjects } from '../generated/fixtures/generated-projects.fixtures'
+import { manyProjectCount } from '../generated/generated.constants'
 import { allRuns } from '../runs/handlers/runs.handlers'
 import { IdPrefix } from '../shared/db/mock-ids.constants'
 import { createdId } from '../shared/db/mock-ids.utils'
-import { mockRecord } from '../shared/db/mock-state.utils'
+import { mockState } from '../shared/db/mock-state.utils'
 import { readBodyFields } from '../shared/http/request/request-body.utils'
 import {
   invalidState,
@@ -18,16 +18,20 @@ import {
   validationFailed,
 } from '../shared/http/response/error-response.utils'
 import { emptyPage, paginate } from '../shared/http/response/pagination.utils'
-import { answerScenario, neverAnswer, pageParam } from '../shared/scenario/mock-scenario.utils'
-import { buildMockProject, mockProjects } from './projects.fixtures'
+import {
+  addressParam,
+  answerScenario,
+  pendingForever,
+} from '../shared/scenario/mock-scenario.utils'
+import { buildProject, projectFixtures } from './projects.fixtures'
 import { rollupRunStatus } from './run-status-rollup.utils'
 
 // Projects created with POST /projects.
-const createdProjects = mockRecord<Project[]>('created-projects', () => [])
+const createdProjects = mockState<Project[]>('created-projects', () => [])
 // The fields of a project changed since, by its id, such as the status that PATCH sets.
-const projectChanges = mockRecord<Record<string, Partial<Project>>>('project-changes', () => ({}))
+const projectChanges = mockState<Record<string, Partial<Project>>>('project-changes', () => ({}))
 // The projects that DELETE removed. The API keeps them, but no request finds them again.
-const deletedProjectIds = mockRecord<string[]>('deleted-projects', () => [])
+const deletedProjectIds = mockState<string[]>('deleted-projects', () => [])
 
 // The unfinished runs of a project, counted by status, and the status of its latest run, as the
 // API derives them. A run that has not started yet is the latest.
@@ -55,12 +59,12 @@ function withRunCounts(project: Project, runs: Run[]): Project {
 const longListScenarios = ['many', 'more-loading']
 
 function allProjects(): Project[] {
-  const long = longListScenarios.includes(pageParam('mock-projects') ?? '')
-  const many = long ? bulkProjects(bulkProjectCount) : []
+  const long = longListScenarios.includes(addressParam('mock-projects') ?? '')
+  const many = long ? manyProjects(manyProjectCount) : []
   const runs = allRuns()
   const changes = projectChanges.get()
   const deleted = deletedProjectIds.get()
-  return [...createdProjects.get(), ...mockProjects, ...extraProjects(), ...many]
+  return [...createdProjects.get(), ...projectFixtures, ...generatedProjects(), ...many]
     .filter(({ id }) => !deleted.includes(id))
     .map((project) => withRunCounts({ ...project, ...changes[project.id] }, runs))
 }
@@ -140,8 +144,8 @@ export const projectHandlers = [
     const scenario = await answerScenario('projects')
     if (scenario === 'empty') return HttpResponse.json(emptyPage)
     const { searchParams } = new URL(request.url)
-    if (pageParam('mock-projects') === 'more-loading' && searchParams.has('cursor')) {
-      return neverAnswer()
+    if (addressParam('mock-projects') === 'more-loading' && searchParams.has('cursor')) {
+      return pendingForever()
     }
     const status = searchParams.get('status')
     const projects = allProjects()
@@ -160,13 +164,13 @@ export const projectHandlers = [
   http.post('/api/v1/projects', async ({ request }) => {
     await answerScenario('create-project')
     // The language that the server takes no longer includes the one chosen.
-    if (pageParam('mock-create-project') === 'invalid') {
+    if (addressParam('mock-create-project') === 'invalid') {
       return validationFailed([{ field: 'output_language', message: 'Choose a language.' }])
     }
     const read = readNewProject(await readBodyFields(request))
     if ('problems' in read) return validationFailed(read.problems)
     const now = new Date().toISOString()
-    const project = buildMockProject({
+    const project = buildProject({
       id: createdId(IdPrefix.Project, createdProjects.get().length + 1),
       ...read.project,
       last_activity_at: now,

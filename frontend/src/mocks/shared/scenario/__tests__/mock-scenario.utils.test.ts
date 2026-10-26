@@ -1,6 +1,6 @@
 import { afterEach, describe, expect, it } from 'vitest'
 
-import { answerScenario, mockScenario, pageParam } from '../mock-scenario.utils'
+import { addressParam, answerScenario, mockScenario } from '../mock-scenario.utils'
 import {
   addressWithParams,
   chosenScenarios,
@@ -21,7 +21,7 @@ describe('pageParam', () => {
   it.each(pageParamCases)('reads $name', ({ param, value }) => {
     openPage(addressWithParams)
 
-    expect(pageParam(param)).toBe(value)
+    expect(addressParam(param)).toBe(value)
   })
 })
 

@@ -5,7 +5,7 @@ import { http, HttpResponse } from 'msw'
 import { afterEach, beforeEach, describe, expect, it, vi } from 'vitest'
 
 import { server } from '@/mocks/msw-server.setup'
-import { mockProjects } from '@/mocks/projects/projects.fixtures'
+import { projectFixtures } from '@/mocks/projects/projects.fixtures'
 import { projectIds } from '@/mocks/shared/db/mock-ids.constants'
 import { useProjectPromptStore } from '@/modules/project/features/create'
 import { useRenameProjectDialogStore } from '@/modules/project/features/rename'
@@ -67,7 +67,7 @@ describe('ProjectSwitcher', () => {
     server.use(
       http.get('/api/v1/projects', ({ request }) => {
         queries.push(new URL(request.url).search)
-        const recent = mockProjects.filter(({ id }) => id !== projectIds.laundry)
+        const recent = projectFixtures.filter(({ id }) => id !== projectIds.laundry)
         return HttpResponse.json({ items: recent, next_cursor: 'more' })
       }),
     )

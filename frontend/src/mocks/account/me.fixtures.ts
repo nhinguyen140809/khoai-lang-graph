@@ -2,7 +2,7 @@ import type { Me } from '@/modules/user/entities'
 
 import { userId } from '../shared/db/mock-ids.constants'
 
-export const mockMe: Me = {
+export const meFixture: Me = {
   id: userId,
   email: 'linh.pham@example.com',
   display_name: 'Linh Pham',

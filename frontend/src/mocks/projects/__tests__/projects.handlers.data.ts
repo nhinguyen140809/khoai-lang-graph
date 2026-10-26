@@ -1,12 +1,12 @@
 import type { Project } from '@/modules/project/entities'
 
-import { extraProjectSpecs } from '../../generated/fixtures/generated-project-specs.fixtures'
-import { bulkProjectCount } from '../../generated/generated.constants'
+import { generatedProjectSpecs } from '../../generated/fixtures/generated-project-specs.fixtures'
+import { manyProjectCount } from '../../generated/generated.constants'
 import { IdPrefix, projectIds } from '../../shared/db/mock-ids.constants'
 import { mockId } from '../../shared/db/mock-ids.utils'
-import { mockProjects } from '../projects.fixtures'
+import { projectFixtures } from '../projects.fixtures'
 
-const projectCount = mockProjects.length + extraProjectSpecs.length
+const projectCount = projectFixtures.length + generatedProjectSpecs.length
 
 /** GET /projects in the scenario of the page address, with a query: the page it answers. */
 export const projectListCases = [
@@ -23,14 +23,14 @@ export const projectListCases = [
     name: 'the first page of a long list in the more-loading scenario',
     address: '/?mock-projects=more-loading',
     query: '?limit=200',
-    count: projectCount + bulkProjectCount,
+    count: projectCount + manyProjectCount,
     nextCursor: null,
   },
   {
     name: 'a long list in the many scenario',
     address: '/?mock-projects=many',
     query: '?limit=200',
-    count: projectCount + bulkProjectCount,
+    count: projectCount + manyProjectCount,
     nextCursor: null,
   },
   {

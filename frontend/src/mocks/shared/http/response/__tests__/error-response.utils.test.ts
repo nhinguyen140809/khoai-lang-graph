@@ -1,11 +1,11 @@
 import { describe, expect, it } from 'vitest'
 
-import { problem } from '../error-response.utils'
+import { errorResponse } from '../error-response.utils'
 import { sharedProblemCases } from './error-response.utils.data'
 
 describe('problem', () => {
   it('answers in the Problem Details format', async () => {
-    const answer = problem(409, 'invalid_state', 'Invalid state', 'The run has ended.', [
+    const answer = errorResponse(409, 'invalid_state', 'Invalid state', 'The run has ended.', [
       { field: 'status', message: 'Ended.' },
     ])
 
@@ -22,7 +22,7 @@ describe('problem', () => {
   })
 
   it('has no detail and no field problem by default', async () => {
-    expect(await problem(500, 'internal_error', 'Internal error').json()).toMatchObject({
+    expect(await errorResponse(500, 'internal_error', 'Internal error').json()).toMatchObject({
       detail: null,
       errors: [],
     })

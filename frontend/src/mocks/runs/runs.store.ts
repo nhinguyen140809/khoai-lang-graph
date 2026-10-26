@@ -1,14 +1,14 @@
 import type { Run } from '@/modules/run/entities'
 
-import { mockRecord } from '../shared/db/mock-state.utils'
+import { mockState } from '../shared/db/mock-state.utils'
 
 // What the mock server changes about runs while the app runs: the runs that messages started, and
 // the runs that were stopped. The changes are kept apart from the fixtures, which never change.
 
 /** The runs that the messages sent with POST /threads/{thread_id}/messages started. */
-export const createdRuns = mockRecord<Run[]>('created-runs', () => [])
+export const createdRuns = mockState<Run[]>('created-runs', () => [])
 
-export const runChanges = mockRecord<Record<string, Partial<Run>>>('run-changes', () => ({}))
+export const runChanges = mockState<Record<string, Partial<Run>>>('run-changes', () => ({}))
 
 /** The runs with the changes that stopping them made. */
 export function withRunChanges(runs: Run[]): Run[] {

@@ -360,7 +360,7 @@ const libraryRunSteps = buildSteps(runIds.libraryMain1, 6, '2026-10-03T10:10:00Z
 )
 
 /** Every run of the mock data, with the run of the API examples in the given state. */
-export function mockRuns(state: MockRunState): Run[] {
+export function runFixtures(state: MockRunState): Run[] {
   return [...finishedRuns, mentorRun3(state)]
 }
 
@@ -382,7 +382,7 @@ const mentorRun2Steps = buildSteps(
 )
 
 /** The steps of a run. Runs without a script here have none. */
-export function mockRunSteps(runId: string, state: MockRunState): RunStep[] {
+export function runStepFixtures(runId: string, state: MockRunState): RunStep[] {
   if (runId === runIds.mentorMain1) return mentorRun1Steps
   if (runId === runIds.mentorMain2) return mentorRun2Steps
   if (runId === runIds.mentorMain3) return mentorRun3Steps(state)
@@ -392,7 +392,7 @@ export function mockRunSteps(runId: string, state: MockRunState): RunStep[] {
 }
 
 /** A run of the mock data with the usual fields; `fields` change what differs. */
-export const buildMockRun = run
+export const buildRun = run
 
 // How far a run without a script of its own went, in the steps of the main run: a running or a
 // stopped run is in the interviews, a failed one failed at the analysis, and one that waits is at

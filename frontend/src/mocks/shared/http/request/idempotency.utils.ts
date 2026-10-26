@@ -3,8 +3,8 @@ import { HttpResponse, type HttpResponseResolver } from 'msw'
 import { ApiErrorCode, HttpStatus } from '@/shared/api/error/api-error.types'
 import { idempotencyKeyHeader } from '@/shared/api/idempotency.constants'
 
-import { mockRecord } from '../../db/mock-state.utils'
-import { problem } from '../response/error-response.utils'
+import { mockState } from '../../db/mock-state.utils'
+import { errorResponse } from '../response/error-response.utils'
 
 interface StoredAnswer {
   /** The body of the request that the key came with. */
@@ -16,10 +16,10 @@ interface StoredAnswer {
 
 // The answers to the keys seen so far, by the path and the key. The mock server keeps them until
 // the records are reset, where the API keeps them for 24 hours.
-const answers = mockRecord<Record<string, StoredAnswer>>('idempotent-answers', () => ({}))
+const answers = mockState<Record<string, StoredAnswer>>('idempotent-answers', () => ({}))
 
 function keyConflict() {
-  return problem(
+  return errorResponse(
     HttpStatus.Conflict,
     ApiErrorCode.IdempotencyConflict,
     'Idempotency conflict',

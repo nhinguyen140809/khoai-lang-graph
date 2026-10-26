@@ -4,25 +4,29 @@ import type { Run } from '@/modules/run/entities'
 import { isUnfinishedRunStatus, type UnfinishedRunStatus } from '@/modules/run/entities'
 import type { Thread } from '@/modules/thread/entities'
 
-import { extraThreads } from '../generated/fixtures/generated-projects.fixtures'
+import { generatedThreads } from '../generated/fixtures/generated-projects.fixtures'
 import { findProject } from '../projects/projects.handlers'
 import { allRuns } from '../runs/handlers/runs.handlers'
 import { IdPrefix } from '../shared/db/mock-ids.constants'
 import { createdId } from '../shared/db/mock-ids.utils'
-import { mockRecord } from '../shared/db/mock-state.utils'
+import { mockState } from '../shared/db/mock-state.utils'
 import { readBodyFields } from '../shared/http/request/request-body.utils'
 import { notFound } from '../shared/http/response/error-response.utils'
 import { paginate } from '../shared/http/response/pagination.utils'
 import { answerScenario, mockRunState, mockScenario } from '../shared/scenario/mock-scenario.utils'
-import { buildMockThread, mockThreads, withoutRuns } from './threads.fixtures'
+import { buildThread, threadFixtures, threadsBeforeAnyRun } from './threads.fixtures'
 
 // Threads created with POST /projects/{project_id}/threads.
-const createdThreads = mockRecord<Thread[]>('created-threads', () => [])
+const createdThreads = mockState<Thread[]>('created-threads', () => [])
 
 // With `?mock-runs=empty`, no thread has a run yet.
 export function allThreads(): Thread[] {
-  const threads = [...createdThreads.get(), ...mockThreads(mockRunState()), ...extraThreads()]
-  if (mockScenario('runs') === 'empty') return withoutRuns(threads)
+  const threads = [
+    ...createdThreads.get(),
+    ...threadFixtures(mockRunState()),
+    ...generatedThreads(),
+  ]
+  if (mockScenario('runs') === 'empty') return threadsBeforeAnyRun(threads)
   const runs = allRuns()
   return threads.map((thread) => withRunsOfThread(thread, runs))
 }
@@ -76,7 +80,7 @@ export const threadHandlers = [
     if (findProject(projectId) === undefined) return notFound('The project')
     const { title } = await readBodyFields(request)
     const now = new Date().toISOString()
-    const thread = buildMockThread({
+    const thread = buildThread({
       id: createdId(IdPrefix.Thread, createdThreads.get().length + 1),
       project_id: projectId,
       title: typeof title === 'string' && title.trim() !== '' ? title.trim() : null,
