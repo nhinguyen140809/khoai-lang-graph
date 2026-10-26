@@ -1,21 +1,36 @@
-import { render, screen, within } from '@testing-library/react'
+import { screen, within } from '@testing-library/react'
 import userEvent from '@testing-library/user-event'
 import { http, HttpResponse } from 'msw'
 import { afterEach, describe, expect, it, vi } from 'vitest'
 
 import { server } from '@/mocks/msw-server.setup'
 import { projectIds } from '@/mocks/shared/db'
+import { emptyPage, noContent } from '@/mocks/shared/http/response'
 import {
   noProjectFilters,
   type ProjectFilters,
   type ProjectStatus,
 } from '@/modules/project/entities'
-import { useDeleteProjectDialogStore } from '@/modules/project/features/delete'
-import { useRenameProjectDialogStore } from '@/modules/project/features/rename'
 import { ProjectDialogs } from '@/modules/project/widgets/dialogs'
 import { apiEndpoints } from '@/shared/api/endpoints'
-import { routerMock } from '@/test/next-stubs/next-stubs.utils'
-import { TestProviders } from '@/test/render/TestProviders'
+import { HttpMethod } from '@/shared/api/http'
+import { serverError, serverErrorOn } from '@/test/msw'
+import { renderWithProviders } from '@/test/render'
+import {
+  confirmAction,
+  expectAlert,
+  expectEnabled,
+  expectNoConfirmDialog,
+  expectNoRole,
+  expectPushedTo,
+  expectRole,
+  expectText,
+  findConfirmDialog,
+  pressButton,
+  pressMenuItem,
+  replaceText,
+} from '@/test/steps'
+import { itAsksBeforeAction } from '@/test/suites'
 
 import { ProjectTable } from '../ProjectTable'
 import {
@@ -26,38 +41,24 @@ import {
   rowRunCases,
 } from './ProjectTable.data'
 
-vi.mock('next/link', async () => (await import('@/test/next-stubs/next-stubs.utils')).linkMock)
-vi.mock(
-  'next/navigation',
-  async () => (await import('@/test/next-stubs/next-stubs.utils')).navigationMock,
-)
-
 function renderTable(status: ProjectStatus, filters: ProjectFilters = noProjectFilters) {
   const onClearFilters = vi.fn()
   // The menu of a row opens the dialogs that the layout holds.
-  render(
+  renderWithProviders(
     <>
       <ProjectTable status={status} filters={filters} onClearFilters={onClearFilters} />
       <ProjectDialogs />
     </>,
-    { wrapper: TestProviders },
   )
   return { onClearFilters }
 }
 
 function answerNoProject() {
-  server.use(
-    http.get(apiEndpoints.projects.pattern, () =>
-      HttpResponse.json({ items: [], next_cursor: null }),
-    ),
-  )
+  server.use(http.get(apiEndpoints.projects.pattern, () => HttpResponse.json(emptyPage)))
 }
 
 afterEach(() => {
   window.history.replaceState(null, '', '/')
-  routerMock.push.mockClear()
-  useRenameProjectDialogStore.getState().closed()
-  useDeleteProjectDialogStore.getState().closed()
 })
 
 /** Shows the long list of the mock data: more active projects than a page holds. */
@@ -68,15 +69,15 @@ async function renderLongList() {
 }
 
 async function openMenu(project: string) {
-  await userEvent.click(await screen.findByRole('button', { name: `Actions for ${project}` }))
+  await pressButton(`Actions for ${project}`)
 }
 
 /** Chooses Delete in the menu of an active project, and returns the dialog that opens. */
 async function chooseDelete(project: string, dialog: string) {
   renderTable('active')
   await openMenu(project)
-  await userEvent.click(await screen.findByRole('menuitem', { name: 'Delete' }))
-  return screen.findByRole('alertdialog', { name: dialog })
+  await pressMenuItem('Delete')
+  return findConfirmDialog(dialog)
 }
 
 // Its runs ended, so it can be deleted.
@@ -90,8 +91,8 @@ describe('ProjectTable', () => {
   it.each(listCases)('lists the $status projects', async ({ status, shown, hidden }) => {
     renderTable(status)
 
-    for (const name of shown) expect(await screen.findByRole('link', { name })).toBeInTheDocument()
-    for (const name of hidden) expect(screen.queryByRole('link', { name })).not.toBeInTheDocument()
+    for (const name of shown) await expectRole('link', name)
+    for (const name of hidden) expectNoRole('link', name)
   })
 
   it.each(rowRunCases)('says $run for the runs of $project', async ({ project, run }) => {
@@ -129,10 +130,10 @@ describe('ProjectTable', () => {
       renderTable(status)
       await openMenu(project)
 
-      await userEvent.click(await screen.findByRole('menuitem', { name: leave }))
+      await pressMenuItem(leave)
 
       await vi.waitFor(() => {
-        expect(screen.queryByRole('link', { name: project })).not.toBeInTheDocument()
+        expectNoRole('link', project)
       })
     },
   )
@@ -141,26 +142,23 @@ describe('ProjectTable', () => {
     renderTable('active')
     await openMenu('Mentor platform')
 
-    await userEvent.click(await screen.findByRole('menuitem', { name: 'Rename' }))
+    await pressMenuItem('Rename')
     const name = within(await screen.findByRole('dialog', { name: 'Rename project' })).getByRole(
       'textbox',
       { name: 'Name' },
     )
-    await userEvent.clear(name)
-    await userEvent.type(name, 'Mentor finder{Enter}')
+    await replaceText(name, 'Mentor finder{Enter}')
 
-    expect(await screen.findByRole('link', { name: 'Mentor finder' })).toBeInTheDocument()
+    await expectRole('link', 'Mentor finder')
   })
 
   it('deletes a project once the dialog is confirmed', async () => {
     const dialog = await askToDeleteCampus()
 
-    await userEvent.click(within(dialog).getByRole('button', { name: 'Delete project' }))
+    await confirmAction(dialog, 'Delete project')
 
-    await vi.waitFor(() => {
-      expect(screen.queryByRole('alertdialog')).not.toBeInTheDocument()
-    })
-    expect(screen.queryByRole('link', { name: campus })).not.toBeInTheDocument()
+    await expectNoConfirmDialog()
+    expectNoRole('link', campus)
   })
 
   it('says to stop the run before deleting a project with a run not finished', async () => {
@@ -168,33 +166,44 @@ describe('ProjectTable', () => {
 
     await userEvent.click(within(dialog).getByRole('button', { name: 'Open project' }))
 
-    expect(routerMock.push).toHaveBeenCalledWith(`/projects/${projectIds.mentor}/activity`)
+    await expectPushedTo(`/projects/${projectIds.mentor}/activity`)
     expect(within(dialog).queryByRole('button', { name: 'Delete project' })).not.toBeInTheDocument()
   })
 
-  it('keeps the dialog and the project when deleting fails', async () => {
-    server.use(
-      http.delete('/api/v1/projects/:projectId', () => new HttpResponse(null, { status: 500 })),
-    )
-    const dialog = await askToDeleteCampus()
-    const confirm = within(dialog).getByRole('button', { name: 'Delete project' })
+  describe('Delete', () => {
+    let isRequested = false
 
-    await userEvent.click(confirm)
-
-    await vi.waitFor(() => {
-      expect(confirm).toBeEnabled()
+    itAsksBeforeAction({
+      action: 'deleting a project',
+      confirmLabel: 'Delete project',
+      hasRun: () => isRequested,
+      open: () => {
+        isRequested = false
+        server.use(
+          http.delete(apiEndpoints.project.pattern, () => {
+            isRequested = true
+            return noContent()
+          }),
+        )
+        return askToDeleteCampus()
+      },
+      fail: () => {
+        server.use(
+          http.delete(apiEndpoints.project.pattern, () => {
+            isRequested = true
+            return serverError()
+          }),
+        )
+      },
     })
-    expect(dialog).toBeInTheDocument()
-    // The open dialog hides the page from assistive technology.
-    expect(screen.getByRole('link', { name: campus, hidden: true })).toBeInTheDocument()
   })
 
   it.each(emptyListCases)('says $text when the list is empty', async ({ status, text }) => {
     answerNoProject()
     renderTable(status)
 
-    expect(await screen.findByText(text)).toBeInTheDocument()
-    expect(screen.queryByRole('table')).not.toBeInTheDocument()
+    await expectText(text)
+    expectNoRole('table')
   })
 
   it.each(filteredListCases)(
@@ -203,10 +212,10 @@ describe('ProjectTable', () => {
       renderTable('active', filters)
 
       for (const name of shown) {
-        expect(await screen.findByRole('link', { name })).toBeInTheDocument()
+        await expectRole('link', name)
       }
       for (const name of hidden) {
-        expect(screen.queryByRole('link', { name })).not.toBeInTheDocument()
+        expectNoRole('link', name)
       }
     },
   )
@@ -221,7 +230,7 @@ describe('ProjectTable', () => {
     expect(
       await screen.findByRole('heading', { name: 'No projects match the filters' }),
     ).toBeInTheDocument()
-    await userEvent.click(screen.getByRole('button', { name: 'Clear filters' }))
+    await pressButton('Clear filters')
     expect(onClearFilters).toHaveBeenCalledOnce()
   })
 
@@ -232,7 +241,7 @@ describe('ProjectTable', () => {
     await userEvent.click(showMore)
 
     await vi.waitFor(() => {
-      expect(screen.queryByRole('button', { name: 'Show more projects' })).not.toBeInTheDocument()
+      expectNoRole('button', 'Show more projects')
     })
     expect(screen.getAllByRole('link').length).toBeGreaterThan(50)
   })
@@ -240,28 +249,24 @@ describe('ProjectTable', () => {
   it('keeps the projects shown when the next page fails to load', async () => {
     server.use(
       http.get(apiEndpoints.projects.pattern, ({ request }) =>
-        new URL(request.url).searchParams.has('cursor')
-          ? new HttpResponse(null, { status: 500 })
-          : undefined,
+        new URL(request.url).searchParams.has('cursor') ? serverError() : undefined,
       ),
     )
     const showMore = await renderLongList()
 
     await userEvent.click(showMore)
 
-    expect(await screen.findByRole('alert')).toHaveTextContent('Failed to load projects (HTTP 500)')
+    await expectAlert('Failed to load projects (HTTP 500)')
     expect(screen.getAllByRole('link')).toHaveLength(50)
-    expect(screen.getByRole('button', { name: 'Show more projects' })).toBeEnabled()
+    expectEnabled('button', 'Show more projects')
   })
 
   it('shows the error with a retry when the projects fail to load', async () => {
-    server.use(
-      http.get(apiEndpoints.projects.path(), () => new HttpResponse(null, { status: 500 })),
-    )
+    server.use(serverErrorOn(HttpMethod.Get, apiEndpoints.projects.path()))
     renderTable('active')
 
     const alert = await screen.findByRole('alert')
     expect(alert).toHaveTextContent('Failed to load projects (HTTP 500)')
-    expect(within(alert).getByRole('button', { name: 'Try again' })).toBeInTheDocument()
+    await expectRole('button', 'Try again', within(alert))
   })
 })

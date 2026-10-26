@@ -1,10 +1,11 @@
-import { http, HttpResponse } from 'msw'
-
 import { projectIds } from '@/mocks/shared/db'
 import { apiEndpoints } from '@/shared/api/endpoints'
+import { HttpMethod } from '@/shared/api/http'
+import { serverErrorOn } from '@/test/msw'
+import type { QueryStateCase } from '@/test/suites'
 
 /** A project, the answer about it, and what the gate shows once the project is loaded or failed. */
-export const gateCases = [
+export const gateCases: (QueryStateCase & { projectId: string })[] = [
   {
     name: 'the screens of a project that exists',
     projectId: projectIds.mentor,
@@ -22,8 +23,7 @@ export const gateCases = [
   {
     name: 'the screens when the project fails to load for another reason',
     projectId: projectIds.mentor,
-    answer: () =>
-      http.get(apiEndpoints.project.pattern, () => new HttpResponse(null, { status: 500 })),
+    answer: () => serverErrorOn(HttpMethod.Get, apiEndpoints.project.pattern),
     shows: 'Project screens, error',
     hides: 'Project not found',
   },

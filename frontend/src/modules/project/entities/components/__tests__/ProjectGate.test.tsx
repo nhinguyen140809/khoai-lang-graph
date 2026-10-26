@@ -1,8 +1,7 @@
-import { render, screen } from '@testing-library/react'
-import { describe, expect, it } from 'vitest'
+import { describe } from 'vitest'
 
-import { server } from '@/mocks/msw-server.setup'
-import { TestProviders } from '@/test/render/TestProviders'
+import { renderWithProviders } from '@/test/render'
+import { itShowsQueryStates } from '@/test/suites'
 
 import { useProject } from '../../hooks/useProjectQueries'
 import { ProjectGate } from '../ProjectGate'
@@ -15,17 +14,13 @@ function Screens({ projectId }: { projectId: string }) {
 }
 
 describe('ProjectGate', () => {
-  it.each(gateCases)('shows $name', async ({ projectId, answer, shows, hides }) => {
-    if (answer !== null) server.use(answer())
-
-    render(
-      <ProjectGate projectId={projectId} notFound={<p>Project not found</p>}>
-        <Screens projectId={projectId} />
-      </ProjectGate>,
-      { wrapper: TestProviders },
-    )
-
-    expect(await screen.findByText(shows)).toBeInTheDocument()
-    expect(screen.queryByText(hides)).not.toBeInTheDocument()
+  itShowsQueryStates({
+    renderScreen: ({ projectId }) =>
+      renderWithProviders(
+        <ProjectGate projectId={projectId} notFound={<p>Project not found</p>}>
+          <Screens projectId={projectId} />
+        </ProjectGate>,
+      ),
+    cases: gateCases,
   })
 })

@@ -1,5 +1,7 @@
 import type { Project } from '@/modules/project/entities'
 import { apiEndpoints } from '@/shared/api/endpoints'
+import { HttpStatus } from '@/shared/api/http'
+import type { RejectedRequestCase } from '@/test/suites'
 
 import { generatedProjectSpecs } from '../../generated/fixtures/generated-project-specs.fixtures'
 import { manyProjectCount } from '../../generated/generated.constants'
@@ -151,17 +153,17 @@ export const projectFilterCases = [
 ]
 
 /** A scenario of POST /projects in the page address, and what it answers. */
-export const createProjectScenarioCases = [
+const createProjectScenarioCases = [
   {
     name: 'the error scenario',
     address: '/?mock-create-project=error',
-    answer: { status: 500, body: { code: 'internal_error' } },
+    answer: { status: HttpStatus.InternalServerError, body: { code: 'internal_error' } },
   },
   {
     name: 'the invalid scenario',
     address: '/?mock-create-project=invalid',
     answer: {
-      status: 422,
+      status: HttpStatus.UnprocessableContent,
       body: { errors: [{ field: 'output_language', message: 'Choose a language.' }] },
     },
   },
@@ -182,11 +184,14 @@ export const pendingProjectCases = [
   {
     request: 'DELETE /projects/{project_id} in the loading scenario',
     address: '/?mock-delete-project=loading',
-    send: { path: apiEndpoints.project.path({ projectId: projectIds.mentor }), method: 'DELETE' },
+    send: {
+      path: apiEndpoints.project.path({ projectId: projectIds.mentor }),
+      method: 'DELETE',
+    },
   },
 ]
 
-export const invalidProjectCases = [
+const invalidProjectCases = [
   {
     name: 'a name that is not text',
     body: '{"name": 3}',
@@ -209,15 +214,15 @@ export const projectErrorCases = [
     address: '/?mock-projects=error',
     method: 'GET',
     path: apiEndpoints.projects.path(),
-    status: 500,
+    status: HttpStatus.InternalServerError,
     code: 'internal_error',
   },
   {
     request: 'GET /projects/{project_id} of a project that does not exist',
     address: '/',
     method: 'GET',
-    path: '/api/v1/projects/no-such-project',
-    status: 404,
+    path: apiEndpoints.project.path({ projectId: 'no-such-project' }),
+    status: HttpStatus.NotFound,
     code: 'not_found',
   },
   {
@@ -225,7 +230,7 @@ export const projectErrorCases = [
     address: '/?mock-project=empty',
     method: 'GET',
     path: apiEndpoints.project.path({ projectId: projectIds.mentor }),
-    status: 404,
+    status: HttpStatus.NotFound,
     code: 'not_found',
   },
   {
@@ -233,15 +238,15 @@ export const projectErrorCases = [
     address: '/?mock-project=error',
     method: 'GET',
     path: apiEndpoints.project.path({ projectId: projectIds.mentor }),
-    status: 500,
+    status: HttpStatus.InternalServerError,
     code: 'internal_error',
   },
   {
     request: 'PATCH /projects/{project_id} of a project that does not exist',
     address: '/',
     method: 'PATCH',
-    path: '/api/v1/projects/no-such-project',
-    status: 404,
+    path: apiEndpoints.project.path({ projectId: 'no-such-project' }),
+    status: HttpStatus.NotFound,
     code: 'not_found',
   },
   {
@@ -249,15 +254,15 @@ export const projectErrorCases = [
     address: '/?mock-update-project=error',
     method: 'PATCH',
     path: apiEndpoints.project.path({ projectId: projectIds.mentor }),
-    status: 500,
+    status: HttpStatus.InternalServerError,
     code: 'internal_error',
   },
   {
     request: 'DELETE /projects/{project_id} of a project that does not exist',
     address: '/',
     method: 'DELETE',
-    path: '/api/v1/projects/no-such-project',
-    status: 404,
+    path: apiEndpoints.project.path({ projectId: 'no-such-project' }),
+    status: HttpStatus.NotFound,
     code: 'not_found',
   },
   {
@@ -265,7 +270,7 @@ export const projectErrorCases = [
     address: '/?mock-delete-project=error',
     method: 'DELETE',
     path: apiEndpoints.project.path({ projectId: projectIds.mentor }),
-    status: 500,
+    status: HttpStatus.InternalServerError,
     code: 'internal_error',
   },
 ]
@@ -277,7 +282,7 @@ export const projectStatusChangeCases = [
 ]
 
 /** PATCH /projects/{project_id} with a body that the API does not take, and the problems it says. */
-export const invalidProjectChangeCases = [
+const invalidProjectChangeCases = [
   {
     name: 'a status that a project does not have',
     body: '{"status": "deleted"}',
@@ -293,4 +298,36 @@ export const invalidProjectChangeCases = [
     body: '{"name": null}',
     errors: [{ field: 'name', message: 'Enter a name.' }],
   },
+]
+
+const projectsPath = apiEndpoints.projects.path()
+const mentorPath = `${projectsPath}/${projectIds.mentor}`
+
+/** The requests about projects that the mock server refuses, and the answers. */
+export const projectRejectedCases: RejectedRequestCase[] = [
+  ...invalidProjectCases.map(({ name, body, errors }): RejectedRequestCase => ({
+    name: `answers 422 for ${name}`,
+    method: 'POST',
+    path: projectsPath,
+    body,
+    status: HttpStatus.UnprocessableContent,
+    answer: { errors },
+  })),
+  ...createProjectScenarioCases.map(({ name, address, answer }): RejectedRequestCase => ({
+    name: `answers ${name}`,
+    method: 'POST',
+    path: projectsPath,
+    body: '{"name": "Clinic booking"}',
+    page: address,
+    status: answer.status,
+    answer: answer.body,
+  })),
+  ...invalidProjectChangeCases.map(({ name, body, errors }): RejectedRequestCase => ({
+    name: `answers 422 on a change for ${name}`,
+    method: 'PATCH',
+    path: mentorPath,
+    body,
+    status: HttpStatus.UnprocessableContent,
+    answer: { errors },
+  })),
 ]
