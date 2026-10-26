@@ -3,7 +3,7 @@ import type { Route } from 'next'
 import { createElement, type ReactNode } from 'react'
 import { describe, expect, it } from 'vitest'
 
-import { routerMock } from '@/test/next-stubs/next-stubs.utils'
+import { routerMock } from '@/test/next-stubs'
 
 import type { Destination } from '../../destinations/destination.types'
 import { DestinationsContext } from '../../destinations/hooks/useDestinations'

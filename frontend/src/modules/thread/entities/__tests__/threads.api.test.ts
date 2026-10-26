@@ -3,7 +3,9 @@ import { describe, expect, it } from 'vitest'
 
 import { server } from '@/mocks/msw-server.setup'
 import { threadIds } from '@/mocks/shared/db'
+import { created, emptyPage } from '@/mocks/shared/http/response'
 import { apiEndpoints } from '@/shared/api/endpoints'
+import { HttpHeader } from '@/shared/api/http'
 
 import { listThreads, sendFirstMessage } from '../threads.api'
 import { createdThread, failedListCases, sentMessage } from './threads.api.data'
@@ -17,11 +19,7 @@ describe('listThreads', () => {
 
   it('returns an empty list when there are no threads', async () => {
     // One-off override: this test needs different data than the default fixture.
-    server.use(
-      http.get(apiEndpoints.threads.pattern, () =>
-        HttpResponse.json({ items: [], next_cursor: null }),
-      ),
-    )
+    server.use(http.get(apiEndpoints.threads.pattern, () => HttpResponse.json(emptyPage)))
 
     await expect(listThreads()).resolves.toEqual([])
   })
@@ -37,13 +35,13 @@ describe('sendFirstMessage', () => {
   it('sends the key with the message and not with the thread', async () => {
     const keys: Record<string, string | null> = {}
     server.use(
-      http.post('/api/v1/projects/p1/threads', ({ request }) => {
-        keys.thread = request.headers.get('Idempotency-Key')
-        return HttpResponse.json(createdThread, { status: 201 })
+      http.post(apiEndpoints.projectThreads.path({ projectId: 'p1' }), ({ request }) => {
+        keys.thread = request.headers.get(HttpHeader.IdempotencyKey)
+        return created(createdThread)
       }),
-      http.post('/api/v1/threads/t1/messages', ({ request }) => {
-        keys.message = request.headers.get('Idempotency-Key')
-        return HttpResponse.json(sentMessage, { status: 201 })
+      http.post(apiEndpoints.threadMessages.path({ threadId: 't1' }), ({ request }) => {
+        keys.message = request.headers.get(HttpHeader.IdempotencyKey)
+        return created(sentMessage)
       }),
     )
 

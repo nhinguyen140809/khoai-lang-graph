@@ -6,7 +6,7 @@ import { afterEach, beforeEach, describe, expect, it, vi } from 'vitest'
 
 import { server } from '@/mocks/msw-server.setup'
 import { apiEndpoints } from '@/shared/api/endpoints'
-import { routerMock } from '@/test/next-stubs/next-stubs.utils'
+import { routerMock } from '@/test/next-stubs'
 import { TestProviders } from '@/test/render/TestProviders'
 
 import { RegisterPage } from '../RegisterPage'

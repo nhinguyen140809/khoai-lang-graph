@@ -1,11 +1,14 @@
 import { HttpResponse } from 'msw'
 import { ZodError } from 'zod'
 
+import { HttpStatus } from '@/shared/api/http'
+import { serverError } from '@/test/msw'
+
 /** An answer of GET /threads, and the error that listThreads throws for it. */
 export const failedListCases = [
   {
     name: 'an HTTP error',
-    answer: () => new HttpResponse(null, { status: 500 }),
+    answer: () => serverError(),
     error: 'HTTP 500',
   },
   {
@@ -15,7 +18,7 @@ export const failedListCases = [
   },
   {
     name: 'an answer that is not JSON',
-    answer: () => new HttpResponse('not json', { status: 200 }),
+    answer: () => new HttpResponse('not json', { status: HttpStatus.Ok }),
     error: SyntaxError,
   },
 ]

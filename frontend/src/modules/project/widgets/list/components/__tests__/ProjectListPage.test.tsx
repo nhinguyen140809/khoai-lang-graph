@@ -5,7 +5,8 @@ import { describe, expect, it, vi } from 'vitest'
 
 import { server } from '@/mocks/msw-server.setup'
 import { apiEndpoints } from '@/shared/api/endpoints'
-import { routerMock, setPathname, setSearch } from '@/test/next-stubs/next-stubs.utils'
+import { setPathname, setQuery } from '@/test/next-stubs'
+import { routerMock } from '@/test/next-stubs/next-stubs.utils'
 import { renderWithProviders } from '@/test/render'
 
 import { ProjectListPage } from '../ProjectListPage'
@@ -34,7 +35,7 @@ async function startProject(idea: string) {
 
 describe('ProjectListPage', () => {
   it('lists the projects of the filters in the address', async () => {
-    setSearch('run-status=interrupted')
+    setQuery('run-status=interrupted')
     renderPage()
 
     expect(await screen.findByRole('link', { name: 'Mentor platform' })).toBeInTheDocument()

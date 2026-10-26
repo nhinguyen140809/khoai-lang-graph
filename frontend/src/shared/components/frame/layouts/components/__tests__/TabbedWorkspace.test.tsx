@@ -3,7 +3,7 @@ import type { Route } from 'next'
 import type { ReactNode } from 'react'
 import { beforeEach, describe, expect, it, vi } from 'vitest'
 
-import { setPathname } from '@/test/next-stubs/next-stubs.utils'
+import { setPathname } from '@/test/next-stubs'
 
 import type { Destination } from '../../../destinations/destination.types'
 import { DestinationsContext } from '../../../destinations/hooks/useDestinations'

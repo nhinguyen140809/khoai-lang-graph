@@ -1,4 +1,5 @@
 import { apiEndpoints } from '@/shared/api/endpoints'
+import { HttpStatus } from '@/shared/api/http'
 
 import { runIds, threadIds } from '../../../shared/db/mock-ids.constants'
 
@@ -41,31 +42,31 @@ export const runErrorCases = [
     address: '/?mock-runs=error',
     method: 'GET',
     path: apiEndpoints.threadRuns.path({ threadId: threadIds.mentorMain }),
-    status: 500,
+    status: HttpStatus.InternalServerError,
     code: 'internal_error',
   },
   {
     request: 'GET /runs/{run_id} of a run that does not exist',
     address: '/',
     method: 'GET',
-    path: '/api/v1/runs/no-such-run',
-    status: 404,
+    path: apiEndpoints.run.path({ runId: 'no-such-run' }),
+    status: HttpStatus.NotFound,
     code: 'not_found',
   },
   {
     request: 'GET /runs/{run_id}/steps of a run that does not exist',
     address: '/',
     method: 'GET',
-    path: '/api/v1/runs/no-such-run/steps',
-    status: 404,
+    path: apiEndpoints.runSteps.path({ runId: 'no-such-run' }),
+    status: HttpStatus.NotFound,
     code: 'not_found',
   },
   {
     request: 'POST /runs/{run_id}/cancel of a run that does not exist',
     address: '/',
     method: 'POST',
-    path: '/api/v1/runs/no-such-run/cancel',
-    status: 404,
+    path: apiEndpoints.runCancel.path({ runId: 'no-such-run' }),
+    status: HttpStatus.NotFound,
     code: 'not_found',
   },
   {
@@ -73,7 +74,7 @@ export const runErrorCases = [
     address: '/',
     method: 'POST',
     path: apiEndpoints.runCancel.path({ runId: runIds.mentorMain1 }),
-    status: 409,
+    status: HttpStatus.Conflict,
     code: 'invalid_state',
   },
   {
@@ -81,7 +82,7 @@ export const runErrorCases = [
     address: '/',
     method: 'POST',
     path: apiEndpoints.runCancel.path({ runId: runIds.mentorMain2 }),
-    status: 409,
+    status: HttpStatus.Conflict,
     code: 'invalid_state',
   },
 ]

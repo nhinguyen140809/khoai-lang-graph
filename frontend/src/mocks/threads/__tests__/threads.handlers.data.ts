@@ -1,4 +1,5 @@
 import { apiEndpoints } from '@/shared/api/endpoints'
+import { HttpStatus } from '@/shared/api/http'
 
 import { projectIds, runIds, threadIds } from '../../shared/db/mock-ids.constants'
 
@@ -65,35 +66,35 @@ export const threadErrorCases = [
     request: 'GET /threads in the error scenario',
     address: '/?mock-threads=error',
     path: apiEndpoints.threads.path(),
-    status: 500,
+    status: HttpStatus.InternalServerError,
     code: 'internal_error',
   },
   {
     request: 'GET /projects/{project_id}/threads of a project that does not exist',
     address: '/',
-    path: '/api/v1/projects/no-such-project/threads',
-    status: 404,
+    path: apiEndpoints.projectThreads.path({ projectId: 'no-such-project' }),
+    status: HttpStatus.NotFound,
     code: 'not_found',
   },
   {
     request: 'GET /threads/{thread_id} of a thread that does not exist',
     address: '/',
-    path: '/api/v1/threads/no-such-thread',
-    status: 404,
+    path: apiEndpoints.thread.path({ threadId: 'no-such-thread' }),
+    status: HttpStatus.NotFound,
     code: 'not_found',
   },
   {
     request: 'GET /threads/{thread_id} in the empty scenario',
     address: '/?mock-thread=empty',
     path: apiEndpoints.thread.path({ threadId: threadIds.mentorMain }),
-    status: 404,
+    status: HttpStatus.NotFound,
     code: 'not_found',
   },
   {
     request: 'GET /threads/{thread_id} in the error scenario',
     address: '/?mock-thread=error',
     path: apiEndpoints.thread.path({ threadId: threadIds.mentorMain }),
-    status: 500,
+    status: HttpStatus.InternalServerError,
     code: 'internal_error',
   },
 ]

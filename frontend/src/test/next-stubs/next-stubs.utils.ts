@@ -17,8 +17,14 @@ export function setPathname(next: string) {
 }
 
 /** Sets the query of the current address, such as `step=abc`. */
-export function setSearch(next: string) {
-  search = next
+export function setQuery(next: string) {
+  query = next
+}
+
+/** Puts the address back to the root without a query. */
+export function resetNextStubs() {
+  pathname = '/'
+  query = ''
 }
 
 export const routerMock = {

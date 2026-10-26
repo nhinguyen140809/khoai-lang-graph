@@ -8,7 +8,7 @@ import { server } from '@/mocks/msw-server.setup'
 import { createdId, IdPrefix } from '@/mocks/shared/db'
 import { apiEndpoints } from '@/shared/api/endpoints'
 import { Dialog, DialogContent, DialogTitle } from '@/shared/components/ui/dialog'
-import { routerMock } from '@/test/next-stubs/next-stubs.utils'
+import { routerMock } from '@/test/next-stubs'
 import { TestProviders } from '@/test/render/TestProviders'
 
 import { NewProjectForm } from '../NewProjectForm'

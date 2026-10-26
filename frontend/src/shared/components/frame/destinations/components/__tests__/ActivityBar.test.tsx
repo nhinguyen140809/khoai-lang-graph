@@ -11,7 +11,7 @@ import type { Route } from 'next'
 import type { ReactNode } from 'react'
 import { beforeEach, describe, expect, it, vi } from 'vitest'
 
-import { setPathname } from '@/test/next-stubs/next-stubs.utils'
+import { setPathname } from '@/test/next-stubs'
 import { Broken, TestProviders } from '@/test/render'
 
 import { PanelRegion } from '../../../panels/panel.types'

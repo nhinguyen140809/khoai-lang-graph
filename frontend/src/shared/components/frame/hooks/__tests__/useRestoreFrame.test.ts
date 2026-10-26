@@ -4,7 +4,7 @@ import { beforeEach, describe, expect, it } from 'vitest'
 
 import { browserStorage } from '@/shared/lib/storage'
 import { routeOfAddress } from '@/shared/routes'
-import { setPathname } from '@/test/next-stubs/next-stubs.utils'
+import { setPathname } from '@/test/next-stubs'
 
 import type { Destination } from '../../destinations/destination.types'
 import { useSideFeatureStore } from '../../destinations/side-feature.store'
