@@ -276,7 +276,8 @@ khoailanggraph/
 │   ├── openapi.json                 # API schema snapshot from `just codegen` (do not edit)
 │   ├── components.json              # shadcn/ui CLI config
 │   ├── openapi-ts.config.ts         # codegen: openapi.json -> src/api/generated/
-│   ├── eslint.config.js             # incl. file naming rules
+│   ├── eslint.config.js             # joins the blocks of lint/configs
+│   ├── lint/                        # ESLint: configs/ (blocks), lib/ (shared lists and patterns), plugin/ (local rules)
 │   ├── prettier.config.js
 │   ├── playwright.config.ts
 │   ├── tsconfig.json
