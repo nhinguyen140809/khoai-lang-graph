@@ -1,63 +1,26 @@
 import { http, HttpResponse } from 'msw'
 
-import type { Run } from '@/modules/run/entities'
-import { isUnfinishedRunStatus, type UnfinishedRunStatus } from '@/modules/run/entities'
-import type { Thread } from '@/modules/thread/entities'
 import { apiEndpoints } from '@/shared/api/endpoints'
 
-import { generatedThreads } from '../generated/fixtures/generated-projects.fixtures'
-import { findProject } from '../projects/projects.handlers'
-import { allRuns } from '../runs/handlers/runs.handlers'
+import { findProject } from '../projects/projects.lookup'
+import { projectNotFound } from '../projects/projects.problems'
+import { mockNow } from '../shared/db/mock-clock.utils'
 import { IdPrefix } from '../shared/db/mock-ids.constants'
 import { createdId } from '../shared/db/mock-ids.utils'
-import { mockState } from '../shared/db/mock-state.utils'
 import { readBodyFields } from '../shared/http/request/request-body.utils'
-import { notFound } from '../shared/http/response/error-response.utils'
-import { paginate } from '../shared/http/response/pagination.utils'
-import { answerScenario, mockRunState, mockScenario } from '../shared/scenario/mock-scenario.utils'
-import { buildThread, threadFixtures, threadsBeforeAnyRun } from './threads.fixtures'
-
-// Threads created with POST /projects/{project_id}/threads.
-const createdThreads = mockState<Thread[]>('created-threads', () => [])
-
-// With `?mock-runs=empty`, no thread has a run yet.
-export function allThreads(): Thread[] {
-  const threads = [
-    ...createdThreads.get(),
-    ...threadFixtures(mockRunState()),
-    ...generatedThreads(),
-  ]
-  if (mockScenario('runs') === 'empty') return threadsBeforeAnyRun(threads)
-  const runs = allRuns()
-  return threads.map((thread) => withRunsOfThread(thread, runs))
-}
-
-function isUnfinishedRun(run: Run): run is Run & { status: UnfinishedRunStatus } {
-  return isUnfinishedRunStatus(run.status)
-}
-
-// The unfinished run of a thread follows the runs: a run stopped while the mock server runs
-// leaves its thread without one.
-function withRunsOfThread(thread: Thread, runs: Run[]): Thread {
-  const active = runs
-    .filter((run) => run.thread_id === thread.id)
-    .toSorted((a, b) => b.number - a.number)
-    .find(isUnfinishedRun)
-  if (active === undefined) {
-    return { ...thread, active_run_id: null, active_run_status: null }
-  }
-  return {
-    ...thread,
-    current_stage: active.current_stage,
-    active_run_id: active.id,
-    active_run_status: active.status,
-  }
-}
+import { emptyPage, paginate } from '../shared/http/response/pagination.utils'
+import { created } from '../shared/http/response/status-response.utils'
+import { requiredText } from '../shared/http/validation/field-values.utils'
+import { answerScenario } from '../shared/scenario/mock-scenario.utils'
+import { buildThread } from './threads.fixtures'
+import { allThreads } from './threads.lookup'
+import { threadNotFound } from './threads.problems'
+import { createdThreads } from './threads.store'
 
 export const threadHandlers = [
   http.get(apiEndpoints.threads.pattern, async ({ request }) => {
     const scenario = await answerScenario('threads')
-    if (scenario === 'empty') return HttpResponse.json({ items: [], next_cursor: null })
+    if (scenario === 'empty') return HttpResponse.json(emptyPage)
     const projectId = new URL(request.url).searchParams.get('project_id')
     const threads = allThreads().filter(
       (thread) => projectId === null || thread.project_id === projectId,
@@ -68,8 +31,8 @@ export const threadHandlers = [
   http.get(apiEndpoints.projectThreads.pattern, async ({ params, request }) => {
     const scenario = await answerScenario('threads')
     const projectId = String(params.projectId)
-    if (findProject(projectId) === undefined) return notFound('The project')
-    if (scenario === 'empty') return HttpResponse.json({ items: [], next_cursor: null })
+    if (findProject(projectId) === undefined) return projectNotFound()
+    if (scenario === 'empty') return HttpResponse.json(emptyPage)
     const threads = allThreads()
       .filter((thread) => thread.project_id === projectId)
       .toSorted((a, b) => b.last_message_at.localeCompare(a.last_message_at))
@@ -78,23 +41,20 @@ export const threadHandlers = [
 
   http.post(apiEndpoints.projectThreads.pattern, async ({ params, request }) => {
     const projectId = String(params.projectId)
-    if (findProject(projectId) === undefined) return notFound('The project')
+    if (findProject(projectId) === undefined) return projectNotFound()
     const { title } = await readBodyFields(request)
-    const now = new Date().toISOString()
+    const now = mockNow()
     const thread = buildThread({
       id: createdId(IdPrefix.Thread, createdThreads.get().length + 1),
       project_id: projectId,
-      title: typeof title === 'string' && title.trim() !== '' ? title.trim() : null,
+      title: requiredText(title) ?? null,
       current_stage: null,
       last_message_at: now,
       created_at: now,
       updated_at: now,
     })
     createdThreads.set([thread, ...createdThreads.get()])
-    return HttpResponse.json(thread, {
-      status: 201,
-      headers: { Location: apiEndpoints.thread.path({ threadId: thread.id }) },
-    })
+    return created(thread, apiEndpoints.thread.path({ threadId: thread.id }))
   }),
 
   http.get(apiEndpoints.thread.pattern, async ({ params }) => {
@@ -103,6 +63,6 @@ export const threadHandlers = [
       scenario === 'empty'
         ? undefined
         : allThreads().find(({ id }) => id === String(params.threadId))
-    return thread === undefined ? notFound('The thread') : HttpResponse.json(thread)
+    return thread === undefined ? threadNotFound() : HttpResponse.json(thread)
   }),
 ]
