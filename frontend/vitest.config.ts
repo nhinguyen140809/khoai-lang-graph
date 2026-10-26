@@ -35,7 +35,14 @@ export default defineConfig({
       },
       {
         // The ESLint config in lint/ runs in Node.js and needs neither the DOM nor the test setup.
-        test: { name: 'lint', environment: 'node', include: ['lint/**/*.test.js'] },
+        // The rules that read types build a TypeScript program on their first test, which takes
+        // longer than the default 5 seconds when the machine is busy.
+        test: {
+          name: 'lint',
+          environment: 'node',
+          include: ['lint/**/*.test.js'],
+          testTimeout: 30_000,
+        },
       },
     ],
     // Run with `pnpm test:coverage`. The report counts the code of the app that the unit tests are
