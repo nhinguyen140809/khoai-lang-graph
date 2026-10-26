@@ -5,7 +5,7 @@ import { usePanelsStore } from '../panels.store'
 
 const subscribe = (onChange: () => void) => usePanelsStore.persist.onFinishHydration(onChange)
 const hasRestored = () => usePanelsStore.persist.hasHydrated()
-const onServer = () => false
+const isRestoredOnServer = () => false
 
 /**
  * A panel of the frame that the user resizes and hides: whether it is shown, and the actions that
@@ -13,15 +13,15 @@ const onServer = () => false
  * `storedSize` reads the size without following it, for a panel that takes it once as it mounts.
  */
 export function usePanel(region: PanelRegion) {
-  const visible = usePanelsStore((state) => state.panels[region].visible)
+  const isVisible = usePanelsStore((state) => state.panels[region].visible)
   const showPanel = usePanelsStore((state) => state.showPanel)
   const togglePanel = usePanelsStore((state) => state.togglePanel)
   const setPanelSize = usePanelsStore((state) => state.setPanelSize)
-  const restored = useSyncExternalStore(subscribe, hasRestored, onServer)
+  const isRestored = useSyncExternalStore(subscribe, hasRestored, isRestoredOnServer)
 
   return {
-    visible,
-    restored,
+    visible: isVisible,
+    restored: isRestored,
     storedSize: () => usePanelsStore.getState().panels[region].size,
     show: () => {
       showPanel(region)

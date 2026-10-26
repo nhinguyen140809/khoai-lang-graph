@@ -1,6 +1,6 @@
 import type { EditorTab } from '../../editor-tabs.types'
 
-export const req: EditorTab = { id: 'i1', title: 'REQ-001', href: '/projects/p1/search/i1' }
+export const requirement: EditorTab = { id: 'i1', title: 'REQ-001', href: '/projects/p1/search/i1' }
 export const ambiguity: EditorTab = {
   id: 'i2',
   title: 'AMB-001',
@@ -13,8 +13,8 @@ export const onScreenCases = [
   {
     name: 'the open editors, the one on screen marked',
     group: 'p1:search',
-    tabs: [req, ambiguity],
-    onScreen: req.id,
+    tabs: [requirement, ambiguity],
+    onScreen: requirement.id,
     titles: ['REQ-001', 'AMB-001'],
     current: 'REQ-001',
   },
@@ -42,7 +42,7 @@ export const onScreenCases = [
 
 /** A tab, and the lucide class of its icon: the one it names, else the one of its feature, else a file. */
 export const tabIconCases = [
-  { name: 'the icon of its feature', tab: req, icon: 'lucide-search' },
+  { name: 'the icon of its feature', tab: requirement, icon: 'lucide-search' },
   { name: 'the icon it names', tab: ambiguity, icon: 'lucide-file-text' },
   {
     name: 'a file outside every feature',
@@ -55,29 +55,29 @@ export const tabIconCases = [
 export const closeTabCases = [
   {
     name: 'shows the next tab after closing the tab on screen',
-    tabs: [req, ambiguity],
-    onScreen: req.id,
-    close: req.title,
+    tabs: [requirement, ambiguity],
+    onScreen: requirement.id,
+    close: requirement.title,
     opens: [ambiguity.href],
   },
   {
     name: 'shows the previous tab after closing the last tab, on screen',
-    tabs: [req, ambiguity],
+    tabs: [requirement, ambiguity],
     onScreen: ambiguity.id,
     close: ambiguity.title,
-    opens: [req.href],
+    opens: [requirement.href],
   },
   {
     name: 'goes to the feature after closing the only tab',
-    tabs: [req],
-    onScreen: req.id,
-    close: req.title,
+    tabs: [requirement],
+    onScreen: requirement.id,
+    close: requirement.title,
     opens: ['/projects/p1/search'],
   },
   {
     name: 'does not navigate when a tab that is not on screen closes',
-    tabs: [req, ambiguity],
-    onScreen: req.id,
+    tabs: [requirement, ambiguity],
+    onScreen: requirement.id,
     close: ambiguity.title,
     opens: [],
   },

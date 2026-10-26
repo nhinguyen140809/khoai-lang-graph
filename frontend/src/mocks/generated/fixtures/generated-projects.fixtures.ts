@@ -27,7 +27,7 @@ const stepRunIndex = (spec: GeneratedProjectSpec) => 100 + spec.n
 function runsOf(spec: GeneratedProjectSpec): Run[] {
   const status = spec.lastRun
   if (status === 'none') return []
-  const finished = !isUnfinishedRunStatus(status)
+  const isFinished = !isUnfinishedRunStatus(status)
   const stage = {
     succeeded: 'done',
     running: 'interviewing',
@@ -48,7 +48,7 @@ function runsOf(spec: GeneratedProjectSpec): Run[] {
         ? { code: 'provider_error', message: 'The model provider failed after the retries.', stage }
         : null,
     started_at: runStart(spec),
-    finished_at: finished ? at(spec.day, '09:40:00') : null,
+    finished_at: isFinished ? at(spec.day, '09:40:00') : null,
   })
   return [{ ...run, step_count: scriptedSteps(run, stepRunIndex(spec)).length }]
 }
@@ -90,7 +90,7 @@ export function generatedThreads(): Thread[] {
   return generatedProjectSpecs.map((spec) => {
     const last = runsOf(spec).at(-1)
     const status = last?.status
-    const unfinished = status !== undefined && isUnfinishedRunStatus(status)
+    const isUnfinished = status !== undefined && isUnfinishedRunStatus(status)
     return {
       id: threadId(spec.n),
       project_id: projectId(spec.n),
@@ -98,8 +98,8 @@ export function generatedThreads(): Thread[] {
       title: 'Main thread',
       status: 'active',
       current_stage: last?.current_stage ?? null,
-      active_run_id: unfinished ? (last?.id ?? null) : null,
-      active_run_status: unfinished ? status : null,
+      active_run_id: isUnfinished ? (last?.id ?? null) : null,
+      active_run_status: isUnfinished ? status : null,
       last_message_at: at(spec.day, '09:00:00'),
       created_at: at(spec.day, '07:55:00'),
       updated_at: at(spec.day, '11:00:00'),

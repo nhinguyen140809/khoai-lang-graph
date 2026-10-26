@@ -8,6 +8,6 @@ import { useIsHydrated } from '@/shared/lib/hydration'
  */
 export function useThemeChoice() {
   const { theme, setTheme } = useTheme()
-  const hydrated = useIsHydrated()
-  return { chosen: hydrated ? theme : undefined, choose: setTheme }
+  const isHydrated = useIsHydrated()
+  return { chosen: isHydrated ? theme : undefined, choose: setTheme }
 }

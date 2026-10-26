@@ -24,6 +24,7 @@ export interface PaletteCommand {
    */
   run?: () => void
 }
+
 export interface PaletteCommandGroup {
   heading: string
   commands: PaletteCommand[]

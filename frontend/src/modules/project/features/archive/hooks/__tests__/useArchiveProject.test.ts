@@ -1,5 +1,5 @@
 import { act, waitFor } from '@testing-library/react'
-import { toast } from 'sonner'
+import type { toast } from 'sonner'
 import { describe, expect, it } from 'vitest'
 
 import { server } from '@/mocks/msw-server.setup'

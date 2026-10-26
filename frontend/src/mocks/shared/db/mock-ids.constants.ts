@@ -14,39 +14,37 @@ export const IdPrefix = {
   Step: 'e1a0',
 } as const
 
-const id = mockId
-
-export const userId = id(IdPrefix.User, 1)
+export const userId = mockId(IdPrefix.User, 1)
 
 export const projectIds = {
-  mentor: id(IdPrefix.Project, 1),
-  campus: id(IdPrefix.Project, 2),
-  library: id(IdPrefix.Project, 3),
-  laundry: id(IdPrefix.Project, 4),
+  mentor: mockId(IdPrefix.Project, 1),
+  campus: mockId(IdPrefix.Project, 2),
+  library: mockId(IdPrefix.Project, 3),
+  laundry: mockId(IdPrefix.Project, 4),
 }
 
 /** The main thread of a project has the number of its project. */
 export const threadIds = {
-  mentorMain: id(IdPrefix.Thread, 1),
-  campusMain: id(IdPrefix.Thread, 2),
-  libraryMain: id(IdPrefix.Thread, 3),
-  laundryMain: id(IdPrefix.Thread, 4),
+  mentorMain: mockId(IdPrefix.Thread, 1),
+  campusMain: mockId(IdPrefix.Thread, 2),
+  libraryMain: mockId(IdPrefix.Thread, 3),
+  laundryMain: mockId(IdPrefix.Thread, 4),
 }
 
 export const runIds = {
   /** Run 1 of the mentor thread: its first message started it, and it went through the whole workflow. */
-  mentorMain1: id('3b90', 1),
+  mentorMain1: mockId('3b90', 1),
   /** Run 2 of the mentor thread: it failed at its cost limit. */
-  mentorMain2: id('4c18', 1),
+  mentorMain2: mockId('4c18', 1),
   /** Run 3 of the mentor thread, the run of the API examples: it retries run 2 and waits at the analysis review. */
-  mentorMain3: id(IdPrefix.Run, 1),
-  campusMain1: id('7e10', 2),
-  libraryMain1: id('7e10', 3),
-  laundryMain1: id('7e10', 4),
+  mentorMain3: mockId(IdPrefix.Run, 1),
+  campusMain1: mockId('7e10', 2),
+  libraryMain1: mockId('7e10', 3),
+  laundryMain1: mockId('7e10', 4),
 }
 
 export const personaIds = [
-  id(IdPrefix.Persona, 1),
-  id(IdPrefix.Persona, 2),
-  id(IdPrefix.Persona, 3),
+  mockId(IdPrefix.Persona, 1),
+  mockId(IdPrefix.Persona, 2),
+  mockId(IdPrefix.Persona, 3),
 ] as const

@@ -13,13 +13,13 @@ import {
 } from '../generated-projects.fixtures'
 import { extraProjectCases, lastStepCases, recordIdCases } from './generated-projects.fixtures.data'
 
-function unique(ids: string[]) {
+function hasUniqueIds(ids: string[]) {
   return new Set(ids).size === ids.length
 }
 
 describe('the extra projects of the mock data', () => {
   it.each(recordIdCases)('give the $records ids apart from those of the fixtures', ({ ids }) => {
-    expect(unique(ids)).toBe(true)
+    expect(hasUniqueIds(ids)).toBe(true)
   })
 
   it('have a thread each, and one run at most', () => {
@@ -31,7 +31,7 @@ describe('the extra projects of the mock data', () => {
     for (const run of runs) {
       expect(threads.some((thread) => thread.id === run.thread_id)).toBe(true)
     }
-    expect(unique(runs.map(({ thread_id }) => thread_id))).toBe(true)
+    expect(hasUniqueIds(runs.map(({ thread_id }) => thread_id))).toBe(true)
   })
 
   it.each(extraProjectCases)(
@@ -41,9 +41,9 @@ describe('the extra projects of the mock data', () => {
       const last = generatedRuns()
         .filter((run) => run.project_id === projectId)
         .toSorted((a, b) => b.number - a.number)[0]
-      const unfinished = last !== undefined && isUnfinishedRunStatus(last.status)
+      const isUnfinished = last !== undefined && isUnfinishedRunStatus(last.status)
 
-      expect(thread?.active_run_id).toBe(unfinished ? last.id : null)
+      expect(thread?.active_run_id).toBe(isUnfinished ? last.id : null)
     },
   )
 
@@ -73,12 +73,12 @@ describe('the extra projects of the mock data', () => {
   })
 })
 
-describe('bulkProjects', () => {
+describe('manyProjects', () => {
   it('makes as many projects as asked, with different ids, some archived', () => {
     const projects = manyProjects(manyProjectCount)
 
     expect(projects).toHaveLength(manyProjectCount)
-    expect(unique(projects.map(({ id }) => id))).toBe(true)
+    expect(hasUniqueIds(projects.map(({ id }) => id))).toBe(true)
     expect(projects.some(({ status }) => status === 'archived')).toBe(true)
   })
 })

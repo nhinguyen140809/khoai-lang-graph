@@ -25,8 +25,10 @@ const RECENT_COUNT = 5
 // project list and the recent projects of the menus.
 function listedProject(queryClient: QueryClient, projectId: string): Project | undefined {
   for (const query of queryClient.getQueryCache().findAll({ queryKey: projectKeys.lists() })) {
-    const data = query.state.data as InfiniteData<ListPage<Project>> | Project[] | undefined
-    const projects = Array.isArray(data) ? data : (data?.pages.flatMap(({ items }) => items) ?? [])
+    const cached = query.state.data as InfiniteData<ListPage<Project>> | Project[] | undefined
+    const projects = Array.isArray(cached)
+      ? cached
+      : (cached?.pages.flatMap(({ items }) => items) ?? [])
     const project = projects.find(({ id }) => id === projectId)
     if (project !== undefined) return project
   }

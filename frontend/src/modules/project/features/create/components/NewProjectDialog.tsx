@@ -19,13 +19,13 @@ interface NewProjectDialogProps {
  * dialog stays open while the project is created, since the project exists either way.
  */
 export function NewProjectDialog({ open, idea, onOpenChange }: NewProjectDialogProps) {
-  const creating = useIsCreatingProject()
+  const isCreating = useIsCreatingProject()
 
   return (
     <Dialog
       open={open}
       onOpenChange={(next) => {
-        if (!creating) onOpenChange(next)
+        if (!isCreating) onOpenChange(next)
       }}
     >
       {/* The title says it all: a description would only repeat the button. At most 80% of the

@@ -32,7 +32,7 @@ export function NewProjectPrompt({ onStart }: NewProjectPromptProps) {
     if (!isBlank) onStart(idea.trim())
   }
 
-  const handleKeyDown = (event: KeyboardEvent<HTMLTextAreaElement>) => {
+  const submitOnEnter = (event: KeyboardEvent<HTMLTextAreaElement>) => {
     if (event.key !== 'Enter' || event.shiftKey || event.nativeEvent.isComposing) return
     event.preventDefault()
     submit()
@@ -72,7 +72,7 @@ export function NewProjectPrompt({ onStart }: NewProjectPromptProps) {
           onChange={(event) => {
             setIdea(event.target.value)
           }}
-          onKeyDown={handleKeyDown}
+          onKeyDown={submitOnEnter}
           className="max-h-60 min-h-16 pt-2.5 pl-9 leading-relaxed"
         />
         <InputGroupAddon align="block-end" className="justify-end">

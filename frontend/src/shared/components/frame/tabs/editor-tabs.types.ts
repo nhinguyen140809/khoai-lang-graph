@@ -1,6 +1,6 @@
 import { z } from 'zod'
 
-export const editorTabSchema = z.object({
+const editorTabSchema = z.object({
   /** Unique in its group, for example the id of the run or the item. */
   id: z.string(),
   title: z.string(),

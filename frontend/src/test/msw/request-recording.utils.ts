@@ -31,4 +31,3 @@ export function recordRequests(headerNames: string[] = []) {
   })
   return requests
 }
-

@@ -9,7 +9,7 @@ import { useIsHydrated } from '@/shared/lib/hydration'
 export function ThemeToggle() {
   const { theme, setTheme } = useTheme()
   // The stored theme is only known in the browser; until hydration no option is marked active.
-  const hydrated = useIsHydrated()
+  const isHydrated = useIsHydrated()
 
   return (
     <ToggleGroup
@@ -17,7 +17,7 @@ export function ThemeToggle() {
       variant="outline"
       size="sm"
       aria-label="Theme"
-      value={hydrated ? (theme ?? '') : ''}
+      value={isHydrated ? (theme ?? '') : ''}
       onValueChange={(value) => {
         if (value) {
           setTheme(value)

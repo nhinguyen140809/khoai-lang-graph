@@ -9,7 +9,6 @@ import {
   mockScenarios,
 } from './mock-scenario.types'
 
-
 /** A parameter of the page address; null outside the browser, such as in unit tests. */
 export function addressParam(name: string): string | null {
   if (typeof window === 'undefined') return null

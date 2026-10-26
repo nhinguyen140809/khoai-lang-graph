@@ -2,15 +2,12 @@ import { type AnchorHTMLAttributes, createElement, type MouseEvent, type ReactNo
 import { vi } from 'vitest'
 
 // Stand-ins for next/navigation and next/link in unit tests, which run without the Next.js
-// router. A test file sets them up with:
-//
-//   vi.mock('next/navigation', async () => (await import('@/test/next-stubs/next-stubs.utils')).navigationMock)
-//   vi.mock('next/link', async () => (await import('@/test/next-stubs/next-stubs.utils')).linkMock)
-//
-// and sets the current address with `setPathname('/projects/p1/console')`.
+// router. The setup file of Vitest mocks both modules for every test, and a test sets the current
+// address with `setPathname('/projects/p1/console')`; the setup also puts the address back after
+// each test.
 
 let pathname = '/'
-let search = ''
+let query = ''
 
 export function setPathname(next: string) {
   pathname = next
@@ -38,7 +35,7 @@ export const routerMock = {
 export const navigationMock = {
   usePathname: () => pathname,
   useRouter: () => routerMock,
-  useSearchParams: () => new URLSearchParams(search),
+  useSearchParams: () => new URLSearchParams(query),
   useParams: () => ({}),
 }
 

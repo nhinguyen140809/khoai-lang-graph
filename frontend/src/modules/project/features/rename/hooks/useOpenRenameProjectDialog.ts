@@ -11,8 +11,8 @@ export function useOpenRenameProjectDialog() {
 }
 
 /**
- * The Rename dialog that `useOpenRenameProjectDialog` opened: its project, whether it is open, and the
- * actions that close it and forget it once it has closed.
+ * The Rename dialog that `useOpenRenameProjectDialog` opened: its project, whether it is open, and
+ * the actions that close it and forget it once it has closed.
  */
 export function useRenameProjectDialog() {
   return usePendingAction(useRenameProjectDialogStore)

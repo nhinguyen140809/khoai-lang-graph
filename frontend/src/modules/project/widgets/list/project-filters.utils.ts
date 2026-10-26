@@ -4,7 +4,6 @@ import { isOneOf } from '@/shared/lib/guards'
 
 import { projectFilterKeys, projectRunFilters } from './project-filters.constants'
 
-
 /** The filters of the project list from the values chosen in its filters. */
 export function projectFiltersOf(values: FilterValues): ProjectFilters {
   const [days] = values[projectFilterKeys.lastActivity] ?? []

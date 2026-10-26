@@ -28,7 +28,7 @@ export function FilterMenu({ fields, values, onApply }: FilterMenuProps) {
   const [open, setOpen] = useState(false)
   const draft = useFilterDraft(values)
   const count = activeFilterCount(values)
-  const nothingToClear = count === 0 && activeFilterCount(draft.values) === 0
+  const hasNothingToClear = count === 0 && activeFilterCount(draft.values) === 0
 
   return (
     <Popover
@@ -92,7 +92,7 @@ export function FilterMenu({ fields, values, onApply }: FilterMenuProps) {
               type="button"
               variant="link"
               className="h-auto px-0 text-muted-foreground hover:text-foreground"
-              disabled={nothingToClear}
+              disabled={hasNothingToClear}
               onClick={draft.clear}
             >
               {filterMessages.clear}

@@ -13,7 +13,6 @@ import { changeRun } from '../runs.changes'
 import { allRuns, findRun, stepsOfRun } from '../runs.lookup'
 import { runNotFound } from '../runs.problems'
 
-
 // The chat starts a run with this endpoint, which is not part of the API; it goes with the chat.
 export const mockRunId = 'run-mock-1'
 

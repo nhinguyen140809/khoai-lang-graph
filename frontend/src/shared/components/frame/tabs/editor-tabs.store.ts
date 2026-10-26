@@ -58,7 +58,7 @@ interface EditorTabsState {
 }
 
 /**
- * The editor tabs of every tab group on this device; a group is the strip of one `Workspace`,
+ * The editor tabs of every tab group on this device; a group is the strip of one `TabbedWorkspace`,
  * named by its layout, and holds the tabs of every feature. `useRestoreFrame` reads them after the
  * first render, before the pages open theirs. Each group is stored under a key of its own, and a
  * browser tab writes only the groups it changed, so that a browser tab on one project never writes
@@ -74,22 +74,22 @@ export const useEditorTabsStore = create<EditorTabsState>()(
       keepNext: null,
       openTab: (group, tab, options = {}) => {
         set((state) => {
-          const asked = state.keepNext === tab.href
-          const keep = options.keep === true || asked
+          const isAsked = state.keepNext === tab.href
+          const isKept = options.keep === true || isAsked
           const tabs = state.groups[group] ?? []
           const isOpen = tabs.some(({ id }) => id === tab.id)
           const previewId = state.preview[group]
-          const replaces = !isOpen && !keep && tabs.some(({ id }) => id === previewId)
-          const placed = replaces
+          const isReplacing = !isOpen && !isKept && tabs.some(({ id }) => id === previewId)
+          const placed = isReplacing
             ? tabs.map((open) => (open.id === previewId ? tab : open))
             : placeTab(tabs, tab, state.lastShown[group])
           let preview = state.preview
-          if (keep) preview = clearGroupTab(preview, group, tab.id)
+          if (isKept) preview = clearGroupTab(preview, group, tab.id)
           else if (!isOpen) preview = setGroupTab(preview, group, tab.id)
           return {
             groups: placed === tabs ? state.groups : { ...state.groups, [group]: placed },
             preview,
-            keepNext: asked ? null : state.keepNext,
+            keepNext: isAsked ? null : state.keepNext,
             onScreen: setGroupTab(state.onScreen, group, tab.id),
             lastShown: setGroupTab(state.lastShown, group, tab.id),
           }

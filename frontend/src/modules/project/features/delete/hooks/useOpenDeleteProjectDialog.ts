@@ -11,8 +11,8 @@ export function useOpenDeleteProjectDialog() {
 }
 
 /**
- * The Delete dialog that `useOpenDeleteProjectDialog` opened: its project, whether it is open, and the
- * actions that close it and forget it once it has closed.
+ * The Delete dialog that `useOpenDeleteProjectDialog` opened: its project, whether it is open, and
+ * the actions that close it and forget it once it has closed.
  */
 export function useDeleteProjectDialog() {
   return usePendingAction(useDeleteProjectDialogStore)

@@ -70,9 +70,9 @@ describe('useCommands', () => {
     })
 
     // fireEvent returns false when the default was prevented.
-    const kept = fireEvent.keyDown(document, { key, ctrlKey: true })
+    const isAllowed = fireEvent.keyDown(document, { key, ctrlKey: true })
 
     expect(run).toHaveBeenCalledTimes(runs)
-    expect(kept).toBe(!prevents)
+    expect(isAllowed).toBe(!prevents)
   })
 })

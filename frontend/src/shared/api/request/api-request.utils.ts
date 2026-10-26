@@ -1,4 +1,4 @@
-import { z } from 'zod'
+import type { z } from 'zod'
 
 import { type ApiError, toApiError } from '../error'
 import { HttpHeader, HttpMethod, MediaType } from '../http'

@@ -16,7 +16,7 @@ afterEach(() => {
   browserStorage.removeItem(storedKey)
 })
 
-describe('mockRecord', () => {
+describe('mockState', () => {
   it('starts from its initial value, read only when first asked for', async () => {
     const { mockState } = await loadMockDb()
     const initial = vi.fn(() => ({ count: 1 }))
@@ -50,7 +50,7 @@ describe('mockRecord', () => {
   })
 })
 
-describe('mockRecord kept in the browser', () => {
+describe('mockState kept in the browser', () => {
   it('writes to browser storage, and a new page reads it back', async () => {
     const first = await loadMockDb()
     first.keepMockDataInBrowser()

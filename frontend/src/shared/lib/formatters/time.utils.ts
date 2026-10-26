@@ -15,6 +15,7 @@ export function formatRelativeTime(iso: string, now: Date): string {
   if (days < 7) return `${String(days)} days ago`
   return format(date, isSameYear(date, now) ? 'MMM d' : 'MMM d, yyyy')
 }
+
 /** A date with its year, as "Oct 1, 2026". */
 export function formatDate(value: string | Date): string {
   return format(new Date(value), 'MMM d, yyyy')
@@ -24,6 +25,10 @@ export function formatDate(value: string | Date): string {
 export function formatDateTime(value: string | Date): string {
   return format(new Date(value), 'MMM d, yyyy, HH:mm')
 }
+
+const SECOND = 1000
+const MINUTE_SECONDS = 60
+const HOUR_SECONDS = 3600
 
 /**
  * How long something took: "850 ms", "4.2 s", "12 s", "2 min 5 s", "1 h 4 min". A unit that is

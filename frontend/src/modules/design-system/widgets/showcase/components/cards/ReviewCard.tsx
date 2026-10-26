@@ -37,7 +37,7 @@ const items = [
   },
 ] as const
 
-const handleSubmit: NonNullable<ComponentProps<typeof Questionnaire>['onSubmit']> = (event) => {
+const sendAnswer: NonNullable<ComponentProps<typeof Questionnaire>['onSubmit']> = (event) => {
   event.preventDefault()
   const decision = new FormData(event.currentTarget).get('decision')
   toast('Answer sent', {
@@ -51,12 +51,7 @@ export function ReviewCard() {
       title="Review: requirements analysis v4"
       description="The run paused at checkpoint_analysis. Keys 1 to 3 choose."
     >
-      <Questionnaire
-        defaultItem="decision"
-        items={items}
-        shortcuts="numbers"
-        onSubmit={handleSubmit}
-      >
+      <Questionnaire defaultItem="decision" items={items} shortcuts="numbers" onSubmit={sendAnswer}>
         <QuestionnaireProgress />
         <QuestionnaireItem name="decision" required>
           <QuestionnaireTitle>Accept the analysis, or reject it?</QuestionnaireTitle>

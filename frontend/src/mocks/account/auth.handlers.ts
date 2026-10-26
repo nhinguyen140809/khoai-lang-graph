@@ -11,7 +11,6 @@ import { requiredText, requiredTextProblem } from '../shared/http/validation/fie
 import { mockScenario, pendingForever } from '../shared/scenario/mock-scenario.utils'
 import { currentUser, sessionState } from './account.store'
 
-
 function missingFields(credentials: Record<string, unknown>, fields: string[]) {
   return fields
     .filter((field) => requiredText(credentials[field]) === undefined)

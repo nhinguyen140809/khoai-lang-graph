@@ -1,5 +1,3 @@
-
-
 // The failures that come from the browser and not from the app: storage blocked or full.
 const STORAGE_ERRORS = new Set(['SecurityError', 'QuotaExceededError'])
 

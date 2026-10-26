@@ -21,7 +21,7 @@ const chartConfig = {
   wont: { label: priorityLabels.wont, color: 'var(--chart-4)' },
 } satisfies ChartConfig
 
-const data = priorityCounts.map((row) => ({ ...row, fill: `var(--color-${row.priority})` }))
+const priorityBars = priorityCounts.map((row) => ({ ...row, fill: `var(--color-${row.priority})` }))
 
 const ramp = ['chart-1', 'chart-2', 'chart-3', 'chart-4', 'chart-5']
 
@@ -33,7 +33,7 @@ export function ChartCard() {
       className="flex flex-col gap-3"
     >
       <ChartContainer config={chartConfig} className="aspect-auto h-44 w-full">
-        <BarChart accessibilityLayer data={data} margin={{ top: 16, left: -20 }}>
+        <BarChart accessibilityLayer data={priorityBars} margin={{ top: 16, left: -20 }}>
           <CartesianGrid vertical={false} />
           <XAxis
             dataKey="priority"

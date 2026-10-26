@@ -12,7 +12,6 @@ const problemSchema = z.object({
   errors: z.array(z.object({ field: z.string(), message: z.string() })).optional(),
 })
 
-
 /** A response with an error status. `code` is the stable value to branch on, when the body has one. */
 export class ApiError extends Error {
   readonly status: number

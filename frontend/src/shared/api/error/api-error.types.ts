@@ -33,6 +33,7 @@ export const ApiErrorCode = {
 } as const
 
 export type ApiErrorCode = (typeof ApiErrorCode)[keyof typeof ApiErrorCode]
+
 export interface FieldProblem {
   field: string
   message: string

@@ -6,7 +6,7 @@ import { type OutputLanguage, outputLanguages } from '@/shared/config/output-lan
 // Temporary hand-written schemas for the projects API.
 // TODO: replace with the types generated into src/shared/api/generated/ once they exist.
 
-export const projectStatusSchema = z.enum(['active', 'archived'])
+const projectStatusSchema = z.enum(['active', 'archived'])
 
 export type ProjectStatus = z.infer<typeof projectStatusSchema>
 

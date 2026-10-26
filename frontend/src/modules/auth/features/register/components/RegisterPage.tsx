@@ -62,7 +62,7 @@ export function RegisterPage({ next }: RegisterPageProps) {
             pendingLabel="Creating the account"
             className="w-full"
           >
-            Create account
+            Register
           </PendingButton>
         </FieldGroup>
       </Form>

@@ -33,7 +33,7 @@ afterEach(() => {
   document.body.replaceChildren()
 })
 
-describe('matchesHotkey', () => {
+describe('isHotkeyPressed', () => {
   it.each(matchesHotkeyCases)('$name: $matches', ({ init, target, hotkey, matches }) => {
     expect(isHotkeyPressed(press(init, target), hotkey)).toBe(matches)
   })

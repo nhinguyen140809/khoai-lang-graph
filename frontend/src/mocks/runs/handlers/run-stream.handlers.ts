@@ -11,9 +11,9 @@ const MOCK_TOKENS = ['Hello', ' from', ' the', ' **mock**', ' agent.']
 export const streamHandlers = [
   sse(apiEndpoints.runStream.pattern, async ({ client }) => {
     let id = 0
-    const send = (event: string, data: unknown) => {
+    const send = (event: string, payload: unknown) => {
       id += 1
-      client.send({ id: String(id), event, data: JSON.stringify(data) } as never)
+      client.send({ id: String(id), event, data: JSON.stringify(payload) } as never)
     }
 
     send('node_start', { node: 'agent' })

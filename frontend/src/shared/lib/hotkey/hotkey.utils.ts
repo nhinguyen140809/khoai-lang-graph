@@ -27,8 +27,8 @@ function isTypingTarget(target: EventTarget | null): boolean {
  * field, so it never takes a character away from the text. Alt never matches.
  */
 export function isHotkeyPressed(event: KeyboardEvent, { key, mod = false, ctrl = false }: Hotkey) {
-  const held = ctrl ? event.ctrlKey && !event.metaKey : event.ctrlKey || event.metaKey
-  if (event.altKey || held !== (mod || ctrl)) return false
+  const isHeld = ctrl ? event.ctrlKey && !event.metaKey : event.ctrlKey || event.metaKey
+  if (event.altKey || isHeld !== (mod || ctrl)) return false
   if (!mod && !ctrl && isTypingTarget(event.target)) return false
   if (event.key.toLowerCase() === key.toLowerCase()) return true
   const code = codeOf(key)

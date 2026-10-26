@@ -26,7 +26,6 @@ import { validateNewProject } from './projects.validators'
 
 const projectStatuses: readonly Project['status'][] = ['active', 'archived']
 
-
 // The filters of GET /projects, as the API applies them: a rollup run status given one or more
 // times matches any of them, `none` a project without a run; `last_activity_after` keeps the
 // projects with activity after that time.
@@ -95,7 +94,7 @@ export const projectHandlers = [
     }
     if (problems.length > 0) return validationFailed(problems)
     changeProject(projectId, () => ({
-      ...(typeof newName === 'string' && { name: newName }),
+      ...(newName !== undefined && { name: newName }),
       ...(newStatus !== undefined && { status: newStatus }),
       updated_at: mockNow(),
     }))

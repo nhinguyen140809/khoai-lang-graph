@@ -25,7 +25,7 @@ describe('groupsBySearch', () => {
   })
 })
 
-describe('shownKey', () => {
+describe('shownCommandsKey', () => {
   it.each(shownKeyCases)('$name', ({ command, same }) => {
     expect(shownCommandsKey([command]) === shownCommandsKey([shownCommand])).toBe(same)
   })

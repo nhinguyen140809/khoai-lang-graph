@@ -4,7 +4,6 @@ import { hasText } from '@/shared/lib/guards'
 
 import type { PaletteCommand, PaletteCommandGroup } from './command.types'
 
-
 /**
  * The commands by group. The groups are in alphabetical order, so that the list does not depend on
  * the order in which the components that register them mount; a group keeps the order of its

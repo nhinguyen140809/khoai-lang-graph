@@ -67,11 +67,11 @@ function DestinationItem({ destination }: { destination: Destination }) {
     )
   }
 
-  const active = feature?.id === destination.id
+  const isActive = feature?.id === destination.id
 
   return (
     <ActivityBarButton
-      aria-pressed={active}
+      aria-pressed={isActive}
       icon={destination.icon}
       label={destination.label}
       onClick={() => {
