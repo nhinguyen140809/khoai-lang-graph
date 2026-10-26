@@ -1,0 +1,40 @@
+/** Cases that check whether two JSON-shaped values read the same. */
+export const sameValueCases = [
+  { name: 'the same number', a: 1, b: 1, expected: true },
+  { name: 'another number', a: 1, b: 2, expected: false },
+  { name: 'plus zero and minus zero', a: 0, b: -0, expected: false },
+  { name: 'the same NaN', a: NaN, b: NaN, expected: true },
+  { name: 'a word and a number read the same', a: '1', b: 1, expected: false },
+  { name: 'the same list', a: [1, 2], b: [1, 2], expected: true },
+  { name: 'a list in another order', a: [2, 1], b: [1, 2], expected: false },
+  {
+    name: 'the same fields in another key order',
+    a: { x: 1, y: 2 },
+    b: { y: 2, x: 1 },
+    expected: true,
+  },
+  { name: 'a field more on one side', a: { x: 1 }, b: { x: 1, y: 2 }, expected: false },
+  {
+    name: 'the same nested values',
+    a: { x: [1, { y: 2 }] },
+    b: { x: [1, { y: 2 }] },
+    expected: true,
+  },
+  { name: 'null and undefined', a: null, b: undefined, expected: false },
+  { name: 'null and an empty object', a: null, b: {}, expected: false },
+  { name: 'an empty list and an empty object', a: [], b: {}, expected: false },
+  {
+    name: 'a field set to undefined and a field left out',
+    a: { x: undefined },
+    b: {},
+    expected: false,
+  },
+  {
+    name: 'a list of objects with the keys in another order',
+    a: [{ x: 1, y: 2 }],
+    b: [{ y: 2, x: 1 }],
+    expected: true,
+  },
+  { name: 'a nested value that differs', a: { x: { y: 1 } }, b: { x: { y: 2 } }, expected: false },
+  { name: 'a list that is longer', a: [1], b: [1, 2], expected: false },
+] as const
