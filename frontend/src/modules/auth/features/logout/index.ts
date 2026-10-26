@@ -1,1 +1,1 @@
-export { useSignOut } from './hooks/useLogout'
+export { useLogout } from './hooks/useLogout'

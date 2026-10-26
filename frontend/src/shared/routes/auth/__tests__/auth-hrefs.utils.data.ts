@@ -1,4 +1,4 @@
-import { registerHref, signInHref } from '../auth-hrefs.utils'
+import { loginHref, registerHref } from '../auth-hrefs.utils'
 
 /** A page of the app to return to, kept as it is. */
 export const keptNextPaths = [
@@ -7,7 +7,7 @@ export const keptNextPaths = [
   '/settings',
 ]
 
-/** A page to return to that is not of this app, or is a sign-in page: the home page instead. */
+/** A page to return to that is not of this app, or is a login page: the home page instead. */
 export const replacedNextPaths = [
   null,
   undefined,
@@ -25,11 +25,11 @@ export const replacedNextPaths = [
   '/register#top',
 ]
 
-/** A builder of the address of a sign-in page, the page to return to, and the address. */
+/** A builder of the address of a login page, the page to return to, and the address. */
 export const authHrefCases = [
   {
-    name: 'signInHref of a page of the app',
-    build: signInHref,
+    name: 'loginHref of a page of the app',
+    build: loginHref,
     next: '/projects/p1/console',
     href: '/login?next=%2Fprojects%2Fp1%2Fconsole',
   },
@@ -41,12 +41,12 @@ export const authHrefCases = [
   },
   { name: 'registerHref without a page', build: registerHref, next: null, href: '/register' },
   {
-    name: 'signInHref of another site',
-    build: signInHref,
+    name: 'loginHref of another site',
+    build: loginHref,
     next: 'https://example.com',
     href: '/login',
   },
-  { name: 'signInHref of the home page', build: signInHref, next: '/', href: '/login' },
+  { name: 'loginHref of the home page', build: loginHref, next: '/', href: '/login' },
   {
     name: 'registerHref of a sign-in page',
     build: registerHref,
@@ -55,8 +55,8 @@ export const authHrefCases = [
   },
 ]
 
-/** The address of the page on screen, and the address of the sign-in page that returns to it. */
-export const signInHrefForCases = [
+/** The address of the page on screen, and the address of the login page that returns to it. */
+export const loginHrefForCases = [
   {
     name: 'returns to the whole address: path, query and fragment',
     location: { pathname: '/threads/t1', search: '?tab=runs', hash: '#step-3' },

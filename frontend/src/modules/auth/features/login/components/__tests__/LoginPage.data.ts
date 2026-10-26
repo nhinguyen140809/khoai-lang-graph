@@ -1,6 +1,6 @@
 import { HttpResponse } from 'msw'
 
-/** The page to return to, and the page that opens after signing in. */
+/** The page to return to, and the page that opens after logging in. */
 export const returnCases = [
   { next: '/projects/p1/console', opens: '/projects/p1/console' },
   { next: 'https://example.com', opens: '/' },
@@ -9,7 +9,7 @@ export const returnCases = [
 ]
 
 /** An answer of POST /auth/login that refuses, and the message under the form. */
-export const refusedSignInCases = [
+export const refusedLoginCases = [
   {
     name: 'a wrong email or password',
     answer: () => HttpResponse.json({ status: 401, code: 'unauthenticated' }, { status: 401 }),

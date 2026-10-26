@@ -1,11 +1,11 @@
-import { signInHrefFor } from '@/shared/routes'
+import { loginHrefFor } from '@/shared/routes'
 
 // Where the app goes when a request answers 401: every endpoint except register, login and health
 // requires a session.
 
-/** Leaves the page for the sign-in page, which returns here afterwards. */
-export function redirectToSignIn() {
-  const href = signInHrefFor(window.location)
+/** Leaves the page for the login page, which returns here afterwards. */
+export function redirectToLogin() {
+  const href = loginHrefFor(window.location)
   if (href !== null) loadPage(href)
 }
 

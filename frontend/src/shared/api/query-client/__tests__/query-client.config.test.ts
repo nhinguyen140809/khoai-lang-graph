@@ -5,11 +5,11 @@ import { createQueryClient } from '../query-client.config'
 import { retryOnce } from '../query-retry.utils'
 import { keptPageCases, unauthorizedError } from './query-client.config.data'
 
-const { redirectToSignIn } = vi.hoisted(() => ({ redirectToSignIn: vi.fn() }))
+const { redirectToLogin } = vi.hoisted(() => ({ redirectToLogin: vi.fn() }))
 
 vi.mock('../../../lib/url/reload.utils', async (importOriginal) => ({
   ...(await importOriginal<typeof authRedirect>()),
-  redirectToSignIn,
+  redirectToLogin,
 }))
 
 function failQuery(error: Error) {
@@ -19,17 +19,17 @@ function failQuery(error: Error) {
 }
 
 beforeEach(() => {
-  redirectToSignIn.mockClear()
+  redirectToLogin.mockClear()
 })
 
 describe('createQueryClient', () => {
-  it('opens the sign-in page when a query answers 401', async () => {
+  it('opens the login page when a query answers 401', async () => {
     await failQuery(unauthorizedError)
 
-    expect(redirectToSignIn).toHaveBeenCalledTimes(1)
+    expect(redirectToLogin).toHaveBeenCalledTimes(1)
   })
 
-  it('opens the sign-in page when a mutation answers 401', async () => {
+  it('opens the login page when a mutation answers 401', async () => {
     const client = createQueryClient()
     const mutation = client
       .getMutationCache()
@@ -37,13 +37,13 @@ describe('createQueryClient', () => {
 
     await mutation.execute(undefined).catch(() => undefined)
 
-    expect(redirectToSignIn).toHaveBeenCalledTimes(1)
+    expect(redirectToLogin).toHaveBeenCalledTimes(1)
   })
 
   it.each(keptPageCases)('stays on the page for $name', async ({ error }) => {
     await failQuery(error)
 
-    expect(redirectToSignIn).not.toHaveBeenCalled()
+    expect(redirectToLogin).not.toHaveBeenCalled()
   })
 
   it('tries a failed query once more only when it may answer otherwise', () => {

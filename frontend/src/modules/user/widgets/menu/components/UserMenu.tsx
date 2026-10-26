@@ -11,7 +11,7 @@ import {
 import Link from 'next/link'
 import { type ComponentProps, useMemo, useState } from 'react'
 
-import { useSignOut } from '@/modules/auth/features/logout'
+import { useLogout } from '@/modules/auth/features/logout'
 import { initials, type Me, useMe } from '@/modules/user/entities'
 import { useActivityBarItem } from '@/shared/components/frame'
 import { Avatar, AvatarFallback, AvatarImage } from '@/shared/components/ui/avatar'
@@ -38,11 +38,11 @@ export function AccountMenuItem() {
 
 /**
  * The account of the signed-in user, for the bottom of the activity bar: the user, who opens the
- * profile, then help, feedback and signing out, which asks first.
+ * profile, then help, feedback and logging out, which asks first.
  */
 export function UserMenu() {
   // The dialog sits beside the menu, since the menu closes when one of its items is chosen.
-  const [confirmingSignOut, setConfirmingSignOut] = useState(false)
+  const [confirmingLogout, setConfirmingLogout] = useState(false)
 
   return (
     <>
@@ -57,7 +57,7 @@ export function UserMenu() {
           <DropdownMenuSeparator />
           <DropdownMenuItem
             onSelect={() => {
-              setConfirmingSignOut(true)
+              setConfirmingLogout(true)
             }}
           >
             <LogOutIcon aria-hidden />
@@ -65,7 +65,7 @@ export function UserMenu() {
           </DropdownMenuItem>
         </DropdownMenuContent>
       </DropdownMenu>
-      <SignOutDialog open={confirmingSignOut} onOpenChange={setConfirmingSignOut} />
+      <LogoutDialog open={confirmingLogout} onOpenChange={setConfirmingLogout} />
     </>
   )
 }
@@ -143,14 +143,14 @@ function SupportItems() {
   )
 }
 
-interface SignOutDialogProps {
+interface LogoutDialogProps {
   open: boolean
   onOpenChange: (open: boolean) => void
 }
 
 /** Asks before ending the session, and waits while it ends; a failure leaves it open. */
-function SignOutDialog({ open, onOpenChange }: SignOutDialogProps) {
-  const signOut = useSignOut()
+function LogoutDialog({ open, onOpenChange }: LogoutDialogProps) {
+  const logoutRequest = useLogout()
 
   return (
     <ConfirmDialog
@@ -160,7 +160,7 @@ function SignOutDialog({ open, onOpenChange }: SignOutDialogProps) {
       title="Sign out?"
       description="You will need to sign in again to continue."
       confirmLabel="Sign out"
-      onConfirm={() => signOut.mutateAsync()}
+      onConfirm={() => logoutRequest.mutateAsync()}
     />
   )
 }

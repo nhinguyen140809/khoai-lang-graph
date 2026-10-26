@@ -1,10 +1,10 @@
 import { ApiErrorCode, HttpStatus } from '@/shared/api/error/api-error.types'
 import type { ErrorMessages } from '@/shared/api/error/api-error.utils'
 
-// The words that the sign-in page shows for the answers of the API.
+// The words that the login page shows for the answers of the API.
 
-export const signInMessages = {
-  /** Why signing in failed; any other failure shows its own message. */
+export const loginMessages = {
+  /** Why logging in failed; any other failure shows its own message. */
   failed: {
     code: { [ApiErrorCode.RateLimited]: 'Too many attempts. Wait a moment, then try again.' },
     status: { [HttpStatus.Unauthorized]: 'The email or the password is wrong.' },

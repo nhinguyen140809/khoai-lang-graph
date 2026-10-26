@@ -17,7 +17,7 @@ export const routeCases = [
   },
   {
     page: 'the sign-in page, which returns to the page asked for',
-    href: () => routes.signIn('/settings'),
+    href: () => routes.login('/settings'),
     path: '/login?next=%2Fsettings',
   },
   {

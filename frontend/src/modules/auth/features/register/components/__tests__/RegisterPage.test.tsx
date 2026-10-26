@@ -34,7 +34,7 @@ async function fillForm() {
 
 describe('RegisterPage', () => {
   it.each(returnCases)(
-    'creates the account, signs in with it, and opens $opens for $next',
+    'creates the account, logs in with it, and opens $opens for $next',
     async ({ next, opens }) => {
       const requests: string[] = []
       server.events.on('request:start', ({ request }) => {
@@ -51,7 +51,7 @@ describe('RegisterPage', () => {
     },
   )
 
-  it('opens the sign-in page when signing in with the new account fails', async () => {
+  it('opens the login page when logging in with the new account fails', async () => {
     server.use(http.post('/api/v1/auth/login', () => new HttpResponse(null, { status: 500 })))
     render(<RegisterPage next="/threads/t1" />, { wrapper: TestProviders })
 
@@ -113,7 +113,7 @@ describe('RegisterPage', () => {
     expect(requests).toEqual([])
   })
 
-  it('links to the sign-in page, keeping the page to return to', () => {
+  it('links to the login page, keeping the page to return to', () => {
     render(<RegisterPage next="/threads/t1" />, { wrapper: TestProviders })
 
     expect(screen.getByRole('link', { name: 'Sign in' })).toHaveAttribute(

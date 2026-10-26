@@ -8,7 +8,7 @@ import { routerMock } from '@/test/next-stubs/next-stubs.utils'
 import { TestProviders } from '@/test/render/TestProviders'
 
 import { LoginPage } from '../LoginPage'
-import { missingFieldCases, refusedSignInCases, returnCases } from './LoginPage.data'
+import { missingFieldCases, refusedLoginCases, returnCases } from './LoginPage.data'
 
 vi.mock(
   'next/navigation',
@@ -20,28 +20,28 @@ beforeEach(() => {
   routerMock.replace.mockClear()
 })
 
-async function signIn(email: string, password: string) {
+async function logIn(email: string, password: string) {
   await userEvent.type(screen.getByLabelText('Email'), email)
   await userEvent.type(screen.getByLabelText('Password'), password)
   await userEvent.click(screen.getByRole('button', { name: 'Sign in' }))
 }
 
 describe('LoginPage', () => {
-  it.each(returnCases)('signs in and opens $opens for $next', async ({ next, opens }) => {
+  it.each(returnCases)('logs in and opens $opens for $next', async ({ next, opens }) => {
     render(<LoginPage next={next} />, { wrapper: TestProviders })
 
-    await signIn('linh.pham@example.com', 'secret')
+    await logIn('linh.pham@example.com', 'secret')
 
     await vi.waitFor(() => {
       expect(routerMock.replace).toHaveBeenCalledWith(opens)
     })
   })
 
-  it.each(refusedSignInCases)('says $name, and stays', async ({ answer, alert }) => {
+  it.each(refusedLoginCases)('says $name, and stays', async ({ answer, alert }) => {
     server.use(http.post('/api/v1/auth/login', answer))
     render(<LoginPage next={null} />, { wrapper: TestProviders })
 
-    await signIn('linh.pham@example.com', 'secret')
+    await logIn('linh.pham@example.com', 'secret')
 
     expect(await screen.findByRole('alert')).toHaveTextContent(alert)
     expect(routerMock.replace).not.toHaveBeenCalled()
@@ -80,7 +80,7 @@ describe('LoginPage', () => {
     server.use(http.post('/api/v1/auth/login', () => HttpResponse.error()))
     render(<LoginPage next={null} />, { wrapper: TestProviders })
 
-    await signIn('linh.pham@example.com', 'secret')
+    await logIn('linh.pham@example.com', 'secret')
 
     expect((await screen.findByRole('alert')).textContent).not.toBe('')
     expect(routerMock.replace).not.toHaveBeenCalled()
@@ -96,14 +96,14 @@ describe('LoginPage', () => {
     )
     render(<LoginPage next={null} />, { wrapper: TestProviders })
 
-    await signIn('  linh.pham@example.com  ', 'secret')
+    await logIn('  linh.pham@example.com  ', 'secret')
 
     await vi.waitFor(() => {
       expect(sent).toEqual({ email: 'linh.pham@example.com', password: 'secret' })
     })
   })
 
-  it('disables the button while signing in', async () => {
+  it('disables the button while logging in', async () => {
     let answer: (() => void) | undefined
     const answered = new Promise<void>((resolve) => {
       answer = resolve
@@ -116,7 +116,7 @@ describe('LoginPage', () => {
     )
     render(<LoginPage next={null} />, { wrapper: TestProviders })
 
-    await signIn('linh.pham@example.com', 'secret')
+    await logIn('linh.pham@example.com', 'secret')
 
     expect(await screen.findByLabelText('Signing in')).toBeInTheDocument()
     expect(screen.getByRole('button', { name: /Sign in/ })).toBeDisabled()

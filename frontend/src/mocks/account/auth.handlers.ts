@@ -8,7 +8,7 @@ import { unauthenticated, validationFailed } from '../shared/http/response/error
 import { mockScenario, neverAnswer } from '../shared/scenario/mock-scenario.utils'
 import { meRecord } from './me.handlers'
 
-// The session of the mock server: signed in until the user signs out.
+// The session of the mock server: logged in until the user signs out.
 const sessionRecord = mockRecord('session', () => ({ signedIn: true }))
 
 // Endpoints that answer without a session.

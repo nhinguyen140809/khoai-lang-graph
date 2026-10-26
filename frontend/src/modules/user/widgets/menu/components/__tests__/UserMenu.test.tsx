@@ -30,7 +30,7 @@ async function openMenu(name: string | RegExp) {
 }
 
 /** Chooses Sign out in the open menu, then confirms it in the dialog. */
-async function confirmSignOut() {
+async function confirmLogout() {
   await userEvent.click(screen.getByRole('menuitem', { name: 'Sign out' }))
   const dialog = await screen.findByRole('alertdialog', { name: 'Sign out?' })
   await userEvent.click(within(dialog).getByRole('button', { name: 'Sign out' }))
@@ -47,11 +47,11 @@ describe('UserMenu', () => {
     expect(menu).toHaveTextContent('linh.pham@example.com')
   })
 
-  it('signs out and loads the sign-in page', async () => {
+  it('signs out and loads the login page', async () => {
     render(<UserMenu />, { wrapper: TestProviders })
 
     await userEvent.click(await screen.findByRole('button', { name: 'Linh Pham' }))
-    await confirmSignOut()
+    await confirmLogout()
 
     await vi.waitFor(() => {
       expect(loadPage).toHaveBeenCalledWith('/login')
@@ -129,7 +129,7 @@ describe('UserMenu', () => {
     expect(screen.getByRole('menuitem', { name: item })).toHaveAttribute('aria-disabled', 'true')
   })
 
-  it('asks before signing out, and keeps the session when cancelled', async () => {
+  it('asks before logging out, and keeps the session when cancelled', async () => {
     render(<UserMenu />, { wrapper: TestProviders })
 
     await openMenu('Linh Pham')
@@ -142,13 +142,13 @@ describe('UserMenu', () => {
     expect((await fetch(apiUrl('/api/v1/me'))).status).toBe(200)
   })
 
-  it('says when signing out fails, and stays on the page', async () => {
+  it('says when logging out fails, and stays on the page', async () => {
     server.use(http.post('/api/v1/auth/logout', () => new HttpResponse(null, { status: 500 })))
     const error = vi.spyOn(toast, 'error')
     render(<UserMenu />, { wrapper: TestProviders })
 
     await openMenu('Linh Pham')
-    await confirmSignOut()
+    await confirmLogout()
 
     await vi.waitFor(() => {
       expect(error).toHaveBeenCalledWith('Failed to sign out (HTTP 500)')
@@ -170,7 +170,7 @@ describe('UserMenu', () => {
     )
 
     await openMenu('Linh Pham')
-    await confirmSignOut()
+    await confirmLogout()
 
     // The mutation is marked failed only after its own onError has run.
     await vi.waitFor(() => {

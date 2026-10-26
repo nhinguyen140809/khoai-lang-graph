@@ -20,7 +20,7 @@ afterEach(() => {
 })
 
 describe('auth handlers', () => {
-  it('answers 401 after signing out, until the user signs in again', async () => {
+  it('answers 401 after logging out, until the user logs in again', async () => {
     expect((await fetch(apiUrl('/api/v1/me'))).status).toBe(200)
 
     expect((await post('/api/v1/auth/logout')).status).toBe(204)
@@ -35,7 +35,7 @@ describe('auth handlers', () => {
     expect((await fetch(apiUrl('/api/v1/me'))).status).toBe(200)
   })
 
-  it('answers 401 to signing out without a session', async () => {
+  it('answers 401 to logging out without a session', async () => {
     expect((await post('/api/v1/auth/logout')).status).toBe(204)
 
     expect((await post('/api/v1/auth/logout')).status).toBe(401)
@@ -82,7 +82,7 @@ describe('auth handlers', () => {
     },
   )
 
-  it('lets creating an account and signing in through without a session', async () => {
+  it('lets creating an account and logging in through without a session', async () => {
     await post('/api/v1/auth/logout')
 
     expect(

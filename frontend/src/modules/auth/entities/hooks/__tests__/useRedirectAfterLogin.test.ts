@@ -5,7 +5,7 @@ import { beforeEach, describe, expect, it, vi } from 'vitest'
 
 import { routerMock } from '@/test/next-stubs/next-stubs.utils'
 
-import { useOpenAfterSignIn } from '../useRedirectAfterLogin'
+import { useRedirectAfterLogin } from '../useRedirectAfterLogin'
 import { returnCases } from './useRedirectAfterLogin.data'
 
 vi.mock(
@@ -18,7 +18,7 @@ function renderWithCache(next: string | null) {
   client.setQueryData(['user', 'me'], { display_name: 'Someone else' })
   const wrapper = ({ children }: { children: ReactNode }) =>
     createElement(QueryClientProvider, { client }, children)
-  const { result } = renderHook(() => useOpenAfterSignIn(next), { wrapper })
+  const { result } = renderHook(() => useRedirectAfterLogin(next), { wrapper })
   return { client, open: result.current }
 }
 
@@ -26,7 +26,7 @@ beforeEach(() => {
   routerMock.replace.mockClear()
 })
 
-describe('useOpenAfterSignIn', () => {
+describe('useRedirectAfterLogin', () => {
   it.each(returnCases)(
     'drops the cached queries, then opens $opens for $next',
     ({ next, opens }) => {

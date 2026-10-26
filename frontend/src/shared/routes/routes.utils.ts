@@ -1,4 +1,4 @@
-import { registerHref, signInHref } from './auth/auth-hrefs.utils'
+import { loginHref, registerHref } from './auth/auth-hrefs.utils'
 import { projectRoutes } from './project-routes.utils'
 import { checkedRoute } from './typed-route/typed-route.utils'
 
@@ -9,8 +9,8 @@ import { checkedRoute } from './typed-route/typed-route.utils'
  */
 export const routes = {
   home: () => checkedRoute('/'),
-  /** The sign-in page, which returns to `next` afterwards. */
-  signIn: signInHref,
+  /** The login page, which returns to `next` afterwards. */
+  login: loginHref,
   /** The page that creates an account, which returns to `next` afterwards. */
   register: registerHref,
   /** The list of the projects. */

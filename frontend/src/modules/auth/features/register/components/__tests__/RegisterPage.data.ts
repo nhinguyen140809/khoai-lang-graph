@@ -1,6 +1,6 @@
 import { HttpResponse } from 'msw'
 
-/** The page to return to, and the page that opens once the account is created and signed in. */
+/** The page to return to, and the page that opens once the account is created and logged in. */
 export const returnCases = [
   { next: null, opens: '/' },
   { next: '/threads/t1', opens: '/threads/t1' },
