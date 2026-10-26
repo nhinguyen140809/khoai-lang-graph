@@ -107,7 +107,7 @@ A slice holds its components in `components/`, its hooks in `hooks/`, and its ot
 
 Outside the modules, shared code holds `types`, `store`, `reducer`, `config`, `constants` and `utils` files; `src/mocks/` holds `types`, `store`, `constants`, `utils`, `handlers`, `fixtures` and `setup` files, its `fixtures` the records of the mock data and its `constants` their fixed ids and counts; `src/test/` holds `utils` and `setup` files; and `tests/` holds the `spec`, `data` and `utils` files of Playwright. A config made of React elements is a `<subject>.config.tsx`.
 
-ESLint checks the kinds of each place (`FILE_KINDS` of `frontend/eslint.config.js`), the layers inside a module, and the folders at the root of a slice: one for each kind that the layer holds, `components/`, `hooks/`, `__tests__/`, and `@x/` in the entities. It also checks that a `constants` file exports no type and declares no function, and that a `types` file imports no `constants` file.
+ESLint checks the kinds of each place (`fileKinds` of `frontend/lint/lib/file-names/file-kinds.constants.js`), the layers inside a module, and the folders at the root of a slice: one for each kind that the layer holds, `components/`, `hooks/`, `__tests__/`, and `@x/` in the entities. It also checks that a `constants` file exports no type and declares no function, and that a `types` file imports no `constants` file.
 
 ## 4. Order of the modules
 
@@ -117,7 +117,7 @@ ESLint checks the kinds of each place (`FILE_KINDS` of `frontend/eslint.config.j
 
 `usage`, `design-system`
 
-A module imports only the modules under it in its line: `project` reads `thread` and `run`; `activity` sits beside `project`, so it may read the same modules, and neither of the two reads the other; `thread` reads `run`, and `user` reads `auth`. `usage` and `design-system` read no other module. The order is `MODULE_IMPORTS` of `frontend/eslint.config.js`, which lists the modules of today and the ones planned next; a new module gets its place there before its first code. ESLint does not load when the lists form a cycle, or name a module that has no list.
+A module imports only the modules under it in its line: `project` reads `thread` and `run`; `activity` sits beside `project`, so it may read the same modules, and neither of the two reads the other; `thread` reads `run`, and `user` reads `auth`. `usage` and `design-system` read no other module. The order is `moduleImports` of `frontend/lint/lib/modules/module-imports.constants.js`, which lists the modules of today and the ones planned next; a new module gets its place there before its first code. ESLint does not load when the lists form a cycle, or name a module that has no list.
 
 `itemRefSchema`, the reference to an item that a step produced or a message names, sits in `run` until the module `artifact` exists.
 
@@ -247,7 +247,7 @@ A block that reads several modules sits in the highest module that it reads, or 
 
 ## 10. Review checklist
 
-- [ ] Every module has its place in `MODULE_IMPORTS`, and imports only the modules under it
+- [ ] Every module has its place in `moduleImports`, and imports only the modules under it
 - [ ] No entity holds the hook, the form or the dialog of an action
 - [ ] Every widget joins objects with actions, or several actions, and holds no rule of its own
 - [ ] Every import between two entities goes through an `@x` file

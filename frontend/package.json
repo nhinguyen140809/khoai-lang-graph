@@ -14,7 +14,7 @@
     "start": "next start",
     "lint": "node scripts/lint.mjs",
     "lint:fix": "node scripts/lint.mjs --fix",
-    "typecheck": "next typegen && tsc --noEmit",
+    "typecheck": "next typegen && tsc --noEmit && tsc -p lint/tsconfig.json",
     "typecheck:watch": "tsc --noEmit --watch --preserveWatchOutput",
     "format": "prettier --write .",
     "format:check": "prettier --check .",

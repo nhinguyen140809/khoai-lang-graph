@@ -52,7 +52,7 @@ const total = Object.fromEntries(
 const lines = [
   // Lets the workflow find its comment on a pull request and update it instead of adding another.
   '<!-- coverage-report -->',
-  '### Unit test coverage',
+  '### Frontend unit test coverage',
   '',
   `| Area | ${metrics.join(' | ')} |`,
   `|---|${metrics.map(() => '---:').join('|')}|`,
