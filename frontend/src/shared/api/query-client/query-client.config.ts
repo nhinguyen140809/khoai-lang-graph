@@ -1,16 +1,17 @@
 import { MutationCache, QueryCache, QueryClient } from '@tanstack/react-query'
 
-import { redirectToLogin } from '../../lib/url/reload.utils'
 import { HttpStatus } from '../error/api-error.types'
 import { ApiError } from '../error/api-error.utils'
 import { canRetryOnce } from './query-retry.utils'
 
-// A request without a session goes to the login page, whichever query or mutation sent it.
-function onError(error: Error) {
-  if (error instanceof ApiError && error.status === HttpStatus.Unauthorized) redirectToLogin()
-}
-
-export function createQueryClient(): QueryClient {
+/**
+ * The client of the queries and the mutations. A request without a session calls `onUnauthorized`,
+ * whichever query or mutation sent it; the caller decides where the user goes.
+ */
+export function createQueryClient(onUnauthorized: () => void): QueryClient {
+  const onError = (error: Error) => {
+    if (error instanceof ApiError && error.status === HttpStatus.Unauthorized) onUnauthorized()
+  }
   return new QueryClient({
     queryCache: new QueryCache({ onError }),
     mutationCache: new MutationCache({ onError }),

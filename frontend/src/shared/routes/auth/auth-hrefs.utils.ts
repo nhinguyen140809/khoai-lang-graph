@@ -68,6 +68,3 @@ export function loginHrefFor({
   if (authPages.includes(pathname)) return null
   return loginHref(`${pathname}${query}${hash}`)
 }
-
-// Kept until the callers use the new name.
-export { nextParam } from '../route-params/route-params.utils'

@@ -1,14 +1,3 @@
-import { loginHrefFor } from '@/shared/routes'
-
-// Where the app goes when a request answers 401: every endpoint except register, login and health
-// requires a session.
-
-/** Leaves the page for the login page, which returns here afterwards. */
-export function redirectToLogin() {
-  const href = loginHrefFor(window.location)
-  if (href !== null) reloadTo(href)
-}
-
 /**
  * Opens `href` with a full page load, which drops what the app kept in memory, such as the query
  * cache, so that nothing of the previous session shows on the next page.

@@ -1,4 +1,4 @@
-import { loginHref, registerHref } from './auth/auth-hrefs.utils'
+import { loginHref, registerHref } from './auth'
 import { projectRoutes } from './project-routes.utils'
 import { checkedRoute } from './typed-route'
 
