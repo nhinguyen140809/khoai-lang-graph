@@ -1,6 +1,6 @@
 import { http, HttpResponse } from 'msw'
 
-import { projectIds } from '@/mocks/shared/db/mock-ids.constants'
+import { projectIds } from '@/mocks/shared/db'
 import { apiEndpoints } from '@/shared/api/endpoints'
 
 /** The open project, the answer about it, and what the button on the top bar says. */

@@ -2,7 +2,7 @@ import { http, HttpResponse } from 'msw'
 import { describe, expect, it } from 'vitest'
 
 import { server } from '@/mocks/msw-server.setup'
-import { threadIds } from '@/mocks/shared/db/mock-ids.constants'
+import { threadIds } from '@/mocks/shared/db'
 import { apiEndpoints } from '@/shared/api/endpoints'
 
 import { listThreads, sendFirstMessage } from '../threads.api'

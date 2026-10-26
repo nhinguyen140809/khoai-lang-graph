@@ -1,5 +1,5 @@
 import { buildProject } from '@/mocks/projects/projects.fixtures'
-import { projectIds } from '@/mocks/shared/db/mock-ids.constants'
+import { projectIds } from '@/mocks/shared/db'
 
 /** A project of the mock data, which the cases archive or restore. */
 export const mentorProject = buildProject({ id: projectIds.mentor, name: 'Mentor platform' })

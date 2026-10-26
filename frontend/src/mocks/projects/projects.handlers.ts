@@ -13,12 +13,15 @@ import { IdPrefix } from '../shared/db/mock-ids.constants'
 import { createdId } from '../shared/db/mock-ids.utils'
 import { mockState } from '../shared/db/mock-state.utils'
 import { readBodyFields } from '../shared/http/request/request-body.utils'
+import { hasMatchingParam } from '../shared/http/request/request-query.utils'
 import {
   invalidState,
   notFound,
   validationFailed,
 } from '../shared/http/response/error-response.utils'
 import { emptyPage, paginate } from '../shared/http/response/pagination.utils'
+import { noContent } from '../shared/http/response/status-response.utils'
+import { isGivenWrong, requiredText } from '../shared/http/validation/field-values.utils'
 import {
   addressParam,
   answerScenario,
@@ -93,12 +96,6 @@ function isOutputLanguage(value: unknown): value is Project['output_language'] {
   return (outputLanguages as readonly unknown[]).includes(value)
 }
 
-// A text field that may be left out: null when it is left out, undefined when it is not text.
-function optionalText(value: unknown): string | null | undefined {
-  if (value == null) return null
-  return typeof value === 'string' ? value : undefined
-}
-
 type NewProject = Pick<Project, 'name' | 'description' | 'output_language'>
 
 // The fields of a new project read from the body; a field given wrong reads as undefined. A name
@@ -150,7 +147,7 @@ export const projectHandlers = [
     }
     const status = searchParams.get('status')
     const projects = allProjects()
-      .filter((project) => status === null || project.status === status)
+      .filter((project) => hasMatchingParam(searchParams, 'status', project.status))
       .filter(matchesFilters(searchParams))
       .toSorted((a, b) => b.last_activity_at.localeCompare(a.last_activity_at))
     return HttpResponse.json(paginate(projects, request))
@@ -192,7 +189,7 @@ export const projectHandlers = [
     const { name, status } = await readBodyFields(request)
     const newName = typeof name === 'string' ? name.trim() : name
     const problems: FieldProblem[] = []
-    if (newName !== undefined && (typeof newName !== 'string' || newName === '')) {
+    if (isGivenWrong(name, requiredText)) {
       problems.push({ field: 'name', message: 'Enter a name.' })
     }
     if (status !== undefined && !isProjectStatus(status)) {
@@ -217,6 +214,6 @@ export const projectHandlers = [
       return invalidState('Stop the unfinished runs of the project first.')
     }
     deletedProjectIds.set([...deletedProjectIds.get(), projectId])
-    return new HttpResponse(null, { status: 204 })
+    return noContent()
   }),
 ]

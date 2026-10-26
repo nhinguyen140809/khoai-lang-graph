@@ -52,6 +52,16 @@ export function invalidState(detail: string) {
   return errorResponse(HttpStatus.Conflict, ApiErrorCode.InvalidState, 'Invalid state', detail)
 }
 
+/** A change based on an old version of the record, which has moved on since. */
+export function versionConflict(detail: string) {
+  return errorResponse(
+    HttpStatus.Conflict,
+    ApiErrorCode.VersionConflict,
+    'Version conflict',
+    detail,
+  )
+}
+
 export function internalError() {
   return errorResponse(HttpStatus.InternalServerError, ApiErrorCode.InternalError, 'Internal error')
 }

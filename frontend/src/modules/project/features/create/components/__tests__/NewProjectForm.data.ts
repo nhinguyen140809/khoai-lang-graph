@@ -1,7 +1,6 @@
 import { HttpResponse } from 'msw'
 
-import { IdPrefix } from '@/mocks/shared/db/mock-ids.constants'
-import { createdId } from '@/mocks/shared/db/mock-ids.utils'
+import { createdId, IdPrefix } from '@/mocks/shared/db'
 import { apiEndpoints } from '@/shared/api/endpoints'
 
 const projectId = createdId(IdPrefix.Project, 1)

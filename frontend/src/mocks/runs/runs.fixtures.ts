@@ -1,5 +1,6 @@
 import type { Run, RunStep } from '@/modules/run/entities'
 
+import { isoTime } from '../shared/db/mock-clock.utils'
 import {
   IdPrefix,
   personaIds,
@@ -230,8 +231,8 @@ function buildSteps(
           : usage(costUsd, spec.seconds * 1000, Math.round(costUsd * 120_000)),
       produced: spec.produced ?? [],
       error: null,
-      started_at: new Date(start).toISOString().replace('.000Z', 'Z'),
-      finished_at: new Date(clock).toISOString().replace('.000Z', 'Z'),
+      started_at: isoTime(new Date(start)),
+      finished_at: isoTime(new Date(clock)),
     }
   })
 }

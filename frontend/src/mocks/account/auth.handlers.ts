@@ -6,6 +6,8 @@ import { apiBasePath, apiEndpoints, publicApiPaths } from '@/shared/api/endpoint
 import { mockState } from '../shared/db/mock-state.utils'
 import { readBodyFields } from '../shared/http/request/request-body.utils'
 import { unauthenticated, validationFailed } from '../shared/http/response/error-response.utils'
+import { noContent } from '../shared/http/response/status-response.utils'
+import { requiredText, requiredTextProblem } from '../shared/http/validation/field-values.utils'
 import { mockScenario, pendingForever } from '../shared/scenario/mock-scenario.utils'
 import { meRecord } from './me.handlers'
 
@@ -15,14 +17,10 @@ const sessionRecord = mockState('session', () => ({ signedIn: true }))
 // Endpoints that answer without a session.
 const PUBLIC_PATHS = ['/api/v1/auth/register', '/api/v1/auth/login', '/api/v1/health']
 
-function text(value: unknown): string {
-  return typeof value === 'string' ? value.trim() : ''
-}
-
 function missingFields(credentials: Record<string, unknown>, fields: string[]) {
   return fields
-    .filter((field) => text(credentials[field]) === '')
-    .map((field) => ({ field, message: 'Enter a value.' }))
+    .filter((field) => requiredText(credentials[field]) === undefined)
+    .map(requiredTextProblem)
 }
 
 export const authHandlers = [
@@ -51,7 +49,7 @@ export const authHandlers = [
       return unauthenticated('The email or the password is wrong.')
     }
     sessionRecord.set({ signedIn: true })
-    return new HttpResponse(null, { status: 204 })
+    return noContent()
   }),
 
   http.post(apiEndpoints.register.pattern, async ({ request }) => {
@@ -66,8 +64,8 @@ export const authHandlers = [
     const now = new Date().toISOString()
     const me: Me = {
       ...meRecord.get(),
-      email: text(credentials.email).toLowerCase(),
-      display_name: text(credentials.display_name),
+      email: (requiredText(credentials.email) ?? '').toLowerCase(),
+      display_name: requiredText(credentials.display_name) ?? '',
       created_at: now,
       updated_at: now,
     }
@@ -77,6 +75,6 @@ export const authHandlers = [
 
   http.post(apiEndpoints.logout.pattern, () => {
     sessionRecord.set({ signedIn: false })
-    return new HttpResponse(null, { status: 204 })
+    return noContent()
   }),
 ]

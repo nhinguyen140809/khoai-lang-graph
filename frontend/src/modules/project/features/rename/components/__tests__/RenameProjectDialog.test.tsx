@@ -3,7 +3,7 @@ import userEvent from '@testing-library/user-event'
 import { describe, expect, it, vi } from 'vitest'
 
 import { server } from '@/mocks/msw-server.setup'
-import { projectIds } from '@/mocks/shared/db/mock-ids.constants'
+import { projectIds } from '@/mocks/shared/db'
 import { TestProviders } from '@/test/render/TestProviders'
 
 import { RenameProjectDialog } from '../RenameProjectDialog'
