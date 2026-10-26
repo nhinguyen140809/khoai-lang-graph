@@ -13,6 +13,7 @@ import {
 import { useDeleteProjectDialogStore } from '@/modules/project/features/delete'
 import { useRenameProjectDialogStore } from '@/modules/project/features/rename'
 import { ProjectDialogs } from '@/modules/project/widgets/dialogs'
+import { apiEndpoints } from '@/shared/api/endpoints'
 import { routerMock } from '@/test/next-stubs/next-stubs.utils'
 import { TestProviders } from '@/test/render/TestProviders'
 
@@ -46,7 +47,9 @@ function renderTable(status: ProjectStatus, filters: ProjectFilters = noProjectF
 
 function answerNoProject() {
   server.use(
-    http.get('/api/v1/projects', () => HttpResponse.json({ items: [], next_cursor: null })),
+    http.get(apiEndpoints.projects.pattern, () =>
+      HttpResponse.json({ items: [], next_cursor: null }),
+    ),
   )
 }
 
@@ -236,7 +239,7 @@ describe('ProjectTable', () => {
 
   it('keeps the projects shown when the next page fails to load', async () => {
     server.use(
-      http.get('/api/v1/projects', ({ request }) =>
+      http.get(apiEndpoints.projects.pattern, ({ request }) =>
         new URL(request.url).searchParams.has('cursor')
           ? new HttpResponse(null, { status: 500 })
           : undefined,
@@ -252,7 +255,9 @@ describe('ProjectTable', () => {
   })
 
   it('shows the error with a retry when the projects fail to load', async () => {
-    server.use(http.get('/api/v1/projects', () => new HttpResponse(null, { status: 500 })))
+    server.use(
+      http.get(apiEndpoints.projects.path(), () => new HttpResponse(null, { status: 500 })),
+    )
     renderTable('active')
 
     const alert = await screen.findByRole('alert')

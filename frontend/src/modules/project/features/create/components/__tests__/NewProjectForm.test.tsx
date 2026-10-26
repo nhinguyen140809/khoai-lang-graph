@@ -7,6 +7,7 @@ import { afterEach, beforeEach, describe, expect, it, vi } from 'vitest'
 import { server } from '@/mocks/msw-server.setup'
 import { IdPrefix } from '@/mocks/shared/db/mock-ids.constants'
 import { createdId } from '@/mocks/shared/db/mock-ids.utils'
+import { apiEndpoints } from '@/shared/api/endpoints'
 import { Dialog, DialogContent, DialogTitle } from '@/shared/components/ui/dialog'
 import { routerMock } from '@/test/next-stubs/next-stubs.utils'
 import { TestProviders } from '@/test/render/TestProviders'
@@ -129,7 +130,7 @@ describe('NewProjectForm', () => {
   )
 
   it.each(failedCreateCases)('shows $name', async ({ answer, message }) => {
-    server.use(http.post('/api/v1/projects', answer))
+    server.use(http.post(apiEndpoints.projects.pattern, answer))
     const onCreated = renderForm()
 
     await create()

@@ -1,6 +1,7 @@
 import { afterEach, describe, expect, it } from 'vitest'
 
 import type { Project } from '@/modules/project/entities'
+import { apiEndpoints } from '@/shared/api/endpoints'
 import { apiUrl } from '@/shared/api/request/api-url.utils'
 
 import { projectIds } from '../../shared/db/mock-ids.constants'
@@ -51,7 +52,9 @@ function post(path: string, body: string) {
 }
 
 async function listedIds(query: string) {
-  const { body } = (await call(`/api/v1/projects?${query}&limit=200`)) as Answer<Page<Project>>
+  const { body } = (await call(`${apiEndpoints.projects.path()}?${query}&limit=200`)) as Answer<
+    Page<Project>
+  >
   return body.items.map(({ id }) => id)
 }
 
@@ -71,14 +74,14 @@ describe('GET /projects', () => {
   })
 
   it('lists the latest activity first', async () => {
-    const { body } = (await call('/api/v1/projects')) as Answer<Page<Project>>
+    const { body } = (await call(apiEndpoints.projects.path())) as Answer<Page<Project>>
 
     const times = body.items.map(({ last_activity_at }) => last_activity_at)
     expect(times).toEqual(times.toSorted().reverse())
   })
 
   it.each(projectFilterCases)('filters by $name', async ({ query, keeps }) => {
-    const all = (await call('/api/v1/projects?limit=200')) as Answer<Page<Project>>
+    const all = (await call(`${apiEndpoints.projects.path()}?limit=200`)) as Answer<Page<Project>>
     const { body } = (await call(`/api/v1/projects${query}&limit=200`)) as Answer<Page<Project>>
 
     expect(body.items.length).toBeGreaterThan(0)
@@ -87,7 +90,9 @@ describe('GET /projects', () => {
   })
 
   it('filters by status', async () => {
-    const { body } = (await call('/api/v1/projects?status=archived')) as Answer<Page<Project>>
+    const { body } = (await call(`${apiEndpoints.projects.path()}?status=archived`)) as Answer<
+      Page<Project>
+    >
 
     expect(body.items.length).toBeGreaterThan(0)
     expect(body.items.every(({ status }) => status === 'archived')).toBe(true)
@@ -99,7 +104,7 @@ describe('GET /projects', () => {
     async ({ address, projectId, counts }) => {
       openPage(address)
 
-      const { body } = (await call('/api/v1/projects')) as Answer<Page<Project>>
+      const { body } = (await call(apiEndpoints.projects.path())) as Answer<Page<Project>>
 
       expect(body.items.find(({ id }) => id === projectId)?.unfinished_run_counts).toEqual(counts)
     },
@@ -112,7 +117,7 @@ describe('the rollup run status of a project', () => {
     async ({ address, projectId, status }) => {
       openPage(address)
 
-      const { body } = (await call('/api/v1/projects')) as Answer<Page<Project>>
+      const { body } = (await call(apiEndpoints.projects.path())) as Answer<Page<Project>>
 
       expect(body.items.find(({ id }) => id === projectId)?.rollup_run_status).toBe(status)
     },
@@ -122,7 +127,7 @@ describe('the rollup run status of a project', () => {
 describe('GET /projects/{project_id}', () => {
   it('answers one project, with its unfinished runs', async () => {
     const { status, body } = (await call(
-      `/api/v1/projects/${projectIds.mentor}`,
+      apiEndpoints.project.path({ projectId: projectIds.mentor }),
     )) as Answer<Project>
 
     expect(status).toBe(200)
@@ -137,10 +142,15 @@ describe('POST /projects', () => {
   it.each(createProjectCases)(
     'creates an active project from $name, first in the list',
     async ({ body, fields }) => {
-      const created = (await post('/api/v1/projects', JSON.stringify(body))) as Answer<Project>
+      const created = (await post(
+        apiEndpoints.projects.path(),
+        JSON.stringify(body),
+      )) as Answer<Project>
 
       expect(created.status).toBe(201)
-      expect(created.headers.get('Location')).toBe(`/api/v1/projects/${created.body.id}`)
+      expect(created.headers.get('Location')).toBe(
+        apiEndpoints.project.path({ projectId: created.body.id }),
+      )
       expect(created.body).toMatchObject({
         ...fields,
         status: 'active',
@@ -152,8 +162,10 @@ describe('POST /projects', () => {
         },
         unfinished_run_counts: { queued: 0, running: 0, interrupted: 0 },
       })
-      expect((await call(`/api/v1/projects/${created.body.id}`)).status).toBe(200)
-      const list = (await call('/api/v1/projects')) as Answer<Page<Project>>
+      expect((await call(apiEndpoints.project.path({ projectId: created.body.id }))).status).toBe(
+        200,
+      )
+      const list = (await call(apiEndpoints.projects.path())) as Answer<Page<Project>>
       expect(list.body.items[0]?.id).toBe(created.body.id)
     },
   )
@@ -171,7 +183,7 @@ describe('POST /projects', () => {
 
 describe('PATCH /projects/{project_id}', () => {
   it.each(projectStatusChangeCases)('$name', async ({ projectId, status }) => {
-    const path = `/api/v1/projects/${projectId}`
+    const path = apiEndpoints.project.path({ projectId })
 
     expect(await send('PATCH', path, JSON.stringify({ status }))).toMatchObject({
       status: 200,
@@ -181,7 +193,7 @@ describe('PATCH /projects/{project_id}', () => {
   })
 
   it('renames a project, without the spaces around its name', async () => {
-    const path = `/api/v1/projects/${projectIds.mentor}`
+    const path = apiEndpoints.project.path({ projectId: projectIds.mentor })
 
     expect(await send('PATCH', path, '{"name": " Mentor finder "}')).toMatchObject({
       status: 200,
@@ -199,7 +211,7 @@ describe('PATCH /projects/{project_id}', () => {
 
 describe('DELETE /projects/{project_id}', () => {
   it('removes a project whose runs ended from the lists and from its address', async () => {
-    const path = `/api/v1/projects/${projectIds.campus}`
+    const path = apiEndpoints.project.path({ projectId: projectIds.campus })
 
     expect((await call(path, { method: 'DELETE' })).status).toBe(204)
     expect((await call(path)).status).toBe(404)
@@ -207,7 +219,7 @@ describe('DELETE /projects/{project_id}', () => {
   })
 
   it('keeps a project with a run that is not finished', async () => {
-    const path = `/api/v1/projects/${projectIds.mentor}`
+    const path = apiEndpoints.project.path({ projectId: projectIds.mentor })
 
     expect(await call(path, { method: 'DELETE' })).toMatchObject({
       status: 409,

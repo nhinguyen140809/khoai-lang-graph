@@ -1,4 +1,5 @@
 import type { Project } from '@/modules/project/entities'
+import { apiEndpoints } from '@/shared/api/endpoints'
 
 import { generatedProjectSpecs } from '../../generated/fixtures/generated-project-specs.fixtures'
 import { manyProjectCount } from '../../generated/generated.constants'
@@ -171,17 +172,17 @@ export const pendingProjectCases = [
   {
     request: 'POST /projects in the loading scenario',
     address: '/?mock-create-project=loading',
-    send: { path: '/api/v1/projects', method: 'POST' },
+    send: { path: apiEndpoints.projects.path(), method: 'POST' },
   },
   {
     request: 'GET /projects of a page after the first in the more-loading scenario',
     address: '/?mock-projects=more-loading',
-    send: { path: '/api/v1/projects?cursor=50', method: 'GET' },
+    send: { path: `${apiEndpoints.projects.path()}?cursor=50`, method: 'GET' },
   },
   {
     request: 'DELETE /projects/{project_id} in the loading scenario',
     address: '/?mock-delete-project=loading',
-    send: { path: `/api/v1/projects/${projectIds.mentor}`, method: 'DELETE' },
+    send: { path: apiEndpoints.project.path({ projectId: projectIds.mentor }), method: 'DELETE' },
   },
 ]
 
@@ -207,7 +208,7 @@ export const projectErrorCases = [
     request: 'GET /projects in the error scenario',
     address: '/?mock-projects=error',
     method: 'GET',
-    path: '/api/v1/projects',
+    path: apiEndpoints.projects.path(),
     status: 500,
     code: 'internal_error',
   },
@@ -223,7 +224,7 @@ export const projectErrorCases = [
     request: 'GET /projects/{project_id} in the empty scenario',
     address: '/?mock-project=empty',
     method: 'GET',
-    path: `/api/v1/projects/${projectIds.mentor}`,
+    path: apiEndpoints.project.path({ projectId: projectIds.mentor }),
     status: 404,
     code: 'not_found',
   },
@@ -231,7 +232,7 @@ export const projectErrorCases = [
     request: 'GET /projects/{project_id} in the error scenario',
     address: '/?mock-project=error',
     method: 'GET',
-    path: `/api/v1/projects/${projectIds.mentor}`,
+    path: apiEndpoints.project.path({ projectId: projectIds.mentor }),
     status: 500,
     code: 'internal_error',
   },
@@ -247,7 +248,7 @@ export const projectErrorCases = [
     request: 'PATCH /projects/{project_id} in the error scenario',
     address: '/?mock-update-project=error',
     method: 'PATCH',
-    path: `/api/v1/projects/${projectIds.mentor}`,
+    path: apiEndpoints.project.path({ projectId: projectIds.mentor }),
     status: 500,
     code: 'internal_error',
   },
@@ -263,7 +264,7 @@ export const projectErrorCases = [
     request: 'DELETE /projects/{project_id} in the error scenario',
     address: '/?mock-delete-project=error',
     method: 'DELETE',
-    path: `/api/v1/projects/${projectIds.mentor}`,
+    path: apiEndpoints.project.path({ projectId: projectIds.mentor }),
     status: 500,
     code: 'internal_error',
   },

@@ -3,6 +3,7 @@ import { http, HttpResponse } from 'msw'
 import type { Run } from '@/modules/run/entities'
 import { isUnfinishedRunStatus, type UnfinishedRunStatus } from '@/modules/run/entities'
 import type { Thread } from '@/modules/thread/entities'
+import { apiEndpoints } from '@/shared/api/endpoints'
 
 import { generatedThreads } from '../generated/fixtures/generated-projects.fixtures'
 import { findProject } from '../projects/projects.handlers'
@@ -54,7 +55,7 @@ function withRunsOfThread(thread: Thread, runs: Run[]): Thread {
 }
 
 export const threadHandlers = [
-  http.get('/api/v1/threads', async ({ request }) => {
+  http.get(apiEndpoints.threads.pattern, async ({ request }) => {
     const scenario = await answerScenario('threads')
     if (scenario === 'empty') return HttpResponse.json({ items: [], next_cursor: null })
     const projectId = new URL(request.url).searchParams.get('project_id')
@@ -64,7 +65,7 @@ export const threadHandlers = [
     return HttpResponse.json(paginate(threads, request))
   }),
 
-  http.get('/api/v1/projects/:projectId/threads', async ({ params, request }) => {
+  http.get(apiEndpoints.projectThreads.pattern, async ({ params, request }) => {
     const scenario = await answerScenario('threads')
     const projectId = String(params.projectId)
     if (findProject(projectId) === undefined) return notFound('The project')
@@ -75,7 +76,7 @@ export const threadHandlers = [
     return HttpResponse.json(paginate(threads, request))
   }),
 
-  http.post('/api/v1/projects/:projectId/threads', async ({ params, request }) => {
+  http.post(apiEndpoints.projectThreads.pattern, async ({ params, request }) => {
     const projectId = String(params.projectId)
     if (findProject(projectId) === undefined) return notFound('The project')
     const { title } = await readBodyFields(request)
@@ -92,11 +93,11 @@ export const threadHandlers = [
     createdThreads.set([thread, ...createdThreads.get()])
     return HttpResponse.json(thread, {
       status: 201,
-      headers: { Location: `/api/v1/threads/${thread.id}` },
+      headers: { Location: apiEndpoints.thread.path({ threadId: thread.id }) },
     })
   }),
 
-  http.get('/api/v1/threads/:threadId', async ({ params }) => {
+  http.get(apiEndpoints.thread.pattern, async ({ params }) => {
     const scenario = await answerScenario('thread')
     const thread =
       scenario === 'empty'

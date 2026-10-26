@@ -1,3 +1,4 @@
+import { apiEndpoints } from '@/shared/api/endpoints'
 import { apiCommand } from '@/shared/api/request'
 
 import type { LoginBody, RegisterBody } from './auth.types'
@@ -6,15 +7,15 @@ import type { LoginBody, RegisterBody } from './auth.types'
 
 /** Starts a session; the server sets the session cookie. */
 export function login(body: LoginBody): Promise<void> {
-  return apiCommand('/api/v1/auth/login', { action: 'sign in', body })
+  return apiCommand(apiEndpoints.login.path(), { action: 'sign in', body })
 }
 
 /** Creates an account; it does not start a session. The answer, the new user, is not read. */
 export function register(body: RegisterBody): Promise<void> {
-  return apiCommand('/api/v1/auth/register', { action: 'create the account', body })
+  return apiCommand(apiEndpoints.register.path(), { action: 'create the account', body })
 }
 
 /** Ends the current session. */
 export function logout(): Promise<void> {
-  return apiCommand('/api/v1/auth/logout', { action: 'sign out' })
+  return apiCommand(apiEndpoints.logout.path(), { action: 'sign out' })
 }

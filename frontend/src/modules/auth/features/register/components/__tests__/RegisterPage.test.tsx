@@ -5,6 +5,7 @@ import { toast } from 'sonner'
 import { afterEach, beforeEach, describe, expect, it, vi } from 'vitest'
 
 import { server } from '@/mocks/msw-server.setup'
+import { apiEndpoints } from '@/shared/api/endpoints'
 import { routerMock } from '@/test/next-stubs/next-stubs.utils'
 import { TestProviders } from '@/test/render/TestProviders'
 
@@ -47,12 +48,15 @@ describe('RegisterPage', () => {
       await vi.waitFor(() => {
         expect(routerMock.replace).toHaveBeenCalledWith(opens)
       })
-      expect(requests).toEqual(['POST /api/v1/auth/register', 'POST /api/v1/auth/login'])
+      expect(requests).toEqual([
+        `POST ${apiEndpoints.register.path()}`,
+        `POST ${apiEndpoints.login.path()}`,
+      ])
     },
   )
 
   it('opens the login page when logging in with the new account fails', async () => {
-    server.use(http.post('/api/v1/auth/login', () => new HttpResponse(null, { status: 500 })))
+    server.use(http.post(apiEndpoints.login.path(), () => new HttpResponse(null, { status: 500 })))
     render(<RegisterPage next="/threads/t1" />, { wrapper: TestProviders })
 
     const info = vi.spyOn(toast, 'info')
@@ -67,7 +71,7 @@ describe('RegisterPage', () => {
 
   it('shows a field problem of the API at its field', async () => {
     server.use(
-      http.post('/api/v1/auth/register', () =>
+      http.post(apiEndpoints.register.pattern, () =>
         HttpResponse.json(
           {
             status: 422,
@@ -88,7 +92,7 @@ describe('RegisterPage', () => {
   })
 
   it.each(failedRegisterCases)('shows $name under the form', async ({ answer, alert }) => {
-    server.use(http.post('/api/v1/auth/register', answer))
+    server.use(http.post(apiEndpoints.register.pattern, answer))
     render(<RegisterPage next={null} />, { wrapper: TestProviders })
 
     await fillForm()
@@ -128,7 +132,7 @@ describe('RegisterPage', () => {
       answer = resolve
     })
     server.use(
-      http.post('/api/v1/auth/register', async () => {
+      http.post(apiEndpoints.register.pattern, async () => {
         await answered
         return new HttpResponse(null, { status: 201 })
       }),

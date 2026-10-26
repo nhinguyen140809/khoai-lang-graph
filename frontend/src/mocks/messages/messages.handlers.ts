@@ -2,6 +2,7 @@ import { http, HttpResponse } from 'msw'
 
 import type { Run } from '@/modules/run/entities'
 import type { Thread } from '@/modules/thread/entities'
+import { apiEndpoints } from '@/shared/api/endpoints'
 
 import { changeProject, findProject } from '../projects/projects.handlers'
 import { allRuns, findMockRun } from '../runs/handlers/runs.handlers'
@@ -81,7 +82,7 @@ function startRun(thread: Thread, now: string): Run {
 
 export const messageHandlers = [
   http.post(
-    '/api/v1/threads/:threadId/messages',
+    apiEndpoints.threadMessages.pattern,
     idempotent(async ({ params, request }) => {
       await answerScenario('send-message')
       const thread = allThreads().find(({ id }) => id === String(params.threadId))

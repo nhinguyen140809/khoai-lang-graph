@@ -1,5 +1,6 @@
 import { z } from 'zod'
 
+import { apiEndpoints } from '@/shared/api/endpoints'
 import { HttpMethod } from '@/shared/api/http'
 import { apiRequest, apiUrl } from '@/shared/api/request'
 
@@ -10,7 +11,7 @@ const listThreadsResponseSchema = z.object({ items: z.array(threadSchema) })
 
 // TODO: switch to the generated client in src/shared/api/generated/ once the threads API exists.
 export async function listThreads(): Promise<Thread[]> {
-  const response = await fetch(apiUrl('/api/v1/threads'))
+  const response = await fetch(apiUrl(apiEndpoints.threads.path()))
   if (!response.ok) {
     throw new Error(`Failed to load threads (HTTP ${String(response.status)})`)
   }
@@ -27,11 +28,11 @@ export async function sendFirstMessage(
   idempotencyKey: string,
 ): Promise<void> {
   const thread = await apiRequest(
-    `/api/v1/projects/${encodeURIComponent(projectId)}/threads`,
+    apiEndpoints.projectThreads.path({ projectId }),
     createdThreadSchema,
     { action: 'start a thread', method: HttpMethod.Post, body: {} },
   )
-  await apiRequest(`/api/v1/threads/${encodeURIComponent(thread.id)}/messages`, sentMessageSchema, {
+  await apiRequest(apiEndpoints.threadMessages.path({ threadId: thread.id }), sentMessageSchema, {
     action: 'send the idea',
     method: HttpMethod.Post,
     body: { content },

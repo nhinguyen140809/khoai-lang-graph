@@ -2,6 +2,7 @@ import { http, HttpResponse } from 'msw'
 
 import type { Project } from '@/modules/project/entities'
 import { isUnfinishedRunStatus, type Run } from '@/modules/run/entities'
+import { apiEndpoints } from '@/shared/api/endpoints'
 import type { FieldProblem } from '@/shared/api/error'
 import { outputLanguages } from '@/shared/config/output-language'
 
@@ -140,7 +141,7 @@ function matchesFilters(params: URLSearchParams) {
 }
 
 export const projectHandlers = [
-  http.get('/api/v1/projects', async ({ request }) => {
+  http.get(apiEndpoints.projects.pattern, async ({ request }) => {
     const scenario = await answerScenario('projects')
     if (scenario === 'empty') return HttpResponse.json(emptyPage)
     const { searchParams } = new URL(request.url)
@@ -155,13 +156,13 @@ export const projectHandlers = [
     return HttpResponse.json(paginate(projects, request))
   }),
 
-  http.get('/api/v1/projects/:projectId', async ({ params }) => {
+  http.get(apiEndpoints.project.pattern, async ({ params }) => {
     const scenario = await answerScenario('project')
     const project = scenario === 'empty' ? undefined : findProject(String(params.projectId))
     return project === undefined ? notFound('The project') : HttpResponse.json(project)
   }),
 
-  http.post('/api/v1/projects', async ({ request }) => {
+  http.post(apiEndpoints.projects.pattern, async ({ request }) => {
     await answerScenario('create-project')
     // The language that the server takes no longer includes the one chosen.
     if (addressParam('mock-create-project') === 'invalid') {
@@ -180,11 +181,11 @@ export const projectHandlers = [
     createdProjects.set([project, ...createdProjects.get()])
     return HttpResponse.json(project, {
       status: 201,
-      headers: { Location: `/api/v1/projects/${project.id}` },
+      headers: { Location: apiEndpoints.project.path({ projectId: project.id }) },
     })
   }),
   // Takes the name and the status, which rename a project, archive it or make it active again.
-  http.patch('/api/v1/projects/:projectId', async ({ params, request }) => {
+  http.patch(apiEndpoints.project.pattern, async ({ params, request }) => {
     await answerScenario('update-project')
     const projectId = String(params.projectId)
     if (findProject(projectId) === undefined) return notFound('The project')
@@ -207,7 +208,7 @@ export const projectHandlers = [
   }),
 
   // A project with a run that is not finished stays until the run is stopped.
-  http.delete('/api/v1/projects/:projectId', async ({ params }) => {
+  http.delete(apiEndpoints.project.pattern, async ({ params }) => {
     await answerScenario('delete-project')
     const projectId = String(params.projectId)
     const project = findProject(projectId)

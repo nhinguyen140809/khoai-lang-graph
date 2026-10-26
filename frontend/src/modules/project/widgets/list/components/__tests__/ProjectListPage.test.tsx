@@ -4,6 +4,7 @@ import { delay, http } from 'msw'
 import { afterEach, describe, expect, it, vi } from 'vitest'
 
 import { server } from '@/mocks/msw-server.setup'
+import { apiEndpoints } from '@/shared/api/endpoints'
 import { routerMock, setPathname, setSearch } from '@/test/next-stubs/next-stubs.utils'
 import { TestProviders } from '@/test/render/TestProviders'
 
@@ -84,7 +85,7 @@ describe('ProjectListPage', () => {
   })
 
   it('stays open while the project is created', async () => {
-    server.use(http.post('/api/v1/projects', () => delay('infinite')))
+    server.use(http.post(apiEndpoints.projects.pattern, () => delay('infinite')))
     renderPage()
     const dialog = await startProject('Mentor platform')
 

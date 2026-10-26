@@ -1,5 +1,7 @@
 import { delay, sse } from 'msw'
 
+import { apiEndpoints } from '@/shared/api/endpoints'
+
 // Kept out of runs.handlers.ts, which the unit tests also load, because sse() needs a global
 // EventSource, which jsdom does not provide. Only the browser worker loads this file; Playwright
 // covers streaming.
@@ -7,7 +9,7 @@ import { delay, sse } from 'msw'
 const MOCK_TOKENS = ['Hello', ' from', ' the', ' **mock**', ' agent.']
 
 export const streamHandlers = [
-  sse('/api/v1/runs/:runId/stream', async ({ client }) => {
+  sse(apiEndpoints.runStream.pattern, async ({ client }) => {
     let id = 0
     const send = (event: string, data: unknown) => {
       id += 1

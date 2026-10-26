@@ -1,6 +1,7 @@
 import { http, HttpResponse } from 'msw'
 
 import { projectIds } from '@/mocks/shared/db/mock-ids.constants'
+import { apiEndpoints } from '@/shared/api/endpoints'
 
 /** A project, the answer about it, and what the gate shows once the project is loaded or failed. */
 export const gateCases = [
@@ -22,7 +23,7 @@ export const gateCases = [
     name: 'the screens when the project fails to load for another reason',
     projectId: projectIds.mentor,
     answer: () =>
-      http.get('/api/v1/projects/:projectId', () => new HttpResponse(null, { status: 500 })),
+      http.get(apiEndpoints.project.pattern, () => new HttpResponse(null, { status: 500 })),
     shows: 'Project screens, error',
     hides: 'Project not found',
   },

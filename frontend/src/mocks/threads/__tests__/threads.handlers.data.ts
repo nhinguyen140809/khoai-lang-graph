@@ -1,3 +1,5 @@
+import { apiEndpoints } from '@/shared/api/endpoints'
+
 import { projectIds, runIds, threadIds } from '../../shared/db/mock-ids.constants'
 
 /** A request for a list of threads in the scenario of the page address: the ids it lists. */
@@ -5,25 +7,25 @@ export const threadListCases = [
   {
     request: 'GET /threads?project_id={project_id}',
     address: '/',
-    path: `/api/v1/threads?project_id=${projectIds.library}`,
+    path: `${apiEndpoints.threads.path()}?project_id=${projectIds.library}`,
     ids: [threadIds.libraryMain],
   },
   {
     request: 'GET /projects/{project_id}/threads',
     address: '/',
-    path: `/api/v1/projects/${projectIds.mentor}/threads`,
+    path: apiEndpoints.projectThreads.path({ projectId: projectIds.mentor }),
     ids: [threadIds.mentorMain],
   },
   {
     request: 'GET /threads in the empty scenario',
     address: '/?mock-threads=empty',
-    path: '/api/v1/threads',
+    path: apiEndpoints.threads.path(),
     ids: [],
   },
   {
     request: 'GET /projects/{project_id}/threads in the empty scenario',
     address: '/?mock-threads=empty',
-    path: `/api/v1/projects/${projectIds.mentor}/threads`,
+    path: apiEndpoints.projectThreads.path({ projectId: projectIds.mentor }),
     ids: [],
   },
 ]
@@ -62,7 +64,7 @@ export const threadErrorCases = [
   {
     request: 'GET /threads in the error scenario',
     address: '/?mock-threads=error',
-    path: '/api/v1/threads',
+    path: apiEndpoints.threads.path(),
     status: 500,
     code: 'internal_error',
   },
@@ -83,14 +85,14 @@ export const threadErrorCases = [
   {
     request: 'GET /threads/{thread_id} in the empty scenario',
     address: '/?mock-thread=empty',
-    path: `/api/v1/threads/${threadIds.mentorMain}`,
+    path: apiEndpoints.thread.path({ threadId: threadIds.mentorMain }),
     status: 404,
     code: 'not_found',
   },
   {
     request: 'GET /threads/{thread_id} in the error scenario',
     address: '/?mock-thread=error',
-    path: `/api/v1/threads/${threadIds.mentorMain}`,
+    path: apiEndpoints.thread.path({ threadId: threadIds.mentorMain }),
     status: 500,
     code: 'internal_error',
   },

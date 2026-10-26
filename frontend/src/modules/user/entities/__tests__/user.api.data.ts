@@ -1,5 +1,7 @@
 import { http, HttpResponse } from 'msw'
 
+import { apiEndpoints } from '@/shared/api/endpoints'
+
 import { getMe } from '../user.api'
 
 /** A call of the user API, and the request it sends. */
@@ -7,7 +9,7 @@ export const sentRequestCases = [
   {
     name: 'reads the signed-in user',
     call: () => getMe(),
-    request: { method: 'GET', path: '/api/v1/me', body: null },
+    request: { method: 'GET', path: apiEndpoints.me.path(), body: null },
   },
 ]
 

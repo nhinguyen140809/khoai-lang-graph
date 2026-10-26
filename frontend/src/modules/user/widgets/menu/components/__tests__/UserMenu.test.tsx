@@ -6,6 +6,7 @@ import { toast } from 'sonner'
 import { beforeEach, describe, expect, it, vi } from 'vitest'
 
 import { server } from '@/mocks/msw-server.setup'
+import { apiEndpoints } from '@/shared/api/endpoints'
 import { apiUrl } from '@/shared/api/request/api-url.utils'
 import type * as urlModule from '@/shared/lib/url'
 import { TestProviders } from '@/test/render/TestProviders'
@@ -57,11 +58,11 @@ describe('UserMenu', () => {
       expect(reloadTo).toHaveBeenCalledWith('/login')
     })
     expect(reloadTo).toHaveBeenCalledTimes(1)
-    expect((await fetch(apiUrl('/api/v1/me'))).status).toBe(401)
+    expect((await fetch(apiUrl(apiEndpoints.me.path()))).status).toBe(401)
   })
 
   it('offers to load the account again when it fails', async () => {
-    server.use(http.get('/api/v1/me', () => new HttpResponse(null, { status: 500 })))
+    server.use(http.get(apiEndpoints.me.path(), () => new HttpResponse(null, { status: 500 })))
     render(<UserMenu />, { wrapper: TestProviders })
 
     await userEvent.click(screen.getByRole('button', { name: 'Account' }))
@@ -77,7 +78,7 @@ describe('UserMenu', () => {
       answer = resolve
     })
     server.use(
-      http.get('/api/v1/me', async () => {
+      http.get(apiEndpoints.me.pattern, async () => {
         await answered
         return new HttpResponse(null, { status: 500 })
       }),
@@ -139,7 +140,7 @@ describe('UserMenu', () => {
 
     expect(screen.queryByRole('alertdialog')).not.toBeInTheDocument()
     expect(reloadTo).not.toHaveBeenCalled()
-    expect((await fetch(apiUrl('/api/v1/me'))).status).toBe(200)
+    expect((await fetch(apiUrl(apiEndpoints.me.path()))).status).toBe(200)
   })
 
   it('says when logging out fails, and stays on the page', async () => {
@@ -160,7 +161,9 @@ describe('UserMenu', () => {
   })
 
   it('shows no failure when the session had already ended', async () => {
-    server.use(http.post('/api/v1/auth/logout', () => new HttpResponse(null, { status: 401 })))
+    server.use(
+      http.post(apiEndpoints.logout.pattern, () => new HttpResponse(null, { status: 401 })),
+    )
     const error = vi.spyOn(toast, 'error')
     const client = new QueryClient()
     render(

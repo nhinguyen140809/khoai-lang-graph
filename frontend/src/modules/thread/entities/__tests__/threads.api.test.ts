@@ -3,6 +3,7 @@ import { describe, expect, it } from 'vitest'
 
 import { server } from '@/mocks/msw-server.setup'
 import { threadIds } from '@/mocks/shared/db/mock-ids.constants'
+import { apiEndpoints } from '@/shared/api/endpoints'
 
 import { listThreads, sendFirstMessage } from '../threads.api'
 import { createdThread, failedListCases, sentMessage } from './threads.api.data'
@@ -17,14 +18,16 @@ describe('listThreads', () => {
   it('returns an empty list when there are no threads', async () => {
     // One-off override: this test needs different data than the default fixture.
     server.use(
-      http.get('/api/v1/threads', () => HttpResponse.json({ items: [], next_cursor: null })),
+      http.get(apiEndpoints.threads.pattern, () =>
+        HttpResponse.json({ items: [], next_cursor: null }),
+      ),
     )
 
     await expect(listThreads()).resolves.toEqual([])
   })
 
   it.each(failedListCases)('throws on $name', async ({ answer, error }) => {
-    server.use(http.get('/api/v1/threads', answer))
+    server.use(http.get(apiEndpoints.threads.pattern, answer))
 
     await expect(listThreads()).rejects.toThrow(error)
   })

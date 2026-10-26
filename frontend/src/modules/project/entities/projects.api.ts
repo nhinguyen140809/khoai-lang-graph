@@ -1,5 +1,6 @@
 import { subDays } from 'date-fns'
 
+import { apiEndpoints } from '@/shared/api/endpoints'
 import { HttpMethod } from '@/shared/api/http'
 import { apiCommand, apiRequest, fetchPage, type ListPage } from '@/shared/api/request'
 
@@ -35,7 +36,7 @@ export function listProjects(
   limit: number,
   filters: ProjectFilters = noProjectFilters,
 ): Promise<ListPage<Project>> {
-  return fetchPage(`/api/v1/projects?${listQuery(status, filters)}`, projectSchema, {
+  return fetchPage(`${apiEndpoints.projects.path()}?${listQuery(status, filters)}`, projectSchema, {
     limit,
     cursor,
     action: 'load projects',
@@ -43,13 +44,13 @@ export function listProjects(
 }
 
 export function getProject(projectId: string): Promise<Project> {
-  return apiRequest(`/api/v1/projects/${encodeURIComponent(projectId)}`, projectSchema, {
+  return apiRequest(apiEndpoints.project.path({ projectId }), projectSchema, {
     action: 'load the project',
   })
 }
 
 export function createProject(body: CreateProjectBody): Promise<Project> {
-  return apiRequest('/api/v1/projects', projectSchema, {
+  return apiRequest(apiEndpoints.projects.path(), projectSchema, {
     action: 'create the project',
     method: HttpMethod.Post,
     body,
@@ -62,7 +63,7 @@ function changeProjectStatus(
   status: ProjectStatus,
   action: string,
 ): Promise<Project> {
-  return apiRequest(`/api/v1/projects/${encodeURIComponent(projectId)}`, projectSchema, {
+  return apiRequest(apiEndpoints.project.path({ projectId }), projectSchema, {
     action,
     method: HttpMethod.Patch,
     body: { status },
@@ -81,7 +82,7 @@ export function restoreProject(projectId: string): Promise<Project> {
 
 /** Gives a project a new name. */
 export function renameProject(projectId: string, name: string): Promise<Project> {
-  return apiRequest(`/api/v1/projects/${encodeURIComponent(projectId)}`, projectSchema, {
+  return apiRequest(apiEndpoints.project.path({ projectId }), projectSchema, {
     action: 'rename the project',
     method: HttpMethod.Patch,
     body: { name },
@@ -90,7 +91,7 @@ export function renameProject(projectId: string, name: string): Promise<Project>
 
 /** Deletes a project: no list shows it again, and its address finds nothing. */
 export function deleteProject(projectId: string): Promise<void> {
-  return apiCommand(`/api/v1/projects/${encodeURIComponent(projectId)}`, {
+  return apiCommand(apiEndpoints.project.path({ projectId }), {
     action: 'delete the project',
     method: HttpMethod.Delete,
   })

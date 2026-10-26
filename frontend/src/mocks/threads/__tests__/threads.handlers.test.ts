@@ -1,6 +1,7 @@
 import { afterEach, describe, expect, it } from 'vitest'
 
 import type { Thread } from '@/modules/thread/entities'
+import { apiEndpoints } from '@/shared/api/endpoints'
 import { apiUrl } from '@/shared/api/request/api-url.utils'
 
 import { generatedProjectSpecs } from '../../generated/fixtures/generated-project-specs.fixtures'
@@ -40,7 +41,7 @@ afterEach(() => {
 
 describe('the lists of threads', () => {
   it('GET /threads lists one thread per project', async () => {
-    const { body } = (await call('/api/v1/threads')) as Answer<Page<Thread>>
+    const { body } = (await call(apiEndpoints.threads.path())) as Answer<Page<Thread>>
 
     expect(body.items).toHaveLength(projectFixtures.length + generatedProjectSpecs.length)
   })
@@ -62,7 +63,7 @@ describe('GET /threads/{thread_id}', () => {
   })
 
   it('has no unfinished run once its run is stopped', async () => {
-    await call(`/api/v1/runs/${runIds.mentorMain3}/cancel`, { method: 'POST' })
+    await call(apiEndpoints.runCancel.path({ runId: runIds.mentorMain3 }), { method: 'POST' })
 
     expect(await mentorThread()).toMatchObject({ active_run_id: null, active_run_status: null })
   })
@@ -70,7 +71,7 @@ describe('GET /threads/{thread_id}', () => {
   it('has no run in the scenario without runs', async () => {
     openPage('/?mock-runs=empty')
 
-    const { body } = (await call('/api/v1/threads')) as Answer<Page<Thread>>
+    const { body } = (await call(apiEndpoints.threads.path())) as Answer<Page<Thread>>
 
     expect(body.items.every(({ active_run_id }) => active_run_id === null)).toBe(true)
   })

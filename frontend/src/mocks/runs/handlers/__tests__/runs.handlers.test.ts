@@ -1,6 +1,7 @@
 import { afterEach, describe, expect, it } from 'vitest'
 
 import type { Run, RunStep } from '@/modules/run/entities'
+import { apiEndpoints } from '@/shared/api/endpoints'
 import { apiUrl } from '@/shared/api/request/api-url.utils'
 
 import { runIds } from '../../../shared/db/mock-ids.constants'
@@ -34,7 +35,7 @@ async function call(path: string, init?: RequestInit) {
   return { status: response.status, body }
 }
 
-const cancel = (runId: string) => call(`/api/v1/runs/${runId}/cancel`, { method: 'POST' })
+const cancel = (runId: string) => call(apiEndpoints.runCancel.path({ runId }), { method: 'POST' })
 
 afterEach(() => {
   openPage('/')
@@ -44,7 +45,7 @@ describe('GET /threads/{thread_id}/runs', () => {
   it.each(runListCases)('lists $name', async ({ address, threadId, runs }) => {
     openPage(address)
 
-    const { body } = (await call(`/api/v1/threads/${threadId}/runs`)) as Answer<Page<Run>>
+    const { body } = (await call(apiEndpoints.threadRuns.path({ threadId }))) as Answer<Page<Run>>
 
     expect(body.items.map(({ number, status }) => ({ number, status }))).toEqual(runs)
   })
@@ -52,7 +53,9 @@ describe('GET /threads/{thread_id}/runs', () => {
 
 describe('GET /runs/{run_id}', () => {
   it('answers run 3 of the API examples, a retry of run 2', async () => {
-    const { status, body } = (await call(`/api/v1/runs/${runIds.mentorMain3}`)) as Answer<Run>
+    const { status, body } = (await call(
+      apiEndpoints.run.path({ runId: runIds.mentorMain3 }),
+    )) as Answer<Run>
 
     expect(status).toBe(200)
     expect(body).toMatchObject({
@@ -71,10 +74,12 @@ describe('GET /runs/{run_id}', () => {
     async ({ state, status, stepCount, finished }) => {
       openPage(`/?mock-run-state=${state}`)
 
-      const { body } = (await call(`/api/v1/runs/${runIds.mentorMain3}`)) as Answer<Run>
-      const steps = (await call(`/api/v1/runs/${runIds.mentorMain3}/steps?limit=200`)) as Answer<
-        Page<RunStep>
-      >
+      const { body } = (await call(
+        apiEndpoints.run.path({ runId: runIds.mentorMain3 }),
+      )) as Answer<Run>
+      const steps = (await call(
+        `${apiEndpoints.runSteps.path({ runId: runIds.mentorMain3 })}?limit=200`,
+      )) as Answer<Page<RunStep>>
 
       expect(body).toMatchObject({ status, step_count: stepCount })
       expect(steps.body.items).toHaveLength(stepCount)
@@ -85,9 +90,11 @@ describe('GET /runs/{run_id}', () => {
 
 describe('GET /runs/{run_id}/steps', () => {
   it('answers the steps in order, in pages', async () => {
-    const first = (await call(`/api/v1/runs/${runIds.mentorMain3}/steps`)) as Answer<Page<RunStep>>
+    const first = (await call(apiEndpoints.runSteps.path({ runId: runIds.mentorMain3 }))) as Answer<
+      Page<RunStep>
+    >
     const second = (await call(
-      `/api/v1/runs/${runIds.mentorMain3}/steps?cursor=${String(first.body.next_cursor)}`,
+      `${apiEndpoints.runSteps.path({ runId: runIds.mentorMain3 })}?cursor=${String(first.body.next_cursor)}`,
     )) as Answer<Page<RunStep>>
     const steps = [...first.body.items, ...second.body.items]
 
@@ -106,7 +113,9 @@ describe('POST /runs/{run_id}/cancel', () => {
 
     expect((await cancel(runIds.mentorMain3)).status).toBe(202)
 
-    const { body } = (await call(`/api/v1/runs/${runIds.mentorMain3}`)) as Answer<Run>
+    const { body } = (await call(
+      apiEndpoints.run.path({ runId: runIds.mentorMain3 }),
+    )) as Answer<Run>
     expect(body.status).toBe('cancelled')
     expect(body.finished_at).not.toBeNull()
     expect(await cancel(runIds.mentorMain3)).toMatchObject({

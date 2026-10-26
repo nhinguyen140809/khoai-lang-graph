@@ -1,5 +1,7 @@
 import { http, HttpResponse } from 'msw'
 
+import { apiEndpoints } from '@/shared/api/endpoints'
+
 import { login, logout, register } from '../auth.api'
 
 /** A call of the auth API, and the request it sends. */
@@ -9,7 +11,7 @@ export const sentRequestCases = [
     call: () => login({ email: 'linh.pham@example.com', password: 'secret' }),
     request: {
       method: 'POST',
-      path: '/api/v1/auth/login',
+      path: apiEndpoints.login.path(),
       body: { email: 'linh.pham@example.com', password: 'secret' },
     },
   },
@@ -18,14 +20,14 @@ export const sentRequestCases = [
     call: () => register({ email: 'an@example.com', password: 'secret', display_name: 'An Tran' }),
     request: {
       method: 'POST',
-      path: '/api/v1/auth/register',
+      path: apiEndpoints.register.path(),
       body: { email: 'an@example.com', password: 'secret', display_name: 'An Tran' },
     },
   },
   {
     name: 'signs out without a body',
     call: () => logout(),
-    request: { method: 'POST', path: '/api/v1/auth/logout', body: null },
+    request: { method: 'POST', path: apiEndpoints.logout.path(), body: null },
   },
 ]
 
@@ -34,7 +36,7 @@ export const refusedCallCases = [
   {
     name: 'a refused sign-in',
     refuse: () =>
-      http.post('/api/v1/auth/login', () =>
+      http.post(apiEndpoints.login.pattern, () =>
         HttpResponse.json({ status: 401, code: 'unauthenticated' }, { status: 401 }),
       ),
     call: () => login({ email: 'a@example.com', password: 'x' }),
@@ -43,7 +45,7 @@ export const refusedCallCases = [
   {
     name: 'an email that has an account',
     refuse: () =>
-      http.post('/api/v1/auth/register', () =>
+      http.post(apiEndpoints.register.pattern, () =>
         HttpResponse.json({ status: 422, code: 'validation_failed' }, { status: 422 }),
       ),
     call: () => register({ email: 'a@example.com', password: 'x', display_name: 'A' }),
@@ -51,7 +53,8 @@ export const refusedCallCases = [
   },
   {
     name: 'a failed sign-out',
-    refuse: () => http.post('/api/v1/auth/logout', () => new HttpResponse(null, { status: 500 })),
+    refuse: () =>
+      http.post(apiEndpoints.logout.path(), () => new HttpResponse(null, { status: 500 })),
     call: () => logout(),
     error: { status: 500, code: null, message: 'Failed to sign out (HTTP 500)' },
   },

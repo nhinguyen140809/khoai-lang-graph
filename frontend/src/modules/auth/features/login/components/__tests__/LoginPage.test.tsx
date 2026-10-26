@@ -4,6 +4,7 @@ import { http, HttpResponse } from 'msw'
 import { beforeEach, describe, expect, it, vi } from 'vitest'
 
 import { server } from '@/mocks/msw-server.setup'
+import { apiEndpoints } from '@/shared/api/endpoints'
 import { routerMock } from '@/test/next-stubs/next-stubs.utils'
 import { TestProviders } from '@/test/render/TestProviders'
 
@@ -38,7 +39,7 @@ describe('LoginPage', () => {
   })
 
   it.each(refusedLoginCases)('says $name, and stays', async ({ answer, alert }) => {
-    server.use(http.post('/api/v1/auth/login', answer))
+    server.use(http.post(apiEndpoints.login.pattern, answer))
     render(<LoginPage next={null} />, { wrapper: TestProviders })
 
     await logIn('linh.pham@example.com', 'secret')
@@ -77,7 +78,7 @@ describe('LoginPage', () => {
   })
 
   it('shows a failure of the network', async () => {
-    server.use(http.post('/api/v1/auth/login', () => HttpResponse.error()))
+    server.use(http.post(apiEndpoints.login.pattern, () => HttpResponse.error()))
     render(<LoginPage next={null} />, { wrapper: TestProviders })
 
     await logIn('linh.pham@example.com', 'secret')
@@ -89,7 +90,7 @@ describe('LoginPage', () => {
   it('sends the email without the spaces around it', async () => {
     let sent: unknown = null
     server.use(
-      http.post('/api/v1/auth/login', async ({ request }) => {
+      http.post(apiEndpoints.login.pattern, async ({ request }) => {
         sent = await request.json()
         return new HttpResponse(null, { status: 204 })
       }),
@@ -109,7 +110,7 @@ describe('LoginPage', () => {
       answer = resolve
     })
     server.use(
-      http.post('/api/v1/auth/login', async () => {
+      http.post(apiEndpoints.login.pattern, async () => {
         await answered
         return new HttpResponse(null, { status: 204 })
       }),

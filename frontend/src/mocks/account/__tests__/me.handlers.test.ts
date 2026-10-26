@@ -1,5 +1,6 @@
 import { afterEach, describe, expect, it } from 'vitest'
 
+import { apiEndpoints } from '@/shared/api/endpoints'
 import { apiUrl } from '@/shared/api/request'
 
 import { meCases } from './me.handlers.data'
@@ -17,7 +18,7 @@ describe('me handlers', () => {
   it.each(meCases)('answers $name', async ({ address, status, body }) => {
     openPage(address)
 
-    const answer = await fetch(apiUrl('/api/v1/me'))
+    const answer = await fetch(apiUrl(apiEndpoints.me.path()))
 
     expect(answer.status).toBe(status)
     expect(await answer.json()).toMatchObject(body)
@@ -27,7 +28,7 @@ describe('me handlers', () => {
     openPage('/?mock-me=loading')
     const controller = new AbortController()
 
-    const request = fetch(apiUrl('/api/v1/me'), { signal: controller.signal }).then(
+    const request = fetch(apiUrl(apiEndpoints.me.path()), { signal: controller.signal }).then(
       () => 'answered',
       () => 'aborted',
     )

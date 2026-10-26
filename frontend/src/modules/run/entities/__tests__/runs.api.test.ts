@@ -3,6 +3,7 @@ import { afterEach, describe, expect, it } from 'vitest'
 
 import { server } from '@/mocks/msw-server.setup'
 import { mockRunId } from '@/mocks/runs/handlers/runs.handlers'
+import { apiEndpoints } from '@/shared/api/endpoints'
 
 import { createRun } from '../runs.api'
 import { failedRunCases } from './runs.api.data'
@@ -35,7 +36,7 @@ describe('createRun', () => {
   })
 
   it.each(failedRunCases)('throws on $name', async ({ answer, error }) => {
-    server.use(http.post('/api/v1/threads/:threadId/runs', answer))
+    server.use(http.post(apiEndpoints.threadRuns.pattern, answer))
 
     await expect(createRun('thread-1', 'hi')).rejects.toThrow(error)
   })

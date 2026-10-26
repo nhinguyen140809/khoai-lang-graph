@@ -1,5 +1,7 @@
 import { http, HttpResponse } from 'msw'
 
+import { apiEndpoints } from '@/shared/api/endpoints'
+
 /** A name typed in the dialog, the answer of the API if it is sent, and the problem that shows. */
 export const renameProblemCases = [
   { name: 'a blank name', typed: '   ', answer: null, problem: 'Enter a name.' },
@@ -7,7 +9,7 @@ export const renameProblemCases = [
     name: 'a name that the API does not take',
     typed: 'Mentor finder',
     answer: () =>
-      http.patch('/api/v1/projects/:projectId', () =>
+      http.patch(apiEndpoints.project.pattern, () =>
         HttpResponse.json(
           {
             title: 'Validation failed',
@@ -24,7 +26,7 @@ export const renameProblemCases = [
     name: 'a failure of the API',
     typed: 'Mentor finder',
     answer: () =>
-      http.patch('/api/v1/projects/:projectId', () => new HttpResponse(null, { status: 500 })),
+      http.patch(apiEndpoints.project.pattern, () => new HttpResponse(null, { status: 500 })),
     problem: 'Failed to rename the project (HTTP 500)',
   },
 ]

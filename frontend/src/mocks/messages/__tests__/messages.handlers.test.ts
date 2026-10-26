@@ -3,6 +3,7 @@ import { afterEach, describe, expect, it } from 'vitest'
 import type { Project } from '@/modules/project/entities'
 import type { Run } from '@/modules/run/entities'
 import type { Thread } from '@/modules/thread/entities'
+import { apiEndpoints } from '@/shared/api/endpoints'
 import { apiUrl } from '@/shared/api/request/api-url.utils'
 
 import { runIds, threadIds } from '../../shared/db/mock-ids.constants'
@@ -50,9 +51,15 @@ afterEach(() => {
 
 /** Creates a project from the body of POST /projects, and a thread in it. */
 async function newThread(project: object = {}) {
-  const created = (await post('/api/v1/projects', JSON.stringify(project))) as Answer<Project>
+  const created = (await post(
+    apiEndpoints.projects.path(),
+    JSON.stringify(project),
+  )) as Answer<Project>
   const projectId = created.body.id
-  const thread = (await post(`/api/v1/projects/${projectId}/threads`, '{}')) as Answer<Thread>
+  const thread = (await post(
+    apiEndpoints.projectThreads.path({ projectId }),
+    '{}',
+  )) as Answer<Thread>
   return { projectId, threadId: thread.body.id }
 }
 
@@ -69,7 +76,7 @@ describe('POST /threads/{thread_id}/messages', () => {
       const { projectId, threadId } = await newThread(project)
 
       const sent = (await post(
-        `/api/v1/threads/${threadId}/messages`,
+        apiEndpoints.threadMessages.path({ threadId }),
         JSON.stringify({ content: IDEA }),
       )) as Answer<Sent>
 
@@ -81,12 +88,12 @@ describe('POST /threads/{thread_id}/messages', () => {
         },
       })
       expect(sent.body.message.run_id).toBe(sent.body.run.id)
-      expect((await call(`/api/v1/projects/${projectId}`)).body).toMatchObject({
+      expect((await call(apiEndpoints.project.path({ projectId }))).body).toMatchObject({
         name: projectName,
         initial_message_id: sent.body.message.id,
         unfinished_run_counts: { queued: 0, running: 1, interrupted: 0 },
       })
-      expect((await call(`/api/v1/threads/${threadId}`)).body).toMatchObject({
+      expect((await call(apiEndpoints.thread.path({ threadId }))).body).toMatchObject({
         current_stage: 'planning',
         active_run_id: sent.body.run.id,
         active_run_status: 'running',
@@ -96,7 +103,7 @@ describe('POST /threads/{thread_id}/messages', () => {
 
   it('leaves a message for the unfinished run of the thread', async () => {
     const sent = (await post(
-      `/api/v1/threads/${threadIds.mentorMain}/messages`,
+      apiEndpoints.threadMessages.path({ threadId: threadIds.mentorMain }),
       JSON.stringify({ content: 'Also ask about group sessions.' }),
     )) as Answer<Sent>
 
@@ -111,20 +118,20 @@ describe('POST /threads/{thread_id}/messages', () => {
 
   it('starts no second run for a message sent again with its key', async () => {
     const { threadId } = await newThread()
-    const path = `/api/v1/threads/${threadId}/messages`
+    const path = apiEndpoints.threadMessages.path({ threadId })
     const body = JSON.stringify({ content: IDEA })
 
     const first = (await post(path, body, 'key-1')) as Answer<Sent>
     const again = (await post(path, body, 'key-1')) as Answer<Sent>
 
     expect(again).toEqual(first)
-    const runs = (await call(`/api/v1/threads/${threadId}/runs`)).body as { items: Run[] }
+    const runs = (await call(apiEndpoints.threadRuns.path({ threadId }))).body as { items: Run[] }
     expect(runs.items).toHaveLength(1)
   })
 
   it('answers 409 to a message sent again with its key and other words', async () => {
     const { threadId } = await newThread()
-    const path = `/api/v1/threads/${threadId}/messages`
+    const path = apiEndpoints.threadMessages.path({ threadId })
     await post(path, JSON.stringify({ content: IDEA }), 'key-1')
 
     expect(await post(path, JSON.stringify({ content: 'Another idea.' }), 'key-1')).toMatchObject({

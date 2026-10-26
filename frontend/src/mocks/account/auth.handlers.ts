@@ -1,6 +1,7 @@
 import { http, HttpResponse } from 'msw'
 
 import type { Me } from '@/modules/user/entities'
+import { apiBasePath, apiEndpoints, publicApiPaths } from '@/shared/api/endpoints'
 
 import { mockState } from '../shared/db/mock-state.utils'
 import { readBodyFields } from '../shared/http/request/request-body.utils'
@@ -31,15 +32,15 @@ export const authHandlers = [
     ({ request }) => {
       const { pathname } = new URL(request.url)
       return (
-        pathname.startsWith('/api/v1/') &&
-        !PUBLIC_PATHS.includes(pathname) &&
+        pathname.startsWith(`${apiBasePath}/`) &&
+        !publicApiPaths.includes(pathname) &&
         !sessionRecord.get().signedIn
       )
     },
     () => unauthenticated('Sign in to continue.'),
   ),
 
-  http.post('/api/v1/auth/login', async ({ request }) => {
+  http.post(apiEndpoints.login.pattern, async ({ request }) => {
     const scenario = mockScenario('login')
     if (scenario === 'loading') return pendingForever()
     const credentials = await readBodyFields(request)
@@ -53,7 +54,7 @@ export const authHandlers = [
     return new HttpResponse(null, { status: 204 })
   }),
 
-  http.post('/api/v1/auth/register', async ({ request }) => {
+  http.post(apiEndpoints.register.pattern, async ({ request }) => {
     const scenario = mockScenario('register')
     if (scenario === 'loading') return pendingForever()
     const credentials = await readBodyFields(request)
@@ -71,10 +72,10 @@ export const authHandlers = [
       updated_at: now,
     }
     meRecord.set(me)
-    return HttpResponse.json(me, { status: 201, headers: { Location: '/api/v1/me' } })
+    return HttpResponse.json(me, { status: 201, headers: { Location: apiEndpoints.me.path() } })
   }),
 
-  http.post('/api/v1/auth/logout', () => {
+  http.post(apiEndpoints.logout.pattern, () => {
     sessionRecord.set({ signedIn: false })
     return new HttpResponse(null, { status: 204 })
   }),

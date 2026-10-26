@@ -10,6 +10,7 @@ import { projectIds } from '@/mocks/shared/db/mock-ids.constants'
 import { useProjectPromptStore } from '@/modules/project/features/create'
 import { useRenameProjectDialogStore } from '@/modules/project/features/rename'
 import { ProjectDialogs } from '@/modules/project/widgets/dialogs'
+import { apiEndpoints } from '@/shared/api/endpoints'
 import { routerMock } from '@/test/next-stubs/next-stubs.utils'
 import { TestProviders } from '@/test/render/TestProviders'
 
@@ -65,7 +66,7 @@ describe('ProjectSwitcher', () => {
   it('switches to a recent active project, marking the open one', async () => {
     const queries: string[] = []
     server.use(
-      http.get('/api/v1/projects', ({ request }) => {
+      http.get(apiEndpoints.projects.pattern, ({ request }) => {
         queries.push(new URL(request.url).search)
         const recent = projectFixtures.filter(({ id }) => id !== projectIds.laundry)
         return HttpResponse.json({ items: recent, next_cursor: 'more' })
@@ -108,7 +109,7 @@ describe('ProjectSwitcher', () => {
     render(<ProjectSwitcher projectId={projectIds.mentor} />, { wrapper: TestProviders })
     await screen.findByRole('button', { name: 'Mentor platform' })
     server.use(
-      http.get('/api/v1/projects/:projectId', () => new HttpResponse(null, { status: 500 })),
+      http.get(apiEndpoints.project.pattern, () => new HttpResponse(null, { status: 500 })),
     )
 
     // Coming back to the window loads the project again.
