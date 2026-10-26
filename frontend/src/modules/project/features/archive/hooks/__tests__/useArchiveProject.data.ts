@@ -22,3 +22,17 @@ export const archiveToastCases = [
     duration: undefined,
   },
 ] as const
+
+/** A change that the server refuses, and the toast that shows the error. */
+export const archiveErrorCases = [
+  {
+    name: 'a failed archive',
+    change: 'archive',
+    message: 'Failed to archive the project (HTTP 500)',
+  },
+  {
+    name: 'a failed restore',
+    change: 'restore',
+    message: 'Failed to restore the project (HTTP 500)',
+  },
+] as const
