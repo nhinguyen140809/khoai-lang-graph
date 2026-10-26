@@ -5,11 +5,14 @@ import js from '@eslint/js'
 import { defineConfig, globalIgnores } from 'eslint/config'
 import nextPlugin from '@next/eslint-plugin-next'
 import checkFile from 'eslint-plugin-check-file'
+import importPlugin from 'eslint-plugin-import'
 import jsxA11y from 'eslint-plugin-jsx-a11y'
 import reactHooks from 'eslint-plugin-react-hooks'
 import simpleImportSort from 'eslint-plugin-simple-import-sort'
 import globals from 'globals'
 import tseslint from 'typescript-eslint'
+
+import localRules from './lint/index.js'
 
 // The visible parts of these libraries are wrapped in src/shared/components/ui, where they take
 // the design system tokens. Code outside that folder uses the wrappers.
@@ -100,6 +103,29 @@ const message = {
   order: 'A module imports only the modules under it (MODULE_IMPORTS in eslint.config.js).',
 }
 
+// The browser storage is used through the index of its folder.
+const storageIndexPattern = {
+  group: ['@/shared/lib/storage/**'],
+  message: 'Import the storage from @/shared/lib/storage, its index.',
+}
+
+// The helpers of the unit tests are used through the index of their folder: @/test/msw,
+// @/test/suites, @/test/next-stubs, @/test/render and @/test/steps.
+const testHelpersIndexPattern = {
+  group: ['@/test/*/**'],
+  message: 'Import the test helpers from the index of their folder, such as @/test/msw.',
+}
+
+// The helpers of the mocks in src/mocks/shared are used through the index of their folder from
+// outside src/mocks: @/mocks/shared/db, @/mocks/shared/scenario and @/mocks/shared/http/<topic>.
+// Inside src/mocks a file imports the file it needs, since the layers of the mocks are checked
+// by the kind of each file.
+const mockHelpersIndexPattern = {
+  group: ['@/mocks/shared/db/**', '@/mocks/shared/scenario/**', '@/mocks/shared/http/*/**'],
+  message:
+    'Import the helpers of the mocks from the index of their folder, such as @/mocks/shared/db.',
+}
+
 // A slice is used through its index.ts only, from any layer above it; inside a slice, files use
 // relative imports. The files of the @x folder of an entity are for the entities of other modules.
 const publicApiPatterns = [
@@ -113,6 +139,9 @@ const publicApiPatterns = [
     group: ['@/shared/components/frame/**'],
     message: 'Import the frame from @/shared/components/frame, its index.',
   },
+  storageIndexPattern,
+  testHelpersIndexPattern,
+  mockHelpersIndexPattern,
 ]
 
 const outsidePatterns = [
@@ -175,11 +204,14 @@ const sharedCodePatterns = [
     message:
       'Shared code does not import the frame. Inside src/shared/components/frame, use relative imports.',
   },
+  storageIndexPattern,
+  testHelpersIndexPattern,
+  mockHelpersIndexPattern,
 ]
 
 // The layers of the frame (README: Frame). A component reaches the state of the frame through
-// hooks, a store stands alone so that hooks are the one place that combines stores, and the pure
-// files hold no React and no state.
+// hooks, a store may build on another store but never on a hook, and the pure files hold no React and
+// no state.
 const frameComponentPattern = {
   regex: '\\.store$',
   allowTypeImports: true,
@@ -188,8 +220,8 @@ const frameComponentPattern = {
 }
 
 const frameStorePattern = {
-  regex: '\\.store$|/hooks/',
-  message: 'A store of the frame imports no other store and no hook. Combine stores in a hook.',
+  regex: '/hooks/',
+  message: 'A store of the frame imports no hook: a hook runs only inside a component.',
 }
 
 const frameHookPattern = {
@@ -229,7 +261,7 @@ function climbPattern(depth) {
 // hooks of its slice, which hold what follows a call.
 const componentPatterns = [
   {
-    regex: '\\.api$|/shared/api/request/api-request\\.utils$',
+    regex: '\\.api$|^@/shared/api/request/',
     message: 'A component calls the API through a hook, which calls <subject>.api.ts.',
   },
   {
@@ -240,6 +272,11 @@ const componentPatterns = [
 
 const componentPaths = [
   ...wrappedLibraryImports,
+  {
+    name: '@/shared/api/request',
+    importNames: ['apiRequest', 'apiCommand', 'fetchPage'],
+    message: 'A component calls the API through a hook, which calls <subject>.api.ts.',
+  },
   {
     name: '@tanstack/react-query',
     message: 'A component reads the queries and the mutations through a hook of its slice.',
@@ -267,13 +304,12 @@ const syntax = {
       selector:
         "CallExpression[callee.name='persist'] > ObjectExpression:not(:has(> Property[key.name='storage']))",
       message:
-        'A persisted store passes storage: persistStorage(...) or persistStorageByEntry(...) of @/shared/lib/storage/browser-storage.utils, which handles storage that is missing, blocked or full.',
+        'A persisted store passes storage: persistStorage(...) or persistStorageByEntry(...) of @/shared/lib/storage, which handles storage that is missing, blocked or full.',
     },
     {
       selector:
         "CallExpression[callee.name='persist'] > ObjectExpression > Property[key.name='name']:not([value.callee.name='storageKey'])",
-      message:
-        'Name the key of a persisted store with storageKey(...) of @/shared/lib/storage/browser-storage.utils.',
+      message: 'Name the key of a persisted store with storageKey(...) of @/shared/lib/storage.',
     },
   ],
   bracketClasses: [
@@ -308,12 +344,88 @@ const syntax = {
     message:
       'A hook lives in hooks/use<Name>.ts of its slice, not in the file of a component (CONTRIBUTING: Hooks of a slice).',
   })),
+  // An action that deletes, stops or revokes something asks first, in a dialog (ConfirmDialog).
+  destructiveActions: [
+    {
+      selector:
+        'ImportSpecifier[imported.name=/^use(Delete|Remove|Stop|Revoke|Discard|Reset)[A-Z][A-Za-z]*(?<!Dialog)$/]',
+      message:
+        'A destructive action asks first: call this hook from a *Dialog.tsx file that renders ConfirmDialog, and open that dialog from menus, rows and commands (CONTRIBUTING: Destructive actions).',
+    },
+  ],
+  // The address of a page that comes from data is typed with routeOfAddress, in one place.
+  routeCast: ["TSAsExpression[typeAnnotation.typeName.name='Route']"].map((selector) => ({
+    selector,
+    message:
+      'Do not cast to Route: write the address of a page with routes or checkedRoute, and an address that comes from data with routeOfAddress of @/shared/routes.',
+  })),
+  // A method written as a literal is checked by its type where it is given to a function or a field
+  // of the type HttpMethod, so the tests may write it; the code outside the tests uses the name.
+  httpMethodLiteral: [
+    {
+      selector: "Property[key.name='method'] > Literal[value=/^(GET|POST|PUT|PATCH|DELETE)$/]",
+      message: 'Use HttpMethod of @/shared/api/http.',
+    },
+  ],
+  // A unit test types, pastes and presses keys with the steps of @/test/steps.
+  userEventKeys: [
+    {
+      selector:
+        'CallExpression[callee.object.name=/^(user|userEvent)$/][callee.property.name=/^(keyboard|type|paste|tab)$/]',
+      message:
+        'Use typeText, pasteText, pressKey, pressKeys, pressTab or clickHolding of @/test/steps.',
+    },
+  ],
+  // A unit test gets its query cache from @/test/render.
+  testQueryClient: [
+    {
+      selector: "NewExpression[callee.name='QueryClient']",
+      message:
+        'Use createTestQueryClient of @/test/render, or the cache that renderWithProviders makes.',
+    },
+  ],
+  // The methods, statuses and headers of HTTP have names in @/shared/api/http, which is the only
+  // place that writes them out.
+  httpVocabulary: [
+    {
+      selector: "Property[key.name='status'] > Literal[raw=/^[1-5]\\d\\d$/]",
+      message: 'Use HttpStatus of @/shared/api/http.',
+    },
+    {
+      selector:
+        'Literal[value=/^(Content-Type|Content-Disposition|Location|If-Match|Idempotency-Key)$/]',
+      message: 'Use HttpHeader of @/shared/api/http.',
+    },
+    {
+      selector: 'Literal[value=/^(application\\/json|application\\/problem\\+json|text\\/plain)$/]',
+      message: 'Use MediaType of @/shared/api/http.',
+    },
+  ],
+  // The paths of the API are written once, in @/shared/api/endpoints.
+  apiPaths: ['Literal', 'TemplateElement'].map((type) => ({
+    selector:
+      type === 'Literal'
+        ? 'Literal[value=/^\\/api\\/v1\\//]'
+        : 'TemplateElement[value.raw=/^\\/api\\/v1\\//]',
+    message:
+      'Write the path of the API with apiEndpoints of @/shared/api/endpoints, or apiEndpoint for a path of its own.',
+  })),
   defaultExport: ['ExportDefaultDeclaration', "ExportSpecifier[exported.name='default']"].map(
     (selector) => ({
       selector,
       message: 'Use a named export; only the routing files of Next.js export a default.',
     }),
   ),
+  // A file of functions keeps the types that others use in the types file of its subject; a type
+  // that only it uses stays in the file, unexported.
+  exportedTypes: [
+    "ExportNamedDeclaration[exportKind='type']",
+    "ExportSpecifier[exportKind='type']",
+  ].map((selector) => ({
+    selector,
+    message:
+      'A file of functions exports no type: a type that others use goes in the types file of its subject, and one only this file uses stays here, unexported (CONTRIBUTING: Types and constants).',
+  })),
   // A constants file holds only the words of the screens and the settings.
   valuesInConstants: [
     ...['TSInterfaceDeclaration', 'TSTypeAliasDeclaration'].map((type) => ({
@@ -343,9 +455,28 @@ const syntax = {
   })),
 }
 
+// Names that say nothing of what they hold, abbreviations, and handle... (an event handler is
+// named after what it does).
+const vagueName =
+  '^(data|info|tmp|temp|obj|arr|val|res|resp|req|cb|fn|ctx|msg|btn|el|elem)$|^handle[A-Z]'
+
 function restrictSyntax(...groups) {
   return { 'no-restricted-syntax': ['error', ...groups.flatMap((group) => syntax[group])] }
 }
+
+// The kinds of file of src/mocks that a file may not import, by the kinds that it is.
+const mockLayers = [
+  {
+    kinds: ['fixtures', 'constants', 'types'],
+    above: ['store', 'lookup', 'changes', 'problems', 'validators', 'handlers'],
+  },
+  { kinds: ['store'], above: ['lookup', 'changes', 'problems', 'validators', 'handlers'] },
+  { kinds: ['lookup'], above: ['changes', 'problems', 'validators', 'handlers'] },
+  { kinds: ['changes'], above: ['problems', 'validators', 'handlers'] },
+  { kinds: ['problems'], above: ['changes', 'validators', 'handlers'] },
+  { kinds: ['validators'], above: ['changes', 'problems', 'handlers'] },
+  { kinds: ['utils', 'handlers'], above: ['handlers'] },
+]
 
 // The files of src/app/ whose default export Next.js reads.
 const nextRoutingFiles = [
@@ -484,9 +615,12 @@ export default defineConfig([
         : { projectService: true, tsconfigRootDir: import.meta.dirname },
     },
     plugins: {
+      import: importPlugin,
       'simple-import-sort': simpleImportSort,
     },
     rules: {
+      // A module is imported in one statement, apart from its types (consistent-type-imports).
+      'import/no-duplicates': 'error',
       'simple-import-sort/imports': 'error',
       'simple-import-sort/exports': 'error',
       'no-console': 'error',
@@ -500,8 +634,8 @@ export default defineConfig([
     },
   },
   {
-    // Browser storage is read and written through src/shared/lib/storage/browser-storage.utils.ts only, which
-    // handles storage that is missing, blocked or full.
+    // Browser storage is read and written through src/shared/lib/storage/browser-storage.utils.ts
+    // only, which handles storage that is missing, blocked or full.
     files: ['src/**/*.{ts,tsx}', 'tests/**/*.ts'],
     ignores: ['src/shared/lib/storage/browser-storage.utils.ts'],
     rules: {
@@ -509,8 +643,7 @@ export default defineConfig([
         'error',
         ...['localStorage', 'sessionStorage'].map((name) => ({
           name,
-          message:
-            'Use browserStorage or persistStorage from @/shared/lib/storage/browser-storage.utils.',
+          message: 'Use browserStorage of @/shared/lib/storage, or persistStorage for a store.',
         })),
       ],
       'no-restricted-properties': [
@@ -519,18 +652,75 @@ export default defineConfig([
           ['localStorage', 'sessionStorage'].map((property) => ({
             object,
             property,
-            message:
-              'Use browserStorage or persistStorage from @/shared/lib/storage/browser-storage.utils.',
+            message: 'Use browserStorage of @/shared/lib/storage, or persistStorage for a store.',
           })),
         ),
       ],
     },
   },
   {
+    // The names that say what a thing is (CONTRIBUTING: Names). A boolean, or a function that
+    // returns one, is is..., has... or can...; find... may come back empty and get... never does;
+    // a name does not use a word that the app dropped.
+    files: ['src/**/*.{ts,tsx}', 'tests/**/*.ts'],
+    ignores: ['src/shared/components/ui/**'],
+    plugins: { local: localRules },
+    rules: {
+      'local/boolean-name': 'error',
+      'local/find-get-name': 'error',
+      'local/retired-words': [
+        'error',
+        {
+          retired: [
+            { words: ['sign', 'in'], use: 'log in (login)' },
+            { words: ['sign', 'out'], use: 'log out (logout)' },
+            { words: ['sign', 'up'], use: 'register' },
+            { words: ['create', 'account'], use: 'register' },
+          ],
+        },
+      ],
+    },
+  },
+  {
+    // find... in the helpers of the tests waits for the element and throws, as findBy... does.
+    files: ['src/test/**/*.ts', 'src/**/__tests__/**/*.{ts,tsx}'],
+    rules: { 'local/find-get-name': 'off' },
+  },
+  {
     // An exported value is camelCase, or PascalCase for a component, a context or an object used
     // as an enum; UPPER_SNAKE_CASE is for a setting private to its file (CONTRIBUTING: Identifier
-    // naming).
+    // naming). A variable or a parameter is not named with a word that fits anything (data, info,
+    // res), an abbreviation (req, msg, btn), or handle... for an event handler; a type is not
+    // named Props alone; destructuring keeps the names of the fields it takes.
     files: ['src/**/*.{ts,tsx}', 'tests/**/*.ts'],
+    ignores: ['src/shared/components/ui/**'],
+    rules: {
+      '@typescript-eslint/naming-convention': [
+        'error',
+        {
+          selector: 'variable',
+          modifiers: ['exported'],
+          format: ['camelCase', 'PascalCase'],
+          custom: { regex: vagueName, match: false },
+        },
+        {
+          selector: ['variable', 'parameter'],
+          format: null,
+          custom: { regex: vagueName, match: false },
+        },
+        { selector: ['variable', 'parameter'], modifiers: ['destructured'], format: null },
+        { selector: 'function', format: null, custom: { regex: vagueName, match: false } },
+        {
+          selector: ['interface', 'typeAlias', 'class', 'enum'],
+          format: null,
+          custom: { regex: '^Props$', match: false },
+        },
+      ],
+    },
+  },
+  {
+    // The components copied from shadcn/ui keep their names.
+    files: ['src/shared/components/ui/**/*.{ts,tsx}'],
     rules: {
       '@typescript-eslint/naming-convention': [
         'error',
@@ -549,6 +739,25 @@ export default defineConfig([
       'innerHtml',
       'inlineKeys',
       'defaultExport',
+      'routeCast',
+      'httpVocabulary',
+      'httpMethodLiteral',
+      'apiPaths',
+    ),
+  },
+  {
+    files: ['src/**/*.@(utils|lookup|changes|problems|validators|handlers).ts'],
+    rules: restrictSyntax(
+      'persistStorage',
+      'bracketClasses',
+      'innerHtml',
+      'inlineKeys',
+      'defaultExport',
+      'exportedTypes',
+      'routeCast',
+      'httpVocabulary',
+      'httpMethodLiteral',
+      'apiPaths',
     ),
   },
   {
@@ -560,6 +769,10 @@ export default defineConfig([
       'inlineKeys',
       'defaultExport',
       'valuesInConstants',
+      'routeCast',
+      'httpVocabulary',
+      'httpMethodLiteral',
+      'apiPaths',
     ),
   },
   {
@@ -571,6 +784,10 @@ export default defineConfig([
       'inlineKeys',
       'defaultExport',
       'constantsInTypes',
+      'routeCast',
+      'httpVocabulary',
+      'httpMethodLiteral',
+      'apiPaths',
     ),
   },
   {
@@ -582,11 +799,51 @@ export default defineConfig([
       'inlineKeys',
       'hooksInComponents',
       'defaultExport',
+      'routeCast',
+      'httpVocabulary',
+      'httpMethodLiteral',
+      'apiPaths',
+      'destructiveActions',
+    ),
+  },
+  {
+    // The dialogs that ask before a destructive action are the components that call it.
+    files: ['src/**/*Dialog.tsx'],
+    rules: restrictSyntax(
+      'persistStorage',
+      'bracketClasses',
+      'innerHtml',
+      'inlineKeys',
+      'hooksInComponents',
+      'defaultExport',
+      'routeCast',
+      'httpVocabulary',
+      'httpMethodLiteral',
+      'apiPaths',
     ),
   },
   {
     files: ['src/**/__tests__/**/*.{ts,tsx}'],
+    rules: restrictSyntax(
+      'persistStorage',
+      'bracketClasses',
+      'innerHtml',
+      'defaultExport',
+      'httpVocabulary',
+      'apiPaths',
+      'userEventKeys',
+      'testQueryClient',
+    ),
+  },
+  {
+    // The test of the endpoints writes the paths that they must give.
+    files: ['src/shared/api/endpoints/__tests__/**/*.ts'],
     rules: restrictSyntax('persistStorage', 'bracketClasses', 'innerHtml', 'defaultExport'),
+  },
+  {
+    // The names of HTTP are written out here.
+    files: ['src/shared/api/http/**/*.ts'],
+    rules: { 'no-restricted-syntax': 'off' },
   },
   {
     files: ['src/shared/components/ui/**/*.{ts,tsx}'],
@@ -605,6 +862,22 @@ export default defineConfig([
       'innerHtml',
       'inlineKeys',
       'hooksInComponents',
+      'routeCast',
+      'httpVocabulary',
+      'httpMethodLiteral',
+      'apiPaths',
+    ),
+  },
+  {
+    // The one place that casts an address to Route.
+    files: ['src/shared/routes/typed-route/typed-route.utils.ts'],
+    rules: restrictSyntax(
+      'persistStorage',
+      'bracketClasses',
+      'innerHtml',
+      'inlineKeys',
+      'defaultExport',
+      'exportedTypes',
     ),
   },
   {
@@ -668,6 +941,20 @@ export default defineConfig([
       'no-restricted-imports': ['error', { patterns: sharedCodePatterns }],
     },
   },
+  // Inside src/mocks a file reads only files of its own kind or of a kind below it: the data
+  // (fixtures, constants, types), then the store, then lookup, then changes and problems, then
+  // handlers, which only the setup files and the tests import (frontend README: Files of a mock
+  // folder).
+  ...mockLayers.map(({ kinds, above }) => ({
+    files: [`src/mocks/**/*.@(${kinds.join('|')}).ts`],
+    rules: restrict(wrappedLibraryImports, [
+      ...publicApiPatterns,
+      {
+        regex: `\\.(${above.join('|')})$`,
+        message: `A ${kinds.join(', ')} file of the mocks does not read a ${above.join(', ')} file: they sit above it (frontend README: Files of a mock folder).`,
+      },
+    ]),
+  })),
   // A slice imports only the layers under it and the modules under its module, other slices from
   // their index, and its own files with relative imports (CONTRIBUTING: Modules).
   ...sliceBlocks,
@@ -678,7 +965,6 @@ export default defineConfig([
     ignores: [
       'src/shared/components/ui/**',
       'src/shared/lib/viewport/hooks/use-mobile.ts',
-      'src/shared/lib/cn/index.ts',
       // Next.js file conventions: routing files, metadata files, and src-level entry points.
       ...nextRoutingFiles,
       'src/@(proxy|instrumentation|instrumentation-client).ts',
@@ -756,6 +1042,23 @@ export default defineConfig([
       '@typescript-eslint/no-unsafe-assignment': 'off',
       '@typescript-eslint/no-unsafe-member-access': 'off',
       '@typescript-eslint/no-unsafe-argument': 'off',
+    },
+  },
+  {
+    // The steps that E2E tests and screenshot specs share are used through the index of their folder.
+    files: ['tests/e2e/**/*.ts', 'tests/screenshots/**/*.ts', 'tests/shared/*.ts'],
+    rules: {
+      'no-restricted-imports': [
+        'error',
+        {
+          patterns: [
+            {
+              group: ['**/shared/steps/*'],
+              message: 'Import the steps from the index of their folder, tests/shared/steps.',
+            },
+          ],
+        },
+      ],
     },
   },
   {
