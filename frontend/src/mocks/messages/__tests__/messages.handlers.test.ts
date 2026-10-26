@@ -7,7 +7,8 @@ import { apiEndpoints } from '@/shared/api/endpoints'
 import { apiUrl } from '@/shared/api/request/api-url.utils'
 
 import { runIds, threadIds } from '../../shared/db/mock-ids.constants'
-import { nameFromMessage, type SentMessage } from '../messages.handlers'
+import { nameFromMessage } from '../messages.handlers'
+import type { SentMessage } from '../messages.store'
 import {
   firstMessageCases,
   invalidMessageCases,
