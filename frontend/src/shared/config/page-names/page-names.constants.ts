@@ -1,4 +1,4 @@
-import { routes } from '../../routes/routes.utils'
+import { routes } from '@/shared/routes'
 
 /** The name of each screen outside a project on the top bar, by the start of its address. */
 export const homePageNames = [
