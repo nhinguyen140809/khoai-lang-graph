@@ -1,4 +1,6 @@
-import { apiUrl } from '@/shared/api/request/api-url.utils'
+import { apiEndpoints } from '@/shared/api/endpoints'
+import { HttpHeader, HttpMethod, MediaType } from '@/shared/api/http'
+import { apiUrl } from '@/shared/api/request'
 
 import { type CreateRunResponse, createRunResponseSchema } from './types/runs.types'
 
@@ -6,9 +8,9 @@ import { type CreateRunResponse, createRunResponseSchema } from './types/runs.ty
 
 /** Starts a run of a thread with an input, and gives the id of the run. */
 export async function createRun(threadId: string, input: string): Promise<CreateRunResponse> {
-  const response = await fetch(apiUrl(`/api/v1/threads/${encodeURIComponent(threadId)}/runs`), {
-    method: 'POST',
-    headers: { 'Content-Type': 'application/json' },
+  const response = await fetch(apiUrl(apiEndpoints.threadRuns.path({ threadId })), {
+    method: HttpMethod.Post,
+    headers: { [HttpHeader.ContentType]: MediaType.Json },
     body: JSON.stringify({ input }),
   })
   if (!response.ok) {
@@ -19,5 +21,5 @@ export async function createRun(threadId: string, input: string): Promise<Create
 
 /** The address of the event stream of a run, from its first event. */
 export function runStreamUrl(runId: string): string {
-  return apiUrl(`/api/v1/runs/${encodeURIComponent(runId)}/stream`)
+  return apiUrl(apiEndpoints.runStream.path({ runId }))
 }

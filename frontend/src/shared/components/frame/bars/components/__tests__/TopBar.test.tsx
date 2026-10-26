@@ -1,15 +1,9 @@
 import { render, screen, within } from '@testing-library/react'
 import userEvent from '@testing-library/user-event'
-import { beforeEach, describe, expect, it, vi } from 'vitest'
+import { describe, expect, it } from 'vitest'
 
 import { useCommandsStore } from '../../../commands/commands.store'
 import { TopBar } from '../TopBar'
-
-vi.mock('next/link', async () => (await import('@/test/next-stubs/next-stubs.utils')).linkMock)
-
-beforeEach(() => {
-  useCommandsStore.setState({ open: false })
-})
 
 describe('TopBar', () => {
   it('shows where the user is, after a link to the home page', () => {

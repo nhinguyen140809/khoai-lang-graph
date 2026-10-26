@@ -1,3 +1,5 @@
+import { isOneOf } from '@/shared/lib/guards'
+
 import { internalError } from '../http/response/error-response.utils'
 import {
   type HandlerScenario,
@@ -7,12 +9,8 @@ import {
   mockScenarios,
 } from './mock-scenario.types'
 
-function isMockScenario(value: string): value is (typeof mockScenarios)[number] {
-  return (mockScenarios as readonly string[]).includes(value)
-}
-
 /** A parameter of the page address; null outside the browser, such as in unit tests. */
-export function pageParam(name: string): string | null {
+export function addressParam(name: string): string | null {
   if (typeof window === 'undefined') return null
   return new URLSearchParams(window.location.search).get(name)
 }
@@ -23,12 +21,12 @@ export function pageParam(name: string): string | null {
  * For an endpoint that returns one record, `empty` answers 404.
  */
 export function mockScenario(resource: string): MockScenario {
-  const value = pageParam(`mock-${resource}`)
-  return value !== null && isMockScenario(value) ? value : 'default'
+  const value = addressParam(`mock-${resource}`)
+  return isOneOf(mockScenarios, value) ? value : 'default'
 }
 
 /** An answer that never comes, so that the request never ends, as in a `loading` scenario. */
-export function neverAnswer(): Promise<never> {
+export function pendingForever(): Promise<never> {
   return new Promise<never>(() => undefined)
 }
 
@@ -43,12 +41,8 @@ export async function answerScenario(resource: string): Promise<HandlerScenario>
     // eslint-disable-next-line @typescript-eslint/only-throw-error -- MSW answers a thrown Response
     throw internalError()
   }
-  if (scenario === 'loading') return neverAnswer()
+  if (scenario === 'loading') return pendingForever()
   return scenario
-}
-
-function isMockRunState(value: string): value is MockRunState {
-  return (mockRunStates as readonly string[]).includes(value)
 }
 
 /**
@@ -56,6 +50,6 @@ function isMockRunState(value: string): value is MockRunState {
  * with `?mock-run-state=running` (or `failed`, `done`). The threads and runs handlers read it.
  */
 export function mockRunState(): MockRunState {
-  const value = pageParam('mock-run-state')
-  return value !== null && isMockRunState(value) ? value : 'waiting'
+  const value = addressParam('mock-run-state')
+  return isOneOf(mockRunStates, value) ? value : 'waiting'
 }

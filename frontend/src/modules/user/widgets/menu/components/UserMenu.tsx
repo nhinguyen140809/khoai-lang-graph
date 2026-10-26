@@ -11,8 +11,8 @@ import {
 import Link from 'next/link'
 import { type ComponentProps, useMemo, useState } from 'react'
 
-import { useSignOut } from '@/modules/auth/features/logout'
-import { initials, type Me, useMe } from '@/modules/user/entities'
+import { useLogout } from '@/modules/auth/features/logout'
+import { type Me, useMe } from '@/modules/user/entities'
 import { useActivityBarItem } from '@/shared/components/frame'
 import { Avatar, AvatarFallback, AvatarImage } from '@/shared/components/ui/avatar'
 import { Button } from '@/shared/components/ui/button'
@@ -25,6 +25,7 @@ import {
   DropdownMenuTrigger,
 } from '@/shared/components/ui/dropdown-menu'
 import { Skeleton } from '@/shared/components/ui/skeleton'
+import { initialsOf } from '@/shared/lib/formatters'
 import { routes } from '@/shared/routes'
 
 /** Shows the account menu at the bottom of the activity bar while it is mounted. */
@@ -38,11 +39,11 @@ export function AccountMenuItem() {
 
 /**
  * The account of the signed-in user, for the bottom of the activity bar: the user, who opens the
- * profile, then help, feedback and signing out, which asks first.
+ * profile, then help, feedback and logging out, which asks first.
  */
 export function UserMenu() {
   // The dialog sits beside the menu, since the menu closes when one of its items is chosen.
-  const [confirmingSignOut, setConfirmingSignOut] = useState(false)
+  const [confirmingLogout, setConfirmingLogout] = useState(false)
 
   return (
     <>
@@ -57,15 +58,15 @@ export function UserMenu() {
           <DropdownMenuSeparator />
           <DropdownMenuItem
             onSelect={() => {
-              setConfirmingSignOut(true)
+              setConfirmingLogout(true)
             }}
           >
             <LogOutIcon aria-hidden />
-            Sign out
+            Log out
           </DropdownMenuItem>
         </DropdownMenuContent>
       </DropdownMenu>
-      <SignOutDialog open={confirmingSignOut} onOpenChange={setConfirmingSignOut} />
+      <LogoutDialog open={confirmingLogout} onOpenChange={setConfirmingLogout} />
     </>
   )
 }
@@ -75,7 +76,7 @@ function UserAvatar({ me }: { me: Me }) {
   return (
     <Avatar size="sm" aria-hidden>
       {me.avatar_url !== null && <AvatarImage src={me.avatar_url} alt="" />}
-      <AvatarFallback>{initials(me.display_name)}</AvatarFallback>
+      <AvatarFallback>{initialsOf(me.display_name)}</AvatarFallback>
     </Avatar>
   )
 }
@@ -143,24 +144,24 @@ function SupportItems() {
   )
 }
 
-interface SignOutDialogProps {
+interface LogoutDialogProps {
   open: boolean
   onOpenChange: (open: boolean) => void
 }
 
 /** Asks before ending the session, and waits while it ends; a failure leaves it open. */
-function SignOutDialog({ open, onOpenChange }: SignOutDialogProps) {
-  const signOut = useSignOut()
+function LogoutDialog({ open, onOpenChange }: LogoutDialogProps) {
+  const logoutRequest = useLogout()
 
   return (
     <ConfirmDialog
       open={open}
       onOpenChange={onOpenChange}
       icon={<LogOutIcon />}
-      title="Sign out?"
-      description="You will need to sign in again to continue."
-      confirmLabel="Sign out"
-      onConfirm={() => signOut.mutateAsync()}
+      title="Log out?"
+      description="You will need to log in again to continue."
+      confirmLabel="Log out"
+      onConfirm={() => logoutRequest.mutateAsync()}
     />
   )
 }

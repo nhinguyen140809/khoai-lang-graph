@@ -9,7 +9,7 @@ interface RootErrorProps {
 
 /**
  * Error boundary for the frames of the screens, which the layouts render, and for the pages that
- * have no boundary of their own, such as the sign-in page. The frame may be what failed, so the
+ * have no boundary of their own, such as the login page. The frame may be what failed, so the
  * error stands alone on the page.
  */
 export default function RootError({ error, retry }: RootErrorProps) {

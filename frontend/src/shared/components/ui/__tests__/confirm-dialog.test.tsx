@@ -1,23 +1,49 @@
-import { render, screen, waitFor } from '@testing-library/react'
+import { render, screen, within } from '@testing-library/react'
 import userEvent from '@testing-library/user-event'
-import { useState } from 'react'
+import { type ComponentProps, useState } from 'react'
 import { describe, expect, it, vi } from 'vitest'
+
+import {
+  confirmAction,
+  expectDisabled,
+  expectEnabled,
+  expectFocused,
+  expectNoAccessibilityViolations,
+  expectNoConfirmDialog,
+  expectRole,
+  findConfirmDialog,
+  pressButton,
+  pressEscape,
+} from '@/test/steps'
+import { itAsksBeforeAction } from '@/test/suites'
 
 import { Button } from '../button'
 import { ConfirmDialog } from '../confirm-dialog'
 import { iconCases } from './confirm-dialog.data'
 
-function renderWithTrigger(onConfirm: () => unknown) {
+const TITLE = 'Delete the item?'
+
+function renderWithTrigger(
+  onConfirm: () => unknown,
+  props: Partial<ComponentProps<typeof ConfirmDialog>> = {},
+) {
   render(
     <ConfirmDialog
       trigger={<Button>Delete</Button>}
-      title="Delete the item?"
+      title={TITLE}
       description="It cannot be restored."
       confirmLabel="Delete"
       destructive
       onConfirm={onConfirm}
+      {...props}
     />,
   )
+}
+
+/** Opens the dialog from its trigger and returns it. */
+async function openDialog() {
+  await pressButton('Delete')
+  return findConfirmDialog(TITLE)
 }
 
 /** The lucide class of the icon over the title, or null without one. */
@@ -27,34 +53,46 @@ function shownIcon() {
   return ['lucide-triangle-alert', 'lucide-archive'].find((name) => svg.classList.contains(name))
 }
 
-async function openAndConfirm() {
-  await userEvent.click(screen.getByRole('button', { name: 'Delete' }))
-  const dialog = await screen.findByRole('alertdialog', { name: 'Delete the item?' })
-  expect(dialog).toHaveAccessibleDescription('It cannot be restored.')
-  await userEvent.click(screen.getByRole('button', { name: 'Delete' }))
-}
-
 describe('ConfirmDialog', () => {
-  it('starts on the button that cancels, and cancels without the action', async () => {
-    const onConfirm = vi.fn()
-    renderWithTrigger(onConfirm)
+  describe('as an action that asks first', () => {
+    let ran = false
+    let failing = false
 
-    await userEvent.click(screen.getByRole('button', { name: 'Delete' }))
-    expect(await screen.findByRole('button', { name: 'Cancel' })).toHaveFocus()
-    await userEvent.click(screen.getByRole('button', { name: 'Cancel' }))
-
-    expect(screen.queryByRole('alertdialog')).not.toBeInTheDocument()
-    expect(onConfirm).not.toHaveBeenCalled()
+    itAsksBeforeAction({
+      action: 'the item',
+      confirmLabel: 'Delete',
+      hasRun: () => ran,
+      opener: () => screen.getByRole('button', { name: 'Delete' }),
+      open: () => {
+        ran = false
+        failing = false
+        renderWithTrigger(() => {
+          ran = true
+          return failing ? Promise.reject(new Error('Failed')) : undefined
+        })
+        return openDialog()
+      },
+      fail: () => {
+        failing = true
+      },
+    })
   })
 
-  it('runs the action and closes', async () => {
-    const onConfirm = vi.fn()
-    renderWithTrigger(onConfirm)
+  it('has nothing that assistive technology cannot read', async () => {
+    renderWithTrigger(vi.fn())
 
-    await openAndConfirm()
+    await openDialog()
 
-    expect(onConfirm).toHaveBeenCalledOnce()
-    expect(screen.queryByRole('alertdialog')).not.toBeInTheDocument()
+    await expectNoAccessibilityViolations()
+  })
+
+  it('starts on the button that cancels, and describes the action', async () => {
+    renderWithTrigger(vi.fn())
+
+    const dialog = await openDialog()
+
+    expect(dialog).toHaveAccessibleDescription('It cannot be restored.')
+    expectFocused('button', 'Cancel', within(dialog))
   })
 
   it('waits for an action that returns a promise, and closes when it resolves', async () => {
@@ -66,27 +104,81 @@ describe('ConfirmDialog', () => {
         }),
     )
 
-    await openAndConfirm()
+    const dialog = await openDialog()
 
-    expect(screen.getByRole('alertdialog')).toBeInTheDocument()
-    expect(screen.getByRole('button', { name: 'Cancel' })).toBeDisabled()
-    await userEvent.keyboard('{Escape}')
-    expect(screen.getByRole('alertdialog')).toBeInTheDocument()
+    await confirmAction(dialog, 'Delete')
+
+    await expectRole('alertdialog')
+    expectDisabled('button', 'Cancel')
+    await pressEscape()
+    await expectRole('alertdialog')
     finish?.()
-    await waitFor(() => {
-      expect(screen.queryByRole('alertdialog')).not.toBeInTheDocument()
+    await expectNoConfirmDialog()
+  })
+
+  it('runs the action once when the button is pressed again while it runs', async () => {
+    const onConfirm = vi.fn(() => new Promise<void>(() => undefined))
+    renderWithTrigger(onConfirm)
+    const dialog = await openDialog()
+    const confirm = within(dialog).getByRole('button', { name: 'Delete' })
+
+    await userEvent.click(confirm)
+    await userEvent.click(confirm)
+
+    expect(confirm).toBeDisabled()
+    expect(onConfirm).toHaveBeenCalledOnce()
+  })
+
+  it('can be confirmed again after a failure', async () => {
+    const onConfirm = vi
+      .fn<() => Promise<void>>()
+      .mockRejectedValueOnce(new Error('Failed'))
+      .mockResolvedValueOnce(undefined)
+    renderWithTrigger(onConfirm)
+    const dialog = await openDialog()
+    await confirmAction(dialog, 'Delete')
+    await vi.waitFor(() => {
+      expectEnabled('button', 'Delete', within(dialog))
+    })
+
+    await confirmAction(dialog, 'Delete')
+
+    await expectNoConfirmDialog()
+    expect(onConfirm).toHaveBeenCalledTimes(2)
+  })
+
+  it('says when it has closed', async () => {
+    const onClosed = vi.fn()
+    renderWithTrigger(vi.fn(), { onClosed })
+
+    const dialog = await openDialog()
+
+    await confirmAction(dialog, 'Delete')
+
+    await vi.waitFor(() => {
+      expect(onClosed).toHaveBeenCalledOnce()
     })
   })
 
-  it('stays open when the action fails, so that the user can try again or cancel', async () => {
-    renderWithTrigger(() => Promise.reject(new Error('Failed')))
+  it('is named by its title alone without a description', async () => {
+    renderWithTrigger(vi.fn(), { description: undefined })
 
-    await openAndConfirm()
+    const dialog = await openDialog()
 
-    await waitFor(() => {
-      expect(screen.getByRole('button', { name: 'Cancel' })).toBeEnabled()
+    expect(dialog).not.toHaveAttribute('aria-describedby')
+  })
+
+  it('shows the label that cancels and the content under the description', async () => {
+    renderWithTrigger(vi.fn(), {
+      cancelLabel: 'Close',
+      children: <p>3 documents go with it.</p>,
     })
-    expect(screen.getByRole('alertdialog')).toBeInTheDocument()
+
+    const dialog = await openDialog()
+
+    await expectRole('button', 'Close', within(dialog))
+    expect(within(dialog).queryByRole('button', { name: 'Cancel' })).not.toBeInTheDocument()
+    expect(within(dialog).getByText('3 documents go with it.')).toBeInTheDocument()
   })
 
   it('opens from elsewhere through open, and says when it closes', async () => {
@@ -108,8 +200,8 @@ describe('ConfirmDialog', () => {
               setOpen(next)
               onOpenChange(next)
             }}
-            title="Sign out?"
-            confirmLabel="Sign out"
+            title="Log out?"
+            confirmLabel="Log out"
             onConfirm={vi.fn()}
           />
         </>
@@ -117,11 +209,13 @@ describe('ConfirmDialog', () => {
     }
     render(<Opener />)
 
-    await userEvent.click(screen.getByRole('button', { name: 'Open' }))
-    await userEvent.click(await screen.findByRole('button', { name: 'Sign out' }))
+    await pressButton('Open')
+    const dialog = await findConfirmDialog('Log out?')
+
+    await confirmAction(dialog, 'Log out')
 
     expect(onOpenChange).toHaveBeenCalledWith(false)
-    expect(screen.queryByRole('alertdialog')).not.toBeInTheDocument()
+    await expectNoConfirmDialog()
   })
 
   it.each(iconCases)('shows $name', async ({ props, icon }) => {

@@ -22,7 +22,7 @@ function thread(fields: Partial<Thread> & Pick<Thread, 'id' | 'project_id'>): Th
 }
 
 /** A thread of the mock data with the usual fields; `fields` change what differs. */
-export const buildMockThread = thread
+export const buildThread = thread
 
 const mentorMainStages = {
   running: {
@@ -43,7 +43,7 @@ const mentorMainStages = {
 >
 
 /** Every thread of the mock data, newest message first. */
-export function mockThreads(state: MockRunState): Thread[] {
+export function threadFixtures(state: MockRunState): Thread[] {
   return [
     thread({
       id: threadIds.mentorMain,
@@ -81,7 +81,7 @@ export function mockThreads(state: MockRunState): Thread[] {
 }
 
 /** The threads as they are before any run: no stage and no unfinished run. */
-export function withoutRuns(threads: Thread[]): Thread[] {
+export function threadsBeforeAnyRun(threads: Thread[]): Thread[] {
   return threads.map((item) => ({
     ...item,
     current_stage: null,

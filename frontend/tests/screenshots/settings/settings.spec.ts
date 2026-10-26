@@ -1,4 +1,5 @@
-import { takeShots } from '../screenshot.utils'
-import { settingsShots } from './settings.data'
+import { screenshots } from '../screenshot.utils'
 
-takeShots('Settings', settingsShots)
+screenshots('Settings', (shot) => {
+  shot.at('Settings', '/settings')
+})

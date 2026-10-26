@@ -1,4 +1,4 @@
-import { isAtOrUnder, pathOf } from '@/shared/lib/url/path.utils'
+import { isAtOrUnder, pathOf } from '@/shared/lib/url'
 
 import type { Destination, FeatureDestination } from './destination.types'
 

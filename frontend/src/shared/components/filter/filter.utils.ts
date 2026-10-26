@@ -1,3 +1,5 @@
+import { queryStringOf } from '@/shared/lib/url'
+
 import type { FilterField, FilterValues } from './filter.types'
 
 /** How many filters have a value, which the button that opens the filters shows. */
@@ -27,7 +29,7 @@ export function filterValuesOf(
  * The query of an address with the values of the filters in place of those it has, which keeps
  * its other parameters; empty when it has none.
  */
-export function filterSearch(
+export function filterQuery(
   params: URLSearchParams,
   fields: readonly FilterField[],
   values: FilterValues,
@@ -37,6 +39,5 @@ export function filterSearch(
     next.delete(field.key)
     for (const value of values[field.key] ?? []) next.append(field.key, value)
   }
-  const text = next.toString()
-  return text === '' ? '' : `?${text}`
+  return queryStringOf(next)
 }

@@ -1,14 +1,14 @@
-import { act, renderHook, waitFor } from '@testing-library/react'
+import { act, waitFor } from '@testing-library/react'
 import { describe, expect, it } from 'vitest'
 
 import { mockRunId } from '@/mocks/runs/handlers/runs.handlers'
-import { TestProviders } from '@/test/render/TestProviders'
+import { renderHookWithProviders } from '@/test/render'
 
 import { useChat } from '../useChat'
 import { blankDrafts, sentDraftCases } from './useChat.data'
 
 function typeAndSend(draft: string) {
-  const { result } = renderHook(() => useChat('t1'), { wrapper: TestProviders })
+  const { result } = renderHookWithProviders(() => useChat('t1'))
   act(() => {
     result.current.setDraft(draft)
   })

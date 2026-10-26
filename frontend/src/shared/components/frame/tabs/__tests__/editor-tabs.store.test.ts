@@ -1,6 +1,6 @@
 import { beforeEach, describe, expect, it } from 'vitest'
 
-import { browserStorage } from '@/shared/lib/storage/browser-storage.utils'
+import { browserStorage } from '@/shared/lib/storage'
 
 import { useEditorTabsStore } from '../editor-tabs.store'
 import { neighborTab } from '../editor-tabs.utils'
@@ -10,7 +10,7 @@ import {
   group,
   neighborTabCases,
   otherGroup,
-  req,
+  requirement,
   storedTabsCases,
   tabStepsCases,
 } from './editor-tabs.store.data'
@@ -30,7 +30,6 @@ function storedGroup(tabGroup: string): unknown {
 
 beforeEach(() => {
   useEditorTabsStore.persist.clearStorage()
-  useEditorTabsStore.setState(useEditorTabsStore.getInitialState())
 })
 
 describe('useEditorTabsStore', () => {
@@ -59,14 +58,14 @@ describe('useEditorTabsStore', () => {
   })
 
   it('keeps the tabs that another browser tab opened in another group since it read them', async () => {
-    browserStorage.setItem(keyOf(group), JSON.stringify({ tabs: [req] }))
+    browserStorage.setItem(keyOf(group), JSON.stringify({ tabs: [requirement] }))
     browserStorage.setItem(keyOf(otherGroup), JSON.stringify({ tabs: [conflict] }))
     await useEditorTabsStore.persist.rehydrate()
     // Another browser tab opens a tab in the other group.
     browserStorage.setItem(keyOf(otherGroup), JSON.stringify({ tabs: [conflict, ambiguity] }))
 
     useEditorTabsStore.getState().openTab(group, ambiguity)
-    useEditorTabsStore.getState().closeTabs(group, [req.id])
+    useEditorTabsStore.getState().closeTabs(group, [requirement.id])
 
     expect(storedGroup(group)).toEqual({ tabs: [ambiguity], preview: ambiguity.id })
     expect(storedGroup(otherGroup)).toEqual({ tabs: [conflict, ambiguity] })
@@ -74,10 +73,10 @@ describe('useEditorTabsStore', () => {
 
   it('removes the stored tabs of a group once all of them close', async () => {
     await useEditorTabsStore.persist.rehydrate()
-    useEditorTabsStore.getState().openTab(group, req)
-    expect(storedGroup(group)).toEqual({ tabs: [req], preview: req.id })
+    useEditorTabsStore.getState().openTab(group, requirement)
+    expect(storedGroup(group)).toEqual({ tabs: [requirement], preview: requirement.id })
 
-    useEditorTabsStore.getState().closeTabs(group, [req.id])
+    useEditorTabsStore.getState().closeTabs(group, [requirement.id])
 
     expect(storedGroup(group)).toBeNull()
   })

@@ -13,11 +13,11 @@ import {
   CommandList,
   CommandShortcut,
 } from '@/shared/components/ui/command'
-import { useModifierKeyName } from '@/shared/lib/hotkey/hooks/useModifierKeyName'
-import { hotkeyLabel } from '@/shared/lib/hotkey/hotkey.utils'
+import { hotkeyLabel, useModifierKeyName } from '@/shared/lib/hotkey'
 
 import { PaletteGroup, paletteHotkey } from '../command.constants'
-import { commandValue, type GroupOfCommands, groupsBySearch } from '../command.utils'
+import type { PaletteCommandGroup } from '../command.types'
+import { commandSearchText, groupsBySearch } from '../command.utils'
 import { useCommandPalette } from '../hooks/useCommandPalette'
 import { useCommands } from '../hooks/useCommands'
 
@@ -59,7 +59,7 @@ export function CommandPalette() {
 }
 
 interface PaletteSearchProps {
-  groups: GroupOfCommands[]
+  groups: PaletteCommandGroup[]
   /** Runs before the command chosen, to close the palette. */
   onChosen: () => void
 }
@@ -90,7 +90,7 @@ function PaletteSearch({ groups, onChosen }: PaletteSearchProps) {
               return (
                 <CommandItem
                   key={id}
-                  value={commandValue(command)}
+                  value={commandSearchText(command)}
                   disabled={run === undefined}
                   data-variant={variant}
                   // A destructive command keeps the color of an error when it is selected, as a

@@ -1,25 +1,13 @@
 import { setupWorker } from 'msw/browser'
 
-import { authHandlers } from './account/auth.handlers'
-import { meHandlers } from './account/me.handlers'
-import { messageHandlers } from './messages/messages.handlers'
-import { projectHandlers } from './projects/projects.handlers'
+import { apiHandlers } from './api.setup'
 import { streamHandlers } from './runs/handlers/run-stream.handlers'
-import { runHandlers } from './runs/handlers/runs.handlers'
 import { keepMockDataInBrowser, resetMockData } from './shared/db/mock-state.utils'
-import { pageParam } from './shared/scenario/mock-scenario.utils'
-import { threadHandlers } from './threads/threads.handlers'
+import { addressParam } from './shared/scenario/mock-scenario.utils'
 
 // The records of the mock server survive a reload; `?mock-reset` starts again from the fixtures.
 keepMockDataInBrowser()
-if (pageParam('mock-reset') !== null) resetMockData()
+if (addressParam('mock-reset') !== null) resetMockData()
 
-export const worker = setupWorker(
-  ...authHandlers,
-  ...meHandlers,
-  ...projectHandlers,
-  ...threadHandlers,
-  ...messageHandlers,
-  ...runHandlers,
-  ...streamHandlers,
-)
+// The event stream of a run exists in the browser only: the unit tests have no EventSource.
+export const worker = setupWorker(...apiHandlers, ...streamHandlers)

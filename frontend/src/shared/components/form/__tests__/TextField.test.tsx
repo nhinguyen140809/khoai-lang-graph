@@ -6,6 +6,16 @@ import { useForm } from 'react-hook-form'
 import { describe, expect, it } from 'vitest'
 import { z } from 'zod'
 
+import {
+  expectAlert,
+  expectInvalidField,
+  expectRole,
+  expectText,
+  expectValidField,
+  pasteText,
+  pressButton,
+} from '@/test/steps'
+
 import { TextField } from '../TextField'
 import { blankNames, typedNameCases } from './TextField.data'
 
@@ -36,18 +46,18 @@ function NameForm({ onSubmit, action }: NameFormProps) {
 /** Types the name as a paste, which takes an empty text too, then saves. */
 async function enterName(text: string) {
   await userEvent.click(screen.getByLabelText('Name'))
-  await userEvent.paste(text)
-  await userEvent.click(screen.getByRole('button', { name: 'Save' }))
+  await pasteText(text)
+  await pressButton('Save')
 }
 
 describe('TextField', () => {
-  it('ties the input to its label and its description', () => {
+  it('ties the input to its label and its description', async () => {
     render(<NameForm onSubmit={() => undefined} />)
 
     const input = screen.getByLabelText('Name')
     expect(input).toHaveAttribute('autocomplete', 'name')
-    expect(input).toHaveAttribute('aria-invalid', 'false')
-    expect(screen.getByText('As others see it.')).toBeInTheDocument()
+    expectValidField(input)
+    await expectText('As others see it.')
   })
 
   it.each(blankNames)(
@@ -57,8 +67,8 @@ describe('TextField', () => {
 
       await enterName(typed)
 
-      expect(await screen.findByRole('alert')).toHaveTextContent('Enter a name.')
-      expect(screen.getByLabelText('Name')).toHaveAttribute('aria-invalid', 'true')
+      await expectAlert('Enter a name.')
+      expectInvalidField('Name')
     },
   )
 
@@ -67,8 +77,8 @@ describe('TextField', () => {
 
     await enterName('')
 
-    expect(await screen.findByRole('alert')).toHaveTextContent('Enter a name.')
-    expect(screen.getByRole('button', { name: 'Help' })).toBeInTheDocument()
+    await expectAlert('Enter a name.')
+    await expectRole('button', 'Help')
   })
 
   it.each(typedNameCases)('gives the form $value for $typed', async ({ typed, value }) => {

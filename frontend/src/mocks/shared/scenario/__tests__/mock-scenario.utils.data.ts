@@ -2,7 +2,7 @@
 export const addressWithParams = '/login?mock-reset&next=%2Fsettings'
 
 /** A parameter, and its value in `addressWithParams`. */
-export const pageParamCases = [
+export const addressParamCases = [
   { name: 'the value of a parameter', param: 'next', value: '/settings' },
   { name: 'an empty value for a parameter without one', param: 'mock-reset', value: '' },
   { name: 'nothing for a parameter that is not there', param: 'mock-me', value: null },

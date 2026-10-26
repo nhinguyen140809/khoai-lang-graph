@@ -1,18 +1,4 @@
-/** A key and the modifier held with it, such as Ctrl+B. */
-export interface Hotkey {
-  /** A character, such as `k` or `?`, or a key name, such as `Escape`. */
-  key: string
-  /**
-   * Requires the modifier key of the platform: Ctrl on Windows and Linux, Cmd on macOS. Without
-   * it, the key matches only when neither is held.
-   */
-  mod?: boolean
-  /**
-   * Requires Ctrl on every platform instead, for a key whose Cmd shortcut macOS keeps for itself,
-   * such as Cmd+` that switches windows.
-   */
-  ctrl?: boolean
-}
+import type { Hotkey } from './hotkey.types'
 
 /**
  * The place on the keyboard of a letter or a digit, as in `KeyboardEvent.code`.
@@ -40,9 +26,9 @@ function isTypingTarget(target: EventTarget | null): boolean {
  * on a US keyboard instead. A hotkey without a modifier does not match while the user types in a
  * field, so it never takes a character away from the text. Alt never matches.
  */
-export function matchesHotkey(event: KeyboardEvent, { key, mod = false, ctrl = false }: Hotkey) {
-  const held = ctrl ? event.ctrlKey && !event.metaKey : event.ctrlKey || event.metaKey
-  if (event.altKey || held !== (mod || ctrl)) return false
+export function isHotkeyPressed(event: KeyboardEvent, { key, mod = false, ctrl = false }: Hotkey) {
+  const isHeld = ctrl ? event.ctrlKey && !event.metaKey : event.ctrlKey || event.metaKey
+  if (event.altKey || isHeld !== (mod || ctrl)) return false
   if (!mod && !ctrl && isTypingTarget(event.target)) return false
   if (event.key.toLowerCase() === key.toLowerCase()) return true
   const code = codeOf(key)

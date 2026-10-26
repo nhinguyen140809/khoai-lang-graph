@@ -1,16 +1,14 @@
 import { http, HttpResponse } from 'msw'
 
-import { mockRecord } from '../shared/db/mock-state.utils'
-import { notFound } from '../shared/http/response/error-response.utils'
-import { answerScenario } from '../shared/scenario/mock-scenario.utils'
-import { mockMe } from './me.fixtures'
+import { apiEndpoints } from '@/shared/api/endpoints'
 
-/** The signed-in user; registering an account replaces it. */
-export const meRecord = mockRecord('me', () => mockMe)
+import { answerScenario } from '../shared/scenario/mock-scenario.utils'
+import { currentUser } from './account.store'
+import { userNotFound } from './me.problems'
 
 export const meHandlers = [
-  http.get('/api/v1/me', async () => {
+  http.get(apiEndpoints.me.pattern, async () => {
     const scenario = await answerScenario('me')
-    return scenario === 'empty' ? notFound('The user') : HttpResponse.json(meRecord.get())
+    return scenario === 'empty' ? userNotFound() : HttpResponse.json(currentUser.get())
   }),
 ]

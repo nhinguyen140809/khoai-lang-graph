@@ -1,6 +1,15 @@
 import { render, screen } from '@testing-library/react'
-import userEvent from '@testing-library/user-event'
 import { describe, expect, it, vi } from 'vitest'
+
+import {
+  expectAttribute,
+  expectDisabled,
+  expectEnabled,
+  expectNoRole,
+  expectRole,
+  pressButton,
+  pressEscape,
+} from '@/test/steps'
 
 import type { FilterValues } from '../filter.types'
 import { FilterMenu } from '../FilterMenu'
@@ -13,7 +22,7 @@ function renderMenu(values: FilterValues = {}) {
 }
 
 async function openMenu() {
-  await userEvent.click(screen.getByRole('button', { name: /^Filter/ }))
+  await pressButton(/^Filter/)
   return screen.findByRole('dialog', { name: 'Filters' })
 }
 
@@ -22,34 +31,34 @@ describe('FilterMenu', () => {
     const { onApply } = renderMenu()
     await openMenu()
 
-    await userEvent.click(screen.getByRole('button', { name: 'Open' }))
-    await userEvent.click(screen.getByRole('button', { name: 'Closed' }))
-    await userEvent.click(screen.getByRole('button', { name: 'In the last day' }))
-    await userEvent.click(screen.getByRole('button', { name: 'In the last 7 days' }))
-    await userEvent.click(screen.getByRole('button', { name: 'Apply' }))
+    await pressButton('Open')
+    await pressButton('Closed')
+    await pressButton('In the last day')
+    await pressButton('In the last 7 days')
+    await pressButton('Apply')
 
     expect(onApply).toHaveBeenCalledWith({ status: ['open', 'closed'], period: ['7'] })
-    expect(screen.queryByRole('dialog')).not.toBeInTheDocument()
+    expectNoRole('dialog')
   })
 
   it('counts the filters applied, and opens on their values', async () => {
     renderMenu({ status: ['closed'], period: ['1'] })
 
-    expect(screen.getByRole('button', { name: 'Filter, 2 applied' })).toBeInTheDocument()
+    await expectRole('button', 'Filter, 2 applied')
     await openMenu()
-    expect(screen.getByRole('button', { name: 'Closed' })).toHaveAttribute('aria-pressed', 'true')
-    expect(screen.getByRole('button', { name: 'Open' })).toHaveAttribute('aria-pressed', 'false')
+    expectAttribute('button', 'Closed', 'aria-pressed', 'true')
+    expectAttribute('button', 'Open', 'aria-pressed', 'false')
   })
 
   it('drops what was chosen when it closes without Apply', async () => {
     const { onApply } = renderMenu()
     await openMenu()
-    await userEvent.click(screen.getByRole('button', { name: 'Open' }))
+    await pressButton('Open')
 
-    await userEvent.keyboard('{Escape}')
+    await pressEscape()
     await openMenu()
 
-    expect(screen.getByRole('button', { name: 'Open' })).toHaveAttribute('aria-pressed', 'false')
+    expectAttribute('button', 'Open', 'aria-pressed', 'false')
     expect(onApply).not.toHaveBeenCalled()
   })
 
@@ -57,9 +66,9 @@ describe('FilterMenu', () => {
     const { onApply } = renderMenu({ status: ['open'] })
     await openMenu()
 
-    await userEvent.click(screen.getByRole('button', { name: 'Clear filters' }))
-    expect(screen.getByRole('button', { name: 'Clear filters' })).toBeEnabled()
-    await userEvent.click(screen.getByRole('button', { name: 'Apply' }))
+    await pressButton('Clear filters')
+    expectEnabled('button', 'Clear filters')
+    await pressButton('Apply')
 
     expect(onApply).toHaveBeenCalledWith({})
   })
@@ -68,6 +77,6 @@ describe('FilterMenu', () => {
     renderMenu()
     await openMenu()
 
-    expect(screen.getByRole('button', { name: 'Clear filters' })).toBeDisabled()
+    expectDisabled('button', 'Clear filters')
   })
 })

@@ -1,3 +1,6 @@
+import { apiEndpoints } from '@/shared/api/endpoints'
+import { HttpStatus } from '@/shared/api/http'
+
 import { runIds, threadIds } from '../../../shared/db/mock-ids.constants'
 
 /** GET /threads/{thread_id}/runs in the scenario of the page address: the runs it lists. */
@@ -38,48 +41,48 @@ export const runErrorCases = [
     request: 'GET /threads/{thread_id}/runs in the error scenario',
     address: '/?mock-runs=error',
     method: 'GET',
-    path: `/api/v1/threads/${threadIds.mentorMain}/runs`,
-    status: 500,
+    path: apiEndpoints.threadRuns.path({ threadId: threadIds.mentorMain }),
+    status: HttpStatus.InternalServerError,
     code: 'internal_error',
   },
   {
     request: 'GET /runs/{run_id} of a run that does not exist',
     address: '/',
     method: 'GET',
-    path: '/api/v1/runs/no-such-run',
-    status: 404,
+    path: apiEndpoints.run.path({ runId: 'no-such-run' }),
+    status: HttpStatus.NotFound,
     code: 'not_found',
   },
   {
     request: 'GET /runs/{run_id}/steps of a run that does not exist',
     address: '/',
     method: 'GET',
-    path: '/api/v1/runs/no-such-run/steps',
-    status: 404,
+    path: apiEndpoints.runSteps.path({ runId: 'no-such-run' }),
+    status: HttpStatus.NotFound,
     code: 'not_found',
   },
   {
     request: 'POST /runs/{run_id}/cancel of a run that does not exist',
     address: '/',
     method: 'POST',
-    path: '/api/v1/runs/no-such-run/cancel',
-    status: 404,
+    path: apiEndpoints.runCancel.path({ runId: 'no-such-run' }),
+    status: HttpStatus.NotFound,
     code: 'not_found',
   },
   {
     request: 'POST /runs/{run_id}/cancel of a run that succeeded',
     address: '/',
     method: 'POST',
-    path: `/api/v1/runs/${runIds.mentorMain1}/cancel`,
-    status: 409,
+    path: apiEndpoints.runCancel.path({ runId: runIds.mentorMain1 }),
+    status: HttpStatus.Conflict,
     code: 'invalid_state',
   },
   {
     request: 'POST /runs/{run_id}/cancel of a run that failed',
     address: '/',
     method: 'POST',
-    path: `/api/v1/runs/${runIds.mentorMain2}/cancel`,
-    status: 409,
+    path: apiEndpoints.runCancel.path({ runId: runIds.mentorMain2 }),
+    status: HttpStatus.Conflict,
     code: 'invalid_state',
   },
 ]

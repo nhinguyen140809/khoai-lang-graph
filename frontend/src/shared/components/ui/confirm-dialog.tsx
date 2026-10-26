@@ -31,7 +31,7 @@ interface ConfirmDialogProps {
   onOpenChange?: (open: boolean) => void
   /** Runs once the dialog has closed, after its animation. */
   onClosed?: (() => void) | undefined
-  /** A question that names the action, such as "Sign out?". */
+  /** A question that names the action, such as "Log out?". */
   title: React.ReactNode
   /** What the action does, and whether it can be undone. */
   description?: React.ReactNode
@@ -40,7 +40,7 @@ interface ConfirmDialogProps {
    * Without one, an action that is destructive shows a warning sign; `null` shows none.
    */
   icon?: React.ReactNode
-  /** The words of the button that confirms: the action itself, such as "Sign out", not "OK". */
+  /** The words of the button that confirms: the action itself, such as "Log out", not "OK". */
   confirmLabel: React.ReactNode
   cancelLabel?: React.ReactNode
   /** An action that deletes or cannot be undone: the button that confirms is red. */

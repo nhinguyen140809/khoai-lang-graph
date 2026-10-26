@@ -1,3 +1,3 @@
 export { login, logout, register } from './auth.api'
 export type { RegisterBody } from './auth.types'
-export { useOpenAfterSignIn } from './hooks/useRedirectAfterLogin'
+export { useRedirectAfterLogin } from './hooks/useRedirectAfterLogin'

@@ -1,38 +1,31 @@
 import { describe, expect, it } from 'vitest'
 
-import { nextParam, safeNextPath, signInHrefFor } from '../auth-hrefs.utils'
+import { afterLoginPath, loginHrefFor } from '../auth-hrefs.utils'
 import {
   authHrefCases,
   keptNextPaths,
-  nextParamCases,
+  loginHrefForCases,
   replacedNextPaths,
-  signInHrefForCases,
 } from './auth-hrefs.utils.data'
 
-describe('safeNextPath', () => {
+describe('afterLoginPath', () => {
   it.each(keptNextPaths)('keeps %j', (next) => {
-    expect(safeNextPath(next)).toBe(next)
+    expect(afterLoginPath(next)).toBe(next)
   })
 
   it.each(replacedNextPaths)('replaces %j with the home page', (next) => {
-    expect(safeNextPath(next)).toBe('/')
+    expect(afterLoginPath(next)).toBe('/')
   })
 })
 
-describe('signInHref and registerHref', () => {
+describe('loginHref and registerHref', () => {
   it.each(authHrefCases)('$name gives $href', ({ build, next, href }) => {
     expect(build(next)).toBe(href)
   })
 })
 
-describe('signInHrefFor', () => {
-  it.each(signInHrefForCases)('$name', ({ location, href }) => {
-    expect(signInHrefFor(location)).toBe(href)
-  })
-})
-
-describe('nextParam', () => {
-  it.each(nextParamCases)('reads $name of next', ({ query, next }) => {
-    expect(nextParam(query)).toBe(next)
+describe('loginHrefFor', () => {
+  it.each(loginHrefForCases)('$name', ({ location, href }) => {
+    expect(loginHrefFor(location)).toBe(href)
   })
 })

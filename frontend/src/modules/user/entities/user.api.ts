@@ -1,4 +1,5 @@
-import { apiRequest } from '@/shared/api/request/api-request.utils'
+import { apiEndpoints } from '@/shared/api/endpoints'
+import { apiRequest } from '@/shared/api/request'
 
 import { type Me, meSchema } from './user.types'
 
@@ -6,5 +7,5 @@ import { type Me, meSchema } from './user.types'
 
 /** The signed-in user. */
 export function getMe(): Promise<Me> {
-  return apiRequest('/api/v1/me', meSchema, { action: 'load your account' })
+  return apiRequest(apiEndpoints.me.path(), meSchema, { action: 'load your account' })
 }

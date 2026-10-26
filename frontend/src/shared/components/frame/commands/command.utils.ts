@@ -1,18 +1,15 @@
 import { defaultFilter } from 'cmdk'
 
-import type { PaletteCommand } from './command.types'
+import { hasText } from '@/shared/lib/guards'
 
-export interface GroupOfCommands {
-  heading: string
-  commands: PaletteCommand[]
-}
+import type { PaletteCommand, PaletteCommandGroup } from './command.types'
 
 /**
  * The commands by group. The groups are in alphabetical order, so that the list does not depend on
  * the order in which the components that register them mount; a group keeps the order of its
  * commands.
  */
-export function commandGroups(sources: Iterable<readonly PaletteCommand[]>): GroupOfCommands[] {
+export function commandGroups(sources: Iterable<readonly PaletteCommand[]>): PaletteCommandGroup[] {
   const groups = new Map<string, PaletteCommand[]>()
   for (const commands of sources) {
     for (const command of commands) {
@@ -27,7 +24,7 @@ export function commandGroups(sources: Iterable<readonly PaletteCommand[]>): Gro
 }
 
 /** The text that the search of the palette matches: the group, the label, and the id, which keeps two equal labels apart. */
-export function commandValue({ group, label, id }: PaletteCommand): string {
+export function commandSearchText({ group, label, id }: PaletteCommand): string {
   return `${group} ${label} ${id}`
 }
 
@@ -37,10 +34,13 @@ export function commandValue({ group, label, id }: PaletteCommand): string {
  * Groups that match as well keep their order, and without a search the order stays. The palette
  * orders its groups itself: the search of cmdk orders the commands of a group, not the groups.
  */
-export function groupsBySearch(groups: GroupOfCommands[], search: string): GroupOfCommands[] {
-  if (search.trim() === '') return groups
-  const best = ({ commands }: GroupOfCommands) =>
-    Math.max(0, ...commands.map((command) => defaultFilter(commandValue(command), search)))
+export function groupsBySearch(
+  groups: PaletteCommandGroup[],
+  search: string,
+): PaletteCommandGroup[] {
+  if (!hasText(search)) return groups
+  const best = ({ commands }: PaletteCommandGroup) =>
+    Math.max(0, ...commands.map((command) => defaultFilter(commandSearchText(command), search)))
   return groups
     .map((group) => ({ group, score: best(group) }))
     .toSorted((a, b) => b.score - a.score)
@@ -48,7 +48,7 @@ export function groupsBySearch(groups: GroupOfCommands[], search: string): Group
 }
 
 /** What the palette shows of the commands, as text: when it changes, they register again. */
-export function shownKey(commands: readonly PaletteCommand[]): string {
+export function shownCommandsKey(commands: readonly PaletteCommand[]): string {
   return JSON.stringify(
     commands.map(({ id, label, group, hotkey, run }) => [
       id,

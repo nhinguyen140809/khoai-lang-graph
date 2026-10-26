@@ -11,29 +11,29 @@ import { PendingButton } from '@/shared/components/ui/pending-button'
 import { Tooltip, TooltipContent, TooltipTrigger } from '@/shared/components/ui/tooltip'
 import { routes } from '@/shared/routes'
 
-import { useSignIn } from '../hooks/useLogin'
-import { type SignInForm, signInFormSchema } from '../login.schema'
+import { useLogin } from '../hooks/useLogin'
+import { type LoginForm, loginFormSchema } from '../login.schema'
 
 interface LoginPageProps {
-  /** The page to return to after signing in. */
+  /** The page to return to after logging in. */
   next: string | null
 }
 
 export function LoginPage({ next }: LoginPageProps) {
-  const signIn = useSignIn(next)
-  const form = useForm<SignInForm>({
-    resolver: zodResolver(signInFormSchema),
+  const loginRequest = useLogin(next)
+  const form = useForm<LoginForm>({
+    resolver: zodResolver(loginFormSchema),
     defaultValues: { email: '', password: '' },
   })
 
   const onSubmit = form.handleSubmit((values) => {
-    signIn.mutate(values)
+    loginRequest.mutate(values)
   })
 
   return (
     <AuthScreen
-      title="Sign in"
-      description="Sign in to open your projects."
+      title="Log in"
+      description="Log in to open your projects."
       switchTo={{
         prompt: 'No account yet?',
         label: 'Create an account',
@@ -57,14 +57,14 @@ export function LoginPage({ next }: LoginPageProps) {
             autoComplete="current-password"
             action={<ForgotPassword />}
           />
-          <FieldError>{signIn.errorMessage}</FieldError>
+          <FieldError>{loginRequest.errorMessage}</FieldError>
           <PendingButton
             type="submit"
-            pending={signIn.isPending}
-            pendingLabel="Signing in"
+            pending={loginRequest.isPending}
+            pendingLabel="Logging in"
             className="w-full"
           >
-            Sign in
+            Log in
           </PendingButton>
         </FieldGroup>
       </Form>

@@ -98,15 +98,16 @@ frontend/
 │   │   │   ├── state/       # query states: loading, error, empty, not found
 │   │   │   ├── form/        # the fields of forms
 │   │   │   └── filter/      # the filters of a list: the button, the form it opens, the reducer of their values and its hooks
-│   │   ├── lib/             # generic utilities, a folder per topic, each with its hooks in hooks/: view/ (the view of the app, useView), tone/, formatters/, hotkey/, timing/, url/, storage/, hydration/, viewport/, cn/
-│   │   ├── api/             # fetch and its errors, query client, API URL, generated/: generated API client (do not edit)
-│   │   ├── routes/          # the addresses of the pages: routes, the builder of an address, the pages of the sign-in
-│   │   └── config/          # what the app sets once: page-names/ (the names of the home page), output-language/
+│   │   ├── lib/             # generic utilities, a folder per topic (the list is in CONTRIBUTING.md)
+│   │   ├── routes/          # the addresses of the pages
+│   │   ├── api/             # request and error, http/ (statuses, methods, headers), query client, API URL, generated/: generated API client (do not edit)
+│   │   └── config/          # what the app sets once: page-names/, output-language/
 │   ├── mocks/               # MSW handlers shared by dev mocking, unit tests, and E2E
-│   └── test/                # Vitest setup
+│   └── test/                # Vitest setup and the helpers of the unit tests: msw/ (calls to the mock server and the requests it records), suites/ (the tests that several files share, as `it*` functions; `requests/`: the request each API function sends and the error it throws, the requests the mock server refuses; `screens/`: the dialog an action asks with before it runs, the fields a form refuses, the states of a query, the toast of a result), next-stubs/ (the router and links of Next.js), render/ (providers and components for rendering), steps/ (what a test does after it has rendered: waiting for a query, answering the dialog of an action, typing in a form, reading a toast, checking what shows on the screen and the page the router was sent to, checking accessibility with axe)
 └── tests/
     ├── e2e/                 # Playwright specs, one folder per feature, their cases in .data.ts
-    └── screenshots/         # the screenshots of the mock states, one folder per feature
+    ├── screenshots/         # the screenshots of the mock states, one folder per feature
+    └── shared/              # what both share: steps/ (typing in a form, pressing a button of a dialog, checking the address and what shows) and the account the mock server knows
 ```
 
 ## Adding shadcn/ui components
@@ -164,7 +165,7 @@ With `--only theme`, only the theme variables in `src/app/styles.css` change. Wi
 
 - All design tokens are CSS variables in `src/app/styles.css`: `:root` holds the light theme, `.dark` the dark theme, and `@theme inline` maps them to Tailwind utilities (`bg-background`, `text-muted-foreground`, `border-border`, ...).
 - The text sizes are the ones of Tailwind, as the Nova style of shadcn/ui uses them: `text-sm` (14px) for the text of components and pages, which people read, and `text-xs` (12px) for labels, captions, hints, the status bar and the titles of panels, which people glance at. Below them, two sizes in `@theme` are for indicators: `text-3xs` (11px, 14px line) for counts, ids, and times, and `text-4xs` (10px, 12px line) for the count inside a badge.
-- A heading stands apart from the text around it by its size and its weight, always `font-semibold`: `font-medium` (500) is too close to regular text to set it apart, and shows as regular text in Segoe UI, the fallback on Windows, which has no such weight. For the same reason, words that stand out in a line, such as the name of the open project on the top bar, the name of the user in the account menu or the feature chosen on the activity bar, are `font-bold`. The sizes: `text-3xl` for the title of the sign-in pages, `text-2xl` for the title of a page, `text-lg` for the heading of a section, the title of a state (empty, error, not found) and the titles of dialogs, alert dialogs, sheets and drawers, `text-base` for the titles of cards, empty blocks and questionnaires and for the legend of a group of fields, `text-sm` for the legend of a group inside another, for the heading of a folded group of fields (in the primary color, as large as the labels beside it, since it is one more setting), and for the title of the side panel, and `text-xs` for the title of a node of a graph.
+- A heading stands apart from the text around it by its size and its weight, always `font-semibold`: `font-medium` (500) is too close to regular text to set it apart, and shows as regular text in Segoe UI, the fallback on Windows, which has no such weight. For the same reason, words that stand out in a line, such as the name of the open project on the top bar, the name of the user in the account menu or the feature chosen on the activity bar, are `font-bold`. The sizes: `text-3xl` for the title of the login pages, `text-2xl` for the title of a page, `text-lg` for the heading of a section, the title of a state (empty, error, not found) and the titles of dialogs, alert dialogs, sheets and drawers, `text-base` for the titles of cards, empty blocks and questionnaires and for the legend of a group of fields, `text-sm` for the legend of a group inside another, for the heading of a folded group of fields (in the primary color, as large as the labels beside it, since it is one more setting), and for the title of the side panel, and `text-xs` for the title of a node of a graph.
 - `--radius` is the base corner radius. The `rounded-sm` ... `rounded-4xl` utilities are derived from it, so changing this one value rounds every component more or less.
 - The corners follow the Nova style: the larger an element is and the more it holds, the rounder its corners, and only what is round by nature is fully round. With `--radius` at 0.375rem (6px), the components of `src/shared/components/ui/` use:
 
@@ -247,20 +248,20 @@ Vietnamese text needs a font that ships the `vietnamese` subset. The subsets of 
 
 - A route is a folder in `src/app/` with a `page.tsx`. The folder path is the URL: `src/app/(home)/projects/page.tsx` is `/projects`.
 - `(home)` and `(project)` are route groups: the name in parentheses is not part of the URL. `(home)` holds the screens outside a project (`/projects`, `/settings`): its `layout.tsx` wraps them in the frame, and its `error.tsx` is their error boundary. `(project)` holds the screens of a project, under `/projects/[projectId]/`: its layout wraps them in the frame with the menu of the project on the top bar, and shows a project that does not exist as not found. `/` opens `/projects`, and a project opens at its activity. A page that must not show the frame (for example a public landing page) goes in another group with its own layout.
-- `(auth)` is the group of the pages that need no session: `/login` signs in and `/register` creates an account. `?next=` gives the page to return to afterwards.
+- `(auth)` is the group of the pages that need no session: `/login` logs in and `/register` creates an account. `?next=` gives the page to return to afterwards.
 - `src/app/` holds only routing files. A `page.tsx` renders a component of a widget or a feature.
-- An `error.tsx` catches what fails to render under its folder, inside the layout of that folder, so the frame stays around the error: the one of `(home)` and the one of a project. What fails in a layout, such as the frame, falls to the `error.tsx` of the folder above: `src/app/error.tsx` catches the frames and the pages without their own, such as the sign-in page, and shows the error alone on the page. `src/app/global-error.tsx` catches what fails in the root layout, such as its providers; it replaces the root layout, so it renders the document itself, without the providers. Each item on the activity bar and the status bar has an `ErrorBoundary` of `react-error-boundary` of its own: an item that fails to render leaves the bar, not the screen. The boundaries call `retry`, which loads the data of the page again and renders it again.
+- An `error.tsx` catches what fails to render under its folder, inside the layout of that folder, so the frame stays around the error: the one of `(home)` and the one of a project. What fails in a layout, such as the frame, falls to the `error.tsx` of the folder above: `src/app/error.tsx` catches the frames and the pages without their own, such as the login page, and shows the error alone on the page. `src/app/global-error.tsx` catches what fails in the root layout, such as its providers; it replaces the root layout, so it renders the document itself, without the providers. Each item on the activity bar and the status bar has an `ErrorBoundary` of `react-error-boundary` of its own: an item that fails to render leaves the bar, not the screen. The boundaries call `retry`, which loads the data of the page again and renders it again.
 - `/render-error` and `/projects/<project_id>/render-error` are pages that fail to render on purpose, to show the `error.tsx` of `(home)` and of a project. Like `/design-system`, they exist only in development; production builds answer 404.
-- Every endpoint except register, login and health answers 401 without a session. When a request sent with `apiRequest` or `apiCommand` (`src/shared/api/request/api-fetch.utils.ts`) answers 401, the query client (`src/shared/api/query-client/query-client.config.ts`) opens `/login?next=<the page>`, which returns to the page after signing in; `next` is kept only when it is a path of this app. Signing out (`UserMenu` of `modules/user/widgets/menu`) ends the session, then loads the sign-in page in full, which drops what the app kept in memory.
+- Every endpoint except register, login and health answers 401 without a session. When a request sent with `apiRequest` or `apiCommand` (`src/shared/api/api-request.utils.ts`) answers 401, the query client (`src/shared/api/query-client.config.ts`) opens `/login?next=<the page>`, which returns to the page after logging in; `next` is kept only when it is a path of this app. Logging out (`UserMenu` of `modules/user/widgets/menu`) ends the session, then loads the login page in full, which drops what the app kept in memory.
 - Files in `src/app/` are Server Components: they render on the server and cannot use state, effects, or event handlers. A component that needs those starts with `'use client'`. Most feature components are Client Components.
 - Links use `<Link href="...">` from `next/link`. `href` is type-checked against the existing routes (`typedRoutes` in `next.config.ts`); `pnpm dev` and `pnpm build` regenerate the route types.
 - A library that touches `window` or `document` while it loads (PDF viewer, code editor, graph layout worker) is imported with `next/dynamic` and `ssr: false` from a Client Component.
 
 ## Frame
 
-The frame (`Workbench`) in `src/shared/components/frame/` lays out a screen after the layout of an editor: a top bar (`TopBar`), an activity bar with one item per feature of the project (`ActivityBar`), the side panel of the feature chosen and the editor (`Workspace`, `SidePanel`, `EditorTabs`), an optional panel under the editor (`EditorWithBottomPanel`), a status bar (`StatusBar`), and the command palette (`CommandPalette`). The frame is shared code and names no feature: a feature describes its item, a destination of the activity bar (`FeatureDestination` in `destinations/destination.types.ts`: id, label, icon, start page, side panel) and the icons of its tabs in `<feature>-frame.config.tsx`, and a layout passes the list to `Workbench` as `destinations` and `tabIcons`. `Workbench` renders the bars itself and takes, the same way, what they show from the app and the features: the crumb of the top bar (`crumb`), the address that its logo leads to (`homeHref`), and the components that register commands and items of the bars (`contributions`). The account menu is one of these items, not a prop of the frame: `AccountMenuItem` of `modules/user/widgets/menu` puts it at the bottom of the activity bar with `useActivityBarItem`. Each layout lists them in its `contributions`, so that a layout says all that its frame shows. The list sets which features a screen has and their order; a feature planned for later is a `PlannedDestination`, shown disabled. A screen that passes no feature shows the account menu alone on the activity bar, and has no side panel.
+The frame (`Workbench`) in `src/shared/components/frame/` lays out a screen after the layout of an editor: a top bar (`TopBar`), an activity bar with one item per feature of the project (`ActivityBar`), the side panel of the feature chosen and the editor (`TabbedWorkspace`, `SidePanel`, `EditorTabs`), an optional panel under the editor (`EditorWithBottomPanel`), a status bar (`StatusBar`), and the command palette (`CommandPalette`). The frame is shared code and names no feature: a feature describes its item, a destination of the activity bar (`FeatureDestination` in `destinations/destination.types.ts`: id, label, icon, start page, side panel) and the icons of its tabs in `<feature>-frame.config.tsx`, and a layout passes the list to `Workbench` as `destinations` and `tabIcons`. `Workbench` renders the bars itself and takes, the same way, what they show from the app and the features: the crumb of the top bar (`crumb`), the address that its logo leads to (`homeHref`), and the components that register commands and items of the bars (`contributions`). The account menu is one of these items, not a prop of the frame: `AccountMenuItem` of `modules/user/widgets/menu` puts it at the bottom of the activity bar with `useActivityBarItem`. Each layout lists them in its `contributions`, so that a layout says all that its frame shows. The list sets which features a screen has and their order; a feature planned for later is a `PlannedDestination`, shown disabled. A screen that passes no feature shows the account menu alone on the activity bar, and has no side panel.
 
-The folder is split by what its parts do. Each folder keeps its own code in layers, and the root of the frame holds what several folders use: in `components/`, `Workbench`, `Workspace` (the side panel, and the editor with the tabs of the group that the layout names, `tabGroup`), `PageWorkspace` (the side panel and the page of a screen outside a project, which has no tabs) and `SideFeatureSplit` (the side panel of the feature chosen beside the editor, which both use); in `hooks/`, `useRestoreFrame` (reads the stored state after the first render) and `useOpenPage`.
+The folder is split by what its parts do. Each folder keeps its own code in layers, and the root of the frame holds what several folders use: in `components/`, `Workbench`, `TabbedWorkspace` (the side panel, and the editor with the tabs of the group that the layout names, `tabGroup`), `UntabbedWorkspace` (the side panel and the page of a screen outside a project, which has no tabs) and `SideFeatureSplit` (the side panel of the feature chosen beside the editor, which both use); in `hooks/`, `useRestoreFrame` (reads the stored state after the first render) and `useOpenPage`.
 
 | Folder          | Holds                                                                                                                                                                                                                                                                                                            |
 | --------------- | ---------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
@@ -273,7 +274,7 @@ The folder is split by what its parts do. Each folder keeps its own code in laye
 | Layer     | Files                                                       | Imports                                                      |
 | --------- | ----------------------------------------------------------- | ------------------------------------------------------------ |
 | Pure      | `*.types.ts`, `*.constants.ts`, `*.utils.ts`, `*.schema.ts` | Other pure files and `shared/lib`; no React code, no zustand |
-| Store     | `*.store.ts`                                                | Pure files; no other store and no hook                       |
+| Store     | `*.store.ts`                                                | Pure files and other stores; no hook                         |
 | Hook      | `hooks/use*.ts`, with the context that the hook reads       | Stores, pure files, other hooks and the router; no component |
 | Component | `components/*.tsx`                                          | Hooks and pure files; a store only for its types             |
 
@@ -302,7 +303,7 @@ The editor tabs belong to the tab group of the workspace, not to a feature: the 
 
 ### Browser storage
 
-The size and visibility of the regions and the open editor tabs are device-local state, kept in the browser by the zustand stores `panels/panels.store.ts`, `destinations/side-feature.store.ts` and `tabs/editor-tabs.store.ts` with the `persist` middleware; `useRestoreFrame` reads them after the first render. Browser storage is read and written only through `src/shared/lib/browser-storage.utils.ts` (ESLint reports any other use of `localStorage` or `sessionStorage`):
+The size and visibility of the regions and the open editor tabs are device-local state, kept in the browser by the zustand stores `panels/panels.store.ts`, `destinations/side-feature.store.ts` and `tabs/editor-tabs.store.ts` with the `persist` middleware; `useRestoreFrame` reads them after the first render. Browser storage is read and written only through `src/shared/lib/storage/browser-storage.utils.ts` (ESLint reports any other use of `localStorage` or `sessionStorage`):
 
 - `storageKey(name)` names a key: every key starts with the name of the app.
 - `browserStorage` reads and writes keys, and fails quietly where storage is missing, blocked or full.
@@ -362,27 +363,31 @@ Habits that help:
 
 ## API client
 
-- A feature calls the API through its `*.api.ts` files, one for each resource it reads, with `apiRequest` or `apiCommand` of `src/shared/api/request/api-fetch.utils.ts`, and its hooks name their queries with the key factory of `<feature>.keys.ts`. An answer with an error status throws an `ApiError` of `api-error.utils.ts`: the status, the `code` of the body (the stable value to branch on), the field problems, and a message. `api-error.types.ts` lists the statuses (`HttpStatus`) and the codes (`ApiErrorCode`) of the API. The query client retries a failed query once unless the answer was a 4xx (`retryOnce` of `api-retry.utils.ts`), and opens the sign-in page on a 401.
+- A feature calls the API through its `*.api.ts` files, one for each resource it reads, with `apiRequest` or `apiCommand` of `src/shared/api/request/api-request.utils.ts`, and its hooks name their queries with the key factory of `<feature>.keys.ts`. An answer with an error status throws an `ApiError` of `src/shared/api/error/api-error.utils.ts`: the status, the `code` of the body (the stable value to branch on), the field problems, and a message. `api-error.types.ts` lists the statuses (`HttpStatus`) and the codes (`ApiErrorCode`) of the API. The query client retries a failed query once unless the answer was a 4xx (`retryOnce` of `src/shared/api/query-client/query-retry.utils.ts`), and opens the login page on a 401.
+- A list endpoint answers a page of `items` and a `next_cursor`. An API function reads one page with `fetchPage`, which takes the `limit` and the cursor, and the hook that loads a long list is an infinite query that spreads `cursorPagesOptions` of `src/shared/api/query-client/cursor-pages.config.ts` (the first page, then each `next_cursor`); a list that is known to be short reads its first page only.
 - A request that starts work (sending a message, and later resume, retry and export) carries an idempotency key: the hook makes it once for the action of the user with `newIdempotencyKey()` (`idempotency.utils.ts`), before the first request, and gives it to the API function, which passes it as the `idempotencyKey` option of `apiRequest` or `apiCommand`. A retry of the action sends the same key, so the server does the work once; a mutation of such an action may retry with `retry: retryOnce`.
 - The typed API client in `src/shared/api/generated/` is generated by `pnpm codegen` from `frontend/openapi.json`, which the backend exports (`just codegen` at the repo root runs both steps). Both are committed and never edited by hand. The schema file does not exist yet, so `pnpm codegen` fails until the backend is in place.
 - `openapi-ts.config.ts` already asks for a fetch client whose calls throw on an error status, and zod checks of the answers. It generates no query options or query keys: the keys stay in `<feature>.keys.ts`, where they keep their hierarchy for invalidation, and the generated query options read the request from their own key. When the first client is generated:
   1. Configure the generated client once, where the providers start: `client.setConfig({ baseUrl: window.location.origin })`, as `apiUrl` does, and an error interceptor that returns `toApiError(response.status, error, ...)`, so that components, the query client and the tests still receive an `ApiError`.
   2. Replace the body of each `*.api.ts` of the features with the generated call, and remove the hand-written schemas of their `*.types.ts`. The hooks and their keys stay as they are.
-  3. Remove `api-fetch.utils.ts` once no feature calls it.
+  3. Remove `api-request.utils.ts` once no feature calls it.
 
 ## Mock data
 
-All mock code lives in `src/mocks/`, in one folder per part of the API, named like the backend feature that serves it. A file may read the data of another folder, as the resources of the API refer to each other; `shared/` holds what every handler uses.
+All mock code lives in `src/mocks/`, in one folder per part of the API, named like the backend feature that serves it. A file may read the data of another folder, as the resources of the API refer to each other; `shared/` holds what every handler uses: `db/` (ids, time, state), `scenario/`, and `http/` with `request/`, `response/` and `validation/`. Each of these folders has an `index.ts`, and code outside `src/mocks` (tests, the test setup) imports from it, such as `@/mocks/shared/db` (enforced by ESLint); a file inside `src/mocks` imports the file it needs, since the layers of the mocks are checked by the kind of each file.
 
 ```text
 src/mocks/
-├── msw-browser.setup.ts  # the handlers of the browser worker (dev mocking, E2E)
-├── msw-server.setup.ts   # the handlers of the unit tests
-├── shared/               # db/ (records, ids), http/ (request/, response/: pages of a list, error answers, idempotency), scenario/
+├── api.setup.ts          # the handlers of every resource, answered by the worker and by the server
+├── msw-browser.setup.ts  # the worker of the browser (dev mocking, E2E): those handlers and the stream of a run
+├── msw-server.setup.ts   # the server of the unit tests: those handlers
+├── shared/               # db/ (state, ids, times), http/ (requests, pages of a list, error answers), scenario/
 ├── account/              # /auth, /me
 ├── projects/             # /projects
+├── generated/            # projects made from specs, with their threads, runs and steps
+├── messages/             # messages
 ├── threads/              # threads
-└── runs/                 # runs, the stream (handlers/)
+└── runs/                 # runs, the stream
 ```
 
 Each folder holds a pair of files per API resource:
@@ -391,6 +396,33 @@ Each folder holds a pair of files per API resource:
 | ------------------------ | --------------------------------------------------------------------------------------------- |
 | `<resource>.fixtures.ts` | The data: typed with the feature's types, fixed values only (no random ids, no current time). |
 | `<resource>.handlers.ts` | MSW handlers that answer the endpoints of that resource with the fixtures.                    |
+
+### Files of a mock folder
+
+The folders of `projects/` and `runs/` repeat the same files, one for each job. A new resource takes the files it needs from this list; a file that a resource does not need is left out.
+
+```text
+src/mocks/<resource>/
+├── <resource>.handlers.ts    # the endpoints; a handlers/ folder once there are two files
+├── <resource>.fixtures.ts    # sample data that never changes; fixtures/ once there are two files
+├── <resource>.store.ts       # what the user changes: created<Things>, <thing>Edits, deleted<Thing>Ids
+├── <resource>.lookup.ts      # reads: all<Things>(), find<Thing>(id), the fixtures and the store together
+├── <resource>.changes.ts     # writes: change<Thing>(id, change), the only code that sets the store
+├── <resource>.problems.ts    # refusals: <thing>NotFound(), refuse<Reason>()
+├── <resource>.validators.ts  # what the body of a request may hold: validate<Body>(), <subject>Problems()
+├── <resource>.constants.ts   # fixed ids and counts
+└── __tests__/                # one test file beside each file it tests
+```
+
+- **Layers:** a file reads files of its own kind or of a kind below it, from the bottom: `fixtures`, `constants` and `types`; then `store`; then `lookup`; then `changes`, `problems` and `validators`; then `handlers`. Nothing but `src/mocks/msw-*.setup.ts` and the tests imports a `handlers` file. ESLint reports an import that goes up. A resource reads another through its `lookup` (`projects.lookup.ts` reads `allRuns` of `runs.lookup.ts`).
+- **Data that spans resources:** the projects made from specs come with their threads, runs and steps, so they live in `src/mocks/generated/`, which reads only the `fixtures` of the resources and which the `lookup` files read.
+- **State:** a `store` holds `mockState` cells and nothing else. The data created since the start is `created<Things>`, the fields changed in a record of the fixtures are `<thing>Edits` by id, and a removed record is `deleted<Thing>Ids`. Only `changes` files and the handlers that create a record set them.
+- **Types:** a type that several files use is in the `types` file of its resource (`projects.types.ts`, `generated-project-specs.types.ts`); a `lookup`, `changes`, `problems` or `handlers` file exports no type (ESLint).
+- **Fixtures:** an export is named `<thing>Fixtures` (`projectFixtures`, `userFixture`), a function that builds one record is `build<Thing>`, and the projects made from specs are `generated<Things>`. The name of a fixture, a store or a lookup never starts with `mock`: the folder says it. The helpers of `shared/` whose name would otherwise read as the real thing keep it (`mockNow`, `mockState`, `mockId`).
+- **Refusals:** a handler never calls `notFound` itself. A record that is missing is `<thing>NotFound()` of the `problems` file of its resource; a check that refuses a request returns the answer, or `null` when the request may go on, and is named `refuse<Reason>`; a check of a whole body is `validate<Body>`, which gives the record that the body describes or the problems of its fields, and a check that gives only problems is `<subject>Problems`; both are in the `validators` file.
+- **A handler** reads in this order: `answerScenario`, the record (or `<thing>NotFound()`), the checks of the body and the state, the change, the answer. A handler of a request that starts work is wrapped in `idempotent`.
+
+A kind with two files or more takes a folder of its own, as in a slice (see Files of a slice in [CONTRIBUTING.md](CONTRIBUTING.md)). A time that a handler stamps on a record comes from `shared/db/mock-clock.utils.ts`.
 
 The same handlers serve `pnpm dev:mock`, the unit tests, and the E2E tests, so a fixture is written once. Example: `threads/threads.fixtures.ts` and `threads/threads.handlers.ts` back `GET /api/v1/threads` and `GET /api/v1/projects/{project_id}/threads`.
 
@@ -405,18 +437,18 @@ The same handlers serve `pnpm dev:mock`, the unit tests, and the E2E tests, so a
 | `me`         | `GET /me`                                                                                                                                                         |
 
 - The ids of the mock data are in `shared/db/mock-ids.constants.ts`; each starts like the id of the same record in the API examples.
-- The mock server keeps the session, the user, the projects, threads, messages and runs that `POST` creates, and the runs that are stopped, as records (`shared/db/mock-db.utils.ts`). The browser worker keeps them in browser storage, so they survive a reload; `?mock-reset` in the page address starts again from the fixtures. Unit tests keep them in memory, and the test setup resets them after each test.
+- The mock server keeps the session, the user, the projects, threads, messages, and runs that `POST` creates, and the runs that are stopped, as state (`shared/db/mock-state.utils.ts`). The browser worker keeps them in browser storage, so they survive a reload; `?mock-reset` in the page address starts again from the fixtures. Unit tests keep them in memory, and the test setup resets them after each test.
 
 To mock a new endpoint:
 
 1. Add the data to `src/mocks/<folder>/<resource>.fixtures.ts`, typed with the type from the entities of its module, `src/modules/<module>/entities/`.
 2. Add the handler to `src/mocks/<folder>/<resource>.handlers.ts` and export the handler list.
-3. Register the list in `msw-browser.setup.ts` (dev mocking, E2E) and `msw-server.setup.ts` (unit tests).
+3. Register the list in `api.setup.ts`, which the worker of the browser (dev mocking, E2E) and the server of the unit tests both answer.
 4. In a test that needs other data or an error, override the handler for that test only with `server.use(...)`; it is reset after each test.
 
 ### Mock scenarios
 
-A handler can answer differently depending on a parameter in the page URL, so every state of a screen can be seen in `pnpm dev:mock`. The parameter name is `mock-<resource>`: `?mock-threads=error` makes the threads handlers answer with an error. A handler starts with `answerScenario('<resource>')` from `src/mocks/shared/mock-scenario.utils.ts`, which answers `error` (HTTP 500) and `loading` (a request that never ends) for every handler, and returns `default` or `empty` for the handler to answer: without the parameter the handler returns the fixtures, and with `empty` an empty list, or 404 for an endpoint that returns one record. Scenarios that are not a query state, such as the state of a run, read their own parameter, for example `?mock-run-state=failed`.
+A handler can answer differently depending on a parameter in the page URL, so every state of a screen can be seen in `pnpm dev:mock`. The parameter name is `mock-<resource>`: `?mock-threads=error` makes the threads handlers answer with an error. A handler starts with `answerScenario('<resource>')` from `src/mocks/shared/scenario/mock-scenario.utils.ts`, which answers `error` (HTTP 500) and `loading` (a request that never ends) for every handler, and returns `default` or `empty` for the handler to answer: without the parameter the handler returns the fixtures, and with `empty` an empty list, or 404 for an endpoint that returns one record. Scenarios that are not a query state, such as the state of a run, read their own parameter, for example `?mock-run-state=failed`.
 
 The parameters and the address of every state of every screen are listed in [Mock scenarios](src/mocks/README.md). Add the addresses of a screen there when the screen is built.
 
@@ -424,7 +456,7 @@ Components never import fixtures. They call the API functions of their feature, 
 
 ### Screenshots
 
-`pnpm screenshots` takes a screenshot of each state of each page, in each window below and in each theme, into `screenshots/<window>-<theme>/`. Each page has a spec in the folder of its feature in `tests/screenshots/` (`account/account`, `projects/project-list`, `projects/project`, `settings/settings`, `design-system/design-system`), and the states of the app as a whole, such as an address with no page, are in `app/app`, and the list of its states in the `.data.ts` beside the spec: the steps from a new browser page to the state, such as an address of [Mock scenarios](src/mocks/README.md), then a click that opens a menu or a submit that shows the errors of a form. A state that changes one part of the page, such as the status bar, is taken as that part alone. A file is named `<page>--<number>-<state>.png`, so that the files of a page sort in the order of its states.
+`pnpm screenshots` takes a screenshot of each state of each page, in each window below and in each theme, into `screenshots/<window>-<theme>/`. Each page has a spec in the folder of its feature in `tests/screenshots/` (`account/account`, `projects/project-list`, `projects/project`, `settings/settings`, `design-system/design-system`), and the states of the app as a whole, such as an address with no page, are in `app/app`, and each state is a test in the spec of the same shape as an E2E test (`async ({ page, user, shoot }) => ...`): it opens an address of [Mock scenarios](src/mocks/README.md), takes the steps with `user` (a click that opens a menu, a submit that shows the errors of a form), waits for what the state shows, and calls `shoot()`. `shoot({ part })` takes one part of the page alone, such as the status bar, `shoot({ hover })` puts the pointer over an element, and `shoot({ fullPage: true })` takes the whole length. A file is named `<page>--<number>-<state>.png`, so that the files of a page sort in the order of its states.
 
 | Window   | Size in CSS pixels                                                                                                         |
 | -------- | -------------------------------------------------------------------------------------------------------------------------- |

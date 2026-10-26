@@ -1,7 +1,9 @@
 import { HttpResponse } from 'msw'
 
-import { IdPrefix } from '@/mocks/shared/db/mock-ids.constants'
-import { createdId } from '@/mocks/shared/db/mock-ids.utils'
+import { createdId, IdPrefix } from '@/mocks/shared/db'
+import { apiEndpoints } from '@/shared/api/endpoints'
+import { HttpStatus } from '@/shared/api/http'
+import { serverError } from '@/test/msw'
 
 const projectId = createdId(IdPrefix.Project, 1)
 const threadId = createdId(IdPrefix.Thread, 1)
@@ -20,9 +22,12 @@ export const createCases = [
     idea: null,
     language: 'English',
     sent: [
-      ['/api/v1/projects', { name: 'Thesis tracker', output_language: 'en' }],
-      [`/api/v1/projects/${projectId}/threads`, {}],
-      [`/api/v1/threads/${threadId}/messages`, { content: 'Mentor platform for students.' }],
+      [apiEndpoints.projects.path(), { name: 'Thesis tracker', output_language: 'en' }],
+      [apiEndpoints.projectThreads.path({ projectId }), {}],
+      [
+        apiEndpoints.threadMessages.path({ threadId }),
+        { content: 'Mentor platform for students.' },
+      ],
     ],
   },
   {
@@ -31,10 +36,10 @@ export const createCases = [
     idea: ' Find a mentor.\nFor university students. ',
     language: 'Vietnamese',
     sent: [
-      ['/api/v1/projects', { name: null, output_language: 'vi' }],
-      [`/api/v1/projects/${projectId}/threads`, {}],
+      [apiEndpoints.projects.path(), { name: null, output_language: 'vi' }],
+      [apiEndpoints.projectThreads.path({ projectId }), {}],
       [
-        `/api/v1/threads/${threadId}/messages`,
+        apiEndpoints.threadMessages.path({ threadId }),
         { content: 'Find a mentor.\nFor university students.' },
       ],
     ],
@@ -48,17 +53,17 @@ export const failedCreateCases = [
     answer: () =>
       HttpResponse.json(
         {
-          status: 422,
+          status: HttpStatus.UnprocessableContent,
           code: 'validation_failed',
           errors: [{ field: 'name', message: 'A project with this name exists.' }],
         },
-        { status: 422 },
+        { status: HttpStatus.UnprocessableContent },
       ),
     message: 'A project with this name exists.',
   },
   {
     name: 'any other failure, under the form',
-    answer: () => new HttpResponse(null, { status: 500 }),
+    answer: () => serverError(),
     message: 'Failed to create the project (HTTP 500)',
   },
 ]
@@ -67,12 +72,12 @@ export const failedCreateCases = [
 export const failedSendCases = [
   {
     request: 'the thread',
-    path: '/api/v1/projects/:projectId/threads',
+    path: apiEndpoints.projectThreads.pattern,
     reason: 'Failed to start a thread (HTTP 500)',
   },
   {
     request: 'the first message',
-    path: '/api/v1/threads/:threadId/messages',
+    path: apiEndpoints.threadMessages.pattern,
     reason: 'Failed to send the idea (HTTP 500)',
   },
 ]

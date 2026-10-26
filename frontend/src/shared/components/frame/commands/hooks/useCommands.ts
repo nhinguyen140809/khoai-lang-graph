@@ -2,10 +2,10 @@
 
 import { useEffect, useEffectEvent, useId, useLayoutEffect, useRef } from 'react'
 
-import { matchesHotkey } from '@/shared/lib/hotkey/hotkey.utils'
+import { isHotkeyPressed } from '@/shared/lib/hotkey'
 
 import type { PaletteCommand } from '../command.types'
-import { shownKey } from '../command.utils'
+import { shownCommandsKey } from '../command.utils'
 import { useCommandsStore } from '../commands.store'
 
 /**
@@ -21,7 +21,7 @@ export function useCommands(commands: readonly PaletteCommand[]) {
   const setCommands = useCommandsStore((state) => state.setCommands)
   const removeCommands = useCommandsStore((state) => state.removeCommands)
   const latest = useRef(commands)
-  const shown = shownKey(commands)
+  const shown = shownCommandsKey(commands)
 
   useLayoutEffect(() => {
     latest.current = commands
@@ -53,7 +53,7 @@ export function useCommands(commands: readonly PaletteCommand[]) {
   const onKeyDown = useEffectEvent((event: KeyboardEvent) => {
     const command = commands.find(
       ({ hotkey, run }) =>
-        hotkey !== undefined && run !== undefined && matchesHotkey(event, hotkey),
+        hotkey !== undefined && run !== undefined && isHotkeyPressed(event, hotkey),
     )
     if (command?.run === undefined) return
     event.preventDefault()

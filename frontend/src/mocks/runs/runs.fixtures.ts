@@ -1,5 +1,6 @@
 import type { Run, RunStep } from '@/modules/run/entities'
 
+import { isoTime } from '../shared/db/mock-clock.utils'
 import {
   IdPrefix,
   personaIds,
@@ -157,7 +158,7 @@ const mentorRun3LastEventIds = {
 } as const satisfies Record<MockRunState, number>
 
 /** The run of the API examples, in the given state. */
-export function mentorRun3(state: MockRunState): Run {
+function mentorRun3(state: MockRunState): Run {
   const steps = mentorRun3Steps(state)
   const last = steps.at(-1)
   return run({
@@ -230,8 +231,8 @@ function buildSteps(
           : usage(costUsd, spec.seconds * 1000, Math.round(costUsd * 120_000)),
       produced: spec.produced ?? [],
       error: null,
-      started_at: new Date(start).toISOString().replace('.000Z', 'Z'),
-      finished_at: new Date(clock).toISOString().replace('.000Z', 'Z'),
+      started_at: isoTime(new Date(start)),
+      finished_at: isoTime(new Date(clock)),
     }
   })
 }
@@ -240,10 +241,10 @@ function interviewSpecs(personaIndex: number, turns: number): StepSpec[] {
   const personaKey = `PER-00${String(personaIndex + 1)}`
   const subject = personaIds[personaIndex]
   return Array.from({ length: turns * 2 }, (_, index) => {
-    const asking = index % 2 === 0
+    const isAsking = index % 2 === 0
     return {
-      node: asking ? 'interviewer' : 'persona_agent',
-      agentRole: asking ? 'interviewer' : 'persona_agent',
+      node: isAsking ? 'interviewer' : 'persona_agent',
+      agentRole: isAsking ? 'interviewer' : 'persona_agent',
       stage: 'interviewing',
       seconds: 8,
       costUsd: 0.004,
@@ -306,7 +307,7 @@ const ANALYST_STEP = 66
 const ANALYSIS_CHECKPOINT_STEP = 67
 
 /** The steps of the run of the API examples, in the given state. */
-export function mentorRun3Steps(state: MockRunState): RunStep[] {
+function mentorRun3Steps(state: MockRunState): RunStep[] {
   const all = buildSteps(runIds.mentorMain3, 3, '2026-10-06T08:30:01Z', mentorRun3Specs)
   switch (state) {
     case 'done':
@@ -360,7 +361,7 @@ const libraryRunSteps = buildSteps(runIds.libraryMain1, 6, '2026-10-03T10:10:00Z
 )
 
 /** Every run of the mock data, with the run of the API examples in the given state. */
-export function mockRuns(state: MockRunState): Run[] {
+export function runFixtures(state: MockRunState): Run[] {
   return [...finishedRuns, mentorRun3(state)]
 }
 
@@ -382,7 +383,7 @@ const mentorRun2Steps = buildSteps(
 )
 
 /** The steps of a run. Runs without a script here have none. */
-export function mockRunSteps(runId: string, state: MockRunState): RunStep[] {
+export function runStepFixtures(runId: string, state: MockRunState): RunStep[] {
   if (runId === runIds.mentorMain1) return mentorRun1Steps
   if (runId === runIds.mentorMain2) return mentorRun2Steps
   if (runId === runIds.mentorMain3) return mentorRun3Steps(state)
@@ -392,7 +393,7 @@ export function mockRunSteps(runId: string, state: MockRunState): RunStep[] {
 }
 
 /** A run of the mock data with the usual fields; `fields` change what differs. */
-export const buildMockRun = run
+export const buildRun = run
 
 // How far a run without a script of its own went, in the steps of the main run: a running or a
 // stopped run is in the interviews, a failed one failed at the analysis, and one that waits is at
@@ -410,14 +411,14 @@ const scriptedStepCounts = {
  * step failed, and one that runs has its last step running.
  */
 export function scriptedSteps(runItem: Run, runIndex: number): RunStep[] {
-  const waitsAtPersonas =
+  const isWaitingAtPersonas =
     runItem.status === 'interrupted' && runItem.current_stage === 'persona_review'
   const count =
     runItem.status === 'succeeded'
       ? mentorRun3Specs.length
       : runItem.status === 'queued'
         ? 0
-        : waitsAtPersonas
+        : isWaitingAtPersonas
           ? 3
           : scriptedStepCounts[runItem.status]
   const steps = buildSteps(

@@ -1,20 +1,24 @@
-import { renderHook, waitFor } from '@testing-library/react'
+import { waitFor } from '@testing-library/react'
 import { describe, expect, it } from 'vitest'
 
-import { TestProviders } from '@/test/render/TestProviders'
+import { renderHookWithProviders } from '@/test/render'
+import { waitForQueries } from '@/test/steps'
 
 import { useProject, useRecentProjects } from '../useProjectQueries'
 
-interface Props {
+interface ProjectHookProps {
   projectId: string | undefined
 }
 
 /** The recent projects, then one project, once `projectId` is given. */
 function renderRecentThenProject() {
-  const initialProps: Props = { projectId: undefined }
-  return renderHook(
-    ({ projectId }: Props) => ({ recent: useRecentProjects(), project: useProject(projectId) }),
-    { wrapper: TestProviders, initialProps },
+  const initialProps: ProjectHookProps = { projectId: undefined }
+  return renderHookWithProviders(
+    ({ projectId }: ProjectHookProps) => ({
+      recent: useRecentProjects(),
+      project: useProject(projectId),
+    }),
+    { initialProps },
   )
 }
 
@@ -22,18 +26,14 @@ describe('useProject', () => {
   it('stays idle without a project', async () => {
     const { result } = renderRecentThenProject()
 
-    await waitFor(() => {
-      expect(result.current.recent.isSuccess).toBe(true)
-    })
+    await waitForQueries(() => [result.current.recent])
     expect(result.current.project.fetchStatus).toBe('idle')
     expect(result.current.project.data).toBeUndefined()
   })
 
   it('shows at once a project that a list has loaded, and loads it again', async () => {
     const { result, rerender } = renderRecentThenProject()
-    await waitFor(() => {
-      expect(result.current.recent.isSuccess).toBe(true)
-    })
+    await waitForQueries(() => [result.current.recent])
 
     const listed = result.current.recent.data?.[0]?.id
 

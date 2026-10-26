@@ -1,41 +1,25 @@
 import { http, HttpResponse } from 'msw'
 
-import type { Run, RunStep } from '@/modules/run/entities'
 import { isUnfinishedRunStatus } from '@/modules/run/entities'
+import { apiEndpoints } from '@/shared/api/endpoints'
+import { HttpStatus } from '@/shared/api/http'
 
-import { extraRuns, extraRunSteps } from '../../generated/fixtures/generated-projects.fixtures'
-import { invalidState, notFound } from '../../shared/http/response/error-response.utils'
+import { mockNow } from '../../shared/db/mock-clock.utils'
+import { invalidState } from '../../shared/http/response/error-response.utils'
 import { paginate } from '../../shared/http/response/pagination.utils'
-import {
-  answerScenario,
-  mockRunState,
-  mockScenario,
-} from '../../shared/scenario/mock-scenario.utils'
-import { mockRuns, mockRunSteps } from '../runs.fixtures'
-import { changeRun, createdRuns, withRunChanges } from '../runs.store'
-
-// With `?mock-runs=empty`, no run exists.
-export function allRuns(): Run[] {
-  if (mockScenario('runs') === 'empty') return []
-  return withRunChanges([...createdRuns.get(), ...mockRuns(mockRunState()), ...extraRuns()])
-}
-
-export function findMockRun(runId: string): Run | undefined {
-  return allRuns().find(({ id }) => id === runId)
-}
-
-/** The steps of a run of the fixtures. */
-export function stepsOfRun(runId: string): RunStep[] {
-  return extraRunSteps(runId) ?? mockRunSteps(runId, mockRunState())
-}
+import { emptyResponse } from '../../shared/http/response/status-response.utils'
+import { answerScenario } from '../../shared/scenario/mock-scenario.utils'
+import { changeRun } from '../runs.changes'
+import { allRuns, findRun, stepsOfRun } from '../runs.lookup'
+import { runNotFound } from '../runs.problems'
 
 // The chat starts a run with this endpoint, which is not part of the API; it goes with the chat.
 export const mockRunId = 'run-mock-1'
 
 export const runHandlers = [
-  http.post('/api/v1/threads/:threadId/runs', () => HttpResponse.json({ run_id: mockRunId })),
+  http.post(apiEndpoints.threadRuns.pattern, () => HttpResponse.json({ run_id: mockRunId })),
 
-  http.get('/api/v1/threads/:threadId/runs', async ({ params, request }) => {
+  http.get(apiEndpoints.threadRuns.pattern, async ({ params, request }) => {
     await answerScenario('runs')
     const runs = allRuns()
       .filter((run) => run.thread_id === String(params.threadId))
@@ -43,24 +27,24 @@ export const runHandlers = [
     return HttpResponse.json(paginate(runs, request))
   }),
 
-  http.get('/api/v1/runs/:runId', async ({ params }) => {
+  http.get(apiEndpoints.run.pattern, async ({ params }) => {
     await answerScenario('runs')
-    const run = findMockRun(String(params.runId))
-    return run === undefined ? notFound('The run') : HttpResponse.json(run)
+    const run = findRun(String(params.runId))
+    return run === undefined ? runNotFound() : HttpResponse.json(run)
   }),
 
-  http.get('/api/v1/runs/:runId/steps', async ({ params, request }) => {
+  http.get(apiEndpoints.runSteps.pattern, async ({ params, request }) => {
     await answerScenario('runs')
     const runId = String(params.runId)
-    if (findMockRun(runId) === undefined) return notFound('The run')
+    if (findRun(runId) === undefined) return runNotFound()
     return HttpResponse.json(paginate(stepsOfRun(runId), request))
   }),
 
-  http.post('/api/v1/runs/:runId/cancel', ({ params }) => {
-    const run = findMockRun(String(params.runId))
-    if (run === undefined) return notFound('The run')
+  http.post(apiEndpoints.runCancel.pattern, ({ params }) => {
+    const run = findRun(String(params.runId))
+    if (run === undefined) return runNotFound()
     if (!isUnfinishedRunStatus(run.status)) return invalidState('The run has already ended.')
-    changeRun(run.id, { status: 'cancelled', finished_at: new Date().toISOString() })
-    return new HttpResponse(null, { status: 202 })
+    changeRun(run.id, { status: 'cancelled', finished_at: mockNow() })
+    return emptyResponse(HttpStatus.Accepted)
   }),
 ]

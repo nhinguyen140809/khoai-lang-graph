@@ -2,7 +2,7 @@ import { z } from 'zod'
 import { create } from 'zustand'
 import { persist } from 'zustand/middleware'
 
-import { parseStored, persistStorage, storageKey } from '@/shared/lib/storage/browser-storage.utils'
+import { parseStored, persistStorage, storageKey } from '@/shared/lib/storage'
 
 import { panelLayouts } from './panel.constants'
 import { PanelRegion } from './panel.types'

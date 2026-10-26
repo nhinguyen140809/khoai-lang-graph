@@ -1,17 +1,16 @@
-import type { ProjectFilters, ProjectRunFilter } from '@/modules/project/entities'
+import type { ProjectFilters } from '@/modules/project/entities'
 import type { FilterValues } from '@/shared/components/filter'
+import { isOneOf } from '@/shared/lib/guards'
 
 import { projectFilterKeys, projectRunFilters } from './project-filters.constants'
-
-function isProjectRunFilter(value: string): value is ProjectRunFilter {
-  return (projectRunFilters as readonly string[]).includes(value)
-}
 
 /** The filters of the project list from the values chosen in its filters. */
 export function projectFiltersOf(values: FilterValues): ProjectFilters {
   const [days] = values[projectFilterKeys.lastActivity] ?? []
   return {
-    runStatuses: (values[projectFilterKeys.runStatus] ?? []).filter(isProjectRunFilter),
+    runStatuses: (values[projectFilterKeys.runStatus] ?? []).filter((value) =>
+      isOneOf(projectRunFilters, value),
+    ),
     activeWithinDays: days === undefined ? null : Number(days),
   }
 }

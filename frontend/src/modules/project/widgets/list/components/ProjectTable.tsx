@@ -23,8 +23,8 @@ import {
   TableHeader,
   TableRow,
 } from '@/shared/components/ui/table'
-import { formatRelativeTime } from '@/shared/lib/formatters/time.utils'
-import { useNow } from '@/shared/lib/timing/hooks/useNow'
+import { formatRelativeTime } from '@/shared/lib/formatters'
+import { useNow } from '@/shared/lib/timing'
 import { routes } from '@/shared/routes'
 
 import { projectFilterMessages } from '../project-filters.constants'

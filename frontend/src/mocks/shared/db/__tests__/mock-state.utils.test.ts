@@ -1,6 +1,6 @@
 import { afterEach, describe, expect, it, vi } from 'vitest'
 
-import { browserStorage, storageKey } from '@/shared/lib/storage/browser-storage.utils'
+import { browserStorage, storageKey } from '@/shared/lib/storage'
 
 import type * as mockDb from '../mock-state.utils'
 
@@ -16,12 +16,12 @@ afterEach(() => {
   browserStorage.removeItem(storedKey)
 })
 
-describe('mockRecord', () => {
+describe('mockState', () => {
   it('starts from its initial value, read only when first asked for', async () => {
-    const { mockRecord } = await loadMockDb()
+    const { mockState } = await loadMockDb()
     const initial = vi.fn(() => ({ count: 1 }))
 
-    const record = mockRecord('counter', initial)
+    const record = mockState('counter', initial)
     expect(initial).not.toHaveBeenCalled()
 
     expect(record.get()).toEqual({ count: 1 })
@@ -30,8 +30,8 @@ describe('mockRecord', () => {
   })
 
   it('keeps what is set, in memory only by default', async () => {
-    const { mockRecord } = await loadMockDb()
-    const record = mockRecord('counter', () => ({ count: 1 }))
+    const { mockState } = await loadMockDb()
+    const record = mockState('counter', () => ({ count: 1 }))
 
     record.set({ count: 2 })
 
@@ -40,8 +40,8 @@ describe('mockRecord', () => {
   })
 
   it('starts again from the initial value after a reset', async () => {
-    const { mockRecord, resetMockData } = await loadMockDb()
-    const record = mockRecord('counter', () => ({ count: 1 }))
+    const { mockState, resetMockData } = await loadMockDb()
+    const record = mockState('counter', () => ({ count: 1 }))
     record.set({ count: 2 })
 
     resetMockData()
@@ -50,31 +50,31 @@ describe('mockRecord', () => {
   })
 })
 
-describe('mockRecord kept in the browser', () => {
+describe('mockState kept in the browser', () => {
   it('writes to browser storage, and a new page reads it back', async () => {
     const first = await loadMockDb()
     first.keepMockDataInBrowser()
-    first.mockRecord('counter', () => ({ count: 1 })).set({ count: 2 })
+    first.mockState('counter', () => ({ count: 1 })).set({ count: 2 })
     expect(browserStorage.getItem(storedKey)).toBe('{"count":2}')
 
     const reloaded = await loadMockDb()
     reloaded.keepMockDataInBrowser()
 
-    expect(reloaded.mockRecord('counter', () => ({ count: 1 })).get()).toEqual({ count: 2 })
+    expect(reloaded.mockState('counter', () => ({ count: 1 })).get()).toEqual({ count: 2 })
   })
 
   it('starts from the initial value when the stored value cannot be read', async () => {
     browserStorage.setItem(storedKey, '{not json')
-    const { keepMockDataInBrowser, mockRecord } = await loadMockDb()
+    const { keepMockDataInBrowser, mockState } = await loadMockDb()
     keepMockDataInBrowser()
 
-    expect(mockRecord('counter', () => ({ count: 1 })).get()).toEqual({ count: 1 })
+    expect(mockState('counter', () => ({ count: 1 })).get()).toEqual({ count: 1 })
   })
 
   it('forgets the stored values on a reset', async () => {
-    const { keepMockDataInBrowser, mockRecord, resetMockData } = await loadMockDb()
+    const { keepMockDataInBrowser, mockState, resetMockData } = await loadMockDb()
     keepMockDataInBrowser()
-    mockRecord('counter', () => ({ count: 1 })).set({ count: 2 })
+    mockState('counter', () => ({ count: 1 })).set({ count: 2 })
 
     resetMockData()
 

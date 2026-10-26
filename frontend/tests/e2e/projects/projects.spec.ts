@@ -1,59 +1,55 @@
-import { expect, test } from '@playwright/test'
-
+import { test } from '../../shared/fixtures.utils'
 import { createdProjectCases, listCases, notFoundCases, openedProjectCases } from './projects.data'
 
 const prompt = 'What product do you want to write the requirements for?'
 
 for (const { name, from, status, id } of openedProjectCases) {
-  test(`opens ${name} from the list at its activity`, async ({ page }) => {
+  test(`opens ${name} from the list at its activity`, async ({ page, user }) => {
     await page.goto(from)
 
-    // The dev server renders the page on the first visit, which can be slow.
-    await expect(page).toHaveURL(/\/projects$/, { timeout: 20_000 })
+    await user.expectUrl(/\/projects$/)
     const row = page.getByRole('row', { name: new RegExp(name) })
-    await expect(row.getByRole('cell', { name: status })).toBeVisible()
-    await page.getByRole('link', { name }).click()
+    await user.expectRole('cell', status, row)
+    await user.pressLink(name)
 
-    await expect(page).toHaveURL(new RegExp(`/projects/${id}/activity$`), { timeout: 20_000 })
-    await expect(page.getByRole('banner').getByRole('button', { name })).toBeVisible()
+    await user.expectUrl(new RegExp(`/projects/${id}/activity$`))
+    await user.expectRole('button', name, page.getByRole('banner'))
   })
 }
 
 for (const { name, idea, typedName, shownName } of createdProjectCases) {
-  test(`${name}, and opens its activity`, async ({ page }) => {
+  test(`${name}, and opens its activity`, async ({ page, user }) => {
     await page.goto('/projects')
 
-    await page.getByRole('textbox', { name: prompt }).fill(idea)
-    await page.getByRole('main').getByRole('button', { name: 'Create project' }).click()
+    await user.fillTextbox(prompt, idea)
+    await user.pressButton('Create project', page.getByRole('main'))
     const dialog = page.getByRole('dialog', { name: 'Create project' })
-    await expect(dialog.getByRole('textbox', { name: 'Idea' })).toHaveValue(idea)
-    await dialog.getByRole('textbox', { name: 'Name (optional)' }).fill(typedName)
-    await dialog.getByRole('button', { name: 'Create project' }).click()
+    await user.expectFieldValue('Idea', idea, dialog)
+    await user.fillTextbox('Name (optional)', typedName, dialog)
+    await user.pressButton('Create project', dialog)
 
-    await expect(page).toHaveURL(/\/projects\/[^/]+\/activity$/, { timeout: 20_000 })
-    await expect(page.getByRole('banner').getByRole('button', { name: shownName })).toBeVisible()
+    await user.expectUrl(/\/projects\/[^/]+\/activity$/)
+    await user.expectRole('button', shownName, page.getByRole('banner'))
   })
 }
 
 for (const { name, archived, shows, hides } of listCases) {
-  test(name, async ({ page }) => {
+  test(name, async ({ page, user }) => {
     await page.goto('/projects')
 
-    if (archived) await page.getByRole('button', { name: 'Archived' }).click()
+    if (archived) await user.pressButton('Archived')
 
-    await expect(page.getByRole('link', { name: shows })).toBeVisible({ timeout: 20_000 })
-    await expect(page.getByRole('link', { name: hides })).toHaveCount(0)
+    await user.expectRole('link', shows)
+    await user.expectNoRole('link', hides)
   })
 }
 
 for (const { name, address } of notFoundCases) {
-  test(`shows ${name} as not found`, async ({ page }) => {
+  test(`shows ${name} as not found`, async ({ page, user }) => {
     await page.goto(address)
 
-    await expect(page.getByRole('heading', { name: 'Project not found' })).toBeVisible({
-      timeout: 20_000,
-    })
-    await page.getByRole('link', { name: 'All projects' }).click()
-    await expect(page).toHaveURL(/\/projects$/)
+    await user.expectRole('heading', 'Project not found')
+    await user.pressLink('All projects')
+    await user.expectUrl(/\/projects$/)
   })
 }

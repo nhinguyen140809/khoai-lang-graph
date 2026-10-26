@@ -1,4 +1,7 @@
-import { http, HttpResponse } from 'msw'
+import { apiEndpoints } from '@/shared/api/endpoints'
+import { HttpMethod, HttpStatus } from '@/shared/api/http'
+import { serverErrorOn } from '@/test/msw'
+import type { SentRequestCase } from '@/test/suites'
 
 import { getMe } from '../user.api'
 
@@ -7,16 +10,20 @@ export const sentRequestCases = [
   {
     name: 'reads the signed-in user',
     call: () => getMe(),
-    request: { method: 'GET', path: '/api/v1/me', body: null },
+    request: { method: 'GET', path: apiEndpoints.me.path(), body: null },
   },
-]
+] satisfies SentRequestCase[]
 
 /** A call of the user API, the handler that refuses it, and the message of the error. */
-export const refusedCallCases = [
+export const apiErrorCases = [
   {
     name: 'a failed read of the user',
-    refuse: () => http.get('/api/v1/me', () => new HttpResponse(null, { status: 500 })),
+    refuse: () => serverErrorOn(HttpMethod.Get, apiEndpoints.me.path()),
     call: () => getMe(),
-    error: { status: 500, code: null, message: 'Failed to load your account (HTTP 500)' },
+    error: {
+      status: HttpStatus.InternalServerError,
+      code: null,
+      message: 'Failed to load your account (HTTP 500)',
+    },
   },
 ]

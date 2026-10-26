@@ -1,20 +1,15 @@
 import { act, renderHook } from '@testing-library/react'
-import { afterEach, describe, expect, it } from 'vitest'
+import { describe, expect, it } from 'vitest'
 
-import { routerMock, setPathname, setSearch } from '@/test/next-stubs/next-stubs.utils'
+import { setPathname, setQuery } from '@/test/next-stubs'
+import { expectReplacedWith } from '@/test/steps'
 
 import { testFields } from '../../__tests__/filter.reducer.data'
 import { useFilters } from '../useFilters'
 
-afterEach(() => {
-  setPathname('/')
-  setSearch('')
-  routerMock.replace.mockClear()
-})
-
 describe('useFilters', () => {
   it('reads the filters from the address, and counts those that have a value', () => {
-    setSearch('status=open&status=closed&period=7&step=abc')
+    setQuery('status=open&status=closed&period=7&step=abc')
 
     const { result } = renderHook(() => useFilters(testFields))
 
@@ -24,29 +19,27 @@ describe('useFilters', () => {
     })
   })
 
-  it('applies values by replacing the address, keeping its other parameters', () => {
+  it('applies values by replacing the address, keeping its other parameters', async () => {
     setPathname('/projects')
-    setSearch('step=abc&status=open')
+    setQuery('step=abc&status=open')
     const { result } = renderHook(() => useFilters(testFields))
 
     act(() => {
       result.current.apply({ status: ['closed'], period: ['1'] })
     })
 
-    expect(routerMock.replace).toHaveBeenCalledWith('/projects?step=abc&status=closed&period=1', {
-      scroll: false,
-    })
+    await expectReplacedWith('/projects?step=abc&status=closed&period=1', { scroll: false })
   })
 
-  it('clears the filters from the address', () => {
+  it('clears the filters from the address', async () => {
     setPathname('/projects')
-    setSearch('status=open&period=7')
+    setQuery('status=open&period=7')
     const { result } = renderHook(() => useFilters(testFields))
 
     act(() => {
       result.current.clear()
     })
 
-    expect(routerMock.replace).toHaveBeenCalledWith('/projects', { scroll: false })
+    await expectReplacedWith('/projects', { scroll: false })
   })
 })

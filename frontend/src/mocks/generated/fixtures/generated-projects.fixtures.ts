@@ -3,11 +3,11 @@ import type { Run, RunStep } from '@/modules/run/entities'
 import { isUnfinishedRunStatus } from '@/modules/run/entities'
 import type { Thread } from '@/modules/thread/entities'
 
-import { buildMockRun, scriptedSteps } from '../../runs/runs.fixtures'
+import { buildRun, scriptedSteps } from '../../runs/runs.fixtures'
 import { IdPrefix, userId } from '../../shared/db/mock-ids.constants'
 import { mockId } from '../../shared/db/mock-ids.utils'
-import type { ExtraProjectSpec } from '../generated-project-specs.types'
-import { extraProjectSpecs } from './generated-project-specs.fixtures'
+import type { GeneratedProjectSpec } from '../generated-project-specs.types'
+import { generatedProjectSpecs } from './generated-project-specs.fixtures'
 
 // Mock projects beyond the four of `projects.fixtures.ts`: each has a thread, a run in one of the
 // states of a run, and its steps. They are generated from the specs, so that a spec is all it takes to add
@@ -19,15 +19,15 @@ const runId = (n: number, number: number) => mockId(IdPrefix.Run, n * 10 + numbe
 const messageId = (n: number, number: number) => mockId(IdPrefix.Message, n * 10 + number)
 
 const at = (day: string, time: string) => `${day}T${time}Z`
-const runStart = (spec: ExtraProjectSpec) => at(spec.day, '09:00:00')
+const runStart = (spec: GeneratedProjectSpec) => at(spec.day, '09:00:00')
 // Numbers the ids of the steps of the run of a project.
-const stepRunIndex = (spec: ExtraProjectSpec) => 100 + spec.n
+const stepRunIndex = (spec: GeneratedProjectSpec) => 100 + spec.n
 
 /** The run of a project: it has one, in the state of `lastRun`, or none yet. */
-function runsOf(spec: ExtraProjectSpec): Run[] {
+function runsOf(spec: GeneratedProjectSpec): Run[] {
   const status = spec.lastRun
   if (status === 'none') return []
-  const finished = !isUnfinishedRunStatus(status)
+  const isFinished = !isUnfinishedRunStatus(status)
   const stage = {
     succeeded: 'done',
     running: 'interviewing',
@@ -36,7 +36,7 @@ function runsOf(spec: ExtraProjectSpec): Run[] {
     cancelled: 'interviewing',
     queued: 'planning',
   }[status]
-  const run = buildMockRun({
+  const run = buildRun({
     id: runId(spec.n, 1),
     thread_id: threadId(spec.n),
     project_id: projectId(spec.n),
@@ -48,26 +48,26 @@ function runsOf(spec: ExtraProjectSpec): Run[] {
         ? { code: 'provider_error', message: 'The model provider failed after the retries.', stage }
         : null,
     started_at: runStart(spec),
-    finished_at: finished ? at(spec.day, '09:40:00') : null,
+    finished_at: isFinished ? at(spec.day, '09:40:00') : null,
   })
   return [{ ...run, step_count: scriptedSteps(run, stepRunIndex(spec)).length }]
 }
 
-export function extraRuns(): Run[] {
-  return extraProjectSpecs.flatMap(runsOf)
+export function generatedRuns(): Run[] {
+  return generatedProjectSpecs.flatMap(runsOf)
 }
 
 /** The steps of one of the extra runs, or none when the run is not one of them. */
-export function extraRunSteps(id: string): RunStep[] | undefined {
-  for (const spec of extraProjectSpecs) {
+export function generatedRunSteps(id: string): RunStep[] | undefined {
+  for (const spec of generatedProjectSpecs) {
     const found = runsOf(spec).find((candidate) => candidate.id === id)
     if (found !== undefined) return scriptedSteps(found, stepRunIndex(spec))
   }
   return undefined
 }
 
-export function extraProjects(): Project[] {
-  return extraProjectSpecs.map((spec) => ({
+export function generatedProjects(): Project[] {
+  return generatedProjectSpecs.map((spec) => ({
     id: projectId(spec.n),
     owner_id: userId,
     name: spec.name,
@@ -86,11 +86,11 @@ export function extraProjects(): Project[] {
   }))
 }
 
-export function extraThreads(): Thread[] {
-  return extraProjectSpecs.map((spec) => {
+export function generatedThreads(): Thread[] {
+  return generatedProjectSpecs.map((spec) => {
     const last = runsOf(spec).at(-1)
     const status = last?.status
-    const unfinished = status !== undefined && isUnfinishedRunStatus(status)
+    const isUnfinished = status !== undefined && isUnfinishedRunStatus(status)
     return {
       id: threadId(spec.n),
       project_id: projectId(spec.n),
@@ -98,8 +98,8 @@ export function extraThreads(): Thread[] {
       title: 'Main thread',
       status: 'active',
       current_stage: last?.current_stage ?? null,
-      active_run_id: unfinished ? (last?.id ?? null) : null,
-      active_run_status: unfinished ? status : null,
+      active_run_id: isUnfinished ? (last?.id ?? null) : null,
+      active_run_status: isUnfinished ? status : null,
       last_message_at: at(spec.day, '09:00:00'),
       created_at: at(spec.day, '07:55:00'),
       updated_at: at(spec.day, '11:00:00'),
@@ -108,7 +108,7 @@ export function extraThreads(): Thread[] {
 }
 
 /** The projects that `?mock-projects=many` adds: plain rows, for a long list. */
-export function bulkProjects(count: number): Project[] {
+export function manyProjects(count: number): Project[] {
   return Array.from({ length: count }, (_, index) => {
     const n = 100 + index
     const day = `2026-09-${String(1 + (index % 28)).padStart(2, '0')}`

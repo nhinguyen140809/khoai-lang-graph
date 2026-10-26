@@ -1,18 +1,14 @@
 import { fireEvent, render, screen } from '@testing-library/react'
-import userEvent from '@testing-library/user-event'
-import { beforeEach, describe, expect, it } from 'vitest'
+import { describe, expect, it } from 'vitest'
+
+import { expectFieldValue, pressButton } from '@/test/steps'
 
 import type { BottomPanelSection } from '../../panel.types'
-import { usePanelsStore } from '../../panels.store'
 import { EditorWithBottomPanel } from '../EditorWithBottomPanel'
 
 const trace: BottomPanelSection[] = [
   { id: 'trace', title: 'Trace', content: <p>trace of REQ-001</p> },
 ]
-
-beforeEach(() => {
-  usePanelsStore.setState(usePanelsStore.getInitialState())
-})
 
 describe('EditorWithBottomPanel', () => {
   it('shows the panel under the editor, and hides and shows it', async () => {
@@ -25,12 +21,12 @@ describe('EditorWithBottomPanel', () => {
       'trace of REQ-001',
     )
 
-    await userEvent.click(screen.getByRole('button', { name: 'Hide Trace and timeline' }))
+    await pressButton('Hide Trace and timeline')
 
     expect(screen.getByText('trace of REQ-001')).not.toBeVisible()
     expect(screen.getByText('REQ-001 Search mentors')).toBeVisible()
 
-    await userEvent.click(screen.getByRole('button', { name: 'Show Trace and timeline' }))
+    await pressButton('Show Trace and timeline')
 
     expect(screen.getByText('trace of REQ-001')).toBeVisible()
     expect(
@@ -67,10 +63,10 @@ describe('EditorWithBottomPanel', () => {
     })
     fireEvent.change(screen.getByRole('textbox', { name: 'Filter' }), { target: { value: 'REQ' } })
 
-    await userEvent.click(screen.getByRole('button', { name: 'Hide Trace' }))
-    await userEvent.click(screen.getByRole('button', { name: 'Show Trace' }))
+    await pressButton('Hide Trace')
+    await pressButton('Show Trace')
 
-    expect(screen.getByRole('textbox', { name: 'Title' })).toHaveValue('Search mentors')
-    expect(screen.getByRole('textbox', { name: 'Filter' })).toHaveValue('REQ')
+    expectFieldValue('Title', 'Search mentors')
+    expectFieldValue('Filter', 'REQ')
   })
 })

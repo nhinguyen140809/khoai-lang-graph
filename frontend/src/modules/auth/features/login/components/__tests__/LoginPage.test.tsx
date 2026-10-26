@@ -1,65 +1,66 @@
-import { render, screen } from '@testing-library/react'
-import userEvent from '@testing-library/user-event'
+import { screen } from '@testing-library/react'
 import { http, HttpResponse } from 'msw'
-import { beforeEach, describe, expect, it, vi } from 'vitest'
+import { describe, expect, it, vi } from 'vitest'
 
 import { server } from '@/mocks/msw-server.setup'
-import { routerMock } from '@/test/next-stubs/next-stubs.utils'
-import { TestProviders } from '@/test/render/TestProviders'
+import { noContent } from '@/mocks/shared/http/response'
+import { apiEndpoints } from '@/shared/api/endpoints'
+import { holdResponse } from '@/test/msw'
+import { routerMock } from '@/test/next-stubs'
+import { renderWithProviders } from '@/test/render'
+import {
+  expectAlert,
+  expectAttribute,
+  expectDisabled,
+  expectLabel,
+  expectNoAccessibilityViolations,
+  expectReplacedWith,
+  fillFields,
+  pressButton,
+} from '@/test/steps'
+import { itAsksForFieldsBeforeSending } from '@/test/suites'
 
 import { LoginPage } from '../LoginPage'
-import { missingFieldCases, refusedSignInCases, returnCases } from './LoginPage.data'
+import { missingFieldCases, refusedLoginCases, returnCases } from './LoginPage.data'
 
-vi.mock(
-  'next/navigation',
-  async () => (await import('@/test/next-stubs/next-stubs.utils')).navigationMock,
-)
-vi.mock('next/link', async () => (await import('@/test/next-stubs/next-stubs.utils')).linkMock)
-
-beforeEach(() => {
-  routerMock.replace.mockClear()
-})
-
-async function signIn(email: string, password: string) {
-  await userEvent.type(screen.getByLabelText('Email'), email)
-  await userEvent.type(screen.getByLabelText('Password'), password)
-  await userEvent.click(screen.getByRole('button', { name: 'Sign in' }))
+async function logIn(email: string, password: string) {
+  await fillFields({ Email: email, Password: password })
+  await pressButton('Log in')
 }
 
 describe('LoginPage', () => {
-  it.each(returnCases)('signs in and opens $opens for $next', async ({ next, opens }) => {
-    render(<LoginPage next={next} />, { wrapper: TestProviders })
+  it.each(returnCases)('logs in and opens $opens for $next', async ({ next, opens }) => {
+    renderWithProviders(<LoginPage next={next} />)
 
-    await signIn('linh.pham@example.com', 'secret')
+    await logIn('linh.pham@example.com', 'secret')
 
-    await vi.waitFor(() => {
-      expect(routerMock.replace).toHaveBeenCalledWith(opens)
-    })
+    await expectReplacedWith(opens)
   })
 
-  it.each(refusedSignInCases)('says $name, and stays', async ({ answer, alert }) => {
-    server.use(http.post('/api/v1/auth/login', answer))
-    render(<LoginPage next={null} />, { wrapper: TestProviders })
+  it.each(refusedLoginCases)('says $name, and stays', async ({ answer, alert }) => {
+    server.use(http.post(apiEndpoints.login.pattern, answer))
+    renderWithProviders(<LoginPage next={null} />)
 
-    await signIn('linh.pham@example.com', 'secret')
+    await logIn('linh.pham@example.com', 'secret')
 
-    expect(await screen.findByRole('alert')).toHaveTextContent(alert)
+    await expectAlert(alert)
     expect(routerMock.replace).not.toHaveBeenCalled()
   })
 
-  it.each(missingFieldCases)('asks for $name before sending', async ({ typed, messages }) => {
-    render(<LoginPage next={null} />, { wrapper: TestProviders })
+  itAsksForFieldsBeforeSending({
+    renderForm: () => renderWithProviders(<LoginPage next={null} />),
+    submitLabel: 'Log in',
+    cases: missingFieldCases,
+  })
 
-    for (const [label, value] of Object.entries(typed)) {
-      await userEvent.type(screen.getByLabelText(label), value)
-    }
-    await userEvent.click(screen.getByRole('button', { name: 'Sign in' }))
+  it('has nothing that assistive technology cannot read', async () => {
+    const { container } = renderWithProviders(<LoginPage next={null} />)
 
-    for (const message of messages) expect(await screen.findByText(message)).toBeInTheDocument()
+    await expectNoAccessibilityViolations(container)
   })
 
   it('links to the account page, keeping the page to return to', () => {
-    render(<LoginPage next="/projects/p1/console" />, { wrapper: TestProviders })
+    renderWithProviders(<LoginPage next="/projects/p1/console" />)
 
     expect(screen.getByRole('link', { name: 'Create an account' })).toHaveAttribute(
       'href',
@@ -68,19 +69,16 @@ describe('LoginPage', () => {
   })
 
   it('has the place of the link that resets a password, not available yet', () => {
-    render(<LoginPage next={null} />, { wrapper: TestProviders })
+    renderWithProviders(<LoginPage next={null} />)
 
-    expect(screen.getByRole('button', { name: 'Forgot password?' })).toHaveAttribute(
-      'aria-disabled',
-      'true',
-    )
+    expectAttribute('button', 'Forgot password?', 'aria-disabled', 'true')
   })
 
   it('shows a failure of the network', async () => {
-    server.use(http.post('/api/v1/auth/login', () => HttpResponse.error()))
-    render(<LoginPage next={null} />, { wrapper: TestProviders })
+    server.use(http.post(apiEndpoints.login.pattern, () => HttpResponse.error()))
+    renderWithProviders(<LoginPage next={null} />)
 
-    await signIn('linh.pham@example.com', 'secret')
+    await logIn('linh.pham@example.com', 'secret')
 
     expect((await screen.findByRole('alert')).textContent).not.toBe('')
     expect(routerMock.replace).not.toHaveBeenCalled()
@@ -89,40 +87,35 @@ describe('LoginPage', () => {
   it('sends the email without the spaces around it', async () => {
     let sent: unknown = null
     server.use(
-      http.post('/api/v1/auth/login', async ({ request }) => {
+      http.post(apiEndpoints.login.pattern, async ({ request }) => {
         sent = await request.json()
-        return new HttpResponse(null, { status: 204 })
+        return noContent()
       }),
     )
-    render(<LoginPage next={null} />, { wrapper: TestProviders })
+    renderWithProviders(<LoginPage next={null} />)
 
-    await signIn('  linh.pham@example.com  ', 'secret')
+    await logIn('  linh.pham@example.com  ', 'secret')
 
     await vi.waitFor(() => {
       expect(sent).toEqual({ email: 'linh.pham@example.com', password: 'secret' })
     })
   })
 
-  it('disables the button while signing in', async () => {
-    let answer: (() => void) | undefined
-    const answered = new Promise<void>((resolve) => {
-      answer = resolve
-    })
+  it('disables the button while logging in', async () => {
+    const { held, release } = holdResponse()
     server.use(
-      http.post('/api/v1/auth/login', async () => {
-        await answered
-        return new HttpResponse(null, { status: 204 })
+      http.post(apiEndpoints.login.pattern, async () => {
+        await held
+        return noContent()
       }),
     )
-    render(<LoginPage next={null} />, { wrapper: TestProviders })
+    renderWithProviders(<LoginPage next={null} />)
 
-    await signIn('linh.pham@example.com', 'secret')
+    await logIn('linh.pham@example.com', 'secret')
 
-    expect(await screen.findByLabelText('Signing in')).toBeInTheDocument()
-    expect(screen.getByRole('button', { name: /Sign in/ })).toBeDisabled()
-    answer?.()
-    await vi.waitFor(() => {
-      expect(routerMock.replace).toHaveBeenCalledWith('/')
-    })
+    await expectLabel('Logging in')
+    expectDisabled('button', /Log in/)
+    release()
+    await expectReplacedWith('/')
   })
 })

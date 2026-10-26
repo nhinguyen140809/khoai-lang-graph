@@ -1,36 +1,40 @@
-import { render, screen } from '@testing-library/react'
+import { screen } from '@testing-library/react'
 import userEvent from '@testing-library/user-event'
-import { http, HttpResponse } from 'msw'
-import { toast } from 'sonner'
-import { afterEach, beforeEach, describe, expect, it, vi } from 'vitest'
+import { http } from 'msw'
+import { describe, expect, it, vi } from 'vitest'
 
 import { server } from '@/mocks/msw-server.setup'
-import { IdPrefix } from '@/mocks/shared/db/mock-ids.constants'
-import { createdId } from '@/mocks/shared/db/mock-ids.utils'
+import { createdId, IdPrefix } from '@/mocks/shared/db'
+import { apiEndpoints } from '@/shared/api/endpoints'
 import { Dialog, DialogContent, DialogTitle } from '@/shared/components/ui/dialog'
-import { routerMock } from '@/test/next-stubs/next-stubs.utils'
-import { TestProviders } from '@/test/render/TestProviders'
+import { serverError } from '@/test/msw'
+import { routerMock } from '@/test/next-stubs'
+import { renderWithProviders } from '@/test/render'
+import {
+  expectFieldValue,
+  expectNoRole,
+  expectPushedTo,
+  expectText,
+  pasteText,
+  pressButton,
+  pressRole,
+  spyOnToast,
+} from '@/test/steps'
 
 import { NewProjectForm } from '../NewProjectForm'
 import { blankIdeas, createCases, failedCreateCases, failedSendCases } from './NewProjectForm.data'
-
-vi.mock(
-  'next/navigation',
-  async () => (await import('@/test/next-stubs/next-stubs.utils')).navigationMock,
-)
 
 const IDEA = 'Mentor platform for students.'
 const activity = `/projects/${createdId(IdPrefix.Project, 1)}/activity`
 
 function renderForm(onCreated = vi.fn()) {
-  render(
+  renderWithProviders(
     <Dialog open>
       <DialogContent aria-describedby={undefined}>
         <DialogTitle>Create project</DialogTitle>
         <NewProjectForm idea={IDEA} defaultLanguage="vi" onCreated={onCreated} />
       </DialogContent>
     </Dialog>,
-    { wrapper: TestProviders },
   )
   return onCreated
 }
@@ -38,10 +42,10 @@ function renderForm(onCreated = vi.fn()) {
 /** Replaces the text of a field with a paste, which takes an empty text too. */
 async function replace(name: string, text: string) {
   await userEvent.clear(screen.getByRole('textbox', { name }))
-  await userEvent.paste(text)
+  await pasteText(text)
 }
 
-const create = () => userEvent.click(screen.getByRole('button', { name: 'Create project' }))
+const create = () => pressButton('Create project')
 
 /** The address and the body of each POST request, in the order they are sent. */
 function recordPosts() {
@@ -61,21 +65,12 @@ function recordPosts() {
   return sent
 }
 
-beforeEach(() => {
-  routerMock.push.mockClear()
-})
-
-afterEach(() => {
-  server.events.removeAllListeners()
-  vi.restoreAllMocks()
-})
-
 describe('NewProjectForm', () => {
   it('starts without a name, with the idea and the language given', () => {
     renderForm()
 
-    expect(screen.getByRole('textbox', { name: 'Name (optional)' })).toHaveValue('')
-    expect(screen.getByRole('textbox', { name: 'Idea' })).toHaveValue(IDEA)
+    expectFieldValue('Name (optional)', '')
+    expectFieldValue('Idea', IDEA)
     expect(screen.getByRole('combobox', { name: 'Language of the documents' })).toHaveTextContent(
       'Vietnamese',
     )
@@ -83,9 +78,9 @@ describe('NewProjectForm', () => {
 
   it('shows the defaults of the runs once their settings open, and they cannot be changed yet', async () => {
     renderForm()
-    expect(screen.queryByRole('spinbutton', { name: 'Personas' })).not.toBeInTheDocument()
+    expectNoRole('spinbutton', 'Personas')
 
-    await userEvent.click(screen.getByRole('button', { name: 'Agent settings' }))
+    await pressButton('Agent settings')
 
     const personas = screen.getByRole('spinbutton', { name: 'Personas' })
     expect(personas).toHaveValue(3)
@@ -104,7 +99,7 @@ describe('NewProjectForm', () => {
     await replace('Idea', idea)
     await create()
 
-    expect(await screen.findByText('Describe the idea.')).toBeInTheDocument()
+    await expectText('Describe the idea.')
     expect(routerMock.push).not.toHaveBeenCalled()
   })
 
@@ -116,25 +111,23 @@ describe('NewProjectForm', () => {
 
       if (projectName !== null) await replace('Name (optional)', projectName)
       if (idea !== null) await replace('Idea', idea)
-      await userEvent.click(screen.getByRole('combobox', { name: 'Language of the documents' }))
-      await userEvent.click(await screen.findByRole('option', { name: language }))
+      await pressRole('combobox', 'Language of the documents')
+      await pressRole('option', language)
       await create()
 
-      await vi.waitFor(() => {
-        expect(routerMock.push).toHaveBeenCalledWith(activity)
-      })
+      await expectPushedTo(activity)
       expect(posts).toEqual(sent)
       expect(onCreated).toHaveBeenCalledOnce()
     },
   )
 
   it.each(failedCreateCases)('shows $name', async ({ answer, message }) => {
-    server.use(http.post('/api/v1/projects', answer))
+    server.use(http.post(apiEndpoints.projects.pattern, answer))
     const onCreated = renderForm()
 
     await create()
 
-    expect(await screen.findByText(message)).toBeInTheDocument()
+    await expectText(message)
     expect(routerMock.push).not.toHaveBeenCalled()
     expect(onCreated).not.toHaveBeenCalled()
   })
@@ -142,15 +135,13 @@ describe('NewProjectForm', () => {
   it.each(failedSendCases)(
     'opens the project created, with a toast, when $request fails',
     async ({ path, reason }) => {
-      const error = vi.spyOn(toast, 'error')
-      server.use(http.post(path, () => new HttpResponse(null, { status: 500 })))
+      const error = spyOnToast('error')
+      server.use(http.post(path, () => serverError()))
       renderForm()
 
       await create()
 
-      await vi.waitFor(() => {
-        expect(routerMock.push).toHaveBeenCalledWith(activity)
-      })
+      await expectPushedTo(activity)
       expect(error).toHaveBeenCalledWith('The project is created, but its idea was not sent.', {
         description: reason,
       })

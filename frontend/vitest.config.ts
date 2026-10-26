@@ -13,9 +13,15 @@ export default defineConfig({
   },
   test: {
     environment: 'jsdom',
-    setupFiles: ['./src/test/vitest.setup.ts'],
+    setupFiles: ['./src/test/vitest.setup.ts', './src/test/zustand.setup.ts'],
     include: ['src/**/*.test.{ts,tsx}'],
     css: true,
+    // Every test starts with the calls of the mocks cleared, the spies restored, and the values set
+    // with `vi.stubEnv` and `vi.stubGlobal` put back, so that no test has to do it for itself.
+    clearMocks: true,
+    restoreMocks: true,
+    unstubEnvs: true,
+    unstubGlobals: true,
     // Dates show in the time zone of the machine; the tests fix it, so that they give the same
     // result on every machine.
     env: { TZ: 'UTC' },

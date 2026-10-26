@@ -1,6 +1,8 @@
 'use client'
 
-import { useEffect, useId } from 'react'
+import { useMemo } from 'react'
+
+import { useRegisterItem } from '@/shared/lib/registry'
 
 import { useActivityBarStore } from '../activity-bar.store'
 import type { ActivityBarItem } from '../destination.types'
@@ -12,18 +14,6 @@ import type { ActivityBarItem } from '../destination.types'
  * `content` on each render of the caller; keep it in `useMemo`.
  */
 export function useActivityBarItem({ order = 0, content }: ActivityBarItem) {
-  const source = useId()
-  const setItem = useActivityBarStore((state) => state.setItem)
-  const removeItem = useActivityBarStore((state) => state.removeItem)
-
-  useEffect(() => {
-    setItem(source, { order, content })
-  }, [source, order, content, setItem])
-
-  useEffect(
-    () => () => {
-      removeItem(source)
-    },
-    [source, removeItem],
-  )
+  const item = useMemo(() => ({ order, content }), [order, content])
+  useRegisterItem(useActivityBarStore, item)
 }

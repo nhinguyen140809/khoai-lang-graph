@@ -3,6 +3,6 @@
  * them, so that both use the same names.
  */
 export const RouteParam = {
-  /** The page to return to after signing in, on the sign-in and account pages. */
+  /** The page to return to after logging in, on the login and account pages. */
   Next: 'next',
 } as const

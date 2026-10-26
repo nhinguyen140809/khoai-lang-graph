@@ -2,23 +2,27 @@ import { http, HttpResponse } from 'msw'
 import { describe, expect, it } from 'vitest'
 
 import { server } from '@/mocks/msw-server.setup'
-import { apiUrl } from '@/shared/api/request/api-url.utils'
+import { apiEndpoint } from '@/shared/api/endpoints'
+import { HttpHeader, HttpStatus, MediaType } from '@/shared/api/http'
+import { apiUrl } from '@/shared/api/request'
 
 import { idempotent } from '../idempotency.utils'
 import { type KeyedRequest, separateRequestCases } from './idempotency.utils.data'
 
+const thingStart = apiEndpoint('/things/:id/start')
+
 // A handler that counts the work it does and answers with that count. Its calls answer the
 // statuses given in turn, then 201.
-function useCountingHandler(...statuses: number[]) {
+function useCountingHandler(...statuses: HttpStatus[]) {
   const state = { works: 0 }
   server.use(
     http.post(
-      '/api/v1/things/:id/start',
+      thingStart.pattern,
       idempotent(() => {
         state.works += 1
         return HttpResponse.json(
           { work: state.works },
-          { status: statuses[state.works - 1] ?? 201 },
+          { status: statuses[state.works - 1] ?? HttpStatus.Created },
         )
       }),
     ),
@@ -27,9 +31,9 @@ function useCountingHandler(...statuses: number[]) {
 }
 
 async function send(request: KeyedRequest, id = '1') {
-  const headers: Record<string, string> = { 'Content-Type': 'application/json' }
-  if (request.key !== null) headers['Idempotency-Key'] = request.key
-  const response = await fetch(apiUrl(`/api/v1/things/${id}/start`), {
+  const headers: Record<string, string> = { [HttpHeader.ContentType]: MediaType.Json }
+  if (request.key !== null) headers[HttpHeader.IdempotencyKey] = request.key
+  const response = await fetch(apiUrl(thingStart.path({ id })), {
     method: 'POST',
     headers,
     body: JSON.stringify(request.body),
@@ -52,7 +56,7 @@ describe('idempotent', () => {
     const first = await send({ key: 'k1', body: { a: 1 } })
     const second = await send({ key: 'k1', body: { a: 1 } })
 
-    expect(first).toEqual({ status: 201, body: { work: 1 } })
+    expect(first).toEqual({ status: HttpStatus.Created, body: { work: 1 } })
     expect(second).toEqual(first)
     expect(state.works).toBe(1)
   })
@@ -62,7 +66,7 @@ describe('idempotent', () => {
     await send({ key: 'k1', body: { a: 1 } })
 
     expect(await send({ key: 'k1', body: { a: 2 } })).toMatchObject({
-      status: 409,
+      status: HttpStatus.Conflict,
       body: { code: 'idempotency_conflict' },
     })
     expect(state.works).toBe(1)
@@ -78,13 +82,13 @@ describe('idempotent', () => {
   })
 
   it('does not keep an answer with an error status', async () => {
-    const state = useCountingHandler(500)
+    const state = useCountingHandler(HttpStatus.InternalServerError)
 
     const failed = await send({ key: 'k1', body: { a: 1 } })
     const retried = await send({ key: 'k1', body: { a: 1 } })
 
-    expect(failed.status).toBe(500)
-    expect(retried.status).toBe(201)
+    expect(failed.status).toBe(HttpStatus.InternalServerError)
+    expect(retried.status).toBe(HttpStatus.Created)
     expect(state.works).toBe(2)
   })
 })

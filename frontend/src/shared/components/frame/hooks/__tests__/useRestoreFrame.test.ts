@@ -1,10 +1,10 @@
 import { render, renderHook, waitFor } from '@testing-library/react'
-import type { Route } from 'next'
 import { createElement, type ReactNode } from 'react'
-import { beforeEach, describe, expect, it, vi } from 'vitest'
+import { beforeEach, describe, expect, it } from 'vitest'
 
-import { browserStorage } from '@/shared/lib/storage/browser-storage.utils'
-import { setPathname } from '@/test/next-stubs/next-stubs.utils'
+import { browserStorage } from '@/shared/lib/storage'
+import { routeOfAddress } from '@/shared/routes'
+import { setPathname } from '@/test/next-stubs'
 
 import type { Destination } from '../../destinations/destination.types'
 import { useSideFeatureStore } from '../../destinations/side-feature.store'
@@ -15,16 +15,11 @@ import { TabGroupContext } from '../../tabs/hooks/useTabGroup'
 import { useRestoreFrame } from '../useRestoreFrame'
 import { chosenFeatureCases } from './useRestoreFrame.data'
 
-vi.mock(
-  'next/navigation',
-  async () => (await import('@/test/next-stubs/next-stubs.utils')).navigationMock,
-)
-
 const SIDE_FEATURE_KEY = useSideFeatureStore.persist.getOptions().name ?? ''
 const TABS_KEY = useEditorTabsStore.persist.getOptions().name ?? ''
 
 function feature(id: string): Destination {
-  return { id, label: id, icon: null, href: `/projects/p1/${id}` as Route, panel: null }
+  return { id, label: id, icon: null, href: routeOfAddress(`/projects/p1/${id}`), panel: null }
 }
 
 const destinations = [feature('console'), feature('search'), feature('artifacts')]
@@ -33,9 +28,6 @@ beforeEach(() => {
   browserStorage.removeItem(SIDE_FEATURE_KEY)
   useEditorTabsStore.persist.clearStorage()
   setPathname('/projects/p1/artifacts')
-  usePanelsStore.setState(usePanelsStore.getInitialState())
-  useSideFeatureStore.setState(useSideFeatureStore.getInitialState())
-  useEditorTabsStore.setState(useEditorTabsStore.getInitialState())
 })
 
 describe('useRestoreFrame', () => {

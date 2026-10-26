@@ -1,6 +1,7 @@
 import { z } from 'zod'
 
-import { type ApiErrorCode, HttpStatus } from './api-error.types'
+import { HttpStatus } from '../http'
+import { type ApiErrorMessages, type FieldProblem } from './api-error.types'
 
 // The error body of the API (RFC 9457 Problem Details). Fields are optional so that an error from
 // a proxy, which has no such body, still becomes an ApiError.
@@ -10,11 +11,6 @@ const problemSchema = z.object({
   detail: z.string().nullable().optional(),
   errors: z.array(z.object({ field: z.string(), message: z.string() })).optional(),
 })
-
-export interface FieldProblem {
-  field: string
-  message: string
-}
 
 /** A response with an error status. `code` is the stable value to branch on, when the body has one. */
 export class ApiError extends Error {
@@ -53,17 +49,11 @@ export function isNotFoundError(error: unknown): boolean {
   return error instanceof ApiError && error.status === HttpStatus.NotFound
 }
 
-/** The words for a failed request, by the `code` or the status of its answer. */
-export interface ErrorMessages {
-  code?: Partial<Record<ApiErrorCode, string>>
-  status?: Partial<Record<HttpStatus, string>>
-}
-
 /**
  * What a page says for a failed request: the words that `messages` gives for the code of the
  * answer, else for its status, else the message of the error.
  */
-export function errorMessageOf(error: Error, messages: ErrorMessages): string {
+export function errorMessageOf(error: Error, messages: ApiErrorMessages): string {
   if (!(error instanceof ApiError)) return error.message
   const byCode = messages.code as Partial<Record<string, string>> | undefined
   const byStatus = messages.status as Partial<Record<number, string>> | undefined

@@ -1,9 +1,9 @@
 import { renderHook } from '@testing-library/react'
 import type { Route } from 'next'
 import { createElement, type ReactNode } from 'react'
-import { beforeEach, describe, expect, it, vi } from 'vitest'
+import { describe, expect, it } from 'vitest'
 
-import { routerMock } from '@/test/next-stubs/next-stubs.utils'
+import { routerMock } from '@/test/next-stubs'
 
 import type { Destination } from '../../destinations/destination.types'
 import { DestinationsContext } from '../../destinations/hooks/useDestinations'
@@ -13,11 +13,6 @@ import { usePanelsStore } from '../../panels/panels.store'
 import { useEditorTabsStore } from '../../tabs/editor-tabs.store'
 import { useOpenPage } from '../useOpenPage'
 import { openPageCases } from './useOpenPage.data'
-
-vi.mock(
-  'next/navigation',
-  async () => (await import('@/test/next-stubs/next-stubs.utils')).navigationMock,
-)
 
 const destinations: Destination[] = [
   {
@@ -32,13 +27,6 @@ const destinations: Destination[] = [
 function wrapper({ children }: { children: ReactNode }) {
   return createElement(DestinationsContext, { value: { destinations, tabIcons: {} } }, children)
 }
-
-beforeEach(() => {
-  routerMock.push.mockClear()
-  usePanelsStore.setState(usePanelsStore.getInitialState())
-  useSideFeatureStore.setState(useSideFeatureStore.getInitialState())
-  useEditorTabsStore.setState(useEditorTabsStore.getInitialState())
-})
 
 describe('useOpenPage', () => {
   it.each(openPageCases)('opens $name', ({ href, options, chosen, sideVisible, keepNext }) => {

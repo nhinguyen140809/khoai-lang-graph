@@ -1,25 +1,29 @@
-import { render, screen } from '@testing-library/react'
-import { describe, expect, it } from 'vitest'
+import { render } from '@testing-library/react'
+import { describe, it } from 'vitest'
 
-import { ViewContext } from '@/shared/lib/view'
+import { ViewProvider } from '@/shared/lib/view'
+import { expectText } from '@/test/steps'
 
 import { RunStatusBadge } from '../RunStatusBadge'
 import { badgeCases } from './RunStatusBadge.data'
 
 describe('RunStatusBadge', () => {
-  it.each(badgeCases)('says $text for $status in the $view view', ({ status, view, text }) => {
-    render(
-      <ViewContext value={view}>
-        <RunStatusBadge status={status} />
-      </ViewContext>,
-    )
+  it.each(badgeCases)(
+    'says $text for $status in the $view view',
+    async ({ status, view, text }) => {
+      render(
+        <ViewProvider value={view}>
+          <RunStatusBadge status={status} />
+        </ViewProvider>,
+      )
 
-    expect(screen.getByText(text)).toBeInTheDocument()
-  })
+      await expectText(text)
+    },
+  )
 
-  it('reads in the user view without a view given', () => {
+  it('reads in the user view without a view given', async () => {
     render(<RunStatusBadge status="running" />)
 
-    expect(screen.getByText('Working')).toBeInTheDocument()
+    await expectText('Working')
   })
 })

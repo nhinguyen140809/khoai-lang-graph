@@ -52,7 +52,7 @@ export const groupsBySearchCases = [
     headings: ['Projects', 'Run', 'View'],
   },
   { name: 'keeps the order without a search', search: ' ', headings: ['Projects', 'Run', 'View'] },
-].map((testCase) => ({ ...testCase, groups: [projects, run, view] }))
+].map((testCase) => ({ groups: [projects, run, view], ...testCase }))
 
 /** A command that the palette shows, before it changes. */
 export const shownCommand: PaletteCommand = {

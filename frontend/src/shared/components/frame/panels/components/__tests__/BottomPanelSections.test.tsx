@@ -1,6 +1,7 @@
 import { render, screen } from '@testing-library/react'
-import userEvent from '@testing-library/user-event'
 import { describe, expect, it } from 'vitest'
+
+import { expectAttribute, expectFieldValue, expectNoRole, pressRole, typeText } from '@/test/steps'
 
 import type { BottomPanelSection } from '../../panel.types'
 import { BottomPanelSections } from '../BottomPanelSections'
@@ -20,16 +21,16 @@ describe('BottomPanelSections', () => {
   it('shows the first section first', () => {
     render(<BottomPanelSections sections={sections} />)
 
-    expect(screen.getByRole('tab', { name: 'Step' })).toHaveAttribute('aria-selected', 'true')
+    expectAttribute('tab', 'Step', 'aria-selected', 'true')
     expect(screen.getByRole('tabpanel')).toHaveTextContent('the step')
   })
 
   it.each(sectionTabCases)('shows the section of the $tab tab', async ({ tab, text }) => {
     render(<BottomPanelSections sections={sections} />)
 
-    await userEvent.click(screen.getByRole('tab', { name: tab }))
+    await pressRole('tab', tab)
 
-    expect(screen.getByRole('tab', { name: tab })).toHaveAttribute('aria-selected', 'true')
+    expectAttribute('tab', tab, 'aria-selected', 'true')
     expect(screen.getByRole('tabpanel')).toHaveTextContent(text)
   })
 
@@ -42,22 +43,22 @@ describe('BottomPanelSections', () => {
         ]}
       />,
     )
-    await userEvent.type(screen.getByRole('textbox', { name: 'Filter' }), 'REQ')
+    await typeText(screen.getByRole('textbox', { name: 'Filter' }), 'REQ')
 
-    await userEvent.click(screen.getByRole('tab', { name: 'State' }))
+    await pressRole('tab', 'State')
     expect(screen.getByLabelText('Filter')).not.toBeVisible()
-    await userEvent.click(screen.getByRole('tab', { name: 'Step' }))
+    await pressRole('tab', 'Step')
 
-    expect(screen.getByRole('textbox', { name: 'Filter' })).toHaveValue('REQ')
+    expectFieldValue('Filter', 'REQ')
   })
 
   it('shows the actions of the section shown, then the controls', async () => {
     render(
       <BottomPanelSections sections={sections} controls={<button type="button">Hide</button>} />,
     )
-    expect(screen.queryByRole('button', { name: 'Copy the state' })).not.toBeInTheDocument()
+    expectNoRole('button', 'Copy the state')
 
-    await userEvent.click(screen.getByRole('tab', { name: 'State' }))
+    await pressRole('tab', 'State')
 
     const buttons = screen.getAllByRole('button').map((button) => button.textContent)
     expect(buttons).toEqual(['Copy the state', 'Hide'])

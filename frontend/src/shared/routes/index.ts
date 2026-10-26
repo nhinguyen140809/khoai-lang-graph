@@ -1,3 +1,11 @@
-export { defaultAfterSignIn, nextParam, safeNextPath, signInHrefFor } from './auth/auth-hrefs.utils'
-export { RouteParam } from './route-params/route-params.constants'
+export {
+  afterLoginPath,
+  defaultAfterLogin,
+  loginHref,
+  loginHrefFor,
+  redirectToLogin,
+  registerHref,
+} from './auth'
+export { nextParam, RouteParam } from './route-params'
 export { routes } from './routes.utils'
+export { routeOfAddress } from './typed-route'

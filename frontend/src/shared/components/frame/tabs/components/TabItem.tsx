@@ -1,5 +1,4 @@
 import { XIcon } from 'lucide-react'
-import type { Route } from 'next'
 import Link from 'next/link'
 
 import { Button } from '@/shared/components/ui/button'
@@ -10,6 +9,7 @@ import {
   ContextMenuSeparator,
   ContextMenuTrigger,
 } from '@/shared/components/ui/context-menu'
+import { routeOfAddress } from '@/shared/routes'
 
 import type { EditorTab } from '../editor-tabs.types'
 import { useTabStrip } from '../hooks/useTabStrip'
@@ -26,8 +26,8 @@ interface TabItemProps {
  */
 export function TabItem({ tab }: TabItemProps) {
   const { tabs, onScreen, previewId, keep, close } = useTabStrip()
-  const active = tab.id === onScreen
-  const preview = tab.id === previewId
+  const isActive = tab.id === onScreen
+  const isPreview = tab.id === previewId
   const ids = tabs.map(({ id }) => id)
   const onKeep = () => {
     keep(tab.id)
@@ -40,13 +40,13 @@ export function TabItem({ tab }: TabItemProps) {
     <ContextMenu>
       <ContextMenuTrigger asChild>
         <li
-          data-active={active}
-          data-preview={preview}
+          data-active={isActive}
+          data-preview={isPreview}
           className="group/tab relative flex shrink-0 items-center border-r text-sm data-[active=false]:text-muted-foreground data-[active=false]:hover:bg-sidebar-accent/60 data-[active=false]:hover:text-foreground data-[active=true]:bg-background data-[active=true]:text-foreground data-[active=true]:before:absolute data-[active=true]:before:inset-x-0 data-[active=true]:before:top-0 data-[active=true]:before:h-px data-[active=true]:before:bg-primary"
         >
           <Link
-            href={tab.href as Route}
-            aria-current={active ? 'page' : undefined}
+            href={routeOfAddress(tab.href)}
+            aria-current={isActive ? 'page' : undefined}
             title={tab.title}
             onAuxClick={(event) => {
               if (event.button !== 1) return
@@ -56,7 +56,7 @@ export function TabItem({ tab }: TabItemProps) {
             onDoubleClick={onKeep}
             className="flex h-full max-w-56 items-center gap-1.5 pr-1 pl-3 outline-none focus-visible:ring-2 focus-visible:ring-ring/50 focus-visible:ring-inset"
           >
-            <TabLabel tab={tab} preview={preview} />
+            <TabLabel tab={tab} preview={isPreview} />
           </Link>
           {/* On the active tab, under the pointer and with the focus, and on every tab of a touch
               screen, which has no pointer to show it. It keeps its place while hidden, so that the
@@ -73,7 +73,7 @@ export function TabItem({ tab }: TabItemProps) {
         </li>
       </ContextMenuTrigger>
       <ContextMenuContent>
-        <ContextMenuItem disabled={!preview} onSelect={onKeep}>
+        <ContextMenuItem disabled={!isPreview} onSelect={onKeep}>
           Keep open
         </ContextMenuItem>
         <ContextMenuSeparator />

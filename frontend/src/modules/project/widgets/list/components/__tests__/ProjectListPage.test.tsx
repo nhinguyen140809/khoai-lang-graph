@@ -1,22 +1,28 @@
-import { render, screen, within } from '@testing-library/react'
+import { screen, within } from '@testing-library/react'
 import userEvent from '@testing-library/user-event'
 import { delay, http } from 'msw'
-import { afterEach, describe, expect, it, vi } from 'vitest'
+import { describe, expect, it } from 'vitest'
 
 import { server } from '@/mocks/msw-server.setup'
-import { routerMock, setPathname, setSearch } from '@/test/next-stubs/next-stubs.utils'
-import { TestProviders } from '@/test/render/TestProviders'
+import { apiEndpoints } from '@/shared/api/endpoints'
+import { setPathname, setQuery } from '@/test/next-stubs'
+import { renderWithProviders } from '@/test/render'
+import {
+  expectDisabled,
+  expectFieldValue,
+  expectNoRole,
+  expectReplacedWith,
+  expectRole,
+  pasteText,
+  pressButton,
+  pressEscape,
+  pressKey,
+} from '@/test/steps'
 
 import { ProjectListPage } from '../ProjectListPage'
 
-vi.mock(
-  'next/navigation',
-  async () => (await import('@/test/next-stubs/next-stubs.utils')).navigationMock,
-)
-vi.mock('next/link', async () => (await import('@/test/next-stubs/next-stubs.utils')).linkMock)
-
 function renderPage() {
-  return render(<ProjectListPage />, { wrapper: TestProviders })
+  return renderWithProviders(<ProjectListPage />)
 }
 
 /** Types an idea in the prompt and sends it, which opens the new project dialog. */
@@ -26,40 +32,31 @@ async function startProject(idea: string) {
       name: 'What product do you want to write the requirements for?',
     }),
   )
-  await userEvent.paste(idea)
-  await userEvent.keyboard('{Enter}')
+  await pasteText(idea)
+  await pressKey('Enter')
   return screen.findByRole('dialog', { name: 'Create project' })
 }
 
-afterEach(() => {
-  setPathname('/')
-  setSearch('')
-  routerMock.replace.mockClear()
-})
-
 describe('ProjectListPage', () => {
   it('lists the projects of the filters in the address', async () => {
-    setSearch('run-status=interrupted')
+    setQuery('run-status=interrupted')
     renderPage()
 
-    expect(await screen.findByRole('link', { name: 'Mentor platform' })).toBeInTheDocument()
-    expect(screen.queryByRole('link', { name: 'Library booking' })).not.toBeInTheDocument()
-    expect(screen.getByRole('button', { name: /^Filter\W+1 applied$/ })).toBeInTheDocument()
+    await expectRole('link', 'Mentor platform')
+    expectNoRole('link', 'Library booking')
+    await expectRole('button', /^Filter\W+1 applied$/)
   })
 
   it('puts the filters applied in the address', async () => {
     setPathname('/projects')
     renderPage()
 
-    await userEvent.click(await screen.findByRole('button', { name: 'Filter' }))
-    await userEvent.click(screen.getByRole('button', { name: 'Waiting for you' }))
-    await userEvent.click(screen.getByRole('button', { name: 'In the last 7 days' }))
-    await userEvent.click(screen.getByRole('button', { name: 'Apply' }))
+    await pressButton('Filter')
+    await pressButton('Waiting for you')
+    await pressButton('In the last 7 days')
+    await pressButton('Apply')
 
-    expect(routerMock.replace).toHaveBeenCalledWith(
-      '/projects?run-status=interrupted&last-activity=7',
-      { scroll: false },
-    )
+    await expectReplacedWith('/projects?run-status=interrupted&last-activity=7', { scroll: false })
   })
 
   it('opens the new project dialog on the idea sent from the prompt', async () => {
@@ -70,7 +67,7 @@ describe('ProjectListPage', () => {
     expect(within(dialog).getByRole('textbox', { name: 'Idea' })).toHaveValue(
       'Mentor platform\nFor university students.',
     )
-    expect(within(dialog).getByRole('textbox', { name: 'Name (optional)' })).toHaveValue('')
+    expectFieldValue('Name (optional)', '', within(dialog))
   })
 
   it('does not open the dialog again when the page shows again', async () => {
@@ -80,18 +77,18 @@ describe('ProjectListPage', () => {
     page.unmount()
     renderPage()
 
-    expect(screen.queryByRole('dialog')).not.toBeInTheDocument()
+    expectNoRole('dialog')
   })
 
   it('stays open while the project is created', async () => {
-    server.use(http.post('/api/v1/projects', () => delay('infinite')))
+    server.use(http.post(apiEndpoints.projects.pattern, () => delay('infinite')))
     renderPage()
     const dialog = await startProject('Mentor platform')
 
     await userEvent.click(within(dialog).getByRole('button', { name: 'Create project' }))
-    await userEvent.keyboard('{Escape}')
+    await pressEscape()
 
-    expect(screen.getByRole('dialog', { name: 'Create project' })).toBeInTheDocument()
-    expect(within(dialog).getByRole('button', { name: 'Cancel' })).toBeDisabled()
+    await expectRole('dialog', 'Create project')
+    expectDisabled('button', 'Cancel', within(dialog))
   })
 })

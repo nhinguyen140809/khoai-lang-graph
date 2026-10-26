@@ -1,8 +1,8 @@
-import { buildMockProject } from '@/mocks/projects/projects.fixtures'
-import { projectIds } from '@/mocks/shared/db/mock-ids.constants'
+import { buildProject } from '@/mocks/projects/projects.fixtures'
+import { projectIds } from '@/mocks/shared/db'
 
 /** A project of the mock data, which the cases archive or restore. */
-export const mentorProject = buildMockProject({ id: projectIds.mentor, name: 'Mentor platform' })
+export const mentorProject = buildProject({ id: projectIds.mentor, name: 'Mentor platform' })
 
 /**
  * A change, and the toast it shows with its duration in milliseconds. Without a duration, a toast
@@ -20,5 +20,19 @@ export const archiveToastCases = [
     change: 'restore',
     message: 'Project restored',
     duration: undefined,
+  },
+] as const
+
+/** A change that the server refuses, and the toast that shows the error. */
+export const archiveErrorCases = [
+  {
+    name: 'a failed archive',
+    change: 'archive',
+    message: 'Failed to archive the project (HTTP 500)',
+  },
+  {
+    name: 'a failed restore',
+    change: 'restore',
+    message: 'Failed to restore the project (HTTP 500)',
   },
 ] as const

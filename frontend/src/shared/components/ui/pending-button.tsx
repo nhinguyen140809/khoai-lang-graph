@@ -6,7 +6,7 @@ import { Spinner } from './spinner'
 interface PendingButtonProps extends Omit<React.ComponentProps<typeof Button>, 'asChild'> {
   /** The action of the button runs: the button is disabled and shows a spinner before its words. */
   pending: boolean
-  /** What runs, for the spinner, such as "Signing in". */
+  /** What runs, for the spinner, such as "Logging in". */
   pendingLabel: string
 }
 

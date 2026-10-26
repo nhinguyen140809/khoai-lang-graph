@@ -1,27 +1,23 @@
-import { afterEach, describe, expect, it } from 'vitest'
+import { describe, expect, it } from 'vitest'
 
-import { answerScenario, mockScenario, pageParam } from '../mock-scenario.utils'
+import { HttpStatus } from '@/shared/api/http'
+import { openPage } from '@/test/msw'
+import { expectStillPending } from '@/test/steps'
+
+import { addressParam, answerScenario, mockScenario } from '../mock-scenario.utils'
 import {
+  addressParamCases,
   addressWithParams,
   chosenScenarios,
   fixtureScenarioCases,
   handlerScenarioCases,
-  pageParamCases,
 } from './mock-scenario.utils.data'
 
-function openPage(address: string) {
-  window.history.replaceState(null, '', address)
-}
-
-afterEach(() => {
-  openPage('/')
-})
-
-describe('pageParam', () => {
-  it.each(pageParamCases)('reads $name', ({ param, value }) => {
+describe('addressParam', () => {
+  it.each(addressParamCases)('reads $name', ({ param, value }) => {
     openPage(addressWithParams)
 
-    expect(pageParam(param)).toBe(value)
+    expect(addressParam(param)).toBe(value)
   })
 })
 
@@ -46,7 +42,7 @@ describe('answerScenario', () => {
     const thrown: unknown = await answerScenario('me').catch((error: unknown) => error)
 
     expect(thrown).toBeInstanceOf(Response)
-    expect((thrown as Response).status).toBe(500)
+    expect((thrown as Response).status).toBe(HttpStatus.InternalServerError)
     expect(await (thrown as Response).json()).toMatchObject({ code: 'internal_error' })
   })
 
@@ -58,11 +54,6 @@ describe('answerScenario', () => {
 
   it('never answers the loading scenario', async () => {
     openPage('/?mock-me=loading')
-    const first = await Promise.race([
-      answerScenario('me').then(() => 'answered'),
-      new Promise((resolve) => setTimeout(resolve, 100, 'pending')),
-    ])
-
-    expect(first).toBe('pending')
+    await expectStillPending(answerScenario('me'))
   })
 })

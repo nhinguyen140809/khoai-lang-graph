@@ -25,12 +25,12 @@ export function useOpenProjectPrompt() {
  * as from the command that creates a project, then clears the request.
  */
 export function useProjectPromptFocus(inputRef: RefObject<HTMLTextAreaElement | null>) {
-  const focusRequested = useProjectPromptStore((state) => state.focusRequested)
+  const isFocusRequested = useProjectPromptStore((state) => state.focusRequested)
   const focused = useProjectPromptStore((state) => state.focused)
 
   useEffect(() => {
-    if (!focusRequested) return
+    if (!isFocusRequested) return
     inputRef.current?.focus()
     focused()
-  }, [focusRequested, focused, inputRef])
+  }, [isFocusRequested, focused, inputRef])
 }

@@ -1,7 +1,9 @@
 import type { Route } from 'next'
 
-import { RouteParam } from '../route-params/route-params.constants'
-import { search } from '../typed-route/typed-route.utils'
+import { queryString } from '@/shared/lib/url'
+
+import { RouteParam } from '../route-params'
+import { routeOfAddress } from '../typed-route'
 
 // The pages that need no session, and the page to return to that every other page can be. A link
 // may carry any `next`, so it is checked before the app opens it.
@@ -13,41 +15,42 @@ const AuthPage = {
 
 const authPages: readonly string[] = Object.values(AuthPage)
 
-/** The page to return to after signing in, when none is given. */
-export const defaultAfterSignIn: Route = '/'
+/** The page to return to after logging in, when none is given. */
+export const defaultAfterLogin: Route = '/'
 
 // Any origin works here: only a `next` that stays on it is kept.
 const BASE = 'http://app.invalid'
 
 /**
- * The page to return to after signing in: a path of this app only, never another origin, so that
- * a link cannot send the user elsewhere after they sign in. The check runs on the parsed address,
+ * The page to return to after logging in: a path of this app only, never another origin, so that
+ * a link cannot send the user elsewhere after they log in. The check runs on the parsed address,
  * because the URL parser drops tabs and line breaks and reads a backslash as a slash.
  */
-export function safeNextPath(next: string | null | undefined): Route {
-  if (!next?.startsWith('/')) return defaultAfterSignIn
+export function afterLoginPath(next: string | null | undefined): Route {
+  if (!next?.startsWith('/')) return defaultAfterLogin
   let url: URL
   try {
     url = new URL(next, BASE)
   } catch {
-    return defaultAfterSignIn
+    return defaultAfterLogin
   }
-  if (url.origin !== BASE) return defaultAfterSignIn
+  if (url.origin !== BASE) return defaultAfterLogin
   const page = url.pathname.replace(/(.)\/+$/, '$1')
-  if (authPages.includes(page)) return defaultAfterSignIn
-  // A path of this app that came from an address, so the route types cannot check it.
-  return `${url.pathname}${url.search}${url.hash}` as Route
+  if (authPages.includes(page)) return defaultAfterLogin
+  return routeOfAddress(`${url.pathname}${url.search}${url.hash}`)
 }
 
 // A page of the account that returns to `next` afterwards; the default page needs no `next`.
 function authHref(page: (typeof AuthPage)[keyof typeof AuthPage], next: string | null | undefined) {
-  const target = safeNextPath(next)
-  const query = search({ [RouteParam.Next]: target === defaultAfterSignIn ? undefined : target })
-  return `${page}${query}` as Route
+  const target = afterLoginPath(next)
+  const query = queryString({
+    [RouteParam.Next]: target === defaultAfterLogin ? undefined : target,
+  })
+  return routeOfAddress(`${page}${query}`)
 }
 
-/** The sign-in page, which returns to `next` afterwards. */
-export function signInHref(next?: string | null): Route {
+/** The login page, which returns to `next` afterwards. */
+export function loginHref(next?: string | null): Route {
   return authHref(AuthPage.Login, next)
 }
 
@@ -56,18 +59,12 @@ export function registerHref(next?: string | null): Route {
   return authHref(AuthPage.Register, next)
 }
 
-/** The sign-in page that returns to `location` afterwards; null on a sign-in or account page. */
-export function signInHrefFor({
+/** The login page that returns to `location` afterwards; null on a login or account page. */
+export function loginHrefFor({
   pathname,
   search: query,
   hash,
 }: Pick<Location, 'pathname' | 'search' | 'hash'>): Route | null {
   if (authPages.includes(pathname)) return null
-  return signInHref(`${pathname}${query}${hash}`)
-}
-
-/** The page to return to, read from the query of a sign-in or account page. */
-export function nextParam(query: Record<string, string | string[] | undefined>): string | null {
-  const value = query[RouteParam.Next]
-  return typeof value === 'string' ? value : null
+  return loginHref(`${pathname}${query}${hash}`)
 }

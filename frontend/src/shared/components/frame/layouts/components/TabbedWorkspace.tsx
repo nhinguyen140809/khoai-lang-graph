@@ -9,7 +9,7 @@ import { EditorTabs } from '../../tabs/components/EditorTabs'
 import { TabGroupContext } from '../../tabs/hooks/useTabGroup'
 import { SideFeatureSplit } from './SideFeatureSplit'
 
-interface WorkspaceProps {
+interface TabbedWorkspaceProps {
   /** The tab group, named by the layout, that the tabs show and the pages inside open theirs in. */
   tabGroup: string
   /** The editor: the page of the tab in view, whichever side panel is shown. */
@@ -21,7 +21,7 @@ interface WorkspaceProps {
  * bar, and the editor follows the tabs, so choosing a feature does not change the editor. The
  * panel keeps its width in pixels when the window is resized.
  */
-export function Workspace({ tabGroup, children }: WorkspaceProps) {
+export function TabbedWorkspace({ tabGroup, children }: TabbedWorkspaceProps) {
   const { feature } = useSideFeature()
 
   return (

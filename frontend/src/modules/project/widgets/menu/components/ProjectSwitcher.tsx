@@ -21,7 +21,7 @@ import {
   renameProjectMessages,
   useOpenRenameProjectDialog,
 } from '@/modules/project/features/rename'
-import { isNotFoundError } from '@/shared/api/error/api-error.utils'
+import { isNotFoundError } from '@/shared/api/error'
 import { Button } from '@/shared/components/ui/button'
 import {
   DropdownMenu,
@@ -32,7 +32,7 @@ import {
   DropdownMenuTrigger,
 } from '@/shared/components/ui/dropdown-menu'
 import { Skeleton } from '@/shared/components/ui/skeleton'
-import { cn } from '@/shared/lib/cn/index'
+import { cn } from '@/shared/lib/cn'
 import { routes } from '@/shared/routes'
 
 interface ProjectSwitcherProps {

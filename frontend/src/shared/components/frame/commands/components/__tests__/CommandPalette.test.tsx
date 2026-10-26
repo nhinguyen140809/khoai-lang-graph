@@ -1,7 +1,15 @@
 import { fireEvent, render, screen, waitFor, within } from '@testing-library/react'
-import userEvent from '@testing-library/user-event'
 import { useEffect, useRef, useState } from 'react'
-import { beforeEach, describe, expect, it, vi } from 'vitest'
+import { describe, expect, it, vi } from 'vitest'
+
+import {
+  expectAttribute,
+  expectFocused,
+  expectNoRole,
+  expectRole,
+  pressRole,
+  typeText,
+} from '@/test/steps'
 
 import type { PaletteCommand } from '../../command.types'
 import { useCommandsStore } from '../../commands.store'
@@ -39,12 +47,8 @@ function FocusPage() {
   )
 }
 
-beforeEach(() => {
-  useCommandsStore.setState({ open: false })
-})
-
 describe('CommandPalette', () => {
-  it('opens with Ctrl+K and lists the commands registered, by group', () => {
+  it('opens with Ctrl+K and lists the commands registered, by group', async () => {
     render(
       <>
         <CommandPalette />
@@ -56,17 +60,17 @@ describe('CommandPalette', () => {
         />
       </>,
     )
-    expect(screen.queryByRole('dialog')).not.toBeInTheDocument()
+    expectNoRole('dialog')
 
     fireEvent.keyDown(document, { key: 'k', ctrlKey: true })
 
-    expect(screen.getByRole('dialog', { name: 'Command palette' })).toBeInTheDocument()
+    await expectRole('dialog', 'Command palette')
     const projects = screen.getByRole('group', { name: 'Projects' })
     const view = screen.getByRole('group', { name: 'View' })
     // The groups are in alphabetical order, whichever registered first.
     expect(projects.compareDocumentPosition(view)).toBe(Node.DOCUMENT_POSITION_FOLLOWING)
     expect(within(projects).getByRole('option')).toHaveTextContent('Open Mentor platform')
-    expect(within(view).getByRole('option', { name: 'Theme: Dark' })).toBeInTheDocument()
+    await expectRole('option', 'Theme: Dark', within(view))
     // The palette registers its own command, on the hotkey that opened it.
     expect(within(view).getByRole('option', { name: /Show all commands/ })).toHaveTextContent(
       'Ctrl+K',
@@ -79,7 +83,7 @@ describe('CommandPalette', () => {
 
     fireEvent.keyDown(document, { key: 'k', ctrlKey: true })
 
-    expect(screen.queryByRole('dialog')).not.toBeInTheDocument()
+    expectNoRole('dialog')
   })
 
   it('runs the command chosen and closes', async () => {
@@ -92,10 +96,10 @@ describe('CommandPalette', () => {
       </>,
     )
 
-    await userEvent.click(screen.getByRole('option', { name: 'Theme: Dark' }))
+    await pressRole('option', 'Theme: Dark')
 
     expect(run).toHaveBeenCalledOnce()
-    expect(screen.queryByRole('dialog')).not.toBeInTheDocument()
+    expectNoRole('dialog')
   })
 
   it('shows the hotkey of a command, and a command without run disabled', () => {
@@ -119,10 +123,7 @@ describe('CommandPalette', () => {
     )
 
     expect(screen.getByRole('option', { name: /Toggle side panel/ })).toHaveTextContent('Ctrl+B')
-    expect(screen.getByRole('option', { name: 'Loading projects...' })).toHaveAttribute(
-      'aria-disabled',
-      'true',
-    )
+    expectAttribute('option', 'Loading projects...', 'aria-disabled', 'true')
   })
 
   it('leaves the focus where the command chosen put it', async () => {
@@ -135,16 +136,16 @@ describe('CommandPalette', () => {
     screen.getByRole('button', { name: 'Before' }).focus()
     fireEvent.keyDown(document, { key: 'k', ctrlKey: true })
 
-    await userEvent.click(await screen.findByRole('option', { name: 'Go' }))
+    await pressRole('option', 'Go')
 
     await waitFor(() => {
-      expect(screen.queryByRole('dialog')).not.toBeInTheDocument()
+      expectNoRole('dialog')
     })
     // A dialog that closes moves the focus, if it does, in a task after it is gone.
     await new Promise((resolve) => {
       setTimeout(resolve, 0)
     })
-    expect(screen.getByRole('textbox', { name: 'Target' })).toHaveFocus()
+    expectFocused('textbox', 'Target')
   })
 
   it.each(searchCases)(
@@ -164,13 +165,13 @@ describe('CommandPalette', () => {
         </>,
       )
 
-      await userEvent.type(screen.getByRole('combobox'), search)
+      await typeText(screen.getByRole('combobox'), search)
 
       for (const label of shown) {
-        expect(screen.getByRole('option', { name: label })).toBeInTheDocument()
+        await expectRole('option', label)
       }
       for (const label of hidden) {
-        expect(screen.queryByRole('option', { name: label })).not.toBeInTheDocument()
+        expectNoRole('option', label)
       }
     },
   )
@@ -194,7 +195,7 @@ describe('CommandPalette', () => {
       </>,
     )
 
-    await userEvent.type(screen.getByRole('combobox'), 'stop')
+    await typeText(screen.getByRole('combobox'), 'stop')
 
     const [first] = screen.getAllByRole('option')
     expect(first).toHaveAccessibleName('Stop run')

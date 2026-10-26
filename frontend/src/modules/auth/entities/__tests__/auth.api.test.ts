@@ -1,30 +1,11 @@
-import { afterEach, describe, expect, it, vi } from 'vitest'
+import { describe } from 'vitest'
 
-import { server } from '@/mocks/msw-server.setup'
-import { ApiError } from '@/shared/api/error/api-error.utils'
-import { recordRequests, stopRecordingRequests } from '@/test/msw/request-recording.utils'
+import { itSendsRequests, itThrowsApiErrors } from '@/test/suites'
 
-import { refusedCallCases, sentRequestCases } from './auth.api.data'
-
-afterEach(stopRecordingRequests)
+import { apiErrorCases, sentRequestCases } from './auth.api.data'
 
 describe('auth api', () => {
-  it.each(sentRequestCases)('$name', async ({ call, request }) => {
-    const requests = recordRequests()
+  itSendsRequests(sentRequestCases)
 
-    await call()
-
-    await vi.waitFor(() => {
-      expect(requests).toEqual([request])
-    })
-  })
-
-  it.each(refusedCallCases)('turns $name into an ApiError', async ({ refuse, call, error }) => {
-    server.use(refuse())
-
-    const caught: unknown = await call().catch((thrown: unknown) => thrown)
-
-    expect(caught).toBeInstanceOf(ApiError)
-    expect(caught).toMatchObject(error)
-  })
+  itThrowsApiErrors(apiErrorCases)
 })

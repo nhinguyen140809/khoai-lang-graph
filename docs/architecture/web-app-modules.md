@@ -58,7 +58,7 @@ src/
 │   │   └── widgets/            # chat/; steps/ later
 │   ├── auth/
 │   │   ├── entities/           # the calls that start and end a session
-│   │   └── features/           # sign-in/, sign-up/, sign-out/
+│   │   └── features/           # login/, register/, logout/
 │   ├── user/
 │   │   ├── entities/           # User
 │   │   ├── features/           # theme/
@@ -180,7 +180,7 @@ A unit test may also import another slice of its layer, from its index, to show 
 | `thread` | Thread, Message | `send-message` | - | The threads today; `send-message` with the activity |
 | `project` | Project, the run that its status shows, the streams of its runs | `create`, `rename`, `archive` (with restore and Undo), `delete` | `list`, `menu`, `commands`, `dialogs`, `status` | Today, except `status` and the runs in the entities, which come with the threads |
 | `activity` | ActivityEvent later, the record of who did what in a project | - | `steps`, the stages of the workflow as a tree in the side panel of Activity, with the item of the feature on the activity bar; `chat`, the chat in its tab | The chat of the first version today; the rest with the activity |
-| `auth` | The calls that start a session, create an account and end a session; the page that opens after signing in | `sign-in`, `sign-up`, `sign-out` | - | Today |
+| `auth` | The calls that start a session, create an account and end a session; the page that opens after signing in | `login`, `register`, `logout` | - | Today |
 | `user` | User, UserSettings | - | `menu`, `settings` | User, `menu` and `settings` today |
 | `usage` | Usage of the user in a calendar month, with the budget of the month | - | - | Next |
 | `trace-link` | TraceLink, the traceability views | - | - | Later |
@@ -229,7 +229,7 @@ Shared code knows no object of the product. What several modules read without be
 | The addresses of the pages (`routes`) | `shared/routes/` | Every module links to the pages of other modules; the folders of `src/app/` are the routes themselves, and the route types of Next.js check each address |
 | The tones of a status and their classes | `shared/lib/tone/` | The UI components and the marks of every module color a state with them |
 | The languages of the documents | `shared/config/output-language/` | The app offers them, today in the dialog that creates a project; project, the run config and the user settings all carry one, and in `project` it would make `run` read `project` |
-| `AuthScreen`, the frame of the sign-in and sign-up screens | `shared/components/frame/layouts/`, with the other layouts of whole screens | It holds no object and no action |
+| `AuthScreen`, the frame of the login and register screens | `shared/components/frame/layouts/`, with the other layouts of whole screens | It holds no object and no action |
 
 `shared/config/` holds what the app sets once: the addresses of its pages, and the values it offers to choose from, such as the languages of the documents. A value that the user can change is data, not config: the values offered stay in `config/`, and the choice of the user belongs to the entities of its module when it is saved on the server, such as `default_output_language` and `theme` of UserSettings, or to a store of the code that changes it when it stays in the browser, such as the sizes of the panels of the frame.
 

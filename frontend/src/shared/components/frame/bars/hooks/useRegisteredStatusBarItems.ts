@@ -1,5 +1,7 @@
 import { useMemo } from 'react'
 
+import { useRegisteredItems } from '@/shared/lib/registry'
+
 import { useStatusBarStore } from '../status-bar.store'
 import { type StatusBarItem, StatusBarSide } from '../status-bar.types'
 
@@ -10,14 +12,11 @@ interface PlacedItem {
 
 /** The items registered with `useStatusBarItem`, by side, in their order. */
 export function useRegisteredStatusBarItems(): Record<StatusBarSide, PlacedItem[]> {
-  const items = useStatusBarStore((state) => state.items)
+  const items = useRegisteredItems(useStatusBarStore)
 
   return useMemo(() => {
-    const sorted = [...items].sort(([, a], [, b]) => (a.order ?? 0) - (b.order ?? 0))
     const on = (side: StatusBarSide) =>
-      sorted
-        .filter(([, item]) => item.side === side)
-        .map(([key, { content }]) => ({ key, content }))
+      items.filter((item) => item.side === side).map(({ key, content }) => ({ key, content }))
     return {
       [StatusBarSide.Left]: on(StatusBarSide.Left),
       [StatusBarSide.Right]: on(StatusBarSide.Right),

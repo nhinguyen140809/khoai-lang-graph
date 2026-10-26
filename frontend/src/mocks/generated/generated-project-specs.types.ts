@@ -4,7 +4,7 @@ import type { RunStatus } from '@/modules/run/entities'
 /** What a mock project is in: the state of its last run, or no run yet. */
 export type ExtraRunState = RunStatus | 'none'
 
-export interface ExtraProjectSpec {
+export interface GeneratedProjectSpec {
   /** Numbers the ids of the project, its thread and its runs; unique, from 5. */
   n: number
   name: string

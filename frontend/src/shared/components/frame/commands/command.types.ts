@@ -1,6 +1,6 @@
 import type { ReactNode } from 'react'
 
-import type { Hotkey } from '@/shared/lib/hotkey/hotkey.utils'
+import type { Hotkey } from '@/shared/lib/hotkey'
 
 /** A command of the command palette, registered with `useCommands`. */
 export interface PaletteCommand {
@@ -23,4 +23,9 @@ export interface PaletteCommand {
    * as while the list it belongs to loads.
    */
   run?: () => void
+}
+
+export interface PaletteCommandGroup {
+  heading: string
+  commands: PaletteCommand[]
 }

@@ -5,15 +5,15 @@ import {
   storedTabGroupSchema,
 } from './editor-tabs.types'
 
-/** The record with the entry of `key` set to `value`, or the same record when it has it already. */
-export function withEntry(record: Record<string, string>, key: string, value: string) {
-  return record[key] === value ? record : { ...record, [key]: value }
+/** The tab of a group set in the record, or the same record when the group has it already. */
+export function setGroupTab(record: Record<string, string>, group: string, tabId: string) {
+  return record[group] === tabId ? record : { ...record, [group]: tabId }
 }
 
-/** The record without the entry of `key` when it holds `value`, else the same record. */
-export function withoutEntry(record: Record<string, string>, key: string, value: string) {
-  if (record[key] !== value) return record
-  return Object.fromEntries(Object.entries(record).filter(([entry]) => entry !== key))
+/** The record without the tab of a group when the group holds that tab, else the same record. */
+export function clearGroupTab(record: Record<string, string>, group: string, tabId: string) {
+  if (record[group] !== tabId) return record
+  return Object.fromEntries(Object.entries(record).filter(([entry]) => entry !== group))
 }
 
 /** The tabs with `tab` in them: in place of the open tab of the same id, else after `after`. */
@@ -25,8 +25,8 @@ export function placeTab(
   const index = tabs.findIndex(({ id }) => id === tab.id)
   const open = index === -1 ? undefined : tabs[index]
   if (open !== undefined) {
-    const same = open.title === tab.title && open.href === tab.href && open.icon === tab.icon
-    return same ? tabs : tabs.with(index, tab)
+    const isSame = open.title === tab.title && open.href === tab.href && open.icon === tab.icon
+    return isSame ? tabs : tabs.with(index, tab)
   }
   const afterIndex = tabs.findIndex(({ id }) => id === after)
   return afterIndex === -1 ? [...tabs, tab] : tabs.toSpliced(afterIndex + 1, 0, tab)
@@ -43,8 +43,8 @@ export function neighborTab(
 ): EditorTab | undefined {
   const index = tabs.findIndex((tab) => tab.id === id)
   if (index === -1) return undefined
-  const stays = (tab: EditorTab) => !closing.includes(tab.id)
-  return tabs.slice(index + 1).find(stays) ?? tabs.slice(0, index).findLast(stays)
+  const isKept = (tab: EditorTab) => !closing.includes(tab.id)
+  return tabs.slice(index + 1).find(isKept) ?? tabs.slice(0, index).findLast(isKept)
 }
 
 /** The stored tabs of each group that has tabs open, with the id of its preview tab. */

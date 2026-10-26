@@ -1,5 +1,7 @@
-import { render, screen } from '@testing-library/react'
+import { render } from '@testing-library/react'
 import { describe, expect, it } from 'vitest'
+
+import { expectAttribute } from '@/test/steps'
 
 import { LoadingState } from '../LoadingState'
 import { loadingCases } from './LoadingState.data'
@@ -10,10 +12,7 @@ describe('LoadingState', () => {
       <LoadingState label="Loading things" size={size} rows={rows} columns={columns} />,
     )
 
-    expect(screen.getByRole('status', { name: 'Loading things' })).toHaveAttribute(
-      'aria-busy',
-      'true',
-    )
+    expectAttribute('status', 'Loading things', 'aria-busy', 'true')
     expect(container.querySelectorAll('[data-slot="skeleton"]')).toHaveLength(skeletons)
   })
 })

@@ -17,7 +17,7 @@ interface AuthScreenProps {
 }
 
 /**
- * The screen of the sign-in and the account pages: the app, a title, the form and a link, in one
+ * The screen of the login and the account pages: the app, a title, the form and a link, in one
  * column whose parts all start at the same left edge.
  */
 export function AuthScreen({ title, description, switchTo, children }: AuthScreenProps) {

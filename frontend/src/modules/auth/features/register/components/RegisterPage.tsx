@@ -9,8 +9,8 @@ import { FieldError, FieldGroup } from '@/shared/components/ui/field'
 import { PendingButton } from '@/shared/components/ui/pending-button'
 import { routes } from '@/shared/routes'
 
-import { useCreateAccount } from '../hooks/useRegister'
-import { type AccountForm, accountFormSchema } from '../register.schema'
+import { useRegister } from '../hooks/useRegister'
+import { type RegisterForm, registerFormSchema } from '../register.schema'
 
 interface RegisterPageProps {
   /** The page to open after the account is created. */
@@ -18,14 +18,14 @@ interface RegisterPageProps {
 }
 
 export function RegisterPage({ next }: RegisterPageProps) {
-  const form = useForm<AccountForm>({
-    resolver: zodResolver(accountFormSchema),
+  const form = useForm<RegisterForm>({
+    resolver: zodResolver(registerFormSchema),
     defaultValues: { display_name: '', email: '', password: '' },
   })
-  const createAccount = useCreateAccount(next, form.setError)
+  const registration = useRegister(next, form.setError)
 
   const onSubmit = form.handleSubmit((values) => {
-    createAccount.mutate(values)
+    registration.mutate(values)
   })
 
   return (
@@ -34,8 +34,8 @@ export function RegisterPage({ next }: RegisterPageProps) {
       description="An account keeps your projects, your settings and the models you choose."
       switchTo={{
         prompt: 'Have an account?',
-        label: 'Sign in',
-        href: routes.signIn(next),
+        label: 'Log in',
+        href: routes.login(next),
       }}
     >
       <Form onSubmit={onSubmit}>
@@ -55,14 +55,14 @@ export function RegisterPage({ next }: RegisterPageProps) {
             type="password"
             autoComplete="new-password"
           />
-          <FieldError>{createAccount.formError}</FieldError>
+          <FieldError>{registration.formError}</FieldError>
           <PendingButton
             type="submit"
-            pending={createAccount.isPending}
+            pending={registration.isPending}
             pendingLabel="Creating the account"
             className="w-full"
           >
-            Create account
+            Register
           </PendingButton>
         </FieldGroup>
       </Form>

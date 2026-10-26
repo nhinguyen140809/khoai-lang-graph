@@ -26,9 +26,9 @@ function project(fields: Partial<Project> & Pick<Project, 'id' | 'name'>): Proje
 }
 
 /** A project of the mock data with the usual fields; `fields` change what differs. */
-export const buildMockProject = project
+export const buildProject = project
 
-export const mockProjects: Project[] = [
+export const projectFixtures: Project[] = [
   project({
     id: projectIds.mentor,
     name: 'Mentor platform',

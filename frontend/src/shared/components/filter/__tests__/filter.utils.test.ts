@@ -1,8 +1,8 @@
 import { describe, expect, it } from 'vitest'
 
-import { activeFilterCount, filterSearch, filterValuesOf } from '../filter.utils'
+import { activeFilterCount, filterQuery, filterValuesOf } from '../filter.utils'
 import { testFields } from './filter.reducer.data'
-import { addressSearchCases, addressValuesCases, countCases } from './filter.utils.data'
+import { addressValuesCases, countCases, filterQueryCases } from './filter.utils.data'
 
 describe('activeFilterCount', () => {
   it.each(countCases)('counts $name', ({ values, count }) => {
@@ -11,13 +11,13 @@ describe('activeFilterCount', () => {
 })
 
 describe('filterValuesOf', () => {
-  it.each(addressValuesCases)('reads $name', ({ search, values }) => {
-    expect(filterValuesOf(new URLSearchParams(search), testFields)).toEqual(values)
+  it.each(addressValuesCases)('reads $name', ({ query, values }) => {
+    expect(filterValuesOf(new URLSearchParams(query), testFields)).toEqual(values)
   })
 })
 
-describe('filterSearch', () => {
-  it.each(addressSearchCases)('$name', ({ search, values, query }) => {
-    expect(filterSearch(new URLSearchParams(search), testFields, values)).toBe(query)
+describe('filterQuery', () => {
+  it.each(filterQueryCases)('$name', ({ query, values, expected }) => {
+    expect(filterQuery(new URLSearchParams(query), testFields, values)).toBe(expected)
   })
 })

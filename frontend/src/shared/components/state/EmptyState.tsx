@@ -1,7 +1,7 @@
 import type { LucideIcon } from 'lucide-react'
 import type { ReactNode } from 'react'
 
-import { cn } from '@/shared/lib/cn/index'
+import { cn } from '@/shared/lib/cn'
 
 import { CenteredState } from './CenteredState'
 import type { StateSize } from './state.types'

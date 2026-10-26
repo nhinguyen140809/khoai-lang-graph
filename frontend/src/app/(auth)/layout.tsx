@@ -5,7 +5,7 @@ interface AuthLayoutProps {
 }
 
 /**
- * The pages that need no session: signing in and creating an account. Their column starts at a
+ * The pages that need no session: logging in and registering. Their column starts at a
  * fixed distance from the top, so that a message of an error pushes only what is under it.
  */
 export default function AuthLayout({ children }: AuthLayoutProps) {
