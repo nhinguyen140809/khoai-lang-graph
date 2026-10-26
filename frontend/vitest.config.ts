@@ -25,5 +25,22 @@ export default defineConfig({
     // Dates show in the time zone of the machine; the tests fix it, so that they give the same
     // result on every machine.
     env: { TZ: 'UTC' },
+    // Run with `pnpm test:coverage`. The report counts the code of the app that the unit tests are
+    // for, not the files that only Next.js, the E2E tests or the design system run.
+    coverage: {
+      provider: 'v8',
+      include: ['src/**/*.{ts,tsx}'],
+      exclude: [
+        'src/**/__tests__/**',
+        'src/**/*.d.ts',
+        'src/**/index.ts',
+        'src/app/**',
+        'src/mocks/**',
+        'src/test/**',
+        'src/shared/components/ui/**',
+        'src/modules/design-system/**',
+      ],
+      reporter: ['text-summary', 'json-summary'],
+    },
   },
 })

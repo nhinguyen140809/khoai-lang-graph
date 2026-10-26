@@ -2,7 +2,7 @@
 
 import { type ReactNode, useEffect, useState } from 'react'
 
-const isMockingEnabled = process.env.NEXT_PUBLIC_API_MOCKING === 'enabled'
+import { isMockingEnabled } from '@/shared/config/env'
 
 // Started at most once: effects run twice under Strict Mode and the worker rejects a second start.
 let workerStarted: Promise<unknown> | undefined

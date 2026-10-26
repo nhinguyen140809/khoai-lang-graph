@@ -648,6 +648,11 @@ export default defineConfig([
       ],
       'no-restricted-properties': [
         'error',
+        {
+          object: 'process',
+          property: 'env',
+          message: 'Read an environment variable through env of @/shared/config/env.',
+        },
         ...['window', 'globalThis', 'self'].flatMap((object) =>
           ['localStorage', 'sessionStorage'].map((property) => ({
             object,
@@ -964,7 +969,6 @@ export default defineConfig([
     files: ['src/**/*.{ts,tsx}', 'tests/**/*.ts'],
     ignores: [
       'src/shared/components/ui/**',
-      'src/shared/lib/viewport/hooks/use-mobile.ts',
       // Next.js file conventions: routing files, metadata files, and src-level entry points.
       ...nextRoutingFiles,
       'src/@(proxy|instrumentation|instrumentation-client).ts',
@@ -1021,10 +1025,7 @@ export default defineConfig([
   {
     // shadcn/ui code is copied from the registry. Keep it close to upstream so
     // `shadcn add --overwrite` diffs stay small; only relax stylistic type rules here.
-    files: [
-      'src/shared/components/ui/**/*.{ts,tsx}',
-      'src/shared/lib/viewport/hooks/use-mobile.ts',
-    ],
+    files: ['src/shared/components/ui/**/*.{ts,tsx}'],
     rules: {
       'react-hooks/set-state-in-effect': 'off',
       '@typescript-eslint/consistent-type-definitions': 'off',

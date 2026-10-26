@@ -1,3 +1,5 @@
+import { omit } from '@/shared/lib/collections'
+
 import {
   type EditorTab,
   type PersistedTabs,
@@ -13,7 +15,7 @@ export function setGroupTab(record: Record<string, string>, group: string, tabId
 /** The record without the tab of a group when the group holds that tab, else the same record. */
 export function clearGroupTab(record: Record<string, string>, group: string, tabId: string) {
   if (record[group] !== tabId) return record
-  return Object.fromEntries(Object.entries(record).filter(([entry]) => entry !== group))
+  return omit(record, [group])
 }
 
 /** The tabs with `tab` in them: in place of the open tab of the same id, else after `after`. */

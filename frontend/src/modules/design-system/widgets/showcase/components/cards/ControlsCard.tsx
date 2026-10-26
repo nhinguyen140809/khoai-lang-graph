@@ -24,6 +24,7 @@ import { Slider } from '@/shared/components/ui/slider'
 import { Spinner } from '@/shared/components/ui/spinner'
 import { Toggle } from '@/shared/components/ui/toggle'
 import { ToggleGroup, ToggleGroupItem } from '@/shared/components/ui/toggle-group'
+import { formatCurrency } from '@/shared/lib/formatters'
 import type { Tone } from '@/shared/lib/tone'
 
 import { SampleCard } from '../Sample'
@@ -92,7 +93,7 @@ export function ControlsCard() {
       <div className="flex flex-col gap-2">
         <div className="flex items-center justify-between text-xs">
           <Label htmlFor="ds-max-cost">Max cost per run</Label>
-          <span className="font-mono text-muted-foreground">${limit.toFixed(2)}</span>
+          <span className="font-mono text-muted-foreground">{formatCurrency(limit)}</span>
         </div>
         <Slider
           id="ds-max-cost"
