@@ -9,14 +9,13 @@ import {
 } from 'lucide-react'
 import type { Route } from 'next'
 import type { ReactNode } from 'react'
-import { afterEach, beforeEach, describe, expect, it, vi } from 'vitest'
+import { beforeEach, describe, expect, it, vi } from 'vitest'
 
 import { setPathname } from '@/test/next-stubs/next-stubs.utils'
-import { TestProviders } from '@/test/render/TestProviders'
+import { Broken, TestProviders } from '@/test/render'
 
 import { PanelRegion } from '../../../panels/panel.types'
 import { usePanelsStore } from '../../../panels/panels.store'
-import { useActivityBarStore } from '../../activity-bar.store'
 import type { Destination } from '../../destination.types'
 import { useActivityBarItem } from '../../hooks/useActivityBarItem'
 import { DestinationsContext } from '../../hooks/useDestinations'
@@ -64,13 +63,6 @@ const destinations: Destination[] = [
 
 beforeEach(() => {
   setPathname('/projects/p1/console/t1')
-  usePanelsStore.setState(usePanelsStore.getInitialState())
-  useSideFeatureStore.setState(useSideFeatureStore.getInitialState())
-  useActivityBarStore.setState(useActivityBarStore.getInitialState())
-})
-
-afterEach(() => {
-  vi.restoreAllMocks()
 })
 
 function withActivities(given: Destination[]) {
@@ -91,10 +83,6 @@ const accountButton = <button type="button">Account</button>
 function AccountItem() {
   useActivityBarItem({ content: accountButton })
   return null
-}
-
-function Broken(): never {
-  throw new Error('The item failed.')
 }
 
 /** Registers an item whose content fails to render. */

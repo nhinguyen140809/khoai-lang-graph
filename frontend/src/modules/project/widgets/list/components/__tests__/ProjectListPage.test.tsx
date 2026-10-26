@@ -1,12 +1,12 @@
-import { render, screen, within } from '@testing-library/react'
+import { screen, within } from '@testing-library/react'
 import userEvent from '@testing-library/user-event'
 import { delay, http } from 'msw'
-import { afterEach, describe, expect, it, vi } from 'vitest'
+import { describe, expect, it, vi } from 'vitest'
 
 import { server } from '@/mocks/msw-server.setup'
 import { apiEndpoints } from '@/shared/api/endpoints'
 import { routerMock, setPathname, setSearch } from '@/test/next-stubs/next-stubs.utils'
-import { TestProviders } from '@/test/render/TestProviders'
+import { renderWithProviders } from '@/test/render'
 
 import { ProjectListPage } from '../ProjectListPage'
 
@@ -17,7 +17,7 @@ vi.mock(
 vi.mock('next/link', async () => (await import('@/test/next-stubs/next-stubs.utils')).linkMock)
 
 function renderPage() {
-  return render(<ProjectListPage />, { wrapper: TestProviders })
+  return renderWithProviders(<ProjectListPage />)
 }
 
 /** Types an idea in the prompt and sends it, which opens the new project dialog. */
@@ -31,12 +31,6 @@ async function startProject(idea: string) {
   await userEvent.keyboard('{Enter}')
   return screen.findByRole('dialog', { name: 'Create project' })
 }
-
-afterEach(() => {
-  setPathname('/')
-  setSearch('')
-  routerMock.replace.mockClear()
-})
 
 describe('ProjectListPage', () => {
   it('lists the projects of the filters in the address', async () => {

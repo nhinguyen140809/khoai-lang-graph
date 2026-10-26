@@ -1,19 +1,18 @@
-import { render, screen } from '@testing-library/react'
+import { screen } from '@testing-library/react'
 import userEvent from '@testing-library/user-event'
 import { ThemeProvider } from 'next-themes'
 import { describe, expect, it } from 'vitest'
 
-import { TestProviders } from '@/test/render/TestProviders'
+import { renderWithProviders } from '@/test/render'
 
 import { ThemePicker } from '../ThemePicker'
 
 describe('ThemePicker', () => {
   it('marks the theme chosen, and chooses another', async () => {
-    render(
+    renderWithProviders(
       <ThemeProvider attribute="class" defaultTheme="system" enableSystem>
         <ThemePicker />
       </ThemeProvider>,
-      { wrapper: TestProviders },
     )
 
     expect(await screen.findByRole('button', { name: 'System', pressed: true })).toBeVisible()

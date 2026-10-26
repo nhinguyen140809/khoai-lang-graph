@@ -1,14 +1,10 @@
 import { act, renderHook } from '@testing-library/react'
-import { afterEach, beforeEach, describe, expect, it, vi } from 'vitest'
+import { beforeEach, describe, expect, it, vi } from 'vitest'
 
 import { useNow } from '../useNow'
 
 beforeEach(() => {
   vi.useFakeTimers({ now: new Date('2026-10-10T12:00:00Z') })
-})
-
-afterEach(() => {
-  vi.useRealTimers()
 })
 
 describe('useNow', () => {

@@ -1,10 +1,6 @@
-import { afterEach, describe, expect, it, vi } from 'vitest'
+import { describe, expect, it, vi } from 'vitest'
 
 import { browserStorage, storageKey } from '../browser-storage.utils'
-
-afterEach(() => {
-  vi.restoreAllMocks()
-})
 
 describe('browserStorage', () => {
   it('reads what it wrote, and null for a missing key', () => {

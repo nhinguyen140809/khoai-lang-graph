@@ -1,9 +1,10 @@
 import { render, screen } from '@testing-library/react'
 import userEvent from '@testing-library/user-event'
-import { afterEach, beforeEach, describe, expect, it, vi } from 'vitest'
+import { describe, expect, it, vi } from 'vitest'
+
+import { Broken } from '@/test/render'
 
 import { useStatusBarItem } from '../../hooks/useStatusBarItem'
-import { useStatusBarStore } from '../../status-bar.store'
 import { type StatusBarItem, StatusBarSide } from '../../status-bar.types'
 import { StatusBar } from '../StatusBar'
 
@@ -12,19 +13,6 @@ function Reports({ item }: { item: StatusBarItem }) {
   useStatusBarItem(item)
   return null
 }
-
-/** An item whose content fails to render. */
-function Broken(): never {
-  throw new Error('The item failed.')
-}
-
-beforeEach(() => {
-  useStatusBarStore.setState(useStatusBarStore.getInitialState())
-})
-
-afterEach(() => {
-  vi.restoreAllMocks()
-})
 
 describe('StatusBar', () => {
   it('leaves out an item that fails to render, and keeps the others', () => {

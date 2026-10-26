@@ -1,18 +1,13 @@
 import { fireEvent, render, screen } from '@testing-library/react'
 import userEvent from '@testing-library/user-event'
-import { beforeEach, describe, expect, it } from 'vitest'
+import { describe, expect, it } from 'vitest'
 
 import type { BottomPanelSection } from '../../panel.types'
-import { usePanelsStore } from '../../panels.store'
 import { EditorWithBottomPanel } from '../EditorWithBottomPanel'
 
 const trace: BottomPanelSection[] = [
   { id: 'trace', title: 'Trace', content: <p>trace of REQ-001</p> },
 ]
-
-beforeEach(() => {
-  usePanelsStore.setState(usePanelsStore.getInitialState())
-})
 
 describe('EditorWithBottomPanel', () => {
   it('shows the panel under the editor, and hides and shows it', async () => {

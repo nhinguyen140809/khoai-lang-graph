@@ -1,4 +1,4 @@
-import { afterEach, beforeEach, describe, expect, it, vi } from 'vitest'
+import { beforeEach, describe, expect, it, vi } from 'vitest'
 
 import { server } from '@/mocks/msw-server.setup'
 
@@ -8,11 +8,6 @@ import { listQueryCases, queryNow } from './projects.api.data'
 beforeEach(() => {
   vi.useFakeTimers({ toFake: ['Date'] })
   vi.setSystemTime(queryNow)
-})
-
-afterEach(() => {
-  vi.useRealTimers()
-  server.events.removeAllListeners()
 })
 
 describe('listProjects', () => {

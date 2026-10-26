@@ -1,6 +1,6 @@
 import { render, renderHook, waitFor } from '@testing-library/react'
 import { createElement, type ReactNode } from 'react'
-import { beforeEach, describe, expect, it, vi } from 'vitest'
+import { beforeEach, describe, expect, it } from 'vitest'
 
 import { browserStorage } from '@/shared/lib/storage'
 import { routeOfAddress } from '@/shared/routes'
@@ -15,11 +15,6 @@ import { TabGroupContext } from '../../tabs/hooks/useTabGroup'
 import { useRestoreFrame } from '../useRestoreFrame'
 import { chosenFeatureCases } from './useRestoreFrame.data'
 
-vi.mock(
-  'next/navigation',
-  async () => (await import('@/test/next-stubs/next-stubs.utils')).navigationMock,
-)
-
 const SIDE_FEATURE_KEY = useSideFeatureStore.persist.getOptions().name ?? ''
 const TABS_KEY = useEditorTabsStore.persist.getOptions().name ?? ''
 
@@ -33,9 +28,6 @@ beforeEach(() => {
   browserStorage.removeItem(SIDE_FEATURE_KEY)
   useEditorTabsStore.persist.clearStorage()
   setPathname('/projects/p1/artifacts')
-  usePanelsStore.setState(usePanelsStore.getInitialState())
-  useSideFeatureStore.setState(useSideFeatureStore.getInitialState())
-  useEditorTabsStore.setState(useEditorTabsStore.getInitialState())
 })
 
 describe('useRestoreFrame', () => {

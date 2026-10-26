@@ -69,6 +69,7 @@ beforeAll(() => {
 
 afterEach(() => {
   server.resetHandlers()
+  server.events.removeAllListeners()
   resetMockData()
   cleanup()
 })

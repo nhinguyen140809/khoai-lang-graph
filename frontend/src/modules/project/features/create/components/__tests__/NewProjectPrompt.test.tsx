@@ -1,24 +1,20 @@
-import { act, render, screen } from '@testing-library/react'
+import { act, screen } from '@testing-library/react'
 import userEvent from '@testing-library/user-event'
-import { beforeEach, describe, expect, it, vi } from 'vitest'
+import { describe, expect, it, vi } from 'vitest'
 
-import { TestProviders } from '@/test/render/TestProviders'
+import { renderWithProviders } from '@/test/render'
 
 import { useProjectPromptStore } from '../../project-prompt.store'
 import { NewProjectPrompt } from '../NewProjectPrompt'
 import { blankIdeas, startCases } from './NewProjectPrompt.data'
 
 function renderPrompt(onStart = vi.fn()) {
-  render(<NewProjectPrompt onStart={onStart} />, { wrapper: TestProviders })
+  renderWithProviders(<NewProjectPrompt onStart={onStart} />)
   const prompt = screen.getByRole('textbox', {
     name: 'What product do you want to write the requirements for?',
   })
   return { prompt, onStart }
 }
-
-beforeEach(() => {
-  useProjectPromptStore.setState({ focusRequested: false })
-})
 
 describe('NewProjectPrompt', () => {
   it.each(startCases)('sends the idea with $by', async ({ by, idea, sent }) => {
