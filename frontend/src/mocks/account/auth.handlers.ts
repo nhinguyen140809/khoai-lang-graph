@@ -9,7 +9,7 @@ import { unauthenticated, validationFailed } from '../shared/http/response/error
 import { noContent } from '../shared/http/response/status-response.utils'
 import { requiredText, requiredTextProblem } from '../shared/http/validation/field-values.utils'
 import { mockScenario, pendingForever } from '../shared/scenario/mock-scenario.utils'
-import { meRecord } from './me.handlers'
+import { currentUser } from './account.store'
 
 // The session of the mock server: logged in until the user signs out.
 const sessionRecord = mockState('session', () => ({ signedIn: true }))
@@ -63,13 +63,13 @@ export const authHandlers = [
     }
     const now = new Date().toISOString()
     const me: Me = {
-      ...meRecord.get(),
+      ...currentUser.get(),
       email: (requiredText(credentials.email) ?? '').toLowerCase(),
       display_name: requiredText(credentials.display_name) ?? '',
       created_at: now,
       updated_at: now,
     }
-    meRecord.set(me)
+    currentUser.set(me)
     return HttpResponse.json(me, { status: 201, headers: { Location: apiEndpoints.me.path() } })
   }),
 
