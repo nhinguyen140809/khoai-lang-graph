@@ -1,39 +1,43 @@
-import { render, screen } from '@testing-library/react'
-import userEvent from '@testing-library/user-event'
+import { screen } from '@testing-library/react'
 import { http, HttpResponse } from 'msw'
-import { toast } from 'sonner'
-import { afterEach, beforeEach, describe, expect, it, vi } from 'vitest'
+import { describe, expect, it } from 'vitest'
 
 import { server } from '@/mocks/msw-server.setup'
+import { emptyResponse } from '@/mocks/shared/http/response'
 import { apiEndpoints } from '@/shared/api/endpoints'
+import { HttpMethod, HttpStatus } from '@/shared/api/http'
+import { holdResponse, serverErrorOn } from '@/test/msw'
 import { routerMock } from '@/test/next-stubs'
-import { TestProviders } from '@/test/render/TestProviders'
+import { renderWithProviders } from '@/test/render'
+import {
+  expectAlert,
+  expectDisabled,
+  expectInvalidField,
+  expectLabel,
+  expectNoAccessibilityViolations,
+  expectReplacedWith,
+  expectText,
+  fillFields,
+  pressButton,
+  spyOnToast,
+} from '@/test/steps'
+import { itAsksForFieldsBeforeSending } from '@/test/suites'
 
 import { RegisterPage } from '../RegisterPage'
 import { failedRegisterCases, missingFieldCases, returnCases } from './RegisterPage.data'
 
-vi.mock(
-  'next/navigation',
-  async () => (await import('@/test/next-stubs/next-stubs.utils')).navigationMock,
-)
-vi.mock('next/link', async () => (await import('@/test/next-stubs/next-stubs.utils')).linkMock)
-
-beforeEach(() => {
-  routerMock.replace.mockClear()
-})
-
-afterEach(() => {
-  server.events.removeAllListeners()
-})
-
 async function fillForm() {
-  await userEvent.type(screen.getByLabelText('Name'), 'An Tran')
-  await userEvent.type(screen.getByLabelText('Email'), 'an@example.com')
-  await userEvent.type(screen.getByLabelText('Password'), 'secret')
-  await userEvent.click(screen.getByRole('button', { name: 'Create account' }))
+  await fillFields({ Name: 'An Tran', Email: 'an@example.com', Password: 'secret' })
+  await pressButton('Register')
 }
 
 describe('RegisterPage', () => {
+  it('has nothing that assistive technology cannot read', async () => {
+    const { container } = renderWithProviders(<RegisterPage next={null} />)
+
+    await expectNoAccessibilityViolations(container)
+  })
+
   it.each(returnCases)(
     'creates the account, logs in with it, and opens $opens for $next',
     async ({ next, opens }) => {
@@ -41,13 +45,11 @@ describe('RegisterPage', () => {
       server.events.on('request:start', ({ request }) => {
         requests.push(`${request.method} ${new URL(request.url).pathname}`)
       })
-      render(<RegisterPage next={next} />, { wrapper: TestProviders })
+      renderWithProviders(<RegisterPage next={next} />)
 
       await fillForm()
 
-      await vi.waitFor(() => {
-        expect(routerMock.replace).toHaveBeenCalledWith(opens)
-      })
+      await expectReplacedWith(opens)
       expect(requests).toEqual([
         `POST ${apiEndpoints.register.path()}`,
         `POST ${apiEndpoints.login.path()}`,
@@ -56,17 +58,14 @@ describe('RegisterPage', () => {
   )
 
   it('opens the login page when logging in with the new account fails', async () => {
-    server.use(http.post(apiEndpoints.login.path(), () => new HttpResponse(null, { status: 500 })))
-    render(<RegisterPage next="/threads/t1" />, { wrapper: TestProviders })
+    server.use(serverErrorOn(HttpMethod.Post, apiEndpoints.login.path()))
+    renderWithProviders(<RegisterPage next="/threads/t1" />)
 
-    const info = vi.spyOn(toast, 'info')
+    const infoToast = spyOnToast('info')
     await fillForm()
 
-    await vi.waitFor(() => {
-      expect(routerMock.replace).toHaveBeenCalledWith('/login?next=%2Fthreads%2Ft1')
-    })
-    expect(info).toHaveBeenCalledWith('The account is created. Sign in with it.')
-    info.mockRestore()
+    await expectReplacedWith('/login?next=%2Fthreads%2Ft1')
+    expect(infoToast).toHaveBeenCalledWith('The account is created. Log in with it.')
   })
 
   it('shows a field problem of the API at its field', async () => {
@@ -74,78 +73,63 @@ describe('RegisterPage', () => {
       http.post(apiEndpoints.register.pattern, () =>
         HttpResponse.json(
           {
-            status: 422,
+            status: HttpStatus.UnprocessableContent,
             code: 'validation_failed',
             errors: [{ field: 'email', message: 'An account with this email exists.' }],
           },
-          { status: 422 },
+          { status: HttpStatus.UnprocessableContent },
         ),
       ),
     )
-    render(<RegisterPage next={null} />, { wrapper: TestProviders })
+    renderWithProviders(<RegisterPage next={null} />)
 
     await fillForm()
 
-    expect(await screen.findByText('An account with this email exists.')).toBeInTheDocument()
-    expect(screen.getByLabelText('Email')).toHaveAttribute('aria-invalid', 'true')
+    await expectText('An account with this email exists.')
+    expectInvalidField('Email')
     expect(routerMock.replace).not.toHaveBeenCalled()
   })
 
   it.each(failedRegisterCases)('shows $name under the form', async ({ answer, alert }) => {
     server.use(http.post(apiEndpoints.register.pattern, answer))
-    render(<RegisterPage next={null} />, { wrapper: TestProviders })
+    renderWithProviders(<RegisterPage next={null} />)
 
     await fillForm()
 
-    expect(await screen.findByRole('alert')).toHaveTextContent(alert)
+    await expectAlert(alert)
     expect(routerMock.replace).not.toHaveBeenCalled()
   })
 
-  it.each(missingFieldCases)('asks for $name before sending', async ({ typed, messages }) => {
-    const requests: string[] = []
-    server.events.on('request:start', ({ request }) => {
-      requests.push(request.url)
-    })
-    render(<RegisterPage next={null} />, { wrapper: TestProviders })
-
-    for (const [label, value] of Object.entries(typed)) {
-      await userEvent.type(screen.getByLabelText(label), value)
-    }
-    await userEvent.click(screen.getByRole('button', { name: 'Create account' }))
-
-    for (const message of messages) expect(await screen.findByText(message)).toBeInTheDocument()
-    expect(requests).toEqual([])
+  itAsksForFieldsBeforeSending({
+    renderForm: () => renderWithProviders(<RegisterPage next={null} />),
+    submitLabel: 'Register',
+    cases: missingFieldCases,
   })
 
   it('links to the login page, keeping the page to return to', () => {
-    render(<RegisterPage next="/threads/t1" />, { wrapper: TestProviders })
+    renderWithProviders(<RegisterPage next="/threads/t1" />)
 
-    expect(screen.getByRole('link', { name: 'Sign in' })).toHaveAttribute(
+    expect(screen.getByRole('link', { name: 'Log in' })).toHaveAttribute(
       'href',
       '/login?next=%2Fthreads%2Ft1',
     )
   })
 
   it('disables the button while the account is created', async () => {
-    let answer: (() => void) | undefined
-    const answered = new Promise<void>((resolve) => {
-      answer = resolve
-    })
+    const { held, release } = holdResponse()
     server.use(
       http.post(apiEndpoints.register.pattern, async () => {
-        await answered
-        return new HttpResponse(null, { status: 201 })
+        await held
+        return emptyResponse(HttpStatus.Created)
       }),
     )
-    render(<RegisterPage next={null} />, { wrapper: TestProviders })
+    renderWithProviders(<RegisterPage next={null} />)
 
     await fillForm()
 
-    expect(await screen.findByLabelText('Creating the account')).toBeInTheDocument()
-    expect(screen.getByRole('button', { name: /Create account/ })).toBeDisabled()
-    answer?.()
-    await vi.waitFor(() => {
-      expect(routerMock.replace).toHaveBeenCalledWith('/')
-    })
+    await expectLabel('Creating the account')
+    expectDisabled('button', /Register/)
+    release()
+    await expectReplacedWith('/')
   })
 })

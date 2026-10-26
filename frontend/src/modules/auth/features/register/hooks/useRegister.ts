@@ -11,7 +11,7 @@ import { registerMessages } from '../register.constants'
 import { type RegisterForm, registerFormSchema } from '../register.schema'
 
 /**
- * Creates an account, then logs in with it, since creating an account does not start a session,
+ * Creates an account, then logs in with it, since registering does not start a session,
  * and opens the page to return to. When logging in fails, the account exists already, so the
  * login page opens instead. The problems of the API show at the fields of the form through
  * `setError`, and `formError` holds any other failure.
@@ -30,8 +30,8 @@ export function useRegister(next: string | null, setError: UseFormSetError<Regis
       }
       return true
     },
-    onSuccess: (signedIn) => {
-      if (signedIn) {
+    onSuccess: (loggedIn) => {
+      if (loggedIn) {
         redirectAfterLogin()
         return
       }

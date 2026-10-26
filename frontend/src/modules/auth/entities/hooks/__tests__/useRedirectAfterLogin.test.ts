@@ -1,30 +1,19 @@
-import { QueryClient, QueryClientProvider } from '@tanstack/react-query'
-import { renderHook } from '@testing-library/react'
-import { createElement, type ReactNode } from 'react'
-import { beforeEach, describe, expect, it, vi } from 'vitest'
+import { describe, expect, it } from 'vitest'
 
 import { routerMock } from '@/test/next-stubs'
+import { createTestQueryClient, renderHookWithProviders } from '@/test/render'
 
 import { useRedirectAfterLogin } from '../useRedirectAfterLogin'
 import { returnCases } from './useRedirectAfterLogin.data'
 
-vi.mock(
-  'next/navigation',
-  async () => (await import('@/test/next-stubs/next-stubs.utils')).navigationMock,
-)
-
 function renderWithCache(next: string | null) {
-  const client = new QueryClient()
+  const client = createTestQueryClient()
   client.setQueryData(['user', 'me'], { display_name: 'Someone else' })
-  const wrapper = ({ children }: { children: ReactNode }) =>
-    createElement(QueryClientProvider, { client }, children)
-  const { result } = renderHook(() => useRedirectAfterLogin(next), { wrapper })
+  const { result } = renderHookWithProviders(() => useRedirectAfterLogin(next), {
+    queryClient: client,
+  })
   return { client, open: result.current }
 }
-
-beforeEach(() => {
-  routerMock.replace.mockClear()
-})
 
 describe('useRedirectAfterLogin', () => {
   it.each(returnCases)(

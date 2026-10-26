@@ -1,5 +1,8 @@
 import { HttpResponse } from 'msw'
 
+import { HttpStatus } from '@/shared/api/http'
+import { serverError } from '@/test/msw'
+
 /** The page to return to, and the page that opens once the account is created and logged in. */
 export const returnCases = [
   { next: null, opens: '/' },
@@ -12,14 +15,17 @@ export const failedRegisterCases = [
     name: 'a problem of a field the form does not have',
     answer: () =>
       HttpResponse.json(
-        { status: 422, errors: [{ field: 'body', message: 'Malformed JSON.' }] },
-        { status: 422 },
+        {
+          status: HttpStatus.UnprocessableContent,
+          errors: [{ field: 'body', message: 'Malformed JSON.' }],
+        },
+        { status: HttpStatus.UnprocessableContent },
       ),
     alert: 'Failed to create the account (HTTP 422)',
   },
   {
     name: 'a failure without field problems',
-    answer: () => new HttpResponse(null, { status: 500 }),
+    answer: () => serverError(),
     alert: 'Failed to create the account (HTTP 500)',
   },
 ]

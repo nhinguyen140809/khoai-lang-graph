@@ -1,66 +1,66 @@
-import { render, screen } from '@testing-library/react'
-import userEvent from '@testing-library/user-event'
+import { screen } from '@testing-library/react'
 import { http, HttpResponse } from 'msw'
-import { beforeEach, describe, expect, it, vi } from 'vitest'
+import { describe, expect, it, vi } from 'vitest'
 
 import { server } from '@/mocks/msw-server.setup'
+import { noContent } from '@/mocks/shared/http/response'
 import { apiEndpoints } from '@/shared/api/endpoints'
+import { holdResponse } from '@/test/msw'
 import { routerMock } from '@/test/next-stubs'
-import { TestProviders } from '@/test/render/TestProviders'
+import { renderWithProviders } from '@/test/render'
+import {
+  expectAlert,
+  expectAttribute,
+  expectDisabled,
+  expectLabel,
+  expectNoAccessibilityViolations,
+  expectReplacedWith,
+  fillFields,
+  pressButton,
+} from '@/test/steps'
+import { itAsksForFieldsBeforeSending } from '@/test/suites'
 
 import { LoginPage } from '../LoginPage'
 import { missingFieldCases, refusedLoginCases, returnCases } from './LoginPage.data'
 
-vi.mock(
-  'next/navigation',
-  async () => (await import('@/test/next-stubs/next-stubs.utils')).navigationMock,
-)
-vi.mock('next/link', async () => (await import('@/test/next-stubs/next-stubs.utils')).linkMock)
-
-beforeEach(() => {
-  routerMock.replace.mockClear()
-})
-
 async function logIn(email: string, password: string) {
-  await userEvent.type(screen.getByLabelText('Email'), email)
-  await userEvent.type(screen.getByLabelText('Password'), password)
-  await userEvent.click(screen.getByRole('button', { name: 'Sign in' }))
+  await fillFields({ Email: email, Password: password })
+  await pressButton('Log in')
 }
 
 describe('LoginPage', () => {
   it.each(returnCases)('logs in and opens $opens for $next', async ({ next, opens }) => {
-    render(<LoginPage next={next} />, { wrapper: TestProviders })
+    renderWithProviders(<LoginPage next={next} />)
 
     await logIn('linh.pham@example.com', 'secret')
 
-    await vi.waitFor(() => {
-      expect(routerMock.replace).toHaveBeenCalledWith(opens)
-    })
+    await expectReplacedWith(opens)
   })
 
   it.each(refusedLoginCases)('says $name, and stays', async ({ answer, alert }) => {
     server.use(http.post(apiEndpoints.login.pattern, answer))
-    render(<LoginPage next={null} />, { wrapper: TestProviders })
+    renderWithProviders(<LoginPage next={null} />)
 
     await logIn('linh.pham@example.com', 'secret')
 
-    expect(await screen.findByRole('alert')).toHaveTextContent(alert)
+    await expectAlert(alert)
     expect(routerMock.replace).not.toHaveBeenCalled()
   })
 
-  it.each(missingFieldCases)('asks for $name before sending', async ({ typed, messages }) => {
-    render(<LoginPage next={null} />, { wrapper: TestProviders })
+  itAsksForFieldsBeforeSending({
+    renderForm: () => renderWithProviders(<LoginPage next={null} />),
+    submitLabel: 'Log in',
+    cases: missingFieldCases,
+  })
 
-    for (const [label, value] of Object.entries(typed)) {
-      await userEvent.type(screen.getByLabelText(label), value)
-    }
-    await userEvent.click(screen.getByRole('button', { name: 'Sign in' }))
+  it('has nothing that assistive technology cannot read', async () => {
+    const { container } = renderWithProviders(<LoginPage next={null} />)
 
-    for (const message of messages) expect(await screen.findByText(message)).toBeInTheDocument()
+    await expectNoAccessibilityViolations(container)
   })
 
   it('links to the account page, keeping the page to return to', () => {
-    render(<LoginPage next="/projects/p1/console" />, { wrapper: TestProviders })
+    renderWithProviders(<LoginPage next="/projects/p1/console" />)
 
     expect(screen.getByRole('link', { name: 'Create an account' })).toHaveAttribute(
       'href',
@@ -69,17 +69,14 @@ describe('LoginPage', () => {
   })
 
   it('has the place of the link that resets a password, not available yet', () => {
-    render(<LoginPage next={null} />, { wrapper: TestProviders })
+    renderWithProviders(<LoginPage next={null} />)
 
-    expect(screen.getByRole('button', { name: 'Forgot password?' })).toHaveAttribute(
-      'aria-disabled',
-      'true',
-    )
+    expectAttribute('button', 'Forgot password?', 'aria-disabled', 'true')
   })
 
   it('shows a failure of the network', async () => {
     server.use(http.post(apiEndpoints.login.pattern, () => HttpResponse.error()))
-    render(<LoginPage next={null} />, { wrapper: TestProviders })
+    renderWithProviders(<LoginPage next={null} />)
 
     await logIn('linh.pham@example.com', 'secret')
 
@@ -92,10 +89,10 @@ describe('LoginPage', () => {
     server.use(
       http.post(apiEndpoints.login.pattern, async ({ request }) => {
         sent = await request.json()
-        return new HttpResponse(null, { status: 204 })
+        return noContent()
       }),
     )
-    render(<LoginPage next={null} />, { wrapper: TestProviders })
+    renderWithProviders(<LoginPage next={null} />)
 
     await logIn('  linh.pham@example.com  ', 'secret')
 
@@ -105,25 +102,20 @@ describe('LoginPage', () => {
   })
 
   it('disables the button while logging in', async () => {
-    let answer: (() => void) | undefined
-    const answered = new Promise<void>((resolve) => {
-      answer = resolve
-    })
+    const { held, release } = holdResponse()
     server.use(
       http.post(apiEndpoints.login.pattern, async () => {
-        await answered
-        return new HttpResponse(null, { status: 204 })
+        await held
+        return noContent()
       }),
     )
-    render(<LoginPage next={null} />, { wrapper: TestProviders })
+    renderWithProviders(<LoginPage next={null} />)
 
     await logIn('linh.pham@example.com', 'secret')
 
-    expect(await screen.findByLabelText('Signing in')).toBeInTheDocument()
-    expect(screen.getByRole('button', { name: /Sign in/ })).toBeDisabled()
-    answer?.()
-    await vi.waitFor(() => {
-      expect(routerMock.replace).toHaveBeenCalledWith('/')
-    })
+    await expectLabel('Logging in')
+    expectDisabled('button', /Log in/)
+    release()
+    await expectReplacedWith('/')
   })
 })

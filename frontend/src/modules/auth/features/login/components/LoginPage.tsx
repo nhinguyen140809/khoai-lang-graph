@@ -32,8 +32,8 @@ export function LoginPage({ next }: LoginPageProps) {
 
   return (
     <AuthScreen
-      title="Sign in"
-      description="Sign in to open your projects."
+      title="Log in"
+      description="Log in to open your projects."
       switchTo={{
         prompt: 'No account yet?',
         label: 'Create an account',
@@ -61,10 +61,10 @@ export function LoginPage({ next }: LoginPageProps) {
           <PendingButton
             type="submit"
             pending={loginRequest.isPending}
-            pendingLabel="Signing in"
+            pendingLabel="Logging in"
             className="w-full"
           >
-            Sign in
+            Log in
           </PendingButton>
         </FieldGroup>
       </Form>

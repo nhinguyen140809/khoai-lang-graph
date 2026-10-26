@@ -32,7 +32,3 @@ export function recordRequests(headerNames: string[] = []) {
   return requests
 }
 
-/** Stops recording the requests; call it after each test that records them. */
-export function stopRecordingRequests() {
-  server.events.removeAllListeners()
-}

@@ -1,21 +1,16 @@
-import { http, HttpResponse } from 'msw'
+import { http } from 'msw'
 
 import type { Me } from '@/modules/user/entities'
 import { apiBasePath, apiEndpoints, publicApiPaths } from '@/shared/api/endpoints'
 
-import { mockState } from '../shared/db/mock-state.utils'
+import { mockNow } from '../shared/db/mock-clock.utils'
 import { readBodyFields } from '../shared/http/request/request-body.utils'
 import { unauthenticated, validationFailed } from '../shared/http/response/error-response.utils'
-import { noContent } from '../shared/http/response/status-response.utils'
+import { created, noContent } from '../shared/http/response/status-response.utils'
 import { requiredText, requiredTextProblem } from '../shared/http/validation/field-values.utils'
 import { mockScenario, pendingForever } from '../shared/scenario/mock-scenario.utils'
-import { currentUser } from './account.store'
+import { currentUser, sessionState } from './account.store'
 
-// The session of the mock server: logged in until the user signs out.
-const sessionRecord = mockState('session', () => ({ signedIn: true }))
-
-// Endpoints that answer without a session.
-const PUBLIC_PATHS = ['/api/v1/auth/register', '/api/v1/auth/login', '/api/v1/health']
 
 function missingFields(credentials: Record<string, unknown>, fields: string[]) {
   return fields
@@ -32,10 +27,10 @@ export const authHandlers = [
       return (
         pathname.startsWith(`${apiBasePath}/`) &&
         !publicApiPaths.includes(pathname) &&
-        !sessionRecord.get().signedIn
+        !sessionState.get().loggedIn
       )
     },
-    () => unauthenticated('Sign in to continue.'),
+    () => unauthenticated('Log in to continue.'),
   ),
 
   http.post(apiEndpoints.login.pattern, async ({ request }) => {
@@ -48,7 +43,7 @@ export const authHandlers = [
     if (scenario === 'error') {
       return unauthenticated('The email or the password is wrong.')
     }
-    sessionRecord.set({ signedIn: true })
+    sessionState.set({ loggedIn: true })
     return noContent()
   }),
 
@@ -61,7 +56,7 @@ export const authHandlers = [
     if (scenario === 'error') {
       return validationFailed([{ field: 'email', message: 'An account with this email exists.' }])
     }
-    const now = new Date().toISOString()
+    const now = mockNow()
     const me: Me = {
       ...currentUser.get(),
       email: (requiredText(credentials.email) ?? '').toLowerCase(),
@@ -70,11 +65,11 @@ export const authHandlers = [
       updated_at: now,
     }
     currentUser.set(me)
-    return HttpResponse.json(me, { status: 201, headers: { Location: apiEndpoints.me.path() } })
+    return created(me, apiEndpoints.me.path())
   }),
 
   http.post(apiEndpoints.logout.pattern, () => {
-    sessionRecord.set({ signedIn: false })
+    sessionState.set({ loggedIn: false })
     return noContent()
   }),
 ]

@@ -62,7 +62,7 @@ export function UserMenu() {
             }}
           >
             <LogOutIcon aria-hidden />
-            Sign out
+            Log out
           </DropdownMenuItem>
         </DropdownMenuContent>
       </DropdownMenu>
@@ -158,9 +158,9 @@ function LogoutDialog({ open, onOpenChange }: LogoutDialogProps) {
       open={open}
       onOpenChange={onOpenChange}
       icon={<LogOutIcon />}
-      title="Sign out?"
-      description="You will need to sign in again to continue."
-      confirmLabel="Sign out"
+      title="Log out?"
+      description="You will need to log in again to continue."
+      confirmLabel="Log out"
       onConfirm={() => logoutRequest.mutateAsync()}
     />
   )

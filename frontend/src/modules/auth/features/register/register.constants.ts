@@ -2,5 +2,5 @@
 
 export const registerMessages = {
   /** The account was created, but logging in with it failed. */
-  createdWithoutSession: 'The account is created. Sign in with it.',
+  createdWithoutSession: 'The account is created. Log in with it.',
 }

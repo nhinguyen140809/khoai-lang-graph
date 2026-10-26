@@ -34,7 +34,7 @@ export function RegisterPage({ next }: RegisterPageProps) {
       description="An account keeps your projects, your settings and the models you choose."
       switchTo={{
         prompt: 'Have an account?',
-        label: 'Sign in',
+        label: 'Log in',
         href: routes.login(next),
       }}
     >

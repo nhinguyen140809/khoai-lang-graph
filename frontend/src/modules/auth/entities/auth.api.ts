@@ -7,7 +7,7 @@ import type { LoginBody, RegisterBody } from './auth.types'
 
 /** Starts a session; the server sets the session cookie. */
 export function login(body: LoginBody): Promise<void> {
-  return apiCommand(apiEndpoints.login.path(), { action: 'sign in', body })
+  return apiCommand(apiEndpoints.login.path(), { action: 'log in', body })
 }
 
 /** Creates an account; it does not start a session. The answer, the new user, is not read. */
@@ -17,5 +17,5 @@ export function register(body: RegisterBody): Promise<void> {
 
 /** Ends the current session. */
 export function logout(): Promise<void> {
-  return apiCommand(apiEndpoints.logout.path(), { action: 'sign out' })
+  return apiCommand(apiEndpoints.logout.path(), { action: 'log out' })
 }

@@ -1,114 +1,89 @@
-import { afterEach, describe, expect, it } from 'vitest'
+import { describe, expect, it } from 'vitest'
 
-import { apiEndpoints } from '@/shared/api/endpoints'
+import { apiEndpoint, apiEndpoints } from '@/shared/api/endpoints'
+import { HttpHeader, HttpStatus } from '@/shared/api/http'
 import { apiUrl } from '@/shared/api/request'
+import { fetchApi, openPage, postApi } from '@/test/msw'
+import { expectStillPending } from '@/test/steps'
+import { itRejectsRequests } from '@/test/suites'
 
-import { authLoadingCases, authProblemCases } from './auth.handlers.data'
-
-// The body goes as it is, so a case can also send text that is not JSON.
-const send = (path: string, body: string) =>
-  fetch(apiUrl(path), { method: 'POST', headers: { 'Content-Type': 'application/json' }, body })
-
-const post = (path: string, body?: unknown) => send(path, JSON.stringify(body ?? {}))
-
-// A scenario of the mocks is chosen in the page address.
-function openPage(address: string) {
-  window.history.replaceState(null, '', address)
-}
-
-afterEach(() => {
-  openPage('/')
-})
+import { authLoadingCases, authRejectedCases } from './auth.handlers.data'
 
 describe('auth handlers', () => {
   it('answers 401 after logging out, until the user logs in again', async () => {
-    expect((await fetch(apiUrl(apiEndpoints.me.path()))).status).toBe(200)
+    expect((await fetchApi(apiEndpoints.me.path())).status).toBe(HttpStatus.Ok)
 
-    expect((await post(apiEndpoints.logout.path())).status).toBe(204)
-    const signedOut = await fetch(apiUrl('/api/v1/me'))
-    expect(signedOut.status).toBe(401)
-    expect(await signedOut.json()).toMatchObject({ code: 'unauthenticated' })
+    expect((await postApi(apiEndpoints.logout.path())).status).toBe(HttpStatus.NoContent)
+    expect(await fetchApi(apiEndpoints.me.path())).toMatchObject({
+      status: HttpStatus.Unauthorized,
+      body: { code: 'unauthenticated' },
+    })
 
     expect(
       (
-        await post(apiEndpoints.login.path(), {
+        await postApi(apiEndpoints.login.path(), {
           email: 'linh.pham@example.com',
           password: 'secret',
         })
       ).status,
-    ).toBe(204)
-    expect((await fetch(apiUrl(apiEndpoints.me.path()))).status).toBe(200)
+    ).toBe(HttpStatus.NoContent)
+    expect((await fetchApi(apiEndpoints.me.path())).status).toBe(HttpStatus.Ok)
   })
 
   it('answers 401 to logging out without a session', async () => {
-    expect((await post(apiEndpoints.logout.path())).status).toBe(204)
+    expect((await postApi(apiEndpoints.logout.path())).status).toBe(HttpStatus.NoContent)
 
-    expect((await post(apiEndpoints.logout.path())).status).toBe(401)
+    expect((await postApi(apiEndpoints.logout.path())).status).toBe(HttpStatus.Unauthorized)
   })
 
   it('creates an account, the email in lower case and the name trimmed, that GET /me returns', async () => {
-    const created = await post(apiEndpoints.register.path(), {
+    const created = await postApi(apiEndpoints.register.path(), {
       email: 'An@Example.com',
       password: 'secret',
       display_name: '  An Tran  ',
     })
 
-    expect(created.status).toBe(201)
-    expect(created.headers.get('Location')).toBe(apiEndpoints.me.path())
-    expect(await created.json()).toMatchObject({ email: 'an@example.com', display_name: 'An Tran' })
-    expect(await (await fetch(apiUrl(apiEndpoints.me.path()))).json()).toMatchObject({
+    expect(created.status).toBe(HttpStatus.Created)
+    expect(created.headers.get(HttpHeader.Location)).toBe(apiEndpoints.me.path())
+    expect(created.body).toMatchObject({ email: 'an@example.com', display_name: 'An Tran' })
+    expect((await fetchApi(apiEndpoints.me.path())).body).toMatchObject({
       email: 'an@example.com',
       display_name: 'An Tran',
     })
   })
 
-  it.each(authProblemCases)(
-    'answers $status to $request',
-    async ({ address, path, body, status, problem }) => {
-      openPage(address)
-
-      const answer = await send(path, body)
-
-      expect(answer.status).toBe(status)
-      expect(await answer.json()).toMatchObject(problem)
-    },
-  )
+  itRejectsRequests(authRejectedCases)
 
   it.each(authLoadingCases)(
     'never answers $request in the loading scenario',
     async ({ address, path }) => {
       openPage(address)
-      const first = await Promise.race([
-        post(path).then(() => 'answered'),
-        new Promise((resolve) => setTimeout(resolve, 100, 'pending')),
-      ])
-
-      expect(first).toBe('pending')
+      await expectStillPending(postApi(path, {}))
     },
   )
 
-  it('lets creating an account and logging in through without a session', async () => {
-    await post(apiEndpoints.logout.path())
+  it('lets registering and logging in through without a session', async () => {
+    await postApi(apiEndpoints.logout.path())
 
     expect(
       (
-        await post(apiEndpoints.register.path(), {
+        await postApi(apiEndpoints.register.path(), {
           email: 'an@example.com',
           password: 'secret',
           display_name: 'An',
         })
       ).status,
-    ).toBe(201)
+    ).toBe(HttpStatus.Created)
     expect(
-      (await post(apiEndpoints.login.path(), { email: 'an@example.com', password: 'secret' }))
+      (await postApi(apiEndpoints.login.path(), { email: 'an@example.com', password: 'secret' }))
         .status,
-    ).toBe(204)
+    ).toBe(HttpStatus.NoContent)
   })
 
   it('leaves health, and any request without a mock, to the network', async () => {
-    await expect(fetch(apiUrl('/api/v1/no-mock'))).rejects.toThrow()
+    await expect(fetch(apiUrl(apiEndpoint('/no-mock').path()))).rejects.toThrow()
 
-    await post(apiEndpoints.logout.path())
+    await postApi(apiEndpoints.logout.path())
     await expect(fetch(apiUrl(apiEndpoints.health.path()))).rejects.toThrow()
   })
 })

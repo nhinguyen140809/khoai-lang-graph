@@ -1,71 +1,73 @@
-import { QueryClient, QueryClientProvider } from '@tanstack/react-query'
-import { render, screen, within } from '@testing-library/react'
+import { screen } from '@testing-library/react'
 import userEvent from '@testing-library/user-event'
-import { http, HttpResponse } from 'msw'
-import { toast } from 'sonner'
-import { beforeEach, describe, expect, it, vi } from 'vitest'
+import { http } from 'msw'
+import { describe, expect, it, vi } from 'vitest'
 
 import { server } from '@/mocks/msw-server.setup'
+import { emptyResponse, noContent } from '@/mocks/shared/http/response'
 import { apiEndpoints } from '@/shared/api/endpoints'
-import { apiUrl } from '@/shared/api/request/api-url.utils'
+import { HttpMethod, HttpStatus } from '@/shared/api/http'
 import type * as urlModule from '@/shared/lib/url'
-import { TestProviders } from '@/test/render/TestProviders'
+import { fetchApi, holdResponse, serverError, serverErrorOn } from '@/test/msw'
+import { createTestQueryClient, renderWithProviders } from '@/test/render'
+import {
+  cancelAction,
+  confirmAction,
+  expectAttribute,
+  expectNoConfirmDialog,
+  expectRole,
+  findConfirmDialog,
+  pressButton,
+  pressMenuItem,
+  spyOnToast,
+  waitForCall,
+} from '@/test/steps'
+import { itAsksBeforeAction } from '@/test/suites'
 
 import { UserMenu } from '../UserMenu'
 import { plannedItems } from './UserMenu.data'
 
 const { reloadTo } = vi.hoisted(() => ({ reloadTo: vi.fn() }))
 
-vi.mock('next/link', async () => (await import('@/test/next-stubs/next-stubs.utils')).linkMock)
 vi.mock('@/shared/lib/url', async (importOriginal) => ({
   ...(await importOriginal<typeof urlModule>()),
   reloadTo,
 }))
 
-beforeEach(() => {
-  reloadTo.mockClear()
-})
-
-async function openMenu(name: string | RegExp) {
-  await userEvent.click(await screen.findByRole('button', { name }))
-}
-
-/** Chooses Sign out in the open menu, then confirms it in the dialog. */
+/** Chooses Log out in the open menu, then confirms it in the dialog. */
 async function confirmLogout() {
-  await userEvent.click(screen.getByRole('menuitem', { name: 'Sign out' }))
-  const dialog = await screen.findByRole('alertdialog', { name: 'Sign out?' })
-  await userEvent.click(within(dialog).getByRole('button', { name: 'Sign out' }))
+  await pressMenuItem('Log out')
+  const dialog = await findConfirmDialog('Log out?')
+  await confirmAction(dialog, 'Log out')
 }
 
 describe('UserMenu', () => {
   it('shows the signed-in user', async () => {
-    render(<UserMenu />, { wrapper: TestProviders })
+    renderWithProviders(<UserMenu />)
 
-    await userEvent.click(await screen.findByRole('button', { name: 'Linh Pham' }))
+    await pressButton('Linh Pham')
 
     const menu = screen.getByRole('menu')
     expect(menu).toHaveTextContent('Linh Pham')
     expect(menu).toHaveTextContent('linh.pham@example.com')
   })
 
-  it('signs out and loads the login page', async () => {
-    render(<UserMenu />, { wrapper: TestProviders })
+  it('logs out and loads the login page', async () => {
+    renderWithProviders(<UserMenu />)
 
-    await userEvent.click(await screen.findByRole('button', { name: 'Linh Pham' }))
+    await pressButton('Linh Pham')
     await confirmLogout()
 
-    await vi.waitFor(() => {
-      expect(reloadTo).toHaveBeenCalledWith('/login')
-    })
+    await waitForCall(reloadTo, '/login')
     expect(reloadTo).toHaveBeenCalledTimes(1)
-    expect((await fetch(apiUrl(apiEndpoints.me.path()))).status).toBe(401)
+    expect((await fetchApi(apiEndpoints.me.path())).status).toBe(HttpStatus.Unauthorized)
   })
 
   it('offers to load the account again when it fails', async () => {
-    server.use(http.get(apiEndpoints.me.path(), () => new HttpResponse(null, { status: 500 })))
-    render(<UserMenu />, { wrapper: TestProviders })
+    server.use(serverErrorOn(HttpMethod.Get, apiEndpoints.me.path()))
+    renderWithProviders(<UserMenu />)
 
-    await userEvent.click(screen.getByRole('button', { name: 'Account' }))
+    await pressButton('Account')
 
     expect(
       await screen.findByRole('menuitem', { name: 'Failed to load your account. Try again' }),
@@ -73,49 +75,41 @@ describe('UserMenu', () => {
   })
 
   it('shows that the account is loading', async () => {
-    let answer: (() => void) | undefined
-    const answered = new Promise<void>((resolve) => {
-      answer = resolve
-    })
+    const { held, release } = holdResponse()
     server.use(
       http.get(apiEndpoints.me.pattern, async () => {
-        await answered
-        return new HttpResponse(null, { status: 500 })
+        await held
+        return serverError()
       }),
     )
-    render(<UserMenu />, { wrapper: TestProviders })
+    renderWithProviders(<UserMenu />)
 
-    await openMenu('Account')
+    await pressButton('Account')
 
-    expect(screen.getByRole('menuitem', { name: 'Loading your account...' })).toHaveAttribute(
-      'aria-disabled',
-      'true',
-    )
-    answer?.()
+    expectAttribute('menuitem', 'Loading your account...', 'aria-disabled', 'true')
+    release()
   })
 
   it('loads the account again after a failure', async () => {
     // Opening the menu loads the account again too, so the server fails until the user retries.
-    let failing = true
-    server.use(
-      http.get('/api/v1/me', () => (failing ? new HttpResponse(null, { status: 500 }) : undefined)),
-    )
-    render(<UserMenu />, { wrapper: TestProviders })
+    let isFailing = true
+    server.use(http.get(apiEndpoints.me.pattern, () => (isFailing ? serverError() : undefined)))
+    renderWithProviders(<UserMenu />)
 
-    await openMenu('Account')
+    await pressButton('Account')
     const retry = await screen.findByRole('menuitem', {
       name: 'Failed to load your account. Try again',
     })
-    failing = false
+    isFailing = false
     await userEvent.click(retry)
 
-    expect(await screen.findByRole('button', { name: 'Linh Pham' })).toBeInTheDocument()
+    await expectRole('button', 'Linh Pham')
   })
 
   it('opens the profile from the user at the top of the menu', async () => {
-    render(<UserMenu />, { wrapper: TestProviders })
+    renderWithProviders(<UserMenu />)
 
-    await openMenu('Linh Pham')
+    await pressButton('Linh Pham')
 
     expect(
       screen.getByRole('menuitem', { name: 'Your profile: Linh Pham linh.pham@example.com' }),
@@ -123,56 +117,79 @@ describe('UserMenu', () => {
   })
 
   it.each(plannedItems)('offers %s disabled until it exists', async (item) => {
-    render(<UserMenu />, { wrapper: TestProviders })
+    renderWithProviders(<UserMenu />)
 
-    await openMenu('Linh Pham')
+    await pressButton('Linh Pham')
 
-    expect(screen.getByRole('menuitem', { name: item })).toHaveAttribute('aria-disabled', 'true')
+    expectAttribute('menuitem', item, 'aria-disabled', 'true')
   })
 
-  it('asks before logging out, and keeps the session when cancelled', async () => {
-    render(<UserMenu />, { wrapper: TestProviders })
+  it('keeps the session when logging out is cancelled', async () => {
+    renderWithProviders(<UserMenu />)
 
-    await openMenu('Linh Pham')
-    await userEvent.click(screen.getByRole('menuitem', { name: 'Sign out' }))
-    const dialog = await screen.findByRole('alertdialog', { name: 'Sign out?' })
-    await userEvent.click(within(dialog).getByRole('button', { name: 'Cancel' }))
+    await pressButton('Linh Pham')
+    await pressMenuItem('Log out')
+    const dialog = await findConfirmDialog('Log out?')
 
-    expect(screen.queryByRole('alertdialog')).not.toBeInTheDocument()
+    await cancelAction(dialog)
+
+    await expectNoConfirmDialog()
     expect(reloadTo).not.toHaveBeenCalled()
-    expect((await fetch(apiUrl(apiEndpoints.me.path()))).status).toBe(200)
+    expect((await fetchApi(apiEndpoints.me.path())).status).toBe(HttpStatus.Ok)
+  })
+
+  describe('Log out', () => {
+    let isRequested = false
+
+    itAsksBeforeAction({
+      action: 'logging out',
+      confirmLabel: 'Log out',
+      hasRun: () => isRequested,
+      open: async () => {
+        isRequested = false
+        server.use(
+          http.post(apiEndpoints.logout.pattern, () => {
+            isRequested = true
+            return noContent()
+          }),
+        )
+        renderWithProviders(<UserMenu />)
+        await pressButton('Linh Pham')
+        await pressMenuItem('Log out')
+        return findConfirmDialog('Log out?')
+      },
+      fail: () => {
+        server.use(
+          http.post(apiEndpoints.logout.pattern, () => {
+            isRequested = true
+            return serverError()
+          }),
+        )
+      },
+    })
   })
 
   it('says when logging out fails, and stays on the page', async () => {
-    server.use(http.post('/api/v1/auth/logout', () => new HttpResponse(null, { status: 500 })))
-    const error = vi.spyOn(toast, 'error')
-    render(<UserMenu />, { wrapper: TestProviders })
+    server.use(serverErrorOn(HttpMethod.Post, apiEndpoints.logout.path()))
+    const error = spyOnToast('error')
+    renderWithProviders(<UserMenu />)
 
-    await openMenu('Linh Pham')
+    await pressButton('Linh Pham')
     await confirmLogout()
 
-    await vi.waitFor(() => {
-      expect(error).toHaveBeenCalledWith('Failed to sign out (HTTP 500)')
-    })
+    await waitForCall(error, 'Failed to log out (HTTP 500)')
     expect(reloadTo).not.toHaveBeenCalled()
     // The dialog stays, so that the user can try again or cancel.
-    expect(screen.getByRole('alertdialog', { name: 'Sign out?' })).toBeInTheDocument()
-    error.mockRestore()
+    expect(await findConfirmDialog('Log out?')).toBeInTheDocument()
   })
 
   it('shows no failure when the session had already ended', async () => {
-    server.use(
-      http.post(apiEndpoints.logout.pattern, () => new HttpResponse(null, { status: 401 })),
-    )
-    const error = vi.spyOn(toast, 'error')
-    const client = new QueryClient()
-    render(
-      <QueryClientProvider client={client}>
-        <UserMenu />
-      </QueryClientProvider>,
-    )
+    server.use(http.post(apiEndpoints.logout.pattern, () => emptyResponse(HttpStatus.Unauthorized)))
+    const error = spyOnToast('error')
+    const client = createTestQueryClient()
+    renderWithProviders(<UserMenu />, { queryClient: client })
 
-    await openMenu('Linh Pham')
+    await pressButton('Linh Pham')
     await confirmLogout()
 
     // The mutation is marked failed only after its own onError has run.
@@ -181,6 +198,5 @@ describe('UserMenu', () => {
     })
     expect(error).not.toHaveBeenCalled()
     expect(reloadTo).not.toHaveBeenCalled()
-    error.mockRestore()
   })
 })
