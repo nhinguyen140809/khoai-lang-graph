@@ -1,7 +1,4 @@
-// The hooks of the store of the Delete dialog: the one that opens it, which the menus, the rows
-// and the palette call, and the one that the dialogs of a project read to show it.
-
-import { useShallow } from 'zustand/react/shallow'
+import { usePendingAction, useSetPendingAction } from '@/shared/lib/pending-action'
 
 import { useDeleteProjectDialogStore } from '../delete-project-dialog.store'
 
@@ -10,7 +7,7 @@ import { useDeleteProjectDialogStore } from '../delete-project-dialog.store'
  * action only, so that the parts that open the dialog do not render again when it opens or closes.
  */
 export function useOpenDeleteProjectDialog() {
-  return useDeleteProjectDialogStore((state) => state.openDialog)
+  return useSetPendingAction(useDeleteProjectDialogStore)
 }
 
 /**
@@ -18,7 +15,5 @@ export function useOpenDeleteProjectDialog() {
  * actions that close it and forget it once it has closed.
  */
 export function useDeleteProjectDialog() {
-  return useDeleteProjectDialogStore(
-    useShallow(({ projectId, open, setOpen, closed }) => ({ projectId, open, setOpen, closed })),
-  )
+  return usePendingAction(useDeleteProjectDialogStore)
 }

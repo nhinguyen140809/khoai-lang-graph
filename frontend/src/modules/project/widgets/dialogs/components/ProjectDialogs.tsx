@@ -29,7 +29,7 @@ interface DialogProps {
 
 interface ProjectDialogProps {
   state: Omit<DialogProps, 'project' | 'onOpenChange' | 'onClosed'> & {
-    projectId: string | null
+    targetId: string | null
     setOpen: (open: boolean) => void
     closed: () => void
   }
@@ -38,9 +38,9 @@ interface ProjectDialogProps {
 
 /** One dialog of a project. The project is read from the queries, and stays while the dialog closes. */
 function ProjectDialog({ state, Dialog }: ProjectDialogProps) {
-  const project = useProject(state.projectId ?? undefined)
+  const project = useProject(state.targetId ?? undefined)
 
-  if (state.projectId === null || project.data === undefined) return null
+  if (state.targetId === null || project.data === undefined) return null
 
   // A dialog of another project starts afresh, even when the one before has not finished closing.
   return (
