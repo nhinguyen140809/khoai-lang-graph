@@ -4,6 +4,7 @@ import type { ComponentProps } from 'react'
 import type { FieldPath, FieldValues } from 'react-hook-form'
 
 import { Input } from '@/shared/components/ui/input'
+import { isString } from '@/shared/lib/guards'
 
 import { FormField, type FormFieldProps } from './FormField'
 
@@ -39,7 +40,7 @@ export function TextField<
         <Input
           {...inputProps}
           {...field}
-          value={typeof field.value === 'string' ? field.value : ''}
+          value={isString(field.value) ? field.value : ''}
           {...controlProps}
         />
       )}

@@ -1,3 +1,5 @@
+import { isOneOf } from '@/shared/lib/guards'
+
 import { internalError } from '../http/response/error-response.utils'
 import {
   type HandlerScenario,
@@ -7,9 +9,6 @@ import {
   mockScenarios,
 } from './mock-scenario.types'
 
-function isMockScenario(value: string): value is (typeof mockScenarios)[number] {
-  return (mockScenarios as readonly string[]).includes(value)
-}
 
 /** A parameter of the page address; null outside the browser, such as in unit tests. */
 export function addressParam(name: string): string | null {
@@ -24,7 +23,7 @@ export function addressParam(name: string): string | null {
  */
 export function mockScenario(resource: string): MockScenario {
   const value = addressParam(`mock-${resource}`)
-  return value !== null && isMockScenario(value) ? value : 'default'
+  return isOneOf(mockScenarios, value) ? value : 'default'
 }
 
 /** An answer that never comes, so that the request never ends, as in a `loading` scenario. */
@@ -47,15 +46,11 @@ export async function answerScenario(resource: string): Promise<HandlerScenario>
   return scenario
 }
 
-function isMockRunState(value: string): value is MockRunState {
-  return (mockRunStates as readonly string[]).includes(value)
-}
-
 /**
  * The state of the mock run that waits at the analysis review by default, chosen in the page URL
  * with `?mock-run-state=running` (or `failed`, `done`). The threads and runs handlers read it.
  */
 export function mockRunState(): MockRunState {
   const value = addressParam('mock-run-state')
-  return value !== null && isMockRunState(value) ? value : 'waiting'
+  return isOneOf(mockRunStates, value) ? value : 'waiting'
 }

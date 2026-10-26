@@ -6,6 +6,7 @@ import { type KeyboardEvent, useId, useRef, useState } from 'react'
 import { Button } from '@/shared/components/ui/button'
 import { InputGroup, InputGroupAddon, InputGroupTextarea } from '@/shared/components/ui/input-group'
 import { Tooltip, TooltipContent, TooltipTrigger } from '@/shared/components/ui/tooltip'
+import { hasText } from '@/shared/lib/guards'
 
 import { useProjectPromptFocus } from '../hooks/useOpenProjectPrompt'
 import { createProjectMessages } from '../new-project.constants'
@@ -24,11 +25,11 @@ export function NewProjectPrompt({ onStart }: NewProjectPromptProps) {
   const id = useId()
   const inputRef = useRef<HTMLTextAreaElement>(null)
   const [idea, setIdea] = useState('')
-  const blank = idea.trim() === ''
+  const isBlank = !hasText(idea)
   useProjectPromptFocus(inputRef)
 
   const submit = () => {
-    if (!blank) onStart(idea.trim())
+    if (!isBlank) onStart(idea.trim())
   }
 
   const handleKeyDown = (event: KeyboardEvent<HTMLTextAreaElement>) => {
@@ -86,7 +87,7 @@ export function NewProjectPrompt({ onStart }: NewProjectPromptProps) {
               <Button
                 type="submit"
                 size="icon"
-                disabled={blank}
+                disabled={isBlank}
                 aria-label={createProjectMessages.create}
               >
                 <ArrowUpIcon aria-hidden />

@@ -20,6 +20,7 @@ import {
   QuestionnaireSubmit,
   QuestionnaireTitle,
 } from '@/shared/components/ui/questionnaire'
+import { isString } from '@/shared/lib/guards'
 
 import { personas } from '../../design-system.fixtures'
 import { SampleCard } from '../Sample'
@@ -40,7 +41,7 @@ const handleSubmit: NonNullable<ComponentProps<typeof Questionnaire>['onSubmit']
   event.preventDefault()
   const decision = new FormData(event.currentTarget).get('decision')
   toast('Answer sent', {
-    description: `Decision: ${typeof decision === 'string' ? decision : 'none'}`,
+    description: `Decision: ${isString(decision) ? decision : 'none'}`,
   })
 }
 
