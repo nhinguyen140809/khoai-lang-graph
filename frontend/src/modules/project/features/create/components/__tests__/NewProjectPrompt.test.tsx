@@ -3,6 +3,7 @@ import userEvent from '@testing-library/user-event'
 import { describe, expect, it, vi } from 'vitest'
 
 import { renderWithProviders } from '@/test/render'
+import { expectDisabled, pasteText, pressButton, pressKey, typeText } from '@/test/steps'
 
 import { useProjectPromptStore } from '../../project-prompt.store'
 import { NewProjectPrompt } from '../NewProjectPrompt'
@@ -21,9 +22,9 @@ describe('NewProjectPrompt', () => {
     const { prompt, onStart } = renderPrompt()
 
     await userEvent.click(prompt)
-    await userEvent.paste(idea)
-    if (by === 'Enter') await userEvent.keyboard('{Enter}')
-    else await userEvent.click(screen.getByRole('button', { name: 'Create project' }))
+    await pasteText(idea)
+    if (by === 'Enter') await pressKey('Enter')
+    else await pressButton('Create project')
 
     expect(onStart).toHaveBeenCalledExactlyOnceWith(sent)
   })
@@ -31,7 +32,7 @@ describe('NewProjectPrompt', () => {
   it('adds a line with Shift+Enter', async () => {
     const { prompt, onStart } = renderPrompt()
 
-    await userEvent.type(prompt, 'Mentor{Shift>}{Enter}{/Shift}platform')
+    await typeText(prompt, 'Mentor{Shift>}{Enter}{/Shift}platform')
 
     expect(prompt).toHaveValue('Mentor\nplatform')
     expect(onStart).not.toHaveBeenCalled()
@@ -41,10 +42,10 @@ describe('NewProjectPrompt', () => {
     const { prompt, onStart } = renderPrompt()
 
     await userEvent.click(prompt)
-    await userEvent.paste(idea)
-    await userEvent.keyboard('{Enter}')
+    await pasteText(idea)
+    await pressKey('Enter')
 
-    expect(screen.getByRole('button', { name: 'Create project' })).toBeDisabled()
+    expectDisabled('button', 'Create project')
     expect(onStart).not.toHaveBeenCalled()
   })
 

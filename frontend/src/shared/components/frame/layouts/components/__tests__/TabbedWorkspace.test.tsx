@@ -1,9 +1,10 @@
 import { act, fireEvent, render, screen } from '@testing-library/react'
 import type { Route } from 'next'
 import type { ReactNode } from 'react'
-import { beforeEach, describe, expect, it, vi } from 'vitest'
+import { beforeEach, describe, expect, it } from 'vitest'
 
 import { setPathname } from '@/test/next-stubs'
+import { expectAttribute, expectNoRole, expectRole } from '@/test/steps'
 
 import type { Destination } from '../../../destinations/destination.types'
 import { DestinationsContext } from '../../../destinations/hooks/useDestinations'
@@ -17,12 +18,6 @@ import type { EditorTab } from '../../../tabs/editor-tabs.types'
 import { useEditorTab } from '../../../tabs/hooks/useEditorTab'
 import { TabbedWorkspace } from '../TabbedWorkspace'
 import { newTabCases, sidePanelCases, tab } from './TabbedWorkspace.data'
-
-vi.mock(
-  'next/navigation',
-  async () => (await import('@/test/next-stubs/next-stubs.utils')).navigationMock,
-)
-vi.mock('next/link', async () => (await import('@/test/next-stubs/next-stubs.utils')).linkMock)
 
 function feature(id: string, title: string, content: string): Destination {
   return {
@@ -42,9 +37,6 @@ const destinations: Destination[] = [
 
 beforeEach(() => {
   setPathname('/projects/p1/artifacts')
-  useEditorTabsStore.setState(useEditorTabsStore.getInitialState())
-  usePanelsStore.setState(usePanelsStore.getInitialState())
-  useSideFeatureStore.setState(useSideFeatureStore.getInitialState())
 })
 
 /** A page that opens its tab, once its title is known. */
@@ -61,7 +53,7 @@ function workspace(page: ReactNode) {
   )
 }
 
-function renderWorkspace(given: Destination[] = destinations) {
+function renderTabbedWorkspace(given: Destination[] = destinations) {
   render(
     <DestinationsContext value={{ destinations: given, tabIcons: {} }}>
       <TabbedWorkspace tabGroup="p1">
@@ -71,11 +63,11 @@ function renderWorkspace(given: Destination[] = destinations) {
   )
 }
 
-describe('Workspace', () => {
+describe('TabbedWorkspace', () => {
   it.each(sidePanelCases)('shows $name, next to the editor', ({ pathname, chosen, panel }) => {
     setPathname(pathname)
     useSideFeatureStore.setState({ chosen })
-    renderWorkspace()
+    renderTabbedWorkspace()
 
     expect(
       screen.getAllByRole('complementary').map((aside) => aside.getAttribute('aria-label')),
@@ -83,20 +75,20 @@ describe('Workspace', () => {
     expect(screen.getByRole('main')).toHaveTextContent('editor')
   })
 
-  it('keeps the editor when another side panel is shown', () => {
-    renderWorkspace()
+  it('keeps the editor when another side panel is shown', async () => {
+    renderTabbedWorkspace()
 
     act(() => {
       useSideFeatureStore.getState().choose('search')
     })
 
-    expect(screen.getByRole('complementary', { name: 'Search' })).toBeInTheDocument()
-    expect(screen.queryByRole('complementary', { name: 'Artifacts' })).not.toBeInTheDocument()
+    await expectRole('complementary', 'Search')
+    expectNoRole('complementary', 'Artifacts')
     expect(screen.getByRole('main')).toHaveTextContent('editor')
   })
 
   it('hides the side panel with Ctrl+B and shows it again as it was', () => {
-    renderWorkspace([
+    renderTabbedWorkspace([
       {
         ...feature('artifacts', 'Artifacts', ''),
         panel: (
@@ -114,10 +106,7 @@ describe('Workspace', () => {
     fireEvent.keyDown(document, { key: 'b', ctrlKey: true })
     expect(screen.getByRole('complementary', { name: 'Artifacts' })).toBeVisible()
     // Hidden, not unmounted: the section is still collapsed.
-    expect(screen.getByRole('button', { name: 'Outline' })).toHaveAttribute(
-      'aria-expanded',
-      'false',
-    )
+    expectAttribute('button', 'Outline', 'aria-expanded', 'false')
   })
 
   it.each(newTabCases)(
@@ -150,19 +139,16 @@ describe('Workspace', () => {
       ),
     )
 
-    expect(screen.getByRole('link', { name: 'Settings, preview' })).toHaveAttribute(
-      'aria-current',
-      'page',
-    )
+    expectAttribute('link', 'Settings, preview', 'aria-current', 'page')
   })
 
   it('has no side panel without features, and leaves Ctrl+B alone', () => {
-    renderWorkspace([])
+    renderTabbedWorkspace([])
 
-    expect(screen.queryByRole('complementary')).not.toBeInTheDocument()
+    expectNoRole('complementary')
     expect(screen.getByRole('main')).toHaveTextContent('editor')
-    const ctrlB = fireEvent.keyDown(document, { key: 'b', ctrlKey: true })
-    expect(ctrlB).toBe(true)
+    const isAllowed = fireEvent.keyDown(document, { key: 'b', ctrlKey: true })
+    expect(isAllowed).toBe(true)
     expect(usePanelsStore.getState().panels[PanelRegion.Side].visible).toBe(true)
   })
 })

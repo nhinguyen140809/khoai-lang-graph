@@ -1,33 +1,21 @@
 import { focusManager } from '@tanstack/react-query'
-import { act, render, screen, within } from '@testing-library/react'
-import userEvent from '@testing-library/user-event'
+import { act, screen, within } from '@testing-library/react'
 import { http, HttpResponse } from 'msw'
-import { afterEach, beforeEach, describe, expect, it, vi } from 'vitest'
+import { afterEach, describe, expect, it } from 'vitest'
 
 import { server } from '@/mocks/msw-server.setup'
 import { projectFixtures } from '@/mocks/projects/projects.fixtures'
 import { projectIds } from '@/mocks/shared/db'
 import { useProjectPromptStore } from '@/modules/project/features/create'
-import { useRenameProjectDialogStore } from '@/modules/project/features/rename'
 import { ProjectDialogs } from '@/modules/project/widgets/dialogs'
 import { apiEndpoints } from '@/shared/api/endpoints'
-import { routerMock } from '@/test/next-stubs/next-stubs.utils'
-import { TestProviders } from '@/test/render/TestProviders'
+import { HttpMethod } from '@/shared/api/http'
+import { serverErrorOn } from '@/test/msw'
+import { renderWithProviders } from '@/test/render'
+import { expectPushedTo, expectRole, pressButton, pressMenuItem, replaceText } from '@/test/steps'
 
 import { ProjectSwitcher } from '../ProjectSwitcher'
 import { switcherLabelCases } from './ProjectSwitcher.data'
-
-vi.mock('next/link', async () => (await import('@/test/next-stubs/next-stubs.utils')).linkMock)
-vi.mock(
-  'next/navigation',
-  async () => (await import('@/test/next-stubs/next-stubs.utils')).navigationMock,
-)
-
-beforeEach(() => {
-  useProjectPromptStore.setState({ focusRequested: false })
-  useRenameProjectDialogStore.getState().closed()
-  routerMock.push.mockClear()
-})
 
 afterEach(() => {
   focusManager.setFocused(undefined)
@@ -36,31 +24,29 @@ afterEach(() => {
 describe('ProjectSwitcher', () => {
   it.each(switcherLabelCases)('names $name', async ({ projectId, answer, label }) => {
     if (answer !== null) server.use(answer())
-    render(<ProjectSwitcher projectId={projectId} />, { wrapper: TestProviders })
+    renderWithProviders(<ProjectSwitcher projectId={projectId} />)
 
-    expect(await screen.findByRole('button', { name: label })).toBeInTheDocument()
+    await expectRole('button', label)
   })
 
   it('renames the open project from its menu', async () => {
     // The menu opens the dialog that the layout holds.
-    render(
+    renderWithProviders(
       <>
         <ProjectSwitcher projectId={projectIds.mentor} />
         <ProjectDialogs />
       </>,
-      { wrapper: TestProviders },
     )
 
-    await userEvent.click(await screen.findByRole('button', { name: 'Mentor platform' }))
-    await userEvent.click(await screen.findByRole('menuitem', { name: 'Rename project' }))
+    await pressButton('Mentor platform')
+    await pressMenuItem('Rename project')
     const name = within(await screen.findByRole('dialog', { name: 'Rename project' })).getByRole(
       'textbox',
       { name: 'Name' },
     )
-    await userEvent.clear(name)
-    await userEvent.type(name, 'Mentor finder{Enter}')
+    await replaceText(name, 'Mentor finder{Enter}')
 
-    expect(await screen.findByRole('button', { name: 'Mentor finder' })).toBeInTheDocument()
+    await expectRole('button', 'Mentor finder')
   })
 
   it('switches to a recent active project, marking the open one', async () => {
@@ -72,9 +58,9 @@ describe('ProjectSwitcher', () => {
         return HttpResponse.json({ items: recent, next_cursor: 'more' })
       }),
     )
-    render(<ProjectSwitcher projectId={projectIds.mentor} />, { wrapper: TestProviders })
+    renderWithProviders(<ProjectSwitcher projectId={projectIds.mentor} />)
 
-    await userEvent.click(await screen.findByRole('button', { name: 'Mentor platform' }))
+    await pressButton('Mentor platform')
     const menu = await screen.findByRole('menu')
 
     expect(
@@ -96,28 +82,26 @@ describe('ProjectSwitcher', () => {
   })
 
   it('opens the prompt of the project list from the menu, to start a project', async () => {
-    render(<ProjectSwitcher projectId={projectIds.mentor} />, { wrapper: TestProviders })
+    renderWithProviders(<ProjectSwitcher projectId={projectIds.mentor} />)
 
-    await userEvent.click(await screen.findByRole('button', { name: 'Mentor platform' }))
-    await userEvent.click(await screen.findByRole('menuitem', { name: 'Create project' }))
+    await pressButton('Mentor platform')
+    await pressMenuItem('Create project')
 
-    expect(routerMock.push).toHaveBeenCalledWith('/projects')
+    await expectPushedTo('/projects')
     expect(useProjectPromptStore.getState().focusRequested).toBe(true)
   })
 
   it('keeps the name of the project when loading it again fails', async () => {
-    render(<ProjectSwitcher projectId={projectIds.mentor} />, { wrapper: TestProviders })
+    renderWithProviders(<ProjectSwitcher projectId={projectIds.mentor} />)
     await screen.findByRole('button', { name: 'Mentor platform' })
-    server.use(
-      http.get(apiEndpoints.project.pattern, () => new HttpResponse(null, { status: 500 })),
-    )
+    server.use(serverErrorOn(HttpMethod.Get, apiEndpoints.project.pattern))
 
     // Coming back to the window loads the project again.
     act(() => {
       focusManager.setFocused(false)
       focusManager.setFocused(true)
     })
-    await userEvent.click(screen.getByRole('button', { name: 'Mentor platform' }))
+    await pressButton('Mentor platform')
 
     expect(
       await screen.findByRole('menuitem', { name: 'Load the project again' }),

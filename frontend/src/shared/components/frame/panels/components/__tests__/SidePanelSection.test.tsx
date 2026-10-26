@@ -2,6 +2,8 @@ import { render, screen } from '@testing-library/react'
 import userEvent from '@testing-library/user-event'
 import { describe, expect, it, vi } from 'vitest'
 
+import { expectAttribute, pressButton } from '@/test/steps'
+
 import { SidePanelSection } from '../SidePanelSection'
 import { openingCases } from './SidePanelSection.data'
 
@@ -41,9 +43,9 @@ describe('SidePanelSection', () => {
       </SidePanelSection>,
     )
 
-    await userEvent.click(screen.getByRole('button', { name: 'Refresh' }))
+    await pressButton('Refresh')
 
     expect(refresh).toHaveBeenCalledOnce()
-    expect(screen.getByRole('button', { name: 'Outline' })).toHaveAttribute('aria-expanded', 'true')
+    expectAttribute('button', 'Outline', 'aria-expanded', 'true')
   })
 })

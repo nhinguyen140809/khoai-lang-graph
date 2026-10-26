@@ -2,6 +2,8 @@ import { HttpResponse } from 'msw'
 
 import { createdId, IdPrefix } from '@/mocks/shared/db'
 import { apiEndpoints } from '@/shared/api/endpoints'
+import { HttpStatus } from '@/shared/api/http'
+import { serverError } from '@/test/msw'
 
 const projectId = createdId(IdPrefix.Project, 1)
 const threadId = createdId(IdPrefix.Thread, 1)
@@ -51,17 +53,17 @@ export const failedCreateCases = [
     answer: () =>
       HttpResponse.json(
         {
-          status: 422,
+          status: HttpStatus.UnprocessableContent,
           code: 'validation_failed',
           errors: [{ field: 'name', message: 'A project with this name exists.' }],
         },
-        { status: 422 },
+        { status: HttpStatus.UnprocessableContent },
       ),
     message: 'A project with this name exists.',
   },
   {
     name: 'any other failure, under the form',
-    answer: () => new HttpResponse(null, { status: 500 }),
+    answer: () => serverError(),
     message: 'Failed to create the project (HTTP 500)',
   },
 ]

@@ -2,6 +2,7 @@ import { waitFor } from '@testing-library/react'
 import { describe, expect, it } from 'vitest'
 
 import { renderHookWithProviders } from '@/test/render'
+import { waitForQueries } from '@/test/steps'
 
 import { useProject, useRecentProjects } from '../useProjectQueries'
 
@@ -25,18 +26,14 @@ describe('useProject', () => {
   it('stays idle without a project', async () => {
     const { result } = renderRecentThenProject()
 
-    await waitFor(() => {
-      expect(result.current.recent.isSuccess).toBe(true)
-    })
+    await waitForQueries(() => [result.current.recent])
     expect(result.current.project.fetchStatus).toBe('idle')
     expect(result.current.project.data).toBeUndefined()
   })
 
   it('shows at once a project that a list has loaded, and loads it again', async () => {
     const { result, rerender } = renderRecentThenProject()
-    await waitFor(() => {
-      expect(result.current.recent.isSuccess).toBe(true)
-    })
+    await waitForQueries(() => [result.current.recent])
 
     const listed = result.current.recent.data?.[0]?.id
 

@@ -1,5 +1,4 @@
 import { render, screen } from '@testing-library/react'
-import userEvent from '@testing-library/user-event'
 import {
   FileStackIcon,
   FolderInputIcon,
@@ -13,6 +12,7 @@ import { beforeEach, describe, expect, it, vi } from 'vitest'
 
 import { setPathname } from '@/test/next-stubs'
 import { Broken, TestProviders } from '@/test/render'
+import { expectAttribute, expectRole, pressButton } from '@/test/steps'
 
 import { PanelRegion } from '../../../panels/panel.types'
 import { usePanelsStore } from '../../../panels/panels.store'
@@ -21,11 +21,6 @@ import { useActivityBarItem } from '../../hooks/useActivityBarItem'
 import { DestinationsContext } from '../../hooks/useDestinations'
 import { useSideFeatureStore } from '../../side-feature.store'
 import { ActivityBar } from '../ActivityBar'
-
-vi.mock(
-  'next/navigation',
-  async () => (await import('@/test/next-stubs/next-stubs.utils')).navigationMock,
-)
 
 const destinations: Destination[] = [
   {
@@ -116,42 +111,36 @@ describe('ActivityBar', () => {
       'Account',
     ])
     // Until one is chosen, the side panel is the one of the page on screen.
-    expect(screen.getByRole('button', { name: /^Console/ })).toHaveAttribute('aria-pressed', 'true')
-    expect(screen.getByRole('button', { name: 'Artifacts' })).toHaveAttribute(
-      'aria-pressed',
-      'false',
-    )
-    expect(screen.getByRole('button', { name: /Sources/ })).toHaveAttribute('aria-disabled', 'true')
+    expectAttribute('button', /^Console/, 'aria-pressed', 'true')
+    expectAttribute('button', 'Artifacts', 'aria-pressed', 'false')
+    expectAttribute('button', /Sources/, 'aria-disabled', 'true')
   })
 
   it('shows the side panel of a feature without leaving the page on screen', async () => {
     renderBar()
 
-    await userEvent.click(screen.getByRole('button', { name: 'Search' }))
+    await pressButton('Search')
 
     expect(useSideFeatureStore.getState().chosen).toBe('search')
-    expect(screen.getByRole('button', { name: 'Search' })).toHaveAttribute('aria-pressed', 'true')
-    expect(screen.getByRole('button', { name: /^Console/ })).toHaveAttribute(
-      'aria-pressed',
-      'false',
-    )
+    expectAttribute('button', 'Search', 'aria-pressed', 'true')
+    expectAttribute('button', /^Console/, 'aria-pressed', 'false')
   })
 
   it('hides and shows the side panel from the item of the panel on screen', async () => {
     renderBar()
 
-    await userEvent.click(screen.getByRole('button', { name: /^Console/ }))
+    await pressButton(/^Console/)
     expect(usePanelsStore.getState().panels[PanelRegion.Side].visible).toBe(false)
 
-    await userEvent.click(screen.getByRole('button', { name: 'Artifacts' }))
+    await pressButton('Artifacts')
     expect(usePanelsStore.getState().panels[PanelRegion.Side].visible).toBe(true)
     expect(useSideFeatureStore.getState().chosen).toBe('artifacts')
   })
 
-  it('reads a badge with the name of its item', () => {
+  it('reads a badge with the name of its item', async () => {
     renderBar()
 
-    expect(screen.getByRole('button', { name: 'Console, 1 review waiting' })).toBeInTheDocument()
+    await expectRole('button', 'Console, 1 review waiting')
   })
 
   it('leaves out an item that fails to render, and keeps the others', () => {

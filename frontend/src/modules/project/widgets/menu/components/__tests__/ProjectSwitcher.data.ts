@@ -1,7 +1,7 @@
-import { http, HttpResponse } from 'msw'
-
 import { projectIds } from '@/mocks/shared/db'
 import { apiEndpoints } from '@/shared/api/endpoints'
+import { HttpMethod } from '@/shared/api/http'
+import { serverErrorOn } from '@/test/msw'
 
 /** The open project, the answer about it, and what the button on the top bar says. */
 export const switcherLabelCases = [
@@ -20,8 +20,7 @@ export const switcherLabelCases = [
   {
     name: 'a project that fails to load',
     projectId: projectIds.mentor,
-    answer: () =>
-      http.get(apiEndpoints.project.pattern, () => new HttpResponse(null, { status: 500 })),
+    answer: () => serverErrorOn(HttpMethod.Get, apiEndpoints.project.pattern),
     label: 'Project unavailable',
   },
 ]

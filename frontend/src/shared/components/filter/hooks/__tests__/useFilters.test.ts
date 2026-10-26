@@ -2,7 +2,7 @@ import { act, renderHook } from '@testing-library/react'
 import { describe, expect, it } from 'vitest'
 
 import { setPathname, setQuery } from '@/test/next-stubs'
-import { routerMock } from '@/test/next-stubs/next-stubs.utils'
+import { expectReplacedWith } from '@/test/steps'
 
 import { testFields } from '../../__tests__/filter.reducer.data'
 import { useFilters } from '../useFilters'
@@ -19,7 +19,7 @@ describe('useFilters', () => {
     })
   })
 
-  it('applies values by replacing the address, keeping its other parameters', () => {
+  it('applies values by replacing the address, keeping its other parameters', async () => {
     setPathname('/projects')
     setQuery('step=abc&status=open')
     const { result } = renderHook(() => useFilters(testFields))
@@ -28,12 +28,10 @@ describe('useFilters', () => {
       result.current.apply({ status: ['closed'], period: ['1'] })
     })
 
-    expect(routerMock.replace).toHaveBeenCalledWith('/projects?step=abc&status=closed&period=1', {
-      scroll: false,
-    })
+    await expectReplacedWith('/projects?step=abc&status=closed&period=1', { scroll: false })
   })
 
-  it('clears the filters from the address', () => {
+  it('clears the filters from the address', async () => {
     setPathname('/projects')
     setQuery('status=open&period=7')
     const { result } = renderHook(() => useFilters(testFields))
@@ -42,6 +40,6 @@ describe('useFilters', () => {
       result.current.clear()
     })
 
-    expect(routerMock.replace).toHaveBeenCalledWith('/projects', { scroll: false })
+    await expectReplacedWith('/projects', { scroll: false })
   })
 })

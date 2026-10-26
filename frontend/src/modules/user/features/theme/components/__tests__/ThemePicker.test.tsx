@@ -1,9 +1,9 @@
 import { screen } from '@testing-library/react'
-import userEvent from '@testing-library/user-event'
 import { ThemeProvider } from 'next-themes'
 import { describe, expect, it } from 'vitest'
 
 import { renderWithProviders } from '@/test/render'
+import { pressButton } from '@/test/steps'
 
 import { ThemePicker } from '../ThemePicker'
 
@@ -16,7 +16,7 @@ describe('ThemePicker', () => {
     )
 
     expect(await screen.findByRole('button', { name: 'System', pressed: true })).toBeVisible()
-    await userEvent.click(screen.getByRole('button', { name: 'Dark' }))
+    await pressButton('Dark')
 
     expect(screen.getByRole('button', { name: 'Dark', pressed: true })).toBeVisible()
     expect(screen.getByRole('button', { name: 'System', pressed: false })).toBeVisible()

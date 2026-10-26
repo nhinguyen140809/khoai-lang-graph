@@ -1,8 +1,8 @@
 import { render, screen } from '@testing-library/react'
-import userEvent from '@testing-library/user-event'
 import { describe, expect, it, vi } from 'vitest'
 
 import { Broken } from '@/test/render'
+import { expectNoText, expectRole, expectText, pressButton } from '@/test/steps'
 
 import { useStatusBarItem } from '../../hooks/useStatusBarItem'
 import { type StatusBarItem, StatusBarSide } from '../../status-bar.types'
@@ -15,7 +15,7 @@ function Reports({ item }: { item: StatusBarItem }) {
 }
 
 describe('StatusBar', () => {
-  it('leaves out an item that fails to render, and keeps the others', () => {
+  it('leaves out an item that fails to render, and keeps the others', async () => {
     // React reports the error that the boundary catches.
     vi.spyOn(console, 'error').mockImplementation(() => undefined)
 
@@ -27,8 +27,8 @@ describe('StatusBar', () => {
       </>,
     )
 
-    expect(screen.getByText('Run 1: running')).toBeInTheDocument()
-    expect(screen.getByRole('button', { name: 'Notifications' })).toBeInTheDocument()
+    await expectText('Run 1: running')
+    await expectRole('button', 'Notifications')
   })
 
   it('shows the items registered, each on its side and in its order', () => {
@@ -63,13 +63,13 @@ describe('StatusBar', () => {
 
     rerender(<StatusBar />)
 
-    expect(screen.queryByText('Run 1: running')).not.toBeInTheDocument()
+    expectNoText('Run 1: running')
   })
 
   it('shows the notifications when nothing is reported', async () => {
     render(<StatusBar />)
 
-    await userEvent.click(screen.getByRole('button', { name: 'Notifications' }))
-    expect(await screen.findByText('Nothing new.')).toBeInTheDocument()
+    await pressButton('Notifications')
+    await expectText('Nothing new.')
   })
 })
