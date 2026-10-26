@@ -1,11 +1,11 @@
 import { HttpResponse } from 'msw'
 
-import { ApiErrorCode, HttpStatus } from '@/shared/api/error/api-error.types'
-import type { FieldProblem } from '@/shared/api/error/api-error.utils'
+import { ApiErrorCode, type FieldProblem } from '@/shared/api/error'
+import { HttpHeader, HttpStatus, MediaType } from '@/shared/api/http'
 
 /** An error response in the Problem Details format of the API. */
 export function errorResponse(
-  status: number,
+  status: HttpStatus,
   code: string,
   title: string,
   detail: string | null = null,
@@ -13,7 +13,7 @@ export function errorResponse(
 ) {
   return HttpResponse.json(
     { type: 'about:blank', title, status, code, detail, errors },
-    { status, headers: { 'Content-Type': 'application/problem+json' } },
+    { status, headers: { [HttpHeader.ContentType]: MediaType.ProblemJson } },
   )
 }
 

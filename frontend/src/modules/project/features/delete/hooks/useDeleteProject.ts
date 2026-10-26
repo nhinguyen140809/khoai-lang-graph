@@ -2,7 +2,7 @@ import { useMutation, useQueryClient } from '@tanstack/react-query'
 import { toast } from 'sonner'
 
 import { deleteProject, type Project, projectKeys, projectName } from '@/modules/project/entities'
-import { errorMessageOf } from '@/shared/api/error/api-error.utils'
+import { errorMessageOf } from '@/shared/api/error'
 
 import { deleteProjectMessages } from '../delete-project.constants'
 

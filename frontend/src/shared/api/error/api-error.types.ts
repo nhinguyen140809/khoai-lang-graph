@@ -1,20 +1,19 @@
+import type { HttpStatus } from '../http'
+
 // The errors of the API: the status of the answer and its `code`, the stable value to branch on.
 // Several codes share a status, such as the three conflicts of 409.
 
-/** The statuses of the answers of the API that carry an error. */
-export const HttpStatus = {
-  BadRequest: 400,
-  Unauthorized: 401,
-  Forbidden: 403,
-  NotFound: 404,
-  Conflict: 409,
-  UnprocessableContent: 422,
-  TooManyRequests: 429,
-  InternalServerError: 500,
-  BadGateway: 502,
-} as const
-
-export type HttpStatus = (typeof HttpStatus)[keyof typeof HttpStatus]
+/** The statuses that the API answers an error with. */
+export type ApiErrorStatus = (typeof HttpStatus)[
+  | 'BadRequest'
+  | 'Unauthorized'
+  | 'Forbidden'
+  | 'NotFound'
+  | 'Conflict'
+  | 'UnprocessableContent'
+  | 'TooManyRequests'
+  | 'InternalServerError'
+  | 'BadGateway']
 
 /** The `code` of an error of the API. */
 export const ApiErrorCode = {
@@ -34,3 +33,13 @@ export const ApiErrorCode = {
 } as const
 
 export type ApiErrorCode = (typeof ApiErrorCode)[keyof typeof ApiErrorCode]
+export interface FieldProblem {
+  field: string
+  message: string
+}
+
+/** The words for a failed request, by the `code` or the status of its answer. */
+export interface ApiErrorMessages {
+  code?: Partial<Record<ApiErrorCode, string>>
+  status?: Partial<Record<ApiErrorStatus, string>>
+}

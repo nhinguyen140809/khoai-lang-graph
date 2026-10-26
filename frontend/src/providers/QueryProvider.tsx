@@ -3,7 +3,7 @@
 import { QueryClientProvider } from '@tanstack/react-query'
 import { type ReactNode, useState } from 'react'
 
-import { createQueryClient } from '@/shared/api/query-client/query-client.config'
+import { createQueryClient } from '@/shared/api/query-client'
 import { redirectToLogin } from '@/shared/routes'
 
 interface QueryProviderProps {

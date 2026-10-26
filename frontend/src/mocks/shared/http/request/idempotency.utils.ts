@@ -1,7 +1,7 @@
 import { HttpResponse, type HttpResponseResolver } from 'msw'
 
-import { ApiErrorCode, HttpStatus } from '@/shared/api/error/api-error.types'
-import { idempotencyKeyHeader } from '@/shared/api/idempotency.constants'
+import { ApiErrorCode } from '@/shared/api/error'
+import { HttpHeader, HttpStatus } from '@/shared/api/http'
 
 import { mockState } from '../../db/mock-state.utils'
 import { errorResponse } from '../response/error-response.utils'
@@ -30,7 +30,7 @@ function keyConflict() {
 function repeatOf({ status, contentType, text }: StoredAnswer) {
   return new HttpResponse(text, {
     status,
-    headers: contentType === null ? {} : { 'Content-Type': contentType },
+    headers: contentType === null ? {} : { [HttpHeader.ContentType]: contentType },
   })
 }
 
@@ -40,7 +40,7 @@ async function keep(storedAt: string, requestBody: string, response: Response) {
     [storedAt]: {
       requestBody,
       status: response.status,
-      contentType: response.headers.get('Content-Type'),
+      contentType: response.headers.get(HttpHeader.ContentType),
       text: await response.clone().text(),
     },
   })
@@ -53,16 +53,16 @@ async function keep(storedAt: string, requestBody: string, response: Response) {
  * are not kept.
  */
 export function idempotent(resolver: HttpResponseResolver): HttpResponseResolver {
-  return async (info) => {
-    const key = info.request.headers.get(idempotencyKeyHeader)
-    if (key === null) return resolver(info)
-    const requestBody = await info.request.clone().text()
-    const storedAt = `${new URL(info.request.url).pathname} ${key}`
+  return async (requestInfo) => {
+    const key = requestInfo.request.headers.get(HttpHeader.IdempotencyKey)
+    if (key === null) return resolver(requestInfo)
+    const requestBody = await requestInfo.request.clone().text()
+    const storedAt = `${new URL(requestInfo.request.url).pathname} ${key}`
     const stored = answers.get()[storedAt]
     if (stored !== undefined) {
       return stored.requestBody === requestBody ? repeatOf(stored) : keyConflict()
     }
-    const response = await resolver(info)
+    const response = await resolver(requestInfo)
     if (response instanceof Response && response.ok) await keep(storedAt, requestBody, response)
     return response
   }

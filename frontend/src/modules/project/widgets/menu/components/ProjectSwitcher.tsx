@@ -21,7 +21,7 @@ import {
   renameProjectMessages,
   useOpenRenameProjectDialog,
 } from '@/modules/project/features/rename'
-import { isNotFoundError } from '@/shared/api/error/api-error.utils'
+import { isNotFoundError } from '@/shared/api/error'
 import { Button } from '@/shared/components/ui/button'
 import {
   DropdownMenu,

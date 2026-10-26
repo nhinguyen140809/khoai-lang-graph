@@ -1,11 +1,7 @@
 import { subDays } from 'date-fns'
 
-import {
-  apiCommand,
-  apiRequest,
-  fetchPage,
-  type ListPage,
-} from '@/shared/api/request/api-request.utils'
+import { HttpMethod } from '@/shared/api/http'
+import { apiCommand, apiRequest, fetchPage, type ListPage } from '@/shared/api/request'
 
 import { noProjectFilters } from './projects.constants'
 import {
@@ -55,7 +51,7 @@ export function getProject(projectId: string): Promise<Project> {
 export function createProject(body: CreateProjectBody): Promise<Project> {
   return apiRequest('/api/v1/projects', projectSchema, {
     action: 'create the project',
-    method: 'POST',
+    method: HttpMethod.Post,
     body,
   })
 }
@@ -68,7 +64,7 @@ function changeProjectStatus(
 ): Promise<Project> {
   return apiRequest(`/api/v1/projects/${encodeURIComponent(projectId)}`, projectSchema, {
     action,
-    method: 'PATCH',
+    method: HttpMethod.Patch,
     body: { status },
   })
 }
@@ -87,7 +83,7 @@ export function restoreProject(projectId: string): Promise<Project> {
 export function renameProject(projectId: string, name: string): Promise<Project> {
   return apiRequest(`/api/v1/projects/${encodeURIComponent(projectId)}`, projectSchema, {
     action: 'rename the project',
-    method: 'PATCH',
+    method: HttpMethod.Patch,
     body: { name },
   })
 }
@@ -96,6 +92,6 @@ export function renameProject(projectId: string, name: string): Promise<Project>
 export function deleteProject(projectId: string): Promise<void> {
   return apiCommand(`/api/v1/projects/${encodeURIComponent(projectId)}`, {
     action: 'delete the project',
-    method: 'DELETE',
+    method: HttpMethod.Delete,
   })
 }

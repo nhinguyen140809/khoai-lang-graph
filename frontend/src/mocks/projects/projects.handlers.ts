@@ -2,7 +2,7 @@ import { http, HttpResponse } from 'msw'
 
 import type { Project } from '@/modules/project/entities'
 import { isUnfinishedRunStatus, type Run } from '@/modules/run/entities'
-import type { FieldProblem } from '@/shared/api/error/api-error.utils'
+import type { FieldProblem } from '@/shared/api/error'
 import { outputLanguages } from '@/shared/config/output-language'
 
 import { generatedProjects, manyProjects } from '../generated/fixtures/generated-projects.fixtures'

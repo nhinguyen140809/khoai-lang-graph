@@ -1,7 +1,8 @@
 import { MutationCache, QueryCache, QueryClient } from '@tanstack/react-query'
 
-import { HttpStatus } from '../error/api-error.types'
-import { ApiError } from '../error/api-error.utils'
+import { ApiError } from '@/shared/api/error'
+import { HttpStatus } from '@/shared/api/http'
+
 import { canRetryOnce } from './query-retry.utils'
 
 /**

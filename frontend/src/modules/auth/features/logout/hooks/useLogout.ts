@@ -2,8 +2,8 @@ import { useMutation } from '@tanstack/react-query'
 import { toast } from 'sonner'
 
 import { logout } from '@/modules/auth/entities'
-import { HttpStatus } from '@/shared/api/error/api-error.types'
-import { ApiError, errorMessageOf } from '@/shared/api/error/api-error.utils'
+import { ApiError, errorMessageOf } from '@/shared/api/error'
+import { HttpStatus } from '@/shared/api/http'
 import { reloadTo } from '@/shared/lib/url'
 import { routes } from '@/shared/routes'
 

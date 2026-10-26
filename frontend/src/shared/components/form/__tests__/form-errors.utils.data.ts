@@ -1,8 +1,14 @@
-import { ApiError } from '@/shared/api/error/api-error.utils'
+import { ApiError } from '@/shared/api/error'
+import { HttpStatus } from '@/shared/api/http'
 
 /** An API error with the field problems given, as a form gets it. */
 export const failed = (fieldErrors: ApiError['fieldErrors']) =>
-  new ApiError('Failed to save (HTTP 422)', 422, 'validation_failed', fieldErrors)
+  new ApiError(
+    'Failed to save (HTTP 422)',
+    HttpStatus.UnprocessableContent,
+    'validation_failed',
+    fieldErrors,
+  )
 
 /** The field of a problem, and whether it is a path of the form, through objects and records. */
 export const fieldPathCases = [

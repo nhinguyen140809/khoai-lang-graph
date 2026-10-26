@@ -1,4 +1,4 @@
-import { apiRequest } from '@/shared/api/request/api-request.utils'
+import { apiRequest } from '@/shared/api/request'
 
 import { type Me, meSchema } from './user.types'
 

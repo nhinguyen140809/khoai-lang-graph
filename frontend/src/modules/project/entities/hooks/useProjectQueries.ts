@@ -7,7 +7,8 @@ import {
   useQueryClient,
 } from '@tanstack/react-query'
 
-import type { ListPage } from '@/shared/api/request/api-request.utils'
+import { cursorPagesOptions } from '@/shared/api/query-client'
+import { type ListPage } from '@/shared/api/request'
 
 import { getProject, listProjects } from '../projects.api'
 import { projectKeys } from '../projects.keys'
@@ -58,8 +59,7 @@ export function useProjectList(status: ProjectStatus, filters: ProjectFilters) {
   return useInfiniteQuery({
     queryKey: projectKeys.list(status, filters),
     queryFn: ({ pageParam }) => listProjects(status, pageParam, PAGE_SIZE, filters),
-    initialPageParam: null as string | null,
-    getNextPageParam: (page) => page.next_cursor,
+    ...cursorPagesOptions,
   })
 }
 

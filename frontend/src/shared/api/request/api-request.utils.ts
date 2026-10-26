@@ -1,13 +1,13 @@
 import { z } from 'zod'
 
-import { type ApiError, toApiError } from '../error/api-error.utils'
-import { idempotencyKeyHeader } from '../idempotency.constants'
+import { type ApiError, toApiError } from '../error'
+import { HttpHeader, HttpMethod, MediaType } from '../http'
 import { apiUrl } from './api-url.utils'
 
 interface ApiRequestOptions {
   /** What the request does, for the error message: "load projects" gives "Failed to load projects". */
   action: string
-  method?: 'GET' | 'POST' | 'PATCH' | 'PUT' | 'DELETE'
+  method?: HttpMethod
   body?: unknown
   headers?: Record<string, string>
   /** For a request that starts work: a repeat with the same key does not do the work again. */
@@ -28,11 +28,11 @@ async function readError(response: Response, action: string): Promise<ApiError> 
 // Sends one request; an error status becomes an ApiError.
 async function send(
   path: string,
-  { action, method = 'GET', body, headers = {}, idempotencyKey }: ApiRequestOptions,
+  { action, method = HttpMethod.Get, body, headers = {}, idempotencyKey }: ApiRequestOptions,
 ): Promise<Response> {
   const requestHeaders: Record<string, string> =
-    body === undefined ? { ...headers } : { 'Content-Type': 'application/json', ...headers }
-  if (idempotencyKey !== undefined) requestHeaders[idempotencyKeyHeader] = idempotencyKey
+    body === undefined ? { ...headers } : { [HttpHeader.ContentType]: MediaType.Json, ...headers }
+  if (idempotencyKey !== undefined) requestHeaders[HttpHeader.IdempotencyKey] = idempotencyKey
   const init: RequestInit = { method, headers: requestHeaders }
   if (body !== undefined) init.body = JSON.stringify(body)
   const response = await fetch(apiUrl(path), init)
@@ -52,37 +52,5 @@ export async function apiRequest<T>(
 
 /** Sends a request whose answer has no body to read, such as `204 No Content`. */
 export async function apiCommand(path: string, options: ApiRequestOptions): Promise<void> {
-  await send(path, { method: 'POST', ...options })
-}
-
-/** The envelope of every list endpoint: one page of items and the cursor of the next page. */
-export function listPageSchema<T>(itemSchema: z.ZodType<T>) {
-  return z.object({ items: z.array(itemSchema), next_cursor: z.string().nullable() })
-}
-
-export interface ListPage<T> {
-  items: T[]
-  next_cursor: string | null
-}
-
-interface PageOptions {
-  /** How many items the page holds at most. */
-  limit: number
-  /** The `next_cursor` of the page before; null for the first page. */
-  cursor: string | null
-  /** What the request does, for the message of its error, such as "load projects". */
-  action: string
-}
-
-/** Reads one page of a list endpoint; the query of `path` is kept. */
-export function fetchPage<T>(
-  path: string,
-  itemSchema: z.ZodType<T>,
-  { limit, cursor, action }: PageOptions,
-): Promise<ListPage<T>> {
-  // Any origin works here: only the path and the query string are kept.
-  const url = new URL(path, 'http://localhost')
-  url.searchParams.set('limit', String(limit))
-  if (cursor !== null) url.searchParams.set('cursor', cursor)
-  return apiRequest(`${url.pathname}${url.search}`, listPageSchema(itemSchema), { action })
+  await send(path, { method: HttpMethod.Post, ...options })
 }

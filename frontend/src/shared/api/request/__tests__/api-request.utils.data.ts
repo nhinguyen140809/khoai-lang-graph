@@ -101,20 +101,3 @@ export const commandMethodCases: { name: string; options: Options; method: strin
   },
 ]
 
-/** A path, the page asked for, and the query that the request sends. */
-export const pageCases = [
-  {
-    name: 'the first page, keeping the query of the path',
-    path: '/api/v1/things?status=active',
-    limit: 50,
-    cursor: null,
-    query: '?status=active&limit=50',
-  },
-  {
-    name: 'the page after a cursor',
-    path: '/api/v1/things',
-    limit: 10,
-    cursor: '10',
-    query: '?limit=10&cursor=10',
-  },
-]

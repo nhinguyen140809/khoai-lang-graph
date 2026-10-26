@@ -8,7 +8,7 @@ import {
   projectName,
   restoreProject,
 } from '@/modules/project/entities'
-import { errorMessageOf } from '@/shared/api/error/api-error.utils'
+import { errorMessageOf } from '@/shared/api/error'
 import { actionToastDuration } from '@/shared/lib/timing'
 
 import { archiveProjectMessages } from '../archive-project.constants'

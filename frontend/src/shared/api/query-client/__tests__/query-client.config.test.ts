@@ -1,52 +1,42 @@
-import { beforeEach, describe, expect, it, vi } from 'vitest'
+import { describe, expect, it, vi } from 'vitest'
 
-import type * as authRedirect from '../../../lib/url/reload.utils'
 import { createQueryClient } from '../query-client.config'
 import { canRetryOnce } from '../query-retry.utils'
 import { keptPageCases, unauthorizedError } from './query-client.config.data'
 
-const { redirectToLogin } = vi.hoisted(() => ({ redirectToLogin: vi.fn() }))
-
-vi.mock('../../../lib/url/reload.utils', async (importOriginal) => ({
-  ...(await importOriginal<typeof authRedirect>()),
-  redirectToLogin,
-}))
+const onUnauthorized = vi.fn()
 
 function failQuery(error: Error) {
-  return createQueryClient()
+  return createQueryClient(onUnauthorized)
     .query({ queryKey: ['x'], queryFn: () => Promise.reject(error), retry: false })
     .catch(() => undefined)
 }
 
-beforeEach(() => {
-  redirectToLogin.mockClear()
-})
-
 describe('createQueryClient', () => {
-  it('opens the login page when a query answers 401', async () => {
+  it('asks the caller to handle it when a query answers 401', async () => {
     await failQuery(unauthorizedError)
 
-    expect(redirectToLogin).toHaveBeenCalledTimes(1)
+    expect(onUnauthorized).toHaveBeenCalledTimes(1)
   })
 
-  it('opens the login page when a mutation answers 401', async () => {
-    const client = createQueryClient()
+  it('asks the caller to handle it when a mutation answers 401', async () => {
+    const client = createQueryClient(onUnauthorized)
     const mutation = client
       .getMutationCache()
       .build(client, { mutationFn: () => Promise.reject(unauthorizedError) })
 
     await mutation.execute(undefined).catch(() => undefined)
 
-    expect(redirectToLogin).toHaveBeenCalledTimes(1)
+    expect(onUnauthorized).toHaveBeenCalledTimes(1)
   })
 
-  it.each(keptPageCases)('stays on the page for $name', async ({ error }) => {
+  it.each(keptPageCases)('leaves the caller alone for $name', async ({ error }) => {
     await failQuery(error)
 
-    expect(redirectToLogin).not.toHaveBeenCalled()
+    expect(onUnauthorized).not.toHaveBeenCalled()
   })
 
   it('tries a failed query once more only when it may answer otherwise', () => {
-    expect(createQueryClient().getDefaultOptions().queries?.retry).toBe(canRetryOnce)
+    expect(createQueryClient(onUnauthorized).getDefaultOptions().queries?.retry).toBe(canRetryOnce)
   })
 })

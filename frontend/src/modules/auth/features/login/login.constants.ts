@@ -1,5 +1,5 @@
-import { ApiErrorCode, HttpStatus } from '@/shared/api/error/api-error.types'
-import type { ErrorMessages } from '@/shared/api/error/api-error.utils'
+import { ApiErrorCode, type ApiErrorMessages } from '@/shared/api/error'
+import { HttpStatus } from '@/shared/api/http'
 
 // The words that the login page shows for the answers of the API.
 
@@ -8,5 +8,5 @@ export const loginMessages = {
   failed: {
     code: { [ApiErrorCode.RateLimited]: 'Too many attempts. Wait a moment, then try again.' },
     status: { [HttpStatus.Unauthorized]: 'The email or the password is wrong.' },
-  } satisfies ErrorMessages,
+  } satisfies ApiErrorMessages,
 }

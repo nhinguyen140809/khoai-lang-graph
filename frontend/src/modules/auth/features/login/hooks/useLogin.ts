@@ -1,7 +1,7 @@
 import { useMutation } from '@tanstack/react-query'
 
 import { login, useRedirectAfterLogin } from '@/modules/auth/entities'
-import { errorMessageOf } from '@/shared/api/error/api-error.utils'
+import { errorMessageOf } from '@/shared/api/error'
 
 import { loginMessages } from '../login.constants'
 

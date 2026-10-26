@@ -1,7 +1,7 @@
 import type { FieldPath, FieldValues, UseFormSetError } from 'react-hook-form'
 import { z } from 'zod'
 
-import { ApiError, type FieldProblem } from '@/shared/api/error/api-error.utils'
+import { ApiError, type FieldProblem } from '@/shared/api/error'
 
 // A form names its fields after the fields of its request, so that a problem of a field that the
 // API answers, such as `run_config.max_steps`, is the path of a field of the form.
