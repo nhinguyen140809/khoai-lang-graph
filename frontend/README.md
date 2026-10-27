@@ -390,6 +390,7 @@ src/mocks/
 ├── generated/            # projects made from specs, with their threads, runs and steps
 ├── messages/             # messages
 ├── artifacts/            # artifacts and items
+├── exports/              # the exports of a project
 ├── threads/              # threads
 ├── workflow/             # the workflow definition, and the artifact kinds built from it, with the content schemas in data/
 └── runs/                 # runs, the stream
@@ -438,6 +439,7 @@ The same handlers serve `pnpm dev:mock`, the unit tests, and the E2E tests, so a
 | `artifact-kinds` | `GET /artifact-kinds`, `GET /content-schemas/{kind}/{schema_version}`, built from the content schemas and the workflow definition                                                                                                                                           |
 | `artifacts`      | `GET /projects/{project_id}/artifacts`, `GET`, `PATCH /artifacts/{artifact_id}`, `GET /artifacts/{artifact_id}/revisions`, `POST /artifacts/{artifact_id}/restore`                                                                                                          |
 | `items`          | `GET`, `POST /artifacts/{artifact_id}/items`, `POST /artifacts/{artifact_id}/items/reorder`, `GET /projects/{project_id}/items`, `GET`, `PATCH`, `DELETE /items/{item_id}`, `GET /items/{item_id}/revisions`, `POST /items/{item_id}/restore`, `POST /items/{item_id}/move` |
+| `exports`        | `POST`, `GET /projects/{project_id}/exports`, `GET /exports/{export_id}`, `GET /exports/{export_id}/file`                                                                                                                                                                   |
 | `threads`        | `GET /threads`, `GET /projects/{project_id}/threads`, `POST /projects/{project_id}/threads`, `GET /threads/{thread_id}`                                                                                                                                                     |
 | `messages`       | `POST /threads/{thread_id}/messages`: a message to a thread without an unfinished run starts a run, and the first one of a project without a name names it                                                                                                                  |
 | `runs`           | `GET /threads/{thread_id}/runs`, `GET /runs/{run_id}`, `GET /runs/{run_id}/steps`, `POST /runs/{run_id}/cancel`, and `POST /threads/{thread_id}/runs` of the chat                                                                                                           |

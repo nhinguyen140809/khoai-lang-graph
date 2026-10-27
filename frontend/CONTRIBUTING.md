@@ -188,7 +188,7 @@ What to check on the diff before it is reviewed, and what a reviewer checks agai
 
 | Need | Use |
 |---|---|
-| An id, a time or a stored record in a mock | `mockId`, `createdId`, `mockNow`, `mockState` of `@/mocks/shared/db` |
+| An id, a time or a stored record in a mock | `mockId`, `createdId`, `mockNow`, `msSince`, `mockState` of `@/mocks/shared/db` |
 | A page of a list, an answer by its status, an error answer | `paginate`, `emptyPage`, `created`, `accepted`, `noContent`, `emptyResponse(HttpStatus.Conflict)`, `notFound`, `validationFailed`, `errorResponse` of `@/mocks/shared/http/response`; the other answers are `HttpResponse.json(...)` of MSW |
 | A field of a request body | `readBodyFields`, and the readers `optionalText`, `requiredText`, `positiveInteger`, `choice`, `jsonObject`, `jsonBoolean` of `@/mocks/shared/http/validation`, each with its `...Problem` |
 | A request that must not do its work twice | `idempotent` of `@/mocks/shared/http/request` |
