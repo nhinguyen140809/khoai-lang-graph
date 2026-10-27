@@ -25,6 +25,10 @@ export const apiEndpoints = {
   runSteps: apiEndpoint('/runs/:runId/steps'),
   runCancel: apiEndpoint('/runs/:runId/cancel'),
   runStream: apiEndpoint('/runs/:runId/stream'),
+
+  workflowDefinition: apiEndpoint('/workflow/definition'),
+  artifactKinds: apiEndpoint('/artifact-kinds'),
+  contentSchema: apiEndpoint('/content-schemas/:kind/:version'),
 }
 
 /** The paths that answer without a session; every other path of the API needs a logged-in user. */

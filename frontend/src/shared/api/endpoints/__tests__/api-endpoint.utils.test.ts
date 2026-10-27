@@ -1,6 +1,5 @@
 import { describe, expect, it } from 'vitest'
 
-import { apiEndpoint } from '../api-endpoint.utils'
 import { apiEndpoints, publicApiPaths } from '../api-endpoints.constants'
 
 describe('apiEndpoints', () => {
@@ -15,8 +14,8 @@ describe('apiEndpoints', () => {
   })
 
   it('give the path of an endpoint with several params', () => {
-    expect(apiEndpoint('/things/:kind/:version').path({ kind: 'persona', version: 2 })).toBe(
-      '/api/v1/things/persona/2',
+    expect(apiEndpoints.contentSchema.path({ kind: 'persona', version: 2 })).toBe(
+      '/api/v1/content-schemas/persona/2',
     )
   })
 
