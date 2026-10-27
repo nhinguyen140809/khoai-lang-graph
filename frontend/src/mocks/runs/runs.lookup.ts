@@ -1,7 +1,7 @@
 import type { Run, RunStep } from '@/modules/run/entities'
 
 import { generatedRuns, generatedRunSteps } from '../generated/fixtures/generated-projects.fixtures'
-import { mockRunState, mockScenario } from '../shared/scenario/mock-scenario.utils'
+import { mockRunState, mockScenario } from '../shared/scenario'
 import { runFixtures, runStepFixtures } from './runs.fixtures'
 import { createdRuns, runEdits } from './runs.store'
 

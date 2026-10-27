@@ -21,6 +21,13 @@ export const queryStringCases = [
     query: '?a=1&c=3',
   },
   { name: 'no parameter at all', params: {}, query: '' },
+  {
+    name: 'a list, once for each entry',
+    params: { status: ['running', 'failed'], page: 2 },
+    query: '?status=running&status=failed&page=2',
+  },
+  { name: 'a list of one entry', params: { status: ['running'] }, query: '?status=running' },
+  { name: 'an empty list', params: { status: [] }, query: '' },
 ] as const
 
 /** Cases that check the query that `queryStringOf` writes in an address. */

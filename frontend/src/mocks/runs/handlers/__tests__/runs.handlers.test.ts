@@ -7,7 +7,7 @@ import type { ListPage } from '@/shared/api/request'
 import type { ApiAnswer } from '@/test/msw'
 import { fetchApi, openPage } from '@/test/msw'
 
-import { runIds } from '../../../shared/db/mock-ids.constants'
+import { runIds } from '../../../shared/db'
 import { mockRunId } from '../runs.handlers'
 import {
   runErrorCases,

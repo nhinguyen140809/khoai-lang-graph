@@ -1,4 +1,4 @@
-import { notFound } from '../shared/http/response/error-response.utils'
+import { notFound } from '../shared/http/response'
 
 /** The answer to a request for a user the mock server does not hold. */
 export function userNotFound() {

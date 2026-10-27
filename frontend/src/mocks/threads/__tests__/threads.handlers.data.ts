@@ -1,7 +1,7 @@
 import { apiEndpoints } from '@/shared/api/endpoints'
 import { HttpStatus } from '@/shared/api/http'
 
-import { projectIds, runIds, threadIds } from '../../shared/db/mock-ids.constants'
+import { projectIds, runIds, threadIds } from '../../shared/db'
 
 /** A request for a list of threads in the scenario of the page address: the ids it lists. */
 export const threadListCases = [

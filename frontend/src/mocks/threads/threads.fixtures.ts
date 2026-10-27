@@ -1,7 +1,7 @@
 import type { Thread } from '@/modules/thread/entities'
 
-import { projectIds, runIds, threadIds, userId } from '../shared/db/mock-ids.constants'
-import type { MockRunState } from '../shared/scenario/mock-scenario.types'
+import { projectIds, runIds, threadIds, userId } from '../shared/db'
+import type { MockRunState } from '../shared/scenario'
 
 // Mock threads. Every project has one thread; the thread of the mentor platform holds the run of
 // the API examples, so its stage and its unfinished run follow the `mock-run-state` scenario.

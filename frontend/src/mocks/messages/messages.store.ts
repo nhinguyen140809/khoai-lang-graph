@@ -1,4 +1,4 @@
-import { mockState } from '../shared/db/mock-state.utils'
+import { mockState } from '../shared/db'
 
 /**
  * A message as POST /threads/{thread_id}/messages answers it, since the threads feature has no type

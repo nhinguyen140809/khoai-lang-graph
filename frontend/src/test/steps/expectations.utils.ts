@@ -1,6 +1,9 @@
 import { screen } from '@testing-library/react'
 import { expect, type Mock, vi } from 'vitest'
 
+import { isString } from '@/shared/lib/guards'
+import { sleep } from '@/shared/lib/timing'
+
 type Role = Parameters<typeof screen.findByRole>[0]
 type Text = string | RegExp
 /** Where a control is looked for: the screen, or a part of it given by `within`. */
@@ -80,7 +83,7 @@ export function expectFieldValue(name: Text, value: string | number, scope: Scop
 }
 
 function fieldOf(field: string | HTMLElement) {
-  return typeof field === 'string' ? screen.getByLabelText(field) : field
+  return isString(field) ? screen.getByLabelText(field) : field
 }
 
 /** Checks that a field, given by its label or itself, is marked invalid. */
@@ -100,7 +103,7 @@ export async function expectStillPending(call: Promise<unknown>, waitMs = 100) {
       () => 'answered',
       () => 'answered',
     ),
-    new Promise((resolve) => setTimeout(resolve, waitMs, 'pending')),
+    sleep(waitMs).then(() => 'pending'),
   ])
   expect(first).toBe('pending')
 }

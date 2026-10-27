@@ -4,7 +4,7 @@ import type { Thread } from '@/modules/thread/entities'
 
 import { generatedThreads } from '../generated/fixtures/generated-projects.fixtures'
 import { allRuns } from '../runs/runs.lookup'
-import { mockRunState, mockScenario } from '../shared/scenario/mock-scenario.utils'
+import { mockRunState, mockScenario } from '../shared/scenario'
 import { threadFixtures, threadsBeforeAnyRun } from './threads.fixtures'
 import { createdThreads } from './threads.store'
 

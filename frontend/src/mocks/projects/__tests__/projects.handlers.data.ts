@@ -5,8 +5,7 @@ import type { RejectedRequestCase } from '@/test/suites'
 
 import { generatedProjectSpecs } from '../../generated/fixtures/generated-project-specs.fixtures'
 import { manyProjectCount } from '../../generated/generated.constants'
-import { IdPrefix, projectIds } from '../../shared/db/mock-ids.constants'
-import { mockId } from '../../shared/db/mock-ids.utils'
+import { IdPrefix, mockId, projectIds } from '../../shared/db'
 import { projectFixtures } from '../projects.fixtures'
 
 const projectCount = projectFixtures.length + generatedProjectSpecs.length

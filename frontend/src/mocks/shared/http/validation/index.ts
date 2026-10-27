@@ -1,7 +1,7 @@
 export {
   choice,
   choiceProblem,
-  isGivenWrong,
+  isSentButInvalid,
   jsonBoolean,
   jsonBooleanProblem,
   jsonObject,

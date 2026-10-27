@@ -9,7 +9,7 @@ import type { ApiAnswer } from '@/test/msw'
 import { fetchApi, postApi } from '@/test/msw'
 import { itRejectsRequests } from '@/test/suites'
 
-import { runIds, threadIds } from '../../shared/db/mock-ids.constants'
+import { runIds, threadIds } from '../../shared/db'
 import { nameFromMessage } from '../messages.handlers'
 import type { SentMessage } from '../messages.store'
 import {

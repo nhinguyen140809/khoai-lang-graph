@@ -3,12 +3,11 @@ import { http } from 'msw'
 import type { Me } from '@/modules/user/entities'
 import { apiBasePath, apiEndpoints, publicApiPaths } from '@/shared/api/endpoints'
 
-import { mockNow } from '../shared/db/mock-clock.utils'
-import { readBodyFields } from '../shared/http/request/request-body.utils'
-import { unauthenticated, validationFailed } from '../shared/http/response/error-response.utils'
-import { created, noContent } from '../shared/http/response/status-response.utils'
-import { requiredText, requiredTextProblem } from '../shared/http/validation/field-values.utils'
-import { mockScenario, pendingForever } from '../shared/scenario/mock-scenario.utils'
+import { mockNow } from '../shared/db'
+import { pathnameOf, readBodyFields } from '../shared/http/request'
+import { created, noContent, unauthenticated, validationFailed } from '../shared/http/response'
+import { requiredText, requiredTextProblem } from '../shared/http/validation'
+import { mockScenario, pendingForever } from '../shared/scenario'
 import { currentUser, sessionState } from './account.store'
 
 function missingFields(credentials: Record<string, unknown>, fields: string[]) {
@@ -22,7 +21,7 @@ export const authHandlers = [
   // then, so that a request with no handler of its own is still reported as unhandled.
   http.all(
     ({ request }) => {
-      const { pathname } = new URL(request.url)
+      const pathname = pathnameOf(request)
       return (
         pathname.startsWith(`${apiBasePath}/`) &&
         !publicApiPaths.includes(pathname) &&

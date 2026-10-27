@@ -3,7 +3,7 @@ import { describe, expect, it } from 'vitest'
 import {
   choice,
   choiceProblem,
-  isGivenWrong,
+  isSentButInvalid,
   jsonBoolean,
   jsonBooleanProblem,
   jsonObject,
@@ -17,7 +17,7 @@ import {
 } from '../field-values.utils'
 import {
   choiceCases,
-  isGivenWrongCases,
+  isSentButInvalidCases,
   jsonBooleanCases,
   jsonObjectCases,
   optionalTextCases,
@@ -95,8 +95,8 @@ describe('the problems of the fields', () => {
   })
 })
 
-describe('isGivenWrong', () => {
-  it.each(isGivenWrongCases)('says $name', ({ value, expected }) => {
-    expect(isGivenWrong(value, requiredText)).toBe(expected)
+describe('isSentButInvalid', () => {
+  it.each(isSentButInvalidCases)('says $name', ({ value, expected }) => {
+    expect(isSentButInvalid(value, requiredText)).toBe(expected)
   })
 })

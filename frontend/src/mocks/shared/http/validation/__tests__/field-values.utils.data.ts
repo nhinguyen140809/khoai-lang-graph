@@ -64,7 +64,7 @@ export const jsonBooleanCases = [
 ]
 
 /** A value of a field, and whether it is sent wrong when the field must hold a `requiredText`. */
-export const isGivenWrongCases = [
+export const isSentButInvalidCases = [
   { name: 'a field left out is not wrong', value: undefined, expected: false },
   { name: 'a text is not wrong', value: 'Mentors', expected: false },
   { name: 'a blank text is wrong', value: '  ', expected: true },

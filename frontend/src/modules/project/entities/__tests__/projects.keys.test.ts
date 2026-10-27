@@ -1,9 +1,11 @@
-import { describe, expect, it } from 'vitest'
+import { describe } from 'vitest'
 
-import { keyCases } from './projects.keys.data'
+import { itNestsQueryKeys, itTellsQueryKeysApart } from '@/test/suites'
+
+import { distinctCases, keyCases } from './projects.keys.data'
 
 describe('projectKeys', () => {
-  it.each(keyCases)('starts the key of $name with the key above it', ({ key, wider }) => {
-    expect(key.slice(0, wider.length)).toEqual(wider)
-  })
+  itNestsQueryKeys(keyCases)
+
+  itTellsQueryKeysApart(distinctCases)
 })

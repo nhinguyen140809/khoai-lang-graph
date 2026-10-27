@@ -2,11 +2,7 @@ import type { FieldProblem } from '@/shared/api/error'
 import { outputLanguages } from '@/shared/config/output-language'
 import { isString } from '@/shared/lib/guards'
 
-import {
-  choice,
-  optionalText,
-  optionalTextProblem,
-} from '../shared/http/validation/field-values.utils'
+import { choice, optionalText, optionalTextProblem } from '../shared/http/validation'
 import type { NewProjectRecord } from './projects.types'
 
 // What the body of the request that creates a project may hold.

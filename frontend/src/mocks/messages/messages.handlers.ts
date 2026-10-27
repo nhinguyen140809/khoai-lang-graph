@@ -9,14 +9,10 @@ import { changeProject, findProject } from '../projects/projects.lookup'
 import { buildRun, noUsage } from '../runs/runs.fixtures'
 import { allRuns, findRun } from '../runs/runs.lookup'
 import { createdRuns } from '../runs/runs.store'
-import { mockNow } from '../shared/db/mock-clock.utils'
-import { IdPrefix } from '../shared/db/mock-ids.constants'
-import { createdId } from '../shared/db/mock-ids.utils'
-import { idempotent } from '../shared/http/request/idempotency.utils'
-import { readBodyFields } from '../shared/http/request/request-body.utils'
-import { validationFailed } from '../shared/http/response/error-response.utils'
-import { created } from '../shared/http/response/status-response.utils'
-import { answerScenario } from '../shared/scenario/mock-scenario.utils'
+import { createdId, IdPrefix, mockNow } from '../shared/db'
+import { idempotent, pathParam, readBodyFields } from '../shared/http/request'
+import { created, validationFailed } from '../shared/http/response'
+import { answerScenario } from '../shared/scenario'
 import { allThreads } from '../threads/threads.lookup'
 import { threadNotFound } from '../threads/threads.problems'
 import { type SentMessage, sentMessages } from './messages.store'
@@ -65,7 +61,7 @@ export const messageHandlers = [
     apiEndpoints.threadMessages.pattern,
     idempotent(async ({ params, request }) => {
       await answerScenario('send-message')
-      const thread = allThreads().find(({ id }) => id === String(params.threadId))
+      const thread = allThreads().find(({ id }) => id === pathParam(params, 'threadId'))
       if (thread === undefined) return threadNotFound()
       const { content } = await readBodyFields(request)
       if (!isString(content) || !hasText(content)) {

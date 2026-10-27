@@ -50,7 +50,7 @@ Conventions:
   | `numbers/` | `clamp`, `decimalsOf`, `NumberLimits` | |
   | `formatters/` | How a number, a date and a length read, in the fixed locale `formatLocale`: `formatNumber`, `formatPercent`, `formatCurrency`, `formatDate`, `formatDateTime`, `formatDuration`, `formatRelativeTime`, and `initialsOf` for the initials of a name, `capitalize` | A month name or a time zone: `date-fns` |
   | `timing/` | `debounce`, `sleep`, `useNow`, `actionToastDuration` | `throttle` and `retry` when a use appears (queries retry through `canRetryOnce` of `shared/api/query-client`); a time limit on a request: `AbortSignal.timeout` |
-  | `url/` | `pathOf`, `isAtOrUnder`, `encodeId`, `reloadTo`, `queryString`, `queryStringOf` | Parsing a query: `URLSearchParams`; the addresses of pages: `routes` |
+  | `url/` | `pathOf`, `isAtOrUnder`, `encodeId`, `reloadTo`, `queryString`, `queryStringOf`, `pathWithQuery` | Parsing a query: `URLSearchParams`; the addresses of pages: `routes` |
   | `hotkey/` | Matching and writing a keyboard shortcut, and the name of the modifier key (`useModifierKeyName`) | |
   | `hydration/`, `viewport/` | `useIsHydrated` (false until the page hydrates), `useIsMobile` | |
   | `cn/` | `cn`, the class names of Tailwind (the alias `utils` of shadcn) | |
@@ -191,7 +191,8 @@ What to check on the diff before it is reviewed, and what a reviewer checks agai
 | A page of a list, an answer by its status, an error answer | `paginate`, `emptyPage`, `created`, `accepted`, `noContent`, `emptyResponse(HttpStatus.Conflict)`, `notFound`, `validationFailed`, `errorResponse` of `@/mocks/shared/http/response`; the other answers are `HttpResponse.json(...)` of MSW |
 | A field of a request body | `readBodyFields`, and the readers `optionalText`, `requiredText`, `positiveInteger`, `choice`, `jsonObject`, `jsonBoolean` of `@/mocks/shared/http/validation`, each with its `...Problem` |
 | A request that must not do its work twice | `idempotent` of `@/mocks/shared/http/request` |
-| A state of the screen chosen in the address | `answerScenario`, `addressParam` of `@/mocks/shared/scenario` |
+| A parameter of the path that a handler matched, such as `projectId` | `pathParam(params, 'projectId')` of `@/mocks/shared/http/request` |
+| A state of the screen chosen in the address | `answerScenario`, `pageUrlParam` of `@/mocks/shared/scenario` |
 | Rendering a component or a hook with its providers | `renderWithProviders`, `renderHookWithProviders` of `@/test/render` |
 | The path of an endpoint of the API, in an API function, a handler or a test | `apiEndpoints.<name>.path(...)` or `.pattern` of `@/shared/api/endpoints` |
 | A request to the mock server (a text body goes as it is, any other as JSON) | `fetchApi`, `callApi`, `getApi`, `postApi`, `putApi`, `patchApi`, `deleteApi`, `openPage` of `@/test/msw` |
@@ -199,6 +200,7 @@ What to check on the diff before it is reviewed, and what a reviewer checks agai
 | The same cases for an `*.api.ts` file: the request it sends, the `ApiError` it throws when the server refuses | `itSendsRequests`, `itThrowsApiErrors` of `@/test/suites` |
 | The router, and the path and the query of a page | `routerMock`, `setPathname`, `setQuery` of `@/test/next-stubs` |
 | A request that the test keeps unanswered, to look at the page meanwhile; a call that never answers | `holdResponse` of `@/test/msw`; `expectStillPending` of `@/test/steps` |
+| The query keys of a `*.keys.ts` file: each starts with the key above it, and keys that stand for different data differ | `itNestsQueryKeys`, `itTellsQueryKeysApart` of `@/test/suites` |
 | A mock that has to be called | `waitForCall` of `@/test/steps` |
 | A query, or several, that has to load | `waitForSuccess`, `waitForQueries` of `@/test/steps` |
 | Typing in a form, pasting, pressing a button, a menu item or another control, a key, Tab, Escape | `fillFields`, `replaceText`, `typeText`, `pasteText`, `pressButton`, `pressMenuItem`, `pressRole`, `pressKey`, `pressKeys`, `pressTab`, `pressEscape` of `@/test/steps`; a test never calls `userEvent.keyboard`, `type`, `paste` or `tab` itself (`clickHolding` clicks while a key is held), and never makes a `QueryClient` (`createTestQueryClient` of `@/test/render`, or `renderWithProviders(ui, { queryClient })` to look at the cache); both enforced by ESLint |

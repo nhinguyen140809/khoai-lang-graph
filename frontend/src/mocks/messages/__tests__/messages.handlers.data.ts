@@ -2,7 +2,7 @@ import { apiEndpoints } from '@/shared/api/endpoints'
 import { HttpStatus } from '@/shared/api/http'
 import type { RejectedRequestCase } from '@/test/suites'
 
-import { threadIds } from '../../shared/db/mock-ids.constants'
+import { threadIds } from '../../shared/db'
 
 /** The content of a first message, and the name that the mock gives its project from it. */
 export const nameFromMessageCases = [

@@ -3,8 +3,9 @@ import { HttpResponse, type HttpResponseResolver } from 'msw'
 import { ApiErrorCode } from '@/shared/api/error'
 import { HttpHeader, HttpStatus } from '@/shared/api/http'
 
-import { mockState } from '../../db/mock-state.utils'
-import { errorResponse } from '../response/error-response.utils'
+import { mockState } from '../../db'
+import { errorResponse } from '../response'
+import { pathnameOf } from './request-query.utils'
 
 interface StoredAnswer {
   /** The body of the request that the key came with. */
@@ -57,7 +58,7 @@ export function idempotent(resolver: HttpResponseResolver): HttpResponseResolver
     const key = requestInfo.request.headers.get(HttpHeader.IdempotencyKey)
     if (key === null) return resolver(requestInfo)
     const requestBody = await requestInfo.request.clone().text()
-    const storedAt = `${new URL(requestInfo.request.url).pathname} ${key}`
+    const storedAt = `${pathnameOf(requestInfo.request)} ${key}`
     const stored = answers.get()[storedAt]
     if (stored !== undefined) {
       return stored.requestBody === requestBody ? repeatOf(stored) : keyConflict()

@@ -1,3 +1,5 @@
+import { queryOf } from '../request'
+
 const DEFAULT_LIMIT = 50
 const MAX_LIMIT = 200
 
@@ -9,7 +11,7 @@ export function paginate<T>(
   items: T[],
   request: Request,
 ): { items: T[]; next_cursor: string | null } {
-  const params = new URL(request.url).searchParams
+  const params = queryOf(request)
   const limit = Math.min(Number(params.get('limit')) || DEFAULT_LIMIT, MAX_LIMIT)
   const offset = Number(params.get('cursor')) || 0
   const end = offset + limit
