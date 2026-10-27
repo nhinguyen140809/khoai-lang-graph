@@ -1,11 +1,17 @@
 import { describe, expect, it } from 'vitest'
 
-import { capitalize, initialsOf } from '../text.utils'
-import { capitalizeCases, initialsCases } from './text.utils.data'
+import { capitalize, initialsOf, snakeToSentenceCase } from '../text.utils'
+import { capitalizeCases, initialsCases, snakeToSentenceCaseCases } from './text.utils.data'
 
 describe('capitalize', () => {
   it.each(capitalizeCases)('writes $name with a capital', ({ text, capitalized }) => {
     expect(capitalize(text)).toBe(capitalized)
+  })
+})
+
+describe('snakeToSentenceCase', () => {
+  it.each(snakeToSentenceCaseCases)('turns $name into sentence case', ({ key, sentence }) => {
+    expect(snakeToSentenceCase(key)).toBe(sentence)
   })
 })
 

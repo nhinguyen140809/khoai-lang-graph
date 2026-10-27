@@ -1,0 +1,127 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "$id": "items/persona/v1",
+  "title": "Interviewee",
+  "description": "A simulated stakeholder.",
+  "x-level": "item",
+  "x-kind": "persona",
+  "x-schema-version": 1,
+  "x-key-prefix": "PER",
+  "x-ui-display": "cards",
+  "x-ui-title-field": "name",
+  "x-ui-list-fields": ["name", "stakeholder_type", "interview_status"],
+  "x-ui-field-order": [
+    "name",
+    "stakeholder_type",
+    "background",
+    "expertise",
+    "goals",
+    "interests",
+    "constraints",
+    "priorities",
+    "concerns",
+    "behavioral_tendencies",
+    "interview_status"
+  ],
+  "type": "object",
+  "additionalProperties": false,
+  "properties": {
+    "name": {
+      "title": "Name",
+      "type": "string",
+      "description": "Display name, for example \"Minh, 3rd-year CS student\".",
+      "x-ui-widget": "text"
+    },
+    "stakeholder_type": {
+      "title": "Stakeholder type",
+      "type": "string",
+      "x-value-from": "elicitation_plan.stakeholder_types",
+      "description": "One of the stakeholder types of the elicitation plan.",
+      "x-ui-widget": "select"
+    },
+    "background": {
+      "title": "Background",
+      "type": "string",
+      "description": "History, context, situation.",
+      "x-ui-widget": "textarea"
+    },
+    "expertise": {
+      "title": "Expertise",
+      "type": "string",
+      "description": "Technical and domain familiarity.",
+      "x-ui-widget": "textarea"
+    },
+    "goals": {
+      "title": "Goals",
+      "type": "array",
+      "items": {
+        "type": "string"
+      },
+      "description": "What this persona wants the system to do.",
+      "x-ui-widget": "list"
+    },
+    "interests": {
+      "title": "Interests",
+      "type": "array",
+      "items": {
+        "type": "string"
+      },
+      "description": "What they care about.",
+      "x-ui-widget": "list"
+    },
+    "constraints": {
+      "title": "Constraints",
+      "type": "array",
+      "items": {
+        "type": "string"
+      },
+      "description": "Limits they operate under.",
+      "x-ui-widget": "list"
+    },
+    "priorities": {
+      "title": "Priorities",
+      "type": "array",
+      "items": {
+        "type": "string"
+      },
+      "description": "How they rank their interests, most important first.",
+      "x-ui-widget": "list"
+    },
+    "concerns": {
+      "title": "Concerns",
+      "type": "array",
+      "items": {
+        "type": "string"
+      },
+      "description": "Risks, worries, objections.",
+      "x-ui-widget": "list"
+    },
+    "behavioral_tendencies": {
+      "title": "Behavioral tendencies",
+      "type": "string",
+      "description": "How they tend to communicate.",
+      "x-ui-widget": "textarea"
+    },
+    "interview_status": {
+      "title": "Interview status",
+      "type": "string",
+      "enum": ["not_started", "in_progress", "completed"],
+      "description": "Progress of the interview with this persona. Set by the system.",
+      "x-ui-widget": "select",
+      "readOnly": true
+    }
+  },
+  "required": [
+    "name",
+    "stakeholder_type",
+    "background",
+    "expertise",
+    "goals",
+    "interests",
+    "constraints",
+    "priorities",
+    "concerns",
+    "behavioral_tendencies",
+    "interview_status"
+  ]
+}

@@ -21,6 +21,22 @@ export const requestedVersionCases = [
   },
 ]
 
+/** The address of a read, the parameter that names the version, and the version it gives. */
+export const namedVersionCases = [
+  {
+    name: 'the parameter asked',
+    address: 'http://x.test/kinds?workflow_version=3',
+    param: 'workflow_version',
+    version: 3,
+  },
+  {
+    name: 'another parameter',
+    address: 'http://x.test/kinds?version=3',
+    param: 'workflow_version',
+    version: null,
+  },
+]
+
 /** The address of a request, and its path. */
 export const pathnameOfCases = [
   { name: 'a path with a query', address: 'http://x.test/items?kind=a', pathname: '/items' },
