@@ -390,6 +390,7 @@ src/mocks/
 ├── generated/            # projects made from specs, with their threads, runs and steps
 ├── messages/             # messages
 ├── threads/              # threads
+├── workflow/             # the workflow definition, and the artifact kinds built from it, with the content schemas in data/
 └── runs/                 # runs, the stream
 ```
 
@@ -402,7 +403,7 @@ Each folder holds a pair of files per API resource:
 
 ### Files of a mock folder
 
-The folders of `projects/` and `runs/` repeat the same files, one for each job. A new resource takes the files it needs from this list; a file that a resource does not need is left out.
+The folders of `projects/`, `workflow/` and `runs/` repeat the same files, one for each job. A new resource takes the files it needs from this list; a file that a resource does not need is left out.
 
 ```text
 src/mocks/<resource>/
@@ -429,15 +430,17 @@ A kind with two files or more takes a folder of its own, as in a slice (see File
 
 The same handlers serve `pnpm dev:mock`, the unit tests, and the E2E tests, so a fixture is written once. Example: `threads/threads.fixtures.ts` and `threads/threads.handlers.ts` back `GET /api/v1/threads` and `GET /api/v1/projects/{project_id}/threads`.
 
-| Resource     | Endpoints                                                                                                                                                         |
-| ------------ | ----------------------------------------------------------------------------------------------------------------------------------------------------------------- |
-| `projects`   | `GET /projects`, `GET /projects/{project_id}`, `POST /projects`, `PATCH /projects/{project_id}`, `DELETE /projects/{project_id}`                                  |
-| `threads`    | `GET /threads`, `GET /projects/{project_id}/threads`, `POST /projects/{project_id}/threads`, `GET /threads/{thread_id}`                                           |
-| `messages`   | `POST /threads/{thread_id}/messages`: a message to a thread without an unfinished run starts a run, and the first one of a project without a name names it        |
-| `runs`       | `GET /threads/{thread_id}/runs`, `GET /runs/{run_id}`, `GET /runs/{run_id}/steps`, `POST /runs/{run_id}/cancel`, and `POST /threads/{thread_id}/runs` of the chat |
-| `run-stream` | `GET /runs/{run_id}/stream` (browser only)                                                                                                                        |
-| `auth`       | `POST /auth/register`, `POST /auth/login`, `POST /auth/logout`, and a 401 for every other endpoint without a session                                              |
-| `me`         | `GET /me`                                                                                                                                                         |
+| Resource         | Endpoints                                                                                                                                                         |
+| ---------------- | ----------------------------------------------------------------------------------------------------------------------------------------------------------------- |
+| `projects`       | `GET /projects`, `GET /projects/{project_id}`, `POST /projects`, `PATCH /projects/{project_id}`, `DELETE /projects/{project_id}`                                  |
+| `workflow`       | `GET /workflow/definition`, with `?version=`                                                                                                                      |
+| `artifact-kinds` | `GET /artifact-kinds`, `GET /content-schemas/{kind}/{schema_version}`, built from the content schemas and the workflow definition                                 |
+| `threads`        | `GET /threads`, `GET /projects/{project_id}/threads`, `POST /projects/{project_id}/threads`, `GET /threads/{thread_id}`                                           |
+| `messages`       | `POST /threads/{thread_id}/messages`: a message to a thread without an unfinished run starts a run, and the first one of a project without a name names it        |
+| `runs`           | `GET /threads/{thread_id}/runs`, `GET /runs/{run_id}`, `GET /runs/{run_id}/steps`, `POST /runs/{run_id}/cancel`, and `POST /threads/{thread_id}/runs` of the chat |
+| `run-stream`     | `GET /runs/{run_id}/stream` (browser only)                                                                                                                        |
+| `auth`           | `POST /auth/register`, `POST /auth/login`, `POST /auth/logout`, and a 401 for every other endpoint without a session                                              |
+| `me`             | `GET /me`                                                                                                                                                         |
 
 - The ids of the mock data are in `shared/db/mock-ids.constants.ts`; each starts like the id of the same record in the API examples.
 - The mock server keeps the session, the user, the projects, threads, messages, and runs that `POST` creates, and the runs that are stopped, as state (`shared/db/mock-state.utils.ts`). The browser worker keeps them in browser storage, so they survive a reload; `?mock-reset` in the page address starts again from the fixtures. Unit tests keep them in memory, and the test setup resets them after each test.

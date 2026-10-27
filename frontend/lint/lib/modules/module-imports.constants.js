@@ -4,7 +4,7 @@
 /** @type {Record<string, string[]>} */
 export const moduleImports = {
   workflow: [],
-  artifact: [],
+  artifact: ['workflow'],
   run: ['workflow', 'artifact'],
   review: ['workflow', 'artifact', 'run'],
   thread: ['workflow', 'artifact', 'run', 'review'],
