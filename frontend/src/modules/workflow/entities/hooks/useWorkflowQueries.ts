@@ -5,7 +5,11 @@ import { getWorkflowDefinition } from '../api/workflow.api'
 import { workflowKeys } from '../keys/workflow.keys'
 import { workflowDefinitionStaleTime } from '../stale-time.constants'
 import type { WorkflowDefinition } from '../types/workflow-definition.types'
-import { reviewableCheckpoints, visibleStages, visibleStageTitle } from '../utils/workflow-definition.utils'
+import {
+  reviewableCheckpoints,
+  visibleStages,
+  visibleStageTitle,
+} from '../utils/workflow-definition.utils'
 
 // One request serves every part of a version: a hook picks its part with `select`, so that the
 // stages, the titles and the graph of a version share one entry in the cache.
