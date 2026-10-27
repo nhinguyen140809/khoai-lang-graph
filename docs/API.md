@@ -187,7 +187,8 @@ The budget is checked before every LLM call, not only when the run starts. A cli
 │   └── /{artifact_id}
 │       ├── /items
 │       ├── /revisions
-│       └── /restore
+│       ├── /restore
+│       └── /trace
 ├── /items
 │   └── /{item_id}
 │       ├── /move
@@ -751,12 +752,86 @@ Editing rule: while a run is `running`, artifacts and items are read-only for th
 
 | Method and path | Purpose | Phase |
 |---|---|---|
-| `GET /items/{item_id}/trace` | The chain of one item; `?direction=` with one of `backward`, `forward`, `both`; `?depth=` (default 5). Returns `nodes` and `links` | MVP |
+| `GET /items/{item_id}/trace` | The chain of one item; `?direction=` with one of `backward`, `forward`, `both` (default `both`); `?depth=` (default 5). Returns `items` and `links`, see [Trace body](#trace-body) | MVP |
+| `GET /artifacts/{artifact_id}/trace` | The chains of all the items of one artifact, from the interview to the backlog, in one answer; same `?direction=` and `?depth=`, with `depth` defaulting to no limit. Returns `items` and `links`, see [Trace body](#trace-body) | MVP |
 | `GET /projects/{project_id}/trace-links` | Current links, without the removed ones; filters `link_type`, `source_item_id`, `target_item_id` | MVP |
 | `POST /projects/{project_id}/trace-links` | Create a link by hand; body `source_item_id`, `target_item_id`, `link_type`, `note`. The pair of item kinds must be allowed for the link type, otherwise `422 validation_failed` | MVP |
 | `DELETE /trace-links/{link_id}` | Remove a link. The link keeps its row with `deleted_at` set, so the links of an earlier step can be shown again; lists and trace views leave it out | MVP |
-| `GET /projects/{project_id}/traceability/matrix` | Rows of `derived_from` chains from backlog item down to raw requirement | MVP |
-| `GET /projects/{project_id}/traceability/coverage` | Counts and lists: requirements with no backlog item, requirements with no source, items that need review after a source changed | MVP |
+| `GET /projects/{project_id}/traceability/matrix` | Rows of `derived_from` chains from backlog item down to raw requirement, see [Matrix body](#matrix-body) | MVP |
+| `GET /projects/{project_id}/traceability/coverage` | Lists: requirements with no backlog item, requirements with no source, items that need review after a source changed, see [Coverage body](#coverage-body) | MVP |
+
+#### Trace body
+
+`GET /items/{item_id}/trace` and `GET /artifacts/{artifact_id}/trace` answer the same body: the items found, and the current links between them. Removed links are left out. An item is listed once, however many chains reach it. For an artifact, the starting points are all its items, and the answer holds every item that a chain reaches in the chosen direction, also in other artifacts. A link has the fields of a trace link; an item has the fields below.
+
+```json
+{
+  "items": [
+    {
+      "id": "0b4d...",
+      "artifact_id": "7c1e...",
+      "key": "REQ-004",
+      "kind": "spec_requirement",
+      "version": 3,
+      "review_status": "approved",
+      "content": { "title": "Search mentors" }
+    }
+  ],
+  "links": [
+    {
+      "id": "d92a...",
+      "source_item_id": "0b4d...",
+      "target_item_id": "5f20...",
+      "link_type": "derived_from",
+      "target_version": 2,
+      "quote": null,
+      "note": null
+    }
+  ]
+}
+```
+
+Both lists are in full, not paged: the answer for an artifact is bounded by the items of one project. `source_item_id` and `target_item_id` of every link are the `id` of an entry of `items`; a link whose other end is beyond `depth` is left out. The order is by `key` for items and by `id` for links. `404 not_found` for an item or an artifact that does not exist.
+
+#### Matrix body
+
+The columns come from the server, so a kind that the workflow definition adds appears with no client change. Each column names the item kinds it holds, ordered from the backlog down to the interview. Each row is one `derived_from` chain; a cell holds the items of that column in the chain, and is an empty list where the chain has none.
+
+```json
+{
+  "columns": [
+    { "key": "backlog", "title": "Backlog", "kinds": ["backlog_item"] },
+    { "key": "source", "title": "Source", "kinds": ["raw_requirement", "latent_need"] }
+  ],
+  "rows": [
+    {
+      "cells": {
+        "backlog": [{ "item_id": "9a1c...", "key": "US-012", "kind": "backlog_item", "title": "Search mentors by skill" }],
+        "source": [{ "item_id": "5f20...", "key": "RAW-004", "kind": "raw_requirement", "title": "Find a mentor" }]
+      }
+    }
+  ]
+}
+```
+
+`title` of an item is the title field that the content schema of its kind names. A row has an entry for every `key` of `columns`.
+
+#### Coverage body
+
+Each gap is one list of items that need attention, with its own title and a sentence that says why. The keys of version 1 are `no_backlog_item` (specified requirements with no incoming `derived_from`), `no_source` (specified or analyzed requirements with no outgoing `derived_from`) and `needs_review` (items whose link to a target has an older `target_version` than the target now, or whose target is `superseded`). A gap with no items is still listed.
+
+```json
+{
+  "gaps": [
+    {
+      "key": "no_backlog_item",
+      "title": "No backlog item",
+      "description": "Specified requirements that no backlog item was derived from.",
+      "items": [{ "item_id": "0b4d...", "key": "REQ-004", "kind": "spec_requirement", "title": "Search mentors" }]
+    }
+  ]
+}
+```
 
 ### Exports
 
