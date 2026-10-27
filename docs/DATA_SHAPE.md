@@ -360,7 +360,7 @@ A passage of the extracted text of a source document, with its embedding, so tha
 
 ### Workflow stages
 
-`Stage` names a position a run can be in; it is the value of `current_stage` in the deck. Workflow definition version 1 has these stages:
+`Stage` names a position a run can be in; it is the value of `current_stage` in the deck. A stage of the definition has a `title` for the user, an `internal` flag for a stage the user does not see, and a `parent` that groups stages as a tree, see [Workflow definitions](workflow/README.md#2-parts-of-a-definition). Workflow definition version 1 has these stages, all at the top level, and `intent_routing` is internal:
 
 `intent_routing`, `planning`, `persona_generation`, `persona_review`, `interviewing`, `analysis`, `analysis_review`, `specification`, `specification_review`, `backlog`, `validation`, `done`
 

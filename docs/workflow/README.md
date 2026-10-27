@@ -36,13 +36,13 @@ A definition file has the same content as the response of `GET /api/v1/workflow/
 | `name`, `version`, `description` | Which workflow and which version | Every run stores `name` and `version` as `workflow_name` and `workflow_version` |
 | `entry` | The node at which the first run of a project starts, the node at which every later run starts, and the node a run goes to after any node when user messages are pending | The run executor |
 | `agent_roles` | Every agent role, with a label, a description and the version of its prompt file | Model settings per role; run steps and origins; the Vocabulary check; the prompt each agent node loads, see [Prompts](../architecture/prompts.md) |
-| `stages` | Every stage, in workflow order | `current_stage` of a run and a thread; the progress view |
-| `nodes` | Every node of the graph. `kind` is `start`, `end`, `agent`, `checkpoint` or `control`. An agent node names its agent role; a checkpoint node holds the prompt, the kinds of the artifacts under review, whether edits are allowed, the options, the questions asked every time, and whether an agent may add questions at run time | The graph view; the interrupt a checkpoint creates |
+| `stages` | Every stage, in workflow order, as a flat list. A stage has a `title` for the user, an `internal` flag and a `parent` that makes the stages a tree | `current_stage` of a run and a thread; the status bar and the progress view, which show the titles and skip the internal stages |
+| `nodes` | Every node of the graph. `kind` is `start`, `end`, `agent`, `checkpoint` or `control`. An agent node names its agent role; a checkpoint node holds the `title` shown to the user, the prompt, the kinds of the artifacts under review, whether edits are allowed, the options, the questions asked every time, and whether an agent may add questions at run time | The graph view; the interrupt a checkpoint creates; the list of reviews the user may turn on in the run settings |
 | `edges` | Every edge, with its label, whether it is conditional, and the checkpoint option that leads along it | The graph view; the edge a run follows after an answer |
 | `artifact_kinds` | Every artifact kind, with its content schema version, the stage that produces it, how many a project may have, the kind of its subject item, and the item kinds it contains | The checks Item in artifact, One artifact, Subject item and Section placement; the order of artifacts in the API |
 | `item_kinds` | Every item kind, with its content schema version | The Content check; `GET /artifact-kinds` |
 | `link_types` | Every trace link type, with the pairs of item kinds it may connect and whether it must stay free of cycles | The checks Link type and No cycle |
-| `value_lists` | Every named list of allowed values for a content field, each value with a label and a description. A content schema names the list with `x-value-list` instead of an `enum`, because the list may change between experiments | The Content check; the schemas served by `GET /artifact-kinds`; the output format and the prompts of the agents; the metrics of the research track |
+| `value_lists` | Every named list of allowed values for a content field, each value with a title and a description. A content schema names the list with `x-value-list` instead of an `enum`, because the list may change between experiments | The Content check; the schemas served by `GET /artifact-kinds`; the output format and the prompts of the agents; the metrics of the research track |
 | `directive_kinds` | Every directive kind, with its item roles and the schema of its `details` | The Directive check |
 | `export_templates` | Every export template, with the artifact kinds it is built from and the formats it can be produced in | The export endpoint |
 | `run_parameters_schema` | JSON Schema of `parameters` in the run configuration, with the default of each parameter | Validation of the run configuration; the run settings form |
@@ -95,6 +95,7 @@ These rules relate parts of one definition to each other, or a definition to the
 | Rule | Detail |
 |---|---|
 | Unique names | Keys of agent roles, stages, link types and export templates, ids of nodes, and kinds of artifacts, items and directives are unique in their list |
+| Stage tree | The `parent` of a stage is null or the key of a stage listed before it, so the stages form a forest with no cycle. A node and an artifact kind name a stage that has no children |
 | Start and end | Exactly one node of kind `start` and one of kind `end` |
 | Known names | Every stage, agent role, node, artifact kind and item kind that a part names is defined in the same definition. A link pair never names `section` |
 | Value sources | Every `x-value-from` in the content schemas that the definition uses names an artifact kind whose `per_project` is `one`, and a field of its content schema that is a list of strings |
@@ -130,7 +131,7 @@ DEFINITION_V1 = WorkflowDefinition(
     graph=build_graph,  # nodes and edges are read from the compiled graph
     entry=Entry(first_run="planner", later_runs="intent_router", pending_messages="intent_router"),
     agent_roles=[AgentRole("planner", "Planner", "Turns the intent into an elicitation plan.", prompt_version=1), ...],
-    stages=[Stage("intent_routing", "Intent routing"), ...],
+    stages=[Stage("intent_routing", "Intent routing", internal=True, parent=None), ...],
     node_data={
         "checkpoint_analysis": Checkpoint(
             stage="analysis_review",
