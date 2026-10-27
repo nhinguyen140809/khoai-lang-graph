@@ -66,6 +66,6 @@ export function jsonBooleanProblem(field: string): FieldProblem {
 }
 
 /** Whether a field that was sent is wrong. A field left out is not wrong: the reader is not asked. */
-export function isGivenWrong(value: unknown, read: (value: unknown) => unknown): boolean {
+export function isSentButInvalid(value: unknown, read: (value: unknown) => unknown): boolean {
   return value !== undefined && read(value) === undefined
 }

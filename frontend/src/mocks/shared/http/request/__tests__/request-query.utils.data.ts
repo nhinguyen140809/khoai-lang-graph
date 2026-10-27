@@ -20,3 +20,20 @@ export const requestedVersionCases = [
     version: null,
   },
 ]
+
+/** The address of a request, and its path. */
+export const pathnameOfCases = [
+  { name: 'a path with a query', address: 'http://x.test/items?kind=a', pathname: '/items' },
+  { name: 'a path without a query', address: 'http://x.test/a/b', pathname: '/a/b' },
+]
+
+/** The address of a request, and the parameters of its query as text. */
+export const queryOfCases = [
+  {
+    name: 'parameters',
+    address: 'http://x.test/items?kind=a&version=2',
+    query: 'kind=a&version=2',
+  },
+  { name: 'a repeated parameter', address: 'http://x.test/items?s=a&s=b', query: 's=a&s=b' },
+  { name: 'no query', address: 'http://x.test/items', query: '' },
+]

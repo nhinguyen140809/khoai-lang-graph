@@ -4,7 +4,7 @@ import { isUnfinishedRunStatus, type Run } from '@/modules/run/entities'
 import { generatedProjects, manyProjects } from '../generated/fixtures/generated-projects.fixtures'
 import { manyProjectCount } from '../generated/generated.constants'
 import { allRuns } from '../runs/runs.lookup'
-import { addressParam } from '../shared/scenario/mock-scenario.utils'
+import { pageUrlParam } from '../shared/scenario'
 import { projectFixtures } from './projects.fixtures'
 import { createdProjects, deletedProjectIds, projectEdits } from './projects.store'
 import { rollupRunStatus } from './run-status-rollup.utils'
@@ -38,7 +38,7 @@ function withRunCounts(project: Project, runs: Run[]): Project {
 const longListScenarios = ['many', 'more-loading']
 
 export function allProjects(): Project[] {
-  const isLong = longListScenarios.includes(addressParam('mock-projects') ?? '')
+  const isLong = longListScenarios.includes(pageUrlParam('mock-projects') ?? '')
   const many = isLong ? manyProjects(manyProjectCount) : []
   const runs = allRuns()
   const changes = projectEdits.get()

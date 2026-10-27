@@ -1,6 +1,6 @@
 import type { Me } from '@/modules/user/entities'
 
-import { userId } from '../shared/db/mock-ids.constants'
+import { userId } from '../shared/db'
 
 export const meFixture: Me = {
   id: userId,

@@ -1,4 +1,4 @@
-import { mockState } from '../shared/db/mock-state.utils'
+import { mockState } from '../shared/db'
 import { meFixture } from './me.fixtures'
 
 /** The signed-in user; registering an account replaces it. */

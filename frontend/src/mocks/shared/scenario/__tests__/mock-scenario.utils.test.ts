@@ -4,20 +4,20 @@ import { HttpStatus } from '@/shared/api/http'
 import { openPage } from '@/test/msw'
 import { expectStillPending } from '@/test/steps'
 
-import { addressParam, answerScenario, mockScenario } from '../mock-scenario.utils'
+import { answerScenario, mockScenario, pageUrlParam } from '../mock-scenario.utils'
 import {
-  addressParamCases,
-  addressWithParams,
   chosenScenarios,
   fixtureScenarioCases,
   handlerScenarioCases,
+  pageUrlParamCases,
+  pageUrlWithParams,
 } from './mock-scenario.utils.data'
 
-describe('addressParam', () => {
-  it.each(addressParamCases)('reads $name', ({ param, value }) => {
-    openPage(addressWithParams)
+describe('pageUrlParam', () => {
+  it.each(pageUrlParamCases)('reads $name', ({ param, value }) => {
+    openPage(pageUrlWithParams)
 
-    expect(addressParam(param)).toBe(value)
+    expect(pageUrlParam(param)).toBe(value)
   })
 })
 

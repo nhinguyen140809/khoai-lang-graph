@@ -4,20 +4,18 @@ import type { Project } from '@/modules/project/entities'
 import { apiEndpoints } from '@/shared/api/endpoints'
 import type { FieldProblem } from '@/shared/api/error'
 
-import { mockNow } from '../shared/db/mock-clock.utils'
-import { IdPrefix } from '../shared/db/mock-ids.constants'
-import { createdId } from '../shared/db/mock-ids.utils'
-import { readBodyFields } from '../shared/http/request/request-body.utils'
-import { hasMatchingParam } from '../shared/http/request/request-query.utils'
-import { invalidState, validationFailed } from '../shared/http/response/error-response.utils'
-import { emptyPage, paginate } from '../shared/http/response/pagination.utils'
-import { created, noContent } from '../shared/http/response/status-response.utils'
-import { choice, isGivenWrong, requiredText } from '../shared/http/validation/field-values.utils'
+import { createdId, IdPrefix, mockNow } from '../shared/db'
+import { hasMatchingParam, pathParam, queryOf, readBodyFields } from '../shared/http/request'
 import {
-  addressParam,
-  answerScenario,
-  pendingForever,
-} from '../shared/scenario/mock-scenario.utils'
+  created,
+  emptyPage,
+  invalidState,
+  noContent,
+  paginate,
+  validationFailed,
+} from '../shared/http/response'
+import { choice, isSentButInvalid, requiredText } from '../shared/http/validation'
+import { answerScenario, pageUrlParam, pendingForever } from '../shared/scenario'
 import { buildProject } from './projects.fixtures'
 import { allProjects, changeProject, findProject } from './projects.lookup'
 import { projectNotFound } from './projects.problems'
@@ -41,8 +39,8 @@ export const projectHandlers = [
   http.get(apiEndpoints.projects.pattern, async ({ request }) => {
     const scenario = await answerScenario('projects')
     if (scenario === 'empty') return HttpResponse.json(emptyPage)
-    const { searchParams } = new URL(request.url)
-    if (addressParam('mock-projects') === 'more-loading' && searchParams.has('cursor')) {
+    const searchParams = queryOf(request)
+    if (pageUrlParam('mock-projects') === 'more-loading' && searchParams.has('cursor')) {
       return pendingForever()
     }
     const projects = allProjects()
@@ -54,14 +52,14 @@ export const projectHandlers = [
 
   http.get(apiEndpoints.project.pattern, async ({ params }) => {
     const scenario = await answerScenario('project')
-    const project = scenario === 'empty' ? undefined : findProject(String(params.projectId))
+    const project = scenario === 'empty' ? undefined : findProject(pathParam(params, 'projectId'))
     return project === undefined ? projectNotFound() : HttpResponse.json(project)
   }),
 
   http.post(apiEndpoints.projects.pattern, async ({ request }) => {
     await answerScenario('create-project')
     // The language that the server takes no longer includes the one chosen.
-    if (addressParam('mock-create-project') === 'invalid') {
+    if (pageUrlParam('mock-create-project') === 'invalid') {
       return validationFailed([{ field: 'output_language', message: 'Choose a language.' }])
     }
     const read = validateNewProject(await readBodyFields(request))
@@ -80,13 +78,13 @@ export const projectHandlers = [
   // Takes the name and the status, which rename a project, archive it or make it active again.
   http.patch(apiEndpoints.project.pattern, async ({ params, request }) => {
     await answerScenario('update-project')
-    const projectId = String(params.projectId)
+    const projectId = pathParam(params, 'projectId')
     if (findProject(projectId) === undefined) return projectNotFound()
     const { name, status } = await readBodyFields(request)
     const newName = requiredText(name)
     const newStatus = choice(projectStatuses, status)
     const problems: FieldProblem[] = []
-    if (isGivenWrong(name, requiredText)) {
+    if (isSentButInvalid(name, requiredText)) {
       problems.push({ field: 'name', message: 'Enter a name.' })
     }
     if (newStatus === undefined && status !== undefined) {
@@ -104,7 +102,7 @@ export const projectHandlers = [
   // A project with a run that is not finished stays until the run is stopped.
   http.delete(apiEndpoints.project.pattern, async ({ params }) => {
     await answerScenario('delete-project')
-    const projectId = String(params.projectId)
+    const projectId = pathParam(params, 'projectId')
     const project = findProject(projectId)
     if (project === undefined) return projectNotFound()
     if (Object.values(project.unfinished_run_counts).some((count) => count > 0)) {

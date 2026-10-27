@@ -1,16 +1,16 @@
 import type { Run, RunStep } from '@/modules/run/entities'
 
-import { isoTime } from '../shared/db/mock-clock.utils'
 import {
   IdPrefix,
+  isoTime,
+  mockId,
   personaIds,
   projectIds,
   runIds,
   threadIds,
   userId,
-} from '../shared/db/mock-ids.constants'
-import { mockId } from '../shared/db/mock-ids.utils'
-import type { MockRunState } from '../shared/scenario/mock-scenario.types'
+} from '../shared/db'
+import type { MockRunState } from '../shared/scenario'
 
 // Mock runs and run steps. The third run of the main thread of the mentor platform is the run of
 // the API examples: it retries the second run from its planner step and waits at the analysis

@@ -1,6 +1,6 @@
 import { isOneOf } from '@/shared/lib/guards'
 
-import { internalError } from '../http/response/error-response.utils'
+import { internalError } from '../http/response'
 import {
   type HandlerScenario,
   type MockRunState,
@@ -10,7 +10,7 @@ import {
 } from './mock-scenario.types'
 
 /** A parameter of the page address; null outside the browser, such as in unit tests. */
-export function addressParam(name: string): string | null {
+export function pageUrlParam(name: string): string | null {
   if (typeof window === 'undefined') return null
   return new URLSearchParams(window.location.search).get(name)
 }
@@ -21,7 +21,7 @@ export function addressParam(name: string): string | null {
  * For an endpoint that returns one record, `empty` answers 404.
  */
 export function mockScenario(resource: string): MockScenario {
-  const value = addressParam(`mock-${resource}`)
+  const value = pageUrlParam(`mock-${resource}`)
   return isOneOf(mockScenarios, value) ? value : 'default'
 }
 
@@ -50,6 +50,6 @@ export async function answerScenario(resource: string): Promise<HandlerScenario>
  * with `?mock-run-state=running` (or `failed`, `done`). The threads and runs handlers read it.
  */
 export function mockRunState(): MockRunState {
-  const value = addressParam('mock-run-state')
+  const value = pageUrlParam('mock-run-state')
   return isOneOf(mockRunStates, value) ? value : 'waiting'
 }

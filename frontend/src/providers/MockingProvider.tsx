@@ -8,8 +8,8 @@ import { isMockingEnabled } from '@/shared/config/env'
 let workerStarted: Promise<unknown> | undefined
 
 function startWorker() {
-  workerStarted ??= import('@/mocks/msw-browser.setup').then(({ worker }) =>
-    worker.start({ onUnhandledRequest: 'bypass' }),
+  workerStarted ??= import('@/mocks/msw-browser.setup').then(({ mswWorker }) =>
+    mswWorker.start({ onUnhandledRequest: 'bypass' }),
   )
   return workerStarted
 }

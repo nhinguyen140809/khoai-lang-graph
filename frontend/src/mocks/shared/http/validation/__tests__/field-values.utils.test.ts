@@ -3,7 +3,7 @@ import { describe, expect, it } from 'vitest'
 import {
   choice,
   choiceProblem,
-  isGivenWrong,
+  isSentButInvalid,
   jsonBoolean,
   jsonBooleanProblem,
   jsonObject,
@@ -95,8 +95,8 @@ describe('the problems of the fields', () => {
   })
 })
 
-describe('isGivenWrong', () => {
+describe('isSentButInvalid', () => {
   it.each(isGivenWrongCases)('says $name', ({ value, expected }) => {
-    expect(isGivenWrong(value, requiredText)).toBe(expected)
+    expect(isSentButInvalid(value, requiredText)).toBe(expected)
   })
 })

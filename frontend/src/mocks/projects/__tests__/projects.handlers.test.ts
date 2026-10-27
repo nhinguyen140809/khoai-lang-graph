@@ -9,7 +9,7 @@ import { fetchApi, openPage, patchApi, postApi } from '@/test/msw'
 import { expectStillPending } from '@/test/steps'
 import { itRejectsRequests } from '@/test/suites'
 
-import { projectIds } from '../../shared/db/mock-ids.constants'
+import { projectIds } from '../../shared/db'
 import {
   createProjectCases,
   pendingProjectCases,

@@ -8,7 +8,7 @@ import { fetchApi, openPage } from '@/test/msw'
 
 import { generatedProjectSpecs } from '../../generated/fixtures/generated-project-specs.fixtures'
 import { projectFixtures } from '../../projects/projects.fixtures'
-import { runIds, threadIds } from '../../shared/db/mock-ids.constants'
+import { runIds, threadIds } from '../../shared/db'
 import { threadErrorCases, threadListCases, threadRunStateCases } from './threads.handlers.data'
 
 // A scenario of the mocks is chosen in the page address.

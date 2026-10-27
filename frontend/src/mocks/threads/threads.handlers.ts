@@ -4,14 +4,11 @@ import { apiEndpoints } from '@/shared/api/endpoints'
 
 import { findProject } from '../projects/projects.lookup'
 import { projectNotFound } from '../projects/projects.problems'
-import { mockNow } from '../shared/db/mock-clock.utils'
-import { IdPrefix } from '../shared/db/mock-ids.constants'
-import { createdId } from '../shared/db/mock-ids.utils'
-import { readBodyFields } from '../shared/http/request/request-body.utils'
-import { emptyPage, paginate } from '../shared/http/response/pagination.utils'
-import { created } from '../shared/http/response/status-response.utils'
-import { requiredText } from '../shared/http/validation/field-values.utils'
-import { answerScenario } from '../shared/scenario/mock-scenario.utils'
+import { createdId, IdPrefix, mockNow } from '../shared/db'
+import { pathParam, queryOf, readBodyFields } from '../shared/http/request'
+import { created, emptyPage, paginate } from '../shared/http/response'
+import { requiredText } from '../shared/http/validation'
+import { answerScenario } from '../shared/scenario'
 import { buildThread } from './threads.fixtures'
 import { allThreads } from './threads.lookup'
 import { threadNotFound } from './threads.problems'
@@ -21,7 +18,7 @@ export const threadHandlers = [
   http.get(apiEndpoints.threads.pattern, async ({ request }) => {
     const scenario = await answerScenario('threads')
     if (scenario === 'empty') return HttpResponse.json(emptyPage)
-    const projectId = new URL(request.url).searchParams.get('project_id')
+    const projectId = queryOf(request).get('project_id')
     const threads = allThreads().filter(
       (thread) => projectId === null || thread.project_id === projectId,
     )
@@ -30,7 +27,7 @@ export const threadHandlers = [
 
   http.get(apiEndpoints.projectThreads.pattern, async ({ params, request }) => {
     const scenario = await answerScenario('threads')
-    const projectId = String(params.projectId)
+    const projectId = pathParam(params, 'projectId')
     if (findProject(projectId) === undefined) return projectNotFound()
     if (scenario === 'empty') return HttpResponse.json(emptyPage)
     const threads = allThreads()
@@ -40,7 +37,7 @@ export const threadHandlers = [
   }),
 
   http.post(apiEndpoints.projectThreads.pattern, async ({ params, request }) => {
-    const projectId = String(params.projectId)
+    const projectId = pathParam(params, 'projectId')
     if (findProject(projectId) === undefined) return projectNotFound()
     const { title } = await readBodyFields(request)
     const now = mockNow()
@@ -62,7 +59,7 @@ export const threadHandlers = [
     const thread =
       scenario === 'empty'
         ? undefined
-        : allThreads().find(({ id }) => id === String(params.threadId))
+        : allThreads().find(({ id }) => id === pathParam(params, 'threadId'))
     return thread === undefined ? threadNotFound() : HttpResponse.json(thread)
   }),
 ]

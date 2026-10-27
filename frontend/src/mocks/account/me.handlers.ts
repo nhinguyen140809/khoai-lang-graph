@@ -2,7 +2,7 @@ import { http, HttpResponse } from 'msw'
 
 import { apiEndpoints } from '@/shared/api/endpoints'
 
-import { answerScenario } from '../shared/scenario/mock-scenario.utils'
+import { answerScenario } from '../shared/scenario'
 import { currentUser } from './account.store'
 import { userNotFound } from './me.problems'
 

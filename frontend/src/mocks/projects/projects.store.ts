@@ -1,6 +1,6 @@
 import type { Project } from '@/modules/project/entities'
 
-import { mockState } from '../shared/db/mock-state.utils'
+import { mockState } from '../shared/db'
 
 // Projects created with POST /projects.
 export const createdProjects = mockState<Project[]>('created-projects', () => [])
