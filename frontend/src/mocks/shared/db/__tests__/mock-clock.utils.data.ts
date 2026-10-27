@@ -17,3 +17,11 @@ export const isoTimeCases = [
     time: '2026-10-10T09:15:30Z',
   },
 ]
+
+/** A time, and the milliseconds from it to 2026-10-10T09:15:30Z, the time of the clock in the test. */
+export const msSinceCases = [
+  { name: 'the same second', time: '2026-10-10T09:15:30Z', ms: 0 },
+  { name: 'a second ago', time: '2026-10-10T09:15:29Z', ms: 1000 },
+  { name: 'a day ago', time: '2026-10-09T09:15:30Z', ms: 86_400_000 },
+  { name: 'a time to come', time: '2026-10-10T09:15:31Z', ms: -1000 },
+]
