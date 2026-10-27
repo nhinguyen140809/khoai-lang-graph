@@ -1,3 +1,4 @@
+import { isOneOf } from '@/shared/lib/guards'
 import type { Wording } from '@/shared/lib/view'
 
 import { noRunLabel, runStatusLabels } from '../constants/run-status.constants'
@@ -8,7 +9,7 @@ import {
 } from '../types/run-status.types'
 
 export function isUnfinishedRunStatus(status: RunStatus): status is UnfinishedRunStatus {
-  return (unfinishedRunStatuses as readonly RunStatus[]).includes(status)
+  return isOneOf(unfinishedRunStatuses, status)
 }
 
 /** The label of a run status in each view, or of no run yet for a project or a thread without one. */
