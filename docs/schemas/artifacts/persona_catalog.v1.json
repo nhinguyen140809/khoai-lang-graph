@@ -1,7 +1,7 @@
 {
   "$schema": "https://json-schema.org/draft/2020-12/schema",
   "$id": "artifacts/persona_catalog/v1",
-  "title": "Persona catalog",
+  "title": "Interviewees",
   "description": "The set of personas generated for the project.",
   "x-level": "artifact",
   "x-kind": "persona_catalog",

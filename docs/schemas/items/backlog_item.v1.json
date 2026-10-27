@@ -1,7 +1,7 @@
 {
   "$schema": "https://json-schema.org/draft/2020-12/schema",
   "$id": "items/backlog_item/v1",
-  "title": "Backlog item",
+  "title": "User story",
   "description": "An epic or a user story. Its order in the backlog is the position of the item.",
   "x-level": "item",
   "x-kind": "backlog_item",

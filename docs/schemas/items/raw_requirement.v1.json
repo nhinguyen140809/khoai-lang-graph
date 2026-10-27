@@ -1,7 +1,7 @@
 {
   "$schema": "https://json-schema.org/draft/2020-12/schema",
   "$id": "items/raw_requirement/v1",
-  "title": "Raw requirement",
+  "title": "Stated need",
   "description": "A requirement as stated in an interview, before any rewriting.",
   "x-level": "item",
   "x-kind": "raw_requirement",

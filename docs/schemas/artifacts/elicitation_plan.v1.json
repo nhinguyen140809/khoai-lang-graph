@@ -1,7 +1,7 @@
 {
   "$schema": "https://json-schema.org/draft/2020-12/schema",
   "$id": "artifacts/elicitation_plan/v1",
-  "title": "Elicitation plan",
+  "title": "Interview plan",
   "description": "What the interviews must find out and how.",
   "x-level": "artifact",
   "x-kind": "elicitation_plan",

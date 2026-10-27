@@ -1,7 +1,7 @@
 {
   "$schema": "https://json-schema.org/draft/2020-12/schema",
   "$id": "artifacts/product_backlog/v1",
-  "title": "Product backlog",
+  "title": "User stories",
   "description": "The ordered backlog. Epics and user stories are the items of the artifact.",
   "x-level": "artifact",
   "x-kind": "product_backlog",

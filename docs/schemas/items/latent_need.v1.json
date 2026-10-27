@@ -1,7 +1,7 @@
 {
   "$schema": "https://json-schema.org/draft/2020-12/schema",
   "$id": "items/latent_need/v1",
-  "title": "Latent need",
+  "title": "Unstated need",
   "description": "A need no persona stated directly, inferred from what they said.",
   "x-level": "item",
   "x-kind": "latent_need",

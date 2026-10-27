@@ -1,7 +1,7 @@
 {
   "$schema": "https://json-schema.org/draft/2020-12/schema",
   "$id": "items/conflict/v1",
-  "title": "Conflict",
+  "title": "Disagreement",
   "description": "Requirements, or wishes of personas, that cannot all hold.",
   "x-level": "item",
   "x-kind": "conflict",

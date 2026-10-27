@@ -1,7 +1,7 @@
 {
   "$schema": "https://json-schema.org/draft/2020-12/schema",
   "$id": "items/ambiguity_issue/v1",
-  "title": "Ambiguity issue",
+  "title": "Needs clarifying",
   "description": "A statement that can be read in more than one way or lacks needed detail.",
   "x-level": "item",
   "x-kind": "ambiguity_issue",

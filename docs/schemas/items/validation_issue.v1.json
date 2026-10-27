@@ -1,7 +1,7 @@
 {
   "$schema": "https://json-schema.org/draft/2020-12/schema",
   "$id": "items/validation_issue/v1",
-  "title": "Validation issue",
+  "title": "Problem found",
   "description": "A problem the validator found.",
   "x-level": "item",
   "x-kind": "validation_issue",

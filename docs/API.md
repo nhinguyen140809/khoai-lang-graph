@@ -693,7 +693,7 @@ Kinds and their schemas, `GET /artifact-kinds`. The display name of a kind is th
           "kind": "spec_requirement",
           "schema_version": 1,
           "schema": {
-            "title": "Specified requirement",
+            "title": "Requirement",
             "x-key-prefix": "REQ",
             "x-ui-display": "table",
             "x-ui-title-field": "title",
