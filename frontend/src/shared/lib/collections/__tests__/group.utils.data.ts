@@ -1,3 +1,23 @@
+/** Cases that check how `groupBy` gathers the items of a list by a key. */
+export const groupByCases = [
+  {
+    name: 'keys in the order they first appear',
+    items: ['p1', 'q1', 'p2'],
+    keyOf: (item: string) => item.slice(0, 1),
+    groups: [
+      { key: 'p', items: ['p1', 'p2'] },
+      { key: 'q', items: ['q1'] },
+    ],
+  },
+  {
+    name: 'one key for every item',
+    items: ['a', 'b'],
+    keyOf: () => 'same',
+    groups: [{ key: 'same', items: ['a', 'b'] }],
+  },
+  { name: 'no item', items: [], keyOf: (item: string) => item, groups: [] },
+] as const
+
 /** A record of a group, with its rank. */
 interface Ranked {
   id: string
