@@ -10,3 +10,7 @@ public/mockServiceWorker.js
 
 # Moved from the root CONTRIBUTING.md, which keeps its own layout of tables and lists
 CONTRIBUTING.md
+
+# Copies of the workflow definition and of the content schemas, kept identical to the specification
+src/mocks/workflow/data
+src/mocks/workflow/requirements_engineering.v1.json

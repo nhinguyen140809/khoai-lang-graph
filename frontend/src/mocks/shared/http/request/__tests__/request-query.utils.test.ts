@@ -2,6 +2,7 @@ import { describe, expect, it } from 'vitest'
 
 import { hasMatchingParam, pathnameOf, queryOf, requestedVersion } from '../request-query.utils'
 import {
+  namedVersionCases,
   paramMatchCases,
   pathnameOfCases,
   queryOfCases,
@@ -17,6 +18,12 @@ describe('hasMatchingParam', () => {
 describe('requestedVersion', () => {
   it.each(requestedVersionCases)('reads $name', ({ address, version }) => {
     expect(requestedVersion(new Request(address))).toBe(version)
+  })
+})
+
+describe('requestedVersion with a parameter name', () => {
+  it.each(namedVersionCases)('reads $name', ({ address, param, version }) => {
+    expect(requestedVersion(new Request(address), param)).toBe(version)
   })
 })
 

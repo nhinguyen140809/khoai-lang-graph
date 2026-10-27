@@ -16,7 +16,7 @@ export function queryOf(request: Request): URLSearchParams {
   return new URL(request.url).searchParams
 }
 
-/** The version that `?version=` names, or null when the request names none. */
-export function requestedVersion(request: Request): number | null {
-  return positiveInteger(Number(queryOf(request).get('version'))) ?? null
+/** The version that `?version=` (or the parameter `name`) gives, or null when the request names none. */
+export function requestedVersion(request: Request, name = 'version'): number | null {
+  return positiveInteger(Number(queryOf(request).get(name))) ?? null
 }

@@ -11,5 +11,5 @@ export const createProjectMessages = {
 /** The defaults of the runs that the new project dialog shows, until they can be changed. */
 export const runDefaultsPreview = {
   personas: 3,
-  reviews: ['Persona review', 'Analysis review', 'Specification review'],
+  reviews: ['Finalize the interviewees', 'Review the analysis', 'Review the specification'],
 }

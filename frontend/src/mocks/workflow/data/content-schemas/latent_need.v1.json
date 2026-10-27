@@ -1,0 +1,45 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "$id": "items/latent_need/v1",
+  "title": "Unstated need",
+  "description": "A need no persona stated directly, inferred from what they said.",
+  "x-level": "item",
+  "x-kind": "latent_need",
+  "x-schema-version": 1,
+  "x-key-prefix": "LN",
+  "x-ui-display": "table",
+  "x-ui-title-field": "description",
+  "x-ui-list-fields": ["description", "confidence", "disposition"],
+  "x-ui-field-order": ["description", "reasoning", "confidence", "disposition"],
+  "type": "object",
+  "additionalProperties": false,
+  "properties": {
+    "description": {
+      "title": "Description",
+      "type": "string",
+      "description": "The need.",
+      "x-ui-widget": "textarea"
+    },
+    "reasoning": {
+      "title": "Reasoning",
+      "type": "string",
+      "description": "Why the analyst inferred it.",
+      "x-ui-widget": "textarea"
+    },
+    "confidence": {
+      "title": "Confidence",
+      "type": "string",
+      "enum": ["low", "medium", "high"],
+      "description": "How sure the inference is.",
+      "x-ui-widget": "select"
+    },
+    "disposition": {
+      "title": "Disposition",
+      "type": "string",
+      "enum": ["open", "promoted", "dismissed"],
+      "description": "What happened to the need. promoted means a requirement was created from it.",
+      "x-ui-widget": "select"
+    }
+  },
+  "required": ["description", "reasoning", "confidence", "disposition"]
+}

@@ -62,7 +62,7 @@ describe('reviewableCheckpoints', () => {
     const choices = reviewableCheckpoints(workflowDefinitionFixture)
 
     expect(choices.map(({ id, title }) => [id, title])).toEqual([
-      ['checkpoint_personas', 'Confirm the interviewees'],
+      ['checkpoint_personas', 'Finalize the interviewees'],
       ['checkpoint_analysis', 'Review the analysis'],
       ['checkpoint_spec', 'Review the specification'],
     ])

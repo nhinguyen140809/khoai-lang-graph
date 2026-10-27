@@ -1,0 +1,62 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "$id": "artifacts/requirement_specification/v1",
+  "title": "Requirement specification",
+  "description": "The specification document. The requirements are the items of the artifact.",
+  "x-level": "artifact",
+  "x-kind": "requirement_specification",
+  "x-schema-version": 1,
+  "x-ui-display": "document",
+  "x-ui-field-order": ["purpose", "scope", "out_of_scope", "definitions"],
+  "type": "object",
+  "additionalProperties": false,
+  "properties": {
+    "purpose": {
+      "title": "Purpose",
+      "type": "string",
+      "description": "What the product is for and who it serves.",
+      "x-ui-widget": "textarea"
+    },
+    "scope": {
+      "title": "Scope",
+      "type": "string",
+      "description": "What the product covers.",
+      "x-ui-widget": "textarea"
+    },
+    "out_of_scope": {
+      "title": "Out of scope",
+      "type": "array",
+      "items": {
+        "type": "string"
+      },
+      "description": "What the product deliberately does not cover.",
+      "x-ui-widget": "list"
+    },
+    "definitions": {
+      "title": "Definitions",
+      "type": "array",
+      "description": "Terms used in the requirements.",
+      "items": {
+        "type": "object",
+        "additionalProperties": false,
+        "properties": {
+          "term": {
+            "title": "Term",
+            "type": "string",
+            "description": "The term.",
+            "x-ui-widget": "text"
+          },
+          "definition": {
+            "title": "Definition",
+            "type": "string",
+            "description": "Its meaning in this specification.",
+            "x-ui-widget": "textarea"
+          }
+        },
+        "required": ["term", "definition"]
+      },
+      "x-ui-widget": "object-list"
+    }
+  },
+  "required": ["purpose", "scope", "out_of_scope", "definitions"]
+}
