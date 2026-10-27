@@ -5,6 +5,7 @@ export {
   restoreArtifact,
   updateArtifact,
 } from './api/artifacts.api'
+export { createExport, getExport, listProjectExports } from './api/exports.api'
 export {
   createItem,
   deleteItem,
@@ -24,6 +25,7 @@ export {
   useArtifactRevisions,
   useProjectArtifacts,
 } from './hooks/useArtifactQueries'
+export { useExport, useProjectExports } from './hooks/useExportQueries'
 export {
   useArtifactItems,
   useItem,
@@ -32,6 +34,7 @@ export {
   useProjectItems,
 } from './hooks/useItemQueries'
 export { artifactKeys } from './keys/artifacts.keys'
+export { exportKeys } from './keys/exports.keys'
 export { itemKeys } from './keys/items.keys'
 export type {
   Artifact,
@@ -42,6 +45,8 @@ export type {
   UpdateArtifactBody,
 } from './types/artifacts.types'
 export { reviewStatuses } from './types/artifacts.types'
+export type { CreateExportBody, Export, ExportStatus } from './types/exports.types'
+export { exportStatuses } from './types/exports.types'
 export type {
   ArtifactItem,
   ArtifactItemFilters,
