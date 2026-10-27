@@ -1,4 +1,4 @@
-import { cn } from '@/shared/lib/utils'
+import { cn } from '@/shared/lib/cn'
 
 interface LogoMarkProps {
   /** Sets the size of the square, `size-4` by default; the letter keeps its share of it. */

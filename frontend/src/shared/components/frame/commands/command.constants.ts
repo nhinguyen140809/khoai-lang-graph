@@ -1,4 +1,4 @@
-import type { Hotkey } from '@/shared/lib/hotkey.utils'
+import type { Hotkey } from '@/shared/lib/hotkey'
 
 /**
  * The groups of the palette that the frame and the features share. A feature names a group of its

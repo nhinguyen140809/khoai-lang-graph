@@ -2,7 +2,7 @@ import { cva } from 'class-variance-authority'
 import { cn } from 'cn'
 import type * as React from 'react'
 
-import { type Tone, toneClasses } from '@/shared/lib/tone.constants'
+import { type Tone, toneClasses } from '@/shared/lib/tone'
 
 // `variant` is the fill and `color` the meaning; the color sets the --tone variables these read.
 // Hover and selection keep the color of the node: a ring of the strong color surrounds it, light
@@ -70,7 +70,7 @@ function NodeHeaderTitle({ className, children, ...props }: React.ComponentProps
   return (
     <h3
       data-slot="node-title"
-      className={cn('flex-1 text-xs font-medium select-none', className)}
+      className={cn('flex-1 text-xs font-semibold select-none', className)}
       {...props}
     >
       {children}

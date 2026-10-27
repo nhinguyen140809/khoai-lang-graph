@@ -1,0 +1,31 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "$id": "artifacts/validation_report/v1",
+  "title": "Verification report",
+  "description": "The result of one validator execution. The issues are the items of the artifact.",
+  "x-level": "artifact",
+  "x-kind": "validation_report",
+  "x-schema-version": 1,
+  "x-ui-display": "document",
+  "x-ui-field-order": ["iteration", "status"],
+  "type": "object",
+  "additionalProperties": false,
+  "properties": {
+    "iteration": {
+      "title": "Iteration",
+      "type": "integer",
+      "minimum": 0,
+      "description": "The rework loop the report belongs to.",
+      "x-ui-widget": "number",
+      "readOnly": true
+    },
+    "status": {
+      "title": "Status",
+      "type": "string",
+      "enum": ["pass", "fail"],
+      "description": "Overall result.",
+      "x-ui-widget": "select"
+    }
+  },
+  "required": ["iteration", "status"]
+}

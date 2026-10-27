@@ -4,6 +4,7 @@ import { describe, expect, it, vi } from 'vitest'
 import type { PaletteCommand } from '../../command.types'
 import { useCommandsStore } from '../../commands.store'
 import { useCommands } from '../useCommands'
+import { hotkeyCases } from './useCommands.data'
 
 function registered(): PaletteCommand[] {
   return [...useCommandsStore.getState().sources.values()].flat()
@@ -59,7 +60,7 @@ describe('useCommands', () => {
     expect(registered().map(({ label }) => label)).toEqual(['Collapse steps', 'b'])
   })
 
-  it('runs a command on its hotkey, and leaves the keys of a command without run alone', () => {
+  it.each(hotkeyCases)('$name', ({ key, runs, prevents }) => {
     const run = vi.fn()
     renderHook(() => {
       useCommands([
@@ -68,12 +69,10 @@ describe('useCommands', () => {
       ])
     })
 
-    const toggled = fireEvent.keyDown(document, { key: 'b', ctrlKey: true })
-    const ignored = fireEvent.keyDown(document, { key: 'l', ctrlKey: true })
-
-    expect(run).toHaveBeenCalledOnce()
     // fireEvent returns false when the default was prevented.
-    expect(toggled).toBe(false)
-    expect(ignored).toBe(true)
+    const isAllowed = fireEvent.keyDown(document, { key, ctrlKey: true })
+
+    expect(run).toHaveBeenCalledTimes(runs)
+    expect(isAllowed).toBe(!prevents)
   })
 })

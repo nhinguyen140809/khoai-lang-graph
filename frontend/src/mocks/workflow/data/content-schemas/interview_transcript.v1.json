@@ -1,0 +1,40 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "$id": "artifacts/interview_transcript/v1",
+  "title": "Interview transcript",
+  "description": "The interview with one persona. The messages are the items of the artifact.",
+  "x-level": "artifact",
+  "x-kind": "interview_transcript",
+  "x-schema-version": 1,
+  "x-ui-display": "document",
+  "x-ui-field-order": ["status", "turn_count", "stop_reason"],
+  "type": "object",
+  "additionalProperties": false,
+  "properties": {
+    "status": {
+      "title": "Status",
+      "type": "string",
+      "enum": ["in_progress", "completed"],
+      "description": "Whether the interview is still running.",
+      "x-ui-widget": "select",
+      "readOnly": true
+    },
+    "turn_count": {
+      "title": "Turn count",
+      "type": "integer",
+      "minimum": 0,
+      "description": "Number of question and answer turns so far.",
+      "x-ui-widget": "number",
+      "readOnly": true
+    },
+    "stop_reason": {
+      "title": "Stop reason",
+      "type": ["string", "null"],
+      "enum": ["max_turns", "interviewer_stopped", "stopping_condition_met", null],
+      "description": "Why the interview ended. Null while it is in progress.",
+      "x-ui-widget": "select",
+      "readOnly": true
+    }
+  },
+  "required": ["status", "turn_count", "stop_reason"]
+}

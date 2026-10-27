@@ -8,6 +8,8 @@ export default defineConfig({
   forbidOnly: Boolean(process.env.CI),
   retries: process.env.CI ? 2 : 0,
   reporter: process.env.CI ? 'github' : 'list',
+  // The dev server renders a page on the first visit, which can be slow.
+  expect: { timeout: 20_000 },
   use: {
     baseURL: `http://localhost:${String(PORT)}`,
     trace: 'on-first-retry',

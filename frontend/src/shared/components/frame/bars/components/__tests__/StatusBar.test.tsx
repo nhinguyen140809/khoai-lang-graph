@@ -1,11 +1,11 @@
 import { render, screen } from '@testing-library/react'
-import userEvent from '@testing-library/user-event'
-import { beforeEach, describe, expect, it } from 'vitest'
+import { describe, expect, it, vi } from 'vitest'
+
+import { Broken } from '@/test/render'
+import { expectNoText, expectRole, expectText, pressButton } from '@/test/steps'
 
 import { useStatusBarItem } from '../../hooks/useStatusBarItem'
-import { StatusBarSide } from '../../status-bar.constants'
-import { useStatusBarStore } from '../../status-bar.store'
-import type { StatusBarItem } from '../../status-bar.types'
+import { type StatusBarItem, StatusBarSide } from '../../status-bar.types'
 import { StatusBar } from '../StatusBar'
 
 /** A component that reports `item` in the status bar while it is mounted. */
@@ -14,11 +14,23 @@ function Reports({ item }: { item: StatusBarItem }) {
   return null
 }
 
-beforeEach(() => {
-  useStatusBarStore.setState(useStatusBarStore.getInitialState())
-})
-
 describe('StatusBar', () => {
+  it('leaves out an item that fails to render, and keeps the others', async () => {
+    // React reports the error that the boundary catches.
+    vi.spyOn(console, 'error').mockImplementation(() => undefined)
+
+    render(
+      <>
+        <StatusBar />
+        <Reports item={{ side: StatusBarSide.Left, content: <Broken /> }} />
+        <Reports item={{ side: StatusBarSide.Left, content: <span>Run 1: running</span> }} />
+      </>,
+    )
+
+    await expectText('Run 1: running')
+    await expectRole('button', 'Notifications')
+  })
+
   it('shows the items registered, each on its side and in its order', () => {
     render(
       <>
@@ -51,13 +63,13 @@ describe('StatusBar', () => {
 
     rerender(<StatusBar />)
 
-    expect(screen.queryByText('Run 1: running')).not.toBeInTheDocument()
+    expectNoText('Run 1: running')
   })
 
   it('shows the notifications when nothing is reported', async () => {
     render(<StatusBar />)
 
-    await userEvent.click(screen.getByRole('button', { name: 'Notifications' }))
-    expect(await screen.findByText('Nothing new.')).toBeInTheDocument()
+    await pressButton('Notifications')
+    await expectText('Nothing new.')
   })
 })

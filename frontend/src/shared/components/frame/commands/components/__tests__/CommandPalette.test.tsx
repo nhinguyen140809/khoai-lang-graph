@@ -1,23 +1,54 @@
-import { fireEvent, render, screen, within } from '@testing-library/react'
-import userEvent from '@testing-library/user-event'
-import { beforeEach, describe, expect, it, vi } from 'vitest'
+import { fireEvent, render, screen, waitFor, within } from '@testing-library/react'
+import { useEffect, useRef, useState } from 'react'
+import { describe, expect, it, vi } from 'vitest'
+
+import {
+  expectAttribute,
+  expectFocused,
+  expectNoRole,
+  expectRole,
+  pressRole,
+  typeText,
+} from '@/test/steps'
 
 import type { PaletteCommand } from '../../command.types'
 import { useCommandsStore } from '../../commands.store'
 import { useCommands } from '../../hooks/useCommands'
 import { CommandPalette } from '../CommandPalette'
+import { searchCases } from './CommandPalette.data'
 
 function Commands({ commands }: { commands: PaletteCommand[] }) {
   useCommands(commands)
   return null
 }
 
-beforeEach(() => {
-  useCommandsStore.setState({ open: false })
-})
+/** A page with a command that puts the focus in its field once the command has run. */
+function FocusPage() {
+  const target = useRef<HTMLInputElement>(null)
+  const [focusTarget, setFocusTarget] = useState(false)
+  useEffect(() => {
+    if (focusTarget) target.current?.focus()
+  }, [focusTarget])
+  useCommands([
+    {
+      id: 'view.go',
+      label: 'Go',
+      group: 'View',
+      run: () => {
+        setFocusTarget(true)
+      },
+    },
+  ])
+  return (
+    <>
+      <button type="button">Before</button>
+      <input ref={target} aria-label="Target" />
+    </>
+  )
+}
 
 describe('CommandPalette', () => {
-  it('opens with Ctrl+K and lists the commands registered, by group', () => {
+  it('opens with Ctrl+K and lists the commands registered, by group', async () => {
     render(
       <>
         <CommandPalette />
@@ -29,17 +60,17 @@ describe('CommandPalette', () => {
         />
       </>,
     )
-    expect(screen.queryByRole('dialog')).not.toBeInTheDocument()
+    expectNoRole('dialog')
 
     fireEvent.keyDown(document, { key: 'k', ctrlKey: true })
 
-    expect(screen.getByRole('dialog', { name: 'Command palette' })).toBeInTheDocument()
+    await expectRole('dialog', 'Command palette')
     const projects = screen.getByRole('group', { name: 'Projects' })
     const view = screen.getByRole('group', { name: 'View' })
     // The groups are in alphabetical order, whichever registered first.
     expect(projects.compareDocumentPosition(view)).toBe(Node.DOCUMENT_POSITION_FOLLOWING)
     expect(within(projects).getByRole('option')).toHaveTextContent('Open Mentor platform')
-    expect(within(view).getByRole('option', { name: 'Theme: Dark' })).toBeInTheDocument()
+    await expectRole('option', 'Theme: Dark', within(view))
     // The palette registers its own command, on the hotkey that opened it.
     expect(within(view).getByRole('option', { name: /Show all commands/ })).toHaveTextContent(
       'Ctrl+K',
@@ -52,7 +83,7 @@ describe('CommandPalette', () => {
 
     fireEvent.keyDown(document, { key: 'k', ctrlKey: true })
 
-    expect(screen.queryByRole('dialog')).not.toBeInTheDocument()
+    expectNoRole('dialog')
   })
 
   it('runs the command chosen and closes', async () => {
@@ -65,10 +96,10 @@ describe('CommandPalette', () => {
       </>,
     )
 
-    await userEvent.click(screen.getByRole('option', { name: 'Theme: Dark' }))
+    await pressRole('option', 'Theme: Dark')
 
     expect(run).toHaveBeenCalledOnce()
-    expect(screen.queryByRole('dialog')).not.toBeInTheDocument()
+    expectNoRole('dialog')
   })
 
   it('shows the hotkey of a command, and a command without run disabled', () => {
@@ -92,37 +123,84 @@ describe('CommandPalette', () => {
     )
 
     expect(screen.getByRole('option', { name: /Toggle side panel/ })).toHaveTextContent('Ctrl+B')
-    expect(screen.getByRole('option', { name: 'Loading projects...' })).toHaveAttribute(
-      'aria-disabled',
-      'true',
-    )
+    expectAttribute('option', 'Loading projects...', 'aria-disabled', 'true')
   })
 
-  it('filters the commands by the search text and by their group', async () => {
+  it('leaves the focus where the command chosen put it', async () => {
+    render(
+      <>
+        <CommandPalette />
+        <FocusPage />
+      </>,
+    )
+    screen.getByRole('button', { name: 'Before' }).focus()
+    fireEvent.keyDown(document, { key: 'k', ctrlKey: true })
+
+    await pressRole('option', 'Go')
+
+    await waitFor(() => {
+      expectNoRole('dialog')
+    })
+    // A dialog that closes moves the focus, if it does, in a task after it is gone.
+    await new Promise((resolve) => {
+      setTimeout(resolve, 0)
+    })
+    expectFocused('textbox', 'Target')
+  })
+
+  it.each(searchCases)(
+    'filters the commands by their label and their group for $search',
+    async ({ search, shown, hidden }) => {
+      useCommandsStore.setState({ open: true })
+      render(
+        <>
+          <CommandPalette />
+          <Commands
+            commands={[
+              { id: 'view.light', label: 'Theme: Light', group: 'View', run: vi.fn() },
+              { id: 'view.dark', label: 'Theme: Dark', group: 'View', run: vi.fn() },
+              { id: 'projects.new', label: 'New project', group: 'Projects', run: vi.fn() },
+            ]}
+          />
+        </>,
+      )
+
+      await typeText(screen.getByRole('combobox'), search)
+
+      for (const label of shown) {
+        await expectRole('option', label)
+      }
+      for (const label of hidden) {
+        expectNoRole('option', label)
+      }
+    },
+  )
+
+  it('lists first, and selects, the best match of a search, whatever its group', async () => {
     useCommandsStore.setState({ open: true })
     render(
       <>
         <CommandPalette />
         <Commands
           commands={[
-            { id: 'view.light', label: 'Theme: Light', group: 'View', run: vi.fn() },
-            { id: 'view.dark', label: 'Theme: Dark', group: 'View', run: vi.fn() },
-            { id: 'projects.new', label: 'New project', group: 'Projects', run: vi.fn() },
+            {
+              id: 'projects.open',
+              label: 'Open Student club manager',
+              group: 'Projects',
+              run: vi.fn(),
+            },
+            { id: 'run.stop', label: 'Stop run', group: 'Run', run: vi.fn() },
           ]}
         />
       </>,
     )
 
-    await userEvent.type(screen.getByRole('combobox'), 'light')
+    await typeText(screen.getByRole('combobox'), 'stop')
 
-    expect(screen.getByRole('option', { name: 'Theme: Light' })).toBeInTheDocument()
-    expect(screen.queryByRole('option', { name: 'Theme: Dark' })).not.toBeInTheDocument()
-
-    await userEvent.clear(screen.getByRole('combobox'))
-    await userEvent.type(screen.getByRole('combobox'), 'view')
-
-    // The two themes and the command of the palette itself.
-    expect(screen.getAllByRole('option')).toHaveLength(3)
-    expect(screen.queryByRole('option', { name: 'New project' })).not.toBeInTheDocument()
+    const [first] = screen.getAllByRole('option')
+    expect(first).toHaveAccessibleName('Stop run')
+    await waitFor(() => {
+      expect(first).toHaveAttribute('aria-selected', 'true')
+    })
   })
 })

@@ -2,31 +2,29 @@
 // between its folders; files inside the folder import each other with relative paths. The index
 // gives components, hooks and types; the stores stay inside the frame, behind its hooks. Server
 // Components import the index too, so every hook it gives starts with 'use client'.
-export type {
-  Activity,
-  FeatureActivity,
-  PlannedActivity,
-  TabIcons,
-} from './activities/activity.types'
-export { AppSidebar } from './app-sidebar'
-export { AppShell } from './AppShell'
 export { LogoMark } from './bars/components/LogoMark'
 export { PageCrumb } from './bars/components/PageCrumb'
 export { useStatusBarItem } from './bars/hooks/useStatusBarItem'
-export { StatusBarSide } from './bars/status-bar.constants'
-export type { StatusBarItem } from './bars/status-bar.types'
+export { type StatusBarItem, StatusBarSide } from './bars/status-bar.types'
 export { PaletteGroup } from './commands/command.constants'
 export type { PaletteCommand } from './commands/command.types'
 export { useCommands } from './commands/hooks/useCommands'
-export { ProjectWorkspace } from './components/ProjectWorkspace'
-export { Workbench } from './components/Workbench'
+export type {
+  ActivityBarItem,
+  Destination,
+  FeatureDestination,
+  PlannedDestination,
+  TabIcons,
+} from './destinations/destination.types'
+export { useActivityBarItem } from './destinations/hooks/useActivityBarItem'
 export { useOpenPage } from './hooks/useOpenPage'
-export {
-  type BottomPanelSection,
-  BottomPanelSections,
-} from './panels/components/BottomPanelSections'
+export { AuthScreen } from './layouts/components/AuthScreen'
+export { TabbedWorkspace } from './layouts/components/TabbedWorkspace'
+export { UntabbedWorkspace } from './layouts/components/UntabbedWorkspace'
+export { Workbench } from './layouts/components/Workbench'
+export { BottomPanelSections } from './panels/components/BottomPanelSections'
 export { EditorWithBottomPanel } from './panels/components/EditorWithBottomPanel'
 export { SidePanel } from './panels/components/SidePanel'
 export { SidePanelSection } from './panels/components/SidePanelSection'
-export { projectTabGroup } from './tabs/editor-tabs.utils'
+export type { BottomPanelSection } from './panels/panel.types'
 export { useEditorTab } from './tabs/hooks/useEditorTab'

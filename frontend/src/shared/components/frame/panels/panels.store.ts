@@ -2,9 +2,10 @@ import { z } from 'zod'
 import { create } from 'zustand'
 import { persist } from 'zustand/middleware'
 
-import { parseStored, persistStorage, storageKey } from '@/shared/lib/browser-storage.utils'
+import { parseStored, persistStorage, storageKey } from '@/shared/lib/storage'
 
-import { panelLayouts, PanelRegion } from './panel.constants'
+import { panelLayouts } from './panel.constants'
+import { PanelRegion } from './panel.types'
 
 const panelSchema = z.object({
   visible: z.boolean(),

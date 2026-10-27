@@ -1,22 +1,32 @@
 import { describe, expect, it } from 'vitest'
 
-import type { PaletteCommand } from '../command.types'
-import { commandGroups } from '../command.utils'
-
-function command(id: string, group: string): PaletteCommand {
-  return { id, label: id, group }
-}
+import { commandGroups, groupsBySearch, shownCommandsKey } from '../command.utils'
+import {
+  commandGroupCases,
+  groupsBySearchCases,
+  shownCommand,
+  shownKeyCases,
+} from './command.utils.data'
 
 describe('commandGroups', () => {
-  it('orders the groups by name and keeps the order of the commands in a group', () => {
-    const groups = commandGroups([
-      [command('toggle', 'View'), command('console', 'Show')],
-      [command('dark', 'View'), command('light', 'View')],
-    ])
+  it.each(commandGroupCases)('$name', ({ sources, groups }) => {
+    expect(
+      commandGroups(sources).map(({ heading, commands }) => [
+        heading,
+        commands.map(({ id }) => id),
+      ]),
+    ).toEqual(groups)
+  })
+})
 
-    expect(groups.map(({ heading, commands }) => [heading, commands.map(({ id }) => id)])).toEqual([
-      ['Show', ['console']],
-      ['View', ['toggle', 'dark', 'light']],
-    ])
+describe('groupsBySearch', () => {
+  it.each(groupsBySearchCases)('$name', ({ groups, search, headings }) => {
+    expect(groupsBySearch(groups, search).map(({ heading }) => heading)).toEqual(headings)
+  })
+})
+
+describe('shownCommandsKey', () => {
+  it.each(shownKeyCases)('$name', ({ command, same }) => {
+    expect(shownCommandsKey([command]) === shownCommandsKey([shownCommand])).toBe(same)
   })
 })

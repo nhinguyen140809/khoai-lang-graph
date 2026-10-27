@@ -1,6 +1,5 @@
 import { setupServer } from 'msw/node'
 
-import { handlers } from './runs.handlers'
-import { threadHandlers } from './threads.handlers'
+import { apiHandlers } from './api.setup'
 
-export const server = setupServer(...handlers, ...threadHandlers)
+export const server = setupServer(...apiHandlers)

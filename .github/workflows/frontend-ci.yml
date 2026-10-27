@@ -30,6 +30,7 @@ jobs:
       pull-requests: read
     outputs:
       frontend: ${{ steps.diff.outputs.frontend }}
+      source: ${{ steps.diff.outputs.source }}
     steps:
       - id: diff
         env:
@@ -40,6 +41,7 @@ jobs:
           # A push to main is already filtered by paths, and a manual run checks everything.
           if [ "$EVENT" != pull_request ]; then
             echo frontend=true >> "$GITHUB_OUTPUT"
+            echo source=true >> "$GITHUB_OUTPUT"
             exit 0
           fi
           files=$(gh api --paginate "repos/$GITHUB_REPOSITORY/pulls/$PR_NUMBER/files" --jq '.[].filename')
@@ -48,6 +50,12 @@ jobs:
           else
             echo frontend=false >> "$GITHUB_OUTPUT"
           fi
+          # The coverage comment is for a pull request that changes the code of the app.
+          if grep -q '^frontend/src/' <<< "$files"; then
+            echo source=true >> "$GITHUB_OUTPUT"
+          else
+            echo source=false >> "$GITHUB_OUTPUT"
+          fi
 
   check:
     name: Checks
@@ -55,6 +63,10 @@ jobs:
     if: needs.changes.outputs.frontend == 'true'
     runs-on: ubuntu-latest
     timeout-minutes: 20
+    permissions:
+      contents: read
+      # To comment the coverage on the pull request.
+      pull-requests: write
     defaults:
       run:
         working-directory: frontend
@@ -76,7 +88,29 @@ jobs:
       - run: pnpm typecheck
       - run: pnpm lint
       - run: pnpm format:check
-      - run: pnpm test
+      # The unit tests, run with the coverage report. The report informs and checks no minimum.
+      - run: pnpm test:coverage
+      - name: Report the coverage
+        if: github.event_name == 'pull_request'
+        run: pnpm --silent coverage:report | tee "$RUNNER_TEMP/coverage.md" >> "$GITHUB_STEP_SUMMARY"
+      # A pull request from a fork has a read-only token and cannot comment.
+      - name: Comment the coverage on the pull request
+        if: >-
+          github.event_name == 'pull_request' && needs.changes.outputs.source == 'true' &&
+          github.event.pull_request.head.repo.full_name == github.repository
+        env:
+          GH_TOKEN: ${{ github.token }}
+          PR_NUMBER: ${{ github.event.pull_request.number }}
+        run: |
+          # Updates the comment of an earlier run instead of adding one for each push.
+          comments="repos/$GITHUB_REPOSITORY/issues"
+          id=$(gh api --paginate "$comments/$PR_NUMBER/comments" \
+            --jq '.[] | select(.body | startswith("<!-- coverage-report -->")) | .id' | head -n 1)
+          if [ -n "$id" ]; then
+            gh api --method PATCH "$comments/comments/$id" -F body=@"$RUNNER_TEMP/coverage.md" > /dev/null
+          else
+            gh api --method POST "$comments/$PR_NUMBER/comments" -F body=@"$RUNNER_TEMP/coverage.md" > /dev/null
+          fi
       - run: pnpm build
 
   e2e:

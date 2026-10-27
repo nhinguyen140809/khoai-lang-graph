@@ -41,7 +41,7 @@ An experiment changes the backend only: a new workflow definition version, or a 
 
 A workflow definition version and a content schema version never change once used, so the web app caches them without expiry, keyed by their version.
 
-Every endpoint above has a request and response example in [API design](../API.md); the examples on this page use the same run. The types of the responses are generated from the OpenAPI schema into `src/api/generated/` and are not repeated here. This page shows only what the web app builds from the responses: the types it owns and an example of each.
+Every endpoint above has a request and response example in [API design](../API.md); the examples on this page use the same run. The types of the responses are generated from the OpenAPI schema into `src/shared/api/generated/` and are not repeated here. This page shows only what the web app builds from the responses: the types it owns and an example of each.
 
 ## 3. Workflow graph
 
@@ -50,7 +50,7 @@ Every endpoint above has a request and response example in [API design](../API.m
 3. Turn every edge into a React Flow edge with its `label`.
 4. Lay the graph out with elkjs (layered algorithm). The definition has no positions, so a node added in the backend gets a place without a client change. The layout is computed once per definition version.
 
-The data of a node and of an edge, in `features/workflow/workflow.types.ts`. `InterruptOption` is the option type of the generated API client:
+The data of a node and of an edge, in `modules/run/widgets/graph/run-graph.types.ts`. `InterruptOption` is the option type of the generated API client:
 
 ```ts
 export interface WorkflowNodeData {
@@ -128,7 +128,7 @@ The web app keeps a status for every node, computed by one pure function from th
 - Clicking a node opens a panel with its steps (model, tokens, cost, items created or changed), the workflow state after each step, and the action to retry from that step.
 - The existing reducer of run events, which keeps only the active node today, grows into this function.
 
-The result of the function, in `features/workflow/workflow.types.ts`:
+The result of the function, in `modules/run/entities/types/run-progress.types.ts`:
 
 ```ts
 export type NodeStatus = 'idle' | 'running' | 'waiting' | 'done' | 'failed'
@@ -226,7 +226,7 @@ The artifact panel draws every kind from its content schema and the display keyw
 - An item keeps the `schema_version` it was written with, and the web app reads the schema of that version from `GET /content-schemas/{kind}/{schema_version}` when it differs from the current one, so older items are still drawn correctly.
 - A kind can have its own component where the generic drawing is not good enough, for example a persona card. A registry maps the kind to the component; a kind without an entry uses the generic drawing.
 
-A field as the detail view and the edit form see it, built from one property of a schema, in `features/artifacts/artifacts.types.ts`:
+A field as the detail view and the edit form see it, built from one property of a schema, in `shared/components/content-form/content-form.types.ts`:
 
 ```ts
 export type Widget = 'text' | 'textarea' | 'select' | 'number' | 'list' | 'tags' | 'object-list'
@@ -311,17 +311,20 @@ Changes of these kinds need code in the web app; every other change of the workf
 
 ## 9. Files
 
-Where the parts above go in the web app, named after the file naming rules of the contributing guide:
+Where the parts above go in the web app. The module and the layer of each part follow [Web App Modules](web-app-modules.md), and the names follow the file naming rules of the contributing guide:
 
-| Part | Files |
-|---|---|
-| Workflow definition and state | `features/workflow/workflow.api.ts`, `features/workflow/workflow.types.ts`, `features/workflow/hooks/useWorkflowDefinition.ts` |
-| Graph | `features/workflow/components/WorkflowGraph.tsx`; one component per node kind: `TerminalNode.tsx`, `AgentNode.tsx`, `CheckpointNode.tsx`, `ControlNode.tsx`; `features/workflow/graph-layout.utils.ts` (elkjs) |
-| Progress on the graph | `features/workflow/node-status.reducer.ts`, `features/workflow/components/NodeDetailsPanel.tsx` |
-| Reviews | `features/workflow/components/ReviewPanel.tsx` |
-| Artifacts and items | `features/artifacts/artifact-kinds.api.ts`, `features/artifacts/artifacts.types.ts` (`FieldView`); one component per display: `DocumentView.tsx`, `SectionHeading.tsx`, `ItemTable.tsx`, `ItemCards.tsx`, `TranscriptView.tsx`; `ContentForm.tsx`; `features/artifacts/field-widgets.utils.ts`; `features/artifacts/kind-components.constants.ts` (the registry) |
-| Run settings | `features/settings/components/RunParametersForm.tsx`, using `ContentForm.tsx` |
-| Workflow state | `features/workflow/components/StateTree.tsx` |
+| Part | Module and layer | Files |
+|---|---|---|
+| Workflow definition and state | `workflow`, entities | `modules/workflow/entities/workflow.api.ts`, `modules/workflow/entities/workflow.types.ts`, `modules/workflow/entities/workflow.keys.ts`, `modules/workflow/entities/hooks/useWorkflowQueries.ts` |
+| Progress of a run | `run`, entities | `modules/run/entities/run-progress.reducer.ts`; `NodeStatus`, `NodeProgress` and `RunProgress` in `modules/run/entities/types/run-progress.types.ts` |
+| Graph | `run`, widget `graph` | `modules/run/widgets/graph/components/WorkflowGraph.tsx`; one component per node kind: `TerminalNode.tsx`, `AgentNode.tsx`, `CheckpointNode.tsx`, `ControlNode.tsx`; `modules/run/widgets/graph/run-graph.types.ts` (`WorkflowNodeData`, `WorkflowEdgeData`); `modules/run/widgets/graph/graph-layout.utils.ts` (elkjs) |
+| Details of a node | `run`, widget `graph` | `modules/run/widgets/graph/components/NodeDetailsPanel.tsx`, with the retry action of `run/features/retry` |
+| Reviews | `review`: entities, feature `answer`, widget `panel` | `modules/review/entities/review.api.ts`, `modules/review/entities/review.types.ts`, `modules/review/entities/hooks/useReviewQueries.ts`; `modules/review/features/answer/components/ReviewAnswerForm.tsx` (options, questions, feedback), `modules/review/features/answer/hooks/useAnswerReview.ts`; `modules/review/widgets/panel/components/ReviewPanel.tsx`, which shows the prompt, the items under review with the edit form of `artifact/features/edit`, and the answer form |
+| Form built from a schema | Shared code | `shared/components/content-form/ContentForm.tsx`, `shared/components/content-form/content-form.types.ts` (`FieldView`), `shared/components/content-form/field-widgets.utils.ts`. The caller gives the values of a field marked `x-value-from` |
+| Artifacts and items | `artifact`, entities | `modules/artifact/entities/artifact-kinds.api.ts`, `modules/artifact/entities/artifact.types.ts`; one component per display: `DocumentView.tsx`, `SectionHeading.tsx`, `ItemTable.tsx`, `ItemCards.tsx`, `TranscriptView.tsx`; `modules/artifact/entities/kind-components.constants.ts` (the registry) |
+| Editing an artifact or an item | `artifact`, feature `edit` | The edit form, on `ContentForm.tsx`, and one hook per save: `modules/artifact/features/edit/hooks/useUpdateArtifact.ts`, `modules/artifact/features/edit/hooks/useUpdateItem.ts` |
+| Run settings | `workflow`, entities | `modules/workflow/entities/components/RunParametersFields.tsx`, on `ContentForm.tsx`. It saves nothing: the feature that shows it, the settings or the dialog that creates a project, saves the values |
+| Workflow state | `workflow`, entities | `modules/workflow/entities/components/StateTree.tsx` |
 
 ## 10. Open points
 

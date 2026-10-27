@@ -1,194 +1,89 @@
 import { beforeEach, describe, expect, it } from 'vitest'
 
-import { browserStorage } from '@/shared/lib/browser-storage.utils'
+import { browserStorage } from '@/shared/lib/storage'
 
 import { useEditorTabsStore } from '../editor-tabs.store'
 import { neighborTab } from '../editor-tabs.utils'
+import {
+  ambiguity,
+  conflict,
+  group,
+  neighborTabCases,
+  otherGroup,
+  requirement,
+  storedTabsCases,
+  tabStepsCases,
+} from './editor-tabs.store.data'
 
 const STORAGE_KEY = useEditorTabsStore.persist.getOptions().name ?? ''
-const req = { id: 'i1', title: 'REQ-001', href: '/projects/p1/search/i1' }
-const ambiguity = { id: 'i2', title: 'AMB-001', href: '/projects/p1/search/i2' }
-const conflict = {
-  id: 'i3',
-  title: 'CONF-001',
-  href: '/projects/p1/search/i3',
-  icon: 'item' as const,
+
+/** The key of the stored tabs of `tabGroup`. */
+function keyOf(tabGroup: string) {
+  return `${STORAGE_KEY}:${tabGroup}`
+}
+
+/** What the storage holds for `tabGroup`, as another browser tab would read it. */
+function storedGroup(tabGroup: string): unknown {
+  const stored = browserStorage.getItem(keyOf(tabGroup))
+  return stored === null ? null : JSON.parse(stored)
 }
 
 beforeEach(() => {
-  browserStorage.removeItem(STORAGE_KEY)
-  useEditorTabsStore.setState(useEditorTabsStore.getInitialState())
+  useEditorTabsStore.persist.clearStorage()
 })
 
 describe('useEditorTabsStore', () => {
-  it('opens a tab once and updates its title', () => {
-    const { openTab } = useEditorTabsStore.getState()
-
-    openTab('p1:search', req, { keep: true })
-    openTab('p1:search', ambiguity, { keep: true })
-    openTab('p1:search', { ...req, title: 'Renamed' })
-
-    expect(useEditorTabsStore.getState().groups['p1:search']).toEqual([
-      { ...req, title: 'Renamed' },
-      ambiguity,
-    ])
-  })
-
-  it('opens a new tab next to the tab shown last, also after its page left the screen', () => {
-    const { openTab, leaveTab } = useEditorTabsStore.getState()
-    openTab('p1:search', req, { keep: true })
-    openTab('p1:search', ambiguity, { keep: true })
-    openTab('p1:search', req)
-
-    leaveTab('p1:search', req.id)
-    expect(useEditorTabsStore.getState().onScreen['p1:search']).toBeUndefined()
-    openTab('p1:search', conflict)
-
-    expect(useEditorTabsStore.getState().groups['p1:search']?.map(({ id }) => id)).toEqual([
-      'i1',
-      'i3',
-      'i2',
-    ])
-    expect(useEditorTabsStore.getState().onScreen['p1:search']).toBe(conflict.id)
-  })
-
-  it('opens a new tab last once the tab shown last is closed', () => {
-    const { openTab, closeTabs } = useEditorTabsStore.getState()
-    openTab('p1:search', ambiguity, { keep: true })
-    openTab('p1:search', req, { keep: true })
-
-    closeTabs('p1:search', [req.id])
-    openTab('p1:search', conflict)
-
-    expect(useEditorTabsStore.getState().groups['p1:search']?.map(({ id }) => id)).toEqual([
-      'i2',
-      'i3',
-    ])
-  })
-
-  it('opens a new page in the preview tab, in the place of the preview tab open', () => {
-    const { openTab } = useEditorTabsStore.getState()
-    openTab('p1:search', req, { keep: true })
-    openTab('p1:search', ambiguity)
-    openTab('p1:search', req)
-
-    openTab('p1:search', conflict)
+  it.each(tabStepsCases)('$name', ({ steps, tabs, preview, onScreen, lastShown, keepNext }) => {
+    for (const step of steps) step(useEditorTabsStore.getState())
 
     const state = useEditorTabsStore.getState()
-    expect(state.groups['p1:search']?.map(({ id }) => id)).toEqual(['i1', 'i3'])
-    expect(state.preview['p1:search']).toBe(conflict.id)
+    expect({
+      tabs: state.groups[group] ?? [],
+      preview: state.preview[group] ?? null,
+      onScreen: state.onScreen[group] ?? null,
+      lastShown: state.lastShown[group] ?? null,
+      keepNext: state.keepNext,
+    }).toEqual({ tabs, preview, onScreen, lastShown, keepNext })
   })
 
-  it('opens a kept tab next to the tab shown last, and leaves the preview tab', () => {
-    const { openTab } = useEditorTabsStore.getState()
-    openTab('p1:search', req)
-
-    openTab('p1:search', ambiguity, { keep: true })
-
-    const state = useEditorTabsStore.getState()
-    expect(state.groups['p1:search']?.map(({ id }) => id)).toEqual(['i1', 'i2'])
-    expect(state.preview['p1:search']).toBe(req.id)
-  })
-
-  it('keeps the preview tab, so the next page opens a new preview tab', () => {
-    const { openTab, keepTab } = useEditorTabsStore.getState()
-    openTab('p1:search', req)
-
-    keepTab('p1:search', req.id)
-    openTab('p1:search', ambiguity)
-
-    const state = useEditorTabsStore.getState()
-    expect(state.groups['p1:search']?.map(({ id }) => id)).toEqual(['i1', 'i2'])
-    expect(state.preview['p1:search']).toBe(ambiguity.id)
-  })
-
-  it('keeps a page asked to be kept, at once when its tab is open, else when it opens', () => {
-    const { openTab, keepPage } = useEditorTabsStore.getState()
-    openTab('p1:search', req)
-
-    keepPage(req.href)
-    expect(useEditorTabsStore.getState().preview['p1:search']).toBeUndefined()
-    keepPage(ambiguity.href)
-    openTab('p1:search', ambiguity)
-
-    const state = useEditorTabsStore.getState()
-    expect(state.groups['p1:search']?.map(({ id }) => id)).toEqual(['i1', 'i2'])
-    expect(state.preview['p1:search']).toBeUndefined()
-    expect(state.keepNext).toBeNull()
-  })
-
-  it('closes several tabs at once', () => {
-    const { openTab, closeTabs } = useEditorTabsStore.getState()
-    openTab('p1:search', req, { keep: true })
-    openTab('p1:search', ambiguity, { keep: true })
-    openTab('p1:search', conflict)
-
-    closeTabs('p1:search', [ambiguity.id, conflict.id])
-
-    const state = useEditorTabsStore.getState()
-    expect(state.groups['p1:search']).toEqual([req])
-    expect(state.preview['p1:search']).toBeUndefined()
-    expect(state.lastShown['p1:search']).toBeUndefined()
-  })
-
-  it('has no preview tab once the preview tab is closed', () => {
-    const { openTab, closeTabs } = useEditorTabsStore.getState()
-    openTab('p1:search', req)
-
-    closeTabs('p1:search', [req.id])
-
-    expect(useEditorTabsStore.getState().preview['p1:search']).toBeUndefined()
-  })
-
-  it('reads the stored tabs and preview tabs, without the fields of an older version', async () => {
-    browserStorage.setItem(
-      STORAGE_KEY,
-      JSON.stringify({
-        // lastHrefs is a field of an older version, which the store leaves out.
-        state: {
-          groups: { 'p1:search': [ambiguity, conflict] },
-          preview: { 'p1:search': conflict.id },
-          lastHrefs: {},
-        },
-        version: 0,
-      }),
-    )
+  it.each(storedTabsCases)('reads $name', async ({ stored, groups, preview }) => {
+    for (const [tabGroup, tabs] of Object.entries(stored)) {
+      browserStorage.setItem(keyOf(tabGroup), JSON.stringify(tabs))
+    }
 
     await useEditorTabsStore.persist.rehydrate()
 
     const state = useEditorTabsStore.getState()
-    expect(state.groups['p1:search']).toEqual([ambiguity, conflict])
-    expect(state.preview['p1:search']).toBe(conflict.id)
-    expect(state).not.toHaveProperty('lastHrefs')
+    expect({ groups: state.groups, preview: state.preview }).toEqual({ groups, preview })
   })
 
-  it('drops stored tabs that do not have the expected shape', async () => {
-    browserStorage.setItem(
-      STORAGE_KEY,
-      JSON.stringify({
-        state: { groups: { 'p1:search': [{ id: 1 }] } },
-        version: 0,
-      }),
-    )
-
+  it('keeps the tabs that another browser tab opened in another group since it read them', async () => {
+    browserStorage.setItem(keyOf(group), JSON.stringify({ tabs: [requirement] }))
+    browserStorage.setItem(keyOf(otherGroup), JSON.stringify({ tabs: [conflict] }))
     await useEditorTabsStore.persist.rehydrate()
+    // Another browser tab opens a tab in the other group.
+    browserStorage.setItem(keyOf(otherGroup), JSON.stringify({ tabs: [conflict, ambiguity] }))
 
-    expect(useEditorTabsStore.getState().groups).toEqual({})
+    useEditorTabsStore.getState().openTab(group, ambiguity)
+    useEditorTabsStore.getState().closeTabs(group, [requirement.id])
+
+    expect(storedGroup(group)).toEqual({ tabs: [ambiguity], preview: ambiguity.id })
+    expect(storedGroup(otherGroup)).toEqual({ tabs: [conflict, ambiguity] })
+  })
+
+  it('removes the stored tabs of a group once all of them close', async () => {
+    await useEditorTabsStore.persist.rehydrate()
+    useEditorTabsStore.getState().openTab(group, requirement)
+    expect(storedGroup(group)).toEqual({ tabs: [requirement], preview: requirement.id })
+
+    useEditorTabsStore.getState().closeTabs(group, [requirement.id])
+
+    expect(storedGroup(group)).toBeNull()
   })
 })
 
 describe('neighborTab', () => {
-  it('is the next tab, else the previous one', () => {
-    expect(neighborTab([req, ambiguity], req.id)).toBe(ambiguity)
-    expect(neighborTab([req, ambiguity], ambiguity.id)).toBe(req)
-    expect(neighborTab([req], req.id)).toBeUndefined()
-  })
-
-  it('skips the tabs that close with it', () => {
-    expect(neighborTab([req, ambiguity, conflict], req.id, [req.id, ambiguity.id])).toBe(conflict)
-    expect(neighborTab([req, ambiguity, conflict], conflict.id, [ambiguity.id, conflict.id])).toBe(
-      req,
-    )
-    expect(neighborTab([req, ambiguity], req.id, [req.id, ambiguity.id])).toBeUndefined()
+  it.each(neighborTabCases)('is $name', ({ tabs, id, closing, neighbor }) => {
+    expect(neighborTab(tabs, id, closing)).toBe(neighbor)
   })
 })

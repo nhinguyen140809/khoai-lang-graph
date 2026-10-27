@@ -1,14 +1,21 @@
-import type { EditorTab } from './editor-tabs.schema'
+import { omit } from '@/shared/lib/collections'
 
-/** The record with the entry of `key` set to `value`, or the same record when it has it already. */
-export function withEntry(record: Record<string, string>, key: string, value: string) {
-  return record[key] === value ? record : { ...record, [key]: value }
+import {
+  type EditorTab,
+  type PersistedTabs,
+  type StoredTabGroup,
+  storedTabGroupSchema,
+} from './editor-tabs.types'
+
+/** The tab of a group set in the record, or the same record when the group has it already. */
+export function setGroupTab(record: Record<string, string>, group: string, tabId: string) {
+  return record[group] === tabId ? record : { ...record, [group]: tabId }
 }
 
-/** The record without the entry of `key` when it holds `value`, else the same record. */
-export function withoutEntry(record: Record<string, string>, key: string, value: string) {
-  if (record[key] !== value) return record
-  return Object.fromEntries(Object.entries(record).filter(([entry]) => entry !== key))
+/** The record without the tab of a group when the group holds that tab, else the same record. */
+export function clearGroupTab(record: Record<string, string>, group: string, tabId: string) {
+  if (record[group] !== tabId) return record
+  return omit(record, [group])
 }
 
 /** The tabs with `tab` in them: in place of the open tab of the same id, else after `after`. */
@@ -20,19 +27,11 @@ export function placeTab(
   const index = tabs.findIndex(({ id }) => id === tab.id)
   const open = index === -1 ? undefined : tabs[index]
   if (open !== undefined) {
-    const same = open.title === tab.title && open.href === tab.href && open.icon === tab.icon
-    return same ? tabs : tabs.with(index, tab)
+    const isSame = open.title === tab.title && open.href === tab.href && open.icon === tab.icon
+    return isSame ? tabs : tabs.with(index, tab)
   }
   const afterIndex = tabs.findIndex(({ id }) => id === after)
   return afterIndex === -1 ? [...tabs, tab] : tabs.toSpliced(afterIndex + 1, 0, tab)
-}
-
-/**
- * The tab group of a project: one strip for every feature, so a tab stays open when the side
- * panel changes.
- */
-export function projectTabGroup(projectId: string): string {
-  return projectId
 }
 
 /**
@@ -46,6 +45,30 @@ export function neighborTab(
 ): EditorTab | undefined {
   const index = tabs.findIndex((tab) => tab.id === id)
   if (index === -1) return undefined
-  const stays = (tab: EditorTab) => !closing.includes(tab.id)
-  return tabs.slice(index + 1).find(stays) ?? tabs.slice(0, index).findLast(stays)
+  const isKept = (tab: EditorTab) => !closing.includes(tab.id)
+  return tabs.slice(index + 1).find(isKept) ?? tabs.slice(0, index).findLast(isKept)
+}
+
+/** The stored tabs of each group that has tabs open, with the id of its preview tab. */
+export function splitTabGroups({ groups, preview = {} }: PersistedTabs) {
+  const entries: Record<string, StoredTabGroup> = {}
+  for (const [group, tabs] of Object.entries(groups)) {
+    if (tabs.length === 0) continue
+    const previewId = preview[group]
+    entries[group] = previewId === undefined ? { tabs } : { tabs, preview: previewId }
+  }
+  return entries
+}
+
+/** The tabs of the groups read from storage, without the groups of another shape. */
+export function joinTabGroups(entries: Record<string, unknown>): PersistedTabs {
+  const groups: Record<string, EditorTab[]> = {}
+  const preview: Record<string, string> = {}
+  for (const [group, entry] of Object.entries(entries)) {
+    const stored = storedTabGroupSchema.safeParse(entry)
+    if (!stored.success) continue
+    groups[group] = stored.data.tabs
+    if (stored.data.preview !== undefined) preview[group] = stored.data.preview
+  }
+  return { groups, preview }
 }

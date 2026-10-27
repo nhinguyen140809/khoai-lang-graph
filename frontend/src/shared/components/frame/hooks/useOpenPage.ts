@@ -3,9 +3,9 @@
 import type { Route } from 'next'
 import { useRouter } from 'next/navigation'
 
-import { activityOfHref } from '../activities/activity.utils'
-import { useActivities } from '../activities/hooks/useActivities'
-import { useSideFeature } from '../activities/hooks/useSideFeature'
+import { destinationOfHref } from '../destinations/destination.utils'
+import { useDestinations } from '../destinations/hooks/useDestinations'
+import { useSideFeature } from '../destinations/hooks/useSideFeature'
 import { useEditorTabsStore } from '../tabs/editor-tabs.store'
 
 interface OpenPageOptions {
@@ -23,12 +23,12 @@ interface OpenPageOptions {
  */
 export function useOpenPage() {
   const router = useRouter()
-  const { activities } = useActivities()
+  const { destinations } = useDestinations()
   const { show } = useSideFeature()
   const keepPage = useEditorTabsStore((state) => state.keepPage)
 
   return (href: Route, options: OpenPageOptions = {}) => {
-    const feature = activityOfHref(activities, href)
+    const feature = destinationOfHref(destinations, href)
     if (feature !== undefined) show(feature.id)
     if (options.keep === true) keepPage(href)
     router.push(href)

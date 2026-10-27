@@ -4,7 +4,7 @@ import { cn } from 'cn'
 import { Progress as ProgressPrimitive } from 'radix-ui'
 import * as React from 'react'
 
-import { type Tone, toneClasses } from '@/shared/lib/tone.constants'
+import { type Tone, toneClasses } from '@/shared/lib/tone'
 
 function Progress({
   className,
@@ -17,7 +17,7 @@ function Progress({
       data-slot="progress"
       data-color={color}
       className={cn(
-        'relative flex h-1 w-full items-center overflow-x-hidden rounded-md bg-muted',
+        'relative flex h-1 w-full items-center overflow-x-hidden rounded-full bg-muted',
         toneClasses[color],
         className,
       )}

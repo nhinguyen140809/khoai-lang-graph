@@ -1,10 +1,21 @@
 import { create } from 'zustand'
 import { persist } from 'zustand/middleware'
 
-import { parseStored, persistStorage, storageKey } from '@/shared/lib/browser-storage.utils'
+import { parseStored, persistStorageByEntry, storageKey } from '@/shared/lib/storage'
 
-import { type EditorTab, type PersistedTabs, persistedTabsSchema } from './editor-tabs.schema'
-import { placeTab, withEntry, withoutEntry } from './editor-tabs.utils'
+import {
+  type EditorTab,
+  type PersistedTabs,
+  persistedTabsSchema,
+  type StoredTabGroup,
+} from './editor-tabs.types'
+import {
+  clearGroupTab,
+  joinTabGroups,
+  placeTab,
+  setGroupTab,
+  splitTabGroups,
+} from './editor-tabs.utils'
 
 interface OpenTabOptions {
   /** Opens the tab as a kept tab instead of the preview tab of its group. */
@@ -47,8 +58,11 @@ interface EditorTabsState {
 }
 
 /**
- * The editor tabs of every project on this device; a group is one project, and holds the tabs of
- * every feature. `useRestoreFrame` reads them after the first render, before the pages open theirs.
+ * The editor tabs of every tab group on this device; a group is the strip of one `TabbedWorkspace`,
+ * named by its layout, and holds the tabs of every feature. `useRestoreFrame` reads them after the
+ * first render, before the pages open theirs. Each group is stored under a key of its own, and a
+ * browser tab writes only the groups it changed, so that a browser tab on one project never writes
+ * its old copy of another project over the tabs opened there since.
  */
 export const useEditorTabsStore = create<EditorTabsState>()(
   persist(
@@ -60,48 +74,48 @@ export const useEditorTabsStore = create<EditorTabsState>()(
       keepNext: null,
       openTab: (group, tab, options = {}) => {
         set((state) => {
-          const asked = state.keepNext === tab.href
-          const keep = options.keep === true || asked
+          const isAsked = state.keepNext === tab.href
+          const isKept = options.keep === true || isAsked
           const tabs = state.groups[group] ?? []
           const isOpen = tabs.some(({ id }) => id === tab.id)
           const previewId = state.preview[group]
-          const replaces = !isOpen && !keep && tabs.some(({ id }) => id === previewId)
-          const placed = replaces
+          const isReplacing = !isOpen && !isKept && tabs.some(({ id }) => id === previewId)
+          const placed = isReplacing
             ? tabs.map((open) => (open.id === previewId ? tab : open))
             : placeTab(tabs, tab, state.lastShown[group])
           let preview = state.preview
-          if (keep) preview = withoutEntry(preview, group, tab.id)
-          else if (!isOpen) preview = withEntry(preview, group, tab.id)
+          if (isKept) preview = clearGroupTab(preview, group, tab.id)
+          else if (!isOpen) preview = setGroupTab(preview, group, tab.id)
           return {
             groups: placed === tabs ? state.groups : { ...state.groups, [group]: placed },
             preview,
-            keepNext: asked ? null : state.keepNext,
-            onScreen: withEntry(state.onScreen, group, tab.id),
-            lastShown: withEntry(state.lastShown, group, tab.id),
+            keepNext: isAsked ? null : state.keepNext,
+            onScreen: setGroupTab(state.onScreen, group, tab.id),
+            lastShown: setGroupTab(state.lastShown, group, tab.id),
           }
         })
       },
       keepTab: (group, id) => {
-        set((state) => ({ preview: withoutEntry(state.preview, group, id) }))
+        set((state) => ({ preview: clearGroupTab(state.preview, group, id) }))
       },
       keepPage: (href) => {
         set((state) => {
           for (const [group, tabs] of Object.entries(state.groups)) {
             const open = tabs.find((tab) => tab.href === href)
-            if (open !== undefined) return { preview: withoutEntry(state.preview, group, open.id) }
+            if (open !== undefined) return { preview: clearGroupTab(state.preview, group, open.id) }
           }
           return { keepNext: href }
         })
       },
       leaveTab: (group, id) => {
-        set((state) => ({ onScreen: withoutEntry(state.onScreen, group, id) }))
+        set((state) => ({ onScreen: clearGroupTab(state.onScreen, group, id) }))
       },
       closeTabs: (group, ids) => {
         set((state) => {
           const closing = new Set(ids)
           const withoutClosed = (record: Record<string, string>) => {
             const id = record[group]
-            return id !== undefined && closing.has(id) ? withoutEntry(record, group, id) : record
+            return id !== undefined && closing.has(id) ? clearGroupTab(record, group, id) : record
           }
           return {
             groups: {
@@ -119,7 +133,9 @@ export const useEditorTabsStore = create<EditorTabsState>()(
       name: storageKey('editor-tabs'),
       skipHydration: true,
       // Changes are stored only once the stored tabs have been read.
-      storage: persistStorage<PersistedTabs>({
+      storage: persistStorageByEntry<PersistedTabs, StoredTabGroup>({
+        split: splitTabGroups,
+        join: joinTabGroups,
         ready: (): boolean => useEditorTabsStore.persist.hasHydrated(),
       }),
       partialize: ({ groups, preview }): PersistedTabs => ({ groups, preview }),

@@ -1,5 +1,6 @@
 'use client'
 
+import { cn } from 'cn'
 import {
   CircleCheckIcon,
   InfoIcon,
@@ -9,6 +10,8 @@ import {
 } from 'lucide-react'
 import { useTheme } from 'next-themes'
 import { Toaster as Sonner, type ToasterProps } from 'sonner'
+
+import { toneClasses } from '@/shared/lib/tone'
 
 const Toaster = ({ ...props }: ToasterProps) => {
   const { theme = 'system' } = useTheme()
@@ -36,6 +39,12 @@ const Toaster = ({ ...props }: ToasterProps) => {
       toastOptions={{
         classNames: {
           toast: 'cn-toast',
+          // An action, such as Undo, is a small ghost button in the primary color rather than the
+          // solid button of the library, whose styles the important classes override.
+          actionButton: cn(
+            toneClasses.primary,
+            'h-7! rounded-md! bg-transparent! px-2.5! text-[0.8rem]! text-(--tone-strong)! hover:bg-(--tone-soft)!',
+          ),
         },
       }}
       {...props}

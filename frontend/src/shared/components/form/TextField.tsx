@@ -1,0 +1,49 @@
+'use client'
+
+import type { ComponentProps } from 'react'
+import type { FieldPath, FieldValues } from 'react-hook-form'
+
+import { Input } from '@/shared/components/ui/input'
+import { isString } from '@/shared/lib/guards'
+
+import { FormField, type FormFieldProps } from './FormField'
+
+type TextFieldProps<T extends FieldValues, N extends FieldPath<T>, TContext, TOutput> = Omit<
+  FormFieldProps<T, N, TContext, TOutput>,
+  'children'
+> &
+  Omit<ComponentProps<typeof Input>, 'id' | 'name' | 'value' | 'onChange' | 'onBlur' | 'children'>
+
+/** A text field of a form: an input with its label, its description, its error and its action. */
+export function TextField<
+  T extends FieldValues,
+  N extends FieldPath<T>,
+  TContext = unknown,
+  TOutput = T,
+>({
+  control,
+  name,
+  label,
+  description,
+  action,
+  ...inputProps
+}: TextFieldProps<T, N, TContext, TOutput>) {
+  return (
+    <FormField
+      control={control}
+      name={name}
+      label={label}
+      description={description}
+      action={action}
+    >
+      {(field, controlProps) => (
+        <Input
+          {...inputProps}
+          {...field}
+          value={isString(field.value) ? field.value : ''}
+          {...controlProps}
+        />
+      )}
+    </FormField>
+  )
+}

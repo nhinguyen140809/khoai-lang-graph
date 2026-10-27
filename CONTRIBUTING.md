@@ -221,81 +221,7 @@ Conventions:
 
 ### TypeScript / React (frontend)
 
-| Tool | Config |
-|---|---|
-| Type checker | `tsc` with `strict`, `noUncheckedIndexedAccess`, `exactOptionalPropertyTypes`, `noImplicitOverride`, `verbatimModuleSyntax` |
-| Linter | **ESLint** flat config: `typescript-eslint` (strict-type-checked), `react-hooks`, `@next/next` (core web vitals), `jsx-a11y`, `import` sorting |
-| Formatter | **Prettier** (+ `prettier-plugin-tailwindcss`) |
-| Package manager | **pnpm** - commit `pnpm-lock.yaml` |
-
-Conventions:
-- **No `any`** - use `unknown` + narrowing. No non-null assertions (`!`) without a comment.
-- **Feature-based structure:** code for a feature lives in `src/features/<feature>/`, and code that knows no feature, including the frame of the screens, in `src/shared/`. The layers follow [Feature-Sliced Design](https://feature-sliced.design): a layer imports only the layers under it.
-- **Import direction** (enforced by ESLint `no-restricted-imports`): imports go one way, `app` -> `features` -> `shared`.
-
-  | Layer | Folders | May import |
-  |---|---|---|
-  | Shared | `src/shared/`: `components/` (`ui/` for shadcn/ui, `frame/` for the frame of the screens, `state/` for query states), `hooks/`, `lib/` (generic utilities), `api/` (server access, `generated/`) | Other shared code only |
-  | Features | `src/features/<feature>/` | Shared code |
-  | App | `src/app/`, `src/providers/` | Features (through their `index.ts`) and shared code |
-
-  - A feature never imports another feature. When two features appear together, the app layer composes them; code both need moves to the shared layer.
-  - A shared component that shows feature content receives it as a prop (`children` or a named `ReactNode` prop) from `src/app/`. Example: `src/app/(app)/layout.tsx` passes the thread list and the artifact panel into `AppShell`.
-  - The rule covers relative paths too: shared code does not reach `features/`, `app/` or `providers/` with `../`, and a relative import inside a feature never climbs out of the feature folder (shared code is imported with `@/`).
-  - Code outside `src/shared/components/frame/` imports the frame from `@/shared/components/frame`, its `index.ts`; files inside the folder use relative imports, and the rest of the shared code does not import the frame.
-  - `src/mocks/` and `src/test/` are test infrastructure and may import feature types.
-- **Feature public API:** each feature has an `index.ts` that exports only what other code needs (page and shared components, hooks, types). Code outside the feature imports from `@/features/<feature>`, never from a file inside it (enforced by ESLint `no-restricted-imports`); code inside the feature uses relative imports. Anything not exported from `index.ts` is private and can change freely.
-- **Components:** function components, named exports, one component per file. Next.js routing files (`page.tsx`, `layout.tsx`, `error.tsx`, ...) are the exception: they must use a default export.
-- **Routes stay thin:** `src/app/` holds only Next.js routing files. A `page.tsx` renders a component from `src/features/`; the frame lives in `src/shared/components/frame/`, global providers in `src/providers/`.
-- **Server and Client Components:** files in `src/app/` are Server Components by default. Add `'use client'` at the top of a component file that uses state, effects, event handlers, or browser APIs. Code that reads `window`, `document`, or `localStorage` runs in an effect or event handler, never during render, so the server-rendered HTML matches the first client render.
-- **Server state** via TanStack Query only - don't copy server data into Zustand/`useState`.
-- **Query states:** a component that shows data from a query handles four states, in this order: loading (`isPending`), error (`isError`), empty (success with no data), success. The first three use the shared components from `@/shared/components/state`:
-
-  | State | Component | Rules |
-  |---|---|---|
-  | Loading | `LoadingState` | Skeleton rows roughly shaped like the content, with a `label` for screen readers. A spinner is only for short actions (a button that is submitting). |
-  | Error | `ErrorState` | A message the user understands, plus `onRetry={() => void query.refetch()}`. The error stays where the data would be; it does not replace the page. |
-  | Empty | `EmptyState` | Says what is missing and, when there is one, offers the next step through `action`. |
-
-  - Each component has two sizes: `compact` for narrow containers (sidebar, cards) and `page` (default) for a panel or a whole page.
-  - Queries use `useQuery`, not `useSuspenseQuery`: a suspended query would run on the server during rendering, where the API is not reachable with the user's session.
-  - Unexpected errors (a bug while rendering) are caught by the route error boundary (`error.tsx`). Slow routes show a `loading.tsx`.
-  - Every state must be reachable in `pnpm dev:mock` through a mock scenario (frontend README: Mock data).
-- **Validation** with Zod at boundaries (forms, untrusted data).
-- **UI components:** use shadcn/ui primitives from `src/shared/components/ui/` before building custom ones. Style with Tailwind utilities; avoid ad-hoc CSS files. Use `cn()` from `@/shared/lib/utils` (re-exports shadcn's `cn` package, a clsx + tailwind-merge replacement) to combine classes. Outside `src/shared/components/ui/`, a class has no CSS value of its own in brackets (`text-[0.625rem]`, `grid-cols-[8rem_1fr]`, `[scrollbar-width:none]`; state selectors such as `data-[state=open]` are fine): use a token or utility of the scale, or add a token or `@utility` to `src/app/styles.css`. A `style` prop is for a value that comes from data, such as the depth of a tree row.
-- **Heavy components** (CodeMirror, React Flow, PDF viewer) are lazy-loaded with `next/dynamic` (`ssr: false` for components that need the browser) so the initial bundle stays small.
-- **Untrusted content** (LLM-generated HTML/Markdown) is never rendered with `dangerouslySetInnerHTML`; HTML artifacts go in a sandboxed iframe.
-- **Accessibility:** semantic HTML, labels on inputs, keyboard navigable. `jsx-a11y` must pass.
-- Path alias: `@/` -> `src/`.
-
-**File naming** (enforced by `eslint-plugin-check-file` in `pnpm lint`):
-
-| File | Pattern | Examples |
-|---|---|---|
-| Component (`.tsx`) | `PascalCase.tsx`, name = the exported component | `ChatPage.tsx` |
-| Hook (`.ts` in a `hooks/` folder) | `useSomething.ts`, name = the exported hook | `useRunStream.ts` |
-| Any other `.ts` | `<subject>.<kind>.ts` | `chat.api.ts`, `settings.store.ts`, `run-events.reducer.ts` |
-| Config that holds React elements (`.tsx`) | `<subject>.config.tsx` | `console-frame.config.tsx` |
-| Unit test | `<file under test>.test.ts(x)`, in a `__tests__/` folder next to the file under test | `features/chat/__tests__/chat.api.test.ts`, `shared/components/state/__tests__/ErrorState.test.tsx` |
-| E2E test | `<subject>.spec.ts` | `tests/e2e/chat.spec.ts` |
-
-- **Subject** (before the first dot): what the file is about, in kebab-case. Always include it, even when the folder already says it (`features/chat/chat.api.ts`), so names are unique in search results and editor tabs.
-- **Kind** (after the dot): the role of the file, one of `api`, `types`, `schema`, `store`, `reducer`, `config`, `constants`, `utils`, `handlers`, `fixtures`, `setup`, `spec`. Need a new kind? Add it to the list here and in `eslint.config.js` in the same PR.
-- **Exceptions** (names set by a tool or convention): `src/shared/components/ui/**` and `src/shared/hooks/use-mobile.ts` (shadcn CLI), `src/shared/lib/utils.ts` (shadcn alias), Next.js file conventions (below), `index.ts` barrels, `*.d.ts`, and root config files (`next.config.ts`, ...).
-- **Next.js file conventions** keep the names the framework requires:
-  - Routing files in `src/app/**`: `page.tsx`, `layout.tsx`, `loading.tsx`, `error.tsx`, `not-found.tsx`, `global-error.tsx`, `template.tsx`, `default.tsx`, `route.ts`.
-  - Metadata files in `src/app/**`: `icon.tsx`, `apple-icon.tsx`, `opengraph-image.tsx`, `twitter-image.tsx`, `sitemap.ts`, `robots.ts`, `manifest.ts`.
-  - Entry points directly in `src/`: `proxy.ts`, `instrumentation.ts`, `instrumentation-client.ts`.
-  - Any other file placed in `src/app/**` follows the table above.
-
-**Folder naming** (enforced by the same plugin):
-
-| Folder | Pattern | Examples |
-|---|---|---|
-| Inside `src/app/` (route segments) | kebab-case segment, or a Next.js form: `(group)`, `[param]`, `[...param]`, `[[...param]]`, `_private`, `@slot` | `settings/`, `(app)/`, `threads/[threadId]/` |
-| Everywhere else in `src/` and `tests/` | kebab-case, or `__tests__` for unit tests | `features/chat/`, `shared/components/`, `features/chat/__tests__/` |
-
-A folder name in `src/app/` is a URL segment, so renaming it changes the URL.
+The conventions of the frontend, from its tools to the naming of its files and identifiers, are in [frontend/CONTRIBUTING.md](frontend/CONTRIBUTING.md).
 
 ### API Contract
 
@@ -324,16 +250,15 @@ A folder name in `src/app/` is a URL segment, so renaming it changes the URL.
 - **Never log** API keys, tokens, passwords, or full user content in production.
 - LLM calls and agent steps are traced separately in Langfuse/LangSmith; application logs and LLM traces complement each other.
 - Raise domain exceptions (`khoailanggraph.domain.errors`); map them to HTTP responses in one place (exception handlers), not in every route.
-- Frontend: use an error boundary per route; no `console.log` left in committed code (ESLint `no-console`).
+- Frontend: [frontend/CONTRIBUTING: Logging \& Errors](frontend/CONTRIBUTING.md#logging--errors).
 
 ## Testing
 
 - **Backend:** `pytest`. Unit tests mock LLMs (LangChain fake chat models) - tests must be **deterministic and free**.
 - Mark tests calling real LLMs with `@pytest.mark.llm`; they're excluded from default CI runs.
-- **Frontend:** Vitest + Testing Library; test behavior, not implementation. Mock HTTP with MSW.
-- **E2E:** Playwright for critical flows only.
+- **Frontend:** Vitest + Testing Library, data-driven tests and Playwright, in [frontend/CONTRIBUTING: Testing](frontend/CONTRIBUTING.md#testing).
 - Coverage target: **>= 80%** for `features/*/service.py`, `agents/`, `tools/` (not a hard gate for UI).
-- Test file naming: `test_<module>.py` / `<Component>.test.tsx`. Frontend unit tests live in a `__tests__/` folder next to the file under test, never beside it (enforced by ESLint).
+- Test file naming: `test_<module>.py`; the frontend in [frontend/CONTRIBUTING: Testing](frontend/CONTRIBUTING.md#testing).
 - A bug fix PR includes a test that fails without the fix.
 
 ## Research Contributions

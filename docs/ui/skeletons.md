@@ -60,7 +60,7 @@ Marks used in the skeletons:
 | `[C]` | The feature on the activity bar whose side panel is shown |
 | `v` and `>` | An expanded and a collapsed node of a tree |
 | `[REQ-001 ...]` | The selected row of a list or a tree |
-| `x` after a tab name | The close button of the tab, shown on the active tab and on a tab under the pointer, and on every tab on a touch screen |
+| `x` after a tab name | The close button of the tab, shown on the active tab and on a tab under the pointer or with the focus, and on every tab on a touch screen |
 | `!` | Needs review: the item was made from an older version of an item it links to |
 | `*` | A step of a running workflow, printed as it starts |
 | `-` | A detail under a step, printed while the step runs: text, a tool call, an item produced |
@@ -70,27 +70,41 @@ Threads stay in the API: a thread maps one-to-one to a workflow session and hold
 
 ## 2. Project list
 
-The only screen outside a project, so it has no activity bar.
+A screen outside a project: its activity bar has no feature yet, only the account menu. A feature shown outside a project would be added to it. The prompt for a new idea comes first, and the projects of the user follow it.
 
 ```text
 +----------------------------------------------------------------------------------------------+
 | (K) khoai / Projects                     [ Search or run a command   Ctrl+K ]         (user) |
 +----------------------------------------------------------------------------------------------+
 |                                                                                              |
-|  Projects                                                   [ Archived ]  [ + New project ]  |
+|                  What product do you want to write the requirements for?                     |
 |                                                                                              |
-|  Name                    Last activity    Items                               Run            |
-|  ------------------------------------------------------------------------------------------  |
-|  [Mentor platform]       2 min ago        3 PER   24 AR   18 REQ   12 US      Waiting review |
-|  Campus food ordering    yesterday        4 PER   31 AR   22 REQ   15 US      -              |
-|  Library booking         3 days ago       2 PER    0 AR    0 REQ    0 US      Running        |
-|  ...                                                                                         |
+|          +------------------------------------------------------------------------+          |
+|          | > An online platform where university students find a mentor           |          |
+|          |                                                                        |          |
+|          | enter to create the project, shift+enter for a new line                |          |
+|          |                                                                 [ ^ ]  |          |
+|          +------------------------------------------------------------------------+          |
+|                                                                                              |
+|          Your projects                                     [ Filter ]  [ Archived ]          |
+|                                                                                              |
+|          Name                        Status                    Last activity                 |
+|          --------------------------------------------------------------------------          |
+|          [Mentor platform]           Waiting for you               2 min ago  [...]          |
+|          Library booking             Working                      3 days ago  [...]          |
+|          Campus food ordering        Done                          yesterday  [...]          |
+|          ...                                                                                 |
 |                                                                                              |
 +----------------------------------------------------------------------------------------------+
 ```
 
-- A row opens the project at Chat. Items are the `item_counts` of the project.
-- `New project` asks for a name, a description and the output language, then opens Chat on an empty thread; the first message starts the first run.
+- The prompt keeps its place, about a fifth of the window under the top bar on a screen wider than a phone, whatever the length of the list. It starts a project from an idea; drawn here with an idea typed in it. Enter, or the arrow up at the bottom right of the box, opens the dialog that creates the project. The arrow is named Create project, in its tooltip and for assistive technology, and waits until the box has text. `Create project` in the command palette and in the menu of the project opens this screen with the focus in the prompt.
+- The dialog, titled `Create project`, shows the name, which is optional because the agents name the project from the idea when it is left empty; the idea, which can still be edited; the language of the documents; and, folded under Agent settings, the settings that the agents start from (the number of personas and the reviews) with their defaults. Only the name has a hint, as its placeholder: it is named from the idea if left empty. Its `Create project` button creates the project, sends the idea as its first message, which starts the first run, and opens the project at Activity.
+- A row opens the project at Activity; the name of the project is in the primary color. Status says, in the words of the user view, the status that the latest runs of the threads of the project roll up to, the one that needs the user most: Waiting for you, then Failed, Working, Starting, Stopped and Done; or Not started before the first run.
+- `[...]` at the end of a row opens the menu of the project: Rename, Archive, or Restore in the list of archived projects, then Delete under a separator, in red. Rename opens a dialog with the name of the project selected, so that typing replaces it; it closes once the list shows the new name, with a success toast. `Rename project`, last in the menu of the open project on the top bar, and in the command palette opens the same dialog. Archive and Restore take effect at once, and a success toast names the project once it has left the list; the toast after Archive has Undo, a ghost button in the primary color, which restores it. Delete asks first, in a dialog that names the project and says that its documents and activity go with it and that this cannot be undone; the dialog waits until the project has left the list, and stays open with a toast when deleting fails. A project with a run that is not finished (about to start, running or waiting for review) is not deleted: Delete opens a dialog that says to stop the run in the project first, with Open project, which opens it at Activity. The button always shows, so that a screen without a pointer reaches it too. The menu has no other way in: a right click on a row opens the menu of the browser for a link, such as Open in new tab.
+- `Filter`, left of `Archived`, opens the filters of the list as a small form: Status, any number of the statuses of the column and Not started, and Last activity, one of In the last day, In the last 2 days, In the last 7 days and In the last 30 days. Apply applies them, and the API filters the projects; closing the form without Apply drops what was chosen. The button shows how many filters are applied, and Clear filters empties the form. When no project matches, the empty state of the list says so, with Clear filters.
+- An empty list shows the empty state under the prompt: no projects yet, and that a project starts from an idea in the prompt above. An empty list of archived projects is one sentence.
+- The list has no counts of items: the short names of the item kinds (PER, AR, REQ) mean little to a user who is not an analyst.
 
 ## 3. Chat
 

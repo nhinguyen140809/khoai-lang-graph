@@ -2,14 +2,14 @@
 
 import { type ReactNode, useEffect, useState } from 'react'
 
-const mockingEnabled = process.env.NEXT_PUBLIC_API_MOCKING === 'enabled'
+import { isMockingEnabled } from '@/shared/config/env'
 
 // Started at most once: effects run twice under Strict Mode and the worker rejects a second start.
 let workerStarted: Promise<unknown> | undefined
 
 function startWorker() {
-  workerStarted ??= import('@/mocks/msw-browser.setup').then(({ worker }) =>
-    worker.start({ onUnhandledRequest: 'bypass' }),
+  workerStarted ??= import('@/mocks/msw-browser.setup').then(({ mswWorker }) =>
+    mswWorker.start({ onUnhandledRequest: 'bypass' }),
   )
   return workerStarted
 }
@@ -23,16 +23,16 @@ interface MockingProviderProps {
  * is ready, so no request reaches the network before the mocks are in place.
  */
 export function MockingProvider({ children }: MockingProviderProps) {
-  const [ready, setReady] = useState(!mockingEnabled)
+  const [ready, setReady] = useState(!isMockingEnabled)
 
   useEffect(() => {
-    if (!mockingEnabled) return
-    let cancelled = false
+    if (!isMockingEnabled) return
+    let isCancelled = false
     void startWorker().then(() => {
-      if (!cancelled) setReady(true)
+      if (!isCancelled) setReady(true)
     })
     return () => {
-      cancelled = true
+      isCancelled = true
     }
   }, [])
 

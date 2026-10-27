@@ -1,10 +1,12 @@
 import type { Route } from 'next'
 import { useRouter } from 'next/navigation'
 
-import type { EditorTab } from '../editor-tabs.schema'
+import { routeOfAddress } from '@/shared/routes'
+
 import { useEditorTabsStore } from '../editor-tabs.store'
+import type { EditorTab } from '../editor-tabs.types'
 import { neighborTab } from '../editor-tabs.utils'
-import type { TabStrip } from '../TabStripContext'
+import type { TabStrip } from './useTabStrip'
 
 const noTabs: EditorTab[] = []
 
@@ -31,7 +33,7 @@ export function useEditorTabs(group: string, rootHref: Route | undefined): TabSt
     close: (closing: readonly string[]) => {
       if (onScreen !== undefined && closing.includes(onScreen)) {
         const next = neighborTab(tabs, onScreen, closing)?.href ?? rootHref
-        if (next !== undefined) router.push(next as Route)
+        if (next !== undefined) router.push(routeOfAddress(next))
       }
       closeTabs(group, closing)
     },

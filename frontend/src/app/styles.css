@@ -1,6 +1,9 @@
 @import 'tailwindcss';
 @import 'tw-animate-css';
 @import 'shadcn/tailwind.css';
+/* The fonts of the interface and of code, self-hosted with their Vietnamese subset. */
+@import '@fontsource-variable/mona-sans';
+@import '@fontsource-variable/noto-sans-mono';
 /* React Flow's own styles go in the components layer, so that utility classes override them. */
 @import '@xyflow/react/dist/style.css' layer(components);
 
@@ -35,10 +38,10 @@
  * as labels.
  */
 :root {
+  /* The same fonts on every system; the system fonts after them show only until they load. */
   --font-ui:
-    -apple-system, BlinkMacSystemFont, 'Segoe WPC', 'Segoe UI', system-ui, Ubuntu, 'Droid Sans',
-    sans-serif;
-  --font-code: Consolas, Menlo, Monaco, 'Droid Sans Mono', 'Courier New', monospace;
+    'Mona Sans Variable', -apple-system, BlinkMacSystemFont, 'Segoe UI', system-ui, sans-serif;
+  --font-code: 'Noto Sans Mono Variable', ui-monospace, Menlo, Consolas, monospace;
 
   --background: #fbfbfb;
   --foreground: #403f53;
@@ -205,22 +208,31 @@
 }
 
 /*
- * text-xs, the size of the text inside components, is 13px instead of 12px, with an 18px line:
- * the smallest size for text that people read. text-sm stays 14px.
- *
- * Below it, three sizes for labels and indicators, which people glance at instead of reading:
- * text-2xs (12px) for labels, captions and hints, text-3xs (11px) for counts, ids and times, and
- * text-4xs (10px) for the count inside a badge.
+ * The text sizes are the ones of Tailwind: text-sm (14px) for the text of components and of
+ * pages, text-xs (12px) for labels, captions and hints, which people glance at instead of reading.
+ * Below them, two sizes for indicators: text-3xs (11px) for counts, ids and times, and text-4xs
+ * (10px) for the count inside a badge.
  */
 @theme {
-  --text-xs: 0.8125rem;
-  --text-xs--line-height: calc(1.125 / 0.8125);
-  --text-2xs: 0.75rem;
-  --text-2xs--line-height: calc(1 / 0.75);
   --text-3xs: 0.6875rem;
   --text-3xs--line-height: calc(0.875 / 0.6875);
   --text-4xs: 0.625rem;
   --text-4xs--line-height: calc(0.75 / 0.625);
+}
+
+/*
+ * Sizes that follow the window instead of the spacing scale: a dialog grows to 80% of the window
+ * height at most, a popover keeps 1rem from each side of the window, and the prompt of the project
+ * list starts 18% of the window height below the top on wider screens. The rows of a dialog, and
+ * of the form inside it, give the space left to the part between the header and the buttons,
+ * which scrolls.
+ */
+@theme {
+  --max-height-dialog: 80dvh;
+  --max-width-popover: calc(100vw - 2rem);
+  --padding-prompt-top: 18vh;
+  --grid-template-rows-header-body: auto minmax(0, 1fr);
+  --grid-template-rows-body-footer: minmax(0, 1fr) auto;
 }
 
 @layer base {
@@ -234,8 +246,8 @@
     @apply font-sans;
   }
 
-  /* Heading sizes follow mira: its largest title is text-lg, card and dialog titles are text-sm,
-     and text inside components is text-xs. */
+  /* Heading sizes follow nova: its largest title is text-lg, card and dialog titles are
+     text-base, and text inside components is text-sm. */
   h1 {
     @apply font-heading text-lg font-medium;
   }
@@ -269,16 +281,6 @@
   [role='button']:not([aria-disabled='true']) {
     cursor: pointer;
   }
-}
-
-/*
- * The editor reads one step larger than the panels around it, for documents that are read at
- * length. Mira sets component text to text-xs, so inside the editor text-xs resolves to 14px and
- * text-sm to 16px. Dialogs and popovers render outside the editor and keep the base sizes.
- */
-@utility editor-text {
-  --text-xs: 0.875rem;
-  --text-sm: 1rem;
 }
 
 /*

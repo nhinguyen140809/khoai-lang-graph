@@ -1,12 +1,4 @@
-/** The panels of the frame that the user resizes and hides, by the region they take. */
-export const PanelRegion = {
-  /** Left of the editor: the side panel of the feature chosen. */
-  Side: 'side',
-  /** Under the editor. */
-  Bottom: 'bottom',
-} as const
-
-export type PanelRegion = (typeof PanelRegion)[keyof typeof PanelRegion]
+import { PanelRegion } from './panel.types'
 
 /** How a panel and the editor share the room of their region. */
 interface PanelLayout {

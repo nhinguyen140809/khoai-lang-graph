@@ -276,7 +276,8 @@ khoailanggraph/
 │   ├── openapi.json                 # API schema snapshot from `just codegen` (do not edit)
 │   ├── components.json              # shadcn/ui CLI config
 │   ├── openapi-ts.config.ts         # codegen: openapi.json -> src/api/generated/
-│   ├── eslint.config.js             # incl. file naming rules
+│   ├── eslint.config.js             # joins the blocks of lint/configs
+│   ├── lint/                        # ESLint: configs/ (blocks), lib/ (shared lists and patterns), plugin/ (local rules)
 │   ├── prettier.config.js
 │   ├── playwright.config.ts
 │   ├── tsconfig.json
@@ -470,7 +471,7 @@ Common commands (see `justfile` for the full list):
 | `just db-revision "msg"` | Create an Alembic migration |
 | `just eval <config>` | Run a research evaluation |
 
-Coding conventions, logging, branching, and commit rules are in **[CONTRIBUTING.md](CONTRIBUTING.md)**.
+Coding conventions, logging, branching, and commit rules are in **[CONTRIBUTING.md](CONTRIBUTING.md)**, and the conventions of the frontend in **[frontend/CONTRIBUTING.md](frontend/CONTRIBUTING.md)**.
 
 ## Testing
 
@@ -506,6 +507,7 @@ See [`research/README.md`](research/README.md) for how to reproduce results.
 | [`docs/architecture/`](docs/architecture/) | System & agent graph diagrams |
 | [`docs/adr/`](docs/adr/) | Architecture Decision Records |
 | [`CONTRIBUTING.md`](CONTRIBUTING.md) | Workflow & conventions |
+| [`frontend/CONTRIBUTING.md`](frontend/CONTRIBUTING.md) | Conventions of the frontend |
 | [`CHANGELOG.md`](CHANGELOG.md) | Release history (auto-generated) |
 
 ## Roadmap

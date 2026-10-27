@@ -1,5 +1,7 @@
 import { create } from 'zustand'
 
+import { removeEntry, setEntry } from '@/shared/lib/collections'
+
 import type { PaletteCommand } from './command.types'
 
 interface CommandsState {
@@ -28,13 +30,9 @@ export const useCommandsStore = create<CommandsState>()((set) => ({
   },
   setCommands: (source, commands) => {
     // A source that is already there keeps its place.
-    set((state) => ({ sources: new Map(state.sources).set(source, commands) }))
+    set((state) => ({ sources: setEntry(state.sources, source, commands) }))
   },
   removeCommands: (source) => {
-    set((state) => {
-      const sources = new Map(state.sources)
-      sources.delete(source)
-      return { sources }
-    })
+    set((state) => ({ sources: removeEntry(state.sources, source) }))
   },
 }))

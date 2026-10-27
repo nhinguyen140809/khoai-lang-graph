@@ -1,42 +1,39 @@
 import { render, renderHook, waitFor } from '@testing-library/react'
-import type { Route } from 'next'
 import { createElement, type ReactNode } from 'react'
-import { beforeEach, describe, expect, it, vi } from 'vitest'
+import { beforeEach, describe, expect, it } from 'vitest'
 
-import { browserStorage } from '@/shared/lib/browser-storage.utils'
-import { setPathname } from '@/test/next-mocks.utils'
+import { browserStorage } from '@/shared/lib/storage'
+import { routeOfAddress } from '@/shared/routes'
+import { setPathname } from '@/test/next-stubs'
 
-import type { Activity } from '../../activities/activity.types'
-import { useSideFeatureStore } from '../../activities/side-feature.store'
+import type { Destination } from '../../destinations/destination.types'
+import { useSideFeatureStore } from '../../destinations/side-feature.store'
 import { usePanelsStore } from '../../panels/panels.store'
 import { useEditorTabsStore } from '../../tabs/editor-tabs.store'
 import { useEditorTab } from '../../tabs/hooks/useEditorTab'
+import { TabGroupContext } from '../../tabs/hooks/useTabGroup'
 import { useRestoreFrame } from '../useRestoreFrame'
-
-vi.mock('next/navigation', async () => (await import('@/test/next-mocks.utils')).navigationMock)
+import { chosenFeatureCases } from './useRestoreFrame.data'
 
 const SIDE_FEATURE_KEY = useSideFeatureStore.persist.getOptions().name ?? ''
 const TABS_KEY = useEditorTabsStore.persist.getOptions().name ?? ''
 
-function feature(id: string): Activity {
-  return { id, label: id, icon: null, href: `/projects/p1/${id}` as Route, panel: null }
+function feature(id: string): Destination {
+  return { id, label: id, icon: null, href: routeOfAddress(`/projects/p1/${id}`), panel: null }
 }
 
-const activities = [feature('console'), feature('search'), feature('artifacts')]
+const destinations = [feature('console'), feature('search'), feature('artifacts')]
 
 beforeEach(() => {
   browserStorage.removeItem(SIDE_FEATURE_KEY)
-  browserStorage.removeItem(TABS_KEY)
+  useEditorTabsStore.persist.clearStorage()
   setPathname('/projects/p1/artifacts')
-  usePanelsStore.setState(usePanelsStore.getInitialState())
-  useSideFeatureStore.setState(useSideFeatureStore.getInitialState())
-  useEditorTabsStore.setState(useEditorTabsStore.getInitialState())
 })
 
 describe('useRestoreFrame', () => {
   it('reads the stored state of the panels, the side feature and the tabs', async () => {
     renderHook(() => {
-      useRestoreFrame(activities)
+      useRestoreFrame(destinations)
     })
 
     await waitFor(() => {
@@ -46,47 +43,37 @@ describe('useRestoreFrame', () => {
     expect(useEditorTabsStore.persist.hasHydrated()).toBe(true)
   })
 
-  it('keeps the side panel of the page on screen when no feature was chosen', async () => {
+  it.each(chosenFeatureCases)('keeps $name', async ({ chosen, shows }) => {
+    browserStorage.setItem(SIDE_FEATURE_KEY, JSON.stringify({ state: { chosen }, version: 0 }))
+
     renderHook(() => {
-      useRestoreFrame(activities)
+      useRestoreFrame(destinations)
     })
 
     await waitFor(() => {
-      expect(useSideFeatureStore.getState().chosen).toBe('artifacts')
-    })
-  })
-
-  it('leaves the feature that the user chose before', async () => {
-    browserStorage.setItem(
-      SIDE_FEATURE_KEY,
-      JSON.stringify({ state: { chosen: 'search' }, version: 0 }),
-    )
-
-    renderHook(() => {
-      useRestoreFrame(activities)
-    })
-
-    await waitFor(() => {
-      expect(useSideFeatureStore.getState().chosen).toBe('search')
+      expect(useSideFeatureStore.getState().chosen).toBe(shows)
     })
   })
 
   it('reads the stored tabs before a page opens its tab', () => {
     const stored = { id: 'a', title: 'a', href: '/projects/p1/artifacts/a' }
-    browserStorage.setItem(
-      TABS_KEY,
-      JSON.stringify({ state: { groups: { p1: [stored] } }, version: 0 }),
-    )
+    browserStorage.setItem(`${TABS_KEY}:p1`, JSON.stringify({ tabs: [stored] }))
     function Page() {
-      useEditorTab('p1', { id: 'b', title: 'b', href: '/projects/p1/artifacts/b' })
+      useEditorTab({ id: 'b', title: 'b', href: '/projects/p1/artifacts/b' })
       return null
     }
     function Frame({ children }: { children: ReactNode }) {
-      useRestoreFrame(activities)
+      useRestoreFrame(destinations)
       return children
     }
 
-    render(createElement(Frame, null, createElement(Page)))
+    render(
+      createElement(
+        TabGroupContext,
+        { value: 'p1' },
+        createElement(Frame, null, createElement(Page)),
+      ),
+    )
 
     expect(useEditorTabsStore.getState().groups.p1?.map(({ id }) => id)).toEqual(['a', 'b'])
   })
