@@ -53,6 +53,20 @@ schemas/
 | Item | `backlog_item` | [`items/backlog_item.v1.json`](items/backlog_item.v1.json) | `US` for a user story, `EP` for an epic | `product_backlog` |
 | Item | `validation_issue` | [`items/validation_issue.v1.json`](items/validation_issue.v1.json) | `VAL` | `validation_report` |
 
+## Checking the files
+
+[`content-schema.meta.schema.json`](content-schema.meta.schema.json) is the schema of a content schema file: the keywords a file may use, the values of the `x-*` keywords, the fields every property needs, and which keywords belong to an artifact kind or to an item kind. Every file of this folder is valid against it.
+
+Rules that relate a file to itself or to its name are not expressible in a JSON Schema. A test of the backend checks them for every file:
+
+| Rule | Detail |
+|---|---|
+| Name | `$id` is `<artifacts or items>/<x-kind>/v<x-schema-version>`, the level matches `x-level`, and the file is `<x-kind>.v<x-schema-version>.json` |
+| Every field is required | `required` lists exactly the names in `properties` |
+| Field order | `x-ui-field-order` lists exactly the names in `properties` |
+| Known fields | `x-ui-title-field` and every name in `x-ui-list-fields` is a property |
+| Value lists | Every `x-value-list` names a list of the workflow definition that uses the file, and a field has either an `enum` or one of `x-value-list` and `x-value-from`, never both |
+
 ## Conventions
 
 | Rule | Detail |
