@@ -19,3 +19,10 @@ export const initialsCases = [
   ['', '?'],
   ['   ', '?'],
 ]
+
+/** A snake_case key, and the sentence case text it becomes. */
+export const snakeToSentenceCaseCases = [
+  { name: 'a key of two words', key: 'acceptance_criteria', sentence: 'Acceptance criteria' },
+  { name: 'a key of one word', key: 'title', sentence: 'Title' },
+  { name: 'an empty key', key: '', sentence: '' },
+]

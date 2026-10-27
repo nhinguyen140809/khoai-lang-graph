@@ -3,6 +3,11 @@ export function capitalize(text: string): string {
   return `${text.charAt(0).toUpperCase()}${text.slice(1)}`
 }
 
+/** A snake_case key in sentence case: "acceptance_criteria" becomes "Acceptance criteria". */
+export function snakeToSentenceCase(key: string): string {
+  return capitalize(key.replaceAll('_', ' '))
+}
+
 /** The initials of a name for an avatar: the first letters of its first and last words. */
 export function initialsOf(name: string): string {
   const letters = name
