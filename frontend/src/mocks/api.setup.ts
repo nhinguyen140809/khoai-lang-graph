@@ -3,6 +3,7 @@ import { meHandlers } from './account/me.handlers'
 import { artifactHandlers } from './artifacts/handlers/artifacts.handlers'
 import { itemEditHandlers } from './artifacts/handlers/item-edits.handlers'
 import { itemHandlers } from './artifacts/handlers/items.handlers'
+import { exportHandlers } from './exports/exports.handlers'
 import { messageHandlers } from './messages/messages.handlers'
 import { projectHandlers } from './projects/projects.handlers'
 import { runHandlers } from './runs/handlers/runs.handlers'
@@ -23,6 +24,7 @@ export const apiHandlers = [
   ...artifactHandlers,
   ...itemHandlers,
   ...itemEditHandlers,
+  ...exportHandlers,
   ...threadHandlers,
   ...messageHandlers,
   ...runHandlers,
