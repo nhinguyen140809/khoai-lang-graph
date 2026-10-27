@@ -272,6 +272,7 @@ Rules:
 - Without `?version=` the response is the current version. A run is shown with the version it ran with, `workflow_version` of the run.
 - A definition version never changes once a run has used it. The response carries `Cache-Control: public, max-age=31536000, immutable` when `?version=` is given.
 - A stage has a `title` for the user, an `internal` flag and a `parent`. The pages for the user show the titles of the stages that are not internal, as a tree by `parent`; the graph, with the node ids, is for the developer view.
+- An item kind has an `issue` field: null, or `{ "status_field", "open_values" }` for a kind that records a problem to settle (version 1: `ambiguity_issue`, `conflict`, `validation_issue`). An item of such a kind is an open issue when the field of its content named by `status_field` holds one of `open_values`. The web app lists the open issues from it, so a kind added in the definition is listed without a client change.
 - The node list has no positions. The web app lays the graph out itself, so a node added in the backend appears without a client change.
 
 ### Workflow state
