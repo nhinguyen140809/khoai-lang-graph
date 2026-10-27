@@ -15,6 +15,8 @@ export const apiEndpoints = {
   projects: apiEndpoint('/projects'),
   project: apiEndpoint('/projects/:projectId'),
   projectThreads: apiEndpoint('/projects/:projectId/threads'),
+  projectArtifacts: apiEndpoint('/projects/:projectId/artifacts'),
+  projectItems: apiEndpoint('/projects/:projectId/items'),
 
   threads: apiEndpoint('/threads'),
   thread: apiEndpoint('/threads/:threadId'),
@@ -25,6 +27,17 @@ export const apiEndpoints = {
   runSteps: apiEndpoint('/runs/:runId/steps'),
   runCancel: apiEndpoint('/runs/:runId/cancel'),
   runStream: apiEndpoint('/runs/:runId/stream'),
+
+  artifact: apiEndpoint('/artifacts/:artifactId'),
+  artifactItems: apiEndpoint('/artifacts/:artifactId/items'),
+  artifactItemsReorder: apiEndpoint('/artifacts/:artifactId/items/reorder'),
+  artifactRevisions: apiEndpoint('/artifacts/:artifactId/revisions'),
+  artifactRestore: apiEndpoint('/artifacts/:artifactId/restore'),
+
+  item: apiEndpoint('/items/:itemId'),
+  itemMove: apiEndpoint('/items/:itemId/move'),
+  itemRevisions: apiEndpoint('/items/:itemId/revisions'),
+  itemRestore: apiEndpoint('/items/:itemId/restore'),
 
   workflowDefinition: apiEndpoint('/workflow/definition'),
   artifactKinds: apiEndpoint('/artifact-kinds'),

@@ -12,6 +12,8 @@ export const IdPrefix = {
   Message: 'c2a1',
   Persona: '8c20',
   Step: 'e1a0',
+  Artifact: 'a7f3',
+  Item: 'c41e',
 } as const
 
 export const userId = mockId(IdPrefix.User, 1)
