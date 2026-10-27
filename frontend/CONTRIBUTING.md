@@ -199,6 +199,7 @@ What to check on the diff before it is reviewed, and what a reviewer checks agai
 | The same cases for an `*.api.ts` file: the request it sends, the `ApiError` it throws when the server refuses | `itSendsRequests`, `itThrowsApiErrors` of `@/test/suites` |
 | The router, and the path and the query of a page | `routerMock`, `setPathname`, `setQuery` of `@/test/next-stubs` |
 | A request that the test keeps unanswered, to look at the page meanwhile; a call that never answers | `holdResponse` of `@/test/msw`; `expectStillPending` of `@/test/steps` |
+| The query keys of a `*.keys.ts` file: each starts with the key above it, and keys that stand for different data differ | `itNestsQueryKeys`, `itTellsQueryKeysApart` of `@/test/suites` |
 | A mock that has to be called | `waitForCall` of `@/test/steps` |
 | A query, or several, that has to load | `waitForSuccess`, `waitForQueries` of `@/test/steps` |
 | Typing in a form, pasting, pressing a button, a menu item or another control, a key, Tab, Escape | `fillFields`, `replaceText`, `typeText`, `pasteText`, `pressButton`, `pressMenuItem`, `pressRole`, `pressKey`, `pressKeys`, `pressTab`, `pressEscape` of `@/test/steps`; a test never calls `userEvent.keyboard`, `type`, `paste` or `tab` itself (`clickHolding` clicks while a key is held), and never makes a `QueryClient` (`createTestQueryClient` of `@/test/render`, or `renderWithProviders(ui, { queryClient })` to look at the cache); both enforced by ESLint |
