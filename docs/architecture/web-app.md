@@ -36,7 +36,7 @@ An experiment changes the backend only: a new workflow definition version, or a 
 | Where a run is and where it has been | `GET /runs/{run_id}/steps`, then the event stream of the run | Every step |
 | The review the user must answer | `GET /runs/{run_id}/interrupts?status=pending`, then the `interrupt` event | Every checkpoint |
 | Artifacts and items | `GET /artifact-kinds` for the schemas, `GET /content-schemas/{kind}/{schema_version}` for content stored with an older version, the artifact and item endpoints for the content | A new content schema version |
-| Run settings form | `run_parameters_schema` of the workflow definition | A new workflow definition version |
+| Run settings form | `run_parameters_schema` and the `checkpoint` nodes of the workflow definition | A new workflow definition version |
 | Workflow state, for experiments | The state endpoints and `state_schema` of the workflow definition | Every step |
 
 A workflow definition version and a content schema version never change once used, so the web app caches them without expiry, keyed by their version.
@@ -55,6 +55,7 @@ The data of a node and of an edge, in `features/workflow/workflow.types.ts`. `In
 ```ts
 export interface WorkflowNodeData {
   label: string
+  title: string | null // set for a checkpoint only
   stage: string | null
   agentRole: string | null
   allowEdits: boolean
@@ -77,6 +78,7 @@ const nodes: Node<WorkflowNodeData>[] = [
     position: { x: 0, y: 0 }, // replaced by the layout
     data: {
       label: 'checkpoint_analysis',
+      title: 'Review the analysis',
       stage: 'analysis_review',
       agentRole: null,
       allowEdits: true,
@@ -97,6 +99,17 @@ const edges: Edge<WorkflowEdgeData>[] = [
 ```
 
 The edge id joins the source, the target and the option, because a checkpoint can have two edges to the same node for two options.
+
+### Visible stages
+
+The graph serves the developer view. The pages for the user show the stages instead, as a tree built from `stages` of the same definition:
+
+1. Group the stages by `parent`; a stage with a null `parent` is a root. The list is in workflow order, so the children of a stage keep that order.
+2. Drop the stages with `internal` set, with their children. The text of a stage is its `title`, never its `key`.
+3. Mark the stage of `current_stage` of the run. When it is internal, the status bar keeps the title of the previous stage that is not.
+4. A stage with children renders as a group that can be collapsed, and it opens when it holds the current stage.
+
+The review stages (`persona_review`, `analysis_review`, `specification_review`) are stages like the others, so the checkpoints appear in the tree at the place of their stage and need no separate entry. The depth of the tree is not limited by the web app; the definition decides it.
 
 ## 4. Progress of a run on the graph
 
@@ -258,6 +271,7 @@ A nullable select offers an empty choice that stores `null`. Saving the form sen
 ## 7. Run settings and workflow state
 
 - **Run settings.** The form for `parameters` of the run configuration is built from `run_parameters_schema` with the same field inputs as the artifact form, so a new run parameter appears without a client change.
+- **Reviews to turn on.** The form also holds a list of checkboxes for `review_checkpoints` of the run configuration, one per node of kind `checkpoint` in the definition, in the order of the nodes. Each checkbox is named by the `title` of the checkpoint, never by its id, and its description is the `prompt`. A checked checkpoint pauses the run for the user; an unchecked one continues at once with its default option and default answers, so a new checkpoint in a definition version appears in the list without a client change. The value saved is the list of ids of the checked checkpoints. The same `title` names the review in the status bar.
 - **Workflow state.** A panel for experiments shows the state of the run, or the state after a chosen step, as a tree, following `state_schema`. Artifacts and items appear as references and link to the version that the step used, so the state of an old step shows the content as it was then, also for items deleted since.
 
 Example of run settings. The property `"max_turns": { "type": "integer", "minimum": 1 }` of `run_parameters_schema` becomes the `FieldView` below: a number input labeled "Max turns", filled with `max_turns` of the project run configuration. The form checks `minimum` against the schema before sending.
