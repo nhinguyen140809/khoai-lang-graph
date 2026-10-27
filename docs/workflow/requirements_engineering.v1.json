@@ -180,18 +180,18 @@
     }
   ],
   "item_kinds": [
-    { "kind": "section", "schema_version": 1 },
-    { "kind": "persona", "schema_version": 1 },
-    { "kind": "interview_message", "schema_version": 1 },
-    { "kind": "raw_requirement", "schema_version": 1 },
-    { "kind": "analyzed_requirement", "schema_version": 1 },
-    { "kind": "latent_need", "schema_version": 1 },
-    { "kind": "assumption", "schema_version": 1 },
-    { "kind": "ambiguity_issue", "schema_version": 1 },
-    { "kind": "conflict", "schema_version": 1 },
-    { "kind": "spec_requirement", "schema_version": 1 },
-    { "kind": "backlog_item", "schema_version": 1 },
-    { "kind": "validation_issue", "schema_version": 1 }
+    { "kind": "section", "schema_version": 1, "issue": null },
+    { "kind": "persona", "schema_version": 1, "issue": null },
+    { "kind": "interview_message", "schema_version": 1, "issue": null },
+    { "kind": "raw_requirement", "schema_version": 1, "issue": null },
+    { "kind": "analyzed_requirement", "schema_version": 1, "issue": null },
+    { "kind": "latent_need", "schema_version": 1, "issue": null },
+    { "kind": "assumption", "schema_version": 1, "issue": null },
+    { "kind": "ambiguity_issue", "schema_version": 1, "issue": { "status_field": "status", "open_values": ["open"] } },
+    { "kind": "conflict", "schema_version": 1, "issue": { "status_field": "status", "open_values": ["open"] } },
+    { "kind": "spec_requirement", "schema_version": 1, "issue": null },
+    { "kind": "backlog_item", "schema_version": 1, "issue": null },
+    { "kind": "validation_issue", "schema_version": 1, "issue": { "status_field": "status", "open_values": ["open"] } }
   ],
   "link_types": [
     {

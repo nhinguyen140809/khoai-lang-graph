@@ -397,9 +397,31 @@
       "additionalProperties": false,
       "properties": {
         "kind": { "$ref": "#/$defs/name" },
-        "schema_version": { "type": "integer", "minimum": 1 }
+        "schema_version": { "type": "integer", "minimum": 1 },
+        "issue": {
+          "anyOf": [{ "$ref": "#/$defs/issueRule" }, { "type": "null" }],
+          "description": "Set for a kind of item that records a problem to settle: where its content says whether it is still open. Null for any other kind."
+        }
       },
-      "required": ["kind", "schema_version"]
+      "required": ["kind", "schema_version", "issue"]
+    },
+    "issueRule": {
+      "type": "object",
+      "additionalProperties": false,
+      "properties": {
+        "status_field": {
+          "$ref": "#/$defs/name",
+          "description": "The field of the content that holds the status of the issue."
+        },
+        "open_values": {
+          "type": "array",
+          "items": { "type": "string" },
+          "minItems": 1,
+          "uniqueItems": true,
+          "description": "The values of that field while the issue is still open."
+        }
+      },
+      "required": ["status_field", "open_values"]
     },
     "linkType": {
       "type": "object",
