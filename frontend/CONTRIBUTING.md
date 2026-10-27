@@ -50,7 +50,7 @@ Conventions:
   | `numbers/` | `clamp`, `decimalsOf`, `NumberLimits` | |
   | `formatters/` | How a number, a date and a length read, in the fixed locale `formatLocale`: `formatNumber`, `formatPercent`, `formatCurrency`, `formatDate`, `formatDateTime`, `formatDuration`, `formatRelativeTime`, and `initialsOf` for the initials of a name, `capitalize` | A month name or a time zone: `date-fns` |
   | `timing/` | `debounce`, `sleep`, `useNow`, `actionToastDuration` | `throttle` and `retry` when a use appears (queries retry through `canRetryOnce` of `shared/api/query-client`); a time limit on a request: `AbortSignal.timeout` |
-  | `url/` | `pathOf`, `isAtOrUnder`, `encodeId`, `reloadTo`, `queryString`, `queryStringOf` | Parsing a query: `URLSearchParams`; the addresses of pages: `routes` |
+  | `url/` | `pathOf`, `isAtOrUnder`, `encodeId`, `reloadTo`, `queryString`, `queryStringOf`, `pathWithQuery` | Parsing a query: `URLSearchParams`; the addresses of pages: `routes` |
   | `hotkey/` | Matching and writing a keyboard shortcut, and the name of the modifier key (`useModifierKeyName`) | |
   | `hydration/`, `viewport/` | `useIsHydrated` (false until the page hydrates), `useIsMobile` | |
   | `cn/` | `cn`, the class names of Tailwind (the alias `utils` of shadcn) | |

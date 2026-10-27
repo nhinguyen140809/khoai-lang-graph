@@ -15,3 +15,25 @@ export const isAtOrUnderCases = [
   { pathname: '/settings-old', path: '/settings', holds: false },
   { pathname: '/', path: '/settings', holds: false },
 ]
+
+/** A path, the parameters of its query, and the address that they make. */
+export const pathWithQueryCases = [
+  {
+    name: 'parameters',
+    path: '/items',
+    params: { kind: 'persona', version: 2 },
+    address: '/items?kind=persona&version=2',
+  },
+  {
+    name: 'a parameter without a value',
+    path: '/items',
+    params: { kind: undefined, version: 2 },
+    address: '/items?version=2',
+  },
+  {
+    name: 'no parameter with a value',
+    path: '/items',
+    params: { kind: undefined },
+    address: '/items',
+  },
+]

@@ -3,6 +3,7 @@ import { subDays } from 'date-fns'
 import { apiEndpoints } from '@/shared/api/endpoints'
 import { HttpMethod } from '@/shared/api/http'
 import { apiCommand, apiRequest, fetchPage, type ListPage } from '@/shared/api/request'
+import { pathWithQuery } from '@/shared/lib/url'
 
 import { noProjectFilters } from './projects.constants'
 import {
@@ -15,17 +16,6 @@ import {
 
 // TODO: switch to the generated client in src/shared/api/generated/ once it is generated.
 
-// The query of GET /projects: the API applies the filters. The period of the last activity is
-// counted back from now.
-function listQuery(status: ProjectStatus, filters: ProjectFilters): string {
-  const params = new URLSearchParams({ status })
-  for (const runStatus of filters.runStatuses) params.append('rollup_run_status', runStatus)
-  if (filters.activeWithinDays !== null) {
-    params.set('last_activity_after', subDays(new Date(), filters.activeWithinDays).toISOString())
-  }
-  return params.toString()
-}
-
 /**
  * One page of the projects of the user with one status, the latest activity first, narrowed by
  * the filters.
@@ -36,7 +26,16 @@ export function listProjects(
   limit: number,
   filters: ProjectFilters = noProjectFilters,
 ): Promise<ListPage<Project>> {
-  return fetchPage(`${apiEndpoints.projects.path()}?${listQuery(status, filters)}`, projectSchema, {
+  // The API applies the filters. The period of the last activity is counted back from now.
+  const path = pathWithQuery(apiEndpoints.projects.path(), {
+    status,
+    rollup_run_status: filters.runStatuses,
+    last_activity_after:
+      filters.activeWithinDays === null
+        ? undefined
+        : subDays(new Date(), filters.activeWithinDays).toISOString(),
+  })
+  return fetchPage(path, projectSchema, {
     limit,
     cursor,
     action: 'load projects',

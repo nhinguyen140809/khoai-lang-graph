@@ -1,6 +1,6 @@
 import type { Route } from 'next'
 
-import { queryString } from '@/shared/lib/url'
+import { pathWithQuery } from '@/shared/lib/url'
 
 import { RouteParam } from '../route-params'
 import { routeOfAddress } from '../typed-route'
@@ -43,10 +43,9 @@ export function afterLoginPath(next: string | null | undefined): Route {
 // A page of the account that returns to `next` afterwards; the default page needs no `next`.
 function authHref(page: (typeof AuthPage)[keyof typeof AuthPage], next: string | null | undefined) {
   const target = afterLoginPath(next)
-  const query = queryString({
-    [RouteParam.Next]: target === defaultAfterLogin ? undefined : target,
-  })
-  return routeOfAddress(`${page}${query}`)
+  return routeOfAddress(
+    pathWithQuery(page, { [RouteParam.Next]: target === defaultAfterLogin ? undefined : target }),
+  )
 }
 
 /** The login page, which returns to `next` afterwards. */
