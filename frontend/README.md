@@ -389,6 +389,7 @@ src/mocks/
 ├── projects/             # /projects
 ├── generated/            # projects made from specs, with their threads, runs and steps
 ├── messages/             # messages
+├── artifacts/            # artifacts and items
 ├── threads/              # threads
 ├── workflow/             # the workflow definition, and the artifact kinds built from it, with the content schemas in data/
 └── runs/                 # runs, the stream
@@ -403,7 +404,7 @@ Each folder holds a pair of files per API resource:
 
 ### Files of a mock folder
 
-The folders of `projects/`, `workflow/` and `runs/` repeat the same files, one for each job. A new resource takes the files it needs from this list; a file that a resource does not need is left out.
+The folders of `projects/`, `artifacts/`, `workflow/` and `runs/` repeat the same files, one for each job. A new resource takes the files it needs from this list; a file that a resource does not need is left out.
 
 ```text
 src/mocks/<resource>/
@@ -421,8 +422,8 @@ src/mocks/<resource>/
 - **Layers:** a file reads files of its own kind or of a kind below it, from the bottom: `fixtures`, `constants` and `types`; then `store`; then `lookup`; then `changes`, `problems` and `validators`; then `handlers`. Nothing but `src/mocks/msw-*.setup.ts` and the tests imports a `handlers` file. ESLint reports an import that goes up. A resource reads another through its `lookup` (`projects.lookup.ts` reads `allRuns` of `runs.lookup.ts`).
 - **Data that spans resources:** the projects made from specs come with their threads, runs and steps, so they live in `src/mocks/generated/`, which reads only the `fixtures` of the resources and which the `lookup` files read.
 - **State:** a `store` holds `mockState` cells and nothing else. The data created since the start is `created<Things>`, the fields changed in a record of the fixtures are `<thing>Edits` by id, and a removed record is `deleted<Thing>Ids`. Only `changes` files and the handlers that create a record set them.
-- **Types:** a type that several files use is in the `types` file of its resource (`projects.types.ts`, `generated-project-specs.types.ts`); a `lookup`, `changes`, `problems` or `handlers` file exports no type (ESLint).
-- **Fixtures:** an export is named `<thing>Fixtures` (`projectFixtures`, `userFixture`), a function that builds one record is `build<Thing>`, and the projects made from specs are `generated<Things>`. The name of a fixture, a store or a lookup never starts with `mock`: the folder says it. The helpers of `shared/` whose name would otherwise read as the real thing keep it (`mockNow`, `mockState`, `mockId`).
+- **Types:** a type that several files use is in the `types` file of its resource (`artifacts.types.ts`, `generated-project-specs.types.ts`); a `lookup`, `changes`, `problems` or `handlers` file exports no type (ESLint).
+- **Fixtures:** an export is named `<thing>Fixtures` (`projectFixtures`, `itemFixtureByKey`), a function that builds one record is `build<Thing>`, and the projects made from specs are `generated<Things>`. The name of a fixture, a store or a lookup never starts with `mock`: the folder says it. The helpers of `shared/` whose name would otherwise read as the real thing keep it (`mockNow`, `mockState`, `mockId`).
 - **Refusals:** a handler never calls `notFound` itself. A record that is missing is `<thing>NotFound()` of the `problems` file of its resource; a check that refuses a request returns the answer, or `null` when the request may go on, and is named `refuse<Reason>`; a check of a whole body is `validate<Body>`, which gives the record that the body describes or the problems of its fields, and a check that gives only problems is `<subject>Problems`; both are in the `validators` file.
 - **A handler** reads in this order: `answerScenario`, the record (or `<thing>NotFound()`), the checks of the body and the state, the change, the answer. A handler of a request that starts work is wrapped in `idempotent`.
 
@@ -430,20 +431,22 @@ A kind with two files or more takes a folder of its own, as in a slice (see File
 
 The same handlers serve `pnpm dev:mock`, the unit tests, and the E2E tests, so a fixture is written once. Example: `threads/threads.fixtures.ts` and `threads/threads.handlers.ts` back `GET /api/v1/threads` and `GET /api/v1/projects/{project_id}/threads`.
 
-| Resource         | Endpoints                                                                                                                                                         |
-| ---------------- | ----------------------------------------------------------------------------------------------------------------------------------------------------------------- |
-| `projects`       | `GET /projects`, `GET /projects/{project_id}`, `POST /projects`, `PATCH /projects/{project_id}`, `DELETE /projects/{project_id}`                                  |
-| `workflow`       | `GET /workflow/definition`, with `?version=`                                                                                                                      |
-| `artifact-kinds` | `GET /artifact-kinds`, `GET /content-schemas/{kind}/{schema_version}`, built from the content schemas and the workflow definition                                 |
-| `threads`        | `GET /threads`, `GET /projects/{project_id}/threads`, `POST /projects/{project_id}/threads`, `GET /threads/{thread_id}`                                           |
-| `messages`       | `POST /threads/{thread_id}/messages`: a message to a thread without an unfinished run starts a run, and the first one of a project without a name names it        |
-| `runs`           | `GET /threads/{thread_id}/runs`, `GET /runs/{run_id}`, `GET /runs/{run_id}/steps`, `POST /runs/{run_id}/cancel`, and `POST /threads/{thread_id}/runs` of the chat |
-| `run-stream`     | `GET /runs/{run_id}/stream` (browser only)                                                                                                                        |
-| `auth`           | `POST /auth/register`, `POST /auth/login`, `POST /auth/logout`, and a 401 for every other endpoint without a session                                              |
-| `me`             | `GET /me`                                                                                                                                                         |
+| Resource         | Endpoints                                                                                                                                                                                                                                                                   |
+| ---------------- | --------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
+| `projects`       | `GET /projects`, `GET /projects/{project_id}`, `POST /projects`, `PATCH /projects/{project_id}`, `DELETE /projects/{project_id}`                                                                                                                                            |
+| `workflow`       | `GET /workflow/definition`, with `?version=`                                                                                                                                                                                                                                |
+| `artifact-kinds` | `GET /artifact-kinds`, `GET /content-schemas/{kind}/{schema_version}`, built from the content schemas and the workflow definition                                                                                                                                           |
+| `artifacts`      | `GET /projects/{project_id}/artifacts`, `GET`, `PATCH /artifacts/{artifact_id}`, `GET /artifacts/{artifact_id}/revisions`, `POST /artifacts/{artifact_id}/restore`                                                                                                          |
+| `items`          | `GET`, `POST /artifacts/{artifact_id}/items`, `POST /artifacts/{artifact_id}/items/reorder`, `GET /projects/{project_id}/items`, `GET`, `PATCH`, `DELETE /items/{item_id}`, `GET /items/{item_id}/revisions`, `POST /items/{item_id}/restore`, `POST /items/{item_id}/move` |
+| `threads`        | `GET /threads`, `GET /projects/{project_id}/threads`, `POST /projects/{project_id}/threads`, `GET /threads/{thread_id}`                                                                                                                                                     |
+| `messages`       | `POST /threads/{thread_id}/messages`: a message to a thread without an unfinished run starts a run, and the first one of a project without a name names it                                                                                                                  |
+| `runs`           | `GET /threads/{thread_id}/runs`, `GET /runs/{run_id}`, `GET /runs/{run_id}/steps`, `POST /runs/{run_id}/cancel`, and `POST /threads/{thread_id}/runs` of the chat                                                                                                           |
+| `run-stream`     | `GET /runs/{run_id}/stream` (browser only)                                                                                                                                                                                                                                  |
+| `auth`           | `POST /auth/register`, `POST /auth/login`, `POST /auth/logout`, and a 401 for every other endpoint without a session                                                                                                                                                        |
+| `me`             | `GET /me`                                                                                                                                                                                                                                                                   |
 
 - The ids of the mock data are in `shared/db/mock-ids.constants.ts`; each starts like the id of the same record in the API examples.
-- The mock server keeps the session, the user, the projects, threads, messages, and runs that `POST` creates, and the runs that are stopped, as state (`shared/db/mock-state.utils.ts`). The browser worker keeps them in browser storage, so they survive a reload; `?mock-reset` in the page address starts again from the fixtures. Unit tests keep them in memory, and the test setup resets them after each test.
+- The mock server keeps the session, the user, the projects, threads, messages, runs and items that `POST` creates, the runs that are stopped, and the artifacts and items that the user changed, as state (`shared/db/mock-state.utils.ts`). The browser worker keeps them in browser storage, so they survive a reload; `?mock-reset` in the page address starts again from the fixtures. Unit tests keep them in memory, and the test setup resets them after each test.
 
 To mock a new endpoint:
 
