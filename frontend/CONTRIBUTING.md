@@ -192,7 +192,7 @@ What to check on the diff before it is reviewed, and what a reviewer checks agai
 | A field of a request body | `readBodyFields`, and the readers `optionalText`, `requiredText`, `positiveInteger`, `choice`, `jsonObject`, `jsonBoolean` of `@/mocks/shared/http/validation`, each with its `...Problem` |
 | A request that must not do its work twice | `idempotent` of `@/mocks/shared/http/request` |
 | A parameter of the path that a handler matched, such as `projectId` | `pathParam(params, 'projectId')` of `@/mocks/shared/http/request` |
-| A state of the screen chosen in the address | `answerScenario`, `addressParam` of `@/mocks/shared/scenario` |
+| A state of the screen chosen in the address | `answerScenario`, `pageUrlParam` of `@/mocks/shared/scenario` |
 | Rendering a component or a hook with its providers | `renderWithProviders`, `renderHookWithProviders` of `@/test/render` |
 | The path of an endpoint of the API, in an API function, a handler or a test | `apiEndpoints.<name>.path(...)` or `.pattern` of `@/shared/api/endpoints` |
 | A request to the mock server (a text body goes as it is, any other as JSON) | `fetchApi`, `callApi`, `getApi`, `postApi`, `putApi`, `patchApi`, `deleteApi`, `openPage` of `@/test/msw` |

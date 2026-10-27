@@ -17,7 +17,7 @@ import {
 } from '../field-values.utils'
 import {
   choiceCases,
-  isGivenWrongCases,
+  isSentButInvalidCases,
   jsonBooleanCases,
   jsonObjectCases,
   optionalTextCases,
@@ -96,7 +96,7 @@ describe('the problems of the fields', () => {
 })
 
 describe('isSentButInvalid', () => {
-  it.each(isGivenWrongCases)('says $name', ({ value, expected }) => {
+  it.each(isSentButInvalidCases)('says $name', ({ value, expected }) => {
     expect(isSentButInvalid(value, requiredText)).toBe(expected)
   })
 })
