@@ -673,7 +673,7 @@ The two levels correspond to the specification and the specification object of t
 | `key` | string | See [identifiers](#identifiers) |
 | `parent_item_id` | ref\<ArtifactItem\>? | The section the item is in, or the epic of a user story; always in the same artifact. Null for an item at the top level |
 | `position` | int | Order among the items with the same parent |
-| `number` | string | Derived, read-only. Outline number such as `3.2.1`, from the positions along the path from the top level |
+| `outline_number` | string | Derived, read-only. Outline number such as `3.2.1`, from the positions along the path from the top level. In an artifact without sections it is the position, `1`, `2`, ... |
 | `schema_version` | int | Version of the content schema of this kind that `content` follows |
 | `content` | object | Fields of the item kind, as listed in the sections below |
 | `version` | int | Starts at 1, increases on every change, deletion and restoration included |

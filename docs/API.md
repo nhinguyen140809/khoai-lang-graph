@@ -626,7 +626,7 @@ Item body:
   "kind": "spec_requirement",
   "parent_item_id": "5b1d...",
   "position": 1,
-  "number": "3.1.1",
+  "outline_number": "3.1.1",
   "schema_version": 1,
   "version": 3,
   "review_status": "draft",
@@ -655,17 +655,17 @@ Items of an artifact, `GET /artifacts/a7f3.../items?limit=3`, in outline order. 
   "items": [
     {
       "id": "3e70...", "key": "SEC-004", "kind": "section", "parent_item_id": null, "position": 3,
-      "number": "3", "depth": 1,
+      "outline_number": "3", "depth": 1,
       "content": { "title": "Functional requirements", "introduction": null }
     },
     {
       "id": "5b1d...", "key": "SEC-005", "kind": "section", "parent_item_id": "3e70...", "position": 1,
-      "number": "3.1", "depth": 2,
+      "outline_number": "3.1", "depth": 2,
       "content": { "title": "Mentor discovery", "introduction": "How a student finds a mentor." }
     },
     {
       "id": "c41e...", "key": "REQ-001", "kind": "spec_requirement", "parent_item_id": "5b1d...", "position": 1,
-      "number": "3.1.1", "depth": 3,
+      "outline_number": "3.1.1", "depth": 3,
       "content": { "title": "Search mentors" }
     }
   ],
@@ -724,7 +724,7 @@ Kinds and their schemas, `GET /artifact-kinds`. The display name of a kind is th
 | `PATCH /artifacts/{artifact_id}` | Change `title`, `summary`, `content` or `review_status`; requires `If-Match` | MVP |
 | `GET /artifacts/{artifact_id}/revisions` | Version history of the artifact; ordered by `version` descending. Each entry has `version`, `change_reason`, `changed_by`, `created_at` and `content`, the content of the artifact at that version | MVP |
 | `POST /artifacts/{artifact_id}/restore` | Make an old version of the artifact and of its items current again; body `version`. Creates new versions and answers the artifact | MVP |
-| `GET /artifacts/{artifact_id}/items` | Items of the artifact in outline order (a section, then what it contains); each item carries `number` and `depth`. `?shape=tree` nests children under their parent instead. Filters `kind`, `review_status`, `parent_item_id`. `?version=` gives the items as they were at that version of the artifact | MVP |
+| `GET /artifacts/{artifact_id}/items` | Items of the artifact in outline order (a section, then what it contains); each item carries `outline_number` and `depth`. `?shape=tree` nests children under their parent instead. Filters `kind`, `review_status`, `parent_item_id`. `?version=` gives the items as they were at that version of the artifact | MVP |
 | `POST /artifacts/{artifact_id}/items` | Create an item or a section by hand; body `kind`, `content`, optional `parent_item_id`. The server assigns the key and puts the item last under its parent. Answers `201` with the item | MVP |
 | `POST /artifacts/{artifact_id}/items/reorder` | Change the order of the items under one parent; body `parent_item_id` (null for the top level) and `ids`, every item under that parent once in the new order, otherwise `422 validation_failed`. Answers `204` | MVP |
 | `POST /items/{item_id}/move` | Move an item, with everything inside it, under another parent of the same artifact; body `parent_item_id`, `position`. A move that breaks a tree rule answers `422 validation_failed`. Answers the moved item | MVP |
