@@ -1,12 +1,14 @@
 import { z } from 'zod'
 
+import { itemRefSchema } from '@/modules/artifact/entities/@x/run'
+
 import { runConfigSchema } from './run-config.types'
 import { runStatuses } from './run-status.types'
 
 // Temporary hand-written schemas for the runs API: the runs and their steps.
 // TODO: replace with the types generated into src/shared/api/generated/ once they exist.
 
-export const usageSchema = z.object({
+const usageSchema = z.object({
   input_tokens: z.number().int(),
   output_tokens: z.number().int(),
   cache_read_tokens: z.number().int(),
@@ -42,14 +44,6 @@ export const runSchema = z.object({
 })
 
 export type Run = z.infer<typeof runSchema>
-
-/** An item that a step produced, which a message can also name. */
-export const itemRefSchema = z.object({
-  item_id: z.string(),
-  kind: z.string(),
-  key: z.string(),
-  version: z.number().int(),
-})
 
 export const runStepSchema = z.object({
   id: z.string(),

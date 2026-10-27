@@ -1,5 +1,8 @@
 import { authHandlers } from './account/auth.handlers'
 import { meHandlers } from './account/me.handlers'
+import { artifactHandlers } from './artifacts/handlers/artifacts.handlers'
+import { itemEditHandlers } from './artifacts/handlers/item-edits.handlers'
+import { itemHandlers } from './artifacts/handlers/items.handlers'
 import { messageHandlers } from './messages/messages.handlers'
 import { projectHandlers } from './projects/projects.handlers'
 import { runHandlers } from './runs/handlers/runs.handlers'
@@ -17,6 +20,9 @@ export const apiHandlers = [
   ...projectHandlers,
   ...workflowHandlers,
   ...artifactKindHandlers,
+  ...artifactHandlers,
+  ...itemHandlers,
+  ...itemEditHandlers,
   ...threadHandlers,
   ...messageHandlers,
   ...runHandlers,

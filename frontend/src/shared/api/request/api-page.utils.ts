@@ -29,3 +29,22 @@ export function fetchPage<T>(
   if (cursor !== null) url.searchParams.set('cursor', cursor)
   return apiRequest(`${url.pathname}${url.search}`, listPageSchema(itemSchema), { action })
 }
+
+/**
+ * Reads every page of a list endpoint that is known to stay short, such as the artifacts of a
+ * project, so that no record is dropped when it grows. A long list is an infinite query instead.
+ */
+export async function fetchAllPages<T>(
+  path: string,
+  itemSchema: z.ZodType<T>,
+  { limit, action }: Omit<PageOptions, 'cursor'>,
+): Promise<T[]> {
+  const items: T[] = []
+  let cursor: string | null = null
+  do {
+    const page: ListPage<T> = await fetchPage(path, itemSchema, { limit, cursor, action })
+    items.push(...page.items)
+    cursor = page.next_cursor
+  } while (cursor !== null)
+  return items
+}

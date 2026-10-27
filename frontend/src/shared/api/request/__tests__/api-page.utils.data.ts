@@ -20,3 +20,17 @@ export const pageCases = [
     query: '?limit=10&cursor=10',
   },
 ]
+
+/** The cursors that the server answers in turn, and the ids it holds on each page. */
+export const allPagesCases = [
+  { name: 'one page', pages: [{ ids: ['a'], next: null }], ids: ['a'], queries: ['?limit=2'] },
+  {
+    name: 'several pages, following each cursor',
+    pages: [
+      { ids: ['a', 'b'], next: '2' },
+      { ids: ['c'], next: null },
+    ],
+    ids: ['a', 'b', 'c'],
+    queries: ['?limit=2', '?limit=2&cursor=2'],
+  },
+]
