@@ -44,7 +44,7 @@ export type {
   ReviewStatus,
   UpdateArtifactBody,
 } from './types/artifacts.types'
-export { reviewStatuses } from './types/artifacts.types'
+export { reviewStatus, reviewStatuses } from './types/artifacts.types'
 export type { CreateExportBody, Export, ExportStatus } from './types/exports.types'
 export { exportStatuses } from './types/exports.types'
 export type {
