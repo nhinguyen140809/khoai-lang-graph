@@ -1,1 +1,1 @@
-export { foldText, hasTextPart } from './text.utils'
+export { foldText, hasTextPart } from './utils/text.utils'
