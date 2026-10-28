@@ -7,7 +7,7 @@ import {
   useArtifactKinds,
   useContentSchema,
 } from '@/modules/workflow/entities/@x/artifact'
-import { cursorPagesOptions } from '@/shared/api/query-client'
+import { cursorPagesOptions, type HookQueryOptions } from '@/shared/api/query-client'
 
 import { getItem, listArtifactItems, listItemRevisions, listProjectItems } from '../api/items.api'
 import { itemKeys } from '../keys/items.keys'
@@ -15,13 +15,13 @@ import { itemsPageSize, outlinePageSize, revisionsPageSize } from '../page-sizes
 import type { ArtifactItem, ArtifactItemFilters, ProjectItemFilters } from '../types/items.types'
 
 /**
- * The items of an artifact in outline order, narrowed by the filters, a page at a time; `enabled`
+ * The items of an artifact in outline order, narrowed by the filters, a page at a time; `isEnabled`
  * waits until they are needed.
  */
 export function useArtifactItems(
   artifactId: string,
   filters: ArtifactItemFilters = {},
-  isEnabled = true,
+  { isEnabled = true }: HookQueryOptions = {},
 ) {
   return useInfiniteQuery({
     queryKey: itemKeys.ofArtifact(artifactId, filters),
@@ -71,11 +71,9 @@ export function useItemSchema(item: ArtifactItem | undefined): {
   const kindSchemas = useMemo(() => kindSchemasByKind(kinds.data), [kinds.data])
   const current = kindSchemas.get(item?.kind ?? '')
   const hasSameVersion = current !== undefined && current.schema_version === item?.schema_version
-  const older = useContentSchema(
-    item?.kind ?? '',
-    item?.schema_version ?? 0,
-    item !== undefined && kinds.isSuccess && !hasSameVersion,
-  )
+  const older = useContentSchema(item?.kind ?? '', item?.schema_version ?? 0, {
+    isEnabled: item !== undefined && kinds.isSuccess && !hasSameVersion,
+  })
   if (hasSameVersion) return { schema: current.schema, isPending: false, isError: false }
   const isError = kinds.isError || older.isError
   return { schema: older.data, isPending: older.data === undefined && !isError, isError }

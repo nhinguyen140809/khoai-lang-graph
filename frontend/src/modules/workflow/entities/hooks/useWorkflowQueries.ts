@@ -1,6 +1,8 @@
 import { useQuery } from '@tanstack/react-query'
 import { useCallback } from 'react'
 
+import type { HookQueryOptions } from '@/shared/api/query-client'
+
 import { getWorkflowDefinition } from '../api/workflow.api'
 import { workflowKeys } from '../keys/workflow.keys'
 import { workflowDefinitionStaleTime } from '../stale-time.constants'
@@ -16,7 +18,7 @@ import {
 function useDefinitionQuery<Selected>(
   version: number | undefined,
   select: (definition: WorkflowDefinition) => Selected,
-  isEnabled = true,
+  { isEnabled = true }: HookQueryOptions = {},
 ) {
   return useQuery({
     queryKey: workflowKeys.definition(version),
@@ -54,7 +56,9 @@ export function useStageTitle(
       stage === null ? null : visibleStageTitle(definition, stage),
     [stage],
   )
-  const title = useDefinitionQuery(version, selectTitle, version !== undefined)
+  const title = useDefinitionQuery(version, selectTitle, {
+    isEnabled: version !== undefined,
+  })
 
   return title.data ?? undefined
 }
@@ -72,5 +76,5 @@ export function useReviewableCheckpoints(version?: number) {
  * is given, so that a run shows the stages of the version it ran with.
  */
 export function useVisibleStages(version: number | undefined) {
-  return useDefinitionQuery(version, visibleStages, version !== undefined)
+  return useDefinitionQuery(version, visibleStages, { isEnabled: version !== undefined })
 }

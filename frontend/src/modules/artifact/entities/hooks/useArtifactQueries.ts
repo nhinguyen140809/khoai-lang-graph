@@ -1,7 +1,7 @@
 import { useInfiniteQuery, useQuery } from '@tanstack/react-query'
 import { useMemo } from 'react'
 
-import { cursorPagesOptions } from '@/shared/api/query-client'
+import { cursorPagesOptions, type HookQueryOptions } from '@/shared/api/query-client'
 
 import { getArtifact, listArtifactRevisions, listProjectArtifacts } from '../api/artifacts.api'
 import { artifactKeys } from '../keys/artifacts.keys'
@@ -13,7 +13,7 @@ import { allowedValues } from '../utils/allowed-values.utils'
 export function useProjectArtifacts(
   projectId: string,
   filters: ArtifactFilters = {},
-  isEnabled = true,
+  { isEnabled = true }: HookQueryOptions = {},
 ) {
   return useQuery({
     queryKey: artifactKeys.list(projectId, filters),
@@ -44,7 +44,13 @@ export function useArtifactRevisions(artifactId: string) {
  * an artifact of the project. The list is the same one until the artifacts or the source change.
  */
 export function useAllowedValues(projectId: string, allowedValuesFrom: string | null): string[] {
-  const artifacts = useProjectArtifacts(projectId, {}, allowedValuesFrom !== null)
+  const artifacts = useProjectArtifacts(
+    projectId,
+    {},
+    {
+      isEnabled: allowedValuesFrom !== null,
+    },
+  )
   return useMemo(
     () => allowedValues(artifacts.data, allowedValuesFrom),
     [artifacts.data, allowedValuesFrom],
