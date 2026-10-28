@@ -221,24 +221,30 @@ The artifact panel draws every kind from its content schema and the display keyw
 | `cards` | One card per item with the fields of `x-ui-list-fields` |
 | `transcript` | The messages in order, as a conversation |
 
-- The detail view and the edit form show the fields in `x-ui-field-order`, each with the input of its `x-ui-widget`. A `readOnly` field is shown but not editable. A field marked `x-value-from` offers the values of the named field of the artifact of the project, for example the topics of the elicitation plan.
+- The detail view and the edit form show the fields in `x-ui-field-order`, each labelled with the `title` of its property (a property without a title reads its name with underscores as spaces and a capital) and with the input of its `x-ui-widget`. A `readOnly` field is shown but not editable. A field marked `x-value-from` offers the values of the named field of the artifact of the project, for example the topics of the elicitation plan.
 - The form checks the content against the schema in the browser for immediate feedback; the backend stays the authority and answers `422` with the field paths.
 - An item keeps the `schema_version` it was written with, and the web app reads the schema of that version from `GET /content-schemas/{kind}/{schema_version}` when it differs from the current one, so older items are still drawn correctly.
 - A kind can have its own component where the generic drawing is not good enough, for example a persona card. A registry maps the kind to the component; a kind without an entry uses the generic drawing.
 
-A field as the detail view and the edit form see it, built from one property of a schema, in `shared/components/content-form/content-form.types.ts`:
+A field as the detail view and the edit form see it, built from one property of a schema by `contentFields(schema)`, in `modules/workflow/entities/types/content-fields.types.ts`:
 
 ```ts
-export type Widget = 'text' | 'textarea' | 'select' | 'number' | 'list' | 'tags' | 'object-list'
+export type FieldWidget = 'text' | 'textarea' | 'select' | 'number' | 'list' | 'tags' | 'object-list'
 
-export interface FieldView {
+export interface ContentField {
   name: string
-  label: string // derived from the name
-  widget: Widget // x-ui-widget, or derived from the type when absent
+  label: string // the title of the property, else derived from the name
+  widget: FieldWidget // x-ui-widget, or derived from the type when absent
   nullable: boolean // the type list contains null
+  required: boolean
   readOnly: boolean
   options: string[] // enum values without null for a select; empty otherwise
   description: string | null
+  allowedValuesFrom: string | null // x-value-from
+  minItems: number | null
+  minimum: number | null
+  maximum: number | null
+  entryFields: ContentField[] // the fields of one entry of an object-list
 }
 ```
 
@@ -274,17 +280,23 @@ A nullable select offers an empty choice that stores `null`. Saving the form sen
 - **Reviews to turn on.** The form also holds a list of checkboxes for `review_checkpoints` of the run configuration, one per node of kind `checkpoint` in the definition, in the order of the nodes. Each checkbox is named by the `title` of the checkpoint, never by its id, and its description is the `prompt`. A checked checkpoint pauses the run for the user; an unchecked one continues at once with its default option and default answers, so a new checkpoint in a definition version appears in the list without a client change. The value saved is the list of ids of the checked checkpoints. The same `title` names the review in the status bar.
 - **Workflow state.** A panel for experiments shows the state of the run, or the state after a chosen step, as a tree, following `state_schema`. Artifacts and items appear as references and link to the version that the step used, so the state of an old step shows the content as it was then, also for items deleted since.
 
-Example of run settings. The property `"max_turns": { "type": "integer", "minimum": 1 }` of `run_parameters_schema` becomes the `FieldView` below: a number input labeled "Max turns", filled with `max_turns` of the project run configuration. The form checks `minimum` against the schema before sending.
+Example of run settings. The property `"max_turns": { "type": "integer", "minimum": 1 }` of `run_parameters_schema` becomes the `ContentField` below: a number input labeled "Max turns", filled with `max_turns` of the project run configuration. The form checks `minimum` against the schema before sending.
 
 ```ts
-const maxTurns: FieldView = {
+const maxTurns: ContentField = {
   name: 'max_turns',
-  label: 'Max turns',
+  label: 'Max turns', // no title, so derived from the name
   widget: 'number', // derived from "integer"
   nullable: false,
+  required: false,
   readOnly: false,
   options: [],
   description: null,
+  allowedValuesFrom: null,
+  minItems: null,
+  minimum: 1,
+  maximum: null,
+  entryFields: [],
 }
 ```
 
@@ -320,11 +332,11 @@ Where the parts above go in the web app. The module and the layer of each part f
 | Graph | `run`, widget `graph` | `modules/run/widgets/graph/components/WorkflowGraph.tsx`; one component per node kind: `TerminalNode.tsx`, `AgentNode.tsx`, `CheckpointNode.tsx`, `ControlNode.tsx`; `modules/run/widgets/graph/run-graph.types.ts` (`WorkflowNodeData`, `WorkflowEdgeData`); `modules/run/widgets/graph/graph-layout.utils.ts` (elkjs) |
 | Details of a node | `run`, widget `graph` | `modules/run/widgets/graph/components/NodeDetailsPanel.tsx`, with the retry action of `run/features/retry` |
 | Reviews | `review`: entities, feature `answer`, widget `panel` | `modules/review/entities/review.api.ts`, `modules/review/entities/review.types.ts`, `modules/review/entities/hooks/useReviewQueries.ts`; `modules/review/features/answer/components/ReviewAnswerForm.tsx` (options, questions, feedback), `modules/review/features/answer/hooks/useAnswerReview.ts`; `modules/review/widgets/panel/components/ReviewPanel.tsx`, which shows the prompt, the items under review with the edit form of `artifact/features/edit`, and the answer form |
-| Form built from a schema | Shared code | `shared/components/content-form/ContentForm.tsx`, `shared/components/content-form/content-form.types.ts` (`FieldView`), `shared/components/content-form/field-widgets.utils.ts`. The caller gives the values of a field marked `x-value-from` |
-| Artifacts and items | `artifact`, entities | `modules/artifact/entities/artifact-kinds.api.ts`, `modules/artifact/entities/artifact.types.ts`; one component per display: `DocumentView.tsx`, `SectionHeading.tsx`, `ItemTable.tsx`, `ItemCards.tsx`, `TranscriptView.tsx`; `modules/artifact/entities/kind-components.constants.ts` (the registry) |
+| Form built from a schema | Shared code | `shared/components/content-form/ContentForm.tsx`, `modules/workflow/entities/types/content-fields.types.ts` (`ContentField`), `shared/components/content-form/field-widgets.utils.ts`. The caller gives the values of a field marked `x-value-from` |
+| Artifacts and items | `artifact`, entities | `modules/workflow/entities/api/artifact-kinds.api.ts`, `modules/artifact/entities/types/artifacts.types.ts`, `modules/artifact/entities/types/items.types.ts`; one component per display: `DocumentView.tsx`, `SectionHeading.tsx`, `ItemTable.tsx`, `ItemCards.tsx`, `TranscriptView.tsx`; `modules/artifact/entities/kind-components.constants.ts` (the registry) |
 | Editing an artifact or an item | `artifact`, feature `edit` | The edit form, on `ContentForm.tsx`, and one hook per save: `modules/artifact/features/edit/hooks/useUpdateArtifact.ts`, `modules/artifact/features/edit/hooks/useUpdateItem.ts` |
 | Run settings | `workflow`, entities | `modules/workflow/entities/components/RunParametersFields.tsx`, on `ContentForm.tsx`. It saves nothing: the feature that shows it, the settings or the dialog that creates a project, saves the values |
-| Workflow state | `workflow`, entities | `modules/workflow/entities/components/StateTree.tsx` |
+| Workflow state | `run`, entities | `modules/run/entities/components/StateTree.tsx` |
 
 ## 10. Open points
 
