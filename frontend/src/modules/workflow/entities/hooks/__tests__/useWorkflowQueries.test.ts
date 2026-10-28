@@ -5,6 +5,7 @@ import { renderHookWithProviders } from '@/test/render'
 import { waitForSuccess } from '@/test/steps'
 
 import {
+  useIssueKinds,
   useReviewableCheckpoints,
   useStageTitle,
   useVisibleStages,
@@ -82,5 +83,18 @@ describe('useVisibleStages', () => {
     const { result } = renderHookWithProviders(() => useVisibleStages(undefined))
 
     expect(result.current.data).toBeUndefined()
+  })
+})
+
+describe('useIssueKinds', () => {
+  it('loads the kinds of item that record a problem to settle', async () => {
+    const { result } = renderHookWithProviders(() => useIssueKinds())
+
+    await waitForSuccess(result)
+    expect(result.current.data?.map(({ kind }) => kind)).toEqual([
+      'ambiguity_issue',
+      'conflict',
+      'validation_issue',
+    ])
   })
 })

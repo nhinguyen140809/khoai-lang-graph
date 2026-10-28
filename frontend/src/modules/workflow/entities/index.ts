@@ -2,6 +2,7 @@ export { getArtifactKinds, getContentSchema } from './api/artifact-kinds.api'
 export { getWorkflowDefinition } from './api/workflow.api'
 export { useArtifactKinds, useContentSchema } from './hooks/useArtifactKindQueries'
 export {
+  useIssueKinds,
   useReviewableCheckpoints,
   useStageTitle,
   useVisibleStages,
@@ -18,7 +19,7 @@ export type {
 export type { ContentDisplay, ContentField, FieldWidget } from './types/content-fields.types'
 export type { ContentValues } from './types/content-values.types'
 export { contentValuesSchema } from './types/content-values.types'
-export type { ReviewableCheckpoint, VisibleStage } from './types/definition-views.types'
+export type { IssueKind, ReviewableCheckpoint, VisibleStage } from './types/definition-views.types'
 export type { ExportFormat, ExportTemplate } from './types/export-templates.types'
 export { exportFormats } from './types/export-templates.types'
 export type { ObjectSchema, WorkflowDefinition } from './types/workflow-definition.types'
@@ -52,7 +53,14 @@ export {
   toStoredContent,
   validateContent,
 } from './utils/content-values.utils'
+export { isOpenIssue, issueKinds } from './utils/issues.utils'
 export { contentSchemasByKind, kindSchemasByKind } from './utils/kind-schemas.utils'
+export {
+  canLinkTypeConnect,
+  findLinkType,
+  kindLevelsOf,
+  targetKindsOf,
+} from './utils/link-types.utils'
 export {
   checkpointNodes,
   edgesFrom,

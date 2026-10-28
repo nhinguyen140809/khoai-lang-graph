@@ -7,6 +7,7 @@ import { getWorkflowDefinition } from '../api/workflow.api'
 import { workflowKeys } from '../keys/workflow.keys'
 import { workflowDefinitionStaleTime } from '../stale-time.constants'
 import type { WorkflowDefinition } from '../types/workflow-definition.types'
+import { issueKinds } from '../utils/issues.utils'
 import {
   reviewableCheckpoints,
   visibleStages,
@@ -77,4 +78,12 @@ export function useReviewableCheckpoints(version?: number) {
  */
 export function useVisibleStages(version: number | undefined) {
   return useDefinitionQuery(version, visibleStages, { isEnabled: version !== undefined })
+}
+
+/**
+ * The kinds of item that record a problem to settle, in a version of the workflow, for the lists
+ * of open issues. Without a version it reads the current one.
+ */
+export function useIssueKinds(version?: number) {
+  return useDefinitionQuery(version, issueKinds)
 }

@@ -48,10 +48,20 @@ export const definedArtifactKindSchema = z.object({
 
 export type DefinedArtifactKind = z.infer<typeof definedArtifactKindSchema>
 
-/** An item kind as the workflow defines it, with the version of the schema of its content. */
+/** Where the content of an issue says whether it is still open. */
+const issueRuleSchema = z.object({
+  status_field: z.string(),
+  open_values: z.array(z.string()).min(1),
+})
+
+/**
+ * An item kind as the workflow defines it, with the version of the schema of its content. `issue`
+ * is set for a kind that records a problem to settle, such as a conflict.
+ */
 export const definedItemKindSchema = z.object({
   kind: z.string(),
   schema_version: z.number().int(),
+  issue: issueRuleSchema.nullable(),
 })
 
 export type DefinedItemKind = z.infer<typeof definedItemKindSchema>
