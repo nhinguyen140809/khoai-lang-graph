@@ -5,6 +5,7 @@
 export const moduleImports = {
   workflow: [],
   artifact: ['workflow'],
+  trace: ['workflow', 'artifact'],
   run: ['workflow', 'artifact'],
   review: ['workflow', 'artifact', 'run'],
   thread: ['workflow', 'artifact', 'run', 'review'],

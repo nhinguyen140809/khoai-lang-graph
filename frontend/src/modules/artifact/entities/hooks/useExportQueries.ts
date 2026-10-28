@@ -1,6 +1,6 @@
 import { useInfiniteQuery, useQuery } from '@tanstack/react-query'
 
-import { cursorPagesOptions } from '@/shared/api/query-client'
+import { cursorPagesOptions, type HookQueryOptions } from '@/shared/api/query-client'
 
 import { getExport, listProjectExports } from '../api/exports.api'
 import { exportKeys } from '../keys/exports.keys'
@@ -18,7 +18,7 @@ export function useProjectExports(projectId: string) {
 }
 
 /** Reads an export again while the server is preparing its file. */
-export function useExport(exportId: string, isEnabled = true) {
+export function useExport(exportId: string, { isEnabled = true }: HookQueryOptions = {}) {
   return useQuery({
     queryKey: exportKeys.detail(exportId),
     queryFn: () => getExport(exportId),

@@ -40,7 +40,9 @@ describe('useArtifactItems', () => {
   })
 
   it('waits until it is enabled', () => {
-    const { result } = renderHookWithProviders(() => useArtifactItems(specification.id, {}, false))
+    const { result } = renderHookWithProviders(() =>
+      useArtifactItems(specification.id, {}, { isEnabled: false }),
+    )
 
     expect(result.current.fetchStatus).toBe('idle')
   })

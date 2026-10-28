@@ -1,5 +1,7 @@
 import { useQuery } from '@tanstack/react-query'
 
+import type { HookQueryOptions } from '@/shared/api/query-client'
+
 import { getArtifactKinds, getContentSchema } from '../api/artifact-kinds.api'
 import { artifactKindKeys } from '../keys/artifact-kinds.keys'
 import { workflowDefinitionStaleTime } from '../stale-time.constants'
@@ -17,7 +19,11 @@ export function useArtifactKinds(workflowVersion?: number) {
 }
 
 /** The content schema of a kind at one version; a version never changes, so it is read once. */
-export function useContentSchema(kind: string, version: number, isEnabled = true) {
+export function useContentSchema(
+  kind: string,
+  version: number,
+  { isEnabled = true }: HookQueryOptions = {},
+) {
   return useQuery({
     queryKey: artifactKindKeys.schema(kind, version),
     queryFn: () => getContentSchema(kind, version),

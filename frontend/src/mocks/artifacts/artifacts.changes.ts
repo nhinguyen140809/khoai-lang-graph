@@ -1,4 +1,10 @@
-import type { Artifact, ArtifactItem, ChangeReason, Revision } from '@/modules/artifact/entities'
+import {
+  type Artifact,
+  type ArtifactItem,
+  type ChangeReason,
+  reviewStatus,
+  type Revision,
+} from '@/modules/artifact/entities'
 import type { ContentValues } from '@/modules/workflow/entities'
 
 import { IdPrefix, mockId, mockNow } from '../shared/db'
@@ -170,7 +176,7 @@ export function addItem(artifact: Artifact, record: NewItemRecord): ArtifactItem
     outline_number: '',
     schema_version: record.schemaVersion,
     version: 1,
-    review_status: 'draft',
+    review_status: reviewStatus.draft,
     created_by: userOrigin,
     updated_by: userOrigin,
     created_at: createdAt,

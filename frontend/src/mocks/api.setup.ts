@@ -8,6 +8,9 @@ import { messageHandlers } from './messages/messages.handlers'
 import { projectHandlers } from './projects/projects.handlers'
 import { runHandlers } from './runs/handlers/runs.handlers'
 import { threadHandlers } from './threads/threads.handlers'
+import { chainHandlers } from './trace/handlers/chains.handlers'
+import { traceLinkHandlers } from './trace/handlers/trace-links.handlers'
+import { traceabilityHandlers } from './trace/handlers/traceability.handlers'
 import { artifactKindHandlers } from './workflow/artifact-kinds.handlers'
 import { workflowHandlers } from './workflow/workflow.handlers'
 
@@ -25,6 +28,9 @@ export const apiHandlers = [
   ...itemHandlers,
   ...itemEditHandlers,
   ...exportHandlers,
+  ...traceLinkHandlers,
+  ...chainHandlers,
+  ...traceabilityHandlers,
   ...threadHandlers,
   ...messageHandlers,
   ...runHandlers,

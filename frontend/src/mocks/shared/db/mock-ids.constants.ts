@@ -15,6 +15,7 @@ export const IdPrefix = {
   Artifact: 'a7f3',
   Item: 'c41e',
   Export: 'e8d0',
+  TraceLink: 'd7a1',
 } as const
 
 export const userId = mockId(IdPrefix.User, 1)

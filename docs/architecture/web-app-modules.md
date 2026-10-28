@@ -28,13 +28,16 @@ The objects come from [Data Shape](../DATA_SHAPE.md), the endpoints from [API de
 - **Level 3, the kinds of file** inside a slice: `components/`, `hooks/`, `types/`, `constants/`, `utils/` and the other kinds of the contributing guide. A kind gets a folder once it has two files or more; a kind with one file stays at the root of the slice.
 - `src/shared/` and `src/app/`, with `src/providers/`, stay outside the modules.
 - Activity is a feature of the activity bar, as Documents or Workflow are, and a module of its own, `activity`. Its side panel shows the stages of the workflow as a tree, in the order of the definition, marked as the events of the run arrive: the widget `steps`, with the item of the feature on the activity bar, not built yet. Its page, which opens in a tab, is the chat: the widget `chat`. Until it is rebuilt, the route of its page shows a placeholder, and `chat` holds the code of the first chat, with the events of the stream of a run and their reducer in `run/entities` and the action that starts a run with an input in `run/features/start`. The rebuilt chat sends a message instead, from `thread/features/send-message`.
-- Three modules hold no object of the product yet: `artifact` holds the placeholder of the artifact panel (`artifact/widgets/panel`), `user` the settings page (`user/widgets/settings`), with the feature that chooses the theme (`user/features/theme`), and `design-system` the page that shows the UI components and the tokens (`design-system/widgets/showcase`).
+- Two modules hold no object of the product yet: `user` the settings page (`user/widgets/settings`), with the feature that chooses the theme (`user/features/theme`), and `design-system` the page that shows the UI components and the tokens (`design-system/widgets/showcase`).
 
 ```text
 src/
 ├── app/                        # routes, layouts, providers; they place the widgets of a screen
 ├── modules/
+│   ├── workflow/
+│   │   └── entities/           # the artifact kinds and their content schemas; @x/artifact.ts
 │   ├── artifact/
+│   │   ├── entities/           # Artifact, ArtifactItem and their revisions; @x/run.ts
 │   │   └── widgets/            # panel/, a placeholder
 │   ├── run/
 │   │   ├── entities/
@@ -105,13 +108,13 @@ A slice holds its components in `components/`, its hooks in `hooks/`, and its ot
 | `fixtures` | `<subject>.fixtures.ts` | - | - | Sample data, as in the design system page |
 | `@x/` | `<module>.ts` | The files for the entities of other modules | - | - |
 
-Outside the modules, shared code holds `types`, `store`, `reducer`, `config`, `constants` and `utils` files; `src/mocks/` holds `types`, `store`, `constants`, `utils`, `handlers`, `fixtures` and `setup` files, its `fixtures` the records of the mock data and its `constants` their fixed ids and counts; `src/test/` holds `utils` and `setup` files; and `tests/` holds the `spec`, `data` and `utils` files of Playwright. A config made of React elements is a `<subject>.config.tsx`.
+Outside the modules, shared code holds `types`, `store`, `reducer`, `config`, `constants` and `utils` files; `src/mocks/` holds `types`, `store`, `constants`, `utils`, `handlers`, `fixtures`, `lookup`, `changes`, `problems` and `setup` files, its `fixtures` the records of the mock data, its `constants` their fixed ids and counts, and its `store`, `lookup`, `changes` and `problems` files the state of a resource, how it is read, how it is changed and how a request is refused ([frontend README: Files of a mock folder](../../frontend/README.md#files-of-a-mock-folder)); `src/test/` holds `utils` and `setup` files; and `tests/` holds the `spec`, `data` and `utils` files of Playwright. A config made of React elements is a `<subject>.config.tsx`.
 
 ESLint checks the kinds of each place (`fileKinds` of `frontend/lint/lib/file-names/file-kinds.constants.js`), the layers inside a module, and the folders at the root of a slice: one for each kind that the layer holds, `components/`, `hooks/`, `__tests__/`, and `@x/` in the entities. It also checks that a `constants` file exports no type and declares no function, and that a `types` file imports no `constants` file.
 
 ## 4. Order of the modules
 
-`workflow`, `artifact` -> `run` -> `review` -> `thread` -> `project`, `activity`
+`workflow` -> `artifact` -> `run` -> `review` -> `thread` -> `project`, `activity`
 
 `auth` -> `user`
 
@@ -119,7 +122,7 @@ ESLint checks the kinds of each place (`fileKinds` of `frontend/lint/lib/file-na
 
 A module imports only the modules under it in its line: `project` reads `thread` and `run`; `activity` sits beside `project`, so it may read the same modules, and neither of the two reads the other; `thread` reads `run`, and `user` reads `auth`. `usage` and `design-system` read no other module. The order is `moduleImports` of `frontend/lint/lib/modules/module-imports.constants.js`, which lists the modules of today and the ones planned next; a new module gets its place there before its first code. ESLint does not load when the lists form a cycle, or name a module that has no list.
 
-`itemRefSchema`, the reference to an item that a step produced or a message names, sits in `run` until the module `artifact` exists.
+`itemRefSchema`, the reference to an item that a step produced or a message names, sits in `artifact`; the entities of `run` read it through `artifact/entities/@x/run`. The entities of `artifact` read the artifact kinds and their content schemas through `workflow/entities/@x/artifact`.
 
 ## 5. Imports
 
@@ -173,9 +176,9 @@ A unit test may also import another slice of its layer, from its index, to show 
 
 | Module | Entities | Features | Widgets | State |
 |---|---|---|---|---|
-| `workflow` | Workflow definition (graph, agent roles, stages in their order, checkpoints and their options), workflow state | - | - | Next |
-| `artifact` | Artifact, ArtifactItem and their revisions; artifact kinds and content schemas | `edit` | `panel` | The placeholder of `panel` today; the rest with the documents |
-| `run` | Run and RunStep, each with its usage; RunEvent, Directive, the event stream of a run; the run statuses and their badge | `stop`, `start` (the first chat); `retry` later | `graph`, the workflow graph of a run, later | The run statuses, the stream of a run and `start` today |
+| `workflow` | Workflow definition (graph, agent roles, stages in their order, checkpoints and their options); artifact kinds and content schemas | - | - | The artifact kinds and content schemas; the definition next |
+| `artifact` | Artifact, ArtifactItem and their revisions, and Export as its resource `exports` | `edit` | `panel` | The entities, and the placeholder of `panel`; the rest with the documents |
+| `run` | Run and RunStep, each with its usage; RunEvent, Directive, the event stream of a run; the workflow state of a run; the run statuses and their badge | `stop`, `start` (the first chat); `retry` later | `graph`, the workflow graph of a run, later | The run statuses, the stream of a run and `start` today |
 | `review` | Interrupt, HumanDecision | `answer` | `panel` | With the activity |
 | `thread` | Thread, Message | `send-message` | - | The threads today; `send-message` with the activity |
 | `project` | Project, the run that its status shows, the streams of its runs | `create`, `rename`, `archive` (with restore and Undo), `delete` | `list`, `menu`, `commands`, `dialogs`, `status` | Today, except `status` and the runs in the entities, which come with the threads |
@@ -183,7 +186,7 @@ A unit test may also import another slice of its layer, from its index, to show 
 | `auth` | The calls that start a session, create an account and end a session; the page that opens after signing in | `login`, `register`, `logout` | - | Today |
 | `user` | User, UserSettings | - | `menu`, `settings` | User, `menu` and `settings` today |
 | `usage` | Usage of the user in a calendar month, with the budget of the month | - | - | Next |
-| `trace-link` | TraceLink, the traceability views | - | - | Later |
+| `trace-link` | TraceLink, the traces of items, the traceability views | - | `graph`, the nodes and edges of a trace, for drawing it | Later |
 | `llm-model` | ModelCatalogEntry, ModelSettings | - | - | Later |
 | `design-system` | - | - | `showcase`, the page of the UI components and the tokens | Today |
 
@@ -191,9 +194,9 @@ The endpoints of the entities:
 
 | Module | Endpoints |
 |---|---|
-| `workflow` | `/workflow/definition`, `/runs/{run_id}/state`, `/runs/{run_id}/steps/{step_id}/state` |
-| `artifact` | `/projects/{project_id}/artifacts`, `/artifacts/{artifact_id}`, `/projects/{project_id}/items`, `/items/{item_id}`, `/artifact-kinds`, `/content-schemas/{kind}/{schema_version}` |
-| `run` | `/threads/{thread_id}/runs`, `/runs/{run_id}`, `/runs/{run_id}/steps`, `/runs/{run_id}/stream`, `/runs/{run_id}/directives`, `/runs/{run_id}/cancel`, `/runs/{run_id}/retry` |
+| `workflow` | `/workflow/definition`, `/artifact-kinds`, `/content-schemas/{kind}/{schema_version}` |
+| `artifact` | `/projects/{project_id}/artifacts`, `/artifacts/{artifact_id}`, `/projects/{project_id}/items`, `/items/{item_id}`, `/projects/{project_id}/exports`, `/exports/{export_id}` |
+| `run` | `/threads/{thread_id}/runs`, `/runs/{run_id}`, `/runs/{run_id}/steps`, `/runs/{run_id}/stream`, `/runs/{run_id}/state`, `/runs/{run_id}/steps/{step_id}/state`, `/runs/{run_id}/directives`, `/runs/{run_id}/cancel`, `/runs/{run_id}/retry` |
 | `review` | `/runs/{run_id}/interrupts`, `/runs/{run_id}/resume` |
 | `thread` | `/projects/{project_id}/threads`, `/threads/{thread_id}`, `/threads/{thread_id}/messages` |
 | `project` | `/projects`, `/projects/{project_id}` |
@@ -215,8 +218,9 @@ The entity of the models is named `llm-model`, not `model`, because "model" alon
 |---|---|
 | Session, AuthIdentity | The entities of `auth`, through the calls that start and end a session; the web app keeps no session object |
 | RunConfig, RunDefaults | Value objects of the runs, in `run/entities`: Run holds a RunConfig, and Project and UserSettings hold RunDefaults, which `project` reads through `@x/project` |
-| ArtifactRevision, ItemRevision, the artifact and item kinds of [Data Shape: section 7](../DATA_SHAPE.md#7-requirements-engineering-artifacts) | Part of `artifact` |
-| Export | One action: a feature that requests a document and downloads it |
+| ArtifactRevision, ItemRevision of [Data Shape: section 7](../DATA_SHAPE.md#7-requirements-engineering-artifacts) | Part of `artifact` |
+| The artifact and item kinds of [Data Shape: section 7](../DATA_SHAPE.md#7-requirements-engineering-artifacts), with their content schemas | Part of `workflow`: the definition decides them |
+| Export | One action, a feature that requests a document and downloads it; its calls and its type are the resource `exports` in `artifact/entities` |
 | ProviderCredential, ProjectMember, SourceDocument, DocumentChunk, ItemEmbedding, Comment, Notification | Later phase of the data shape; placed when the phase starts |
 
 ## 8. Shared code

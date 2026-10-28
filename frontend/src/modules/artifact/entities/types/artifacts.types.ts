@@ -20,6 +20,14 @@ export const reviewStatuses = ['draft', 'approved', 'rejected', 'superseded'] as
 
 export type ReviewStatus = (typeof reviewStatuses)[number]
 
+/** The review statuses by name, so that code names one without writing its string: `reviewStatus.superseded` is the status of an item that a newer version replaced. */
+export const reviewStatus = {
+  draft: 'draft',
+  approved: 'approved',
+  rejected: 'rejected',
+  superseded: 'superseded',
+} as const satisfies { [Status in ReviewStatus]: Status }
+
 export const artifactSchema = z.object({
   id: z.string(),
   kind: z.string(),
