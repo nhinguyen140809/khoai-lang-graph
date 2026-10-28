@@ -15,6 +15,7 @@ import { DisclosureCard } from './cards/DisclosureCard'
 import { ExplorerTreeCard } from './cards/ExplorerTreeCard'
 import { FormCard } from './cards/FormCard'
 import { GraphCard } from './cards/GraphCard'
+import { HighlightCard } from './cards/HighlightCard'
 import { ItemsCard } from './cards/ItemsCard'
 import { MarkdownCard } from './cards/MarkdownCard'
 import { NavigationCard } from './cards/NavigationCard'
@@ -52,6 +53,7 @@ export function DesignSystemPage() {
             <ReviewCard />
             <ButtonsCard />
             <BadgesCard />
+            <HighlightCard />
             <CodeCard />
             <AlertsCard />
             <FormCard />

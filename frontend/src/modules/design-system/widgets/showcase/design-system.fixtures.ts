@@ -215,3 +215,46 @@ export const sampleMarkdown = [
   '}',
   '```',
 ].join('\n')
+
+/** A message of an interview, with the words that items were taken from. */
+export const interviewMessage =
+  'I ask seniors in my club, but I never know who is free this week. I want to cancel without writing to anyone, and a reminder the hour before would help.'
+
+export interface QuotedItem {
+  /** The words of the message that the item was taken from. */
+  quote: string
+  key: string
+  title: string
+  color: Tone
+}
+
+export const quotedItems: QuotedItem[] = [
+  {
+    quote: 'I ask seniors in my club',
+    key: 'RAW-001',
+    title: 'Ask seniors for advice',
+    color: 'primary',
+  },
+  {
+    quote: 'I never know who is free this week',
+    key: 'RAW-002',
+    title: 'See who is free',
+    color: 'warning',
+  },
+  {
+    quote: 'cancel without writing to anyone',
+    key: 'RAW-003',
+    title: 'Cancel a session alone',
+    color: 'destructive',
+  },
+  {
+    quote: 'a reminder the hour before',
+    key: 'RAW-004',
+    title: 'Remind before a session',
+    color: 'success',
+  },
+]
+
+/** A text that a search can mark in several places. */
+export const searchText =
+  'Mentors can search mentors by field and filter them by availability. Students book a session with a mentor, rate it, and export the history of their sessions.'
