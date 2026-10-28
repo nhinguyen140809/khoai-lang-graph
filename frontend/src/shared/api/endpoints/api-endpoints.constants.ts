@@ -37,11 +37,18 @@ export const apiEndpoints = {
   artifactItemsReorder: apiEndpoint('/artifacts/:artifactId/items/reorder'),
   artifactRevisions: apiEndpoint('/artifacts/:artifactId/revisions'),
   artifactRestore: apiEndpoint('/artifacts/:artifactId/restore'),
+  artifactTrace: apiEndpoint('/artifacts/:artifactId/trace'),
 
   item: apiEndpoint('/items/:itemId'),
   itemMove: apiEndpoint('/items/:itemId/move'),
   itemRevisions: apiEndpoint('/items/:itemId/revisions'),
   itemRestore: apiEndpoint('/items/:itemId/restore'),
+  itemTrace: apiEndpoint('/items/:itemId/trace'),
+
+  projectTraceLinks: apiEndpoint('/projects/:projectId/trace-links'),
+  traceLink: apiEndpoint('/trace-links/:linkId'),
+  traceabilityMatrix: apiEndpoint('/projects/:projectId/traceability/matrix'),
+  traceabilityCoverage: apiEndpoint('/projects/:projectId/traceability/coverage'),
 
   workflowDefinition: apiEndpoint('/workflow/definition'),
   artifactKinds: apiEndpoint('/artifact-kinds'),
