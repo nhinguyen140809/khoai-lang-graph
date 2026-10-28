@@ -404,7 +404,7 @@ The chat between the user and the system. Interview turns between agents are not
 
 ### RunConfig (MVP)
 
-Value object stored on each Run: the complete configuration the run uses, resolved when the run starts and then frozen, so that later setting changes do not alter the record of a past run. The fields in the first table belong to every workflow; `parameters` holds the limits of one workflow version.
+Value object stored on each Run: the complete configuration the run uses, resolved when the run starts and then frozen, so that later setting changes do not alter the record of a past run. A retry is a new run: it resolves its RunConfig when it starts, so the settings saved since the run it retries apply. The fields in the first table belong to every workflow; `parameters` holds the limits of one workflow version.
 
 | Field | Type | Notes |
 |---|---|---|

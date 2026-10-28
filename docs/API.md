@@ -392,7 +392,7 @@ Response `201`:
 | `GET /runs/{run_id}/directives` | Directives of the run with their items, ordered by `iteration`; explains why the run looped | MVP |
 | `POST /runs/{run_id}/resume` | Answer the pending interrupt, see below | MVP |
 | `POST /runs/{run_id}/cancel` | Stop the run. The open call to the LLM provider is closed. `202` | MVP |
-| `POST /runs/{run_id}/retry` | Create a new run that starts from a step of this run; body `from_step_id`. Before it starts, the artifacts, items and trace links of the project are brought back to the versions that the state of that step references, see [Runtime: retry](architecture/runtime.md#retry). Returns the new run | MVP |
+| `POST /runs/{run_id}/retry` | Create a new run that starts from a step of this run; body `from_step_id`. The new run resolves its RunConfig when it starts, see [Data Shape: RunDefaults](DATA_SHAPE.md#rundefaults-mvp). Before it starts, the artifacts, items and trace links of the project are brought back to the versions that the state of that step references, see [Runtime: retry](architecture/runtime.md#retry). Returns the new run | MVP |
 
 Run body, `GET /runs/5f2d...`, while the run waits at the analysis review. It is the third run of the thread: the first run went through the whole workflow, the second failed at its cost limit, and this run retries the second from its planner step, so its steps start again at the planner. `models` is shortened to two of the roles:
 
