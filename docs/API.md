@@ -474,6 +474,39 @@ Steps of a run, `GET /runs/5f2d.../steps`, ordered by `sequence`. The example sh
 }
 ```
 
+Directives of a run, `GET /runs/5f2d.../directives`, ordered by `iteration`. The first was issued by the decision of the user at a checkpoint, the second by a step; each `items` entry is an item reference with the `role` that the kind allows. Exactly one of `issued_by_step_id` and `human_decision_id` is set, the other is null:
+
+```json
+{
+  "items": [
+    {
+      "id": "3b7c...", "run_id": "5f2d...", "kind": "rework",
+      "issued_by_step_id": null, "human_decision_id": "a41e...",
+      "target_node": "interviewer", "iteration": 1,
+      "instruction": "Clarify CONF-001: would a layered design work?",
+      "items": [
+        { "item": { "item_id": "8c20...", "kind": "persona", "key": "PER-001", "version": 1 }, "role": "addressed_to" },
+        { "item": { "item_id": "7e11...", "kind": "conflict", "key": "CONF-001", "version": 2 }, "role": "about" }
+      ],
+      "details": {},
+      "created_at": "2026-10-06T08:41:12Z"
+    },
+    {
+      "id": "3b7d...", "run_id": "5f2d...", "kind": "intent",
+      "issued_by_step_id": "e1b4...", "human_decision_id": null,
+      "target_node": "analyst", "iteration": 2,
+      "instruction": "Check the login requirement again.",
+      "items": [
+        { "item": { "item_id": "6d02...", "kind": "analyzed_requirement", "key": "REQ-004", "version": 1 }, "role": "about" }
+      ],
+      "details": {},
+      "created_at": "2026-10-06T08:55:40Z"
+    }
+  ],
+  "next_cursor": null
+}
+```
+
 The pending interrupt, `GET /runs/5f2d.../interrupts?status=pending`. The `interrupt` event carries the same fields, with `interrupt_id` for `id`:
 
 ```json
