@@ -47,6 +47,7 @@ export type {
 export { reviewStatus, reviewStatuses } from './types/artifacts.types'
 export type { CreateExportBody, Export, ExportStatus } from './types/exports.types'
 export { exportStatuses } from './types/exports.types'
+export type { IssueGroup, IssueItem, IssueLink } from './types/issues.types'
 export type {
   ArtifactItem,
   ArtifactItemFilters,
@@ -60,4 +61,5 @@ export type {
 } from './types/items.types'
 export type { ChangeReason, Revision } from './types/revisions.types'
 export { allowedValues } from './utils/allowed-values.utils'
+export { issuesWithSubjects } from './utils/issues.utils'
 export { itemHierarchy } from './utils/item-hierarchy.utils'
