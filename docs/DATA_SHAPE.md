@@ -186,7 +186,7 @@ Scoping rules:
 | `status` | enum | `active`, `disabled` |
 | `email_verified_at` | datetime? | |
 | `last_login_at` | datetime? | |
-| `monthly_budget_usd` | number? | Cost limit per calendar month, set by an admin. Null means the server default |
+| `monthly_budget_usd` | number? | Cost limit per calendar month in UTC, set by an admin. Null means the server default |
 | `password_hash` | server-only string? | Hash of the password. Null when the user signs in only through an external provider |
 
 ### AuthIdentity (Later)
@@ -284,7 +284,7 @@ The master keys are kept in the server environment, never in the database, each 
 | Field | Type | Notes |
 |---|---|---|
 | `owner_id` | ref\<User\> | |
-| `name` | string | |
+| `name` | string? | Null when the project is created without a name, until its first run names it from the initial intent. The user can change it at any time |
 | `description` | string? | Free text about the product and its domain |
 | `status` | enum | `active`, `archived` |
 | `output_language` | enum | `en`, `vi` |
@@ -292,7 +292,11 @@ The master keys are kept in the server environment, never in the database, each 
 | `initial_message_id` | ref\<Message\>? | The user message that started the first run of the project, for example "I want to build an online platform for university students to find mentors." Its content is the initial intent of the project. Null until the first run starts, so a run that starts while it is null is the first run of the project and begins at the planner |
 | `model_overrides` | map\<AgentRole, string\> | Optional `provider:model` per role for this project |
 | `item_counts` | map\<ItemKind, int\> | Derived, read-only. Shown on the project card |
+| `unfinished_run_counts` | RunCounts | Derived, read-only. The number of unfinished runs of the project in each status, see below. `interrupted` counts the reviews that wait for the user |
+| `rollup_run_status` | enum? | Derived, read-only. The status that the latest [Run](#run-mvp) of each thread of the project rolls up to: the one that needs the user most, in the order `interrupted`, `failed`, `running`, `queued`, `cancelled`, `succeeded`. A run that a later run of its thread replaced no longer counts, so a failed run that was run again does not show. Null before the first run. The project list shows it |
 | `last_activity_at` | datetime | Derived, stored. Kept in a column so that the project list can be sorted by it |
+
+`RunCounts` is `{ queued: int, running: int, interrupted: int }`, one count per status of an unfinished run.
 
 ### ProjectMember (Later)
 
@@ -356,7 +360,7 @@ A passage of the extracted text of a source document, with its embedding, so tha
 
 ### Workflow stages
 
-`Stage` names a position a run can be in; it is the value of `current_stage` in the deck. Workflow definition version 1 has these stages:
+`Stage` names a position a run can be in; it is the value of `current_stage` in the deck. A stage of the definition has a `title` for the user, an `internal` flag for a stage the user does not see, and a `parent` that groups stages as a tree, see [Workflow definitions](workflow/README.md#2-parts-of-a-definition). Workflow definition version 1 has these stages, all at the top level, and `intent_routing` is internal:
 
 `intent_routing`, `planning`, `persona_generation`, `persona_review`, `interviewing`, `analysis`, `analysis_review`, `specification`, `specification_review`, `backlog`, `validation`, `done`
 
@@ -372,6 +376,7 @@ A passage of the extracted text of a source document, with its embedding, so tha
 | `status` | enum | `active`, `archived` |
 | `current_stage` | Stage? | Stage of the latest run. Null before the first run |
 | `active_run_id` | ref\<Run\>? | The unfinished run of the thread (`queued`, `running` or `interrupted`); at most one, see [Runtime: lifecycle](architecture/runtime.md#3-lifecycle) |
+| `latest_run_status` | enum? | Derived, read-only. The status of the latest [Run](#run-mvp) of the thread, unfinished or ended. The unfinished run of a thread is always its latest, so while `active_run_id` is set, this is its status. Null before the first run of the thread |
 | `last_message_at` | datetime | Time of the newest message; the creation time while the thread has no message |
 
 Deck: `project_id`, `current_stage`. The deck's `initial_intent` belongs to the project, see `Project.initial_message_id`.
@@ -448,6 +453,7 @@ Each choice therefore has one place per level: models are chosen in ModelSetting
 |---|---|---|
 | `thread_id` | ref\<Thread\> | |
 | `project_id` | ref\<Project\> | Repeated for direct filtering |
+| `number` | int | Order of the run in its thread, from 1, without gaps; unique per thread. Names the run, for example "Run 3" |
 | `started_by` | ref\<User\> | |
 | `workflow_name` | string | Name of the workflow definition the run uses |
 | `workflow_version` | int | Version of that definition, fixed for the whole run |
@@ -459,6 +465,7 @@ Each choice therefore has one place per level: models are chosen in ModelSetting
 | `error` | RunError? | `{ code: string, message: string, stage: Stage }` |
 | `usage` | Usage | Totals over all steps, see below |
 | `trace_id` | string? | Id in the tracing tool |
+| `step_count` | int | Derived. Number of steps of the run so far, which is also the `sequence` of its latest step; 0 before the first step |
 | `last_event_id` | int | Derived. Sequence of the newest event of the run; a client continues the event stream from it |
 | `started_at` | datetime? | |
 | `finished_at` | datetime? | |
@@ -502,7 +509,7 @@ One entry of the resumable event stream. The payload of each event type is defin
 | `run_id` | ref\<Run\> | |
 | `sequence` | int | Increasing per run; the client resumes from the last one it saw. A counter of its own, not related to the sequence of the steps |
 | `step_id` | ref\<RunStep\>? | The step the event belongs to. Null for an event of the whole run, such as `done` |
-| `type` | enum | `node_start`, `node_end`, `token`, `tool_call`, `artifact_created`, `artifact_delta`, `interrupt`, `message_delivered`, `error`, `done` |
+| `type` | enum | `node_start`, `node_end`, `token`, `tool_call`, `artifact_created`, `artifact_delta`, `interrupt`, `message_delivered`, `project_named`, `error`, `done` |
 | `data` | object | Depends on `type` |
 
 The event log is the durable record of a run: the stream endpoint replays it after a reconnect, and the workflow never writes into an HTTP response. Token text is stored in grouped chunks, not one event per token. Payload fields are listed in [API design: run event stream](API.md#6-run-event-stream).
@@ -666,7 +673,7 @@ The two levels correspond to the specification and the specification object of t
 | `key` | string | See [identifiers](#identifiers) |
 | `parent_item_id` | ref\<ArtifactItem\>? | The section the item is in, or the epic of a user story; always in the same artifact. Null for an item at the top level |
 | `position` | int | Order among the items with the same parent |
-| `number` | string | Derived, read-only. Outline number such as `3.2.1`, from the positions along the path from the top level |
+| `outline_number` | string | Derived, read-only. Outline number such as `3.2.1`, from the positions along the path from the top level. In an artifact without sections it is the position, `1`, `2`, ... |
 | `schema_version` | int | Version of the content schema of this kind that `content` follows |
 | `content` | object | Fields of the item kind, as listed in the sections below |
 | `version` | int | Starts at 1, increases on every change, deletion and restoration included |

@@ -50,7 +50,7 @@ Where a run begins in the workflow:
 
 ![Where a run begins](diagrams/runtime-run-entry.drawio.svg)
 
-The message of the first run is the initial intent of the project: when a run starts while `initial_message_id` of the project is null, the backend sets it to the message in the same transaction, with a conditional update so that only one run can set it, and the run begins at the planner. Every later run, in any thread of the project, begins at the intent router, which decides which node should handle the message, see [section 5](#5-messages-during-a-run). The workflow state of every run carries the content of that first message as `initial_intent`, so the planner can read it when the router sends a later run back to it.
+The message of the first run is the initial intent of the project: when a run starts while `initial_message_id` of the project is null, the backend sets it to the message in the same transaction, with a conditional update so that only one run can set it, and the run begins at the planner. Every later run, in any thread of the project, begins at the intent router, which decides which node should handle the message, see [section 5](#5-messages-during-a-run). The workflow state of every run carries the content of that first message as `initial_intent`, so the planner can read it when the router sends a later run back to it. A project created without a name is named by its first run, from that message; the event stream of the run sends `project_named`, see [API design: event types](../API.md#event-types).
 
 ## 3. Lifecycle
 

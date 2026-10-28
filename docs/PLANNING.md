@@ -229,7 +229,7 @@ Status: `queued` -> `running` -> (`interrupted` <-> `running`) -> `succeeded` | 
 **Design points**
 
 - **Background execution:** runs execute outside the request handler. Start with an in-process task manager (asyncio tasks + a `runs` table in Postgres); move to a queue (arq / Celery + Redis) if we need multiple workers or restarts without losing runs. With the in-process manager, a restart fails the runs that were in a step (error `server_restarted`), restarts the queued ones and leaves the interrupted ones waiting; the user retries a failed run from its last completed step. Details: [Runtime: failures, cancellation and restarts](architecture/runtime.md#7-failures-cancellation-and-restarts).
-- **Event stream:** one SSE stream per run carries `node_start`, `node_end`, `token`, `tool_call`, `artifact_created`, `artifact_delta`, `interrupt`, `message_delivered`, `error`, `done`. The payload of each type is defined in [API design: run event stream](API.md#6-run-event-stream).
+- **Event stream:** one SSE stream per run carries `node_start`, `node_end`, `token`, `tool_call`, `artifact_created`, `artifact_delta`, `interrupt`, `message_delivered`, `project_named`, `error`, `done`. The payload of each type is defined in [API design: run event stream](API.md#6-run-event-stream).
 - **Resumable streaming:** every SSE event has an incrementing `id`; events are persisted (or buffered) so a client that reconnects with `Last-Event-ID` gets what it missed. Page reloads do not lose progress.
 - **Human-in-the-loop:** a node calls LangGraph `interrupt()`, the run becomes `interrupted`, the UI shows the approval, and `/resume` continues with `Command(resume=...)`.
 - **Retry / time travel:** LangGraph checkpoints let us re-run from any earlier step (fork from a checkpoint), which powers "retry this step" in the UI.
@@ -324,7 +324,7 @@ Rules that make results defensible in a thesis. Complements the experiment workf
 - [x] Init shadcn/ui and companion libraries (section 4)
 - [x] App shell: sidebar + resizable chat / artifact panels
 - [x] App Router routes + TanStack Query, API client codegen script (writes `frontend/openapi.json` + `src/shared/api/generated/`)
-- [ ] Generate the first client once the backend exports `openapi.json`, then replace the hand-written types in `features/chat/chat.types.ts`
+- [ ] Generate the first client once the backend exports `openapi.json`, then replace the hand-written types in the `*.types.ts` files of the features
 - [x] Zustand store for user settings (model choices, theme, etc.)
 - [x] Chat page consuming the SSE endpoint (against MSW mocks until the backend exists)
 - [x] Vitest + MSW + Playwright setup

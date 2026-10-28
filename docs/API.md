@@ -93,7 +93,7 @@ Every list endpoint uses cursor pagination and the same envelope.
 | Request | `?limit=` (default 50, maximum 200) and `?cursor=` (opaque string from the previous page) |
 | Response | `{ "items": [...], "next_cursor": "..." }`; `next_cursor` is `null` on the last page |
 | Order | Stated per endpoint and stable; ties are broken by `id` |
-| Filters | Query parameters named after the field, for example `?kind=spec_requirement&review_status=draft` |
+| Filters | Query parameters named after the field, for example `?kind=spec_requirement&review_status=draft`. A filter given several times matches any of its values, for example `?rollup_run_status=interrupted&rollup_run_status=failed`. A filter on a time is the name of the field with `_after` and an ISO 8601 time, and keeps the items after that time, for example `?last_activity_after=2026-10-15T00:00:00Z` |
 
 ### Errors
 
@@ -134,7 +134,7 @@ An artifact and an item each carry `version`. An update sends the version it was
 
 ### Idempotency
 
-`POST` requests that start work accept an `Idempotency-Key` header: send message, resume, retry, create export. Repeating a request with the same key within 24 hours returns the first response without doing the work again. This makes a retry after a network failure safe.
+`POST` requests that start work, and the request that creates a project, accept an `Idempotency-Key` header: send message, resume, retry, create export, create project. Repeating a request with the same key within 24 hours returns the first response without doing the work again. This makes a retry after a network failure safe.
 
 ### Rate limits and budgets
 
@@ -143,7 +143,7 @@ An artifact and an item each carry `version`. An update sends the version it was
 | Requests per minute | Per user | `429 rate_limited` |
 | Unfinished runs | One per thread | A message sent meanwhile is delivered into that run. A retry answers `409 run_already_active` while any run of the project is unfinished |
 | Cost per run | `max_cost_usd` in the run configuration | The run fails with an `error` event, code `cost_limit_exceeded` |
-| Cost per user per month | `monthly_budget_usd` of the user | `429 budget_exceeded` on send message and resume; a run that reaches it while working fails with code `budget_exceeded` |
+| Cost per user per calendar month in UTC | `monthly_budget_usd` of the user | `429 budget_exceeded` on send message and resume; a run that reaches it while working fails with code `budget_exceeded` |
 
 The budget is checked before every LLM call, not only when the run starts. A client handles both answers to a spent budget: the early `429 budget_exceeded` and a run that fails with `budget_exceeded`.
 
@@ -187,7 +187,8 @@ The budget is checked before every LLM call, not only when the run starts. A cli
 │   └── /{artifact_id}
 │       ├── /items
 │       ├── /revisions
-│       └── /restore
+│       ├── /restore
+│       └── /trace
 ├── /items
 │   └── /{item_id}
 │       ├── /move
@@ -228,8 +229,25 @@ Login and register answer the same way for a wrong password and an unknown email
 | `GET /me/model-settings` | The chosen model per agent role | MVP |
 | `PUT /me/model-settings` | Replace the choices; each is validated against the catalog | MVP |
 | `GET /models` | Model catalog: allowed models, capabilities, prices | MVP |
-| `GET /me/usage` | Tokens and cost of the user, grouped by `?group_by=` with one of `day`, `project`, `agent_role`, `model` | MVP |
+| `GET /me/usage` | Tokens and cost of the user in one calendar month in UTC, `?month=YYYY-MM`, the current month by default: the total, the budget of the month, and, with `?group_by=` one of `day`, `project`, `agent_role`, `model`, the groups. See the example below | MVP |
 | `GET /workflow/definition` | One version of the workflow definition, see [workflow definition](#workflow-definition). `?version=` reads an older version, so a past run is shown with the definition it ran with | MVP |
+
+Usage of the current month, `GET /me/usage?group_by=project`:
+
+```json
+{
+  "month": "2026-10",
+  "budget_usd": 20.0,
+  "total": { "input_tokens": 412000, "output_tokens": 61000, "cache_read_tokens": 180000, "cache_write_tokens": 24000, "cost_usd": 3.07, "duration_ms": 1650000 },
+  "groups": [
+    { "key": "90aa...", "usage": { "input_tokens": 395000, "output_tokens": 58000, "cache_read_tokens": 176000, "cache_write_tokens": 23000, "cost_usd": 3.01, "duration_ms": 1580000 } },
+    { "key": "7c41...", "usage": { "input_tokens": 17000, "output_tokens": 3000, "cache_read_tokens": 4000, "cache_write_tokens": 1000, "cost_usd": 0.06, "duration_ms": 70000 } }
+  ]
+}
+```
+
+- `budget_usd` is the budget that applies to the month: `monthly_budget_usd` of the user, or the server default when it is null. It is null when the month has no limit.
+- `total` and each `usage` are a [Usage](DATA_SHAPE.md#run-mvp); `groups` is empty without `group_by`, and `key` is the id, the day (`YYYY-MM-DD`), the role or the model of the group.
 
 ### Workflow definition
 
@@ -253,6 +271,8 @@ Rules:
 
 - Without `?version=` the response is the current version. A run is shown with the version it ran with, `workflow_version` of the run.
 - A definition version never changes once a run has used it. The response carries `Cache-Control: public, max-age=31536000, immutable` when `?version=` is given.
+- A stage has a `title` for the user, an `internal` flag and a `parent`. The pages for the user show the titles of the stages that are not internal, as a tree by `parent`; the graph, with the node ids, is for the developer view.
+- An item kind has an `issue` field: null, or `{ "status_field", "open_values" }` for a kind that records a problem to settle (version 1: `ambiguity_issue`, `conflict`, `validation_issue`). An item of such a kind is an open issue when the field of its content named by `status_field` holds one of `open_values`. The web app lists the open issues from it, so a kind added in the definition is listed without a client change.
 - The node list has no positions. The web app lays the graph out itself, so a node added in the backend appears without a client change.
 
 ### Workflow state
@@ -290,11 +310,11 @@ Rules:
 
 | Method and path | Purpose | Phase |
 |---|---|---|
-| `GET /projects` | Projects of the user; `?status=`; ordered by `last_activity_at` descending | MVP |
-| `POST /projects` | Create; body `name`, `description`, `output_language` | MVP |
-| `GET /projects/{project_id}` | One project, with `item_counts` | MVP |
+| `GET /projects` | Projects of the user; filters `status`, `rollup_run_status` (one or more values; `none` matches a project without a run) and `last_activity_after`; ordered by `last_activity_at` descending. Each item has `rollup_run_status`, which the project list shows; `item_counts` comes only with `GET /projects/{project_id}` | MVP |
+| `POST /projects` | Create; body `name`, `description`, `output_language`. `name` is optional: without it, the first run names the project from its initial intent, and the event stream of that run sends `project_named`. Accepts an `Idempotency-Key`, so that a retry after a lost answer creates no second project | MVP |
+| `GET /projects/{project_id}` | One project, with `item_counts`, `unfinished_run_counts` and `rollup_run_status` | MVP |
 | `PATCH /projects/{project_id}` | Change name, description, status, `run_config`, `model_overrides` | MVP |
-| `DELETE /projects/{project_id}` | Soft delete | MVP |
+| `DELETE /projects/{project_id}` | Soft delete: the project is left out of lists, and its endpoints answer `404`. A project with an unfinished run (`queued`, `running` or `interrupted`) answers `409 invalid_state`; the run is stopped first | MVP |
 
 ### Threads and messages
 
@@ -303,7 +323,7 @@ Rules:
 | `GET /projects/{project_id}/threads` | Threads of a project; ordered by `last_message_at` descending | MVP |
 | `GET /threads` | Threads of the user across projects; `?project_id=` | MVP |
 | `POST /projects/{project_id}/threads` | Create an empty thread; body optional `title`. The first message of the thread starts the work. The message that starts the first run of the project becomes the initial intent of the project, see [Data shape: Project](DATA_SHAPE.md#project-mvp) | MVP |
-| `GET /threads/{thread_id}` | One thread, with `active_run_id` | MVP |
+| `GET /threads/{thread_id}` | One thread, with `active_run_id` and `latest_run_status` | MVP |
 | `PATCH /threads/{thread_id}` | Change `title`, `status` | MVP |
 | `DELETE /threads/{thread_id}` | Soft delete | MVP |
 | `GET /threads/{thread_id}/messages` | Chat messages; ordered by `sequence` ascending. User messages carry `delivery` | MVP |
@@ -333,7 +353,7 @@ Response `201`:
     "id": "c2a1...",
     "thread_id": "7f3a...",
     "sequence": 1,
-    "run_id": "5f2d...",
+    "run_id": "3b90...",
     "author": "user",
     "agent_role": null,
     "content": "I want to build an online platform for university students to find mentors.",
@@ -341,11 +361,12 @@ Response `201`:
     "item_refs": [],
     "delivery": "started_run",
     "delivered_in_step_id": null,
-    "created_at": "2026-10-06T08:30:00Z"
+    "created_at": "2026-10-02T08:10:00Z"
   },
   "run": {
-    "id": "5f2d...",
+    "id": "3b90...",
     "thread_id": "7f3a...",
+    "number": 1,
     "status": "queued",
     "workflow_name": "requirements_engineering",
     "workflow_version": 1,
@@ -355,14 +376,14 @@ Response `201`:
 }
 ```
 
-`run` is the run body, shown here with only some of its fields; the full body is in [Runs](#runs). The web app then opens `GET /api/v1/runs/5f2d.../stream` to follow the run. A message sent while this run is unfinished gets the same response shape, with `delivery` `pending` and `run` being the unfinished run.
+`run` is the run body, shown here with only some of its fields; the full body is in [Runs](#runs). The message starts the first run of the thread, so its `number` is 1. The web app then opens `GET /api/v1/runs/3b90.../stream` to follow the run. A message sent while this run is unfinished gets the same response shape, with `delivery` `pending` and `run` being the unfinished run.
 
 ### Runs
 
 | Method and path | Purpose | Phase |
 |---|---|---|
 | `GET /threads/{thread_id}/runs` | Runs of a thread; ordered by `created_at` descending | MVP |
-| `GET /runs/{run_id}` | Status, stage, iteration, usage, error, `workflow_name`, `workflow_version`, `last_event_id`. The status transitions are listed in [Runtime: lifecycle](architecture/runtime.md#3-lifecycle) | MVP |
+| `GET /runs/{run_id}` | Number in the thread, status, stage, iteration, step count, usage, error, `workflow_name`, `workflow_version`, `last_event_id`. The status transitions are listed in [Runtime: lifecycle](architecture/runtime.md#3-lifecycle) | MVP |
 | `GET /runs/{run_id}/steps` | Run steps; ordered by `sequence` | MVP |
 | `GET /runs/{run_id}/state` | The current workflow state of the run, see [workflow state](#workflow-state) | MVP |
 | `GET /runs/{run_id}/steps/{step_id}/state` | The workflow state saved after that step; the starting point of a retry from the next step | MVP |
@@ -373,13 +394,14 @@ Response `201`:
 | `POST /runs/{run_id}/cancel` | Stop the run. The open call to the LLM provider is closed. `202` | MVP |
 | `POST /runs/{run_id}/retry` | Create a new run that starts from a step of this run; body `from_step_id`. Before it starts, the artifacts, items and trace links of the project are brought back to the versions that the state of that step references, see [Runtime: retry](architecture/runtime.md#retry). Returns the new run | MVP |
 
-Run body, `GET /runs/5f2d...`, while the run waits at the analysis review. `models` is shortened to two of the roles:
+Run body, `GET /runs/5f2d...`, while the run waits at the analysis review. It is the third run of the thread: the first run went through the whole workflow, the second failed at its cost limit, and this run retries the second from its planner step, so its steps start again at the planner. `models` is shortened to two of the roles:
 
 ```json
 {
   "id": "5f2d...",
   "thread_id": "7f3a...",
   "project_id": "90aa...",
+  "number": 3,
   "started_by": "11b7...",
   "workflow_name": "requirements_engineering",
   "workflow_version": 1,
@@ -392,13 +414,14 @@ Run body, `GET /runs/5f2d...`, while the run waits at the analysis review. `mode
     "output_language": "en",
     "max_steps": 80,
     "max_cost_usd": 2.0,
-    "parameters": { "target_personas_num": 3, "max_personas": 3, "max_turns": 6, "max_iterations": 2 }
+    "parameters": { "target_personas_num": 3, "max_personas": 3, "max_turns": 12, "max_iterations": 2 }
   },
-  "retry_of_run_id": null,
+  "retry_of_run_id": "4c18...",
   "error": null,
   "usage": { "input_tokens": 48210, "output_tokens": 9930, "cache_read_tokens": 31500, "cache_write_tokens": 6200, "cost_usd": 0.42, "duration_ms": 214000 },
   "trace_id": "b81c...",
-  "last_event_id": 46,
+  "step_count": 67,
+  "last_event_id": 246,
   "started_at": "2026-10-06T08:30:01Z",
   "finished_at": null
 }
@@ -588,7 +611,7 @@ Artifact body:
   "version": 9,
   "review_status": "draft",
   "item_count": 16,
-  "created_by": { "actor": "agent", "agent_role": "requirement_engineer", "user_id": null, "run_id": "5f2d...", "step_id": "e7c0..." },
+  "created_by": { "actor": "agent", "agent_role": "requirement_engineer", "user_id": null, "run_id": "3b90...", "step_id": "e7c0..." },
   "updated_by": { "actor": "user", "agent_role": null, "user_id": "11b7...", "run_id": null, "step_id": null },
   "created_at": "2026-10-02T08:30:00Z",
   "updated_at": "2026-10-02T09:02:11Z"
@@ -606,11 +629,11 @@ Item body:
   "kind": "spec_requirement",
   "parent_item_id": "5b1d...",
   "position": 1,
-  "number": "3.1.1",
+  "outline_number": "3.1.1",
   "schema_version": 1,
   "version": 3,
   "review_status": "draft",
-  "created_by": { "actor": "agent", "agent_role": "requirement_engineer", "user_id": null, "run_id": "5f2d...", "step_id": "e7c0..." },
+  "created_by": { "actor": "agent", "agent_role": "requirement_engineer", "user_id": null, "run_id": "3b90...", "step_id": "e7c0..." },
   "updated_by": { "actor": "user", "agent_role": null, "user_id": "11b7...", "run_id": null, "step_id": null },
   "created_at": "2026-10-02T08:30:00Z",
   "updated_at": "2026-10-02T09:02:11Z",
@@ -635,17 +658,17 @@ Items of an artifact, `GET /artifacts/a7f3.../items?limit=3`, in outline order. 
   "items": [
     {
       "id": "3e70...", "key": "SEC-004", "kind": "section", "parent_item_id": null, "position": 3,
-      "number": "3", "depth": 1,
+      "outline_number": "3", "depth": 1,
       "content": { "title": "Functional requirements", "introduction": null }
     },
     {
       "id": "5b1d...", "key": "SEC-005", "kind": "section", "parent_item_id": "3e70...", "position": 1,
-      "number": "3.1", "depth": 2,
+      "outline_number": "3.1", "depth": 2,
       "content": { "title": "Mentor discovery", "introduction": "How a student finds a mentor." }
     },
     {
       "id": "c41e...", "key": "REQ-001", "kind": "spec_requirement", "parent_item_id": "5b1d...", "position": 1,
-      "number": "3.1.1", "depth": 3,
+      "outline_number": "3.1.1", "depth": 3,
       "content": { "title": "Search mentors" }
     }
   ],
@@ -673,7 +696,7 @@ Kinds and their schemas, `GET /artifact-kinds`. The display name of a kind is th
           "kind": "spec_requirement",
           "schema_version": 1,
           "schema": {
-            "title": "Specified requirement",
+            "title": "Requirement",
             "x-key-prefix": "REQ",
             "x-ui-display": "table",
             "x-ui-title-field": "title",
@@ -702,18 +725,18 @@ Kinds and their schemas, `GET /artifact-kinds`. The display name of a kind is th
 | `GET /projects/{project_id}/artifacts` | Artifacts of a project; filters `kind`, `review_status`; ordered by the stage that produces the kind | MVP |
 | `GET /artifacts/{artifact_id}` | One artifact; `?version=` reads any version, also of a deleted artifact, which answers `404` without `?version=` | MVP |
 | `PATCH /artifacts/{artifact_id}` | Change `title`, `summary`, `content` or `review_status`; requires `If-Match` | MVP |
-| `GET /artifacts/{artifact_id}/revisions` | Version history of the artifact; ordered by `version` descending | MVP |
-| `POST /artifacts/{artifact_id}/restore` | Make an old version of the artifact and of its items current again; body `version`. Creates new versions | MVP |
-| `GET /artifacts/{artifact_id}/items` | Items of the artifact in outline order (a section, then what it contains); each item carries `number` and `depth`. `?shape=tree` nests children under their parent instead. Filters `kind`, `review_status`, `parent_item_id`. `?version=` gives the items as they were at that version of the artifact | MVP |
-| `POST /artifacts/{artifact_id}/items` | Create an item or a section by hand; body `kind`, `content`, optional `parent_item_id`. The server assigns the key and puts the item last under its parent | MVP |
-| `POST /artifacts/{artifact_id}/items/reorder` | Change the order of the items under one parent; body `parent_item_id` (null for the top level) and `ids` in the new order | MVP |
-| `POST /items/{item_id}/move` | Move an item, with everything inside it, under another parent of the same artifact; body `parent_item_id`, `position`. A move that breaks a tree rule answers `422 validation_failed` | MVP |
+| `GET /artifacts/{artifact_id}/revisions` | Version history of the artifact; ordered by `version` descending. Each entry has `version`, `change_reason`, `changed_by`, `created_at` and `content`, the content of the artifact at that version | MVP |
+| `POST /artifacts/{artifact_id}/restore` | Make an old version of the artifact and of its items current again; body `version`. Creates new versions and answers the artifact | MVP |
+| `GET /artifacts/{artifact_id}/items` | Items of the artifact in outline order (a section, then what it contains); each item carries `outline_number` and `depth`. `?shape=tree` nests children under their parent instead. Filters `kind`, `review_status`, `parent_item_id`. `?version=` gives the items as they were at that version of the artifact | MVP |
+| `POST /artifacts/{artifact_id}/items` | Create an item or a section by hand; body `kind`, `content`, optional `parent_item_id`. The server assigns the key and puts the item last under its parent. Answers `201` with the item | MVP |
+| `POST /artifacts/{artifact_id}/items/reorder` | Change the order of the items under one parent; body `parent_item_id` (null for the top level) and `ids`, every item under that parent once in the new order, otherwise `422 validation_failed`. Answers `204` | MVP |
+| `POST /items/{item_id}/move` | Move an item, with everything inside it, under another parent of the same artifact; body `parent_item_id`, `position`. A move that breaks a tree rule answers `422 validation_failed`. Answers the moved item | MVP |
 | `GET /projects/{project_id}/items` | Items across all artifacts of a project; filters `kind`, `review_status`, `run_id` (created or changed by that run), `q` (text search in key and content); ordered by `key` | MVP |
 | `GET /items/{item_id}` | One item; `?version=` reads any version, also of a deleted item, which answers `404` without `?version=` | MVP |
 | `PATCH /items/{item_id}` | Change `content` fields or `review_status`; requires `If-Match` | MVP |
-| `DELETE /items/{item_id}` | Soft delete: the item gets a new version with change reason `deleted` and is left out of lists; its versions stay readable with `?version=`, and trace links to it stay readable. Deleting a section that still contains items answers `409 invalid_state` | MVP |
-| `GET /items/{item_id}/revisions` | Version history of the item; ordered by `version` descending | MVP |
-| `POST /items/{item_id}/restore` | Make an old version current again; body `version`. Creates a new version | MVP |
+| `DELETE /items/{item_id}` | Soft delete: the item gets a new version with change reason `deleted` and is left out of lists; its versions stay readable with `?version=`, and trace links to it stay readable. Deleting a section that still contains items answers `409 invalid_state`. Answers `204` | MVP |
+| `GET /items/{item_id}/revisions` | Version history of the item; ordered by `version` descending. Each entry has the fields of an entry of the history of an artifact | MVP |
+| `POST /items/{item_id}/restore` | Make an old version current again; body `version`. Creates a new version and answers the item; it also brings back an item that was deleted | MVP |
 
 Artifacts are created by the workflow, one per kind as listed in the data shape; there is no endpoint to create or delete one by hand.
 
@@ -724,18 +747,92 @@ Content rules:
 - `content` never holds the id of an item. Relations between items are created through the trace link endpoints.
 - The client renders and edits an artifact and its items from the schemas returned by `GET /artifact-kinds`, and an artifact or item stored with an older schema version from `GET /content-schemas/{kind}/{schema_version}`, so a field added to a schema appears in the client with no client change. A kind can still have its own component where a generic form is not enough, for example a persona card or an interview transcript.
 
-Editing rule: while a run is `running`, artifacts and items are read-only for the user and `PATCH` answers `409 invalid_state`. They can be edited when the run is `interrupted` or when the thread has no active run.
+Editing rule: while a run is `running`, artifacts and items are read-only for the user, and every change (`PATCH`, create, delete, move, reorder and restore) answers `409 invalid_state`. They can be edited when the run is `interrupted` or when the thread has no active run.
 
 ### Traceability
 
 | Method and path | Purpose | Phase |
 |---|---|---|
-| `GET /items/{item_id}/trace` | The chain of one item; `?direction=` with one of `backward`, `forward`, `both`; `?depth=` (default 5). Returns `nodes` and `links` | MVP |
+| `GET /items/{item_id}/trace` | The chain of one item; `?direction=` with one of `backward`, `forward`, `both` (default `both`); `?depth=` (default 5). Returns `items` and `links`, see [Trace body](#trace-body) | MVP |
+| `GET /artifacts/{artifact_id}/trace` | The chains of all the items of one artifact, from the interview to the backlog, in one answer; same `?direction=` and `?depth=`, with `depth` defaulting to no limit. Returns `items` and `links`, see [Trace body](#trace-body) | MVP |
 | `GET /projects/{project_id}/trace-links` | Current links, without the removed ones; filters `link_type`, `source_item_id`, `target_item_id` | MVP |
 | `POST /projects/{project_id}/trace-links` | Create a link by hand; body `source_item_id`, `target_item_id`, `link_type`, `note`. The pair of item kinds must be allowed for the link type, otherwise `422 validation_failed` | MVP |
 | `DELETE /trace-links/{link_id}` | Remove a link. The link keeps its row with `deleted_at` set, so the links of an earlier step can be shown again; lists and trace views leave it out | MVP |
-| `GET /projects/{project_id}/traceability/matrix` | Rows of `derived_from` chains from backlog item down to raw requirement | MVP |
-| `GET /projects/{project_id}/traceability/coverage` | Counts and lists: requirements with no backlog item, requirements with no source, items that need review after a source changed | MVP |
+| `GET /projects/{project_id}/traceability/matrix` | Rows of `derived_from` chains from backlog item down to raw requirement, see [Matrix body](#matrix-body) | MVP |
+| `GET /projects/{project_id}/traceability/coverage` | Lists: requirements with no backlog item, requirements with no source, items that need review after a source changed, see [Coverage body](#coverage-body) | MVP |
+
+#### Trace body
+
+`GET /items/{item_id}/trace` and `GET /artifacts/{artifact_id}/trace` answer the same body: the items found, and the current links between them. Removed links are left out. An item is listed once, however many chains reach it. For an artifact, the starting points are all its items, and the answer holds every item that a chain reaches in the chosen direction, also in other artifacts. A link has the fields of a trace link; an item has the fields below.
+
+```json
+{
+  "items": [
+    {
+      "id": "0b4d...",
+      "artifact_id": "7c1e...",
+      "key": "REQ-004",
+      "kind": "spec_requirement",
+      "version": 3,
+      "review_status": "approved",
+      "content": { "title": "Search mentors" }
+    }
+  ],
+  "links": [
+    {
+      "id": "d92a...",
+      "source_item_id": "0b4d...",
+      "target_item_id": "5f20...",
+      "link_type": "derived_from",
+      "target_version": 2,
+      "quote": null,
+      "note": null
+    }
+  ]
+}
+```
+
+Both lists are in full, not paged: the answer for an artifact is bounded by the items of one project. `source_item_id` and `target_item_id` of every link are the `id` of an entry of `items`; a link whose other end is beyond `depth` is left out. The order is by `key` for items and by `id` for links. `404 not_found` for an item or an artifact that does not exist.
+
+#### Matrix body
+
+The columns come from the server, so a kind that the workflow definition adds appears with no client change. Each column names the item kinds it holds, ordered from the backlog down to the interview. Each row is one `derived_from` chain; a cell holds the items of that column in the chain, and is an empty list where the chain has none.
+
+```json
+{
+  "columns": [
+    { "key": "backlog", "title": "Backlog", "kinds": ["backlog_item"] },
+    { "key": "source", "title": "Source", "kinds": ["raw_requirement", "latent_need"] }
+  ],
+  "rows": [
+    {
+      "cells": {
+        "backlog": [{ "item_id": "9a1c...", "key": "US-012", "kind": "backlog_item", "title": "Search mentors by skill" }],
+        "source": [{ "item_id": "5f20...", "key": "RAW-004", "kind": "raw_requirement", "title": "Find a mentor" }]
+      }
+    }
+  ]
+}
+```
+
+`title` of an item is the title field that the content schema of its kind names. A row has an entry for every `key` of `columns`.
+
+#### Coverage body
+
+Each gap is one list of items that need attention, with its own title and a sentence that says why. The keys of version 1 are `no_backlog_item` (specified requirements with no incoming `derived_from`), `no_source` (specified or analyzed requirements with no outgoing `derived_from`) and `needs_review` (items whose link to a target has an older `target_version` than the target now, or whose target is `superseded`). A gap with no items is still listed.
+
+```json
+{
+  "gaps": [
+    {
+      "key": "no_backlog_item",
+      "title": "No backlog item",
+      "description": "Specified requirements that no backlog item was derived from.",
+      "items": [{ "item_id": "0b4d...", "key": "REQ-004", "kind": "spec_requirement", "title": "Search mentors" }]
+    }
+  ]
+}
+```
 
 ### Exports
 
@@ -754,6 +851,7 @@ Editing rule: while a run is `running`, artifacts and items are read-only for th
 | `GET`, `POST /artifacts/{artifact_id}/comments`; `GET`, `POST /items/{item_id}/comments`; `PATCH`, `DELETE /comments/{comment_id}` | Comment on an artifact or on one item |
 | `GET /projects/{project_id}/activity` | Activity feed |
 | `GET /me/notifications`; `POST /me/notifications/{notification_id}/read` | Notifications |
+| `GET /projects/{project_id}/stream` | Event stream of the runs of a project, for a screen that shows the status of the whole project, see [open point 8](#9-open-points) |
 | `GET`, `POST /me/provider-credentials`; `DELETE /me/provider-credentials/{credential_id}` | User-supplied provider keys |
 
 ### Operations
@@ -776,7 +874,7 @@ These two are outside `/api/v1`.
 | Client | The browser `EventSource`; the session cookie is sent automatically |
 | Response headers | `Content-Type: text/event-stream`, `Cache-Control: no-cache`, `X-Accel-Buffering: no` |
 | Event id | The `sequence` of the event in the run event log, increasing by one |
-| Reconnect | The client sends `Last-Event-ID`; the server first replays every stored event with a higher sequence, then continues live. `?after=` does the same for a client that cannot set the header |
+| Reconnect | The client sends `Last-Event-ID`; the server first replays every stored event with a higher sequence, then continues live. `?after=` does the same for a client that cannot set the header. When a request has both, `Last-Event-ID` wins: `EventSource` reconnects by itself to the address it opened, `?after=` included, with the last event it read in the header, so `?after=` would send again the events it has |
 | First connect | Without `Last-Event-ID`, the stream starts from the first event of the run |
 | Heartbeat | A comment line `: ping` every 15 seconds when no event was sent |
 | End | After the `done` event the server closes the stream. A run that already finished replays its events and closes |
@@ -790,27 +888,27 @@ The stream to the browser and the call to the LLM provider are two separate conn
 The last events of the run in the run body example: the analyst finishes, then the analysis review pauses the run. Every event has an `id`, a type after `event:`, and a JSON payload after `data:`; a line that starts with `:` is a heartbeat.
 
 ```text
-id: 41
+id: 241
 event: node_start
 data: {"node":"analyst","step_id":"e9d1...","agent_role":"analyst","stage":"analysis","iteration":0,"persona_key":null}
 
-id: 42
+id: 242
 event: token
 data: {"node":"analyst","step_id":"e9d1...","text":"Grouping the raw requirements by topic. "}
 
-id: 43
+id: 243
 event: artifact_delta
 data: {"artifact_id":"b210...","delta":"AR-007 created","version":4,"item_id":"d3f9...","item_key":"AR-007","change":"item_created"}
 
-id: 44
+id: 244
 event: node_end
 data: {"node":"analyst","step_id":"e9d1...","status":"succeeded","usage":{"input_tokens":6100,"output_tokens":2300,"cache_read_tokens":4800,"cache_write_tokens":0,"cost_usd":0.05,"duration_ms":31000}}
 
-id: 45
+id: 245
 event: node_start
 data: {"node":"checkpoint_analysis","step_id":"e9d2...","agent_role":null,"stage":"analysis_review","iteration":0,"persona_key":null}
 
-id: 46
+id: 246
 event: interrupt
 data: {"node":"checkpoint_analysis","step_id":"e9d2...","payload":{"interrupt_id":"7b0c...","prompt":"Review the requirements analysis. Accept it, or reject it with feedback.","options":[{"key":"accept","label":"Accept","requires_feedback":false,"approves":true,"is_default":true}],"questions":[],"allow_edits":true,"review_artifacts":[{"artifact_id":"b210...","kind":"requirements_analysis","title":"Requirements analysis","version":4}]}}
 
@@ -832,6 +930,7 @@ The type names are the ones defined in [Planning: agent run lifecycle](PLANNING.
 | `artifact_created` | A new artifact was saved | `artifact_id`, `name`, `version` | `kind` |
 | `artifact_delta` | An artifact changed: an item was added, changed or removed, or a field of the artifact changed | `artifact_id`, `delta` | `version`, `item_id`, `item_key`, `change` with one of `item_created`, `item_updated`, `item_deleted`, `artifact_updated` |
 | `message_delivered` | A pending user message was taken in by a step | - | `message_id`, `step_id`, `node` |
+| `project_named` | The run named its project, which was created without a name | - | `step_id`, `project_id`, `name` |
 | `interrupt` | The run paused for input. Not sent for an interrupt resolved at once with the defaults | `node`, `payload` | `step_id`; `payload` contains `interrupt_id`, `prompt`, `options`, `questions`, `allow_edits`, `review_artifacts` |
 | `error` | The run failed | `message` | `code`, one of the codes in [Runtime: failures](architecture/runtime.md#failures); `stage` |
 | `done` | The run ended | - | `status` with one of `succeeded`, `failed`, `cancelled` |
@@ -841,6 +940,7 @@ The type names are the ones defined in [Planning: agent run lifecycle](PLANNING.
 Rules:
 
 - **Events carry references, not content.** An artifact event gives the ids and versions; the client fetches the artifact or the item when it needs the content. A reconnecting client therefore never applies a stale copy. `name` in `artifact_created` is the title of the artifact.
+- **A name is a record of the step.** `project_named` gives the name that the run chose. The client reads the current name from the project, which the user may have changed since, so a replayed event never brings back an old name.
 - **Token text is grouped.** The server stores and sends token text in chunks of at most 200 ms of output, not one event per token, so the event log stays small and a replay is fast.
 - **Unknown types are ignored.** A client skips an event type it does not know, so a type can be added without a new API version.
 
@@ -969,6 +1069,8 @@ Decision: the event log in the database now. Because events already pass through
 4. **Token event retention.** Grouped token events are kept with the run. Deleting them after a run ends, while keeping the final message, makes the log smaller but removes word-by-word replay.
 5. **Reasoning text.** No event type carries the model's reasoning text. If the product shows it, a `thinking` type is added; the web app already ignores unknown types.
 6. **Search by meaning.** `q` on the item list matches text only. With the item embeddings of the data shape (Later), the same endpoint can rank items by meaning; the parameter that selects it is not designed.
+7. **The node that names a project.** A project created without a name is named by its first run. The planner, which reads the initial intent first, can return the name with its plan, or a node of its own can run before it; either choice changes the workflow definition and the prompts.
+8. **A stream per project.** Each run has a stream of its own (D4). A screen that shows the status of a whole project, such as the status bar of the web app, opens one stream per unfinished run and reads the threads of the project again at each event that changes a status, so a run that starts in a thread without an unfinished run shows only when the threads load again. `GET /projects/{project_id}/stream` (Later) would send, with the transport of the run stream, an event each time a run of the project starts, changes its status, its stage or its cost, or ends, with the `rollup_run_status` of the project after it. Open: the payload of its events, and whether it is a second kind of stream beside D4 or replaces the run streams for that screen. The budget of the month belongs to the user, across projects, so it stays out of this stream: a screen that shows it reads `GET /me/usage` again when a run of the user changes its cost.
 
 ## 10. Review checklist
 

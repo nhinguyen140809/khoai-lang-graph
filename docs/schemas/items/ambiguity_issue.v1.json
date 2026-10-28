@@ -1,7 +1,7 @@
 {
   "$schema": "https://json-schema.org/draft/2020-12/schema",
   "$id": "items/ambiguity_issue/v1",
-  "title": "Ambiguity issue",
+  "title": "Needs clarifying",
   "description": "A statement that can be read in more than one way or lacks needed detail.",
   "x-level": "item",
   "x-kind": "ambiguity_issue",
@@ -26,27 +26,32 @@
   "additionalProperties": false,
   "properties": {
     "description": {
+      "title": "Description",
       "type": "string",
       "description": "What is unclear.",
       "x-ui-widget": "textarea"
     },
     "ambiguity_type": {
+      "title": "Ambiguity type",
       "type": "string",
       "x-value-list": "ambiguity_type",
       "description": "Kind of ambiguity.",
       "x-ui-widget": "select"
     },
     "ambiguous_text": {
+      "title": "Ambiguous text",
       "type": "string",
       "description": "The exact wording at issue.",
       "x-ui-widget": "textarea"
     },
     "clarifying_question": {
+      "title": "Clarifying question",
       "type": "string",
       "description": "What to ask to resolve it.",
       "x-ui-widget": "textarea"
     },
     "status": {
+      "title": "Status",
       "type": "string",
       "enum": [
         "open",
@@ -57,6 +62,7 @@
       "x-ui-widget": "select"
     },
     "resolution": {
+      "title": "Resolution",
       "type": [
         "string",
         "null"

@@ -1,0 +1,179 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "$id": "schemas/content-schema",
+  "title": "Content schema",
+  "description": "The form of a content schema file: the schema of the content of one artifact kind or one item kind at one version.",
+  "type": "object",
+  "properties": {
+    "$schema": {
+      "const": "https://json-schema.org/draft/2020-12/schema"
+    },
+    "$id": {
+      "type": "string",
+      "pattern": "^(artifacts|items)/[a-z][a-z0-9_]*/v[1-9][0-9]*$",
+      "description": "The level, the kind and the version, as in artifacts/persona_catalog/v1."
+    },
+    "title": {
+      "type": "string",
+      "minLength": 1,
+      "description": "The name of the kind as shown to the user."
+    },
+    "description": {
+      "type": "string",
+      "minLength": 1
+    },
+    "x-level": {
+      "enum": ["artifact", "item"]
+    },
+    "x-kind": {
+      "type": "string",
+      "pattern": "^[a-z][a-z0-9_]*$"
+    },
+    "x-schema-version": {
+      "type": "integer",
+      "minimum": 1
+    },
+    "x-key-prefix": {
+      "type": "string",
+      "minLength": 1,
+      "description": "Item kinds only. The prefix of the key of an item, such as REQ, or a short text that names one prefix for each case, as backlog_item does. A kind whose key is built another way has none."
+    },
+    "x-ui-display": {
+      "enum": ["document", "heading", "table", "cards", "transcript"]
+    },
+    "x-ui-title-field": {
+      "type": "string",
+      "description": "Item kinds only. The field that names an item in lists, links and trace views."
+    },
+    "x-ui-list-fields": {
+      "type": "array",
+      "minItems": 1,
+      "uniqueItems": true,
+      "items": { "type": "string" },
+      "description": "Item kinds only. The fields shown as table columns or on a card."
+    },
+    "x-ui-field-order": {
+      "type": "array",
+      "minItems": 1,
+      "uniqueItems": true,
+      "items": { "type": "string" },
+      "description": "Every property name, in the order of the detail view and the edit form."
+    },
+    "type": {
+      "const": "object"
+    },
+    "additionalProperties": {
+      "const": false
+    },
+    "properties": {
+      "type": "object",
+      "minProperties": 1,
+      "additionalProperties": { "$ref": "#/$defs/field" }
+    },
+    "required": {
+      "type": "array",
+      "minItems": 1,
+      "uniqueItems": true,
+      "items": { "type": "string" }
+    }
+  },
+  "required": [
+    "$schema",
+    "$id",
+    "title",
+    "description",
+    "x-level",
+    "x-kind",
+    "x-schema-version",
+    "x-ui-display",
+    "x-ui-field-order",
+    "type",
+    "additionalProperties",
+    "properties",
+    "required"
+  ],
+  "additionalProperties": false,
+  "allOf": [
+    {
+      "if": { "properties": { "x-level": { "const": "artifact" } } },
+      "then": {
+        "properties": {
+          "x-ui-display": { "const": "document" },
+          "x-key-prefix": false,
+          "x-ui-title-field": false,
+          "x-ui-list-fields": false
+        }
+      },
+      "else": {
+        "properties": {
+          "x-ui-display": { "enum": ["heading", "table", "cards", "transcript"] }
+        },
+        "required": ["x-ui-title-field", "x-ui-list-fields"]
+      }
+    }
+  ],
+  "$defs": {
+    "field": {
+      "type": "object",
+      "additionalProperties": false,
+      "properties": {
+        "title": {
+          "type": "string",
+          "minLength": 1,
+          "description": "The label of the field as shown to the user."
+        },
+        "type": {
+          "anyOf": [
+            { "enum": ["string", "integer", "number", "boolean", "array", "object"] },
+            {
+              "type": "array",
+              "minItems": 2,
+              "uniqueItems": true,
+              "items": { "enum": ["string", "integer", "number", "boolean", "array", "object", "null"] }
+            }
+          ],
+          "description": "A single type, or a list that adds null for an optional field."
+        },
+        "description": {
+          "type": "string",
+          "minLength": 1
+        },
+        "enum": {
+          "type": "array",
+          "minItems": 1,
+          "uniqueItems": true
+        },
+        "items": {
+          "type": "object"
+        },
+        "minimum": {
+          "type": "number"
+        },
+        "minItems": {
+          "type": "integer",
+          "minimum": 0
+        },
+        "readOnly": {
+          "const": true
+        },
+        "x-ui-widget": {
+          "enum": ["text", "textarea", "select", "number", "list", "tags", "object-list"]
+        },
+        "x-value-list": {
+          "type": "string",
+          "pattern": "^[a-z][a-z0-9_]*$",
+          "description": "The key of a value list of the workflow definition that gives the allowed values."
+        },
+        "x-value-from": {
+          "type": "string",
+          "pattern": "^[a-z][a-z0-9_]*\\.[a-z][a-z0-9_]*$",
+          "description": "The artifact kind and the field, joined by a dot, that give the allowed values."
+        }
+      },
+      "required": ["title", "type", "description", "x-ui-widget"],
+      "not": {
+        "required": ["enum", "x-value-list"]
+      }
+    }
+  }
+}

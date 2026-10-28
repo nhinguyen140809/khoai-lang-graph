@@ -1,7 +1,7 @@
 {
   "$schema": "https://json-schema.org/draft/2020-12/schema",
   "$id": "items/latent_need/v1",
-  "title": "Latent need",
+  "title": "Unstated need",
   "description": "A need no persona stated directly, inferred from what they said.",
   "x-level": "item",
   "x-kind": "latent_need",
@@ -24,16 +24,19 @@
   "additionalProperties": false,
   "properties": {
     "description": {
+      "title": "Description",
       "type": "string",
       "description": "The need.",
       "x-ui-widget": "textarea"
     },
     "reasoning": {
+      "title": "Reasoning",
       "type": "string",
       "description": "Why the analyst inferred it.",
       "x-ui-widget": "textarea"
     },
     "confidence": {
+      "title": "Confidence",
       "type": "string",
       "enum": [
         "low",
@@ -44,6 +47,7 @@
       "x-ui-widget": "select"
     },
     "disposition": {
+      "title": "Disposition",
       "type": "string",
       "enum": [
         "open",

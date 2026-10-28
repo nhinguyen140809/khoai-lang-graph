@@ -1,7 +1,7 @@
 {
   "$schema": "https://json-schema.org/draft/2020-12/schema",
   "$id": "items/backlog_item/v1",
-  "title": "Backlog item",
+  "title": "User story",
   "description": "An epic or a user story. Its order in the backlog is the position of the item.",
   "x-level": "item",
   "x-kind": "backlog_item",
@@ -31,6 +31,7 @@
   "additionalProperties": false,
   "properties": {
     "item_type": {
+      "title": "Item type",
       "type": "string",
       "enum": [
         "epic",
@@ -40,11 +41,13 @@
       "x-ui-widget": "select"
     },
     "title": {
+      "title": "Title",
       "type": "string",
       "description": "Short name.",
       "x-ui-widget": "text"
     },
     "as_a": {
+      "title": "As a",
       "type": [
         "string",
         "null"
@@ -53,6 +56,7 @@
       "x-ui-widget": "text"
     },
     "i_want": {
+      "title": "I want",
       "type": [
         "string",
         "null"
@@ -61,6 +65,7 @@
       "x-ui-widget": "text"
     },
     "so_that": {
+      "title": "So that",
       "type": [
         "string",
         "null"
@@ -69,6 +74,7 @@
       "x-ui-widget": "text"
     },
     "acceptance_criteria": {
+      "title": "Acceptance criteria",
       "type": "array",
       "description": "Scenarios that show the item is done.",
       "items": {
@@ -76,16 +82,19 @@
         "additionalProperties": false,
         "properties": {
           "given": {
+            "title": "Given",
             "type": "string",
             "description": "Starting situation.",
             "x-ui-widget": "text"
           },
           "when": {
+            "title": "When",
             "type": "string",
             "description": "Action.",
             "x-ui-widget": "text"
           },
           "then": {
+            "title": "Then",
             "type": "string",
             "description": "Expected result.",
             "x-ui-widget": "text"
@@ -100,12 +109,14 @@
       "x-ui-widget": "object-list"
     },
     "priority": {
+      "title": "Priority",
       "type": "string",
       "x-value-list": "priority",
       "description": "Importance.",
       "x-ui-widget": "select"
     },
     "story_points": {
+      "title": "Story points",
       "type": [
         "integer",
         "null"
@@ -115,6 +126,7 @@
       "x-ui-widget": "number"
     },
     "delivery_status": {
+      "title": "Delivery status",
       "type": "string",
       "enum": [
         "todo",
