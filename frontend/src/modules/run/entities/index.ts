@@ -1,4 +1,5 @@
 export { RunStatusBadge } from './components/RunStatusBadge'
+export { type RunDefaults, runDefaultsSchema } from './config/run-config.types'
 export { listRunDirectives } from './directives/directives.api'
 export { directiveKeys } from './directives/directives.keys'
 export type { Directive, DirectiveItem } from './directives/directives.types'

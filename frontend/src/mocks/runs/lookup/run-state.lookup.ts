@@ -69,19 +69,30 @@ function valuesOf(projectId: string, { stage, status, iteration }: Moment) {
   }
 }
 
-/**
- * The state of a run after one of its steps, or the current state without a step; `lastStep` is
- * the step that the current state follows, null for a run without steps.
- */
-export function stateOfRun(run: Run, step: RunStep | null, lastStep: RunStep | null): RunState {
-  const moment: Moment =
-    step === null
-      ? { stage: run.current_stage, status: run.status, iteration: run.iteration_count }
-      : { stage: step.stage, status: step.status, iteration: step.iteration }
+/** The workflow state of a run now, after its last step; the step is none for a run without steps. */
+export function currentStateOfRun(run: Run, lastStep: RunStep | undefined): RunState {
   return {
     run_id: run.id,
-    step_id: (step ?? lastStep)?.id ?? null,
+    step_id: lastStep?.id ?? null,
     workflow_version: run.workflow_version,
-    values: valuesOf(run.project_id, moment),
+    values: valuesOf(run.project_id, {
+      stage: run.current_stage,
+      status: run.status,
+      iteration: run.iteration_count,
+    }),
+  }
+}
+
+/** The workflow state of a run after one of its steps. */
+export function stateOfRunAfterStep(run: Run, step: RunStep): RunState {
+  return {
+    run_id: run.id,
+    step_id: step.id,
+    workflow_version: run.workflow_version,
+    values: valuesOf(run.project_id, {
+      stage: step.stage,
+      status: step.status,
+      iteration: step.iteration,
+    }),
   }
 }

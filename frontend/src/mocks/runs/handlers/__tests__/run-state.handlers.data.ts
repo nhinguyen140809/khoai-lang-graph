@@ -11,7 +11,7 @@ const [firstStep] = runStepFixtures(runIds.mentorMain3, 'waiting')
 export const firstStepId = firstStep?.id ?? ''
 
 /** A stage of the run, the state after the step of that stage, and what the state lists. */
-export const stateCases = [
+export const stepStateCases = [
   {
     name: 'the planning step: no personas yet',
     stepSequence: 1,
@@ -27,7 +27,7 @@ export const stateCases = [
 ]
 
 /** A request that the state endpoints refuse. */
-export const refusedStateCases = [
+export const refusedRunStateCases = [
   {
     name: 'refuses the state of a run that does not exist',
     method: HttpMethod.Get,
@@ -53,7 +53,7 @@ export const refusedStateCases = [
     name: 'fails in the error scenario',
     method: HttpMethod.Get,
     path: apiEndpoints.runState.path({ runId: runIds.mentorMain3 }),
-    page: '/?mock-workflow-state=error',
+    page: '/?mock-run-state=error',
     status: HttpStatus.InternalServerError,
     answer: { code: 'internal_error' },
   },

@@ -1,14 +1,14 @@
 import { http } from 'msw'
 
-import type { Run } from '@/modules/run/entities'
+import type { Run, RunDefaults } from '@/modules/run/entities'
 import type { Thread } from '@/modules/thread/entities'
 import { apiEndpoints } from '@/shared/api/endpoints'
 import { hasText, isString } from '@/shared/lib/guards'
 
-import { changeProject, findProject } from '../projects/projects.lookup'
-import { buildRun, noUsage } from '../runs/fixtures/runs.fixtures'
-import { allRuns, findRun } from '../runs/lookup/runs.lookup'
-import { createdRuns } from '../runs/runs.store'
+import { changeProject } from '../projects/projects.lookup'
+import { findRun } from '../runs/lookup/runs.lookup'
+import { addRun } from '../runs/runs.changes'
+import { validateRunDefaults } from '../runs/runs.validators'
 import { createdId, IdPrefix, mockNow } from '../shared/db'
 import { idempotent, pathParam, readBodyFields } from '../shared/http/request'
 import { created, validationFailed } from '../shared/http/response'
@@ -35,25 +35,16 @@ export function nameFromMessage(content: string): string {
 }
 
 // A message to a thread without an unfinished run starts a run, which goes on until it is stopped.
-function startRun(thread: Thread, now: string): Run {
-  const runs = createdRuns.get()
-  const run = buildRun({
-    id: createdId(IdPrefix.Run, runs.length + 1),
-    thread_id: thread.id,
-    project_id: thread.project_id,
-    number: allRuns().filter(({ thread_id }) => thread_id === thread.id).length + 1,
+function startRun(thread: Thread, now: string, override?: RunDefaults): Run {
+  return addRun({
+    threadId: thread.id,
+    projectId: thread.project_id,
     status: 'running',
-    current_stage: 'planning',
-    usage: noUsage,
-    step_count: 0,
-    last_event_id: 0,
-    started_at: now,
-    finished_at: null,
+    currentStage: 'planning',
+    stepCount: 0,
+    startedAt: now,
+    ...(override && { override }),
   })
-  const language = findProject(thread.project_id)?.output_language ?? 'en'
-  const started = { ...run, run_config: { ...run.run_config, output_language: language } }
-  createdRuns.set([...runs, started])
-  return started
 }
 
 export const messageHandlers = [
@@ -63,13 +54,18 @@ export const messageHandlers = [
       await answerScenario('send-message')
       const thread = allThreads().find(({ id }) => id === pathParam(params, 'threadId'))
       if (thread === undefined) return threadNotFound()
-      const { content } = await readBodyFields(request)
+      const { content, run_config: givenRunConfig } = await readBodyFields(request)
       if (!isString(content) || !hasText(content)) {
         return validationFailed([{ field: 'content', message: 'Enter a message.' }])
       }
+      const checkedRunConfig =
+        givenRunConfig === undefined ? undefined : validateRunDefaults(givenRunConfig)
+      if (checkedRunConfig !== undefined && 'problems' in checkedRunConfig) {
+        return validationFailed(checkedRunConfig.problems)
+      }
       const now = mockNow()
       const unfinished = thread.active_run_id === null ? undefined : findRun(thread.active_run_id)
-      const run = unfinished ?? startRun(thread, now)
+      const run = unfinished ?? startRun(thread, now, checkedRunConfig?.runDefaults)
       const messages = sentMessages.get()
       const message: SentMessage = {
         id: createdId(IdPrefix.Message, messages.length + 1),

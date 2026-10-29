@@ -8,5 +8,5 @@ export {
   threadIds,
   userId,
 } from './mock-ids.constants'
-export { createdId, mockId } from './mock-ids.utils'
+export { createdId, mockId, nextCreatedId } from './mock-ids.utils'
 export { keepMockDataInBrowser, mockState, resetMockData } from './mock-state.utils'

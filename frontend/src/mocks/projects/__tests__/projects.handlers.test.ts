@@ -165,6 +165,38 @@ describe('PATCH /projects/{project_id}', () => {
     })
     expect(await fetchApi(path)).toMatchObject({ body: { name: 'Mentor finder' } })
   })
+
+  it('sets the run settings of a project', async () => {
+    const path = apiEndpoints.project.path({ projectId: projectIds.mentor })
+    const runConfig = {
+      review_checkpoints: [],
+      max_steps: 40,
+      max_cost_usd: null,
+      parameters: null,
+    }
+
+    expect(await patchApi(path, { run_config: runConfig })).toMatchObject({
+      status: HttpStatus.Ok,
+      body: { run_config: runConfig },
+    })
+    expect(await fetchApi(path)).toMatchObject({ body: { run_config: runConfig } })
+  })
+
+  it('leaves unset the run settings that the body leaves out', async () => {
+    const path = apiEndpoints.project.path({ projectId: projectIds.mentor })
+
+    expect(await patchApi(path, { run_config: { max_steps: 40 } })).toMatchObject({
+      status: HttpStatus.Ok,
+      body: {
+        run_config: {
+          review_checkpoints: null,
+          max_steps: 40,
+          max_cost_usd: null,
+          parameters: null,
+        },
+      },
+    })
+  })
 })
 
 describe('the requests that are refused', () => {

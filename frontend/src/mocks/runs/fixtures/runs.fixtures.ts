@@ -23,7 +23,8 @@ const MINI = 'openai:gpt-4.1-mini'
 const stepId = (runIndex: number, sequence: number) =>
   mockId(IdPrefix.Step, runIndex * 1000 + sequence)
 
-const runConfig: Run['run_config'] = {
+/** The settings that the server gives a run when no level sets them. */
+export const defaultRunConfigFixture: Run['run_config'] = {
   models: {
     intent_router: MINI,
     planner: SONNET,
@@ -71,7 +72,7 @@ function run(fields: Partial<Run> & Pick<Run, 'id' | 'thread_id' | 'project_id' 
     status: 'succeeded',
     current_stage: 'done',
     iteration_count: 0,
-    run_config: runConfig,
+    run_config: defaultRunConfigFixture,
     retry_of_run_id: null,
     error: null,
     usage: usage(0.61, 412_000, 52_000),
@@ -223,7 +224,8 @@ function buildSteps(
       status: 'succeeded',
       iteration: 0,
       subject_item_id: spec.subject ?? null,
-      model_id: spec.agentRole === null ? null : (runConfig.models[spec.agentRole] ?? null),
+      model_id:
+        spec.agentRole === null ? null : (defaultRunConfigFixture.models[spec.agentRole] ?? null),
       llm_calls: spec.agentRole === null ? 0 : 1,
       usage:
         spec.agentRole === null

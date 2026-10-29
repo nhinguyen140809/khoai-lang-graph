@@ -283,6 +283,11 @@ export const projectStatusChangeCases = [
 /** PATCH /projects/{project_id} with a body that the API does not take, and the problems it says. */
 const invalidProjectChangeCases = [
   {
+    name: 'run settings with a field of the wrong type',
+    body: '{"run_config": {"max_steps": "five"}}',
+    errors: [{ field: 'run_config.max_steps', message: 'Send a value of type integer or null.' }],
+  },
+  {
     name: 'a status that a project does not have',
     body: '{"status": "deleted"}',
     errors: [{ field: 'status', message: 'Choose active or archived.' }],

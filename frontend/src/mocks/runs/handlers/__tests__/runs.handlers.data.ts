@@ -1,5 +1,6 @@
 import { apiEndpoints } from '@/shared/api/endpoints'
-import { HttpStatus } from '@/shared/api/http'
+import { HttpMethod, HttpStatus } from '@/shared/api/http'
+import type { RejectedRequestCase } from '@/test/suites'
 
 import { runIds, threadIds } from '../../../shared/db'
 
@@ -90,27 +91,29 @@ export const runErrorCases = [
 /** A request to retry a run that the mock server refuses. */
 export const refusedRetryCases = [
   {
-    request: 'POST /runs/{run_id}/retry of a run that does not exist',
-    address: '/',
+    name: 'refuses to retry a run that does not exist',
+    method: HttpMethod.Post,
     path: apiEndpoints.runRetry.path({ runId: 'no-such-run' }),
     body: { from_step_id: 'step' },
     status: HttpStatus.NotFound,
-    code: 'not_found',
+    answer: { code: 'not_found' },
   },
   {
-    request: 'POST /runs/{run_id}/retry without a step',
-    address: '/?mock-run-status=done',
+    name: 'refuses to retry without a step',
+    method: HttpMethod.Post,
     path: apiEndpoints.runRetry.path({ runId: runIds.mentorMain2 }),
     body: {},
+    page: '/?mock-run-status=done',
     status: HttpStatus.UnprocessableContent,
-    code: 'validation_failed',
+    answer: { code: 'validation_failed' },
   },
   {
-    request: 'POST /runs/{run_id}/retry from a step that is not of the run',
-    address: '/?mock-run-status=done',
+    name: 'refuses to retry from a step that is not of the run',
+    method: HttpMethod.Post,
     path: apiEndpoints.runRetry.path({ runId: runIds.mentorMain2 }),
     body: { from_step_id: 'no-such-step' },
+    page: '/?mock-run-status=done',
     status: HttpStatus.UnprocessableContent,
-    code: 'validation_failed',
+    answer: { code: 'validation_failed' },
   },
-]
+] satisfies RejectedRequestCase[]

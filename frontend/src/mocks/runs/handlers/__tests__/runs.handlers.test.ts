@@ -6,8 +6,11 @@ import { HttpStatus } from '@/shared/api/http'
 import type { ListPage } from '@/shared/api/request'
 import type { ApiAnswer } from '@/test/msw'
 import { fetchApi, openPage } from '@/test/msw'
+import { itRejectsRequests } from '@/test/suites'
 
-import { runIds, startedRunId } from '../../../shared/db'
+import { changeProject } from '../../../projects/projects.lookup'
+import { projectIds, runIds, startedRunId } from '../../../shared/db'
+import { stepsOfRun } from '../../lookup/runs.lookup'
 import {
   refusedRetryCases,
   runErrorCases,
@@ -130,15 +133,25 @@ describe('errors', () => {
 })
 
 describe('POST /runs/{run_id}/retry', () => {
-  it.each(refusedRetryCases)(
-    'answers $status to $request',
-    async ({ address, path, body, status, code }) => {
-      openPage(address)
+  itRejectsRequests(refusedRetryCases)
 
-      expect(await fetchApi(path, { method: 'POST', body: JSON.stringify(body) })).toMatchObject({
-        status,
-        body: { code },
-      })
-    },
-  )
+  it('starts a run that resolves the settings saved since the run it retries', async () => {
+    openPage('/?mock-run-status=done')
+    changeProject(projectIds.mentor, ({ run_config: runConfig }) => ({
+      run_config: { ...runConfig, max_cost_usd: 9 },
+    }))
+    const [step] = stepsOfRun(runIds.mentorMain2)
+
+    const { status, body } = (await fetchApi(
+      apiEndpoints.runRetry.path({ runId: runIds.mentorMain2 }),
+      {
+        method: 'POST',
+        body: JSON.stringify({ from_step_id: step?.id }),
+      },
+    )) as ApiAnswer<Run>
+
+    expect(status).toBe(HttpStatus.Created)
+    expect(body).toMatchObject({ retry_of_run_id: runIds.mentorMain2, status: 'queued' })
+    expect(body.run_config.max_cost_usd).toBe(9)
+  })
 })

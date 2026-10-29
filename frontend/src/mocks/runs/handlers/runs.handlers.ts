@@ -3,9 +3,8 @@ import { http, HttpResponse } from 'msw'
 import { isUnfinishedRunStatus } from '@/modules/run/entities'
 import { apiEndpoints } from '@/shared/api/endpoints'
 import { HttpStatus } from '@/shared/api/http'
-import { isString } from '@/shared/lib/guards'
 
-import { createdId, IdPrefix, mockNow, startedRunId } from '../../shared/db'
+import { mockNow, startedRunId } from '../../shared/db'
 import { idempotent, pathParam, readBodyFields } from '../../shared/http/request'
 import {
   created,
@@ -15,11 +14,10 @@ import {
   validationFailed,
 } from '../../shared/http/response'
 import { answerScenario } from '../../shared/scenario'
-import { buildRun, noUsage } from '../fixtures/runs.fixtures'
 import { allRuns, findRun, stepsOfRun } from '../lookup/runs.lookup'
-import { changeRun } from '../runs.changes'
-import { runNotFound } from '../runs.problems'
-import { createdRuns } from '../runs.store'
+import { addRun, changeRun } from '../runs.changes'
+import { refuseUnfinishedRun, runNotFound } from '../runs.problems'
+import { validateRetryBody } from '../runs.validators'
 
 export const runHandlers = [
   // The chat starts a run with this endpoint, which is not part of the API; it goes with the chat.
@@ -60,39 +58,21 @@ export const runHandlers = [
       await answerScenario('retry-run')
       const source = findRun(pathParam(params, 'runId'))
       if (source === undefined) return runNotFound()
-      const { from_step_id: fromStepId } = await readBodyFields(request)
-      const step = stepsOfRun(source.id).find(({ id }) => id === fromStepId)
-      if (!isString(fromStepId) || step === undefined) {
-        return validationFailed([
-          { field: 'from_step_id', message: 'Choose a step of the run to start from.' },
-        ])
-      }
-      const runs = allRuns()
-      if (
-        runs.some(
-          ({ thread_id: threadId, status }) =>
-            threadId === source.thread_id && isUnfinishedRunStatus(status),
-        )
-      ) {
-        return invalidState('The thread has a run that has not ended.')
-      }
-      const started = buildRun({
-        id: createdId(IdPrefix.Run, createdRuns.get().length + 1),
-        thread_id: source.thread_id,
-        project_id: source.project_id,
-        number: runs.filter(({ thread_id: threadId }) => threadId === source.thread_id).length + 1,
-        status: 'queued',
-        current_stage: step.stage,
-        run_config: source.run_config,
-        retry_of_run_id: source.id,
-        usage: noUsage,
-        step_count: step.sequence - 1,
-        last_event_id: 0,
-        started_at: mockNow(),
-        finished_at: null,
-      })
-      createdRuns.set([...createdRuns.get(), started])
-      return created(started)
+      const checked = validateRetryBody(source.id, await readBodyFields(request))
+      if ('problems' in checked) return validationFailed(checked.problems)
+      const refusal = refuseUnfinishedRun(source.thread_id)
+      if (refusal !== null) return refusal
+      return created(
+        addRun({
+          threadId: source.thread_id,
+          projectId: source.project_id,
+          status: 'queued',
+          currentStage: checked.step.stage,
+          retryOfRunId: source.id,
+          stepCount: checked.step.sequence - 1,
+          startedAt: mockNow(),
+        }),
+      )
     }),
   ),
 ]

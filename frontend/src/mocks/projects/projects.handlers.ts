@@ -4,6 +4,7 @@ import type { Project } from '@/modules/project/entities'
 import { apiEndpoints } from '@/shared/api/endpoints'
 import type { FieldProblem } from '@/shared/api/error'
 
+import { validateRunDefaults } from '../runs/runs.validators'
 import { createdId, IdPrefix, mockNow } from '../shared/db'
 import { hasMatchingParam, pathParam, queryOf, readBodyFields } from '../shared/http/request'
 import {
@@ -75,12 +76,13 @@ export const projectHandlers = [
     createdProjects.set([project, ...createdProjects.get()])
     return created(project, apiEndpoints.project.path({ projectId: project.id }))
   }),
-  // Takes the name and the status, which rename a project, archive it or make it active again.
+  // Takes the name, the status and the run settings, which rename a project, archive it or make it
+  // active again, or set the settings that its runs start from.
   http.patch(apiEndpoints.project.pattern, async ({ params, request }) => {
     await answerScenario('update-project')
     const projectId = pathParam(params, 'projectId')
     if (findProject(projectId) === undefined) return projectNotFound()
-    const { name, status } = await readBodyFields(request)
+    const { name, status, run_config: givenRunConfig } = await readBodyFields(request)
     const newName = requiredText(name)
     const newStatus = choice(projectStatuses, status)
     const problems: FieldProblem[] = []
@@ -90,8 +92,15 @@ export const projectHandlers = [
     if (newStatus === undefined && status !== undefined) {
       problems.push({ field: 'status', message: 'Choose active or archived.' })
     }
+    const checkedRunConfig =
+      givenRunConfig === undefined ? undefined : validateRunDefaults(givenRunConfig)
+    if (checkedRunConfig !== undefined && 'problems' in checkedRunConfig) {
+      problems.push(...checkedRunConfig.problems)
+    }
     if (problems.length > 0) return validationFailed(problems)
     changeProject(projectId, () => ({
+      ...(checkedRunConfig !== undefined &&
+        'runDefaults' in checkedRunConfig && { run_config: checkedRunConfig.runDefaults }),
       ...(newName !== undefined && { name: newName }),
       ...(newStatus !== undefined && { status: newStatus }),
       updated_at: mockNow(),
