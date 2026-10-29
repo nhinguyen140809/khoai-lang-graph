@@ -3,6 +3,7 @@ import {
   runParameterValuesOf,
   sentRunParameters,
 } from '@/modules/workflow/entities/@x/run'
+import { isString } from '@/shared/lib/guards'
 
 import type { RunDefaults } from './run-config.types'
 import { defaultSelectKey, runDefaultsMessages } from './run-defaults.constants'
@@ -29,7 +30,7 @@ export function defaultTextOf(field: RunParameterField): string | null {
   const value = field.defaultValue
   if (typeof value === 'boolean')
     return value ? runDefaultsMessages.flagOn : runDefaultsMessages.flagOff
-  if (typeof value === 'string' || typeof value === 'number') return String(value)
+  if (isString(value) || typeof value === 'number') return String(value)
   return null
 }
 
@@ -47,7 +48,7 @@ export function defaultChoiceLabelOf(field: RunParameterField): string {
  * option can be taken for the default.
  */
 export function selectKeyOf(field: RunParameterField, value: unknown): string {
-  const index = typeof value === 'string' ? field.options.indexOf(value) : -1
+  const index = isString(value) ? field.options.indexOf(value) : -1
   return index === -1 ? defaultSelectKey : String(index)
 }
 
@@ -90,5 +91,5 @@ export function isRunDefaultsEmpty(defaults: RunDefaults): boolean {
 
 /** The reviews that a form field holds: a list, or `null` for the default of the next level. */
 export function selectedCheckpoints(value: unknown): string[] | null {
-  return Array.isArray(value) ? value.filter((id): id is string => typeof id === 'string') : null
+  return Array.isArray(value) ? value.filter(isString) : null
 }
