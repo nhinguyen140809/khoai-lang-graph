@@ -3,7 +3,7 @@
 // gets a folder named after it in the plural.
 /** @type {Record<'entities' | 'features' | 'widgets' | 'shared' | 'mocks' | 'test', string[]>} */
 export const fileKinds = {
-  entities: ['api', 'keys', 'queries', 'types', 'reducer', 'constants', 'utils'],
+  entities: ['api', 'keys', 'queries', 'types', 'schema', 'reducer', 'constants', 'utils'],
   features: ['types', 'schema', 'store', 'reducer', 'constants', 'utils'],
   widgets: ['types', 'store', 'reducer', 'constants', 'utils', 'fixtures'],
   shared: ['types', 'store', 'reducer', 'config', 'constants', 'utils'],
@@ -56,7 +56,11 @@ export const kindPlaces = [
 export const kebabCasePattern = '+([a-z0-9])*(-+([a-z0-9]))'
 export const pascalCasePattern = '+([A-Z])*([a-zA-Z0-9])'
 
-// The modules whose entities split by topic: the root of the entities holds a folder for each
-// topic, and a topic holds its files by kind. The other modules keep a folder for each kind at
-// the root of the entities.
-export const topicEntityModules = ['run', 'workflow']
+// The modules whose entities split by topic, with their topics: the root of the entities holds a
+// folder for each topic, and a topic holds its files by kind, flat, with its hooks and tests. The
+// other modules keep a folder for each kind at the root of the entities. A new topic is added here.
+/** @type {Record<string, string[]>} */
+export const topicEntityModules = {
+  run: ['config', 'directives', 'events', 'runs', 'state', 'status', 'steps'],
+  workflow: ['artifact-kinds', 'checkpoints', 'content-fields', 'definition', 'issues', 'run-parameters', 'stages'],
+}

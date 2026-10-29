@@ -24,9 +24,24 @@ describe('sliceFolderRules', () => {
     expect(rules['src/modules/project/*/']).toBe('@(entities|features|widgets)')
   })
 
-  it('leaves the root of the entities of a module split by topic to the rule of every folder', () => {
-    expect(rules['src/modules/run/entities/*/']).toBeUndefined()
-    expect(rules['src/modules/project/entities/*/']).toBeDefined()
+  it('lets the root of the entities of a module split by topic hold its topics, not the kinds', () => {
+    expect(rules['src/modules/run/entities/*/']).toBe(
+      '@(components|__tests__|@x|config|directives|events|runs|state|status|steps)',
+    )
+    expect(rules['src/modules/run/entities/*/']).not.toContain('types')
+  })
+
+  it('lets a topic hold its hooks and tests only', () => {
+    expect(rules['src/modules/run/entities/runs/*/']).toBe('@(hooks|__tests__)')
+  })
+
+  it('lets the entities of a module not split by topic hold a folder for each kind', () => {
+    expect(rules['src/modules/project/entities/*/']).toContain('types')
+  })
+
+  it('lets the entities hold a schema file', () => {
+    expect(fileKinds.entities).toContain('schema')
+    expect(rules['src/modules/project/entities/*/']).toContain('schemas')
   })
 
   it('gives the folder @x to the entities only', () => {

@@ -46,6 +46,29 @@ function sliceFolderRulesOfLayer(moduleName, layer) {
 }
 
 /**
+ * The folder rules of the entities of a module: a folder for each kind at the root, or, for a
+ * module split by topic, a folder for each topic at the root and only hooks and tests in a topic.
+ * @param {string} moduleName
+ * @returns {[string, string][]}
+ */
+function entityFolderRules(moduleName) {
+  const topics = topicEntityModules[moduleName]
+  if (topics === undefined) {
+    return [[`src/modules/${moduleName}/entities/*/`, sliceFolderNames('entities')]]
+  }
+  return [
+    [`src/modules/${moduleName}/entities/*/`, `@(components|__tests__|@x|${topics.join('|')})`],
+    ...topics.map(
+      (topic) =>
+        /** @type {[string, string]} */ ([
+          `src/modules/${moduleName}/entities/${topic}/*/`,
+          '@(hooks|__tests__)',
+        ]),
+    ),
+  ]
+}
+
+/**
  * The folder rules of one module: its layers, the entities and the slices of its features and its
  * widgets.
  * @param {string} moduleName
@@ -54,11 +77,7 @@ function sliceFolderRulesOfLayer(moduleName, layer) {
 function folderRulesOfModule(moduleName) {
   return [
     [`src/modules/${moduleName}/*/`, `@(${moduleLayers.join('|')})`],
-    // The entities of a module split by topic hold any topic folder, which the folder rule of
-    // every other folder checks
-    ...(topicEntityModules.includes(moduleName)
-      ? []
-      : [[`src/modules/${moduleName}/entities/*/`, sliceFolderNames('entities')]]),
+    ...entityFolderRules(moduleName),
     ...sliceFolderRulesOfLayer(moduleName, 'features'),
     ...sliceFolderRulesOfLayer(moduleName, 'widgets'),
   ]
