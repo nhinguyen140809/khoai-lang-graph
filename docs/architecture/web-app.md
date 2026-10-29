@@ -128,7 +128,7 @@ The web app keeps a status for every node, computed by one pure function from th
 - Clicking a node opens a panel with its steps (model, tokens, cost, items created or changed), the workflow state after each step, and the action to retry from that step.
 - The existing reducer of run events, which keeps only the active node today, grows into this function.
 
-The result of the function, in `modules/run/entities/types/run-progress.types.ts`:
+The result of the function, in `modules/run/entities/steps/run-steps.types.ts`:
 
 ```ts
 export type NodeStatus = 'idle' | 'running' | 'waiting' | 'done' | 'failed'
@@ -226,7 +226,7 @@ The artifact panel draws every kind from its content schema and the display keyw
 - An item keeps the `schema_version` it was written with, and the web app reads the schema of that version from `GET /content-schemas/{kind}/{schema_version}` when it differs from the current one, so older items are still drawn correctly.
 - A kind can have its own component where the generic drawing is not good enough, for example a persona card. A registry maps the kind to the component; a kind without an entry uses the generic drawing.
 
-A field as the detail view and the edit form see it, built from one property of a schema by `contentFields(schema)`, in `modules/workflow/entities/types/content-fields.types.ts`:
+A field as the detail view and the edit form see it, built from one property of a schema by `contentFields(schema)`, in `modules/workflow/entities/content-fields/content-fields.types.ts`:
 
 ```ts
 export type FieldWidget = 'text' | 'textarea' | 'select' | 'number' | 'list' | 'tags' | 'object-list'
@@ -276,27 +276,23 @@ A nullable select offers an empty choice that stores `null`. Saving the form sen
 
 ## 7. Run settings and workflow state
 
-- **Run settings.** The form for `parameters` of the run configuration is built from `run_parameters_schema` with the same field inputs as the artifact form, so a new run parameter appears without a client change.
+- **Run settings.** The form for `parameters` of the run configuration is built from `run_parameters_schema`, one `RunParameterField` for each property, so a new run parameter appears without a client change. The widget comes from the type of the property: an integer or a number is a number input, a property with `enum` is a select, a boolean is a group of three choices (default, on, off), and any other type of a single value is a text input. A property that holds a list or an object has no widget and is left out. A parameter that is not set is not sent, so the next level supplies it, and the form shows the `default` of the property for it ("Default (On)" for a boolean, a placeholder for any other); a boolean set to on or off sends `true` or `false`. The form checks `minimum`, `maximum` and the type against the schema before sending.
 - **Reviews to turn on.** The form also holds a list of checkboxes for `review_checkpoints` of the run configuration, one per node of kind `checkpoint` in the definition, in the order of the nodes. Each checkbox is named by the `title` of the checkpoint, never by its id, and its description is the `prompt`. A checked checkpoint pauses the run for the user; an unchecked one continues at once with its default option and default answers, so a new checkpoint in a definition version appears in the list without a client change. The value saved is the list of ids of the checked checkpoints. The same `title` names the review in the status bar.
 - **Workflow state.** A panel for experiments shows the state of the run, or the state after a chosen step, as a tree, following `state_schema`. Artifacts and items appear as references and link to the version that the step used, so the state of an old step shows the content as it was then, also for items deleted since.
 
-Example of run settings. The property `"max_turns": { "type": "integer", "minimum": 1 }` of `run_parameters_schema` becomes the `ContentField` below: a number input labeled "Max turns", filled with `max_turns` of the project run configuration. The form checks `minimum` against the schema before sending.
+Example of run settings. The property `"max_turns": { "type": "integer", "minimum": 1, "default": 6 }` of `run_parameters_schema` becomes the `RunParameterField` below, in `modules/workflow/entities/run-parameters/run-parameters.types.ts`: a number input labeled "Max turns", filled with `max_turns` of the project run configuration, and showing the default "6" as its placeholder while it is empty.
 
 ```ts
-const maxTurns: ContentField = {
+const maxTurns: RunParameterField = {
   name: 'max_turns',
   label: 'Max turns', // no title, so derived from the name
   widget: 'number', // derived from "integer"
-  nullable: false,
-  required: false,
-  readOnly: false,
-  options: [],
   description: null,
-  allowedValuesFrom: null,
-  minItems: null,
+  options: [],
   minimum: 1,
   maximum: null,
-  entryFields: [],
+  integer: true,
+  defaultValue: 6,
 }
 ```
 
@@ -327,15 +323,15 @@ Where the parts above go in the web app. The module and the layer of each part f
 
 | Part | Module and layer | Files |
 |---|---|---|
-| Workflow definition and state | `workflow`, entities | `modules/workflow/entities/workflow.api.ts`, `modules/workflow/entities/workflow.types.ts`, `modules/workflow/entities/workflow.keys.ts`, `modules/workflow/entities/hooks/useWorkflowQueries.ts` |
-| Progress of a run | `run`, entities | `modules/run/entities/run-progress.reducer.ts`; `NodeStatus`, `NodeProgress` and `RunProgress` in `modules/run/entities/types/run-progress.types.ts` |
+| Workflow definition and state | `workflow`, entities | `modules/workflow/entities/definition/workflow.api.ts`, `modules/workflow/entities/definition/workflow-definition.types.ts`, `modules/workflow/entities/definition/workflow.keys.ts`, `modules/workflow/entities/definition/hooks/useWorkflowDefinition.ts` |
+| Progress of a run | `run`, entities | `modules/run/entities/steps/run-progress.utils.ts`; `NodeStatus`, `NodeProgress` and `RunProgress` in `modules/run/entities/steps/run-steps.types.ts` |
 | Graph | `run`, widget `graph` | `modules/run/widgets/graph/components/WorkflowGraph.tsx`; one component per node kind: `TerminalNode.tsx`, `AgentNode.tsx`, `CheckpointNode.tsx`, `ControlNode.tsx`; `modules/run/widgets/graph/run-graph.types.ts` (`WorkflowNodeData`, `WorkflowEdgeData`); `modules/run/widgets/graph/graph-layout.utils.ts` (elkjs) |
 | Details of a node | `run`, widget `graph` | `modules/run/widgets/graph/components/NodeDetailsPanel.tsx`, with the retry action of `run/features/retry` |
 | Reviews | `review`: entities, feature `answer`, widget `panel` | `modules/review/entities/review.api.ts`, `modules/review/entities/review.types.ts`, `modules/review/entities/hooks/useReviewQueries.ts`; `modules/review/features/answer/components/ReviewAnswerForm.tsx` (options, questions, feedback), `modules/review/features/answer/hooks/useAnswerReview.ts`; `modules/review/widgets/panel/components/ReviewPanel.tsx`, which shows the prompt, the items under review with the edit form of `artifact/features/edit`, and the answer form |
-| Form built from a schema | Shared code | `shared/components/content-form/ContentForm.tsx`, `modules/workflow/entities/types/content-fields.types.ts` (`ContentField`), `shared/components/content-form/field-widgets.utils.ts`. The caller gives the values of a field marked `x-value-from` |
-| Artifacts and items | `artifact`, entities | `modules/workflow/entities/api/artifact-kinds.api.ts`, `modules/artifact/entities/types/artifacts.types.ts`, `modules/artifact/entities/types/items.types.ts`; one component per display: `DocumentView.tsx`, `SectionHeading.tsx`, `ItemTable.tsx`, `ItemCards.tsx`, `TranscriptView.tsx`; `modules/artifact/entities/kind-components.constants.ts` (the registry) |
+| Form built from a schema | Shared code | `shared/components/content-form/ContentForm.tsx`, `modules/workflow/entities/content-fields/content-fields.types.ts` (`ContentField`), `shared/components/content-form/field-widgets.utils.ts`. The caller gives the values of a field marked `x-value-from` |
+| Artifacts and items | `artifact`, entities | `modules/workflow/entities/artifact-kinds/artifact-kinds.api.ts`, `modules/artifact/entities/types/artifacts.types.ts`, `modules/artifact/entities/types/items.types.ts`; one component per display: `DocumentView.tsx`, `SectionHeading.tsx`, `ItemTable.tsx`, `ItemCards.tsx`, `TranscriptView.tsx`; `modules/artifact/entities/kind-components.constants.ts` (the registry) |
 | Editing an artifact or an item | `artifact`, feature `edit` | The edit form, on `ContentForm.tsx`, and one hook per save: `modules/artifact/features/edit/hooks/useUpdateArtifact.ts`, `modules/artifact/features/edit/hooks/useUpdateItem.ts` |
-| Run settings | `workflow`, entities | `modules/workflow/entities/components/RunParametersFields.tsx`, on `ContentForm.tsx`. It saves nothing: the feature that shows it, the settings or the dialog that creates a project, saves the values |
+| Run settings | `run`, entities | `modules/run/entities/components/RunDefaultsFields.tsx`, on `runParameterFields` of `workflow`. It saves nothing: the feature that shows the fields saves the values |
 | Workflow state | `run`, entities | `modules/run/entities/components/StateTree.tsx` |
 
 ## 10. Open points
