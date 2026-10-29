@@ -1,5 +1,6 @@
 import { subDays } from 'date-fns'
 
+import type { RunDefaults } from '@/modules/run/entities/@x/project'
 import { apiEndpoints } from '@/shared/api/endpoints'
 import { HttpMethod } from '@/shared/api/http'
 import { apiCommand, apiRequest, fetchPage, type ListPage } from '@/shared/api/request'
@@ -85,6 +86,18 @@ export function renameProject(projectId: string, name: string): Promise<Project>
     action: 'rename the project',
     method: HttpMethod.Patch,
     body: { name },
+  })
+}
+
+/** Sets the run settings of a project; the runs that start after it use them. */
+export function updateProjectRunConfig(
+  projectId: string,
+  runConfig: RunDefaults,
+): Promise<Project> {
+  return apiRequest(apiEndpoints.project.path({ projectId }), projectSchema, {
+    action: 'save the run settings of the project',
+    method: HttpMethod.Patch,
+    body: { run_config: runConfig },
   })
 }
 
