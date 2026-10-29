@@ -1,5 +1,6 @@
 import { useEffect, useReducer } from 'react'
 
+import { runStreamUrl } from '../../runs/runs.api'
 import {
   applyRunEvent,
   initialRunState,
@@ -7,8 +8,7 @@ import {
   parseRunEvent,
   type RunState,
 } from '../run-events.reducer'
-import { runStreamUrl } from '../runs.api'
-import { runEventTypes } from '../types/run-events.types'
+import { runEventTypes } from '../run-events.types'
 
 /**
  * Subscribes to the SSE stream of one run. EventSource reconnects on its own and sends

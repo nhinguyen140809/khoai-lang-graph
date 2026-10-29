@@ -1,7 +1,7 @@
 import { describe, expect, it } from 'vitest'
 
-import { runStatusesByAttention } from '../../constants/run-status.constants'
-import { runStatuses } from '../../types/run-status.types'
+import { runStatusesByAttention } from '../run-status.constants'
+import { runStatuses } from '../run-status.types'
 import { isUnfinishedRunStatus, runStatusLabel } from '../run-status.utils'
 import { labelCases, unfinishedCases } from './run-status.utils.data'
 

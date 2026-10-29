@@ -11,7 +11,7 @@ import {
 
 import type { Tone } from '@/shared/lib/tone'
 
-import type { RunStatus } from '../types/run-status.types'
+import type { RunStatus } from './run-status.types'
 
 /** How a run status shows. */
 interface RunStatusLook {

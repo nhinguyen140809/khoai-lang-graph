@@ -2,7 +2,7 @@ import { CircleDashedIcon, type LucideIcon, XIcon } from 'lucide-react'
 
 import type { Tone } from '@/shared/lib/tone'
 
-import type { RunStatus } from '../../types/run-status.types'
+import type { RunStatus } from '../run-status.types'
 
 /** A status of a run, or none, and how it shows. */
 export const lookCases: {

@@ -1,2 +1,2 @@
-export { runDefaultsSchema } from '../types/run-config.types'
-export { type RunStatus, runStatuses } from '../types/run-status.types'
+export { runDefaultsSchema } from '../config/run-config.types'
+export { type RunStatus, runStatuses } from '../status/run-status.types'

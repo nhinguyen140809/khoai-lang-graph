@@ -2,7 +2,7 @@ import { apiEndpoints } from '@/shared/api/endpoints'
 import { HttpMethod } from '@/shared/api/http'
 import { apiRequest, apiUrl } from '@/shared/api/request'
 
-import { type CreateRunResponse, createRunResponseSchema } from './types/runs.types'
+import { type CreateRunResponse, createRunResponseSchema } from './runs.types'
 
 // TODO: switch to the generated client in src/shared/api/generated/ once it is generated.
 

@@ -1,12 +1,8 @@
 import { isOneOf } from '@/shared/lib/guards'
 import type { Wording } from '@/shared/lib/view'
 
-import { noRunLabel, runStatusLabels } from '../constants/run-status.constants'
-import {
-  type RunStatus,
-  type UnfinishedRunStatus,
-  unfinishedRunStatuses,
-} from '../types/run-status.types'
+import { noRunLabel, runStatusLabels } from './run-status.constants'
+import { type RunStatus, type UnfinishedRunStatus, unfinishedRunStatuses } from './run-status.types'
 
 export function isUnfinishedRunStatus(status: RunStatus): status is UnfinishedRunStatus {
   return isOneOf(unfinishedRunStatuses, status)

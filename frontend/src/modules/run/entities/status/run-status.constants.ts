@@ -1,6 +1,6 @@
 import type { Wording } from '@/shared/lib/view'
 
-import type { RunStatus } from '../types/run-status.types'
+import type { RunStatus } from './run-status.types'
 
 /**
  * The statuses of a run, from the one that needs the user most: a review that waits, a run that

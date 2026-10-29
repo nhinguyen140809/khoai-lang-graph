@@ -3,7 +3,7 @@ import {
   runEventSchemas,
   type RunEventType,
   type RunStreamStatus,
-} from './types/run-events.types'
+} from './run-events.types'
 
 export interface RunState {
   status: RunStreamStatus

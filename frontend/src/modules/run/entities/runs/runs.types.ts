@@ -2,8 +2,8 @@ import { z } from 'zod'
 
 import { itemRefSchema } from '@/modules/artifact/entities/@x/run'
 
-import { runConfigSchema } from './run-config.types'
-import { runStatuses } from './run-status.types'
+import { runConfigSchema } from '../config/run-config.types'
+import { runStatuses } from '../status/run-status.types'
 
 // Temporary hand-written schemas for the runs API: the runs and their steps.
 // TODO: replace with the types generated into src/shared/api/generated/ once they exist.

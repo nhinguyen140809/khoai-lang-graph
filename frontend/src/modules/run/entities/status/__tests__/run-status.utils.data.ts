@@ -1,6 +1,6 @@
 import type { Wording } from '@/shared/lib/view'
 
-import type { RunStatus } from '../../types/run-status.types'
+import type { RunStatus } from '../run-status.types'
 
 /** A status of a run, and whether the run has not ended. */
 export const unfinishedCases: [RunStatus, boolean][] = [

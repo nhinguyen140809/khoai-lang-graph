@@ -1,5 +1,5 @@
 import type { RunState } from '../run-events.reducer'
-import type { RunEvent, RunEventType } from '../types/run-events.types'
+import type { RunEvent, RunEventType } from '../run-events.types'
 
 interface RunEventCase {
   name: string
