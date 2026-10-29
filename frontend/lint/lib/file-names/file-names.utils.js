@@ -1,7 +1,12 @@
 import { moduleLayers } from '../modules/module-imports.constants.js'
 import { readModuleNames } from '../modules/module-names.utils.js'
 import { foldersOf } from '../paths.utils.js'
-import { fileKinds, kebabCasePattern, kindFolders } from './file-kinds.constants.js'
+import {
+  fileKinds,
+  kebabCasePattern,
+  kindFolders,
+  topicEntityModules,
+} from './file-kinds.constants.js'
 
 /**
  * The name of a file of these kinds: <subject>.<kind>.ts, the subject in kebab-case.
@@ -49,7 +54,11 @@ function sliceFolderRulesOfLayer(moduleName, layer) {
 function folderRulesOfModule(moduleName) {
   return [
     [`src/modules/${moduleName}/*/`, `@(${moduleLayers.join('|')})`],
-    [`src/modules/${moduleName}/entities/*/`, sliceFolderNames('entities')],
+    // The entities of a module split by topic hold any topic folder, which the folder rule of
+    // every other folder checks
+    ...(topicEntityModules.includes(moduleName)
+      ? []
+      : [[`src/modules/${moduleName}/entities/*/`, sliceFolderNames('entities')]]),
     ...sliceFolderRulesOfLayer(moduleName, 'features'),
     ...sliceFolderRulesOfLayer(moduleName, 'widgets'),
   ]

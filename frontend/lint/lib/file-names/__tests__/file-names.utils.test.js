@@ -24,6 +24,11 @@ describe('sliceFolderRules', () => {
     expect(rules['src/modules/project/*/']).toBe('@(entities|features|widgets)')
   })
 
+  it('leaves the root of the entities of a module split by topic to the rule of every folder', () => {
+    expect(rules['src/modules/run/entities/*/']).toBeUndefined()
+    expect(rules['src/modules/project/entities/*/']).toBeDefined()
+  })
+
   it('gives the folder @x to the entities only', () => {
     expect(rules['src/modules/project/entities/*/']).toContain('@x')
     expect(rules['src/modules/project/features/create/*/']).not.toContain('@x')
