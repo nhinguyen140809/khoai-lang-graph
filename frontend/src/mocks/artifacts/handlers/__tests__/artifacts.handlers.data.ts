@@ -51,7 +51,7 @@ export const artifactRejectedCases: RejectedRequestCase[] = [
   },
   {
     name: 'refuses a change while a run is running',
-    page: '/?mock-run-state=running',
+    page: '/?mock-run-status=running',
     method: 'PATCH',
     path: artifactPath,
     body: { title: 'Plan' },
@@ -96,7 +96,7 @@ export const artifactRejectedCases: RejectedRequestCase[] = [
   },
   {
     name: 'refuses a restore while a run is running',
-    page: '/?mock-run-state=running',
+    page: '/?mock-run-status=running',
     method: 'POST',
     path: `${artifactPath}/restore`,
     body: { version: 1 },

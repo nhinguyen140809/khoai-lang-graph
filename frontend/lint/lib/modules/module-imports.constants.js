@@ -12,7 +12,7 @@ export const moduleImports = {
   project: ['workflow', 'artifact', 'run', 'review', 'thread'],
   activity: ['workflow', 'artifact', 'run', 'review', 'thread'],
   auth: [],
-  user: ['auth'],
+  user: ['auth', 'run'],
   usage: [],
   'design-system': [],
 }

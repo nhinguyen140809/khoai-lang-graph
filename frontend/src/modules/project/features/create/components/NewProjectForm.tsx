@@ -2,28 +2,23 @@
 
 import { zodResolver } from '@hookform/resolvers/zod'
 import { ChevronDownIcon } from 'lucide-react'
-import { useId } from 'react'
+import { type ReactNode, useMemo } from 'react'
 import { useForm } from 'react-hook-form'
 
+import {
+  noRunDefaultsFieldValues,
+  RunDefaultsFields,
+  useRunSettingsOptions,
+} from '@/modules/run/entities'
 import { Form, FormField, TextField } from '@/shared/components/form'
 import { Button } from '@/shared/components/ui/button'
-import { Checkbox } from '@/shared/components/ui/checkbox'
 import {
   Collapsible,
   CollapsibleContent,
   CollapsibleTrigger,
 } from '@/shared/components/ui/collapsible'
 import { DialogClose, DialogFooter } from '@/shared/components/ui/dialog'
-import {
-  Field,
-  FieldDescription,
-  FieldError,
-  FieldGroup,
-  FieldLabel,
-  FieldLegend,
-  FieldSet,
-} from '@/shared/components/ui/field'
-import { Input } from '@/shared/components/ui/input'
+import { FieldError, FieldGroup } from '@/shared/components/ui/field'
 import { PendingButton } from '@/shared/components/ui/pending-button'
 import { ScrollArea } from '@/shared/components/ui/scroll-area'
 import {
@@ -41,8 +36,8 @@ import {
 } from '@/shared/config/output-language'
 
 import { useCreateProject } from '../hooks/useCreateProject'
-import { createProjectMessages, runDefaultsPreview } from '../new-project.constants'
-import { newProjectFormSchema } from '../new-project.schema'
+import { createProjectMessages } from '../new-project.constants'
+import { newProjectFormSchemaOf } from '../new-project.schema'
 
 interface NewProjectFormProps {
   /** The idea that the prompt sent, which becomes the first message of the project. */
@@ -52,11 +47,23 @@ interface NewProjectFormProps {
 }
 
 export function NewProjectForm({ idea, defaultLanguage, onCreated }: NewProjectFormProps) {
+  const { checkpoints, parameterFields } = useRunSettingsOptions()
+  const schema = useMemo(() => newProjectFormSchemaOf(parameterFields), [parameterFields])
   const form = useForm({
-    resolver: zodResolver(newProjectFormSchema),
-    defaultValues: { name: '', output_language: defaultLanguage, idea },
+    resolver: zodResolver(schema),
+    defaultValues: {
+      name: '',
+      output_language: defaultLanguage,
+      idea,
+      run_config: noRunDefaultsFieldValues,
+    },
   })
-  const createProject = useCreateProject(form.setError, onCreated)
+  const createProject = useCreateProject({
+    setError: form.setError,
+    onCreated,
+    schema,
+    parameterFields,
+  })
 
   const onSubmit = form.handleSubmit((values) => {
     createProject.mutate(values)
@@ -99,7 +106,15 @@ export function NewProjectForm({ idea, defaultLanguage, onCreated }: NewProjectF
               </Select>
             )}
           </FormField>
-          <RunDefaults />
+          <AgentSettings>
+            <RunDefaultsFields
+              control={form.control}
+              path="run_config"
+              legend={createProjectMessages.agentSettings}
+              checkpoints={checkpoints}
+              parameterFields={parameterFields}
+            />
+          </AgentSettings>
           <FieldError>{createProject.formError}</FieldError>
         </FieldGroup>
       </ScrollArea>
@@ -121,51 +136,22 @@ export function NewProjectForm({ idea, defaultLanguage, onCreated }: NewProjectF
   )
 }
 
-/**
- * The settings that the agents start from, with their defaults, folded under a line that opens
- * them: most people keep the defaults, and they cannot be changed yet.
- */
-function RunDefaults() {
-  const id = useId()
-
+/** The settings that the agents start from, folded under a line that opens them: most people keep the defaults. */
+function AgentSettings({ children }: { children: ReactNode }) {
   return (
     <Collapsible>
       {/* As large as the labels of the other fields, since it is one more setting of the project;
           its weight, its color and its chevron say that it opens. */}
       <h3>
         <CollapsibleTrigger className="group flex items-center gap-1.5 rounded-md text-sm font-semibold text-primary outline-none hover:text-primary/80 focus-visible:ring-2 focus-visible:ring-ring/50">
-          Agent settings
+          {createProjectMessages.agentSettings}
           <ChevronDownIcon
             aria-hidden
             className="size-4 transition-transform group-data-[state=open]:rotate-180 motion-reduce:transition-none"
           />
         </CollapsibleTrigger>
       </h3>
-      <CollapsibleContent className="pt-4">
-        <FieldSet disabled>
-          <FieldLegend className="sr-only">Agent settings</FieldLegend>
-          <FieldDescription>These defaults cannot be changed yet.</FieldDescription>
-          <Field orientation="horizontal" data-disabled>
-            <FieldLabel htmlFor={`${id}-personas`}>Personas</FieldLabel>
-            <Input
-              id={`${id}-personas`}
-              type="number"
-              value={runDefaultsPreview.personas}
-              readOnly
-              className="w-16"
-            />
-          </Field>
-          <FieldSet>
-            <FieldLegend variant="label">Reviews</FieldLegend>
-            {runDefaultsPreview.reviews.map((review, index) => (
-              <Field key={review} orientation="horizontal" data-disabled>
-                <Checkbox id={`${id}-review-${String(index)}`} checked />
-                <FieldLabel htmlFor={`${id}-review-${String(index)}`}>{review}</FieldLabel>
-              </Field>
-            ))}
-          </FieldSet>
-        </FieldSet>
-      </CollapsibleContent>
+      <CollapsibleContent className="pt-4">{children}</CollapsibleContent>
     </Collapsible>
   )
 }

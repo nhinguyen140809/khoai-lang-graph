@@ -39,6 +39,19 @@ describe('the resolved config', () => {
     expect(rule).toHaveLength(2)
   })
 
+  it('keeps the files of a topic of the entities to the topics that it reads, but not its tests', async () => {
+    const source = await ruleOf(
+      'src/modules/run/entities/steps/run-steps.utils.ts',
+      'no-restricted-imports',
+    )
+    expect(JSON.stringify(source)).toContain('topicEntityModules')
+    const test = await ruleOf(
+      'src/modules/run/entities/steps/__tests__/run-steps.utils.test.ts',
+      'no-restricted-imports',
+    )
+    expect(JSON.stringify(test)).not.toContain('topicEntityModules')
+  })
+
   it('has the rules of every concern', async () => {
     const config = await eslint.calculateConfigForFile(
       'src/modules/project/entities/projects.api.ts',

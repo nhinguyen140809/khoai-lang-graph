@@ -45,17 +45,17 @@ export const threadRunStateCases = [
   },
   {
     name: 'is running',
-    address: '/?mock-run-state=running',
+    address: '/?mock-run-status=running',
     thread: { active_run_id: runIds.mentorMain3, active_run_status: 'running' },
   },
   {
     name: 'failed',
-    address: '/?mock-run-state=failed',
+    address: '/?mock-run-status=failed',
     thread: { active_run_id: null, active_run_status: null },
   },
   {
     name: 'is done',
-    address: '/?mock-run-state=done',
+    address: '/?mock-run-status=done',
     thread: { active_run_id: null, active_run_status: null },
   },
 ]

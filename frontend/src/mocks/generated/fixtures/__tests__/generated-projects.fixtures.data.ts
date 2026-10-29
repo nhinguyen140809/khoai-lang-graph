@@ -1,5 +1,5 @@
 import { projectFixtures } from '../../../projects/projects.fixtures'
-import { runFixtures } from '../../../runs/runs.fixtures'
+import { runFixtures } from '../../../runs/fixtures/runs.fixtures'
 import { threadFixtures } from '../../../threads/threads.fixtures'
 import { generatedProjects, generatedRuns, generatedThreads } from '../generated-projects.fixtures'
 

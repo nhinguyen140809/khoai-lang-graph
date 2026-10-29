@@ -16,6 +16,8 @@ export const IdPrefix = {
   Item: 'c41e',
   Export: 'e8d0',
   TraceLink: 'd7a1',
+  Directive: '3b7c',
+  Decision: 'a41e',
 } as const
 
 export const userId = mockId(IdPrefix.User, 1)
@@ -46,6 +48,9 @@ export const runIds = {
   libraryMain1: mockId('7e10', 3),
   laundryMain1: mockId('7e10', 4),
 }
+
+/** The run that `POST /threads/{thread_id}/runs` answers; the mock server keeps no record of it. */
+export const startedRunId = mockId(IdPrefix.Run, 2)
 
 export const personaIds = [
   mockId(IdPrefix.Persona, 1),

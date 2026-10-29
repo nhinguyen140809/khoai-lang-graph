@@ -7,6 +7,7 @@ export {
   deleteProject,
   renameProject,
   restoreProject,
+  updateProjectRunConfig,
 } from './projects.api'
 export { noProjectFilters, projectMessages } from './projects.constants'
 export { projectKeys } from './projects.keys'

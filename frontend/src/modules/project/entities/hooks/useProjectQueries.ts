@@ -7,7 +7,7 @@ import {
   useQueryClient,
 } from '@tanstack/react-query'
 
-import { cursorPagesOptions } from '@/shared/api/query-client'
+import { cursorPagesOptions, pageItems } from '@/shared/api/query-client'
 import { type ListPage } from '@/shared/api/request'
 
 import { getProject, listProjects } from '../projects.api'
@@ -26,9 +26,7 @@ const RECENT_COUNT = 5
 function listedProject(queryClient: QueryClient, projectId: string): Project | undefined {
   for (const query of queryClient.getQueryCache().findAll({ queryKey: projectKeys.lists() })) {
     const cached = query.state.data as InfiniteData<ListPage<Project>> | Project[] | undefined
-    const projects = Array.isArray(cached)
-      ? cached
-      : (cached?.pages.flatMap(({ items }) => items) ?? [])
+    const projects = Array.isArray(cached) ? cached : pageItems(cached)
     const project = projects.find(({ id }) => id === projectId)
     if (project !== undefined) return project
   }

@@ -4,6 +4,7 @@ import { restrictImports } from '../lib/imports/restrict-imports.utils.js'
 import { componentPaths, componentPatterns } from '../lib/imports/component-patterns.constants.js'
 import { FileScope } from '../lib/imports/slice-patterns.constants.js'
 import { modulePatterns } from '../lib/imports/slice-patterns.utils.js'
+import { entityTopics, topicPatterns } from '../lib/imports/topic-patterns.utils.js'
 import { wrappedLibraryImports } from '../lib/imports/wrapped-libraries.constants.js'
 import { moduleImports, moduleLayers } from '../lib/modules/module-imports.constants.js'
 import { assertModuleTable, readModuleNames } from '../lib/modules/module-names.utils.js'
@@ -15,6 +16,8 @@ import localRules from '../plugin/index.js'
  * @typedef {object} Slice
  * @property {string} sliceGlob the glob of the slice folders
  * @property {(fileScope: FileScopeName) => object[]} patternsOf
+ * @property {string[]} topics the topics of entities split by topic; none for any other slice
+ * @property {(topic: string) => object[]} topicPatternsOf
  */
 
 const moduleNames = readModuleNames()
@@ -29,6 +32,8 @@ const slices = moduleNames.flatMap((moduleName) =>
         ? `src/modules/${moduleName}/entities`
         : `src/modules/${moduleName}/${layer}/*`,
     patternsOf: (fileScope) => modulePatterns(moduleName, layer, fileScope),
+    topics: layer === 'entities' ? entityTopics(moduleName) : [],
+    topicPatternsOf: (topic) => topicPatterns(moduleName, topic),
   })),
 )
 
@@ -43,6 +48,19 @@ function sourceBlock({ sliceGlob, patternsOf }) {
       patterns: patternsOf(FileScope.Source),
     }),
   }
+}
+
+// The files of each topic of entities split by topic: the patterns of the slice, and the topics
+// that the topic reads. The tests of a topic keep the block of the tests, which comes after.
+/** @param {Slice} slice */
+function topicBlocks({ sliceGlob, patternsOf, topics, topicPatternsOf }) {
+  return topics.map((topic) => ({
+    files: [`${sliceGlob}/${topic}/**/*.{ts,tsx}`],
+    rules: restrictImports({
+      paths: wrappedLibraryImports,
+      patterns: [...patternsOf(FileScope.Source), ...topicPatternsOf(topic)],
+    }),
+  }))
 }
 
 /** @param {Slice} slice */
@@ -70,9 +88,14 @@ function testBlock({ sliceGlob, patternsOf }) {
 
 // A slice imports only the layers under it and the modules under its module, other slices from
 // their index, and its own files with relative imports. The blocks of a slice: its files, then
-// the components, then the tests.
+// its topics, then the components, then the tests.
 export default defineConfig([
-  ...slices.flatMap((slice) => [sourceBlock(slice), componentBlock(slice), testBlock(slice)]),
+  ...slices.flatMap((slice) => [
+    sourceBlock(slice),
+    ...topicBlocks(slice),
+    componentBlock(slice),
+    testBlock(slice),
+  ]),
   {
     files: ['src/modules/**/*.{ts,tsx}'],
     plugins: { local: /** @type {import('eslint').ESLint.Plugin} */ (localRules) },

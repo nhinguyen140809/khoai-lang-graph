@@ -1,2 +1,2 @@
-export { useReviewableCheckpoints } from '../hooks/useWorkflowQueries'
-export type { ReviewableCheckpoint } from '../types/definition-views.types'
+export type { ReviewableCheckpoint } from '../checkpoints/checkpoints.types'
+export { useReviewableCheckpoints } from '../checkpoints/hooks/useCheckpointQueries'

@@ -1,7 +1,9 @@
 import { describe, expect, it } from 'vitest'
 
-import { newProjectFormSchema } from '../new-project.schema'
+import { newProjectFormSchemaOf } from '../new-project.schema'
 import { invalidFormCases, validFormCases } from './new-project.schema.data'
+
+const newProjectFormSchema = newProjectFormSchemaOf([])
 
 describe('newProjectFormSchema', () => {
   it.each(validFormCases)('$name', ({ form, values }) => {

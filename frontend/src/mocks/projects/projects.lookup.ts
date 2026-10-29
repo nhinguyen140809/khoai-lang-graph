@@ -3,7 +3,7 @@ import { isUnfinishedRunStatus, type Run } from '@/modules/run/entities'
 
 import { generatedProjects, manyProjects } from '../generated/fixtures/generated-projects.fixtures'
 import { manyProjectCount } from '../generated/generated.constants'
-import { allRuns } from '../runs/runs.lookup'
+import { allRuns } from '../runs/lookup/runs.lookup'
 import { pageUrlParam } from '../shared/scenario'
 import { projectFixtures } from './projects.fixtures'
 import { createdProjects, deletedProjectIds, projectEdits } from './projects.store'

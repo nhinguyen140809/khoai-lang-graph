@@ -4,19 +4,24 @@ import { isUnfinishedRunStatus } from '@/modules/run/entities'
 import { apiEndpoints } from '@/shared/api/endpoints'
 import { HttpStatus } from '@/shared/api/http'
 
-import { mockNow } from '../../shared/db'
-import { pathParam } from '../../shared/http/request'
-import { emptyResponse, invalidState, paginate } from '../../shared/http/response'
+import { mockNow, startedRunId } from '../../shared/db'
+import { idempotent, pathParam, readBodyFields } from '../../shared/http/request'
+import {
+  created,
+  emptyResponse,
+  invalidState,
+  paginate,
+  validationFailed,
+} from '../../shared/http/response'
 import { answerScenario } from '../../shared/scenario'
-import { changeRun } from '../runs.changes'
-import { allRuns, findRun, stepsOfRun } from '../runs.lookup'
-import { runNotFound } from '../runs.problems'
-
-// The chat starts a run with this endpoint, which is not part of the API; it goes with the chat.
-export const mockRunId = 'run-mock-1'
+import { allRuns, findRun, stepsOfRun } from '../lookup/runs.lookup'
+import { addRun, changeRun } from '../runs.changes'
+import { refuseUnfinishedRun, runNotFound } from '../runs.problems'
+import { validateRetryBody } from '../runs.validators'
 
 export const runHandlers = [
-  http.post(apiEndpoints.threadRuns.pattern, () => HttpResponse.json({ run_id: mockRunId })),
+  // The chat starts a run with this endpoint, which is not part of the API; it goes with the chat.
+  http.post(apiEndpoints.threadRuns.pattern, () => HttpResponse.json({ run_id: startedRunId })),
 
   http.get(apiEndpoints.threadRuns.pattern, async ({ params, request }) => {
     await answerScenario('runs')
@@ -46,4 +51,28 @@ export const runHandlers = [
     changeRun(run.id, { status: 'cancelled', finished_at: mockNow() })
     return emptyResponse(HttpStatus.Accepted)
   }),
+
+  http.post(
+    apiEndpoints.runRetry.pattern,
+    idempotent(async ({ params, request }) => {
+      await answerScenario('retry-run')
+      const source = findRun(pathParam(params, 'runId'))
+      if (source === undefined) return runNotFound()
+      const checked = validateRetryBody(source.id, await readBodyFields(request))
+      if ('problems' in checked) return validationFailed(checked.problems)
+      const refusal = refuseUnfinishedRun(source.thread_id)
+      if (refusal !== null) return refusal
+      return created(
+        addRun({
+          threadId: source.thread_id,
+          projectId: source.project_id,
+          status: 'queued',
+          currentStage: checked.step.stage,
+          retryOfRunId: source.id,
+          stepCount: checked.step.sequence - 1,
+          startedAt: mockNow(),
+        }),
+      )
+    }),
+  ),
 ]

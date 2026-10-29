@@ -6,13 +6,16 @@ import { HttpStatus } from '@/shared/api/http'
 import type { ListPage } from '@/shared/api/request'
 import type { ApiAnswer } from '@/test/msw'
 import { fetchApi, openPage } from '@/test/msw'
+import { itRejectsRequests } from '@/test/suites'
 
-import { runIds } from '../../../shared/db'
-import { mockRunId } from '../runs.handlers'
+import { changeProject } from '../../../projects/projects.lookup'
+import { projectIds, runIds, startedRunId } from '../../../shared/db'
+import { stepsOfRun } from '../../lookup/runs.lookup'
 import {
+  refusedRetryCases,
   runErrorCases,
   runListCases,
-  runStateCases,
+  runStatusScenarioCases,
   unfinishedRunStates,
 } from './runs.handlers.data'
 
@@ -50,10 +53,10 @@ describe('GET /runs/{run_id}', () => {
     })
   })
 
-  it.each(runStateCases)(
+  it.each(runStatusScenarioCases)(
     'follows the $state state of the run',
     async ({ state, status, stepCount, finished }) => {
-      openPage(`/?mock-run-state=${state}`)
+      openPage(`/?mock-run-status=${state}`)
 
       const { body } = (await fetchApi(
         apiEndpoints.run.path({ runId: runIds.mentorMain3 }),
@@ -90,7 +93,7 @@ describe('GET /runs/{run_id}/steps', () => {
 
 describe('POST /runs/{run_id}/cancel', () => {
   it.each(unfinishedRunStates)('stops a run that is %s, once', async (state) => {
-    openPage(`/?mock-run-state=${state}`)
+    openPage(`/?mock-run-status=${state}`)
 
     expect((await cancel(runIds.mentorMain3)).status).toBe(HttpStatus.Accepted)
 
@@ -114,7 +117,7 @@ describe('the run of the chat', () => {
       run_id: string
     }>
 
-    expect(body).toEqual({ run_id: mockRunId })
+    expect(body).toEqual({ run_id: startedRunId })
   })
 })
 
@@ -127,4 +130,28 @@ describe('errors', () => {
       expect(await fetchApi(path, { method })).toMatchObject({ status, body: { code } })
     },
   )
+})
+
+describe('POST /runs/{run_id}/retry', () => {
+  itRejectsRequests(refusedRetryCases)
+
+  it('starts a run that resolves the settings saved since the run it retries', async () => {
+    openPage('/?mock-run-status=done')
+    changeProject(projectIds.mentor, ({ run_config: runConfig }) => ({
+      run_config: { ...runConfig, max_cost_usd: 9 },
+    }))
+    const [step] = stepsOfRun(runIds.mentorMain2)
+
+    const { status, body } = (await fetchApi(
+      apiEndpoints.runRetry.path({ runId: runIds.mentorMain2 }),
+      {
+        method: 'POST',
+        body: JSON.stringify({ from_step_id: step?.id }),
+      },
+    )) as ApiAnswer<Run>
+
+    expect(status).toBe(HttpStatus.Created)
+    expect(body).toMatchObject({ retry_of_run_id: runIds.mentorMain2, status: 'queued' })
+    expect(body.run_config.max_cost_usd).toBe(9)
+  })
 })

@@ -55,6 +55,16 @@ export const messageRejectedCases: RejectedRequestCase[] = [
     answer: { errors: [{ field: 'content', message: 'Enter a message.' }] },
   })),
   {
+    name: 'answers 422 for run settings with a field of the wrong type',
+    method: 'POST',
+    path: messagesPath,
+    body: '{"content": "Hi", "run_config": {"max_steps": "five"}}',
+    status: HttpStatus.UnprocessableContent,
+    answer: {
+      errors: [{ field: 'run_config.max_steps', message: 'Send a value of type integer or null.' }],
+    },
+  },
+  {
     name: 'answers 500 in the error scenario of sending a message',
     method: 'POST',
     path: messagesPath,

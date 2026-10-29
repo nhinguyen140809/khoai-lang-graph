@@ -1,10 +1,10 @@
 import type { Thread } from '@/modules/thread/entities'
 
 import { projectIds, runIds, threadIds, userId } from '../shared/db'
-import type { MockRunState } from '../shared/scenario'
+import type { MockRunStatus } from '../shared/scenario'
 
 // Mock threads. Every project has one thread; the thread of the mentor platform holds the run of
-// the API examples, so its stage and its unfinished run follow the `mock-run-state` scenario.
+// the API examples, so its stage and its unfinished run follow the `mock-run-status` scenario.
 
 function thread(fields: Partial<Thread> & Pick<Thread, 'id' | 'project_id'>): Thread {
   return {
@@ -38,17 +38,17 @@ const mentorMainStages = {
   failed: { current_stage: 'analysis', active_run_id: null, active_run_status: null },
   done: { current_stage: 'done', active_run_id: null, active_run_status: null },
 } as const satisfies Record<
-  MockRunState,
+  MockRunStatus,
   Pick<Thread, 'current_stage' | 'active_run_id' | 'active_run_status'>
 >
 
 /** Every thread of the mock data, newest message first. */
-export function threadFixtures(state: MockRunState): Thread[] {
+export function threadFixtures(scenario: MockRunStatus): Thread[] {
   return [
     thread({
       id: threadIds.mentorMain,
       project_id: projectIds.mentor,
-      ...mentorMainStages[state],
+      ...mentorMainStages[scenario],
       last_message_at: '2026-10-06T08:41:12Z',
       created_at: '2026-10-02T08:09:30Z',
       updated_at: '2026-10-06T08:41:12Z',

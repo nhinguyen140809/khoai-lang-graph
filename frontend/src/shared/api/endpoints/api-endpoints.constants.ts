@@ -26,6 +26,10 @@ export const apiEndpoints = {
 
   run: apiEndpoint('/runs/:runId'),
   runSteps: apiEndpoint('/runs/:runId/steps'),
+  runState: apiEndpoint('/runs/:runId/state'),
+  runStepState: apiEndpoint('/runs/:runId/steps/:stepId/state'),
+  runDirectives: apiEndpoint('/runs/:runId/directives'),
+  runRetry: apiEndpoint('/runs/:runId/retry'),
   runCancel: apiEndpoint('/runs/:runId/cancel'),
   runStream: apiEndpoint('/runs/:runId/stream'),
 

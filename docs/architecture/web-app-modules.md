@@ -43,12 +43,13 @@ src/
 │   │   ├── entities/
 │   │   │   ├── @x/             # the files for the entities of other modules: project.ts, thread.ts
 │   │   │   ├── components/     # RunStatusBadge
-│   │   │   ├── constants/
-│   │   │   ├── hooks/          # useRunStream.ts
-│   │   │   ├── types/
-│   │   │   ├── utils/
-│   │   │   ├── run-events.reducer.ts
-│   │   │   ├── runs.api.ts
+│   │   │   ├── config/         # the settings of a run: types, the fields of the run settings, hooks/
+│   │   │   ├── directives/     # api, keys, types, hooks/
+│   │   │   ├── events/         # the event stream of a run: api, reducer, types, hooks/
+│   │   │   ├── runs/           # Run and RunUsage: api, keys, types, polling, hooks/
+│   │   │   ├── state/          # the workflow state of a run: api, keys, types, hooks/
+│   │   │   ├── status/         # the run statuses: types, labels, looks
+│   │   │   ├── steps/          # RunStep, grouping and progress: api, keys, types, hooks/
 │   │   │   └── index.ts
 │   │   └── features/           # start/
 │   ├── thread/
@@ -82,7 +83,7 @@ Dividing by module first keeps a subject in one folder. In exchange, the modules
 | Features | One slice for each action of the user that changes something: send a message, stop a run, rename a project | The entities of its module and of the modules under it, and shared code |
 | Widgets | One slice for each block of the screens that puts objects next to actions, or several actions together | The features and the entities of its module and of the modules under it, and shared code |
 
-- An **entity** holds what several slices need to read its objects: the schema and the types of the responses, the functions that call the endpoints, the query keys, the query hooks, the pure helpers, and the small components that show an object, such as the badge of a run status. It holds the functions of every endpoint of its objects, the ones that change them too, so that all their query keys sit in one place and a feature invalidates exactly the queries it changes.
+- An **entity** holds what several slices need to read its objects: the schema and the types of the responses, the functions that call the endpoints, the query keys, the query hooks, the pure helpers, the fields that edit a value object which several forms embed, with the schema of those fields and without their submit (the run settings), and the small components that show an object, such as the badge of a run status. It holds the functions of every endpoint of its objects, the ones that change them too, so that all their query keys sit in one place and a feature invalidates exactly the queries it changes.
 - A **feature** holds one action of the user: the mutation hook, the form or the dialog, and the rules of the action, such as which run Stop stops. Such a rule stays in the feature even when it is core to the product: what decides is object or action, not how central the code is.
 - A **widget** holds a block that puts objects next to actions, such as the status of a project with Stop. It adds no rule of its own: reading stays in the entities and the actions in the features. The widget places them, connects them, for example by giving the run on screen to both, and keeps only the state of the block, such as the tab that is open.
 - A block that is not a widget goes where its content is: a block of one object to its entity, a block of one action to its feature, a block with neither object nor action to shared code. An entity never shows an action, since a lower layer does not import a higher one.
@@ -100,7 +101,7 @@ A slice holds its components in `components/`, its hooks in `hooks/`, and its ot
 | `keys` | `<resource>.keys.ts` | The query keys | - | - |
 | `queries` | `<resource>.queries.ts` | A query that several places read or write | - | - |
 | `types` | `<subject>.types.ts` | The schemas and the types of the responses, and the lists of values that a type is made from | The types of the action | The types of the block |
-| `schema` | `<form>.schema.ts` | - | The schema of a form | - |
+| `schema` | `<form>.schema.ts` | The schema of the fields of a value object that several forms embed (`run-defaults.schema.ts`) | The schema of a form | - |
 | `store` | `<topic>.store.ts` | - | The state of a dialog or of a prompt | The state of the block |
 | `reducer` | `<topic>.reducer.ts` | The events of a stream | A state that events change | A state that events change |
 | `constants` | `<topic>.constants.ts` | The labels and the looks of the values, and the defaults | The words of the action | The words of the block |
@@ -109,6 +110,10 @@ A slice holds its components in `components/`, its hooks in `hooks/`, and its ot
 | `@x/` | `<module>.ts` | The files for the entities of other modules | - | - |
 
 Outside the modules, shared code holds `types`, `store`, `reducer`, `config`, `constants` and `utils` files; `src/mocks/` holds `types`, `store`, `constants`, `utils`, `handlers`, `fixtures`, `lookup`, `changes`, `problems` and `setup` files, its `fixtures` the records of the mock data, its `constants` their fixed ids and counts, and its `store`, `lookup`, `changes` and `problems` files the state of a resource, how it is read, how it is changed and how a request is refused ([frontend README: Files of a mock folder](../../frontend/README.md#files-of-a-mock-folder)); `src/test/` holds `utils` and `setup` files; and `tests/` holds the `spec`, `data` and `utils` files of Playwright. A config made of React elements is a `<subject>.config.tsx`.
+
+The entities of a module with many topics split by topic instead of by kind: the root of `modules/run/entities` holds a folder for each topic, `components/`, `@x/` and `index.ts`, and a topic holds its files flat, `<subject>.<kind>.ts`, with its `hooks/` and `__tests__/`. The topics are listed in `topicEntityModules` of the lint code, each with the topics that it reads, and a new topic is added there. The topics depend one way, and ESLint reports an import against it: `status` and `config` at the bottom, `runs` above them, `steps`, `state` and `directives` above `runs`, and `events`, which imports no other topic. No topic imports `components/`.
+
+The entities of `workflow` split by topic in the same way: `definition` (the graph, the vocabulary, the export templates, the link types, and the one query of the definition that the other topics select from), `stages`, `checkpoints` and `issues` (what is read from the definition, each reading `definition`), `artifact-kinds` (the kinds and their content schemas, reading `definition`), `content-fields` (the fields and values of the content of an artifact or an item, reading `artifact-kinds`, and `issues` reads it for the values of an item) and `run-parameters` (the fields of the run settings, reading `definition`, with their own types apart from the content fields).
 
 ESLint checks the kinds of each place (`fileKinds` of `frontend/lint/lib/file-names/file-kinds.constants.js`), the layers inside a module, and the folders at the root of a slice: one for each kind that the layer holds, `components/`, `hooks/`, `__tests__/`, and `@x/` in the entities. It also checks that a `constants` file exports no type and declares no function, and that a `types` file imports no `constants` file.
 
@@ -120,7 +125,7 @@ ESLint checks the kinds of each place (`fileKinds` of `frontend/lint/lib/file-na
 
 `usage`, `design-system`
 
-A module imports only the modules under it in its line: `project` reads `thread` and `run`; `activity` sits beside `project`, so it may read the same modules, and neither of the two reads the other; `thread` reads `run`, and `user` reads `auth`. `usage` and `design-system` read no other module. The order is `moduleImports` of `frontend/lint/lib/modules/module-imports.constants.js`, which lists the modules of today and the ones planned next; a new module gets its place there before its first code. ESLint does not load when the lists form a cycle, or name a module that has no list.
+A module imports only the modules under it in its line: `project` reads `thread` and `run`; `activity` sits beside `project`, so it may read the same modules, and neither of the two reads the other; `thread` reads `run`, and `user` reads `auth`, and `run` for the RunDefaults of UserSettings. `usage` and `design-system` read no other module. The order is `moduleImports` of `frontend/lint/lib/modules/module-imports.constants.js`, which lists the modules of today and the ones planned next; a new module gets its place there before its first code. ESLint does not load when the lists form a cycle, or name a module that has no list.
 
 `itemRefSchema`, the reference to an item that a step produced or a message names, sits in `artifact`; the entities of `run` read it through `artifact/entities/@x/run`. The entities of `artifact` read the artifact kinds and their content schemas through `workflow/entities/@x/artifact`.
 
@@ -159,16 +164,18 @@ modules/
 
 ```ts
 // modules/run/entities/@x/project.ts
-export { runDefaultsSchema } from '../types/run-config.types'
-export { type RunStatus, runStatuses } from '../types/run-status.types'
+export { type RunDefaults, runDefaultsSchema } from '../config/run-config.types'
+export { type RunStatus, runStatuses } from '../status/run-status.types'
 ```
 
 The links between entities today:
 
 | Entity that uses | Entity used | What it takes |
 |---|---|---|
-| `project` | `run` | The run statuses |
+| `project` | `run` | The run statuses; RunDefaults, the run settings of a project |
 | `thread` | `run` | The unfinished run statuses |
+| `run` | `workflow` | The fields of the run parameters with their checks and values; the checkpoints that a run may pause at |
+| `run` | `artifact` | `itemRefSchema`; `subjectKeyOfMessage`, the item that an interview message is about |
 
 A unit test may also import another slice of its layer, from its index, to show slices together, such as the project table with the dialogs that its rows open.
 
@@ -178,13 +185,13 @@ A unit test may also import another slice of its layer, from its index, to show 
 |---|---|---|---|---|
 | `workflow` | Workflow definition (graph, agent roles, stages in their order, checkpoints and their options); artifact kinds and content schemas | - | - | The artifact kinds and content schemas; the definition next |
 | `artifact` | Artifact, ArtifactItem and their revisions, and Export as its resource `exports` | `edit` | `panel` | The entities, and the placeholder of `panel`; the rest with the documents |
-| `run` | Run and RunStep, each with its usage; RunEvent, Directive, the event stream of a run; the workflow state of a run; the run statuses and their badge | `stop`, `start` (the first chat); `retry` later | `graph`, the workflow graph of a run, later | The run statuses, the stream of a run and `start` today |
+| `run` | Run and RunStep, each with its usage (`RunUsage`); RunEvent, Directive, the event stream of a run; the workflow state of a run, after a step or now; the steps grouped by subject and the progress of the nodes; the fields of the run settings and their schema, which the forms of the features embed; the run statuses and their badge. The entities split by topic: `runs`, `steps`, `state`, `directives`, `events`, `config`, `status`, and a topic imports only the topics under it | `stop`, `start` (the first chat); `retry` later | `graph`, the workflow graph of a run, later | The run statuses, the stream of a run and `start` today |
 | `review` | Interrupt, HumanDecision | `answer` | `panel` | With the activity |
 | `thread` | Thread, Message | `send-message` | - | The threads today; `send-message` with the activity |
-| `project` | Project, the run that its status shows, the streams of its runs | `create`, `rename`, `archive` (with restore and Undo), `delete` | `list`, `menu`, `commands`, `dialogs`, `status` | Today, except `status` and the runs in the entities, which come with the threads |
+| `project` | Project, the run that its status shows, the streams of its runs | `create`, `rename`, `archive` (with restore and Undo), `delete`; `run-settings` later | `list`, `menu`, `commands`, `dialogs`, `status` | Today, except `status` and the runs in the entities, which come with the threads |
 | `activity` | ActivityEvent later, the record of who did what in a project | - | `steps`, the stages of the workflow as a tree in the side panel of Activity, with the item of the feature on the activity bar; `chat`, the chat in its tab | The chat of the first version today; the rest with the activity |
 | `auth` | The calls that start a session, create an account and end a session; the page that opens after signing in | `login`, `register`, `logout` | - | Today |
-| `user` | User, UserSettings | - | `menu`, `settings` | User, `menu` and `settings` today |
+| `user` | User, UserSettings | `run-settings` later | `menu`, `settings` | User, `menu` and `settings` today |
 | `usage` | Usage of the user in a calendar month, with the budget of the month | - | - | Next |
 | `trace-link` | TraceLink, the traces of items, the traceability views | - | `graph`, the nodes and edges of a trace, for drawing it | Later |
 | `llm-model` | ModelCatalogEntry, ModelSettings | - | - | Later |

@@ -42,7 +42,7 @@ export const itemEditRejectedCases: RejectedRequestCase[] = [
   },
   {
     name: 'refuses a change while a run is running',
-    page: '/?mock-run-state=running',
+    page: '/?mock-run-status=running',
     method: 'PATCH',
     path: itemPath,
     body: { content: { title: 'x' } },
@@ -123,7 +123,7 @@ export const itemEditRejectedCases: RejectedRequestCase[] = [
   },
   {
     name: 'refuses an item made while a run is running',
-    page: '/?mock-run-state=running',
+    page: '/?mock-run-status=running',
     method: 'POST',
     path: specificationItems,
     body: { kind: 'spec_requirement', content: requirementContent },
