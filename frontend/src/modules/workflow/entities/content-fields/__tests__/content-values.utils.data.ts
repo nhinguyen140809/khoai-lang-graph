@@ -55,6 +55,12 @@ export const validateCases = [
     problems: { story_points: 'Enter a number.' },
   },
   {
+    name: 'a fraction where a whole number is asked',
+    kind: 'backlog_item',
+    content: { ...validStory, story_points: 2.5 },
+    problems: { story_points: 'Enter a whole number.' },
+  },
+  {
     name: 'a field that the user cannot edit',
     kind: 'persona',
     content: { interview_status: 'bogus' },

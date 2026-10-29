@@ -9,6 +9,7 @@ export const fieldWidgets = [
   'textarea',
   'select',
   'number',
+  'boolean',
   'list',
   'tags',
   'object-list',
@@ -44,6 +45,10 @@ export interface ContentField {
   minItems: number | null
   minimum: number | null
   maximum: number | null
+  /** The type list of the property contains `integer`: a number with no fraction. */
+  integer: boolean
+  /** The `default` of the property; null without one. */
+  defaultValue: unknown
   /** The fields of one entry of an `object-list`. */
   entryFields: ContentField[]
 }

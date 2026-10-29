@@ -26,6 +26,7 @@ const plainList: WidgetValueRule = { ...plainValue, hasListValue: true }
 function numberProblem(field: ContentField, value: unknown): string | null {
   const number = typeof value === 'number' ? value : Number(value)
   if (Number.isNaN(number)) return 'Enter a number.'
+  if (field.integer && !Number.isInteger(number)) return 'Enter a whole number.'
   if (field.minimum !== null && number < field.minimum)
     return `Enter ${String(field.minimum)} or more.`
   if (field.maximum !== null && number > field.maximum)
@@ -55,6 +56,7 @@ export const widgetValueRules = {
   textarea: plainValue,
   select: { ...plainValue, valueProblem: selectProblem },
   number: { ...plainValue, valueProblem: numberProblem, toStoredValue: Number },
+  boolean: { ...plainValue, toStoredValue: (value) => value === true || value === 'true' },
   list: plainList,
   tags: plainList,
   'object-list': { ...plainList, valueProblem: entriesProblem },

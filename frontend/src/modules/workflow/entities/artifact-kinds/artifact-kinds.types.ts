@@ -23,7 +23,7 @@ import { z } from 'zod'
 const jsonTypeSchema = z.enum(['string', 'number', 'integer', 'boolean', 'array', 'object', 'null'])
 
 /** One field of a content schema, with the keywords that the app reads. */
-const schemaPropertySchema = z.looseObject({
+export const schemaPropertySchema = z.looseObject({
   type: z.union([jsonTypeSchema, z.array(jsonTypeSchema)]).optional(),
   /** The label of the field. */
   title: z.string().optional(),
@@ -45,6 +45,7 @@ const schemaPropertySchema = z.looseObject({
   minimum: z.number().optional(),
   maximum: z.number().optional(),
   readOnly: z.boolean().optional(),
+  default: z.unknown().optional(),
   'x-ui-widget': z.string().optional(),
   'x-value-from': z.string().optional(),
 })

@@ -29,6 +29,7 @@ function fieldWidgetOf(property: SchemaProperty): FieldWidget {
   if (property.enum !== undefined) return 'select'
   if (types.includes('integer') || types.includes('number')) return 'number'
   if (types.includes('array')) return 'list'
+  if (types.includes('boolean')) return 'boolean'
   return 'text'
 }
 
@@ -49,6 +50,8 @@ function fieldOf(name: string, property: SchemaProperty, isRequired: boolean): C
     minItems: property.minItems ?? null,
     minimum: property.minimum ?? null,
     maximum: property.maximum ?? null,
+    integer: typesOf(property).includes('integer'),
+    defaultValue: property.default ?? null,
     entryFields:
       widget === 'object-list'
         ? Object.entries(entryProperties).map(([entryName, entry]) =>
