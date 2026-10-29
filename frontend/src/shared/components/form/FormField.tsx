@@ -9,7 +9,13 @@ import {
   type FieldValues,
 } from 'react-hook-form'
 
-import { Field, FieldDescription, FieldError, FieldLabel } from '@/shared/components/ui/field'
+import {
+  Field,
+  FieldContent,
+  FieldDescription,
+  FieldError,
+  FieldLabel,
+} from '@/shared/components/ui/field'
 
 /** The props that tie a control to the label and the error of its field. */
 export interface FieldControlProps {
@@ -41,8 +47,8 @@ export interface FormFieldProps<
 }
 
 /**
- * One field of a form of react-hook-form: its label, its control, its description, its error and
- * its action.
+ * One field of a form of react-hook-form: its label, its description under the label, its control,
+ * its error and its action.
  * The control gets the id of the label and `aria-invalid`, and the field `data-invalid`, from the
  * state of the field, so that no form repeats them.
  */
@@ -66,9 +72,15 @@ export function FormField<
       name={name}
       render={({ field, fieldState }) => (
         <Field data-invalid={fieldState.invalid}>
-          <FieldLabel htmlFor={id}>{label}</FieldLabel>
+          {description === undefined ? (
+            <FieldLabel htmlFor={id}>{label}</FieldLabel>
+          ) : (
+            <FieldContent>
+              <FieldLabel htmlFor={id}>{label}</FieldLabel>
+              <FieldDescription>{description}</FieldDescription>
+            </FieldContent>
+          )}
           {children(field, { id, 'aria-invalid': fieldState.invalid })}
-          {description !== undefined && <FieldDescription>{description}</FieldDescription>}
           {action === undefined ? (
             <FieldError errors={[fieldState.error]} />
           ) : (
