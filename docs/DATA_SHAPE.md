@@ -696,7 +696,7 @@ Rules between the two levels:
 
 - **Items are stored once.** An artifact does not copy its items into its `content`. The items of an artifact are the items whose `artifact_id` is the artifact; they form a tree through `parent_item_id`, see [sections and nesting](#sections-and-nesting).
 - **Artifact version.** The revision of an artifact stores the list of its items with the version of each, so any earlier state of the whole artifact can be shown again.
-- **Review applies to the artifact.** A checkpoint asks the user to review an artifact. When the chosen option approves, the artifact and every item that is still `draft` get `review_status` `approved`. An item can also be rejected or edited on its own.
+- **Review applies to the artifact.** A checkpoint asks the user to review an artifact. When the chosen option approves, the artifact and every item that is still `draft` get `review_status` `approved`, each as a new version with `change_reason` `reviewed`. An item can also be rejected or edited on its own.
 - **Rework keeps the artifact and replaces items.** A rework round works inside the existing artifact; it does not create a second artifact of the same kind. An agent that changes what an item says, in a rework round, does not edit the item: it creates a new item, with a new key and a `supersedes` link to the old one, and the old item becomes `superseded`. A split creates several new items and a merge one, each linked with `supersedes` to every item it replaces. The old items stay, with their links, so the history of the requirement can be followed. The lifecycle fields below are the exception.
 - **The user edits in place.** A user who edits an item, at a checkpoint or outside a run, changes the item itself: it gets a new version with the same key.
 - **Trace links connect items only.** An artifact is never the source or the target of a trace link.
@@ -1009,7 +1009,7 @@ Deck: `status`, and `issues` with `category` ("specification") and `severity` ("
 
 One row per version, on each level. They back history, diff and "restore this version".
 
-Revisions are never changed or deleted, not even when the item, the artifact or the project is deleted, because the saved workflow state of every step references them, see [workflow state to entities](#workflow-state-to-entities). Deleting an item or an artifact writes a revision with `change_reason` `deleted`, whose snapshot marks it deleted; restoring it writes one with `restored`.
+Revisions are never changed or deleted, not even when the item, the artifact or the project is deleted, because the saved workflow state of every step references them, see [workflow state to entities](#workflow-state-to-entities). Deleting an item or an artifact writes a revision with `change_reason` `deleted`, whose snapshot marks it deleted; restoring it writes one with `restored`. A decision at a checkpoint whose option approves writes one with `reviewed`, and its `human_decision_id`, on the artifact under review and on each of its items whose `review_status` it changes.
 
 ArtifactRevision:
 
@@ -1020,7 +1020,7 @@ ArtifactRevision:
 | `snapshot` | object | Title, summary, content and review status at this version, and whether the artifact is deleted |
 | `item_versions` | ItemRef[] | The items of the artifact at this version, in order, each with its version |
 | `changed_by` | Origin | |
-| `change_reason` | enum | `generated`, `user_edit`, `rework`, `restored`, `deleted` |
+| `change_reason` | enum | `generated`, `user_edit`, `rework`, `reviewed`, `restored`, `deleted` |
 | `human_decision_id` | ref\<HumanDecision\>? | Set when the change came from a checkpoint |
 
 ItemRevision:
@@ -1031,7 +1031,7 @@ ItemRevision:
 | `version` | int | |
 | `snapshot` | object | Content, position, parent item and review status at this version, and whether the item is deleted |
 | `changed_by` | Origin | |
-| `change_reason` | enum | `generated`, `user_edit`, `rework`, `restored`, `deleted` |
+| `change_reason` | enum | `generated`, `user_edit`, `rework`, `reviewed`, `restored`, `deleted` |
 | `human_decision_id` | ref\<HumanDecision\>? | Set when the change came from a checkpoint |
 
 ### ItemEmbedding (Later)

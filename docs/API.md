@@ -558,7 +558,7 @@ Resume rules:
 - `feedback` is required when the chosen option requires it.
 - `answers` has one entry per answered question, by question key, in the shape of `Answer` in the [data shape](DATA_SHAPE.md#humandecision-mvp). Every required question is answered, every choice is a choice of its question, and `text` is present when a chosen choice requires it; otherwise `422 validation_failed` with the question key in the field path.
 - `modified_items` is accepted only when the interrupt allows edits.
-- When the chosen option approves, the artifacts under review and their items that are still `draft` become `approved`.
+- When the chosen option approves, the artifacts under review and their items that are still `draft` become `approved`, each as a new version with `change_reason` `reviewed`.
 - The server stores a human decision, marks the interrupt resolved, and continues the run. The response is `202` with the run.
 
 An interrupt can ask several questions of different types and is answered at once. The checkpoints of definition version 1 ask none; the example comes from a checkpoint that clarifies the intent of a project, see [Runtime: open points](architecture/runtime.md#8-open-points):

@@ -130,6 +130,7 @@ Enum change_reason {
   generated
   user_edit
   rework
+  reviewed
   restored
   deleted
 }
