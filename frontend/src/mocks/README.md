@@ -57,6 +57,7 @@ A parameter in the page address changes what a group of endpoints answers. Param
 | `mock-me`               | `empty` (404), `error`, `loading`                                                                                                                           | `GET /me`                                                                                                                     |
 | `mock-login`            | `error` (401, wrong email or password), `loading`                                                                                                           | `POST /auth/login`                                                                                                            |
 | `mock-register`         | `error` (422, the email has an account), `loading`                                                                                                          | `POST /auth/register`                                                                                                         |
+| `mock-run-parameters`   | `all-types` (the run parameters of the docs, and a flag with a default, a flag without one and a choice)                                                    | `GET /workflow/definition`, the latest version                                                                                |
 | `mock-create-project`   | `error`, `invalid` (422, the language of the documents is not taken), `loading`                                                                             | `POST /projects`                                                                                                              |
 | `mock-update-project`   | `error`, `loading`                                                                                                                                          | `PATCH /projects/{project_id}`, which renames a project, archives it and restores it                                          |
 | `mock-delete-project`   | `error`, `loading`                                                                                                                                          | `DELETE /projects/{project_id}`, which answers 409 for a project with a run that is not finished, such as the mentor platform |
@@ -97,44 +98,45 @@ A parameter in the page address changes what a group of endpoints answers. Param
 
 ## Project list
 
-| State                                                                       | Address                                                                                                                 |
-| --------------------------------------------------------------------------- | ----------------------------------------------------------------------------------------------------------------------- |
-| Projects                                                                    | http://localhost:3000/projects                                                                                          |
-| Loading                                                                     | http://localhost:3000/projects?mock-projects=loading                                                                    |
-| Error                                                                       | http://localhost:3000/projects?mock-projects=error                                                                      |
-| Empty                                                                       | http://localhost:3000/projects?mock-projects=empty                                                                      |
-| The mentor platform running                                                 | http://localhost:3000/projects?mock-run-status=running                                                                  |
-| No unfinished run in the mentor platform                                    | http://localhost:3000/projects?mock-run-status=done                                                                     |
-| A long list of projects, 50 at a time with Show more projects               | http://localhost:3000/projects?mock-projects=many                                                                       |
-| Loading more projects                                                       | Open http://localhost:3000/projects?mock-projects=more-loading and press Show more projects                             |
-| Archived projects                                                           | Open http://localhost:3000/projects and press Archived                                                                  |
-| No archived project                                                         | Open http://localhost:3000/projects?mock-projects=empty and press Archived                                              |
-| Filters of the list                                                         | Open http://localhost:3000/projects and press Filter                                                                    |
-| The projects that wait for the user                                         | In the filters, choose Waiting for you and press Apply                                                                  |
-| No project matches the filters                                              | In the filters, choose In the last day and press Apply: the projects of the mock data were last active before that      |
-| Filters given in the address                                                | http://localhost:3000/projects?run-status=failed&run-status=none                                                        |
-| Create project dialog                                                       | Open http://localhost:3000/projects, type an idea in the prompt and press Create project                                |
-| An idea left empty                                                          | In the Create project dialog, empty the idea and press Create project                                                   |
-| Creating the project                                                        | Open the Create project dialog from http://localhost:3000/projects?mock-create-project=loading and press Create project |
-| The project fails to be created                                             | The same from http://localhost:3000/projects?mock-create-project=error                                                  |
-| A field that the API does not take                                          | The same from http://localhost:3000/projects?mock-create-project=invalid                                                |
-| The project is created, but its idea is not sent: its activity with a toast | The same from http://localhost:3000/projects?mock-send-message=error                                                    |
-| Prompt with the focus                                                       | Open the command palette in a project and choose Create project                                                         |
-| A project without a name                                                    | In the Create project dialog, leave the name empty and create the project                                               |
-| Menu of a project                                                           | Open http://localhost:3000/projects and press the `...` button of a row                                                 |
-| Rename project dialog                                                       | In the menu of a project, choose Rename                                                                                 |
-| A project renamed                                                           | In the Rename project dialog, type a new name and press Rename                                                          |
-| Renaming the project                                                        | The same from http://localhost:3000/projects?mock-update-project=loading                                                |
-| The project fails to be renamed                                             | The same from http://localhost:3000/projects?mock-update-project=error                                                  |
-| A project archived, with Undo in the toast                                  | In the menu of a project, choose Archive                                                                                |
-| The project fails to be archived                                            | The same from http://localhost:3000/projects?mock-update-project=error                                                  |
-| Menu of an archived project                                                 | Press Archived, then the `...` button of a row                                                                          |
-| A project restored                                                          | In the menu of an archived project, choose Restore                                                                      |
-| The project fails to be restored                                            | The same from http://localhost:3000/projects?mock-update-project=error                                                  |
-| Delete project dialog                                                       | In the menu of a project whose runs ended, such as Campus food ordering, choose Delete                                  |
-| A project with a run that is not finished, which is not deleted             | In the menu of the mentor platform, choose Delete                                                                       |
-| Deleting the project                                                        | Open the Delete project dialog from http://localhost:3000/projects?mock-delete-project=loading and press Delete project |
-| The project fails to be deleted                                             | The same from http://localhost:3000/projects?mock-delete-project=error                                                  |
+| State                                                                       | Address                                                                                                                   |
+| --------------------------------------------------------------------------- | ------------------------------------------------------------------------------------------------------------------------- |
+| Projects                                                                    | http://localhost:3000/projects                                                                                            |
+| Loading                                                                     | http://localhost:3000/projects?mock-projects=loading                                                                      |
+| Error                                                                       | http://localhost:3000/projects?mock-projects=error                                                                        |
+| Empty                                                                       | http://localhost:3000/projects?mock-projects=empty                                                                        |
+| The mentor platform running                                                 | http://localhost:3000/projects?mock-run-status=running                                                                    |
+| No unfinished run in the mentor platform                                    | http://localhost:3000/projects?mock-run-status=done                                                                       |
+| A long list of projects, 50 at a time with Show more projects               | http://localhost:3000/projects?mock-projects=many                                                                         |
+| Loading more projects                                                       | Open http://localhost:3000/projects?mock-projects=more-loading and press Show more projects                               |
+| Archived projects                                                           | Open http://localhost:3000/projects and press Archived                                                                    |
+| No archived project                                                         | Open http://localhost:3000/projects?mock-projects=empty and press Archived                                                |
+| Filters of the list                                                         | Open http://localhost:3000/projects and press Filter                                                                      |
+| The projects that wait for the user                                         | In the filters, choose Waiting for you and press Apply                                                                    |
+| No project matches the filters                                              | In the filters, choose In the last day and press Apply: the projects of the mock data were last active before that        |
+| Filters given in the address                                                | http://localhost:3000/projects?run-status=failed&run-status=none                                                          |
+| Create project dialog                                                       | Open http://localhost:3000/projects, type an idea in the prompt and press Create project                                  |
+| The run settings with every kind of parameter                               | Open the Create project dialog from http://localhost:3000/projects?mock-run-parameters=all-types and press Agent settings |
+| An idea left empty                                                          | In the Create project dialog, empty the idea and press Create project                                                     |
+| Creating the project                                                        | Open the Create project dialog from http://localhost:3000/projects?mock-create-project=loading and press Create project   |
+| The project fails to be created                                             | The same from http://localhost:3000/projects?mock-create-project=error                                                    |
+| A field that the API does not take                                          | The same from http://localhost:3000/projects?mock-create-project=invalid                                                  |
+| The project is created, but its idea is not sent: its activity with a toast | The same from http://localhost:3000/projects?mock-send-message=error                                                      |
+| Prompt with the focus                                                       | Open the command palette in a project and choose Create project                                                           |
+| A project without a name                                                    | In the Create project dialog, leave the name empty and create the project                                                 |
+| Menu of a project                                                           | Open http://localhost:3000/projects and press the `...` button of a row                                                   |
+| Rename project dialog                                                       | In the menu of a project, choose Rename                                                                                   |
+| A project renamed                                                           | In the Rename project dialog, type a new name and press Rename                                                            |
+| Renaming the project                                                        | The same from http://localhost:3000/projects?mock-update-project=loading                                                  |
+| The project fails to be renamed                                             | The same from http://localhost:3000/projects?mock-update-project=error                                                    |
+| A project archived, with Undo in the toast                                  | In the menu of a project, choose Archive                                                                                  |
+| The project fails to be archived                                            | The same from http://localhost:3000/projects?mock-update-project=error                                                    |
+| Menu of an archived project                                                 | Press Archived, then the `...` button of a row                                                                            |
+| A project restored                                                          | In the menu of an archived project, choose Restore                                                                        |
+| The project fails to be restored                                            | The same from http://localhost:3000/projects?mock-update-project=error                                                    |
+| Delete project dialog                                                       | In the menu of a project whose runs ended, such as Campus food ordering, choose Delete                                    |
+| A project with a run that is not finished, which is not deleted             | In the menu of the mentor platform, choose Delete                                                                         |
+| Deleting the project                                                        | Open the Delete project dialog from http://localhost:3000/projects?mock-delete-project=loading and press Delete project   |
+| The project fails to be deleted                                             | The same from http://localhost:3000/projects?mock-delete-project=error                                                    |
 
 ## Other screens
 
