@@ -6,7 +6,7 @@ import type { Thread } from '@/modules/thread/entities'
 import { apiEndpoints } from '@/shared/api/endpoints'
 import { HttpHeader, HttpStatus } from '@/shared/api/http'
 import type { ApiAnswer } from '@/test/msw'
-import { fetchApi, postApi } from '@/test/msw'
+import { fetchApi, getApiItems, postApi } from '@/test/msw'
 import { itRejectsRequests } from '@/test/suites'
 
 import { runIds, threadIds } from '../../shared/db'
@@ -106,10 +106,8 @@ describe('POST /threads/{thread_id}/messages', () => {
       status: first.status,
       body: first.body,
     })
-    const runs = (await fetchApi(apiEndpoints.threadRuns.path({ threadId }))).body as {
-      items: Run[]
-    }
-    expect(runs.items).toHaveLength(1)
+    const runs = await getApiItems<Run>(apiEndpoints.threadRuns.path({ threadId }))
+    expect(runs).toHaveLength(1)
   })
 
   it('answers 409 to a message sent again with its key and other words', async () => {

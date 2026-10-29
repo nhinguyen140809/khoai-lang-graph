@@ -5,7 +5,7 @@ import { apiEndpoints } from '@/shared/api/endpoints'
 import { HttpStatus } from '@/shared/api/http'
 import type { ListPage } from '@/shared/api/request'
 import type { ApiAnswer } from '@/test/msw'
-import { fetchApi, openPage } from '@/test/msw'
+import { fetchApi, getApi, getApiItems, openPage } from '@/test/msw'
 import { itRejectsRequests } from '@/test/suites'
 
 import { changeProject } from '../../../projects/projects.lookup'
@@ -27,11 +27,9 @@ describe('GET /threads/{thread_id}/runs', () => {
   it.each(runListCases)('lists $name', async ({ address, threadId, runs }) => {
     openPage(address)
 
-    const { body } = (await fetchApi(apiEndpoints.threadRuns.path({ threadId }))) as ApiAnswer<
-      ListPage<Run>
-    >
+    const listed = await getApiItems<Run>(apiEndpoints.threadRuns.path({ threadId }))
 
-    expect(body.items.map(({ number, status }) => ({ number, status }))).toEqual(runs)
+    expect(listed.map(({ number, status }) => ({ number, status }))).toEqual(runs)
   })
 })
 
@@ -58,16 +56,14 @@ describe('GET /runs/{run_id}', () => {
     async ({ state, status, stepCount, finished }) => {
       openPage(`/?mock-run-status=${state}`)
 
-      const { body } = (await fetchApi(
-        apiEndpoints.run.path({ runId: runIds.mentorMain3 }),
-      )) as ApiAnswer<Run>
-      const steps = (await fetchApi(
+      const run = await getApi<Run>(apiEndpoints.run.path({ runId: runIds.mentorMain3 }))
+      const steps = await getApiItems<RunStep>(
         `${apiEndpoints.runSteps.path({ runId: runIds.mentorMain3 })}?limit=200`,
-      )) as ApiAnswer<ListPage<RunStep>>
+      )
 
-      expect(body).toMatchObject({ status, step_count: stepCount })
-      expect(steps.body.items).toHaveLength(stepCount)
-      expect(body.finished_at !== null).toBe(finished)
+      expect(run).toMatchObject({ status, step_count: stepCount })
+      expect(steps).toHaveLength(stepCount)
+      expect(run.finished_at !== null).toBe(finished)
     },
   )
 })
@@ -97,11 +93,9 @@ describe('POST /runs/{run_id}/cancel', () => {
 
     expect((await cancel(runIds.mentorMain3)).status).toBe(HttpStatus.Accepted)
 
-    const { body } = (await fetchApi(
-      apiEndpoints.run.path({ runId: runIds.mentorMain3 }),
-    )) as ApiAnswer<Run>
-    expect(body.status).toBe('cancelled')
-    expect(body.finished_at).not.toBeNull()
+    const run = await getApi<Run>(apiEndpoints.run.path({ runId: runIds.mentorMain3 }))
+    expect(run.status).toBe('cancelled')
+    expect(run.finished_at).not.toBeNull()
     expect(await cancel(runIds.mentorMain3)).toMatchObject({
       status: HttpStatus.Conflict,
       body: { code: 'invalid_state' },
