@@ -122,14 +122,7 @@ describe('the run of the chat', () => {
 })
 
 describe('errors', () => {
-  it.each(runErrorCases)(
-    'answers $status to $request',
-    async ({ address, method, path, status, code }) => {
-      openPage(address)
-
-      expect(await fetchApi(path, { method })).toMatchObject({ status, body: { code } })
-    },
-  )
+  itRejectsRequests(runErrorCases)
 })
 
 describe('POST /runs/{run_id}/retry', () => {
