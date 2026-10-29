@@ -69,6 +69,7 @@ export type {
 export { useIssueKinds } from './issues/hooks/useIssueQueries'
 export type { IssueKind } from './issues/issues.types'
 export { isOpenIssue, issueKinds } from './issues/issues.utils'
+export type { RunParameterField } from './run-parameters/run-parameters.types'
 export { useStageTitle, useVisibleStages } from './stages/hooks/useStageQueries'
 export type { VisibleStage } from './stages/stages.types'
 export { stageTitles, visibleStages, visibleStageTitle } from './stages/stages.utils'
