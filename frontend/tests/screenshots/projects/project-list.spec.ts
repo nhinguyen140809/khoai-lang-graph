@@ -237,13 +237,13 @@ screenshots('Project list', (shot) => {
   })
 
   shot('The mentor platform running', async ({ page, shoot }) => {
-    await page.goto(`${projects}?mock-run-state=running`)
+    await page.goto(`${projects}?mock-run-status=running`)
 
     await shoot({ part: page.getByRole('table') })
   })
 
   shot('No unfinished run in the mentor platform', async ({ page, shoot }) => {
-    await page.goto(`${projects}?mock-run-state=done`)
+    await page.goto(`${projects}?mock-run-status=done`)
 
     await shoot({ part: page.getByRole('table') })
   })

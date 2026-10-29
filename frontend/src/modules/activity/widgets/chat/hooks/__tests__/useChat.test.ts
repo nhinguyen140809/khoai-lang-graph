@@ -1,7 +1,7 @@
 import { act, waitFor } from '@testing-library/react'
 import { describe, expect, it } from 'vitest'
 
-import { mockRunId } from '@/mocks/runs/handlers/runs.handlers'
+import { startedRunId } from '@/mocks/shared/db'
 import { renderHookWithProviders } from '@/test/render'
 
 import { useChat } from '../useChat'
@@ -25,7 +25,7 @@ describe('useChat', () => {
       const result = typeAndSend(draft)
 
       await waitFor(() => {
-        expect(result.current.turns).toEqual([{ id: mockRunId, prompt, runId: mockRunId }])
+        expect(result.current.turns).toEqual([{ id: startedRunId, prompt, runId: startedRunId }])
       })
       expect(result.current.draft).toBe('')
     },

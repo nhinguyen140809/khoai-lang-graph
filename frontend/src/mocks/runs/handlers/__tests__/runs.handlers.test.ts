@@ -7,12 +7,11 @@ import type { ListPage } from '@/shared/api/request'
 import type { ApiAnswer } from '@/test/msw'
 import { fetchApi, openPage } from '@/test/msw'
 
-import { runIds } from '../../../shared/db'
-import { mockRunId } from '../runs.handlers'
+import { runIds, startedRunId } from '../../../shared/db'
 import {
   runErrorCases,
   runListCases,
-  runStateCases,
+  runStatusScenarioCases,
   unfinishedRunStates,
 } from './runs.handlers.data'
 
@@ -50,10 +49,10 @@ describe('GET /runs/{run_id}', () => {
     })
   })
 
-  it.each(runStateCases)(
+  it.each(runStatusScenarioCases)(
     'follows the $state state of the run',
     async ({ state, status, stepCount, finished }) => {
-      openPage(`/?mock-run-state=${state}`)
+      openPage(`/?mock-run-status=${state}`)
 
       const { body } = (await fetchApi(
         apiEndpoints.run.path({ runId: runIds.mentorMain3 }),
@@ -90,7 +89,7 @@ describe('GET /runs/{run_id}/steps', () => {
 
 describe('POST /runs/{run_id}/cancel', () => {
   it.each(unfinishedRunStates)('stops a run that is %s, once', async (state) => {
-    openPage(`/?mock-run-state=${state}`)
+    openPage(`/?mock-run-status=${state}`)
 
     expect((await cancel(runIds.mentorMain3)).status).toBe(HttpStatus.Accepted)
 
@@ -114,7 +113,7 @@ describe('the run of the chat', () => {
       run_id: string
     }>
 
-    expect(body).toEqual({ run_id: mockRunId })
+    expect(body).toEqual({ run_id: startedRunId })
   })
 })
 

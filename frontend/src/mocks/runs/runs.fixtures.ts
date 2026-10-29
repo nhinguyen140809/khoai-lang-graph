@@ -10,11 +10,11 @@ import {
   threadIds,
   userId,
 } from '../shared/db'
-import type { MockRunState } from '../shared/scenario'
+import type { MockRunStatus } from '../shared/scenario'
 
 // Mock runs and run steps. The third run of the main thread of the mentor platform is the run of
 // the API examples: it retries the second run from its planner step and waits at the analysis
-// review. Its state follows the `mock-run-state` scenario.
+// review. Its status follows the `mock-run-status` scenario.
 
 const SONNET = 'anthropic:claude-sonnet-5'
 const MINI = 'openai:gpt-4.1-mini'
@@ -147,7 +147,7 @@ const mentorRun3Statuses = {
   waiting: { status: 'interrupted', current_stage: 'analysis_review' },
   failed: { status: 'failed', current_stage: 'analysis' },
   done: { status: 'succeeded', current_stage: 'done' },
-} as const satisfies Record<MockRunState, Pick<Run, 'status' | 'current_stage'>>
+} as const satisfies Record<MockRunStatus, Pick<Run, 'status' | 'current_stage'>>
 
 // The last event of the run of the API examples: 246 while it waits, as in the examples.
 const mentorRun3LastEventIds = {
@@ -155,21 +155,21 @@ const mentorRun3LastEventIds = {
   waiting: 246,
   failed: 243,
   done: 290,
-} as const satisfies Record<MockRunState, number>
+} as const satisfies Record<MockRunStatus, number>
 
-/** The run of the API examples, in the given state. */
-function mentorRun3(state: MockRunState): Run {
-  const steps = mentorRun3Steps(state)
+/** The run of the API examples, in the given scenario. */
+function mentorRun3(scenario: MockRunStatus): Run {
+  const steps = mentorRun3Steps(scenario)
   const last = steps.at(-1)
   return run({
     id: runIds.mentorMain3,
     thread_id: threadIds.mentorMain,
     project_id: projectIds.mentor,
     number: 3,
-    ...mentorRun3Statuses[state],
+    ...mentorRun3Statuses[scenario],
     retry_of_run_id: runIds.mentorMain2,
     error:
-      state === 'failed'
+      scenario === 'failed'
         ? {
             code: 'provider_error',
             message: 'The model provider failed, after the retries and the fallback models.',
@@ -181,14 +181,14 @@ function mentorRun3(state: MockRunState): Run {
       output_tokens: 9930,
       cache_read_tokens: 31500,
       cache_write_tokens: 6200,
-      cost_usd: state === 'done' ? 0.71 : 0.42,
+      cost_usd: scenario === 'done' ? 0.71 : 0.42,
       duration_ms: 214000,
     },
     trace_id: 'b81c0000-0000-4000-8000-000000000001',
     step_count: steps.length,
-    last_event_id: mentorRun3LastEventIds[state],
+    last_event_id: mentorRun3LastEventIds[scenario],
     started_at: '2026-10-06T08:30:01Z',
-    finished_at: state === 'failed' || state === 'done' ? (last?.finished_at ?? null) : null,
+    finished_at: scenario === 'failed' || scenario === 'done' ? (last?.finished_at ?? null) : null,
   })
 }
 
@@ -306,10 +306,10 @@ const mentorRun3Specs: StepSpec[] = [
 const ANALYST_STEP = 66
 const ANALYSIS_CHECKPOINT_STEP = 67
 
-/** The steps of the run of the API examples, in the given state. */
-function mentorRun3Steps(state: MockRunState): RunStep[] {
+/** The steps of the run of the API examples, in the given scenario. */
+function mentorRun3Steps(scenario: MockRunStatus): RunStep[] {
   const all = buildSteps(runIds.mentorMain3, 3, '2026-10-06T08:30:01Z', mentorRun3Specs)
-  switch (state) {
+  switch (scenario) {
     case 'done':
       return all
     case 'waiting':
@@ -360,9 +360,9 @@ const libraryRunSteps = buildSteps(runIds.libraryMain1, 6, '2026-10-03T10:10:00Z
   step.sequence === 4 ? { ...step, status: 'running' as const, finished_at: null } : step,
 )
 
-/** Every run of the mock data, with the run of the API examples in the given state. */
-export function runFixtures(state: MockRunState): Run[] {
-  return [...finishedRuns, mentorRun3(state)]
+/** Every run of the mock data, with the run of the API examples in the given scenario. */
+export function runFixtures(scenario: MockRunStatus): Run[] {
+  return [...finishedRuns, mentorRun3(scenario)]
 }
 
 // The first run went through the whole workflow; the second failed at the specification.
@@ -383,10 +383,10 @@ const mentorRun2Steps = buildSteps(
 )
 
 /** The steps of a run. Runs without a script here have none. */
-export function runStepFixtures(runId: string, state: MockRunState): RunStep[] {
+export function runStepFixtures(runId: string, scenario: MockRunStatus): RunStep[] {
   if (runId === runIds.mentorMain1) return mentorRun1Steps
   if (runId === runIds.mentorMain2) return mentorRun2Steps
-  if (runId === runIds.mentorMain3) return mentorRun3Steps(state)
+  if (runId === runIds.mentorMain3) return mentorRun3Steps(scenario)
   if (runId === runIds.libraryMain1) return libraryRunSteps
   const finished = finishedRuns.find(({ id }) => id === runId)
   return finished === undefined ? [] : scriptedSteps(finished, 50 + finishedRuns.indexOf(finished))

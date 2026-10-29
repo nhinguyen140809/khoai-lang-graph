@@ -25,7 +25,7 @@ export const runListCases = [
 ]
 
 /** A state of the run of the API examples, and what GET /runs/{run_id} answers in it. */
-export const runStateCases = [
+export const runStatusScenarioCases = [
   { state: 'waiting', status: 'interrupted', stepCount: 67, finished: false },
   { state: 'running', status: 'running', stepCount: 66, finished: false },
   { state: 'failed', status: 'failed', stepCount: 66, finished: true },

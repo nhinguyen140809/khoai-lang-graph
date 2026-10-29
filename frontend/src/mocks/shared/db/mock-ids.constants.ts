@@ -47,6 +47,9 @@ export const runIds = {
   laundryMain1: mockId('7e10', 4),
 }
 
+/** The run that `POST /threads/{thread_id}/runs` answers; the mock server keeps no record of it. */
+export const startedRunId = mockId(IdPrefix.Run, 2)
+
 export const personaIds = [
   mockId(IdPrefix.Persona, 1),
   mockId(IdPrefix.Persona, 2),

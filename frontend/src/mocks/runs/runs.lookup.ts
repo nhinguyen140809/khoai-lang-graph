@@ -1,7 +1,7 @@
 import type { Run, RunStep } from '@/modules/run/entities'
 
 import { generatedRuns, generatedRunSteps } from '../generated/fixtures/generated-projects.fixtures'
-import { mockRunState, mockScenario } from '../shared/scenario'
+import { mockRunStatus, mockScenario } from '../shared/scenario'
 import { runFixtures, runStepFixtures } from './runs.fixtures'
 import { createdRuns, runEdits } from './runs.store'
 
@@ -17,7 +17,7 @@ function withRunEdits(runs: Run[]): Run[] {
 // With `?mock-runs=empty`, no run exists.
 export function allRuns(): Run[] {
   if (mockScenario('runs') === 'empty') return []
-  return withRunEdits([...createdRuns.get(), ...runFixtures(mockRunState()), ...generatedRuns()])
+  return withRunEdits([...createdRuns.get(), ...runFixtures(mockRunStatus()), ...generatedRuns()])
 }
 
 export function findRun(runId: string): Run | undefined {
@@ -26,5 +26,5 @@ export function findRun(runId: string): Run | undefined {
 
 /** The steps of a run of the fixtures. */
 export function stepsOfRun(runId: string): RunStep[] {
-  return generatedRunSteps(runId) ?? runStepFixtures(runId, mockRunState())
+  return generatedRunSteps(runId) ?? runStepFixtures(runId, mockRunStatus())
 }

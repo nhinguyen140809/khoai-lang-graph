@@ -1,8 +1,8 @@
-export type { HandlerScenario, MockRunState, MockScenario } from './mock-scenario.types'
-export { mockRunStates, mockScenarios } from './mock-scenario.types'
+export type { HandlerScenario, MockRunStatus, MockScenario } from './mock-scenario.types'
+export { mockRunStatuses, mockScenarios } from './mock-scenario.types'
 export {
   answerScenario,
-  mockRunState,
+  mockRunStatus,
   mockScenario,
   pageUrlParam,
   pendingForever,

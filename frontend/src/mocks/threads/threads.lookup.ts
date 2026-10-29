@@ -4,7 +4,7 @@ import type { Thread } from '@/modules/thread/entities'
 
 import { generatedThreads } from '../generated/fixtures/generated-projects.fixtures'
 import { allRuns } from '../runs/runs.lookup'
-import { mockRunState, mockScenario } from '../shared/scenario'
+import { mockRunStatus, mockScenario } from '../shared/scenario'
 import { threadFixtures, threadsBeforeAnyRun } from './threads.fixtures'
 import { createdThreads } from './threads.store'
 
@@ -15,7 +15,7 @@ import { createdThreads } from './threads.store'
 export function allThreads(): Thread[] {
   const threads = [
     ...createdThreads.get(),
-    ...threadFixtures(mockRunState()),
+    ...threadFixtures(mockRunStatus()),
     ...generatedThreads(),
   ]
   if (mockScenario('runs') === 'empty') return threadsBeforeAnyRun(threads)

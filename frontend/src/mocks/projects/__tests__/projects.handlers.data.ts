@@ -66,7 +66,7 @@ export const unfinishedRunCountCases = [
   },
   {
     name: 'a project whose run the scenario sets running',
-    address: '/?mock-run-state=running',
+    address: '/?mock-run-status=running',
     projectId: projectIds.mentor,
     counts: { queued: 0, running: 1, interrupted: 0 },
   },
@@ -82,7 +82,7 @@ export const rollupRunStatusCases = [
   },
   {
     name: 'a project whose failed run a later run of its thread replaced',
-    address: '/?mock-run-state=done',
+    address: '/?mock-run-status=done',
     projectId: projectIds.mentor,
     status: 'succeeded',
   },

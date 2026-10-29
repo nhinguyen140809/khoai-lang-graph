@@ -2,7 +2,7 @@ import { http } from 'msw'
 import { describe, expect, it } from 'vitest'
 
 import { server } from '@/mocks/msw-server.setup'
-import { mockRunId } from '@/mocks/runs/handlers/runs.handlers'
+import { startedRunId } from '@/mocks/shared/db'
 import { apiEndpoints } from '@/shared/api/endpoints'
 import { itSendsRequests } from '@/test/suites'
 
@@ -11,7 +11,7 @@ import { failedRunCases, sentRunRequestCases } from './runs.api.data'
 
 describe('createRun', () => {
   it('returns the run id from the API', async () => {
-    await expect(createRun('thread-1', 'hi')).resolves.toEqual({ run_id: mockRunId })
+    await expect(createRun('thread-1', 'hi')).resolves.toEqual({ run_id: startedRunId })
   })
 
   itSendsRequests(sentRunRequestCases)

@@ -4,7 +4,7 @@ import { isUnfinishedRunStatus } from '@/modules/run/entities'
 import { apiEndpoints } from '@/shared/api/endpoints'
 import { HttpStatus } from '@/shared/api/http'
 
-import { mockNow } from '../../shared/db'
+import { mockNow, startedRunId } from '../../shared/db'
 import { pathParam } from '../../shared/http/request'
 import { emptyResponse, invalidState, paginate } from '../../shared/http/response'
 import { answerScenario } from '../../shared/scenario'
@@ -12,11 +12,9 @@ import { changeRun } from '../runs.changes'
 import { allRuns, findRun, stepsOfRun } from '../runs.lookup'
 import { runNotFound } from '../runs.problems'
 
-// The chat starts a run with this endpoint, which is not part of the API; it goes with the chat.
-export const mockRunId = 'run-mock-1'
-
 export const runHandlers = [
-  http.post(apiEndpoints.threadRuns.pattern, () => HttpResponse.json({ run_id: mockRunId })),
+  // The chat starts a run with this endpoint, which is not part of the API; it goes with the chat.
+  http.post(apiEndpoints.threadRuns.pattern, () => HttpResponse.json({ run_id: startedRunId })),
 
   http.get(apiEndpoints.threadRuns.pattern, async ({ params, request }) => {
     await answerScenario('runs')
