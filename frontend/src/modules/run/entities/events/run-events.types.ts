@@ -13,6 +13,7 @@ export const runEventSchemas = {
   }),
   artifact_created: z.object({ artifact_id: z.string(), name: z.string(), version: z.number() }),
   artifact_delta: z.object({ artifact_id: z.string(), delta: z.string() }),
+  message_delivered: z.object({}),
   interrupt: z.object({ node: z.string(), payload: z.unknown() }),
   error: z.object({ message: z.string() }),
   done: z.object({}),

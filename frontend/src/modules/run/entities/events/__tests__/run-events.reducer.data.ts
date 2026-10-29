@@ -1,10 +1,10 @@
-import type { RunState } from '../run-events.reducer'
+import type { RunStreamState } from '../run-events.reducer'
 import type { RunEvent, RunEventType } from '../run-events.types'
 
 interface RunEventCase {
   name: string
   events: RunEvent[]
-  state: Partial<RunState>
+  state: Partial<RunStreamState>
 }
 
 /** The events of a run, in order, and the state they leave. */
@@ -54,6 +54,11 @@ export const runEventCases: RunEventCase[] = [
       { type: 'tool_call', id: '2', data: { node: 'agent', tool: 'search', args: {} } },
     ],
     state: { status: 'streaming', activeNode: 'agent', text: '', lastEventId: '2' },
+  },
+  {
+    name: 'only moves past the id of a delivered message',
+    events: [{ type: 'message_delivered', id: '4', data: {} }],
+    state: { status: 'streaming', activeNode: null, text: '', lastEventId: '4' },
   },
 ]
 

@@ -1,6 +1,11 @@
 import { describe, expect, it } from 'vitest'
 
-import { applyRunEvent, initialRunState, isTerminal, parseRunEvent } from '../run-events.reducer'
+import {
+  applyRunEvent,
+  initialRunStreamState,
+  isTerminal,
+  parseRunEvent,
+} from '../run-events.reducer'
 import {
   invalidPayloadCases,
   runEventCases,
@@ -10,7 +15,7 @@ import {
 
 describe('applyRunEvent', () => {
   it.each(runEventCases)('$name', ({ events, state }) => {
-    expect(events.reduce(applyRunEvent, initialRunState)).toMatchObject(state)
+    expect(events.reduce(applyRunEvent, initialRunStreamState)).toMatchObject(state)
   })
 })
 

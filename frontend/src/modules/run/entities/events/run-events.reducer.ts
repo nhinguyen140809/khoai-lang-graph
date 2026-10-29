@@ -5,7 +5,7 @@ import {
   type RunStreamStatus,
 } from './run-events.types'
 
-export interface RunState {
+export interface RunStreamState {
   status: RunStreamStatus
   activeNode: string | null
   text: string
@@ -13,7 +13,7 @@ export interface RunState {
   lastEventId: string | null
 }
 
-export const initialRunState: RunState = {
+export const initialRunStreamState: RunStreamState = {
   status: 'streaming',
   activeNode: null,
   text: '',
@@ -33,7 +33,7 @@ export function parseRunEvent(type: RunEventType, id: string, raw: string): RunE
   return result.success ? ({ type, id, data: result.data } as RunEvent) : null
 }
 
-export function applyRunEvent(state: RunState, event: RunEvent): RunState {
+export function applyRunEvent(state: RunStreamState, event: RunEvent): RunStreamState {
   const next = { ...state, lastEventId: event.id }
   switch (event.type) {
     case 'node_start':
@@ -51,6 +51,7 @@ export function applyRunEvent(state: RunState, event: RunEvent): RunState {
     case 'tool_call':
     case 'artifact_created':
     case 'artifact_delta':
+    case 'message_delivered':
       // Consumed by the workflow and artifact panels once they exist.
       return next
   }

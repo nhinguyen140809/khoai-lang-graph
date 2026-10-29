@@ -3,10 +3,10 @@ import { useEffect, useReducer } from 'react'
 import { runStreamUrl } from '../../runs/runs.api'
 import {
   applyRunEvent,
-  initialRunState,
+  initialRunStreamState,
   isTerminal,
   parseRunEvent,
-  type RunState,
+  type RunStreamState,
 } from '../run-events.reducer'
 import { runEventTypes } from '../run-events.types'
 
@@ -15,8 +15,8 @@ import { runEventTypes } from '../run-events.types'
  * `Last-Event-ID`, so the server can replay missed events.
  * Mount one instance per run; state is not reset when `runId` changes.
  */
-export function useRunStream(runId: string): RunState {
-  const [state, dispatch] = useReducer(applyRunEvent, initialRunState)
+export function useRunStream(runId: string): RunStreamState {
+  const [state, dispatch] = useReducer(applyRunEvent, initialRunStreamState)
 
   useEffect(() => {
     const source = new EventSource(runStreamUrl(runId))

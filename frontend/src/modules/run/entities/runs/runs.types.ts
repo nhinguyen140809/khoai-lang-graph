@@ -8,7 +8,8 @@ import { runStatuses } from '../status/run-status.types'
 // Temporary hand-written schemas for the runs API: the runs and their steps.
 // TODO: replace with the types generated into src/shared/api/generated/ once they exist.
 
-const usageSchema = z.object({
+/** The tokens, cost and time that a run or one of its steps used. */
+export const runUsageSchema = z.object({
   input_tokens: z.number().int(),
   output_tokens: z.number().int(),
   cache_read_tokens: z.number().int(),
@@ -17,7 +18,7 @@ const usageSchema = z.object({
   duration_ms: z.number().int(),
 })
 
-export type Usage = z.infer<typeof usageSchema>
+export type RunUsage = z.infer<typeof runUsageSchema>
 
 export const runSchema = z.object({
   id: z.string(),
@@ -34,7 +35,7 @@ export const runSchema = z.object({
   run_config: runConfigSchema,
   retry_of_run_id: z.string().nullable(),
   error: z.object({ code: z.string(), message: z.string(), stage: z.string() }).nullable(),
-  usage: usageSchema,
+  usage: runUsageSchema,
   trace_id: z.string().nullable(),
   /** Steps so far; also the sequence of the latest step. */
   step_count: z.number().int(),
@@ -57,7 +58,7 @@ export const runStepSchema = z.object({
   subject_item_id: z.string().nullable(),
   model_id: z.string().nullable(),
   llm_calls: z.number().int(),
-  usage: usageSchema,
+  usage: runUsageSchema,
   produced: z.array(itemRefSchema),
   error: z.string().nullable(),
   started_at: z.iso.datetime(),
