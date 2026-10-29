@@ -58,9 +58,27 @@ export const pascalCasePattern = '+([A-Z])*([a-zA-Z0-9])'
 
 // The modules whose entities split by topic, with their topics: the root of the entities holds a
 // folder for each topic, and a topic holds its files by kind, flat, with its hooks and tests. The
-// other modules keep a folder for each kind at the root of the entities. A new topic is added here.
-/** @type {Record<string, string[]>} */
+// other modules keep a folder for each kind at the root of the entities. Each topic lists the
+// topics that it reads, so that the topics depend one way; a topic never reads the components of
+// the entities. A new topic is added here.
+/** @type {Record<string, Record<string, string[]>>} */
 export const topicEntityModules = {
-  run: ['config', 'directives', 'events', 'runs', 'state', 'status', 'steps'],
-  workflow: ['artifact-kinds', 'checkpoints', 'content-fields', 'definition', 'issues', 'run-parameters', 'stages'],
+  run: {
+    config: [],
+    directives: ['config', 'runs', 'status'],
+    events: [],
+    runs: ['config', 'status'],
+    state: ['config', 'runs', 'status'],
+    status: [],
+    steps: ['config', 'runs', 'status'],
+  },
+  workflow: {
+    'artifact-kinds': ['definition'],
+    checkpoints: ['definition'],
+    'content-fields': ['artifact-kinds'],
+    definition: [],
+    issues: ['content-fields', 'definition'],
+    'run-parameters': ['definition'],
+    stages: ['definition'],
+  },
 }

@@ -52,10 +52,11 @@ function sliceFolderRulesOfLayer(moduleName, layer) {
  * @returns {[string, string][]}
  */
 function entityFolderRules(moduleName) {
-  const topics = topicEntityModules[moduleName]
-  if (topics === undefined) {
+  const topicImports = topicEntityModules[moduleName]
+  if (topicImports === undefined) {
     return [[`src/modules/${moduleName}/entities/*/`, sliceFolderNames('entities')]]
   }
+  const topics = Object.keys(topicImports)
   return [
     [`src/modules/${moduleName}/entities/*/`, `@(components|__tests__|@x|${topics.join('|')})`],
     ...topics.map(
