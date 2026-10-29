@@ -1,6 +1,6 @@
 import type { TraceLink } from '@/modules/trace/entities'
 
-import { createdId, IdPrefix } from '../shared/db'
+import { IdPrefix, nextCreatedId } from '../shared/db'
 import { createdTraceLinks, deletedTraceLinkIds } from './trace-links.store'
 import type { NewTraceLinkRecord } from './trace-links.types'
 
@@ -9,7 +9,7 @@ import type { NewTraceLinkRecord } from './trace-links.types'
 /** Makes the link that a checked body describes. */
 export function addTraceLink(record: NewTraceLinkRecord): TraceLink {
   const link: TraceLink = {
-    id: createdId(IdPrefix.TraceLink, createdTraceLinks.get().length + 1),
+    id: nextCreatedId(IdPrefix.TraceLink, createdTraceLinks),
     source_item_id: record.sourceItemId,
     target_item_id: record.targetItemId,
     link_type: record.linkType,

@@ -5,7 +5,7 @@ import { apiEndpoints } from '@/shared/api/endpoints'
 import type { FieldProblem } from '@/shared/api/error'
 
 import { validateRunDefaults } from '../runs/runs.validators'
-import { createdId, IdPrefix, mockNow } from '../shared/db'
+import { IdPrefix, mockNow, nextCreatedId } from '../shared/db'
 import { hasMatchingParam, pathParam, queryOf, readBodyFields } from '../shared/http/request'
 import {
   created,
@@ -67,7 +67,7 @@ export const projectHandlers = [
     if ('problems' in read) return validationFailed(read.problems)
     const now = mockNow()
     const project = buildProject({
-      id: createdId(IdPrefix.Project, createdProjects.get().length + 1),
+      id: nextCreatedId(IdPrefix.Project, createdProjects),
       ...read.project,
       last_activity_at: now,
       created_at: now,
