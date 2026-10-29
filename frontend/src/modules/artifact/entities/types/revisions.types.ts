@@ -7,7 +7,14 @@ import { originSchema } from './artifacts.types'
 // Temporary hand-written schemas for the revisions of artifacts and items.
 // TODO: replace with the types generated into src/shared/api/generated/ once they exist.
 
-const changeReasons = ['generated', 'user_edit', 'rework', 'restored', 'deleted'] as const
+const changeReasons = [
+  'generated',
+  'user_edit',
+  'rework',
+  'reviewed',
+  'restored',
+  'deleted',
+] as const
 
 export type ChangeReason = (typeof changeReasons)[number]
 
