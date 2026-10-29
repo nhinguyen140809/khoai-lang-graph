@@ -12,9 +12,11 @@ import { server } from '@/mocks/msw-server.setup'
 import { projectIds } from '@/mocks/shared/db'
 import { apiBasePath, apiEndpoints } from '@/shared/api/endpoints'
 import { HttpMethod } from '@/shared/api/http'
+import { pageItems } from '@/shared/api/query-client'
 import { recordRequests, serverErrorOn } from '@/test/msw'
 import { renderHookWithProviders } from '@/test/render'
 import { waitForQueries, waitForSuccess } from '@/test/steps'
+import { itWaitsUntilEnabled } from '@/test/suites'
 
 import { itemsPageSize } from '../../page-sizes.constants'
 import {
@@ -34,17 +36,9 @@ describe('useArtifactItems', () => {
     const { result } = renderHookWithProviders(() => useArtifactItems(specification.id))
 
     await waitForSuccess(result)
-    const items = result.current.data?.pages.flatMap((page) => page.items) ?? []
+    const items = pageItems(result.current.data)
     expect(items).toHaveLength(specification.item_count)
     expect(items[0]?.key).toBe('SEC-001')
-  })
-
-  it('waits until it is enabled', () => {
-    const { result } = renderHookWithProviders(() =>
-      useArtifactItems(specification.id, {}, { isEnabled: false }),
-    )
-
-    expect(result.current.fetchStatus).toBe('idle')
   })
 })
 
@@ -150,4 +144,13 @@ describe('useItemSchema', () => {
     })
     expect(result.current.schema).toBeUndefined()
   })
+})
+
+describe('enabling', () => {
+  itWaitsUntilEnabled([
+    {
+      name: 'useArtifactItems',
+      useHook: () => useArtifactItems(specification.id, {}, { isEnabled: false }),
+    },
+  ])
 })

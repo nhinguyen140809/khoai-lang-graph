@@ -4,8 +4,10 @@ import { describe, expect, it } from 'vitest'
 
 import { itemFixtureByKey } from '@/mocks/artifacts/fixtures/artifacts.fixtures'
 import { projectIds } from '@/mocks/shared/db'
+import { pageItems } from '@/shared/api/query-client'
 import { renderHookWithProviders } from '@/test/render'
 import { waitForSuccess } from '@/test/steps'
+import { itWaitsUntilEnabled } from '@/test/suites'
 
 import { useLinksCiting, useProjectTraceLinks } from '../useTraceLinkQueries'
 
@@ -16,7 +18,7 @@ describe('useProjectTraceLinks', () => {
     const { result } = renderHookWithProviders(() => useProjectTraceLinks(projectId))
 
     await waitForSuccess(result)
-    const links = result.current.data?.pages.flatMap((page) => page.items) ?? []
+    const links = pageItems(result.current.data)
     expect(links.length).toBeGreaterThan(0)
   })
 
@@ -26,7 +28,7 @@ describe('useProjectTraceLinks', () => {
     )
 
     await waitForSuccess(result)
-    const links = result.current.data?.pages.flatMap((page) => page.items) ?? []
+    const links = pageItems(result.current.data)
     expect(links.length).toBeGreaterThan(0)
     expect(links.every(({ link_type }) => link_type === 'involves')).toBe(true)
   })
@@ -51,18 +53,19 @@ describe('useLinksCiting', () => {
     const { result } = renderHookWithProviders(() => useLinksCiting(projectId, message.id))
 
     await waitForSuccess(result)
-    const links = result.current.data?.pages.flatMap((page) => page.items) ?? []
+    const links = pageItems(result.current.data)
     expect(links.length).toBeGreaterThan(0)
     expect(links.every((link) => link.target_item_id === message.id && link.quote !== null)).toBe(
       true,
     )
   })
+})
 
-  it('loads nothing until it is enabled', () => {
-    const { result } = renderHookWithProviders(() =>
-      useLinksCiting(projectId, 'item', { isEnabled: false }),
-    )
-
-    expect(result.current.fetchStatus).toBe('idle')
-  })
+describe('enabling', () => {
+  itWaitsUntilEnabled([
+    {
+      name: 'useLinksCiting',
+      useHook: () => useLinksCiting(projectId, 'item', { isEnabled: false }),
+    },
+  ])
 })
