@@ -59,4 +59,4 @@ export const pascalCasePattern = '+([A-Z])*([a-zA-Z0-9])'
 // The modules whose entities split by topic: the root of the entities holds a folder for each
 // topic, and a topic holds its files by kind. The other modules keep a folder for each kind at
 // the root of the entities.
-export const topicEntityModules = ['run']
+export const topicEntityModules = ['run', 'workflow']

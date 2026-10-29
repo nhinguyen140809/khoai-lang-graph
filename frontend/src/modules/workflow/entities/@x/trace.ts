@@ -1,1 +1,1 @@
-export { contentValuesSchema } from '../types/content-values.types'
+export { contentValuesSchema } from '../content-fields/content-values.types'
