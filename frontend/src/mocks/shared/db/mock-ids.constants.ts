@@ -16,6 +16,8 @@ export const IdPrefix = {
   Item: 'c41e',
   Export: 'e8d0',
   TraceLink: 'd7a1',
+  Directive: '3b7c',
+  Decision: 'a41e',
 } as const
 
 export const userId = mockId(IdPrefix.User, 1)

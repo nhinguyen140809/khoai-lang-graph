@@ -3,7 +3,7 @@ import { isUnfinishedRunStatus } from '@/modules/run/entities'
 import type { Thread } from '@/modules/thread/entities'
 
 import { generatedThreads } from '../generated/fixtures/generated-projects.fixtures'
-import { allRuns } from '../runs/runs.lookup'
+import { allRuns } from '../runs/lookup/runs.lookup'
 import { mockRunStatus, mockScenario } from '../shared/scenario'
 import { threadFixtures, threadsBeforeAnyRun } from './threads.fixtures'
 import { createdThreads } from './threads.store'

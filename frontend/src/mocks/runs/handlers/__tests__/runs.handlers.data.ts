@@ -86,3 +86,31 @@ export const runErrorCases = [
     code: 'invalid_state',
   },
 ]
+
+/** A request to retry a run that the mock server refuses. */
+export const refusedRetryCases = [
+  {
+    request: 'POST /runs/{run_id}/retry of a run that does not exist',
+    address: '/',
+    path: apiEndpoints.runRetry.path({ runId: 'no-such-run' }),
+    body: { from_step_id: 'step' },
+    status: HttpStatus.NotFound,
+    code: 'not_found',
+  },
+  {
+    request: 'POST /runs/{run_id}/retry without a step',
+    address: '/?mock-run-status=done',
+    path: apiEndpoints.runRetry.path({ runId: runIds.mentorMain2 }),
+    body: {},
+    status: HttpStatus.UnprocessableContent,
+    code: 'validation_failed',
+  },
+  {
+    request: 'POST /runs/{run_id}/retry from a step that is not of the run',
+    address: '/?mock-run-status=done',
+    path: apiEndpoints.runRetry.path({ runId: runIds.mentorMain2 }),
+    body: { from_step_id: 'no-such-step' },
+    status: HttpStatus.UnprocessableContent,
+    code: 'validation_failed',
+  },
+]

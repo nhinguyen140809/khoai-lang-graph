@@ -1,11 +1,9 @@
 import { z } from 'zod'
 
-import { itemRefSchema } from '@/modules/artifact/entities/@x/run'
-
 import { runConfigSchema } from '../config/run-config.types'
 import { runStatuses } from '../status/run-status.types'
 
-// Temporary hand-written schemas for the runs API: the runs and their steps.
+// Temporary hand-written schemas for the runs API: the runs.
 // TODO: replace with the types generated into src/shared/api/generated/ once they exist.
 
 /** The tokens, cost and time that a run or one of its steps used. */
@@ -45,27 +43,6 @@ export const runSchema = z.object({
 })
 
 export type Run = z.infer<typeof runSchema>
-
-export const runStepSchema = z.object({
-  id: z.string(),
-  run_id: z.string(),
-  sequence: z.number().int(),
-  node: z.string(),
-  agent_role: z.string().nullable(),
-  stage: z.string(),
-  status: z.enum(['running', 'succeeded', 'failed', 'skipped']),
-  iteration: z.number().int(),
-  subject_item_id: z.string().nullable(),
-  model_id: z.string().nullable(),
-  llm_calls: z.number().int(),
-  usage: runUsageSchema,
-  produced: z.array(itemRefSchema),
-  error: z.string().nullable(),
-  started_at: z.iso.datetime(),
-  finished_at: z.iso.datetime().nullable(),
-})
-
-export type RunStep = z.infer<typeof runStepSchema>
 
 // The answer of the request that starts a run of a thread with an input.
 export const createRunResponseSchema = z.object({ run_id: z.string() })

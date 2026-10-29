@@ -3,7 +3,7 @@ import type { Run, RunStep } from '@/modules/run/entities'
 import { isUnfinishedRunStatus } from '@/modules/run/entities'
 import type { Thread } from '@/modules/thread/entities'
 
-import { buildRun, scriptedSteps } from '../../runs/runs.fixtures'
+import { buildRun, scriptedSteps } from '../../runs/fixtures/runs.fixtures'
 import { IdPrefix, mockId, userId } from '../../shared/db'
 import type { GeneratedProjectSpec } from '../generated-project-specs.types'
 import { generatedProjectSpecs } from './generated-project-specs.fixtures'

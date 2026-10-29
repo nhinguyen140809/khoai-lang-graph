@@ -9,8 +9,8 @@ import {
   runIds,
   threadIds,
   userId,
-} from '../shared/db'
-import type { MockRunStatus } from '../shared/scenario'
+} from '../../shared/db'
+import type { MockRunStatus } from '../../shared/scenario'
 
 // Mock runs and run steps. The third run of the main thread of the mentor platform is the run of
 // the API examples: it retries the second run from its planner step and waits at the analysis
@@ -394,6 +394,33 @@ export function runStepFixtures(runId: string, scenario: MockRunStatus): RunStep
 
 /** A run of the mock data with the usual fields; `fields` change what differs. */
 export const buildRun = run
+
+/** A step of a run with the usual fields; `fields` change what differs. The id follows the sequence. */
+export function buildStep(fields: Partial<RunStep> & Pick<RunStep, 'sequence'>): RunStep {
+  return {
+    id: `s${String(fields.sequence)}`,
+    run_id: 'r1',
+    node: 'interviewer',
+    agent_role: null,
+    stage: 'interviewing',
+    status: 'succeeded',
+    iteration: 0,
+    subject_item_id: null,
+    model_id: null,
+    llm_calls: 0,
+    usage: noUsage,
+    produced: [],
+    error: null,
+    started_at: '2026-10-01T00:00:00Z',
+    finished_at: null,
+    ...fields,
+  }
+}
+
+/** The item that a step produced, with the key it was given. */
+export function producedItems(sequence: number, key: string): RunStep['produced'] {
+  return [{ item_id: `i${String(sequence)}`, kind: 'interview_message', key, version: 1 }]
+}
 
 // How far a run without a script of its own went, in the steps of the main run: a running or a
 // stopped run is in the interviews, a failed one failed at the analysis, and one that waits is at

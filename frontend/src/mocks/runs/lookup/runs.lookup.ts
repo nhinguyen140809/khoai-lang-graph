@@ -1,9 +1,12 @@
 import type { Run, RunStep } from '@/modules/run/entities'
 
-import { generatedRuns, generatedRunSteps } from '../generated/fixtures/generated-projects.fixtures'
-import { mockRunStatus, mockScenario } from '../shared/scenario'
-import { runFixtures, runStepFixtures } from './runs.fixtures'
-import { createdRuns, runEdits } from './runs.store'
+import {
+  generatedRuns,
+  generatedRunSteps,
+} from '../../generated/fixtures/generated-projects.fixtures'
+import { mockRunStatus, mockScenario } from '../../shared/scenario'
+import { runFixtures, runStepFixtures } from '../fixtures/runs.fixtures'
+import { createdRuns, runEdits } from '../runs.store'
 
 // The runs and their steps as the mock server holds them now: the fixtures, the runs that messages
 // started, and what changed in them.

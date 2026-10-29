@@ -1,6 +1,6 @@
 import { HttpHeader } from '@/shared/api/http'
 
-import { allRuns } from '../runs/runs.lookup'
+import { allRuns } from '../runs/lookup/runs.lookup'
 import { invalidState, notFound, validationFailed, versionConflict } from '../shared/http/response'
 
 // What the handlers of the artifacts and the items refuse in a request: a record that is not there,

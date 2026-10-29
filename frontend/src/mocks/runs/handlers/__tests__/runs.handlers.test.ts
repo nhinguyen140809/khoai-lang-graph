@@ -9,6 +9,7 @@ import { fetchApi, openPage } from '@/test/msw'
 
 import { runIds, startedRunId } from '../../../shared/db'
 import {
+  refusedRetryCases,
   runErrorCases,
   runListCases,
   runStatusScenarioCases,
@@ -124,6 +125,20 @@ describe('errors', () => {
       openPage(address)
 
       expect(await fetchApi(path, { method })).toMatchObject({ status, body: { code } })
+    },
+  )
+})
+
+describe('POST /runs/{run_id}/retry', () => {
+  it.each(refusedRetryCases)(
+    'answers $status to $request',
+    async ({ address, path, body, status, code }) => {
+      openPage(address)
+
+      expect(await fetchApi(path, { method: 'POST', body: JSON.stringify(body) })).toMatchObject({
+        status,
+        body: { code },
+      })
     },
   )
 })

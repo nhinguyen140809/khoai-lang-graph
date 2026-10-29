@@ -1,6 +1,6 @@
 import { useEffect, useReducer } from 'react'
 
-import { runStreamUrl } from '../../runs/runs.api'
+import { runEventsUrl } from '../run-events.api'
 import {
   applyRunEvent,
   initialRunStreamState,
@@ -19,7 +19,7 @@ export function useRunStream(runId: string): RunStreamState {
   const [state, dispatch] = useReducer(applyRunEvent, initialRunStreamState)
 
   useEffect(() => {
-    const source = new EventSource(runStreamUrl(runId))
+    const source = new EventSource(runEventsUrl(runId))
     for (const type of runEventTypes) {
       source.addEventListener(type, (message: MessageEvent<string>) => {
         const event = parseRunEvent(type, message.lastEventId, message.data)
