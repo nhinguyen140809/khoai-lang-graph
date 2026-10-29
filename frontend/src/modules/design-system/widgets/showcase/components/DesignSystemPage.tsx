@@ -11,6 +11,7 @@ import { ChatCard } from './cards/ChatCard'
 import { CodeCard } from './cards/CodeCard'
 import { CommandCard } from './cards/CommandCard'
 import { ControlsCard } from './cards/ControlsCard'
+import { CopyButtonCard } from './cards/CopyButtonCard'
 import { DisclosureCard } from './cards/DisclosureCard'
 import { ExplorerTreeCard } from './cards/ExplorerTreeCard'
 import { FormCard } from './cards/FormCard'
@@ -52,6 +53,7 @@ export function DesignSystemPage() {
             <ChartCard />
             <ReviewCard />
             <ButtonsCard />
+            <CopyButtonCard />
             <BadgesCard />
             <HighlightCard />
             <CodeCard />
