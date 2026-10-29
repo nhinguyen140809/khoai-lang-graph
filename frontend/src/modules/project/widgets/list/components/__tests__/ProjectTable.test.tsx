@@ -1,7 +1,7 @@
 import { screen, within } from '@testing-library/react'
 import userEvent from '@testing-library/user-event'
 import { http, HttpResponse } from 'msw'
-import { afterEach, describe, expect, it, vi } from 'vitest'
+import { describe, expect, it, vi } from 'vitest'
 
 import { server } from '@/mocks/msw-server.setup'
 import { projectIds } from '@/mocks/shared/db'
@@ -14,7 +14,7 @@ import {
 import { ProjectDialogs } from '@/modules/project/widgets/dialogs'
 import { apiEndpoints } from '@/shared/api/endpoints'
 import { HttpMethod } from '@/shared/api/http'
-import { serverError, serverErrorOn } from '@/test/msw'
+import { openPage, serverError, serverErrorOn } from '@/test/msw'
 import { renderWithProviders } from '@/test/render'
 import {
   confirmAction,
@@ -57,13 +57,9 @@ function answerNoProject() {
   server.use(http.get(apiEndpoints.projects.pattern, () => HttpResponse.json(emptyPage)))
 }
 
-afterEach(() => {
-  window.history.replaceState(null, '', '/')
-})
-
 /** Shows the long list of the mock data: more active projects than a page holds. */
 async function renderLongList() {
-  window.history.replaceState(null, '', '/?mock-projects=many')
+  openPage('/?mock-projects=many')
   renderTable('active')
   return screen.findByRole('button', { name: 'Show more projects' })
 }
