@@ -4,6 +4,7 @@ import { artifactHandlers } from './artifacts/handlers/artifacts.handlers'
 import { itemEditHandlers } from './artifacts/handlers/item-edits.handlers'
 import { itemHandlers } from './artifacts/handlers/items.handlers'
 import { exportHandlers } from './exports/exports.handlers'
+import { interruptHandlers } from './interrupts/interrupts.handlers'
 import { messageHandlers } from './messages/messages.handlers'
 import { projectHandlers } from './projects/projects.handlers'
 import { directiveHandlers } from './runs/handlers/directives.handlers'
@@ -38,4 +39,5 @@ export const apiHandlers = [
   ...runHandlers,
   ...runStateHandlers,
   ...directiveHandlers,
+  ...interruptHandlers,
 ]
