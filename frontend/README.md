@@ -393,7 +393,8 @@ src/mocks/
 ├── exports/              # the exports of a project
 ├── threads/              # threads
 ├── workflow/             # the workflow definition, and the artifact kinds built from it, with the content schemas in data/
-└── runs/                 # runs, their steps, state and directives, the stream
+├── runs/                 # runs, their steps, state and directives, the stream
+└── interrupts/           # the interrupts of the runs, and the answer to them
 ```
 
 Each folder holds a pair of files per API resource:
@@ -448,6 +449,7 @@ The same handlers serve `pnpm dev:mock`, the unit tests, and the E2E tests, so a
 | `runs`           | `GET /threads/{thread_id}/runs`, `GET /runs/{run_id}`, `GET /runs/{run_id}/steps`, `POST /runs/{run_id}/cancel`, `POST /runs/{run_id}/retry` (a new run of the thread from a step, once the thread has no run that has not ended), and `POST /threads/{thread_id}/runs` of the chat |
 | `run-state`      | `GET /runs/{run_id}/state`, `GET /runs/{run_id}/steps/{step_id}/state`: the lists of the state follow the stage that the run or the step reached                                                                                                                                    |
 | `directives`     | `GET /runs/{run_id}/directives`, by the loop they start; only the first run of the mentor thread has any                                                                                                                                                                            |
+| `interrupts`     | `GET /runs/{run_id}/interrupts`, each with its options, its questions and the artifacts under review; `POST /runs/{run_id}/resume`, the answer that resolves the pending interrupt and continues the run                                                                            |
 | `run-stream`     | `GET /runs/{run_id}/stream` (browser only)                                                                                                                                                                                                                                          |
 | `auth`           | `POST /auth/register`, `POST /auth/login`, `POST /auth/logout`, and a 401 for every other endpoint without a session                                                                                                                                                                |
 | `me`             | `GET /me`                                                                                                                                                                                                                                                                           |

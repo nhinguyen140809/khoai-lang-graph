@@ -176,6 +176,9 @@ The links between entities today:
 | `thread` | `run` | The unfinished run statuses |
 | `run` | `workflow` | The fields of the run parameters with their checks and values; the checkpoints that a run may pause at |
 | `run` | `artifact` | `itemRefSchema`; `subjectKeyOfMessage`, the item that an interview message is about |
+| `review` | `workflow` | The options, the questions and the answers of a checkpoint |
+| `review` | `artifact` | `artifactRefSchema`; `ItemRef`, the items the user edited before answering |
+| `review` | `run` | `runSchema`, the run that the resume answers; the polling of a run that works |
 
 A unit test may also import another slice of its layer, from its index, to show slices together, such as the project table with the dialogs that its rows open.
 
@@ -186,7 +189,7 @@ A unit test may also import another slice of its layer, from its index, to show 
 | `workflow` | Workflow definition (graph, agent roles, stages in their order, checkpoints and their options); artifact kinds and content schemas | - | - | The artifact kinds and content schemas; the definition next |
 | `artifact` | Artifact, ArtifactItem and their revisions, and Export as its resource `exports` | `edit` | `panel` | The entities, and the placeholder of `panel`; the rest with the documents |
 | `run` | Run and RunStep, each with its usage (`RunUsage`); RunEvent, Directive, the event stream of a run; the workflow state of a run, after a step or now; the steps grouped by subject and the progress of the nodes; the fields of the run settings and their schema, which the forms of the features embed; the run statuses and their badge. The entities split by topic: `runs`, `steps`, `state`, `directives`, `events`, `config`, `status`, and a topic imports only the topics under it | `stop`, `start` (the first chat); `retry` later | `graph`, the workflow graph of a run, later | The run statuses, the stream of a run and `start` today |
-| `review` | Interrupt, HumanDecision | `answer` | `panel` | With the activity |
+| `review` | Interrupt, HumanDecision | `answer` | `panel` | The entities; `answer` and `panel` with the activity |
 | `thread` | Thread, Message | `send-message` | - | The threads today; `send-message` with the activity |
 | `project` | Project, the run that its status shows, the streams of its runs | `create`, `rename`, `archive` (with restore and Undo), `delete`; `run-settings` later | `list`, `menu`, `commands`, `dialogs`, `status` | Today, except `status` and the runs in the entities, which come with the threads |
 | `activity` | ActivityEvent later, the record of who did what in a project | - | `steps`, the stages of the workflow as a tree in the side panel of Activity, with the item of the feature on the activity bar; `chat`, the chat in its tab | The chat of the first version today; the rest with the activity |
