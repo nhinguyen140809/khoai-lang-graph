@@ -3,8 +3,8 @@ import { useInfiniteQuery, useQuery } from '@tanstack/react-query'
 import { cursorPagesOptions, type HookQueryOptions } from '@/shared/api/query-client'
 
 import { getExport, listProjectExports } from '../api/exports.api'
+import { exportsPageSize } from '../constants/page-sizes.constants'
 import { exportKeys } from '../keys/exports.keys'
-import { exportsPageSize } from '../page-sizes.constants'
 
 // How long the hook waits before it reads a pending export again, to see whether its file is ready.
 const EXPORT_POLL_MS = 600

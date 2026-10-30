@@ -12,10 +12,12 @@ import { useRunStream } from '../useRunStream'
 // The stream of the test: it keeps the listeners that the hook registers, and whether it was
 // closed. jsdom has no EventSource, so the hook opens this one instead.
 class TestEventSource {
+  readonly url: string
   closed = false
   private readonly listeners = new Map<string, (message: MessageEvent<string>) => void>()
 
-  constructor(readonly url: string) {
+  constructor(url: string) {
+    this.url = url
     sources.push(this)
   }
 

@@ -18,7 +18,7 @@ import { renderHookWithProviders } from '@/test/render'
 import { waitForQueries, waitForSuccess } from '@/test/steps'
 import { itWaitsUntilEnabled } from '@/test/suites'
 
-import { itemsPageSize } from '../../page-sizes.constants'
+import { itemsPageSize } from '../../constants/page-sizes.constants'
 import {
   useArtifactItems,
   useItem,

@@ -19,6 +19,9 @@ export {
   restoreItem,
   updateItem,
 } from './api/items.api'
+export { reviewStatusLabels } from './constants/artifacts.constants'
+export { exportStatusLabels } from './constants/exports.constants'
+export { changeReasonLabels } from './constants/revisions.constants'
 export {
   useAllowedValues,
   useArtifact,

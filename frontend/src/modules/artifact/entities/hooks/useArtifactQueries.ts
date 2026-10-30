@@ -4,8 +4,8 @@ import { useMemo } from 'react'
 import { cursorPagesOptions, type HookQueryOptions } from '@/shared/api/query-client'
 
 import { getArtifact, listArtifactRevisions, listProjectArtifacts } from '../api/artifacts.api'
+import { revisionsPageSize } from '../constants/page-sizes.constants'
 import { artifactKeys } from '../keys/artifacts.keys'
-import { revisionsPageSize } from '../page-sizes.constants'
 import type { ArtifactFilters } from '../types/artifacts.types'
 import { allowedValues } from '../utils/allowed-values.utils'
 
