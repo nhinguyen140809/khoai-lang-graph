@@ -1,7 +1,7 @@
 'use client'
 
 import { Badge } from '@/shared/components/ui/badge'
-import { useView } from '@/shared/lib/view'
+import { useWording } from '@/shared/lib/view'
 
 import type { RunStatus } from '../status/run-status.types'
 import { runStatusLabel } from '../status/run-status.utils'
@@ -14,13 +14,13 @@ interface RunStatusBadgeProps {
 
 /** A badge in the color of a run status, with its icon and its label in the view of the app. */
 export function RunStatusBadge({ status }: RunStatusBadgeProps) {
-  const view = useView()
   const { tone, icon: Icon } = runStatusLook(status)
+  const label = useWording(runStatusLabel(status))
 
   return (
     <Badge variant="soft" color={tone}>
       <Icon aria-hidden />
-      {runStatusLabel(status)[view]}
+      {label}
     </Badge>
   )
 }
