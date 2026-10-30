@@ -18,6 +18,7 @@ export const IdPrefix = {
   TraceLink: 'd7a1',
   Directive: '3b7c',
   Decision: 'a41e',
+  Interrupt: '7b0c',
 } as const
 
 export const userId = mockId(IdPrefix.User, 1)

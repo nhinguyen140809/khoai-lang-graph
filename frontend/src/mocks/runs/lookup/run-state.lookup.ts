@@ -1,5 +1,6 @@
 import type { Run, RunState, RunStep } from '@/modules/run/entities'
 
+import { artifactRefOf } from '../../artifacts/artifact-refs.utils'
 import { allArtifacts, allItems } from '../../artifacts/artifacts.lookup'
 import { workflowDefinitionFixture } from '../../workflow/workflow.fixtures'
 
@@ -30,15 +31,9 @@ interface Moment {
 function valuesOf(projectId: string, { stage, status, iteration }: Moment) {
   const isReached = (from: string) => stageKeys.indexOf(stage) >= stageKeys.indexOf(from)
   const artifacts = allArtifacts().filter((artifact) => artifact.project_id === projectId)
-  const artifactRef = ({ id, kind, title, version }: (typeof artifacts)[number]) => ({
-    artifact_id: id,
-    kind,
-    title,
-    version,
-  })
   const latest = (kind: string) => {
     const found = artifacts.find((artifact) => artifact.kind === kind)
-    return found === undefined ? null : artifactRef(found)
+    return found === undefined ? null : artifactRefOf(found)
   }
   const items = allItems().filter((item) => item.project_id === projectId)
   return {
@@ -62,7 +57,7 @@ function valuesOf(projectId: string, { stage, status, iteration }: Moment) {
       ]),
     ),
     interview_transcripts: isReached('interviewing')
-      ? artifacts.filter(({ kind }) => kind === 'interview_transcript').map(artifactRef)
+      ? artifacts.filter(({ kind }) => kind === 'interview_transcript').map(artifactRefOf)
       : [],
     validation_report: isReached('validation') ? latest('validation_report') : null,
     rework_directives: [],
