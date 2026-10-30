@@ -418,7 +418,7 @@ As built (2026-10-29, on `e5-zcode`, not merged), following the [E5 plan](fronte
 - The index of the slice was born with the type exports in the commit of the types (not the last one), so that the mocks, which import the slice through its index, compile on every commit.
 - The mock derives every interrupt from the steps of the run at the checkpoint nodes of the definition, with `interruptEdits` in the store for the answers; the scenarios `mock-interrupts`, `mock-agent-questions` (`only`, `added`) and `mock-resume-run` serve its states. An approval writes `change_reason` `reviewed` on the artifacts under review and their draft items.
 - The refusal of edits on an interrupt that does not allow them is tested in the validators only: every checkpoint of definition version 1 allows edits, so no interrupt the mock serves refuses them; the handler test keeps the refusals the mock can serve.
-- The two open docs gaps of the E5 plan (section 11) are left to the user, on `docs/fe/run-api-fields`: the order of the interrupts by `created_at`, and the pending interrupt set to `cancelled` when a run is cancelled.
+- The two open docs gaps of the E5 plan (section 11) are left to the user, on `docs/fe/api-fields`: the order of the interrupts by `created_at`, and the pending interrupt set to `cancelled` when a run is cancelled.
 
 ### E6. `thread`
 

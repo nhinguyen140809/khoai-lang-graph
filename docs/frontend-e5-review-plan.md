@@ -29,7 +29,7 @@ Short paths: `review/entities/...` is `frontend/src/modules/review/entities/...`
 | Title | `feat(frontend): read the interrupts of a run and answer them` |
 | Needs | E1 (artifact refs), E4 (run schema, polling), I1 (idempotency keys); all merged |
 | After it | E6 `thread`, then P7; S2 builds `review/features/answer` and `review/widgets/panel` on it |
-| Docs first | The `change_reason` `reviewed` of decision 6 is written on `docs/fe/run-api-fields`; merge that branch before E5 is opened, so that the mock of the resume (commit 3) follows docs that are on `main` |
+| Docs first | The `change_reason` `reviewed` of decision 6 is written on `docs/fe/api-fields`; merge that branch before E5 is opened, so that the mock of the resume (commit 3) follows docs that are on `main` |
 
 The module `review` already has its place: `moduleImports.review` is `['workflow', 'artifact', 'run']` in `frontend/lint/lib/modules/module-imports.constants.js`. No lint list changes.
 
@@ -66,7 +66,7 @@ Confirmed by the user on 2026-10-29:
    | b. Change `review_status` without a new version | Breaks "as a new version of the same item"; the version of an approved item stays the one under review |
    | c. Use `user_edit` | The history reads as if the user edited the content |
 
-   Decision: a. Done on 2026-10-29 in the worktree of `docs/fe/run-api-fields` (`D:/Documents/DA/khoai-lang-graph-docs`), not committed:
+   Decision: a. Done on 2026-10-29 in the worktree of `docs/fe/api-fields` (`D:/Documents/DA/khoai-lang-graph-docs`), not committed:
 
    - `docs/DATA_SHAPE.md`: `reviewed` in the `change_reason` of ArtifactRevision and ItemRevision; the paragraph of the revisions says that a decision whose option approves writes a revision with `reviewed`, and its `human_decision_id`, on the artifact under review and on each item whose `review_status` it changes; "Review applies to the artifact" says each approval is a new version with `change_reason` `reviewed`.
    - `docs/API.md`, resume rules: the approved artifacts and items each get a new version with `change_reason` `reviewed`.
@@ -369,7 +369,7 @@ Data-driven where the cases share one flow (CONTRIBUTING, Testing); every new re
 
 ## 11. Docs to update
 
-Docs first, on `docs/fe/run-api-fields`:
+Docs first, on `docs/fe/api-fields`:
 
 - Done (decision 6): Data Shape, API and the database schema name the `change_reason` `reviewed` of an approval.
 - Open, found while writing this plan; the mock follows them already. Add them to the same branch, or leave them to the user:
@@ -403,7 +403,7 @@ The agent writes no code for these; they go in the docs where named.
 | A rejection issues no directive in the mock | S2 or S6 | `directivesOfRun` reads the fixtures only; add `createdDirectives` when a screen shows why the run looped after a reject |
 | After a resume, the steps of the mock do not move on | S2 | The run is `running` at the next stage; its steps stay those of the fixtures |
 | Phase M of the E4 review, not done: `nextCreatedId` in `exports.handlers.ts:34`, `messages.handlers.ts:71`, `projects.handlers.ts:70`, `threads.handlers.ts:45`, `trace-links.changes.ts:12`; `pageItems` and `itWaitsUntilEnabled` in the hook tests of `artifact`, `trace` and `project` | Done on 2026-10-29, on `refactor/fe/mock-ids-and-test-helpers`, not merged: one commit per item | The two code places of `pageItems` (`useProjectQueries`, `ProjectTable`) were done already, and the hook tests of `project` held no case to convert, so that commit touches `artifact` and `trace` only. The follow-up of item 10 of the E4 review, `runErrorCases` in the older shape, is done in the same PR |
-| `docs/fe/run-api-fields` | Before E5 | Holds the body of the directives and the retry rule of E4, and the `change_reason` `reviewed` of decision 6 (not committed yet) |
+| `docs/fe/api-fields` | Before E5 | Holds the body of the directives and the retry rule of E4, and the `change_reason` `reviewed` of decision 6 (not committed yet) |
 | The proposal for a failed `PATCH` in the dialog that creates a project | With the dialog PR | Open in the E4 review checklist |
 
 ## 13. Commits and checks
@@ -425,8 +425,8 @@ Checks, one at a time: ESLint and Prettier on the changed files; Vitest on `src/
 ## 14. Checklist
 
 - [x] Decisions 6 and 7 confirmed by the user (2026-10-29)
-- [x] `reviewed` written in the worktree of `docs/fe/run-api-fields` (Data Shape, API, `database.dbml`, the diagram of the artifacts)
-- [x] That change committed on `docs/fe/run-api-fields` (`73ac70c`); the branch is not merged yet, so E5 was built on a branch of `main` following the docs of that branch (`e5-zcode`, not `feat/fe/review-entities`)
+- [x] `reviewed` written in the worktree of `docs/fe/api-fields` (Data Shape, API, `database.dbml`, the diagram of the artifacts)
+- [x] That change committed on `docs/fe/api-fields` (`73ac70c`); the branch is not merged yet, so E5 was built on a branch of `main` following the docs of that branch (`e5-zcode`, not `feat/fe/review-entities`)
 - [x] The two open docs gaps of section 11 left to the user
 - [x] Commit 1: `artifactRefOf`, used in three places after commit 3
 - [x] Commit 2: endpoints, `@x/review` of `workflow`, `artifact` and `run`, types (with the index of the slice holding the type exports, so that commit 3 compiles)

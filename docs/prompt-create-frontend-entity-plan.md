@@ -4,20 +4,20 @@ Write a plan for building the next entity PR of the frontend, following the shap
 
 ## Prerequisites
 
-Load these two skills before starting (they change how you place and review code):
+Load these two skills before starting (they change how you place and review code). Both are committed in this repo under `docs/skills/`:
 
-1. **Feature-Sliced Design** - for module placement, layer imports, and `@x` cross-import decisions. Install from [fsd.how](https://fsd.how) (official docs, v2.1).
-2. **Clean Review** - for the 7-dimension quality check (naming, functions, DRY, YAGNI, magic numbers, readability, conventions). Based on "Clean Code" by Robert C. Martin.
+1. **Feature-Sliced Design** (`docs/skills/feature-sliced-design/SKILL.md`) - for module placement, layer imports, and `@x` cross-import decisions. The methodology reference is [fsd.how](https://fsd.how) (v2.1).
+2. **Clean Review** (`docs/skills/clean-review/SKILL.md`) - for the 7-dimension quality check (naming, functions, DRY, YAGNI, magic numbers, readability, conventions). Based on "Clean Code" by Robert C. Martin.
 
-To install either, create a folder with a `SKILL.md` inside:
+Read both files before writing the plan. If your tool supports skills (Claude Code, ZCode), you can also install them to `~/.claude/skills/` for auto-loading, but reading the files in this repo is enough.
 
-```bash
-mkdir -p ~/.claude/skills/feature-sliced-design ~/.claude/skills/clean-review
-```
+## Docs-first rule
 
-Then write the `SKILL.md` content. You can get the FSD skill from the [fsd.how GitHub repo](https://github.com/feature-sliced/feature-sliced.design) or write your own summary of the methodology. For the clean review skill, write it yourself based on the 7 dimensions listed above.
+If you find a gap in the API docs (`docs/API.md`), the data shape (`docs/DATA_SHAPE.md`), or any architecture doc - something the entity needs but the docs do not describe, or something the docs get wrong - do NOT write code that invents behavior. Instead:
 
-If you cannot install them, you can still write the plan by reading the FSD rules at [fsd.how](https://fsd.how) and applying the clean code dimensions manually. The skills make it faster and more consistent, but the plan can be written without them.
+1. Propose the fix or addition on the `docs/fe/api-fields` branch (or tell the user to add it there).
+2. The plan notes the gap in its "Left for the next PRs" section.
+3. No code and no mock answers an endpoint that the API does not describe.
 
 ## Sources to read before writing
 
