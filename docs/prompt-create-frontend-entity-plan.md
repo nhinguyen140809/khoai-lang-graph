@@ -6,18 +6,18 @@ Write a plan for building the next entity PR of the frontend, following the shap
 
 Load these two skills before starting (they change how you place and review code):
 
-1. **Feature-Sliced Design** - for module placement, layer imports, and `@x` cross-import decisions.
-2. **Clean Review** - for the 7-dimension quality check (naming, functions, DRY, YAGNI, magic numbers, readability, conventions).
+1. **Feature-Sliced Design** - for module placement, layer imports, and `@x` cross-import decisions. Install from [fsd.how](https://fsd.how) (official docs, v2.1).
+2. **Clean Review** - for the 7-dimension quality check (naming, functions, DRY, YAGNI, magic numbers, readability, conventions). Based on "Clean Code" by Robert C. Martin.
 
-To install them, create a folder with a `SKILL.md` inside:
+To install either, create a folder with a `SKILL.md` inside:
 
 ```bash
 mkdir -p ~/.claude/skills/feature-sliced-design ~/.claude/skills/clean-review
 ```
 
-For the FSD skill, the methodology reference is [fsd.how](https://fsd.how) (v2.1). For the clean review skill, base it on the "Clean Code" book by Robert C. Martin and cover the 7 dimensions: naming, function size, duplication (DRY), over-engineering (YAGNI), magic numbers, readability, and conventions.
+Then write the `SKILL.md` content. You can get the FSD skill from the [fsd.how GitHub repo](https://github.com/feature-sliced/feature-sliced.design) or write your own summary of the methodology. For the clean review skill, write it yourself based on the 7 dimensions listed above.
 
-If you do not have these skills installed, you can still write the plan by reading the FSD rules at [fsd.how](https://fsd.how) and applying the clean code dimensions manually. The skills just make it faster and more consistent.
+If you cannot install them, you can still write the plan by reading the FSD rules at [fsd.how](https://fsd.how) and applying the clean code dimensions manually. The skills make it faster and more consistent, but the plan can be written without them.
 
 ## Sources to read before writing
 

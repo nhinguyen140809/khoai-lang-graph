@@ -428,9 +428,12 @@ From P7: the threads of a project, `Thread` and `Message`, newer than on the bra
 
 | Copy | To | What changes |
 |---|---|---|
-| `mocks/messages.fixtures.ts` | `mocks/messages/` | Types from `thread/entities` |
+| `mocks/threads.fixtures.ts` (89 lines) | `mocks/threads/fixtures/` | Types from `thread/entities`; `sentMessages` moves to the store |
+| `mocks/threads.handlers.ts` (108 lines) | `mocks/threads/handlers/` | Scenario helper; split per endpoint |
+| `mocks/messages.fixtures.ts` (89 lines) | `mocks/messages/fixtures/` | Types from `thread/entities` |
+| `mocks/messages.handlers.ts` (72 lines) | `mocks/messages/handlers/` | Scenario helper; the mock already keeps created messages in a store |
 
-Write: the list of messages and its handler, the changes of a thread with their handlers, and the function that sends a message to a thread with its idempotency key ([D7](#d7-idempotency-keys)), which `sendFirstMessage` then calls.
+Write: the list of messages and its handler, the changes of a thread with their handlers, and the function that sends a message to a thread with its idempotency key ([D7](#d7-idempotency-keys)), which `sendFirstMessage` then calls. On `main`, `thread/entities` already has `threads.api.ts` and `threads.types.ts` (listThreads, sendFirstMessage); `mocks/threads/` and `mocks/messages/` already serve their endpoints with a store for created messages.
 
 ### E7. `llm-model`
 
@@ -452,9 +455,9 @@ Endpoints added: `PATCH /me`, `POST /me/password`, `GET /me/sessions`, `DELETE /
 |---|---|---|
 | `userSettingsSchema`, `profileSchema`, `sessionSchema` of `features/settings/settings.types.ts` | `user/entities/user.types.ts` | RunDefaults from `run/entities` |
 | `getUserSettings`, `replaceUserSettings`, `changeProfile`, `changePassword`, `listSessions`, `revokeSession` of `features/settings/settings.api.ts` | `user/entities/user.api.ts` | Paging for the sessions |
-| `mocks/account.fixtures.ts`, `account.handlers.ts` | `mocks/account/` | Scenario helper |
+| `mocks/account.fixtures.ts`, `account.handlers.ts` | `mocks/account/` | Scenario helper; already on `main` for the auth and me endpoints |
 
-Write: keys in `userKeys`, hooks. The hooks of the branch (`useAccountQueries.ts`) write their keys by hand and mix queries with mutations, so they are not copied.
+Write: keys in `userKeys`, hooks. The hooks of the branch (`useAccountQueries.ts`) write their keys by hand and mix queries with mutations, so they are not copied. On `main`, `mocks/account/` already has `auth.handlers.ts`, `me.fixtures.ts`, `me.handlers.ts` and `me.problems.ts`; the user PR extends them.
 
 ### E9. `usage`
 
