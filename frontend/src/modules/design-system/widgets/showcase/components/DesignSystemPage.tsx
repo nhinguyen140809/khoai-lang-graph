@@ -12,6 +12,7 @@ import { CodeCard } from './cards/CodeCard'
 import { CommandCard } from './cards/CommandCard'
 import { ControlsCard } from './cards/ControlsCard'
 import { CopyButtonCard } from './cards/CopyButtonCard'
+import { DiffViewCard } from './cards/DiffViewCard'
 import { DisclosureCard } from './cards/DisclosureCard'
 import { ExplorerTreeCard } from './cards/ExplorerTreeCard'
 import { FloatingSurfaceCard } from './cards/FloatingSurfaceCard'
@@ -57,6 +58,7 @@ export function DesignSystemPage() {
             <CopyButtonCard />
             <BadgesCard />
             <HighlightCard />
+            <DiffViewCard />
             <CodeCard />
             <FloatingSurfaceCard />
             <AlertsCard />

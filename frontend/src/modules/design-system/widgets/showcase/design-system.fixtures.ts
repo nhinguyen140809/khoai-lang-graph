@@ -220,6 +220,15 @@ export const sampleMarkdown = [
 export const interviewMessage =
   'I ask seniors in my club, but I never know who is free this week. I want to cancel without writing to anyone, and a reminder the hour before would help.'
 
+/** The statement of REQ-001 at version 3 and at version 4, to read what the change marked. */
+export const statementV3 =
+  'The system shall let a student search mentors by field and availability.'
+export const statementV4 =
+  'The system shall let a student search and filter mentors by field, availability and rating.'
+
+/** The rationale that version 4 of REQ-001 brought, which version 3 did not have. */
+export const rationaleV4 = 'Students cannot find a free mentor today; many give up before asking.'
+
 export interface QuotedItem {
   /** The words of the message that the item was taken from. */
   quote: string

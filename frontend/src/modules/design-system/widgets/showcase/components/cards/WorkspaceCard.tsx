@@ -11,6 +11,7 @@ import {
   SquareChevronRightIcon,
   XIcon,
 } from 'lucide-react'
+import type { ReactNode } from 'react'
 
 import { LogoMark } from '@/shared/components/frame'
 import {
@@ -21,6 +22,7 @@ import {
   BreadcrumbSeparator,
 } from '@/shared/components/ui/breadcrumb'
 import { Card } from '@/shared/components/ui/card'
+import { DiffView } from '@/shared/components/ui/diff-view'
 import { Kbd } from '@/shared/components/ui/kbd'
 import {
   ResizableHandle,
@@ -30,6 +32,7 @@ import {
 import { ScrollArea } from '@/shared/components/ui/scroll-area'
 import { Separator } from '@/shared/components/ui/separator'
 
+import { rationaleV4, statementV3, statementV4 } from '../../design-system.fixtures'
 import { ArtifactTree } from '../ArtifactTree'
 
 const features = [
@@ -39,10 +42,13 @@ const features = [
   { label: 'Traceability', Icon: GitForkIcon },
 ]
 
-const fields = [
-  ['Statement', 'The system shall let a student search mentors by field and availability.'],
+// The document of REQ-001 as a reader of its history sees it: version 4, with the words that
+// changed since version 3 marked in its statement, and its new rationale brought whole.
+const fields: [label: string, value: ReactNode][] = [
+  ['Statement', <DiffView before={statementV3} after={statementV4} />],
   ['Type', 'functional'],
   ['Priority', 'must'],
+  ['Rationale', <DiffView before="" after={rationaleV4} />],
   ['Verification', 'test'],
 ]
 
@@ -115,7 +121,14 @@ export function WorkspaceCard() {
                     </BreadcrumbItem>
                   </BreadcrumbList>
                 </Breadcrumb>
-                <h2>REQ-001 Search mentors</h2>
+                <div className="flex flex-col gap-1">
+                  <h2>REQ-001 Search mentors</h2>
+                  {/* The document shows the change while the reader holds a version of its
+                      history; the history itself belongs to the bottom panel. */}
+                  <p className="text-xs text-muted-foreground">
+                    Version 4 with its changes since version 3
+                  </p>
+                </div>
                 <dl className="flex flex-col gap-y-1.5 text-xs">
                   {fields.map(([label, value]) => (
                     <div key={label} className="flex gap-x-3">
