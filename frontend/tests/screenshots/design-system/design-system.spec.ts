@@ -71,6 +71,18 @@ screenshots('Design system', (shot) => {
       }),
     })
   })
+
+  shot('Key text and relative time', async ({ page, shoot }) => {
+    const width = page.viewportSize()?.width ?? 1920
+    await page.setViewportSize({ width, height: 2400 })
+    await page.goto('/design-system')
+
+    await shoot({
+      part: page.locator('[data-slot="card"]').filter({
+        has: page.locator('[data-slot="card-title"]', { hasText: 'Typography' }),
+      }),
+    })
+  })
 })
 
 /** The card of the copy buttons on the page. */

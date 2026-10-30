@@ -1,8 +1,17 @@
+'use client'
+
 import { Code } from '@/shared/components/ui/code'
 import { Kbd, KbdGroup } from '@/shared/components/ui/kbd'
+import { KeyText } from '@/shared/components/ui/key-text'
+import { RelativeTime } from '@/shared/components/ui/relative-time'
 import { Separator } from '@/shared/components/ui/separator'
 
 import { SampleCard, SampleLabel } from '../Sample'
+
+/** A moment this many minutes before now, for the words of a relative time. */
+function minutesAgo(minutes: number): string {
+  return new Date(Date.now() - minutes * 60_000).toISOString()
+}
 
 const headings = [
   { Tag: 'h1', size: 'text-lg' },
@@ -51,6 +60,18 @@ export function TypographyCard() {
           <Kbd>Ctrl</Kbd>
           <Kbd>K</Kbd>
         </KbdGroup>
+      </p>
+      <p className="text-sm">
+        The key of a record after its title, Requirement specification <KeyText>REQ-001</KeyText>,
+        and a long key cut to fit,{' '}
+        <KeyText truncate className="inline-block max-w-24 align-bottom">
+          5f2d0000-0000-4000-8000-000000000001
+        </KeyText>
+        , with the whole key on hover.
+      </p>
+      <p className="text-sm">
+        A moment as the words that people read, <RelativeTime date={minutesAgo(5)} />, with the
+        exact time on hover, and one that holds still, <RelativeTime date={minutesAgo(90)} />.
       </p>
       <pre className="overflow-x-auto rounded-md bg-muted p-2 text-xs">
         {`> I want an online platform for students to find mentors.
