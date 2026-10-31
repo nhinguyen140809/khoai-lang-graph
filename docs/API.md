@@ -213,10 +213,10 @@ All paths are relative to `/api/v1`. The Phase column uses the phases of the dat
 | `POST /auth/login` | Start a session; sets the cookie | MVP |
 | `POST /auth/logout` | Revoke the current session | MVP |
 | `GET /me` | The signed-in user | MVP |
-| `PATCH /me` | Change `display_name`, `avatar_url` | MVP |
-| `POST /me/password` | Change the password; body `current_password`, `new_password` | MVP |
-| `GET /me/sessions` | Sessions of the user | MVP |
-| `DELETE /me/sessions/{session_id}` | Revoke one session | MVP |
+| `PATCH /me` | Change `display_name`, `avatar_url`; each is optional, and a field left out keeps its value. `display_name` is a text that is not empty once trimmed, of at most 100 characters; `avatar_url` is null or an `http` or `https` address; no other field; otherwise `422 validation_failed` at the field. Returns `200` with the user | MVP |
+| `POST /me/password` | Change the password; body `current_password`, `new_password`. A wrong `current_password` answers `422 validation_failed` at `current_password`; `new_password` has at least 8 characters and differs from the current password, otherwise `422` at `new_password`. Returns `204`; the session of the request stays, and every other session of the user is revoked | MVP |
+| `GET /me/sessions` | The sessions of the user that are not revoked and not expired, ordered by `last_seen_at` descending. Each has the fields of [Session](DATA_SHAPE.md#session-mvp) that are not `server-only`, and `current`, true for the session of the request | MVP |
+| `DELETE /me/sessions/{session_id}` | Revoke one session; `204`. Revoking the session of the request signs the user out, as `POST /auth/logout`. A session that is revoked, expired or of another user answers `404` | MVP |
 
 Login and register answer the same way for a wrong password and an unknown email, and are rate limited per IP address.
 
@@ -224,8 +224,8 @@ Login and register answer the same way for a wrong password and an unknown email
 
 | Method and path | Purpose | Phase |
 |---|---|---|
-| `GET /me/settings` | User settings | MVP |
-| `PUT /me/settings` | Replace user settings | MVP |
+| `GET /me/settings` | The [UserSettings](DATA_SHAPE.md#usersettings-mvp) of the user, always `200`: a user who has saved none gets the defaults, `theme` `system`, `ui_language` `en`, `default_output_language` `en`, `default_run_config` with every field null, `notify_on_interrupt` and `notify_on_run_finished` true | MVP |
+| `PUT /me/settings` | Replace user settings. Body: any of `theme`, `ui_language`, `default_output_language`, `default_run_config`, `notify_on_interrupt`, `notify_on_run_finished`; a field left out keeps its value. Each enum takes a value of its list and each `notify_on_` field a boolean; `default_run_config` is a whole RunDefaults with the rules of `run_config` of a project, a field left out of it being null; no other field; otherwise `422 validation_failed` at the field, such as `theme` or `default_run_config.max_steps`. Returns `200` with the settings as `GET` answers them | MVP |
 | `GET /me/model-settings` | The [ModelSettings](DATA_SHAPE.md#modelsettings-mvp) of the user, one for each agent role that the user chose a model for, ordered by `agent_role`; a role without one uses the server default | MVP |
 | `PUT /me/model-settings` | Replace the model settings of the user. Body `items`, a list of `agent_role`, `model_id` and an optional `temperature`; a role left out uses the server default. Each `agent_role` is an agent role of the current workflow definition, given once; each `model_id` is a model of the catalog whose `allowed_roles` holds the role; `temperature` is null or a number from 0 to 1; otherwise `422 validation_failed` at `items.<index>.agent_role`, `items.<index>.model_id` or `items.<index>.temperature`. Returns `200` with the settings as `GET` lists them | MVP |
 | `GET /models` | Model catalog: allowed models, capabilities, prices, ordered by `model_id` | MVP |
@@ -311,7 +311,7 @@ Rules:
 | Method and path | Purpose | Phase |
 |---|---|---|
 | `GET /projects` | Projects of the user; filters `status`, `rollup_run_status` (one or more values; `none` matches a project without a run) and `last_activity_after`; ordered by `last_activity_at` descending. Each item has `rollup_run_status`, which the project list shows; `item_counts` comes only with `GET /projects/{project_id}` | MVP |
-| `POST /projects` | Create; body `name`, `description`, `output_language`. `name` is optional: without it, the first run names the project from its initial intent, and the event stream of that run sends `project_named`. Accepts an `Idempotency-Key`, so that a retry after a lost answer creates no second project | MVP |
+| `POST /projects` | Create; body `name`, `description`, `output_language`. `output_language` left out takes `default_output_language` of the user settings. `name` is optional: without it, the first run names the project from its initial intent, and the event stream of that run sends `project_named`. Accepts an `Idempotency-Key`, so that a retry after a lost answer creates no second project | MVP |
 | `GET /projects/{project_id}` | One project, with `item_counts`, `unfinished_run_counts` and `rollup_run_status` | MVP |
 | `PATCH /projects/{project_id}` | Change name, description, status, `run_config`, `model_overrides`. Each key of `model_overrides` is an agent role of the current workflow definition and each value a model of the catalog whose `allowed_roles` holds the role; otherwise `422 validation_failed` at `model_overrides.<role>` | MVP |
 | `DELETE /projects/{project_id}` | Soft delete: the project is left out of lists, and its endpoints answer `404`. A project with an unfinished run (`queued`, `running` or `interrupted`) answers `409 invalid_state`; the run is stopped first | MVP |
