@@ -73,11 +73,11 @@ export const failedSendCases = [
   {
     request: 'the thread',
     path: apiEndpoints.projectThreads.pattern,
-    reason: 'Failed to start a thread (HTTP 500)',
+    reason: 'Failed to create the thread (HTTP 500)',
   },
   {
     request: 'the first message',
     path: apiEndpoints.threadMessages.pattern,
-    reason: 'Failed to send the idea (HTTP 500)',
+    reason: 'Failed to send the message (HTTP 500)',
   },
 ]

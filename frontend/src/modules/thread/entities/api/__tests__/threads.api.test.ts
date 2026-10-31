@@ -1,34 +1,45 @@
-import { http, HttpResponse } from 'msw'
+import { http } from 'msw'
 import { describe, expect, it } from 'vitest'
 
 import { server } from '@/mocks/msw-server.setup'
-import { threadIds } from '@/mocks/shared/db'
-import { created, emptyPage } from '@/mocks/shared/http/response'
+import { projectIds, threadIds } from '@/mocks/shared/db'
+import { created } from '@/mocks/shared/http/response'
 import { apiEndpoints } from '@/shared/api/endpoints'
 import { HttpHeader } from '@/shared/api/http'
+import { openPage } from '@/test/msw'
+import { itSendsRequests, itThrowsApiErrors } from '@/test/suites'
 
-import { listThreads, sendFirstMessage } from '../threads.api'
-import { createdThread, failedListCases, sentMessage } from './threads.api.data'
+import { getThread, sendFirstMessage } from '../threads.api'
+import {
+  createdThread,
+  sentMessage,
+  sentThreadRequestCases,
+  threadApiErrorCases,
+} from './threads.api.data'
 
-describe('listThreads', () => {
-  it('returns the threads from the API', async () => {
-    const threads = await listThreads()
-
-    expect(threads.map(({ id }) => id)).toContain(threadIds.mentorMain)
+describe('the thread API', () => {
+  it('reads the thread of the mentor platform with the status of its latest run', async () => {
+    await expect(getThread(threadIds.mentorMain)).resolves.toMatchObject({
+      id: threadIds.mentorMain,
+      project_id: projectIds.mentor,
+      current_stage: 'analysis_review',
+      latest_run_status: 'interrupted',
+    })
   })
 
-  it('returns an empty list when there are no threads', async () => {
-    // One-off override: this test needs different data than the default fixture.
-    server.use(http.get(apiEndpoints.threads.pattern, () => HttpResponse.json(emptyPage)))
+  it('reads the thread of the mentor platform once its run has ended', async () => {
+    openPage('/?mock-run-status=done')
 
-    await expect(listThreads()).resolves.toEqual([])
+    await expect(getThread(threadIds.mentorMain)).resolves.toMatchObject({
+      current_stage: 'done',
+      active_run_id: null,
+      latest_run_status: 'succeeded',
+    })
   })
 
-  it.each(failedListCases)('throws on $name', async ({ answer, error }) => {
-    server.use(http.get(apiEndpoints.threads.pattern, answer))
+  itSendsRequests(sentThreadRequestCases)
 
-    await expect(listThreads()).rejects.toThrow(error)
-  })
+  itThrowsApiErrors(threadApiErrorCases)
 })
 
 describe('sendFirstMessage', () => {

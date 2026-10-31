@@ -1,21 +1,77 @@
-import { z } from 'zod'
-
 import { apiEndpoints } from '@/shared/api/endpoints'
 import { HttpMethod } from '@/shared/api/http'
-import { apiRequest } from '@/shared/api/request'
+import { apiCommand, apiRequest, fetchPage, type ListPage } from '@/shared/api/request'
+import { pathWithQuery } from '@/shared/lib/url'
 
-import { sentMessageSchema } from '../types/messages.types'
-import { type Thread, threadSchema } from '../types/threads.types'
+import {
+  type CreateThreadBody,
+  type Thread,
+  type ThreadFilters,
+  threadSchema,
+  type UpdateThreadBody,
+} from '../types/threads.types'
+import { sendMessage } from './messages.api'
 
-// The first page of the threads; later pages are not read.
-const listThreadsResponseSchema = z.object({ items: z.array(threadSchema) })
+// TODO: switch to the generated client in src/shared/api/generated/ once it is generated.
 
-// TODO: switch to the generated client in src/shared/api/generated/ once the threads API exists.
-export async function listThreads(): Promise<Thread[]> {
-  const { items } = await apiRequest(apiEndpoints.threads.path(), listThreadsResponseSchema, {
-    action: 'load threads',
+/** One page of the threads of a project, the newest message first. */
+export function listProjectThreads(
+  projectId: string,
+  cursor: string | null,
+  limit: number,
+): Promise<ListPage<Thread>> {
+  return fetchPage(apiEndpoints.projectThreads.path({ projectId }), threadSchema, {
+    limit,
+    cursor,
+    action: 'load the threads of the project',
   })
-  return items
+}
+
+/** One page of the threads of the user across projects, the newest message first. */
+export function listThreads(
+  cursor: string | null,
+  limit: number,
+  filters: ThreadFilters = {},
+): Promise<ListPage<Thread>> {
+  const path = pathWithQuery(apiEndpoints.threads.path(), { project_id: filters.projectId })
+  return fetchPage(path, threadSchema, {
+    limit,
+    cursor,
+    action: 'load the threads',
+  })
+}
+
+/** One thread, with the status of its latest run. */
+export function getThread(threadId: string): Promise<Thread> {
+  return apiRequest(apiEndpoints.thread.path({ threadId }), threadSchema, {
+    action: 'load the thread',
+  })
+}
+
+/** Creates an empty thread in a project; its first message starts the work. */
+export function createThread(projectId: string, body: CreateThreadBody = {}): Promise<Thread> {
+  return apiRequest(apiEndpoints.projectThreads.path({ projectId }), threadSchema, {
+    action: 'create the thread',
+    method: HttpMethod.Post,
+    body,
+  })
+}
+
+/** Renames a thread, archives it or makes it active again. */
+export function updateThread(threadId: string, body: UpdateThreadBody): Promise<Thread> {
+  return apiRequest(apiEndpoints.thread.path({ threadId }), threadSchema, {
+    action: 'change the thread',
+    method: HttpMethod.Patch,
+    body,
+  })
+}
+
+/** Deletes a thread; a thread with an unfinished run answers 409 until the run is stopped. */
+export function deleteThread(threadId: string): Promise<void> {
+  return apiCommand(apiEndpoints.thread.path({ threadId }), {
+    action: 'delete the thread',
+    method: HttpMethod.Delete,
+  })
 }
 
 /**
@@ -27,15 +83,6 @@ export async function sendFirstMessage(
   content: string,
   idempotencyKey: string,
 ): Promise<void> {
-  const thread = await apiRequest(apiEndpoints.projectThreads.path({ projectId }), threadSchema, {
-    action: 'start a thread',
-    method: HttpMethod.Post,
-    body: {},
-  })
-  await apiRequest(apiEndpoints.threadMessages.path({ threadId: thread.id }), sentMessageSchema, {
-    action: 'send the idea',
-    method: HttpMethod.Post,
-    body: { content },
-    idempotencyKey,
-  })
+  const thread = await createThread(projectId)
+  await sendMessage(thread.id, { content }, idempotencyKey)
 }
