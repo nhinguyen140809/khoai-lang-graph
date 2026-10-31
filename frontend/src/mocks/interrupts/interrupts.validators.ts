@@ -37,42 +37,34 @@ function optionalNumber(value: unknown): number | null | undefined {
   return typeof value === 'number' ? value : undefined
 }
 
-/** The answer as the body gives it, once its shape has no problem. */
-function answerOf(given: Record<string, unknown>): QuestionAnswer {
-  return {
-    choice_keys: choiceKeysOf(given.choice_keys) ?? [],
-    text: optionalText(given.text) ?? null,
-    number: optionalNumber(given.number) ?? null,
-  }
-}
-
-/**
- * The problems of the answer to one question, by the rules of its type: the choices an answer picks,
- * the text that the question or a chosen choice asks for, and the number of a number question.
- */
-export function answerProblems(
-  question: InterruptQuestion,
-  answer: unknown,
+/** The answer as the body gives it, or the problems of its shape. */
+function parseAnswer(
+  given: unknown,
   field: string,
-): FieldProblem[] {
-  if (!isRecord(answer)) return [jsonObjectProblem(field)]
+): { answer: QuestionAnswer } | { problems: FieldProblem[] } {
+  if (!isRecord(given)) return { problems: [jsonObjectProblem(field)] }
+  const keys = choiceKeysOf(given.choice_keys)
+  const text = optionalText(given.text)
+  const number = optionalNumber(given.number)
   const problems: FieldProblem[] = []
-  const keys = choiceKeysOf(answer.choice_keys)
-  const text = optionalText(answer.text)
-  const number = optionalNumber(answer.number)
   if (keys === undefined) problems.push({ field, message: 'Send the chosen choices as keys.' })
   if (text === undefined) problems.push(optionalTextProblem(field))
   if (number === undefined) problems.push({ field, message: 'Send a number, or nothing.' })
-  if (keys === undefined || text === undefined || number === undefined) return problems
+  if (keys === undefined || text === undefined || number === undefined) return { problems }
+  return { answer: { choice_keys: keys, text, number } }
+}
 
+// The problems of an answer of a good shape, by the rules of its question: the choices it picks
+// for its type, and the text that the question or a chosen choice asks for.
+function answerRuleProblems(
+  question: InterruptQuestion,
+  answer: QuestionAnswer,
+  field: string,
+): FieldProblem[] {
   const choiceKeys = question.choices.map(({ key }) => key)
-  const chosen = keys.filter((key) => choiceKeys.includes(key))
-  const hasUnknownKey = chosen.length !== keys.length
-  const tooFewChoices = (fewest: number) => ({
-    field,
-    message:
-      fewest === 1 ? 'Choose at least one choice.' : `Choose at least ${String(fewest)} choices.`,
-  })
+  const chosen = answer.choice_keys.filter((key) => choiceKeys.includes(key))
+  const hasUnknownKey = chosen.length !== answer.choice_keys.length
+  const problems: FieldProblem[] = []
   switch (question.type) {
     case 'single_select':
       if (hasUnknownKey || chosen.length !== 1) {
@@ -82,7 +74,7 @@ export function answerProblems(
     case 'multi_select': {
       if (hasUnknownKey) problems.push({ field, message: 'Choose the choices of the question.' })
       const fewest = Math.max(question.min_selected ?? 0, question.required ? 1 : 0)
-      if (chosen.length < fewest) problems.push(tooFewChoices(fewest))
+      if (chosen.length < fewest) problems.push(tooFewChoicesProblem(field, fewest))
       if (question.max_selected !== null && chosen.length > question.max_selected) {
         problems.push({
           field,
@@ -92,10 +84,10 @@ export function answerProblems(
       break
     }
     case 'free_text':
-      if (question.required && !hasText(text)) problems.push(requiredTextProblem(field))
+      if (question.required && !hasText(answer.text)) problems.push(requiredTextProblem(field))
       break
     case 'number':
-      if (question.required && number === null) {
+      if (question.required && answer.number === null) {
         problems.push({ field, message: 'Enter a number.' })
       }
       break
@@ -103,8 +95,62 @@ export function answerProblems(
   const hasChoiceThatRequiresText = question.choices.some(
     ({ key, requires_text }) => requires_text && chosen.includes(key),
   )
-  if (hasChoiceThatRequiresText && !hasText(text)) problems.push(requiredTextProblem(field))
+  if (hasChoiceThatRequiresText && !hasText(answer.text)) {
+    problems.push(requiredTextProblem(field))
+  }
   return problems
+}
+
+// The problem of a multiple choice that picks fewer choices than its question asks for.
+function tooFewChoicesProblem(field: string, fewest: number): FieldProblem {
+  return {
+    field,
+    message:
+      fewest === 1 ? 'Choose at least one choice.' : `Choose at least ${String(fewest)} choices.`,
+  }
+}
+
+/**
+ * The problems of the answer to one question: its shape first, then the rules of its type, the
+ * choices it picks and the text that the question or a chosen choice asks for.
+ */
+export function answerProblems(
+  question: InterruptQuestion,
+  given: unknown,
+  field: string,
+): FieldProblem[] {
+  const read = parseAnswer(given, field)
+  return 'problems' in read ? read.problems : answerRuleProblems(question, read.answer, field)
+}
+
+// The answers of the body by question key, with the problems of each answer, of a required
+// question left unanswered, and of an answer to a key that is no question of the interrupt.
+function answersOf(
+  interrupt: Interrupt,
+  given: unknown,
+): { answers: Record<string, QuestionAnswer>; problems: FieldProblem[] } {
+  const object = given === undefined ? {} : jsonObject(given)
+  if (object === undefined) return { answers: {}, problems: [jsonObjectProblem('answers')] }
+  const answers: Record<string, QuestionAnswer> = {}
+  const problems: FieldProblem[] = []
+  for (const question of interrupt.questions) {
+    const field = `answers.${question.key}`
+    const answer = object[question.key]
+    if (answer === undefined) {
+      if (question.required) problems.push({ field, message: 'Answer this question.' })
+      continue
+    }
+    problems.push(...answerProblems(question, answer, field))
+    const read = parseAnswer(answer, field)
+    if ('answer' in read) answers[question.key] = read.answer
+  }
+  const questionKeys = new Set(interrupt.questions.map(({ key }) => key))
+  for (const key of Object.keys(object)) {
+    if (!questionKeys.has(key)) {
+      problems.push({ field: `answers.${key}`, message: 'Answer a question of this review.' })
+    }
+  }
+  return { answers, problems }
 }
 
 // The option that the body chooses: one of the options of the interrupt, or null for an interrupt
@@ -178,30 +224,11 @@ export function validateResumeBody(
     )
   }
 
-  const answers = given.answers === undefined ? {} : jsonObject(given.answers)
-  const answered: Record<string, QuestionAnswer> = {}
-  if (answers === undefined) {
-    problems.push(jsonObjectProblem('answers'))
-  } else {
-    for (const question of interrupt.questions) {
-      const field = `answers.${question.key}`
-      const answer = answers[question.key]
-      if (answer === undefined) {
-        if (question.required) problems.push({ field, message: 'Answer this question.' })
-        continue
-      }
-      problems.push(...answerProblems(question, answer, field))
-      if (isRecord(answer)) answered[question.key] = answerOf(answer)
-    }
-    for (const key of Object.keys(answers)) {
-      if (interrupt.questions.every(({ key: questionKey }) => questionKey !== key)) {
-        problems.push({ field: `answers.${key}`, message: 'Answer a question of this review.' })
-      }
-    }
-  }
+  const checkedAnswers = answersOf(interrupt, given.answers)
+  problems.push(...checkedAnswers.problems)
 
-  const modified = modifiedItemsOf(interrupt, given.modified_items)
-  problems.push(...modified.problems)
+  const checkedItems = modifiedItemsOf(interrupt, given.modified_items)
+  problems.push(...checkedItems.problems)
   if (problems.length > 0) return { problems }
   return {
     decision: {
@@ -209,8 +236,8 @@ export function validateResumeBody(
       // The option and the feedback were checked above: no problem means each is set, not missing.
       option: option ?? null,
       feedback: feedback ?? null,
-      answers: answered,
-      modified_items: modified.items,
+      answers: checkedAnswers.answers,
+      modified_items: checkedItems.items,
     },
   }
 }

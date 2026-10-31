@@ -7,7 +7,7 @@ import { type Project, projectName, unfinishedRunCount } from '@/modules/project
 import { ConfirmDialog } from '@/shared/components/ui/confirm-dialog'
 import { routes } from '@/shared/routes'
 
-import { useDeleteProject } from '../hooks/useDeleteProject'
+import { useDeleteProject } from './hooks/useDeleteProject'
 
 interface DeleteProjectDialogProps {
   project: Project

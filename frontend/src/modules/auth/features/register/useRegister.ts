@@ -7,8 +7,8 @@ import { login, register, type RegisterBody, useRedirectAfterLogin } from '@/mod
 import { formErrorOf, showFieldProblems } from '@/shared/components/form'
 import { routes } from '@/shared/routes'
 
-import { registerMessages } from '../register.constants'
-import { type RegisterForm, registerFormSchema } from '../register.schema'
+import { registerMessages } from './register.constants'
+import { type RegisterForm, registerFormSchema } from './register.schema'
 
 /**
  * Creates an account, then logs in with it, since registering does not start a session,

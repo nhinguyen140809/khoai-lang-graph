@@ -26,6 +26,14 @@ describe('the resolved config', () => {
     expect(JSON.stringify(hook)).not.toContain('Hooks of a slice')
   })
 
+  it('gives a lone component at the root of a feature or a widget the rules of the components', async () => {
+    const rule = await ruleOf(
+      'src/modules/project/widgets/menu/ProjectSwitcher.tsx',
+      'no-restricted-imports',
+    )
+    expect(JSON.stringify(rule)).toContain('through a hook of its slice')
+  })
+
   it('lets the routing files of Next.js export a default', async () => {
     const page = await ruleOf('src/app/page.tsx', 'no-restricted-syntax')
     expect(JSON.stringify(page)).not.toContain('named export')
@@ -91,6 +99,28 @@ describe('the rules of file names', () => {
     expect(await problemsOf('src/modules/project/entities/projects.fixtures.ts')).toContain(
       'check-file/filename-naming-convention',
     )
+  })
+
+  it('accepts a lone hook at the root of a feature or a widget, with its tests', async () => {
+    for (const filePath of [
+      'src/modules/run/features/start/useStartRun.ts',
+      'src/modules/project/widgets/list/useProjectFilterFields.ts',
+      'src/modules/run/features/start/__tests__/useStartRun.test.ts',
+      'src/modules/run/features/start/__tests__/useStartRun.data.ts',
+    ]) {
+      expect(await problemsOf(filePath)).toEqual([])
+    }
+  })
+
+  it('rejects a hook outside hooks/ elsewhere', async () => {
+    for (const filePath of [
+      'src/modules/run/entities/runs/useRuns.ts',
+      'src/modules/project/entities/useProjects.ts',
+      'src/modules/project/features/create/components/useThing.ts',
+      'src/shared/lib/timing/useClock.ts',
+    ]) {
+      expect(await problemsOf(filePath)).toContain('check-file/filename-naming-convention')
+    }
   })
 
   it('rejects a folder that is not kebab-case', async () => {

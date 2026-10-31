@@ -9,7 +9,7 @@ import {
   projectFilterKeys,
   projectFilterMessages,
   projectRunFilters,
-} from '../project-filters.constants'
+} from './project-filters.constants'
 
 /**
  * The filters of the project list: the status of a project, in the view of the app, any number of

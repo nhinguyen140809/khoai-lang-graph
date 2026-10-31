@@ -36,9 +36,15 @@ export default defineConfig([
           '**/!(__tests__)/*.config.tsx': `${kebabCasePattern}.config`,
           // Hooks: useSomething.ts
           '**/hooks/*.ts': `use${pascalCasePattern}`,
-          // Everything else: <subject>.<kind>.ts, subject in kebab-case, with the kinds of its place
+          // Everything else: <subject>.<kind>.ts, subject in kebab-case, with the kinds of its place,
+          // and a lone hook at the root of a feature or a widget
           ...Object.fromEntries(
-            kindPlaces.map(({ files, kinds }) => [files, kindFileNamePattern(kinds)]),
+            kindPlaces.map(({ files, kinds, hooks }) => [
+              files,
+              hooks
+                ? `@(use${pascalCasePattern}|${kindFileNamePattern(kinds)})`
+                : kindFileNamePattern(kinds),
+            ]),
           ),
           // Unit tests: only in a __tests__ folder, named after the file under test plus .test,
           // and the cases of a data-driven test after the file under test plus .data
@@ -47,7 +53,8 @@ export default defineConfig([
           // values that several specs share
           'tests/**/*.ts': `@(index|${kebabCasePattern}.@(spec|data|utils|constants))`,
           '**/hooks/__tests__/*.ts': `use${pascalCasePattern}.@(test|data)`,
-          '**/!(hooks)/__tests__/*.ts': `@(${pascalCasePattern}.data|${kindFileNamePattern(allFileKinds)}.@(test|data))`,
+          // The tests of a lone hook sit in the __tests__ of the root of its feature or widget.
+          '**/!(hooks)/__tests__/*.ts': `@(${pascalCasePattern}.data|@(use${pascalCasePattern}|${kindFileNamePattern(allFileKinds)}).@(test|data))`,
         },
       ],
       'check-file/folder-naming-convention': [

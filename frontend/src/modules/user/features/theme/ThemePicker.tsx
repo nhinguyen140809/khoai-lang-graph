@@ -6,7 +6,7 @@ import { Button } from '@/shared/components/ui/button'
 import { ButtonGroup } from '@/shared/components/ui/button-group'
 import { Tooltip, TooltipContent, TooltipTrigger } from '@/shared/components/ui/tooltip'
 
-import { useThemeChoice } from '../hooks/useThemeChoice'
+import { useThemeChoice } from './useThemeChoice'
 
 const themeOptions: { value: string; label: string; Icon: typeof SunIcon }[] = [
   { value: 'light', label: 'Light', Icon: SunIcon },

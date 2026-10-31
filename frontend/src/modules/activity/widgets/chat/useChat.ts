@@ -2,7 +2,7 @@ import { useState } from 'react'
 
 import { useStartRun } from '@/modules/run/features/start'
 
-import type { ChatTurn } from '../chat.types'
+import type { ChatTurn } from './chat.types'
 
 /**
  * The turns of the chat and the message being written. `send` starts a run with the message, then

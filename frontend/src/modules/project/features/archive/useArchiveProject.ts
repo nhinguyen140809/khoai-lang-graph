@@ -11,7 +11,7 @@ import {
 import { errorMessageOf } from '@/shared/api/error'
 import { actionToastDuration } from '@/shared/lib/timing'
 
-import { archiveProjectMessages } from '../archive-project.constants'
+import { archiveProjectMessages } from './archive-project.constants'
 
 /**
  * Archives a project, or restores an archived one to the active projects. Once the projects have
