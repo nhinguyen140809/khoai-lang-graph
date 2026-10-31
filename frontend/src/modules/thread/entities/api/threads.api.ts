@@ -4,12 +4,8 @@ import { apiEndpoints } from '@/shared/api/endpoints'
 import { HttpMethod } from '@/shared/api/http'
 import { apiRequest } from '@/shared/api/request'
 
-import {
-  createdThreadSchema,
-  sentMessageSchema,
-  type Thread,
-  threadSchema,
-} from '../types/threads.types'
+import { sentMessageSchema } from '../types/messages.types'
+import { type Thread, threadSchema } from '../types/threads.types'
 
 // The first page of the threads; later pages are not read.
 const listThreadsResponseSchema = z.object({ items: z.array(threadSchema) })
@@ -31,11 +27,11 @@ export async function sendFirstMessage(
   content: string,
   idempotencyKey: string,
 ): Promise<void> {
-  const thread = await apiRequest(
-    apiEndpoints.projectThreads.path({ projectId }),
-    createdThreadSchema,
-    { action: 'start a thread', method: HttpMethod.Post, body: {} },
-  )
+  const thread = await apiRequest(apiEndpoints.projectThreads.path({ projectId }), threadSchema, {
+    action: 'start a thread',
+    method: HttpMethod.Post,
+    body: {},
+  })
   await apiRequest(apiEndpoints.threadMessages.path({ threadId: thread.id }), sentMessageSchema, {
     action: 'send the idea',
     method: HttpMethod.Post,
