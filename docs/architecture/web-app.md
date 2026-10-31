@@ -336,6 +336,7 @@ Where the parts above go in the web app. The module and the layer of each part f
 | Run settings | `run`, entities | `modules/run/entities/components/RunDefaultsFields.tsx`, on `runParameterFields` of `workflow`. It saves nothing: the feature that shows the fields saves the values |
 | Workflow state | `run`, entities | `modules/run/entities/components/StateTree.tsx` |
 | Models | `llm-model`, entities | `modules/llm-model/entities/models/models.api.ts`, `modules/llm-model/entities/models/models.types.ts`, `modules/llm-model/entities/models/hooks/useModelQueries.ts`, `modules/llm-model/entities/model-settings/model-settings.api.ts`, `modules/llm-model/entities/model-settings/model-settings.types.ts`, `modules/llm-model/entities/model-settings/hooks/useModelSettingQueries.ts` |
+| Account | `user`, entities | `modules/user/entities/user/user.api.ts`, `modules/user/entities/user/user.types.ts`, `modules/user/entities/user/hooks/useMe.ts`, `modules/user/entities/sessions/sessions.api.ts`, `modules/user/entities/sessions/sessions.types.ts`, `modules/user/entities/sessions/hooks/useSessionQueries.ts`, `modules/user/entities/user-settings/user-settings.api.ts`, `modules/user/entities/user-settings/user-settings.types.ts`, `modules/user/entities/user-settings/hooks/useUserSettingsQueries.ts` |
 
 ## 10. Open points
 

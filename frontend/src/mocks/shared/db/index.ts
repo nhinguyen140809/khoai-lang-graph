@@ -4,6 +4,7 @@ export {
   personaIds,
   projectIds,
   runIds,
+  sessionIds,
   startedRunId,
   threadIds,
   userId,

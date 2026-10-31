@@ -10,6 +10,7 @@ import { expectStillPending } from '@/test/steps'
 import { itRejectsRequests } from '@/test/suites'
 
 import { projectIds } from '../../shared/db'
+import { changeUserSettings } from '../../user-settings/user-settings.changes'
 import {
   createProjectCases,
   pendingProjectCases,
@@ -100,6 +101,21 @@ describe('GET /projects/{project_id}', () => {
       name: 'Mentor platform',
       unfinished_run_counts: { queued: 0, running: 0, interrupted: 1 },
     })
+  })
+})
+
+describe('POST /projects without a language', () => {
+  it.each([
+    { name: 'English with the settings of the fixtures', language: 'en' as const },
+    { name: 'the default language of the user', language: 'vi' as const },
+  ])('creates a project in $name', async ({ language }) => {
+    changeUserSettings({ default_output_language: language })
+
+    const created = (await postApi(apiEndpoints.projects.path(), {
+      name: 'Clinic',
+    })) as ApiAnswer<Project>
+
+    expect(created.body.output_language).toBe(language)
   })
 })
 

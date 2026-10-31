@@ -8,7 +8,9 @@ import { pathnameOf, readBodyFields } from '../shared/http/request'
 import { created, noContent, unauthenticated, validationFailed } from '../shared/http/response'
 import { requiredText, requiredTextProblem } from '../shared/http/validation'
 import { mockScenario, pendingForever } from '../shared/scenario'
-import { currentUser, sessionState } from './account.store'
+import { resetUserSettings } from '../user-settings/user-settings.changes'
+import { currentPassword, currentUser, sessionState } from './account.store'
+import { logIn, logOut } from './auth.changes'
 
 function missingFields(credentials: Record<string, unknown>, fields: string[]) {
   return fields
@@ -41,7 +43,7 @@ export const authHandlers = [
     if (scenario === 'error') {
       return unauthenticated('The email or the password is wrong.')
     }
-    sessionState.set({ loggedIn: true })
+    logIn()
     return noContent()
   }),
 
@@ -63,11 +65,13 @@ export const authHandlers = [
       updated_at: now,
     }
     currentUser.set(me)
+    currentPassword.set(requiredText(credentials.password) ?? '')
+    resetUserSettings()
     return created(me, apiEndpoints.me.path())
   }),
 
   http.post(apiEndpoints.logout.pattern, () => {
-    sessionState.set({ loggedIn: false })
+    logOut()
     return noContent()
   }),
 ]

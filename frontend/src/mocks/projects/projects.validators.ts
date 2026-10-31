@@ -3,6 +3,7 @@ import { outputLanguages } from '@/shared/config/output-language'
 import { isString } from '@/shared/lib/guards'
 
 import { choice, optionalText, optionalTextProblem } from '../shared/http/validation'
+import { currentUserSettings } from '../user-settings/user-settings.lookup'
 import type { NewProjectRecord } from './projects.types'
 
 // What the body of the request that creates a project may hold.
@@ -15,8 +16,11 @@ export function validateNewProject(
   const givenName = optionalText(given.name)
   const name = isString(givenName) ? givenName.trim() || null : givenName
   const description = optionalText(given.description)
+  // A language left out is the default one of the user.
   const language =
-    given.output_language === undefined ? 'en' : choice(outputLanguages, given.output_language)
+    given.output_language === undefined
+      ? currentUserSettings().default_output_language
+      : choice(outputLanguages, given.output_language)
   if (name !== undefined && description !== undefined && language !== undefined) {
     return { project: { name, description, output_language: language } }
   }

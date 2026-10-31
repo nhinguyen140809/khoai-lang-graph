@@ -20,9 +20,18 @@ export const IdPrefix = {
   Decision: 'a41e',
   Interrupt: '7b0c',
   ModelSetting: '6d1e',
+  Session: '5e55',
 } as const
 
 export const userId = mockId(IdPrefix.User, 1)
+
+export const sessionIds = {
+  /** The session of this browser. */
+  current: mockId(IdPrefix.Session, 1),
+  phone: mockId(IdPrefix.Session, 2),
+  laptop: mockId(IdPrefix.Session, 3),
+  revoked: mockId(IdPrefix.Session, 4),
+}
 
 export const projectIds = {
   mentor: mockId(IdPrefix.Project, 1),
