@@ -10,6 +10,8 @@ export const apiEndpoints = {
   register: apiEndpoint('/auth/register'),
   logout: apiEndpoint('/auth/logout'),
   me: apiEndpoint('/me'),
+  models: apiEndpoint('/models'),
+  modelSettings: apiEndpoint('/me/model-settings'),
   health: apiEndpoint('/health'),
 
   projects: apiEndpoint('/projects'),

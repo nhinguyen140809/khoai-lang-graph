@@ -6,6 +6,8 @@ import { itemHandlers } from './artifacts/handlers/items.handlers'
 import { exportHandlers } from './exports/exports.handlers'
 import { interruptHandlers } from './interrupts/interrupts.handlers'
 import { messageHandlers } from './messages/messages.handlers'
+import { modelSettingHandlers } from './model-settings/model-settings.handlers'
+import { modelHandlers } from './models/models.handlers'
 import { projectHandlers } from './projects/projects.handlers'
 import { directiveHandlers } from './runs/handlers/directives.handlers'
 import { runStateHandlers } from './runs/handlers/run-state.handlers'
@@ -24,6 +26,8 @@ import { workflowHandlers } from './workflow/workflow.handlers'
 export const apiHandlers = [
   ...authHandlers,
   ...meHandlers,
+  ...modelHandlers,
+  ...modelSettingHandlers,
   ...projectHandlers,
   ...workflowHandlers,
   ...artifactKindHandlers,
