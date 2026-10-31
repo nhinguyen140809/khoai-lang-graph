@@ -16,6 +16,8 @@ function Progress({
     <ProgressPrimitive.Root
       data-slot="progress"
       data-color={color}
+      // The root needs the value too: it sets `aria-valuenow` and calls `getValueLabel` with it.
+      value={value}
       className={cn(
         'relative flex h-1 w-full items-center overflow-x-hidden rounded-full bg-muted',
         toneClasses[color],
