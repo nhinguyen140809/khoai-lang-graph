@@ -18,3 +18,18 @@ export const meSchema = z.object({
 })
 
 export type Me = z.infer<typeof meSchema>
+
+/** The fields of the user that the user may change; a field left out keeps its value. */
+export interface UpdateMeBody {
+  /** Not empty once trimmed, at most 100 characters. */
+  display_name?: string
+  /** An `http` or `https` address, or null for no picture. */
+  avatar_url?: string | null
+}
+
+/** The body that changes the password of the user; the other sessions of the user end. */
+export interface ChangePasswordBody {
+  current_password: string
+  /** At least 8 characters, other than the current password. */
+  new_password: string
+}
