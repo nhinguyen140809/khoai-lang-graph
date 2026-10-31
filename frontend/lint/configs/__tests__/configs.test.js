@@ -34,6 +34,19 @@ describe('the resolved config', () => {
     expect(JSON.stringify(rule)).toContain('through a hook of its slice')
   })
 
+  it('keeps the queries and the API out of the utils files of the slices', async () => {
+    const utils = await ruleOf(
+      'src/modules/thread/entities/threads.utils.ts',
+      'no-restricted-syntax',
+    )
+    expect(JSON.stringify(utils)).toContain('holds pure helpers')
+    const shared = await ruleOf(
+      'src/shared/api/query-client/page-items.utils.ts',
+      'no-restricted-syntax',
+    )
+    expect(JSON.stringify(shared)).not.toContain('holds pure helpers')
+  })
+
   it('lets the routing files of Next.js export a default', async () => {
     const page = await ruleOf('src/app/page.tsx', 'no-restricted-syntax')
     expect(JSON.stringify(page)).not.toContain('named export')

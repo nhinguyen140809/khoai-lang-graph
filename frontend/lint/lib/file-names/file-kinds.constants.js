@@ -70,7 +70,7 @@ export const topicEntityModules = {
   run: {
     config: [],
     directives: ['config', 'runs', 'status'],
-    events: [],
+    events: ['runs', 'status'],
     runs: ['config', 'status'],
     state: ['config', 'runs', 'status'],
     status: [],

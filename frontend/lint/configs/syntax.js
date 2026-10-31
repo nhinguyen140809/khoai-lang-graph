@@ -32,6 +32,12 @@ export default defineConfig([
     rules: restrictSyntax(...namedExports, 'exportedTypes'),
   },
   {
+    // The utils files of the slices, whose helpers are pure; shared code and the test helpers wrap
+    // the cache of the queries in utils files of their own.
+    files: ['src/modules/**/*.utils.ts'],
+    rules: restrictSyntax(...namedExports, 'exportedTypes', 'queriesInUtils'),
+  },
+  {
     files: ['src/**/*.constants.ts'],
     rules: restrictSyntax(...namedExports, 'valuesInConstants'),
   },
