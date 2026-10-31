@@ -17,6 +17,7 @@ describe('entityTopics', () => {
     expect(entityTopics('run')).toContain('steps')
     expect(entityTopics('project')).toEqual(['projects', 'run-status'])
     expect(entityTopics('llm-model')).toEqual(['model-settings', 'models'])
+    expect(entityTopics('user')).toEqual(['sessions', 'user', 'user-settings'])
     expect(entityTopics('thread')).toEqual([])
   })
 })
@@ -47,6 +48,12 @@ describe('topicPatterns', () => {
     const patterns = topicPatterns('llm-model', 'model-settings')
     expect(isRejected(patterns, '../models/models.types')).toBe(true)
     expect(isRejected(patterns, './model-settings.types')).toBe(false)
+  })
+
+  it('keeps the topics of the user entities apart', () => {
+    const patterns = topicPatterns('user', 'sessions')
+    expect(isRejected(patterns, '../user-settings/user-settings.types')).toBe(true)
+    expect(isRejected(patterns, './sessions.types')).toBe(false)
   })
 
   it('throws for a topic that the module does not list', () => {

@@ -1,2 +1,2 @@
-export { useMe } from './hooks/useMe'
-export type { Me } from './user.types'
+export { useMe } from './user/hooks/useMe'
+export type { Me } from './user/user.types'

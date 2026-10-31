@@ -84,6 +84,11 @@ export const topicEntityModules = {
     status: [],
     steps: ['config', 'runs', 'status'],
   },
+  user: {
+    sessions: [],
+    user: [],
+    'user-settings': [],
+  },
   workflow: {
     'artifact-kinds': ['definition'],
     checkpoints: ['definition'],
