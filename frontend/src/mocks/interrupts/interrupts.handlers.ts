@@ -16,7 +16,7 @@ import { accepted, paginate, validationFailed } from '../shared/http/response'
 import { answerScenario } from '../shared/scenario'
 import { resolveInterrupt } from './interrupts.changes'
 import { interruptsOfRun, pendingInterruptOf } from './interrupts.lookup'
-import { refuseAnswerOfOtherInterrupt } from './interrupts.problems'
+import { runNotWaitingForAnswer } from './interrupts.problems'
 import { validateResumeBody } from './interrupts.validators'
 
 export const interruptHandlers = [
@@ -37,11 +37,9 @@ export const interruptHandlers = [
       const run = findRun(pathParam(params, 'runId'))
       if (run === undefined) return runNotFound()
       const fields = await readBodyFields(request)
-      const pending = pendingInterruptOf(run)
-      const refusal = refuseAnswerOfOtherInterrupt(pending, fields.interrupt_id)
-      if (refusal !== null) return refusal
-      // The refusal is null only when the run waits for this answer.
-      const interrupt = assertPresent(pending, 'The run waits for this answer.')
+      const interrupt = pendingInterruptOf(run)
+      if (interrupt === null || interrupt.id !== fields.interrupt_id)
+        return runNotWaitingForAnswer()
       const checked = validateResumeBody(interrupt, fields)
       if ('problems' in checked) return validationFailed(checked.problems)
       resolveInterrupt(run, interrupt, checked.decision)
