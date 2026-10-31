@@ -1,5 +1,6 @@
 export { coalescedTask } from './coalesced-task.utils'
 export { debounce } from './debounce.utils'
+export { minuteMs } from './duration.constants'
 export { useNow } from './hooks/useNow'
 export { sleep } from './sleep.utils'
 export { actionToastDuration } from './toast.constants'

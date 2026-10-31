@@ -62,6 +62,16 @@ export const sentMessageProblemCases = [
     problems: [{ field: 'models.chef', message: 'Choose one of the values.' }],
   },
   {
+    name: 'a model that does not serve its role',
+    body: { content: 'Hi', models: { analyst: 'openai:gpt-4.1-mini' } },
+    problems: [{ field: 'models.analyst', message: 'Choose one of the values.' }],
+  },
+  {
+    name: 'a model that the catalog does not hold',
+    body: { content: 'Hi', models: { analyst: 'acme:magic' } },
+    problems: [{ field: 'models.analyst', message: 'Choose one of the values.' }],
+  },
+  {
     name: 'a model without a value',
     body: { content: 'Hi', models: { analyst: ' ' } },
     problems: [{ field: 'models.analyst', message: 'Enter a value.' }],

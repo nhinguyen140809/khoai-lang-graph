@@ -83,6 +83,14 @@ export const messageRejectedCases: RejectedRequestCase[] = [
     answer: { errors: [{ field: 'models.chef', message: 'Choose one of the values.' }] },
   },
   {
+    name: 'answers 422 for a model that does not serve its role',
+    method: 'POST',
+    path: messagesPath,
+    body: '{"content": "Hi", "models": {"analyst": "openai:gpt-4.1-mini"}}',
+    status: HttpStatus.UnprocessableContent,
+    answer: { errors: [{ field: 'models.analyst', message: 'Choose one of the values.' }] },
+  },
+  {
     name: 'answers 422 for a role without a model',
     method: 'POST',
     path: messagesPath,

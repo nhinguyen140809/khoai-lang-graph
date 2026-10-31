@@ -1,6 +1,7 @@
 import type { RunDefaults } from '@/modules/run/entities'
 import type { FieldProblem } from '@/shared/api/error'
 
+import { modelIdsForRole } from '../models/models.lookup'
 import { validateRunDefaults } from '../runs/runs.validators'
 import {
   choiceProblem,
@@ -47,7 +48,10 @@ export function validateSentMessageBody(
   }
 }
 
-/** The models of the run that the message starts, by agent role; else the problems of the field. */
+/**
+ * The models of the run that the message starts, by agent role, each a model of the catalog that
+ * serves its role; else the problems of the field.
+ */
 function validateModels(
   given: unknown,
 ): { models: Record<string, string> } | { problems: FieldProblem[] } {
@@ -63,6 +67,7 @@ function validateModels(
     }
     const text = requiredText(model)
     if (text === undefined) problems.push(requiredTextProblem(`models.${role}`))
+    else if (!modelIdsForRole(role).includes(text)) problems.push(choiceProblem(`models.${role}`))
     else models[role] = text
   }
   return problems.length > 0 ? { problems } : { models }
