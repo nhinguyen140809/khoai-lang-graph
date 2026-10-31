@@ -91,7 +91,7 @@ Dividing by module first keeps a subject in one folder. In exchange, the modules
 
 ## 3. Kinds of file in a slice
 
-A slice holds its components in `components/`, its hooks in `hooks/`, and its other files as `<subject>.<kind>.ts`. A kind with two files or more gets a folder named after it in the plural, such as `types/` or `stores/`. The unit tests sit in a `__tests__/` folder beside the files they test: `<file>.test.ts(x)`, with the cases of a data-driven test in `<file>.data.ts`. Every slice has an `index.ts`.
+A slice holds its components in `components/`, its hooks in `hooks/`, and its other files as `<subject>.<kind>.ts`. A kind with two files or more gets a folder named after it in the plural, such as `types/` or `stores/`. In a feature or a widget, the components and the hooks follow the same count: a lone component or a lone hook stays at the root of the slice, as `run/features/start/useStartRun.ts`, and `components/` and `hooks/` hold two files or more. The slices themselves, the folders right under `features/` and `widgets/`, are named after the action or the block (`stop`, `status`), never after a kind of file. The unit tests sit in a `__tests__/` folder beside the files they test: `<file>.test.ts(x)`, with the cases of a data-driven test in `<file>.data.ts`. Every slice has an `index.ts`.
 
 | Kind | File | Entities | Features | Widgets |
 |---|---|---|---|---|
@@ -115,7 +115,7 @@ The entities of a module with many topics split by topic instead of by kind: the
 
 The entities of `workflow` split by topic in the same way: `definition` (the graph, the vocabulary, the export templates, the link types, and the one query of the definition that the other topics select from), `stages`, `checkpoints` and `issues` (what is read from the definition, each reading `definition`), `artifact-kinds` (the kinds and their content schemas, reading `definition`), `content-fields` (the fields and values of the content of an artifact or an item, reading `artifact-kinds`, and `issues` reads it for the values of an item) and `run-parameters` (the fields of the run settings, reading `definition`, with their own types apart from the content fields).
 
-ESLint checks the kinds of each place (`fileKinds` of `frontend/lint/lib/file-names/file-kinds.constants.js`), the layers inside a module, and the folders at the root of a slice: one for each kind that the layer holds, `components/`, `hooks/`, `__tests__/`, and `@x/` in the entities. It also checks that a `constants` file exports no type and declares no function, and that a `types` file imports no `constants` file.
+ESLint checks the kinds of each place (`fileKinds` of `frontend/lint/lib/file-names/file-kinds.constants.js`), the layers inside a module, and the folders at the root of a slice: one for each kind that the layer holds, `components/`, `hooks/`, `__tests__/`, and `@x/` in the entities. A hook at the root of a feature or a widget is a `use<Name>.ts`, and a component there follows the import rules of the components. It also checks that a `constants` file exports no type and declares no function, and that a `types` file imports no `constants` file.
 
 ## 4. Order of the modules
 
