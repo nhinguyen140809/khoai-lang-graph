@@ -47,6 +47,16 @@ export function validationFailed(errors: FieldProblem[]) {
   )
 }
 
+/** A request whose query the API does not read, such as a value out of the list of a parameter. */
+export function invalidRequest(detail: string) {
+  return errorResponse(
+    HttpStatus.BadRequest,
+    ApiErrorCode.InvalidRequest,
+    'Invalid request',
+    detail,
+  )
+}
+
 /** A request that the state of the record does not allow, such as stopping a run that ended. */
 export function invalidState(detail: string) {
   return errorResponse(HttpStatus.Conflict, ApiErrorCode.InvalidState, 'Invalid state', detail)

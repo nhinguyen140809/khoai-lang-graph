@@ -1,6 +1,7 @@
 export {
   errorResponse,
   internalError,
+  invalidRequest,
   invalidState,
   notFound,
   unauthenticated,

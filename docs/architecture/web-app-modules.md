@@ -69,6 +69,8 @@ src/
 │   │   └── widgets/            # menu/, settings/
 │   ├── llm-model/
 │   │   └── entities/           # ModelCatalogEntry (models/), ModelSettings (model-settings/)
+│   ├── usage/
+│   │   └── entities/           # MonthlyUsage
 │   └── design-system/
 │       └── widgets/            # showcase/
 └── shared/                     # api/, components/ (ui/, frame/ with frame/layouts/, ...), hooks/,
@@ -205,7 +207,7 @@ A unit test may also import another slice of its layer, from its index, to show 
 | `activity` | ActivityEvent later, the record of who did what in a project | - | `steps`, the stages of the workflow as a tree in the side panel of Activity, with the item of the feature on the activity bar; `chat`, the chat in its tab | The chat of the first version today; the rest with the activity |
 | `auth` | The calls that start a session, create an account and end a session; the page that opens after signing in | `login`, `register`, `logout` | - | Today |
 | `user` | User, Session, UserSettings | `run-settings` later | `menu`, `settings` | The entities; the forms of the account and the preferences with Settings |
-| `usage` | Usage of the user in a calendar month, with the budget of the month | - | - | Next |
+| `usage` | MonthlyUsage, the usage of the user in a calendar month, with the budget of the month and its groups | - | - | The entities; the budget on the status bar with the cost meter, the usage section with Settings |
 | `trace-link` | TraceLink, the traces of items, the traceability views | - | `graph`, the nodes and edges of a trace, for drawing it | Later |
 | `llm-model` | ModelCatalogEntry, ModelSettings | - | - | The entities; the form of the model settings with Settings |
 | `design-system` | - | - | `showcase`, the page of the UI components and the tokens | Today |
