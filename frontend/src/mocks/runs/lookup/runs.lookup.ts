@@ -11,6 +11,7 @@ import {
   generatedRuns,
   generatedRunSteps,
 } from '../../generated/fixtures/generated-projects.fixtures'
+import { modelsOfUserSettings } from '../../model-settings/model-settings.lookup'
 import { mockRunStatus, mockScenario } from '../../shared/scenario'
 import { defaultRunConfigFixture, runFixtures, runStepFixtures } from '../fixtures/runs.fixtures'
 import { createdRuns, runEdits } from '../runs.store'
@@ -68,10 +69,11 @@ type WholeSetting = 'review_checkpoints' | 'max_steps' | 'max_cost_usd'
  * The settings of a run that starts now. Each setting comes from the first level that sets it: the
  * `override` of the request that starts the run, then the settings of the project, then the
  * default of the server; the parameters are resolved one by one. The output language is the one
- * of the project. The models of the request replace the ones of the default, by agent role.
+ * of the project. The models are resolved by agent role, from the first level that sets one: the
+ * request, the overrides of the project, the model settings of the user, then the default.
  */
 export function resolveRunConfig(
-  project: Pick<Project, 'run_config' | 'output_language'> | undefined,
+  project: Pick<Project, 'run_config' | 'output_language' | 'model_overrides'> | undefined,
   override?: RunDefaults,
   models?: Record<string, string>,
 ): Run['run_config'] {
@@ -82,7 +84,12 @@ export function resolveRunConfig(
     levels.map((level) => level?.[setting]).find((value) => value != null) ?? defaults[setting]
   return {
     ...defaults,
-    models: { ...defaults.models, ...models },
+    models: {
+      ...defaults.models,
+      ...modelsOfUserSettings(),
+      ...project?.model_overrides,
+      ...models,
+    },
     review_checkpoints: firstSet('review_checkpoints'),
     max_steps: firstSet('max_steps'),
     max_cost_usd: firstSet('max_cost_usd'),

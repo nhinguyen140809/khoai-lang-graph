@@ -2,7 +2,9 @@ import { describe, expect, it } from 'vitest'
 
 import { openPage } from '@/test/msw'
 
+import { changeModelSettings } from '../../../model-settings/model-settings.changes'
 import { runIds, threadIds } from '../../../shared/db'
+import { defaultRunConfigFixture } from '../../fixtures/runs.fixtures'
 import {
   findUnfinishedRun,
   latestRunOfEachThread,
@@ -43,7 +45,13 @@ describe('findUnfinishedRun', () => {
 })
 
 describe('resolveRunConfig', () => {
-  it.each(resolveCases)('resolves $name', ({ project, override, config }) => {
-    expect(resolveRunConfig(project, override)).toEqual(config)
+  it.each(resolveCases)('resolves $name', ({ project, override, models, config }) => {
+    expect(resolveRunConfig(project, override, models)).toEqual(config)
+  })
+
+  it('falls back to the default models once the user has no model setting', () => {
+    changeModelSettings([])
+
+    expect(resolveRunConfig(undefined).models).toEqual(defaultRunConfigFixture.models)
   })
 })
