@@ -1,3 +1,4 @@
+import { useQuery } from '@tanstack/react-query'
 import { act, waitFor } from '@testing-library/react'
 import { delay, http, HttpResponse } from 'msw'
 import { afterEach, describe, expect, it, vi } from 'vitest'
@@ -6,6 +7,7 @@ import { server } from '@/mocks/msw-server.setup'
 import { buildRun } from '@/mocks/runs/fixtures/runs.fixtures'
 import { projectIds, runIds, threadIds } from '@/mocks/shared/db'
 import { apiEndpoints } from '@/shared/api/endpoints'
+import { costQueryMeta } from '@/shared/api/query-client'
 import { sleep } from '@/shared/lib/timing'
 import { openedEventSources } from '@/test/event-source'
 import { renderHookWithProviders } from '@/test/render'
@@ -48,6 +50,33 @@ async function followedStream(onReloaded = vi.fn()) {
   const hook = renderHookWithProviders(() => useFollowedRun(threadIds.mentorMain, onReloaded))
   await waitFor(() => {
     expect(openedEventSources()).toHaveLength(1)
+  })
+  return { ...hook, source: openedEventSources()[0] }
+}
+
+// Counts how often a query of the cost, and one without a cost, load while the run is followed.
+function costQueries(counts: { cost: number; other: number }) {
+  return {
+    cost: {
+      queryKey: ['cost'],
+      queryFn: () => (counts.cost += 1),
+      meta: costQueryMeta,
+    },
+    other: { queryKey: ['other'], queryFn: () => (counts.other += 1) },
+  }
+}
+
+// The followed run beside a query that holds a cost and one that does not, both counted.
+async function followedStreamWithCosts(counts: { cost: number; other: number }) {
+  const queries = costQueries(counts)
+  const hook = renderHookWithProviders(() => {
+    useQuery(queries.cost)
+    useQuery(queries.other)
+    return useFollowedRun(threadIds.mentorMain)
+  })
+  await waitFor(() => {
+    expect(openedEventSources()).toHaveLength(1)
+    expect(counts.cost).toBe(1)
   })
   return { ...hook, source: openedEventSources()[0] }
 }
@@ -192,5 +221,52 @@ describe('useRunStatusEvents', () => {
       expect(result.current.data?.status).toBe('succeeded')
     })
     expect(openedEventSources()).toHaveLength(0)
+  })
+  it('loads the queries that hold a cost again at an event that changes a cost, and no other', async () => {
+    const counts = { cost: 0, other: 0 }
+    const { source } = await followedStreamWithCosts(counts)
+    server.use(answerRunWith('interrupted'))
+
+    act(() => {
+      source?.emit('node_end', { node: 'analyst' }, '247')
+    })
+
+    await waitFor(() => {
+      expect(counts.cost).toBe(2)
+    })
+    expect(counts.other).toBe(1)
+  })
+
+  it('leaves the queries that hold a cost as they are at an event that changes none', async () => {
+    const counts = { cost: 0, other: 0 }
+    const { source } = await followedStreamWithCosts(counts)
+    server.use(answerRunWith('running'))
+
+    act(() => {
+      source?.emit('node_start', { node: 'analyst' }, '247')
+    })
+    await sleep(100)
+
+    expect(counts.cost).toBe(1)
+  })
+
+  it('loads the queries that hold a cost once for a burst of events', async () => {
+    const counts = { cost: 0, other: 0 }
+    const { source } = await followedStreamWithCosts(counts)
+    server.use(answerRunWith('interrupted'))
+
+    act(() => {
+      source?.emit('node_end', { node: 'analyst' }, '247')
+      source?.emit('node_end', { node: 'analyst' }, '248')
+      source?.emit('node_end', { node: 'analyst' }, '249')
+    })
+    await sleep(150)
+
+    // Once at the first load, once for the first event, and once more for the two that follow it.
+    await waitFor(() => {
+      expect(counts.cost).toBe(3)
+    })
+    await sleep(100)
+    expect(counts.cost).toBe(3)
   })
 })
