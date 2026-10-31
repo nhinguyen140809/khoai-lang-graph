@@ -183,7 +183,7 @@ A unit test may also import another slice of its layer, from its index, to show 
 | `auth` | The calls that start a session, create an account and end a session; the page that opens after signing in | `login`, `register`, `logout` | - | Today |
 | `user` | User, UserSettings | - | `menu`, `settings` | User, `menu` and `settings` today |
 | `usage` | Usage of the user in a calendar month, with the budget of the month | - | - | Next |
-| `trace-link` | TraceLink, the traceability views | - | - | Later |
+| `trace` | TraceLink, the traceability views | - | - | Later |
 | `llm-model` | ModelCatalogEntry, ModelSettings | - | - | Later |
 | `design-system` | - | - | `showcase`, the page of the UI components and the tokens | Today |
 
@@ -200,7 +200,7 @@ The endpoints of the entities:
 | `auth` | `/auth/login`, `/auth/register`, `/auth/logout` |
 | `user` | `/me`, `/me/settings` |
 | `usage` | `/me/usage` |
-| `trace-link` | `/projects/{project_id}/trace-links`, `/trace-links/{link_id}`, `/items/{item_id}/trace`, `/projects/{project_id}/traceability/matrix`, `/projects/{project_id}/traceability/coverage` |
+| `trace` | `/projects/{project_id}/trace-links`, `/trace-links/{link_id}`, `/items/{item_id}/trace`, `/projects/{project_id}/traceability/matrix`, `/projects/{project_id}/traceability/coverage` |
 | `llm-model` | `/models`, `/me/model-settings` |
 
 `auth` and `user` are two modules, as the identity and access of a user usually are: signing in, signing up and signing out need nothing of the user, and the user menu uses Sign out, so `user` sits above `auth`.
