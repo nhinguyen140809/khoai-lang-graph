@@ -2,8 +2,8 @@ import { describe, expect, it } from 'vitest'
 
 import { itSendsRequests, itThrowsApiErrors } from '@/test/suites'
 
-import { getMe } from '../user.api'
-import { apiErrorCases, sentRequestCases } from './user.api.data'
+import { changePassword, getMe, updateMe } from '../user.api'
+import { apiErrorCases, passwordBody, sentRequestCases, updateBody } from './user.api.data'
 
 describe('user api', () => {
   it('reads the signed-in user', async () => {
@@ -11,6 +11,15 @@ describe('user api', () => {
       email: 'linh.pham@example.com',
       display_name: 'Linh Pham',
     })
+  })
+
+  it('answers the user with the name that it saved', async () => {
+    await expect(updateMe(updateBody)).resolves.toMatchObject({ display_name: 'Linh P.' })
+    await expect(getMe()).resolves.toMatchObject({ display_name: 'Linh P.' })
+  })
+
+  it('changes the password of the fixtures', async () => {
+    await expect(changePassword(passwordBody)).resolves.toBeUndefined()
   })
 
   itSendsRequests(sentRequestCases)
