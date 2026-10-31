@@ -4,7 +4,7 @@ import type { ListPage } from './api-page.types'
 import { apiRequest } from './api-request.utils'
 
 /** The envelope of every list endpoint: one page of items and the cursor of the next page. */
-function listPageSchema<T>(itemSchema: z.ZodType<T>) {
+export function listPageSchema<T>(itemSchema: z.ZodType<T>) {
   return z.object({ items: z.array(itemSchema), next_cursor: z.string().nullable() })
 }
 
