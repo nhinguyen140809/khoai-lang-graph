@@ -129,6 +129,8 @@ screenshots('Project', (shot) => {
   statusShot('not started', `${mentor}?mock-runs=empty`, 'Not started')
   statusShot('loading', `${mentor}?mock-threads=loading`, 'Loading status')
   statusShot('error', `${mentor}?mock-threads=error`, 'Failed to load the status.')
+  statusShot('budget near its limit', `${mentor}?mock-budget=warning`, '$4.76 / $5.52')
+  statusShot('budget nearly spent', `${mentor}?mock-budget=danger`, '$4.76 / $5.00')
 
   shot('Status: failed, with the reason in a tooltip', async ({ page, user, shoot }) => {
     await page.goto(`${mentor}?mock-run-status=failed`)
