@@ -17,6 +17,7 @@ import { threadHandlers } from './threads/threads.handlers'
 import { chainHandlers } from './trace/handlers/chains.handlers'
 import { traceLinkHandlers } from './trace/handlers/trace-links.handlers'
 import { traceabilityHandlers } from './trace/handlers/traceability.handlers'
+import { usageHandlers } from './usage/usage.handlers'
 import { userSettingHandlers } from './user-settings/user-settings.handlers'
 import { artifactKindHandlers } from './workflow/artifact-kinds.handlers'
 import { workflowHandlers } from './workflow/workflow.handlers'
@@ -32,6 +33,7 @@ export const apiHandlers = [
   ...userSettingHandlers,
   ...modelHandlers,
   ...modelSettingHandlers,
+  ...usageHandlers,
   ...projectHandlers,
   ...workflowHandlers,
   ...artifactKindHandlers,

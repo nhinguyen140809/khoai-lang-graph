@@ -2,6 +2,7 @@ import { HttpStatus } from '@/shared/api/http'
 
 import {
   internalError,
+  invalidRequest,
   invalidState,
   notFound,
   unauthenticated,
@@ -28,6 +29,12 @@ export const errorResponseCases = [
     answer: () => validationFailed([{ field: 'email', message: 'Enter a value.' }]),
     status: HttpStatus.UnprocessableContent,
     fields: { code: 'validation_failed', errors: [{ field: 'email', message: 'Enter a value.' }] },
+  },
+  {
+    name: 'invalidRequest',
+    answer: () => invalidRequest('Send the month as YYYY-MM.'),
+    status: HttpStatus.BadRequest,
+    fields: { code: 'invalid_request', detail: 'Send the month as YYYY-MM.' },
   },
   {
     name: 'invalidState',

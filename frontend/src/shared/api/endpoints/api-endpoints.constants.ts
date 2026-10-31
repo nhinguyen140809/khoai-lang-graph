@@ -16,6 +16,7 @@ export const apiEndpoints = {
   userSettings: apiEndpoint('/me/settings'),
   models: apiEndpoint('/models'),
   modelSettings: apiEndpoint('/me/model-settings'),
+  usage: apiEndpoint('/me/usage'),
   health: apiEndpoint('/health'),
 
   projects: apiEndpoint('/projects'),
