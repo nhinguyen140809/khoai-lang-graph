@@ -1,8 +1,9 @@
 import type { Project } from '@/modules/project/entities'
 import type { Run, RunStep } from '@/modules/run/entities'
 import { isUnfinishedRunStatus } from '@/modules/run/entities'
-import type { Thread } from '@/modules/thread/entities'
+import type { Message, Thread } from '@/modules/thread/entities'
 
+import { buildMessage } from '../../messages/messages.fixtures'
 import { buildRun, scriptedSteps } from '../../runs/fixtures/runs.fixtures'
 import { IdPrefix, mockId, userId } from '../../shared/db'
 import { buildThread } from '../../threads/threads.fixtures'
@@ -91,11 +92,27 @@ export function generatedThreads(): Thread[] {
     buildThread({
       id: threadId(spec.n),
       project_id: projectId(spec.n),
-      last_message_at: at(spec.day, '09:00:00'),
       created_at: at(spec.day, '07:55:00'),
       updated_at: at(spec.day, '11:00:00'),
     }),
   )
+}
+
+/** The first message of each generated project that has a run: the idea that started it. */
+export function generatedMessages(): Message[] {
+  return generatedProjectSpecs
+    .filter((spec) => spec.lastRun !== 'none')
+    .map((spec) =>
+      buildMessage({
+        id: messageId(spec.n, 1),
+        thread_id: threadId(spec.n),
+        sequence: 1,
+        run_id: runId(spec.n, 1),
+        content: spec.message,
+        delivery: 'started_run',
+        created_at: runStart(spec),
+      }),
+    )
 }
 
 /** The projects that `?mock-projects=many` adds: plain rows, for a long list. */

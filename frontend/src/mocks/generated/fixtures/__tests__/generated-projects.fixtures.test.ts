@@ -3,6 +3,7 @@ import { describe, expect, it } from 'vitest'
 import { manyProjectCount } from '../../generated.constants'
 import { generatedProjectSpecs } from '../generated-project-specs.fixtures'
 import {
+  generatedMessages,
   generatedProjects,
   generatedRuns,
   generatedRunSteps,
@@ -30,6 +31,17 @@ describe('the extra projects of the mock data', () => {
       expect(threads.some((thread) => thread.id === run.thread_id)).toBe(true)
     }
     expect(hasUniqueIds(runs.map(({ thread_id }) => thread_id))).toBe(true)
+  })
+
+  it('gives one message to each project with a run, whose id is its initial message', () => {
+    const messages = generatedMessages()
+    const withRun = generatedProjects().filter(
+      ({ initial_message_id }) => initial_message_id !== null,
+    )
+
+    expect(messages.map(({ id }) => id)).toEqual(
+      withRun.map(({ initial_message_id }) => initial_message_id),
+    )
   })
 
   it('cover every state of a run, and a project without a run', () => {

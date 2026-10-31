@@ -3,9 +3,11 @@ import { describe, expect, it } from 'vitest'
 import { isUnfinishedRunStatus } from '@/modules/run/entities'
 import { openPage } from '@/test/msw'
 
+import { generatedProjects } from '../../generated/fixtures/generated-projects.fixtures'
 import { allRuns } from '../../runs/lookup/runs.lookup'
 import { changeRun } from '../../runs/runs.changes'
 import { runIds, threadIds } from '../../shared/db'
+import { changeThread, removeThread } from '../threads.changes'
 import { allThreads, findThread } from '../threads.lookup'
 import { generatedThreadCases, mentorRunStateCases } from './threads.lookup.data'
 
@@ -37,6 +39,29 @@ describe('allThreads', () => {
           current_stage === null && active_run_id === null && latest_run_status === null,
       ),
     ).toBe(true)
+  })
+
+  it('reads the time of the newest message as the time of the last message of a thread', () => {
+    expect(findThread(threadIds.mentorMain)?.last_message_at).toBe('2026-10-06T08:30:40Z')
+  })
+
+  it('reads the creation time while the thread has no message', () => {
+    const project = generatedProjects().find(({ name }) => name === 'Thesis tracker')
+
+    const thread = allThreads().find(({ project_id }) => project_id === project?.id)
+    expect(thread?.last_message_at).toBe(thread?.created_at)
+  })
+
+  it('reads the edit of a thread over its fixture', () => {
+    changeThread(threadIds.campusMain, { title: 'Renamed', status: 'archived' })
+
+    expect(findThread(threadIds.campusMain)).toMatchObject({ title: 'Renamed', status: 'archived' })
+  })
+
+  it('leaves a deleted thread out', () => {
+    removeThread(threadIds.laundryMain)
+
+    expect(findThread(threadIds.laundryMain)).toBeUndefined()
   })
 })
 
