@@ -20,7 +20,7 @@ const SONNET = 'anthropic:claude-sonnet-5'
 const MINI = 'openai:gpt-4.1-mini'
 
 // The id of a step: the number of its run, then its sequence in the run.
-const stepId = (runIndex: number, sequence: number) =>
+export const buildStepId = (runIndex: number, sequence: number) =>
   mockId(IdPrefix.Step, runIndex * 1000 + sequence)
 
 /** The settings that the server gives a run when no level sets them. */
@@ -215,7 +215,7 @@ function buildSteps(
     clock += spec.seconds * 1000
     const costUsd = spec.costUsd ?? 0
     return {
-      id: stepId(runIndex, index + 1),
+      id: buildStepId(runIndex, index + 1),
       run_id: runId,
       sequence: index + 1,
       node: spec.node,

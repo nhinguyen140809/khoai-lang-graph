@@ -23,6 +23,8 @@ interface NewRun {
   startedAt: string
   /** The settings that the request gives for this run. */
   override?: RunDefaults
+  /** The models by agent role that the request gives for this run, over the resolved ones. */
+  models?: Record<string, string>
 }
 
 /** Starts a run in a thread: it takes the next number and resolves its settings now. */
@@ -34,7 +36,7 @@ export function addRun(fields: NewRun): Run {
     number: runsOfThread(fields.threadId).length + 1,
     status: fields.status,
     current_stage: fields.currentStage,
-    run_config: resolveRunConfig(findProject(fields.projectId), fields.override),
+    run_config: resolveRunConfig(findProject(fields.projectId), fields.override, fields.models),
     retry_of_run_id: fields.retryOfRunId ?? null,
     usage: noUsage,
     step_count: fields.stepCount,

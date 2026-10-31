@@ -5,6 +5,7 @@ import {
   type RunDefaults,
   type RunStep,
 } from '@/modules/run/entities'
+import { newestOfEachGroup } from '@/shared/lib/collections'
 
 import {
   generatedRuns,
@@ -43,6 +44,18 @@ export function runsOfThread(threadId: string): Run[] {
   return allRuns().filter((run) => run.thread_id === threadId)
 }
 
+/**
+ * The latest run of each thread, the one of the highest number, by the id of its thread: a run that
+ * a later run of its thread replaced no longer counts.
+ */
+export function latestRunOfEachThread(runs: Run[] = allRuns()): Map<string, Run> {
+  return newestOfEachGroup(
+    runs,
+    ({ thread_id: threadId }) => threadId,
+    ({ number }) => number,
+  )
+}
+
 /** The run of a thread that has not ended, if it has one. */
 export function findUnfinishedRun(threadId: string): Run | undefined {
   return runsOfThread(threadId).find(({ status }) => isUnfinishedRunStatus(status))
@@ -55,11 +68,12 @@ type WholeSetting = 'review_checkpoints' | 'max_steps' | 'max_cost_usd'
  * The settings of a run that starts now. Each setting comes from the first level that sets it: the
  * `override` of the request that starts the run, then the settings of the project, then the
  * default of the server; the parameters are resolved one by one. The output language is the one
- * of the project.
+ * of the project. The models of the request replace the ones of the default, by agent role.
  */
 export function resolveRunConfig(
   project: Pick<Project, 'run_config' | 'output_language'> | undefined,
   override?: RunDefaults,
+  models?: Record<string, string>,
 ): Run['run_config'] {
   // The levels, from the first to the last; the default of the server comes after them.
   const levels = [override, project?.run_config]
@@ -68,6 +82,7 @@ export function resolveRunConfig(
     levels.map((level) => level?.[setting]).find((value) => value != null) ?? defaults[setting]
   return {
     ...defaults,
+    models: { ...defaults.models, ...models },
     review_checkpoints: firstSet('review_checkpoints'),
     max_steps: firstSet('max_steps'),
     max_cost_usd: firstSet('max_cost_usd'),
