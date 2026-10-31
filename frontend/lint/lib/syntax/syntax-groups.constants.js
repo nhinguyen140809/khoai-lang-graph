@@ -55,11 +55,12 @@ export const syntaxGroups = {
     message:
       'A hook lives in hooks/use<Name>.ts of its slice, or alone in use<Name>.ts at the root of a feature or a widget, not in the file of a component (CONTRIBUTING: Hooks of a slice).',
   })),
-  // An action that deletes, stops or revokes something asks first, in a dialog (ConfirmDialog).
+  // An action that deletes, stops or revokes something asks first, in a dialog (ConfirmDialog). A
+  // hook named ...Command only opens that dialog from the command palette, so any file may call it.
   destructiveActions: [
     {
       selector:
-        'ImportSpecifier[imported.name=/^use(Delete|Remove|Stop|Revoke|Discard|Reset)[A-Z][A-Za-z]*(?<!Dialog)$/]',
+        'ImportSpecifier[imported.name=/^use(Delete|Remove|Stop|Revoke|Discard|Reset)[A-Z][A-Za-z]*(?<!Dialog|Command)$/]',
       message:
         'A destructive action asks first: call this hook from a *Dialog.tsx file that renders ConfirmDialog, and open that dialog from menus, rows and commands (CONTRIBUTING: Destructive actions).',
     },
@@ -129,6 +130,16 @@ export const syntaxGroups = {
       message: 'Use a named export; only the routing files of Next.js export a default.',
     }),
   ),
+  // A utils file of a slice holds pure helpers: what reads or changes the cache of the queries, or
+  // calls the API, is a hook of the slice.
+  queriesInUtils: [
+    "ImportDeclaration[source.value='@tanstack/react-query']",
+    String.raw`ImportDeclaration[source.value=/\.api$/]`,
+  ].map((selector) => ({
+    selector,
+    message:
+      'A *.utils.ts file holds pure helpers: code that reads or changes the cache of the queries, or calls the API, is a hook in hooks/ of the slice, such as one of its use<Resource>Queries.ts (CONTRIBUTING: Inside a slice).',
+  })),
   // A file of functions keeps the types that others use in the types file of its subject; a type
   // that only it uses stays in the file, unexported.
   exportedTypes: [

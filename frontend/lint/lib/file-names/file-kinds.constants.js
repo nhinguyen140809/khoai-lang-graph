@@ -67,10 +67,14 @@ export const pascalCasePattern = '+([A-Z])*([a-zA-Z0-9])'
 // the entities. A new topic is added here.
 /** @type {Record<string, Record<string, string[]>>} */
 export const topicEntityModules = {
+  project: {
+    projects: [],
+    'run-status': [],
+  },
   run: {
     config: [],
     directives: ['config', 'runs', 'status'],
-    events: [],
+    events: ['runs', 'status'],
     runs: ['config', 'status'],
     state: ['config', 'runs', 'status'],
     status: [],

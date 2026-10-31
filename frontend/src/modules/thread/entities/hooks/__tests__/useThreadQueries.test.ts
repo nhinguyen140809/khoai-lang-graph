@@ -1,12 +1,19 @@
-import { describe, expect, it } from 'vitest'
+import { describe, expect, it, vi } from 'vitest'
 
 import { projectIds, threadIds } from '@/mocks/shared/db'
 import { pageItems } from '@/shared/api/query-client'
-import { renderHookWithProviders } from '@/test/render'
+import { createTestQueryClient, renderHookWithProviders } from '@/test/render'
 import { waitForSuccess } from '@/test/steps'
 import { itWaitsUntilEnabled } from '@/test/suites'
 
-import { useProjectThreads, useThread, useThreads } from '../useThreadQueries'
+import { threadKeys } from '../../keys/threads.keys'
+import {
+  useProjectThreads,
+  useReloadThreadsIfRunStatusChanged,
+  useThread,
+  useThreads,
+} from '../useThreadQueries'
+import { reloadCases, threadWith } from './useThreadQueries.data'
 
 describe('useProjectThreads', () => {
   it('loads the threads of a project, the newest message first', async () => {
@@ -45,6 +52,41 @@ describe('useThread', () => {
       id: threadIds.mentorMain,
       latest_run_status: 'interrupted',
     })
+  })
+})
+
+describe('useReloadThreadsIfRunStatusChanged', () => {
+  const run = { project_id: 'p1', thread_id: 't1' }
+
+  it.each(reloadCases)(
+    'for $name, loads the threads again: $reloads',
+    async ({ shown, status, reloads }) => {
+      const queryClient = createTestQueryClient()
+      queryClient.setQueryData(threadKeys.ofProject('p1'), {
+        pages: [{ items: [threadWith('t1', shown)], next_cursor: null }],
+        pageParams: [null],
+      })
+      const invalidate = vi.spyOn(queryClient, 'invalidateQueries')
+      const { result } = renderHookWithProviders(() => useReloadThreadsIfRunStatusChanged(), {
+        queryClient,
+      })
+
+      await result.current({ ...run, status })
+
+      expect(invalidate).toHaveBeenCalledTimes(reloads ? 1 : 0)
+    },
+  )
+
+  it('loads nothing when the threads are not loaded', async () => {
+    const queryClient = createTestQueryClient()
+    const invalidate = vi.spyOn(queryClient, 'invalidateQueries')
+    const { result } = renderHookWithProviders(() => useReloadThreadsIfRunStatusChanged(), {
+      queryClient,
+    })
+
+    await result.current({ ...run, status: 'running' })
+
+    expect(invalidate).not.toHaveBeenCalled()
   })
 })
 

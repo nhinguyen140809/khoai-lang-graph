@@ -15,7 +15,8 @@ function isRejected(patterns, source) {
 describe('entityTopics', () => {
   it('lists the topics of a module split by topic, and none for another module', () => {
     expect(entityTopics('run')).toContain('steps')
-    expect(entityTopics('project')).toEqual([])
+    expect(entityTopics('project')).toEqual(['projects', 'run-status'])
+    expect(entityTopics('thread')).toEqual([])
   })
 })
 
@@ -36,7 +37,8 @@ describe('topicPatterns', () => {
   it('keeps a topic from the topics beside it or above it, and from the components', () => {
     expect(isRejected(topicPatterns('run', 'steps'), '../state/run-state.types')).toBe(true)
     expect(isRejected(topicPatterns('run', 'runs'), '../steps/run-steps.types')).toBe(true)
-    expect(isRejected(topicPatterns('run', 'events'), '../../runs/runs.utils')).toBe(true)
+    expect(isRejected(topicPatterns('run', 'events'), '../../steps/run-steps.types')).toBe(true)
+    expect(isRejected(topicPatterns('run', 'events'), '../../runs/runs.keys')).toBe(false)
     expect(isRejected(topicPatterns('run', 'config'), '../components/RunDefaultsFields')).toBe(true)
   })
 

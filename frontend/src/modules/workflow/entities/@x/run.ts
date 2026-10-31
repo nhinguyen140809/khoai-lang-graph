@@ -12,3 +12,4 @@ export {
   runParameterValuesOf,
   sentRunParameters,
 } from '../run-parameters/run-parameters.utils'
+export { useStageTitle } from '../stages/hooks/useStageQueries'

@@ -103,6 +103,17 @@ describe('POST /runs/{run_id}/cancel', () => {
   })
 })
 
+describe('POST /runs/{run_id}/cancel in the error scenario', () => {
+  it('leaves the run as it was', async () => {
+    openPage('/?mock-cancel-run=error')
+
+    expect((await cancel(runIds.mentorMain3)).status).toBe(HttpStatus.InternalServerError)
+
+    const run = await getApi<Run>(apiEndpoints.run.path({ runId: runIds.mentorMain3 }))
+    expect(run).toMatchObject({ status: 'interrupted', finished_at: null })
+  })
+})
+
 describe('the run of the chat', () => {
   it('answers the id of the mock run', async () => {
     const { body } = (await fetchApi(apiEndpoints.threadRuns.path({ threadId: 't1' }), {

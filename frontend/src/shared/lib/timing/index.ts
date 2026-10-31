@@ -1,3 +1,4 @@
+export { coalescedTask } from './coalesced-task.utils'
 export { debounce } from './debounce.utils'
 export { useNow } from './hooks/useNow'
 export { sleep } from './sleep.utils'

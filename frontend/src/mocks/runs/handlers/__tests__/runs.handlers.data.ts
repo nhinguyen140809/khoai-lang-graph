@@ -68,6 +68,14 @@ export const runErrorCases = [
     answer: { code: 'not_found' },
   },
   {
+    name: 'refuses to stop a run in the error scenario',
+    method: HttpMethod.Post,
+    path: apiEndpoints.runCancel.path({ runId: runIds.mentorMain3 }),
+    page: '/?mock-cancel-run=error',
+    status: HttpStatus.InternalServerError,
+    answer: { code: 'internal_error' },
+  },
+  {
     name: 'refuses to stop a run that succeeded',
     method: HttpMethod.Post,
     path: apiEndpoints.runCancel.path({ runId: runIds.mentorMain1 }),

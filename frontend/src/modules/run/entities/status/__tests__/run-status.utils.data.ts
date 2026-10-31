@@ -21,3 +21,13 @@ export const labelCases: { name: string; status: RunStatus | null; label: Wordin
   },
   { name: 'no run yet', status: null, label: { developer: 'No run yet', user: 'Not started' } },
 ]
+
+/** A status of a run, and whether its label names the stage. */
+export const hasStageNameCases: [RunStatus, boolean][] = [
+  ['queued', false],
+  ['running', true],
+  ['interrupted', true],
+  ['succeeded', false],
+  ['failed', true],
+  ['cancelled', true],
+]

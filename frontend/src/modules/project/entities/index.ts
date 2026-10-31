@@ -1,6 +1,7 @@
 export { ProjectGate } from './components/ProjectGate'
 export { ProjectNotFound } from './components/ProjectNotFound'
-export { useProject, useProjectList, useRecentProjects } from './hooks/useProjectQueries'
+export { ProjectRunStreams } from './components/ProjectRunStreams'
+export { useProject, useProjectList, useRecentProjects } from './projects/hooks/useProjectQueries'
 export {
   archiveProject,
   createProject,
@@ -8,8 +9,20 @@ export {
   renameProject,
   restoreProject,
   updateProjectRunConfig,
-} from './projects.api'
-export { noProjectFilters, projectMessages, projectStatusLabels } from './projects.constants'
-export { projectKeys } from './projects.keys'
-export type { Project, ProjectFilters, ProjectRunFilter, ProjectStatus } from './projects.types'
-export { projectName, unfinishedRunCount } from './projects.utils'
+} from './projects/projects.api'
+export {
+  noProjectFilters,
+  projectMessages,
+  projectStatusLabels,
+} from './projects/projects.constants'
+export { projectKeys } from './projects/projects.keys'
+export type {
+  Project,
+  ProjectFilters,
+  ProjectRunFilter,
+  ProjectStatus,
+} from './projects/projects.types'
+export { projectName, unfinishedRunCount } from './projects/projects.utils'
+export { useProjectRunResult } from './run-status/hooks/useProjectRunResult'
+export type { ProjectRunResult } from './run-status/project-run-result.types'
+export { shownRun } from './run-status/project-run-result.utils'

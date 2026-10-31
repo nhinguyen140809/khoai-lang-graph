@@ -19,6 +19,7 @@ export { useRunDirectives } from './directives/hooks/useDirectiveQueries'
 export { useRunStream } from './events/hooks/useRunStream'
 export { runEventsUrl } from './events/run-events.api'
 export { useLatestRun, useRun, useThreadRuns } from './runs/hooks/useRunQueries'
+export { useRunStageTitle } from './runs/hooks/useRunStageTitle'
 export { runModuleKeys } from './runs/run-module.keys'
 export {
   cancelRun,
@@ -35,6 +36,7 @@ export { useCurrentRunState, useRunStateAfterStep } from './state/hooks/useRunSt
 export { getCurrentRunState, getRunStateAfterStep } from './state/run-state.api'
 export { runStateKeys } from './state/run-state.keys'
 export type { RunState } from './state/run-state.types'
+export { useRunStatusLook } from './status/hooks/useRunStatusLook'
 export { noRunLabel, runStatusesByAttention } from './status/run-status.constants'
 export type { RunStatus, UnfinishedRunStatus } from './status/run-status.types'
 export { isUnfinishedRunStatus, runStatusLabel } from './status/run-status.utils'

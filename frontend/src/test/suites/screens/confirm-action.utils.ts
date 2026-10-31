@@ -14,6 +14,7 @@ export function itAsksBeforeAction({
   action,
   open,
   confirmLabel,
+  cancelLabel,
   hasRun,
   opener,
   fail,
@@ -27,7 +28,7 @@ export function itAsksBeforeAction({
   it(`does not run ${action} after Cancel`, async () => {
     const dialog = await open()
 
-    await cancelAction(dialog)
+    await cancelAction(dialog, cancelLabel)
 
     await expectNoConfirmDialog()
     expect(hasRun()).toBe(false)
@@ -55,7 +56,7 @@ export function itAsksBeforeAction({
     it(`gives the focus back to the control that opened the dialog of ${action}`, async () => {
       const dialog = await open()
 
-      await cancelAction(dialog)
+      await cancelAction(dialog, cancelLabel)
 
       await expectNoConfirmDialog()
       expect(opener()).toHaveFocus()
@@ -74,7 +75,7 @@ export function itAsksBeforeAction({
     })
 
     // The dialog is still there and answers again: Cancel works once the failure has settled.
-    await cancelAction(dialog)
+    await cancelAction(dialog, cancelLabel)
     await expectNoConfirmDialog()
   })
 }

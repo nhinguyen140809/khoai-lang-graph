@@ -44,7 +44,8 @@ export const runHandlers = [
     return HttpResponse.json(paginate(stepsOfRun(runId), request))
   }),
 
-  http.post(apiEndpoints.runCancel.pattern, ({ params }) => {
+  http.post(apiEndpoints.runCancel.pattern, async ({ params }) => {
+    await answerScenario('cancel-run')
     const run = findRun(pathParam(params, 'runId'))
     if (run === undefined) return runNotFound()
     if (!isUnfinishedRunStatus(run.status)) return invalidState('The run has already ended.')

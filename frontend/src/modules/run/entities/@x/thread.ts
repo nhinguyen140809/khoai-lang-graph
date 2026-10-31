@@ -1,5 +1,7 @@
 export { type RunDefaults } from '../config/run-config.types'
 export { type LiveRunQueryOptions } from '../runs/run-queries.types'
-export { runSchema } from '../runs/runs.types'
+export { type Run, runSchema } from '../runs/runs.types'
 export { refetchIntervalOf } from '../runs/runs.utils'
+export { runStatusesByAttention } from '../status/run-status.constants'
 export { runStatuses } from '../status/run-status.types'
+export { isUnfinishedRunStatus } from '../status/run-status.utils'
