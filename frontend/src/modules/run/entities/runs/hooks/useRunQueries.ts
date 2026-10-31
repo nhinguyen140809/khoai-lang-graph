@@ -1,6 +1,7 @@
 import { useInfiniteQuery, useQuery } from '@tanstack/react-query'
 
 import { cursorPagesOptions, type HookQueryOptions } from '@/shared/api/query-client'
+import { type CostShare, costShare } from '@/shared/lib/cost'
 
 import { findLatestRun, getRun, listThreadRuns } from '../runs.api'
 import { runsPageSize } from '../runs.constants'
@@ -35,4 +36,17 @@ export function useRun(runId: string, { isEnabled = true }: HookQueryOptions = {
     refetchInterval: (query) => refetchIntervalOf(query.state.data?.status),
     enabled: isEnabled,
   })
+}
+
+/**
+ * The cost of the newest run of a thread against the limit of the run. Undefined while the run
+ * loads, before the first run of the thread, and for a run without a limit.
+ */
+export function useRunCost(
+  threadId: string,
+  options: HookQueryOptions = {},
+): CostShare | undefined {
+  const run = useLatestRun(threadId, options)
+  if (run.data == null) return undefined
+  return costShare(run.data.usage.cost_usd, run.data.run_config.max_cost_usd)
 }

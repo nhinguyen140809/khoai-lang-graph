@@ -207,7 +207,7 @@ A unit test may also import another slice of its layer, from its index, to show 
 | `activity` | ActivityEvent later, the record of who did what in a project | - | `steps`, the stages of the workflow as a tree in the side panel of Activity, with the item of the feature on the activity bar; `chat`, the chat in its tab | The chat of the first version today; the rest with the activity |
 | `auth` | The calls that start a session, create an account and end a session; the page that opens after signing in | `login`, `register`, `logout` | - | Today |
 | `user` | User, Session, UserSettings | `run-settings` later | `menu`, `settings` | The entities; the forms of the account and the preferences with Settings |
-| `usage` | MonthlyUsage, the usage of the user in a calendar month, with the budget of the month and its groups | - | - | The entities; the budget on the status bar with the cost meter, the usage section with Settings |
+| `usage` | MonthlyUsage, the usage of the user in a calendar month, with the budget of the month and its groups | - | - | The entities and the budget on the status bar; the usage section with Settings |
 | `trace-link` | TraceLink, the traces of items, the traceability views | - | `graph`, the nodes and edges of a trace, for drawing it | Later |
 | `llm-model` | ModelCatalogEntry, ModelSettings | - | - | The entities; the form of the model settings with Settings |
 | `design-system` | - | - | `showcase`, the page of the UI components and the tokens | Today |
@@ -254,6 +254,8 @@ Shared code knows no object of the product. What several modules read without be
 | The two views of the app, the `Wording` of a value, and `ViewContext` with `useView` | `shared/lib/view/` | Every layer reads them; `Providers` of `src/providers/`, in the app layer, gives the app its view |
 | The addresses of the pages (`routes`) | `shared/routes/` | Every module links to the pages of other modules; the folders of `src/app/` are the routes themselves, and the route types of Next.js check each address |
 | The tones of a status and their classes | `shared/lib/tone/` | The UI components and the marks of every module color a state with them |
+| The comparison of a cost with its limit, its levels and their tones | `shared/lib/cost/` | `run` and `usage` compare a cost with its limit |
+| The meta of a query that holds a cost | `shared/api/query-client/` | The stream of a run loads such queries again without naming them |
 | The languages of the documents | `shared/config/output-language/` | The app offers them, today in the dialog that creates a project; project, the run config and the user settings all carry one, and in `project` it would make `run` read `project` |
 | `AuthScreen`, the frame of the login and register screens | `shared/components/frame/layouts/`, with the other layouts of whole screens | It holds no object and no action |
 

@@ -3,19 +3,23 @@
 import { useQueryClient } from '@tanstack/react-query'
 import { useEffect, useEffectEvent, useState } from 'react'
 
+import { hasCost } from '@/shared/api/query-client'
 import { coalescedTask } from '@/shared/lib/timing'
 
 import { runKeys } from '../../runs/runs.keys'
 import type { Run } from '../../runs/runs.types'
 import { isUnfinishedRunStatus } from '../../status/run-status.utils'
 import { runEventsUrl } from '../run-events.api'
-import { runStatusEvents, streamReopenMs } from '../run-events.constants'
+import { runCostEvents, runStatusEvents, streamReopenMs } from '../run-events.constants'
+
+const costEvents: ReadonlySet<string> = new Set(runCostEvents)
 
 /**
  * Follows the event stream of an unfinished run and loads the run again at each event that may
  * change its status or its stage, then calls `onReloaded` with it. The events of a burst share one
  * load, and an event that comes during a load is followed by one more, since the load that started
- * before it may answer without its change. The stream starts after the latest event that the run
+ * before it may answer without its change. An event that may change a cost also loads again every
+ * query that holds a cost, and the events of a burst share that load too. The stream starts after the latest event that the run
  * had when it loaded, and is closed after `done`, so that it does not connect again; the browser
  * reconnects with the last event it read. A stream whose connection fails for good opens again a
  * moment later.
@@ -49,11 +53,13 @@ export function useRunStatusEvents(
       const latest = queryClient.getQueryData<Run | null>(queryKey)
       if (!isClosed && latest != null) await reloaded(latest)
     })
+    const reloadCosts = coalescedTask(() => queryClient.invalidateQueries({ predicate: hasCost }))
     for (const type of runStatusEvents) {
       source.addEventListener(type, (event) => {
         // The connection reports its own failures as `error` too, without the data of an event.
         if (!(event instanceof MessageEvent)) return
         reload()
+        if (costEvents.has(type)) reloadCosts()
       })
     }
     source.addEventListener('done', () => {

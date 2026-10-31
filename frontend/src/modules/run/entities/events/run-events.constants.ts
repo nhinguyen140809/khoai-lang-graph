@@ -12,5 +12,15 @@ export const runStatusEvents = [
   'done',
 ] as const satisfies readonly RunEventType[]
 
+/**
+ * The events of a run after which its cost may differ: a step that ends, a failure and the end of
+ * the run.
+ */
+export const runCostEvents = [
+  'node_end',
+  'error',
+  'done',
+] as const satisfies readonly (typeof runStatusEvents)[number][]
+
 /** How long a stream waits before it opens again after its connection failed, in milliseconds. */
 export const streamReopenMs = 5_000
