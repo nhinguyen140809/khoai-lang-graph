@@ -1,6 +1,6 @@
 import { z } from 'zod'
 
-import { unfinishedRunStatuses } from '@/modules/run/entities/@x/thread'
+import { runStatuses } from '@/modules/run/entities/@x/thread'
 
 // Temporary hand-written schemas for the threads API.
 // TODO: replace with the types generated into src/shared/api/generated/ once they exist.
@@ -12,12 +12,15 @@ export const threadSchema = z.object({
   /** Null until it is given, or generated from the first message. */
   title: z.string().nullable(),
   status: z.enum(['active', 'archived']),
-  /** Stage of the latest run; null before the first run. */
+  /** The stage of the latest run; null before the first run. */
   current_stage: z.string().nullable(),
   /** The unfinished run of the thread (queued, running or interrupted), if any. */
   active_run_id: z.string().nullable(),
-  /** The status of `active_run_id`; null when the thread has no unfinished run. */
-  active_run_status: z.enum(unfinishedRunStatuses).nullable(),
+  /**
+   * The status of the latest run, unfinished or ended; null before the first run. While
+   * `active_run_id` is set, the status of that run.
+   */
+  latest_run_status: z.enum(runStatuses).nullable(),
   last_message_at: z.iso.datetime(),
   created_at: z.iso.datetime(),
   updated_at: z.iso.datetime(),

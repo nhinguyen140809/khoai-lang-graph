@@ -39,24 +39,24 @@ export const threadRunStateCases = [
     thread: {
       project_id: projectIds.mentor,
       active_run_id: runIds.mentorMain3,
-      active_run_status: 'interrupted',
+      latest_run_status: 'interrupted',
       current_stage: 'analysis_review',
     },
   },
   {
     name: 'is running',
     address: '/?mock-run-status=running',
-    thread: { active_run_id: runIds.mentorMain3, active_run_status: 'running' },
+    thread: { active_run_id: runIds.mentorMain3, latest_run_status: 'running' },
   },
   {
     name: 'failed',
     address: '/?mock-run-status=failed',
-    thread: { active_run_id: null, active_run_status: null },
+    thread: { active_run_id: null, latest_run_status: 'failed' },
   },
   {
     name: 'is done',
     address: '/?mock-run-status=done',
-    thread: { active_run_id: null, active_run_status: null },
+    thread: { active_run_id: null, latest_run_status: 'succeeded' },
   },
 ]
 

@@ -68,7 +68,7 @@ describe('POST /threads/{thread_id}/messages', () => {
       expect((await fetchApi(apiEndpoints.thread.path({ threadId }))).body).toMatchObject({
         current_stage: 'planning',
         active_run_id: sent.body.run.id,
-        active_run_status: 'running',
+        latest_run_status: 'running',
       })
     },
   )

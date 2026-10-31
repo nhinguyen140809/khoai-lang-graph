@@ -5,6 +5,7 @@ import type { Thread } from '@/modules/thread/entities'
 
 import { buildRun, scriptedSteps } from '../../runs/fixtures/runs.fixtures'
 import { IdPrefix, mockId, userId } from '../../shared/db'
+import { buildThread } from '../../threads/threads.fixtures'
 import type { GeneratedProjectSpec } from '../generated-project-specs.types'
 import { generatedProjectSpecs } from './generated-project-specs.fixtures'
 
@@ -86,24 +87,15 @@ export function generatedProjects(): Project[] {
 }
 
 export function generatedThreads(): Thread[] {
-  return generatedProjectSpecs.map((spec) => {
-    const last = runsOf(spec).at(-1)
-    const status = last?.status
-    const isUnfinished = status !== undefined && isUnfinishedRunStatus(status)
-    return {
+  return generatedProjectSpecs.map((spec) =>
+    buildThread({
       id: threadId(spec.n),
       project_id: projectId(spec.n),
-      created_by: userId,
-      title: 'Main thread',
-      status: 'active',
-      current_stage: last?.current_stage ?? null,
-      active_run_id: isUnfinished ? (last?.id ?? null) : null,
-      active_run_status: isUnfinished ? status : null,
       last_message_at: at(spec.day, '09:00:00'),
       created_at: at(spec.day, '07:55:00'),
       updated_at: at(spec.day, '11:00:00'),
-    }
-  })
+    }),
+  )
 }
 
 /** The projects that `?mock-projects=many` adds: plain rows, for a long list. */

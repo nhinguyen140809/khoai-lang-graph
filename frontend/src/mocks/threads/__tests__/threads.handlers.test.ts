@@ -42,7 +42,10 @@ describe('GET /threads/{thread_id}', () => {
       method: 'POST',
     })
 
-    expect(await mentorThread()).toMatchObject({ active_run_id: null, active_run_status: null })
+    expect(await mentorThread()).toMatchObject({
+      active_run_id: null,
+      latest_run_status: 'cancelled',
+    })
   })
 
   it('has no run in the scenario without runs', async () => {
@@ -50,7 +53,12 @@ describe('GET /threads/{thread_id}', () => {
 
     const items = await getApiItems<Thread>(apiEndpoints.threads.path())
 
-    expect(items.every(({ active_run_id }) => active_run_id === null)).toBe(true)
+    expect(
+      items.every(
+        ({ active_run_id, latest_run_status }) =>
+          active_run_id === null && latest_run_status === null,
+      ),
+    ).toBe(true)
   })
 })
 

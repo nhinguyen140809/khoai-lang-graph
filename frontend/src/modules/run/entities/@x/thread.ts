@@ -1,1 +1,1 @@
-export { unfinishedRunStatuses } from '../status/run-status.types'
+export { type RunStatus, runStatuses } from '../status/run-status.types'

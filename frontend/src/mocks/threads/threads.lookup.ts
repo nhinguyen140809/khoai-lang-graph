@@ -1,46 +1,35 @@
-import type { Run, UnfinishedRunStatus } from '@/modules/run/entities'
-import { isUnfinishedRunStatus } from '@/modules/run/entities'
+import type { Run } from '@/modules/run/entities'
 import type { Thread } from '@/modules/thread/entities'
 
 import { generatedThreads } from '../generated/fixtures/generated-projects.fixtures'
-import { allRuns } from '../runs/lookup/runs.lookup'
-import { mockRunStatus, mockScenario } from '../shared/scenario'
-import { threadFixtures, threadsBeforeAnyRun } from './threads.fixtures'
+import { findUnfinishedRun, latestRunOfEachThread } from '../runs/lookup/runs.lookup'
+import { threadFixtures } from './threads.fixtures'
 import { createdThreads } from './threads.store'
 
-// The threads as the mock server holds them now: the fixtures and the threads created since, with
-// the run that each one has.
+// The threads as the mock server holds them now: the fixtures and the threads created since, each
+// with the run fields that the runs of the mock server give it.
 
-// With `?mock-runs=empty`, no thread has a run yet.
+/** Every thread, the run fields of each one read from its runs. */
 export function allThreads(): Thread[] {
-  const threads = [
-    ...createdThreads.get(),
-    ...threadFixtures(mockRunStatus()),
-    ...generatedThreads(),
-  ]
-  if (mockScenario('runs') === 'empty') return threadsBeforeAnyRun(threads)
-  const runs = allRuns()
-  return threads.map((thread) => withRunsOfThread(thread, runs))
+  const latestRuns = latestRunOfEachThread()
+  return [...createdThreads.get(), ...threadFixtures, ...generatedThreads()].map((thread) =>
+    withRunsOfThread(thread, latestRuns.get(thread.id)),
+  )
 }
 
-function isUnfinishedRun(run: Run): run is Run & { status: UnfinishedRunStatus } {
-  return isUnfinishedRunStatus(run.status)
+/** A thread of the fixtures or one created since. */
+export function findThread(threadId: string): Thread | undefined {
+  return allThreads().find(({ id }) => id === threadId)
 }
 
-// The unfinished run of a thread follows the runs: a run stopped while the mock server runs
-// leaves its thread without one.
-function withRunsOfThread(thread: Thread, runs: Run[]): Thread {
-  const active = runs
-    .filter((run) => run.thread_id === thread.id)
-    .toSorted((a, b) => b.number - a.number)
-    .find(isUnfinishedRun)
-  if (active === undefined) {
-    return { ...thread, active_run_id: null, active_run_status: null }
-  }
+// The stage and the status of the latest run of a thread, and its unfinished run: a run stopped
+// while the mock server runs leaves its thread without one.
+function withRunsOfThread(thread: Thread, latest: Run | undefined): Thread {
+  const active = findUnfinishedRun(thread.id)
   return {
     ...thread,
-    current_stage: active.current_stage,
-    active_run_id: active.id,
-    active_run_status: active.status,
+    current_stage: latest?.current_stage ?? null,
+    active_run_id: active?.id ?? null,
+    latest_run_status: latest?.status ?? null,
   }
 }

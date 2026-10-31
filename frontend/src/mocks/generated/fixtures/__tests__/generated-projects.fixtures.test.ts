@@ -1,7 +1,5 @@
 import { describe, expect, it } from 'vitest'
 
-import { isUnfinishedRunStatus } from '@/modules/run/entities'
-
 import { manyProjectCount } from '../../generated.constants'
 import { generatedProjectSpecs } from '../generated-project-specs.fixtures'
 import {
@@ -11,7 +9,7 @@ import {
   generatedThreads,
   manyProjects,
 } from '../generated-projects.fixtures'
-import { extraProjectCases, lastStepCases, recordIdCases } from './generated-projects.fixtures.data'
+import { lastStepCases, recordIdCases } from './generated-projects.fixtures.data'
 
 function hasUniqueIds(ids: string[]) {
   return new Set(ids).size === ids.length
@@ -33,19 +31,6 @@ describe('the extra projects of the mock data', () => {
     }
     expect(hasUniqueIds(runs.map(({ thread_id }) => thread_id))).toBe(true)
   })
-
-  it.each(extraProjectCases)(
-    'show the unfinished run of $name on its thread, and none once its run ended',
-    ({ projectId }) => {
-      const thread = generatedThreads().find((candidate) => candidate.project_id === projectId)
-      const last = generatedRuns()
-        .filter((run) => run.project_id === projectId)
-        .toSorted((a, b) => b.number - a.number)[0]
-      const isUnfinished = last !== undefined && isUnfinishedRunStatus(last.status)
-
-      expect(thread?.active_run_id).toBe(isUnfinished ? last.id : null)
-    },
-  )
 
   it('cover every state of a run, and a project without a run', () => {
     const statuses = new Set(generatedRuns().map(({ status }) => status))

@@ -8,16 +8,10 @@ export const recordIdCases = [
   { records: 'projects', ids: [...projectFixtures, ...generatedProjects()].map(({ id }) => id) },
   {
     records: 'threads',
-    ids: [...threadFixtures('waiting'), ...generatedThreads()].map(({ id }) => id),
+    ids: [...threadFixtures, ...generatedThreads()].map(({ id }) => id),
   },
   { records: 'runs', ids: [...runFixtures('waiting'), ...generatedRuns()].map(({ id }) => id) },
 ]
-
-/** Each extra project, by name. */
-export const extraProjectCases = generatedProjects().map(({ id, name }) => ({
-  name,
-  projectId: id,
-}))
 
 /** A state of a run, and the status of its last step. */
 export const lastStepCases = [
