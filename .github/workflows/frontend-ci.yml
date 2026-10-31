@@ -112,6 +112,31 @@ jobs:
           else
             gh api --method POST "$comments/$PR_NUMBER/comments" -F body=@"$RUNNER_TEMP/coverage.md" > /dev/null
           fi
+
+  # The production build, beside the checks, so that it neither waits for the unit tests nor shares
+  # their time limit.
+  build:
+    name: Build
+    needs: changes
+    if: needs.changes.outputs.frontend == 'true'
+    runs-on: ubuntu-latest
+    timeout-minutes: 15
+    defaults:
+      run:
+        working-directory: frontend
+    steps:
+      - uses: actions/checkout@v7
+        with:
+          persist-credentials: false
+      - uses: pnpm/action-setup@v6
+        with:
+          package_json_file: frontend/package.json
+      - uses: actions/setup-node@v7
+        with:
+          node-version-file: .nvmrc
+          cache: pnpm
+          cache-dependency-path: frontend/pnpm-lock.yaml
+      - run: pnpm install --frozen-lockfile
       - run: pnpm build
 
   e2e:
@@ -152,7 +177,7 @@ jobs:
   # passes when they passed or were skipped.
   result:
     name: Frontend CI result
-    needs: [changes, check, e2e]
+    needs: [changes, check, build, e2e]
     if: always()
     runs-on: ubuntu-latest
     timeout-minutes: 5
