@@ -28,7 +28,7 @@ The objects come from [Data Shape](../DATA_SHAPE.md), the endpoints from [API de
 - **Level 3, the kinds of file** inside a slice: `components/`, `hooks/`, `types/`, `constants/`, `utils/` and the other kinds of the contributing guide. A kind gets a folder once it has two files or more; a kind with one file stays at the root of the slice.
 - `src/shared/` and `src/app/`, with `src/providers/`, stay outside the modules.
 - Activity is a feature of the activity bar, as Documents or Workflow are, and a module of its own, `activity`. Its side panel shows the stages of the workflow as a tree, in the order of the definition, marked as the events of the run arrive: the widget `steps`, with the item of the feature on the activity bar, not built yet. Its page, which opens in a tab, is the chat: the widget `chat`. Until it is rebuilt, the route of its page shows a placeholder, and `chat` holds the code of the first chat, with the events of the stream of a run and their reducer in `run/entities` and the action that starts a run with an input in `run/features/start`. The rebuilt chat sends a message instead, from `thread/features/send-message`.
-- Two modules hold no object of the product yet: `user` the settings page (`user/widgets/settings`), with the feature that chooses the theme (`user/features/theme`), and `design-system` the page that shows the UI components and the tokens (`design-system/widgets/showcase`).
+- One module holds no object of the product: `design-system`, the page that shows the UI components and the tokens (`design-system/widgets/showcase`). `user` holds User, Session and UserSettings, with the settings page (`user/widgets/settings`) and the feature that chooses the theme (`user/features/theme`).
 
 ```text
 src/
@@ -64,7 +64,7 @@ src/
 │   │   ├── entities/           # the calls that start and end a session
 │   │   └── features/           # login/, register/, logout/
 │   ├── user/
-│   │   ├── entities/           # User
+│   │   ├── entities/           # User (user/), Session (sessions/), UserSettings (user-settings/)
 │   │   ├── features/           # theme/
 │   │   └── widgets/            # menu/, settings/
 │   ├── llm-model/
@@ -120,6 +120,8 @@ The entities of `workflow` split by topic in the same way: `definition` (the gra
 The entities of `project` split by topic too: `projects` (the projects, their requests, keys, types, filters and words) and `run-status` (the run that the status of a project shows, `ProjectRunResult` and `shownRun`, and the stream of the runs of a project). Neither reads the other; `run-status` reads the threads and the runs through their `@x/project`.
 
 The entities of `llm-model` split by topic too: `models`, the catalog, and `model-settings`, the model of each agent role; neither reads the other.
+
+The entities of `user` split by topic too: `user`, the signed-in user, `sessions`, the devices where the user is signed in, and `user-settings`, the preferences; none reads another.
 
 ESLint checks the kinds of each place (`fileKinds` of `frontend/lint/lib/file-names/file-kinds.constants.js`), the layers inside a module, and the folders at the root of a slice: one for each kind that the layer holds, `components/`, `hooks/`, `__tests__/`, and `@x/` in the entities. A hook at the root of a feature or a widget is a `use<Name>.ts`, and a component there follows the import rules of the components. It also checks that a `constants` file exports no type and declares no function, and that a `types` file imports no `constants` file.
 
@@ -202,7 +204,7 @@ A unit test may also import another slice of its layer, from its index, to show 
 | `project` | Project, the run that its status shows, the streams of its runs | `create`, `rename`, `archive` (with restore and Undo), `delete`; `run-settings` later | `list`, `menu`, `commands`, `dialogs`, `status` | Today |
 | `activity` | ActivityEvent later, the record of who did what in a project | - | `steps`, the stages of the workflow as a tree in the side panel of Activity, with the item of the feature on the activity bar; `chat`, the chat in its tab | The chat of the first version today; the rest with the activity |
 | `auth` | The calls that start a session, create an account and end a session; the page that opens after signing in | `login`, `register`, `logout` | - | Today |
-| `user` | User, UserSettings | `run-settings` later | `menu`, `settings` | User, `menu` and `settings` today |
+| `user` | User, Session, UserSettings | `run-settings` later | `menu`, `settings` | The entities; the forms of the account and the preferences with Settings |
 | `usage` | Usage of the user in a calendar month, with the budget of the month | - | - | Next |
 | `trace-link` | TraceLink, the traces of items, the traceability views | - | `graph`, the nodes and edges of a trace, for drawing it | Later |
 | `llm-model` | ModelCatalogEntry, ModelSettings | - | - | The entities; the form of the model settings with Settings |
@@ -219,7 +221,7 @@ The endpoints of the entities:
 | `thread` | `/projects/{project_id}/threads`, `/threads`, `/threads/{thread_id}`, `/threads/{thread_id}/messages` |
 | `project` | `/projects`, `/projects/{project_id}` |
 | `auth` | `/auth/login`, `/auth/register`, `/auth/logout` |
-| `user` | `/me`, `/me/settings` |
+| `user` | `/me`, `/me/password`, `/me/sessions`, `/me/settings` |
 | `usage` | `/me/usage` |
 | `trace-link` | `/projects/{project_id}/trace-links`, `/trace-links/{link_id}`, `/items/{item_id}/trace`, `/projects/{project_id}/traceability/matrix`, `/projects/{project_id}/traceability/coverage` |
 | `llm-model` | `/models`, `/me/model-settings` |
