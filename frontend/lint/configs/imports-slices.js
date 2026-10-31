@@ -66,8 +66,9 @@ function topicBlocks({ sliceGlob, patternsOf, topics, topicPatternsOf }) {
 /** @param {Slice} slice */
 function componentBlock({ sliceGlob, patternsOf }) {
   return {
-    files: [`${sliceGlob}/components/**/*.{ts,tsx}`],
-    ignores: ['**/__tests__/**'],
+    // The components of a slice, in components/ or alone at its root.
+    files: [`${sliceGlob}/components/**/*.{ts,tsx}`, `${sliceGlob}/*.tsx`],
+    ignores: ['**/__tests__/**', '**/*.config.tsx'],
     rules: restrictImports({
       paths: componentPaths,
       patterns: [...patternsOf(FileScope.Source), ...componentPatterns],

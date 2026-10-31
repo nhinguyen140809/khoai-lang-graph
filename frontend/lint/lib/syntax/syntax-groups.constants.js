@@ -53,7 +53,7 @@ export const syntaxGroups = {
   ].map((selector) => ({
     selector,
     message:
-      'A hook lives in hooks/use<Name>.ts of its slice, not in the file of a component (CONTRIBUTING: Hooks of a slice).',
+      'A hook lives in hooks/use<Name>.ts of its slice, or alone in use<Name>.ts at the root of a feature or a widget, not in the file of a component (CONTRIBUTING: Hooks of a slice).',
   })),
   // An action that deletes, stops or revokes something asks first, in a dialog (ConfirmDialog).
   destructiveActions: [
