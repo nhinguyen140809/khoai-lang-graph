@@ -13,6 +13,7 @@ import {
 } from '../../generated/fixtures/generated-projects.fixtures'
 import { modelsOfUserSettings } from '../../model-settings/model-settings.lookup'
 import { mockRunStatus, mockScenario } from '../../shared/scenario'
+import { currentUserSettings } from '../../user-settings/user-settings.lookup'
 import { defaultRunConfigFixture, runFixtures, runStepFixtures } from '../fixtures/runs.fixtures'
 import { createdRuns, runEdits } from '../runs.store'
 
@@ -67,10 +68,11 @@ type WholeSetting = 'review_checkpoints' | 'max_steps' | 'max_cost_usd'
 
 /**
  * The settings of a run that starts now. Each setting comes from the first level that sets it: the
- * `override` of the request that starts the run, then the settings of the project, then the
- * default of the server; the parameters are resolved one by one. The output language is the one
- * of the project. The models are resolved by agent role, from the first level that sets one: the
- * request, the overrides of the project, the model settings of the user, then the default.
+ * `override` of the request that starts the run, then the settings of the project, then the run
+ * defaults of the user, then the default of the server; the parameters are resolved one by one.
+ * The output language is the one of the project. The models are resolved by agent role, from the
+ * first level that sets one: the request, the overrides of the project, the model settings of the
+ * user, then the default.
  */
 export function resolveRunConfig(
   project: Pick<Project, 'run_config' | 'output_language' | 'model_overrides'> | undefined,
@@ -78,7 +80,7 @@ export function resolveRunConfig(
   models?: Record<string, string>,
 ): Run['run_config'] {
   // The levels, from the first to the last; the default of the server comes after them.
-  const levels = [override, project?.run_config]
+  const levels = [override, project?.run_config, currentUserSettings().default_run_config]
   const defaults = defaultRunConfigFixture
   const firstSet = <K extends WholeSetting>(setting: K) =>
     levels.map((level) => level?.[setting]).find((value) => value != null) ?? defaults[setting]

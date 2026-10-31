@@ -1,10 +1,12 @@
 import { defaultRunConfigFixture } from '../../fixtures/runs.fixtures'
 
-// The model settings of the fixtures: the user chose Claude Opus 5 for the analyst, and GPT-4.1
-// mini for the persona agent, which the default already uses.
+// The settings of the user in the fixtures: the model settings choose Claude Opus 5 for the analyst,
+// and GPT-4.1 mini for the persona agent, which the default already uses; the run defaults of the
+// user set 60 steps at most.
 const userModels = { analyst: 'anthropic:claude-opus-5' }
 const withUserModels = {
   ...defaultRunConfigFixture,
+  max_steps: 60,
   models: { ...defaultRunConfigFixture.models, ...userModels },
 }
 
