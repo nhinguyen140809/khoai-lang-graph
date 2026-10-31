@@ -111,9 +111,11 @@ A slice holds its components in `components/`, its hooks in `hooks/`, and its ot
 
 Outside the modules, shared code holds `types`, `store`, `reducer`, `config`, `constants` and `utils` files; `src/mocks/` holds `types`, `store`, `constants`, `utils`, `handlers`, `fixtures`, `lookup`, `changes`, `problems` and `setup` files, its `fixtures` the records of the mock data, its `constants` their fixed ids and counts, and its `store`, `lookup`, `changes` and `problems` files the state of a resource, how it is read, how it is changed and how a request is refused ([frontend README: Files of a mock folder](../../frontend/README.md#files-of-a-mock-folder)); `src/test/` holds `utils` and `setup` files; and `tests/` holds the `spec`, `data` and `utils` files of Playwright. A config made of React elements is a `<subject>.config.tsx`.
 
-The entities of a module with many topics split by topic instead of by kind: the root of `modules/run/entities` holds a folder for each topic, `components/`, `@x/` and `index.ts`, and a topic holds its files flat, `<subject>.<kind>.ts`, with its `hooks/` and `__tests__/`. The topics are listed in `topicEntityModules` of the lint code, each with the topics that it reads, and a new topic is added there. The topics depend one way, and ESLint reports an import against it: `status` and `config` at the bottom, `runs` above them, `steps`, `state` and `directives` above `runs`, and `events`, which imports no other topic. No topic imports `components/`.
+The entities of a module with many topics split by topic instead of by kind: the root of `modules/run/entities` holds a folder for each topic, `components/`, `@x/` and `index.ts`, and a topic holds its files flat, `<subject>.<kind>.ts`, with its `hooks/` and `__tests__/`. The topics are listed in `topicEntityModules` of the lint code, each with the topics that it reads, and a new topic is added there. The topics depend one way, and ESLint reports an import against it: `status` and `config` at the bottom, `runs` above them, `steps`, `state` and `directives` above `runs`, and `events` above `runs` and `status`. No topic imports `components/`.
 
 The entities of `workflow` split by topic in the same way: `definition` (the graph, the vocabulary, the export templates, the link types, and the one query of the definition that the other topics select from), `stages`, `checkpoints` and `issues` (what is read from the definition, each reading `definition`), `artifact-kinds` (the kinds and their content schemas, reading `definition`), `content-fields` (the fields and values of the content of an artifact or an item, reading `artifact-kinds`, and `issues` reads it for the values of an item) and `run-parameters` (the fields of the run settings, reading `definition`, with their own types apart from the content fields).
+
+The entities of `project` split by topic too: `projects` (the projects, their requests, keys, types, filters and words) and `run-status` (the run that the status of a project shows, `ProjectRunResult` and `shownRun`, and the stream of the runs of a project). Neither reads the other; `run-status` reads the threads and the runs through their `@x/project`.
 
 ESLint checks the kinds of each place (`fileKinds` of `frontend/lint/lib/file-names/file-kinds.constants.js`), the layers inside a module, and the folders at the root of a slice: one for each kind that the layer holds, `components/`, `hooks/`, `__tests__/`, and `@x/` in the entities. A hook at the root of a feature or a widget is a `use<Name>.ts`, and a component there follows the import rules of the components. It also checks that a `constants` file exports no type and declares no function, and that a `types` file imports no `constants` file.
 
@@ -172,8 +174,9 @@ The links between entities today:
 
 | Entity that uses | Entity used | What it takes |
 |---|---|---|
-| `project` | `run` | The run statuses; RunDefaults, the run settings of a project |
-| `thread` | `run` | The run statuses; `runSchema`, the run that a message starts; RunDefaults; the polling of a run that works |
+| `project` | `run` | The run statuses; RunDefaults, the run settings of a project; the latest run of a thread, its key and its event stream |
+| `project` | `thread` | The threads of a project, their key, `threadsByAttention` |
+| `thread` | `run` | The run statuses and `runStatusesByAttention`; `runSchema`, the run that a message starts; RunDefaults; the polling of a run that works |
 | `thread` | `artifact` | `artifactRefSchema`, `itemRefSchema`, the references of a message |
 | `run` | `workflow` | The fields of the run parameters with their checks and values; the checkpoints that a run may pause at |
 | `run` | `artifact` | `itemRefSchema`; `subjectKeyOfMessage`, the item that an interview message is about |
@@ -189,10 +192,10 @@ A unit test may also import another slice of its layer, from its index, to show 
 |---|---|---|---|---|
 | `workflow` | Workflow definition (graph, agent roles, stages in their order, checkpoints and their options); artifact kinds and content schemas | - | - | The artifact kinds and content schemas; the definition next |
 | `artifact` | Artifact, ArtifactItem and their revisions, and Export as its resource `exports` | `edit` | `panel` | The entities, and the placeholder of `panel`; the rest with the documents |
-| `run` | Run and RunStep, each with its usage (`RunUsage`); RunEvent, Directive, the event stream of a run; the workflow state of a run, after a step or now; the steps grouped by subject and the progress of the nodes; the fields of the run settings and their schema, which the forms of the features embed; the run statuses and their badge. The entities split by topic: `runs`, `steps`, `state`, `directives`, `events`, `config`, `status`, and a topic imports only the topics under it | `stop`, `start` (the first chat); `retry` later | `graph`, the workflow graph of a run, later | The run statuses, the stream of a run and `start` today |
+| `run` | Run and RunStep, each with its usage (`RunUsage`); RunEvent, Directive, the event stream of a run; the workflow state of a run, after a step or now; the steps grouped by subject and the progress of the nodes; the fields of the run settings and their schema, which the forms of the features embed; the run statuses and their badge. The entities split by topic: `runs`, `steps`, `state`, `directives`, `events`, `config`, `status`, and a topic imports only the topics under it | `stop`, `start` (the first chat); `retry` later | `graph`, the workflow graph of a run, later | The run statuses, the stream of a run, `stop` and `start` today |
 | `review` | Interrupt, HumanDecision | `answer` | `panel` | The entities; `answer` and `panel` with the activity |
 | `thread` | Thread, Message | `send-message` | - | The entities; `send-message` with the activity |
-| `project` | Project, the run that its status shows, the streams of its runs | `create`, `rename`, `archive` (with restore and Undo), `delete`; `run-settings` later | `list`, `menu`, `commands`, `dialogs`, `status` | Today, except `status` and the runs in the entities, which come with the threads |
+| `project` | Project, the run that its status shows, the streams of its runs | `create`, `rename`, `archive` (with restore and Undo), `delete`; `run-settings` later | `list`, `menu`, `commands`, `dialogs`, `status` | Today |
 | `activity` | ActivityEvent later, the record of who did what in a project | - | `steps`, the stages of the workflow as a tree in the side panel of Activity, with the item of the feature on the activity bar; `chat`, the chat in its tab | The chat of the first version today; the rest with the activity |
 | `auth` | The calls that start a session, create an account and end a session; the page that opens after signing in | `login`, `register`, `logout` | - | Today |
 | `user` | User, UserSettings | `run-settings` later | `menu`, `settings` | User, `menu` and `settings` today |
@@ -254,7 +257,7 @@ A block that reads several modules sits in the highest module that it reads, or 
 
 | Block | Slice | What it reads |
 |---|---|---|
-| The status of a project on the top bar | `project/widgets/status` | `project`, `thread`, `run`, and Stop of `run/features/stop` |
+| The status of a project on the status bar | `project/widgets/status` | `project`, `thread`, `run`, and Stop of `run/features/stop` |
 | The tree of the stages in the side panel of Activity | `activity/widgets/steps` | `workflow` for the stages, in order, with their labels; `run` for the steps and the events of the run; `review` for the pending review |
 | The chat of Activity | `activity/widgets/chat` | `thread`, and Send of `thread/features/send-message`; `run`, `review`, `artifact` |
 | The workflow graph of a run | `run/widgets/graph` | `workflow` |
