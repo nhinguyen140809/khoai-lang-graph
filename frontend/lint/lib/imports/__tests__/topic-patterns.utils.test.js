@@ -16,6 +16,7 @@ describe('entityTopics', () => {
   it('lists the topics of a module split by topic, and none for another module', () => {
     expect(entityTopics('run')).toContain('steps')
     expect(entityTopics('project')).toEqual(['projects', 'run-status'])
+    expect(entityTopics('llm-model')).toEqual(['model-settings', 'models'])
     expect(entityTopics('thread')).toEqual([])
   })
 })
@@ -40,6 +41,12 @@ describe('topicPatterns', () => {
     expect(isRejected(topicPatterns('run', 'events'), '../../steps/run-steps.types')).toBe(true)
     expect(isRejected(topicPatterns('run', 'events'), '../../runs/runs.keys')).toBe(false)
     expect(isRejected(topicPatterns('run', 'config'), '../components/RunDefaultsFields')).toBe(true)
+  })
+
+  it('keeps the topics of a module that read nothing of each other apart', () => {
+    const patterns = topicPatterns('llm-model', 'model-settings')
+    expect(isRejected(patterns, '../models/models.types')).toBe(true)
+    expect(isRejected(patterns, './model-settings.types')).toBe(false)
   })
 
   it('throws for a topic that the module does not list', () => {

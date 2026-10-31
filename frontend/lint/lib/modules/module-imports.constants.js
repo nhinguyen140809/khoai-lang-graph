@@ -14,6 +14,7 @@ export const moduleImports = {
   auth: [],
   user: ['auth', 'run'],
   usage: [],
+  'llm-model': [],
   'design-system': [],
 }
 

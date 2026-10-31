@@ -67,6 +67,10 @@ export const pascalCasePattern = '+([A-Z])*([a-zA-Z0-9])'
 // the entities. A new topic is added here.
 /** @type {Record<string, Record<string, string[]>>} */
 export const topicEntityModules = {
+  'llm-model': {
+    'model-settings': [],
+    models: [],
+  },
   project: {
     projects: [],
     'run-status': [],
