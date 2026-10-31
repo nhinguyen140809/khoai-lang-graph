@@ -43,11 +43,15 @@ export function validateRetryBody(
   return step === undefined ? { problems: [choiceProblem('from_step_id')] } : { step }
 }
 
-/** The run settings that a body gives at `run_config`, a field left out not set; else the problems. */
+/**
+ * The run settings that a body gives at `field`, such as `run_config` or `default_run_config`, a
+ * field left out not set; else the problems, each at a path under `field`.
+ */
 export function validateRunDefaults(
   given: unknown,
+  field = 'run_config',
 ): { runDefaults: RunDefaults } | { problems: FieldProblem[] } {
-  const problems = schemaProblems(runDefaultsJsonSchema, given, 'run_config')
+  const problems = schemaProblems(runDefaultsJsonSchema, given, field)
   if (problems.length > 0 || !isRecord(given)) return { problems }
   return { runDefaults: runDefaultsSchema.parse({ ...noRunDefaults, ...given }) }
 }

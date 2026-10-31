@@ -1,11 +1,16 @@
 import { describe, expect, it } from 'vitest'
 
+import type { Session } from '@/modules/user/entities'
 import { apiEndpoints } from '@/shared/api/endpoints'
+import { HttpStatus } from '@/shared/api/http'
 import { apiUrl } from '@/shared/api/request'
-import { fetchApi, openPage } from '@/test/msw'
+import { fetchApi, getApiItems, openPage, patchApi, postApi } from '@/test/msw'
 import { expectStillPending } from '@/test/steps'
+import { itRejectsRequests } from '@/test/suites'
 
-import { meCases } from './me.handlers.data'
+import { sessionIds } from '../../shared/db'
+import { mePasswordFixture } from '../me.fixtures'
+import { meCases, meRejectedCases } from './me.handlers.data'
 
 // A scenario of the mocks is chosen in the page address.
 describe('me handlers', () => {
@@ -14,6 +19,30 @@ describe('me handlers', () => {
 
     expect(await fetchApi(apiEndpoints.me.path())).toMatchObject({ status, body })
   })
+
+  it('changes the name, trimmed, that GET /me then reads', async () => {
+    const changed = await patchApi(apiEndpoints.me.path(), { display_name: '  Linh P.  ' })
+
+    expect(changed).toMatchObject({ status: HttpStatus.Ok, body: { display_name: 'Linh P.' } })
+    expect((await fetchApi(apiEndpoints.me.path())).body).toMatchObject({
+      display_name: 'Linh P.',
+      email: 'linh.pham@example.com',
+    })
+  })
+
+  it('changes the password, and ends the other sessions', async () => {
+    const body = { current_password: mePasswordFixture, new_password: 'long-enough-1' }
+
+    expect((await postApi(apiEndpoints.password.path(), body)).status).toBe(HttpStatus.NoContent)
+
+    expect((await postApi(apiEndpoints.password.path(), body)).status).toBe(
+      HttpStatus.UnprocessableContent,
+    )
+    const sessions = await getApiItems<Session>(apiEndpoints.sessions.path())
+    expect(sessions.map(({ id }) => id)).toEqual([sessionIds.current])
+  })
+
+  itRejectsRequests(meRejectedCases)
 
   it('never answers in the loading scenario', async () => {
     openPage('/?mock-me=loading')

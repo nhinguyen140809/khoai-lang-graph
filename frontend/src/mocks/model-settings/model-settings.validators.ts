@@ -2,7 +2,7 @@ import type { ReplaceModelSettingsBody } from '@/modules/llm-model/entities'
 import type { FieldProblem } from '@/shared/api/error'
 
 import { modelIdsForRole } from '../models/models.lookup'
-import { choice, choiceProblem, jsonObject, schemaProblems } from '../shared/http/validation'
+import { bodyProblems, choice, choiceProblem, jsonObject } from '../shared/http/validation'
 import { workflowDefinitionFixture } from '../workflow/workflow.fixtures'
 
 // What the body of the request that replaces the model settings may hold: a list of the model of
@@ -29,15 +29,6 @@ const modelSettingsBodySchema = {
 }
 
 type ModelSettingChoice = ReplaceModelSettingsBody['items'][number]
-
-// The problems of the shape of the body. The schema paths start with a dot, as `schemaProblems`
-// joins an empty root to a name.
-function modelSettingsShapeProblems(given: Record<string, unknown>): FieldProblem[] {
-  return schemaProblems(modelSettingsBodySchema, given, '').map((problem) => ({
-    ...problem,
-    field: problem.field.replace(/^\./, ''),
-  }))
-}
 
 // The choice of one entry of `items` whose shape is right, or the problem of its role or model. `taken`
 // holds the roles of the entries before it.
@@ -66,7 +57,7 @@ function readModelSettingChoice(
 export function validateModelSettings(
   given: Record<string, unknown>,
 ): { choices: ModelSettingChoice[] } | { problems: FieldProblem[] } {
-  const problems = modelSettingsShapeProblems(given)
+  const problems = bodyProblems(modelSettingsBodySchema, given)
   const choices: ModelSettingChoice[] = []
   const taken = new Set<string>()
   const entries: unknown[] = Array.isArray(given.items) ? given.items : []

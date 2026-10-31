@@ -15,3 +15,6 @@ export const meFixture: Me = {
   created_at: '2026-09-01T08:00:00Z',
   updated_at: '2026-10-06T08:20:00Z',
 }
+
+/** The password of the user of the examples, which a change of the password checks. */
+export const mePasswordFixture = 'correct-horse-7'

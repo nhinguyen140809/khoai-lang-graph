@@ -31,4 +31,15 @@ describe('validateRunDefaults', () => {
   it.each(refusedRunDefaults)('refuses $name', ({ given, problems }) => {
     expect(validateRunDefaults(given)).toEqual({ problems })
   })
+
+  it('names its problems under the field that it is given', () => {
+    expect(validateRunDefaults({ max_steps: 'many' }, 'default_run_config')).toEqual({
+      problems: [
+        {
+          field: 'default_run_config.max_steps',
+          message: 'Send a value of type integer or null.',
+        },
+      ],
+    })
+  })
 })

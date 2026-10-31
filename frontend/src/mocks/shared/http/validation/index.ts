@@ -13,4 +13,4 @@ export {
   requiredText,
   requiredTextProblem,
 } from './field-values.utils'
-export { schemaProblems } from './json-schema.utils'
+export { bodyProblems, schemaProblems } from './json-schema.utils'
