@@ -321,13 +321,13 @@ Rules:
 | Method and path | Purpose | Phase |
 |---|---|---|
 | `GET /projects/{project_id}/threads` | Threads of a project; ordered by `last_message_at` descending | MVP |
-| `GET /threads` | Threads of the user across projects; `?project_id=` | MVP |
-| `POST /projects/{project_id}/threads` | Create an empty thread; body optional `title`. The first message of the thread starts the work. The message that starts the first run of the project becomes the initial intent of the project, see [Data shape: Project](DATA_SHAPE.md#project-mvp) | MVP |
+| `GET /threads` | Threads of the user across projects; `?project_id=`; ordered by `last_message_at` descending | MVP |
+| `POST /projects/{project_id}/threads` | Create an empty thread; body optional `title`: left out or `null` leaves the thread without a title until its first message, any other value is a text with more than whitespace, else `422 validation_failed` at `title`. The first message of the thread starts the work. The message that starts the first run of the project becomes the initial intent of the project, see [Data shape: Project](DATA_SHAPE.md#project-mvp) | MVP |
 | `GET /threads/{thread_id}` | One thread, with `active_run_id` and `latest_run_status` | MVP |
-| `PATCH /threads/{thread_id}` | Change `title`, `status` | MVP |
-| `DELETE /threads/{thread_id}` | Soft delete | MVP |
+| `PATCH /threads/{thread_id}` | Change `title`, `status`. `title` is a text with more than whitespace and cannot be set back to `null`; `status` is `active` or `archived`; otherwise `422 validation_failed` at the field | MVP |
+| `DELETE /threads/{thread_id}` | Soft delete: the thread is left out of lists, and its endpoints answer `404`. A thread with an unfinished run (`queued`, `running` or `interrupted`) answers `409 invalid_state`; the run is stopped first | MVP |
 | `GET /threads/{thread_id}/messages` | Chat messages; ordered by `sequence` ascending. User messages carry `delivery` | MVP |
-| `POST /threads/{thread_id}/messages` | Send a user message. Body `content`, optional `run_config` with the fields of [RunDefaults](DATA_SHAPE.md#rundefaults-mvp) and optional `models`, a map of agent role to model, both used only when the message starts a run. Returns `201` with the message and the run it started or was sent to | MVP |
+| `POST /threads/{thread_id}/messages` | Send a user message. Body `content`, optional `run_config` with the fields of [RunDefaults](DATA_SHAPE.md#rundefaults-mvp) and optional `models`, a map of agent role to model, both used only when the message starts a run. Each key of `models` is an agent role of the current workflow definition and each value a `provider:model` text; otherwise `422 validation_failed` at `models.<role>`. Returns `201` with the message and the run it started or was sent to | MVP |
 
 Sending a message is the only way the chat box starts work, and it is never rejected because the thread has an unfinished run:
 
