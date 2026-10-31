@@ -257,7 +257,7 @@ The model a user chose for each agent role. One row per user and role.
 | `user_id` | ref\<User\> | |
 | `agent_role` | AgentRole | See [agent roles](#agent-roles) |
 | `model_id` | string | Must exist in the catalog and allow this role |
-| `temperature` | number? | Null means the role default |
+| `temperature` | number? | From 0 to 1, a range that every provider of the catalog accepts. Null means the role default |
 
 Resolution order when a run starts: one-off override in the run request, then project setting, then user setting, then the server default for the role, see [RunDefaults](#rundefaults-mvp).
 
