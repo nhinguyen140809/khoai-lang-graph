@@ -11,10 +11,14 @@ import { ChatCard } from './cards/ChatCard'
 import { CodeCard } from './cards/CodeCard'
 import { CommandCard } from './cards/CommandCard'
 import { ControlsCard } from './cards/ControlsCard'
+import { CopyButtonCard } from './cards/CopyButtonCard'
+import { DiffViewCard } from './cards/DiffViewCard'
 import { DisclosureCard } from './cards/DisclosureCard'
 import { ExplorerTreeCard } from './cards/ExplorerTreeCard'
+import { FloatingSurfaceCard } from './cards/FloatingSurfaceCard'
 import { FormCard } from './cards/FormCard'
 import { GraphCard } from './cards/GraphCard'
+import { HighlightCard } from './cards/HighlightCard'
 import { ItemsCard } from './cards/ItemsCard'
 import { MarkdownCard } from './cards/MarkdownCard'
 import { NavigationCard } from './cards/NavigationCard'
@@ -51,8 +55,12 @@ export function DesignSystemPage() {
             <ChartCard />
             <ReviewCard />
             <ButtonsCard />
+            <CopyButtonCard />
             <BadgesCard />
+            <HighlightCard />
+            <DiffViewCard />
             <CodeCard />
+            <FloatingSurfaceCard />
             <AlertsCard />
             <FormCard />
             <NumbersCard />
