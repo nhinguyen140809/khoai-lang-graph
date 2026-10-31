@@ -1,2 +1,2 @@
-export { sendFirstMessage } from './threads.api'
-export type { Thread } from './threads.types'
+export { sendFirstMessage } from './api/threads.api'
+export type { Thread } from './types/threads.types'

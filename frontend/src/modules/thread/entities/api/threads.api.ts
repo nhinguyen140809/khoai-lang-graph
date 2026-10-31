@@ -4,7 +4,12 @@ import { apiEndpoints } from '@/shared/api/endpoints'
 import { HttpMethod } from '@/shared/api/http'
 import { apiRequest } from '@/shared/api/request'
 
-import { createdThreadSchema, sentMessageSchema, type Thread, threadSchema } from './threads.types'
+import {
+  createdThreadSchema,
+  sentMessageSchema,
+  type Thread,
+  threadSchema,
+} from '../types/threads.types'
 
 // The first page of the threads; later pages are not read.
 const listThreadsResponseSchema = z.object({ items: z.array(threadSchema) })
