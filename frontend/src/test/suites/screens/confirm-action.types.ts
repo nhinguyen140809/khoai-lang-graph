@@ -9,6 +9,8 @@ export interface AsksBeforeActionCase {
   open: () => Promise<HTMLElement>
   /** The words of the button that runs the action. */
   confirmLabel: string
+  /** The words of the button that leaves the action undone, when they are not "Cancel". */
+  cancelLabel?: string
   /** Whether the action has reached its end: the request arrived, or the effect happened. */
   hasRun: () => boolean
   /**
