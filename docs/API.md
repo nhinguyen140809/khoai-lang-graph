@@ -248,6 +248,8 @@ Usage of the current month, `GET /me/usage?group_by=project`:
 
 - `budget_usd` is the budget that applies to the month: `monthly_budget_usd` of the user, or the server default when it is null. It is null when the month has no limit.
 - `total` and each `usage` are a [Usage](DATA_SHAPE.md#run-mvp); `groups` is empty without `group_by`, and `key` is the id, the day (`YYYY-MM-DD`), the role or the model of the group.
+- The usage of a step counts in the month and the day, in UTC, of its `started_at`. `groups` has one entry for each key with usage in the month: by `key` for `day`, by `cost_usd` descending for the others, ties broken by `key`. A step without an agent role or a model calls no LLM and is in no group of `agent_role` or `model`, so the groups add up to the tokens and the cost of `total`, and only `total` holds its time.
+- A `month` that is not `YYYY-MM`, or a `group_by` out of its list, answers `400 invalid_request`. A month without usage, such as a month to come, answers `total` at zero and no groups.
 
 ### Workflow definition
 
