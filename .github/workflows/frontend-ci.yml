@@ -62,11 +62,7 @@ jobs:
     needs: changes
     if: needs.changes.outputs.frontend == 'true'
     runs-on: ubuntu-latest
-    timeout-minutes: 20
-    permissions:
-      contents: read
-      # To comment the coverage on the pull request.
-      pull-requests: write
+    timeout-minutes: 15
     defaults:
       run:
         working-directory: frontend
@@ -88,8 +84,79 @@ jobs:
       - run: pnpm typecheck
       - run: pnpm lint
       - run: pnpm format:check
-      # The unit tests, run with the coverage report. The report informs and checks no minimum.
-      - run: pnpm test:coverage
+
+  # The unit tests, split in four parts that run at once, each with its coverage. Each part writes
+  # a blob report, which the coverage job joins.
+  unit:
+    name: Unit tests (${{ matrix.shard }}/4)
+    needs: changes
+    if: needs.changes.outputs.frontend == 'true'
+    runs-on: ubuntu-latest
+    # The unit tests grow with each entity: about 17 minutes in one part on 2026-10-31.
+    timeout-minutes: 20
+    strategy:
+      fail-fast: false
+      matrix:
+        shard: [1, 2, 3, 4]
+    defaults:
+      run:
+        working-directory: frontend
+    steps:
+      - uses: actions/checkout@v7
+        with:
+          persist-credentials: false
+      - uses: pnpm/action-setup@v6
+        with:
+          package_json_file: frontend/package.json
+      - uses: actions/setup-node@v7
+        with:
+          node-version-file: .nvmrc
+          cache: pnpm
+          cache-dependency-path: frontend/pnpm-lock.yaml
+      - run: pnpm install --frozen-lockfile
+      - run: pnpm test:coverage --shard=${{ matrix.shard }}/4 --reporter=blob --reporter=default
+      - uses: actions/upload-artifact@v7
+        with:
+          name: vitest-blob-${{ matrix.shard }}
+          path: frontend/.vitest/blob
+          # The folder starts with a dot, which the action leaves out by default.
+          include-hidden-files: true
+          retention-days: 1
+
+  # Joins the reports of the four parts into one coverage summary. The report informs and checks no
+  # minimum.
+  coverage:
+    name: Coverage
+    needs: [changes, unit]
+    if: needs.changes.outputs.frontend == 'true'
+    runs-on: ubuntu-latest
+    timeout-minutes: 10
+    permissions:
+      contents: read
+      # To comment the coverage on the pull request.
+      pull-requests: write
+    defaults:
+      run:
+        working-directory: frontend
+    steps:
+      - uses: actions/checkout@v7
+        with:
+          persist-credentials: false
+      - uses: pnpm/action-setup@v6
+        with:
+          package_json_file: frontend/package.json
+      - uses: actions/setup-node@v7
+        with:
+          node-version-file: .nvmrc
+          cache: pnpm
+          cache-dependency-path: frontend/pnpm-lock.yaml
+      - run: pnpm install --frozen-lockfile
+      - uses: actions/download-artifact@v8
+        with:
+          pattern: vitest-blob-*
+          path: frontend/.vitest/blob
+          merge-multiple: true
+      - run: pnpm vitest run --merge-reports --coverage
       - name: Report the coverage
         if: github.event_name == 'pull_request'
         run: pnpm --silent coverage:report | tee "$RUNNER_TEMP/coverage.md" >> "$GITHUB_STEP_SUMMARY"
@@ -111,6 +178,31 @@ jobs:
           else
             gh api --method POST "$comments/$PR_NUMBER/comments" -F body=@"$RUNNER_TEMP/coverage.md" > /dev/null
           fi
+
+  # The production build, beside the checks, so that it neither waits for the unit tests nor shares
+  # their time limit.
+  build:
+    name: Build
+    needs: changes
+    if: needs.changes.outputs.frontend == 'true'
+    runs-on: ubuntu-latest
+    timeout-minutes: 15
+    defaults:
+      run:
+        working-directory: frontend
+    steps:
+      - uses: actions/checkout@v7
+        with:
+          persist-credentials: false
+      - uses: pnpm/action-setup@v6
+        with:
+          package_json_file: frontend/package.json
+      - uses: actions/setup-node@v7
+        with:
+          node-version-file: .nvmrc
+          cache: pnpm
+          cache-dependency-path: frontend/pnpm-lock.yaml
+      - run: pnpm install --frozen-lockfile
       - run: pnpm build
 
   e2e:
@@ -151,7 +243,7 @@ jobs:
   # passes when they passed or were skipped.
   result:
     name: Frontend CI result
-    needs: [changes, check, e2e]
+    needs: [changes, check, unit, coverage, build, e2e]
     if: always()
     runs-on: ubuntu-latest
     timeout-minutes: 5

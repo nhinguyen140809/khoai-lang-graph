@@ -26,6 +26,8 @@ next-env.d.ts
 
 # Tests
 coverage
+# The blob reports of the parts of the unit tests, joined into one coverage report.
+.vitest
 playwright-report
 test-results
 blob-report
