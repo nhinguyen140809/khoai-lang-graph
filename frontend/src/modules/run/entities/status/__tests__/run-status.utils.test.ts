@@ -2,8 +2,8 @@ import { describe, expect, it } from 'vitest'
 
 import { runStatusesByAttention } from '../run-status.constants'
 import { runStatuses } from '../run-status.types'
-import { isUnfinishedRunStatus, runStatusLabel } from '../run-status.utils'
-import { labelCases, unfinishedCases } from './run-status.utils.data'
+import { hasStageName, isUnfinishedRunStatus, runStatusLabel } from '../run-status.utils'
+import { hasStageNameCases, labelCases, unfinishedCases } from './run-status.utils.data'
 
 describe('isUnfinishedRunStatus', () => {
   it.each(unfinishedCases)('tells whether a %s run has not ended: %s', (status, unfinished) => {
@@ -21,4 +21,13 @@ describe('runStatusLabel', () => {
   it.each(labelCases)('labels $name in each view', ({ status, label }) => {
     expect(runStatusLabel(status)).toEqual(label)
   })
+})
+
+describe('hasStageName', () => {
+  it.each(hasStageNameCases)(
+    'tells whether the label of a %s run names its stage: %s',
+    (status, names) => {
+      expect(hasStageName(status)).toBe(names)
+    },
+  )
 })
