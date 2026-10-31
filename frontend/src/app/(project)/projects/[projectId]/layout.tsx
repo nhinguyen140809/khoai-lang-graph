@@ -2,6 +2,7 @@ import { ProjectGate, ProjectNotFound } from '@/modules/project/entities'
 import { ProjectCommands } from '@/modules/project/widgets/commands'
 import { ProjectDialogs } from '@/modules/project/widgets/dialogs'
 import { ProjectSwitcher } from '@/modules/project/widgets/menu'
+import { ProjectRunStatusItem } from '@/modules/project/widgets/status'
 import { AccountMenuItem } from '@/modules/user/widgets/menu'
 import { TabbedWorkspace, UntabbedWorkspace, Workbench } from '@/shared/components/frame'
 import { routes } from '@/shared/routes'
@@ -46,6 +47,7 @@ export default async function ProjectLayout({
           <>
             <ProjectCommands currentProjectId={projectId} />
             <ProjectDialogs />
+            <ProjectRunStatusItem projectId={projectId} />
             <AccountMenuItem />
           </>
         }
