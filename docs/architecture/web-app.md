@@ -335,6 +335,7 @@ Where the parts above go in the web app. The module and the layer of each part f
 | Editing an artifact or an item | `artifact`, feature `edit` | The edit form, on `ContentForm.tsx`, and one hook per save: `modules/artifact/features/edit/hooks/useUpdateArtifact.ts`, `modules/artifact/features/edit/hooks/useUpdateItem.ts` |
 | Run settings | `run`, entities | `modules/run/entities/components/RunDefaultsFields.tsx`, on `runParameterFields` of `workflow`. It saves nothing: the feature that shows the fields saves the values |
 | Workflow state | `run`, entities | `modules/run/entities/components/StateTree.tsx` |
+| Models | `llm-model`, entities | `modules/llm-model/entities/models/models.api.ts`, `modules/llm-model/entities/models/models.types.ts`, `modules/llm-model/entities/models/hooks/useModelQueries.ts`, `modules/llm-model/entities/model-settings/model-settings.api.ts`, `modules/llm-model/entities/model-settings/model-settings.types.ts`, `modules/llm-model/entities/model-settings/hooks/useModelSettingQueries.ts` |
 
 ## 10. Open points
 

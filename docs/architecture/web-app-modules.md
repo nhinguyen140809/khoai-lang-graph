@@ -67,6 +67,8 @@ src/
 │   │   ├── entities/           # User
 │   │   ├── features/           # theme/
 │   │   └── widgets/            # menu/, settings/
+│   ├── llm-model/
+│   │   └── entities/           # ModelCatalogEntry (models/), ModelSettings (model-settings/)
 │   └── design-system/
 │       └── widgets/            # showcase/
 └── shared/                     # api/, components/ (ui/, frame/ with frame/layouts/, ...), hooks/,
@@ -116,6 +118,8 @@ The entities of a module with many topics, or with parts that change for differe
 The entities of `workflow` split by topic in the same way: `definition` (the graph, the vocabulary, the export templates, the link types, and the one query of the definition that the other topics select from), `stages`, `checkpoints` and `issues` (what is read from the definition, each reading `definition`), `artifact-kinds` (the kinds and their content schemas, reading `definition`), `content-fields` (the fields and values of the content of an artifact or an item, reading `artifact-kinds`, and `issues` reads it for the values of an item) and `run-parameters` (the fields of the run settings, reading `definition`, with their own types apart from the content fields).
 
 The entities of `project` split by topic too: `projects` (the projects, their requests, keys, types, filters and words) and `run-status` (the run that the status of a project shows, `ProjectRunResult` and `shownRun`, and the stream of the runs of a project). Neither reads the other; `run-status` reads the threads and the runs through their `@x/project`.
+
+The entities of `llm-model` split by topic too: `models`, the catalog, and `model-settings`, the model of each agent role; neither reads the other.
 
 ESLint checks the kinds of each place (`fileKinds` of `frontend/lint/lib/file-names/file-kinds.constants.js`), the layers inside a module, and the folders at the root of a slice: one for each kind that the layer holds, `components/`, `hooks/`, `__tests__/`, and `@x/` in the entities. A hook at the root of a feature or a widget is a `use<Name>.ts`, and a component there follows the import rules of the components. It also checks that a `constants` file exports no type and declares no function, and that a `types` file imports no `constants` file.
 
@@ -201,7 +205,7 @@ A unit test may also import another slice of its layer, from its index, to show 
 | `user` | User, UserSettings | `run-settings` later | `menu`, `settings` | User, `menu` and `settings` today |
 | `usage` | Usage of the user in a calendar month, with the budget of the month | - | - | Next |
 | `trace-link` | TraceLink, the traces of items, the traceability views | - | `graph`, the nodes and edges of a trace, for drawing it | Later |
-| `llm-model` | ModelCatalogEntry, ModelSettings | - | - | Later |
+| `llm-model` | ModelCatalogEntry, ModelSettings | - | - | The entities; the form of the model settings with Settings |
 | `design-system` | - | - | `showcase`, the page of the UI components and the tokens | Today |
 
 The endpoints of the entities:
