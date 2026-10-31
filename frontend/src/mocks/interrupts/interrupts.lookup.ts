@@ -1,4 +1,4 @@
-import type { Interrupt, InterruptStatus } from '@/modules/review/entities'
+import type { Interrupt, InterruptQuestion, InterruptStatus } from '@/modules/review/entities'
 import type { Run, RunStep } from '@/modules/run/entities'
 import type { CheckpointNode } from '@/modules/workflow/entities'
 import { findNode } from '@/modules/workflow/entities'
@@ -77,8 +77,8 @@ function statusOf(run: Run, step: RunStep): InterruptStatus {
   return step.status === 'running' && run.status === 'interrupted' ? 'pending' : 'cancelled'
 }
 
-// What the interrupt asks: the prompt, the options and the questions of the checkpoint, or the
-// agent questions of the scenario for the one that waits.
+// What the interrupt asks: the prompt, the options and the questions of the checkpoint; for the
+// one that waits, the scenario may ask the agent questions only, or add them to the checkpoint.
 function asksOf(
   status: InterruptStatus,
   node: CheckpointNode,
@@ -87,12 +87,14 @@ function asksOf(
   if (mode === 'only') {
     return { prompt: agentQuestionsPromptFixture, options: [], questions: agentQuestionFixtures }
   }
-  if (mode === 'added') {
-    return { prompt: node.prompt, options: node.options, questions: agentQuestionFixtures }
-  }
+  const definitionQuestions = node.questions.map((question): InterruptQuestion => ({
+    ...question,
+    source: 'definition',
+  }))
   return {
     prompt: node.prompt,
     options: node.options,
-    questions: node.questions.map((question) => ({ ...question, source: 'definition' })),
+    questions:
+      mode === 'added' ? [...definitionQuestions, ...agentQuestionFixtures] : definitionQuestions,
   }
 }

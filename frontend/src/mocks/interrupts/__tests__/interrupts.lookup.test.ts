@@ -1,6 +1,8 @@
-import { describe, expect, it } from 'vitest'
+import { describe, expect, it, onTestFinished } from 'vitest'
 
 import type { Run } from '@/modules/run/entities'
+import { findNode } from '@/modules/workflow/entities'
+import { omit } from '@/shared/lib/collections'
 import { assertPresent } from '@/shared/lib/guards'
 import { openPage } from '@/test/msw'
 
@@ -9,6 +11,8 @@ import { artifactFixtureByKind } from '../../artifacts/fixtures/artifacts.fixtur
 import { allRuns, findRun, stepsOfRun } from '../../runs/lookup/runs.lookup'
 import { changeRun } from '../../runs/runs.changes'
 import { projectIds, runIds } from '../../shared/db'
+import { workflowDefinitionFixture } from '../../workflow/workflow.fixtures'
+import { agentQuestionFixtures } from '../interrupts.fixtures'
 import { interruptsOfRun, pendingInterruptOf } from '../interrupts.lookup'
 import { interruptEdits } from '../interrupts.store'
 import { agentQuestionCases, run3InterruptCases } from './interrupts.lookup.data'
@@ -107,5 +111,26 @@ describe('interruptsOfRun', () => {
       status: 'resolved',
       resolved_at: '2026-10-07T09:00:00Z',
     })
+  })
+})
+
+describe('the agent questions added to a checkpoint that asks questions', () => {
+  it('keeps the questions of the checkpoint, then adds the agent questions', () => {
+    openPage('/?mock-agent-questions=added')
+    const node = findNode(workflowDefinitionFixture, 'checkpoint_analysis')
+    if (node?.kind !== 'checkpoint') throw new Error('The definition has the analysis checkpoint.')
+    const questions = node.questions
+    const asked = assertPresent(agentQuestionFixtures[0], 'The fixtures hold an agent question.')
+    node.questions = [{ ...omit(asked, ['source']), key: 'scope' }]
+    onTestFinished(() => {
+      node.questions = questions
+    })
+
+    expect(
+      pendingInterruptOf(run3())?.questions.map(({ key, source }) => ({ key, source })),
+    ).toEqual([
+      { key: 'scope', source: 'definition' },
+      ...agentQuestionFixtures.map(({ key }) => ({ key, source: 'agent' })),
+    ])
   })
 })
