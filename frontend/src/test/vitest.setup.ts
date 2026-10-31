@@ -5,6 +5,7 @@ import { afterAll, afterEach, beforeAll, vi } from 'vitest'
 
 import { server } from '@/mocks/msw-server.setup'
 import { resetMockData } from '@/mocks/shared/db'
+import { EventSourceStub, resetEventSources } from '@/test/event-source'
 import { openPage } from '@/test/msw'
 import { resetNextStubs } from '@/test/next-stubs'
 
@@ -47,6 +48,15 @@ Object.defineProperty(window, 'matchMedia', {
     }) as MediaQueryList,
 })
 
+// jsdom has no EventSource: a test sends the events of a stream through the stand-in.
+if (!('EventSource' in globalThis)) {
+  Object.defineProperty(globalThis, 'EventSource', {
+    value: EventSourceStub,
+    writable: true,
+    configurable: true,
+  })
+}
+
 if (!('scrollIntoView' in Element.prototype)) {
   Object.defineProperty(Element.prototype, 'scrollIntoView', {
     value: () => undefined,
@@ -69,13 +79,14 @@ beforeAll(() => {
 })
 
 // What a test changes is put back after it: the handlers and the listeners of the mock server, the
-// records of the mock data, the page address and its scenario, the fake timers, and what is
-// rendered.
+// records of the mock data, the page address and its scenario, the event streams opened, the fake
+// timers, and what is rendered.
 afterEach(() => {
   server.resetHandlers()
   server.events.removeAllListeners()
   resetMockData()
   resetNextStubs()
+  resetEventSources()
   openPage('/')
   vi.useRealTimers()
   cleanup()
