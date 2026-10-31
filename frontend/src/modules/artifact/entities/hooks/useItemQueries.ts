@@ -10,7 +10,11 @@ import {
 import { cursorPagesOptions, type HookQueryOptions } from '@/shared/api/query-client'
 
 import { getItem, listArtifactItems, listItemRevisions, listProjectItems } from '../api/items.api'
-import { itemsPageSize, outlinePageSize, revisionsPageSize } from '../constants/page-sizes.constants'
+import {
+  itemsPageSize,
+  outlinePageSize,
+  revisionsPageSize,
+} from '../constants/page-sizes.constants'
 import { itemKeys } from '../keys/items.keys'
 import type { ArtifactItem, ArtifactItemFilters, ProjectItemFilters } from '../types/items.types'
 
