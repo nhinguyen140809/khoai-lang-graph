@@ -18,7 +18,9 @@ export default defineConfig({
         test: {
           name: 'app',
           environment: 'jsdom',
-          setupFiles: ['./src/test/vitest.setup.ts', './src/test/zustand.setup.ts'],
+          // The zustand setup comes first: it replaces `create` before any module that makes a
+          // store is imported, and the mock server setup imports modules that reach stores.
+          setupFiles: ['./src/test/zustand.setup.ts', './src/test/vitest.setup.ts'],
           include: ['src/**/*.test.{ts,tsx}'],
           css: true,
           // Every test starts with the calls of the mocks cleared, the spies restored, and the
