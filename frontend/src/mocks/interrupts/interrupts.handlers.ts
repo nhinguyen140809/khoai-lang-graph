@@ -24,8 +24,9 @@ export const interruptHandlers = [
     const scenario = await answerScenario('interrupts')
     const run = findRun(pathParam(params, 'runId'))
     if (run === undefined) return runNotFound()
+    const query = queryOf(request)
     const interrupts = (scenario === 'empty' ? [] : interruptsOfRun(run)).filter(({ status }) =>
-      hasMatchingParam(queryOf(request), 'status', status),
+      hasMatchingParam(query, 'status', status),
     )
     return HttpResponse.json(paginate(interrupts, request))
   }),

@@ -2,12 +2,12 @@ import type { Interrupt, InterruptQuestion, InterruptStatus } from '@/modules/re
 import type { Run, RunStep } from '@/modules/run/entities'
 import type { CheckpointNode } from '@/modules/workflow/entities'
 import { findNode } from '@/modules/workflow/entities'
-import { isOneOf } from '@/shared/lib/guards'
 
 import { artifactRefOf } from '../artifacts/artifact-refs.utils'
 import { allArtifacts } from '../artifacts/artifacts.lookup'
 import { stepsOfRun } from '../runs/lookup/runs.lookup'
 import { IdPrefix } from '../shared/db'
+import { choice } from '../shared/http/validation'
 import { pageUrlParam } from '../shared/scenario'
 import { workflowDefinitionFixture } from '../workflow/workflow.fixtures'
 import { agentQuestionFixtures, agentQuestionsPromptFixture } from './interrupts.fixtures'
@@ -26,19 +26,15 @@ function interruptIdOf(step: RunStep): string {
 // What `?mock-agent-questions` asks of the interrupt that a run waits for: an interrupt that only
 // asks questions, or a review with questions. Null leaves the questions of the definition.
 function agentQuestionMode(): AgentQuestionMode | null {
-  const value = pageUrlParam('mock-agent-questions')
-  return isOneOf(agentQuestionModes, value) ? value : null
+  return choice(agentQuestionModes, pageUrlParam('mock-agent-questions')) ?? null
 }
 
 /** The interrupts of a run, in the order of its steps: one for each checkpoint it reached. */
 export function interruptsOfRun(run: Run): Interrupt[] {
-  const interrupts: Interrupt[] = []
-  for (const step of stepsOfRun(run.id)) {
+  return stepsOfRun(run.id).flatMap((step) => {
     const node = findNode(workflowDefinitionFixture, step.node)
-    if (node?.kind !== 'checkpoint') continue
-    interrupts.push(interruptOf(run, step, node))
-  }
-  return interrupts
+    return node?.kind === 'checkpoint' ? [interruptOf(run, step, node)] : []
+  })
 }
 
 /** The interrupt that a run waits for, or null when it waits for nothing. */
