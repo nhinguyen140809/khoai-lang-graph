@@ -10,8 +10,8 @@ import { LoadingState } from '@/shared/components/state'
 import { ScrollArea } from '@/shared/components/ui/scroll-area'
 import { Toggle } from '@/shared/components/ui/toggle'
 
-import { useProjectFilterFields } from '../hooks/useProjectFilterFields'
 import { projectFiltersOf } from '../project-filters.utils'
+import { useProjectFilterFields } from '../useProjectFilterFields'
 import { ProjectTable } from './ProjectTable'
 
 /**

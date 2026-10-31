@@ -18,9 +18,9 @@ import {
 import { FieldError, FieldGroup } from '@/shared/components/ui/field'
 import { PendingButton } from '@/shared/components/ui/pending-button'
 
-import { useRenameProject } from '../hooks/useRenameProject'
-import { renameProjectMessages } from '../rename-project.constants'
-import { renameProjectFormSchema } from '../rename-project.schema'
+import { useRenameProject } from './hooks/useRenameProject'
+import { renameProjectMessages } from './rename-project.constants'
+import { renameProjectFormSchema } from './rename-project.schema'
 
 interface RenameProjectDialogProps {
   project: Pick<Project, 'id' | 'name'>

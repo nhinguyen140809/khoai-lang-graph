@@ -1,1 +1,1 @@
-export { ProjectCommands } from './components/ProjectCommands'
+export { ProjectCommands } from './ProjectCommands'

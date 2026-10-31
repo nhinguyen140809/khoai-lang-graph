@@ -1,1 +1,1 @@
-export { AccountMenuItem } from './components/UserMenu'
+export { AccountMenuItem } from './UserMenu'

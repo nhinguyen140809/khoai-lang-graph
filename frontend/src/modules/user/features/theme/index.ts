@@ -1,1 +1,1 @@
-export { ThemePicker } from './components/ThemePicker'
+export { ThemePicker } from './ThemePicker'

@@ -1,1 +1,1 @@
-export { useArchiveProject } from './hooks/useArchiveProject'
+export { useArchiveProject } from './useArchiveProject'

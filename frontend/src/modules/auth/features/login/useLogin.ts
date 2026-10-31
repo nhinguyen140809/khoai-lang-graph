@@ -3,7 +3,7 @@ import { useMutation } from '@tanstack/react-query'
 import { login, useRedirectAfterLogin } from '@/modules/auth/entities'
 import { errorMessageOf } from '@/shared/api/error'
 
-import { loginMessages } from '../login.constants'
+import { loginMessages } from './login.constants'
 
 /**
  * Logs in, then opens the page to return to: `next` when it is a page of this app.

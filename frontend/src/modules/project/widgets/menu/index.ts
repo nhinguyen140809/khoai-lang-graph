@@ -1,1 +1,1 @@
-export { ProjectSwitcher } from './components/ProjectSwitcher'
+export { ProjectSwitcher } from './ProjectSwitcher'

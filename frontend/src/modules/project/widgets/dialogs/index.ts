@@ -1,1 +1,1 @@
-export { ProjectDialogs } from './components/ProjectDialogs'
+export { ProjectDialogs } from './ProjectDialogs'

@@ -1,1 +1,1 @@
-export { RegisterPage } from './components/RegisterPage'
+export { RegisterPage } from './RegisterPage'
