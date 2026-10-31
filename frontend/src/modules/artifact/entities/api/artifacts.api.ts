@@ -3,7 +3,7 @@ import { HttpHeader, HttpMethod } from '@/shared/api/http'
 import { apiRequest, fetchAllPages, fetchPage, type ListPage } from '@/shared/api/request'
 import { pathWithQuery } from '@/shared/lib/url'
 
-import { artifactsPageSize } from '../page-sizes.constants'
+import { artifactsPageSize } from '../constants/page-sizes.constants'
 import {
   type Artifact,
   type ArtifactFilters,

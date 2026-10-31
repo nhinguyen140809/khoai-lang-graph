@@ -1,4 +1,6 @@
-import type { ProjectFilters } from './projects.types'
+import type { Wording } from '@/shared/lib/view'
+
+import type { ProjectFilters, ProjectStatus } from './projects.types'
 
 // The words of the projects, for their lists and their states, and the filters that narrow nothing.
 
@@ -17,6 +19,12 @@ export const projectMessages = {
   /** The project failed to load for another reason. */
   unavailable: 'Project unavailable',
 }
+
+/** The label of each project status in each view, as the list of projects reads it. */
+export const projectStatusLabels = {
+  active: { developer: 'Active', user: 'Active' },
+  archived: { developer: 'Archived', user: 'Archived' },
+} as const satisfies Record<ProjectStatus, Wording>
 
 /** The filters of a list of projects that narrow nothing. */
 export const noProjectFilters: ProjectFilters = { runStatuses: [], activeWithinDays: null }

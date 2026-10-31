@@ -4,7 +4,7 @@ import { apiEndpoints } from '@/shared/api/endpoints'
 
 import { findProject } from '../projects/projects.lookup'
 import { projectNotFound } from '../projects/projects.problems'
-import { createdId, IdPrefix, mockNow } from '../shared/db'
+import { IdPrefix, mockNow, nextCreatedId } from '../shared/db'
 import { pathParam, queryOf, readBodyFields } from '../shared/http/request'
 import { created, emptyPage, paginate } from '../shared/http/response'
 import { requiredText } from '../shared/http/validation'
@@ -42,7 +42,7 @@ export const threadHandlers = [
     const { title } = await readBodyFields(request)
     const now = mockNow()
     const thread = buildThread({
-      id: createdId(IdPrefix.Thread, createdThreads.get().length + 1),
+      id: nextCreatedId(IdPrefix.Thread, createdThreads),
       project_id: projectId,
       title: requiredText(title) ?? null,
       current_stage: null,

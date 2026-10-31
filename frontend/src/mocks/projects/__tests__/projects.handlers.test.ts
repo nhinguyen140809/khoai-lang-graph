@@ -5,7 +5,7 @@ import { apiEndpoints } from '@/shared/api/endpoints'
 import { HttpHeader, HttpStatus } from '@/shared/api/http'
 import type { ListPage } from '@/shared/api/request'
 import type { ApiAnswer } from '@/test/msw'
-import { fetchApi, openPage, patchApi, postApi } from '@/test/msw'
+import { fetchApi, getApiItems, openPage, patchApi, postApi } from '@/test/msw'
 import { expectStillPending } from '@/test/steps'
 import { itRejectsRequests } from '@/test/suites'
 
@@ -23,10 +23,8 @@ import {
 } from './projects.handlers.data'
 
 async function listedIds(query: string) {
-  const { body } = (await fetchApi(
-    `${apiEndpoints.projects.path()}?${query}&limit=200`,
-  )) as ApiAnswer<ListPage<Project>>
-  return body.items.map(({ id }) => id)
+  const items = await getApiItems<Project>(`${apiEndpoints.projects.path()}?${query}&limit=200`)
+  return items.map(({ id }) => id)
 }
 
 describe('GET /projects', () => {
@@ -43,33 +41,27 @@ describe('GET /projects', () => {
   })
 
   it('lists the latest activity first', async () => {
-    const { body } = (await fetchApi(apiEndpoints.projects.path())) as ApiAnswer<ListPage<Project>>
+    const items = await getApiItems<Project>(apiEndpoints.projects.path())
 
-    const times = body.items.map(({ last_activity_at }) => last_activity_at)
+    const times = items.map(({ last_activity_at }) => last_activity_at)
     expect(times).toEqual(times.toSorted().reverse())
   })
 
   it.each(projectFilterCases)('filters by $name', async ({ query, keeps }) => {
-    const all = (await fetchApi(`${apiEndpoints.projects.path()}?limit=200`)) as ApiAnswer<
-      ListPage<Project>
-    >
-    const { body } = (await fetchApi(
-      `${apiEndpoints.projects.path()}${query}&limit=200`,
-    )) as ApiAnswer<ListPage<Project>>
+    const all = await getApiItems<Project>(`${apiEndpoints.projects.path()}?limit=200`)
+    const items = await getApiItems<Project>(`${apiEndpoints.projects.path()}${query}&limit=200`)
 
-    expect(body.items.length).toBeGreaterThan(0)
-    expect(body.items.length).toBeLessThan(all.body.items.length)
-    expect(body.items.every(keeps)).toBe(true)
+    expect(items.length).toBeGreaterThan(0)
+    expect(items.length).toBeLessThan(all.length)
+    expect(items.every(keeps)).toBe(true)
   })
 
   it('filters by status', async () => {
-    const { body } = (await fetchApi(
-      `${apiEndpoints.projects.path()}?status=archived`,
-    )) as ApiAnswer<ListPage<Project>>
+    const items = await getApiItems<Project>(`${apiEndpoints.projects.path()}?status=archived`)
 
-    expect(body.items.length).toBeGreaterThan(0)
-    expect(body.items.every(({ status }) => status === 'archived')).toBe(true)
-    expect(body.items.map(({ id }) => id)).toContain(projectIds.laundry)
+    expect(items.length).toBeGreaterThan(0)
+    expect(items.every(({ status }) => status === 'archived')).toBe(true)
+    expect(items.map(({ id }) => id)).toContain(projectIds.laundry)
   })
 
   it.each(unfinishedRunCountCases)(
@@ -77,11 +69,9 @@ describe('GET /projects', () => {
     async ({ address, projectId, counts }) => {
       openPage(address)
 
-      const { body } = (await fetchApi(apiEndpoints.projects.path())) as ApiAnswer<
-        ListPage<Project>
-      >
+      const items = await getApiItems<Project>(apiEndpoints.projects.path())
 
-      expect(body.items.find(({ id }) => id === projectId)?.unfinished_run_counts).toEqual(counts)
+      expect(items.find(({ id }) => id === projectId)?.unfinished_run_counts).toEqual(counts)
     },
   )
 })
@@ -92,11 +82,9 @@ describe('the rollup run status of a project', () => {
     async ({ address, projectId, status }) => {
       openPage(address)
 
-      const { body } = (await fetchApi(apiEndpoints.projects.path())) as ApiAnswer<
-        ListPage<Project>
-      >
+      const items = await getApiItems<Project>(apiEndpoints.projects.path())
 
-      expect(body.items.find(({ id }) => id === projectId)?.rollup_run_status).toBe(status)
+      expect(items.find(({ id }) => id === projectId)?.rollup_run_status).toBe(status)
     },
   )
 })
@@ -139,8 +127,8 @@ describe('POST /projects', () => {
       expect(
         (await fetchApi(apiEndpoints.project.path({ projectId: created.body.id }))).status,
       ).toBe(HttpStatus.Ok)
-      const list = (await fetchApi(apiEndpoints.projects.path())) as ApiAnswer<ListPage<Project>>
-      expect(list.body.items[0]?.id).toBe(created.body.id)
+      const items = await getApiItems<Project>(apiEndpoints.projects.path())
+      expect(items[0]?.id).toBe(created.body.id)
     },
   )
 })

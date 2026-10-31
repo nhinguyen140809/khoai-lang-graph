@@ -9,7 +9,7 @@ import { changeProject } from '../projects/projects.lookup'
 import { findRun } from '../runs/lookup/runs.lookup'
 import { addRun } from '../runs/runs.changes'
 import { validateRunDefaults } from '../runs/runs.validators'
-import { createdId, IdPrefix, mockNow } from '../shared/db'
+import { IdPrefix, mockNow, nextCreatedId } from '../shared/db'
 import { idempotent, pathParam, readBodyFields } from '../shared/http/request'
 import { created, validationFailed } from '../shared/http/response'
 import { answerScenario } from '../shared/scenario'
@@ -68,7 +68,7 @@ export const messageHandlers = [
       const run = unfinished ?? startRun(thread, now, checkedRunConfig?.runDefaults)
       const messages = sentMessages.get()
       const message: SentMessage = {
-        id: createdId(IdPrefix.Message, messages.length + 1),
+        id: nextCreatedId(IdPrefix.Message, sentMessages),
         thread_id: thread.id,
         sequence: messages.filter(({ thread_id }) => thread_id === thread.id).length + 1,
         run_id: run.id,
