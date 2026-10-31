@@ -4,7 +4,7 @@ import type { InterruptQuestion } from '@/modules/review/entities'
 // of the definition ask none, so the `?mock-agent-questions` scenario shows these instead.
 
 /** What an interrupt that only asks questions asks, in the words of the agent that asks. */
-export const agentQuestionsPromptFixture = 'A few details before the plan is made.'
+export const onlyQuestionsPromptFixture = 'A few details before the plan is made.'
 
 /** The questions an agent adds at run time: who uses the product, and what to keep in mind. */
 export const agentQuestionFixtures: InterruptQuestion[] = [

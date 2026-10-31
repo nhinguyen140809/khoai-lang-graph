@@ -10,7 +10,7 @@ import { IdPrefix } from '../shared/db'
 import { choice } from '../shared/http/validation'
 import { pageUrlParam } from '../shared/scenario'
 import { workflowDefinitionFixture } from '../workflow/workflow.fixtures'
-import { agentQuestionFixtures, agentQuestionsPromptFixture } from './interrupts.fixtures'
+import { agentQuestionFixtures, onlyQuestionsPromptFixture } from './interrupts.fixtures'
 import { interruptEdits } from './interrupts.store'
 import { type AgentQuestionMode, agentQuestionModes } from './interrupts.types'
 
@@ -45,7 +45,7 @@ export function pendingInterruptOf(run: Run): Interrupt | null {
 function interruptOf(run: Run, step: RunStep, node: CheckpointNode): Interrupt {
   const id = interruptIdOf(step)
   const edit = interruptEdits.get()[id]
-  const status = edit?.status ?? statusOf(run, step)
+  const status = edit?.status ?? interruptStatusOf(run, step)
   return {
     id,
     run_id: run.id,
@@ -62,26 +62,26 @@ function interruptOf(run: Run, step: RunStep, node: CheckpointNode): Interrupt {
     status,
     created_at: step.started_at,
     resolved_at: edit?.resolved_at ?? (status === 'resolved' ? step.finished_at : null),
-    ...asksOf(status, node),
+    ...checkpointAskOf(status, node),
   }
 }
 
 // Where a step of a checkpoint leaves its interrupt: answered when the step succeeded, waiting
 // while the run itself waits, and dropped when the run stopped or failed at the checkpoint.
-function statusOf(run: Run, step: RunStep): InterruptStatus {
+function interruptStatusOf(run: Run, step: RunStep): InterruptStatus {
   if (step.status === 'succeeded') return 'resolved'
   return step.status === 'running' && run.status === 'interrupted' ? 'pending' : 'cancelled'
 }
 
 // What the interrupt asks: the prompt, the options and the questions of the checkpoint; for the
 // one that waits, the scenario may ask the agent questions only, or add them to the checkpoint.
-function asksOf(
+function checkpointAskOf(
   status: InterruptStatus,
   node: CheckpointNode,
 ): Pick<Interrupt, 'prompt' | 'options' | 'questions'> {
   const mode = status === 'pending' ? agentQuestionMode() : null
   if (mode === 'only') {
-    return { prompt: agentQuestionsPromptFixture, options: [], questions: agentQuestionFixtures }
+    return { prompt: onlyQuestionsPromptFixture, options: [], questions: agentQuestionFixtures }
   }
   const definitionQuestions = node.questions.map((question): InterruptQuestion => ({
     ...question,

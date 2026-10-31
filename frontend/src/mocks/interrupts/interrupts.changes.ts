@@ -46,8 +46,8 @@ function approveArtifacts(refs: Interrupt['review_artifacts']): void {
 // The stage that the run goes on at after an answer: the stage of the node that the edge of the
 // chosen option leads to; the first edge for an interrupt that asks questions only, and `done`
 // for a node the definition gives no stage.
-function stageAfterOption(node: string, option: string | null): string {
-  const edges = edgesFrom(workflowDefinitionFixture, node)
+function stageAfterOption(nodeId: string, option: string | null): string {
+  const edges = edgesFrom(workflowDefinitionFixture, nodeId)
   const target =
     option === null
       ? edges[0]?.target

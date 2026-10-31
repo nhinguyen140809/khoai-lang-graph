@@ -38,7 +38,7 @@ function optionalNumber(value: unknown): number | null | undefined {
 }
 
 /** The answer as the body gives it, or the problems of its shape. */
-function readAnswer(
+function parseAnswer(
   given: unknown,
   field: string,
 ): { answer: QuestionAnswer } | { problems: FieldProblem[] } {
@@ -56,7 +56,7 @@ function readAnswer(
 
 // The problems of an answer of a good shape, by the rules of its question: the choices it picks
 // for its type, and the text that the question or a chosen choice asks for.
-function ruleProblems(
+function answerRuleProblems(
   question: InterruptQuestion,
   answer: QuestionAnswer,
   field: string,
@@ -119,8 +119,8 @@ export function answerProblems(
   given: unknown,
   field: string,
 ): FieldProblem[] {
-  const read = readAnswer(given, field)
-  return 'problems' in read ? read.problems : ruleProblems(question, read.answer, field)
+  const read = parseAnswer(given, field)
+  return 'problems' in read ? read.problems : answerRuleProblems(question, read.answer, field)
 }
 
 // The answers of the body by question key, with the problems of each answer, of a required
@@ -141,7 +141,7 @@ function answersOf(
       continue
     }
     problems.push(...answerProblems(question, answer, field))
-    const read = readAnswer(answer, field)
+    const read = parseAnswer(answer, field)
     if ('answer' in read) answers[question.key] = read.answer
   }
   const questionKeys = new Set(interrupt.questions.map(({ key }) => key))
@@ -224,11 +224,11 @@ export function validateResumeBody(
     )
   }
 
-  const answered = answersOf(interrupt, given.answers)
-  problems.push(...answered.problems)
+  const checkedAnswers = answersOf(interrupt, given.answers)
+  problems.push(...checkedAnswers.problems)
 
-  const modified = modifiedItemsOf(interrupt, given.modified_items)
-  problems.push(...modified.problems)
+  const checkedItems = modifiedItemsOf(interrupt, given.modified_items)
+  problems.push(...checkedItems.problems)
   if (problems.length > 0) return { problems }
   return {
     decision: {
@@ -236,8 +236,8 @@ export function validateResumeBody(
       // The option and the feedback were checked above: no problem means each is set, not missing.
       option: option ?? null,
       feedback: feedback ?? null,
-      answers: answered.answers,
-      modified_items: modified.items,
+      answers: checkedAnswers.answers,
+      modified_items: checkedItems.items,
     },
   }
 }
