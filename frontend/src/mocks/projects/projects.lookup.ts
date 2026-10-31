@@ -3,7 +3,7 @@ import { isUnfinishedRunStatus, type Run } from '@/modules/run/entities'
 
 import { generatedProjects, manyProjects } from '../generated/fixtures/generated-projects.fixtures'
 import { manyProjectCount } from '../generated/generated.constants'
-import { allRuns } from '../runs/lookup/runs.lookup'
+import { allRuns, latestRunOfEachThread } from '../runs/lookup/runs.lookup'
 import { pageUrlParam } from '../shared/scenario'
 import { projectFixtures } from './projects.fixtures'
 import { createdProjects, deletedProjectIds, projectEdits } from './projects.store'
@@ -20,16 +20,11 @@ function withRunCounts(project: Project, runs: Run[]): Project {
   for (const run of own) {
     if (isUnfinishedRunStatus(run.status)) counts[run.status] += 1
   }
-  // The latest run of each thread: a run that a later run of its thread replaced no longer counts.
-  const latestOfThread = new Map<string, Run>()
-  for (const run of own) {
-    const latest = latestOfThread.get(run.thread_id)
-    if (latest === undefined || run.number > latest.number) latestOfThread.set(run.thread_id, run)
-  }
+  const latestRuns = [...latestRunOfEachThread(own).values()]
   return {
     ...project,
     unfinished_run_counts: counts,
-    rollup_run_status: rollupRunStatus([...latestOfThread.values()].map(({ status }) => status)),
+    rollup_run_status: rollupRunStatus(latestRuns.map(({ status }) => status)),
   }
 }
 

@@ -5,6 +5,7 @@ import {
   type RunDefaults,
   type RunStep,
 } from '@/modules/run/entities'
+import { newestOfEachGroup } from '@/shared/lib/collections'
 
 import {
   generatedRuns,
@@ -41,6 +42,18 @@ export function stepsOfRun(runId: string): RunStep[] {
 /** The runs of a thread. */
 export function runsOfThread(threadId: string): Run[] {
   return allRuns().filter((run) => run.thread_id === threadId)
+}
+
+/**
+ * The latest run of each thread, the one of the highest number, by the id of its thread: a run that
+ * a later run of its thread replaced no longer counts.
+ */
+export function latestRunOfEachThread(runs: Run[] = allRuns()): Map<string, Run> {
+  return newestOfEachGroup(
+    runs,
+    ({ thread_id: threadId }) => threadId,
+    ({ number }) => number,
+  )
 }
 
 /** The run of a thread that has not ended, if it has one. */

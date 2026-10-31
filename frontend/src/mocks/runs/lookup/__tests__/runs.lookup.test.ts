@@ -3,13 +3,30 @@ import { describe, expect, it } from 'vitest'
 import { openPage } from '@/test/msw'
 
 import { runIds, threadIds } from '../../../shared/db'
-import { findUnfinishedRun, resolveRunConfig, runsOfThread } from '../runs.lookup'
+import {
+  findUnfinishedRun,
+  latestRunOfEachThread,
+  resolveRunConfig,
+  runsOfThread,
+} from '../runs.lookup'
 import { resolveCases } from './runs.lookup.data'
 
 describe('runsOfThread', () => {
   it('lists the runs of a thread only', () => {
     expect(runsOfThread(threadIds.mentorMain).map(({ number }) => number)).toEqual([1, 2, 3])
     expect(runsOfThread('no-such-thread')).toEqual([])
+  })
+})
+
+describe('latestRunOfEachThread', () => {
+  it('keeps the run of the highest number of each thread', () => {
+    expect(latestRunOfEachThread().get(threadIds.mentorMain)?.id).toBe(runIds.mentorMain3)
+  })
+
+  it('has no entry for a thread without a run', () => {
+    openPage('/?mock-runs=empty')
+
+    expect(latestRunOfEachThread().size).toBe(0)
   })
 })
 
