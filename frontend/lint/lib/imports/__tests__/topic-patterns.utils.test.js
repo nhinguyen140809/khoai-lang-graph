@@ -15,7 +15,8 @@ function isRejected(patterns, source) {
 describe('entityTopics', () => {
   it('lists the topics of a module split by topic, and none for another module', () => {
     expect(entityTopics('run')).toContain('steps')
-    expect(entityTopics('project')).toEqual([])
+    expect(entityTopics('project')).toEqual(['projects', 'run-status'])
+    expect(entityTopics('thread')).toEqual([])
   })
 })
 

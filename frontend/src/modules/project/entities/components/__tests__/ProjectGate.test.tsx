@@ -3,7 +3,7 @@ import { describe } from 'vitest'
 import { renderWithProviders } from '@/test/render'
 import { itShowsQueryStates } from '@/test/suites'
 
-import { useProject } from '../../hooks/useProjectQueries'
+import { useProject } from '../../projects/hooks/useProjectQueries'
 import { ProjectGate } from '../ProjectGate'
 import { gateCases } from './ProjectGate.data'
 
