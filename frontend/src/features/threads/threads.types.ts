@@ -3,7 +3,7 @@ import { z } from 'zod'
 import { runStatuses, unfinishedRunStatuses } from '@/shared/config/run-status.constants'
 
 // Temporary hand-written schemas for the threads and runs API.
-// TODO: replace with the types generated into src/api/generated/ once they exist.
+// TODO: replace with the types generated into src/shared/api/generated/ once they exist.
 
 export const threadSchema = z.object({
   id: z.string(),

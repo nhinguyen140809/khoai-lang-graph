@@ -2,7 +2,7 @@ import { render, screen, within } from '@testing-library/react'
 import userEvent from '@testing-library/user-event'
 import { beforeEach, describe, expect, it, vi } from 'vitest'
 
-import { PROJECT_IDS, RUN_IDS } from '@/mocks/mock-ids.constants'
+import { PROJECT_IDS, RUN_IDS } from '@/mocks/shared/mock-ids.constants'
 import { setPathname, setSearch } from '@/test/next-mocks.utils'
 import { TestProviders } from '@/test/TestProviders'
 

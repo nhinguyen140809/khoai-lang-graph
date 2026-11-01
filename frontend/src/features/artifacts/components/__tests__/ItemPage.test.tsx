@@ -3,9 +3,9 @@ import userEvent from '@testing-library/user-event'
 import { http, HttpResponse } from 'msw'
 import { beforeEach, describe, expect, it, vi } from 'vitest'
 
-import { mockItemByKey } from '@/mocks/artifacts.fixtures'
-import { PROJECT_IDS } from '@/mocks/mock-ids.constants'
+import { mockItemByKey } from '@/mocks/artifacts/artifacts.fixtures'
 import { server } from '@/mocks/msw-server.setup'
+import { PROJECT_IDS } from '@/mocks/shared/mock-ids.constants'
 import { setPathname } from '@/test/next-mocks.utils'
 import { TestProviders } from '@/test/TestProviders'
 

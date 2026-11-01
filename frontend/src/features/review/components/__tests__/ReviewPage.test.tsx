@@ -1,7 +1,7 @@
 import { render, screen } from '@testing-library/react'
 import { beforeEach, describe, expect, it, vi } from 'vitest'
 
-import { PROJECT_IDS, RUN_IDS } from '@/mocks/mock-ids.constants'
+import { PROJECT_IDS, RUN_IDS } from '@/mocks/shared/mock-ids.constants'
 import { setPathname } from '@/test/next-mocks.utils'
 import { TestProviders } from '@/test/TestProviders'
 

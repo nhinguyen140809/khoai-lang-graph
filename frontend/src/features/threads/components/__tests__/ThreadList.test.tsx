@@ -2,8 +2,8 @@ import { render, screen } from '@testing-library/react'
 import { http, HttpResponse } from 'msw'
 import { beforeEach, describe, expect, it, vi } from 'vitest'
 
-import { PROJECT_IDS, THREAD_IDS } from '@/mocks/mock-ids.constants'
 import { server } from '@/mocks/msw-server.setup'
+import { PROJECT_IDS, THREAD_IDS } from '@/mocks/shared/mock-ids.constants'
 import { setPathname } from '@/test/next-mocks.utils'
 import { TestProviders } from '@/test/TestProviders'
 

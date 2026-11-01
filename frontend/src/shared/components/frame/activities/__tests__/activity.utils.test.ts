@@ -2,7 +2,7 @@ import type { Route } from 'next'
 import { describe, expect, it } from 'vitest'
 
 import type { Activity } from '../activity.types'
-import { activityOfHref, isFeatureActivity } from '../activity.utils'
+import { activityOfHref, firstTopActivity, isFeatureActivity } from '../activity.utils'
 
 const activities: Activity[] = [
   {
@@ -62,5 +62,22 @@ describe('isFeatureActivity', () => {
       'artifacts',
       'items',
     ])
+  })
+})
+
+describe('firstTopActivity', () => {
+  it('is the first feature at the top of the bar, never one at the bottom', () => {
+    const settings = {
+      id: 'settings',
+      label: 'Settings',
+      icon: null,
+      placement: 'bottom' as const,
+      href: '/settings' as Route,
+      panel: null,
+    }
+    const features = activities.filter(isFeatureActivity)
+
+    expect(firstTopActivity([settings, ...features])?.id).toBe('console')
+    expect(firstTopActivity([settings])).toBeUndefined()
   })
 })

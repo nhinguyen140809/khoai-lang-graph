@@ -1,21 +1,28 @@
 'use client'
 
+import { type Control, useController } from 'react-hook-form'
+
 import { Input } from '@/shared/components/ui/input'
 import { Textarea } from '@/shared/components/ui/textarea'
 
-import type { Answer, Question } from '../review.types'
+import type { ReviewForm } from '../review.schema'
+import type { Question, ResumeBody } from '../review.types'
 import { ChoiceList } from './ChoiceList'
 
 interface QuestionFieldProps {
   question: Question
-  answer: Answer
-  problem: string | undefined
-  onChange: (answer: Answer) => void
+  /** The control of the review form, whose `answers` hold the answer to the question. */
+  control: Control<ReviewForm, unknown, ResumeBody>
 }
 
 /** One question of a review, drawn by its type, with the answer filled in. */
-export function QuestionField({ question, answer, problem, onChange }: QuestionFieldProps) {
+export function QuestionField({ question, control }: QuestionFieldProps) {
+  const {
+    field: { value: answer, onChange },
+    fieldState: { error },
+  } = useController({ control, name: `answers.${question.key}` })
   const id = `question-${question.key}`
+  const invalid = error !== undefined
   const needsText = question.choices.some(
     (choice) => choice.requires_text && answer.choice_keys.includes(choice.key),
   )
@@ -44,7 +51,7 @@ export function QuestionField({ question, answer, problem, onChange }: QuestionF
           id={id}
           rows={3}
           aria-label={question.prompt}
-          aria-invalid={problem !== undefined}
+          aria-invalid={invalid}
           value={answer.text ?? ''}
           onChange={(event) => {
             onChange({ ...answer, text: event.target.value })
@@ -57,7 +64,7 @@ export function QuestionField({ question, answer, problem, onChange }: QuestionF
           id={id}
           type="number"
           aria-label={question.prompt}
-          aria-invalid={problem !== undefined}
+          aria-invalid={invalid}
           value={answer.number ?? ''}
           onChange={(event) => {
             const text = event.target.value
@@ -69,7 +76,7 @@ export function QuestionField({ question, answer, problem, onChange }: QuestionF
       {needsText && (
         <Input
           aria-label={`More about your choice for "${question.prompt}"`}
-          aria-invalid={problem !== undefined}
+          aria-invalid={invalid}
           value={answer.text ?? ''}
           onChange={(event) => {
             onChange({ ...answer, text: event.target.value })
@@ -77,9 +84,9 @@ export function QuestionField({ question, answer, problem, onChange }: QuestionF
         />
       )}
 
-      {problem !== undefined && (
+      {error !== undefined && (
         <p role="alert" className="text-xs text-destructive-strong">
-          {problem}
+          {error.message}
         </p>
       )}
     </fieldset>

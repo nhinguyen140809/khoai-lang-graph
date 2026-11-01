@@ -20,19 +20,6 @@ const open = (section?: string) => {
   render(<UserSettingsPage />, { wrapper: TestProviders })
 }
 
-describe('navigation', () => {
-  it('lists the sections, and marks the one that is open', () => {
-    open('usage')
-
-    expect(screen.getByRole('link', { name: 'Usage' })).toHaveAttribute('aria-current', 'page')
-    expect(screen.getByRole('link', { name: 'Profile' })).toHaveAttribute('href', '/settings')
-    expect(screen.getByRole('link', { name: 'Login sessions' })).toHaveAttribute(
-      'href',
-      '/settings?section=sessions',
-    )
-  })
-})
-
 describe('Profile', () => {
   it('shows the email, and saves a new name', async () => {
     open()
@@ -55,7 +42,7 @@ describe('Profile', () => {
 })
 
 describe('Password', () => {
-  it('checks the new password before it sends it', () => {
+  it('checks the new password before it sends it', async () => {
     open('password')
     fireEvent.change(screen.getByLabelText('Current password'), {
       target: { value: 'old-password' },
@@ -63,10 +50,10 @@ describe('Password', () => {
     fireEvent.change(screen.getByLabelText('New password'), { target: { value: 'short' } })
     fireEvent.click(screen.getByRole('button', { name: 'Change password' }))
 
-    expect(screen.getByText('Use at least 8 characters.')).toBeInTheDocument()
+    expect(await screen.findByText('Use at least 8 characters.')).toBeInTheDocument()
   })
 
-  it('wants the new password typed twice', () => {
+  it('wants the new password typed twice', async () => {
     open('password')
     fireEvent.change(screen.getByLabelText('Current password'), {
       target: { value: 'old-password' },
@@ -77,7 +64,7 @@ describe('Password', () => {
     })
     fireEvent.click(screen.getByRole('button', { name: 'Change password' }))
 
-    expect(screen.getByText('The two passwords differ.')).toBeInTheDocument()
+    expect(await screen.findByText('The two passwords differ.')).toBeInTheDocument()
   })
 
   it('changes the password, and clears the fields', async () => {

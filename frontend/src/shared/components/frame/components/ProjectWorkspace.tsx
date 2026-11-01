@@ -1,15 +1,12 @@
 'use client'
 
-import { PanelLeftIcon } from 'lucide-react'
 import type { ReactNode } from 'react'
 
 import { Surface } from '@/shared/components/ui/surface'
 
 import { useSideFeature } from '../activities/hooks/useSideFeature'
-import { PaletteGroup } from '../commands/command.constants'
-import { useCommands } from '../commands/hooks/useCommands'
+import { useSidePanelCommand } from '../hooks/useSidePanelCommand'
 import { EditorSplit } from '../panels/components/EditorSplit'
-import { usePanel } from '../panels/hooks/usePanel'
 import { PanelRegion } from '../panels/panel.constants'
 import { EditorTabs } from '../tabs/components/EditorTabs'
 import { projectTabGroup } from '../tabs/editor-tabs.utils'
@@ -27,19 +24,9 @@ interface ProjectWorkspaceProps {
  */
 export function ProjectWorkspace({ projectId, children }: ProjectWorkspaceProps) {
   const { feature } = useSideFeature()
-  const sidePanel = usePanel(PanelRegion.Side)
   const group = projectTabGroup(projectId)
 
-  useCommands([
-    {
-      id: 'view.toggleSidePanel',
-      label: 'Toggle side panel',
-      group: PaletteGroup.View,
-      icon: <PanelLeftIcon />,
-      hotkey: { key: 'b', mod: true },
-      run: sidePanel.toggle,
-    },
-  ])
+  useSidePanelCommand()
 
   return (
     <EditorSplit region={PanelRegion.Side} panel={feature?.panel}>

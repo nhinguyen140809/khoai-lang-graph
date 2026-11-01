@@ -14,6 +14,8 @@ export const HttpStatus = {
   BadGateway: 502,
 } as const
 
+export type HttpStatus = (typeof HttpStatus)[keyof typeof HttpStatus]
+
 /** The `code` of an error of the API. */
 export const ApiErrorCode = {
   InvalidRequest: 'invalid_request',

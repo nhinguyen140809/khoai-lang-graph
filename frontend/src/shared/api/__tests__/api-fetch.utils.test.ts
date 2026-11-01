@@ -62,6 +62,7 @@ describe('apiRequest', () => {
       message: 'Failed to load the thing (HTTP 502)',
     })
   })
+
   it('sends a body as JSON, with the headers given', async () => {
     let sent: { method: string; type: string | null; trace: string | null; body: unknown } | null =
       null

@@ -13,7 +13,7 @@ import {
   userSettingsSchema,
 } from './settings.types'
 
-// TODO: switch to the generated client in src/api/generated/ once it is generated.
+// TODO: switch to the generated client in src/shared/api/generated/ once it is generated.
 
 export function getUserSettings(): Promise<UserSettings> {
   return apiRequest('/api/v1/me/settings', userSettingsSchema, { action: 'load your settings' })

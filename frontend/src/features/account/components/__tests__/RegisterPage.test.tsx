@@ -106,6 +106,7 @@ describe('RegisterPage', () => {
 
     expect(await screen.findByText('Enter an email address.')).toBeInTheDocument()
   })
+
   it('asks for the name, the email and the password', async () => {
     render(<RegisterPage next={null} />, { wrapper: TestProviders })
 

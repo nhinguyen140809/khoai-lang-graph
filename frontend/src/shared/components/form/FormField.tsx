@@ -17,13 +17,22 @@ export interface FieldControlProps {
   'aria-invalid': boolean
 }
 
-export interface FormFieldProps<T extends FieldValues> {
-  control: Control<T>
-  name: FieldPath<T>
+/**
+ * The props of a field of a form: the `control` of the form, which also carries the values that
+ * its schema gives on submit, and the `name` of the field, whose value the control receives.
+ */
+export interface FormFieldProps<
+  T extends FieldValues,
+  N extends FieldPath<T>,
+  TContext = unknown,
+  TOutput = T,
+> {
+  control: Control<T, TContext, TOutput>
+  name: N
   label: ReactNode
   description?: ReactNode
   /** The control of the field, such as a textarea or a select. */
-  children: (field: ControllerRenderProps<T, FieldPath<T>>, control: FieldControlProps) => ReactNode
+  children: (field: ControllerRenderProps<T, N>, control: FieldControlProps) => ReactNode
 }
 
 /**
@@ -31,13 +40,12 @@ export interface FormFieldProps<T extends FieldValues> {
  * The control gets the id of the label and `aria-invalid`, and the field `data-invalid`, from the
  * state of the field, so that no form repeats them.
  */
-export function FormField<T extends FieldValues>({
-  control,
-  name,
-  label,
-  description,
-  children,
-}: FormFieldProps<T>) {
+export function FormField<
+  T extends FieldValues,
+  N extends FieldPath<T>,
+  TContext = unknown,
+  TOutput = T,
+>({ control, name, label, description, children }: FormFieldProps<T, N, TContext, TOutput>) {
   const id = useId()
   return (
     <Controller

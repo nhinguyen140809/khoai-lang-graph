@@ -1,6 +1,6 @@
 import { z } from 'zod'
 
-import { HttpStatus } from './api-error.constants'
+import { type ApiErrorCode, HttpStatus } from './api-error.constants'
 
 // The error body of the API (RFC 9457 Problem Details). Fields are optional so that an error from
 // a proxy, which has no such body, still becomes an ApiError.
@@ -49,5 +49,26 @@ export function toApiError(status: number, body: unknown, fallback: string): Api
     status,
     code ?? null,
     errors ?? [],
+  )
+}
+
+/** The words for a failed request, by the `code` or the status of its answer. */
+export interface ErrorMessages {
+  code?: Partial<Record<ApiErrorCode, string>>
+  status?: Partial<Record<HttpStatus, string>>
+}
+
+/**
+ * What a page says for a failed request: the words that `messages` gives for the code of the
+ * answer, else for its status, else the message of the error.
+ */
+export function errorMessageOf(error: Error, messages: ErrorMessages): string {
+  if (!(error instanceof ApiError)) return error.message
+  const byCode = messages.code as Partial<Record<string, string>> | undefined
+  const byStatus = messages.status as Partial<Record<number, string>> | undefined
+  return (
+    (error.code === null ? undefined : byCode?.[error.code]) ??
+    byStatus?.[error.status] ??
+    error.message
   )
 }

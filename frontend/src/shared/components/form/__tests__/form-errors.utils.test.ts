@@ -35,6 +35,17 @@ describe('fieldProblemsOf', () => {
     ])
   })
 
+  it('reads the fields of a schema that refines or transforms its value', () => {
+    const transformed = z
+      .object({ current_password: z.string(), again: z.string() })
+      .refine(() => true)
+      .transform(({ current_password }) => ({ current_password }))
+
+    expect(
+      fieldProblemsOf(failed([{ field: 'current_password', message: 'Wrong.' }]), transformed),
+    ).toEqual([{ field: 'current_password', message: 'Wrong.' }])
+  })
+
   it('has none for an error that is not of the API', () => {
     expect(fieldProblemsOf(new Error('offline'), schema)).toEqual([])
   })

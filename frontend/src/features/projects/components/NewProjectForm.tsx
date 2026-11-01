@@ -1,21 +1,12 @@
 'use client'
 
 import { zodResolver } from '@hookform/resolvers/zod'
-import { useRouter } from 'next/navigation'
-import { Controller, useForm } from 'react-hook-form'
-import { z } from 'zod'
+import { useForm } from 'react-hook-form'
 
-import { ApiError } from '@/shared/api/api-error.utils'
+import { FormField, TextField } from '@/shared/components/form'
 import { Button } from '@/shared/components/ui/button'
 import { DialogClose, DialogFooter } from '@/shared/components/ui/dialog'
-import {
-  Field,
-  FieldDescription,
-  FieldError,
-  FieldGroup,
-  FieldLabel,
-} from '@/shared/components/ui/field'
-import { Input } from '@/shared/components/ui/input'
+import { FieldGroup } from '@/shared/components/ui/field'
 import {
   Select,
   SelectContent,
@@ -25,29 +16,10 @@ import {
 } from '@/shared/components/ui/select'
 import { Spinner } from '@/shared/components/ui/spinner'
 import { Textarea } from '@/shared/components/ui/textarea'
-import { routes } from '@/shared/config/routes'
 
 import { useCreateProject } from '../hooks/useCreateProject'
-import {
-  type OutputLanguage,
-  outputLanguageLabels,
-  outputLanguages,
-  outputLanguageSchema,
-} from '../projects.types'
-
-const formSchema = z.object({
-  name: z.string().trim().min(1, 'Enter a name.'),
-  description: z.string(),
-  output_language: outputLanguageSchema,
-})
-
-type FormValues = z.infer<typeof formSchema>
-
-const formFields = ['name', 'description', 'output_language'] as const
-
-function isFormField(field: string): field is keyof FormValues {
-  return formFields.some((name) => name === field)
-}
+import { newProjectFormSchema } from '../projects.schema'
+import { type OutputLanguage, outputLanguageLabels, outputLanguages } from '../projects.types'
 
 interface NewProjectFormProps {
   defaultLanguage: OutputLanguage
@@ -55,43 +27,15 @@ interface NewProjectFormProps {
 }
 
 export function NewProjectForm({ defaultLanguage, onCreated }: NewProjectFormProps) {
-  const router = useRouter()
-  const createProject = useCreateProject()
-  const form = useForm<FormValues>({
-    resolver: zodResolver(formSchema),
+  const form = useForm({
+    resolver: zodResolver(newProjectFormSchema),
     defaultValues: { name: '', description: '', output_language: defaultLanguage },
   })
-  const { errors } = form.formState
+  const createProject = useCreateProject(form.setError)
 
-  const onSubmit = form.handleSubmit((values) => {
-    const description = values.description.trim()
-    createProject.mutate(
-      {
-        name: values.name,
-        description: description === '' ? null : description,
-        output_language: values.output_language,
-      },
-      {
-        onSuccess: ({ projectId }) => {
-          onCreated()
-          router.push(routes.project(projectId).console())
-        },
-        onError: (error) => {
-          if (!(error instanceof ApiError)) return
-          for (const { field, message } of error.fieldErrors) {
-            if (isFormField(field)) form.setError(field, { message })
-          }
-        },
-      },
-    )
+  const onSubmit = form.handleSubmit((body) => {
+    createProject.mutate(body, { onSuccess: onCreated })
   })
-
-  // Field problems are shown at their field; any other failure under the form.
-  const formError =
-    createProject.isError &&
-    !(createProject.error instanceof ApiError && createProject.error.fieldErrors.length > 0)
-      ? createProject.error.message
-      : null
 
   return (
     <form
@@ -101,53 +45,36 @@ export function NewProjectForm({ defaultLanguage, onCreated }: NewProjectFormPro
       }}
     >
       <FieldGroup>
-        <Field data-invalid={errors.name !== undefined}>
-          <FieldLabel htmlFor="new-project-name">Name</FieldLabel>
-          <Input
-            id="new-project-name"
-            autoComplete="off"
-            aria-invalid={errors.name !== undefined}
-            {...form.register('name')}
-          />
-          <FieldError errors={[errors.name]} />
-        </Field>
-        <Field data-invalid={errors.description !== undefined}>
-          <FieldLabel htmlFor="new-project-description">Description (optional)</FieldLabel>
-          <Textarea
-            id="new-project-description"
-            rows={3}
-            placeholder="The product and its domain"
-            aria-invalid={errors.description !== undefined}
-            {...form.register('description')}
-          />
-          <FieldError errors={[errors.description]} />
-        </Field>
-        <Field data-invalid={errors.output_language !== undefined}>
-          <FieldLabel htmlFor="new-project-language">Output language</FieldLabel>
-          <Controller
-            name="output_language"
-            control={form.control}
-            render={({ field }) => (
-              <Select value={field.value} onValueChange={field.onChange}>
-                <SelectTrigger id="new-project-language" className="w-full">
-                  <SelectValue />
-                </SelectTrigger>
-                <SelectContent>
-                  {outputLanguages.map((language) => (
-                    <SelectItem key={language} value={language}>
-                      {outputLanguageLabels[language]}
-                    </SelectItem>
-                  ))}
-                </SelectContent>
-              </Select>
-            )}
-          />
-          <FieldDescription>The language the agents write the artifacts in.</FieldDescription>
-          <FieldError errors={[errors.output_language]} />
-        </Field>
-        {formError !== null && (
+        <TextField control={form.control} name="name" label="Name" autoComplete="off" />
+        <FormField control={form.control} name="description" label="Description (optional)">
+          {(field, control) => (
+            <Textarea rows={3} placeholder="The product and its domain" {...field} {...control} />
+          )}
+        </FormField>
+        <FormField
+          control={form.control}
+          name="output_language"
+          label="Output language"
+          description="The language the agents write the artifacts in."
+        >
+          {(field, control) => (
+            <Select value={field.value} onValueChange={field.onChange}>
+              <SelectTrigger {...control} className="w-full">
+                <SelectValue />
+              </SelectTrigger>
+              <SelectContent>
+                {outputLanguages.map((language) => (
+                  <SelectItem key={language} value={language}>
+                    {outputLanguageLabels[language]}
+                  </SelectItem>
+                ))}
+              </SelectContent>
+            </Select>
+          )}
+        </FormField>
+        {createProject.formError !== null && (
           <p role="alert" className="text-xs text-destructive">
-            {formError}
+            {createProject.formError}
           </p>
         )}
       </FieldGroup>

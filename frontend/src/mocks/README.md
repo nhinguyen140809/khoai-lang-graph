@@ -34,6 +34,7 @@ The data is the project of the API examples, an online platform where university
 
 | Record                               | Id                                                       | What it holds                                                                                                                                                                                                                                                                                                 |
 | ------------------------------------ | -------------------------------------------------------- | ------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
+| User "Linh Pham"                     | `11b70000-0000-4000-8000-000000000001`                   | The user of the API examples, `linh.pham@example.com`. The mock server signs in any email and password                                                                                                                                                                                                        |
 | Project "Mentor platform"            | `90aa0000-0000-4000-8000-000000000001`                   | The project of the API examples                                                                                                                                                                                                                                                                               |
 | Project "Campus food ordering"       | `90aa0000-0000-4000-8000-000000000002`                   | Finished runs only                                                                                                                                                                                                                                                                                            |
 | Project "Library booking"            | `90aa0000-0000-4000-8000-000000000003`                   | A running run, at the interviews                                                                                                                                                                                                                                                                              |
@@ -83,18 +84,18 @@ A parameter in the page address changes what a group of endpoints answers. Param
 
 ## Account
 
-| State                                                 | Address                                                                                    |
-| ----------------------------------------------------- | ------------------------------------------------------------------------------------------ |
-| Sign-in page                                          | http://localhost:3000/login                                                                |
-| Sign-in page that returns to the chat                 | http://localhost:3000/login?next=%2Fprojects%2F90aa0000-0000-4000-8000-000000000001%2Fchat |
-| Wrong email or password                               | http://localhost:3000/login?mock-login=error                                               |
-| Create an account                                     | http://localhost:3000/register                                                             |
-| The email has an account                              | http://localhost:3000/register?mock-register=error                                         |
-| Signed out: every other page goes to the sign-in page | Choose Sign out in the account menu, then open http://localhost:3000/projects              |
-| Account menu loading                                  | http://localhost:3000/projects?mock-me=loading                                             |
-| Account menu error                                    | http://localhost:3000/projects?mock-me=error                                               |
-| Theme not saved (a toast after choosing a theme)      | http://localhost:3000/projects?mock-settings=save-error                                    |
-| Settings fail to load: the theme stays on this device | http://localhost:3000/projects?mock-settings=error                                         |
+| State                                                 | Address                                                                                       |
+| ----------------------------------------------------- | --------------------------------------------------------------------------------------------- |
+| Sign-in page                                          | http://localhost:3000/login                                                                   |
+| Sign-in page that returns to the console              | http://localhost:3000/login?next=%2Fprojects%2F90aa0000-0000-4000-8000-000000000001%2Fconsole |
+| Wrong email or password                               | http://localhost:3000/login?mock-login=error                                                  |
+| Create an account                                     | http://localhost:3000/register                                                                |
+| The email has an account                              | http://localhost:3000/register?mock-register=error                                            |
+| Signed out: every other page goes to the sign-in page | Choose Sign out in the account menu, then open http://localhost:3000/projects                 |
+| Account menu loading                                  | http://localhost:3000/projects?mock-me=loading                                                |
+| Account menu error                                    | http://localhost:3000/projects?mock-me=error                                                  |
+| Theme not saved (a toast after choosing a theme)      | http://localhost:3000/projects?mock-settings=save-error                                       |
+| Settings fail to load: the theme stays on this device | http://localhost:3000/projects?mock-settings=error                                            |
 
 ## Project list
 
@@ -226,7 +227,7 @@ The API documentation does not fix the shape of the matrix and coverage response
 
 ## Project settings
 
-Three sections, chosen in the side panel: General (name, description, output language, archive), Runs (the checkpoints to review at, the limits, and a field for each parameter of `run_parameters_schema`) and Models (one model per agent role, from the catalog, only the models that can serve the role). A save is a `PATCH /projects/{project_id}` that the mock server keeps; `?mock-reset` forgets it. The server rejects a limit that is out of range, and a `max_personas` below `target_personas_num`.
+Three sections, chosen in the side panel of Settings at the bottom of the activity bar, under "This project": General (name, description, output language, archive), Runs (the checkpoints to review at, the limits, and a field for each parameter of `run_parameters_schema`) and Models (one model per agent role, from the catalog, only the models that can serve the role). A save is a `PATCH /projects/{project_id}` that the mock server keeps; `?mock-reset` forgets it. The server rejects a limit that is out of range, and a `max_personas` below `target_personas_num`.
 
 | Section                   | Address                                                                                                       |
 | ------------------------- | ------------------------------------------------------------------------------------------------------------- |
@@ -240,7 +241,7 @@ Three sections, chosen in the side panel: General (name, description, output lan
 
 ## Settings of the user
 
-The page is outside a project, at `/settings`, and opens from "Your settings" in the account menu. A section is chosen in the list at its left: Profile, Password, Preferences (theme, languages, notifications, and the run settings every project starts from), Models (the model and the temperature of each agent role), Usage (tokens and cost, grouped by day, project, agent role or model) and Login sessions. What is saved is kept by the mock server; `?mock-reset` forgets it.
+The page is outside a project, at `/settings`. Settings, at the bottom of the activity bar, shows the sections in the side panel, under "You"; inside a project they are listed above the sections of the project. The sections: Profile, Password, Preferences (theme, languages, notifications, and the run settings every project starts from), Models (the model and the temperature of each agent role), Usage (tokens and cost, grouped by day, project, agent role or model) and Login sessions. What is saved is kept by the mock server; `?mock-reset` forgets it.
 
 | Section                            | Address                                                               |
 | ---------------------------------- | --------------------------------------------------------------------- |

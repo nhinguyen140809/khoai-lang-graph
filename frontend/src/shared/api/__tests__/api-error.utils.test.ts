@@ -1,6 +1,7 @@
 import { describe, expect, it } from 'vitest'
 
-import { ApiError, toApiError } from '../api-error.utils'
+import { ApiErrorCode, HttpStatus } from '../api-error.constants'
+import { ApiError, errorMessageOf, toApiError } from '../api-error.utils'
 
 describe('toApiError', () => {
   it('reads the code, the detail and the field problems of a Problem Details body', () => {
@@ -43,5 +44,31 @@ describe('toApiError', () => {
     expect(
       toApiError(404, { code: 'not_found', detail }, 'Failed to load (HTTP 404)'),
     ).toMatchObject({ code: 'not_found', message: 'Failed to load (HTTP 404)' })
+  })
+})
+
+describe('errorMessageOf', () => {
+  const messages = {
+    code: { [ApiErrorCode.RateLimited]: 'Wait a moment.' },
+    status: {
+      [HttpStatus.Unauthorized]: 'Wrong password.',
+      [HttpStatus.TooManyRequests]: 'Slow down.',
+    },
+  }
+
+  it('takes the words for the code first, then for the status', () => {
+    expect(errorMessageOf(new ApiError('x', 429, 'rate_limited', []), messages)).toBe(
+      'Wait a moment.',
+    )
+    expect(errorMessageOf(new ApiError('x', 401, 'unauthenticated', []), messages)).toBe(
+      'Wrong password.',
+    )
+  })
+
+  it('keeps the message of the error when no words are given for it', () => {
+    expect(errorMessageOf(new ApiError('Failed (HTTP 500)', 500, null, []), messages)).toBe(
+      'Failed (HTTP 500)',
+    )
+    expect(errorMessageOf(new Error('Network down'), messages)).toBe('Network down')
   })
 })

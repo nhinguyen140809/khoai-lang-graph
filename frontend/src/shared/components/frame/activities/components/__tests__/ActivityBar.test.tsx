@@ -90,8 +90,8 @@ describe('ActivityBar', () => {
       'Search',
       'Artifacts',
       'Sources, planned for later',
-      'Settings',
       'Account',
+      'Settings',
     ])
     // Until one is chosen, the side panel is the one of the page on screen.
     expect(screen.getByRole('button', { name: /^Console/ })).toHaveAttribute('aria-pressed', 'true')

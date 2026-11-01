@@ -36,12 +36,15 @@ export function parameterFields(definition: RunConfigDefinition): ParameterField
   }))
 }
 
-/** The run settings as the form holds them: text for every number, so an empty field is empty. */
+/**
+ * The run settings as a form holds them, named as the request names them: text for every number,
+ * so that an empty field is empty.
+ */
 export interface RunForm {
-  /** Null when the project leaves the checkpoints to the default of the user. */
-  checkpoints: string[] | null
-  maxSteps: string
-  maxCost: string
+  /** Null when the checkpoints are left to the next level. */
+  review_checkpoints: string[] | null
+  max_steps: string
+  max_cost_usd: string
   parameters: Record<string, string>
 }
 
@@ -54,18 +57,20 @@ export function scalarText(value: unknown): string {
 
 const textOf = scalarText
 
-export function runFormOf(config: RunConfig): RunForm {
+/** The form of the run settings `config`, with a field for each parameter of `fields`. */
+export function runFormOf(config: RunConfig, fields: ParameterField[]): RunForm {
   return {
-    checkpoints: config.review_checkpoints,
-    maxSteps: textOf(config.max_steps),
-    maxCost: textOf(config.max_cost_usd),
+    review_checkpoints: config.review_checkpoints,
+    max_steps: textOf(config.max_steps),
+    max_cost_usd: textOf(config.max_cost_usd),
     parameters: Object.fromEntries(
-      Object.entries(config.parameters ?? {}).map(([key, value]) => [key, textOf(value)]),
+      fields.map(({ key }) => [key, textOf(config.parameters?.[key])]),
     ),
   }
 }
 
-function numberProblem(
+/** What is wrong with a number typed in a field, given its limits; null when nothing is. */
+export function numberProblem(
   text: string,
   field: { integer: boolean; min?: number | undefined; max?: number | undefined },
 ) {
@@ -77,29 +82,6 @@ function numberProblem(
   return null
 }
 
-/** The problems of the form by field: `max_steps`, `max_cost_usd` and `parameters.<key>`. */
-export function validateRunForm(form: RunForm, fields: ParameterField[]): Record<string, string> {
-  const problems: Record<string, string> = {}
-  const steps = form.maxSteps.trim()
-  if (steps !== '') {
-    const problem = numberProblem(steps, { integer: true, min: 1 })
-    if (problem !== null) problems.max_steps = problem
-  }
-  const cost = form.maxCost.trim()
-  if (cost !== '') {
-    const problem = numberProblem(cost, { integer: false })
-    if (problem !== null) problems.max_cost_usd = problem
-    else if (Number(cost) <= 0) problems.max_cost_usd = 'Enter an amount above 0.'
-  }
-  for (const field of fields) {
-    const text = (form.parameters[field.key] ?? '').trim()
-    if (text === '' || field.kind !== 'number') continue
-    const problem = numberProblem(text, { integer: field.integer, min: field.min, max: field.max })
-    if (problem !== null) problems[`parameters.${field.key}`] = problem
-  }
-  return problems
-}
-
 /** The run settings to send; a field that is empty is not set, so the next level supplies it. */
 export function toRunConfig(form: RunForm, fields: ParameterField[]): RunConfig {
   const parameters: Record<string, unknown> = {}
@@ -109,10 +91,10 @@ export function toRunConfig(form: RunForm, fields: ParameterField[]): RunConfig 
     parameters[field.key] =
       field.kind === 'number' ? Number(text) : field.kind === 'boolean' ? text === 'true' : text
   }
-  const steps = form.maxSteps.trim()
-  const cost = form.maxCost.trim()
+  const steps = form.max_steps.trim()
+  const cost = form.max_cost_usd.trim()
   return {
-    review_checkpoints: form.checkpoints,
+    review_checkpoints: form.review_checkpoints,
     max_steps: steps === '' ? null : Number(steps),
     max_cost_usd: cost === '' ? null : Number(cost),
     parameters: Object.keys(parameters).length === 0 ? null : parameters,

@@ -3,7 +3,7 @@ import { z } from 'zod'
 import { type UserSettingsSection, userSettingsSections } from '@/shared/config/routes'
 
 // Temporary hand-written schemas for the settings API.
-// TODO: replace with the types generated into src/api/generated/ once they exist.
+// TODO: replace with the types generated into src/shared/api/generated/ once they exist.
 
 export const userSettingsSchema = z.object({
   user_id: z.string(),

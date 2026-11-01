@@ -2,8 +2,8 @@ import { render, screen } from '@testing-library/react'
 import userEvent from '@testing-library/user-event'
 import { beforeEach, describe, expect, it, vi } from 'vitest'
 
-import { mockArtifactItems } from '@/mocks/artifacts.fixtures'
-import { PROJECT_IDS } from '@/mocks/mock-ids.constants'
+import { mockArtifactItems } from '@/mocks/artifacts/artifacts.fixtures'
+import { PROJECT_IDS } from '@/mocks/shared/mock-ids.constants'
 import { setPathname } from '@/test/next-mocks.utils'
 import { TestProviders } from '@/test/TestProviders'
 

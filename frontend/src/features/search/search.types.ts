@@ -1,7 +1,7 @@
 import { z } from 'zod'
 
 // Temporary hand-written schema for the items API.
-// TODO: replace with the types generated into src/api/generated/ once they exist.
+// TODO: replace with the types generated into src/shared/api/generated/ once they exist.
 
 export const itemSchema = z.object({
   id: z.string(),

@@ -3,8 +3,8 @@ import userEvent from '@testing-library/user-event'
 import { http, HttpResponse } from 'msw'
 import { describe, expect, it, vi } from 'vitest'
 
-import { PROJECT_IDS, RUN_IDS } from '@/mocks/mock-ids.constants'
 import { server } from '@/mocks/msw-server.setup'
+import { PROJECT_IDS, RUN_IDS } from '@/mocks/shared/mock-ids.constants'
 import { TestProviders } from '@/test/TestProviders'
 
 import { ProjectRunStatus } from '../ProjectRunStatus'

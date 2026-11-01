@@ -1,8 +1,8 @@
 import { render, screen, within } from '@testing-library/react'
 import { beforeEach, describe, expect, it, vi } from 'vitest'
 
-import { mockItemByKey } from '@/mocks/artifacts.fixtures'
-import { PROJECT_IDS } from '@/mocks/mock-ids.constants'
+import { mockItemByKey } from '@/mocks/artifacts/artifacts.fixtures'
+import { PROJECT_IDS } from '@/mocks/shared/mock-ids.constants'
 import { setPathname, setSearch } from '@/test/next-mocks.utils'
 import { TestProviders } from '@/test/TestProviders'
 

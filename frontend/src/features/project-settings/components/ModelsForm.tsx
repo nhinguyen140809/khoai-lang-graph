@@ -1,21 +1,16 @@
 'use client'
 
-import { useState } from 'react'
+import { zodResolver } from '@hookform/resolvers/zod'
+import { useForm } from 'react-hook-form'
 
+import { FormField, SaveBar } from '@/shared/components/form'
 import type { RunConfigDefinition } from '@/shared/components/run-config'
-import {
-  Field,
-  FieldDescription,
-  FieldError,
-  FieldGroup,
-  FieldLabel,
-} from '@/shared/components/ui/field'
+import { FieldGroup } from '@/shared/components/ui/field'
 import { NativeSelect, NativeSelectOption } from '@/shared/components/ui/native-select'
 
-import { formErrorMessage, serverFieldErrors } from '../form-errors.utils'
 import { useUpdateProject } from '../hooks/useUpdateProject'
+import { modelsFormSchema } from '../project-settings.schema'
 import type { ModelEntry, SettingsProject } from '../project-settings.types'
-import { SaveBar } from './SaveBar'
 
 interface ModelsFormProps {
   project: SettingsProject
@@ -25,9 +20,22 @@ interface ModelsFormProps {
 
 /** One model for each agent role; a role left empty takes the model of the user. */
 export function ModelsForm({ project, definition, models }: ModelsFormProps) {
-  const update = useUpdateProject(project.id)
-  const [chosen, setChosen] = useState<Record<string, string>>(project.model_overrides)
-  const errors = serverFieldErrors(update.error, 'model_overrides.')
+  const form = useForm({
+    resolver: zodResolver(modelsFormSchema),
+    defaultValues: {
+      model_overrides: Object.fromEntries(
+        definition.agent_roles.map(({ key }) => [key, project.model_overrides[key] ?? '']),
+      ),
+    },
+  })
+  const update = useUpdateProject(project.id, {
+    setError: form.setError,
+    schema: modelsFormSchema,
+  })
+
+  const onSubmit = form.handleSubmit((patch) => {
+    update.mutate(patch)
+  })
 
   return (
     <form
@@ -35,12 +43,7 @@ export function ModelsForm({ project, definition, models }: ModelsFormProps) {
       aria-label="Models"
       className="flex max-w-xl flex-col"
       onSubmit={(event) => {
-        event.preventDefault()
-        update.mutate({
-          model_overrides: Object.fromEntries(
-            Object.entries(chosen).filter(([, model]) => model !== ''),
-          ),
-        })
+        void onSubmit(event)
       }}
     >
       <p className="pb-4 text-xs text-muted-foreground">
@@ -48,35 +51,29 @@ export function ModelsForm({ project, definition, models }: ModelsFormProps) {
       </p>
       <FieldGroup>
         {definition.agent_roles.map((role) => (
-          <Field key={role.key} data-invalid={errors[role.key] !== undefined}>
-            <FieldLabel htmlFor={`model-${role.key}`}>{role.label}</FieldLabel>
-            <NativeSelect
-              id={`model-${role.key}`}
-              value={chosen[role.key] ?? ''}
-              aria-invalid={errors[role.key] !== undefined}
-              onChange={(event) => {
-                setChosen({ ...chosen, [role.key]: event.target.value })
-              }}
-            >
-              <NativeSelectOption value="">Default of my settings</NativeSelectOption>
-              {models
-                .filter(({ allowed_roles }) => allowed_roles.includes(role.key))
-                .map((model) => (
-                  <NativeSelectOption key={model.model_id} value={model.model_id}>
-                    {model.display_name}
-                  </NativeSelectOption>
-                ))}
-            </NativeSelect>
-            <FieldDescription>{role.description}</FieldDescription>
-            <FieldError>{errors[role.key]}</FieldError>
-          </Field>
+          <FormField
+            key={role.key}
+            control={form.control}
+            name={`model_overrides.${role.key}`}
+            label={role.label}
+            description={role.description}
+          >
+            {(field, control) => (
+              <NativeSelect {...field} {...control}>
+                <NativeSelectOption value="">Default of my settings</NativeSelectOption>
+                {models
+                  .filter(({ allowed_roles }) => allowed_roles.includes(role.key))
+                  .map((model) => (
+                    <NativeSelectOption key={model.model_id} value={model.model_id}>
+                      {model.display_name}
+                    </NativeSelectOption>
+                  ))}
+              </NativeSelect>
+            )}
+          </FormField>
         ))}
       </FieldGroup>
-      <SaveBar
-        pending={update.isPending}
-        error={formErrorMessage(update.error)}
-        saved={update.isSuccess}
-      />
+      <SaveBar pending={update.isPending} error={update.formError} saved={update.isSuccess} />
     </form>
   )
 }

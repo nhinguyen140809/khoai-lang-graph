@@ -9,7 +9,7 @@ import {
   threadSchema,
 } from './threads.types'
 
-// TODO: switch to the generated client in src/api/generated/ once it is generated.
+// TODO: switch to the generated client in src/shared/api/generated/ once it is generated.
 
 /** The threads of a project, newest message first. */
 export function listProjectThreads(projectId: string): Promise<Thread[]> {

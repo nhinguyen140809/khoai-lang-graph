@@ -1,6 +1,6 @@
 import { expect, test } from '@playwright/test'
 
-import { PROJECT_IDS } from '../../src/mocks/mock-ids.constants'
+import { PROJECT_IDS } from '../../src/mocks/shared/mock-ids.constants'
 
 const artifacts = `/projects/${PROJECT_IDS.mentor}/artifacts`
 

@@ -1,7 +1,7 @@
 import { z } from 'zod'
 
 // Temporary hand-written schemas for the traceability endpoints.
-// TODO: replace with the types generated into src/api/generated/ once they exist.
+// TODO: replace with the types generated into src/shared/api/generated/ once they exist.
 
 /** An item as a row or a list shows it. */
 export const itemRefSchema = z.object({

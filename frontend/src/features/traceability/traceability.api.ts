@@ -2,7 +2,7 @@ import { apiRequest, fetchAllPages } from '@/shared/api/api-fetch.utils'
 
 import { coverageSchema, linkSchema, matrixSchema, projectItemSchema } from './traceability.types'
 
-// TODO: switch to the generated client in src/api/generated/ once it is generated.
+// TODO: switch to the generated client in src/shared/api/generated/ once it is generated.
 
 const id = encodeURIComponent
 

@@ -8,7 +8,7 @@ import {
   workflowStepSchema,
 } from './workflow.types'
 
-// TODO: switch to the generated client in src/api/generated/ once it is generated.
+// TODO: switch to the generated client in src/shared/api/generated/ once it is generated.
 
 const id = encodeURIComponent
 

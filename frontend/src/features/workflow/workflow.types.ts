@@ -3,7 +3,7 @@ import { z } from 'zod'
 import { runStatuses } from '@/shared/config/run-status.constants'
 
 // Temporary hand-written schemas for the workflow definition and the runs.
-// TODO: replace with the types generated into src/api/generated/ once they exist.
+// TODO: replace with the types generated into src/shared/api/generated/ once they exist.
 
 export const nodeKinds = ['start', 'end', 'agent', 'checkpoint', 'control'] as const
 

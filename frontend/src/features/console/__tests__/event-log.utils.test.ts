@@ -1,8 +1,8 @@
 import { describe, expect, it } from 'vitest'
 
-import { mockMessages } from '@/mocks/messages.fixtures'
-import { RUN_IDS, THREAD_IDS } from '@/mocks/mock-ids.constants'
-import { mockRuns, mockRunSteps } from '@/mocks/runs.fixtures'
+import { mockRuns, mockRunSteps } from '@/mocks/runs/runs.fixtures'
+import { RUN_IDS, THREAD_IDS } from '@/mocks/shared/mock-ids.constants'
+import { mockMessages } from '@/mocks/threads/messages.fixtures'
 
 import type { ConsoleStep, Message } from '../console.types'
 import {

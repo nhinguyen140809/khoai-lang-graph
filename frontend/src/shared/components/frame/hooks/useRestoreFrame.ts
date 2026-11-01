@@ -2,7 +2,7 @@ import { usePathname } from 'next/navigation'
 import { useEffectEvent, useLayoutEffect } from 'react'
 
 import type { Activity } from '../activities/activity.types'
-import { activityOfHref, isFeatureActivity } from '../activities/activity.utils'
+import { activityOfHref, firstTopActivity, isFeatureActivity } from '../activities/activity.utils'
 import { useSideFeatureStore } from '../activities/side-feature.store'
 import { usePanelsStore } from '../panels/panels.store'
 import { useEditorTabsStore } from '../tabs/editor-tabs.store'
@@ -24,7 +24,7 @@ export function useRestoreFrame(activities: readonly Activity[]) {
     const { chosen, choose } = useSideFeatureStore.getState()
     if (chosen !== null) return
     const features = activities.filter(isFeatureActivity)
-    const shown = activityOfHref(features, pathname) ?? features[0]
+    const shown = activityOfHref(features, pathname) ?? firstTopActivity(features)
     if (shown !== undefined) choose(shown.id)
   })
 

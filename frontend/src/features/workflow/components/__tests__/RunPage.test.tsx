@@ -1,8 +1,8 @@
 import { fireEvent, render, screen, within } from '@testing-library/react'
 import { beforeEach, describe, expect, it, vi } from 'vitest'
 
-import { PROJECT_IDS, RUN_IDS } from '@/mocks/mock-ids.constants'
-import { mockRunSteps } from '@/mocks/runs.fixtures'
+import { mockRunSteps } from '@/mocks/runs/runs.fixtures'
+import { PROJECT_IDS, RUN_IDS } from '@/mocks/shared/mock-ids.constants'
 import { setPathname, setSearch } from '@/test/next-mocks.utils'
 import { TestProviders } from '@/test/TestProviders'
 

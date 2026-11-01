@@ -10,13 +10,14 @@ import { useActivities } from '../hooks/useActivities'
 import { useSideFeature } from '../hooks/useSideFeature'
 
 interface ActivityBarProps {
-  /** The account menu, at the bottom. */
+  /** The account menu, above the features at the bottom. */
   account: ReactNode
 }
 
 /**
- * One item per feature that the screen gives Workbench, then the account menu; a screen that gives
- * none, such as the screens outside a project today, shows the account menu only. An item shows
+ * One item per feature that the screen gives Workbench, with the account menu above the features
+ * at the bottom, such as the settings; a screen that gives none shows the account menu only. An
+ * item shows
  * the icon of its feature with the name under it. It shows the side panel of its feature and
  * leaves the editor as it is; the item of the side panel on screen hides the panel instead.
  */
@@ -34,12 +35,12 @@ export function ActivityBar({ account }: ActivityBarProps) {
           <ActivityItem key={activity.id} activity={activity} />
         ))}
       <div className="mt-auto flex flex-col items-center gap-1">
+        {account}
         {activities
           .filter((activity) => activity.placement === 'bottom')
           .map((activity) => (
             <ActivityItem key={activity.id} activity={activity} />
           ))}
-        {account}
       </div>
     </nav>
   )

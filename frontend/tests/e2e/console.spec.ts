@@ -1,6 +1,6 @@
 import { expect, test } from '@playwright/test'
 
-import { PROJECT_IDS } from '../../src/mocks/mock-ids.constants'
+import { PROJECT_IDS } from '../../src/mocks/shared/mock-ids.constants'
 
 const consolePath = `/projects/${PROJECT_IDS.mentor}/console`
 const campusConsole = `/projects/${PROJECT_IDS.campus}/console`
@@ -124,11 +124,15 @@ test('opens an empty console when the project has no thread', async ({ page }) =
   await expect(page.getByPlaceholder(/Describe what to build/)).toBeVisible()
 })
 
-test('switches the theme from the account menu', async ({ page }) => {
+test('switches the theme from the command palette', async ({ page }) => {
   await page.goto(consolePath)
+  // The page listens for the shortcut once it has loaded its event log.
+  await expect(page.getByRole('log', { name: 'Event log' })).toBeVisible()
 
-  await page.getByRole('button', { name: /Account/ }).click()
-  await page.getByRole('menuitemradio', { name: 'Light' }).click()
+  await page.keyboard.press('Control+k')
+  const palette = page.getByRole('dialog', { name: 'Command palette' })
+  await palette.getByRole('combobox').fill('Theme: Light')
+  await page.keyboard.press('Enter')
 
   await expect(page.locator('html')).not.toHaveClass(/dark/)
 })

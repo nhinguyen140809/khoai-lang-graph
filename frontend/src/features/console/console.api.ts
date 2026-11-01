@@ -12,7 +12,7 @@ import {
   sendMessageResponseSchema,
 } from './console.types'
 
-// TODO: switch to the generated client in src/api/generated/ once the client is generated.
+// TODO: switch to the generated client in src/shared/api/generated/ once the client is generated.
 
 export function runStreamUrl(runId: string): string {
   return apiUrl(`/api/v1/runs/${encodeURIComponent(runId)}/stream`)

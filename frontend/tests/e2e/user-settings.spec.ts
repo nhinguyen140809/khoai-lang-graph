@@ -1,11 +1,14 @@
 import { expect, test } from '@playwright/test'
 
-test('opens the settings of the user from the account menu, and saves the name', async ({
+test('opens the settings of the user from the activity bar, and saves the name', async ({
   page,
 }) => {
   await page.goto('/projects')
-  await page.getByRole('button', { name: /Account/ }).click({ timeout: 20_000 })
-  await page.getByRole('menuitem', { name: 'Your settings' }).click()
+  await page.getByRole('button', { name: 'Settings' }).click({ timeout: 20_000 })
+  await page
+    .getByRole('navigation', { name: 'Your settings' })
+    .getByRole('link', { name: 'Profile' })
+    .click()
 
   await expect(page).toHaveURL(/\/settings$/, { timeout: 20_000 })
   await expect(page.getByRole('banner')).toContainText('Settings')

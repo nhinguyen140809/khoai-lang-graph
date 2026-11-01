@@ -5,7 +5,7 @@ import { ThemeProvider, useTheme } from 'next-themes'
 import type { ReactNode } from 'react'
 import { describe, expect, it } from 'vitest'
 
-import { mockUserSettings } from '@/mocks/me.fixtures'
+import { mockUserSettings } from '@/mocks/account/me.fixtures'
 import { server } from '@/mocks/msw-server.setup'
 import { TestProviders } from '@/test/TestProviders'
 

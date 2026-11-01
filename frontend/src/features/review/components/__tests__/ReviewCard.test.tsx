@@ -2,9 +2,9 @@ import { render, screen, within } from '@testing-library/react'
 import userEvent from '@testing-library/user-event'
 import { afterEach, describe, expect, it, vi } from 'vitest'
 
-import { pendingInterrupt } from '@/mocks/interrupts.handlers'
-import { RUN_IDS } from '@/mocks/mock-ids.constants'
-import { mockRuns } from '@/mocks/runs.fixtures'
+import { pendingInterrupt } from '@/mocks/runs/interrupts.handlers'
+import { mockRuns } from '@/mocks/runs/runs.fixtures'
+import { RUN_IDS } from '@/mocks/shared/mock-ids.constants'
 import { TestProviders } from '@/test/TestProviders'
 
 import { ReviewCard } from '../ReviewCard'

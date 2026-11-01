@@ -8,8 +8,8 @@ import simpleImportSort from 'eslint-plugin-simple-import-sort'
 import globals from 'globals'
 import tseslint from 'typescript-eslint'
 
-// The visible parts of these libraries are wrapped in src/shared/components/ui, where they take the
-// design system tokens. Code outside that folder uses the wrappers.
+// The visible parts of these libraries are wrapped in src/shared/components/ui, where they take
+// the design system tokens. Code outside that folder uses the wrappers.
 const wrappedLibraryImports = [
   { name: 'streamdown', message: 'Use Markdown from @/shared/components/ui/markdown.' },
   { name: '@streamdown/code', message: 'Use Markdown from @/shared/components/ui/markdown.' },
@@ -27,6 +27,11 @@ const wrappedLibraryImports = [
     name: 'recharts',
     importNames: ['ResponsiveContainer', 'Tooltip', 'Legend'],
     message: 'Use ChartContainer, ChartTooltip, and ChartLegend from @/shared/components/ui/chart.',
+  },
+  {
+    name: 'sonner',
+    importNames: ['Toaster'],
+    message: 'Use Toaster from @/shared/components/ui/sonner.',
   },
 ]
 

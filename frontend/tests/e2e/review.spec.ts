@@ -1,6 +1,6 @@
 import { expect, test } from '@playwright/test'
 
-import { PROJECT_IDS, RUN_IDS } from '../../src/mocks/mock-ids.constants'
+import { PROJECT_IDS, RUN_IDS } from '../../src/mocks/shared/mock-ids.constants'
 
 const consolePath = `/projects/${PROJECT_IDS.mentor}/console`
 const reviewPath = `/projects/${PROJECT_IDS.mentor}/review/${RUN_IDS.mentorMain3}`

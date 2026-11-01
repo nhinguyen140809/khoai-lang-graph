@@ -1,24 +1,29 @@
 'use client'
 
-import { useState } from 'react'
+import { zodResolver } from '@hookform/resolvers/zod'
+import { useForm } from 'react-hook-form'
 
-import { Field, FieldError, FieldGroup, FieldLabel } from '@/shared/components/ui/field'
-import { Input } from '@/shared/components/ui/input'
+import { SaveBar, TextField } from '@/shared/components/form'
+import { FieldGroup } from '@/shared/components/ui/field'
 
-import { formErrorMessage, serverFieldErrors } from '../form-errors.utils'
 import { useChangePassword } from '../hooks/useAccountQueries'
-import { SaveBar } from './SaveBar'
-
-const MIN_LENGTH = 8
+import { passwordFormSchema } from '../settings.schema'
 
 /** The current password and the new one, typed twice. */
 export function PasswordForm() {
-  const change = useChangePassword()
-  const [current, setCurrent] = useState('')
-  const [next, setNext] = useState('')
-  const [again, setAgain] = useState('')
-  const [problems, setProblems] = useState<Record<string, string>>({})
-  const shown = { ...serverFieldErrors(change.error), ...problems }
+  const form = useForm({
+    resolver: zodResolver(passwordFormSchema),
+    defaultValues: { current_password: '', new_password: '', again: '' },
+  })
+  const change = useChangePassword(form.setError)
+
+  const onSubmit = form.handleSubmit((body) => {
+    change.mutate(body, {
+      onSuccess: () => {
+        form.reset()
+      },
+    })
+  })
 
   return (
     <form
@@ -26,53 +31,35 @@ export function PasswordForm() {
       aria-label="Password"
       className="flex max-w-xl flex-col"
       onSubmit={(event) => {
-        event.preventDefault()
-        const found: Record<string, string> = {}
-        if (current === '') found.current_password = 'Enter your current password.'
-        if (next.length < MIN_LENGTH)
-          found.new_password = `Use at least ${String(MIN_LENGTH)} characters.`
-        else if (again !== next) found.again = 'The two passwords differ.'
-        setProblems(found)
-        if (Object.keys(found).length > 0) return
-        change.mutate(
-          { current_password: current, new_password: next },
-          {
-            onSuccess: () => {
-              setCurrent('')
-              setNext('')
-              setAgain('')
-            },
-          },
-        )
+        void onSubmit(event)
       }}
     >
       <FieldGroup>
-        {(
-          [
-            ['current_password', 'Current password', current, setCurrent, 'current-password'],
-            ['new_password', 'New password', next, setNext, 'new-password'],
-            ['again', 'New password again', again, setAgain, 'new-password'],
-          ] as const
-        ).map(([name, label, value, setValue, autoComplete]) => (
-          <Field key={name} data-invalid={shown[name] !== undefined}>
-            <FieldLabel htmlFor={`password-${name}`}>{label}</FieldLabel>
-            <Input
-              id={`password-${name}`}
-              type="password"
-              value={value}
-              autoComplete={autoComplete}
-              aria-invalid={shown[name] !== undefined}
-              onChange={(event) => {
-                setValue(event.target.value)
-              }}
-            />
-            <FieldError>{shown[name]}</FieldError>
-          </Field>
-        ))}
+        <TextField
+          control={form.control}
+          name="current_password"
+          label="Current password"
+          type="password"
+          autoComplete="current-password"
+        />
+        <TextField
+          control={form.control}
+          name="new_password"
+          label="New password"
+          type="password"
+          autoComplete="new-password"
+        />
+        <TextField
+          control={form.control}
+          name="again"
+          label="New password again"
+          type="password"
+          autoComplete="new-password"
+        />
       </FieldGroup>
       <SaveBar
         pending={change.isPending}
-        error={formErrorMessage(change.error)}
+        error={change.formError}
         saved={change.isSuccess}
         label="Change password"
       />

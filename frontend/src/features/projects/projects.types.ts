@@ -1,7 +1,7 @@
 import { z } from 'zod'
 
 // Temporary hand-written schemas for the projects API and the parts of other resources that the
-// project list reads. TODO: replace with types generated into src/api/generated/.
+// project list reads. TODO: replace with types generated into src/shared/api/generated/.
 
 export const outputLanguages = ['en', 'vi'] as const
 

@@ -2,7 +2,7 @@ import { render, screen } from '@testing-library/react'
 import userEvent from '@testing-library/user-event'
 import { describe, expect, it, vi } from 'vitest'
 
-import { PROJECT_IDS } from '@/mocks/mock-ids.constants'
+import { PROJECT_IDS } from '@/mocks/shared/mock-ids.constants'
 import { TestProviders } from '@/test/TestProviders'
 
 import { ExportButton } from '../ExportButton'

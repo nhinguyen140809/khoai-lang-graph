@@ -1,2 +1,3 @@
+export { ProjectSettingsNav } from './components/ProjectSettingsNav'
 export { SettingsPage } from './components/SettingsPage'
-export { projectSettingsActivity, projectSettingsTabIcons } from './project-settings-frame.config'
+export { projectSettingsTabIcons } from './project-settings-frame.config'

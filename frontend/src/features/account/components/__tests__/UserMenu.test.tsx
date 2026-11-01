@@ -1,5 +1,5 @@
 import { QueryClient, QueryClientProvider } from '@tanstack/react-query'
-import { render, screen } from '@testing-library/react'
+import { render, screen, within } from '@testing-library/react'
 import userEvent from '@testing-library/user-event'
 import { http, HttpResponse } from 'msw'
 import { toast } from 'sonner'
@@ -12,10 +12,9 @@ import { TestProviders } from '@/test/TestProviders'
 
 import { UserMenu } from '../UserMenu'
 
-const { loadPage, setTheme } = vi.hoisted(() => ({ loadPage: vi.fn(), setTheme: vi.fn() }))
+const { loadPage } = vi.hoisted(() => ({ loadPage: vi.fn() }))
 
 vi.mock('next/link', async () => (await import('@/test/next-mocks.utils')).linkMock)
-vi.mock('next-themes', () => ({ useTheme: () => ({ theme: 'dark', setTheme }) }))
 vi.mock('@/shared/api/auth-redirect.utils', async (importOriginal) => ({
   ...(await importOriginal<typeof authRedirect>()),
   loadPage,
@@ -23,18 +22,24 @@ vi.mock('@/shared/api/auth-redirect.utils', async (importOriginal) => ({
 
 beforeEach(() => {
   loadPage.mockClear()
-  setTheme.mockClear()
 })
 
 async function openMenu(name: string | RegExp) {
   await userEvent.click(await screen.findByRole('button', { name }))
 }
 
+/** Chooses Sign out in the open menu, then confirms it in the dialog. */
+async function confirmSignOut() {
+  await userEvent.click(screen.getByRole('menuitem', { name: 'Sign out' }))
+  const dialog = await screen.findByRole('alertdialog', { name: 'Sign out?' })
+  await userEvent.click(within(dialog).getByRole('button', { name: 'Sign out' }))
+}
+
 describe('UserMenu', () => {
   it('shows the signed-in user', async () => {
     render(<UserMenu />, { wrapper: TestProviders })
 
-    await userEvent.click(await screen.findByRole('button', { name: 'Account of Linh Pham' }))
+    await userEvent.click(await screen.findByRole('button', { name: 'Linh Pham' }))
 
     const menu = screen.getByRole('menu')
     expect(menu).toHaveTextContent('Linh Pham')
@@ -44,8 +49,8 @@ describe('UserMenu', () => {
   it('signs out and loads the sign-in page', async () => {
     render(<UserMenu />, { wrapper: TestProviders })
 
-    await userEvent.click(await screen.findByRole('button', { name: 'Account of Linh Pham' }))
-    await userEvent.click(screen.getByRole('menuitem', { name: 'Sign out' }))
+    await userEvent.click(await screen.findByRole('button', { name: 'Linh Pham' }))
+    await confirmSignOut()
 
     await vi.waitFor(() => {
       expect(loadPage).toHaveBeenCalledWith('/login')
@@ -88,41 +93,56 @@ describe('UserMenu', () => {
   })
 
   it('loads the account again after a failure', async () => {
+    // Opening the menu loads the account again too, so the server fails until the user retries.
+    let failing = true
     server.use(
-      http.get('/api/v1/me', () => new HttpResponse(null, { status: 500 }), { once: true }),
+      http.get('/api/v1/me', () => (failing ? new HttpResponse(null, { status: 500 }) : undefined)),
     )
     render(<UserMenu />, { wrapper: TestProviders })
 
     await openMenu('Account')
-    await userEvent.click(
-      await screen.findByRole('menuitem', { name: 'Failed to load your account. Try again' }),
-    )
+    const retry = await screen.findByRole('menuitem', {
+      name: 'Failed to load your account. Try again',
+    })
+    failing = false
+    await userEvent.click(retry)
 
-    expect(await screen.findByRole('button', { name: 'Account of Linh Pham' })).toBeInTheDocument()
+    expect(await screen.findByRole('button', { name: 'Linh Pham' })).toBeInTheDocument()
   })
 
-  it('links to the settings of the user', async () => {
+  it('opens the profile from the user at the top of the menu', async () => {
     render(<UserMenu />, { wrapper: TestProviders })
 
-    await openMenu('Account of Linh Pham')
+    await openMenu('Linh Pham')
 
-    expect(screen.getByRole('menuitem', { name: 'Your settings' })).toHaveAttribute(
-      'href',
-      '/settings',
-    )
+    expect(
+      screen.getByRole('menuitem', { name: 'Your profile: Linh Pham linh.pham@example.com' }),
+    ).toHaveAttribute('href', '/settings')
   })
 
-  it('marks the theme in use and changes it', async () => {
+  it('offers help and feedback disabled until they exist', async () => {
     render(<UserMenu />, { wrapper: TestProviders })
 
-    await openMenu('Account of Linh Pham')
-    expect(screen.getByRole('menuitemradio', { name: 'Dark' })).toHaveAttribute(
-      'aria-checked',
+    await openMenu('Linh Pham')
+
+    expect(screen.getByRole('menuitem', { name: 'Help' })).toHaveAttribute('aria-disabled', 'true')
+    expect(screen.getByRole('menuitem', { name: 'Send feedback' })).toHaveAttribute(
+      'aria-disabled',
       'true',
     )
-    await userEvent.click(screen.getByRole('menuitemradio', { name: 'Light' }))
+  })
 
-    expect(setTheme).toHaveBeenCalledWith('light')
+  it('asks before signing out, and keeps the session when cancelled', async () => {
+    render(<UserMenu />, { wrapper: TestProviders })
+
+    await openMenu('Linh Pham')
+    await userEvent.click(screen.getByRole('menuitem', { name: 'Sign out' }))
+    const dialog = await screen.findByRole('alertdialog', { name: 'Sign out?' })
+    await userEvent.click(within(dialog).getByRole('button', { name: 'Cancel' }))
+
+    expect(screen.queryByRole('alertdialog')).not.toBeInTheDocument()
+    expect(loadPage).not.toHaveBeenCalled()
+    expect((await fetch(apiUrl('/api/v1/me'))).status).toBe(200)
   })
 
   it('says when signing out fails, and stays on the page', async () => {
@@ -130,13 +150,15 @@ describe('UserMenu', () => {
     const error = vi.spyOn(toast, 'error')
     render(<UserMenu />, { wrapper: TestProviders })
 
-    await openMenu('Account of Linh Pham')
-    await userEvent.click(screen.getByRole('menuitem', { name: 'Sign out' }))
+    await openMenu('Linh Pham')
+    await confirmSignOut()
 
     await vi.waitFor(() => {
       expect(error).toHaveBeenCalledWith('Failed to sign out (HTTP 500)')
     })
     expect(loadPage).not.toHaveBeenCalled()
+    // The dialog stays, so that the user can try again or cancel.
+    expect(screen.getByRole('alertdialog', { name: 'Sign out?' })).toBeInTheDocument()
     error.mockRestore()
   })
 
@@ -150,8 +172,8 @@ describe('UserMenu', () => {
       </QueryClientProvider>,
     )
 
-    await openMenu('Account of Linh Pham')
-    await userEvent.click(screen.getByRole('menuitem', { name: 'Sign out' }))
+    await openMenu('Linh Pham')
+    await confirmSignOut()
 
     // The mutation is marked failed only after its own onError has run.
     await vi.waitFor(() => {

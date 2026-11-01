@@ -7,7 +7,7 @@ interface ActivityBase {
   label: string
   /** An icon element, such as `<SearchIcon />`; the frame sets its size. */
   icon: ReactNode
-  /** Items at the bottom sit above the account menu, like settings. */
+  /** Items at the bottom sit below the account menu, like settings. */
   placement?: 'top' | 'bottom'
 }
 

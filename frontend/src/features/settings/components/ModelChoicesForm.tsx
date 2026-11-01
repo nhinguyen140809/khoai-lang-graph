@@ -1,22 +1,16 @@
 'use client'
 
-import { useState } from 'react'
+import { zodResolver } from '@hookform/resolvers/zod'
+import { type Control, useForm, useWatch } from 'react-hook-form'
 
+import { FormField, SaveBar, TextField } from '@/shared/components/form'
 import type { RunConfigDefinition } from '@/shared/components/run-config'
-import {
-  Field,
-  FieldDescription,
-  FieldError,
-  FieldGroup,
-  FieldLabel,
-} from '@/shared/components/ui/field'
-import { Input } from '@/shared/components/ui/input'
+import { FieldGroup } from '@/shared/components/ui/field'
 import { NativeSelect, NativeSelectOption } from '@/shared/components/ui/native-select'
 
-import { formErrorMessage, serverFieldErrors } from '../form-errors.utils'
 import { useSaveModelChoices } from '../hooks/useAccountQueries'
+import { type ModelChoicesForm as Choices, modelChoicesFormSchema } from '../settings.schema'
 import type { CatalogModel, ModelChoice } from '../settings.types'
-import { SaveBar } from './SaveBar'
 
 interface ModelChoicesFormProps {
   definition: RunConfigDefinition
@@ -24,31 +18,32 @@ interface ModelChoicesFormProps {
   choices: ModelChoice[]
 }
 
-interface Row {
-  model: string
-  temperature: string
-}
+type Role = RunConfigDefinition['agent_roles'][number]
 
 /** The model of each agent role, and its temperature; a role left on the default uses the server default. */
 export function ModelChoicesForm({ definition, catalog, choices }: ModelChoicesFormProps) {
-  const save = useSaveModelChoices()
-  const [rows, setRows] = useState<Record<string, Row>>(() =>
-    Object.fromEntries(
-      choices.map((choice) => [
-        choice.agent_role,
-        {
-          model: choice.model_id,
-          temperature: choice.temperature === null ? '' : String(choice.temperature),
-        },
-      ]),
-    ),
-  )
-  const [problems, setProblems] = useState<Record<string, string>>({})
-  const errors = serverFieldErrors(save.error)
+  const form = useForm({
+    resolver: zodResolver(modelChoicesFormSchema),
+    defaultValues: {
+      choices: Object.fromEntries(
+        definition.agent_roles.map(({ key }) => {
+          const chosen = choices.find(({ agent_role }) => agent_role === key)
+          return [
+            key,
+            {
+              model_id: chosen?.model_id ?? '',
+              temperature: chosen?.temperature == null ? '' : String(chosen.temperature),
+            },
+          ]
+        }),
+      ),
+    },
+  })
+  const save = useSaveModelChoices(form.setError)
 
-  const setRow = (role: string, change: Partial<Row>) => {
-    setRows({ ...rows, [role]: { model: '', temperature: '', ...rows[role], ...change } })
-  }
+  const onSubmit = form.handleSubmit((items) => {
+    save.mutate(items)
+  })
 
   return (
     <form
@@ -56,20 +51,7 @@ export function ModelChoicesForm({ definition, catalog, choices }: ModelChoicesF
       aria-label="Models"
       className="flex max-w-xl flex-col"
       onSubmit={(event) => {
-        event.preventDefault()
-        const found: Record<string, string> = {}
-        const items: ModelChoice[] = []
-        for (const [role, row] of Object.entries(rows)) {
-          if (row.model === '') continue
-          const text = row.temperature.trim()
-          const temperature = text === '' ? null : Number(text)
-          if (temperature !== null && !(temperature >= 0 && temperature <= 2)) {
-            found[role] = 'Enter a number from 0 to 2.'
-          }
-          items.push({ agent_role: role, model_id: row.model, temperature })
-        }
-        setProblems(found)
-        if (Object.keys(found).length === 0) save.mutate(items)
+        void onSubmit(event)
       }}
     >
       <p className="pb-4 text-xs text-muted-foreground">
@@ -77,57 +59,63 @@ export function ModelChoicesForm({ definition, catalog, choices }: ModelChoicesF
         default of the server.
       </p>
       <FieldGroup>
-        {definition.agent_roles.map((role) => {
-          const row = rows[role.key]
-          const problem =
-            problems[role.key] ??
-            errors[`items.${role.key}`] ??
-            errors[`items.${role.key}.temperature`]
-          return (
-            <Field key={role.key} data-invalid={problem !== undefined}>
-              <FieldLabel htmlFor={`choice-${role.key}`}>{role.label}</FieldLabel>
-              <div className="flex gap-2">
-                <NativeSelect
-                  id={`choice-${role.key}`}
-                  className="flex-1"
-                  value={row?.model ?? ''}
-                  aria-invalid={problem !== undefined}
-                  onChange={(event) => {
-                    setRow(role.key, { model: event.target.value })
-                  }}
-                >
-                  <NativeSelectOption value="">Server default</NativeSelectOption>
-                  {catalog
-                    .filter(({ allowed_roles }) => allowed_roles.includes(role.key))
-                    .map((model) => (
-                      <NativeSelectOption key={model.model_id} value={model.model_id}>
-                        {model.display_name}
-                      </NativeSelectOption>
-                    ))}
-                </NativeSelect>
-                <Input
-                  aria-label={`Temperature of ${role.label}`}
-                  className="w-24"
-                  inputMode="decimal"
-                  placeholder="Temp."
-                  disabled={(row?.model ?? '') === ''}
-                  value={row?.temperature ?? ''}
-                  onChange={(event) => {
-                    setRow(role.key, { temperature: event.target.value })
-                  }}
-                />
-              </div>
-              <FieldDescription>{role.description}</FieldDescription>
-              <FieldError>{problem}</FieldError>
-            </Field>
-          )
-        })}
+        {definition.agent_roles.map((role) => (
+          <ChoiceRow
+            key={role.key}
+            control={form.control}
+            role={role}
+            models={catalog.filter(({ allowed_roles }) => allowed_roles.includes(role.key))}
+          />
+        ))}
       </FieldGroup>
-      <SaveBar
-        pending={save.isPending}
-        error={formErrorMessage(save.error)}
-        saved={save.isSuccess}
-      />
+      <SaveBar pending={save.isPending} error={save.formError} saved={save.isSuccess} />
     </form>
+  )
+}
+
+interface ChoiceRowProps {
+  control: Control<Choices, unknown, ModelChoice[]>
+  role: Role
+  models: CatalogModel[]
+}
+
+/** The model of one role, and beside it its temperature, which waits for a model to be chosen. */
+function ChoiceRow({ control, role, models }: ChoiceRowProps) {
+  const model = useWatch({ control, name: `choices.${role.key}.model_id` })
+  return (
+    <div className="flex items-start gap-2">
+      <div className="min-w-0 flex-1">
+        <FormField
+          control={control}
+          name={`choices.${role.key}.model_id`}
+          label={role.label}
+          description={role.description}
+        >
+          {(field, controlProps) => (
+            <NativeSelect {...field} {...controlProps}>
+              <NativeSelectOption value="">Server default</NativeSelectOption>
+              {models.map((entry) => (
+                <NativeSelectOption key={entry.model_id} value={entry.model_id}>
+                  {entry.display_name}
+                </NativeSelectOption>
+              ))}
+            </NativeSelect>
+          )}
+        </FormField>
+      </div>
+      <div className="w-24">
+        <TextField
+          control={control}
+          name={`choices.${role.key}.temperature`}
+          label={
+            <>
+              Temperature<span className="sr-only"> of {role.label}</span>
+            </>
+          }
+          inputMode="decimal"
+          disabled={model === ''}
+        />
+      </div>
+    </div>
   )
 }

@@ -1,22 +1,18 @@
 'use client'
 
-import { type KeyboardEvent, useState } from 'react'
+import { zodResolver } from '@hookform/resolvers/zod'
+import { type KeyboardEvent, useMemo } from 'react'
+import { Controller, useForm, useWatch } from 'react-hook-form'
 
-import { ApiError } from '@/shared/api/api-error.utils'
 import { Button } from '@/shared/components/ui/button'
 import { Spinner } from '@/shared/components/ui/spinner'
 import { Textarea } from '@/shared/components/ui/textarea'
 
 import { useResumeRun } from '../hooks/useResumeRun'
 import { useReviewedItems } from '../hooks/useReviewedItems'
-import type { Answer, Interrupt } from '../review.types'
-import {
-  buildResumeBody,
-  defaultOption,
-  editedItems,
-  initialAnswers,
-  validateReview,
-} from '../review-form.utils'
+import { reviewFormSchema } from '../review.schema'
+import type { Interrupt } from '../review.types'
+import { defaultOption, editedItems, initialAnswers } from '../review-form.utils'
 import { ChoiceList } from './ChoiceList'
 import { QuestionField } from './QuestionField'
 
@@ -32,39 +28,30 @@ interface ReviewCardProps {
  * review waiting.
  */
 export function ReviewCard({ interrupt, onDone }: ReviewCardProps) {
-  const resume = useResumeRun(interrupt.run_id)
-  const [optionKey, setOptionKey] = useState(defaultOption(interrupt.options)?.key)
-  const [feedback, setFeedback] = useState('')
-  const [answers, setAnswers] = useState<Record<string, Answer>>(() =>
-    initialAnswers(interrupt.questions),
-  )
-  const [problems, setProblems] = useState<Record<string, string>>({})
-  const [failure, setFailure] = useState<string | null>(null)
-
   const reviewed = useReviewedItems(
     interrupt.review_artifacts.map(({ artifact_id }) => artifact_id),
   )
-  const edited = editedItems(reviewed.data ?? [])
+  const edited = useMemo(() => editedItems(reviewed.data ?? []), [reviewed.data])
+  const schema = useMemo(() => reviewFormSchema(interrupt, edited), [interrupt, edited])
+  const form = useForm({
+    resolver: zodResolver(schema),
+    defaultValues: {
+      option: defaultOption(interrupt.options)?.key ?? null,
+      feedback: '',
+      answers: initialAnswers(interrupt.questions),
+    },
+  })
+  const resume = useResumeRun(interrupt.run_id, {
+    setError: form.setError,
+    schema,
+    onAnswered: onDone,
+  })
+  const optionKey = useWatch({ control: form.control, name: 'option' })
   const option = interrupt.options.find(({ key }) => key === optionKey)
 
-  const send = () => {
-    setFailure(null)
-    const found = validateReview(interrupt, { option, feedback, answers })
-    setProblems(found)
-    if (Object.keys(found).length > 0) return
-    // The promise outlives this card: the answer makes the review disappear, which removes it.
-    void resume
-      .mutateAsync(buildResumeBody(interrupt, { option, feedback, answers, edited }))
-      .then(onDone, (error: unknown) => {
-        if (error instanceof ApiError && error.fieldErrors.length > 0) {
-          setProblems(
-            Object.fromEntries(error.fieldErrors.map(({ field, message }) => [field, message])),
-          )
-          return
-        }
-        setFailure(error instanceof Error ? error.message : 'The answer was not sent.')
-      })
-  }
+  const send = form.handleSubmit((body) => {
+    resume.mutate(body)
+  })
 
   const handleKeyDown = (event: KeyboardEvent<HTMLElement>) => {
     if (event.key === 'Escape') {
@@ -75,7 +62,7 @@ export function ReviewCard({ interrupt, onDone }: ReviewCardProps) {
     // Enter sends, except where it adds a line to a box.
     if (event.key === 'Enter' && !(event.target instanceof HTMLTextAreaElement)) {
       event.preventDefault()
-      send()
+      void send()
     }
   }
 
@@ -106,66 +93,73 @@ export function ReviewCard({ interrupt, onDone }: ReviewCardProps) {
       </header>
 
       {interrupt.options.length > 0 && (
-        <div className="flex flex-col gap-1">
-          <ChoiceList
-            label="Options"
-            choices={interrupt.options}
-            value={optionKey === undefined ? [] : [optionKey]}
-            onChange={([key]) => {
-              setOptionKey(key)
-              setProblems({})
-            }}
-          />
-          {problems.option !== undefined && (
-            <p role="alert" className="text-destructive-strong">
-              {problems.option}
-            </p>
+        <Controller
+          control={form.control}
+          name="option"
+          render={({ field, fieldState: { error } }) => (
+            <div className="flex flex-col gap-1">
+              <ChoiceList
+                label="Options"
+                choices={interrupt.options}
+                value={field.value === null ? [] : [field.value]}
+                onChange={([key]) => {
+                  field.onChange(key ?? null)
+                  form.clearErrors()
+                }}
+              />
+              {error !== undefined && (
+                <p role="alert" className="text-destructive-strong">
+                  {error.message}
+                </p>
+              )}
+            </div>
           )}
-        </div>
+        />
       )}
 
       {option?.requires_feedback === true && (
-        <div className="flex flex-col gap-1">
-          <label htmlFor={`feedback-${interrupt.id}`} className="font-medium">
-            Feedback (required)
-          </label>
-          <Textarea
-            id={`feedback-${interrupt.id}`}
-            rows={3}
-            aria-invalid={problems.feedback !== undefined}
-            value={feedback}
-            onChange={(event) => {
-              setFeedback(event.target.value)
-            }}
-          />
-          {problems.feedback !== undefined && (
-            <p role="alert" className="text-destructive-strong">
-              {problems.feedback}
-            </p>
+        <Controller
+          control={form.control}
+          name="feedback"
+          render={({ field, fieldState: { error } }) => (
+            <div className="flex flex-col gap-1">
+              <label htmlFor={`feedback-${interrupt.id}`} className="font-medium">
+                Feedback (required)
+              </label>
+              <Textarea
+                id={`feedback-${interrupt.id}`}
+                rows={3}
+                aria-invalid={error !== undefined}
+                {...field}
+              />
+              {error !== undefined && (
+                <p role="alert" className="text-destructive-strong">
+                  {error.message}
+                </p>
+              )}
+            </div>
           )}
-        </div>
+        />
       )}
 
       {interrupt.questions.map((question) => (
-        <QuestionField
-          key={question.key}
-          question={question}
-          answer={answers[question.key] ?? question.default_answer}
-          problem={problems[question.key]}
-          onChange={(answer) => {
-            setAnswers((previous) => ({ ...previous, [question.key]: answer }))
-          }}
-        />
+        <QuestionField key={question.key} question={question} control={form.control} />
       ))}
 
-      {failure !== null && (
+      {resume.formError !== null && (
         <p role="alert" className="text-destructive-strong">
-          {failure}
+          {resume.formError}
         </p>
       )}
 
       <footer className="flex items-center gap-3">
-        <Button size="xs" disabled={resume.isPending} onClick={send}>
+        <Button
+          size="xs"
+          disabled={resume.isPending}
+          onClick={() => {
+            void send()
+          }}
+        >
           {resume.isPending && <Spinner className="size-3" />}
           Send
         </Button>

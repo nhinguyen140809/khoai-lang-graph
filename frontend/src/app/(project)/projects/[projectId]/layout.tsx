@@ -4,7 +4,7 @@ import Link from 'next/link'
 import { UserMenu } from '@/features/account'
 import { artifactsActivity, artifactTabIcons } from '@/features/artifacts'
 import { consoleActivity, consoleTabIcons } from '@/features/console'
-import { projectSettingsActivity, projectSettingsTabIcons } from '@/features/project-settings'
+import { ProjectSettingsNav, projectSettingsTabIcons } from '@/features/project-settings'
 import {
   NewProjectDialog,
   PendingReviewBadge,
@@ -14,16 +14,18 @@ import {
 } from '@/features/projects'
 import { reviewTabIcons } from '@/features/review'
 import { searchActivity } from '@/features/search'
-import { ThemeCommands, ThemeSync } from '@/features/settings'
+import { settingsActivity, ThemeCommands, ThemeSync } from '@/features/settings'
 import { ProjectRunStatusItem } from '@/features/threads'
 import { traceabilityActivity, traceabilityTabIcons } from '@/features/traceability'
 import { workflowActivity, workflowTabIcons } from '@/features/workflow'
 import type { Activity, TabIcons } from '@/shared/components/frame'
-import { ProjectWorkspace, Workbench } from '@/shared/components/frame'
+import { PageWorkspace, ProjectWorkspace, Workbench } from '@/shared/components/frame'
 import { NotFoundState } from '@/shared/components/state'
 import { Button } from '@/shared/components/ui/button'
-import { Surface } from '@/shared/components/ui/surface'
 import { routes } from '@/shared/config/routes'
+
+/** The features of the screen of a project that does not exist: the settings of the user. */
+const notFoundActivities: Activity[] = [settingsActivity()]
 
 /** The icons that the pages of the features name for their tabs. */
 const tabIcons: TabIcons = {
@@ -66,7 +68,10 @@ export default async function ProjectLayout({
       icon: <FolderInputIcon />,
       note: 'Uploaded documents, planned for later',
     },
-    projectSettingsActivity(projectId),
+    settingsActivity({
+      href: routes.project(projectId).settings(),
+      projectSections: <ProjectSettingsNav projectId={projectId} />,
+    }),
   ]
 
   return (
@@ -78,6 +83,7 @@ export default async function ProjectLayout({
           <Workbench
             crumb={crumb}
             account={<UserMenu />}
+            activities={notFoundActivities}
             contributions={
               <>
                 <ProjectCommands />
@@ -86,19 +92,21 @@ export default async function ProjectLayout({
             }
             dialogs={dialogs}
           >
-            <Surface as="main" className="flex flex-1 items-center justify-center p-6">
-              <NotFoundState
-                className="w-full max-w-md p-0"
-                title="Project not found"
-                description="No project exists at this address, or it was deleted."
-                reference={projectId}
-                action={
-                  <Button asChild>
-                    <Link href={routes.projects()}>All projects</Link>
-                  </Button>
-                }
-              />
-            </Surface>
+            <PageWorkspace>
+              <div className="flex h-full items-center justify-center p-6">
+                <NotFoundState
+                  className="w-full max-w-md p-0"
+                  title="Project not found"
+                  description="No project exists at this address, or it was deleted."
+                  reference={projectId}
+                  action={
+                    <Button asChild>
+                      <Link href={routes.projects()}>All projects</Link>
+                    </Button>
+                  }
+                />
+              </div>
+            </PageWorkspace>
           </Workbench>
         }
       >

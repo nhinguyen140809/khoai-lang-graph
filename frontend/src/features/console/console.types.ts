@@ -3,7 +3,7 @@ import { z } from 'zod'
 import { runStatuses } from '@/shared/config/run-status.constants'
 
 // Temporary hand-written schemas for the run event stream and the console API.
-// TODO: replace with types generated into src/api/generated/ once the run events are
+// TODO: replace with types generated into src/shared/api/generated/ once the run events are
 // part of the generated types. Payload fields are provisional.
 export const runEventSchemas = {
   node_start: z.object({ node: z.string() }),

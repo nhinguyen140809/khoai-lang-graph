@@ -1,18 +1,16 @@
 'use client'
 
-import Link from 'next/link'
 import { useSearchParams } from 'next/navigation'
 
 import { ErrorState, LoadingState } from '@/shared/components/state'
 import { ScrollArea } from '@/shared/components/ui/scroll-area'
-import { RouteParam, routes } from '@/shared/config/routes'
-import { cn } from '@/shared/lib/utils'
+import { RouteParam } from '@/shared/config/routes'
 
 import { useCatalog, useDefinition, useModelChoices } from '../hooks/useAccountQueries'
 import { useProfile } from '../hooks/useProfile'
 import { useUserSettings } from '../hooks/useUserSettings'
 import { settingsSectionOf } from '../section.utils'
-import { settingsSectionLabels, settingsSections } from '../settings.types'
+import { settingsSectionLabels } from '../settings.types'
 import { ModelChoicesForm } from './ModelChoicesForm'
 import { PasswordForm } from './PasswordForm'
 import { PreferencesForm } from './PreferencesForm'
@@ -62,38 +60,24 @@ function ProfileSection() {
   return <ProfileForm profile={profile.data} />
 }
 
-/** The settings of the user, outside a project: one section at a time, chosen in the address. */
+/**
+ * The settings of the user, outside a project: one section at a time, chosen in the address from
+ * the side panel of the settings.
+ */
 export function UserSettingsPage() {
   const section = settingsSectionOf(useSearchParams().get(RouteParam.Section))
 
   return (
-    <div className="flex h-full min-h-0">
-      <nav aria-label="Sections" className="flex w-44 shrink-0 flex-col gap-px border-r p-2">
-        {settingsSections.map((entry) => (
-          <Link
-            key={entry}
-            href={routes.settings(entry)}
-            aria-current={entry === section ? 'page' : undefined}
-            className={cn(
-              'rounded-md px-2 py-1 text-xs outline-none hover:bg-accent focus-visible:ring-2 focus-visible:ring-ring/50',
-              entry === section && 'bg-accent font-medium',
-            )}
-          >
-            {settingsSectionLabels[entry]}
-          </Link>
-        ))}
-      </nav>
-      <ScrollArea className="min-w-0 flex-1">
-        <div className="flex flex-col gap-4 p-6">
-          <h1 className="text-sm font-medium">{settingsSectionLabels[section]}</h1>
-          {section === 'profile' && <ProfileSection />}
-          {section === 'password' && <PasswordForm />}
-          {section === 'preferences' && <PreferencesSection />}
-          {section === 'models' && <ModelsSection />}
-          {section === 'usage' && <UsageView />}
-          {section === 'sessions' && <SessionsList />}
-        </div>
-      </ScrollArea>
-    </div>
+    <ScrollArea className="h-full">
+      <div className="flex flex-col gap-4 p-6">
+        <h1 className="text-sm font-medium">{settingsSectionLabels[section]}</h1>
+        {section === 'profile' && <ProfileSection />}
+        {section === 'password' && <PasswordForm />}
+        {section === 'preferences' && <PreferencesSection />}
+        {section === 'models' && <ModelsSection />}
+        {section === 'usage' && <UsageView />}
+        {section === 'sessions' && <SessionsList />}
+      </div>
+    </ScrollArea>
   )
 }

@@ -1,7 +1,7 @@
 import { z } from 'zod'
 
 // Temporary hand-written schemas for the interrupts and the resume request.
-// TODO: replace with the types generated into src/api/generated/ once they exist.
+// TODO: replace with the types generated into src/shared/api/generated/ once they exist.
 
 export const optionSchema = z.object({
   key: z.string(),

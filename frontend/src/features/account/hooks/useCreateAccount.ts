@@ -7,6 +7,7 @@ import { formErrorOf, showFieldProblems } from '@/shared/components/form'
 import { routes } from '@/shared/config/routes'
 
 import { login, register } from '../account.api'
+import { accountMessages } from '../account.constants'
 import { type AccountForm, accountFormSchema } from '../account.schema'
 import type { RegisterBody } from '../account.types'
 import { useOpenAfterSignIn } from './useOpenAfterSignIn'
@@ -36,7 +37,7 @@ export function useCreateAccount(next: string | null, setError: UseFormSetError<
         openAfterSignIn()
         return
       }
-      toast.info('The account is created. Sign in with it.')
+      toast.info(accountMessages.createdWithoutSession)
       router.replace(routes.signIn(next))
     },
     onError: (error) => {

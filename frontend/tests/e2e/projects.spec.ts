@@ -1,6 +1,6 @@
 import { expect, test } from '@playwright/test'
 
-import { PROJECT_IDS } from '../../src/mocks/mock-ids.constants'
+import { PROJECT_IDS } from '../../src/mocks/shared/mock-ids.constants'
 
 test('opens a project from the list at Console, with its run on the status bar', async ({
   page,

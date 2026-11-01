@@ -1,7 +1,7 @@
 import { expect, test } from '@playwright/test'
 
-import { PROJECT_IDS, RUN_IDS } from '../../src/mocks/mock-ids.constants'
-import { mockRunSteps } from '../../src/mocks/runs.fixtures'
+import { mockRunSteps } from '../../src/mocks/runs/runs.fixtures'
+import { PROJECT_IDS, RUN_IDS } from '../../src/mocks/shared/mock-ids.constants'
 
 /** The first step of run 1, which the mock data keeps. */
 const mockStepId = mockRunSteps(RUN_IDS.mentorMain1, 'done')[0]?.id ?? ''

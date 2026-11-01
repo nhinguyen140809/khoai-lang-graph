@@ -1,9 +1,12 @@
 'use client'
 
+import { zodResolver } from '@hookform/resolvers/zod'
 import { DownloadIcon } from 'lucide-react'
 import { useSearchParams } from 'next/navigation'
 import { useState } from 'react'
+import { useForm, useWatch } from 'react-hook-form'
 
+import { FormField } from '@/shared/components/form'
 import { ErrorState, LoadingState } from '@/shared/components/state'
 import { Button } from '@/shared/components/ui/button'
 import {
@@ -14,7 +17,6 @@ import {
   DialogTitle,
   DialogTrigger,
 } from '@/shared/components/ui/dialog'
-import { Field, FieldLabel } from '@/shared/components/ui/field'
 import {
   Select,
   SelectContent,
@@ -25,6 +27,8 @@ import {
 import { Spinner } from '@/shared/components/ui/spinner'
 import { RouteParam } from '@/shared/config/routes'
 
+import { exportFormSchema } from '../artifacts.schema'
+import type { DefinitionSummary } from '../artifacts.types'
 import { useDefinitionSummary } from '../hooks/useDefinitionSummary'
 import { useExport } from '../hooks/useExport'
 
@@ -70,10 +74,6 @@ export function ExportButton({ projectId, openFromAddress = false }: ExportButto
 
 function ExportForm({ projectId }: { projectId: string }) {
   const definition = useDefinitionSummary()
-  const [template, setTemplate] = useState<string | null>(null)
-  const [format, setFormat] = useState<string | null>(null)
-
-  const { asked, exported } = useExport(projectId)
 
   if (definition.isPending)
     return <LoadingState label="Loading the templates" rows={2} size="compact" />
@@ -86,50 +86,81 @@ function ExportForm({ projectId }: { projectId: string }) {
       />
     )
   }
+  return <ExportFields projectId={projectId} templates={definition.data.export_templates} />
+}
 
-  const chosenTemplate =
-    definition.data.export_templates.find(({ key }) => key === template) ??
-    definition.data.export_templates[0]
-  const formats = chosenTemplate?.formats ?? []
-  const chosenFormat = format !== null && formats.includes(format) ? format : formats[0]
+interface ExportFieldsProps {
+  projectId: string
+  templates: DefinitionSummary['export_templates']
+}
+
+function ExportFields({ projectId, templates }: ExportFieldsProps) {
+  const formatsOf = (template: string) =>
+    templates.find(({ key }) => key === template)?.formats ?? []
+  const form = useForm({
+    resolver: zodResolver(exportFormSchema),
+    defaultValues: { template: templates[0]?.key ?? '', format: templates[0]?.formats[0] ?? '' },
+  })
+  const { asked, exported } = useExport(projectId, form.setError)
+  const formats = formatsOf(useWatch({ control: form.control, name: 'template' }))
   const result = exported.data
 
-  return (
-    <div className="flex flex-col gap-4">
-      <Field>
-        <FieldLabel htmlFor="export-template">Template</FieldLabel>
-        <Select value={chosenTemplate?.key ?? ''} onValueChange={setTemplate}>
-          <SelectTrigger id="export-template" className="w-full">
-            <SelectValue />
-          </SelectTrigger>
-          <SelectContent>
-            {definition.data.export_templates.map(({ key, label }) => (
-              <SelectItem key={key} value={key}>
-                {label}
-              </SelectItem>
-            ))}
-          </SelectContent>
-        </Select>
-      </Field>
-      <Field>
-        <FieldLabel htmlFor="export-format">Format</FieldLabel>
-        <Select value={chosenFormat ?? ''} onValueChange={setFormat}>
-          <SelectTrigger id="export-format" className="w-full">
-            <SelectValue />
-          </SelectTrigger>
-          <SelectContent>
-            {formats.map((value) => (
-              <SelectItem key={value} value={value}>
-                {value}
-              </SelectItem>
-            ))}
-          </SelectContent>
-        </Select>
-      </Field>
+  const onSubmit = form.handleSubmit((body) => {
+    asked.mutate(body)
+  })
 
-      {asked.isError && (
+  return (
+    <form
+      noValidate
+      className="flex flex-col gap-4"
+      onSubmit={(event) => {
+        void onSubmit(event)
+      }}
+    >
+      <FormField control={form.control} name="template" label="Template">
+        {(field, control) => (
+          <Select
+            value={field.value}
+            onValueChange={(template) => {
+              field.onChange(template)
+              // A format that the new template lacks gives way to the first one it has.
+              const next = formatsOf(template)
+              if (!next.includes(form.getValues('format'))) form.setValue('format', next[0] ?? '')
+            }}
+          >
+            <SelectTrigger {...control} className="w-full">
+              <SelectValue />
+            </SelectTrigger>
+            <SelectContent>
+              {templates.map(({ key, label }) => (
+                <SelectItem key={key} value={key}>
+                  {label}
+                </SelectItem>
+              ))}
+            </SelectContent>
+          </Select>
+        )}
+      </FormField>
+      <FormField control={form.control} name="format" label="Format">
+        {(field, control) => (
+          <Select value={field.value} onValueChange={field.onChange}>
+            <SelectTrigger {...control} className="w-full">
+              <SelectValue />
+            </SelectTrigger>
+            <SelectContent>
+              {formats.map((value) => (
+                <SelectItem key={value} value={value}>
+                  {value}
+                </SelectItem>
+              ))}
+            </SelectContent>
+          </Select>
+        )}
+      </FormField>
+
+      {asked.formError !== null && (
         <p role="alert" className="text-sm text-destructive-strong">
-          {asked.error.message}
+          {asked.formError}
         </p>
       )}
 
@@ -154,17 +185,13 @@ function ExportForm({ projectId }: { projectId: string }) {
       )}
 
       <Button
-        disabled={chosenTemplate === undefined || chosenFormat === undefined || asked.isPending}
+        type="submit"
+        disabled={asked.isPending}
         variant={result?.status === 'ready' ? 'outline' : 'default'}
-        onClick={() => {
-          if (chosenTemplate !== undefined && chosenFormat !== undefined) {
-            asked.mutate({ key: chosenTemplate.key, chosen: chosenFormat })
-          }
-        }}
       >
         {asked.isPending && <Spinner className="size-4" />}
         {result === undefined ? 'Export' : 'Export again'}
       </Button>
-    </div>
+    </form>
   )
 }

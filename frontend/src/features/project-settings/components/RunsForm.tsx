@@ -1,21 +1,20 @@
 'use client'
 
-import { useMemo, useState } from 'react'
+import { zodResolver } from '@hookform/resolvers/zod'
+import { useMemo } from 'react'
+import { FormProvider, useForm } from 'react-hook-form'
 
+import { SaveBar } from '@/shared/components/form'
 import {
   parameterFields,
   type RunConfigDefinition,
   RunConfigFields,
-  type RunForm,
   runFormOf,
-  toRunConfig,
-  validateRunForm,
 } from '@/shared/components/run-config'
 
-import { formErrorMessage, serverFieldErrors } from '../form-errors.utils'
 import { useUpdateProject } from '../hooks/useUpdateProject'
+import { runsFormSchema } from '../project-settings.schema'
 import type { SettingsProject } from '../project-settings.types'
-import { SaveBar } from './SaveBar'
 
 interface RunsFormProps {
   project: SettingsProject
@@ -24,44 +23,34 @@ interface RunsFormProps {
 
 /** The run settings of the project: what a field leaves empty takes the value of the user. */
 export function RunsForm({ project, definition }: RunsFormProps) {
-  const update = useUpdateProject(project.id)
   const fields = useMemo(() => parameterFields(definition), [definition])
-  const [form, setForm] = useState<RunForm>(() => runFormOf(project.run_config))
-  const [problems, setProblems] = useState<Record<string, string>>({})
-  const shown = { ...serverFieldErrors(update.error, 'run_config.'), ...problems }
+  const schema = useMemo(() => runsFormSchema(fields), [fields])
+  const form = useForm({
+    resolver: zodResolver(schema),
+    defaultValues: { run_config: runFormOf(project.run_config, fields) },
+  })
+  const update = useUpdateProject(project.id, { setError: form.setError, schema })
 
-  const save = () => {
-    const found = validateRunForm(form, fields)
-    setProblems(found)
-    if (Object.keys(found).length > 0) return
-    update.mutate({ run_config: toRunConfig(form, fields) })
-  }
+  const onSubmit = form.handleSubmit((patch) => {
+    update.mutate(patch)
+  })
 
   return (
-    <form
-      noValidate
-      aria-label="Runs"
-      className="flex max-w-xl flex-col"
-      onSubmit={(event) => {
-        event.preventDefault()
-        save()
-      }}
-    >
-      <p className="pb-4 text-xs text-muted-foreground">
-        A field left empty takes the value of your own settings.
-      </p>
-      <RunConfigFields
-        definition={definition}
-        form={form}
-        onChange={setForm}
-        problems={shown}
-        defaultLabel="Use my default"
-      />
-      <SaveBar
-        pending={update.isPending}
-        error={formErrorMessage(update.error)}
-        saved={update.isSuccess}
-      />
-    </form>
+    <FormProvider {...form}>
+      <form
+        noValidate
+        aria-label="Runs"
+        className="flex max-w-xl flex-col"
+        onSubmit={(event) => {
+          void onSubmit(event)
+        }}
+      >
+        <p className="pb-4 text-xs text-muted-foreground">
+          A field left empty takes the value of your own settings.
+        </p>
+        <RunConfigFields definition={definition} name="run_config" defaultLabel="Use my default" />
+        <SaveBar pending={update.isPending} error={update.formError} saved={update.isSuccess} />
+      </form>
+    </FormProvider>
   )
 }

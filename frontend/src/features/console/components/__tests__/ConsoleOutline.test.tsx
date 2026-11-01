@@ -2,7 +2,7 @@ import { render, screen, within } from '@testing-library/react'
 import userEvent from '@testing-library/user-event'
 import { afterEach, beforeEach, describe, expect, it, vi } from 'vitest'
 
-import { THREAD_IDS } from '@/mocks/mock-ids.constants'
+import { THREAD_IDS } from '@/mocks/shared/mock-ids.constants'
 import { TestProviders } from '@/test/TestProviders'
 
 import { useCommandHistoryStore } from '../../command-history.store'

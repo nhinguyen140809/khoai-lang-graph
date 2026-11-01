@@ -1,7 +1,7 @@
 import { z } from 'zod'
 
 // Temporary hand-written schemas for the artifacts API.
-// TODO: replace with the types generated into src/api/generated/ once they exist.
+// TODO: replace with the types generated into src/shared/api/generated/ once they exist.
 
 const jsonTypeSchema = z.enum(['string', 'number', 'integer', 'boolean', 'array', 'object', 'null'])
 

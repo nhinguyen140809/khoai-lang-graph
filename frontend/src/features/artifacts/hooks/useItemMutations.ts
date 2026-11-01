@@ -1,7 +1,15 @@
 import { useMutation, useQueryClient } from '@tanstack/react-query'
+import type { UseFormSetError } from 'react-hook-form'
+import type { z } from 'zod'
+
+import { type FieldOf, formErrorOf, showFieldProblems } from '@/shared/components/form'
 
 import { restoreItem, updateItem } from '../artifacts.api'
+import type { ItemForm } from '../artifacts.schema'
 import type { ArtifactItem } from '../artifacts.types'
+
+// The API names a field of an item under `content`, and the edit form names it alone.
+const fieldOfContent: FieldOf = (field) => field.replace(/^content\./, '')
 
 /** Reads again what a change of an item changes: the item, its lists, its history and its trace. */
 function useRefreshItem() {
@@ -16,12 +24,24 @@ function useRefreshItem() {
     ])
 }
 
-export function useUpdateItem(item: ArtifactItem) {
+/**
+ * Saves the content of an item as its next version; the problems of the API show at the fields of
+ * the edit form, whose schema depends on the kind of the item.
+ */
+export function useUpdateItem(
+  item: ArtifactItem,
+  setError: UseFormSetError<ItemForm>,
+  schema: z.ZodType,
+) {
   const refresh = useRefreshItem()
-  return useMutation({
+  const update = useMutation({
     mutationFn: (content: Record<string, unknown>) => updateItem(item.id, item.version, content),
     onSuccess: (saved) => refresh(saved),
+    onError: (error) => {
+      showFieldProblems(setError, error, schema, fieldOfContent)
+    },
   })
+  return { ...update, formError: formErrorOf(update.error, schema, fieldOfContent) }
 }
 
 export function useRestoreItem(item: ArtifactItem) {

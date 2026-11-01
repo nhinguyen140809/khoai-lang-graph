@@ -1,10 +1,14 @@
 import { expect, type Page, test } from '@playwright/test'
 
-import { PROJECT_IDS } from '../../src/mocks/mock-ids.constants'
+import { PROJECT_IDS } from '../../src/mocks/shared/mock-ids.constants'
 
 async function signOut(page: Page) {
-  await page.getByRole('button', { name: /Account/ }).click()
+  await page.getByRole('button', { name: 'Linh Pham' }).click()
   await page.getByRole('menuitem', { name: 'Sign out' }).click()
+  await page
+    .getByRole('alertdialog', { name: 'Sign out?' })
+    .getByRole('button', { name: 'Sign out' })
+    .click()
   await expect(page).toHaveURL(/\/login$/)
 }
 
@@ -37,7 +41,7 @@ test('creates an account and opens the projects with it', async ({ page }) => {
   await page.getByRole('button', { name: 'Create account' }).click()
 
   await expect(page).toHaveURL(/\/projects$/)
-  await page.getByRole('button', { name: /Account/ }).click()
+  await page.getByRole('button', { name: 'An Tran' }).click()
   await expect(page.getByRole('menu')).toContainText('an@example.com')
 })
 

@@ -3,8 +3,8 @@ import '@testing-library/jest-dom/vitest'
 import { cleanup } from '@testing-library/react'
 import { afterAll, afterEach, beforeAll, vi } from 'vitest'
 
-import { resetMockData } from '@/mocks/mock-db.utils'
 import { server } from '@/mocks/msw-server.setup'
+import { resetMockData } from '@/mocks/shared/mock-db.utils'
 
 // Unit tests run without the Next.js router, so every test gets the stand-in of next/navigation
 // (src/test/next-mocks.utils.ts). The mock handlers loaded here import modules that read the

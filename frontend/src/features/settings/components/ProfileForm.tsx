@@ -1,28 +1,29 @@
 'use client'
 
-import { useState } from 'react'
+import { zodResolver } from '@hookform/resolvers/zod'
+import { useId } from 'react'
+import { useForm } from 'react-hook-form'
 
-import {
-  Field,
-  FieldDescription,
-  FieldError,
-  FieldGroup,
-  FieldLabel,
-} from '@/shared/components/ui/field'
+import { SaveBar, TextField } from '@/shared/components/form'
+import { Field, FieldGroup, FieldLabel } from '@/shared/components/ui/field'
 import { Input } from '@/shared/components/ui/input'
 
-import { formErrorMessage, serverFieldErrors } from '../form-errors.utils'
 import { useChangeProfile } from '../hooks/useAccountQueries'
+import { profileFormSchema } from '../settings.schema'
 import type { Profile } from '../settings.types'
-import { SaveBar } from './SaveBar'
 
 /** The name and the picture of the user; the email is shown and cannot be changed here. */
 export function ProfileForm({ profile }: { profile: Profile }) {
-  const save = useChangeProfile()
-  const [name, setName] = useState(profile.display_name)
-  const [avatar, setAvatar] = useState(profile.avatar_url ?? '')
-  const [problem, setProblem] = useState<string | null>(null)
-  const errors = serverFieldErrors(save.error)
+  const form = useForm({
+    resolver: zodResolver(profileFormSchema),
+    defaultValues: { display_name: profile.display_name, avatar_url: profile.avatar_url ?? '' },
+  })
+  const save = useChangeProfile(form.setError)
+  const emailId = useId()
+
+  const onSubmit = form.handleSubmit((body) => {
+    save.mutate(body)
+  })
 
   return (
     <form
@@ -30,52 +31,24 @@ export function ProfileForm({ profile }: { profile: Profile }) {
       aria-label="Profile"
       className="flex max-w-xl flex-col"
       onSubmit={(event) => {
-        event.preventDefault()
-        if (name.trim() === '') {
-          setProblem('Enter your name.')
-          return
-        }
-        setProblem(null)
-        const picture = avatar.trim()
-        save.mutate({ display_name: name.trim(), avatar_url: picture === '' ? null : picture })
+        void onSubmit(event)
       }}
     >
       <FieldGroup>
         <Field>
-          <FieldLabel htmlFor="profile-email">Email</FieldLabel>
-          <Input id="profile-email" value={profile.email} readOnly />
+          <FieldLabel htmlFor={emailId}>Email</FieldLabel>
+          <Input id={emailId} value={profile.email} readOnly />
         </Field>
-        <Field data-invalid={(problem ?? errors.display_name) !== undefined}>
-          <FieldLabel htmlFor="profile-name">Name</FieldLabel>
-          <Input
-            id="profile-name"
-            value={name}
-            autoComplete="name"
-            aria-invalid={(problem ?? errors.display_name) !== undefined}
-            onChange={(event) => {
-              setName(event.target.value)
-            }}
-          />
-          <FieldError>{problem ?? errors.display_name}</FieldError>
-        </Field>
-        <Field>
-          <FieldLabel htmlFor="profile-avatar">Picture</FieldLabel>
-          <Input
-            id="profile-avatar"
-            value={avatar}
-            placeholder="https://"
-            onChange={(event) => {
-              setAvatar(event.target.value)
-            }}
-          />
-          <FieldDescription>The address of an image. Empty shows your initials.</FieldDescription>
-        </Field>
+        <TextField control={form.control} name="display_name" label="Name" autoComplete="name" />
+        <TextField
+          control={form.control}
+          name="avatar_url"
+          label="Picture"
+          placeholder="https://"
+          description="The address of an image. Empty shows your initials."
+        />
       </FieldGroup>
-      <SaveBar
-        pending={save.isPending}
-        error={formErrorMessage(save.error)}
-        saved={save.isSuccess}
-      />
+      <SaveBar pending={save.isPending} error={save.formError} saved={save.isSuccess} />
     </form>
   )
 }

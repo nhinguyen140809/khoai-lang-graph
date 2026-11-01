@@ -97,7 +97,7 @@ frontend/
 │   │   │   ├── state/       # query states: loading, error, empty, not found
 │   │   │   └── run-config/  # the settings of a run
 │   │   ├── hooks/, lib/     # generic hooks and utilities
-│   │   ├── api/             # fetch and its errors, query client, generated/: generated API client (do not edit)
+│   │   ├── api/             # fetch and its errors, query client, API URL, generated/: generated API client (do not edit)
 │   │   └── config/          # what the app sets once: the addresses of its pages, the labels of run statuses
 │   ├── mocks/               # MSW handlers shared by dev mocking, unit tests, and E2E
 │   └── test/                # Vitest setup
@@ -124,7 +124,7 @@ pnpm fix                           # apply this repo's ESLint and Prettier style
 - The page `/design-system` shows the installed components as cards, with the color tokens and the type scale, in both themes; `sidebar` is not shown (the frame has its own activity bar and side panel) and `direction` has no visible part. It exists only in development (`pnpm dev`, then open http://localhost:3000/design-system); production builds answer 404.
 - `tree.tsx` is not part of shadcn/ui: it comes from the Origin UI registry (`pnpm ui:add https://coss.com/origin/r/tree.json`, MIT) and wraps [Headless Tree](https://headless-tree.lukasbach.com) (`@headless-tree/core`, `@headless-tree/react`).
 - `node.tsx`, `handle.tsx`, and `node-status-indicator.tsx` come from the [React Flow UI](https://reactflow.dev/ui) registry (`pnpm ui:add https://ui.reactflow.dev/base-node`, and so on). The CLI writes them to `src/shared/components/`; move them to `src/shared/components/ui/`, and rename `base-node.tsx` and `base-handle.tsx` to `node.tsx` and `handle.tsx`, with the components `Node` and `Handle`: like the other components, they have no `Base` prefix.
-- `code.tsx`, `flow.tsx`, `edge.tsx`, `markdown.tsx`, `surface.tsx`, and `stack.tsx` are written for this project. `Code` shows inline code, after the [Code](https://chakra-ui.com/docs/components/code) component of Chakra UI. Its fills are `solid`, `surface`, `soft`, `outline`, and `plain`, and its `size` (`sm`, `default`, `lg`) matches a text size: captions, component text, and body text. `Flow` is the React Flow canvas (`@xyflow/react`) with the color mode of the current theme, light until hydration so that the server HTML matches. `Edge` draws an edge path in the line style of its `variant` (`solid`, `dashed`, `dotted`); it sets the `--xy-edge-*` variables of its edge, so React Flow still handles selection and animation. `Markdown` renders Markdown with [Streamdown](https://streamdown.ai) and its code plugin (`@streamdown/code`), with the heading sizes of the page. Inline code is a `Code` of the body text size (`lg`). Code blocks keep the frame, header, and buttons of Streamdown, and show the highlighted lines in a ScrollArea instead of a native scroll container. `Surface` is a rounded area on the background of the frame, such as the side panel or the editor; its `as` prop renders it as a `div`, `main`, `section`, or `aside`. `Stack` lays its children out in a row or a column (`direction`, a column by default) with a gap of the spacing scale (`gap="2"` is `gap-2`), after the [Stack](https://chakra-ui.com/docs/components/stack) of Chakra UI and the one of MUI; `align` and `justify` place them, and `separator` goes between two children.
+- `code.tsx`, `flow.tsx`, `edge.tsx`, `markdown.tsx`, `surface.tsx`, `stack.tsx`, and `confirm-dialog.tsx` are written for this project. `ConfirmDialog` asks before an action, on the alert dialog: a question as the title, the action as the words of its button, an icon (a warning sign by default for a destructive action), and, when the action returns a promise, the dialog waits for it, then closes when it resolves and stays open when it rejects. `Code` shows inline code, after the [Code](https://chakra-ui.com/docs/components/code) component of Chakra UI. Its fills are `solid`, `surface`, `soft`, `outline`, and `plain`, and its `size` (`sm`, `default`, `lg`) matches a text size: captions, component text, and body text. `Flow` is the React Flow canvas (`@xyflow/react`) with the color mode of the current theme, light until hydration so that the server HTML matches. `Edge` draws an edge path in the line style of its `variant` (`solid`, `dashed`, `dotted`); it sets the `--xy-edge-*` variables of its edge, so React Flow still handles selection and animation. `Markdown` renders Markdown with [Streamdown](https://streamdown.ai) and its code plugin (`@streamdown/code`), with the heading sizes of the page. Inline code is a `Code` of the body text size (`lg`). Code blocks keep the frame, header, and buttons of Streamdown, and show the highlighted lines in a ScrollArea instead of a native scroll container. `Surface` is a rounded area on the background of the frame, such as the side panel or the editor; its `as` prop renders it as a `div`, `main`, `section`, or `aside`. `Stack` lays its children out in a row or a column (`direction`, a column by default) with a gap of the spacing scale (`gap="2"` is `gap-2`), after the [Stack](https://chakra-ui.com/docs/components/stack) of Chakra UI and the one of MUI; `align` and `justify` place them, and `separator` goes between two children.
 - The libraries wrapped in `src/shared/components/ui/` are not imported directly elsewhere; ESLint (`no-restricted-imports`) reports `streamdown`, `@streamdown/code`, `react-resizable-panels`, `ReactFlow` and `Handle` from `@xyflow/react`, and `ResponsiveContainer`, `Tooltip`, and `Legend` from `recharts`. Their hooks, types, and other parts (for example `Background`, `Controls`, `Bar`) can be imported directly, because they take their colors from the tokens. Headless Tree has no visible parts, so it is not restricted.
 - Existing files are kept unless `--overwrite` is passed. Overwriting removes the local edits below, so check the result with `--diff` and re-apply them:
 
@@ -185,8 +185,8 @@ With `--only theme`, only the theme variables in `src/app/styles.css` change. Wi
 - The graph components `Node` and `Edge` take the five chart colors as well as the tones: `color="chart-1"` ... `color="chart-5"`, for parts of a graph that show order or magnitude rather than a status (`graphTones` and `graphToneClasses` in `src/shared/lib/tone.constants.ts`). A chart color fills, outlines, and strokes; text on the page keeps the text color (`--tone-text`), because some chart colors read poorly as text, and text on a solid chart fill takes `--chart-N-foreground`.
 - React Flow: `styles.css` imports its stylesheet into the `components` layer, so that utility classes override it, and sets its `--xy-*` variables to the tokens. The canvas is transparent, edges use `--muted-foreground` (`--primary` when selected; `Edge` sets its own from its color), nodes and handles `--card`, and controls and the minimap `--popover`. The `flow-selected:` variant applies while a node or edge is selected or focused from the keyboard, since React Flow removes their focus outline.
 - Markdown code blocks use the Shiki themes `night-owl-light` and `night-owl`, the same colors as the editor.
-- Dark mode is class-based and handled by `next-themes`. Its `ThemeProvider` (in `src/providers/Providers.tsx`) sets the `dark` class on `<html>` before the page hydrates. The default theme is Dark; the account menu and the command palette offer Light, Dark, and System. Components read the theme with `useTheme()` from `next-themes`.
-- The theme follows the user across devices: `ThemeSync` (in `src/features/settings/`) applies the `theme` of the user settings (`GET /me/settings`) when they load, and saves a theme chosen on the page with `PUT /me/settings`. `next-themes` also keeps the theme in the browser, so that a page opens in the right theme before the settings load. That copy is only known in the browser, so UI that depends on the theme must not differ between the server-rendered HTML and the first client render (see `UserMenu.tsx`).
+- Dark mode is class-based and handled by `next-themes`. Its `ThemeProvider` (in `src/providers/Providers.tsx`) sets the `dark` class on `<html>` before the page hydrates. The default theme is Dark; the command palette and the Preferences section of the settings offer Light, Dark, and System. Components read the theme with `useTheme()` from `next-themes`.
+- The theme follows the user across devices: `ThemeSync` (in `src/features/settings/`) applies the `theme` of the user settings (`GET /me/settings`) when they load, and saves a theme chosen on the page with `PUT /me/settings`. `next-themes` also keeps the theme in the browser, so that a page opens in the right theme before the settings load. That copy is only known in the browser, so UI that depends on the theme must not differ between the server-rendered HTML and the first client render (see `ThemeToggle.tsx` of the design system page).
 
 ### Fonts
 
@@ -220,7 +220,7 @@ Vietnamese text needs a font that ships the `vietnamese` subset. The subsets of 
 ## Routes, Server and Client Components
 
 - A route is a folder in `src/app/` with a `page.tsx`. The folder path is the URL: `src/app/(project)/projects/[projectId]/console/page.tsx` is `/projects/{projectId}/console`.
-- `(auth)`, `(home)` and `(project)` are route groups: the name in parentheses is not part of the URL. `(auth)` holds the pages that need no session, `(home)` the screens outside a project, and `(project)` the screens of a project. The `layout.tsx` of each group wraps its pages in the frame (`Workbench`), and its `error.tsx` is the error boundary for those pages. Inside a project, the layout of the project puts the side panel of the feature chosen next to the editor (`ProjectWorkspace`).
+- `(auth)`, `(home)` and `(project)` are route groups: the name in parentheses is not part of the URL. `(auth)` holds the pages that need no session, `(home)` the screens outside a project, and `(project)` the screens of a project. The `layout.tsx` of each group wraps its pages in the frame (`Workbench`), and its `error.tsx` is the error boundary for those pages. Inside a project, the layout of the project puts the side panel of the feature chosen next to the editor (`ProjectWorkspace`); outside a project, the layout puts it next to the page (`PageWorkspace`).
 - The routes:
 
   | URL                                                      | Screen                                                                                                          |
@@ -241,15 +241,15 @@ Vietnamese text needs a font that ships the `vietnamese` subset. The subsets of 
   | `/design-system`                                         | Design system, in development only                                                                              |
 
 - `src/app/` holds only routing files. A `page.tsx` renders a component from `src/features/`.
-- Every endpoint except register, login and health answers 401 without a session. The query client (`src/shared/api/query-client.config.ts`) then opens `/login?next=<the page>`, which returns to the page after signing in; `next` is kept only when it is a path of this app. Signing out (account menu) ends the session, then loads the sign-in page in full, which drops what the app kept in memory.
+- Every endpoint except register, login and health answers 401 without a session. When a request sent with `apiRequest` or `apiCommand` (`src/shared/api/api-fetch.utils.ts`) answers 401, the query client (`src/shared/api/query-client.config.ts`) opens `/login?next=<the page>`, which returns to the page after signing in; `next` is kept only when it is a path of this app. Signing out (`UserMenu` of `features/account`) ends the session, then loads the sign-in page in full, which drops what the app kept in memory.
 - Files in `src/app/` are Server Components: they render on the server and cannot use state, effects, or event handlers. A component that needs those starts with `'use client'`. Most feature components are Client Components.
 - Links use `<Link href="...">` from `next/link`. `href` is type-checked against the existing routes (`typedRoutes` in `next.config.ts`); `pnpm dev` and `pnpm build` regenerate the route types.
-- The addresses of the pages of a project are built by `src/shared/config/routes.utils.ts` (`consoleHref`, `itemHref`, `runHref`, ...), which also names their query parameters (`RouteParam`). Each address is checked against the folders of `src/app/` with the route types of Next, as `Link` checks its `href`, so a page that is moved or removed makes its function a type error. A feature links to a page of another feature through it, never with an address written in place, and a page reads its query parameters by the same names.
+- The addresses of the pages are built by the `routes` factory of `src/shared/config/routes/` (`routes.project(projectId).console()`, `routes.settings('usage')`, ...), which also names their query parameters (`RouteParam`). Each address is checked against the folders of `src/app/` with the route types of Next, as `Link` checks its `href`, so a page that is moved or removed makes its entry in the factory a type error. A feature links to a page of another feature through it, never with an address written in place, and a page reads its query parameters by the same names.
 - A library that touches `window` or `document` while it loads (PDF viewer, code editor, graph layout worker) is imported with `next/dynamic` and `ssr: false` from a Client Component.
 
 ## Frame
 
-Every screen uses the frame (`Workbench`) in `src/shared/components/frame/`, after the layout of an editor: a top bar (`TopBar`), an activity bar with one item per feature of the project (`ActivityBar`), the side panel of the feature chosen and the editor (`ProjectWorkspace`, `SidePanel`, `EditorTabs`), an optional panel under the editor (`EditorWithBottomPanel`), a status bar (`StatusBar`), and the command palette (`CommandPalette`). The frame is shared code and names no feature: each feature describes its item (`FeatureActivity` in `activities/activity.types.ts`: id, label, icon, start page, side panel) and the icons of its tabs in `<feature>-frame.config.tsx`, and a layout passes the list to `Workbench` as `activities` and `tabIcons`. `Workbench` renders the bars itself and takes, the same way, what they show from the features: the crumb of the top bar (`crumb`), the account menu (`account`), the components that register commands and items of the status bar (`contributions`) and the dialogs (`dialogs`). The list sets which features a screen has and their order; an item with a `note` and no start page is a feature planned for later, shown disabled. Today only the layout of a project passes features; the screens outside a project show the account menu alone on the activity bar, and a feature shown outside a project would be passed by their layout.
+Every screen uses the frame (`Workbench`) in `src/shared/components/frame/`, after the layout of an editor: a top bar (`TopBar`), an activity bar with one item per feature of the project (`ActivityBar`), the side panel of the feature chosen and the editor (`ProjectWorkspace`, `SidePanel`, `EditorTabs`), an optional panel under the editor (`EditorWithBottomPanel`), a status bar (`StatusBar`), and the command palette (`CommandPalette`). The frame is shared code and names no feature: each feature describes its item (`FeatureActivity` in `activities/activity.types.ts`: id, label, icon, start page, side panel) and the icons of its tabs in `<feature>-frame.config.tsx`, and a layout passes the list to `Workbench` as `activities` and `tabIcons`. `Workbench` renders the bars itself and takes, the same way, what they show from the features: the crumb of the top bar (`crumb`), the account menu (`account`), which the activity bar shows above the features at the bottom, the components that register commands and items of the status bar (`contributions`) and the dialogs (`dialogs`). The list sets which features a screen has and their order; an item with a `note` and no start page is a feature planned for later, shown disabled. The settings are a feature like the others, at the bottom of the bar on every screen (`settingsActivity` of `features/settings`): their side panel lists the sections of the settings of the user and, inside a project, those of the project, which the layout of the project passes in. Outside a project, the settings are the only feature, and a page that belongs to no feature, such as the project list, shows no side panel until the user chooses one; a feature at the bottom of the bar is never shown unasked.
 
 The folder is split by what its parts do. Each folder keeps its own code in layers, and the root of the frame holds what several folders use: `Workbench` and `ProjectWorkspace` in `components/`, and in `hooks/` `useRestoreFrame` (reads the stored state after the first render) and `useOpenPage`.
 
@@ -344,14 +344,32 @@ Habits that help:
 
 ## Mock data
 
-All mock code lives in `src/mocks/`, one pair of files per API resource:
+All mock code lives in `src/mocks/`, in one folder per part of the API, named like the backend feature that serves it. A file may read the data of another folder, as the resources of the API refer to each other; `shared/` holds what every handler uses.
+
+```text
+src/mocks/
+├── msw-browser.setup.ts  # the handlers of the browser worker (dev mocking, E2E)
+├── msw-server.setup.ts   # the handlers of the unit tests
+├── data/                 # copies of the workflow definition and the content schemas
+├── shared/               # records, ids, scenarios, pages of a list, error answers
+├── account/              # /auth, /me
+├── models/               # /models
+├── projects/             # /projects
+├── threads/              # threads and messages
+├── runs/                 # runs, steps, the stream, interrupts
+├── artifacts/            # artifacts, items, artifact kinds, the workflow definition, exports
+├── traceability/         # trace links, matrix, coverage
+└── workflow/             # the state of a run
+```
+
+Each folder holds a pair of files per API resource:
 
 | File                     | Content                                                                                       |
 | ------------------------ | --------------------------------------------------------------------------------------------- |
 | `<resource>.fixtures.ts` | The data: typed with the feature's types, fixed values only (no random ids, no current time). |
 | `<resource>.handlers.ts` | MSW handlers that answer the endpoints of that resource with the fixtures.                    |
 
-The same handlers serve `pnpm dev:mock`, the unit tests, and the E2E tests, so a fixture is written once. Example: `threads.fixtures.ts` and `threads.handlers.ts` back `GET /api/v1/threads` and `GET /api/v1/projects/{project_id}/threads`.
+The same handlers serve `pnpm dev:mock`, the unit tests, and the E2E tests, so a fixture is written once. Example: `threads/threads.fixtures.ts` and `threads/threads.handlers.ts` back `GET /api/v1/threads` and `GET /api/v1/projects/{project_id}/threads`.
 
 | Resource         | Endpoints                                                                                                               |
 | ---------------- | ----------------------------------------------------------------------------------------------------------------------- |
@@ -363,20 +381,20 @@ The same handlers serve `pnpm dev:mock`, the unit tests, and the E2E tests, so a
 | `me`             | `GET /me`, `GET /me/settings`, `PUT /me/settings`                                                                       |
 | `artifact-kinds` | `GET /artifact-kinds`                                                                                                   |
 
-- The ids of the mock data are in `mock-ids.constants.ts`; each starts like the id of the same record in the API examples.
-- `src/mocks/data/` holds copies of the workflow definition and the content schemas of the specification, byte for byte (Prettier skips the folder). `artifact-kinds.fixtures.ts` builds the response of `GET /artifact-kinds` from them, with the `enum` of every value list filled in. When the specification changes, copy the files again.
-- The mock server keeps the session, the user, the user settings, and what `POST` creates as records (`mock-db.utils.ts`). The browser worker keeps them in browser storage, so they survive a reload; `?mock-reset` in the page address starts again from the fixtures. Unit tests keep them in memory, and the test setup resets them after each test.
+- The ids of the mock data are in `shared/mock-ids.constants.ts`; each starts like the id of the same record in the API examples.
+- `src/mocks/data/` holds copies of the workflow definition and the content schemas of the specification, byte for byte (Prettier skips the folder). `artifacts/artifact-kinds.fixtures.ts` builds the response of `GET /artifact-kinds` from them, with the `enum` of every value list filled in. When the specification changes, copy the files again.
+- The mock server keeps the session, the user, the user settings, and what `POST` creates as records (`shared/mock-db.utils.ts`). The browser worker keeps them in browser storage, so they survive a reload; `?mock-reset` in the page address starts again from the fixtures. Unit tests keep them in memory, and the test setup resets them after each test.
 
 To mock a new endpoint:
 
-1. Add the data to `src/mocks/<resource>.fixtures.ts`, typed with the type from `src/features/<feature>/`.
-2. Add the handler to `src/mocks/<resource>.handlers.ts` and export the handler list.
+1. Add the data to `src/mocks/<folder>/<resource>.fixtures.ts`, typed with the type from `src/features/<feature>/`.
+2. Add the handler to `src/mocks/<folder>/<resource>.handlers.ts` and export the handler list.
 3. Register the list in `msw-browser.setup.ts` (dev mocking, E2E) and `msw-server.setup.ts` (unit tests).
 4. In a test that needs other data or an error, override the handler for that test only with `server.use(...)`; it is reset after each test.
 
 ### Mock scenarios
 
-A handler can answer differently depending on a parameter in the page URL, so every state of a screen can be seen in `pnpm dev:mock`. The parameter name is `mock-<resource>`: `?mock-threads=error` makes the threads handlers answer with an error. A handler reads it with `mockScenario('<resource>')` from `src/mocks/mock-scenario.utils.ts` and supports the scenarios `empty`, `error`, and `loading`; without the parameter it returns the fixtures. For an endpoint that returns one record, `empty` answers 404. Scenarios that are not a query state, such as the state of a run, read their own parameter, for example `?mock-run-state=failed`.
+A handler can answer differently depending on a parameter in the page URL, so every state of a screen can be seen in `pnpm dev:mock`. The parameter name is `mock-<resource>`: `?mock-threads=error` makes the threads handlers answer with an error. A handler reads it with `mockScenario('<resource>')` from `src/mocks/shared/mock-scenario.utils.ts` and supports the scenarios `empty`, `error`, and `loading`; without the parameter it returns the fixtures. For an endpoint that returns one record, `empty` answers 404. Scenarios that are not a query state, such as the state of a run, read their own parameter, for example `?mock-run-state=failed`.
 
 The parameters and the address of every state of every screen are listed in [Mock scenarios](src/mocks/README.md). Add the addresses of a screen there when the screen is built.
 

@@ -312,7 +312,7 @@ Check: `pnpm test src/shared`, a look at `/design-system`.
 
 ### P4. Account
 
-State: cut on `feat/fe/account` from `origin/main` on 2026-10-14, in the working tree for review. It is additive, as P3: no route renders `UserMenu` until P6, so the menu is reviewed from its unit test. The cut differs from the table below:
+State: cut on `feat/fe/account` from `origin/main` on 2026-10-14, then split on the same day into three stacked draft PRs, since the shared groundwork done for it had grown to more than half of the 84 files: #15 `refactor/fe/api-routes` (`refactor(frontend): call the API from hooks only, build addresses with a routes factory, and group the mocks`), #16 `feat/fe/form-fields` (`feat(frontend): add the shared form fields and the confirm dialog`) on #15, and #17 `feat/fe/account` (this section) on #16. P5 stacks on #17. It is additive, as P3: no route renders `UserMenu` until P6, so the menu is reviewed from its unit test. The cut differs from the table below:
 
 - `DEFAULT_AFTER_SIGN_IN` is `/`, which exists on `main`; P6 sets it to `/projects`.
 - `GET /me/settings`, `PUT /me/settings` and `mockUserSettings` go with their first consumer, the new project form of P6, with the `UserSettings` type; `pagination.utils.ts` goes with P5; `mock-ids.constants.ts` holds only `USER_ID`, and P5 adds the ids of projects, threads and runs; `mockRunState` of `mock-scenario.utils.ts` goes with P5.
@@ -329,7 +329,7 @@ Endpoints: `POST /auth/login`, `POST /auth/register`, `POST /auth/logout`, `GET 
 | Feature | `src/features/account/` (api, types, `AuthCard`, `LoginPage`, `RegisterPage`, `UserMenu`, `useMe`, tests) |
 | Routes | `src/app/(auth)/layout.tsx`, `login/page.tsx`, `register/page.tsx` |
 | Shared code | `src/shared/api/api-fetch.utils.ts`, `src/shared/api/auth-redirect.utils.ts` and their tests, `src/shared/api/query-client.config.ts` (a 401 goes to sign in, no retry for 4xx) |
-| Mock infrastructure | `src/mocks/mock-db.utils.ts`, `mock-ids.constants.ts`, `pagination.utils.ts`, `problem.utils.ts`, `mock-scenario.utils.ts`, `msw-browser.setup.ts`, `msw-server.setup.ts`, `auth.handlers.ts`, `me.handlers.ts`, `me.fixtures.ts`, `__tests__/auth.handlers.test.ts`, `README.md` (mock scenarios), and the `resetMockData` hunk of `src/test/vitest.setup.ts` |
+| Mock infrastructure | `src/mocks/shared/mock-db.utils.ts`, `mock-ids.constants.ts`, `pagination.utils.ts`, `problem.utils.ts`, `mock-scenario.utils.ts`, `msw-browser.setup.ts`, `msw-server.setup.ts`, `auth.handlers.ts`, `me.handlers.ts`, `me.fixtures.ts`, `__tests__/auth.handlers.test.ts`, `README.md` (mock scenarios), and the `resetMockData` hunk of `src/test/vitest.setup.ts` |
 | E2E | `tests/e2e/account.spec.ts` |
 
 ### P5. Mocks of projects and runs
@@ -338,7 +338,7 @@ State: cut on `feat/fe/project-mocks` on 2026-10-14, in the worktree `.claude/wo
 
 Endpoints: `GET /projects` (paged, filter by status), `POST /projects`, `GET /projects/{id}`, `GET /threads`, `GET /projects/{id}/threads`, `GET /threads/{id}`, `GET /threads/{id}/runs`, `GET /runs/{id}`, `GET /runs/{id}/steps`, `POST /runs/{id}/cancel`.
 
-Files: `src/mocks/projects.handlers.ts`, `projects.fixtures.ts`, `extra-projects.fixtures.ts`, `extra-project-specs.constants.ts`, `threads.handlers.ts`, `threads.fixtures.ts`, `runs.handlers.ts`, `runs.fixtures.ts`, `mock-runs.store.ts`, `pagination.utils.ts`, the ids of projects, threads and runs in `mock-ids.constants.ts`, `mockRunState` in `mock-scenario.utils.ts`, the handlers in the two setups, and tests of the fixtures and of the three handler groups. They are one PR because `projects.handlers` reads the runs for the unfinished counts, and threads follow their runs. Review as data: the fixtures are the project of the API examples plus generated projects.
+Files: `src/mocks/projects/projects.handlers.ts`, `projects.fixtures.ts`, `extra-projects.fixtures.ts`, `extra-project-specs.constants.ts`, `threads.handlers.ts`, `threads.fixtures.ts`, `runs.handlers.ts`, `runs.fixtures.ts`, `mock-runs.store.ts`, `pagination.utils.ts`, the ids of projects, threads and runs in `mock-ids.constants.ts`, `mockRunState` in `mock-scenario.utils.ts`, the handlers in the two setups, and tests of the fixtures and of the three handler groups. They are one PR because `projects.handlers` reads the runs for the unfinished counts, and threads follow their runs. Review as data: the fixtures are the project of the API examples plus generated projects.
 
 The fixtures are typed with the types of the features, which come later, so P5 brings the types of the API that it serves (decided on 2026-10-14, against a P5 of the mocks only or mocks that wait for P6 and P7):
 
@@ -368,7 +368,7 @@ The project `layout.tsx` is cut for this PR: the frame with an empty list of act
 
 Endpoints: `GET /projects/{id}/threads`, `POST /projects/{id}/threads` (used by P9), `GET /threads`, `GET /threads/{id}`, `GET /threads/{id}/runs`, `GET /runs/{id}`, `GET /runs/{id}/steps`.
 
-Files: `src/features/threads/` (api, types, utils, `ProjectRunStatus` and `ProjectRunStatusItem`, hooks, tests), `src/mocks/threads.handlers.ts`, `threads.fixtures.ts`. `components/ThreadList.tsx` and its test are no longer rendered anywhere; drop them in this PR unless the owner wants the list back. The layout hunk adds `ProjectRunStatusItem` to the `contributions` of `Workbench`, which puts the run at the left of the status bar with `useStatusBarItem`.
+Files: `src/features/threads/` (api, types, utils, `ProjectRunStatus` and `ProjectRunStatusItem`, hooks, tests), `src/mocks/threads/threads.handlers.ts`, `threads.fixtures.ts`. `components/ThreadList.tsx` and its test are no longer rendered anywhere; drop them in this PR unless the owner wants the list back. The layout hunk adds `ProjectRunStatusItem` to the `contributions` of `Workbench`, which puts the run at the left of the status bar with `useStatusBarItem`.
 
 ### P8. Artifacts, read
 
@@ -427,7 +427,7 @@ Endpoints: `POST /projects/{id}/exports`, `GET /projects/{id}/exports`, `GET /ex
 
 Endpoints: `GET /runs/{id}/interrupts?status=pending`, `POST /runs/{id}/resume`, `GET /artifacts/{id}/items`.
 
-Files: `src/features/review/` (api, types, `review-form.utils.ts`, hooks, `ChoiceList`, `QuestionField`, `ReviewCard`, `ReviewPage`, tests), `review/[runId]/page.tsx` (composes `ArtifactPanel`, `ConsolePage` and `ReviewPage`), `review-frame.config.tsx` with the `paths` and the tab icon it adds in the project `layout.tsx`, `src/mocks/interrupts.handlers.ts`, the review link of the console, `tests/e2e/review.spec.ts`, section 4 of `docs/ui/skeletons.md`.
+Files: `src/features/review/` (api, types, `review-form.utils.ts`, hooks, `ChoiceList`, `QuestionField`, `ReviewCard`, `ReviewPage`, tests), `review/[runId]/page.tsx` (composes `ArtifactPanel`, `ConsolePage` and `ReviewPage`), `review-frame.config.tsx` with the `paths` and the tab icon it adds in the project `layout.tsx`, `src/mocks/runs/interrupts.handlers.ts`, the review link of the console, `tests/e2e/review.spec.ts`, section 4 of `docs/ui/skeletons.md`.
 
 ### P15. Workflow
 
@@ -451,13 +451,15 @@ Files: `src/features/traceability/` (api, types, `issues.utils.ts`, `matrix-filt
 
 Endpoints: `GET /projects/{id}`, `PATCH /projects/{id}`, `GET /models`, `GET /workflow/definition`.
 
-Files: `src/features/project-settings/` (api, types, `section.utils.ts`, `form-errors.utils.ts`, hooks, `GeneralForm`, `RunsForm`, `ModelsForm`, `SaveBar`, `SettingsNav`, `SettingsPage`, tests, `project-settings-frame.config.tsx`), its entry in the project `layout.tsx`, `src/shared/components/run-config/` (shared with P18), `settings/page.tsx`, `src/mocks/models.handlers.ts`, `models.fixtures.ts`, the `/run-settings` command of the console, `tests/e2e/project-settings.spec.ts`, section 9 of `docs/ui/skeletons.md`.
+Files: `src/features/project-settings/` (api, types, `section.utils.ts`, `form-errors.utils.ts`, hooks, `GeneralForm`, `RunsForm`, `ModelsForm`, `SaveBar`, `SettingsNav`, `SettingsPage`, tests, `project-settings-frame.config.tsx`), its entry in the project `layout.tsx`, `src/shared/components/run-config/` (shared with P18), `settings/page.tsx`, `src/mocks/models/models.handlers.ts`, `models.fixtures.ts`, the `/run-settings` command of the console, `tests/e2e/project-settings.spec.ts`, section 9 of `docs/ui/skeletons.md`.
 
 ### P18. Settings of the user
 
 Endpoints: `GET /me`, `PATCH /me`, `POST /me/password`, `GET /me/sessions`, `DELETE /me/sessions/{id}`, `GET /me/model-settings`, `PUT /me/model-settings`, `GET /me/usage?group_by=`, `GET /me/settings`, `PUT /me/settings`, `GET /models`, `GET /workflow/definition`.
 
-Files: `src/features/settings/` (api, types, store, `section.utils.ts`, `form-errors.utils.ts`, hooks, `ProfileForm`, `PasswordForm`, `PreferencesForm`, `ModelChoicesForm`, `SessionsList`, `UsageView`, `ThemeSync`, `ThemeCommands`, `SaveBar`, `UserSettingsPage`, tests), `src/app/(home)/settings/page.tsx`, the `ThemeSync` and `ThemeCommands` lines of the two layouts, `src/mocks/account.handlers.ts`, `account.fixtures.ts`, `tests/e2e/user-settings.spec.ts`, section 10 of `docs/ui/skeletons.md`.
+Files: `src/features/settings/` (api, types, store, `section.utils.ts`, `form-errors.utils.ts`, hooks, `ProfileForm`, `PasswordForm`, `PreferencesForm`, `ModelChoicesForm`, `SessionsList`, `UsageView`, `ThemeSync`, `ThemeCommands`, `SaveBar`, `UserSettingsPage`, tests), `src/app/(home)/settings/page.tsx`, the `ThemeSync` and `ThemeCommands` lines of the two layouts, `src/mocks/account/account.handlers.ts`, `account.fixtures.ts`, `tests/e2e/user-settings.spec.ts`, section 10 of `docs/ui/skeletons.md`.
+
+To do in P17 and P18: every settings page, of the user and of a project, moves under `/settings` with sub-routes, and opens inside the workspace like the other pages. The mock has `/settings?section=` outside a project and `/projects/{id}/settings?section=` inside one; the shape of the sub-routes is decided in these PRs.
 
 ## 6. Files that several PRs touch
 
@@ -473,7 +475,7 @@ These cannot be copied whole with `git checkout feat/fe/mock -- <path>`: the bra
 | `src/test/vitest.setup.ts` | P3, P4, first test with a select | P3: browser stubs. P4: `resetMockData`. The pointer capture stub with the first test that opens a select |
 | `tests/e2e/frame.spec.ts` | P9, P10, P15 | P9: Ctrl+K and the run on the status bar. P10: Ctrl+B. P15: the activity bar and the tabs with the review |
 | `src/features/console/components/Console.tsx`, `commands.constants.ts` | P9, P13, P14, P17 | P9: the base commands. Later: `/export`, the review link, `/run-settings` |
-| `src/features/artifacts/artifacts.api.ts`, `src/mocks/artifacts.handlers.ts`, `tests/e2e/artifacts.spec.ts`, `ItemPage.tsx` | P8, P11, P12, P13 | The calls, handlers, tests and view parts of each endpoint group |
+| `src/features/artifacts/artifacts.api.ts`, `src/mocks/artifacts/artifacts.handlers.ts`, `tests/e2e/artifacts.spec.ts`, `ItemPage.tsx` | P8, P11, P12, P13 | The calls, handlers, tests and view parts of each endpoint group |
 | `eslint.config.js`, `.prettierignore`, `src/env.d.ts`, `.env.example` | P1, P3, P8, P15 | See P1 |
 
 Mock handlers shared by features: `GET /workflow/definition` and `GET /projects/{id}/items` are in `artifacts.handlers.ts` (first consumer P8); `GET /models` is in `models.handlers.ts` (first consumer P17, again in P18); `POST /runs/{id}/retry` is in `messages.handlers.ts` (P9, again in P15). A handler is written once in the PR of its first consumer and is not moved afterwards.

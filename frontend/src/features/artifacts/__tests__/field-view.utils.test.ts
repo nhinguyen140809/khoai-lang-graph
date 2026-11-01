@@ -1,6 +1,6 @@
 import { describe, expect, it } from 'vitest'
 
-import { mockArtifactKinds } from '@/mocks/artifact-kinds.fixtures'
+import { mockArtifactKinds } from '@/mocks/artifacts/artifact-kinds.fixtures'
 
 import {
   changedFields,

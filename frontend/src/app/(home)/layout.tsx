@@ -2,9 +2,8 @@ import type { ReactNode } from 'react'
 
 import { UserMenu } from '@/features/account'
 import { NewProjectDialog, ProjectCommands } from '@/features/projects'
-import { ThemeCommands, ThemeSync } from '@/features/settings'
-import { PageCrumb, Workbench } from '@/shared/components/frame'
-import { Surface } from '@/shared/components/ui/surface'
+import { settingsActivity, ThemeCommands, ThemeSync } from '@/features/settings'
+import { type Activity, PageCrumb, PageWorkspace, Workbench } from '@/shared/components/frame'
 
 interface HomeLayoutProps {
   children: ReactNode
@@ -16,9 +15,12 @@ const pages = [
   { path: '/projects', name: 'Projects' },
 ]
 
+/** The features of the screens outside a project: the settings, at the bottom of the bar. */
+const activities: Activity[] = [settingsActivity()]
+
 /**
- * Screens outside a project: the frame, with the account menu on the activity bar. They have no
- * feature yet; a feature shown outside a project would be passed to Workbench here as an activity.
+ * Screens outside a project: the frame, with the account menu and the settings on the activity
+ * bar, and the side panel of the settings beside the page once it is chosen.
  */
 export default function HomeLayout({ children }: HomeLayoutProps) {
   return (
@@ -27,6 +29,7 @@ export default function HomeLayout({ children }: HomeLayoutProps) {
       <Workbench
         crumb={<PageCrumb pages={pages} fallback="Projects" />}
         account={<UserMenu />}
+        activities={activities}
         contributions={
           <>
             <ProjectCommands />
@@ -35,9 +38,7 @@ export default function HomeLayout({ children }: HomeLayoutProps) {
         }
         dialogs={<NewProjectDialog />}
       >
-        <Surface as="main" className="min-h-0 flex-1">
-          {children}
-        </Surface>
+        <PageWorkspace>{children}</PageWorkspace>
       </Workbench>
     </>
   )

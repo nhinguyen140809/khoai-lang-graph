@@ -7,6 +7,16 @@ export function isFeatureActivity(activity: Activity): activity is FeatureActivi
 }
 
 /**
+ * The feature shown when the page on screen belongs to none: the first one at the top of the bar.
+ * A feature at the bottom, such as the settings, is never shown unasked.
+ */
+export function firstTopActivity(
+  features: readonly FeatureActivity[],
+): FeatureActivity | undefined {
+  return features.find(({ placement }) => placement !== 'bottom')
+}
+
+/**
  * The feature that a page belongs to: of the addresses the page is at or under, the longest one
  * decides. The query and the fragment of the address do not count.
  */

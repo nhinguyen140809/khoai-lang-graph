@@ -76,6 +76,7 @@ describe('LoginPage', () => {
       '/register?next=%2Fprojects%2Fp1%2Fconsole',
     )
   })
+
   it('says to wait after too many attempts', async () => {
     server.use(
       http.post('/api/v1/auth/login', () =>

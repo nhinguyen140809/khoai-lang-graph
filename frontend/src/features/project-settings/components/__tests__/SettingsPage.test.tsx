@@ -1,11 +1,10 @@
 import { fireEvent, render, screen, waitFor } from '@testing-library/react'
 import { beforeEach, describe, expect, it, vi } from 'vitest'
 
-import { PROJECT_IDS } from '@/mocks/mock-ids.constants'
+import { PROJECT_IDS } from '@/mocks/shared/mock-ids.constants'
 import { setPathname, setSearch } from '@/test/next-mocks.utils'
 import { TestProviders } from '@/test/TestProviders'
 
-import { SettingsNav } from '../SettingsNav'
 import { SettingsPage } from '../SettingsPage'
 
 vi.mock('next/navigation', async () => (await import('@/test/next-mocks.utils')).navigationMock)
@@ -127,22 +126,5 @@ describe('Models', () => {
     fireEvent.click(screen.getByRole('button', { name: 'Save' }))
 
     expect(await screen.findByText('Saved')).toBeInTheDocument()
-  })
-})
-
-describe('SettingsNav', () => {
-  it('links to the sections, and marks the one that is open', () => {
-    setSearch('section=runs')
-    render(<SettingsNav projectId={PROJECT_IDS.mentor} />)
-
-    expect(screen.getByRole('link', { name: 'Runs' })).toHaveAttribute('aria-current', 'page')
-    expect(screen.getByRole('link', { name: 'General' })).toHaveAttribute(
-      'href',
-      `/projects/${PROJECT_IDS.mentor}/settings`,
-    )
-    expect(screen.getByRole('link', { name: 'Models' })).toHaveAttribute(
-      'href',
-      `/projects/${PROJECT_IDS.mentor}/settings?section=models`,
-    )
   })
 })

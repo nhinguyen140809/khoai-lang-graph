@@ -1,3 +1,5 @@
-export { fieldProblemsOf, formErrorOf, showFieldProblems } from './form-errors.utils'
+export { CheckboxField } from './CheckboxField'
+export { type FieldOf, fieldProblemsOf, formErrorOf, showFieldProblems } from './form-errors.utils'
 export { type FieldControlProps, FormField } from './FormField'
+export { SaveBar } from './SaveBar'
 export { TextField } from './TextField'
