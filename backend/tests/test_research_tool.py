@@ -48,17 +48,9 @@ def test_research_queries_follow_the_plan() -> None:
     ]
 
 
-def test_demo_mode_serves_fixtures_offline() -> None:
-    tool = research.make_research_search(Settings(app_env="test"))
-
-    assert tool is research.demo_research_search
-
-
 def test_live_mode_prefers_tavily_then_the_keyless_chain() -> None:
-    with_key = research.make_research_search(
-        Settings(app_env="test", demo_mode=False, tavily_api_key="test-key")
-    )
-    without_key = research.make_research_search(Settings(app_env="test", demo_mode=False))
+    with_key = research.make_research_search(Settings(app_env="test", tavily_api_key="test-key"))
+    without_key = research.make_research_search(Settings(app_env="test"))
 
     assert with_key is not research.live_research_search
     assert without_key is research.live_research_search

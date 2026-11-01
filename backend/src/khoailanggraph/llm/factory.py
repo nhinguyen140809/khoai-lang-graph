@@ -3,9 +3,8 @@
 `get_chat_model(role, config)` resolves the role to a `provider:model` string
 (run override > project > user > the role's models.yaml default; the run's
 frozen map arrives as `config["configurable"]["models"]`) and builds — or
-reuses — the chat model for it. `fake:*` model ids build the deterministic
-FakeChatModel of the demo data, so tests and keyless demos run the whole
-workflow.
+reuses — the chat model for it. Every model id resolves through the provider
+registry (models.yaml) — production always uses a real provider.
 
 A node never hard-codes a model and never builds a chat model itself
 (CONTRIBUTING: LangGraph/agents): it asks for its role.
@@ -16,8 +15,6 @@ from __future__ import annotations
 from collections.abc import Mapping
 from typing import TYPE_CHECKING, Any
 
-from khoailanggraph.llm.demo import make_demo_data
-from khoailanggraph.llm.fake import FakeChatModel
 from khoailanggraph.llm.registry import default_registry
 from khoailanggraph.settings import get_settings
 
@@ -40,9 +37,6 @@ def build_chat_model(model_id: str, temperature: float | None = None) -> BaseCha
     """One chat model per `provider:model` id, without importing lazy providers
     that a keyless run never uses."""
     provider, _, name = model_id.partition(":")
-    if provider == "fake":
-        return FakeChatModel(demo=make_demo_data(name))
-
     if provider == "openai":
         from langchain_openai import ChatOpenAI  # noqa: PLC0415 - provider is imported only when used
 
@@ -54,10 +48,21 @@ def build_chat_model(model_id: str, temperature: float | None = None) -> BaseCha
             credentials["base_url"] = settings.openai_base_url
         # Transient gateway errors (5xx timeouts) retry with the openai
         # client; a long agent conversation tolerates the added latency.
+        # Streaming keeps bytes flowing so the gateway's ~90s no-response
+        # proxy ceiling never fires: a persona call generating 2-3k tokens
+        # ran 305s streamed where every non-streamed attempt 504'd
+        # (verified 2026-10-27 against the real gateway). The token cap
+        # bounds a degenerate streamed generation (one looped to 386KB of
+        # carriage returns) so the _invoke retry takes over instead of a
+        # runaway — 32k left room for the largest lawful output (the
+        # analyst's one-call batch: RAW+AR+latent+assumptions+conflicts)
+        # which truncated at 16k on the real run of 2026-10-27.
         return ChatOpenAI(
             model=name,
             temperature=temperature,
             max_retries=default_registry().max_retries,
+            max_tokens=32768,
+            streaming=True,
             **credentials,
         )
     if provider == "anthropic":
@@ -80,5 +85,5 @@ def get_chat_model(role: str, config: Mapping[str, Any] | None = None) -> BaseCh
 
 
 def reset_model_cache() -> None:
-    """Drop the cached models; each test run starts with fresh fake counters."""
+    """Drop the cached models; each run (and test) starts with fresh ones."""
     _model_cache.clear()

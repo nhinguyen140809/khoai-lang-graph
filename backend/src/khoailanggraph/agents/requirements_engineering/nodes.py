@@ -27,16 +27,26 @@ from collections.abc import Callable, Mapping
 from functools import wraps
 from typing import TYPE_CHECKING, Any, TypeVar, cast
 
+import structlog
 from langchain_core.runnables import RunnableConfig
 from langgraph.types import interrupt
 from pydantic import BaseModel
 
 from khoailanggraph.agents import prompts as prompt_loader
 from khoailanggraph.agents.requirements_engineering import orchestrator
+from khoailanggraph.agents.requirements_engineering.decisions import (
+    AppliedDecision,
+    DecisionResult,
+    DecisionSpec,
+    apply_confidence_policy,
+    policy_from_environment,
+    run_decision,
+)
 from khoailanggraph.agents.requirements_engineering.definition import (
     agent_roles as definition_agent_roles,
 )
 from khoailanggraph.agents.requirements_engineering.definition import nodes as definition_nodes
+from khoailanggraph.agents.requirements_engineering.definition import value_lists as get_value_lists
 from khoailanggraph.agents.requirements_engineering.outputs import (
     AnalystOutput,
     BacklogOutput,
@@ -70,11 +80,37 @@ if TYPE_CHECKING:
 
 PROMPTS_PACKAGE = "khoailanggraph.agents.requirements_engineering"
 
+# One degenerate streamed generation retries fresh twice before failing.
+_LLM_PARSE_ATTEMPTS = 3
+
+logger = structlog.get_logger(__name__)
+
 _T = TypeVar("_T", bound=BaseModel)
 NodeFn = Callable[..., dict[str, Any]]
 
 ItemRefDict = dict[str, Any]
 Known = dict[str, ItemRefDict]
+
+
+def _log_decision(
+    node: str,
+    decision_id: str,
+    result: DecisionResult,
+    applied: list[AppliedDecision],
+    extra: str,
+) -> None:
+    """One structured log line per gate decision — the observability of the
+    decision layer: provider, per-spec action, fallback, latency."""
+    logger.info(
+        "decision",
+        node=node,
+        decision_id=decision_id,
+        provider=result.provider,
+        fallback_used=result.fallback_used,
+        latency_ms=round(result.latency_ms, 1),
+        applied=[item.model_dump(mode="json") for item in applied],
+        summary=extra,
+    )
 
 
 # ---------------------------------------------------------------------------
@@ -134,11 +170,31 @@ def _invoke[T: BaseModel](
     prompt = prompt_loader.load_cached(PROMPTS_PACKAGE, role, int(entry["prompt_version"]))
     messages = prompt_loader.assemble_prompt(prompt, prompt_values)
     model: BaseChatModel = get_chat_model(role, config)
-    answer = model.with_structured_output(schema).invoke(messages)
-    if not isinstance(answer, schema):
-        msg = f"{role} returned {type(answer).__name__}, expected {schema.__name__}"
-        raise TypeError(msg)
-    return answer
+    # A streamed generation can degenerate (a repetition loop that ends in a
+    # truncated, unparseable tool call — seen as 386KB of junk on the real
+    # gateway 2026-10-27). One fresh attempt is almost always clean, so a bad
+    # parse retries instead of failing the whole run.
+    last_error: Exception | None = None
+    for attempt in range(_LLM_PARSE_ATTEMPTS):
+        try:
+            answer = model.with_structured_output(schema).invoke(messages)
+            if not isinstance(answer, schema):
+                msg = f"{role} returned {type(answer).__name__}, expected {schema.__name__}"
+                raise TypeError(msg)
+            return answer
+        except Exception as exc:
+            last_error = exc
+            if attempt < _LLM_PARSE_ATTEMPTS - 1:
+                logger.warning(
+                    "llm retry",
+                    role=role,
+                    attempt=attempt + 1,
+                    error=f"{type(exc).__name__}: {str(exc)[:200]}",
+                )
+    if last_error is None:  # unreachable: the loop always ran at least once
+        msg = f"{role} produced no answer"
+        raise RuntimeError(msg)
+    raise last_error
 
 
 # ---------------------------------------------------------------------------
@@ -180,15 +236,38 @@ def _plan_term(value: str) -> str:
     return value.strip().strip(".,;:").casefold()
 
 
+_WORD_MIN = 4
+_PARAPHRASE_THRESHOLD = 0.7
+
+
+def _content_words(text: str) -> frozenset[str]:
+    """The content words of a plan term: 4+ letters, simple plural stemming."""
+    return frozenset(
+        (w if len(w) <= _WORD_MIN else w.removesuffix("s"))
+        for w in text.replace(".", " ").replace(",", " ")
+        .replace("(", " ").replace(")", " ").split()
+        if len(w) >= _WORD_MIN
+    )
+
+
 def match_plan_value(value: str, allowed: list[str]) -> str | None:
     """The plan term `value` stands for, verbatim; None when it matches none.
 
     The controlled vocabulary of the plan is the one the artifacts must
-    reuse. A model that names the term exactly comes back untouched; one
-    that decorates it ("Students (commuter and resident) ...") resolves to
-    the longest plan term the wording contains; a true stranger stays
-    None so the caller can reject it honestly. Sentence punctuation around
-    either side never decides the match.
+    reuse. Five matching tiers, from strict to tolerant:
+
+    1. Verbatim — the value is exactly a plan term.
+    2. Casefold + punctuation — the same words, different case or period.
+    3. Decoration — the plan term appears inside the value's wording.
+    4. Shortening — the value is inside a plan term, keeping at least
+       half its words (a dropped parenthetical or trailing clause).
+    5. Paraphrase — the value and the plan term share at least 70% of
+       their content words (with simple plural stemming). A model may
+       reorder or drop words while keeping the topic's meaning.
+
+    A value matching none of these stays None so the caller can reject it
+    honestly. Sentence punctuation around either side never decides the
+    match.
     """
     if value in allowed:
         return value
@@ -205,6 +284,31 @@ def match_plan_value(value: str, allowed: list[str]) -> str | None:
     best_term, best_candidate = best_pair
     if best_candidate and best_candidate in lowered:
         return best_term
+    containing = [
+        (original, candidate)
+        for original, candidate in candidates
+        if lowered and candidate and lowered in candidate
+        and len(lowered.split()) * 2 >= len(candidate.split())
+    ]
+    if containing:
+        return max(containing, key=lambda pair: len(pair[1]))[0]
+    # Paraphrase: word overlap with simple stemming — the model reworded
+    # the term but kept most of its content words.
+    if lowered:
+        value_words = _content_words(lowered)
+        best_overlap, best_original = 0.0, None
+        for original, candidate in candidates:
+            if not candidate:
+                continue
+            term_words = _content_words(candidate)
+            if not term_words:
+                continue
+            overlap = len(value_words & term_words) / len(term_words)
+            if overlap > best_overlap:
+                best_overlap = overlap
+                best_original = original
+        if best_original is not None and best_overlap >= _PARAPHRASE_THRESHOLD:
+            return best_original
     return None
 
 
@@ -478,18 +582,23 @@ def stakeholder_miner_node(
             },
         )
         for mined in draft.observations:
-            ref_number += 1
             if str(mined.source) != str(record["key"]):
-                msg = (
-                    f"observation '{mined.dimension}' cites source "
-                    f"'{mined.source}', but was mined from '{record['key']}'"
+                logger.warning(
+                    "miner observation skipped: wrong source",
+                    dimension=str(mined.dimension),
+                    cites=str(mined.source),
+                    actual=str(record["key"]),
                 )
-                raise ValueError(msg)
+                continue
             if mined.evidence not in document:
-                msg = (
-                    f"observation '{mined.dimension}' does not quote {record['key']} word for word"
+                logger.warning(
+                    "miner observation skipped: evidence not verbatim",
+                    dimension=str(mined.dimension),
+                    evidence=str(mined.evidence)[:100],
+                    source=str(record["key"]),
                 )
-                raise ValueError(msg)
+                continue
+            ref_number += 1
             item = sink.add_item(
                 corpus["artifact_id"],
                 "stakeholder_observation",
@@ -596,7 +705,14 @@ def persona_generator_node(
     if plan_record is not None:
         plan_content = cast("dict[str, list[str]]", plan_record["content"])
         allowed = plan_content.get("stakeholder_types", [])
-        outside = [value for value in draft.uncovered_stakeholder_types if value not in allowed]
+        # Same tolerant matching as the personas themselves: the model phrases
+        # a plan term without its sentence punctuation ("…staff" for the
+        # plan's "…staff."), and punctuation must not decide the match.
+        outside = [
+            value
+            for value in draft.uncovered_stakeholder_types
+            if match_plan_value(value, allowed) is None
+        ]
         if outside:
             msg = f"personas listed unknown stakeholder types: {outside}"
             raise ValueError(msg)
@@ -626,12 +742,17 @@ def persona_generator_node(
         if allowed:
             matched = match_plan_value(str(content.get("stakeholder_type", "")), allowed)
             if matched is None:
-                msg = (
-                    f"persona '{content.get('name', '?')}': stakeholder_type "
-                    f"'{content.get('stakeholder_type')}' matches none of the "
-                    "plan's stakeholder_types"
+                # The plan's stakeholder_types are the lawful vocabulary: a
+                # persona typed outside it is skipped (logged) — the evidence
+                # may be real (e.g. parents in the uploaded document) but the
+                # plan didn't list it, so the persona doesn't enter the store.
+                logger.warning(
+                    "persona skipped: stakeholder_type outside plan",
+                    name=str(content.get("name", "?")),
+                    stakeholder_type=str(content.get("stakeholder_type", "")),
+                    plan_types=sorted(allowed),
                 )
-                raise ValueError(msg)
+                continue
             content["stakeholder_type"] = matched
         content["interview_status"] = "not_started"
         item = sink.add_item(catalog["artifact_id"], "persona", content, ref=persona_draft.ref)
@@ -755,7 +876,59 @@ def interviewer_node(
             },
         )
 
-        if turn.stop:
+        # Gate point 1/3 — interview_turn_policy: the bounded decision layer
+        # (Jev/mock via DECISION_PROVIDER, off by default) may stop an
+        # interview earlier than the interviewer's own `stop`, never later.
+        done_spec = DecisionSpec(
+            name="persona_complete",
+            kind="noul",
+            criteria=(
+                "this persona's answers substantially cover the elicitation-plan "
+                "topics and information gaps they can speak to; remaining gaps "
+                "belong to other personas or later rounds"
+            ),
+            default=turn.stop,
+        )
+        decision_result = run_decision(
+            "interview_turn_policy",
+            {
+                "persona": {
+                    "key": persona["key"],
+                    "name": persona["content"].get("name"),
+                    "stakeholder_type": persona["content"].get("stakeholder_type"),
+                },
+                "transcript": [
+                    {
+                        "role": entry["content"]["role"],
+                        "content": entry["content"]["content"],
+                    }
+                    for entry in messages[-TRANSCRIPT_TAIL:]
+                ],
+                "plan_topics": (plan_content.get("topics", []) if plan_record is not None else []),
+                "turn": turn_no,
+                "max_turns": cfg.parameters.max_turns,
+                "llm_stop": turn.stop,
+                "llm_question": turn.question,
+            },
+            [done_spec],
+        )
+        stop = bool(turn.stop)
+        if decision_result is not None:
+            applied = apply_confidence_policy(
+                decision_result, done_spec, turn.stop, policy_from_environment()
+            )
+            verdict = decision_result.value("persona_complete")
+            if verdict is not None and applied.action in {"auto", "applied_unrated"}:
+                stop = stop or bool(verdict)
+            _log_decision(
+                "interviewer",
+                "interview_turn_policy",
+                decision_result,
+                [applied],
+                f"persona {persona['key']} llm_stop={turn.stop} final_stop={stop}",
+            )
+
+        if stop:
             closed = sink.update_artifact_content(
                 transcript["artifact_id"],
                 dict(transcript["content"])
@@ -851,6 +1024,90 @@ def persona_agent_node(
 # The analyst and the rework control node
 
 
+def _normalize_raw_topics(analysis: AnalystOutput, plan_topic_values: list[str]) -> None:
+    """The plan's topics are the lawful vocabulary of a raw requirement's
+    topic; the model's phrasing resolves to the plan term, and a topic
+    matching none becomes None — the field is optional, an unresolvable
+    phrasing loses the linkage rather than failing the whole run."""
+    for draft in analysis.raw_requirements:
+        if draft.topic and plan_topic_values:
+            matched = match_plan_value(draft.topic, plan_topic_values)
+            if matched is not None:
+                draft.topic = matched
+            else:
+                logger.warning(
+                    "analyst topic dropped",
+                    ref=str(draft.ref),
+                    dropped=str(draft.topic),
+                    note="no plan topic matched; topic is optional (str | None)",
+                )
+                draft.topic = None
+
+
+# Valid target kinds per link field, from definition.v3.json link_types.
+_PERSONA = frozenset({"persona"})
+_MSG = frozenset({"interview_message"})
+_REQ_LEVEL = frozenset({"raw_requirement", "analyzed_requirement", "spec_requirement"})
+_AR_OR_RAW = frozenset({"raw_requirement", "latent_need"})
+
+
+def _normalize_analyzed_quality(analysis: AnalystOutput) -> None:
+    """quality_category is an optional enum: a model value outside the
+    value list becomes None (the field is str | None in the schema)."""
+    allowed = frozenset(
+        str(entry["key"]) for entry in get_value_lists().get("quality_category", [])
+    )
+    if not allowed:
+        return
+    for analyzed_draft in analysis.analyzed_requirements:
+        if (analyzed_draft.quality_category
+                and str(analyzed_draft.quality_category) not in allowed):
+            logger.warning(
+                "analyst quality_category normalized",
+                ref=str(analyzed_draft.ref),
+                dropped=str(analyzed_draft.quality_category),
+                note="value outside the quality_category value list",
+            )
+            analyzed_draft.quality_category = None
+
+
+def _normalize_analyst_links(analysis: AnalystOutput, known: Known) -> None:
+    """Drop link refs whose target kind the trace law doesn't allow for
+    that field — a model citing a latent_need in concerns is over-citing."""
+    for latent in analysis.latent_needs:
+        latent.involves = _keep_valid(latent.involves, known, _PERSONA)
+    for ar in analysis.analyzed_requirements:
+        ar.derived_from = _keep_valid(ar.derived_from, known, _AR_OR_RAW)
+        ar.involves = _keep_valid(ar.involves, known, _PERSONA)
+    for assumption in analysis.assumptions:
+        assumption.concerns = _keep_valid(assumption.concerns, known, _REQ_LEVEL)
+    for ambiguity in analysis.ambiguity_issues:
+        ambiguity.concerns = _keep_valid(ambiguity.concerns, known, _REQ_LEVEL)
+    for conflict in analysis.conflicts:
+        conflict.concerns = _keep_valid(conflict.concerns, known, _REQ_LEVEL)
+        conflict.involves = _keep_valid(conflict.involves, known, _PERSONA)
+
+
+def _keep_valid(
+    references: list[str],
+    known: Known,
+    valid_kinds: frozenset[str],
+) -> list[str]:
+    kept = [
+        str(ref)
+        for ref in references
+        if known.get(str(ref), {}).get("kind") in valid_kinds
+    ]
+    dropped = [str(ref) for ref in references if str(ref) not in kept]
+    if dropped:
+        logger.warning(
+            "analyst link refs filtered",
+            dropped=dropped,
+            valid_kinds=sorted(valid_kinds),
+        )
+    return kept
+
+
 @safe_node
 def analyst_node(
     state: REState,
@@ -875,8 +1132,10 @@ def analyst_node(
     )
     plan_record = sink.read_artifact(state["project_id"], "elicitation_plan")
     topics = ""
+    plan_topic_values: list[str] = []
     if plan_record is not None:
         plan_topics = cast("dict[str, list[str]]", plan_record["content"])["topics"]
+        plan_topic_values = list(plan_topics)
         topics = "\n".join(plan_topics)
 
     analysis_record = sink.read_artifact(state["project_id"], "requirements_analysis")
@@ -941,6 +1200,10 @@ def analyst_node(
         known[str(item["key"])] = item
         refs[slot].append(item)
         return item
+
+    _normalize_raw_topics(analysis, plan_topic_values)
+    _normalize_analyst_links(analysis, known)
+    _normalize_analyzed_quality(analysis)
 
     for draft in analysis.raw_requirements:
         item = write(
@@ -1063,6 +1326,51 @@ def rework_elicitation_node(
     return {"rework_directives": [directive_id], "current_stage": "rework_planning"}
 
 
+def _normalize_engineer_quality(draft: EngineerOutput) -> None:
+    """quality_category is an optional enum (value list): a model value outside
+    the list becomes None — same normalization the analyst already applies."""
+    allowed = frozenset(
+        str(entry["key"]) for entry in get_value_lists().get("quality_category", [])
+    )
+    if not allowed:
+        return
+    for spec_draft in draft.requirements:
+        if (spec_draft.quality_category
+                and str(spec_draft.quality_category) not in allowed):
+            logger.warning(
+                "engineer quality_category normalized",
+                ref=str(spec_draft.ref),
+                dropped=str(spec_draft.quality_category),
+            )
+            spec_draft.quality_category = None
+
+
+def _normalize_engineer_derived_from(draft: EngineerOutput, known: Known) -> None:
+    """Keep derived_from lawful: only analyzed_requirement refs.
+
+    The trace law allows derived_from only between spec_requirement and
+    analyzed_requirement. The engineer sometimes cites a latent need it
+    promoted into a requirement — a ref of another kind is dropped (logged)
+    as long as at least one AR ref remains; a requirement with no AR ref
+    at all still fails honestly.
+    """
+    for spec_draft in draft.requirements:
+        lawful = [
+            str(ref)
+            for ref in spec_draft.derived_from
+            if known.get(str(ref), {}).get("kind") == "analyzed_requirement"
+        ]
+        dropped = [str(ref) for ref in spec_draft.derived_from if str(ref) not in lawful]
+        if dropped:
+            logger.warning(
+                "engineer derived_from normalized",
+                requirement=str(spec_draft.ref),
+                dropped=dropped,
+                kept=lawful,
+            )
+            spec_draft.derived_from = lawful
+
+
 @safe_node
 def requirement_engineer_node(
     state: REState,
@@ -1125,6 +1433,90 @@ def requirement_engineer_node(
             "directive": _directive_for(state, runnable_config, "checkpoint_spec"),
         },
     )
+
+    _normalize_engineer_quality(draft)
+
+    # Gate point 2/3 — spec_type_priority_review: the bounded decision layer
+    # (Jev/mock via DECISION_PROVIDER, off by default) reviews every
+    # requirement's type and priority; high-confidence answers replace the
+    # engineer's, low-confidence ones keep them, very low ones flag review.
+    decision_specs: list[DecisionSpec] = []
+    for index, spec_draft in enumerate(draft.requirements):
+        decision_specs.append(
+            DecisionSpec(
+                name=f"req_{index + 1:03d}_type",
+                kind="choice",
+                options=[
+                    {"value": "functional", "what": "a behaviour the system does"},
+                    {"value": "non_functional", "what": "a quality the system must hold"},
+                    {"value": "constraint", "what": "a limit the design must respect"},
+                ],
+                default=spec_draft.type,
+            )
+        )
+        decision_specs.append(
+            DecisionSpec(
+                name=f"req_{index + 1:03d}_priority",
+                kind="choice",
+                options=[
+                    {"value": "must", "what": "non-negotiable for launch"},
+                    {"value": "should", "what": "important but deferrable"},
+                    {"value": "could", "what": "nice to have"},
+                    {"value": "wont", "what": "explicitly out of scope this release"},
+                ],
+                default=spec_draft.priority,
+            )
+        )
+    decision_applied: dict[str, AppliedDecision] = {}
+    decision_result = (
+        run_decision(
+            "spec_type_priority_review",
+            {
+                "requirements": [
+                    {
+                        "ref": spec_draft.ref,
+                        "title": spec_draft.title,
+                        "statement": spec_draft.statement,
+                        "llm_type": spec_draft.type,
+                        "llm_priority": spec_draft.priority,
+                        "acceptance_criteria": spec_draft.acceptance_criteria,
+                    }
+                    for spec_draft in draft.requirements
+                ],
+                "scope": draft.scope,
+                "out_of_scope": draft.out_of_scope,
+            },
+            decision_specs,
+        )
+        if decision_specs
+        else None
+    )
+    if decision_result is not None:
+        policy = policy_from_environment()
+        for spec in decision_specs:
+            decision_applied[spec.name] = apply_confidence_policy(
+                decision_result, spec, spec.default, policy
+            )
+        for index, spec_draft in enumerate(draft.requirements):
+            type_choice = decision_applied.get(f"req_{index + 1:03d}_type")
+            if type_choice is not None and type_choice.action in {"auto", "applied_unrated"}:
+                spec_draft.type = type_choice.chosen
+            priority_choice = decision_applied.get(f"req_{index + 1:03d}_priority")
+            if priority_choice is not None and priority_choice.action in {
+                "auto",
+                "applied_unrated",
+            }:
+                spec_draft.priority = priority_choice.chosen
+        _log_decision(
+            "requirement_engineer",
+            "spec_type_priority_review",
+            decision_result,
+            list(decision_applied.values()),
+            f"{decision_result.provider} reviewed type/priority of "
+            f"{len(draft.requirements)} requirement(s)",
+        )
+
+    _normalize_engineer_derived_from(draft, known)
 
     if spec_record is not None:
         ref = sink.update_artifact_content(
@@ -1296,6 +1688,69 @@ def validator_node(
         },
     )
 
+    # Gate point 3/3 — validation_status_review: the bounded decision layer
+    # (Jev/mock via DECISION_PROVIDER, off by default) reviews the validator's
+    # verdict; a high-confidence override can pass or fail the run, a
+    # low-confidence one keeps the LLM's, a very low one flags human review.
+    status_spec = DecisionSpec(
+        name="validation_passes",
+        kind="noul",
+        criteria=(
+            "taken together, the artifacts satisfy all nine validation dimensions "
+            "(completeness, consistency, ambiguity, correctness, feasibility, "
+            "testability, traceability, stakeholder coverage, conflicts) — true passes"
+        ),
+        default=(draft.status == "pass"),
+    )
+    human_spec = DecisionSpec(
+        name="needs_human_attention",
+        kind="noul",
+        criteria=(
+            "the validation verdict is close, contested or consequential enough "
+            "that a human reviewer should look at it before it is accepted"
+        ),
+        default=False,
+    )
+    decision_result = run_decision(
+        "validation_status_review",
+        {
+            "llm_verdict": draft.status,
+            "llm_issues": [
+                {
+                    "category": issue.category,
+                    "severity": issue.severity,
+                    "description": issue.description,
+                }
+                for issue in draft.issues
+            ],
+            "requirement_count": len(spec_items),
+            "backlog_count": len(backlog_items),
+            "iteration_count": iteration,
+        },
+        [status_spec, human_spec],
+    )
+    final_status = draft.status
+    status_applied: AppliedDecision | None = None
+    human_applied: AppliedDecision | None = None
+    if decision_result is not None:
+        policy = policy_from_environment()
+        status_applied = apply_confidence_policy(decision_result, status_spec, final_status, policy)
+        human_applied = apply_confidence_policy(decision_result, human_spec, False, policy)
+        verdict = decision_result.value("validation_passes")
+        if status_applied.action in {"auto", "applied_unrated"} and verdict is not None:
+            final_status = "pass" if verdict else "fail"
+        applied_items = [item for item in (status_applied, human_applied) if item is not None]
+        bits = [f"llm={draft.status}", f"final={final_status}"]
+        if human_applied is not None and human_applied.needs_human:
+            bits.append("flagged for human attention")
+        _log_decision(
+            "validator",
+            "validation_status_review",
+            decision_result,
+            applied_items,
+            f"{decision_result.provider} reviewed the validation verdict ({' · '.join(bits)})",
+        )
+
     known: Known = {
         entry["key"]: {
             "item_id": entry["item_id"],
@@ -1305,11 +1760,28 @@ def validator_node(
         }
         for entry in spec_items + backlog_items
     }
+    # validation_category is an enum (value list): a model value outside the
+    # list maps to the closest stage word — the field is required (str).
+    _vc_allowed = frozenset(
+        str(entry["key"]) for entry in get_value_lists().get("validation_category", [])
+    )
+    if _vc_allowed:
+        for issue in draft.issues:
+            if str(issue.category) not in _vc_allowed:
+                original = str(issue.category)
+                matched = match_plan_value(original, sorted(_vc_allowed))
+                issue.category = matched if matched is not None else "specification"
+                logger.warning(
+                    "validator category normalized",
+                    ref=str(issue.ref),
+                    dropped=original,
+                    mapped=str(issue.category),
+                )
     report = sink.create_artifact(
         state["project_id"],
         "validation_report",
         title=f"Validation report, iteration {iteration}",
-        content={"iteration": iteration, "status": draft.status},
+        content={"iteration": iteration, "status": final_status},
         summary=f"{len(draft.issues)} issue(s)",
     )
     for issue in draft.issues:
@@ -1322,13 +1794,24 @@ def validator_node(
             ref=issue.ref,
         )
         item = dict(item_ref)
-        _link_each(sink, str(item["item_id"]), "flags", known, issue.flags)
+        # flags cite item keys: a model word that isn't a key is dropped
+        # (logged) — the model sometimes writes a topic word like "backlog"
+        # instead of a specific item key such as "US-001".
+        _valid_flags = [f for f in issue.flags if str(f) in known]
+        _dropped_flags = [f for f in issue.flags if str(f) not in _valid_flags]
+        if _dropped_flags:
+            logger.warning(
+                "validator flags normalized",
+                issue_ref=str(issue.ref),
+                dropped=_dropped_flags,
+            )
+        _link_each(sink, str(item["item_id"]), "flags", known, _valid_flags)
 
     updates: dict[str, Any] = {
         "validation_report": dict(report),
         "iteration_count": iteration,
     }
-    if draft.status == "pass":
+    if final_status == "pass":
         updates["status"] = "succeeded"
         updates["current_stage"] = "done"
     elif iteration >= cfg.parameters.max_iterations:
@@ -1337,7 +1820,7 @@ def validator_node(
         updates["current_stage"] = "done"
     else:
         updates["current_stage"] = "validation"
-    return {**updates, "response_validator_status": draft.status}
+    return {**updates, "response_validator_status": final_status}
 
 
 # ---------------------------------------------------------------------------

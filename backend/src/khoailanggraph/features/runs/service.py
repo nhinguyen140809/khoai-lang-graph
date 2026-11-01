@@ -1,17 +1,17 @@
-"""Run creation + the demo executor: message POST, the runs shim, and the
+"""Run creation + the executor: message POST, the runs shim, and the
 background task that walks the whole 15-node workflow through the DB sink
-(§5 run lifecycle). On the dev SQLite demo the executor runs the workflow
-with the roles pointed at `fake:demo` and writes artifacts, items, links,
-steps and events as it goes — the same walk Phase C proves in-process, now
-persisted, and serving the shapes the reads (runs, steps, search, SSE) answer
-from.
+(§5 run lifecycle). The executor runs the workflow with the roles resolved
+per `config/models.yaml` against the gateway and writes artifacts, items,
+links, steps and events as it goes — the same walk Phase C proves
+in-process, now persisted, and serving the shapes the reads (runs, steps,
+search, SSE) answer from.
 
-The executor is deliberately synchronous-inline for the demo: POST /messages
-answers with {message, run} of a run in `queued`, runs the graph to completion
-(or to its first interrupt) before answering — good enough for the API
-contract and dramatically simpler than task infrastructure; the async-polling
-SSE endpoint replays over the events the run already recorded. A later change
-moves the walk into a background thread without touching this contract.
+The executor is deliberately synchronous-inline: POST /messages answers with
+{message, run} of a run in `queued`, runs the graph to completion (or to its
+first interrupt) before answering — good enough for the API contract and
+dramatically simpler than task infrastructure; the async-polling SSE endpoint
+replays over the events the run already recorded. A later change moves the
+walk into a background thread without touching this contract.
 """
 
 from __future__ import annotations
@@ -25,7 +25,6 @@ from sqlalchemy import func, select
 from sqlalchemy.orm import Session, sessionmaker  # noqa: TC002 - runtime types
 
 from khoailanggraph.agents.requirements_engineering import definition as workflow_definition
-from khoailanggraph.agents.requirements_engineering.definition import agent_roles
 from khoailanggraph.agents.requirements_engineering.graph import build_re_graph
 from khoailanggraph.agents.requirements_engineering.state import make_initial_state
 from khoailanggraph.api.errors import ApiError
@@ -51,7 +50,6 @@ from khoailanggraph.features.runs.models import (
 
 WF_NAME = "requirements_engineering"
 WF_VERSION = workflow_definition.WORKFLOW_VERSION
-FALLBACK_ROLE_MODEL = "fake:demo"
 
 
 def utcnow() -> datetime:
@@ -93,14 +91,8 @@ DEFAULT_RUN_CONFIG: dict[str, Any] = {
 
 
 def role_models() -> dict[str, str]:
-    """The per-role model map of a run.
-
-    Demo mode pins every role to the keyless fake provider; with
-    `DEMO_MODE=false` the map is empty and each role resolves through
-    `config/models.yaml` (defaults/roles) against the gateway env keys.
-    """
-    if get_settings().demo_mode:
-        return {role: FALLBACK_ROLE_MODEL for role in sorted(agent_roles())}
+    """The per-role model map of a run: empty — each role resolves through
+    `config/models.yaml` (defaults/roles) against the gateway env keys."""
     return {}
 
 
@@ -211,7 +203,7 @@ def start_run_blocking(
     config: dict[str, Any],
     started_by_message: UUID | None = None,
 ) -> None:
-    """Run the whole workflow through the DB sink (executor demo, §5 runs).
+    """Run the whole workflow through the DB sink (the executor, §5 runs).
 
     Writes the RunRow + every step + event onto the sync engine in one worker
     thread, so the async app either awaits or replays what this recorded.
@@ -337,7 +329,7 @@ def start_run_blocking(
         except Exception as exc:
             run.status = "failed"
             run.error_code = "provider_error"
-            run.error_message = f"exec demo run: {exc}"
+            run.error_message = f"run executor: {exc}"
         failed_node = result["final"].get("failed_node")
         for sequence, node_label in step_rows:
             session.add(

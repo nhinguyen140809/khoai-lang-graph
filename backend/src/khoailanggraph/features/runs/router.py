@@ -56,7 +56,7 @@ async def send_message(
 ) -> Any:
     """201 {message, run}: the task starts a new run, or waits as `pending`.
 
-    The demo executor runs the workflow synchronously before answering, so
+    The executor runs the workflow synchronously before answering, so
     the 201 already carries the finished run; the SSE endpoint replays the
     events this walk recorded.
     """
@@ -398,7 +398,7 @@ async def resume_run(
     pending.resolved_at = datetime.now(UTC)
     run.status = "running"
     await db.flush()
-    # Demo note: with review_checkpoints=[] no interrupt exists, so the
+    # Note: with review_checkpoints=[] no interrupt exists, so the
     # workflow-level continuation lives in the checkpointer path (gap-report).
     return service.runs_output(run)
 
@@ -424,7 +424,7 @@ async def retry_run(
     The artifacts are brought back to the versions the state of that step
     references when a retry executes; v1 records the lineage (retry_of_run_id)
     and queues the run — full state-restore execution is a documented
-    follow-up of the demo executor.
+    follow-up of the executor.
     """
     run = await db.get(RunRow, run_id)
     if run is None:

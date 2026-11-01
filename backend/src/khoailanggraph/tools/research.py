@@ -9,14 +9,13 @@ queries the node built from the plan and returns raw search hits:
     [{"title": ..., "url": ..., "publisher": ..., "year": ..., "text": ...}]
 
 Plain data the corpus_builder prompt receives inside `<search_results>`; the
-node treats it as data, never as instructions. Two implementations: the demo
-tool serves fixed documents offline (keyless runs and tests), the Tavily tool
-calls the real API with the `TAVILY_API_KEY` of `.env` — never committed.
+node treats it as data, never as instructions. Two implementations: the Tavily
+tool calls the real API with the `TAVILY_API_KEY` of `.env` — never committed —
+and the keyless chain (DuckDuckGo HTML, then Wikipedia) serves without a key.
 """
 
 from __future__ import annotations
 
-import copy
 import html
 import json
 import re
@@ -34,96 +33,6 @@ ResearchSearch = Callable[[Sequence[str]], list[dict[str, Any]]]
 
 _HITS_PER_QUERY = 8
 _TAVILY_URL = "https://api.tavily.com/search"
-
-
-# The offline corpus of the mentor platform scenario — the same texts the
-# demo dataset's miner and generator fixtures quote, so the verbatim-evidence
-# gates hold end to end on a keyless run.
-DEMO_SEARCH_HITS: list[dict[str, Any]] = [
-    {
-        "title": "Survey: what students want from campus mentoring",
-        "url": "https://forum.example.edu/threads/mentoring-survey",
-        "publisher": "University student forum",
-        "year": "2025",
-        "text": (
-            "We asked 240 students about mentoring platforms. Undergraduates "
-            "overwhelmingly want a simple, fast interface: 61% said they would "
-            "stop using a tool that needs more than a few taps to book a chat. "
-            "Students also worry about visibility: \"I don't want my career "
-            'questions visible to everyone," wrote one third-year respondent. '
-            'Several complained that mentees get no reply from mentors: "I '
-            'messaged five mentors and heard back from one."'
-        ),
-    },
-    {
-        "title": "Volunteer mentors on why they quit coaching programs",
-        "url": "https://engineering-blogs.example.org/mentoring-workload",
-        "publisher": "Engineering blog collective",
-        "year": "2024",
-        "text": (
-            "Mentors volunteer about two hours a week and guard that budget "
-            "closely. The strongest recurring complaint is low-effort requests: "
-            '"Spam requests with no agenda make me decline everything," one '
-            "senior engineer reported. Several asked for a clear agenda before "
-            'each session and an easy way to decline: "If I cannot say no '
-            'without an awkward exchange, I just stop logging in." Others '
-            "warned that students treat mentoring as a homework service: "
-            '"Some mentees want solutions handed over, not guidance."'
-        ),
-    },
-    {
-        "title": "Running a university platform: safety, verification, reporting",
-        "url": "https://it-policy.example.edu/reports/mvp-platform-oversight",
-        "publisher": "University IT policy office",
-        "year": "2025",
-        "text": (
-            "Every mentoring profile must be verified before it goes live. "
-            "Administrators require approval workflows, audit reports, and "
-            'usage reports each semester: "I will not approve the platform '
-            'without verification and reporting," the review states. '
-            "Moderation staffing is thin, so unmoderated interactions are the "
-            "main risk: sessions should at least be reportable, and every "
-            "rule should be written down."
-        ),
-    },
-    {
-        "title": "Mentor matching in three student projects: a field report",
-        "url": "https://teaching-centre.example.edu/reports/matching-field-report",
-        "publisher": "Teaching and learning centre",
-        "year": "2023",
-        "text": (
-            "Matching quality decides whether students come back. Students "
-            "judge mentors by field of study and career path first; a pool "
-            "that is too large causes choice paralysis. The report recommends "
-            'short mentor profiles and a bookmark list, because "students '
-            "who saved three candidates booked twice as often as those who "
-            'browsed without saving."'
-        ),
-    },
-    {
-        "title": "Vendor whitepaper: mentoring platform engagement metrics",
-        "url": "https://vendor.example.com/whitepapers/engagement",
-        "publisher": "Vendor marketing",
-        "year": "2024",
-        "text": (
-            "Our platform boosts engagement 300% through gamified badges and "
-            "streaks. Book a demo today to see how universities unlock "
-            "mentoring at scale. No campus interviews are quoted in this "
-            "document. This vendor page should not be selected as a research "
-            "document because it carries no stakeholder voice."
-        ),
-    },
-]
-
-
-def demo_research_search(queries: Sequence[str]) -> list[dict[str, Any]]:
-    """The offline answer: the fixture corpus, ignoring the queries.
-
-    Deterministic by design — every keyless run mines the same documents, so
-    the demo dataset's observation and persona fixtures stay in sync with the
-    stored source texts (the verbatim-evidence gates depend on it).
-    """
-    return copy.deepcopy(DEMO_SEARCH_HITS)
 
 
 def tavily_research_search(
@@ -173,16 +82,14 @@ def tavily_research_search(
 
 
 def make_research_search(settings: Settings) -> ResearchSearch:
-    """The run's search tool: the demo corpus in demo mode, else real search.
+    """The run's search tool: Tavily with a key, else the keyless live chain.
 
-    Live mode prefers Tavily (richer pages, needs `TAVILY_API_KEY` of .env)
-    and falls back to the keyless DuckDuckGo HTML endpoint, so a live run
-    needs no key anyone has to sign up for. Never None — a network failure
-    surfaces as an exception the safe node turns into a failed run (an
-    honest error, never a fabricated corpus).
+    Tavily serves richer pages (needs `TAVILY_API_KEY` of .env); without a
+    key the DuckDuckGo HTML endpoint — Wikipedia behind it — keeps every run
+    on real pages, no key anyone has to sign up for. Never None — a network
+    failure surfaces as an exception the safe node turns into a failed run
+    (an honest error, never a fabricated corpus).
     """
-    if settings.demo_mode:
-        return demo_research_search
     if settings.tavily_api_key:
         return lambda queries: tavily_research_search(
             queries, api_key=settings.tavily_api_key or ""

@@ -63,16 +63,49 @@ fixture projects plus one finished run for «Mentor platform». The CSRF
 rule accepts the application origins of `settings.csrf_allowed_origins`
 (the Next server on `:3000` by default) — see `gap-report.md` §1.1.
 
-`DEMO_MODE=true` (the default) pins every role to the keyless scripted
-`fake:demo` model — the whole 15-node walk replays the Mentor platform
-storyline without any API key. `DEMO_MODE=false` in `backend/.env` (with
-`OPENAI_BASE_URL` + `OPENAI_API_KEY`) answers chat runs with real models:
-`config/models.yaml` defaults to `openai:glm-5.2` through the BioTuring
-gateway (the vn endpoint for low latency), and a full real run takes
-minutes — the log pages in only when the whole workflow finishes (known
-follow-up §2.3 of `gap-report.md`). The test suite and the seed pin demo
-mode themselves (`tests/conftest.py`, `scripts/seed_demo.py`), so they
-never call a gateway whatever `.env` contains.
+Every role answers through a real model — `config/models.yaml` defaults to
+`openai:glm-5.2` through the BioTuring gateway (the vn endpoint for low
+latency), so `backend/.env` needs `OPENAI_BASE_URL` + `OPENAI_API_KEY`, and
+a full real run takes 15–45 minutes — the log pages in only when the whole
+workflow finishes (known follow-up §2.3 of `gap-report.md`). The research
+corpus is real too: DuckDuckGo's HTML endpoint with a Wikipedia fallback,
+keyless — Tavily when `TAVILY_API_KEY` is set. The test suite
+(`tests/conftest.py`) and the seed (`scripts/seed_demo.py`) install their
+own scripted model and fixture corpus at the same seams, so they never call
+a gateway whatever `.env` contains.
+
+## Decision layer (Jev)
+
+The three workflow gate points — should an interview stop
+(`interview_turn_policy`), does a spec have the right type/priority
+(`spec_type_priority_review`), did validation pass
+(`validation_status_review`) — consult a bounded, calibrated decision model
+(`agents/requirements_engineering/decisions.py`) before applying the LLM's
+own value. It is **off by default**; opt in through `backend/.env` (or the
+real environment — env vars outrank the file):
+
+```bash
+DECISION_PROVIDER=mock   # luôn đồng ý default của LLM — smoke-test, không cần gì thêm
+DECISION_PROVIDER=llm    # dùng CHÍNH gateway BioTuring (key OPENAI_* sẵn có)
+DECISION_PROVIDER=jev    # qua typesafe.ai — cần group dưới + TYPESAFE_API_KEY
+```
+
+`llm` hỏi gateway bằng câu hỏi bounded (chỉ chọn giá trị khai báo sẵn,
+không tự do diễn giải), mỗi câu trả lời không kèm confidence nên được áp
+dụng nguyên trạng (`applied_unrated`). Nhanh hơn hẳn khi ghép
+`DECISION_MODEL=openai:glm-5.2-No-Think` (mặc định dùng model default của
+`config/models.yaml`).
+
+`jev` cần SDK: `uv sync --group jev`, và client đọc `TYPESAFE_API_KEY` /
+`TYPESAFE_BASE_URL` từ môi trường. Thiếu SDK hoặc lỗi call → tự fallback
+theo `DECISION_FALLBACK` (default `mock`) với `fallback_used=True` trong
+log — không bao giờ crash run.
+
+High-confidence answers replace the LLM's (`auto`), mid-confidence keep
+them, very low confidence flag the decision for human review. Every
+decision logs one structured `decision` line (provider, per-spec action,
+fallback, latency). The thresholds are tunable: `DECISION_AUTO_CONFIDENCE`,
+`DECISION_REVIEW_CONFIDENCE`.
 
 ## Checks
 

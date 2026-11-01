@@ -36,6 +36,11 @@ dev = [
     "langchain-openai>=1.0",
     "langchain-anthropic>=1.0",
 ]
+# The bounded decision provider of the workflow gates (DECISION_PROVIDER=jev):
+# optional, so a default install works without it (falls back to mock).
+jev = [
+    "typesafe-sdk>=0.7",
+]
 
 [build-system]
 requires = ["hatchling"]
@@ -60,7 +65,7 @@ select = ["E", "F", "W", "I", "N", "UP", "B", "SIM", "RUF", "ASYNC", "S", "PL", 
 # would scatter the contract.
 "src/khoailanggraph/agents/requirements_engineering/ports.py" = ["PLR0913"]
 "src/khoailanggraph/agents/requirements_engineering/nodes.py" = ["PLR0915"]
-"src/khoailanggraph/llm/demo.py" = ["PLR0913", "PLR0917"]
+"tests/support/fake_data.py" = ["PLR0913", "PLR0917"]
 "tests/support/in_memory_sinks.py" = ["PLR0913"]
 "tests/test_workflow.py" = ["PLR0915"]
 # Migration files are Alembic-generated; their length is the schema itself.
@@ -74,7 +79,7 @@ select = ["E", "F", "W", "I", "N", "UP", "B", "SIM", "RUF", "ASYNC", "S", "PL", 
 # schema class is built; TYPE_CHECKING would 500 every response.
 "src/khoailanggraph/features/artifacts/schemas.py" = ["TC001"]
 "src/khoailanggraph/features/runs/schemas.py" = ["TC001", "TC003"]
-# The demo executor is one narrative worker; its wires are the §5 contract.
+# The run executor is one narrative worker; its wires are the §5 contract.
 "src/khoailanggraph/features/runs/service.py" = ["PLR0912", "PLR0913", "PLR0915", "PLR0917"]
 "src/khoailanggraph/features/runs/router.py" = ["PLC0415"]
 # The documents feature follows the same §5 contract shape as its siblings.
@@ -90,6 +95,12 @@ select = ["E", "F", "W", "I", "N", "UP", "B", "SIM", "RUF", "ASYNC", "S", "PL", 
 strict = true
 python_version = "3.12"
 plugins = ["pydantic.mypy"]
+
+[[tool.mypy.overrides]]
+# The optional jev provider (README.md: Decision layer): absent without
+# `uv sync --group jev`, present and typed when installed.
+module = ["typesafe_sdk.*"]
+ignore_missing_imports = true
 
 [tool.pytest.ini_options]
 testpaths = ["tests"]

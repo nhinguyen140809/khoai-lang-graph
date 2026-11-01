@@ -25,8 +25,8 @@ import json
 import re
 from typing import Any
 
-from khoailanggraph.llm.fake import DemoCalls
-from khoailanggraph.tools.research import DEMO_SEARCH_HITS
+from support.fake_llm import DemoCalls
+from support.fake_search import DEMO_SEARCH_HITS
 
 DEMO_INTENT = "I want to build an online platform for university students to find mentors."
 
@@ -310,11 +310,11 @@ def _mined(system: str, user: str, call_number: int) -> dict[str, Any]:
             row["source"] = key
         return {"observations": rows}
 
-    if "forum.example.edu" in user:
+    if "/wiki/Mentorship" in user:
         return _fixture("SRC-001")
-    if "engineering-blogs" in user:
+    if "/wiki/Youth_mentoring" in user:
         return _fixture("SRC-002")
-    if "it-policy" in user:
+    if "/wiki/E-mentoring" in user:
         return _fixture("SRC-003")
     if key not in _MINED_BY_SOURCE:
         raise LookupError(f"the demo miner has no fixture for source '{key}'")

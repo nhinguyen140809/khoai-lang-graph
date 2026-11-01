@@ -16,8 +16,10 @@ from typing import TYPE_CHECKING, cast
 from unittest.mock import patch
 
 import pytest
+from pydantic import BaseModel
 
 import khoailanggraph.llm.factory as llm_factory
+from khoailanggraph.agents.requirements_engineering import nodes
 
 if TYPE_CHECKING:
     from collections.abc import Generator
@@ -35,9 +37,9 @@ from khoailanggraph.agents.requirements_engineering.outputs import InterviewerTu
 from khoailanggraph.agents.requirements_engineering.state import REState, make_initial_state
 from khoailanggraph.domain import rules as domain_rules
 from khoailanggraph.llm import reset_model_cache
-from khoailanggraph.llm.demo import DEMO_INTENT, DemoData, _corpus, _mined, _personas
-from khoailanggraph.llm.fake import FakeChatModel
-from khoailanggraph.tools.research import demo_research_search
+from support.fake_data import DEMO_INTENT, DemoData, _corpus, _mined, _personas
+from support.fake_llm import FakeChatModel
+from support.fake_search import demo_research_search
 from support.in_memory_sinks import InMemoryArtifactSink, InMemoryDirectiveSink
 
 ROLES = sorted(agent_roles())
@@ -329,7 +331,10 @@ def test_research_gates_fail_the_run_at_the_lying_node() -> None:
             return answer
 
     cases = [
-        (DriftingQuotesData, "stakeholder_miner_node: ", "does not quote SRC-001 word for word"),
+        # Drifted quotes are now SKIPPED (logged) instead of crashing the
+        # miner; the observation never enters the store, so the persona
+        # generator fails when its fixture cites the skipped key.
+        (DriftingQuotesData, "persona_generator_node: ", "consolidates unknown observation key"),
         (InventedUrlsData, "corpus_builder_node: ", "selected invented documents"),
         (AlteredEvidenceData, "persona_generator_node: ", "altered the evidence quote of OBS-001"),
     ]
@@ -386,9 +391,7 @@ def test_uploaded_documents_lead_the_corpus_and_ground_the_persona() -> None:
     upload = by_url["upload://mentoring-inbox.md"]
     assert upload["content"]["origin"] == "upload"
     assert upload["content"]["text"] == upload_text
-    assert (
-        by_url["https://forum.example.edu/threads/mentoring-survey"]["content"]["origin"] == "web"
-    )
+    assert by_url["https://en.wikipedia.org/wiki/Mentorship"]["content"]["origin"] == "web"
 
     observations = [entry for entry in sink.items if entry["kind"] == "stakeholder_observation"]
     uploaded_obs = next(
@@ -427,3 +430,31 @@ def test_uploaded_documents_lead_the_corpus_and_ground_the_persona() -> None:
     reports = [a for a in sink.artifacts if a["kind"] == "validation_report"]
     assert len(reports) == 1
     assert reports[0]["content"]["status"] == "pass"
+
+
+def test_invoke_retries_a_degenerate_generation() -> None:
+    """A bad structured output (the streamed repetition loop of the real
+    gateway) retries fresh instead of failing the run (nodes._invoke)."""
+
+    class Probe(BaseModel):
+        answer: str
+
+    class FlakyModel:
+        calls = 0
+
+        def with_structured_output(self, _schema: type) -> FlakyModel:
+            return self
+
+        def invoke(self, _messages: object) -> Probe:
+            FlakyModel.calls += 1
+            if FlakyModel.calls == 1:
+                msg = "Invalid JSON: EOF while parsing an object"
+                raise ValueError(msg)
+            return Probe(answer="clean")
+
+    with patch.object(nodes, "get_chat_model", lambda _role, _cfg: FlakyModel()):
+        result = nodes._invoke(
+            "planner", {"configurable": {}}, Probe, {"output_language": "English", "intent": "test"}
+        )
+    assert result.answer == "clean"
+    assert FlakyModel.calls == 2

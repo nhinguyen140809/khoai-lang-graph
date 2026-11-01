@@ -16,11 +16,16 @@ ported to khoai-lang-graph).
 
 from __future__ import annotations
 
+import json
 import os
 import time
 from typing import Any, Literal, Protocol, runtime_checkable
 
 from pydantic import BaseModel
+
+from khoailanggraph.llm import factory as llm_factory
+from khoailanggraph.llm.registry import default_registry
+from khoailanggraph.settings import get_settings
 
 DecisionKind = Literal["noul", "choice"]
 
@@ -86,9 +91,7 @@ class AppliedDecision(BaseModel):
 
     name: str
     chosen: Any
-    action: Literal[
-        "auto", "kept_low_confidence", "needs_review", "applied_unrated"
-    ]
+    action: Literal["auto", "kept_low_confidence", "needs_review", "applied_unrated"]
     needs_human: bool = False
 
 
@@ -118,6 +121,7 @@ def _as_float(value: Any) -> float | None:
 # ---------------------------------------------------------------------------
 # Provider: mock — always confident, returns the default
 # ---------------------------------------------------------------------------
+
 
 class MockDecisionModel:
     provider_name = "mock"
@@ -156,8 +160,124 @@ class MockDecisionModel:
 _DEFAULT_NOUL_SPLIT = 0.5
 
 # ---------------------------------------------------------------------------
+# Provider: llm — the OpenAI-compatible gateway as the decision model
+# ---------------------------------------------------------------------------
+
+_STATE_RENDER_LIMIT = 4000
+
+
+def _render_state_for_llm(context: dict[str, Any]) -> str:
+    """The decision context as bounded JSON for the llm provider."""
+    try:
+        rendered = json.dumps(context, ensure_ascii=False, default=str)
+    except (TypeError, ValueError):
+        return str(context)[:_STATE_RENDER_LIMIT]
+    return rendered[:_STATE_RENDER_LIMIT]
+
+
+def _decision_model_id() -> str:
+    """The model the llm provider decides with: the DECISION_MODEL env var,
+    the Settings field (backend/.env), else the registry default of
+    config/models.yaml."""
+    env = os.environ.get("DECISION_MODEL")
+    if env:
+        return env.strip()
+    settings_model = get_settings().decision_model
+    if settings_model:
+        return str(settings_model).strip()
+    return default_registry().default_model
+
+
+class LLMDecisionModel:
+    """The gateway LLM answering the bounded questions (DECISION_PROVIDER=llm).
+
+    Uncalibrated by design: the answers carry no confidence, so the policy
+    applies them as-is ("applied_unrated") — the questions themselves are
+    the bound (declared options, no free prose).
+    """
+
+    provider_name = "llm"
+    calibrated = False
+
+    def decide(
+        self, decision_id: str, context: dict[str, Any], specs: list[DecisionSpec]
+    ) -> DecisionResult:
+        start = _now_ms()
+        from pydantic import create_model  # noqa: PLC0415 - a schema per batch
+
+        fields: dict[str, Any] = {}
+        for spec in specs:
+            if spec.kind == "noul":
+                fields[spec.name] = (bool, spec.default if spec.default is not None else False)
+            else:
+                option_values = [str(option.get("value")) for option in spec.options or []]
+                if not option_values:
+                    option_values = [str(spec.default)]
+                fields[spec.name] = (
+                    Literal[tuple(option_values)],
+                    str(spec.default) if spec.default is not None else option_values[0],
+                )
+        prompt_schema = create_model(f"Decision_{decision_id.replace('-', '_')}", **fields)
+
+        lines = [
+            "You are a bounded decision model. Answer every question by picking "
+            "one of the declared values. Do not explain. Do not invent values.",
+        ]
+        for spec in specs:
+            if spec.kind == "noul":
+                lines.append(f"- `{spec.name}`: true if — {spec.criteria or spec.name}")
+            else:
+                rendered = ", ".join(
+                    f"{option.get('value')}: {option.get('what', '')}"
+                    for option in spec.options or []
+                )
+                lines.append(f"- `{spec.name}`: choose one of [{rendered}]")
+        lines.append("INPUT STATE (JSON):\n" + _render_state_for_llm(context))
+
+        model = llm_factory.build_chat_model(_decision_model_id())
+        outcome = model.with_structured_output(prompt_schema).invoke(
+            [("system", lines[0]), ("human", "\n".join(lines[1:]))]
+        )
+        answers: dict[str, DecisionAnswer] = {}
+        for spec in specs:
+            value = getattr(outcome, spec.name, None)
+            answers[spec.name] = DecisionAnswer(name=spec.name, value=value)
+        return DecisionResult(
+            decision_id=decision_id,
+            provider=self.provider_name,
+            calibrated=False,
+            answers=answers,
+            latency_ms=_now_ms() - start,
+        )
+
+
+# ---------------------------------------------------------------------------
 # Provider: Jev — bounded, calibrated judgments via typesafe_sdk
 # ---------------------------------------------------------------------------
+
+
+def _jev_answer(spec: DecisionSpec, raw: Any) -> DecisionAnswer:
+    """One parsed jev answer: a noul probability or a choice + confidence."""
+    if spec.kind == "noul":
+        probability = _as_float(
+            getattr(raw, "noul", None) if not isinstance(raw, dict) else raw.get("noul")
+        )
+        if probability is None:
+            raise DecisionProviderError(f"jev noul answer missing for '{spec.name}'")
+        return DecisionAnswer(
+            name=spec.name,
+            value=probability >= _DEFAULT_NOUL_SPLIT,
+            probability=probability,
+            confidence=max(probability, 1.0 - probability),
+        )
+    choice = getattr(raw, "choice", None) if not isinstance(raw, dict) else raw.get("choice")
+    confidence = _as_float(
+        getattr(raw, "confidence", None) if not isinstance(raw, dict) else raw.get("confidence")
+    )
+    if choice is None:
+        raise DecisionProviderError(f"jev choice answer missing for '{spec.name}'")
+    return DecisionAnswer(name=spec.name, value=choice, probability=None, confidence=confidence)
+
 
 class JevDecisionModel:
     provider_name = "jev"
@@ -168,28 +288,43 @@ class JevDecisionModel:
     ) -> DecisionResult:
         start = _now_ms()
         try:
-            from typesafe_sdk import TypeSafeClient  # type: ignore[import-not-found]  # noqa: PLC0415
+            from typesafe_sdk import TypeSafeClient  # noqa: PLC0415 - optional jev group
         except ImportError as exc:
             raise DecisionProviderError(f"typesafe_sdk not installed: {exc}") from exc
 
+        # typesafe-sdk 0.7.5 question shapes: a noul describes its yes/no
+        # outcomes as a criteria OBJECT; a choice maps every label to its
+        # description (no options list — the proto was written for an older
+        # SDK and the request died on normalize_questions validation).
         questions: dict[str, Any] = {}
         for spec in specs:
             if spec.kind == "noul":
                 questions[spec.name] = {
                     "type": "noul",
-                    "criteria": spec.criteria or spec.name,
+                    "criteria": {"true": spec.criteria or spec.name},
                 }
             else:
                 questions[spec.name] = {
                     "type": "choice",
-                    "options": spec.options or [],
+                    "criteria": {
+                        str(option.get("value")): str(option.get("what", ""))
+                        for option in spec.options or []
+                    },
                 }
 
+        # The key reaches the SDK either way — real env var first (tests),
+        # backend/.env through Settings second (the committed-free path).
+        api_key = os.environ.get("TYPESAFE_API_KEY") or get_settings().typesafe_api_key
+        base_url = os.environ.get("TYPESAFE_BASE_URL") or get_settings().typesafe_base_url
+        credentials: dict[str, Any] = {}
+        if api_key:
+            credentials["api_key"] = api_key
+        if base_url:
+            credentials["base_url"] = base_url
+
         try:
-            with TypeSafeClient() as client:
-                response = client.system_one(
-                    state=context, questions=questions
-                )
+            with TypeSafeClient(**credentials) as client:
+                response = client.system_one(state=context, questions=questions)
             raw_answers = getattr(response, "answers", None) or {}
         except Exception as exc:
             raise DecisionProviderError(f"jev system_one call failed: {exc}") from exc
@@ -198,46 +333,8 @@ class JevDecisionModel:
         for spec in specs:
             raw = raw_answers.get(spec.name)
             if raw is None:
-                raise DecisionProviderError(
-                    f"jev returned no answer for '{spec.name}'"
-                )
-            if spec.kind == "noul":
-                probability = _as_float(
-                    getattr(raw, "noul", None)
-                    if not isinstance(raw, dict)
-                    else raw.get("noul")
-                )
-                if probability is None:
-                    raise DecisionProviderError(
-                        f"jev noul answer missing for '{spec.name}'"
-                    )
-                answers[spec.name] = DecisionAnswer(
-                    name=spec.name,
-                    value=probability >= _DEFAULT_NOUL_SPLIT,
-                    probability=probability,
-                    confidence=max(probability, 1.0 - probability),
-                )
-            else:
-                choice = (
-                    getattr(raw, "choice", None)
-                    if not isinstance(raw, dict)
-                    else raw.get("choice")
-                )
-                confidence = _as_float(
-                    getattr(raw, "confidence", None)
-                    if not isinstance(raw, dict)
-                    else raw.get("confidence")
-                )
-                if choice is None:
-                    raise DecisionProviderError(
-                        f"jev choice answer missing for '{spec.name}'"
-                    )
-                answers[spec.name] = DecisionAnswer(
-                    name=spec.name,
-                    value=choice,
-                    probability=None,
-                    confidence=confidence,
-                )
+                raise DecisionProviderError(f"jev returned no answer for '{spec.name}'")
+            answers[spec.name] = _jev_answer(spec, raw)
         return DecisionResult(
             decision_id=decision_id,
             provider=self.provider_name,
@@ -259,16 +356,29 @@ def reset_decision_cache() -> None:
 
 
 def _provider_from_environment() -> str:
-    return (os.environ.get("DECISION_PROVIDER") or "off").strip().lower()
+    # The real env var wins over the .env file so per-call toggles (tests)
+    # bypass the settings cache; .env flows through Settings like every
+    # other knob of the backend.
+    env = os.environ.get("DECISION_PROVIDER")
+    if env is not None:
+        return env.strip().lower()
+    return str(get_settings().decision_provider or "off").strip().lower()
 
 
 def _fallback_from_environment() -> str:
-    return (os.environ.get("DECISION_FALLBACK") or "mock").strip().lower()
+    env = os.environ.get("DECISION_FALLBACK")
+    if env is not None:
+        return env.strip().lower()
+    return str(get_settings().decision_fallback or "mock").strip().lower()
 
 
 def policy_from_environment() -> ConfidencePolicy:
     auto = _as_float(os.environ.get("DECISION_AUTO_CONFIDENCE"))
+    if auto is None:
+        auto = get_settings().decision_auto_confidence
     review = _as_float(os.environ.get("DECISION_REVIEW_CONFIDENCE"))
+    if review is None:
+        review = get_settings().decision_review_confidence
     return ConfidencePolicy(
         auto=auto if auto is not None else _DEFAULT_AUTO_CONFIDENCE,
         review=review if review is not None else _DEFAULT_REVIEW_CONFIDENCE,
@@ -282,6 +392,8 @@ def get_decision_model() -> DecisionModel | None:
         return None
     if provider == "mock":
         return MockDecisionModel()
+    if provider == "llm":
+        return LLMDecisionModel()
     if provider == "jev":
         return JevDecisionModel()
     return None
@@ -318,19 +430,13 @@ def apply_confidence_policy(
     """The graded application of one answer: auto, keep, or human review."""
     answer = result.answers.get(spec.name)
     if answer is None or answer.value is None:
-        return AppliedDecision(
-            name=spec.name, chosen=current_value, action="kept_low_confidence"
-        )
+        return AppliedDecision(name=spec.name, chosen=current_value, action="kept_low_confidence")
     if not result.calibrated or answer.confidence is None:
-        return AppliedDecision(
-            name=spec.name, chosen=answer.value, action="applied_unrated"
-        )
+        return AppliedDecision(name=spec.name, chosen=answer.value, action="applied_unrated")
     if answer.confidence >= policy.auto:
         return AppliedDecision(name=spec.name, chosen=answer.value, action="auto")
     if answer.confidence >= policy.review:
-        return AppliedDecision(
-            name=spec.name, chosen=current_value, action="kept_low_confidence"
-        )
+        return AppliedDecision(name=spec.name, chosen=current_value, action="kept_low_confidence")
     return AppliedDecision(
         name=spec.name,
         chosen=current_value,
@@ -354,6 +460,7 @@ __all__ = [
     "DecisionResult",
     "DecisionSpec",
     "JevDecisionModel",
+    "LLMDecisionModel",
     "MockDecisionModel",
     "apply_confidence_policy",
     "new_decision_id",

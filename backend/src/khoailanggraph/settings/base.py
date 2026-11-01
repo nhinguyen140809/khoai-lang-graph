@@ -25,9 +25,6 @@ class Settings(BaseSettings):
     )
 
     app_env: str = "local"
-    # Demo mode pins every role to fake:demo (keyless scripted runs); false
-    # leaves the model choice to config/models.yaml and the gateway env keys.
-    demo_mode: bool = True
     # Dev defaults to SQLite (zero setup): a file under backend/data. Production
     # points DATABASE_URL at Postgres; both use SQLAlchemy async engines.
     database_url: str = (
@@ -45,15 +42,29 @@ class Settings(BaseSettings):
     # The OpenAI-compatible gateway the llm layer calls through; None keeps
     # whatever the process environment already provides (langchain reads
     # OPENAI_API_KEY / OPENAI_BASE_URL itself when these are unset).
-    # The OpenAI-compatible gateway the llm layer calls through; None keeps
-    # whatever the process environment already provides (langchain reads
-    # OPENAI_API_KEY / OPENAI_BASE_URL itself when these are unset).
     openai_api_key: str | None = None
     openai_base_url: str | None = None
     # The research-search provider key of the corpus builder (Tavily), read
-    # from the same .env as the gateway keys and never committed. Demo mode
-    # never needs it: the demo search tool serves fixture documents offline.
+    # from the same .env as the gateway keys and never committed. Without it
+    # the keyless DuckDuckGo→Wikipedia chain serves the corpus builder.
     tavily_api_key: str | None = None
+    # The bounded decision layer of the workflow gates (README.md: Decision
+    # layer): "off" keeps every gate on the LLM's own value, "mock" confirms
+    # the defaults, "jev" answers through typesafe_sdk (needs the `jev`
+    # dependency group; falls back to mock without it).
+    decision_provider: str = "off"
+    decision_fallback: str = "mock"
+    # The model the llm decision provider asks (README.md: Decision layer):
+    # None keeps the registry default of config/models.yaml — a No-Think
+    # variant answers the small gate questions much faster.
+    decision_model: str | None = None
+    decision_auto_confidence: float | None = None
+    decision_review_confidence: float | None = None
+    # The typesafe.ai credentials of the jev provider: the SDK reads the
+    # same-named env vars itself; these fields let backend/.env carry them
+    # like the gateway keys (never committed).
+    typesafe_api_key: str | None = None
+    typesafe_base_url: str | None = None
     # Uploaded source documents (docs/API.md §5 Source documents): the raw
     # bytes land under this directory as {uuid}.bin keys the API never
     # returns; uploads over the limit answer 422 too_large.

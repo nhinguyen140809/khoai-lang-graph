@@ -2,7 +2,7 @@
 
 from __future__ import annotations
 
-import os
+from typing import TYPE_CHECKING
 
 from khoailanggraph.agents.requirements_engineering.decisions import (
     ConfidencePolicy,
@@ -14,6 +14,9 @@ from khoailanggraph.agents.requirements_engineering.decisions import (
     get_decision_model,
     run_decision,
 )
+
+if TYPE_CHECKING:
+    import pytest
 
 
 def test_spec_model_round_trips() -> None:
@@ -80,15 +83,14 @@ def test_confidence_policy_kept_low() -> None:
     assert applied.needs_human is False
 
 
-def test_env_off_stops_decisions() -> None:
-    os.environ["DECISION_PROVIDER"] = "off"
+def test_env_off_stops_decisions(monkeypatch: pytest.MonkeyPatch) -> None:
+    monkeypatch.setenv("DECISION_PROVIDER", "off")
     assert get_decision_model() is None
     assert run_decision("t", {}, []) is None
-    os.environ.pop("DECISION_PROVIDER", None)
 
 
-def test_env_mock_runs() -> None:
-    os.environ["DECISION_PROVIDER"] = "mock"
+def test_env_mock_runs(monkeypatch: pytest.MonkeyPatch) -> None:
+    monkeypatch.setenv("DECISION_PROVIDER", "mock")
     result = run_decision(
         "t",
         {},
@@ -104,4 +106,3 @@ def test_env_mock_runs() -> None:
     assert result is not None
     assert result.provider == "mock"
     assert result.answers["x"].value == "approve"
-    os.environ.pop("DECISION_PROVIDER", None)

@@ -17,13 +17,14 @@ from __future__ import annotations
 
 import argparse
 import asyncio
+import sys
 from datetime import datetime
+from pathlib import Path
 from uuid import UUID
 
 from sqlalchemy import delete, func, select
 
 import khoailanggraph.api.models_registry  # noqa: F401 - registers every table
-from khoailanggraph.agents.requirements_engineering.definition import agent_roles
 from khoailanggraph.features.artifacts import models as artifacts_models
 from khoailanggraph.features.me import hashing
 from khoailanggraph.features.me import models as me_models
@@ -38,6 +39,12 @@ from khoailanggraph.platform.db import (
     make_sync_engine,
 )
 from khoailanggraph.settings import get_settings
+
+# The scripted storyline lives with the test doubles (the test suite is its
+# other consumer); the seed reaches them through the tests directory.
+sys.path.insert(0, str(Path(__file__).resolve().parent.parent / "tests"))
+
+from support.hermetic import install_fake_provider
 
 DEMO_USER_ID = UUID("11b70000-0000-4000-8000-000000000001")
 PROJECT_IDS = {
@@ -162,12 +169,12 @@ async def seed(reset: bool) -> None:
         await session.commit()
     await engine.dispose()
 
-    config = runs_service.run_config_for(output_language="en")
     # The seed replays the scripted Mentor platform storyline by design
-    # (fixtures of the frontend), whatever DEMO_MODE the machine runs with.
-    config["models"] = {
-        role: runs_service.FALLBACK_ROLE_MODEL for role in sorted(agent_roles())
-    }
+    # (fixtures of the frontend), whatever gateway keys the machine carries:
+    # install the fake provider and the fixture corpus at the same seams
+    # the test suite uses, then walk the workflow once.
+    install_fake_provider()
+    config = runs_service.run_config_for(output_language="en")
     runs_service.start_run_blocking(
         sync_engine,
         run_id=MENTOR_RUN_ID,

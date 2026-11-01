@@ -261,6 +261,12 @@ class EngineerOutput(_Output):
     requirements: list[NewSpecRequirement]
 
 
+class AcceptanceCriterionDraft(_Output):
+    given: str
+    when: str
+    then: str
+
+
 class NewBacklogItem(_Output):
     ref: str
     item_type: Literal["epic", "user_story"]
@@ -268,7 +274,7 @@ class NewBacklogItem(_Output):
     as_a: str | None
     i_want: str | None
     so_that: str | None
-    acceptance_criteria: list[dict[str, str]]
+    acceptance_criteria: list[AcceptanceCriterionDraft]
     priority: str
     story_points: int | None
     derived_from: list[str] = Field(min_length=1)
