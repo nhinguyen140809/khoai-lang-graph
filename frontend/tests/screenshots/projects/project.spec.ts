@@ -18,11 +18,16 @@ async function openCommandPalette(user: UserSteps) {
 
 screenshots('Project', (shot) => {
   // The states of the status of a project differ in the status bar only.
-  const statusShot = (name: string, address: string, text: string) => {
+  const statusShot = (
+    name: string,
+    address: string,
+    ready: string | { role: 'progressbar'; name: string },
+  ) => {
     shot(`Status: ${name}`, async ({ page, user, shoot }) => {
       await page.goto(address)
 
-      await user.expectText(text)
+      if (typeof ready === 'string') await user.expectText(ready)
+      else await user.expectRole(ready.role, ready.name)
       await shoot({ part: page.getByRole('contentinfo') })
     })
   }
@@ -129,8 +134,15 @@ screenshots('Project', (shot) => {
   statusShot('not started', `${mentor}?mock-runs=empty`, 'Not started')
   statusShot('loading', `${mentor}?mock-threads=loading`, 'Loading status')
   statusShot('error', `${mentor}?mock-threads=error`, 'Failed to load the status.')
-  statusShot('budget near its limit', `${mentor}?mock-budget=warning`, '$4.76 / $5.52')
-  statusShot('budget nearly spent', `${mentor}?mock-budget=danger`, '$4.76 / $5.00')
+  // The amounts of the budget show in a tooltip, so the meter is what the page waits for.
+  statusShot('budget near its limit', `${mentor}?mock-budget=warning`, {
+    role: 'progressbar',
+    name: 'Monthly budget used',
+  })
+  statusShot('budget nearly spent', `${mentor}?mock-budget=danger`, {
+    role: 'progressbar',
+    name: 'Monthly budget used',
+  })
 
   shot('Status: failed, with the reason in a tooltip', async ({ page, user, shoot }) => {
     await page.goto(`${mentor}?mock-run-status=failed`)
