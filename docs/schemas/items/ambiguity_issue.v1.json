@@ -8,13 +8,15 @@
   "x-schema-version": 1,
   "x-key-prefix": "AMB",
   "x-ui-display": "table",
-  "x-ui-title-field": "description",
+  "x-ui-navigable": true,
+  "x-ui-title-field": "title",
   "x-ui-list-fields": [
-    "description",
+    "title",
     "ambiguity_type",
     "status"
   ],
   "x-ui-field-order": [
+    "title",
     "description",
     "ambiguity_type",
     "ambiguous_text",
@@ -25,6 +27,12 @@
   "type": "object",
   "additionalProperties": false,
   "properties": {
+    "title": {
+      "title": "Title",
+      "type": "string",
+      "description": "A short name of at most 60 characters that tells the point of the item at a glance, for example \"Find a mentor in my field\".",
+      "x-ui-widget": "text"
+    },
     "description": {
       "title": "Description",
       "type": "string",
@@ -72,6 +80,7 @@
     }
   },
   "required": [
+    "title",
     "description",
     "ambiguity_type",
     "ambiguous_text",

@@ -221,6 +221,8 @@ The artifact panel draws every kind from its content schema and the display keyw
 | `cards` | One card per item with the fields of `x-ui-list-fields` |
 | `transcript` | The messages in order, as a conversation |
 
+The side panel lists a document as a tree: its sections and, under them, the items of the kinds whose `x-ui-navigable` is `true`, each named by its `x-ui-title-field`. A kind whose `x-ui-navigable` is `false`, such as `interview_message`, has no row and no page of its own: its items are short enough to read in place on the page of the document, so there is no need to reach them one by one.
+
 - The detail view and the edit form show the fields in `x-ui-field-order`, each labelled with the `title` of its property (a property without a title reads its name with underscores as spaces and a capital) and with the input of its `x-ui-widget`. A `readOnly` field is shown but not editable. A field marked `x-value-from` offers the values of the named field of the artifact of the project, for example the topics of the elicitation plan.
 - The form checks the content against the schema in the browser for immediate feedback; the backend stays the authority and answers `422` with the field paths.
 - An item keeps the `schema_version` it was written with, and the web app reads the schema of that version from `GET /content-schemas/{kind}/{schema_version}` when it differs from the current one, so older items are still drawn correctly.
@@ -304,7 +306,7 @@ active_persona_index    1
 interview_turn          3
 iteration_count         0
 personas                PER-001 v1, PER-002 v2                         (links to those versions)
-interview_transcripts   Interview with PER-001 v7, Interview with PER-002 v2   (links to those versions)
+interview_transcripts   Interview with the student v7, Interview with the mentor v2   (links to those versions)
 ```
 
 ## 8. What still needs a change in the web app
