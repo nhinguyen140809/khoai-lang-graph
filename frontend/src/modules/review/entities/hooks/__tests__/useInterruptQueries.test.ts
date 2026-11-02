@@ -44,6 +44,22 @@ describe('usePendingInterrupt', () => {
   })
 })
 
+describe('usePendingInterrupt once the run goes on', () => {
+  it('gives nothing, though the review is still in the cache', async () => {
+    const { result, rerender } = renderHookWithProviders(
+      ({ status }: { status: 'interrupted' | 'running' }) =>
+        usePendingInterrupt(runIds.mentorMain3, { runStatus: status }),
+      { initialProps: { status: 'interrupted' } },
+    )
+    await waitForSuccess(result)
+    expect(result.current.data).toMatchObject({ status: 'pending' })
+
+    rerender({ status: 'running' })
+
+    expect(result.current.data).toBeUndefined()
+  })
+})
+
 describe('enabling', () => {
   itWaitsUntilEnabled([
     {

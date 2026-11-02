@@ -36,15 +36,18 @@ interface PendingInterruptOptions extends HookQueryOptions {
 
 /**
  * What the run waits for, read only while the run is interrupted; null when it waits for nothing.
- * It never polls: the answer and the interrupt event of the run load it again.
+ * Once the run goes on, it gives nothing, though the last answer stays in the cache. It never
+ * polls: the answer and the interrupt event of the run load it again.
  */
 export function usePendingInterrupt(
   runId: string,
   { isEnabled = true, runStatus }: PendingInterruptOptions,
 ) {
+  const isInterrupted = runStatus === 'interrupted'
   return useQuery({
     queryKey: interruptKeys.pending(runId),
     queryFn: () => findPendingInterrupt(runId),
-    enabled: isEnabled && runStatus === 'interrupted',
+    enabled: isEnabled && isInterrupted,
+    select: (pending) => (isInterrupted ? pending : undefined),
   })
 }
