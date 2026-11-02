@@ -11,6 +11,7 @@ import * as React from 'react'
 
 interface TreeContextValue<T = unknown> {
   indent: number
+  guides?: boolean | undefined
   currentItem?: ItemInstance<T> | undefined
   tree?: TreeInstance<T> | undefined
 }
@@ -28,9 +29,17 @@ function useTreeContext<T = unknown>() {
 interface TreeProps<T = unknown> extends React.HTMLAttributes<HTMLDivElement> {
   indent?: number
   tree?: TreeInstance<T>
+  /** Draws a vertical line at each level of indent, so the eye follows a branch to its end. */
+  guides?: boolean | undefined
 }
 
-function Tree<T = unknown>({ indent = 20, tree, className, ...props }: TreeProps<T>) {
+function Tree<T = unknown>({
+  indent = 20,
+  tree,
+  guides = false,
+  className,
+  ...props
+}: TreeProps<T>) {
   const containerProps: React.HTMLAttributes<HTMLDivElement> =
     tree && typeof tree.getContainerProps === 'function' ? tree.getContainerProps() : {}
   const mergedProps = { ...props, ...containerProps }
@@ -45,7 +54,9 @@ function Tree<T = unknown>({ indent = 20, tree, className, ...props }: TreeProps
   } as React.CSSProperties
 
   return (
-    <TreeContext.Provider value={{ indent, tree: tree as TreeInstance<unknown> | undefined }}>
+    <TreeContext.Provider
+      value={{ indent, guides, tree: tree as TreeInstance<unknown> | undefined }}
+    >
       <div
         className={cn('flex flex-col', className)}
         data-slot="tree"
@@ -69,7 +80,7 @@ function TreeItem<T = unknown>({
   children,
   ...props
 }: Omit<TreeItemProps<T>, 'indent'>) {
-  const { indent } = useTreeContext<T>()
+  const { indent, guides } = useTreeContext<T>()
 
   const itemProps: React.HTMLAttributes<HTMLButtonElement> =
     typeof item.getProps === 'function' ? item.getProps() : {}
@@ -87,17 +98,21 @@ function TreeItem<T = unknown>({
   const Comp = asChild ? Slot.Root : 'button'
 
   return (
-    <TreeContext.Provider value={{ currentItem: item as ItemInstance<unknown>, indent }}>
+    <TreeContext.Provider value={{ currentItem: item as ItemInstance<unknown>, indent, guides }}>
       <Comp
         aria-expanded={item.isFolder() ? item.isExpanded() : undefined}
         className={cn(
           'z-10 ps-(--tree-padding) outline-hidden select-none not-last:pb-0.5 focus:z-20 data-[disabled]:pointer-events-none data-[disabled]:opacity-50',
+          // A line at each level of indent, one pixel wide, drawn in the padding of the row: the row
+          // is as wide as its own indent, so a line never crosses its title.
+          'data-[guides]:bg-[repeating-linear-gradient(to_right,transparent_0,transparent_calc(var(--tree-indent)-1px),var(--border)_calc(var(--tree-indent)-1px),var(--border)_calc(var(--tree-indent)))] data-[guides]:bg-size-[var(--tree-padding)_100%] data-[guides]:bg-no-repeat',
           className,
         )}
         data-drag-target={
           typeof item.isDragTarget === 'function' ? item.isDragTarget() || false : undefined
         }
         data-focus={typeof item.isFocused === 'function' ? item.isFocused() || false : undefined}
+        data-guides={guides ? '' : undefined}
         data-folder={typeof item.isFolder === 'function' ? item.isFolder() || false : undefined}
         data-search-match={
           typeof item.isMatchingSearch === 'function' ? item.isMatchingSearch() || false : undefined
