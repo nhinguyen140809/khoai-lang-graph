@@ -131,15 +131,15 @@ ESLint checks the kinds of each place (`fileKinds` of `frontend/lint/lib/file-na
 
 ## 4. Order of the modules
 
-`workflow` -> `artifact` -> `run` -> `review` -> `thread` -> `project`, `activity`
+`workflow` -> `artifact` -> `run` -> `review` -> `thread` -> `project`, `activity`, `documents`
 
 `auth` -> `user`
 
 `usage`, `design-system`
 
-A module imports only the modules under it in its line: `project` reads `thread` and `run`; `activity` sits beside `project`, so it may read the same modules, and neither of the two reads the other; `thread` reads `run`, and `user` reads `auth`, and `run` for the RunDefaults of UserSettings. `usage` and `design-system` read no other module. The order is `moduleImports` of `frontend/lint/lib/modules/module-imports.constants.js`, which lists the modules of today and the ones planned next; a new module gets its place there before its first code. ESLint does not load when the lists form a cycle, or name a module that has no list.
+A module imports only the modules under it in its line: `project` reads `thread` and `run`; `activity` sits beside `project`, so it may read the same modules, and neither of the two reads the other; `documents` sits above `project` and reads `workflow`, `artifact`, `trace`, `run`, `review`, `thread` and `project`; `thread` reads `run`, and `user` reads `auth`, and `run` for the RunDefaults of UserSettings. `usage` and `design-system` read no other module. The order is `moduleImports` of `frontend/lint/lib/modules/module-imports.constants.js`, which lists the modules of today and the ones planned next; a new module gets its place there before its first code. ESLint does not load when the lists form a cycle, or name a module that has no list.
 
-`itemRefSchema`, the reference to an item that a step produced or a message names, sits in `artifact`; the entities of `run` read it through `artifact/entities/@x/run`. The entities of `artifact` read the artifact kinds, their content schemas and the content fields through `workflow/entities/@x/artifact`.
+`itemRefSchema`, the reference to an item that a step produced or a message names, sits in `artifact`; the entities of `run` read it through `artifact/entities/@x/run`. The entities of `artifact` read the artifact kinds, their content schemas and the content fields through `workflow/entities/@x/artifact`. The entities of `documents` read `workflow`, `artifact`, `run`, `review` and `project` through the `@x/documents.ts` file of each.
 
 ## 5. Imports
 
@@ -207,6 +207,7 @@ A unit test may also import another slice of its layer, from its index, to show 
 | `thread` | Thread, Message | `send-message` | - | The entities; `send-message` with the activity |
 | `project` | Project, the run that its status shows, the streams of its runs | `create`, `rename`, `archive` (with restore and Undo), `delete`; `run-settings` later | `list`, `menu`, `commands`, `dialogs`, `status` | Today |
 | `activity` | ActivityEvent later, the record of who did what in a project | - | `steps`, the stages of the workflow as a tree in the side panel of Activity, with the item of the feature on the activity bar; `chat`, the chat in its tab | The chat of the first version today; the rest with the activity |
+| `documents` | The list of the documents of a project and the mark of each | - | `panel`, the documents as a tree with the outline of the open document and what asks something of the user; `document`, the page of a document; `item`, the page of an item with Previous and Next | Documents on the activity bar; edit, peek and export later |
 | `auth` | The calls that start a session, create an account and end a session; the page that opens after signing in | `login`, `register`, `logout` | - | Today |
 | `user` | User, Session, UserSettings | `run-settings` later | `menu`, `settings` | The entities; the forms of the account and the preferences with Settings |
 | `usage` | MonthlyUsage, the usage of the user in a calendar month, with the budget of the month and its groups | - | - | The entities and the budget on the status bar; the usage section with Settings |
@@ -272,6 +273,7 @@ A block that reads several modules sits in the highest module that it reads, or 
 | The status of a project on the status bar | `project/widgets/status` | `project`, `thread`, `run`, and Stop of `run/features/stop` |
 | The tree of the stages in the side panel of Activity | `activity/widgets/steps` | `workflow` for the stages, in order, with their labels; `run` for the steps and the events of the run; `review` for the pending review |
 | The chat of Activity | `activity/widgets/chat` | `thread`, and Send of `thread/features/send-message`; `run`, `review`, `artifact` |
+| The documents of a project in the side panel, a document and an item in tabs | `documents/widgets/panel`, `document`, `item` | `workflow` for the kinds and their order; `artifact` for the outline, the status of an item and the views; `run` for the artifacts that the node in progress writes; `review` for the documents under review; `project` for whether the run is unfinished |
 | The workflow graph of a run | `run/widgets/graph` | `workflow` |
 | The panel of a pending review | `review/widgets/panel` | `artifact`, and the edit form of `artifact/features/edit` |
 
