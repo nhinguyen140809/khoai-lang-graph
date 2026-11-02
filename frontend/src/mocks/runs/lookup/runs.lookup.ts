@@ -7,6 +7,7 @@ import {
 } from '@/modules/run/entities'
 import { newestOfEachGroup } from '@/shared/lib/collections'
 
+import { allArtifacts } from '../../artifacts/artifacts.lookup'
 import {
   generatedRuns,
   generatedRunSteps,
@@ -14,6 +15,7 @@ import {
 import { modelsOfUserSettings } from '../../model-settings/model-settings.lookup'
 import { mockRunStatus, mockScenario } from '../../shared/scenario'
 import { currentUserSettings } from '../../user-settings/user-settings.lookup'
+import { workflowDefinitionFixture } from '../../workflow/workflow.fixtures'
 import { defaultRunConfigFixture, runFixtures, runStepFixtures } from '../fixtures/runs.fixtures'
 import { createdRuns, runEdits } from '../runs.store'
 
@@ -103,4 +105,18 @@ export function resolveRunConfig(
         defaults.parameters,
       ),
   }
+}
+
+/**
+ * The artifact that the node in progress of a run writes: the artifact of the project of the run
+ * whose kind the workflow gives to the stage the run is in; undefined when the stage writes none.
+ */
+export function artifactInProgress(run: Pick<Run, 'project_id' | 'current_stage'>) {
+  const kind = workflowDefinitionFixture.artifact_kinds.find(
+    ({ stage }) => stage === run.current_stage,
+  )?.kind
+  if (kind === undefined) return undefined
+  return allArtifacts().find(
+    (artifact) => artifact.project_id === run.project_id && artifact.kind === kind,
+  )
 }

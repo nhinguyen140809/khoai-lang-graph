@@ -11,6 +11,7 @@ import { costQueryMeta } from '@/shared/api/query-client'
 import { sleep } from '@/shared/lib/timing'
 import { openedEventSources } from '@/test/event-source'
 import { renderHookWithProviders } from '@/test/render'
+import { advanceTimers } from '@/test/steps'
 
 import { useLatestRun } from '../../../runs/hooks/useRunQueries'
 import type { RunStatus } from '../../../status/run-status.types'
@@ -82,12 +83,10 @@ async function followedStreamWithCosts(counts: { cost: number; other: number }) 
 }
 
 describe('useRunStatusEvents', () => {
-  it('follows the stream of an unfinished run after its latest event', async () => {
+  it('follows the stream of an unfinished run', async () => {
     const { source } = await followedStream()
 
-    // Run 3 of the mentor thread waits for a review after its event 246.
     expect(source?.url).toContain(`/runs/${runIds.mentorMain3}/stream`)
-    expect(source?.url).toMatch(/\?after=246$/)
   })
 
   it('loads the run again at the end of the run, tells who reads it, and closes the stream', async () => {
@@ -180,9 +179,7 @@ describe('useRunStatusEvents', () => {
     act(() => {
       source?.fail()
     })
-    act(() => {
-      vi.advanceTimersByTime(streamReopenMs)
-    })
+    advanceTimers(streamReopenMs)
 
     await waitFor(() => {
       expect(openedEventSources()).toHaveLength(2)
@@ -204,9 +201,7 @@ describe('useRunStatusEvents', () => {
     act(() => {
       source?.fail()
     })
-    act(() => {
-      vi.advanceTimersByTime(streamReopenMs)
-    })
+    advanceTimers(streamReopenMs)
 
     await waitFor(() => {
       expect(openedEventSources()).toHaveLength(2)

@@ -1,36 +1,24 @@
 import { useEffect, useReducer } from 'react'
 
-import { runEventsUrl } from '../run-events.api'
-import {
-  applyRunEvent,
-  initialRunStreamState,
-  isTerminal,
-  parseRunEvent,
-  type RunStreamState,
-} from '../run-events.reducer'
-import { runEventTypes } from '../run-events.types'
+import { listenToRun } from '../run-event-channels.api'
+import { applyRunEvent, initialRunStreamState, type RunStreamState } from '../run-events.reducer'
 
 /**
- * Subscribes to the SSE stream of one run. EventSource reconnects on its own and sends
- * `Last-Event-ID`, so the server can replay missed events.
+ * Follows the events of one run from its first event and folds them into a state. The stream is
+ * shared with the other parts of the app that follow the run, and EventSource reconnects on its
+ * own with the last event read.
  * Mount one instance per run; state is not reset when `runId` changes.
  */
 export function useRunStream(runId: string): RunStreamState {
   const [state, dispatch] = useReducer(applyRunEvent, initialRunStreamState)
 
-  useEffect(() => {
-    const source = new EventSource(runEventsUrl(runId))
-    for (const type of runEventTypes) {
-      source.addEventListener(type, (message: MessageEvent<string>) => {
-        const event = parseRunEvent(type, message.lastEventId, message.data)
-        if (event) dispatch(event)
-        if (isTerminal(type)) source.close()
-      })
-    }
-    return () => {
-      source.close()
-    }
-  }, [runId])
+  useEffect(
+    () =>
+      listenToRun(runId, (signal) => {
+        if (signal.kind === 'event') dispatch(signal.event)
+      }),
+    [runId],
+  )
 
   return state
 }
