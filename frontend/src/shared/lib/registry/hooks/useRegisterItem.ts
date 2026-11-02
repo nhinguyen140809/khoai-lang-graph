@@ -1,6 +1,6 @@
 'use client'
 
-import { useEffect, useId } from 'react'
+import { useId, useLayoutEffect } from 'react'
 
 import type { RegistryStore } from '../registry.types'
 
@@ -14,11 +14,12 @@ export function useRegisterItem<Item>(store: RegistryStore<Item>, item: Item) {
   const setItem = store((state) => state.setItem)
   const removeItem = store((state) => state.removeItem)
 
-  useEffect(() => {
+  // Before the screen is painted, so that what the item adds is there on the first frame.
+  useLayoutEffect(() => {
     setItem(source, item)
   }, [source, item, setItem])
 
-  useEffect(
+  useLayoutEffect(
     () => () => {
       removeItem(source)
     },

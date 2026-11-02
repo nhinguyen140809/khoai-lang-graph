@@ -1,6 +1,8 @@
 import { act, renderHook } from '@testing-library/react'
 import { beforeEach, describe, expect, it, vi } from 'vitest'
 
+import { advanceTimersAsync } from '@/test/steps'
+
 import { useClipboard } from '../useClipboard'
 
 // jsdom has no clipboard: the test writes into the one the browser would give the page.
@@ -35,9 +37,7 @@ describe('useClipboard', () => {
 
     await copy(result.current, 'REQ-001')
 
-    await act(async () => {
-      await vi.advanceTimersByTimeAsync(2000)
-    })
+    await advanceTimersAsync(2000)
 
     expect(result.current.isCopied).toBe(false)
   })
@@ -47,19 +47,13 @@ describe('useClipboard', () => {
     const { result } = renderHook(() => useClipboard())
 
     await copy(result.current, 'REQ-001')
-    await act(async () => {
-      await vi.advanceTimersByTimeAsync(1500)
-    })
+    await advanceTimersAsync(1500)
     await copy(result.current, 'REQ-002')
-    await act(async () => {
-      await vi.advanceTimersByTimeAsync(1500)
-    })
+    await advanceTimersAsync(1500)
 
     expect(result.current.isCopied).toBe(true)
 
-    await act(async () => {
-      await vi.advanceTimersByTimeAsync(500)
-    })
+    await advanceTimersAsync(500)
 
     expect(result.current.isCopied).toBe(false)
   })

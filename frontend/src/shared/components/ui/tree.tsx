@@ -89,7 +89,7 @@ function TreeItem<T = unknown>({
   return (
     <TreeContext.Provider value={{ currentItem: item as ItemInstance<unknown>, indent }}>
       <Comp
-        aria-expanded={item.isExpanded()}
+        aria-expanded={item.isFolder() ? item.isExpanded() : undefined}
         className={cn(
           'z-10 ps-(--tree-padding) outline-hidden select-none not-last:pb-0.5 focus:z-20 data-[disabled]:pointer-events-none data-[disabled]:opacity-50',
           className,

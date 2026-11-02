@@ -1,6 +1,7 @@
 import { render, screen } from '@testing-library/react'
-import { act } from 'react'
 import { afterEach, describe, expect, it, vi } from 'vitest'
+
+import { advanceTimers } from '@/test/steps'
 
 import { RelativeTime } from '../relative-time'
 
@@ -28,9 +29,7 @@ describe('RelativeTime', () => {
 
     expect(screen.getByText('1 min ago')).toBeInTheDocument()
 
-    act(() => {
-      vi.advanceTimersByTime(60_000)
-    })
+    advanceTimers(60_000)
 
     expect(screen.getByText('2 min ago')).toBeInTheDocument()
   })
