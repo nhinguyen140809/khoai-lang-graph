@@ -226,14 +226,14 @@ The artifact panel draws every kind from its content schema and the display keyw
 - An item keeps the `schema_version` it was written with, and the web app reads the schema of that version from `GET /content-schemas/{kind}/{schema_version}` when it differs from the current one, so older items are still drawn correctly.
 - A kind can have its own component where the generic drawing is not good enough, for example a persona card. A registry maps the kind to the component; a kind without an entry uses the generic drawing.
 
-A field as the detail view and the edit form see it, built from one property of a schema by `contentFields(schema)`, in `modules/workflow/entities/content-fields/content-fields.types.ts`:
+A field as the detail view and the edit form see it, built from one property of a schema by `contentFields(schema)`, in `modules/workflow/entities/content/fields/content-fields.types.ts`:
 
 ```ts
 export type FieldWidget = 'text' | 'textarea' | 'select' | 'number' | 'list' | 'tags' | 'object-list'
 
 export interface ContentField {
   name: string
-  label: string // the title of the property, else derived from the name
+  title: string // the title of the property, else derived from the name
   widget: FieldWidget // x-ui-widget, or derived from the type when absent
   nullable: boolean // the type list contains null
   required: boolean
@@ -330,7 +330,7 @@ Where the parts above go in the web app. The module and the layer of each part f
 | Reviews | `review`: entities, feature `answer`, widget `panel` | `modules/review/entities/interrupts.api.ts`, `modules/review/entities/interrupts.types.ts`, `modules/review/entities/hooks/useInterruptQueries.ts`; `modules/review/features/answer/components/ReviewAnswerForm.tsx` (options, questions, feedback), `modules/review/features/answer/hooks/useAnswerReview.ts`; `modules/review/widgets/panel/components/ReviewPanel.tsx`, which shows the prompt, the items under review with the edit form of `artifact/features/edit`, and the answer form |
 | Status of a project | `project`, widget `status`; `run`, feature `stop` | `modules/project/widgets/status/components/ProjectRunStatus.tsx`, `modules/project/entities/run-status/hooks/useProjectRunResult.ts`, `modules/run/entities/events/hooks/useRunStatusEvents.ts`, `modules/project/entities/run-status/hooks/useProjectRunStream.ts`, `modules/run/features/stop/components/StopRunDialog.tsx` |
 | Threads and messages | `thread`, entities | `modules/thread/entities/api/threads.api.ts`, `modules/thread/entities/api/messages.api.ts`, `modules/thread/entities/types/threads.types.ts`, `modules/thread/entities/types/messages.types.ts`, `modules/thread/entities/hooks/useThreadQueries.ts`, `modules/thread/entities/hooks/useMessageQueries.ts`; `modules/thread/features/send-message` later |
-| Form built from a schema | Shared code | `shared/components/content-form/ContentForm.tsx`, `modules/workflow/entities/content-fields/content-fields.types.ts` (`ContentField`), `shared/components/content-form/field-widgets.utils.ts`. The caller gives the values of a field marked `x-value-from` |
+| Form built from a schema | Shared code | `shared/components/content-form/ContentForm.tsx`, `modules/workflow/entities/content/fields/content-fields.types.ts` (`ContentField`), `shared/components/content-form/field-widgets.utils.ts`. The caller gives the values of a field marked `x-value-from` |
 | Artifacts and items | `artifact`, entities | `modules/workflow/entities/artifact-kinds/artifact-kinds.api.ts`, `modules/artifact/entities/types/artifacts.types.ts`, `modules/artifact/entities/types/items.types.ts`; one component per display: `DocumentView.tsx`, `SectionHeading.tsx`, `ItemTable.tsx`, `ItemCards.tsx`, `TranscriptView.tsx`; `modules/artifact/entities/kind-components.constants.ts` (the registry) |
 | Editing an artifact or an item | `artifact`, feature `edit` | The edit form, on `ContentForm.tsx`, and one hook per save: `modules/artifact/features/edit/hooks/useUpdateArtifact.ts`, `modules/artifact/features/edit/hooks/useUpdateItem.ts` |
 | Run settings | `run`, entities | `modules/run/entities/components/RunDefaultsFields.tsx`, on `runParameterFields` of `workflow`. It saves nothing: the feature that shows the fields saves the values |
