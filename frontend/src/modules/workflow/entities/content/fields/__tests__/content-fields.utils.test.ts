@@ -1,14 +1,21 @@
 import { describe, expect, it } from 'vitest'
 
-import { contentSchemaFixtureByKind } from '@/mocks/workflow/artifact-kinds.fixtures'
+import {
+  artifactKindFixtures,
+  contentSchemaFixtureByKind,
+} from '@/mocks/workflow/artifact-kinds.fixtures'
 
-import { contentDisplayOf, contentFields, itemTitle, summaryFields } from '../content-fields.utils'
+import {
+  contentDisplayOf,
+  contentFields,
+  documentDisplaysByKind,
+  summaryFields,
+} from '../content-fields.utils'
 import {
   contentFieldCases,
   displayCases,
   displayFallbackCases,
   fieldOrderCases,
-  itemTitleCases,
   listFieldCases,
 } from './content-fields.utils.data'
 
@@ -36,16 +43,16 @@ describe('contentFields', () => {
     expect(found).toMatchObject(contentField)
   })
 
-  it('takes the label from the title of the property, else from the name', () => {
-    const labels = contentFields({
+  it('takes the title from the title of the property, else from the name', () => {
+    const titles = contentFields({
       title: 'Kind',
       properties: {
         as_a: { type: 'string', title: 'Role' },
         so_that: { type: 'string' },
       },
-    }).map(({ label }) => label)
+    }).map(({ title }) => title)
 
-    expect(labels).toEqual(['Role', 'So that'])
+    expect(titles).toEqual(['Role', 'So that'])
   })
 
   it('takes the widget from the type when the schema names none', () => {
@@ -96,10 +103,34 @@ describe('summaryFields', () => {
   })
 })
 
-describe('itemTitle', () => {
-  it.each(itemTitleCases)('names an item by $name', ({ kind, item, title }) => {
-    expect(itemTitle(kind === null ? undefined : contentSchemaFixtureByKind(kind), item)).toBe(
-      title,
-    )
+describe('valueList', () => {
+  it('reads the value list that a property names', () => {
+    const fields = contentFields({
+      title: 'Kind',
+      properties: {
+        priority: { type: 'string', 'x-value-list': 'priority' },
+        note: { type: 'string' },
+      },
+    })
+
+    expect(fields.map(({ valueList }) => valueList)).toEqual(['priority', null])
+  })
+})
+
+describe('documentDisplaysByKind', () => {
+  const displays = documentDisplaysByKind(artifactKindFixtures)
+
+  it('is the display of the first kind of item that holds content, past the sections', () => {
+    expect(displays.get('persona_catalog')).toBe('cards')
+    expect(displays.get('requirements_analysis')).toBe('table')
+    expect(displays.get('interview_transcript')).toBe('transcript')
+  })
+
+  it('is a document alone for a kind that holds no item', () => {
+    expect(displays.get('elicitation_plan')).toBe('document')
+  })
+
+  it('is empty before the kinds load', () => {
+    expect(documentDisplaysByKind(undefined).size).toBe(0)
   })
 })

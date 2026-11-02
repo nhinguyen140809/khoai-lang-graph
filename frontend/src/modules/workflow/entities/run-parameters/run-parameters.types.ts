@@ -17,7 +17,7 @@ export type RunParameterWidget = (typeof runParameterWidgets)[number]
 export interface RunParameterField {
   name: string
   /** The title of the property; when it has none, derived from the name: `max_turns` reads "Max turns". */
-  label: string
+  title: string
   widget: RunParameterWidget
   description: string | null
   /** The values of a select; empty for the other widgets. */

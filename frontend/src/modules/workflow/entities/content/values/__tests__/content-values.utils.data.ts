@@ -139,3 +139,10 @@ export const entryCases = [
     names: ['acceptance_criteria'],
   },
 ]
+
+export const valueTitleCases = [
+  { name: 'a value of the list', list: 'priority', value: 'must', title: 'Must' },
+  { name: 'a value the list lacks', list: 'priority', value: 'later', title: 'later' },
+  { name: 'a field that names no list', list: null, value: 'must', title: 'must' },
+  { name: 'a list the definition lacks', list: 'unknown', value: 'must', title: 'must' },
+]

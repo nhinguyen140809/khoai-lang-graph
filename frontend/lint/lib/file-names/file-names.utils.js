@@ -47,7 +47,8 @@ function sliceFolderRulesOfLayer(moduleName, layer) {
 
 /**
  * The folder rules of the entities of a module: a folder for each kind at the root, or, for a
- * module split by topic, a folder for each topic at the root and only hooks and tests in a topic.
+ * module split by topic, a folder for each topic at the root, or for each group of topics that
+ * holds only topic folders, and only hooks and tests in a topic.
  * @param {string} moduleName
  * @returns {[string, string][]}
  */
@@ -57,8 +58,24 @@ function entityFolderRules(moduleName) {
     return [[`src/modules/${moduleName}/entities/*/`, sliceFolderNames('entities')]]
   }
   const topics = Object.keys(topicImports)
+  // A topic named <group>/<name> sits in a folder of its group, which holds only topic folders.
+  /** @type {Map<string, string[]>} */
+  const groups = new Map()
+  for (const topic of topics) {
+    const [group, name] = topic.split('/')
+    if (name !== undefined && group !== undefined)
+      groups.set(group, [...(groups.get(group) ?? []), name])
+  }
+  const roots = [...new Set(topics.map((topic) => topic.split('/')[0]))]
   return [
-    [`src/modules/${moduleName}/entities/*/`, `@(components|__tests__|@x|${topics.join('|')})`],
+    [`src/modules/${moduleName}/entities/*/`, `@(components|__tests__|@x|${roots.join('|')})`],
+    ...[...groups].map(
+      ([group, names]) =>
+        /** @type {[string, string]} */ ([
+          `src/modules/${moduleName}/entities/${group}/*/`,
+          `@(${names.join('|')})`,
+        ]),
+    ),
     ...topics.map(
       (topic) =>
         /** @type {[string, string]} */ ([

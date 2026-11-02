@@ -35,6 +35,21 @@ describe('sliceFolderRules', () => {
     expect(rules['src/modules/run/entities/runs/*/']).toBe('@(hooks|__tests__)')
   })
 
+  it('lets the root of the entities hold the folder of a group of topics, once', () => {
+    const root = rules['src/modules/workflow/entities/*/']
+    expect(root).toContain('|content|')
+    expect(root).not.toContain('content/')
+    expect(root.match(/content/g)).toHaveLength(1)
+  })
+
+  it('lets a group of topics hold its topic folders only', () => {
+    expect(rules['src/modules/workflow/entities/content/*/']).toBe('@(fields|values|value-labels)')
+  })
+
+  it('lets a topic in a group hold its hooks and tests only', () => {
+    expect(rules['src/modules/workflow/entities/content/values/*/']).toBe('@(hooks|__tests__)')
+  })
+
   it('lets the entities of a module not split by topic hold a folder for each kind', () => {
     expect(rules['src/modules/thread/entities/*/']).toContain('types')
   })

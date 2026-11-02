@@ -18,6 +18,9 @@ export function edgesFrom(definition: WorkflowDefinition, nodeId: string): Workf
 }
 
 /** The list of values that a content field names with `x-value-list`, or null if none. */
-export function findValueList(definition: WorkflowDefinition, key: string): ValueList | null {
+export function findValueList(
+  definition: Pick<WorkflowDefinition, 'value_lists'>,
+  key: string,
+): ValueList | null {
   return definition.value_lists.find((list) => list.key === key) ?? null
 }

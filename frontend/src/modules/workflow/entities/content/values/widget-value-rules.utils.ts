@@ -1,6 +1,6 @@
 import { isEmpty, isRecord } from '@/shared/lib/guards'
 
-import type { ContentField, FieldWidget } from './content-fields.types'
+import type { ContentField, FieldWidget } from '../fields/content-fields.types'
 
 // What each widget implies for the value of its field. Content checks look the widget up here
 // instead of branching on its name, so a widget that the schema can name has its row, and
@@ -45,7 +45,7 @@ function entriesProblem(field: ContentField, value: unknown): string | null {
     const record = isRecord(entry) ? entry : {}
     for (const entryField of field.entryFields) {
       if (entryField.required && isEmpty(record[entryField.name]))
-        return `Fill in "${entryField.label}" in every entry.`
+        return `Fill in "${entryField.title}" in every entry.`
     }
   }
   return null

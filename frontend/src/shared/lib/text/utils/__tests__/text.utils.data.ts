@@ -27,3 +27,14 @@ export const foldTextCases = [
   { name: 'a text without accents', text: 'plain', folded: 'plain' },
   { name: 'an empty text', text: '', folded: '' },
 ]
+
+/** A value of a content field and the text that shows it. */
+export const textOfCases = [
+  { name: 'a string', value: 'mentor', text: 'mentor' },
+  { name: 'a number', value: 3, text: '3' },
+  { name: 'zero', value: 0, text: '0' },
+  { name: 'a boolean', value: false, text: 'false' },
+  { name: 'a list', value: ['a'], text: '' },
+  { name: 'null', value: null, text: '' },
+  { name: 'undefined', value: undefined, text: '' },
+]

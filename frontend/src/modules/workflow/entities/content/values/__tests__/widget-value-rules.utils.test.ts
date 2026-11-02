@@ -1,6 +1,6 @@
 import { describe, expect, it } from 'vitest'
 
-import { fieldWidgets } from '../content-fields.types'
+import { fieldWidgets } from '../../fields/content-fields.types'
 import { widgetValueRules } from '../widget-value-rules.utils'
 
 describe('widgetValueRules', () => {

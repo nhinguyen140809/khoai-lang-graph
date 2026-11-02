@@ -3,12 +3,13 @@ import { describe, expect, it } from 'vitest'
 import { contentSchemaFixtureByKind } from '@/mocks/workflow/artifact-kinds.fixtures'
 import { assertPresent } from '@/shared/lib/guards'
 
-import { contentFields } from '../content-fields.utils'
+import { contentFields } from '../../fields/content-fields.utils'
 import {
   changedFields,
   initialValue,
   toStoredContent,
   validateContent,
+  valueTitle,
 } from '../content-values.utils'
 import {
   changedFieldCases,
@@ -16,6 +17,7 @@ import {
   initialValueCases,
   storedContentCases,
   validateCases,
+  valueTitleCases,
 } from './content-values.utils.data'
 
 describe('validateContent', () => {
@@ -133,5 +135,25 @@ describe('changedFields', () => {
     const before = { acceptance_criteria: [{ given: 'a', when: 'b', then: 'c' }] }
 
     expect(changedFields(fields, before, { acceptance_criteria: after })).toEqual(names)
+  })
+})
+
+describe('valueTitle', () => {
+  const definition = {
+    value_lists: [
+      {
+        key: 'priority',
+        title: 'Priority',
+        values: [{ key: 'must', title: 'Must', description: '' }],
+      },
+    ],
+  }
+
+  it.each(valueTitleCases)('gives $title for $name', ({ list, value, title }) => {
+    expect(valueTitle({ valueList: list }, value, definition)).toBe(title)
+  })
+
+  it('gives the value while the definition loads', () => {
+    expect(valueTitle({ valueList: 'priority' }, 'must', undefined)).toBe('must')
   })
 })

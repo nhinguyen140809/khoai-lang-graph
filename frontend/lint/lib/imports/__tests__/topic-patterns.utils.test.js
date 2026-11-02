@@ -19,6 +19,7 @@ describe('entityTopics', () => {
     expect(entityTopics('llm-model')).toEqual(['model-settings', 'models'])
     expect(entityTopics('user')).toEqual(['sessions', 'user', 'user-settings'])
     expect(entityTopics('thread')).toEqual([])
+    expect(entityTopics('workflow')).toContain('content/values')
   })
 })
 
@@ -54,6 +55,28 @@ describe('topicPatterns', () => {
     const patterns = topicPatterns('user', 'sessions')
     expect(isRejected(patterns, '../user-settings/user-settings.types')).toBe(true)
     expect(isRejected(patterns, './sessions.types')).toBe(false)
+  })
+
+  it('names a topic of a group by its path, and by its name from a topic beside it', () => {
+    const patterns = topicPatterns('workflow', 'content/fields')
+    expect(isRejected(patterns, '../values/content-values.types')).toBe(true)
+    expect(isRejected(patterns, '../../content/values/content-values.types')).toBe(true)
+    expect(isRejected(patterns, '../../value-labels/value-labels.utils')).toBe(true)
+    expect(isRejected(patterns, '../../artifact-kinds/artifact-kinds.types')).toBe(false)
+  })
+
+  it('lets a topic of a group read the topics of its group that it lists', () => {
+    const patterns = topicPatterns('workflow', 'content/value-labels')
+    expect(isRejected(patterns, '../fields/content-fields.types')).toBe(false)
+    expect(isRejected(patterns, '../../values/content-values.utils')).toBe(false)
+    expect(isRejected(patterns, '../../../definition/workflow-definition.types')).toBe(false)
+    expect(isRejected(topicPatterns('workflow', 'content/values'), '../value-labels/x')).toBe(true)
+  })
+
+  it('lets a topic outside the group read the topics of the group that it lists', () => {
+    const patterns = topicPatterns('workflow', 'issues')
+    expect(isRejected(patterns, '../content/values/content-values.types')).toBe(false)
+    expect(isRejected(patterns, '../content/fields/content-fields.types')).toBe(true)
   })
 
   it('throws for a topic that the module does not list', () => {

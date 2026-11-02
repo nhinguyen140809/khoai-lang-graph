@@ -42,7 +42,7 @@ function NumberParameter<T extends FieldValues, TOutput>({
     <NumberField
       control={control}
       name={name}
-      label={field.label}
+      label={field.title}
       description={field.description ?? undefined}
       integer={field.integer}
       placeholder={defaultTextOf(field) ?? undefined}
@@ -71,14 +71,14 @@ function FlagParameter<T extends FieldValues, TOutput>({
     <FormFieldSet
       control={control}
       name={name}
-      legend={field.label}
+      legend={field.title}
       description={field.description ?? undefined}
     >
       {(controller) => {
         const current = flagChoices.find(({ value }) => value === (controller.value ?? null))
         return (
           <RadioGroup
-            aria-label={field.label}
+            aria-label={field.title}
             value={(current ?? flagChoices[0]).key}
             onValueChange={(key) => {
               controller.onChange(flagChoices.find((choice) => choice.key === key)?.value ?? null)
@@ -106,7 +106,7 @@ function SelectParameter<T extends FieldValues, TOutput>({
     <FormField
       control={control}
       name={name}
-      label={field.label}
+      label={field.title}
       description={field.description ?? undefined}
     >
       {(controller, controlProps) => (
@@ -142,7 +142,7 @@ function TextParameter<T extends FieldValues, TOutput>({
     <TextField
       control={control}
       name={name}
-      label={field.label}
+      label={field.title}
       description={field.description ?? undefined}
       placeholder={defaultTextOf(field) ?? undefined}
     />

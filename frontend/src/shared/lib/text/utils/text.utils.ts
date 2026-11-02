@@ -10,3 +10,10 @@ export function foldText(text: string): string {
 export function hasTextPart(text: string, part: string): boolean {
   return foldText(text).includes(foldText(part))
 }
+
+/** A string, number or boolean value as text; anything else, such as a list or a missing value, as empty text. */
+export function textOf(value: unknown): string {
+  if (typeof value === 'string') return value
+  if (typeof value === 'number' || typeof value === 'boolean') return String(value)
+  return ''
+}
