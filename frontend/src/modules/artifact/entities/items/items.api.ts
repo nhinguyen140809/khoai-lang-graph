@@ -3,7 +3,7 @@ import { HttpHeader, HttpMethod } from '@/shared/api/http'
 import { apiCommand, apiRequest, fetchPage, type ListPage } from '@/shared/api/request'
 import { pathWithQuery } from '@/shared/lib/url'
 
-import { itemFilterParams } from '../artifacts/filter-params.utils'
+import { filterParams } from '../artifacts/filter-params.utils'
 import {
   type ArtifactItem,
   type ArtifactItemFilters,
@@ -22,7 +22,7 @@ import {
 
 function artifactItemsPath(artifactId: string, filters: ArtifactItemFilters, shape?: 'tree') {
   return pathWithQuery(apiEndpoints.artifactItems.path({ artifactId }), {
-    ...itemFilterParams(filters),
+    ...filterParams(filters),
     parent_item_id: filters.parentItemId,
     shape,
     version: filters.version,
@@ -71,7 +71,7 @@ export function listProjectItems(
   filters: ProjectItemFilters = {},
 ): Promise<ListPage<ArtifactItem>> {
   const path = pathWithQuery(apiEndpoints.projectItems.path({ projectId }), {
-    ...itemFilterParams(filters),
+    ...filterParams(filters),
     run_id: filters.runId,
     q: filters.text,
   })

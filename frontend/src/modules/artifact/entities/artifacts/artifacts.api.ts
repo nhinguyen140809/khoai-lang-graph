@@ -10,7 +10,7 @@ import {
   artifactSchema,
   type UpdateArtifactBody,
 } from './artifacts.types'
-import { artifactFilterParams } from './filter-params.utils'
+import { filterParams } from './filter-params.utils'
 
 // TODO: switch to the generated client in src/shared/api/generated/ once it is generated.
 
@@ -21,7 +21,7 @@ export function listProjectArtifacts(
 ): Promise<Artifact[]> {
   const path = pathWithQuery(
     apiEndpoints.projectArtifacts.path({ projectId }),
-    artifactFilterParams(filters),
+    filterParams(filters),
   )
   return fetchAllPages(path, artifactSchema, {
     limit: artifactsPageSize,
