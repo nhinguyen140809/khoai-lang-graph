@@ -9,8 +9,9 @@ import { useDestinations } from './useDestinations'
 
 /**
  * The feature whose side panel is shown, and the actions that change it. The feature is the one
- * the user chose on the activity bar; until one is chosen, it is the feature of the page on
- * screen, else the first feature. Undefined when the screen has no features.
+ * the user chose on the activity bar, also while the panel is hidden; until one is chosen, it is
+ * the feature of the page on screen, else the first feature. Undefined when the screen has no
+ * features.
  */
 export function useSideFeature() {
   const pathname = usePathname()
@@ -30,6 +31,8 @@ export function useSideFeature() {
 
   return {
     feature,
+    /** Whether the side panel is shown; the feature stays the one chosen while it is hidden. */
+    isPanelShown: sidePanel.visible,
     show,
     /**
      * As an item of the activity bar does, like an editor: the item of the feature shown hides or

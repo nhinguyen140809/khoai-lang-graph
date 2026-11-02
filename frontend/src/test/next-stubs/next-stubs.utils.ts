@@ -8,6 +8,7 @@ import { vi } from 'vitest'
 
 let pathname = '/'
 let query = ''
+let params: Record<string, string> = {}
 
 export function setPathname(next: string) {
   pathname = next
@@ -18,10 +19,16 @@ export function setQuery(next: string) {
   query = next
 }
 
-/** Puts the address back to the root without a query. */
+/** Sets the dynamic parameters of the current route, such as `{ artifactId: 'a1' }`. */
+export function setParams(next: Record<string, string>) {
+  params = next
+}
+
+/** Puts the address back to the root without a query or parameters. */
 export function resetNextStubs() {
   pathname = '/'
   query = ''
+  params = {}
 }
 
 export const routerMock = {
@@ -36,7 +43,7 @@ export const navigationMock = {
   usePathname: () => pathname,
   useRouter: () => routerMock,
   useSearchParams: () => new URLSearchParams(query),
-  useParams: () => ({}),
+  useParams: () => params,
 }
 
 type LinkProps = AnchorHTMLAttributes<HTMLAnchorElement> & { href: string; children?: ReactNode }

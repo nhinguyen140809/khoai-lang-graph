@@ -8,7 +8,7 @@ import { TopBar } from '../../bars/components/TopBar'
 import { CommandPalette } from '../../commands/components/CommandPalette'
 import { ActivityBar } from '../../destinations/components/ActivityBar'
 import { FeatureCommands } from '../../destinations/components/FeatureCommands'
-import type { Destination, TabIcons } from '../../destinations/destination.types'
+import type { Destination } from '../../destinations/destination.types'
 import { DestinationsContext } from '../../destinations/hooks/useDestinations'
 import { useRestoreFrame } from '../../hooks/useRestoreFrame'
 
@@ -22,8 +22,6 @@ interface WorkbenchProps {
    * Without a feature, the screen has no side panel.
    */
   destinations?: readonly Destination[]
-  /** The icons that the pages of the features name for their tabs. */
-  tabIcons?: TabIcons
   /**
    * Components that render nothing and add to the frame what belongs to no page: commands with
    * `useCommands`, such as the projects to open, items of the status bar with `useStatusBarItem`,
@@ -35,7 +33,6 @@ interface WorkbenchProps {
 }
 
 const noDestinations: readonly Destination[] = []
-const noTabIcons: TabIcons = {}
 
 /**
  * The frame of every screen: top bar, activity bar, content, status bar, and the command
@@ -47,11 +44,10 @@ export function Workbench({
   crumb,
   homeHref,
   destinations = noDestinations,
-  tabIcons = noTabIcons,
   contributions,
   children,
 }: WorkbenchProps) {
-  const frameDestinations = useMemo(() => ({ destinations, tabIcons }), [destinations, tabIcons])
+  const frameDestinations = useMemo(() => ({ destinations }), [destinations])
 
   useRestoreFrame(destinations)
 

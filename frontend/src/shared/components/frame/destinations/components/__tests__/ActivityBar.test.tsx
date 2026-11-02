@@ -14,11 +14,11 @@ import { setPathname } from '@/test/next-stubs'
 import { Broken, TestProviders } from '@/test/render'
 import { expectAttribute, expectRole, pressButton } from '@/test/steps'
 
+import { frameWrapper } from '../../../__tests__/frame-wrapper.utils.data'
 import { PanelRegion } from '../../../panels/panel.types'
 import { usePanelsStore } from '../../../panels/panels.store'
 import type { Destination } from '../../destination.types'
 import { useActivityBarItem } from '../../hooks/useActivityBarItem'
-import { DestinationsContext } from '../../hooks/useDestinations'
 import { useSideFeatureStore } from '../../side-feature.store'
 import { ActivityBar } from '../ActivityBar'
 
@@ -61,12 +61,11 @@ beforeEach(() => {
 })
 
 function withActivities(given: Destination[]) {
+  const Frame = frameWrapper({ destinations: given })
   return function Providers({ children }: { children: ReactNode }) {
     return (
       <TestProviders>
-        <DestinationsContext value={{ destinations: given, tabIcons: {} }}>
-          {children}
-        </DestinationsContext>
+        <Frame>{children}</Frame>
       </TestProviders>
     )
   }
@@ -131,6 +130,8 @@ describe('ActivityBar', () => {
 
     await pressButton(/^Console/)
     expect(usePanelsStore.getState().panels[PanelRegion.Side].visible).toBe(false)
+    // No item is pressed while the panel is hidden, so none keeps the fill of a chosen item.
+    expectAttribute('button', /^Console/, 'aria-pressed', 'false')
 
     await pressButton('Artifacts')
     expect(usePanelsStore.getState().panels[PanelRegion.Side].visible).toBe(true)

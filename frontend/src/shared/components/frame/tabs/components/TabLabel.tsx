@@ -3,6 +3,7 @@ import { FileIcon } from 'lucide-react'
 import { destinationOfHref } from '../../destinations/destination.utils'
 import { useDestinations } from '../../destinations/hooks/useDestinations'
 import type { EditorTab } from '../editor-tabs.types'
+import { useTabIcon } from '../hooks/useTabIcon'
 
 interface TabLabelProps {
   tab: EditorTab
@@ -12,13 +13,13 @@ interface TabLabelProps {
 
 /**
  * The icon and the title of a tab, on the tab and in the list of open tabs. The icon is the one
- * that the page of the tab names among the tab icons of the frame, else the icon of the feature it
+ * that the page of the tab names among the registered tab icons, else the icon of the feature it
  * belongs to. Inside an element of the group `tab`, `data-active` colors the icon and
  * `data-preview` sets the title in italics.
  */
 export function TabLabel({ tab, preview }: TabLabelProps) {
-  const { destinations, tabIcons } = useDestinations()
-  const named = tab.icon === undefined ? undefined : tabIcons[tab.icon]
+  const { destinations } = useDestinations()
+  const named = useTabIcon(tab.icon)
   const icon = named ?? destinationOfHref(destinations, tab.href)?.icon ?? <FileIcon />
 
   return (
