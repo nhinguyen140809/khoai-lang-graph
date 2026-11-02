@@ -41,9 +41,13 @@
     "x-ui-display": {
       "enum": ["document", "heading", "table", "cards", "transcript"]
     },
+    "x-ui-navigable": {
+      "type": "boolean",
+      "description": "Item kinds only. Whether the items of the kind can be reached one by one: a row in the outline of the document that holds them, and a page of their own. Items short enough to read in place in the page of the document, such as the messages of an interview, are not navigable."
+    },
     "x-ui-title-field": {
       "type": "string",
-      "description": "Item kinds only. The field that names an item in lists, links and trace views."
+      "description": "Item kinds only. The field that names an item in lists, links, the outline and trace views."
     },
     "x-ui-list-fields": {
       "type": "array",
@@ -100,6 +104,7 @@
         "properties": {
           "x-ui-display": { "const": "document" },
           "x-key-prefix": false,
+          "x-ui-navigable": false,
           "x-ui-title-field": false,
           "x-ui-list-fields": false
         }
@@ -108,7 +113,7 @@
         "properties": {
           "x-ui-display": { "enum": ["heading", "table", "cards", "transcript"] }
         },
-        "required": ["x-ui-title-field", "x-ui-list-fields"]
+        "required": ["x-ui-navigable", "x-ui-title-field", "x-ui-list-fields"]
       }
     }
   ],

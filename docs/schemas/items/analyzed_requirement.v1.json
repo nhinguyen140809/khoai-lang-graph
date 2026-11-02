@@ -8,13 +8,15 @@
   "x-schema-version": 1,
   "x-key-prefix": "AR",
   "x-ui-display": "table",
-  "x-ui-title-field": "statement",
+  "x-ui-navigable": true,
+  "x-ui-title-field": "title",
   "x-ui-list-fields": [
-    "statement",
+    "title",
     "type",
     "priority"
   ],
   "x-ui-field-order": [
+    "title",
     "statement",
     "type",
     "quality_category",
@@ -24,6 +26,12 @@
   "type": "object",
   "additionalProperties": false,
   "properties": {
+    "title": {
+      "title": "Title",
+      "type": "string",
+      "description": "A short name of at most 60 characters that tells the point of the item at a glance, for example \"Find a mentor in my field\".",
+      "x-ui-widget": "text"
+    },
     "statement": {
       "title": "Statement",
       "type": "string",
@@ -66,6 +74,7 @@
     }
   },
   "required": [
+    "title",
     "statement",
     "type",
     "quality_category",

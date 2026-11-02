@@ -8,14 +8,16 @@
   "x-schema-version": 1,
   "x-key-prefix": "VAL",
   "x-ui-display": "table",
-  "x-ui-title-field": "description",
+  "x-ui-navigable": true,
+  "x-ui-title-field": "title",
   "x-ui-list-fields": [
-    "description",
+    "title",
     "category",
     "severity",
     "status"
   ],
   "x-ui-field-order": [
+    "title",
     "category",
     "severity",
     "description",
@@ -25,6 +27,12 @@
   "type": "object",
   "additionalProperties": false,
   "properties": {
+    "title": {
+      "title": "Title",
+      "type": "string",
+      "description": "A short name of at most 60 characters that tells the point of the item at a glance, for example \"Find a mentor in my field\".",
+      "x-ui-widget": "text"
+    },
     "category": {
       "title": "Category",
       "type": "string",
@@ -71,6 +79,7 @@
     }
   },
   "required": [
+    "title",
     "category",
     "severity",
     "description",

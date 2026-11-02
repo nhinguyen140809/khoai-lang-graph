@@ -65,6 +65,7 @@ Rules that relate a file to itself or to its name are not expressible in a JSON 
 | Every field is required | `required` lists exactly the names in `properties` |
 | Field order | `x-ui-field-order` lists exactly the names in `properties` |
 | Known fields | `x-ui-title-field` and every name in `x-ui-list-fields` is a property |
+| Title of a navigable kind | When `x-ui-navigable` is `true`, the field that `x-ui-title-field` names is a short title: its description says it has at most 60 characters. The length is not a keyword of the schema, because the structured output of LLM providers does not accept it |
 | Value lists | Every `x-value-list` names a list of the workflow definition that uses the file, and a field has either an `enum` or one of `x-value-list` and `x-value-from`, never both |
 
 ## Conventions
@@ -101,7 +102,8 @@ At schema level:
 | Keyword | Values | Meaning |
 |---|---|---|
 | `x-ui-display` | `document`, `heading`, `table`, `cards`, `transcript` | How the content of the kind is shown. `document`: the fields of an artifact, shown above its items. `heading`: a section heading with the items it contains. `table`: one row per item. `cards`: one card per item. `transcript`: the items in order, as a conversation |
-| `x-ui-title-field` | One property name | The field that names an item in lists, links and trace views. Item kinds only |
+| `x-ui-navigable` | `true`, `false` | Whether the items of the kind can be reached one by one: a row in the outline of the document that holds them, and a page of their own. `false` for items that are short enough to read in place in the page of the document. Item kinds only |
+| `x-ui-title-field` | One property name | The field that names an item in lists, links, the outline and trace views. Item kinds only |
 | `x-ui-list-fields` | Property names, in order | The fields shown as table columns or on a card. Item kinds only |
 | `x-ui-field-order` | Every property name, in order | The order of the fields in the detail view and the edit form |
 
@@ -114,21 +116,21 @@ At field level:
 
 A field without `x-ui-widget` is shown by its type. The label of a field is derived from its name, for example `fit_criterion` becomes "Fit criterion".
 
-| Kind | `x-ui-display` | `x-ui-title-field` | `x-ui-list-fields` |
-|---|---|---|---|
-| Every artifact kind | `document` | - | - |
-| `section` | `heading` | `title` | `title` |
-| `persona` | `cards` | `name` | `name`, `stakeholder_type`, `interview_status` |
-| `interview_message` | `transcript` | `content` | `turn`, `role`, `content` |
-| `raw_requirement` | `table` | `statement` | `statement`, `topic` |
-| `analyzed_requirement` | `table` | `statement` | `statement`, `type`, `priority` |
-| `latent_need` | `table` | `description` | `description`, `confidence`, `disposition` |
-| `assumption` | `table` | `statement` | `statement`, `validation_status` |
-| `ambiguity_issue` | `table` | `description` | `description`, `ambiguity_type`, `status` |
-| `conflict` | `table` | `description` | `description`, `severity`, `status` |
-| `spec_requirement` | `table` | `title` | `title`, `type`, `priority`, `verification_method` |
-| `backlog_item` | `table` | `title` | `title`, `item_type`, `priority`, `story_points`, `delivery_status` |
-| `validation_issue` | `table` | `description` | `description`, `category`, `severity`, `status` |
+| Kind | `x-ui-display` | `x-ui-navigable` | `x-ui-title-field` | `x-ui-list-fields` |
+|---|---|---|---|---|
+| Every artifact kind | `document` | - | - | - |
+| `section` | `heading` | `true` | `title` | `title` |
+| `persona` | `cards` | `true` | `name` | `name`, `stakeholder_type`, `interview_status` |
+| `interview_message` | `transcript` | `false` | `content` | `turn`, `role`, `content` |
+| `raw_requirement` | `table` | `true` | `title` | `title`, `topic` |
+| `analyzed_requirement` | `table` | `true` | `title` | `title`, `type`, `priority` |
+| `latent_need` | `table` | `true` | `title` | `title`, `confidence`, `disposition` |
+| `assumption` | `table` | `true` | `title` | `title`, `validation_status` |
+| `ambiguity_issue` | `table` | `true` | `title` | `title`, `ambiguity_type`, `status` |
+| `conflict` | `table` | `true` | `title` | `title`, `severity`, `status` |
+| `spec_requirement` | `table` | `true` | `title` | `title`, `type`, `priority`, `verification_method` |
+| `backlog_item` | `table` | `true` | `title` | `title`, `item_type`, `priority`, `story_points`, `delivery_status` |
+| `validation_issue` | `table` | `true` | `title` | `title`, `category`, `severity`, `status` |
 
 The fields marked `readOnly` in version 1 are `interview_status` of a persona, `status`, `turn_count` and `stop_reason` of an interview transcript, and `iteration` of a validation report.
 
