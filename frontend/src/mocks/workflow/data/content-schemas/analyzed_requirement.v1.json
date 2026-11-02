@@ -8,12 +8,30 @@
   "x-schema-version": 1,
   "x-key-prefix": "AR",
   "x-ui-display": "table",
-  "x-ui-title-field": "statement",
-  "x-ui-list-fields": ["statement", "type", "priority"],
-  "x-ui-field-order": ["statement", "type", "quality_category", "priority", "rationale"],
+  "x-ui-navigable": true,
+  "x-ui-title-field": "title",
+  "x-ui-list-fields": [
+    "title",
+    "type",
+    "priority"
+  ],
+  "x-ui-field-order": [
+    "title",
+    "statement",
+    "type",
+    "quality_category",
+    "priority",
+    "rationale"
+  ],
   "type": "object",
   "additionalProperties": false,
   "properties": {
+    "title": {
+      "title": "Title",
+      "type": "string",
+      "description": "A short name of at most 60 characters that tells the point of the item at a glance, for example \"Find a mentor in my field\".",
+      "x-ui-widget": "text"
+    },
     "statement": {
       "title": "Statement",
       "type": "string",
@@ -23,13 +41,20 @@
     "type": {
       "title": "Type",
       "type": "string",
-      "enum": ["functional", "non_functional", "constraint"],
+      "enum": [
+        "functional",
+        "non_functional",
+        "constraint"
+      ],
       "description": "Kind of requirement.",
       "x-ui-widget": "select"
     },
     "quality_category": {
       "title": "Quality category",
-      "type": ["string", "null"],
+      "type": [
+        "string",
+        "null"
+      ],
       "x-value-list": "quality_category",
       "description": "Quality attribute. Required when type is non_functional, null otherwise.",
       "x-ui-widget": "select"
@@ -48,5 +73,12 @@
       "x-ui-widget": "textarea"
     }
   },
-  "required": ["statement", "type", "quality_category", "priority", "rationale"]
+  "required": [
+    "title",
+    "statement",
+    "type",
+    "quality_category",
+    "priority",
+    "rationale"
+  ]
 }

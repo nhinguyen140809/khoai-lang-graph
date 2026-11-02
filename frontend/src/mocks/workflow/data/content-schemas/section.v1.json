@@ -8,9 +8,15 @@
   "x-schema-version": 1,
   "x-key-prefix": "SEC",
   "x-ui-display": "heading",
+  "x-ui-navigable": true,
   "x-ui-title-field": "title",
-  "x-ui-list-fields": ["title"],
-  "x-ui-field-order": ["title", "introduction"],
+  "x-ui-list-fields": [
+    "title"
+  ],
+  "x-ui-field-order": [
+    "title",
+    "introduction"
+  ],
   "type": "object",
   "additionalProperties": false,
   "properties": {
@@ -22,10 +28,16 @@
     },
     "introduction": {
       "title": "Introduction",
-      "type": ["string", "null"],
+      "type": [
+        "string",
+        "null"
+      ],
       "description": "Short text shown under the heading. Null when the section has none.",
       "x-ui-widget": "textarea"
     }
   },
-  "required": ["title", "introduction"]
+  "required": [
+    "title",
+    "introduction"
+  ]
 }

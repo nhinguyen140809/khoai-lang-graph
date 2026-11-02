@@ -119,7 +119,7 @@ function interview(personaKey: string, personaName: string, turns: Turn[]): Arti
   const turnCount = turnOf(turns.length - 1)
   return {
     kind: 'interview_transcript',
-    title: `Interview: ${personaKey} ${personaName}`,
+    title: `Interview with the ${personaName.toLowerCase()}`,
     summary: `${String(turnCount)} turns with the ${personaName.toLowerCase()}.`,
     status: 'approved',
     subjectKey: personaKey,
@@ -200,14 +200,15 @@ const interviews: ArtifactSpec[] = [
   ]),
 ]
 
-const raw = (key: string, statement: string, topic: string): ItemSpec => ({
+const raw = (key: string, title: string, statement: string, topic: string): ItemSpec => ({
   key,
   kind: 'raw_requirement',
-  content: { statement, topic },
+  content: { title, statement, topic },
 })
 
 const analyzed = (
   key: string,
+  title: string,
   statement: string,
   type: string,
   priority: string,
@@ -218,14 +219,14 @@ const analyzed = (
   key,
   kind: 'analyzed_requirement',
   version,
-  content: { statement, type, quality_category: qualityCategory, priority, rationale },
+  content: { title, statement, type, quality_category: qualityCategory, priority, rationale },
 })
 
 const requirementsAnalysis: ArtifactSpec = {
   kind: 'requirements_analysis',
   title: 'Requirements analysis',
   summary:
-    '10 analyzed requirements, 2 latent needs, 3 ambiguities and 1 conflict from three interviews.',
+    'From three interviews: 8 stated needs, 10 analysed requirements, 2 unstated needs, 3 assumptions, 3 needs clarifying and 1 disagreement.',
   version: 4,
   content: {
     key_findings: [
@@ -235,20 +236,52 @@ const requirementsAnalysis: ArtifactSpec = {
     open_questions: ['Does a booking need the approval of the admin?', 'How long is a session?'],
   },
   items: [
-    raw('RAW-001', 'I want to find a mentor who works in my field of study.', 'search'),
-    raw('RAW-002', 'I never know who is free this week, so I give up.', 'search'),
-    raw('RAW-003', 'I want to cancel a session without writing to anyone.', 'booking'),
-    raw('RAW-004', 'I want a reminder the hour before a session.', 'reminders'),
-    raw('RAW-005', 'I can give two afternoons a week; I say which hours.', 'booking'),
-    raw('RAW-006', 'I sometimes want to see several students at once.', 'booking'),
+    raw(
+      'RAW-001',
+      'Find a mentor in my field',
+      'I want to find a mentor who works in my field of study.',
+      'search',
+    ),
+    raw(
+      'RAW-002',
+      'See who is free this week',
+      'I never know who is free this week, so I give up.',
+      'search',
+    ),
+    raw(
+      'RAW-003',
+      'Cancel without writing',
+      'I want to cancel a session without writing to anyone.',
+      'booking',
+    ),
+    raw(
+      'RAW-004',
+      'Reminder before a session',
+      'I want a reminder the hour before a session.',
+      'reminders',
+    ),
+    raw(
+      'RAW-005',
+      'Offer two afternoons a week',
+      'I can give two afternoons a week; I say which hours.',
+      'booking',
+    ),
+    raw(
+      'RAW-006',
+      'See several students at once',
+      'I sometimes want to see several students at once.',
+      'booking',
+    ),
     raw(
       'RAW-007',
+      'Approve mentors first',
       'A mentor must be approved before students can see the profile.',
       'administration',
     ),
-    raw('RAW-008', 'I would like to approve a booking too.', 'booking'),
+    raw('RAW-008', 'Approve a booking too', 'I would like to approve a booking too.', 'booking'),
     analyzed(
       'AR-001',
+      'List mentors by field',
       'The system lists mentors by field of study.',
       'functional',
       'must',
@@ -256,6 +289,7 @@ const requirementsAnalysis: ArtifactSpec = {
     ),
     analyzed(
       'AR-002',
+      'Weekly hours of a mentor',
       'A mentor sets the weekly hours when sessions can be booked.',
       'functional',
       'must',
@@ -263,6 +297,7 @@ const requirementsAnalysis: ArtifactSpec = {
     ),
     analyzed(
       'AR-003',
+      'Search with free hours',
       'A student searches mentors by field and sees their free hours.',
       'functional',
       'must',
@@ -270,6 +305,7 @@ const requirementsAnalysis: ArtifactSpec = {
     ),
     analyzed(
       'AR-004',
+      'Cancel a booked session',
       'A student cancels a booked session without contacting the mentor.',
       'functional',
       'must',
@@ -277,6 +313,7 @@ const requirementsAnalysis: ArtifactSpec = {
     ),
     analyzed(
       'AR-005',
+      'Remind both sides',
       'The system reminds the student and the mentor before a session.',
       'functional',
       'should',
@@ -284,6 +321,7 @@ const requirementsAnalysis: ArtifactSpec = {
     ),
     analyzed(
       'AR-006',
+      'Approved mentors only',
       'A mentor is listed only after the admin approved the account.',
       'constraint',
       'must',
@@ -291,6 +329,7 @@ const requirementsAnalysis: ArtifactSpec = {
     ),
     analyzed(
       'AR-007',
+      'Two-step booking',
       'A booking runs in two layers: a request, then the approval of the mentor or the admin.',
       'functional',
       'must',
@@ -300,6 +339,7 @@ const requirementsAnalysis: ArtifactSpec = {
     ),
     analyzed(
       'AR-008',
+      'Group sessions',
       'A mentor may allow several students in one session.',
       'functional',
       'could',
@@ -307,6 +347,7 @@ const requirementsAnalysis: ArtifactSpec = {
     ),
     analyzed(
       'AR-009',
+      'Reminder by email',
       'The system sends the reminder of a session by email.',
       'functional',
       'should',
@@ -314,6 +355,7 @@ const requirementsAnalysis: ArtifactSpec = {
     ),
     analyzed(
       'AR-010',
+      'Search within 2 seconds',
       'A search result is listed within 2 seconds.',
       'non_functional',
       'should',
@@ -324,6 +366,7 @@ const requirementsAnalysis: ArtifactSpec = {
       key: 'LN-001',
       kind: 'latent_need',
       content: {
+        title: 'Trust before booking',
         description: 'Students need to trust a mentor before they book.',
         reasoning: 'Two interviewees asked who the mentor is before they asked about time.',
         confidence: 'medium',
@@ -334,6 +377,7 @@ const requirementsAnalysis: ArtifactSpec = {
       key: 'LN-002',
       kind: 'latent_need',
       content: {
+        title: 'Record of every decision',
         description: 'The admin needs a record of every decision for the report of the term.',
         reasoning: 'The admin asked for a record, a list and a number for every task.',
         confidence: 'high',
@@ -344,6 +388,7 @@ const requirementsAnalysis: ArtifactSpec = {
       key: 'ASM-001',
       kind: 'assumption',
       content: {
+        title: 'Mentors have a university email',
         statement: 'Every mentor has an email of the university.',
         reasoning: 'Mentors are lecturers.',
         impact_if_wrong: 'Reminders cannot be sent to some mentors.',
@@ -354,6 +399,7 @@ const requirementsAnalysis: ArtifactSpec = {
       key: 'ASM-002',
       kind: 'assumption',
       content: {
+        title: 'A session lasts one hour',
         statement: 'A session lasts one hour.',
         reasoning: 'Two interviewees said about an hour.',
         impact_if_wrong: 'The hours that a mentor sets would not fit the sessions.',
@@ -364,6 +410,7 @@ const requirementsAnalysis: ArtifactSpec = {
       key: 'ASM-003',
       kind: 'assumption',
       content: {
+        title: 'University sign-in',
         statement: 'Students sign in with the account of the university.',
         reasoning: 'The platform is only for the students of one university.',
         impact_if_wrong: 'The platform needs its own sign-up.',
@@ -374,6 +421,7 @@ const requirementsAnalysis: ArtifactSpec = {
       key: 'AMB-001',
       kind: 'ambiguity_issue',
       content: {
+        title: '"Fast" has no number',
         description: '"Fast" search has no number.',
         ambiguity_type: 'vague',
         ambiguous_text: 'Fast. I do not wait for a page that takes more than a couple of seconds.',
@@ -386,6 +434,7 @@ const requirementsAnalysis: ArtifactSpec = {
       key: 'AMB-002',
       kind: 'ambiguity_issue',
       content: {
+        title: 'Session length unknown',
         description: 'The length of a session is not given.',
         ambiguity_type: 'incomplete',
         ambiguous_text: 'About an hour, and I do not want back-to-back sessions.',
@@ -398,6 +447,7 @@ const requirementsAnalysis: ArtifactSpec = {
       key: 'AMB-003',
       kind: 'ambiguity_issue',
       content: {
+        title: 'Reminder channel unnamed',
         description: 'The reminder comes "the hour before"; the channel is not named.',
         ambiguity_type: 'incomplete',
         ambiguous_text: 'I want a reminder the hour before.',
@@ -410,6 +460,7 @@ const requirementsAnalysis: ArtifactSpec = {
       key: 'CONF-001',
       kind: 'conflict',
       content: {
+        title: 'Who approves a booking',
         description: 'PER-001 and PER-003 disagree on who approves a booking.',
         conflict_type: 'between_stakeholders',
         severity: 'high',
@@ -744,6 +795,7 @@ const validationReport: ArtifactSpec = {
       content: {
         category: 'specification',
         severity: 'high',
+        title: 'REQ-005 lacks acceptance criteria',
         description: 'REQ-005 has no acceptance criteria.',
         suggestion: 'Say how a tester sees that the reminder was sent.',
         status: 'open',
@@ -755,6 +807,7 @@ const validationReport: ArtifactSpec = {
       content: {
         category: 'analysis',
         severity: 'low',
+        title: 'REQ-007 outgrows the one-hour session',
         description: 'REQ-007 needs a longer hour than ASM-002 allows.',
         suggestion: 'Decide the length of a session first (AMB-002).',
         status: 'open',
@@ -763,15 +816,40 @@ const validationReport: ArtifactSpec = {
   ],
 }
 
+// The analysis is still under review, but the user has begun: some items are approved, some are
+// refused, so that a document shows every state of an item next to the drafts.
+const analysisReview: Record<string, 'approved' | 'rejected'> = {
+  'RAW-001': 'approved',
+  'RAW-002': 'approved',
+  'RAW-008': 'rejected',
+  'AR-001': 'approved',
+  'AR-002': 'approved',
+  'LN-002': 'rejected',
+  'ASM-003': 'rejected',
+}
+
+function withReview(specs: ItemSpec[]): ItemSpec[] {
+  return specs.map((spec) => ({
+    ...spec,
+    ...(analysisReview[spec.key] !== undefined && { status: analysisReview[spec.key] }),
+    ...(spec.children !== undefined && { children: withReview(spec.children) }),
+  }))
+}
+
 export const mentorArtifactSpecs: ArtifactSpec[] = [
   elicitationPlan,
   personaCatalog,
   ...interviews,
-  requirementsAnalysis,
+  { ...requirementsAnalysis, items: withReview(requirementsAnalysis.items) },
   requirementSpecification,
   productBacklog,
   validationReport,
 ]
 
 /** The items that the user edited, with their version now. */
-export const mentorEditedKeys: Record<string, number> = { 'AR-007': 2 }
+export const mentorEditedKeys: Record<string, number> = {
+  'AR-007': 2,
+  'AR-003': 2,
+  'RAW-004': 3,
+  'REQ-002': 2,
+}

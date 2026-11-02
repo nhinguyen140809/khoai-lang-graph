@@ -8,12 +8,29 @@
   "x-schema-version": 1,
   "x-key-prefix": "LN",
   "x-ui-display": "table",
-  "x-ui-title-field": "description",
-  "x-ui-list-fields": ["description", "confidence", "disposition"],
-  "x-ui-field-order": ["description", "reasoning", "confidence", "disposition"],
+  "x-ui-navigable": true,
+  "x-ui-title-field": "title",
+  "x-ui-list-fields": [
+    "title",
+    "confidence",
+    "disposition"
+  ],
+  "x-ui-field-order": [
+    "title",
+    "description",
+    "reasoning",
+    "confidence",
+    "disposition"
+  ],
   "type": "object",
   "additionalProperties": false,
   "properties": {
+    "title": {
+      "title": "Title",
+      "type": "string",
+      "description": "A short name of at most 60 characters that tells the point of the item at a glance, for example \"Find a mentor in my field\".",
+      "x-ui-widget": "text"
+    },
     "description": {
       "title": "Description",
       "type": "string",
@@ -29,17 +46,31 @@
     "confidence": {
       "title": "Confidence",
       "type": "string",
-      "enum": ["low", "medium", "high"],
+      "enum": [
+        "low",
+        "medium",
+        "high"
+      ],
       "description": "How sure the inference is.",
       "x-ui-widget": "select"
     },
     "disposition": {
       "title": "Disposition",
       "type": "string",
-      "enum": ["open", "promoted", "dismissed"],
+      "enum": [
+        "open",
+        "promoted",
+        "dismissed"
+      ],
       "description": "What happened to the need. promoted means a requirement was created from it.",
       "x-ui-widget": "select"
     }
   },
-  "required": ["description", "reasoning", "confidence", "disposition"]
+  "required": [
+    "title",
+    "description",
+    "reasoning",
+    "confidence",
+    "disposition"
+  ]
 }
