@@ -1,0 +1,209 @@
+import {
+  contentFields,
+  type ContentSchema,
+  isNavigable,
+  type IssueKind,
+  itemTitle,
+} from '@/modules/workflow/entities/@x/artifact'
+import { groupBy } from '@/shared/lib/collections'
+import { isEmpty } from '@/shared/lib/guards'
+import { ancestorsOf } from '@/shared/lib/hierarchy'
+
+import type { Artifact } from '../artifacts/artifacts.types'
+import { itemHierarchy } from '../items/item-hierarchy.utils'
+import type { OutlineItem } from '../items/items.types'
+import type { ItemStatus, StatusCount } from '../status/item-status.types'
+import { itemStatus, mergeStatusCounts } from '../status/item-status.utils'
+import type {
+  ArrangedPlace,
+  ArrangeInput,
+  BreadcrumbStep,
+  KindView,
+  OutlineNeighbors,
+  OutlineNode,
+} from './outline.types'
+
+// The order of a document: sections nest by `parent_item_id`; under a parent, the items that are not
+// sections form runs of one kind, in the order of the item kinds of the artifact kind. The outline of
+// the side panel and the parts of the page of a document both read this order from `arrangeItems`.
+
+/** The id of the row of an item in the outline. */
+export function itemNodeId(itemId: string): string {
+  return `item:${itemId}`
+}
+
+function placeUnder(
+  parentId: string | null,
+  input: ArrangeInput,
+  known: ReadonlySet<string>,
+): ArrangedPlace {
+  const inside = input.items.filter(({ parent_item_id }) =>
+    parentId === null
+      ? parent_item_id === null || !known.has(parent_item_id)
+      : parent_item_id === parentId,
+  )
+  const isSection = (item: OutlineItem) => input.kinds.get(item.kind)?.display === 'heading'
+  const rank = (kind: string) => {
+    const index = input.itemKinds.indexOf(kind)
+    return index === -1 ? input.itemKinds.length : index
+  }
+  const runs = groupBy(
+    inside.filter((item) => !isSection(item)),
+    ({ kind }) => kind,
+  )
+    .map(({ key, items }) => ({ kind: key, items }))
+    .toSorted((a, b) => rank(a.kind) - rank(b.kind))
+  return {
+    sections: inside
+      .filter(isSection)
+      .map((item) => ({ item, place: placeUnder(item.id, input, known) })),
+    runs,
+  }
+}
+
+/** The items of an artifact in the order of its document (see the top of this file). */
+export function arrangeItems(input: ArrangeInput): ArrangedPlace {
+  return placeUnder(null, input, new Set(input.items.map(({ id }) => id)))
+}
+
+function countOf(place: ArrangedPlace): number {
+  return (
+    place.runs.reduce((total, { items }) => total + items.length, 0) +
+    place.sections.reduce((total, { place: inner }) => total + countOf(inner), 0)
+  )
+}
+
+interface OutlineContext extends ArrangeInput {
+  issueKinds: readonly IssueKind[]
+}
+
+function runNodes(place: ArrangedPlace, context: OutlineContext, parentId: string): OutlineNode[] {
+  return place.runs.flatMap(({ kind, items }) => {
+    const view = context.kinds.get(kind)
+    if (view !== undefined && !isNavigable(view.schema)) return []
+    const children: OutlineNode[] = items.map((item) => ({
+      type: 'item',
+      id: itemNodeId(item.id),
+      item,
+      title: itemTitle(view?.schema, item),
+      status: itemStatus(item, context.issueKinds),
+    }))
+    return [
+      {
+        type: 'group',
+        id: `group:${parentId}:${kind}`,
+        kind,
+        title: view?.title ?? kind,
+        count: items.length,
+        statusCounts: statusCountsOf(children),
+        children,
+      },
+    ]
+  })
+}
+
+/** The statuses of the items under the rows given, the ones in the sections and groups included. */
+function statusCountsOf(nodes: readonly OutlineNode[]): StatusCount[] {
+  return mergeStatusCounts(
+    nodes.map((node) => {
+      if (node.type === 'item') return [{ status: node.status, count: 1 }]
+      return isBranch(node) ? node.statusCounts : []
+    }),
+  )
+}
+
+function placeNodes(
+  place: ArrangedPlace,
+  context: OutlineContext,
+  parentId: string,
+): OutlineNode[] {
+  const sections: OutlineNode[] = place.sections.map(({ item, place: inner }) => {
+    const children = placeNodes(inner, context, item.id)
+    return {
+      type: 'section',
+      id: `section:${item.id}`,
+      item,
+      title: itemTitle(context.kinds.get(item.kind)?.schema, item),
+      count: countOf(inner),
+      statusCounts: statusCountsOf(children),
+      children,
+    }
+  })
+  return [...sections, ...runNodes(place, context, parentId)]
+}
+
+/**
+ * The outline of an artifact, in the order of the document. An artifact without items gives one row
+ * for each filled field of its content. A section or a group counts the statuses of the rows under
+ * it; how much they ask of the user depends on the review, so the reader decides it.
+ */
+export function artifactOutline(
+  input: ArrangeInput & {
+    artifact: Pick<Artifact, 'id' | 'content'>
+    artifactSchema: ContentSchema | undefined
+    issueKinds: readonly IssueKind[]
+  },
+): OutlineNode[] {
+  if (input.items.length === 0) {
+    if (input.artifactSchema === undefined) return []
+    return contentFields(input.artifactSchema)
+      .filter(({ name }) => !isEmpty(input.artifact.content[name]))
+      .map(({ name, title }) => ({ type: 'field', id: `field:${name}`, name, title }))
+  }
+  return placeNodes(arrangeItems(input), input, 'root')
+}
+
+/** Whether a row of the outline holds rows under it: a section or a group of items. */
+export function isBranch(node: OutlineNode): node is Extract<OutlineNode, { children: unknown }> {
+  return node.type === 'section' || node.type === 'group'
+}
+
+/** The rows of type `item` that a reader goes through, in order. */
+function outlineLeaves(nodes: readonly OutlineNode[]): Extract<OutlineNode, { type: 'item' }>[] {
+  return nodes.flatMap((node) => {
+    if (node.type === 'item') return [node]
+    return isBranch(node) ? outlineLeaves(node.children) : []
+  })
+}
+
+/** The items of the outline that a reader goes through, in order (see `outlineLeaves`). */
+export function outlineSequence(nodes: readonly OutlineNode[]): OutlineItem[] {
+  return outlineLeaves(nodes).map(({ item }) => item)
+}
+
+/** The rows of type `item` of an outline, in order, each with its status. */
+export function outlineStatuses(
+  nodes: readonly OutlineNode[],
+): { item: OutlineItem; status: ItemStatus }[] {
+  return outlineLeaves(nodes).map(({ item, status }) => ({ item, status }))
+}
+
+/** The place of an item in the order that a reader goes through, with the item before and after it. */
+export function outlineNeighbors(nodes: readonly OutlineNode[], itemId: string): OutlineNeighbors {
+  const sequence = outlineSequence(nodes)
+  const position = sequence.findIndex(({ id }) => id === itemId)
+  return {
+    index: position + 1,
+    count: sequence.length,
+    previous: position > 0 ? (sequence[position - 1] ?? null) : null,
+    next: position >= 0 ? (sequence[position + 1] ?? null) : null,
+  }
+}
+
+/**
+ * The path from the document down to an item, as the outline draws it: the sections above the
+ * item from the top down, each with its title in its kind, then the group of the kind of the item,
+ * which is named by that kind. A section has no group.
+ */
+export function outlineBreadcrumb(
+  item: Pick<OutlineItem, 'id' | 'kind' | 'parent_item_id'>,
+  outline: { items: readonly OutlineItem[]; kinds: ReadonlyMap<string, KindView> },
+): BreadcrumbStep[] {
+  const sections = ancestorsOf(item, outline.items, itemHierarchy).map((section) => ({
+    id: section.id,
+    title: itemTitle(outline.kinds.get(section.kind)?.schema, section),
+  }))
+  const kind = outline.kinds.get(item.kind)
+  if (kind?.display === 'heading') return sections
+  return [...sections, { id: `group:${item.kind}`, title: kind?.title ?? item.kind }]
+}

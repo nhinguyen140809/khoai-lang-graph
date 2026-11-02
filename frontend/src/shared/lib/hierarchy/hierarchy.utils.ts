@@ -9,9 +9,13 @@ export function isNested<T>(items: readonly T[], { parentIdOf }: Hierarchy<T>): 
  * The items above an item, from the top level down to its parent. The chain ends where a parent is
  * not among the items.
  */
-export function ancestorsOf<T>(item: T, items: readonly T[], hierarchy: Hierarchy<T>): T[] {
+export function ancestorsOf<T, Item extends T>(
+  item: T,
+  items: readonly Item[],
+  hierarchy: Hierarchy<T>,
+): Item[] {
   const { idOf, parentIdOf } = hierarchy
-  const chain: T[] = []
+  const chain: Item[] = []
   let parentId = parentIdOf(item)
   while (parentId !== null) {
     const parent = items.find((candidate) => idOf(candidate) === parentId)
