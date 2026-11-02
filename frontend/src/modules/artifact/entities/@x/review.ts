@@ -1,2 +1,2 @@
-export { artifactRefSchema } from '../types/artifacts.types'
-export type { ItemRef } from '../types/items.types'
+export { artifactRefSchema } from '../artifacts/artifacts.types'
+export type { ItemRef } from '../items/items.types'
