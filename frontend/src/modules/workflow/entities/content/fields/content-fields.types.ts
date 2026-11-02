@@ -29,8 +29,10 @@ export type ContentDisplay = (typeof contentDisplays)[number]
  */
 export interface ContentField {
   name: string
+  /** The kind and the name, such as `interview_transcript.stop_reason`; an entry of a list adds its name after its list. */
+  path: string
   /** The title of the property; when it has none, derived from the name: `acceptance_criteria` reads "Acceptance criteria". */
-  label: string
+  title: string
   widget: FieldWidget
   /** The type list of the property contains `null`. */
   nullable: boolean
@@ -41,6 +43,8 @@ export interface ContentField {
   description: string | null
   /** The artifact and field whose entries a select may take (`x-value-from`), such as `elicitation_plan.topics`. */
   allowedValuesFrom: string | null
+  /** The key of the value list whose titles name the values of the field (`x-value-list`); null when it names none. */
+  valueList: string | null
   /** The fewest entries of a list; null when it may be empty. */
   minItems: number | null
   minimum: number | null

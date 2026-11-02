@@ -1,7 +1,9 @@
 import { isSameValue, omit } from '@/shared/lib/collections'
 import { isBlank, isEmpty } from '@/shared/lib/guards'
 
-import type { ContentField } from './content-fields.types'
+import type { WorkflowDefinition } from '../../definition/workflow-definition.types'
+import { findValueList } from '../../definition/workflow-definition.utils'
+import type { ContentField } from '../fields/content-fields.types'
 import type { ContentValues } from './content-values.types'
 import { widgetValueRules } from './widget-value-rules.utils'
 
@@ -71,4 +73,20 @@ export function changedFields(
     .filter((field) => !field.readOnly)
     .filter((field) => !isSameValue(before[field.name] ?? null, after[field.name] ?? null))
     .map((field) => field.name)
+}
+
+/**
+ * The title that the definition gives a value of a value list, such as "Must" for `must`; the
+ * value itself when the field names no list, the definition has not loaded or the list lacks it.
+ */
+export function valueTitle(
+  field: Pick<ContentField, 'valueList'>,
+  value: string,
+  definition: Pick<WorkflowDefinition, 'value_lists'> | undefined,
+): string {
+  if (field.valueList === null || definition === undefined) return value
+  return (
+    findValueList(definition, field.valueList)?.values.find(({ key }) => key === value)?.title ??
+    value
+  )
 }

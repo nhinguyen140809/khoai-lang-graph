@@ -14,12 +14,22 @@ export const keyCases = [
     key: itemKeys.ofProject('p1', { kind: 'persona' }),
     wider: itemKeys.lists(),
   },
+  {
+    name: 'the first page of the items of a project',
+    key: itemKeys.firstOfProject('p1', { kind: 'persona' }),
+    wider: itemKeys.lists(),
+  },
   { name: 'one item', key: itemKeys.detail('i1'), wider: itemKeys.all() },
   { name: 'the versions of an item', key: itemKeys.revisions('i1'), wider: itemKeys.all() },
 ]
 
 /** Two keys that must differ, so that one query never answers for the other. */
 export const distinctCases = [
+  {
+    name: 'the first page and the pages of the items of a project',
+    first: itemKeys.firstOfProject('p1', {}),
+    second: itemKeys.ofProject('p1', {}),
+  },
   {
     name: 'the items of an artifact and of a project',
     first: itemKeys.ofArtifact('x', {}),

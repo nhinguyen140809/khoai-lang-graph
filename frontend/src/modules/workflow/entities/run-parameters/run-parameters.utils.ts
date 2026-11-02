@@ -11,7 +11,7 @@ import {
   runParameterWidgets,
 } from './run-parameters.types'
 
-// The run parameters of a workflow, read from `run_parameters_schema`: the widget, label and limits
+// The run parameters of a workflow, read from `run_parameters_schema`: the widget, title and limits
 // of each, and what a form does with their values. The widget comes from the property: the first
 // widget of `runParameterWidgets` whose rule shows it; a property of a type that no widget shows (a
 // list, an object) is left out. What each widget shows and implies for a value is in
@@ -96,7 +96,7 @@ export function runParameterFields(parameters: ObjectSchema): RunParameterField[
     const options = property.enum ?? []
     return {
       name,
-      label: property.title ?? snakeToSentenceCase(name),
+      title: property.title ?? snakeToSentenceCase(name),
       widget: widgetOf(property),
       description: property.description ?? null,
       options,

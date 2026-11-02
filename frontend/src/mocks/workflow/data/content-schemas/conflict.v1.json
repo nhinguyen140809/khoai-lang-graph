@@ -8,9 +8,15 @@
   "x-schema-version": 1,
   "x-key-prefix": "CONF",
   "x-ui-display": "table",
-  "x-ui-title-field": "description",
-  "x-ui-list-fields": ["description", "severity", "status"],
+  "x-ui-navigable": true,
+  "x-ui-title-field": "title",
+  "x-ui-list-fields": [
+    "title",
+    "severity",
+    "status"
+  ],
   "x-ui-field-order": [
+    "title",
     "description",
     "conflict_type",
     "severity",
@@ -21,6 +27,12 @@
   "type": "object",
   "additionalProperties": false,
   "properties": {
+    "title": {
+      "title": "Title",
+      "type": "string",
+      "description": "A short name of at most 60 characters that tells the point of the item at a glance, for example \"Find a mentor in my field\".",
+      "x-ui-widget": "text"
+    },
     "description": {
       "title": "Description",
       "type": "string",
@@ -37,7 +49,11 @@
     "severity": {
       "title": "Severity",
       "type": "string",
-      "enum": ["low", "medium", "high"],
+      "enum": [
+        "low",
+        "medium",
+        "high"
+      ],
       "description": "How much it blocks the specification.",
       "x-ui-widget": "select"
     },
@@ -53,18 +69,26 @@
     "status": {
       "title": "Status",
       "type": "string",
-      "enum": ["open", "resolved", "dismissed"],
+      "enum": [
+        "open",
+        "resolved",
+        "dismissed"
+      ],
       "description": "State of the conflict.",
       "x-ui-widget": "select"
     },
     "resolution": {
       "title": "Resolution",
-      "type": ["string", "null"],
+      "type": [
+        "string",
+        "null"
+      ],
       "description": "How it was resolved. Null while open.",
       "x-ui-widget": "textarea"
     }
   },
   "required": [
+    "title",
     "description",
     "conflict_type",
     "severity",

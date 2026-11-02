@@ -25,7 +25,7 @@ const jsonTypeSchema = z.enum(['string', 'number', 'integer', 'boolean', 'array'
 /** One field of a content schema, with the keywords that the app reads. */
 export const schemaPropertySchema = z.looseObject({
   type: z.union([jsonTypeSchema, z.array(jsonTypeSchema)]).optional(),
-  /** The label of the field. */
+  /** The title of the field. */
   title: z.string().optional(),
   description: z.string().optional(),
   enum: z.array(z.union([z.string(), z.number(), z.null()])).optional(),
@@ -48,6 +48,7 @@ export const schemaPropertySchema = z.looseObject({
   default: z.unknown().optional(),
   'x-ui-widget': z.string().optional(),
   'x-value-from': z.string().optional(),
+  'x-value-list': z.string().optional(),
 })
 
 export type SchemaProperty = z.infer<typeof schemaPropertySchema>
@@ -62,6 +63,7 @@ export const contentSchemaSchema = z.looseObject({
   'x-kind': z.string().optional(),
   'x-key-prefix': z.string().optional(),
   'x-ui-display': z.string().optional(),
+  'x-ui-navigable': z.boolean().optional(),
   'x-ui-title-field': z.string().optional(),
   'x-ui-list-fields': z.array(z.string()).optional(),
   'x-ui-field-order': z.array(z.string()).optional(),

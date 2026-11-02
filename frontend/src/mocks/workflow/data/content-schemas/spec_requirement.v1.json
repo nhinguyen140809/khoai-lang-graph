@@ -8,8 +8,14 @@
   "x-schema-version": 1,
   "x-key-prefix": "REQ",
   "x-ui-display": "table",
+  "x-ui-navigable": true,
   "x-ui-title-field": "title",
-  "x-ui-list-fields": ["title", "type", "priority", "verification_method"],
+  "x-ui-list-fields": [
+    "title",
+    "type",
+    "priority",
+    "verification_method"
+  ],
   "x-ui-field-order": [
     "title",
     "statement",
@@ -39,13 +45,20 @@
     "type": {
       "title": "Type",
       "type": "string",
-      "enum": ["functional", "non_functional", "constraint"],
+      "enum": [
+        "functional",
+        "non_functional",
+        "constraint"
+      ],
       "description": "Kind of requirement.",
       "x-ui-widget": "select"
     },
     "quality_category": {
       "title": "Quality category",
-      "type": ["string", "null"],
+      "type": [
+        "string",
+        "null"
+      ],
       "x-value-list": "quality_category",
       "description": "Quality attribute. Required when type is non_functional, null otherwise.",
       "x-ui-widget": "select"
@@ -74,14 +87,22 @@
     },
     "fit_criterion": {
       "title": "Fit criterion",
-      "type": ["string", "null"],
+      "type": [
+        "string",
+        "null"
+      ],
       "description": "Measurable threshold. Required when type is non_functional, null otherwise.",
       "x-ui-widget": "textarea"
     },
     "verification_method": {
       "title": "Verification method",
       "type": "string",
-      "enum": ["test", "inspection", "demonstration", "analysis"],
+      "enum": [
+        "test",
+        "inspection",
+        "demonstration",
+        "analysis"
+      ],
       "description": "How the requirement is verified.",
       "x-ui-widget": "select"
     }

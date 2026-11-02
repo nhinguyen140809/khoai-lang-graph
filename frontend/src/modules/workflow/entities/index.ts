@@ -11,25 +11,29 @@ export { contentSchemasByKind, kindSchemasByKind } from './artifact-kinds/kind-s
 export type { ReviewableCheckpoint } from './checkpoints/checkpoints.types'
 export { reviewableCheckpoints } from './checkpoints/checkpoints.utils'
 export { useReviewableCheckpoints } from './checkpoints/hooks/useCheckpointQueries'
+export { ContentFieldValue } from './components/ContentFieldValue'
 export type {
   ContentDisplay,
   ContentField,
   FieldWidget,
-} from './content-fields/content-fields.types'
+} from './content/fields/content-fields.types'
+export { contentDisplays } from './content/fields/content-fields.types'
 export {
   contentDisplayOf,
   contentFields,
-  itemTitle,
+  isNavigable,
   summaryFields,
-} from './content-fields/content-fields.utils'
-export type { ContentValues } from './content-fields/content-values.types'
-export { contentValuesSchema } from './content-fields/content-values.types'
+} from './content/fields/content-fields.utils'
+export type { ContentValues } from './content/values/content-values.types'
+export { contentValuesSchema } from './content/values/content-values.types'
 export {
   changedFields,
   initialValue,
   toStoredContent,
   validateContent,
-} from './content-fields/content-values.utils'
+  valueTitle,
+} from './content/values/content-values.utils'
+export { itemTitle } from './content/values/item-title.utils'
 export type { ExportFormat, ExportTemplate } from './definition/export-templates.types'
 export { exportFormats } from './definition/export-templates.types'
 export { useWorkflowDefinition } from './definition/hooks/useWorkflowDefinition'

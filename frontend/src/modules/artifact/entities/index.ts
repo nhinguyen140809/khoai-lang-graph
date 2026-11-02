@@ -1,3 +1,5 @@
+// The entities of the module by topic: artifacts, items, revisions, exports, issues, status and
+// outline. A topic reads only the topics under it (see `topicEntityModules` in the lint code).
 export { allowedValues } from './artifacts/allowed-values.utils'
 export {
   getArtifact,
@@ -21,6 +23,9 @@ export {
   useArtifact,
   useProjectArtifacts,
 } from './artifacts/hooks/useArtifactQueries'
+export { ArtifactDocument } from './components/ArtifactDocument'
+export { ArtifactItemDetails } from './components/ArtifactItemDetails'
+export type { RenderItemLink } from './components/DocumentBlocks'
 export { createExport, getExport, listProjectExports } from './exports/exports.api'
 export { exportStatusLabels } from './exports/exports.constants'
 export { exportKeys } from './exports/exports.keys'
@@ -34,7 +39,9 @@ export {
   useItem,
   useItemSchema,
   useProjectItems,
+  useProjectItemsOfKinds,
 } from './items/hooks/useItemQueries'
+export { useReloadArtifacts } from './items/hooks/useReloadArtifacts'
 export { itemHierarchy } from './items/item-hierarchy.utils'
 export {
   createItem,
@@ -60,7 +67,43 @@ export type {
   ProjectItemFilters,
   UpdateItemBody,
 } from './items/items.types'
+export { documentBlocks } from './outline/document-blocks.utils'
+export { useArtifactDocument } from './outline/hooks/useArtifactDocument'
+export { useArtifactOutline } from './outline/hooks/useArtifactOutline'
+export { useOutlineItems } from './outline/hooks/useOutlineItems'
+export type {
+  ArtifactDocumentData,
+  ArtifactDocumentResult,
+  ArtifactOutlineResult,
+  BreadcrumbStep,
+  DocumentBlock,
+  KindView,
+  OutlineItemsResult,
+  OutlineNeighbors,
+  OutlineNode,
+} from './outline/outline.types'
+export {
+  artifactOutline,
+  isBranch,
+  itemNodeId,
+  outlineBreadcrumb,
+  outlineNeighbors,
+  outlineSequence,
+  outlineStatuses,
+} from './outline/outline.utils'
 export { useArtifactRevisions, useItemRevisions } from './revisions/hooks/useRevisionQueries'
 export { listArtifactRevisions, listItemRevisions } from './revisions/revisions.api'
 export { changeReasonLabels } from './revisions/revisions.constants'
 export type { ChangeReason, Revision } from './revisions/revisions.types'
+export { useItemStatusLook } from './status/hooks/useItemStatusLook'
+export { attentionLevels, itemStatusLooks } from './status/item-status.constants'
+export type { AttentionLevel, ItemStatus, StatusCount } from './status/item-status.types'
+export {
+  attentionCounts,
+  attentionLevel,
+  attentionText,
+  branchAttention,
+  highestLevel,
+  itemStatus,
+  itemStatusLook,
+} from './status/item-status.utils'

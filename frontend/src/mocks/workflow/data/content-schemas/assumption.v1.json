@@ -8,12 +8,28 @@
   "x-schema-version": 1,
   "x-key-prefix": "ASM",
   "x-ui-display": "table",
-  "x-ui-title-field": "statement",
-  "x-ui-list-fields": ["statement", "validation_status"],
-  "x-ui-field-order": ["statement", "reasoning", "impact_if_wrong", "validation_status"],
+  "x-ui-navigable": true,
+  "x-ui-title-field": "title",
+  "x-ui-list-fields": [
+    "title",
+    "validation_status"
+  ],
+  "x-ui-field-order": [
+    "title",
+    "statement",
+    "reasoning",
+    "impact_if_wrong",
+    "validation_status"
+  ],
   "type": "object",
   "additionalProperties": false,
   "properties": {
+    "title": {
+      "title": "Title",
+      "type": "string",
+      "description": "A short name of at most 60 characters that tells the point of the item at a glance, for example \"Find a mentor in my field\".",
+      "x-ui-widget": "text"
+    },
     "statement": {
       "title": "Statement",
       "type": "string",
@@ -35,10 +51,20 @@
     "validation_status": {
       "title": "Validation status",
       "type": "string",
-      "enum": ["unverified", "confirmed", "invalidated"],
+      "enum": [
+        "unverified",
+        "confirmed",
+        "invalidated"
+      ],
       "description": "Whether the assumption was checked.",
       "x-ui-widget": "select"
     }
   },
-  "required": ["statement", "reasoning", "impact_if_wrong", "validation_status"]
+  "required": [
+    "title",
+    "statement",
+    "reasoning",
+    "impact_if_wrong",
+    "validation_status"
+  ]
 }

@@ -8,8 +8,15 @@
   "x-schema-version": 1,
   "x-key-prefix": "US for a user story, EP for an epic",
   "x-ui-display": "table",
+  "x-ui-navigable": true,
   "x-ui-title-field": "title",
-  "x-ui-list-fields": ["title", "item_type", "priority", "story_points", "delivery_status"],
+  "x-ui-list-fields": [
+    "title",
+    "item_type",
+    "priority",
+    "story_points",
+    "delivery_status"
+  ],
   "x-ui-field-order": [
     "item_type",
     "title",
@@ -27,7 +34,10 @@
     "item_type": {
       "title": "Item type",
       "type": "string",
-      "enum": ["epic", "user_story"],
+      "enum": [
+        "epic",
+        "user_story"
+      ],
       "description": "Epic or user story.",
       "x-ui-widget": "select"
     },
@@ -39,19 +49,28 @@
     },
     "as_a": {
       "title": "As a",
-      "type": ["string", "null"],
+      "type": [
+        "string",
+        "null"
+      ],
       "description": "Role of the user. Required for a user story, null for an epic.",
       "x-ui-widget": "text"
     },
     "i_want": {
       "title": "I want",
-      "type": ["string", "null"],
+      "type": [
+        "string",
+        "null"
+      ],
       "description": "What the user wants to do. Required for a user story, null for an epic.",
       "x-ui-widget": "text"
     },
     "so_that": {
       "title": "So that",
-      "type": ["string", "null"],
+      "type": [
+        "string",
+        "null"
+      ],
       "description": "The benefit. Required for a user story, null for an epic.",
       "x-ui-widget": "text"
     },
@@ -82,7 +101,11 @@
             "x-ui-widget": "text"
           }
         },
-        "required": ["given", "when", "then"]
+        "required": [
+          "given",
+          "when",
+          "then"
+        ]
       },
       "x-ui-widget": "object-list"
     },
@@ -95,7 +118,10 @@
     },
     "story_points": {
       "title": "Story points",
-      "type": ["integer", "null"],
+      "type": [
+        "integer",
+        "null"
+      ],
       "minimum": 0,
       "description": "Relative size. Null when not estimated.",
       "x-ui-widget": "number"
@@ -103,7 +129,11 @@
     "delivery_status": {
       "title": "Delivery status",
       "type": "string",
-      "enum": ["todo", "in_progress", "done"],
+      "enum": [
+        "todo",
+        "in_progress",
+        "done"
+      ],
       "description": "Progress of the work. Set by the user.",
       "x-ui-widget": "select"
     }

@@ -1,4 +1,4 @@
-import type { ContentValues } from '../content-fields/content-values.types'
+import type { ContentValues } from '../content/values/content-values.types'
 import type { WorkflowDefinition } from '../definition/workflow-definition.types'
 import type { IssueKind } from './issues.types'
 

@@ -27,7 +27,7 @@ export const fieldCases = [
     name: 'an integer with limits',
     property: 'max_turns',
     field: {
-      label: 'Turns',
+      title: 'Turns',
       widget: 'number',
       integer: true,
       minimum: 1,
@@ -40,7 +40,7 @@ export const fieldCases = [
     name: 'a number that may have a fraction',
     property: 'budget',
     field: {
-      label: 'Budget',
+      title: 'Budget',
       widget: 'number',
       integer: false,
       minimum: null,

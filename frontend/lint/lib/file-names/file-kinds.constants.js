@@ -64,15 +64,19 @@ export const pascalCasePattern = '+([A-Z])*([a-zA-Z0-9])'
 // folder for each topic, and a topic holds its files by kind, flat, with its hooks and tests. The
 // other modules keep a folder for each kind at the root of the entities. Each topic lists the
 // topics that it reads, so that the topics depend one way; a topic never reads the components of
-// the entities. A new topic is added here.
+// the entities. A topic named <group>/<name> sits in a folder of its group, which holds only topic
+// folders and no file; the topics of a group read each other by the same one-way lists. A new
+// topic is added here.
 /** @type {Record<string, Record<string, string[]>>} */
 export const topicEntityModules = {
   artifact: {
     artifacts: [],
     exports: ['artifacts'],
-    issues: ['items'],
     items: ['artifacts'],
+    issues: ['items'],
     revisions: ['artifacts', 'items'],
+    status: ['artifacts', 'items'],
+    outline: ['artifacts', 'items', 'status'],
   },
   'llm-model': {
     'model-settings': [],
@@ -99,9 +103,11 @@ export const topicEntityModules = {
   workflow: {
     'artifact-kinds': ['definition'],
     checkpoints: ['definition'],
-    'content-fields': ['artifact-kinds'],
+    'content/fields': ['artifact-kinds'],
+    'content/values': ['artifact-kinds', 'content/fields', 'definition'],
+    'content/value-labels': ['content/fields', 'content/values', 'definition'],
     definition: [],
-    issues: ['content-fields', 'definition'],
+    issues: ['content/values', 'definition'],
     'run-parameters': ['definition'],
     stages: ['definition'],
   },

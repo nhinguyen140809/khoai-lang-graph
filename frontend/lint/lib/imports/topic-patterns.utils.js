@@ -1,7 +1,18 @@
 import { topicEntityModules } from '../file-names/file-kinds.constants.js'
 
 /**
- * The topics of the entities of a module split by topic, or none for a module that is not.
+ * The ways that an import names a topic: by its path from the entities, or, for a topic in a group,
+ * by its name alone from a topic of the same group, which sits beside it.
+ * @param {string} topic
+ */
+function pathAlternatives(topic) {
+  const name = topic.split('/').at(-1) ?? topic
+  return name === topic ? topic : `${topic}|${name}`
+}
+
+/**
+ * The topics of the entities of a module split by topic, or none for a module that is not. A topic
+ * in a group of topics is named `<group>/<name>`.
  * @param {string} moduleName
  * @returns {string[]}
  */
@@ -27,7 +38,7 @@ export function topicPatterns(moduleName, topic) {
   const read = readTopics.length === 0 ? 'no other topic' : readTopics.join(', ')
   return [
     {
-      regex: `^(\\.\\./)+(${[...unreadTopics, 'components'].join('|')})(/|$)`,
+      regex: `^(\\.\\./)+(${[...unreadTopics.map(pathAlternatives), 'components'].join('|')})(/|$)`,
       message: `The topics of the entities depend one way: ${topic} reads ${read} (topicEntityModules).`,
     },
   ]
