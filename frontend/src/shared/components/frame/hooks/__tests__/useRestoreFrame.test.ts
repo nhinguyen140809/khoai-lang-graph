@@ -6,12 +6,13 @@ import { browserStorage } from '@/shared/lib/storage'
 import { routeOfAddress } from '@/shared/routes'
 import { setPathname } from '@/test/next-stubs'
 
+import { frameWrapper } from '../../__tests__/frame-wrapper.utils.data'
+import { tabsOf } from '../../__tests__/tab-state.utils.data'
 import type { Destination } from '../../destinations/destination.types'
 import { useSideFeatureStore } from '../../destinations/side-feature.store'
 import { usePanelsStore } from '../../panels/panels.store'
 import { useEditorTabsStore } from '../../tabs/editor-tabs.store'
 import { useEditorTab } from '../../tabs/hooks/useEditorTab'
-import { TabGroupContext } from '../../tabs/hooks/useTabGroup'
 import { useRestoreFrame } from '../useRestoreFrame'
 import { chosenFeatureCases } from './useRestoreFrame.data'
 
@@ -67,14 +68,10 @@ describe('useRestoreFrame', () => {
       return children
     }
 
-    render(
-      createElement(
-        TabGroupContext,
-        { value: 'p1' },
-        createElement(Frame, null, createElement(Page)),
-      ),
-    )
+    render(createElement(Frame, null, createElement(Page)), {
+      wrapper: frameWrapper({ tabGroup: 'p1' }),
+    })
 
-    expect(useEditorTabsStore.getState().groups.p1?.map(({ id }) => id)).toEqual(['a', 'b'])
+    expect(tabsOf('p1').tabs.map(({ id }) => id)).toEqual(['a', 'b'])
   })
 })

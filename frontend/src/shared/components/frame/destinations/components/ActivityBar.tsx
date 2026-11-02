@@ -25,7 +25,7 @@ export function ActivityBar() {
   return (
     <nav
       aria-label="Features"
-      className="flex w-16 shrink-0 flex-col items-center gap-1 bg-sidebar py-2"
+      className="flex w-22 shrink-0 flex-col items-center gap-1 bg-sidebar px-1.5 py-2"
     >
       {destinations
         .filter((destination) => destination.placement !== 'bottom')
@@ -51,7 +51,7 @@ export function ActivityBar() {
 }
 
 function DestinationItem({ destination }: { destination: Destination }) {
-  const { feature, toggle } = useSideFeature()
+  const { feature, isPanelShown, toggle } = useSideFeature()
 
   if (!isFeatureDestination(destination)) {
     // The name is on the item; the reason it is not there yet shows beside it.
@@ -67,7 +67,8 @@ function DestinationItem({ destination }: { destination: Destination }) {
     )
   }
 
-  const isActive = feature?.id === destination.id
+  // The item is pressed while its panel is shown, not while the panel is hidden.
+  const isActive = isPanelShown && feature?.id === destination.id
 
   return (
     <ActivityBarButton
@@ -92,22 +93,19 @@ interface ActivityBarButtonProps extends ComponentProps<'button'> {
 }
 
 /**
- * An item of the activity bar: the icon in a rounded shape, the name under it, then what the item
- * adds, such as a badge. Its look follows its state: `aria-pressed` fills the shape of the feature
- * whose side panel is shown and sets its name in medium weight, the pointer over another item
- * fills its shape lighter, and `aria-disabled` dims a feature planned for later.
+ * An item of the activity bar: the icon with the name under it, then what the item adds, such as a
+ * badge. Its look follows its state: `aria-pressed` fills the whole item of the feature whose side
+ * panel is shown and sets its name in semibold, the pointer over another item changes its icon and name to the text color, and
+ * `aria-disabled` dims a feature planned for later.
  */
 function ActivityBarButton({ icon, label, children, ...props }: ActivityBarButtonProps) {
   return (
     <button
       type="button"
-      className="group/item relative flex w-14 flex-col items-center gap-1 rounded-md py-1 text-muted-foreground outline-none not-aria-disabled:hover:text-foreground focus-visible:ring-2 focus-visible:ring-ring/50 aria-disabled:opacity-50 aria-pressed:font-bold aria-pressed:text-foreground"
+      className="relative flex w-full flex-col items-center gap-1 rounded-md py-1.5 text-muted-foreground transition-colors outline-none not-aria-disabled:hover:text-foreground focus-visible:ring-2 focus-visible:ring-ring/50 aria-disabled:opacity-50 aria-pressed:bg-sidebar-accent aria-pressed:font-semibold aria-pressed:text-foreground motion-reduce:transition-none"
       {...props}
     >
-      <span
-        aria-hidden
-        className="flex h-7 w-10 items-center justify-center rounded-md transition-colors group-hover/item:group-not-aria-pressed/item:group-not-aria-disabled/item:bg-sidebar-accent/60 group-aria-pressed/item:bg-sidebar-accent motion-reduce:transition-none [&_svg]:size-5"
-      >
+      <span aria-hidden className="flex h-7 w-10 items-center justify-center [&_svg]:size-5">
         {icon}
       </span>
       <span className="max-w-full truncate px-0.5 text-xs">{label}</span>

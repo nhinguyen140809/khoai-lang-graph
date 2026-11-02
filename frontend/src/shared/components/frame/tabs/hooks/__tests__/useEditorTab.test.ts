@@ -1,19 +1,22 @@
 import { act, renderHook } from '@testing-library/react'
-import { createElement, type ReactNode } from 'react'
 import { describe, expect, it } from 'vitest'
 
+import { frameWrapper } from '../../../__tests__/frame-wrapper.utils.data'
+import { tabsOf } from '../../../__tests__/tab-state.utils.data'
 import { useEditorTabsStore } from '../../editor-tabs.store'
 import type { EditorTab } from '../../editor-tabs.types'
 import { useEditorTab } from '../useEditorTab'
-import { TabGroupContext } from '../useTabGroup'
 import { group, openedTabCases, requirement } from './useEditorTab.data'
 
 /** Renders the hook inside the workspace of `tabGroup`, or outside any when it is null. */
-function renderTab(tab: EditorTab | null, tabGroup: string | null = group) {
-  return renderHook(({ current }) => useEditorTab(current), {
+function renderTab(
+  tab: EditorTab | null,
+  tabGroup: string | null = group,
+  options: { isTitleProvisional?: boolean } = {},
+) {
+  return renderHook(({ current }) => useEditorTab(current, options), {
     initialProps: { current: tab },
-    wrapper: ({ children }: { children: ReactNode }) =>
-      createElement(TabGroupContext, { value: tabGroup }, children),
+    wrapper: frameWrapper({ tabGroup }),
   })
 }
 
@@ -21,10 +24,7 @@ describe('useEditorTab', () => {
   it.each(openedTabCases)('opens $name as the preview tab of its group', ({ tab, opened }) => {
     renderTab(tab)
 
-    const state = useEditorTabsStore.getState()
-    expect(state.groups[group]).toEqual([opened])
-    expect(state.preview[group]).toBe(opened.id)
-    expect(state.onScreen[group]).toBe(opened.id)
+    expect(tabsOf(group)).toMatchObject({ tabs: [opened], preview: opened.id, onScreen: opened.id })
   })
 
   it('opens no tab outside a workspace with tabs', () => {
@@ -44,7 +44,21 @@ describe('useEditorTab', () => {
 
     rerender({ current: requirement })
 
-    expect(useEditorTabsStore.getState().groups[group]).toEqual([requirement])
+    expect(tabsOf(group).tabs).toEqual([requirement])
+  })
+
+  it('opens a tab with a stand-in title while the page does not know its own', () => {
+    renderTab({ ...requirement, title: 'Item' }, group, { isTitleProvisional: true })
+
+    expect(tabsOf(group).tabs).toEqual([{ ...requirement, title: 'Item' }])
+  })
+
+  it('keeps the title of a tab that is open when the page opens it with a stand-in title', () => {
+    useEditorTabsStore.getState().openTab(group, requirement)
+
+    renderTab({ ...requirement, title: 'Item' }, group, { isTitleProvisional: true })
+
+    expect(tabsOf(group).tabs).toEqual([requirement])
   })
 
   it('keeps the tab when the function it returns is called', () => {
@@ -54,7 +68,7 @@ describe('useEditorTab', () => {
       result.current()
     })
 
-    expect(useEditorTabsStore.getState().preview[group]).toBeUndefined()
+    expect(tabsOf(group).preview).toBeNull()
   })
 
   it('keeps no tab through the function when there is no group', () => {
@@ -72,8 +86,6 @@ describe('useEditorTab', () => {
 
     unmount()
 
-    const state = useEditorTabsStore.getState()
-    expect(state.groups[group]).toEqual([requirement])
-    expect(state.onScreen[group]).toBeUndefined()
+    expect(tabsOf(group)).toMatchObject({ tabs: [requirement], onScreen: null })
   })
 })

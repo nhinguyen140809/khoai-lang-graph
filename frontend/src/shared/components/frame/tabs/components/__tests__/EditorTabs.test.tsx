@@ -2,16 +2,14 @@ import { fireEvent, render, screen } from '@testing-library/react'
 import userEvent from '@testing-library/user-event'
 import { FileTextIcon, PlayIcon, SearchIcon } from 'lucide-react'
 import type { Route } from 'next'
-import type { ReactNode } from 'react'
 import { beforeEach, describe, expect, it } from 'vitest'
 
 import { routerMock } from '@/test/next-stubs'
 import { expectNoRole, expectPushedTo, pressButton, pressMenuItem } from '@/test/steps'
 
+import { frameWrapper } from '../../../__tests__/frame-wrapper.utils.data'
+import { seedTabs, tabsOf } from '../../../__tests__/tab-state.utils.data'
 import type { Destination, TabIcons } from '../../../destinations/destination.types'
-import { DestinationsContext } from '../../../destinations/hooks/useDestinations'
-import { useEditorTabsStore } from '../../editor-tabs.store'
-import { TabGroupContext } from '../../hooks/useTabGroup'
 import { EditorTabs } from '../EditorTabs'
 import {
   ambiguity,
@@ -22,36 +20,29 @@ import {
 } from './EditorTabs.data'
 
 const searchHref = '/projects/p1/search' as Route
+const tabIcons: TabIcons = { artifact: <FileTextIcon />, run: <PlayIcon /> }
 const destinations: Destination[] = [
   { id: 'search', label: 'Search', icon: <SearchIcon />, href: searchHref, panel: null },
 ]
-const tabIcons: TabIcons = { artifact: <FileTextIcon />, run: <PlayIcon /> }
 
-function Providers({ children }: { children: ReactNode }) {
-  return <DestinationsContext value={{ destinations, tabIcons }}>{children}</DestinationsContext>
-}
-
-/** The strip, in the workspace of `group`. */
-function renderTabs(group: string) {
-  render(
-    <TabGroupContext value={group}>
-      <EditorTabs rootHref={searchHref} />
-    </TabGroupContext>,
-    { wrapper: Providers },
-  )
+/** The strip, in the workspace of `group`, or outside any workspace without one. */
+function renderTabs(group?: string) {
+  render(<EditorTabs rootHref={searchHref} />, {
+    wrapper: frameWrapper({
+      destinations,
+      tabIcons,
+      ...(group !== undefined && { tabGroup: group }),
+    }),
+  })
 }
 
 beforeEach(() => {
-  useEditorTabsStore.setState({
-    ...useEditorTabsStore.getInitialState(),
-    groups: { 'p1:search': [requirement, ambiguity] },
-    onScreen: { 'p1:search': requirement.id },
-  })
+  seedTabs('p1:search', { tabs: [requirement, ambiguity], onScreen: requirement.id })
 })
 
 describe('EditorTabs', () => {
   it.each(onScreenCases)('lists $name', ({ group, tabs, onScreen, titles, current }) => {
-    useEditorTabsStore.setState({ groups: { [group]: tabs }, onScreen: { [group]: onScreen } })
+    seedTabs(group, { tabs, onScreen })
     renderTabs(group)
 
     const links = screen.getAllByRole('link')
@@ -64,20 +55,20 @@ describe('EditorTabs', () => {
   })
 
   it('shows no strip outside a workspace with tabs', () => {
-    render(<EditorTabs rootHref={searchHref} />, { wrapper: Providers })
+    renderTabs()
 
     expectNoRole('navigation')
   })
 
   it('names the preview tab as such, and keeps it on a double click', async () => {
-    useEditorTabsStore.setState({ preview: { 'p1:search': ambiguity.id } })
+    seedTabs('p1:search', { preview: ambiguity.id })
     renderTabs('p1:search')
 
     const previewTab = screen.getByRole('link', { name: 'AMB-001, preview' })
     expect(previewTab.closest('li')).toHaveAttribute('data-preview', 'true')
     await userEvent.dblClick(previewTab)
 
-    expect(useEditorTabsStore.getState().preview['p1:search']).toBeUndefined()
+    expect(tabsOf('p1:search').preview).toBeNull()
     expect(screen.getByRole('link', { name: 'AMB-001' }).closest('li')).toHaveAttribute(
       'data-preview',
       'false',
@@ -94,18 +85,18 @@ describe('EditorTabs', () => {
     )
     await pressMenuItem('Close other tabs')
 
-    expect(useEditorTabsStore.getState().groups['p1:search']).toEqual([ambiguity])
+    expect(tabsOf('p1:search').tabs).toEqual([ambiguity])
     await expectPushedTo(ambiguity.href)
   })
 
   it('keeps a preview tab from its menu', async () => {
-    useEditorTabsStore.setState({ preview: { 'p1:search': requirement.id } })
+    seedTabs('p1:search', { preview: requirement.id })
     renderTabs('p1:search')
 
     fireEvent.contextMenu(screen.getByRole('link', { name: 'REQ-001, preview' }))
     await pressMenuItem('Keep open')
 
-    expect(useEditorTabsStore.getState().preview['p1:search']).toBeUndefined()
+    expect(tabsOf('p1:search').preview).toBeNull()
   })
 
   it('lists every open tab at the end of the strip, and closes them all from there', async () => {
@@ -127,10 +118,7 @@ describe('EditorTabs', () => {
   })
 
   it.each(closeTabCases)('$name', async ({ tabs, onScreen, close, opens }) => {
-    useEditorTabsStore.setState({
-      groups: { 'p1:search': tabs },
-      onScreen: { 'p1:search': onScreen },
-    })
+    seedTabs('p1:search', { tabs, onScreen })
     renderTabs('p1:search')
 
     await pressButton(`Close ${close}`)
@@ -140,7 +128,7 @@ describe('EditorTabs', () => {
   })
 
   it('closes a tab on middle click', async () => {
-    useEditorTabsStore.setState({ groups: { 'p1:search': [requirement] } })
+    seedTabs('p1:search', { tabs: [requirement] })
     renderTabs('p1:search')
 
     fireEvent(
@@ -153,7 +141,7 @@ describe('EditorTabs', () => {
   })
 
   it.each(tabIconCases)('shows $name as the icon of a tab', ({ tab, icon }) => {
-    useEditorTabsStore.setState({ groups: { 'p1:search': [tab] } })
+    seedTabs('p1:search', { tabs: [tab] })
     renderTabs('p1:search')
 
     expect(

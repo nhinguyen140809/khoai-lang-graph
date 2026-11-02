@@ -119,6 +119,24 @@ A parameter in the page address changes what a group of endpoints answers. Param
 | Account menu loading                                                      | http://localhost:3000/projects?mock-me=loading                                   |
 | Account menu error                                                        | http://localhost:3000/projects?mock-me=error                                     |
 
+## Documents
+
+The documents of the mentor platform are at `/projects/90aa0000-0000-4000-8000-000000000001/documents`; open one from the side panel of Documents.
+
+| State                                              | Address                                                                          |
+| -------------------------------------------------- | -------------------------------------------------------------------------------- |
+| The documents, the analysis waiting for the review | `/projects/90aa0000-0000-4000-8000-000000000001/documents`                       |
+| Loading the documents                              | the same page with `?mock-artifacts=loading`                                     |
+| The documents fail to load                         | the same page with `?mock-artifacts=error`                                       |
+| No document, no unfinished run                     | the same page with `?mock-artifacts=empty&mock-run-status=done`                  |
+| No document yet, every kind not started            | the same page with `?mock-artifacts=empty&mock-run-status=running`               |
+| A document being written                           | the same page with `?mock-run-status=running`; its stream sends `artifact_delta` |
+| The outline or the document fails to load          | a document page with `?mock-artifact=error`                                      |
+
+In the analysis, the user has begun the review: `RAW-001`, `RAW-002`, `AR-001` and `AR-002` are approved, `RAW-008`, `LN-002` and `ASM-003` are rejected, `RAW-004`, `AR-003` and the like were edited by the user, and three ambiguities and one conflict are open, so the document and its outline show every state of an item next to the drafts.
+
+In the browser, the stream of a running run whose stage writes an artifact sends `node_start` and a few `artifact_delta` for that artifact and then stays open, so the document keeps its mark of being written.
+
 ## Project list
 
 | State                                                                       | Address                                                                                                                   |

@@ -1,4 +1,5 @@
 import { screen, waitFor, within } from '@testing-library/react'
+import userEvent from '@testing-library/user-event'
 import { describe, expect, it } from 'vitest'
 
 import { openPage } from '@/test/msw'
@@ -27,7 +28,8 @@ describe('MonthlyBudgetItem', () => {
     const bar = await within(statusBar()).findByRole('progressbar', { name: barName })
     expect(bar).toHaveAttribute('aria-valuetext', shown.percent)
     expect(bar).toHaveAttribute('aria-valuenow', shown.percent.replace('%', ''))
-    expect(within(statusBar()).getByText(shown.amounts)).toBeInTheDocument()
+    await userEvent.hover(within(statusBar()).getByRole('group'))
+    expect(await screen.findByRole('tooltip')).toHaveTextContent(shown.amounts)
   })
 
   it('leaves the status bar with the component', async () => {

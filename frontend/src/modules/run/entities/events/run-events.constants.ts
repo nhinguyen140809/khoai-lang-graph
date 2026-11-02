@@ -24,3 +24,19 @@ export const runCostEvents = [
 
 /** How long a stream waits before it opens again after its connection failed, in milliseconds. */
 export const streamReopenMs = 5_000
+
+/** The events that change which artifacts the node in progress writes. */
+export const artifactProgressEvents = [
+  ...runStatusEvents,
+  'artifact_created',
+  'artifact_delta',
+] as const satisfies readonly RunEventType[]
+
+/**
+ * The events after which the artifacts of the project may differ: an artifact that is created, and
+ * a node that ends, which may have changed the ones it wrote.
+ */
+export const artifactWrittenEvents = [
+  'artifact_created',
+  'node_end',
+] as const satisfies readonly (typeof artifactProgressEvents)[number][]

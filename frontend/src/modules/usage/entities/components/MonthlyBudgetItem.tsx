@@ -1,14 +1,14 @@
 'use client'
 
-import { cn } from 'cn'
 import { GaugeIcon } from 'lucide-react'
 import { useMemo } from 'react'
 
 import { StatusBarSide, useStatusBarItem } from '@/shared/components/frame'
+import { ColoredText } from '@/shared/components/ui/colored-text'
 import { Progress } from '@/shared/components/ui/progress'
+import { Tooltip, TooltipContent, TooltipTrigger } from '@/shared/components/ui/tooltip'
 import { costLevelTones } from '@/shared/lib/cost'
 import { formatCurrency, formatPercent } from '@/shared/lib/formatters'
-import { toneClasses } from '@/shared/lib/tone'
 
 import { useMonthlyBudget } from '../hooks/useUsageQueries'
 import { usageMessages } from '../usage.constants'
@@ -29,8 +29,9 @@ const wholePercent = 100
 // TODO: open the usage of the month in the settings, once the settings show it.
 /**
  * The budget of the month that the user has spent, once it is above the normal level: a gauge, a
- * bar, the percent and the amounts, in the color of the level. A spent budget stops the work of
- * every project.
+ * bar and the percent, in the color of the level. The amounts show in a tooltip over the whole
+ * item, which a screen reader reads as its description. A spent budget stops the work of every
+ * project.
  */
 export function MonthlyBudget() {
   const budget = useMonthlyBudget()
@@ -38,31 +39,34 @@ export function MonthlyBudget() {
 
   const tone = costLevelTones[budget.level]
   const percent = formatPercent(budget.percent / wholePercent)
+  const amounts = usageMessages.spentOfBudget(
+    formatCurrency(budget.costUsd),
+    formatCurrency(budget.limitUsd),
+  )
   return (
-    <span
-      className={cn(
-        'flex shrink-0 items-center gap-1.5 text-sm text-(--tone-strong) [&_svg]:size-3.5',
-        toneClasses[tone],
-      )}
-    >
-      <GaugeIcon aria-hidden />
-      {/* A cost over its limit fills the bar. The bar says the percent to assistive technology. */}
-      <Progress
-        value={Math.min(budget.percent, wholePercent)}
-        color={tone}
-        aria-label={usageMessages.monthlyBudget}
-        getValueLabel={() => percent}
-        className="h-2 w-16 bg-foreground/10"
-      />
-      <span aria-hidden className="tabular-nums">
-        {percent}
-      </span>
-      <span className="tabular-nums">
-        {usageMessages.spentOfBudget(
-          formatCurrency(budget.costUsd),
-          formatCurrency(budget.limitUsd),
-        )}
-      </span>
-    </span>
+    <Tooltip>
+      <TooltipTrigger asChild>
+        <ColoredText
+          color={tone}
+          role="group"
+          tabIndex={0}
+          className="-mx-1.5 flex shrink-0 items-center gap-1.5 rounded-md px-1.5 py-0.5 text-sm transition-colors outline-none hover:bg-foreground/10 focus-visible:bg-foreground/10 focus-visible:ring-2 focus-visible:ring-ring/50 motion-reduce:transition-none [&_svg]:size-3.5"
+        >
+          <GaugeIcon aria-hidden />
+          {/* A cost over its limit fills the bar. The bar says the percent to assistive technology. */}
+          <Progress
+            value={Math.min(budget.percent, wholePercent)}
+            color={tone}
+            aria-label={usageMessages.monthlyBudget}
+            getValueLabel={() => percent}
+            className="h-2 w-16 bg-foreground/10"
+          />
+          <span aria-hidden className="tabular-nums">
+            {percent}
+          </span>
+        </ColoredText>
+      </TooltipTrigger>
+      <TooltipContent side="top">{amounts}</TooltipContent>
+    </Tooltip>
   )
 }

@@ -16,6 +16,21 @@ export const routeCases = [
     path: '/projects/a%2Fb%20c/activity',
   },
   {
+    page: 'the documents of a project',
+    href: () => routes.project('p1').documents(),
+    path: '/projects/p1/documents',
+  },
+  {
+    page: 'a document, by the id of its artifact',
+    href: () => routes.project('p1').document('a/1'),
+    path: '/projects/p1/documents/a%2F1',
+  },
+  {
+    page: 'an item, by its id',
+    href: () => routes.project('p1').item('i1'),
+    path: '/projects/p1/items/i1',
+  },
+  {
     page: 'the login page, which returns to the page asked for',
     href: () => routes.login('/settings'),
     path: '/login?next=%2Fsettings',

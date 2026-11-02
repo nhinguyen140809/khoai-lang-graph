@@ -4,7 +4,7 @@ import type { Route } from 'next'
 export const openPageCases: {
   name: string
   href: Route
-  options?: { keep: boolean }
+  options?: { keep?: boolean; inPlace?: boolean }
   chosen: string | null
   sideVisible: boolean
   keepNext: string | null

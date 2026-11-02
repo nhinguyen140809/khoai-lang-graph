@@ -11,9 +11,9 @@ const row = {
   isFolder: () => false,
 } as unknown as ItemInstance<unknown>
 
-function renderRow(item: ItemInstance<unknown> = row) {
+function renderRow(guides: boolean, item: ItemInstance<unknown> = row) {
   render(
-    <Tree indent={16} aria-label="Files">
+    <Tree guides={guides} indent={16} aria-label="Files">
       <TreeItem item={item}>Row</TreeItem>
     </Tree>,
   )
@@ -22,16 +22,27 @@ function renderRow(item: ItemInstance<unknown> = row) {
 
 describe('Tree', () => {
   it('sets the indent of its levels', () => {
-    renderRow()
+    renderRow(false)
 
     expect(document.querySelector('[data-slot="tree"]')).toHaveStyle({ '--tree-indent': '16px' })
+  })
+
+  it('draws no guide in the rows by default', () => {
+    expect(renderRow(false)).not.toHaveAttribute('data-guides')
+  })
+
+  it('draws a guide at each level in the indent of a row with guides', () => {
+    const item = renderRow(true)
+
+    expect(item).toHaveAttribute('data-guides')
+    expect(item).toHaveStyle({ '--tree-padding': '32px' })
   })
 
   it('tells whether a row is expanded only when it holds rows', () => {
     const folder = { ...row, isFolder: () => true } as unknown as ItemInstance<unknown>
 
-    expect(renderRow(folder)).toHaveAttribute('aria-expanded', 'false')
+    expect(renderRow(false, folder)).toHaveAttribute('aria-expanded', 'false')
     document.body.replaceChildren()
-    expect(renderRow()).not.toHaveAttribute('aria-expanded')
+    expect(renderRow(false)).not.toHaveAttribute('aria-expanded')
   })
 })
