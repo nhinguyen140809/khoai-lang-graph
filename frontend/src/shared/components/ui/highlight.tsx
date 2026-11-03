@@ -8,17 +8,17 @@ import { type Tone, toneClasses } from '@/shared/lib/tone'
 
 // `variant` is how the words are marked and `color` the meaning; the color sets the --tone
 // variables these read. The words keep their own color, except in `solid`. Hover, focus and an
-// open popup (`data-state=open`) paint the soft fill under the words and hide the line, so a line
-// mark becomes the fill it stands for.
+// open popup (`data-state=open`) paint the fill of the tone at half strength under the words and
+// hide the line, so a line mark becomes the fill it stands for, and a soft mark deepens.
 const highlightStyles = cva(
   '-mx-[0.2em] rounded-[0.25em] bg-transparent box-decoration-clone px-[0.2em] py-[0.12em] text-inherit transition-colors outline-none focus-visible:ring-[3px] focus-visible:ring-ring/50 data-interactive:cursor-pointer',
   {
     variants: {
       variant: {
         underline:
-          'underline [text-decoration-color:var(--tone-strong)] decoration-2 underline-offset-[0.2em] hover:bg-(--tone-soft) hover:[text-decoration-color:transparent] focus-visible:bg-(--tone-soft) focus-visible:[text-decoration-color:transparent] data-[state=open]:bg-(--tone-soft) data-[state=open]:[text-decoration-color:transparent]',
-        wavy: 'underline [text-decoration-color:var(--tone-strong)] decoration-wavy decoration-1 underline-offset-[0.2em] hover:bg-(--tone-soft) hover:[text-decoration-color:transparent] focus-visible:bg-(--tone-soft) focus-visible:[text-decoration-color:transparent] data-[state=open]:bg-(--tone-soft) data-[state=open]:[text-decoration-color:transparent]',
-        soft: 'bg-(--tone-soft) hover:bg-[color-mix(in_oklab,var(--tone)_32%,transparent)] focus-visible:bg-[color-mix(in_oklab,var(--tone)_32%,transparent)] data-[state=open]:bg-[color-mix(in_oklab,var(--tone)_32%,transparent)]',
+          'underline [text-decoration-color:var(--tone-strong)] underline-offset-[0.2em] hover:bg-(--tone)/50 hover:[text-decoration-color:transparent] focus-visible:bg-(--tone)/50 focus-visible:[text-decoration-color:transparent] data-[state=open]:bg-(--tone)/50 data-[state=open]:[text-decoration-color:transparent]',
+        wavy: 'underline [text-decoration-color:var(--tone-strong)] decoration-wavy underline-offset-[0.2em] hover:bg-(--tone)/50 hover:[text-decoration-color:transparent] focus-visible:bg-(--tone)/50 focus-visible:[text-decoration-color:transparent] data-[state=open]:bg-(--tone)/50 data-[state=open]:[text-decoration-color:transparent]',
+        soft: 'bg-(--tone)/50 hover:bg-(--tone)/70 focus-visible:bg-(--tone)/70 data-[state=open]:bg-(--tone)/70',
         solid:
           'bg-(--tone) text-(--tone-foreground) hover:bg-(--tone)/80 data-[state=open]:bg-(--tone)/80',
       },
@@ -33,6 +33,8 @@ type HighlightVariant = 'underline' | 'wavy' | 'soft' | 'solid'
 type HighlightMarkProps = Omit<React.ComponentProps<'mark'>, 'color'> & {
   variant?: HighlightVariant | undefined
   color?: Tone | undefined
+  /** The width of the line of an `underline` or `wavy` mark, in pixels. */
+  strokeWidth?: number | undefined
   /** The mark acts on a click or a key: it takes the focus, shows a pointer, and answers Enter and Space. */
   isInteractive?: boolean | undefined
   asChild?: boolean
@@ -43,12 +45,19 @@ function HighlightMark({
   className,
   variant = 'underline',
   color = 'primary',
+  strokeWidth,
   isInteractive = false,
   asChild = false,
   onKeyDown,
+  style,
   ...props
 }: HighlightMarkProps) {
   const Comp = asChild ? Slot.Root : 'mark'
+  // The line of the line variants takes its width; the fill variants have no line to size.
+  const width =
+    variant === 'soft' || variant === 'solid'
+      ? undefined
+      : (strokeWidth ?? (variant === 'wavy' ? 1 : 2))
 
   return (
     <Comp
@@ -59,6 +68,9 @@ function HighlightMark({
       role={isInteractive ? 'button' : undefined}
       tabIndex={isInteractive ? 0 : undefined}
       className={cn(highlightStyles({ variant, color }), className)}
+      style={
+        width === undefined ? style : { ...style, textDecorationThickness: `${String(width)}px` }
+      }
       onKeyDown={(event: React.KeyboardEvent<HTMLElement>) => {
         onKeyDown?.(event)
         if (!isInteractive || event.defaultPrevented) return
@@ -75,6 +87,8 @@ function HighlightMark({
 interface HighlightRange extends TextRange {
   variant?: HighlightVariant | undefined
   color?: Tone | undefined
+  /** The width of the line of the mark of the range, in pixels. */
+  strokeWidth?: number | undefined
 }
 
 type HighlightProps<Range extends HighlightRange> = Omit<
@@ -89,6 +103,8 @@ type HighlightProps<Range extends HighlightRange> = Omit<
   ranges?: readonly Range[] | undefined
   variant?: HighlightVariant | undefined
   color?: Tone | undefined
+  /** The width of the line of each mark, in pixels, for the `underline` and `wavy` variants. */
+  strokeWidth?: number | undefined
   /** Whether case and accents are left out when matching `query`; true when absent. */
   ignoreCase?: boolean | undefined
   /** Whether every place of `query` is marked, or only the first; true when absent. */
@@ -111,6 +127,7 @@ function Highlight<Range extends HighlightRange = HighlightRange>({
   ranges,
   variant,
   color,
+  strokeWidth,
   ignoreCase,
   matchAll,
   renderMark,
@@ -130,6 +147,7 @@ function Highlight<Range extends HighlightRange = HighlightRange>({
           <HighlightMark
             variant={range.variant ?? variant}
             color={range.color ?? color}
+            strokeWidth={range.strokeWidth ?? strokeWidth}
             isInteractive={renderMark !== undefined}
           >
             {text}
@@ -145,4 +163,4 @@ function Highlight<Range extends HighlightRange = HighlightRange>({
   )
 }
 
-export { Highlight, HighlightMark, type HighlightVariant }
+export { Highlight, HighlightMark, type HighlightRange, type HighlightVariant }

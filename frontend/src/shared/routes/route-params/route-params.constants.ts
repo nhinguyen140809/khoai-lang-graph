@@ -5,4 +5,6 @@
 export const RouteParam = {
   /** The page to return to after logging in, on the login and account pages. */
   Next: 'next',
+  /** The item that a document page scrolls to and marks. */
+  Item: 'item',
 } as const

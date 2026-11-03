@@ -26,6 +26,11 @@ export const routeCases = [
     path: '/projects/p1/documents/a%2F1',
   },
   {
+    page: 'a document at one of its items',
+    href: () => routes.project('p1').document('a/1', { itemId: 'i1' }),
+    path: '/projects/p1/documents/a%2F1?item=i1',
+  },
+  {
     page: 'an item, by its id',
     href: () => routes.project('p1').item('i1'),
     path: '/projects/p1/items/i1',
