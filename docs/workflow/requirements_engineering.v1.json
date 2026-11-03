@@ -198,24 +198,28 @@
       "key": "evidenced_by",
       "title": "Evidenced by",
       "acyclic": false,
+      "quotes": { "source": false, "target": true },
       "pairs": [{ "source": ["raw_requirement", "latent_need"], "target": ["interview_message"] }]
     },
     {
       "key": "stated_by",
       "title": "Stated by",
       "acyclic": false,
+      "quotes": { "source": false, "target": false },
       "pairs": [{ "source": ["raw_requirement"], "target": ["persona"] }]
     },
     {
       "key": "involves",
       "title": "Involves",
       "acyclic": false,
+      "quotes": { "source": false, "target": false },
       "pairs": [{ "source": ["analyzed_requirement", "latent_need", "conflict"], "target": ["persona"] }]
     },
     {
       "key": "derived_from",
       "title": "Based on",
       "acyclic": true,
+      "quotes": { "source": true, "target": true },
       "pairs": [
         { "source": ["analyzed_requirement"], "target": ["raw_requirement", "latent_need"] },
         { "source": ["spec_requirement"], "target": ["analyzed_requirement"] },
@@ -226,6 +230,7 @@
       "key": "concerns",
       "title": "Applies to",
       "acyclic": false,
+      "quotes": { "source": false, "target": true },
       "pairs": [
         {
           "source": ["assumption", "ambiguity_issue", "conflict"],
@@ -237,30 +242,35 @@
       "key": "resolved_by",
       "title": "Resolved by",
       "acyclic": false,
+      "quotes": { "source": false, "target": true },
       "pairs": [{ "source": ["ambiguity_issue", "conflict"], "target": ["interview_message"] }]
     },
     {
       "key": "flags",
       "title": "Points out",
       "acyclic": false,
+      "quotes": { "source": false, "target": true },
       "pairs": [{ "source": ["validation_issue"], "target": "any" }]
     },
     {
       "key": "depends_on",
       "title": "Depends on",
       "acyclic": true,
+      "quotes": { "source": false, "target": false },
       "pairs": [{ "source": ["spec_requirement", "backlog_item"], "target": "same" }]
     },
     {
       "key": "duplicates",
       "title": "Same as",
       "acyclic": false,
+      "quotes": { "source": false, "target": false },
       "pairs": [{ "source": "any", "target": "same" }]
     },
     {
       "key": "supersedes",
       "title": "Replaces",
       "acyclic": true,
+      "quotes": { "source": false, "target": false },
       "pairs": [{ "source": "any", "target": "same" }]
     }
   ],

@@ -130,6 +130,7 @@ Enum change_reason {
   generated
   user_edit
   rework
+  reviewed
   restored
   deleted
 }
@@ -653,7 +654,8 @@ Table trace_links {
   source_item_id uuid [not null, ref: > artifact_items.id]
   target_item_id uuid [not null, ref: > artifact_items.id]
   target_version int [not null, note: 'Version of the target item when the link was created']
-  quote text [note: 'For evidenced_by: the exact words in the interview message']
+  source_quote text [note: 'Words of the source that the link is about, at most 300 characters; only for link types that allow them']
+  target_quote text [note: 'Words of the target that the link is about, such as the exact words of an interview message, at most 300 characters; only for link types that allow them']
   "note" text
   created_actor actor [not null]
   created_agent_role text

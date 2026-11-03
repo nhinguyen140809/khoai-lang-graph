@@ -213,10 +213,10 @@ All paths are relative to `/api/v1`. The Phase column uses the phases of the dat
 | `POST /auth/login` | Start a session; sets the cookie | MVP |
 | `POST /auth/logout` | Revoke the current session | MVP |
 | `GET /me` | The signed-in user | MVP |
-| `PATCH /me` | Change `display_name`, `avatar_url` | MVP |
-| `POST /me/password` | Change the password; body `current_password`, `new_password` | MVP |
-| `GET /me/sessions` | Sessions of the user | MVP |
-| `DELETE /me/sessions/{session_id}` | Revoke one session | MVP |
+| `PATCH /me` | Change `display_name`, `avatar_url`; each is optional, and a field left out keeps its value. `display_name` is a text that is not empty once trimmed, of at most 100 characters; `avatar_url` is null or an `http` or `https` address; no other field; otherwise `422 validation_failed` at the field. Returns `200` with the user | MVP |
+| `POST /me/password` | Change the password; body `current_password`, `new_password`. A wrong `current_password` answers `422 validation_failed` at `current_password`; `new_password` has at least 8 characters and differs from the current password, otherwise `422` at `new_password`. Returns `204`; the session of the request stays, and every other session of the user is revoked | MVP |
+| `GET /me/sessions` | The sessions of the user that are not revoked and not expired, ordered by `last_seen_at` descending. Each has the fields of [Session](DATA_SHAPE.md#session-mvp) that are not `server-only`, and `current`, true for the session of the request | MVP |
+| `DELETE /me/sessions/{session_id}` | Revoke one session; `204`. Revoking the session of the request signs the user out, as `POST /auth/logout`. A session that is revoked, expired or of another user answers `404` | MVP |
 
 Login and register answer the same way for a wrong password and an unknown email, and are rate limited per IP address.
 
@@ -224,11 +224,11 @@ Login and register answer the same way for a wrong password and an unknown email
 
 | Method and path | Purpose | Phase |
 |---|---|---|
-| `GET /me/settings` | User settings | MVP |
-| `PUT /me/settings` | Replace user settings | MVP |
-| `GET /me/model-settings` | The chosen model per agent role | MVP |
-| `PUT /me/model-settings` | Replace the choices; each is validated against the catalog | MVP |
-| `GET /models` | Model catalog: allowed models, capabilities, prices | MVP |
+| `GET /me/settings` | The [UserSettings](DATA_SHAPE.md#usersettings-mvp) of the user, always `200`: a user who has saved none gets the defaults, `theme` `system`, `ui_language` `en`, `default_output_language` `en`, `default_run_config` with every field null, `notify_on_interrupt` and `notify_on_run_finished` true | MVP |
+| `PUT /me/settings` | Replace user settings. Body: any of `theme`, `ui_language`, `default_output_language`, `default_run_config`, `notify_on_interrupt`, `notify_on_run_finished`; a field left out keeps its value. Each enum takes a value of its list and each `notify_on_` field a boolean; `default_run_config` is a whole RunDefaults with the rules of `run_config` of a project, a field left out of it being null; no other field; otherwise `422 validation_failed` at the field, such as `theme` or `default_run_config.max_steps`. Returns `200` with the settings as `GET` answers them | MVP |
+| `GET /me/model-settings` | The [ModelSettings](DATA_SHAPE.md#modelsettings-mvp) of the user, one for each agent role that the user chose a model for, ordered by `agent_role`; a role without one uses the server default | MVP |
+| `PUT /me/model-settings` | Replace the model settings of the user. Body `items`, a list of `agent_role`, `model_id` and an optional `temperature`; a role left out uses the server default. Each `agent_role` is an agent role of the current workflow definition, given once; each `model_id` is a model of the catalog whose `allowed_roles` holds the role; `temperature` is null or a number from 0 to 1; otherwise `422 validation_failed` at `items.<index>.agent_role`, `items.<index>.model_id` or `items.<index>.temperature`. Returns `200` with the settings as `GET` lists them | MVP |
+| `GET /models` | Model catalog: allowed models, capabilities, prices, ordered by `model_id` | MVP |
 | `GET /me/usage` | Tokens and cost of the user in one calendar month in UTC, `?month=YYYY-MM`, the current month by default: the total, the budget of the month, and, with `?group_by=` one of `day`, `project`, `agent_role`, `model`, the groups. See the example below | MVP |
 | `GET /workflow/definition` | One version of the workflow definition, see [workflow definition](#workflow-definition). `?version=` reads an older version, so a past run is shown with the definition it ran with | MVP |
 
@@ -248,6 +248,8 @@ Usage of the current month, `GET /me/usage?group_by=project`:
 
 - `budget_usd` is the budget that applies to the month: `monthly_budget_usd` of the user, or the server default when it is null. It is null when the month has no limit.
 - `total` and each `usage` are a [Usage](DATA_SHAPE.md#run-mvp); `groups` is empty without `group_by`, and `key` is the id, the day (`YYYY-MM-DD`), the role or the model of the group.
+- The usage of a step counts in the month and the day, in UTC, of its `started_at`. `groups` has one entry for each key with usage in the month: by `key` for `day`, by `cost_usd` descending for the others, ties broken by `key`. A step without an agent role or a model calls no LLM and is in no group of `agent_role` or `model`, so the groups add up to the tokens and the cost of `total`, and only `total` holds its time.
+- A `month` that is not `YYYY-MM`, or a `group_by` out of its list, answers `400 invalid_request`. A month without usage, such as a month to come, answers `total` at zero and no groups.
 
 ### Workflow definition
 
@@ -311,9 +313,9 @@ Rules:
 | Method and path | Purpose | Phase |
 |---|---|---|
 | `GET /projects` | Projects of the user; filters `status`, `rollup_run_status` (one or more values; `none` matches a project without a run) and `last_activity_after`; ordered by `last_activity_at` descending. Each item has `rollup_run_status`, which the project list shows; `item_counts` comes only with `GET /projects/{project_id}` | MVP |
-| `POST /projects` | Create; body `name`, `description`, `output_language`. `name` is optional: without it, the first run names the project from its initial intent, and the event stream of that run sends `project_named`. Accepts an `Idempotency-Key`, so that a retry after a lost answer creates no second project | MVP |
+| `POST /projects` | Create; body `name`, `description`, `output_language`. `output_language` left out takes `default_output_language` of the user settings. `name` is optional: without it, the first run names the project from its initial intent, and the event stream of that run sends `project_named`. Accepts an `Idempotency-Key`, so that a retry after a lost answer creates no second project | MVP |
 | `GET /projects/{project_id}` | One project, with `item_counts`, `unfinished_run_counts` and `rollup_run_status` | MVP |
-| `PATCH /projects/{project_id}` | Change name, description, status, `run_config`, `model_overrides` | MVP |
+| `PATCH /projects/{project_id}` | Change name, description, status, `run_config`, `model_overrides`. Each key of `model_overrides` is an agent role of the current workflow definition and each value a model of the catalog whose `allowed_roles` holds the role; otherwise `422 validation_failed` at `model_overrides.<role>` | MVP |
 | `DELETE /projects/{project_id}` | Soft delete: the project is left out of lists, and its endpoints answer `404`. A project with an unfinished run (`queued`, `running` or `interrupted`) answers `409 invalid_state`; the run is stopped first | MVP |
 
 ### Threads and messages
@@ -321,13 +323,13 @@ Rules:
 | Method and path | Purpose | Phase |
 |---|---|---|
 | `GET /projects/{project_id}/threads` | Threads of a project; ordered by `last_message_at` descending | MVP |
-| `GET /threads` | Threads of the user across projects; `?project_id=` | MVP |
-| `POST /projects/{project_id}/threads` | Create an empty thread; body optional `title`. The first message of the thread starts the work. The message that starts the first run of the project becomes the initial intent of the project, see [Data shape: Project](DATA_SHAPE.md#project-mvp) | MVP |
+| `GET /threads` | Threads of the user across projects; `?project_id=`; ordered by `last_message_at` descending | MVP |
+| `POST /projects/{project_id}/threads` | Create an empty thread; body optional `title`: left out or `null` leaves the thread without a title until its first message, any other value is a text with more than whitespace, else `422 validation_failed` at `title`. The first message of the thread starts the work. The message that starts the first run of the project becomes the initial intent of the project, see [Data shape: Project](DATA_SHAPE.md#project-mvp) | MVP |
 | `GET /threads/{thread_id}` | One thread, with `active_run_id` and `latest_run_status` | MVP |
-| `PATCH /threads/{thread_id}` | Change `title`, `status` | MVP |
-| `DELETE /threads/{thread_id}` | Soft delete | MVP |
+| `PATCH /threads/{thread_id}` | Change `title`, `status`. `title` is a text with more than whitespace and cannot be set back to `null`; `status` is `active` or `archived`; otherwise `422 validation_failed` at the field | MVP |
+| `DELETE /threads/{thread_id}` | Soft delete: the thread is left out of lists, and its endpoints answer `404`. A thread with an unfinished run (`queued`, `running` or `interrupted`) answers `409 invalid_state`; the run is stopped first | MVP |
 | `GET /threads/{thread_id}/messages` | Chat messages; ordered by `sequence` ascending. User messages carry `delivery` | MVP |
-| `POST /threads/{thread_id}/messages` | Send a user message. Body `content`, optional `run_config` with the fields of [RunDefaults](DATA_SHAPE.md#rundefaults-mvp) and optional `models`, a map of agent role to model, both used only when the message starts a run. Returns `201` with the message and the run it started or was sent to | MVP |
+| `POST /threads/{thread_id}/messages` | Send a user message. Body `content`, optional `run_config` with the fields of [RunDefaults](DATA_SHAPE.md#rundefaults-mvp) and optional `models`, a map of agent role to model, both used only when the message starts a run. Each key of `models` is an agent role of the current workflow definition and each value a model of the catalog whose `allowed_roles` holds the role; otherwise `422 validation_failed` at `models.<role>`. Returns `201` with the message and the run it started or was sent to | MVP |
 
 Sending a message is the only way the chat box starts work, and it is never rejected because the thread has an unfinished run:
 
@@ -392,7 +394,7 @@ Response `201`:
 | `GET /runs/{run_id}/directives` | Directives of the run with their items, ordered by `iteration`; explains why the run looped | MVP |
 | `POST /runs/{run_id}/resume` | Answer the pending interrupt, see below | MVP |
 | `POST /runs/{run_id}/cancel` | Stop the run. The open call to the LLM provider is closed. `202` | MVP |
-| `POST /runs/{run_id}/retry` | Create a new run that starts from a step of this run; body `from_step_id`. Before it starts, the artifacts, items and trace links of the project are brought back to the versions that the state of that step references, see [Runtime: retry](architecture/runtime.md#retry). Returns the new run | MVP |
+| `POST /runs/{run_id}/retry` | Create a new run that starts from a step of this run; body `from_step_id`. The new run resolves its RunConfig when it starts, see [Data Shape: RunDefaults](DATA_SHAPE.md#rundefaults-mvp). Before it starts, the artifacts, items and trace links of the project are brought back to the versions that the state of that step references, see [Runtime: retry](architecture/runtime.md#retry). Returns the new run | MVP |
 
 Run body, `GET /runs/5f2d...`, while the run waits at the analysis review. It is the third run of the thread: the first run went through the whole workflow, the second failed at its cost limit, and this run retries the second from its planner step, so its steps start again at the planner. `models` is shortened to two of the roles:
 
@@ -474,6 +476,39 @@ Steps of a run, `GET /runs/5f2d.../steps`, ordered by `sequence`. The example sh
 }
 ```
 
+Directives of a run, `GET /runs/5f2d.../directives`, ordered by `iteration`. The first was issued by the decision of the user at a checkpoint, the second by a step; each `items` entry is an item reference with the `role` that the kind allows. Exactly one of `issued_by_step_id` and `human_decision_id` is set, the other is null:
+
+```json
+{
+  "items": [
+    {
+      "id": "3b7c...", "run_id": "5f2d...", "kind": "rework",
+      "issued_by_step_id": null, "human_decision_id": "a41e...",
+      "target_node": "interviewer", "iteration": 1,
+      "instruction": "Clarify CONF-001: would a layered design work?",
+      "items": [
+        { "item": { "item_id": "8c20...", "kind": "persona", "key": "PER-001", "version": 1 }, "role": "addressed_to" },
+        { "item": { "item_id": "7e11...", "kind": "conflict", "key": "CONF-001", "version": 2 }, "role": "about" }
+      ],
+      "details": {},
+      "created_at": "2026-10-06T08:41:12Z"
+    },
+    {
+      "id": "3b7d...", "run_id": "5f2d...", "kind": "intent",
+      "issued_by_step_id": "e1b4...", "human_decision_id": null,
+      "target_node": "analyst", "iteration": 2,
+      "instruction": "Check the login requirement again.",
+      "items": [
+        { "item": { "item_id": "6d02...", "kind": "analyzed_requirement", "key": "REQ-004", "version": 1 }, "role": "about" }
+      ],
+      "details": {},
+      "created_at": "2026-10-06T08:55:40Z"
+    }
+  ],
+  "next_cursor": null
+}
+```
+
 The pending interrupt, `GET /runs/5f2d.../interrupts?status=pending`. The `interrupt` event carries the same fields, with `interrupt_id` for `id`:
 
 ```json
@@ -525,7 +560,7 @@ Resume rules:
 - `feedback` is required when the chosen option requires it.
 - `answers` has one entry per answered question, by question key, in the shape of `Answer` in the [data shape](DATA_SHAPE.md#humandecision-mvp). Every required question is answered, every choice is a choice of its question, and `text` is present when a chosen choice requires it; otherwise `422 validation_failed` with the question key in the field path.
 - `modified_items` is accepted only when the interrupt allows edits.
-- When the chosen option approves, the artifacts under review and their items that are still `draft` become `approved`.
+- When the chosen option approves, the artifacts under review and their items that are still `draft` become `approved`, each as a new version with `change_reason` `reviewed`.
 - The server stores a human decision, marks the interrupt resolved, and continues the run. The response is `202` with the run.
 
 An interrupt can ask several questions of different types and is answered at once. The checkpoints of definition version 1 ask none; the example comes from a checkpoint that clarifies the intent of a project, see [Runtime: open points](architecture/runtime.md#8-open-points):
@@ -748,16 +783,16 @@ Content rules:
 - `content` never holds the id of an item. Relations between items are created through the trace link endpoints.
 - The client renders and edits an artifact and its items from the schemas returned by `GET /artifact-kinds`, and an artifact or item stored with an older schema version from `GET /content-schemas/{kind}/{schema_version}`, so a field added to a schema appears in the client with no client change. A kind can still have its own component where a generic form is not enough, for example a persona card or an interview transcript.
 
-Editing rule: while a run is `running`, artifacts and items are read-only for the user, and every change (`PATCH`, create, delete, move, reorder and restore) answers `409 invalid_state`. They can be edited when the run is `interrupted` or when the thread has no active run.
+Editing rule: the user changes an artifact or its items only while the run of the project waits for a review that takes changes: the run is `interrupted`, and its pending interrupt has `allow_edits: true` and lists the artifact in `review_artifacts`. Every other change (`PATCH`, create, delete, move, reorder and restore) answers `409 invalid_state`: while a run is `running`, while the pending interrupt does not allow edits or does not list the artifact, and when the thread has no active run.
 
 ### Traceability
 
 | Method and path | Purpose | Phase |
 |---|---|---|
-| `GET /items/{item_id}/trace` | The chain of one item; `?direction=` with one of `backward`, `forward`, `both` (default `both`); `?depth=` (default 5). Returns `items` and `links`, see [Trace body](#trace-body) | MVP |
+| `GET /items/{item_id}/trace` | The chain of one item; `?direction=` with one of `backward`, `forward`, `both` (default `both`): `backward` follows the links from their source to their target (where the item came from), `forward` from their target to their source (what was built from it); `?depth=` (default 5). Returns `items` and `links`, see [Trace body](#trace-body) | MVP |
 | `GET /artifacts/{artifact_id}/trace` | The chains of all the items of one artifact, from the interview to the backlog, in one answer; same `?direction=` and `?depth=`, with `depth` defaulting to no limit. Returns `items` and `links`, see [Trace body](#trace-body) | MVP |
 | `GET /projects/{project_id}/trace-links` | Current links, without the removed ones; filters `link_type`, `source_item_id`, `target_item_id` | MVP |
-| `POST /projects/{project_id}/trace-links` | Create a link by hand; body `source_item_id`, `target_item_id`, `link_type`, `note`. The pair of item kinds must be allowed for the link type, otherwise `422 validation_failed` | MVP |
+| `POST /projects/{project_id}/trace-links` | Create a link by hand; body `source_item_id`, `target_item_id`, `link_type`, `note`, `source_quote`, `target_quote` (both optional). The pair of item kinds must be allowed for the link type, and the quotes must follow the [quote rules](#quote-rules), otherwise `422 validation_failed` | MVP |
 | `DELETE /trace-links/{link_id}` | Remove a link. The link keeps its row with `deleted_at` set, so the links of an earlier step can be shown again; lists and trace views leave it out | MVP |
 | `GET /projects/{project_id}/traceability/matrix` | Rows of `derived_from` chains from backlog item down to raw requirement, see [Matrix body](#matrix-body) | MVP |
 | `GET /projects/{project_id}/traceability/coverage` | Lists: requirements with no backlog item, requirements with no source, items that need review after a source changed, see [Coverage body](#coverage-body) | MVP |
@@ -786,7 +821,8 @@ Editing rule: while a run is `running`, artifacts and items are read-only for th
       "target_item_id": "5f20...",
       "link_type": "derived_from",
       "target_version": 2,
-      "quote": null,
+      "source_quote": null,
+      "target_quote": null,
       "note": null
     }
   ]
@@ -794,6 +830,15 @@ Editing rule: while a run is `running`, artifacts and items are read-only for th
 ```
 
 Both lists are in full, not paged: the answer for an artifact is bounded by the items of one project. `source_item_id` and `target_item_id` of every link are the `id` of an entry of `items`; a link whose other end is beyond `depth` is left out. The order is by `key` for items and by `id` for links. `404 not_found` for an item or an artifact that does not exist.
+
+#### Quote rules
+
+A link may quote the words that it is about, on each side: `target_quote` holds words of the target item, such as the exact words of an interview message for `evidenced_by`, and `source_quote` holds words of the source item, such as the part of a requirement that comes from the item it is based on. Each is null when the link is about the whole item. A link reads from its source to its target through the title of its link type ("REQ-001 Based on AR-001").
+
+- `quotes` of the link type in the workflow definition says which side may hold words (`quotes.source`, `quotes.target`); a quote on a side that the link type does not allow answers `422 validation_failed` at that field. In definition version 1, `evidenced_by`, `resolved_by`, `concerns` and `flags` may quote their target, `derived_from` both sides, and the other link types neither.
+- A quote is one run of words of at most 300 characters, found word for word in one `text` or `textarea` field of its item: the target at `target_version`, the source at its version when the link is made. Otherwise `422 validation_failed` at that field.
+- A link has at most one quote per side, since a source, a target and a link type make one link.
+- The server never rewrites a quote. When the item changes later, its words may no longer be in it; the client then shows the quote without marking it.
 
 #### Matrix body
 

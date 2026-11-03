@@ -135,7 +135,7 @@ The user cancels with `POST /runs/{run_id}/cancel`. The open call to the LLM pro
 
 ### Retry
 
-`POST /runs/{run_id}/retry` with a step starts a new run from the workflow checkpoint saved before that step. The steps before it are not run again, so their LLM calls are not paid twice. The state saved after each step can be read with `GET /runs/{run_id}/steps/{step_id}/state`, which helps choose the step to retry from.
+`POST /runs/{run_id}/retry` with a step starts a new run from the workflow checkpoint saved before that step. The steps before it are not run again, so their LLM calls are not paid twice. The state saved after each step can be read with `GET /runs/{run_id}/steps/{step_id}/state`, which helps choose the step to retry from. The new run resolves its RunConfig when it starts, as any run does, so the settings saved since the run it retries apply: a run that failed at its cost limit can be retried after the limit is raised.
 
 The steps after the chosen one changed the artifacts that the saved state does not know about, so before the new run starts, in one transaction, the backend brings the project back to that point:
 

@@ -257,7 +257,7 @@ The model a user chose for each agent role. One row per user and role.
 | `user_id` | ref\<User\> | |
 | `agent_role` | AgentRole | See [agent roles](#agent-roles) |
 | `model_id` | string | Must exist in the catalog and allow this role |
-| `temperature` | number? | Null means the role default |
+| `temperature` | number? | From 0 to 1, a range that every provider of the catalog accepts. Null means the role default |
 
 Resolution order when a run starts: one-off override in the run request, then project setting, then user setting, then the server default for the role, see [RunDefaults](#rundefaults-mvp).
 
@@ -404,7 +404,7 @@ The chat between the user and the system. Interview turns between agents are not
 
 ### RunConfig (MVP)
 
-Value object stored on each Run: the complete configuration the run uses, resolved when the run starts and then frozen, so that later setting changes do not alter the record of a past run. The fields in the first table belong to every workflow; `parameters` holds the limits of one workflow version.
+Value object stored on each Run: the complete configuration the run uses, resolved when the run starts and then frozen, so that later setting changes do not alter the record of a past run. A retry is a new run: it resolves its RunConfig when it starts, so the settings saved since the run it retries apply. The fields in the first table belong to every workflow; `parameters` holds the limits of one workflow version.
 
 | Field | Type | Notes |
 |---|---|---|
@@ -696,7 +696,7 @@ Rules between the two levels:
 
 - **Items are stored once.** An artifact does not copy its items into its `content`. The items of an artifact are the items whose `artifact_id` is the artifact; they form a tree through `parent_item_id`, see [sections and nesting](#sections-and-nesting).
 - **Artifact version.** The revision of an artifact stores the list of its items with the version of each, so any earlier state of the whole artifact can be shown again.
-- **Review applies to the artifact.** A checkpoint asks the user to review an artifact. When the chosen option approves, the artifact and every item that is still `draft` get `review_status` `approved`. An item can also be rejected or edited on its own.
+- **Review applies to the artifact.** A checkpoint asks the user to review an artifact. When the chosen option approves, the artifact and every item that is still `draft` get `review_status` `approved`, each as a new version with `change_reason` `reviewed`. An item can also be rejected or edited on its own.
 - **Rework keeps the artifact and replaces items.** A rework round works inside the existing artifact; it does not create a second artifact of the same kind. An agent that changes what an item says, in a rework round, does not edit the item: it creates a new item, with a new key and a `supersedes` link to the old one, and the old item becomes `superseded`. A split creates several new items and a merge one, each linked with `supersedes` to every item it replaces. The old items stay, with their links, so the history of the requirement can be followed. The lifecycle fields below are the exception.
 - **The user edits in place.** A user who edits an item, at a checkpoint or outside a run, changes the item itself: it gets a new version with the same key.
 - **Trace links connect items only.** An artifact is never the source or the target of a trace link.
@@ -845,7 +845,7 @@ A requirement as stated in an interview, before any rewriting.
 | `statement` | string | Close to the persona's own words |
 | `topic` | string? | One of the plan's `topics` |
 
-Links: `stated_by` to the persona; `evidenced_by` to each interview message it was taken from, with the exact quote on the link.
+Links: `stated_by` to the persona; `evidenced_by` to each interview message it was taken from, with the exact words of the message on the link (`target_quote`).
 
 ### AnalyzedRequirement (MVP)
 
@@ -1016,7 +1016,7 @@ Deck: `status`, and `issues` with `category` ("specification") and `severity` ("
 
 One row per version, on each level. They back history, diff and "restore this version".
 
-Revisions are never changed or deleted, not even when the item, the artifact or the project is deleted, because the saved workflow state of every step references them, see [workflow state to entities](#workflow-state-to-entities). Deleting an item or an artifact writes a revision with `change_reason` `deleted`, whose snapshot marks it deleted; restoring it writes one with `restored`.
+Revisions are never changed or deleted, not even when the item, the artifact or the project is deleted, because the saved workflow state of every step references them, see [workflow state to entities](#workflow-state-to-entities). Deleting an item or an artifact writes a revision with `change_reason` `deleted`, whose snapshot marks it deleted; restoring it writes one with `restored`. A decision at a checkpoint whose option approves writes one with `reviewed`, and its `human_decision_id`, on the artifact under review and on each of its items whose `review_status` it changes.
 
 ArtifactRevision:
 
@@ -1027,7 +1027,7 @@ ArtifactRevision:
 | `snapshot` | object | Title, summary, content and review status at this version, and whether the artifact is deleted |
 | `item_versions` | ItemRef[] | The items of the artifact at this version, in order, each with its version |
 | `changed_by` | Origin | |
-| `change_reason` | enum | `generated`, `user_edit`, `rework`, `restored`, `deleted` |
+| `change_reason` | enum | `generated`, `user_edit`, `rework`, `reviewed`, `restored`, `deleted` |
 | `human_decision_id` | ref\<HumanDecision\>? | Set when the change came from a checkpoint |
 
 ItemRevision:
@@ -1038,7 +1038,7 @@ ItemRevision:
 | `version` | int | |
 | `snapshot` | object | Content, position, parent item and review status at this version, and whether the item is deleted |
 | `changed_by` | Origin | |
-| `change_reason` | enum | `generated`, `user_edit`, `rework`, `restored`, `deleted` |
+| `change_reason` | enum | `generated`, `user_edit`, `rework`, `reviewed`, `restored`, `deleted` |
 | `human_decision_id` | ref\<HumanDecision\>? | Set when the change came from a checkpoint |
 
 ### ItemEmbedding (Later)
@@ -1076,32 +1076,35 @@ A directed link between two items of one project. A reference from one item to a
 | `source_item_id` | ref\<ArtifactItem\> | |
 | `target_item_id` | ref\<ArtifactItem\> | |
 | `target_version` | int | Version of the target when the link was created, see [staleness](#staleness) |
-| `quote` | string? | For `evidenced_by`: the exact words in the interview message that support the source |
+| `source_quote` | string? | Words of the source that the link is about, such as the part of a requirement that comes from the item it is based on; null when the link is about the whole source. Allowed when `quotes.source` of the link type is true |
+| `target_quote` | string? | Words of the target that the link is about, such as the exact words of an interview message for `evidenced_by`; null when the link is about the whole target. Allowed when `quotes.target` of the link type is true |
 | `link_type` | LinkType | See the table below |
 | `note` | string? | Short reason for the link |
 | `created_by` | Origin | |
 | `deleted_by` | Origin? | Who removed the link; null while the link is current. Removing sets `deleted_at` and keeps the row, so the links of an earlier step can be shown again |
 
-The direction is always from the later item to the earlier one, so following links from any item leads back to the interview.
+A link reads from its source to its target through the title of its link type ("REQ-001 Based on AR-001"). Following `derived_from` and `evidenced_by` from any item leads back to the interview. A quote is one run of words of at most 300 characters, found in one `text` or `textarea` field of its item, and a link has at most one quote per side, see [API: quote rules](API.md#quote-rules).
 
 ### Link types
 
 In workflow definition version 1, `link_type` is the set below.
 
-| Link type | From | To | Meaning |
-|---|---|---|---|
-| `evidenced_by` | RawRequirement, LatentNeed | InterviewMessage | The words it was taken from |
-| `stated_by` | RawRequirement | Persona | Who said it |
-| `involves` | AnalyzedRequirement, LatentNeed, Conflict | Persona | The personas that want it, or the sides of a conflict |
-| `derived_from` | AnalyzedRequirement | RawRequirement, LatentNeed | Built from |
-| `derived_from` | SpecRequirement | AnalyzedRequirement | Built from |
-| `derived_from` | BacklogItem | SpecRequirement | Built from |
-| `concerns` | Assumption, AmbiguityIssue, Conflict | RawRequirement, AnalyzedRequirement, SpecRequirement | The item it is about |
-| `resolved_by` | AmbiguityIssue, Conflict | InterviewMessage | The answer that settled it. A resolution made by the user at a checkpoint is recorded on the item revision instead |
-| `flags` | ValidationIssue | Any item kind | The item the validator found a problem in |
-| `depends_on` | SpecRequirement, BacklogItem | Same kind | Must be done first |
-| `duplicates` | Any item kind | Same kind | Same content |
-| `supersedes` | Any item kind | Same kind | Replaced after rework |
+| Link type | From | To | Meaning | Source quote | Target quote |
+|---|---|---|---|---|---|
+| `evidenced_by` | RawRequirement, LatentNeed | InterviewMessage | The words it was taken from | No | Yes: the words of the interview |
+| `stated_by` | RawRequirement | Persona | Who said it | No | No |
+| `involves` | AnalyzedRequirement, LatentNeed, Conflict | Persona | The personas that want it, or the sides of a conflict | No | No |
+| `derived_from` | AnalyzedRequirement | RawRequirement, LatentNeed | Built from | Yes: the words that come from the target | Yes: the words of the target that it uses |
+| `derived_from` | SpecRequirement | AnalyzedRequirement | Built from | Yes | Yes |
+| `derived_from` | BacklogItem | SpecRequirement | Built from | Yes | Yes |
+| `concerns` | Assumption, AmbiguityIssue, Conflict | RawRequirement, AnalyzedRequirement, SpecRequirement | The item it is about | No | Yes: the words of the requirement that it is about |
+| `resolved_by` | AmbiguityIssue, Conflict | InterviewMessage | The answer that settled it. A resolution made by the user at a checkpoint is recorded on the item revision instead | No | Yes: the words of the answer |
+| `flags` | ValidationIssue | Any item kind | The item the validator found a problem in | No | Yes: the words found wrong |
+| `depends_on` | SpecRequirement, BacklogItem | Same kind | Must be done first | No | No |
+| `duplicates` | Any item kind | Same kind | Same content | No | No |
+| `supersedes` | Any item kind | Same kind | Replaced after rework | No | No |
+
+The two quote columns are `quotes` of the link type in the definition. Every quote is optional: an agent gives one when the link is about some words, not about the whole item.
 
 `duplicates` and `supersedes` apply to every item kind except `section`, so the Links line of each item kind leaves them out.
 
@@ -1298,7 +1301,7 @@ Example of a prompt view. `derived_from` and `involves` hold the targets of the 
 Rules for the prompt view:
 
 - **Structured output.** An agent returns items through an output schema, one schema per item kind, never as free text that is parsed afterwards.
-- **Link fields named after link types.** Each type of outgoing trace link is a field with the name of the link type and the keys of the targets, the same name the output model of the agent uses. An `evidenced_by` link is rendered as `{ "message": "<message key>", "quote": "<exact words>" }`, because it has a quote.
+- **Link fields named after link types.** Each type of outgoing trace link is a field with the name of the link type and the keys of the targets, the same name the output model of the agent uses. A link with words is rendered as an object with the key of its target and its words: `{ "message": "<message key>", "target_quote": "<exact words>" }` for `evidenced_by` and `resolved_by`, `{ "item": "<key>", "source_quote": "<words of this item>", "target_quote": "<words of the target>" }` for the other link types that allow words, each quote only when the link has it; a link without words stays a key.
 - **Stable rendering.** The prompt view of an item is rendered with a fixed field order, and items are listed in a fixed order (by key), so the same items always produce the same text. A prompt whose beginning is identical to an earlier one is served from the provider's prompt cache at a fraction of the price.
 - **Fixed parts first.** In every agent prompt the parts that do not change during a run (tool definitions, role instructions) come first, and the parts that change (current artifacts, rework directive, newest messages) come after them. No timestamp, run id or user name appears in the fixed parts.
 - **Current state, not history.** An agent receives the current version of the items it needs, not the full message history of the run. Items are stored outside the prompt and referenced by key.
