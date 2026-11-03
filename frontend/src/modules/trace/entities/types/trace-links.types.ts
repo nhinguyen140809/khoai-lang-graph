@@ -14,8 +14,16 @@ export const traceLinkSchema = z.object({
   link_type: z.string(),
   /** The version of the target when the link was made. */
   target_version: z.number().int(),
-  /** For a link of the type `evidenced_by`: the exact words that support the source. */
-  quote: z.string().nullable(),
+  /**
+   * The words of the target that the link is about, such as the quote of an interview message; null
+   * when the link is about the whole target. Named `quote` before S1b.D.
+   */
+  target_quote: z.string().nullable(),
+  /**
+   * The words of the source that the link is about, such as the part of a requirement built from
+   * this target; null when the link is about the whole source.
+   */
+  source_quote: z.string().nullable(),
   note: z.string().nullable(),
 })
 

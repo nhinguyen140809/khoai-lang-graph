@@ -20,7 +20,8 @@ export interface LinkSpec {
   type: string
   /** The version of the target when the link was made; the current one when absent. */
   targetVersion?: number
-  quote?: string
+  targetQuote?: string
+  sourceQuote?: string
   note?: string
 }
 

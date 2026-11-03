@@ -21,7 +21,8 @@ export function buildTraceLinks(specs: LinkSpec[], items: ArtifactItem[], n: num
         target_item_id: target.id,
         link_type: spec.type,
         target_version: spec.targetVersion ?? target.version,
-        quote: spec.quote ?? null,
+        target_quote: spec.targetQuote ?? null,
+        source_quote: spec.sourceQuote ?? null,
         note: spec.note ?? null,
       },
     ]

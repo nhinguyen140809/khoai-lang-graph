@@ -25,7 +25,7 @@ export function useProjectTraceLinks(
 
 /**
  * The links that cite an item, such as an interview message: the items taken from its words, each
- * with the quote. `isEnabled` waits until it is needed.
+ * with the words of their target. `isEnabled` waits until it is needed.
  */
 export function useLinksCiting(projectId: string, itemId: string, options: HookQueryOptions = {}) {
   return useProjectTraceLinks(projectId, { linkType: evidencedBy, targetItemId: itemId }, options)
