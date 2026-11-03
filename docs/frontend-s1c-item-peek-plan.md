@@ -94,7 +94,7 @@ The behavior on the screen of each component is in section 10; a decision that s
 
 4. **Where it sits.** `TabbedWorkspace` wraps its editor `Surface` in `EditorSplit region={PanelRegion.Aside} panel={aside === null ? undefined : <AsidePanel {...aside} />}`, inside `SideFeatureSplit`: side panel, editor, right panel, from left to right. `UntabbedWorkspace` (the screens outside a project) has no right panel. Without content, `EditorSplit` gives the editor the whole room, as for a screen without a feature.
 
-5. **Below 1440 px, the side panel and the right panel take turns.** `useIsWideWindow()` (new, `shared/lib/viewport/hooks/useIsWideWindow.ts`: `wideWindowQuery = (min-width: ${wideWindowMinWidth}px)` with `wideWindowMinWidth = 1440` at the top of the file, as `useIsMobile` keeps `mobileBreakpoint` and `mobileQuery`; an external store, false on the server). `SideFeatureSplit` computes `isSideGivenWay = !isWide && aside !== null` and passes it to `EditorSplit` as the new prop `isPanelHidden`; `StoredPanel` hides the panel with `Activity` when `!visible || isPanelHidden`. The stored visibility of the side panel does not change, so it comes back when the right panel closes, and its state (the collapsed rows of the tree) stays.
+5. **Below 1440 px, the side panel and the right panel take turns.** `useIsWideWindow()` (new, `shared/lib/viewport/hooks/useIsWideWindow.ts`: `WIDE_WINDOW_MIN_WIDTH = 1440` and `wideWindowQuery = (min-width: ${String(WIDE_WINDOW_MIN_WIDTH)}px)` at the top of the file, a private setting in UPPER_SNAKE_CASE as the contributing guide names it; an external store, false on the server). The same commit renames the two private settings of the `useIsMobile` file beside it, `mobileBreakpoint` and `mobileQuery` to `MOBILE_BREAKPOINT` and `MOBILE_QUERY`, which predate that rule. `SideFeatureSplit` computes `isSideGivenWay = !isWide && aside !== null` and passes it to `EditorSplit` as the new prop `isPanelHidden`; `StoredPanel` hides the panel with `Activity` when `!visible || isPanelHidden`. The stored visibility of the side panel does not change, so it comes back when the right panel closes, and its state (the collapsed rows of the tree) stays.
    - `Ctrl+B` while `isSideGivenWay` holds calls `aside.onClose()` and `sidePanel.show()` (answer B4); otherwise it toggles as today. The label of the command stays "Toggle side panel".
 
 6. **The design system** shows the right panel in the sample workspace of `WorkspaceCard.tsx`, with a static content and a close button that hides it.
@@ -107,9 +107,9 @@ The behavior on the screen of each component is in section 10; a decision that s
    export function usePeekedItem(): {
      /** The item that the address peeks at, or null. */
      itemId: string | null
-     /** Adds `?peek=` to the address of the page on screen, keeping its other parameters (push: Back closes it). */
-     openPeek: (itemId: string) => void
-     /** Opens the peek of the item, or closes it when it is the one peeked. */
+     /** Opens the peek of the item, or closes it when it is the one peeked: pushes `?peek=` for
+      * another item, keeping the other parameters of the page (Back closes it), and removes it for
+      * the item peeked (replace). */
      togglePeek: (itemId: string) => void
      /** Removes `?peek=` from the address (replace: the page stays where it is). */
      closePeek: () => void
@@ -127,7 +127,7 @@ The behavior on the screen of each component is in section 10; a decision that s
    - A table or a card of a document: `ArtifactDocument` and `DocumentBlocks` get a render prop `renderItemKey?: (item: OutlineItem) => ReactNode`; without it the key stays plain text, as today. The table draws it in its key cell; a card draws it in its header, under the title (`CardDescription`). The document page passes `(item) => <PeekKeyButton item={item} />`: a ghost button of size `xs` with the key in `font-mono text-xs`, `aria-label` "Quick look at REQ-001", `aria-pressed` while that item is peeked, which calls `togglePeek(item.id)`. The title stays the link to the item page. A transcript draws no key button: its messages are read in place.
    - The chips and the marks of the links of an item page (S1b decision 14) keep their card, and do not open the peek: the card already shows the item at the other end, and its Open opens the page. The rows of "Why this item exists" stay links to the pages.
    - `Read` of a quote stays a link to the transcript (S1b decision 17).
-   - S2 adds the chat and the review bar, with `openPeek`.
+   - S2 adds the chat and the review bar, and with them `openPeek` (the form that always opens the item, where `togglePeek` would close it): the hook gains it when S2 uses it, since no code of S1c calls it.
 
 10. **The peek of an item** (`ItemPeek({ projectId, itemId })`, 7.5): under the heading of the panel,
     - the key line of the item: `ItemKeyLine` (extracted from `ArtifactItemDetails` in S1c.2, section 6) with the status of `useItemStatus(projectId, item)`;
@@ -204,7 +204,7 @@ The behavior on the screen of each component is in section 10; a decision that s
 | File | Change | Commit |
 |---|---|---|
 | `docs/ui/usability.md` (`frontend-plan`) | B1 to B4 | none |
-| `shared/lib/viewport/hooks/useIsWideWindow.ts` (new), test, `index.ts` | Decision 5 | 1.1 |
+| `shared/lib/viewport/hooks/useIsWideWindow.ts` (new), the renamed settings of `useIsMobile.ts`, test, `index.ts` | Decision 5 | 1.1 |
 | `frame/panels/panel.types.ts`, `panel.constants.ts`, `panels.store.ts` | `Aside` (decision 1) | 1.2 |
 | `frame/panels/aside-panel.store.ts`, `aside-panel.types.ts`, `hooks/useAsidePanel.ts`, `hooks/useRegisteredAsidePanel.ts`, `hooks/useReturnFocus.ts`, `components/AsidePanel.tsx` (new), tests | Decisions 2, 3 | 1.2 |
 | `frame/panels/components/EditorSplit.tsx` | `isPanelHidden` | 1.2 |
@@ -385,7 +385,7 @@ export const itemPeekMessages = {
 | `frame/panels/components/__tests__/AsidePanel.test.tsx` | The heading takes the focus; a new `key` moves it again; the close button and `Escape` call `onClose`; the focus returns to the opener, or to the editor when the opener is gone; axe |
 | `frame/layouts/components/__tests__/TabbedWorkspace.test.tsx` + data | Content shows the region; no content gives the editor the room; narrow window hides the side panel without changing its stored visibility; `Ctrl+B` on a narrow window closes the right panel and shows the side panel |
 | `shared/routes/peek/__tests__/peek-query.utils.test.ts` + data | Add, replace, remove; the other parameters kept in order |
-| `shared/routes/peek/hooks/__tests__/usePeekedItem.test.ts` | Reads the parameter; `openPeek` pushes; `togglePeek` closes the peeked item; `closePeek` replaces |
+| `shared/routes/peek/hooks/__tests__/usePeekedItem.test.ts` | Reads the parameter; `togglePeek` pushes for another item and closes the peeked one; `closePeek` replaces |
 | `artifact/entities/components/__tests__/ItemKeyLine.test.tsx` | Status, key, version only after a change |
 | `artifact/entities/components/__tests__/ArtifactDocument.test.tsx` (extended) | `renderItemKey` in the key cell of a table and the header of a card; none in a transcript; plain key without it |
 | `documents/widgets/peek/components/__tests__/ItemPeek.test.tsx` | Key line, main field, origin; empty main field; Open as page opens the preview tab and closes the peek; a row of "Why this item exists" opens its page and the peek closes; a message opens its transcript; loading, not found with Close, error with Try again; axe |
@@ -407,6 +407,7 @@ Helpers: `renderWorkbench` renders the frame for the frame tests; the peek tests
 | Item | Where |
 |---|---|
 | The chat and the review bar open the peek | S2 |
+| `openPeek` of `usePeekedItem`, the form that always opens the item | S2, with the chat and the review bar |
 | Open point 9 (a row opens the peek or the page) | Tests with users |
 | `Open to the side`, two groups | The frame, after S1 |
 | Other content in the right panel (the results of S3, the links of S4) | Their PRs, with `useAsidePanel` |
