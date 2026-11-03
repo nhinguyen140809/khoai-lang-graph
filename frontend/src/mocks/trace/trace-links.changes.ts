@@ -14,8 +14,8 @@ export function addTraceLink(record: NewTraceLinkRecord): TraceLink {
     target_item_id: record.targetItemId,
     link_type: record.linkType,
     target_version: record.targetVersion,
-    target_quote: null,
-    source_quote: null,
+    target_quote: record.targetQuote,
+    source_quote: record.sourceQuote,
     note: record.note,
   }
   createdTraceLinks.set([...createdTraceLinks.get(), link])

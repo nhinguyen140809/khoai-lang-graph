@@ -63,7 +63,13 @@ const evidence: LinkSpec[] = [
 const derivations: LinkSpec[] = [
   { source: 'AR-001', target: 'RAW-001', type: 'derived_from' },
   { source: 'AR-002', target: 'RAW-005', type: 'derived_from' },
-  { source: 'AR-003', target: 'RAW-002', type: 'derived_from' },
+  {
+    source: 'AR-003',
+    target: 'RAW-002',
+    type: 'derived_from',
+    sourceQuote: 'sees their free hours',
+    targetQuote: 'I never know who is free this week',
+  },
   { source: 'AR-003', target: 'LN-001', type: 'derived_from' },
   { source: 'AR-004', target: 'RAW-003', type: 'derived_from' },
   { source: 'AR-005', target: 'RAW-004', type: 'derived_from' },
@@ -72,7 +78,13 @@ const derivations: LinkSpec[] = [
   { source: 'AR-008', target: 'RAW-006', type: 'derived_from' },
   { source: 'AR-009', target: 'RAW-004', type: 'derived_from' },
   { source: 'AR-010', target: 'RAW-002', type: 'derived_from' },
-  { source: 'REQ-001', target: 'AR-001', type: 'derived_from' },
+  {
+    source: 'REQ-001',
+    target: 'AR-001',
+    type: 'derived_from',
+    sourceQuote: 'search mentors by field of study',
+    targetQuote: 'lists mentors by field of study',
+  },
   { source: 'REQ-002', target: 'AR-003', type: 'derived_from' },
   { source: 'REQ-003', target: 'AR-007', type: 'derived_from', targetVersion: 1 },
   { source: 'REQ-004', target: 'AR-004', type: 'derived_from' },
@@ -89,9 +101,19 @@ const derivations: LinkSpec[] = [
 ]
 
 const concerns: LinkSpec[] = [
-  { source: 'AMB-001', target: 'AR-010', type: 'concerns' },
+  {
+    source: 'AMB-001',
+    target: 'AR-010',
+    type: 'concerns',
+    targetQuote: 'within 2 seconds',
+  },
   { source: 'AMB-002', target: 'AR-003', type: 'concerns' },
-  { source: 'AMB-003', target: 'AR-005', type: 'concerns' },
+  {
+    source: 'AMB-003',
+    target: 'AR-005',
+    type: 'concerns',
+    targetQuote: 'reminds the student and the mentor',
+  },
   { source: 'ASM-002', target: 'AR-003', type: 'concerns' },
   { source: 'CONF-001', target: 'AR-007', type: 'concerns' },
   { source: 'VAL-001', target: 'REQ-005', type: 'flags' },

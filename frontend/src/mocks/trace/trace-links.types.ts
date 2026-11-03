@@ -10,6 +10,10 @@ export interface NewTraceLinkRecord {
   linkType: string
   /** The version of the target now. */
   targetVersion: number
+  /** The words of the target that the link is about; null when it is about the whole target. */
+  targetQuote: string | null
+  /** The words of the source that the link is about; null when it is about the whole source. */
+  sourceQuote: string | null
   note: string | null
 }
 
@@ -54,6 +58,10 @@ export interface CandidateLink {
   source: ArtifactItem
   target: ArtifactItem
   linkType: LinkType
+  /** The words of the target that the link is about; null when it is about the whole target. */
+  targetQuote: string | null
+  /** The words of the source that the link is about; null when it is about the whole source. */
+  sourceQuote: string | null
 }
 
 /** One rule that a link between two items of a project must keep: the problem when it does not. */

@@ -41,5 +41,9 @@ export interface CreateTraceLinkBody {
   source_item_id: string
   target_item_id: string
   link_type: string
+  /** The words of the target that the link is about, when its type may quote the target. */
+  target_quote?: string | null | undefined
+  /** The words of the source that the link is about, when its type may quote the source. */
+  source_quote?: string | null | undefined
   note?: string | null | undefined
 }
