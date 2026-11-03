@@ -1,12 +1,15 @@
-// Runs ESLint in several processes, one after another, so that each process stays within a small
-// Node.js heap (for example NODE_OPTIONS=--max-old-space-size=768). The type-aware rules build a
-// TypeScript program: one process for the whole project loads every file of the project and keeps
-// the types it checks. Here each process lints one group of folders, with a TypeScript program
-// of that group only: its files, the files they import, and the declarations every file needs.
+// Runs ESLint in several processes, so that each process stays within a small Node.js heap
+// (LINT_MAX_OLD_SPACE, in MB, 1536 by default). The type-aware rules build a TypeScript program:
+// one process for the whole project loads every file of the project and keeps the types it
+// checks. Here each process lints one group of folders, with a TypeScript program of that group
+// only: its files, the files they import, and the declarations every file needs. The groups run
+// side by side, one process for every two cores of the machine at most (LINT_JOBS overrides the
+// count, as LINT_MAX_OLD_SPACE does the heap).
 //
 // Usage: node scripts/lint.mjs [ESLint options], for example `node scripts/lint.mjs --fix`.
-import { spawnSync } from 'node:child_process'
+import { spawn } from 'node:child_process'
 import { mkdirSync, readdirSync, writeFileSync } from 'node:fs'
+import { cpus } from 'node:os'
 import path from 'node:path'
 import { fileURLToPath } from 'node:url'
 
@@ -71,24 +74,44 @@ mkdirSync(configDir, { recursive: true })
 const eslintOptions = process.argv.slice(2)
 const failed = []
 
-for (const group of groups) {
-  if (group.lint.length === 0) continue
-  const args = [
-    eslintBin,
-    ...group.lint.map((entry) => entry.path),
-    ...(group.ignore ?? []).flatMap((pattern) => ['--ignore-pattern', pattern]),
-    // A folder can be empty until its first code.
-    '--no-error-on-unmatched-pattern',
-    ...eslintOptions,
-  ]
-  console.log(`\nESLint: ${group.lint.map((entry) => entry.path).join(' ')}`)
-  const result = spawnSync(process.execPath, args, {
-    cwd: root,
-    stdio: 'inherit',
-    env: { ...process.env, ESLINT_TSCONFIG: writeTsconfig(group) },
+const run = (group) =>
+  new Promise((resolve) => {
+    const args = [
+      eslintBin,
+      ...group.lint.map((entry) => entry.path),
+      ...(group.ignore ?? []).flatMap((pattern) => ['--ignore-pattern', pattern]),
+      // A folder can be empty until its first code.
+      '--no-error-on-unmatched-pattern',
+      ...eslintOptions,
+    ]
+    console.log(`\nESLint: ${group.lint.map((entry) => entry.path).join(' ')}`)
+    const child = spawn(process.execPath, args, {
+      cwd: root,
+      stdio: 'inherit',
+      env: {
+        ...process.env,
+        ESLINT_TSCONFIG: writeTsconfig(group),
+        NODE_OPTIONS: `--max-old-space-size=${process.env.LINT_MAX_OLD_SPACE ?? '1536'}`,
+      },
+    })
+    child.on('close', (code) => {
+      if (code !== 0) failed.push(group.name)
+      resolve()
+    })
   })
-  if (result.status !== 0) failed.push(group.name)
-}
+
+const pending = groups.filter((group) => group.lint.length > 0)
+const workers =
+  Number.parseInt(process.env.LINT_JOBS ?? '', 10) || Math.max(1, Math.floor(cpus().length / 2))
+await Promise.all(
+  Array.from({ length: Math.min(pending.length, workers) }, () => {
+    const take = () => {
+      const group = pending.shift()
+      return group === undefined ? undefined : run(group).then(take)
+    }
+    return take()
+  }),
+)
 
 if (failed.length > 0) {
   console.error(`\nESLint found problems or failed in: ${failed.join(', ')}`)
