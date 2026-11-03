@@ -31,7 +31,7 @@ S1b is a docs PR and three stacked PRs, as S1a became #56 (docs) and #55, #57, #
 | PR | Branch | Title | Based on |
 |---|---|---|---|
 | S1b.D | `docs/fe/api-fields` (exists, with 9 commits not on `main`) | `docs(api): accept a change of a document only during a review, and quote the words of both items of a link` | `main` |
-| S1b.0 | `chore/fe/maintenance-before-edit` | `chore(frontend): move the page link to the frame, drop the artifact panel placeholder, fix the transcript links, and refuse a change outside a review in the mock` | `main`, once S1b.D is merged |
+| S1b.0 | `chore/fe/maintenance-before-edit` | `chore(frontend): move the page link to the frame, drop the artifact panel placeholder, fix the transcript links, refuse a change outside a review in the mock, and place the documents files in the folders of their kind` | `main`, once S1b.D is merged |
 | S1b.1 | `feat/fe/edit-entities` | `feat(frontend): read the inputs of the content fields, the history of a record, the links and the origin of an item, and when a document can change` | S1b.0 |
 | S1b.2 | `feat/fe/edit-artifacts` | `feat(frontend): edit an item and a document during a review, browse and restore their versions, and show the links and the origin of an item` | S1b.1 |
 
@@ -129,7 +129,7 @@ The behavior on the screen of each component is in section 10; a decision that s
    | The dialogs of the edits and the restores, mounted once | `documents/widgets/dialogs` (new) | A dialog opened through a store is mounted once by a dialogs widget of the layout (decision 22); the restore reloads the traces, so the widget sits in `documents` |
    | `!` in the tree and in the footer | `documents/widgets/panel` (reads `useDocumentOutline`) | The tree already draws every status by its look |
    | A button disabled with its reason in a tooltip (`DisabledReason`) | `shared/components/ui/disabled-reason.tsx` | No product object; two features use it (Edit, Restore) and the history uses it for Show changes |
-   | Whether a document is drawn as a transcript (`holdsTranscript`) | `artifact/entities/outline/document-blocks.utils.ts` | A reading rule of the blocks of a document |
+   | Whether a document is drawn as a transcript (`hasTranscript`) | `artifact/entities/outline/document-blocks.utils.ts` | A reading rule of the blocks of a document |
    | A value drawn with marks (`marks`, `renderMark` of `ContentFieldValue`) | `workflow/entities/components/ContentFieldValue.tsx` | The view of a value is `workflow`'s; the ranges come from `documents` through `ArtifactItemDetails` |
    | What follows a change of an artifact or an item: the answer in the cache, then every artifact and item loads again (`useApplyRecordChange`) | `artifact/entities/items/hooks/useApplyRecordChange.ts` | Three callers in two features (save an item, save a document, restore); a cache helper of the entity |
    | The link that opens a page in the preview tab (`PageLink`, today `ItemLink`) | `shared/components/frame/tabs/components/PageLink.tsx` | No product object; three slices use it |
@@ -240,7 +240,7 @@ The behavior on the screen of each component is in section 10; a decision that s
 
     - `closed`: a ghost button "History" with `HistoryIcon`, `aria-expanded="false"`. Nothing loads.
     - `version`: the surface, 320 px wide (`w-80`): a header with the heading "History" (`h2`, `tabIndex={-1}`), the toggle of the list (`ListIcon`, "Show every version" or "Hide the list", `aria-expanded`) and Close (`XIcon`, "Close the history"); then the stepper: Newer (`ChevronUpIcon`, "Newer version") and Older (`ChevronDownIcon`, "Older version") beside "Version 2 of 3" and the line "<reason>, <author>, <time>" (`changeReasonLabels` through `useWording`, `revisionAuthor`, `RelativeTime`); then "Show changes" (`Checkbox` with its label) and the control of `renderRestore(version)` for a version that is not the current one.
-    - `list`: the list of every loaded version above the stepper, newest first, in a `ScrollArea` of at most `min(24rem, 50vh)`: one button per version ("Version 2", the reason, the author, the time), the selected one with `aria-current="true"`; "Show older versions" (a `PendingButton`) at its end while there is a next page.
+    - `list`: the list of every loaded version above the stepper, newest first, in a `ScrollArea` of at most `max-h-history-list` (a `--max-height-history-list` entry of the `@theme` block of `src/app/styles.css`, as `max-h-dialog` is; it holds `min(24rem, 50vh)`): one button per version ("Version 2", the reason, the author, the time), the selected one with `aria-current="true"`; "Show older versions" (a `PendingButton`) at its end while there is a next page.
     - Data: `useRevisionHistory(target, { isEnabled: view.level !== 'closed' })`. Loading: the line under "Version 2 of 3" is a `Skeleton`, and the list shows `LoadingState` (`size="compact"`, `rows={3}`, label "Loading the versions"). Error: `ErrorState` (`size="compact"`, "The versions could not load.") with Try again, in place of the stepper.
     - Older selects the version right before; when it is not loaded, the next page loads first and Older shows its pending state. Newer is disabled on the current version, Older on version 1.
     - The state of the surface is `useHistoryView(currentVersion, { isHidden })` of `artifact/entities/revisions/hooks/useHistoryView.ts`, held by the page, which gives the same `view` to the surface and to the content (decision 11): `level`, `selectedVersion`, `showsChanges`, and `open`, `close`, `toggleList`, `stepBack`, `select`, `setShowsChanges`. Its rules:
@@ -328,7 +328,7 @@ The behavior on the screen of each component is in section 10; a decision that s
     - No link: the line does not render and nothing is marked. Loading: one `Skeleton` line (`h-6 w-64`), the text without marks. Error: one line "The links could not load." with Try again, the text without marks (decision 20).
 
 15. **The quotes of a transcript** (answer A8). On a document drawn as a transcript, the words of each message that a link quotes are marked, and a click on a mark opens the same card with the items that quote them.
-    - Data: `useLinkQuotesOf(artifactId, { isEnabled })` of `trace/entities` reads `useArtifactTrace(artifactId, { direction: 'forward', depth: 1 })` (the items that link to the messages, with their links) and gives `{ quotesByItem: ReadonlyMap<string, LinkQuote[]>, isError, retry }` from `linkQuotesByItem`, empty while it loads or fails. The document page enables it when the document holds a transcript block (`holdsTranscript(blocks)` of `outline/document-blocks.utils.ts`) and computes `markRangesOf(text, quotes, { isIssue })` per message.
+    - Data: `useLinkQuotesOf(artifactId, { isEnabled })` of `trace/entities` reads `useArtifactTrace(artifactId, { direction: 'forward', depth: 1 })` (the items that link to the messages, with their links) and gives, in the same shape as `useItemLinks` and `useItemOrigin`, a union with `state`: `pending`, `error` with `retry`, or `success` with `quotesByItem` from `linkQuotesByItem`; while it loads or fails, the page draws no marks (`useOutOfDateItemIds` keeps its plain set instead: it never surfaces an error, the `!` state just does not show). The document page enables it when the document holds a transcript block (`hasTranscript(blocks)` of `outline/document-blocks.utils.ts`) and computes `markRangesOf(text, quotes, { isIssue })` per message.
     - View: `ArtifactDocument` gets `messageMarks?: ReadonlyMap<string, readonly Range[]>` (by message id) and `renderMessageMark?: (range: Range, children: ReactNode) => ReactNode`, passed to `DocumentBlocks`, whose transcript draws the text of a message with `Highlight` and its `renderMark`. The page wraps each mark in `LinkedItemsPopover` with one entry per link of the mark (`relation` "Quoted by"). An `evidenced_by` mark is `primary`; a `resolved_by` mark, from an issue, is `warning`.
     - The marks show in the Read mode only: while the history of the document is open, the transcript renders without them.
     - When the links fail, the transcript renders without marks and a line above it says "The quotes could not load." with Try again (decision 20).
@@ -347,7 +347,7 @@ The behavior on the screen of each component is in section 10; a decision that s
 
     - Rule: `originOf(trace, itemId)` of `trace/entities` follows the `derived_from` links backward from the item, and gives `{ evidence: Citation[], steps: OriginStep[] }`: the `evidenced_by` citations of the item itself (`Citation = { link, quote, citing, cited }`), then one step per `derived_from` target, `OriginStep = { link, item, evidence: Citation[], steps: OriginStep[] }`. Steps and citations in key order; an item met twice (two paths to one raw requirement) is a step once, under its first path; a loop is walked once.
     - Which items have an origin: an item that has a `derived_from` link to follow or an `evidenced_by` link. In the definition of version 1: a raw requirement and a latent need (their quotes), an analyzed requirement, a specified requirement and a backlog item (through their chain). A persona, a section, a message, an issue, an assumption or a stakeholder type has none, and the section does not render.
-    - Data: `useItemOrigin(projectId, itemId)` of `trace/entities` reads `useItemTrace(itemId, { direction: 'backward' })` (depth 5, enough for message, raw requirement, analyzed requirement, specified requirement, backlog item), the schemas of `useArtifactKinds` (titles) and the transcript titles from `useProjectArtifacts(projectId)` (already loaded by the panel), and gives `{ state: 'success', origin: OriginView }`: the same tree with each step titled and marked out of date (`isLinkOutOfDate`), and each citation as `CitationView = { citation, transcriptTitle, turn, text }` (`turn` from `content.turn` of the message, null when it is not a number; `text` from `transcriptContentField`).
+    - Data: `useItemOrigin(projectId, itemId)` of `trace/entities` reads `useItemTrace(itemId, { direction: 'backward', depth: ORIGIN_TRACE_DEPTH })` (`ORIGIN_TRACE_DEPTH = 5`, a private setting at the top of `useItemOrigin.ts`: enough for message, raw requirement, analyzed requirement, specified requirement, backlog item), the schemas of `useArtifactKinds` (titles) and the transcript titles from `useProjectArtifacts(projectId)` (already loaded by the panel), and gives `{ state: 'success', origin: OriginView }`: the same tree with each step titled and marked out of date (`isLinkOutOfDate`), and each citation as `CitationView = { citation, transcriptTitle, turn, text }` (`turn` from `content.turn` of the message, null when it is not a number; `text` from `transcriptContentField`).
     - View: `ItemOrigin({ projectId, itemId })` renders the section "Why this item exists" (`h2`): each step a row, indented one step per level (`pl-4`), "Based on" (the title of the link type), the key and the title as a `PageLink` to `useItemHref(projectId)(item)`, and `!` with "Made from version 1; now version 2" when out of date; under the row, when the link has a `source_quote`, the line `for "<words>"` in `text-xs text-muted-foreground`: the words of the item above that come from this step. Each citation: the line "Student interview, turn 2" (the transcript title, then "turn N" when known) with `Read` at its right (a `PageLink` to `useItemHref(projectId)(cited)`: the transcript at the message, decision 17), then the text of the message in a `blockquote` with the quote marked (`Highlight`, the range of `quoteRange(text, quote)`); a citation without a quote shows the line and the text unmarked.
     - The rows here are links, not chips with a card: the section is already the summary that the card would give.
     - Loading: `LoadingState` (`size="compact"`, `rows={2}`, label "Loading where this item comes from"). Error: `ErrorState` (`size="compact"`, "Where this item comes from could not load.") with Try again (decision 20).
@@ -420,7 +420,7 @@ The behavior on the screen of each component is in section 10; a decision that s
 
 ### The docs branch and the maintenance (S1b.D, S1b.0)
 
-25. **S1b.D, the docs branch, gets two commits; S1b.0 holds six small changes, one commit each.**
+25. **S1b.D, the docs branch, gets two commits; S1b.0 holds seven small changes, one commit each.**
     - S1b.D, on `docs/fe/api-fields` (the Docs-first rule of the prompt: a change of the API goes to that branch): the editing rule in `docs/API.md` (the "Editing rule" paragraph: a change is accepted only while the run is `interrupted` by an interrupt that allows edits and lists the artifact in `review_artifacts`; every other change answers `409 invalid_state`; decision 9), then the quotes on both sides of a link (decision 13): `docs/API.md` (the trace body and the body of `POST /projects/{id}/trace-links`: `quote` renamed `target_quote`, `source_quote` added; the rules of the quotes; the sentence on `backward` and `forward` of decision 13), `docs/DATA_SHAPE.md` (TraceLink: `target_quote` and `source_quote`; the table of the link types gains the two columns of decision 13; the sentence on the direction of a link replaced as decision 13 says; the prompt view of a link with words), `docs/ui/reference-apps.md` (`{message, target_quote}`), `docs/workflow/definition.schema.json` (`quotes` of `linkType`, required, two booleans), `docs/workflow/requirements_engineering.v1.json` and its copy of the mock (the `quotes` of each link type; one commit, since `workflow.handlers.test.ts` compares them), `docs/workflow/prompts/analyst.v1.md` (the words of `derived_from`, `concerns`, `resolved_by`), `docs/architecture/database.dbml` and `README.md` (`trace_links.quote` renamed `target_quote`, `trace_links.source_quote`), and the diagram of the tables rendered again from the DBML with `scripts/db-diagram/render.mjs`. `linkTypeSchema` of the app ignores `quotes` until S1b.1 reads it (zod drops a key it does not know). The branch already names the module `trace` in Web App Modules (`10f0259`). The user merges S1b.D before S1b.0 starts.
     - S1b.0:
       - `DocumentBlocks` draws the role of a message of a transcript as plain text (`span`), not through `renderItemLink`: a message has no page. Its test checks that no link is drawn for a message.
@@ -429,6 +429,7 @@ The behavior on the screen of each component is in section 10; a decision that s
       - The mock follows: `refuseWhileRunning(projectId)` of `mocks/artifacts/artifacts.problems.ts` becomes `refuseOutsideReview(projectId, artifactId)`, which answers `409 invalid_state` ("An artifact changes only during a review that allows edits.") unless the shown run of the project is `interrupted` and `pendingInterruptOf(run)` allows edits and lists the artifact. Every change handler (items, artifacts, restores) calls it with the artifact of the record; `refuseChange` calls it after the version check. The handler tests gain a case for a document outside the review (the specification) and one for a run that ended (`?mock-run-status=done`). The mocks README states the rule.
       - Web App Modules drops the widget `panel` of `artifact`; the mocks README lists the scenarios `mock-traces`, `mock-trace-links`, `mock-create-trace-link`, `mock-delete-trace-link`, `mock-traceability`, which the handlers read today.
       - `frontend/CONTRIBUTING.md`: the bullet "Dialogs opened from several places" becomes "Dialogs": every dialog, a confirm included, is mounted once by a `...Dialogs` widget and opened through the store of its feature; its last sentence ("A dialog that one place opens stays beside its trigger, with its own state.") goes (decision 22). The two dialogs of `main` that sit beside their trigger (the logout confirm of `UserMenu`, `NewProjectDialog`) move in a later maintenance PR (section 15).
+      - The files of a kind that `documents/entities` holds twice move into the folder of their kind, with their tests, with `git mv` (frontend CONTRIBUTING: Files of a slice): `documents.utils.ts` and `document-tab-icons.utils.ts` into `utils/`, `documents.types.ts` and `document-tab-icons.types.ts` into `types/`. A kind with one file stays at the root, so `documents.constants.ts` moves when S1b.1 adds `edit-access.constants.ts` beside it.
 
 ## 4. Scope
 
@@ -460,11 +461,11 @@ The behavior on the screen of each component is in section 10; a decision that s
 | View state hook | `use<What it gives>` | `useHistoryView` |
 | Documents hooks | `use<What it gives>` | `useEditLockReason`, `useDocumentOutline`, `useItemStatus` |
 | Page hooks | `use<What it gives>` | `useDocumentTarget`, `useScrollToItem` |
-| Pure rules | What they give | `contentChanges`, `withoutEmptyEntries`, `mainField`, `findAgentRole`, `findQuote`, `revisionAuthor`, `previousRevision`, `recordKeyOf`, `revisionKeyOf`, `parseRevisionKey`, `originOf`, `linkQuotesByItem`, `outOfDateItemIds`, `itemLinkGroups`, `holdsTranscript`, `itemAnchorId`, `editAccessOf`, `fieldMarksOf`, `markRangesOf`, `itemUpdateBody`, `artifactUpdateBody`, `isVersionConflict`, `isWritingRunStatus` |
+| Pure rules | What they give | `contentChanges`, `withoutEmptyEntries`, `mainField`, `findAgentRole`, `findQuote`, `revisionAuthor`, `previousRevision`, `recordKeyOf`, `revisionKeyOf`, `parseRevisionKey`, `originOf`, `linkQuotesByItem`, `outOfDateItemIds`, `itemLinkGroups`, `hasTranscript`, `itemAnchorId`, `editAccessOf`, `fieldMarksOf`, `markRangesOf`, `itemUpdateBody`, `artifactUpdateBody`, `isVersionConflict`, `isWritingRunStatus` |
 | Schemas | `<form>FormSchema` | `editItemFormSchema(fields)`, `editArtifactFormSchema(fields)`; `withContentProblems(schema, fields)` |
 | Types | The value | `ContentFormValues`, `RevisionTarget`, `RevisionHistoryResult`, `HistoryLevel`, `HistoryView`, `RecordChange`, `LinkQuotes` (the `quotes` of a link type), `Citation`, `LinkQuote`, `OriginStep`, `OriginTree`, `ItemLinkGroup`, `ItemLinkRow`, `LinkMarkRange`, `EditAccess`, `EditLockReason`, `CitationView`, `OriginView`, `OriginStepView`, `ItemOriginResult`, `ItemLinksResult`, `LinkedEntry` |
 | Route parameter | The value | `RouteParam.Item = 'item'` |
-| Words | `<topic>Messages` | `contentInputMessages`, `revisionMessages`, `editMessages`, `restoreMessages`, `editAccessMessages`, `itemOriginMessages`, `linkedItemMessages` |
+| Words | `<topic>Messages` | `contentInputMessages`, `revisionMessages`, `recordChangeMessages`, `editMessages`, `restoreMessages`, `editAccessMessages`, `itemOriginMessages`, `linkedItemMessages` |
 
 
 ## 6. Shared code first
@@ -534,15 +535,16 @@ The commit column names the PR and the commit number of section 16.
 | `mocks/artifacts/artifacts.problems.ts` (`refuseOutsideReview`), the change handlers of `mocks/artifacts/handlers/`, their tests, `mocks/README.md` (the rule) | Decision 25 | 0.4 |
 | `docs/architecture/web-app-modules.md` (no `panel` in `artifact`), `frontend/src/mocks/README.md` (the trace scenarios) | Decision 25 | 0.5 |
 | `frontend/CONTRIBUTING.md` | The rule of the dialogs (decision 25) | 0.6 |
+| `documents/entities/`: `git mv` of `documents.utils.ts` and `document-tab-icons.utils.ts` into `utils/`, of `documents.types.ts` and `document-tab-icons.types.ts` into `types/`, each with its test, and the imports that follow | Decision 25 | 0.7 |
 | `shared/components/ui/disabled-reason.tsx`, test; design system `ButtonsCard.tsx`; `shared/components/ui/highlight.tsx` (exports the type `HighlightRange`) | `DisabledReason`; the ranges of the marks | 1.1 |
 | `shared/routes/route-params/route-params.constants.ts`, `project-routes.utils.ts`, tests | `RouteParam.Item`, `document(artifactId, { itemId })` | 1.1 |
 | `workflow/entities/components/content-input/` (new), `components/ContentFieldValue.tsx` (`marks`, `renderMark`), `content/values/content-form.schema.ts` (new), `content/values/content-values.utils.ts` (`contentChanges`, `withoutEmptyEntries`, `findQuote`), `content/fields/content-fields.utils.ts` (`mainField`), `content/value-labels/hooks/useValueLabelOf.ts` (new) and `useValueLabel.ts` (built on it), `definition/workflow-vocabulary.types.ts` (`quotes` of `linkTypeSchema`, `LinkQuotes`), `definition/workflow-definition.utils.ts` (`findAgentRole`), tests, `index.ts`, `@x/artifact.ts` (+ `contentChanges`, `findAgentRole`, `mainField`, and `isNavigable` for `useItemHref` when it is not there yet); `@x/trace.ts` changes in 1.7 | Decisions 4, 5, 10, 11, 13, 14, 16 | 1.2 |
 | `run/entities/status/run-status.utils.ts` (`isWritingRunStatus`), test, `@x/documents.ts` | Decision 9 | 1.3 |
 | `trace/entities/types/trace-links.types.ts` (`quote` renamed `target_quote`, `source_quote` added), `trace/widgets/graph/trace-graph.types.ts` and `trace-graph.utils.ts` (the field of an edge renamed `targetQuote`), `mocks/trace/trace-links.types.ts` (`quote` of `LinkSpec` renamed `targetQuote`, + `sourceQuote`), `fixtures/trace-link-builder.fixtures.ts`, `trace-links.changes.ts`, `fixtures/mentor-platform-trace-links.fixtures.ts` (the eight quotes of today under `targetQuote`), the handlers that answer links, their tests | Decision 13: the rename and the new field, in the mock and the app at once, since the entity parses what the mock answers | 1.4 |
 | `mocks/trace/fixtures/mentor-platform-trace-links.fixtures.ts` (the words of section 12), `validators/link-rules.validators.ts` (the quote rules of decision 13), their tests | Decision 13; section 12 | 1.5 |
-| `artifact/entities/status/*` (`outOfDate`), `outline/outline.utils.ts` (`outOfDateIds`, `itemAnchorId`), `outline/document-blocks.utils.ts` (`holdsTranscript`), `items/hooks/useApplyRecordChange.ts` (new), `items/hooks/useItemHref.ts` (new), `outline/outline.types.ts`, `outline/outline.constants.ts` (`transcriptTurnField`), `outline/hooks/useArtifactOutline.ts` (options), `revisions/*` (`RevisionTarget`, `HistoryLevel`, `HistoryView`, `useRevisionHistory`, `useHistoryView`, `revisionAuthor`, `previousRevision`, `recordKeyOf`, `revisionKeyOf`, `parseRevisionKey`, `revisionMessages`), `artifacts/hooks/useArtifactQueries.ts` (`useAllowedValuesOf`), `components/ArtifactDocument.tsx` (`actions`, `targetItemId`, `messageMarks`, `renderMessageMark`, `fieldsView`), `components/DocumentBlocks.tsx` (anchors, message marks), `components/ArtifactItemDetails.tsx` (`afterKeyLine`, `fieldMarks`, `renderFieldMark`), `components/history/` (new), `components/artifact-view.constants.ts`, tests, `index.ts`, `@x/documents.ts`, `@x/trace.ts` (+ `useProjectArtifacts`, `reviewStatusLabels`, `useItemHref`, `transcriptContentField`, `transcriptTurnField`); the scenario `mock-revisions` in `mocks/artifacts/handlers/items.handlers.ts` and `artifacts.handlers.ts`, their tests, `mocks/README.md` | Decisions 10, 11, 14, 15, 17, 18; section 12 | 1.6 |
+| `artifact/entities/status/*` (`outOfDate`), `outline/outline.utils.ts` (`outOfDateIds`, `itemAnchorId`), `outline/document-blocks.utils.ts` (`hasTranscript`), `items/hooks/useApplyRecordChange.ts` (new), `items/hooks/useItemHref.ts` (new), `outline/outline.types.ts`, `outline/outline.constants.ts` (`transcriptTurnField`), `outline/hooks/useArtifactOutline.ts` (options), `revisions/*` (`RevisionTarget`, `HistoryLevel`, `HistoryView`, `useRevisionHistory`, `useHistoryView`, `revisionAuthor`, `previousRevision`, `recordKeyOf`, `revisionKeyOf`, `parseRevisionKey`, `revisionMessages`, `recordChangeMessages`), `artifacts/hooks/useArtifactQueries.ts` (`useAllowedValuesOf`), `components/ArtifactDocument.tsx` (`actions`, `targetItemId`, `messageMarks`, `renderMessageMark`, `fieldsView`), `components/DocumentBlocks.tsx` (anchors, message marks), `components/ArtifactItemDetails.tsx` (`afterKeyLine`, `fieldMarks`, `renderFieldMark`), `components/history/` (new), `components/artifact-view.constants.ts`, tests, `index.ts`, `@x/documents.ts`, `@x/trace.ts` (+ `useProjectArtifacts`, `reviewStatusLabels`, `useItemHref`, `transcriptContentField`, `transcriptTurnField`); the scenario `mock-revisions` in `mocks/artifacts/handlers/items.handlers.ts` and `artifacts.handlers.ts`, their tests, `mocks/README.md`; `src/app/styles.css` (`--max-height-history-list`) | Decisions 10, 11, 14, 15, 17, 18; section 12 | 1.6 |
 | `trace/entities/types/chains.types.ts` (`Citation`, `LinkQuote`, `OriginStep`, `OriginTree`, `ItemLinkGroup`, `ItemLinkRow`), `types/item-links.types.ts` and `types/item-origin.types.ts` (new: `LinkMarkRange`, `LinkedEntry`, `ItemLinksResult`, `CitationView`, `OriginView`, `OriginStepView`, `ItemOriginResult`), `utils/chains.utils.ts`, `utils/link-marks.utils.ts` (new: `fieldMarksOf`, `markRangesOf`), `hooks/useChainQueries.ts` (`useOutOfDateItemIds`, `useLinkQuotesOf`, `useReloadTraces`), `hooks/useItemLinks.ts`, `useItemOrigin.ts` (new), `components/ItemOrigin.tsx`, `LinkedItemsPopover.tsx`, `item-origin.constants.ts`, `linked-items.constants.ts` (new), tests, `index.ts`, `@x/documents.ts` (new: `useOutOfDateItemIds`); `workflow/entities/@x/trace.ts` (+ `mainField`, `findQuote`, `itemTitle`, `kindSchemasByKind`, `useArtifactKinds`, `useWorkflowDefinition`, `useIssueKinds`, `ContentFieldValue`) | Decisions 13 to 16, 18, 21 | 1.7 |
-| `documents/entities/utils/edit-access.utils.ts`, `edit-access.constants.ts`, `hooks/useEditLockReason.ts`, `useDocumentOutline.ts`, `useItemStatus.ts` (new), `hooks/useDocumentsUnderReview.ts` (+ `interrupt`), `documents.types.ts` (`EditAccess`, `EditLockReason`), tests, `index.ts` | Decisions 9, 18 | 1.8 |
+| `documents/entities/utils/edit-access.utils.ts` (new), `constants/edit-access.constants.ts` (new) with `constants/documents.constants.ts` moved beside it, `hooks/useEditLockReason.ts`, `useDocumentOutline.ts`, `useItemStatus.ts` (new), `hooks/useDocumentsUnderReview.ts` (+ `interrupt`), `types/documents.types.ts` (`EditAccess`, `EditLockReason`), tests, `index.ts` | Decisions 9, 18 | 1.8 |
 | `web-app-modules.md`, `web-app.md` | Section 14, entities part | 1.9 |
 | `artifact/features/edit/` (new) | Decisions 6 to 8, 22 | 2.1 |
 | `artifact/features/restore/` (new) | Decisions 12, 22 | 2.2 |
@@ -793,11 +795,11 @@ export function itemLinkGroups(
 /** The ids of the items of an artifact that link to a target that moved on since; empty while loading or failed. */
 export function useOutOfDateItemIds(artifactId: string): ReadonlySet<string>
 
-/** The quoted words of the items of an artifact and of the items that link to them, such as the quotes of each message of a transcript; empty while loading or failed. */
+/** The quoted words of the items of an artifact and of the items that link to them, such as the quotes of each message of a transcript; a union with `state`, as `useItemLinks` and `useItemOrigin` give. */
 export function useLinkQuotesOf(
   artifactId: string,
   { isEnabled }: { isEnabled: boolean },
-): { quotesByItem: ReadonlyMap<string, LinkQuote[]>; isError: boolean; retry: () => void }
+): { state: 'pending' } | { state: 'error'; retry: () => void } | { state: 'success'; quotesByItem: ReadonlyMap<string, LinkQuote[]> }
 
 /** Loads again every query of the traces, after an artifact or an item changed. */
 export function useReloadTraces(): () => Promise<void>
@@ -918,7 +920,7 @@ export function LinkedItemsPopover({ projectId, entries, children }: { projectId
 
 ```text
 artifact/entities/
-├── @x/documents.ts                 + useArtifactOutline, itemStatus, holdsTranscript, types ItemStatus, OutlineItem
+├── @x/documents.ts                 + useArtifactOutline, itemStatus, hasTranscript, types ItemStatus, OutlineItem
 ├── @x/trace.ts                     + useProjectArtifacts, reviewStatusLabels, useItemHref, transcriptContentField, transcriptTurnField
 ├── artifacts/hooks/useArtifactQueries.ts   + useAllowedValuesOf
 ├── items/hooks/useApplyRecordChange.ts     new
@@ -929,13 +931,13 @@ artifact/entities/
 │   └── item-status.constants.ts    itemStatusMessages.statuses.outOfDate, attention.outOfDate; itemStatusLooks.outOfDate
 ├── outline/
 │   ├── outline.utils.ts            artifactOutline takes outOfDateIds; + itemAnchorId
-│   ├── document-blocks.utils.ts    + holdsTranscript
+│   ├── document-blocks.utils.ts    + hasTranscript
 │   ├── outline.constants.ts        + transcriptTurnField = 'turn'
 │   └── hooks/useArtifactOutline.ts + { outOfDateIds }
 ├── revisions/
 │   ├── revisions.types.ts          + RevisionTarget, RevisionHistoryResult, HistoryLevel, HistoryView
 │   ├── revisions.utils.ts          new: revisionAuthor, previousRevision, recordKeyOf, revisionKeyOf, parseRevisionKey
-│   ├── revisions.constants.ts      + revisionMessages
+│   ├── revisions.constants.ts      + revisionMessages, recordChangeMessages
 │   └── hooks/
 │       ├── useRevisionQueries.ts   + useRevisionHistory
 │       └── useHistoryView.ts       new
@@ -1021,7 +1023,7 @@ export function useItemHref(projectId: string): (item: { id: string; kind: strin
 export function itemAnchorId(itemId: string): string // `item-${itemId}`
 
 /** Whether the blocks of a document draw messages of a transcript. */
-export function holdsTranscript(blocks: readonly DocumentBlock[]): boolean
+export function hasTranscript(blocks: readonly DocumentBlock[]): boolean
 ```
 
 `useRevisionHistory` picks the key and the function by `target.type` (`itemKeys.revisions` with `listItemRevisions`, `artifactKeys.revisions` with `listArtifactRevisions`), with `cursorPagesOptions`, so a page that renders it never calls two hooks by condition. `useItemRevisions` and `useArtifactRevisions` stay, unchanged.
@@ -1052,17 +1054,19 @@ interface RevisionContentProps {
 
 ```text
 documents/entities/
-├── utils/edit-access.utils.ts       new: editAccessOf
-├── edit-access.constants.ts         new: editAccessMessages
+├── types/                          documents.types.ts (+ EditAccess, EditLockReason), document-tab-icons.types.ts
+├── utils/                          edit-access.utils.ts (new: editAccessOf), documents.utils.ts, document-tab-icons.utils.ts
+├── constants/                      documents.constants.ts, edit-access.constants.ts (new: editAccessMessages)
 ├── hooks/
 │   ├── useDocumentsUnderReview.ts   + interrupt
 │   ├── useEditLockReason.ts         new
 │   ├── useDocumentOutline.ts        new
 │   ├── useItemStatus.ts             new
 │   └── __tests__/                   one test file per new hook
-├── documents.types.ts               + EditAccess, EditLockReason
 └── index.ts                         + the new hooks, types
 ```
+
+`utils/` and `types/` exist from S1b.0 (decision 25), which moved the files of S1a into the folders of their kinds; `constants/` starts at commit 8, when `documents.constants.ts` moves beside the new `edit-access.constants.ts` (a kind with one file stays at the root).
 
 ```ts
 /** Whether a document can change now, and why not. */
@@ -1331,6 +1335,13 @@ export const revisionMessages = {
   loadError: 'The versions could not load.',
 } as const
 
+// artifact/entities, revisions.constants.ts: the words of a change of a record that the state of the
+// project refuses. One concept, one place: the edit and restore features take their `locked` value
+// from it, since `artifact` may not read `documents`, where the rule itself lives.
+export const recordChangeMessages = {
+  locked: 'This document cannot change now. It can change while it waits for your review.',
+} as const
+
 // itemStatusMessages additions
 statuses.outOfDate = { letter: '!', label: 'Based on an older version' }
 attention.outOfDate = (count: number) => `${String(count)} out of date`
@@ -1345,7 +1356,7 @@ export const editMessages = {
   summary: 'Summary',
   titleRequired: 'Enter a title.',
   discard: { title: 'Discard your changes?', description: 'What you changed in this form is lost.', confirm: 'Discard', cancel: 'Keep editing' },
-  locked: 'This document cannot change now. It can change while it waits for your review.',
+  locked: recordChangeMessages.locked,
   conflict: { item: 'This item changed since you opened it.', artifact: 'This document changed since you opened it.', lost: 'Reload to see the new version; what you typed is not kept.', reload: 'Reload' },
 } as const
 
@@ -1357,7 +1368,7 @@ export const restoreMessages = {
   artifactDescription: (version: number) => `The document and each of its items get their content of version ${String(version)} as a new version. The current content stays in the history.`,
   confirm: 'Restore',
   restored: (version: number) => `Restored version ${String(version)}`,
-  locked: 'This document cannot change now. It can change while it waits for your review.',
+  locked: recordChangeMessages.locked,
 } as const
 
 export const editAccessMessages = {
@@ -1418,7 +1429,7 @@ quotesLoadError: 'The quotes could not load.',
 
 | File | Cases |
 |---|---|
-| `artifact/.../document-blocks.utils.test.ts` + data (extended) | `holdsTranscript` |
+| `artifact/.../document-blocks.utils.test.ts` + data (extended) | `hasTranscript` |
 | `shared/components/ui/__tests__/disabled-reason.test.tsx` | No reason: the child alone; a reason: tooltip on focus and on hover, the reason as the description; axe |
 | `shared/components/frame/.../PageLink.test.tsx` (S1b.0) | Click opens the preview tab; double click keeps; a click with Ctrl does not prevent the default |
 | `mocks/artifacts/handlers/__tests__/*` (S1b.0, extended) | A change of an item of the requirements analysis passes by default; of the specification answers `409 invalid_state`; with `?mock-run-status=done` and `=running` answers `409 invalid_state`; a restore follows the same rule |
@@ -1435,7 +1446,7 @@ quotesLoadError: 'The quotes could not load.',
 | `run/.../run-status.utils.test.ts` | `isWritingRunStatus` for each status |
 | `trace/.../chains.utils.test.ts` + data | `originOf`: a chain to a quote, a raw requirement with its own evidence, two paths to one item (shown once), no `derived_from`, a loop; `linkQuotesByItem`: a `source_quote` on the source and a `target_quote` on the target of one link, two quotes of one message, key order, a link without words left out; `outOfDateItemIds`: older `target_version`, superseded target; `itemLinkGroups`: outgoing and incoming, definition order, unknown type |
 | `trace/entities/types/__tests__`, `trace/widgets/graph/__tests__/trace-graph.utils.test.ts` (S1b.1 commit 4, extended) | A link parses with `target_quote` and `source_quote`; an edge of the graph carries `targetQuote` |
-| `trace/.../useChainQueries.test.ts` | `useOutOfDateItemIds` on the specification gives REQ-003; `useLinkQuotesOf` on the transcript of PER-001 gives the quotes of PER-001#2; not enabled reads nothing; `useReloadTraces` invalidates the module key |
+| `trace/.../useChainQueries.test.ts` | `useOutOfDateItemIds` on the specification gives REQ-003; `useLinkQuotesOf` on the transcript of PER-001 gives the quotes of PER-001#2, and its states; not enabled reads nothing; `useReloadTraces` invalidates the module key |
 | `artifact/.../item-status.utils.test.ts` + data | `outOfDate` order (after `openIssue`, before `edited`); its level in and out of a review; its look and count text |
 | `artifact/.../outline.utils.test.ts` + data | The `outOfDateIds` reach the item nodes and the status counts; `itemAnchorId` |
 | `artifact/.../revisions.utils.test.ts` + data | `revisionAuthor` (user, known role, unknown role); `previousRevision` (loaded, not loaded); `recordKeyOf`; `revisionKeyOf` and `parseRevisionKey` round trip, a foreign string gives null |
@@ -1511,6 +1522,7 @@ S1b.0 `chore/fe/maintenance-before-edit`, from `origin/main` once S1b.D is merge
 4. `fix(mocks): refuse a change of a document outside a review that allows edits`
 5. `docs: drop the artifact panel from the modules, and list the trace scenarios of the mock`
 6. `docs: open every dialog through the store of its feature, mounted once`
+7. `refactor(documents): place the files of the documents entities in the folders of their kind`
 
 S1b.1 `feat/fe/edit-entities`:
 
@@ -1542,7 +1554,7 @@ Checks, one at a time, per PR: ESLint and Prettier on the changed files; Vitest 
 - [x] A1 to A9 written in `usability.md` on `frontend-plan` (5.3, 5.4, 7.4, 8.2, 8.3; 2026-11-03), as this plan builds them; the user reads them there and changes what does not fit before S1b.2
 - [ ] The server repository follows the editing rule and the quotes of decision 13 (the user)
 - [ ] S1b.D: commits 1 and 2 on `docs/fe/api-fields`, the diagram rendered, the workflow test green; the branch merged by the user
-- [ ] S1b.0 from `origin/main` after S1b.D; commits 1 to 6, each checked; PR opened
+- [ ] S1b.0 from `origin/main` after S1b.D; commits 1 to 7, each checked; PR opened
 - [ ] S1b.1 from the S1b.0 branch; commits 1 to 9, each checked; PR opened with its base noted
 - [ ] S1b.2 from the S1b.1 branch; commits 1 to 5, each checked; PR opened with its base noted
 - [ ] Each row of section 10 checked once in `pnpm dev:mock` (one dev server, one page at a time, stopped after): edit and save AR-001, the history of AR-007 at its three levels with the changes, a restore, the card of AR-007 on REQ-003, the mark of AR-001 in REQ-001 with its chip, the `warning` mark on AR-010, the origin of REQ-001 and its `Read`, Edit disabled on REQ-001 with its tooltip on hover
