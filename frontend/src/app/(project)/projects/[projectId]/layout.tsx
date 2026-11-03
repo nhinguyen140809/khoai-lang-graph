@@ -1,3 +1,4 @@
+import { DocumentDialogs } from '@/modules/documents/widgets/dialogs'
 import { documentsDestination, DocumentsTabIcons } from '@/modules/documents/widgets/panel'
 import { ProjectGate, ProjectNotFound } from '@/modules/project/entities'
 import { ProjectCommands } from '@/modules/project/widgets/commands'
@@ -23,6 +24,7 @@ function projectContributions(projectId: string) {
     <>
       <ProjectCommands currentProjectId={projectId} />
       <ProjectDialogs />
+      <DocumentDialogs />
       <ProjectRunStatusItem projectId={projectId} />
       <MonthlyBudgetItem />
       <DocumentsTabIcons />
