@@ -782,7 +782,7 @@ Content rules:
 - `content` never holds the id of an item. Relations between items are created through the trace link endpoints.
 - The client renders and edits an artifact and its items from the schemas returned by `GET /artifact-kinds`, and an artifact or item stored with an older schema version from `GET /content-schemas/{kind}/{schema_version}`, so a field added to a schema appears in the client with no client change. A kind can still have its own component where a generic form is not enough, for example a persona card or an interview transcript.
 
-Editing rule: while a run is `running`, artifacts and items are read-only for the user, and every change (`PATCH`, create, delete, move, reorder and restore) answers `409 invalid_state`. They can be edited when the run is `interrupted` or when the thread has no active run.
+Editing rule: the user changes an artifact or its items only while the run of the project waits for a review that takes changes: the run is `interrupted`, and its pending interrupt has `allow_edits: true` and lists the artifact in `review_artifacts`. Every other change (`PATCH`, create, delete, move, reorder and restore) answers `409 invalid_state`: while a run is `running`, while the pending interrupt does not allow edits or does not list the artifact, and when the thread has no active run.
 
 ### Traceability
 
