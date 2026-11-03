@@ -1,7 +1,7 @@
 import { type Artifact, attentionLevels } from '@/modules/artifact/entities/@x/documents'
 import type { DefinedArtifactKind } from '@/modules/workflow/entities/@x/documents'
 
-import { documentMarkLooks } from '../documents.constants'
+import { documentMarkLooks } from '../constants/documents.constants'
 import type {
   DocumentEntry,
   DocumentMark,

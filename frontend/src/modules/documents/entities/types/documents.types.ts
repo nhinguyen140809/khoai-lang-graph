@@ -46,3 +46,10 @@ export type DocumentListResult =
       /** Whether the pending review of the run lists the document. */
       isUnderReview: (artifactId: string) => boolean
     }
+
+/** Why the document cannot change now; the words of each reason sit in `editAccessMessages`. */
+export type EditLockReason =
+  'agentsWorking' | 'reviewTakesNoChanges' | 'notUnderReview' | 'noReview'
+
+/** Whether a document can change now, and why not. */
+export type EditAccess = { canEdit: true } | { canEdit: false; reason: EditLockReason }

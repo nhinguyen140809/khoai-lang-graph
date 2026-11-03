@@ -1,6 +1,6 @@
 import type { AttentionLevel } from '@/modules/artifact/entities/@x/documents'
 
-import type { DocumentMark } from './types/documents.types'
+import type { DocumentMark } from '../types/documents.types'
 
 /**
  * How a document mark shows: the level of attention it asks (`act` is to act now, `follow` is

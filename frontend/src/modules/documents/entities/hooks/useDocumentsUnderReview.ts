@@ -3,15 +3,17 @@
 import { useMemo } from 'react'
 
 import { shownRun, useProjectRunResult } from '@/modules/project/entities/@x/documents'
+import type { Interrupt } from '@/modules/review/entities/@x/documents'
 import { usePendingInterrupt } from '@/modules/review/entities/@x/documents'
 import type { Run } from '@/modules/run/entities/@x/documents'
 
 /**
- * The run that the project shows and the artifacts that its pending review lists, which are none
- * once the run goes on. It reads queries only and opens no stream.
+ * The run that the project shows, its pending interrupt and the artifacts that its review lists,
+ * which are none once the run goes on. It reads queries only and opens no stream.
  */
 export function useDocumentsUnderReview(projectId: string): {
   run: Run | null
+  interrupt: Interrupt | null
   reviewIds: ReadonlySet<string>
 } {
   const run = shownRun(useProjectRunResult(projectId))
@@ -23,7 +25,7 @@ export function useDocumentsUnderReview(projectId: string): {
     () => new Set(pending.data?.review_artifacts.map(({ artifact_id }) => artifact_id) ?? []),
     [pending.data],
   )
-  return { run, reviewIds }
+  return { run, interrupt: pending.data ?? null, reviewIds }
 }
 
 /** Whether the pending review of the project lists the document. */
