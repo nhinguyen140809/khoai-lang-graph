@@ -15,13 +15,14 @@ Short paths as in S1b: `documents/...`, `artifact/...`, `workflow/...` under `fr
 7. [Changes to existing modules](#7-changes-to-existing-modules)
 8. [The slices, file by file](#8-the-slices-file-by-file)
 9. [State and data flow](#9-state-and-data-flow)
-10. [Screen states and words](#10-screen-states-and-words)
-11. [Mocks and screenshots](#11-mocks-and-screenshots)
-12. [Tests](#12-tests)
-13. [Docs to update](#13-docs-to-update)
-14. [Left for the next PRs](#14-left-for-the-next-prs)
-15. [Commits and checks](#15-commits-and-checks)
-16. [Checklist](#16-checklist)
+10. [Behavior of each component](#10-behavior-of-each-component)
+11. [Screen states and words](#11-screen-states-and-words)
+12. [Mocks and screenshots](#12-mocks-and-screenshots)
+13. [Tests](#13-tests)
+14. [Docs to update](#14-docs-to-update)
+15. [Left for the next PRs](#15-left-for-the-next-prs)
+16. [Commits and checks](#16-commits-and-checks)
+17. [Checklist](#17-checklist)
 
 ## 1. Row in the PR table
 
@@ -30,11 +31,11 @@ Two stacked PRs: the frame first, reviewed alone since every screen gets the new
 | PR | Branch | Title | Based on |
 |---|---|---|---|
 | S1c.1 | `feat/fe/aside-panel` | `feat(frontend): add a right panel to the frame, which the side panel gives way to on a narrow window` | `main`, once S1b.2 is merged |
-| S1c.2 | `feat/fe/item-peek` | `feat(frontend): peek at an item in the right panel from a document and from the links of an item` | S1c.1 |
+| S1c.2 | `feat/fe/item-peek` | `feat(frontend): peek at an item in the right panel from the keys of a document` | S1c.1 |
 
 | | |
 |---|---|
-| Needs | S1a; S1b (`ItemSources`, `useItemStatus`, `useItemHref` of `documents/entities`, `mainField` of `workflow`, `ItemLinks` of the item page, the `PageLink` of the frame) |
+| Needs | S1a; S1b (`ItemOrigin` of `trace/entities`, `useItemStatus` of `documents/entities`, `useItemHref` of `artifact/entities`, `mainField` of `workflow`, the `PageLink` of the frame) |
 | After it | S1d (export). S2: a key in an entry of the chat and a disagreement of the review bar open the peek with `usePeekedItem` of `@/shared/routes` |
 | Docs-first | The answers B1 to B4 below. The API needs nothing |
 
@@ -51,8 +52,8 @@ Answers needed before S1c.2 (S1c.1 does not wait: the frame shows no product con
 
 | Source | What it gave this PR |
 |---|---|
-| `docs/ui/usability.md` (`frontend-plan`) 5.3, 5.4, 7.5, open point 9 | The peek: title, key, main field, source, `Open as page`; 400 px; opened from a row of a document table, a key in the chat, a disagreement, "Based on and used by"; below 1440 px the side panel collapses while the right panel is open and comes back after; the activity bar stays |
-| S1b plan | `ItemSources`, `useItemStatus`, `useItemHref`, `mainField`, `ItemLinks`, `PageLink`, the `actions` slot of `ArtifactDocument`; the rule that `artifact` takes render props, not addresses |
+| `docs/ui/usability.md` (`frontend-plan`) 5.3, 5.4, 7.5, open point 9 | The peek: title, key, main field, source, `Open as page`; 400 px; opened from a row of a document table, a key in the chat, a disagreement, "Based on and used by" (S1b gives the links of an item a card of their own instead, its answer A4); below 1440 px the side panel collapses while the right panel is open and comes back after; the activity bar stays |
+| S1b plan | `ItemOrigin`, `useItemStatus`, `useItemHref`, `mainField`, `PageLink`, the `actions` slot of `ArtifactDocument`; the chips and the marks of the links of an item open a card (`LinkedItemsPopover`), not a page; the rule that `artifact` takes render props, not addresses |
 | `frame/panels/`: `panel.types.ts`, `panel.constants.ts`, `panels.store.ts`, `hooks/usePanel.ts`, `components/EditorSplit.tsx` | `EditorSplit` is generic by region: a region gives `orientation`, `position`, sizes; `StoredPanel` keeps the panel mounted and hidden with `Activity`; the stored state is parsed with a schema that has `side` and `bottom` only |
 | `frame/layouts/components/SideFeatureSplit.tsx`, `TabbedWorkspace.tsx` | `SideFeatureSplit` registers `Ctrl+B` (`view.toggleSidePanel`) while a feature is chosen; `TabbedWorkspace` holds the tabs and the page in a `Surface` |
 | `frame/tabs/tab-icons.store.ts`, `bars/status-bar.store.ts`, `@/shared/lib/registry` | The registry pattern: `createRegistryStore`, `useRegisterItem` (layout effect), `useRegisteredItems` |
@@ -63,6 +64,8 @@ Answers needed before S1c.2 (S1c.1 does not wait: the frame shows no product con
 | S1a as built (S1b plan, section 2.1) | Small hooks that give one thing; a block that two widgets need goes to the entities of `documents`; nothing outside the scope in the PR |
 
 ## 3. Decisions
+
+The behavior on the screen of each component is in section 10; a decision that sets a behavior points to its row there.
 
 ### The right panel (S1c.1, frame)
 
@@ -91,7 +94,7 @@ Answers needed before S1c.2 (S1c.1 does not wait: the frame shows no product con
 
 4. **Where it sits.** `TabbedWorkspace` wraps its editor `Surface` in `EditorSplit region={PanelRegion.Aside} panel={aside === null ? undefined : <AsidePanel {...aside} />}`, inside `SideFeatureSplit`: side panel, editor, right panel, from left to right. `UntabbedWorkspace` (the screens outside a project) has no right panel. Without content, `EditorSplit` gives the editor the whole room, as for a screen without a feature.
 
-5. **Below 1440 px, the side panel and the right panel take turns.** `useIsWideWindow()` (new, `shared/lib/viewport/hooks/useIsWideWindow.ts`: `(min-width: 1440px)` as an external store, false on the server, as `useIsMobile`). `SideFeatureSplit` computes `isSideGivenWay = !isWide && aside !== null` and passes it to `EditorSplit` as the new prop `isPanelHidden`; `StoredPanel` hides the panel with `Activity` when `!visible || isPanelHidden`. The stored visibility of the side panel does not change, so it comes back when the right panel closes, and its state (the collapsed rows of the tree) stays.
+5. **Below 1440 px, the side panel and the right panel take turns.** `useIsWideWindow()` (new, `shared/lib/viewport/hooks/useIsWideWindow.ts`: `wideWindowQuery = (min-width: ${wideWindowMinWidth}px)` with `wideWindowMinWidth = 1440` at the top of the file, as `useIsMobile` keeps `mobileBreakpoint` and `mobileQuery`; an external store, false on the server). `SideFeatureSplit` computes `isSideGivenWay = !isWide && aside !== null` and passes it to `EditorSplit` as the new prop `isPanelHidden`; `StoredPanel` hides the panel with `Activity` when `!visible || isPanelHidden`. The stored visibility of the side panel does not change, so it comes back when the right panel closes, and its state (the collapsed rows of the tree) stays.
    - `Ctrl+B` while `isSideGivenWay` holds calls `aside.onClose()` and `sidePanel.show()` (answer B4); otherwise it toggles as today. The label of the command stays "Toggle side panel".
 
 6. **The design system** shows the right panel in the sample workspace of `WorkspaceCard.tsx`, with a static content and a close button that hides it.
@@ -122,20 +125,20 @@ Answers needed before S1c.2 (S1c.1 does not wait: the frame shows no product con
 
 9. **Where the peek opens from** (answer B2).
    - A table or a card of a document: `ArtifactDocument` and `DocumentBlocks` get a render prop `renderItemKey?: (item: OutlineItem) => ReactNode`; without it the key stays plain text, as today. The table draws it in its key cell; a card draws it in its header, under the title (`CardDescription`). The document page passes `(item) => <PeekKeyButton item={item} />`: a ghost button of size `xs` with the key in `font-mono text-xs`, `aria-label` "Quick look at REQ-001", `aria-pressed` while that item is peeked, which calls `togglePeek(item.id)`. The title stays the link to the item page. A transcript draws no key button: its messages are read in place.
-   - "Based on and used by" on an item page: the title of a row becomes a button that calls `openPeek(other.id)`, in place of the `PageLink` of S1b; the peek has `Open as page`.
-   - `Read` of a source stays a link to the transcript (S1b decision 13).
+   - The chips and the marks of the links of an item page (S1b decision 14) keep their card, and do not open the peek: the card already shows the item at the other end, and its Open opens the page. The rows of "Why this item exists" stay links to the pages.
+   - `Read` of a quote stays a link to the transcript (S1b decision 17).
    - S2 adds the chat and the review bar, with `openPeek`.
 
 10. **The peek of an item** (`ItemPeek({ projectId, itemId })`, 7.5): under the heading of the panel,
     - the key line of the item: `ItemKeyLine` (extracted from `ArtifactItemDetails` in S1c.2, section 6) with the status of `useItemStatus(projectId, item)`;
     - the main field (`mainField(schema)`): its title in `text-sm font-semibold text-muted-foreground`, then `ContentFieldValue`; nothing when it is empty;
-    - `ItemSources` of S1b;
+    - `ItemOrigin` of `trace/entities` (S1b), the section "Why this item exists";
     - `Open as page`: an outline button that opens `useItemHref(projectId)(item)` in the preview tab with `useOpenPage`, then `closePeek()`. The item page then has no `?peek=`.
     - The peek reads the queries that the item page reads (`useItem`, `useItemSchema`, `useItemTrace` backward): a peek and the page of the same item share their cache.
 
 11. **States of the peek.** Loading: `LoadingState` (`size="compact"`, `rows={4}`, label "Loading the item"). Not found (`404`: a deleted item, a wrong id in the address): `NotFoundState` (`size="compact"`, title "Item not found", `action` a link button "Close the quick look" that calls `closePeek`). An error: `ErrorState` (`size="compact"`) with Try again. A peeked item of a kind without a page (a message) shows the same way; `Open as page` opens its transcript at it.
 
-12. **Words** in `itemPeekMessages` (`documents/widgets/peek/item-peek.constants.ts`): see section 10. The frame has no words of its own for the panel: the title and the close label come with the content.
+12. **Words** in `itemPeekMessages` (`documents/widgets/peek/item-peek.constants.ts`): see section 11. The frame has no words of its own for the panel: the title and the close label come with the content.
 
 13. **`'use client'`.** The project layout imports `documents/widgets/peek` (`ItemPeekPanel`): `useItemPeekPanel` and `usePeekedItem` start with `'use client'`, as do `useAsidePanel`, `useReturnFocus` and `useIsWideWindow`, which the frame index exports or reaches.
 
@@ -143,7 +146,7 @@ Answers needed before S1c.2 (S1c.1 does not wait: the frame shows no product con
 
 | | |
 |---|---|
-| Endpoints read | `GET /items/{id}`, the kinds and schemas, `GET /items/{id}/trace` (the sources); no new one |
+| Endpoints read | `GET /items/{id}`, the kinds and schemas, `GET /items/{id}/trace` (the origin); no new one |
 | Endpoints called | None |
 | Written new | Section 8 |
 | Not built | A peek of anything but an item; two groups side by side (`Open to the side`); opening the peek from the chat and the review bar (S2) |
@@ -177,7 +180,7 @@ Answers needed before S1c.2 (S1c.1 does not wait: the frame shows no product con
 | `useOpenPage`, `useCommands`, `PaletteGroup` | `@/shared/components/frame` | `Open as page`, `Ctrl+B` |
 | `RouteParam` | `@/shared/routes` | The address of a peek |
 | `useItem`, `useItemSchema`, `ContentFieldValue`, `mainField`, `itemTitle`, `useWorkflowDefinition` | `artifact/entities`, `workflow/entities` | The body and the title of the peek |
-| `ItemSources`, `useItemStatus`, `useItemHref` | `documents/entities` (S1b) | The source, the status, `Open as page` |
+| `ItemOrigin`; `useItemStatus`; `useItemHref` | `trace/entities`, `documents/entities`, `artifact/entities` (S1b) | The origin, the status, `Open as page` |
 | `renderWorkbench`, `renderDocumentsFrame`, `setQuery`, `setPathname`, `routerMock` | `@/test/render`, `@/test/next-stubs` | The tests |
 
 ### Extract before new code
@@ -194,7 +197,7 @@ Answers needed before S1c.2 (S1c.1 does not wait: the frame shows no product con
 | Candidate | Why it stays |
 |---|---|
 | A generic "panel opened by a query parameter" in the frame | The frame reads no address of a feature; the peek reads its own parameter and registers its content |
-| `PeekKeyButton` in `documents/entities` | One widget uses it (`document`); `ItemLinks` uses a title button of its own shape |
+| `PeekKeyButton` in `documents/entities` | One widget uses it (`document`) |
 
 ## 7. Changes to existing modules
 
@@ -207,14 +210,14 @@ Answers needed before S1c.2 (S1c.1 does not wait: the frame shows no product con
 | `frame/panels/components/EditorSplit.tsx` | `isPanelHidden` | 1.2 |
 | `frame/layouts/components/TabbedWorkspace.tsx`, `SideFeatureSplit.tsx`, tests; `frame/index.ts` | Decisions 4, 5 | 1.2 |
 | Design system `WorkspaceCard.tsx` | Decision 6 | 1.3 |
-| `frontend/CONTRIBUTING.md` (the right panel in the frame helpers), `docs/architecture/web-app.md` (the frame) | Section 13 | 1.4 |
+| `frontend/CONTRIBUTING.md` (the right panel in the frame helpers), `docs/architecture/web-app.md` (the frame) | Section 14 | 1.4 |
 | `shared/routes/route-params/route-params.constants.ts` (`Peek`), `shared/routes/peek/` (new), `shared/routes/index.ts`, tests | Decision 7 | 2.1 |
 | `artifact/entities/components/ItemKeyLine.tsx` (new), `ArtifactItemDetails.tsx` (uses it), `DocumentBlocks.tsx` and `ArtifactDocument.tsx` (`renderItemKey`), tests, `index.ts` | Decisions 9, 10 | 2.2 |
 | `documents/widgets/peek/` (new) | Decisions 8, 10, 11 | 2.3 |
-| `documents/widgets/document/components/DocumentPage.tsx`, `PeekKeyButton.tsx` (new); `documents/widgets/item/components/ItemLinks.tsx` | Decision 9 | 2.3 |
+| `documents/widgets/document/components/DocumentPage.tsx`, `PeekKeyButton.tsx` (new) | Decision 9 | 2.3 |
 | `app/(project)/projects/[projectId]/layout.tsx` | `<Suspense fallback={null}><ItemPeekPanel projectId={projectId} /></Suspense>` in `projectContributions`; the JSDoc names the peek | 2.3 |
-| `tests/screenshots/projects/documents.spec.ts` | Section 11 | 2.3 |
-| Web App Modules, Web App, mocks README, implementation plan | Section 13 | 2.4 |
+| `tests/screenshots/projects/documents.spec.ts` | Section 12 | 2.3 |
+| Web App Modules, Web App, mocks README, implementation plan | Section 14 | 2.4 |
 
 Files that two commits change: `frame/index.ts` (1.2 only), `artifact/entities/index.ts` (2.2 only), `web-app.md` (1.4 the frame, 2.4 the peek).
 
@@ -292,7 +295,7 @@ export function ItemKeyLine({ item, status, isUnderReview }: { item: Pick<Artifa
 documents/widgets/peek/
 ├── components/
 │   ├── ItemPeekPanel.tsx       calls useItemPeekPanel; renders nothing
-│   ├── ItemPeek.tsx            the body: key line, main field, sources, Open as page, its states
+│   ├── ItemPeek.tsx            the body: key line, main field, origin, Open as page, its states
 │   └── __tests__/ItemPeek.test.tsx, ItemPeekPanel.test.tsx
 ├── useItemPeekPanel.ts         the lone hook of the slice, at its root
 ├── item-peek.constants.ts      itemPeekMessages
@@ -321,7 +324,30 @@ export function useItemPeekPanel(projectId: string): void
 
 Flow: a key button pushes `?peek=REQ-001's id`; `ItemPeekPanel` reads it and registers the peek; the frame opens the right panel (and, below 1440 px, hides the side panel) and moves the focus to its heading; the peek loads the item, which the page often has in its cache already. Close, `Escape` or Back removes the parameter; the panel unregisters, the side panel comes back, and the focus returns to the key button.
 
-## 10. Screen states and words
+## 10. Behavior of each component
+
+### The right panel (frame, S1c.1)
+
+| Component (where) | What it shows; disabled or hidden when | What the user does | What follows | Focus and keys |
+|---|---|---|---|---|
+| `AsidePanel` (right of the editor, inside a project) | A header of 40 px with the title of its content in an `h2` (cut with `truncate`) and Close (`XIcon`, the `closeLabel` of the content); the content in a `ScrollArea`. 400 px at the start, from 320 px to 50% of the window, the editor never under 30%. Not rendered while no content is registered; never on the screens outside a project | Clicks Close; presses Escape with the focus inside the panel; drags the handle between the editor and the panel | Close and Escape call `onClose` of the content (the peek removes `?peek=`); the panel goes once nothing is registered. A drag resizes it, and the size is stored with the other panels | The heading takes the focus when the panel opens and each time `key` changes. When the panel goes, the focus returns to the element that had it before the panel opened, if it is still in the page, else to the `main` of the editor. Escape in the command palette or in a dialog never reaches the panel. The handle is a `separator` that the arrow keys move, as the other handles of the frame |
+| Side panel on a narrow window (under 1440 px) | Hidden while the right panel shows, without changing its stored visibility; back, with its tree as it was, once the right panel goes. On a wide window both show | Presses `Ctrl+B` while the side panel gave way | The right panel closes (`onClose` of its content) and the side panel shows. Otherwise `Ctrl+B` toggles the side panel as today; its label stays "Toggle side panel" | The focus follows the right panel as above |
+| `WorkspaceCard` (design system) | The sample workspace with a right panel of static content | Clicks its Close | The sample panel hides | As `AsidePanel` |
+
+### The peek (S1c.2)
+
+| Component (where) | What it shows; disabled or hidden when | What the user does | What follows | Focus and keys |
+|---|---|---|---|---|
+| `PeekKeyButton` (the key cell of a table, the header of a card, in a document) | A ghost button of size `xs` with the key in `font-mono text-xs`; `aria-label` "Quick look at REQ-001"; `aria-pressed` while that item is peeked. None in a transcript, whose messages are read in place | Clicks it, or Enter or Space on it | The first press opens the peek of the item (`?peek=` pushed: Back closes it); a press on the key of the peeked item closes it (`?peek=` removed, replace); a press on another key shows that item in the same panel (pushed) | The heading of the panel takes the focus; when the peek closes, the focus returns to this button |
+| The title of a row or a card (unchanged) | The link to the item page | Clicks it | The item page opens in the preview tab; the new page has no `?peek=`, so the peek closes | As S1a |
+| The chips and marks of the links of an item page (S1b) | Unchanged: they open their card, not the peek | - | - | - |
+| `ItemPeek` (in the right panel) | Under the heading (the title of the item; "Item" while it loads): the key line with the status (`ItemKeyLine`); the main field, its title and its value, nothing when empty; "Why this item exists" (`ItemOrigin` of S1b); `Open as page`. A message (no page of its own) shows the same way | Clicks `Open as page`; clicks a row or `Read` of "Why this item exists" | `Open as page` opens the item page in the preview tab (a message: its transcript at it) and closes the peek. A row or `Read` opens that page in the preview tab; the new page has no `?peek=`, so the peek closes | The focus order: heading, the links of the origin, `Open as page`. After a page opens, the focus goes where the frame puts it on a new page |
+| The states of `ItemPeek` | Loading: `LoadingState` compact, 4 rows, "Loading the item". Not found: `NotFoundState` compact, "Item not found", with the link button "Close the quick look". Error: `ErrorState` compact with Try again | Clicks Close the quick look; clicks Try again | Close removes `?peek=`; Try again loads the item again | The heading keeps the focus; the button of each state is next in the Tab order |
+| The address `?peek=` | - | Presses Back; reloads; opens a link that holds `?peek=`; moves to another page | Back closes the peek (its open was pushed); a reload and a link open it again; another page has no `?peek=`, so the peek closes: a peek belongs to the page it was opened on. The tab keeps the address of its page, without the query | - |
+
+One peek at a time: the last item asked replaces the content of the panel, and the panel shows one content (the last registered). The peek sends no request of its own beyond the queries of the item, so closing it while it loads stops nothing that matters.
+
+## 11. Screen states and words
 
 | State | What shows | Scenario |
 |---|---|---|
@@ -344,12 +370,12 @@ export const itemPeekMessages = {
 } as const
 ```
 
-## 11. Mocks and screenshots
+## 12. Mocks and screenshots
 
 - No mock change: `mock-item` covers the states of the peek.
 - Screenshots (S1c.2): the specification with the peek of REQ-001 at 1600 px and at 1280 px (the screenshot config sets the viewport per case). S1c.1 adds none: no screen of the app shows the right panel before S1c.2.
 
-## 12. Tests
+## 13. Tests
 
 | File | Cases |
 |---|---|
@@ -362,22 +388,21 @@ export const itemPeekMessages = {
 | `shared/routes/peek/hooks/__tests__/usePeekedItem.test.ts` | Reads the parameter; `openPeek` pushes; `togglePeek` closes the peeked item; `closePeek` replaces |
 | `artifact/entities/components/__tests__/ItemKeyLine.test.tsx` | Status, key, version only after a change |
 | `artifact/entities/components/__tests__/ArtifactDocument.test.tsx` (extended) | `renderItemKey` in the key cell of a table and the header of a card; none in a transcript; plain key without it |
-| `documents/widgets/peek/components/__tests__/ItemPeek.test.tsx` | Key line, main field, sources; empty main field; Open as page opens the preview tab and closes the peek; a message opens its transcript; loading, not found with Close, error with Try again; axe |
+| `documents/widgets/peek/components/__tests__/ItemPeek.test.tsx` | Key line, main field, origin; empty main field; Open as page opens the preview tab and closes the peek; a row of "Why this item exists" opens its page and the peek closes; a message opens its transcript; loading, not found with Close, error with Try again; axe |
 | `documents/widgets/peek/components/__tests__/ItemPeekPanel.test.tsx` | With `?peek=` the right panel shows the item; without it, nothing; Close removes the parameter |
-| `documents/widgets/document/components/__tests__/DocumentPage.test.tsx` (extended) | The key button toggles the peek; `aria-pressed` |
-| `documents/widgets/item/components/__tests__/ItemLinks.test.tsx` (extended) | A row opens the peek of the other item |
+| `documents/widgets/document/components/__tests__/DocumentPage.test.tsx` (extended) | The key button toggles the peek; `aria-pressed`; the key of another item replaces the peek; the focus goes to the heading of the panel and back to the key on close |
 
 Helpers: `renderWorkbench` renders the frame for the frame tests; the peek tests render `renderDocumentsFrame` with `ItemPeekPanel` in its contributions. `renderDocumentsFrame` gains an option `contributions?: ReactNode`, added to `DocumentsTabIcons`; three test files use it (peek, document page, item page), so it stays in `test/render/`.
 
-## 13. Docs to update
+## 14. Docs to update
 
 - `frontend/CONTRIBUTING.md`: in the table of Reuse, `useAsidePanel` for content beside the editor; the frame keeps the words of the content.
 - `docs/architecture/web-app.md`: the regions of the frame (the right panel and the rule of 1440 px), and the files of the peek in section 9.
 - `docs/architecture/web-app-modules.md`: `documents` widgets `peek`; `artifact` component `ItemKeyLine`; section 8, `usePeekedItem` in `shared/routes`.
-- `frontend/src/mocks/README.md`: the addresses of section 10 under Documents.
+- `frontend/src/mocks/README.md`: the addresses of section 11 under Documents.
 - Implementation plan: rows S1c.1, S1c.2; checklist.
 
-## 14. Left for the next PRs
+## 15. Left for the next PRs
 
 | Item | Where |
 |---|---|
@@ -386,7 +411,7 @@ Helpers: `renderWorkbench` renders the frame for the frame tests; the peek tests
 | `Open to the side`, two groups | The frame, after S1 |
 | Other content in the right panel (the results of S3, the links of S4) | Their PRs, with `useAsidePanel` |
 
-## 15. Commits and checks
+## 16. Commits and checks
 
 S1c.1 `feat/fe/aside-panel`:
 
@@ -399,14 +424,14 @@ S1c.2 `feat/fe/item-peek`:
 
 1. `feat(routes): open and close the peek of an item through the address`
 2. `feat(artifact): draw the key line of an item, and the key of a row through the page`
-3. `feat(documents): peek at an item from a document and from the links of an item`
+3. `feat(documents): peek at an item from the keys of a document`
 4. `docs: describe the peek of an item`
 
 Checks, one at a time, per PR: ESLint and Prettier on the changed files; Vitest on `shared/components/frame`, `shared/lib/viewport`, `shared/routes`, `modules/design-system` (S1c.1), and `shared/routes`, `modules/artifact`, `modules/documents`, `test/render` (S1c.2); typecheck once per PR. No full suite, E2E, screenshots or build locally. The ASCII and comment greps of S1b.
 
-## 16. Checklist
+## 17. Checklist
 
-- [ ] B1 to B4 answered by the user and written in `usability.md` on `frontend-plan` before S1c.2
+- [x] B1 to B4 written in `usability.md` on `frontend-plan` (5.3, 5.4, 7.5, open point 9; 2026-11-03), as this plan builds them; the user reads them there before S1c.2
 - [ ] S1b.2 merged; S1c.1 from `origin/main`; commits 1 to 4, each checked
 - [ ] S1c.2 from the S1c.1 branch; commits 1 to 4, each checked
 - [ ] The peek checked once in `pnpm dev:mock` at 1280 px and 1600 px (one dev server, one page at a time, stopped after)
