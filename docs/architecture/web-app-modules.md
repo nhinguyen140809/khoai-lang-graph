@@ -37,8 +37,7 @@ src/
 │   ├── workflow/
 │   │   └── entities/           # the artifact kinds and their content schemas; @x/artifact.ts
 │   ├── artifact/
-│   │   ├── entities/           # Artifact, ArtifactItem and their revisions; @x/run.ts
-│   │   └── widgets/            # panel/, a placeholder
+│   │   └── entities/           # Artifact, ArtifactItem and their revisions; @x/run.ts
 │   ├── run/
 │   │   ├── entities/
 │   │   │   ├── @x/             # the files for the entities of other modules: project.ts, thread.ts
@@ -201,7 +200,7 @@ A unit test may also import another slice of its layer, from its index, to show 
 | Module | Entities | Features | Widgets | State |
 |---|---|---|---|---|
 | `workflow` | Workflow definition (graph, agent roles, stages in their order, checkpoints and their options); artifact kinds and content schemas; the content fields and the component that shows the value of one, with the title that the definition gives a value of a value list | - | - | The artifact kinds, content schemas, definition and content fields |
-| `artifact` | Artifact, ArtifactItem and their revisions, and Export as its resource `exports`; the outline of an artifact, the status of an item and its look, and the views of a document and of an item without actions | `edit` | `panel` | The entities with their views, and the placeholder of `panel`; the actions with the documents |
+| `artifact` | Artifact, ArtifactItem and their revisions, and Export as its resource `exports`; the outline of an artifact, the status of an item and its look, and the views of a document and of an item without actions | `edit` | - | The entities with their views; the actions with the documents |
 | `run` | Run and RunStep, each with its usage (`RunUsage`); RunEvent, Directive, the event stream of a run; the workflow state of a run, after a step or now; the steps grouped by subject and the progress of the nodes; the fields of the run settings and their schema, which the forms of the features embed; the run statuses and their badge. The entities split by topic: `runs`, `steps`, `state`, `directives`, `events`, `config`, `status`, and a topic imports only the topics under it | `stop`, `start` (the first chat); `retry` later | `graph`, the workflow graph of a run, later | The run statuses, the stream of a run, `stop` and `start` today |
 | `review` | Interrupt, HumanDecision | `answer` | `panel` | The entities; `answer` and `panel` with the activity |
 | `thread` | Thread, Message | `send-message` | - | The entities; `send-message` with the activity |
