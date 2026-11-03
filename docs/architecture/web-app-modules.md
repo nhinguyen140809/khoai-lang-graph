@@ -192,6 +192,9 @@ The links between entities today:
 | `review` | `workflow` | The options, the questions and the answers of a checkpoint |
 | `review` | `artifact` | `artifactRefSchema`; `ItemRef`, the items the user edited before answering |
 | `review` | `run` | `runSchema`, the run that the resume answers; the polling of a run that works |
+| `trace` | `workflow` | The content schemas, `itemTitle`, `mainField`, `findQuote`, the definition and the issue kinds |
+| `trace` | `artifact` | The review status labels, the artifacts of a project, the address of an item (`useItemHref`), the transcript fields, the reload after a change |
+| `documents` | `trace` | `useOutOfDateItemIds`, the items made from an older version of an item they link to |
 
 A unit test may also import another slice of its layer, from its index, to show slices together, such as the project table with the dialogs that its rows open.
 
@@ -199,18 +202,18 @@ A unit test may also import another slice of its layer, from its index, to show 
 
 | Module | Entities | Features | Widgets | State |
 |---|---|---|---|---|
-| `workflow` | Workflow definition (graph, agent roles, stages in their order, checkpoints and their options); artifact kinds and content schemas; the content fields and the component that shows the value of one, with the title that the definition gives a value of a value list | - | - | The artifact kinds, content schemas, definition and content fields |
-| `artifact` | Artifact, ArtifactItem and their revisions, and Export as its resource `exports`; the outline of an artifact, the status of an item and its look, and the views of a document and of an item without actions | `edit` | - | The entities with their views; the actions with the documents |
+| `workflow` | Workflow definition (graph, agent roles, stages in their order, checkpoints and their options); artifact kinds and content schemas; the content fields and the components that show the value of one and edit one, with the title that the definition gives a value of a value list; comparing two contents, dropping empty entries, and finding where the words of a quote sit | - | - | The artifact kinds, content schemas, definition and content fields |
+| `artifact` | Artifact, ArtifactItem and their revisions with the history surface of a record, and Export as its resource `exports`; the outline of an artifact, the status of an item (with `outOfDate`) and its look, the address of any item, and the views of a document and of an item without actions, with the marks of the quoted words | `edit` | - | The entities with their views; the actions with the documents |
 | `run` | Run and RunStep, each with its usage (`RunUsage`); RunEvent, Directive, the event stream of a run; the workflow state of a run, after a step or now; the steps grouped by subject and the progress of the nodes; the fields of the run settings and their schema, which the forms of the features embed; the run statuses and their badge. The entities split by topic: `runs`, `steps`, `state`, `directives`, `events`, `config`, `status`, and a topic imports only the topics under it | `stop`, `start` (the first chat); `retry` later | `graph`, the workflow graph of a run, later | The run statuses, the stream of a run, `stop` and `start` today |
 | `review` | Interrupt, HumanDecision | `answer` | `panel` | The entities; `answer` and `panel` with the activity |
 | `thread` | Thread, Message | `send-message` | - | The entities; `send-message` with the activity |
 | `project` | Project, the run that its status shows, the streams of its runs | `create`, `rename`, `archive` (with restore and Undo), `delete`; `run-settings` later | `list`, `menu`, `commands`, `dialogs`, `status` | Today |
 | `activity` | ActivityEvent later, the record of who did what in a project | - | `steps`, the stages of the workflow as a tree in the side panel of Activity, with the item of the feature on the activity bar; `chat`, the chat in its tab | The chat of the first version today; the rest with the activity |
-| `documents` | The list of the documents of a project and the mark of each | - | `panel`, the documents as a tree with the outline of the open document and what asks something of the user; `document`, the page of a document; `item`, the page of an item with Previous and Next | Documents on the activity bar; edit, peek and export later |
+| `documents` | The list of the documents of a project and the mark of each; when a document can change, the outline with the out of date items, and the status of one item | - | `panel`, the documents as a tree with the outline of the open document and what asks something of the user; `document`, the page of a document; `item`, the page of an item with Previous and Next | Documents on the activity bar; edit, peek and export later |
 | `auth` | The calls that start a session, create an account and end a session; the page that opens after signing in | `login`, `register`, `logout` | - | Today |
 | `user` | User, Session, UserSettings | `run-settings` later | `menu`, `settings` | The entities; the forms of the account and the preferences with Settings |
 | `usage` | MonthlyUsage, the usage of the user in a calendar month, with the budget of the month and its groups | - | - | The entities and the budget on the status bar; the usage section with Settings |
-| `trace` | TraceLink, the traces of items, the traceability views | - | `graph`, the nodes and edges of a trace, for drawing it | Later |
+| `trace` | TraceLink with the words of both of its items, the traces of items, the traceability views, the origin of an item, the links of an item and their marks, the out of date items, and the card of the items at the other end | - | `graph`, the nodes and edges of a trace, for drawing it | Later |
 | `llm-model` | ModelCatalogEntry, ModelSettings | - | - | The entities; the form of the model settings with Settings |
 | `design-system` | - | - | `showcase`, the page of the UI components and the tokens | Today |
 
