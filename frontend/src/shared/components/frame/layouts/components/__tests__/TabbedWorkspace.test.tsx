@@ -6,8 +6,9 @@ import { beforeEach, describe, expect, it } from 'vitest'
 import { setPathname } from '@/test/next-stubs'
 import { expectAttribute, expectNoRole, expectRole } from '@/test/steps'
 
+import { frameWrapper } from '../../../__tests__/frame-wrapper.utils.data'
+import { seedTabs, tabsOf } from '../../../__tests__/tab-state.utils.data'
 import type { Destination } from '../../../destinations/destination.types'
-import { DestinationsContext } from '../../../destinations/hooks/useDestinations'
 import { useSideFeatureStore } from '../../../destinations/side-feature.store'
 import { SidePanel } from '../../../panels/components/SidePanel'
 import { SidePanelSection } from '../../../panels/components/SidePanelSection'
@@ -46,21 +47,11 @@ function Page({ tab }: { tab: EditorTab | null }) {
 }
 
 function workspace(page: ReactNode) {
-  return (
-    <DestinationsContext value={{ destinations, tabIcons: {} }}>
-      <TabbedWorkspace tabGroup="p1">{page}</TabbedWorkspace>
-    </DestinationsContext>
-  )
+  return <TabbedWorkspace tabGroup="p1">{page}</TabbedWorkspace>
 }
 
 function renderTabbedWorkspace(given: Destination[] = destinations) {
-  render(
-    <DestinationsContext value={{ destinations: given, tabIcons: {} }}>
-      <TabbedWorkspace tabGroup="p1">
-        <p>editor</p>
-      </TabbedWorkspace>
-    </DestinationsContext>,
-  )
+  render(workspace(<p>editor</p>), { wrapper: frameWrapper({ destinations: given }) })
 }
 
 describe('TabbedWorkspace', () => {
@@ -112,14 +103,16 @@ describe('TabbedWorkspace', () => {
   it.each(newTabCases)(
     'opens the tab of a new page next to the tab of the page shown before, $name',
     ({ open, renders }) => {
-      useEditorTabsStore.setState({ groups: { p1: open } })
+      seedTabs('p1', { tabs: open })
       setPathname('/projects/p1/a')
-      const { rerender } = render(workspace(<Page key="a" tab={tab('a')} />))
+      const { rerender } = render(workspace(<Page key="a" tab={tab('a')} />), {
+        wrapper: frameWrapper({ destinations }),
+      })
 
       setPathname('/projects/p1/b')
       for (const rendered of renders) rerender(workspace(<Page key="b" tab={rendered} />))
 
-      expect(useEditorTabsStore.getState().groups.p1?.map(({ id }) => id)).toEqual(['a', 'b', 'c'])
+      expect(tabsOf('p1').tabs.map(({ id }) => id)).toEqual(['a', 'b', 'c'])
     },
   )
 
@@ -137,6 +130,7 @@ describe('TabbedWorkspace', () => {
           tab={{ id: 'settings', title: 'Settings', href: '/projects/p1/settings?section=members' }}
         />,
       ),
+      { wrapper: frameWrapper({ destinations }) },
     )
 
     expectAttribute('link', 'Settings, preview', 'aria-current', 'page')

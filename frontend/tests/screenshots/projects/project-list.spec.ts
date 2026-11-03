@@ -112,6 +112,15 @@ screenshots('Project list', (shot) => {
     await shoot()
   })
 
+  shot('Create project dialog with every kind of run parameter', async ({ page, user, shoot }) => {
+    await page.goto(`${projects}?mock-run-parameters=all-types`)
+
+    await openCreateProjectDialog(page, user)
+    await user.pressButton('Agent settings')
+    await page.getByRole('dialog').getByText('Interview style').scrollIntoViewIfNeeded()
+    await shoot()
+  })
+
   shot('Create project dialog with an idea left empty', async ({ page, user, shoot }) => {
     await page.goto(projects)
 
@@ -237,13 +246,13 @@ screenshots('Project list', (shot) => {
   })
 
   shot('The mentor platform running', async ({ page, shoot }) => {
-    await page.goto(`${projects}?mock-run-state=running`)
+    await page.goto(`${projects}?mock-run-status=running`)
 
     await shoot({ part: page.getByRole('table') })
   })
 
   shot('No unfinished run in the mentor platform', async ({ page, shoot }) => {
-    await page.goto(`${projects}?mock-run-state=done`)
+    await page.goto(`${projects}?mock-run-status=done`)
 
     await shoot({ part: page.getByRole('table') })
   })

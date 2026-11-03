@@ -7,6 +7,7 @@
   "x-kind": "interview_message",
   "x-schema-version": 1,
   "x-ui-display": "transcript",
+  "x-ui-navigable": false,
   "x-ui-title-field": "content",
   "x-ui-list-fields": [
     "turn",

@@ -3,8 +3,8 @@ import { isOneOf } from '@/shared/lib/guards'
 import { internalError } from '../http/response'
 import {
   type HandlerScenario,
-  type MockRunState,
-  mockRunStates,
+  type MockRunStatus,
+  mockRunStatuses,
   type MockScenario,
   mockScenarios,
 } from './mock-scenario.types'
@@ -46,10 +46,10 @@ export async function answerScenario(resource: string): Promise<HandlerScenario>
 }
 
 /**
- * The state of the mock run that waits at the analysis review by default, chosen in the page URL
- * with `?mock-run-state=running` (or `failed`, `done`). The threads and runs handlers read it.
+ * The status of the mock run that waits at the analysis review by default, chosen in the page URL
+ * with `?mock-run-status=running` (or `failed`, `done`). The threads and runs handlers read it.
  */
-export function mockRunState(): MockRunState {
-  const value = pageUrlParam('mock-run-state')
-  return isOneOf(mockRunStates, value) ? value : 'waiting'
+export function mockRunStatus(): MockRunStatus {
+  const value = pageUrlParam('mock-run-status')
+  return isOneOf(mockRunStatuses, value) ? value : 'waiting'
 }

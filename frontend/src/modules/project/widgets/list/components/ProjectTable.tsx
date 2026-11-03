@@ -10,6 +10,7 @@ import {
   type ProjectStatus,
   useProjectList,
 } from '@/modules/project/entities'
+import { pageItems } from '@/shared/api/query-client'
 import { filterMessages } from '@/shared/components/filter'
 import { EmptyState, ErrorState, LoadingState } from '@/shared/components/state'
 import { Button } from '@/shared/components/ui/button'
@@ -62,7 +63,7 @@ export function ProjectTable({ status, filters, onClearFilters }: ProjectTablePr
     )
   }
 
-  const rows = projects.data.pages.flatMap(({ items }) => items)
+  const rows = pageItems(projects.data)
 
   // Filters that keep nothing show the whole empty state, with the way back to every project; a
   // first visit has nothing else to do here either. The archived projects are a part of the list,

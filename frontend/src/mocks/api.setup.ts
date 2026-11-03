@@ -1,13 +1,24 @@
 import { authHandlers } from './account/auth.handlers'
 import { meHandlers } from './account/me.handlers'
+import { sessionHandlers } from './account/sessions.handlers'
 import { artifactHandlers } from './artifacts/handlers/artifacts.handlers'
 import { itemEditHandlers } from './artifacts/handlers/item-edits.handlers'
 import { itemHandlers } from './artifacts/handlers/items.handlers'
 import { exportHandlers } from './exports/exports.handlers'
+import { interruptHandlers } from './interrupts/interrupts.handlers'
 import { messageHandlers } from './messages/messages.handlers'
+import { modelSettingHandlers } from './model-settings/model-settings.handlers'
+import { modelHandlers } from './models/models.handlers'
 import { projectHandlers } from './projects/projects.handlers'
+import { directiveHandlers } from './runs/handlers/directives.handlers'
+import { runStateHandlers } from './runs/handlers/run-state.handlers'
 import { runHandlers } from './runs/handlers/runs.handlers'
 import { threadHandlers } from './threads/threads.handlers'
+import { chainHandlers } from './trace/handlers/chains.handlers'
+import { traceLinkHandlers } from './trace/handlers/trace-links.handlers'
+import { traceabilityHandlers } from './trace/handlers/traceability.handlers'
+import { usageHandlers } from './usage/usage.handlers'
+import { userSettingHandlers } from './user-settings/user-settings.handlers'
 import { artifactKindHandlers } from './workflow/artifact-kinds.handlers'
 import { workflowHandlers } from './workflow/workflow.handlers'
 
@@ -18,6 +29,11 @@ import { workflowHandlers } from './workflow/workflow.handlers'
 export const apiHandlers = [
   ...authHandlers,
   ...meHandlers,
+  ...sessionHandlers,
+  ...userSettingHandlers,
+  ...modelHandlers,
+  ...modelSettingHandlers,
+  ...usageHandlers,
   ...projectHandlers,
   ...workflowHandlers,
   ...artifactKindHandlers,
@@ -25,7 +41,13 @@ export const apiHandlers = [
   ...itemHandlers,
   ...itemEditHandlers,
   ...exportHandlers,
+  ...traceLinkHandlers,
+  ...chainHandlers,
+  ...traceabilityHandlers,
   ...threadHandlers,
   ...messageHandlers,
   ...runHandlers,
+  ...runStateHandlers,
+  ...directiveHandlers,
+  ...interruptHandlers,
 ]

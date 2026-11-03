@@ -1,0 +1,48 @@
+import { useQuery } from '@tanstack/react-query'
+import { useMemo } from 'react'
+
+import type { HookQueryOptions } from '@/shared/api/query-client'
+
+import { allowedValues } from '../allowed-values.utils'
+import { getArtifact, listProjectArtifacts } from '../artifacts.api'
+import { artifactKeys } from '../artifacts.keys'
+import type { ArtifactFilters } from '../artifacts.types'
+
+/** The artifacts of a project, narrowed by the filters, in the order of the stages that make them. */
+export function useProjectArtifacts(
+  projectId: string,
+  filters: ArtifactFilters = {},
+  { isEnabled = true }: HookQueryOptions = {},
+) {
+  return useQuery({
+    queryKey: artifactKeys.list(projectId, filters),
+    queryFn: () => listProjectArtifacts(projectId, filters),
+    enabled: isEnabled,
+  })
+}
+
+/** One artifact; with `version`, the artifact as it was at that version. */
+export function useArtifact(artifactId: string, version?: number) {
+  return useQuery({
+    queryKey: artifactKeys.detail(artifactId, version),
+    queryFn: () => getArtifact(artifactId, version),
+  })
+}
+
+/**
+ * The values that a field may take when its schema says `x-value-from`: the entries of a field of
+ * an artifact of the project. The list is the same one until the artifacts or the source change.
+ */
+export function useAllowedValues(projectId: string, allowedValuesFrom: string | null): string[] {
+  const artifacts = useProjectArtifacts(
+    projectId,
+    {},
+    {
+      isEnabled: allowedValuesFrom !== null,
+    },
+  )
+  return useMemo(
+    () => allowedValues(artifacts.data, allowedValuesFrom),
+    [artifacts.data, allowedValuesFrom],
+  )
+}

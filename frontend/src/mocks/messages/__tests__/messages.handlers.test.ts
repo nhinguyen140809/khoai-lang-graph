@@ -2,24 +2,18 @@ import { describe, expect, it } from 'vitest'
 
 import type { Project } from '@/modules/project/entities'
 import type { Run } from '@/modules/run/entities'
-import type { Thread } from '@/modules/thread/entities'
+import type { Message, Thread } from '@/modules/thread/entities'
 import { apiEndpoints } from '@/shared/api/endpoints'
 import { HttpHeader, HttpStatus } from '@/shared/api/http'
 import type { ApiAnswer } from '@/test/msw'
-import { fetchApi, postApi } from '@/test/msw'
+import { fetchApi, getApiItems, openPage, postApi } from '@/test/msw'
 import { itRejectsRequests } from '@/test/suites'
 
-import { runIds, threadIds } from '../../shared/db'
-import { nameFromMessage } from '../messages.handlers'
-import type { SentMessage } from '../messages.store'
-import {
-  firstMessageCases,
-  messageRejectedCases,
-  nameFromMessageCases,
-} from './messages.handlers.data'
+import { IdPrefix, mockId, runIds, threadIds } from '../../shared/db'
+import { firstMessageCases, messageRejectedCases } from './messages.handlers.data'
 
 interface Sent {
-  message: SentMessage
+  message: Message
   run: Run
 }
 
@@ -36,9 +30,52 @@ async function newThread(project: object = {}) {
   return { projectId, threadId: thread.body.id }
 }
 
-describe('nameFromMessage', () => {
-  it.each(nameFromMessageCases)('names a project from $name', ({ content, projectName }) => {
-    expect(nameFromMessage(content)).toBe(projectName)
+describe('GET /threads/{thread_id}/messages', () => {
+  it('lists the four messages of the mentor thread in the order they were sent', async () => {
+    const messages = await getApiItems<Message>(
+      apiEndpoints.threadMessages.path({ threadId: threadIds.mentorMain }),
+    )
+
+    expect(messages.map(({ sequence, author }) => ({ sequence, author }))).toEqual([
+      { sequence: 1, author: 'user' },
+      { sequence: 2, author: 'agent' },
+      { sequence: 3, author: 'user' },
+      { sequence: 4, author: 'user' },
+    ])
+  })
+
+  it('answers the empty page in the empty scenario', async () => {
+    openPage('/?mock-messages=empty')
+
+    expect(
+      await getApiItems<Message>(
+        apiEndpoints.threadMessages.path({ threadId: threadIds.mentorMain }),
+      ),
+    ).toEqual([])
+  })
+
+  it('lists the first message of a generated project', async () => {
+    const messages = await getApiItems<Message>(
+      apiEndpoints.threadMessages.path({ threadId: mockId(IdPrefix.Thread, 5) }),
+    )
+
+    expect(messages).toHaveLength(1)
+    expect(messages[0]).toMatchObject({
+      sequence: 1,
+      content: 'Patients of a small clinic should book appointments online instead of phoning.',
+      delivery: 'started_run',
+    })
+  })
+
+  it('lists a sent message last', async () => {
+    await postApi(apiEndpoints.threadMessages.path({ threadId: threadIds.mentorMain }), {
+      content: 'Another question.',
+    })
+
+    const messages = await getApiItems<Message>(
+      apiEndpoints.threadMessages.path({ threadId: threadIds.mentorMain }),
+    )
+    expect(messages.at(-1)).toMatchObject({ sequence: 5, content: 'Another question.' })
   })
 })
 
@@ -68,7 +105,8 @@ describe('POST /threads/{thread_id}/messages', () => {
       expect((await fetchApi(apiEndpoints.thread.path({ threadId }))).body).toMatchObject({
         current_stage: 'planning',
         active_run_id: sent.body.run.id,
-        active_run_status: 'running',
+        latest_run_status: 'running',
+        title: 'Thesis tracker',
       })
     },
   )

@@ -12,14 +12,37 @@ import {
 import {
   clearGroupTab,
   joinTabGroups,
-  placeTab,
+  placeOpenedTab,
   setGroupTab,
+  setGroupTabOrNone,
   splitTabGroups,
 } from './editor-tabs.utils'
 
 interface OpenTabOptions {
   /** Opens the tab as a kept tab instead of the preview tab of its group. */
   keep?: boolean
+  /** The title is a stand-in until the page knows its own: a tab already open keeps its title. */
+  isTitleProvisional?: boolean
+}
+
+/**
+ * What a page asked of its tab before the tab opened: to be kept, and to take the place of an open
+ * tab, which gives it the state of that tab, kept or preview, instead of a place of its own.
+ */
+interface PendingOpen {
+  href: string
+  keep: boolean
+  replaceTabId: string | null
+  /** What the opener calls the page, for the tab while the page does not know its own title. */
+  title: string | null
+}
+
+/** What the page at `href` was already asked of its tab, else nothing. */
+function pendingOf(state: Pick<EditorTabsState, 'pendingOpen'>, href: string): PendingOpen {
+  const { pendingOpen } = state
+  return pendingOpen?.href === href
+    ? pendingOpen
+    : { href, keep: false, replaceTabId: null, title: null }
 }
 
 /** The tab strips of every group, which are stored, and what the tabs keep for the session only. */
@@ -35,8 +58,8 @@ interface EditorTabsState {
   onScreen: Record<string, string>
   /** By group, the id of the tab whose page was on screen last, kept after the page leaves. */
   lastShown: Record<string, string>
-  /** The address of a page asked to be kept before its tab opened; the next tab of it is kept. */
-  keepNext: string | null
+  /** What the next tab of one page is asked to be when it opens; one page waits at a time. */
+  pendingOpen: PendingOpen | null
   /**
    * Opens the tab of the page on screen, or gives an open tab its new title. A new tab is the
    * preview tab of its group: it takes the place of the preview tab open, else it goes after the
@@ -51,6 +74,13 @@ interface EditorTabsState {
    * its tab opens, for a double click whose first click is still opening the page.
    */
   keepPage: (href: string) => void
+  /** Asks the tab of the page at `href` to take the place of tab `tabId` when it opens. */
+  replacePage: (href: string, tabId: string) => void
+  /**
+   * Gives the tab of the page at `href` the title that its opener calls it, for as long as the page
+   * does not know its own, so that a page that fails to load still has a tab that names it.
+   */
+  namePage: (href: string, title: string) => void
   /** The page of the tab leaves the screen. */
   leaveTab: (group: string, id: string) => void
   /** Closes the tabs `ids` of the group at once: one tab, every tab but one, or all of them. */
@@ -71,25 +101,27 @@ export const useEditorTabsStore = create<EditorTabsState>()(
       preview: {},
       onScreen: {},
       lastShown: {},
-      keepNext: null,
+      pendingOpen: null,
       openTab: (group, tab, options = {}) => {
         set((state) => {
-          const isAsked = state.keepNext === tab.href
-          const isKept = options.keep === true || isAsked
+          const pending = state.pendingOpen?.href === tab.href ? state.pendingOpen : null
           const tabs = state.groups[group] ?? []
-          const isOpen = tabs.some(({ id }) => id === tab.id)
-          const previewId = state.preview[group]
-          const isReplacing = !isOpen && !isKept && tabs.some(({ id }) => id === previewId)
-          const placed = isReplacing
-            ? tabs.map((open) => (open.id === previewId ? tab : open))
-            : placeTab(tabs, tab, state.lastShown[group])
-          let preview = state.preview
-          if (isKept) preview = clearGroupTab(preview, group, tab.id)
-          else if (!isOpen) preview = setGroupTab(preview, group, tab.id)
+          const open = tabs.find(({ id }) => id === tab.id)
+          const providedTitle = open === undefined ? (pending?.title ?? tab.title) : open.title
+          const titled =
+            options.isTitleProvisional === true ? { ...tab, title: providedTitle } : tab
+          const placed = placeOpenedTab({
+            tabs,
+            tab: titled,
+            previewId: state.preview[group],
+            lastShownId: state.lastShown[group],
+            isKept: options.keep === true || pending?.keep === true,
+            replaceTabId: pending?.replaceTabId ?? null,
+          })
           return {
-            groups: placed === tabs ? state.groups : { ...state.groups, [group]: placed },
-            preview,
-            keepNext: isAsked ? null : state.keepNext,
+            groups: placed.tabs === tabs ? state.groups : { ...state.groups, [group]: placed.tabs },
+            preview: setGroupTabOrNone(state.preview, group, placed.previewId),
+            pendingOpen: pending === null ? state.pendingOpen : null,
             onScreen: setGroupTab(state.onScreen, group, tab.id),
             lastShown: setGroupTab(state.lastShown, group, tab.id),
           }
@@ -104,7 +136,19 @@ export const useEditorTabsStore = create<EditorTabsState>()(
             const open = tabs.find((tab) => tab.href === href)
             if (open !== undefined) return { preview: clearGroupTab(state.preview, group, open.id) }
           }
-          return { keepNext: href }
+          return { pendingOpen: { ...pendingOf(state, href), keep: true } }
+        })
+      },
+      replacePage: (href, tabId) => {
+        set((state) => ({ pendingOpen: { ...pendingOf(state, href), replaceTabId: tabId } }))
+      },
+      namePage: (href, title) => {
+        set((state) => {
+          // A tab that is open already has its title; nothing opens for the hint to name.
+          const isOpen = Object.values(state.groups).some((tabs) =>
+            tabs.some((tab) => tab.href === href),
+          )
+          return isOpen ? state : { pendingOpen: { ...pendingOf(state, href), title } }
         })
       },
       leaveTab: (group, id) => {

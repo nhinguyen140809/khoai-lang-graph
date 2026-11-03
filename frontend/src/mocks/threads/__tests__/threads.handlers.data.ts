@@ -1,5 +1,6 @@
 import { apiEndpoints } from '@/shared/api/endpoints'
 import { HttpStatus } from '@/shared/api/http'
+import type { RejectedRequestCase } from '@/test/suites'
 
 import { projectIds, runIds, threadIds } from '../../shared/db'
 
@@ -39,24 +40,24 @@ export const threadRunStateCases = [
     thread: {
       project_id: projectIds.mentor,
       active_run_id: runIds.mentorMain3,
-      active_run_status: 'interrupted',
+      latest_run_status: 'interrupted',
       current_stage: 'analysis_review',
     },
   },
   {
     name: 'is running',
-    address: '/?mock-run-state=running',
-    thread: { active_run_id: runIds.mentorMain3, active_run_status: 'running' },
+    address: '/?mock-run-status=running',
+    thread: { active_run_id: runIds.mentorMain3, latest_run_status: 'running' },
   },
   {
     name: 'failed',
-    address: '/?mock-run-state=failed',
-    thread: { active_run_id: null, active_run_status: null },
+    address: '/?mock-run-status=failed',
+    thread: { active_run_id: null, latest_run_status: 'failed' },
   },
   {
     name: 'is done',
-    address: '/?mock-run-state=done',
-    thread: { active_run_id: null, active_run_status: null },
+    address: '/?mock-run-status=done',
+    thread: { active_run_id: null, latest_run_status: 'succeeded' },
   },
 ]
 
@@ -96,5 +97,79 @@ export const threadErrorCases = [
     path: apiEndpoints.thread.path({ threadId: threadIds.mentorMain }),
     status: HttpStatus.InternalServerError,
     code: 'internal_error',
+  },
+]
+
+/** The requests that change a thread that the mock server refuses, and the answers. */
+export const threadRejectedCases: RejectedRequestCase[] = [
+  {
+    name: 'answers 404 for PATCH of a thread that does not exist',
+    method: 'PATCH',
+    path: apiEndpoints.thread.path({ threadId: 'no-such-thread' }),
+    body: '{"title": "New"}',
+    status: HttpStatus.NotFound,
+  },
+  {
+    name: 'answers 404 for DELETE of a thread that does not exist',
+    method: 'DELETE',
+    path: apiEndpoints.thread.path({ threadId: 'no-such-thread' }),
+    status: HttpStatus.NotFound,
+  },
+  {
+    name: 'answers 409 for DELETE of the mentor thread while its run waits',
+    method: 'DELETE',
+    path: apiEndpoints.thread.path({ threadId: threadIds.mentorMain }),
+    status: HttpStatus.Conflict,
+    answer: { code: 'invalid_state' },
+  },
+  {
+    name: 'answers 422 for a blank title of a new thread',
+    method: 'POST',
+    path: apiEndpoints.projectThreads.path({ projectId: projectIds.mentor }),
+    body: '{"title": "  "}',
+    status: HttpStatus.UnprocessableContent,
+    answer: { errors: [{ field: 'title', message: 'Enter a value.' }] },
+  },
+  {
+    name: 'answers 422 for a null title on PATCH',
+    method: 'PATCH',
+    path: apiEndpoints.thread.path({ threadId: threadIds.campusMain }),
+    body: '{"title": null}',
+    status: HttpStatus.UnprocessableContent,
+    answer: { errors: [{ field: 'title', message: 'Enter a value.' }] },
+  },
+  {
+    name: 'answers 422 for an unknown status',
+    method: 'PATCH',
+    path: apiEndpoints.thread.path({ threadId: threadIds.campusMain }),
+    body: '{"status": "closed"}',
+    status: HttpStatus.UnprocessableContent,
+    answer: { errors: [{ field: 'status', message: 'Choose one of the values.' }] },
+  },
+  {
+    name: 'answers 500 in the error scenario of creating a thread',
+    method: 'POST',
+    path: apiEndpoints.projectThreads.path({ projectId: projectIds.mentor }),
+    body: '{}',
+    page: '/?mock-create-thread=error',
+    status: HttpStatus.InternalServerError,
+    answer: { code: 'internal_error' },
+  },
+  {
+    name: 'answers 500 in the error scenario of updating a thread',
+    method: 'PATCH',
+    path: apiEndpoints.thread.path({ threadId: threadIds.campusMain }),
+    body: '{"title": "New"}',
+    page: '/?mock-update-thread=error',
+    status: HttpStatus.InternalServerError,
+    answer: { code: 'internal_error' },
+  },
+  {
+    name: 'answers 500 in the error scenario of deleting a thread',
+    method: 'DELETE',
+    path: apiEndpoints.thread.path({ threadId: threadIds.laundryMain }),
+    page: '/?mock-delete-thread=error',
+    status: HttpStatus.InternalServerError,
+    answer: { code: 'internal_error' },
   },
 ]

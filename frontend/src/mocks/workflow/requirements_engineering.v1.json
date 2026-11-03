@@ -180,18 +180,18 @@
     }
   ],
   "item_kinds": [
-    { "kind": "section", "schema_version": 1 },
-    { "kind": "persona", "schema_version": 1 },
-    { "kind": "interview_message", "schema_version": 1 },
-    { "kind": "raw_requirement", "schema_version": 1 },
-    { "kind": "analyzed_requirement", "schema_version": 1 },
-    { "kind": "latent_need", "schema_version": 1 },
-    { "kind": "assumption", "schema_version": 1 },
-    { "kind": "ambiguity_issue", "schema_version": 1 },
-    { "kind": "conflict", "schema_version": 1 },
-    { "kind": "spec_requirement", "schema_version": 1 },
-    { "kind": "backlog_item", "schema_version": 1 },
-    { "kind": "validation_issue", "schema_version": 1 }
+    { "kind": "section", "schema_version": 1, "issue": null },
+    { "kind": "persona", "schema_version": 1, "issue": null },
+    { "kind": "interview_message", "schema_version": 1, "issue": null },
+    { "kind": "raw_requirement", "schema_version": 1, "issue": null },
+    { "kind": "analyzed_requirement", "schema_version": 1, "issue": null },
+    { "kind": "latent_need", "schema_version": 1, "issue": null },
+    { "kind": "assumption", "schema_version": 1, "issue": null },
+    { "kind": "ambiguity_issue", "schema_version": 1, "issue": { "status_field": "status", "open_values": ["open"] } },
+    { "kind": "conflict", "schema_version": 1, "issue": { "status_field": "status", "open_values": ["open"] } },
+    { "kind": "spec_requirement", "schema_version": 1, "issue": null },
+    { "kind": "backlog_item", "schema_version": 1, "issue": null },
+    { "kind": "validation_issue", "schema_version": 1, "issue": { "status_field": "status", "open_values": ["open"] } }
   ],
   "link_types": [
     {
@@ -390,31 +390,35 @@
     "properties": {
       "target_personas_num": {
         "type": "integer",
+        "title": "Number of interviewees",
         "minimum": 1,
         "maximum": 10,
         "default": 3,
-        "description": "How many personas to generate."
+        "description": "How many interviewees take part in the interviews."
       },
       "max_personas": {
         "type": "integer",
+        "title": "Maximum interviewees",
         "minimum": 1,
         "maximum": 10,
         "default": 3,
-        "description": "Upper bound on personas interviewed. Not lower than target_personas_num."
+        "description": "The largest number of interviewees who may be interviewed. It should not be lower than the number of interviewees above."
       },
       "max_turns": {
         "type": "integer",
+        "title": "Maximum turns per interviewee",
         "minimum": 1,
         "maximum": 20,
         "default": 6,
-        "description": "Upper bound on question and answer turns per persona."
+        "description": "The longest an interview may run, counted in questions and answers."
       },
       "max_iterations": {
         "type": "integer",
+        "title": "Maximum review rounds",
         "minimum": 0,
         "maximum": 5,
         "default": 2,
-        "description": "Upper bound on rework loops."
+        "description": "How many times the results may be revised after a review."
       }
     },
     "required": ["target_personas_num", "max_personas", "max_turns", "max_iterations"]

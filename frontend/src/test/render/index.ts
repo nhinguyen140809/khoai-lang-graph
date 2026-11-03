@@ -1,4 +1,6 @@
 export { Broken } from './Broken'
+export { renderDocumentsFrame } from './render-documents-frame.utils'
 export { renderHookWithProviders, renderWithProviders } from './render-with-providers.utils'
+export { renderWorkbench } from './render-workbench.utils'
 export { createTestQueryClient } from './test-query-client.utils'
 export { TestProviders } from './TestProviders'

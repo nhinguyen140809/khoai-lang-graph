@@ -841,6 +841,7 @@ A requirement as stated in an interview, before any rewriting.
 
 | Field | Type | Notes |
 |---|---|---|
+| `title` | string | A short name of at most 60 characters. For example "Find a mentor in my field" |
 | `statement` | string | Close to the persona's own words |
 | `topic` | string? | One of the plan's `topics` |
 
@@ -852,6 +853,7 @@ A requirement after analysis: merged, classified and prioritized.
 
 | Field | Type | Notes |
 |---|---|---|
+| `title` | string | A short name of at most 60 characters. For example "List mentors by field" |
 | `statement` | string | Rewritten to be clear and atomic |
 | `type` | enum | `functional`, `non_functional`, `constraint` |
 | `quality_category` | string? | For `non_functional`. From the value list `quality_category`; version 1: `performance`, `security`, `usability`, `reliability`, `maintainability`, `compatibility`, `portability` |
@@ -866,6 +868,7 @@ A need no persona stated directly, inferred from what they said.
 
 | Field | Type | Notes |
 |---|---|---|
+| `title` | string | A short name of at most 60 characters. For example "Trust before booking" |
 | `description` | string | |
 | `reasoning` | string | Why the analyst inferred it |
 | `confidence` | enum | `low`, `medium`, `high` |
@@ -879,6 +882,7 @@ Something taken as true without confirmation.
 
 | Field | Type | Notes |
 |---|---|---|
+| `title` | string | A short name of at most 60 characters. For example "A session lasts one hour" |
 | `statement` | string | |
 | `reasoning` | string | Why it was assumed |
 | `impact_if_wrong` | string | |
@@ -892,6 +896,7 @@ A statement that can be read in more than one way or lacks needed detail.
 
 | Field | Type | Notes |
 |---|---|---|
+| `title` | string | A short name of at most 60 characters. For example "Session length unknown" |
 | `description` | string | |
 | `ambiguity_type` | string | From the value list `ambiguity_type`; version 1: `lexical`, `syntactic`, `semantic`, `vague`, `incomplete` |
 | `ambiguous_text` | string | The exact wording at issue |
@@ -907,6 +912,7 @@ Two or more requirements, or the wishes of two or more personas, that cannot all
 
 | Field | Type | Notes |
 |---|---|---|
+| `title` | string | A short name of at most 60 characters. For example "Who approves a booking" |
 | `description` | string | |
 | `conflict_type` | string | From the value list `conflict_type`; version 1: `between_requirements`, `between_stakeholders`, `with_constraint` |
 | `severity` | enum | `low`, `medium`, `high` |
@@ -993,6 +999,7 @@ ValidationIssue:
 
 | Field | Type | Notes |
 |---|---|---|
+| `title` | string | A short name of at most 60 characters. For example "REQ-005 lacks acceptance criteria" |
 | `category` | string | From the value list `validation_category`; version 1: `elicitation`, `analysis`, `specification`, `backlog`, `traceability` |
 | `severity` | enum | `low`, `medium`, `high` |
 | `description` | string | |
@@ -1281,6 +1288,7 @@ Example of a prompt view. `derived_from` and `involves` hold the targets of the 
 ```json
 {
   "key": "AR-003",
+  "title": "Search mentors by field",
   "statement": "A student can filter mentors by field of study.",
   "type": "functional",
   "priority": "must",

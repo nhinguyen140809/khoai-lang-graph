@@ -2,7 +2,7 @@ import { loginHref, registerHref } from '../auth-hrefs.utils'
 
 /** A page of the app to return to, kept as it is. */
 export const keptNextPaths = [
-  '/projects/p1/console?mock-run-state=done',
+  '/projects/p1/console?mock-run-status=done',
   '/projects/p1/console#step-3',
   '/settings',
 ]

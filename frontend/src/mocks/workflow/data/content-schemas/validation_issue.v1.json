@@ -8,12 +8,31 @@
   "x-schema-version": 1,
   "x-key-prefix": "VAL",
   "x-ui-display": "table",
-  "x-ui-title-field": "description",
-  "x-ui-list-fields": ["description", "category", "severity", "status"],
-  "x-ui-field-order": ["category", "severity", "description", "suggestion", "status"],
+  "x-ui-navigable": true,
+  "x-ui-title-field": "title",
+  "x-ui-list-fields": [
+    "title",
+    "category",
+    "severity",
+    "status"
+  ],
+  "x-ui-field-order": [
+    "title",
+    "category",
+    "severity",
+    "description",
+    "suggestion",
+    "status"
+  ],
   "type": "object",
   "additionalProperties": false,
   "properties": {
+    "title": {
+      "title": "Title",
+      "type": "string",
+      "description": "A short name of at most 60 characters that tells the point of the item at a glance, for example \"Find a mentor in my field\".",
+      "x-ui-widget": "text"
+    },
     "category": {
       "title": "Category",
       "type": "string",
@@ -24,7 +43,11 @@
     "severity": {
       "title": "Severity",
       "type": "string",
-      "enum": ["low", "medium", "high"],
+      "enum": [
+        "low",
+        "medium",
+        "high"
+      ],
       "description": "How serious the issue is.",
       "x-ui-widget": "select"
     },
@@ -36,17 +59,31 @@
     },
     "suggestion": {
       "title": "Suggestion",
-      "type": ["string", "null"],
+      "type": [
+        "string",
+        "null"
+      ],
       "description": "How to fix it.",
       "x-ui-widget": "textarea"
     },
     "status": {
       "title": "Status",
       "type": "string",
-      "enum": ["open", "fixed", "dismissed"],
+      "enum": [
+        "open",
+        "fixed",
+        "dismissed"
+      ],
       "description": "State of the issue.",
       "x-ui-widget": "select"
     }
   },
-  "required": ["category", "severity", "description", "suggestion", "status"]
+  "required": [
+    "title",
+    "category",
+    "severity",
+    "description",
+    "suggestion",
+    "status"
+  ]
 }

@@ -296,8 +296,8 @@ Rules:
       { "item_id": "8c21...", "kind": "persona", "key": "PER-002", "version": 2 }
     ],
     "interview_transcripts": [
-      { "artifact_id": "b1f0...", "kind": "interview_transcript", "title": "Interview with PER-001", "version": 7 },
-      { "artifact_id": "b1f1...", "kind": "interview_transcript", "title": "Interview with PER-002", "version": 2 }
+      { "artifact_id": "b1f0...", "kind": "interview_transcript", "title": "Interview with the student", "version": 7 },
+      { "artifact_id": "b1f1...", "kind": "interview_transcript", "title": "Interview with the mentor", "version": 2 }
     ]
   }
 }
@@ -734,6 +734,7 @@ Kinds and their schemas, `GET /artifact-kinds`. The display name of a kind is th
             "title": "Requirement",
             "x-key-prefix": "REQ",
             "x-ui-display": "table",
+            "x-ui-navigable": true,
             "x-ui-title-field": "title",
             "x-ui-list-fields": ["title", "type", "priority", "verification_method"],
             "x-ui-field-order": ["title", "statement", "type", "quality_category", "priority", "rationale", "acceptance_criteria", "fit_criterion", "verification_method"],

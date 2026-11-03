@@ -1,5 +1,7 @@
-import { act, renderHook } from '@testing-library/react'
+import { renderHook } from '@testing-library/react'
 import { beforeEach, describe, expect, it, vi } from 'vitest'
+
+import { advanceTimers } from '@/test/steps'
 
 import { useNow } from '../useNow'
 
@@ -12,14 +14,10 @@ describe('useNow', () => {
     const { result } = renderHook(() => useNow(1000))
     expect(result.current.toISOString()).toBe('2026-10-10T12:00:00.000Z')
 
-    act(() => {
-      vi.advanceTimersByTime(999)
-    })
+    advanceTimers(999)
     expect(result.current.toISOString()).toBe('2026-10-10T12:00:00.000Z')
 
-    act(() => {
-      vi.advanceTimersByTime(1)
-    })
+    advanceTimers(1)
     expect(result.current.toISOString()).toBe('2026-10-10T12:00:01.000Z')
   })
 })

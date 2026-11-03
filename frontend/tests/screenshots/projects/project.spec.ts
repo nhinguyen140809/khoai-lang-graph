@@ -17,6 +17,21 @@ async function openCommandPalette(user: UserSteps) {
 }
 
 screenshots('Project', (shot) => {
+  // The states of the status of a project differ in the status bar only.
+  const statusShot = (
+    name: string,
+    address: string,
+    ready: string | { role: 'progressbar'; name: string },
+  ) => {
+    shot(`Status: ${name}`, async ({ page, user, shoot }) => {
+      await page.goto(address)
+
+      if (typeof ready === 'string') await user.expectText(ready)
+      else await user.expectRole(ready.role, ready.name)
+      await shoot({ part: page.getByRole('contentinfo') })
+    })
+  }
+
   shot.at('Frame of the mentor platform', mentor)
 
   shot('Project menu', async ({ page, user, shoot }) => {
@@ -110,6 +125,39 @@ screenshots('Project', (shot) => {
 
     await openCommandPalette(user)
     await user.typeText('rename')
+    await shoot()
+  })
+
+  statusShot('waiting for you', mentor, 'Waiting for you: Reviewing the analysis')
+  statusShot('working', `${mentor}?mock-run-status=running`, 'Working: Analysing the interviews')
+  statusShot('done', `${mentor}?mock-run-status=done`, 'Done')
+  statusShot('not started', `${mentor}?mock-runs=empty`, 'Not started')
+  statusShot('loading', `${mentor}?mock-threads=loading`, 'Loading status')
+  statusShot('error', `${mentor}?mock-threads=error`, 'Failed to load the status.')
+  // The amounts of the budget show in a tooltip, so the meter is what the page waits for.
+  statusShot('budget near its limit', `${mentor}?mock-budget=warning`, {
+    role: 'progressbar',
+    name: 'Monthly budget used',
+  })
+  statusShot('budget nearly spent', `${mentor}?mock-budget=danger`, {
+    role: 'progressbar',
+    name: 'Monthly budget used',
+  })
+
+  shot('Status: failed, with the reason in a tooltip', async ({ page, user, shoot }) => {
+    await page.goto(`${mentor}?mock-run-status=failed`)
+
+    const link = page.getByRole('link', { name: /^Failed/ })
+    await link.hover()
+    await user.expectRole('tooltip')
+    await shoot({ hover: link })
+  })
+
+  shot('Stop run dialog', async ({ page, user, shoot }) => {
+    await page.goto(mentor)
+
+    await user.pressButton('Stop')
+    await user.expectRole('alertdialog', 'Stop the run?')
     await shoot()
   })
 })

@@ -66,7 +66,7 @@ export const unfinishedRunCountCases = [
   },
   {
     name: 'a project whose run the scenario sets running',
-    address: '/?mock-run-state=running',
+    address: '/?mock-run-status=running',
     projectId: projectIds.mentor,
     counts: { queued: 0, running: 1, interrupted: 0 },
   },
@@ -82,7 +82,7 @@ export const rollupRunStatusCases = [
   },
   {
     name: 'a project whose failed run a later run of its thread replaced',
-    address: '/?mock-run-state=done',
+    address: '/?mock-run-status=done',
     projectId: projectIds.mentor,
     status: 'succeeded',
   },
@@ -282,6 +282,11 @@ export const projectStatusChangeCases = [
 
 /** PATCH /projects/{project_id} with a body that the API does not take, and the problems it says. */
 const invalidProjectChangeCases = [
+  {
+    name: 'run settings with a field of the wrong type',
+    body: '{"run_config": {"max_steps": "five"}}',
+    errors: [{ field: 'run_config.max_steps', message: 'Send a value of type integer or null.' }],
+  },
   {
     name: 'a status that a project does not have',
     body: '{"status": "deleted"}',

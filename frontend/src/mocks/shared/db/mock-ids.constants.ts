@@ -15,9 +15,23 @@ export const IdPrefix = {
   Artifact: 'a7f3',
   Item: 'c41e',
   Export: 'e8d0',
+  TraceLink: 'd7a1',
+  Directive: '3b7c',
+  Decision: 'a41e',
+  Interrupt: '7b0c',
+  ModelSetting: '6d1e',
+  Session: '5e55',
 } as const
 
 export const userId = mockId(IdPrefix.User, 1)
+
+export const sessionIds = {
+  /** The session of this browser. */
+  current: mockId(IdPrefix.Session, 1),
+  phone: mockId(IdPrefix.Session, 2),
+  laptop: mockId(IdPrefix.Session, 3),
+  revoked: mockId(IdPrefix.Session, 4),
+}
 
 export const projectIds = {
   mentor: mockId(IdPrefix.Project, 1),
@@ -45,6 +59,9 @@ export const runIds = {
   libraryMain1: mockId('7e10', 3),
   laundryMain1: mockId('7e10', 4),
 }
+
+/** The run that `POST /threads/{thread_id}/runs` answers; the mock server keeps no record of it. */
+export const startedRunId = mockId(IdPrefix.Run, 2)
 
 export const personaIds = [
   mockId(IdPrefix.Persona, 1),

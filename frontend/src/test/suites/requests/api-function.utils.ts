@@ -6,12 +6,15 @@ import { ApiError } from '@/shared/api/error'
 import { recordRequests } from '../../msw'
 import type { ApiErrorCase, SentRequestCase } from './api-function.types'
 
-/** Tests that each call sends the request it should. */
+/**
+ * Tests that each call sends the request it should. Only the request counts: the call may be
+ * refused by the mock server for an id it does not hold, and its outcome is ignored.
+ */
 export function itSendsRequests(cases: readonly SentRequestCase[]) {
   it.each(cases)('$name', async ({ call, request }) => {
     const requests = recordRequests(Object.keys(request.headers ?? {}))
 
-    await call()
+    await call().catch(() => undefined)
 
     await vi.waitFor(() => {
       expect(requests).toEqual([request])

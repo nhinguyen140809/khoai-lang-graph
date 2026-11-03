@@ -8,8 +8,13 @@
   "x-schema-version": 1,
   "x-key-prefix": "PER",
   "x-ui-display": "cards",
+  "x-ui-navigable": true,
   "x-ui-title-field": "name",
-  "x-ui-list-fields": ["name", "stakeholder_type", "interview_status"],
+  "x-ui-list-fields": [
+    "name",
+    "stakeholder_type",
+    "interview_status"
+  ],
   "x-ui-field-order": [
     "name",
     "stakeholder_type",
@@ -105,7 +110,11 @@
     "interview_status": {
       "title": "Interview status",
       "type": "string",
-      "enum": ["not_started", "in_progress", "completed"],
+      "enum": [
+        "not_started",
+        "in_progress",
+        "completed"
+      ],
       "description": "Progress of the interview with this persona. Set by the system.",
       "x-ui-widget": "select",
       "readOnly": true

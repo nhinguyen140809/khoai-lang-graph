@@ -2,6 +2,7 @@ import { beforeEach, describe, expect, it } from 'vitest'
 
 import { browserStorage } from '@/shared/lib/storage'
 
+import { tabsOf } from '../../__tests__/tab-state.utils.data'
 import { useEditorTabsStore } from '../editor-tabs.store'
 import { neighborTab } from '../editor-tabs.utils'
 import {
@@ -38,12 +39,28 @@ describe('useEditorTabsStore', () => {
 
     const state = useEditorTabsStore.getState()
     expect({
-      tabs: state.groups[group] ?? [],
-      preview: state.preview[group] ?? null,
-      onScreen: state.onScreen[group] ?? null,
-      lastShown: state.lastShown[group] ?? null,
-      keepNext: state.keepNext,
+      ...tabsOf(group),
+      keepNext: state.pendingOpen?.keep === true ? state.pendingOpen.href : null,
     }).toEqual({ tabs, preview, onScreen, lastShown, keepNext })
+  })
+
+  it('keeps no title for a page whose tab is open already', () => {
+    useEditorTabsStore.getState().openTab(group, requirement)
+
+    useEditorTabsStore.getState().namePage(requirement.href, 'Find a mentor')
+
+    expect(useEditorTabsStore.getState().pendingOpen).toBeNull()
+  })
+
+  it('keeps the title for a page whose tab is not open', () => {
+    useEditorTabsStore.getState().namePage(requirement.href, 'Find a mentor')
+
+    expect(useEditorTabsStore.getState().pendingOpen).toEqual({
+      href: requirement.href,
+      keep: false,
+      replaceTabId: null,
+      title: 'Find a mentor',
+    })
   })
 
   it.each(storedTabsCases)('reads $name', async ({ stored, groups, preview }) => {

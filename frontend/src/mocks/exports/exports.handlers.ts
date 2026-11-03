@@ -4,9 +4,10 @@ import type { Export } from '@/modules/artifact/entities'
 import { apiEndpoints } from '@/shared/api/endpoints'
 import { HttpHeader, MediaType } from '@/shared/api/http'
 
+import { artifactRefOf } from '../artifacts/artifact-refs.utils'
 import { findProject } from '../projects/projects.lookup'
 import { projectNotFound } from '../projects/projects.problems'
-import { createdId, IdPrefix, mockNow, userId } from '../shared/db'
+import { IdPrefix, mockNow, nextCreatedId, userId } from '../shared/db'
 import { idempotent, pathParam, readBodyFields } from '../shared/http/request'
 import { accepted, emptyPage, paginate, validationFailed } from '../shared/http/response'
 import { answerScenario } from '../shared/scenario'
@@ -31,19 +32,14 @@ export const exportHandlers = [
       const { template, format } = read
       const exported = exportedArtifacts(projectId, template)
       const entry: Export = {
-        id: createdId(IdPrefix.Export, createdExports.get().length + 1),
+        id: nextCreatedId(IdPrefix.Export, createdExports),
         project_id: projectId,
         template,
         format,
         status: 'pending',
         file_name: `${template}.${exportFileExtensions[format] ?? format}`,
         requested_by: userId,
-        included_artifacts: exported.map(({ id, kind, title, version }) => ({
-          artifact_id: id,
-          kind,
-          title,
-          version,
-        })),
+        included_artifacts: exported.map(artifactRefOf),
         size_bytes: null,
         download_url: null,
         created_at: mockNow(),

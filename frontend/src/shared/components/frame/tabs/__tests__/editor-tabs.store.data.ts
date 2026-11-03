@@ -19,11 +19,12 @@ export const conflict: EditorTab = {
 }
 
 const open =
-  (tab: EditorTab, options?: { keep: boolean }): Step =>
+  (tab: EditorTab, options?: { keep?: boolean; isTitleProvisional?: boolean }): Step =>
   (store) => {
     store.openTab(group, tab, options)
   }
 const kept = { keep: true }
+const provisional = { isTitleProvisional: true }
 const leave =
   (tab: EditorTab): Step =>
   (store) => {
@@ -48,6 +49,18 @@ const keepPage =
     store.keepPage(tab.href)
   }
 
+const nameAs =
+  (next: EditorTab, title: string): Step =>
+  (store) => {
+    store.namePage(next.href, title)
+  }
+
+const replace =
+  (next: EditorTab, current: EditorTab): Step =>
+  (store) => {
+    store.replacePage(next.href, current.id)
+  }
+
 interface TabStepsCase {
   name: string
   steps: Step[]
@@ -61,6 +74,29 @@ interface TabStepsCase {
 
 /** Things done to the tabs, in order, and the tabs they leave. */
 export const tabStepsCases: TabStepsCase[] = [
+  {
+    name: 'opens a page in the place of a kept tab on screen, and keeps the new tab',
+    steps: [
+      open(requirement, kept),
+      open(ambiguity, kept),
+      replace(conflict, ambiguity),
+      open(conflict),
+    ],
+    tabs: [requirement, conflict],
+    preview: null,
+    onScreen: conflict.id,
+    lastShown: conflict.id,
+    keepNext: null,
+  },
+  {
+    name: 'opens a page in the place of the preview tab on screen, and the new tab is the preview',
+    steps: [open(requirement, kept), open(ambiguity), replace(conflict, ambiguity), open(conflict)],
+    tabs: [requirement, conflict],
+    preview: conflict.id,
+    onScreen: conflict.id,
+    lastShown: conflict.id,
+    keepNext: null,
+  },
   {
     name: 'opens a tab once and updates its title',
     steps: [
@@ -173,6 +209,45 @@ export const tabStepsCases: TabStepsCase[] = [
     preview: null,
     onScreen: conflict.id,
     lastShown: null,
+    keepNext: null,
+  },
+  {
+    name: 'keeps the title of an open tab when the page opens it with a stand-in title',
+    steps: [open(requirement, kept), open({ ...requirement, title: 'Item' }, provisional)],
+    tabs: [requirement],
+    preview: null,
+    onScreen: requirement.id,
+    lastShown: requirement.id,
+    keepNext: null,
+  },
+  {
+    name: 'opens a tab with the title that the opener gave while the page has none of its own',
+    steps: [
+      nameAs(requirement, 'Find a mentor'),
+      open({ ...requirement, title: 'Item' }, provisional),
+    ],
+    tabs: [{ ...requirement, title: 'Find a mentor' }],
+    preview: requirement.id,
+    onScreen: requirement.id,
+    lastShown: requirement.id,
+    keepNext: null,
+  },
+  {
+    name: 'opens a tab with the title of the page once the page knows it',
+    steps: [nameAs(requirement, 'Find a mentor'), open(requirement)],
+    tabs: [requirement],
+    preview: requirement.id,
+    onScreen: requirement.id,
+    lastShown: requirement.id,
+    keepNext: null,
+  },
+  {
+    name: 'opens a tab with the stand-in title when none is open yet',
+    steps: [open({ ...requirement, title: 'Item' }, provisional)],
+    tabs: [{ ...requirement, title: 'Item' }],
+    preview: requirement.id,
+    onScreen: requirement.id,
+    lastShown: requirement.id,
     keepNext: null,
   },
   {

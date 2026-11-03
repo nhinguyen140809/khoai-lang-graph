@@ -8,12 +8,26 @@
   "x-schema-version": 1,
   "x-key-prefix": "RAW",
   "x-ui-display": "table",
-  "x-ui-title-field": "statement",
-  "x-ui-list-fields": ["statement", "topic"],
-  "x-ui-field-order": ["statement", "topic"],
+  "x-ui-navigable": true,
+  "x-ui-title-field": "title",
+  "x-ui-list-fields": [
+    "title",
+    "topic"
+  ],
+  "x-ui-field-order": [
+    "title",
+    "statement",
+    "topic"
+  ],
   "type": "object",
   "additionalProperties": false,
   "properties": {
+    "title": {
+      "title": "Title",
+      "type": "string",
+      "description": "A short name of at most 60 characters that tells the point of the item at a glance, for example \"Find a mentor in my field\".",
+      "x-ui-widget": "text"
+    },
     "statement": {
       "title": "Statement",
       "type": "string",
@@ -22,11 +36,18 @@
     },
     "topic": {
       "title": "Topic",
-      "type": ["string", "null"],
+      "type": [
+        "string",
+        "null"
+      ],
       "x-value-from": "elicitation_plan.topics",
       "description": "The plan topic it belongs to.",
       "x-ui-widget": "select"
     }
   },
-  "required": ["statement", "topic"]
+  "required": [
+    "title",
+    "statement",
+    "topic"
+  ]
 }

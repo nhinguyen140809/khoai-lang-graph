@@ -1,1 +1,1 @@
-export { ArtifactPanel } from './components/ArtifactPanel'
+export { ArtifactPanel } from './ArtifactPanel'

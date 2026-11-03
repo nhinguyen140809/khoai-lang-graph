@@ -4,7 +4,7 @@ import type { ReactNode } from 'react'
 
 import { isNotFoundError } from '@/shared/api/error'
 
-import { useProject } from '../hooks/useProjectQueries'
+import { useProject } from '../projects/hooks/useProjectQueries'
 
 interface ProjectGateProps {
   projectId: string

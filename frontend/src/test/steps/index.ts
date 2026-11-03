@@ -24,6 +24,7 @@ export {
   waitForCall,
 } from './expectations.utils'
 export { fillFields, pressButton, pressMenuItem, pressRole, replaceText } from './form.utils'
+export { openCommandPalette, statusBar } from './frame.utils'
 export {
   clickHolding,
   pasteText,
@@ -35,4 +36,5 @@ export {
 } from './keyboard.utils'
 export { waitForQueries, waitForSuccess } from './query-states.utils'
 export { expectPushedTo, expectReplacedWith } from './router-expectations.utils'
+export { advanceTimers, advanceTimersAsync } from './timers.utils'
 export { spyOnToast } from './toast.utils'

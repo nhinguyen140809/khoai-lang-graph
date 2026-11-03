@@ -5,14 +5,17 @@
 export const moduleImports = {
   workflow: [],
   artifact: ['workflow'],
+  trace: ['workflow', 'artifact'],
   run: ['workflow', 'artifact'],
   review: ['workflow', 'artifact', 'run'],
   thread: ['workflow', 'artifact', 'run', 'review'],
   project: ['workflow', 'artifact', 'run', 'review', 'thread'],
   activity: ['workflow', 'artifact', 'run', 'review', 'thread'],
+  documents: ['workflow', 'artifact', 'trace', 'run', 'review', 'thread', 'project'],
   auth: [],
-  user: ['auth'],
+  user: ['auth', 'run'],
   usage: [],
+  'llm-model': [],
   'design-system': [],
 }
 

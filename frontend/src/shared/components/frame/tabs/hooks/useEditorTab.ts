@@ -15,8 +15,14 @@ import { useTabGroup } from './useTabGroup'
  * The tab opens as the preview tab of its group, which the next page opened replaces, unless the
  * page was asked to be kept with `keepPage`. The function returned keeps the tab: the page calls it
  * when the user changes something on it.
+ *
+ * A page that shows a state of its own while it loads or fails opens its tab at once with a stand-in
+ * title and sets `isTitleProvisional`: a tab that is already open keeps the title it has.
  */
-export function useEditorTab(tab: EditorTab | null): () => void {
+export function useEditorTab(
+  tab: EditorTab | null,
+  { isTitleProvisional = false }: { isTitleProvisional?: boolean } = {},
+): () => void {
   const group = useTabGroup()
   const openTab = useEditorTabsStore((state) => state.openTab)
   const keepTab = useEditorTabsStore((state) => state.keepTab)
@@ -28,8 +34,8 @@ export function useEditorTab(tab: EditorTab | null): () => void {
 
   useEffect(() => {
     if (group === null || id === undefined || title === undefined || href === undefined) return
-    openTab(group, { id, title, href, ...(icon !== undefined && { icon }) })
-  }, [group, id, title, href, icon, openTab])
+    openTab(group, { id, title, href, ...(icon !== undefined && { icon }) }, { isTitleProvisional })
+  }, [group, id, title, href, icon, isTitleProvisional, openTab])
 
   useEffect(() => {
     if (group === null || id === undefined) return

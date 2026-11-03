@@ -4,34 +4,6 @@ import type { RejectedRequestCase } from '@/test/suites'
 
 import { threadIds } from '../../shared/db'
 
-/** The content of a first message, and the name that the mock gives its project from it. */
-export const nameFromMessageCases = [
-  { name: 'a short idea', content: 'Mentor platform', projectName: 'Mentor platform' },
-  {
-    name: 'the first words of a long line',
-    content: 'I want to build an online platform for university students.',
-    projectName: 'I want to build an',
-  },
-  {
-    name: 'the first line with text, without its last punctuation',
-    content: '\n  Thesis tracker.\nFor the supervisors of a faculty.',
-    projectName: 'Thesis tracker',
-  },
-  {
-    name: 'an idea in Vietnamese',
-    content: 'Nền tảng tìm người hướng dẫn cho sinh viên',
-    projectName: 'Nền tảng tìm người hướng',
-  },
-]
-
-/** A body of POST /threads/{thread_id}/messages that the mock refuses, as text. */
-const invalidMessageCases = [
-  { name: 'no content', body: '{}' },
-  { name: 'a blank content', body: '{"content": "  "}' },
-  { name: 'a content that is not text', body: '{"content": 3}' },
-  { name: 'a body that is not JSON', body: 'not json' },
-]
-
 /** A body of POST /projects, and the name of the project once its first message is sent. */
 export const firstMessageCases = [
   { name: 'a project without a name', project: {}, projectName: 'Thesis tracker' },
@@ -44,16 +16,103 @@ export const firstMessageCases = [
 
 const messagesPath = apiEndpoints.threadMessages.path({ threadId: threadIds.mentorMain })
 
-/** The messages that the mock refuses, and the answers. */
+/** The requests about the messages that the mock server refuses, and the answers. */
 export const messageRejectedCases: RejectedRequestCase[] = [
-  ...invalidMessageCases.map(({ name, body }): RejectedRequestCase => ({
-    name: `answers 422 for ${name}`,
+  {
+    name: 'answers 404 for GET of the messages of a thread that does not exist',
+    method: 'GET',
+    path: apiEndpoints.threadMessages.path({ threadId: 'no-such-thread' }),
+    status: HttpStatus.NotFound,
+  },
+  {
+    name: 'answers 422 for no content',
     method: 'POST',
     path: messagesPath,
-    body,
+    body: '{}',
     status: HttpStatus.UnprocessableContent,
-    answer: { errors: [{ field: 'content', message: 'Enter a message.' }] },
-  })),
+    answer: { errors: [{ field: 'content', message: 'Enter a value.' }] },
+  },
+  {
+    name: 'answers 422 for a blank content',
+    method: 'POST',
+    path: messagesPath,
+    body: '{"content": "  "}',
+    status: HttpStatus.UnprocessableContent,
+    answer: { errors: [{ field: 'content', message: 'Enter a value.' }] },
+  },
+  {
+    name: 'answers 422 for a content that is not text',
+    method: 'POST',
+    path: messagesPath,
+    body: '{"content": 3}',
+    status: HttpStatus.UnprocessableContent,
+    answer: { errors: [{ field: 'content', message: 'Enter a value.' }] },
+  },
+  {
+    name: 'answers 422 for a body that is not JSON',
+    method: 'POST',
+    path: messagesPath,
+    body: 'not json',
+    status: HttpStatus.UnprocessableContent,
+    answer: { errors: [{ field: 'content', message: 'Enter a value.' }] },
+  },
+  {
+    name: 'answers 422 for run settings with a field of the wrong type',
+    method: 'POST',
+    path: messagesPath,
+    body: '{"content": "Hi", "run_config": {"max_steps": "five"}}',
+    status: HttpStatus.UnprocessableContent,
+    answer: {
+      errors: [{ field: 'run_config.max_steps', message: 'Send a value of type integer or null.' }],
+    },
+  },
+  {
+    name: 'answers 422 for models that is not an object',
+    method: 'POST',
+    path: messagesPath,
+    body: '{"content": "Hi", "models": "sonnet"}',
+    status: HttpStatus.UnprocessableContent,
+    answer: { errors: [{ field: 'models', message: 'Send an object.' }] },
+  },
+  {
+    name: 'answers 422 for a model of a role that is not one of the definition',
+    method: 'POST',
+    path: messagesPath,
+    body: '{"content": "Hi", "models": {"chef": "anthropic:claude-sonnet-5"}}',
+    status: HttpStatus.UnprocessableContent,
+    answer: { errors: [{ field: 'models.chef', message: 'Choose one of the values.' }] },
+  },
+  {
+    name: 'answers 422 for a model that does not serve its role',
+    method: 'POST',
+    path: messagesPath,
+    body: '{"content": "Hi", "models": {"analyst": "openai:gpt-4.1-mini"}}',
+    status: HttpStatus.UnprocessableContent,
+    answer: { errors: [{ field: 'models.analyst', message: 'Choose one of the values.' }] },
+  },
+  {
+    name: 'answers 422 for a role without a model',
+    method: 'POST',
+    path: messagesPath,
+    body: '{"content": "Hi", "models": {"analyst": " "}}',
+    status: HttpStatus.UnprocessableContent,
+    answer: { errors: [{ field: 'models.analyst', message: 'Enter a value.' }] },
+  },
+  {
+    name: 'answers 404 for POST to a thread that does not exist',
+    method: 'POST',
+    path: apiEndpoints.threadMessages.path({ threadId: 'no-such-thread' }),
+    body: '{"content": "Hi"}',
+    status: HttpStatus.NotFound,
+  },
+  {
+    name: 'answers 500 in the error scenario of the messages',
+    method: 'GET',
+    path: messagesPath,
+    page: '/?mock-messages=error',
+    status: HttpStatus.InternalServerError,
+    answer: { code: 'internal_error' },
+  },
   {
     name: 'answers 500 in the error scenario of sending a message',
     method: 'POST',
@@ -62,12 +121,5 @@ export const messageRejectedCases: RejectedRequestCase[] = [
     page: '/?mock-send-message=error',
     status: HttpStatus.InternalServerError,
     answer: { code: 'internal_error' },
-  },
-  {
-    name: 'answers 404 for a thread that does not exist',
-    method: 'POST',
-    path: apiEndpoints.threadMessages.path({ threadId: 'no-such-thread' }),
-    body: '{"content": "Hi"}',
-    status: HttpStatus.NotFound,
   },
 ]

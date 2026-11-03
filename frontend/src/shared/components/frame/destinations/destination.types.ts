@@ -31,10 +31,13 @@ export interface PlannedDestination extends DestinationBase {
 export type Destination = FeatureDestination | PlannedDestination
 
 /**
- * The icons of editor tabs, by the name that a page gives its tab, such as `artifacts.item`. A
- * feature starts the names of its icons with its own name, so that two features never share one.
+ * The icons of editor tabs, by the name that a page gives its tab: a record, or a function for the
+ * names that are not all known in advance, such as one for each kind that a feature reads. A
+ * feature starts the names of its icons with its own name, such as `documents.item.table`, so that
+ * two features never share one, and registers them with `useTabIcons`. A tab whose name has no
+ * icon shows the icon of its feature.
  */
-export type TabIcons = Readonly<Record<string, ReactNode>>
+export type TabIcons = Readonly<Record<string, ReactNode>> | ((name: string) => ReactNode)
 
 /**
  * An item at the bottom of the activity bar, below the features, registered with

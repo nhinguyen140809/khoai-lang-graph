@@ -57,6 +57,17 @@ export function schemaProblems(schema: unknown, value: unknown, path: string): F
   return []
 }
 
+/**
+ * The problems of the body of a request against a schema, each at the name of its field, such as
+ * `default_run_config.max_steps`, without the dot that `schemaProblems` puts before a name.
+ */
+export function bodyProblems(schema: unknown, body: Record<string, unknown>): FieldProblem[] {
+  return schemaProblems(schema, body, '').map((problem) => ({
+    ...problem,
+    field: problem.field.replace(/^\./, ''),
+  }))
+}
+
 function recordProblems(
   schema: Record<string, unknown>,
   value: Record<string, unknown>,
