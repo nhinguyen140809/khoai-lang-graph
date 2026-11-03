@@ -27,6 +27,7 @@ export { EditorWithBottomPanel } from './panels/components/EditorWithBottomPanel
 export { SidePanel } from './panels/components/SidePanel'
 export { SidePanelSection } from './panels/components/SidePanelSection'
 export type { BottomPanelSection } from './panels/panel.types'
+export { PageLink } from './tabs/components/PageLink'
 export { useEditorTab } from './tabs/hooks/useEditorTab'
 export { useTabIcon } from './tabs/hooks/useTabIcon'
 export { useTabIcons } from './tabs/hooks/useTabIcons'
