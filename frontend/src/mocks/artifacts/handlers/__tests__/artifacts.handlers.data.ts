@@ -5,9 +5,10 @@ import type { RejectedRequestCase } from '@/test/suites'
 import { projectIds } from '../../../shared/db'
 import { artifactFixtureByKind } from '../../fixtures/artifacts.fixtures'
 
-const plan = artifactFixtureByKind(projectIds.mentor, 'elicitation_plan')
-const artifactPath = apiEndpoints.artifact.path({ artifactId: plan.id })
-const versionHeader = { [HttpHeader.IfMatch]: String(plan.version) }
+const analysis = artifactFixtureByKind(projectIds.mentor, 'requirements_analysis')
+const specification = artifactFixtureByKind(projectIds.mentor, 'requirement_specification')
+const artifactPath = apiEndpoints.artifact.path({ artifactId: analysis.id })
+const versionHeader = { [HttpHeader.IfMatch]: String(analysis.version) }
 
 /** A request the handlers refuse, and the status and code of the answer. */
 export const artifactRejectedCases: RejectedRequestCase[] = [
@@ -36,7 +37,7 @@ export const artifactRejectedCases: RejectedRequestCase[] = [
     name: 'refuses a change without the version it is based on',
     method: 'PATCH',
     path: artifactPath,
-    body: { title: 'Plan' },
+    body: { title: 'Analysis' },
     status: HttpStatus.Conflict,
     answer: { code: 'version_conflict' },
   },
@@ -44,7 +45,7 @@ export const artifactRejectedCases: RejectedRequestCase[] = [
     name: 'refuses a change based on an old version',
     method: 'PATCH',
     path: artifactPath,
-    body: { title: 'Plan' },
+    body: { title: 'Analysis' },
     headers: { [HttpHeader.IfMatch]: '1' },
     status: HttpStatus.Conflict,
     answer: { code: 'version_conflict' },
@@ -54,8 +55,27 @@ export const artifactRejectedCases: RejectedRequestCase[] = [
     page: '/?mock-run-status=running',
     method: 'PATCH',
     path: artifactPath,
-    body: { title: 'Plan' },
+    body: { title: 'Analysis' },
     headers: versionHeader,
+    status: HttpStatus.Conflict,
+    answer: { code: 'invalid_state' },
+  },
+  {
+    name: 'refuses a change when the run has ended',
+    page: '/?mock-run-status=done',
+    method: 'PATCH',
+    path: artifactPath,
+    body: { title: 'Analysis' },
+    headers: versionHeader,
+    status: HttpStatus.Conflict,
+    answer: { code: 'invalid_state' },
+  },
+  {
+    name: 'refuses a change of an artifact outside the review',
+    method: 'PATCH',
+    path: apiEndpoints.artifact.path({ artifactId: specification.id }),
+    body: { title: 'Specification' },
+    headers: { [HttpHeader.IfMatch]: String(specification.version) },
     status: HttpStatus.Conflict,
     answer: { code: 'invalid_state' },
   },
@@ -81,7 +101,7 @@ export const artifactRejectedCases: RejectedRequestCase[] = [
     name: 'refuses a content that breaks the schema',
     method: 'PATCH',
     path: artifactPath,
-    body: { content: { objectives: null } },
+    body: { content: { key_findings: null } },
     headers: versionHeader,
     status: HttpStatus.UnprocessableContent,
     answer: { code: 'validation_failed' },
@@ -97,6 +117,15 @@ export const artifactRejectedCases: RejectedRequestCase[] = [
   {
     name: 'refuses a restore while a run is running',
     page: '/?mock-run-status=running',
+    method: 'POST',
+    path: `${artifactPath}/restore`,
+    body: { version: 1 },
+    status: HttpStatus.Conflict,
+    answer: { code: 'invalid_state' },
+  },
+  {
+    name: 'refuses a restore when the run has ended',
+    page: '/?mock-run-status=done',
     method: 'POST',
     path: `${artifactPath}/restore`,
     body: { version: 1 },
@@ -134,4 +163,4 @@ export const scenarioCases = [
   },
 ]
 
-export { plan, versionHeader }
+export { analysis, versionHeader }

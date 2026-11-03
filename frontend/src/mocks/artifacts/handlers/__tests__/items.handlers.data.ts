@@ -12,6 +12,13 @@ export const mentorRequirement = itemFixtureByKey(projectId, 'REQ-001')
 export const discoverySection = itemFixtureByKey(projectId, 'SEC-004')
 export const itemPath = apiEndpoints.item.path({ itemId: mentorRequirement.id })
 export const specificationItems = apiEndpoints.artifactItems.path({ artifactId: specification.id })
+export const analysis = artifactFixtureByKind(projectId, 'requirements_analysis')
+/**
+ * An analyzed requirement of the requirements analysis, the only artifact the review that waits by
+ * default lists, so the change tests of the handlers run on it.
+ */
+export const analyzedRequirement = itemFixtureByKey(projectId, 'AR-001')
+export const analysisItems = apiEndpoints.artifactItems.path({ artifactId: analysis.id })
 
 /** A read the handlers refuse, and the status and code of the answer. */
 export const itemRejectedCases: RejectedRequestCase[] = [

@@ -17,6 +17,8 @@ import {
 const projectId = projectIds.mentor
 /** An artifact at version 2 of the mentor project. */
 const plan = artifactFixtureByKind(projectId, 'elicitation_plan')
+/** The requirements analysis, the only artifact the review that waits by default lists. */
+export const analysis = artifactFixtureByKind(projectId, 'requirements_analysis')
 const artifactPath = apiEndpoints.artifact.path({ artifactId: plan.id })
 
 /** A call of the artifacts API, and the request it sends. */

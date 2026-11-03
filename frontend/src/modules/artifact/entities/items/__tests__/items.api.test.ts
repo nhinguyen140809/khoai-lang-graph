@@ -14,8 +14,10 @@ import {
   updateItem,
 } from '../items.api'
 import {
+  analysis,
+  analyzedRequirement,
   apiErrorCases,
-  newRequirement,
+  newAnalyzedRequirement,
   requirement,
   sentRequestCases,
   specification,
@@ -57,27 +59,33 @@ describe('items api', () => {
   })
 
   it('reads an item as it was at an older version', async () => {
-    const edited = await updateItem(requirement.id, requirement.version, {
-      content: { title: 'Find mentors' },
+    const edited = await updateItem(analyzedRequirement.id, analyzedRequirement.version, {
+      content: { title: 'List mentors fast' },
     })
 
-    const older = await getItem(requirement.id, requirement.version)
+    const older = await getItem(analyzedRequirement.id, analyzedRequirement.version)
 
-    expect(older.content.title).toBe(requirement.content.title)
-    expect(edited.content.title).toBe('Find mentors')
+    expect(older.content.title).toBe(analyzedRequirement.content.title)
+    expect(edited.content.title).toBe('List mentors fast')
   })
 
   it('makes an item that gets the next key of its kind', async () => {
-    const created = await createItem(specification.id, newRequirement)
+    const created = await createItem(analysis.id, newAnalyzedRequirement)
 
-    expect(created).toMatchObject({ kind: 'spec_requirement', version: 1, review_status: 'draft' })
-    expect(created.key).toMatch(/^REQ-0\d\d$/)
+    expect(created).toMatchObject({
+      kind: 'analyzed_requirement',
+      version: 1,
+      review_status: 'draft',
+    })
+    expect(created.key).toMatch(/^AR-0\d\d$/)
   })
 
   it('does not find a deleted item again', async () => {
-    await deleteItem(requirement.id)
+    await deleteItem(analyzedRequirement.id)
 
-    await expect(getItem(requirement.id)).rejects.toMatchObject({ status: HttpStatus.NotFound })
+    await expect(getItem(analyzedRequirement.id)).rejects.toMatchObject({
+      status: HttpStatus.NotFound,
+    })
   })
 
   itSendsRequests(sentRequestCases)
@@ -85,10 +93,14 @@ describe('items api', () => {
   it('sends the version that a change is based on in If-Match', async () => {
     const requests = recordRequests([HttpHeader.IfMatch])
 
-    await updateItem(requirement.id, requirement.version, { content: { title: 'x' } })
+    await updateItem(analyzedRequirement.id, analyzedRequirement.version, {
+      content: { title: 'x' },
+    })
 
     await vi.waitFor(() => {
-      expect(requests[0]?.headers).toEqual({ [HttpHeader.IfMatch]: String(requirement.version) })
+      expect(requests[0]?.headers).toEqual({
+        [HttpHeader.IfMatch]: String(analyzedRequirement.version),
+      })
     })
   })
 

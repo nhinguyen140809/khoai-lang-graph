@@ -7,13 +7,13 @@ import { itRejectsRequests } from '@/test/suites'
 
 import { projectIds } from '../../../shared/db'
 import {
+  analysis,
   artifactRejectedCases,
-  plan,
   scenarioCases,
   versionHeader,
 } from './artifacts.handlers.data'
 
-const artifactPath = apiEndpoints.artifact.path({ artifactId: plan.id })
+const artifactPath = apiEndpoints.artifact.path({ artifactId: analysis.id })
 
 describe('the artifact handlers', () => {
   itRejectsRequests(artifactRejectedCases)
@@ -38,22 +38,24 @@ describe('the artifact handlers', () => {
     const saved = await callApi({
       method: 'PATCH',
       path: artifactPath,
-      body: { title: 'Plan of the interviews', summary: null },
+      body: { title: 'Analysis of the interviews', summary: null },
       headers: versionHeader,
     })
 
     expect(saved.body).toMatchObject({
-      title: 'Plan of the interviews',
+      title: 'Analysis of the interviews',
       summary: null,
-      version: plan.version + 1,
+      version: analysis.version + 1,
       updated_by: { actor: 'user' },
     })
-    expect((await getApi<Artifact>(artifactPath)).title).toBe('Plan of the interviews')
-    const older = await getApi<Artifact>(`${artifactPath}?version=${String(plan.version)}`)
-    expect(older).toMatchObject({ version: plan.version, content: plan.content })
+    expect((await getApi<Artifact>(artifactPath)).title).toBe('Analysis of the interviews')
+    const older = await getApi<Artifact>(`${artifactPath}?version=${String(analysis.version)}`)
+    expect(older).toMatchObject({ version: analysis.version, content: analysis.content })
     const revisions = await getApiItems<Revision>(`${artifactPath}/revisions`)
     expect(revisions.map(({ version, change_reason }) => [version, change_reason])).toEqual([
-      [plan.version + 1, 'user_edit'],
+      [analysis.version + 1, 'user_edit'],
+      [4, 'rework'],
+      [3, 'rework'],
       [2, 'rework'],
       [1, 'generated'],
     ])
@@ -63,12 +65,15 @@ describe('the artifact handlers', () => {
     const saved = await callApi({
       method: 'PATCH',
       path: artifactPath,
-      body: { content: { topics: ['search'] } },
+      body: { content: { open_questions: ['How long is a session?'] } },
       headers: versionHeader,
     })
 
     expect(saved.body).toMatchObject({
-      content: { topics: ['search'], objectives: plan.content.objectives },
+      content: {
+        open_questions: ['How long is a session?'],
+        key_findings: analysis.content.key_findings,
+      },
     })
   })
 
@@ -76,10 +81,13 @@ describe('the artifact handlers', () => {
     const restored = await callApi({
       method: 'POST',
       path: `${artifactPath}/restore`,
-      body: { version: 1 },
+      body: { version: 2 },
     })
 
-    expect(restored.body).toMatchObject({ version: plan.version + 1, content: plan.content })
+    expect(restored.body).toMatchObject({
+      version: analysis.version + 1,
+      content: analysis.content,
+    })
     const [latest] = await getApiItems<Revision>(`${artifactPath}/revisions`)
     expect(latest).toMatchObject({ change_reason: 'restored' })
   })
