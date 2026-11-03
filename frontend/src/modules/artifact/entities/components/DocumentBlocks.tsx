@@ -133,19 +133,13 @@ function ItemCards({
   )
 }
 
-function ItemTranscript({
-  items,
-  renderItemLink,
-}: {
-  items: readonly OutlineItem[]
-  renderItemLink: RenderItemLink
-}) {
+function ItemTranscript({ items }: { items: readonly OutlineItem[] }) {
   return (
     <ol className="max-w-prose space-y-3">
       {items.map((item) => (
         <li key={item.id} className="space-y-0.5">
           <p className="text-xs font-semibold text-muted-foreground">
-            {renderItemLink(item, textOf(item.content[transcriptRoleField]) || item.key)}
+            <span>{textOf(item.content[transcriptRoleField]) || item.key}</span>
           </p>
           <p className="whitespace-pre-line">{textOf(item.content[transcriptContentField])}</p>
         </li>
@@ -190,7 +184,7 @@ export function DocumentBlocks({ blocks, kinds, renderItemLink }: DocumentBlocks
           )
         }
         if (block.display === 'transcript') {
-          return <ItemTranscript key={key} items={block.items} renderItemLink={renderItemLink} />
+          return <ItemTranscript key={key} items={block.items} />
         }
         return (
           <ItemsTable
