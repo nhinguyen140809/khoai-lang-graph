@@ -72,6 +72,14 @@ const linkEndSchema = z.union([z.array(z.string()), z.enum(['any', 'same'])])
 /** A pair of item kinds that a link type may connect. */
 const linkPairSchema = z.object({ source: linkEndSchema, target: linkEndSchema })
 
+/** Which side of a link of this type may quote the words of its item: the source, the target. */
+export const linkQuotesSchema = z.object({
+  source: z.boolean(),
+  target: z.boolean(),
+})
+
+export type LinkQuotes = z.infer<typeof linkQuotesSchema>
+
 /** A kind of link between two items, such as `derived_from`, and the pairs of kinds it may connect. */
 export const linkTypeSchema = z.object({
   key: z.string(),
@@ -79,6 +87,8 @@ export const linkTypeSchema = z.object({
   /** Following links of the type from an item never returns to it. */
   acyclic: z.boolean(),
   pairs: z.array(linkPairSchema),
+  /** Which side of a link of this type may quote words. */
+  quotes: linkQuotesSchema,
 })
 
 export type LinkType = z.infer<typeof linkTypeSchema>

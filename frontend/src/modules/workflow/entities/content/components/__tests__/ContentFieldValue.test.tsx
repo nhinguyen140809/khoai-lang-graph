@@ -46,3 +46,35 @@ describe('ContentFieldValue', () => {
     await expectNoAccessibilityViolations(container)
   })
 })
+
+describe('ContentFieldValue with marks', () => {
+  it('draws a text value with its marks, wrapped by the wrapper of each range', async () => {
+    renderWithProviders(
+      <ContentFieldValue
+        field={field({ widget: 'textarea' })}
+        value="The system shall list mentors."
+        definition={undefined}
+        marks={[{ start: 11, end: 29 }]}
+        renderMark={(range, children) => <em key={range.start}>{children}</em>}
+      />,
+    )
+
+    const marked = await screen.findByText('shall list mentors')
+    expect(marked.closest('em')).not.toBeNull()
+    expect(marked.closest('mark')).not.toBeNull()
+  })
+
+  it('ignores the marks of a value that is not a text', () => {
+    const { container } = renderWithProviders(
+      <ContentFieldValue
+        field={field({ widget: 'boolean' })}
+        value={true}
+        definition={undefined}
+        marks={[{ start: 0, end: 1 }]}
+      />,
+    )
+
+    expect(screen.getByText('Yes')).toBeInTheDocument()
+    expect(container.querySelector('mark')).toBeNull()
+  })
+})

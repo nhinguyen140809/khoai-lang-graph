@@ -9,6 +9,7 @@ import {
   contentDisplayOf,
   contentFields,
   documentDisplaysByKind,
+  mainField,
   summaryFields,
 } from '../content-fields.utils'
 import {
@@ -82,6 +83,24 @@ describe('contentDisplayOf', () => {
 
   it.each(displayFallbackCases)('falls back for $name', ({ schema, display }) => {
     expect(contentDisplayOf(schema)).toBe(display)
+  })
+})
+
+describe('mainField', () => {
+  it('gives the first field that is not the title field: what the item says', () => {
+    const main = mainField(contentSchemaFixtureByKind('spec_requirement'))
+
+    expect(main?.name).toBe('statement')
+  })
+
+  it('gives no field for a schema that holds its title field only', () => {
+    const main = mainField({
+      title: 'Kind',
+      'x-ui-title-field': 'title',
+      properties: { title: { type: 'string' } },
+    })
+
+    expect(main).toBeUndefined()
   })
 })
 

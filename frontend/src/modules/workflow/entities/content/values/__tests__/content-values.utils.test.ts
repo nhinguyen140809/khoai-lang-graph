@@ -3,21 +3,27 @@ import { describe, expect, it } from 'vitest'
 import { contentSchemaFixtureByKind } from '@/mocks/workflow/artifact-kinds.fixtures'
 import { assertPresent } from '@/shared/lib/guards'
 
-import { contentFields } from '../../fields/content-fields.utils'
+import { contentFields, mainField } from '../../fields/content-fields.utils'
 import {
   changedFields,
+  contentChanges,
+  findQuote,
   initialValue,
   toStoredContent,
   validateContent,
   valueTitle,
+  withoutEmptyEntries,
 } from '../content-values.utils'
 import {
   changedFieldCases,
+  contentChangesCases,
   entryCases,
+  findQuoteCases,
   initialValueCases,
   storedContentCases,
   validateCases,
   valueTitleCases,
+  withoutEmptyCases,
 } from './content-values.utils.data'
 
 describe('validateContent', () => {
@@ -155,5 +161,85 @@ describe('valueTitle', () => {
 
   it('gives the value while the definition loads', () => {
     expect(valueTitle({ valueList: 'priority' }, 'must', undefined)).toBe('must')
+  })
+})
+
+describe('contentChanges', () => {
+  it.each(contentChangesCases)('finds $name', ({ kind, before, after, changes }) => {
+    const found = contentChanges(contentFields(contentSchemaFixtureByKind(kind)), before, after)
+
+    expect(found.map(({ field, before: was, after: is }) => [field.name, was, is])).toEqual(changes)
+  })
+
+  it('names the read only fields too, which changedFields leaves out', () => {
+    const fields = contentFields(contentSchemaFixtureByKind('persona'))
+
+    const found = contentChanges(
+      fields,
+      { interview_status: 'completed', name: 'Ann' },
+      {
+        interview_status: 'completed',
+        name: 'Bea',
+      },
+    )
+
+    expect(found.map(({ field }) => field.name)).toEqual(['name'])
+    expect(changedFields(fields, { interview_status: 'completed' }, {})).toEqual([])
+  })
+})
+
+describe('withoutEmptyEntries', () => {
+  it.each(withoutEmptyCases)(
+    'drops the entries that hold nothing: $name',
+    ({ widget, before, after }) => {
+      const fields = contentFields({
+        title: 'Kind',
+        properties: {
+          entries: {
+            type: 'array',
+            'x-ui-widget': widget,
+            items: {
+              type: 'object',
+              properties: { name: { type: 'string' }, role: { type: 'string' } },
+            },
+          },
+          note: { type: 'string' },
+        },
+      })
+
+      expect(withoutEmptyEntries(fields, before)).toEqual(after)
+    },
+  )
+})
+
+describe('findQuote', () => {
+  it.each(findQuoteCases)('finds the words $name', ({ quote, content, expected }) => {
+    const schema = contentSchemaFixtureByKind('spec_requirement')
+    // The fields in the order the caller searches them: the main field first, then the rest.
+    const main = mainField(schema)
+    const ordered =
+      main === undefined
+        ? contentFields(schema)
+        : [main, ...contentFields(schema).filter((field) => field !== main)]
+
+    const found = findQuote(ordered, content, quote)
+
+    expect(found === null ? null : { field: found.field, start: found.range.start }).toEqual(
+      expected,
+    )
+  })
+
+  it('does not search the entries of a list', () => {
+    const fields = contentFields({
+      title: 'Kind',
+      properties: {
+        criteria: { type: 'array', 'x-ui-widget': 'list', items: { type: 'string' } },
+        statement: { type: 'string', 'x-ui-widget': 'textarea' },
+      },
+    })
+
+    expect(
+      findQuote(fields, { criteria: ['shall list mentors'], statement: 'x' }, 'shall list mentors'),
+    ).toBeNull()
   })
 })

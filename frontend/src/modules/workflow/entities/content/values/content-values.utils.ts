@@ -1,5 +1,6 @@
 import { isSameValue, omit } from '@/shared/lib/collections'
-import { isBlank, isEmpty } from '@/shared/lib/guards'
+import { isBlank, isEmpty, isRecord } from '@/shared/lib/guards'
+import { quoteRange, textOf, type TextRange } from '@/shared/lib/text'
 
 import type { WorkflowDefinition } from '../../definition/workflow-definition.types'
 import { findValueList } from '../../definition/workflow-definition.utils'
@@ -33,7 +34,7 @@ function fieldProblem(field: ContentField, value: unknown): string | null {
 
 /** The problems of a content against the fields of its schema, by field name. */
 export function validateContent(
-  fields: ContentField[],
+  fields: readonly ContentField[],
   content: ContentValues,
 ): Record<string, string> {
   const problems: Record<string, string> = {}
@@ -63,16 +64,76 @@ export function toStoredContent(fields: ContentField[], content: ContentValues):
   return stored
 }
 
-/** The names of the fields whose value differs between two contents. */
+/** The names of the fields whose value differs between two contents, read only fields left out. */
 export function changedFields(
   fields: ContentField[],
   before: ContentValues,
   after: ContentValues,
 ): string[] {
+  return contentChanges(
+    fields.filter((field) => !field.readOnly),
+    before,
+    after,
+  ).map(({ field }) => field.name)
+}
+
+/**
+ * The fields whose value differs between two contents, read only fields included, with both
+ * values: what a version changed, shown as a diff.
+ */
+export function contentChanges(
+  fields: readonly ContentField[],
+  before: ContentValues,
+  after: ContentValues,
+): { field: ContentField; before: unknown; after: unknown }[] {
   return fields
-    .filter((field) => !field.readOnly)
     .filter((field) => !isSameValue(before[field.name] ?? null, after[field.name] ?? null))
-    .map((field) => field.name)
+    .map((field) => ({
+      field,
+      before: before[field.name] ?? null,
+      after: after[field.name] ?? null,
+    }))
+}
+
+/**
+ * The content without the entries that hold nothing: a blank entry of a `list` or `tags` field,
+ * and an entry of an `object-list` whose every field is empty. Other fields stay as they are.
+ */
+export function withoutEmptyEntries(
+  fields: readonly ContentField[],
+  content: ContentValues,
+): ContentValues {
+  const kept: ContentValues = { ...content }
+  for (const field of fields) {
+    if (field.widget !== 'list' && field.widget !== 'tags' && field.widget !== 'object-list')
+      continue
+    const value = kept[field.name]
+    if (!Array.isArray(value)) continue
+    kept[field.name] = value.filter((entry) =>
+      field.widget === 'object-list'
+        ? isRecord(entry) && field.entryFields.some(({ name }) => !isEmpty(entry[name]))
+        : !isBlank(entry),
+    )
+  }
+  return kept
+}
+
+/**
+ * Where the words of a quote sit in a content: the first `text` or `textarea` field that holds
+ * them, in the order of the fields given (the main field first); a `list` entry is not searched.
+ * Null when no field holds them.
+ */
+export function findQuote(
+  fields: readonly ContentField[],
+  content: ContentValues,
+  quote: string,
+): { field: string; range: TextRange } | null {
+  for (const field of fields) {
+    if (field.widget !== 'text' && field.widget !== 'textarea') continue
+    const range = quoteRange(textOf(content[field.name]), quote)
+    if (range !== null) return { field: field.name, range }
+  }
+  return null
 }
 
 /**

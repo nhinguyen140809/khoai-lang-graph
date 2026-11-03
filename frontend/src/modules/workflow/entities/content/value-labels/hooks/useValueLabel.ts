@@ -1,9 +1,6 @@
-import { useWording } from '@/shared/lib/view'
-
 import type { WorkflowDefinition } from '../../../definition/workflow-definition.types'
 import type { ContentField } from '../../fields/content-fields.types'
-import { valueTitle } from '../../values/content-values.utils'
-import { valueLabel } from '../value-labels.utils'
+import { useValueLabelOf } from './useValueLabelOf'
 
 /**
  * What a select field shows for its chosen value, in the view of the app: the title that a value
@@ -14,6 +11,5 @@ export function useValueLabel(
   value: string,
   definition: Pick<WorkflowDefinition, 'value_lists'> | undefined,
 ): string {
-  const label = useWording(valueLabel(field.path, value))
-  return field.valueList === null ? label : valueTitle(field, value, definition)
+  return useValueLabelOf(field, definition)(value)
 }

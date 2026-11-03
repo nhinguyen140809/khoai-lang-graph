@@ -16,6 +16,7 @@ export { contentSchemasByKind, kindSchemasByKind } from './artifact-kinds/kind-s
 export type { ReviewableCheckpoint } from './checkpoints/checkpoints.types'
 export { reviewableCheckpoints } from './checkpoints/checkpoints.utils'
 export { useReviewableCheckpoints } from './checkpoints/hooks/useCheckpointQueries'
+export { ContentFieldInput } from './content/components/content-input/ContentFieldInput'
 export { ContentFieldValue } from './content/components/ContentFieldValue'
 export type {
   ContentDisplay,
@@ -27,18 +28,25 @@ export {
   contentDisplayOf,
   contentFields,
   isNavigable,
+  mainField,
   summaryFields,
 } from './content/fields/content-fields.utils'
+export { useValueLabelOf } from './content/value-labels/hooks/useValueLabelOf'
+export type { ContentFormValues } from './content/values/content-form.schema'
+export { contentFormValuesSchema, withContentProblems } from './content/values/content-form.schema'
 export type { ContentValues } from './content/values/content-values.types'
 export { contentValuesSchema } from './content/values/content-values.types'
 export {
   changedFields,
+  contentChanges,
+  findQuote,
   initialValue,
   toStoredContent,
   validateContent,
   valueTitle,
+  withoutEmptyEntries,
 } from './content/values/content-values.utils'
-export { itemTitle } from './content/values/item-title.utils'
+export { extensionFieldText, itemTitle } from './content/values/item-title.utils'
 export type { ExportFormat, ExportTemplate } from './definition/export-templates.types'
 export { exportFormats } from './definition/export-templates.types'
 export { useLinkTitleOf } from './definition/hooks/useLinkTitleOf'
@@ -55,6 +63,7 @@ export type { ObjectSchema, WorkflowDefinition } from './definition/workflow-def
 export {
   checkpointNodes,
   edgesFrom,
+  findAgentRole,
   findNode,
   findValueList,
 } from './definition/workflow-definition.utils'
@@ -72,6 +81,7 @@ export type {
   DefinedArtifactKind,
   DefinedItemKind,
   DirectiveKind,
+  LinkQuotes,
   LinkType,
   ValueList,
   WorkflowStage,
