@@ -1,8 +1,8 @@
 # Frontend S1d: export a document
 
-The plan of the PR S1d of the [Frontend implementation plan](frontend-implementation-plan.md), the last of the four PRs of the screen Documents, after [S1a](frontend-s1a-documents-plan.md), [S1b](frontend-s1b-edit-artifacts-plan.md) and [S1c](frontend-s1c-item-peek-plan.md). Written from [Prompt: create a frontend feature or widget plan](prompt-create-frontend-feature-plan.md); an agent implements from it, every decision is made.
+The plan of S1d of the [Frontend implementation plan](frontend-implementation-plan.md), the last part of the screen Documents, after [S1a](frontend-s1a-documents-plan.md), [S1b](frontend-s1b-edit-artifacts-plan.md) and [S1c](frontend-s1c-item-peek-plan.md). Written from [Prompt: create a frontend feature or widget plan](prompt-create-frontend-feature-plan.md), checked against `main` at `8126441` (#58). An agent implements from it: every decision is made, and the agent applies it. When the code differs from what this plan says (a name, a path, a signature), the agent stops and reports the difference instead of choosing.
 
-Short paths as in S1a.
+Short paths as in S1b: `documents/...`, `artifact/...`, `workflow/...` under `frontend/src/modules/`; `shared/...`, `mocks/...`, `test/...`, `app/...` under `frontend/src/`.
 
 ## Contents
 
@@ -25,59 +25,106 @@ Short paths as in S1a.
 
 ## 1. Row in the PR table
 
+One PR: it adds one feature, one small widget that mounts it, and one rule to an entity; no change of old code is planned. A fix met on the way goes to the next maintenance PR, not here.
+
 | | |
 |---|---|
-| Branch | `feat/fe/export`, from `origin/main` once S1c is merged |
-| Title | `feat(frontend): export a document from its page and from the command palette` |
-| Needs | E1b (#39: `createExport` with its idempotency key, `useExport` that reads a pending export again, the mock of the exports with its file); I1 (#29, the keys); S1a (the document page) |
+| Branch | `feat/fe/export`, from `origin/main` once S1c.2 is merged |
+| Title | `feat(frontend): export a document from its page and from the command palette, and download it when it is ready` |
+| Needs | E1b (#39: `createExport` with its idempotency key, `useExport` that reads a pending export again every 600 ms, the mock of the exports with its file); I1 (the keys, `newIdempotencyKey`); S1b.1 (the `actions` slot of `ArtifactDocument`) |
 | After it | S2 to S6. S5 may list the exports of a project in Settings |
-| Docs-first | `usability.md` draws `[ Export v ]` on the document (6.3, 6.4, 7.5) and lists export among the commands of the palette (4), with "Export specification" as a button (8.2), but not what follows a click; decisions 2 to 5 describe it and go to the local copy of `usability.md`. The file endpoint is not in the API (D5 of the implementation plan): the web app downloads `download_url`, and the mock serves that address |
+| Docs-first | The answers C1 to C4 below. The file endpoint is not in the API (D5 of the implementation plan): the web app downloads `download_url`, and the mock serves that address |
+
+Answers needed before the code. Each has the proposal built here; the answer goes to `docs/ui/usability.md` on `frontend-plan`, 7.5 and 8.2.
+
+| # | Question | Proposal built here |
+|---|---|---|
+| C1 | What a click on Export opens | One dialog: the documents to export as a list of choices (the templates), the formats of the chosen one, and Export (decision 3) |
+| C2 | The words of the button | "Export", beside the title of the document, which gives the noun; its label for assistive technology is "Export Requirement specification" (decision 4) |
+| C3 | What follows Export | The dialog closes; a toast says that the file is being prepared, then the file downloads and the toast offers to download it again (decision 6) |
+| C4 | Whether an export survives a reload | No: a reload forgets the exports being prepared; they stay on the server, and the list of the exports comes with Settings (decision 7) |
 
 ## 2. What was read
 
 | Source | What it gave this PR |
 |---|---|
-| Implementation plan D5, D7, row E1b, open point "Exports" | The key made once per action of the user, the retry once after a network error or a 5xx with the same key, `409 idempotency_conflict` shown with the generic message; the file "with S1" |
-| `docs/API.md` Exports | `POST /projects/{id}/exports` with `template`, `format`, `202`, `422` for a template or format the definition lacks; `GET /exports/{id}` with `download_url` when `ready`, valid for a limited time |
-| `requirements_engineering.v1.json`, `export_templates` | Five templates, each with its artifact kinds and formats: Requirement specification (md, pdf, docx), User stories (md, csv, json), Requirement-to-source table (csv, md), Interview transcripts (md, pdf), All documents (json, md) |
-| `main` | `createExport(projectId, body, idempotencyKey)`, `useExport` (polls every 600 ms while pending), `exportStatusLabels`, `ExportTemplate`, `exportFormats`, `useWorkflowDefinition`; `createPendingActionStore`; `useCommands`; the mock: `POST` stores a pending export, `GET` answers it ready with `download_url` pointing at `/exports/{id}/file`, which the mock serves as an attachment, scenarios `mock-exports` |
-| `origin/feat/fe/mock` `ExportButton.tsx`, `useExport.ts` | A reference for the menu and the polling; not copied |
+| Implementation plan D5, D7, row E1b | The key made once per action of the user and kept in the variables of the mutation; one retry after a network error or a 5xx with the same key; `409 idempotency_conflict` shown with the generic message; the file "with S1" |
+| `docs/API.md` Exports, Idempotency | `POST /projects/{id}/exports` with `template` and `format`, `202`; `422` for a template or a format that the definition lacks; `GET /exports/{id}` with `download_url` when `ready`, valid for a limited time; statuses `pending`, `ready`, `failed` |
+| `mocks/workflow/requirements_engineering.v1.json`, `export_templates` | Five templates: `requirement_specification` (markdown, pdf, docx), `product_backlog` "User stories" (markdown, csv, json), `traceability_matrix` "Requirement-to-source table" (csv, markdown), `interview_transcripts` (markdown, pdf), `full_project` "All documents" (json, markdown). Every artifact kind is in `full_project`, so every document of the mock has at least one template |
+| `docs/ui/usability.md` (`frontend-plan`) 4, 6.4, 7.5, 8.2 | `[ Export v ]` at the right of the title of a document; export among the commands of the palette; "Buttons are a verb and a noun" |
+| `artifact/entities/exports/` on `main` | `createExport(projectId, body, idempotencyKey)`, `getExport`, `useExport(exportId, { isEnabled })` with `refetchInterval` while `pending`, `exportKeys`, `exportStatusLabels`, `CreateExportBody`, `Export` |
+| `workflow/entities/definition/export-templates.types.ts` | `ExportTemplate` (`key`, `title`, `artifact_kinds`, `formats`), `exportFormats`, `ExportFormat` |
+| `mocks/exports/` | `POST` keeps a pending export (`idempotent`); `GET /exports/{id}` answers it `ready` with `download_url` at `/exports/{id}/file` 1500 ms after its creation (`exportReadyAfterMs`); the file is served as an attachment; scenario `mock-exports` (`empty`, `error`, `loading`) on all three endpoints; no `failed` state |
+| `@/shared/lib/pending-action`, `project/features/rename`, `run/features/stop` | A dialog opened from several places: a store from `createPendingActionStore`, `useOpen...Dialog` and `use...Dialog` in one file, the dialog mounted once by a widget |
+| `@/shared/api/idempotency` (`newIdempotencyKey`), `@/shared/api/query-client` (`canRetryOnce`) | The key of an action; the rule of one retry |
+| `origin/feat/fe/mock` `ExportButton.tsx`, `useExport.ts` | A reference for the menu and the polling; nothing is copied |
+| S1a as built (S1b plan, section 2.1) | A reading rule goes to the entity of its object; a lone component or hook stays at the root of its slice; nothing outside the scope in the PR |
 
 ## 3. Decisions
 
-1. **One feature, `artifact/features/export`.** Asking for an export changes nothing of an artifact, but it is an action of the user on the documents of a project; Export is the resource `exports` of `artifact` (Web App Modules section 7), so the feature sits in `artifact`.
-2. **Which templates a document offers.** `exportTemplatesOf(templates, kind)` gives the templates whose `artifact_kinds` include the kind of the document, the ones with the fewest kinds first, so the specification offers "Requirement specification" before "Requirement-to-source table" and "All documents". A document whose kind no template holds shows no Export button.
-3. **The Export button opens a dialog**, `[ Export v ]` of the skeletons: "Export specification" as its label (`Export` and the title of the first template, 8.2). The dialog `ExportDialog`: a radio group of the templates of decision 2 (the first chosen), a radio group of the formats of the chosen template (the first chosen), the labels of the formats in `exportFormatLabels` ("Markdown", "PDF", "Word", "CSV", "JSON"), and Export. One dialog, not a menu with sub menus, so the two choices read at once and the palette opens the same thing.
-4. **The palette.** `ExportCommands`, mounted in the contributions of the project layout, registers one command per template of the definition, "Export: Requirement specification", id `artifact.export.<template key>`, group of the actions; it opens the dialog with that template chosen. The dialog opens from two places, so it is mounted once (`ExportDialogs` in the contributions) and opened through `useOpenExportDialog`, on a store from `createPendingActionStore` that keeps the template key (CONTRIBUTING: dialogs opened from several places).
-5. **After Export.**
-   - The key is `crypto.randomUUID()`, made when the user presses Export, and kept in the variables of the mutation, so a retry sends it again (D7). `useCreateExport` retries once after a network error or a 5xx.
-   - On `202`, the dialog closes, a toast with a spinner says "Preparing the requirement specification (PDF)...", and the export joins the exports followed by `useFollowExports`, a small store of ids in the feature (`followed-exports.store.ts`).
-   - `ExportFollowers`, mounted with `ExportDialogs`, renders one `ExportFollower` per followed id, which reads `useExport(id)` (polling while pending). On `ready`, it starts the download (an `a` with `href = download_url` and `download = file_name`, clicked once), replaces the toast with "Requirement specification downloaded" and an action "Download again" (the same address, while it is valid), and drops the id. On `failed`, the toast says "The export failed." with `Try again`, which asks again with a new key (a new action of the user). A read that fails keeps polling as `useExport` does; after 5 failures in a row the toast says "The export could not be checked." and the id is dropped.
-   - `422` (a template or format the definition no longer has) and the other errors of the request: the dialog stays open with the message of `errorMessageOf`; `409 idempotency_conflict` takes the generic message.
-   - The followed ids live in memory: a reload forgets them, and the export stays on the server. Said in section 14.
-6. **Where the button sits.** `documents/widgets/document` places `ExportButton` at the right of the title of the document (`artifact/features/export`, takes the projectId and the kind). It is enabled while a run works: an export reads the stored versions and the API does not refuse it then.
-7. **Words** in `exportMessages` (`artifact/features/export/export.constants.ts`); `exportFormatLabels` in `workflow/entities/definition/export-templates.constants.ts`, beside the formats.
+1. **What goes where.**
+
+   | Piece | Where | Why |
+   |---|---|---|
+   | The templates that hold a kind (`exportTemplatesOf`), the words of each format (`exportFormatLabels`) | `workflow/entities/definition/` | A reading rule and the words of an object of the definition |
+   | Ask for an export, follow it, download it; the dialog, the button, the commands | `artifact/features/export` | One action of the user; the export is the resource `exports` of `artifact` (Web App Modules, section 7) |
+   | Mount the dialog and the downloads once, and register the commands | `artifact/widgets/export` | A dialog that several places open is mounted once by a widget that the layout mounts (CONTRIBUTING: dialogs opened from several places); it reads only `artifact` and `workflow`, so it sits in `artifact` |
+   | The Export button on the page of a document | `documents/widgets/document` places `ExportButton` in the `actions` slot of `ArtifactDocument` | The widget of the page composes the actions |
+   | The download of a file by its address | Inside `useExportDownload` of the feature | One user; it touches the page (an anchor clicked), so it is not a `utils` file |
+
+2. **Which templates a document offers.** `exportTemplatesOf(templates, kind)` gives the templates whose `artifact_kinds` include the kind, the ones with the fewest kinds first, then in the order of the definition: the specification offers "Requirement specification", then "Requirement-to-source table", then "All documents". A kind that no template holds gives none, and the page shows no Export button.
+
+3. **One dialog** (answer C1). `ExportDialog`: the title "Export"; a `RadioGroup` "Document" with every template of the definition, each with its title; a `RadioGroup` "Format" with the formats of the chosen template, each with its label (`exportFormatLabels`); a `FieldError` under the form; Cancel and Export (`PendingButton` "Exporting"). One dialog, not a menu with sub menus, so that both choices read at once and the palette opens the same thing.
+   - The template chosen at the start is the one the dialog was opened with; the format is the first of that template. Choosing another template chooses its first format.
+   - The form is `react-hook-form` with `exportFormSchema` (`export.schema.ts`): `{ template: z.string().min(1), format: z.enum(exportFormats) }`, named after the fields of the request.
+
+4. **The Export button** (answer C2). `ExportButton({ projectId, artifact })`: an outline button "Export" (icon `DownloadIcon`) with `aria-label` "Export " followed by the title of the artifact. It opens the dialog with the first template of `exportTemplatesOf(templates, artifact.kind)`, and renders nothing while the definition loads or when the kind has no template. It stays enabled while a run works: an export reads the stored versions, and the API does not refuse it then. The document page places it in the `actions` slot after Edit.
+
+5. **The palette.** `useExportCommands(projectId)` registers one command per template of the definition while it is mounted: id `artifact.export.<template key>`, label "Export: Requirement specification", group "Export", icon `DownloadIcon`; it opens the dialog with that template. The dialog opens from two places, so it is mounted once and opened through `useOpenExportDialog()(templateKey)`, on a store from `createPendingActionStore()` that keeps the template key.
+
+6. **After Export** (answer C3).
+   - The key is `newIdempotencyKey()`, made in the submit handler, once per press of Export, and passed in the variables of the mutation (`{ body, idempotencyKey }`), so the retry of the mutation sends it again (D7). `useCreateExport(projectId)` sets `retry: canRetryOnce`: one retry after a network error or a 5xx, none after a 4xx.
+   - On `202`: the dialog closes; `followExport(export.id)` adds the id to `useFollowedExportsStore`; a toast `toast.loading` with the id `export:<id>` says "Preparing Requirement specification (PDF)" (`exportFileLabel(template, format)`).
+   - `ExportDownloads`, mounted with the dialog, renders one `ExportDownload` per followed id; each calls `useExportDownload(id)`, which reads `useExport(id)` (it reads again every 600 ms while `pending`) and, once:
+     - on `ready`: starts the download (an `a` with `href = download_url` and `download = file_name`, appended, clicked and removed), replaces the toast with `toast.success` "Requirement specification (PDF) is ready" with the action "Download again" (the same address) and `duration: actionToastDuration`, and forgets the id;
+     - on `failed`: replaces the toast with `toast.error` "The export failed." with the action "Try again" (`duration: actionToastDuration`), which opens the dialog again with the template of the export (`useOpenExportDialog`), so that the user presses Export again and a new key goes with the new action; then forgets the id;
+     - when the read fails (after the one retry of the queries): replaces the toast with `toast.error` "The export could not be checked." and forgets the id.
+   - A `useRef` flag in `useExportDownload` makes each outcome run once, also when the component renders again before the id is forgotten.
+   - `422` (a template or a format the definition no longer has): the problems at their fields (`showFieldProblems`), the rest under the form (`formErrorOf`); the dialog stays open. `409 idempotency_conflict` and any other error: the generic message of `errorMessageOf(error, {})` under the form.
+
+7. **The followed exports live in memory** (answer C4): `useFollowedExportsStore` is a zustand store without `persist`. A reload forgets them; the export stays on the server.
+
+8. **Mounting.** `artifact/widgets/export` holds `ExportCommands` (calls `useExportCommands`, renders nothing) and `ExportDialogs` (renders `ExportDialog` and `ExportDownloads`). The project layout mounts both in `projectContributions`, after `ProjectDialogs`.
+
+9. **Words** in `exportMessages` (`artifact/features/export/export.constants.ts`); `exportFormatLabels` in `workflow/entities/definition/export-templates.constants.ts`.
+
+10. **`'use client'`.** The project layout imports `artifact/widgets/export`: `useExportCommands`, `useOpenExportDialog`, `useCreateExport`, `useExportDownload`, `useFollowExport` and the components with state start with `'use client'`.
 
 ## 4. Scope
 
 | | |
 |---|---|
 | Endpoints called | `POST /projects/{id}/exports` with `Idempotency-Key` |
-| Endpoints read | `GET /exports/{id}` (polling), the definition; the file at `download_url` (a download, not a request of the app) |
+| Endpoints read | `GET /exports/{id}` (every 600 ms while pending), `GET /workflow/definition`; the file at `download_url` (a download of the browser, not a request of the app) |
 | Written new | Section 8 |
-| Not built | The list of the exports of a project (section 14) |
+| Not built | The list of the exports of a project (`GET /projects/{id}/exports`; `useProjectExports` exists); an export that survives a reload |
 
 ## 5. Naming
 
-| Part | Name |
-|---|---|
-| Feature slice | `artifact/features/export` |
-| Components | `ExportButton`, `ExportDialog`, `ExportDialogs`, `ExportCommands`, `ExportFollowers` (with `ExportFollower` in the same file) |
-| Hooks | `useCreateExport`, `useOpenExportDialog` and `useExportDialog` (in `useOpenExportDialog.ts`), `useFollowExports` |
-| Stores | `export-dialog.store.ts` (`useExportDialogStore`), `followed-exports.store.ts` (`useFollowedExportsStore`) |
-| Pure rules | `exportTemplatesOf`, `exportFileLabel` (the toast name: template title and format label) |
-| Command ids | `artifact.export.<template key>` |
-| Words | `exportMessages`, `exportFormatLabels` |
+| Part | Rule | Name |
+|---|---|---|
+| Feature slice | The action | `artifact/features/export` |
+| Widget slice | The block | `artifact/widgets/export` |
+| Components of the action | `<Verb><Object><Role>` | `ExportButton`, `ExportDialog` |
+| Components that render nothing in place | `...Commands`, `...Dialogs`, what they follow | `ExportCommands`, `ExportDialogs`, `ExportDownloads` (with `ExportDownload` in the same file) |
+| Mutation hook | `use<Verb><Object>` | `useCreateExport` |
+| Dialog hooks | `useOpen<...>Dialog`, `use<...>Dialog` in one file | `useOpenExportDialog`, `useExportDialog` in `useOpenExportDialog.ts` |
+| Other hooks | `use<What>` | `useExportCommands`, `useExportDownload`; `useFollowExport` and `useFollowedExports` (the two hooks of the store, in `useFollowExport.ts`) |
+| Stores | `<topic>.store.ts` | `export-dialog.store.ts` (`useExportDialogStore`), `followed-exports.store.ts` (`useFollowedExportsStore`) |
+| Schema | `<form>FormSchema` | `exportFormSchema` in `export.schema.ts` |
+| Pure rules | What they give | `exportTemplatesOf` (workflow), `exportFileLabel` (feature) |
+| Command ids | `<module>.<action>` | `artifact.export.<template key>` |
+| Words | `<topic>Messages`, `<value>Labels` | `exportMessages`, `exportFormatLabels` |
 
 ## 6. Shared code first
 
@@ -86,12 +133,17 @@ Short paths as in S1a.
 | What | From | For |
 |---|---|---|
 | `createPendingActionStore`, `useSetPendingAction`, `usePendingAction` | `@/shared/lib/pending-action` | The dialog opened from two places |
-| `Dialog`, `RadioGroup`, `PendingButton` | `shared/components/ui` | The dialog |
-| `useCommands`, `PaletteGroup` | frame | The commands |
-| `toast` (with `id` to replace one toast) | `sonner` | Preparing, downloaded, failed |
-| `createExport`, `useExport`, `exportKeys` | `artifact/entities` | The request and the polling |
-| `useWorkflowDefinition` | `workflow/entities` | The templates |
-| `itToastsOnResult`, `itAsksForFieldsBeforeSending` | `@/test/suites` | The cases of the action |
+| `Dialog`, `DialogContent`, `DialogHeader`, `DialogTitle`, `DialogFooter`, `DialogClose`, `RadioGroup`, `RadioGroupItem`, `Button`, `PendingButton`, `FieldError`, `FieldGroup` | `shared/components/ui` | The dialog |
+| `Form`, `FormFieldSet`, `showFieldProblems`, `formErrorOf` | `@/shared/components/form` | The form and its errors |
+| `useCommands` | `@/shared/components/frame` | The commands |
+| `toast` | `sonner` | Preparing, ready, failed |
+| `actionToastDuration` | `@/shared/lib/timing` | The toasts with an action |
+| `newIdempotencyKey` | `@/shared/api/idempotency` | The key of an action |
+| `canRetryOnce` | `@/shared/api/query-client` | The retry of the mutation |
+| `errorMessageOf` | `@/shared/api/error` | The other errors |
+| `createExport`, `useExport`, `type Export`, `type CreateExportBody`, `type Artifact` | `artifact/entities` | The request and the polling |
+| `useWorkflowDefinition`, `type ExportTemplate`, `exportFormats`, `type ExportFormat` | `workflow/entities` | The templates |
+| `itToastsOnResult`, `itAsksForFieldsBeforeSending`, `expectNoAccessibilityViolations`, `spyOnToast`, `openCommandPalette`, `renderWorkbench` | `@/test/*` | The tests |
 
 ### Extract before new code
 
@@ -101,132 +153,222 @@ None.
 
 | Candidate | Why it stays |
 |---|---|
-| A download helper (`a` click) | One user; it moves to `shared/lib/url` with a second |
-| A store of followed jobs | One user |
+| A download helper in `shared/lib/url` | One user; it moves there with a second |
+| A store of followed jobs in shared code | One user; S2 follows runs through their stream, not by polling |
+| `exportTemplatesOf` in the feature | A rule of the templates of the definition: it goes to `workflow`, where S4 (the export of the traceability table) and S5 can read it |
 
 ## 7. Changes to existing modules
 
 | File | Change | Commit |
 |---|---|---|
-| `usability.md` (local) | Decisions 2 to 5 | none |
-| `workflow/entities/definition/export-templates.constants.ts` (new), `index.ts` | `exportFormatLabels` | 1 |
-| `artifact/features/export/` (new) | Section 8 | 2 |
-| `artifact/entities/hooks/useExportQueries.ts` | `useExport` takes `retry` options for the follower; its JSDoc names the polling | 2 |
-| `documents/widgets/document/components/DocumentPage.tsx` | `ExportButton` (decision 6) | 3 |
-| `app/(project)/projects/[projectId]/layout.tsx` | `<ExportCommands projectId />`, `<ExportDialogs projectId />` in the contributions of a found project | 3 |
-| Web App Modules, Web App, mocks README, implementation plan (D5 and the open point "Exports" closed) | Section 13 | 4 |
+| `docs/ui/usability.md` (`frontend-plan`) | C1 to C4 | none |
+| `workflow/entities/definition/export-templates.utils.ts` (new: `exportTemplatesOf`), `export-templates.constants.ts` (new: `exportFormatLabels`), tests, `index.ts` | Decisions 2, 9 | 1 |
+| `mocks/exports/exports.handlers.ts`, its test; `mocks/README.md` | The scenario `mock-export` (section 11) | 2 |
+| `artifact/features/export/` (new) | Decisions 3 to 7 | 3 |
+| `artifact/widgets/export/` (new) | Decision 8 | 4 |
+| `app/(project)/projects/[projectId]/layout.tsx` | `<ExportCommands projectId={projectId} />`, `<ExportDialogs projectId={projectId} />` in `projectContributions` | 4 |
+| `documents/widgets/document/components/DocumentPage.tsx`, test | `ExportButton` in the `actions` slot (decision 4) | 4 |
+| `tests/screenshots/projects/documents.spec.ts` | Section 11 | 4 |
+| Web App Modules, Web App, frontend README, implementation plan | Section 13 | 5 |
+
+Files that two commits change: `mocks/README.md` (2 the scenario, 5 the addresses of the screen), `workflow/entities/index.ts` (1 only).
 
 ## 8. The slices, file by file
+
+### `workflow/entities/definition`
+
+```ts
+// export-templates.utils.ts
+/** The templates that hold the kind of a document, the most specific first (the fewest kinds), then in the order of the definition. */
+export function exportTemplatesOf(templates: readonly ExportTemplate[], kind: string): ExportTemplate[]
+
+// export-templates.constants.ts
+/** The words of each file format of an export, the same in both views. */
+export const exportFormatLabels = {
+  markdown: 'Markdown',
+  pdf: 'PDF',
+  docx: 'Word',
+  csv: 'CSV',
+  json: 'JSON',
+} as const satisfies Record<ExportFormat, string>
+```
+
+### `artifact/features/export`
 
 ```text
 artifact/features/export/
 ├── components/
 │   ├── ExportButton.tsx
-│   ├── ExportDialog.tsx
-│   ├── ExportDialogs.tsx
-│   ├── ExportCommands.tsx
-│   ├── ExportFollowers.tsx
-│   └── __tests__/
+│   ├── ExportDialog.tsx          the dialog and its form (ExportForm stays local in the file)
+│   ├── ExportDownloads.tsx       one ExportDownload per followed id (ExportDownload local in the file)
+│   └── __tests__/ExportButton.test.tsx, ExportDialog.test.tsx, ExportDownloads.test.tsx
 ├── hooks/
 │   ├── useCreateExport.ts
-│   ├── useOpenExportDialog.ts
-│   ├── useFollowExports.ts
-│   └── __tests__/
-├── stores/export-dialog.store.ts, followed-exports.store.ts
-├── export.constants.ts
-├── export.utils.ts             exportTemplatesOf, exportFileLabel
-├── __tests__/export.utils.test.ts, .data.ts
-└── index.ts
+│   ├── useOpenExportDialog.ts    useOpenExportDialog, useExportDialog
+│   ├── useExportCommands.ts
+│   ├── useExportDownload.ts
+│   ├── useFollowExport.ts        useFollowExport (adds an id), useFollowedExports (reads the ids)
+│   └── __tests__/useCreateExport.test.ts, useExportCommands.test.ts, useExportDownload.test.ts
+├── stores/
+│   ├── export-dialog.store.ts    useExportDialogStore = createPendingActionStore()
+│   └── followed-exports.store.ts useFollowedExportsStore: exportIds, follow, forget
+├── export.constants.ts           exportMessages
+├── export.schema.ts              exportFormSchema, ExportFormValues
+├── export.utils.ts               exportFileLabel
+├── __tests__/export.utils.test.ts, export.utils.data.ts, export.schema.test.ts
+└── index.ts                      ExportButton, ExportDialog, ExportDownloads, useExportCommands, exportMessages
 ```
 
 ```ts
-/** The templates that hold the kind of a document, the most specific first (decision 2). */
-export function exportTemplatesOf(templates: readonly ExportTemplate[], kind: string): ExportTemplate[]
+/** The name of the file in the words of the user: the title of its template and the label of its format, such as "Requirement specification (PDF)". */
+export function exportFileLabel(template: Pick<ExportTemplate, 'title'> | undefined, format: ExportFormat): string
 
-/** Asks for an export with the key of the action; retries once after a network error or a 5xx. */
-export function useCreateExport(projectId: string): UseMutationResult<Export, ApiError, { body: CreateExportBody; idempotencyKey: string }>
+/**
+ * Asks for an export with the key of the action, which a retry sends again; one retry after a
+ * network error or a 5xx. On success it follows the export and opens the toast that says it is
+ * being prepared. A refusal shows its problems at the fields through `setError`.
+ */
+export function useCreateExport(
+  projectId: string,
+  { setError, onAsked }: { setError: UseFormSetError<ExportFormValues>; onAsked: () => void },
+): UseMutationResult<Export, Error, { body: CreateExportBody; idempotencyKey: string }> & { formError: string | null }
+
+/**
+ * Follows one export until it is ready or failed: downloads it once and says so in its toast, or
+ * says why it did not; then forgets it. `retry` asks again for the same document with a new key.
+ */
+export function useExportDownload(exportId: string): void
+
+/** Registers one command per export template while mounted; each opens the dialog with its template. */
+export function useExportCommands(projectId: string): void
+```
+
+```tsx
+/** Exports the document of an artifact; nothing while the templates load or when none holds its kind. */
+export function ExportButton({ projectId, artifact }: { projectId: string; artifact: Pick<Artifact, 'kind' | 'title'> })
+
+/** Asks which document and which format to export; one on the screen, opened by the Export button and the palette. */
+export function ExportDialog({ projectId }: { projectId: string })
+
+/** Follows every export asked for in this page, each until its file is ready or failed. Renders nothing visible. */
+export function ExportDownloads()
+```
+
+`useFollowExport.ts` holds the two hooks of the store `followed-exports.store.ts` (CONTRIBUTING: the hooks of one store share a file, named after the hook that the parts call). `useExportDownload` calls `useOpenExportDialog` for the "Try again" of a failed export; it never calls `useCreateExport`.
+
+### `artifact/widgets/export`
+
+```text
+artifact/widgets/export/
+├── components/
+│   ├── ExportCommands.tsx        calls useExportCommands; renders nothing
+│   ├── ExportDialogs.tsx         ExportDialog and ExportDownloads
+│   └── __tests__/ExportDialogs.test.tsx
+└── index.ts
 ```
 
 ## 9. State and data flow
 
 | State | Where |
 |---|---|
-| The dialog open and its template | `useExportDialogStore` |
-| The chosen template and format in the dialog | `react-hook-form` of the dialog |
-| The exports followed | `useFollowedExportsStore` (in memory) |
-| The export | `useExport(id)`, polling |
+| The dialog open and its template | `useExportDialogStore` (`targetId` is the template key) |
+| The chosen template and format | `react-hook-form` of `ExportDialog` |
+| The exports followed | `useFollowedExportsStore`, in memory |
+| An export | `useExport(id)`, read again while pending |
+| Whether an outcome of an export ran | A `useRef` in `useExportDownload` |
 
-Flow: Export; the dialog; `POST` with the key; the toast "Preparing"; polling every 600 ms; `ready`: download and the toast "downloaded".
+Flow: Export (button or palette) opens the dialog with a template; Export sends `POST` with a new key; the dialog closes and the toast says "Preparing"; the export is read every 600 ms; on `ready` the file downloads and the toast offers it again; on `failed` the toast offers Try again, which opens the dialog with the same template.
 
 ## 10. Screen states and words
 
 | State | What shows | Scenario |
 |---|---|---|
-| No template for the kind | No button | the persona catalog has one (interview transcripts); a kind without, in the unit tests |
-| Request pending | `PendingButton` | `?mock-exports=loading` |
-| Request failed | Message in the dialog | `?mock-exports=error` |
-| Preparing, then downloaded | Toast replaced | default |
+| The button | "Export" at the right of the title | the specification page |
+| No template for the kind | No button | unit tests (every kind of the mock has `full_project`) |
+| The dialog | Templates, formats of the chosen one | press Export |
+| Request pending | `PendingButton` "Exporting" | `?mock-exports=loading` |
+| Request failed | The message under the form | `?mock-exports=error` |
+| Preparing, then ready | The loading toast, then the file and "Download again" | default |
+| Export failed | The error toast with Try again | `?mock-export=failed` |
+| Export not checked | The error toast | `?mock-export=error` |
+| The palette | "Export: Requirement specification" and the four others | `Ctrl+K`, type "Export" |
 
 ```ts
 export const exportMessages = {
-  button: (title: string) => `Export ${title.toLowerCase()}`,
+  button: 'Export',
+  buttonLabel: (title: string) => `Export ${title}`,
   dialogTitle: 'Export',
   template: 'Document',
   format: 'Format',
+  cancel: 'Cancel',
   submit: 'Export',
-  preparing: (file: string) => `Preparing the ${file}...`,
-  downloaded: (file: string) => `${file} downloaded`,
+  submitting: 'Exporting',
+  commandGroup: 'Export',
+  command: (title: string) => `Export: ${title}`,
+  preparing: (file: string) => `Preparing ${file}`,
+  ready: (file: string) => `${file} is ready`,
   downloadAgain: 'Download again',
   failed: 'The export failed.',
-  unchecked: 'The export could not be checked.',
   tryAgain: 'Try again',
-  command: (title: string) => `Export: ${title}`,
-}
-export const exportFormatLabels = { markdown: 'Markdown', pdf: 'PDF', docx: 'Word', csv: 'CSV', json: 'JSON' } as const satisfies Record<ExportFormat, string>
+  unchecked: 'The export could not be checked.',
+} as const
 ```
 
 ## 11. Mocks and screenshots
 
-- No handler change; check that the mock keeps the export `pending` for one read before `ready` (so the toast "Preparing" shows), else add that step to `exports.lookup.ts` (`withReadyFile` after the first read).
+- A new scenario `mock-export` on `GET /exports/{export_id}` only, read with `answerScenario('export')`: `error` and `loading` as every scenario, and `failed`, which answers the export with `status: 'failed'` and no `download_url`. `mock-exports` keeps its meaning on the three endpoints. The handler test gets a case for `failed`. The mocks README lists the scenario.
+- The mock keeps an export `pending` for 1500 ms (`exportReadyAfterMs`), so the toast "Preparing" shows in `pnpm dev:mock`; nothing changes there.
 - Screenshot: the dialog open on the specification.
 
 ## 12. Tests
 
 | File | Cases |
 |---|---|
-| `export.utils.test.ts` | `exportTemplatesOf` (kinds, order, none); `exportFileLabel` |
-| `useCreateExport.test.ts` | The header carries the key; a retry after a network error sends the same key; no retry after a 4xx |
-| `ExportDialog.test.tsx` | Templates and formats; changing the template changes the formats; `itToastsOnResult`; stays open on an error; axe |
-| `ExportCommands.test.tsx` | One command per template; it opens the dialog with that template |
-| `ExportFollowers.test.tsx` | Pending then ready: download started once (spy on the anchor click), toast replaced; failed: toast with Try again, which sends a new key; five failed reads drop it |
-| `DocumentPage.test.tsx` | The button with the first template; none without a template |
+| `workflow/.../export-templates.utils.test.ts` + data | `exportTemplatesOf`: the specification (three, in order), a kind in `full_project` only, a kind in none |
+| `artifact/features/export/__tests__/export.utils.test.ts` + data | `exportFileLabel` for each format; a template not found reads its key |
+| `.../export.schema.test.ts` | A missing template; a format outside `exportFormats` |
+| `.../useCreateExport.test.ts` | The request carries the key; a retry after a network error sends the same key; no retry after a 4xx; `422` at the fields; the loading toast with the id `export:<id>` (`spyOnToast`) |
+| `.../useExportCommands.test.ts` | One command per template, with its id and label; it opens the dialog with that template |
+| `.../useExportDownload.test.ts` | Pending then ready: one click on an anchor with the address and the file name (spy on `HTMLAnchorElement.prototype.click`), the toast replaced, the id forgotten; failed: the error toast, Try again opens the dialog with the template of the export; a failed read: the "not checked" toast; each outcome once |
+| `.../ExportDialog.test.tsx` | Opens with the template it was given; the formats follow the template; Export closes and toasts; two presses of Export after a failure send two keys; stays open on an error with the message; axe. No `itAsksForFieldsBeforeSending`: both fields always hold a value |
+| `.../ExportButton.test.tsx` | Opens the dialog with the first template of the kind; its label for assistive technology; nothing without a template; nothing while the definition loads |
+| `artifact/widgets/export/.../ExportDialogs.test.tsx` | Rendered with `renderWorkbench`: the palette lists the commands, a command opens the dialog, an export runs to its download |
+| `documents/widgets/document/.../DocumentPage.test.tsx` (extended) | The Export button in the `actions` slot after Edit |
+| `mocks/exports/__tests__/exports.handlers.test.ts` (extended) | `mock-export=failed` |
+
+Helpers: none new. The tests of the hooks use `renderHookWithProviders`; the tests of the dialog render it beside a button that opens it through `useOpenExportDialog`, a local `function Opener` of the test file.
 
 ## 13. Docs to update
 
-- Web App Modules: row `artifact` features `export`; Web App section 9: the files.
-- Mocks README: the export addresses.
-- Implementation plan: row S1d, D5 (the file through `download_url`), open point "Exports" closed, checklist ("S1 merged" when S1a to S1d are).
+- `docs/architecture/web-app-modules.md`: row `artifact` features `export` and widgets `export`; section 6 State of `artifact`.
+- `docs/architecture/web-app.md` section 9: the files of the export.
+- `frontend/src/mocks/README.md`: the scenario `mock-export` and the addresses of section 10.
+- Implementation plan: row S1d; D5 (the file through `download_url`); the open point "Exports" closed; the checklist ("S1 merged" once S1a to S1d are).
 
 ## 14. Left for the next PRs
 
 | Item | Where |
 |---|---|
 | The list of the exports of a project, an export that survives a reload | S5 (Settings) or a later PR |
-| The export "Requirement-to-source table" from Trace | S4 |
+| The export "Requirement-to-source table" from Trace | S4, with `useOpenExportDialog` |
+| The file endpoint in the API | `docs/fe/api-fields` (D5), when the backend serves files |
 
 ## 15. Commits and checks
 
-1. `feat(frontend): name the export formats`
-2. `feat(frontend): ask for the export of a document and download it when it is ready`
-3. `feat(frontend): export from the page of a document and from the command palette`
-4. `docs(frontend): describe the export of a document`
+1. `feat(workflow): give the export templates of a kind and the words of each format`
+2. `feat(mocks): answer an export that failed`
+3. `feat(artifact): ask for the export of a document and download it when it is ready`
+4. `feat(frontend): export from the page of a document and from the command palette`
+5. `docs: describe the export of a document`
 
-Checks: ESLint and Prettier on the changed files; Vitest on `modules/workflow`, `modules/artifact`, `modules/documents`; typecheck once.
+Each file goes in the commit of its row in section 7. The plan and the prompt stay on `frontend-plan`.
+
+Checks, one at a time: ESLint and Prettier on the changed files; Vitest on `modules/workflow/entities/definition`, `modules/artifact`, `modules/documents/widgets/document`, `mocks/exports`; typecheck once. No full suite, E2E, screenshots or build locally. The ASCII and comment greps of S1b.
 
 ## 16. Checklist
 
-- [ ] Decisions 2 to 5 written in `usability.md`
-- [ ] S1c merged; branch from `origin/main`
-- [ ] Commits 1 to 4, each checked
-- [ ] The download checked once in `pnpm dev:mock` (one dev server, stopped after)
+- [ ] C1 to C4 answered by the user and written in `usability.md` on `frontend-plan`
+- [ ] S1c.2 merged; branch from `origin/main`
+- [ ] Commits 1 to 5, each checked
+- [ ] The download checked once in `pnpm dev:mock` (one dev server, one page at a time, stopped after)
 - [ ] The description of the PR written from this plan; the endpoint checked against `createExport`
