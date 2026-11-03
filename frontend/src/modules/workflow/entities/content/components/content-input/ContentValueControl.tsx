@@ -1,6 +1,7 @@
 'use client'
 
 import { useId } from 'react'
+import type { ControllerRenderProps } from 'react-hook-form'
 
 import type { FieldControlProps } from '@/shared/components/form'
 import { NumberInput } from '@/shared/components/form/number'
@@ -28,12 +29,24 @@ interface ContentValueControlProps {
   definition: Pick<WorkflowDefinition, 'value_lists'> | undefined
   /** The id and `aria-invalid` that the label and the error of the field give the control. */
   controlProps?: FieldControlProps | undefined
+  /** The name and the blur of the field in the form around the control, which tie it to its value. */
+  formField?: Pick<ControllerRenderProps, 'name' | 'onBlur'> | undefined
+  /** The element of the control, for the form to focus it. */
+  controlRef?: ((instance: HTMLElement | null) => void) | undefined
 }
 
-function TextControl({ value, onChange, controlProps }: ContentValueControlProps) {
+function TextControl({
+  value,
+  onChange,
+  controlProps,
+  formField,
+  controlRef,
+}: ContentValueControlProps) {
   return (
     <Input
       {...controlProps}
+      {...formField}
+      ref={controlRef}
       value={isString(value) ? value : ''}
       onChange={(event) => {
         onChange(event.target.value)
@@ -42,10 +55,18 @@ function TextControl({ value, onChange, controlProps }: ContentValueControlProps
   )
 }
 
-function TextareaControl({ value, onChange, controlProps }: ContentValueControlProps) {
+function TextareaControl({
+  value,
+  onChange,
+  controlProps,
+  formField,
+  controlRef,
+}: ContentValueControlProps) {
   return (
     <Textarea
       {...controlProps}
+      {...formField}
+      ref={controlRef}
       className="field-sizing-content min-h-16"
       value={isString(value) ? value : ''}
       onChange={(event) => {

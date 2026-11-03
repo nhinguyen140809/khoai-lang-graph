@@ -8,7 +8,10 @@ import { assertPresent } from '@/shared/lib/guards'
 import { expectNoAccessibilityViolations, typeText } from '@/test/steps'
 
 import type { ContentFormValues } from '../../../values/content-form.schema'
-import { contentFormValuesSchema, withContentProblems } from '../../../values/content-form.schema'
+import {
+  contentFormValuesSchema,
+  withContentProblems,
+} from '../../../values/content-form.schema'
 import { ContentFieldInput } from '../ContentFieldInput'
 import {
   type FieldChange,
