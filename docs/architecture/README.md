@@ -237,7 +237,7 @@ Requirements engineering output has two levels, artifacts and the items inside t
 |---|---|---|
 | `artifacts` | Upper level: a work product | Project, kind, title, summary, version, review status, origin, and `content`, a JSON column with the fields of the artifact kind |
 | `artifact_items` | Lower level, and node of the trace graph | Artifact, kind, key, parent item, position, version, review status, origin, and `content`, a JSON column with the fields of the item kind |
-| `trace_links` | Edge of the trace graph | Source item, target item, link type, target version, quote |
+| `trace_links` | Edge of the trace graph | Source item, target item, link type, target version, the quoted words of the source and of the target |
 
 Options considered for the artifact fields:
 

@@ -433,13 +433,23 @@
           "type": "boolean",
           "description": "Following links of this type from an item must never return to it."
         },
+        "quotes": {
+          "type": "object",
+          "additionalProperties": false,
+          "description": "Which item of a link of this type may be quoted: words of the source (source_quote), words of the target (target_quote). A quote is optional where it is allowed.",
+          "properties": {
+            "source": { "type": "boolean" },
+            "target": { "type": "boolean" }
+          },
+          "required": ["source", "target"]
+        },
         "pairs": {
           "type": "array",
           "minItems": 1,
           "items": { "$ref": "#/$defs/linkPair" }
         }
       },
-      "required": ["key", "title", "acyclic", "pairs"]
+      "required": ["key", "title", "acyclic", "quotes", "pairs"]
     },
     "linkPair": {
       "type": "object",

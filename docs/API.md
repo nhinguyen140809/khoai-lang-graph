@@ -788,10 +788,10 @@ Editing rule: the user changes an artifact or its items only while the run of th
 
 | Method and path | Purpose | Phase |
 |---|---|---|
-| `GET /items/{item_id}/trace` | The chain of one item; `?direction=` with one of `backward`, `forward`, `both` (default `both`); `?depth=` (default 5). Returns `items` and `links`, see [Trace body](#trace-body) | MVP |
+| `GET /items/{item_id}/trace` | The chain of one item; `?direction=` with one of `backward`, `forward`, `both` (default `both`): `backward` follows the links from their source to their target (where the item came from), `forward` from their target to their source (what was built from it); `?depth=` (default 5). Returns `items` and `links`, see [Trace body](#trace-body) | MVP |
 | `GET /artifacts/{artifact_id}/trace` | The chains of all the items of one artifact, from the interview to the backlog, in one answer; same `?direction=` and `?depth=`, with `depth` defaulting to no limit. Returns `items` and `links`, see [Trace body](#trace-body) | MVP |
 | `GET /projects/{project_id}/trace-links` | Current links, without the removed ones; filters `link_type`, `source_item_id`, `target_item_id` | MVP |
-| `POST /projects/{project_id}/trace-links` | Create a link by hand; body `source_item_id`, `target_item_id`, `link_type`, `note`. The pair of item kinds must be allowed for the link type, otherwise `422 validation_failed` | MVP |
+| `POST /projects/{project_id}/trace-links` | Create a link by hand; body `source_item_id`, `target_item_id`, `link_type`, `note`, `source_quote`, `target_quote` (both optional). The pair of item kinds must be allowed for the link type, and the quotes must follow the [quote rules](#quote-rules), otherwise `422 validation_failed` | MVP |
 | `DELETE /trace-links/{link_id}` | Remove a link. The link keeps its row with `deleted_at` set, so the links of an earlier step can be shown again; lists and trace views leave it out | MVP |
 | `GET /projects/{project_id}/traceability/matrix` | Rows of `derived_from` chains from backlog item down to raw requirement, see [Matrix body](#matrix-body) | MVP |
 | `GET /projects/{project_id}/traceability/coverage` | Lists: requirements with no backlog item, requirements with no source, items that need review after a source changed, see [Coverage body](#coverage-body) | MVP |
@@ -820,7 +820,8 @@ Editing rule: the user changes an artifact or its items only while the run of th
       "target_item_id": "5f20...",
       "link_type": "derived_from",
       "target_version": 2,
-      "quote": null,
+      "source_quote": null,
+      "target_quote": null,
       "note": null
     }
   ]
@@ -828,6 +829,15 @@ Editing rule: the user changes an artifact or its items only while the run of th
 ```
 
 Both lists are in full, not paged: the answer for an artifact is bounded by the items of one project. `source_item_id` and `target_item_id` of every link are the `id` of an entry of `items`; a link whose other end is beyond `depth` is left out. The order is by `key` for items and by `id` for links. `404 not_found` for an item or an artifact that does not exist.
+
+#### Quote rules
+
+A link may quote the words that it is about, on each side: `target_quote` holds words of the target item, such as the exact words of an interview message for `evidenced_by`, and `source_quote` holds words of the source item, such as the part of a requirement that comes from the item it is based on. Each is null when the link is about the whole item. A link reads from its source to its target through the title of its link type ("REQ-001 Based on AR-001").
+
+- `quotes` of the link type in the workflow definition says which side may hold words (`quotes.source`, `quotes.target`); a quote on a side that the link type does not allow answers `422 validation_failed` at that field. In definition version 1, `evidenced_by`, `resolved_by`, `concerns` and `flags` may quote their target, `derived_from` both sides, and the other link types neither.
+- A quote is one run of words of at most 300 characters, found word for word in one `text` or `textarea` field of its item: the target at `target_version`, the source at its version when the link is made. Otherwise `422 validation_failed` at that field.
+- A link has at most one quote per side, since a source, a target and a link type make one link.
+- The server never rewrites a quote. When the item changes later, its words may no longer be in it; the client then shows the quote without marking it.
 
 #### Matrix body
 

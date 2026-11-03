@@ -115,7 +115,7 @@ ReqView: the specification as a table with numbered headings and a panel of attr
 
 ![Dovetail highlights](https://mintcdn.com/dovetail-e5aa4160/mN7xFQnMVduaQRDY/help/projects/highlights/Highlightshero.png?fit=max&auto=format&n=mN7xFQnMVduaQRDY&q=85&s=2b144d0bf789fe5bf1492e7a934804b1)
 
-**For this system.** A link `evidenced_by` holds `{message, quote}`. Opening a raw requirement or a latent need can highlight its quote in the interview transcript, and each message of the transcript can list the items that cite it.
+**For this system.** A link `evidenced_by` holds `{message, target_quote}`. Opening a raw requirement or a latent need can highlight its quote in the interview transcript, and each message of the transcript can list the items that cite it.
 
 ## 7. Whiteboard and story map
 

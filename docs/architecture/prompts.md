@@ -139,7 +139,7 @@ An agent returns items through an output model, never as free text that is parse
 
 - Each returned item has the content fields of its kind, minus the fields marked `readOnly` and those set by the user.
 - A new item has a `ref`, a short name unique within the response such as `R1`. An existing item has its `key`, and an agent returns one only to change its lifecycle fields; a change of what an item says is a new item with a `supersedes` link, see [Data shape: two levels](../DATA_SHAPE.md#two-levels-artifact-and-item). The server assigns keys to new items.
-- Link fields have the name of the link type, as in the prompt view, and name the items the item is linked to, by key or by `ref` of the same response, for example `derived_from: ["R1", "LN-002"]`. The server turns them into trace links.
+- Link fields have the name of the link type, as in the prompt view, and name the items the item is linked to, by key or by `ref` of the same response, for example `derived_from: ["R1", "LN-002"]`. A link of a type that allows words may be an object with its words instead, for example `evidenced_by: [{ "message": "PER-001#4", "target_quote": "<exact words>" }]` and `derived_from: [{ "item": "R1", "source_quote": "<words of this item>", "target_quote": "<words of R1>" }]`. The server turns them into trace links, and a quote that breaks the [quote rules](../API.md#quote-rules) fails the validation of the step.
 - The model may return fields of the artifact itself, such as `summary` and the content fields of the artifact kind.
 
 ## 7. Writing rules
