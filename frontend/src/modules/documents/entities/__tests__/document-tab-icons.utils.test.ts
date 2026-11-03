@@ -2,7 +2,7 @@ import { describe, expect, it } from 'vitest'
 
 import { contentDisplays } from '@/modules/workflow/entities'
 
-import { documentTabIconName, itemTabIconName } from '../document-tab-icons.utils'
+import { documentTabIconName, itemTabIconName } from '../utils/document-tab-icons.utils'
 
 describe('documentTabIconName', () => {
   it('names the display of the document', () => {

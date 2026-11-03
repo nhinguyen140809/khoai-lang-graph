@@ -1,6 +1,6 @@
 import type { ContentDisplay } from '@/modules/workflow/entities/@x/documents'
 
-import type { DocumentTabIconName } from './document-tab-icons.types'
+import type { DocumentTabIconName } from '../types/document-tab-icons.types'
 /**
  * The name that the page of a document gives its tab icon, among the tab icons of Documents: the display of its first part, so that a
  * document of cards, of a table or of a transcript each has a look of its own, or a document alone

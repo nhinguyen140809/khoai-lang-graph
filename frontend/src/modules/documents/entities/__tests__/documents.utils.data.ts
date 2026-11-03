@@ -3,7 +3,7 @@ import { projectIds } from '@/mocks/shared/db'
 import { workflowDefinitionFixture } from '@/mocks/workflow/workflow.fixtures'
 import { assertPresent } from '@/shared/lib/guards'
 
-import type { DocumentMark } from '../documents.types'
+import type { DocumentMark } from '../types/documents.types'
 
 export const mentorArtifacts = artifactFixtures.filter(
   ({ project_id }) => project_id === projectIds.mentor,
