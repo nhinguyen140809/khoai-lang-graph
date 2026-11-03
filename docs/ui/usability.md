@@ -251,10 +251,10 @@ The outline:
 - Appears under the document open in the active tab, while every other document stays one row. The side panel holds the list of documents and one outline, not every item of the project as the current explorer does.
 - A row shows the title of the item; the key and the fields are on the item page. A collapsed section shows how many items it holds.
 - The row of the item in the active tab is marked, and stays in view while Previous and Next move through the items.
-- Marks after a title: `*` edited by the user and not yet reviewed, `!` made from an older version of an item it links to. Superseded and deleted items are hidden; search and the history of an item still reach them.
-- A document without sections is grouped by item kind, each group named by the `title` of the item kind schema. The outline of an interview transcript lists the questions of the interviewer, one row per turn. The elicitation plan has no items; its outline lists the headings of its fields.
+- States, by attention and not by meaning (answers of 2026-11-01 and 2026-11-03), as in [the reference of the tree](documents-tree-reference.png): a line guides each level; the color of the title says how much the row asks of the user now, and one letter at the end of the row says which state, only where the color alone would leave a doubt, with no icon. `warning`: a document under review (`R`), an open issue in it (`?`), its drafts (color only, "Needs your review"). `primary`: a document being written (`W`), an item edited by the user and not reviewed yet (`E`). Muted: a kind not started, a rejected item (`X`). `!` marks an item made from an older version of an item it links to, "Based on an older version": `warning` in a document under review, `primary` outside one. A tooltip on each row gives its state in full; a collapsed section takes the color of the highest level under it. The footer of the side panel counts only what needs the user in the open document ("2 to review, 1 to resolve, 1 out of date"). Superseded and deleted items are hidden; search and the history of an item still reach them.
+- A document without sections is grouped by item kind, each group named by the `title` of the item kind schema. The outline of an interview transcript has no row for its messages: a message has no page of its own (`x-ui-navigable: false`) and is read in the transcript, where the words that items quote are marked. The elicitation plan has no items; its outline lists the headings of its fields.
 - The command palette in the top bar goes to documents and items by title or key, and the Search feature lists results ([5.5](#55-search)), so the side panel of Documents has no search box of its own.
-- The side panel is 280 px wide and collapses, with `Ctrl+B` as an accelerator. Below a window width of 1440 px it shares the space with the right panel: opening a peek collapses the side panel, and closing it brings the side panel back. The activity bar stays.
+- The side panel is 280 px wide and collapses, with `Ctrl+B` as an accelerator. Below a window width of 1440 px it shares the space with the right panel: opening a peek collapses the side panel, and closing it brings the side panel back; while the side panel gives way, `Ctrl+B` closes the peek and brings it back. The activity bar stays.
 
 ### 5.4 Opening an item
 
@@ -267,9 +267,12 @@ The outline:
 
 **Proposal.** I2 is the home of every item, and I1 serves the links met while reading.
 
-- **Item page.** Opened from the outline, from search, and from `Open as page` in a peek, in the preview tab, or in a kept tab after a double click, see [5.6](#56-tabs). Its URL is built from the item key: keys are unique in a project and never reused, and an edit by the user keeps the key, so an item can be bookmarked and sent to a teammate. Previous and Next follow the outline order across sections and show the position ("1 of 18"); `J` and `K` are accelerators, as in Jira.
-- **Peek.** Opened from a row in the table of a document, a key in an entry of the chat of Activity, a disagreement, or "Based on and used by". It shows the title, the key, the main field and the source, with `Open as page`. It uses the right panel.
-- **Fields on the item page.** In `x-ui-field-order`, the label above the value, list fields as lists. Empty optional fields are hidden when reading and shown when editing. `Edit` turns the page into the form of the content schema, see [Web App: artifacts and items](../architecture/web-app.md#6-artifacts-and-items).
+- **Item page.** Opened from the outline, from search, and from `Open as page` in a peek, in the preview tab, or in a kept tab after a double click, see [5.6](#56-tabs). Its URL holds the `id` of the item, as every path of the API, so an item can be bookmarked and sent to a teammate. Previous and Next float over the bottom right corner of the page, show while the user acts and fade after a moment without action; they follow the outline order across sections and show the position ("3 of 18"); `J` and `K` are accelerators, as in Jira.
+- **Peek.** Opened from the key of a row in the table of a document or of a card, drawn as a button ("Quick look at REQ-001"; the title stays the link to the item page), from a key in an entry of the chat of Activity, or from a disagreement. It shows the title, the key line, the main field and "Why this item exists", with `Open as page`, and "Close the quick look" on its close button. It uses the right panel, and its item is part of the address: Back closes it, a reload keeps it, a link opens it, and another page closes it. A second press on the key closes it; the key of another item replaces it.
+- **Fields on the item page.** In `x-ui-field-order`, the label above the value, list fields as lists. Empty optional fields are hidden when reading and shown when editing. `Edit` turns the page into the form of the content schema, see [Web App: artifacts and items](../architecture/web-app.md#6-artifacts-and-items), and the page then shows the form alone: no links, no origin, no history, no Previous and Next, no `J` and `K`, until Save or Cancel; Cancel after a change asks "Discard your changes?".
+- **When a document can change.** Only while the run waits for a review that allows edits, and only the documents of that review. Otherwise `Edit` and `Restore this version` stay on the page, disabled, and their tooltip gives the reason on hover and on focus: "Documents cannot change while the agents work.", "Only the documents under review can change now.", "This review does not take changes.", or "A document can change while it waits for your review.".
+- **Links of an item.** In three places, each with one job. The words that a link quotes are marked in the text where they are; a link quotes words on its source side, its target side, or both, as its link type allows (an interview message for `evidenced_by` and `resolved_by`, both sides for `derived_from`, the requirement for `concerns` and `flags`, none for the others), at most one run of words per side. Under the key line, every direct link is a chip with the key and the title of the other item, in the words of its link type ("Based on", and "Based on this item" for a link from another item); hovering a chip lights its marks in the text, and hovering a mark lights its chips. A chip or a mark opens a card with the other item: its title, status, main field and the words it quotes, and `Open`. At the end of the page, "Why this item exists" gathers the chain that the item is based on, down to the words of the interview, with `Read`, which opens the transcript at that message. A failure to load the links shows one line with Try again and leaves the rest of the page as it is.
+- **History.** A button "History" floats over the bottom left corner of the page. It opens in levels: first the selected version, with Newer and Older, "Show changes" and "Restore this version"; then the list of every version above it, newest first. While the history is open, at either level, the page shows the selected version, the current one at the start, with its changes marked in the fields when asked (removed words struck through in red, added words in green), and no link: the chips, the marks and "Why this item exists" come back when the history closes. Restore asks first, without a red button, since restoring again undoes it; after a restore the history stays open with the new version on top.
 - **Review across item pages.** During a review, the review bar stays at the bottom of the document under review and of every item page of that document, with the count of items edited so far, so the user approves after the last item without going back to the document.
 - **Superseded item.** Its page stays reachable from links and from history, with a banner "Replaced by REQ-014" that links to the new item.
 - I3 can come later as a display of the backlog and the validation report; it needs no change to the frame.
@@ -627,46 +630,50 @@ One item in a tab, opened from the outline. Here the specification is approved a
 |   [A]    | (v) Interview plan       | Specification x | [Search mentors] x | _Interview..._ x|
 | Activity | (v) Personas             +--------------------------------------------------------+
 |          | (v) Interviews         3 |   Specification > 3 Functional > 3.1 Mentor discovery  |
-|>  [D]    | (v) Requirements analysis|                               1 of 18   [ < ]  [ > ]   |
-|>Documents| (v) Specification        |                                                        |
-|          |     v 3   Functional  12 |   Search mentors                            [ Edit ]   |
-|   [S]    |       v 3.1 Mentor dis...|   REQ-001   Must   Functional   Approved, version 3    |
-|  Search  |         [Search mentors] |                                                        |
-|          |         Filter by field  |   Statement                                            |
-|   [T]    |       > 3.2 Booking    5 |   The system shall let a student search mentors        |
-|  Trace   |       > 3.3 Sessions   5 |   by field and availability.                           |
-|          |     > 4   Non-funct... 6 |                                                        |
-|          | (>) Backlog              |   Source                                               |
-|          | ( ) Validation reports   |   Student, interview, answer 4              [ Read ]   |
-|          |                          |   "I never know who is free this week, so I give       |
-|          |                          |   up."                                                 |
-|          |                          |                                                        |
-|          |                          |   Rationale                                            |
-|          |                          |   Students cannot find a free mentor today.            |
+|>  [D]    | (v) Requirements analysis|                                                        |
+|>Documents| (v) Specification        |   Search mentors                            [ Edit ]   |
+|          |     v 3   Functional  12 |   REQ-001   Must   Functional   Approved, version 3    |
+|   [S]    |       v 3.1 Mentor dis...|   Based on [AR-001 The system lists...]                |
+|  Search  |         [Search mentors] |   Based on this item [US-001 Search by field]          |
+|          |         Filter by field  |                                                        |
+|   [T]    |       > 3.2 Booking    5 |   Statement                                            |
+|  Trace   |       > 3.3 Sessions   5 |   The system shall let a student [search mentors by    |
+|          |     > 4   Non-funct... 6 |   field of study].                                     |
+|          | (>) Backlog              |                                                        |
+|          | ( ) Validation reports   |   Rationale                                            |
+|          |                          |   Students named finding a mentor in their field as    |
+|          |                          |   their main problem.                                  |
 |          |                          |                                                        |
 |          |                          |   Acceptance criteria                                  |
-|          |                          |   1. Results within 2 s for 1,000 mentors              |
-|          |                          |   2. Filters for field and availability                |
+|          |                          |   1. Searching by a field of study lists only mentors  |
+|          |                          |      of that field                                     |
 |          |                          |                                                        |
 |          |                          |   Verification     Test                                |
 |          |                          |                                                        |
-|   [*]    |                          |   > Based on and used by (3)                           |
-| Settings |                          |   > History (3 versions)                               |
+|          |                          |   Why this item exists                                 |
+|          |                          |     Based on  AR-001  The system lists mentors by...   |
+|          |                          |       Based on  RAW-001  I want to find a mentor...    |
+|          |                          |         Student interview, turn 2             Read     |
+|          |                          |         [I ask seniors in my club], but I never know   |
+|          |                          |         who is free this week, so I give up.           |
+|   [*]    |                          |                                                        |
+| Settings |                          |   [ History ]                   3 of 18   [ < ]  [ > ] |
 +----------+--------------------------+--------------------------------------------------------+
 |   (>) Working: Backlog  [ Stop ]                                                             |
 +----------------------------------------------------------------------------------------------+
 ```
 
-- The breadcrumb links to the document and to each section. `1 of 18` is the position in the outline order of the specification; `[ < ]` and `[ > ]` are Previous and Next, inside this tab.
+- The breadcrumb links to the document and to each section. `3 of 18` is the position in the outline order of the specification; `[ < ]` and `[ > ]` are Previous and Next, inside this tab, floating over the bottom right corner; `[ History ]` floats over the bottom left corner.
 - The line under the title holds the key, the fields the user compares between items (priority and type) and the review status.
 - Quality category and fit criterion are empty for this requirement, so they are hidden; `Edit` shows every field of the content schema.
-- `Source` follows the `derived_from` chain down to the raw requirement and shows the quote of its `evidenced_by`; `Read` opens the transcript at that answer in the preview tab, drawn here as `_Interview..._` for its italic title. The source comes right after the statement, because it is what no other tool shows.
-- `Based on and used by` and `History` are the TRACE and TIMELINE tabs of the current bottom panel, collapsed.
+- The two lines under the key line are the links of the item: `Based on [AR-001 ...]` for its own link, `Based on this item [US-001 ...]` for the link of the user story built from it. `[search mentors by field of study]` in the statement are the words that come from AR-001, marked; a click on them or on a chip opens a card with AR-001 and `Open`.
+- `Why this item exists` follows the `derived_from` chain down to the raw requirement and ends with the words of the interview that it quotes, marked in the message; `Read` opens the transcript at that message in the preview tab, drawn here as `_Interview..._` for its italic title. It sits at the end of the page and sums up the chain that the marks point into.
+- `[ History ]` replaces the TIMELINE tab of the current bottom panel ([5.4](#54-opening-an-item)); while it is open, the page shows the selected version and hides the links. The tree draws its states as colors and letters ([5.3](#53-inside-a-document-sections-and-items)); the marks `(v)`, `(>)`, `(!)`, `( )` of the skeletons stand for them in text.
 - A persona uses the same page with its 11 fields; its five list fields (goals, interests, constraints, priorities, concerns) are shown as lists under their labels.
 
 ### 7.5 Item peek
 
-A row in the table of a document, or a key in an entry of the chat of Activity, a disagreement or a list of links, opens the item in the right panel, so the user keeps their place. At 1280 px the side panel collapses while the right panel is open; the activity bar stays.
+The key of a row in the table of a document, or a key in an entry of the chat of Activity or of a disagreement, opens the item in the right panel, so the user keeps their place. The links of an item page open their own card instead ([5.4](#54-opening-an-item)). At 1280 px the side panel collapses while the right panel is open; the activity bar stays.
 
 ```text
 +----------------------------------------------------------------------------------------------+
@@ -674,17 +681,17 @@ A row in the table of a document, or a key in an entry of the chat of Activity, 
 +----------+----------------------------------------------------+------------------------------+
 |   [A]    | [Requirement specification] x                      | Search mentors           [x] |
 | Activity +----------------------------------------------------+ REQ-001   Must   Approved    |
-|          |   Requirement specification          [ Export v ]  |                              |
+|          |   Requirement specification    [ Edit ] [ Export ] |                              |
 |>  [D]    |   Approved, version 2                              | The system shall let a       |
 |>Documents|                                                    | student search mentors by    |
-|          |   3    Functional requirements                     | field and availability.      |
+|          |   3    Functional requirements                     | field of study.              |
 |   [S]    |   3.1  Mentor discovery                            |                              |
-|  Search  |        How a student finds a mentor.               | Source                       |
-|          |                                                    | Student, interview, answer 4 |
-|   [T]    |        Search mentors        Must    Test          | "I never know who is free    |
-|  Trace   |        Filter by field       Should  Test          | this week, so I give up."    |
-|          |   3.2  Booking                                     |                              |
-|          |        Book a 30-minute ...  Must    Test          |           [ Open as page ]   |
+|  Search  |        How a student finds a mentor.               | Why this item exists         |
+|          |                                                    |  Based on AR-001             |
+|   [T]    |        [REQ-001] Search mentors      Must    Test  |   Based on RAW-001           |
+|  Trace   |         REQ-002  Filter by field     Should  Test  |    Student interview, turn 2 |
+|          |   3.2  Booking                                     |    [I ask seniors in my club]|
+|          |         REQ-005  Book a 30-minute... Must    Test  |           [ Open as page ]   |
 |   [*]    |        ...                                         |                              |
 | Settings |                                                    |                              |
 +----------+----------------------------------------------------+------------------------------+
@@ -692,8 +699,10 @@ A row in the table of a document, or a key in an entry of the chat of Activity, 
 +----------------------------------------------------------------------------------------------+
 ```
 
-- The peek holds the title, the key, the main field and the source; every other field is on the item page.
+- `[REQ-001]` is the key of the row, a button "Quick look at REQ-001", pressed while its item is peeked; the title of the row stays the link to the item page.
+- The peek holds the title, the key line, the main field and "Why this item exists"; every other field is on the item page. `[x]` reads "Close the quick look" for assistive technology; Escape closes it too, and the focus goes back to the key.
 - `Open as page` opens the item page in the preview tab; a double click on the tab keeps it.
+- **Export.** `[ Export ]` beside the title of a document (its label for assistive technology "Export Requirement specification") opens one dialog: the documents to export as a list of choices (the export templates of the definition), the formats of the chosen one, and Export; the palette has the same commands ("Export: Requirement specification"). Export closes the dialog; a notice says that the file is being prepared, then the file downloads by itself and the notice offers "Download again", or says that the export failed and offers "Try again". A reload forgets the exports being prepared; the list of the exports of a project comes with Settings. Export stays enabled while the agents work, since it reads the stored versions.
 
 ### 7.6 Search results
 
@@ -798,7 +807,7 @@ A small size fits text that is short, is glanced at instead of read, and has roo
 
 - **One status, one place.** The state of the project is said once, in the status bar and the marks of the documents, not again as a badge in the top bar and a card in the conversation.
 - **Agents report findings, not process.** "The student and the admin disagree on who approves a booking" instead of "analyst: 24 AR, 3 AMB, 1 CONF".
-- **Buttons are a verb and a noun.** "Approve analysis", "Export specification", "Interview again".
+- **Buttons are a verb and a noun.** "Approve analysis", "Interview again", "Restore this version". A button beside the title of what it acts on takes its noun from that title: "Export" and "Edit" sit at the right of the title of the document, and their labels for assistive technology name it ("Export Requirement specification").
 - **Numbers only where they lead to a decision.** The count of disagreements leads to reading them; the step number and the token count do not.
 
 ### 8.3 Words
@@ -820,7 +829,12 @@ A small size fits text that is short, is glanced at instead of read, and has roo
 | Conflict | Disagreement |
 | Backlog item | User story |
 | Validation issue | Problem found |
-| `derived_from`, `evidenced_by` | Based on, Source |
+| `derived_from`, `evidenced_by` | Based on; Why this item exists (the chain down to the interview) |
+| A link to the item, seen from its target | "Based on this item" (the title of the link type, then "this item") |
+| `outOfDate` (a link made from an older version of its target) | Based on an older version, `!` |
+| Peek | Quick look |
+| Revisions | History, Version 3 |
+| Restore | Restore this version |
 | Accept; Reject and re-analyse; Reject and re-interview | Approve analysis; Redo the analysis; Interview again |
 | `max_cost_usd` | Budget |
 
@@ -891,15 +905,15 @@ What makes a screen look generated, and what to do instead:
 
 ## 11. Open points
 
-1. **Documents still to come.** Listing the artifact kinds that have no artifact yet, muted, tells the user what to expect, but a kind that a run never produces (an optional branch of an experiment) would stay "not started". Proposal: list them while a run is unfinished and hide them once it finishes. The alternative is to list only the documents that exist.
+1. **Documents still to come.** Settled (2026-11-01): the artifact kinds that have no artifact yet are listed, muted, while the project has an unfinished run, and hidden once it has none.
 2. **Switch to the developer view.** A per-user setting or a URL prefix; every user or only a researcher role.
 3. **Language of the UI.** Vietnamese, English or both is an open question of the planning; the user words of [8.3](#83-words) need a Vietnamese set too.
 4. **Time left.** "About N minutes left" in the status bar needs durations of past runs; the API does not provide them today, so the skeletons show only counts.
 5. **Several runs in one project.** The status bar shows one run per project, which matches [Screen Skeletons, open point 1](skeletons.md#10-open-points) only if a project allows one active run.
 6. **Groups of documents.** Interview transcripts (one per persona) and validation reports (one per run of the validator) are groups in the side panel of Documents. Open: whether the group of validation reports shows every report or only the latest.
-7. **Item addresses.** The item page URL by key, as proposed in [5.4](#54-opening-an-item), or by `id`. A key is readable and stable under user edits; an `id` also survives a key format change.
-8. **Order of the groups in the outline.** A document without sections is grouped by item kind in the order of the definition, which puts raw requirements first; the skeletons on this page put disagreements and unclear points first, because they are what a review decides on. That order needs either a change of the definition or a rule in the web app.
-9. **Peek or page from a row.** A row of a document table opens a peek in this proposal; if tests show that users mostly read items in full, the row opens the page instead.
+7. **Item addresses.** Settled (2026-11-01): the item page URL holds the `id` of the item, as every path of the API.
+8. **Order of the groups in the outline.** Settled (2026-11-01): a document without sections groups its items by item kind in the order of the definition, with no rule in the web app; another order is a change of the definition. The skeletons on this page still put disagreements first and are not redrawn.
+9. **Peek or page from a row.** The key of a row opens a peek and its title opens the page; if tests show that users mostly read items in full, the key opens the page instead.
 10. **Stage titles for the user.** Settled: the status bar shows the `title` of the current stage. A stage marked `internal`, such as "Intent routing", is not shown, and the status bar keeps the title of the previous stage. The wireframes in this page still show the earlier wording, such as "Waiting for you: Analysis review"; their boxes are drawn for the shorter text and are not redrawn.
 11. **Preview tab for non-developers.** Whether the italic title is enough for a non-developer to notice that the next click replaces the tab ([5.6](#56-tabs)); if tests show it is not, a clearer mark on the tab. Also open: whether the open tabs come back when the project opens again on another device.
 12. **Trace on the activity bar.** A feature of its own, as proposed, or a view inside Documents if tests show that users seldom open it.
@@ -910,7 +924,7 @@ What makes a screen look generated, and what to do instead:
 
 - [ ] Choose a frame option: A, C or D (B is rejected by D0)
 - [ ] Confirm the brief and the jobs of [section 2](#2-users-and-their-jobs) with two or three target users
-- [ ] Decide whether documents still to come are listed ([open point 1](#11-open-points))
+- [x] Decide whether documents still to come are listed ([open point 1](#11-open-points))
 - [ ] In the same test, check that users notice a review that starts while they read another document (status bar at the bottom and a notification, see [5.2](#52-where-the-project-stands))
 - [ ] Draw the chosen frame from a second test definition with another shape (more stages, a loop, a new artifact kind) to check D0
 - [ ] Agree the user words of [8.3](#83-words) and move them into the labels of the workflow definition

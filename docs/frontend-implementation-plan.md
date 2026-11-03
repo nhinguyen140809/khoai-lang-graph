@@ -501,10 +501,10 @@ After the entities, one screen at a time, each drawn first from the skeletons of
 
 | # | Screen | Module of the screen | Features | Copy with the screen |
 |---|---|---|---|---|
-| S1 | Documents: the side panel of documents with the outline, the document tab, the item page and peek | `artifact` | `edit`, `restore`, export | None |
+| S1 | Documents: the side panel of documents with the outline, the document tab, the item page and peek | `documents` | `artifact/features/edit`, `restore`, `export` | None |
 | S2 | Activity: the tree of the stages in the side panel, the chat in a tab, the review bar of a document | `activity`, `review` | `thread/features/send-message`, `review/features/answer`, `run/features/stop` | `features/review/review-form.utils.ts` to `review/features/answer` |
 | S3 | Search, in its side panel and in the command palette | `artifact` | None | None |
-| S4 | Trace: the matrix, the gaps and issues | `trace-link` | Creating and removing a link | `features/traceability/matrix-filter.utils.ts` |
+| S4 | Trace: the matrix, the gaps and issues | `trace` | Creating and removing a link | `features/traceability/matrix-filter.utils.ts` |
 | S5 | Settings, both scopes | `settings` | The saves of `user`, `project` and `llm-model` | None |
 | S6 | Workflow, in the developer view: the graph of a run, its steps and its state | `run` | `run/features/retry` | `features/workflow/graph-layout.utils.ts` to `run/widgets/graph` |
 
@@ -549,7 +549,15 @@ The PRs go one at a time, in the order of the rows: each branch starts from `ori
 | E8 | `feat/fe/user-entities` | `feat(frontend): read and change the profile, the sessions and the settings of the user` | C1 |
 | E9 | `feat/fe/usage-entities` | `feat(frontend): read the usage of the user by group` | R1 |
 | B1 | `feat/fe/monthly-budget` | `feat(frontend): show the budget of the month in the status bar` ([D8](#d8-complete-entities-and-the-parts-of-p7)) | P7, E9 |
-| S1 to S6 | `feat/fe/<screen>` | One per screen of [section 8](#8-screens) | Their entities |
+| S1a | merged | #55 `refactor(frontend): group the artifact entities by topic and fix small issues`, #56 `docs(schemas): add a short title and x-ui-navigable to the items`, #57 `feat(frontend): read the outline and the status of the documents, and the content values in words`, #58 `feat(frontend): show the documents of a project in the side panel and in tabs` ([plan](frontend-s1a-documents-plan.md)) | E0 to E6, P7 |
+| S1b.D | `docs/fe/api-fields` | `docs(api): accept a change of a document only during a review, and quote the words of both items of a link` ([S1b plan](frontend-s1b-edit-artifacts-plan.md)) | S1a |
+| S1b.0 | `chore/fe/maintenance-before-edit` | `chore(frontend): move the page link to the frame, drop the artifact panel placeholder, fix the transcript links, and refuse a change outside a review in the mock` | S1b.D |
+| S1b.1 | `feat/fe/edit-entities` | `feat(frontend): read the inputs of the content fields, the history of a record, the links and the origin of an item, and when a document can change` | S1b.0 |
+| S1b.2 | `feat/fe/edit-artifacts` | `feat(frontend): edit an item and a document during a review, browse and restore their versions, and show the links and the origin of an item` | S1b.1 |
+| S1c.1 | `feat/fe/aside-panel` | `feat(frontend): add a right panel to the frame, which the side panel gives way to on a narrow window` ([S1c plan](frontend-s1c-item-peek-plan.md)) | S1b.2 |
+| S1c.2 | `feat/fe/item-peek` | `feat(frontend): peek at an item in the right panel from the keys of a document` | S1c.1 |
+| S1d | `feat/fe/export` | `feat(frontend): export a document from its page and from the command palette, and download it when it is ready` ([S1d plan](frontend-s1d-export-plan.md)) | S1c.2 |
+| S2 to S6 | `feat/fe/<screen>` | One per screen of [section 8](#8-screens) | Their entities |
 
 For every PR: a branch from `origin/main`; copy the files of its row from `feat/fe/mock` with `git show feat/fe/mock:<path>`, then apply the changes of its row; run the checks one at a time (typecheck when imports, types or routes change, lint of the changed files, tests of the touched folders; the full lint and the full test run in CI on the PR); search the diff for a non-ASCII character in prose and a leftover `console.log`; one-line Conventional Commits message, no AI attribution; open as a draft.
 
