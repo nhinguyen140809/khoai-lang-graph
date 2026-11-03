@@ -20,3 +20,8 @@ export function runStatusLabel(status: RunStatus | null): Wording {
 export function hasStageName(status: RunStatus): boolean {
   return !statusesWithoutStage.includes(status)
 }
+
+/** Whether a run in this status writes the documents, which the user then cannot change: `running` only. */
+export function isWritingRunStatus(status: RunStatus): boolean {
+  return status === 'running'
+}
