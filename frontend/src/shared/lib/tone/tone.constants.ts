@@ -29,6 +29,12 @@ export const toneClasses = {
   // The yellow is light, so its soft fill needs the same opacity as the warning's.
   chart:
     '[--tone:var(--chart)] [--tone-foreground:var(--chart-foreground)] [--tone-strong:var(--chart-strong)] [--tone-soft:color-mix(in_oklab,var(--chart)_35%,transparent)] [--tone-border:color-mix(in_oklab,var(--chart-strong)_50%,transparent)] dark:[--tone-soft:color-mix(in_oklab,var(--chart)_20%,transparent)]',
+  // The muted fill and its text are a pair of the theme, and the accent is its blue tint; both
+  // read as backgrounds, so their soft fill is the token itself.
+  muted:
+    '[--tone:var(--muted)] [--tone-foreground:var(--muted-foreground)] [--tone-strong:var(--muted-foreground)] [--tone-soft:var(--muted)] [--tone-border:var(--border)]',
+  accent:
+    '[--tone:var(--accent)] [--tone-foreground:var(--accent-foreground)] [--tone-strong:var(--accent-foreground)] [--tone-soft:var(--accent)] [--tone-border:var(--border)]',
 } as const satisfies Record<Tone, string>
 
 // Badge and Button read their props the same way. Without a color, solid and link take the

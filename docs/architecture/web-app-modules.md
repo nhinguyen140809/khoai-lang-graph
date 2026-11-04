@@ -255,7 +255,7 @@ Shared code knows no object of the product. What several modules read without be
 |---|---|---|
 | The two views of the app, the `Wording` of a value, and `ViewContext` with `useView` | `shared/lib/view/` | Every layer reads them; `Providers` of `src/providers/`, in the app layer, gives the app its view |
 | The addresses of the pages (`routes`) | `shared/routes/` | Every module links to the pages of other modules; the folders of `src/app/` are the routes themselves, and the route types of Next.js check each address |
-| The tones of a status and their classes | `shared/lib/tone/` | The UI components and the marks of every module color a state with them |
+| The tones and their classes, in the group of a status and the group of the rest | `shared/lib/tone/` | The UI components and the marks of every module color a state, a value or a person with them |
 | The comparison of a cost with its limit, its levels and their tones | `shared/lib/cost/` | `run` and `usage` compare a cost with its limit |
 | The meta of a query that holds a cost | `shared/api/query-client/` | The stream of a run loads such queries again without naming them |
 | The languages of the documents | `shared/config/output-language/` | The app offers them, today in the dialog that creates a project; project, the run config and the user settings all carry one, and in `project` it would make `run` read `project` |

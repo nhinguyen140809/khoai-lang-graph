@@ -2,6 +2,8 @@ import {
   ChartColumnIcon,
   CircleCheckIcon,
   CircleDashedIcon,
+  CircleDotIcon,
+  CircleOffIcon,
   InfoIcon,
   type LucideIcon,
   OctagonXIcon,
@@ -18,4 +20,6 @@ export const toneIcons: Record<Tone, LucideIcon> = {
   warning: TriangleAlertIcon,
   destructive: OctagonXIcon,
   chart: ChartColumnIcon,
+  muted: CircleOffIcon,
+  accent: CircleDotIcon,
 }

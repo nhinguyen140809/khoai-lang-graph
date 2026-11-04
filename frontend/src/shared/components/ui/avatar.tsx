@@ -1,8 +1,11 @@
 'use client'
 
+import { cva } from 'class-variance-authority'
 import { cn } from 'cn'
 import { Avatar as AvatarPrimitive } from 'radix-ui'
 import * as React from 'react'
+
+import { type Tone, toneClasses } from '@/shared/lib/tone'
 
 function Avatar({
   className,
@@ -34,17 +37,39 @@ function AvatarImage({ className, ...props }: React.ComponentProps<typeof Avatar
   )
 }
 
+// `variant` is the fill and `color` the meaning, as for Badge and Button; without either, the
+// fallback keeps its muted look.
+const avatarFallbackStyles = cva(
+  'flex size-full items-center justify-center rounded-full text-sm group-data-[size=sm]/avatar:text-xs',
+  {
+    variants: {
+      variant: {
+        soft: 'bg-(--tone-soft) text-(--tone-strong)',
+        solid: 'bg-(--tone) text-(--tone-foreground)',
+        none: 'bg-muted text-muted-foreground',
+      },
+      color: toneClasses,
+    },
+  },
+)
+
 function AvatarFallback({
   className,
+  variant,
+  color,
   ...props
-}: React.ComponentProps<typeof AvatarPrimitive.Fallback>) {
+}: React.ComponentProps<typeof AvatarPrimitive.Fallback> & {
+  variant?: 'soft' | 'solid' | undefined
+  color?: Tone | undefined
+}) {
+  // A color alone reads as a soft fill of that color; neither prop gives the muted look.
+  const fill = variant ?? (color === undefined ? 'none' : 'soft')
   return (
     <AvatarPrimitive.Fallback
       data-slot="avatar-fallback"
-      className={cn(
-        'flex size-full items-center justify-center rounded-full bg-muted text-sm text-muted-foreground group-data-[size=sm]/avatar:text-xs',
-        className,
-      )}
+      data-variant={fill}
+      data-color={color}
+      className={cn(avatarFallbackStyles({ variant: fill, color }), className)}
       {...props}
     />
   )

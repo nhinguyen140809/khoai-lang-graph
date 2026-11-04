@@ -54,6 +54,7 @@ type ThreadEntry =
   | {
       kind: 'message'
       initials: string
+      tone: Tone
       author?: string
       text: string
       attachment?: { name: string; description: string }
@@ -67,6 +68,7 @@ const thread: ThreadEntry[] = [
   {
     kind: 'message',
     initials: 'YN',
+    tone: 'primary',
     text: 'I want an online platform where university students find mentors.',
     attachment: { name: 'project-brief.pdf', description: 'PDF, 240 KB' },
   },
@@ -87,6 +89,7 @@ const thread: ThreadEntry[] = [
   {
     kind: 'message',
     initials: 'AN',
+    tone: 'chart',
     author: 'analyst',
     text: 'PER-001 and PER-003 disagree on who approves a booking, see CONF-001.',
     time: '0:52',
@@ -101,7 +104,9 @@ function ThreadRow({ entry }: { entry: ThreadEntry }) {
         <Message align={entry.author ? 'start' : 'end'}>
           <MessageAvatar>
             <Avatar>
-              <AvatarFallback>{entry.initials}</AvatarFallback>
+              <AvatarFallback variant="soft" color={entry.tone}>
+                {entry.initials}
+              </AvatarFallback>
             </Avatar>
           </MessageAvatar>
           <MessageContent>
