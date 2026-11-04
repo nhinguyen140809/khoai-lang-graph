@@ -17,3 +17,8 @@ export function textOf(value: unknown): string {
   if (typeof value === 'number' || typeof value === 'boolean') return String(value)
   return ''
 }
+
+/** The article before a word, by the sound of its first letter, for a sentence that names it. */
+export function articleOf(word: string): string {
+  return /^[aeiou]/i.test(word) ? 'an' : 'a'
+}
