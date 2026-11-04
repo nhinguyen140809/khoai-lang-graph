@@ -1,0 +1,787 @@
+<!doctype html>
+<html lang="en">
+  <head>
+    <meta charset="utf-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1" />
+    <title>Wireframe: transcript, persona, status and count</title>
+    <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/@fontsource-variable/mona-sans/index.css" />
+    <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/@fontsource-variable/noto-sans-mono/index.css" />
+    <script src="https://cdn.jsdelivr.net/npm/@tailwindcss/browser@4"></script>
+    <script src="https://cdn.jsdelivr.net/npm/lucide@latest/dist/umd/lucide.min.js"></script>
+    <style type="text/tailwindcss">
+      /* Token của dự án: frontend/src/app/styles.css (Night Owl Light), chép nguyên phần dùng tới. */
+      :root {
+        --font-ui: 'Mona Sans Variable', -apple-system, BlinkMacSystemFont, 'Segoe UI', system-ui, sans-serif;
+        --font-code: 'Noto Sans Mono Variable', ui-monospace, Menlo, Consolas, monospace;
+        --background: #fbfbfb;
+        --foreground: #403f53;
+        --card: #f0f0f0;
+        --primary: #3460be;
+        --primary-foreground: #ffffff;
+        --secondary: #e0e7ea;
+        --muted: #e0e7ea;
+        --muted-foreground: #4b6875;
+        --accent: #d3e8f8;
+        --destructive: #b50c1b;
+        --success: #027c5a;
+        --success-strong: #056e50;
+        --warning: #ffa37f;
+        --warning-strong: #a94e28;
+        --border: #cedadf;
+        --input: #c5d4da;
+        --ring: #3460be;
+        --sidebar: #f0f0f0;
+        --sidebar-accent: #d3e8f8;
+        --radius: 0.375rem;
+        --primary-foreground: #ffffff;
+        --success-foreground: #ffffff;
+        --warning-foreground: #011627;
+        --secondary-foreground: #403f53;
+        --chart: #fbd509;
+        --chart-strong: #9f5b06;
+        --chart-foreground: #011627;
+      }
+      /* Nấc Xám: bỏ màu nhấn, màu trạng thái và màu người nói, chỉ xem bố cục. */
+      :root[data-mau="xam"] {
+        --primary: #3f3f46;
+        --success: #52525b;
+        --success-strong: #52525b;
+        --warning: #a1a1aa;
+        --warning-strong: #52525b;
+        --chart: #d4d4d8;
+        --chart-strong: #52525b;
+        --ring: #3f3f46;
+      }
+      @theme inline {
+        --font-sans: var(--font-ui);
+        --font-mono: var(--font-code);
+        --color-background: var(--background);
+        --color-foreground: var(--foreground);
+        --color-card: var(--card);
+        --color-primary: var(--primary);
+        --color-primary-foreground: var(--primary-foreground);
+        --color-secondary: var(--secondary);
+        --color-muted: var(--muted);
+        --color-muted-foreground: var(--muted-foreground);
+        --color-accent: var(--accent);
+        --color-destructive: var(--destructive);
+        --color-success: var(--success);
+        --color-success-strong: var(--success-strong);
+        --color-border: var(--border);
+        --color-input: var(--input);
+        --color-ring: var(--ring);
+        --color-sidebar: var(--sidebar);
+        --color-sidebar-accent: var(--sidebar-accent);
+        --radius-md: calc(var(--radius) * 0.8);
+        --radius-lg: var(--radius);
+        --radius-xl: calc(var(--radius) * 1.4);
+        --radius-4xl: calc(var(--radius) * 2.6);
+      }
+      @layer base {
+        body { @apply bg-background text-foreground font-sans; line-height: 1.5; }
+      }
+    </style>
+    <style>
+      /* Tone của dự án (shared/lib/tone): biến --tone-strong, --tone-soft mà Badge và Highlight đọc. */
+      .tone-neutral { --tone-strong: var(--foreground); --tone-soft: color-mix(in oklab, var(--foreground) 8%, var(--background)); }
+      .tone-primary { --tone-strong: var(--primary); --tone-soft: color-mix(in oklab, var(--primary) 10%, var(--background)); }
+      .tone-success { --tone-strong: var(--success-strong); --tone-soft: color-mix(in oklab, var(--success) 12%, var(--background)); }
+      .tone-warning { --tone-strong: var(--warning-strong); --tone-soft: color-mix(in oklab, var(--warning) 35%, transparent); }
+      /* Màu của một người nói: tone có sẵn của design system, theo thứ tự trong danh sách người tham gia.
+         Người dẫn (người đầu tiên) lấy primary; người thứ hai trở đi lần lượt chart, accent, muted. Không dùng màu trạng thái. */
+      .spk-host { --spk: var(--primary); --spk-solid: var(--primary); --spk-fg: var(--primary-foreground); --spk-soft: color-mix(in oklab, var(--primary) 10%, var(--background)); }
+      .spk-1 { --spk-solid: var(--chart); --spk-fg: var(--chart-foreground); }
+      .spk-2 { --spk-solid: var(--accent); --spk-fg: var(--foreground); }
+      .spk-3 { --spk-solid: var(--muted); --spk-fg: var(--muted-foreground); }
+
+      /* ===== Thanh công cụ và khung lý do của wireframe (mẫu của skill) ===== */
+      .wf-bar { position: relative; z-index: 50; display: flex; align-items: center; gap: 16px; height: 56px;
+        padding: 0 16px; overflow-x: auto; white-space: nowrap; background: #fff; border-bottom: 1px solid #e5e5e5;
+        color: #737373; font: 14px/1 system-ui, -apple-system, sans-serif; }
+      .wf-bar *, .wf-reason * { box-sizing: border-box; }
+      .wf-group { display: flex; align-items: center; gap: 8px; flex-shrink: 0; }
+      .wf-set { display: flex; align-items: center; gap: 4px; flex-shrink: 0; padding: 3px; border-radius: 10px; background: #ebebed; }
+      .wf-set a { position: relative; display: inline-flex; align-items: center; gap: 6px; height: 30px; padding: 0 12px;
+        border-radius: 7px; color: #737373; text-decoration: none; }
+      .wf-set a:hover { color: #171717; }
+      .wf-switch { display: inline-flex; align-items: center; gap: 8px; flex-shrink: 0; color: #737373; text-decoration: none; }
+      .wf-switch i { position: relative; width: 36px; height: 20px; border-radius: 10px; background: #e4e4e7; transition: background .15s; }
+      .wf-switch i::after { content: ""; position: absolute; top: 2px; left: 2px; width: 16px; height: 16px; border-radius: 50%;
+        background: #fff; box-shadow: 0 1px 2px rgb(0 0 0 / .2); transition: translate .15s; }
+      .wf-switch[aria-checked="true"] i { background: #171717; }
+      .wf-switch[aria-checked="true"] i::after { translate: 16px 0; }
+      .wf-set a[aria-current="page"], .wf-flags a[aria-pressed="true"] { background: #fff; color: #171717; font-weight: 500;
+        box-shadow: 0 1px 2px rgb(0 0 0 / .08), 0 0 0 1px rgb(0 0 0 / .04); }
+      .wf-bar svg { width: 16px; height: 16px; flex-shrink: 0; }
+      .wf-flags a::before { content: ""; width: 12px; height: 12px; border: 1.5px solid #a3a3a3; border-radius: 3px; }
+      .wf-flags a[aria-pressed="true"]::before { border-color: #171717; background: #171717 url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 24 24' fill='none' stroke='white' stroke-width='4' stroke-linecap='round' stroke-linejoin='round'%3E%3Cpath d='M20 6 9 17l-5-5'/%3E%3C/svg%3E") center / 10px no-repeat; }
+      body[data-gon="1"] [data-wf-gon], body[data-bolap="1"] [data-wf-lap] { display: none; }
+      [data-wf-param="v"] a { justify-content: center; min-width: 32px; padding: 0 10px; }
+      [data-wf-param="v"] a[data-recommended]::after { content: ""; position: absolute; top: 5px; right: 5px;
+        width: 5px; height: 5px; border-radius: 50%; background: #3460be; }
+      .wf-menu { flex-shrink: 0; }
+      .wf-menu summary { display: flex; align-items: center; gap: 6px; height: 36px; padding: 0 10px; border-radius: 8px;
+        cursor: pointer; list-style: none; }
+      .wf-menu summary::-webkit-details-marker { display: none; }
+      .wf-menu summary:hover, .wf-menu[open] summary { background: #f4f4f5; }
+      .wf-menu b { color: #171717; font-weight: 500; }
+      .wf-popover { position: fixed; z-index: 60; display: grid; gap: 4px; min-width: 168px; padding: 4px; background: #fff;
+        border: 1px solid #ececee; border-radius: 10px; box-shadow: 0 8px 24px rgb(0 0 0 / .08); }
+      .wf-popover a { display: flex; align-items: center; height: 34px; padding: 0 10px; border-radius: 6px; color: #404040; text-decoration: none; }
+      .wf-popover a:hover, .wf-popover a[aria-current="page"] { background: #f4f4f5; color: #171717; }
+      .wf-popover a[aria-current="page"] { font-weight: 500; }
+      .wf-reason { border-bottom: 1px solid #e5e5e5; background: #fafafa; color: #404040; font: 13px/1.5 system-ui, -apple-system, sans-serif; }
+      .wf-reason summary { display: flex; flex-wrap: wrap; align-items: center; gap: 4px 8px; min-height: 44px; padding: 8px 16px;
+        cursor: pointer; list-style: none; }
+      .wf-reason summary::-webkit-details-marker { display: none; }
+      .wf-reason-name { min-width: 0; overflow: hidden; color: #171717; font-weight: 600; text-overflow: ellipsis; white-space: nowrap; }
+      .wf-reason-tag { flex-shrink: 0; height: 20px; padding: 0 8px; border-radius: 10px; background: #eef2ff; color: #4338ca;
+        font-size: 12px; font-weight: 500; line-height: 20px; }
+      .wf-reason-why { flex: 1; min-width: 0; overflow: hidden; color: #525252; text-overflow: ellipsis; white-space: nowrap; }
+      .wf-reason[open] .wf-reason-why { white-space: normal; }
+      .wf-reason-toggle { display: inline-flex; flex-shrink: 0; align-items: center; gap: 4px; height: 28px; margin-left: auto;
+        padding: 0 8px; border-radius: 6px; color: #171717; font-weight: 500; }
+      .wf-reason summary:hover .wf-reason-toggle { background: #f0f0f0; }
+      .wf-reason-toggle svg { width: 16px; height: 16px; transition: rotate .15s; }
+      .wf-reason[open] .wf-reason-toggle svg { rotate: 180deg; }
+      .wf-reason-body { display: grid; grid-template-columns: minmax(0, 1fr); gap: 16px; padding: 4px 16px 16px; }
+      .wf-reason-cols { display: grid; max-width: 1120px; grid-template-columns: repeat(auto-fit, minmax(min(240px, 100%), 1fr)); gap: 16px 32px; }
+      .wf-reason h3 { display: flex; align-items: center; gap: 6px; margin: 0 0 4px; color: #171717; font-size: 12px; font-weight: 600; }
+      .wf-reason h3 i { width: 6px; height: 6px; border-radius: 50%; background: #a3a3a3; }
+      .wf-reason h3 i[data-tone="uu"] { background: #16a34a; }
+      .wf-reason h3 i[data-tone="nhuoc"] { background: #d97706; }
+      .wf-reason ul { display: grid; gap: 2px; margin: 0; padding-left: 16px; }
+      .wf-reason li::marker { color: #a3a3a3; }
+      .wf-reason p { margin: 0; }
+      .wf-reason-tips { display: flex; flex-wrap: wrap; align-items: center; gap: 8px; padding-top: 12px; border-top: 1px solid #ebebeb; }
+      .wf-reason-tips h3 { margin: 0 4px 0 0; }
+      .wf-reason-tips button { display: inline-flex; align-items: center; gap: 6px; height: 28px; padding: 0 10px; border: 1px solid #e5e5e5;
+        border-radius: 8px; background: #fff; color: #262626; font: inherit; white-space: nowrap; cursor: pointer; }
+      .wf-reason-tips button:hover { border-color: #d4d4d4; background: #f5f5f5; }
+      .wf-reason-tips button svg { width: 14px; height: 14px; color: #737373; }
+      .wf-reason-tips button [data-icon="da-chep"], .wf-reason-tips button[data-copied] [data-icon="chep"] { display: none; }
+      .wf-reason-tips button[data-copied] [data-icon="da-chep"] { display: block; color: #16a34a; }
+      .wf-reason :focus-visible { outline: 2px solid #3460be; outline-offset: 2px; }
+      @media (max-width: 767px) {
+        .wf-reason-why { order: 1; flex-basis: 100%; }
+        .wf-reason-toggle span { position: absolute; width: 1px; height: 1px; overflow: hidden; clip-path: inset(50%); white-space: nowrap; }
+        .wf-reason-tips h3 { flex-basis: 100%; }
+      }
+      @layer base { [data-wf-block] { position: relative; } }
+      [data-wf-block]::before { content: attr(data-wf-block); position: absolute; top: 4px; left: 4px; z-index: 5;
+        display: grid; place-items: center; width: 18px; height: 18px; border-radius: 9px; background: #1f1f1f; color: #fff; font: 11px/1 system-ui; }
+      [data-wf-block][data-wf-block-out]::before, [data-wf-block][data-wf-block-out-fixed]::before { top: auto; bottom: calc(100% + 4px); }
+      .wf-reason li { text-wrap: pretty; }
+      .wf-kho-label { display: none; }
+      body[data-frame] .wf-bar, body[data-frame] .wf-reason { display: none; }
+      .wf-drawer { position: fixed; inset: 0 auto 0 0; z-index: 40; width: 280px; translate: -100% 0; transition: translate .35s; }
+      .wf-scrim { position: fixed; inset: 0; z-index: 39; background: rgb(1 22 39 / .3); opacity: 0; pointer-events: none; transition: opacity .35s; }
+      body[data-menu-open] .wf-drawer { translate: 0 0; }
+      body[data-menu-open] .wf-scrim { opacity: 1; pointer-events: auto; }
+      /* Ghi chú của wireframe trên trang Widget: không phải chữ của sản phẩm. */
+      .wf-note { font: 13px/1.5 system-ui, -apple-system, sans-serif; color: #525252; }
+    </style>
+  </head>
+  <body>
+    <nav class="wf-bar" aria-label="Wireframe">
+      <span class="wf-set" data-wf-param="man">
+        <a data-value="transcript">Transcript</a><a data-value="persona">Persona</a><a data-value="widget">Widget</a>
+      </span>
+      <div class="wf-group" data-wf-only="transcript persona">
+        <span>Phương án</span>
+        <span class="wf-set" data-wf-param="v" id="wf-options"></span>
+      </div>
+      <details class="wf-menu" data-wf-only="transcript">
+        <summary><span>Mẫu:</span><b data-wf-current="du"></b><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="m6 9 6 6 6-6"/></svg></summary>
+        <div class="wf-popover" data-wf-param="du"><a data-value="xong">Xong</a><a data-value="dang-chay">Đang chạy</a><a data-value="nhom">Nhóm</a></div>
+      </details>
+      <span class="wf-set wf-flags" data-wf-only="transcript persona"><a data-wf-toggle="gon" data-on="1" data-off="0">Gọn chữ</a><a data-wf-toggle="bolap" data-on="1" data-off="0">Bỏ lặp</a></span>
+      <a class="wf-switch" data-wf-toggle="mau" data-on="mau" data-off="xam" role="switch">Màu <i></i></a>
+      <span class="wf-set" data-wf-param="kho">
+        <a data-value="desktop" title="Desktop" aria-label="Desktop"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><rect width="20" height="14" x="2" y="3" rx="2"/><path d="M8 21h8M12 17v4"/></svg><span class="wf-kho-label">Desktop</span></a>
+        <a data-value="mobile" title="Mobile" aria-label="Mobile"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><rect width="14" height="20" x="5" y="2" rx="2"/><path d="M12 18h.01"/></svg><span class="wf-kho-label">Mobile</span></a>
+      </span>
+      <details class="wf-menu" data-wf-only="transcript persona">
+        <summary><span>Trạng thái:</span><b data-wf-current="tt"></b><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="m6 9 6 6 6-6"/></svg></summary>
+        <div class="wf-popover" data-wf-param="tt"><a data-value="du-lieu">Có dữ liệu</a><a data-value="dang-tai">Đang tải</a><a data-value="rong">Rỗng</a><a data-value="loi">Lỗi</a></div>
+      </details>
+    </nav>
+    <details class="wf-reason" data-wf-reason>
+      <summary>
+        <span class="wf-reason-name" id="wf-name"></span>
+        <span class="wf-reason-tag" id="wf-tag">Khuyên dùng</span>
+        <span class="wf-reason-why" id="wf-why"></span>
+        <span class="wf-reason-toggle"><span>Ưu, nhược</span><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="m6 9 6 6 6-6"/></svg></span>
+      </summary>
+      <div class="wf-reason-body">
+        <div class="wf-reason-cols">
+          <section><h3><i data-tone="uu"></i>Ưu</h3><ul id="wf-pros"></ul></section>
+          <section><h3><i data-tone="nhuoc"></i>Nhược</h3><ul id="wf-cons"></ul></section>
+          <section><h3><i></i>Hợp khi</h3><p id="wf-fit"></p></section>
+        </div>
+        <div class="wf-reason-tips" id="wf-tips"><h3>Gợi ý góp ý</h3></div>
+      </div>
+    </details>
+    <main id="wf-design"></main>
+
+    <script>
+      const params = new URLSearchParams(location.search);
+      const state = { man: 'transcript', v: '', du: 'xong', gon: '0', bolap: '0', mau: 'xam', kho: 'desktop', tt: 'du-lieu', uu: '0' };
+      for (const key of Object.keys(state)) state[key] = params.get(key) || state[key];
+
+      // ===== Phương án và lý do =====
+      const screens = {
+        transcript: {
+          recommended: 'a',
+          options: {
+            a: {
+              name: 'A - Hai phía, có avatar',
+              why: 'Ai tham gia ở đầu trang (avatar, tên, link tới trang của persona); người dẫn ở bên phải, người khác ở bên trái; turn và kết thúc là các vạch separator.',
+              pros: ['Câu hỏi và câu trả lời tách ngay bằng vị trí, kể cả ở nấc Xám', 'Nhóm nhiều người vẫn đọc ra từng người nhờ avatar, tên và màu', 'Nhiều tin liền nhau của một người gộp dưới một tên, một avatar'],
+              cons: ['Bubble rộng tối đa 80%: câu trả lời dài thành nhiều dòng hơn', 'Cần dữ liệu: danh sách người tham gia, và ai là người dẫn (ngồi bên phải)'],
+              fit: 'Phỏng vấn một hoặc vài người, đọc lướt để tìm câu trả lời và chữ được trích dẫn.',
+              tips: ['Người phỏng vấn ở bên trái', 'Bỏ avatar của người phỏng vấn', 'Màu bubble theo từng người', 'Bỏ dòng Turn'],
+            },
+            b: {
+              name: 'B - Một cột, màu theo người',
+              why: 'Mọi tin ở một cột từ trên xuống, mỗi người một màu bubble và một avatar; không cần biết ai là người dẫn.',
+              pros: ['Dữ liệu ít nhất: chỉ cần tên và thứ tự người tham gia', 'Nhiều người nói không bị dồn về một phía', 'Đọc như biên bản một cuộc họp'],
+              cons: ['Câu hỏi và câu trả lời chỉ khác nhau bằng màu: ở nấc Xám khó tách', 'Từ năm người trở lên, màu bubble khó phân biệt'],
+              fit: 'Phỏng vấn nhóm là chuyện thường, hoặc có nhiều người phỏng vấn.',
+              tips: ['Bubble của người phỏng vấn không có màu', 'Avatar to hơn', 'Bỏ dòng Turn'],
+            },
+            c: {
+              name: 'C - Kịch bản, không bubble',
+              why: 'Đọc như một văn bản phỏng vấn: avatar và tên ở cột trái, lời nói ở cột phải với một vạch màu của người nói.',
+              pros: ['Dòng chữ dài nhất, dễ đọc và dễ trích dẫn', 'Thấp nhất theo chiều cao, đọc được nhiều lượt một màn', 'Hợp với ý "tài liệu là trang", không khung lồng khung'],
+              cons: ['Ít giống chat: câu hỏi và câu trả lời tách bằng tên và vạch màu, không bằng vị trí', 'Cột tên chiếm 144px ở desktop'],
+              fit: 'Transcript dài, người dùng đọc để kiểm chứng chữ mà các item trích.',
+              tips: ['Thêm nền nhạt cho lời của người phỏng vấn', 'Cột tên hẹp hơn', 'Bỏ vạch màu'],
+            },
+          },
+        },
+        persona: {
+          recommended: 'b',
+          options: {
+            a: {
+              name: 'A - Trang của một persona (page display: profile)',
+              why: 'Trang của một persona: avatar cạnh tên, dòng loại và trạng thái, rồi mọi field, list xếp thành cặp. Mở từ thẻ trong tài liệu.',
+              pros: ['Đọc hết để duyệt, không rời tài liệu', 'Năm list xếp thành cặp, đỡ dài', 'Avatar và màu trùng với transcript của chính persona đó'],
+              cons: ['Tài liệu dài: khoảng 25 dòng mỗi persona'],
+              fit: 'Ba đến năm persona, đọc kỹ ở bước duyệt persona.',
+              tips: ['Bỏ avatar', 'List xếp một cột', 'Ẩn Expertise và Behavioral tendencies'],
+            },
+            b: {
+              name: 'B - Thẻ có avatar (display: avatar-cards)',
+              why: 'So nhanh các persona: tên, trạng thái, bối cảnh, mục tiêu; phần còn lại ở trang của persona.',
+              pros: ['Thấy bốn persona trong một màn', 'So các persona theo cùng một khung'],
+              cons: ['Phải mở trang persona để đọc ràng buộc, ưu tiên, mối lo', 'Bối cảnh bị cắt sau hai dòng; thẻ vẫn khoảng 7 dòng chữ (probe báo dày hơn mức 5 dòng)'],
+              fit: 'Nhiều persona (từ năm trở lên), hoặc khi chỉ cần chọn persona để mở.',
+              tips: ['Thêm Concerns vào thẻ', 'Thẻ một cột', 'Bỏ nút Open the profile'],
+            },
+          },
+        },
+        widget: {
+          options: {
+            '': {
+              name: 'Ba widget mới trông thế nào: separator, avatar-list, badge',
+              why: 'Một trang mẫu: hình của từng giá trị, và mỗi widget hiện ở những chỗ nào. Không phải một màn của app.',
+              pros: ['separator: một field thêm vào cũng thành một vạch, không phải sửa layout', 'avatar-list: ai tham gia, có link tới trang của persona', 'badge: Badge nền nhạt, không chấm'],
+              cons: ['Màu của badge nằm trong code theo field, như nhãn của giá trị hiện nay'],
+              fit: 'Xem trước khi chốt tên và hình của hai widget.',
+              tips: ['Không in đậm số', 'Badge viền thay vì nền nhạt'],
+            },
+          },
+        },
+      };
+      const screen = screens[state.man] ?? screens.transcript;
+      if (!(state.v in screen.options)) state.v = screen.recommended ?? '';
+      Object.assign(document.body.dataset, state);
+      document.documentElement.dataset.mau = state.mau;
+      if (params.has('frame')) document.body.dataset.frame = '1';
+
+      // ===== Dữ liệu mẫu (giả, lấy chữ từ fixture của mock khi có) =====
+      const people = {
+        interviewer: { key: 'interviewer', name: 'Interviewer', host: true, color: 'host' },
+        student: { key: 'PER-001', name: 'Student', color: 1 },
+        studentLong: { key: 'PER-001', name: 'Minh, third-year computer science student', color: 1 },
+        mentor: { key: 'PER-002', name: 'Mentor', color: 2 },
+        admin: { key: 'PER-003', name: 'Admin', color: 3 },
+      };
+      const samples = {
+        xong: {
+          title: 'Interview with the student',
+          review: { label: 'Approved', tone: 'success' },
+          summary: 'The student gives up when no mentor is free this week, and wants to book and cancel without writing to anyone.',
+          participants: [people.interviewer, people.student], turns: 4, end: ['Completed', 'Stopping condition reached'],
+          messages: [
+            [1, 'interviewer', 'How do you look for a mentor today?'],
+            [1, 'student', 'I ask seniors in my club, but [I never know who is free this week], so I give up.'],
+            [1, 'student', 'Sometimes I email a lecturer and wait a few days for an answer.'],
+            [2, 'interviewer', 'What would make you book a session?'],
+            [2, 'interviewer', 'Think of the last time you wanted advice.'],
+            [2, 'student', 'If I [see the free hours of a mentor in my field] and can book in one click.'],
+            [3, 'interviewer', 'What if you cannot come?'],
+            [3, 'student', 'I want to cancel without writing to anyone, and I want a reminder the hour before.'],
+            [4, 'interviewer', 'How fast should the search be?'],
+            [4, 'student', 'Fast. I do not wait for a page that takes more than a couple of seconds. If it is slow on my phone between two classes, I close it and ask a friend instead, because a friend answers faster than the site loads.'],
+          ],
+        },
+        'dang-chay': {
+          title: 'Interview with the student',
+          review: { label: 'Being written', tone: 'primary' },
+          summary: 'The interview with the student is in progress.',
+          participants: [people.interviewer, people.student], turns: 2, end: ['In progress'],
+          messages: [
+            [1, 'interviewer', 'How do you book a study room today?'],
+            [1, 'student', 'I ask at the desk, and the free rooms are gone by nine.'],
+            [2, 'interviewer', 'What goes wrong once a room is booked?'],
+            [2, 'student', 'People book a room for the whole day and never come.'],
+            [3, 'interviewer', 'What would you change first?'],
+          ],
+        },
+        nhom: {
+          title: 'Group interview on bookings',
+          review: { label: 'Approved', tone: 'success' },
+          summary: 'The admin and the mentor disagree on who approves a booking; the student only asks for an answer within the day.',
+          participants: [people.interviewer, people.studentLong, people.mentor, people.admin], turns: 2, end: ['Completed', 'Turn limit reached'],
+          messages: [
+            [1, 'interviewer', 'Who should approve a booking?'],
+            [1, 'admin', 'I do, at least in the first year.'],
+            [1, 'mentor', 'I would rather approve my own sessions.'],
+            [1, 'mentor', 'Students book hours that I cannot do.'],
+            [1, 'studentLong', 'I do not want to [wait two days for an answer].'],
+            [2, 'interviewer', 'What if the mentor and the admin disagree?'],
+            [2, 'admin', 'Then the admin decides, and the mentor sees why.'],
+            [2, 'studentLong', 'As long as I know within the day.'],
+          ],
+        },
+      };
+      const personas = [
+        { person: people.student, type: 'Student', status: ['Interviewed', 'success'], background: 'Third-year undergraduate who wants advice on a research career.', expertise: 'Knows the courses of the faculty, not the people behind them.', goals: ['Find a mentor in my field', 'Book a session in a few minutes'], interests: ['Research', 'Internships'], constraints: ['Free only between classes'], priorities: ['Speed', 'Trust in the mentor'], concerns: ['Not knowing who is free this week'], behavioral: 'Gives up when a task takes more than a few steps.' },
+        { person: people.mentor, type: 'Mentor', status: ['Interviewed', 'success'], background: 'Lecturer who mentors students next to teaching.', expertise: 'Ten years in the field, no time for administration.', goals: ['Set the hours I am free', 'Meet students who match my field'], interests: ['Teaching'], constraints: ['Free two afternoons a week'], priorities: ['Control over my hours'], concerns: ['Students who book and do not come'], behavioral: 'Answers short and wants a reminder for everything.' },
+        { person: people.admin, type: 'Admin', status: ['Interview in progress', 'primary'], background: 'Staff of the mentoring program.', expertise: 'Knows the rules of the program and the complaints of past years.', goals: ['See who mentors whom', 'Remove accounts that break the rules'], interests: [], constraints: ['Has to report to the dean each term'], priorities: ['Safety', 'Reports'], concerns: ['Bookings that nobody approved'], behavioral: 'Wants a record of every decision.' },
+      ];
+
+      // ===== Phần nhỏ dùng chung, cùng class với component của dự án =====
+      const icon = (name, size = 'size-4') => `<i data-lucide="${name}" class="${size} shrink-0" aria-hidden="true"></i>`;
+      const initialsOf = (name) => {
+        const words = name.replace(/[^A-Za-z ]/g, ' ').split(/\s+/).filter(Boolean);
+        return (words.length > 1 ? words[0][0] + words[1][0] : (words[0] ?? '?').slice(0, 2)).toUpperCase();
+      };
+      // Avatar của dự án (ui/avatar.tsx) với nền nhạt và chữ đậm của màu người nói.
+      const avatar = (person, size = 'size-8 text-xs') =>
+        `<span class="spk-${person.color} relative flex ${size} shrink-0 rounded-full select-none" aria-hidden="true"><span class="flex size-full items-center justify-center rounded-full bg-(--spk-solid) font-semibold text-(--spk-fg)">${initialsOf(person.name)}</span></span>`;
+      // Badge soft của dự án (ui/badge.tsx), không chấm: widget badge.
+      const statusBadge = ([label, tone]) =>
+        `<span class="tone-${tone} inline-flex h-5 w-fit shrink-0 items-center rounded-4xl px-2 text-xs font-medium whitespace-nowrap bg-(--tone-soft) text-(--tone-strong)">${label}</span>`;
+      // Widget count: số đậm, rồi danh từ số ít hay số nhiều.
+      const countText = (count, one, other) =>
+        `<span class="whitespace-nowrap"><b class="font-semibold text-foreground tabular-nums">${count}</b> ${count === 1 ? one : other}</span>`;
+      // Chữ được trích: Highlight dạng gạch chân, màu primary (S1b).
+      const withMarks = (text) =>
+        text.replace(/\[([^\]]+)\]/g, '<mark tabindex="0" class="tone-primary -mx-[0.2em] rounded-[0.25em] bg-transparent px-[0.2em] text-inherit underline decoration-(--tone-strong) decoration-2 underline-offset-[0.2em] cursor-pointer hover:bg-(--tone-soft)">$1</mark>');
+      const turnDivider = (turn) =>
+        `<div class="flex items-center gap-2 py-1 text-xs text-muted-foreground before:h-px before:flex-1 before:bg-border after:h-px after:flex-1 after:bg-border" role="separator" aria-label="Turn ${turn}">Turn ${turn}</div>`;
+
+      // Gom tin: theo lượt, rồi theo chuỗi tin liền nhau của một người.
+      function runsOf(messages) {
+        const runs = [];
+        for (const [turn, who, text] of messages) {
+          const last = runs.at(-1);
+          if (last && last.turn === turn && last.who === who) last.texts.push(text);
+          else runs.push({ turn, who, person: people[who], texts: [text] });
+        }
+        return runs;
+      }
+
+      // ===== Ba phương án của transcript =====
+      function runA({ person, texts }) {
+        const side = person.host ? 'flex-row-reverse' : '';
+        const bubble = person.host ? `spk-host bg-(--spk-soft)` : 'bg-muted';
+        return `<li class="flex items-start gap-2 ${side}">
+          ${avatar(person)}
+          <div class="flex max-w-[80%] min-w-0 flex-col gap-1 ${person.host ? 'items-end' : 'items-start'}">
+            <span class="spk-${person.color} max-w-full truncate px-1 text-xs font-semibold text-foreground">${person.name}</span>
+            ${texts.map((text) => `<p class="${bubble} w-fit max-w-full rounded-xl px-3 py-2 text-base leading-relaxed text-pretty">${withMarks(text)}</p>`).join('')}
+          </div>
+        </li>`;
+      }
+      function runB({ person, texts }) {
+        return `<li class="flex items-start gap-2">
+          ${avatar(person)}
+          <div class="flex max-w-[85%] min-w-0 flex-col items-start gap-1">
+            <span class="spk-${person.color} max-w-full truncate px-1 text-xs font-semibold text-foreground">${person.name}</span>
+            ${texts.map((text) => `<p class="spk-${person.color} w-fit max-w-full rounded-xl bg-(--spk-soft) px-3 py-2 text-base leading-relaxed text-pretty">${withMarks(text)}</p>`).join('')}
+          </div>
+        </li>`;
+      }
+      function runC({ person, texts }) {
+        return `<li class="grid grid-cols-1 gap-x-4 gap-y-1 sm:grid-cols-[9rem_minmax(0,1fr)]">
+          <div class="flex min-w-0 items-center gap-2 sm:items-start">
+            ${avatar(person, 'size-6 text-[10px]')}
+            <span class="spk-${person.color} line-clamp-2 text-xs font-semibold text-foreground sm:pt-1">${person.name}</span>
+          </div>
+          <div class="spk-${person.color} space-y-2 border-l-2 border-(--spk) pl-3">
+            ${texts.map((text) => `<p class="text-base leading-relaxed text-pretty">${withMarks(text)}</p>`).join('')}
+          </div>
+        </li>`;
+      }
+      const runViews = { a: runA, b: runB, c: runC };
+
+      function conversation(sample) {
+        const view = runViews[state.v];
+        let html = '';
+        let turn = null;
+        for (const run of runsOf(sample.messages)) {
+          if (run.turn !== turn) {
+            turn = run.turn;
+            html += `<li>${turnDivider(turn)}</li>`;
+          }
+          html += view(run);
+        }
+        const gap = state.v === 'c' ? 'space-y-3' : 'space-y-4';
+        return `<ol class="max-w-prose ${gap}" data-wf-block="2">${html}</ol>`;
+      }
+
+      // Cuối hội thoại: các field widget separator của interview, cùng một vạch vì cùng một chỗ.
+      function transcriptEnd(values) {
+        return `<div data-wf-block="3" class="max-w-prose pt-2">
+          <div class="flex items-center gap-3 text-sm text-muted-foreground before:h-px before:min-w-6 before:flex-1 before:bg-border after:h-px after:min-w-6 after:flex-1 after:bg-border">
+            <p class="flex flex-col items-center justify-center gap-x-4 gap-y-1 text-center sm:flex-row sm:flex-wrap">${values.map((value) => `<span>${value}</span>`).join('')}</p>
+          </div>
+        </div>`;
+      }
+
+      // Các field còn lại của interview, đầu trang: tên field bên trái, giá trị bên phải. Participants là widget avatar-list.
+      function transcriptFields(sample) {
+        const chip = (person) => {
+          const inner = `${avatar(person, 'size-6 text-[10px]')}<span class="truncate">${person.name}</span>`;
+          return person.host
+            ? `<span class="inline-flex h-8 max-w-full items-center gap-2">${inner}</span>`
+            : `<a href="#" class="inline-flex h-8 max-w-full items-center gap-2 text-primary underline-offset-4 hover:underline">${inner}</a>`;
+        };
+        const row = (title, value) => `<div class="flex flex-col gap-1 sm:flex-row sm:gap-4"><dt class="w-28 shrink-0 text-sm font-semibold text-muted-foreground sm:pt-1.5">${title}</dt><dd class="min-w-0 text-sm">${value}</dd></div>`;
+        return `<dl class="max-w-prose space-y-2 border-y border-border py-3" data-wf-block="6" data-wf-block-out-fixed>
+          ${row('Participants', `<div class="grid grid-cols-1 sm:flex sm:flex-wrap sm:items-center sm:gap-x-4">${sample.participants.map(chip).join('')}</div>`)}
+          ${row('Turn count', String(sample.turns))}
+        </dl>`;
+      }
+
+      function documentHeader({ title, review, summary }) {
+        return `<header class="space-y-2" data-wf-block="1" data-wf-block-out-fixed>
+          <div class="flex flex-wrap items-start gap-4">
+            <h1 class="min-w-0 flex-1 text-2xl font-semibold">${title}</h1>
+            <button type="button" disabled title="Only the documents under review can change now." class="inline-flex h-8 items-center gap-1.5 rounded-md border border-border px-2.5 text-sm font-medium opacity-50">${icon('pencil', 'size-3.5')}Edit</button>
+          </div>
+          <p class="tone-${review.tone} text-sm font-semibold text-(--tone-strong)">${review.label}</p>
+          ${summary ? `<p class="max-w-prose" data-wf-lap>${summary}</p>` : ''}
+        </header>`;
+      }
+
+      // ===== Persona =====
+      const field = (title, body, wide, extra = '') =>
+        `<div ${wide ? 'data-wide' : ''} ${extra} class="min-w-0 space-y-1 sm:data-wide:col-span-2"><dt class="text-sm font-semibold text-muted-foreground">${title}</dt><dd class="text-pretty">${body}</dd></div>`;
+      const list = (entries) => `<ul class="list-disc space-y-1 pl-5">${entries.map((entry) => `<li>${entry}</li>`).join('')}</ul>`;
+      function profileA(p) {
+        const lists = [['Goals', p.goals], ['Interests', p.interests], ['Constraints', p.constraints], ['Priorities', p.priorities], ['Concerns', p.concerns]]
+          .filter(([, entries]) => entries.length > 0)
+          .map(([title, entries]) => field(title, list(entries), false)).join('');
+        return `<article class="flex flex-col gap-4 overflow-hidden rounded-xl bg-card py-4 text-sm ring-1 ring-foreground/10">
+          <header class="flex items-start gap-3 px-4">
+            ${avatar(p.person, 'size-10 text-sm')}
+            <div class="min-w-0 flex-1 space-y-1">
+              <h3 class="text-base font-semibold"><a href="#" class="hover:underline">${p.person.name}</a></h3>
+              <p class="flex flex-col items-start gap-x-3 gap-y-1 text-sm text-muted-foreground sm:flex-row sm:items-center"><span>${p.type}</span>${statusBadge(p.status)}</p>
+            </div>
+            <span class="shrink-0 pt-1 font-mono text-xs text-muted-foreground">${p.person.key}</span>
+          </header>
+          <dl class="grid grid-cols-1 gap-x-6 gap-y-4 px-4 sm:grid-cols-2">
+            ${field('Background', p.background, true)}
+            ${field('Expertise', p.expertise, true, 'data-wf-gon')}
+            ${lists}
+            ${field('Behavioral tendencies', p.behavioral, true, 'data-wf-gon')}
+          </dl>
+        </article>`;
+      }
+      // Trang của một persona: tiêu đề có avatar, dòng loại và trạng thái, key, rồi phần thân của chân dung.
+      function personaItemPage(p) {
+        const lists = [['Goals', p.goals], ['Interests', p.interests], ['Constraints', p.constraints], ['Priorities', p.priorities], ['Concerns', p.concerns]]
+          .filter(([, entries]) => entries.length > 0)
+          .map(([title, entries]) => field(title, list(entries), false)).join('');
+        return `<header class="space-y-2" data-wf-block="1" data-wf-block-out-fixed>
+            <p class="text-sm text-muted-foreground">Interviewees</p>
+            <div class="flex flex-wrap items-center gap-3">
+              ${avatar(p.person, 'size-10 text-sm')}
+              <h1 class="min-w-0 flex-1 text-2xl font-semibold">${p.person.name}</h1>
+              <button type="button" disabled class="inline-flex h-8 items-center gap-1.5 rounded-md border border-border px-2.5 text-sm font-medium opacity-50">${icon('pencil', 'size-3.5')}Edit</button>
+            </div>
+            <p class="flex flex-wrap items-center gap-x-4 gap-y-1 text-sm"><span class="tone-success font-semibold text-(--tone-strong)">Approved</span><span class="font-mono text-xs text-muted-foreground">${p.person.key}</span><span class="text-muted-foreground">${p.type}</span>${statusBadge(p.status)}</p>
+          </header>
+          <dl class="grid max-w-190 grid-cols-1 gap-x-6 gap-y-6 sm:grid-cols-2" data-wf-block="5" data-wf-block-out-fixed>
+            ${field('Background', p.background, true)}
+            ${field('Expertise', p.expertise, true, 'data-wf-gon')}
+            ${lists}
+            ${field('Behavioral tendencies', p.behavioral, true, 'data-wf-gon')}
+          </dl>`;
+      }
+      function profileB(p) {
+        return `<article class="flex flex-col gap-3 overflow-hidden rounded-xl bg-card py-3 text-sm ring-1 ring-foreground/10">
+          <header class="flex items-start gap-3 px-3">
+            ${avatar(p.person)}
+            <div class="min-w-0 space-y-1">
+              <h3 class="text-base font-semibold"><a href="#" class="hover:underline">${p.person.name}</a></h3>
+              ${statusBadge(p.status)}
+            </div>
+          </header>
+          <div class="space-y-1 px-3">
+            <p class="line-clamp-2 text-pretty">${p.background}</p>
+            <p class="line-clamp-1"><span class="font-semibold text-muted-foreground">Goals:</span> ${p.goals.join('; ')}</p>
+          </div>
+        </article>`;
+      }
+
+      // ===== Trạng thái của trang =====
+      const loading = () => `<div class="space-y-6" aria-busy="true" aria-label="Loading the document">
+        <div class="space-y-2"><div class="h-8 w-2/3 animate-pulse rounded-md bg-muted"></div><div class="h-4 w-24 animate-pulse rounded-md bg-muted"></div></div>
+        ${[60, 40, 70, 50].map((width, index) => `<div class="flex gap-2 ${state.man === 'transcript' && state.v === 'a' && index % 2 === 0 ? 'flex-row-reverse' : ''}"><div class="size-8 animate-pulse rounded-full bg-muted"></div><div class="h-14 animate-pulse rounded-xl bg-muted" style="width:${width}%"></div></div>`).join('')}
+      </div>`;
+      const errorState = () => `<div class="grid place-items-center gap-3 py-24 text-center" role="alert">
+        <span class="grid size-10 place-items-center rounded-full bg-muted text-muted-foreground">${icon('circle-alert', 'size-5')}</span>
+        <p class="text-lg font-semibold">The document could not load.</p>
+        <button type="button" class="inline-flex h-8 items-center gap-1.5 rounded-md border border-border bg-background px-2.5 text-sm font-medium hover:bg-muted">${icon('rotate-cw', 'size-3.5')}Try again</button>
+      </div>`;
+      const emptyState = (title, text) => `<div class="grid place-items-center gap-2 rounded-xl border border-dashed border-border py-12 text-center" data-wf-block="2">
+        <span class="grid size-10 place-items-center rounded-full bg-muted text-muted-foreground">${icon(state.man === 'persona' ? 'users' : 'messages-square', 'size-5')}</span>
+        <p class="text-base font-semibold">${title}</p>
+        <p class="max-w-sm text-sm text-muted-foreground">${text}</p>
+      </div>`;
+
+      function transcriptPage() {
+        const sample = samples[state.du] ?? samples.xong;
+        if (state.tt === 'dang-tai') return loading();
+        if (state.tt === 'loi') return errorState();
+        const isEmpty = state.tt === 'rong';
+        const header = documentHeader(isEmpty ? { ...sample, review: { label: 'Being written', tone: 'primary' }, summary: null } : sample);
+        if (isEmpty) {
+          return `${header}${transcriptFields({ ...sample, turns: 0 })}${emptyState('No message yet', 'The messages show here as the interview goes on.')}${transcriptEnd(['In progress'])}`;
+        }
+        return `${header}${transcriptFields(sample)}${conversation(sample)}${transcriptEnd(sample.end)}`;
+      }
+
+      function personaPage() {
+        if (state.tt === 'dang-tai') return loading();
+        if (state.tt === 'loi') return errorState();
+        const header = documentHeader({ title: 'Interviewees', review: { label: 'Approved', tone: 'success' }, summary: 'The mentor and the admin may disagree on who approves a booking.' });
+        const rationale = `<section class="space-y-1" data-wf-block="4" data-wf-block-out-fixed><h2 class="text-lg font-semibold">Selection rationale</h2><p class="max-w-prose">One persona for each stakeholder type, so that every side of a booking is heard.</p></section>`;
+        if (state.v === 'a') return personaItemPage(personas[0]);
+        if (state.tt === 'rong') return `${header}${rationale}${emptyState('No interviewee yet', 'The personas show here once the agents write them.')}`;
+        const cards = `<div class="grid grid-cols-1 gap-3 sm:grid-cols-2">${personas.map(profileB).join('')}</div>`;
+        return `${header}${rationale}<section class="space-y-3" data-wf-block="5" data-wf-block-out-fixed><h2 class="pt-2 text-lg font-semibold">Interviewee <span class="text-sm text-muted-foreground">(3)</span></h2>${cards}</section>`;
+      }
+
+      // ===== Trang mẫu của hai widget =====
+      function widgetPage() {
+        const row = (where, example) => `<div class="grid grid-cols-1 items-center gap-2 border-t border-border py-3 sm:grid-cols-[14rem_minmax(0,1fr)]"><p class="wf-note">${where}</p><div class="min-w-0 text-sm">${example}</div></div>`;
+        const code = (text) => `<pre class="rounded-lg bg-muted p-3 font-mono text-xs leading-relaxed whitespace-pre-wrap break-words text-foreground">${text}</pre>`;
+        const rule = (text) => `<div class="flex items-center gap-3 text-sm text-muted-foreground before:h-px before:flex-1 before:bg-border after:h-px after:flex-1 after:bg-border"><span class="flex flex-wrap justify-center gap-x-4">${text}</span></div>`;
+        const chip = (person) => `<span class="inline-flex h-8 items-center gap-2 ${person.host ? '' : 'text-primary'}">${avatar(person, 'size-6 text-[10px]')}${person.name}</span>`;
+        return `<div class="space-y-10">
+          <section class="space-y-3" data-wf-block="1" data-wf-block-out-fixed>
+            <h2 class="text-lg font-semibold">separator</h2>
+            <p class="wf-note">Một giá trị đánh dấu một mốc của chuỗi: vạch kẻ với giá trị ở giữa (Marker separator). Trong transcript: field của message vẽ một vạch chỗ giá trị đổi; field của interview vẽ vạch sau tin cuối. Các field đổi cùng một chỗ chung một vạch. Số đọc là tên field và số ("Turn 2"); lựa chọn đọc là nhãn của giá trị. Chỗ khác (form, bảng, history) thì là chữ thường; sửa theo kiểu của field.</p>
+            <div>
+              ${row('Field turn của message, chỗ đổi lượt', rule('Turn 2'))}
+              ${row('Field status và stop_reason của interview, sau tin cuối', rule('<span>Completed</span><span>Stopping condition reached</span>'))}
+              ${row('Interview đang chạy (stop_reason chưa có)', rule('In progress'))}
+              ${row('Form sửa (field chỉ đọc)', '<div class="space-y-1"><p class="text-sm font-medium">Status</p><p>Completed</p></div>')}
+            </div>
+            ${code(`"status": { "type": "string", "enum": ["in_progress", "completed"], "x-ui-widget": "separator" }
+"turn":   { "type": "integer", "minimum": 1, "x-ui-widget": "separator" }`)}
+          </section>
+          <section class="space-y-3" data-wf-block="2" data-wf-block-out-fixed>
+            <h2 class="text-lg font-semibold">avatar-list</h2>
+            <p class="wf-note">Một danh sách người: mỗi người một avatar và tên; tên là link khi mục có item_id. Màu avatar theo thứ tự: primary, chart, accent, muted. Dùng cho participants của transcript.</p>
+            <div>
+              ${row('Đầu một transcript', `<div class="grid grid-cols-1 sm:flex sm:flex-wrap sm:items-center sm:gap-x-4">${[people.interviewer, people.student, people.mentor, people.admin].map(chip).join('')}</div>`)}
+            </div>
+            ${code(`"participants": {
+  "type": "array",
+  "items": { "properties": { "key", "name", "role", "item_id" } },
+  "x-ui-widget": "avatar-list",
+  "readOnly": true
+}`)}
+          </section>
+          <section class="space-y-3" data-wf-block="7" data-wf-block-out-fixed>
+            <h2 class="text-lg font-semibold">badge</h2>
+            <p class="wf-note">Một lựa chọn hiện bằng Badge nền nhạt, không chấm, ở mọi chỗ field đó hiện. Màu của từng giá trị đặt trong code cạnh nhãn của giá trị. Đề xuất cho interview_status của persona.</p>
+            <div class="flex flex-wrap gap-2">${statusBadge(['Interviewed', 'success'])}${statusBadge(['Interview in progress', 'primary'])}${statusBadge(['Not interviewed', 'neutral'])}</div>
+            <div>
+              ${row('Dòng dưới tên trên thẻ có avatar', `<p class="flex flex-wrap items-center gap-x-3 text-muted-foreground"><span>Student</span>${statusBadge(['Interviewed', 'success'])}</p>`)}
+              ${row('Key line của trang một persona', `<p class="flex flex-wrap items-center gap-x-4"><span class="tone-success font-semibold text-(--tone-strong)">Approved</span><span class="font-mono text-xs text-muted-foreground">PER-001</span><span class="text-muted-foreground">Student</span>${statusBadge(['Interviewed', 'success'])}</p>`)}
+            </div>
+          </section>
+        </div>`;
+      }
+
+      // ===== Khung app: top bar, activity bar, side panel, tab =====
+      const docRow = (label, { active = false, depth = 0, letter = '', tone = '' } = {}) =>
+        `<a href="#" ${active ? 'aria-current="page"' : ''} class="flex h-8 items-center gap-2 rounded-md px-2 text-sm hover:bg-sidebar-accent aria-[current=page]:bg-sidebar-accent aria-[current=page]:font-semibold" style="padding-left:${8 + depth * 16}px"><span class="min-w-0 flex-1 truncate ${tone}">${label}</span>${letter ? `<span class="text-xs font-semibold ${tone}">${letter}</span>` : ''}</a>`;
+      function documentList() {
+        const isTranscript = state.man === 'transcript';
+        return `<p class="px-2 pb-2 text-xs font-semibold text-muted-foreground">DOCUMENTS</p>
+          ${docRow('Interview plan')}
+          ${docRow('Interviewees', { active: !isTranscript && state.v !== 'a' })}
+          ${!isTranscript ? personas.map((p, index) => docRow(p.person.name, { depth: 1, active: state.v === 'a' && index === 0 })).join('') : ''}
+          ${docRow('Interviews')}
+          ${docRow(isTranscript ? (samples[state.du] ?? samples.xong).title : 'Interview with the student', { depth: 1, active: isTranscript })}
+          ${docRow('Interview with the mentor', { depth: 1 })}
+          ${docRow('Interview with the admin', { depth: 1 })}
+          ${docRow('Requirements analysis', { letter: 'R', tone: 'tone-warning text-(--tone-strong)' })}
+          ${docRow('Requirement specification')}
+          ${docRow('Backlog', { tone: 'text-muted-foreground' })}`;
+      }
+      const activity = (name, label, active = false) =>
+        `<a href="#" ${active ? 'aria-current="page"' : ''} class="flex flex-col items-center gap-1 rounded-md py-2 text-xs text-muted-foreground hover:text-foreground aria-[current=page]:text-foreground aria-[current=page]:font-semibold">${icon(name, 'size-5')}${label}</a>`;
+      function appFrame(content) {
+        const tabTitle = state.man === 'persona' ? (state.v === 'a' ? 'Student' : 'Interviewees') : (samples[state.du] ?? samples.xong).title;
+        return `<div class="flex min-h-[calc(100vh-100px)] flex-col">
+          <header class="flex h-14 shrink-0 items-center gap-3 border-b border-border px-3">
+            <button type="button" data-wf-menu class="grid size-9 place-items-center rounded-md hover:bg-muted md:hidden" aria-label="Open the documents">${icon('menu')}</button>
+            <span class="text-sm"><b class="font-bold">khoai</b> <span class="text-muted-foreground">/</span> Mentor platform</span>
+            <span class="ml-auto hidden h-9 w-80 items-center gap-2 rounded-md border border-input bg-background px-3 text-sm text-muted-foreground lg:flex">${icon('search')}Search or run a command</span>
+            <span class="grid size-8 place-items-center rounded-full bg-muted text-xs font-semibold">NT</span>
+          </header>
+          <div class="flex min-h-0 flex-1">
+            <nav class="hidden w-20 shrink-0 flex-col gap-1 border-r border-border p-2 md:flex" aria-label="Features">
+              ${activity('messages-square', 'Activity')}${activity('files', 'Documents', true)}${activity('search', 'Search')}${activity('git-branch', 'Trace')}
+            </nav>
+            <aside class="hidden w-70 shrink-0 space-y-1 border-r border-border bg-sidebar p-2 lg:block">${documentList()}</aside>
+            <div class="flex min-w-0 flex-1 flex-col">
+              <div class="flex h-10 shrink-0 items-end border-b border-border px-2"><span class="flex h-9 max-w-64 items-center gap-2 truncate rounded-t-md border border-b-0 border-border bg-background px-3 text-sm italic">${icon(state.man === 'persona' ? 'users' : 'messages-square', 'size-3.5')}${tabTitle}</span></div>
+              <article class="mx-auto w-full max-w-3xl space-y-6 p-4 sm:p-6">${content}</article>
+            </div>
+          </div>
+          <footer class="flex h-8 shrink-0 items-center border-t border-border px-3 text-sm"><span class="tone-warning text-(--tone-strong) font-semibold">Waiting for you: Analysis review</span></footer>
+        </div>
+        <div class="wf-scrim" data-wf-close></div>
+        <aside class="wf-drawer space-y-1 overflow-y-auto bg-sidebar p-2 shadow-lg">${documentList()}</aside>`;
+      }
+
+      function render() {
+        const design = document.getElementById('wf-design');
+        if (state.kho === 'mobile' && !params.has('frame')) {
+          const frameSource = `?${new URLSearchParams({ ...state, kho: 'desktop', frame: '1' })}`;
+          design.innerHTML = `<div style="display:grid;place-items:center;padding:24px"><iframe src="${frameSource}" title="Mobile" style="width:375px;max-width:100%;height:812px;border:1px solid #ddd;border-radius:24px;background:#fff"></iframe></div>`;
+          return;
+        }
+        if (state.man === 'widget') {
+          design.innerHTML = `<div class="mx-auto max-w-3xl p-4 sm:p-6">${widgetPage()}</div>`;
+          return;
+        }
+        design.innerHTML = appFrame(state.man === 'persona' ? personaPage() : transcriptPage());
+      }
+
+      // ===== Thanh công cụ =====
+      const optionSet = document.getElementById('wf-options');
+      optionSet.innerHTML = Object.entries(screen.options)
+        .filter(([key]) => key !== '')
+        .map(([key, option]) => `<a data-value="${key}" title="${option.name}${key === screen.recommended ? ' (khuyên dùng)' : ''}" ${key === screen.recommended ? 'data-recommended' : ''}>${key.toUpperCase()}</a>`)
+        .join('');
+      for (const only of document.querySelectorAll('[data-wf-only]')) {
+        if (!only.dataset.wfOnly.split(' ').includes(state.man)) only.style.display = 'none';
+      }
+      const linkTo = (changes) => `?${new URLSearchParams({ ...state, ...changes })}`;
+      function updateLinks() {
+        for (const set of document.querySelectorAll('[data-wf-param]')) {
+          for (const link of set.querySelectorAll('a')) {
+            const param = set.dataset.wfParam;
+            // Đổi màn thì về phương án khuyên dùng của màn đó.
+            link.href = linkTo({ [param]: link.dataset.value, ...(param === 'man' && { v: '' }) });
+            if (state[param] !== link.dataset.value) continue;
+            link.setAttribute('aria-current', 'page');
+            const currentLabel = document.querySelector(`[data-wf-current="${param}"]`);
+            if (currentLabel) currentLabel.textContent = link.textContent;
+          }
+        }
+        for (const toggle of document.querySelectorAll('[data-wf-toggle]')) {
+          const param = toggle.dataset.wfToggle;
+          const isOn = state[param] === toggle.dataset.on;
+          toggle.setAttribute(toggle.getAttribute('role') === 'switch' ? 'aria-checked' : 'aria-pressed', String(isOn));
+          toggle.href = linkTo({ [param]: isOn ? toggle.dataset.off : toggle.dataset.on });
+        }
+      }
+      updateLinks();
+
+      // Khung lý do
+      const option = screen.options[state.v];
+      document.getElementById('wf-name').textContent = option.name;
+      document.getElementById('wf-tag').hidden = !(screen.recommended && state.v === screen.recommended);
+      document.getElementById('wf-why').textContent = option.why;
+      document.getElementById('wf-pros').innerHTML = option.pros.map((line) => `<li>${line}</li>`).join('');
+      document.getElementById('wf-cons').innerHTML = option.cons.map((line) => `<li>${line}</li>`).join('');
+      document.getElementById('wf-fit').textContent = option.fit;
+      const copyIcons = '<svg data-icon="chep" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><rect width="14" height="14" x="8" y="8" rx="2"/><path d="M4 16c-1.1 0-2-.9-2-2V4c0-1.1.9-2 2-2h10c1.1 0 2 .9 2 2"/></svg><svg data-icon="da-chep" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M20 6 9 17l-5-5"/></svg>';
+      document.getElementById('wf-tips').insertAdjacentHTML('beforeend', option.tips.map((tip) => `<button type="button" data-copy="${tip}">${tip}${copyIcons}</button>`).join(''));
+      const reasonBox = document.querySelector('[data-wf-reason]');
+      reasonBox.open = state.uu === '1';
+      reasonBox.addEventListener('toggle', () => {
+        state.uu = reasonBox.open ? '1' : '0';
+        history.replaceState(null, '', linkTo({}));
+        updateLinks();
+      });
+      const barMenus = [...document.querySelectorAll('.wf-menu')];
+      for (const barMenu of barMenus) {
+        barMenu.addEventListener('toggle', () => {
+          const summaryRect = barMenu.querySelector('summary').getBoundingClientRect();
+          Object.assign(barMenu.querySelector('.wf-popover').style, { top: `${summaryRect.bottom + 6}px`, left: `${summaryRect.left}px` });
+        });
+      }
+      document.addEventListener('click', (event) => {
+        for (const barMenu of barMenus) if (!barMenu.contains(event.target)) barMenu.open = false;
+        if (event.target.closest('[data-wf-menu]')) document.body.toggleAttribute('data-menu-open');
+        if (event.target.closest('[data-wf-close]')) document.body.removeAttribute('data-menu-open');
+        if (event.target.closest('a[href="#"]')) event.preventDefault();
+      });
+      document.addEventListener('keydown', (event) => {
+        if (event.key !== 'Escape') return;
+        document.body.removeAttribute('data-menu-open');
+        for (const barMenu of barMenus) barMenu.open = false;
+      });
+      for (const button of document.querySelectorAll('[data-copy]')) {
+        button.addEventListener('click', async () => {
+          await navigator.clipboard.writeText(button.dataset.copy);
+          button.setAttribute('data-copied', '');
+          setTimeout(() => button.removeAttribute('data-copied'), 1500);
+        });
+      }
+
+      new MutationObserver(() => {
+        if (document.querySelector('i[data-lucide]') && window.lucide) lucide.createIcons();
+      }).observe(document.body, { childList: true, subtree: true });
+      render();
+      if (window.lucide) lucide.createIcons();
+
+      function placeBlockNumbers() {
+        const isOverlap = (first, second) => first.left < second.right && first.right > second.left && first.top < second.bottom && first.bottom > second.top;
+        for (const block of document.querySelectorAll('[data-wf-block]')) {
+          const blockRect = block.getBoundingClientRect();
+          const numberRect = { left: blockRect.left + 4, top: blockRect.top + 4, right: blockRect.left + 22, bottom: blockRect.top + 22 };
+          const contentRects = [...block.querySelectorAll('svg, img')].map((node) => node.getBoundingClientRect());
+          const walker = document.createTreeWalker(block, NodeFilter.SHOW_TEXT);
+          for (let node = walker.nextNode(); node; node = walker.nextNode()) {
+            if (!node.textContent.trim()) continue;
+            const range = document.createRange();
+            range.selectNodeContents(node);
+            contentRects.push(...range.getClientRects());
+          }
+          block.toggleAttribute('data-wf-block-out', block.hasAttribute('data-wf-block-out-fixed') || contentRects.some((rect) => rect.width > 0 && isOverlap(rect, numberRect)));
+        }
+      }
+      requestAnimationFrame(() => requestAnimationFrame(placeBlockNumbers));
+      setTimeout(placeBlockNumbers, 600);
+      setTimeout(placeBlockNumbers, 1500);
+      addEventListener('resize', placeBlockNumbers);
+    </script>
+  </body>
+</html>
