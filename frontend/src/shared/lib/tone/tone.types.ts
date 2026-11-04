@@ -1,5 +1,5 @@
-/** The colors that Badge, Button, Alert, Code, Node, Edge, Marker, Progress, and Spinner take. */
-export const tones = ['neutral', 'primary', 'success', 'warning', 'destructive'] as const
+/** The colors that Badge, Button, Alert, Code, Highlight, Node, Edge, Marker, Progress, and Spinner take. `chart` is the yellow of the charts, with its own tokens in each theme. */
+export const tones = ['neutral', 'primary', 'success', 'warning', 'destructive', 'chart'] as const
 
 export type Tone = (typeof tones)[number]
 

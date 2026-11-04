@@ -35,7 +35,10 @@
  * The five chart colors are yellow, from lemon to amber, in steps of lightness, so they encode
  * order or magnitude: chart-1 stands out most, chart-5 sits closest to the background. In the
  * light theme chart-4 and chart-5 are below 2:1 on the background, so charts show their values
- * as labels.
+ * as labels. The `chart` color of the components takes its own yellow from the ramp, tuned for
+ * the eye in each theme: the vivid yellow fills, the light theme reads it as the dark amber
+ * #9f5b06, since a vivid yellow cannot hold 4.5:1 on a white page, and the dark theme takes the
+ * most contrast yellow of the ramp, chart-1.
  */
 :root {
   /* The same fonts on every system; the system fonts after them show only until they load. */
@@ -74,6 +77,9 @@
   --chart-3: #dc9e08;
   --chart-4: #edb90c;
   --chart-5: #fbd509;
+  --chart: #fbd509;
+  --chart-foreground: #011627;
+  --chart-strong: #9f5b06;
   --sidebar: #f0f0f0;
   --sidebar-foreground: #403f53;
   --sidebar-primary: #3460be;
@@ -126,6 +132,9 @@
   --chart-3: #e7a807;
   --chart-4: #cd8505;
   --chart-5: #b06505;
+  --chart: color-mix(in srgb, var(--chart-1), var(--chart-2));
+  --chart-foreground: #011627;
+  --chart-strong: var(--chart-2);
   --sidebar: #011627;
   --sidebar-foreground: #a3bdd6;
   --sidebar-primary: #82aaff;
@@ -180,6 +189,9 @@
   --color-chart-3: var(--chart-3);
   --color-chart-4: var(--chart-4);
   --color-chart-5: var(--chart-5);
+  --color-chart: var(--chart);
+  --color-chart-foreground: var(--chart-foreground);
+  --color-chart-strong: var(--chart-strong);
   --color-sidebar: var(--sidebar);
   --color-sidebar-foreground: var(--sidebar-foreground);
   --color-sidebar-primary: var(--sidebar-primary);
@@ -229,6 +241,7 @@
  */
 @theme {
   --max-height-dialog: 80dvh;
+  --max-height-history-list: min(24rem, 50vh);
   --max-width-popover: calc(100vw - 2rem);
   --padding-prompt-top: 18vh;
   --grid-template-rows-header-body: auto minmax(0, 1fr);

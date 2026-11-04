@@ -1,4 +1,5 @@
 import {
+  ChartColumnIcon,
   CircleCheckIcon,
   CircleDashedIcon,
   InfoIcon,
@@ -16,4 +17,5 @@ export const toneIcons: Record<Tone, LucideIcon> = {
   success: CircleCheckIcon,
   warning: TriangleAlertIcon,
   destructive: OctagonXIcon,
+  chart: ChartColumnIcon,
 }
