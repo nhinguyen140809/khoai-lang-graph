@@ -49,6 +49,10 @@
       "type": "string",
       "description": "Item kinds only. The field that names an item in lists, links, the outline and trace views."
     },
+    "x-ui-role-field": {
+      "type": "string",
+      "description": "Item kinds only. The field that names who says the words of a message, shown as the speaker of a transcript. The kinds that draw a transcript name one."
+    },
     "x-ui-list-fields": {
       "type": "array",
       "minItems": 1,

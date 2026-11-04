@@ -17,3 +17,16 @@ export function fieldText(item: { content: ContentValues }, name: string): strin
   const value = item.content[name]
   return isString(value) && hasText(value) ? value : null
 }
+
+/**
+ * The text of the field that an extension of the schema names, such as the words of a message of
+ * a transcript, or who says them; empty when the schema or the field holds none.
+ */
+export function extensionFieldText(
+  schema: ContentSchema | undefined,
+  item: { content: ContentValues },
+  extension: 'x-ui-title-field' | 'x-ui-role-field',
+): string {
+  const name = schema?.[extension]
+  return name === undefined ? '' : (fieldText(item, name) ?? '')
+}
