@@ -1,83 +1,20 @@
 import { collectBy } from '@/shared/lib/collections'
 
 import type {
-  Citation,
   ItemLinkGroup,
   ItemLinkRow,
   LinkQuote,
-  OriginStep,
-  OriginTree,
   Trace,
   TraceItem,
 } from '../types/chains.types'
 import type { TraceLink } from '../types/trace-links.types'
 import { isLinkOutOfDate } from './trace-links.utils'
 
-// The rules of reading a trace: where an item comes from, the quoted words of every item, the
-// items made from an older version of what they link to, and the links of an item by type.
+// The rules of reading a trace: the quoted words of every item, the items made from an older
+// version of what they link to, and the links of an item by type.
 
 function itemById(trace: Trace): Map<string, TraceItem> {
   return new Map(trace.items.map((item) => [item.id, item]))
-}
-
-// The citations of an item: its `evidenced_by` links with the item each cites, in key order.
-function citationsOf(
-  item: TraceItem,
-  links: readonly TraceLink[],
-  byId: Map<string, TraceItem>,
-): Citation[] {
-  return links
-    .filter(
-      ({ link_type, source_item_id }) => link_type === 'evidenced_by' && source_item_id === item.id,
-    )
-    .flatMap((link) => {
-      const cited = byId.get(link.target_item_id)
-      return cited === undefined ? [] : [{ link, quote: link.target_quote, citing: item, cited }]
-    })
-    .toSorted((first, second) => first.cited.key.localeCompare(second.cited.key))
-}
-
-// The steps of the origin of an item: one per `derived_from` target, each with its own citations
-// and steps. An item met twice is a step once, under its first path, and a loop is walked once.
-function stepsOf(
-  item: TraceItem,
-  links: readonly TraceLink[],
-  byId: Map<string, TraceItem>,
-  seen: Set<string>,
-): OriginStep[] {
-  return links
-    .filter(
-      ({ link_type, source_item_id }) => link_type === 'derived_from' && source_item_id === item.id,
-    )
-    .flatMap((link) => {
-      const target = byId.get(link.target_item_id)
-      if (target === undefined || seen.has(target.id)) return []
-      seen.add(target.id)
-      return [
-        {
-          link,
-          item: target,
-          evidence: citationsOf(target, links, byId),
-          steps: stepsOf(target, links, byId, seen),
-        },
-      ]
-    })
-    .toSorted((first, second) => first.item.key.localeCompare(second.item.key))
-}
-
-/**
- * Where an item comes from: the words it cites itself (`evidenced_by`), and one step per
- * `derived_from` target with what that item cites and is based on in turn, down to the interview.
- */
-export function originOf(trace: Trace, itemId: string): OriginTree {
-  const byId = itemById(trace)
-  const start = byId.get(itemId)
-  if (start === undefined) return { evidence: [], steps: [] }
-  const seen = new Set<string>([itemId])
-  return {
-    evidence: citationsOf(start, trace.links, byId),
-    steps: stepsOf(start, trace.links, byId, seen),
-  }
 }
 
 /**
@@ -131,9 +68,11 @@ export function itemLinkGroups(
   {
     linkTypes,
     titleOf,
+    kindTitleOf,
   }: {
     linkTypes: readonly { key: string; title: string }[]
     titleOf: (item: TraceItem) => string
+    kindTitleOf: (item: TraceItem) => string
   },
 ): { outgoing: ItemLinkGroup[]; incoming: ItemLinkGroup[] } {
   const byId = itemById(trace)
@@ -142,6 +81,7 @@ export function itemLinkGroups(
     return {
       link,
       other,
+      kindTitle: kindTitleOf(other),
       title: titleOf(other),
       isOutOfDate: target !== undefined && isLinkOutOfDate(link, target),
     }

@@ -27,8 +27,8 @@ interface ContentFieldValueProps<Range extends HighlightRange = HighlightRange> 
 }
 
 /**
- * A text with some of its words marked, `soft` in the color of each range: the whole text in one,
- * so that a range may cross the lines of it.
+ * A text with some of its words marked, each range in the form and the color it carries: the whole
+ * text in one, so that a range may cross the lines of it.
  */
 function MarkedText<Range extends HighlightRange>({
   text,
@@ -42,7 +42,6 @@ function MarkedText<Range extends HighlightRange>({
   return (
     <p className="whitespace-pre-line">
       <Highlight
-        variant="soft"
         ranges={marks}
         renderMark={renderMark === undefined ? undefined : (mark, range) => renderMark(range, mark)}
       >

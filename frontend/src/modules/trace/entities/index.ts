@@ -4,6 +4,7 @@ export { getTraceabilityCoverage, getTraceabilityMatrix } from './api/traceabili
 export { linkedItemMessages } from './components/linked-items.constants'
 export { LinkedItemsPopover } from './components/LinkedItemsPopover'
 export { QuotedWordsPopover } from './components/QuotedWordsPopover'
+export { quoteMarkColors } from './constants/link-marks.constants'
 export { derivedFrom, evidencedBy } from './constants/trace-links.constants'
 export {
   useArtifactTrace,

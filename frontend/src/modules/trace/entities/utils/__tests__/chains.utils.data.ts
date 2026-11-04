@@ -53,16 +53,6 @@ export const chainTrace: Trace = {
 }
 
 /** A loop: the analyzed requirement is based on itself through the raw one. */
-export const loopTrace: Trace = {
-  items: [
-    item('analyzed', 'AR-001', 'analyzed_requirement'),
-    item('raw', 'RAW-001', 'raw_requirement'),
-  ],
-  links: [
-    link('l1', 'analyzed', 'raw', 'derived_from'),
-    link('l2', 'raw', 'analyzed', 'derived_from'),
-  ],
-}
 
 /** The quotes of the items of a trace, by item. */
 export const quotesTrace: Trace = {

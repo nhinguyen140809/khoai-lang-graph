@@ -85,7 +85,12 @@ const derivations: LinkSpec[] = [
     sourceQuote: 'search mentors by field of study',
     targetQuote: 'lists mentors by field of study',
   },
-  { source: 'REQ-002', target: 'AR-003', type: 'derived_from' },
+  {
+    source: 'REQ-002',
+    target: 'AR-003',
+    type: 'derived_from',
+    targetQuote: 'searches mentors by field',
+  },
   { source: 'REQ-003', target: 'AR-007', type: 'derived_from', targetVersion: 1 },
   { source: 'REQ-004', target: 'AR-004', type: 'derived_from' },
   { source: 'REQ-005', target: 'AR-005', type: 'derived_from' },

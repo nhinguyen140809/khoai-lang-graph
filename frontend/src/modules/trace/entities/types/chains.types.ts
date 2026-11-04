@@ -50,32 +50,12 @@ export interface LinkQuote {
   other: TraceItem
 }
 
-/** An `evidenced_by` link with its two items: the item that cites, and the item cited, such as a message of an interview, with the words it quotes. */
-export interface Citation {
-  link: TraceLink
-  quote: string | null
-  citing: TraceItem
-  cited: TraceItem
-}
-
-/** One item that an item is based on (`derived_from`), with what it is based on in turn and the words it cites. */
-export interface OriginStep {
-  link: TraceLink
-  item: TraceItem
-  evidence: Citation[]
-  steps: OriginStep[]
-}
-
-/** Where an item comes from: the words it cites itself, and the items it is based on. */
-export interface OriginTree {
-  evidence: Citation[]
-  steps: OriginStep[]
-}
-
-/** A link of an item, with the item at its other end, its title, and whether the link was made from an older version of its target. */
+/** A link of an item, with the item at its other end, the title of its kind and its own, and whether the link was made from an older version of its target. */
 export interface ItemLinkRow {
   link: TraceLink
   other: TraceItem
+  /** The title of the kind of the other item, from its schema, such as "Stated need". */
+  kindTitle: string
   title: string
   isOutOfDate: boolean
 }
