@@ -57,6 +57,28 @@ describe('ItemPage', () => {
     expect(screen.queryByText('version 1')).not.toBeInTheDocument()
   })
 
+  it('shows the page of a persona as a profile: its avatar, its fields of one line on the key line, its lists in pairs', async () => {
+    renderItem(itemFixtureByKey(projectId, 'PER-001').id)
+
+    const heading = await screen.findByRole('heading', { level: 1, name: 'Minh' })
+    expect(heading.parentElement).toHaveTextContent('PER-001')
+    // The avatar leads the title, in the tone of the place of the persona among the items.
+    expect(screen.getByText('M')).toHaveAttribute('data-color', 'chart')
+    // The fields of one line sit above the label of the status, under the title.
+    const stakeholder = screen.getByText('Student').closest('p')
+    expect(stakeholder?.textContent).toContain('Stakeholder type: Student')
+    expect(screen.getByText('Interviewed')).toBeInTheDocument()
+    expect(stakeholder?.compareDocumentPosition(screen.getByText(/Approved/))).toBe(
+      Node.DOCUMENT_POSITION_FOLLOWING,
+    )
+    // The body holds the fields of the profile, a list in one column and a text across.
+    const goals = screen.getByRole('heading', { name: 'Goals' }).closest('section')
+    const background = screen.getByRole('heading', { name: 'Background' }).closest('section')
+    expect(goals).not.toHaveAttribute('data-wide')
+    expect(background).toHaveAttribute('data-wide')
+    expect(screen.queryByRole('heading', { name: 'Name' })).not.toBeInTheDocument()
+  })
+
   it('shows the sections and the group above the item in the breadcrumb, from the top down', async () => {
     const specification = artifactFixtureByKind(projectId, 'requirement_specification')
     renderItem(itemFixtureByKey(projectId, 'REQ-001').id)

@@ -34,22 +34,26 @@ function renderWithMarks() {
 }
 
 describe('ItemKeyLine', () => {
-  it('shows the status and the key in one line', () => {
+  it('shows the label of the status alone; the key sits in the heading', () => {
     renderKeyLine('approved')
 
-    expect(screen.getByText('REQ-001')).toBeInTheDocument()
     expect(screen.getByText(/Approved/)).toBeInTheDocument()
+    expect(screen.queryByText('REQ-001')).not.toBeInTheDocument()
     expect(screen.queryByText(/^version /)).not.toBeInTheDocument()
   })
 
-  it('follows the key with the fields of one line of a persona, in their order', () => {
+  it('shows the fields of one line of a persona above the label of its status', () => {
     renderWithProviders(
       <ItemKeyLine item={persona} status="approved" isUnderReview={false} schema={personaSchema} />,
     )
 
-    const line = screen.getByText('PER-001').closest('p')
-    expect(line?.textContent).toContain('Stakeholder type: Student')
+    const stakeholder = screen.getByText('Student').closest('p')
+    const status = screen.getByText(/Approved/).closest('p')
+    if (stakeholder === null || status === null) throw new Error('The key line lost a line')
+    expect(stakeholder.textContent).toContain('Stakeholder type: Student')
     expect(screen.getByText('Interviewed')).toBeInTheDocument()
+    expect(stakeholder).not.toBe(status)
+    expect(stakeholder.compareDocumentPosition(status)).toBe(Node.DOCUMENT_POSITION_FOLLOWING)
     expect(screen.queryByText('Background')).not.toBeInTheDocument()
   })
 

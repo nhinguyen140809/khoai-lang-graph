@@ -45,9 +45,9 @@ const bodyFields = {
 } as const satisfies Record<ItemPageLayout, (schema: ContentSchema) => ContentField[]>
 
 /**
- * The key line of an item: the label of its status in its color, the key, then the fields of one
- * line that its page layout names. The history holds the versions. The page draws it right under
- * the title, with the links of the item under it.
+ * The key line of an item: the fields of one line that its page layout names, above the label of
+ * its status in its color. The key sits beside the title, in the heading; the history holds the
+ * versions. The page draws the line right under the title, with the links of the item under it.
  */
 export function ItemKeyLine({ item, status, isUnderReview, schema }: ItemKeyLineProps) {
   const { data: definition } = useWorkflowDefinition()
@@ -55,13 +55,18 @@ export function ItemKeyLine({ item, status, isUnderReview, schema }: ItemKeyLine
   const line = schema === undefined ? [] : keyLineFields[pageLayoutOf(schema)](schema)
 
   return (
-    <p className="flex flex-wrap items-center gap-x-4 gap-y-1 text-sm">
-      <ColoredText color={look.color} className="font-semibold">
-        {look.label}
-      </ColoredText>
-      <span className="font-mono text-xs text-muted-foreground">{item.key}</span>
-      <InlineFieldValues fields={line} content={item.content} definition={definition} />
-    </p>
+    <div className="space-y-0.5 text-sm">
+      {line.length > 0 && (
+        <p className="flex flex-wrap items-center gap-x-4 gap-y-1">
+          <InlineFieldValues fields={line} content={item.content} definition={definition} />
+        </p>
+      )}
+      <p className="flex flex-wrap items-center gap-x-4 gap-y-1">
+        <ColoredText color={look.color} className="font-semibold">
+          {look.label}
+        </ColoredText>
+      </p>
+    </div>
   )
 }
 

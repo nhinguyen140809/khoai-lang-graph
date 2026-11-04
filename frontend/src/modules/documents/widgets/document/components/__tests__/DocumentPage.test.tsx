@@ -16,6 +16,7 @@ import { DocumentsHomePage } from '../DocumentsHomePage'
 
 const projectId = projectIds.mentor
 const analysis = artifactFixtureByKind(projectId, 'requirements_analysis')
+const interview = artifactFixtureByKind(projectId, 'interview_transcript', 'Interview with Minh')
 const documentsPath = `/projects/${projectId}/documents`
 
 function renderDocument(artifactId: string, scenario?: string) {
@@ -95,6 +96,16 @@ describe('DocumentPage', () => {
     routerMock.push.mockClear()
     await userEvent.dblClick(link)
     expect(routerMock.push).toHaveBeenCalledWith(href)
+  })
+
+  it('opens the page of a persona from the participants of a transcript', async () => {
+    renderDocument(interview.id)
+    const persona = itemFixtureByKey(projectId, 'PER-001')
+
+    const link = await screen.findByRole('link', { name: 'Minh' })
+    expect(link).toHaveAttribute('href', `/projects/${projectId}/items/${persona.id}`)
+    await userEvent.click(link)
+    expect(routerMock.push).toHaveBeenCalledWith(`/projects/${projectId}/items/${persona.id}`)
   })
 
   it('shows a loading state while the document loads', async () => {
