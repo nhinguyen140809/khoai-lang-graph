@@ -22,9 +22,3 @@ export const stopReasonLabels = {
     user: 'Stopping condition reached',
   },
 } as const satisfies Record<string, Wording>
-
-/** Who said a message of an interview, in each view. */
-export const messageRoleLabels = {
-  interviewer: { developer: 'Interviewer', user: 'Interviewer' },
-  persona: { developer: 'Persona', user: 'Interviewee' },
-} as const satisfies Record<string, Wording>

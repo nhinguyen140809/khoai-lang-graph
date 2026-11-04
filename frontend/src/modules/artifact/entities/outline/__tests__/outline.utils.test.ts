@@ -8,6 +8,7 @@ import {
   artifactOutline,
   isBranch,
   itemAnchorId,
+  itemAnchorProps,
   itemNodeId,
   outlineBreadcrumb,
   outlineNeighbors,
@@ -238,10 +239,10 @@ describe('outlineBreadcrumb', () => {
 
 describe('documentBlocks', () => {
   it('gives a heading for each section, at a level that follows its depth', () => {
-    const blocks = documentBlocks({
-      ...mentorDocument('requirement_specification'),
-      kinds: kindViewFixtures,
-    })
+    const blocks = documentBlocks(
+      { ...mentorDocument('requirement_specification'), kinds: kindViewFixtures },
+      { artifactDisplay: 'document' },
+    )
     const headings = blocks.flatMap((block) =>
       block.type === 'heading' ? [`${String(block.level)} ${block.title}`] : [],
     )
@@ -258,10 +259,10 @@ describe('documentBlocks', () => {
   })
 
   it('draws a run of items of one kind with the display of the kind', () => {
-    const blocks = documentBlocks({
-      ...mentorDocument('requirement_specification'),
-      kinds: kindViewFixtures,
-    })
+    const blocks = documentBlocks(
+      { ...mentorDocument('requirement_specification'), kinds: kindViewFixtures },
+      { artifactDisplay: 'document' },
+    )
     const runs = blocks.flatMap((block) =>
       block.type === 'items' ? [`${block.display}:${String(block.items.length)}`] : [],
     )
@@ -270,10 +271,10 @@ describe('documentBlocks', () => {
   })
 
   it('gives a heading with the count for each group of a document without sections', () => {
-    const blocks = documentBlocks({
-      ...mentorDocument('requirements_analysis'),
-      kinds: kindViewFixtures,
-    })
+    const blocks = documentBlocks(
+      { ...mentorDocument('requirements_analysis'), kinds: kindViewFixtures },
+      { artifactDisplay: 'document' },
+    )
 
     expect(blocks.slice(0, 2)).toMatchObject([
       { type: 'group', title: 'Stated need', count: 8 },
@@ -281,23 +282,35 @@ describe('documentBlocks', () => {
     ])
   })
 
-  it('draws cards and transcripts with their own display', () => {
-    const persona = documentBlocks({
-      ...mentorDocument('persona_catalog'),
-      kinds: kindViewFixtures,
-    })
-    const transcript = documentBlocks({
-      ...mentorDocument('interview_transcript'),
-      kinds: kindViewFixtures,
-    })
+  it('draws avatar cards and transcripts with their own display', () => {
+    const persona = documentBlocks(
+      { ...mentorDocument('persona_catalog'), kinds: kindViewFixtures },
+      { artifactDisplay: 'document' },
+    )
+    const transcript = documentBlocks(
+      { ...mentorDocument('interview_transcript'), kinds: kindViewFixtures },
+      { artifactDisplay: 'transcript' },
+    )
 
-    expect(persona.at(-1)).toMatchObject({ type: 'items', display: 'cards' })
+    expect(persona.at(-1)).toMatchObject({ type: 'items', display: 'profile' })
     expect(transcript.at(-1)).toMatchObject({ type: 'items', display: 'transcript' })
+  })
+
+  it('gives a transcript no heading for the group of its messages', () => {
+    const blocks = documentBlocks(
+      { ...mentorDocument('interview_transcript'), kinds: kindViewFixtures },
+      { artifactDisplay: 'transcript' },
+    )
+
+    expect(blocks.some((block) => block.type === 'group')).toBe(false)
   })
 
   it('gives nothing for a document without items', () => {
     expect(
-      documentBlocks({ ...mentorDocument('elicitation_plan'), kinds: kindViewFixtures }),
+      documentBlocks(
+        { ...mentorDocument('elicitation_plan'), kinds: kindViewFixtures },
+        { artifactDisplay: 'document' },
+      ),
     ).toEqual([])
   })
 })
@@ -324,6 +337,21 @@ describe('itemAnchorId', () => {
   it('names the anchor of an item on the page of its document', () => {
     expect(itemAnchorId('i1')).toBe('item-i1')
     expect(itemAnchorId('i1')).not.toBe(itemNodeId('i1'))
+  })
+})
+
+describe('itemAnchorProps', () => {
+  it('ties the block of an item to the address of the page', () => {
+    expect(itemAnchorProps('i1', null)).toEqual({ id: 'item-i1', tabIndex: -1 })
+    expect(itemAnchorProps('i1', 'i2')).toEqual({ id: 'item-i1', tabIndex: -1 })
+  })
+
+  it('marks the block of the item that the address names, as a target of the focus', () => {
+    expect(itemAnchorProps('i1', 'i1')).toEqual({
+      id: 'item-i1',
+      tabIndex: -1,
+      'data-target': '',
+    })
   })
 })
 
@@ -355,12 +383,18 @@ describe('hasTranscript', () => {
   it('tells whether the blocks of a document draw messages of a transcript', () => {
     expect(
       hasTranscript(
-        documentBlocks({ ...mentorDocument('interview_transcript'), kinds: kindViewFixtures }),
+        documentBlocks(
+          { ...mentorDocument('interview_transcript'), kinds: kindViewFixtures },
+          { artifactDisplay: 'transcript' },
+        ),
       ),
     ).toBe(true)
     expect(
       hasTranscript(
-        documentBlocks({ ...mentorDocument('requirement_specification'), kinds: kindViewFixtures }),
+        documentBlocks(
+          { ...mentorDocument('requirement_specification'), kinds: kindViewFixtures },
+          { artifactDisplay: 'document' },
+        ),
       ),
     ).toBe(false)
   })

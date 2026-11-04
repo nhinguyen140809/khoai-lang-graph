@@ -64,7 +64,7 @@ describe('DocumentPage', () => {
 
     const tab = await findTab(personas.title)
     await waitFor(() => {
-      expect(tab.querySelector('svg.lucide-layout-grid')).not.toBeNull()
+      expect(tab.querySelector('svg.lucide-users')).not.toBeNull()
     })
   })
 

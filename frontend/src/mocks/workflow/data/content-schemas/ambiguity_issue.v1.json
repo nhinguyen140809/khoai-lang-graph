@@ -67,7 +67,7 @@
         "dismissed"
       ],
       "description": "State of the issue.",
-      "x-ui-widget": "select"
+      "x-ui-widget": "badge"
     },
     "resolution": {
       "title": "Resolution",

@@ -79,7 +79,7 @@ export interface ExplorerNode {
 /** The artifact tree of the example project, keyed by node id; `root` is the top. */
 export const explorerNodes: Record<string, ExplorerNode> = {
   root: { name: 'Artifacts', children: ['plan', 'personas', 'analysis', 'spec', 'backlog'] },
-  plan: { name: 'Elicitation plan' },
+  plan: { name: 'Interview plan' },
   personas: { name: 'Personas', children: ['per-1', 'per-2', 'per-3'] },
   'per-1': { name: 'PER-001 Student' },
   'per-2': { name: 'PER-002 Mentor' },
@@ -97,7 +97,7 @@ export const explorerNodes: Record<string, ExplorerNode> = {
   'req-2': { name: 'REQ-002 Filter by field' },
   'sec-3-2': { name: '3.2 Booking', children: ['req-5'] },
   'req-5': { name: 'REQ-005 Book a session' },
-  backlog: { name: 'Product backlog' },
+  backlog: { name: 'User stories' },
 }
 
 export interface TraceNodeData extends Record<string, unknown> {

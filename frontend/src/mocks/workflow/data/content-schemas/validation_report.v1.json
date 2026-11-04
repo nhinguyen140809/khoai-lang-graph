@@ -7,7 +7,10 @@
   "x-kind": "validation_report",
   "x-schema-version": 1,
   "x-ui-display": "document",
-  "x-ui-field-order": ["iteration", "status"],
+  "x-ui-field-order": [
+    "iteration",
+    "status"
+  ],
   "type": "object",
   "additionalProperties": false,
   "properties": {
@@ -22,10 +25,16 @@
     "status": {
       "title": "Status",
       "type": "string",
-      "enum": ["pass", "fail"],
+      "enum": [
+        "pass",
+        "fail"
+      ],
       "description": "Overall result.",
-      "x-ui-widget": "select"
+      "x-ui-widget": "badge"
     }
   },
-  "required": ["iteration", "status"]
+  "required": [
+    "iteration",
+    "status"
+  ]
 }

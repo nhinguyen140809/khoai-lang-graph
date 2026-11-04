@@ -1,12 +1,23 @@
+import type { ReactNode } from 'react'
+
 import type {
+  ArtifactDisplay,
   ContentDisplay,
   ContentField,
   ContentSchema,
+  ContentValues,
 } from '@/modules/workflow/entities/@x/artifact'
+import type { Tone } from '@/shared/lib/tone'
 
 import type { Artifact } from '../artifacts/artifacts.types'
 import type { OutlineItem } from '../items/items.types'
 import type { ItemStatus, StatusCount } from '../status/item-status.types'
+
+/** Draws the title of an item as a link to its page; the page of the document gives how it opens. */
+export type RenderItemLink = (item: OutlineItem, title: ReactNode) => ReactNode
+
+/** Wraps some content in one element that opens the page of the item with this id and takes a class, such as a `PageLink`. */
+export type RenderItemIdLink = (itemId: string, children: ReactNode) => ReactNode
 
 /** A row of the outline of an artifact. `id` is unique in the tree of one artifact. */
 export type OutlineNode =
@@ -107,12 +118,37 @@ export interface BreadcrumbStep {
 /** What the page of a document draws: the artifact, its filled fields and the parts of its page. */
 export interface ArtifactDocumentData {
   artifact: Artifact
-  /** The fields of the artifact that hold a value, in the order of its schema. */
+  /** How the document is laid out: the display of its artifact kind. */
+  display: ArtifactDisplay
+  /** The filled fields of the artifact, in the order of its schema. */
   fields: ContentField[]
+  /** The people of its conversation; empty for a document that is not a transcript. */
+  participants: Participant[]
   blocks: DocumentBlock[]
   /** The kinds that draw the items, by kind name. */
   kinds: ReadonlyMap<string, KindView>
 }
+
+/** A person of a conversation, as its transcript draws it. */
+export interface Participant {
+  key: string
+  name: string
+  /** The item that the participant is, whose page it reaches; null for an agent. */
+  itemId: string | null
+  /** `end` for those who share the role of the first participant, who leads; `start` for the others. */
+  side: 'start' | 'end'
+  tone: Tone
+}
+
+/** A part of a conversation: a separator where values change, or the messages in a row of one participant. */
+export type TranscriptPart =
+  | { type: 'separator'; key: string; fields: ContentField[]; content: ContentValues }
+  | {
+      type: 'run'
+      key: string
+      participant: Participant
+      messages: { item: OutlineItem; text: string }[]
+    }
 
 /** What `useArtifactDocument` gives: the document, or why it is not there. */
 export type ArtifactDocumentResult =

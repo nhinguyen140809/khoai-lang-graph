@@ -75,7 +75,7 @@ export const contentFieldCases = [
 export const displayCases = [
   { kind: 'requirement_specification', display: 'document' },
   { kind: 'section', display: 'heading' },
-  { kind: 'persona', display: 'cards' },
+  { kind: 'persona', display: 'profile' },
   { kind: 'interview_message', display: 'transcript' },
   { kind: 'spec_requirement', display: 'table' },
 ]

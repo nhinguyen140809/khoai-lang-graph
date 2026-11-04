@@ -9,15 +9,15 @@
   "x-ui-display": "transcript",
   "x-ui-navigable": false,
   "x-ui-title-field": "content",
-  "x-ui-role-field": "role",
+  "x-ui-role-field": "speaker",
   "x-ui-list-fields": [
     "turn",
-    "role",
+    "speaker",
     "content"
   ],
   "x-ui-field-order": [
     "turn",
-    "role",
+    "speaker",
     "content",
     "iteration",
     "topic"
@@ -30,17 +30,13 @@
       "type": "integer",
       "minimum": 1,
       "description": "A question and its answer share a turn.",
-      "x-ui-widget": "number"
+      "x-ui-widget": "separator"
     },
-    "role": {
-      "title": "Role",
+    "speaker": {
+      "title": "Speaker",
       "type": "string",
-      "enum": [
-        "interviewer",
-        "persona"
-      ],
-      "description": "Who wrote the message.",
-      "x-ui-widget": "select"
+      "description": "The key of the participant of the transcript who says the words.",
+      "x-ui-widget": "text"
     },
     "content": {
       "title": "Content",
@@ -68,7 +64,7 @@
   },
   "required": [
     "turn",
-    "role",
+    "speaker",
     "content",
     "iteration",
     "topic"

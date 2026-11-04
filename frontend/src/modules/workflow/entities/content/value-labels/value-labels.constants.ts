@@ -1,7 +1,6 @@
 import type { Wording } from '@/shared/lib/view'
 
 import {
-  messageRoleLabels,
   personaInterviewStatusLabels,
   stopReasonLabels,
   transcriptStatusLabels,
@@ -33,7 +32,6 @@ export const valueLabelsByField: Readonly<Record<string, Readonly<Record<string,
   'persona.interview_status': personaInterviewStatusLabels,
   'interview_transcript.status': transcriptStatusLabels,
   'interview_transcript.stop_reason': stopReasonLabels,
-  'interview_message.role': messageRoleLabels,
   'ambiguity_issue.status': ambiguityStatusLabels,
   'conflict.status': conflictStatusLabels,
   'conflict.severity': severityLabels,

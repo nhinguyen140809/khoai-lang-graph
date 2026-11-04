@@ -151,7 +151,7 @@ screenshots('Documents', (shot) => {
 
   shotWhenReady('Panel with a transcript open', `/documents/${interview}`, {
     role: 'treeitem',
-    name: 'Interview with the student',
+    name: 'Interview with Minh',
   })
   shotWhenReady('Outline that fails to load', `/documents/${analysis}?mock-artifact=error`, {
     role: 'treeitem',
@@ -162,8 +162,8 @@ screenshots('Documents', (shot) => {
     await page.goto(`${project}/documents/${analysis}`)
 
     // A row with no color of its own: its icon and title go from muted to the text color.
-    const row = page.getByRole('treeitem', { name: 'Persona catalog' })
-    await user.expectRole('treeitem', 'Persona catalog')
+    const row = page.getByRole('treeitem', { name: 'Interviewees' })
+    await user.expectRole('treeitem', 'Interviewees')
     await row.hover()
     await shoot({ hover: row })
   })

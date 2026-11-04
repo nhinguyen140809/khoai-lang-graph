@@ -5,14 +5,15 @@ import type { ReactNode } from 'react'
 import {
   type ContentField,
   ContentFieldValue,
-  extensionFieldText,
   fieldText,
+  type ItemDisplay,
   itemTitle,
   summaryFields,
   useWorkflowDefinition,
+  type ValueDefinition,
 } from '@/modules/workflow/entities/@x/artifact'
 import { Card, CardContent, CardHeader, CardTitle } from '@/shared/components/ui/card'
-import { Highlight, type HighlightRange } from '@/shared/components/ui/highlight'
+import type { HighlightRange } from '@/shared/components/ui/highlight'
 import {
   Table,
   TableBody,
@@ -23,16 +24,17 @@ import {
 } from '@/shared/components/ui/table'
 
 import type { OutlineItem } from '../items/items.types'
-import type { DocumentBlock, KindView } from '../outline/outline.types'
-import { itemAnchorId } from '../outline/outline.utils'
+import type { DocumentBlock, KindView, Participant, RenderItemLink } from '../outline/outline.types'
+import { itemAnchorProps } from '../outline/outline.utils'
 import { artifactViewMessages } from './artifact-view.constants'
-
-/** Draws the title of an item as a link to its page; the page of the document gives how it opens. */
-export type RenderItemLink = (item: OutlineItem, title: ReactNode) => ReactNode
+import { ItemAvatarCards } from './ItemAvatarCards'
+import { ItemTranscript } from './ItemTranscript'
 
 interface DocumentBlocksProps<Range extends HighlightRange = HighlightRange> {
   blocks: readonly DocumentBlock[]
   kinds: ReadonlyMap<string, KindView>
+  /** The people of the conversation of a transcript; empty for a document that holds none. */
+  participants?: readonly Participant[] | undefined
   renderItemLink: RenderItemLink
   /** The item that the address of the page names: its block is marked and scrolled to. */
   targetItemId?: string | null | undefined
@@ -42,32 +44,35 @@ interface DocumentBlocksProps<Range extends HighlightRange = HighlightRange> {
   renderMessageMark?: ((range: Range, children: ReactNode) => ReactNode) | undefined
 }
 
-/** The props that tie a block of one item to the address of the page. */
-function anchorProps(itemId: string, targetItemId: string | null) {
-  return {
-    id: itemAnchorId(itemId),
-    tabIndex: -1,
-    ...(targetItemId === itemId ? { 'data-target': '' } : {}),
-  } as const
+/** The props that every view of a run of items takes; each view reads the ones it needs. */
+interface RunViewProps<Range extends HighlightRange = HighlightRange> {
+  items: readonly OutlineItem[]
+  view: KindView
+  participants: readonly Participant[]
+  renderItemLink: RenderItemLink
+  definition: ValueDefinition
+  targetItemId: string | null
+  messageMarks?: ReadonlyMap<string, readonly Range[]> | undefined
+  renderMessageMark?: ((range: Range, children: ReactNode) => ReactNode) | undefined
 }
-
-type ValueDefinition = ReturnType<typeof useWorkflowDefinition>['data']
 
 const headings = { 2: 'h2', 3: 'h3', 4: 'h4', 5: 'h5' } as const
 
-function ItemsTable({
+// The size of a section heading by its level: the top level one step above the body text, the
+// levels nested under it at the size of the body, set apart by their weight alone.
+const headingSizes = { 2: 'text-lg', 3: 'text-base', 4: 'text-base', 5: 'text-base' } as const
+
+function itemTitleOf(view: KindView, item: OutlineItem, field: ContentField): ReactNode {
+  return fieldText(item, field.name) ?? itemTitle(view.schema, item)
+}
+
+function ItemsTable<Range extends HighlightRange = HighlightRange>({
   items,
   view,
   renderItemLink,
   definition,
   targetItemId,
-}: {
-  items: readonly OutlineItem[]
-  view: KindView
-  renderItemLink: RenderItemLink
-  definition: ValueDefinition
-  targetItemId: string | null
-}) {
+}: RunViewProps<Range>) {
   const fields = summaryFields(view.schema)
   const titleField = view.schema['x-ui-title-field']
   const linkedName = fields.some(({ name }) => name === titleField) ? titleField : fields[0]?.name
@@ -86,7 +91,7 @@ function ItemsTable({
           <TableRow
             key={item.id}
             className="data-[target]:bg-accent/50"
-            {...anchorProps(item.id, targetItemId)}
+            {...itemAnchorProps(item.id, targetItemId)}
           >
             <TableCell className="font-mono text-xs">{item.key}</TableCell>
             {fields.map((field) => (
@@ -109,23 +114,13 @@ function ItemsTable({
   )
 }
 
-function itemTitleOf(view: KindView, item: OutlineItem, field: ContentField): ReactNode {
-  return fieldText(item, field.name) ?? itemTitle(view.schema, item)
-}
-
-function ItemCards({
+function ItemCards<Range extends HighlightRange = HighlightRange>({
   items,
   view,
   renderItemLink,
   definition,
   targetItemId,
-}: {
-  items: readonly OutlineItem[]
-  view: KindView
-  renderItemLink: RenderItemLink
-  definition: ValueDefinition
-  targetItemId: string | null
-}) {
+}: RunViewProps<Range>) {
   const fields = summaryFields(view.schema)
   const [first, ...others] = fields
   return (
@@ -135,7 +130,7 @@ function ItemCards({
           key={item.id}
           size="sm"
           className="data-[target]:bg-accent/50"
-          {...anchorProps(item.id, targetItemId)}
+          {...itemAnchorProps(item.id, targetItemId)}
         >
           <CardHeader>
             <CardTitle>
@@ -162,61 +157,24 @@ function ItemCards({
   )
 }
 
-function ItemTranscript<Range extends HighlightRange>({
-  items,
-  view,
-  targetItemId,
-  messageMarks,
-  renderMessageMark,
-}: {
-  items: readonly OutlineItem[]
-  view: KindView
-  targetItemId: string | null
-  messageMarks?: ReadonlyMap<string, readonly Range[]> | undefined
-  renderMessageMark?: ((range: Range, children: ReactNode) => ReactNode) | undefined
-}) {
-  return (
-    <ol className="max-w-prose space-y-3">
-      {items.map((item) => {
-        const marks = messageMarks?.get(item.id)
-        // What a message says, and who says it, sit in the fields its schema names.
-        const text = extensionFieldText(view.schema, item, 'x-ui-title-field')
-        return (
-          <li
-            key={item.id}
-            className="space-y-0.5 data-[target]:bg-accent/50"
-            {...anchorProps(item.id, targetItemId)}
-          >
-            <p className="text-xs font-semibold text-muted-foreground">
-              <span>{extensionFieldText(view.schema, item, 'x-ui-role-field') || item.key}</span>
-            </p>
-            <p className="whitespace-pre-line">
-              {marks === undefined || marks.length === 0 ? (
-                text
-              ) : (
-                <Highlight
-                  ranges={marks}
-                  renderMark={
-                    renderMessageMark === undefined
-                      ? undefined
-                      : (mark, range) => renderMessageMark(range, mark)
-                  }
-                >
-                  {text}
-                </Highlight>
-              )}
-            </p>
-          </li>
-        )
-      })}
-    </ol>
-  )
+/** The view of a run of items of one kind, whatever the width of the marks it draws. */
+type RunView = <Range extends HighlightRange>(props: RunViewProps<Range>) => ReactNode
+
+// The view of a run of items, by the display of its kind. Each view takes the props that
+// DocumentBlocks has for a run and reads the ones it needs; `heading` items are drawn as the
+// heading of a section, before the runs.
+const itemRunViews: Record<Exclude<ItemDisplay, 'heading'>, RunView> = {
+  table: ItemsTable,
+  cards: ItemCards,
+  transcript: ItemTranscript,
+  profile: ItemAvatarCards,
 }
 
 /** The parts of a document in order: headings of sections, headings of groups, and the items drawn by their display. */
 export function DocumentBlocks<Range extends HighlightRange = HighlightRange>({
   blocks,
   kinds,
+  participants = [],
   renderItemLink,
   targetItemId = null,
   messageMarks,
@@ -231,8 +189,8 @@ export function DocumentBlocks<Range extends HighlightRange = HighlightRange>({
           return (
             <Heading
               key={`heading:${block.item.id}`}
-              className="pt-2 text-lg font-semibold data-[target]:bg-accent/50"
-              {...anchorProps(block.item.id, targetItemId)}
+              className={`pt-2 font-semibold data-[target]:bg-accent/50 ${headingSizes[block.level]}`}
+              {...itemAnchorProps(block.item.id, targetItemId)}
             >
               {block.title}
             </Heading>
@@ -247,39 +205,18 @@ export function DocumentBlocks<Range extends HighlightRange = HighlightRange>({
         }
         const view = kinds.get(block.kind)
         if (view === undefined) return null
-        const key = `items:${block.kind}:${String(index)}`
-        if (block.display === 'cards') {
-          return (
-            <ItemCards
-              key={key}
-              items={block.items}
-              view={view}
-              renderItemLink={renderItemLink}
-              definition={definition}
-              targetItemId={targetItemId}
-            />
-          )
-        }
-        if (block.display === 'transcript') {
-          return (
-            <ItemTranscript
-              key={key}
-              items={block.items}
-              view={view}
-              targetItemId={targetItemId}
-              messageMarks={messageMarks}
-              renderMessageMark={renderMessageMark}
-            />
-          )
-        }
+        const RunView = itemRunViews[block.display]
         return (
-          <ItemsTable
-            key={key}
+          <RunView
+            key={`items:${block.kind}:${String(index)}`}
             items={block.items}
             view={view}
+            participants={participants}
             renderItemLink={renderItemLink}
             definition={definition}
             targetItemId={targetItemId}
+            messageMarks={messageMarks}
+            renderMessageMark={renderMessageMark}
           />
         )
       })}

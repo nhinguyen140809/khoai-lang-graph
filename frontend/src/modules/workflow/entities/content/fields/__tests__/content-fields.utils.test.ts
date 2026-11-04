@@ -161,8 +161,11 @@ describe('documentDisplaysByKind', () => {
   const displays = documentDisplaysByKind(artifactKindFixtures)
 
   it('is the display of the first kind of item that holds content, past the sections', () => {
-    expect(displays.get('persona_catalog')).toBe('cards')
+    expect(displays.get('persona_catalog')).toBe('profile')
     expect(displays.get('requirements_analysis')).toBe('table')
+  })
+
+  it('is the layout that the artifact kind names, when it is not a document', () => {
     expect(displays.get('interview_transcript')).toBe('transcript')
   })
 
