@@ -1,6 +1,7 @@
 import { isEmpty, isRecord } from '@/shared/lib/guards'
 
 import type { ContentField, FieldWidget } from '../fields/content-fields.types'
+import { isChoiceField, isNumberField } from '../fields/content-fields.utils'
 
 // What each widget implies for the value of its field. Content checks look the widget up here
 // instead of branching on its name, so a widget that the schema can name has its row, and
@@ -22,6 +23,9 @@ const plainValue: WidgetValueRule = {
 }
 
 const plainList: WidgetValueRule = { ...plainValue, hasListValue: true }
+
+// The rule of a list of entries, shared by the object list and the avatar list.
+const entriesList: WidgetValueRule = { ...plainList, valueProblem: entriesProblem }
 
 function numberProblem(field: ContentField, value: unknown): string | null {
   const number = typeof value === 'number' ? value : Number(value)
@@ -51,6 +55,12 @@ function entriesProblem(field: ContentField, value: unknown): string | null {
   return null
 }
 
+// A separator is checked by the type of its field: a choice as a select, a number by its bounds.
+function separatorProblem(field: ContentField, value: unknown): string | null {
+  if (isChoiceField(field)) return selectProblem(field, value)
+  return isNumberField(field) ? numberProblem(field, value) : null
+}
+
 export const widgetValueRules = {
   text: plainValue,
   textarea: plainValue,
@@ -59,5 +69,8 @@ export const widgetValueRules = {
   boolean: { ...plainValue, toStoredValue: (value) => value === true || value === 'true' },
   list: plainList,
   tags: plainList,
-  'object-list': { ...plainList, valueProblem: entriesProblem },
+  'object-list': entriesList,
+  separator: { ...plainValue, valueProblem: separatorProblem },
+  'avatar-list': entriesList,
+  badge: { ...plainValue, valueProblem: selectProblem },
 } as const satisfies Record<FieldWidget, WidgetValueRule>

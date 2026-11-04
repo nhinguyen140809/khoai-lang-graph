@@ -13,15 +13,66 @@ export const fieldWidgets = [
   'list',
   'tags',
   'object-list',
+  'separator',
+  'avatar-list',
+  'badge',
 ] as const
 
 export type FieldWidget = (typeof fieldWidgets)[number]
 
-/** The ways to lay out the content of a kind. */
-export const contentDisplays = ['document', 'heading', 'table', 'cards', 'transcript'] as const
+/** The widgets whose value reads on one line, such as under the title of an avatar card. */
+export const oneLineWidgets = [
+  'text',
+  'select',
+  'badge',
+  'number',
+  'boolean',
+  'separator',
+] as const satisfies readonly FieldWidget[]
 
-/** How the content of a kind is laid out; an artifact is a `document`, its items take the others. */
+/** The ways to lay out the content of a kind. */
+export const contentDisplays = [
+  'document',
+  'heading',
+  'table',
+  'cards',
+  'transcript',
+  'profile',
+] as const
+
+/** How the content of a kind is laid out; an artifact takes a layout of its document, its items the others. */
 export type ContentDisplay = (typeof contentDisplays)[number]
+
+/** The layouts of a whole document, which an artifact kind may name; its items take the others. */
+export const artifactDisplays = [
+  'document',
+  'transcript',
+] as const satisfies readonly ContentDisplay[]
+
+export type ArtifactDisplay = (typeof artifactDisplays)[number]
+
+/** The displays of an item kind: how a run of its items is drawn in a document. */
+export const itemDisplays = [
+  'heading',
+  'table',
+  'cards',
+  'transcript',
+  'profile',
+] as const satisfies readonly ContentDisplay[]
+
+export type ItemDisplay = (typeof itemDisplays)[number]
+
+/** How the page of one item is laid out: every field under its label, or the whole page as a profile. */
+export type ItemPageLayout = 'fields' | 'profile'
+
+/** The layout of the page of one item, by the display of its kind; a display without a row fails to compile. */
+export const itemPageLayouts = {
+  heading: 'fields',
+  table: 'fields',
+  cards: 'fields',
+  transcript: 'fields',
+  profile: 'profile',
+} as const satisfies Record<ItemDisplay, ItemPageLayout>
 
 /**
  * One field of the content of an artifact or an item, built from one property of the schema of its
@@ -55,4 +106,16 @@ export interface ContentField {
   defaultValue: unknown
   /** The fields of one entry of an `object-list`. */
   entryFields: ContentField[]
+}
+
+/** The fields of a kind whose display is `profile`, as its cards and the page of one item draw them. */
+export interface ProfileFields {
+  /** The field of `x-ui-title-field`: the name on the card and the heading of the page. */
+  title: ContentField | undefined
+  /** The other list fields that read on one line: under the name on the card, on the key line of the page. */
+  line: ContentField[]
+  /** The other list fields: a text on two lines and a list on one line, on the card. */
+  card: ContentField[]
+  /** Every field but the title and the line, in field order: the body of the page. */
+  body: ContentField[]
 }

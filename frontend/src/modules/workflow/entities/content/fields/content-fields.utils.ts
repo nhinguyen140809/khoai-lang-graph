@@ -7,11 +7,18 @@ import type {
   SchemaProperty,
 } from '../../artifact-kinds/artifact-kinds.types'
 import {
+  type ArtifactDisplay,
+  artifactDisplays,
   type ContentDisplay,
-  contentDisplays,
   type ContentField,
   type FieldWidget,
   fieldWidgets,
+  type ItemDisplay,
+  itemDisplays,
+  type ItemPageLayout,
+  itemPageLayouts,
+  oneLineWidgets,
+  type ProfileFields,
 } from './content-fields.types'
 
 // The fields of a content, read from the JSON schema of its kind: the widget, title, limits and
@@ -71,24 +78,42 @@ function fieldOf(
   }
 }
 
-/** How a kind is shown: the display it names, else `document` for an artifact and `table` for an item. */
-export function contentDisplayOf(schema: ContentSchema): ContentDisplay {
+/** The layout that an artifact kind names for its document, else `document`. */
+export function artifactDisplayOf(schema: ContentSchema): ArtifactDisplay {
   const named = schema['x-ui-display']
-  if (isOneOf(contentDisplays, named)) return named
-  return schema['x-level'] === 'artifact' ? 'document' : 'table'
+  return isOneOf(artifactDisplays, named) ? named : 'document'
+}
+
+/** The display an item kind names, else `table`. */
+function itemDisplayOf(schema: ContentSchema): ItemDisplay {
+  const named = schema['x-ui-display']
+  return isOneOf(itemDisplays, named) ? named : 'table'
+}
+
+/** How a kind is shown: for an artifact, its layout; for an item, the display it names, else `table`. */
+export function contentDisplayOf(schema: ContentSchema): ContentDisplay {
+  return schema['x-level'] === 'artifact' ? artifactDisplayOf(schema) : itemDisplayOf(schema)
+}
+
+/** The layout of the page of one item of the kind: the row of its display in `itemPageLayouts`. */
+export function pageLayoutOf(schema: ContentSchema): ItemPageLayout {
+  return itemPageLayouts[itemDisplayOf(schema)]
 }
 
 /**
- * What each kind of artifact is made of, by kind name: the display of the first kind of item that
- * holds content, since a section only gives the structure; `heading` for a kind that holds sections
- * alone, and `document` for a kind that holds no item.
+ * What each kind of artifact is made of, by kind name: the layout of its own schema when it names
+ * one, else the display of the first kind of item that holds content, since a section only gives
+ * the structure; `heading` for a kind that holds sections alone, and `document` for a kind that
+ * holds no item.
  */
 export function documentDisplaysByKind(
   kinds: ArtifactKinds | undefined,
 ): Map<string, ContentDisplay> {
   return new Map(
-    (kinds?.artifact_kinds ?? []).map(({ kind, item_kinds }): [string, ContentDisplay] => {
-      const displays = item_kinds.map(({ schema }) => contentDisplayOf(schema))
+    (kinds?.artifact_kinds ?? []).map(({ kind, schema, item_kinds }): [string, ContentDisplay] => {
+      const layout = artifactDisplayOf(schema)
+      if (layout !== 'document') return [kind, layout]
+      const displays = item_kinds.map(({ schema: itemSchema }) => contentDisplayOf(itemSchema))
       const content = displays.find((display) => display !== 'heading')
       return [kind, content ?? displays[0] ?? 'document']
     }),
@@ -131,4 +156,52 @@ export function summaryFields(schema: ContentSchema): ContentField[] {
  */
 export function isNavigable(schema: ContentSchema): boolean {
   return schema['x-ui-navigable'] !== false
+}
+
+/** The field that an extension of the schema names; undefined when there is none. */
+export function extensionField(
+  schema: ContentSchema,
+  extension: 'x-ui-title-field' | 'x-ui-role-field' | 'x-ui-participants-field',
+): ContentField | undefined {
+  const name = schema[extension]
+  return name === undefined ? undefined : contentFields(schema).find((field) => field.name === name)
+}
+
+/** Whether a field offers values to choose from: an enum, a value list or the values of another artifact. */
+export function isChoiceField(
+  field: Pick<ContentField, 'options' | 'valueList' | 'allowedValuesFrom'>,
+): boolean {
+  return field.options.length > 0 || field.valueList !== null || field.allowedValuesFrom !== null
+}
+
+/** Whether the value of a field is a number, whatever its widget: the schema made it an integer or bounded it. */
+export function isNumberField(
+  field: Pick<ContentField, 'integer' | 'minimum' | 'maximum'>,
+): boolean {
+  return field.integer || field.minimum !== null || field.maximum !== null
+}
+
+/** Whether the value of a field reads on one line: its widget is one of `oneLineWidgets`. */
+export function isOneLineField(field: Pick<ContentField, 'widget'>): boolean {
+  return isOneOf(oneLineWidgets, field.widget)
+}
+
+/** Whether a field marks a place of a sequence: its widget is `separator`. */
+export function isSeparatorField(field: Pick<ContentField, 'widget'>): boolean {
+  return field.widget === 'separator'
+}
+
+/** The fields of a kind whose display is `profile`, as its cards and the page of one item draw them. */
+export function profileFields(schema: ContentSchema): ProfileFields {
+  const titleName = schema['x-ui-title-field']
+  const fields = contentFields(schema)
+  const listed = summaryFields(schema)
+  const line = listed.filter((field) => field.name !== titleName && isOneLineField(field))
+  const lineNames = new Set(line.map(({ name }) => name))
+  return {
+    title: titleName === undefined ? undefined : fields.find((field) => field.name === titleName),
+    line,
+    card: listed.filter((field) => field.name !== titleName && !lineNames.has(field.name)),
+    body: fields.filter((field) => field.name !== titleName && !lineNames.has(field.name)),
+  }
 }

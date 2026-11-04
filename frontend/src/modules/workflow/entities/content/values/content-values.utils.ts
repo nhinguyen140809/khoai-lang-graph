@@ -15,8 +15,13 @@ import { widgetValueRules } from './widget-value-rules.utils'
 
 /** The value a field starts with when the item has none. */
 export function initialValue(field: ContentField): unknown {
-  if (widgetValueRules[field.widget].hasListValue) return []
+  if (hasListValue(field)) return []
   return field.nullable ? null : ''
+}
+
+/** Whether the value of a field is a list: it starts empty, and is never stored as null. */
+export function hasListValue(field: Pick<ContentField, 'widget'>): boolean {
+  return widgetValueRules[field.widget].hasListValue
 }
 
 /** The problem with a value, in the words of a form, or null when the value is fine. */
@@ -62,7 +67,7 @@ export function toStoredContent(
     const value = content[field.name]
     const rule = widgetValueRules[field.widget]
     if (!isEmpty(value)) stored[field.name] = rule.toStoredValue(value)
-    else if (field.nullable && !rule.hasListValue) stored[field.name] = null
+    else if (field.nullable && !hasListValue(field)) stored[field.name] = null
   }
   return stored
 }

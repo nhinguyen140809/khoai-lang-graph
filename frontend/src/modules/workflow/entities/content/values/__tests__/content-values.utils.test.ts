@@ -8,6 +8,7 @@ import {
   changedFields,
   contentChanges,
   findQuote,
+  hasListValue,
   initialValue,
   toStoredContent,
   validateContent,
@@ -55,6 +56,54 @@ describe('validateContent', () => {
     expect(validateContent(fields, { points: 0 })).toEqual({ points: 'Enter 1 or more.' })
     expect(validateContent(fields, { points: 6 })).toEqual({ points: 'Enter 5 or less.' })
     expect(validateContent(fields, { points: 3 })).toEqual({})
+  })
+
+  it('refuses a value of a badge that its field does not offer', () => {
+    const fields = contentFields({
+      title: 'Kind',
+      properties: {
+        status: { type: 'string', 'x-ui-widget': 'badge', enum: ['not_started', 'completed'] },
+      },
+    })
+
+    expect(validateContent(fields, { status: 'bogus' })).toEqual({
+      status: 'Choose one of the values.',
+    })
+  })
+
+  it('checks a separator by the type of its field', () => {
+    const fields = contentFields({
+      title: 'Kind',
+      properties: {
+        turn: { type: 'integer', 'x-ui-widget': 'separator', minimum: 1 },
+        state: { type: 'string', 'x-ui-widget': 'separator', enum: ['on', 'off'] },
+        note: { type: 'string', 'x-ui-widget': 'separator' },
+      },
+    })
+
+    expect(validateContent(fields, { turn: 0, state: 'nope', note: 'any text' })).toEqual({
+      turn: 'Enter 1 or more.',
+      state: 'Choose one of the values.',
+    })
+    expect(validateContent(fields, { turn: 2, state: 'on', note: 'any text' })).toEqual({})
+  })
+})
+
+describe('hasListValue', () => {
+  it.each([
+    ['list', true],
+    ['tags', true],
+    ['object-list', true],
+    ['avatar-list', true],
+    ['text', false],
+    ['textarea', false],
+    ['select', false],
+    ['number', false],
+    ['boolean', false],
+    ['separator', false],
+    ['badge', false],
+  ] as const)('says if %s has a list value: %s', (widget, hasList) => {
+    expect(hasListValue({ widget })).toBe(hasList)
   })
 })
 

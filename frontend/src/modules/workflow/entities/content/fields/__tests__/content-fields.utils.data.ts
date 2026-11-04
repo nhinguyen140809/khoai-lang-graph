@@ -1,3 +1,5 @@
+import type { ContentSchema } from '../../../artifact-kinds/artifact-kinds.types'
+
 /** The names of the fields of a kind, in the order of its schema. */
 export const fieldOrderCases = [
   {
@@ -110,3 +112,82 @@ export const listFieldCases = [
     names: ['title', 'type', 'priority', 'verification_method'],
   },
 ]
+
+/** A kind of artifact whose document reads as a conversation of its participants. */
+export const transcriptSchema: ContentSchema = {
+  title: 'Interview',
+  'x-level': 'artifact',
+  'x-kind': 'interview',
+  'x-ui-display': 'transcript',
+  'x-ui-participants-field': 'participants',
+  properties: {
+    participants: {
+      type: 'array',
+      'x-ui-widget': 'avatar-list',
+      items: {
+        type: 'object',
+        properties: {
+          key: { type: 'string' },
+          name: { type: 'string' },
+          role: { type: 'string', enum: ['interviewer', 'persona'] },
+          item_id: { type: ['string', 'null'] },
+        },
+      },
+    },
+    turn_count: { type: 'integer', 'x-ui-widget': 'number', minimum: 0 },
+    status: { type: 'string', 'x-ui-widget': 'separator', enum: ['in_progress', 'completed'] },
+  },
+}
+
+/** A kind of item that says who speaks a message of a transcript. */
+export const messageSchema: ContentSchema = {
+  title: 'Message',
+  'x-level': 'item',
+  'x-kind': 'message',
+  'x-ui-display': 'transcript',
+  'x-ui-title-field': 'content',
+  'x-ui-role-field': 'speaker',
+  properties: {
+    turn: { type: 'integer', 'x-ui-widget': 'separator', minimum: 1 },
+    speaker: { type: 'string', 'x-ui-widget': 'text' },
+    content: { type: 'string', 'x-ui-widget': 'textarea' },
+  },
+}
+
+/** A kind of item whose display is a profile, with the fields of a person. */
+export const profileSchema: ContentSchema = {
+  title: 'Interviewee',
+  'x-level': 'item',
+  'x-kind': 'interviewee',
+  'x-ui-display': 'profile',
+  'x-ui-title-field': 'name',
+  'x-ui-list-fields': ['name', 'stakeholder_type', 'interview_status', 'background', 'goals'],
+  properties: {
+    name: { type: 'string', 'x-ui-widget': 'text' },
+    stakeholder_type: { type: 'string', 'x-ui-widget': 'select' },
+    background: { type: 'string', 'x-ui-widget': 'textarea' },
+    expertise: { type: 'string', 'x-ui-widget': 'textarea' },
+    goals: { type: 'array', 'x-ui-widget': 'list' },
+    interests: { type: 'array', 'x-ui-widget': 'list' },
+    interview_status: {
+      type: 'string',
+      'x-ui-widget': 'badge',
+      enum: ['not_started', 'in_progress', 'completed'],
+    },
+  },
+}
+
+/** A widget, whether its value reads on one line, and whether it marks a place of a sequence. */
+export const widgetRuleCases = [
+  { widget: 'text', isOneLine: true, isSeparator: false },
+  { widget: 'textarea', isOneLine: false, isSeparator: false },
+  { widget: 'select', isOneLine: true, isSeparator: false },
+  { widget: 'number', isOneLine: true, isSeparator: false },
+  { widget: 'boolean', isOneLine: true, isSeparator: false },
+  { widget: 'list', isOneLine: false, isSeparator: false },
+  { widget: 'tags', isOneLine: false, isSeparator: false },
+  { widget: 'object-list', isOneLine: false, isSeparator: false },
+  { widget: 'separator', isOneLine: true, isSeparator: true },
+  { widget: 'avatar-list', isOneLine: false, isSeparator: false },
+  { widget: 'badge', isOneLine: true, isSeparator: false },
+] as const

@@ -11,6 +11,8 @@ import {
   RowsIcon,
   TableIcon,
   TextIcon,
+  UserRoundIcon,
+  UsersIcon,
 } from 'lucide-react'
 import type { ReactNode } from 'react'
 
@@ -38,11 +40,13 @@ export const documentTabIcons = {
   'documents.document.table': <TableIcon />,
   'documents.document.cards': <LayoutGridIcon />,
   'documents.document.transcript': <MessagesSquareIcon />,
+  'documents.document.profile': <UsersIcon />,
   'documents.item.document': <TextIcon />,
   'documents.item.heading': <HeadingIcon />,
   'documents.item.table': <RowsIcon />,
   'documents.item.cards': <IdCardIcon />,
   'documents.item.transcript': <MessageSquareIcon />,
+  'documents.item.profile': <UserRoundIcon />,
 } as const satisfies Record<DocumentTabIconName, ReactNode>
 
 /** Documents on the activity bar of a project: the documents, their outline and the items. */

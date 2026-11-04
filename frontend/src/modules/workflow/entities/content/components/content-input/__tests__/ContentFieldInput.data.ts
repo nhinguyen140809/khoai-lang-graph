@@ -12,6 +12,9 @@ const fields = contentFields({
     name: { type: 'string', title: 'Name' },
     note: { type: 'string', title: 'Note', 'x-ui-widget': 'textarea' },
     mood: { type: 'string', title: 'Mood', enum: ['calm', 'happy'] },
+    feeling: { type: 'string', title: 'Feeling', 'x-ui-widget': 'badge', enum: ['calm', 'happy'] },
+    phase: { type: 'string', title: 'Phase', 'x-ui-widget': 'separator', enum: ['open', 'closed'] },
+    place: { type: 'integer', title: 'Place', 'x-ui-widget': 'separator', minimum: 1 },
     pick: {
       type: 'string',
       title: 'Pick',
@@ -97,6 +100,24 @@ export const widgetCases: readonly WidgetCase[] = [
     saved: { mood: 'happy' },
   },
   {
+    name: 'a badge',
+    field: fieldOf('feeling'),
+    change: { kind: 'select', option: 'happy' },
+    saved: { feeling: 'happy' },
+  },
+  {
+    name: 'a separator of a choice',
+    field: fieldOf('phase'),
+    change: { kind: 'select', option: 'closed' },
+    saved: { phase: 'closed' },
+  },
+  {
+    name: 'a separator of a number',
+    field: fieldOf('place'),
+    change: { kind: 'type', text: '3' },
+    saved: { place: 3 },
+  },
+  {
     name: 'a number',
     field: fieldOf('points'),
     change: { kind: 'type', text: '5' },
@@ -142,6 +163,28 @@ export const nullableSelect = specFieldOf('quality_category')
 export const readOnlyField = contentFields(contentSchemaFixtureByKind('persona')).find(
   (field) => field.name === 'interview_status',
 )
+
+/** A read only list of people, which shows its people without a control. */
+export const readOnlyPeopleField = contentFields({
+  title: 'Kind',
+  properties: {
+    people: {
+      type: 'array',
+      title: 'People',
+      'x-ui-widget': 'avatar-list',
+      readOnly: true,
+      items: {
+        type: 'object',
+        properties: {
+          key: { type: 'string' },
+          name: { type: 'string' },
+          role: { type: 'string' },
+          item_id: { type: ['string', 'null'] },
+        },
+      },
+    },
+  },
+}).find((field) => field.name === 'people')
 
 /** The initial content of the test form: the required field filled, so only the case changes. */
 export const initialContent = { name: 'Ann' }

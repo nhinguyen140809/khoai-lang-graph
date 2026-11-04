@@ -1,6 +1,6 @@
 import { describe, expect, it } from 'vitest'
 
-import { valueLabel } from '../value-labels.utils'
+import { nonStatusTone, valueLabel, valueTone } from '../value-labels.utils'
 
 describe('valueLabel', () => {
   it('gives the label written for the field, in each view', () => {
@@ -25,5 +25,38 @@ describe('valueLabel', () => {
 
   it('gives the value in sentence case for a value the field has no label for', () => {
     expect(valueLabel('conflict.severity', 'critical').user).toBe('Critical')
+  })
+})
+
+describe('valueTone', () => {
+  it('gives the tone written for the field', () => {
+    expect(valueTone('persona.interview_status', 'in_progress')).toBe('primary')
+    expect(valueTone('persona.interview_status', 'completed')).toBe('success')
+  })
+
+  it('reads a value without a row in the neutral tone', () => {
+    expect(valueTone('persona.interview_status', 'withdrawn')).toBe('neutral')
+    expect(valueTone('note.mood', 'calm')).toBe('neutral')
+  })
+})
+
+describe('nonStatusTone', () => {
+  it('gives the first place the primary tone, then every tone that is not a status, in turn', () => {
+    expect([0, 1, 2, 3, 4, 5].map(nonStatusTone)).toEqual([
+      'primary',
+      'chart',
+      'accent',
+      'muted',
+      'neutral',
+      'primary',
+    ])
+  })
+
+  it('never gives a tone of a status', () => {
+    for (const place of Array.from({ length: 12 }, (_, index) => index)) {
+      expect(nonStatusTone(place)).not.toBe('success')
+      expect(nonStatusTone(place)).not.toBe('warning')
+      expect(nonStatusTone(place)).not.toBe('destructive')
+    }
   })
 })

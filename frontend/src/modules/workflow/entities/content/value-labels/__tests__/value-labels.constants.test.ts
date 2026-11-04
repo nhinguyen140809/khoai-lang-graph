@@ -4,6 +4,7 @@ import { artifactKindFixtures } from '@/mocks/workflow/artifact-kinds.fixtures'
 
 import { contentFields } from '../../fields/content-fields.utils'
 import { valueLabelsByField } from '../value-labels.constants'
+import { valueTonesByField } from '../value-tones.constants'
 
 /** Every select of the kinds that offers a fixed list of values: not a value list, not the values of another field. */
 const fixedSelects = artifactKindFixtures.artifact_kinds
@@ -33,5 +34,14 @@ describe('valueLabelsByField', () => {
     const paths = new Set(fixedSelects.map(({ path }) => path))
 
     expect(Object.keys(valueLabelsByField).filter((path) => !paths.has(path))).toEqual([])
+  })
+})
+
+describe('valueTonesByField', () => {
+  it('names each field by its kind and its field, as the labels do', () => {
+    const paths = Object.keys(valueTonesByField)
+
+    expect(paths.length).toBeGreaterThan(0)
+    expect(paths.every((path) => /^[a-z_]+\.[a-z_]+$/.test(path))).toBe(true)
   })
 })

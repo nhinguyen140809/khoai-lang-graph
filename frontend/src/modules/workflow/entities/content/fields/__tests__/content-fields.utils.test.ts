@@ -5,11 +5,18 @@ import {
   contentSchemaFixtureByKind,
 } from '@/mocks/workflow/artifact-kinds.fixtures'
 
+import { itemDisplays, itemPageLayouts } from '../content-fields.types'
 import {
+  artifactDisplayOf,
   contentDisplayOf,
   contentFields,
   documentDisplaysByKind,
+  extensionField,
+  isOneLineField,
+  isSeparatorField,
   mainField,
+  pageLayoutOf,
+  profileFields,
   summaryFields,
 } from '../content-fields.utils'
 import {
@@ -18,6 +25,10 @@ import {
   displayFallbackCases,
   fieldOrderCases,
   listFieldCases,
+  messageSchema,
+  profileSchema,
+  transcriptSchema,
+  widgetRuleCases,
 } from './content-fields.utils.data'
 
 describe('contentFields', () => {
@@ -73,6 +84,16 @@ describe('contentFields', () => {
       ['kind', 'select'],
       ['note', 'text'],
     ])
+  })
+
+  it('reads the separator, avatar list and badge widgets from x-ui-widget', () => {
+    const widgets = [...contentFields(transcriptSchema), ...contentFields(profileSchema)].map(
+      ({ name, widget }) => [name, widget],
+    )
+
+    expect(widgets).toContainEqual(['participants', 'avatar-list'])
+    expect(widgets).toContainEqual(['status', 'separator'])
+    expect(widgets).toContainEqual(['interview_status', 'badge'])
   })
 })
 
@@ -151,5 +172,116 @@ describe('documentDisplaysByKind', () => {
 
   it('is empty before the kinds load', () => {
     expect(documentDisplaysByKind(undefined).size).toBe(0)
+  })
+
+  it('lets the layout that the artifact kind names win over the displays of its items', () => {
+    const kinds = {
+      workflow_version: 1,
+      artifact_kinds: [
+        {
+          kind: 'interview',
+          schema_version: 1,
+          schema: transcriptSchema,
+          item_kinds: [{ kind: 'message', schema_version: 1, schema: messageSchema }],
+        },
+      ],
+    }
+
+    expect(documentDisplaysByKind(kinds).get('interview')).toBe('transcript')
+  })
+})
+
+describe('artifactDisplayOf', () => {
+  it('reads the layout that an artifact kind names', () => {
+    expect(artifactDisplayOf(transcriptSchema)).toBe('transcript')
+  })
+
+  it('reads an artifact that names a display of an item as a document', () => {
+    expect(
+      artifactDisplayOf({ title: 'Kind', 'x-level': 'artifact', 'x-ui-display': 'profile' }),
+    ).toBe('document')
+  })
+
+  it('reads a document when the kind names no layout', () => {
+    expect(artifactDisplayOf({ title: 'Kind', 'x-level': 'artifact' })).toBe('document')
+  })
+})
+
+describe('pageLayoutOf', () => {
+  it('gives a kind with the display profile the page layout of a profile', () => {
+    expect(pageLayoutOf(profileSchema)).toBe('profile')
+  })
+
+  it('gives every other kind the page of today', () => {
+    expect(pageLayoutOf(messageSchema)).toBe('fields')
+    expect(pageLayoutOf(contentSchemaFixtureByKind('spec_requirement'))).toBe('fields')
+  })
+
+  it('has a row for every display of an item', () => {
+    expect(Object.keys(itemPageLayouts).toSorted()).toEqual([...itemDisplays].toSorted())
+  })
+})
+
+describe('the display of a test kind by level', () => {
+  it('reads the display an item kind names', () => {
+    expect(contentDisplayOf(profileSchema)).toBe('profile')
+  })
+
+  it('reads the layout an artifact kind names', () => {
+    expect(contentDisplayOf(transcriptSchema)).toBe('transcript')
+  })
+})
+
+describe('extensionField', () => {
+  it('reads the field that each keyword names', () => {
+    expect(extensionField(profileSchema, 'x-ui-title-field')?.name).toBe('name')
+    expect(extensionField(messageSchema, 'x-ui-role-field')?.name).toBe('speaker')
+    expect(extensionField(transcriptSchema, 'x-ui-participants-field')?.name).toBe('participants')
+  })
+
+  it('gives no field for a kind without the keyword, or a name that is not a property', () => {
+    expect(extensionField(transcriptSchema, 'x-ui-role-field')).toBeUndefined()
+    expect(
+      extensionField(
+        { title: 'Kind', 'x-ui-title-field': 'missing', properties: { name: { type: 'string' } } },
+        'x-ui-title-field',
+      ),
+    ).toBeUndefined()
+  })
+})
+
+describe('the rules of each widget', () => {
+  it.each(widgetRuleCases)('reads the rules of $widget', ({ widget, isOneLine, isSeparator }) => {
+    expect(isOneLineField({ widget })).toBe(isOneLine)
+    expect(isSeparatorField({ widget })).toBe(isSeparator)
+  })
+})
+
+describe('profileFields', () => {
+  it('splits the fields of a kind whose display is a profile', () => {
+    const fields = profileFields(profileSchema)
+
+    expect(fields.title?.name).toBe('name')
+    expect(fields.line.map(({ name }) => name)).toEqual(['stakeholder_type', 'interview_status'])
+    expect(fields.card.map(({ name }) => name)).toEqual(['background', 'goals'])
+    expect(fields.body.map(({ name }) => name)).toEqual([
+      'background',
+      'expertise',
+      'goals',
+      'interests',
+    ])
+  })
+
+  it('gives no title for a kind without a title field', () => {
+    const fields = profileFields({
+      title: 'Kind',
+      'x-ui-list-fields': ['a', 'b'],
+      properties: { a: { type: 'string' }, b: { type: 'integer' } },
+    })
+
+    expect(fields.title).toBeUndefined()
+    expect(fields.line.map(({ name }) => name)).toEqual(['a', 'b'])
+    expect(fields.card).toEqual([])
+    expect(fields.body).toEqual([])
   })
 })

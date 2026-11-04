@@ -45,6 +45,98 @@ describe('ContentFieldValue', () => {
     expect(screen.queryByText('What:')).not.toBeInTheDocument()
     await expectNoAccessibilityViolations(container)
   })
+
+  it('shows a value of a badge in the tone written for the field, with no dot', () => {
+    renderWithProviders(
+      <ContentFieldValue
+        field={field({
+          widget: 'badge',
+          path: 'persona.interview_status',
+          options: ['not_started', 'in_progress', 'completed'],
+        })}
+        value="in_progress"
+        definition={undefined}
+      />,
+    )
+
+    const badge = screen.getByText('Interview in progress').closest('[data-slot="badge"]')
+    expect(badge).toHaveAttribute('data-color', 'primary')
+    expect(badge).toHaveAttribute('data-variant', 'soft')
+    expect(badge?.querySelectorAll('*').length).toBe(0)
+  })
+
+  it('draws the people of an avatar list, each its avatar and its name', () => {
+    renderWithProviders(
+      <ContentFieldValue
+        field={field({ widget: 'avatar-list' })}
+        value={[
+          { key: 'interviewer', name: 'Interviewer', role: 'interviewer', item_id: null },
+          { key: 'PER-001', name: 'Ann', role: 'persona', item_id: 'item-1' },
+        ]}
+        definition={undefined}
+      />,
+    )
+
+    expect(screen.getByText('Interviewer')).toBeInTheDocument()
+    expect(screen.getByText('Ann')).toBeInTheDocument()
+    expect(screen.getByText('I')).toBeInTheDocument()
+    expect(screen.getByText('A')).toBeInTheDocument()
+  })
+
+  it('draws a person with an item as the link the caller gives, in the look of a button', () => {
+    renderWithProviders(
+      <ContentFieldValue
+        field={field({ widget: 'avatar-list' })}
+        value={[{ key: 'PER-001', name: 'Ann', role: 'persona', item_id: 'item-1' }]}
+        definition={undefined}
+        renderItemIdLink={(itemId, children) => (
+          <a key={itemId} href={`/items/${itemId}`}>
+            {children}
+          </a>
+        )}
+      />,
+    )
+
+    const link = screen.getByRole('link', { name: 'Ann' })
+    expect(link).toHaveAttribute('href', '/items/item-1')
+    expect(link).toHaveAttribute('data-variant', 'outline')
+    expect(link.querySelector('[data-slot="avatar-fallback"]')).toHaveAttribute(
+      'data-color',
+      'primary',
+    )
+  })
+
+  it('draws a person without an item, or without a link, as its avatar and name only', () => {
+    const cases = [
+      { key: 'PER-001', name: 'Ann', role: 'persona', item_id: null },
+      { key: 'PER-002', name: 'Bea', role: 'persona', item_id: 'item-2' },
+    ]
+
+    const { rerender } = renderWithProviders(
+      <ContentFieldValue
+        field={field({ widget: 'avatar-list' })}
+        value={cases}
+        definition={undefined}
+      />,
+    )
+    expect(screen.queryByRole('link')).not.toBeInTheDocument()
+
+    rerender(
+      <ContentFieldValue
+        field={field({ widget: 'avatar-list' })}
+        value={cases}
+        definition={undefined}
+        renderItemIdLink={(itemId, children) => (
+          <a key={itemId} href={`/items/${itemId}`}>
+            {children}
+          </a>
+        )}
+      />,
+    )
+    // The person without an item is not a link; only the one with an item is.
+    expect(screen.queryByRole('link', { name: 'Ann' })).not.toBeInTheDocument()
+    expect(screen.getByRole('link', { name: 'Bea' })).toBeInTheDocument()
+  })
 })
 
 describe('ContentFieldValue with marks', () => {
