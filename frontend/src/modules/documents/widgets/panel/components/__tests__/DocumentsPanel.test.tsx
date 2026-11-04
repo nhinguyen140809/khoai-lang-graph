@@ -71,7 +71,7 @@ describe('DocumentsPanel tooltips', () => {
     )
 
     expect(await screen.findByRole('tooltip')).toHaveTextContent(
-      'Requirements analysis / Needs clarifying / Session length unknownIssue to resolve',
+      'Requirements analysis / Point to clarify / Session length unknownIssue to resolve',
     )
   })
 })
