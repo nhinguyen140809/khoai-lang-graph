@@ -554,7 +554,8 @@ The PRs go one at a time, in the order of the rows: each branch starts from `ori
 | S1b.0 | `chore/fe/maintenance-before-edit` | `chore(frontend): move the page link to the frame, drop the artifact panel placeholder, fix the transcript links, refuse a change outside a review in the mock, and place the documents files in the folders of their kind` | S1b.D |
 | S1b.1 | `feat/fe/edit-entities` | `feat(frontend): read the inputs of the content fields, the history of a record, the links and the origin of an item, and when a document can change` | S1b.0 |
 | S1b.2 | `feat/fe/edit-artifacts` | `feat(frontend): edit an item and a document during a review, browse and restore their versions, and show the links and the origin of an item` | S1b.1 |
-| S1c.1 | `feat/fe/aside-panel` | `feat(frontend): add a right panel to the frame, which the side panel gives way to on a narrow window` ([S1c plan](frontend-s1c-item-peek-plan.md)) | S1b.2 |
+| S1e | `feat/fe/document-layouts` | `feat(frontend): lay out an interview as a conversation of its participants and the personas as profiles, from their schemas` ([S1e plan](frontend-s1e-document-layouts-plan.md)) | S1b.2 |
+| S1c.1 | `feat/fe/aside-panel` | `feat(frontend): add a right panel to the frame, which the side panel gives way to on a narrow window` ([S1c plan](frontend-s1c-item-peek-plan.md)) | S1e |
 | S1c.2 | `feat/fe/item-peek` | `feat(frontend): peek at an item in the right panel from the keys of a document` | S1c.1 |
 | S1d | `feat/fe/export` | `feat(frontend): export a document from its page and from the command palette, and download it when it is ready` ([S1d plan](frontend-s1d-export-plan.md)) | S1c.2 |
 | S2 to S6 | `feat/fe/<screen>` | One per screen of [section 8](#8-screens) | Their entities |
