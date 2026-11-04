@@ -86,7 +86,13 @@ describe('the artifact handlers', () => {
 
     expect(restored.body).toMatchObject({
       version: analysis.version + 1,
-      content: analysis.content,
+      content: {
+        key_findings: [
+          'Students want to see free hours before they book.',
+          'The admin wants to approve mentors.',
+        ],
+        open_questions: ['How long is a session?'],
+      },
     })
     const [latest] = await getApiItems<Revision>(`${artifactPath}/revisions`)
     expect(latest).toMatchObject({ change_reason: 'restored' })
