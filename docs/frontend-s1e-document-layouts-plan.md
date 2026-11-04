@@ -28,17 +28,18 @@ Short paths: `documents/...`, `artifact/...`, `workflow/...`, `trace/...` are un
 
 ## 1. Row in the PR table
 
-S1e is one PR (answer A5): the schema docs first, then the tones of the avatar, the reading rules and the views of `workflow`, then the layouts of `artifact` with the mock that serves them, then the pages, then the screenshots and the docs.
+S1e is a docs PR, S1e.D, then one PR of the code (answer A5). S1e.D changes the schema docs and is merged first, as S1b.D was; S1e then adds the tones of the avatar, the reading rules and the views of `workflow`, then the layouts of `artifact` with the mock that serves them, then the pages, then the screenshots and the docs.
 
 | PR | Branch | Title | Based on |
 |---|---|---|---|
-| S1e | `feat/fe/document-layouts` | `feat(frontend): lay out an interview as a conversation of its participants and the personas as profiles, from their schemas` | `main`, once S1b.2 is merged |
+| S1e.D | `docs/fe/document-layouts` | `docs(schemas): add the participants of an interview, the profile display and three widgets` | `main` (written: `3368d49`) |
+| S1e | `feat/fe/document-layouts` | `feat(frontend): lay out an interview as a conversation of its participants and the personas as profiles, from their schemas` | `main`, once S1b.2 and S1e.D are merged |
 
 | | |
 |---|---|
-| Needs | S1b merged (S1b.0, S1b.1, S1b.2): the table `widgetControls` of `ContentValueControl` and the read only fields of `ContentFieldInput` (S1b.1), the keyword `x-ui-role-field` and `extensionFieldText` (`820654c`, `a8aa5b9`), the marks of a transcript (`messageMarks`, `renderMessageMark`), the anchors and `data-target` of the blocks, the slots `actions` and `fieldsView` of `ArtifactDocument`, `RevisionContent`, the item page with `ItemKeyLine` and the link line, `PageLink` with `className` (`df16caa`) |
+| Needs | S1e.D merged: the schemas, the data shape and the analyst prompt of section 8. S1b merged (S1b.0, S1b.1, S1b.2): the table `widgetControls` of `ContentValueControl` and the read only fields of `ContentFieldInput` (S1b.1), the keyword `x-ui-role-field` and `extensionFieldText` (`820654c`, `a8aa5b9`), the marks of a transcript (`messageMarks`, `renderMessageMark`), the anchors and `data-target` of the blocks, the slots `actions` and `fieldsView` of `ArtifactDocument`, `RevisionContent`, the item page with `ItemKeyLine` and the link line, `PageLink` with `className` (`df16caa`) |
 | After it | S1c (peek): `renderItemKey` also draws the key on an avatar card, and its peek no longer shows `ItemOrigin` (section 15); the S1c plan is checked again once S1e merges. S1d (export): the Export button in the `actions` slot, unchanged by S1e |
-| Docs-first | The schemas change in `docs/schemas/` and `docs/DATA_SHAPE.md` in the first commit, docs only (decision 5); the server repository follows them. The answers A1 to A26 and the answer of D1 go to `docs/ui/usability.md` on `frontend-plan` before commit 4, which shows the screens |
+| Docs-first | The schemas change in `docs/schemas/`, `docs/DATA_SHAPE.md` and the analyst prompt in the docs PR S1e.D (decision 5); the server repository follows them. The answers A1 to A26 and the answer of D1 go to `docs/ui/usability.md` on `frontend-plan` before commit 3, which shows the screens |
 
 Answers of the user (2026-11-04 and 2026-11-05), each built by the decision named:
 
@@ -71,7 +72,7 @@ Answers of the user (2026-11-04 and 2026-11-05), each built by the decision name
 | A25 | How to build from the wireframe | Reuse the components that exist; change the classes inside a component as little as possible; the wireframe is a sketch, not a spec of each class; use the design system of the app, no new color and nothing drawn by hand. The wireframe is not changed: what it lacks and what changes in its design are notes for the build (section 1.2) | Decision 2 |
 | A26 | One display or two for a persona | One value, `x-ui-display: profile` (each kind has one display): in a document it draws an avatar card per item, on the page of one item the whole page as a profile. The avatar card is the look of a `profile` item in a document, not a widget; the widgets are for fields (`avatar-list` is the one for people). Chosen over two keywords, over `avatar-cards` alone, and over a display on the artifact | Decisions 7, 20, 21 |
 
-Question for the user. It has the proposal that this plan builds; the user confirms or changes it before commit 4:
+Question for the user. It has the proposal that this plan builds; the user confirms or changes it before commit 3:
 
 | # | Question | Proposal built here |
 |---|---|---|
@@ -215,7 +216,7 @@ S1b is not merged; this table compares its plan with `0c72c6f`, for the parts th
 | The marks of a transcript in `LinkedItemsPopover`; a failure shows a line with Try again | `QuotedWordsPopover`; a failure shows a toast | S1e keeps `messageMarks` and `renderMessageMark` as they are |
 | `ItemOrigin`, "Why this item exists" (decision 16) | Dropped on purpose (answer A13): the link line under the title replaces it. `mocks/README.md` still lists "A transcript at a message: open REQ-001, scroll to Why this item exists" | S1e does not read it; the stale row is for S1b to fix; the S1c plan, whose peek shows `ItemOrigin`, follows it |
 | Under a version of a document, the line "The items below are as they are now; each item has its own history." | `revisionMessages.itemsAsNow` defined and drawn nowhere | Reported for S1b |
-| A docs PR of its own for a change of the API (S1b.D) | `x-ui-role-field` went in a commit of S1b.1 with its mock copy (`820654c`) | S1e puts the schema docs in its first commit (decision 5) |
+| A docs PR of its own for a change of the API (S1b.D) | `x-ui-role-field` went in a commit of S1b.1 with its mock copy (`820654c`) | S1e puts the schema docs in a docs PR of its own, S1e.D (decision 5) |
 
 ## 3. Decisions
 
@@ -267,7 +268,7 @@ The behavior on the screen of each component is in section 10; a decision that s
 
 ### Schemas (docs)
 
-5. **The schemas change in version 1, in place, in the first commit** (answers A12, A17, A18). No content is stored outside the mock yet. The first commit changes `docs/schemas/` and `docs/DATA_SHAPE.md` only; the mock copies follow in commit 4 with the code that reads them. There is no docs PR of its own (answer A5; S1b did the same for `x-ui-role-field`, `820654c`). The server repository follows the files, its models, and the line of the analyst prompt (the role of a speaker read from the participants). The exact changes are in section 8.
+5. **The schemas change in version 1, in place, in the docs PR S1e.D** (answers A12, A17, A18). No content is stored outside the mock yet. S1e.D (`docs/fe/document-layouts`, from `main`, commit `3368d49`) changes `docs/schemas/`, `docs/DATA_SHAPE.md` and the line of `docs/workflow/prompts/analyst.v1.md`, docs only, and is merged before S1e, as S1b.D was (the user, 2026-11-05); the mock copies follow in commit 2 of S1e, with the code that reads them. S1e.D and S1b.1 both change `content-schema.meta.schema.json` (`x-ui-role-field`) and `interview_message.v1.json` (`820654c` sets `x-ui-role-field: role`): the PR that merges second resolves them and keeps the text of S1e.D (`speaker`). The server repository follows the files, its models, and the line of the analyst prompt (the role of a speaker read from the participants). The exact changes are in section 8.
    - `interview_transcript`: `x-ui-display: transcript`; a new keyword `x-ui-participants-field: participants`; a new read only field `participants` (widget `avatar-list`), a list of objects `{ key, name, role, item_id }`, the one who leads first; `turn_count` titled "Turns"; `status` and `stop_reason` take the widget `separator`; `x-ui-field-order: [participants, turn_count, status, stop_reason]`.
    - `interview_message`: `role` gives way to `speaker`, the key of a participant of its transcript; `x-ui-role-field: speaker`; `turn` takes the widget `separator`; `x-ui-list-fields: [turn, speaker, content]`.
    - `persona`: `x-ui-display: profile`; `x-ui-list-fields: [name, stakeholder_type, interview_status, background, goals]`; `interview_status` takes the widget `badge`.
@@ -355,7 +356,7 @@ The behavior on the screen of each component is in section 10; a decision that s
 
 ### Mock
 
-24. **The mock follows the schemas** (commit 4): the copies of the three schemas; a case in `mocks/workflow/__tests__/artifact-kinds.fixtures.test.ts` that compares every file of `contentSchemaFiles` with its file in `docs/schemas/<artifacts or items>/`; each interview with its participants (the `item_id` of a persona resolved by the builder, as it resolves `subject_item_id`) and its speakers; the interview in progress of the library project; summaries that the page does not show elsewhere (A15). Section 12 has the data.
+24. **The mock follows the schemas** (commit 3): the copies of the three schemas; a case in `mocks/workflow/__tests__/artifact-kinds.fixtures.test.ts` that compares every file of `contentSchemaFiles` with its file in `docs/schemas/<artifacts or items>/`; each interview with its participants (the `item_id` of a persona resolved by the builder, as it resolves `subject_item_id`) and its speakers; the interview in progress of the library project; summaries that the page does not show elsewhere (A15). Section 12 has the data.
 
 ## 4. Scope
 
@@ -425,31 +426,33 @@ The behavior on the screen of each component is in section 10; a decision that s
 
 | File | What changes | Commit |
 |---|---|---|
-| `docs/schemas/content-schema.meta.schema.json`, `README.md`, `artifacts/interview_transcript.v1.json`, `items/interview_message.v1.json`, `items/persona.v1.json`; `docs/DATA_SHAPE.md` | Section 8 | 1 |
-| `shared/components/ui/avatar.tsx`, `__tests__/avatar.test.tsx` (new); `design-system/widgets/showcase/components/cards/ChatCard.tsx` | Decision 6 | 2 |
-| `workflow/entities/content/fields/content-fields.types.ts`, `content-fields.utils.ts`, `artifact-kinds/artifact-kinds.types.ts` | The widgets, `profile`, `artifactDisplays`, `itemDisplays`, `ItemPageLayout`, `itemPageLayouts`, `oneLineWidgets`, `ProfileFields`; `artifactDisplayOf`, `pageLayoutOf`, `contentDisplayOf`, `documentDisplaysByKind`, `extensionField`, `isOneLineField`, `profileFields`; `x-ui-participants-field` in `contentSchemaSchema` | 3 |
-| `workflow/entities/content/values/content-values.utils.ts`, `widget-value-rules.utils.ts`, `content-values.types.ts` | `hasListValue`; the rows of the three widgets; `ValueDefinition` | 3 |
-| `workflow/entities/content/value-labels/value-tones.constants.ts` (new), `value-labels.utils.ts` | `valueTonesByField`; `valueTone`, `personTone` | 3 |
-| `workflow/entities/components/ContentFieldValue.tsx`, `PersonAvatar.tsx`, `FieldSeparator.tsx`, `InlineFieldValues.tsx` (new), `content-input/ContentValueControl.tsx`, `content-input/ContentFieldInput.tsx` | The rows of the three widgets and `renderItemIdLink`; `ValueDefinition` | 3 |
-| `workflow/entities/@x/artifact.ts` | Decision 4 | 3 |
-| `documents/widgets/panel/documents-frame.config.tsx` | The icons of `profile` | 3 |
-| `artifact/entities/outline/outline.types.ts`, `outline.utils.ts`, `document-blocks.utils.ts`, `transcript.utils.ts` (new), `hooks/useArtifactDocument.ts` | Decisions 13 to 16, 19 | 4 |
-| `artifact/entities/components/ArtifactDocument.tsx`, `DocumentBlocks.tsx`, `ItemTranscript.tsx` (new), `ItemAvatarCards.tsx` (new), `ItemHeading.tsx` (new), `ArtifactItemDetails.tsx`, `index.ts` | Decisions 17, 18, 20 to 22 | 4 |
-| `workflow/entities/content/value-labels/interview-value-labels.constants.ts`, `value-labels.constants.ts` | `messageRoleLabels` and its row `interview_message.role` go with the field | 4 |
-| `mocks/workflow/data/content-schemas/*.json` (three), `mocks/workflow/__tests__/artifact-kinds.fixtures.test.ts` | The copies; the comparison | 4 |
-| `mocks/artifacts/fixtures/mentor-platform-artifacts.fixtures.ts`, `artifacts.fixtures.ts`, `artifact-builder.fixtures.ts` | Section 12 | 4 |
-| Tests that read the mock: `workflow/.../content-fields.utils.test.ts`, `workflow/.../value-labels.constants.test.ts`, `artifact/.../outline.utils.test.ts`, `ArtifactDocument.test.tsx`, `ArtifactItemDetails.test.tsx` | Section 13 | 4 |
-| `documents/widgets/document/components/DocumentPage.tsx`, `documents/widgets/item/components/ItemPage.tsx` and their tests | `renderItemIdLink`; `ItemHeading` with `place`, `schema` on `ItemKeyLine` | 5 |
-| `tests/screenshots/projects/documents.spec.ts` | Section 12 | 6 |
-| `docs/architecture/web-app.md`, `docs/architecture/web-app-modules.md`, `frontend/src/mocks/README.md` | Section 14 | 7 |
+| `docs/schemas/content-schema.meta.schema.json`, `README.md`, `artifacts/interview_transcript.v1.json`, `items/interview_message.v1.json`, `items/persona.v1.json`; `docs/DATA_SHAPE.md`; `docs/workflow/prompts/analyst.v1.md` | Section 8 | S1e.D (done) |
+| `shared/components/ui/avatar.tsx`, `__tests__/avatar.test.tsx` (new); `design-system/widgets/showcase/components/cards/ChatCard.tsx` | Decision 6 | 1 |
+| `workflow/entities/content/fields/content-fields.types.ts`, `content-fields.utils.ts`, `artifact-kinds/artifact-kinds.types.ts` | The widgets, `profile`, `artifactDisplays`, `itemDisplays`, `ItemPageLayout`, `itemPageLayouts`, `oneLineWidgets`, `ProfileFields`; `artifactDisplayOf`, `pageLayoutOf`, `contentDisplayOf`, `documentDisplaysByKind`, `extensionField`, `isOneLineField`, `profileFields`; `x-ui-participants-field` in `contentSchemaSchema` | 2 |
+| `workflow/entities/content/values/content-values.utils.ts`, `widget-value-rules.utils.ts`, `content-values.types.ts` | `hasListValue`; the rows of the three widgets; `ValueDefinition` | 2 |
+| `workflow/entities/content/value-labels/value-tones.constants.ts` (new), `value-labels.utils.ts` | `valueTonesByField`; `valueTone`, `personTone` | 2 |
+| `workflow/entities/components/ContentFieldValue.tsx`, `PersonAvatar.tsx`, `FieldSeparator.tsx`, `InlineFieldValues.tsx` (new), `content-input/ContentValueControl.tsx`, `content-input/ContentFieldInput.tsx` | The rows of the three widgets and `renderItemIdLink`; `ValueDefinition` | 2 |
+| `workflow/entities/@x/artifact.ts` | Decision 4 | 2 |
+| `documents/widgets/panel/documents-frame.config.tsx` | The icons of `profile` | 2 |
+| `artifact/entities/outline/outline.types.ts`, `outline.utils.ts`, `document-blocks.utils.ts`, `transcript.utils.ts` (new), `hooks/useArtifactDocument.ts` | Decisions 13 to 16, 19 | 3 |
+| `artifact/entities/components/ArtifactDocument.tsx`, `DocumentBlocks.tsx`, `ItemTranscript.tsx` (new), `ItemAvatarCards.tsx` (new), `ItemHeading.tsx` (new), `ArtifactItemDetails.tsx`, `index.ts` | Decisions 17, 18, 20 to 22 | 3 |
+| `workflow/entities/content/value-labels/interview-value-labels.constants.ts`, `value-labels.constants.ts` | `messageRoleLabels` and its row `interview_message.role` go with the field | 3 |
+| `mocks/workflow/data/content-schemas/*.json` (three), `mocks/workflow/__tests__/artifact-kinds.fixtures.test.ts` | The copies; the comparison | 3 |
+| `mocks/artifacts/fixtures/mentor-platform-artifacts.fixtures.ts`, `artifacts.fixtures.ts`, `artifact-builder.fixtures.ts` | Section 12 | 3 |
+| Tests that read the mock: `workflow/.../content-fields.utils.test.ts`, `workflow/.../value-labels.constants.test.ts`, `artifact/.../outline.utils.test.ts`, `ArtifactDocument.test.tsx`, `ArtifactItemDetails.test.tsx` | Section 13 | 3 |
+| `documents/widgets/document/components/DocumentPage.tsx`, `documents/widgets/item/components/ItemPage.tsx` and their tests | `renderItemIdLink`; `ItemHeading` with `place`, `schema` on `ItemKeyLine` | 4 |
+| `tests/screenshots/projects/documents.spec.ts` | Section 12 | 5 |
+| `docs/architecture/web-app.md`, `docs/architecture/web-app-modules.md`, `frontend/src/mocks/README.md` | Section 14 | 6 |
 
-The files that two commits change: `content-fields.utils.test.ts` and `value-labels.constants.test.ts` (commit 3 adds the cases with test schemas; commit 4 changes the expectations that read the mock).
+The files that two commits change: `content-fields.utils.test.ts` and `value-labels.constants.test.ts` (commit 2 adds the cases with test schemas; commit 3 changes the expectations that read the mock).
 
 ## 8. The slices, file by file
 
 S1e adds no slice; it adds to `shared/components/ui/avatar.tsx`, the entities of `workflow` and `artifact`, and two pages. The class strings below are the few that place the parts (decision 2).
 
-### `docs/schemas` and `docs/DATA_SHAPE.md` (commit 1)
+### `docs/schemas`, `docs/DATA_SHAPE.md` and the analyst prompt (S1e.D, done in `3368d49`)
+
+Written on `docs/fe/document-layouts`; every schema file is valid against the new meta schema (checked with `ajv`, draft 2020-12), and five wrong schemas are refused (an artifact with `profile`, an item with `x-ui-participants-field`, a `badge` without `enum`, an `avatar-list` that is not an array, an artifact with `x-ui-role-field`). What it holds:
 
 `content-schema.meta.schema.json`:
 
@@ -503,9 +506,11 @@ S1e adds no slice; it adds to `shared/components/ui/avatar.tsx`, the entities of
 - The table of the kinds: "Every artifact kind except `interview_transcript`: `document`", "`interview_transcript`: `transcript`", "`persona`: `profile`", the new list fields of `persona` and `interview_message`; `participants` among the read only fields.
 - Plain values only: "No field holds the id or key of another item, except `item_id` of a participant of a conversation, which the system sets so that the participant reaches the item it is. Relations between items are trace links."
 
-`DATA_SHAPE.md`: the table of InterviewTranscript gains `participants` ("object[]: `key`, `name`, `role` (`interviewer`, `persona`), `item_id` (the persona, null for the interviewer), the interviewer first; the data allows several personas, version 1 writes one"); InterviewMessage has `speaker` ("the key of a participant of its transcript") in place of `role`.
+`DATA_SHAPE.md`: the table of InterviewTranscript gains `participants` ("object[]: `key`, `name`, `role` (`interviewer`, `persona`), `item_id` (the persona, null for the interviewer), the interviewer first; the data allows several personas, version 1 writes one"); InterviewMessage has `speaker` ("the key of a participant of its transcript") in place of `role`; the table of the nodes says that the interviewer and the persona agent write messages said by their participants.
 
-### `shared/components/ui/avatar.tsx` (commit 2)
+`docs/workflow/prompts/analyst.v1.md`: the line of `<transcripts>` says that `<role>` is the role of the participant who says the message.
+
+### `shared/components/ui/avatar.tsx` (commit 1)
 
 ```tsx
 // `variant` is the fill and `color` the meaning, as for Badge and Button; without either, the
@@ -537,7 +542,7 @@ function AvatarFallback({
 
 The fallback resolves `variant` to `soft` when `color` is given without it, and to `none` when neither is; it sets `data-variant` and `data-color` as `Badge` does. The chat card of the design system page draws its avatars in soft tones.
 
-### `workflow/entities` (commit 3)
+### `workflow/entities` (commit 2)
 
 ```text
 workflow/entities/
@@ -681,7 +686,7 @@ export function InlineFieldValues(props: { fields: readonly ContentField[]; cont
 export function PersonAvatar(props: { name: string; tone: Tone; size?: 'sm' | 'default' | 'lg' })
 ```
 
-### `artifact/entities` (commit 4)
+### `artifact/entities` (commit 3)
 
 ```text
 artifact/entities/
@@ -842,7 +847,7 @@ const detailBodies = { fields: FieldList, profile: ProfileGrid } as const satisf
 
 `DocumentLayout` renders `version ?? sections`, then `blocks`. `TranscriptLayout` renders `version ?? fieldList`, then `blocks`, then `version === undefined && endSeparator`. `DocumentBlocks` passes `participants` to `ItemTranscript` and draws `ItemAvatarCards` for the display `profile`.
 
-### The pages (commit 5)
+### The pages (commit 4)
 
 - `DocumentPage` gives `ArtifactDocument` the prop `renderItemIdLink={(itemId, children) => <PageLink href={project.item(itemId)}>{children}</PageLink>}`.
 - `ItemPage` replaces its `<h1>` with `<ItemHeading item={record} schema={page.schema} title={page.title} place={page.neighbors.index} />` and passes `schema={page.schema}` to `ItemKeyLine`.
@@ -917,7 +922,7 @@ Words. The title of `turn_count` becomes "Turns" in the schema. Every other word
 
 ## 12. Mocks and screenshots
 
-- Commit 4 copies the three schemas of commit 1 into `mocks/workflow/data/content-schemas/`, with the test of decision 24.
+- Commit 3 copies the three schemas of S1e.D into `mocks/workflow/data/content-schemas/`, with the test of decision 24.
 - `interview()` of `mentor-platform-artifacts.fixtures.ts` takes a summary, and builds `participants` = `[{ key: 'interviewer', name: 'Interviewer', role: 'interviewer', item_id: null }, { key: personaKey, name: personaName, role: 'persona', item_id: null }]` and each message with `speaker` (`interviewer`, or the key of the persona, from the first element of the tuple, renamed `speaker`). `buildProjectArtifacts` (`artifact-builder.fixtures.ts`) sets `item_id` of each participant whose `key` is the key of an item of the project to the id of that item, as it resolves `subject_item_id` from `subjectKey`. The summaries say what the page does not:
   - the student: "The student gives up when no mentor is free this week, and wants to book and cancel without writing to anyone.";
   - the mentor: "The mentor offers two afternoons a week, sessions of an hour, and wants a reminder for both sides.";
@@ -953,29 +958,29 @@ Words. The title of `turn_count` becomes "Turns" in the schema. Every other word
 
   Check with the tests of `mocks/artifacts`, `mocks/projects` and `mocks/runs` that no count of the library project changed in a test; a test that counted its artifacts gets the new count.
 - No new scenario.
-- Screenshot cases in `tests/screenshots/projects/documents.spec.ts` (commit 6): `Document with cards` becomes `Document with avatar cards` (same address); `Document with a transcript` stays (full page); new `Transcript of an interview in progress` (`/projects/${projectIds.library}/documents/${mockId(IdPrefix.Artifact, 304)}`, full page); new `Avatar cards of personas being interviewed` (`/projects/${projectIds.library}/documents/${mockId(IdPrefix.Artifact, 302)}`); new `Profile page of a persona` (open PER-001 from the outline of the mentor catalog, full page); new `Participant under the pointer` (the transcript of the mentor platform with the pointer on "Student" of the list of the fields).
+- Screenshot cases in `tests/screenshots/projects/documents.spec.ts` (commit 5): `Document with cards` becomes `Document with avatar cards` (same address); `Document with a transcript` stays (full page); new `Transcript of an interview in progress` (`/projects/${projectIds.library}/documents/${mockId(IdPrefix.Artifact, 304)}`, full page); new `Avatar cards of personas being interviewed` (`/projects/${projectIds.library}/documents/${mockId(IdPrefix.Artifact, 302)}`); new `Profile page of a persona` (open PER-001 from the outline of the mentor catalog, full page); new `Participant under the pointer` (the transcript of the mentor platform with the pointer on "Student" of the list of the fields).
 
 ## 13. Tests
 
 | File | Cases |
 |---|---|
-| `shared/components/ui/__tests__/avatar.test.tsx` (new, commit 2) | No props: the muted fallback as before. `color` alone: `data-variant="soft"`, `data-color`. `variant="solid"` with a color. Axe |
-| `workflow/.../content-fields.utils.test.ts` + data (commit 3) | `pageLayoutOf`: `profile` gives `profile`, `table` gives `fields`; the keys of `itemPageLayouts` equal `itemDisplays` (as the test of `widgetValueRules` compares its keys with `fieldWidgets`). `artifactDisplayOf`: `transcript`; `profile` reads `document`; none reads `document`. `contentDisplayOf` by level: an item names `profile`. `documentDisplaysByKind`: the layout of an artifact wins over its items. `extensionField`: each keyword; a name that is not a property. `isOneLineField` and `isSeparatorField` for each widget. `profileFields`: title, line, card and body of a test kind; no title field. The three widgets are read from `x-ui-widget` |
-| `workflow/.../content-fields.utils.test.ts` (commit 4) | `documentDisplaysByKind` of the mock: `persona_catalog` gives `profile`, `interview_transcript` gives `transcript` |
+| `shared/components/ui/__tests__/avatar.test.tsx` (new, commit 1) | No props: the muted fallback as before. `color` alone: `data-variant="soft"`, `data-color`. `variant="solid"` with a color. Axe |
+| `workflow/.../content-fields.utils.test.ts` + data (commit 2) | `pageLayoutOf`: `profile` gives `profile`, `table` gives `fields`; the keys of `itemPageLayouts` equal `itemDisplays` (as the test of `widgetValueRules` compares its keys with `fieldWidgets`). `artifactDisplayOf`: `transcript`; `profile` reads `document`; none reads `document`. `contentDisplayOf` by level: an item names `profile`. `documentDisplaysByKind`: the layout of an artifact wins over its items. `extensionField`: each keyword; a name that is not a property. `isOneLineField` and `isSeparatorField` for each widget. `profileFields`: title, line, card and body of a test kind; no title field. The three widgets are read from `x-ui-widget` |
+| `workflow/.../content-fields.utils.test.ts` (commit 3) | `documentDisplaysByKind` of the mock: `persona_catalog` gives `profile`, `interview_transcript` gives `transcript` |
 | `workflow/.../content-values.utils.test.ts` + data | `hasListValue` for each widget; a `badge` outside its options refused with "Choose one of the values."; a `separator` checked by its type (a choice, a number below its minimum) |
 | `workflow/.../widget-value-rules.utils.test.ts` | Rows for every widget (the case that compares the keys with `fieldWidgets`); `avatar-list` has a list value |
 | `workflow/.../value-labels.utils.test.ts` | `valueTone`: a value with a row; neutral without. `personTone` for the places 0 to 4: primary, chart, neutral, chart, neutral |
-| `workflow/.../value-labels.constants.test.ts` | Commit 3: every path of `valueTonesByField` is written as `<kind>.<field>`. Commit 4: `fixedSelects` takes the widgets `select`, `badge` and `separator`, so that the labels of the transcript status, the stop reason and the persona status still belong to fields that exist; the row of `interview_message.role` is gone; every path of `valueTonesByField` names a badge field of a mock schema with those values |
+| `workflow/.../value-labels.constants.test.ts` | Commit 2: every path of `valueTonesByField` is written as `<kind>.<field>`. Commit 3: `fixedSelects` takes the widgets `select`, `badge` and `separator`, so that the labels of the transcript status, the stop reason and the persona status still belong to fields that exist; the row of `interview_message.role` is gone; every path of `valueTonesByField` names a badge field of a mock schema with those values |
 | `workflow/.../ContentFieldValue.test.tsx` + data | A `badge` reads the label of its value, in its tone (`data-color`), with no dot; a `separator` reads as a label or a number; an `avatar-list` draws an avatar and a name per entry, a ghost button (`data-variant="ghost"`) through `renderItemIdLink` when the entry has an `item_id`, a `span` without the prop or without the id |
 | `workflow/.../content-input/ContentFieldInput.test.tsx` + data | A `badge` edits as a select; a `separator` of a choice as a select, of a number as a number input; a read only `avatar-list` shows its people |
 | `workflow/.../FieldSeparator.test.tsx`, `InlineFieldValues.test.tsx`, `PersonAvatar.test.tsx` (new) | The separator: "Turn 2", a label, two fields side by side, nothing for empty fields. The line: filled fields only, in order, each after its `sr-only` title. The avatar: the initials, `data-variant="soft"` and the `data-color` of its tone, `aria-hidden`. Axe on each |
-| `artifact/.../outline.utils.test.ts` + data | `itemAnchorProps`. `documentBlocks`: a group heading in a `document`; none in a `transcript`; every call already in the file passes `{ artifactDisplay: 'document' }`. The persona block is `profile` (commit 4) |
+| `artifact/.../outline.utils.test.ts` + data | `itemAnchorProps`. `documentBlocks`: a group heading in a `document`; none in a `transcript`; every call already in the file passes `{ artifactDisplay: 'document' }`. The persona block is `profile` (commit 3) |
 | `artifact/.../transcript.utils.test.ts` + data (new) | `transcriptParticipants`: the entries in order with their `itemId` and tone; two who lead share the right side; no keyword gives none. `transcriptParts`: a separator before the first message and where the turn changes, not where only the speaker changes; two separator fields changing at one message share one part; two messages of one speaker in one run; four participants; a speaker that is not a participant; the text from the title field |
 | `artifact/.../hooks/useArtifactDocument.test.ts` | `display` of the interview is `transcript`, of the plan `document`; its participants; `pending` while the schema of the artifact loads; a schema that fails gives `document` with no fields |
 | `artifact/.../components/ArtifactDocument.test.tsx` (extended) | The interview: the list with "Participants" and "Turns", "Student" as a ghost button that is a link through `renderItemIdLink`, "Interviewer" as text; no group heading; the separators "Turn 1" to "Turn 4"; the interviewer runs at the end (`data-align="end"`), the student at the start; the last separator "Completed" and "Stopping condition reached" after the last message, and no `h2` "Status". The library interview: "In progress" alone. A `fieldsView` on the interview takes the place of the list, and the last separator is gone. The persona catalog: three `h3` links, the badge "Interviewed", the background, "Goals:"; the library catalog: "Not interviewed". The anchors and the marks of the S1b case on the bubble of PER-001#2. Axe on the interview and on the cards |
 | `artifact/.../components/ArtifactItemDetails.test.tsx` (extended) | A persona: the body without the name, the stakeholder type and the status; a list without `data-wide`, a text with it; a requirement as before. `ItemKeyLine` with the schema of a persona: the type and the badge after the key |
 | `artifact/.../components/ItemHeading.test.tsx` (new) | A persona: the avatar with its initials and the tone of its place, and the `h1`; a requirement: the `h1` alone |
-| `documents/widgets/document/components/__tests__/DocumentPage.test.tsx`, `documents/widgets/item/components/__tests__/ItemPage.test.tsx` (extended, commit 5) | "Student" in the list of the interview opens its item page; the page of PER-001: the avatar, the badge on the key line, the lists in pairs |
+| `documents/widgets/document/components/__tests__/DocumentPage.test.tsx`, `documents/widgets/item/components/__tests__/ItemPage.test.tsx` (extended, commit 4) | "Student" in the list of the interview opens its item page; the page of PER-001: the avatar, the badge on the key line, the lists in pairs |
 | `mocks/workflow/__tests__/artifact-kinds.fixtures.test.ts` | Every content schema of the mock equals its file in `docs/schemas/` |
 | `mocks/artifacts/...` (the builder) | `item_id` of the persona of each interview is the id of its item; the interviewer has none |
 
@@ -985,13 +990,13 @@ Helpers: the test schemas (a transcript with participants, a message kind with a
 
 | Doc | What changes | Commit |
 |---|---|---|
-| `docs/schemas/*`, `docs/DATA_SHAPE.md` | Section 8 | 1 |
-| `docs/architecture/web-app.md` section 6 | "The page of a document draws every kind ..." in place of "The artifact panel draws"; the displays by level with `profile` and the layout `transcript`; the participants of a transcript and where its fields go; the three widgets, the tones of badge values and of people in the code; the bullet of the registry replaced by "A layout that the generic drawing cannot give is a new value of `x-ui-display`, named after how it looks, never a component chosen by the name of a kind"; `FieldWidget` in the sketch with every widget | 7 |
-| `docs/architecture/web-app.md` section 8 | "A new value of `x-ui-display` or `x-ui-widget`" names the tables that it adds a row to (decision 3), and says that the compiler reports each missing row | 7 |
-| `docs/architecture/web-app.md` section 9 | The row Artifacts and items names the files that exist: `ArtifactDocument.tsx`, `DocumentBlocks.tsx`, `ItemTranscript.tsx`, `ItemAvatarCards.tsx`, `ItemHeading.tsx`, `ArtifactItemDetails.tsx`; `PersonAvatar.tsx`, `FieldSeparator.tsx`, `InlineFieldValues.tsx` of `workflow`; no registry | 7 |
-| `docs/architecture/web-app-modules.md` | The row `artifact`: "the views of a document and of an item without actions, laid out by the display of the artifact and of each kind of item" | 7 |
-| `frontend/src/mocks/README.md` | Section Documents: the library project, "An interview in progress" (its interview) and "Personas being interviewed" (its catalog); "The profile page of a persona" | 7 |
-| `docs/ui/usability.md` (`frontend-plan`) | A1 to A26 and the answer of D1 (5.3 for the transcript, 7.4 for the personas) | Before commit 4 |
+| `docs/schemas/*`, `docs/DATA_SHAPE.md`, `docs/workflow/prompts/analyst.v1.md` | Section 8 | S1e.D (done) |
+| `docs/architecture/web-app.md` section 6 | "The page of a document draws every kind ..." in place of "The artifact panel draws"; the displays by level with `profile` and the layout `transcript`; the participants of a transcript and where its fields go; the three widgets, the tones of badge values and of people in the code; the bullet of the registry replaced by "A layout that the generic drawing cannot give is a new value of `x-ui-display`, named after how it looks, never a component chosen by the name of a kind"; `FieldWidget` in the sketch with every widget | 6 |
+| `docs/architecture/web-app.md` section 8 | "A new value of `x-ui-display` or `x-ui-widget`" names the tables that it adds a row to (decision 3), and says that the compiler reports each missing row | 6 |
+| `docs/architecture/web-app.md` section 9 | The row Artifacts and items names the files that exist: `ArtifactDocument.tsx`, `DocumentBlocks.tsx`, `ItemTranscript.tsx`, `ItemAvatarCards.tsx`, `ItemHeading.tsx`, `ArtifactItemDetails.tsx`; `PersonAvatar.tsx`, `FieldSeparator.tsx`, `InlineFieldValues.tsx` of `workflow`; no registry | 6 |
+| `docs/architecture/web-app-modules.md` | The row `artifact`: "the views of a document and of an item without actions, laid out by the display of the artifact and of each kind of item" | 6 |
+| `frontend/src/mocks/README.md` | Section Documents: the library project, "An interview in progress" (its interview) and "Personas being interviewed" (its catalog); "The profile page of a persona" | 6 |
+| `docs/ui/usability.md` (`frontend-plan`) | A1 to A26 and the answer of D1 (5.3 for the transcript, 7.4 for the personas) | Before commit 3 |
 | `docs/ui/wireframes/s1e-document-layouts.html` (`frontend-plan`) | The wireframe, kept as it was chosen; section 1.2 holds the notes for the build | Done with this plan |
 | `docs/frontend-implementation-plan.md` (`frontend-plan`) | The row S1e, and S1c.1 after it | Done with this plan |
 
@@ -1011,17 +1016,20 @@ Helpers: the test schemas (a transcript with participants, a message kind with a
 
 ## 16. Commits and checks
 
-`feat/fe/document-layouts`, from `origin/main` once S1b.2 is merged:
+S1e.D `docs/fe/document-layouts`, from `origin/main` (written; the user pushes it and opens its PR):
 
-1. `docs(schemas): lay out an interview as a conversation of its participants and the personas as profiles, and add three widgets`
-2. `feat(shared): give an avatar the tones and fills of the other components`
-3. `feat(workflow): read the layout of an artifact and the profile display, and draw the separator, avatar list and badge widgets`
-4. `feat(artifact): draw an interview as a conversation of its participants, and the personas as avatar cards and a profile page`
-5. `feat(documents): open the page of a participant from its interview, and show the page of a persona as a profile`
-6. `test(screenshots): cover the conversation of an interview, the avatar cards and the profile page`
-7. `docs: describe the layouts of a document, the participants of a transcript and the new widgets`
+- `3368d49 docs(schemas): add the participants of an interview, the profile display and three widgets`
 
-Each file goes in the commit of its row in section 7. Commit 3 compiles alone: `profile` falls to the table of `DocumentBlocks` until commit 4 adds its case, and no schema of the mock names a new widget or display before commit 4. The plan, the prompt and the wireframe stay on `frontend-plan`.
+S1e `feat/fe/document-layouts`, from `origin/main` once S1b.2 and S1e.D are merged:
+
+1. `feat(shared): give an avatar the tones and fills of the other components`
+2. `feat(workflow): read the layout of an artifact and the profile display, and draw the separator, avatar list and badge widgets`
+3. `feat(artifact): draw an interview as a conversation of its participants, and the personas as avatar cards and a profile page`
+4. `feat(documents): open the page of a participant from its interview, and show the page of a persona as a profile`
+5. `test(screenshots): cover the conversation of an interview, the avatar cards and the profile page`
+6. `docs: describe the layouts of a document, the participants of a transcript and the new widgets`
+
+Each file goes in the commit of its row in section 7. Commit 2 compiles alone: `profile` falls to the table of `DocumentBlocks` until commit 3 adds its case, and no schema of the mock names a new widget or display before commit 3. The plan, the prompt and the wireframe stay on `frontend-plan`.
 
 Checks, one at a time: ESLint and Prettier on the changed files; Vitest on the touched folders (`shared/components/ui`, `modules/design-system`, `modules/workflow/entities`, `modules/artifact/entities`, `modules/documents`, `mocks/workflow`, `mocks/artifacts`, `mocks/projects`, `mocks/runs`); typecheck once, since types change. A test that times out only with the others runs again alone. No full suite, E2E, screenshots or build locally; CI runs them. Then:
 
@@ -1033,12 +1041,14 @@ Checks, one at a time: ESLint and Prettier on the changed files; Vitest on the t
 
 ## 17. Checklist
 
-- [ ] D1 confirmed or changed by the user; A1 to A26 and the answer of D1 written in `docs/ui/usability.md` on `frontend-plan` before commit 4
+- [ ] D1 confirmed or changed by the user; A1 to A26 and the answer of D1 written in `docs/ui/usability.md` on `frontend-plan` before commit 3
 - [x] The answers of S1b (A1 to A9) are in `usability.md` (2026-11-03)
 - [x] The wireframe in `docs/ui/wireframes/`, unchanged, with the notes for the build in section 1.2
 - [ ] S1b.2 merged; this plan checked again against `main`: the paths and the names of sections 7 and 8, `widgetControls`, `messageMarks`, `fieldsView`, `x-ui-role-field`, `ItemKeyLine`, `useItemPage`, `PageLink` with `className`
-- [ ] The server repository follows the schemas, the data shape (the participants with `item_id`) and the line of the analyst prompt of commit 1 (the user)
-- [ ] Commits 1 to 7, each checked
+- [ ] The server repository follows the schemas, the data shape (the participants with `item_id`) and the line of the analyst prompt of S1e.D (the user)
+- [x] S1e.D written on `docs/fe/document-layouts` (`3368d49`)
+- [ ] S1e.D pushed, its PR opened and merged (the user)
+- [ ] Commits 1 to 6 of S1e, each checked
 - [ ] The S1c plan updated: `renderItemKey` on an avatar card, and its peek without `ItemOrigin`
 - [ ] Each row of section 10 checked once in `pnpm dev:mock` (one dev server, one page at a time, stopped after): the interview with the student and its participant that opens PER-001, the personas of the mentor platform, the profile page of PER-001, the interview and the personas of the library project, the interview at a message from `?item=`
 - [ ] The description of the PR written from this plan; it calls no new endpoint
