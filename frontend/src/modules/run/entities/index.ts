@@ -15,14 +15,12 @@ export { listRunDirectives } from './directives/directives.api'
 export { directiveKeys } from './directives/directives.keys'
 export type { Directive, DirectiveItem } from './directives/directives.types'
 export { useRunDirectives } from './directives/hooks/useDirectiveQueries'
-export { useRunStream } from './events/hooks/useRunStream'
 export { runEventsUrl } from './events/run-events.api'
 export { useLatestRun, useRun, useThreadRuns } from './runs/hooks/useRunQueries'
 export { useRunStageTitle } from './runs/hooks/useRunStageTitle'
 export { runModuleKeys } from './runs/run-module.keys'
 export {
   cancelRun,
-  createRun,
   findLatestRun,
   getRun,
   listThreadRuns,

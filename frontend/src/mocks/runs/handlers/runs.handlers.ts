@@ -4,7 +4,7 @@ import { isUnfinishedRunStatus } from '@/modules/run/entities'
 import { apiEndpoints } from '@/shared/api/endpoints'
 import { HttpStatus } from '@/shared/api/http'
 
-import { mockNow, startedRunId } from '../../shared/db'
+import { mockNow } from '../../shared/db'
 import { idempotent, pathParam, readBodyFields } from '../../shared/http/request'
 import {
   created,
@@ -20,9 +20,6 @@ import { refuseUnfinishedRun, runNotFound } from '../runs.problems'
 import { validateRetryBody } from '../runs.validators'
 
 export const runHandlers = [
-  // The chat starts a run with this endpoint, which is not part of the API; it goes with the chat.
-  http.post(apiEndpoints.threadRuns.pattern, () => HttpResponse.json({ run_id: startedRunId })),
-
   http.get(apiEndpoints.threadRuns.pattern, async ({ params, request }) => {
     await answerScenario('runs')
     const runs = allRuns()

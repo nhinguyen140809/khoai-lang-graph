@@ -5,7 +5,6 @@ export {
   projectIds,
   runIds,
   sessionIds,
-  startedRunId,
   threadIds,
   userId,
 } from './mock-ids.constants'

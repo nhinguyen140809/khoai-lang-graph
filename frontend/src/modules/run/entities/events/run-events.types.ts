@@ -27,8 +27,5 @@ export type RunEvent = {
   [K in RunEventType]: { type: K; id: string; data: z.infer<(typeof runEventSchemas)[K]> }
 }[RunEventType]
 
-/** Where the stream of a run is, as the events read so far tell it. */
-export type RunStreamStatus = 'streaming' | 'interrupted' | 'succeeded' | 'failed'
-
 /** What a channel of a run tells its listeners: an event of the run, or that its connection failed for good. */
 export type RunChannelSignal = { kind: 'event'; event: RunEvent } | { kind: 'failed' }
