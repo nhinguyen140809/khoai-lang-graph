@@ -4,11 +4,7 @@ import { ChevronRightIcon } from 'lucide-react'
 import type { ReactNode } from 'react'
 
 import { useItemHref } from '@/modules/artifact/entities/@x/trace'
-import {
-  itemTitle,
-  useContentSchemas,
-  useLinkTitleOf,
-} from '@/modules/workflow/entities/@x/trace'
+import { itemTitle, useContentSchemas, useLinkTitleOf } from '@/modules/workflow/entities/@x/trace'
 import { PageLink } from '@/shared/components/frame'
 import { ColoredText } from '@/shared/components/ui/colored-text'
 import { HighlightMark } from '@/shared/components/ui/highlight'

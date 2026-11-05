@@ -35,7 +35,9 @@ function TextControl({ value, onChange, controlProps }: ContentValueControlProps
     <Input
       {...controlProps}
       value={isString(value) ? value : ''}
-      onChange={(event) => { onChange(event.target.value); }}
+      onChange={(event) => {
+        onChange(event.target.value)
+      }}
     />
   )
 }
@@ -46,7 +48,9 @@ function TextareaControl({ value, onChange, controlProps }: ContentValueControlP
       {...controlProps}
       className="field-sizing-content min-h-16"
       value={isString(value) ? value : ''}
-      onChange={(event) => { onChange(event.target.value); }}
+      onChange={(event) => {
+        onChange(event.target.value)
+      }}
     />
   )
 }
@@ -66,8 +70,9 @@ function SelectControl({
     <NativeSelect
       {...controlProps}
       value={chosen ?? ''}
-      onChange={(event) => { onChange(event.target.value === '' && field.nullable ? null : event.target.value); }
-      }
+      onChange={(event) => {
+        onChange(event.target.value === '' && field.nullable ? null : event.target.value)
+      }}
     >
       {field.nullable ? (
         <NativeSelectOption value="">{contentInputMessages.none}</NativeSelectOption>
@@ -159,7 +164,10 @@ const widgetControls = {
   list: EntriesOf,
   tags: TagsControlBySource,
   'object-list': EntriesOf,
-} as const satisfies Record<ContentField['widget'], (props: ContentValueControlProps) => React.ReactNode>
+} as const satisfies Record<
+  ContentField['widget'],
+  (props: ContentValueControlProps) => React.ReactNode
+>
 
 /** The control of a value by its widget, without a label: the table `widgetControls` has a row per widget. */
 export function ContentValueControl(props: ContentValueControlProps) {

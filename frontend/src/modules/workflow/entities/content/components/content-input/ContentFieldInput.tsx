@@ -1,6 +1,6 @@
 'use client'
 
-import { type FieldPath,useFormContext } from 'react-hook-form'
+import { type FieldPath, useFormContext } from 'react-hook-form'
 
 import { FormField, FormFieldSet } from '@/shared/components/form'
 

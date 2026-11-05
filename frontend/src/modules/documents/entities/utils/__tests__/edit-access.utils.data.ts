@@ -11,7 +11,10 @@ const specification = artifactFixtureByKind(projectIds.mentor, 'requirement_spec
 export const editAccessCases: {
   name: string
   runStatus: RunStatus | undefined
-  interrupt: { allow_edits: boolean; review_artifacts: { artifact_id: string; kind: string; title: string; version: number }[] } | null
+  interrupt: {
+    allow_edits: boolean
+    review_artifacts: { artifact_id: string; kind: string; title: string; version: number }[]
+  } | null
   artifactId: string
   expected: EditAccess
 }[] = [
@@ -25,21 +28,51 @@ export const editAccessCases: {
   {
     name: 'a review that takes no changes',
     runStatus: 'interrupted',
-    interrupt: { allow_edits: false, review_artifacts: [{ artifact_id: analysis.id, kind: analysis.kind, title: analysis.title, version: analysis.version }] },
+    interrupt: {
+      allow_edits: false,
+      review_artifacts: [
+        {
+          artifact_id: analysis.id,
+          kind: analysis.kind,
+          title: analysis.title,
+          version: analysis.version,
+        },
+      ],
+    },
     artifactId: analysis.id,
     expected: { canEdit: false, reason: 'reviewTakesNoChanges' },
   },
   {
     name: 'a review that does not list the document',
     runStatus: 'interrupted',
-    interrupt: { allow_edits: true, review_artifacts: [{ artifact_id: analysis.id, kind: analysis.kind, title: analysis.title, version: analysis.version }] },
+    interrupt: {
+      allow_edits: true,
+      review_artifacts: [
+        {
+          artifact_id: analysis.id,
+          kind: analysis.kind,
+          title: analysis.title,
+          version: analysis.version,
+        },
+      ],
+    },
     artifactId: specification.id,
     expected: { canEdit: false, reason: 'notUnderReview' },
   },
   {
     name: 'a review that allows edits and lists the document',
     runStatus: 'interrupted',
-    interrupt: { allow_edits: true, review_artifacts: [{ artifact_id: analysis.id, kind: analysis.kind, title: analysis.title, version: analysis.version }] },
+    interrupt: {
+      allow_edits: true,
+      review_artifacts: [
+        {
+          artifact_id: analysis.id,
+          kind: analysis.kind,
+          title: analysis.title,
+          version: analysis.version,
+        },
+      ],
+    },
     artifactId: analysis.id,
     expected: { canEdit: true },
   },

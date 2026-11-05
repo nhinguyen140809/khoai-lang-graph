@@ -13,12 +13,7 @@ import { fieldOf } from './ContentFieldInput.data'
 function EntriesProbe({ field, initial }: { field: ContentField; initial: unknown[] }) {
   const [entries, setEntries] = useState(initial)
   return (
-    <EntriesControl
-      field={field}
-      entries={entries}
-      onChange={setEntries}
-      definition={undefined}
-    />
+    <EntriesControl field={field} entries={entries} onChange={setEntries} definition={undefined} />
   )
 }
 

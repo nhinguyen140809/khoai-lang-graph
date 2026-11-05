@@ -12,7 +12,13 @@ import {
 } from '../revisions.utils'
 import { revisionTarget } from './revisions.utils.data'
 
-const user = { actor: 'user' as const, agent_role: null, user_id: 'u1', run_id: null, step_id: null }
+const user = {
+  actor: 'user' as const,
+  agent_role: null,
+  user_id: 'u1',
+  run_id: null,
+  step_id: null,
+}
 const analyst = {
   actor: 'agent' as const,
   agent_role: 'analyst',

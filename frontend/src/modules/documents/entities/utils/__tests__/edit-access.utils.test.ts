@@ -21,7 +21,12 @@ describe('editAccessOf', () => {
         interrupt: {
           allow_edits: true,
           review_artifacts: [
-            { artifact_id: analysis.id, kind: analysis.kind, title: analysis.title, version: analysis.version },
+            {
+              artifact_id: analysis.id,
+              kind: analysis.kind,
+              title: analysis.title,
+              version: analysis.version,
+            },
           ],
         },
         artifactId: analysis.id,

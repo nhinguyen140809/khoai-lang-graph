@@ -78,9 +78,7 @@ export function applyHistoryViewAction(
         }
       }
       if (action.isHidden && !next.wasHidden) next = { ...next, level: 'closed' }
-      return next.wasHidden === action.isHidden
-        ? next
-        : { ...next, wasHidden: action.isHidden }
+      return next.wasHidden === action.isHidden ? next : { ...next, wasHidden: action.isHidden }
     }
   }
 }
