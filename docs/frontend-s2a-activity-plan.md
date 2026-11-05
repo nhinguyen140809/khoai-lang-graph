@@ -591,7 +591,7 @@ The `index.ts` of every folder of `shared/lib`, `shared/components` and `shared/
 | `toneClasses`, `Tone` | `@/shared/lib/tone` | The tones of the stepper, the trace, the timeline and the feed entry |
 | `useView`, `useWording`, `Wording`, `View` | `@/shared/lib/view` | The words in each view |
 | `formatDate`, `formatDateTime`, `formatDuration`, `formatCurrency`, `formatLocale` | `@/shared/lib/formatters` | The dates and times of Outline and of a run, the durations of the developer view, the costs; the locale of `pluralForm` |
-| `groupBy`, `newestOfEachGroup` | `@/shared/lib/collections` | The messages by run, what a line of work wrote by kind; each item once at its last version, and its first version |
+| `groupBy`, `newestOfEachGroup`, `collectBy` | `@/shared/lib/collections` | The messages by run, what a line of work wrote by kind; each item once at its last version, and its first version; `collectBy(items, keyOf, valueOf?)` builds a `Map<K, V[]>` in one call (added after the S1 stack was read: it replaces the hand-rolled loops that group items under each key) |
 | `isHotkeyPressed`, `ariaKeyShortcuts`, `Hotkey` | `@/shared/lib/hotkey` | Ctrl or Cmd+Enter in the feedback box |
 | `hasText`, `isBlank`, `isOneOf` | `@/shared/lib/guards` | A blank prompt or answer; an event of a list |
 | `coalescedTask`, `minuteMs`, `actionToastDuration` | `@/shared/lib/timing` | The listener of decision 6; the rounded duration; the toasts |
@@ -606,8 +606,23 @@ The `index.ts` of every folder of `shared/lib`, `shared/components` and `shared/
 | `useProjectThreads`, `threadsByAttention`, `useThreadMessages`, `sendMessage`, `sendFirstMessage`, `messageKeys`, `threadKeys` | `thread/entities` | The thread, the messages, Send |
 | `useRunInterrupts`, `usePendingInterrupt`, `resumeRun`, `interruptKeys`, `interruptStatusLabels` | `review/entities` | The reviews, Open review, Answer |
 | `useVisibleStages`, `useDefinitionQuery` (inside `workflow`), `itemTitle`, `kindSchemasByKind`, `useArtifactKinds` | `workflow/entities` | Stages, labels, titles |
+| `useContentSchemas`, `useKindTitleOf`, `useLinkTitleOf` | `workflow/entities` (through `@x/artifact` or `@x/activity`) | The schemas of every kind in one memoized map; the title of a kind by its key (the key itself until the kinds load); the title of a link type by its key. Added on the S1 stack after `9711007`: they replace the `useArtifactKinds` + `useMemo(contentSchemasByKind)` boilerplate |
 | `itemStatus`, `useProjectItemsOfKinds`, `itemKeys`, `artifactKeys`, `listArtifactItems` (inside `artifact`) | `artifact/entities` | Edited items, subjects |
 | `useProjectPromptFocus` | `project/features/create` | `NewProjectPrompt`, unchanged |
+
+### Where components live in the entities (added on the S1 stack)
+
+The entities of a module split by topic, and the lint lets a topic hold its own `components/` folder: a component that serves one topic sits in `entities/<topic>/components/`, one that serves the topics of a group sits in the group folder, and only what serves several topics stays in `entities/components/`. What already lives in a topic on `main`:
+
+| Module | Topic | Components |
+|---|---|---|
+| `run/entities` | `config` | `ParameterField`, `RunDefaultsFields` (S2a reuses both in the run settings dialog) |
+| `run/entities` | `status` | `RunStatusBadge` |
+| `project/entities` | `run-status` | `ProjectRunStreams` |
+| `artifact/entities` | `revisions` | `HistorySurface`, `RevisionContent`, `VersionItem`, `VersionList`, `VersionStepper` |
+| `workflow/entities` | `content` (group) | `ContentFieldValue`, `FieldSeparator`, `InlineFieldValues`, the `content-input/` controls |
+
+New components of S2a follow the same rule: a component that only the steps of a run read sits in `run/entities/steps/components/`, not in `run/entities/components/`.
 
 ### New in shared code
 
