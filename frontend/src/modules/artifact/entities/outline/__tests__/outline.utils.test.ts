@@ -10,6 +10,7 @@ import {
   outlineBreadcrumb,
   outlineNeighbors,
   outlineSequence,
+  outlineStatuses,
 } from '../outline.utils'
 import { issueKindFixtures, kindViewFixtures, mentorDocument } from './outline.utils.data'
 
@@ -314,5 +315,29 @@ describe('isBranch', () => {
     expect(types.get('section')).toBe(true)
     expect(types.get('group')).toBe(true)
     expect(types.get('item')).toBe(false)
+  })
+})
+
+describe('the out of date items of an outline', () => {
+  it('reach the item rows and the counts of the sections and groups', () => {
+    const document = mentorDocument('requirement_specification')
+    const outOfDate = document.items.find(({ key }) => key === 'REQ-001')
+    if (outOfDate === undefined) throw new Error('No REQ-001 in the fixture')
+
+    const nodes = artifactOutline({
+      ...document,
+      artifactSchema: kindViewFixtures.get('requirement_specification')?.schema,
+      kinds: kindViewFixtures,
+      issueKinds: issueKindFixtures,
+      outOfDateIds: new Set([outOfDate.id]),
+    })
+
+    const statuses = outlineStatuses(nodes).filter(
+      ({ item }) => item.key === 'REQ-001' || item.key === 'REQ-002',
+    )
+    expect(statuses.map(({ item, status }) => [item.key, status])).toEqual([
+      ['REQ-001', 'outOfDate'],
+      ['REQ-002', 'approved'],
+    ])
   })
 })

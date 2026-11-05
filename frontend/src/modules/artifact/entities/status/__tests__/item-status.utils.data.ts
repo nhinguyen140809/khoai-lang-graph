@@ -10,10 +10,11 @@ const agent = {
 } as const
 const user = { ...agent, actor: 'user' } as const
 
-type StatusItem = Pick<ArtifactItem, 'kind' | 'content' | 'review_status' | 'updated_by'>
+type StatusItem = Pick<ArtifactItem, 'id' | 'kind' | 'content' | 'review_status' | 'updated_by'>
 
 function statusItem(overrides: Partial<StatusItem>): StatusItem {
   return {
+    id: 'item-1',
     kind: 'raw_requirement',
     review_status: 'draft',
     updated_by: agent,
