@@ -1,5 +1,6 @@
 import { defaultFilter } from 'cmdk'
 
+import { collectBy } from '@/shared/lib/collections'
 import { hasText } from '@/shared/lib/guards'
 import { foldText } from '@/shared/lib/text'
 
@@ -11,14 +12,7 @@ import type { PaletteCommand, PaletteCommandGroup } from './command.types'
  * commands.
  */
 export function commandGroups(sources: Iterable<readonly PaletteCommand[]>): PaletteCommandGroup[] {
-  const groups = new Map<string, PaletteCommand[]>()
-  for (const commands of sources) {
-    for (const command of commands) {
-      const group = groups.get(command.group)
-      if (group === undefined) groups.set(command.group, [command])
-      else group.push(command)
-    }
-  }
+  const groups = collectBy([...sources].flat(), ({ group }) => group)
   return [...groups]
     .sort(([a], [b]) => a.localeCompare(b))
     .map(([heading, commands]) => ({ heading, commands }))

@@ -34,3 +34,31 @@ export function newestOfEachGroup<T, K>(
   }
   return newest
 }
+
+/**
+ * The items of each key, in a map: every item goes to the array of the key that `keyOf` gives
+ * it, `valueOf` tells what of the item its array holds, and a null key skips the item. The keys
+ * and the items of each array keep the order they came in.
+ */
+export function collectBy<T, K>(items: Iterable<T>, keyOf: (item: T) => K | null): Map<K, T[]>
+export function collectBy<T, K, V>(
+  items: Iterable<T>,
+  keyOf: (item: T) => K | null,
+  valueOf: (item: T) => V,
+): Map<K, V[]>
+export function collectBy<T, K, V>(
+  items: Iterable<T>,
+  keyOf: (item: T) => K | null,
+  valueOf?: (item: T) => V,
+): Map<K, V[]> {
+  const ofKey = new Map<K, V[]>()
+  for (const item of items) {
+    const key = keyOf(item)
+    if (key === null) continue
+    const value = valueOf === undefined ? (item as unknown as V) : valueOf(item)
+    const held = ofKey.get(key)
+    if (held === undefined) ofKey.set(key, [value])
+    else held.push(value)
+  }
+  return ofKey
+}

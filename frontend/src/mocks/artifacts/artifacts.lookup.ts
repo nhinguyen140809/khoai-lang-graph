@@ -6,6 +6,7 @@ import {
   type Revision,
 } from '@/modules/artifact/entities'
 import type { ContentValues } from '@/modules/workflow/entities'
+import { collectBy } from '@/shared/lib/collections'
 
 import { isoTime } from '../shared/db'
 import { placeInOutline } from './artifact-outline.utils'
@@ -64,11 +65,10 @@ function placedItems(): PlacedItem[] {
 }
 
 function placeAllItems(): PlacedItem[] {
-  const ofArtifact = new Map<string, ArtifactItem[]>()
-  for (const item of itemsWithDeleted()) {
-    if (isDeleted(item.id)) continue
-    ofArtifact.set(item.artifact_id, [...(ofArtifact.get(item.artifact_id) ?? []), item])
-  }
+  const ofArtifact = collectBy(
+    itemsWithDeleted().filter(({ id }) => !isDeleted(id)),
+    ({ artifact_id }) => artifact_id,
+  )
   return [...ofArtifact.values()].flatMap((items) => placeInOutline(items))
 }
 
