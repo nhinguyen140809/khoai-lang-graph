@@ -34,6 +34,7 @@ export { exportStatuses } from './exports/exports.types'
 export { useExport, useProjectExports } from './exports/hooks/useExportQueries'
 export type { IssueGroup, IssueItem, IssueLink } from './issues/issues.types'
 export { issuesWithSubjects } from './issues/issues.utils'
+export { useItemHref } from './items/hooks/useItemHref'
 export {
   useArtifactItems,
   useItem,
@@ -85,6 +86,7 @@ export type {
 export {
   artifactOutline,
   isBranch,
+  itemAnchorId,
   itemNodeId,
   outlineBreadcrumb,
   outlineNeighbors,

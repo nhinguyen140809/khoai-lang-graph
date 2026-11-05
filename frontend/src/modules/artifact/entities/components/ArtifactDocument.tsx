@@ -15,13 +15,20 @@ interface ArtifactDocumentProps {
   renderItemLink: RenderItemLink
   /** Whether the document waits for the review of the user. */
   isUnderReview: boolean
+  /** The item that the address of the page names: its block is marked and scrolled to. */
+  targetItemId?: string | null | undefined
 }
 
 /**
  * The body of a document page: its title, its status line, its summary, each filled field of the
  * artifact under its label, then its sections and items in the order of the outline.
  */
-export function ArtifactDocument({ data, renderItemLink, isUnderReview }: ArtifactDocumentProps) {
+export function ArtifactDocument({
+  data,
+  renderItemLink,
+  isUnderReview,
+  targetItemId = null,
+}: ArtifactDocumentProps) {
   const { artifact, fields, blocks, kinds } = data
   const { data: definition } = useWorkflowDefinition()
   // A superseded document never reaches a page, so it reads as a draft.
@@ -56,7 +63,12 @@ export function ArtifactDocument({ data, renderItemLink, isUnderReview }: Artifa
           </div>
         </section>
       ))}
-      <DocumentBlocks blocks={blocks} kinds={kinds} renderItemLink={renderItemLink} />
+      <DocumentBlocks
+        blocks={blocks}
+        kinds={kinds}
+        renderItemLink={renderItemLink}
+        targetItemId={targetItemId}
+      />
       {fields.length === 0 && blocks.length === 0 && (
         <p className="text-muted-foreground">{artifactViewMessages.empty}</p>
       )}

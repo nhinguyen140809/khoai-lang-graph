@@ -7,6 +7,8 @@ import type { OutlineNode } from '../outline.types'
 import {
   artifactOutline,
   isBranch,
+  itemAnchorId,
+  itemNodeId,
   outlineBreadcrumb,
   outlineNeighbors,
   outlineSequence,
@@ -315,6 +317,13 @@ describe('isBranch', () => {
     expect(types.get('section')).toBe(true)
     expect(types.get('group')).toBe(true)
     expect(types.get('item')).toBe(false)
+  })
+})
+
+describe('itemAnchorId', () => {
+  it('names the anchor of an item on the page of its document', () => {
+    expect(itemAnchorId('i1')).toBe('item-i1')
+    expect(itemAnchorId('i1')).not.toBe(itemNodeId('i1'))
   })
 })
 

@@ -32,6 +32,11 @@ export function itemNodeId(itemId: string): string {
   return `item:${itemId}`
 }
 
+/** The id of the block of an item on the page of its document, which the address of the item scrolls to. */
+export function itemAnchorId(itemId: string): string {
+  return `item-${itemId}`
+}
+
 function placeUnder(
   parentId: string | null,
   input: ArrangeInput,

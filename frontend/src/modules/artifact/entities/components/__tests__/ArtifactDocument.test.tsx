@@ -1,7 +1,10 @@
-import { screen, within } from '@testing-library/react'
+import { screen, waitFor, within } from '@testing-library/react'
 import { describe, expect, it } from 'vitest'
 
-import { artifactFixtureByKind } from '@/mocks/artifacts/fixtures/artifacts.fixtures'
+import {
+  artifactFixtureByKind,
+  itemFixtureByKey,
+} from '@/mocks/artifacts/fixtures/artifacts.fixtures'
 import { projectIds } from '@/mocks/shared/db'
 import { assertPresent } from '@/shared/lib/guards'
 import { renderWithProviders } from '@/test/render'
@@ -18,9 +21,11 @@ const renderItemLink = (item: { key: string }, title: React.ReactNode) => (
 function LoadedDocument({
   artifactId,
   isUnderReview,
+  slots = {},
 }: {
   artifactId: string
   isUnderReview: boolean
+  slots?: Partial<Parameters<typeof ArtifactDocument>[0]> | undefined
 }) {
   const document = useArtifactDocument(artifactId)
   return document.state === 'success' ? (
@@ -28,15 +33,26 @@ function LoadedDocument({
       data={document}
       renderItemLink={renderItemLink}
       isUnderReview={isUnderReview}
+      {...slots}
     />
   ) : null
 }
 
-function renderDocument(kind: string, { isUnderReview = false } = {}) {
+function renderDocument(
+  kind: string,
+  {
+    isUnderReview = false,
+    slots,
+  }: {
+    isUnderReview?: boolean
+    slots?: Partial<Parameters<typeof ArtifactDocument>[0]> | undefined
+  } = {},
+) {
   return renderWithProviders(
     <LoadedDocument
       artifactId={artifactFixtureByKind(projectId, kind).id}
       isUnderReview={isUnderReview}
+      slots={slots}
     />,
   )
 }
@@ -90,5 +106,24 @@ describe('ArtifactDocument', () => {
     await screen.findAllByRole('table')
 
     await expectNoAccessibilityViolations(container)
+  })
+})
+
+describe('ArtifactDocument with the slots of a page', () => {
+  it('anchors every block of an item and marks the target one', async () => {
+    const message = itemFixtureByKey(projectId, 'PER-001#2')
+    renderDocument('interview_transcript', {
+      slots: {
+        targetItemId: message.id,
+      },
+    })
+
+    const block = await waitFor(() => {
+      const found = document.getElementById(`item-${message.id}`)
+      if (found === null) throw new Error('The block of the message has no anchor')
+      return found
+    })
+    expect(block).toHaveAttribute('tabindex', '-1')
+    expect(block).toHaveAttribute('data-target', '')
   })
 })
