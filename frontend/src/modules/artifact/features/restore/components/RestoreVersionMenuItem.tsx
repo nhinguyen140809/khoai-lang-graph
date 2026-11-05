@@ -1,16 +1,16 @@
 'use client'
 
-import { HistoryIcon } from 'lucide-react'
+import { Undo2Icon } from 'lucide-react'
 
 import type { RevisionTarget } from '@/modules/artifact/entities'
 import { revisionKeyOf } from '@/modules/artifact/entities'
-import { Button } from '@/shared/components/ui/button'
 import { DisabledReason } from '@/shared/components/ui/disabled-reason'
+import { DropdownMenuItem } from '@/shared/components/ui/dropdown-menu'
 
 import { useOpenRestoreVersionDialog } from '../hooks/useOpenRestoreVersionDialog'
 import { restoreMessages } from '../restore.constants'
 
-interface RestoreVersionButtonProps {
+interface RestoreVersionMenuItemProps {
   target: RevisionTarget
   version: number
   /** Why the record cannot change now, or null when it can. */
@@ -18,27 +18,28 @@ interface RestoreVersionButtonProps {
 }
 
 /**
- * The control that restores the selected version of a record, in the history surface: a ghost
- * button, disabled with its reason while the record cannot change, which opens the dialog that
- * asks before it restores.
+ * The entry that restores a version of a record, in the menu of its item in the history:
+ * disabled with its reason while the record cannot change, and opening the dialog that asks
+ * before it restores.
  */
-export function RestoreVersionButton({ target, version, lockedReason }: RestoreVersionButtonProps) {
+export function RestoreVersionMenuItem({
+  target,
+  version,
+  lockedReason,
+}: RestoreVersionMenuItemProps) {
   const openRestore = useOpenRestoreVersionDialog()
 
   return (
     <DisabledReason reason={lockedReason}>
-      <Button
-        type="button"
-        variant="ghost"
-        size="sm"
+      <DropdownMenuItem
         disabled={lockedReason !== null}
-        onClick={() => {
+        onSelect={() => {
           openRestore(revisionKeyOf(target, version))
         }}
       >
-        <HistoryIcon data-icon="inline-start" />
+        <Undo2Icon />
         {restoreMessages.button}
-      </Button>
+      </DropdownMenuItem>
     </DisabledReason>
   )
 }
