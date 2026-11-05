@@ -232,7 +232,7 @@ From a read of the placement of the code on 2026-10-19, beyond what ESLint check
 | The names of the events that the status stream follows (`RUN_STATUS_EVENTS`, `COST_EVENTS`) move from `project/entities` to `run/entities`, checked with `satisfies readonly RunEventType[]`; `STREAM_REOPEN_MS` stays | They are words of the run events, written as bare strings today | E4 |
 | One address of the event stream: `runEventsUrl(runId, after)`; `runStreamUrl` goes | `runStreamUrl(id)` is the stream after event 0; P7 adds `runEventsUrl` | E4 |
 | `ProjectRunStreams` moves from `project/widgets/status` to `project/entities`, beside `useRunStatusStream` | It holds no action: it keeps the queries of a project fresh | P7 |
-| `EntryAuthor` of the new chat reads `Message['author']` | Same three values | S2, with the chat |
+| `EntryAuthor` of the new chat reads `Message['author']` | Same three values | S2a, with the chat: no `EntryAuthor`, the looks of an author are `messageAuthorLooks` of `thread/entities` |
 | `isFiltered` moves from `project/entities` to `project-filters.utils.ts` of `project/widgets/list`; `noProjectFilters` stays | Only the list reads it; the API reads `noProjectFilters` | C1 |
 | `runDefaultsSchema` moves to `run/entities`, and the run config of `runs.types.ts` becomes a named `runConfigSchema` | Value objects of the runs ([D3](#d3-settings)) | C1 |
 | `useModelOverridesStore` is deleted | Nothing reads it, and the API has no one-off model override: the overrides of a project are `model_overrides` | C1 |
@@ -502,13 +502,14 @@ After the entities, one screen at a time, each drawn first from the skeletons of
 | # | Screen | Module of the screen | Features | Copy with the screen |
 |---|---|---|---|---|
 | S1 | Documents: the side panel of documents with the outline, the document tab, the item page and peek | `documents` | `artifact/features/edit`, `restore`, `export` | None |
-| S2 | Activity: the tree of the stages in the side panel, the chat in a tab, the review bar of a document | `activity`, `review` | `thread/features/send-message`, `review/features/answer`, `run/features/stop` | `features/review/review-form.utils.ts` to `review/features/answer` |
+| S2a | Activity: Progress (the stages as a stepper) and Outline (the messages as a timeline) in the side panel, the chat in a tab with its work, its reviews and the prompt that it shares with a new project ([S2a plan](frontend-s2a-activity-plan.md)) | `activity` | `thread/features/send-message`, `review/features/answer`, `run/features/stop` | `features/review/review-form.utils.ts`, `review.schema.ts`, `QuestionField.tsx` to `review/features/answer` |
+| S2b | The review bar of a document and of its item pages, with the edited items | `documents`, `review` | `review/features/answer` (S2a) | None |
 | S3 | Search, in its side panel and in the command palette | `artifact` | None | None |
 | S4 | Trace: the matrix, the gaps and issues | `trace` | Creating and removing a link | `features/traceability/matrix-filter.utils.ts` |
 | S5 | Settings, both scopes | `settings` | The saves of `user`, `project` and `llm-model` | None |
 | S6 | Workflow, in the developer view: the graph of a run, its steps and its state | `run` | `run/features/retry` | `features/workflow/graph-layout.utils.ts` to `run/widgets/graph` |
 
-The features of each screen are those of section 6 of Web App Modules; a screen adds its route, its feature item in `<feature>-frame.config.tsx` and its entry in the layout. S2 reads the new chat of P7 in its backup as a reference ([D8](#d8-complete-entities-and-the-parts-of-p7)).
+The features of each screen are those of section 6 of Web App Modules; a screen adds its route, its feature item in `<feature>-frame.config.tsx` and its entry in the layout. S2a reads the new chat of P7 in its backup as a reference ([D8](#d8-complete-entities-and-the-parts-of-p7)).
 
 ### Dialogs opened from several places
 
@@ -558,7 +559,14 @@ The PRs go one at a time, in the order of the rows: each branch starts from `ori
 | S1c.1 | `feat/fe/aside-panel` | `feat(frontend): add a right panel to the frame, which the side panel gives way to on a narrow window` ([S1c plan](frontend-s1c-item-peek-plan.md)) | S1e |
 | S1c.2 | `feat/fe/item-peek` | `feat(frontend): peek at an item in the right panel from the keys of a document` | S1c.1 |
 | S1d | `feat/fe/export` | `feat(frontend): export a document from its page and from the command palette, and download it when it is ready` ([S1d plan](frontend-s1d-export-plan.md)) | S1c.2 |
-| S2 to S6 | `feat/fe/<screen>` | One per screen of [section 8](#8-screens) | Their entities |
+| S2a.D | `docs/fe/activity` | `docs(api): give an answered review the decision that answered it` ([S2a plan](frontend-s2a-activity-plan.md)) | None |
+| S2a.0 | `chore/fe/maintenance-before-activity` | `chore(frontend): remove the first chat and the start of a run that the API lacks, and share the scroll to an anchor` | S1d |
+| S2a.1 | `feat/fe/activity-entities` | `feat(frontend): read the progress of the stages, the work of a run, the decision of a review and the thread of the activity` | S2a.0, S2a.D |
+| S2a.2 | `feat/fe/prompt-input` | `feat(frontend): add the stepper, the timeline and the trace, and one prompt input for every prompt that starts work` | S2a.1 |
+| S2a.3 | `feat/fe/send-message-and-answer` | `feat(frontend): send a message with the settings of the run it starts, and answer a review` | S2a.2 |
+| S2a.4 | `feat/fe/activity` | `feat(frontend): show the activity of a project, its progress and its outline in the side panel and the chat in its tab` | S2a.3 |
+| S2b | `feat/fe/review-bar` | The review bar of a document (plan to write from S2a as built) | S2a.4 |
+| S3 to S6 | `feat/fe/<screen>` | One per screen of [section 8](#8-screens) | Their entities |
 
 For every PR: a branch from `origin/main`; copy the files of its row from `feat/fe/mock` with `git show feat/fe/mock:<path>`, then apply the changes of its row; run the checks one at a time (typecheck when imports, types or routes change, lint of the changed files, tests of the touched folders; the full lint and the full test run in CI on the PR); search the diff for a non-ASCII character in prose and a leftover `console.log`; one-line Conventional Commits message, no AI attribution; open as a draft.
 
