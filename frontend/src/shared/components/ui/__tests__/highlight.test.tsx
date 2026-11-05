@@ -6,7 +6,7 @@ import { describe, expect, it, vi } from 'vitest'
 import { Highlight } from '../highlight'
 
 function marksOf(container: HTMLElement) {
-  return [...container.querySelectorAll('[data-slot="highlight-mark"]')]
+  return [...container.querySelectorAll<HTMLElement>('[data-slot="highlight-mark"]')]
 }
 
 describe('Highlight', () => {
@@ -57,6 +57,37 @@ describe('Highlight', () => {
     const { container } = render(<Highlight>plain</Highlight>)
 
     expect(marksOf(container)).toHaveLength(0)
+  })
+
+  it('sets the width of the line of a mark, from the text or the range, and keeps a default by variant', () => {
+    const { container } = render(
+      <Highlight variant="underline" strokeWidth={3} query="one">
+        one two three
+      </Highlight>,
+    )
+    const { container: defaults } = render(
+      <Highlight variant="underline" query="one">
+        one
+      </Highlight>,
+    )
+    const { container: ranges } = render(
+      <Highlight
+        variant="wavy"
+        ranges={[
+          { start: 0, end: 3 },
+          { start: 4, end: 7, strokeWidth: 4 },
+        ]}
+      >
+        one two three
+      </Highlight>,
+    )
+
+    expect(marksOf(container).map((mark) => mark.style.textDecorationThickness)).toEqual(['3px'])
+    expect(marksOf(defaults).map((mark) => mark.style.textDecorationThickness)).toEqual(['2px'])
+    expect(marksOf(ranges).map((mark) => mark.style.textDecorationThickness)).toEqual([
+      '1px',
+      '4px',
+    ])
   })
 
   it('leaves a mark out of the tab order unless it is interactive', () => {

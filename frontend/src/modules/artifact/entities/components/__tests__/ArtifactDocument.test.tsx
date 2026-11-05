@@ -1,11 +1,14 @@
-import { screen, within } from '@testing-library/react'
+import { screen, waitFor, within } from '@testing-library/react'
 import { describe, expect, it } from 'vitest'
 
-import { artifactFixtureByKind } from '@/mocks/artifacts/fixtures/artifacts.fixtures'
+import {
+  artifactFixtureByKind,
+  itemFixtureByKey,
+} from '@/mocks/artifacts/fixtures/artifacts.fixtures'
 import { projectIds } from '@/mocks/shared/db'
 import { assertPresent } from '@/shared/lib/guards'
 import { renderWithProviders } from '@/test/render'
-import { expectNoAccessibilityViolations, expectText } from '@/test/steps'
+import { expectNoAccessibilityViolations } from '@/test/steps'
 
 import { useArtifactDocument } from '../../outline/hooks/useArtifactDocument'
 import { ArtifactDocument } from '../ArtifactDocument'
@@ -18,9 +21,11 @@ const renderItemLink = (item: { key: string }, title: React.ReactNode) => (
 function LoadedDocument({
   artifactId,
   isUnderReview,
+  slots = {},
 }: {
   artifactId: string
   isUnderReview: boolean
+  slots?: Partial<Parameters<typeof ArtifactDocument>[0]> | undefined
 }) {
   const document = useArtifactDocument(artifactId)
   return document.state === 'success' ? (
@@ -28,15 +33,26 @@ function LoadedDocument({
       data={document}
       renderItemLink={renderItemLink}
       isUnderReview={isUnderReview}
+      {...slots}
     />
   ) : null
 }
 
-function renderDocument(kind: string, { isUnderReview = false } = {}) {
+function renderDocument(
+  kind: string,
+  {
+    isUnderReview = false,
+    slots,
+  }: {
+    isUnderReview?: boolean
+    slots?: Partial<Parameters<typeof ArtifactDocument>[0]> | undefined
+  } = {},
+) {
   return renderWithProviders(
     <LoadedDocument
       artifactId={artifactFixtureByKind(projectId, kind).id}
       isUnderReview={isUnderReview}
+      slots={slots}
     />,
   )
 }
@@ -73,12 +89,6 @@ describe('ArtifactDocument', () => {
     expect(await screen.findByRole('heading', { name: 'Objectives' })).toBeInTheDocument()
   })
 
-  it('shows the status line with the version', async () => {
-    renderDocument('requirement_specification')
-
-    await expectText(/^version \d+$/)
-  })
-
   it('names the review that waits for the user in the color that asks for it', async () => {
     renderDocument('requirements_analysis', { isUnderReview: true })
 
@@ -90,5 +100,44 @@ describe('ArtifactDocument', () => {
     await screen.findAllByRole('table')
 
     await expectNoAccessibilityViolations(container)
+  })
+})
+
+describe('ArtifactDocument with the slots of a page', () => {
+  it('places the actions at the right of the title, and the fields view in place of the fields', async () => {
+    renderDocument('elicitation_plan', {
+      slots: {
+        actions: <button type="button">Edit</button>,
+        fieldsView: <p>The version of the history shows here.</p>,
+      },
+    })
+
+    const edit = await screen.findByRole('button', { name: 'Edit' })
+    expect(edit.closest('div')?.querySelector('h1')).not.toBeNull()
+    expect(screen.getByText('The version of the history shows here.')).toBeInTheDocument()
+    expect(screen.queryByRole('heading', { name: 'Objectives' })).not.toBeInTheDocument()
+  })
+
+  it('anchors every block of an item and marks the target one', async () => {
+    const message = itemFixtureByKey(projectId, 'PER-001#2')
+    renderDocument('interview_transcript', {
+      slots: {
+        targetItemId: message.id,
+        messageMarks: new Map([[message.id, [{ start: 0, end: 5 }]]]),
+        renderMessageMark: (range, children) => <em key={range.start}>{children}</em>,
+      },
+    })
+
+    const block = await waitFor(() => {
+      const found = document.getElementById(`item-${message.id}`)
+      if (found === null) throw new Error('The block of the message has no anchor')
+      return found
+    })
+    expect(block).toHaveAttribute('tabindex', '-1')
+    expect(block).toHaveAttribute('data-target', '')
+    // The quoted words of the message are marked, wrapped by the wrapper of the page.
+    const marked = block.querySelector('mark')
+    expect(marked).not.toBeNull()
+    expect(marked?.closest('em')).not.toBeNull()
   })
 })

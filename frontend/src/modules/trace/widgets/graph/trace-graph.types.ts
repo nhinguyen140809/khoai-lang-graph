@@ -25,7 +25,7 @@ export interface TraceGraphEdge {
   /** Whether the source needs a new look: see `isLinkOutOfDate`. */
   isOutOfDate: boolean
   /** The words of the target that support the source, for a link that has them. */
-  quote: string | null
+  targetQuote: string | null
 }
 
 /** The nodes and the edges of a trace. */

@@ -32,6 +32,11 @@ export function itemNodeId(itemId: string): string {
   return `item:${itemId}`
 }
 
+/** The id of the block of an item on the page of its document, which the address of the item scrolls to. */
+export function itemAnchorId(itemId: string): string {
+  return `item-${itemId}`
+}
+
 function placeUnder(
   parentId: string | null,
   input: ArrangeInput,
@@ -75,6 +80,8 @@ function countOf(place: ArrangedPlace): number {
 
 interface OutlineContext extends ArrangeInput {
   issueKinds: readonly IssueKind[]
+  /** The items made from an older version of an item they link to; empty by default. */
+  outOfDateIds: ReadonlySet<string>
 }
 
 function runNodes(place: ArrangedPlace, context: OutlineContext, parentId: string): OutlineNode[] {
@@ -86,7 +93,7 @@ function runNodes(place: ArrangedPlace, context: OutlineContext, parentId: strin
       id: itemNodeId(item.id),
       item,
       title: itemTitle(view?.schema, item),
-      status: itemStatus(item, context.issueKinds),
+      status: itemStatus(item, context.issueKinds, { outOfDateIds: context.outOfDateIds }),
     }))
     return [
       {
@@ -142,6 +149,8 @@ export function artifactOutline(
     artifact: Pick<Artifact, 'id' | 'content'>
     artifactSchema: ContentSchema | undefined
     issueKinds: readonly IssueKind[]
+    /** The items made from an older version of an item they link to; empty by default. */
+    outOfDateIds?: ReadonlySet<string>
   },
 ): OutlineNode[] {
   if (input.items.length === 0) {
@@ -150,7 +159,11 @@ export function artifactOutline(
       .filter(({ name }) => !isEmpty(input.artifact.content[name]))
       .map(({ name, title }) => ({ type: 'field', id: `field:${name}`, name, title }))
   }
-  return placeNodes(arrangeItems(input), input, 'root')
+  return placeNodes(
+    arrangeItems(input),
+    { ...input, outOfDateIds: input.outOfDateIds ?? new Set() },
+    'root',
+  )
 }
 
 /** Whether a row of the outline holds rows under it: a section or a group of items. */

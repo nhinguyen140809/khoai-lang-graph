@@ -41,3 +41,8 @@ function placeBlocks(place: ArrangedPlace, input: ArrangeInput, isTop: boolean):
 export function documentBlocks(input: ArrangeInput): DocumentBlock[] {
   return placeBlocks(arrangeItems(input), input, true)
 }
+
+/** Whether the blocks of a document draw messages of a transcript. */
+export function hasTranscript(blocks: readonly DocumentBlock[]): boolean {
+  return blocks.some((block) => block.type === 'items' && block.display === 'transcript')
+}

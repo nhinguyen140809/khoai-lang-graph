@@ -110,6 +110,12 @@ export function contentFields(schema: ContentSchema): ContentField[] {
   )
 }
 
+/** The first field of the schema that is not its title field: what an item says, such as the statement of a requirement. */
+export function mainField(schema: ContentSchema): ContentField | undefined {
+  const title = schema['x-ui-title-field']
+  return contentFields(schema).find((field) => field.name !== title)
+}
+
 /** The fields that a table or a card of an item kind shows, in the order of `x-ui-list-fields`. */
 export function summaryFields(schema: ContentSchema): ContentField[] {
   const fields = contentFields(schema)

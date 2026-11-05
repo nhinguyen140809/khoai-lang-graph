@@ -80,6 +80,7 @@ export const itemHandlers = [
 
   http.get(apiEndpoints.itemRevisions.pattern, async ({ params, request }) => {
     await answerScenario('item')
+    await answerScenario('revisions')
     const item = findItemWithDeleted(pathParam(params, 'itemId'))
     return item === undefined
       ? itemNotFound()

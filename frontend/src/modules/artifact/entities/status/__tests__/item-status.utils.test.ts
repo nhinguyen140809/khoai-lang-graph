@@ -3,6 +3,7 @@ import { describe, expect, it } from 'vitest'
 import {
   attentionCounts,
   attentionLevel,
+  attentionText,
   branchAttention,
   highestLevel,
   itemStatus,
@@ -104,5 +105,64 @@ describe('itemStatusLook', () => {
   it('shows the letter of an open issue only where the user can act on it', () => {
     expect(itemStatusLook('openIssue', { isUnderReview: false }, 'user').letter).toBeNull()
     expect(itemStatusLook('openIssue', { isUnderReview: true }, 'user').letter).toBe('?')
+  })
+})
+
+describe('the out of date status', () => {
+  const issueKinds = [{ kind: 'conflict', statusField: 'status', openValues: ['open'] }]
+  const agent = {
+    actor: 'agent' as const,
+    agent_role: null,
+    user_id: null,
+    run_id: null,
+    step_id: null,
+  }
+  const itemOf = (id: string) => ({
+    id,
+    kind: 'spec_requirement',
+    content: {},
+    review_status: 'approved' as const,
+    updated_by: agent,
+  })
+
+  it('comes after an open issue and before an edited item', () => {
+    const ids = new Set(['item-2'])
+
+    expect(itemStatus(itemOf('item-2'), [], { outOfDateIds: ids })).toBe('outOfDate')
+    expect(
+      itemStatus(
+        { ...itemOf('issue'), kind: 'conflict', content: { status: 'open' } },
+        issueKinds,
+        { outOfDateIds: ids },
+      ),
+    ).toBe('openIssue')
+    expect(
+      itemStatus(
+        {
+          ...itemOf('item-3'),
+          review_status: 'draft',
+          updated_by: { ...agent, actor: 'user' as const },
+        },
+        [],
+        { outOfDateIds: new Set(['item-3']) },
+      ),
+    ).toBe('outOfDate')
+  })
+
+  it('never shows without the ids', () => {
+    expect(itemStatus(itemOf('item-2'), [])).toBe('approved')
+  })
+
+  it('never shows without the ids, asks to act under review, and follows outside it', () => {
+    expect(attentionLevel('outOfDate', { isUnderReview: true })).toBe('act')
+    expect(attentionLevel('outOfDate', { isUnderReview: false })).toBe('follow')
+    expect(attentionText('outOfDate', 2)).toBe('2 out of date')
+  })
+
+  it('reads its letter and label', () => {
+    const look = itemStatusLook('outOfDate', { isUnderReview: true }, 'user')
+
+    expect(look.letter).toBe('!')
+    expect(look.label).toBe('Based on an older version')
   })
 })

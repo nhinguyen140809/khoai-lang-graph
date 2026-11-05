@@ -82,6 +82,7 @@ export const artifactHandlers = [
 
   http.get(apiEndpoints.artifactRevisions.pattern, async ({ params, request }) => {
     await answerScenario('artifact')
+    await answerScenario('revisions')
     const artifact = findArtifact(pathParam(params, 'artifactId'))
     return artifact === undefined
       ? artifactNotFound()

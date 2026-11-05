@@ -2,7 +2,13 @@ import { describe, expect, it } from 'vitest'
 
 import { workflowDefinitionFixture } from '@/mocks/workflow/workflow.fixtures'
 
-import { checkpointNodes, edgesFrom, findNode, findValueList } from '../workflow-definition.utils'
+import {
+  checkpointNodes,
+  edgesFrom,
+  findAgentRole,
+  findNode,
+  findValueList,
+} from '../workflow-definition.utils'
 import { edgeCases, nodeCases, valueListCases } from './workflow-definition.utils.data'
 
 describe('findNode', () => {
@@ -34,5 +40,17 @@ describe('findValueList', () => {
     const list = findValueList(workflowDefinitionFixture, key)
 
     expect(list?.values.map((value) => value.key) ?? null).toEqual(values)
+  })
+})
+
+describe('findAgentRole', () => {
+  it('gives the agent role of its key', () => {
+    const interviewer = findAgentRole(workflowDefinitionFixture, 'interviewer')
+
+    expect(interviewer?.label).toBe('Interviewer')
+  })
+
+  it('gives undefined for a key that the definition does not hold', () => {
+    expect(findAgentRole(workflowDefinitionFixture, 'nobody')).toBeUndefined()
   })
 })

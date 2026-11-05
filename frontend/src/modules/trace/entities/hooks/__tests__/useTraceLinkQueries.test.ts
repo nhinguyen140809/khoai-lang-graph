@@ -48,16 +48,16 @@ describe('useProjectTraceLinks', () => {
 })
 
 describe('useLinksCiting', () => {
-  it('loads the links that cite an item, each with its quote', async () => {
+  it('loads the links that cite an item, each with the words of their target', async () => {
     const message = itemFixtureByKey(projectId, 'PER-001#2')
     const { result } = renderHookWithProviders(() => useLinksCiting(projectId, message.id))
 
     await waitForSuccess(result)
     const links = pageItems(result.current.data)
     expect(links.length).toBeGreaterThan(0)
-    expect(links.every((link) => link.target_item_id === message.id && link.quote !== null)).toBe(
-      true,
-    )
+    expect(
+      links.every((link) => link.target_item_id === message.id && link.target_quote !== null),
+    ).toBe(true)
   })
 })
 

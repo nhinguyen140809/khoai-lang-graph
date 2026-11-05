@@ -3,10 +3,18 @@ import { describe, expect, it } from 'vitest'
 
 import { artifactFixtureByKind } from '@/mocks/artifacts/fixtures/artifacts.fixtures'
 import { projectIds } from '@/mocks/shared/db'
+import { contentSchemaFixtureByKind } from '@/mocks/workflow/artifact-kinds.fixtures'
+import { contentFields } from '@/modules/workflow/entities'
+import { assertPresent } from '@/shared/lib/guards'
 import { renderHookWithProviders } from '@/test/render'
 import { waitForQueries, waitForSuccess } from '@/test/steps'
 
-import { useAllowedValues, useArtifact, useProjectArtifacts } from '../useArtifactQueries'
+import {
+  useAllowedValues,
+  useAllowedValuesOf,
+  useArtifact,
+  useProjectArtifacts,
+} from '../useArtifactQueries'
 
 const projectId = projectIds.mentor
 const plan = artifactFixtureByKind(projectId, 'elicitation_plan')
@@ -67,5 +75,22 @@ describe('useAllowedValues', () => {
     rerender()
 
     expect(result.current).toBe(first)
+  })
+})
+
+describe('useAllowedValuesOf', () => {
+  it('gives the values of each field that names a source, from one read of the artifacts', async () => {
+    const fields = contentFields(contentSchemaFixtureByKind('persona'))
+    const withPlainField = [
+      ...fields,
+      { ...assertPresent(fields[0], 'No field'), name: 'note', allowedValuesFrom: null },
+    ]
+
+    const { result } = renderHookWithProviders(() => useAllowedValuesOf(projectId, withPlainField))
+
+    await waitFor(() => {
+      expect(result.current.get('stakeholder_type')).toEqual(['student', 'mentor', 'admin'])
+    })
+    expect(result.current.has('note')).toBe(false)
   })
 })

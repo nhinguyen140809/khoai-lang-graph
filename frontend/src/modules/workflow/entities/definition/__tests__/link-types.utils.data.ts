@@ -1,7 +1,13 @@
 import type { LinkType } from '../workflow-vocabulary.types'
 
 function linkType(pairs: LinkType['pairs']): LinkType {
-  return { key: 'test', title: 'Test', acyclic: false, pairs }
+  return {
+    key: 'test',
+    title: 'Test',
+    acyclic: false,
+    pairs,
+    quotes: { source: false, target: false },
+  }
 }
 
 /** A link type, a source kind and a target kind, and whether the type connects them. */

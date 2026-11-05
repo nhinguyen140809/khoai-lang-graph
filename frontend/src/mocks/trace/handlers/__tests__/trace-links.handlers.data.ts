@@ -10,6 +10,10 @@ import { projectIds } from '../../../shared/db'
 
 export const projectId = projectIds.mentor
 const requirement = itemFixtureByKey(projectId, 'REQ-001')
+const secondRequirement = itemFixtureByKey(projectId, 'REQ-002')
+const analyzed = itemFixtureByKey(projectId, 'AR-001')
+const raw = itemFixtureByKey(projectId, 'RAW-002')
+const mentorPersona = itemFixtureByKey(projectId, 'PER-002')
 const specification = artifactFixtureByKind(projectId, 'requirement_specification')
 const linksPath = apiEndpoints.projectTraceLinks.path({ projectId })
 const itemTracePath = apiEndpoints.itemTrace.path({ itemId: requirement.id })
@@ -38,6 +42,32 @@ export const traceLinkRejectedCases: RejectedRequestCase[] = [
     method: 'POST',
     path: linksPath,
     body: {},
+    status: HttpStatus.UnprocessableContent,
+    answer: { code: 'validation_failed' },
+  },
+  {
+    name: 'refuses a quote on the side of a link type that quotes no words',
+    method: 'POST',
+    path: linksPath,
+    body: {
+      source_item_id: raw.id,
+      target_item_id: mentorPersona.id,
+      link_type: 'stated_by',
+      target_quote: 'I never know who is free this week',
+    },
+    status: HttpStatus.UnprocessableContent,
+    answer: { code: 'validation_failed' },
+  },
+  {
+    name: 'refuses a quote whose words are not in the text of its item',
+    method: 'POST',
+    path: linksPath,
+    body: {
+      source_item_id: secondRequirement.id,
+      target_item_id: analyzed.id,
+      link_type: 'derived_from',
+      target_quote: 'words that are not there',
+    },
     status: HttpStatus.UnprocessableContent,
     answer: { code: 'validation_failed' },
   },

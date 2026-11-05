@@ -30,7 +30,7 @@ export function traceGraphOf(trace: Trace, titleOf: (item: TraceItem) => string)
           target: link.target_item_id,
           linkType: link.link_type,
           isOutOfDate: isLinkOutOfDate(link, target),
-          quote: link.quote,
+          targetQuote: link.target_quote,
         },
       ]
     }),

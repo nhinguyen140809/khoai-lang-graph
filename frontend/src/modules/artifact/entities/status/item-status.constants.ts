@@ -9,6 +9,7 @@ export const itemStatusMessages = {
   statuses: {
     edited: { letter: 'E', label: 'Edited by you, not reviewed yet' },
     openIssue: { letter: '?', label: 'Issue to resolve' },
+    outOfDate: { letter: '!', label: 'Based on an older version' },
     rejected: { letter: 'X', label: 'Rejected' },
     draftInReview: { letter: null, label: 'Needs your review' },
   },
@@ -16,6 +17,7 @@ export const itemStatusMessages = {
     draft: (count: number) => `${String(count)} to review`,
     openIssue: (count: number) => `${String(count)} to resolve`,
     edited: (count: number) => `${String(count)} edited`,
+    outOfDate: (count: number) => `${String(count)} out of date`,
   },
 } as const
 
@@ -50,6 +52,13 @@ export const itemStatusLooks = {
     label: {
       developer: itemStatusMessages.statuses.openIssue.label,
       user: itemStatusMessages.statuses.openIssue.label,
+    },
+  },
+  outOfDate: {
+    letter: itemStatusMessages.statuses.outOfDate.letter,
+    label: {
+      developer: itemStatusMessages.statuses.outOfDate.label,
+      user: itemStatusMessages.statuses.outOfDate.label,
     },
   },
 } as const satisfies Record<ItemStatus, { letter: string | null; label: Wording }>

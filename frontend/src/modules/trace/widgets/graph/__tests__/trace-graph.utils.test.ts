@@ -9,12 +9,12 @@ describe('traceGraphOf', () => {
 
     expect(graph.nodes.map(({ id, isSuperseded }) => ({ id, isSuperseded }))).toEqual(nodes)
     expect(
-      graph.edges.map(({ id, source, target, isOutOfDate, quote }) => ({
+      graph.edges.map(({ id, source, target, isOutOfDate, targetQuote }) => ({
         id,
         source,
         target,
         isOutOfDate,
-        quote,
+        targetQuote,
       })),
     ).toEqual(edges)
   })

@@ -1,5 +1,10 @@
 import type { ArtifactItem } from '@/modules/artifact/entities'
-import { canLinkTypeConnect, contentDisplayOf } from '@/modules/workflow/entities'
+import {
+  canLinkTypeConnect,
+  contentDisplayOf,
+  contentFields,
+  findQuote,
+} from '@/modules/workflow/entities'
 import type { FieldProblem } from '@/shared/api/error'
 import { distancesFrom, successorsFrom } from '@/shared/lib/graph'
 
@@ -79,6 +84,51 @@ const makesNoLoop: LinkRule = {
   },
 }
 
+// Where the words of a quote sit in a text field of the item, or null when no field holds them.
+function quoteIn(item: ArtifactItem, quote: string) {
+  const schema = findKind(item.kind)?.schema
+  const fields = schema === undefined ? [] : contentFields(schema)
+  return findQuote(fields, item.content, quote)
+}
+
+// The words of a link: at most 300 characters, on a side its type may quote, and found word for
+// word in a text field of their item.
+const quotesAreAllowed: LinkRule = {
+  check: ({ source, target, linkType, targetQuote, sourceQuote }) => {
+    if (targetQuote !== null && targetQuote.length > 300) {
+      return { field: 'target_quote', message: 'A quote holds at most 300 characters.' }
+    }
+    if (sourceQuote !== null && sourceQuote.length > 300) {
+      return { field: 'source_quote', message: 'A quote holds at most 300 characters.' }
+    }
+    if (targetQuote !== null && !linkType.quotes.target) {
+      return {
+        field: 'target_quote',
+        message: 'A link of this type quotes no words of its target.',
+      }
+    }
+    if (sourceQuote !== null && !linkType.quotes.source) {
+      return {
+        field: 'source_quote',
+        message: 'A link of this type quotes no words of its source.',
+      }
+    }
+    if (targetQuote !== null && quoteIn(target, targetQuote) === null) {
+      return {
+        field: 'target_quote',
+        message: 'The words are not found in the text of the target.',
+      }
+    }
+    if (sourceQuote !== null && quoteIn(source, sourceQuote) === null) {
+      return {
+        field: 'source_quote',
+        message: 'The words are not found in the text of the source.',
+      }
+    }
+    return null
+  },
+}
+
 /** The rules in the order they are tried: the cheap ones first. */
 export const linkRules: LinkRule[] = [
   endsAreLinkable,
@@ -86,4 +136,5 @@ export const linkRules: LinkRule[] = [
   kindsAreConnected,
   notARepeat,
   makesNoLoop,
+  quotesAreAllowed,
 ]

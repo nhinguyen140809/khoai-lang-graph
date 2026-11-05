@@ -12,14 +12,21 @@ function item(id: string, version: number, status: TraceItem['review_status'] = 
   }
 }
 
-function link(id: string, source: string, target: string, targetVersion: number, quote?: string) {
+function link(
+  id: string,
+  source: string,
+  target: string,
+  targetVersion: number,
+  targetQuote?: string,
+) {
   return {
     id,
     source_item_id: source,
     target_item_id: target,
     link_type: 'derived_from',
     target_version: targetVersion,
-    quote: quote ?? null,
+    target_quote: targetQuote ?? null,
+    source_quote: null,
     note: null,
   }
 }
@@ -34,7 +41,7 @@ export const graphCases: {
     source: string
     target: string
     isOutOfDate: boolean
-    quote: string | null
+    targetQuote: string | null
   }[]
 }[] = [
   {
@@ -44,7 +51,7 @@ export const graphCases: {
       { id: 'a', isSuperseded: false },
       { id: 'b', isSuperseded: false },
     ],
-    edges: [{ id: 'l1', source: 'a', target: 'b', isOutOfDate: false, quote: 'the words' }],
+    edges: [{ id: 'l1', source: 'a', target: 'b', isOutOfDate: false, targetQuote: 'the words' }],
   },
   {
     name: 'an edge out of date when the target changed since, and a node superseded when replaced',
@@ -58,8 +65,8 @@ export const graphCases: {
       { id: 'c', isSuperseded: false },
     ],
     edges: [
-      { id: 'l1', source: 'a', target: 'b', isOutOfDate: true, quote: null },
-      { id: 'l2', source: 'a', target: 'c', isOutOfDate: true, quote: null },
+      { id: 'l1', source: 'a', target: 'b', isOutOfDate: true, targetQuote: null },
+      { id: 'l2', source: 'a', target: 'c', isOutOfDate: true, targetQuote: null },
     ],
   },
   {

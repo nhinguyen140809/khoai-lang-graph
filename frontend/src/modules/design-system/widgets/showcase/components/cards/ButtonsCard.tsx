@@ -3,6 +3,7 @@ import { ChevronDownIcon, PlayIcon, PlusIcon, SquareIcon, Trash2Icon } from 'luc
 import { Button } from '@/shared/components/ui/button'
 import { ButtonGroup } from '@/shared/components/ui/button-group'
 import { Code } from '@/shared/components/ui/code'
+import { DisabledReason } from '@/shared/components/ui/disabled-reason'
 import { Spinner } from '@/shared/components/ui/spinner'
 import { fills, tones } from '@/shared/lib/tone'
 
@@ -70,6 +71,9 @@ export function ButtonsCard() {
           <Spinner />
           Running
         </Button>
+        <DisabledReason reason="Documents cannot change while the agents work.">
+          <Button disabled>Edit</Button>
+        </DisabledReason>
         <Button variant="solid" color="destructive">
           <SquareIcon />
           Stop run

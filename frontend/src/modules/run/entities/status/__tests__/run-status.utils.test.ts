@@ -2,7 +2,12 @@ import { describe, expect, it } from 'vitest'
 
 import { runStatusesByAttention } from '../run-status.constants'
 import { runStatuses } from '../run-status.types'
-import { hasStageName, isUnfinishedRunStatus, runStatusLabel } from '../run-status.utils'
+import {
+  hasStageName,
+  isUnfinishedRunStatus,
+  isWritingRunStatus,
+  runStatusLabel,
+} from '../run-status.utils'
 import { hasStageNameCases, labelCases, unfinishedCases } from './run-status.utils.data'
 
 describe('isUnfinishedRunStatus', () => {
@@ -30,4 +35,10 @@ describe('hasStageName', () => {
       expect(hasStageName(status)).toBe(names)
     },
   )
+})
+
+describe('isWritingRunStatus', () => {
+  it.each(runStatuses)('tells whether a %s run writes the documents', (status) => {
+    expect(isWritingRunStatus(status)).toBe(status === 'running')
+  })
 })

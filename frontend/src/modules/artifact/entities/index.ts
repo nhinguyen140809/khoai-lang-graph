@@ -20,6 +20,7 @@ export type {
 export { reviewStatus, reviewStatuses } from './artifacts/artifacts.types'
 export {
   useAllowedValues,
+  useAllowedValuesOf,
   useArtifact,
   useProjectArtifacts,
 } from './artifacts/hooks/useArtifactQueries'
@@ -34,6 +35,9 @@ export { exportStatuses } from './exports/exports.types'
 export { useExport, useProjectExports } from './exports/hooks/useExportQueries'
 export type { IssueGroup, IssueItem, IssueLink } from './issues/issues.types'
 export { issuesWithSubjects } from './issues/issues.utils'
+export type { RecordChange } from './items/hooks/useApplyRecordChange'
+export { useApplyRecordChange } from './items/hooks/useApplyRecordChange'
+export { useItemHref } from './items/hooks/useItemHref'
 export {
   useArtifactItems,
   useItem,
@@ -67,7 +71,7 @@ export type {
   ProjectItemFilters,
   UpdateItemBody,
 } from './items/items.types'
-export { documentBlocks } from './outline/document-blocks.utils'
+export { documentBlocks, hasTranscript } from './outline/document-blocks.utils'
 export { useArtifactDocument } from './outline/hooks/useArtifactDocument'
 export { useArtifactOutline } from './outline/hooks/useArtifactOutline'
 export { useOutlineItems } from './outline/hooks/useOutlineItems'
@@ -85,16 +89,41 @@ export type {
 export {
   artifactOutline,
   isBranch,
+  itemAnchorId,
   itemNodeId,
   outlineBreadcrumb,
   outlineNeighbors,
   outlineSequence,
   outlineStatuses,
 } from './outline/outline.utils'
-export { useArtifactRevisions, useItemRevisions } from './revisions/hooks/useRevisionQueries'
+export { HistorySurface } from './revisions/components/HistorySurface'
+export { RevisionContent } from './revisions/components/RevisionContent'
+export { useHistoryView } from './revisions/hooks/useHistoryView'
+export {
+  useArtifactRevisions,
+  useItemRevisions,
+  useRevisionHistory,
+} from './revisions/hooks/useRevisionQueries'
 export { listArtifactRevisions, listItemRevisions } from './revisions/revisions.api'
-export { changeReasonLabels } from './revisions/revisions.constants'
+export {
+  changeReasonLabels,
+  recordChangeMessages,
+  revisionMessages,
+} from './revisions/revisions.constants'
 export type { ChangeReason, Revision } from './revisions/revisions.types'
+export type {
+  HistoryLevel,
+  HistoryView,
+  RevisionHistoryResult,
+  RevisionTarget,
+} from './revisions/revisions.types'
+export {
+  parseRevisionKey,
+  previousRevision,
+  recordKeyOf,
+  revisionAuthor,
+  revisionKeyOf,
+} from './revisions/revisions.utils'
 export { useItemStatusLook } from './status/hooks/useItemStatusLook'
 export { attentionLevels, itemStatusLooks } from './status/item-status.constants'
 export type { AttentionLevel, ItemStatus, StatusCount } from './status/item-status.types'

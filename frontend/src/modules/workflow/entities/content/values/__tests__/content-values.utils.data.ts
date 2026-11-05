@@ -146,3 +146,96 @@ export const valueTitleCases = [
   { name: 'a field that names no list', list: null, value: 'must', title: 'must' },
   { name: 'a list the definition lacks', list: 'unknown', value: 'must', title: 'must' },
 ]
+
+/** A content before and after a change, and the fields that differ with both values. */
+export const contentChangesCases = [
+  {
+    name: 'a field that changed and one that stayed',
+    kind: 'spec_requirement',
+    before: {
+      title: 'a',
+      statement: 'x',
+      type: 'functional',
+      priority: 'must',
+      rationale: 'r',
+      quality_category: null,
+      acceptance_criteria: [],
+      fit_criterion: null,
+      verification_method: 'test',
+    },
+    after: {
+      title: 'b',
+      statement: 'x',
+      type: 'functional',
+      priority: 'must',
+      rationale: 'r',
+      quality_category: null,
+      acceptance_criteria: [],
+      fit_criterion: null,
+      verification_method: 'test',
+    },
+    changes: [['title', 'a', 'b']],
+  },
+  {
+    name: 'a field missing on one side',
+    kind: 'spec_requirement',
+    before: { title: 'a' },
+    after: {},
+    changes: [['title', 'a', null]],
+  },
+]
+
+/** A content with empty entries, and the content without them. */
+export const withoutEmptyCases = [
+  {
+    name: 'a blank entry of a list and a blank tag',
+    widget: 'list',
+    before: { entries: ['a', '   '] },
+    after: { entries: ['a'] },
+  },
+  {
+    name: 'an entry of an object list whose every field is empty',
+    widget: 'object-list',
+    before: {
+      entries: [
+        { name: '', role: '' },
+        { name: 'a', role: 'b' },
+      ],
+    },
+    after: { entries: [{ name: 'a', role: 'b' }] },
+  },
+  {
+    name: 'a filled entry of a list stays, and a field without entries stays as it is',
+    widget: 'list',
+    before: { entries: ['a'], note: 'keep' },
+    after: { entries: ['a'], note: 'keep' },
+  },
+]
+
+/** A quote, the fields to search in their order, the content, and where the words sit. */
+export const findQuoteCases = [
+  {
+    name: 'in the field that holds the words',
+    quote: 'shall list mentors',
+    content: { title: 'Find a mentor', statement: 'The system shall list mentors.' },
+    expected: { field: 'statement', start: 11 },
+  },
+  {
+    name: 'in a later field',
+    quote: 'very important',
+    content: { title: 'Find a mentor', statement: 'x', rationale: 'This is very important.' },
+    expected: { field: 'rationale', start: 8 },
+  },
+  {
+    name: 'in the main field when two fields hold them',
+    quote: 'mentor',
+    content: { title: 'Find a mentor', statement: 'The mentor lists mentors.' },
+    expected: { field: 'statement', start: 4 },
+  },
+  {
+    name: 'not found',
+    quote: 'nowhere to be seen',
+    content: { title: 'Find a mentor', statement: 'x' },
+    expected: null,
+  },
+]

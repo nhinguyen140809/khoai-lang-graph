@@ -38,18 +38,41 @@ function parseLink(
   const linkType =
     linkTypeKey === undefined ? null : findLinkType(workflowDefinitionFixture, linkTypeKey)
   const note = optionalText(body.note)
+  const targetQuote = optionalText(body.target_quote)
+  const sourceQuote = optionalText(body.source_quote)
 
   const problems = [
     source === undefined ? chooseItemProblem('source_item_id') : null,
     target === undefined ? chooseItemProblem('target_item_id') : null,
     linkType === null ? choiceProblem('link_type') : null,
     note === undefined ? optionalTextProblem('note') : null,
+    targetQuote === undefined ? optionalTextProblem('target_quote') : null,
+    sourceQuote === undefined ? optionalTextProblem('source_quote') : null,
   ].filter((problem) => problem !== null)
   // Every problem is listed above; the checks here only let the compiler see that no field is missing.
-  if (source === undefined || target === undefined || linkType === null || note === undefined) {
+  if (
+    source === undefined ||
+    target === undefined ||
+    linkType === null ||
+    note === undefined ||
+    targetQuote === undefined ||
+    sourceQuote === undefined
+  ) {
     return { problems }
   }
-  return { read: { candidate: { projectId, source, target, linkType }, note } }
+  return {
+    read: {
+      candidate: {
+        projectId,
+        source,
+        target,
+        linkType,
+        targetQuote: targetQuote ?? null,
+        sourceQuote: sourceQuote ?? null,
+      },
+      note,
+    },
+  }
 }
 
 // The first rule that the link breaks, or null when it breaks none.
@@ -76,13 +99,15 @@ export function validateNewTraceLink(
   const { read } = result
   const problem = ruleProblem(read.candidate)
   if (problem !== null) return { problems: [problem] }
-  const { source, target, linkType } = read.candidate
+  const { source, target, linkType, targetQuote, sourceQuote } = read.candidate
   return {
     link: {
       sourceItemId: source.id,
       targetItemId: target.id,
       linkType: linkType.key,
       targetVersion: target.version,
+      targetQuote,
+      sourceQuote,
       note: read.note,
     },
   }

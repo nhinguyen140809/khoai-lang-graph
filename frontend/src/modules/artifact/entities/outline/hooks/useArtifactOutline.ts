@@ -12,8 +12,13 @@ import { useOutlineItems } from './useOutlineItems'
 
 /**
  * The outline of an artifact, in the order of its document, and the status of each of its items.
+ * The items made from an older version of an item they link to come in as `outOfDateIds`, which the
+ * reader of the trace supplies; without them no item reads as out of date.
  */
-export function useArtifactOutline(artifactId: string): ArtifactOutlineResult {
+export function useArtifactOutline(
+  artifactId: string,
+  { outOfDateIds }: { outOfDateIds?: ReadonlySet<string> } = {},
+): ArtifactOutlineResult {
   const artifact = useArtifact(artifactId)
   const { schema, isError: isSchemaError, retry: retrySchema } = useItemSchema(artifact.data)
   const issueKinds = useIssueKinds()
@@ -31,8 +36,9 @@ export function useArtifactOutline(artifactId: string): ArtifactOutlineResult {
             itemKinds: success.itemKinds,
             kinds: success.kinds,
             issueKinds: issueKinds.data,
+            ...(outOfDateIds !== undefined && { outOfDateIds }),
           }),
-    [artifact.data, schema, success, issueKinds.data],
+    [artifact.data, schema, success, issueKinds.data, outOfDateIds],
   )
   const statuses = useMemo(() => outlineStatuses(nodes), [nodes])
   const artifactData = artifact.data

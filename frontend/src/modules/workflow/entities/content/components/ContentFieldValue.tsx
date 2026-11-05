@@ -1,6 +1,9 @@
 'use client'
 
+import type { ReactNode } from 'react'
+
 import { Badge } from '@/shared/components/ui/badge'
+import { Highlight, type HighlightRange } from '@/shared/components/ui/highlight'
 import { isEmpty, isRecord } from '@/shared/lib/guards'
 import { textOf } from '@/shared/lib/text'
 
@@ -13,10 +16,40 @@ import { contentValueMessages } from './content-field-value.constants'
 /** What titles the values of a field that names a list of values; none until the definition loads. */
 type ValueDefinition = Pick<WorkflowDefinition, 'value_lists'> | undefined
 
-interface ContentFieldValueProps {
+interface ContentFieldValueProps<Range extends HighlightRange = HighlightRange> {
   field: ContentField
   value: unknown
   definition: ValueDefinition
+  /** The words of the value to mark, as ranges of its text; only a text or a textarea value is drawn with them. */
+  marks?: readonly Range[] | undefined
+  /** Wraps the marked words of a range, for example in the trigger of a popover; the marks become interactive. */
+  renderMark?: ((range: Range, children: ReactNode) => ReactNode) | undefined
+}
+
+/**
+ * A text with some of its words marked, `soft` in the color of each range: the whole text in one,
+ * so that a range may cross the lines of it.
+ */
+function MarkedText<Range extends HighlightRange>({
+  text,
+  marks,
+  renderMark,
+}: {
+  text: string
+  marks: readonly Range[]
+  renderMark?: ((range: Range, children: ReactNode) => ReactNode) | undefined
+}) {
+  return (
+    <p className="whitespace-pre-line">
+      <Highlight
+        variant="soft"
+        ranges={marks}
+        renderMark={renderMark === undefined ? undefined : (mark, range) => renderMark(range, mark)}
+      >
+        {text}
+      </Highlight>
+    </p>
+  )
 }
 
 function TextValue({ text }: { text: string }) {
@@ -158,9 +191,18 @@ const widgetValueViews = {
  * entries with their own fields. Renders nothing for an empty value; the caller hides the label.
  * The caller reads the definition once, so a table of many values does not read it for each.
  */
-export function ContentFieldValue({ field, value, definition }: ContentFieldValueProps) {
+export function ContentFieldValue<Range extends HighlightRange = HighlightRange>({
+  field,
+  value,
+  definition,
+  marks,
+  renderMark,
+}: ContentFieldValueProps<Range>) {
   if (isEmpty(value)) return null
 
+  if ((field.widget === 'text' || field.widget === 'textarea') && marks !== undefined) {
+    return <MarkedText text={textOf(value)} marks={marks} renderMark={renderMark} />
+  }
   const View = widgetValueViews[field.widget]
   return <View field={field} value={value} definition={definition} />
 }

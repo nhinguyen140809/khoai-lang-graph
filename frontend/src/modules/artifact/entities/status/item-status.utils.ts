@@ -12,17 +12,20 @@ import type { AttentionLevel, ItemStatus, StatusCount } from './item-status.type
  * never reaches a screen, so it reads as a draft.
  */
 export function itemStatus(
-  item: Pick<ArtifactItem, 'kind' | 'content' | 'review_status' | 'updated_by'>,
+  item: Pick<ArtifactItem, 'id' | 'kind' | 'content' | 'review_status' | 'updated_by'>,
   issueKinds: readonly IssueKind[],
+  { outOfDateIds }: { outOfDateIds: ReadonlySet<string> } = { outOfDateIds: new Set() },
 ): ItemStatus {
   if (isOpenIssue(item, issueKinds)) return 'openIssue'
+  if (outOfDateIds.has(item.id)) return 'outOfDate'
   if (item.updated_by.actor === 'user' && item.review_status === 'draft') return 'edited'
   return item.review_status === 'superseded' ? 'draft' : item.review_status
 }
 
 /**
- * How much an item status asks of the user now. A draft or an open issue asks something only while
- * its document waits for the review of the user; outside a review the agents work on them.
+ * How much an item status asks of the user now. A draft, an open issue or an out of date item asks
+ * to act while its document waits for the review of the user; outside a review the agents work on
+ * the first two, and an out of date item stays one to follow.
  */
 export function attentionLevel(
   status: ItemStatus,
@@ -34,6 +37,8 @@ export function attentionLevel(
       return isUnderReview ? 'act' : 'none'
     case 'edited':
       return 'follow'
+    case 'outOfDate':
+      return isUnderReview ? 'act' : 'follow'
     case 'rejected':
       return 'quiet'
     case 'approved':
@@ -137,5 +142,6 @@ export function branchAttention(
 export function attentionText(status: ItemStatus, count: number): string {
   if (status === 'openIssue') return itemStatusMessages.attention.openIssue(count)
   if (status === 'edited') return itemStatusMessages.attention.edited(count)
+  if (status === 'outOfDate') return itemStatusMessages.attention.outOfDate(count)
   return itemStatusMessages.attention.draft(count)
 }

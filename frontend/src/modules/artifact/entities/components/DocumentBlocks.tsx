@@ -11,6 +11,7 @@ import {
   useWorkflowDefinition,
 } from '@/modules/workflow/entities/@x/artifact'
 import { Card, CardContent, CardHeader, CardTitle } from '@/shared/components/ui/card'
+import { Highlight, type HighlightRange } from '@/shared/components/ui/highlight'
 import {
   Table,
   TableBody,
@@ -24,15 +25,31 @@ import { textOf } from '@/shared/lib/text'
 import type { OutlineItem } from '../items/items.types'
 import { transcriptContentField, transcriptRoleField } from '../outline/outline.constants'
 import type { DocumentBlock, KindView } from '../outline/outline.types'
+import { itemAnchorId } from '../outline/outline.utils'
 import { artifactViewMessages } from './artifact-view.constants'
 
 /** Draws the title of an item as a link to its page; the page of the document gives how it opens. */
 export type RenderItemLink = (item: OutlineItem, title: ReactNode) => ReactNode
 
-interface DocumentBlocksProps {
+interface DocumentBlocksProps<Range extends HighlightRange = HighlightRange> {
   blocks: readonly DocumentBlock[]
   kinds: ReadonlyMap<string, KindView>
   renderItemLink: RenderItemLink
+  /** The item that the address of the page names: its block is marked and scrolled to. */
+  targetItemId?: string | null | undefined
+  /** The quoted words of each message of a transcript, by message id. */
+  messageMarks?: ReadonlyMap<string, readonly Range[]> | undefined
+  /** Wraps the marked words of a message, for example in the trigger of a popover. */
+  renderMessageMark?: ((range: Range, children: ReactNode) => ReactNode) | undefined
+}
+
+/** The props that tie a block of one item to the address of the page. */
+function anchorProps(itemId: string, targetItemId: string | null) {
+  return {
+    id: itemAnchorId(itemId),
+    tabIndex: -1,
+    ...(targetItemId === itemId ? { 'data-target': '' } : {}),
+  } as const
 }
 
 type ValueDefinition = ReturnType<typeof useWorkflowDefinition>['data']
@@ -44,11 +61,13 @@ function ItemsTable({
   view,
   renderItemLink,
   definition,
+  targetItemId,
 }: {
   items: readonly OutlineItem[]
   view: KindView
   renderItemLink: RenderItemLink
   definition: ValueDefinition
+  targetItemId: string | null
 }) {
   const fields = summaryFields(view.schema)
   const titleField = view.schema['x-ui-title-field']
@@ -65,7 +84,11 @@ function ItemsTable({
       </TableHeader>
       <TableBody>
         {items.map((item) => (
-          <TableRow key={item.id}>
+          <TableRow
+            key={item.id}
+            className="data-[target]:bg-accent/50"
+            {...anchorProps(item.id, targetItemId)}
+          >
             <TableCell className="font-mono text-xs">{item.key}</TableCell>
             {fields.map((field) => (
               <TableCell key={field.name} className="align-top whitespace-normal">
@@ -96,18 +119,25 @@ function ItemCards({
   view,
   renderItemLink,
   definition,
+  targetItemId,
 }: {
   items: readonly OutlineItem[]
   view: KindView
   renderItemLink: RenderItemLink
   definition: ValueDefinition
+  targetItemId: string | null
 }) {
   const fields = summaryFields(view.schema)
   const [first, ...others] = fields
   return (
     <div className="grid gap-3 sm:grid-cols-2">
       {items.map((item) => (
-        <Card key={item.id} size="sm">
+        <Card
+          key={item.id}
+          size="sm"
+          className="data-[target]:bg-accent/50"
+          {...anchorProps(item.id, targetItemId)}
+        >
           <CardHeader>
             <CardTitle>
               {renderItemLink(
@@ -133,23 +163,64 @@ function ItemCards({
   )
 }
 
-function ItemTranscript({ items }: { items: readonly OutlineItem[] }) {
+function ItemTranscript<Range extends HighlightRange>({
+  items,
+  targetItemId,
+  messageMarks,
+  renderMessageMark,
+}: {
+  items: readonly OutlineItem[]
+  targetItemId: string | null
+  messageMarks?: ReadonlyMap<string, readonly Range[]> | undefined
+  renderMessageMark?: ((range: Range, children: ReactNode) => ReactNode) | undefined
+}) {
   return (
     <ol className="max-w-prose space-y-3">
-      {items.map((item) => (
-        <li key={item.id} className="space-y-0.5">
-          <p className="text-xs font-semibold text-muted-foreground">
-            <span>{textOf(item.content[transcriptRoleField]) || item.key}</span>
-          </p>
-          <p className="whitespace-pre-line">{textOf(item.content[transcriptContentField])}</p>
-        </li>
-      ))}
+      {items.map((item) => {
+        const marks = messageMarks?.get(item.id)
+        const text = textOf(item.content[transcriptContentField])
+        return (
+          <li
+            key={item.id}
+            className="space-y-0.5 data-[target]:bg-accent/50"
+            {...anchorProps(item.id, targetItemId)}
+          >
+            <p className="text-xs font-semibold text-muted-foreground">
+              <span>{textOf(item.content[transcriptRoleField]) || item.key}</span>
+            </p>
+            <p className="whitespace-pre-line">
+              {marks === undefined || marks.length === 0 ? (
+                text
+              ) : (
+                <Highlight
+                  variant="soft"
+                  ranges={marks}
+                  renderMark={
+                    renderMessageMark === undefined
+                      ? undefined
+                      : (mark, range) => renderMessageMark(range, mark)
+                  }
+                >
+                  {text}
+                </Highlight>
+              )}
+            </p>
+          </li>
+        )
+      })}
     </ol>
   )
 }
 
 /** The parts of a document in order: headings of sections, headings of groups, and the items drawn by their display. */
-export function DocumentBlocks({ blocks, kinds, renderItemLink }: DocumentBlocksProps) {
+export function DocumentBlocks<Range extends HighlightRange = HighlightRange>({
+  blocks,
+  kinds,
+  renderItemLink,
+  targetItemId = null,
+  messageMarks,
+  renderMessageMark,
+}: DocumentBlocksProps<Range>) {
   const { data: definition } = useWorkflowDefinition()
   return (
     <div className="space-y-4">
@@ -157,7 +228,11 @@ export function DocumentBlocks({ blocks, kinds, renderItemLink }: DocumentBlocks
         if (block.type === 'heading') {
           const Heading = headings[block.level]
           return (
-            <Heading key={`heading:${block.item.id}`} className="pt-2 text-lg font-semibold">
+            <Heading
+              key={`heading:${block.item.id}`}
+              className="pt-2 text-lg font-semibold data-[target]:bg-accent/50"
+              {...anchorProps(block.item.id, targetItemId)}
+            >
               {block.title}
             </Heading>
           )
@@ -180,11 +255,20 @@ export function DocumentBlocks({ blocks, kinds, renderItemLink }: DocumentBlocks
               view={view}
               renderItemLink={renderItemLink}
               definition={definition}
+              targetItemId={targetItemId}
             />
           )
         }
         if (block.display === 'transcript') {
-          return <ItemTranscript key={key} items={block.items} />
+          return (
+            <ItemTranscript
+              key={key}
+              items={block.items}
+              targetItemId={targetItemId}
+              messageMarks={messageMarks}
+              renderMessageMark={renderMessageMark}
+            />
+          )
         }
         return (
           <ItemsTable
@@ -193,6 +277,7 @@ export function DocumentBlocks({ blocks, kinds, renderItemLink }: DocumentBlocks
             view={view}
             renderItemLink={renderItemLink}
             definition={definition}
+            targetItemId={targetItemId}
           />
         )
       })}
