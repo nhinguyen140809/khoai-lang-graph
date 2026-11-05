@@ -1,6 +1,7 @@
 import { useQuery } from '@tanstack/react-query'
 import { useMemo } from 'react'
 
+import type { ContentField } from '@/modules/workflow/entities/@x/artifact'
 import type { HookQueryOptions } from '@/shared/api/query-client'
 
 import { allowedValues } from '../allowed-values.utils'
@@ -45,4 +46,24 @@ export function useAllowedValues(projectId: string, allowedValuesFrom: string | 
     () => allowedValues(artifacts.data, allowedValuesFrom),
     [artifacts.data, allowedValuesFrom],
   )
+}
+
+/**
+ * The values that each field with `x-value-from` may take, by field name, from one read of the
+ * artifacts of the project: what a form of the whole content offers to each of its selects.
+ */
+export function useAllowedValuesOf(
+  projectId: string,
+  fields: readonly ContentField[],
+): ReadonlyMap<string, string[]> {
+  const artifacts = useProjectArtifacts(projectId)
+  return useMemo(() => {
+    const byField = new Map<string, string[]>()
+    for (const field of fields) {
+      if (field.allowedValuesFrom !== null) {
+        byField.set(field.name, allowedValues(artifacts.data, field.allowedValuesFrom))
+      }
+    }
+    return byField
+  }, [fields, artifacts.data])
 }

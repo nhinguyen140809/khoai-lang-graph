@@ -20,6 +20,7 @@ export type {
 export { reviewStatus, reviewStatuses } from './artifacts/artifacts.types'
 export {
   useAllowedValues,
+  useAllowedValuesOf,
   useArtifact,
   useProjectArtifacts,
 } from './artifacts/hooks/useArtifactQueries'
@@ -36,6 +37,8 @@ export { exportStatuses } from './exports/exports.types'
 export { useExport, useProjectExports } from './exports/hooks/useExportQueries'
 export type { IssueGroup, IssueItem, IssueLink } from './issues/issues.types'
 export { issuesWithSubjects } from './issues/issues.utils'
+export type { RecordChange } from './items/hooks/useApplyRecordChange'
+export { useApplyRecordChange } from './items/hooks/useApplyRecordChange'
 export { useItemHref } from './items/hooks/useItemHref'
 export {
   useArtifactItems,
@@ -107,13 +110,13 @@ export {
   recordChangeMessages,
   revisionMessages,
 } from './revisions/revisions.constants'
+export type { ChangeReason, Revision } from './revisions/revisions.types'
 export type {
   HistoryLevel,
   HistoryView,
   RevisionHistoryResult,
   RevisionTarget,
 } from './revisions/revisions.types'
-export type { ChangeReason, Revision } from './revisions/revisions.types'
 export {
   parseRevisionKey,
   previousRevision,
