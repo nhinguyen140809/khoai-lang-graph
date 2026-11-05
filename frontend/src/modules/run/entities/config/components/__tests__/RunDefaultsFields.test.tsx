@@ -5,8 +5,8 @@ import { describe, expect, it } from 'vitest'
 
 import { assertPresent } from '@/shared/lib/guards'
 
-import { noRunDefaultsFieldValues } from '../../config/run-defaults.constants'
-import type { RunDefaultsFieldValues } from '../../config/run-defaults.schema'
+import { noRunDefaultsFieldValues } from '../../run-defaults.constants'
+import type { RunDefaultsFieldValues } from '../../run-defaults.schema'
 import { RunDefaultsFields } from '../RunDefaultsFields'
 import { runSettingsOptions } from './RunDefaultsFields.data'
 

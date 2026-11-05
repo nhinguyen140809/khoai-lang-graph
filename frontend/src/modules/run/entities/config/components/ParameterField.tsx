@@ -15,13 +15,13 @@ import {
   SelectValue,
 } from '@/shared/components/ui/select'
 
-import { defaultSelectKey, runDefaultsMessages } from '../config/run-defaults.constants'
+import { defaultSelectKey, runDefaultsMessages } from '../run-defaults.constants'
 import {
   defaultChoiceLabelOf,
   defaultTextOf,
   selectKeyOf,
   selectValueOf,
-} from '../config/run-defaults.utils'
+} from '../run-defaults.utils'
 
 interface ParameterControlProps<T extends FieldValues, TOutput> {
   control: Control<T, unknown, TOutput>

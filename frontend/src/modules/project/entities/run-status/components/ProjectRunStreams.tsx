@@ -4,7 +4,7 @@ import { useLatestRun } from '@/modules/run/entities/@x/project'
 import { threadsWithUnfinishedRun, useProjectThreads } from '@/modules/thread/entities/@x/project'
 import { pageItems } from '@/shared/api/query-client'
 
-import { useProjectRunStream } from '../run-status/hooks/useProjectRunStream'
+import { useProjectRunStream } from '../hooks/useProjectRunStream'
 
 /**
  * Follows the event stream of the unfinished run of each thread of a project, so that what reads
