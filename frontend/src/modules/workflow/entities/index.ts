@@ -6,7 +6,12 @@ export type {
   KindSchema,
   SchemaProperty,
 } from './artifact-kinds/artifact-kinds.types'
-export { useArtifactKinds, useContentSchema } from './artifact-kinds/hooks/useArtifactKindQueries'
+export {
+  useArtifactKinds,
+  useContentSchema,
+  useContentSchemas,
+} from './artifact-kinds/hooks/useArtifactKindQueries'
+export { useKindTitleOf } from './artifact-kinds/hooks/useKindTitleOf'
 export { contentSchemasByKind, kindSchemasByKind } from './artifact-kinds/kind-schemas.utils'
 export type { ReviewableCheckpoint } from './checkpoints/checkpoints.types'
 export { reviewableCheckpoints } from './checkpoints/checkpoints.utils'
@@ -36,6 +41,7 @@ export {
 export { itemTitle } from './content/values/item-title.utils'
 export type { ExportFormat, ExportTemplate } from './definition/export-templates.types'
 export { exportFormats } from './definition/export-templates.types'
+export { useLinkTitleOf } from './definition/hooks/useLinkTitleOf'
 export { useWorkflowDefinition } from './definition/hooks/useWorkflowDefinition'
 export {
   canLinkTypeConnect,

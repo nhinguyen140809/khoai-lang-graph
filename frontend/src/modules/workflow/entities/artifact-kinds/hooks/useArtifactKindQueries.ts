@@ -1,10 +1,13 @@
 import { useQuery } from '@tanstack/react-query'
+import { useMemo } from 'react'
 
 import type { HookQueryOptions } from '@/shared/api/query-client'
 
 import { workflowDefinitionStaleTime } from '../../definition/stale-time.constants'
 import { getArtifactKinds, getContentSchema } from '../artifact-kinds.api'
 import { artifactKindKeys } from '../artifact-kinds.keys'
+import type { ContentSchema } from '../artifact-kinds.types'
+import { contentSchemasByKind } from '../kind-schemas.utils'
 
 /**
  * The content schemas of every kind in a workflow version, or in the current one without a
@@ -30,4 +33,13 @@ export function useContentSchema(
     enabled: isEnabled,
     staleTime: Infinity,
   })
+}
+
+/**
+ * The schema of the content of every kind, by kind, built once from the kinds that loaded: what
+ * the title, the display or the address of an item reads. Empty until the kinds load.
+ */
+export function useContentSchemas(): ReadonlyMap<string, ContentSchema> {
+  const { data: kinds } = useArtifactKinds()
+  return useMemo(() => contentSchemasByKind(kinds), [kinds])
 }
