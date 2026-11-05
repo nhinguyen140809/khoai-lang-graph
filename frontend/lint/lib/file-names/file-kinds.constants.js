@@ -65,9 +65,10 @@ export const pascalCasePattern = '+([A-Z])*([a-zA-Z0-9])'
 // and tests. The other modules keep a folder for each kind at the root of the entities. Each
 // topic lists the topics that it reads, so that the topics depend one way; a topic never reads
 // the components at the root of the entities, which serve several topics, while a component that
-// serves one topic sits in the components folder of that topic. A topic named <group>/<name> sits
-// in a folder of its group, which holds only topic folders and no file; the topics of a group
-// read each other by the same one-way lists. A new topic is added here.
+// serves one topic sits in the components folder of that topic, and one that serves the topics
+// of a group sits in the components folder of that group. A topic named <group>/<name> sits in a
+// folder of its group, which holds its topic folders, the components of the group and no file;
+// the topics of a group read each other by the same one-way lists. A new topic is added here.
 /** @type {Record<string, Record<string, string[]>>} */
 export const topicEntityModules = {
   artifact: {

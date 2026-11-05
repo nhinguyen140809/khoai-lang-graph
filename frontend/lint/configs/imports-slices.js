@@ -79,10 +79,19 @@ function topicComponentBlocks({ sliceGlob, patternsOf, topics, topicPatternsOf }
 }
 
 /** @param {Slice} slice */
-function componentBlock({ sliceGlob, patternsOf }) {
+function componentBlock({ sliceGlob, patternsOf, topics }) {
+  // The components of the groups of topics of the entities, which serve the topics of their group.
+  const groups = [
+    ...new Set(topics.filter((topic) => topic.includes('/')).map((topic) => topic.split('/')[0])),
+  ]
   return {
-    // The components of a slice, in components/ or alone at its root.
-    files: [`${sliceGlob}/components/**/*.{ts,tsx}`, `${sliceGlob}/*.tsx`],
+    // The components of a slice, in components/ or alone at its root, and in the components
+    // folder of each group of topics.
+    files: [
+      `${sliceGlob}/components/**/*.{ts,tsx}`,
+      `${sliceGlob}/*.tsx`,
+      ...groups.map((group) => `${sliceGlob}/${group}/components/**/*.{ts,tsx}`),
+    ],
     ignores: ['**/__tests__/**', '**/*.config.tsx'],
     rules: restrictImports({
       paths: componentPaths,

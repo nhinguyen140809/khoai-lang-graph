@@ -42,8 +42,10 @@ describe('sliceFolderRules', () => {
     expect(root.match(/content/g)).toHaveLength(1)
   })
 
-  it('lets a group of topics hold its topic folders only', () => {
-    expect(rules['src/modules/workflow/entities/content/*/']).toBe('@(fields|values|value-labels)')
+  it('lets a group of topics hold its topic folders and its components only', () => {
+    expect(rules['src/modules/workflow/entities/content/*/']).toBe(
+      '@(components|fields|values|value-labels)',
+    )
   })
 
   it('lets a topic in a group hold its components, hooks and tests only', () => {
