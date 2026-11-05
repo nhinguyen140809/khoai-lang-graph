@@ -530,6 +530,7 @@ A pause in which the run asks the user for input. A checkpoint node creates one 
 | `review_artifacts` | ArtifactRef[] | The artifacts under review, at the version shown; empty when nothing is reviewed |
 | `status` | enum | `pending`, `resolved`, `cancelled` |
 | `resolved_at` | datetime? | |
+| `decision` | HumanDecision? | Derived, read-only. The decision that resolved it; null while it is pending and when it is cancelled. Given with the interrupt, so that a client shows which option was taken and who took it |
 
 An interrupt has at least one option or one question. One shape serves every use: a review that decides where the run goes (options and artifacts under review), questions only, or a review with questions. The lists that a use does not need are empty, so an interrupt has no kind field, and its options and questions are stored as JSON in its row, since they are always read and written with it.
 
