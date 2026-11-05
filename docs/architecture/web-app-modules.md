@@ -265,6 +265,7 @@ Shared code knows no object of the product. Code that holds no rule and names no
 | The meta of a query that holds a cost | `shared/api/query-client/` | The stream of a run loads such queries again without naming them |
 | The languages of the documents | `shared/config/output-language/` | The app offers them, today in the dialog that creates a project; project, the run config and the user settings all carry one, and in `project` it would make `run` read `project` |
 | `AuthScreen`, the frame of the login and register screens | `shared/components/frame/layouts/`, with the other layouts of whole screens | It holds no object and no action |
+| The width of a dialog (`size`) and its body that scrolls between its header and footer (`scrollBody`), props of `DialogContent` | `shared/components/ui/` | Every dialog sizes itself with them instead of a class of its own |
 
 `shared/config/` holds what the app sets once: the addresses of its pages, and the values it offers to choose from, such as the languages of the documents. A value that the user can change is data, not config: the values offered stay in `config/`, and the choice of the user belongs to the entities of its module when it is saved on the server, such as `default_output_language` and `theme` of UserSettings, or to a store of the code that changes it when it stays in the browser, such as the sizes of the panels of the frame.
 

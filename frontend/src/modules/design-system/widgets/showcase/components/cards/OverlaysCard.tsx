@@ -107,7 +107,7 @@ export function OverlaysCard() {
         <DialogTrigger asChild>
           <Button variant="outline">Dialog</Button>
         </DialogTrigger>
-        <DialogContent>
+        <DialogContent size="md">
           <DialogHeader>
             <DialogTitle>Rename the project</DialogTitle>
             <DialogDescription>The name shows in the project list.</DialogDescription>
