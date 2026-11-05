@@ -63,6 +63,11 @@ function slug(text: string) {
  * in the order in which its states are declared. A state waits for what it shows before `shoot()`,
  * such as an error that appears after the app tries again.
  */
+/** Scrolls the page until the element shows, inside the scroll area of the frame; a state reads at one place of a long page with it. */
+export async function scrollTo(target: Locator) {
+  await target.scrollIntoViewIfNeeded()
+}
+
 export function screenshots(pageName: string, declare: (shot: ShotTest) => void) {
   test.describe(pageName, () => {
     // The tests of a file are declared in the same order in every worker, so the numbers agree.
@@ -92,9 +97,43 @@ export function screenshots(pageName: string, declare: (shot: ShotTest) => void)
             animations: 'disabled',
             style: HIDDEN,
           } as const
-          await (part === undefined
-            ? page.screenshot({ ...options, fullPage })
-            : part.screenshot(options))
+          if (part !== undefined) {
+            await part.screenshot(options)
+            return
+          }
+          if (!fullPage) {
+            await page.screenshot(options)
+            return
+          }
+          // The pages scroll inside the frame, not the document, so a full page capture holds one
+          // window only: the window grows to the height of the content for one capture, then back.
+          const size = page.viewportSize()
+          if (size === null) return
+          const { content, chrome } = await page.evaluate(() => {
+            const areas = [
+              ...document.querySelectorAll<HTMLElement>('[data-slot="scroll-area-viewport"]'),
+            ]
+            const content = Math.max(
+              document.body.scrollHeight,
+              ...areas.map((area) => area.scrollHeight),
+            )
+            const area = areas[0]?.clientHeight
+            return { content, chrome: area === undefined ? 0 : window.innerHeight - area }
+          })
+          await page.setViewportSize({
+            width: size.width,
+            height: Math.max(size.height, content + chrome),
+          })
+          await page.evaluate(
+            () =>
+              new Promise((resolve) => {
+                requestAnimationFrame(() => {
+                  resolve(null)
+                })
+              }),
+          )
+          await page.screenshot(options)
+          await page.setViewportSize(size)
         }
         await body({ page, user, shoot })
       })
