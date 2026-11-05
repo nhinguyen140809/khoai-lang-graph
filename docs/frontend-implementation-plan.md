@@ -560,9 +560,9 @@ The PRs go one at a time, in the order of the rows: each branch starts from `ori
 | S1c.2 | `feat/fe/item-peek` | `feat(frontend): peek at an item in the right panel from the keys of a document` | S1c.1 |
 | S1d | `feat/fe/export` | `feat(frontend): export a document from its page and from the command palette, and download it when it is ready` ([S1d plan](frontend-s1d-export-plan.md)) | S1c.2 |
 | S2a.D | `docs/fe/activity` | `docs(api): give an answered review the decision that answered it` ([S2a plan](frontend-s2a-activity-plan.md)) | None |
-| S2a.0 | `chore/fe/maintenance-before-activity` | `chore(frontend): remove the first chat and the start of a run that the API lacks, and share the scroll, the route parameters and the text helpers` | S1d |
+| S2a.0 | `chore/fe/maintenance-before-activity` | `chore(frontend): remove the first chat and the start of a run that the API lacks, and move the code without business to shared` | S1d |
 | S2a.1 | `feat/fe/activity-entities` | `feat(frontend): read the progress of the stages, the work of a run in words, the decision of a review and the thread of the activity` | S2a.0, S2a.D |
-| S2a.2 | `feat/fe/prompt-input` | `feat(frontend): add the stepper, the timeline and the trace, and one prompt input for every prompt that starts work` | S2a.1 |
+| S2a.2 | `feat/fe/prompt-input` | `feat(frontend): add the stepper, the timeline, the trace, the entry of a feed, and one prompt input for every prompt that starts work` | S2a.1 |
 | S2a.3 | `feat/fe/send-message-and-answer` | `feat(frontend): send a message, choose the settings of the run it starts, and answer a review` | S2a.2 |
 | S2a.4 | `feat/fe/activity` | `feat(frontend): show the activity of a project, its progress and its outline in the side panel and the chat in its tab` | S2a.3 |
 | S2b | `feat/fe/review-bar` | The review bar of a document (plan to write from S2a as built) | S2a.4 |
