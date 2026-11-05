@@ -1,11 +1,7 @@
 import { describe, expect, it } from 'vitest'
 
 import { collectBy, groupBy, newestOfEachGroup } from '../group.utils'
-import {
-  collectByCases,
-  groupByCases,
-  newestOfEachGroupCases,
-} from './group.utils.data'
+import { collectByCases, groupByCases, newestOfEachGroupCases } from './group.utils.data'
 
 describe('groupBy', () => {
   it.each(groupByCases)('gives $name', ({ items, keyOf, groups }) => {

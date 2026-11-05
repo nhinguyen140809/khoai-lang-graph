@@ -86,7 +86,11 @@ function byGroupOrder(grouping: UsageGrouping): (a: UsageGroup, b: UsageGroup) =
 }
 
 function groupsOf(grouping: UsageGrouping, steps: MonthStep[]): UsageGroup[] {
-  const usagesByKey = collectBy(steps, (step) => groupKey(grouping, step), ({ usage }) => usage)
+  const usagesByKey = collectBy(
+    steps,
+    (step) => groupKey(grouping, step),
+    ({ usage }) => usage,
+  )
   return [...usagesByKey]
     .map(([key, usages]) => ({ key, usage: sumUsage(usages) }))
     .toSorted(byGroupOrder(grouping))

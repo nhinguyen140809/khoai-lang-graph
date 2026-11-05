@@ -78,5 +78,11 @@ export const collectByCases: {
     valueOf: (item) => item.length,
     collected: [['same', [1, 1]]],
   },
-  { name: 'no item', items: [], keyOf: (item) => item, valueOf: (item) => item.length, collected: [] },
+  {
+    name: 'no item',
+    items: [],
+    keyOf: (item) => item,
+    valueOf: (item) => item.length,
+    collected: [],
+  },
 ]
