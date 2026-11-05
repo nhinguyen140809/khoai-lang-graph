@@ -26,6 +26,8 @@ export {
 export { ArtifactDocument } from './components/ArtifactDocument'
 export { ArtifactItemDetails } from './components/ArtifactItemDetails'
 export type { RenderItemLink } from './components/DocumentBlocks'
+export { HistorySurface } from './revisions/components/HistorySurface'
+export { RevisionContent } from './revisions/components/RevisionContent'
 export { createExport, getExport, listProjectExports } from './exports/exports.api'
 export { exportStatusLabels } from './exports/exports.constants'
 export { exportKeys } from './exports/exports.keys'
@@ -93,10 +95,32 @@ export {
   outlineSequence,
   outlineStatuses,
 } from './outline/outline.utils'
-export { useArtifactRevisions, useItemRevisions } from './revisions/hooks/useRevisionQueries'
+export { useHistoryView } from './revisions/hooks/useHistoryView'
+export {
+  useArtifactRevisions,
+  useItemRevisions,
+  useRevisionHistory,
+} from './revisions/hooks/useRevisionQueries'
 export { listArtifactRevisions, listItemRevisions } from './revisions/revisions.api'
-export { changeReasonLabels } from './revisions/revisions.constants'
+export {
+  changeReasonLabels,
+  recordChangeMessages,
+  revisionMessages,
+} from './revisions/revisions.constants'
+export type {
+  HistoryLevel,
+  HistoryView,
+  RevisionHistoryResult,
+  RevisionTarget,
+} from './revisions/revisions.types'
 export type { ChangeReason, Revision } from './revisions/revisions.types'
+export {
+  parseRevisionKey,
+  previousRevision,
+  recordKeyOf,
+  revisionAuthor,
+  revisionKeyOf,
+} from './revisions/revisions.utils'
 export { useItemStatusLook } from './status/hooks/useItemStatusLook'
 export { attentionLevels, itemStatusLooks } from './status/item-status.constants'
 export type { AttentionLevel, ItemStatus, StatusCount } from './status/item-status.types'

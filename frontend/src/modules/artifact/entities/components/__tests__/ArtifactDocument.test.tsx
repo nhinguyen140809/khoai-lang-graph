@@ -8,7 +8,7 @@ import {
 import { projectIds } from '@/mocks/shared/db'
 import { assertPresent } from '@/shared/lib/guards'
 import { renderWithProviders } from '@/test/render'
-import { expectNoAccessibilityViolations, expectText } from '@/test/steps'
+import { expectNoAccessibilityViolations } from '@/test/steps'
 
 import { useArtifactDocument } from '../../outline/hooks/useArtifactDocument'
 import { ArtifactDocument } from '../ArtifactDocument'
@@ -89,12 +89,6 @@ describe('ArtifactDocument', () => {
     expect(await screen.findByRole('heading', { name: 'Objectives' })).toBeInTheDocument()
   })
 
-  it('shows the status line with the version', async () => {
-    renderDocument('requirement_specification')
-
-    await expectText(/^version \d+$/)
-  })
-
   it('names the review that waits for the user in the color that asks for it', async () => {
     renderDocument('requirements_analysis', { isUnderReview: true })
 
@@ -110,6 +104,20 @@ describe('ArtifactDocument', () => {
 })
 
 describe('ArtifactDocument with the slots of a page', () => {
+  it('places the actions at the right of the title, and the fields view in place of the fields', async () => {
+    renderDocument('elicitation_plan', {
+      slots: {
+        actions: <button type="button">Edit</button>,
+        fieldsView: <p>The version of the history shows here.</p>,
+      },
+    })
+
+    const edit = await screen.findByRole('button', { name: 'Edit' })
+    expect(edit.closest('div')?.querySelector('h1')).not.toBeNull()
+    expect(screen.getByText('The version of the history shows here.')).toBeInTheDocument()
+    expect(screen.queryByRole('heading', { name: 'Objectives' })).not.toBeInTheDocument()
+  })
+
   it('anchors every block of an item and marks the target one', async () => {
     const message = itemFixtureByKey(projectId, 'PER-001#2')
     renderDocument('interview_transcript', {

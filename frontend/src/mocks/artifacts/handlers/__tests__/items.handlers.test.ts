@@ -2,12 +2,14 @@ import { describe, expect, it } from 'vitest'
 
 import type { OutlineItem } from '@/modules/artifact/entities'
 import { apiEndpoints } from '@/shared/api/endpoints'
-import { getApiItems, openPage } from '@/test/msw'
+import { HttpStatus } from '@/shared/api/http'
+import { callApi, getApiItems, openPage } from '@/test/msw'
 import { itRejectsRequests } from '@/test/suites'
 
 import { runIds } from '../../../shared/db'
 import {
   discoverySection,
+  itemPathOfRequirement,
   itemRejectedCases,
   projectId,
   specificationItems,
@@ -22,6 +24,14 @@ interface NestedItem {
 
 describe('the item handlers', () => {
   itRejectsRequests(itemRejectedCases)
+
+  it('leave the item as it is while the scenario of its versions waits', async () => {
+    openPage('/?mock-revisions=loading')
+
+    const answered = await callApi({ method: 'GET', path: itemPathOfRequirement })
+
+    expect(answered.status).toBe(HttpStatus.Ok)
+  })
 
   it('list the items of an artifact in outline order, narrowed by the filters', async () => {
     const all = await getApiItems<OutlineItem>(specificationItems)

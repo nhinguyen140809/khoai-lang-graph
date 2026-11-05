@@ -133,6 +133,14 @@ export const artifactRejectedCases: RejectedRequestCase[] = [
     answer: { code: 'invalid_state' },
   },
   {
+    name: 'refuses a read of the versions of an artifact when the scenario answers an error',
+    page: '/?mock-revisions=error',
+    method: 'GET',
+    path: `${artifactPath}/revisions`,
+    status: HttpStatus.InternalServerError,
+    answer: { code: 'internal_error' },
+  },
+  {
     name: 'refuses a read of the versions of an unknown artifact',
     method: 'GET',
     path: apiEndpoints.artifactRevisions.path({ artifactId: 'missing' }),

@@ -11,6 +11,7 @@ export const specification = artifactFixtureByKind(projectId, 'requirement_speci
 export const mentorRequirement = itemFixtureByKey(projectId, 'REQ-001')
 export const discoverySection = itemFixtureByKey(projectId, 'SEC-004')
 export const itemPath = apiEndpoints.item.path({ itemId: mentorRequirement.id })
+export { itemPath as itemPathOfRequirement }
 export const specificationItems = apiEndpoints.artifactItems.path({ artifactId: specification.id })
 export const analysis = artifactFixtureByKind(projectId, 'requirements_analysis')
 /**
@@ -43,6 +44,14 @@ export const itemRejectedCases: RejectedRequestCase[] = [
     path: `${itemPath}?version=9`,
     status: HttpStatus.NotFound,
     answer: { code: 'not_found' },
+  },
+  {
+    name: 'refuses a read of the versions of an item when the scenario answers an error',
+    page: '/?mock-revisions=error',
+    method: 'GET',
+    path: `${itemPath}/revisions`,
+    status: HttpStatus.InternalServerError,
+    answer: { code: 'internal_error' },
   },
   {
     name: 'refuses a read of the items of an unknown artifact',
