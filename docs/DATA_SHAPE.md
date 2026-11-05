@@ -807,18 +807,19 @@ InterviewTranscript:
 
 | Field | Type | Notes |
 |---|---|---|
+| `participants` | object[] | The people of the interview, the interviewer first. Each has `key` (`interviewer`, or the key of the persona), `name`, `role` (`interviewer`, `persona`) and `item_id` (the persona; null for the interviewer). Set by the system. The data allows several personas; version 1 writes one |
 | `status` | enum | `in_progress`, `completed` |
 | `turn_count` | int | |
 | `stop_reason` | enum? | `max_turns`, `interviewer_stopped`, `stopping_condition_met` |
 
-The fields above are the `content` of the transcript artifact. The persona being interviewed is its `subject_item_id`. The messages are the items of the transcript, ordered by `position`.
+The fields above are the `content` of the transcript artifact. The persona being interviewed is its `subject_item_id`, which is also the `item_id` of the participant of that persona. The messages are the items of the transcript, ordered by `position`.
 
 InterviewMessage:
 
 | Field | Type | Notes |
 |---|---|---|
 | `turn` | int | A question and its answer share a turn |
-| `role` | enum | `interviewer`, `persona` |
+| `speaker` | string | The `key` of the participant of the transcript who says the words |
 | `content` | string | |
 | `iteration` | int | 0 for the first interview, higher for rework rounds |
 | `topic` | string? | The plan topic the question targets; one of the plan's `topics` |
@@ -1264,8 +1265,8 @@ Reads and writes marked (deck) are shown in the deck. The others are inferred fr
 | Planner | `initial_intent`, rework directive (deck) | ElicitationPlan (deck) |
 | Generator | `stakeholder_types`, `target_personas_num` (deck) | Persona[] (deck) |
 | checkpoint_personas | Persona[] (deck) | HumanDecision; Persona[] when the user edits (deck) |
-| interviewer | plan objectives, transcripts, rework directive (deck) | InterviewMessage with role `interviewer` (deck) |
-| persona_agent | one Persona, the question (deck) | InterviewMessage with role `persona` (deck) |
+| interviewer | plan objectives, transcripts, rework directive (deck) | InterviewMessage said by the participant `interviewer` (deck) |
+| persona_agent | one Persona, the question (deck) | InterviewMessage said by the participant of the persona (deck) |
 | analyst | Persona[], transcripts, rework directive (deck); topics of the plan; on a rework loop, the current analysis items | RawRequirement[], AnalyzedRequirement[], LatentNeed[], Assumption[], AmbiguityIssue[], Conflict[] (deck) |
 | rework_elicitation | open AmbiguityIssue[] and Conflict[] | Directive of kind `rework` (deck) |
 | checkpoint_analysis | the six analyst outputs (deck) | HumanDecision (deck) |

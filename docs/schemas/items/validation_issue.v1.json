@@ -49,7 +49,7 @@
         "high"
       ],
       "description": "How serious the issue is.",
-      "x-ui-widget": "select"
+      "x-ui-widget": "badge"
     },
     "description": {
       "title": "Description",
@@ -75,7 +75,7 @@
         "dismissed"
       ],
       "description": "State of the issue.",
-      "x-ui-widget": "select"
+      "x-ui-widget": "badge"
     }
   },
   "required": [
