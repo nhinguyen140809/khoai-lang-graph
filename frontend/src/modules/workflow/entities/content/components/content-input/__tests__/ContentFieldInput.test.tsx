@@ -45,9 +45,11 @@ function InputForm({
   return (
     <FormProvider {...form}>
       <form
-        onSubmit={form.handleSubmit((values) => {
-          onSaved(values)
-        })}
+        onSubmit={(event) => {
+          void form.handleSubmit((values) => {
+            onSaved(values)
+          })(event)
+        }}
       >
         <ContentFieldInput field={field} allowedValues={allowedValues} definition={undefined} />
         <button type="submit">Save</button>
