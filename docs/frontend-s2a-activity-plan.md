@@ -32,7 +32,7 @@ S2 of the implementation plan held the activity and the review bar of a document
 
 | PR | Branch | Title | Based on |
 |---|---|---|---|
-| S2a.D | `docs/fe/activity` | `docs(api): give an answered review the decision that answered it` | `main` |
+| S2a.D | `docs/fe/activity` | `docs: describe the activity, the decision of a review and the rule of shared code` | `main` |
 | S2a.0 | `chore/fe/maintenance-before-activity` | `chore(frontend): remove the first chat and the start of a run that the API lacks, and move the code without business to shared` | `main`, once S1d is merged |
 | S2a.1 | `feat/fe/activity-entities` | `feat(frontend): read the progress of the stages, the work of a run in words, the decision of a review and the thread of the activity` | S2a.0, once S2a.D is merged |
 | S2a.2 | `feat/fe/prompt-input` | `feat(frontend): add the stepper, the timeline, the trace, the entry of a feed, and one prompt input for every prompt that starts work` | S2a.1 |
@@ -43,7 +43,7 @@ S2 of the implementation plan held the activity and the review bar of a document
 |---|---|
 | Needs | S1 merged (S1a to S1e): `PageLink` and its `className` (S1b.0, `df16caa`), `RouteParam.Item`, `useDocumentTarget`, `useScrollToItem` and `DisabledReason` (S1b), `usePeekedItem` with `togglePeek` and `RouteParam.Peek` (S1c.2). E4, E5, E6 and P7 merged (they are): the run, review and thread entities, `StopRunButton` and the one `StopRunDialog` mounted by `ProjectRunStatusItem`. S2a.D merged before S2a.1 |
 | After it | S2b (the review bar of a document): mounts `AnswerReviewForm` of `review/features/answer` at the bottom of a document under review and of its item pages; counts the edited items with `useEditedItems`. A later PR: the models of a run in the run settings dialog, once `moduleImports` lets `activity` read `llm-model`. S6 (Workflow): Try again on a failed run (`run/features/retry`) joins the line of work of a failed step |
-| Docs-first | The decision of an answered review is a field of the API that the docs do not have: S2a.D adds it (decision 5); the server repository follows it. The placement rule of shared code changes (A24): `docs/prompt-create-frontend-feature-plan.md` on `frontend-plan` is changed with this plan, and `docs/architecture/web-app-modules.md` section 8 and `frontend/CONTRIBUTING.md` change in the first commit of S2a.0, before the code that follows the rule. The answers A1 to A25 and the answers of D1 to D11 go to `docs/ui/usability.md` on `frontend-plan` (5.7 and 7.7) before commit S2a.4/1, which shows the screen |
+| Docs-first | The decision of an answered review is a field of the API that the docs do not have: S2a.D adds it (decision 5); the server repository follows it. The placement rule of shared code changes (A24): `docs/prompt-create-frontend-feature-plan.md` on `frontend-plan` is changed with this plan, and `docs/architecture/web-app-modules.md` section 8, `frontend/CONTRIBUTING.md` and the description of the activity in `web-app.md`, `web-app-modules.md` and the workflow README change in S2a.D, before the code that follows them. The answers A1 to A25 and the answers of D1 to D11 go to `docs/ui/usability.md` on `frontend-plan` (5.7 and 7.7) before commit S2a.4/1, which shows the screen |
 
 Answers of the user (2026-11-05), each built by the decision named. A1 to A12 came with the sketches; A13 to A20 answered the first draft of this plan, A21 and A22 the second, A23 to A25 the third:
 
@@ -354,7 +354,7 @@ The behavior on the screen of each component is in section 10; a decision that s
 
 ### Shared code (S2a.0, S2a.1, S2a.2)
 
-6. **Every piece without business goes to `shared`, from its first user** (A22, A24, A25). The question for each helper, hook and component of S2a: does it read or decide anything about an object of the product? When it does not, it is shared code, whatever the count of its users. A mechanism inside a rule of the product splits: the mechanism to `shared`, the rule in its module. The rule is written first (S2a.0/0: Web App Modules section 8 and CONTRIBUTING; the plan prompt changes with this plan). The copies that exist move to the shared piece in the same PR, so that no copy is left:
+6. **Every piece without business goes to `shared`, from its first user** (A22, A24, A25). The question for each helper, hook and component of S2a: does it read or decide anything about an object of the product? When it does not, it is shared code, whatever the count of its users. A mechanism inside a rule of the product splits: the mechanism to `shared`, the rule in its module. The rule is written first (S2a.D: Web App Modules section 8 and CONTRIBUTING; the plan prompt changes with this plan). The copies that exist move to the shared piece in the same PR, so that no copy is left:
 
    | Piece | Where | Users | Replaces | Commit |
    |---|---|---|---|---|
@@ -633,7 +633,7 @@ Each holds a rule of the product or names one of its objects (A24):
 | File | What changes | Commit |
 |---|---|---|
 | `docs/API.md`, `docs/DATA_SHAPE.md` | Decision 5 | S2a.D/1 |
-| `docs/architecture/web-app-modules.md` section 8, `frontend/CONTRIBUTING.md` (the rule above the shared code table) | "Code that holds no rule and names no object of the product goes to shared code from its first user, whatever the count of its users; a mechanism inside a rule of the product splits: the mechanism to shared code, the rule in its module" (A24) | S2a.0/0 |
+| `docs/architecture/web-app-modules.md` section 8, `frontend/CONTRIBUTING.md` (the rule above the shared code table) | "Code that holds no rule and names no object of the product goes to shared code from its first user, whatever the count of its users; a mechanism inside a rule of the product splits: the mechanism to shared code, the rule in its module" (A24) | S2a.D/2 |
 | `activity/widgets/chat/*` (all), `run/features/start/*` (all), `run/entities/runs/runs.api.ts`, `runs.types.ts`, `run/entities/events/hooks/useRunStream.ts` and its test, `run/entities/events/run-events.reducer.ts` and its test and data, `run/entities/index.ts`, `mocks/runs/handlers/runs.handlers.ts` | Decision 9: removed | S2a.0/1 |
 | `run/entities/events/run-events.reducer.ts` to `run-events.utils.ts`, its test and data (`git mv`); its importers (`run-event-channels.api.ts`) | Decision 9: renamed | S2a.0/2 |
 | `shared/lib/viewport/hooks/useScrollIntoView.ts` (new) and its test, `shared/lib/viewport/index.ts`; `shared/routes/route-params/hooks/useRouteParam.ts` (new) and its test, `route-params.types.ts` (`RouteParamName`), `shared/routes/route-params/index.ts`; `documents/widgets/document/hooks/useScrollToItem.ts` and `useDocumentTarget.ts` (removed) and `DocumentPage.tsx`; `documents/widgets/panel/components/DocumentTree.tsx`; `shared/routes/peek/` (`usePeekedItem` reads `?peek=` with `useRouteParam`); `frontend/CONTRIBUTING.md` (two rows) | Decision 6 | S2a.0/3 |
@@ -661,9 +661,10 @@ Each holds a rule of the product or names one of its objects (A24):
 | `app/(project)/projects/[projectId]/activity/page.tsx`, `layout.tsx` | Decisions 28, 35, 36 | S2a.4/3 |
 | `mocks/messages/messages.fixtures.ts`, `mocks/runs/fixtures/runs.fixtures.ts` (steps of the library run, the error code of a failed run), the tests that count them | Section 12 | S2a.1/1 (steps), S2a.1/2 (messages) |
 | `tests/screenshots/projects/activity.spec.ts` (new) | Section 12 | S2a.4/4 |
-| `docs/architecture/web-app.md`, `docs/architecture/web-app-modules.md` (sections 1, 2, 5, 6, 9), `frontend/src/mocks/README.md`, `frontend/README.md` | Section 14 | S2a.4/5 |
+| `docs/architecture/web-app.md` (sections 3, 5, 9), `docs/architecture/web-app-modules.md` (sections 1, 2, 6, 9), `docs/workflow/README.md` | Section 14 | S2a.D/3 |
+| `docs/architecture/web-app.md` (section 2), `docs/architecture/web-app-modules.md` (section 5), `frontend/src/mocks/README.md`, `frontend/README.md` | Section 14 | S2a.4/5 |
 
-The files that two commits change: `run/entities/index.ts` (S2a.0/1 removes `createRun`, `useRunStream`; S2a.1/1 adds the new exports), `shared/routes/route-params/` (S2a.0/3 adds `useRouteParam`; S2a.4/1 adds `Entry`), `shared/routes/peek/` (S2a.0/3 reads with `useRouteParam`; S2a.4/1 adds `openPeek`), `NewProjectPrompt.tsx` (S2a.0/4 `isSubmitKey`; S2a.2/4 `PromptInput`), `shared/lib/text/utils/text.utils.ts` (S2a.0/4 `firstLineOf`; S2a.1/0 `joinPresent`), `docs/architecture/web-app-modules.md` (S2a.0/0 section 8; S2a.4/5 the other sections), `frontend/CONTRIBUTING.md` (the rule in S2a.0/0, then one row with each shared piece, in its commit).
+The files that two commits change: `run/entities/index.ts` (S2a.0/1 removes `createRun`, `useRunStream`; S2a.1/1 adds the new exports), `shared/routes/route-params/` (S2a.0/3 adds `useRouteParam`; S2a.4/1 adds `Entry`), `shared/routes/peek/` (S2a.0/3 reads with `useRouteParam`; S2a.4/1 adds `openPeek`), `NewProjectPrompt.tsx` (S2a.0/4 `isSubmitKey`; S2a.2/4 `PromptInput`), `shared/lib/text/utils/text.utils.ts` (S2a.0/4 `firstLineOf`; S2a.1/0 `joinPresent`), `docs/architecture/web-app-modules.md` (S2a.D/2 section 8; S2a.D/3 and S2a.4/5 the other sections), `frontend/CONTRIBUTING.md` (the rule in S2a.D/2, then one row with each shared piece, in its commit).
 
 ## 8. The slices, file by file
 
@@ -1676,12 +1677,14 @@ Helpers: `runWith(status)` and `stepOf(fields)` builders in `run/entities/steps/
 |---|---|---|
 | `docs/API.md`, `docs/DATA_SHAPE.md` | Decision 5 | S2a.D/1 |
 | `docs/prompt-create-frontend-feature-plan.md` (`frontend-plan`) | Placement item 5, section 6 of the plan, rule 1: the rule of A24 | Done with this plan |
-| `docs/architecture/web-app-modules.md` section 8, `frontend/CONTRIBUTING.md` (the rule of shared code) | The rule of A24 | S2a.0/0 |
+| `docs/architecture/web-app-modules.md` section 8, `frontend/CONTRIBUTING.md` (the rule of shared code) | The rule of A24 | S2a.D/2 |
 | `frontend/CONTRIBUTING.md`, the shared code table | One row with each piece of decision 6 and the components of decision 7 | Each in its commit |
 | `docs/ui/usability.md` (`frontend-plan`) | 5.7 and 7.7: the side panel with Progress (the stages of the definition as steps and sub-steps, the interviews one after another, A21, A23; the marks of D9) and Outline (the messages of the user, the newest at the bottom, D2); the lines of work in words (D1, D10); the review card that answers in the chat (D3); the prompt with its two sides and "Run settings" (D4, D5); a project with no run (D6); the icon (A15); the sketch of 7.7 redrawn from section 1.1 | Before S2a.4/1 |
-| `docs/architecture/web-app-modules.md` sections 1, 2, 5, 6, 9 | Section 1: the activity has entities (the thread of the activity, the entries of a run, their stream), a feature (`choose-run-settings`) and the widgets `panel`, `chat`, `dialogs`; the first chat is gone. Section 2 tree. Section 5: the links of `activity` through `@x/activity`. Section 6: the rows of `activity`, `thread` (`send-message` built), `review` (`answer` built); `activity` may read `llm-model` later, for the models of a run. Section 9: the tree of the stages is `activity/widgets/panel`, with Outline; the chat holds its prompt | S2a.4/5 |
-| `docs/architecture/web-app.md` | Section 2: the activity follows the stream of its latest run. Section 3: the nested stages as sub-steps, the subjects of a stage that runs once for each (from the artifact kind `one_per_subject` that names it), and the marks of a stage. Section 5: the review panel is `AnswerReviewForm`, in the chat now and in the review bar with S2b; the decision of an answered review. Section 9: the rows Reviews and Threads and messages with their real files, and a row Activity | S2a.4/5 |
-| `docs/workflow/README.md` | Section 2, the row `stages`: "the progress view shows the stages nested under a stage as its sub-steps, and the subjects of a stage that an artifact kind `one_per_subject` names, one after another" | S2a.4/5 |
+| `docs/architecture/web-app-modules.md` sections 1, 2, 6, 9 | Section 1: the activity has entities (the thread of the activity, the entries of a run, their stream), a feature (`choose-run-settings`) and the widgets `panel`, `chat`, `dialogs`; the first chat is gone. Section 2 tree. Section 6: the rows of `activity`, `thread` (`send-message` built), `review` (`answer` built); `activity` may read `llm-model` later, for the models of a run. Section 9: the tree of the stages is `activity/widgets/panel`, with Outline; the chat holds its prompt | S2a.D/3 |
+| `docs/architecture/web-app-modules.md` section 5 | The links of `activity` through `@x/activity` | S2a.4/5 |
+| `docs/architecture/web-app.md` sections 3, 5, 9 | Section 3: the nested stages as sub-steps, the subjects of a stage that runs once for each (from the artifact kind `one_per_subject` that names it), and the marks of a stage. Section 5: the review panel is `AnswerReviewForm`, in the chat now and in the review bar with S2b; the decision of an answered review. Section 9: the rows Reviews and Threads and messages with their real files, and a row Activity | S2a.D/3 |
+| `docs/architecture/web-app.md` section 2 | The activity follows the stream of its latest run | S2a.4/5 |
+| `docs/workflow/README.md` | Section 2, the row `stages`: "the progress view shows the stages nested under a stage as its sub-steps, and the subjects of a stage that an artifact kind `one_per_subject` names, one after another" | S2a.D/3 |
 | `frontend/src/mocks/README.md` | A section Activity: the addresses of section 11 and what each shows | S2a.4/5 |
 | `docs/frontend-implementation-plan.md` (`frontend-plan`) | The row S2 split into S2a and S2b in section 8, and the rows of S2a.D to S2a.4 and S2b in section 9 | Done with this plan |
 
@@ -1708,10 +1711,13 @@ Helpers: `runWith(status)` and `stepOf(fields)` builders in `run/entities/steps/
 S2a.D `docs/fe/activity`, from `origin/main`:
 
 1. `docs(api): give an answered review the decision that answered it`
+2. `docs: put in shared code what holds no rule of the product, whatever its count of users`
+3. `docs: describe the activity, its progress of steps and sub-steps, its chat and the answer of a review`
+
+The three commits are written on the branch. What they hold of section 14 waits for no code; the rest of that section (the stream of the activity, the `@x` links, the mock states) changes with the code.
 
 S2a.0 `chore/fe/maintenance-before-activity`, from `origin/main` once S1d is merged:
 
-0. `docs: put in shared code what holds no rule of the product, whatever its count of users`
 1. `refactor(frontend): remove the first chat and the start of a run that the API lacks`
 2. `refactor(run): name the file of the run event parsers after what it holds` (`git mv` only)
 3. `refactor(frontend): scroll into view and read a route parameter with shared hooks`
@@ -1746,7 +1752,7 @@ S2a.4 `feat/fe/activity`, on S2a.3:
 2. `feat(activity): show the chat of the activity, with its work, its reviews and its prompt`
 3. `feat(app): put Activity first on the activity bar, with its page and its dialogs`
 4. `test(screenshots): cover the activity of a project`
-5. `docs: describe the activity, its entries and the prompt that it shares`
+5. `docs: describe the stream of the activity and the states of its mock`
 
 Each file goes in the commit of its row in section 7. S2a.1/1 holds the `workflow` and `artifact` parts that `run` reads (`@x/run`, `useAgentRoleLabels`, `useStageSubjects`, `editedItems`), so that it compiles alone. The plan, the prompt and the sketches stay on `frontend-plan`.
 
