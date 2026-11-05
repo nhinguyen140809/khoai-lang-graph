@@ -171,6 +171,11 @@ function LoadedDocument({
             renderItemLink={(item, title) => (
               <PageLink href={project.item(item.id)}>{title}</PageLink>
             )}
+            renderItemIdLink={(itemId, children) => (
+              <PageLink href={project.item(itemId)} className="hover:no-underline">
+                {children}
+              </PageLink>
+            )}
           />
         )}
       </ScrollArea>

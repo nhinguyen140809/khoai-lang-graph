@@ -2,21 +2,31 @@ import type { Page } from '@playwright/test'
 
 import { IdPrefix, projectIds } from '../../../src/mocks/shared/db/mock-ids.constants'
 import { mockId } from '../../../src/mocks/shared/db/mock-ids.utils'
-import { screenshots } from '../screenshot.utils'
+import { screenshots, scrollTo } from '../screenshot.utils'
 
 const project = `/projects/${projectIds.mentor}`
-// The artifacts of the mentor platform are numbered in the order of the fixtures.
-const artifactId = (position: number) => mockId(IdPrefix.Artifact, 100 + position)
-const plan = artifactId(1)
-const persona = artifactId(2)
-const interview = artifactId(3)
-const analysis = artifactId(6)
-const specification = artifactId(7)
+const libraryProject = `/projects/${projectIds.library}`
+// The artifacts of a project are numbered in the order of the fixtures.
+const artifactId = (base: number, position: number) => mockId(IdPrefix.Artifact, base + position)
+const plan = artifactId(100, 1)
+const persona = artifactId(100, 2)
+const interview = artifactId(100, 3)
+const analysis = artifactId(100, 6)
+const specification = artifactId(100, 7)
+const verification = artifactId(100, 8)
+// The library project holds a plan, personas being interviewed and an interview in progress.
+const libraryPersonas = artifactId(300, 2)
+const libraryInterview = artifactId(300, 4)
 
-/** Opens an item from the outline of its document, as a user does. */
-async function openItem(page: Page, artifact: string, title: string) {
+/** Opens an item from the outline of its document, as a user does; the name matches exactly when the document holds a row whose name also holds it. */
+async function openItem(
+  page: Page,
+  artifact: string,
+  title: string,
+  { exact = false }: { exact?: boolean } = {},
+) {
   await page.goto(`${project}/documents/${artifact}`)
-  await page.getByRole('treeitem', { name: title }).click()
+  await page.getByRole('treeitem', { name: title, exact }).click()
   await page.getByRole('group', { name: 'Go through the items' }).waitFor()
 }
 
@@ -81,10 +91,51 @@ screenshots('Documents', (shot) => {
   shot.at('Document with sections and tables', `${project}/documents/${specification}`, {
     fullPage: true,
   })
-  shot.at('Document with cards', `${project}/documents/${persona}`)
+  shot.at('Document with avatar cards', `${project}/documents/${persona}`)
   shot.at('Document with a transcript', `${project}/documents/${interview}`, { fullPage: true })
+
+  shot('End of a transcript', async ({ page, shoot }) => {
+    await page.goto(`${project}/documents/${interview}`)
+
+    const end = page.getByText('Stopping condition reached')
+    await end.waitFor()
+    await scrollTo(end)
+    await shoot()
+  })
+  shot.at(
+    'Avatar cards of personas being interviewed',
+    `${libraryProject}/documents/${libraryPersonas}`,
+  )
+  shot.at(
+    'Transcript of an interview in progress',
+    `${libraryProject}/documents/${libraryInterview}`,
+    {
+      fullPage: true,
+    },
+  )
+
+  shot('Profile page of a persona', async ({ page, user, shoot }) => {
+    // The interview of the persona also reads "Minh"; the row of the persona matches exactly.
+    await openItem(page, persona, 'Minh', { exact: true })
+
+    await user.expectRole('group', 'Go through the items')
+    await shoot({ fullPage: true })
+  })
+
+  shot('Participant under the pointer', async ({ page, shoot }) => {
+    await page.goto(`${project}/documents/${interview}`)
+
+    // The tab of the interview also reads "Minh"; the participant matches exactly.
+    const student = page.getByRole('link', { name: 'Minh', exact: true })
+    await student.waitFor()
+    await student.hover()
+    await shoot({ hover: student })
+  })
   shot.at('Document without items', `${project}/documents/${plan}`)
   shot.at('Document of the analysis in full', `${project}/documents/${analysis}`, {
+    fullPage: true,
+  })
+  shot.at('Document of the verification report', `${project}/documents/${verification}`, {
     fullPage: true,
   })
   shotWhenReady('Document that fails to load', `/documents/${analysis}?mock-artifact=error`, {
@@ -151,7 +202,7 @@ screenshots('Documents', (shot) => {
 
   shotWhenReady('Panel with a transcript open', `/documents/${interview}`, {
     role: 'treeitem',
-    name: 'Interview with the student',
+    name: 'Interview with Minh',
   })
   shotWhenReady('Outline that fails to load', `/documents/${analysis}?mock-artifact=error`, {
     role: 'treeitem',
@@ -162,8 +213,8 @@ screenshots('Documents', (shot) => {
     await page.goto(`${project}/documents/${analysis}`)
 
     // A row with no color of its own: its icon and title go from muted to the text color.
-    const row = page.getByRole('treeitem', { name: 'Persona catalog' })
-    await user.expectRole('treeitem', 'Persona catalog')
+    const row = page.getByRole('treeitem', { name: 'Interviewees' })
+    await user.expectRole('treeitem', 'Interviewees')
     await row.hover()
     await shoot({ hover: row })
   })

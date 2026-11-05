@@ -37,6 +37,15 @@ export function itemAnchorId(itemId: string): string {
   return `item-${itemId}`
 }
 
+/** The props that tie the block of an item to the address of the page: its anchor, a target of the focus, and `data-target` when the address names it. */
+export function itemAnchorProps(itemId: string, targetItemId: string | null) {
+  return {
+    id: itemAnchorId(itemId),
+    tabIndex: -1,
+    ...(targetItemId === itemId ? { 'data-target': '' } : {}),
+  } as const
+}
+
 function placeUnder(
   parentId: string | null,
   input: ArrangeInput,

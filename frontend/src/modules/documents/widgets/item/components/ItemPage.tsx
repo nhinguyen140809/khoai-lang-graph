@@ -8,6 +8,7 @@ import {
   type ArtifactItem,
   ArtifactItemDetails,
   HistorySurface,
+  ItemHeading,
   ItemKeyLine,
   RevisionContent,
   useItem,
@@ -111,8 +112,13 @@ function ItemPageBody({ projectId, record }: { projectId: string; record: Artifa
         <ScrollArea className="h-full">
           <article className="mx-auto max-w-3xl space-y-4 p-6 pb-20">
             <header className="space-y-2">
-              <div className="flex flex-wrap items-start gap-4">
-                <h1 className="text-2xl font-semibold">{page.title}</h1>
+              <div className="flex flex-wrap items-center gap-4">
+                <ItemHeading
+                  item={record}
+                  schema={page.schema}
+                  title={page.title}
+                  place={page.neighbors.index}
+                />
                 {!isEditing && (
                   <EditRecordButton target={target} lockedReason={page.lockedReason} />
                 )}
@@ -123,6 +129,7 @@ function ItemPageBody({ projectId, record }: { projectId: string; record: Artifa
                     item={record}
                     status={page.status}
                     isUnderReview={page.isUnderReview}
+                    schema={page.schema}
                   />
                   <ErrorBoundary
                     resetKeys={[record.id]}

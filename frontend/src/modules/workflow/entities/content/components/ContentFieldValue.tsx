@@ -3,18 +3,23 @@
 import type { ReactNode } from 'react'
 
 import { Badge } from '@/shared/components/ui/badge'
+import { Button } from '@/shared/components/ui/button'
 import { Highlight, type HighlightRange } from '@/shared/components/ui/highlight'
 import { isEmpty, isRecord } from '@/shared/lib/guards'
 import { textOf } from '@/shared/lib/text'
 
-import type { WorkflowDefinition } from '../../definition/workflow-definition.types'
+import { InitialsAvatar } from '../../components/InitialsAvatar'
 import type { ContentField, FieldWidget } from '../fields/content-fields.types'
+import { isChoiceField } from '../fields/content-fields.utils'
 import { useValueLabel } from '../value-labels/hooks/useValueLabel'
+import { nonStatusTone, valueTone } from '../value-labels/value-labels.utils'
+import type { ValueDefinition } from '../values/content-values.types'
 import { valueTitle } from '../values/content-values.utils'
+import { fieldText } from '../values/item-title.utils'
 import { contentValueMessages } from './content-field-value.constants'
 
-/** What titles the values of a field that names a list of values; none until the definition loads. */
-type ValueDefinition = Pick<WorkflowDefinition, 'value_lists'> | undefined
+/** Wraps the people of an avatar list that reach the page of their item; the caller knows the addresses. */
+type RenderItemIdLink = (itemId: string, children: ReactNode) => ReactNode
 
 interface ContentFieldValueProps<Range extends HighlightRange = HighlightRange> {
   field: ContentField
@@ -24,6 +29,8 @@ interface ContentFieldValueProps<Range extends HighlightRange = HighlightRange> 
   marks?: readonly Range[] | undefined
   /** Wraps the marked words of a range, for example in the trigger of a popover; the marks become interactive. */
   renderMark?: ((range: Range, children: ReactNode) => ReactNode) | undefined
+  /** Wraps the people of an avatar list that reach the page of their item, such as a link. */
+  renderItemIdLink?: RenderItemIdLink | undefined
 }
 
 /**
@@ -107,7 +114,7 @@ function TagsValue({
   definition: ValueDefinition
 }) {
   return (
-    <span className="flex flex-wrap gap-1">
+    <span className="flex flex-wrap gap-2">
       {items.map((tag, index) => (
         <Badge key={index} variant="soft">
           {valueTitle(field, textOf(tag), definition)}
@@ -157,10 +164,67 @@ function SelectValue({
   return <span>{useValueLabel(field, value, definition)}</span>
 }
 
+/** A value of a badge field, in the tone written for the field. */
+function BadgeValue({
+  field,
+  value,
+  definition,
+}: {
+  field: ContentField
+  value: string
+  definition: ValueDefinition
+}) {
+  return (
+    <Badge variant="soft" color={valueTone(field.path, value)}>
+      {useValueLabel(field, value, definition)}
+    </Badge>
+  )
+}
+
+/** A list of entries, each its avatar and its name; an entry that has an item reaches its page. */
+function AvatarListValue({
+  entries,
+  renderItemIdLink,
+}: {
+  entries: unknown[]
+  renderItemIdLink: RenderItemIdLink | undefined
+}) {
+  return (
+    <span className="flex flex-wrap gap-2">
+      {entries.map((entry, place) => {
+        if (!isRecord(entry)) return null
+        const name = fieldText({ content: entry }, 'name') ?? ''
+        const itemId = fieldText({ content: entry }, 'item_id')
+        const person = (
+          <>
+            <InitialsAvatar name={name} tone={nonStatusTone(place)} size="sm" />
+            <span>{name}</span>
+          </>
+        )
+        // An entry that has an item reaches its page, as an outline button that wraps the link;
+        // the others read as the same avatar and name, not focusable.
+        if (itemId === null || renderItemIdLink === undefined) {
+          return (
+            <span key={place} className="inline-flex items-center gap-1 py-1 text-sm">
+              {person}
+            </span>
+          )
+        }
+        return (
+          <Button key={place} asChild variant="outline">
+            {renderItemIdLink(itemId, person)}
+          </Button>
+        )
+      })}
+    </span>
+  )
+}
+
 interface WidgetValueViewProps {
   field: ContentField
   value: unknown
   definition: ValueDefinition
+  renderItemIdLink: RenderItemIdLink | undefined
 }
 
 // How each widget shows a value that is not empty. Looked up by widget instead of branched on, so
@@ -182,6 +246,19 @@ const widgetValueViews = {
     Array.isArray(value) ? (
       <EntriesValue field={field} items={value} definition={definition} />
     ) : null,
+  separator: ({ field, value, definition }) =>
+    isChoiceField(field) ? (
+      <SelectValue field={field} value={textOf(value)} definition={definition} />
+    ) : (
+      <span>{textOf(value)}</span>
+    ),
+  'avatar-list': ({ value, renderItemIdLink }) =>
+    Array.isArray(value) ? (
+      <AvatarListValue entries={value} renderItemIdLink={renderItemIdLink} />
+    ) : null,
+  badge: ({ field, value, definition }) => (
+    <BadgeValue field={field} value={textOf(value)} definition={definition} />
+  ),
 } as const satisfies Record<FieldWidget, (props: WidgetValueViewProps) => React.ReactNode>
 
 /**
@@ -196,6 +273,7 @@ export function ContentFieldValue<Range extends HighlightRange = HighlightRange>
   definition,
   marks,
   renderMark,
+  renderItemIdLink,
 }: ContentFieldValueProps<Range>) {
   if (isEmpty(value)) return null
 
@@ -203,5 +281,7 @@ export function ContentFieldValue<Range extends HighlightRange = HighlightRange>
     return <MarkedText text={textOf(value)} marks={marks} renderMark={renderMark} />
   }
   const View = widgetValueViews[field.widget]
-  return <View field={field} value={value} definition={definition} />
+  return (
+    <View field={field} value={value} definition={definition} renderItemIdLink={renderItemIdLink} />
+  )
 }

@@ -7,13 +7,15 @@
   "x-kind": "persona",
   "x-schema-version": 1,
   "x-key-prefix": "PER",
-  "x-ui-display": "cards",
+  "x-ui-display": "profile",
   "x-ui-navigable": true,
   "x-ui-title-field": "name",
   "x-ui-list-fields": [
     "name",
     "stakeholder_type",
-    "interview_status"
+    "interview_status",
+    "background",
+    "goals"
   ],
   "x-ui-field-order": [
     "name",
@@ -116,7 +118,7 @@
         "completed"
       ],
       "description": "Progress of the interview with this persona. Set by the system.",
-      "x-ui-widget": "select",
+      "x-ui-widget": "badge",
       "readOnly": true
     }
   },

@@ -12,6 +12,7 @@ describe('widgetValueRules', () => {
     ['list', true],
     ['tags', true],
     ['object-list', true],
+    ['avatar-list', true],
     ['text', false],
     ['number', false],
   ] as const)('says if %s has a list value: %s', (widget, hasListValue) => {

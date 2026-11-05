@@ -13,9 +13,15 @@ import { expectNoAccessibilityViolations } from '@/test/steps'
 import { useArtifactDocument } from '../../outline/hooks/useArtifactDocument'
 import { ArtifactDocument } from '../ArtifactDocument'
 
-const projectId = projectIds.mentor
+const mentorProjectId = projectIds.mentor
+const libraryProjectId = projectIds.library
 const renderItemLink = (item: { key: string }, title: React.ReactNode) => (
   <a href={`/items/${item.key}`}>{title}</a>
+)
+const renderItemIdLink = (itemId: string, children: React.ReactNode) => (
+  <a key={itemId} href={`/participants/${itemId}`}>
+    {children}
+  </a>
 )
 
 function LoadedDocument({
@@ -33,6 +39,7 @@ function LoadedDocument({
       data={document}
       renderItemLink={renderItemLink}
       isUnderReview={isUnderReview}
+      renderItemIdLink={renderItemIdLink}
       {...slots}
     />
   ) : null
@@ -41,9 +48,11 @@ function LoadedDocument({
 function renderDocument(
   kind: string,
   {
+    projectId = mentorProjectId,
     isUnderReview = false,
     slots,
   }: {
+    projectId?: string
     isUnderReview?: boolean
     slots?: Partial<Parameters<typeof ArtifactDocument>[0]> | undefined
   } = {},
@@ -69,18 +78,24 @@ describe('ArtifactDocument', () => {
     ).toHaveAttribute('href', '/items/RAW-001')
   })
 
-  it('shows cards for the items of a card kind', async () => {
+  it('shows avatar cards for the items of a profile kind, with the badge of each person', async () => {
     renderDocument('persona_catalog')
 
-    expect(await screen.findByRole('link', { name: 'Student' })).toBeInTheDocument()
+    const links = await screen.findAllByRole('link')
+    expect(links.map((link) => link.textContent)).toContain('Minh')
+    expect(screen.getAllByRole('heading', { level: 3 }).length).toBe(3)
+    expect(screen.getAllByText('Interviewed').length).toBe(3)
+    expect(
+      screen.getByText('Third-year undergraduate who wants advice on a research career.'),
+    ).toBeInTheDocument()
+    expect(screen.getAllByText(/Goals:/).length).toBe(3)
     expect(screen.queryByRole('table')).not.toBeInTheDocument()
   })
 
-  it('shows the messages of a transcript with their role, and no link for a message', async () => {
-    renderDocument('interview_transcript')
+  it('shows the badge of a persona that is not interviewed yet', async () => {
+    renderDocument('persona_catalog', { projectId: libraryProjectId })
 
-    expect(await screen.findByText('How do you look for a mentor today?')).toBeInTheDocument()
-    expect(screen.queryByRole('link')).not.toBeInTheDocument()
+    expect(await screen.findByText('Not interviewed')).toBeInTheDocument()
   })
 
   it('shows the fields of an artifact that has no items', async () => {
@@ -103,6 +118,116 @@ describe('ArtifactDocument', () => {
   })
 })
 
+describe('ArtifactDocument of a transcript', () => {
+  it('lists the fields that are not separators, with the participants as links to their item', async () => {
+    renderDocument('interview_transcript')
+
+    const list = assertPresent(
+      await screen.findByText('Participants'),
+      'The transcript shows no list of fields',
+    ).closest('dl')
+    expect(screen.getByText('Turns')).toBeInTheDocument()
+    expect(screen.getByText('Turns').closest('div')?.textContent).toContain('4')
+    expect(
+      within(assertPresent(list, 'No list of fields')).getByText('Interviewer'),
+    ).toBeInTheDocument()
+    const student = screen.getByRole('link', { name: 'Minh' })
+    expect(student).toHaveAttribute('data-variant', 'outline')
+    expect(student).toHaveAttribute(
+      'href',
+      `/participants/${itemFixtureByKey(mentorProjectId, 'PER-001').id}`,
+    )
+    expect(screen.queryByRole('link', { name: 'Interviewer' })).not.toBeInTheDocument()
+  })
+
+  it('draws the conversation of its participants with a separator for each turn', async () => {
+    renderDocument('interview_transcript')
+
+    const first = await screen.findByText('How do you look for a mentor today?')
+    for (const turn of ['Turn 1', 'Turn 2', 'Turn 3', 'Turn 4']) {
+      expect(screen.getByText(turn)).toBeInTheDocument()
+    }
+    // The interviewer, who leads, sits at the right; the student at the left.
+    expect(first.closest('[data-slot="message"]')).toHaveAttribute('data-align', 'end')
+    const answer = screen.getByText(
+      'I ask seniors in my club, but I never know who is free this week, so I give up.',
+    )
+    expect(answer.closest('[data-slot="message"]')).toHaveAttribute('data-align', 'start')
+    // The conversation has no heading of the kind of its messages.
+    expect(screen.queryByRole('heading', { name: /Interview message/ })).not.toBeInTheDocument()
+  })
+
+  it('ends with the separator of the artifact, after the last message', async () => {
+    renderDocument('interview_transcript')
+
+    const last = await screen.findByText(
+      'Fast. I do not wait for a page that takes more than a couple of seconds.',
+    )
+    const separator = screen.getByText('Completed').closest('[data-slot="marker"]')
+    expect(separator).not.toBeNull()
+    expect(last.compareDocumentPosition(assertPresent(separator, 'No end separator'))).toBe(
+      Node.DOCUMENT_POSITION_FOLLOWING,
+    )
+    expect(screen.getByText('Stopping condition reached')).toBeInTheDocument()
+    expect(screen.queryByRole('heading', { name: 'Status' })).not.toBeInTheDocument()
+  })
+
+  it('ends with the status alone while the interview runs', async () => {
+    renderDocument('interview_transcript', { projectId: libraryProjectId })
+
+    expect(await screen.findByText('How do you book a study room today?')).toBeInTheDocument()
+    expect(screen.getByText('In progress')).toBeInTheDocument()
+    expect(screen.queryByText('Stopping condition reached')).not.toBeInTheDocument()
+  })
+
+  it('takes the version of the history in place of the list, without the end separator', async () => {
+    renderDocument('interview_transcript', {
+      slots: { fieldsView: <p>The version of the history shows here.</p> },
+    })
+
+    expect(await screen.findByText('The version of the history shows here.')).toBeInTheDocument()
+    expect(screen.queryByText('Participants')).not.toBeInTheDocument()
+    expect(screen.queryByText('Completed')).not.toBeInTheDocument()
+  })
+
+  it('anchors the bubble of a message and marks the target one', async () => {
+    const message = itemFixtureByKey(mentorProjectId, 'PER-001#2')
+    renderDocument('interview_transcript', {
+      slots: {
+        targetItemId: message.id,
+        messageMarks: new Map([[message.id, [{ start: 0, end: 5 }]]]),
+        renderMessageMark: (range, children) => <em key={range.start}>{children}</em>,
+      },
+    })
+
+    const block = await waitFor(() => {
+      const found = document.getElementById(`item-${message.id}`)
+      if (found === null) throw new Error('The bubble of the message has no anchor')
+      return found
+    })
+    expect(block).toHaveAttribute('tabindex', '-1')
+    expect(block).toHaveAttribute('data-target', '')
+    // The quoted words of the message are marked, wrapped by the wrapper of the page.
+    const marked = block.querySelector('mark')
+    expect(marked).not.toBeNull()
+    expect(marked?.closest('em')).not.toBeNull()
+  })
+
+  it('has no accessibility violation on the conversation', async () => {
+    const { container } = renderDocument('interview_transcript')
+    await screen.findByText('How do you look for a mentor today?')
+
+    await expectNoAccessibilityViolations(container)
+  })
+
+  it('has no accessibility violation on the avatar cards', async () => {
+    const { container } = renderDocument('persona_catalog')
+    await screen.findAllByRole('heading', { level: 3 })
+
+    await expectNoAccessibilityViolations(container)
+  })
+})
+
 describe('ArtifactDocument with the slots of a page', () => {
   it('places the actions at the right of the title, and the fields view in place of the fields', async () => {
     renderDocument('elicitation_plan', {
@@ -116,28 +241,5 @@ describe('ArtifactDocument with the slots of a page', () => {
     expect(edit.closest('div')?.querySelector('h1')).not.toBeNull()
     expect(screen.getByText('The version of the history shows here.')).toBeInTheDocument()
     expect(screen.queryByRole('heading', { name: 'Objectives' })).not.toBeInTheDocument()
-  })
-
-  it('anchors every block of an item and marks the target one', async () => {
-    const message = itemFixtureByKey(projectId, 'PER-001#2')
-    renderDocument('interview_transcript', {
-      slots: {
-        targetItemId: message.id,
-        messageMarks: new Map([[message.id, [{ start: 0, end: 5 }]]]),
-        renderMessageMark: (range, children) => <em key={range.start}>{children}</em>,
-      },
-    })
-
-    const block = await waitFor(() => {
-      const found = document.getElementById(`item-${message.id}`)
-      if (found === null) throw new Error('The block of the message has no anchor')
-      return found
-    })
-    expect(block).toHaveAttribute('tabindex', '-1')
-    expect(block).toHaveAttribute('data-target', '')
-    // The quoted words of the message are marked, wrapped by the wrapper of the page.
-    const marked = block.querySelector('mark')
-    expect(marked).not.toBeNull()
-    expect(marked?.closest('em')).not.toBeNull()
   })
 })

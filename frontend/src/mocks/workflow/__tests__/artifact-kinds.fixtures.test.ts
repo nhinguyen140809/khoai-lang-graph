@@ -1,8 +1,12 @@
+import { readFileSync } from 'node:fs'
+import path from 'node:path'
+
 import { describe, expect, it } from 'vitest'
 
-import { assertPresent } from '@/shared/lib/guards'
+import { assertPresent, isRecord } from '@/shared/lib/guards'
 
 import { artifactKindFixtures, findKind, itemKindsOf } from '../artifact-kinds.fixtures'
+import { contentSchemaFiles } from '../data/content-schemas'
 
 function itemSchema(kind: string): Record<string, unknown> {
   const itemKind = artifactKindFixtures.artifact_kinds
@@ -45,6 +49,25 @@ describe('artifactKindFixtures', () => {
     expect(property('spec_requirement', 'priority').description).toContain(
       'must: The product fails a stakeholder',
     )
+  })
+})
+
+describe('the schema copies of the mock', () => {
+  it('equal the schema files of the docs', () => {
+    for (const [kind, schema] of Object.entries(contentSchemaFiles)) {
+      const level = isRecord(schema) && schema['x-level'] === 'artifact' ? 'artifacts' : 'items'
+      const version = isRecord(schema) ? schema['x-schema-version'] : 1
+      const file = path.join(
+        import.meta.dirname,
+        '../../../../..',
+        'docs/schemas',
+        level,
+        `${kind}.v${String(version)}.json`,
+      )
+      expect(schema, `The copy of ${kind} differs from ${file}`).toEqual(
+        JSON.parse(readFileSync(file, 'utf8')),
+      )
+    }
   })
 })
 

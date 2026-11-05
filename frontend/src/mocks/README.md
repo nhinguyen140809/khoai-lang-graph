@@ -149,6 +149,9 @@ The documents of the mentor platform are at `/projects/90aa0000-0000-4000-8000-0
 | A warning mark from an issue                       | open AR-010; the mark of AMB-001 in its statement                                |
 | Edit disabled outside the review                   | open REQ-001; its tooltip on hover                                               |
 | A transcript at a message                          | open REQ-001, scroll to Why this item exists, click the citation card            |
+| An interview in progress                           | open the Interview with the student of the library project                       |
+| Personas being interviewed                         | open the Interviewees of the library project                                     |
+| The profile page of a persona                      | open the Interviewees of the mentor platform, then Minh                          |
 
 In the analysis, the user has begun the review: `RAW-001`, `RAW-002`, `AR-001` and `AR-002` are approved, `RAW-008`, `LN-002` and `ASM-003` are rejected, `RAW-004`, `AR-003` and the like were edited by the user, and three ambiguities and one conflict are open, so the document and its outline show every state of an item next to the drafts.
 

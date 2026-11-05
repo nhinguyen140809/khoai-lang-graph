@@ -1,4 +1,5 @@
 import type { Artifact, ArtifactItem } from '@/modules/artifact/entities'
+import { isRecord, isString } from '@/shared/lib/guards'
 
 import { IdPrefix, mockId } from '../../shared/db'
 import { findKind } from '../../workflow/artifact-kinds.fixtures'
@@ -32,6 +33,20 @@ interface BuildOptions {
   day: string
   /** The keys of the items that the user edited, with their new version. */
   editedKeys?: Record<string, number>
+}
+
+// A participant of an interview reaches the item it is, such as its persona; the builder resolves
+// the item ids of the whole project, as it resolves the subject of the interview.
+function withParticipantIds(content: ArtifactSpec['content'], items: ArtifactItem[]) {
+  const listed = content.participants
+  if (!Array.isArray(listed)) return content
+  return {
+    ...content,
+    participants: listed.map((entry: unknown) => {
+      if (!isRecord(entry) || !isString(entry.key)) return entry
+      return { ...entry, item_id: items.find(({ key }) => key === entry.key)?.id ?? null }
+    }),
+  }
 }
 
 /** Builds the artifacts and the items in outline order of one project. */
@@ -90,7 +105,7 @@ export function buildProjectArtifacts(
       title: spec.title,
       summary: spec.summary,
       schema_version: schemaVersionOf(spec.kind),
-      content: spec.content,
+      content: withParticipantIds(spec.content, items),
       subject_item_id: subject,
       version: spec.version ?? 1,
       review_status: spec.status ?? 'draft',

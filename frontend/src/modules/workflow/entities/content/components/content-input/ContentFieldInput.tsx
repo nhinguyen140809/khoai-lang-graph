@@ -4,9 +4,9 @@ import { type FieldPath, useFormContext } from 'react-hook-form'
 
 import { FormField, FormFieldSet } from '@/shared/components/form'
 
-import type { WorkflowDefinition } from '../../../definition/workflow-definition.types'
 import type { ContentField } from '../../fields/content-fields.types'
 import type { ContentFormValues } from '../../values/content-form.schema'
+import type { ValueDefinition } from '../../values/content-values.types'
 import { ContentFieldValue } from '../ContentFieldValue'
 import { ContentValueControl } from './ContentValueControl'
 
@@ -15,7 +15,7 @@ interface ContentFieldInputProps {
   /** The values that a field with `x-value-from` may take, read by the form from the artifacts of the project. */
   allowedValues?: readonly string[] | undefined
   /** Titles the values of a field that names a value list; none until the definition loads. */
-  definition: Pick<WorkflowDefinition, 'value_lists'> | undefined
+  definition: ValueDefinition
 }
 
 /**

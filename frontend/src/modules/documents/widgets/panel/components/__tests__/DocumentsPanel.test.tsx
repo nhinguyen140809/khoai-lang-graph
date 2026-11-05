@@ -35,9 +35,9 @@ describe('DocumentsPanel icons', () => {
   it('shows before the title of a document the icon of what it is made of', async () => {
     renderPanel()
 
-    const persona = await findRow('Persona catalog')
+    const persona = await findRow('Interviewees')
     await waitFor(() => {
-      expect(persona.querySelector('svg.lucide-layout-grid')).not.toBeNull()
+      expect(persona.querySelector('svg.lucide-users')).not.toBeNull()
     })
     const analysisRow = await findRow('Requirements analysis')
     expect(analysisRow.querySelector('svg.lucide-table')).not.toBeNull()
@@ -56,11 +56,9 @@ describe('DocumentsPanel tooltips', () => {
   it('names a document by its full title, with its status under it', async () => {
     renderPanel()
 
-    await userEvent.hover(within(await findRow('Persona catalog')).getByText('Persona catalog'))
+    await userEvent.hover(within(await findRow('Interviewees')).getByText('Interviewees'))
 
-    expect(await screen.findByRole('tooltip')).toHaveTextContent(
-      'Persona catalogApproved, version 2',
-    )
+    expect(await screen.findByRole('tooltip')).toHaveTextContent('IntervieweesApproved, version 2')
   })
 
   it('ends the path of a row with its own title, so a title cut short reads in full', async () => {
@@ -130,7 +128,7 @@ describe('DocumentsPanel marks', () => {
   it('shows no letter at the end of an approved document', async () => {
     renderPanel()
 
-    const row = await findRow('Persona catalog')
+    const row = await findRow('Interviewees')
 
     expect(letterOf(row)).toBe('')
   })
@@ -242,7 +240,7 @@ describe('DocumentsPanel outline', () => {
   it('renders no footer for a document with nothing to count', async () => {
     renderPanel({ artifactId: artifactFixtureByKind(projectId, 'persona_catalog').id })
 
-    await findRow('Student')
+    await findRow('Minh')
     expectNoText(/to review/)
     expect(document.querySelector('aside .border-t')).toBeNull()
   })

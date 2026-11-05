@@ -11,7 +11,7 @@ const stakeholderTypes = ['student', 'mentor', 'admin']
 
 const elicitationPlan: ArtifactSpec = {
   kind: 'elicitation_plan',
-  title: 'Elicitation plan',
+  title: 'Interview plan',
   summary:
     'Three stakeholder types, four topics, and the questions to settle before the interviews end.',
   status: 'approved',
@@ -43,8 +43,8 @@ const elicitationPlan: ArtifactSpec = {
 
 const personaCatalog: ArtifactSpec = {
   kind: 'persona_catalog',
-  title: 'Persona catalog',
-  summary: 'Three personas, one for each stakeholder type of the plan.',
+  title: 'Interviewees',
+  summary: 'The mentor and the admin may disagree on who approves a booking.',
   status: 'approved',
   version: 2,
   content: {
@@ -58,7 +58,7 @@ const personaCatalog: ArtifactSpec = {
       kind: 'persona',
       status: 'approved',
       content: {
-        name: 'Student',
+        name: 'Minh',
         stakeholder_type: 'student',
         background: 'Third-year undergraduate who wants advice on a research career.',
         expertise: 'Knows the courses of the faculty, not the people behind them.',
@@ -76,7 +76,7 @@ const personaCatalog: ArtifactSpec = {
       kind: 'persona',
       status: 'approved',
       content: {
-        name: 'Mentor',
+        name: 'Lan',
         stakeholder_type: 'mentor',
         background: 'Lecturer who mentors students next to teaching.',
         expertise: 'Ten years in the field, no time for administration.',
@@ -94,7 +94,7 @@ const personaCatalog: ArtifactSpec = {
       kind: 'persona',
       status: 'approved',
       content: {
-        name: 'Admin',
+        name: 'Tuan',
         stakeholder_type: 'admin',
         background: 'Staff of the mentoring program.',
         expertise: 'Knows the rules of the program and the complaints of past years.',
@@ -110,96 +110,127 @@ const personaCatalog: ArtifactSpec = {
   ],
 }
 
-type Turn = [role: 'interviewer' | 'persona', content: string, topic: string | null]
+type Turn = [saidBy: 'interviewer' | 'persona', content: string, topic: string | null]
 
 // A question and its answer share one turn.
 function turnOf(index: number): number {
   return Math.floor(index / 2) + 1
 }
 
-function interview(personaKey: string, personaName: string, turns: Turn[]): ArtifactSpec {
+function interview(
+  personaKey: string,
+  personaName: string,
+  summary: string,
+  turns: Turn[],
+): ArtifactSpec {
   const turnCount = turnOf(turns.length - 1)
   return {
     kind: 'interview_transcript',
-    title: `Interview with the ${personaName.toLowerCase()}`,
-    summary: `${String(turnCount)} turns with the ${personaName.toLowerCase()}.`,
+    title: `Interview with ${personaName}`,
+    summary,
     status: 'approved',
     subjectKey: personaKey,
     content: {
+      participants: [
+        { key: 'interviewer', name: 'Interviewer', role: 'interviewer', item_id: null },
+        { key: personaKey, name: personaName, role: 'persona', item_id: null },
+      ],
       status: 'completed',
       turn_count: turnCount,
       stop_reason: 'stopping_condition_met',
     },
-    items: turns.map(([role, content, topic], index) => ({
+    // A message names its speaker by the key of its participant.
+    items: turns.map(([saidBy, content, topic], index) => ({
       key: `${personaKey}#${String(index + 1)}`,
       kind: 'interview_message',
       status: 'approved',
-      content: { turn: turnOf(index), role, content, iteration: 0, topic },
+      content: {
+        turn: turnOf(index),
+        speaker: saidBy === 'interviewer' ? 'interviewer' : personaKey,
+        content,
+        iteration: 0,
+        topic,
+      },
     })),
   }
 }
 
 const interviews: ArtifactSpec[] = [
-  interview('PER-001', 'Student', [
-    ['interviewer', 'How do you look for a mentor today?', 'search'],
+  interview(
+    'PER-001',
+    'Minh',
+    'The student gives up when no mentor is free this week, and wants to book and cancel without writing to anyone.',
     [
-      'persona',
-      'I ask seniors in my club, but I never know who is free this week, so I give up.',
-      'search',
+      ['interviewer', 'How do you look for a mentor today?', 'search'],
+      [
+        'persona',
+        'I ask seniors in my club, but I never know who is free this week, so I give up.',
+        'search',
+      ],
+      ['interviewer', 'What would make you book a session?', 'booking'],
+      [
+        'persona',
+        'If I see the free hours of a mentor in my field and can book in one click.',
+        'booking',
+      ],
+      ['interviewer', 'What if you cannot come?', 'booking'],
+      [
+        'persona',
+        'I want to cancel without writing to anyone, and I want a reminder the hour before.',
+        'reminders',
+      ],
+      ['interviewer', 'How fast should the search be?', 'search'],
+      [
+        'persona',
+        'Fast. I do not wait for a page that takes more than a couple of seconds.',
+        'search',
+      ],
     ],
-    ['interviewer', 'What would make you book a session?', 'booking'],
+  ),
+  interview(
+    'PER-002',
+    'Lan',
+    'The mentor offers two afternoons a week, sessions of an hour, and wants a reminder for both sides.',
     [
-      'persona',
-      'If I see the free hours of a mentor in my field and can book in one click.',
-      'booking',
+      ['interviewer', 'How would you offer your time to students?', 'booking'],
+      [
+        'persona',
+        'I can give two afternoons a week. I need to say which hours, and nothing else.',
+        'booking',
+      ],
+      ['interviewer', 'How long is a session?', 'booking'],
+      ['persona', 'About an hour, and I do not want back-to-back sessions.', 'booking'],
+      ['interviewer', 'What about students who do not show up?', 'reminders'],
+      [
+        'persona',
+        'A reminder to both of us would help. Sometimes I also want to see several students at once.',
+        'reminders',
+      ],
     ],
-    ['interviewer', 'What if you cannot come?', 'booking'],
+  ),
+  interview(
+    'PER-003',
+    'Tuan',
+    'The admin wants to approve the mentors and, in the first year, every booking.',
     [
-      'persona',
-      'I want to cancel without writing to anyone, and I want a reminder the hour before.',
-      'reminders',
+      ['interviewer', 'Who decides which mentors are listed?', 'administration'],
+      [
+        'persona',
+        'I do. A mentor must be approved before a student can see the profile.',
+        'administration',
+      ],
+      ['interviewer', 'And a booking?', 'booking'],
+      ['persona', 'I would like to approve a booking too, at least in the first year.', 'booking'],
+      ['interviewer', 'What do you report each term?', 'administration'],
+      ['persona', 'The number of sessions per mentor and the complaints.', 'administration'],
+      ['interviewer', 'How do you want to find a problem account?', 'administration'],
+      [
+        'persona',
+        'A list of the accounts with complaints, and a button to suspend one.',
+        'administration',
+      ],
     ],
-    ['interviewer', 'How fast should the search be?', 'search'],
-    [
-      'persona',
-      'Fast. I do not wait for a page that takes more than a couple of seconds.',
-      'search',
-    ],
-  ]),
-  interview('PER-002', 'Mentor', [
-    ['interviewer', 'How would you offer your time to students?', 'booking'],
-    [
-      'persona',
-      'I can give two afternoons a week. I need to say which hours, and nothing else.',
-      'booking',
-    ],
-    ['interviewer', 'How long is a session?', 'booking'],
-    ['persona', 'About an hour, and I do not want back-to-back sessions.', 'booking'],
-    ['interviewer', 'What about students who do not show up?', 'reminders'],
-    [
-      'persona',
-      'A reminder to both of us would help. Sometimes I also want to see several students at once.',
-      'reminders',
-    ],
-  ]),
-  interview('PER-003', 'Admin', [
-    ['interviewer', 'Who decides which mentors are listed?', 'administration'],
-    [
-      'persona',
-      'I do. A mentor must be approved before a student can see the profile.',
-      'administration',
-    ],
-    ['interviewer', 'And a booking?', 'booking'],
-    ['persona', 'I would like to approve a booking too, at least in the first year.', 'booking'],
-    ['interviewer', 'What do you report each term?', 'administration'],
-    ['persona', 'The number of sessions per mentor and the complaints.', 'administration'],
-    ['interviewer', 'How do you want to find a problem account?', 'administration'],
-    [
-      'persona',
-      'A list of the accounts with complaints, and a button to suspend one.',
-      'administration',
-    ],
-  ]),
+  ),
 ]
 
 const raw = (key: string, title: string, statement: string, topic: string): ItemSpec => ({
@@ -228,7 +259,7 @@ const requirementsAnalysis: ArtifactSpec = {
   kind: 'requirements_analysis',
   title: 'Requirements analysis',
   summary:
-    'From three interviews: 8 stated needs, 10 analysed requirements, 2 unstated needs, 3 assumptions, 3 points to clarify and 1 disagreement.',
+    'From three interviews: 8 stated needs, 10 analysed requirements, 2 unstated needs, 4 assumptions, 3 points to clarify and 1 disagreement.',
   version: 4,
   content: {
     key_findings: [
@@ -417,6 +448,17 @@ const requirementsAnalysis: ArtifactSpec = {
         reasoning: 'The platform is only for the students of one university.',
         impact_if_wrong: 'The platform needs its own sign-up.',
         validation_status: 'confirmed',
+      },
+    },
+    {
+      key: 'ASM-004',
+      kind: 'assumption',
+      content: {
+        title: 'The admin approves every booking',
+        statement: 'Every booking waits for the approval of the admin.',
+        reasoning: 'The first plan gave the admin control over every booking.',
+        impact_if_wrong: 'Bookings would wait for the admin.',
+        validation_status: 'invalidated',
       },
     },
     {
@@ -681,7 +723,7 @@ const story = (
 
 const productBacklog: ArtifactSpec = {
   kind: 'product_backlog',
-  title: 'Product backlog',
+  title: 'User stories',
   summary: '2 epics and 6 user stories, ordered by priority.',
   content: {
     product_goal: 'A student books a mentor in a few minutes.',
@@ -787,7 +829,7 @@ const productBacklog: ArtifactSpec = {
 
 const validationReport: ArtifactSpec = {
   kind: 'validation_report',
-  title: 'Validation report',
+  title: 'Verification report',
   summary: '2 issues: 1 high, 1 low.',
   content: { iteration: 0, status: 'fail' },
   items: [
@@ -911,7 +953,7 @@ export const mentorEditedBefore: Record<string, ContentValues[]> = {
 
 /** The content of each artifact the agents reworked, before the rework, oldest first. */
 export const mentorArtifactBefore: Record<string, ContentValues[]> = {
-  'Elicitation plan': [
+  'Interview plan': [
     {
       objectives: [
         'Learn how students look for a mentor today',
@@ -931,7 +973,7 @@ export const mentorArtifactBefore: Record<string, ContentValues[]> = {
       ],
     },
   ],
-  'Persona catalog': [
+  Interviewees: [
     {
       selection_rationale: 'One persona for each stakeholder type of the program.',
       uncovered_stakeholder_types: [],

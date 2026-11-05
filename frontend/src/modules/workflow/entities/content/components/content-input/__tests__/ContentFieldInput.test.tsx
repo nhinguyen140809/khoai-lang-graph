@@ -16,6 +16,7 @@ import {
   initialContent,
   nullableSelect,
   readOnlyField,
+  readOnlyPeopleField,
   widgetCases,
 } from './ContentFieldInput.data'
 
@@ -156,6 +157,20 @@ describe('ContentFieldInput', () => {
 
     expect(screen.getByText('Interviewed')).toBeInTheDocument()
     expect(screen.queryByRole('textbox')).not.toBeInTheDocument()
+  })
+
+  it('shows the people of a read only avatar list, without a control', () => {
+    render(
+      <InputForm
+        field={assertPresent(readOnlyPeopleField, 'No read only avatar list')}
+        initial={{ people: [{ key: 'interviewer', name: 'Interviewer', item_id: null }] }}
+        onSaved={() => undefined}
+      />,
+    )
+
+    expect(screen.getByText('Interviewer')).toBeInTheDocument()
+    expect(screen.queryByRole('textbox')).not.toBeInTheDocument()
+    expect(screen.queryByRole('combobox')).not.toBeInTheDocument()
   })
 
   it('shows the problem of the field at the field', async () => {

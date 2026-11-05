@@ -18,6 +18,10 @@ interface SimpleProject {
   day: string
   personas: [string, string]
   requirements: [string, string, string]
+  /** The interview status of each persona; both completed by default. */
+  interviewStatuses?: [string, string]
+  /** An interview transcript, placed after the specification; none by default. */
+  interview?: ArtifactSpec
 }
 
 const section = (key: string, title: string, children: ItemSpec[]): ItemSpec => ({
@@ -27,11 +31,16 @@ const section = (key: string, title: string, children: ItemSpec[]): ItemSpec => 
   children,
 })
 
-/** An elicitation plan, a persona catalog and a short specification. */
-function simpleSpecs({ personas, requirements }: SimpleProject): ArtifactSpec[] {
+/** An elicitation plan, a persona catalog and a short specification, then the interview it names. */
+function simpleSpecs({
+  personas,
+  requirements,
+  interviewStatuses,
+  interview,
+}: SimpleProject): ArtifactSpec[] {
   const plan: ArtifactSpec = {
     kind: 'elicitation_plan',
-    title: 'Elicitation plan',
+    title: 'Interview plan',
     summary: 'Two stakeholder types and the topics to ask about.',
     status: 'approved',
     content: {
@@ -46,7 +55,7 @@ function simpleSpecs({ personas, requirements }: SimpleProject): ArtifactSpec[] 
   }
   const catalog: ArtifactSpec = {
     kind: 'persona_catalog',
-    title: 'Persona catalog',
+    title: 'Interviewees',
     summary: 'One persona for each stakeholder type.',
     status: 'approved',
     content: {
@@ -68,7 +77,7 @@ function simpleSpecs({ personas, requirements }: SimpleProject): ArtifactSpec[] 
         priorities: [],
         concerns: [],
         behavioral_tendencies: 'Prefers a short path to the result.',
-        interview_status: 'completed',
+        interview_status: interviewStatuses?.[index] ?? 'completed',
       },
     })),
   }
@@ -104,7 +113,7 @@ function simpleSpecs({ personas, requirements }: SimpleProject): ArtifactSpec[] 
       ),
     ],
   }
-  return [plan, catalog, specification]
+  return [plan, catalog, specification, ...(interview === undefined ? [] : [interview])]
 }
 
 function simple(project: SimpleProject): BuiltProject {
@@ -134,6 +143,48 @@ const projects: BuiltProject[] = [
     day: '2026-10-03',
     personas: ['Student', 'Librarian'],
     requirements: ['Book a study room', 'Book a seat', 'Release an unused booking'],
+    interviewStatuses: ['in_progress', 'not_started'],
+    interview: {
+      kind: 'interview_transcript',
+      title: 'Interview with the student',
+      summary: 'The student finds the free rooms gone by nine, booked by people who never come.',
+      status: 'draft',
+      subjectKey: 'PER-001',
+      content: {
+        participants: [
+          { key: 'interviewer', name: 'Interviewer', role: 'interviewer', item_id: null },
+          { key: 'PER-001', name: 'Student', role: 'persona', item_id: null },
+        ],
+        turn_count: 2,
+        status: 'in_progress',
+        stop_reason: null,
+      },
+      // Key, then turn, speaker, content and topic; iteration 0.
+      items: (
+        [
+          ['PER-001#1', 1, 'interviewer', 'How do you book a study room today?', 'daily use'],
+          [
+            'PER-001#2',
+            1,
+            'PER-001',
+            'I ask at the desk, and the free rooms are gone by nine.',
+            'daily use',
+          ],
+          ['PER-001#3', 2, 'interviewer', 'What goes wrong once a room is booked?', 'problems'],
+          [
+            'PER-001#4',
+            2,
+            'PER-001',
+            'People book a room for the whole day and never come.',
+            'problems',
+          ],
+        ] as [string, number, string, string, string][]
+      ).map(([key, turn, speaker, content, topic]) => ({
+        key,
+        kind: 'interview_message',
+        content: { turn, speaker, content, iteration: 0, topic },
+      })),
+    },
   }),
   simple({
     n: 4,

@@ -12,6 +12,8 @@ import { ArtifactItemDetails, ItemKeyLine } from '../ArtifactItemDetails'
 
 const requirement = itemFixtureByKey(projectIds.mentor, 'REQ-001')
 const schema = contentSchemaFixtureByKind('spec_requirement')
+const persona = itemFixtureByKey(projectIds.mentor, 'PER-001')
+const personaSchema = contentSchemaFixtureByKind('persona')
 
 function renderKeyLine(status: ItemStatus, isUnderReview = false) {
   return renderWithProviders(
@@ -32,12 +34,27 @@ function renderWithMarks() {
 }
 
 describe('ItemKeyLine', () => {
-  it('shows the status and the key in one line', () => {
+  it('shows the label of the status alone; the key sits in the heading', () => {
     renderKeyLine('approved')
 
-    expect(screen.getByText('REQ-001')).toBeInTheDocument()
     expect(screen.getByText(/Approved/)).toBeInTheDocument()
+    expect(screen.queryByText('REQ-001')).not.toBeInTheDocument()
     expect(screen.queryByText(/^version /)).not.toBeInTheDocument()
+  })
+
+  it('shows the fields of one line of a persona above the label of its status', () => {
+    renderWithProviders(
+      <ItemKeyLine item={persona} status="approved" isUnderReview={false} schema={personaSchema} />,
+    )
+
+    const stakeholder = screen.getByText('Student').closest('p')
+    const status = screen.getByText(/Approved/).closest('p')
+    if (stakeholder === null || status === null) throw new Error('The key line lost a line')
+    expect(stakeholder.textContent).toContain('Stakeholder type: Student')
+    expect(screen.getByText('Interviewed')).toBeInTheDocument()
+    expect(stakeholder).not.toBe(status)
+    expect(stakeholder.compareDocumentPosition(status)).toBe(Node.DOCUMENT_POSITION_FOLLOWING)
+    expect(screen.queryByText('Background')).not.toBeInTheDocument()
   })
 
   it('writes the status in the color of its level', () => {
@@ -81,5 +98,35 @@ describe('ArtifactItemDetails', () => {
     const { container } = renderWithMarks()
 
     await expectNoAccessibilityViolations(container)
+  })
+})
+
+describe('ArtifactItemDetails of a profile', () => {
+  it('draws the body without the name, the stakeholder type and the status, each list in one column and each text across', () => {
+    renderWithProviders(<ArtifactItemDetails item={persona} schema={personaSchema} />)
+
+    expect(screen.queryByRole('heading', { name: 'Name' })).not.toBeInTheDocument()
+    expect(screen.queryByRole('heading', { name: 'Stakeholder type' })).not.toBeInTheDocument()
+    expect(screen.queryByRole('heading', { name: 'Interview status' })).not.toBeInTheDocument()
+    expect(screen.getByRole('heading', { name: 'Background' })).toBeInTheDocument()
+    const goals = screen.getByRole('heading', { name: 'Goals' }).closest('section')
+    expect(goals).not.toHaveAttribute('data-wide')
+    const background = screen.getByRole('heading', { name: 'Background' }).closest('section')
+    expect(background).toHaveAttribute('data-wide')
+  })
+
+  it('keeps the marks of the fields on the page of a profile', () => {
+    renderWithProviders(
+      <ArtifactItemDetails
+        item={persona}
+        schema={personaSchema}
+        fieldMarks={new Map([['background', [{ start: 0, end: 11 }]]])}
+        renderFieldMark={(range, children) => <em key={range.start}>{children}</em>}
+      />,
+    )
+
+    const marked = screen.getByText('Third-year')
+    expect(marked.closest('em')).not.toBeNull()
+    expect(marked.closest('mark')).not.toBeNull()
   })
 })

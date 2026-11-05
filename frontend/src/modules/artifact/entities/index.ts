@@ -26,7 +26,7 @@ export {
 } from './artifacts/hooks/useArtifactQueries'
 export { ArtifactDocument } from './components/ArtifactDocument'
 export { ArtifactItemDetails, ItemKeyLine } from './components/ArtifactItemDetails'
-export type { RenderItemLink } from './components/DocumentBlocks'
+export { ItemHeading } from './components/ItemHeading'
 export { createExport, getExport, listProjectExports } from './exports/exports.api'
 export { exportStatusLabels } from './exports/exports.constants'
 export { exportKeys } from './exports/exports.keys'
@@ -85,6 +85,8 @@ export type {
   OutlineItemsResult,
   OutlineNeighbors,
   OutlineNode,
+  RenderItemIdLink,
+  RenderItemLink,
 } from './outline/outline.types'
 export {
   artifactOutline,

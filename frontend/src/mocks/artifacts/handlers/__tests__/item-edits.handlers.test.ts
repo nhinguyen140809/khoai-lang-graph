@@ -116,14 +116,14 @@ describe('the item edit handlers', () => {
       version: 1,
       review_status: 'draft',
       position: 1,
-      outline_number: '28.1',
+      outline_number: '29.1',
       created_by: { actor: 'user' },
     })
     const id = (created.body as ArtifactItem).id
     expect(created.headers.get(HttpHeader.Location)).toBe(apiEndpoints.item.path({ itemId: id }))
     expect((await outline()).slice(-2)).toEqual([
-      ['SEC-008', '28', 1],
-      ['AR-011', '28.1', 2],
+      ['SEC-008', '29', 1],
+      ['AR-011', '29.1', 2],
     ])
     const revisions = await getApiItems<Revision>(apiEndpoints.itemRevisions.path({ itemId: id }))
     expect(revisions.map(({ version, change_reason }) => [version, change_reason])).toEqual([
@@ -166,7 +166,7 @@ describe('the item edit handlers', () => {
 
     const created = await addAnalyzedRequirement()
 
-    expect(created.body).toMatchObject({ position: 28 })
+    expect(created.body).toMatchObject({ position: 29 })
   })
 
   it('count the items of the artifact that is changed', async () => {
@@ -241,9 +241,9 @@ describe('the item edit handlers', () => {
 
     expect(reordered.status).toBe(HttpStatus.NoContent)
     expect((await outline()).slice(-3)).toEqual([
-      ['SEC-008', '28', 1],
-      ['AR-012', '28.1', 2],
-      ['AR-011', '28.2', 2],
+      ['SEC-008', '29', 1],
+      ['AR-012', '29.1', 2],
+      ['AR-011', '29.2', 2],
     ])
   })
 
@@ -262,7 +262,7 @@ describe('the item edit handlers', () => {
       position: 1,
     })
     const places = await outline()
-    expect(places.find(([key]) => key === 'AR-001')).toEqual(['AR-001', '27.1', 2])
+    expect(places.find(([key]) => key === 'AR-001')).toEqual(['AR-001', '28.1', 2])
     expect(places.find(([key]) => key === 'AR-002')).toEqual(['AR-002', '9', 1])
   })
 

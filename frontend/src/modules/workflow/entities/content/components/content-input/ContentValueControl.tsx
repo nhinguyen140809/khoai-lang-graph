@@ -13,9 +13,10 @@ import { Switch } from '@/shared/components/ui/switch'
 import { Textarea } from '@/shared/components/ui/textarea'
 import { isString } from '@/shared/lib/guards'
 
-import type { WorkflowDefinition } from '../../../definition/workflow-definition.types'
 import type { ContentField } from '../../fields/content-fields.types'
+import { isChoiceField, isNumberField } from '../../fields/content-fields.utils'
 import { useValueLabelOf } from '../../value-labels/hooks/useValueLabelOf'
+import type { ValueDefinition } from '../../values/content-values.types'
 import { contentInputMessages } from './content-input.constants'
 import { EntriesControl } from './EntriesControl'
 
@@ -26,7 +27,7 @@ interface ContentValueControlProps {
   /** The values that a field with `x-value-from` may take, read by the form from the artifacts of the project. */
   allowedValues?: readonly string[] | undefined
   /** Titles the values of a field that names a value list; none until the definition loads. */
-  definition: Pick<WorkflowDefinition, 'value_lists'> | undefined
+  definition: ValueDefinition
   /** The id and `aria-invalid` that the label and the error of the field give the control. */
   controlProps?: FieldControlProps | undefined
   /** The name and the blur of the field in the form around the control, which tie it to its value. */
@@ -174,6 +175,17 @@ function TagsControlBySource(props: ContentValueControlProps) {
   return <Control {...props} />
 }
 
+// The control of a separator, by the type of its field: a choice as a select, a number as a
+// number input, any other value as text.
+function SeparatorControl(props: ContentValueControlProps) {
+  const Control = isChoiceField(props.field)
+    ? SelectControl
+    : isNumberField(props.field)
+      ? NumberControl
+      : TextControl
+  return <Control {...props} />
+}
+
 // The control of a value by its widget, without a label: a new widget fails to compile until it
 // has a row here, as `widgetValueViews` of `ContentFieldValue` does for the view of a value.
 const widgetControls = {
@@ -185,6 +197,9 @@ const widgetControls = {
   list: EntriesOf,
   tags: TagsControlBySource,
   'object-list': EntriesOf,
+  separator: SeparatorControl,
+  'avatar-list': EntriesOf,
+  badge: SelectControl,
 } as const satisfies Record<
   ContentField['widget'],
   (props: ContentValueControlProps) => React.ReactNode

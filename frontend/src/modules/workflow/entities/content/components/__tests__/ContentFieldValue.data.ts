@@ -63,6 +63,18 @@ export const valueCases = [
   },
   { name: 'tags', field: field({ widget: 'tags' }), value: ['a', 'b'], shown: ['a', 'b'] },
   { name: 'an object list', ...objectListCase },
+  {
+    name: 'a separator of a choice',
+    field: field({ widget: 'separator', options: ['on', 'off'] }),
+    value: 'on',
+    shown: ['On'],
+  },
+  {
+    name: 'a separator of a number',
+    field: field({ widget: 'separator', integer: true }),
+    value: 2,
+    shown: ['2'],
+  },
 ]
 
 export const emptyCases = [
