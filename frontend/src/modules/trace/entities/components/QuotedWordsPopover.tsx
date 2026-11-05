@@ -1,13 +1,13 @@
 'use client'
 
 import { ChevronRightIcon } from 'lucide-react'
-import { type ReactNode, useCallback, useMemo } from 'react'
+import type { ReactNode } from 'react'
 
 import { useItemHref } from '@/modules/artifact/entities/@x/trace'
 import {
   itemTitle,
   useContentSchemas,
-  useWorkflowDefinition,
+  useLinkTitleOf,
 } from '@/modules/workflow/entities/@x/trace'
 import { PageLink } from '@/shared/components/frame'
 import { ColoredText } from '@/shared/components/ui/colored-text'
@@ -90,15 +90,7 @@ export function QuotedWordsPopover({
   children: ReactNode
 }) {
   const hrefOf = useItemHref(projectId)
-  const { data: definition } = useWorkflowDefinition()
-  const linkTitles = useMemo(
-    () => new Map((definition?.link_types ?? []).map(({ key, title }) => [key, title])),
-    [definition],
-  )
-  const linkTitleOf = useCallback(
-    (linkType: string) => linkTitles.get(linkType) ?? linkType,
-    [linkTitles],
-  )
+  const linkTitleOf = useLinkTitleOf()
 
   return (
     <Popover>
