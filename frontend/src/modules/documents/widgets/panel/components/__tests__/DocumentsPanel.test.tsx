@@ -58,9 +58,7 @@ describe('DocumentsPanel tooltips', () => {
 
     await userEvent.hover(within(await findRow('Interviewees')).getByText('Interviewees'))
 
-    expect(await screen.findByRole('tooltip')).toHaveTextContent(
-      'IntervieweesApproved, version 2',
-    )
+    expect(await screen.findByRole('tooltip')).toHaveTextContent('IntervieweesApproved, version 2')
   })
 
   it('ends the path of a row with its own title, so a title cut short reads in full', async () => {

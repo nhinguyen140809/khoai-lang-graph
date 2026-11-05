@@ -2,7 +2,7 @@ import type { Page } from '@playwright/test'
 
 import { IdPrefix, projectIds } from '../../../src/mocks/shared/db/mock-ids.constants'
 import { mockId } from '../../../src/mocks/shared/db/mock-ids.utils'
-import { screenshots,scrollTo } from '../screenshot.utils'
+import { screenshots, scrollTo } from '../screenshot.utils'
 
 const project = `/projects/${projectIds.mentor}`
 const libraryProject = `/projects/${projectIds.library}`
