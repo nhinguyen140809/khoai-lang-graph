@@ -24,6 +24,21 @@ function renderDetails(status: ItemStatus, isUnderReview = false) {
   )
 }
 
+/** The details with the slots and the marks that a page adds. */
+function renderWithSlots() {
+  return renderWithProviders(
+    <ArtifactItemDetails
+      item={requirement}
+      schema={schema}
+      status="approved"
+      isUnderReview={false}
+      afterKeyLine={<a href="/links">Based on AR-001</a>}
+      fieldMarks={new Map([['statement', [{ start: 17, end: 45 }]]])}
+      renderFieldMark={(range, children) => <em key={range.start}>{children}</em>}
+    />,
+  )
+}
+
 describe('ArtifactItemDetails', () => {
   it('shows the status, the key and the version in one line', () => {
     renderDetails('approved')
@@ -58,5 +73,22 @@ describe('ArtifactItemDetails', () => {
     const { container } = renderDetails('approved')
 
     await expectNoAccessibilityViolations(container)
+  })
+})
+
+describe('ArtifactItemDetails with the slots of a page', () => {
+  it('draws what the page gives under the key line', () => {
+    renderWithSlots()
+
+    const link = screen.getByRole('link', { name: 'Based on AR-001' })
+    expect(link).toBeInTheDocument()
+  })
+
+  it('passes the marks of a field to its value, wrapped by the wrapper of the page', () => {
+    renderWithSlots()
+
+    const marked = screen.getByText('let a student search mentors')
+    expect(marked.closest('em')).not.toBeNull()
+    expect(marked.closest('mark')).not.toBeNull()
   })
 })

@@ -68,7 +68,7 @@ export type {
   ProjectItemFilters,
   UpdateItemBody,
 } from './items/items.types'
-export { documentBlocks } from './outline/document-blocks.utils'
+export { documentBlocks, hasTranscript } from './outline/document-blocks.utils'
 export { useArtifactDocument } from './outline/hooks/useArtifactDocument'
 export { useArtifactOutline } from './outline/hooks/useArtifactOutline'
 export { useOutlineItems } from './outline/hooks/useOutlineItems'

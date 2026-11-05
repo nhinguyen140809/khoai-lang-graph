@@ -2,7 +2,7 @@ import { describe, expect, it } from 'vitest'
 
 import { assertPresent } from '@/shared/lib/guards'
 
-import { documentBlocks } from '../document-blocks.utils'
+import { documentBlocks, hasTranscript } from '../document-blocks.utils'
 import type { OutlineNode } from '../outline.types'
 import {
   artifactOutline,
@@ -348,5 +348,20 @@ describe('the out of date items of an outline', () => {
       ['REQ-001', 'outOfDate'],
       ['REQ-002', 'approved'],
     ])
+  })
+})
+
+describe('hasTranscript', () => {
+  it('tells whether the blocks of a document draw messages of a transcript', () => {
+    expect(
+      hasTranscript(
+        documentBlocks({ ...mentorDocument('interview_transcript'), kinds: kindViewFixtures }),
+      ),
+    ).toBe(true)
+    expect(
+      hasTranscript(
+        documentBlocks({ ...mentorDocument('requirement_specification'), kinds: kindViewFixtures }),
+      ),
+    ).toBe(false)
   })
 })

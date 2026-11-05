@@ -115,6 +115,8 @@ describe('ArtifactDocument with the slots of a page', () => {
     renderDocument('interview_transcript', {
       slots: {
         targetItemId: message.id,
+        messageMarks: new Map([[message.id, [{ start: 0, end: 5 }]]]),
+        renderMessageMark: (range, children) => <em key={range.start}>{children}</em>,
       },
     })
 
@@ -125,5 +127,9 @@ describe('ArtifactDocument with the slots of a page', () => {
     })
     expect(block).toHaveAttribute('tabindex', '-1')
     expect(block).toHaveAttribute('data-target', '')
+    // The quoted words of the message are marked, wrapped by the wrapper of the page.
+    const marked = block.querySelector('mark')
+    expect(marked).not.toBeNull()
+    expect(marked?.closest('em')).not.toBeNull()
   })
 })
