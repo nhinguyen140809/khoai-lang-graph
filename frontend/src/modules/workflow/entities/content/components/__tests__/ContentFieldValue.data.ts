@@ -1,4 +1,4 @@
-import type { ContentField } from '../../content/fields/content-fields.types'
+import type { ContentField } from '../../fields/content-fields.types'
 
 function field(overrides: Partial<ContentField>): ContentField {
   return {

@@ -11,7 +11,7 @@ export { contentSchemasByKind, kindSchemasByKind } from './artifact-kinds/kind-s
 export type { ReviewableCheckpoint } from './checkpoints/checkpoints.types'
 export { reviewableCheckpoints } from './checkpoints/checkpoints.utils'
 export { useReviewableCheckpoints } from './checkpoints/hooks/useCheckpointQueries'
-export { ContentFieldValue } from './components/ContentFieldValue'
+export { ContentFieldValue } from './content/components/ContentFieldValue'
 export type {
   ContentDisplay,
   ContentField,

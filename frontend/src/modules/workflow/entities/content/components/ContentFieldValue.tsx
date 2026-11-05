@@ -4,10 +4,10 @@ import { Badge } from '@/shared/components/ui/badge'
 import { isEmpty, isRecord } from '@/shared/lib/guards'
 import { textOf } from '@/shared/lib/text'
 
-import type { ContentField, FieldWidget } from '../content/fields/content-fields.types'
-import { useValueLabel } from '../content/value-labels/hooks/useValueLabel'
-import { valueTitle } from '../content/values/content-values.utils'
-import type { WorkflowDefinition } from '../definition/workflow-definition.types'
+import type { WorkflowDefinition } from '../../definition/workflow-definition.types'
+import type { ContentField, FieldWidget } from '../fields/content-fields.types'
+import { useValueLabel } from '../value-labels/hooks/useValueLabel'
+import { valueTitle } from '../values/content-values.utils'
 import { contentValueMessages } from './content-field-value.constants'
 
 /** What titles the values of a field that names a list of values; none until the definition loads. */
