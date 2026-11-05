@@ -48,7 +48,7 @@ function sliceFolderRulesOfLayer(moduleName, layer) {
 /**
  * The folder rules of the entities of a module: a folder for each kind at the root, or, for a
  * module split by topic, a folder for each topic at the root, or for each group of topics that
- * holds only topic folders, and only hooks and tests in a topic.
+ * holds only topic folders, and only components, hooks and tests in a topic.
  * @param {string} moduleName
  * @returns {[string, string][]}
  */
@@ -80,7 +80,7 @@ function entityFolderRules(moduleName) {
       (topic) =>
         /** @type {[string, string]} */ ([
           `src/modules/${moduleName}/entities/${topic}/*/`,
-          '@(hooks|__tests__)',
+          '@(components|hooks|__tests__)',
         ]),
     ),
   ]
