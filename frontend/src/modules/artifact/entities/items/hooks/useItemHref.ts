@@ -1,13 +1,9 @@
 'use client'
 
 import type { Route } from 'next'
-import { useCallback, useMemo } from 'react'
+import { useCallback } from 'react'
 
-import {
-  contentSchemasByKind,
-  isNavigable,
-  useArtifactKinds,
-} from '@/modules/workflow/entities/@x/artifact'
+import { isNavigable, useContentSchemas } from '@/modules/workflow/entities/@x/artifact'
 import { routes } from '@/shared/routes'
 
 /** The item whose address is asked: its id, its kind and the artifact that holds it. */
@@ -24,8 +20,7 @@ interface AddressedItem {
  */
 export function useItemHref(projectId: string): (item: AddressedItem) => Route {
   const project = routes.project(projectId)
-  const { data: kinds } = useArtifactKinds()
-  const schemas = useMemo(() => contentSchemasByKind(kinds), [kinds])
+  const schemas = useContentSchemas()
   return useCallback(
     (item) => {
       const schema = schemas.get(item.kind)

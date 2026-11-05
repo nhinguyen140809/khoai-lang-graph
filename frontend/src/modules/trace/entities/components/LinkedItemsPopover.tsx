@@ -4,9 +4,8 @@ import { type ReactNode, useCallback, useMemo } from 'react'
 
 import { useItemHref } from '@/modules/artifact/entities/@x/trace'
 import {
-  contentSchemasByKind,
   itemTitle,
-  useArtifactKinds,
+  useContentSchemas,
   useWorkflowDefinition,
 } from '@/modules/workflow/entities/@x/trace'
 import { ColoredText } from '@/shared/components/ui/colored-text'
@@ -52,9 +51,7 @@ function LinkedEntryBlock({
   /** The title of the type of a link, as the definition of the workflow names it. */
   linkTitleOf: (linkType: string) => string
 }) {
-  const { data: kinds } = useArtifactKinds()
-  // The schemas are built once, for the kind title and the title.
-  const schemas = useMemo(() => contentSchemasByKind(kinds), [kinds])
+  const schemas = useContentSchemas()
   const schema = schemas.get(entry.item.kind)
   const title = itemTitle(schema, entry.item)
 

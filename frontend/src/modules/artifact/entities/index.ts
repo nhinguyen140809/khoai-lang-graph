@@ -27,8 +27,6 @@ export {
 export { ArtifactDocument } from './components/ArtifactDocument'
 export { ArtifactItemDetails } from './components/ArtifactItemDetails'
 export type { RenderItemLink } from './components/DocumentBlocks'
-export { HistorySurface } from './revisions/components/HistorySurface'
-export { RevisionContent } from './revisions/components/RevisionContent'
 export { createExport, getExport, listProjectExports } from './exports/exports.api'
 export { exportStatusLabels } from './exports/exports.constants'
 export { exportKeys } from './exports/exports.keys'
@@ -98,6 +96,8 @@ export {
   outlineSequence,
   outlineStatuses,
 } from './outline/outline.utils'
+export { HistorySurface } from './revisions/components/HistorySurface'
+export { RevisionContent } from './revisions/components/RevisionContent'
 export { useHistoryView } from './revisions/hooks/useHistoryView'
 export {
   useArtifactRevisions,
