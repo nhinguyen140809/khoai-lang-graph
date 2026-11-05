@@ -5,6 +5,7 @@ import { useRouter } from 'next/navigation'
 
 import { type Project, projectName, unfinishedRunCount } from '@/modules/project/entities'
 import { ConfirmDialog } from '@/shared/components/ui/confirm-dialog'
+import { pluralForm } from '@/shared/lib/text'
 import { routes } from '@/shared/routes'
 
 import { useDeleteProject } from './hooks/useDeleteProject'
@@ -68,7 +69,7 @@ function StopRunFirstDialog({ project, open, onOpenChange, onClosed }: DeletePro
       onOpenChange={onOpenChange}
       onClosed={onClosed}
       icon={<CircleStopIcon />}
-      title={runs === 1 ? 'Stop the run first' : 'Stop the runs first'}
+      title={`Stop the ${pluralForm(runs, { one: 'run', other: 'runs' })} first`}
       description={
         <>
           <span className="font-bold text-foreground">{projectName(project)}</span>{' '}

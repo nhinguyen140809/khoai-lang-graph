@@ -18,6 +18,13 @@ function isTypingTarget(target: EventTarget | null): boolean {
   )
 }
 
+/** Whether a key sends a prompt: Enter without Shift, outside a composition of an input method. */
+export function isSubmitKey(
+  event: Pick<KeyboardEvent, 'key' | 'shiftKey' | 'isComposing'>,
+): boolean {
+  return event.key === 'Enter' && !event.shiftKey && !event.isComposing
+}
+
 /**
  * Whether a key event is the hotkey.
  *

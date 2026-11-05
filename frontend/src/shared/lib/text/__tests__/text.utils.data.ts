@@ -1,3 +1,12 @@
+/** A text, and the first line of it that holds more than whitespace, trimmed. */
+export const firstLineCases = [
+  { name: 'a one-line text', text: 'Book a mentor', line: 'Book a mentor' },
+  { name: 'leading blank lines', text: '\n\n  Book a mentor\nBook a room', line: 'Book a mentor' },
+  { name: 'spaces around', text: '  Book a mentor  \nsecond', line: 'Book a mentor' },
+  { name: 'a text of whitespace', text: '  \n\t', line: '' },
+  { name: 'an empty text', text: '', line: '' },
+]
+
 /** A text, a part, and whether the text holds the part in any case or accent. */
 export const includesTextCases = [
   { name: 'the same case', text: 'Search mentors', part: 'mentors', found: true },

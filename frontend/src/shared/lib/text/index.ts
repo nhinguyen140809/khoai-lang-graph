@@ -1,5 +1,6 @@
 export { capitalize, initialsOf, jsonToPlainText, snakeToSentenceCase } from './formatters.utils'
+export { pluralForm } from './plural.utils'
 export { quoteRange } from './quotes.utils'
 export { rangesOfQuery, splitByRanges } from './ranges.utils'
 export type { TextRange, TextSegment } from './text.types'
-export { articleOf, foldText, hasTextPart, textOf } from './text.utils'
+export { articleOf, firstLineOf, foldText, hasTextPart, textOf } from './text.utils'

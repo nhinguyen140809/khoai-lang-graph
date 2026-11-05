@@ -1,4 +1,4 @@
-import { collectBy } from '@/shared/lib/collections'
+import { collectBy, rankIn } from '@/shared/lib/collections'
 
 import type { ItemLinkGroup, ItemLinkRow, LinkQuote, Trace, TraceItem } from '../types/chains.types'
 import type { TraceLink } from '../types/trace-links.types'
@@ -86,10 +86,8 @@ export function itemLinkGroups(
       return other === undefined ? [] : [rowOf(link, other)]
     })
     const rowsByType = collectBy(rows, ({ link }) => link.link_type)
-    const rankOf = (key: string) => {
-      const index = linkTypes.findIndex((type) => type.key === key)
-      return index === -1 ? linkTypes.length : index
-    }
+    const order = linkTypes.map(({ key }) => key)
+    const rankOf = (key: string) => rankIn(order, key)
     return [...rowsByType.entries()]
       .map(([linkType, rowsOfType]) => ({
         linkType,

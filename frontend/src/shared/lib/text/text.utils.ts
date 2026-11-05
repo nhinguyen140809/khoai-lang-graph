@@ -1,3 +1,5 @@
+import { hasText } from '@/shared/lib/guards'
+
 /**
  * The text in lower case and without accents, so that "Nguyễn" and "nguyen" read the same. The
  * letter "đ" has no accent to strip, so it is written out as "d".
@@ -16,6 +18,12 @@ export function textOf(value: unknown): string {
   if (typeof value === 'string') return value
   if (typeof value === 'number' || typeof value === 'boolean') return String(value)
   return ''
+}
+
+/** The first line of a text that holds more than whitespace, trimmed; empty text without one. */
+export function firstLineOf(text: string): string {
+  const first = text.split('\n').find(hasText)
+  return first === undefined ? '' : first.trim()
 }
 
 /** The article before a word, by the sound of its first letter, for a sentence that names it. */

@@ -7,6 +7,7 @@ import type {
 import type { QuestionAnswer } from '@/modules/workflow/entities'
 import type { FieldProblem } from '@/shared/api/error'
 import { hasText, isRecord, isString } from '@/shared/lib/guards'
+import { pluralForm } from '@/shared/lib/text'
 
 import { findItem } from '../artifacts/artifacts.lookup'
 import {
@@ -105,8 +106,7 @@ function answerRuleProblems(
 function tooFewChoicesProblem(field: string, fewest: number): FieldProblem {
   return {
     field,
-    message:
-      fewest === 1 ? 'Choose at least one choice.' : `Choose at least ${String(fewest)} choices.`,
+    message: `Choose at least ${fewest === 1 ? 'one' : String(fewest)} ${pluralForm(fewest, { one: 'choice', other: 'choices' })}.`,
   }
 }
 

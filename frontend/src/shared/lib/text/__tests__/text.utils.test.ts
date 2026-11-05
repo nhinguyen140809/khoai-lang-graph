@@ -1,7 +1,7 @@
 import { describe, expect, it } from 'vitest'
 
-import { articleOf, foldText, hasTextPart, textOf } from '../text.utils'
-import { foldTextCases, includesTextCases, textOfCases } from './text.utils.data'
+import { articleOf, firstLineOf, foldText, hasTextPart, textOf } from '../text.utils'
+import { firstLineCases, foldTextCases, includesTextCases, textOfCases } from './text.utils.data'
 
 describe('foldText', () => {
   it.each(foldTextCases)('reads $name', ({ text, folded }) => {
@@ -18,6 +18,12 @@ describe('hasTextPart', () => {
 describe('textOf', () => {
   it.each(textOfCases)('reads $name', ({ value, text }) => {
     expect(textOf(value)).toBe(text)
+  })
+})
+
+describe('firstLineOf', () => {
+  it.each(firstLineCases)('reads $name', ({ text, line }) => {
+    expect(firstLineOf(text)).toBe(line)
   })
 })
 
