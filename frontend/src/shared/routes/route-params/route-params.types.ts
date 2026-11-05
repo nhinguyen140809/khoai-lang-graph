@@ -8,3 +8,6 @@ export const RouteParam = {
   /** The item that a document page scrolls to and marks. */
   Item: 'item',
 } as const
+
+/** The name of a query parameter of a page, as `RouteParam` lists them. */
+export type RouteParamName = (typeof RouteParam)[keyof typeof RouteParam]

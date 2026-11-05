@@ -56,7 +56,7 @@ Conventions:
   | `clipboard/` | `useClipboard`, which copies a text and reports it for two seconds | The Clipboard API of the browser written in a component: the hook owns it |
   | `url/` | `pathOf`, `isAtOrUnder`, `encodeId`, `reloadTo`, `queryString`, `queryStringOf`, `pathWithQuery` | Parsing a query: `URLSearchParams`; the addresses of pages: `routes` |
   | `hotkey/` | Matching and writing a keyboard shortcut, and the name of the modifier key (`useModifierKeyName`) | |
-  | `hydration/`, `viewport/` | `useIsHydrated` (false until the page hydrates), `useIsMobile` | |
+  | `hydration/`, `viewport/` | `useIsHydrated` (false until the page hydrates), `useIsMobile`, `useScrollIntoView` (the element in view again on each key change) | |
   | `cn/` | `cn`, the class names of Tailwind (the alias `utils` of shadcn) | |
   | `registry/` | The items that components register while they are mounted, and leave with them: `createRegistryStore`, `useRegisterItem`, `useRegisteredItems`, `OrderedItem` (the status bar and the activity bar use it) | |
   | `storage/` | The browser storage (`browserStorage`, `storageKey`), and the storage of a persisted zustand store (`persistStorage`, `persistStorageByEntry`) with `parseStored` for a stored value checked by a schema; imported from `@/shared/lib/storage` only | Reading JSON by hand: `parseStored` |
