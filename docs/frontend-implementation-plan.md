@@ -502,7 +502,7 @@ After the entities, one screen at a time, each drawn first from the skeletons of
 | # | Screen | Module of the screen | Features | Copy with the screen |
 |---|---|---|---|---|
 | S1 | Documents: the side panel of documents with the outline, the document tab, the item page and peek | `documents` | `artifact/features/edit`, `restore`, `export` | None |
-| S2a | Activity: Progress (the stages as a stepper of steps and sub-steps) and Outline (the messages of the user as a timeline) in the side panel, the chat in a tab with its work in plain words, its reviews and the prompt that it shares with a new project ([S2a plan](frontend-s2a-activity-plan.md)) | `activity` | `thread/features/send-message`, `activity/features/choose-run-settings`, `review/features/answer`, `run/features/stop` | `features/review/review-form.utils.ts`, `review.schema.ts`, `QuestionField.tsx` to `review/features/answer` |
+| S2a | Activity: Progress (the stages of the definition as a stepper of steps and sub-steps) and Outline (the messages of the user as a timeline) in the side panel, the chat in a tab with its work in plain words, its reviews and the prompt that it shares with a new project ([S2a plan](frontend-s2a-activity-plan.md)) | `activity` | `thread/features/send-message`, `activity/features/choose-run-settings`, `review/features/answer`, `run/features/stop` | `features/review/review-form.utils.ts`, `review.schema.ts`, `QuestionField.tsx` to `review/features/answer` |
 | S2b | The review bar of a document and of its item pages, with the edited items | `documents`, `review` | `review/features/answer` (S2a) | None |
 | S3 | Search, in its side panel and in the command palette | `artifact` | None | None |
 | S4 | Trace: the matrix, the gaps and issues | `trace` | Creating and removing a link | `features/traceability/matrix-filter.utils.ts` |
@@ -560,7 +560,7 @@ The PRs go one at a time, in the order of the rows: each branch starts from `ori
 | S1c.2 | `feat/fe/item-peek` | `feat(frontend): peek at an item in the right panel from the keys of a document` | S1c.1 |
 | S1d | `feat/fe/export` | `feat(frontend): export a document from its page and from the command palette, and download it when it is ready` ([S1d plan](frontend-s1d-export-plan.md)) | S1c.2 |
 | S2a.D | `docs/fe/activity` | `docs(api): give an answered review the decision that answered it` ([S2a plan](frontend-s2a-activity-plan.md)) | None |
-| S2a.0 | `chore/fe/maintenance-before-activity` | `chore(frontend): remove the first chat and the start of a run that the API lacks, and share the scroll to an anchor` | S1d |
+| S2a.0 | `chore/fe/maintenance-before-activity` | `chore(frontend): remove the first chat and the start of a run that the API lacks, and share the scroll, the route parameters and the text helpers` | S1d |
 | S2a.1 | `feat/fe/activity-entities` | `feat(frontend): read the progress of the stages, the work of a run in words, the decision of a review and the thread of the activity` | S2a.0, S2a.D |
 | S2a.2 | `feat/fe/prompt-input` | `feat(frontend): add the stepper, the timeline and the trace, and one prompt input for every prompt that starts work` | S2a.1 |
 | S2a.3 | `feat/fe/send-message-and-answer` | `feat(frontend): send a message, choose the settings of the run it starts, and answer a review` | S2a.2 |
