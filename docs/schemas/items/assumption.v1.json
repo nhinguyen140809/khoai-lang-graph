@@ -57,7 +57,7 @@
         "invalidated"
       ],
       "description": "Whether the assumption was checked.",
-      "x-ui-widget": "select"
+      "x-ui-widget": "badge"
     }
   },
   "required": [

@@ -39,7 +39,7 @@
       "description": "Item kinds only. The prefix of the key of an item, such as REQ, or a short text that names one prefix for each case, as backlog_item does. A kind whose key is built another way has none."
     },
     "x-ui-display": {
-      "enum": ["document", "heading", "table", "cards", "transcript"]
+      "enum": ["document", "heading", "table", "cards", "transcript", "profile"]
     },
     "x-ui-navigable": {
       "type": "boolean",
@@ -51,14 +51,18 @@
     },
     "x-ui-role-field": {
       "type": "string",
-      "description": "Item kinds only. The field that names who says the words of a message, shown as the speaker of a transcript. The kinds that draw a transcript name one."
+      "description": "Item kinds only. The field whose value is the key of the participant who says the words of a message, shown as the speaker of a transcript. The kinds that draw a transcript name one."
+    },
+    "x-ui-participants-field": {
+      "type": "string",
+      "description": "Artifact kinds only. The field that lists the people of a conversation, the one who leads first: an object list whose entries have key, name, role and item_id. A message names its speaker by the key of an entry. The kinds that draw a transcript name one."
     },
     "x-ui-list-fields": {
       "type": "array",
       "minItems": 1,
       "uniqueItems": true,
       "items": { "type": "string" },
-      "description": "Item kinds only. The fields shown as table columns or on a card."
+      "description": "Item kinds only. The fields shown as table columns, on a card, and on the card of a profile: the fields that read on one line under its title, then the others."
     },
     "x-ui-field-order": {
       "type": "array",
@@ -106,16 +110,18 @@
       "if": { "properties": { "x-level": { "const": "artifact" } } },
       "then": {
         "properties": {
-          "x-ui-display": { "const": "document" },
+          "x-ui-display": { "enum": ["document", "transcript"] },
           "x-key-prefix": false,
           "x-ui-navigable": false,
           "x-ui-title-field": false,
+          "x-ui-role-field": false,
           "x-ui-list-fields": false
         }
       },
       "else": {
         "properties": {
-          "x-ui-display": { "enum": ["heading", "table", "cards", "transcript"] }
+          "x-ui-display": { "enum": ["heading", "table", "cards", "transcript", "profile"] },
+          "x-ui-participants-field": false
         },
         "required": ["x-ui-navigable", "x-ui-title-field", "x-ui-list-fields"]
       }
@@ -166,7 +172,7 @@
           "const": true
         },
         "x-ui-widget": {
-          "enum": ["text", "textarea", "select", "number", "list", "tags", "object-list"]
+          "enum": ["text", "textarea", "select", "number", "list", "tags", "object-list", "separator", "avatar-list", "badge"]
         },
         "x-value-list": {
           "type": "string",
@@ -182,7 +188,17 @@
       "required": ["title", "type", "description", "x-ui-widget"],
       "not": {
         "required": ["enum", "x-value-list"]
-      }
+      },
+      "allOf": [
+        {
+          "if": { "properties": { "x-ui-widget": { "const": "badge" } } },
+          "then": { "anyOf": [{ "required": ["enum"] }, { "required": ["x-value-list"] }] }
+        },
+        {
+          "if": { "properties": { "x-ui-widget": { "const": "avatar-list" } } },
+          "then": { "properties": { "type": { "const": "array" } } }
+        }
+      ]
     }
   }
 }

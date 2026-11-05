@@ -8,11 +8,9 @@ import {
   itemTitle,
   mainField,
   useArtifactKinds,
-  useIssueKinds,
   useWorkflowDefinition,
 } from '@/modules/workflow/entities/@x/trace'
 
-import type { TraceItem } from '../types/chains.types'
 import type { ItemLinksResult } from '../types/item-links.types'
 import { itemLinkGroups, linkQuotesByItem } from '../utils/chains.utils'
 import { fieldMarksOf } from '../utils/link-marks.utils'
@@ -26,25 +24,19 @@ export function useItemLinks(itemId: string): ItemLinksResult {
   const trace = useItemTrace(itemId, { direction: 'both', depth: 1 })
   const { data: definition } = useWorkflowDefinition()
   const { data: kinds } = useArtifactKinds()
-  const { data: issueKinds } = useIssueKinds()
 
   const result = useMemo<ItemLinksResult | undefined>(() => {
     const traceData = trace.data
-    if (
-      traceData === undefined ||
-      definition === undefined ||
-      kinds === undefined ||
-      issueKinds === undefined
-    ) {
+    if (traceData === undefined || definition === undefined || kinds === undefined) {
       return undefined
     }
 
     const schemas = contentSchemasByKind(kinds)
     const linkTypes = definition.link_types.map(({ key, title }) => ({ key, title }))
-    const isIssue = (item: TraceItem) => issueKinds.some(({ kind }) => kind === item.kind)
     const groups = itemLinkGroups(traceData, itemId, {
       linkTypes,
       titleOf: (item) => itemTitle(schemas.get(item.kind), item),
+      kindTitleOf: (item) => schemas.get(item.kind)?.title ?? item.kind,
     })
     const quotes = linkQuotesByItem(traceData).get(itemId) ?? []
     const item = traceData.items.find(({ id }) => id === itemId)
@@ -55,7 +47,7 @@ export function useItemLinks(itemId: string): ItemLinksResult {
       main === undefined || item === undefined || schema === undefined
         ? []
         : [main, ...contentFields(schema).filter((field) => field !== main)]
-    const fieldMarks = fieldMarksOf(item?.content ?? {}, quotes, { fields: ordered, isIssue })
+    const fieldMarks = fieldMarksOf(item?.content ?? {}, quotes, { fields: ordered })
     const rows = [...groups.outgoing, ...groups.incoming].flatMap(({ rows }) => rows)
     return {
       state: 'success',
@@ -65,7 +57,7 @@ export function useItemLinks(itemId: string): ItemLinksResult {
       fieldMarks,
       rowsByLinkId: new Map(rows.map((row) => [row.link.id, row])),
     }
-  }, [trace.data, definition, kinds, issueKinds, itemId])
+  }, [trace.data, definition, kinds, itemId])
 
   if (trace.isError) return { state: 'error', retry: () => void trace.refetch() }
   if (result === undefined) return { state: 'pending' }

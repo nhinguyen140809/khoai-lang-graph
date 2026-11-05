@@ -55,7 +55,7 @@
         "high"
       ],
       "description": "How much it blocks the specification.",
-      "x-ui-widget": "select"
+      "x-ui-widget": "badge"
     },
     "proposed_resolutions": {
       "title": "Proposed resolutions",
@@ -75,7 +75,7 @@
         "dismissed"
       ],
       "description": "State of the conflict.",
-      "x-ui-widget": "select"
+      "x-ui-widget": "badge"
     },
     "resolution": {
       "title": "Resolution",

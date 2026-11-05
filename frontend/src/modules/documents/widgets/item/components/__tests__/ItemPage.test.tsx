@@ -65,7 +65,7 @@ describe('ItemPage', () => {
 
     await waitFor(() => {
       expect(trail).toHaveTextContent(
-        `${specification.title}/Functional requirements/Mentor discovery/Requirement`,
+        `${specification.title}/Functional requirements/Mentor discovery/Requirement/Search mentors`,
       )
     })
   })

@@ -58,6 +58,14 @@ const sizeStyles: Record<FloatingSize, string> = {
   lg: 'p-4',
 }
 
+// The width the surface never grows past, so that it fits the area at its own inset.
+const maxWidthStyles: Record<FloatingOffset, string> = {
+  none: 'max-w-full',
+  sm: 'max-w-[calc(100%-1rem)]',
+  default: 'max-w-[calc(100%-2rem)]',
+  lg: 'max-w-[calc(100%-3rem)]',
+}
+
 interface FloatingSurfaceProps extends Omit<React.ComponentProps<typeof Surface>, 'className'> {
   /** Which corner of the containing area the surface floats in; bottom-right when left out. */
   corner?: FloatingCorner
@@ -73,9 +81,10 @@ interface FloatingSurfaceProps extends Omit<React.ComponentProps<typeof Surface>
 /**
  * A surface that floats at a corner of the area that contains it, above the content of that
  * area: it stays where it is while the content scrolls, and it is clipped to the area, so it
- * never covers the rest of the app. The nearest positioned ancestor places it: give the area
- * `relative`. The surface sizes itself to what it holds; anything else, such as its z-index
- * or a wider shape, changes through `className`.
+ * never covers the rest of the app. It also keeps to the width of the area less its inset, so
+ * nothing of it is clipped on a narrow window. The nearest positioned ancestor places it: give
+ * the area `relative`. The surface sizes itself to what it holds; anything else, such as its
+ * z-index or a wider shape, changes through `className`.
  */
 function FloatingSurface({
   corner = 'bottom-right',
@@ -93,6 +102,7 @@ function FloatingSurface({
       className={cn(
         'absolute z-20 w-fit shrink-0 shadow-lg',
         cornerStyles[offset][corner],
+        maxWidthStyles[offset],
         variantStyles[variant],
         sizeStyles[size],
         className,

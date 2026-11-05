@@ -43,7 +43,7 @@ describe('useItemLinks', () => {
     expect(result.current.rowsByLinkId.size).toBe(result.current.count)
   })
 
-  it('marks in warning when the other item is an issue', async () => {
+  it('marks the words that another item quotes in the yellow of the charts', async () => {
     const item = itemFixtureByKey(projectId, 'AR-010')
     const { result } = renderHookWithProviders(() => useItemLinks(item.id))
 
@@ -53,7 +53,7 @@ describe('useItemLinks', () => {
     if (result.current.state !== 'success') return
 
     const marks = result.current.fieldMarks.get('statement') ?? []
-    expect(marks[0]?.color).toBe('warning')
+    expect(marks[0]?.color).toBe('chart')
   })
 
   it('reads nothing for an item with no link', () => {

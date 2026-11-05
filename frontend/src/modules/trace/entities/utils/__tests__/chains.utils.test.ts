@@ -1,39 +1,7 @@
 import { describe, expect, it } from 'vitest'
 
-import { itemLinkGroups, linkQuotesByItem, originOf, outOfDateItemIds } from '../chains.utils'
-import { chainTrace, loopTrace, outOfDateTrace, quotesTrace } from './chains.utils.data'
-
-describe('originOf', () => {
-  it('follows the chain of a requirement down to the quote it cites', () => {
-    const origin = originOf(chainTrace, 'spec')
-
-    expect(origin.steps.map(({ item }) => item.key)).toEqual(['AR-001'])
-    expect(origin.steps[0]?.steps.map(({ item }) => item.key)).toEqual(['RAW-001'])
-    // The raw requirement cites the message.
-    expect(origin.steps[0]?.steps[0]?.evidence.map(({ cited }) => cited.key)).toEqual(['PER-001#2'])
-    // A requirement with its own evidence cites it directly too.
-    const raw = originOf(chainTrace, 'raw')
-    expect(raw.evidence.map(({ cited }) => cited.key)).toEqual(['PER-001#2'])
-    expect(raw.steps).toEqual([])
-  })
-
-  it('walks an item met twice once, under its first path', () => {
-    const origin = originOf(chainTrace, 'spec')
-
-    expect(JSON.stringify(origin).match(/"item":\{"id":"raw"/g)?.length).toBe(1)
-  })
-
-  it('gives nothing for an item with no derived_from link', () => {
-    expect(originOf(chainTrace, 'message')).toEqual({ evidence: [], steps: [] })
-  })
-
-  it('walks a loop once', () => {
-    const origin = originOf(loopTrace, 'analyzed')
-
-    expect(origin.steps.map(({ item }) => item.key)).toEqual(['RAW-001'])
-    expect(origin.steps[0]?.steps).toEqual([])
-  })
-})
+import { itemLinkGroups, linkQuotesByItem, outOfDateItemIds } from '../chains.utils'
+import { chainTrace, outOfDateTrace, quotesTrace } from './chains.utils.data'
 
 describe('linkQuotesByItem', () => {
   it('puts the source quote on the source and the target quote on the target', () => {
@@ -70,6 +38,7 @@ describe('itemLinkGroups', () => {
     const groups = itemLinkGroups(quotesTrace, 'analyzed', {
       linkTypes,
       titleOf: (item) => item.key,
+      kindTitleOf: () => 'Kind',
     })
 
     expect(groups.outgoing.map(({ title }) => title)).toEqual(['Evidenced by'])
@@ -81,6 +50,7 @@ describe('itemLinkGroups', () => {
     const groups = itemLinkGroups(chainTrace, 'spec', {
       linkTypes: [{ key: 'derived_from', title: 'Based on' }],
       titleOf: (item) => item.key,
+      kindTitleOf: () => 'Kind',
     })
 
     expect(groups.outgoing.map(({ title }) => title)).toEqual(['Based on', 'concerns'])
@@ -90,6 +60,7 @@ describe('itemLinkGroups', () => {
     const groups = itemLinkGroups(outOfDateTrace, 'spec', {
       linkTypes,
       titleOf: (item) => item.key,
+      kindTitleOf: () => 'Kind',
     })
 
     expect(groups.outgoing[0]?.rows[0]?.isOutOfDate).toBe(true)

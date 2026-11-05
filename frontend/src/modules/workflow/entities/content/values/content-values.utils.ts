@@ -50,7 +50,10 @@ export function validateContent(
  * The content as the API stores it: numbers as numbers, an empty nullable field as null. A field
  * that the content does not hold stays out, so that a change sets only the fields it names.
  */
-export function toStoredContent(fields: ContentField[], content: ContentValues): ContentValues {
+export function toStoredContent(
+  fields: readonly ContentField[],
+  content: ContentValues,
+): ContentValues {
   const readOnly = fields.filter((field) => field.readOnly).map(({ name }) => name)
   const stored: ContentValues = omit(content, readOnly)
   for (const field of fields) {
@@ -66,7 +69,7 @@ export function toStoredContent(fields: ContentField[], content: ContentValues):
 
 /** The names of the fields whose value differs between two contents, read only fields left out. */
 export function changedFields(
-  fields: ContentField[],
+  fields: readonly ContentField[],
   before: ContentValues,
   after: ContentValues,
 ): string[] {

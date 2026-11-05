@@ -6,13 +6,11 @@ import { contentFields, mainField } from '@/modules/workflow/entities'
 import type { LinkQuote, TraceItem } from '../../types/chains.types'
 import { fieldMarksOf, markRangesOf } from '../link-marks.utils'
 
-const issueKind = 'ambiguity_issue'
 const requirementKind = 'spec_requirement'
-const issueItem = { id: 'issue', kind: issueKind } as TraceItem
 const requirementItem = { id: 'other', kind: requirementKind } as TraceItem
 
-/** A quote of the given words, from a link to the item given. */
-function quoteOf(words: string, other: TraceItem): LinkQuote {
+/** A quote of the given words, from a link of the given side to the item given. */
+function quoteOf(words: string, other: TraceItem, side: LinkQuote['side'] = 'source'): LinkQuote {
   return {
     link: {
       id: `link-${words}`,
@@ -24,7 +22,7 @@ function quoteOf(words: string, other: TraceItem): LinkQuote {
       source_quote: null,
       note: null,
     },
-    side: 'target',
+    side,
     quote: words,
     other,
   }
@@ -35,11 +33,11 @@ const main = mainField(schema)
 const fields = main === undefined ? [] : [main, ...contentFields(schema).filter((f) => f !== main)]
 
 describe('fieldMarksOf', () => {
-  it('places a quote in the field that holds its words, with its link', () => {
+  it('places a quote in the field that holds its words, underlined in primary', () => {
     const marks = fieldMarksOf(
       { statement: 'The system shall let a student search mentors by field of study.' },
       [quoteOf('search mentors by field of study', requirementItem)],
-      { fields, isIssue: () => false },
+      { fields },
     )
 
     expect(marks.get('statement')).toEqual([
@@ -48,9 +46,21 @@ describe('fieldMarksOf', () => {
         linkIds: ['link-search mentors by field of study'],
         start: 31,
         end: 63,
+        variant: 'underline',
         color: 'primary',
+        strokeWidth: 3,
       },
     ])
+  })
+
+  it('marks the words that another record quotes in the yellow of the charts', () => {
+    const marks = fieldMarksOf(
+      { statement: 'A search result is listed within 2 seconds.' },
+      [quoteOf('within 2 seconds', requirementItem, 'target')],
+      { fields },
+    )
+
+    expect(marks.get('statement')?.[0]?.color).toBe('chart')
   })
 
   it('merges overlapping quotes of one field into one mark with both links', () => {
@@ -60,7 +70,7 @@ describe('fieldMarksOf', () => {
         quoteOf('let a student', requirementItem),
         quoteOf('student search mentors', requirementItem),
       ],
-      { fields, isIssue: () => false },
+      { fields },
     )
 
     expect(marks.get('statement')).toEqual([
@@ -69,42 +79,43 @@ describe('fieldMarksOf', () => {
         linkIds: ['link-student search mentors', 'link-let a student'],
         start: 17,
         end: 45,
+        variant: 'underline',
         color: 'primary',
+        strokeWidth: 3,
       },
     ])
+  })
+
+  it('keeps the yellow when quotes of both directions merge', () => {
+    const marks = fieldMarksOf(
+      { statement: 'The system shall let a student search mentors.' },
+      [
+        quoteOf('let a student', requirementItem),
+        quoteOf('student search mentors', requirementItem, 'target'),
+      ],
+      { fields },
+    )
+
+    expect(marks.get('statement')?.[0]?.color).toBe('chart')
   })
 
   it('leaves a quote out that no field holds', () => {
     const marks = fieldMarksOf(
       { statement: 'The system shall list mentors.' },
       [quoteOf('words that are not there', requirementItem)],
-      { fields, isIssue: () => false },
+      { fields },
     )
 
     expect(marks.size).toBe(0)
-  })
-
-  it('marks in warning when the other item is an issue', () => {
-    const marks = fieldMarksOf(
-      { statement: 'A search result is listed within 2 seconds.' },
-      [quoteOf('within 2 seconds', issueItem)],
-      { fields, isIssue: (item) => item.kind === issueKind },
-    )
-
-    expect(marks.get('statement')?.[0]?.color).toBe('warning')
   })
 })
 
 describe('markRangesOf', () => {
   it('places the quotes of one text, such as a message', () => {
-    const marks = markRangesOf(
-      'I ask seniors in my club, but I never know who is free this week',
-      [
-        quoteOf('I ask seniors in my club', requirementItem),
-        quoteOf('who is free this week', requirementItem),
-      ],
-      { isIssue: () => false },
-    )
+    const marks = markRangesOf('I ask seniors in my club, but I never know who is free this week', [
+      quoteOf('I ask seniors in my club', requirementItem),
+      quoteOf('who is free this week', requirementItem),
+    ])
 
     expect(marks.map(({ start, end }) => [start, end])).toEqual([
       [0, 24],

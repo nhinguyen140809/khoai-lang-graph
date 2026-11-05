@@ -167,4 +167,93 @@ screenshots('Documents', (shot) => {
     await row.hover()
     await shoot({ hover: row })
   })
+
+  shot('Item in edit mode', async ({ page, user, shoot }) => {
+    await openItem(page, analysis, 'List mentors by field')
+
+    await page.getByRole('button', { name: 'Edit', exact: true }).click()
+    await user.expectRole('textbox', 'Title')
+    await shoot({ fullPage: true })
+  })
+
+  shot(
+    'History at the level of the list with the changes of a version',
+    async ({ page, user, shoot }) => {
+      await openItem(page, analysis, 'Two-step booking')
+
+      await user.pressButton('History')
+      await user.pressButton('Show all versions')
+      // The current version stays selected: version 1 has none before it, so its Show changes is off.
+      await page.getByRole('checkbox', { name: 'Show changes' }).check()
+      await shoot({ fullPage: true })
+    },
+  )
+
+  shot('History at the level of the version with its stepper', async ({ page, user, shoot }) => {
+    await openItem(page, analysis, 'Two-step booking')
+
+    await user.pressButton('History')
+    await user.expectRole('button', 'Older version')
+    await shoot({ fullPage: true })
+  })
+
+  shot('History of an older version with its restore menu', async ({ page, user, shoot }) => {
+    await openItem(page, analysis, 'Two-step booking')
+
+    await user.pressButton('History')
+    await user.pressButton('Older version')
+    await page.getByRole('button', { name: 'More actions' }).click()
+    await user.expectRole('menuitem', 'Restore this version')
+    await shoot({ fullPage: true })
+  })
+
+  shot('Card of the items at the other end of a link', async ({ page, user, shoot }) => {
+    await openItem(page, specification, 'Book a session')
+
+    await user.expectRole('button', 'Analysed requirement, Two-step booking')
+    await page.getByRole('button', { name: 'Analysed requirement, Two-step booking' }).click()
+    await page.getByRole('link', { name: 'Analysed requirement, Two-step booking' }).waitFor()
+    await shoot()
+  })
+
+  shot('Mark of the quoted words with its chip active', async ({ page, shoot }) => {
+    await openItem(page, specification, 'Search mentors')
+
+    const chip = page.getByRole('button', { name: 'Analysed requirement, List mentors by field' })
+    await chip.waitFor()
+    await chip.hover()
+    await shoot({ fullPage: true, hover: chip })
+  })
+
+  shot('Card of the items behind a mark of the quoted words', async ({ page, shoot }) => {
+    await openItem(page, specification, 'Search mentors')
+
+    await page.locator('[data-slot="highlight-mark"][data-interactive]').first().click()
+    await page.getByRole('link', { name: 'Analysed requirement, List mentors by field' }).waitFor()
+    await shoot({ fullPage: true })
+  })
+
+  shot(
+    'Mark of the words that another record quotes, in the yellow of the charts',
+    async ({ page, user, shoot }) => {
+      await openItem(page, analysis, 'Search within 2 seconds')
+
+      await user.expectRole('button', 'Point to clarify, "Fast" has no number')
+      await shoot({ fullPage: true })
+    },
+  )
+
+  shot('Marks of the quoted words of both directions of a link', async ({ page, user, shoot }) => {
+    await openItem(page, analysis, 'Search with free hours')
+
+    await user.expectRole('button', 'Requirement, Filter by field and availability')
+    await shoot({ fullPage: true })
+  })
+
+  shot('Row of an item made from an older version', async ({ page, user, shoot }) => {
+    await page.goto(`${project}/documents/${specification}`)
+
+    await user.expectRole('treeitem', 'Book a session')
+    await shoot()
+  })
 })

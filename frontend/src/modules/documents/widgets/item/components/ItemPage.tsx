@@ -1,14 +1,21 @@
 'use client'
 
 import Link from 'next/link'
-import { Fragment, useRef } from 'react'
+import { Fragment, type ReactNode, useRef, useState } from 'react'
+import { ErrorBoundary } from 'react-error-boundary'
 
 import {
   type ArtifactItem,
   ArtifactItemDetails,
+  HistorySurface,
+  ItemKeyLine,
+  RevisionContent,
   useItem,
   useItemSchema,
 } from '@/modules/artifact/entities'
+import { EditItemForm, EditRecordButton, useIsEditing } from '@/modules/artifact/features/edit'
+import { RestoreVersionMenuItem } from '@/modules/artifact/features/restore'
+import { QuotedWordsPopover, quoteMarkColors, useItemLinks } from '@/modules/trace/entities'
 import { isNavigable } from '@/modules/workflow/entities'
 import { isNotFoundError } from '@/shared/api/error'
 import { ErrorState, LoadingState, NotFoundState } from '@/shared/components/state'
@@ -28,17 +35,19 @@ import { useItemCommands } from '../hooks/useItemCommands'
 import { useItemPage } from '../hooks/useItemPage'
 import { useItemTab } from '../hooks/useItemTab'
 import { itemPageMessages, navigatorIdleMs } from '../item-page.constants'
+import { ItemLinkLine } from './ItemLinkLine'
 import { ItemNavigator } from './ItemNavigator'
 
 /**
- * The page of one item, in a tab of its own: a breadcrumb from its document down to its group, fixed
- * under the tab, its title, the line with its key, status and version, and its fields. Previous and Next float over
- * the page and open the item before and after it in the tab on screen.
+ * The page of one item, in a tab of its own, in three modes: Read shows the title with Edit, the
+ * key line with the link line under it, and the fields with the quoted words marked, each opening
+ * the card of the items at the other end of its link, with the history surface in the corner; History shows the selected version in
+ * place of the fields; Edit shows the form alone. An item of a kind that is read in place in its
+ * document, or that does not exist, shows the state instead.
  */
 export function ItemPage({ projectId, itemId }: { projectId: string; itemId: string }) {
   const item = useItem(itemId)
   const { schema } = useItemSchema(item.data)
-  useItemTab(projectId, itemId, item.data)
   const notFound = (
     <NotFoundState
       title={itemPageMessages.notFound.title}
@@ -58,14 +67,18 @@ export function ItemPage({ projectId, itemId }: { projectId: string; itemId: str
 
 function ItemPageBody({ projectId, record }: { projectId: string; record: ArtifactItem }) {
   const project = routes.project(projectId)
-  const page = useItemPage(projectId, record)
-  const { neighbors, moveTo } = page
+  const target = { type: 'item' as const, id: record.id }
+  const isEditing = useIsEditing(target)
+  const keepTab = useItemTab(projectId, record.id, record)
+  const page = useItemPage(projectId, record, { isEditing })
+  const links = useItemLinks(record.id)
+  const [activeLinkId, setActiveLinkId] = useState<string | null>(null)
   const pageRef = useRef<HTMLDivElement>(null)
   const { isShown, show, holdProps } = useIdleVisibility(pageRef, { idleMs: navigatorIdleMs })
-  useItemCommands(neighbors, moveTo, show)
+  useItemCommands(page.neighbors, page.moveTo, show, { isEnabled: !isEditing })
 
   return (
-    <div ref={pageRef} className="relative flex h-full flex-col">
+    <div ref={pageRef} className="flex h-full flex-col">
       {/* The path stays under the tab while the item scrolls. */}
       <header className="shrink-0 border-b px-6 py-2">
         <Breadcrumb aria-label={itemPageMessages.location}>
@@ -87,33 +100,189 @@ function ItemPageBody({ projectId, record }: { projectId: string; record: Artifa
                 </BreadcrumbItem>
               </Fragment>
             ))}
+            <BreadcrumbSeparator>{itemPageMessages.separator}</BreadcrumbSeparator>
+            <BreadcrumbItem>
+              <BreadcrumbPage>{page.title}</BreadcrumbPage>
+            </BreadcrumbItem>
           </BreadcrumbList>
         </Breadcrumb>
       </header>
-      <ScrollArea className="min-h-0 flex-1">
-        <article className="mx-auto max-w-3xl space-y-4 p-6 pb-20">
-          <h1 className="text-2xl font-semibold">{page.title}</h1>
-          {page.schema !== undefined && page.status !== undefined && (
-            <ArtifactItemDetails
-              item={record}
-              schema={page.schema}
-              status={page.status}
-              isUnderReview={page.isUnderReview}
+      <div className="relative min-h-0 flex-1">
+        <ScrollArea className="h-full">
+          <article className="mx-auto max-w-3xl space-y-4 p-6 pb-20">
+            <header className="space-y-2">
+              <div className="flex flex-wrap items-start gap-4">
+                <h1 className="text-2xl font-semibold">{page.title}</h1>
+                {!isEditing && (
+                  <EditRecordButton target={target} lockedReason={page.lockedReason} />
+                )}
+              </div>
+              {!isEditing && !page.isHistoryOpen && page.status !== undefined && (
+                <>
+                  <ItemKeyLine
+                    item={record}
+                    status={page.status}
+                    isUnderReview={page.isUnderReview}
+                  />
+                  <ErrorBoundary
+                    resetKeys={[record.id]}
+                    fallbackRender={({ resetErrorBoundary }) => (
+                      <LinkLineError onRetry={resetErrorBoundary} />
+                    )}
+                  >
+                    <ItemLinkLineBlock
+                      projectId={projectId}
+                      links={links}
+                      activeLinkId={activeLinkId}
+                      onActiveLinkChange={setActiveLinkId}
+                    />
+                  </ErrorBoundary>
+                </>
+              )}
+            </header>
+            {isEditing ? (
+              page.schema !== undefined && (
+                <EditItemForm
+                  item={record}
+                  schema={page.schema}
+                  lockedReason={page.lockedReason}
+                  onChanged={page.reloadTraces}
+                  onFirstChange={keepTab}
+                />
+              )
+            ) : page.isHistoryOpen && page.schema !== undefined ? (
+              <RevisionContent target={target} view={page.history} fields={page.fields} />
+            ) : (
+              page.schema !== undefined && (
+                <>
+                  <ArtifactItemDetails
+                    item={record}
+                    schema={page.schema}
+                    fieldMarks={links.state === 'success' ? links.fieldMarks : undefined}
+                    renderFieldMark={(range, children) => (
+                      <ErrorBoundary resetKeys={[record.id]} fallbackRender={() => children}>
+                        <FieldMarkPopover
+                          projectId={projectId}
+                          links={links}
+                          range={range}
+                          onActiveLinkChange={setActiveLinkId}
+                        >
+                          {children}
+                        </FieldMarkPopover>
+                      </ErrorBoundary>
+                    )}
+                  />
+                </>
+              )
+            )}
+          </article>
+        </ScrollArea>
+        {!isEditing && (
+          <>
+            <HistorySurface
+              target={target}
+              currentVersion={record.version}
+              view={page.history}
+              renderRestore={(version) => (
+                <RestoreVersionMenuItem
+                  target={target}
+                  version={version}
+                  lockedReason={page.lockedReason}
+                />
+              )}
             />
-          )}
-        </article>
-      </ScrollArea>
-      <ItemNavigator
-        neighbors={neighbors}
-        isShown={isShown}
-        holdProps={holdProps}
-        onPrevious={() => {
-          moveTo(neighbors.previous)
-        }}
-        onNext={() => {
-          moveTo(neighbors.next)
-        }}
-      />
+            <ItemNavigator
+              neighbors={page.neighbors}
+              isShown={isShown}
+              holdProps={holdProps}
+              onPrevious={() => {
+                page.moveTo(page.neighbors.previous)
+              }}
+              onNext={() => {
+                page.moveTo(page.neighbors.next)
+              }}
+            />
+          </>
+        )}
+      </div>
     </div>
+  )
+}
+
+/** The link line, with its own error state; nothing while it loads. */
+function ItemLinkLineBlock({
+  projectId,
+  links,
+  activeLinkId,
+  onActiveLinkChange,
+}: {
+  projectId: string
+  links: ReturnType<typeof useItemLinks>
+  activeLinkId: string | null
+  onActiveLinkChange: (linkId: string | null) => void
+}) {
+  if (links.state !== 'success' || links.count === 0) return null
+  return (
+    <ItemLinkLine
+      projectId={projectId}
+      links={links}
+      activeLinkId={activeLinkId}
+      onActiveLinkChange={onActiveLinkChange}
+    />
+  )
+}
+
+/** The error of the links block, with its way to try again. */
+function LinkLineError({ onRetry }: { onRetry: () => void }) {
+  return <ErrorState size="compact" message={itemPageMessages.linksLoadError} onRetry={onRetry} />
+}
+
+/** A mark of the quoted words, wrapped in the card of the items at the other end of its links. */
+function FieldMarkPopover({
+  projectId,
+  links,
+  range,
+  onActiveLinkChange,
+  children,
+}: {
+  projectId: string
+  links: ReturnType<typeof useItemLinks>
+  range: { id: string; linkIds: string[] }
+  onActiveLinkChange: (linkId: string | null) => void
+  children: ReactNode
+}) {
+  if (links.state !== 'success') return children
+  const rows = range.linkIds.flatMap((id) => {
+    const row = links.rowsByLinkId.get(id)
+    return row === undefined ? [] : [row]
+  })
+  if (rows.length === 0) return children
+  const outgoingIds = new Set(links.outgoing.flatMap(({ rows }) => rows.map((row) => row.link.id)))
+  return (
+    <QuotedWordsPopover
+      projectId={projectId}
+      entries={rows.map((row) => ({
+        item: row.other,
+        relation: {
+          direction: outgoingIds.has(row.link.id) ? 'outgoing' : 'incoming',
+          linkType: row.link.link_type,
+        },
+        isOutOfDate: row.isOutOfDate,
+        otherQuote: outgoingIds.has(row.link.id) ? row.link.target_quote : row.link.source_quote,
+        quoteColor: quoteMarkColors[outgoingIds.has(row.link.id) ? 'target' : 'source'],
+        madeFromVersion: row.isOutOfDate ? row.link.target_version : null,
+      }))}
+    >
+      <span
+        onMouseEnter={() => {
+          onActiveLinkChange(rows[0]?.link.id ?? null)
+        }}
+        onMouseLeave={() => {
+          onActiveLinkChange(null)
+        }}
+      >
+        {children}
+      </span>
+    </QuotedWordsPopover>
   )
 }

@@ -30,7 +30,7 @@
         "fail"
       ],
       "description": "Overall result.",
-      "x-ui-widget": "select"
+      "x-ui-widget": "badge"
     }
   },
   "required": [

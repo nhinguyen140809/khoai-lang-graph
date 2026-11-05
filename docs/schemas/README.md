@@ -64,7 +64,7 @@ Rules that relate a file to itself or to its name are not expressible in a JSON 
 | Name | `$id` is `<artifacts or items>/<x-kind>/v<x-schema-version>`, the level matches `x-level`, and the file is `<x-kind>.v<x-schema-version>.json` |
 | Every field is required | `required` lists exactly the names in `properties` |
 | Field order | `x-ui-field-order` lists exactly the names in `properties` |
-| Known fields | `x-ui-title-field` and every name in `x-ui-list-fields` is a property |
+| Known fields | `x-ui-title-field`, `x-ui-role-field`, `x-ui-participants-field` and every name in `x-ui-list-fields` is a property |
 | Title of a navigable kind | When `x-ui-navigable` is `true`, the field that `x-ui-title-field` names is a short title: its description says it has at most 60 characters. The length is not a keyword of the schema, because the structured output of LLM providers does not accept it |
 | Value lists | Every `x-value-list` names a list of the workflow definition that uses the file, and a field has either an `enum` or one of `x-value-list` and `x-value-from`, never both |
 
@@ -79,7 +79,7 @@ Rules that relate a file to itself or to its name are not expressible in a JSON 
 | Value lists | A field whose allowed values may change between experiments names a value list of the workflow definition with `x-value-list` instead of listing them in `enum`. When the backend serves a schema, or gives it to an agent as the output format, it fills in the `enum` from the definition version in use and adds the description of each value to the description of the field, so an agent reads what every value means. Version 1 has five: `priority`, `quality_category`, `ambiguity_type`, `conflict_type` and `validation_category`, see [Workflow definitions](../workflow/README.md) |
 | Closed objects | `additionalProperties` is `false`; a field that is not in the schema is rejected |
 | Every field is required | An optional field is required and nullable, written as a type list such as `["string", "null"]`. This is the form the structured output of LLM providers accepts |
-| Plain values only | No field holds the id or key of another item. Relations are trace links, see [Data shape: traceability](../DATA_SHAPE.md#8-traceability) |
+| Plain values only | No field holds the id or key of another item, except the participants of a conversation: the system sets the `key` of a participant to the key of the item it is and its `item_id` to the id of that item, so that a message names its speaker and the participant opens its item. Relations between items are trace links, see [Data shape: traceability](../DATA_SHAPE.md#8-traceability) |
 | Metadata | `x-level` (`artifact` or `item`), `x-kind`, `x-schema-version`, and on item kinds `x-key-prefix` |
 | Display keywords | `x-ui-*` and `readOnly` tell the client how to show and edit the content, see [display keywords](#display-keywords) |
 
@@ -101,27 +101,30 @@ At schema level:
 
 | Keyword | Values | Meaning |
 |---|---|---|
-| `x-ui-display` | `document`, `heading`, `table`, `cards`, `transcript` | How the content of the kind is shown. `document`: the fields of an artifact, shown above its items. `heading`: a section heading with the items it contains. `table`: one row per item. `cards`: one card per item. `transcript`: the items in order, as a conversation |
+| `x-ui-display` | An artifact kind: `document`, `transcript`. An item kind: `heading`, `table`, `cards`, `transcript`, `profile` | How the content of the kind is shown. For an artifact, the layout of its document: `document`, its fields above its items; `transcript`, its items as a conversation between its participants, its fields that are separators after the last message and its other fields above the conversation. For an item: `heading`, a section heading with the items it contains; `table`, one row per item; `cards`, one card per item; `transcript`, the items in order, as the messages of a conversation; `profile`, items that are people: in a document one card per item with an avatar, and the page of one item as a profile, the avatar beside its title |
 | `x-ui-navigable` | `true`, `false` | Whether the items of the kind can be reached one by one: a row in the outline of the document that holds them, and a page of their own. `false` for items that are short enough to read in place in the page of the document. Item kinds only |
 | `x-ui-title-field` | One property name | The field that names an item in lists, links, the outline and trace views. Item kinds only |
-| `x-ui-list-fields` | Property names, in order | The fields shown as table columns or on a card. Item kinds only |
+| `x-ui-role-field` | One property name | The field whose value is the key of the participant who says the words of a message, shown as the speaker of a transcript. Item kinds only |
+| `x-ui-participants-field` | One property name | The field that lists the people of a conversation, the one who leads first: an object list whose entries have `key`, `name`, `role` and `item_id`. The participants who share the role of the first one are drawn on its side of the conversation, the others on the other side. Artifact kinds only |
+| `x-ui-list-fields` | Property names, in order | The fields shown as table columns, on a card, and on the card of a profile: the fields that read on one line under its title, then the others. Item kinds only |
 | `x-ui-field-order` | Every property name, in order | The order of the fields in the detail view and the edit form |
 
 At field level:
 
 | Keyword | Values | Meaning |
 |---|---|---|
-| `x-ui-widget` | `text`, `textarea`, `select`, `number`, `list`, `tags`, `object-list` | The input used to show and edit the field: one line, several lines, a choice from the `enum` or from the values that `x-value-from` names, a number, a list of lines, a list of short tags, a list of objects with their own fields |
+| `x-ui-widget` | `text`, `textarea`, `select`, `number`, `list`, `tags`, `object-list`, `separator`, `avatar-list`, `badge` | The input used to show and edit the field: one line, several lines, a choice from the `enum` or from the values that `x-value-from` names, a number, a list of lines, a list of short tags, a list of objects with their own fields. `separator`: a value that marks a place of a sequence; in a transcript, a separator where the value of a message changes from the message before, or after the last message for a field of the artifact, and its value elsewhere; edited as its type. `avatar-list`: a list of people whose entries have a `name` and an `item_id`, each shown as an avatar and its name, which opens the item when it has one. `badge`: a choice from the `enum` or from a value list, shown as a badge |
 | `readOnly` | `true` | A standard JSON Schema keyword. The field is set by the system: the user cannot edit it, and the output format given to an agent leaves it out |
 
 A field without `x-ui-widget` is shown by its type. The label of a field is derived from its name, for example `fit_criterion` becomes "Fit criterion".
 
 | Kind | `x-ui-display` | `x-ui-navigable` | `x-ui-title-field` | `x-ui-list-fields` |
 |---|---|---|---|---|
-| Every artifact kind | `document` | - | - | - |
+| Every artifact kind except `interview_transcript` | `document` | - | - | - |
+| `interview_transcript` | `transcript` | - | - | - |
 | `section` | `heading` | `true` | `title` | `title` |
-| `persona` | `cards` | `true` | `name` | `name`, `stakeholder_type`, `interview_status` |
-| `interview_message` | `transcript` | `false` | `content` | `turn`, `role`, `content` |
+| `persona` | `profile` | `true` | `name` | `name`, `stakeholder_type`, `interview_status`, `background`, `goals` |
+| `interview_message` | `transcript` | `false` | `content` | `turn`, `speaker`, `content` |
 | `raw_requirement` | `table` | `true` | `title` | `title`, `topic` |
 | `analyzed_requirement` | `table` | `true` | `title` | `title`, `type`, `priority` |
 | `latent_need` | `table` | `true` | `title` | `title`, `confidence`, `disposition` |
@@ -132,7 +135,9 @@ A field without `x-ui-widget` is shown by its type. The label of a field is deri
 | `backlog_item` | `table` | `true` | `title` | `title`, `item_type`, `priority`, `story_points`, `delivery_status` |
 | `validation_issue` | `table` | `true` | `title` | `title`, `category`, `severity`, `status` |
 
-The fields marked `readOnly` in version 1 are `interview_status` of a persona, `status`, `turn_count` and `stop_reason` of an interview transcript, and `iteration` of a validation report.
+`interview_transcript` names its participants with `x-ui-participants-field: participants`, and `interview_message` its speaker with `x-ui-role-field: speaker`. In version 1, `status` and `stop_reason` of an interview transcript and `turn` of an interview message are separators, `participants` of an interview transcript is an avatar list, and `interview_status` of a persona is a badge.
+
+The fields marked `readOnly` in version 1 are `interview_status` of a persona, `participants`, `status`, `turn_count` and `stop_reason` of an interview transcript, and `iteration` of a validation report.
 
 How the web app uses these keywords is described in [Architecture: web app](../architecture/web-app.md).
 

@@ -10,7 +10,13 @@ export const itemPageMessages = {
   notFound: { title: 'Item not found', description: 'This item does not exist, or was deleted.' },
   loading: 'Loading the item',
   loadError: 'The item could not load.',
+  linksLoading: 'Loading the links',
+  moreLinks: (count: number) => `${String(count)} more`,
+  linksLoadError: 'The links could not load.',
 } as const
 
 /** How long the navigator stays after the last action of the user, in milliseconds. */
 export const navigatorIdleMs = 2_500
+
+/** How many chips of one link group show before "N more" replaces the rest. */
+export const linkChipsShown = 5

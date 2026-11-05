@@ -138,6 +138,17 @@ The documents of the mentor platform are at `/projects/90aa0000-0000-4000-8000-0
 | No document yet, every kind not started            | the same page with `?mock-artifacts=empty&mock-run-status=running`               |
 | A document being written                           | the same page with `?mock-run-status=running`; its stream sends `artifact_delta` |
 | The outline or the document fails to load          | a document page with `?mock-artifact=error`                                      |
+| The edit form of the requirements analysis         | open AR-001 of the analysis and press Edit                                       |
+| Save pending                                       | the edit form with `?mock-update-item=loading`                                   |
+| Save failed                                        | the edit form with `?mock-update-item=error`                                     |
+| The history at its three levels                    | open AR-007 and press History; Older and Show every version                      |
+| The history fails to load                          | the same page with `?mock-revisions=error`                                       |
+| Restore failed                                     | the history with an older version and `?mock-restore-item=error`                 |
+| The links of an item with `!`                      | open REQ-003; the chip of AR-007 and its card                                    |
+| The quoted words marked                            | open REQ-001; the mark of AR-001 in its statement, its chip and its origin       |
+| A warning mark from an issue                       | open AR-010; the mark of AMB-001 in its statement                                |
+| Edit disabled outside the review                   | open REQ-001; its tooltip on hover                                               |
+| A transcript at a message                          | open REQ-001, scroll to Why this item exists, click the citation card            |
 
 In the analysis, the user has begun the review: `RAW-001`, `RAW-002`, `AR-001` and `AR-002` are approved, `RAW-008`, `LN-002` and `ASM-003` are rejected, `RAW-004`, `AR-003` and the like were edited by the user, and three ambiguities and one conflict are open, so the document and its outline show every state of an item next to the drafts.
 

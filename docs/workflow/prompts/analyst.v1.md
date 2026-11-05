@@ -38,7 +38,7 @@ Turn what the stakeholders said into a requirements analysis: raw requirements, 
 
 - `<topics>`: the topics of the elicitation plan, one per line.
 - `<personas>`: the stakeholders, one JSON object per line, each with its key such as `PER-001`.
-- `<transcripts>`: the interviews, one message per line as `<key> <role>: <content>`. A message key is the persona key, `#` and the position, such as `PER-001#4`.
+- `<transcripts>`: the interviews, one message per line as `<key> <role>: <content>`, where `<role>` is the role of the participant who says it. A message key is the persona key, `#` and the position, such as `PER-001#4`.
 - `<current_analysis>`: the items of the analysis so far, with their keys. Empty on the first analysis.
 - `<directive>`: what this loop must address. Empty on the first analysis.
 

@@ -5,6 +5,7 @@ import type { ReactNode } from 'react'
 import {
   type ContentField,
   ContentFieldValue,
+  extensionFieldText,
   fieldText,
   itemTitle,
   summaryFields,
@@ -20,10 +21,8 @@ import {
   TableHeader,
   TableRow,
 } from '@/shared/components/ui/table'
-import { textOf } from '@/shared/lib/text'
 
 import type { OutlineItem } from '../items/items.types'
-import { transcriptContentField, transcriptRoleField } from '../outline/outline.constants'
 import type { DocumentBlock, KindView } from '../outline/outline.types'
 import { itemAnchorId } from '../outline/outline.utils'
 import { artifactViewMessages } from './artifact-view.constants'
@@ -165,11 +164,13 @@ function ItemCards({
 
 function ItemTranscript<Range extends HighlightRange>({
   items,
+  view,
   targetItemId,
   messageMarks,
   renderMessageMark,
 }: {
   items: readonly OutlineItem[]
+  view: KindView
   targetItemId: string | null
   messageMarks?: ReadonlyMap<string, readonly Range[]> | undefined
   renderMessageMark?: ((range: Range, children: ReactNode) => ReactNode) | undefined
@@ -178,7 +179,8 @@ function ItemTranscript<Range extends HighlightRange>({
     <ol className="max-w-prose space-y-3">
       {items.map((item) => {
         const marks = messageMarks?.get(item.id)
-        const text = textOf(item.content[transcriptContentField])
+        // What a message says, and who says it, sit in the fields its schema names.
+        const text = extensionFieldText(view.schema, item, 'x-ui-title-field')
         return (
           <li
             key={item.id}
@@ -186,14 +188,13 @@ function ItemTranscript<Range extends HighlightRange>({
             {...anchorProps(item.id, targetItemId)}
           >
             <p className="text-xs font-semibold text-muted-foreground">
-              <span>{textOf(item.content[transcriptRoleField]) || item.key}</span>
+              <span>{extensionFieldText(view.schema, item, 'x-ui-role-field') || item.key}</span>
             </p>
             <p className="whitespace-pre-line">
               {marks === undefined || marks.length === 0 ? (
                 text
               ) : (
                 <Highlight
-                  variant="soft"
                   ranges={marks}
                   renderMark={
                     renderMessageMark === undefined
@@ -264,6 +265,7 @@ export function DocumentBlocks<Range extends HighlightRange = HighlightRange>({
             <ItemTranscript
               key={key}
               items={block.items}
+              view={view}
               targetItemId={targetItemId}
               messageMarks={messageMarks}
               renderMessageMark={renderMessageMark}

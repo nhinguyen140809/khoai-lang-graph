@@ -63,6 +63,8 @@ export function ContentFieldInput({ field, allowedValues, definition }: ContentF
           allowedValues={allowedValues}
           definition={definition}
           controlProps={controlProps}
+          formField={{ name: controller.name, onBlur: controller.onBlur }}
+          controlRef={controller.ref}
         />
       )}
     </FormField>

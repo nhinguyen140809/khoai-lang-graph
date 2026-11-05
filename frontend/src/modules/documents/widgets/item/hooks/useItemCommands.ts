@@ -12,6 +12,7 @@ export function useItemCommands(
   neighbors: OutlineNeighbors,
   move: (target: { id: string }) => void,
   onMoved: () => void,
+  { isEnabled = true }: { isEnabled?: boolean } = {},
 ) {
   const command = (id: string, label: string, key: string, target: { id: string } | null) => ({
     id,
@@ -26,8 +27,12 @@ export function useItemCommands(
     }),
   })
 
-  useCommands([
-    command('documents.nextItem', itemPageMessages.next, 'j', neighbors.next),
-    command('documents.previousItem', itemPageMessages.previous, 'k', neighbors.previous),
-  ])
+  useCommands(
+    isEnabled
+      ? [
+          command('documents.nextItem', itemPageMessages.next, 'j', neighbors.next),
+          command('documents.previousItem', itemPageMessages.previous, 'k', neighbors.previous),
+        ]
+      : [],
+  )
 }
