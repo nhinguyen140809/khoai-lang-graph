@@ -1,17 +1,17 @@
 'use client'
 
 import { useQueryClient } from '@tanstack/react-query'
-import { useEffect, useEffectEvent } from 'react'
 
 import { hasCost } from '@/shared/api/query-client'
 import { isOneOf } from '@/shared/lib/guards'
-import { coalescedTask } from '@/shared/lib/scheduling'
+import { useCoalescedListener } from '@/shared/lib/scheduling'
 
 import { runKeys } from '../../runs/runs.keys'
 import type { Run } from '../../runs/runs.types'
 import { isUnfinishedRunStatus } from '../../status/run-status.utils'
 import { listenToRun } from '../run-event-channels.api'
 import { runCostEvents, runStatusEvents } from '../run-events.constants'
+import type { RunChannelSignal } from '../run-events.types'
 
 /**
  * Follows the event stream of an unfinished run and loads the run again at each event that may
@@ -27,41 +27,32 @@ export function useRunStatusEvents(
   onReloaded: (run: Run) => Promise<void> | void,
 ) {
   const queryClient = useQueryClient()
-  const reloaded = useEffectEvent(onReloaded)
-  const runId = run?.id
-  const threadId = run?.thread_id
+  const runId = run?.id ?? null
   const isUnfinished = run != null && isUnfinishedRunStatus(run.status)
+  const key = isUnfinished ? runId : null
 
-  useEffect(() => {
-    if (runId === undefined || threadId === undefined || !isUnfinished) return
-    const queryKey = runKeys.latestOfThread(threadId)
+  const listenAfterLoaded = (listener: (signal: RunChannelSignal) => void) => {
+    const queryKey = runKeys.latestOfThread(run?.thread_id ?? '')
     // Read when the stream opens only: the run loads again at each event, with a later id.
     const lastEventId = queryClient.getQueryData<Run | null>(queryKey)?.last_event_id
-    // Set once the cleanup stops the listening, so that a load still in progress reports nothing.
-    let isClosed = false
+    return listenToRun(run?.id ?? '', listener, { after: lastEventId ?? null })
+  }
 
-    const reload = coalescedTask(async () => {
+  useCoalescedListener(key, {
+    listen: listenAfterLoaded,
+    isWanted: (signal) =>
+      signal.kind === 'failed' || isOneOf(runStatusEvents, signal.event.type),
+    task: async ({ isClosed }) => {
+      const queryKey = runKeys.latestOfThread(run?.thread_id ?? '')
       await queryClient.invalidateQueries({ queryKey })
       const latest = queryClient.getQueryData<Run | null>(queryKey)
-      if (!isClosed && latest != null) await reloaded(latest)
-    })
-    const reloadCosts = coalescedTask(() => queryClient.invalidateQueries({ predicate: hasCost }))
-    const stop = listenToRun(
-      runId,
-      (signal) => {
-        if (signal.kind === 'failed') {
-          reload()
-          return
-        }
-        if (!isOneOf(runStatusEvents, signal.event.type)) return
-        reload()
-        if (isOneOf(runCostEvents, signal.event.type)) reloadCosts()
-      },
-      { after: lastEventId ?? null },
-    )
-    return () => {
-      isClosed = true
-      stop()
-    }
-  }, [queryClient, runId, threadId, isUnfinished])
+      if (!isClosed() && latest != null) await onReloaded(latest)
+    },
+  })
+
+  useCoalescedListener(key, {
+    listen: listenAfterLoaded,
+    isWanted: (signal) => signal.kind === 'event' && isOneOf(runCostEvents, signal.event.type),
+    task: () => queryClient.invalidateQueries({ predicate: hasCost }),
+  })
 }
