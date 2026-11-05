@@ -212,9 +212,7 @@ screenshots('Documents', (shot) => {
 
     await user.expectRole('button', 'Analysed requirement, Two-step booking')
     await page.getByRole('button', { name: 'Analysed requirement, Two-step booking' }).click()
-    await page
-      .getByRole('link', { name: 'Analysed requirement, Two-step booking' })
-      .waitFor()
+    await page.getByRole('link', { name: 'Analysed requirement, Two-step booking' }).waitFor()
     await shoot()
   })
 
@@ -231,9 +229,7 @@ screenshots('Documents', (shot) => {
     await openItem(page, specification, 'Search mentors')
 
     await page.locator('[data-slot="highlight-mark"][data-interactive]').first().click()
-    await page
-      .getByRole('link', { name: 'Analysed requirement, List mentors by field' })
-      .waitFor()
+    await page.getByRole('link', { name: 'Analysed requirement, List mentors by field' }).waitFor()
     await shoot({ fullPage: true })
   })
 
@@ -260,5 +256,4 @@ screenshots('Documents', (shot) => {
     await user.expectRole('treeitem', 'Book a session')
     await shoot()
   })
-
 })

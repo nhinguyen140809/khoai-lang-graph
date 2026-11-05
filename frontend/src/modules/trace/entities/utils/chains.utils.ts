@@ -1,12 +1,6 @@
 import { collectBy } from '@/shared/lib/collections'
 
-import type {
-  ItemLinkGroup,
-  ItemLinkRow,
-  LinkQuote,
-  Trace,
-  TraceItem,
-} from '../types/chains.types'
+import type { ItemLinkGroup, ItemLinkRow, LinkQuote, Trace, TraceItem } from '../types/chains.types'
 import type { TraceLink } from '../types/trace-links.types'
 import { isLinkOutOfDate } from './trace-links.utils'
 
