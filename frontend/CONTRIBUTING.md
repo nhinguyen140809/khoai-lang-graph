@@ -153,7 +153,7 @@ What to check on the diff before it is reviewed, and what a reviewer checks agai
 
 **Duplication**
 - Search before writing: the same condition by hand (`isString(x) && hasText(x)`), the same JSX block, the same steps in two tests, the same cases in two `.data.ts`. The places to look first are `@/shared/lib`, `@/shared/components`, `src/mocks/shared` and `src/test`.
-- Two copies are a warning, three are a helper. A helper states one idea in its name, sits in the lowest layer that all its callers can import, and has a test of its own. Do not extract by size alone.
+- Code without business is shared code from its first user (Placement). For code with business, two copies are a warning, three are a helper. A helper states one idea in its name, sits in the lowest layer that all its callers can import, and has a test of its own. Do not extract by size alone.
 - When the first user is in another slice, the second user does not copy it: the helper moves down to the layer both can import, then both use it.
 
 **Readability**
@@ -163,7 +163,7 @@ What to check on the diff before it is reviewed, and what a reviewer checks agai
 
 **Cohesion of a folder**
 - By meaning: the name of the folder describes every file in it, and a file that needs "and" to be described belongs elsewhere.
-- By use: the files of a folder are used together or change together. A file that one place uses sits beside that place; one that several slices use goes down a level (slice, entities of the module, `shared`).
+- By use: the files of a folder are used together or change together. A file with business that one place uses sits beside that place; one that several slices use goes down a level (slice, entities of the module). A file without business sits in `shared` (Placement).
 - More than about five files with different topics become folders by topic, each with an `index.ts` that exports only what others use.
 
 **Layers**
@@ -172,7 +172,8 @@ What to check on the diff before it is reviewed, and what a reviewer checks agai
 - Nothing in `shared` knows a module, and nothing in an entity knows a screen.
 
 **Placement**
-- Ask who imports the file: one slice (inside it), several slices of a module (its entities), several modules (`shared`), only tests (`src/test`), only the mocks (`src/mocks/shared`). A new folder has a singular topic name, and a row in the README or here when it opens a new place.
+- First ask whether the file holds business: whether it reads or decides anything about an object of the product. A file that does not (a duration in words, the key that sends a prompt, the scroll of an element into view, the width of a dialog, a listener that coalesces the signals of a stream) goes to `shared` from its first user, whatever the count of its users. A mechanism inside a rule of the product splits: the mechanism to `shared`, the rule in the module of its object (the stream of a run: which stream, which events and when to listen stay in `run`; the listener goes to `shared/lib/timing`).
+- Then ask who imports a file with business: one slice (inside it), several slices of a module (its entities), several modules (the entities of the module of its object, which the others read through `@x`), only tests (`src/test`), only the mocks (`src/mocks/shared`). A new folder has a singular topic name, and a row in the README or here when it opens a new place.
 - Moves and renames go in their own PR.
 
 **Screens**

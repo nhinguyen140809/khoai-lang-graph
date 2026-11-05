@@ -252,7 +252,7 @@ The entity of the models is named `llm-model`, not `model`, because "model" alon
 
 ## 8. Shared code
 
-Shared code knows no object of the product. What several modules read without being an object goes there:
+Shared code knows no object of the product. Code that holds no rule and names no object of the product goes there from its first user, whatever the count of its users: a helper to `shared/lib/<topic>/`, a hook to its `hooks/`, a component to `shared/components/`. A mechanism inside a rule of the product splits: the mechanism goes to shared code, the rule stays in the module of its object; the stream of a run keeps in `run` which stream it reads, which events count and when it listens, and the listener that coalesces the bursts of a stream is shared code. Code with a rule of the product stays in its module, even when several modules read it. What shared code holds today:
 
 | Code | Where | Why |
 |---|---|---|
