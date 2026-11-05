@@ -49,7 +49,7 @@ export const statusLookCases: {
     status: null,
     view: 'user',
     label: 'Not started',
-    tone: 'neutral',
+    tone: 'muted',
     needsUser: false,
   },
   {
@@ -57,7 +57,7 @@ export const statusLookCases: {
     status: null,
     view: 'developer',
     label: 'No run yet',
-    tone: 'neutral',
+    tone: 'muted',
     needsUser: false,
   },
 ]
