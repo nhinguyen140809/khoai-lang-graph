@@ -11,8 +11,8 @@ import {
   useWorkflowDefinition,
 } from '@/modules/workflow/entities/@x/documents'
 
-import type { DocumentListResult, NotStartedSubject } from '../documents.types'
-import { documentEntries } from '../documents.utils'
+import type { DocumentListResult, NotStartedSubject } from '../types/documents.types'
+import { documentEntries } from '../utils/documents.utils'
 import { useDocumentsUnderReview } from './useDocumentsUnderReview'
 import { useSubjectsWithoutArtifact } from './useSubjectsWithoutArtifact'
 import { useWritingArtifacts } from './useWritingArtifacts'

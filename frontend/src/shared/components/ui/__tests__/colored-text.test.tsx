@@ -22,7 +22,7 @@ describe('ColoredText', () => {
     render(<ColoredText color="muted">Rejected</ColoredText>)
 
     expect(screen.getByText('Rejected')).toHaveAttribute('data-color', 'muted')
-    expect(screen.getByText('Rejected')).not.toHaveClass('text-(--tone-strong)')
+    expect(screen.getByText('Rejected')).toHaveClass('text-(--tone-strong)')
   })
 
   it('adds the classes it is given', () => {

@@ -8,7 +8,7 @@ import type { Fill, Tone, ToneVariants } from './tone.types'
  * - `--tone-foreground`: text on the solid fill
  * - `--tone-strong`: text, icons, and bars on the page and on the soft fill
  * - `--tone-soft`: soft fill, the color at an opacity that keeps `--tone-strong` at 4.5:1 or more
- *   (warning in the light theme: 4.0:1, see styles.css)
+ *   (warning in the light theme: 4.0:1, and chart 4.2:1, see styles.css)
  * - `--tone-border`: outline
  */
 export const toneClasses = {
@@ -23,6 +23,18 @@ export const toneClasses = {
     '[--tone:var(--warning)] [--tone-foreground:var(--warning-foreground)] [--tone-strong:var(--warning-strong)] [--tone-soft:color-mix(in_oklab,var(--warning)_35%,transparent)] [--tone-border:color-mix(in_oklab,var(--warning-strong)_50%,transparent)] dark:[--tone-soft:color-mix(in_oklab,var(--warning)_20%,transparent)]',
   destructive:
     '[--tone:var(--destructive)] [--tone-foreground:var(--destructive-foreground)] [--tone-strong:var(--destructive-strong)] [--tone-soft:color-mix(in_oklab,var(--destructive)_15%,transparent)] [--tone-border:color-mix(in_oklab,var(--destructive-strong)_50%,transparent)] dark:[--tone-soft:color-mix(in_oklab,var(--destructive)_20%,transparent)]',
+  // The yellow of the charts as a color of the interface, its own tokens in each theme: the
+  // vivid yellow fills, the light theme reads it as the dark amber --chart-strong, as the light
+  // warning below reads its orange, and the dark theme as the most contrast yellow of the ramp.
+  // The yellow is light, so its soft fill needs the same opacity as the warning's.
+  chart:
+    '[--tone:var(--chart)] [--tone-foreground:var(--chart-foreground)] [--tone-strong:var(--chart-strong)] [--tone-soft:color-mix(in_oklab,var(--chart)_35%,transparent)] [--tone-border:color-mix(in_oklab,var(--chart-strong)_50%,transparent)] dark:[--tone-soft:color-mix(in_oklab,var(--chart)_20%,transparent)]',
+  // The muted fill and its text are a pair of the theme, and the accent is its blue tint; both
+  // read as backgrounds, so their soft fill is the token itself.
+  muted:
+    '[--tone:var(--muted)] [--tone-foreground:var(--muted-foreground)] [--tone-strong:var(--muted-foreground)] [--tone-soft:var(--muted)] [--tone-border:var(--border)]',
+  accent:
+    '[--tone:var(--accent)] [--tone-foreground:var(--accent-foreground)] [--tone-strong:var(--accent-foreground)] [--tone-soft:var(--accent)] [--tone-border:var(--border)]',
 } as const satisfies Record<Tone, string>
 
 // Badge and Button read their props the same way. Without a color, solid and link take the

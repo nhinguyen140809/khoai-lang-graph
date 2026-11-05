@@ -13,13 +13,12 @@ import {
   useListedDocumentTitle,
   useWritingArtifacts,
 } from '@/modules/documents/entities'
-import { useEditorTab } from '@/shared/components/frame'
+import { PageLink, useEditorTab } from '@/shared/components/frame'
 import { ErrorState, LoadingState, NotFoundState } from '@/shared/components/state'
 import { ScrollArea } from '@/shared/components/ui/scroll-area'
 import { routes } from '@/shared/routes'
 
 import { documentPageMessages } from '../document-page.constants'
-import { ItemLink } from './ItemLink'
 
 function DocumentBody({
   document,
@@ -51,7 +50,7 @@ function DocumentBody({
             data={document}
             isUnderReview={isUnderReview}
             renderItemLink={(item, title) => (
-              <ItemLink href={project.item(item.id)}>{title}</ItemLink>
+              <PageLink href={project.item(item.id)}>{title}</PageLink>
             )}
           />
         </ScrollArea>

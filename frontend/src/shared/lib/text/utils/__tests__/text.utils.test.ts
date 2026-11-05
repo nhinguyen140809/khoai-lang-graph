@@ -1,6 +1,6 @@
 import { describe, expect, it } from 'vitest'
 
-import { foldText, hasTextPart, textOf } from '../text.utils'
+import { articleOf, foldText, hasTextPart, textOf } from '../text.utils'
 import { foldTextCases, includesTextCases, textOfCases } from './text.utils.data'
 
 describe('foldText', () => {
@@ -18,5 +18,15 @@ describe('hasTextPart', () => {
 describe('textOf', () => {
   it.each(textOfCases)('reads $name', ({ value, text }) => {
     expect(textOf(value)).toBe(text)
+  })
+})
+
+describe('articleOf', () => {
+  it.each([
+    { word: 'Based on', article: 'a' },
+    { word: 'Applies to', article: 'an' },
+    { word: 'Involves', article: 'an' },
+  ])('reads the article of $word', ({ word, article }) => {
+    expect(articleOf(word)).toBe(article)
   })
 })

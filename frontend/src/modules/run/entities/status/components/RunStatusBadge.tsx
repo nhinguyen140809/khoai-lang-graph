@@ -2,8 +2,8 @@
 
 import { Badge } from '@/shared/components/ui/badge'
 
-import { useRunStatusLook } from '../status/hooks/useRunStatusLook'
-import type { RunStatus } from '../status/run-status.types'
+import { useRunStatusLook } from '../hooks/useRunStatusLook'
+import type { RunStatus } from '../run-status.types'
 
 interface RunStatusBadgeProps {
   /** The status of a run, or null for a project or a thread without a run. */

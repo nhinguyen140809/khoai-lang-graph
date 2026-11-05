@@ -1,7 +1,12 @@
 import { describe, expect, it } from 'vitest'
 
-import type { DocumentMark } from '../documents.types'
-import { documentEntries, documentMark, documentMarkLook, groupMark } from '../documents.utils'
+import type { DocumentMark } from '../types/documents.types'
+import {
+  documentEntries,
+  documentMark,
+  documentMarkLook,
+  groupMark,
+} from '../utils/documents.utils'
 import {
   definedKinds,
   groupMarkCases,

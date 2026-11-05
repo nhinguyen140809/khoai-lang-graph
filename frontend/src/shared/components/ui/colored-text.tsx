@@ -3,21 +3,14 @@ import type * as React from 'react'
 
 import { type Tone, toneClasses } from '@/shared/lib/tone'
 
-/** The colors of a run of text: one of the colors of the app, or muted. */
-type TextColor = Tone | 'muted'
-
 interface ColoredTextProps extends Omit<React.ComponentProps<'span'>, 'color'> {
   /** The color of the text; none keeps the color of the text around it. */
-  color?: TextColor | null | undefined
-}
-
-function isTone(color: TextColor | null | undefined): color is Tone {
-  return color !== null && color !== undefined && color !== 'muted'
+  color?: Tone | null | undefined
 }
 
 /**
- * A run of text in one of the colors of the app, or muted: the title of a row, a state, a count.
- * Whatever sits inside takes the color too.
+ * A run of text in one of the colors of the app: the title of a row, a state, a count. Whatever
+ * sits inside takes the color too.
  */
 function ColoredText({ color, className, ...props }: ColoredTextProps) {
   return (
@@ -25,8 +18,7 @@ function ColoredText({ color, className, ...props }: ColoredTextProps) {
       data-slot="colored-text"
       data-color={color ?? undefined}
       className={cn(
-        isTone(color) && [toneClasses[color], 'text-(--tone-strong)'],
-        'data-[color=muted]:text-muted-foreground',
+        color !== null && color !== undefined && [toneClasses[color], 'text-(--tone-strong)'],
         className,
       )}
       {...props}
@@ -35,4 +27,3 @@ function ColoredText({ color, className, ...props }: ColoredTextProps) {
 }
 
 export { ColoredText }
-export type { TextColor }

@@ -65,6 +65,7 @@ export const contentSchemaSchema = z.looseObject({
   'x-ui-display': z.string().optional(),
   'x-ui-navigable': z.boolean().optional(),
   'x-ui-title-field': z.string().optional(),
+  'x-ui-role-field': z.string().optional(),
   'x-ui-list-fields': z.array(z.string()).optional(),
   'x-ui-field-order': z.array(z.string()).optional(),
   properties: z.record(z.string(), schemaPropertySchema).optional(),

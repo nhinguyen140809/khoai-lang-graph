@@ -16,8 +16,8 @@ import {
 } from '@/shared/components/ui/field'
 import { Switch } from '@/shared/components/ui/switch'
 
-import { runDefaultsMessages } from '../config/run-defaults.constants'
-import { selectedCheckpoints, toggledCheckpoints } from '../config/run-defaults.utils'
+import { runDefaultsMessages } from '../run-defaults.constants'
+import { selectedCheckpoints, toggledCheckpoints } from '../run-defaults.utils'
 import { ParameterField } from './ParameterField'
 
 interface RunDefaultsFieldsProps<T extends FieldValues, TOutput = T> {

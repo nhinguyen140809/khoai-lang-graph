@@ -9,6 +9,7 @@
   "x-ui-display": "transcript",
   "x-ui-navigable": false,
   "x-ui-title-field": "content",
+  "x-ui-role-field": "role",
   "x-ui-list-fields": [
     "turn",
     "role",

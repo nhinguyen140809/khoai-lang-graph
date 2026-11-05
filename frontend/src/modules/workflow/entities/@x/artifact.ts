@@ -1,7 +1,12 @@
 export type { ContentSchema } from '../artifact-kinds/artifact-kinds.types'
-export { useArtifactKinds, useContentSchema } from '../artifact-kinds/hooks/useArtifactKindQueries'
+export {
+  useArtifactKinds,
+  useContentSchema,
+  useContentSchemas,
+} from '../artifact-kinds/hooks/useArtifactKindQueries'
+export { useKindTitleOf } from '../artifact-kinds/hooks/useKindTitleOf'
 export { kindSchemasByKind } from '../artifact-kinds/kind-schemas.utils'
-export { ContentFieldValue } from '../components/ContentFieldValue'
+export { ContentFieldValue } from '../content/components/ContentFieldValue'
 export type { ContentDisplay, ContentField } from '../content/fields/content-fields.types'
 export {
   contentDisplayOf,

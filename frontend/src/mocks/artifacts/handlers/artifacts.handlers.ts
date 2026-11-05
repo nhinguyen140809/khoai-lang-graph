@@ -27,7 +27,7 @@ import {
   artifactNotFound,
   invalidRestoreVersion,
   refuseChange,
-  refuseWhileRunning,
+  refuseOutsideReview,
   versionNotFound,
 } from '../artifacts.problems'
 import { contentProblems, validateArtifactChange } from '../artifacts.validators'
@@ -66,7 +66,7 @@ export const artifactHandlers = [
     await answerScenario('update-artifact')
     const artifact = findArtifact(pathParam(params, 'artifactId'))
     if (artifact === undefined) return artifactNotFound()
-    const refused = refuseChange(request, artifact)
+    const refused = refuseChange(request, artifact, artifact.id)
     if (refused !== null) return refused
     const read = validateArtifactChange(await readBodyFields(request))
     if ('problems' in read) return validationFailed(read.problems)
@@ -94,7 +94,7 @@ export const artifactHandlers = [
     await answerScenario('restore-artifact')
     const artifact = findArtifact(pathParam(params, 'artifactId'))
     if (artifact === undefined) return artifactNotFound()
-    const refused = refuseWhileRunning(artifact.project_id)
+    const refused = refuseOutsideReview(artifact.project_id, artifact.id)
     if (refused !== null) return refused
     const { version } = await readBodyFields(request)
     const target = artifactRevisions(artifact).find((entry) => entry.version === version)

@@ -1,6 +1,6 @@
 import type { View } from '@/shared/lib/view'
 
-import type { RunStatus } from '../../status/run-status.types'
+import type { RunStatus } from '../../run-status.types'
 
 /** A status of a run, or none, a view of the app, and what the badge says in it. */
 export const badgeCases: { status: RunStatus | null; view: View; text: string }[] = [

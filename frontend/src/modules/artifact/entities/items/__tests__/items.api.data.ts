@@ -59,6 +59,25 @@ export const newRequirement: CreateItemBody = {
   parent_item_id: section.id,
 }
 
+/** The requirements analysis, the only artifact the review that waits by default lists. */
+export const analysis = artifactFixtureByKind(projectId, 'requirements_analysis')
+/** An analyzed requirement of the analysis, which its review lets the user change. */
+export const analyzedRequirement = itemFixtureByKey(projectId, 'AR-001')
+
+/** An analyzed requirement to add to the analysis. */
+export const newAnalyzedRequirement: CreateItemBody = {
+  kind: 'analyzed_requirement',
+  content: {
+    title: 'Rate a session',
+    statement: 'The system shall let a student rate a session.',
+    type: 'functional',
+    quality_category: null,
+    priority: 'could',
+    rationale: 'Asked for in the interviews.',
+  },
+  parent_item_id: null,
+}
+
 const artifactItemsPath = apiEndpoints.artifactItems.path({ artifactId: specification.id })
 const itemPath = apiEndpoints.item.path({ itemId: requirement.id })
 

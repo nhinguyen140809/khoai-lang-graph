@@ -24,7 +24,7 @@ import {
   invalidRestoreVersion,
   itemNotFound,
   refuseChange,
-  refuseWhileRunning,
+  refuseOutsideReview,
 } from '../artifacts.problems'
 import {
   validateItemChange,
@@ -39,7 +39,7 @@ export const itemEditHandlers = [
     await answerScenario('create-item')
     const artifact = findArtifact(pathParam(params, 'artifactId'))
     if (artifact === undefined) return artifactNotFound()
-    const refused = refuseWhileRunning(artifact.project_id)
+    const refused = refuseOutsideReview(artifact.project_id, artifact.id)
     if (refused !== null) return refused
     const read = validateNewItem(artifact, await readBodyFields(request))
     if ('problems' in read) return validationFailed(read.problems)
@@ -52,7 +52,7 @@ export const itemEditHandlers = [
     await answerScenario('reorder-items')
     const artifact = findArtifact(pathParam(params, 'artifactId'))
     if (artifact === undefined) return artifactNotFound()
-    const refused = refuseWhileRunning(artifact.project_id)
+    const refused = refuseOutsideReview(artifact.project_id, artifact.id)
     if (refused !== null) return refused
     const read = validateItemReorder(artifact, await readBodyFields(request))
     if ('problems' in read) return validationFailed(read.problems)
@@ -65,7 +65,7 @@ export const itemEditHandlers = [
     await answerScenario('update-item')
     const item = findItem(pathParam(params, 'itemId'))
     if (item === undefined) return itemNotFound()
-    const refused = refuseChange(request, item)
+    const refused = refuseChange(request, item, item.artifact_id)
     if (refused !== null) return refused
     const read = validateItemChange(item, await readBodyFields(request))
     if ('problems' in read) return validationFailed(read.problems)
@@ -78,7 +78,7 @@ export const itemEditHandlers = [
     await answerScenario('delete-item')
     const item = findItem(pathParam(params, 'itemId'))
     if (item === undefined) return itemNotFound()
-    const refused = refuseWhileRunning(item.project_id)
+    const refused = refuseOutsideReview(item.project_id, item.artifact_id)
     if (refused !== null) return refused
     if (childrenOf(item.artifact_id, item.id).length > 0) {
       return invalidState('A section that still holds items cannot be deleted.')
@@ -92,7 +92,7 @@ export const itemEditHandlers = [
     await answerScenario('move-item')
     const item = findItem(pathParam(params, 'itemId'))
     if (item === undefined) return itemNotFound()
-    const refused = refuseWhileRunning(item.project_id)
+    const refused = refuseOutsideReview(item.project_id, item.artifact_id)
     if (refused !== null) return refused
     const read = validateItemMove(item, await readBodyFields(request))
     if ('problems' in read) return validationFailed(read.problems)
@@ -105,7 +105,7 @@ export const itemEditHandlers = [
     await answerScenario('restore-item')
     const item = findItemWithDeleted(pathParam(params, 'itemId'))
     if (item === undefined) return itemNotFound()
-    const refused = refuseWhileRunning(item.project_id)
+    const refused = refuseOutsideReview(item.project_id, item.artifact_id)
     if (refused !== null) return refused
     const { version } = await readBodyFields(request)
     const target = itemRevisions(item).find((entry) => entry.version === version)

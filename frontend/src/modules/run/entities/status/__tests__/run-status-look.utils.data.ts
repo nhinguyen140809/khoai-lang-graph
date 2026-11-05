@@ -18,6 +18,6 @@ export const lookCases: {
   {
     name: 'no run yet',
     status: null,
-    look: { tone: 'neutral', icon: CircleDashedIcon, needsUser: false },
+    look: { tone: 'muted', icon: CircleDashedIcon, needsUser: false },
   },
 ]

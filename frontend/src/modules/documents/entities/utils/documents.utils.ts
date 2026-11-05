@@ -1,13 +1,13 @@
 import { type Artifact, attentionLevels } from '@/modules/artifact/entities/@x/documents'
 import type { DefinedArtifactKind } from '@/modules/workflow/entities/@x/documents'
 
-import { documentMarkLooks } from './documents.constants'
+import { documentMarkLooks } from '../documents.constants'
 import type {
   DocumentEntry,
   DocumentMark,
   MarkedArtifact,
   NotStartedSubject,
-} from './documents.types'
+} from '../types/documents.types'
 
 /**
  * The mark of an artifact, the first that holds: `writing` when the node in progress wrote it;

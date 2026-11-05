@@ -1,3 +1,5 @@
+import { cpus } from 'node:os'
+
 import { defineConfig, devices } from '@playwright/test'
 
 import e2e from './playwright.config'
@@ -31,8 +33,9 @@ export default defineConfig({
   // The first visit to a page waits for the dev server to compile it.
   timeout: 60_000,
   retries: 1,
-  // One browser at a time on a developer machine; CI runs one for every two cores.
-  ...(process.env.CI ? {} : { workers: 1 }),
+  // One browser for every two cores on a developer machine, so a small machine still runs one at a
+  // time while a large one fills itself; CI keeps its own default of the same shape.
+  ...(process.env.CI ? {} : { workers: Math.max(1, Math.floor(cpus().length / 2)) }),
   projects: Object.entries(windows).flatMap(([window, device]) =>
     themes.map((theme) => ({
       name: `${window}-${theme}`,

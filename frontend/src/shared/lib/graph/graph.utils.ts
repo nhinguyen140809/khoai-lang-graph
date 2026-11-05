@@ -1,3 +1,5 @@
+import { collectBy } from '@/shared/lib/collections'
+
 /**
  * What each id leads to, from a list of edges: for an id, the ids at the other end of the edges
  * that leave it, in the order of the list. The index is built once, so a walk over many ids reads
@@ -8,13 +10,7 @@ export function successorsFrom<E>(
   fromOf: (edge: E) => string,
   toOf: (edge: E) => string,
 ): (id: string) => readonly string[] {
-  const successors = new Map<string, string[]>()
-  for (const edge of edges) {
-    const from = fromOf(edge)
-    const leadsTo = successors.get(from) ?? []
-    leadsTo.push(toOf(edge))
-    successors.set(from, leadsTo)
-  }
+  const successors = collectBy(edges, fromOf, toOf)
   return (id) => successors.get(id) ?? []
 }
 

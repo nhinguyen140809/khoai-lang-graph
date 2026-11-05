@@ -1,4 +1,5 @@
 import type { MonthlyUsage, Usage, UsageGroup, UsageGrouping } from '@/modules/usage/entities'
+import { collectBy } from '@/shared/lib/collections'
 
 import { currentUser } from '../account/account.store'
 import { allRuns, stepsOfRun } from '../runs/lookup/runs.lookup'
@@ -85,12 +86,11 @@ function byGroupOrder(grouping: UsageGrouping): (a: UsageGroup, b: UsageGroup) =
 }
 
 function groupsOf(grouping: UsageGrouping, steps: MonthStep[]): UsageGroup[] {
-  const usagesByKey = new Map<string, Usage[]>()
-  for (const step of steps) {
-    const key = groupKey(grouping, step)
-    if (key === null) continue
-    usagesByKey.set(key, [...(usagesByKey.get(key) ?? []), step.usage])
-  }
+  const usagesByKey = collectBy(
+    steps,
+    (step) => groupKey(grouping, step),
+    ({ usage }) => usage,
+  )
   return [...usagesByKey]
     .map(([key, usages]) => ({ key, usage: sumUsage(usages) }))
     .toSorted(byGroupOrder(grouping))

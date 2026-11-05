@@ -157,6 +157,8 @@ const projects: BuiltProject[] = [
     ),
 ]
 
+export { mentorArtifactBefore, mentorEditedBefore } from './mentor-platform-artifacts.fixtures'
+
 export const artifactFixtures: Artifact[] = projects.flatMap(({ artifacts }) => artifacts)
 export const itemFixtures: ArtifactItem[] = projects.flatMap(({ items }) => items)
 

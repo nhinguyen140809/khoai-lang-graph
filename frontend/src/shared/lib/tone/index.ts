@@ -1,4 +1,5 @@
 export { fillTones, toneClasses } from './tone.constants'
+export { nonStatusTones, statusTones } from './tone.types'
 export {
   type Fill,
   fills,

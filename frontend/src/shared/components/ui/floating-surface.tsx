@@ -12,8 +12,8 @@ type FloatingOffset = 'none' | 'sm' | 'default' | 'lg'
 /** The background of the surface: the page, a popover, or a blur of what floats under it. */
 type FloatingVariant = 'default' | 'popover' | 'glass'
 
-/** The padding inside the surface. */
-type FloatingSize = 'sm' | 'default' | 'lg'
+/** The padding inside the surface; `none` leaves the padding to what the surface holds. */
+type FloatingSize = 'none' | 'sm' | 'default' | 'lg'
 
 // Tailwind cannot see classes put together at run time, so every corner at every offset is
 // written out: the columns are the spacing scale, and only the two edges of the corner are set.
@@ -52,6 +52,7 @@ const variantStyles: Record<FloatingVariant, string> = {
 }
 
 const sizeStyles: Record<FloatingSize, string> = {
+  none: 'p-0',
   sm: 'p-2',
   default: 'p-3',
   lg: 'p-4',

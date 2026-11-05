@@ -1,6 +1,6 @@
 import type { ReviewableCheckpoint } from '@/modules/workflow/entities/@x/run'
 
-import { parameterFields } from '../../config/__tests__/run-defaults.utils.data'
+import { parameterFields } from '../../__tests__/run-defaults.utils.data'
 
 /** The reviews that the tests of the fields offer. */
 export const checkpoints: ReviewableCheckpoint[] = [

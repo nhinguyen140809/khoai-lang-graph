@@ -51,3 +51,38 @@ export const newestOfEachGroupCases: { name: string; items: Ranked[]; kept: [str
       kept: [['a', 'first']],
     },
   ]
+
+/** Cases that check how `collectBy` gathers what `valueOf` gives, under the key that `keyOf`
+ * gives. */
+export const collectByCases: {
+  name: string
+  items: string[]
+  keyOf: (item: string) => string | null
+  valueOf: (item: string) => number
+  collected: [string, number[]][]
+}[] = [
+  {
+    name: 'the values of each key, in the order they came',
+    items: ['p1', 'q1', 'p2'],
+    keyOf: (item) => item.slice(0, 1),
+    valueOf: (item) => item.length,
+    collected: [
+      ['p', [2, 2]],
+      ['q', [2]],
+    ],
+  },
+  {
+    name: 'one key for every item',
+    items: ['a', 'b'],
+    keyOf: () => 'same',
+    valueOf: (item) => item.length,
+    collected: [['same', [1, 1]]],
+  },
+  {
+    name: 'no item',
+    items: [],
+    keyOf: (item) => item,
+    valueOf: (item) => item.length,
+    collected: [],
+  },
+]

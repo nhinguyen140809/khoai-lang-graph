@@ -1,4 +1,4 @@
-import type { TextColor } from '@/shared/components/ui/colored-text'
+import type { Tone } from '@/shared/lib/tone'
 import type { Wording } from '@/shared/lib/view'
 
 import { reviewStatusLabels } from '../artifacts/artifacts.constants'
@@ -28,7 +28,7 @@ export const attentionLevels = {
   follow: { order: 1, color: 'primary' },
   none: { order: 2, color: null },
   quiet: { order: 3, color: 'muted' },
-} as const satisfies Record<AttentionLevel, { order: number; color: TextColor | null }>
+} as const satisfies Record<AttentionLevel, { order: number; color: Tone | null }>
 
 /** The letter and the label of each item status; a status with no letter shows by its color alone. */
 export const itemStatusLooks = {

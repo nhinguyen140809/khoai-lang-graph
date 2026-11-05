@@ -60,10 +60,11 @@ describe('ArtifactDocument', () => {
     expect(screen.queryByRole('table')).not.toBeInTheDocument()
   })
 
-  it('shows the messages of a transcript with their role', async () => {
+  it('shows the messages of a transcript with their role, and no link for a message', async () => {
     renderDocument('interview_transcript')
 
     expect(await screen.findByText('How do you look for a mentor today?')).toBeInTheDocument()
+    expect(screen.queryByRole('link')).not.toBeInTheDocument()
   })
 
   it('shows the fields of an artifact that has no items', async () => {

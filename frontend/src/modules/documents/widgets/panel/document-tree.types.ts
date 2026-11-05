@@ -2,7 +2,7 @@ import type { Route } from 'next'
 
 import type { AttentionLevel } from '@/modules/artifact/entities'
 import type { DocumentTabIconName } from '@/modules/documents/entities'
-import type { TextColor } from '@/shared/components/ui/colored-text'
+import type { Tone } from '@/shared/lib/tone'
 
 /** What a click on a row does: opens its page, asks to load the outline again, or nothing. */
 export type TreeAction = { type: 'open'; href: Route } | { type: 'retry' } | { type: 'none' }
@@ -10,7 +10,7 @@ export type TreeAction = { type: 'open'; href: Route } | { type: 'retry' } | { t
 /** How a row shows: how much it asks of the user, the color for that, the letter and the full text. */
 export interface RowLook {
   level: AttentionLevel
-  color: TextColor | null
+  color: Tone | null
   /** One character at the end of the row, or null when the color alone says it. */
   letter: string | null
   /** What the row says in full, for its tooltip and for assistive technology. */

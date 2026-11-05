@@ -63,11 +63,35 @@ function topicBlocks({ sliceGlob, patternsOf, topics, topicPatternsOf }) {
   }))
 }
 
+/**
+ * The components of a topic: the patterns of the slice, the topics that the topic reads, and the
+ * rules of every component. It comes after the block of the topic, so its files follow these.
+ * @param {Slice} slice */
+function topicComponentBlocks({ sliceGlob, patternsOf, topics, topicPatternsOf }) {
+  return topics.map((topic) => ({
+    files: [`${sliceGlob}/${topic}/components/**/*.{ts,tsx}`],
+    ignores: ['**/__tests__/**', '**/*.config.tsx'],
+    rules: restrictImports({
+      paths: componentPaths,
+      patterns: [...patternsOf(FileScope.Source), ...topicPatternsOf(topic), ...componentPatterns],
+    }),
+  }))
+}
+
 /** @param {Slice} slice */
-function componentBlock({ sliceGlob, patternsOf }) {
+function componentBlock({ sliceGlob, patternsOf, topics }) {
+  // The components of the groups of topics of the entities, which serve the topics of their group.
+  const groups = [
+    ...new Set(topics.filter((topic) => topic.includes('/')).map((topic) => topic.split('/')[0])),
+  ]
   return {
-    // The components of a slice, in components/ or alone at its root.
-    files: [`${sliceGlob}/components/**/*.{ts,tsx}`, `${sliceGlob}/*.tsx`],
+    // The components of a slice, in components/ or alone at its root, and in the components
+    // folder of each group of topics.
+    files: [
+      `${sliceGlob}/components/**/*.{ts,tsx}`,
+      `${sliceGlob}/*.tsx`,
+      ...groups.map((group) => `${sliceGlob}/${group}/components/**/*.{ts,tsx}`),
+    ],
     ignores: ['**/__tests__/**', '**/*.config.tsx'],
     rules: restrictImports({
       paths: componentPaths,
@@ -89,11 +113,12 @@ function testBlock({ sliceGlob, patternsOf }) {
 
 // A slice imports only the layers under it and the modules under its module, other slices from
 // their index, and its own files with relative imports. The blocks of a slice: its files, then
-// its topics, then the components, then the tests.
+// its topics, then the components of its topics, then its own components, then the tests.
 export default defineConfig([
   ...slices.flatMap((slice) => [
     sourceBlock(slice),
     ...topicBlocks(slice),
+    ...topicComponentBlocks(slice),
     componentBlock(slice),
     testBlock(slice),
   ]),

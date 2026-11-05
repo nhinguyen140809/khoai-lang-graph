@@ -1,3 +1,5 @@
+import type { ContentValues } from '@/modules/workflow/entities'
+
 import type { ArtifactSpec, ItemSpec } from '../artifacts.types'
 
 // The artifacts of the mentor platform, as the run of the API examples made them: the elicitation
@@ -226,7 +228,7 @@ const requirementsAnalysis: ArtifactSpec = {
   kind: 'requirements_analysis',
   title: 'Requirements analysis',
   summary:
-    'From three interviews: 8 stated needs, 10 analysed requirements, 2 unstated needs, 3 assumptions, 3 needs clarifying and 1 disagreement.',
+    'From three interviews: 8 stated needs, 10 analysed requirements, 2 unstated needs, 3 assumptions, 3 points to clarify and 1 disagreement.',
   version: 4,
   content: {
     key_findings: [
@@ -852,4 +854,115 @@ export const mentorEditedKeys: Record<string, number> = {
   'AR-003': 2,
   'RAW-004': 3,
   'REQ-002': 2,
+}
+
+/**
+ * The content of each item the user edited, before the edits: the first entry was what the agents
+ * wrote, and the ones after it were the user's earlier edits, oldest first. The last version holds
+ * the content of the fixture, so a history shows real changes.
+ */
+export const mentorEditedBefore: Record<string, ContentValues[]> = {
+  'AR-007': [
+    {
+      title: 'Two-step booking',
+      statement: 'A booking is a request the mentor confirms.',
+      type: 'functional',
+      quality_category: null,
+      priority: 'must',
+      rationale: 'The admin wants control over bookings.',
+    },
+  ],
+  'AR-003': [
+    {
+      title: 'Search with free hours',
+      statement: 'A student sees the free hours of mentors.',
+      type: 'functional',
+      quality_category: null,
+      priority: 'must',
+      rationale: 'Not knowing who is free makes students give up.',
+    },
+  ],
+  'RAW-004': [
+    {
+      title: 'Reminder before a session',
+      statement: 'I want a reminder before a session.',
+      topic: 'reminders',
+    },
+    {
+      title: 'Reminder before a session',
+      statement: 'I want a reminder some time before a session.',
+      topic: 'reminders',
+    },
+  ],
+  'REQ-002': [
+    {
+      title: 'Filter by field and availability',
+      statement: 'The system shall let a student filter mentors by field of study.',
+      type: 'functional',
+      quality_category: null,
+      priority: 'must',
+      rationale: 'Taken from the analysis of the interviews.',
+      acceptance_criteria: [],
+      fit_criterion: null,
+      verification_method: 'test',
+    },
+  ],
+}
+
+/** The content of each artifact the agents reworked, before the rework, oldest first. */
+export const mentorArtifactBefore: Record<string, ContentValues[]> = {
+  'Elicitation plan': [
+    {
+      objectives: [
+        'Learn how students look for a mentor today',
+        'Learn what a mentor needs to offer sessions',
+        'Learn what the program needs to keep the service safe',
+      ],
+      topics,
+      information_gaps: ['How long is a session?', 'Who approves a mentor?'],
+      stakeholder_types: stakeholderTypes,
+      strategies: [
+        'Open questions first, then ask for examples',
+        'Ask each persona about the same topics',
+      ],
+      stopping_conditions: [
+        'Every topic was asked about',
+        'No new requirement in the last three turns',
+      ],
+    },
+  ],
+  'Persona catalog': [
+    {
+      selection_rationale: 'One persona for each stakeholder type of the program.',
+      uncovered_stakeholder_types: [],
+    },
+  ],
+  'Requirements analysis': [
+    {
+      key_findings: ['Students want to see free hours before they book.'],
+      open_questions: ['How long is a session?'],
+    },
+    {
+      key_findings: [
+        'Students want to see free hours before they book.',
+        'The admin wants to approve mentors.',
+      ],
+      open_questions: ['How long is a session?'],
+    },
+    {
+      key_findings: [
+        'Students want to see free hours before they book.',
+        'The admin wants to approve mentors.',
+      ],
+      open_questions: ['How long is a session?', 'Does a booking need the approval of the admin?'],
+    },
+  ],
+  'Requirement specification': [
+    {
+      purpose: 'Help university students find and book mentors.',
+      scope: 'Mentor discovery, booking, reminders and the administration of mentors.',
+      out_of_scope: ['Payments', 'Video calls'],
+      definitions: [{ term: 'Mentor', definition: 'A lecturer who offers sessions to students.' }],
+    },
+  ],
 }
