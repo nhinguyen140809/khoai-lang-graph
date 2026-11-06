@@ -46,7 +46,11 @@ function runsOf(spec: GeneratedProjectSpec): Run[] {
     current_stage: stage,
     error:
       status === 'failed'
-        ? { code: 'provider_error', message: 'The model provider failed after the retries.', stage }
+        ? {
+            code: 'cost_limit_exceeded',
+            message: 'The next model call would exceed the cost limit of the run.',
+            stage,
+          }
         : null,
     started_at: runStart(spec),
     finished_at: isFinished ? at(spec.day, '09:40:00') : null,

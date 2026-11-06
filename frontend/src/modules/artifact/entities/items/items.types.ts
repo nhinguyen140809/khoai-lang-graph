@@ -41,6 +41,13 @@ export const nestedOutlineItemSchema: z.ZodType<NestedOutlineItem> = outlineItem
   children: z.lazy(() => z.array(nestedOutlineItemSchema)),
 })
 
+/** An item that a stage works on, one after another, such as an interviewee to interview. */
+export interface StageSubject {
+  id: string
+  key: string
+  title: string
+}
+
 /** A reference to an item at a version, such as an item that a step produced or a message names. */
 export const itemRefSchema = z.object({
   item_id: z.string(),

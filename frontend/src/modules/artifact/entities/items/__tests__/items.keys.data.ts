@@ -19,6 +19,11 @@ export const keyCases = [
     key: itemKeys.firstOfProject('p1', { kind: 'persona' }),
     wider: itemKeys.lists(),
   },
+  {
+    name: 'the first page of the items of an artifact',
+    key: itemKeys.firstOfArtifact('a1'),
+    wider: itemKeys.lists(),
+  },
   { name: 'one item', key: itemKeys.detail('i1'), wider: itemKeys.all() },
   { name: 'the versions of an item', key: itemKeys.revisions('i1'), wider: itemKeys.all() },
 ]
@@ -34,6 +39,11 @@ export const distinctCases = [
     name: 'the items of an artifact and of a project',
     first: itemKeys.ofArtifact('x', {}),
     second: itemKeys.ofProject('x', {}),
+  },
+  {
+    name: 'the first page and the pages of the items of an artifact',
+    first: itemKeys.firstOfArtifact('x'),
+    second: itemKeys.ofArtifact('x', {}),
   },
   {
     name: 'the items of two filters',

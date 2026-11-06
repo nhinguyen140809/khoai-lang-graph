@@ -1,5 +1,6 @@
+export type { CheckpointOption, QuestionAnswer } from '../definition/workflow-graph.types'
 export {
   checkpointOptionSchema,
   checkpointQuestionSchema,
-  type QuestionAnswer,
+  questionAnswerSchema,
 } from '../definition/workflow-graph.types'

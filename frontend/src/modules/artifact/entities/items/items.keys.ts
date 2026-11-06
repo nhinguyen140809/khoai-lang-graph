@@ -14,6 +14,12 @@ export const itemKeys = {
   /** The first page of the items of one project, narrowed by the filters, apart from the pages the list loads. */
   firstOfProject: (projectId: string, filters: ProjectItemFilters) =>
     [...itemKeys.lists(), 'project-first', projectId, filters] as const,
+  /**
+   * The first page of the items of one artifact, in outline order, apart from the pages the list
+   * loads: another shape of data than `ofArtifact` holds.
+   */
+  firstOfArtifact: (artifactId: string) =>
+    [...itemKeys.lists(), 'artifact-first', artifactId] as const,
   /** One item as it is now, or as it was at a version. */
   detail: (itemId: string, version?: number) =>
     [...itemKeys.all(), 'detail', itemId, version ?? null] as const,

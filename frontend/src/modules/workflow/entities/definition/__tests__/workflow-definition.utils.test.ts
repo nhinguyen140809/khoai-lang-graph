@@ -3,6 +3,7 @@ import { describe, expect, it } from 'vitest'
 import { workflowDefinitionFixture } from '@/mocks/workflow/workflow.fixtures'
 
 import {
+  agentRoleLabels,
   checkpointNodes,
   edgesFrom,
   findAgentRole,
@@ -40,6 +41,15 @@ describe('findValueList', () => {
     const list = findValueList(workflowDefinitionFixture, key)
 
     expect(list?.values.map((value) => value.key) ?? null).toEqual(values)
+  })
+})
+
+describe('agentRoleLabels', () => {
+  it('gives the label of each agent role of the definition, by its key', () => {
+    const labels = agentRoleLabels(workflowDefinitionFixture)
+
+    expect(labels.get('interviewer')).toBe('Interviewer')
+    expect(labels.size).toBe(workflowDefinitionFixture.agent_roles.length)
   })
 })
 

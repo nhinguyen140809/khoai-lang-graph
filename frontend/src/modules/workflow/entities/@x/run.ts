@@ -13,3 +13,5 @@ export {
   sentRunParameters,
 } from '../run-parameters/run-parameters.utils'
 export { useStageTitle } from '../stages/hooks/useStageQueries'
+export { useVisibleStages } from '../stages/hooks/useStageQueries'
+export type { VisibleStage } from '../stages/stages.types'

@@ -15,7 +15,7 @@ describe('the artifact fixtures', () => {
 
   it('give each participant of an interview the id of the item it is; the interviewer has none', () => {
     const interviews = artifactFixtures.filter(({ kind }) => kind === 'interview_transcript')
-    expect(interviews.length).toBe(4)
+    expect(interviews.length).toBe(5)
 
     for (const interview of interviews) {
       const participants = interview.content.participants
@@ -42,6 +42,7 @@ describe('the artifact fixtures', () => {
       'elicitation_plan',
       'persona_catalog',
       'requirement_specification',
+      'interview_transcript',
       'interview_transcript',
     ])
   })
