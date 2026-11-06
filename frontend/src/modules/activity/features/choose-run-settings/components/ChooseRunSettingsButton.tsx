@@ -31,7 +31,8 @@ export function ChooseRunSettingsButton({ thread }: ChooseRunSettingsButtonProps
     <DisabledReason reason={reason}>
       <Button
         variant="ghost"
-        size="xs"
+        size="sm"
+        className="px-1.5 text-sm"
         disabled={isDisabled}
         onClick={() => {
           if (thread !== null) openRunSettings(thread.id)

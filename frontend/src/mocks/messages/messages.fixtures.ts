@@ -6,7 +6,8 @@ import { IdPrefix, mockId, projectIds, runIds, threadIds } from '../shared/db'
 
 // Mock messages. The chat of the mentor platform follows the runs of the API examples: the first
 // message started run 1, the validator answered in run 1, a second message started run 2, and a
-// third was taken in by run 3 while it ran. The other projects have their first message only.
+// third was taken in by run 3 while it ran. The other projects have their first message only,
+// except the campus thread, which also holds a message that no run has taken in yet.
 
 function message(
   fields: Partial<Message> & Pick<Message, 'id' | 'thread_id' | 'sequence' | 'created_at'>,
@@ -116,6 +117,16 @@ export const messageFixtures: Message[] = [
     content: 'Also ask about group sessions.',
     delivery: 'pending',
     created_at: '2026-10-06T08:42:00Z',
+  }),
+  // The run of the campus thread ended; this message waits for the run it will start.
+  message({
+    id: mockId(IdPrefix.Message, 10),
+    thread_id: threadIds.campusMain,
+    sequence: 2,
+    run_id: null,
+    content: 'Let a group of students order and pay together.',
+    delivery: null,
+    created_at: '2026-10-05T16:25:00Z',
   }),
 ]
 
