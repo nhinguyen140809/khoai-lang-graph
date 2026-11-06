@@ -1,4 +1,15 @@
-export { listThreadMessages, sendMessage } from './api/messages.api'
+export { useThreadMessages } from './messages/hooks/useMessageQueries'
+export { listThreadMessages, sendMessage } from './messages/messages.api'
+export { messageKeys } from './messages/messages.keys'
+export type {
+  Message,
+  MessageAuthor,
+  MessageDelivery,
+  SendMessageBody,
+  SentMessage,
+} from './messages/messages.types'
+export { messageAuthors, messageDeliveries } from './messages/messages.types'
+export { useProjectThreads, useThread, useThreads } from './threads/hooks/useThreadQueries'
 export {
   createThread,
   deleteThread,
@@ -7,24 +18,13 @@ export {
   listThreads,
   sendFirstMessage,
   updateThread,
-} from './api/threads.api'
-export { useThreadMessages } from './hooks/useMessageQueries'
-export { useProjectThreads, useThread, useThreads } from './hooks/useThreadQueries'
-export { messageKeys } from './keys/messages.keys'
-export { threadKeys } from './keys/threads.keys'
-export type {
-  Message,
-  MessageAuthor,
-  MessageDelivery,
-  SendMessageBody,
-  SentMessage,
-} from './types/messages.types'
-export { messageAuthors, messageDeliveries } from './types/messages.types'
+} from './threads/threads.api'
+export { threadKeys } from './threads/threads.keys'
 export type {
   CreateThreadBody,
   Thread,
   ThreadFilters,
   ThreadStatus,
   UpdateThreadBody,
-} from './types/threads.types'
-export { threadStatuses } from './types/threads.types'
+} from './threads/threads.types'
+export { threadStatuses } from './threads/threads.types'

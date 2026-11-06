@@ -1,6 +1,6 @@
 import { buildThread } from '@/mocks/threads/threads.fixtures'
 
-import type { Thread } from '../../types/threads.types'
+import type { Thread } from '../../threads.types'
 
 export function threadWith(id: string, status: Thread['latest_run_status']): Thread {
   return buildThread({ id, project_id: 'p1', latest_run_status: status })

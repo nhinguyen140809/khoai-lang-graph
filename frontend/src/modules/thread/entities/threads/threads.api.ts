@@ -3,14 +3,14 @@ import { HttpMethod } from '@/shared/api/http'
 import { apiCommand, apiRequest, fetchPage, type ListPage } from '@/shared/api/request'
 import { pathWithQuery } from '@/shared/lib/url'
 
+import { sendMessage } from '../messages/messages.api'
 import {
   type CreateThreadBody,
   type Thread,
   type ThreadFilters,
   threadSchema,
   type UpdateThreadBody,
-} from '../types/threads.types'
-import { sendMessage } from './messages.api'
+} from './threads.types'
 
 // TODO: switch to the generated client in src/shared/api/generated/ once it is generated.
 

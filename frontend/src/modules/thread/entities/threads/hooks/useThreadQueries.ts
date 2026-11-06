@@ -10,10 +10,10 @@ import { refetchIntervalOf, type Run } from '@/modules/run/entities/@x/thread'
 import { cursorPagesOptions, type HookQueryOptions, pageItems } from '@/shared/api/query-client'
 import type { ListPage } from '@/shared/api/request'
 
-import { getThread, listProjectThreads, listThreads } from '../api/threads.api'
-import { threadKeys } from '../keys/threads.keys'
-import { threadsPageSize } from '../page-sizes.constants'
-import type { Thread, ThreadFilters } from '../types/threads.types'
+import { getThread, listProjectThreads, listThreads } from '../threads.api'
+import { threadsPageSize } from '../threads.constants'
+import { threadKeys } from '../threads.keys'
+import type { Thread, ThreadFilters } from '../threads.types'
 
 /** The threads of a project, the newest message first, a page at a time. */
 export function useProjectThreads(projectId: string, { isEnabled = true }: HookQueryOptions = {}) {

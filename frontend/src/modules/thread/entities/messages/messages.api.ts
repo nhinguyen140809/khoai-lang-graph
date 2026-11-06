@@ -8,7 +8,7 @@ import {
   type SendMessageBody,
   type SentMessage,
   sentMessageSchema,
-} from '../types/messages.types'
+} from './messages.types'
 
 // TODO: switch to the generated client in src/shared/api/generated/ once it is generated.
 

@@ -3,9 +3,9 @@ import { useInfiniteQuery } from '@tanstack/react-query'
 import { type LiveRunQueryOptions, refetchIntervalOf } from '@/modules/run/entities/@x/thread'
 import { cursorPagesOptions } from '@/shared/api/query-client'
 
-import { listThreadMessages } from '../api/messages.api'
-import { messageKeys } from '../keys/messages.keys'
-import { messagesPageSize } from '../page-sizes.constants'
+import { listThreadMessages } from '../messages.api'
+import { messagesPageSize } from '../messages.constants'
+import { messageKeys } from '../messages.keys'
 
 /**
  * The messages of a thread, in the order they were sent, a page at a time. The list is read again

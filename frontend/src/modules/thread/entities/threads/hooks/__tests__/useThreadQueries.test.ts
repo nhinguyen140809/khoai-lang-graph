@@ -6,7 +6,7 @@ import { createTestQueryClient, renderHookWithProviders } from '@/test/render'
 import { waitForSuccess } from '@/test/steps'
 import { itWaitsUntilEnabled } from '@/test/suites'
 
-import { threadKeys } from '../../keys/threads.keys'
+import { threadKeys } from '../../threads.keys'
 import {
   useProjectThreads,
   useReloadThreadsIfRunStatusChanged,

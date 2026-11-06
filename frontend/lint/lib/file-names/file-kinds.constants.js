@@ -97,6 +97,10 @@ export const topicEntityModules = {
     status: [],
     steps: ['config', 'runs', 'status'],
   },
+  thread: {
+    messages: [],
+    threads: ['messages'],
+  },
   trace: {
     chains: ['links'],
     'item-links': ['chains'],

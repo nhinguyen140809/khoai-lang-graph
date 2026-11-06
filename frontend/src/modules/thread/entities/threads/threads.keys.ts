@@ -1,4 +1,4 @@
-import type { ThreadFilters } from '../types/threads.types'
+import type { ThreadFilters } from './threads.types'
 
 /** The query keys of the threads, from the widest to the narrowest; each starts with the one above. */
 export const threadKeys = {

@@ -1,7 +1,7 @@
 import { isUnfinishedRunStatus, runStatusesByAttention } from '@/modules/run/entities/@x/thread'
 import { rankIn } from '@/shared/lib/collections'
 
-import type { Thread } from './types/threads.types'
+import type { Thread } from './threads.types'
 
 // The rank of a thread: the place of the status of its latest run, a thread without a run last.
 function attentionRank({ latest_run_status: status }: Thread) {
