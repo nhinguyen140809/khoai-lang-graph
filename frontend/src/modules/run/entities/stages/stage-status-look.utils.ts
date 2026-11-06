@@ -1,9 +1,8 @@
 import type { Wording } from '@/shared/lib/view'
 
-import type { WorkStatus } from './run-steps.types'
 import type { StageStatus } from './stage-progress.types'
 import { stageStatusLabels } from './stage-status.constants'
-import { stageStatusLooks, workStatusLooks } from './stage-status-look.constants'
+import { stageStatusLooks } from './stage-status-look.constants'
 
 /** How a status of a stage or of a subject shows. */
 export function stageStatusLook(status: StageStatus) {
@@ -24,14 +23,4 @@ export function isStageStatusInProgress(status: StageStatus): boolean {
 /** Whether the status of a stage is done. */
 export function isStageStatusCompleted(status: StageStatus): boolean {
   return stageStatusLook(status).isCompleted
-}
-
-/** Whether a line of work is in progress. */
-export function isWorkStatusInProgress(status: WorkStatus): boolean {
-  return workStatusLook(status).isLoading
-}
-
-/** How a status of a line of work shows. */
-export function workStatusLook(status: WorkStatus) {
-  return workStatusLooks[status]
 }

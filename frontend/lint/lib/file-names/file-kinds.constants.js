@@ -93,9 +93,11 @@ export const topicEntityModules = {
     directives: ['config', 'runs', 'status'],
     events: ['runs', 'status'],
     runs: ['config', 'status'],
+    stages: ['runs', 'status', 'steps', 'work'],
     state: ['config', 'runs', 'status'],
     status: [],
     steps: ['config', 'runs', 'status'],
+    work: ['runs', 'status', 'steps'],
   },
   thread: {
     messages: [],

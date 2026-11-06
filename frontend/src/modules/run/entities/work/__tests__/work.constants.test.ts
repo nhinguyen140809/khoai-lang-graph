@@ -1,7 +1,7 @@
 import { describe, expect, it } from 'vitest'
 
-import type { WorkStatus } from '../run-steps.types'
 import { workMessages, workStatusLabels } from '../work.constants'
+import type { WorkStatus } from '../work.types'
 
 describe('workMessages', () => {
   it.each([

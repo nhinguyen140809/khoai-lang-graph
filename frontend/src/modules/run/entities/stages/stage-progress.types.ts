@@ -1,6 +1,6 @@
 import type { StageSubject } from '@/modules/artifact/entities/@x/run'
 
-import type { WorkStatus } from './run-steps.types'
+import type { WorkStatus } from '../work/work.types'
 
 /** The statuses of a stage or of a subject of a stage, as far as a run went. */
 export const stageStatuses = [

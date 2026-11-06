@@ -4,10 +4,11 @@ import { firstInOrder } from '@/shared/lib/collections'
 
 import type { Run } from '../runs/runs.types'
 import type { RunStatus } from '../status/run-status.types'
-import type { RunStep, WorkEntry, WorkStatus } from './run-steps.types'
-import { orderedSteps } from './run-steps.utils'
+import type { RunStep } from '../steps/run-steps.types'
+import { orderedSteps } from '../steps/run-steps.utils'
+import type { WorkEntry, WorkStatus } from '../work/work.types'
+import { workEntries } from '../work/work-entries.utils'
 import type { StageProgress, StageStatus, SubjectProgress } from './stage-progress.types'
-import { workEntries } from './work-entries.utils'
 
 /** The statuses of a stage or of a subject, from the one that needs the user most. */
 export const stageStatusesByAttention: readonly StageStatus[] = [
