@@ -14,7 +14,7 @@ describe('GET /me/usage', () => {
     const usage = await getApi<MonthlyUsage>(path)
 
     expect(usage).toMatchObject({ month: '2026-10', budget_usd: 20, groups: [] })
-    expect(usage.total.cost_usd).toBeCloseTo(4.755, 6)
+    expect(usage.total.cost_usd).toBeCloseTo(4.775, 6)
   })
 
   it('groups by day, in the order of the days', async () => {
@@ -42,8 +42,8 @@ describe('GET /me/usage', () => {
   })
 
   it.each([
-    { scenario: 'warning', budget: 5.52 },
-    { scenario: 'danger', budget: 5 },
+    { scenario: 'warning', budget: 5.55 },
+    { scenario: 'danger', budget: 5.02 },
     { scenario: 'none', budget: null },
   ])('answers the budget $budget in the $scenario scenario', async ({ scenario, budget }) => {
     openPage(`/?mock-budget=${scenario}`)

@@ -18,6 +18,31 @@ import type { RunStatus } from '../../../status/run-status.types'
 import { streamReopenMs } from '../../run-events.constants'
 import { useRunStatusEvents } from '../useRunStatusEvents'
 
+// The events of the stream of a run, with the fields the API carries.
+const NODE_START = {
+  node: 'analyst',
+  step_id: 's66',
+  agent_role: 'analyst',
+  stage: 'analysis',
+  iteration: 0,
+  persona_key: null,
+}
+const NODE_END = {
+  node: 'analyst',
+  step_id: 's66',
+  status: 'succeeded',
+  usage: {
+    input_tokens: 0,
+    output_tokens: 0,
+    cache_read_tokens: 0,
+    cache_write_tokens: 0,
+    cost_usd: 0,
+    duration_ms: 0,
+  },
+}
+const TOKEN = { node: 'analyst', text: 'Hello', step_id: 's66' }
+const DONE = { status: 'succeeded' }
+
 // Run 3 of the mentor thread, with the status the API answers for it now.
 function mentorRun(status: RunStatus, lastEventId = 246) {
   return buildRun({
@@ -91,7 +116,7 @@ describe('useRunStatusEvents', () => {
     server.use(answerRunWith('succeeded'))
 
     act(() => {
-      source?.emit('done', { status: 'succeeded' }, '247')
+      source?.emit('done', DONE, '247')
     })
 
     await waitFor(() => {
@@ -109,13 +134,13 @@ describe('useRunStatusEvents', () => {
     server.use(answerRunWith('interrupted'))
 
     act(() => {
-      source?.emit('token', { node: 'analyst', text: 'Hello' }, '247')
+      source?.emit('token', TOKEN, '247')
     })
     await sleep(50)
     expect(onReloaded).not.toHaveBeenCalled()
 
     act(() => {
-      source?.emit('node_end', { node: 'analyst' }, '248')
+      source?.emit('node_end', NODE_END, '248')
     })
     await waitFor(() => {
       expect(onReloaded).toHaveBeenCalledOnce()
@@ -139,7 +164,7 @@ describe('useRunStatusEvents', () => {
     )
 
     act(() => {
-      source?.emit('node_end', { node: 'analyst' }, '247')
+      source?.emit('node_end', NODE_END, '247')
       source?.emit('done', { status: 'succeeded' }, '248')
     })
 
@@ -160,7 +185,7 @@ describe('useRunStatusEvents', () => {
     )
 
     act(() => {
-      source?.emit('node_end', { node: 'analyst' }, '247')
+      source?.emit('node_end', NODE_END, '247')
     })
     unmount()
     await sleep(150)
@@ -188,7 +213,7 @@ describe('useRunStatusEvents', () => {
     const { result, source } = await followedStream()
     server.use(answerRunWith('interrupted', 250))
     act(() => {
-      source?.emit('node_end', { node: 'analyst' }, '250')
+      source?.emit('node_end', NODE_END, '250')
     })
     await waitFor(() => {
       expect(result.current.data?.last_event_id).toBe(250)
@@ -219,7 +244,7 @@ describe('useRunStatusEvents', () => {
     server.use(answerRunWith('interrupted'))
 
     act(() => {
-      source?.emit('node_end', { node: 'analyst' }, '247')
+      source?.emit('node_end', NODE_END, '247')
     })
 
     await waitFor(() => {
@@ -234,7 +259,7 @@ describe('useRunStatusEvents', () => {
     server.use(answerRunWith('running'))
 
     act(() => {
-      source?.emit('node_start', { node: 'analyst' }, '247')
+      source?.emit('node_start', NODE_START, '247')
     })
     await sleep(100)
 
@@ -247,9 +272,9 @@ describe('useRunStatusEvents', () => {
     server.use(answerRunWith('interrupted'))
 
     act(() => {
-      source?.emit('node_end', { node: 'analyst' }, '247')
-      source?.emit('node_end', { node: 'analyst' }, '248')
-      source?.emit('node_end', { node: 'analyst' }, '249')
+      source?.emit('node_end', NODE_END, '247')
+      source?.emit('node_end', NODE_END, '248')
+      source?.emit('node_end', NODE_END, '249')
     })
     await sleep(150)
 

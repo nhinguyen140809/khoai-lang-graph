@@ -2,7 +2,7 @@ import { projectIds } from '../../shared/db'
 
 /** A month, and what its usage costs without groups. */
 export const monthCases = [
-  { name: 'October 2026', month: '2026-10', cost: 4.755 },
+  { name: 'October 2026', month: '2026-10', cost: 4.775 },
   { name: 'September 2026', month: '2026-09', cost: 1.944 },
   { name: 'a month without usage', month: '2026-11', cost: 0 },
 ]
@@ -15,9 +15,9 @@ export const groupingCases = [
   { grouping: 'model', count: 2, first: 'anthropic:claude-sonnet-5' },
 ] as const
 
-/** A scenario of the budget, and the budget of a month that cost $4.755. */
+/** A scenario of the budget, and the budget of a month that cost $4.775. */
 export const budgetCases = [
-  { scenario: 'warning', budget: 5.52 },
-  { scenario: 'danger', budget: 5 },
+  { scenario: 'warning', budget: 5.55 },
+  { scenario: 'danger', budget: 5.02 },
   { scenario: 'none', budget: null },
 ]

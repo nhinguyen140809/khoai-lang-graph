@@ -12,7 +12,11 @@ describe('artifactsInProgress', () => {
     const ids = new Set(['a'])
 
     expect(
-      artifactsInProgress(ids, { id: '1', type: 'token', data: { node: 'n', text: 't' } }),
+      artifactsInProgress(ids, {
+        id: '1',
+        type: 'token',
+        data: { node: 'n', text: 't', step_id: 's1' },
+      }),
     ).toBe(ids)
   })
 })

@@ -69,7 +69,23 @@ describe('useProjectRunStream', () => {
 
     // A step that ends leaves the run waiting, as its thread already shows.
     act(() => {
-      source?.emit('node_end', { node: 'analyst' }, '247')
+      source?.emit(
+        'node_end',
+        {
+          node: 'analyst',
+          step_id: 's66',
+          status: 'succeeded',
+          usage: {
+            input_tokens: 0,
+            output_tokens: 0,
+            cache_read_tokens: 0,
+            cache_write_tokens: 0,
+            cost_usd: 0,
+            duration_ms: 0,
+          },
+        },
+        '247',
+      )
     })
     await waitFor(() => {
       expect(runLoads).toBe(loadsBefore + 1)

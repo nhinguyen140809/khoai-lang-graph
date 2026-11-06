@@ -6,6 +6,29 @@ import { listenToRun } from '../run-event-channels.api'
 import { streamReopenMs } from '../run-events.constants'
 import type { RunChannelSignal } from '../run-events.types'
 
+// The events of the stream of a run, with the fields the API carries.
+const NODE_START = {
+  node: 'analyst',
+  step_id: 's1',
+  agent_role: 'analyst',
+  stage: 'analysis',
+  iteration: 0,
+  persona_key: null,
+}
+const NODE_END = {
+  node: 'analyst',
+  step_id: 's1',
+  status: 'succeeded',
+  usage: {
+    input_tokens: 0,
+    output_tokens: 0,
+    cache_read_tokens: 0,
+    cache_write_tokens: 0,
+    cost_usd: 0,
+    duration_ms: 0,
+  },
+}
+
 function recorder() {
   const signals: RunChannelSignal[] = []
   return {
@@ -31,7 +54,7 @@ describe('listenToRun', () => {
     const second = recorder()
     const stops = [listenToRun('r1', first.listener), listenToRun('r1', second.listener)]
 
-    openedEventSources()[0]?.emit('node_start', { node: 'analyst' }, '1')
+    openedEventSources()[0]?.emit('node_start', NODE_START, '1')
 
     expect(first.types()).toEqual(['node_start'])
     expect(second.types()).toEqual(['node_start'])
@@ -41,8 +64,8 @@ describe('listenToRun', () => {
   it('gives a listener that joins late the events read already', () => {
     const early = recorder()
     const stopEarly = listenToRun('r1', early.listener)
-    openedEventSources()[0]?.emit('node_start', { node: 'analyst' }, '1')
-    openedEventSources()[0]?.emit('node_end', { node: 'analyst' }, '2')
+    openedEventSources()[0]?.emit('node_start', NODE_START, '1')
+    openedEventSources()[0]?.emit('node_end', NODE_END, '2')
 
     const late = recorder()
     const stopLate = listenToRun('r1', late.listener)
@@ -55,8 +78,8 @@ describe('listenToRun', () => {
   it('leaves out the events up to the id given by `after`', () => {
     const early = recorder()
     const stopEarly = listenToRun('r1', early.listener)
-    openedEventSources()[0]?.emit('node_start', { node: 'analyst' }, '1')
-    openedEventSources()[0]?.emit('node_end', { node: 'analyst' }, '2')
+    openedEventSources()[0]?.emit('node_start', NODE_START, '1')
+    openedEventSources()[0]?.emit('node_end', NODE_END, '2')
 
     const late = recorder()
     const stopLate = listenToRun('r1', late.listener, { after: 1 })
@@ -90,7 +113,7 @@ describe('listenToRun', () => {
     vi.useFakeTimers()
     const stop = listenToRun('r1', recorder().listener)
 
-    openedEventSources()[0]?.emit('done', {}, '5')
+    openedEventSources()[0]?.emit('done', { status: 'succeeded' }, '5')
     vi.advanceTimersByTime(streamReopenMs)
 
     expect(openedEventSources()[0]?.closed).toBe(true)
@@ -103,7 +126,7 @@ describe('listenToRun', () => {
     vi.useFakeTimers()
     const watcher = recorder()
     const stop = listenToRun('r1', watcher.listener)
-    openedEventSources()[0]?.emit('node_start', { node: 'analyst' }, '7')
+    openedEventSources()[0]?.emit('node_start', NODE_START, '7')
 
     openedEventSources()[0]?.fail()
     vi.advanceTimersByTime(streamReopenMs)
