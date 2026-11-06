@@ -6,7 +6,11 @@ import { renderHookWithProviders } from '@/test/render'
 import { waitForSuccess } from '@/test/steps'
 import { itWaitsUntilEnabled } from '@/test/suites'
 
-import { usePendingInterrupt, useRunInterrupts } from '../useInterruptQueries'
+import {
+  usePendingInterrupt,
+  useReloadRunInterrupts,
+  useRunInterrupts,
+} from '../useInterruptQueries'
 
 describe('useRunInterrupts', () => {
   it('loads the interrupts of a run with their statuses', async () => {
@@ -18,6 +22,20 @@ describe('useRunInterrupts', () => {
       { node: 'checkpoint_personas', status: 'resolved' },
       { node: 'checkpoint_analysis', status: 'pending' },
     ])
+  })
+})
+
+describe('useReloadRunInterrupts', () => {
+  it('loads every query of the interrupts of a run again', async () => {
+    const { result } = renderHookWithProviders(() => useRunInterrupts(runIds.mentorMain3))
+    await waitForSuccess(result)
+
+    const reload = renderHookWithProviders(() => useReloadRunInterrupts()).result.current
+    await reload(runIds.mentorMain3)
+
+    // The load again keeps the same interrupts, with the state the mock serves now.
+    await waitForSuccess(result)
+    expect(pageItems(result.current.data).length).toBeGreaterThan(0)
   })
 })
 

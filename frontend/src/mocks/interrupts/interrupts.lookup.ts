@@ -6,7 +6,7 @@ import { findNode } from '@/modules/workflow/entities'
 import { artifactRefOf } from '../artifacts/artifact-refs.utils'
 import { allArtifacts } from '../artifacts/artifacts.lookup'
 import { stepsOfRun } from '../runs/lookup/runs.lookup'
-import { IdPrefix } from '../shared/db'
+import { IdPrefix, userId } from '../shared/db'
 import { choice } from '../shared/http/validation'
 import { pageUrlParam } from '../shared/scenario'
 import { workflowDefinitionFixture } from '../workflow/workflow.fixtures'
@@ -46,6 +46,7 @@ function interruptOf(run: Run, step: RunStep, node: CheckpointNode): Interrupt {
   const id = interruptIdOf(step)
   const edit = interruptEdits.get()[id]
   const status = edit?.status ?? interruptStatusOf(run, step)
+  const resolvedAt = edit?.resolved_at ?? (status === 'resolved' ? step.finished_at : null)
   return {
     id,
     run_id: run.id,
@@ -61,8 +62,29 @@ function interruptOf(run: Run, step: RunStep, node: CheckpointNode): Interrupt {
       .map(artifactRefOf),
     status,
     created_at: step.started_at,
-    resolved_at: edit?.resolved_at ?? (status === 'resolved' ? step.finished_at : null),
+    resolved_at: resolvedAt,
+    decision: edit?.decision ?? decisionOf(run, status, node, resolvedAt),
     ...checkpointAskOf(status, node),
+  }
+}
+
+// The decision of a resolved interrupt: its checkpoint's default option. The run of the API
+// examples that retried without its checkpoints takes it without asking, so nothing decided it;
+// the others were answered by the user in the app.
+function decisionOf(
+  run: Run,
+  status: InterruptStatus,
+  node: CheckpointNode,
+  resolvedAt: string | null,
+): Interrupt['decision'] {
+  if (status !== 'resolved' || resolvedAt === null) return null
+  return {
+    option: node.options.find(({ is_default }) => is_default)?.key ?? node.options[0]?.key ?? null,
+    feedback: null,
+    answers: {},
+    // The failed run of the mentor thread took its reviews with the defaults, without asking.
+    decided_by: run.status === 'failed' ? null : userId,
+    decided_at: resolvedAt,
   }
 }
 
