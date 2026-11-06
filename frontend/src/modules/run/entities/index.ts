@@ -19,10 +19,13 @@ export { useRunProgressEvents } from './events/hooks/useRunProgressEvents'
 export { runEventsUrl } from './events/run-events.api'
 export { useLatestRun, useRun, useThreadRuns } from './runs/hooks/useRunQueries'
 export { useRunStageTitle } from './runs/hooks/useRunStageTitle'
+export { runErrorLabels } from './runs/run-error.constants'
+export { runErrorLabel } from './runs/run-error.utils'
 export { runModuleKeys } from './runs/run-module.keys'
 export { cancelRun, findLatestRun, getRun, listThreadRuns, retryRun } from './runs/runs.api'
 export { runKeys } from './runs/runs.keys'
-export type { Run, RunUsage } from './runs/runs.types'
+export type { Run, RunErrorCode, RunUsage } from './runs/runs.types'
+export { runErrorCodes } from './runs/runs.types'
 export { refetchIntervalOf } from './runs/runs.utils'
 export { useCurrentRunState, useRunStateAfterStep } from './state/hooks/useRunStateQueries'
 export { getCurrentRunState, getRunStateAfterStep } from './state/run-state.api'
@@ -33,10 +36,16 @@ export { useRunStatusLook } from './status/hooks/useRunStatusLook'
 export { noRunLabel, runStatusesByAttention } from './status/run-status.constants'
 export type { RunStatus, UnfinishedRunStatus } from './status/run-status.types'
 export { isUnfinishedRunStatus, runStatusLabel } from './status/run-status.utils'
-export { useRunSteps } from './steps/hooks/useRunStepQueries'
+export { durationWords } from './steps/duration-words.utils'
+export { useReloadRunSteps, useRunSteps } from './steps/hooks/useRunStepQueries'
+export { useStageProgress } from './steps/hooks/useStageProgress'
+export { useStageStatusLook } from './steps/hooks/useStageStatusLook'
+export { useWorkStatusLook } from './steps/hooks/useWorkStatusLook'
+export { useWorkWords } from './steps/hooks/useWorkWords'
 export { runProgress } from './steps/run-progress.utils'
 export { listRunSteps } from './steps/run-steps.api'
 export { runStepKeys } from './steps/run-steps.keys'
+export type { WorkEntry, WorkStatus, WorkWords } from './steps/run-steps.types'
 export type {
   NodeProgress,
   NodeStatus,
@@ -44,4 +53,28 @@ export type {
   RunStep,
   StepEntry,
 } from './steps/run-steps.types'
+export type {
+  StageProgress,
+  StageProgressResult,
+  StageStatus,
+  SubjectProgress,
+} from './steps/stage-progress.types'
+export {
+  stageProgress,
+  stageStatusesByAttention,
+  stageStatusOfRun,
+  stageStatusOfWork,
+} from './steps/stage-progress.utils'
+export { stageStatusLabels } from './steps/stage-status.constants'
+export { stageStatusLooks, workStatusLooks } from './steps/stage-status-look.constants'
+export {
+  isStageStatusCompleted,
+  isStageStatusInProgress,
+  isWorkStatusInProgress,
+  stageStatusLabel,
+  stageStatusLook,
+  workStatusLook,
+} from './steps/stage-status-look.utils'
 export { groupSteps } from './steps/step-groups.utils'
+export { workMessages, workStatusLabels } from './steps/work.constants'
+export { workEntries } from './steps/work-entries.utils'
