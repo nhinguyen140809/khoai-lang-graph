@@ -1,4 +1,4 @@
-export { useReloadThreadMessages } from '../messages/hooks/useMessageQueries'
+export { useReloadThreadMessages, useThreadMessages } from '../messages/hooks/useMessageQueries'
 export type { Message } from '../messages/messages.types'
 export { useProjectThreads } from '../threads/hooks/useThreadQueries'
 export type { Thread } from '../threads/threads.types'
