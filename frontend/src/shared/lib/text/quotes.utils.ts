@@ -1,4 +1,4 @@
-import type { TextRange } from '../text.types'
+import type { TextRange } from './text.types'
 
 function escapeRegExp(text: string): string {
   return text.replace(/[.*+?^${}()|[\]\\]/g, '\\$&')

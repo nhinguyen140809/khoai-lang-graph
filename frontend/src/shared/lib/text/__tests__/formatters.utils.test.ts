@@ -1,7 +1,12 @@
 import { describe, expect, it } from 'vitest'
 
-import { capitalize, initialsOf, snakeToSentenceCase } from '../text.utils'
-import { capitalizeCases, initialsCases, snakeToSentenceCaseCases } from './text.utils.data'
+import { capitalize, initialsOf, jsonToPlainText, snakeToSentenceCase } from '../formatters.utils'
+import {
+  capitalizeCases,
+  initialsCases,
+  jsonToPlainTextCases,
+  snakeToSentenceCaseCases,
+} from './formatters.utils.data'
 
 describe('capitalize', () => {
   it.each(capitalizeCases)('writes $name with a capital', ({ text, capitalized }) => {
@@ -18,5 +23,11 @@ describe('snakeToSentenceCase', () => {
 describe('initialsOf', () => {
   it.each(initialsCases)('%j gives %j', (name, expected) => {
     expect(initialsOf(name)).toBe(expected)
+  })
+})
+
+describe('jsonToPlainText', () => {
+  it.each(jsonToPlainTextCases)('writes $name', ({ value, text }) => {
+    expect(jsonToPlainText(value)).toBe(text)
   })
 })

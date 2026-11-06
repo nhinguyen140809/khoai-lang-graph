@@ -1,5 +1,5 @@
-import { snakeToSentenceCase } from '@/shared/lib/formatters'
 import { isOneOf, isString } from '@/shared/lib/guards'
+import { snakeToSentenceCase } from '@/shared/lib/text'
 
 import type {
   ArtifactKinds,

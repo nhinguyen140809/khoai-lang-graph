@@ -1,6 +1,6 @@
 import { type Coverage, isLinkOutOfDate } from '@/modules/trace/entities'
-import { snakeToSentenceCase } from '@/shared/lib/formatters'
 import { assertPresent } from '@/shared/lib/guards'
+import { snakeToSentenceCase } from '@/shared/lib/text'
 
 import type { GapRule } from '../trace-links.types'
 import {

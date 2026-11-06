@@ -1,4 +1,4 @@
-import type { TextRange, TextSegment } from '../text.types'
+import type { TextRange, TextSegment } from './text.types'
 import { foldText } from './text.utils'
 
 interface MatchOptions {
