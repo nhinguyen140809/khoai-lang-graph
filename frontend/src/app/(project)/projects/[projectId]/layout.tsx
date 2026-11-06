@@ -1,3 +1,5 @@
+import { ActivityDialogs } from '@/modules/activity/widgets/dialogs'
+import { activityDestination } from '@/modules/activity/widgets/panel'
 import { DocumentDialogs } from '@/modules/documents/widgets/dialogs'
 import { documentsDestination, DocumentsTabIcons } from '@/modules/documents/widgets/panel'
 import { ProjectGate, ProjectNotFound } from '@/modules/project/entities'
@@ -24,6 +26,7 @@ function projectContributions(projectId: string) {
     <>
       <ProjectCommands currentProjectId={projectId} />
       <ProjectDialogs />
+      <ActivityDialogs />
       <DocumentDialogs />
       <ProjectRunStatusItem projectId={projectId} />
       <MonthlyBudgetItem />
@@ -36,8 +39,9 @@ function projectContributions(projectId: string) {
 /**
  * Every screen of a project: the frame with the menu of the project on the top bar, its dialogs,
  * the budget of the month and the account menu, and the project workspace with the editor. The
- * activity bar holds Documents. A project that does not exist shows as not found, in the frame of
- * the screens outside a project. The features of a project join the activity bar as they are built.
+ * activity bar holds Activity and Documents. A project that does not exist shows as not found, in
+ * the frame of the screens outside a project. The features of a project join the activity bar as
+ * they are built.
  */
 export default async function ProjectLayout({
   children,
@@ -46,7 +50,7 @@ export default async function ProjectLayout({
   const { projectId } = await params
   const crumb = <ProjectSwitcher projectId={projectId} />
   // The features of a project join the activity bar as they are built.
-  const destinations = [documentsDestination(projectId)]
+  const destinations = [activityDestination(projectId), documentsDestination(projectId)]
 
   return (
     <ProjectGate
