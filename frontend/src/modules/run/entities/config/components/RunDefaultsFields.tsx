@@ -34,6 +34,8 @@ interface RunDefaultsFieldsProps<T extends FieldValues, TOutput = T> {
    * schema of the form checks.
    */
   parameterFields: RunParameterField[]
+  /** Whether the note about the runs that the settings apply to shows; true unless a dialog says it. */
+  showNote?: boolean
 }
 
 /** The name of a field of the run settings in the values of the form. */
@@ -106,11 +108,12 @@ export function RunDefaultsFields<T extends FieldValues, TOutput = T>({
   legend,
   checkpoints,
   parameterFields,
+  showNote = true,
 }: RunDefaultsFieldsProps<T, TOutput>) {
   return (
     <FieldSet>
       <FieldLegend className="sr-only">{legend}</FieldLegend>
-      <FieldDescription>{runDefaultsMessages.appliesNote}</FieldDescription>
+      {showNote && <FieldDescription>{runDefaultsMessages.appliesNote}</FieldDescription>}
       <CheckpointsField
         control={control}
         name={nameAt<T>(path, 'review_checkpoints')}
