@@ -1,7 +1,13 @@
 import { describe, expect, it } from 'vitest'
 
-import { formatDate, formatDateTime, formatDuration, formatRelativeTime } from '../time.utils'
-import { dateCases, dateTimeCases, durationCases, now, relativeTimeCases } from './time.utils.data'
+import { formatDate, formatDateTime, formatDuration, formatRelativeTime } from '../formatters.utils'
+import {
+  dateCases,
+  dateTimeCases,
+  durationCases,
+  now,
+  relativeTimeCases,
+} from './formatters.utils.data'
 
 describe('formatRelativeTime', () => {
   it.each(relativeTimeCases)('formats %s as %j', (iso, expected) => {

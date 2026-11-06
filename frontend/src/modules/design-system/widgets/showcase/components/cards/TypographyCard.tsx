@@ -5,7 +5,7 @@ import { Kbd, KbdGroup } from '@/shared/components/ui/kbd'
 import { KeyText } from '@/shared/components/ui/key-text'
 import { RelativeTime } from '@/shared/components/ui/relative-time'
 import { Separator } from '@/shared/components/ui/separator'
-import { minuteMs } from '@/shared/lib/timing'
+import { minuteMs } from '@/shared/lib/time'
 
 import { SampleCard, SampleLabel } from '../Sample'
 

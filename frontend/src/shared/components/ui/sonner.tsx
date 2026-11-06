@@ -13,6 +13,12 @@ import { Toaster as Sonner, type ToasterProps } from 'sonner'
 
 import { toneClasses } from '@/shared/lib/tone'
 
+/**
+ * How long a toast with an action, such as Undo, stays, in milliseconds: longer than the 4 seconds
+ * of a toast without one, so that there is time to reach the action, also from the keyboard.
+ */
+const actionToastDuration = 10_000
+
 const Toaster = ({ ...props }: ToasterProps) => {
   const { theme = 'system' } = useTheme()
 
@@ -52,4 +58,4 @@ const Toaster = ({ ...props }: ToasterProps) => {
   )
 }
 
-export { Toaster }
+export { actionToastDuration, Toaster }

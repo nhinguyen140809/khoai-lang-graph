@@ -2,8 +2,7 @@
 
 import type * as React from 'react'
 
-import { formatDateTime, formatRelativeTime } from '@/shared/lib/formatters'
-import { useNow } from '@/shared/lib/timing'
+import { formatDateTime, formatRelativeTime, useNow } from '@/shared/lib/time'
 
 interface RelativeTimeProps extends Omit<React.ComponentProps<'time'>, 'children' | 'dateTime'> {
   /** The moment, as the ISO string that the API gives. */

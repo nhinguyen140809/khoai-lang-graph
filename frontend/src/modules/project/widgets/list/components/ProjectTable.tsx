@@ -24,8 +24,7 @@ import {
   TableHeader,
   TableRow,
 } from '@/shared/components/ui/table'
-import { formatRelativeTime } from '@/shared/lib/formatters'
-import { useNow } from '@/shared/lib/timing'
+import { formatRelativeTime, useNow } from '@/shared/lib/time'
 import { routes } from '@/shared/routes'
 
 import { projectFilterMessages } from '../project-filters.constants'

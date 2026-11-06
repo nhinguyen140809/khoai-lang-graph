@@ -7,7 +7,7 @@ import type { OutlineNeighbors } from '@/modules/artifact/entities'
 import { Button } from '@/shared/components/ui/button'
 import { FloatingSurface } from '@/shared/components/ui/floating-surface'
 import { Tooltip, TooltipContent, TooltipTrigger } from '@/shared/components/ui/tooltip'
-import type { IdleHoldProps } from '@/shared/lib/timing'
+import type { IdleHoldProps } from '@/shared/lib/idle-visibility'
 
 import { itemPageMessages } from '../item-page.constants'
 

@@ -5,7 +5,7 @@ import { useEffect, useEffectEvent } from 'react'
 
 import { hasCost } from '@/shared/api/query-client'
 import { isOneOf } from '@/shared/lib/guards'
-import { coalescedTask } from '@/shared/lib/timing'
+import { coalescedTask } from '@/shared/lib/scheduling'
 
 import { runKeys } from '../../runs/runs.keys'
 import type { Run } from '../../runs/runs.types'

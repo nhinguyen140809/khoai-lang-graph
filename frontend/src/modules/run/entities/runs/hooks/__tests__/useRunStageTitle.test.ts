@@ -1,7 +1,7 @@
 import { waitFor } from '@testing-library/react'
 import { describe, expect, it } from 'vitest'
 
-import { sleep } from '@/shared/lib/timing'
+import { sleep } from '@/shared/lib/scheduling'
 import { renderHookWithProviders } from '@/test/render'
 
 import { useRunStageTitle } from '../useRunStageTitle'

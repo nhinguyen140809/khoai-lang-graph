@@ -3,7 +3,7 @@
 import { useEffect, useEffectEvent, useState } from 'react'
 
 import { isOneOf } from '@/shared/lib/guards'
-import { coalescedTask } from '@/shared/lib/timing'
+import { coalescedTask } from '@/shared/lib/scheduling'
 
 import type { Run } from '../../runs/runs.types'
 import { artifactsInProgress } from '../artifacts-in-progress.utils'
