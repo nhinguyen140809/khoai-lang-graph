@@ -2,6 +2,7 @@
 
 import { CheckIcon, CirclePauseIcon, PencilIcon, PlusIcon, XIcon } from 'lucide-react'
 
+import { Spinner } from '@/shared/components/ui/spinner'
 import {
   Trace,
   TraceCollapsible,
@@ -12,11 +13,10 @@ import {
   TraceLine,
   TraceTitle,
 } from '@/shared/components/ui/trace'
-import { Spinner } from '@/shared/components/ui/spinner'
 import type { Tone } from '@/shared/lib/tone'
 
-import { SampleCard } from '../Sample'
 import { traceRows } from '../../design-system.fixtures'
+import { SampleCard } from '../Sample'
 
 /** How a line of work shows, by its status: the tone of its color, its mark and the status of its trace line. */
 const looks: Record<
@@ -37,38 +37,39 @@ export function TraceCard() {
       className="flex flex-col gap-3"
     >
       <Trace>
-        {traceRows.map(({ key, title, description, status, tone }) => (
-          <TraceCollapsible key={key} defaultOpen={key === 's1'}>
-            <TraceCollapsibleTrigger aria-label={`Show what ${title} wrote`}>
-              <TraceLine
-                color={tone}
-                {...(looks[status]?.traceStatus !== undefined && {
-                  status: looks[status]?.traceStatus,
-                })}
-              >
-                <TraceIcon>{looks[status]?.icon}</TraceIcon>
-                <TraceTitle>{title}</TraceTitle>
-                <TraceDescription>{description}</TraceDescription>
-              </TraceLine>
-            </TraceCollapsibleTrigger>
-            <TraceCollapsibleContent>
-              <Trace>
-                <TraceLine color="neutral">
-                  <TraceIcon>
-                    <PlusIcon />
-                  </TraceIcon>
-                  <TraceTitle>AR-001</TraceTitle>
+        {traceRows.map(({ key, title, description, status, tone }) => {
+          const look = looks[status]
+          return (
+            <TraceCollapsible key={key} defaultOpen={key === 's1'}>
+              <TraceCollapsibleTrigger aria-label={`Show what ${title} wrote`}>
+                <TraceLine
+                  color={tone}
+                  {...(look?.traceStatus !== undefined && { status: look.traceStatus })}
+                >
+                  <TraceIcon>{look?.icon}</TraceIcon>
+                  <TraceTitle>{title}</TraceTitle>
+                  <TraceDescription>{description}</TraceDescription>
                 </TraceLine>
-                <TraceLine color="neutral">
-                  <TraceIcon>
-                    <PencilIcon />
-                  </TraceIcon>
-                  <TraceTitle>PER-001</TraceTitle>
-                </TraceLine>
-              </Trace>
-            </TraceCollapsibleContent>
-          </TraceCollapsible>
-        ))}
+              </TraceCollapsibleTrigger>
+              <TraceCollapsibleContent>
+                <Trace>
+                  <TraceLine color="neutral">
+                    <TraceIcon>
+                      <PlusIcon />
+                    </TraceIcon>
+                    <TraceTitle>AR-001</TraceTitle>
+                  </TraceLine>
+                  <TraceLine color="neutral">
+                    <TraceIcon>
+                      <PencilIcon />
+                    </TraceIcon>
+                    <TraceTitle>PER-001</TraceTitle>
+                  </TraceLine>
+                </Trace>
+              </TraceCollapsibleContent>
+            </TraceCollapsible>
+          )
+        })}
       </Trace>
     </SampleCard>
   )

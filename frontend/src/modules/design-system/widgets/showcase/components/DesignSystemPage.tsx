@@ -15,6 +15,7 @@ import { CopyButtonCard } from './cards/CopyButtonCard'
 import { DiffViewCard } from './cards/DiffViewCard'
 import { DisclosureCard } from './cards/DisclosureCard'
 import { ExplorerTreeCard } from './cards/ExplorerTreeCard'
+import { FeedEntryCard } from './cards/FeedEntryCard'
 import { FloatingSurfaceCard } from './cards/FloatingSurfaceCard'
 import { FormCard } from './cards/FormCard'
 import { GraphCard } from './cards/GraphCard'
@@ -28,8 +29,8 @@ import { ReviewCard } from './cards/ReviewCard'
 import { SkeletonCard } from './cards/SkeletonCard'
 import { StepperCard } from './cards/StepperCard'
 import { TimelineCard } from './cards/TimelineCard'
-import { TraceCard } from './cards/TraceCard'
 import { TokensCard } from './cards/TokensCard'
+import { TraceCard } from './cards/TraceCard'
 import { TypographyCard } from './cards/TypographyCard'
 import { WorkspaceCard } from './cards/WorkspaceCard'
 import { ThemeToggle } from './ThemeToggle'
@@ -76,6 +77,7 @@ export function DesignSystemPage() {
             <OverlaysCard />
             <NavigationCard />
             <DisclosureCard />
+            <FeedEntryCard />
             <ItemsCard />
             <CommandCard />
             <CalendarCard />

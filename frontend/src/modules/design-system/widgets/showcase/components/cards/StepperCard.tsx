@@ -3,7 +3,6 @@
 import { CircleCheckIcon, CircleStopIcon, CircleXIcon } from 'lucide-react'
 
 import { Spinner } from '@/shared/components/ui/spinner'
-
 import {
   Stepper,
   StepperDescription,
@@ -13,8 +12,8 @@ import {
 } from '@/shared/components/ui/stepper'
 import type { Tone } from '@/shared/lib/tone'
 
-import { SampleCard, SampleGroup } from '../Sample'
 import { stepperSteps } from '../../design-system.fixtures'
+import { SampleCard, SampleGroup } from '../Sample'
 
 /** The marks of the steps of the sample, by their status. */
 const marks: Record<string, { color: Tone; icon: React.ReactNode; label: string }> = {

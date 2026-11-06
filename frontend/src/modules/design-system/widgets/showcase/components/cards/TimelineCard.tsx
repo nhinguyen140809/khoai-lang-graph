@@ -9,8 +9,8 @@ import {
   TimelineTitle,
 } from '@/shared/components/ui/timeline'
 
-import { SampleCard } from '../Sample'
 import { timelineRows } from '../../design-system.fixtures'
+import { SampleCard } from '../Sample'
 
 export function TimelineCard() {
   return (
