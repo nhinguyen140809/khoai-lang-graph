@@ -40,8 +40,7 @@ export function useRunStatusEvents(
 
   useCoalescedListener(key, {
     listen: listenAfterLoaded,
-    isWanted: (signal) =>
-      signal.kind === 'failed' || isOneOf(runStatusEvents, signal.event.type),
+    isWanted: (signal) => signal.kind === 'failed' || isOneOf(runStatusEvents, signal.event.type),
     task: async ({ isClosed }) => {
       const queryKey = runKeys.latestOfThread(run?.thread_id ?? '')
       await queryClient.invalidateQueries({ queryKey })
