@@ -1,7 +1,7 @@
 import { describe, expect, it } from 'vitest'
 
-import { formatCurrency, formatNumber, formatPercent } from '../number.utils'
-import { currencyCases, numberCases, percentCases } from './number.utils.data'
+import { formatCurrency, formatNumber, formatPercent } from '../formatters.utils'
+import { currencyCases, numberCases, percentCases } from './formatters.utils.data'
 
 describe('formatNumber', () => {
   it.each(numberCases)('writes $name as $text', ({ value, text }) => {
