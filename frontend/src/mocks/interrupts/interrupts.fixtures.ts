@@ -4,14 +4,15 @@ import type { InterruptQuestion } from '@/modules/review/entities'
 // of the definition ask none, so the `?mock-agent-questions` scenario shows these instead.
 
 /** What an interrupt that only asks questions asks, in the words of the agent that asks. */
-export const onlyQuestionsPromptFixture = 'A few details before the plan is made.'
+export const onlyQuestionsPromptFixture =
+  'Before I plan the interviews, tell me who will use the platform and what the first version must take care of.'
 
 /** The questions an agent adds at run time: who uses the product, and what to keep in mind. */
 export const agentQuestionFixtures: InterruptQuestion[] = [
   {
     key: 'users',
     type: 'multi_select',
-    prompt: 'Who will use the platform?',
+    prompt: 'Who uses the platform in their day, so the interviews ask the right people?',
     required: true,
     choices: [
       { key: 'students', label: 'Students', requires_text: false },
@@ -26,7 +27,7 @@ export const agentQuestionFixtures: InterruptQuestion[] = [
   {
     key: 'payments',
     type: 'single_select',
-    prompt: 'Should the first version take payments?',
+    prompt: 'Should the first version already take payments, or is a free pilot enough?',
     required: true,
     choices: [
       { key: 'yes', label: 'Yes', requires_text: false },
@@ -40,7 +41,7 @@ export const agentQuestionFixtures: InterruptQuestion[] = [
   {
     key: 'sessions_per_week',
     type: 'number',
-    prompt: 'How many sessions should a mentor offer per week?',
+    prompt: 'How many sessions should a mentor offer each week, at most?',
     required: false,
     choices: [],
     min_selected: null,
@@ -51,7 +52,7 @@ export const agentQuestionFixtures: InterruptQuestion[] = [
   {
     key: 'notes',
     type: 'free_text',
-    prompt: 'Anything else the agents should know?',
+    prompt: 'Anything else the agents should know before they plan the interviews?',
     required: false,
     choices: [],
     min_selected: null,

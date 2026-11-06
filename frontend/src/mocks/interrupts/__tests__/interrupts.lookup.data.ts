@@ -34,15 +34,9 @@ export const agentQuestionCases = [
   {
     name: 'an interrupt that only asks questions',
     address: '/?mock-agent-questions=only',
-    prompt: 'A few details before the plan is made.',
+    prompt:
+      'Before I plan the interviews, tell me who will use the platform and what the first version must take care of.',
     options: [],
-    questions: ['users', 'payments', 'sessions_per_week', 'notes'],
-  },
-  {
-    name: 'a review with the agent questions added',
-    address: '/?mock-agent-questions=added',
-    prompt: 'Review the requirements analysis. Accept it, or reject it with feedback.',
-    options: ['accept', 'reject_reanalyse', 'reject_reinterview'],
     questions: ['users', 'payments', 'sessions_per_week', 'notes'],
   },
 ]
