@@ -69,6 +69,8 @@ Not pushed, and left on the first machine: about 60 `refs/backup/*`. The names `
 
 The three local-only docs (`docs/frontend-implementation-plan.md`, `docs/frontend-review-plan.md`, `docs/ui/usability.md`) are in row 1 because it was committed with `git add -f`. They are listed in `.git/info/exclude` on the first machine so that no PR holds them. On the other machine, add the same three lines to `.git/info/exclude` after checking out row 1, and cut each PR branch from `origin/main`, then copy only the files of that PR from row 1 (`git checkout origin/chore/fe/entities-temp-2026-10-26 -- <paths>`), never the three docs.
 
+Editing the history of the stack during review: [Frontend stack script](frontend-stack-script.md) describes `scripts/git-stack`, which stops at a commit to edit it, folds a fixup into a commit, and rebases the branches above it in one command. The script and the note stay on this branch, like the plan; neither is part of `main`.
+
 ## 3. Decisions
 
 ### D1. What is copied from `feat/fe/mock`

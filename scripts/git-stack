@@ -1,0 +1,361 @@
+#!/usr/bin/env bash
+# git-stack: edit the history of the stacked branches of this repository.
+#
+# The stack, bottom to top:
+#   docs/fe/activity
+#   chore/fe/maintenance-before-activity
+#   feat/fe/activity-entities
+#   feat/fe/prompt-input
+#   feat/fe/send-message-and-answer
+#   feat/fe/activity
+#
+# Usage:
+#   git stack status
+#   git stack list
+#   git stack edit <commit>...   stop at each commit; edit, git add, then `git stack continue`
+#   git stack continue           amend the stopped commit, replay the rest and re-point the branches
+#   git stack fixup <commit>     commit the staged changes as a fixup of one commit and squash it
+#   git stack autosquash <commit>...  squash the fixup commits of these targets in one rebase
+#   git stack sync               rebase each branch onto the one below it and re-point the rest
+#   git stack abort              abort the rebase in progress
+#
+# <commit> is a SHA (a prefix is enough) or part of its subject. Run the command from the top
+# branch; the worktree must be clean, except for `fixup`, which takes the staged changes. Put this
+# file on PATH as `git-stack` to type `git stack ...`.
+#
+# A commit added to a lower branch needs one rebase: the branch just above it, onto the new tip.
+# That rebase carries every commit of the branches above, so those branches only move their tips;
+# `sync` does both.
+
+set -euo pipefail
+
+STACK_BASE=${GIT_STACK_BASE:-docs/fe/activity}
+if [ -n "${GIT_STACK_BRANCHES:-}" ]; then
+  # shellcheck disable=SC2206
+  STACK_BRANCHES=(${GIT_STACK_BRANCHES})
+else
+  STACK_BRANCHES=(
+    chore/fe/maintenance-before-activity
+    feat/fe/activity-entities
+    feat/fe/prompt-input
+    feat/fe/send-message-and-answer
+    feat/fe/activity
+  )
+fi
+STATE="$(git rev-parse --absolute-git-dir)/git-stack-state"
+
+die() {
+  printf 'git-stack: %s\n' "$*" >&2
+  exit 1
+}
+
+info() {
+  printf '%s\n' "$*"
+}
+
+top_branch() {
+  printf '%s' "${STACK_BRANCHES[${#STACK_BRANCHES[@]}-1]}"
+}
+
+current_branch() {
+  git symbolic-ref --quiet --short HEAD || die 'detached HEAD: check out a branch of the stack'
+}
+
+is_ancestor() {
+  git merge-base --is-ancestor "$1" "$2" 2>/dev/null
+}
+
+require_clean() {
+  [ -z "$(git status --porcelain --untracked-files=no)" ] ||
+    die 'the worktree has changes; commit or stash them first'
+}
+
+require_top() {
+  [ "$(current_branch)" = "$(top_branch)" ] ||
+    die "run it from $(top_branch): the rebase replays the branches above the commit"
+}
+
+rebase_in_progress() {
+  [ -d "$(git rev-parse --git-path rebase-merge)" ] ||
+    [ -d "$(git rev-parse --git-path rebase-apply)" ]
+}
+
+find_commit() {
+  local arg=$1 top sha hits count
+  top=$(top_branch)
+  if sha=$(git rev-parse --verify --quiet "${arg}^{commit}"); then
+    :
+  else
+    hits=$(git log --format='%H%x09%s' "$STACK_BASE..$top" |
+      awk -F'\t' '$2 !~ /^(fixup|squash|amend)! /' |
+      grep -iF -- "$arg" || true)
+    [ -n "$hits" ] || die "no commit of the stack matches: $arg"
+    count=$(printf '%s\n' "$hits" | wc -l | tr -d ' ')
+    [ "$count" = 1 ] || {
+      printf 'git-stack: more than one commit matches %s:\n%s\n' "$arg" "$hits" >&2
+      exit 1
+    }
+    sha=${hits%%$'\t'*}
+  fi
+  is_ancestor "$sha" "$STACK_BASE" && die "$arg is at or below the base of the stack"
+  is_ancestor "$sha" "$top" || die "$arg is not in $top"
+  printf '%s' "$sha"
+}
+
+save_state() {
+  local mode=$1 target=$2 branch tip subject
+  : >"$STATE"
+  printf 'mode\t%s\n' "$mode" >>"$STATE"
+  printf 'target\t%s\n' "$target" >>"$STATE"
+  for branch in "${STACK_BRANCHES[@]}"; do
+    tip=$(git rev-parse --verify --quiet "refs/heads/$branch") || continue
+    subject=$(git log -1 --format=%s "$tip")
+    printf 'branch\t%s\t%s\t%s\n' "$branch" "$tip" "$subject" >>"$STATE"
+  done
+}
+
+state_field() {
+  awk -F'\t' -v key="$1" '$1==key{print $2; exit}' "$STATE"
+}
+
+commit_with_subject() {
+  local subject=$1
+  git log --format='%H%x09%s' "$STACK_BASE..HEAD" |
+    awk -F'\t' -v subject="$subject" '$2==subject{print $1; exit}'
+}
+
+oldest_of() {
+  local oldest=$1 commit count oldest_count
+  shift
+  oldest_count=$(git rev-list --count "$STACK_BASE..$oldest")
+  for commit in "$@"; do
+    count=$(git rev-list --count "$STACK_BASE..$commit")
+    if [ "$count" -lt "$oldest_count" ]; then
+      oldest=$commit
+      oldest_count=$count
+    fi
+  done
+  printf '%s' "$oldest"
+}
+
+repoint_branches() {
+  local target branch old_sha subject new_sha count
+  target=$(state_field target)
+  while IFS=$'\t' read -r kind branch old_sha subject; do
+    [ "$kind" = branch ] || continue
+    # The rebase has already moved the branch it ended on.
+    if [ "$(current_branch)" = "$branch" ]; then
+      continue
+    fi
+    # A branch below the edited commit, or its parent, keeps its place.
+    if [ "$old_sha" != "$target" ] && is_ancestor "$old_sha" "$target"; then
+      continue
+    fi
+    new_sha=$(commit_with_subject "$subject")
+    [ -n "$new_sha" ] || {
+      printf 'git-stack: %s moved, but no commit reads "%s" now\n' "$branch" "$subject" >&2
+      continue
+    }
+    count=$(git log --format='%s' "$STACK_BASE..HEAD" | grep -cxF -- "$subject" || true)
+    if [ "$count" != 1 ]; then
+      printf 'git-stack: "%s" reads more than once; move %s by hand\n' "$subject" "$branch" >&2
+      continue
+    fi
+    git branch -f "$branch" "$new_sha" >/dev/null
+    info "  $branch -> $(git rev-parse --short "$new_sha")"
+  done <"$STATE"
+}
+
+restore_branch() {
+  local original
+  original=$(state_field original)
+  [ -n "$original" ] || return 0
+  [ "$(current_branch)" = "$original" ] || git checkout "$original"
+}
+
+finish() {
+  repoint_branches
+  restore_branch
+  rm -f "$STATE"
+}
+
+continue_rebase() {
+  local mode
+  [ -f "$STATE" ] || die 'no edit in progress'
+  mode=$(state_field mode)
+  if [ "$mode" = edit ] && [ -f "$(git rev-parse --git-path rebase-merge/amend)" ] &&
+    ! git diff --cached --quiet; then
+    git commit --amend --no-edit
+  fi
+  if ! GIT_EDITOR=true git rebase --continue; then
+    printf 'git-stack: resolve the conflicts, git add the files, then run `git stack continue` again\n' >&2
+    exit 1
+  fi
+  if rebase_in_progress; then
+    info "stopped at $(git log -1 --format='%h %s')"
+    info 'edit the files, git add them, then run `git stack continue`'
+    exit 0
+  fi
+  finish
+  info 'done'
+}
+
+edit_commit() {
+  local arg target oldest script
+  require_clean
+  require_top
+  [ $# -gt 0 ] || die 'usage: git stack edit <commit>...'
+  local -a targets
+  targets=()
+  for arg in "$@"; do
+    targets+=("$(find_commit "$arg")")
+  done
+  oldest=$(oldest_of "${targets[@]}")
+  save_state edit "$oldest"
+  printf 'original\t%s\n' "$(current_branch)" >>"$STATE"
+
+  script=$(mktemp)
+  cat >"$script" <<'EOF'
+#!/bin/sh
+awk -v targets="$GIT_STACK_EDIT_TARGETS" '
+  BEGIN { count = split(targets, list, " ") }
+  {
+    if ($2 != "") {
+      for (i = 1; i <= count; i++) {
+        if (index(list[i], $2) == 1) { $1 = "edit"; break }
+      }
+    }
+    print
+  }' "$1" >"$1.tmp" && mv "$1.tmp" "$1"
+EOF
+  chmod +x "$script"
+  GIT_STACK_EDIT_TARGETS="${targets[*]}" GIT_SEQUENCE_EDITOR="$script" \
+    git rebase -i --autosquash "$oldest^"
+  rm -f "$script"
+
+  if ! rebase_in_progress; then
+    rm -f "$STATE"
+    die 'the rebase did not stop at the commits; nothing changed'
+  fi
+  info "stopped at $(git log -1 --format='%h %s')"
+  info 'edit the files, git add them, then run `git stack continue`'
+}
+
+autosquash_commits() {
+  local arg oldest
+  require_clean
+  require_top
+  [ $# -gt 0 ] || die 'usage: git stack autosquash <commit>...'
+  local -a targets
+  targets=()
+  for arg in "$@"; do
+    targets+=("$(find_commit "$arg")")
+  done
+  oldest=$(oldest_of "${targets[@]}")
+  if ! git log --format='%s' "$oldest^..HEAD" | grep -q '^fixup!'; then
+    die "no fixup commit above $oldest; make one with git commit --fixup=<commit>"
+  fi
+  save_state autosquash "$oldest"
+  printf 'original\t%s\n' "$(current_branch)" >>"$STATE"
+  if ! GIT_SEQUENCE_EDITOR=true git rebase -i --autosquash "$oldest^"; then
+    printf 'git-stack: resolve the conflicts, git add the files, then run `git stack continue`\n' >&2
+    exit 1
+  fi
+  finish
+  info 'done'
+}
+
+fixup_commit() {
+  local target
+  require_top
+  git diff --cached --quiet && die 'stage the changes to fix up first (git add)'
+  target=$(find_commit "$1")
+  save_state fixup "$target"
+  printf 'original\t%s\n' "$(current_branch)" >>"$STATE"
+  git commit --fixup="$target"
+  if ! GIT_SEQUENCE_EDITOR=true git rebase -i --autosquash "$target^"; then
+    printf 'git-stack: resolve the conflicts, git add the files, then run `git stack continue`\n' >&2
+    exit 1
+  fi
+  finish
+  info 'done'
+}
+
+sync_stack() {
+  local original index lower upper base
+  require_clean
+  original=$(current_branch)
+  for ((index = 1; index < ${#STACK_BRANCHES[@]}; index++)); do
+    lower=${STACK_BRANCHES[$((index - 1))]}
+    upper=${STACK_BRANCHES[$index]}
+    if is_ancestor "$lower" "$upper"; then
+      continue
+    fi
+    info "$upper is not on top of $lower; rebasing it"
+    git checkout "$upper"
+    # The fork point is the old tip of the lower branch, the commit the upper branch was cut from,
+    # even when the lower branch has moved since: with a commit added, or with its tip amended.
+    base=$(git merge-base --fork-point "$lower" "$upper" 2>/dev/null || true)
+    [ -n "$base" ] || base=$(git merge-base "$lower" "$upper")
+    if ! GIT_EDITOR=true git rebase --onto "$lower" "$base" "$upper"; then
+      printf 'git-stack: resolve the conflicts, git add the files, run git rebase --continue, then `git stack sync` again\n' >&2
+      exit 1
+    fi
+  done
+  [ "$(current_branch)" = "$original" ] || git checkout "$original"
+  info 'done'
+}
+
+print_status() {
+  local branch tip count previous chain
+  info "base: $STACK_BASE $(git rev-parse --short "$STACK_BASE")"
+  previous=''
+  for branch in "${STACK_BRANCHES[@]}"; do
+    tip=$(git rev-parse --short "$branch")
+    count=$(git rev-list --count "$STACK_BASE..$branch")
+    chain=''
+    if [ -n "$previous" ] && ! is_ancestor "$previous" "$branch"; then
+      chain=" (not on top of $previous)"
+    fi
+    info "$branch $tip ($count commits)$chain"
+    previous=$branch
+  done
+  if [ -f "$STATE" ]; then
+    info "edit in progress: $(state_field mode) $(git rev-parse --short "$(state_field target)")"
+  fi
+}
+
+print_list() {
+  local commit branch mark
+  while read -r commit; do
+    mark=' '
+    for branch in "${STACK_BRANCHES[@]}"; do
+      if [ "$(git rev-parse "$branch")" = "$commit" ]; then
+        mark="* $branch"
+        break
+      fi
+    done
+    printf '%s %s %s\n' "$(git rev-parse --short "$commit")" "$mark" "$(git log -1 --format=%s "$commit")"
+  done < <(git rev-list --reverse "$STACK_BASE..$(top_branch)")
+}
+
+case "${1:-status}" in
+  status) print_status ;;
+  list) print_list ;;
+  edit) [ $# -ge 2 ] || die 'usage: git stack edit <commit>...'; shift; edit_commit "$@" ;;
+  fixup) [ $# = 2 ] || die 'usage: git stack fixup <commit>'; fixup_commit "$2" ;;
+  autosquash) [ $# -ge 2 ] || die 'usage: git stack autosquash <commit>...'; shift; autosquash_commits "$@" ;;
+  continue) continue_rebase ;;
+  sync) sync_stack ;;
+  abort)
+    if rebase_in_progress; then
+      git rebase --abort
+    fi
+    rm -f "$STATE"
+    info 'aborted'
+    ;;
+  help | -h | --help)
+    sed -n '2,32p' "$0" | sed 's/^# \{0,1\}//'
+    ;;
+  *) die "unknown command: $1 (run `git stack help`)" ;;
+esac
