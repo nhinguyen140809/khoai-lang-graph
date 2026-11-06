@@ -7,8 +7,13 @@ import { checkedRoute, routeOfAddress } from './typed-route'
 export function projectRoutes(projectId: string) {
   const id = encodeId(projectId)
   return {
-    /** The activity of the project, the page a project opens on. */
-    activity: () => checkedRoute(`/projects/${id}/activity`),
+    /** The activity of the project, the page a project opens on; with `entryId`, scrolled to that entry. */
+    activity: ({ entryId }: { entryId?: string } = {}) =>
+      routeOfAddress(
+        pathWithQuery(checkedRoute(`/projects/${id}/activity`), {
+          [RouteParam.Entry]: entryId,
+        }),
+      ),
     /** The start page of the documents of the project. */
     documents: () => checkedRoute(`/projects/${id}/documents`),
     /** One document, by the id of its artifact; with `itemId`, scrolled to that item. */

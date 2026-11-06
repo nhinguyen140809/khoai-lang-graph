@@ -41,12 +41,13 @@ export function useStageSubjects(
   return useMemo(() => {
     const subjects = new Map<string, StageSubject[]>()
     stages.forEach(([stage, kind], index) => {
+      const schema = schemas.get(kind)
       subjects.set(
         stage,
         (itemsOfKind[index] ?? []).map((item) => ({
           id: item.id,
           key: item.key,
-          title: itemTitle(schemas.get(kind), item),
+          title: itemTitle(schema, item),
         })),
       )
     })

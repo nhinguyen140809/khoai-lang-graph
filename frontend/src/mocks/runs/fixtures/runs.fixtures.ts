@@ -122,13 +122,13 @@ const finishedRuns: Run[] = [
   run({
     id: runIds.libraryMain1,
     number: 1,
-    step_count: 11,
+    step_count: 9,
     thread_id: threadIds.libraryMain,
     project_id: projectIds.library,
     status: 'running',
     current_stage: 'interviewing',
     usage: usage(0.06, 125_000, 6_400),
-    last_event_id: 34,
+    last_event_id: 22,
     started_at: '2026-10-03T10:10:00Z',
     finished_at: null,
   }),
@@ -364,7 +364,7 @@ const libraryRunSteps = buildSteps(runIds.libraryMain1, 6, '2026-10-03T10:10:00Z
   ...interviewSpecs(projectIds.library, 0, 2),
   ...interviewSpecs(projectIds.library, 1, 1),
 ]).map((step) =>
-  step.sequence === 11 ? { ...step, status: 'running' as const, finished_at: null } : step,
+  step.sequence === 9 ? { ...step, status: 'running' as const, finished_at: null } : step,
 )
 
 /** Every run of the mock data, with the run of the API examples in the given scenario. */
