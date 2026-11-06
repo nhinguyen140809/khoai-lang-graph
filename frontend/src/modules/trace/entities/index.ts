@@ -1,25 +1,5 @@
-export { getArtifactTrace, getItemTrace } from './api/chains.api'
-export { createTraceLink, deleteTraceLink, listProjectTraceLinks } from './api/trace-links.api'
-export { getTraceabilityCoverage, getTraceabilityMatrix } from './api/traceability.api'
-export { linkedItemMessages } from './components/linked-items.constants'
-export { LinkedItemsPopover } from './components/LinkedItemsPopover'
-export { QuotedWordsPopover } from './components/QuotedWordsPopover'
-export { quoteMarkColors } from './constants/link-marks.constants'
-export { derivedFrom, evidencedBy } from './constants/trace-links.constants'
-export {
-  useArtifactTrace,
-  useItemTrace,
-  useLinkQuotesOf,
-  useOutOfDateItemIds,
-  useReloadTraces,
-} from './hooks/useChainQueries'
-export { useItemLinks } from './hooks/useItemLinks'
-export { useTraceabilityCoverage, useTraceabilityMatrix } from './hooks/useTraceabilityQueries'
-export { useLinksCiting, useProjectTraceLinks } from './hooks/useTraceLinkQueries'
-export { chainKeys } from './keys/chains.keys'
-export { traceLinkKeys } from './keys/trace-links.keys'
-export { traceModuleKeys } from './keys/trace-module.keys'
-export { traceabilityKeys } from './keys/traceability.keys'
+export { getArtifactTrace, getItemTrace } from './chains/chains.api'
+export { chainKeys } from './chains/chains.keys'
 export type {
   ItemLinkGroup,
   ItemLinkRow,
@@ -28,11 +8,34 @@ export type {
   TraceDirection,
   TraceItem,
   TraceQuery,
-} from './types/chains.types'
-export { traceDirections } from './types/chains.types'
-export type { ItemLinksResult, LinkedEntry, LinkMarkRange } from './types/item-links.types'
-export type { CreateTraceLinkBody, TraceLink, TraceLinkFilters } from './types/trace-links.types'
-export type { Coverage, ItemSummary, Matrix } from './types/traceability.types'
-export { itemLinkGroups, linkQuotesByItem, outOfDateItemIds } from './utils/chains.utils'
-export { fieldMarksOf, markRangesOf } from './utils/link-marks.utils'
-export { isLinkOutOfDate } from './utils/trace-links.utils'
+} from './chains/chains.types'
+export { traceDirections } from './chains/chains.types'
+export { itemLinkGroups, linkQuotesByItem, outOfDateItemIds } from './chains/chains.utils'
+export {
+  useArtifactTrace,
+  useItemTrace,
+  useLinkQuotesOf,
+  useOutOfDateItemIds,
+  useReloadTraces,
+} from './chains/hooks/useChainQueries'
+export { LinkedItemsPopover } from './item-links/components/LinkedItemsPopover'
+export { QuotedWordsPopover } from './item-links/components/QuotedWordsPopover'
+export { useItemLinks } from './item-links/hooks/useItemLinks'
+export type { ItemLinksResult, LinkedEntry, LinkMarkRange } from './item-links/item-links.types'
+export { quoteMarkColors } from './item-links/link-marks.constants'
+export { fieldMarksOf, markRangesOf } from './item-links/link-marks.utils'
+export { linkedItemMessages } from './item-links/linked-items.constants'
+export { useLinksCiting, useProjectTraceLinks } from './links/hooks/useTraceLinkQueries'
+export { createTraceLink, deleteTraceLink, listProjectTraceLinks } from './links/trace-links.api'
+export { derivedFrom, evidencedBy } from './links/trace-links.constants'
+export { traceLinkKeys } from './links/trace-links.keys'
+export type { CreateTraceLinkBody, TraceLink, TraceLinkFilters } from './links/trace-links.types'
+export { isLinkOutOfDate } from './links/trace-links.utils'
+export { traceModuleKeys } from './trace-module.keys'
+export {
+  useTraceabilityCoverage,
+  useTraceabilityMatrix,
+} from './traceability/hooks/useTraceabilityQueries'
+export { getTraceabilityCoverage, getTraceabilityMatrix } from './traceability/traceability.api'
+export { traceabilityKeys } from './traceability/traceability.keys'
+export type { Coverage, ItemSummary, Matrix } from './traceability/traceability.types'

@@ -1,1 +1,1 @@
-export { useOutOfDateItemIds } from '../hooks/useChainQueries'
+export { useOutOfDateItemIds } from '../chains/hooks/useChainQueries'
