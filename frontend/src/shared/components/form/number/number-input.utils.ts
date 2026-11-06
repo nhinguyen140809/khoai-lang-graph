@@ -1,3 +1,4 @@
+import { formatLocale } from '@/shared/config/locale'
 import { hasText } from '@/shared/lib/guards'
 import { clamp, decimalsOf, type NumberLimits } from '@/shared/lib/numbers'
 
@@ -85,5 +86,5 @@ export function numberToText(value: number | null): string {
   if (value === null) return ''
   // `toString` writes a very small or a very large number with an exponent, which a user cannot
   // edit; `toLocaleString` writes every digit.
-  return value.toLocaleString('en-US', { useGrouping: false, maximumFractionDigits: 20 })
+  return value.toLocaleString(formatLocale, { useGrouping: false, maximumFractionDigits: 20 })
 }
