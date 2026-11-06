@@ -26,6 +26,9 @@ import { NumbersCard } from './cards/NumbersCard'
 import { OverlaysCard } from './cards/OverlaysCard'
 import { ReviewCard } from './cards/ReviewCard'
 import { SkeletonCard } from './cards/SkeletonCard'
+import { StepperCard } from './cards/StepperCard'
+import { TimelineCard } from './cards/TimelineCard'
+import { TraceCard } from './cards/TraceCard'
 import { TokensCard } from './cards/TokensCard'
 import { TypographyCard } from './cards/TypographyCard'
 import { WorkspaceCard } from './cards/WorkspaceCard'
@@ -78,6 +81,9 @@ export function DesignSystemPage() {
             <CalendarCard />
             <CarouselCard />
             <SkeletonCard />
+            <StepperCard />
+            <TimelineCard />
+            <TraceCard />
           </div>
         </main>
       </ScrollArea>
