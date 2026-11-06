@@ -9,7 +9,6 @@ import { useClipboard } from '../useClipboard'
 const writeText = vi.fn(() => Promise.resolve())
 
 beforeEach(() => {
-  writeText.mockClear()
   Object.defineProperty(navigator, 'clipboard', { value: { writeText }, configurable: true })
 })
 

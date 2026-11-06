@@ -1,5 +1,5 @@
 import { fireEvent } from '@testing-library/react'
-import { afterEach, describe, expect, it } from 'vitest'
+import { describe, expect, it } from 'vitest'
 
 import {
   ariaKeyShortcuts,
@@ -34,10 +34,6 @@ function press(init: KeyboardEventInit, target: KeyTarget): KeyboardEvent {
   if (event === undefined) throw new Error('The document received no keydown event.')
   return event
 }
-
-afterEach(() => {
-  document.body.replaceChildren()
-})
 
 describe('isSubmitKey', () => {
   it.each([

@@ -1,6 +1,6 @@
 import { act, screen, waitFor, within } from '@testing-library/react'
 import userEvent from '@testing-library/user-event'
-import { afterEach, describe, expect, it, vi } from 'vitest'
+import { describe, expect, it, vi } from 'vitest'
 
 import {
   artifactFixtureByKind,
@@ -22,10 +22,6 @@ const first = itemFixtureByKey(projectId, 'RAW-001')
 const last = itemFixtures
   .filter((item) => item.artifact_id === analysis.id && item.kind === 'conflict')
   .at(-1)
-
-afterEach(() => {
-  vi.useRealTimers()
-})
 
 function renderItem(itemId: string, scenario?: string) {
   return renderDocumentsFrame(<ItemPage projectId={projectId} itemId={itemId} />, {
