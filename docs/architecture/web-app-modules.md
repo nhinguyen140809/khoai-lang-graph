@@ -75,7 +75,7 @@ src/
 │   └── design-system/
 │       └── widgets/            # showcase/
 └── shared/                     # api/, components/ (ui/, frame/ with frame/layouts/, ...), hooks/,
-                                # lib/ (view/, tone/, formatters/), config/ (routes/, output-language/)
+                                # lib/ (view/, tone/, text/, numbers/, time/), config/ (routes/, output-language/, locale/)
 ```
 
 Dividing by module first keeps a subject in one folder. In exchange, the modules keep an order between them ([section 4](#4-order-of-the-modules)), and the linter of Feature-Sliced Design (Steiger), which expects the layers first, does not apply; the rules are the ESLint rules of the repository.

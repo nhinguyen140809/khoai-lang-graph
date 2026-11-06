@@ -130,7 +130,7 @@ describe('the rules of file names', () => {
       'src/modules/run/entities/runs/useRuns.ts',
       'src/modules/project/entities/useProjects.ts',
       'src/modules/project/features/create/components/useThing.ts',
-      'src/shared/lib/timing/useClock.ts',
+      'src/shared/lib/scheduling/useClock.ts',
     ]) {
       expect(await problemsOf(filePath)).toContain('check-file/filename-naming-convention')
     }
