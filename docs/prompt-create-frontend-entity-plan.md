@@ -4,12 +4,15 @@ Write a plan for building the next entity PR of the frontend, following the shap
 
 ## Prerequisites
 
-Load these two skills before starting (they change how you place and review code). Both are committed in this repo under `docs/skills/`:
+Load these skills before starting (they change how you place and review code). All are committed in this repo under `docs/skills/`:
 
 1. **Feature-Sliced Design** (`docs/skills/feature-sliced-design/SKILL.md`) - for module placement, layer imports, and `@x` cross-import decisions. The methodology reference is [fsd.how](https://fsd.how) (v2.1).
 2. **Clean Review** (`docs/skills/clean-review/SKILL.md`) - for the 7-dimension quality check (naming, functions, DRY, YAGNI, magic numbers, readability, conventions). Based on "Clean Code" by Robert C. Martin.
+3. **React Best Practices** (`docs/skills/vercel-react-best-practices/SKILL.md`) - for the hook and data-fetching rules the sketches follow: derived state computed, not synced through an effect; correct dependencies; parallel fetching; Suspense boundaries. Read the rules a sketch touches, not the whole set.
+4. **React Foundation Review** (`docs/skills/react-foundation-review/SKILL.md`) - for reviewing the sketches before handing the plan over: hook misuse, state synced through an effect, prop drilling, god components.
+5. **Fowler Refactor** (`docs/skills/fowler-refactor/SKILL.md`) - the refactoring catalog for the code the plan changes in place: a smell met in a copy or a change (a long function, a repeated branch, a parameter list that grows) maps to its pattern (Extract Function, Extract Hook, Introduce Parameter Object, Replace Conditional with Lookup Table) in `references/fowler-patterns.md`. The skill runs only on an explicit `/fowler-refactor`; writing the plan reads its reference, not the skill.
 
-Read both files before writing the plan. If your tool supports skills (Claude Code, ZCode), you can also install them to `~/.claude/skills/` for auto-loading, but reading the files in this repo is enough.
+Read the files before writing the plan. If your tool supports skills (Claude Code, ZCode), you can also install them to `~/.claude/skills/` for auto-loading, but reading the files in this repo is enough. An agent that implements from the plan loads the same files when it needs the rule behind a decision.
 
 ## Docs-first rule
 
