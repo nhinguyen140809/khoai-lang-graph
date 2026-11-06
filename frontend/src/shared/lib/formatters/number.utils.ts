@@ -1,4 +1,4 @@
-import { formatLocale } from './formatters.constants'
+import { formatLocale } from '@/shared/config/locale'
 
 /** A number with its thousands separated: 12345.6 as "12,345.6". */
 export function formatNumber(value: number): string {
