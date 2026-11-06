@@ -38,7 +38,7 @@ import { errorMessageOf } from '@/shared/api/error'
 import { PageLink, useEditorTab } from '@/shared/components/frame'
 import { ErrorState, LoadingState, NotFoundState } from '@/shared/components/state'
 import { ScrollArea } from '@/shared/components/ui/scroll-area'
-import { useScrollIntoView } from '@/shared/lib/viewport'
+import { useScrollIntoViewById } from '@/shared/lib/viewport'
 import { RouteParam, routes, useRouteParam } from '@/shared/routes'
 
 import { documentPageMessages } from '../document-page.constants'
@@ -112,12 +112,10 @@ function LoadedDocument({
     }
   }, [quotesError])
   const { schema: artifactSchema } = useItemSchema(document.artifact)
-  useScrollIntoView(
-    () =>
-      targetItemId === null ? null : window.document.getElementById(itemAnchorId(targetItemId)),
-    targetItemId,
-    { block: 'center', focus: true },
-  )
+  useScrollIntoViewById(targetItemId === null ? null : itemAnchorId(targetItemId), {
+    block: 'center',
+    focus: true,
+  })
 
   // The fields of the document are what the data gives; the content fields of the schema for the history.
   const fields = document.fields
