@@ -1,7 +1,8 @@
 import type { Message } from '@/modules/thread/entities'
 
+import { artifactFixtureByKind, itemFixtureByKey } from '../artifacts/fixtures/artifacts.fixtures'
 import { buildStepId } from '../runs/fixtures/runs.fixtures'
-import { IdPrefix, mockId, runIds, threadIds } from '../shared/db'
+import { IdPrefix, mockId, projectIds, runIds, threadIds } from '../shared/db'
 
 // Mock messages. The chat of the mentor platform follows the runs of the API examples: the first
 // message started run 1, the validator answered in run 1, a second message started run 2, and a
@@ -72,7 +73,7 @@ export const messageFixtures: Message[] = [
     author: 'agent',
     agent_role: 'validator',
     content:
-      'The requirement specification is ready: **18 requirements** in 4 sections. See REQ-001 first.',
+      'The specification is ready: **18 requirements** in 4 sections, from finding a mentor to paying for a session.',
     created_at: '2026-10-02T08:52:41Z',
   }),
   message({
@@ -94,4 +95,42 @@ export const messageFixtures: Message[] = [
     delivered_in_step_id: buildStepId(3, 4),
     created_at: '2026-10-06T08:30:40Z',
   }),
+  message({
+    id: mockId(IdPrefix.Message, 8),
+    thread_id: threadIds.mentorMain,
+    sequence: 5,
+    run_id: runIds.mentorMain3,
+    author: 'agent',
+    agent_role: 'analyst',
+    content:
+      'I read all three interviews and found **one conflict**: the student and the admin disagree on who approves a booking. It needs your call when you review the analysis.',
+    artifact_refs: [artifactRefOf('requirements_analysis', 4)],
+    item_refs: [itemRefOf('CONF-001')],
+    created_at: '2026-10-06T08:41:00Z',
+  }),
+  message({
+    id: mockId(IdPrefix.Message, 9),
+    thread_id: threadIds.mentorMain,
+    sequence: 6,
+    run_id: runIds.mentorMain3,
+    content: 'Also ask about group sessions.',
+    delivery: 'pending',
+    created_at: '2026-10-06T08:42:00Z',
+  }),
 ]
+
+// The references of the message of the analyst, at the versions the mock data holds.
+function artifactRefOf(kind: string, version: number): Message['artifact_refs'][number] {
+  const artifact = artifactFixtureByKind(projectIds.mentor, kind)
+  return {
+    artifact_id: artifact.id,
+    kind: artifact.kind,
+    title: artifact.title,
+    version,
+  }
+}
+
+function itemRefOf(key: string): Message['item_refs'][number] {
+  const item = itemFixtureByKey(projectIds.mentor, key)
+  return { item_id: item.id, kind: item.kind, key, version: item.version }
+}

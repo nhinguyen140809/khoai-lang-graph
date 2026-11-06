@@ -31,7 +31,7 @@ async function newThread(project: object = {}) {
 }
 
 describe('GET /threads/{thread_id}/messages', () => {
-  it('lists the four messages of the mentor thread in the order they were sent', async () => {
+  it('lists the six messages of the mentor thread in the order they were sent', async () => {
     const messages = await getApiItems<Message>(
       apiEndpoints.threadMessages.path({ threadId: threadIds.mentorMain }),
     )
@@ -41,6 +41,8 @@ describe('GET /threads/{thread_id}/messages', () => {
       { sequence: 2, author: 'agent' },
       { sequence: 3, author: 'user' },
       { sequence: 4, author: 'user' },
+      { sequence: 5, author: 'agent' },
+      { sequence: 6, author: 'user' },
     ])
   })
 
@@ -75,7 +77,7 @@ describe('GET /threads/{thread_id}/messages', () => {
     const messages = await getApiItems<Message>(
       apiEndpoints.threadMessages.path({ threadId: threadIds.mentorMain }),
     )
-    expect(messages.at(-1)).toMatchObject({ sequence: 5, content: 'Another question.' })
+    expect(messages.at(-1)).toMatchObject({ sequence: 7, content: 'Another question.' })
   })
 })
 

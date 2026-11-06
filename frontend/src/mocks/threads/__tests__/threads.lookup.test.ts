@@ -42,7 +42,7 @@ describe('allThreads', () => {
   })
 
   it('reads the time of the newest message as the time of the last message of a thread', () => {
-    expect(findThread(threadIds.mentorMain)?.last_message_at).toBe('2026-10-06T08:30:40Z')
+    expect(findThread(threadIds.mentorMain)?.last_message_at).toBe('2026-10-06T08:42:00Z')
   })
 
   it('reads the creation time while the thread has no message', () => {

@@ -4,6 +4,7 @@ import { apiCommand, apiRequest, fetchPage, type ListPage } from '@/shared/api/r
 import { pathWithQuery } from '@/shared/lib/url'
 
 import { sendMessage } from '../messages/messages.api'
+import type { SendMessageBody } from '../messages/messages.types'
 import {
   type CreateThreadBody,
   type Thread,
@@ -80,9 +81,15 @@ export function deleteThread(threadId: string): Promise<void> {
  */
 export async function sendFirstMessage(
   projectId: string,
-  content: string,
+  body: SendMessageBody,
   idempotencyKey: string,
 ): Promise<void> {
   const thread = await createThread(projectId)
-  await sendMessage(thread.id, { content }, idempotencyKey)
+  try {
+    await sendMessage(thread.id, body, idempotencyKey)
+  } catch (error) {
+    // The thread exists only for this message: remove it, so that a retry starts one thread.
+    await deleteThread(thread.id).catch(() => undefined)
+    throw error
+  }
 }

@@ -18,7 +18,7 @@ describe('addMessage', () => {
 
     const { message } = addMessage(thread, { content: 'Another question.' })
 
-    expect(message).toMatchObject({ sequence: 5, delivery: 'pending' })
+    expect(message).toMatchObject({ sequence: 7, delivery: 'pending' })
   })
 
   it('starts a run for a thread whose run has ended, with the models of the message', () => {
