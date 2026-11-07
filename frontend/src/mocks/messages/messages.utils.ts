@@ -1,4 +1,4 @@
-import { hasText } from '@/shared/lib/guards'
+import { firstLineOf } from '@/shared/lib/text'
 
 // How many words of the first message name a project without a name, or a thread without a title.
 const NAME_WORDS = 5
@@ -8,7 +8,7 @@ const NAME_WORDS = 5
  * first message, naming a project without a name or a thread without a title.
  */
 export function nameFromMessage(content: string): string {
-  const line = content.split('\n').find(hasText) ?? ''
+  const line = firstLineOf(content)
   return line
     .trim()
     .split(/\s+/)

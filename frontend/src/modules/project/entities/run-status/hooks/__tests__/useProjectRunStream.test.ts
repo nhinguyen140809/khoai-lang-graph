@@ -9,7 +9,7 @@ import { buildThread } from '@/mocks/threads/threads.fixtures'
 import { type RunStatus, useLatestRun } from '@/modules/run/entities/@x/project'
 import { useProjectThreads } from '@/modules/thread/entities/@x/project'
 import { apiEndpoints } from '@/shared/api/endpoints'
-import { sleep } from '@/shared/lib/timing'
+import { sleep } from '@/shared/lib/scheduling'
 import { openedEventSources } from '@/test/event-source'
 import { renderHookWithProviders } from '@/test/render'
 

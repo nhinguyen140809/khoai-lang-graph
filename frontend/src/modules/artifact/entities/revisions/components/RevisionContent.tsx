@@ -10,8 +10,8 @@ import {
 } from '@/modules/workflow/entities/@x/artifact'
 import { Badge } from '@/shared/components/ui/badge'
 import { DiffView } from '@/shared/components/ui/diff-view'
-import { jsonToPlainText } from '@/shared/lib/formatters'
 import { isEmpty } from '@/shared/lib/guards'
+import { jsonToPlainText } from '@/shared/lib/text'
 
 import { useRevisionHistory } from '../../revisions/hooks/useRevisionQueries'
 import { revisionMessages } from '../../revisions/revisions.constants'

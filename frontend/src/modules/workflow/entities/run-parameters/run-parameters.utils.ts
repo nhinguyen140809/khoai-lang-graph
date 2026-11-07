@@ -1,5 +1,5 @@
-import { snakeToSentenceCase } from '@/shared/lib/formatters'
 import { isBlank } from '@/shared/lib/guards'
+import { snakeToSentenceCase } from '@/shared/lib/text'
 
 import type { ObjectSchema } from '../definition/workflow-definition.types'
 import {

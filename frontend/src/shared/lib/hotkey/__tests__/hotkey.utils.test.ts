@@ -1,7 +1,13 @@
 import { fireEvent } from '@testing-library/react'
-import { afterEach, describe, expect, it } from 'vitest'
+import { describe, expect, it } from 'vitest'
 
-import { ariaKeyShortcuts, hotkeyKeys, hotkeyLabel, isHotkeyPressed } from '../hotkey.utils'
+import {
+  ariaKeyShortcuts,
+  hotkeyKeys,
+  hotkeyLabel,
+  isHotkeyPressed,
+  isSubmitKey,
+} from '../hotkey.utils'
 import {
   ariaKeyShortcutsCases,
   hotkeyKeysCases,
@@ -29,8 +35,21 @@ function press(init: KeyboardEventInit, target: KeyTarget): KeyboardEvent {
   return event
 }
 
-afterEach(() => {
-  document.body.replaceChildren()
+describe('isSubmitKey', () => {
+  it.each([
+    { name: 'Enter', key: 'Enter', shiftKey: false, isComposing: false, sends: true },
+    { name: 'Shift+Enter', key: 'Enter', shiftKey: true, isComposing: false, sends: false },
+    {
+      name: 'Enter in a composition',
+      key: 'Enter',
+      shiftKey: false,
+      isComposing: true,
+      sends: false,
+    },
+    { name: 'another key', key: 'a', shiftKey: false, isComposing: false, sends: false },
+  ])('sends on $name: $sends', ({ key, shiftKey, isComposing, sends }) => {
+    expect(isSubmitKey({ key, shiftKey, isComposing })).toBe(sends)
+  })
 })
 
 describe('isHotkeyPressed', () => {

@@ -5,6 +5,7 @@ import { type ReactNode, useEffect, useRef } from 'react'
 
 import { Button } from '@/shared/components/ui/button'
 import { Skeleton } from '@/shared/components/ui/skeleton'
+import { isFocused } from '@/shared/lib/viewport'
 
 import { revisionMessages } from '../../revisions/revisions.constants'
 import type { HistoryView, RevisionHistoryResult } from '../../revisions/revisions.types'
@@ -42,10 +43,10 @@ export function VersionStepper({
   // Newer is disabled on the current version and Older on version 1; the focus moves to the other
   // one, so it never rests on a control that no longer works.
   useEffect(() => {
-    if (view.selectedVersion === currentVersion && document.activeElement === newer.current) {
+    if (view.selectedVersion === currentVersion && isFocused(newer.current)) {
       older.current?.focus()
     }
-    if (view.selectedVersion === 1 && document.activeElement === older.current) {
+    if (view.selectedVersion === 1 && isFocused(older.current)) {
       newer.current?.focus()
     }
   }, [view.selectedVersion, currentVersion])

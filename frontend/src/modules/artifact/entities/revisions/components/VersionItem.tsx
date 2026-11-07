@@ -13,7 +13,7 @@ import {
   DropdownMenuTrigger,
 } from '@/shared/components/ui/dropdown-menu'
 import { Toggle, toggleVariants } from '@/shared/components/ui/toggle'
-import { formatDateTime } from '@/shared/lib/formatters'
+import { formatDateTime } from '@/shared/lib/time'
 import { useView } from '@/shared/lib/view'
 
 import {

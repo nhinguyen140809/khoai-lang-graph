@@ -64,7 +64,7 @@ import {
   SheetTrigger,
 } from '@/shared/components/ui/sheet'
 import { Tooltip, TooltipContent, TooltipTrigger } from '@/shared/components/ui/tooltip'
-import { sleep } from '@/shared/lib/timing'
+import { sleep } from '@/shared/lib/scheduling'
 
 import { SampleCard } from '../Sample'
 
@@ -107,7 +107,7 @@ export function OverlaysCard() {
         <DialogTrigger asChild>
           <Button variant="outline">Dialog</Button>
         </DialogTrigger>
-        <DialogContent>
+        <DialogContent size="md">
           <DialogHeader>
             <DialogTitle>Rename the project</DialogTitle>
             <DialogDescription>The name shows in the project list.</DialogDescription>

@@ -1,5 +1,6 @@
 import { type Run, runStatusesByAttention } from '@/modules/run/entities'
 import { HttpHeader } from '@/shared/api/http'
+import { rankIn } from '@/shared/lib/collections'
 
 import { pendingInterruptOf } from '../interrupts/interrupts.lookup'
 import { allRuns, latestRunOfEachThread } from '../runs/lookup/runs.lookup'
@@ -34,7 +35,7 @@ function shownRunOf(projectId: string): Run | undefined {
   const runs = allRuns().filter((run) => run.project_id === projectId)
   return [...latestRunOfEachThread(runs).values()].sort(
     (first, second) =>
-      runStatusesByAttention.indexOf(first.status) - runStatusesByAttention.indexOf(second.status),
+      rankIn(runStatusesByAttention, first.status) - rankIn(runStatusesByAttention, second.status),
   )[0]
 }
 

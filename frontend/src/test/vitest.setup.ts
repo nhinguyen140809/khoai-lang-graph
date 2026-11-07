@@ -80,7 +80,7 @@ beforeAll(() => {
 
 // What a test changes is put back after it: the handlers and the listeners of the mock server, the
 // records of the mock data, the page address and its scenario, the event streams opened, the fake
-// timers, and what is rendered.
+// timers, what is rendered, and what a test appended to the body itself.
 afterEach(() => {
   server.resetHandlers()
   server.events.removeAllListeners()
@@ -90,6 +90,7 @@ afterEach(() => {
   openPage('/')
   vi.useRealTimers()
   cleanup()
+  document.body.replaceChildren()
 })
 
 afterAll(() => {

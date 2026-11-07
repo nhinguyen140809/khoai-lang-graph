@@ -2,13 +2,13 @@
 
 import type { ItemInstance } from '@headless-tree/core'
 import { cn } from 'cn'
-import { useEffect } from 'react'
 
 import { documentsMessages } from '@/modules/documents/entities'
 import { useTabIcon } from '@/shared/components/frame'
 import { ColoredText } from '@/shared/components/ui/colored-text'
 import { Tooltip, TooltipContent, TooltipTrigger } from '@/shared/components/ui/tooltip'
 import { Tree, TreeItem, TreeItemLabel } from '@/shared/components/ui/tree'
+import { useScrollIntoView } from '@/shared/lib/viewport'
 
 import type { RowLook, TreeNode } from '../document-tree.types'
 import { useDocumentTree } from '../hooks/useDocumentTree'
@@ -86,10 +86,10 @@ function RowContent({ node, item }: { node: TreeNode; item: ItemInstance<TreeNod
 export function DocumentTree({ nodes, currentId, onRetry }: DocumentTreeProps) {
   const { tree, indent, open } = useDocumentTree(nodes, onRetry)
 
-  useEffect(() => {
-    if (currentId === undefined) return
-    tree.getItemInstance(currentId).getElement()?.scrollIntoView({ block: 'nearest' })
-  }, [tree, currentId])
+  useScrollIntoView(
+    () => (currentId === undefined ? undefined : tree.getItemInstance(currentId).getElement()),
+    currentId ?? null,
+  )
 
   return (
     <Tree indent={indent} tree={tree} guides aria-label={documentsMessages.title} className="pb-2">

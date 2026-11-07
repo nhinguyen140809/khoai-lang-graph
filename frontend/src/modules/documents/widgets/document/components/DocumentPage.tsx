@@ -9,6 +9,7 @@ import {
   type ArtifactDocumentResult,
   hasTranscript,
   HistorySurface,
+  itemAnchorId,
   RevisionContent,
   useArtifact,
   useArtifactDocument,
@@ -37,11 +38,10 @@ import { errorMessageOf } from '@/shared/api/error'
 import { PageLink, useEditorTab } from '@/shared/components/frame'
 import { ErrorState, LoadingState, NotFoundState } from '@/shared/components/state'
 import { ScrollArea } from '@/shared/components/ui/scroll-area'
-import { routes } from '@/shared/routes'
+import { useScrollIntoViewById } from '@/shared/lib/viewport'
+import { RouteParam, routes, useRouteParam } from '@/shared/routes'
 
 import { documentPageMessages } from '../document-page.constants'
-import { useDocumentTarget } from '../hooks/useDocumentTarget'
-import { useScrollToItem } from '../hooks/useScrollToItem'
 
 /** A state fills the page and sits in the middle of it; only the document scrolls. */
 function DocumentBody({
@@ -97,7 +97,7 @@ function LoadedDocument({
   const lockedReason = useEditLockReason(projectId, document.artifact.id)
   const history = useHistoryView(document.artifact.version, { isHidden: isEditing })
   const reloadTraces = useReloadTraces()
-  const targetItemId = useDocumentTarget()
+  const targetItemId = useRouteParam(RouteParam.Item)
   // The quoted words of the messages of a transcript: read while the document holds one.
   const hasMessages = hasTranscript(document.blocks)
   const quotes = useLinkQuotesOf(document.artifact.id, {
@@ -112,7 +112,10 @@ function LoadedDocument({
     }
   }, [quotesError])
   const { schema: artifactSchema } = useItemSchema(document.artifact)
-  useScrollToItem(targetItemId, { isReady: true })
+  useScrollIntoViewById(targetItemId === null ? null : itemAnchorId(targetItemId), {
+    block: 'center',
+    focus: true,
+  })
 
   // The fields of the document are what the data gives; the content fields of the schema for the history.
   const fields = document.fields

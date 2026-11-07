@@ -43,11 +43,7 @@ export function RenameProjectDialog({
   return (
     <Dialog open={open} onOpenChange={onOpenChange}>
       {/* The title says it all: a description would only repeat the button. */}
-      <DialogContent
-        className="sm:max-w-md"
-        aria-describedby={undefined}
-        onCloseAutoFocus={() => onClosed?.()}
-      >
+      <DialogContent size="md" aria-describedby={undefined} onCloseAutoFocus={() => onClosed?.()}>
         <DialogHeader>
           <DialogTitle>{renameProjectMessages.rename}</DialogTitle>
         </DialogHeader>

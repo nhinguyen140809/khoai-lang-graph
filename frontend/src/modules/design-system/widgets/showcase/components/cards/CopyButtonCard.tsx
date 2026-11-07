@@ -14,6 +14,13 @@ const displayLabels: Record<CopyDisplay, string> = {
   'icon-text': 'Copy the run id',
 }
 
+// The size of the button for each display: the icon alone is the small square one.
+const displaySizes: Record<CopyDisplay, 'icon-sm' | 'sm'> = {
+  icon: 'icon-sm',
+  text: 'sm',
+  'icon-text': 'sm',
+}
+
 export function CopyButtonCard() {
   return (
     <SampleCard
@@ -33,7 +40,7 @@ export function CopyButtonCard() {
             value="5f2d0000-0000-4000-8000-000000000001"
             display={display}
             label={displayLabels[display]}
-            size={display === 'icon' ? 'icon-sm' : 'sm'}
+            size={displaySizes[display]}
           />
         </SampleGroup>
       ))}

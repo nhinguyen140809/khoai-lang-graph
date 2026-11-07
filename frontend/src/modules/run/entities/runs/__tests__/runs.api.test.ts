@@ -3,30 +3,13 @@ import { describe, expect, it } from 'vitest'
 
 import { server } from '@/mocks/msw-server.setup'
 import { runStepFixtures } from '@/mocks/runs/fixtures/runs.fixtures'
-import { runIds, startedRunId, threadIds } from '@/mocks/shared/db'
+import { runIds, threadIds } from '@/mocks/shared/db'
 import { apiEndpoints } from '@/shared/api/endpoints'
 import { openPage } from '@/test/msw'
 import { itSendsRequests } from '@/test/suites'
 
-import { cancelRun, createRun, findLatestRun, getRun, listThreadRuns, retryRun } from '../runs.api'
-import {
-  emptyRunPageAnswer,
-  failedRunCases,
-  sentRunRequestCases,
-  threadRunCases,
-} from './runs.api.data'
-
-describe('createRun', () => {
-  it('returns the run id from the API', async () => {
-    await expect(createRun('thread-1', 'hi')).resolves.toEqual({ run_id: startedRunId })
-  })
-
-  it.each(failedRunCases)('throws on $name', async ({ answer, error }) => {
-    server.use(http.post(apiEndpoints.threadRuns.pattern, answer))
-
-    await expect(createRun('thread-1', 'hi')).rejects.toThrow(error)
-  })
-})
+import { cancelRun, findLatestRun, getRun, listThreadRuns, retryRun } from '../runs.api'
+import { emptyRunPageAnswer, sentRunRequestCases, threadRunCases } from './runs.api.data'
 
 describe('listThreadRuns', () => {
   it.each(threadRunCases)('lists the runs of $name', async ({ threadId, numbers }) => {

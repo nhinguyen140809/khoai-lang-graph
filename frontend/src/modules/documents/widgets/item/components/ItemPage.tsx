@@ -29,7 +29,7 @@ import {
   BreadcrumbSeparator,
 } from '@/shared/components/ui/breadcrumb'
 import { ScrollArea } from '@/shared/components/ui/scroll-area'
-import { useIdleVisibility } from '@/shared/lib/timing'
+import { useIdleVisibility } from '@/shared/lib/idle-visibility'
 import { routes } from '@/shared/routes'
 
 import { useItemCommands } from '../hooks/useItemCommands'

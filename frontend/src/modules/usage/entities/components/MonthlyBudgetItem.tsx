@@ -8,7 +8,7 @@ import { ColoredText } from '@/shared/components/ui/colored-text'
 import { Progress } from '@/shared/components/ui/progress'
 import { Tooltip, TooltipContent, TooltipTrigger } from '@/shared/components/ui/tooltip'
 import { costLevelTones } from '@/shared/lib/cost'
-import { formatCurrency, formatPercent } from '@/shared/lib/formatters'
+import { formatCurrency, formatPercent } from '@/shared/lib/numbers'
 
 import { useMonthlyBudget } from '../hooks/useUsageQueries'
 import { usageMessages } from '../usage.constants'

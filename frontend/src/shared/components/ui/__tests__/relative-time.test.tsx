@@ -1,5 +1,5 @@
 import { render, screen } from '@testing-library/react'
-import { afterEach, describe, expect, it, vi } from 'vitest'
+import { describe, expect, it, vi } from 'vitest'
 
 import { advanceTimers } from '@/test/steps'
 
@@ -7,10 +7,6 @@ import { RelativeTime } from '../relative-time'
 
 // The times of the test are local on purpose: the words and the title format in the zone of
 // the machine that runs them, and a local string reads the same in every zone.
-afterEach(() => {
-  vi.useRealTimers()
-})
-
 describe('RelativeTime', () => {
   it('reads the words, and names the exact time for whoever hovers or parses', () => {
     vi.useFakeTimers()

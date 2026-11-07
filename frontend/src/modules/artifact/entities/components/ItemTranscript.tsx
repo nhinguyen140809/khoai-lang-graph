@@ -21,6 +21,13 @@ import type { KindView, Participant } from '../outline/outline.types'
 import { itemAnchorProps } from '../outline/outline.utils'
 import { transcriptParts } from '../outline/transcript.utils'
 
+// The bubble of each side of the conversation: the leader at the right in a tinted one, the
+// others at the left in a muted one.
+const bubbleVariants = {
+  start: 'muted',
+  end: 'tinted',
+} as const satisfies Record<Participant['side'], 'muted' | 'tinted'>
+
 interface ItemTranscriptProps<Range extends HighlightRange = HighlightRange> {
   items: readonly OutlineItem[]
   view: KindView
@@ -71,10 +78,7 @@ export function ItemTranscript<Range extends HighlightRange = HighlightRange>({
                 {part.messages.map(({ item, text }) => {
                   const marks = messageMarks?.get(item.id)
                   return (
-                    <Bubble
-                      key={item.id}
-                      variant={part.participant.side === 'end' ? 'tinted' : 'muted'}
-                    >
+                    <Bubble key={item.id} variant={bubbleVariants[part.participant.side]}>
                       <BubbleContent
                         {...itemAnchorProps(item.id, targetItemId)}
                         className="text-base text-pretty whitespace-pre-line data-[target]:ring-2 data-[target]:ring-ring"

@@ -1,7 +1,7 @@
 import { readFileSync } from 'node:fs'
 import { resolve } from 'node:path'
 
-import { afterEach, describe, expect, it } from 'vitest'
+import { describe, expect, it } from 'vitest'
 
 import { apiEndpoints } from '@/shared/api/endpoints'
 import { HttpHeader, HttpMethod } from '@/shared/api/http'
@@ -17,10 +17,6 @@ const documented: unknown = JSON.parse(
 )
 
 describe('the workflow handlers', () => {
-  afterEach(() => {
-    openPage('/')
-  })
-
   it('serve the definition of the docs', async () => {
     const answer = await callApi({
       method: HttpMethod.Get,

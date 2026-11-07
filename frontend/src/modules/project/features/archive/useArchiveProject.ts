@@ -9,7 +9,7 @@ import {
   restoreProject,
 } from '@/modules/project/entities'
 import { errorMessageOf } from '@/shared/api/error'
-import { actionToastDuration } from '@/shared/lib/timing'
+import { actionToastDuration } from '@/shared/components/ui/sonner'
 
 import { archiveProjectMessages } from './archive-project.constants'
 

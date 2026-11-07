@@ -2,7 +2,7 @@ import { act, waitFor } from '@testing-library/react'
 import { describe, expect, it, vi } from 'vitest'
 
 import { runIds } from '@/mocks/shared/db'
-import { sleep } from '@/shared/lib/timing'
+import { sleep } from '@/shared/lib/scheduling'
 import { openedEventSources } from '@/test/event-source'
 import { renderHookWithProviders } from '@/test/render'
 

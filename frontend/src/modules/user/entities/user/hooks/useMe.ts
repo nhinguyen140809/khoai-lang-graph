@@ -1,6 +1,6 @@
 import { useQuery } from '@tanstack/react-query'
 
-import { minuteMs } from '@/shared/lib/timing'
+import { minuteMs } from '@/shared/lib/time'
 
 import { getMe } from '../user.api'
 import { userKeys } from '../user.keys'

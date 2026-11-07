@@ -2,7 +2,7 @@ import { screen } from '@testing-library/react'
 import { expect, type Mock, vi } from 'vitest'
 
 import { isString } from '@/shared/lib/guards'
-import { sleep } from '@/shared/lib/timing'
+import { sleep } from '@/shared/lib/scheduling'
 
 type Role = Parameters<typeof screen.findByRole>[0]
 type Text = string | RegExp

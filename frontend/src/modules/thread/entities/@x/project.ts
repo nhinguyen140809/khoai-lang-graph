@@ -1,3 +1,6 @@
-export { useProjectThreads, useReloadThreadsIfRunStatusChanged } from '../hooks/useThreadQueries'
-export { threadsByAttention, threadsWithUnfinishedRun } from '../threads.utils'
-export type { Thread } from '../types/threads.types'
+export {
+  useProjectThreads,
+  useReloadThreadsIfRunStatusChanged,
+} from '../threads/hooks/useThreadQueries'
+export type { Thread } from '../threads/threads.types'
+export { threadsByAttention, threadsWithUnfinishedRun } from '../threads/threads.utils'

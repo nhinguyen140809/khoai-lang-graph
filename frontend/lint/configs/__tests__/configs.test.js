@@ -73,6 +73,34 @@ describe('the resolved config', () => {
     expect(JSON.stringify(test)).not.toContain('topicEntityModules')
   })
 
+  it('keeps the browser environment in the files that own it', async () => {
+    const source = await ruleOf(
+      'src/modules/project/entities/projects.api.ts',
+      'no-restricted-globals',
+    )
+    expect(JSON.stringify(source)).toContain('The router owns the address')
+    const owner = await ruleOf('src/shared/lib/viewport/scroll.utils.ts', 'no-restricted-globals')
+    expect(JSON.stringify(owner)).not.toContain('The router owns the address')
+    const test = await ruleOf(
+      'src/modules/project/entities/__tests__/projects.api.test.ts',
+      'no-restricted-globals',
+    )
+    expect(JSON.stringify(test)).not.toContain('The router owns the address')
+  })
+
+  it('keeps the locale of a written value in the formatters', async () => {
+    const source = await ruleOf(
+      'src/modules/project/entities/projects.api.ts',
+      'no-restricted-properties',
+    )
+    expect(JSON.stringify(source)).toContain('formatLocale')
+    const owner = await ruleOf(
+      'src/shared/lib/numbers/formatters.utils.ts',
+      'no-restricted-properties',
+    )
+    expect(JSON.stringify(owner)).not.toContain('formatLocale')
+  })
+
   it('has the rules of every concern', async () => {
     const config = await eslint.calculateConfigForFile(
       'src/modules/project/entities/projects.api.ts',
@@ -130,7 +158,7 @@ describe('the rules of file names', () => {
       'src/modules/run/entities/runs/useRuns.ts',
       'src/modules/project/entities/useProjects.ts',
       'src/modules/project/features/create/components/useThing.ts',
-      'src/shared/lib/timing/useClock.ts',
+      'src/shared/lib/scheduling/useClock.ts',
     ]) {
       expect(await problemsOf(filePath)).toContain('check-file/filename-naming-convention')
     }

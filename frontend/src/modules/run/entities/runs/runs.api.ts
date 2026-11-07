@@ -2,18 +2,9 @@ import { apiEndpoints } from '@/shared/api/endpoints'
 import { HttpMethod } from '@/shared/api/http'
 import { apiCommand, apiRequest, fetchPage, type ListPage } from '@/shared/api/request'
 
-import { type CreateRunResponse, createRunResponseSchema, type Run, runSchema } from './runs.types'
+import { type Run, runSchema } from './runs.types'
 
 // TODO: switch to the generated client in src/shared/api/generated/ once it is generated.
-
-/** Starts a run of a thread with an input, and gives the id of the run. */
-export function createRun(threadId: string, input: string): Promise<CreateRunResponse> {
-  return apiRequest(apiEndpoints.threadRuns.path({ threadId }), createRunResponseSchema, {
-    action: 'create the run',
-    method: HttpMethod.Post,
-    body: { input },
-  })
-}
 
 /** One page of the runs of a thread, the newest first. */
 export function listThreadRuns(

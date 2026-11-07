@@ -25,7 +25,7 @@ import {
   DropdownMenuTrigger,
 } from '@/shared/components/ui/dropdown-menu'
 import { Skeleton } from '@/shared/components/ui/skeleton'
-import { initialsOf } from '@/shared/lib/formatters'
+import { initialsOf } from '@/shared/lib/text'
 import { routes } from '@/shared/routes'
 
 /** Shows the account menu at the bottom of the activity bar while it is mounted. */

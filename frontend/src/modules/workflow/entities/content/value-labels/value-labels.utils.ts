@@ -1,4 +1,4 @@
-import { snakeToSentenceCase } from '@/shared/lib/formatters'
+import { snakeToSentenceCase } from '@/shared/lib/text'
 import { nonStatusTones, type Tone } from '@/shared/lib/tone'
 import type { Wording } from '@/shared/lib/view'
 

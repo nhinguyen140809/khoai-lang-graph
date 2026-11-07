@@ -1,7 +1,7 @@
 'use client'
 
 import { Avatar, AvatarFallback } from '@/shared/components/ui/avatar'
-import { initialsOf } from '@/shared/lib/formatters'
+import { initialsOf } from '@/shared/lib/text'
 import type { Tone } from '@/shared/lib/tone'
 
 /**

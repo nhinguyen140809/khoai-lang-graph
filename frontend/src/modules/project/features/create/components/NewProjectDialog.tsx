@@ -29,11 +29,8 @@ export function NewProjectDialog({ open, idea, onOpenChange }: NewProjectDialogP
       }}
     >
       {/* The title says it all: a description would only repeat the button. At most 80% of the
-          window high, so that the open agent settings scroll between the title and the buttons. */}
-      <DialogContent
-        className="max-h-dialog grid-rows-header-body sm:max-w-lg"
-        aria-describedby={undefined}
-      >
+          window high, so that the form scrolls between the title and the buttons. */}
+      <DialogContent size="lg" scrollBody aria-describedby={undefined}>
         <DialogHeader>
           <DialogTitle>{createProjectMessages.create}</DialogTitle>
         </DialogHeader>

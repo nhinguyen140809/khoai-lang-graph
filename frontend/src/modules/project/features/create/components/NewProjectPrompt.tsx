@@ -7,6 +7,7 @@ import { Button } from '@/shared/components/ui/button'
 import { InputGroup, InputGroupAddon, InputGroupTextarea } from '@/shared/components/ui/input-group'
 import { Tooltip, TooltipContent, TooltipTrigger } from '@/shared/components/ui/tooltip'
 import { hasText } from '@/shared/lib/guards'
+import { isSubmitKey } from '@/shared/lib/hotkey'
 
 import { useProjectPromptFocus } from '../hooks/useOpenProjectPrompt'
 import { createProjectMessages } from '../new-project.constants'
@@ -33,7 +34,7 @@ export function NewProjectPrompt({ onStart }: NewProjectPromptProps) {
   }
 
   const submitOnEnter = (event: KeyboardEvent<HTMLTextAreaElement>) => {
-    if (event.key !== 'Enter' || event.shiftKey || event.nativeEvent.isComposing) return
+    if (!isSubmitKey(event.nativeEvent)) return
     event.preventDefault()
     submit()
   }

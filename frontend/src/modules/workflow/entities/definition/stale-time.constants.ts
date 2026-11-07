@@ -1,5 +1,5 @@
 import { isProduction } from '@/shared/config/env'
-import { minuteMs } from '@/shared/lib/timing'
+import { minuteMs } from '@/shared/lib/time'
 
 // What the workflow definition decides, such as the content schemas of the kinds, changes only with
 // a deploy. A production build reads it again after an hour; any other build after ten minutes, so

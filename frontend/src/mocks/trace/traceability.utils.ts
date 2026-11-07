@@ -1,7 +1,7 @@
 import type { Matrix } from '@/modules/trace/entities'
 import { findLinkType, type LinkType, type WorkflowDefinition } from '@/modules/workflow/entities'
-import { snakeToSentenceCase } from '@/shared/lib/formatters'
 import { assertPresent } from '@/shared/lib/guards'
+import { snakeToSentenceCase } from '@/shared/lib/text'
 
 /** The link type of a definition with this key; a definition without it is a mistake of the fixtures. */
 export function getLinkType(definition: WorkflowDefinition, key: string): LinkType {

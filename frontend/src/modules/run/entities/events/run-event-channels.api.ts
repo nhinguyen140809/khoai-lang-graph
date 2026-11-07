@@ -2,8 +2,8 @@ import { hasText } from '@/shared/lib/guards'
 
 import { runEventsUrl } from './run-events.api'
 import { streamReopenMs } from './run-events.constants'
-import { isTerminal, parseRunEvent } from './run-events.reducer'
 import { type RunChannelSignal, type RunEvent, runEventTypes } from './run-events.types'
+import { isTerminal, parseRunEvent } from './run-events.utils'
 
 type Listener = (signal: RunChannelSignal) => void
 

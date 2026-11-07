@@ -2,7 +2,7 @@ import { useQuery } from '@tanstack/react-query'
 
 import type { HookQueryOptions } from '@/shared/api/query-client'
 import { isProduction } from '@/shared/config/env'
-import { minuteMs } from '@/shared/lib/timing'
+import { minuteMs } from '@/shared/lib/time'
 
 import { listModels } from '../models.api'
 import { modelKeys } from '../models.keys'

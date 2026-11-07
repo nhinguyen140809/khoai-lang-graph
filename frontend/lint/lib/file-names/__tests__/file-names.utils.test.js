@@ -55,12 +55,12 @@ describe('sliceFolderRules', () => {
   })
 
   it('lets the entities of a module not split by topic hold a folder for each kind', () => {
-    expect(rules['src/modules/thread/entities/*/']).toContain('types')
+    expect(rules['src/modules/review/entities/*/']).toContain('types')
   })
 
   it('lets the entities hold a schema file', () => {
     expect(fileKinds.entities).toContain('schema')
-    expect(rules['src/modules/thread/entities/*/']).toContain('schemas')
+    expect(rules['src/modules/review/entities/*/']).toContain('schemas')
   })
 
   it('gives the folder @x to the entities only', () => {

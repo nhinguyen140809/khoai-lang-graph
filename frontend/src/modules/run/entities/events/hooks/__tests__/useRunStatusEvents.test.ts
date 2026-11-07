@@ -1,14 +1,14 @@
 import { useQuery } from '@tanstack/react-query'
 import { act, waitFor } from '@testing-library/react'
 import { delay, http, HttpResponse } from 'msw'
-import { afterEach, describe, expect, it, vi } from 'vitest'
+import { describe, expect, it, vi } from 'vitest'
 
 import { server } from '@/mocks/msw-server.setup'
 import { buildRun } from '@/mocks/runs/fixtures/runs.fixtures'
 import { projectIds, runIds, threadIds } from '@/mocks/shared/db'
 import { apiEndpoints } from '@/shared/api/endpoints'
 import { costQueryMeta } from '@/shared/api/query-client'
-import { sleep } from '@/shared/lib/timing'
+import { sleep } from '@/shared/lib/scheduling'
 import { openedEventSources } from '@/test/event-source'
 import { renderHookWithProviders } from '@/test/render'
 import { advanceTimers } from '@/test/steps'
@@ -17,10 +17,6 @@ import { useLatestRun } from '../../../runs/hooks/useRunQueries'
 import type { RunStatus } from '../../../status/run-status.types'
 import { streamReopenMs } from '../../run-events.constants'
 import { useRunStatusEvents } from '../useRunStatusEvents'
-
-afterEach(() => {
-  vi.useRealTimers()
-})
 
 // Run 3 of the mentor thread, with the status the API answers for it now.
 function mentorRun(status: RunStatus, lastEventId = 246) {

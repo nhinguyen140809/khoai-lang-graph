@@ -18,7 +18,7 @@ describe('entityTopics', () => {
     expect(entityTopics('project')).toEqual(['projects', 'run-status'])
     expect(entityTopics('llm-model')).toEqual(['model-settings', 'models'])
     expect(entityTopics('user')).toEqual(['sessions', 'user', 'user-settings'])
-    expect(entityTopics('thread')).toEqual([])
+    expect(entityTopics('thread')).toEqual(['messages', 'threads'])
     expect(entityTopics('workflow')).toContain('content/values')
   })
 })

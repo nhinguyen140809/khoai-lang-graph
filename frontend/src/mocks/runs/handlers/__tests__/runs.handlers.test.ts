@@ -9,7 +9,7 @@ import { fetchApi, getApi, getApiItems, openPage } from '@/test/msw'
 import { itRejectsRequests } from '@/test/suites'
 
 import { changeProject } from '../../../projects/projects.lookup'
-import { projectIds, runIds, startedRunId } from '../../../shared/db'
+import { projectIds, runIds } from '../../../shared/db'
 import { stepsOfRun } from '../../lookup/runs.lookup'
 import {
   refusedRetryCases,
@@ -111,18 +111,6 @@ describe('POST /runs/{run_id}/cancel in the error scenario', () => {
 
     const run = await getApi<Run>(apiEndpoints.run.path({ runId: runIds.mentorMain3 }))
     expect(run).toMatchObject({ status: 'interrupted', finished_at: null })
-  })
-})
-
-describe('the run of the chat', () => {
-  it('answers the id of the mock run', async () => {
-    const { body } = (await fetchApi(apiEndpoints.threadRuns.path({ threadId: 't1' }), {
-      method: 'POST',
-    })) as ApiAnswer<{
-      run_id: string
-    }>
-
-    expect(body).toEqual({ run_id: startedRunId })
   })
 })
 

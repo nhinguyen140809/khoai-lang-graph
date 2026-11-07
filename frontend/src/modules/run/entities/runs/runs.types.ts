@@ -43,8 +43,3 @@ export const runSchema = z.object({
 })
 
 export type Run = z.infer<typeof runSchema>
-
-// The answer of the request that starts a run of a thread with an input.
-export const createRunResponseSchema = z.object({ run_id: z.string() })
-
-export type CreateRunResponse = z.infer<typeof createRunResponseSchema>

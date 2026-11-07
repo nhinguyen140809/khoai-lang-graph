@@ -15,19 +15,11 @@ export { listRunDirectives } from './directives/directives.api'
 export { directiveKeys } from './directives/directives.keys'
 export type { Directive, DirectiveItem } from './directives/directives.types'
 export { useRunDirectives } from './directives/hooks/useDirectiveQueries'
-export { useRunStream } from './events/hooks/useRunStream'
 export { runEventsUrl } from './events/run-events.api'
 export { useLatestRun, useRun, useThreadRuns } from './runs/hooks/useRunQueries'
 export { useRunStageTitle } from './runs/hooks/useRunStageTitle'
 export { runModuleKeys } from './runs/run-module.keys'
-export {
-  cancelRun,
-  createRun,
-  findLatestRun,
-  getRun,
-  listThreadRuns,
-  retryRun,
-} from './runs/runs.api'
+export { cancelRun, findLatestRun, getRun, listThreadRuns, retryRun } from './runs/runs.api'
 export { runKeys } from './runs/runs.keys'
 export type { Run, RunUsage } from './runs/runs.types'
 export { refetchIntervalOf } from './runs/runs.utils'
