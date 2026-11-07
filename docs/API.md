@@ -816,11 +816,13 @@ Content rules:
 
 Editing rule: the user changes an artifact or its items only while the run of the project waits for a review that takes changes: the run is `interrupted`, and its pending interrupt has `allow_edits: true` and lists the artifact in `review_artifacts`. Every other change (`PATCH`, create, delete, move, reorder and restore) answers `409 invalid_state`: while a run is `running`, while the pending interrupt does not allow edits or does not list the artifact, and when the thread has no active run.
 
+The same rule holds for a trace link that the user creates or removes, by the artifact of its source item: a link is a statement about its source ("REQ-001 Based on AR-001"), so it changes only while the document of the source takes changes. The target is not changed by the link and is not checked. Outside that state, `POST /projects/{project_id}/trace-links` and `DELETE /trace-links/{link_id}` answer `409 invalid_state`. A link that an agent writes during a run is not a change of the user and is not checked against this rule.
+
 ### Traceability
 
 | Method and path | Purpose | Phase |
 |---|---|---|
-| `GET /items/{item_id}/trace` | The chain of one item; `?direction=` with one of `backward`, `forward`, `both` (default `both`): `backward` follows the links from their source to their target (where the item came from), `forward` from their target to their source (what was built from it); `?depth=` (default 5). Returns `items` and `links`, see [Trace body](#trace-body) | MVP |
+| `GET /items/{item_id}/trace` | The chain of one item; `?direction=` with one of `backward`, `forward`, `both` (default `both`): `backward` follows the links from their source to their target (where the item came from), `forward` from their target to their source (what was built from it), and `both` gives the two walks together. Each walk keeps its direction from the item to the end: it never follows a link the other way, so `both` does not reach the other items built from the same source (the siblings of the item), which their own trace shows; `?depth=` (default 5). Returns `items` and `links`, see [Trace body](#trace-body) | MVP |
 | `GET /artifacts/{artifact_id}/trace` | The chains of all the items of one artifact, from the interview to the backlog, in one answer; same `?direction=` and `?depth=`, with `depth` defaulting to no limit. Returns `items` and `links`, see [Trace body](#trace-body) | MVP |
 | `GET /projects/{project_id}/trace-links` | Current links, without the removed ones; filters `link_type`, `source_item_id`, `target_item_id` | MVP |
 | `POST /projects/{project_id}/trace-links` | Create a link by hand; body `source_item_id`, `target_item_id`, `link_type`, `note`, `source_quote`, `target_quote` (both optional). The pair of item kinds must be allowed for the link type, and the quotes must follow the [quote rules](#quote-rules), otherwise `422 validation_failed` | MVP |
@@ -896,15 +898,21 @@ The columns come from the server, so a kind that the workflow definition adds ap
 
 #### Coverage body
 
-Each gap is one list of items that need attention, with its own title and a sentence that says why. The keys of version 1 are `no_backlog_item` (specified requirements with no incoming `derived_from`), `no_source` (specified or analyzed requirements with no outgoing `derived_from`) and `needs_review` (items whose link to a target has an older `target_version` than the target now, or whose target is `superseded`). A gap with no items is still listed.
+Each gap is one list of items that need attention, with its own title and a sentence that says why. The `title` and the `description` are shown to the user as they are, so they are written in natural language for a reader who knows the product but not its data: when the workflow definition version names the gap, the words come from it; otherwise the server writes them. Definition version 1 names no gap, so the server gives the words below. The keys of version 1 are `no_backlog_item` (specified requirements with no incoming `derived_from`), `no_source` (specified or analyzed requirements with no outgoing `derived_from`) and `needs_review` (items whose link to a target has an older `target_version` than the target now, or whose target is `superseded`). A gap with no items is still listed.
+
+| Key | `title` | `description` |
+|---|---|---|
+| `no_backlog_item` | Requirements without a user story | These specified requirements have no user story in the backlog that is built from them yet. |
+| `no_source` | Requirements without a source | These requirements are not based on any need from the interviews. |
+| `needs_review` | Links to check | The item that each of these links is based on changed after the link was made, or was replaced. |
 
 ```json
 {
   "gaps": [
     {
       "key": "no_backlog_item",
-      "title": "No backlog item",
-      "description": "Specified requirements that no backlog item was derived from.",
+      "title": "Requirements without a user story",
+      "description": "These specified requirements have no user story in the backlog that is built from them yet.",
       "items": [{ "item_id": "0b4d...", "key": "REQ-004", "kind": "spec_requirement", "title": "Search mentors" }]
     }
   ]

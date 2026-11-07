@@ -1085,6 +1085,8 @@ A directed link between two items of one project. A reference from one item to a
 | `created_by` | Origin | |
 | `deleted_by` | Origin? | Who removed the link; null while the link is current. Removing sets `deleted_at` and keeps the row, so the links of an earlier step can be shown again |
 
+A link belongs to its source: the user creates or removes a link only while the document of the source item takes changes, as for the items, see [API: editing rule](API.md#artifacts-and-items). The target does not change.
+
 A link reads from its source to its target through the title of its link type ("REQ-001 Based on AR-001"). Following `derived_from` and `evidenced_by` from any item leads back to the interview. A quote is one run of words of at most 300 characters, found in one `text` or `textarea` field of its item, and a link has at most one quote per side, see [API: quote rules](API.md#quote-rules).
 
 ### Link types
