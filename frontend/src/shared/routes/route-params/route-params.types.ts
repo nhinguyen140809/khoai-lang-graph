@@ -7,6 +7,8 @@ export const RouteParam = {
   Next: 'next',
   /** The item that a document page scrolls to and marks. */
   Item: 'item',
+  /** The entry of the chat of the activity that the page scrolls to and marks. */
+  Entry: 'entry',
 } as const
 
 /** The name of a query parameter of a page, as `RouteParam` lists them. */

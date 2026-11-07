@@ -2,15 +2,19 @@
 
 import { mergeProps } from '@base-ui/react/merge-props'
 import { useRender } from '@base-ui/react/use-render'
+import { cva } from 'class-variance-authority'
 import { cn } from 'cn'
 import { createContext, useCallback, useContext, useState } from 'react'
 
 import { type Tone, toneClasses } from '@/shared/lib/tone'
 
 // Types
+type TimelineVariant = 'default' | 'compact'
+
 type TimelineContextValue = {
   activeStep: number
   setActiveStep: (step: number) => void
+  variant: TimelineVariant
 }
 
 // Context
@@ -30,6 +34,12 @@ interface TimelineProps extends useRender.ComponentProps<'div'> {
   value?: number
   onValueChange?: (value: number) => void
   orientation?: 'horizontal' | 'vertical'
+  /**
+   * `default`: the dot floats left of the content, the date sits above the title. `compact`: a
+   * tight list, the dot sits in the row of the title and the date reads under it, indented to the
+   * title, as the outline of a panel draws one.
+   */
+  variant?: TimelineVariant
 }
 
 function Timeline({
@@ -37,6 +47,7 @@ function Timeline({
   value,
   onValueChange,
   orientation = 'vertical',
+  variant = 'default',
   className,
   render,
   children,
@@ -62,12 +73,13 @@ function Timeline({
       className,
     ),
     'data-orientation': orientation,
+    'data-variant': variant,
     'data-slot': 'timeline',
     children,
   }
 
   return (
-    <TimelineContext.Provider value={{ activeStep: currentStep, setActiveStep }}>
+    <TimelineContext.Provider value={{ activeStep: currentStep, setActiveStep, variant }}>
       {useRender({
         defaultTagName: 'div',
         render,
@@ -98,14 +110,21 @@ function TimelineContent({
 }
 
 // TimelineDate
+const timelineDateVariants = cva('block text-muted-foreground', {
+  variants: {
+    variant: {
+      default: 'mb-1 text-xs font-medium group-data-[orientation=vertical]/timeline:max-sm:h-4',
+      compact: 'ps-3.5 text-3xs',
+    },
+  },
+})
+
 type TimelineDateProps = useRender.ComponentProps<'time'>
 
 function TimelineDate({ className, render, children, ...props }: TimelineDateProps) {
+  const { variant } = useTimeline()
   const defaultProps = {
-    className: cn(
-      'mb-1 block text-xs font-medium text-muted-foreground group-data-[orientation=vertical]/timeline:max-sm:h-4',
-      className,
-    ),
+    className: cn(timelineDateVariants({ variant }), className),
     'data-slot': 'timeline-date',
     children,
   }
@@ -118,14 +137,24 @@ function TimelineDate({ className, render, children, ...props }: TimelineDatePro
 }
 
 // TimelineHeader
+const timelineHeaderVariants = cva('', {
+  variants: {
+    variant: {
+      default: '',
+      compact: 'flex min-w-0 items-center gap-2',
+    },
+  },
+})
+
 function TimelineHeader({
   className,
   render,
   children,
   ...props
 }: useRender.ComponentProps<'div'>) {
+  const { variant } = useTimeline()
   const defaultProps = {
-    className: cn(className),
+    className: cn(timelineHeaderVariants({ variant }), className),
     'data-slot': 'timeline-header',
     children,
   }
@@ -138,6 +167,16 @@ function TimelineHeader({
 }
 
 // TimelineIndicator
+const timelineIndicatorVariants = cva('rounded-full', {
+  variants: {
+    variant: {
+      default:
+        'absolute size-4 border-2 border-primary/20 group-data-completed/timeline-item:border-primary group-data-[orientation=horizontal]/timeline:-top-6 group-data-[orientation=horizontal]/timeline:left-0 group-data-[orientation=horizontal]/timeline:-translate-y-1/2 group-data-[orientation=vertical]/timeline:top-0 group-data-[orientation=vertical]/timeline:-left-6 group-data-[orientation=vertical]/timeline:-translate-x-1/2',
+      compact: 'static size-1.5 shrink-0 border-0 bg-muted-foreground/40',
+    },
+  },
+})
+
 type TimelineIndicatorProps = useRender.ComponentProps<'div'>
 
 function TimelineIndicator({
@@ -150,12 +189,13 @@ function TimelineIndicator({
   /** The fill of the dot; the muted fill without it. */
   color?: Tone | undefined
 }) {
+  const { variant } = useTimeline()
   const defaultProps = {
     'aria-hidden': true,
     'data-color': color,
     className: cn(
-      'absolute size-4 rounded-full border-2 border-primary/20 group-data-completed/timeline-item:border-primary group-data-[orientation=horizontal]/timeline:-top-6 group-data-[orientation=horizontal]/timeline:left-0 group-data-[orientation=horizontal]/timeline:-translate-y-1/2 group-data-[orientation=vertical]/timeline:top-0 group-data-[orientation=vertical]/timeline:-left-6 group-data-[orientation=vertical]/timeline:-translate-x-1/2',
-      color && [toneClasses[color], 'bg-(--tone)'],
+      timelineIndicatorVariants({ variant }),
+      color !== undefined && [toneClasses[color], 'bg-(--tone)'],
       className,
     ),
     'data-slot': 'timeline-indicator',
@@ -170,18 +210,28 @@ function TimelineIndicator({
 }
 
 // TimelineItem
+const timelineItemVariants = cva(
+  'group/timeline-item relative flex flex-col gap-0.5 has-[+[data-completed]]:**:data-[slot=timeline-separator]:bg-primary',
+  {
+    variants: {
+      variant: {
+        default:
+          'flex-1 group-data-[orientation=horizontal]/timeline:mt-8 group-data-[orientation=horizontal]/timeline:not-last:pe-8 group-data-[orientation=vertical]/timeline:ms-8 group-data-[orientation=vertical]/timeline:not-last:pb-6',
+        compact: 'flex-none',
+      },
+    },
+  },
+)
+
 interface TimelineItemProps extends useRender.ComponentProps<'div'> {
   step: number
 }
 
 function TimelineItem({ step, className, render, children, ...props }: TimelineItemProps) {
-  const { activeStep } = useTimeline()
+  const { activeStep, variant } = useTimeline()
 
   const defaultProps = {
-    className: cn(
-      'group/timeline-item relative flex flex-1 flex-col gap-0.5 group-data-[orientation=horizontal]/timeline:mt-8 group-data-[orientation=horizontal]/timeline:not-last:pe-8 group-data-[orientation=vertical]/timeline:ms-8 group-data-[orientation=vertical]/timeline:not-last:pb-6 has-[+[data-completed]]:**:data-[slot=timeline-separator]:bg-primary',
-      className,
-    ),
+    className: cn(timelineItemVariants({ variant }), className),
     'data-completed': step <= activeStep || undefined,
     'data-slot': 'timeline-item',
     children,

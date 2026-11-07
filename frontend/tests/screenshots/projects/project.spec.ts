@@ -21,7 +21,7 @@ screenshots('Project', (shot) => {
   const statusShot = (
     name: string,
     address: string,
-    ready: string | { role: 'progressbar'; name: string },
+    ready: string | { role: 'progressbar' | 'link'; name: string | RegExp },
   ) => {
     shot(`Status: ${name}`, async ({ page, user, shoot }) => {
       await page.goto(address)
@@ -130,8 +130,14 @@ screenshots('Project', (shot) => {
 
   statusShot('waiting for you', mentor, 'Waiting for you: Reviewing the analysis')
   statusShot('working', `${mentor}?mock-run-status=running`, 'Working: Analysing the interviews')
-  statusShot('done', `${mentor}?mock-run-status=done`, 'Done')
-  statusShot('not started', `${mentor}?mock-runs=empty`, 'Not started')
+  statusShot('done', `${mentor}?mock-run-status=done`, {
+    role: 'link',
+    name: /^Done/,
+  })
+  statusShot('not started', `${mentor}?mock-runs=empty`, {
+    role: 'link',
+    name: /^Not started/,
+  })
   statusShot('loading', `${mentor}?mock-threads=loading`, 'Loading status')
   statusShot('error', `${mentor}?mock-threads=error`, 'Failed to load the status.')
   // The amounts of the budget show in a tooltip, so the meter is what the page waits for.
@@ -156,7 +162,8 @@ screenshots('Project', (shot) => {
   shot('Stop run dialog', async ({ page, user, shoot }) => {
     await page.goto(mentor)
 
-    await user.pressButton('Stop')
+    // The prompt of the activity carries a stop of its own; this one stops from the status bar.
+    await user.pressButton('Stop', page.getByRole('contentinfo'))
     await user.expectRole('alertdialog', 'Stop the run?')
     await shoot()
   })

@@ -20,6 +20,10 @@ interface SidePanelSectionProps {
   actions?: ReactNode
   /** Whether the section starts open. */
   defaultOpen?: boolean
+  /** Whether the section is open, when the panel around it controls the state. */
+  open?: boolean | undefined
+  /** What runs when the section opens or closes, when the panel around it controls the state. */
+  onOpenChange?: ((open: boolean) => void) | undefined
   children: ReactNode
 }
 
@@ -31,10 +35,16 @@ export function SidePanelSection({
   title,
   actions,
   defaultOpen = true,
+  open,
+  onOpenChange,
   children,
 }: SidePanelSectionProps) {
   return (
-    <Collapsible defaultOpen={defaultOpen} className="border-t first:border-t-0">
+    <Collapsible
+      {...(open === undefined ? { defaultOpen } : { open })}
+      {...(onOpenChange !== undefined && { onOpenChange })}
+      className="border-t first:border-t-0"
+    >
       <div className="group/header flex h-8 items-center hover:bg-sidebar-accent">
         <SectionTitle title={title} />
         {actions !== undefined && (

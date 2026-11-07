@@ -47,3 +47,9 @@ export const routeCases = [
   },
   { page: 'the page that creates an account', href: () => routes.register(), path: '/register' },
 ]
+
+/** A route of the activity, and the entry it names. */
+export const activityEntryCases = [
+  { name: 'without an entry', entryId: undefined, query: null },
+  { name: 'with an entry', entryId: 'i1', query: 'i1' },
+] as const

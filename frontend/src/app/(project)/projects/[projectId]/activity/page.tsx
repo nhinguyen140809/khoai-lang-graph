@@ -1,14 +1,13 @@
-import { ActivityIcon } from 'lucide-react'
+import { Suspense } from 'react'
 
-import { EmptyState } from '@/shared/components/state'
+import { ActivityPage } from '@/modules/activity/widgets/chat'
 
-// TODO: replace with the activity of the project once it is built.
-export default function Page() {
+/** The chat of the activity of a project, with its prompt. */
+export default async function Page({ params }: PageProps<'/projects/[projectId]/activity'>) {
+  const { projectId } = await params
   return (
-    <EmptyState
-      icon={ActivityIcon}
-      title="Activity is not built yet"
-      description="The work of the agents and the messages of the project will show here."
-    />
+    <Suspense fallback={null}>
+      <ActivityPage projectId={projectId} />
+    </Suspense>
   )
 }
