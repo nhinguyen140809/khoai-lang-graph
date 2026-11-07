@@ -6,7 +6,7 @@ import { edgesFrom, findNode } from '@/modules/workflow/entities'
 import { changeArtifact, changeItem } from '../artifacts/artifacts.changes'
 import { allItems, findArtifact } from '../artifacts/artifacts.lookup'
 import { changeRun } from '../runs/runs.changes'
-import { mockNow } from '../shared/db'
+import { mockNow, userId } from '../shared/db'
 import { workflowDefinitionFixture } from '../workflow/workflow.fixtures'
 import { interruptEdits } from './interrupts.store'
 
@@ -17,7 +17,17 @@ import { interruptEdits } from './interrupts.store'
 export function resolveInterrupt(run: Run, interrupt: Interrupt, decision: ResumeRunBody): void {
   interruptEdits.set({
     ...interruptEdits.get(),
-    [interrupt.id]: { status: 'resolved', resolved_at: mockNow() },
+    [interrupt.id]: {
+      status: 'resolved',
+      resolved_at: mockNow(),
+      decision: {
+        option: decision.option,
+        feedback: decision.feedback,
+        answers: decision.answers,
+        decided_by: userId,
+        decided_at: mockNow(),
+      },
+    },
   })
   const option = interrupt.options.find(({ key }) => key === decision.option)
   if (option?.approves === true) approveArtifacts(interrupt.review_artifacts)

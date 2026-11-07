@@ -6,7 +6,7 @@ import { buildStep } from '@/mocks/runs/fixtures/runs.fixtures'
 import { assertPresent } from '@/shared/lib/guards'
 import { ViewProvider } from '@/shared/lib/view'
 
-import type { RunStep } from '../../run-steps.types'
+import type { RunStep } from '../../../steps/run-steps.types'
 import { workEntries } from '../../work-entries.utils'
 import { useWorkWords } from '../useWorkWords'
 

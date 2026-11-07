@@ -1,6 +1,7 @@
 import { buildStep } from '@/mocks/runs/fixtures/runs.fixtures'
 
-import type { RunStep, WorkStatus } from '../run-steps.types'
+import type { RunStep } from '../../steps/run-steps.types'
+import type { WorkStatus } from '../work.types'
 
 export interface WorkEntryCase {
   name: string

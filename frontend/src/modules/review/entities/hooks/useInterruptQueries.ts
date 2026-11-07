@@ -1,4 +1,4 @@
-import { useInfiniteQuery, useQuery } from '@tanstack/react-query'
+import { useInfiniteQuery, useQuery, useQueryClient } from '@tanstack/react-query'
 
 import {
   type LiveRunQueryOptions,
@@ -10,6 +10,14 @@ import { cursorPagesOptions, type HookQueryOptions } from '@/shared/api/query-cl
 import { findPendingInterrupt, listRunInterrupts } from '../interrupts.api'
 import { interruptsPageSize } from '../interrupts.constants'
 import { interruptKeys } from '../interrupts.keys'
+
+/** Loads every query of the interrupts of a run again. */
+export function useReloadRunInterrupts(): (runId: string) => Promise<void> {
+  const queryClient = useQueryClient()
+  return async (runId) => {
+    await queryClient.invalidateQueries({ queryKey: interruptKeys.ofRun(runId) })
+  }
+}
 
 /**
  * Every interrupt of a run, the ones taken with the defaults included, a page at a time. The list

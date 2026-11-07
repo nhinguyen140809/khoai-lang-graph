@@ -6,9 +6,9 @@ import { useStageSubjects } from '@/modules/artifact/entities/@x/run'
 import { useVisibleStages } from '@/modules/workflow/entities/@x/run'
 
 import type { Run } from '../../runs/runs.types'
+import { useRunSteps } from '../../steps/hooks/useRunStepQueries'
 import type { StageProgressResult } from '../stage-progress.types'
 import { stageProgress } from '../stage-progress.utils'
-import { useRunSteps } from './useRunStepQueries'
 
 /**
  * The stages of the workflow of a run with their progress, their nested stages and their subjects.

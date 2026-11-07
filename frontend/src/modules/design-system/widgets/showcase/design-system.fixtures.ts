@@ -267,3 +267,72 @@ export const quotedItems: QuotedItem[] = [
 /** A text that a search can mark in several places. */
 export const searchText =
   'Mentors can search mentors by field and filter them by availability. Students book a session with a mentor, rate it, and export the history of their sessions.'
+
+/** A step of the progress of the work, as the side panel of the activity draws it. */
+export interface StepperStep {
+  key: string
+  title: string
+  status: 'done' | 'running' | 'waiting' | 'failed' | 'stopped' | 'not_started'
+}
+
+export const stepperSteps: StepperStep[] = [
+  { key: 'planning', title: 'Planning the interviews', status: 'done' },
+  { key: 'personas', title: 'Proposing the interviewees', status: 'done' },
+  { key: 'interviewing', title: 'Interviewing', status: 'running' },
+  { key: 'analysis', title: 'Analysing the interviews', status: 'waiting' },
+  { key: 'specification', title: 'Writing the specification', status: 'not_started' },
+]
+
+/** A row of the outline of the messages of the user, as the side panel of the activity draws it. */
+export interface TimelineRow {
+  key: string
+  date: string
+  title: string
+  tone: 'primary' | 'warning' | 'neutral'
+}
+
+export const timelineRows: TimelineRow[] = [
+  { key: 'm1', date: '2 Oct', title: 'I want to build an online platform...', tone: 'primary' },
+  { key: 'm2', date: '4 Oct', title: 'Group sessions are needed too...', tone: 'primary' },
+  { key: 'm3', date: '6 Oct', title: 'Also ask about group sessions.', tone: 'warning' },
+]
+
+/** A line of the work of the agents, as the chat of the activity draws it. */
+export interface TraceRow {
+  key: string
+  title: string
+  description: string
+  status: 'done' | 'running' | 'waiting' | 'failed'
+  tone: 'primary' | 'success' | 'warning' | 'destructive'
+}
+
+export const traceRows: TraceRow[] = [
+  {
+    key: 's1',
+    title: 'Analysing the interviews',
+    description: 'Took 1 minute   24 written',
+    status: 'done',
+    tone: 'success',
+  },
+  {
+    key: 's2',
+    title: 'Interviewing: Student',
+    description: 'Working',
+    status: 'running',
+    tone: 'primary',
+  },
+  {
+    key: 's3',
+    title: 'Reviewing the analysis',
+    description: 'Waiting for your review',
+    status: 'waiting',
+    tone: 'warning',
+  },
+  {
+    key: 's4',
+    title: 'Writing the specification',
+    description: 'Failed: The work reached its budget.',
+    status: 'failed',
+    tone: 'destructive',
+  },
+]

@@ -26,7 +26,7 @@ describe('sliceFolderRules', () => {
 
   it('lets the root of the entities of a module split by topic hold its topics, not the kinds', () => {
     expect(rules['src/modules/run/entities/*/']).toBe(
-      '@(components|__tests__|@x|config|directives|events|runs|state|status|steps)',
+      '@(components|__tests__|@x|config|directives|events|runs|stages|state|status|steps|work)',
     )
     expect(rules['src/modules/run/entities/*/']).not.toContain('types')
   })

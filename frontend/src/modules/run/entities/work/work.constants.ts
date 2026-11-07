@@ -1,7 +1,7 @@
 import { joinPresent, pluralForm } from '@/shared/lib/text'
 import type { Wording } from '@/shared/lib/view'
 
-import type { WorkStatus } from './run-steps.types'
+import type { WorkStatus } from './work.types'
 
 /** The label of each status of a line of work in each view, as the chat and Progress read it. */
 export const workStatusLabels = {

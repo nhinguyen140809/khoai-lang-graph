@@ -4,8 +4,9 @@ import { msBetween } from '@/shared/lib/time'
 
 import type { Run } from '../runs/runs.types'
 import type { RunStatus } from '../status/run-status.types'
-import type { RunStep, RunStepStatus, StepEntry, WorkEntry, WorkStatus } from './run-steps.types'
-import { groupSteps } from './step-groups.utils'
+import type { RunStep, RunStepStatus, StepEntry } from '../steps/run-steps.types'
+import { groupSteps } from '../steps/step-groups.utils'
+import type { WorkEntry, WorkStatus } from './work.types'
 
 /** The work status of a step that runs, by the status of its run. */
 const workStatusOfRunningRun = {

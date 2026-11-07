@@ -5,6 +5,7 @@ import {
   checkpointOptionSchema,
   checkpointQuestionSchema,
   type QuestionAnswer,
+  questionAnswerSchema,
 } from '@/modules/workflow/entities/@x/review'
 
 // Temporary hand-written schemas for the interrupts of the runs.
@@ -27,6 +28,18 @@ export const interruptQuestionSchema = checkpointQuestionSchema.extend({
 
 export type InterruptQuestion = z.infer<typeof interruptQuestionSchema>
 
+/** The decision that resolved an interrupt: what the user answered, or the run took. */
+export const interruptDecisionSchema = z.object({
+  option: z.string().nullable(),
+  feedback: z.string().nullable(),
+  answers: z.record(z.string(), questionAnswerSchema),
+  /** Null when the run took the defaults without asking. */
+  decided_by: z.string().nullable(),
+  decided_at: z.iso.datetime(),
+})
+
+export type InterruptDecision = z.infer<typeof interruptDecisionSchema>
+
 /** A pause of a run that waits for the user, with what it asks and what it reviews. */
 export const interruptSchema = z.object({
   id: z.string(),
@@ -43,6 +56,8 @@ export const interruptSchema = z.object({
   status: z.enum(interruptStatuses),
   created_at: z.iso.datetime(),
   resolved_at: z.iso.datetime().nullable(),
+  /** The decision that resolved it; null while it waits and when the run stopped. */
+  decision: interruptDecisionSchema.nullable(),
 })
 
 export type Interrupt = z.infer<typeof interruptSchema>
