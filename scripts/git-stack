@@ -29,6 +29,10 @@
 
 set -euo pipefail
 
+# A closed output never kills an edit halfway: the writes that fail (a pipe that stopped
+# reading) cost their message, not the re-pointing of the branches that follows them.
+trap '' PIPE
+
 # Everything the script says goes to standard error: a standard output that stopped reading (a
 # closed pipe, for instance) then fails one message instead of killing an edit halfway, between
 # the rebase and the re-pointing of the branches.
@@ -55,7 +59,7 @@ die() {
 }
 
 info() {
-  printf '%s\n' "$*"
+  printf '%s\n' "$*" >&2 || true
 }
 
 top_branch() {
