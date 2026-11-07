@@ -293,7 +293,7 @@ async def test_models_catalog_serves_allowlist(client: AsyncClient) -> None:
     body = response.json()
     assert response.status_code == 200
     assert "models" in body
-    assert any(m["id"] == "openai:glm-5.2" for m in body["models"])
+    assert any(m["id"] == "openai:gpt-4.1" for m in body["models"])
 
 
 async def test_patch_item_and_version_conflict(client: AsyncClient) -> None:

@@ -1073,11 +1073,11 @@ def _normalize_analyzed_quality(analysis: AnalystOutput) -> None:
 
 def _normalize_analyst_links(analysis: AnalystOutput, known: Known) -> None:
     """Drop link refs whose target kind the trace law doesn't allow for
-    that field — a model citing a latent_need in concerns is over-citing."""
+    that field — a model citing a latent_need in concerns is over-citing.
+    AR derived_from is normalized SEPARATELY after RAW items are in `known`."""
     for latent in analysis.latent_needs:
         latent.involves = _keep_valid(latent.involves, known, _PERSONA)
     for ar in analysis.analyzed_requirements:
-        ar.derived_from = _keep_valid(ar.derived_from, known, _AR_OR_RAW)
         ar.involves = _keep_valid(ar.involves, known, _PERSONA)
     for assumption in analysis.assumptions:
         assumption.concerns = _keep_valid(assumption.concerns, known, _REQ_LEVEL)
@@ -1230,6 +1230,15 @@ def analyst_node(
         _evidence_links(sink, item["item_id"], known, latent.evidenced_by)
         _link_each(sink, item["item_id"], "involves", known, latent.involves)
         _supersede_each(sink, current_keys, item["item_id"], latent.supersedes)
+
+    # AR derived_from is normalized here — after RAW items are in `known`:
+    # the model may cite a latent_need it promoted; the trace law only
+    # allows derived_from between analyzed_requirement and raw_requirement
+    # or latent_need, and a ref of any other kind is dropped (logged).
+    for analyzed_draft in analysis.analyzed_requirements:
+        analyzed_draft.derived_from = _keep_valid(
+            analyzed_draft.derived_from, known, _AR_OR_RAW
+        )
 
     for analyzed_draft in analysis.analyzed_requirements:
         item = write(
