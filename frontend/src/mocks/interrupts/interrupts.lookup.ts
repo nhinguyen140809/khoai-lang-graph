@@ -23,8 +23,8 @@ function interruptIdOf(step: RunStep): string {
   return `${IdPrefix.Interrupt}${step.id.slice(IdPrefix.Step.length)}`
 }
 
-// What `?mock-agent-questions` asks of the interrupt that a run waits for: an interrupt that only
-// asks questions, or a review with questions. Null leaves the questions of the definition.
+// What `?mock-agent-questions` asks of the interrupt that a run waits for: an interrupt that
+// only asks questions, before any document exists to review. Null leaves the definition's ask.
 function agentQuestionMode(): AgentQuestionMode | null {
   return choice(agentQuestionModes, pageUrlParam('mock-agent-questions')) ?? null
 }
@@ -53,13 +53,16 @@ function interruptOf(run: Run, step: RunStep, node: CheckpointNode): Interrupt {
     step_id: step.id,
     node: node.id,
     allow_edits: node.allow_edits,
-    review_artifacts: allArtifacts()
-      .filter(
-        (artifact) =>
-          artifact.project_id === run.project_id &&
-          node.review_artifact_kinds.includes(artifact.kind),
-      )
-      .map(artifactRefOf),
+    review_artifacts:
+      agentQuestionMode() === 'only'
+        ? []
+        : allArtifacts()
+            .filter(
+              (artifact) =>
+                artifact.project_id === run.project_id &&
+                node.review_artifact_kinds.includes(artifact.kind),
+            )
+            .map(artifactRefOf),
     status,
     created_at: step.started_at,
     resolved_at: resolvedAt,
@@ -96,7 +99,7 @@ function interruptStatusOf(run: Run, step: RunStep): InterruptStatus {
 }
 
 // What the interrupt asks: the prompt, the options and the questions of the checkpoint; for the
-// one that waits, the scenario may ask the agent questions only, or add them to the checkpoint.
+// one that waits, the scenario may ask the agent questions only, with no review around them.
 function checkpointAskOf(
   status: InterruptStatus,
   node: CheckpointNode,
@@ -112,7 +115,6 @@ function checkpointAskOf(
   return {
     prompt: node.prompt,
     options: node.options,
-    questions:
-      mode === 'added' ? [...definitionQuestions, ...agentQuestionFixtures] : definitionQuestions,
+    questions: definitionQuestions,
   }
 }

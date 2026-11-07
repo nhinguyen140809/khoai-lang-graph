@@ -77,6 +77,7 @@ export type {
   WorkflowEntry,
   WorkflowNode,
 } from './definition/workflow-graph.types'
+export { questionAnswerSchema } from './definition/workflow-graph.types'
 export type {
   AgentRole,
   DefinedArtifactKind,
