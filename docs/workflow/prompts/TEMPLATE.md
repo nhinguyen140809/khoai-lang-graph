@@ -53,6 +53,7 @@ Produce ... so that ... can ...
 ## Output
 
 <!-- Optional. Only what the field descriptions of the output schema do not say: link fields, when to update an existing item, how to choose between values. -->
+- `report`: one to three sentences to the user about what this node did; the server turns them into a message of the chat.
 - ...
 
 ## Examples

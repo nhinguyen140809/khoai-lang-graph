@@ -383,7 +383,7 @@ Deck: `project_id`, `current_stage`. The deck's `initial_intent` belongs to the 
 
 ### Message (MVP)
 
-The chat between the user and the system. Interview turns between agents are not messages; they are [InterviewMessage](#interviewtranscript-and-interviewmessage-mvp) records.
+The chat between the user and the system. Interview turns between agents are not messages; they are [InterviewMessage](#interviewtranscript-and-interviewmessage-mvp) records. A message with `author` `agent` is the `report` field of the output model of a node, with refs to the artifacts and the items it wrote; see [Prompts: output models](architecture/prompts.md#6-output-models).
 
 | Field | Type | Notes |
 |---|---|---|
