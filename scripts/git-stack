@@ -257,7 +257,7 @@ autosquash_commits() {
     targets+=("$(find_commit "$arg")")
   done
   oldest=$(oldest_of "${targets[@]}")
-  if ! git log --format='%s' "$oldest^..HEAD" | grep -q '^fixup!'; then
+  if ! git log --format='%s' "$oldest^..HEAD" | grep '^fixup!' >/dev/null; then
     die "no fixup commit above $oldest; make one with git commit --fixup=<commit>"
   fi
   save_state autosquash "$oldest"
