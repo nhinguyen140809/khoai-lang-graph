@@ -1,3 +1,20 @@
+/** The parts to join, and the ones that hold text joined by a separator. */
+export const joinPresentCases: {
+  name: string
+  parts: (string | null | undefined)[]
+  separator?: string
+  joined: string
+}[] = [
+  { name: 'joins the parts that hold text', parts: ['a', 'b'], joined: 'a, b' },
+  {
+    name: 'leaves nulls and blanks out',
+    parts: ['a', null, '', undefined, '  ', 'b'],
+    joined: 'a, b',
+  },
+  { name: 'joins with the separator given', parts: ['a', 'b'], separator: ' ', joined: 'a b' },
+  { name: 'joins nothing when no part holds text', parts: [null, ''], joined: '' },
+]
+
 /** A text, and the first line of it that holds more than whitespace, trimmed. */
 export const firstLineCases = [
   { name: 'a one-line text', text: 'Book a mentor', line: 'Book a mentor' },

@@ -17,6 +17,11 @@ export function threadsByAttention(threads: Thread[]): Thread[] {
   return threads.toSorted((a, b) => attentionRank(a) - attentionRank(b))
 }
 
+/** Whether a run of the thread has not finished, so that a message joins it instead of starting one. */
+export function hasUnfinishedRun(thread: Pick<Thread, 'active_run_id'> | null): boolean {
+  return thread?.active_run_id !== null && thread?.active_run_id !== undefined
+}
+
 /** The threads whose latest run has not finished. */
 export function threadsWithUnfinishedRun(threads: Thread[]): Thread[] {
   return threads.filter(

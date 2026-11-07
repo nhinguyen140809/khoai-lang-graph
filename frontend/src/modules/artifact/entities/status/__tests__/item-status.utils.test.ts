@@ -1,10 +1,12 @@
 import { describe, expect, it } from 'vitest'
 
+import type { ArtifactItem } from '../../items/items.types'
 import {
   attentionCounts,
   attentionLevel,
   attentionText,
   branchAttention,
+  editedItems,
   highestLevel,
   itemStatus,
   itemStatusLook,
@@ -16,6 +18,48 @@ import {
   highestLevelCases,
   itemStatusCases,
 } from './item-status.utils.data'
+
+describe('editedItems', () => {
+  const agent = {
+    actor: 'agent' as const,
+    agent_role: null,
+    user_id: null,
+    run_id: null,
+    step_id: null,
+  }
+  const itemOf = (id: string): ArtifactItem => ({
+    id,
+    artifact_id: 'a1',
+    project_id: 'p1',
+    key: id,
+    kind: 'spec_requirement',
+    parent_item_id: null,
+    position: 1,
+    outline_number: '1',
+    schema_version: 1,
+    version: 1,
+    content: {},
+    review_status: 'approved',
+    created_by: agent,
+    updated_by: agent,
+    created_at: '2026-10-06T08:00:00Z',
+    updated_at: '2026-10-06T08:00:00Z',
+  })
+
+  it('keeps the items that the user changed and that are still draft', () => {
+    const items: ArtifactItem[] = [
+      itemOf('edited'),
+      { ...itemOf('approved-by-user'), updated_by: { ...agent, actor: 'user' } },
+      {
+        ...itemOf('changed'),
+        review_status: 'draft',
+        updated_by: { ...agent, actor: 'user' },
+      },
+    ]
+
+    expect(editedItems(items).map(({ id }) => id)).toEqual(['changed'])
+  })
+})
 
 describe('itemStatus', () => {
   it.each(itemStatusCases)('reads $name', ({ item, status }) => {

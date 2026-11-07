@@ -1,15 +1,7 @@
 import type { Run, RunStep } from '@/modules/run/entities'
 
-import {
-  IdPrefix,
-  isoTime,
-  mockId,
-  personaIds,
-  projectIds,
-  runIds,
-  threadIds,
-  userId,
-} from '../../shared/db'
+import { itemFixtures } from '../../artifacts/fixtures/artifacts.fixtures'
+import { IdPrefix, isoTime, mockId, projectIds, runIds, threadIds, userId } from '../../shared/db'
 import type { MockRunStatus } from '../../shared/scenario'
 
 // Mock runs and run steps. The third run of the main thread of the mentor platform is the run of
@@ -22,6 +14,13 @@ const MINI = 'openai:gpt-4.1-mini'
 // The id of a step: the number of its run, then its sequence in the run.
 export const buildStepId = (runIndex: number, sequence: number) =>
   mockId(IdPrefix.Step, runIndex * 1000 + sequence)
+
+/** The id of the item of a project with this key, or the fallback for a key the mock data lacks. */
+function itemIdOf(projectId: string, key: string, fallback = mockId(IdPrefix.Item, 0)): string {
+  return (
+    itemFixtures.find((item) => item.project_id === projectId && item.key === key)?.id ?? fallback
+  )
+}
 
 /** The settings that the server gives a run when no level sets them. */
 export const defaultRunConfigFixture: Run['run_config'] = {
@@ -123,13 +122,13 @@ const finishedRuns: Run[] = [
   run({
     id: runIds.libraryMain1,
     number: 1,
-    step_count: 4,
+    step_count: 11,
     thread_id: threadIds.libraryMain,
     project_id: projectIds.library,
     status: 'running',
     current_stage: 'interviewing',
     usage: usage(0.06, 125_000, 6_400),
-    last_event_id: 16,
+    last_event_id: 34,
     started_at: '2026-10-03T10:10:00Z',
     finished_at: null,
   }),
@@ -239,9 +238,9 @@ function buildSteps(
   })
 }
 
-function interviewSpecs(personaIndex: number, turns: number): StepSpec[] {
+function interviewSpecs(projectId: string, personaIndex: number, turns: number): StepSpec[] {
   const personaKey = `PER-00${String(personaIndex + 1)}`
-  const subject = personaIds[personaIndex]
+  const subject = itemIdOf(projectId, personaKey)
   return Array.from({ length: turns * 2 }, (_, index) => {
     const isAsking = index % 2 === 0
     return {
@@ -250,10 +249,14 @@ function interviewSpecs(personaIndex: number, turns: number): StepSpec[] {
       stage: 'interviewing',
       seconds: 8,
       costUsd: 0.004,
-      ...(subject !== undefined && { subject }),
+      subject,
       produced: [
         {
-          item_id: `9d01${String(personaIndex)}${String(index).padStart(3, '0')}-0000-4000-8000-000000000001`,
+          item_id: itemIdOf(
+            projectId,
+            `${personaKey}#${String(index + 1)}`,
+            `9d01${String(personaIndex)}${String(index).padStart(3, '0')}-0000-4000-8000-000000000001`,
+          ),
           kind: 'interview_message',
           key: `${personaKey}#${String(index + 1)}`,
           version: 1,
@@ -263,8 +266,8 @@ function interviewSpecs(personaIndex: number, turns: number): StepSpec[] {
   })
 }
 
-const personas = ['PER-001', 'PER-002', 'PER-003'].map((key, index) => ({
-  item_id: personaIds[index] ?? key,
+const personas = ['PER-001', 'PER-002', 'PER-003'].map((key) => ({
+  item_id: itemIdOf(projectIds.mentor, key),
   kind: 'persona',
   key,
   version: 1,
@@ -281,9 +284,9 @@ const mentorRun3Specs: StepSpec[] = [
     produced: personas,
   },
   { node: 'checkpoint_personas', agentRole: null, stage: 'persona_review', seconds: 95 },
-  ...interviewSpecs(0, 12),
-  ...interviewSpecs(1, 9),
-  ...interviewSpecs(2, 10),
+  ...interviewSpecs(projectIds.mentor, 0, 12),
+  ...interviewSpecs(projectIds.mentor, 1, 9),
+  ...interviewSpecs(projectIds.mentor, 2, 10),
   { node: 'analyst', agentRole: 'analyst', stage: 'analysis', seconds: 53, costUsd: 0.065 },
   { node: 'checkpoint_analysis', agentRole: null, stage: 'analysis_review', seconds: 140 },
   {
@@ -349,17 +352,19 @@ const libraryRunSteps = buildSteps(runIds.libraryMain1, 6, '2026-10-03T10:10:00Z
     stage: 'persona_generation',
     seconds: 15,
     costUsd: 0.028,
+    produced: ['PER-001', 'PER-002', 'PER-003'].map((key) => ({
+      item_id: itemIdOf(projectIds.library, key),
+      kind: 'persona',
+      key,
+      version: 1,
+    })),
   },
   { node: 'checkpoint_personas', agentRole: null, stage: 'persona_review', seconds: 60 },
-  {
-    node: 'interviewer',
-    agentRole: 'interviewer',
-    stage: 'interviewing',
-    seconds: 4,
-    costUsd: 0.004,
-  },
+  // The interviews run one after another: Mai is done, Phong runs, and Phuc has not started.
+  ...interviewSpecs(projectIds.library, 0, 2),
+  ...interviewSpecs(projectIds.library, 1, 1),
 ]).map((step) =>
-  step.sequence === 4 ? { ...step, status: 'running' as const, finished_at: null } : step,
+  step.sequence === 11 ? { ...step, status: 'running' as const, finished_at: null } : step,
 )
 
 /** Every run of the mock data, with the run of the API examples in the given scenario. */

@@ -11,7 +11,7 @@ describe('the message API', () => {
   it('reads the messages of the mentor thread in the order they were sent', async () => {
     const page = await listThreadMessages(threadIds.mentorMain, null, 50)
 
-    expect(page.items.map(({ sequence }) => sequence)).toEqual([1, 2, 3, 4])
+    expect(page.items.map(({ sequence }) => sequence)).toEqual([1, 2, 3, 4, 5, 6])
     expect(page.next_cursor).toBeNull()
   })
 
@@ -21,7 +21,7 @@ describe('the message API', () => {
     const sent = await sendMessage(threadIds.mentorMain, { content: 'Another question.' }, 'key-1')
 
     expect(sent.message).toMatchObject({
-      sequence: 5,
+      sequence: 7,
       content: 'Another question.',
       delivery: 'started_run',
     })

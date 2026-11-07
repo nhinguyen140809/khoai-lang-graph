@@ -173,9 +173,16 @@ describe('ArtifactDocument of a transcript', () => {
   })
 
   it('ends with the status alone while the interview runs', async () => {
-    renderDocument('interview_transcript', { projectId: libraryProjectId })
+    const artifact = artifactFixtureByKind(
+      projectIds.library,
+      'interview_transcript',
+      'Interview with Phong',
+    )
+    renderWithProviders(
+      <LoadedDocument artifactId={artifact.id} isUnderReview={false} slots={{}} />,
+    )
 
-    expect(await screen.findByText('How do you book a study room today?')).toBeInTheDocument()
+    expect(await screen.findByText('How do you manage the bookings today?')).toBeInTheDocument()
     expect(screen.getByText('In progress')).toBeInTheDocument()
     expect(screen.queryByText('Stopping condition reached')).not.toBeInTheDocument()
   })

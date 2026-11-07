@@ -16,12 +16,12 @@ interface SimpleProject {
   projectId: string
   runId: string
   day: string
-  personas: [string, string]
+  personas: [string, string, ...string[]]
   requirements: [string, string, string]
-  /** The interview status of each persona; both completed by default. */
-  interviewStatuses?: [string, string]
-  /** An interview transcript, placed after the specification; none by default. */
-  interview?: ArtifactSpec
+  /** The interview status of each persona; all completed by default. */
+  interviewStatuses?: string[]
+  /** The interview transcripts, placed after the specification in order; none by default. */
+  interviews?: ArtifactSpec[]
 }
 
 const section = (key: string, title: string, children: ItemSpec[]): ItemSpec => ({
@@ -36,7 +36,7 @@ function simpleSpecs({
   personas,
   requirements,
   interviewStatuses,
-  interview,
+  interviews = [],
 }: SimpleProject): ArtifactSpec[] {
   const plan: ArtifactSpec = {
     kind: 'elicitation_plan',
@@ -69,7 +69,7 @@ function simpleSpecs({
       content: {
         name,
         stakeholder_type: index === 0 ? 'user' : 'administrator',
-        background: `${name} of the product.`,
+        background: 'Works with the product every day.',
         expertise: 'Knows the daily work.',
         goals: [requirements[index] ?? requirements[0]],
         interests: [],
@@ -113,7 +113,7 @@ function simpleSpecs({
       ),
     ],
   }
-  return [plan, catalog, specification, ...(interview === undefined ? [] : [interview])]
+  return [plan, catalog, specification, ...interviews]
 }
 
 function simple(project: SimpleProject): BuiltProject {
@@ -133,7 +133,7 @@ const projects: BuiltProject[] = [
     projectId: projectIds.campus,
     runId: runIds.campusMain1,
     day: '2026-10-05',
-    personas: ['Hungry student', 'Canteen cook'],
+    personas: ['Nam', 'Hoa'],
     requirements: ['Order from a menu', 'Pick up with a code', 'See the queue'],
   }),
   simple({
@@ -141,57 +141,102 @@ const projects: BuiltProject[] = [
     projectId: projectIds.library,
     runId: runIds.libraryMain1,
     day: '2026-10-03',
-    personas: ['Student', 'Librarian'],
+    personas: ['Mai', 'Phong', 'Phuc'],
     requirements: ['Book a study room', 'Book a seat', 'Release an unused booking'],
-    interviewStatuses: ['in_progress', 'not_started'],
-    interview: {
-      kind: 'interview_transcript',
-      title: 'Interview with the student',
-      summary: 'The student finds the free rooms gone by nine, booked by people who never come.',
-      status: 'draft',
-      subjectKey: 'PER-001',
-      content: {
-        participants: [
-          { key: 'interviewer', name: 'Interviewer', role: 'interviewer', item_id: null },
-          { key: 'PER-001', name: 'Student', role: 'persona', item_id: null },
-        ],
-        turn_count: 2,
-        status: 'in_progress',
-        stop_reason: null,
+    interviewStatuses: ['completed', 'in_progress', 'not_started'],
+    // The interview of Mai, completed, then the one of Phong, in progress.
+    interviews: [
+      {
+        kind: 'interview_transcript',
+        title: 'Interview with Mai',
+        summary: 'Mai finds the free rooms gone by nine, booked by people who never come.',
+        status: 'draft',
+        subjectKey: 'PER-001',
+        content: {
+          participants: [
+            { key: 'interviewer', name: 'Interviewer', role: 'interviewer', item_id: null },
+            { key: 'PER-001', name: 'Mai', role: 'persona', item_id: null },
+          ],
+          turn_count: 2,
+          status: 'completed',
+          stop_reason: 'stopping_condition_met',
+        },
+        // Key, then turn, speaker, content and topic; iteration 0.
+        items: (
+          [
+            ['PER-001#1', 1, 'interviewer', 'How do you book a study room today?', 'daily use'],
+            [
+              'PER-001#2',
+              1,
+              'PER-001',
+              'I ask at the desk, and the free rooms are gone by nine.',
+              'daily use',
+            ],
+            ['PER-001#3', 2, 'interviewer', 'What goes wrong once a room is booked?', 'problems'],
+            [
+              'PER-001#4',
+              2,
+              'PER-001',
+              'People book a room for the whole day and never come.',
+              'problems',
+            ],
+          ] as [string, number, string, string, string][]
+        ).map(([key, turn, speaker, content, topic]) => ({
+          key,
+          kind: 'interview_message',
+          content: { turn, speaker, content, iteration: 0, topic },
+        })),
       },
-      // Key, then turn, speaker, content and topic; iteration 0.
-      items: (
-        [
-          ['PER-001#1', 1, 'interviewer', 'How do you book a study room today?', 'daily use'],
-          [
-            'PER-001#2',
-            1,
-            'PER-001',
-            'I ask at the desk, and the free rooms are gone by nine.',
-            'daily use',
+      {
+        kind: 'interview_transcript',
+        title: 'Interview with Phong',
+        summary:
+          'Phong checks a notebook of bookings that the agents will replace with the system.',
+        status: 'draft',
+        subjectKey: 'PER-002',
+        content: {
+          participants: [
+            { key: 'interviewer', name: 'Interviewer', role: 'interviewer', item_id: null },
+            { key: 'PER-002', name: 'Phong', role: 'persona', item_id: null },
           ],
-          ['PER-001#3', 2, 'interviewer', 'What goes wrong once a room is booked?', 'problems'],
+          turn_count: 2,
+          status: 'in_progress',
+          stop_reason: null,
+        },
+        // Key, then turn, speaker, content and topic; iteration 0.
+        items: (
           [
-            'PER-001#4',
-            2,
-            'PER-001',
-            'People book a room for the whole day and never come.',
-            'problems',
-          ],
-        ] as [string, number, string, string, string][]
-      ).map(([key, turn, speaker, content, topic]) => ({
-        key,
-        kind: 'interview_message',
-        content: { turn, speaker, content, iteration: 0, topic },
-      })),
-    },
+            ['PER-002#1', 1, 'interviewer', 'How do you manage the bookings today?', 'daily use'],
+            [
+              'PER-002#2',
+              1,
+              'PER-002',
+              'We write them in a notebook, and the rooms are gone by nine.',
+              'daily use',
+            ],
+            ['PER-002#3', 2, 'interviewer', 'What goes wrong once a room is booked?', 'problems'],
+            [
+              'PER-002#4',
+              2,
+              'PER-002',
+              'People book a room for the whole day and never come.',
+              'problems',
+            ],
+          ] as [string, number, string, string, string][]
+        ).map(([key, turn, speaker, content, topic]) => ({
+          key,
+          kind: 'interview_message',
+          content: { turn, speaker, content, iteration: 0, topic },
+        })),
+      },
+    ],
   }),
   simple({
     n: 4,
     projectId: projectIds.laundry,
     runId: runIds.laundryMain1,
     day: '2026-09-20',
-    personas: ['Resident', 'Dorm manager'],
+    personas: ['Duc', 'Khanh'],
     requirements: ['Book a machine', 'Release an unused booking', 'See the free machines'],
   }),
   ...generatedProjectSpecs
@@ -202,7 +247,7 @@ const projects: BuiltProject[] = [
         projectId: mockId(IdPrefix.Project, spec.n),
         runId: mockId(IdPrefix.Run, spec.n * 10 + 1),
         day: spec.day,
-        personas: ['Regular user', 'Administrator'],
+        personas: ['Anh', 'Binh'],
         requirements: spec.requirements,
       }),
     ),

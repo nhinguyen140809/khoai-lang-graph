@@ -16,6 +16,9 @@ export const messageDeliveries = ['started_run', 'pending', 'delivered', 'undeli
 
 export type MessageDelivery = (typeof messageDeliveries)[number]
 
+/** Which note a message of the user reads while it waits: in the step that runs, after the review, or never. */
+export type MessageDeliveryNote = 'pendingInStep' | 'pendingInReview' | 'undelivered'
+
 /** A message of the chat between the user and the system, on the thread it belongs to. */
 export const messageSchema = z.object({
   id: z.string(),

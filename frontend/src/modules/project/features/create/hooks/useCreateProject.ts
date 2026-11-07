@@ -66,7 +66,7 @@ export function useCreateProject({
         }
       }
       try {
-        await sendFirstMessage(project.id, idea, idempotencyKey)
+        await sendFirstMessage(project.id, { content: idea }, idempotencyKey)
       } catch (error) {
         return { project, failure: { step: 'idea', error } satisfies FollowUpFailure }
       }

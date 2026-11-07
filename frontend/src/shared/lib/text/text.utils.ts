@@ -26,6 +26,16 @@ export function firstLineOf(text: string): string {
   return first === undefined ? '' : first.trim()
 }
 
+/** The parts that hold text, joined by `separator`, ", " by default. */
+export function joinPresent(
+  parts: readonly (string | null | undefined)[],
+  separator = ', ',
+): string {
+  return parts
+    .filter((part) => part !== null && part !== undefined && hasText(part))
+    .join(separator)
+}
+
 /** The article before a word, by the sound of its first letter, for a sentence that names it. */
 export function articleOf(word: string): string {
   return /^[aeiou]/i.test(word) ? 'an' : 'a'

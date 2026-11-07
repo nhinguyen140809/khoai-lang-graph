@@ -46,6 +46,7 @@ export {
   useProjectItemsOfKinds,
 } from './items/hooks/useItemQueries'
 export { useReloadArtifacts } from './items/hooks/useReloadArtifacts'
+export { useStageSubjects } from './items/hooks/useStageSubjects'
 export { itemHierarchy } from './items/item-hierarchy.utils'
 export {
   createItem,
@@ -69,8 +70,10 @@ export type {
   NestedOutlineItem,
   OutlineItem,
   ProjectItemFilters,
+  StageSubject,
   UpdateItemBody,
 } from './items/items.types'
+export { subjectTitlesOf } from './items/items.utils'
 export { documentBlocks, hasTranscript } from './outline/document-blocks.utils'
 export { useArtifactDocument } from './outline/hooks/useArtifactDocument'
 export { useArtifactOutline } from './outline/hooks/useArtifactOutline'
@@ -126,9 +129,11 @@ export {
   revisionAuthor,
   revisionKeyOf,
 } from './revisions/revisions.utils'
+export { useEditedItems } from './status/hooks/useEditedItems'
 export { useItemStatusLook } from './status/hooks/useItemStatusLook'
 export { attentionLevels, itemStatusLooks } from './status/item-status.constants'
 export type { AttentionLevel, ItemStatus, StatusCount } from './status/item-status.types'
+export { editedItems } from './status/item-status.utils'
 export {
   attentionCounts,
   attentionLevel,

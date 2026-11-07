@@ -46,6 +46,11 @@ export function attentionLevel(
   }
 }
 
+/** The items that the user changed and that are still draft, as `itemStatus` reads them. */
+export function editedItems(items: readonly ArtifactItem[]): ArtifactItem[] {
+  return items.filter((item) => itemStatus(item, []) === 'edited')
+}
+
 /**
  * How an item status shows in a document that is, or is not, under review: how much it asks of the
  * user (`level`), the color for that (`color`, null for the text color), the letter at the end of its

@@ -61,19 +61,19 @@ describe('usageOfMonth', () => {
 
 describe('budgetOfMonth', () => {
   it('is the budget that the server gives a user without one', () => {
-    expect(budgetOfMonth(4.755)).toBe(20)
+    expect(budgetOfMonth(4.775)).toBe(20)
   })
 
   it('is the budget of the user when there is one', () => {
     currentUser.set({ ...currentUser.get(), monthly_budget_usd: 50 })
 
-    expect(budgetOfMonth(4.755)).toBe(50)
+    expect(budgetOfMonth(4.775)).toBe(50)
   })
 
   it.each(budgetCases)('is $budget in the $scenario scenario', ({ scenario, budget }) => {
     openPage(`/?mock-budget=${scenario}`)
 
-    expect(budgetOfMonth(4.755)).toBe(budget)
+    expect(budgetOfMonth(4.775)).toBe(budget)
   })
 
   it('keeps the budget of the user for a month without cost', () => {

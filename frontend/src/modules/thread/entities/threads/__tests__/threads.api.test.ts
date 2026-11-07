@@ -56,7 +56,7 @@ describe('sendFirstMessage', () => {
       }),
     )
 
-    await sendFirstMessage('p1', 'An idea', 'key-1')
+    await sendFirstMessage('p1', { content: 'An idea' }, 'key-1')
 
     expect(keys).toEqual({ thread: null, message: 'key-1' })
   })

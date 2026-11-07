@@ -12,7 +12,7 @@ describe('usage api', () => {
 
     expect(usage.month).toBe('2026-10')
     expect(usage.budget_usd).toBe(20)
-    expect(usage.total.cost_usd).toBeCloseTo(4.755, 6)
+    expect(usage.total.cost_usd).toBeCloseTo(4.775, 6)
     expect(usage.groups).toEqual([])
   })
 

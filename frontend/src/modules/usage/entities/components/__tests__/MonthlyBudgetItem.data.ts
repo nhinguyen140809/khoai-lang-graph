@@ -10,11 +10,11 @@ export const monthlyBudgetShownCases: {
   {
     name: 'the meter near its limit',
     address: '/?mock-budget=warning',
-    shown: { percent: '86%', amounts: '$4.76 / $5.52' },
+    shown: { percent: '86%', amounts: '$4.78 / $5.55' },
   },
   {
     name: 'the meter nearly spent',
     address: '/?mock-budget=danger',
-    shown: { percent: '95%', amounts: '$4.76 / $5.00' },
+    shown: { percent: '95%', amounts: '$4.78 / $5.02' },
   },
 ]

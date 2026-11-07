@@ -1,3 +1,6 @@
 export { minuteMs } from './duration.constants'
+export type { RoundedDuration, RoundedDurationKind } from './duration.types'
+export { roundedDurationKinds } from './duration.types'
+export { msBetween, roundedDuration } from './duration.utils'
 export { formatDate, formatDateTime, formatDuration, formatRelativeTime } from './formatters.utils'
 export { useNow } from './hooks/useNow'

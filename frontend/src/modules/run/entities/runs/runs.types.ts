@@ -43,3 +43,16 @@ export const runSchema = z.object({
 })
 
 export type Run = z.infer<typeof runSchema>
+
+/** The codes that a failed run names in its error, from Runtime failures. */
+export const runErrorCodes = [
+  'provider_error',
+  'step_limit_exceeded',
+  'cost_limit_exceeded',
+  'budget_exceeded',
+  'timeout',
+  'item_conflict',
+  'server_restarted',
+] as const
+
+export type RunErrorCode = (typeof runErrorCodes)[number]
