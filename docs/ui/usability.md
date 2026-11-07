@@ -35,6 +35,7 @@ The current frame is in [Screen Skeletons](skeletons.md), the apps already studi
     - [7.5 Item peek](#75-item-peek)
     - [7.6 Search results](#76-search-results)
     - [7.7 Activity](#77-activity)
+    - [7.8 Trace](#78-trace)
   - [8. Size, text and words](#8-size-text-and-words)
   - [9. Avoiding a generated look](#9-avoiding-a-generated-look)
   - [10. Reference apps and guidelines](#10-reference-apps-and-guidelines)
@@ -81,7 +82,7 @@ The brief. Each line says where it comes from: read in the docs, or guessed and 
 | Second user | The researcher: runs the same workflow and inspects runs, steps, cost and state | Docs |
 | Platform | Desktop browser | Docs |
 | Differentiator | Every requirement traces back to a quote in an interview with a persona (`evidenced_by`) | Docs |
-| Vocabulary | Known to the user: idea, persona, interview, requirement, priority, user story, backlog. Unknown: run, thread, step, node, checkpoint, interrupt, trace, token, workflow version, item keys | Guessed |
+| Vocabulary | Known to the user: idea, persona, interview, requirement, priority, user story, backlog, trace (following a requirement to where it comes from and to what was built from it). Unknown: run, thread, step, node, checkpoint, interrupt, token, workflow version, item keys | Guessed |
 
 The job of each screen. The column "Decides with" is what the user compares to reach the final action, so it must be the most visible content of that screen.
 
@@ -97,6 +98,8 @@ The job of each screen. The column "Decides with" is what the user compares to r
 | Developer view | Debug and compare runs (researcher) | Graph, steps, state, cost, model per role | Retry from a step; open the trace | The current frame (LangGraph Studio, Langfuse) |
 
 Items carry many fields: a specified requirement has 9, a persona 11, five of them lists. A document is read as a whole, but an item is read and edited on its own, so items need their own place in the navigation and their own page, not only a row of the document.
+
+In the user view, Trace means following a requirement to where it comes from and to what was built from it ([7.8](#78-trace)). The trace of a run is another object, which the developer view alone names "Run trace", so the two words never meet.
 
 The differentiator appears on the item page as its source quote ([7.4](#74-item-page)), not only on a traceability page.
 
@@ -145,7 +148,7 @@ Moving every developer element into another corner of the user view gives a scre
 | Side panel: artifact tree down to the items | Translate | The side panel of Documents: the documents of the project with their marks, and under the open one its sections and items, down to every item, see [5.3](#53-inside-a-document-sections-and-items) |
 | Editor tabs and split editor | Keep | As in VS Code: a single click opens the preview tab, a double click keeps it; at most two groups side by side, see [5.6](#56-tabs) |
 | Editor: an item opened in a tab | Keep | The item page, with its own URL, see [5.4](#54-opening-an-item) |
-| Bottom panel: TRACE | On demand | "Source" shown on the item page; "Based on and used by" collapsed under it |
+| Bottom panel: TRACE | Translate | "See its trace" in the menu of the item page opens the chain of the item as a graph, in the Trace feature, see [7.8](#78-trace) |
 | Bottom panel: TIMELINE | On demand | "History" collapsed on the item page |
 | Status bar: run state and stage | Translate | The status bar stays at the bottom, in user words: "Working: Interviewing", "Waiting for you: Analysis review", with `Open review` or `Stop`; a review that starts also shows a notification, see [5.2](#52-where-the-project-stands) |
 | Status bar: step number, workflow version | Developer view | - |
@@ -163,8 +166,8 @@ Moving every developer element into another corner of the user view gives a scre
 | Runs and their steps | Translate | The steps of the current work as a tree in the side panel of Activity, in user words, see [5.7](#57-activity); the list of runs and the details of a step stay in the developer view |
 | Retry from a step | Developer view | "Try again" on a failed run retries from the last completed step |
 | Workflow state tree, link to the trace | Developer view | - |
-| Traceability matrix | Keep | The Trace feature on the activity bar, and the export "Traceability matrix" |
-| Coverage counts | Translate | The side panel of Trace, in user words: "2 requirements have no user story" |
+| Traceability matrix | Developer view | The user view follows one item through its chain, the Trace feature of [7.8](#78-trace); the matrix itself stays in the developer view, in a later build; the export keeps its name |
+| Coverage counts | Translate | The side panel of Trace, one row per gap with its count, in the words the workflow definition or the server gives, see [7.8](#78-trace) |
 | Settings: General | Keep | Project settings |
 | Settings: review at each checkpoint, number of personas | Keep | Project settings |
 | Settings: max steps, max turns, max iterations, max cost | On demand | "Advanced" section of Project settings, collapsed |
@@ -200,7 +203,7 @@ The hardest decision to reverse: routes, components and copy all follow it. It m
 | Activity | The steps of the work as a tree, marked as the run goes; the chat opens in a tab, see [5.7](#57-activity) | Yes, first on the bar | Yes (the current Console) |
 | Documents | The documents with their marks, and the outline of the open one, see [5.3](#53-inside-a-document-sections-and-items) | Yes | Yes (the current Artifacts) |
 | Search | A query box, filters and the results, see [5.5](#55-search) | Yes | Yes |
-| Trace | The coverage counts and the views of traceability, as in the current frame, in user words | Yes | Yes |
+| Trace | The overview of what needs attention, the tree of the documents and their items, and the chain of a chosen item as a graph, see [7.8](#78-trace) | Yes | Yes |
 | Workflow | The runs and their steps; the graph opens in a tab | No | Yes |
 | Settings | The sections of the project settings; at the bottom of the bar | Yes | Yes |
 | Sources (later) | The uploaded documents | When in scope | When in scope |
@@ -775,6 +778,47 @@ Activity on the activity bar while the agents interview the librarian: the steps
 - The chat is a tab like any other: it stays open beside a document in a second group ([5.6](#56-tabs)), and the preview tab of a document opened from an entry does not replace it.
 - A key in an entry opens the item in a peek ([7.5](#75-item-peek)); a document in an entry opens it in the preview tab.
 
+### 7.8 Trace
+
+Trace while the specification of the mentor platform is under review: the overview and the tree of the documents in the side panel, and the chain of one requirement as a graph. The layout is in the [wireframe](wireframes/s4-trace.html); the words and the rules are below.
+
+```text
++----------------------------------------------------------------------------------------------+
+| khoai / Mentor platform     [ Search or run a command   Ctrl+K ]                      (NT)   |
++----------+--------------------------+--------------------------------------------------------+
+|>  [W]    | Overview                 | [Trace of Layered booking flow] x                      |
+|> Trace   |   Requirements with-      +--------------------------------------------------------+
+|          |   out a user story   3   |                                                        |
+|   [D]    |   Requirements with-      |  Interview, student                                    |
+|Documents |   out a source       2   |     ^                                                  |
+|          |   Links to check     2   |     |  Based on                                       |
+|   [S]    |   Open issues        3   |     v                                                 |
+|  Search  |                          |  Students book a session at once                       |
+|          | Documents                |     ^                                                  |
+|          | v Interview transcripts  |     |  Based on (!) made from version 3              |
+|          | v Requirements analysis  |     v                                                 |
+|          |     (!) Layered book...  |  Layered booking flow                                  |
+|          |     ( ) Filter by fi...  |     ^                                                  |
+|          | v Requirement specif...  |     |  Concerns                                       |
+|          |     ( ) Search mentors   |     v                                                 |
+|          |                          |  Fast has no number                                    |
+|          |                          |                                                        |
+|   [*]    |                          |  (?) How to read the lines                             |
+| Settings |                          |  v Read the links as a list                            |
++----------+--------------------------+--------------------------------------------------------+
+```
+
+- **The word.** Trace means following a requirement to where it comes from and to what was built from it. The trace of a run is another object, "Run trace", which only the developer view names.
+- **The side panel, two sections.** "Overview" holds one row per gap of the coverage, its title and its one-sentence description from the workflow definition or the server (version 1: "Requirements without a user story", "Requirements without a source", "Links to check"), each with its count in the tone of its level of attention, neutral at zero; "Open issues" closes the section with its count. "Documents" holds the documents of the project and, under an open document, its items, in the layout and the colors of the tree of Documents, with marks of its own: a document row shows up to two counts (its items that need a check, its items missing a link or still open), never a letter; an item row shows the icon of its level of attention, with its reasons in a tooltip, and no mark when the item needs nothing. A row of a gap opens its page in the preview tab; a click on an item opens its chain.
+- **The start page.** When no item is chosen, the page says what Trace is, carries the sentence "Choose an item in the side panel to follow where it comes from and what was built from it.", and offers "Show the open issues".
+- **The chain of an item.** "Trace of Layered booking flow" opens in a tab of its own. The graph reads left to right: the interviews on the left, the backlog on the right, and an arrow goes from an item to the item it is based on, so the title of the link reads along the arrow, pointing left. A chain never turns: it is what the item is based on, followed back to the interviews, and what was built from it, followed forward to the backlog; a sibling is not in the chain, since its own chain shows it.
+- **A node and an edge.** A node names an item by its kind and its title, the key only in its tooltip; the node of the item of the page is marked. An edge carries the title of its link, and its look says how much the link asks of the user, by the level of attention, not by good or bad: act (the item it is based on changed after the link was made), a solid thick warning line; follow (the link comes from an open issue), a dashed line in the primary tone; none, a solid thin muted line; quiet (an end was rejected or replaced), a dotted thin muted line. "How to read the lines" states each sentence again in a legend.
+- **Choosing a link.** A click on an edge selects it: the edge takes its selected stroke, and the words that the link quotes show inside the node of each side that has them, with "made from version N" beside the title of an out of date link. The selection clears on a click elsewhere, on Escape, on a node, or moves to another link.
+- **The actions.** The menu of a node (a right click, the menu key, or its "..." button) holds "Open", "Open in a new tab", "See its trace" and "Link to another item"; the menu of an edge holds "Show the quoted words" and "Remove this link". A link may change only while the document of its source takes changes: a link is a statement about its source, so an action that would change it sits disabled, with the reason. The item page gathers its actions the same way: one "..." button beside the title holds "Edit", "See its trace" and "Link to another item", and the document page the same button with "Edit".
+- **A gap.** A gap opens a page in a tab with its description and its items, each named by its kind and its title with its document; a click on one shows its chain. A gap the coverage no longer lists says "This list is not shown anymore."
+- **The open issues.** One card per issue: its kind and its title, its status, "The problem" with what the issue says, "Where it applies" with each item it concerns and the words it quotes, and "Between" with the people a disagreement involves; the card ends with "Open" and "See its trace".
+- **One set of words.** A link is a link in both views: "Link to another item", "Remove this link", "See its trace". The traceability matrix is the developer view alone, in a later build. Under the graph, "Read the links as a list" writes one sentence per link ("Layered booking flow is based on Students book a session at once."), for a screen reader and for a user who prefers text.
+
 ## 8. Size, text and words
 
 ### 8.1 Two densities, one design system
@@ -916,7 +960,7 @@ What makes a screen look generated, and what to do instead:
 9. **Peek or page from a row.** The key of a row opens a peek and its title opens the page; if tests show that users mostly read items in full, the key opens the page instead.
 10. **Stage titles for the user.** Settled: the status bar shows the `title` of the current stage. A stage marked `internal`, such as "Intent routing", is not shown, and the status bar keeps the title of the previous stage. The wireframes in this page still show the earlier wording, such as "Waiting for you: Analysis review"; their boxes are drawn for the shorter text and are not redrawn.
 11. **Preview tab for non-developers.** Whether the italic title is enough for a non-developer to notice that the next click replaces the tab ([5.6](#56-tabs)); if tests show it is not, a clearer mark on the tab. Also open: whether the open tabs come back when the project opens again on another device.
-12. **Trace on the activity bar.** A feature of its own, as proposed, or a view inside Documents if tests show that users seldom open it.
+12. **Trace on the activity bar.** Settled (2026-11-07): a feature of its own, named "Trace", as proposed; the matrix of the developer view is a later build.
 13. **Name of the feature of the agents.** Activity, as proposed in [5.7](#57-activity), or another name of its table, and the label of its input box.
 14. **Stages that a run skips in Activity.** The tree lists every stage of the definition in the order of `stages`, so a stage that a run never reaches (an optional branch of an experiment) stays not started, as a document does in [open point 1](#11-open-points), and the same choice applies. The first and the last stage of version 1, intent routing and done, name no work for the user; the skeleton of [7.7](#77-activity) leaves them out, which needs the mark of an internal stage of [open point 10](#11-open-points).
 
