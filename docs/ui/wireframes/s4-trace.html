@@ -1,0 +1,338 @@
+<!doctype html>
+<html lang="en">
+  <head>
+    <meta charset="utf-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1" />
+    <title>Wireframe: Trace, the chain of an item, the gaps and the open issues (layout only)</title>
+    <script src="https://cdn.jsdelivr.net/npm/@tailwindcss/browser@4"></script>
+    <style type="text/tailwindcss">
+      /* Tokens of the project, copied from frontend/src/app/styles.css (:root, Night Owl Light). */
+      :root {
+        --font-ui: 'Mona Sans Variable', -apple-system, BlinkMacSystemFont, 'Segoe UI', system-ui, sans-serif;
+        --font-code: 'Noto Sans Mono Variable', ui-monospace, Menlo, Consolas, monospace;
+        --background: #fbfbfb;
+        --foreground: #403f53;
+        --card: #f0f0f0;
+        --primary: #3460be;
+        --primary-foreground: #ffffff;
+        --muted: #e0e7ea;
+        --muted-foreground: #4b6875;
+        --accent: #d3e8f8;
+        --destructive: #b50c1b;
+        --success-strong: #056e50;
+        --warning: #ffa37f;
+        --warning-strong: #a94e28;
+        --border: #cedadf;
+        --input: #c5d4da;
+        --sidebar: #f0f0f0;
+        --sidebar-accent: #d3e8f8;
+        --radius: 0.375rem;
+      }
+      @theme inline {
+        --font-sans: var(--font-ui);
+        --font-mono: var(--font-code);
+        --color-background: var(--background);
+        --color-foreground: var(--foreground);
+        --color-card: var(--card);
+        --color-primary: var(--primary);
+        --color-primary-foreground: var(--primary-foreground);
+        --color-muted: var(--muted);
+        --color-muted-foreground: var(--muted-foreground);
+        --color-accent: var(--accent);
+        --color-destructive: var(--destructive);
+        --color-success-strong: var(--success-strong);
+        --color-warning: var(--warning);
+        --color-warning-strong: var(--warning-strong);
+        --color-border: var(--border);
+        --color-input: var(--input);
+        --color-sidebar: var(--sidebar);
+        --color-sidebar-accent: var(--sidebar-accent);
+        --radius-md: calc(var(--radius) * 0.8);
+        --radius-lg: var(--radius);
+      }
+      @layer base {
+        body { @apply bg-background text-foreground font-sans text-sm; }
+      }
+    </style>
+  </head>
+  <body class="space-y-10 p-6">
+    <!-- One frame per state. Layout only: section 11.1 of the S4 plan gives the component, props, icon and tone of each part. Signs such as (!), (o), ... and [pencil] stand for icons. -->
+
+    <!-- 1. Trace: the side panel (Overview, Documents) and the chain of one item, a link chosen, a node menu open. -->
+    <section class="space-y-2">
+      <h2 class="text-base font-semibold">1. Trace, the chain of an item</h2>
+      <div class="flex h-[40rem] w-[80rem] overflow-hidden rounded-lg border border-border">
+        <!-- Activity bar -->
+        <div class="flex w-20 shrink-0 flex-col items-center gap-3 border-r border-border bg-sidebar py-3 text-[10px] text-muted-foreground">
+          <span>Activity</span><span>Documents</span><span>Search</span>
+          <span class="font-bold text-foreground">Trace</span><span>Settings</span>
+        </div>
+
+        <!-- TracePanel -->
+        <div class="w-72 shrink-0 space-y-4 overflow-hidden border-r border-border bg-sidebar p-3 text-xs">
+          <p class="text-sm font-semibold">Trace</p>
+          <div class="space-y-1">
+            <p class="font-semibold text-muted-foreground">Overview</p>
+            <div class="flex items-center justify-between rounded-md px-2 py-1.5" title="Links whose earlier item changed after they were made.">
+              <span>Links to check</span><span class="rounded-md bg-warning/35 px-1.5 text-warning-strong">1</span>
+            </div>
+            <div class="flex items-center justify-between rounded-md px-2 py-1.5">
+              <span>Requirements without a source</span><span class="rounded-md bg-accent px-1.5 text-primary">1</span>
+            </div>
+            <div class="flex items-center justify-between rounded-md px-2 py-1.5">
+              <span>Requirements without a user story</span><span class="rounded-md bg-accent px-1.5 text-primary">2</span>
+            </div>
+            <div class="flex items-center justify-between rounded-md px-2 py-1.5">
+              <span>Open issues</span><span class="rounded-md bg-warning/35 px-1.5 text-warning-strong">3</span>
+            </div>
+          </div>
+          <div class="space-y-0.5">
+            <p class="font-semibold text-muted-foreground">Documents</p>
+            <div class="flex items-center gap-1 rounded-md px-2 py-1.5">
+              <span class="w-3 text-muted-foreground">&gt;</span>
+              <span class="text-muted-foreground">Interview transcripts</span>
+            </div>
+            <div class="flex items-center gap-1 rounded-md px-2 py-1.5">
+              <span class="w-3 text-muted-foreground">v</span>
+              <span class="min-w-0 flex-1 truncate"><span class="text-muted-foreground">Analysis</span> Requirements analysis</span>
+              <span class="rounded-md bg-warning/35 px-1.5 text-warning-strong" title="2 items need your check.">2</span>
+              <span class="rounded-md bg-accent px-1.5 text-primary" title="1 item is missing a link or concerned by an open issue.">1</span>
+            </div>
+            <div class="flex items-center gap-1 rounded-md py-1.5 pl-7 pr-2">
+              <span class="min-w-0 flex-1 truncate">Search mentors by field</span>
+              <span class="text-primary" title="An open ambiguity issue concerns this item.">(o)</span>
+            </div>
+            <div class="flex items-center gap-1 rounded-md bg-sidebar-accent py-1.5 pl-7 pr-2">
+              <span class="min-w-0 flex-1 truncate font-bold">Layered booking flow</span>
+              <span class="text-warning-strong" title="An open conflict concerns this item.">(!)</span>
+            </div>
+            <div class="flex items-center gap-1 rounded-md py-1.5 pl-7 pr-2">
+              <span class="min-w-0 flex-1 truncate">Mentor availability</span>
+            </div>
+            <div class="flex items-center gap-1 rounded-md px-2 py-1.5">
+              <span class="w-3 text-muted-foreground">&gt;</span>
+              <span class="min-w-0 flex-1 truncate"><span class="text-muted-foreground">Specification</span> Requirement specification</span>
+              <span class="rounded-md bg-accent px-1.5 text-primary">2</span>
+            </div>
+          </div>
+          <p class="text-[10px] text-muted-foreground">Marks: (!) needs your check, (o) something is not settled yet. The sketch draws the icons as text.</p>
+        </div>
+
+        <!-- ItemChainPage -->
+        <div class="flex min-w-0 flex-1 flex-col">
+          <div class="flex h-8 shrink-0 items-center border-b border-border bg-sidebar px-2 text-xs">
+            <span class="rounded-md bg-background px-2 py-1 italic">Trace of Layered booking flow</span>
+          </div>
+          <div class="space-y-2 px-5 pt-4">
+            <h1 class="text-2xl font-semibold">Trace of Layered booking flow</h1>
+            <p class="text-muted-foreground">The items on the left are what this item is based on, down to the interviews. The items on the right were built from it.</p>
+          </div>
+
+          <!-- The graph: nodes placed by the layout; arrows point to the item each one is based on. -->
+          <div class="relative m-5 min-h-0 flex-1 rounded-md border border-border bg-card">
+            <svg class="absolute inset-0 h-full w-full" aria-hidden="true">
+              <defs>
+                <marker id="arrow-none" viewBox="0 0 10 10" refX="9" refY="5" markerWidth="7" markerHeight="7" orient="auto-start-reverse">
+                  <path d="M0,0 L10,5 L0,10 z" class="fill-muted-foreground" />
+                </marker>
+                <marker id="arrow-act" viewBox="0 0 10 10" refX="9" refY="5" markerWidth="7" markerHeight="7" orient="auto-start-reverse">
+                  <path d="M0,0 L10,5 L0,10 z" class="fill-warning-strong" />
+                </marker>
+                <marker id="arrow-follow" viewBox="0 0 10 10" refX="9" refY="5" markerWidth="7" markerHeight="7" orient="auto-start-reverse">
+                  <path d="M0,0 L10,5 L0,10 z" class="fill-primary" />
+                </marker>
+                <marker id="arrow-chosen" viewBox="0 0 10 10" refX="9" refY="5" markerWidth="7" markerHeight="7" orient="auto-start-reverse">
+                  <path d="M0,0 L10,5 L0,10 z" class="fill-foreground" />
+                </marker>
+              </defs>
+              <!-- RAW-004 -> MSG-012 (Evidenced by), none -->
+              <line x1="232" y1="90" x2="196" y2="90" class="stroke-muted-foreground" stroke-width="1" marker-end="url(#arrow-none)" />
+              <!-- AR-003 -> RAW-004 (Based on), chosen: drawn in the text color -->
+              <line x1="452" y1="90" x2="416" y2="90" class="stroke-foreground" stroke-width="2.5" marker-end="url(#arrow-chosen)" />
+              <!-- REQ-002 -> AR-003 (Based on), act: thick warning -->
+              <line x1="672" y1="90" x2="636" y2="90" class="stroke-warning-strong" stroke-width="2.5" marker-end="url(#arrow-act)" />
+              <!-- US-004 -> REQ-002 (Based on), none -->
+              <line x1="892" y1="90" x2="856" y2="90" class="stroke-muted-foreground" stroke-width="1" marker-end="url(#arrow-none)" />
+              <!-- CONF-001 -> AR-003 (Concerns), follow: dashed primary -->
+              <line x1="544" y1="232" x2="544" y2="168" class="stroke-primary" stroke-width="1.5" stroke-dasharray="6 4" marker-end="url(#arrow-follow)" />
+            </svg>
+
+            <!-- Edge labels -->
+            <span class="absolute left-[196px] top-[64px] rounded bg-background px-1 text-[10px] text-muted-foreground">Evidenced by</span>
+            <span class="absolute left-[420px] top-[64px] rounded bg-background px-1 text-[10px] font-bold">Based on</span>
+            <span class="absolute left-[632px] top-[64px] rounded bg-background px-1 text-[10px] text-warning-strong">Based on, made from version 1</span>
+            <span class="absolute left-[856px] top-[64px] rounded bg-background px-1 text-[10px] text-muted-foreground">Based on</span>
+            <span class="absolute left-[552px] top-[192px] rounded bg-background px-1 text-[10px] text-primary">Concerns</span>
+
+            <!-- Nodes: kind (small), title (main), key last (small) -->
+            <div class="absolute left-[16px] top-[40px] w-44 rounded-lg border border-border bg-background p-2 text-xs">
+              <p class="text-[10px] text-muted-foreground">Interview message</p>
+              <p class="font-semibold">The student, answer 4</p>
+            </div>
+            <div class="absolute left-[236px] top-[40px] w-44 rounded-lg border border-border bg-background p-2 text-xs">
+              <p class="text-[10px] text-muted-foreground">Stated need</p>
+              <p class="font-semibold">Students book a session at once</p>
+              <blockquote class="mt-1 border-l-2 border-warning px-1 text-[10px] text-muted-foreground">"book a slot right away"</blockquote>
+            </div>
+            <div class="absolute left-[456px] top-[40px] w-44 rounded-lg border-2 border-primary bg-background p-2 text-xs">
+              <div class="flex items-start justify-between">
+                <p class="text-[10px] text-muted-foreground">Analyzed requirement</p><span class="text-muted-foreground">...</span>
+              </div>
+              <p class="font-semibold">Layered booking flow</p>
+              <blockquote class="mt-1 border-l-2 border-primary px-1 text-[10px] text-muted-foreground">"a student books at once, and the admin can approve later"</blockquote>
+            </div>
+            <div class="absolute left-[676px] top-[40px] w-44 rounded-lg border border-warning-strong bg-background p-2 text-xs">
+              <p class="text-[10px] text-muted-foreground">Specified requirement</p>
+              <p class="font-semibold">Book a session</p>
+            </div>
+            <div class="absolute left-[896px] top-[40px] w-44 rounded-lg border border-border bg-background p-2 text-xs">
+              <p class="text-[10px] text-muted-foreground">User story</p>
+              <p class="font-semibold">Book a mentor in two clicks</p>
+            </div>
+            <div class="absolute left-[456px] top-[236px] w-44 rounded-lg border border-primary bg-background p-2 text-xs">
+              <p class="text-[10px] text-muted-foreground">Conflict, open</p>
+              <p class="font-semibold">Who approves a booking</p>
+            </div>
+
+            <!-- Context menu of the node REQ-002 (right click or its "..." button) -->
+            <div class="absolute left-[760px] top-[120px] w-56 rounded-md border border-border bg-background p-1 text-xs shadow-md">
+              <p class="rounded px-2 py-1.5">Open</p>
+              <p class="rounded px-2 py-1.5">Open in a new tab</p>
+              <p class="rounded bg-accent px-2 py-1.5">See its trace</p>
+              <p class="rounded px-2 py-1.5 text-muted-foreground" title="Only the documents under review can change now.">Link to another item</p>
+            </div>
+
+            <!-- Legend -->
+            <div class="absolute bottom-3 left-3 w-[34rem] space-y-0.5 rounded-md border border-border bg-background p-2 text-[10px]">
+              <p><span class="text-warning-strong">Thick orange line.</span> The item it is based on changed after the link was made. Check that both still agree.</p>
+              <p><span class="text-primary">Dashed blue line.</span> It comes from an open issue that is not settled yet.</p>
+              <p><span class="text-muted-foreground">Thin gray line.</span> The link needs nothing from you.</p>
+              <p><span class="text-muted-foreground">Dotted gray line.</span> It touches an item that was rejected or replaced.</p>
+            </div>
+          </div>
+          <p class="px-5 pb-3 text-xs text-primary">Read the links as a list</p>
+        </div>
+      </div>
+    </section>
+
+    <!-- 2. The open issues: the problem, where it applies with the quoted words, the sides. -->
+    <section class="space-y-2">
+      <h2 class="text-base font-semibold">2. Open issues</h2>
+      <div class="w-[52rem] space-y-4 rounded-lg border border-border p-5">
+        <h1 class="text-2xl font-semibold">Open issues</h1>
+        <p class="text-muted-foreground">Each issue is a question that the agents could not settle alone. Each card says what the problem is, where it applies, and which words of the requirements it is about.</p>
+        <h2 class="text-lg font-semibold">Conflicts <span class="font-normal text-muted-foreground">1</span></h2>
+        <div class="space-y-3 rounded-lg border border-border p-4">
+          <div class="flex items-start justify-between">
+            <div>
+              <p class="text-xs text-muted-foreground">Conflict</p>
+              <h3 class="text-base font-semibold">Who approves a booking</h3>
+            </div>
+            <span class="rounded-md bg-warning/35 px-2 py-0.5 text-xs text-warning-strong">Open</span>
+          </div>
+          <div class="space-y-1">
+            <h4 class="text-sm font-semibold">The problem</h4>
+            <p>The student wants to book a session at once, and the admin wants to approve each session before it is booked.</p>
+          </div>
+          <div class="space-y-1">
+            <h4 class="text-sm font-semibold">Between</h4>
+            <p>The student and the admin.</p>
+          </div>
+          <div class="space-y-2">
+            <h4 class="text-sm font-semibold">Where it applies</h4>
+            <div class="space-y-1 rounded-md bg-card p-2 text-xs">
+              <p><span class="text-muted-foreground">Analyzed requirement</span> <a class="text-primary">Layered booking flow</a> <span class="text-muted-foreground">in Requirements analysis</span></p>
+              <blockquote class="border-l-2 border-warning pl-2 text-muted-foreground">"a student books at once, and the admin can approve later"</blockquote>
+            </div>
+            <div class="space-y-1 rounded-md bg-card p-2 text-xs">
+              <p><span class="text-muted-foreground">Stated need</span> <a class="text-primary">Admin approves each session</a> <span class="text-muted-foreground">in Requirements analysis</span></p>
+              <blockquote class="border-l-2 border-warning pl-2 text-muted-foreground">"I want to say yes to every session first"</blockquote>
+            </div>
+          </div>
+          <div class="flex gap-2">
+            <span class="rounded-md border border-border px-3 py-1 text-xs font-medium">Open</span>
+            <span class="rounded-md border border-border px-3 py-1 text-xs font-medium">See its trace</span>
+          </div>
+        </div>
+      </div>
+    </section>
+
+    <!-- 3. The item page: an icon button (MoreHorizontalIcon) in place of Edit, its menu open. -->
+    <section class="space-y-2">
+      <h2 class="text-base font-semibold">3. Item page, the menu of actions</h2>
+      <div class="relative h-64 w-[52rem] space-y-2 rounded-lg border border-border p-5">
+        <div class="flex items-center gap-3">
+          <h1 class="text-xl font-semibold">Layered booking flow</h1>
+          <span class="rounded-md px-2 py-1 text-xs font-medium" title="More actions">...</span>
+        </div>
+        <p class="text-xs text-muted-foreground">Analyzed requirement, Draft, version 2 <span class="font-mono">AR-003</span></p>
+        <p class="text-xs"><span class="text-muted-foreground">Based on</span> <span class="rounded-md border border-border px-2 py-0.5">Students book a session at once</span></p>
+        <div class="absolute left-[15rem] top-[3.5rem] w-60 rounded-md border border-border bg-background p-1 text-xs shadow-md">
+          <p class="rounded px-2 py-1.5">[pencil] Edit</p>
+          <p class="rounded bg-accent px-2 py-1.5">[waypoints] See its trace</p>
+          <p class="rounded px-2 py-1.5">[link] Link to another item</p>
+        </div>
+      </div>
+    </section>
+
+    <!-- 4. Link two items. -->
+    <section class="space-y-2">
+      <h2 class="text-base font-semibold">4. Link to another item</h2>
+      <div class="w-[34rem] space-y-3 rounded-lg border border-border bg-background p-5 text-sm">
+        <h3 class="text-lg font-semibold">Link Layered booking flow to another item</h3>
+        <p class="text-muted-foreground">A link records that this item is based on another item, or that it is about another item. The agents read the links when they work again.</p>
+        <div class="space-y-1">
+          <p class="text-xs font-semibold">Kind of link</p>
+          <div class="rounded-md border border-input px-2 py-1.5">Based on</div>
+        </div>
+        <div class="space-y-1">
+          <p class="text-xs font-semibold">Other item</p>
+          <div class="rounded-md border border-input px-2 py-1.5">book at once</div>
+          <div class="rounded-md border border-border text-xs">
+            <div class="bg-accent px-2 py-1.5"><p class="text-[10px] text-muted-foreground">Stated need</p><p>Students book a session at once <span class="font-mono text-[10px] text-muted-foreground">RAW-004</span></p></div>
+            <div class="px-2 py-1.5"><p class="text-[10px] text-muted-foreground">Latent need</p><p>Book without waiting <span class="font-mono text-[10px] text-muted-foreground">LN-002</span></p></div>
+          </div>
+        </div>
+        <p class="rounded-md bg-card px-2 py-1.5 text-xs">Layered booking flow will be based on Students book a session at once.</p>
+        <div class="space-y-1">
+          <p class="text-xs font-semibold">Note</p>
+          <div class="h-12 rounded-md border border-input px-2 py-1 text-xs text-muted-foreground">Optional. Say why the two items are linked.</div>
+        </div>
+        <div class="flex justify-end gap-2">
+          <span class="rounded-md border border-border px-3 py-1.5 text-xs font-medium">Cancel</span>
+          <span class="rounded-md bg-primary px-3 py-1.5 text-xs font-medium text-primary-foreground">Add the link</span>
+        </div>
+      </div>
+    </section>
+
+    <!-- 5. Remove a link: destructive confirm. -->
+    <section class="space-y-2">
+      <h2 class="text-base font-semibold">5. Remove a link</h2>
+      <div class="w-[34rem] space-y-3 rounded-lg border border-border bg-background p-5 text-sm">
+        <h3 class="text-lg font-semibold">Remove this link?</h3>
+        <p class="text-muted-foreground">Layered booking flow will no longer be based on Students book a session at once. The link leaves the graph, the lists and the pages of both items.</p>
+        <div class="flex justify-end gap-2">
+          <span class="rounded-md border border-border px-3 py-1.5 text-xs font-medium">Cancel</span>
+          <span class="rounded-md bg-destructive px-3 py-1.5 text-xs font-medium text-primary-foreground">Remove the link</span>
+        </div>
+      </div>
+    </section>
+
+    <!-- 6. A gap: its description and its items. -->
+    <section class="space-y-2">
+      <h2 class="text-base font-semibold">6. A gap</h2>
+      <div class="w-[52rem] space-y-3 rounded-lg border border-border p-5">
+        <h1 class="text-2xl font-semibold">Requirements without a user story</h1>
+        <p class="text-muted-foreground">These specified requirements have no user story in the backlog that is built from them yet.</p>
+        <div class="divide-y divide-border rounded-md border border-border text-sm">
+          <div class="flex items-baseline gap-2 px-3 py-2">
+            <span class="text-xs text-muted-foreground">Specified requirement</span><a class="text-primary">Notify the mentor</a><span class="ml-auto text-xs text-muted-foreground">in <span class="text-[10px]">Specification</span> <span class="text-foreground">Requirement specification</span></span>
+          </div>
+          <div class="flex items-baseline gap-2 px-3 py-2">
+            <span class="text-xs text-muted-foreground">Specified requirement</span><a class="text-primary">Export the sessions</a><span class="ml-auto text-xs text-muted-foreground">in <span class="text-[10px]">Specification</span> <span class="text-foreground">Requirement specification</span></span>
+          </div>
+        </div>
+      </div>
+    </section>
+  </body>
+</html>
