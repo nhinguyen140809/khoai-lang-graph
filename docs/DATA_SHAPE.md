@@ -578,7 +578,7 @@ The answer to an interrupt, given by the user or taken from the defaults. Kept p
 | `option` | string? | Key of the chosen option. Null only when the interrupt has no options |
 | `feedback` | string? | Required when the chosen option requires feedback |
 | `answers` | map\<string, Answer\> | One entry per answered question, by question key |
-| `modified_items` | ItemRef[] | Items the user edited before answering; each points at the new version. Allowed only when the interrupt allows edits. The deck calls this field `modified_artifacts` |
+| `modified_items` | ItemRef[] | Items the user edited before answering; each points at the new version. Allowed only when the interrupt allows edits. When the chosen option does not approve, these items keep their versions, and the agents read them with the feedback before they write again. The deck calls this field `modified_artifacts` |
 
 `Answer` is `{ choice_keys: string[], text: string?, number: number? }`, one shape for every question type:
 
