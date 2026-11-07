@@ -41,7 +41,7 @@ Section 3 is added to the sections of the prompt, as the user asked for the arch
 
 | | |
 |---|---|
-| Needs | E3 (#41), S1a (#57, #58), S1b (#62, #63), S2a.0 (the trace topics); `ProjectRunStreams` of P7 (#49) |
+| Needs | E3 (#41), S1a (#57, #58), S1b (#62, #63), S2a.0 (the trace topics); `useProjectRunResult` of P7 (#49) |
 | After it | The matrix in the developer view (section 16), S5, S6 (which reuses the graph layout) |
 | Docs first | (1) When a link may change (A1). (2) That `direction=both` of the trace of an item is two walks, one each way, never a walk that changes direction (A2). (3) The titles and descriptions of the gaps in natural language, from the definition when it names the gap, else from the server (A6). S4.D (`4a84de16`) writes the three. (4) What Trace shows, which Usability does not describe (A3 to A12): the answers go to `docs/ui/usability.md` on `frontend-plan` before S4.2 |
 | Sketch | [`docs/ui/wireframes/s4-trace.html`](ui/wireframes/s4-trace.html): the layout of the side panel, the chain graph with a chosen link and a node menu, a gap, the open issues, the item menu, the add and remove dialogs. It is a layout only: the look of each part is section 11.1, and where the sketch writes a word in place of an icon (the tree marks, the menu button, the legend button), the icon of section 11.1 is built |
@@ -86,7 +86,7 @@ The agent builds the proposal; the user confirms or changes each before the PR t
 
 ```text
 app/(project)/projects/[projectId]/
-  layout.tsx                       traceDestination, TraceDialogs, TraceCommands
+  layout.tsx                       traceDestination, TraceDialogs, TraceCommands, TraceStreams
   trace/page.tsx                   -> TraceHomePage   (traceability/widgets/home)
   trace/items/[itemId]/            -> ItemTracePage         (traceability/widgets/chain)
   trace/gaps/[gapKey]/             -> GapPage               (traceability/widgets/gap)
@@ -96,16 +96,17 @@ app/(project)/projects/[projectId]/
 
 traceability  (new module, widgets only: the screen Trace)
   panel   TracePanel = OverviewSection + TraceTree; traceDestination
-  home, chain, gap, issues, commands
+  home, chain, gap, issues, commands, streams
       reads: trace, artifact, workflow, documents, project
 documents     widgets/item, widgets/document: the menu of actions
 trace         entities: links, chains, traceability, item-links, issues (new topic), graph (moved here)
               features: add-link, remove-link (new)
               widgets: dialogs (new)
       reads: workflow, artifact
-artifact      features/edit: EditRecordMenuItem (new beside EditRecordButton)
+artifact      features/edit: useEditRecordAction (new beside EditRecordButton)
 shared        RecordName (S2b), Tree, Flow, Node, Edge (+ weight), ContextMenu, DropdownMenu,
-              ConfirmDialog, createPendingActionStore, fetchAllPages, layoutLayered (new)
+              DropdownActionItem and ContextActionItem (new), ConfirmDialog, createPendingActionStore,
+              fetchAllPages, layoutLayered (new), usePrefersReducedMotion (new)
 ```
 
 `traceability` sits above `documents` because the lock of a link (A1) is the lock of the document of its source, which `documents/entities` reads from the run, the review and the project. `trace` stays under `run` and `review`; its features take the lock as a prop (FSD strategy C), as the features of `artifact` do. The pure rule that turns a trace into a graph moves from `trace/widgets/graph` to `trace/entities/graph`, since the chain page of `traceability` reads it and a widget never imports another widget.
@@ -126,7 +127,7 @@ pure rules         chainGraphOf(trace, context)          nodes and edges with th
 entity hooks       useItemChain(projectId, itemId)       joins the trace, the kinds, the titles, the coverage
   |                                                      and the issues; a union with `state`
 features           useAddLink, useRemoveLink  mutations; on success invalidate traceModuleKeys.all()
-  |                AddLinkMenuItem, ...             menu items that open the dialogs through their stores
+  |                useAddLinkAction, ...            actions for the menus; `run` opens the dialog through its store
 widgets            ItemTracePage                         lays out (useChainLayout), draws (Flow), puts the
   |                                                      feature items in the menus with the lock; no rule
 app                page.tsx, layout.tsx                  mount pages, destination, dialogs, commands
@@ -147,7 +148,7 @@ Side panel: TraceTree
   useProjectAttention(projectId)        --> Map<itemId, ItemAttention>   (coverage and open issues)
   document row: the count of its items at act and at follow (two badges)
   item row: the icon of its level and the reasons in its tooltip
-  click an item --> openPage(routes.project(id).traceItem(itemId))
+  click an item --> openPage(routes.project(id).itemTrace(itemId))
 
 Chain page: ItemTracePage
   useItemChain(projectId, itemId):
@@ -157,8 +158,8 @@ Chain page: ItemTracePage
     chainGraphOf(trace, { focusId, titleOf, kindTitleOf, linkTitleOf, attentionOf })
   useChainLayout(graph)   --> layoutLayered (elk, imported on first use), cached by the graph ids
   Flow draws ChainNode and ChainEdge; the chosen link is a state of the page
-  node menu  --> useOpenPage, traceItem(id) in place, AddLinkMenuItem(lock)
-  edge menu  --> show the quotes, RemoveLinkMenuItem(lock)
+  node menu  --> useOpenPage, itemTrace(id) in place, useAddLinkAction(lock)
+  edge menu  --> show the quotes, useRemoveLinkAction(lock)
   lock       --> useEditLockReason(projectId, source.artifact_id) for the item of the menu
 
 Link two items (from the item page menu or a node menu)
@@ -176,7 +177,7 @@ Open issues page
 
 While the agents write
   the coverage, the issues and the chain read with refetchInterval = liveTraceMs (5000 ms) while
-  useIsProjectWriting(projectId); ProjectRunStreams reloads traceModuleKeys.all() on a status change
+  useIsProjectWriting(projectId); TraceStreams (mounted by the layout) reloads the trace once when it turns false
 ```
 
 ### What reloads what
@@ -186,14 +187,14 @@ While the agents write
 | A link added or removed by the user | Every query of the trace module: chains, item links, coverage, issues | `invalidateQueries({ queryKey: traceModuleKeys.all() })` in the mutation |
 | An item edited (S1b) | The traces, as today (`useReloadTraces`), so an edge that becomes out of date shows it | Unchanged |
 | The agents write | The coverage, the issues and the chain on screen, every 5 s | `refetchInterval` given by the widgets |
-| The run stops writing | One last load | `ProjectRunStreams` adds `traceModuleKeys.all()` to what it reloads |
+| The run stops writing | One last load | `TraceStreams` of `traceability/widgets/streams` calls `useReloadTraces` once when `useIsProjectWriting` turns from true to false (`project` may not read `trace`, so `ProjectRunStreams` does not change) |
 | The graph data changes | The layout, once per set of node and edge ids | `useChainLayout` keyed by those ids |
 
 ## 4. Decisions
 
 ### Modules and maintenance (S4.0)
 
-1. **A screen module `traceability`, apart from the module `trace`.** The module `trace` holds the links as objects: their entities, and the features that change them. The screen Trace puts together the data of several modules (`trace`, `artifact`, `workflow`, the lock of `documents`, the run of `project`), as Activity and Documents do, so it is a module of its own above them (Web App Modules 9), and `trace` does not grow a screen. `trace` may not read `documents`, which reads `trace`, so the screen could not sit in `trace` anyway. `traceability` holds widgets only: `panel`, `home`, `chain`, `gap`, `issues`, `commands`. `moduleImports` gains `traceability: ['workflow', 'artifact', 'trace', 'run', 'review', 'thread', 'project', 'documents']` in a `build` commit (first in S4.1), with its case in `lint/configs/__tests__/configs.test.js`. Its name is the one of the API (`/traceability`) and differs from `trace`, so that an import says which one it means; the screen reads "Trace".
+1. **A screen module `traceability`, apart from the module `trace`.** The module `trace` holds the links as objects: their entities, and the features that change them. The screen Trace puts together the data of several modules (`trace`, `artifact`, `workflow`, the lock of `documents`, the run of `project`), as Activity and Documents do, so it is a module of its own above them (Web App Modules 9), and `trace` does not grow a screen. `trace` may not read `documents`, which reads `trace`, so the screen could not sit in `trace` anyway. `traceability` holds widgets only: `panel`, `home`, `chain`, `gap`, `issues`, `commands`, `streams`. `moduleImports` gains `traceability: ['workflow', 'artifact', 'trace', 'run', 'review', 'thread', 'project', 'documents']` in a `build` commit (first in S4.1), with its case in `lint/configs/__tests__/configs.test.js`. Its name is the one of the API (`/traceability`) and differs from `trace`, so that an import says which one it means; the screen reads "Trace".
 2. **The trace graph moves to the entity.** `trace/widgets/graph/` (`traceGraphOf`, its types and test) moves with `git mv` to `trace/entities/graph/`, a topic of `trace` that reads `chains` and `links`; `trace/widgets/graph` is removed. The rule names no screen, so it belongs to the entity; the chain page of `traceability` reads it there.
 3. **An item names itself by its kind and its title; a key is optional and always last** (the user, 2026-11-07, S2b decision 17). The key is shown only where it helps: in the search results of the add dialog (a user may type a key), on the key line of the item page, and in the tooltip of a node. Elsewhere it is left out, since it adds a word the user does not read: the nodes, the rows of the tree, the rows of a gap, the cards of the issues and the chips show the kind and the title only. The screens of S1b that put the key first change in S4.0: `ItemKeyLine` reads "Analyzed requirement, Draft, version 2" and then the key, small and muted, at the end; the chips of the link line show the title, and the card of a chip the kind and the title. They use `RecordName` and `RecordNameTooltip` of `shared/components/ui/record-name.tsx` (S2b decision 17), whose `code` is optional; when S2b has not merged, S4.0 adds that file with its test and S2b takes it.
 
@@ -202,20 +203,20 @@ While the agents write
 4. **The chain is two walks, one each way** (A2). `useItemTrace(itemId, { direction: 'both', depth: chainDepth })`, `chainDepth = 10`: version 1 has at most five levels from a message to a backlog item, plus the issues that concern them, so 10 reaches both ends. The API answers both walks with the items and links found; S4.D states that a walk never turns. The client adds no walk of its own.
 5. **Attention of a link and of an item, by how much to act** (A7). Pure rules in `trace/entities/graph/attention.utils.ts`, on the levels of `attentionLevels` of `artifact/entities` (act, follow, none, quiet, with their tones), read through `artifact/entities/@x/trace`. Only the scale is shared with Documents; the rules that put a link or an item on a level are those below.
    - `linkAttention(link, ends, issueKinds)`: `act` when `isLinkOutOfDate(link, target)` (the item it is based on changed after the link was made); `quiet` when either end is `rejected` or `superseded`; `follow` when the source is an open issue (`isOpenIssue`); `none` otherwise. The first rule that holds, in this order: act, quiet, follow, none.
-   - `itemAttention(item, context)`: `act` when the item is in a gap whose key is in `actGapKeys` (`['needs_review']`) or an open issue concerns or flags it; `follow` when the item is in another gap (a missing source or user story) or is itself an open issue; `quiet` when it is `rejected` or `superseded`; `none` otherwise. Each level carries its reasons in user words (the description of the gap, or "An open conflict concerns this item."), for the tooltips.
+   - `itemAttention(item, context)`: `act` when the item is in a gap whose key is in `actGapKeys` (`['needs_review']`; a gap of another key, also one that a later version adds, is `follow`, so it shows without a client change, at the lower level) or an open issue concerns or flags it; `follow` when the item is in another gap (a missing source or user story) or is itself an open issue; `quiet` when it is `rejected` or `superseded`; `none` otherwise. Each level carries its reasons in user words (the description of the gap, or "An open conflict concerns this item."), for the tooltips.
    - `useProjectAttention(projectId, options)` in `trace/entities/graph/hooks/useGraphQueries.ts`: joins `useTraceabilityCoverage` and `useOpenIssues` and gives `Map<itemId, ItemAttention>` with `state`.
 6. **The chain as a graph.** `chainGraphOf(trace, context)` in `trace/entities/graph/trace-graph.utils.ts` replaces `traceGraphOf`: nodes with `kindTitle`, `title`, `key`, `reviewStatus`, `attention`, `isFocus`; edges with `linkTitle`, `attention`, `sourceQuote`, `targetQuote`, `madeFromVersion` (when out of date). `useItemChain(projectId, itemId, options)` in `hooks/useGraphQueries.ts` gives an `ItemChainResult`: `pending`, `error` with `retry`, `notFound`, `success` with `graph` and `focus` (the node of the item).
 7. **Open issues with their words** (A11). `trace/entities/issues/`: `openIssueEntries(items, links, context)`: for each open issue (`isOpenIssue` with the kinds of the definition), in kind order then key order, the issue, its problem text (`mainField` of its schema), its subjects (the targets of its links of the issue link types, each with the link and its `target_quote`), and its sides (the targets of its `involves` links). `issueLinkTypesOf(definition, issueKinds)` (workflow): the link types with a pair whose source lists an issue kind and whose target is not an `interview_message` (version 1: `concerns`, `flags`). `useOpenIssues(projectId, options)`: one query under `issueKeys.ofProject`, reading in parallel every page of the items of the project and of the links of each issue link type and of `involves`, giving an `OpenIssuesResult` with `groups` and `count`. `artifact/entities/issues/issuesWithSubjects` stays for the attention counts of Documents.
-8. **Live while the agents write.** `useTraceabilityCoverage`, `useOpenIssues` and `useItemTrace` take `refetchInterval?: number | false`; the widgets give `liveTraceMs` (5000) while `useIsProjectWriting(projectId)` (new, `project/entities/run-status/hooks/useProjectRunResult.ts`) is true. `ProjectRunStreams` reloads `traceModuleKeys.all()` on a status change.
+8. **Live while the agents write.** `useTraceabilityCoverage`, `useOpenIssues` and `useItemTrace` take `refetchInterval?: number | false`; the widgets give `liveTraceMs` (5000) while `useIsProjectWriting(projectId)` (new in `project/entities/run-status/hooks/useProjectRunResult.ts`, exported by the `index.ts` of `project/entities`, since a widget reads an entity through its public API and `@x` is only between entities) is true. The last load after the agents stop is `TraceStreams({ projectId })` of `traceability/widgets/streams`, mounted once by the project layout, with `useReloadTraceWhenAgentsStop(projectId)`: a `useRef` of the last value and an effect inside the hook that calls `useReloadTraces()` once on true to false. `ProjectRunStreams` does not change: `project` may not import `trace` (`moduleImports`). TanStack Query keeps the data object when a refetch answers the same data (structural sharing), so the graph and its layout are not derived again every 5 s.
 9. **The link types from a source and the targets.** `linkTypesFrom(definition, sourceKind)` (workflow): the link types with a pair whose source lists the kind, without `duplicates` and `supersedes` (the rework of the agents), each with its title and target kinds. `useLinkTargets(projectId, { kinds, text, excludeId })` (trace links hooks): the first page (20) of `listProjectItems(projectId, { kind: kinds, text })` without the source.
 10. **The layout is shared code.** `layoutLayered({ nodes, edges }, { width, height, direction })` in `shared/lib/graph/layout.utils.ts`: elk `layered`, loaded with `import()` on the first call, giving positions by node id; it names no object of the product, and S6 uses it for the workflow. `Edge` of `shared/components/ui/edge.tsx` gains `weight: 'thin' | 'regular' | 'strong'` (1, 1.5 and 2.5 px through `--xy-edge-stroke-width`), added the way its `variant` is (a map, a `data-weight` attribute), and shown on the design system page. `edge.tsx` exports its two maps (`edgeLineStyles`, `edgeWeights`), so that the legend of the trace page draws its samples from the same values (section 11.1).
 
 ### Features (S4.2)
 
 11. **When a link may change** (A1). Every action on a link takes `lockedReason: string | null` of the document of its source: the caller gives `useEditLockReason(projectId, source.artifact_id)`. The words are those of `editAccessMessages`. The mock refuses a link change outside that state with `409 invalid_state` (section 13).
-12. **Link two items**: `trace/features/add-link`. `AddLinkMenuItem({ source, lockedReason, menu })` (with `LinkIcon`) opens `AddLinkDialog` through `useOpenAddLinkDialog(sourceItemId)`. The form (`add-link.schema.ts`): `linkType` (required), `targetItemId` (required), `note` (optional, at most 500 characters; an empty note sends null). No quote (section 16). It sends `createTraceLink`; success: the toast, `invalidateQueries(traceModuleKeys.all())`, the dialog closes; a `422` on the field it names; a `409` shows the lock reason.
-13. **The actions of an item in one menu** (A10). `documents/widgets/item` replaces `EditRecordButton` with `ItemActionsMenu` (in the file of `ItemPage`), shaped as `ProjectActionsMenu` of `project/widgets/list`: a `DropdownMenu` on `Button variant="ghost" size="icon-sm"` with `MoreHorizontalIcon` and a `sr-only` name the menu button, inside a `Tooltip` with the same words. Its items, each an icon and words (section 11.1): `EditRecordMenuItem` (new in `artifact/features/edit`, beside `EditRecordButton`, the same rule and lock), "See its trace" (a navigation to `traceItem(itemId)`), `AddLinkMenuItem`. `DocumentPage` gets `DocumentActionsMenu` with `EditRecordMenuItem`. When the edit mode ends, the focus goes back to the menu button, the role that `EditRecordButton` had.
-14. **Remove a link**: `trace/features/remove-link`. `RemoveLinkMenuItem({ link, lockedReason, menu })` (destructive tone, `UnlinkIcon`) opens `RemoveLinkDialog` (`ConfirmDialog destructive`) through `useOpenRemoveLinkDialog(linkKeyOf(sourceItemId, linkId))`; only the dialog calls `useRemoveLink`. It sits in the menu of an edge, and in the card of an outgoing chip of the item page (the card of `LinkedItemsPopover` gains an `actions` slot). The dialogs are mounted once by `trace/widgets/dialogs` (`TraceDialogs`) in the project layout.
+12. **Link two items**: `trace/features/add-link`. The feature gives the action, not a menu item: `useAddLinkAction(source, lockedReason)` returns `{ label, icon: LinkIcon, disabledReason, run }`, where `run` opens `AddLinkDialog` through `useOpenAddLinkDialog(sourceItemId)`; the menus of the widgets draw it with `DropdownActionItem` or `ContextActionItem` (decision 25), so the feature knows no menu. The form (`add-link.schema.ts`): `linkType` (required), `targetItemId` (required), `note` (optional, at most 500 characters; an empty note sends null). No quote (section 16). It sends `createTraceLink`; success: the toast, `invalidateQueries(traceModuleKeys.all())`, the dialog closes; a `422` on the field it names; a `409` shows the lock reason.
+13. **The actions of an item in one menu** (A10). `documents/widgets/item` replaces `EditRecordButton` with `ItemActionsMenu` (in the file of `ItemPage`), shaped as `ProjectActionsMenu` of `project/widgets/list`: a `DropdownMenu` on `Button variant="ghost" size="icon-sm"` with `MoreHorizontalIcon` and a `sr-only` name the menu button, inside a `Tooltip` with the same words. Its items, each an icon and words (section 11.1), drawn with `DropdownActionItem`: `useEditRecordAction(target, lockedReason)` (new in `artifact/features/edit`, beside `EditRecordButton`, the same rule and lock), "See its trace" (a navigation to `itemTrace(itemId)`), `useAddLinkAction`. `DocumentPage` gets `DocumentActionsMenu` with `useEditRecordAction`. When the edit mode ends, the focus goes back to the menu button, the role that `EditRecordButton` had.
+14. **Remove a link**: `trace/features/remove-link`. `useRemoveLinkAction(link, lockedReason)` returns `{ label, icon: UnlinkIcon, tone: 'destructive', disabledReason, run }`; `run` opens `RemoveLinkDialog` (`ConfirmDialog destructive`) through `useOpenRemoveLinkDialog(linkKeyOf(sourceItemId, linkId))`; only the dialog calls `useRemoveLink`. It sits in the menu of an edge, and in the card of an outgoing chip of the item page (the card of `LinkedItemsPopover` gains an `actions` slot). The dialogs are mounted once by `trace/widgets/dialogs` (`TraceDialogs`) in the project layout.
 
 ### Widgets (S4.3)
 
@@ -223,7 +224,7 @@ While the agents write
     - "Overview": one row per gap of the coverage (its title from the API, a `Badge` with the count, `variant="soft"` in the tone of the level of the gap above zero and `neutral` at zero, its description in the tooltip), then "Open issues" with its count. A row opens its page in the preview tab; a double click keeps it.
     - "Documents": `TraceTree`, the documents of the project and their items, on `Tree` of `shared/components/ui` with the row layout and the colors of the tree of Documents (indentation, chevrons, row height, selected fill) but its own marks. A document row shows the kind and the title of its document and up to two count badges (its items at act, its items at follow), never a letter. An item row shows its title, with the icon of its level (`CircleAlertIcon` for act, `CircleDashedIcon` for follow) and the reasons in its tooltip; a row at none shows no mark. A click on an item opens its chain; the item of the chain on screen is selected.
     - `traceDestination(projectId)` in `trace-frame.config.tsx`: `id: 'trace'`, `label: 'Trace'`, `icon: <WaypointsIcon />`, `href: routes.project(projectId).trace()`, `paths: ['/projects/<id>/trace']`.
-16. **The start page.** `TraceHomePage`, in a tab "Trace": a sentence that says what the feature shows, "Choose an item in the side panel to follow where it comes from and what was built from it.", and the overview of the side panel repeated as a short list of links, for a narrow window where the side panel is closed.
+16. **The start page.** `TraceHomePage`, in a tab "Trace": the description and the sentence "Choose an item in the side panel to follow where it comes from and what was built from it.", in an `Empty` with `WaypointsIcon`, and one `Button variant="outline" size="sm"` "Show the open issues". It does not repeat the overview of the side panel: a widget does not import another widget (`panel`), and a second copy of the overview would be a copy of its rule. On a narrow window the side panel opens over the page, as for Documents.
 17. **A gap** (A12). `GapPage({ projectId, gapKey })`, in a tab named after the gap: its description, then its items, each a row with `RecordName layout="line"` (kind, title, key last) and the kind and title of its document, muted; a click opens its chain in the preview tab. A key that the coverage no longer lists: `NotFoundState` "This list is not shown anymore." with a link to the start page.
 18. **The open issues** (A11). `OpenIssuesPage`, in a tab "Open issues": one section per issue kind with its count; one `Item variant="outline"` per issue: the kind (small, muted) and the title as a heading, its status value as a `Badge`; "The problem" with the problem text; "Where it applies" with each subject (`RecordName`, its document, the quoted words in a `blockquote`); "Between" with the sides (personas) for a conflict; the buttons "Open" and "See its trace". Empty: `EmptyState` with the sentence of section 12.
 19. **One set of words for a link** (A4). Both views say "link": "Link to another item", "Remove this link", "See its trace". The developer view adds nothing of its own here; the trace of a run, which is another object, is "Run trace" in S6.
@@ -234,7 +235,9 @@ While the agents write
 21. **The layout** (A5). `useChainLayout(graph)` (`traceability/widgets/chain/hooks/`): a `useQuery` keyed by the ids of the nodes and the edges, calling `layoutLayered(graph, { width: chainNodeWidth, height: chainNodeHeight, direction: 'LEFT' })`, so the targets (the interviews) sit on the left and the arrows of the links point left. While it lays out: `LoadingState`; a failure: `ErrorState` with Try again.
 22. **A node and an edge.** `ChainNode` (a custom node of `Flow`, in the file of the page) shows the kind, the title and, when the item is not a draft, its review status; the key is not in the node (decision 3) but in its tooltip with the kind and the title. A "more" icon button shows on hover and on focus. The node of the item of the page is marked. `ChainEdge` draws the link with the line of its level (A7), an arrow at its target, and its link title as the label in the middle, cut with "..." past `max-w-32`. Section 11.1 gives the component and the props of each part.
 23. **Choosing a link** (A8). The page keeps `selectedLinkId` in a `useState` of `useChainSelection`. A click on an edge or its label selects it; the edge takes its selected stroke; `ChainNode` of its source shows `sourceQuote`, and the node of its target `targetQuote`, each in a `blockquote` with the quote color of `quoteMarkColors`, under the title; a side without words shows nothing. The selection clears on a click on the canvas, on Escape, on a node, or moves to another edge. A link that is out of date also shows "made from version N" in its label while it is chosen.
-24. **Menus on a node and on an edge** (A9). `ContextMenu` of `shared/components/ui` on each node and edge, opened by a right click, the menu key or Shift+F10, and by the "..." button of a node. Node: "Open" (preview tab), "Open in a new tab" (`useOpenPage` with `keep`), "See its trace" (this tab, `inPlace`), `AddLinkMenuItem` with the lock of the document of that item. Edge: "Show the quoted words" (chooses the link; disabled when neither side has words), `RemoveLinkMenuItem` with the lock of the document of the source. A click on a node opens the item page in the preview tab; a double click shows its chain in this tab.
+24. **Menus on a node and on an edge** (A9). A node: `ContextMenu` of `shared/components/ui` around the content of `ChainNode`, opened by a right click, a long press on a touch screen, the menu key or Shift+F10, and by its "more" button. An edge: Radix `ContextMenu` does not open from the path of an SVG edge, so the label of the edge holds a controlled `DropdownMenu`; `onEdgeContextMenu` of `Flow` chooses the link and opens that menu at the label, and the menu key opens it while the edge has the focus. Node menu: "Open" (preview tab), "Open in a new tab" (`useOpenPage` with `keep`), "See its trace" (this tab, `inPlace`), the action of `useAddLinkAction` with the lock of the document of that item. Edge menu: "Show the quoted words" (chooses the link; disabled when neither side has words), the action of `useRemoveLinkAction` with the lock of the document of the source. The lock is read by `NodeMenuContent` and `EdgeMenuContent` (in the file of the page), which mount only while their menu is open, so one `useEditLockReason` runs at a time, not one per node. A click on a node opens the item page in the preview tab; a double click shows its trace in this tab.
+25. **Two shared menu items.** `DropdownActionItem` and `ContextActionItem` in `shared/components/ui/action-menu-item.tsx`: each takes `{ icon, label, disabledReason, tone, onSelect }`, draws `DropdownMenuItem` or `ContextMenuItem` with the icon, the label and `variant="destructive"` for `tone="destructive"`, and wraps a disabled item in `DisabledReason`. They name no object of the product. `ProjectActionsMenu` keeps its items in this PR (section 16).
+26. **The canvas.** `chainNodeTypes` and `chainEdgeTypes` are constants at the top of the file of the page, never objects made in render, so `Flow` does not remount the nodes. The nodes and edges of `Flow` are a `useMemo` of the graph, the positions and the chosen link. `nodesFocusable` and `edgesFocusable` are on; `onlyRenderVisibleElements` is on from `chainVisibleOnlyFrom` (100) nodes. The "more" button of a node has the classes `nodrag nopan` of `@xyflow/react`, so a click on it neither drags the node nor pans the canvas, and it is always visible on a touch screen (`pointer-coarse:opacity-100`). `fitView` takes `duration: 0` while `usePrefersReducedMotion()` (new, `shared/lib/viewport/hooks/`, `matchMedia('(prefers-reduced-motion: reduce)')` through `useSyncExternalStore`) is true, else 200 ms.
 
 ## 5. Scope
 
@@ -252,11 +255,13 @@ While the agents write
 | Part | Rule | Name |
 |---|---|---|
 | Screen module | The subject, as the API names it | `traceability` |
-| Widget slices | The block | `panel`, `home`, `chain`, `gap`, `issues`, `commands` (`traceability`); `dialogs` (`trace`) |
+| Widget slices | The block | `panel`, `home`, `chain`, `gap`, `issues`, `commands`, `streams` (`traceability`); `dialogs` (`trace`) |
 | Feature slices | The action | `add-link`, `remove-link` |
-| Components of an action | `<Verb><Object><Role>` | `AddLinkMenuItem`, `AddLinkDialog`, `RemoveLinkMenuItem`, `RemoveLinkDialog`, `EditRecordMenuItem` |
+| Components of an action | `<Verb><Object><Role>` | `AddLinkDialog`, `RemoveLinkDialog` |
+| Action hooks for a menu | `use<Verb><Object>Action` | `useAddLinkAction`, `useRemoveLinkAction`, `useEditRecordAction` |
+| Shared menu items | The menu and its role | `DropdownActionItem`, `ContextActionItem`, `ItemAction` |
 | Components of a block | `<Object><Block>` | `TracePanel`, `OverviewSection`, `TraceTree`, `TraceHomePage`, `ItemTracePage`, `ChainNode`, `ChainEdge`, `GapPage`, `OpenIssuesPage`, `IssueCard`, `ItemActionsMenu`, `DocumentActionsMenu` |
-| Components that render nothing in place | `...Dialogs`, `...Commands` | `TraceDialogs`, `TraceCommands` |
+| Components that render nothing in place | `...Dialogs`, `...Commands`, `...Streams` | `TraceDialogs`, `TraceCommands`, `TraceStreams` |
 | Mutation hooks | `use<Verb><Object>` | `useAddLink`, `useRemoveLink` |
 | Dialog store hooks | As the prompt names them | `useOpenAddLinkDialog`, `useAddLinkDialog`, `useOpenRemoveLinkDialog`, `useRemoveLinkDialog` |
 | Entity hooks | What they give | `useItemChain`, `useProjectAttention`, `useOpenIssues`, `useLinkTargets`, `useIsProjectWriting` |
@@ -265,8 +270,8 @@ While the agents write
 | Pure rules | What they give | `chainGraphOf`, `linkAttention`, `itemAttention`, `openIssueEntries`, `issueLinkTypesOf`, `linkTypesFrom`, `linkKeyOf`, `parseLinkKey`, `linkSentence`, `layoutLayered` |
 | Types | The object and what it is | `ChainGraph`, `ChainNodeData`, `ChainEdgeData`, `ItemAttention`, `OpenIssueEntry`, `LinkTypeChoice` |
 | Words | `<topic>Messages` | `tracePanelMessages`, `traceHomeMessages`, `itemTraceMessages`, `gapPageMessages`, `openIssuesMessages`, `addLinkMessages`, `removeLinkMessages`, `itemActionsMessages` |
-| Constants | camelCase | `chainDepth`, `liveTraceMs`, `actGapKeys`, `chainNodeWidth`, `chainNodeHeight`, `linkTargetsPageSize`, `noteMaxLength` |
-| Routes | What they open | `trace()`, `traceItem(itemId)`, `traceGap(gapKey)`, `traceIssues()` |
+| Constants | camelCase | `chainDepth`, `liveTraceMs`, `actGapKeys`, `chainVisibleOnlyFrom`, `chainNodeWidth`, `chainNodeHeight`, `linkTargetsPageSize`, `noteMaxLength` |
+| Routes | What they open | `trace()`, `itemTrace(itemId)`, `traceGap(gapKey)`, `traceIssues()` |
 | Command ids | `<module>.<action>` | `trace.issues`, `trace.addLink` |
 
 ## 7. Shared code first
@@ -283,7 +288,7 @@ While the agents write
 | `createPendingActionStore`, `fetchAllPages`, `debounce`, `errorMessageOf` | `shared/lib`, `shared/api` | Dialogs, issues, search, errors |
 | `getItemTrace`, `useItemTrace`, `useTraceabilityCoverage`, `createTraceLink`, `deleteTraceLink`, `listProjectTraceLinks`, `isLinkOutOfDate`, `quoteMarkColors`, `LinkedItemsPopover`, `traceModuleKeys` | `trace/entities` | The chain, the actions |
 | `attentionLevels`, `AttentionLevel`, `listProjectItems`, `useItem`, `useItemHref`, `reviewStatus` | `artifact/entities` | Levels, items, addresses |
-| The hooks of `EditRecordButton` | `artifact/features/edit` | `EditRecordMenuItem` |
+| The hooks of `EditRecordButton` | `artifact/features/edit` | `useEditRecordAction` |
 | `canLinkTypeConnect`, `targetKindsOf`, `useLinkTitleOf`, `useIssueKinds`, `isOpenIssue`, `mainField`, `itemTitle`, `useKindTitleOf`, `useContentSchemas`, `useWorkflowDefinition` | `workflow/entities` | Link types, issues, words |
 | `useDocumentList`, `useDocumentOutline`, `useEditLockReason`, `editAccessMessages` | `documents/entities` | The tree, the lock |
 | `shownRun`, `useProjectRunResult` | `project/entities` | `useIsProjectWriting` |
@@ -294,6 +299,8 @@ While the agents write
 |---|---|---|---|
 | `layoutLayered` | `shared/lib/graph/layout.utils.ts` | The chain page; S6 | `layoutGraph` of `origin/feat/fe/mock`, which named the workflow |
 | `weight` of `Edge` | `shared/components/ui/edge.tsx` | `ChainEdge` | Nothing |
+| `DropdownActionItem`, `ContextActionItem`, `ItemAction` | `shared/components/ui/action-menu-item.tsx` | The menus of the item page, the document page, a node and an edge | The icon, label and `DisabledReason` that each menu item writes by hand today |
+| `usePrefersReducedMotion` | `shared/lib/viewport/hooks/usePrefersReducedMotion.ts` | The fit of the graph | Nothing; no copy found |
 
 ### Checked, kept in the module
 
@@ -319,15 +326,15 @@ While the agents write
 | `trace/entities/issues/` (new) | `openIssueEntries`, `useOpenIssues`, `issueKeys` | S4.1 / 4 |
 | `trace/entities/links/` | `useLinkTargets`, `linkKeyOf`, `parseLinkKey`, `linkSentence` | S4.1 / 5 |
 | `trace/entities/chains/hooks/useChainQueries.ts`, `traceability/hooks/useTraceabilityQueries.ts` | `refetchInterval` | S4.1 / 5 |
-| `project/entities/run-status/hooks/useProjectRunResult.ts`, `run-status/components/ProjectRunStreams.tsx`, `@x/traceability.ts` (new) | `useIsProjectWriting`; the reload of the trace module | S4.1 / 6 |
-| `shared/lib/graph/layout.utils.ts` (new), `shared/components/ui/edge.tsx`, the design system page | `layoutLayered`; `weight` | S4.1 / 7 |
+| `project/entities/run-status/hooks/useProjectRunResult.ts`, `project/entities/index.ts` | `useIsProjectWriting`, exported | S4.1 / 6 |
+| `shared/lib/graph/layout.utils.ts` (new), `shared/components/ui/edge.tsx`, `shared/components/ui/action-menu-item.tsx` (new), `shared/lib/viewport/hooks/usePrefersReducedMotion.ts` (new), the design system page | `layoutLayered`; `weight`; the menu items; reduced motion | S4.1 / 7 |
 | `shared/routes/project-routes.utils.ts` | The four routes | S4.1 / 8 |
 | `mocks/trace/handlers/trace-links.handlers.ts` | `409 invalid_state` outside a review that takes changes of the document of the source (`refuseOutsideReview` of `mocks/artifacts/artifacts.problems.ts`) | S4.2 / 1 |
 | The gaps of `mocks/trace/lookup/coverage.lookup.ts` | The titles and descriptions of S4.D | S4.2 / 1 |
-| `artifact/features/edit/components/EditRecordMenuItem.tsx` (new), `index.ts` | Decision 13 | S4.2 / 2 |
+| `artifact/features/edit/hooks/useEditRecordAction.ts` (new), `index.ts` | Decision 13 | S4.2 / 2 |
 | `trace/entities/item-links/components/LinkedItemsPopover.tsx` | `actions` slot | S4.2 / 3 |
 | `documents/widgets/item/components/ItemPage.tsx`, `documents/widgets/document/components/DocumentPage.tsx` | `ItemActionsMenu`, `DocumentActionsMenu`; the Remove in the card | S4.2 / 5 |
-| `app/.../[projectId]/layout.tsx` | `TraceDialogs` (S4.2), `traceDestination` and `TraceCommands` (S4.3) | S4.2 / 4, S4.3 / 6 |
+| `app/.../[projectId]/layout.tsx` | `TraceDialogs` (S4.2), `traceDestination`, `TraceCommands` and `TraceStreams` (S4.3) | S4.2 / 4, S4.3 / 6 |
 | `app/.../[projectId]/trace/...` (new) | The four pages | S4.3 / 6 |
 | `tests/screenshots/projects/trace.spec.ts` (new) | Section 13 | S4.3 / 7 |
 
@@ -394,12 +401,12 @@ export function useOpenIssues(projectId: string, options?: LiveTraceOptions): Op
 ```text
 trace/features/add-link/
 ├── components/
-│   ├── AddLinkMenuItem.tsx
 │   ├── AddLinkDialog.tsx
 │   └── __tests__/
 ├── hooks/
 │   ├── useAddLink.ts
 │   ├── useOpenAddLinkDialog.ts
+│   ├── useAddLinkAction.ts
 │   └── __tests__/
 ├── add-link.store.ts
 ├── add-link.schema.ts
@@ -409,12 +416,12 @@ trace/features/add-link/
 
 trace/features/remove-link/
 ├── components/
-│   ├── RemoveLinkMenuItem.tsx
 │   ├── RemoveLinkDialog.tsx
 │   └── __tests__/
 ├── hooks/
 │   ├── useRemoveLink.ts
 │   ├── useOpenRemoveLinkDialog.ts
+│   ├── useRemoveLinkAction.ts
 │   └── __tests__/
 ├── remove-link.store.ts
 ├── remove-link.constants.ts
@@ -426,14 +433,15 @@ trace/widgets/dialogs/
 ```
 
 ```tsx
-export function AddLinkMenuItem(props: { source: Pick<ArtifactItem, 'id' | 'kind'>; lockedReason: string | null; menu: 'dropdown' | 'context' })
+/** What a menu needs to show the action that links this item to another; `run` opens the dialog. */
+export function useAddLinkAction(source: Pick<ArtifactItem, 'id' | 'kind'>, lockedReason: string | null): ItemAction | null
 export function AddLinkDialog(props: { projectId: string })
-export function RemoveLinkMenuItem(props: { link: Pick<TraceLink, 'id' | 'source_item_id'>; lockedReason: string | null; menu: 'dropdown' | 'context' })
+export function useRemoveLinkAction(link: Pick<TraceLink, 'id' | 'source_item_id'>, lockedReason: string | null): ItemAction
 export function RemoveLinkDialog(props: { projectId: string })
 export function TraceDialogs(props: { projectId: string })
 ```
 
-`menu` picks `DropdownMenuItem` or `ContextMenuItem`, the two menus of `shared/components/ui` that the item can sit in; it is an explicit variant, not a boolean.
+`ItemAction` is the type of `shared/components/ui/action-menu-item.tsx` (`{ icon, label, disabledReason, tone, onSelect }`, `run` as `onSelect`). `useAddLinkAction` gives null for a kind from which no link type starts, so the menu leaves the item out. The features hold the action and its rule; the widgets choose the menu.
 
 ### `traceability/widgets` (S4.3, new module)
 
@@ -469,8 +477,12 @@ traceability/widgets/
 │   ├── components/OpenIssuesPage.tsx    IssueCard in the file
 │   ├── open-issues.constants.ts
 │   └── index.ts
-└── commands/
-    ├── TraceCommands.tsx
+├── commands/
+│   ├── TraceCommands.tsx
+│   └── index.ts
+└── streams/
+    ├── TraceStreams.tsx
+    ├── useReloadTraceWhenAgentsStop.ts
     └── index.ts
 ```
 
@@ -536,18 +548,18 @@ The wireframe fixes the layout; this table fixes the look. Every part is drawn b
 | Part | Component and props | Icon | Notes |
 |---|---|---|---|
 | Heading | `h1` `text-2xl font-semibold`, the description in `text-muted-foreground` | - | As the document page |
-| The canvas | `Flow` of `shared/components/ui/flow.tsx`, its `Controls` and, from 40 nodes, its `MiniMap` | The zoom buttons of `Controls` | `fitView` on load |
+| The canvas | `Flow` of `shared/components/ui/flow.tsx`, with `Controls` and, from 40 nodes, `MiniMap` of `@xyflow/react` as its children (the colors from the `--xy-*` tokens that `flow.tsx` sets) | The zoom buttons of `Controls`, each with its label | Decision 26 |
 | Legend button | `Button variant="ghost" size="icon-sm"` in a `FloatingSurface` at `top-right` of the canvas, `sr-only` and `Tooltip` "How to read the lines" | `InfoIcon` | Opens a `Popover` with four rows: an `EdgeSample` and the sentence of its level |
 | `EdgeSample` | A small `svg` line in the file of the page, drawn with the line styles and weights that `edge.tsx` exports (`edgeLineStyles`, `edgeWeights`) and the tone classes, so the legend and the edges read one source | - | `aria-hidden`; the sentence beside it says the meaning |
-| A node | `Node variant="outline"` with the `color` of its level; `NodeHeader` with the kind in `text-xs text-muted-foreground`; `NodeHeaderTitle` with the title, `line-clamp-2`; `NodeContent` with the quote of the chosen link | - | The review status, when not draft: `Badge variant="outline" color="neutral"` with `reviewStatusLabels` in `NodeFooter` |
+| A node | `Node variant="outline"` with the `color` of its level, inside a `ContextMenuTrigger`; `NodeHeader` with the kind in `text-xs text-muted-foreground`; `NodeHeaderTitle` with the title, `line-clamp-2`; `NodeContent` with the quote of the chosen link | - | The review status, when not draft: `Badge variant="outline" color="neutral"` with `reviewStatusLabels` in `NodeFooter` |
 | The node of the page | The same `Node`, with `data-focus` that adds the `ring-2 ring-primary` of the focus style | - | `aria-current="page"` |
 | Node tooltip | `RecordNameTooltip` on the title (kind, title, key) | - | The only place of the key in the graph |
 | Node "more" button | `Button variant="ghost" size="icon-xs"` in `NodeHeader`, shown on hover and focus (`opacity-0 group-hover:opacity-100 focus-visible:opacity-100`) | `MoreHorizontalIcon` | `sr-only` "More actions for Layered booking flow"; opens the same `ContextMenu` content |
 | An edge | `Edge` with the variant, color and weight of its level; `markerEnd` an arrow (`MarkerType.ArrowClosed` of `@xyflow/react`) in the stroke color | - | Selected: the selected stroke that `Edge` already sets |
 | Edge label | `EdgeLabelRenderer` with `Badge variant="outline"` in the tone of the level (`neutral` for none), `variant="soft"` while chosen | `HistoryIcon` before "made from version N" while chosen and out of date | `max-w-32 truncate`, the whole title in its `title` |
 | Quoted words | `HighlightMark variant="soft"` with `color={quoteMarkColors.source}` in the source node and `quoteMarkColors.target` in the target node, in a `p text-xs`, as the card of a link (`LinkedItemsPopover`) draws them | - | Only on a side that has words |
-| Node menu | `ContextMenu`, `ContextMenuContent`, `ContextMenuItem` with an icon each | "Open" `ArrowRightIcon`; "Open in a new tab" `ExternalLinkIcon` (the icon of Open in the card of a link); "See its trace" `WaypointsIcon`; "Link to another item" `LinkIcon` | A disabled item sits in `DisabledReason` with the lock reason |
-| Edge menu | The same | "Show the quoted words" `QuoteIcon`; "Remove this link" `UnlinkIcon`, `variant="destructive"` of `ContextMenuItem` | A `ContextMenuSeparator` before the destructive item |
+| Node menu | `ContextMenu`, `ContextMenuContent`, `ContextActionItem` for the feature actions and `ContextMenuItem` with an icon for the navigations | "Open" `ArrowRightIcon`; "Open in a new tab" `ExternalLinkIcon` (the icon of Open in the card of a link); "See its trace" `WaypointsIcon`; "Link to another item" `LinkIcon` | A disabled item sits in `DisabledReason` with the lock reason |
+| Edge menu | A controlled `DropdownMenu` at the label (decision 24), `DropdownActionItem` | "Show the quoted words" `QuoteIcon`; "Remove this link" `UnlinkIcon`, `variant="destructive"` of `ContextMenuItem` | A `ContextMenuSeparator` before the destructive item |
 | The links as a list | `Collapsible` with a `Button variant="link" size="sm"` trigger, `ChevronRightIcon` that turns | `ChevronRightIcon` | Each sentence a `p`; each title a `PageLink` |
 | States | `LoadingState`, `ErrorState`, `NotFoundState`, `EmptyState` (`WaypointsIcon`) | - | - |
 
@@ -556,7 +568,7 @@ The wireframe fixes the layout; this table fixes the look. Every part is drawn b
 | Part | Component and props | Icon | Notes |
 |---|---|---|---|
 | The menu button | `Button variant="ghost" size="icon-sm"`, `sr-only` "More actions", in a `Tooltip` | `MoreHorizontalIcon` | As `ProjectActionsMenu` |
-| The menu | `DropdownMenu`, `DropdownMenuContent align="end"`, `DropdownMenuItem` with an icon each | "Edit" `PencilIcon`; "See its trace" `WaypointsIcon`; "Link to another item" `LinkIcon` | A disabled item sits in `DisabledReason` |
+| The menu | `DropdownMenu`, `DropdownMenuContent align="end"`, `DropdownActionItem` for Edit and the link, `DropdownMenuItem` with an icon for See its trace | "Edit" `PencilIcon`; "See its trace" `WaypointsIcon`; "Link to another item" `LinkIcon` | A disabled item sits in `DisabledReason` |
 | Remove in a chip card | `Button variant="ghost" color="destructive" size="xs"` in the `actions` slot of the card | `UnlinkIcon` | - |
 
 ### The gap page and the open issues
@@ -588,7 +600,7 @@ The wireframe fixes the layout; this table fixes the look. Every part is drawn b
 | Overview: a gap row | Its title, a count badge in the tone of its level (neutral at zero), its description in the tooltip | Click; double click | The gap page in the preview tab; kept on double click | Arrow keys between rows; Enter opens; `aria-current="page"` on the page on screen |
 | Overview: Open issues | "Open issues" and its count | As a gap row | The open issues page | As above |
 | Overview loading, error | `LoadingState size="compact" rows={3}`; `ErrorState size="compact"` with Try again | Try again | Loads again | - |
-| Documents: a document row | The kind (small, muted) and the title of the document; up to two count badges (act, follow), their meaning in the tooltip ("2 items need your check. 1 item is missing a link or concerned by an open issue."); no letter | Click the chevron or the row; Arrow right and left | Opens or closes its items (loads the outline once) | The keys of `Tree` |
+| Documents: a document row | The kind (small, muted) and the title of the document; up to two count badges (act, follow), their meaning in the tooltip ("2 items need your check. 1 item is missing a link or still open."); no letter | Click the chevron or the row; Arrow right and left | Opens or closes its items (loads the outline once) | The keys of `Tree` |
 | Documents: an item row | The title; the icon of its level with the reasons in its tooltip; no mark at level none; the item of the chain on screen selected | Click; double click; Enter | Its chain in the preview tab; kept on double click | As above |
 | Documents: an outline that fails | One row "The items could not load." with Try again | Try again | Loads again | - |
 
@@ -667,7 +679,10 @@ export const tracePanelMessages = {
   documents: 'Documents',
   openIssues: 'Open issues',
   actCount: (count: number) => `${String(count)} ${pluralForm(count, { one: 'item needs', other: 'items need' })} your check.`,
-  followCount: (count: number) => `${String(count)} ${pluralForm(count, { one: 'item is', other: 'items are' })} missing a link or concerned by an open issue.`,
+  /** Act: a link to check, or an open issue about the item. */
+  actReasons: 'The item it is based on changed, or an open issue is about it.',
+  /** Follow: a missing link, or the item is itself an open issue. */
+  followCount: (count: number) => `${String(count)} ${pluralForm(count, { one: 'item is', other: 'items are' })} missing a link or still open.`,
   itemsLoadError: 'The items could not load.',
 } as const
 
@@ -781,7 +796,9 @@ export const itemActionsMessages = {
 | `trace/entities/links/__tests__/trace-links.utils.test.ts` | `linkKeyOf`, `parseLinkKey`, `linkSentence` in three tenses and for a type without a sentence form |
 | `shared/lib/graph/__tests__/layout.utils.test.ts`, `shared/components/ui/__tests__/edge.test.tsx` | Positions for a chain and a lone node; elk loaded once; the three weights |
 | `project/entities/run-status/hooks/__tests__/useProjectRunResult.test.ts` | `useIsProjectWriting` |
-| `artifact/features/edit/components/__tests__/EditRecordMenuItem.test.tsx` | The lock; the edit mode; the focus back to the menu button |
+| `artifact/features/edit/hooks/__tests__/useEditRecordAction.test.ts` | The action with and without the lock; `run` starts the edit mode; the focus back to the menu button |
+| `shared/components/ui/__tests__/action-menu-item.test.tsx`, `shared/lib/viewport/hooks/__tests__/usePrefersReducedMotion.test.ts` | The icon, the label, the destructive variant, the disabled reason; the media query and its change |
+| `traceability/widgets/streams/__tests__/TraceStreams.test.tsx` | One reload when the run stops writing, none while it writes or when it never wrote |
 | `trace/features/add-link/...`, `remove-link/...` | `itAsksForFieldsBeforeSending`; `itAsksBeforeAction`; `itToastsOnResult`; the body; a `422` on its field; the lock; both menus |
 | `traceability/widgets/panel/...` | `itShowsQueryStates`; the gap rows and counts; the tree marks without letters; a click opens the chain; `aria-current` |
 | `traceability/widgets/chain/...` | `itShowsQueryStates`; nodes by kind and title with the key last; edge looks by level; choosing an edge shows the quotes and Escape hides them; node and edge menus with the lock; click and double click; the list of sentences; `expectNoAccessibilityViolations` |
@@ -812,6 +829,9 @@ Helpers: `renderTraceScreen(page, { pathname, scenario })` over `renderWorkbench
 | A sentence form of every link type in the definition, so that "Concerns" and "Flags" read as sentences | A docs PR of the definition, then `linkSentence` reads it |
 | Editing the note of a link | When the API has `PATCH /trace-links/{id}` |
 | Linking by dragging from a node to another | After tests show that users look for it |
+| A virtual list for a gap or the open issues past 50 rows (Web Interface Guidelines) | A later PR with `@tanstack/react-virtual`, when a project reaches it; version 1 projects hold fewer |
+| The level of each gap from the API (`attention`), in place of `actGapKeys` | A docs PR of the coverage body, then `itemAttention` reads it |
+| `ProjectActionsMenu` on the shared menu items | The next maintenance PR |
 | The trace of an item in the bottom panel of the developer view | S6 |
 
 ## 17. Commits and checks
@@ -830,14 +850,14 @@ S4.1 (`feat/fe/trace-screen-entities`):
 3. `feat(trace): read the chain of an item as a graph, with the attention of its items and links`
 4. `feat(trace): read the open issues with their problem, their quoted words and their sides`
 5. `feat(trace): search the items to link, write a link as a sentence, and follow the agents while they write`
-6. `feat(project): tell whether the agents of a project write, and reload the trace when they stop`
-7. `feat(shared): lay out a graph in layers, and give an edge a weight`
+6. `feat(project): tell whether the agents of a project write`
+7. `feat(shared): lay out a graph in layers, give an edge a weight, add the menu items of an action, and read the reduced motion setting`
 8. `feat(routes): add the pages of Trace`
 
 S4.2 (`feat/fe/trace-links`):
 
 1. `feat(mocks): refuse a change of a link outside a review, and name the gaps in the words of the user`
-2. `feat(edit): edit a record from a menu`
+2. `feat(edit): give the action of editing a record to a menu`
 3. `feat(trace): link two items and remove a link, each in its dialog`
 4. `feat(app): mount the dialogs of the links in the layout of a project`
 5. `feat(documents): gather the actions of an item and of a document in one menu`
@@ -848,7 +868,7 @@ S4.3 (`feat/fe/trace-screen`):
 2. `feat(traceability): show the chain of an item as a graph, with its menus and its quoted words`
 3. `feat(traceability): show the items of a gap`
 4. `feat(traceability): show the open issues with their problem and where they apply`
-5. `feat(traceability): add the start page and the commands of Trace`
+5. `feat(traceability): add the start page, the commands and the reload when the agents stop`
 6. `feat(app): put Trace on the activity bar, with its pages`
 7. `test(screenshots): cover Trace`
 8. `docs: describe Trace, its module and the links made by hand`
@@ -866,7 +886,7 @@ git diff --name-only | grep -E 'modules/traceability/.*/components/' | xargs gre
 - [x] A1, A2, A6 answered by the user (2026-11-07); S4.D committed on `docs/fe/trace-link-changes` (`4a84de16`)
 - [ ] S4.D pushed, its PR opened and merged (the user); the server repository follows it (the lock of a link, the two walks of `both`, the words of the gaps)
 - [ ] A3 to A12 confirmed or changed, and written in `docs/ui/usability.md` on `frontend-plan` (a new 7.8 Trace) before S4.2
-- [ ] S2a merged; this plan checked again against `main`: `trace/entities` by topic, `trace/widgets/graph`, `ItemKeyLine`, `ItemLinkLine`, `LinkedItemsPopover`, `useEditLockReason`, `ProjectRunStreams`, `moduleImports`
+- [ ] S2a merged; this plan checked again against `main`: `trace/entities` by topic, `trace/widgets/graph`, `ItemKeyLine`, `ItemLinkLine`, `LinkedItemsPopover`, `useEditLockReason`, `useProjectRunResult`, `moduleImports`
 - [ ] The order with S2b settled for `RecordName`, `lowerFirst` and `listSentenceParts`
 - [ ] Each commit of section 17 checked alone
 - [ ] Each row of section 11 checked once in `pnpm dev:mock` (one dev server, one page at a time, stopped after): the panel and the tree, the chain of `AR-003` and of `AR-007`, a chosen link, both menus, add and remove a link with and without the lock, the gap, the open issues, the menu button
