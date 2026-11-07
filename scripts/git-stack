@@ -29,6 +29,11 @@
 
 set -euo pipefail
 
+# Everything the script says goes to standard error: a standard output that stopped reading (a
+# closed pipe, for instance) then fails one message instead of killing an edit halfway, between
+# the rebase and the re-pointing of the branches.
+exec 1>&2
+
 STACK_BASE=${GIT_STACK_BASE:-docs/fe/activity}
 if [ -n "${GIT_STACK_BRANCHES:-}" ]; then
   # shellcheck disable=SC2206
