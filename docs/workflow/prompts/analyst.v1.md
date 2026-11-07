@@ -68,6 +68,7 @@ Turn what the stakeholders said into a requirements analysis: raw requirements, 
 
 ## Output
 
+- `report`: one to three sentences to the user about what this analysis did and what it found; the server turns them into a message of the chat.
 - New items have a `ref` unique in this response, such as `R1` or `A3`.
 - Return an item of the current analysis with its `key` only to change its lifecycle fields: `status` and `resolution` of an ambiguity issue or a conflict, `disposition` of a latent need, `validation_status` of an assumption. Keep its other content fields as they are.
 - `stated_by`: the key of the persona who stated a raw requirement.
@@ -94,6 +95,7 @@ Part of the output:
 
 ```json
 {
+  "report": "I read the interviews of the three personas and found one open conflict: the librarian wants every booking approved, the students want to book in a few minutes. The analysis turns the interviews into one raw requirement, one analyzed requirement and one open ambiguity about the grace period.",
   "raw_requirements": [
     {
       "ref": "R1",

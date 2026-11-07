@@ -27,7 +27,7 @@ The objects come from [Data Shape](../DATA_SHAPE.md), the endpoints from [API de
 - **Level 2, the layers** of Feature-Sliced Design inside a module: one slice of entities (`entities/`), one slice for each feature (`features/<feature>/`) and one for each widget (`widgets/<widget>/`).
 - **Level 3, the kinds of file** inside a slice: `components/`, `hooks/`, `types/`, `constants/`, `utils/` and the other kinds of the contributing guide. A kind gets a folder once it has two files or more; a kind with one file stays at the root of the slice.
 - `src/shared/` and `src/app/`, with `src/providers/`, stay outside the modules.
-- Activity is a feature of the activity bar, as Documents or Workflow are, and a module of its own, `activity`. Its side panel shows the stages of the workflow as a tree, in the order of the definition, marked as the events of the run arrive: the widget `steps`, with the item of the feature on the activity bar, not built yet. Its page, which opens in a tab, is the chat: the widget `chat`. Until it is rebuilt, the route of its page shows a placeholder, and `chat` holds the code of the first chat, with the events of the stream of a run and their reducer in `run/entities` and the action that starts a run with an input in `run/features/start`. The rebuilt chat sends a message instead, from `thread/features/send-message`.
+- Activity is a feature of the activity bar, as Documents or Workflow are, and a module of its own, `activity`. Its side panel has two sections: Progress, the stages of the workflow as steps and sub-steps (the stages that the definition nests, and the subjects of a stage that runs once for each), marked as the events of the run arrive, and Outline, the messages of the user; the widget `panel`, with the item of the feature on the activity bar. Its page, which opens in a tab, is the chat, with the work of the agents, the reviews to answer and the prompt: the widget `chat`. The dialog of the settings of the run that the next message starts is mounted once by the widget `dialogs`, and kept by the feature `choose-run-settings`. The entities of `activity` give the thread that the activity shows and join the messages, the work and the reviews of a run into the entries of the chat. The chat sends a message instead of starting a run, from `thread/features/send-message`; the activity follows the stream of its latest run, and each event that changes what the run did loads its work, its reviews and its messages again.
 - One module holds no object of the product: `design-system`, the page that shows the UI components and the tokens (`design-system/widgets/showcase`). `user` holds User, Session and UserSettings, with the settings page (`user/widgets/settings`) and the feature that chooses the theme (`user/features/theme`).
 
 ```text
@@ -58,7 +58,9 @@ src/
 │   │   ├── features/           # create/, rename/, archive/, delete/
 │   │   └── widgets/            # list/, menu/, commands/, dialogs/
 │   ├── activity/
-│   │   └── widgets/            # chat/; steps/ later
+│   │   ├── entities/           # the thread of the activity, the entries of a run, their stream
+│   │   ├── features/           # choose-run-settings/
+│   │   └── widgets/            # panel/, chat/, dialogs/
 │   ├── auth/
 │   │   ├── entities/           # the calls that start and end a session
 │   │   └── features/           # login/, register/, logout/
@@ -205,10 +207,10 @@ A unit test may also import another slice of its layer, from its index, to show 
 | `workflow` | Workflow definition (graph, agent roles, stages in their order, checkpoints and their options); artifact kinds and content schemas; the content fields and the components that show the value of one and edit one, with the title that the definition gives a value of a value list; comparing two contents, dropping empty entries, and finding where the words of a quote sit | - | - | The artifact kinds, content schemas, definition and content fields |
 | `artifact` | Artifact, ArtifactItem and their revisions with the history surface of a record, and Export as its resource `exports`; the outline of an artifact, the status of an item (with `outOfDate`) and its look, the address of any item, and laid out by the display of the artifact and of each kind of item, with the marks of the quoted words | `edit`, `restore` | - | The entities with their views; the actions with the documents |
 | `run` | Run and RunStep, each with its usage (`RunUsage`); RunEvent, Directive, the event stream of a run; the workflow state of a run, after a step or now; the steps grouped by subject and the progress of the nodes; the fields of the run settings and their schema, which the forms of the features embed; the run statuses and their badge. The entities split by topic: `runs`, `steps`, `state`, `directives`, `events`, `config`, `status`, and a topic imports only the topics under it | `stop`, `start` (the first chat); `retry` later | `graph`, the workflow graph of a run, later | The run statuses, the stream of a run, `stop` and `start` today |
-| `review` | Interrupt, HumanDecision | `answer` | `panel` | The entities; `answer` and `panel` with the activity |
-| `thread` | Thread, Message | `send-message` | - | The entities; `send-message` with the activity |
+| `review` | Interrupt, HumanDecision, the decision of an answered interrupt and its look | `answer` | `panel`, the review bar of a document | The entities; `answer` with the activity (S2a), `panel` with the review bar (S2b) |
+| `thread` | Thread, Message, the looks of an author and of a delivery | `send-message` | - | The entities; `send-message` with the activity (S2a) |
 | `project` | Project, the run that its status shows, the streams of its runs | `create`, `rename`, `archive` (with restore and Undo), `delete`; `run-settings` later | `list`, `menu`, `commands`, `dialogs`, `status` | Today |
-| `activity` | ActivityEvent later, the record of who did what in a project | - | `steps`, the stages of the workflow as a tree in the side panel of Activity, with the item of the feature on the activity bar; `chat`, the chat in its tab | The chat of the first version today; the rest with the activity |
+| `activity` | The thread that the activity shows; the entries of a run (its messages, its work, its reviews) and the stream that loads them again; ActivityEvent later, the record of who did what in a project | `choose-run-settings`, the settings of the run that the next message starts, in a large dialog | `panel`, Progress and Outline in the side panel of Activity, with the item of the feature on the activity bar; `chat`, the chat in its tab with its prompt; `dialogs`, the dialogs mounted once | Today. It reads `llm-model` once the run settings offer the models of a run |
 | `documents` | The list of the documents of a project and the mark of each; when a document can change, the outline with the out of date items, and the status of one item | - | `panel`, the documents as a tree with the outline of the open document and what asks something of the user; `document`, the page of a document; `item`, the page of an item with its links and the history; `dialogs`, the dialogs of the edits and the restores | Documents on the activity bar; edit and restore today; peek and export later |
 | `auth` | The calls that start a session, create an account and end a session; the page that opens after signing in | `login`, `register`, `logout` | - | Today |
 | `user` | User, Session, UserSettings | `run-settings` later | `menu`, `settings` | The entities; the forms of the account and the preferences with Settings |
@@ -252,7 +254,7 @@ The entity of the models is named `llm-model`, not `model`, because "model" alon
 
 ## 8. Shared code
 
-Shared code knows no object of the product. What several modules read without being an object goes there:
+Shared code knows no object of the product. Code that holds no rule and names no object of the product goes there from its first user, whatever the count of its users: a helper to `shared/lib/<topic>/`, a hook to its `hooks/`, a component to `shared/components/`. A mechanism inside a rule of the product splits: the mechanism goes to shared code, the rule stays in the module of its object; the stream of a run keeps in `run` which stream it reads, which events count and when it listens, and the listener that coalesces the bursts of a stream is shared code. Code with a rule of the product stays in its module, even when several modules read it. What shared code holds today:
 
 | Code | Where | Why |
 |---|---|---|
@@ -273,8 +275,8 @@ A block that reads several modules sits in the highest module that it reads, or 
 | Block | Slice | What it reads |
 |---|---|---|
 | The status of a project on the status bar | `project/widgets/status` | `project`, `thread`, `run`, and Stop of `run/features/stop` |
-| The tree of the stages in the side panel of Activity | `activity/widgets/steps` | `workflow` for the stages, in order, with their labels; `run` for the steps and the events of the run; `review` for the pending review |
-| The chat of Activity | `activity/widgets/chat` | `thread`, and Send of `thread/features/send-message`; `run`, `review`, `artifact` |
+| Progress and Outline in the side panel of Activity | `activity/widgets/panel` | `workflow` for the stages, in order, with their titles and their nesting; `artifact` for the subjects of a stage that runs once for each; `run` for the steps and the events of the run; `review` for the pending review; `thread` for the messages of the user |
+| The chat of Activity, with its prompt | `activity/widgets/chat` | `thread`, and Send of `thread/features/send-message`; the settings of `activity/features/choose-run-settings`; `run`, and Stop of `run/features/stop`; `review`, and Answer of `review/features/answer`; `artifact` |
 | The documents of a project in the side panel, a document and an item in tabs | `documents/widgets/panel`, `document`, `item` | `workflow` for the kinds and their order; `artifact` for the outline, the status of an item and the views; `run` for the artifacts that the node in progress writes; `review` for the documents under review; `project` for whether the run is unfinished |
 | The workflow graph of a run | `run/widgets/graph` | `workflow` |
 | The panel of a pending review | `review/widgets/panel` | `artifact`, and the edit form of `artifact/features/edit` |

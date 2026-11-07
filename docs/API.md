@@ -390,7 +390,7 @@ Response `201`:
 | `GET /runs/{run_id}/state` | The current workflow state of the run, see [workflow state](#workflow-state) | MVP |
 | `GET /runs/{run_id}/steps/{step_id}/state` | The workflow state saved after that step; the starting point of a retry from the next step | MVP |
 | `GET /runs/{run_id}/stream` | Event stream, see [section 6](#6-run-event-stream) | MVP |
-| `GET /runs/{run_id}/interrupts` | Interrupts of the run, each with its prompt, options, questions and artifacts under review, including those resolved at once with the defaults because their checkpoint is not in `review_checkpoints`; `?status=pending` gives the one the user must answer | MVP |
+| `GET /runs/{run_id}/interrupts` | Interrupts of the run, each with its prompt, options, questions and artifacts under review, and the decision that resolved it, including those resolved at once with the defaults because their checkpoint is not in `review_checkpoints`; `?status=pending` gives the one the user must answer | MVP |
 | `GET /runs/{run_id}/directives` | Directives of the run with their items, ordered by `iteration`; explains why the run looped | MVP |
 | `POST /runs/{run_id}/resume` | Answer the pending interrupt, see below | MVP |
 | `POST /runs/{run_id}/cancel` | Stop the run. The open call to the LLM provider is closed. `202` | MVP |
@@ -509,7 +509,7 @@ Directives of a run, `GET /runs/5f2d.../directives`, ordered by `iteration`. The
 }
 ```
 
-The pending interrupt, `GET /runs/5f2d.../interrupts?status=pending`. The `interrupt` event carries the same fields, with `interrupt_id` for `id`:
+The pending interrupt, `GET /runs/5f2d.../interrupts?status=pending`. The `interrupt` event carries the same fields, with `interrupt_id` for `id`, and without `status`, `created_at`, `resolved_at` and `decision`, since it is sent while the interrupt is pending:
 
 ```json
 {
@@ -532,10 +532,41 @@ The pending interrupt, `GET /runs/5f2d.../interrupts?status=pending`. The `inter
       ],
       "status": "pending",
       "created_at": "2026-10-06T08:41:12Z",
-      "resolved_at": null
+      "resolved_at": null,
+      "decision": null
     }
   ],
   "next_cursor": null
+}
+```
+
+A resolved interrupt gives its `decision`, the [HumanDecision](DATA_SHAPE.md#humandecision-mvp) that resolved it: `option`, `feedback`, `answers`, `decided_by` (null when the run took the defaults because its checkpoint is not in `review_checkpoints`) and `decided_at`. It is null while the interrupt is pending and for a cancelled one. The persona review of the same run, answered by the user, in `GET /runs/5f2d.../interrupts`:
+
+```json
+{
+  "id": "6a1f...",
+  "run_id": "5f2d...",
+  "step_id": "e1a2...",
+  "node": "checkpoint_personas",
+  "prompt": "Review the personas. Edit them if needed, then approve them.",
+  "options": [
+    { "key": "approve", "label": "Approve the interviewees", "requires_feedback": false, "approves": true, "is_default": true }
+  ],
+  "questions": [],
+  "allow_edits": true,
+  "review_artifacts": [
+    { "artifact_id": "b1e0...", "kind": "persona_catalog", "title": "Interviewees", "version": 1 }
+  ],
+  "status": "resolved",
+  "created_at": "2026-10-06T08:30:28Z",
+  "resolved_at": "2026-10-06T08:32:03Z",
+  "decision": {
+    "option": "approve",
+    "feedback": null,
+    "answers": {},
+    "decided_by": "11b7...",
+    "decided_at": "2026-10-06T08:32:03Z"
+  }
 }
 ```
 
@@ -561,7 +592,7 @@ Resume rules:
 - `answers` has one entry per answered question, by question key, in the shape of `Answer` in the [data shape](DATA_SHAPE.md#humandecision-mvp). Every required question is answered, every choice is a choice of its question, and `text` is present when a chosen choice requires it; otherwise `422 validation_failed` with the question key in the field path.
 - `modified_items` is accepted only when the interrupt allows edits.
 - When the chosen option approves, the artifacts under review and their items that are still `draft` become `approved`, each as a new version with `change_reason` `reviewed`.
-- The server stores a human decision, marks the interrupt resolved, and continues the run. The response is `202` with the run.
+- The server stores a human decision, marks the interrupt resolved, gives the decision as `decision` of the interrupt, and continues the run. The response is `202` with the run.
 
 An interrupt can ask several questions of different types and is answered at once. The checkpoints of definition version 1 ask none; the example comes from a checkpoint that clarifies the intent of a project, see [Runtime: open points](architecture/runtime.md#8-open-points):
 
@@ -570,11 +601,11 @@ An interrupt can ask several questions of different types and is answered at onc
   "id": "8c1d...",
   "step_id": "e1b4...",
   "node": "clarify_intent",
-  "prompt": "A few details before the plan is made.",
+  "prompt": "Before I plan the interviews, tell me who will use the platform and what the first version must take care of.",
   "options": [],
   "questions": [
     {
-      "key": "users", "type": "multi_select", "prompt": "Who will use the platform?", "required": true,
+      "key": "users", "type": "multi_select", "prompt": "Who uses the platform in their day, so the interviews ask the right people?", "required": true,
       "choices": [
         { "key": "students", "label": "Students", "requires_text": false },
         { "key": "mentors", "label": "Mentors", "requires_text": false },
@@ -585,7 +616,7 @@ An interrupt can ask several questions of different types and is answered at onc
       "source": "agent"
     },
     {
-      "key": "payments", "type": "single_select", "prompt": "Should the first version take payments?", "required": true,
+      "key": "payments", "type": "single_select", "prompt": "Should the first version already take payments, or is a free pilot enough?", "required": true,
       "choices": [
         { "key": "yes", "label": "Yes", "requires_text": false },
         { "key": "no", "label": "No", "requires_text": false }
@@ -595,7 +626,7 @@ An interrupt can ask several questions of different types and is answered at onc
       "source": "agent"
     },
     {
-      "key": "sessions_per_week", "type": "number", "prompt": "How many sessions should a mentor offer per week?", "required": false,
+      "key": "sessions_per_week", "type": "number", "prompt": "How many sessions should a mentor offer each week, at most?", "required": false,
       "choices": [],
       "min_selected": null, "max_selected": null,
       "default_answer": { "choice_keys": [], "text": null, "number": 2 },
