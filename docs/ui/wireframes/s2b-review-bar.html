@@ -1,0 +1,257 @@
+<!doctype html>
+<html lang="en">
+  <head>
+    <meta charset="utf-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1" />
+    <title>Wireframe: the review bar of a document and of its item pages</title>
+    <script src="https://cdn.jsdelivr.net/npm/@tailwindcss/browser@4"></script>
+    <style type="text/tailwindcss">
+      /* Tokens of the project, copied from frontend/src/app/styles.css (:root, Night Owl Light). */
+      :root {
+        --font-ui: 'Mona Sans Variable', -apple-system, BlinkMacSystemFont, 'Segoe UI', system-ui, sans-serif;
+        --font-code: 'Noto Sans Mono Variable', ui-monospace, Menlo, Consolas, monospace;
+        --background: #fbfbfb;
+        --foreground: #403f53;
+        --card: #f0f0f0;
+        --primary: #3460be;
+        --primary-foreground: #ffffff;
+        --muted: #e0e7ea;
+        --muted-foreground: #4b6875;
+        --accent: #d3e8f8;
+        --success-strong: #056e50;
+        --warning: #ffa37f;
+        --warning-strong: #a94e28;
+        --border: #cedadf;
+        --input: #c5d4da;
+        --sidebar: #f0f0f0;
+        --radius: 0.375rem;
+      }
+      @theme inline {
+        --font-sans: var(--font-ui);
+        --font-mono: var(--font-code);
+        --color-background: var(--background);
+        --color-foreground: var(--foreground);
+        --color-card: var(--card);
+        --color-primary: var(--primary);
+        --color-primary-foreground: var(--primary-foreground);
+        --color-muted: var(--muted);
+        --color-muted-foreground: var(--muted-foreground);
+        --color-accent: var(--accent);
+        --color-success-strong: var(--success-strong);
+        --color-warning: var(--warning);
+        --color-warning-strong: var(--warning-strong);
+        --color-border: var(--border);
+        --color-input: var(--input);
+        --color-sidebar: var(--sidebar);
+        --radius-md: calc(var(--radius) * 0.8);
+        --radius-lg: var(--radius);
+      }
+      @layer base {
+        body { @apply bg-background text-foreground font-sans text-sm; }
+      }
+    </style>
+  </head>
+  <body class="space-y-10 p-6">
+    <!-- One frame per state. Only the layout counts: the parts are the components named in the plan. -->
+
+    <!-- 1. The document under review, the bar closed. -->
+    <section class="space-y-2">
+      <h2 class="text-base font-semibold">1. Document under review, bar closed</h2>
+      <div class="flex h-80 w-[56rem] flex-col overflow-hidden rounded-lg border border-border">
+        <div class="flex h-8 shrink-0 items-center gap-1 border-b border-border bg-sidebar px-2 text-xs">
+          <span class="rounded-md bg-background px-2 py-1">(!) Requirements analysis</span>
+          <span class="px-2 py-1 text-muted-foreground">Interview: Student</span>
+        </div>
+        <div class="relative min-h-0 flex-1 space-y-2 overflow-hidden p-6">
+          <div class="flex items-center justify-between">
+            <h1 class="text-2xl font-semibold">Requirements analysis</h1>
+            <span class="rounded-md border border-border px-2 py-1 text-xs">Edit</span>
+          </div>
+          <p class="text-muted-foreground">24 requirements from 3 interviews.</p>
+          <div class="h-3 w-2/3 rounded bg-muted"></div>
+          <div class="h-3 w-1/2 rounded bg-muted"></div>
+          <span class="absolute bottom-3 left-3 rounded-md border border-border bg-background px-2 py-1 text-xs">History</span>
+        </div>
+        <!-- DocumentReviewBar, closed: look, prompt, edited items, Answer. -->
+        <div class="flex h-12 shrink-0 items-center gap-3 border-t border-border bg-card px-4">
+          <span class="text-xs font-bold text-warning-strong">Waiting for you</span>
+          <span class="min-w-0 flex-1 truncate">Review the requirements analysis. Accept it, or reject it with feedback.</span>
+          <!-- Each title is a link; its tooltip gives the kind, the title and the key (title attribute here). -->
+          <span class="shrink-0 text-xs text-muted-foreground">
+            You edited <a class="inline-block max-w-48 truncate align-bottom text-primary underline" title="Analyzed requirement: Layered booking flow (AR-003)">Layered booking flow</a> and <a class="inline-block max-w-48 truncate align-bottom text-primary underline" title="Stated need: Students book a session at once (RAW-004)">Students book a session at once</a>.
+          </span>
+          <span class="shrink-0 rounded-md bg-primary px-3 py-1.5 text-xs font-medium text-primary-foreground">Answer</span>
+        </div>
+      </div>
+    </section>
+
+    <!-- 2. An item page of the same document, the bar open on the answer. -->
+    <section class="space-y-2">
+      <h2 class="text-base font-semibold">2. Item page of that document, bar open</h2>
+      <div class="flex h-[30rem] w-[56rem] flex-col overflow-hidden rounded-lg border border-border">
+        <div class="shrink-0 border-b border-border px-6 py-2 text-xs text-muted-foreground">
+          Requirements analysis &gt; Requirements &gt; Layered booking flow
+        </div>
+        <div class="relative min-h-0 flex-1 space-y-2 overflow-hidden p-6">
+          <h1 class="text-xl font-semibold">Layered booking flow</h1>
+          <p class="text-xs text-muted-foreground">Analyzed requirement, edited, version 2 <span class="font-mono">AR-003</span></p>
+          <div class="h-3 w-2/3 rounded bg-muted"></div>
+          <span class="absolute right-3 bottom-3 rounded-md border border-border bg-background px-2 py-1 text-xs">&lt; 3 of 24 &gt;</span>
+        </div>
+        <!-- DocumentReviewBar, open: AnswerReviewForm above the row, which keeps its place. -->
+        <div class="shrink-0 border-t border-border bg-card">
+          <div class="max-h-96 space-y-1 overflow-auto px-4 pt-3 pb-2">
+            <p class="text-xs font-medium text-muted-foreground">Your choice</p>
+            <div class="rounded-lg border border-border bg-background p-2 text-xs">
+              <p class="font-medium">( ) Approve analysis</p>
+              <p class="pl-5 text-muted-foreground">This option approves the documents under review, and the agents then continue with writing the specification.</p>
+            </div>
+            <div class="rounded-lg border border-primary bg-background p-2 text-xs">
+              <p class="font-medium">(o) Redo the analysis</p>
+              <p class="pl-5 text-muted-foreground">This option approves nothing and sends the work back to analysing the interviews.</p>
+              <div class="mt-1 h-10 rounded-md border border-input px-2 py-1 text-muted-foreground">
+                Describe what should change; the agents read this before they continue.
+              </div>
+            </div>
+            <div class="rounded-lg border border-border bg-background p-2 text-xs">
+              <p class="font-medium">( ) Interview again</p>
+              <p class="pl-5 text-muted-foreground">This option approves nothing and sends the work back to interviewing.</p>
+              <p class="pl-5 text-muted-foreground">This choice needs a short description from you.</p>
+            </div>
+            <div class="flex justify-end pt-1">
+              <span class="rounded-md bg-primary px-3 py-1.5 text-xs font-medium text-primary-foreground">Send</span>
+            </div>
+          </div>
+          <div class="flex h-12 items-center gap-3 border-t border-border px-4">
+            <span class="text-xs font-bold text-warning-strong">Waiting for you</span>
+            <span class="min-w-0 flex-1 truncate">Review the requirements analysis. Accept it, or reject it with feedback.</span>
+            <span class="shrink-0 text-xs text-muted-foreground">You edited <a class="inline-block max-w-48 truncate align-bottom text-primary underline" title="Analyzed requirement: Layered booking flow (AR-003)">Layered booking flow</a> and <a class="inline-block max-w-48 truncate align-bottom text-primary underline" title="Stated need: Students book a session at once (RAW-004)">Students book a session at once</a>.</span>
+            <span class="shrink-0 rounded-md border border-border bg-background px-3 py-1.5 text-xs font-medium">Hide the answer</span>
+          </div>
+        </div>
+      </div>
+    </section>
+
+    <!-- 3. A record in edit mode: Answer still opens the form, whose options and Send are disabled with the reason. -->
+    <section class="space-y-2">
+      <h2 class="text-base font-semibold">3. A record in edit mode</h2>
+      <div class="w-[56rem] overflow-hidden rounded-lg border border-border">
+        <div class="flex h-12 items-center gap-3 bg-card px-4">
+          <span class="text-xs font-bold text-warning-strong">Waiting for you</span>
+          <span class="min-w-0 flex-1 truncate">Review the requirements analysis. Accept it, or reject it with feedback.</span>
+          <span class="shrink-0 text-xs text-muted-foreground">Save or cancel your change before you answer.</span>
+          <span class="shrink-0 rounded-md bg-primary px-3 py-1.5 text-xs font-medium text-primary-foreground">Answer</span>
+        </div>
+      </div>
+    </section>
+
+    <!-- 4. The answer sent: one line in place of the bar on the page where it was sent. -->
+    <section class="space-y-2">
+      <h2 class="text-base font-semibold">4. Answer sent</h2>
+      <div class="w-[56rem] overflow-hidden rounded-lg border border-border">
+        <div class="flex h-12 items-center gap-3 bg-card px-4">
+          <span class="text-xs font-bold text-success-strong">Reviewed</span>
+          <span class="min-w-0 flex-1 truncate">You chose Redo the analysis.</span>
+        </div>
+      </div>
+    </section>
+
+    <!-- 5. The review fails to load while the run waits. -->
+    <section class="space-y-2">
+      <h2 class="text-base font-semibold">5. Review failed to load</h2>
+      <div class="w-[56rem] overflow-hidden rounded-lg border border-border">
+        <div class="flex h-12 items-center gap-3 bg-card px-4">
+          <span class="min-w-0 flex-1 truncate">The review could not load.</span>
+          <span class="shrink-0 rounded-md border border-border bg-background px-3 py-1.5 text-xs font-medium">Try again</span>
+        </div>
+      </div>
+    </section>
+    <!-- 6 and 7. ConfirmAnswerDialog, opened by Send: the review now, the answer, what happens. -->
+    <section class="space-y-2">
+      <h2 class="text-base font-semibold">6. Confirm, approving option</h2>
+      <div class="w-[32rem] space-y-3 rounded-lg border border-border bg-background p-5">
+        <h3 class="text-lg font-semibold">Send your answer?</h3>
+        <p class="text-muted-foreground">Check what the review holds now and what your answer does. An answer cannot be taken back.</p>
+        <div class="space-y-1">
+          <h4 class="text-base font-semibold">The review now</h4>
+          <ul class="list-disc space-y-0.5 pl-5">
+            <li>Review the requirements analysis. Accept it, or reject it with feedback.</li>
+            <li>Requirements analysis is under review in version 4.</li>
+            <li>18 items are still in draft.</li>
+            <li>You edited 2 items.
+              <ul class="mt-0.5 space-y-0.5 pl-4">
+                <li class="flex items-baseline gap-2"><span class="text-xs text-muted-foreground">Analyzed requirement</span><span class="truncate">Layered booking flow</span></li>
+                <li class="flex items-baseline gap-2"><span class="text-xs text-muted-foreground">Stated need</span><span class="truncate">Students book a session at once</span></li>
+              </ul>
+            </li>
+          </ul>
+        </div>
+        <div class="space-y-1">
+          <h4 class="text-base font-semibold">Your answer</h4>
+          <ul class="list-disc space-y-0.5 pl-5">
+            <li class="font-bold">Approve analysis</li>
+            <li>You did not write any feedback.</li>
+          </ul>
+        </div>
+        <div class="space-y-1">
+          <h4 class="text-base font-semibold">What happens when you send</h4>
+          <ul class="list-disc space-y-0.5 pl-5">
+            <li>Requirements analysis becomes approved.</li>
+            <li>Its 18 draft items become approved.</li>
+            <li>The 2 items that you edited are approved in the versions that you saved.</li>
+            <li>Items that were rejected stay rejected.</li>
+            <li>The agents then continue with writing the specification.</li>
+            <li>The documents cannot be changed while the agents work.</li>
+            <li>An answer cannot be taken back after it is sent.</li>
+          </ul>
+        </div>
+        <div class="flex justify-end gap-2 pt-1">
+          <span class="rounded-md border border-border px-3 py-1.5 text-xs font-medium">Cancel</span>
+          <span class="rounded-md bg-primary px-3 py-1.5 text-xs font-medium text-primary-foreground">Approve analysis</span>
+        </div>
+      </div>
+    </section>
+
+    <section class="space-y-2">
+      <h2 class="text-base font-semibold">7. Confirm, send-back option</h2>
+      <div class="w-[32rem] space-y-3 rounded-lg border border-border bg-background p-5">
+        <h3 class="text-lg font-semibold">Send your answer?</h3>
+        <p class="text-muted-foreground">Check what the review holds now and what your answer does. An answer cannot be taken back.</p>
+        <div class="space-y-1">
+          <h4 class="text-base font-semibold">The review now</h4>
+          <ul class="list-disc space-y-0.5 pl-5">
+            <li>Requirements analysis is under review in version 4.</li>
+            <li>18 items are still in draft.</li>
+            <li>You edited 2 items.
+              <ul class="mt-0.5 space-y-0.5 pl-4">
+                <li class="flex items-baseline gap-2"><span class="text-xs text-muted-foreground">Analyzed requirement</span><span class="truncate">Layered booking flow</span></li>
+                <li class="flex items-baseline gap-2"><span class="text-xs text-muted-foreground">Stated need</span><span class="truncate">Students book a session at once</span></li>
+              </ul>
+            </li>
+          </ul>
+        </div>
+        <div class="space-y-1">
+          <h4 class="text-base font-semibold">Your answer</h4>
+          <ul class="list-disc space-y-0.5 pl-5">
+            <li class="font-bold">Redo the analysis</li>
+            <li><blockquote class="border-l-2 border-border pl-2 text-muted-foreground">The layered booking flow should let the admin approve each session. The need of the students to book at once should be split by role.</blockquote></li>
+          </ul>
+        </div>
+        <div class="space-y-1">
+          <h4 class="text-base font-semibold">What happens when you send</h4>
+          <ul class="list-disc space-y-0.5 pl-5">
+            <li>Nothing is approved, and Requirements analysis stays in draft.</li>
+            <li>The 2 items that you edited keep the versions that you saved.</li>
+            <li>The agents read your feedback and your edited items, and then go back to analysing the interviews.</li>
+            <li>The documents cannot be changed while the agents work.</li>
+            <li>An answer cannot be taken back after it is sent.</li>
+          </ul>
+        </div>
+        <div class="flex justify-end gap-2 pt-1">
+          <span class="rounded-md border border-border px-3 py-1.5 text-xs font-medium">Cancel</span>
+          <span class="rounded-md bg-primary px-3 py-1.5 text-xs font-medium text-primary-foreground">Redo the analysis</span>
+        </div>
+      </div>
+    </section>
+  </body>
+</html>

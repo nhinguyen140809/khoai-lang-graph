@@ -505,9 +505,9 @@ After the entities, one screen at a time, each drawn first from the skeletons of
 |---|---|---|---|---|
 | S1 | Documents: the side panel of documents with the outline, the document tab, the item page and peek | `documents` | `artifact/features/edit`, `restore`, `export` | None |
 | S2a | Activity: Progress (the stages of the definition as a stepper of steps and sub-steps) and Outline (the messages of the user as a timeline) in the side panel, the chat in a tab with its work in plain words, its reviews and the prompt that it shares with a new project ([S2a plan](frontend-s2a-activity-plan.md)) | `activity` | `thread/features/send-message`, `activity/features/choose-run-settings`, `review/features/answer`, `run/features/stop` | `features/review/review-form.utils.ts`, `review.schema.ts`, `QuestionField.tsx` to `review/features/answer` |
-| S2b | The review bar of a document and of its item pages, with the edited items | `documents`, `review` | `review/features/answer` (S2a) | None |
+| S2b | The review bar of a document and of its item pages, with the edited items ([S2b plan](frontend-s2b-review-bar-plan.md)) | `documents`, `review` | `review/features/answer` (S2a) | None |
 | S3 | Search, in its side panel and in the command palette | `artifact` | None | None |
-| S4 | Trace: the matrix, the gaps and issues | `trace` | Creating and removing a link | `features/traceability/matrix-filter.utils.ts` |
+| S4 | Trace: the chain of an item as a graph, the gaps and the open issues; the matrix later, in the developer view ([S4 plan](frontend-s4-trace-plan.md)) | `traceability` (new), `trace` | `trace/features/add-link`, `remove-link` | `layoutGraph` of `features/workflow` as `layoutLayered` |
 | S5 | Settings, both scopes | `settings` | The saves of `user`, `project` and `llm-model` | None |
 | S6 | Workflow, in the developer view: the graph of a run, its steps and its state | `run` | `run/features/retry` | `features/workflow/graph-layout.utils.ts` to `run/widgets/graph` |
 
@@ -567,8 +567,15 @@ The PRs go one at a time, in the order of the rows: each branch starts from `ori
 | S2a.2 | `feat/fe/prompt-input` | `feat(frontend): add the stepper, the timeline, the trace, the entry of a feed, and one prompt input for every prompt that starts work` | S2a.1 |
 | S2a.3 | `feat/fe/send-message-and-answer` | `feat(frontend): send a message, choose the settings of the run it starts, and answer a review` | S2a.2 |
 | S2a.4 | `feat/fe/activity` | `feat(frontend): show the activity of a project, its progress and its outline in the side panel and the chat in its tab` | S2a.3 |
-| S2b | `feat/fe/review-bar` | The review bar of a document (plan to write from S2a as built) | S2a.4 |
-| S3 to S6 | `feat/fe/<screen>` | One per screen of [section 8](#8-screens) | Their entities |
+| S2b.1 | `feat/fe/answer-review-confirm` | `feat(frontend): explain each option of a review, keep the answer across pages, and confirm it before it is sent` ([S2b plan](frontend-s2b-review-bar-plan.md)) | S2a.4 |
+| S2b.2 | `feat/fe/review-bar` | `feat(frontend): show the review bar of a document and of its item pages, with the edited items` ([S2b plan](frontend-s2b-review-bar-plan.md)) | S2b.1 |
+| S2c | `feat/fe/review-item` | The review of one item: approve or reject an item alone (plan to write; [S2b plan, section 15](frontend-s2b-review-bar-plan.md#15-left-for-the-next-prs)) | S2b.2 |
+| S4.D | `docs/fe/trace-link-changes` | `docs(api): change a link only while the document of its source takes changes, follow a chain one way, and name the gaps in the words of the user` ([S4 plan](frontend-s4-trace-plan.md)) | None |
+| S4.0 | `chore/fe/maintenance-before-trace` | `chore(frontend): name an item by its kind and title before its key, and move the trace graph to the entity` | S2a |
+| S4.1 | `feat/fe/trace-screen-entities` | `feat(frontend): read the chain of an item as a graph with its attention, the open issues with their words, and what a project needs` | S4.0, S4.D |
+| S4.2 | `feat/fe/trace-links` | `feat(frontend): link two items, remove a link, and gather the actions of an item in one menu` | S4.1 |
+| S4.3 | `feat/fe/trace-screen` | `feat(frontend): show Trace, with the overview, the tree of the documents, the chain of an item, the gaps and the open issues` | S4.2 |
+| S3, S5, S6 | `feat/fe/<screen>` | One per screen of [section 8](#8-screens) | Their entities |
 
 For every PR: a branch from `origin/main`; copy the files of its row from `feat/fe/mock` with `git show feat/fe/mock:<path>`, then apply the changes of its row; run the checks one at a time (typecheck when imports, types or routes change, lint of the changed files, tests of the touched folders; the full lint and the full test run in CI on the PR); search the diff for a non-ASCII character in prose and a leftover `console.log`; one-line Conventional Commits message, no AI attribution; open as a draft.
 
