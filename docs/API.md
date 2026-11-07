@@ -601,11 +601,11 @@ An interrupt can ask several questions of different types and is answered at onc
   "id": "8c1d...",
   "step_id": "e1b4...",
   "node": "clarify_intent",
-  "prompt": "A few details before the plan is made.",
+  "prompt": "Before I plan the interviews, tell me who will use the platform and what the first version must take care of.",
   "options": [],
   "questions": [
     {
-      "key": "users", "type": "multi_select", "prompt": "Who will use the platform?", "required": true,
+      "key": "users", "type": "multi_select", "prompt": "Who uses the platform in their day, so the interviews ask the right people?", "required": true,
       "choices": [
         { "key": "students", "label": "Students", "requires_text": false },
         { "key": "mentors", "label": "Mentors", "requires_text": false },
@@ -616,7 +616,7 @@ An interrupt can ask several questions of different types and is answered at onc
       "source": "agent"
     },
     {
-      "key": "payments", "type": "single_select", "prompt": "Should the first version take payments?", "required": true,
+      "key": "payments", "type": "single_select", "prompt": "Should the first version already take payments, or is a free pilot enough?", "required": true,
       "choices": [
         { "key": "yes", "label": "Yes", "requires_text": false },
         { "key": "no", "label": "No", "requires_text": false }
@@ -626,7 +626,7 @@ An interrupt can ask several questions of different types and is answered at onc
       "source": "agent"
     },
     {
-      "key": "sessions_per_week", "type": "number", "prompt": "How many sessions should a mentor offer per week?", "required": false,
+      "key": "sessions_per_week", "type": "number", "prompt": "How many sessions should a mentor offer each week, at most?", "required": false,
       "choices": [],
       "min_selected": null, "max_selected": null,
       "default_answer": { "choice_keys": [], "text": null, "number": 2 },

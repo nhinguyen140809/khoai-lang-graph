@@ -34,6 +34,7 @@ An experiment changes the backend only: a new workflow definition version, or a 
 |---|---|---|
 | Workflow graph and stages | `GET /workflow/definition?version=` | A new workflow definition version |
 | Where a run is and where it has been | `GET /runs/{run_id}/steps`, then the event stream of the run | Every step |
+| The activity of a project: its progress, its outline and its chat | The threads of the project, the runs, steps, interrupts and messages of the thread it shows, then the event stream of its latest run | Every step, review and message |
 | The review the user must answer | `GET /runs/{run_id}/interrupts?status=pending`, then the `interrupt` event | Every checkpoint |
 | Artifacts and items | `GET /artifact-kinds` for the schemas, `GET /content-schemas/{kind}/{schema_version}` for content stored with an older version, the artifact and item endpoints for the content | A new content schema version |
 | Run settings form | `run_parameters_schema` and the `checkpoint` nodes of the workflow definition | A new workflow definition version |

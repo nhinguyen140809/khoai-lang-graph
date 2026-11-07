@@ -15,7 +15,9 @@ How the mocks work (fixtures, handlers, adding an endpoint) is in [Mock data](..
   - [Mock data](#mock-data)
   - [Parameters](#parameters)
   - [Account](#account)
+  - [Documents](#documents)
   - [Project list](#project-list)
+  - [Activity](#activity)
   - [Other screens](#other-screens)
   - [Frame of a project](#frame-of-a-project)
   - [Development pages](#development-pages)
@@ -199,6 +201,28 @@ In the browser, the stream of a running run whose stage writes an artifact sends
 | Deleting the project                                                        | Open the Delete project dialog from http://localhost:3000/projects?mock-delete-project=loading and press Delete project   |
 | The project fails to be deleted                                             | The same from http://localhost:3000/projects?mock-delete-project=error                                                    |
 
+## Activity
+
+| State                       | Address                                                                                                    |
+| --------------------------- | ---------------------------------------------------------------------------------------------------------- |
+| Waiting at a review         | http://localhost:3000/projects/90aa0000-0000-4000-8000-000000000001/activity                               |
+| Working                     | The same with `?mock-run-status=running`                                                                   |
+| Failed                      | The same with `?mock-run-status=failed`                                                                    |
+| Finished                    | The same with `?mock-run-status=done`                                                                      |
+| Interviews in progress      | http://localhost:3000/projects/90aa0000-0000-4000-8000-000000000003/activity                               |
+| No run                      | The same with `?mock-threads=empty`                                                                        |
+| Threads loading, failing    | `?mock-threads=loading`, `?mock-threads=error` on the activity of any project                              |
+| Messages loading, failing   | `?mock-messages=loading`, `?mock-messages=error`                                                           |
+| Steps loading, failing      | `?mock-runs=loading`, `?mock-runs=error`                                                                   |
+| Interrupts failing          | `?mock-interrupts=error`                                                                                   |
+| A review with questions     | `?mock-agent-questions=only`, `?mock-agent-questions=added`                                                |
+| Answering: pending, failing | `?mock-resume-run=loading`, `?mock-resume-run=error` after choosing an option                              |
+| Sending: pending, failing   | `?mock-send-message=loading`, `?mock-send-message=error` after sending a message                           |
+| A target entry              | `?entry=<id of the review>` on the activity of the mentor platform, the id that `GET .../interrupts` gives |
+
+The Progress of the mentor platform lists the twelve stages of its workflow; the library project
+holds the interviews of its three interviewees, one done, one in progress and one not started.
+
 ## Other screens
 
 | State          | Address                            |
@@ -222,7 +246,7 @@ In the browser, the stream of a running run whose stage writes an artifact sends
 | Rename project, last in the project menu       | Open http://localhost:3000/projects/90aa0000-0000-4000-8000-000000000001/activity, press the name of the project on the top bar and choose Rename project |
 | Rename project in the command palette          | Open the command palette in the mentor platform and type rename                                                                                           |
 
-The command palette opens with `Ctrl+K`. The activity of a project is a placeholder until it is built.
+The command palette opens with `Ctrl+K`.
 
 ## Development pages
 
