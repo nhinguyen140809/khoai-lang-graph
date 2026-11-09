@@ -1085,6 +1085,8 @@ A directed link between two items of one project. A reference from one item to a
 | `created_by` | Origin | |
 | `deleted_by` | Origin? | Who removed the link; null while the link is current. Removing sets `deleted_at` and keeps the row, so the links of an earlier step can be shown again |
 
+A link belongs to its source: the user creates or removes a link only while the document of the source item takes changes, as for the items, see [API: editing rule](API.md#artifacts-and-items). The target does not change.
+
 A link reads from its source to its target through the title of its link type ("REQ-001 Based on AR-001"). Following `derived_from` and `evidenced_by` from any item leads back to the interview. A quote is one run of words of at most 300 characters, found in one `text` or `textarea` field of its item, and a link has at most one quote per side, see [API: quote rules](API.md#quote-rules).
 
 ### Link types
@@ -1108,7 +1110,9 @@ In workflow definition version 1, `link_type` is the set below.
 
 The two quote columns are `quotes` of the link type in the definition. Every quote is optional: an agent gives one when the link is about some words, not about the whole item.
 
-`duplicates` and `supersedes` apply to every item kind except `section`, so the Links line of each item kind leaves them out.
+`agent_only` of the link type in the definition says that only the agents create links of the type, during a run. In version 1 it is true for `duplicates` and `supersedes` and false for the other link types.
+
+`duplicates` and `supersedes` apply to every item kind except `section`, so the Links line of each item kind leaves them out. The user never creates them by hand, since they are `agent_only`.
 
 ### Integrity rules
 
@@ -1126,7 +1130,7 @@ The storage does not enforce the meaning of content or links, so the backend che
 | Subject item | `subject_item_id` is set only on an interview transcript, and points at a persona |
 | One artifact | Creating a second artifact of a kind that allows one per project is rejected |
 | Link endpoints | Source and target are items that exist, are not deleted, are not sections, and are in the same project as the link |
-| Link type | The pair of source kind and target kind is a row of the link types table for that `link_type` |
+| Link type | The pair of source kind and target kind is a row of the link types table for that `link_type`, and a link that the user creates is not of an `agent_only` link type |
 | No self link | Source and target differ |
 | No cycle | Following `derived_from`, `depends_on` or `supersedes` links from an item never returns to it |
 | No duplicate | At most one current link per source, target and `link_type`; removed links do not count |

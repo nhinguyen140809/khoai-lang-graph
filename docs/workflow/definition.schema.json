@@ -419,9 +419,21 @@
           "minItems": 1,
           "uniqueItems": true,
           "description": "The values of that field while the issue is still open."
+        },
+        "about_link_types": {
+          "type": "array",
+          "items": { "$ref": "#/$defs/name" },
+          "uniqueItems": true,
+          "description": "The keys of the link types that tie an issue of the kind to the items it is about."
+        },
+        "party_link_types": {
+          "type": "array",
+          "items": { "$ref": "#/$defs/name" },
+          "uniqueItems": true,
+          "description": "The keys of the link types that tie an issue of the kind to the people it involves."
         }
       },
-      "required": ["status_field", "open_values"]
+      "required": ["status_field", "open_values", "about_link_types", "party_link_types"]
     },
     "linkType": {
       "type": "object",
@@ -432,6 +444,10 @@
         "acyclic": {
           "type": "boolean",
           "description": "Following links of this type from an item must never return to it."
+        },
+        "agent_only": {
+          "type": "boolean",
+          "description": "Whether only the agents create links of this type during a run; the user never creates one by hand."
         },
         "quotes": {
           "type": "object",
@@ -449,7 +465,7 @@
           "items": { "$ref": "#/$defs/linkPair" }
         }
       },
-      "required": ["key", "title", "acyclic", "quotes", "pairs"]
+      "required": ["key", "title", "acyclic", "agent_only", "quotes", "pairs"]
     },
     "linkPair": {
       "type": "object",
