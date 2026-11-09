@@ -4,9 +4,7 @@ import { PencilIcon } from 'lucide-react'
 import { useEffect, useRef } from 'react'
 
 import type { RevisionTarget } from '@/modules/artifact/entities'
-import { Button } from '@/shared/components/ui/button'
-import { DisabledReason } from '@/shared/components/ui/disabled-reason'
-import { Tooltip, TooltipContent, TooltipTrigger } from '@/shared/components/ui/tooltip'
+import { ActionIconButton } from '@/shared/components/ui/menu-action'
 
 import { editMessages } from '../edit.constants'
 import {
@@ -46,28 +44,18 @@ export function EditRecordButton({ target, lockedReason }: EditRecordButtonProps
 
   if (isEditing) return null
 
-  const control = (
-    <Button
-      ref={button}
-      type="button"
-      variant="ghost"
-      size="icon"
-      aria-label={editMessages.edit}
-      className="text-muted-foreground"
-      disabled={lockedReason !== null}
-      onClick={() => {
-        startEditing(target)
-      }}
-    >
-      <PencilIcon />
-    </Button>
-  )
-
-  if (lockedReason !== null) return <DisabledReason reason={lockedReason}>{control}</DisabledReason>
   return (
-    <Tooltip>
-      <TooltipTrigger asChild>{control}</TooltipTrigger>
-      <TooltipContent>{editMessages.edit}</TooltipContent>
-    </Tooltip>
+    <ActionIconButton
+      ref={button}
+      size="icon"
+      action={{
+        icon: PencilIcon,
+        label: editMessages.edit,
+        disabledReason: lockedReason,
+        run: () => {
+          startEditing(target)
+        },
+      }}
+    />
   )
 }
