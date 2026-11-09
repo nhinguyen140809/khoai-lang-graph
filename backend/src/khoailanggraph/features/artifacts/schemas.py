@@ -61,9 +61,7 @@ class ItemRevision(BaseModel):
 
     item_id: str
     version: int
-    change_reason: Literal[
-        "generated", "user_edit", "rework", "restored", "deleted"
-    ]
+    change_reason: Literal["generated", "user_edit", "rework", "reviewed", "restored", "deleted"]
     snapshot: dict[str, Any]
     created_at: IsoDatetime
 

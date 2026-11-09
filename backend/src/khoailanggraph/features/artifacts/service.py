@@ -47,6 +47,8 @@ from khoailanggraph.features.artifacts.models import (
 )
 from khoailanggraph.features.projects.models import ProjectKeyCounterRow
 from khoailanggraph.features.runs.models import RunEventRow
+from khoailanggraph.platform import origin as origins
+from khoailanggraph.platform.origin import Origin
 
 if TYPE_CHECKING:
     from sqlalchemy import Engine
@@ -60,6 +62,17 @@ def utcnow() -> datetime:
     return datetime.now(UTC)
 
 
+def _changed(by: Origin) -> dict[str, Any]:
+    """The `changed_*` columns of a revision row for an origin."""
+    return {
+        "changed_actor": by.actor,
+        "changed_agent_role": by.agent_role,
+        "changed_by_user_id": by.user_id,
+        "changed_run_id": by.run_id,
+        "changed_step_id": by.step_id,
+    }
+
+
 def _loads(blob: bytes) -> Any:
     return json.loads((blob or b"null").decode("utf-8"))
 
@@ -71,10 +84,26 @@ def _dumps(value: Any) -> bytes:
 class SqlArtifactSink:
     """An `ArtifactSink` over the project's tables; run_id tags every event."""
 
-    def __init__(self, engine: Engine, *, run_id: UUID | None = None) -> None:
+    def __init__(
+        self,
+        engine: Engine,
+        *,
+        run_id: UUID | None = None,
+        user_id: UUID | None = None,
+    ) -> None:
         self.engine = engine
         self.run_id = run_id
+        # The agent role of the node that is writing, set by the node wrapper; the user whose
+        # decision the writes follow (an approval, an edit at a review), when there is one.
+        self.agent_role: str | None = None
+        self.user_id = user_id
         self._session: Session | None = None
+
+    def _origin(self, *, by_user: bool = False) -> Origin:
+        """Who the next write is credited to: the user of a decision, else the running agent."""
+        if by_user and self.user_id is not None:
+            return Origin(actor="user", user_id=self.user_id, run_id=self.run_id)
+        return Origin.of_agent(self.agent_role, self.run_id)
 
     # — session plumbing —
     def bind(self, session: Session) -> None:
@@ -168,6 +197,8 @@ class SqlArtifactSink:
             content_json=_dumps(content),
             subject_item_id=UUID(subject_id) if subject_id else None,
         )
+        origins.write(row, "created", self._origin())
+        origins.write(row, "updated", self._origin())
         self.session.add(row)
         self.session.flush()
         self.session.add(
@@ -184,6 +215,7 @@ class SqlArtifactSink:
                 ),
                 item_versions_json=_dumps([]),
                 change_reason="generated",
+                **_changed(self._origin()),
             )
         )
         seq = self.next_sequence()
@@ -248,8 +280,10 @@ class SqlArtifactSink:
         )
         row.content_json = _dumps(merged)
         row.version += 1
+        origins.write(row, "updated", self._origin())
+        row.updated_at = utcnow()
         self.session.flush()
-        self._write_artifact_revision(row)
+        self._write_artifact_revision(row, "generated")
         seq = self.next_sequence()
         self._emit(
             "artifact_delta",
@@ -268,8 +302,10 @@ class SqlArtifactSink:
         )
 
     def approve_artifact(self, artifact_id: str) -> ArtifactRef:
+        """The artifact under review and its draft items become approved, each as a new
+        version with the change reason `reviewed`."""
         row = self._artifact_row(artifact_id)
-        row.review_status = "approved"
+        by = self._origin(by_user=True)
         for item in self.session.scalars(
             select(ArtifactItemRow).where(
                 ArtifactItemRow.artifact_id == row.id,
@@ -278,13 +314,23 @@ class SqlArtifactSink:
         ):
             item.review_status = "approved"
             item.version += 1
-            self._write_item_revision(item, "generated")
+            origins.write(item, "updated", by)
+            item.updated_at = utcnow()
+            self._write_item_revision(item, "reviewed", by)
+        if row.review_status == "draft":
+            row.review_status = "approved"
+        row.version += 1
+        origins.write(row, "updated", by)
+        row.updated_at = utcnow()
         self.session.flush()
+        self._write_artifact_revision(row, "reviewed", by)
         return ArtifactRef(
             artifact_id=str(row.id), kind=row.kind, title=row.title, version=row.version
         )
 
-    def _write_artifact_revision(self, row: ArtifactRow) -> None:
+    def _write_artifact_revision(
+        self, row: ArtifactRow, reason: str, by: Origin | None = None
+    ) -> None:
         item_rows = self.session.scalars(
             select(ArtifactItemRow).where(ArtifactItemRow.artifact_id == row.id)
         ).all()
@@ -305,7 +351,8 @@ class SqlArtifactSink:
                     }
                 ),
                 item_versions_json=_dumps(item_versions),
-                change_reason="generated",
+                change_reason=reason,
+                **_changed(by or self._origin()),
             )
         )
         self.session.flush()
@@ -413,11 +460,13 @@ class SqlArtifactSink:
             position=int(count) + 1,
             content_json=_dumps(content),
         )
+        origins.write(entry, "created", self._origin())
+        origins.write(entry, "updated", self._origin())
         del subject_id  # items carry no subject column; artifacts hold it (§2.3)
         row.version += 1
         self.session.add(entry)
         self.session.flush()
-        self._write_item_revision(entry, "generated")
+        self._write_item_revision(entry, "generated", self._origin())
         seq = self.next_sequence()
         self._emit(
             "artifact_delta",
@@ -433,7 +482,7 @@ class SqlArtifactSink:
         )
         return ItemRef(item_id=str(entry.id), kind=kind, key=str(entry.key), version=entry.version)
 
-    def _write_item_revision(self, entry: ArtifactItemRow, reason: str) -> None:
+    def _write_item_revision(self, entry: ArtifactItemRow, reason: str, by: Origin) -> None:
         self.session.add(
             ItemRevisionRow(
                 item_id=entry.id,
@@ -449,6 +498,7 @@ class SqlArtifactSink:
                     }
                 ),
                 change_reason=reason,
+                **_changed(by),
             )
         )
 
@@ -461,10 +511,13 @@ class SqlArtifactSink:
         self._raise(
             domain_rules.validate_content(str(entry.kind), merged, value_lists=wf.value_lists())
         )
+        by = self._origin(by_user=True)
         entry.content_json = _dumps(merged)
         entry.version += 1
+        origins.write(entry, "updated", by)
+        entry.updated_at = utcnow()
         self.session.flush()
-        self._write_item_revision(entry, "user_edit")
+        self._write_item_revision(entry, "user_edit", by)
         return ItemRef(
             item_id=str(entry.id),
             kind=str(entry.kind),
@@ -479,8 +532,10 @@ class SqlArtifactSink:
             raise KeyError(msg)
         entry.review_status = "superseded"
         entry.version += 1
+        origins.write(entry, "updated", self._origin())
+        entry.updated_at = utcnow()
         self.session.flush()
-        self._write_item_revision(entry, "generated")
+        self._write_item_revision(entry, "generated", self._origin())
         return ItemRef(
             item_id=str(entry.id),
             kind=str(entry.kind),
@@ -537,6 +592,7 @@ class SqlArtifactSink:
                 source_quote=source_quote,
                 target_quote=target_quote,
                 note=note,
+                created_by_run_id=self.run_id,
             )
         )
         self.session.flush()

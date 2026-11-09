@@ -69,7 +69,12 @@ class ArtifactSink(Protocol):
     from the project counters and never reused; every write produces a
     revision. `ref`s are unique per node response and are resolved by
     `add_item`, so an agent never sees a generated key before it exists.
+
+    `agent_role` is the role of the node that writes: the node wrapper sets it
+    before a node runs, and the sink credits the writes of the node to it.
     """
+
+    agent_role: str | None
 
     def create_artifact(
         self,

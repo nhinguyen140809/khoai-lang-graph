@@ -201,6 +201,13 @@ def _invoke[T: BaseModel](
 # The safe_node wrapper (kept from the prototype)
 
 
+def _agent_role_of_node(name: str) -> str | None:
+    """The agent role of a node by the name of its function (`analyst_node`, or the node id)."""
+    node = definition_nodes().get(name.removesuffix("_node"))
+    role = None if node is None else node.get("agent_role")
+    return None if role is None else str(role)
+
+
 def safe_node(fn: NodeFn) -> NodeFn:
     """Turn any node failure into an error update instead of a crash.
 
@@ -211,6 +218,9 @@ def safe_node(fn: NodeFn) -> NodeFn:
 
     @wraps(fn)
     def wrapper(state: REState, config: RunnableConfig | None = None) -> dict[str, Any]:
+        sink = _configurable(config).get("artifact_sink")
+        if sink is not None:
+            sink.agent_role = _agent_role_of_node(fn.__name__)
         try:
             return fn(state, config or {})
         except Exception as exc:
@@ -244,8 +254,11 @@ def _content_words(text: str) -> frozenset[str]:
     """The content words of a plan term: 4+ letters, simple plural stemming."""
     return frozenset(
         (w if len(w) <= _WORD_MIN else w.removesuffix("s"))
-        for w in text.replace(".", " ").replace(",", " ")
-        .replace("(", " ").replace(")", " ").split()
+        for w in text.replace(".", " ")
+        .replace(",", " ")
+        .replace("(", " ")
+        .replace(")", " ")
+        .split()
         if len(w) >= _WORD_MIN
     )
 
@@ -287,7 +300,9 @@ def match_plan_value(value: str, allowed: list[str]) -> str | None:
     containing = [
         (original, candidate)
         for original, candidate in candidates
-        if lowered and candidate and lowered in candidate
+        if lowered
+        and candidate
+        and lowered in candidate
         and len(lowered.split()) * 2 >= len(candidate.split())
     ]
     if containing:
@@ -1090,8 +1105,7 @@ def _normalize_analyzed_quality(analysis: AnalystOutput) -> None:
     if not allowed:
         return
     for analyzed_draft in analysis.analyzed_requirements:
-        if (analyzed_draft.quality_category
-                and str(analyzed_draft.quality_category) not in allowed):
+        if analyzed_draft.quality_category and str(analyzed_draft.quality_category) not in allowed:
             logger.warning(
                 "analyst quality_category normalized",
                 ref=str(analyzed_draft.ref),
@@ -1123,11 +1137,7 @@ def _keep_valid(
     known: Known,
     valid_kinds: frozenset[str],
 ) -> list[str]:
-    kept = [
-        str(ref)
-        for ref in references
-        if known.get(str(ref), {}).get("kind") in valid_kinds
-    ]
+    kept = [str(ref) for ref in references if known.get(str(ref), {}).get("kind") in valid_kinds]
     dropped = [str(ref) for ref in references if str(ref) not in kept]
     if dropped:
         logger.warning(
@@ -1266,9 +1276,7 @@ def analyst_node(
     # allows derived_from between analyzed_requirement and raw_requirement
     # or latent_need, and a ref of any other kind is dropped (logged).
     for analyzed_draft in analysis.analyzed_requirements:
-        analyzed_draft.derived_from = _keep_valid(
-            analyzed_draft.derived_from, known, _AR_OR_RAW
-        )
+        analyzed_draft.derived_from = _keep_valid(analyzed_draft.derived_from, known, _AR_OR_RAW)
 
     for analyzed_draft in analysis.analyzed_requirements:
         item = write(
@@ -1374,8 +1382,7 @@ def _normalize_engineer_quality(draft: EngineerOutput) -> None:
     if not allowed:
         return
     for spec_draft in draft.requirements:
-        if (spec_draft.quality_category
-                and str(spec_draft.quality_category) not in allowed):
+        if spec_draft.quality_category and str(spec_draft.quality_category) not in allowed:
             logger.warning(
                 "engineer quality_category normalized",
                 ref=str(spec_draft.ref),

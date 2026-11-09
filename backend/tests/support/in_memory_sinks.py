@@ -45,6 +45,7 @@ class InMemoryArtifactSink:
         self.items: list[dict[str, Any]] = []
         self.links: list[dict[str, Any]] = []
         self.written: list[str] = []  # references of the current response pass
+        self.agent_role: str | None = None
 
     # — keys —
     def _next(self, project_id: str, prefix: str) -> int:
