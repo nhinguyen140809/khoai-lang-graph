@@ -42,7 +42,9 @@ function Tree<T = unknown>({
 }: TreeProps<T>) {
   const containerProps: React.HTMLAttributes<HTMLDivElement> =
     tree && typeof tree.getContainerProps === 'function' ? tree.getContainerProps() : {}
-  const mergedProps = { ...props, ...containerProps }
+  // The container props of headless-tree come first, so what the caller names (the aria-label of
+  // the tree) wins over them.
+  const mergedProps = { ...containerProps, ...props }
 
   // Extract style from mergedProps to merge with our custom styles
   const { style: propStyle, ...otherProps } = mergedProps
