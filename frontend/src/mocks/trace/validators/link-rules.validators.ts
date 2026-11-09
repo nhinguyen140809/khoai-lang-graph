@@ -47,6 +47,18 @@ const notToItself: LinkRule = {
       : null,
 }
 
+// A type that only the agents create is never started by the user; the agents write theirs
+// outside this validator.
+const userMayStartIt: LinkRule = {
+  check: ({ linkType }) =>
+    linkType.agent_only
+      ? {
+          field: 'link_type',
+          message: `A ${linkType.title.toLowerCase()} link is made by the agents, not by hand.`,
+        }
+      : null,
+}
+
 const kindsAreConnected: LinkRule = {
   check: ({ source, target, linkType }) =>
     canLinkTypeConnect(linkType, source.kind, target.kind)
@@ -133,6 +145,7 @@ const quotesAreAllowed: LinkRule = {
 export const linkRules: LinkRule[] = [
   endsAreLinkable,
   notToItself,
+  userMayStartIt,
   kindsAreConnected,
   notARepeat,
   makesNoLoop,
