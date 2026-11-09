@@ -123,6 +123,8 @@ Errors use the Problem Details format (RFC 9457) with media type `application/pr
 | 409 | `invalid_state` | The action does not apply to the current status, for example resume on a run that is not interrupted |
 | 409 | `idempotency_conflict` | The idempotency key was used before with a different body |
 | 422 | `validation_failed` | A field fails validation |
+| 422 | `unsupported_format` | Uploaded document format is not one the server parses |
+| 422 | `too_large` | Uploaded document exceeds the size limit |
 | 429 | `rate_limited` | Too many requests; `Retry-After` gives the wait in seconds |
 | 429 | `budget_exceeded` | The monthly budget of the user is reached; the request would start or continue LLM work |
 | 502 | `provider_error` | The LLM provider failed and the fallback also failed |
@@ -165,6 +167,7 @@ The budget is checked before every LLM call, not only when the run starts. A cli
 │       ├── /threads
 │       ├── /artifacts
 │       ├── /items
+│       ├── /documents
 │       ├── /trace-links
 │       ├── /traceability
 │       └── /exports
@@ -195,6 +198,7 @@ The budget is checked before every LLM call, not only when the run starts. A cli
 │       ├── /revisions
 │       ├── /restore
 │       └── /trace
+├── /documents/{document_id}
 ├── /trace-links/{link_id}
 └── /exports/{export_id}
 ```
@@ -937,6 +941,41 @@ Each gap is one list of items that need attention, with its own title and a sent
 }
 ```
 
+### Source documents
+
+Uploaded research documents of a project - the user-supplied half of the
+research corpus that grounds the personas; the other half comes from the
+workflow's live search. The upload stores the file bytes server-side and
+never returns them in JSON; responses carry the metadata and the plain text
+the server extracted at upload time (the text the mining stage quotes
+verbatim, capped at 20,000 characters).
+
+| Method and path | Purpose | Phase |
+|---|---|---|
+| `GET /projects/{project_id}/documents` | Documents of the project; ordered by `created_at` descending | MVP |
+| `POST /projects/{project_id}/documents` | Upload one: `multipart/form-data` with `file`, optional `title` (taken from the filename when absent), optional `first_version_id` to add a new version to an existing document. `201` with the created document and a `Location` header | MVP |
+| `GET /documents/{document_id}` | One document with its versions; `?version=` reads any stored version's text, not just the latest | MVP |
+| `DELETE /documents/{document_id}` | Soft delete: the document leaves the lists, its versions stay readable. `204` | MVP |
+
+Rules:
+
+- Allowed formats (MVP): `txt`, `md`, `html`, `json`; each upload answers
+  `422 unsupported_format` otherwise. PDF and DOCX arrive with the
+  corresponding parsers.
+- One file per request, at most 10 MB (`max_upload_mb`); over -> `422 too_large`.
+- A changed document is uploaded again as a new version with the
+  `first_version_id` of the document; the server gives it the next version
+  number. A version is never edited in place, the same rule the artifacts
+  follow.
+- The storage location of the bytes is `server-only` (section 3): it never appears
+  in a response.
+- An uploaded document joins the research corpus of the workspace's later
+  runs as a `source_document` item with `origin: "upload"`: its extracted
+  text is quoted verbatim by the mining stage, like any web hit (runs already
+  in flight keep the corpus they started with).
+- `html` uploads are reduced to their readable text; a future workflow run
+  draws on the extracted `text` exactly as it draws on the live-search hits.
+
 ### Exports
 
 | Method and path | Purpose | Phase |
@@ -950,7 +989,6 @@ Each gap is one list of items that need attention, with its own title and a sent
 | Method and path | Purpose |
 |---|---|
 | `GET`, `POST /projects/{project_id}/members`; `PATCH`, `DELETE /projects/{project_id}/members/{user_id}` | Share a project |
-| `GET`, `POST /projects/{project_id}/documents`; `GET`, `DELETE /documents/{document_id}` | Upload source documents. A changed document is uploaded as a new version, with the `first_version_id` of the document; the server gives it the next version number. A version is never edited in place |
 | `GET`, `POST /artifacts/{artifact_id}/comments`; `GET`, `POST /items/{item_id}/comments`; `PATCH`, `DELETE /comments/{comment_id}` | Comment on an artifact or on one item |
 | `GET /projects/{project_id}/activity` | Activity feed |
 | `GET /me/notifications`; `POST /me/notifications/{notification_id}/read` | Notifications |

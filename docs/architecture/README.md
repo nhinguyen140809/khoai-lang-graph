@@ -215,7 +215,7 @@ It is the storage form of [Data shape](../DATA_SHAPE.md): 36 tables in 5 groups.
 | Table group | Tables |
 |---|---|
 | [`identity_and_settings`](diagrams/database/identity-and-settings.svg) | `users`, `auth_identities`, `sessions`, `user_settings`, `model_settings`, `provider_credentials` |
-| [`workspace`](diagrams/database/workspace.svg) | `projects`, `project_members`, `project_key_counters`, `source_documents`, `document_chunks` |
+| [`workspace`](diagrams/database/workspace.svg) | `projects`, `project_members`, `project_key_counters`, `source_documents`, `document_versions`, `document_chunks` |
 | [`conversation_and_execution`](diagrams/database/conversation-and-execution.svg) | `threads`, `messages`, `message_artifacts`, `message_items`, `runs`, `run_steps`, `run_events`, `interrupts`, `interrupt_artifacts`, `human_decisions`, `human_decision_items`, `directives`, `directive_items` |
 | [`artifacts_and_trace`](diagrams/database/artifacts-and-trace.svg) | `artifacts`, `artifact_items`, `artifact_revisions`, `item_revisions`, `item_embeddings`, `trace_links` |
 | [`supporting`](diagrams/database/supporting.svg) | `exports`, `export_artifacts`, `comments`, `activity_events`, `notifications`, `idempotency_keys` |

@@ -119,7 +119,7 @@ The entities are grouped into six areas. An area is a group that changes togethe
 |---|---|---|
 | Identity and account | User, AuthIdentity, Session | MVP: User, Session. Later: AuthIdentity for external login |
 | Settings | UserSettings, ModelSettings, ModelCatalogEntry, ProviderCredential | MVP: first three. Later: ProviderCredential |
-| Workspace | Project, ProjectMember, SourceDocument, DocumentChunk | MVP: Project. Later: the other three |
+| Workspace | Project, ProjectMember, SourceDocument, DocumentVersion, DocumentChunk | MVP: Project, SourceDocument, DocumentVersion. Later: the other two |
 | Conversation and execution | Thread, Message, Run, RunStep, RunEvent, Interrupt, HumanDecision, Directive | MVP |
 | Requirements engineering artifacts | Artifact (7 kinds), ArtifactItem (12 kinds), ItemEmbedding | MVP: Artifact, ArtifactItem. Later: ItemEmbedding |
 | Cross-cutting | ArtifactRevision, ItemRevision, TraceLink, Comment, Export, ActivityEvent, Notification | MVP: ArtifactRevision, ItemRevision, TraceLink, Export. Later: the other three |
@@ -136,8 +136,9 @@ erDiagram
     User ||--o{ ProviderCredential : "supplies (Later)"
     User ||--o{ Notification : "receives (Later)"
     Project ||--o{ ProjectMember : "shared with (Later)"
-    Project ||--o{ SourceDocument : "contains (Later)"
-    SourceDocument ||--o{ DocumentChunk : "split into (Later)"
+    Project ||--o{ SourceDocument : contains
+    SourceDocument ||--o{ DocumentVersion : "has versions"
+    DocumentVersion ||--o{ DocumentChunk : "split into (Later)"
     Project ||--o{ Thread : contains
     Project |o--o| Message : "initial intent"
     Thread ||--o{ Message : contains
@@ -309,22 +310,31 @@ Sharing a project with other users. Real-time collaboration on one thread stays 
 | `role` | enum | `owner`, `editor`, `viewer` |
 | `invited_by` | ref\<User\> | |
 
-### SourceDocument (Later)
+### SourceDocument (MVP)
 
-A file the user uploads as context for elicitation, for example an existing brief or meeting notes.
+A file the user uploads as context for elicitation, for example an existing brief or meeting notes. The row is the identity of the document; its content is in its [DocumentVersion](#documentversion-mvp) rows.
 
 | Field | Type | Notes |
 |---|---|---|
 | `project_id` | ref\<Project\> | |
-| `uploaded_by` | ref\<User\> | |
-| `first_version_id` | ref\<SourceDocument\> | The first version of the document, shared by all its versions; equal to `id` on version 1. Unique together with `version` |
-| `version` | int | Starts at 1. A changed document is uploaded as a new version with the same `first_version_id`; a stored version is never edited |
-| `file_name` | string | |
-| `media_type` | string | |
-| `size_bytes` | int | |
-| `storage_key` | server-only string | Location in object storage |
-| `extraction_status` | enum | `pending`, `ready`, `failed` |
-| `summary` | string? | Short summary used in prompts in place of the full text |
+| `title` | string | Taken from the file name when the upload gives none |
+| `filename` | string | The name of the file of the first upload |
+| `format` | enum | `txt`, `md`, `html`, `json` |
+| `latest_version` | int | The `version` of its newest DocumentVersion, from 1 |
+
+Later: `uploaded_by`, `extraction_status` (`pending`, `ready`, `failed`) and `summary` (a short text used in prompts in place of the full text), which a parser that runs after the upload needs.
+
+### DocumentVersion (MVP)
+
+One stored version of a document. A changed document is uploaded as a new version, which gets the next number; a stored version is never edited.
+
+| Field | Type | Notes |
+|---|---|---|
+| `document_id` | ref\<SourceDocument\> | Unique together with `version` |
+| `version` | int | Starts at 1 |
+| `size_bytes` | int | Size of the uploaded file |
+| `text` | string | The plain text extracted at upload, at most 20,000 characters; the research stage quotes it |
+| `storage_key` | server-only string | Location of the file bytes |
 
 ### DocumentChunk (Later)
 
@@ -332,7 +342,7 @@ A passage of the extracted text of a source document, with its embedding, so tha
 
 | Field | Type | Notes |
 |---|---|---|
-| `source_document_id` | ref\<SourceDocument\> | The document version the chunk comes from |
+| `document_version_id` | ref\<DocumentVersion\> | The document version the chunk comes from |
 | `project_id` | ref\<Project\> | Repeated so that a search stays inside one project |
 | `position` | int | Order of the chunk in the document, from 1 |
 | `text` | string | The passage |

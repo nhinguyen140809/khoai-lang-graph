@@ -307,28 +307,32 @@ Table project_key_counters {
 Table source_documents {
   id uuid [pk]
   project_id uuid [not null, ref: > projects.id]
-  uploaded_by uuid [not null, ref: > users.id]
-  first_version_id uuid [not null, ref: > source_documents.id, note: 'The first version of the document, shared by all its versions; equal to id on version 1']
-  version int [not null, default: 1]
-  file_name text [not null]
-  media_type text [not null]
-  size_bytes bigint [not null]
-  storage_key text [not null, note: 'Server-only']
-  extraction_status extraction_status [not null, default: 'pending']
-  summary text
+  title text [not null]
+  filename text [not null]
+  format text [not null, note: 'txt, md, html or json']
+  latest_version int [not null, default: 1]
   created_at timestamptz [not null]
   deleted_at timestamptz
   updated_at timestamptz [not null]
+}
+
+Table document_versions {
+  id uuid [pk]
+  document_id uuid [not null, ref: > source_documents.id]
+  version int [not null, default: 1]
+  size_bytes bigint [not null]
+  text text [not null, note: 'Plain text extracted at upload, at most 20000 characters']
+  storage_key text [not null, note: 'Server-only']
+  created_at timestamptz [not null]
 
   indexes {
-    (first_version_id, version) [unique]
+    (document_id, version) [unique]
   }
-  Note: 'Later phase'
 }
 
 Table document_chunks {
   id uuid [pk]
-  source_document_id uuid [not null, ref: > source_documents.id]
+  document_version_id uuid [not null, ref: > document_versions.id]
   project_id uuid [not null, ref: > projects.id]
   position int [not null]
   text text [not null]
@@ -338,7 +342,7 @@ Table document_chunks {
   created_at timestamptz [not null]
 
   indexes {
-    (source_document_id, position) [unique]
+    (document_version_id, position) [unique]
     (project_id, embedding_model)
   }
   Note: 'Later phase. Written once when the extraction of a document version succeeds. A similarity search uses an approximate nearest neighbour index on embedding, per embedding model'
@@ -828,6 +832,7 @@ TableGroup workspace {
   project_members
   project_key_counters
   source_documents
+  document_versions
   document_chunks
 }
 
