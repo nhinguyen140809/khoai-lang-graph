@@ -187,11 +187,11 @@
     { "kind": "analyzed_requirement", "schema_version": 1, "issue": null },
     { "kind": "latent_need", "schema_version": 1, "issue": null },
     { "kind": "assumption", "schema_version": 1, "issue": null },
-    { "kind": "ambiguity_issue", "schema_version": 1, "issue": { "status_field": "status", "open_values": ["open"] } },
-    { "kind": "conflict", "schema_version": 1, "issue": { "status_field": "status", "open_values": ["open"] } },
+    { "kind": "ambiguity_issue", "schema_version": 1, "issue": { "status_field": "status", "open_values": ["open"], "about_link_types": ["concerns"], "party_link_types": [] } },
+    { "kind": "conflict", "schema_version": 1, "issue": { "status_field": "status", "open_values": ["open"], "about_link_types": ["concerns"], "party_link_types": ["involves"] } },
     { "kind": "spec_requirement", "schema_version": 1, "issue": null },
     { "kind": "backlog_item", "schema_version": 1, "issue": null },
-    { "kind": "validation_issue", "schema_version": 1, "issue": { "status_field": "status", "open_values": ["open"] } }
+    { "kind": "validation_issue", "schema_version": 1, "issue": { "status_field": "status", "open_values": ["open"], "about_link_types": ["flags"], "party_link_types": [] } }
   ],
   "link_types": [
     {
