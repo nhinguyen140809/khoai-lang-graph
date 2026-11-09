@@ -128,3 +128,19 @@ export const notFoundCases = [
   { name: 'an error that is not of the API', error: new Error('x'), notFound: false },
   { name: 'a value that is not an error', error: 'not found', notFound: false },
 ]
+
+/** An error, and whether it says that the record the request changes moved on since it was read. */
+export const versionConflictCases = [
+  {
+    name: 'an ApiError with the code of a version conflict',
+    error: new ApiError('x', HttpStatus.Conflict, ApiErrorCode.VersionConflict, []),
+    isConflict: true,
+  },
+  {
+    name: 'an ApiError of another code with the same status',
+    error: new ApiError('x', HttpStatus.Conflict, ApiErrorCode.InvalidState, []),
+    isConflict: false,
+  },
+  { name: 'an error that is not of the API', error: new Error('x'), isConflict: false },
+  { name: 'a value that is not an error', error: 'version_conflict', isConflict: false },
+]
