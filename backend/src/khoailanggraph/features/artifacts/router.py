@@ -3,7 +3,8 @@
 from __future__ import annotations
 
 import json as jsonlib
-from typing import Annotated, Any
+from datetime import UTC, datetime
+from typing import Annotated, Any, Literal
 from uuid import UUID
 
 from fastapi import APIRouter, Depends, Header, Query
@@ -19,6 +20,8 @@ from khoailanggraph.features.artifacts.models import ArtifactItemRow, ArtifactRo
 from khoailanggraph.features.projects.service import get_project_row
 from khoailanggraph.features.runs.service import project_has_active_run
 from khoailanggraph.llm.registry import default_registry
+from khoailanggraph.platform import origin as origins
+from khoailanggraph.platform.origin import Origin
 
 router = APIRouter()
 
@@ -32,15 +35,22 @@ async def search_items(
     q: Annotated[str, Query()] = "",
     kind: Annotated[str | None, Query()] = None,
     review_status: Annotated[str | None, Query()] = None,
+    run_id: Annotated[UUID | None, Query()] = None,
     cursor: Annotated[int, Query(ge=0)] = 0,
     limit: Annotated[int, Query(ge=1, le=MAX_LIMIT)] = 50,
 ) -> Page[schemas.Item]:
     """Search the items of a project by key or text, with the filters of
-    docs/API.md §5: `kind` and `review_status` (filtering by `run_id` needs
-    the actor tables and stays a follow-up)."""
+    docs/API.md §5: `kind`, `review_status` and `run_id` (the items that run created or changed)."""
     await get_project_row(db, project_id)
     items, next_cursor = await service.search_project_items(
-        db, project_id, query=q, kind=kind, review_status=review_status, limit=limit, cursor=cursor
+        db,
+        project_id,
+        query=q,
+        kind=kind,
+        review_status=review_status,
+        run_id=run_id,
+        limit=limit,
+        cursor=cursor,
     )
     return Page(items=items, next_cursor=next_cursor)
 
@@ -51,13 +61,15 @@ async def list_project_artifacts(
     user: deps.CurrentUser,
     db: deps.DbSession,
     *,
+    kind: Annotated[str | None, Query()] = None,
+    review_status: Annotated[str | None, Query()] = None,
     cursor: Annotated[int, Query(ge=0)] = 0,
     limit: Annotated[int, Query(ge=1, le=MAX_LIMIT)] = 50,
-) -> Page[schemas.ArtifactSummary]:
-    """The artifacts of the project, for the Artifacts tree (§5)."""
+) -> Page[schemas.Artifact]:
+    """The artifacts of the project (§5), filtered by kind and review status."""
     await get_project_row(db, project_id)
     artifacts, next_cursor = await service.list_project_artifacts(
-        db, project_id, limit=limit, cursor=cursor
+        db, project_id, kind=kind, review_status=review_status, limit=limit, cursor=cursor
     )
     return Page(items=artifacts, next_cursor=next_cursor)
 
@@ -148,16 +160,28 @@ async def list_artifact_items(
     db: deps.DbSession,
     *,
     kind: Annotated[str | None, Query()] = None,
+    review_status: Annotated[str | None, Query()] = None,
+    parent_item_id: Annotated[UUID | None, Query()] = None,
+    shape: Annotated[Literal["flat", "tree"], Query()] = "flat",
     cursor: Annotated[int, Query(ge=0)] = 0,
     limit: Annotated[int, Query(ge=1, le=MAX_LIMIT)] = 200,
-) -> Page[schemas.Item]:
-    """The items of one artifact in outline order (API.md §5)."""
+) -> Page[schemas.NestedOutlineItem] | Page[schemas.OutlineItem]:
+    """The items of one artifact in outline order; `?shape=tree` nests each item under its
+    parent (API.md §5)."""
     row = await db.get(ArtifactRow, artifact_id)
     if row is None or row.deleted_at is not None:
         raise ApiError(404, "not_found", "Not found", "The artifact does not exist.")
     items, next_cursor = await service.list_artifact_items(
-        db, artifact_id, kind=kind, limit=limit, cursor=cursor
+        db,
+        artifact_id,
+        kind=kind,
+        review_status=review_status,
+        parent_item_id=parent_item_id,
+        limit=limit,
+        cursor=cursor,
     )
+    if shape == "tree":
+        return Page(items=service.nested_outline(items), next_cursor=next_cursor)
     return Page(items=items, next_cursor=next_cursor)
 
 
@@ -276,9 +300,14 @@ async def patch_item(
                 "The item content fails its schema or the plan vocabulary.",
                 errors=errors,
             )
+    by = Origin.of_user(UUID(str(user.id)))
     row.content_json = jsonlib.dumps(merged, ensure_ascii=False).encode("utf-8")
     if body.review_status is not None:
         row.review_status = body.review_status
     row.version += 1
+    origins.write(row, "updated", by)
+    row.updated_at = datetime.now(UTC)
+    await db.flush()
+    db.add(service.item_revision_row(row, "user_edit", by))
     await db.flush()
     return await service.get_item(db, item_id)

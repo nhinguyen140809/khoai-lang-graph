@@ -62,6 +62,24 @@ def utcnow() -> datetime:
     return datetime.now(UTC)
 
 
+def item_revision_row(entry: ArtifactItemRow, reason: str, by: Origin) -> ItemRevisionRow:
+    """The revision of an item at its current version: what the item was and who changed it."""
+    return ItemRevisionRow(
+        item_id=entry.id,
+        version=entry.version,
+        snapshot_json=_dumps(
+            {
+                "content": _loads(entry.content_json),
+                "position": entry.position,
+                "parent_item_id": str(entry.parent_item_id) if entry.parent_item_id else None,
+                "review_status": entry.review_status,
+            }
+        ),
+        change_reason=reason,
+        **_changed(by),
+    )
+
+
 def _changed(by: Origin) -> dict[str, Any]:
     """The `changed_*` columns of a revision row for an origin."""
     return {
@@ -426,6 +444,19 @@ class SqlArtifactSink:
         prefix = KEY_PREFIXES.get(entry_kind, entry_kind.upper()[:3])
         return key(prefix, self._next(str(artifact_row.project_id), prefix))
 
+    def _next_position(self, artifact_id: UUID, parent_id: str | None) -> int:
+        """The position after the last item under the same parent, from 1."""
+        parent = UUID(parent_id) if parent_id else None
+        top = self.session.scalar(
+            select(func.max(ArtifactItemRow.position)).where(
+                ArtifactItemRow.artifact_id == artifact_id,
+                ArtifactItemRow.parent_item_id.is_(None)
+                if parent is None
+                else ArtifactItemRow.parent_item_id == parent,
+            )
+        )
+        return 1 if top is None else int(top) + 1
+
     def add_item(
         self,
         artifact_id: str,
@@ -457,7 +488,7 @@ class SqlArtifactSink:
             kind=kind,
             key=self._item_key(row, kind, content, int(count)),
             parent_item_id=UUID(parent_id) if parent_id else None,
-            position=int(count) + 1,
+            position=self._next_position(row.id, parent_id),
             content_json=_dumps(content),
         )
         origins.write(entry, "created", self._origin())
@@ -483,24 +514,7 @@ class SqlArtifactSink:
         return ItemRef(item_id=str(entry.id), kind=kind, key=str(entry.key), version=entry.version)
 
     def _write_item_revision(self, entry: ArtifactItemRow, reason: str, by: Origin) -> None:
-        self.session.add(
-            ItemRevisionRow(
-                item_id=entry.id,
-                version=entry.version,
-                snapshot_json=_dumps(
-                    {
-                        "content": _loads(entry.content_json),
-                        "position": entry.position,
-                        "parent_item_id": str(entry.parent_item_id)
-                        if entry.parent_item_id
-                        else None,
-                        "review_status": entry.review_status,
-                    }
-                ),
-                change_reason=reason,
-                **_changed(by),
-            )
-        )
+        self.session.add(item_revision_row(entry, reason, by))
 
     def update_item_content(self, item_id: str, content: dict[str, Any]) -> ItemRef:
         entry = self.session.get(ArtifactItemRow, UUID(item_id))
@@ -601,36 +615,137 @@ class SqlArtifactSink:
         return self._plan_values(project_id).get(reference, [])
 
 
-def item_view(row: ArtifactItemRow) -> schemas.Item:
-    payload = json.loads((row.content_json or b"null").decode("utf-8"))
-    if not isinstance(payload, dict):
-        payload = {}
-    return schemas.Item(
-        id=str(row.id),
-        project_id=str(row.project_id),
-        artifact_id=str(row.artifact_id),
-        parent_item_id=(str(row.parent_item_id) if row.parent_item_id else None),
-        key=row.key,
-        kind=row.kind,
-        review_status=row.review_status,
-        content=payload,
-        version=row.version,
-        updated_at=row.updated_at,
+def _origin_view(by: Origin) -> schemas.Origin:
+    return schemas.Origin(
+        actor=by.actor,
+        agent_role=by.agent_role,
+        user_id=None if by.user_id is None else str(by.user_id),
+        run_id=None if by.run_id is None else str(by.run_id),
+        step_id=None if by.step_id is None else str(by.step_id),
     )
 
 
-def artifact_view(row: ArtifactRow) -> schemas.ArtifactSummary:
-    """The artifact row as the project tree reads it (Artifacts tab)."""
-    return schemas.ArtifactSummary(
+def outline_of(rows: list[ArtifactItemRow]) -> dict[UUID, tuple[str, int]]:
+    """The outline number and depth of each item of one artifact.
+
+    The number is the position of the item among its siblings, joined with the numbers of its
+    ancestors (`3.2.1`); an artifact without sections numbers its items `1`, `2`, ... An item
+    whose parent is not among `rows` counts as top level.
+    """
+    present = {row.id for row in rows}
+    children: dict[UUID | None, list[ArtifactItemRow]] = {}
+    for row in rows:
+        parent = row.parent_item_id if row.parent_item_id in present else None
+        children.setdefault(parent, []).append(row)
+    for siblings in children.values():
+        siblings.sort(key=lambda row: (row.position, row.key))
+    numbering: dict[UUID, tuple[str, int]] = {}
+
+    def walk(parent: UUID | None, prefix: str, depth: int) -> None:
+        for index, row in enumerate(children.get(parent, []), start=1):
+            number = f"{prefix}{index}"
+            numbering[row.id] = (number, depth)
+            walk(row.id, f"{number}.", depth + 1)
+
+    walk(None, "", 1)
+    return numbering
+
+
+def outline_in_order(rows: list[ArtifactItemRow]) -> list[ArtifactItemRow]:
+    """The items of one artifact in outline order: a section, then what it contains."""
+    numbering = outline_of(rows)
+
+    def order(row: ArtifactItemRow) -> tuple[int, ...]:
+        return tuple(int(part) for part in numbering[row.id][0].split("."))
+
+    return sorted(rows, key=order)
+
+
+async def _numbering_of(
+    session: AsyncSession, artifact_ids: set[UUID]
+) -> dict[UUID, tuple[str, int]]:
+    """The outline of every artifact in `artifact_ids`, from their live items."""
+    if not artifact_ids:
+        return {}
+    rows = (
+        await session.scalars(
+            select(ArtifactItemRow).where(
+                ArtifactItemRow.artifact_id.in_(artifact_ids),
+                ArtifactItemRow.deleted_at.is_(None),
+            )
+        )
+    ).all()
+    by_artifact: dict[UUID, list[ArtifactItemRow]] = {}
+    for row in rows:
+        by_artifact.setdefault(row.artifact_id, []).append(row)
+    numbering: dict[UUID, tuple[str, int]] = {}
+    for items in by_artifact.values():
+        numbering |= outline_of(items)
+    return numbering
+
+
+def item_view(row: ArtifactItemRow, numbering: dict[UUID, tuple[str, int]]) -> schemas.Item:
+    return schemas.Item(**_item_fields(row, numbering))
+
+
+def outline_item_view(
+    row: ArtifactItemRow, numbering: dict[UUID, tuple[str, int]]
+) -> schemas.OutlineItem:
+    return schemas.OutlineItem(
+        **_item_fields(row, numbering), depth=numbering.get(row.id, ("1", 1))[1]
+    )
+
+
+def _item_fields(row: ArtifactItemRow, numbering: dict[UUID, tuple[str, int]]) -> dict[str, Any]:
+    payload = json.loads((row.content_json or b"null").decode("utf-8"))
+    return {
+        "id": str(row.id),
+        "artifact_id": str(row.artifact_id),
+        "project_id": str(row.project_id),
+        "key": row.key,
+        "kind": row.kind,
+        "parent_item_id": None if row.parent_item_id is None else str(row.parent_item_id),
+        "position": row.position,
+        "outline_number": numbering.get(row.id, (str(row.position), 1))[0],
+        "schema_version": row.schema_version,
+        "version": row.version,
+        "review_status": row.review_status,
+        "created_by": _origin_view(origins.read(row, "created")),
+        "updated_by": _origin_view(origins.read(row, "updated")),
+        "created_at": row.created_at,
+        "updated_at": row.updated_at,
+        "content": payload if isinstance(payload, dict) else {},
+    }
+
+
+def nested_outline(items: list[schemas.OutlineItem]) -> list[schemas.NestedOutlineItem]:
+    """The outline items as a forest: each item holds the items whose parent it is."""
+    nodes = {item.id: schemas.NestedOutlineItem(**item.model_dump(), children=[]) for item in items}
+    roots: list[schemas.NestedOutlineItem] = []
+    for item in items:
+        node = nodes[item.id]
+        parent = nodes.get(item.parent_item_id) if item.parent_item_id is not None else None
+        (parent.children if parent is not None else roots).append(node)
+    return roots
+
+
+def artifact_view(row: ArtifactRow, item_count: int) -> schemas.Artifact:
+    """The artifact row as the client reads it."""
+    return schemas.Artifact(
         id=str(row.id),
-        project_id=str(row.project_id),
         kind=row.kind,
+        project_id=str(row.project_id),
         title=row.title,
         summary=row.summary,
         schema_version=row.schema_version,
+        content=_loads(row.content_json or b"{}"),
+        subject_item_id=None if row.subject_item_id is None else str(row.subject_item_id),
         version=row.version,
         review_status=row.review_status,
-        content=_loads(row.content_json or b"{}"),
+        item_count=item_count,
+        created_by=_origin_view(origins.read(row, "created")),
+        updated_by=_origin_view(origins.read(row, "updated")),
+        created_at=row.created_at,
         updated_at=row.updated_at,
     )
 
@@ -660,11 +775,12 @@ async def search_project_items(
     query: str,
     kind: str | None = None,
     review_status: str | None = None,
+    run_id: UUID | None = None,
     limit: int,
     cursor: int,
 ) -> tuple[list[schemas.Item], int | None]:
-    """The items of a project by text, filtered by kind and review status;
-    ordered by key, cursor pagination."""
+    """The items of a project by text, filtered by kind, review status and run (the items that
+    run created or changed); ordered by key, cursor pagination."""
     conditions = [
         ArtifactItemRow.project_id == project_id,
         ArtifactItemRow.deleted_at.is_(None),
@@ -673,6 +789,12 @@ async def search_project_items(
         conditions.append(ArtifactItemRow.kind == kind)
     if review_status is not None:
         conditions.append(ArtifactItemRow.review_status == review_status)
+    if run_id is not None:
+        conditions.append(
+            ArtifactItemRow.id.in_(
+                select(ItemRevisionRow.item_id).where(ItemRevisionRow.changed_run_id == run_id)
+            )
+        )
     rows = list(
         (
             await session.scalars(
@@ -680,7 +802,8 @@ async def search_project_items(
             )
         ).all()
     )
-    views = [item_view(row) for row in rows]
+    numbering = await _numbering_of(session, {row.artifact_id for row in rows})
+    views = [item_view(row, numbering) for row in rows]
     if query.strip():
         views = [view for view in views if matches(view, query.strip())]
     window = views[cursor : cursor + limit]
@@ -732,23 +855,41 @@ async def list_project_artifacts(
     session: AsyncSession,
     project_id: UUID,
     *,
+    kind: str | None = None,
+    review_status: str | None = None,
     limit: int,
     cursor: int,
-) -> tuple[list[schemas.ArtifactSummary], int | None]:
-    """The artifacts of a project (Artifacts tab tree), in creation order."""
+) -> tuple[list[schemas.Artifact], int | None]:
+    """The artifacts of a project, in creation order, filtered by kind and review status."""
+    conditions = [ArtifactRow.project_id == project_id, ArtifactRow.deleted_at.is_(None)]
+    if kind is not None:
+        conditions.append(ArtifactRow.kind == kind)
+    if review_status is not None:
+        conditions.append(ArtifactRow.review_status == review_status)
     rows = list(
         (
             await session.scalars(
                 select(ArtifactRow)
-                .where(
-                    ArtifactRow.project_id == project_id,
-                    ArtifactRow.deleted_at.is_(None),
-                )
+                .where(*conditions)
                 .order_by(ArtifactRow.created_at, ArtifactRow.id)
             )
         ).all()
     )
-    views = [artifact_view(row) for row in rows]
+    counts = dict(
+        (
+            await session.execute(
+                select(ArtifactItemRow.artifact_id, func.count())
+                .where(
+                    ArtifactItemRow.project_id == project_id,
+                    ArtifactItemRow.deleted_at.is_(None),
+                )
+                .group_by(ArtifactItemRow.artifact_id)
+            )
+        )
+        .tuples()
+        .all()
+    )
+    views = [artifact_view(row, int(counts.get(row.id, 0))) for row in rows]
     window = views[cursor : cursor + limit]
     next_cursor = cursor + len(window) if cursor + len(window) < len(views) else None
     return window, next_cursor
@@ -973,11 +1114,11 @@ async def item_revisions(session: AsyncSession, item_id: UUID) -> list[schemas.I
     )
     return [
         schemas.ItemRevision(
-            item_id=str(entry.item_id),
             version=entry.version,
             change_reason=str(entry.change_reason),
-            snapshot=_loads(entry.snapshot_json or b"{}"),
+            changed_by=_origin_view(origins.read(entry, "changed")),
             created_at=entry.created_at,
+            content=_loads(entry.snapshot_json or b"{}").get("content", {}),
         )
         for entry in history
     ]
@@ -1038,7 +1179,8 @@ async def item_trace(
             )
         ).all()
     )
-    nodes = [item_view(node) for node in node_rows]
+    numbering = await _numbering_of(session, {node.artifact_id for node in node_rows})
+    nodes = [item_view(node, numbering) for node in node_rows]
     return nodes, found
 
 
@@ -1047,26 +1189,34 @@ async def list_artifact_items(
     artifact_id: UUID,
     *,
     kind: str | None,
+    review_status: str | None,
+    parent_item_id: UUID | None,
     limit: int,
     cursor: int,
-) -> tuple[list[schemas.Item], int | None]:
-    """The live items of one artifact in outline order (sections first,
-    then their items, top level last); a kind filter keeps one item kind."""
+) -> tuple[list[schemas.OutlineItem], int | None]:
+    """The live items of one artifact in outline order (a section, then what it contains).
+
+    The outline numbers come from the whole artifact; a filter only keeps some of its items.
+    """
     rows = list(
         (
             await session.scalars(
-                select(ArtifactItemRow)
-                .where(
+                select(ArtifactItemRow).where(
                     ArtifactItemRow.artifact_id == artifact_id,
                     ArtifactItemRow.deleted_at.is_(None),
                 )
-                .order_by(ArtifactItemRow.kind.desc(), ArtifactItemRow.key)
             )
         ).all()
     )
-    if kind is not None:
-        rows = [row for row in rows if row.kind == kind]
-    views = [item_view(row) for row in rows]
+    numbering = outline_of(rows)
+    kept = [
+        row
+        for row in outline_in_order(rows)
+        if (kind is None or row.kind == kind)
+        and (review_status is None or row.review_status == review_status)
+        and (parent_item_id is None or row.parent_item_id == parent_item_id)
+    ]
+    views = [outline_item_view(row, numbering) for row in kept]
     window = views[cursor : cursor + limit]
     next_cursor = cursor + len(window) if cursor + len(window) < len(views) else None
     return window, next_cursor
@@ -1076,7 +1226,7 @@ async def get_item(session: AsyncSession, item_id: UUID) -> schemas.Item:
     row = await session.get(ArtifactItemRow, item_id)
     if row is None or row.deleted_at is not None:
         raise ApiError(404, "not_found", "Not found", "The item does not exist.")
-    return item_view(row)
+    return item_view(row, await _numbering_of(session, {row.artifact_id}))
 
 
 def _with_value_lists(kind: str, value_lists: dict[str, Any]) -> dict[str, Any]:

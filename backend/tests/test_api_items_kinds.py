@@ -96,16 +96,24 @@ async def test_list_project_artifacts_tree(client: AsyncClient) -> None:
     first = body["items"][0]
     assert set(first) == {
         "id",
-        "project_id",
         "kind",
+        "project_id",
         "title",
         "summary",
         "schema_version",
+        "content",
+        "subject_item_id",
         "version",
         "review_status",
-        "content",
+        "item_count",
+        "created_by",
+        "updated_by",
+        "created_at",
         "updated_at",
     }
+    assert first["created_by"]["actor"] == "agent"
+    assert first["created_by"]["run_id"] is not None
+    assert first["created_by"]["agent_role"] == "planner"
     artifact_ids = {artifact["id"] for artifact in body["items"]}
     assert project_id not in artifact_ids
     assert len(artifact_ids) > 1
@@ -180,7 +188,8 @@ async def test_item_revisions_desc(client: AsyncClient) -> None:
     assert response.status_code == 200
     assert body["items"], "the sink writes a revision per version"
     first = body["items"][0]
-    assert set(first) == {"item_id", "version", "change_reason", "snapshot", "created_at"}
+    assert set(first) == {"version", "change_reason", "changed_by", "created_at", "content"}
+    assert first["changed_by"]["actor"] == "agent"
     versions = [entry["version"] for entry in body["items"]]
     assert versions == sorted(versions, reverse=True)
 
@@ -347,3 +356,94 @@ async def test_artifact_content_in_summary(client: AsyncClient) -> None:
     kinds = {a["kind"]: a for a in artifacts.json()["items"]}
     assert "content" in kinds["elicitation_plan"], "document fields served"
     assert isinstance(kinds["elicitation_plan"]["content"], dict)
+
+
+ITEM_FIELDS = {
+    "id",
+    "artifact_id",
+    "project_id",
+    "key",
+    "kind",
+    "parent_item_id",
+    "position",
+    "outline_number",
+    "schema_version",
+    "version",
+    "review_status",
+    "created_by",
+    "updated_by",
+    "created_at",
+    "updated_at",
+    "content",
+}
+
+
+async def test_an_item_has_the_fields_of_the_client_schema(client: AsyncClient) -> None:
+    project_id, _thread_id = await seeded_run(client)
+    listing = await client.get(
+        f"/api/v1/projects/{project_id}/items", params={"kind": "backlog_item"}
+    )
+    item = listing.json()["items"][0]
+
+    response = await client.get(f"/api/v1/items/{item['id']}")
+
+    body = response.json()
+    assert set(body) == ITEM_FIELDS
+    assert body["created_by"]["actor"] == "agent"
+    assert body["created_by"]["agent_role"] == "backlog_manager"
+    assert body["created_by"]["run_id"] is not None
+    assert body["updated_by"] == body["created_by"]
+    assert body["outline_number"].isdigit()
+
+
+async def test_outline_items_carry_a_depth_and_nest_with_the_tree_shape(
+    client: AsyncClient,
+) -> None:
+    project_id, _thread_id = await seeded_run(client)
+    artifacts = await client.get(f"/api/v1/projects/{project_id}/artifacts")
+    spec_id = next(
+        a["id"] for a in artifacts.json()["items"] if a["kind"] == "requirement_specification"
+    )
+
+    flat = (await client.get(f"/api/v1/artifacts/{spec_id}/items")).json()["items"]
+    tree = (await client.get(f"/api/v1/artifacts/{spec_id}/items", params={"shape": "tree"})).json()
+
+    assert all(set(entry) == ITEM_FIELDS | {"depth"} for entry in flat)
+    assert [entry["outline_number"] for entry in flat] == [str(n) for n in range(1, len(flat) + 1)]
+    assert {entry["depth"] for entry in flat} == {1}
+    assert [entry["id"] for entry in tree["items"]] == [entry["id"] for entry in flat]
+    assert all(entry["children"] == [] for entry in tree["items"])
+
+
+async def test_items_can_be_listed_by_the_run_that_wrote_them(client: AsyncClient) -> None:
+    project_id, thread_id = await seeded_run(client)
+    run_id = (await client.get(f"/api/v1/threads/{thread_id}/runs")).json()["items"][0]["id"]
+
+    written = await client.get(f"/api/v1/projects/{project_id}/items", params={"run_id": run_id})
+    other = await client.get(
+        f"/api/v1/projects/{project_id}/items", params={"run_id": str(uuid4())}
+    )
+
+    assert written.json()["items"]
+    assert other.json()["items"] == []
+
+
+async def test_a_user_edit_is_a_revision_credited_to_the_user(client: AsyncClient) -> None:
+    project_id, _thread_id = await seeded_run(client)
+    listing = await client.get(f"/api/v1/projects/{project_id}/items")
+    first = listing.json()["items"][0]
+
+    await client.patch(
+        f"/api/v1/items/{first['id']}",
+        headers={"If-Match": str(first["version"])},
+        json={"review_status": "approved"},
+    )
+
+    revisions = (await client.get(f"/api/v1/items/{first['id']}/revisions")).json()["items"]
+    assert revisions[0]["version"] == first["version"] + 1
+    assert revisions[0]["change_reason"] == "user_edit"
+    assert revisions[0]["changed_by"]["actor"] == "user"
+    assert revisions[0]["changed_by"]["user_id"] is not None
+    edited = await client.get(f"/api/v1/items/{first['id']}")
+    assert edited.json()["updated_by"]["actor"] == "user"
+    assert edited.json()["created_by"]["actor"] == "agent"

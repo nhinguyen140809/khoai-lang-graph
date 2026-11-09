@@ -9,37 +9,72 @@ from pydantic import BaseModel, ConfigDict
 from khoailanggraph.platform.serialization import IsoDatetime
 
 
+class Origin(BaseModel):
+    """Who made a change: an agent (with its role, run and step) or a user."""
+
+    model_config = ConfigDict(extra="forbid")
+
+    actor: Literal["agent", "user"]
+    agent_role: str | None
+    user_id: str | None
+    run_id: str | None
+    step_id: str | None
+
+
 class Item(BaseModel):
-    """GET /projects/{id}/items và GET /items/{id}; Zod strips unknowns."""
+    """One item of an artifact (API.md items; the shape of the client's item schema)."""
 
     model_config = ConfigDict(extra="forbid")
 
     id: str
-    project_id: str
     artifact_id: str
-    parent_item_id: str | None
+    project_id: str
     key: str
     kind: str
-    review_status: str
-    content: dict[str, Any]
-    version: int
-    updated_at: IsoDatetime
-
-
-class ArtifactSummary(BaseModel):
-    """One artifact instance of the project tree (Artifacts tab, §5)."""
-
-    model_config = ConfigDict(extra="forbid")
-
-    id: str
-    project_id: str
-    kind: str
-    title: str
-    summary: str | None
+    parent_item_id: str | None
+    position: int
+    outline_number: str
     schema_version: int
     version: int
     review_status: str
+    created_by: Origin
+    updated_by: Origin
+    created_at: IsoDatetime
+    updated_at: IsoDatetime
     content: dict[str, Any]
+
+
+class OutlineItem(Item):
+    """An item in the outline of its artifact: with the depth of its outline number."""
+
+    depth: int
+
+
+class NestedOutlineItem(OutlineItem):
+    """An item with the items under it (`?shape=tree`)."""
+
+    children: list[NestedOutlineItem]
+
+
+class Artifact(BaseModel):
+    """One artifact instance of a project (API.md artifacts)."""
+
+    model_config = ConfigDict(extra="forbid")
+
+    id: str
+    kind: str
+    project_id: str
+    title: str
+    summary: str | None
+    schema_version: int
+    content: dict[str, Any]
+    subject_item_id: str | None
+    version: int
+    review_status: str
+    item_count: int
+    created_by: Origin
+    updated_by: Origin
+    created_at: IsoDatetime
     updated_at: IsoDatetime
 
 
@@ -55,15 +90,15 @@ class ItemLinkRef(BaseModel):
 
 
 class ItemRevision(BaseModel):
-    """One version of an item (GET /items/{id}/revisions, DATA_SHAPE §7)."""
+    """One version of an item (GET /items/{id}/revisions)."""
 
     model_config = ConfigDict(extra="forbid")
 
-    item_id: str
     version: int
     change_reason: Literal["generated", "user_edit", "rework", "reviewed", "restored", "deleted"]
-    snapshot: dict[str, Any]
+    changed_by: Origin
     created_at: IsoDatetime
+    content: dict[str, Any]
 
 
 class MatrixChainRef(BaseModel):
