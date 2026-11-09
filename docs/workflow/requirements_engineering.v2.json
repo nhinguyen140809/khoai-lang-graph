@@ -29,7 +29,7 @@
   "stages": [
     { "key": "intent_routing", "title": "Intent routing", "internal": true, "parent": null },
     { "key": "planning", "title": "Planning the interviews", "internal": false, "parent": null },
-    { "key": "research", "title": "Researching the stakeholders", "internal": false, "parent": null },
+    { "key": "research", "title": "Finding evidence for the interviewees", "internal": false, "parent": null },
     { "key": "persona_generation", "title": "Proposing the interviewees", "internal": false, "parent": null },
     { "key": "persona_review", "title": "Finalizing the interviewees", "internal": false, "parent": null },
     { "key": "interviewing", "title": "Interviewing", "internal": false, "parent": null },
