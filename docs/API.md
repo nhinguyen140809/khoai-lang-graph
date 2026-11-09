@@ -316,7 +316,7 @@ Rules:
 
 | Method and path | Purpose | Phase |
 |---|---|---|
-| `GET /projects` | Projects of the user; filters `status`, `rollup_run_status` (one or more values; `none` matches a project without a run) and `last_activity_after`; ordered by `last_activity_at` descending. Each item has `rollup_run_status`, which the project list shows; `item_counts` comes only with `GET /projects/{project_id}` | MVP |
+| `GET /projects` | Projects of the user; filters `status`, `rollup_run_status` (one or more values; `none` matches a project without a run) and `last_activity_after`; ordered by `last_activity_at` descending. Each item has `item_counts`, `unfinished_run_counts` and `rollup_run_status`, the same fields as `GET /projects/{project_id}` | MVP |
 | `POST /projects` | Create; body `name`, `description`, `output_language`. `output_language` left out takes `default_output_language` of the user settings. `name` is optional: without it, the first run names the project from its initial intent, and the event stream of that run sends `project_named`. Accepts an `Idempotency-Key`, so that a retry after a lost answer creates no second project | MVP |
 | `GET /projects/{project_id}` | One project, with `item_counts`, `unfinished_run_counts` and `rollup_run_status` | MVP |
 | `PATCH /projects/{project_id}` | Change name, description, status, `run_config`, `model_overrides`. Each key of `model_overrides` is an agent role of the current workflow definition and each value a model of the catalog whose `allowed_roles` holds the role; otherwise `422 validation_failed` at `model_overrides.<role>` | MVP |

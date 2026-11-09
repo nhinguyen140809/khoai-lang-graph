@@ -292,7 +292,7 @@ The master keys are kept in the server environment, never in the database, each 
 | `run_config` | RunDefaults | Settings for the runs of the project; a field left empty takes the value of the user, see [RunDefaults](#rundefaults-mvp) |
 | `initial_message_id` | ref\<Message\>? | The user message that started the first run of the project, for example "I want to build an online platform for university students to find mentors." Its content is the initial intent of the project. Null until the first run starts, so a run that starts while it is null is the first run of the project and begins at the planner |
 | `model_overrides` | map\<AgentRole, string\> | Optional `provider:model` per role for this project |
-| `item_counts` | map\<ItemKind, int\> | Derived, read-only. Shown on the project card |
+| `item_counts` | map\<ItemKind, int\> | Derived, read-only. The number of live items of each kind, in the list of projects and in the detail of one |
 | `unfinished_run_counts` | RunCounts | Derived, read-only. The number of unfinished runs of the project in each status, see below. `interrupted` counts the reviews that wait for the user |
 | `rollup_run_status` | enum? | Derived, read-only. The status that the latest [Run](#run-mvp) of each thread of the project rolls up to: the one that needs the user most, in the order `interrupted`, `failed`, `running`, `queued`, `cancelled`, `succeeded`. A run that a later run of its thread replaced no longer counts, so a failed run that was run again does not show. Null before the first run. The project list shows it |
 | `last_activity_at` | datetime | Derived, stored. Kept in a column so that the project list can be sorted by it |
@@ -1243,6 +1243,8 @@ flowchart RL
 
 When an item changes, every item reachable through forward links may be out of date.
 Each link stores the version of the target it was created against (`target_version`). A link whose `target_version` is lower than the target's current `version` marks its source as needing review. A link whose target is `superseded` marks its source the same way: it must be derived again from the item that replaces the target.
+
+Approving an item at a review writes a new version with the same content. A link that was up to date with the item before the approval follows it to the new version, so a review does not mark anything as out of date; a link that was already behind stays behind.
 
 ## 9. Mapping to the agent workflow
 
