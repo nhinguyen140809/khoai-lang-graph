@@ -1,4 +1,5 @@
 export { isFocused } from './focus.utils'
 export { useIsMobile } from './hooks/useIsMobile'
+export { usePrefersReducedMotion } from './hooks/usePrefersReducedMotion'
 export { useScrollIntoView } from './hooks/useScrollIntoView'
 export { useScrollIntoViewById } from './hooks/useScrollIntoViewById'
