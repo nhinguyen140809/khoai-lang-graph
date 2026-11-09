@@ -54,6 +54,8 @@ export {
 } from './content/values/content-values.utils'
 export { useItemTitleOf } from './content/values/hooks/useItemTitleOf'
 export { extensionFieldText, itemTitle } from './content/values/item-title.utils'
+export type { QuotePlace } from './content/values/quote-place.types'
+export { placeQuote } from './content/values/quote-place.utils'
 export type { ExportFormat, ExportTemplate } from './definition/export-templates.types'
 export { exportFormats } from './definition/export-templates.types'
 export { useAgentRoleLabels } from './definition/hooks/useAgentRoleLabels'
