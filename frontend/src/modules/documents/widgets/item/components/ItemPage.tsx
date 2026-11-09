@@ -11,7 +11,7 @@ import {
   useItem,
   useItemSchema,
 } from '@/modules/artifact/entities'
-import { EditItemForm, EditRecordButton, useIsEditing } from '@/modules/artifact/features/edit'
+import { EditItemForm, useIsEditing } from '@/modules/artifact/features/edit'
 import { RestoreVersionMenuItem } from '@/modules/artifact/features/restore'
 import { useItemLinks } from '@/modules/trace/entities'
 import { isNavigable } from '@/modules/workflow/entities'
@@ -34,6 +34,7 @@ import { useItemPage } from '../hooks/useItemPage'
 import { useItemTab } from '../hooks/useItemTab'
 import { itemPageMessages, navigatorIdleMs } from '../item-page.constants'
 import { FieldMarkPopover } from './FieldMarkPopover'
+import { ItemActionsMenu } from './ItemActionsMenu'
 import { ItemDetails } from './ItemDetails'
 import { ItemHeading } from './ItemHeading'
 import { ItemKeyLine } from './ItemKeyLine'
@@ -113,15 +114,14 @@ function ItemPageBody({ projectId, record }: { projectId: string; record: Artifa
         <ScrollArea className="h-full">
           <article className="mx-auto max-w-3xl space-y-4 p-6 pb-20">
             <header className="space-y-2">
-              <div className="flex flex-wrap items-center gap-4">
+              {/* The actions of the item sit beside its title, down at its last line. */}
+              <div className="flex flex-wrap items-end gap-4">
                 <ItemHeading
                   hasAvatar={page.view?.hasAvatar ?? false}
                   title={page.title}
                   place={page.neighbors.index}
                 />
-                {!isEditing && (
-                  <EditRecordButton target={target} lockedReason={page.lockedReason} />
-                )}
+                {!isEditing && <ItemActionsMenu record={record} lockedReason={page.lockedReason} />}
               </div>
               {!isEditing && !page.isHistoryOpen && page.status !== undefined && (
                 <>
@@ -140,6 +140,7 @@ function ItemPageBody({ projectId, record }: { projectId: string; record: Artifa
                     <ItemLinkLineBlock
                       projectId={projectId}
                       links={links}
+                      lockedReason={page.lockedReason}
                       activeLinkId={activeLinkId}
                       onActiveLinkChange={setActiveLinkId}
                     />

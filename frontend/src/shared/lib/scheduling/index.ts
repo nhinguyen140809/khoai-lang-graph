@@ -1,4 +1,5 @@
 export { coalescedTask } from './coalesced-task.utils'
 export { debounce } from './debounce.utils'
 export { useCoalescedListener } from './hooks/useCoalescedListener'
+export { useDebouncedValue } from './hooks/useDebouncedValue'
 export { sleep } from './sleep.utils'

@@ -222,7 +222,9 @@ screenshots('Documents', (shot) => {
   shot('Item in edit mode', async ({ page, user, shoot }) => {
     await openItem(page, analysis, 'List mentors by field')
 
-    await page.getByRole('button', { name: 'Edit', exact: true }).click()
+    // Edit sits in the "..." menu beside the title, with the trace and the link actions.
+    await page.getByRole('button', { name: 'More actions' }).click()
+    await page.getByRole('menuitem', { name: 'Edit', exact: true }).click()
     await user.expectRole('textbox', 'Title')
     await shoot({ fullPage: true })
   })
@@ -253,7 +255,8 @@ screenshots('Documents', (shot) => {
 
     await user.pressButton('History')
     await user.pressButton('Older version')
-    await page.getByRole('button', { name: 'More actions' }).click()
+    // The "..." of the old version comes after the "..." of the item in the page.
+    await page.getByRole('button', { name: 'More actions' }).last().click()
     await user.expectRole('menuitem', 'Restore this version')
     await shoot({ fullPage: true })
   })

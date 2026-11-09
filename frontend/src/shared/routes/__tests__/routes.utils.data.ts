@@ -36,6 +36,26 @@ export const routeCases = [
     path: '/projects/p1/items/i1',
   },
   {
+    page: 'the trace of a project',
+    href: () => routes.project('p1').trace(),
+    path: '/projects/p1/trace',
+  },
+  {
+    page: 'the chain of an item, by its id',
+    href: () => routes.project('p1').itemTrace('i1'),
+    path: '/projects/p1/trace/items/i1',
+  },
+  {
+    page: 'the items of a gap of the coverage',
+    href: () => routes.project('p1').traceGap('no_source'),
+    path: '/projects/p1/trace/gaps/no_source',
+  },
+  {
+    page: 'the open issues of a project',
+    href: () => routes.project('p1').traceIssues(),
+    path: '/projects/p1/trace/issues',
+  },
+  {
     page: 'the login page, which returns to the page asked for',
     href: () => routes.login('/settings'),
     path: '/login?next=%2Fsettings',

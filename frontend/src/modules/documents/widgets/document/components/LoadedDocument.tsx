@@ -14,7 +14,7 @@ import {
   useHistoryView,
   useItemSchema,
 } from '@/modules/artifact/entities'
-import { EditArtifactForm, EditRecordButton, useIsEditing } from '@/modules/artifact/features/edit'
+import { EditArtifactForm, useIsEditing } from '@/modules/artifact/features/edit'
 import { RestoreVersionMenuItem } from '@/modules/artifact/features/restore'
 import { useEditLockReason } from '@/modules/documents/entities'
 import { markRangesOf, useLinkQuotesOf, useReloadTraces } from '@/modules/trace/entities'
@@ -25,6 +25,7 @@ import { ScrollArea } from '@/shared/components/ui/scroll-area'
 import { useScrollIntoViewById } from '@/shared/lib/viewport'
 import { RouteParam, routes, useRouteParam } from '@/shared/routes'
 
+import { DocumentActionsMenu } from './DocumentActionsMenu'
 import { MessageMarkPopover } from './MessageMarkPopover'
 
 export function LoadedDocument({
@@ -117,7 +118,7 @@ export function LoadedDocument({
                 <RevisionContent target={target} view={history} fields={fields} />
               ) : undefined
             }
-            actions={<EditRecordButton target={target} lockedReason={lockedReason} />}
+            actions={<DocumentActionsMenu target={target} lockedReason={lockedReason} />}
             renderItemLink={(item, title) => (
               <PageLink href={project.item(item.id)}>{title}</PageLink>
             )}

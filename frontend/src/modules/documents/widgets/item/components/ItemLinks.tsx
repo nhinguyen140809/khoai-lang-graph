@@ -10,11 +10,13 @@ import { ItemLinkLine } from './ItemLinkLine'
 export function ItemLinkLineBlock({
   projectId,
   links,
+  lockedReason,
   activeLinkId,
   onActiveLinkChange,
 }: {
   projectId: string
   links: ReturnType<typeof useItemLinks>
+  lockedReason: string | null
   activeLinkId: string | null
   onActiveLinkChange: (linkId: string | null) => void
 }) {
@@ -23,6 +25,7 @@ export function ItemLinkLineBlock({
     <ItemLinkLine
       projectId={projectId}
       links={links}
+      lockedReason={lockedReason}
       activeLinkId={activeLinkId}
       onActiveLinkChange={onActiveLinkChange}
     />

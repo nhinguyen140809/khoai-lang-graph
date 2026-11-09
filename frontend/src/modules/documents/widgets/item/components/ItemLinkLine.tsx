@@ -1,11 +1,13 @@
 'use client'
 
-import { TriangleAlertIcon } from 'lucide-react'
+import { TriangleAlertIcon, Unlink2Icon } from 'lucide-react'
 import { useState } from 'react'
 
-import type { ItemLinksResult } from '@/modules/trace/entities'
+import type { ItemLinksResult, TraceLink } from '@/modules/trace/entities'
 import { linkedItemMessages, LinkedItemsPopover, quoteMarkColors } from '@/modules/trace/entities'
+import { useUnlinkAction } from '@/modules/trace/features/remove-link'
 import { Button } from '@/shared/components/ui/button'
+import { DisabledReason } from '@/shared/components/ui/disabled-reason'
 
 import { itemPageMessages, linkChipsShown } from '../item-page.constants'
 
@@ -13,9 +15,38 @@ interface ItemLinkLineProps {
   projectId: string
   /** The links of the item, from `useItemLinks`. */
   links: ItemLinksResult
+  /** Why the document of the item cannot change, which a change of a link needs; null when it can. */
+  lockedReason: string | null
   /** The link whose chips and marks show active, held by the page. */
   activeLinkId: string | null
   onActiveLinkChange: (linkId: string | null) => void
+}
+
+/** What the card of an outgoing chip offers: removing the link, when its document may change. */
+function RemoveLinkButton({
+  link,
+  lockedReason,
+}: {
+  link: Pick<TraceLink, 'id' | 'source_item_id'>
+  lockedReason: string | null
+}) {
+  const remove = useUnlinkAction(link, lockedReason)
+
+  return (
+    <DisabledReason reason={remove.disabledReason}>
+      <Button
+        type="button"
+        variant="ghost"
+        color="destructive"
+        size="xs"
+        disabled={remove.disabledReason !== null}
+        onClick={remove.run}
+      >
+        <Unlink2Icon aria-hidden />
+        {remove.label}
+      </Button>
+    </DisabledReason>
+  )
 }
 
 /**
@@ -27,6 +58,7 @@ interface ItemLinkLineProps {
 export function ItemLinkLine({
   projectId,
   links,
+  lockedReason,
   activeLinkId,
   onActiveLinkChange,
 }: ItemLinkLineProps) {
@@ -55,6 +87,11 @@ export function ItemLinkLine({
             madeFromVersion: row.isOutOfDate ? row.link.target_version : null,
           },
         ]}
+        renderActions={
+          isOutgoing
+            ? () => <RemoveLinkButton link={row.link} lockedReason={lockedReason} />
+            : undefined
+        }
       >
         <Button
           type="button"

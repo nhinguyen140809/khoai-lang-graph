@@ -15,6 +15,11 @@ export const itemPageMessages = {
   linksLoadError: 'The links could not load.',
 } as const
 
+/** The words of the menu that gathers the actions of an item. */
+export const itemActionsMessages = {
+  more: 'More actions',
+} as const
+
 /** How long the navigator stays after the last action of the user, in milliseconds. */
 export const navigatorIdleMs = 2_500
 
