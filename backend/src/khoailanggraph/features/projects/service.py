@@ -11,8 +11,9 @@ the activity bar shows. Nothing here touches HTTP.
 from __future__ import annotations
 
 import json
+from dataclasses import dataclass
 from datetime import UTC, datetime
-from typing import TYPE_CHECKING
+from typing import TYPE_CHECKING, cast
 from uuid import UUID, uuid4
 
 from sqlalchemy import func, select
@@ -24,11 +25,14 @@ if TYPE_CHECKING:
 
 from khoailanggraph.api.errors import ApiError
 from khoailanggraph.features.artifacts.models import ArtifactItemRow
+from khoailanggraph.features.me.models import UserSettingsRow
 from khoailanggraph.features.projects import schemas
 from khoailanggraph.features.projects.models import ProjectRow
 from khoailanggraph.features.runs.models import RunRow
 
 UNFINISHED_STATUSES = ("queued", "running", "interrupted")
+# The status a project shows, from the one that needs the user most to the one that needs least.
+ROLLUP_ORDER = ("interrupted", "failed", "running", "queued", "cancelled", "succeeded")
 
 
 def _now() -> datetime:
@@ -70,6 +74,28 @@ async def _unfinished_counts(session: AsyncSession, project_id: UUID) -> dict[st
     return {status: rows.get(status, 0) for status in UNFINISHED_STATUSES}
 
 
+async def rollup_run_status(session: AsyncSession, project_id: UUID) -> schemas.RunStatus | None:
+    """The status that the latest run of each thread of the project rolls up to: the one that
+    needs the user most. A run that a later run of its thread replaced no longer counts; null
+    before the first run."""
+    rows = (
+        await session.execute(
+            select(RunRow.thread_id, RunRow.number, RunRow.status).where(
+                RunRow.project_id == project_id
+            )
+        )
+    ).all()
+    latest: dict[UUID, tuple[int, str]] = {}
+    for thread_id, number, status in rows:
+        if thread_id not in latest or number > latest[thread_id][0]:
+            latest[thread_id] = (number, str(status))
+    statuses = {status for _number, status in latest.values()}
+    return cast(
+        "schemas.RunStatus | None",
+        next((status for status in ROLLUP_ORDER if status in statuses), None),
+    )
+
+
 def _run_defaults(raw: bytes) -> schemas.RunDefaults:
     payload = json.loads(raw.decode("utf-8") or b"{}")
     if not isinstance(payload, dict):
@@ -105,35 +131,66 @@ async def project_view(
             running=unfinished.get("running", 0),
             interrupted=unfinished.get("interrupted", 0),
         ),
+        rollup_run_status=await rollup_run_status(session, row.id),
         last_activity_at=row.last_activity_at,
         created_at=row.created_at,
         updated_at=row.updated_at,
     )
 
 
+@dataclass(frozen=True)
+class ProjectFilters:
+    """What a project list keeps: a status, some rollup run statuses (`none` matches a project
+    without a run) and the projects with activity after a time."""
+
+    status: str = "active"
+    rollup_run_statuses: list[str] | None = None
+    last_activity_after: datetime | None = None
+
+
 async def list_projects(
     session: AsyncSession,
     owner_id: UUID,
+    filters: ProjectFilters,
     *,
-    status: str,
     cursor: int,
     limit: int,
 ) -> tuple[list[schemas.ProjectSummary], int | None]:
-    """Threads of the owner, newest activity first, cursor pagination (§3)."""
-    statement = (
-        select(ProjectRow)
-        .where(
-            ProjectRow.owner_id == owner_id,
-            ProjectRow.status == status,
-            ProjectRow.deleted_at.is_(None),
-        )
-        .order_by(ProjectRow.last_activity_at.desc(), ProjectRow.id)
+    """The projects of the owner that the filters keep, the latest activity first."""
+    conditions = [
+        ProjectRow.owner_id == owner_id,
+        ProjectRow.status == filters.status,
+        ProjectRow.deleted_at.is_(None),
+    ]
+    if filters.last_activity_after is not None:
+        after = filters.last_activity_after.astimezone(UTC).replace(tzinfo=None)
+        conditions.append(ProjectRow.last_activity_at > after)
+    rows = list(
+        (
+            await session.scalars(
+                select(ProjectRow)
+                .where(*conditions)
+                .order_by(ProjectRow.last_activity_at.desc(), ProjectRow.id)
+            )
+        ).all()
     )
-    statement = statement.offset(cursor).limit(limit) if cursor else statement.limit(limit)
-    rows = list((await session.scalars(statement)).all())
     views = [await project_view(session, row) for row in rows]
-    next_cursor = cursor + len(views) if len(views) == limit else None
-    return views, next_cursor
+    if filters.rollup_run_statuses:
+        wanted = {None if value == "none" else value for value in filters.rollup_run_statuses}
+        views = [view for view in views if view.rollup_run_status in wanted]
+    window = views[cursor : cursor + limit]
+    next_cursor = cursor + len(window) if cursor + len(window) < len(views) else None
+    return window, next_cursor
+
+
+async def _default_output_language(session: AsyncSession, owner: UserRow) -> str:
+    """The `default_output_language` of the settings of the user; English without settings."""
+    language = await session.scalar(
+        select(UserSettingsRow.default_output_language).where(
+            UserSettingsRow.user_id == UUID(str(owner.id))
+        )
+    )
+    return language or "en"
 
 
 async def create_project(
@@ -147,7 +204,7 @@ async def create_project(
         owner_id=UUID(str(owner.id)),
         name=body.name,
         description=body.description,
-        output_language=body.output_language,
+        output_language=body.output_language or await _default_output_language(session, owner),
         run_config_json=b"{}",
         model_overrides_json=b"{}",
         last_activity_at=_now(),

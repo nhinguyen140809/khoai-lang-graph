@@ -88,6 +88,7 @@ select = ["E", "F", "W", "I", "N", "UP", "B", "SIM", "RUF", "ASYNC", "S", "PL", 
 "src/khoailanggraph/features/documents/schemas.py" = ["TC001", "TC003"]
 "src/khoailanggraph/features/artifacts/service.py" = ["PLR0913", "PLR0917", "TC002"]
 "src/khoailanggraph/features/artifacts/router.py" = ["PLR0913", "PLR0917"]
+"src/khoailanggraph/features/projects/router.py" = ["PLR0913", "PLR0917"]
 # uv scripts may print to stdout; they are developer tools.
 "scripts/**" = ["T201", "S108"]
 

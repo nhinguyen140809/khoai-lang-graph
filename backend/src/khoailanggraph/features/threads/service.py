@@ -4,7 +4,7 @@ project on first chat open, title nulled until the first message (§5)."""
 from __future__ import annotations
 
 from datetime import UTC, datetime
-from typing import TYPE_CHECKING
+from typing import TYPE_CHECKING, cast
 from uuid import UUID  # noqa: TC003 - FastAPI cast at runtime
 
 from sqlalchemy import select
@@ -14,6 +14,7 @@ if TYPE_CHECKING:
 
 from khoailanggraph.api.errors import ApiError
 from khoailanggraph.features.projects.service import get_project_row
+from khoailanggraph.features.runs.models import RunRow
 from khoailanggraph.features.threads import schemas
 from khoailanggraph.features.threads.models import ThreadRow
 
@@ -22,8 +23,18 @@ def _now() -> datetime:
     return datetime.now(UTC)
 
 
-async def thread_view(row: ThreadRow) -> schemas.ThreadSummary:
-    """The thread shape the FE reads: active run fields included (§5)."""
+async def latest_run_status(session: AsyncSession, thread_id: UUID) -> str | None:
+    """The status of the latest run of a thread, unfinished or ended; null before its first run."""
+    return await session.scalar(
+        select(RunRow.status)
+        .where(RunRow.thread_id == thread_id)
+        .order_by(RunRow.number.desc())
+        .limit(1)
+    )
+
+
+async def thread_view(session: AsyncSession, row: ThreadRow) -> schemas.ThreadSummary:
+    """The thread shape the client reads, with the status of its latest run."""
     return schemas.ThreadSummary(
         id=str(row.id),
         project_id=str(row.project_id),
@@ -32,7 +43,9 @@ async def thread_view(row: ThreadRow) -> schemas.ThreadSummary:
         status=row.status,
         current_stage=row.current_stage,
         active_run_id=str(row.active_run_id) if row.active_run_id else None,
-        active_run_status=row.active_run_status,
+        latest_run_status=cast(
+            "schemas.RunStatus | None", await latest_run_status(session, row.id)
+        ),
         last_message_at=row.last_message_at,
         created_at=row.created_at,
         updated_at=row.updated_at,
@@ -66,7 +79,7 @@ async def list_threads(
     )
     statement = statement.offset(cursor).limit(limit) if cursor else statement.limit(limit)
     rows = list((await session.scalars(statement)).all())
-    views = [await thread_view(row) for row in rows]
+    views = [await thread_view(session, row) for row in rows]
     next_cursor = cursor + len(views) if len(views) == limit else None
     return views, next_cursor
 

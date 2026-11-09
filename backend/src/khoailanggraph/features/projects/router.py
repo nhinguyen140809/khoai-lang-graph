@@ -2,6 +2,7 @@
 
 from __future__ import annotations
 
+from datetime import datetime  # noqa: TC003 - FastAPI reads the annotation at run time
 from typing import Annotated
 from uuid import UUID
 
@@ -11,8 +12,12 @@ from khoailanggraph.api import deps
 from khoailanggraph.api.errors import ApiError
 from khoailanggraph.api.schemas import MAX_LIMIT, Page
 from khoailanggraph.features.projects import schemas, service
+from khoailanggraph.features.projects.service import ROLLUP_ORDER
 from khoailanggraph.features.threads import schemas as thread_schemas
 from khoailanggraph.features.threads import service as thread_service
+
+# The values a project list may be filtered by: the rollup statuses and "none" for no run yet.
+ROLLUP_FILTERS = ("none", *ROLLUP_ORDER)
 
 router = APIRouter()
 
@@ -21,13 +26,31 @@ router = APIRouter()
 async def list_projects(
     user: deps.CurrentUser,
     db: deps.DbSession,
+    *,
     status: Annotated[str, Query()] = "active",
+    rollup_run_status: Annotated[list[str] | None, Query()] = None,
+    last_activity_after: Annotated[datetime | None, Query()] = None,
     cursor: Annotated[int, Query(ge=0)] = 0,
     limit: Annotated[int, Query(ge=1, le=MAX_LIMIT)] = 50,
 ) -> Page[schemas.ProjectSummary]:
-    """Owner's projects, newest activity first, envelope + cursor (§3/§5)."""
+    """The projects of the user with one status, the latest activity first. `rollup_run_status`
+    may be given several times (`none` matches a project without a run); `last_activity_after`
+    keeps the projects with activity after a time (§3/§5)."""
+    unknown = [value for value in rollup_run_status or [] if value not in ROLLUP_FILTERS]
+    if unknown:
+        raise ApiError(
+            400,
+            "invalid_request",
+            "Invalid request",
+            f"rollup_run_status must be one of {', '.join(ROLLUP_FILTERS)}.",
+        )
+    filters = service.ProjectFilters(
+        status=status,
+        rollup_run_statuses=rollup_run_status,
+        last_activity_after=last_activity_after,
+    )
     views, next_cursor = await service.list_projects(
-        db, UUID(str(user.id)), status=status, cursor=cursor, limit=limit
+        db, UUID(str(user.id)), filters, cursor=cursor, limit=limit
     )
     return Page(items=views, next_cursor=next_cursor)
 
@@ -40,9 +63,10 @@ async def create_project(
     response: Response,
     _origin: Annotated[None, Depends(deps.check_origin)],
 ) -> schemas.ProjectSummary:
-    """Create a project; the FE opens its chat right after (§5)."""
-    name = body.name.strip()
-    if not name:
+    """Create a project. The name is optional: without it, the first run names the project from
+    its initial intent. A language left out is the default language of the user (§5)."""
+    name = None if body.name is None else body.name.strip()
+    if name == "":
         raise ApiError(
             422,
             "validation_failed",
@@ -99,7 +123,7 @@ async def create_thread(
         db, project_id=project_id, created_by=UUID(str(user.id))
     )
     response.headers["Location"] = f"/api/v1/threads/{row.id}"
-    return await thread_service.thread_view(row)
+    return await thread_service.thread_view(db, row)
 
 
 @router.get("/threads/{thread_id}")
@@ -108,6 +132,6 @@ async def get_thread(
     user: deps.CurrentUser,
     db: deps.DbSession,
 ) -> thread_schemas.ThreadSummary:
-    """One thread, with `active_run_id`/`active_run_status` when it runs."""
+    """One thread, with its unfinished run and the status of its latest run."""
     row = await thread_service.get_thread_row(db, thread_id)
-    return await thread_service.thread_view(row)
+    return await thread_service.thread_view(db, row)

@@ -111,7 +111,6 @@ async def send_message(
     db.add(run)
     message.run_id = run.id
     thread.active_run_id = run.id
-    thread.active_run_status = "queued"
     await db.commit()  # the worker's connection must see the queued rows
     await asyncio.to_thread(
         service.start_run_blocking,
@@ -162,7 +161,6 @@ async def create_run_shim(
     )
     db.add(run)
     thread.active_run_id = run.id
-    thread.active_run_status = "queued"
     await db.commit()  # worker connection must see the queued rows
     await asyncio.to_thread(
         service.start_run_blocking,
@@ -461,8 +459,7 @@ async def retry_run(
     db.add(retry)
     if thread is not None:
         thread.active_run_id = retry.id
-        thread.active_run_status = "queued"
-    await db.flush()
+        await db.flush()
     return service.runs_output(retry)
 
 

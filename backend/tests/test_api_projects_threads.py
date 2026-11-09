@@ -15,6 +15,7 @@ from khoailanggraph.platform.db import (
     ensure_schema,
     make_async_engine,
     make_session_factory,
+    make_sync_engine,
 )
 from khoailanggraph.settings import Settings
 
@@ -43,10 +44,12 @@ async def app() -> AsyncIterator[FastAPI]:
     engine = make_async_engine(settings)
     await ensure_schema(engine)
     application.state.session_factory = make_session_factory(engine)
+    application.state.sync_engine = make_sync_engine(settings)
     try:
         yield application
     finally:
         await engine.dispose()
+        application.state.sync_engine.dispose()
         TEST_DB.unlink(missing_ok=True)
 
 
@@ -102,6 +105,7 @@ async def test_create_project_returns_201_location_full_shape(
         "model_overrides",
         "item_counts",
         "unfinished_run_counts",
+        "rollup_run_status",
         "last_activity_at",
         "created_at",
         "updated_at",
@@ -117,6 +121,7 @@ async def test_create_project_returns_201_location_full_shape(
     assert body["model_overrides"] == {}
     assert body["item_counts"] == {}
     assert body["unfinished_run_counts"] == {"queued": 0, "running": 0, "interrupted": 0}
+    assert body["rollup_run_status"] is None
     assert body["last_activity_at"] is not None
     assert body["initial_message_id"] is None
     assert body["created_at"] is not None
@@ -165,7 +170,7 @@ async def test_thread_lifecycle_matches_frontend_contract(
         "status",
         "current_stage",
         "active_run_id",
-        "active_run_status",
+        "latest_run_status",
         "last_message_at",
         "created_at",
         "updated_at",
@@ -173,7 +178,7 @@ async def test_thread_lifecycle_matches_frontend_contract(
     assert thread["title"] is None
     assert thread["current_stage"] is None
     assert thread["active_run_id"] is None
-    assert thread["active_run_status"] is None
+    assert thread["latest_run_status"] is None
 
     listing = await signed_in.get(f"/api/v1/projects/{project_id}/threads")
     assert listing.json()["items"][0]["id"] == thread["id"]
@@ -199,3 +204,65 @@ async def test_projects_archived_filter(signed_in: AsyncClient) -> None:
 
     assert missing.status_code == 200
     assert missing.json()["items"] == []
+
+
+async def test_a_project_may_be_created_without_a_name(signed_in: AsyncClient) -> None:
+    response = await signed_in.post("/api/v1/projects", json={"description": "An idea"})
+
+    assert response.status_code == 201
+    assert response.json()["name"] is None
+    assert response.json()["output_language"] == "en"
+
+
+async def test_a_language_left_out_is_the_default_language_of_the_user(
+    signed_in: AsyncClient,
+) -> None:
+    saved = await signed_in.put(
+        "/api/v1/me/settings",
+        json={
+            "theme": "system",
+            "ui_language": "vi",
+            "default_output_language": "vi",
+            "default_run_config": {},
+            "notify_on_interrupt": True,
+            "notify_on_run_finished": True,
+        },
+    )
+    assert saved.status_code == 200
+
+    response = await signed_in.post("/api/v1/projects", json={"name": "Dự án"})
+
+    assert response.json()["output_language"] == "vi"
+
+
+async def test_a_name_of_spaces_is_refused(signed_in: AsyncClient) -> None:
+    response = await signed_in.post("/api/v1/projects", json={"name": "   "})
+
+    assert response.status_code == 422
+
+
+async def test_the_project_list_is_filtered_by_the_status_of_the_latest_runs(
+    signed_in: AsyncClient,
+) -> None:
+    started = (await signed_in.post("/api/v1/projects", json=PROJECT_BODY)).json()["id"]
+    unstarted = (await signed_in.post("/api/v1/projects", json={"name": "Idea"})).json()["id"]
+    thread = (await signed_in.post(f"/api/v1/projects/{started}/threads")).json()["id"]
+    await signed_in.post(f"/api/v1/threads/{thread}/messages", json={"content": "Build it"})
+
+    async def ids(**params: object) -> set[str]:
+        response = await signed_in.get("/api/v1/projects", params=params)  # type: ignore[arg-type]
+        assert response.status_code == 200
+        return {entry["id"] for entry in response.json()["items"]}
+
+    assert await ids(rollup_run_status="none") == {unstarted}
+    assert await ids(rollup_run_status="succeeded") == {started}
+    assert await ids(rollup_run_status=["none", "succeeded"]) == {started, unstarted}
+    assert await ids(rollup_run_status="interrupted") == set()
+    assert await ids(last_activity_after="2999-01-01T00:00:00Z") == set()
+    assert await ids(last_activity_after="2000-01-01T00:00:00Z") == {started, unstarted}
+    invalid = await signed_in.get("/api/v1/projects", params={"rollup_run_status": "done"})
+    assert invalid.status_code == 400
+    assert invalid.json()["code"] == "invalid_request"
+    thread_view = (await signed_in.get(f"/api/v1/threads/{thread}")).json()
+    assert thread_view["latest_run_status"] == "succeeded"
+    assert thread_view["active_run_id"] is None

@@ -35,9 +35,7 @@ def upgrade() -> None:
     op.create_table(
         "document_versions",
         sa.Column("id", sa.Uuid(), primary_key=True),
-        sa.Column(
-            "document_id", sa.Uuid(), sa.ForeignKey("source_documents.id"), nullable=False
-        ),
+        sa.Column("document_id", sa.Uuid(), sa.ForeignKey("source_documents.id"), nullable=False),
         sa.Index("ix_document_versions_document_id", "document_id"),
         sa.Column("version", sa.Integer(), nullable=False),
         sa.Column("size_bytes", sa.Integer(), nullable=False),

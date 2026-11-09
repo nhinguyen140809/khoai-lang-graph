@@ -10,6 +10,7 @@ from khoailanggraph.platform.serialization import IsoDatetime
 
 OutputLanguage = Literal["en", "vi"]
 ProjectStatus = Literal["active", "archived"]
+RunStatus = Literal["queued", "running", "interrupted", "succeeded", "failed", "cancelled"]
 
 
 class RunDefaults(BaseModel):
@@ -38,7 +39,7 @@ class ProjectSummary(BaseModel):
 
     id: str
     owner_id: str
-    name: str
+    name: str | None
     description: str | None
     status: ProjectStatus
     output_language: OutputLanguage
@@ -47,6 +48,7 @@ class ProjectSummary(BaseModel):
     model_overrides: dict[str, str]
     item_counts: dict[str, int]
     unfinished_run_counts: UnfinishedRunCounts
+    rollup_run_status: RunStatus | None
     last_activity_at: IsoDatetime
     created_at: IsoDatetime
     updated_at: IsoDatetime
@@ -55,6 +57,6 @@ class ProjectSummary(BaseModel):
 class ProjectBody(BaseModel):
     model_config = ConfigDict(extra="forbid")
 
-    name: str = Field(min_length=1)
+    name: str | None = Field(default=None)
     description: str | None = None
-    output_language: OutputLanguage
+    output_language: OutputLanguage | None = None

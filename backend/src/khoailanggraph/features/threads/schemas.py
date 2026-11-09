@@ -9,7 +9,7 @@ from pydantic import BaseModel, ConfigDict
 from khoailanggraph.platform.serialization import IsoDatetime
 
 ThreadStatus = Literal["active", "archived"]
-ActiveRunStatus = Literal["queued", "running", "interrupted"]
+RunStatus = Literal["queued", "running", "interrupted", "succeeded", "failed", "cancelled"]
 
 
 class ThreadSummary(BaseModel):
@@ -24,7 +24,7 @@ class ThreadSummary(BaseModel):
     status: ThreadStatus
     current_stage: str | None
     active_run_id: str | None
-    active_run_status: ActiveRunStatus | None
+    latest_run_status: RunStatus | None
     last_message_at: IsoDatetime
     created_at: IsoDatetime
     updated_at: IsoDatetime

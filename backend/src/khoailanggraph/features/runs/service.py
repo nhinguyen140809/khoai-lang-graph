@@ -264,7 +264,6 @@ def start_run_blocking(
             project.initial_message_id = message.id
             session.flush()
         thread.active_run_id = run.id
-        thread.active_run_status = "running"
         sink = SqlArtifactSink(engine, run_id=run.id)
         sink.bind(session)
         state = make_initial_state(
@@ -366,7 +365,6 @@ def start_run_blocking(
         run.finished_at = utcnow()
         if thread is not None:
             thread.active_run_id = None
-            thread.active_run_status = None
             thread.current_stage = run.current_stage
         session.commit()
 
