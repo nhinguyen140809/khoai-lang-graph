@@ -25,6 +25,6 @@ export type {
 } from './projects/projects.types'
 export { projectName, unfinishedRunCount } from './projects/projects.utils'
 export { ProjectRunStreams } from './run-status/components/ProjectRunStreams'
-export { useProjectRunResult } from './run-status/hooks/useProjectRunResult'
+export { useIsProjectWriting, useProjectRunResult } from './run-status/hooks/useProjectRunResult'
 export type { ProjectRunResult } from './run-status/project-run-result.types'
 export { shownRun } from './run-status/project-run-result.utils'

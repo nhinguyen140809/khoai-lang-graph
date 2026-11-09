@@ -3,6 +3,7 @@ import { threadsByAttention, useProjectThreads } from '@/modules/thread/entities
 import { pageItems } from '@/shared/api/query-client'
 
 import type { ProjectRunResult } from '../project-run-result.types'
+import { shownRun } from '../project-run-result.utils'
 
 /**
  * The status of a project: its threads from the one whose latest run needs the user most, and the
@@ -23,4 +24,16 @@ export function useProjectRunResult(projectId: string): ProjectRunResult {
   if (run.isLoadingError) return { state: 'error', retry: () => void run.refetch() }
   if (run.data === undefined) return { state: 'pending' }
   return { state: 'success', run: run.data, threads: sorted }
+}
+
+/** The statuses of a run whose agents write to the documents of the project; a run that waits for the user writes nothing. */
+const writingRunStatuses = ['queued', 'running'] as const
+
+/**
+ * Whether the agents of a project write now: its shown run works, so its documents change while
+ * it goes. The pages of the trace follow while it does, and reload once when it stops.
+ */
+export function useIsProjectWriting(projectId: string): boolean {
+  const run = shownRun(useProjectRunResult(projectId))
+  return run !== null && (writingRunStatuses as readonly string[]).includes(run.status)
 }
