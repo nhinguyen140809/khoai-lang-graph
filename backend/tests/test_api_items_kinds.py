@@ -705,3 +705,24 @@ async def test_a_link_to_an_item_that_changed_afterwards_needs_a_check(client: A
     ]
     assert changed["made_from_version"] == link["target_version"]
     assert changed["current_version"] == link["target_version"] + 1
+
+
+async def test_the_documents_of_a_run_carry_a_summary_of_what_they_say(client: AsyncClient) -> None:
+    project_id, _thread_id = await seeded_run(client)
+
+    artifacts = (await client.get(f"/api/v1/projects/{project_id}/artifacts")).json()["items"]
+
+    summaries = {entry["kind"]: entry["summary"] for entry in artifacts}
+    for kind in (
+        "elicitation_plan",
+        "requirements_analysis",
+        "requirement_specification",
+        "product_backlog",
+        "interview_transcript",
+    ):
+        assert summaries[kind], f"{kind} has no summary"
+    analysis = next(entry for entry in artifacts if entry["kind"] == "requirements_analysis")
+    assert "key_findings" in analysis["content"], "the summary is not part of the content"
+    plan = next(entry for entry in artifacts if entry["kind"] == "elicitation_plan")
+    assert "summary" not in plan["content"]
+    assert "report" not in plan["content"]

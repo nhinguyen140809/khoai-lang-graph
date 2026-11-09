@@ -44,6 +44,7 @@ Write the elicitation plan the interviewers will follow: what the interviews mus
 ## Output
 
 - `report`: one to three sentences to the user about the plan: who you will interview and about what, and anything in the idea that is unclear; the server turns them into a message of the chat. Name things by what they say, never by their keys.
+- `summary`: one or two sentences about what the plan says, for the top of the artifact; describe the content, not what you did, which is the `report`.
 
 # User
 

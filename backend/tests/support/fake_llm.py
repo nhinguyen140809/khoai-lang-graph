@@ -140,10 +140,21 @@ _REPORTS = {
 }
 
 
+# What the documents say, for the outputs that may carry a summary of the artifact.
+_SUMMARIES = {
+    "PlannerOutput": "Three kinds of stakeholders and the topics to ask each of them about.",
+    "AnalystOutput": "Students want fast booking, mentors want limits, an admin wants oversight.",
+    "EngineerOutput": "The platform lets students find and book mentors, with verified profiles.",
+    "BacklogOutput": "User stories for search, booking, mentor limits and moderation.",
+}
+
+
 def _with_reports(answer: dict[str, Any], schema_name: str) -> dict[str, Any]:
-    """Give the answer of a node the `report` it must write."""
+    """Give the answer of a node the `report` it must write, and a `summary` where it may."""
     if schema_name in _REPORTS:
         answer.setdefault("report", _REPORTS[schema_name])
+    if schema_name in _SUMMARIES:
+        answer.setdefault("summary", _SUMMARIES[schema_name])
     return answer
 
 

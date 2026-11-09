@@ -535,8 +535,8 @@ def _interviewer_turn(system: str, user: str, call_number: int) -> dict[str, Any
     stops deterministically after the plan's three questions per persona.
     """
     asked = user.count(" interviewer:")
-    if asked >= _QUESTS_PER_PERSONA:
-        return {"question": "", "stop": True}
+    if asked >= _QUESTS_PER_PERSONA or "<limit_reached>\nyes" in user:
+        return {"question": "", "stop": True, "summary": _summary_for(user)}
     index = min(asked, len(_QUESTIONS) - 1)
     return {"question": _QUESTIONS[index], "stop": False}
 
@@ -585,12 +585,12 @@ _SUMMARIES: dict[str, str] = {
 }
 
 
-def _interview_summary(system: str, user: str, call_number: int) -> dict[str, Any]:
+def _summary_for(user: str) -> str:
     """One sentence about the interview, chosen by the persona in the prompt."""
     for role, summary in _SUMMARIES.items():
         if f'stakeholder_type": "{role}' in user:
-            return {"summary": summary}
-    return {"summary": _SUMMARIES["Student"]}
+            return summary
+    return _SUMMARIES["Student"]
 
 
 _EVIDENCE = {
@@ -1379,7 +1379,6 @@ class DemoData:
     GeneratorOutputV2 = staticmethod(_personas)
     InterviewerTurnOutput = staticmethod(_interviewer_turn)
     PersonaAnswerOutput = staticmethod(_persona_answer)
-    InterviewSummaryOutput = staticmethod(_interview_summary)
     AnalystOutput = staticmethod(_analyst)
     EngineerOutput = staticmethod(_engineer)
     BacklogOutput = staticmethod(_backlog)

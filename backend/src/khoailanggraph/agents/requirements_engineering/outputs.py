@@ -12,7 +12,7 @@ from __future__ import annotations
 
 from typing import Annotated, Literal
 
-from pydantic import BaseModel, ConfigDict, Field
+from pydantic import BaseModel, ConfigDict, Field, model_validator
 
 from khoailanggraph.domain.artifacts import ElicitationPlanContent
 
@@ -42,6 +42,19 @@ Report = Annotated[
             "One to three sentences to the user, in the output language, about what you did: "
             "what was done in plain words first, then only what needs their attention. "
             "Name things by what they say, never by their key."
+        ),
+    ),
+]
+
+# The summary of a document: what its content says, for the top of the artifact. It is not the
+# report, which says what the step did.
+Summary = Annotated[
+    str | None,
+    Field(
+        default=None,
+        description=(
+            "One or two sentences, in the output language, about what the document says, for the "
+            "top of it: the content, not what you did. Null when there is nothing to sum up."
         ),
     ),
 ]
@@ -201,23 +214,27 @@ class PlannerOutput(ElicitationPlanContent):
     """The plan content verbatim, and the report; the planner produces no items."""
 
     report: Report
+    summary: Summary
 
 
 class InterviewerTurnOutput(_Output):
     question: str
     stop: bool = False
-
-
-class InterviewSummaryOutput(_Output):
-    """One sentence about a finished interview, for the top of its transcript."""
-
-    summary: str = Field(
-        min_length=1,
+    summary: str | None = Field(
+        default=None,
         description=(
-            "One sentence, at most 160 characters, about what the interviewee said: who they are, "
-            "then what they care about. Use only what they said."
+            "When you stop: one sentence, at most 160 characters, about what the interviewee said "
+            "(who they are, then what they care about), using only what they said. Null when you "
+            "ask a question."
         ),
     )
+
+    @model_validator(mode="after")
+    def _a_stop_comes_with_a_summary(self) -> InterviewerTurnOutput:
+        if self.stop and not (self.summary and self.summary.strip()):
+            msg = "write the summary of the interview when you stop"
+            raise ValueError(msg)
+        return self
 
 
 class PersonaAnswerOutput(_Output):
@@ -301,6 +318,7 @@ class ConflictDraft(_Output):
 
 class AnalystOutput(_Output):
     report: Report
+    summary: Summary
     raw_requirements: list[RawRequirementDraft]
     analyzed_requirements: list[AnalyzedRequirementDraft]
     latent_needs: list[LatentNeedDraft]
@@ -336,6 +354,7 @@ class EngineerOutput(_Output):
     """The frame of the specification plus its requirement items."""
 
     report: Report
+    summary: Summary
     purpose: str
     scope: str
     out_of_scope: list[str]
@@ -368,6 +387,7 @@ class BacklogOutput(_Output):
     """The frame of the backlog plus its items, in backlog order."""
 
     report: Report
+    summary: Summary
     product_goal: str
     prioritization_notes: str | None
     items: list[NewBacklogItem]

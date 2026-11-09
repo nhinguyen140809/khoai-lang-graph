@@ -69,6 +69,7 @@ Turn what the stakeholders said into a requirements analysis: raw requirements, 
 ## Output
 
 - `report`: one to three sentences to the user about what this analysis did and what it found; the server turns them into a message of the chat.
+- `summary`: one or two sentences about what the analysis says, for the top of the artifact; describe the content, not what you did, which is the `report`. Leave it out when you only change a few items of an existing one.
 - New items have a `ref` unique in this response, such as `R1` or `A3`.
 - Return an item of the current analysis with its `key` only to change its lifecycle fields: `status` and `resolution` of an ambiguity issue or a conflict, `disposition` of a latent need, `validation_status` of an assumption. Keep its other content fields as they are.
 - `stated_by`: the key of the persona who stated a raw requirement.

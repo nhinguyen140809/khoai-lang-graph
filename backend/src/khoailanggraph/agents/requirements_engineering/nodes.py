@@ -56,7 +56,6 @@ from khoailanggraph.agents.requirements_engineering.outputs import (
     GeneratorOutputV2,
     IntentDirectiveOutput,
     InterviewerTurnOutput,
-    InterviewSummaryOutput,
     ItemLink,
     LinkRef,
     MessageLink,
@@ -513,7 +512,8 @@ def planner_node(
         state["project_id"],
         "elicitation_plan",
         title="Elicitation plan",
-        content=plan.model_dump(mode="json", exclude={"report"}),
+        content=plan.model_dump(mode="json", exclude={"report", "summary"}),
+        summary=plan.summary,
     )
     sink.add_report(plan.report)
     return {"elicitation_plan": dict(created), "current_stage": "planning"}
@@ -914,38 +914,81 @@ def _transcript_of(
     return dict(created), []
 
 
-def _close_interview(
+def _set_summary(sink: ArtifactSink, artifact_id: str, summary: str | None) -> None:
+    """The overview of an artifact that a pass updated, when the agent wrote a new one."""
+    if summary:
+        sink.set_artifact_summary(artifact_id, summary)
+
+
+def _plan_topics(sink: ArtifactSink, state: REState) -> list[str]:
+    """The topics of the elicitation plan; none when the project has no plan."""
+    record = sink.read_artifact(state["project_id"], "elicitation_plan")
+    if record is None:
+        return []
+    topics = cast("dict[str, list[str]]", record["content"]).get("topics", [])
+    return [str(topic) for topic in topics]
+
+
+def _ask_interviewer(
     state: REState,
     config: RunnableConfig | Mapping[str, Any],
     persona: ItemRecord,
-    transcript: dict[str, Any],
-    stop_reason: str,
-) -> ArtifactRef:
-    """End the interview of a persona: the transcript is completed and gets a one sentence
-    summary of what the persona said, for the top of the transcript."""
+    messages: list[ItemRecord],
+    *,
+    limit_reached: bool,
+) -> InterviewerTurnOutput:
+    """One turn of the interviewer: the next question, or the stop with the summary of the
+    interview. With `limit_reached` the turn limit ended the interview: the interviewer writes
+    the summary and asks nothing."""
     cfg = _run_config(state)
     sink = _sink(config)
-    messages = sink.read_items(transcript["artifact_id"])
-    summary: InterviewSummaryOutput = _invoke(
-        "interview_summarizer",
+    plan_record = sink.read_artifact(state["project_id"], "elicitation_plan")
+    plan_lines = "(no plan)"
+    if plan_record is not None:
+        plan_content = cast("dict[str, list[str]]", plan_record["content"])
+        plan_lines = "\n".join(
+            [
+                *(f"topic: {topic}" for topic in plan_content.get("topics", [])),
+                *(
+                    f"stop when: {condition}"
+                    for condition in plan_content.get("stopping_conditions", [])
+                ),
+            ]
+        )
+    turn: InterviewerTurnOutput = _invoke(
+        "interviewer",
         config,
-        InterviewSummaryOutput,
+        InterviewerTurnOutput,
         {
             "output_language": _language(cfg),
+            "plan": plan_lines,
             "persona": json.dumps(prompt_view(persona), ensure_ascii=False),
-            "transcript": "\n".join(
-                transcript_lines(
-                    persona["key"], messages, transcript["content"].get("participants")
-                )
-            )
-            or "(no messages)",
+            "transcript": "\n".join(transcript_lines(persona["key"], messages[-TRANSCRIPT_TAIL:]))
+            or "(none yet; this is the opening turn)",
+            "turn": str(int(state["interview_turn"]) + 1),
+            "limit_reached": "yes" if limit_reached else "",
+            "directive": _directive_for(state, config, "checkpoint_analysis"),
         },
     )
+    return turn
+
+
+def _close_interview(
+    sink: ArtifactSink,
+    transcript: dict[str, Any],
+    stop_reason: str,
+    summary: str | None,
+) -> ArtifactRef:
+    """End the interview of a persona: the transcript is completed, and the sentence that the
+    interviewer wrote about what the persona said becomes its summary."""
     closed = sink.update_artifact_content(
         transcript["artifact_id"],
         dict(transcript["content"]) | {"status": "completed", "stop_reason": stop_reason},
     )
-    sink.set_artifact_summary(transcript["artifact_id"], summary.summary)
+    if summary:
+        sink.set_artifact_summary(transcript["artifact_id"], summary)
+    else:
+        logger.warning("interview closed without a summary", artifact=transcript["artifact_id"])
     return closed
 
 
@@ -987,7 +1030,8 @@ def interviewer_node(
         if orchestrator.exceeded_max_turns(state, turns_per_persona=cfg.parameters.max_turns):
             persona = orchestrator.active_persona(state, sink)
             transcript, messages = _transcript_of(state, sink, persona)
-            closed = _close_interview(state, runnable_config, persona, transcript, "max_turns")
+            last = _ask_interviewer(state, runnable_config, persona, messages, limit_reached=True)
+            closed = _close_interview(sink, transcript, "max_turns", last.summary)
             if int(state["active_persona_index"]) + 1 >= len(state["personas"]):
                 return {
                     **cursor,
@@ -1002,38 +1046,7 @@ def interviewer_node(
         persona = orchestrator.active_persona(state, sink)
         transcript, messages = _transcript_of(state, sink, persona)
         turn_no = int(state["interview_turn"]) + 1
-
-        transcript_rendered = (
-            "\n".join(transcript_lines(persona["key"], messages[-TRANSCRIPT_TAIL:]))
-            or "(none yet; this is the opening turn)"
-        )
-        plan_record = sink.read_artifact(state["project_id"], "elicitation_plan")
-        plan_lines = "(no plan)"
-        if plan_record is not None:
-            plan_content = cast("dict[str, list[str]]", plan_record["content"])
-            plan_lines = "\n".join(
-                [
-                    *(f"topic: {topic}" for topic in plan_content.get("topics", [])),
-                    *(
-                        f"stop when: {condition}"
-                        for condition in plan_content.get("stopping_conditions", [])
-                    ),
-                ]
-            )
-
-        turn: InterviewerTurnOutput = _invoke(
-            "interviewer",
-            runnable_config,
-            InterviewerTurnOutput,
-            {
-                "output_language": _language(cfg),
-                "plan": plan_lines,
-                "persona": json.dumps(prompt_view(persona), ensure_ascii=False),
-                "transcript": transcript_rendered,
-                "turn": str(turn_no),
-                "directive": _directive_for(state, runnable_config, "checkpoint_analysis"),
-            },
-        )
+        turn = _ask_interviewer(state, runnable_config, persona, messages, limit_reached=False)
 
         # Gate point 1/3 — interview_turn_policy: the bounded decision layer
         # (Jev/mock via DECISION_PROVIDER, off by default) may stop an
@@ -1063,7 +1076,7 @@ def interviewer_node(
                     }
                     for entry in messages[-TRANSCRIPT_TAIL:]
                 ],
-                "plan_topics": (plan_content.get("topics", []) if plan_record is not None else []),
+                "plan_topics": _plan_topics(sink, state),
                 "turn": turn_no,
                 "max_turns": cfg.parameters.max_turns,
                 "llm_stop": turn.stop,
@@ -1088,9 +1101,7 @@ def interviewer_node(
             )
 
         if stop:
-            closed = _close_interview(
-                state, runnable_config, persona, transcript, "interviewer_stopped"
-            )
+            closed = _close_interview(sink, transcript, "interviewer_stopped", turn.summary)
             if int(state["active_persona_index"]) + 1 >= len(state["personas"]):
                 return {
                     **cursor,
@@ -1320,6 +1331,7 @@ def analyst_node(
             },
         )
         artifact_id: str = str(analysis_ref["artifact_id"])
+        _set_summary(sink, artifact_id, analysis.summary)
     else:
         created = sink.create_artifact(
             state["project_id"],
@@ -1329,6 +1341,7 @@ def analyst_node(
                 "key_findings": analysis.key_findings,
                 "open_questions": analysis.open_questions,
             },
+            summary=analysis.summary,
         )
         artifact_id = str(created["artifact_id"])
 
@@ -1688,6 +1701,7 @@ def requirement_engineer_node(
             },
         )
         artifact_id: str = str(ref["artifact_id"])
+        _set_summary(sink, artifact_id, draft.summary)
     else:
         created = sink.create_artifact(
             state["project_id"],
@@ -1699,6 +1713,7 @@ def requirement_engineer_node(
                 "out_of_scope": draft.out_of_scope,
                 "definitions": [item.model_dump(mode="json") for item in draft.definitions],
             },
+            summary=draft.summary,
         )
         artifact_id = str(created["artifact_id"])
 
@@ -1776,6 +1791,7 @@ def backlog_manager_node(
             },
         )
         artifact_id: str = str(ref["artifact_id"])
+        _set_summary(sink, artifact_id, draft.summary)
     else:
         created = sink.create_artifact(
             state["project_id"],
@@ -1785,6 +1801,7 @@ def backlog_manager_node(
                 "product_goal": draft.product_goal,
                 "prioritization_notes": draft.prioritization_notes,
             },
+            summary=draft.summary,
         )
         artifact_id = str(created["artifact_id"])
 

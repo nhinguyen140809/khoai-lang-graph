@@ -55,6 +55,7 @@ Turn every specified requirement into actionable backlog items — epics and use
 ## Output
 
 - `report`: one to three sentences to the user about what the backlog holds and what it leaves out; the server turns them into a message of the chat. Name things by what they say, never by their keys.
+- `summary`: one or two sentences about what the backlog says, for the top of the artifact; describe the content, not what you did, which is the `report`. Leave it out when you only change a few items of an existing one.
 - `derived_from`: each a key, or `{ "item": "<key>", "source_quote": "<words of this item>", "target_quote": "<words of that requirement>" }` when the item uses a part of the requirement or is built from several. A quote is one run of words, at most 300 characters, copied exactly from the item it quotes; give a quote only where it helps.
 
 # User

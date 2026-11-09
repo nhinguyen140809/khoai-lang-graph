@@ -28,7 +28,6 @@ defaults:
 roles:
   interviewer: openai:gpt-4.1-mini
   persona_agent: openai:gpt-4.1-mini
-  interview_summarizer: openai:gpt-4.1-mini
   stakeholder_miner: openai:gpt-4.1
   persona_generator: openai:gpt-4.1
   analyst: openai:gpt-4.1

@@ -368,13 +368,12 @@ A passage of the extracted text of a source document, with its embedding, so tha
 | `validator` | validator | Checks the outputs and reports issues |
 | `intent_router` | intent router | Decides which node a message sent by the user should go to |
 
-Workflow definition version 2 keeps these roles and adds three. The summarizer is not a node of the graph: the interviewer node calls it when an interview ends.
+Workflow definition version 2 keeps these roles and adds two.
 
 | Role | Node in the deck | Job |
 |---|---|---|
 | `corpus_builder` | corpus builder | Chooses the research documents that the interviewees are based on |
 | `stakeholder_miner` | stakeholder miner | Notes what each kind of stakeholder cares about in those documents, with the words of the document |
-| `interview_summarizer` | none | Sums up one finished interview in a sentence, the `summary` of its transcript |
 
 ### Workflow stages
 
@@ -831,7 +830,7 @@ InterviewTranscript:
 | `turn_count` | int | |
 | `stop_reason` | enum? | `max_turns`, `interviewer_stopped`, `stopping_condition_met` |
 
-The `summary` of the transcript artifact is one sentence about what the persona said, written by the `interview_summarizer` role when the interview ends, whether the interviewer stopped it or the turn limit did; a rework round writes it again. The fields above are the `content` of the transcript artifact. The persona being interviewed is its `subject_item_id`, which is also the `item_id` of the participant of that persona. The messages are the items of the transcript, ordered by `position`.
+The `summary` of the transcript artifact is one sentence about what the persona said, written by the `interviewer` when the interview ends, with its stop, or in one last turn when the turn limit ended it; a rework round writes it again. The fields above are the `content` of the transcript artifact. The persona being interviewed is its `subject_item_id`, which is also the `item_id` of the participant of that persona. The messages are the items of the transcript, ordered by `position`.
 
 InterviewMessage:
 

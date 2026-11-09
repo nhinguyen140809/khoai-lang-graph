@@ -20,12 +20,6 @@
     },
     { "key": "interviewer", "label": "Interviewer", "description": "Asks interview questions.", "prompt_version": 1 },
     { "key": "persona_agent", "label": "Persona agent", "description": "Answers as one persona.", "prompt_version": 1 },
-    {
-      "key": "interview_summarizer",
-      "label": "Interview summarizer",
-      "description": "Sums up one finished interview in a sentence for the top of its transcript.",
-      "prompt_version": 1
-    },
     { "key": "analyst", "label": "Analyst", "description": "Extracts and analyzes requirements.", "prompt_version": 1 },
     { "key": "requirement_engineer", "label": "Requirement engineer", "description": "Writes the requirement specification.", "prompt_version": 1 },
     { "key": "backlog_manager", "label": "Backlog manager", "description": "Writes the product backlog.", "prompt_version": 1 },
