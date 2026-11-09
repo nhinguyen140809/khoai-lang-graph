@@ -19,6 +19,7 @@ export {
   useReloadTraces,
 } from './chains/hooks/useChainQueries'
 export { actGapKeys, isActGap, itemAttention, linkAttention } from './graph/attention.utils'
+export { useItemChain, useTraceAttention } from './graph/hooks/useGraphQueries'
 export { chainDepth } from './graph/trace-graph.constants'
 export type {
   AttentionContext,

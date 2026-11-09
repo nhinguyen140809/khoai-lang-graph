@@ -1,5 +1,6 @@
 import { useQuery } from '@tanstack/react-query'
 
+import type { LiveTraceOptions } from '../../live-trace.types'
 import { getTraceabilityCoverage, getTraceabilityMatrix } from '../traceability.api'
 import { traceabilityKeys } from '../traceability.keys'
 
@@ -11,10 +12,14 @@ export function useTraceabilityMatrix(projectId: string) {
   })
 }
 
-/** The items of a project that need attention. */
-export function useTraceabilityCoverage(projectId: string) {
+/** The items of a project that need attention; a reload follows the agents while they write. */
+export function useTraceabilityCoverage(
+  projectId: string,
+  { refetchInterval }: LiveTraceOptions = {},
+) {
   return useQuery({
     queryKey: traceabilityKeys.coverage(projectId),
     queryFn: () => getTraceabilityCoverage(projectId),
+    refetchInterval: refetchInterval ?? false,
   })
 }

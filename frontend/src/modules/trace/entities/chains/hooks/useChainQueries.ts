@@ -5,22 +5,24 @@ import { useCallback, useMemo } from 'react'
 
 import type { HookQueryOptions } from '@/shared/api/query-client'
 
+import type { LiveTraceOptions } from '../../live-trace.types'
 import { traceModuleKeys } from '../../trace-module.keys'
 import { getArtifactTrace, getItemTrace } from '../chains.api'
 import { chainKeys } from '../chains.keys'
 import type { LinkQuote, TraceQuery } from '../chains.types'
 import { linkQuotesByItem, outOfDateItemIds } from '../chains.utils'
 
-/** The chain of one item; `isEnabled` waits until it is needed. */
+/** The chain of one item; `isEnabled` waits until it is needed, and a reload follows the agents while they write. */
 export function useItemTrace(
   itemId: string,
   query: TraceQuery = {},
-  { isEnabled = true }: HookQueryOptions = {},
+  { isEnabled = true, refetchInterval }: LiveTraceOptions = {},
 ) {
   return useQuery({
     queryKey: chainKeys.ofItem(itemId, query),
     queryFn: () => getItemTrace(itemId, query),
     enabled: isEnabled,
+    refetchInterval: refetchInterval ?? false,
   })
 }
 
