@@ -10,6 +10,7 @@ import {
   type ProjectStatus,
   useProjectList,
 } from '@/modules/project/entities'
+import { errorMessageOf } from '@/shared/api/error'
 import { pageItems } from '@/shared/api/query-client'
 import { filterMessages } from '@/shared/components/filter'
 import { EmptyState, ErrorState, LoadingState } from '@/shared/components/state'
@@ -55,7 +56,7 @@ export function ProjectTable({ status, filters, onClearFilters }: ProjectTablePr
   if (projects.data === undefined) {
     return (
       <ErrorState
-        message={projects.error.message}
+        message={errorMessageOf(projects.error, {})}
         onRetry={() => void projects.refetch()}
         className="px-0"
       />
@@ -140,7 +141,11 @@ export function ProjectTable({ status, filters, onClearFilters }: ProjectTablePr
         <div className="flex flex-col items-center gap-2">
           {/* The button tries the page again. */}
           {projects.isFetchNextPageError && (
-            <ErrorState size="compact" message={projects.error.message} className="p-0" />
+            <ErrorState
+              size="compact"
+              message={errorMessageOf(projects.error, {})}
+              className="p-0"
+            />
           )}
           <PendingButton
             variant="outline"
