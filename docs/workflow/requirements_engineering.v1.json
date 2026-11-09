@@ -198,6 +198,7 @@
       "key": "evidenced_by",
       "title": "Evidenced by",
       "acyclic": false,
+      "agent_only": false,
       "quotes": { "source": false, "target": true },
       "pairs": [{ "source": ["raw_requirement", "latent_need"], "target": ["interview_message"] }]
     },
@@ -205,6 +206,7 @@
       "key": "stated_by",
       "title": "Stated by",
       "acyclic": false,
+      "agent_only": false,
       "quotes": { "source": false, "target": false },
       "pairs": [{ "source": ["raw_requirement"], "target": ["persona"] }]
     },
@@ -212,6 +214,7 @@
       "key": "involves",
       "title": "Involves",
       "acyclic": false,
+      "agent_only": false,
       "quotes": { "source": false, "target": false },
       "pairs": [{ "source": ["analyzed_requirement", "latent_need", "conflict"], "target": ["persona"] }]
     },
@@ -219,6 +222,7 @@
       "key": "derived_from",
       "title": "Based on",
       "acyclic": true,
+      "agent_only": false,
       "quotes": { "source": true, "target": true },
       "pairs": [
         { "source": ["analyzed_requirement"], "target": ["raw_requirement", "latent_need"] },
@@ -230,6 +234,7 @@
       "key": "concerns",
       "title": "Applies to",
       "acyclic": false,
+      "agent_only": false,
       "quotes": { "source": false, "target": true },
       "pairs": [
         {
@@ -242,6 +247,7 @@
       "key": "resolved_by",
       "title": "Resolved by",
       "acyclic": false,
+      "agent_only": false,
       "quotes": { "source": false, "target": true },
       "pairs": [{ "source": ["ambiguity_issue", "conflict"], "target": ["interview_message"] }]
     },
@@ -249,6 +255,7 @@
       "key": "flags",
       "title": "Points out",
       "acyclic": false,
+      "agent_only": false,
       "quotes": { "source": false, "target": true },
       "pairs": [{ "source": ["validation_issue"], "target": "any" }]
     },
@@ -256,6 +263,7 @@
       "key": "depends_on",
       "title": "Depends on",
       "acyclic": true,
+      "agent_only": false,
       "quotes": { "source": false, "target": false },
       "pairs": [{ "source": ["spec_requirement", "backlog_item"], "target": "same" }]
     },
@@ -263,6 +271,7 @@
       "key": "duplicates",
       "title": "Same as",
       "acyclic": false,
+      "agent_only": true,
       "quotes": { "source": false, "target": false },
       "pairs": [{ "source": "any", "target": "same" }]
     },
@@ -270,6 +279,7 @@
       "key": "supersedes",
       "title": "Replaces",
       "acyclic": true,
+      "agent_only": true,
       "quotes": { "source": false, "target": false },
       "pairs": [{ "source": "any", "target": "same" }]
     }

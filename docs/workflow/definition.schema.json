@@ -433,6 +433,10 @@
           "type": "boolean",
           "description": "Following links of this type from an item must never return to it."
         },
+        "agent_only": {
+          "type": "boolean",
+          "description": "Whether only the agents create links of this type during a run; the user never creates one by hand."
+        },
         "quotes": {
           "type": "object",
           "additionalProperties": false,
@@ -449,7 +453,7 @@
           "items": { "$ref": "#/$defs/linkPair" }
         }
       },
-      "required": ["key", "title", "acyclic", "quotes", "pairs"]
+      "required": ["key", "title", "acyclic", "agent_only", "quotes", "pairs"]
     },
     "linkPair": {
       "type": "object",
