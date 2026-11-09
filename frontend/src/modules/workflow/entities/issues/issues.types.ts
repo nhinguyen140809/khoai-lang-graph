@@ -9,3 +9,12 @@ export interface IssueKind {
   /** The values of that field while the issue is still open. */
   openValues: string[]
 }
+
+/**
+ * The link types that tie an issue of a kind to the items it is about and to the people it
+ * involves, by key, as the definition names them.
+ */
+export interface IssueLinkTypes {
+  about: string[]
+  parties: string[]
+}

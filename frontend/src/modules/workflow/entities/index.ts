@@ -63,6 +63,7 @@ export {
   canLinkTypeConnect,
   findLinkType,
   kindLevelsOf,
+  linkTypesFrom,
   targetKindsOf,
 } from './definition/link-types.utils'
 export { getWorkflowDefinition } from './definition/workflow.api'
@@ -92,6 +93,7 @@ export type {
   DirectiveKind,
   LinkQuotes,
   LinkType,
+  LinkTypeChoice,
   ValueList,
   WorkflowStage,
 } from './definition/workflow-vocabulary.types'

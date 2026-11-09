@@ -12,6 +12,14 @@ describe('the vocabulary of the workflow', () => {
     }
   })
 
+  it('names the link types that only the agents create, which the user never starts by hand', () => {
+    const agentOnly = workflowDefinitionFixture.link_types
+      .filter((linkType) => linkType.agent_only)
+      .map(({ key }) => key)
+
+    expect(agentOnly).toEqual(['duplicates', 'supersedes'])
+  })
+
   it('parses the definition of the mock', () => {
     expect(workflowDefinitionSchema.safeParse(workflowDefinitionFixture).success).toBe(true)
   })

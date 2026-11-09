@@ -1,5 +1,5 @@
 import type { WorkflowDefinition } from './workflow-definition.types'
-import type { LinkType } from './workflow-vocabulary.types'
+import type { LinkType, LinkTypeChoice } from './workflow-vocabulary.types'
 
 /** One end of a pair of a link type: the kinds it lists, any kind, or (for the target) the kind of the source. */
 type PairEnd = LinkType['pairs'][number]['source']
@@ -19,6 +19,36 @@ function listedPairs(linkType: LinkType): { source: string[]; target: string[] }
 /** The kinds that the pairs of a link type lead to, without a repeat, in the order they are listed. */
 export function targetKindsOf(linkType: LinkType): string[] {
   return [...new Set(listedPairs(linkType).flatMap(({ target }) => target))]
+}
+
+/**
+ * The kinds of link that an item of one kind may start by hand: every link type with a pair whose
+ * source lists the kind, except those that only the agents create, each with its title and the
+ * kinds that its pairs lead to. A target of `same` names the kind of the source; a target of `any`
+ * names no kind, so the choice searches every kind.
+ */
+export function linkTypesFrom(
+  definition: WorkflowDefinition,
+  sourceKind: string,
+): LinkTypeChoice[] {
+  return definition.link_types
+    .filter(({ agent_only: isAgentOnly }) => !isAgentOnly)
+    .filter((linkType) =>
+      linkType.pairs.some(({ source }) => isSourceKindListed(source, sourceKind)),
+    )
+    .map((linkType) => ({
+      key: linkType.key,
+      title: linkType.title,
+      targetKinds: [
+        ...new Set(
+          linkType.pairs.flatMap(({ source, target }) => {
+            if (!isSourceKindListed(source, sourceKind)) return []
+            if (target === 'same') return [sourceKind]
+            return target === 'any' ? [] : target
+          }),
+        ),
+      ],
+    }))
 }
 
 function isSourceKindListed(end: PairEnd, sourceKind: string): boolean {
