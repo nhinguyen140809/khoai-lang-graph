@@ -1,7 +1,19 @@
 import { describe, expect, it } from 'vitest'
 
-import { ApiError, errorMessageOf, isNotFoundError, toApiError } from '../api-error.utils'
-import { errorMessageCases, messages, notFoundCases, toApiErrorCases } from './api-error.utils.data'
+import {
+  ApiError,
+  errorMessageOf,
+  isNotFoundError,
+  isVersionConflict,
+  toApiError,
+} from '../api-error.utils'
+import {
+  errorMessageCases,
+  messages,
+  notFoundCases,
+  toApiErrorCases,
+  versionConflictCases,
+} from './api-error.utils.data'
 
 describe('toApiError', () => {
   it.each(toApiErrorCases)('reads $name', ({ status, body, message, error }) => {
@@ -21,5 +33,11 @@ describe('errorMessageOf', () => {
 describe('isNotFoundError', () => {
   it.each(notFoundCases)('is $notFound for $name', ({ error, notFound }) => {
     expect(isNotFoundError(error)).toBe(notFound)
+  })
+})
+
+describe('isVersionConflict', () => {
+  it.each(versionConflictCases)('is $isConflict for $name', ({ error, isConflict }) => {
+    expect(isVersionConflict(error)).toBe(isConflict)
   })
 })
