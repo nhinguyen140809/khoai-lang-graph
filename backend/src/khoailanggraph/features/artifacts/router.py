@@ -93,9 +93,9 @@ async def list_project_trace_links(
     if link_type is not None:
         links = [link for link in links if link.link_type == link_type]
     if source_item_id is not None:
-        links = [link for link in links if link.source.id == str(source_item_id)]
+        links = [link for link in links if link.source_item_id == str(source_item_id)]
     if target_item_id is not None:
-        links = [link for link in links if link.target.id == str(target_item_id)]
+        links = [link for link in links if link.target_item_id == str(target_item_id)]
     window = links[cursor : cursor + limit]
     next_cursor = cursor + len(window) if cursor + len(window) < len(links) else None
     return Page(items=window, next_cursor=next_cursor)
@@ -106,23 +106,21 @@ async def traceability_matrix(
     project_id: UUID,
     user: deps.CurrentUser,
     db: deps.DbSession,
-) -> dict[str, list[schemas.MatrixChainRow]]:
-    """Rows of `derived_from` chains from backlog item down to raw requirement
-    (API.md; the Traceability matrix view)."""
+) -> schemas.Matrix:
+    """Rows of `derived_from` chains from the top of the derivation down to the interview;
+    the columns come from the workflow definition (API.md)."""
     await get_project_row(db, project_id)
-    rows = await service.traceability_matrix(db, project_id)
-    return {"rows": rows}
+    return await service.traceability_matrix(db, project_id)
 
 
-@router.get("/projects/{project_id}/traceability/coverage")
+@router.get("/projects/{project_id}/traceability/coverage", response_model_exclude_none=True)
 async def traceability_coverage(
     project_id: UUID,
     user: deps.CurrentUser,
     db: deps.DbSession,
-) -> schemas.TraceCoverage:
-    """Counts and lists (API.md): requirements with no backlog item,
-    requirements with no source, items that need review after a source
-    changed."""
+) -> schemas.Coverage:
+    """The items that need attention (API.md): requirements with no user story, requirements
+    with no source, and items whose links to a changed target need a check."""
     await get_project_row(db, project_id)
     return await service.traceability_coverage(db, project_id)
 
@@ -145,12 +143,25 @@ async def item_trace(
     db: deps.DbSession,
     *,
     direction: Annotated[str, Query()] = "both",
-    depth: Annotated[int, Query(ge=1, le=10)] = 5,
-) -> dict[str, Any]:
-    """The chain of one item: `nodes` and their `links`, walked `depth`
-    hops backward, forward or both (API.md §5)."""
-    nodes, links = await service.item_trace(db, item_id, direction=direction, depth=depth)
-    return {"nodes": nodes, "links": links}
+    depth: Annotated[int, Query(ge=1, le=100)] = 5,
+) -> schemas.Trace:
+    """The chain of one item: the items found and the links between them, walked `depth`
+    links backward (where it came from), forward (what was built from it) or both."""
+    return await service.item_trace(db, item_id, direction=direction, depth=depth)
+
+
+@router.get("/artifacts/{artifact_id}/trace")
+async def artifact_trace(
+    artifact_id: UUID,
+    user: deps.CurrentUser,
+    db: deps.DbSession,
+    *,
+    direction: Annotated[str, Query()] = "both",
+    depth: Annotated[int | None, Query(ge=1, le=100)] = None,
+) -> schemas.Trace:
+    """The chains of all the items of one artifact, from the interview to the backlog, in one
+    answer; without `depth` a chain goes to its end."""
+    return await service.artifact_trace(db, artifact_id, direction=direction, depth=depth)
 
 
 @router.get("/artifacts/{artifact_id}/items")

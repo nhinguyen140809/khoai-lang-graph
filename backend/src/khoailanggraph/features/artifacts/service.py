@@ -13,6 +13,7 @@ from __future__ import annotations
 
 import json
 from datetime import UTC, datetime
+from functools import lru_cache
 from typing import TYPE_CHECKING, Any, cast
 from uuid import UUID, uuid4
 
@@ -37,7 +38,7 @@ from khoailanggraph.domain.keys import (
 )
 from khoailanggraph.domain.registry import schema_dict
 from khoailanggraph.domain.rules import LinkCandidate
-from khoailanggraph.features.artifacts import schemas
+from khoailanggraph.features.artifacts import schemas, traceability
 from khoailanggraph.features.artifacts.models import (
     ArtifactItemRow,
     ArtifactRevisionRow,
@@ -750,16 +751,6 @@ def artifact_view(row: ArtifactRow, item_count: int) -> schemas.Artifact:
     )
 
 
-def _ref_view(row: ArtifactItemRow | None) -> schemas.ItemLinkRef:
-    """A link end resolved to its item; links never dangle by construction."""
-    if row is None:
-        msg = "trace link end does not resolve to a live item"
-        raise ValueError(msg)
-    return schemas.ItemLinkRef(
-        id=str(row.id), key=row.key, kind=row.kind, review_status=row.review_status
-    )
-
-
 def matches(item: schemas.Item, query: str) -> bool:
     """Mock parity: substring on key or stringify of content (case-insensitive)."""
     lowered = query.lower()
@@ -895,6 +886,41 @@ async def list_project_artifacts(
     return window, next_cursor
 
 
+async def _live_links(
+    session: AsyncSession, project_id: UUID
+) -> list[tuple[TraceLinkRow, ArtifactItemRow, ArtifactItemRow]]:
+    """The current links of a project whose two ends are live items, by source key, type and
+    target key."""
+    source = aliased(ArtifactItemRow, name="source_item")
+    target = aliased(ArtifactItemRow, name="target_item")
+    result = await session.execute(
+        select(TraceLinkRow, source, target)
+        .join(source, source.id == TraceLinkRow.source_item_id)
+        .join(target, target.id == TraceLinkRow.target_item_id)
+        .where(
+            TraceLinkRow.project_id == project_id,
+            TraceLinkRow.deleted_at.is_(None),
+            source.deleted_at.is_(None),
+            target.deleted_at.is_(None),
+        )
+        .order_by(source.key, TraceLinkRow.link_type, target.key)
+    )
+    return [(link, src, tgt) for link, src, tgt in result.all()]
+
+
+def _link_view(link: TraceLinkRow) -> schemas.TraceLink:
+    return schemas.TraceLink(
+        id=str(link.id),
+        source_item_id=str(link.source_item_id),
+        target_item_id=str(link.target_item_id),
+        link_type=link.link_type,
+        target_version=link.target_version,
+        source_quote=link.source_quote,
+        target_quote=link.target_quote,
+        note=link.note,
+    )
+
+
 async def list_project_links(
     session: AsyncSession,
     project_id: UUID,
@@ -902,51 +928,31 @@ async def list_project_links(
     limit: int,
     cursor: int,
 ) -> tuple[list[schemas.TraceLink], int | None]:
-    """The trace links of a project with both ends resolved (Traceability tab)."""
-    source = aliased(ArtifactItemRow, name="source_item")
-    target = aliased(ArtifactItemRow, name="target_item")
-    rows = list(
-        (
-            await session.execute(
-                select(TraceLinkRow, source, target)
-                .join(source, source.id == TraceLinkRow.source_item_id)
-                .join(target, target.id == TraceLinkRow.target_item_id)
-                .where(
-                    TraceLinkRow.project_id == project_id,
-                    TraceLinkRow.deleted_at.is_(None),
-                    source.deleted_at.is_(None),
-                    target.deleted_at.is_(None),
-                )
-                .order_by(source.key, TraceLinkRow.link_type, target.key)
-            )
-        ).all()
-    )
-    views = [
-        schemas.TraceLink(
-            id=str(link.id),
-            project_id=str(link.project_id),
-            link_type=link.link_type,
-            source=_ref_view(source_row),
-            target=_ref_view(target_row),
-            target_version=link.target_version,
-            quote=link.target_quote,
-            note=link.note,
-        )
-        for link, source_row, target_row in rows
-    ]
+    """The current trace links of a project."""
+    views = [_link_view(link) for link, _source, _target in await _live_links(session, project_id)]
     window = views[cursor : cursor + limit]
     next_cursor = cursor + len(window) if cursor + len(window) < len(views) else None
     return window, next_cursor
 
 
-def _chain_ref(row: ArtifactItemRow) -> schemas.MatrixChainRef:
-    return schemas.MatrixChainRef(
-        id=str(row.id), key=row.key, kind=row.kind, review_status=row.review_status
-    )
+@lru_cache
+def _title_field(kind: str) -> str | None:
+    field = schema_dict(kind).get("x-ui-title-field")
+    return None if field is None else str(field)
 
 
-async def _live_items_of_project(session: AsyncSession, project_id: UUID) -> list[ArtifactItemRow]:
-    return list(
+def item_title(row: ArtifactItemRow) -> str:
+    """What an item is called: its title field, else its key."""
+    name = _title_field(str(row.kind))
+    value = None if name is None else _loads(row.content_json or b"{}").get(name)
+    return value if isinstance(value, str) and value.strip() else str(row.key)
+
+
+async def _graph_of(
+    session: AsyncSession, project_id: UUID
+) -> tuple[traceability.Graph, dict[str, ArtifactItemRow]]:
+    """The live items of a project and the current links between them."""
+    rows = list(
         (
             await session.scalars(
                 select(ArtifactItemRow)
@@ -958,143 +964,46 @@ async def _live_items_of_project(session: AsyncSession, project_id: UUID) -> lis
             )
         ).all()
     )
-
-
-def _derived_target(
-    derived_by_source: dict[str, list[tuple[str, ArtifactItemRow]]], source_id: str
-) -> tuple[str, ArtifactItemRow] | None:
-    options = derived_by_source.get(source_id)
-    return options[0] if options else None
-
-
-def _no_source_of(
-    links: list[schemas.TraceLink], kind: str, items: list[ArtifactItemRow]
-) -> list[schemas.MatrixChainRef]:
-    """Spec or analyzed requirements with no outgoing derived_from."""
-    with_source = {link.source.id for link in links if link.link_type == "derived_from"}
-    return [_chain_ref(item) for item in items if item.kind == kind and item.id not in with_source]
-
-
-def _staleness_of_links(
-    links: list[schemas.TraceLink], versions: dict[str, tuple[int, str]]
-) -> list[schemas.MatrixChainRef]:
-    """Sources whose link was made from an older version of the target, or
-    whose target is superseded (DATA_SHAPE §8 Staleness)."""
-    stale: dict[str, schemas.MatrixChainRef] = {}
-    for link in links:
-        if link.link_type in {"supersedes", "duplicates"}:
-            continue
-        current = versions.get(link.target.id)
-        if current is None:
-            continue
-        version, review_status = current
-        if link.target_version < version or review_status == "superseded":
-            stale[link.source.id] = schemas.MatrixChainRef(
-                id=link.source.id,
-                key=link.source.key,
-                kind=link.source.kind,
-                review_status=link.source.review_status,
-            )
-    return list(stale.values())
-
-
-async def traceability_matrix(
-    session: AsyncSession, project_id: UUID
-) -> list[schemas.MatrixChainRow]:
-    """Rows of `derived_from` chains (API.md traceability matrix): one row
-    per chain from a backlog item down to its raw or latent source, with the
-    `evidenced_by` interview messages behind each source."""
-    items = await _live_items_of_project(session, project_id)
-    links, _ = await list_project_links(session, project_id, limit=10_000, cursor=0)
-    by_id = {str(row.id): row for row in items}
-
-    derived: dict[str, ArtifactItemRow] = {}
-    for link in links:
-        if link.link_type == "derived_from" and link.target.id in by_id:
-            derived.setdefault(link.source.id, by_id[link.target.id])
-
-    def evidence_of(source_id: str) -> list[schemas.MatrixChainRef]:
-        found: dict[str, schemas.MatrixChainRef] = {}
-        for link in links:
-            if link.source.id != source_id or link.link_type != "evidenced_by":
-                continue
-            target = by_id.get(link.target.id)
-            if target is not None:
-                found[link.target.id] = _chain_ref(target)
-        return list(found.values())
-
-    def chain(backlog: ArtifactItemRow | None, spec_row: ArtifactItemRow) -> None:
-        analyzed = derived.get(str(spec_row.id))
-        sources: list[ArtifactItemRow] = []
-        for link in links:
-            if (
-                analyzed is not None
-                and link.link_type == "derived_from"
-                and link.source.id == str(analyzed.id)
-                and link.target.id in by_id
-            ):
-                sources.append(by_id[link.target.id])
-        evidence = [ref for source in sources for ref in evidence_of(str(source.id))]
-        rows.append(
-            schemas.MatrixChainRow(
-                backlog=_chain_ref(backlog) if backlog is not None else None,
-                spec=_chain_ref(spec_row),
-                analyzed=_chain_ref(analyzed) if analyzed is not None else None,
-                source=[_chain_ref(entry) for entry in sources],
-                evidence=evidence,
-            )
+    by_id = {str(row.id): row for row in rows}
+    nodes = {
+        key: traceability.Node(
+            id=key,
+            key=str(row.key),
+            kind=str(row.kind),
+            version=row.version,
+            review_status=str(row.review_status),
+            title=item_title(row),
         )
-
-    rows: list[schemas.MatrixChainRow] = []
-    covered_specs: set[str] = set()
-    for item in items:
-        if item.kind != "backlog_item":
-            continue
-        spec = derived.get(str(item.id))
-        if spec is not None:
-            covered_specs.add(str(spec.id))
-            chain(item, spec)
-    for item in items:
-        if item.kind == "spec_requirement" and str(item.id) not in covered_specs:
-            chain(None, item)
-    return rows
-
-
-async def traceability_coverage(session: AsyncSession, project_id: UUID) -> schemas.TraceCoverage:
-    """The three coverage lists of API.md, each with its items."""
-    items = await _live_items_of_project(session, project_id)
-    links, _ = await list_project_links(session, project_id, limit=10_000, cursor=0)
-
-    outgoing_source: dict[str, None] = {}
-    incoming_target: dict[str, None] = {}
-    for link in links:
-        if link.link_type == "derived_from":
-            outgoing_source[link.source.id] = None
-            incoming_target[link.target.id] = None
-
-    specs = [item for item in items if item.kind == "spec_requirement"]
-    no_backlog = [_chain_ref(item) for item in specs if str(item.id) not in incoming_target]
-    no_source = [
-        _chain_ref(item)
-        for item in items
-        if item.kind in {"spec_requirement", "analyzed_requirement"}
-        and str(item.id) not in outgoing_source
+        for key, row in by_id.items()
+    }
+    edges = [
+        traceability.Edge(
+            id=str(link.id),
+            source=str(link.source_item_id),
+            target=str(link.target_item_id),
+            link_type=str(link.link_type),
+            target_version=link.target_version,
+        )
+        for link, _source, _target in await _live_links(session, project_id)
+        if str(link.source_item_id) in nodes and str(link.target_item_id) in nodes
     ]
+    return traceability.Graph(nodes=nodes, edges=edges), by_id
 
-    versions = {str(row.id): (row.version, row.review_status) for row in items}
-    stale = _staleness_of_links(links, versions)
-    stale_ids = {entry.id for entry in stale}
-    open_kinds = {"ambiguity_issue", "conflict", "validation_issue"}
-    open_issues = [
-        _chain_ref(item)
-        for item in items
-        if item.kind in open_kinds and item.review_status != "superseded"
-    ]
-    needs_review = stale + [entry for entry in open_issues if entry.id not in stale_ids]
-    return schemas.TraceCoverage(
-        no_backlog_item=schemas.CoverageEntry(count=len(no_backlog), items=no_backlog),
-        no_source=schemas.CoverageEntry(count=len(no_source), items=no_source),
-        needs_review=schemas.CoverageEntry(count=len(needs_review), items=needs_review),
+
+async def traceability_matrix(session: AsyncSession, project_id: UUID) -> schemas.Matrix:
+    """Rows of `derived_from` chains from the top of the derivation to the interview; the
+    columns come from the workflow definition."""
+    graph, _rows = await _graph_of(session, project_id)
+    return schemas.Matrix.model_validate(
+        traceability.matrix(graph, traceability.Chain.of(wf.link_types()))
+    )
+
+
+async def traceability_coverage(session: AsyncSession, project_id: UUID) -> schemas.Coverage:
+    """The items of a project that need attention, by the reason."""
+    graph, _rows = await _graph_of(session, project_id)
+    return schemas.Coverage.model_validate(
+        traceability.coverage(graph, traceability.Chain.of(wf.link_types()))
     )
 
 
@@ -1124,64 +1033,76 @@ async def item_revisions(session: AsyncSession, item_id: UUID) -> list[schemas.I
     ]
 
 
-async def item_trace(
-    session: AsyncSession,
-    item_id: UUID,
-    *,
-    direction: str,
-    depth: int,
-) -> tuple[list[schemas.Item], list[schemas.TraceLink]]:
-    """The chain of one item (GET /items/{id}/trace): the links within
-    `depth` hops, forward, backward or both, with their items resolved."""
-    row = await session.get(ArtifactItemRow, item_id)
-    if row is None or row.deleted_at is not None:
-        raise ApiError(404, "not_found", "Not found", "The item does not exist.")
-    links, _ = await list_project_links(session, UUID(str(row.project_id)), limit=10_000, cursor=0)
-    directions: set[str] = {"both", "forward", "backward"}
-    if direction not in directions:
+def _parse_direction(direction: str) -> traceability.Direction:
+    if direction not in {"backward", "forward", "both"}:
         raise ApiError(
             422,
             "validation_failed",
             "Validation failed",
             "direction must be backward, forward or both.",
         )
+    return cast("traceability.Direction", direction)
 
-    reachable: dict[str, None] = {str(item_id): None}
-    found: list[schemas.TraceLink] = []
-    seen_links: set[str] = set()
 
-    def walk(current: str, hops: int) -> None:
-        if hops == 0:
-            return
-        for link in links:
-            if link.id in seen_links:
-                continue
-            follows = (direction in {"forward", "both"} and link.source.id == current) or (
-                direction in {"backward", "both"} and link.target.id == current
-            )
-            if not follows:
-                continue
-            seen_links.add(link.id)
-            found.append(link)
-            other = link.target.id if link.source.id == current else link.source.id
-            if other not in reachable:
-                reachable[other] = None
-                walk(other, hops - 1)
-
-    walk(str(item_id), max(1, depth))
-    node_rows = list(
-        (
-            await session.scalars(
-                select(ArtifactItemRow).where(
-                    ArtifactItemRow.id.in_([UUID(key) for key in reachable]),
-                    ArtifactItemRow.deleted_at.is_(None),
-                )
-            )
-        ).all()
+async def _trace_of(
+    session: AsyncSession,
+    project_id: UUID,
+    starts: list[str],
+    direction: str,
+    depth: int | None,
+) -> schemas.Trace:
+    graph, rows = await _graph_of(session, project_id)
+    nodes, edges = traceability.trace(
+        graph,
+        [start for start in starts if start in graph.nodes],
+        _parse_direction(direction),
+        depth,
     )
-    numbering = await _numbering_of(session, {node.artifact_id for node in node_rows})
-    nodes = [item_view(node, numbering) for node in node_rows]
-    return nodes, found
+    links = {str(link.id): link for link, _s, _t in await _live_links(session, project_id)}
+    return schemas.Trace(
+        items=[
+            schemas.TraceItem(
+                id=node.id,
+                artifact_id=str(rows[node.id].artifact_id),
+                key=node.key,
+                kind=node.kind,
+                version=node.version,
+                review_status=node.review_status,
+                content=_loads(rows[node.id].content_json or b"{}"),
+            )
+            for node in nodes
+        ],
+        links=[_link_view(links[edge.id]) for edge in edges],
+    )
+
+
+async def item_trace(
+    session: AsyncSession, item_id: UUID, *, direction: str, depth: int
+) -> schemas.Trace:
+    """The chain of one item, walked `depth` links backward, forward or both."""
+    row = await session.get(ArtifactItemRow, item_id)
+    if row is None or row.deleted_at is not None:
+        raise ApiError(404, "not_found", "Not found", "The item does not exist.")
+    return await _trace_of(session, UUID(str(row.project_id)), [str(item_id)], direction, depth)
+
+
+async def artifact_trace(
+    session: AsyncSession, artifact_id: UUID, *, direction: str, depth: int | None
+) -> schemas.Trace:
+    """The chains of all the items of one artifact in one answer."""
+    row = await session.get(ArtifactRow, artifact_id)
+    if row is None or row.deleted_at is not None:
+        raise ApiError(404, "not_found", "Not found", "The artifact does not exist.")
+    items = (
+        await session.scalars(
+            select(ArtifactItemRow.id).where(
+                ArtifactItemRow.artifact_id == artifact_id, ArtifactItemRow.deleted_at.is_(None)
+            )
+        )
+    ).all()
+    return await _trace_of(
+        session, UUID(str(row.project_id)), [str(item) for item in items], direction, depth
+    )
 
 
 async def list_artifact_items(

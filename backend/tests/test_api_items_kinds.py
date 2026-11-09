@@ -119,7 +119,7 @@ async def test_list_project_artifacts_tree(client: AsyncClient) -> None:
     assert len(artifact_ids) > 1
 
 
-async def test_list_project_links_resolves_both_ends(client: AsyncClient) -> None:
+async def test_list_project_links_gives_the_ids_of_both_ends(client: AsyncClient) -> None:
     project_id, _thread_id = await seeded_run(client)
 
     response = await client.get(f"/api/v1/projects/{project_id}/trace-links")
@@ -130,51 +130,66 @@ async def test_list_project_links_resolves_both_ends(client: AsyncClient) -> Non
     link = body["items"][0]
     assert set(link) == {
         "id",
-        "project_id",
+        "source_item_id",
+        "target_item_id",
         "link_type",
-        "source",
-        "target",
         "target_version",
-        "quote",
+        "source_quote",
+        "target_quote",
         "note",
     }
-    for end in ("source", "target"):
-        assert set(link[end]) == {"id", "key", "kind", "review_status"}
     types = {entry["link_type"] for entry in body["items"]}
     assert "derived_from" in types
+    evidence = [entry for entry in body["items"] if entry["link_type"] == "evidenced_by"]
+    assert any(entry["target_quote"] for entry in evidence), "interview evidence quotes the target"
+    assert all(entry["source_quote"] is None for entry in evidence)
 
 
-async def test_traceability_matrix_rows(client: AsyncClient) -> None:
+async def test_traceability_matrix_follows_the_definition(client: AsyncClient) -> None:
     project_id, _thread_id = await seeded_run(client)
 
     response = await client.get(f"/api/v1/projects/{project_id}/traceability/matrix")
 
-    rows = response.json()["rows"]
+    body = response.json()
     assert response.status_code == 200
-    assert rows, "the workflow writes derived_from chains"
-    first = rows[0]
-    assert set(first) == {"backlog", "spec", "analyzed", "source", "evidence"}
-    assert first["backlog"] is not None
-    assert first["backlog"]["kind"] == "backlog_item"
-    assert first["spec"] is not None
-    assert first["spec"]["kind"] == "spec_requirement"
-    assert first["analyzed"] is not None
-    expected_sources = {"raw_requirement", "latent_need"}
-    assert any(entry["kind"] in expected_sources for entry in first["source"])
+    assert [column["key"] for column in body["columns"]] == [
+        "backlog_item",
+        "spec_requirement",
+        "analyzed_requirement",
+        "raw_requirement",
+        "interview_message",
+    ]
+    assert body["columns"][3]["title"] == "Raw requirement / Latent need"
+    assert body["rows"], "the workflow writes derived_from chains"
+    column_keys = {column["key"] for column in body["columns"]}
+    for row in body["rows"]:
+        assert set(row["cells"]) == column_keys
+    first = body["rows"][0]["cells"]
+    assert first["backlog_item"][0]["kind"] == "backlog_item"
+    assert set(first["backlog_item"][0]) == {"item_id", "key", "kind", "title"}
+    assert first["spec_requirement"][0]["kind"] == "spec_requirement"
+    assert first["analyzed_requirement"][0]["kind"] == "analyzed_requirement"
+    assert first["raw_requirement"], "the last level holds what the item above derives from"
 
 
-async def test_traceability_coverage_lists(client: AsyncClient) -> None:
+async def test_traceability_coverage_lists_the_gaps(client: AsyncClient) -> None:
     project_id, _thread_id = await seeded_run(client)
 
     response = await client.get(f"/api/v1/projects/{project_id}/traceability/coverage")
 
     body = response.json()
     assert response.status_code == 200
-    entry_fields = {"id", "key", "kind", "review_status"}
-    for key in ("no_backlog_item", "no_source", "needs_review"):
-        assert body[key]["count"] == len(body[key]["items"])
-        for entry in body[key]["items"]:
-            assert set(entry) == entry_fields
+    assert [gap["key"] for gap in body["gaps"]] == [
+        "no_backlog_item",
+        "no_source",
+        "needs_review",
+    ]
+    for gap in body["gaps"]:
+        assert gap["title"]
+        assert gap["description"]
+        for entry in gap["items"]:
+            assert {"item_id", "key", "kind", "title"} <= set(entry)
+            assert ("changed_targets" in entry) == (gap["key"] == "needs_review")
 
 
 async def test_item_revisions_desc(client: AsyncClient) -> None:
@@ -194,7 +209,7 @@ async def test_item_revisions_desc(client: AsyncClient) -> None:
     assert versions == sorted(versions, reverse=True)
 
 
-async def test_item_trace_walks_both_directions(client: AsyncClient) -> None:
+async def test_item_trace_gives_items_and_links(client: AsyncClient) -> None:
     project_id, _thread_id = await seeded_run(client)
     items = await client.get(f"/api/v1/projects/{project_id}/items", params={"q": "US-0"})
     item_id = items.json()["items"][0]["id"]
@@ -203,9 +218,57 @@ async def test_item_trace_walks_both_directions(client: AsyncClient) -> None:
 
     body = response.json()
     assert response.status_code == 200
-    assert body["nodes"], "the chain resolves items"
-    assert body["links"], "the chain carries links"
+    assert set(body) == {"items", "links"}
+    assert {"id", "artifact_id", "key", "kind", "version", "review_status", "content"} == set(
+        body["items"][0]
+    )
+    assert item_id in {entry["id"] for entry in body["items"]}
     assert any(link["link_type"] == "derived_from" for link in body["links"])
+    ends = {link["source_item_id"] for link in body["links"]} | {
+        link["target_item_id"] for link in body["links"]
+    }
+    assert ends <= {entry["id"] for entry in body["items"]}
+    keys = [entry["key"] for entry in body["items"]]
+    assert keys == sorted(keys)
+
+
+async def test_item_trace_keeps_its_direction(client: AsyncClient) -> None:
+    project_id, _thread_id = await seeded_run(client)
+    items = await client.get(f"/api/v1/projects/{project_id}/items", params={"q": "US-0"})
+    item_id = items.json()["items"][0]["id"]
+
+    backward = (
+        await client.get(f"/api/v1/items/{item_id}/trace", params={"direction": "backward"})
+    ).json()
+    forward = (
+        await client.get(f"/api/v1/items/{item_id}/trace", params={"direction": "forward"})
+    ).json()
+    invalid = await client.get(f"/api/v1/items/{item_id}/trace", params={"direction": "up"})
+
+    assert {entry["kind"] for entry in backward["items"]} > {"backlog_item", "spec_requirement"}
+    assert {entry["kind"] for entry in forward["items"]} == {"backlog_item"}, (
+        "nothing is built from a story"
+    )
+    assert invalid.status_code == 422
+
+
+async def test_artifact_trace_covers_all_its_items(client: AsyncClient) -> None:
+    project_id, _thread_id = await seeded_run(client)
+    artifacts = await client.get(f"/api/v1/projects/{project_id}/artifacts")
+    backlog_id = next(a["id"] for a in artifacts.json()["items"] if a["kind"] == "product_backlog")
+    stories = await client.get(f"/api/v1/artifacts/{backlog_id}/items")
+
+    response = await client.get(
+        f"/api/v1/artifacts/{backlog_id}/trace", params={"direction": "backward"}
+    )
+
+    body = response.json()
+    assert response.status_code == 200
+    found = {entry["id"] for entry in body["items"]}
+    assert {entry["id"] for entry in stories.json()["items"]} <= found
+    assert {entry["kind"] for entry in body["items"]} >= {"raw_requirement", "interview_message"}
+    missing = await client.get(f"/api/v1/artifacts/{uuid4()}/trace")
+    assert missing.status_code == 404
 
 
 async def test_search_finds_spec_requirements(client: AsyncClient) -> None:

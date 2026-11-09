@@ -78,17 +78,6 @@ class Artifact(BaseModel):
     updated_at: IsoDatetime
 
 
-class ItemLinkRef(BaseModel):
-    """The item a link points from or to, resolved for the UI."""
-
-    model_config = ConfigDict(extra="forbid")
-
-    id: str
-    key: str
-    kind: str
-    review_status: str
-
-
 class ItemRevision(BaseModel):
     """One version of an item (GET /items/{id}/revisions)."""
 
@@ -101,58 +90,105 @@ class ItemRevision(BaseModel):
     content: dict[str, Any]
 
 
-class MatrixChainRef(BaseModel):
+class TraceLink(BaseModel):
+    """One current trace link (API.md traceability)."""
+
     model_config = ConfigDict(extra="forbid")
 
     id: str
+    source_item_id: str
+    target_item_id: str
+    link_type: str
+    target_version: int
+    source_quote: str | None
+    target_quote: str | None
+    note: str | None
+
+
+class TraceItem(BaseModel):
+    """An item that a chain reaches."""
+
+    model_config = ConfigDict(extra="forbid")
+
+    id: str
+    artifact_id: str
     key: str
     kind: str
+    version: int
     review_status: str
+    content: dict[str, Any]
 
 
-class MatrixChainRow(BaseModel):
-    """One row of the coverage matrix (API.md: 'derived_from chains from
-    backlog item down to raw requirement'); source and evidence may be
-    several per skeleton's comma-joined cells."""
-
-    model_config = ConfigDict(extra="forbid")
-
-    backlog: MatrixChainRef | None
-    spec: MatrixChainRef | None
-    analyzed: MatrixChainRef | None
-    source: list[MatrixChainRef]
-    evidence: list[MatrixChainRef]
-
-
-class CoverageEntry(BaseModel):
-    model_config = ConfigDict(extra="forbid")
-
-    count: int
-    items: list[MatrixChainRef]
-
-
-class TraceCoverage(BaseModel):
-    """The three coverage lists of API.md: requirements with no backlog
-    item, requirements with no source, items that need review after a
-    source changed."""
+class Trace(BaseModel):
+    """The chains of an item or an artifact: the items found and the links between them."""
 
     model_config = ConfigDict(extra="forbid")
 
-    no_backlog_item: CoverageEntry
-    no_source: CoverageEntry
-    needs_review: CoverageEntry
+    items: list[TraceItem]
+    links: list[TraceLink]
 
 
-class TraceLink(BaseModel):
-    """One trace link of the project (Traceability tab, §5)."""
+class ItemSummary(BaseModel):
+    """An item as a cell or a list of the traceability views shows it."""
 
     model_config = ConfigDict(extra="forbid")
 
-    id: str
-    project_id: str
+    item_id: str
+    key: str
+    kind: str
+    title: str
+
+
+class MatrixColumn(BaseModel):
+    model_config = ConfigDict(extra="forbid")
+
+    key: str
+    title: str
+    kinds: list[str]
+
+
+class MatrixRow(BaseModel):
+    model_config = ConfigDict(extra="forbid")
+
+    cells: dict[str, list[ItemSummary]]
+
+
+class Matrix(BaseModel):
+    """Rows of `derived_from` chains; the columns come from the workflow definition."""
+
+    model_config = ConfigDict(extra="forbid")
+
+    columns: list[MatrixColumn]
+    rows: list[MatrixRow]
+
+
+class ChangedTarget(BaseModel):
+    """A target of a link that changed after the link was made."""
+
+    model_config = ConfigDict(extra="forbid")
+
+    target: ItemSummary
     link_type: str
-    source: ItemLinkRef
-    target: ItemLinkRef
-    target_version: int
-    quote: str | None
-    note: str | None
+    made_from_version: int
+    current_version: int
+
+
+class CoverageItem(ItemSummary):
+    changed_targets: list[ChangedTarget] | None = None
+
+
+class CoverageGap(BaseModel):
+    model_config = ConfigDict(extra="forbid")
+
+    key: str
+    title: str
+    description: str
+    items: list[CoverageItem]
+
+
+class Coverage(BaseModel):
+    """The items that need attention, one list for each reason."""
+
+    model_config = ConfigDict(extra="forbid")
+
+    gaps: list[CoverageGap]
