@@ -174,6 +174,7 @@ async def list_artifact_items(
     review_status: Annotated[str | None, Query()] = None,
     parent_item_id: Annotated[UUID | None, Query()] = None,
     shape: Annotated[Literal["flat", "tree"], Query()] = "flat",
+    version: Annotated[int | None, Query(ge=1)] = None,
     cursor: Annotated[int, Query(ge=0)] = 0,
     limit: Annotated[int, Query(ge=1, le=MAX_LIMIT)] = 200,
 ) -> Page[schemas.NestedOutlineItem] | Page[schemas.OutlineItem]:
@@ -188,6 +189,7 @@ async def list_artifact_items(
         kind=kind,
         review_status=review_status,
         parent_item_id=parent_item_id,
+        version=version,
         limit=limit,
         cursor=cursor,
     )
@@ -196,14 +198,26 @@ async def list_artifact_items(
     return Page(items=items, next_cursor=next_cursor)
 
 
+@router.get("/artifacts/{artifact_id}")
+async def get_artifact(
+    artifact_id: UUID,
+    user: deps.CurrentUser,
+    db: deps.DbSession,
+    version: Annotated[int | None, Query(ge=1)] = None,
+) -> schemas.Artifact:
+    """One artifact; `?version=` reads any stored version (§5)."""
+    return await service.get_artifact(db, artifact_id, version)
+
+
 @router.get("/items/{item_id}")
 async def get_item(
     item_id: UUID,
     user: deps.CurrentUser,
     db: deps.DbSession,
+    version: Annotated[int | None, Query(ge=1)] = None,
 ) -> schemas.Item:
-    """One item (§5); a later ?version reads any stored version."""
-    return await service.get_item(db, item_id)
+    """One item; `?version=` reads any stored version (§5)."""
+    return await service.get_item(db, item_id, version)
 
 
 @router.get("/artifact-kinds")
@@ -317,4 +331,7 @@ async def patch_item(
     await db.flush()
     db.add(service.item_revision_row(row, "user_edit", by))
     await db.flush()
+    artifact = await db.get(ArtifactRow, row.artifact_id)
+    if artifact is not None:
+        await db.run_sync(lambda session: service.bump_artifact(session, artifact, "user_edit", by))
     return await service.get_item(db, item_id)

@@ -100,6 +100,50 @@ def _dumps(value: Any) -> bytes:
     return json.dumps(value, ensure_ascii=False).encode("utf-8")
 
 
+def write_artifact_revision(
+    session: Session, row: ArtifactRow, reason: str, by: Origin
+) -> ArtifactRevisionRow:
+    """The revision of an artifact at its current version: what it was, the versions of its
+    items in outline order, and who changed it."""
+    item_rows = session.scalars(
+        select(ArtifactItemRow).where(
+            ArtifactItemRow.artifact_id == row.id, ArtifactItemRow.deleted_at.is_(None)
+        )
+    ).all()
+    item_versions = [
+        {"item_id": str(item.id), "version": item.version}
+        for item in outline_in_order(list(item_rows))
+    ]
+    revision = ArtifactRevisionRow(
+        artifact_id=row.id,
+        version=row.version,
+        snapshot_json=_dumps(
+            {
+                "title": row.title,
+                "summary": row.summary,
+                "content": _loads(row.content_json),
+                "review_status": row.review_status,
+            }
+        ),
+        item_versions_json=_dumps(item_versions),
+        change_reason=reason,
+        **_changed(by),
+    )
+    session.add(revision)
+    session.flush()
+    return revision
+
+
+def bump_artifact(session: Session, row: ArtifactRow, reason: str, by: Origin) -> None:
+    """The artifact or one of its items changed: a new version of the artifact, with its
+    revision."""
+    row.version += 1
+    origins.write(row, "updated", by)
+    row.updated_at = utcnow()
+    session.flush()
+    write_artifact_revision(session, row, reason, by)
+
+
 class SqlArtifactSink:
     """An `ArtifactSink` over the project's tables; run_id tags every event."""
 
@@ -220,23 +264,7 @@ class SqlArtifactSink:
         origins.write(row, "updated", self._origin())
         self.session.add(row)
         self.session.flush()
-        self.session.add(
-            ArtifactRevisionRow(
-                artifact_id=row.id,
-                version=REVISION_VERSION,
-                snapshot_json=_dumps(
-                    {
-                        "title": row.title,
-                        "summary": row.summary,
-                        "content": content,
-                        "review_status": row.review_status,
-                    }
-                ),
-                item_versions_json=_dumps([]),
-                change_reason="generated",
-                **_changed(self._origin()),
-            )
-        )
+        write_artifact_revision(self.session, row, "generated", self._origin())
         seq = self.next_sequence()
         self._emit(
             "artifact_created",
@@ -298,11 +326,7 @@ class SqlArtifactSink:
             domain_rules.validate_content(str(row.kind), merged, value_lists=wf.value_lists())
         )
         row.content_json = _dumps(merged)
-        row.version += 1
-        origins.write(row, "updated", self._origin())
-        row.updated_at = utcnow()
-        self.session.flush()
-        self._write_artifact_revision(row, "generated")
+        bump_artifact(self.session, row, "generated", self._origin())
         seq = self.next_sequence()
         self._emit(
             "artifact_delta",
@@ -338,43 +362,10 @@ class SqlArtifactSink:
             self._write_item_revision(item, "reviewed", by)
         if row.review_status == "draft":
             row.review_status = "approved"
-        row.version += 1
-        origins.write(row, "updated", by)
-        row.updated_at = utcnow()
-        self.session.flush()
-        self._write_artifact_revision(row, "reviewed", by)
+        bump_artifact(self.session, row, "reviewed", by)
         return ArtifactRef(
             artifact_id=str(row.id), kind=row.kind, title=row.title, version=row.version
         )
-
-    def _write_artifact_revision(
-        self, row: ArtifactRow, reason: str, by: Origin | None = None
-    ) -> None:
-        item_rows = self.session.scalars(
-            select(ArtifactItemRow).where(ArtifactItemRow.artifact_id == row.id)
-        ).all()
-        item_versions = [
-            {"item_id": str(item.id), "version": item.version}
-            for item in sorted(item_rows, key=lambda entry: entry.position)
-        ]
-        self.session.add(
-            ArtifactRevisionRow(
-                artifact_id=row.id,
-                version=row.version,
-                snapshot_json=_dumps(
-                    {
-                        "title": row.title,
-                        "summary": row.summary,
-                        "content": _loads(row.content_json),
-                        "review_status": row.review_status,
-                    }
-                ),
-                item_versions_json=_dumps(item_versions),
-                change_reason=reason,
-                **_changed(by or self._origin()),
-            )
-        )
-        self.session.flush()
 
     # — item side —
     def _item_record(self, entry: ArtifactItemRow) -> ItemRecord:
@@ -495,10 +486,10 @@ class SqlArtifactSink:
         origins.write(entry, "created", self._origin())
         origins.write(entry, "updated", self._origin())
         del subject_id  # items carry no subject column; artifacts hold it (§2.3)
-        row.version += 1
         self.session.add(entry)
         self.session.flush()
         self._write_item_revision(entry, "generated", self._origin())
+        bump_artifact(self.session, row, "generated", self._origin())
         seq = self.next_sequence()
         self._emit(
             "artifact_delta",
@@ -533,6 +524,7 @@ class SqlArtifactSink:
         entry.updated_at = utcnow()
         self.session.flush()
         self._write_item_revision(entry, "user_edit", by)
+        bump_artifact(self.session, self._artifact_row(str(entry.artifact_id)), "user_edit", by)
         return ItemRef(
             item_id=str(entry.id),
             kind=str(entry.kind),
@@ -551,6 +543,9 @@ class SqlArtifactSink:
         entry.updated_at = utcnow()
         self.session.flush()
         self._write_item_revision(entry, "generated", self._origin())
+        bump_artifact(
+            self.session, self._artifact_row(str(entry.artifact_id)), "generated", self._origin()
+        )
         return ItemRef(
             item_id=str(entry.id),
             kind=str(entry.kind),
@@ -1105,6 +1100,58 @@ async def artifact_trace(
     )
 
 
+def _copy_row[RowT: (ArtifactItemRow, ArtifactRow)](row: RowT, **changes: Any) -> RowT:
+    """A detached copy of a row with some columns replaced: an item or an artifact as it was."""
+    columns = {attr.key: getattr(row, attr.key) for attr in row.__mapper__.column_attrs}
+    return type(row)(**{**columns, **changes})
+
+
+def _changed_columns(
+    prefix: str, revision: ArtifactRevisionRow | ItemRevisionRow
+) -> dict[str, Any]:
+    """The `<prefix>_*` origin columns holding who made a revision."""
+    by = origins.read(revision, "changed")
+    return {
+        f"{prefix}_actor": by.actor,
+        f"{prefix}_agent_role": by.agent_role,
+        f"{prefix}_by_user_id": by.user_id,
+        f"{prefix}_run_id": by.run_id,
+        f"{prefix}_step_id": by.step_id,
+    }
+
+
+def _item_at(row: ArtifactItemRow, revision: ItemRevisionRow) -> ArtifactItemRow:
+    """The item as it was at one of its versions."""
+    snapshot = _loads(revision.snapshot_json or b"{}")
+    parent = snapshot.get("parent_item_id")
+    return _copy_row(
+        row,
+        content_json=_dumps(snapshot.get("content", {})),
+        position=snapshot.get("position", row.position),
+        parent_item_id=UUID(parent) if parent else None,
+        review_status=snapshot.get("review_status", row.review_status),
+        version=revision.version,
+        updated_at=revision.created_at,
+        **_changed_columns("updated", revision),
+    )
+
+
+async def _item_revision(session: AsyncSession, item_id: UUID, version: int) -> ItemRevisionRow:
+    revision = await session.get(ItemRevisionRow, (item_id, version))
+    if revision is None:
+        raise ApiError(404, "not_found", "Not found", "The version does not exist.")
+    return revision
+
+
+async def _artifact_revision(
+    session: AsyncSession, artifact_id: UUID, version: int
+) -> ArtifactRevisionRow:
+    revision = await session.get(ArtifactRevisionRow, (artifact_id, version))
+    if revision is None:
+        raise ApiError(404, "not_found", "Not found", "The version does not exist.")
+    return revision
+
+
 async def list_artifact_items(
     session: AsyncSession,
     artifact_id: UUID,
@@ -1112,23 +1159,34 @@ async def list_artifact_items(
     kind: str | None,
     review_status: str | None,
     parent_item_id: UUID | None,
+    version: int | None = None,
     limit: int,
     cursor: int,
 ) -> tuple[list[schemas.OutlineItem], int | None]:
-    """The live items of one artifact in outline order (a section, then what it contains).
+    """The live items of one artifact in outline order (a section, then what it contains);
+    with `version`, the items as they were at that version of the artifact.
 
     The outline numbers come from the whole artifact; a filter only keeps some of its items.
     """
-    rows = list(
-        (
-            await session.scalars(
-                select(ArtifactItemRow).where(
-                    ArtifactItemRow.artifact_id == artifact_id,
-                    ArtifactItemRow.deleted_at.is_(None),
+    if version is None:
+        rows = list(
+            (
+                await session.scalars(
+                    select(ArtifactItemRow).where(
+                        ArtifactItemRow.artifact_id == artifact_id,
+                        ArtifactItemRow.deleted_at.is_(None),
+                    )
                 )
-            )
-        ).all()
-    )
+            ).all()
+        )
+    else:
+        revision = await _artifact_revision(session, artifact_id, version)
+        rows = []
+        for entry in _loads(revision.item_versions_json):
+            item = await session.get(ArtifactItemRow, UUID(entry["item_id"]))
+            if item is not None:
+                item_revision = await _item_revision(session, item.id, int(entry["version"]))
+                rows.append(_item_at(item, item_revision))
     numbering = outline_of(rows)
     kept = [
         row
@@ -1143,11 +1201,48 @@ async def list_artifact_items(
     return window, next_cursor
 
 
-async def get_item(session: AsyncSession, item_id: UUID) -> schemas.Item:
+async def get_item(
+    session: AsyncSession, item_id: UUID, version: int | None = None
+) -> schemas.Item:
+    """One item; with `version`, the item as it was then. Without it, an item that was deleted
+    answers 404."""
     row = await session.get(ArtifactItemRow, item_id)
-    if row is None or row.deleted_at is not None:
+    if row is None or (version is None and row.deleted_at is not None):
         raise ApiError(404, "not_found", "Not found", "The item does not exist.")
-    return item_view(row, await _numbering_of(session, {row.artifact_id}))
+    numbering = await _numbering_of(session, {row.artifact_id})
+    if version is not None:
+        row = _item_at(row, await _item_revision(session, item_id, version))
+    return item_view(row, numbering)
+
+
+async def get_artifact(
+    session: AsyncSession, artifact_id: UUID, version: int | None = None
+) -> schemas.Artifact:
+    """One artifact; with `version`, the artifact as it was then. Without it, an artifact that
+    was deleted answers 404."""
+    row = await session.get(ArtifactRow, artifact_id)
+    if row is None or (version is None and row.deleted_at is not None):
+        raise ApiError(404, "not_found", "Not found", "The artifact does not exist.")
+    if version is None:
+        count = await session.scalar(
+            select(func.count()).where(
+                ArtifactItemRow.artifact_id == artifact_id, ArtifactItemRow.deleted_at.is_(None)
+            )
+        )
+        return artifact_view(row, int(count or 0))
+    revision = await _artifact_revision(session, artifact_id, version)
+    snapshot = _loads(revision.snapshot_json or b"{}")
+    then = _copy_row(
+        row,
+        title=snapshot.get("title", row.title),
+        summary=snapshot.get("summary"),
+        content_json=_dumps(snapshot.get("content", {})),
+        review_status=snapshot.get("review_status", row.review_status),
+        version=revision.version,
+        updated_at=revision.created_at,
+        **_changed_columns("updated", revision),
+    )
+    return artifact_view(then, len(_loads(revision.item_versions_json)))
 
 
 def _with_value_lists(kind: str, value_lists: dict[str, Any]) -> dict[str, Any]:

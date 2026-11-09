@@ -529,3 +529,81 @@ async def test_a_user_edit_is_a_revision_credited_to_the_user(client: AsyncClien
     edited = await client.get(f"/api/v1/items/{first['id']}")
     assert edited.json()["updated_by"]["actor"] == "user"
     assert edited.json()["created_by"]["actor"] == "agent"
+
+
+async def test_an_item_can_be_read_at_an_earlier_version(client: AsyncClient) -> None:
+    project_id, _thread_id = await seeded_run(client)
+    listing = await client.get(
+        f"/api/v1/projects/{project_id}/items", params={"kind": "spec_requirement"}
+    )
+    first = listing.json()["items"][0]
+    await client.patch(
+        f"/api/v1/items/{first['id']}",
+        headers={"If-Match": str(first["version"])},
+        json={"review_status": "rejected"},
+    )
+
+    before = await client.get(f"/api/v1/items/{first['id']}", params={"version": first["version"]})
+    after = await client.get(
+        f"/api/v1/items/{first['id']}", params={"version": first["version"] + 1}
+    )
+    missing = await client.get(f"/api/v1/items/{first['id']}", params={"version": 99})
+
+    assert before.json()["review_status"] == first["review_status"]
+    assert before.json()["version"] == first["version"]
+    assert before.json()["updated_by"]["actor"] == "agent"
+    assert after.json()["review_status"] == "rejected"
+    assert after.json()["updated_by"]["actor"] == "user"
+    assert missing.status_code == 404
+    assert set(before.json()) == ITEM_FIELDS
+
+
+async def test_every_version_of_an_artifact_can_be_read(client: AsyncClient) -> None:
+    project_id, _thread_id = await seeded_run(client)
+    artifacts = await client.get(f"/api/v1/projects/{project_id}/artifacts")
+    spec = next(a for a in artifacts.json()["items"] if a["kind"] == "requirement_specification")
+
+    current = await client.get(f"/api/v1/artifacts/{spec['id']}")
+    versions = [
+        (await client.get(f"/api/v1/artifacts/{spec['id']}", params={"version": number})).json()
+        for number in range(1, spec["version"] + 1)
+    ]
+
+    assert current.json() == spec
+    assert [entry["version"] for entry in versions] == list(range(1, spec["version"] + 1))
+    counts = [entry["item_count"] for entry in versions]
+    assert counts[0] == 0, "the artifact is created before its items"
+    assert counts == sorted(counts)
+    assert counts[-1] == spec["item_count"]
+    assert (
+        await client.get(f"/api/v1/artifacts/{spec['id']}", params={"version": 999})
+    ).status_code == 404
+    assert (await client.get(f"/api/v1/artifacts/{uuid4()}")).status_code == 404
+
+
+async def test_the_items_of_an_artifact_can_be_read_as_they_were(client: AsyncClient) -> None:
+    project_id, _thread_id = await seeded_run(client)
+    artifacts = await client.get(f"/api/v1/projects/{project_id}/artifacts")
+    spec = next(a for a in artifacts.json()["items"] if a["kind"] == "requirement_specification")
+    now = (await client.get(f"/api/v1/artifacts/{spec['id']}/items")).json()["items"]
+    target = now[0]
+    await client.patch(
+        f"/api/v1/items/{target['id']}",
+        headers={"If-Match": str(target["version"])},
+        json={"review_status": "rejected"},
+    )
+    edited = (await client.get(f"/api/v1/artifacts/{spec['id']}")).json()
+
+    then = await client.get(
+        f"/api/v1/artifacts/{spec['id']}/items", params={"version": spec["version"]}
+    )
+    first = await client.get(f"/api/v1/artifacts/{spec['id']}/items", params={"version": 1})
+    latest = await client.get(
+        f"/api/v1/artifacts/{spec['id']}/items", params={"version": edited["version"]}
+    )
+
+    assert edited["version"] == spec["version"] + 1, "an edit of an item is a new artifact version"
+    assert [entry["id"] for entry in then.json()["items"]] == [entry["id"] for entry in now]
+    assert then.json()["items"][0]["review_status"] == target["review_status"]
+    assert latest.json()["items"][0]["review_status"] == "rejected"
+    assert first.json()["items"] == []
