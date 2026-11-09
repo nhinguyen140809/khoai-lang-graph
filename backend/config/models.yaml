@@ -1,0 +1,45 @@
+# Model profiles of the backend (README.md: Model Configuration).
+#
+# Agents ask the llm layer for a role, never for a model; the resolver merges
+# this file with environment overrides (LLM__DEFAULT_MODEL, LLM__ROLES__<ROLE>),
+# user settings and run requests, in that order (later wins).
+#
+# Current setup: the advisor's OpenAI key (api.openai.com, no OPENAI_BASE_URL
+# in .env). Two tiers: gpt-4.1 reasons and writes the long structured batches;
+# gpt-4.1-mini answers the short conversational/extraction turns cheaply.
+# To return to the BioTuring gateway: set OPENAI_BASE_URL + OPENAI_API_KEY
+# in .env and restore the glm-5.2 / glm-5.2-No-Think names below.
+
+defaults:
+  model: openai:gpt-4.1
+  temperature: 0.2
+  # Agent conversations span dozens of calls; transient 5xx timeouts retry
+  # instead of failing the whole run.
+  max_retries: 4
+
+# A role not listed uses defaults.model (gpt-4.1). The persona generator,
+# analyst and stakeholder miner all produce structured batches that must
+# reuse the plan's exact vocabulary verbatim and quote evidence word for
+# word (mini drifted on both: a parent persona outside the plan, and a
+# paraphrased evidence quote — both on 2026-10-31). The planner, corpus
+# builder, engineer, backlog manager and validator keep the reasoning
+# default; the interview loop stays mini — short in-character turns,
+# many calls.
+roles:
+  interviewer: openai:gpt-4.1-mini
+  persona_agent: openai:gpt-4.1-mini
+  stakeholder_miner: openai:gpt-4.1
+  persona_generator: openai:gpt-4.1
+  analyst: openai:gpt-4.1
+
+# Models a user may pick in the UI (GET /api/v1/models serves this catalog).
+allowlist:
+  - id: openai:gpt-4.1
+    label: GPT-4.1
+    capabilities: [tool_calling, structured_output, streaming]
+  - id: openai:gpt-4.1-mini
+    label: GPT-4.1 mini
+    capabilities: [tool_calling, structured_output, streaming]
+  - id: openai:gpt-5.2
+    label: GPT-5.2
+    capabilities: [tool_calling, structured_output, streaming]
