@@ -439,8 +439,20 @@ class SqlArtifactSink:
                 ArtifactItemRow.review_status == "draft",
             )
         ):
+            before = item.version
             item.review_status = "approved"
             item.version += 1
+            # The content did not change: a link that was up to date follows the new version.
+            self.session.execute(
+                update(TraceLinkRow)
+                .where(
+                    TraceLinkRow.target_item_id == item.id,
+                    TraceLinkRow.target_version == before,
+                    TraceLinkRow.deleted_at.is_(None),
+                )
+                .values(target_version=item.version)
+                .execution_options(synchronize_session=False)
+            )
             origins.write(item, "updated", by)
             item.updated_at = utcnow()
             self._write_item_revision(item, "reviewed", by)

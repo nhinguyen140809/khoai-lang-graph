@@ -656,3 +656,52 @@ async def test_a_transcript_shows_its_summary_under_its_title(client: AsyncClien
         assert transcript["title"].startswith("Interview with ")
         assert transcript["summary"]
         assert transcript["content"]["status"] == "completed"
+
+
+async def test_a_review_marks_no_link_as_out_of_date(client: AsyncClient) -> None:
+    project_id, _thread_id = await seeded_run(client)
+
+    coverage = (await client.get(f"/api/v1/projects/{project_id}/traceability/coverage")).json()
+
+    needs_review = next(gap for gap in coverage["gaps"] if gap["key"] == "needs_review")
+    for entry in needs_review["items"]:
+        # What is left is a link to an item that a later pass replaced, never one that was
+        # only approved.
+        for change in entry["changed_targets"]:
+            assert change["made_from_version"] == change["current_version"]
+
+
+async def test_a_link_to_an_item_that_changed_afterwards_needs_a_check(client: AsyncClient) -> None:
+    project_id, _thread_id = await seeded_run(client)
+    links = (
+        await client.get(
+            f"/api/v1/projects/{project_id}/trace-links", params={"link_type": "derived_from"}
+        )
+    ).json()["items"]
+    specs = {
+        item["id"]: item
+        for item in (
+            await client.get(
+                f"/api/v1/projects/{project_id}/items", params={"kind": "spec_requirement"}
+            )
+        ).json()["items"]
+    }
+    link = next(link for link in links if link["target_item_id"] in specs)
+    target = specs[link["target_item_id"]]
+    await client.patch(
+        f"/api/v1/items/{target['id']}",
+        headers={"If-Match": str(target["version"])},
+        json={"review_status": "rejected"},
+    )
+
+    coverage = (await client.get(f"/api/v1/projects/{project_id}/traceability/coverage")).json()
+
+    needs_review = next(gap for gap in coverage["gaps"] if gap["key"] == "needs_review")
+    entry = next(
+        item for item in needs_review["items"] if item["item_id"] == link["source_item_id"]
+    )
+    [changed] = [
+        change for change in entry["changed_targets"] if change["target"]["item_id"] == target["id"]
+    ]
+    assert changed["made_from_version"] == link["target_version"]
+    assert changed["current_version"] == link["target_version"] + 1
