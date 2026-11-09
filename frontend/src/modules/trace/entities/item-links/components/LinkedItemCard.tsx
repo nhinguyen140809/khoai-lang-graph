@@ -5,6 +5,7 @@ import { ExternalLinkIcon } from 'lucide-react'
 import type { Route } from 'next'
 
 import { PageLink } from '@/shared/components/frame'
+import { RecordName } from '@/shared/components/ui/record-name'
 
 import { linkedItemMessages } from '../linked-items.constants'
 
@@ -20,8 +21,8 @@ interface LinkedItemCardProps {
 
 /**
  * The card of a record the page relates to, in the outline look of the buttons of the design
- * system: the line over the title under its own title, with the sign of the page it opens at the
- * end, held in the middle of the height. The whole card opens the page, and the fill it takes on
+ * system: the kind of the record over its title, with the sign of the page it opens at the end,
+ * held in the middle of the height. The whole card opens the page, and the fill it takes on
  * hover says so.
  */
 export function LinkedItemCard({ href, over, title, className }: LinkedItemCardProps) {
@@ -34,12 +35,7 @@ export function LinkedItemCard({ href, over, title, className }: LinkedItemCardP
         className,
       )}
     >
-      <span className="min-w-0 flex-1 space-y-0.5">
-        <span className="block text-xs font-normal text-muted-foreground">{over}</span>
-        <span className="block text-sm font-semibold underline-offset-4 group-hover:underline">
-          {title}
-        </span>
-      </span>
+      <RecordName kind={over} title={title} layout="stacked" className="flex-1" />
       <ExternalLinkIcon
         aria-hidden
         className="size-4 shrink-0 text-muted-foreground transition-colors group-hover:text-foreground"

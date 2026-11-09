@@ -3,6 +3,7 @@
 import { Code } from '@/shared/components/ui/code'
 import { Kbd, KbdGroup } from '@/shared/components/ui/kbd'
 import { KeyText } from '@/shared/components/ui/key-text'
+import { RecordName } from '@/shared/components/ui/record-name'
 import { RelativeTime } from '@/shared/components/ui/relative-time'
 import { Separator } from '@/shared/components/ui/separator'
 import { minuteMs } from '@/shared/lib/time'
@@ -70,6 +71,17 @@ export function TypographyCard() {
         </KeyText>
         , with the whole key on hover.
       </p>
+      <div className="flex flex-col gap-2">
+        <p className="text-sm">
+          A record named by its kind and its title, on one line{' '}
+          <RecordName kind="Requirement" title="Search mentors" code="REQ-001" layout="line" />
+          and without its key <RecordName kind="Persona" title="Minh" layout="line" />.
+        </p>
+        <p className="text-sm">
+          Stacked, the kind over the title,{' '}
+          <RecordName kind="Requirement" title="Search mentors" code="REQ-001" layout="stacked" />.
+        </p>
+      </div>
       <p className="text-sm">
         A moment as the words that people read, <RelativeTime date={minutesAgo(5)} />, with the
         exact time on hover, and one that holds still, <RelativeTime date={minutesAgo(90)} />.

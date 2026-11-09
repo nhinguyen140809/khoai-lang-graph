@@ -113,12 +113,7 @@ function ItemPageBody({ projectId, record }: { projectId: string; record: Artifa
           <article className="mx-auto max-w-3xl space-y-4 p-6 pb-20">
             <header className="space-y-2">
               <div className="flex flex-wrap items-center gap-4">
-                <ItemHeading
-                  item={record}
-                  schema={page.schema}
-                  title={page.title}
-                  place={page.neighbors.index}
-                />
+                <ItemHeading schema={page.schema} title={page.title} place={page.neighbors.index} />
                 {!isEditing && (
                   <EditRecordButton target={target} lockedReason={page.lockedReason} />
                 )}

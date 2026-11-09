@@ -34,12 +34,23 @@ function renderWithMarks() {
 }
 
 describe('ItemKeyLine', () => {
-  it('shows the label of the status alone; the key sits in the heading', () => {
+  it('names the item by its status, with its version and its key last', () => {
+    renderWithProviders(
+      <ItemKeyLine item={requirement} status="approved" isUnderReview={false} schema={schema} />,
+    )
+
+    const line = screen.getByText(/Approved/).closest('p')
+    if (line === null) throw new Error('The key line lost its line')
+    expect(line).toHaveTextContent(/version \d/)
+    expect(line).toHaveTextContent('REQ-001')
+    expect(screen.getByText('REQ-001')).toHaveClass('text-muted-foreground')
+  })
+
+  it('names the item while the schema of it has not loaded yet', () => {
     renderKeyLine('approved')
 
     expect(screen.getByText(/Approved/)).toBeInTheDocument()
-    expect(screen.queryByText('REQ-001')).not.toBeInTheDocument()
-    expect(screen.queryByText(/^version /)).not.toBeInTheDocument()
+    expect(screen.getByText('REQ-001')).toBeInTheDocument()
   })
 
   it('shows the fields of one line of a persona above the label of its status', () => {

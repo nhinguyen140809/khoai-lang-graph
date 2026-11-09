@@ -42,22 +42,28 @@ describe('ItemPage', () => {
   it('shows the breadcrumb, the title, the key line and the filled fields', async () => {
     renderItem(first.id)
 
-    expect(
-      await screen.findByRole('heading', { level: 1, name: /Find a mentor in my field/ }),
-    ).toBeInTheDocument()
+    const heading = await screen.findByRole('heading', {
+      level: 1,
+      name: /Find a mentor in my field/,
+    })
+    expect(heading).toBeInTheDocument()
     expect(await screen.findByRole('link', { name: analysis.title })).toHaveAttribute(
       'href',
       `/projects/${projectId}/documents/${analysis.id}`,
     )
-    expect(screen.getByText('RAW-001')).toBeInTheDocument()
-    expect(screen.queryByText('version 1')).not.toBeInTheDocument()
+    // The key line names the item by its status, with the key last.
+    const keyLine = screen.getByText('RAW-001').closest('p')
+    expect(keyLine).toHaveTextContent('version')
+    expect(heading.parentElement).not.toHaveTextContent('RAW-001')
   })
 
   it('shows the page of a persona as a profile: its avatar, its fields of one line on the key line, its lists in pairs', async () => {
     renderItem(itemFixtureByKey(projectId, 'PER-001').id)
 
     const heading = await screen.findByRole('heading', { level: 1, name: 'Minh' })
-    expect(heading.parentElement).toHaveTextContent('PER-001')
+    // The key of the persona sits on the key line, under the title, no longer beside it.
+    expect(heading.parentElement).not.toHaveTextContent('PER-001')
+    expect(screen.getByText('PER-001')).toBeInTheDocument()
     // The avatar leads the title, in the tone of the place of the persona among the items.
     expect(screen.getByText('M')).toHaveAttribute('data-color', 'chart')
     // The fields of one line sit above the label of the status, under the title.
