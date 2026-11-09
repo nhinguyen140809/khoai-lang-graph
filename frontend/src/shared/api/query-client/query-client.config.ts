@@ -1,7 +1,6 @@
 import { MutationCache, QueryCache, QueryClient } from '@tanstack/react-query'
 
-import { ApiError } from '@/shared/api/error'
-import { HttpStatus } from '@/shared/api/http'
+import { isUnauthorizedError } from '@/shared/api/error'
 
 import { canRetryOnce } from './query-retry.utils'
 
@@ -11,7 +10,7 @@ import { canRetryOnce } from './query-retry.utils'
  */
 export function createQueryClient(onUnauthorized: () => void): QueryClient {
   const onError = (error: Error) => {
-    if (error instanceof ApiError && error.status === HttpStatus.Unauthorized) onUnauthorized()
+    if (isUnauthorizedError(error)) onUnauthorized()
   }
   return new QueryClient({
     queryCache: new QueryCache({ onError }),
