@@ -898,7 +898,7 @@ The columns come from the server, so a kind that the workflow definition adds ap
 
 #### Coverage body
 
-Each gap is one list of items that need attention, with its own title and a sentence that says why. The `title` and the `description` are shown to the user as they are, so they are written in natural language for a reader who knows the product but not its data: when the workflow definition version names the gap, the words come from it; otherwise the server writes them. Definition version 1 names no gap, so the server gives the words below. The keys of version 1 are `no_backlog_item` (specified requirements with no incoming `derived_from`), `no_source` (specified or analyzed requirements with no outgoing `derived_from`) and `needs_review` (items whose link to a target has an older `target_version` than the target now, or whose target is `superseded`). A gap with no items is still listed.
+Each gap is one list of items that need attention, with its own title and a sentence that says why. The `title` and the `description` are shown to the user as they are, so they are written in natural language for a reader who knows the product but not its data: when the workflow definition version names the gap, the words come from it; otherwise the server writes them. Definition version 1 names no gap, so the server gives the words below. The keys of version 1 are `no_backlog_item` (specified requirements with no incoming `derived_from`), `no_source` (specified or analyzed requirements with no outgoing `derived_from`) and `needs_review` (items whose link to a target has an older `target_version` than the target now, or whose target is `superseded`). A gap with no items is still listed. An item of `needs_review` also carries `changed_targets`: the targets of its links that changed after the link was made, each with the summary of the target, the `link_type` of the link, the version the link was made from (`made_from_version`) and the version of the target now (`current_version`), so a screen can say why the item is listed without reading the items one by one.
 
 | Key | `title` | `description` |
 |---|---|---|
@@ -914,6 +914,24 @@ Each gap is one list of items that need attention, with its own title and a sent
       "title": "Requirements without a user story",
       "description": "These specified requirements have no user story in the backlog that is built from them yet.",
       "items": [{ "item_id": "0b4d...", "key": "REQ-004", "kind": "spec_requirement", "title": "Search mentors" }]
+    },
+    {
+      "key": "needs_review",
+      "title": "Links to check",
+      "description": "The item that each of these links is based on changed after the link was made, or was replaced.",
+      "items": [
+        {
+          "item_id": "7e91...", "key": "REQ-003", "kind": "spec_requirement", "title": "Book a session",
+          "changed_targets": [
+            {
+              "target": { "item_id": "5f20...", "key": "AR-003", "kind": "analyzed_requirement", "title": "Search with free hours" },
+              "link_type": "derived_from",
+              "made_from_version": 2,
+              "current_version": 3
+            }
+          ]
+        }
+      ]
     }
   ]
 }
