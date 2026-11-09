@@ -733,6 +733,7 @@ Table exports {
   template text [not null, note: 'Export template from the workflow definition']
   format export_format [not null]
   status export_status [not null, default: 'pending']
+  included_artifacts jsonb [not null, note: 'The artifacts exported, each with its kind, title and the version exported']
   file_name text [not null]
   size_bytes bigint
   storage_key text [note: 'Server-only. Set when the export is ready']

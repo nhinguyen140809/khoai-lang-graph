@@ -983,6 +983,7 @@ Rules:
 | `POST /projects/{project_id}/exports` | Request a document; body `template`, `format`. The template is one of the export templates of the current workflow definition version, and the format one of its formats, otherwise `422 validation_failed`. `202` | MVP |
 | `GET /projects/{project_id}/exports` | Exports of a project; ordered by `created_at` descending | MVP |
 | `GET /exports/{export_id}` | Status; when `ready`, includes `download_url`, valid for a limited time | MVP |
+| `GET /exports/{export_id}/file` | The file of a ready export, as a download; the address that `download_url` gives. `404` while the export is not ready | MVP |
 
 ### Later phase
 
