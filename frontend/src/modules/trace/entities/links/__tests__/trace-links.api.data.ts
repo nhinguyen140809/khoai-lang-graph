@@ -11,14 +11,14 @@ import { createTraceLink, deleteTraceLink, listProjectTraceLinks } from '../trac
 import type { CreateTraceLinkBody } from '../trace-links.types'
 
 export const projectId = projectIds.mentor
-const requirement = itemFixtureByKey(projectId, 'REQ-001')
-const otherRequirement = itemFixtureByKey(projectId, 'REQ-002')
+const analyzed = itemFixtureByKey(projectId, 'AR-001')
+const mentorPersona = itemFixtureByKey(projectId, 'PER-002')
 
-/** A link between two items that the type allows and that does not exist yet. */
+/** A link between two items that the type allows and that does not exist yet, from an item of the document under review. */
 export const newLink: CreateTraceLinkBody = {
-  source_item_id: otherRequirement.id,
-  target_item_id: requirement.id,
-  link_type: 'depends_on',
+  source_item_id: analyzed.id,
+  target_item_id: mentorPersona.id,
+  link_type: 'involves',
   note: 'Needs the search first.',
 }
 
