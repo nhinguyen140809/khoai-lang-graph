@@ -8,6 +8,7 @@ export {
   ApiError,
   errorMessageOf,
   isNotFoundError,
+  isUnauthorizedError,
   isVersionConflict,
   toApiError,
 } from './api-error.utils'
