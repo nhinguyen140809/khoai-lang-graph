@@ -82,4 +82,10 @@ export {
 } from './traceability/hooks/useTraceabilityQueries'
 export { getTraceabilityCoverage, getTraceabilityMatrix } from './traceability/traceability.api'
 export { traceabilityKeys } from './traceability/traceability.keys'
-export type { Coverage, ItemSummary, Matrix } from './traceability/traceability.types'
+export type {
+  ChangedTarget,
+  Coverage,
+  CoverageItem,
+  ItemSummary,
+  Matrix,
+} from './traceability/traceability.types'

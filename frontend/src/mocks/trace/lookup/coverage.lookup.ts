@@ -58,6 +58,23 @@ const gapRules: GapRule[] = [
               : []
           }),
       ),
+    changedTargetsOf: (item, { itemById, links }) =>
+      links
+        .filter(({ link_type }) => chainLinkTypes.includes(link_type))
+        .flatMap((link) => {
+          if (link.source_item_id !== item.id) return []
+          const target = itemById.get(link.target_item_id)
+          return target !== undefined && isLinkOutOfDate(link, target)
+            ? [
+                {
+                  target: toSummary(target),
+                  link_type: link.link_type,
+                  made_from_version: link.target_version,
+                  current_version: target.version,
+                },
+              ]
+            : []
+        }),
   },
 ]
 
@@ -65,11 +82,16 @@ const gapRules: GapRule[] = [
 export function coverageOf(projectId: string): Coverage {
   const project = itemsAndLinksOf(projectId)
   return {
-    gaps: gapRules.map(({ key, title, description, itemsIn }) => ({
+    gaps: gapRules.map(({ key, title, description, itemsIn, changedTargetsOf }) => ({
       key,
       title,
       description,
-      items: itemsIn(project).map(toSummary),
+      items: itemsIn(project).map((item) => ({
+        ...toSummary(item),
+        ...(changedTargetsOf !== undefined
+          ? { changed_targets: changedTargetsOf(item, project) }
+          : {}),
+      })),
     })),
   }
 }

@@ -27,6 +27,27 @@ export const matrixSchema = z.object({
 
 export type Matrix = z.infer<typeof matrixSchema>
 
+/** One target of the links of an item that changed after the link to it was made. */
+export const changedTargetSchema = z.object({
+  target: itemSummarySchema,
+  link_type: z.string(),
+  made_from_version: z.number().int(),
+  current_version: z.number().int(),
+})
+
+export type ChangedTarget = z.infer<typeof changedTargetSchema>
+
+/**
+ * An item of the coverage of a gap. An item of the `needs_review` gap also carries the targets of
+ * its links that changed after the link was made, each with the version the link was made from
+ * and the version of the target now, so a screen can say why the item is listed.
+ */
+export const coverageItemSchema = itemSummarySchema.extend({
+  changed_targets: z.array(changedTargetSchema).optional(),
+})
+
+export type CoverageItem = z.infer<typeof coverageItemSchema>
+
 /** The kinds of gap in the links of a project, each with the items it holds. */
 export const coverageSchema = z.object({
   gaps: z.array(
@@ -34,7 +55,7 @@ export const coverageSchema = z.object({
       key: z.string(),
       title: z.string(),
       description: z.string(),
-      items: z.array(itemSummarySchema),
+      items: z.array(coverageItemSchema),
     }),
   ),
 })
