@@ -1,5 +1,7 @@
 export { ProjectGate } from './components/ProjectGate'
 export { ProjectNotFound } from './components/ProjectNotFound'
+export { ProjectIdProvider } from './projects/components/ProjectIdProvider'
+export { useProjectId } from './projects/hooks/useProjectId'
 export { useProject, useProjectList, useRecentProjects } from './projects/hooks/useProjectQueries'
 export {
   archiveProject,
