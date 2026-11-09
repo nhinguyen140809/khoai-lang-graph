@@ -15,7 +15,7 @@ The skeletons fix the regions and what each one holds; sizes, colors and compone
   - [5. Artifacts](#5-artifacts)
   - [6. Artifact as a document](#6-artifact-as-a-document)
   - [7. Workflow](#7-workflow)
-  - [8. Traceability](#8-traceability)
+  - [8. Trace](#8-trace)
   - [9. Project settings](#9-project-settings)
   - [10. Open points](#10-open-points)
 
@@ -304,32 +304,36 @@ The side panel lists the runs of a thread and their steps; the editor shows the 
 - Every turn of an interview is a step, so the steps of one interview are grouped under the persona and expand on click.
 - The panel shows the selected step: its node, stage, iteration, model, usage, the items it produced, and the actions to retry from it and to open its trace.
 
-## 8. Traceability
+## 8. Trace
+
+As built in the user view: the feature "Trace" on the activity bar, its side panel with an overview of what needs attention and the tree of the documents, and the chain of a chosen item as a graph. See [Usability 7.8](usability.md#78-trace) for the words and the behavior.
 
 ```text
 +----------------------------------------------------------------------------------------------+
 | (K) khoai / Mentor platform v            [ Search or run a command   Ctrl+K ]         (user) |
 +-----+--------------------------+-------------------------------------------------------------+
-|     | TRACEABILITY             | Matrix  x                                                   |
-|  C  |                          +-------------------------------------------------------------+
-|  A  | COVERAGE                 | Backlog   Spec      Analyzed   Source           Evidence    |
-|  W  |   No backlog item      2 | US-004    REQ-001   AR-003     RAW-002          PER-001#4   |
-| [T] |   No source            1 | US-005    REQ-001   AR-003     RAW-002, LN-001  PER-001#4   |
-|  S  |   Needs review         3 | US-006    REQ-002   AR-005     RAW-004          PER-002#7   |
-|     |                          | -         REQ-007   AR-011     RAW-015          PER-003#2   |
-|     | VIEWS                    | -         REQ-009   AR-014     -                -           |
-|     |  [Matrix]                | ...                                                         |
-|     |   Issues                 |                                                             |
-|     |                          | [ Only gaps ]                                               |
-|  *  |                          |                                                             |
+|     | Overview                 | [Trace of Layered booking flow] x                         |
+|  A  |   Requirements with-      +-------------------------------------------------------------+
+|  D  |   out a user story   3   |                                                             |
+|  T  |   Requirements with-      |  Interview, student                                         |
+|  R  |   out a source       2   |     ^                                                       |
+|  A  |   Links to check     2   |     |  Based on                                           |
+|  C  |   Open issues        3   |     v                                                      |
+|  E  |                          |  Stated need, Students book a session at once               |
+|     | Documents                |     ^  Based on  (!) made from version 3                   |
+|     | v Interview transcripts  |     v                                                      |
+|     | v Requirements analysis  |  Analysed requirement, Layered booking flow                |
+|     |     (!) Layered booki... |     ^  Concerns                                            |
+|     | v Requirement specifi... |     v                                                      |
+|     |                          |  Point to clarify, Fast has no number                      |
+|     |                          |                                                             |
+|     |                          |  (?) How to read the lines     v Read the links as a list  |
 +-----+--------------------------+-------------------------------------------------------------+
-| Run 3: waiting for review | analysis_review | step 67 | $0.42 of $2.00 | workflow v1         |
+|   (>) Working: Interviewing  [ Stop ]                                                        |
 +----------------------------------------------------------------------------------------------+
 ```
 
-- The matrix has one row per `derived_from` chain, from backlog item down to raw requirement or latent need, with the interview messages that `evidenced_by` points to. Every key opens the item.
-- The coverage counts come from the coverage endpoint; a click filters the matrix to those rows.
-- Issues lists the open ambiguity issues, conflicts and validation issues with the items they concern or flag.
+The traceability matrix, a table of every chain of the project, moves to the developer view in a later build; the user view follows one item at a time through its chain.
 
 ## 9. Project settings
 

@@ -132,13 +132,13 @@ ESLint checks the kinds of each place (`fileKinds` of `frontend/lint/lib/file-na
 
 ## 4. Order of the modules
 
-`workflow` -> `artifact` -> `run` -> `review` -> `thread` -> `project`, `activity`, `documents`
+`workflow` -> `artifact` -> `run` -> `review` -> `thread` -> `project`, `activity`, `documents` -> `traceability`
 
 `auth` -> `user`
 
 `usage`, `design-system`
 
-A module imports only the modules under it in its line: `project` reads `thread` and `run`; `activity` sits beside `project`, so it may read the same modules, and neither of the two reads the other; `documents` sits above `project` and reads `workflow`, `artifact`, `trace`, `run`, `review`, `thread` and `project`; `thread` reads `run`, and `user` reads `auth`, and `run` for the RunDefaults of UserSettings. `usage` and `design-system` read no other module. The order is `moduleImports` of `frontend/lint/lib/modules/module-imports.constants.js`, which lists the modules of today and the ones planned next; a new module gets its place there before its first code. ESLint does not load when the lists form a cycle, or name a module that has no list.
+A module imports only the modules under it in its line: `project` reads `thread` and `run`; `activity` sits beside `project`, so it may read the same modules, and neither of the two reads the other; `documents` sits above `project` and reads `workflow`, `artifact`, `trace`, `run`, `review`, `thread` and `project`; `traceability`, the screen Trace, sits above `documents` and reads the same modules plus `documents` for the lock of a document; `thread` reads `run`, and `user` reads `auth`, and `run` for the RunDefaults of UserSettings. `usage` and `design-system` read no other module. The order is `moduleImports` of `frontend/lint/lib/modules/module-imports.constants.js`, which lists the modules of today and the ones planned next; a new module gets its place there before its first code. ESLint does not load when the lists form a cycle, or name a module that has no list.
 
 `itemRefSchema`, the reference to an item that a step produced or a message names, sits in `artifact`; the entities of `run` read it through `artifact/entities/@x/run`. The entities of `artifact` read the artifact kinds, their content schemas and the content fields through `workflow/entities/@x/artifact`. The entities of `documents` read `workflow`, `artifact`, `run`, `review` and `project` through the `@x/documents.ts` file of each.
 
@@ -215,7 +215,8 @@ A unit test may also import another slice of its layer, from its index, to show 
 | `auth` | The calls that start a session, create an account and end a session; the page that opens after signing in | `login`, `register`, `logout` | - | Today |
 | `user` | User, Session, UserSettings | `run-settings` later | `menu`, `settings` | The entities; the forms of the account and the preferences with Settings |
 | `usage` | MonthlyUsage, the usage of the user in a calendar month, with the budget of the month and its groups | - | - | The entities and the budget on the status bar; the usage section with Settings |
-| `trace` | TraceLink with the words of both of its items, the traces of items, the traceability views, the origin of an item, the links of an item and their marks, the out of date items, and the card of the items at the other end | - | `graph`, the nodes and edges of a trace, for drawing it | Later |
+| `trace` | TraceLink with the words of both of its items, the traces of items, the traceability views, the origin of an item, the links of an item and their marks, the out of date items, and the card of the items at the other end; the entities split by topic: `chains`, `links`, `item-links`, `issues`, `traceability` and `graph`, the chain as nodes and edges with the attention of each | `add-link`, `remove-link`, each in its dialog | `dialogs`, the dialogs of the links mounted once by the layout | Today |
+| `traceability` | - | - | `panel`, the overview of what needs attention and the tree of the documents with their items; `chain`, the chain of an item as a graph with its menus and its quoted words; `gap`, the items of a gap; `issues`, the open issues with their problem and where they apply; `home`, the start page; `commands`, the commands of Trace; `streams`, the reload of the trace when the agents stop | Today |
 | `llm-model` | ModelCatalogEntry, ModelSettings | - | - | The entities; the form of the model settings with Settings |
 | `design-system` | - | - | `showcase`, the page of the UI components and the tokens | Today |
 
@@ -288,6 +289,7 @@ A block that reads several modules sits in the highest module that it reads, or 
 | The documents of a project in the side panel, a document and an item in tabs | `documents/widgets/panel`, `document`, `item` | `workflow` for the kinds and their order; `artifact` for the outline, the status of an item and the views; `run` for the artifacts that the node in progress writes; `review` for the documents under review; `project` for whether the run is unfinished |
 | The workflow graph of a run | `run/widgets/graph` | `workflow` |
 | The panel of a pending review | `review/widgets/panel` | `artifact`, and the edit form of `artifact/features/edit` |
+| Trace: the side panel, the chain of an item, the gaps and the open issues | `traceability/widgets` | `trace` for the chain, the coverage and the issues, with the actions of its features; `workflow` for the words of the kinds and the links; `artifact` for the items and their views; `documents` for the lock of a document and its outline; `project` for whether the agents write |
 
 ## 10. Review checklist
 
