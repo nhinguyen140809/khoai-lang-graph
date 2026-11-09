@@ -18,6 +18,15 @@ export {
   useOutOfDateItemIds,
   useReloadTraces,
 } from './chains/hooks/useChainQueries'
+export { useOpenIssues } from './issues/hooks/useOpenIssues'
+export { issueKeys } from './issues/issues.keys'
+export type {
+  IssueContext,
+  OpenIssueEntry,
+  OpenIssueGroup,
+  OpenIssuesResult,
+} from './issues/open-issues.types'
+export { openIssueEntries } from './issues/open-issues.utils'
 export { LinkedItemsPopover } from './item-links/components/LinkedItemsPopover'
 export { QuotedWordsPopover } from './item-links/components/QuotedWordsPopover'
 export { useItemLinks } from './item-links/hooks/useItemLinks'
@@ -31,6 +40,8 @@ export { derivedFrom, evidencedBy } from './links/trace-links.constants'
 export { traceLinkKeys } from './links/trace-links.keys'
 export type { CreateTraceLinkBody, TraceLink, TraceLinkFilters } from './links/trace-links.types'
 export { isLinkOutOfDate } from './links/trace-links.utils'
+export { liveTraceMs } from './live-trace.constants'
+export type { LiveTraceOptions } from './live-trace.types'
 export { traceModuleKeys } from './trace-module.keys'
 export {
   useTraceabilityCoverage,
