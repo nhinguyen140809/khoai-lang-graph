@@ -2,11 +2,7 @@
 
 import { useMemo } from 'react'
 
-import {
-  itemTitle,
-  useContentSchemas,
-  useWorkflowDefinition,
-} from '@/modules/workflow/entities/@x/artifact'
+import { useItemTitleOf, useWorkflowDefinition } from '@/modules/workflow/entities/@x/artifact'
 
 import type { StageSubject } from '../items.types'
 import { useProjectItemsOfKinds } from './useItemQueries'
@@ -21,7 +17,7 @@ export function useStageSubjects(
   version: number | undefined,
 ): ReadonlyMap<string, StageSubject[]> {
   const { data: definition } = useWorkflowDefinition(version)
-  const schemas = useContentSchemas()
+  const titleOf = useItemTitleOf()
   const subjectsOfStage = useMemo(() => {
     const ofStage = new Map<string, string>()
     for (const kind of definition?.artifact_kinds ?? []) {
@@ -40,17 +36,16 @@ export function useStageSubjects(
 
   return useMemo(() => {
     const subjects = new Map<string, StageSubject[]>()
-    stages.forEach(([stage, kind], index) => {
-      const schema = schemas.get(kind)
+    stages.forEach(([stage], index) => {
       subjects.set(
         stage,
         (itemsOfKind[index] ?? []).map((item) => ({
           id: item.id,
           key: item.key,
-          title: itemTitle(schema, item),
+          title: titleOf(item),
         })),
       )
     })
     return subjects
-  }, [stages, itemsOfKind, schemas])
+  }, [stages, itemsOfKind, titleOf])
 }

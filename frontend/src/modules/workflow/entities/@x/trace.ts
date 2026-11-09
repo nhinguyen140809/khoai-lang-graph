@@ -7,6 +7,7 @@ export { contentFields, isNavigable, mainField } from '../content/fields/content
 export type { ContentValues } from '../content/values/content-values.types'
 export { contentValuesSchema } from '../content/values/content-values.types'
 export { findQuote } from '../content/values/content-values.utils'
+export { useItemTitleOf } from '../content/values/hooks/useItemTitleOf'
 export { extensionFieldText, itemTitle } from '../content/values/item-title.utils'
 export { useLinkTitleOf } from '../definition/hooks/useLinkTitleOf'
 export { useWorkflowDefinition } from '../definition/hooks/useWorkflowDefinition'

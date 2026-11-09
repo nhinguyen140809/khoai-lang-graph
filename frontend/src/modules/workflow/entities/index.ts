@@ -52,6 +52,7 @@ export {
   valueTitle,
   withoutEmptyEntries,
 } from './content/values/content-values.utils'
+export { useItemTitleOf } from './content/values/hooks/useItemTitleOf'
 export { extensionFieldText, itemTitle } from './content/values/item-title.utils'
 export type { ExportFormat, ExportTemplate } from './definition/export-templates.types'
 export { exportFormats } from './definition/export-templates.types'
