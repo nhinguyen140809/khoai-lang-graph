@@ -1,6 +1,7 @@
-import { reviewStatus } from '@/modules/artifact/entities'
-import { isLinkOutOfDate, type Trace, type TraceItem } from '@/modules/trace/entities'
+import { reviewStatus } from '@/modules/artifact/entities/@x/trace'
 
+import type { Trace, TraceItem } from '../chains/chains.types'
+import { isLinkOutOfDate } from '../links/trace-links.utils'
 import type { TraceGraph } from './trace-graph.types'
 
 /**
