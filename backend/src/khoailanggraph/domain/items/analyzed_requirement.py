@@ -18,6 +18,7 @@ class AnalyzedRequirementContent(BaseModel):
 
     model_config = ConfigDict(extra="forbid")
 
+    title: str
     statement: str
     type: Literal["functional", "non_functional", "constraint"]
     quality_category: str | None

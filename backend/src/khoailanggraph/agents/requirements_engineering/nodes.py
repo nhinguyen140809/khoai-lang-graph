@@ -773,6 +773,18 @@ def persona_generator_node(
     }
 
 
+INTERVIEWER_KEY = "interviewer"
+
+
+def _role_of(transcript: dict[str, Any], message: ItemRecord) -> str:
+    """The role (`interviewer` or `persona`) of the participant who says a message."""
+    speaker = message["content"]["speaker"]
+    for participant in transcript["content"]["participants"]:
+        if participant["key"] == speaker:
+            return str(participant["role"])
+    return "persona"
+
+
 def _transcript_of(
     state: REState,
     sink: ArtifactSink,
@@ -787,8 +799,26 @@ def _transcript_of(
     created = sink.create_artifact(
         state["project_id"],
         "interview_transcript",
-        title=f"Interview of {persona['key']}",
-        content={"status": "in_progress", "turn_count": 0, "stop_reason": None},
+        title=f"Interview with {persona['content'].get('name', persona['key'])}",
+        content={
+            "participants": [
+                {
+                    "key": INTERVIEWER_KEY,
+                    "name": "Interviewer",
+                    "role": "interviewer",
+                    "item_id": None,
+                },
+                {
+                    "key": str(persona["key"]),
+                    "name": str(persona["content"].get("name", persona["key"])),
+                    "role": "persona",
+                    "item_id": str(persona["item_id"]),
+                },
+            ],
+            "status": "in_progress",
+            "turn_count": 0,
+            "stop_reason": None,
+        },
         subject_id=persona["item_id"],
     )
     return dict(created), []
@@ -899,7 +929,7 @@ def interviewer_node(
                 },
                 "transcript": [
                     {
-                        "role": entry["content"]["role"],
+                        "role": _role_of(transcript, entry),
                         "content": entry["content"]["content"],
                     }
                     for entry in messages[-TRANSCRIPT_TAIL:]
@@ -950,7 +980,7 @@ def interviewer_node(
             "interview_message",
             {
                 "turn": turn_no,
-                "role": "interviewer",
+                "speaker": INTERVIEWER_KEY,
                 "content": turn.question,
                 "iteration": int(state["iteration_count"]),
                 "topic": None,
@@ -978,7 +1008,7 @@ def persona_agent_node(
         (
             str(entry["content"]["content"])
             for entry in reversed(messages)
-            if entry["content"]["role"] == "interviewer"
+            if entry["content"]["speaker"] == INTERVIEWER_KEY
         ),
         None,
     )
@@ -1004,7 +1034,7 @@ def persona_agent_node(
         "interview_message",
         {
             "turn": turn_no,
-            "role": "persona",
+            "speaker": str(persona["key"]),
             "content": answer.answer,
             "iteration": int(state["iteration_count"]),
             "topic": None,

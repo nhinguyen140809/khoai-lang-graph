@@ -120,5 +120,36 @@ def invoke_demo(
     if handler is None:
         msg = f"the demo dataset has no answer for schema '{schema_name}'"
         raise LookupError(msg)
-    answer = handler(system, user, call_number)
-    return cast("dict[str, Any]", answer)
+    answer = cast("dict[str, Any]", handler(system, user, call_number))
+    return _with_titles(answer)
+
+
+# The drafts of an answer that carry a `title`, and the field a short name is cut from.
+_TITLED_DRAFTS = {
+    "raw_requirements": "statement",
+    "analyzed_requirements": "statement",
+    "latent_needs": "description",
+    "assumptions": "statement",
+    "ambiguity_issues": "description",
+    "conflicts": "description",
+    "issues": "description",
+}
+_TITLE_LIMIT = 60
+
+
+def _short_name(text: str) -> str:
+    """The first words of `text`, at most 60 characters, the way an agent names an item."""
+    first = text.split(".", maxsplit=1)[0].strip()
+    if len(first) <= _TITLE_LIMIT:
+        return first
+    cut = first[:_TITLE_LIMIT].rsplit(" ", 1)[0]
+    return cut.rstrip(",;:")
+
+
+def _with_titles(answer: dict[str, Any]) -> dict[str, Any]:
+    """Give every draft of the scripted answer the `title` an agent must write."""
+    for section, field in _TITLED_DRAFTS.items():
+        for draft in answer.get(section, []):
+            if isinstance(draft, dict) and "title" not in draft and field in draft:
+                draft["title"] = _short_name(str(draft[field]))
+    return answer

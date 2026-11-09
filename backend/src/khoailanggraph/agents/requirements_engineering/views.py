@@ -61,13 +61,25 @@ def summary_lines(items: list[ItemRecord], fields: tuple[str, ...]) -> str:
 def transcript_lines(
     persona_key: str,
     items: list[ItemRecord],
+    participants: list[dict[str, Any]] | None = None,
 ) -> list[str]:
     """Interview messages as `<key> <role>: <content>`, in transcript order.
+
+    `<role>` is the role of the participant who says the message, found in
+    `participants` (the transcript's list); without it the persona's key is the
+    persona and anything else is the interviewer.
 
     A message key is its persona's key, `#` and the position, such as
     `PER-001#4` — the form analyst.v1 expects.
     """
+    roles = {str(p["key"]): str(p["role"]) for p in participants or []}
+
+    def role_of(speaker: object) -> str:
+        key = str(speaker)
+        return roles.get(key, "persona" if key == persona_key else "interviewer")
+
     return [
-        f"{persona_key}#{position} {entry['content']['role']}: {entry['content']['content']}"
+        f"{persona_key}#{position} {role_of(entry['content']['speaker'])}: "
+        f"{entry['content']['content']}"
         for position, entry in enumerate(sorted(items, key=lambda item: item["key"]), start=1)
     ]

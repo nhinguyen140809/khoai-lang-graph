@@ -245,7 +245,7 @@ async def test_artifact_kinds_full_contract(client: AsyncClient) -> None:
 
     body = response.json()
     assert response.status_code == 200
-    assert body["workflow_version"] == 3
+    assert body["workflow_version"] == 2
     kinds = [k["kind"] for k in body["artifact_kinds"]]
     assert "elicitation_plan" in kinds
     assert "research_corpus" in kinds

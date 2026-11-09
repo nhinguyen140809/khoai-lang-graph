@@ -16,6 +16,7 @@ class AssumptionContent(BaseModel):
 
     model_config = ConfigDict(extra="forbid")
 
+    title: str
     statement: str
     reasoning: str
     impact_if_wrong: str

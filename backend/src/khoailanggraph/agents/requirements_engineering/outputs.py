@@ -10,13 +10,23 @@ them into trace-link rows.
 
 from __future__ import annotations
 
-from typing import Literal
+from typing import Annotated, Literal
 
 from pydantic import BaseModel, ConfigDict, Field
 
 from khoailanggraph.domain.artifacts import ElicitationPlanContent
 
 DEFAULT_QUALITY = None
+
+# The short name of an item, as the content schemas describe it: shown in lists and links.
+ItemTitle = Annotated[
+    str,
+    Field(
+        description=(
+            "A short name of at most 60 characters that tells the point of the item at a glance."
+        )
+    ),
+]
 
 
 class _Output(BaseModel):
@@ -152,6 +162,7 @@ class PersonaAnswerOutput(_Output):
 
 class RawRequirementDraft(_Output):
     ref: str
+    title: ItemTitle
     statement: str
     topic: str | None
     stated_by: str
@@ -161,6 +172,7 @@ class RawRequirementDraft(_Output):
 
 class AnalyzedRequirementDraft(_Output):
     ref: str
+    title: ItemTitle
     statement: str
     type: Literal["functional", "non_functional", "constraint"]
     quality_category: str | None = DEFAULT_QUALITY
@@ -173,6 +185,7 @@ class AnalyzedRequirementDraft(_Output):
 
 class LatentNeedDraft(_Output):
     ref: str
+    title: ItemTitle
     description: str
     reasoning: str
     confidence: Literal["low", "medium", "high"]
@@ -184,6 +197,7 @@ class LatentNeedDraft(_Output):
 
 class AssumptionDraft(_Output):
     ref: str
+    title: ItemTitle
     statement: str
     reasoning: str
     impact_if_wrong: str
@@ -194,6 +208,7 @@ class AssumptionDraft(_Output):
 
 class AmbiguityIssueDraft(_Output):
     ref: str
+    title: ItemTitle
     description: str
     ambiguity_type: str
     ambiguous_text: str
@@ -207,6 +222,7 @@ class AmbiguityIssueDraft(_Output):
 
 class ConflictDraft(_Output):
     ref: str
+    title: ItemTitle
     description: str
     conflict_type: str
     severity: Literal["low", "medium", "high"]
@@ -292,6 +308,7 @@ class BacklogOutput(_Output):
 
 class ValidationIssueDraft(_Output):
     ref: str
+    title: ItemTitle
     category: str
     severity: Literal["low", "medium", "high"]
     description: str

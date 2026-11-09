@@ -18,6 +18,7 @@ class ValidationIssueContent(BaseModel):
 
     model_config = ConfigDict(extra="forbid")
 
+    title: str
     category: str
     severity: Literal["low", "medium", "high"]
     description: str

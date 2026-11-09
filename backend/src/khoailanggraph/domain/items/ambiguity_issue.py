@@ -17,6 +17,7 @@ class AmbiguityIssueContent(BaseModel):
 
     model_config = ConfigDict(extra="forbid")
 
+    title: str
     description: str
     ambiguity_type: str
     ambiguous_text: str

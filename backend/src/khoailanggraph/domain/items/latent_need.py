@@ -17,6 +17,7 @@ class LatentNeedContent(BaseModel):
 
     model_config = ConfigDict(extra="forbid")
 
+    title: str
     description: str
     reasoning: str
     confidence: Literal["low", "medium", "high"]

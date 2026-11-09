@@ -19,6 +19,7 @@ class ConflictContent(BaseModel):
 
     model_config = ConfigDict(extra="forbid")
 
+    title: str
     description: str
     conflict_type: str
     severity: Literal["low", "medium", "high"]
