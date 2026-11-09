@@ -4,7 +4,7 @@ import { describe, expect, it } from 'vitest'
 
 import type { ItemLinksResult } from '@/modules/trace/entities'
 import { renderWithProviders } from '@/test/render'
-import { expectNoAccessibilityViolations } from '@/test/steps'
+import { expectNoAccessibilityViolations, pressEscape } from '@/test/steps'
 
 import { ItemLinkLine } from '../ItemLinkLine'
 
@@ -83,6 +83,7 @@ function renderLine() {
     <ItemLinkLine
       projectId="p1"
       links={links}
+      lockedReason={null}
       activeLinkId={null}
       onActiveLinkChange={() => undefined}
     />,
@@ -131,6 +132,35 @@ describe('ItemLinkLine', () => {
     expect(
       await screen.findByRole('link', { name: 'Analysed requirement, Requirement 1' }),
     ).toBeInTheDocument()
+  })
+
+  it('offers to remove the link in the card of an outgoing chip, not of an incoming one', async () => {
+    const user = userEvent.setup()
+    renderLine()
+
+    await user.click(screen.getByRole('button', { name: 'Analysed requirement, Requirement 1' }))
+    expect(await screen.findByText('Remove this link')).toBeInTheDocument()
+
+    await pressEscape()
+    await user.click(screen.getByRole('button', { name: 'Point to clarify, Fast has no number' }))
+    expect(await screen.findByText(/applies to this item/)).toBeInTheDocument()
+    expect(screen.queryByText('Remove this link')).not.toBeInTheDocument()
+  })
+
+  it('sits the removal of an outgoing chip disabled with its reason', async () => {
+    const user = userEvent.setup()
+    renderWithProviders(
+      <ItemLinkLine
+        projectId="p1"
+        links={links}
+        lockedReason="Documents cannot change while the agents work."
+        activeLinkId={null}
+        onActiveLinkChange={() => undefined}
+      />,
+    )
+
+    await user.click(screen.getByRole('button', { name: 'Analysed requirement, Requirement 1' }))
+    expect(await screen.findByText('Remove this link')).toBeDisabled()
   })
 
   it('has no accessibility violation', async () => {

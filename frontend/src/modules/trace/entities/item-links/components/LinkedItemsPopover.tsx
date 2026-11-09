@@ -45,11 +45,14 @@ function LinkedEntryBlock({
   entry,
   hrefOf,
   linkTitleOf,
+  actions,
 }: {
   entry: LinkedEntry
   hrefOf: ReturnType<typeof useItemHref>
   /** The title of the type of a link, as the definition of the workflow names it. */
   linkTitleOf: (linkType: string) => string
+  /** What the caller offers to do with the link of this entry, such as removing it. */
+  actions: ReactNode
 }) {
   const schemas = useContentSchemas()
   const titleOf = useItemTitleOf()
@@ -62,6 +65,7 @@ function LinkedEntryBlock({
         href={hrefOf(entry.item)}
         over={schema?.title ?? entry.item.kind}
         title={title}
+        actions={actions}
       />
       <p className="text-xs">{relationSentence(entry.relation, title, linkTitleOf)}</p>
       {entry.otherQuote !== null && (
@@ -90,10 +94,13 @@ function LinkedEntryBlock({
 export function LinkedItemsPopover({
   projectId,
   entries,
+  renderActions,
   children,
 }: {
   projectId: string
   entries: readonly LinkedEntry[]
+  /** Draws what the card of each entry offers to do with its link; nothing by default. */
+  renderActions?: ((entry: LinkedEntry) => ReactNode) | undefined
   children: ReactNode
 }) {
   const hrefOf = useItemHref(projectId)
@@ -106,7 +113,12 @@ export function LinkedItemsPopover({
         {entries.map((entry, index) => (
           <div key={entry.item.id} className="space-y-3">
             {index > 0 && <Separator />}
-            <LinkedEntryBlock entry={entry} hrefOf={hrefOf} linkTitleOf={linkTitleOf} />
+            <LinkedEntryBlock
+              entry={entry}
+              hrefOf={hrefOf}
+              linkTitleOf={linkTitleOf}
+              actions={renderActions?.(entry) ?? null}
+            />
           </div>
         ))}
       </PopoverContent>

@@ -1,3 +1,8 @@
+/** The words of the menu that gathers the actions of a document. */
+export const documentActionsMessages = {
+  more: 'More actions',
+} as const
+
 export const documentPageMessages = {
   choose: {
     title: 'Choose a document',

@@ -1,6 +1,6 @@
 'use client'
 
-import { UnlinkIcon } from 'lucide-react'
+import { Unlink2Icon } from 'lucide-react'
 
 import { linkKeyOf, type TraceLink } from '@/modules/trace/entities'
 import type { MenuAction } from '@/shared/components/ui/menu-action'
@@ -13,14 +13,14 @@ import { useOpenRemoveLinkDialog } from './useOpenRemoveLinkDialog'
  * destructive look, the reason its document cannot change, and a run that opens the Remove link
  * dialog, which asks before it sends.
  */
-export function useRemoveLinkAction(
+export function useUnlinkAction(
   link: Pick<TraceLink, 'id' | 'source_item_id'>,
   lockedReason: string | null,
 ): MenuAction {
   const openRemoveLink = useOpenRemoveLinkDialog()
 
   return {
-    icon: UnlinkIcon,
+    icon: Unlink2Icon,
     label: removeLinkMessages.open,
     disabledReason: lockedReason,
     tone: 'destructive',
