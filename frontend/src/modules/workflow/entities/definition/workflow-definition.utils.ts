@@ -22,6 +22,13 @@ export function agentRoleLabels(definition: WorkflowDefinition): Map<string, str
   return new Map(definition.agent_roles.map(({ key, label }) => [key, label]))
 }
 
+/** The kinds of item that each kind of artifact holds, in the order of the definition, by its kind. */
+export function itemKindsByArtifactKind(
+  definition: Pick<WorkflowDefinition, 'artifact_kinds'>,
+): Map<string, string[]> {
+  return new Map(definition.artifact_kinds.map(({ kind, item_kinds }) => [kind, item_kinds]))
+}
+
 /** The agent role of the definition with this key, or undefined. */
 export function findAgentRole(
   definition: Pick<WorkflowDefinition, 'agent_roles'>,
