@@ -19,7 +19,7 @@ from khoailanggraph.features.artifacts import schemas, service
 from khoailanggraph.features.artifacts.models import ArtifactItemRow, ArtifactRow
 from khoailanggraph.features.projects.service import get_project_row
 from khoailanggraph.features.runs.service import project_has_active_run
-from khoailanggraph.llm.registry import default_registry
+from khoailanggraph.llm.registry import ModelCatalogEntry, default_registry
 from khoailanggraph.platform import origin as origins
 from khoailanggraph.platform.origin import Origin
 
@@ -244,20 +244,16 @@ async def get_workflow_definition(
 
 
 @router.get("/models")
-async def list_models(user: deps.CurrentUser) -> Any:
-    """The allowlist catalog served to the settings UI (§5)."""
-    registry = default_registry()
-    return {
-        "models": [
-            {
-                "id": entry.id,
-                "label": entry.label,
-                "provider": entry.id.partition(":")[0],
-                "capabilities": list(entry.capabilities),
-            }
-            for entry in registry.allowlist
-        ]
-    }
+async def list_models(
+    user: deps.CurrentUser,
+    cursor: Annotated[int, Query(ge=0)] = 0,
+    limit: Annotated[int, Query(ge=1, le=MAX_LIMIT)] = 50,
+) -> Page[ModelCatalogEntry]:
+    """The models a user may pick, ordered by `model_id` (§5)."""
+    catalog = default_registry().catalog(list(workflow.agent_roles()))
+    window = catalog[cursor : cursor + limit]
+    next_cursor = cursor + len(window) if cursor + len(window) < len(catalog) else None
+    return Page(items=window, next_cursor=next_cursor)
 
 
 class PatchItemBody(BaseModel):

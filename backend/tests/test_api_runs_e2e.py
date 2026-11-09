@@ -101,6 +101,8 @@ async def test_send_message_runs_the_workflow_end_to_end(
     assert message["author"] == "user"
     assert message["content"] == TASK
     assert message["sequence"] == 1
+    assert message["artifact_refs"] == []
+    assert message["item_refs"] == []
 
     run = body["run"]
     assert run["status"] == "succeeded", run

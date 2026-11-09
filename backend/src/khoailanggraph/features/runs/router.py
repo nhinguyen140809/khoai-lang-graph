@@ -4,7 +4,7 @@ from __future__ import annotations
 
 import asyncio
 import json as jsonlib
-from typing import TYPE_CHECKING, Annotated, Any
+from typing import TYPE_CHECKING, Annotated, Any, Literal
 from uuid import UUID, uuid4
 
 from fastapi import APIRouter, Depends, Query, Request
@@ -16,7 +16,13 @@ from khoailanggraph.api import deps
 from khoailanggraph.api.errors import ApiError
 from khoailanggraph.api.schemas import MAX_LIMIT, Page
 from khoailanggraph.features.runs import schemas, service
-from khoailanggraph.features.runs.models import RunEventRow, RunRow, RunStepRow
+from khoailanggraph.features.runs.models import (
+    HumanDecisionRow,
+    InterruptRow,
+    RunEventRow,
+    RunRow,
+    RunStepRow,
+)
 from khoailanggraph.features.threads import service as thread_service
 from khoailanggraph.features.threads.models import ThreadRow
 from khoailanggraph.platform.db import make_sync_engine
@@ -295,36 +301,30 @@ class ResumeBody(BaseModel):
 
 
 @router.get("/runs/{run_id}/interrupts")
-async def list_run_interrupts(
+async def list_interrupts(
     run_id: UUID,
     user: deps.CurrentUser,
     db: deps.DbSession,
-    status: Annotated[str | None, Query()] = None,
-) -> list[dict[str, Any]]:
-    """The interrupts of a run; ?status=pending gives the one to answer (§5)."""
-    from khoailanggraph.features.runs.models import InterruptRow
-
+    status: Annotated[Literal["pending", "resolved", "cancelled"] | None, Query()] = None,
+    cursor: Annotated[int, Query(ge=0)] = 0,
+    limit: Annotated[int, Query(ge=1, le=MAX_LIMIT)] = 50,
+) -> Page[schemas.Interrupt]:
+    """The interrupts of a run, the oldest first, each with the decision that resolved it;
+    `?status=pending` gives the one the user must answer (§5)."""
     statement = select(InterruptRow).where(InterruptRow.run_id == run_id)
     if status is not None:
         statement = statement.where(InterruptRow.status == status)
-    rows = list((await db.scalars(statement)).all())
-    return [
-        {
-            "id": str(row.id),
-            "run_id": str(row.run_id),
-            "step_id": str(row.step_id) if row.step_id else None,
-            "node": row.node,
-            "prompt": row.prompt,
-            "options": jsonlib.loads((row.options_json or b"[]").decode("utf-8")),
-            "questions": jsonlib.loads((row.questions_json or b"[]").decode("utf-8")),
-            "allow_edits": row.allow_edits,
-            "review_artifacts": jsonlib.loads((row.artifacts_json or b"[]").decode("utf-8")),
-            "status": row.status,
-            "created_at": row.created_at,
-            "resolved_at": row.resolved_at,
-        }
-        for row in rows
-    ]
+    rows = list((await db.scalars(statement.order_by(InterruptRow.created_at))).all())
+    decisions = {
+        decision.interrupt_id: decision
+        for decision in (
+            await db.scalars(select(HumanDecisionRow).where(HumanDecisionRow.run_id == run_id))
+        ).all()
+    }
+    views = [service.interrupt_output(row, decisions.get(row.id)) for row in rows]
+    window = views[cursor : cursor + limit]
+    next_cursor = cursor + len(window) if cursor + len(window) < len(views) else None
+    return Page(items=window, next_cursor=next_cursor)
 
 
 @router.post("/runs/{run_id}/resume")

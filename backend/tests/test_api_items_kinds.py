@@ -364,8 +364,27 @@ async def test_models_catalog_serves_allowlist(client: AsyncClient) -> None:
     response = await client.get("/api/v1/models")
     body = response.json()
     assert response.status_code == 200
-    assert "models" in body
-    assert any(m["id"] == "openai:gpt-4.1" for m in body["models"])
+    assert body["next_cursor"] is None
+    entries = body["items"]
+    assert [entry["model_id"] for entry in entries] == sorted(
+        entry["model_id"] for entry in entries
+    )
+    entry = next(entry for entry in entries if entry["model_id"] == "openai:gpt-4.1")
+    assert set(entry) == {
+        "model_id",
+        "provider",
+        "display_name",
+        "capabilities",
+        "context_window",
+        "input_price_per_mtok",
+        "output_price_per_mtok",
+        "cache_read_price_per_mtok",
+        "cache_write_price_per_mtok",
+        "allowed_roles",
+    }
+    assert entry["provider"] == "openai"
+    assert entry["cache_write_price_per_mtok"] is None
+    assert {"planner", "analyst", "validator"} <= set(entry["allowed_roles"])
 
 
 async def test_patch_item_and_version_conflict(client: AsyncClient) -> None:

@@ -10,7 +10,7 @@ freezes the run config; this registry only reads the file.
 from __future__ import annotations
 
 from functools import lru_cache
-from typing import TYPE_CHECKING, Any
+from typing import TYPE_CHECKING, Any, Literal
 
 from pydantic import BaseModel, Field
 from yaml import safe_load
@@ -21,12 +21,40 @@ if TYPE_CHECKING:
     from pathlib import Path
 
 
+Capability = Literal["tool_calling", "structured_output", "streaming", "vision"]
+
+
 class ModelProfile(BaseModel):
-    """One allowlist entry: what a user may pick in the UI."""
+    """One allowlist entry: what a user may pick, and what the model offers.
+
+    `allowed_roles` names the agent roles the model may serve; left out, it serves every role
+    (the catalog lists the roles of the workflow definition in use).
+    """
 
     id: str
     label: str
-    capabilities: list[str] = Field(default_factory=list)
+    capabilities: list[Capability] = Field(default_factory=list)
+    context_window: int
+    input_price_per_mtok: float | None = None
+    output_price_per_mtok: float | None = None
+    cache_read_price_per_mtok: float | None = None
+    cache_write_price_per_mtok: float | None = None
+    allowed_roles: list[str] | None = None
+
+
+class ModelCatalogEntry(BaseModel):
+    """A model a user may pick (GET /models), as the API serves it."""
+
+    model_id: str
+    provider: str
+    display_name: str
+    capabilities: list[Capability]
+    context_window: int
+    input_price_per_mtok: float | None
+    output_price_per_mtok: float | None
+    cache_read_price_per_mtok: float | None
+    cache_write_price_per_mtok: float | None
+    allowed_roles: list[str]
 
 
 class ModelRegistry(BaseModel):
@@ -37,6 +65,25 @@ class ModelRegistry(BaseModel):
     max_retries: int = 2
     roles: dict[str, str] = Field(default_factory=dict)
     allowlist: list[ModelProfile] = Field(default_factory=list)
+
+    def catalog(self, roles: list[str]) -> list[ModelCatalogEntry]:
+        """The models a user may pick, ordered by `model_id`; `roles` are the agent roles of the
+        workflow definition in use, which a model without a list of its own serves."""
+        return [
+            ModelCatalogEntry(
+                model_id=entry.id,
+                provider=entry.id.partition(":")[0],
+                display_name=entry.label,
+                capabilities=entry.capabilities,
+                context_window=entry.context_window,
+                input_price_per_mtok=entry.input_price_per_mtok,
+                output_price_per_mtok=entry.output_price_per_mtok,
+                cache_read_price_per_mtok=entry.cache_read_price_per_mtok,
+                cache_write_price_per_mtok=entry.cache_write_price_per_mtok,
+                allowed_roles=roles if entry.allowed_roles is None else entry.allowed_roles,
+            )
+            for entry in sorted(self.allowlist, key=lambda profile: profile.id)
+        ]
 
     def model_for_role(self, role: str) -> str:
         """The `provider:model` of a role; an unlisted role uses the default."""

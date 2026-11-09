@@ -18,7 +18,7 @@ from __future__ import annotations
 
 import json
 from datetime import UTC, datetime
-from typing import TYPE_CHECKING, Any
+from typing import TYPE_CHECKING, Any, cast
 from uuid import UUID, uuid4
 
 from sqlalchemy import func, select
@@ -43,6 +43,8 @@ from khoailanggraph.features.projects.models import ProjectRow
 from khoailanggraph.features.runs import schemas
 from khoailanggraph.features.runs.models import (
     DirectiveRow,
+    HumanDecisionRow,
+    InterruptRow,
     RunEventRow,
     RunRow,
     RunStepRow,
@@ -148,7 +150,47 @@ def message_output(row: MessageRow) -> schemas.Message:
         content=row.content,
         delivery=row.delivery,
         delivered_in_step_id=str(row.delivered_in_step_id) if row.delivered_in_step_id else None,
+        artifact_refs=[
+            schemas.ArtifactRef.model_validate(ref)
+            for ref in json.loads((row.artifact_refs_json or b"[]").decode("utf-8"))
+        ],
+        item_refs=[
+            schemas.ItemRef.model_validate(ref)
+            for ref in json.loads((row.item_refs_json or b"[]").decode("utf-8"))
+        ],
         created_at=row.created_at,
+    )
+
+
+def interrupt_output(row: InterruptRow, decision: HumanDecisionRow | None) -> schemas.Interrupt:
+    """An interrupt with its options, questions and decision; a question written without a
+    source is one of the definition."""
+    questions = json.loads((row.questions_json or b"[]").decode("utf-8"))
+    return schemas.Interrupt(
+        id=str(row.id),
+        run_id=str(row.run_id),
+        step_id=str(row.step_id) if row.step_id else None,
+        node=row.node,
+        prompt=row.prompt,
+        options=json.loads((row.options_json or b"[]").decode("utf-8")),
+        questions=[{"source": "definition", **question} for question in questions],
+        allow_edits=row.allow_edits,
+        review_artifacts=[
+            schemas.ArtifactRef.model_validate(ref)
+            for ref in json.loads((row.artifacts_json or b"[]").decode("utf-8"))
+        ],
+        status=cast("schemas.InterruptStatus", row.status),
+        created_at=row.created_at,
+        resolved_at=row.resolved_at,
+        decision=None
+        if decision is None
+        else schemas.InterruptDecision(
+            option=decision.option,
+            feedback=decision.feedback,
+            answers=json.loads((decision.answers_json or b"{}").decode("utf-8")),
+            decided_by=str(decision.decided_by) if decision.decided_by else None,
+            decided_at=decision.created_at,
+        ),
     )
 
 

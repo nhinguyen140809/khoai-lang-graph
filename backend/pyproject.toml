@@ -81,7 +81,7 @@ select = ["E", "F", "W", "I", "N", "UP", "B", "SIM", "RUF", "ASYNC", "S", "PL", 
 "src/khoailanggraph/features/runs/schemas.py" = ["TC001", "TC003"]
 # The run executor is one narrative worker; its wires are the §5 contract.
 "src/khoailanggraph/features/runs/service.py" = ["PLR0912", "PLR0913", "PLR0915", "PLR0917"]
-"src/khoailanggraph/features/runs/router.py" = ["PLC0415"]
+"src/khoailanggraph/features/runs/router.py" = ["PLC0415", "PLR0913", "PLR0917"]
 # The documents feature follows the same §5 contract shape as its siblings.
 "src/khoailanggraph/features/documents/router.py" = ["PLR0913", "PLR0917", "TC003"]
 "src/khoailanggraph/features/documents/service.py" = ["PLR0913"]

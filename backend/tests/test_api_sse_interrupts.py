@@ -2,14 +2,17 @@
 
 from __future__ import annotations
 
+import json
+from datetime import UTC, datetime
 from pathlib import Path
 from tempfile import gettempdir
 from typing import TYPE_CHECKING
-from uuid import uuid4
+from uuid import UUID, uuid4
 
 import pytest
 from httpx import ASGITransport, AsyncClient
 
+from khoailanggraph.features.runs.models import HumanDecisionRow, InterruptRow
 from khoailanggraph.main import create_app
 from khoailanggraph.platform.db import (
     ensure_schema,
@@ -138,7 +141,7 @@ async def test_interrupts_empty_for_auto_approve_run(client: AsyncClient) -> Non
     run_id = await _run_once(client)
     response = await client.get(f"/api/v1/runs/{run_id}/interrupts")
     assert response.status_code == 200
-    assert response.json() == []
+    assert response.json() == {"items": [], "next_cursor": None}
 
 
 async def test_resume_answers_409_when_not_interrupted(client: AsyncClient) -> None:
@@ -159,3 +162,74 @@ async def test_cancel_finished_run_answers_409(client: AsyncClient) -> None:
     assert response.status_code == 409
     assert response.json()["code"] == "invalid_state"
     assert "The run already succeeded." in response.json()["detail"]
+
+
+async def test_interrupts_come_oldest_first_with_the_decision_of_a_resolved_one(
+    app: FastAPI, client: AsyncClient
+) -> None:
+    run_id = await _run_once(client)
+    options = [
+        {
+            "key": "approve",
+            "label": "Approve",
+            "requires_feedback": False,
+            "approves": True,
+            "is_default": True,
+        }
+    ]
+    async with app.state.session_factory() as session:
+        resolved = InterruptRow(
+            run_id=UUID(run_id),
+            node="checkpoint_personas",
+            prompt="Review the personas.",
+            options_json=json.dumps(options).encode(),
+            allow_edits=True,
+            status="resolved",
+            created_at=datetime(2026, 11, 1, tzinfo=UTC),
+            resolved_at=datetime(2026, 11, 1, 1, tzinfo=UTC),
+        )
+        pending = InterruptRow(
+            run_id=UUID(run_id),
+            node="checkpoint_analysis",
+            prompt="Review the analysis.",
+            created_at=datetime(2026, 11, 2, tzinfo=UTC),
+        )
+        session.add_all([pending, resolved])
+        await session.flush()
+        session.add(
+            HumanDecisionRow(
+                interrupt_id=resolved.id,
+                run_id=UUID(run_id),
+                option="approve",
+                feedback=None,
+                answers_json=b"{}",
+                created_at=datetime(2026, 11, 1, 1, tzinfo=UTC),
+            )
+        )
+        await session.commit()
+
+    everything = (await client.get(f"/api/v1/runs/{run_id}/interrupts")).json()["items"]
+    waiting = (
+        await client.get(f"/api/v1/runs/{run_id}/interrupts", params={"status": "pending"})
+    ).json()["items"]
+
+    assert [entry["node"] for entry in everything] == ["checkpoint_personas", "checkpoint_analysis"]
+    assert everything[0]["decision"] == {
+        "option": "approve",
+        "feedback": None,
+        "answers": {},
+        "decided_by": None,
+        "decided_at": everything[0]["resolved_at"],
+    }
+    assert everything[1]["decision"] is None
+    assert [entry["node"] for entry in waiting] == ["checkpoint_analysis"]
+    assert everything[0]["review_artifacts"] == []
+    assert everything[0]["options"] == options
+
+
+async def test_a_status_that_no_interrupt_has_is_refused(client: AsyncClient) -> None:
+    run_id = await _run_once(client)
+
+    response = await client.get(f"/api/v1/runs/{run_id}/interrupts", params={"status": "open"})
+
+    assert response.status_code == 422

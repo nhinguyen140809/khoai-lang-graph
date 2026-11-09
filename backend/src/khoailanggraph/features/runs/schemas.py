@@ -8,6 +8,7 @@ from pydantic import BaseModel
 
 from khoailanggraph.platform.serialization import IsoDatetime
 
+InterruptStatus = Literal["pending", "resolved", "cancelled"]
 RunStatus = Literal["queued", "running", "interrupted", "succeeded", "failed", "cancelled"]
 
 
@@ -83,14 +84,23 @@ class Run(BaseModel):
     finished_at: IsoDatetime | None
 
 
+class ArtifactRef(BaseModel):
+    artifact_id: str
+    kind: str
+    title: str
+    version: int
+
+
 class Message(BaseModel):
     id: str
     thread_id: str
     sequence: int
     run_id: str | None
-    author: str
+    author: Literal["user", "agent", "system"]
     agent_role: str | None
     content: str
+    artifact_refs: list[ArtifactRef]
+    item_refs: list[ItemRef]
     delivery: Literal["started_run", "pending", "delivered", "undelivered"] | None
     delivered_in_step_id: str | None
     created_at: IsoDatetime
@@ -99,3 +109,32 @@ class Message(BaseModel):
 class SendMessageResponse(BaseModel):
     message: Message
     run: Run
+
+
+class InterruptDecision(BaseModel):
+    """The human decision that resolved an interrupt."""
+
+    option: str | None
+    feedback: str | None
+    answers: dict[str, Any]
+    decided_by: str | None
+    decided_at: IsoDatetime
+
+
+class Interrupt(BaseModel):
+    """A pause of a run for a review, with its options and questions and, once resolved, the
+    decision that resolved it."""
+
+    id: str
+    run_id: str
+    step_id: str | None
+    node: str
+    prompt: str
+    options: list[dict[str, Any]]
+    questions: list[dict[str, Any]]
+    allow_edits: bool
+    review_artifacts: list[ArtifactRef]
+    status: InterruptStatus
+    created_at: IsoDatetime
+    resolved_at: IsoDatetime | None
+    decision: InterruptDecision | None
