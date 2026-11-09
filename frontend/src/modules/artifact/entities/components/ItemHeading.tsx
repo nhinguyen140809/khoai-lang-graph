@@ -2,11 +2,11 @@
 
 import {
   type ContentSchema,
-  InitialsAvatar,
   type ItemPageLayout,
   nonStatusTone,
   pageLayoutOf,
 } from '@/modules/workflow/entities/@x/artifact'
+import { InitialsAvatar } from '@/shared/components/ui/initials-avatar'
 
 // Whether an avatar leads the title of the page, by the page layout.
 const headingAvatars = { fields: false, profile: true } as const satisfies Record<

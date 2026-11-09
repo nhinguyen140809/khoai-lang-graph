@@ -1,7 +1,6 @@
 'use client'
 
 import {
-  InitialsAvatar,
   InlineFieldValues,
   itemTitle,
   nonStatusTone,
@@ -9,6 +8,7 @@ import {
   type ValueDefinition,
 } from '@/modules/workflow/entities/@x/artifact'
 import { Card, CardContent, CardDescription, CardHeader } from '@/shared/components/ui/card'
+import { InitialsAvatar } from '@/shared/components/ui/initials-avatar'
 import { isEmpty } from '@/shared/lib/guards'
 import { textOf } from '@/shared/lib/text'
 

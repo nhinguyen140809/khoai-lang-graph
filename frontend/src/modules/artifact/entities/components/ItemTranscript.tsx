@@ -2,13 +2,10 @@
 
 import type { ReactNode } from 'react'
 
-import {
-  FieldSeparator,
-  InitialsAvatar,
-  type ValueDefinition,
-} from '@/modules/workflow/entities/@x/artifact'
+import { FieldSeparator, type ValueDefinition } from '@/modules/workflow/entities/@x/artifact'
 import { Bubble, BubbleContent } from '@/shared/components/ui/bubble'
 import { Highlight, type HighlightRange } from '@/shared/components/ui/highlight'
+import { InitialsAvatar } from '@/shared/components/ui/initials-avatar'
 import {
   Message,
   MessageAvatar,

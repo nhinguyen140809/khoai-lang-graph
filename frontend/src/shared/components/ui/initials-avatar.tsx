@@ -1,8 +1,9 @@
 'use client'
 
-import { Avatar, AvatarFallback } from '@/shared/components/ui/avatar'
 import { initialsOf } from '@/shared/lib/text'
 import type { Tone } from '@/shared/lib/tone'
+
+import { Avatar, AvatarFallback } from './avatar'
 
 /**
  * The initials of a name on the soft fill of a tone. The name sits beside the avatar, so the

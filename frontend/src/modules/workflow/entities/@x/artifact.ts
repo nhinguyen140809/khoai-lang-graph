@@ -6,7 +6,6 @@ export {
 } from '../artifact-kinds/hooks/useArtifactKindQueries'
 export { useKindTitleOf } from '../artifact-kinds/hooks/useKindTitleOf'
 export { contentSchemasByKind, kindSchemasByKind } from '../artifact-kinds/kind-schemas.utils'
-export { InitialsAvatar } from '../components/InitialsAvatar'
 export { ContentFieldValue } from '../content/components/ContentFieldValue'
 export { FieldSeparator } from '../content/components/FieldSeparator'
 export { InlineFieldValues } from '../content/components/InlineFieldValues'
