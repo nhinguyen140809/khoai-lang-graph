@@ -607,3 +607,39 @@ async def test_the_items_of_an_artifact_can_be_read_as_they_were(client: AsyncCl
     assert then.json()["items"][0]["review_status"] == target["review_status"]
     assert latest.json()["items"][0]["review_status"] == "rejected"
     assert first.json()["items"] == []
+
+
+async def test_the_chat_holds_the_message_of_the_user_and_the_report_of_each_step(
+    client: AsyncClient,
+) -> None:
+    project_id, thread_id = await seeded_run(client)
+
+    response = await client.get(f"/api/v1/threads/{thread_id}/messages")
+
+    body = response.json()
+    messages = body["items"]
+    assert response.status_code == 200
+    assert [entry["sequence"] for entry in messages] == list(range(1, len(messages) + 1))
+    assert messages[0]["author"] == "user"
+    assert messages[0]["delivery"] == "started_run"
+    reports = [entry for entry in messages if entry["author"] == "agent"]
+    assert [entry["agent_role"] for entry in reports][:2] == ["planner", "corpus_builder"]
+    assert all(entry["content"] and entry["delivery"] is None for entry in reports)
+    analyst = next(entry for entry in reports if entry["agent_role"] == "analyst")
+    assert analyst["artifact_refs"][0]["kind"] == "requirements_analysis"
+    assert {ref["kind"] for ref in analyst["item_refs"]} >= {
+        "raw_requirement",
+        "analyzed_requirement",
+    }
+    assert set(analyst["item_refs"][0]) == {"item_id", "kind", "key", "version"}
+    assert set(analyst["artifact_refs"][0]) == {"artifact_id", "kind", "title", "version"}
+    keys = [ref["key"] for ref in analyst["item_refs"]]
+    assert keys == sorted(keys)
+    # The refs point at items that exist.
+    first = analyst["item_refs"][0]
+    assert (await client.get(f"/api/v1/items/{first['item_id']}")).status_code == 200
+    paged = await client.get(f"/api/v1/threads/{thread_id}/messages", params={"limit": 2})
+    assert len(paged.json()["items"]) == 2
+    assert paged.json()["next_cursor"] == 2
+    assert (await client.get(f"/api/v1/threads/{uuid4()}/messages")).status_code == 404
+    assert project_id

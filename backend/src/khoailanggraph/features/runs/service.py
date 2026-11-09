@@ -306,7 +306,7 @@ def start_run_blocking(
             project.initial_message_id = message.id
             session.flush()
         thread.active_run_id = run.id
-        sink = SqlArtifactSink(engine, run_id=run.id)
+        sink = SqlArtifactSink(engine, run_id=run.id, thread_id=thread.id)
         sink.bind(session)
         state = make_initial_state(
             str(thread.project_id) if thread else str(run_id),

@@ -24,7 +24,7 @@ from khoailanggraph.features.runs.models import (
     RunStepRow,
 )
 from khoailanggraph.features.threads import service as thread_service
-from khoailanggraph.features.threads.models import ThreadRow
+from khoailanggraph.features.threads.models import MessageRow, ThreadRow
 from khoailanggraph.platform.db import make_sync_engine
 
 if TYPE_CHECKING:
@@ -49,6 +49,35 @@ def _sync_engine(request: Request) -> Any:
         engine = make_sync_engine(request.app.state.settings)
         request.app.state.sync_engine = engine
     return engine
+
+
+@router.get("/threads/{thread_id}/messages")
+async def list_messages(
+    thread_id: UUID,
+    user: deps.CurrentUser,
+    db: deps.DbSession,
+    cursor: Annotated[int, Query(ge=0)] = 0,
+    limit: Annotated[int, Query(ge=1, le=MAX_LIMIT)] = 50,
+) -> Page[schemas.Message]:
+    """The chat messages of a thread in the order they were sent: what the user wrote and the
+    report of each step of the agents, with the artifacts and the items it refers to (§5)."""
+    await thread_service.get_thread_row(db, thread_id)
+    rows = list(
+        (
+            await db.scalars(
+                select(MessageRow)
+                .where(MessageRow.thread_id == thread_id)
+                .order_by(MessageRow.sequence)
+                .offset(cursor)
+                .limit(limit + 1)
+            )
+        ).all()
+    )
+    window = rows[:limit]
+    return Page(
+        items=[service.message_output(row) for row in window],
+        next_cursor=cursor + limit if len(rows) > limit else None,
+    )
 
 
 @router.post("/threads/{thread_id}/messages", status_code=201)

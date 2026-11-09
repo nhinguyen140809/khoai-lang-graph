@@ -121,7 +121,30 @@ def invoke_demo(
         msg = f"the demo dataset has no answer for schema '{schema_name}'"
         raise LookupError(msg)
     answer = cast("dict[str, Any]", handler(system, user, call_number))
-    return _with_titles(answer)
+    return _with_reports(_with_titles(answer), schema_name)
+
+
+# What each node says to the user in its report, as a scripted model writes it. The interview
+# turns (`InterviewerTurnOutput`, `PersonaAnswerOutput`) have no report: they are the transcript.
+_REPORTS = {
+    "PlannerOutput": "I read your idea and planned the interviews around who will use it.",
+    "CorpusBuilderOutput": "I gathered the documents the interviewees will be based on.",
+    "MinerOutput": "I read a document and noted what its stakeholders care about.",
+    "GeneratorOutputV2": "I proposed the interviewees, each based on the evidence I found.",
+    "GeneratorOutput": "I proposed the interviewees.",
+    "AnalystOutput": "I turned the interviews into requirements and found a few open questions.",
+    "EngineerOutput": "I wrote the specification from the analysis.",
+    "BacklogOutput": "I turned the specification into a backlog of user stories.",
+    "ValidatorOutput": "I checked the documents and listed what still needs a fix.",
+    "IntentDirectiveOutput": "I will go back to the step your message is about.",
+}
+
+
+def _with_reports(answer: dict[str, Any], schema_name: str) -> dict[str, Any]:
+    """Give the answer of a node the `report` it must write."""
+    if schema_name in _REPORTS:
+        answer.setdefault("report", _REPORTS[schema_name])
+    return answer
 
 
 # The drafts of an answer that carry a `title`, and the field a short name is cut from.

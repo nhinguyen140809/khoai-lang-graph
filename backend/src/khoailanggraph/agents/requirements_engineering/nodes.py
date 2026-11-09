@@ -23,7 +23,7 @@ through untouched. Nothing here imports FastAPI or the features layer.
 """
 
 import json
-from collections.abc import Callable, Mapping
+from collections.abc import Callable, Mapping, Sequence
 from functools import wraps
 from typing import TYPE_CHECKING, Any, TypeVar, cast
 
@@ -45,6 +45,7 @@ from khoailanggraph.agents.requirements_engineering.decisions import (
 from khoailanggraph.agents.requirements_engineering.definition import (
     agent_roles as definition_agent_roles,
 )
+from khoailanggraph.agents.requirements_engineering.definition import link_types as get_link_types
 from khoailanggraph.agents.requirements_engineering.definition import nodes as definition_nodes
 from khoailanggraph.agents.requirements_engineering.definition import value_lists as get_value_lists
 from khoailanggraph.agents.requirements_engineering.outputs import (
@@ -55,6 +56,9 @@ from khoailanggraph.agents.requirements_engineering.outputs import (
     GeneratorOutputV2,
     IntentDirectiveOutput,
     InterviewerTurnOutput,
+    ItemLink,
+    LinkRef,
+    MessageLink,
     MinerOutput,
     PersonaAnswerOutput,
     PlannerOutput,
@@ -71,6 +75,7 @@ from khoailanggraph.agents.requirements_engineering.views import (
     prompt_views,
     transcript_lines,
 )
+from khoailanggraph.domain import rules as domain_rules
 from khoailanggraph.domain.run_config import RunConfig
 from khoailanggraph.llm import get_chat_model
 from khoailanggraph.tools.research import research_queries, research_search_of
@@ -220,7 +225,7 @@ def safe_node(fn: NodeFn) -> NodeFn:
     def wrapper(state: REState, config: RunnableConfig | None = None) -> dict[str, Any]:
         sink = _configurable(config).get("artifact_sink")
         if sink is not None:
-            sink.agent_role = _agent_role_of_node(fn.__name__)
+            sink.begin_node(_agent_role_of_node(fn.__name__))
         try:
             return fn(state, config or {})
         except Exception as exc:
@@ -365,17 +370,79 @@ def _must_find(known: Known, value: str) -> ItemRefDict:
     return target
 
 
+def _key_of(reference: LinkRef | MessageLink) -> str:
+    """The key (or ref) an agent named in a link, whether it gave a key or an object."""
+    if isinstance(reference, str):
+        return reference
+    return reference.message if isinstance(reference, MessageLink) else reference.item
+
+
+def _quotes_of(reference: LinkRef | MessageLink) -> tuple[str | None, str | None]:
+    """The words a link is about, on the source and on the target; none for a bare key."""
+    if isinstance(reference, str):
+        return None, None
+    if isinstance(reference, MessageLink):
+        return None, reference.target_quote
+    return reference.source_quote, reference.target_quote
+
+
+def _held_quote(
+    sink: ArtifactSink,
+    side: str,
+    quote: str | None,
+    *,
+    link_type: str,
+    item_id: str,
+) -> str | None:
+    """A quote that the quote rules accept, else none: a model that does not copy the words
+    exactly still links the items, without the words (logged)."""
+    if quote is None:
+        return None
+    item = sink.read_item(item_id)
+    violations = domain_rules.check_quote(
+        side,
+        quote,
+        link_type=link_type,
+        link_type_definition=get_link_types()[link_type],
+        kind=item["kind"],
+        content=item["content"],
+    )
+    if violations:
+        logger.warning(
+            "link quote dropped",
+            link_type=link_type,
+            side=side,
+            item=item["key"],
+            reason=violations[0].message,
+            quote=quote[:80],
+        )
+        return None
+    return quote
+
+
 def _link_each(
     sink: ArtifactSink,
     source_id: str,
     link_type: str,
     known: Known,
-    references: list[str],
+    references: Sequence[LinkRef | MessageLink],
 ) -> None:
-    """One link of `link_type` per referenced key; an unknown key fails loudly."""
-    for value in references:
-        target = _must_find(known, value)
-        sink.add_link(source_id=source_id, target_id=target["item_id"], link_type=link_type)
+    """One link of `link_type` per referenced key, with the words it quotes; an unknown key
+    fails loudly."""
+    for reference in references:
+        target = _must_find(known, _key_of(reference))
+        source_quote, target_quote = _quotes_of(reference)
+        sink.add_link(
+            source_id=source_id,
+            target_id=target["item_id"],
+            link_type=link_type,
+            source_quote=_held_quote(
+                sink, "source", source_quote, link_type=link_type, item_id=source_id
+            ),
+            target_quote=_held_quote(
+                sink, "target", target_quote, link_type=link_type, item_id=target["item_id"]
+            ),
+        )
 
 
 def _evidence_links(
@@ -384,18 +451,13 @@ def _evidence_links(
     known: Known,
     evidence: list[Any],
 ) -> None:
+    """One `evidenced_by` link per message, with the words of the message that it quotes."""
     seen: set[str] = set()
     for entry in evidence:
         if entry.message in seen:
             continue
         seen.add(entry.message)
-        target = _must_find(known, entry.message)
-        sink.add_link(
-            source_id=source_id,
-            target_id=target["item_id"],
-            link_type="evidenced_by",
-            target_quote=entry.quote,
-        )
+        _link_each(sink, source_id, "evidenced_by", known, [entry.as_link()])
 
 
 def _supersede_each(
@@ -445,12 +507,14 @@ def planner_node(
         PlannerOutput,
         {"output_language": _language(cfg), "intent": state["initial_intent"]},
     )
-    created = _sink(config or {}).create_artifact(
+    sink = _sink(config or {})
+    created = sink.create_artifact(
         state["project_id"],
         "elicitation_plan",
         title="Elicitation plan",
-        content=plan.model_dump(mode="json"),
+        content=plan.model_dump(mode="json", exclude={"report"}),
     )
+    sink.add_report(plan.report)
     return {"elicitation_plan": dict(created), "current_stage": "planning"}
 
 
@@ -549,6 +613,7 @@ def corpus_builder_node(
             ref=source.ref,
         )
         sources.append(dict(item))
+    sink.add_report(draft.report)
     return {
         "research_corpus": dict(corpus),
         "current_stage": "research",
@@ -624,8 +689,16 @@ def stakeholder_miner_node(
                 source_id=item["item_id"],
                 target_id=record["item_id"],
                 link_type="evidenced_by",
+                target_quote=_held_quote(
+                    sink,
+                    "target",
+                    str(mined.evidence),
+                    link_type="evidenced_by",
+                    item_id=record["item_id"],
+                ),
             )
             observations.append(dict(item))
+        sink.add_report(draft.report)
     return {
         "observations": observations,
         "current_stage": "research",
@@ -778,6 +851,7 @@ def persona_generator_node(
                 target_id=known_observations[key]["item_id"],
                 link_type="grounded_in",
             )
+    sink.add_report(draft.report)
     return {
         "personas": personas,
         "interview_transcripts": [],
@@ -1132,13 +1206,13 @@ def _normalize_analyst_links(analysis: AnalystOutput, known: Known) -> None:
         conflict.involves = _keep_valid(conflict.involves, known, _PERSONA)
 
 
-def _keep_valid(
-    references: list[str],
+def _keep_valid[RefT: str | ItemLink](
+    references: list[RefT],
     known: Known,
     valid_kinds: frozenset[str],
-) -> list[str]:
-    kept = [str(ref) for ref in references if known.get(str(ref), {}).get("kind") in valid_kinds]
-    dropped = [str(ref) for ref in references if str(ref) not in kept]
+) -> list[RefT]:
+    kept = [ref for ref in references if known.get(_key_of(ref), {}).get("kind") in valid_kinds]
+    dropped = [_key_of(ref) for ref in references if ref not in kept]
     if dropped:
         logger.warning(
             "analyst link refs filtered",
@@ -1327,6 +1401,7 @@ def analyst_node(
         for issue in analysis.conflicts
         if issue.status == "open" and not issue.proposed_resolutions
     ]
+    sink.add_report(analysis.report)
     return {
         **refs,
         "response_analyst_status": "needs_interviews" if unresolved else "ok",
@@ -1402,11 +1477,11 @@ def _normalize_engineer_derived_from(draft: EngineerOutput, known: Known) -> Non
     """
     for spec_draft in draft.requirements:
         lawful = [
-            str(ref)
+            ref
             for ref in spec_draft.derived_from
-            if known.get(str(ref), {}).get("kind") == "analyzed_requirement"
+            if known.get(_key_of(ref), {}).get("kind") == "analyzed_requirement"
         ]
-        dropped = [str(ref) for ref in spec_draft.derived_from if str(ref) not in lawful]
+        dropped = [_key_of(ref) for ref in spec_draft.derived_from if ref not in lawful]
         if dropped:
             logger.warning(
                 "engineer derived_from normalized",
@@ -1608,6 +1683,7 @@ def requirement_engineer_node(
     for spec_draft, item in zip(draft.requirements, written, strict=True):
         _link_each(sink, str(item["item_id"]), "depends_on", placeholder, spec_draft.depends_on)
 
+    sink.add_report(draft.report)
     return {"requirement_specification": written, "current_stage": "specification"}
 
 
@@ -1693,6 +1769,7 @@ def backlog_manager_node(
     for draft_item, item in zip(draft.items, written, strict=True):
         _link_each(sink, str(item["item_id"]), "depends_on", placeholder, draft_item.depends_on)
 
+    sink.add_report(draft.report)
     return {"product_backlog": written, "current_stage": "backlog"}
 
 
@@ -1843,8 +1920,8 @@ def validator_node(
         # flags cite item keys: a model word that isn't a key is dropped
         # (logged) — the model sometimes writes a topic word like "backlog"
         # instead of a specific item key such as "US-001".
-        _valid_flags = [f for f in issue.flags if str(f) in known]
-        _dropped_flags = [f for f in issue.flags if str(f) not in _valid_flags]
+        _valid_flags = [f for f in issue.flags if _key_of(f) in known]
+        _dropped_flags = [_key_of(f) for f in issue.flags if f not in _valid_flags]
         if _dropped_flags:
             logger.warning(
                 "validator flags normalized",
@@ -1866,6 +1943,7 @@ def validator_node(
         updates["current_stage"] = "done"
     else:
         updates["current_stage"] = "validation"
+    sink.add_report(draft.report)
     return {**updates, "response_validator_status": final_status}
 
 
@@ -2014,6 +2092,7 @@ def intent_router_node(
         instruction=directive.instruction,
         item_ids=[],
     )
+    _sink(runnable_config).add_report(directive.report)
     return {
         "rework_directives": [directive_id],
         "current_stage": "intent_routing",

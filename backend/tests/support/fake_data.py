@@ -644,7 +644,7 @@ def _upload_flow_analysis() -> dict[str, Any]:
             "statement": row[0],
             "topic": row[1],
             "stated_by": "PER-001",
-            "evidenced_by": [{"message": f"PER-001#{position + 1}", "quote": row[2]}],
+            "evidenced_by": [{"message": f"PER-001#{2 * position}", "target_quote": row[2]}],
         }
         for position, row in enumerate(rows, start=1)
     ]
@@ -691,7 +691,7 @@ def _upload_flow_analysis() -> dict[str, Any]:
                 "reasoning": "Inferred from the privacy worries, never stated outright.",
                 "confidence": "medium",
                 "disposition": "open",
-                "evidenced_by": [{"message": "PER-001#6", "quote": rows[2][2]}],
+                "evidenced_by": [{"message": "PER-001#6", "target_quote": rows[2][2]}],
                 "involves": ["PER-001"],
             }
         ],
@@ -728,8 +728,8 @@ def _analyst(system: str, user: str, call_number: int) -> dict[str, Any]:
                     "stated_by": f"PER-00{index}",
                     "evidenced_by": [
                         {
-                            "message": f"PER-00{index}#{position + 1}",
-                            "quote": statement[2],
+                            "message": f"PER-00{index}#{2 * position}",
+                            "target_quote": statement[2],
                         }
                     ],
                 }
@@ -768,7 +768,7 @@ def _analyst(system: str, user: str, call_number: int) -> dict[str, Any]:
             "reasoning": "Inferred from the persona's words, never stated outright.",
             "confidence": "medium",
             "disposition": "open",
-            "evidenced_by": [{"message": message, "quote": quote}],
+            "evidenced_by": [{"message": message, "target_quote": quote}],
             "involves": [persona],
         }
 
@@ -831,14 +831,14 @@ def _analyst(system: str, user: str, call_number: int) -> dict[str, Any]:
                 "Students need trust signals such as a verified badge before contacting a mentor.",
                 "PER-001",
                 "PER-001#6",
-                "Mentors who never reply",
+                "I also worry about privacy",
             ),
             latent(
                 "L2",
                 "Administrators need automated moderation support to keep their workload feasible.",
                 "PER-003",
                 "PER-003#6",
-                "Limited moderation staff",
+                "sessions should be moderated or at least reportable",
             ),
         ],
         "assumptions": [

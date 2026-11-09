@@ -48,6 +48,7 @@ from khoailanggraph.features.artifacts.models import (
 )
 from khoailanggraph.features.projects.models import ProjectKeyCounterRow
 from khoailanggraph.features.runs.models import RunEventRow
+from khoailanggraph.features.threads.models import MessageRow, ThreadRow
 from khoailanggraph.platform import origin as origins
 from khoailanggraph.platform.origin import Origin
 
@@ -153,14 +154,73 @@ class SqlArtifactSink:
         *,
         run_id: UUID | None = None,
         user_id: UUID | None = None,
+        thread_id: UUID | None = None,
     ) -> None:
         self.engine = engine
         self.run_id = run_id
-        # The agent role of the node that is writing, set by the node wrapper; the user whose
-        # decision the writes follow (an approval, an edit at a review), when there is one.
+        self.thread_id = thread_id
+        # The agent role of the node that is writing; the user whose decision the writes follow
+        # (an approval, an edit at a review), when there is one.
         self.agent_role: str | None = None
         self.user_id = user_id
         self._session: Session | None = None
+        # What the node wrote since it began: the refs of its report.
+        self._touched_artifacts: dict[UUID, None] = {}
+        self._touched_items: dict[UUID, None] = {}
+
+    def begin_node(self, agent_role: str | None) -> None:
+        """A node starts: its writes are credited to its role, and its report starts empty."""
+        self.agent_role = agent_role
+        self._touched_artifacts.clear()
+        self._touched_items.clear()
+
+    def add_report(self, content: str) -> None:
+        """The report of the node as a message of the thread: the agent says what it did, with
+        links to the artifacts and the items it wrote."""
+        if self.thread_id is None:
+            return
+        artifacts = [
+            ArtifactRef(
+                artifact_id=str(row.id), kind=row.kind, title=row.title, version=row.version
+            )
+            for row in (self._artifact_row(str(key)) for key in self._touched_artifacts)
+        ]
+        items = sorted(
+            (self.session.get(ArtifactItemRow, key) for key in self._touched_items),
+            key=lambda row: str(row.key) if row is not None else "",
+        )
+        count = (
+            self.session.scalar(
+                select(func.count())
+                .select_from(MessageRow)
+                .where(MessageRow.thread_id == self.thread_id)
+            )
+            or 0
+        )
+        self.session.add(
+            MessageRow(
+                thread_id=self.thread_id,
+                sequence=int(count) + 1,
+                run_id=self.run_id,
+                author="agent",
+                agent_role=self.agent_role,
+                content=content,
+                artifact_refs_json=_dumps(artifacts),
+                item_refs_json=_dumps(
+                    [
+                        ItemRef(
+                            item_id=str(row.id), kind=row.kind, key=row.key, version=row.version
+                        )
+                        for row in items
+                        if row is not None
+                    ]
+                ),
+            )
+        )
+        thread = self.session.get(ThreadRow, self.thread_id)
+        if thread is not None:
+            thread.last_message_at = utcnow()
+        self.session.flush()
 
     def _origin(self, *, by_user: bool = False) -> Origin:
         """Who the next write is credited to: the user of a decision, else the running agent."""
@@ -265,6 +325,7 @@ class SqlArtifactSink:
         self.session.add(row)
         self.session.flush()
         write_artifact_revision(self.session, row, "generated", self._origin())
+        self._touched_artifacts[row.id] = None
         seq = self.next_sequence()
         self._emit(
             "artifact_created",
@@ -327,6 +388,7 @@ class SqlArtifactSink:
         )
         row.content_json = _dumps(merged)
         bump_artifact(self.session, row, "generated", self._origin())
+        self._touched_artifacts[row.id] = None
         seq = self.next_sequence()
         self._emit(
             "artifact_delta",
@@ -363,6 +425,7 @@ class SqlArtifactSink:
         if row.review_status == "draft":
             row.review_status = "approved"
         bump_artifact(self.session, row, "reviewed", by)
+        self._touched_artifacts[row.id] = None
         return ArtifactRef(
             artifact_id=str(row.id), kind=row.kind, title=row.title, version=row.version
         )
@@ -490,6 +553,8 @@ class SqlArtifactSink:
         self.session.flush()
         self._write_item_revision(entry, "generated", self._origin())
         bump_artifact(self.session, row, "generated", self._origin())
+        self._touched_artifacts[row.id] = None
+        self._touched_items[entry.id] = None
         seq = self.next_sequence()
         self._emit(
             "artifact_delta",
@@ -578,6 +643,20 @@ class SqlArtifactSink:
             ),
             link_types=wf.link_types(),
         )
+        link_type_definition = wf.link_types()[link_type]
+        for side, quote, item in (
+            ("source", source_quote, source),
+            ("target", target_quote, target),
+        ):
+            if quote is not None:
+                violations += domain_rules.check_quote(
+                    side,
+                    quote,
+                    link_type=link_type,
+                    link_type_definition=link_type_definition,
+                    kind=str(item.kind),
+                    content=_loads(item.content_json),
+                )
         self._raise(violations)
         statement = (
             update(TraceLinkRow)

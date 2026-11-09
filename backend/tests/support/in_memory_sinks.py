@@ -46,6 +46,24 @@ class InMemoryArtifactSink:
         self.links: list[dict[str, Any]] = []
         self.written: list[str] = []  # references of the current response pass
         self.agent_role: str | None = None
+        self.reports: list[dict[str, Any]] = []
+        self._touched_artifacts: dict[str, None] = {}
+        self._touched_items: dict[str, None] = {}
+
+    def begin_node(self, agent_role: str | None) -> None:
+        self.agent_role = agent_role
+        self._touched_artifacts.clear()
+        self._touched_items.clear()
+
+    def add_report(self, content: str) -> None:
+        self.reports.append(
+            {
+                "agent_role": self.agent_role,
+                "content": content,
+                "artifact_ids": list(self._touched_artifacts),
+                "item_ids": list(self._touched_items),
+            }
+        )
 
     # — keys —
     def _next(self, project_id: str, prefix: str) -> int:
@@ -87,6 +105,7 @@ class InMemoryArtifactSink:
             "review_status": "draft",
         }
         self.artifacts.append(artifact)
+        self._touched_artifacts[str(artifact["artifact_id"])] = None
         return self._artifact_ref(artifact)
 
     @staticmethod
@@ -146,6 +165,7 @@ class InMemoryArtifactSink:
         )
         artifact["content"] = merged
         artifact["version"] += 1
+        self._touched_artifacts[str(artifact["artifact_id"])] = None
         return self._artifact_ref(artifact)
 
     def approve_artifact(self, artifact_id: str) -> ArtifactRef:
@@ -285,6 +305,8 @@ class InMemoryArtifactSink:
         }
         artifact["version"] += 1
         self.items.append(entry)
+        self._touched_artifacts[str(entry["artifact_id"])] = None
+        self._touched_items[str(entry["item_id"])] = None
         return self._item_ref(entry)
 
     def update_item_content(self, item_id: str, content: dict[str, Any]) -> ItemRef:
@@ -336,6 +358,19 @@ class InMemoryArtifactSink:
             ),
             link_types=LINK_TYPES,
         )
+        for side, quote, item in (
+            ("source", source_quote, source),
+            ("target", target_quote, target),
+        ):
+            if quote is not None:
+                violations += domain_rules.check_quote(
+                    side,
+                    quote,
+                    link_type=link_type,
+                    link_type_definition=LINK_TYPES[link_type],
+                    kind=str(item["kind"]),
+                    content=item["content"],
+                )
         self._raise(violations)
         if link_type in link_rules.ACYCLIC_LINK_TYPES:
             links_as_rows = [

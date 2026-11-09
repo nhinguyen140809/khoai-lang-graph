@@ -33,11 +33,57 @@ class _Output(BaseModel):
     model_config = ConfigDict(extra="forbid")
 
 
+# The report of a node: what the user reads in the chat about what the node did.
+Report = Annotated[
+    str,
+    Field(
+        min_length=1,
+        description=(
+            "One to three sentences to the user, in the output language, about what you did: "
+            "what was done in plain words first, then only what needs their attention. "
+            "Name things by what they say, never by their key."
+        ),
+    ),
+]
+
+_QUOTE_NOTE = (
+    "One run of words, at most 300 characters, copied exactly from one text field of the item."
+)
+
+
 class EvidencedBy(_Output):
-    """One interview message a requirement was taken from, with its quote."""
+    """One interview message a requirement was taken from, with the words it quotes."""
 
     message: str
-    quote: str
+    target_quote: str = Field(description=f"The words of the message. {_QUOTE_NOTE}")
+
+    def as_link(self) -> MessageLink:
+        return MessageLink(message=self.message, target_quote=self.target_quote)
+
+
+class ItemLink(_Output):
+    """A link to an item with the words it is about, on one side or both."""
+
+    item: str
+    source_quote: str | None = Field(
+        default=None, description=f"The words of this item that the link is about. {_QUOTE_NOTE}"
+    )
+    target_quote: str | None = Field(
+        default=None, description=f"The words of the linked item that it is about. {_QUOTE_NOTE}"
+    )
+
+
+class MessageLink(_Output):
+    """A link to an interview message with the words of the answer."""
+
+    message: str
+    target_quote: str | None = Field(
+        default=None, description=f"The words of the answer. {_QUOTE_NOTE}"
+    )
+
+
+# A link names the item by its key or ref; an object adds the words the link is about.
+LinkRef = str | ItemLink
 
 
 class NewPersona(_Output):
@@ -59,6 +105,7 @@ class NewPersona(_Output):
 class GeneratorOutput(_Output):
     """The frame of the persona catalog plus its persona items."""
 
+    report: Report
     selection_rationale: str
     uncovered_stakeholder_types: list[str]
     personas: list[NewPersona]
@@ -81,6 +128,7 @@ class NewSource(_Output):
 class CorpusBuilderOutput(_Output):
     """The kept documents of the research corpus, with the reason each was kept."""
 
+    report: Report
     selection_rationale: str
     sources: list[NewSource]
 
@@ -99,6 +147,7 @@ class NewObservation(_Output):
 class MinerOutput(_Output):
     """The stakeholder observations mined from one source document."""
 
+    report: Report
     observations: list[NewObservation]
 
 
@@ -141,6 +190,7 @@ class StakeholderGroup(_Output):
 class GeneratorOutputV2(_Output):
     """The frame of the evidence-grounded persona catalog plus its personas."""
 
+    report: Report
     selection_rationale: str
     stakeholder_groups: list[StakeholderGroup]
     uncovered_stakeholder_types: list[str]
@@ -148,7 +198,9 @@ class GeneratorOutputV2(_Output):
 
 
 class PlannerOutput(ElicitationPlanContent):
-    """The plan content verbatim; the planner produces no items."""
+    """The plan content verbatim, and the report; the planner produces no items."""
+
+    report: Report
 
 
 class InterviewerTurnOutput(_Output):
@@ -178,7 +230,7 @@ class AnalyzedRequirementDraft(_Output):
     quality_category: str | None = DEFAULT_QUALITY
     priority: str
     rationale: str
-    derived_from: list[str] = Field(min_length=1)
+    derived_from: list[LinkRef] = Field(min_length=1)
     involves: list[str]
     supersedes: list[str] = Field(default_factory=list)
 
@@ -202,7 +254,7 @@ class AssumptionDraft(_Output):
     reasoning: str
     impact_if_wrong: str
     validation_status: Literal["unverified", "confirmed", "invalidated"]
-    concerns: list[str]
+    concerns: list[LinkRef]
     supersedes: list[str] = Field(default_factory=list)
 
 
@@ -215,8 +267,8 @@ class AmbiguityIssueDraft(_Output):
     clarifying_question: str
     status: Literal["open", "resolved", "dismissed"]
     resolution: str | None
-    concerns: list[str]
-    resolved_by: str | None
+    concerns: list[LinkRef]
+    resolved_by: str | MessageLink | None
     supersedes: list[str] = Field(default_factory=list)
 
 
@@ -229,13 +281,14 @@ class ConflictDraft(_Output):
     proposed_resolutions: list[str]
     status: Literal["open", "resolved", "dismissed"]
     resolution: str | None
-    concerns: list[str]
+    concerns: list[LinkRef]
     involves: list[str]
-    resolved_by: str | None
+    resolved_by: str | MessageLink | None
     supersedes: list[str] = Field(default_factory=list)
 
 
 class AnalystOutput(_Output):
+    report: Report
     raw_requirements: list[RawRequirementDraft]
     analyzed_requirements: list[AnalyzedRequirementDraft]
     latent_needs: list[LatentNeedDraft]
@@ -262,7 +315,7 @@ class NewSpecRequirement(_Output):
     acceptance_criteria: list[str]
     fit_criterion: str | None
     verification_method: Literal["test", "inspection", "demonstration", "analysis"]
-    derived_from: list[str] = Field(min_length=1)
+    derived_from: list[LinkRef] = Field(min_length=1)
     depends_on: list[str]
     supersedes: list[str] = Field(default_factory=list)
 
@@ -270,6 +323,7 @@ class NewSpecRequirement(_Output):
 class EngineerOutput(_Output):
     """The frame of the specification plus its requirement items."""
 
+    report: Report
     purpose: str
     scope: str
     out_of_scope: list[str]
@@ -293,7 +347,7 @@ class NewBacklogItem(_Output):
     acceptance_criteria: list[AcceptanceCriterionDraft]
     priority: str
     story_points: int | None
-    derived_from: list[str] = Field(min_length=1)
+    derived_from: list[LinkRef] = Field(min_length=1)
     depends_on: list[str]
     supersedes: list[str] = Field(default_factory=list)
 
@@ -301,6 +355,7 @@ class NewBacklogItem(_Output):
 class BacklogOutput(_Output):
     """The frame of the backlog plus its items, in backlog order."""
 
+    report: Report
     product_goal: str
     prioritization_notes: str | None
     items: list[NewBacklogItem]
@@ -313,10 +368,11 @@ class ValidationIssueDraft(_Output):
     severity: Literal["low", "medium", "high"]
     description: str
     suggestion: str | None
-    flags: list[str]
+    flags: list[LinkRef]
 
 
 class ValidatorOutput(_Output):
+    report: Report
     status: Literal["pass", "fail"]
     issues: list[ValidationIssueDraft]
 
@@ -327,6 +383,7 @@ ROUTER_TARGETS = Literal[
 
 
 class IntentDirectiveOutput(_Output):
+    report: Report
     target_node: ROUTER_TARGETS
     instruction: str
     about: list[str]

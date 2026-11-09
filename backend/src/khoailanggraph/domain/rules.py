@@ -237,3 +237,48 @@ def check_link(
             )
         )
     return violations
+
+
+# A quote is one run of words of at most this many characters.
+MAX_QUOTE_LENGTH = 300
+_QUOTABLE_WIDGETS = frozenset({"text", "textarea"})
+
+
+def quotable_texts(kind: str, content: Mapping[str, Any]) -> list[str]:
+    """The text of the `text` and `textarea` fields of an item: where a quote may be found."""
+    fields = schema_dict(kind)["properties"]
+    return [
+        value
+        for name, field in fields.items()
+        if field.get("x-ui-widget") in _QUOTABLE_WIDGETS
+        and isinstance(value := content.get(name), str)
+    ]
+
+
+def check_quote(  # noqa: PLR0913 - a side, its words, and the link type and item they belong to
+    side: str,
+    quote: str,
+    *,
+    link_type: str,
+    link_type_definition: Mapping[str, Any],
+    kind: str,
+    content: Mapping[str, Any],
+) -> list[Violation]:
+    """The quote rules of one side of a link: the link type allows a quote on that side, the quote
+    is not empty and has at most 300 characters, and it is found word for word in one `text` or
+    `textarea` field of the item it quotes."""
+    allowed = link_type_definition.get("quotes", {}).get(side, False)
+    if not allowed:
+        return [Violation("quote", f"{link_type} does not allow a quote of the {side}")]
+    if not quote.strip():
+        return [Violation("quote", f"the {side} quote of {link_type} is empty")]
+    if len(quote) > MAX_QUOTE_LENGTH:
+        return [Violation("quote", f"the {side} quote of {link_type} is over {MAX_QUOTE_LENGTH}")]
+    if not any(quote in text for text in quotable_texts(kind, content)):
+        return [
+            Violation(
+                "quote",
+                f"the {side} quote of {link_type} is not found word for word in the {kind}",
+            )
+        ]
+    return []

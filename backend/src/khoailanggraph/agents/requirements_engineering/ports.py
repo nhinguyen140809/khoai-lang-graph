@@ -70,11 +70,19 @@ class ArtifactSink(Protocol):
     revision. `ref`s are unique per node response and are resolved by
     `add_item`, so an agent never sees a generated key before it exists.
 
-    `agent_role` is the role of the node that writes: the node wrapper sets it
-    before a node runs, and the sink credits the writes of the node to it.
+    A node announces itself with `begin_node` before it runs: the sink credits the writes of the
+    node to its agent role, and `add_report` posts the report of the node as a message of the
+    chat, with the artifacts and the items written since `begin_node` as its refs.
     """
 
-    agent_role: str | None
+    def begin_node(self, agent_role: str | None) -> None:
+        """The node about to run, by its agent role (none for a node that is no agent)."""
+        ...
+
+    def add_report(self, content: str) -> None:
+        """The report of the node, for the user: a message of the chat that refers to the
+        artifacts and the items the node wrote."""
+        ...
 
     def create_artifact(
         self,

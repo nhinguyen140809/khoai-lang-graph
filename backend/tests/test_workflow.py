@@ -36,6 +36,7 @@ from khoailanggraph.agents.requirements_engineering.nodes import PROMPTS_PACKAGE
 from khoailanggraph.agents.requirements_engineering.outputs import InterviewerTurnOutput
 from khoailanggraph.agents.requirements_engineering.state import REState, make_initial_state
 from khoailanggraph.domain import rules as domain_rules
+from khoailanggraph.domain.errors import IntegrityError
 from khoailanggraph.llm import reset_model_cache
 from support.fake_data import DEMO_INTENT, DemoData, _corpus, _mined, _personas
 from support.fake_llm import FakeChatModel
@@ -458,3 +459,112 @@ def test_invoke_retries_a_degenerate_generation() -> None:
         )
     assert result.answer == "clean"
     assert FlakyModel.calls == 2
+
+
+def _finished_run() -> InMemoryArtifactSink:
+    sink = InMemoryArtifactSink()
+    final = build_re_graph().invoke(run_state(), config=fake_config(sink, InMemoryDirectiveSink()))
+    assert final["status"] == "succeeded", final.get("error")
+    return sink
+
+
+def _item(sink: InMemoryArtifactSink, item_id: str) -> dict[str, object]:
+    return next(entry for entry in sink.items if entry["item_id"] == item_id)
+
+
+def test_the_evidence_of_a_requirement_quotes_its_message_word_for_word() -> None:
+    sink = _finished_run()
+
+    evidence = [
+        link
+        for link in sink.links
+        if link["link_type"] == "evidenced_by"
+        and _item(sink, link["source_id"])["kind"] == "raw_requirement"
+    ]
+
+    assert evidence
+    for link in evidence:
+        message = _item(sink, link["target_id"])["content"]
+        assert link["quote"], f"{link['source_key']} quotes nothing"
+        assert link["quote"] in str(message["content"])  # type: ignore[index]
+        assert link["source_quote"] is None
+
+
+def test_a_quote_that_is_not_in_the_message_makes_the_sink_refuse_the_link() -> None:
+    sink = _finished_run()
+    raw = next(entry for entry in sink.items if entry["kind"] == "raw_requirement")
+    message = next(entry for entry in sink.items if entry["kind"] == "interview_message")
+
+    with pytest.raises(IntegrityError):
+        sink.add_link(
+            source_id=str(raw["item_id"]),
+            target_id=str(message["item_id"]),
+            link_type="derived_from",
+            target_quote="words that nobody said",
+        )
+
+
+def test_an_agent_whose_quote_is_not_exact_still_links_the_items() -> None:
+    sink = _finished_run()
+    raw = next(entry for entry in sink.items if entry["kind"] == "raw_requirement")
+    messages = [entry for entry in sink.items if entry["kind"] == "interview_message"]
+    other = next(
+        entry
+        for entry in messages
+        if all(
+            link["target_id"] != entry["item_id"]
+            for link in sink.links
+            if link["source_id"] == raw["item_id"]
+        )
+    )
+    known = {
+        str(other["key"]): {
+            "item_id": str(other["item_id"]),
+            "kind": "interview_message",
+            "key": str(other["key"]),
+            "version": 1,
+        }
+    }
+
+    nodes._link_each(
+        sink,
+        str(raw["item_id"]),
+        "evidenced_by",
+        known,
+        [nodes.MessageLink(message=str(other["key"]), target_quote="words that nobody said")],
+    )
+
+    assert sink.links[-1]["target_id"] == other["item_id"]
+    assert sink.links[-1]["quote"] is None
+
+
+def test_every_agent_step_reports_to_the_user_except_the_interview_turns() -> None:
+    sink = _finished_run()
+
+    roles = [report["agent_role"] for report in sink.reports]
+
+    assert roles[0] == "planner"
+    assert roles[1] == "corpus_builder"
+    assert roles.count("stakeholder_miner") == 3, "one report for each document that was read"
+    assert {"persona_generator", "analyst", "requirement_engineer", "backlog_manager"} <= set(roles)
+    assert "validator" in roles
+    assert "interviewer" not in roles
+    assert "persona_agent" not in roles
+    assert all(report["content"].strip() for report in sink.reports)
+
+
+def test_a_report_refers_to_what_its_step_wrote() -> None:
+    sink = _finished_run()
+
+    by_role = {report["agent_role"]: report for report in sink.reports}
+
+    planner = by_role["planner"]
+    assert len(planner["artifact_ids"]) == 1
+    assert planner["item_ids"] == []
+    analyst = by_role["analyst"]
+    written = {str(_item(sink, item_id)["kind"]) for item_id in analyst["item_ids"]}
+    assert {"raw_requirement", "analyzed_requirement"} <= written
+    backlog = by_role["backlog_manager"]
+    assert {str(_item(sink, item_id)["kind"]) for item_id in backlog["item_ids"]} == {
+        "backlog_item"
+    }
