@@ -16,6 +16,7 @@ import { filterMessages } from '@/shared/components/filter'
 import { EmptyState, ErrorState, LoadingState } from '@/shared/components/state'
 import { Button } from '@/shared/components/ui/button'
 import { PendingButton } from '@/shared/components/ui/pending-button'
+import { RelativeTime } from '@/shared/components/ui/relative-time'
 import {
   Table,
   TableBody,
@@ -25,7 +26,7 @@ import {
   TableHeader,
   TableRow,
 } from '@/shared/components/ui/table'
-import { formatRelativeTime, useNow } from '@/shared/lib/time'
+import { useNow } from '@/shared/lib/time'
 import { routes } from '@/shared/routes'
 
 import { projectFilterMessages } from '../project-filters.constants'
@@ -46,6 +47,7 @@ interface ProjectTableProps {
  */
 export function ProjectTable({ status, filters, onClearFilters }: ProjectTableProps) {
   const projects = useProjectList(status, filters)
+  // One clock for the rows: each of them counts from it.
   const now = useNow()
 
   if (projects.isPending) {
@@ -126,9 +128,7 @@ export function ProjectTable({ status, filters, onClearFilters }: ProjectTablePr
                 <ProjectRunCell project={project} />
               </TableCell>
               <TableCell className="text-right text-muted-foreground">
-                <time dateTime={project.last_activity_at}>
-                  {formatRelativeTime(project.last_activity_at, now)}
-                </time>
+                <RelativeTime date={project.last_activity_at} now={now} />
               </TableCell>
               <TableCell className="text-right">
                 <ProjectActionsMenu project={project} />
