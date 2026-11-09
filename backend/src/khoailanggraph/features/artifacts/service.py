@@ -406,6 +406,28 @@ class SqlArtifactSink:
             artifact_id=str(row.id), kind=row.kind, title=row.title, version=row.version
         )
 
+    def set_artifact_summary(self, artifact_id: str, summary: str) -> ArtifactRef:
+        """The short overview shown at the top of an artifact; a change of the artifact."""
+        row = self._artifact_row(artifact_id)
+        row.summary = summary
+        bump_artifact(self.session, row, "generated", self._origin())
+        self._touched_artifacts[row.id] = None
+        self._emit(
+            "artifact_delta",
+            {
+                "artifact_id": str(row.id),
+                "delta": {"summary": summary},
+                "version": row.version,
+                "item_id": None,
+                "item_key": None,
+                "change": "artifact_updated",
+            },
+            self.next_sequence(),
+        )
+        return ArtifactRef(
+            artifact_id=str(row.id), kind=row.kind, title=row.title, version=row.version
+        )
+
     def approve_artifact(self, artifact_id: str) -> ArtifactRef:
         """The artifact under review and its draft items become approved, each as a new
         version with the change reason `reviewed`."""

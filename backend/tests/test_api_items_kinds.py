@@ -643,3 +643,16 @@ async def test_the_chat_holds_the_message_of_the_user_and_the_report_of_each_ste
     assert paged.json()["next_cursor"] == 2
     assert (await client.get(f"/api/v1/threads/{uuid4()}/messages")).status_code == 404
     assert project_id
+
+
+async def test_a_transcript_shows_its_summary_under_its_title(client: AsyncClient) -> None:
+    project_id, _thread_id = await seeded_run(client)
+
+    artifacts = (await client.get(f"/api/v1/projects/{project_id}/artifacts")).json()["items"]
+
+    transcripts = [entry for entry in artifacts if entry["kind"] == "interview_transcript"]
+    assert len(transcripts) == 3
+    for transcript in transcripts:
+        assert transcript["title"].startswith("Interview with ")
+        assert transcript["summary"]
+        assert transcript["content"]["status"] == "completed"

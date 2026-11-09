@@ -56,6 +56,7 @@ from khoailanggraph.agents.requirements_engineering.outputs import (
     GeneratorOutputV2,
     IntentDirectiveOutput,
     InterviewerTurnOutput,
+    InterviewSummaryOutput,
     ItemLink,
     LinkRef,
     MessageLink,
@@ -69,7 +70,7 @@ from khoailanggraph.agents.requirements_engineering.ports import (
     DirectiveSink,
     ItemRecord,
 )
-from khoailanggraph.agents.requirements_engineering.state import REState
+from khoailanggraph.agents.requirements_engineering.state import ArtifactRef, REState
 from khoailanggraph.agents.requirements_engineering.views import (
     prompt_view,
     prompt_views,
@@ -913,6 +914,41 @@ def _transcript_of(
     return dict(created), []
 
 
+def _close_interview(
+    state: REState,
+    config: RunnableConfig | Mapping[str, Any],
+    persona: ItemRecord,
+    transcript: dict[str, Any],
+    stop_reason: str,
+) -> ArtifactRef:
+    """End the interview of a persona: the transcript is completed and gets a one sentence
+    summary of what the persona said, for the top of the transcript."""
+    cfg = _run_config(state)
+    sink = _sink(config)
+    messages = sink.read_items(transcript["artifact_id"])
+    summary: InterviewSummaryOutput = _invoke(
+        "interview_summarizer",
+        config,
+        InterviewSummaryOutput,
+        {
+            "output_language": _language(cfg),
+            "persona": json.dumps(prompt_view(persona), ensure_ascii=False),
+            "transcript": "\n".join(
+                transcript_lines(
+                    persona["key"], messages, transcript["content"].get("participants")
+                )
+            )
+            or "(no messages)",
+        },
+    )
+    closed = sink.update_artifact_content(
+        transcript["artifact_id"],
+        dict(transcript["content"]) | {"status": "completed", "stop_reason": stop_reason},
+    )
+    sink.set_artifact_summary(transcript["artifact_id"], summary.summary)
+    return closed
+
+
 def _merge_transcripts(state: REState, transcript: dict[str, Any]) -> list[dict[str, Any]]:
     """The transcript refs of the state, with `transcript` added or refreshed."""
     kept = [
@@ -949,10 +985,14 @@ def interviewer_node(
 
     while True:
         if orchestrator.exceeded_max_turns(state, turns_per_persona=cfg.parameters.max_turns):
+            persona = orchestrator.active_persona(state, sink)
+            transcript, messages = _transcript_of(state, sink, persona)
+            closed = _close_interview(state, runnable_config, persona, transcript, "max_turns")
             if int(state["active_persona_index"]) + 1 >= len(state["personas"]):
                 return {
                     **cursor,
                     "interviewer_stop": True,
+                    "interview_transcripts": _merge_transcripts(state, dict(closed)),
                     "current_stage": "interviewing",
                 }
             cursor.update(orchestrator.advance_update(state))
@@ -1048,10 +1088,8 @@ def interviewer_node(
             )
 
         if stop:
-            closed = sink.update_artifact_content(
-                transcript["artifact_id"],
-                dict(transcript["content"])
-                | {"status": "completed", "stop_reason": "interviewer_stopped"},
+            closed = _close_interview(
+                state, runnable_config, persona, transcript, "interviewer_stopped"
             )
             if int(state["active_persona_index"]) + 1 >= len(state["personas"]):
                 return {

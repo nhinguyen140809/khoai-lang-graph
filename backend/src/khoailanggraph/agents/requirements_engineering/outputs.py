@@ -208,6 +208,18 @@ class InterviewerTurnOutput(_Output):
     stop: bool = False
 
 
+class InterviewSummaryOutput(_Output):
+    """One sentence about a finished interview, for the top of its transcript."""
+
+    summary: str = Field(
+        min_length=1,
+        description=(
+            "One sentence, at most 160 characters, about what the interviewee said: who they are, "
+            "then what they care about. Use only what they said."
+        ),
+    )
+
+
 class PersonaAnswerOutput(_Output):
     answer: str
 

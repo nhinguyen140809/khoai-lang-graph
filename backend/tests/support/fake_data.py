@@ -578,6 +578,21 @@ def _persona_answer(system: str, user: str, call_number: int) -> dict[str, Any]:
     return {"answer": _ANSWERS["Student"]}
 
 
+_SUMMARIES: dict[str, str] = {
+    "Student": "A student short of time who wants a mentor fast and private questions.",
+    "Mentor": "A mentor with two hours a week who wants clear agendas and easy declines.",
+    "Administrator": "An administrator who puts safety first and wants verified mentors.",
+}
+
+
+def _interview_summary(system: str, user: str, call_number: int) -> dict[str, Any]:
+    """One sentence about the interview, chosen by the persona in the prompt."""
+    for role, summary in _SUMMARIES.items():
+        if f'stakeholder_type": "{role}' in user:
+            return {"summary": summary}
+    return {"summary": _SUMMARIES["Student"]}
+
+
 _EVIDENCE = {
     "Student": [
         (
@@ -1364,6 +1379,7 @@ class DemoData:
     GeneratorOutputV2 = staticmethod(_personas)
     InterviewerTurnOutput = staticmethod(_interviewer_turn)
     PersonaAnswerOutput = staticmethod(_persona_answer)
+    InterviewSummaryOutput = staticmethod(_interview_summary)
     AnalystOutput = staticmethod(_analyst)
     EngineerOutput = staticmethod(_engineer)
     BacklogOutput = staticmethod(_backlog)

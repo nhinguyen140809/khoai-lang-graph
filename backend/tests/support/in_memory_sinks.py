@@ -168,6 +168,13 @@ class InMemoryArtifactSink:
         self._touched_artifacts[str(artifact["artifact_id"])] = None
         return self._artifact_ref(artifact)
 
+    def set_artifact_summary(self, artifact_id: str, summary: str) -> ArtifactRef:
+        artifact = self._artifact_row(artifact_id)
+        artifact["summary"] = summary
+        artifact["version"] += 1
+        self._touched_artifacts[str(artifact["artifact_id"])] = None
+        return self._artifact_ref(artifact)
+
     def approve_artifact(self, artifact_id: str) -> ArtifactRef:
         artifact = self._artifact_row(artifact_id)
         artifact["review_status"] = "approved"

@@ -59,7 +59,7 @@ def fake_config(sink: ArtifactSink, directives: InMemoryDirectiveSink) -> Runnab
     }
 
 
-def run_state() -> REState:
+def run_state(max_turns: int = 6) -> REState:
     return make_initial_state(
         "project-1",
         DEMO_INTENT,
@@ -73,7 +73,7 @@ def run_state() -> REState:
                 "target_sources_num": 3,
                 "target_personas_num": 3,
                 "max_personas": 3,
-                "max_turns": 6,
+                "max_turns": max_turns,
                 "max_iterations": 2,
             },
         },
@@ -461,9 +461,11 @@ def test_invoke_retries_a_degenerate_generation() -> None:
     assert FlakyModel.calls == 2
 
 
-def _finished_run() -> InMemoryArtifactSink:
+def _finished_run(max_turns: int = 6) -> InMemoryArtifactSink:
     sink = InMemoryArtifactSink()
-    final = build_re_graph().invoke(run_state(), config=fake_config(sink, InMemoryDirectiveSink()))
+    final = build_re_graph().invoke(
+        run_state(max_turns), config=fake_config(sink, InMemoryDirectiveSink())
+    )
     assert final["status"] == "succeeded", final.get("error")
     return sink
 
@@ -568,3 +570,34 @@ def test_a_report_refers_to_what_its_step_wrote() -> None:
     assert {str(_item(sink, item_id)["kind"]) for item_id in backlog["item_ids"]} == {
         "backlog_item"
     }
+
+
+def _transcripts(sink: InMemoryArtifactSink) -> list[dict[str, object]]:
+    return [entry for entry in sink.artifacts if entry["kind"] == "interview_transcript"]
+
+
+def test_a_transcript_gets_a_sentence_about_what_the_persona_said() -> None:
+    sink = _finished_run()
+
+    transcripts = _transcripts(sink)
+
+    assert len(transcripts) == 3
+    for transcript in transcripts:
+        content = transcript["content"]
+        assert content["status"] == "completed"  # type: ignore[index]
+        assert content["stop_reason"] == "interviewer_stopped"  # type: ignore[index]
+        assert 0 < len(str(transcript["summary"])) <= 160
+
+
+def test_an_interview_that_reaches_the_turn_limit_is_closed_and_summed_up_too() -> None:
+    sink = _finished_run(max_turns=3)
+
+    transcripts = _transcripts(sink)
+
+    assert len(transcripts) == 3
+    for transcript in transcripts:
+        content = transcript["content"]
+        assert content["status"] == "completed"  # type: ignore[index]
+        assert content["stop_reason"] == "max_turns"  # type: ignore[index]
+        assert content["turn_count"] == 3  # type: ignore[index]
+        assert transcript["summary"]

@@ -157,6 +157,10 @@ class ArtifactSink(Protocol):
         """One trace link, checked against the pairs of the definition in use."""
         ...
 
+    def set_artifact_summary(self, artifact_id: str, summary: str) -> ArtifactRef:
+        """The short overview shown at the top of an artifact."""
+        ...
+
     def approve_artifact(self, artifact_id: str) -> ArtifactRef:
         """Set an artifact and its draft items to approved (approve option)."""
         ...
