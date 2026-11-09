@@ -144,3 +144,19 @@ export const versionConflictCases = [
   { name: 'an error that is not of the API', error: new Error('x'), isConflict: false },
   { name: 'a value that is not an error', error: 'version_conflict', isConflict: false },
 ]
+
+/** An error, and whether it says that the request had no session. */
+export const unauthorizedCases = [
+  {
+    name: 'an ApiError with status 401',
+    error: new ApiError('x', HttpStatus.Unauthorized, null, []),
+    isUnauthorized: true,
+  },
+  {
+    name: 'an ApiError with another status',
+    error: new ApiError('x', HttpStatus.Forbidden, null, []),
+    isUnauthorized: false,
+  },
+  { name: 'an error that is not of the API', error: new Error('x'), isUnauthorized: false },
+  { name: 'a value that is not an error', error: 'unauthorized', isUnauthorized: false },
+]

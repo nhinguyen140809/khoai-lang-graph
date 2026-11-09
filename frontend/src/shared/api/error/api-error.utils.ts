@@ -49,6 +49,11 @@ export function isNotFoundError(error: unknown): boolean {
   return error instanceof ApiError && error.status === HttpStatus.NotFound
 }
 
+/** Whether a request failed because it was sent without a session, or with one that ended. */
+export function isUnauthorizedError(error: unknown): boolean {
+  return error instanceof ApiError && error.status === HttpStatus.Unauthorized
+}
+
 /** Whether a request failed because the record it changes moved on since the caller read it. */
 export function isVersionConflict(error: unknown): boolean {
   return error instanceof ApiError && error.code === ApiErrorCode.VersionConflict

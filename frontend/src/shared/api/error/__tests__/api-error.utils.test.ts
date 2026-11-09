@@ -4,6 +4,7 @@ import {
   ApiError,
   errorMessageOf,
   isNotFoundError,
+  isUnauthorizedError,
   isVersionConflict,
   toApiError,
 } from '../api-error.utils'
@@ -12,6 +13,7 @@ import {
   messages,
   notFoundCases,
   toApiErrorCases,
+  unauthorizedCases,
   versionConflictCases,
 } from './api-error.utils.data'
 
@@ -39,5 +41,11 @@ describe('isNotFoundError', () => {
 describe('isVersionConflict', () => {
   it.each(versionConflictCases)('is $isConflict for $name', ({ error, isConflict }) => {
     expect(isVersionConflict(error)).toBe(isConflict)
+  })
+})
+
+describe('isUnauthorizedError', () => {
+  it.each(unauthorizedCases)('is $isUnauthorized for $name', ({ error, isUnauthorized }) => {
+    expect(isUnauthorizedError(error)).toBe(isUnauthorized)
   })
 })
