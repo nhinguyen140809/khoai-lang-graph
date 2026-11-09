@@ -733,7 +733,7 @@ Section content:
 
 | Field | Type | Notes |
 |---|---|---|
-| `title` | string | Heading text, without its number |
+| `title` | string | Heading text of at most 60 characters, without its number |
 | `introduction` | string? | Short text shown under the heading |
 
 Rules:
@@ -786,7 +786,7 @@ A simulated stakeholder. The profile is application data; a template renders it 
 
 | Field | Type | Notes |
 |---|---|---|
-| `name` | string | For example "Minh, 3rd-year CS student" |
+| `name` | string | The name shown for the interviewee, at most 60 characters. For example "Minh, 3rd-year CS student" |
 | `stakeholder_type` | string | One of the plan's `stakeholder_types` |
 | `background` | string | History, context, situation |
 | `expertise` | string | Technical and domain familiarity |
@@ -943,7 +943,7 @@ A requirement as written in the specification.
 
 | Field | Type | Notes |
 |---|---|---|
-| `title` | string | For example "Search mentors" |
+| `title` | string | A short name of at most 60 characters. For example "Search mentors" |
 | `statement` | string | "The system shall ..." |
 | `type` | enum | `functional`, `non_functional`, `constraint` |
 | `quality_category` | string? | From the value list `quality_category`, as on AnalyzedRequirement |
@@ -971,7 +971,7 @@ The artifact that holds the epics and user stories. The fields below are its `co
 | Field | Type | Notes |
 |---|---|---|
 | `item_type` | enum | `epic`, `user_story` |
-| `title` | string | |
+| `title` | string | A short name of at most 60 characters. For example "List mentors by field" |
 | `as_a` | string? | Story only |
 | `i_want` | string? | Story only |
 | `so_that` | string? | Story only |
