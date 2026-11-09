@@ -1,5 +1,10 @@
 import { defineConfig, devices } from '@playwright/test'
 
+// The specs import the config of the app, which reads NODE_ENV, and Playwright leaves it as the
+// shell has it (often nothing); the runner fills it the way a plain `next dev` does.
+const env = process.env as { NODE_ENV?: string }
+env.NODE_ENV ||= 'development'
+
 const PORT = 3100
 
 export default defineConfig({
