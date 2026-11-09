@@ -3,8 +3,9 @@
 from __future__ import annotations
 
 from typing import Any, Literal
+from uuid import UUID  # noqa: TC003 - pydantic reads the annotations at run time
 
-from pydantic import BaseModel, ConfigDict
+from pydantic import BaseModel, ConfigDict, Field
 
 from khoailanggraph.platform.serialization import IsoDatetime
 
@@ -192,3 +193,57 @@ class Coverage(BaseModel):
     model_config = ConfigDict(extra="forbid")
 
     gaps: list[CoverageGap]
+
+
+class ArtifactRevision(ItemRevision):
+    """One version of an artifact: what its content was and who changed it."""
+
+
+class ArtifactPatch(BaseModel):
+    """PATCH /artifacts/{id}: the fields to change; a field left out keeps its value."""
+
+    model_config = ConfigDict(extra="forbid")
+
+    title: str | None = None
+    summary: str | None = None
+    content: dict[str, Any] | None = None
+    review_status: str | None = None
+
+
+class CreateItemBody(BaseModel):
+    model_config = ConfigDict(extra="forbid")
+
+    kind: str
+    content: dict[str, Any]
+    parent_item_id: UUID | None = None
+
+
+class ReorderBody(BaseModel):
+    model_config = ConfigDict(extra="forbid")
+
+    parent_item_id: UUID | None
+    ids: list[UUID]
+
+
+class MoveBody(BaseModel):
+    model_config = ConfigDict(extra="forbid")
+
+    parent_item_id: UUID | None
+    position: int = Field(ge=1)
+
+
+class RestoreBody(BaseModel):
+    model_config = ConfigDict(extra="forbid")
+
+    version: int = Field(ge=1)
+
+
+class CreateLinkBody(BaseModel):
+    model_config = ConfigDict(extra="forbid")
+
+    source_item_id: UUID
+    target_item_id: UUID
+    link_type: str
+    note: str | None = None
+    source_quote: str | None = None
+    target_quote: str | None = None

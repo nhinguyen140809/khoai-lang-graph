@@ -7,7 +7,7 @@ from datetime import UTC, datetime
 from typing import Annotated, Any, Literal
 from uuid import UUID
 
-from fastapi import APIRouter, Depends, Header, Query
+from fastapi import APIRouter, Depends, Header, Query, Response
 from fastapi.responses import JSONResponse
 from pydantic import BaseModel, ConfigDict
 
@@ -15,10 +15,9 @@ from khoailanggraph.agents.requirements_engineering import definition as workflo
 from khoailanggraph.api import deps
 from khoailanggraph.api.errors import ApiError
 from khoailanggraph.api.schemas import MAX_LIMIT, Page
-from khoailanggraph.features.artifacts import schemas, service
-from khoailanggraph.features.artifacts.models import ArtifactItemRow, ArtifactRow
+from khoailanggraph.features.artifacts import editing, schemas, service
+from khoailanggraph.features.artifacts.models import ArtifactItemRow, ArtifactRow, TraceLinkRow
 from khoailanggraph.features.projects.service import get_project_row
-from khoailanggraph.features.runs.service import project_has_active_run
 from khoailanggraph.llm.registry import ModelCatalogEntry, default_registry
 from khoailanggraph.platform import origin as origins
 from khoailanggraph.platform.origin import Origin
@@ -228,6 +227,20 @@ async def list_artifact_kinds(
     return service.artifact_kinds_response(workflow)
 
 
+@router.get("/content-schemas/{kind}/{schema_version}")
+async def get_content_schema(
+    kind: str,
+    schema_version: int,
+    user: deps.CurrentUser,
+) -> JSONResponse:
+    """The content schema of one artifact kind or item kind at one version: to show a document
+    stored with an older version. It never changes, so it can be cached for ever."""
+    schema = service.content_schema_at(workflow, kind, schema_version)
+    return JSONResponse(
+        content=schema, headers={"Cache-Control": "public, max-age=31536000, immutable"}
+    )
+
+
 @router.get("/workflow/definition")
 async def get_workflow_definition(
     user: deps.CurrentUser,
@@ -288,19 +301,13 @@ async def patch_item(
     if_match: Annotated[str | None, Header()] = None,
     _origin: Annotated[None, Depends(deps.check_origin)] = None,
 ) -> schemas.Item:
-    """Edit an item (§5): If-Match version → 409 on mismatch; items are
-    read-only while a run of their project is unfinished (409 invalid_state)."""
+    """Edit an item (§5): `If-Match` with another version answers 409; an item takes changes
+    only while a review that allows edits waits for the user (409 invalid_state)."""
     current = await service.get_item(db, item_id)
     row = await db.get(ArtifactItemRow, item_id)
     if row is None or row.deleted_at is not None:
         raise ApiError(404, "not_found", "Not found", "The item does not exist.")
-    if await project_has_active_run(db, UUID(str(row.project_id))):
-        raise ApiError(
-            409,
-            "invalid_state",
-            "Invalid state",
-            "A run of this project is in progress; items are read-only.",
-        )
+    await editing.ensure_editable(db, await _artifact_of(db, row))
     wanted = (if_match or "").strip('"')
     if if_match is not None and wanted not in {str(current.version), f'"v{current.version}"'}:
         raise ApiError(
@@ -335,3 +342,231 @@ async def patch_item(
     if artifact is not None:
         await db.run_sync(lambda session: service.bump_artifact(session, artifact, "user_edit", by))
     return await service.get_item(db, item_id)
+
+
+async def _artifact_of(db: deps.DbSession, item: ArtifactItemRow) -> ArtifactRow:
+    artifact = await db.get(ArtifactRow, item.artifact_id)
+    if artifact is None or artifact.deleted_at is not None:
+        raise ApiError(404, "not_found", "Not found", "The artifact does not exist.")
+    return artifact
+
+
+def _by(user: Any) -> Origin:
+    return Origin.of_user(UUID(str(user.id)))
+
+
+@router.patch("/artifacts/{artifact_id}")
+async def patch_artifact(
+    artifact_id: UUID,
+    body: schemas.ArtifactPatch,
+    user: deps.CurrentUser,
+    db: deps.DbSession,
+    if_match: Annotated[str | None, Header()] = None,
+    _origin: Annotated[None, Depends(deps.check_origin)] = None,
+) -> schemas.Artifact:
+    """Change the title, summary, content or review status of an artifact."""
+    artifact = await db.get(ArtifactRow, artifact_id)
+    if artifact is None or artifact.deleted_at is not None:
+        raise ApiError(404, "not_found", "Not found", "The artifact does not exist.")
+    await editing.ensure_editable(db, artifact)
+    fields = {key: getattr(body, key) for key in body.model_fields_set}
+    by = _by(user)
+    await db.run_sync(
+        lambda session: editing.patch_artifact(
+            session, artifact_id, fields=fields, if_match=if_match, by=by
+        )
+    )
+    return await service.get_artifact(db, artifact_id)
+
+
+@router.get("/artifacts/{artifact_id}/revisions")
+async def list_artifact_revisions(
+    artifact_id: UUID,
+    user: deps.CurrentUser,
+    db: deps.DbSession,
+) -> Page[schemas.ArtifactRevision]:
+    """The versions of an artifact, newest first, each with its content."""
+    return Page(items=await service.artifact_revisions(db, artifact_id), next_cursor=None)
+
+
+@router.post("/artifacts/{artifact_id}/restore")
+async def restore_artifact(
+    artifact_id: UUID,
+    body: schemas.RestoreBody,
+    user: deps.CurrentUser,
+    db: deps.DbSession,
+    _origin: Annotated[None, Depends(deps.check_origin)],
+) -> schemas.Artifact:
+    """Make an old version of the artifact and of its items current again, as new versions."""
+    artifact = await db.get(ArtifactRow, artifact_id)
+    if artifact is None or artifact.deleted_at is not None:
+        raise ApiError(404, "not_found", "Not found", "The artifact does not exist.")
+    await editing.ensure_editable(db, artifact)
+    by = _by(user)
+    await db.run_sync(
+        lambda session: editing.restore_artifact(session, artifact_id, body.version, by)
+    )
+    return await service.get_artifact(db, artifact_id)
+
+
+@router.post("/artifacts/{artifact_id}/items", status_code=201)
+async def create_item(
+    artifact_id: UUID,
+    body: schemas.CreateItemBody,
+    user: deps.CurrentUser,
+    db: deps.DbSession,
+    response: Response,
+    _origin: Annotated[None, Depends(deps.check_origin)],
+) -> schemas.Item:
+    """Create an item or a section by hand; the server gives it its key and puts it last under
+    its parent."""
+    artifact = await db.get(ArtifactRow, artifact_id)
+    if artifact is None or artifact.deleted_at is not None:
+        raise ApiError(404, "not_found", "Not found", "The artifact does not exist.")
+    await editing.ensure_editable(db, artifact)
+    by = _by(user)
+    row = await db.run_sync(
+        lambda session: editing.create_item(
+            session,
+            artifact_id,
+            kind=body.kind,
+            content=body.content,
+            parent_item_id=body.parent_item_id,
+            by=by,
+        )
+    )
+    response.headers["Location"] = f"/api/v1/items/{row.id}"
+    return await service.get_item(db, row.id)
+
+
+@router.post("/artifacts/{artifact_id}/items/reorder", status_code=204)
+async def reorder_items(
+    artifact_id: UUID,
+    body: schemas.ReorderBody,
+    user: deps.CurrentUser,
+    db: deps.DbSession,
+    _origin: Annotated[None, Depends(deps.check_origin)],
+) -> Response:
+    """Change the order of the items under one parent."""
+    artifact = await db.get(ArtifactRow, artifact_id)
+    if artifact is None or artifact.deleted_at is not None:
+        raise ApiError(404, "not_found", "Not found", "The artifact does not exist.")
+    await editing.ensure_editable(db, artifact)
+    by = _by(user)
+    await db.run_sync(
+        lambda session: editing.reorder_items(
+            session, artifact_id, parent_item_id=body.parent_item_id, ids=body.ids, by=by
+        )
+    )
+    return Response(status_code=204)
+
+
+@router.delete("/items/{item_id}", status_code=204)
+async def delete_item(
+    item_id: UUID,
+    user: deps.CurrentUser,
+    db: deps.DbSession,
+    _origin: Annotated[None, Depends(deps.check_origin)],
+) -> Response:
+    """Soft delete an item: it leaves the lists and its versions stay readable."""
+    item = await db.get(ArtifactItemRow, item_id)
+    if item is None or item.deleted_at is not None:
+        raise ApiError(404, "not_found", "Not found", "The item does not exist.")
+    await editing.ensure_editable(db, await _artifact_of(db, item))
+    by = _by(user)
+    await db.run_sync(lambda session: editing.delete_item(session, item_id, by))
+    return Response(status_code=204)
+
+
+@router.post("/items/{item_id}/move")
+async def move_item(
+    item_id: UUID,
+    body: schemas.MoveBody,
+    user: deps.CurrentUser,
+    db: deps.DbSession,
+    _origin: Annotated[None, Depends(deps.check_origin)],
+) -> schemas.Item:
+    """Move an item, with everything inside it, under another parent of the same artifact."""
+    item = await db.get(ArtifactItemRow, item_id)
+    if item is None or item.deleted_at is not None:
+        raise ApiError(404, "not_found", "Not found", "The item does not exist.")
+    await editing.ensure_editable(db, await _artifact_of(db, item))
+    by = _by(user)
+    await db.run_sync(
+        lambda session: editing.move_item(
+            session,
+            item_id,
+            parent_item_id=body.parent_item_id,
+            position=body.position,
+            by=by,
+        )
+    )
+    return await service.get_item(db, item_id)
+
+
+@router.post("/items/{item_id}/restore")
+async def restore_item(
+    item_id: UUID,
+    body: schemas.RestoreBody,
+    user: deps.CurrentUser,
+    db: deps.DbSession,
+    _origin: Annotated[None, Depends(deps.check_origin)],
+) -> schemas.Item:
+    """Make an old version of an item current again; it also brings back a deleted item."""
+    item = await db.get(ArtifactItemRow, item_id)
+    if item is None:
+        raise ApiError(404, "not_found", "Not found", "The item does not exist.")
+    await editing.ensure_editable(db, await _artifact_of(db, item))
+    by = _by(user)
+    await db.run_sync(lambda session: editing.restore_item(session, item_id, body.version, by))
+    return await service.get_item(db, item_id)
+
+
+@router.post("/projects/{project_id}/trace-links", status_code=201)
+async def create_trace_link(
+    project_id: UUID,
+    body: schemas.CreateLinkBody,
+    user: deps.CurrentUser,
+    db: deps.DbSession,
+    response: Response,
+    _origin: Annotated[None, Depends(deps.check_origin)],
+) -> schemas.TraceLink:
+    """Create a link by hand. A link is a statement about its source, so it is made only while
+    the document of the source takes changes."""
+    await get_project_row(db, project_id)
+    source = await db.get(ArtifactItemRow, body.source_item_id)
+    if source is None or source.deleted_at is not None or source.project_id != project_id:
+        raise ApiError(404, "not_found", "Not found", "The item does not exist.")
+    await editing.ensure_editable(db, await _artifact_of(db, source))
+    link = await db.run_sync(
+        lambda session: editing.create_link(
+            session,
+            project_id,
+            source_item_id=body.source_item_id,
+            target_item_id=body.target_item_id,
+            link_type=body.link_type,
+            note=body.note,
+            source_quote=body.source_quote,
+            target_quote=body.target_quote,
+        )
+    )
+    response.headers["Location"] = f"/api/v1/trace-links/{link.id}"
+    return service.link_view(link)
+
+
+@router.delete("/trace-links/{link_id}", status_code=204)
+async def delete_trace_link(
+    link_id: UUID,
+    user: deps.CurrentUser,
+    db: deps.DbSession,
+    _origin: Annotated[None, Depends(deps.check_origin)],
+) -> Response:
+    """Remove a link; it keeps its row, so earlier steps can show it again."""
+    link = await db.get(TraceLinkRow, link_id)
+    if link is None or link.deleted_at is not None:
+        raise ApiError(404, "not_found", "Not found", "The link does not exist.")
+    source = await db.get(ArtifactItemRow, link.source_item_id)
+    if source is not None:
+        await editing.ensure_editable(db, await _artifact_of(db, source))
+    await db.run_sync(lambda session: editing.delete_link(session, link_id))
+    return Response(status_code=204)

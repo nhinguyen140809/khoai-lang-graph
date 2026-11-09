@@ -12,8 +12,9 @@ from fastapi.responses import JSONResponse
 
 import khoailanggraph.api.models_registry  # noqa: F401 - registers every table
 from khoailanggraph.api import deps
-from khoailanggraph.api.errors import ApiError, api_error_handler
+from khoailanggraph.api.errors import ApiError, api_error_handler, integrity_error_handler
 from khoailanggraph.api.router import api_router
+from khoailanggraph.domain.errors import IntegrityError
 from khoailanggraph.features.me import service as me_service
 from khoailanggraph.platform.db import (
     ensure_schema,
@@ -117,6 +118,7 @@ def create_app(settings: Settings | None = None) -> FastAPI:
     app.include_router(api_router)
 
     app.add_exception_handler(ApiError, api_error_handler)
+    app.add_exception_handler(IntegrityError, integrity_error_handler)
 
     async def validation_handler(_request: Request, exc: Exception) -> Response:
         """Render a request-body validation failure as Problem Details."""

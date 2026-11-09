@@ -111,6 +111,19 @@ def schema_bytes(kind: str) -> bytes:
     ).read_bytes()
 
 
+def schema_dict_at(kind: str, version: int) -> dict[str, Any] | None:
+    """A kind's content schema at one version, parsed; none when that version does not exist."""
+    if kind not in CONTENT_MODELS:
+        return None
+    try:
+        raw = (
+            resources.files("khoailanggraph.domain") / "content_schemas" / f"{kind}.v{version}.json"
+        ).read_bytes()
+    except FileNotFoundError:
+        return None
+    return cast("dict[str, Any]", json.loads(raw))
+
+
 def schema_dict(kind: str) -> dict[str, Any]:
     """A kind's canonical content schema, parsed."""
     return cast("dict[str, Any]", json.loads(schema_bytes(kind)))

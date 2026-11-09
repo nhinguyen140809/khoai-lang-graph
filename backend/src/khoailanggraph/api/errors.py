@@ -11,6 +11,8 @@ from typing import TYPE_CHECKING, Any
 
 from fastapi.responses import JSONResponse
 
+from khoailanggraph.domain.errors import IntegrityError
+
 if TYPE_CHECKING:
     from fastapi import Request
 
@@ -57,6 +59,26 @@ def unauthenticated() -> ApiError:
 def problem_response(error: ApiError) -> JSONResponse:
     """Render an ApiError as a Problem Details response."""
     return JSONResponse(status_code=error.status, content=error.body(), media_type=MEDIA_TYPE)
+
+
+async def integrity_error_handler(_request: Request, exc: Exception) -> JSONResponse:
+    """A write that the integrity rules of the domain refuse is a `422 validation_failed`, with
+    each broken rule at the field it concerns."""
+    if not isinstance(exc, IntegrityError):
+        raise exc
+    errors = [
+        {"field": violation.path or violation.rule, "message": violation.message}
+        for violation in exc.violations
+    ]
+    return problem_response(
+        ApiError(
+            422,
+            "validation_failed",
+            "Validation failed",
+            "The change breaks a rule of the document.",
+            errors=errors,
+        )
+    )
 
 
 async def api_error_handler(_request: Request, exc: Exception) -> JSONResponse:

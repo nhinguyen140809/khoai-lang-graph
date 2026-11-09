@@ -20,6 +20,7 @@ from khoailanggraph.platform.db import (
     make_sync_engine,
 )
 from khoailanggraph.settings import Settings
+from support.api_helpers import open_review
 
 if TYPE_CHECKING:
     from collections.abc import AsyncIterator
@@ -389,8 +390,9 @@ async def test_models_catalog_serves_allowlist(client: AsyncClient) -> None:
     assert {"planner", "analyst", "validator"} <= set(entry["allowed_roles"])
 
 
-async def test_patch_item_and_version_conflict(client: AsyncClient) -> None:
+async def test_patch_item_and_version_conflict(app: FastAPI, client: AsyncClient) -> None:
     project_id, _thread_id = await seeded_run(client)
+    await open_review(app, project_id)
     listing = await client.get(f"/api/v1/projects/{project_id}/items")
     first = listing.json()["items"][0]
     item_id = first["id"]
@@ -512,8 +514,11 @@ async def test_items_can_be_listed_by_the_run_that_wrote_them(client: AsyncClien
     assert other.json()["items"] == []
 
 
-async def test_a_user_edit_is_a_revision_credited_to_the_user(client: AsyncClient) -> None:
+async def test_a_user_edit_is_a_revision_credited_to_the_user(
+    app: FastAPI, client: AsyncClient
+) -> None:
     project_id, _thread_id = await seeded_run(client)
+    await open_review(app, project_id)
     listing = await client.get(f"/api/v1/projects/{project_id}/items")
     first = listing.json()["items"][0]
 
@@ -533,8 +538,9 @@ async def test_a_user_edit_is_a_revision_credited_to_the_user(client: AsyncClien
     assert edited.json()["created_by"]["actor"] == "agent"
 
 
-async def test_an_item_can_be_read_at_an_earlier_version(client: AsyncClient) -> None:
+async def test_an_item_can_be_read_at_an_earlier_version(app: FastAPI, client: AsyncClient) -> None:
     project_id, _thread_id = await seeded_run(client)
+    await open_review(app, project_id)
     listing = await client.get(
         f"/api/v1/projects/{project_id}/items", params={"kind": "spec_requirement"}
     )
@@ -583,8 +589,11 @@ async def test_every_version_of_an_artifact_can_be_read(client: AsyncClient) -> 
     assert (await client.get(f"/api/v1/artifacts/{uuid4()}")).status_code == 404
 
 
-async def test_the_items_of_an_artifact_can_be_read_as_they_were(client: AsyncClient) -> None:
+async def test_the_items_of_an_artifact_can_be_read_as_they_were(
+    app: FastAPI, client: AsyncClient
+) -> None:
     project_id, _thread_id = await seeded_run(client)
+    await open_review(app, project_id)
     artifacts = await client.get(f"/api/v1/projects/{project_id}/artifacts")
     spec = next(a for a in artifacts.json()["items"] if a["kind"] == "requirement_specification")
     now = (await client.get(f"/api/v1/artifacts/{spec['id']}/items")).json()["items"]
@@ -673,8 +682,11 @@ async def test_a_review_marks_no_link_as_out_of_date(client: AsyncClient) -> Non
             assert change["made_from_version"] == change["current_version"]
 
 
-async def test_a_link_to_an_item_that_changed_afterwards_needs_a_check(client: AsyncClient) -> None:
+async def test_a_link_to_an_item_that_changed_afterwards_needs_a_check(
+    app: FastAPI, client: AsyncClient
+) -> None:
     project_id, _thread_id = await seeded_run(client)
+    await open_review(app, project_id)
     links = (
         await client.get(
             f"/api/v1/projects/{project_id}/trace-links", params={"link_type": "derived_from"}
@@ -853,3 +865,27 @@ async def test_a_directive_lists_the_items_it_refers_to_with_their_roles(
     assert first["items"][0]["item"]["version"] == issue["version"]
     assert first["issued_by_step_id"] is None
     assert first["details"] == {}
+
+
+async def test_a_content_schema_is_served_at_any_version_it_has(client: AsyncClient) -> None:
+    await seeded_run(client)
+    kinds = (await client.get("/api/v1/artifact-kinds")).json()["artifact_kinds"]
+    persona = next(
+        item for kind in kinds for item in kind["item_kinds"] if item["kind"] == "persona"
+    )
+
+    current = await client.get(f"/api/v1/content-schemas/persona/{persona['schema_version']}")
+    older = await client.get("/api/v1/content-schemas/persona/1")
+
+    assert persona["schema_version"] == 2
+    assert current.status_code == 200
+    assert current.json() == persona["schema"]
+    assert current.headers["cache-control"] == "public, max-age=31536000, immutable"
+    assert older.status_code == 200
+    assert older.json()["x-schema-version"] == 1
+    assert "evidence" not in older.json()["properties"]
+    assert "evidence" in current.json()["properties"]
+    stakeholder = older.json()["properties"]["stakeholder_type"]
+    assert "x-value-from" in stakeholder or "enum" in stakeholder
+    for path in ("/persona/9", "/nothing/1", "/persona/0"):
+        assert (await client.get(f"/api/v1/content-schemas{path}")).status_code == 404

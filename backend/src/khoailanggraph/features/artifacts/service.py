@@ -36,7 +36,7 @@ from khoailanggraph.domain.keys import (
     interview_message_key,
     key,
 )
-from khoailanggraph.domain.registry import schema_dict
+from khoailanggraph.domain.registry import schema_dict, schema_dict_at
 from khoailanggraph.domain.rules import LinkCandidate
 from khoailanggraph.features.artifacts import schemas, traceability
 from khoailanggraph.features.artifacts.models import (
@@ -75,6 +75,7 @@ def item_revision_row(entry: ArtifactItemRow, reason: str, by: Origin) -> ItemRe
                 "position": entry.position,
                 "parent_item_id": str(entry.parent_item_id) if entry.parent_item_id else None,
                 "review_status": entry.review_status,
+                "deleted": entry.deleted_at is not None,
             }
         ),
         change_reason=reason,
@@ -155,6 +156,7 @@ class SqlArtifactSink:
         run_id: UUID | None = None,
         user_id: UUID | None = None,
         thread_id: UUID | None = None,
+        as_user: bool = False,
     ) -> None:
         self.engine = engine
         self.run_id = run_id
@@ -163,6 +165,8 @@ class SqlArtifactSink:
         # (an approval, an edit at a review), when there is one.
         self.agent_role: str | None = None
         self.user_id = user_id
+        # The user makes every write of this sink (a change in a document), not an agent.
+        self.as_user = as_user
         self._session: Session | None = None
         # What the node wrote since it began: the refs of its report.
         self._touched_artifacts: dict[UUID, None] = {}
@@ -224,7 +228,7 @@ class SqlArtifactSink:
 
     def _origin(self, *, by_user: bool = False) -> Origin:
         """Who the next write is credited to: the user of a decision, else the running agent."""
-        if by_user and self.user_id is not None:
+        if (by_user or self.as_user) and self.user_id is not None:
             return Origin(actor="user", user_id=self.user_id, run_id=self.run_id)
         return Origin.of_agent(self.agent_role, self.run_id)
 
@@ -1016,7 +1020,7 @@ async def _live_links(
     return [(link, src, tgt) for link, src, tgt in result.all()]
 
 
-def _link_view(link: TraceLinkRow) -> schemas.TraceLink:
+def link_view(link: TraceLinkRow) -> schemas.TraceLink:
     return schemas.TraceLink(
         id=str(link.id),
         source_item_id=str(link.source_item_id),
@@ -1037,7 +1041,7 @@ async def list_project_links(
     cursor: int,
 ) -> tuple[list[schemas.TraceLink], int | None]:
     """The current trace links of a project."""
-    views = [_link_view(link) for link, _source, _target in await _live_links(session, project_id)]
+    views = [link_view(link) for link, _source, _target in await _live_links(session, project_id)]
     window = views[cursor : cursor + limit]
     next_cursor = cursor + len(window) if cursor + len(window) < len(views) else None
     return window, next_cursor
@@ -1116,9 +1120,9 @@ async def traceability_coverage(session: AsyncSession, project_id: UUID) -> sche
 
 
 async def item_revisions(session: AsyncSession, item_id: UUID) -> list[schemas.ItemRevision]:
-    """The versions of one item, newest first (TIMELINE)."""
+    """The versions of one item, newest first; they stay readable after the item is deleted."""
     row = await session.get(ArtifactItemRow, item_id)
-    if row is None or row.deleted_at is not None:
+    if row is None:
         raise ApiError(404, "not_found", "Not found", "The item does not exist.")
     history = list(
         (
@@ -1180,8 +1184,34 @@ async def _trace_of(
             )
             for node in nodes
         ],
-        links=[_link_view(links[edge.id]) for edge in edges],
+        links=[link_view(links[edge.id]) for edge in edges],
     )
+
+
+async def artifact_revisions(
+    session: AsyncSession, artifact_id: UUID
+) -> list[schemas.ArtifactRevision]:
+    """The versions of one artifact, newest first, each with the content it had."""
+    row = await session.get(ArtifactRow, artifact_id)
+    if row is None or row.deleted_at is not None:
+        raise ApiError(404, "not_found", "Not found", "The artifact does not exist.")
+    history = (
+        await session.scalars(
+            select(ArtifactRevisionRow)
+            .where(ArtifactRevisionRow.artifact_id == artifact_id)
+            .order_by(ArtifactRevisionRow.version.desc())
+        )
+    ).all()
+    return [
+        schemas.ArtifactRevision(
+            version=entry.version,
+            change_reason=str(entry.change_reason),
+            changed_by=_origin_view(origins.read(entry, "changed")),
+            created_at=entry.created_at,
+            content=_loads(entry.snapshot_json or b"{}").get("content", {}),
+        )
+        for entry in history
+    ]
 
 
 async def item_trace(
@@ -1358,8 +1388,13 @@ async def get_artifact(
     return artifact_view(then, len(_loads(revision.item_versions_json)))
 
 
-def _with_value_lists(kind: str, value_lists: dict[str, Any]) -> dict[str, Any]:
-    output = json.loads(json.dumps(dict(schema_dict(kind))))
+def _with_value_lists(
+    kind: str, value_lists: dict[str, Any], version: int | None = None
+) -> dict[str, Any]:
+    """The content schema of a kind (at `version`, else the current one), with the allowed values
+    of every field that names a value list filled in from the definition."""
+    source = schema_dict(kind) if version is None else schema_dict_at(kind, version)
+    output = json.loads(json.dumps(dict(source or {})))
     for field_schema in output.get("properties", {}).values():
         if isinstance(field_schema, dict) and "x-value-list" in field_schema:
             name = str(field_schema["x-value-list"])
@@ -1409,3 +1444,11 @@ def artifact_kinds_response(workflow: Any) -> dict[str, Any]:
         "workflow_version": int(workflow.DEFINITION["version"]),
         "artifact_kinds": artifact_kinds,
     }
+
+
+def content_schema_at(workflow: Any, kind: str, version: int) -> dict[str, Any]:
+    """The content schema of an artifact kind or an item kind at one version, as the client
+    shows what was stored with it; 404 when the kind or the version does not exist."""
+    if schema_dict_at(kind, version) is None:
+        raise ApiError(404, "not_found", "Not found", "The content schema does not exist.")
+    return _with_value_lists(kind, workflow.value_lists(), version)
