@@ -134,10 +134,15 @@ layers = [
 # enumerated, never wildcarded; the domain-error translation that would
 # remove these is a follow-up in backend/gap-report.md.
 ignore_imports = [
+    "khoailanggraph.features.artifacts.editing -> khoailanggraph.api.errors",
     "khoailanggraph.features.artifacts.router -> khoailanggraph.api.deps",
     "khoailanggraph.features.artifacts.router -> khoailanggraph.api.errors",
     "khoailanggraph.features.artifacts.router -> khoailanggraph.api.schemas",
     "khoailanggraph.features.artifacts.service -> khoailanggraph.api.errors",
+    "khoailanggraph.features.documents.router -> khoailanggraph.api.deps",
+    "khoailanggraph.features.documents.router -> khoailanggraph.api.errors",
+    "khoailanggraph.features.documents.router -> khoailanggraph.api.schemas",
+    "khoailanggraph.features.documents.service -> khoailanggraph.api.errors",
     "khoailanggraph.features.me.router -> khoailanggraph.api.deps",
     "khoailanggraph.features.me.router -> khoailanggraph.api.errors",
     "khoailanggraph.features.me.service -> khoailanggraph.api.errors",
