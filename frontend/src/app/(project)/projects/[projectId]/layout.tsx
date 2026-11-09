@@ -8,6 +8,9 @@ import { ProjectDialogs } from '@/modules/project/widgets/dialogs'
 import { ProjectSwitcher } from '@/modules/project/widgets/menu'
 import { ProjectRunStatusItem } from '@/modules/project/widgets/status'
 import { TraceDialogs } from '@/modules/trace/widgets/dialogs'
+import { TraceCommands } from '@/modules/traceability/widgets/commands'
+import { traceDestination } from '@/modules/traceability/widgets/panel'
+import { TraceStreams } from '@/modules/traceability/widgets/streams'
 import { MonthlyBudgetItem } from '@/modules/usage/entities'
 import { AccountMenuItem } from '@/modules/user/widgets/menu'
 import { TabbedWorkspace, UntabbedWorkspace, Workbench } from '@/shared/components/frame'
@@ -30,6 +33,8 @@ function projectContributions(projectId: string) {
       <ActivityDialogs />
       <DocumentDialogs />
       <TraceDialogs projectId={projectId} />
+      <TraceCommands projectId={projectId} />
+      <TraceStreams projectId={projectId} />
       <ProjectRunStatusItem projectId={projectId} />
       <MonthlyBudgetItem />
       <DocumentsTabIcons />
@@ -52,7 +57,11 @@ export default async function ProjectLayout({
   const { projectId } = await params
   const crumb = <ProjectSwitcher projectId={projectId} />
   // The features of a project join the activity bar as they are built.
-  const destinations = [activityDestination(projectId), documentsDestination(projectId)]
+  const destinations = [
+    activityDestination(projectId),
+    documentsDestination(projectId),
+    traceDestination(projectId),
+  ]
 
   return (
     <ProjectGate

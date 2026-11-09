@@ -25,16 +25,13 @@ export function projectRoutes(projectId: string) {
       ),
     /** One item, by its id, whatever artifact holds it. */
     item: (itemId: string) => checkedRoute(`/projects/${id}/items/${encodeId(itemId)}`),
-    // The pages of Trace come with its screen; until then, their addresses name data that no
-    // folder of src/app/ holds, so `checkedRoute` cannot check them yet.
     /** The start page of the trace of the project. */
-    trace: () => routeOfAddress(`/projects/${id}/trace`),
+    trace: () => checkedRoute(`/projects/${id}/trace`),
     /** The chain of one item, by its id. */
-    itemTrace: (itemId: string) =>
-      routeOfAddress(`/projects/${id}/trace/items/${encodeId(itemId)}`),
+    itemTrace: (itemId: string) => checkedRoute(`/projects/${id}/trace/items/${encodeId(itemId)}`),
     /** The items of one gap of the coverage, by its key. */
-    traceGap: (gapKey: string) => routeOfAddress(`/projects/${id}/trace/gaps/${encodeId(gapKey)}`),
+    traceGap: (gapKey: string) => checkedRoute(`/projects/${id}/trace/gaps/${encodeId(gapKey)}`),
     /** The open issues of the project. */
-    traceIssues: () => routeOfAddress(`/projects/${id}/trace/issues`),
+    traceIssues: () => checkedRoute(`/projects/${id}/trace/issues`),
   }
 }

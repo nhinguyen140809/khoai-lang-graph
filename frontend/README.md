@@ -324,15 +324,18 @@ The screens have two kinds of reader. The developer view uses the words of the s
 - **Title and label.** A title is text that comes with the data and reads the same in every view: the title of an artifact or an item, of a stage or a value list of the workflow definition, of a property of a content schema. A label is text that the app writes, for a value of the system or for a control: a `Wording` table of the labels of a value is named `<value>Labels`, such as `runStatusLabels`, and a function that gives the text in the view of the app is named `use<Value>Label`. A field whose name the API fixes, such as the `label` of a node of the workflow graph, keeps the name of the API.
 - **Nouns.** The sentences of the screens for users take the user word of this table; code, comments and the developer view keep the system word.
 
-| System word           | User word | Where                                                                                  |
-| --------------------- | --------- | -------------------------------------------------------------------------------------- |
-| Thread, console       | Activity  | The feature of a project where the agents work and the user writes, `modules/activity` |
-| Run                   | Not shown | The status of a project says it instead: Working, Waiting for you, Done                |
-| Checkpoint, interrupt | Review    |                                                                                        |
-| Artifact              | Document  |                                                                                        |
-| Run settings          | Agents    | The settings that the agents start from, in the dialog that creates a project          |
+| System word           | User word | Where                                                                                                 |
+| --------------------- | --------- | ----------------------------------------------------------------------------------------------------- |
+| Thread, console       | Activity  | The feature of a project where the agents work and the user writes, `modules/activity`                |
+| Run                   | Not shown | The status of a project says it instead: Working, Waiting for you, Done                               |
+| Checkpoint, interrupt | Review    |                                                                                                       |
+| Artifact              | Document  |                                                                                                       |
+| Run settings          | Agents    | The settings that the agents start from, in the dialog that creates a project                         |
+| Trace of a run        | Run trace | The trace of an item is Trace; the trace of a run is another object, named only in the developer view |
 
 The labels of the stages, of the options of a checkpoint and of the artifact and item kinds come from the workflow definition and the content schemas, not from the web app.
+
+An item names itself by its kind and its title, with its key optional and always last (`RecordName` and `RecordNameTooltip` of `shared/components/ui/record-name.tsx`): the key is shown only where it helps, such as the search results where a user may type one, the key line of the item page and the tooltip of a node of the chain graph. A link is a link in both views: "Link to another item", "Remove this link", "See its trace".
 
 ## Low-memory development
 
