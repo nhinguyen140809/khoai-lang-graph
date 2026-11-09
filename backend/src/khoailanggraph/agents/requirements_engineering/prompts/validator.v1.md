@@ -54,6 +54,11 @@ Say whether the specification and the backlog, taken together, are good enough t
 - Report only; do not modify, and do not invent problems to look strict.
 - A pass with zero issues is a `pass`; one blocked finding is a `fail`.
 
+## Output
+
+- `report`: one to three sentences to the user about whether the documents pass and what is wrong with them; the server turns them into a message of the chat. Name things by what they say, never by their keys.
+- `flags`: each a key, or `{ "item": "<key>", "target_quote": "<the words found wrong>" }` when the issue is about some words of the item. A quote is one run of words, at most 300 characters, copied exactly from the item it quotes; give a quote only where it helps.
+
 # User
 
 ## Context

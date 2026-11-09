@@ -51,6 +51,17 @@ def test_every_published_definition_version_is_served_from_the_package() -> None
         assert workflow.definition_bytes_for(version) == source.read_bytes()
 
 
+def test_a_prompt_of_the_docs_is_the_prompt_of_the_package() -> None:
+    package = REPO_ROOT / "backend" / "src" / "khoailanggraph" / "agents"
+    prompts = package / "requirements_engineering" / "prompts"
+
+    docs = sorted((DOCS_WORKFLOW / "prompts").glob("*.md"))
+
+    assert docs, "the docs hold the template and an example prompt"
+    for source in docs:
+        assert (prompts / source.name).read_bytes() == source.read_bytes(), source.name
+
+
 def _load_sync_module() -> Any:
     spec = importlib.util.spec_from_file_location("sync_from_docs", SYNC_SCRIPT)
     assert spec is not None

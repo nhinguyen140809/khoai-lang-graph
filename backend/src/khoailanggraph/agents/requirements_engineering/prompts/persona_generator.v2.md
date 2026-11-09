@@ -60,6 +60,7 @@ Cluster the observations into stakeholder groups, then produce the requested num
 
 ## Output
 
+- `report`: one to three sentences to the user about who the interviewees are, and which kinds of stakeholders no evidence covers; the server turns them into a message of the chat. Name things by what they say, never by their keys.
 - Every observation key you consolidate into a group appears in that group's `observations`; every persona's `grounded_in` holds observation keys, never group keys.
 - `evidence` entries carry observation and source keys exactly as given in `<observations>`; the quote is the observation's `evidence`, copied exactly.
 - `stakeholder_groups` are reported once, before the personas; they are the record of how the evidence was consolidated.

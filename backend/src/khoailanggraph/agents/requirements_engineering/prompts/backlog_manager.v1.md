@@ -52,6 +52,11 @@ Turn every specified requirement into actionable backlog items — epics and use
 - Every story implements at least one requirement (`derived_from`); every requirement is implemented by at least one story.
 - An epic has a title and criteria but its `as_a`, `i_want` and `so_that` are null.
 
+## Output
+
+- `report`: one to three sentences to the user about what the backlog holds and what it leaves out; the server turns them into a message of the chat. Name things by what they say, never by their keys.
+- `derived_from`: each a key, or `{ "item": "<key>", "source_quote": "<words of this item>", "target_quote": "<words of that requirement>" }` when the item uses a part of the requirement or is built from several. A quote is one run of words, at most 300 characters, copied exactly from the item it quotes; give a quote only where it helps.
+
 # User
 
 ## Context

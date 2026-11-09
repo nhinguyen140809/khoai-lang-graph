@@ -54,6 +54,10 @@ From the given search hits, select the documents that carry real voices of the s
 - Prefer primary material: studies, surveys, interviews, forum threads, complaint logs.
 - Write every text field of the output in {{ output_language }}; keep `url` exactly as given.
 
+## Output
+
+- `report`: one to three sentences to the user about the documents you kept and anything the corpus lacks; the server turns them into a message of the chat. Name things by what they say, never by their keys.
+
 # User
 
 ## Context

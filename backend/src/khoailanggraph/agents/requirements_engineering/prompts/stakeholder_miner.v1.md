@@ -52,6 +52,11 @@ Return one observation for every distinct evaluative dimension a stakeholder gro
 - Copy the `source` key exactly from `<source>` into every observation.
 - Write every text field except `evidence` in {{ output_language }}.
 
+## Output
+
+- `report`: one to three sentences to the user about what the stakeholders of this document care about; the server turns them into a message of the chat. Name things by what they say, never by their keys.
+- The server links each observation to its document and uses `evidence` as the quote of that link, so copy `evidence` exactly from the document.
+
 # User
 
 ## Context

@@ -47,6 +47,10 @@ Read the pending messages together with the current artifacts and pick the node 
 - Route to a node only from the permitted targets; never to a persona agent.
 - A message that just restates a wish that is already covered by the artifacts routes to the node that would be next.
 
+## Output
+
+- `report`: one to three sentences to the user about which step you send the message to and why; the server turns them into a message of the chat. Name things by what they say, never by their keys.
+
 # User
 
 ## Context

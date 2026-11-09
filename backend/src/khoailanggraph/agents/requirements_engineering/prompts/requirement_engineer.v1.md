@@ -66,6 +66,11 @@ Write the formal, testable requirement specification from the analyzed requireme
 - One requirement per item: a statement that can be met in part is several requirements.
 - A non-functional requirement has a `fit_criterion`; a functional requirement has acceptance criteria; a constraint may have either when it makes the check measurable.
 
+## Output
+
+- `report`: one to three sentences to the user about what the specification covers and any requirement that needs a decision; the server turns them into a message of the chat. Name things by what they say, never by their keys.
+- `derived_from`: each a key, or `{ "item": "<key>", "source_quote": "<words of this requirement>", "target_quote": "<words of that item>" }` when the requirement uses a part of the item or is built from several items. A quote is one run of words, at most 300 characters, copied exactly from the item it quotes; give a quote only where it helps.
+
 # User
 
 ## Context

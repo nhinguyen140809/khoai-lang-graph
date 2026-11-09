@@ -41,6 +41,10 @@ Write the elicitation plan the interviewers will follow: what the interviews mus
 - Do not invent stakeholders with names; list types, not personas.
 - Keep each objective, topic, gap, strategy and stopping condition to one clear sentence.
 
+## Output
+
+- `report`: one to three sentences to the user about the plan: who you will interview and about what, and anything in the idea that is unclear; the server turns them into a message of the chat. Name things by what they say, never by their keys.
+
 # User
 
 ## Context
