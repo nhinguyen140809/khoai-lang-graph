@@ -1,20 +1,22 @@
 {
   "$schema": "https://json-schema.org/draft/2020-12/schema",
   "$id": "items/latent_need/v1",
-  "title": "Latent need",
+  "title": "Unstated need",
   "description": "A need no persona stated directly, inferred from what they said.",
   "x-level": "item",
   "x-kind": "latent_need",
   "x-schema-version": 1,
   "x-key-prefix": "LN",
   "x-ui-display": "table",
-  "x-ui-title-field": "description",
+  "x-ui-navigable": true,
+  "x-ui-title-field": "title",
   "x-ui-list-fields": [
-    "description",
+    "title",
     "confidence",
     "disposition"
   ],
   "x-ui-field-order": [
+    "title",
     "description",
     "reasoning",
     "confidence",
@@ -23,17 +25,26 @@
   "type": "object",
   "additionalProperties": false,
   "properties": {
+    "title": {
+      "title": "Title",
+      "type": "string",
+      "description": "A short name of at most 60 characters that tells the point of the item at a glance, for example \"Find a mentor in my field\".",
+      "x-ui-widget": "text"
+    },
     "description": {
+      "title": "Description",
       "type": "string",
       "description": "The need.",
       "x-ui-widget": "textarea"
     },
     "reasoning": {
+      "title": "Reasoning",
       "type": "string",
       "description": "Why the analyst inferred it.",
       "x-ui-widget": "textarea"
     },
     "confidence": {
+      "title": "Confidence",
       "type": "string",
       "enum": [
         "low",
@@ -44,6 +55,7 @@
       "x-ui-widget": "select"
     },
     "disposition": {
+      "title": "Disposition",
       "type": "string",
       "enum": [
         "open",
@@ -55,6 +67,7 @@
     }
   },
   "required": [
+    "title",
     "description",
     "reasoning",
     "confidence",

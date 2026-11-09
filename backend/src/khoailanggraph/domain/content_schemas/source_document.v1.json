@@ -1,8 +1,8 @@
 {
   "$schema": "https://json-schema.org/draft/2020-12/schema",
   "$id": "items/source_document/v1",
-  "title": "Source document",
-  "description": "One research document of the corpus, selected for its real stakeholder voices.",
+  "title": "Research document",
+  "description": "One research document of the corpus, kept for the stakeholder mining.",
   "x-level": "item",
   "x-kind": "source_document",
   "x-schema-version": 1,
@@ -20,45 +20,63 @@
     "year",
     "excerpt",
     "text",
+    "origin",
     "relevance_reason"
   ],
   "type": "object",
   "additionalProperties": false,
   "properties": {
     "title": {
+      "title": "Title",
       "type": "string",
-      "description": "Title of the document, copied from the search hit.",
+      "description": "A short name of at most 60 characters for the document, shortened from the title of the search hit or the name of the uploaded file.",
       "x-ui-widget": "text"
     },
     "url": {
+      "title": "Link",
       "type": "string",
       "description": "Where the document was found, copied exactly.",
       "x-ui-widget": "text"
     },
     "publisher": {
+      "title": "Publisher",
       "type": "string",
       "description": "Site, journal or forum that published it.",
       "x-ui-widget": "text"
     },
     "year": {
+      "title": "Year",
       "type": "string",
       "description": "Publication year when the hit shows one, empty otherwise.",
       "x-ui-widget": "text"
     },
     "excerpt": {
+      "title": "Excerpt",
       "type": "string",
       "description": "Short verbatim snippet showing the stakeholder voice in the document.",
       "x-ui-widget": "textarea"
     },
     "text": {
+      "title": "Text",
       "type": "string",
       "description": "The document text the search hit brought, copied verbatim; the miner extracts its evidence quotes from it.",
       "x-ui-widget": "textarea"
     },
     "relevance_reason": {
+      "title": "Why it matters",
       "type": "string",
       "description": "Which stakeholder types or topics of the plan this document covers.",
       "x-ui-widget": "textarea"
+    },
+    "origin": {
+      "title": "Origin",
+      "type": "string",
+      "enum": [
+        "web",
+        "upload"
+      ],
+      "description": "Where the document came from: a live-search hit or a member upload.",
+      "x-ui-widget": "select"
     }
   },
   "required": [
@@ -68,6 +86,8 @@
     "year",
     "excerpt",
     "text",
-    "relevance_reason"
-  ]
+    "relevance_reason",
+    "origin"
+  ],
+  "x-ui-navigable": true
 }

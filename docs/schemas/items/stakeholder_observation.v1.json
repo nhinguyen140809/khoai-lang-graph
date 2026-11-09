@@ -26,7 +26,7 @@
     "stakeholder_name": {
       "title": "Stakeholder",
       "type": "string",
-      "description": "The stakeholder group as the document itself names it, for example \"commuter students\".",
+      "description": "The stakeholder group as the document itself names it, in at most 60 characters, for example \"commuter students\".",
       "x-ui-widget": "text"
     },
     "description": {

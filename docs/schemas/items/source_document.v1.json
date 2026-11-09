@@ -29,7 +29,7 @@
     "title": {
       "title": "Title",
       "type": "string",
-      "description": "Title of the document, copied from the search hit.",
+      "description": "A short name of at most 60 characters for the document, shortened from the title of the search hit or the name of the uploaded file.",
       "x-ui-widget": "text"
     },
     "url": {

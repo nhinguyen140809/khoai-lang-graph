@@ -8,6 +8,7 @@
   "x-schema-version": 1,
   "x-key-prefix": "SEC",
   "x-ui-display": "heading",
+  "x-ui-navigable": true,
   "x-ui-title-field": "title",
   "x-ui-list-fields": [
     "title"
@@ -20,11 +21,13 @@
   "additionalProperties": false,
   "properties": {
     "title": {
+      "title": "Title",
       "type": "string",
       "description": "Heading text, without its number. The number, for example 3.2, is derived from the position of the section.",
       "x-ui-widget": "text"
     },
     "introduction": {
+      "title": "Introduction",
       "type": [
         "string",
         "null"

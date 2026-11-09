@@ -1,8 +1,8 @@
 {
   "$schema": "https://json-schema.org/draft/2020-12/schema",
   "$id": "artifacts/persona_catalog/v2",
-  "title": "Persona catalog",
-  "description": "The set of evidence-grounded personas generated for the project, with their stakeholder groups.",
+  "title": "Interviewees",
+  "description": "The set of evidence-grounded interviewees of the project, with their stakeholder groups.",
   "x-level": "artifact",
   "x-kind": "persona_catalog",
   "x-schema-version": 2,
@@ -16,11 +16,13 @@
   "additionalProperties": false,
   "properties": {
     "selection_rationale": {
+      "title": "Selection rationale",
       "type": "string",
       "description": "Why these personas were chosen for the stakeholder types of the plan.",
       "x-ui-widget": "textarea"
     },
     "stakeholder_groups": {
+      "title": "Stakeholder groups",
       "type": "array",
       "items": {
         "type": "object",
@@ -42,12 +44,17 @@
             "description": "Keys of the stakeholder observations consolidated into this group."
           }
         },
-        "required": ["name", "description", "observations"]
+        "required": [
+          "name",
+          "description",
+          "observations"
+        ]
       },
       "description": "How the mined observations were consolidated before the personas were built.",
       "x-ui-widget": "list"
     },
     "uncovered_stakeholder_types": {
+      "title": "Uncovered stakeholder types",
       "type": "array",
       "items": {
         "type": "string"

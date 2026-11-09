@@ -1,31 +1,41 @@
 {
   "$schema": "https://json-schema.org/draft/2020-12/schema",
   "$id": "items/raw_requirement/v1",
-  "title": "Raw requirement",
+  "title": "Stated need",
   "description": "A requirement as stated in an interview, before any rewriting.",
   "x-level": "item",
   "x-kind": "raw_requirement",
   "x-schema-version": 1,
   "x-key-prefix": "RAW",
   "x-ui-display": "table",
-  "x-ui-title-field": "statement",
+  "x-ui-navigable": true,
+  "x-ui-title-field": "title",
   "x-ui-list-fields": [
-    "statement",
+    "title",
     "topic"
   ],
   "x-ui-field-order": [
+    "title",
     "statement",
     "topic"
   ],
   "type": "object",
   "additionalProperties": false,
   "properties": {
+    "title": {
+      "title": "Title",
+      "type": "string",
+      "description": "A short name of at most 60 characters that tells the point of the item at a glance, for example \"Find a mentor in my field\".",
+      "x-ui-widget": "text"
+    },
     "statement": {
+      "title": "Statement",
       "type": "string",
       "description": "The requirement, close to the persona's own words.",
       "x-ui-widget": "textarea"
     },
     "topic": {
+      "title": "Topic",
       "type": [
         "string",
         "null"
@@ -36,6 +46,7 @@
     }
   },
   "required": [
+    "title",
     "statement",
     "topic"
   ]

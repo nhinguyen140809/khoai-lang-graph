@@ -2,7 +2,7 @@
 
 The canonical schema files of workflow definition version 2 live beside this
 module (`content_schemas/*.v1.json`, and the v2 files of `persona` and
-`persona_catalog`); the typed content models mirror them and a unit test
+`persona_catalog`), as copies of `docs/schemas/`; the typed content models mirror them and a unit test
 fails when the two drift apart. This module is the single place that knows
 which model and which schema file belong to a kind. The versions live in one
 map so they mirror the `schema_version` of `definition.v2.json` without the
@@ -52,7 +52,6 @@ _DEFAULT_SCHEMA_VERSION = 1
 SCHEMA_VERSIONS: dict[str, int] = {
     "persona": 2,
     "persona_catalog": 2,
-    "source_document": 2,
 }
 
 ARTIFACT_CONTENT_MODELS: dict[str, type[BaseModel]] = {

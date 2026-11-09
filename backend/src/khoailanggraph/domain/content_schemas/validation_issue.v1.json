@@ -1,21 +1,23 @@
 {
   "$schema": "https://json-schema.org/draft/2020-12/schema",
   "$id": "items/validation_issue/v1",
-  "title": "Validation issue",
+  "title": "Problem to solve",
   "description": "A problem the validator found.",
   "x-level": "item",
   "x-kind": "validation_issue",
   "x-schema-version": 1,
   "x-key-prefix": "VAL",
   "x-ui-display": "table",
-  "x-ui-title-field": "description",
+  "x-ui-navigable": true,
+  "x-ui-title-field": "title",
   "x-ui-list-fields": [
-    "description",
+    "title",
     "category",
     "severity",
     "status"
   ],
   "x-ui-field-order": [
+    "title",
     "category",
     "severity",
     "description",
@@ -25,13 +27,21 @@
   "type": "object",
   "additionalProperties": false,
   "properties": {
+    "title": {
+      "title": "Title",
+      "type": "string",
+      "description": "A short name of at most 60 characters that tells the point of the item at a glance, for example \"Find a mentor in my field\".",
+      "x-ui-widget": "text"
+    },
     "category": {
+      "title": "Category",
       "type": "string",
       "x-value-list": "validation_category",
       "description": "The part of the output the issue is about.",
       "x-ui-widget": "select"
     },
     "severity": {
+      "title": "Severity",
       "type": "string",
       "enum": [
         "low",
@@ -39,14 +49,16 @@
         "high"
       ],
       "description": "How serious the issue is.",
-      "x-ui-widget": "select"
+      "x-ui-widget": "badge"
     },
     "description": {
+      "title": "Description",
       "type": "string",
       "description": "What is wrong.",
       "x-ui-widget": "textarea"
     },
     "suggestion": {
+      "title": "Suggestion",
       "type": [
         "string",
         "null"
@@ -55,6 +67,7 @@
       "x-ui-widget": "textarea"
     },
     "status": {
+      "title": "Status",
       "type": "string",
       "enum": [
         "open",
@@ -62,10 +75,11 @@
         "dismissed"
       ],
       "description": "State of the issue.",
-      "x-ui-widget": "select"
+      "x-ui-widget": "badge"
     }
   },
   "required": [
+    "title",
     "category",
     "severity",
     "description",

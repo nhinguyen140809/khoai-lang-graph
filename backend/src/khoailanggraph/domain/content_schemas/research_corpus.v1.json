@@ -14,6 +14,7 @@
   "additionalProperties": false,
   "properties": {
     "selection_rationale": {
+      "title": "Why these documents",
       "type": "string",
       "description": "Why these documents were kept for the stakeholder types of the plan.",
       "x-ui-widget": "textarea"

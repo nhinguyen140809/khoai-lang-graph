@@ -15,6 +15,7 @@
   "additionalProperties": false,
   "properties": {
     "key_findings": {
+      "title": "Key findings",
       "type": "array",
       "items": {
         "type": "string"
@@ -23,6 +24,7 @@
       "x-ui-widget": "list"
     },
     "open_questions": {
+      "title": "Open questions",
       "type": "array",
       "items": {
         "type": "string"

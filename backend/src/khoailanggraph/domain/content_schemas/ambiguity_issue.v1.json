@@ -1,20 +1,22 @@
 {
   "$schema": "https://json-schema.org/draft/2020-12/schema",
   "$id": "items/ambiguity_issue/v1",
-  "title": "Ambiguity issue",
+  "title": "Point to clarify",
   "description": "A statement that can be read in more than one way or lacks needed detail.",
   "x-level": "item",
   "x-kind": "ambiguity_issue",
   "x-schema-version": 1,
   "x-key-prefix": "AMB",
   "x-ui-display": "table",
-  "x-ui-title-field": "description",
+  "x-ui-navigable": true,
+  "x-ui-title-field": "title",
   "x-ui-list-fields": [
-    "description",
+    "title",
     "ambiguity_type",
     "status"
   ],
   "x-ui-field-order": [
+    "title",
     "description",
     "ambiguity_type",
     "ambiguous_text",
@@ -25,28 +27,39 @@
   "type": "object",
   "additionalProperties": false,
   "properties": {
+    "title": {
+      "title": "Title",
+      "type": "string",
+      "description": "A short name of at most 60 characters that tells the point of the item at a glance, for example \"Find a mentor in my field\".",
+      "x-ui-widget": "text"
+    },
     "description": {
+      "title": "Description",
       "type": "string",
       "description": "What is unclear.",
       "x-ui-widget": "textarea"
     },
     "ambiguity_type": {
+      "title": "Ambiguity type",
       "type": "string",
       "x-value-list": "ambiguity_type",
       "description": "Kind of ambiguity.",
       "x-ui-widget": "select"
     },
     "ambiguous_text": {
+      "title": "Ambiguous text",
       "type": "string",
       "description": "The exact wording at issue.",
       "x-ui-widget": "textarea"
     },
     "clarifying_question": {
+      "title": "Clarifying question",
       "type": "string",
       "description": "What to ask to resolve it.",
       "x-ui-widget": "textarea"
     },
     "status": {
+      "title": "Status",
       "type": "string",
       "enum": [
         "open",
@@ -54,9 +67,10 @@
         "dismissed"
       ],
       "description": "State of the issue.",
-      "x-ui-widget": "select"
+      "x-ui-widget": "badge"
     },
     "resolution": {
+      "title": "Resolution",
       "type": [
         "string",
         "null"
@@ -66,6 +80,7 @@
     }
   },
   "required": [
+    "title",
     "description",
     "ambiguity_type",
     "ambiguous_text",

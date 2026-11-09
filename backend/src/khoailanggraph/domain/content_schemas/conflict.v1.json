@@ -1,20 +1,22 @@
 {
   "$schema": "https://json-schema.org/draft/2020-12/schema",
   "$id": "items/conflict/v1",
-  "title": "Conflict",
+  "title": "Disagreement",
   "description": "Requirements, or wishes of personas, that cannot all hold.",
   "x-level": "item",
   "x-kind": "conflict",
   "x-schema-version": 1,
   "x-key-prefix": "CONF",
   "x-ui-display": "table",
-  "x-ui-title-field": "description",
+  "x-ui-navigable": true,
+  "x-ui-title-field": "title",
   "x-ui-list-fields": [
-    "description",
+    "title",
     "severity",
     "status"
   ],
   "x-ui-field-order": [
+    "title",
     "description",
     "conflict_type",
     "severity",
@@ -25,18 +27,27 @@
   "type": "object",
   "additionalProperties": false,
   "properties": {
+    "title": {
+      "title": "Title",
+      "type": "string",
+      "description": "A short name of at most 60 characters that tells the point of the item at a glance, for example \"Find a mentor in my field\".",
+      "x-ui-widget": "text"
+    },
     "description": {
+      "title": "Description",
       "type": "string",
       "description": "What conflicts.",
       "x-ui-widget": "textarea"
     },
     "conflict_type": {
+      "title": "Conflict type",
       "type": "string",
       "x-value-list": "conflict_type",
       "description": "Kind of conflict.",
       "x-ui-widget": "select"
     },
     "severity": {
+      "title": "Severity",
       "type": "string",
       "enum": [
         "low",
@@ -44,9 +55,10 @@
         "high"
       ],
       "description": "How much it blocks the specification.",
-      "x-ui-widget": "select"
+      "x-ui-widget": "badge"
     },
     "proposed_resolutions": {
+      "title": "Proposed resolutions",
       "type": "array",
       "items": {
         "type": "string"
@@ -55,6 +67,7 @@
       "x-ui-widget": "list"
     },
     "status": {
+      "title": "Status",
       "type": "string",
       "enum": [
         "open",
@@ -62,9 +75,10 @@
         "dismissed"
       ],
       "description": "State of the conflict.",
-      "x-ui-widget": "select"
+      "x-ui-widget": "badge"
     },
     "resolution": {
+      "title": "Resolution",
       "type": [
         "string",
         "null"
@@ -74,6 +88,7 @@
     }
   },
   "required": [
+    "title",
     "description",
     "conflict_type",
     "severity",

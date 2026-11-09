@@ -7,15 +7,17 @@
   "x-kind": "interview_message",
   "x-schema-version": 1,
   "x-ui-display": "transcript",
+  "x-ui-navigable": false,
   "x-ui-title-field": "content",
+  "x-ui-role-field": "speaker",
   "x-ui-list-fields": [
     "turn",
-    "role",
+    "speaker",
     "content"
   ],
   "x-ui-field-order": [
     "turn",
-    "role",
+    "speaker",
     "content",
     "iteration",
     "topic"
@@ -24,32 +26,33 @@
   "additionalProperties": false,
   "properties": {
     "turn": {
+      "title": "Turn",
       "type": "integer",
       "minimum": 1,
       "description": "A question and its answer share a turn.",
-      "x-ui-widget": "number"
+      "x-ui-widget": "separator"
     },
-    "role": {
+    "speaker": {
+      "title": "Speaker",
       "type": "string",
-      "enum": [
-        "interviewer",
-        "persona"
-      ],
-      "description": "Who wrote the message.",
-      "x-ui-widget": "select"
+      "description": "The key of the participant of the transcript who says the words.",
+      "x-ui-widget": "text"
     },
     "content": {
+      "title": "Content",
       "type": "string",
       "description": "The text of the message.",
       "x-ui-widget": "textarea"
     },
     "iteration": {
+      "title": "Iteration",
       "type": "integer",
       "minimum": 0,
       "description": "0 for the first interview, higher for rework rounds.",
       "x-ui-widget": "number"
     },
     "topic": {
+      "title": "Topic",
       "type": [
         "string",
         "null"
@@ -61,7 +64,7 @@
   },
   "required": [
     "turn",
-    "role",
+    "speaker",
     "content",
     "iteration",
     "topic"

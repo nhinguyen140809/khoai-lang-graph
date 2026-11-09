@@ -8,12 +8,14 @@
   "x-schema-version": 1,
   "x-key-prefix": "ASM",
   "x-ui-display": "table",
-  "x-ui-title-field": "statement",
+  "x-ui-navigable": true,
+  "x-ui-title-field": "title",
   "x-ui-list-fields": [
-    "statement",
+    "title",
     "validation_status"
   ],
   "x-ui-field-order": [
+    "title",
     "statement",
     "reasoning",
     "impact_if_wrong",
@@ -22,22 +24,32 @@
   "type": "object",
   "additionalProperties": false,
   "properties": {
+    "title": {
+      "title": "Title",
+      "type": "string",
+      "description": "A short name of at most 60 characters that tells the point of the item at a glance, for example \"Find a mentor in my field\".",
+      "x-ui-widget": "text"
+    },
     "statement": {
+      "title": "Statement",
       "type": "string",
       "description": "What is assumed.",
       "x-ui-widget": "textarea"
     },
     "reasoning": {
+      "title": "Reasoning",
       "type": "string",
       "description": "Why it was assumed.",
       "x-ui-widget": "textarea"
     },
     "impact_if_wrong": {
+      "title": "Impact if wrong",
       "type": "string",
       "description": "What changes if the assumption does not hold.",
       "x-ui-widget": "textarea"
     },
     "validation_status": {
+      "title": "Validation status",
       "type": "string",
       "enum": [
         "unverified",
@@ -45,10 +57,11 @@
         "invalidated"
       ],
       "description": "Whether the assumption was checked.",
-      "x-ui-widget": "select"
+      "x-ui-widget": "badge"
     }
   },
   "required": [
+    "title",
     "statement",
     "reasoning",
     "impact_if_wrong",
