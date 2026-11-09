@@ -1,5 +1,6 @@
 export type { Artifact } from '../artifacts/artifacts.types'
 export { useProjectArtifacts } from '../artifacts/hooks/useArtifactQueries'
+export { useItem } from '../items/hooks/useItemQueries'
 export { useProjectItems, useProjectItemsOfKinds } from '../items/hooks/useItemQueries'
 export { useReloadArtifacts } from '../items/hooks/useReloadArtifacts'
 export type { ArtifactItem } from '../items/items.types'

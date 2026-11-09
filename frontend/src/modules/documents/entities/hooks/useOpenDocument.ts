@@ -2,7 +2,7 @@
 
 import { useParams } from 'next/navigation'
 
-import { useItem } from '@/modules/artifact/entities'
+import { useItem } from '@/modules/artifact/entities/@x/documents'
 
 /**
  * The artifact and the item of the page on screen, from its address: `artifactId` on a document
