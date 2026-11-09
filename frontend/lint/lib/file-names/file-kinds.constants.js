@@ -105,6 +105,7 @@ export const topicEntityModules = {
   },
   trace: {
     chains: ['links'],
+    graph: ['chains', 'links'],
     'item-links': ['chains'],
     links: [],
     traceability: [],

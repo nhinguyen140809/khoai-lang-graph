@@ -4,7 +4,11 @@ import { ChevronRightIcon } from 'lucide-react'
 import type { ReactNode } from 'react'
 
 import { useItemHref } from '@/modules/artifact/entities/@x/trace'
-import { itemTitle, useContentSchemas, useLinkTitleOf } from '@/modules/workflow/entities/@x/trace'
+import {
+  useContentSchemas,
+  useItemTitleOf,
+  useLinkTitleOf,
+} from '@/modules/workflow/entities/@x/trace'
 import { PageLink } from '@/shared/components/frame'
 import { ColoredText } from '@/shared/components/ui/colored-text'
 import { HighlightMark } from '@/shared/components/ui/highlight'
@@ -28,9 +32,10 @@ function QuotedEntryBlock({
   linkTitleOf: (linkType: string) => string
 }) {
   const schemas = useContentSchemas()
+  const titleOf = useItemTitleOf()
   const schema = schemas.get(entry.item.kind)
   const kindTitle = schema?.title ?? entry.item.kind
-  const title = itemTitle(schema, entry.item)
+  const title = titleOf(entry.item)
 
   return (
     <div className="space-y-1.5">

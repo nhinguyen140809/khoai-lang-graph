@@ -8,6 +8,7 @@ import {
   documentsMessages,
   useDocumentDisplays,
   useDocumentList,
+  useOpenDocument,
 } from '@/modules/documents/entities'
 import { SidePanel, useOpenPage } from '@/shared/components/frame'
 import { EmptyState, ErrorState, LoadingState } from '@/shared/components/state'
@@ -16,7 +17,6 @@ import { routes } from '@/shared/routes'
 
 import type { TreeNode } from '../document-tree.types'
 import { documentNodeId, documentTreeNodes } from '../document-tree.utils'
-import { useOpenDocument } from '../hooks/useOpenDocument'
 import { DocumentAttentionSummary } from './DocumentAttentionSummary'
 import { DocumentTree } from './DocumentTree'
 

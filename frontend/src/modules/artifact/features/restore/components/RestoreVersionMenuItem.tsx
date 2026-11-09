@@ -4,8 +4,7 @@ import { Undo2Icon } from 'lucide-react'
 
 import type { RevisionTarget } from '@/modules/artifact/entities'
 import { revisionKeyOf } from '@/modules/artifact/entities'
-import { DisabledReason } from '@/shared/components/ui/disabled-reason'
-import { DropdownMenuItem } from '@/shared/components/ui/dropdown-menu'
+import { DropdownActionItem } from '@/shared/components/ui/menu-action'
 
 import { useOpenRestoreVersionDialog } from '../hooks/useOpenRestoreVersionDialog'
 import { restoreMessages } from '../restore.constants'
@@ -30,16 +29,13 @@ export function RestoreVersionMenuItem({
   const openRestore = useOpenRestoreVersionDialog()
 
   return (
-    <DisabledReason reason={lockedReason}>
-      <DropdownMenuItem
-        disabled={lockedReason !== null}
-        onSelect={() => {
-          openRestore(revisionKeyOf(target, version))
-        }}
-      >
-        <Undo2Icon />
-        {restoreMessages.button}
-      </DropdownMenuItem>
-    </DisabledReason>
+    <DropdownActionItem
+      icon={Undo2Icon}
+      label={restoreMessages.button}
+      disabledReason={lockedReason}
+      onSelect={() => {
+        openRestore(revisionKeyOf(target, version))
+      }}
+    />
   )
 }

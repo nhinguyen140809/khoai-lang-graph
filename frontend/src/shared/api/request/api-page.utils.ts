@@ -31,20 +31,32 @@ export function fetchPage<T>(
 }
 
 /**
- * Reads every page of a list endpoint that is known to stay short, such as the artifacts of a
- * project, so that no record is dropped when it grows. A long list is an infinite query instead.
+ * Collects the items of every page of a list that loads one page at a time, by passing the cursor
+ * of each page to the read of the next; `readPage` gets null for the first page. For a list that
+ * is known to stay short, so that no record is dropped when it grows; a long list is an infinite
+ * query instead.
  */
-export async function fetchAllPages<T>(
-  path: string,
-  itemSchema: z.ZodType<T>,
-  { limit, action }: Omit<PageOptions, 'cursor'>,
+export async function collectAllPages<T>(
+  readPage: (cursor: string | null) => Promise<ListPage<T>>,
 ): Promise<T[]> {
   const items: T[] = []
   let cursor: string | null = null
   do {
-    const page: ListPage<T> = await fetchPage(path, itemSchema, { limit, cursor, action })
+    const page: ListPage<T> = await readPage(cursor)
     items.push(...page.items)
     cursor = page.next_cursor
   } while (cursor !== null)
   return items
+}
+
+/**
+ * Reads every page of a list endpoint that is known to stay short, such as the artifacts of a
+ * project, so that no record is dropped when it grows. A long list is an infinite query instead.
+ */
+export function fetchAllPages<T>(
+  path: string,
+  itemSchema: z.ZodType<T>,
+  { limit, action }: Omit<PageOptions, 'cursor'>,
+): Promise<T[]> {
+  return collectAllPages((cursor) => fetchPage(path, itemSchema, { limit, cursor, action }))
 }

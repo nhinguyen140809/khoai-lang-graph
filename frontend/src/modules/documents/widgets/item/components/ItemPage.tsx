@@ -1,22 +1,19 @@
 'use client'
 
 import Link from 'next/link'
-import { Fragment, type ReactNode, useRef, useState } from 'react'
+import { Fragment, useRef, useState } from 'react'
 import { ErrorBoundary } from 'react-error-boundary'
 
 import {
   type ArtifactItem,
-  ArtifactItemDetails,
   HistorySurface,
-  ItemHeading,
-  ItemKeyLine,
   RevisionContent,
   useItem,
   useItemSchema,
 } from '@/modules/artifact/entities'
 import { EditItemForm, EditRecordButton, useIsEditing } from '@/modules/artifact/features/edit'
 import { RestoreVersionMenuItem } from '@/modules/artifact/features/restore'
-import { QuotedWordsPopover, quoteMarkColors, useItemLinks } from '@/modules/trace/entities'
+import { useItemLinks } from '@/modules/trace/entities'
 import { isNavigable } from '@/modules/workflow/entities'
 import { isNotFoundError } from '@/shared/api/error'
 import { ErrorState, LoadingState, NotFoundState } from '@/shared/components/state'
@@ -36,7 +33,11 @@ import { useItemCommands } from '../hooks/useItemCommands'
 import { useItemPage } from '../hooks/useItemPage'
 import { useItemTab } from '../hooks/useItemTab'
 import { itemPageMessages, navigatorIdleMs } from '../item-page.constants'
-import { ItemLinkLine } from './ItemLinkLine'
+import { FieldMarkPopover } from './FieldMarkPopover'
+import { ItemDetails } from './ItemDetails'
+import { ItemHeading } from './ItemHeading'
+import { ItemKeyLine } from './ItemKeyLine'
+import { ItemLinkLineBlock, LinkLineError } from './ItemLinks'
 import { ItemNavigator } from './ItemNavigator'
 
 /**
@@ -114,8 +115,7 @@ function ItemPageBody({ projectId, record }: { projectId: string; record: Artifa
             <header className="space-y-2">
               <div className="flex flex-wrap items-center gap-4">
                 <ItemHeading
-                  item={record}
-                  schema={page.schema}
+                  hasAvatar={page.view?.hasAvatar ?? false}
                   title={page.title}
                   place={page.neighbors.index}
                 />
@@ -129,7 +129,7 @@ function ItemPageBody({ projectId, record }: { projectId: string; record: Artifa
                     item={record}
                     status={page.status}
                     isUnderReview={page.isUnderReview}
-                    schema={page.schema}
+                    fields={page.view?.keyLineFields}
                   />
                   <ErrorBoundary
                     resetKeys={[record.id]}
@@ -160,11 +160,12 @@ function ItemPageBody({ projectId, record }: { projectId: string; record: Artifa
             ) : page.isHistoryOpen && page.schema !== undefined ? (
               <RevisionContent target={target} view={page.history} fields={page.fields} />
             ) : (
-              page.schema !== undefined && (
+              page.view !== undefined && (
                 <>
-                  <ArtifactItemDetails
+                  <ItemDetails
                     item={record}
-                    schema={page.schema}
+                    layout={page.view.layout}
+                    fields={page.view.bodyFields}
                     fieldMarks={links.state === 'success' ? links.fieldMarks : undefined}
                     renderFieldMark={(range, children) => (
                       <ErrorBoundary resetKeys={[record.id]} fallbackRender={() => children}>
@@ -213,83 +214,5 @@ function ItemPageBody({ projectId, record }: { projectId: string; record: Artifa
         )}
       </div>
     </div>
-  )
-}
-
-/** The link line, with its own error state; nothing while it loads. */
-function ItemLinkLineBlock({
-  projectId,
-  links,
-  activeLinkId,
-  onActiveLinkChange,
-}: {
-  projectId: string
-  links: ReturnType<typeof useItemLinks>
-  activeLinkId: string | null
-  onActiveLinkChange: (linkId: string | null) => void
-}) {
-  if (links.state !== 'success' || links.count === 0) return null
-  return (
-    <ItemLinkLine
-      projectId={projectId}
-      links={links}
-      activeLinkId={activeLinkId}
-      onActiveLinkChange={onActiveLinkChange}
-    />
-  )
-}
-
-/** The error of the links block, with its way to try again. */
-function LinkLineError({ onRetry }: { onRetry: () => void }) {
-  return <ErrorState size="compact" message={itemPageMessages.linksLoadError} onRetry={onRetry} />
-}
-
-/** A mark of the quoted words, wrapped in the card of the items at the other end of its links. */
-function FieldMarkPopover({
-  projectId,
-  links,
-  range,
-  onActiveLinkChange,
-  children,
-}: {
-  projectId: string
-  links: ReturnType<typeof useItemLinks>
-  range: { id: string; linkIds: string[] }
-  onActiveLinkChange: (linkId: string | null) => void
-  children: ReactNode
-}) {
-  if (links.state !== 'success') return children
-  const rows = range.linkIds.flatMap((id) => {
-    const row = links.rowsByLinkId.get(id)
-    return row === undefined ? [] : [row]
-  })
-  if (rows.length === 0) return children
-  const outgoingIds = new Set(links.outgoing.flatMap(({ rows }) => rows.map((row) => row.link.id)))
-  return (
-    <QuotedWordsPopover
-      projectId={projectId}
-      entries={rows.map((row) => ({
-        item: row.other,
-        relation: {
-          direction: outgoingIds.has(row.link.id) ? 'outgoing' : 'incoming',
-          linkType: row.link.link_type,
-        },
-        isOutOfDate: row.isOutOfDate,
-        otherQuote: outgoingIds.has(row.link.id) ? row.link.target_quote : row.link.source_quote,
-        quoteColor: quoteMarkColors[outgoingIds.has(row.link.id) ? 'target' : 'source'],
-        madeFromVersion: row.isOutOfDate ? row.link.target_version : null,
-      }))}
-    >
-      <span
-        onMouseEnter={() => {
-          onActiveLinkChange(rows[0]?.link.id ?? null)
-        }}
-        onMouseLeave={() => {
-          onActiveLinkChange(null)
-        }}
-      >
-        {children}
-      </span>
-    </QuotedWordsPopover>
   )
 }

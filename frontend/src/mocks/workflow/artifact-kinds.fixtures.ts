@@ -7,7 +7,7 @@ import {
 import { isRecord, isString } from '@/shared/lib/guards'
 
 import { contentSchemaFiles } from './data/content-schemas'
-import definition from './requirements_engineering.v1.json'
+import definition from './requirements_engineering.v1.json' with { type: 'json' }
 import { workflowDefinitionFixture } from './workflow.fixtures'
 
 // The response of GET /artifact-kinds for workflow definition version 1, built from copies of the

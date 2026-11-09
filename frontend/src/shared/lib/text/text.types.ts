@@ -12,3 +12,6 @@ export interface TextSegment<Range extends TextRange = TextRange> {
   text: string
   range: Range | null
 }
+
+/** One thing of a list written as a sentence, or the words between two of them. */
+export type SentencePart<T> = { type: 'item'; value: T } | { type: 'text'; text: string }

@@ -37,3 +37,18 @@ export const jsonToPlainTextCases = [
   { name: 'a list of objects', value: [{ given: 'a', then: 'b' }], text: 'a / b' },
   { name: 'an object', value: { a: 1 }, text: '{"a":1}' },
 ]
+
+/** A text, and the text with its first letter in lower case. */
+export const lowerFirstCases = [
+  { name: 'a word', text: 'Draft', lowered: 'draft' },
+  { name: 'words', text: 'Version 2', lowered: 'version 2' },
+  {
+    name: 'a text that starts with a capital inside the first word',
+    text: 'iOS app',
+    lowered: 'iOS app',
+  },
+  { name: 'a first word in capitals', text: 'API design', lowered: 'API design' },
+  { name: 'a lone article', text: 'A title', lowered: 'a title' },
+  { name: 'a text that is lower case already', text: 'draft', lowered: 'draft' },
+  { name: 'an empty text', text: '', lowered: '' },
+]

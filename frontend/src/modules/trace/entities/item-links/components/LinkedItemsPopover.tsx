@@ -3,7 +3,11 @@
 import type { ReactNode } from 'react'
 
 import { useItemHref } from '@/modules/artifact/entities/@x/trace'
-import { itemTitle, useContentSchemas, useLinkTitleOf } from '@/modules/workflow/entities/@x/trace'
+import {
+  useContentSchemas,
+  useItemTitleOf,
+  useLinkTitleOf,
+} from '@/modules/workflow/entities/@x/trace'
 import { ColoredText } from '@/shared/components/ui/colored-text'
 import { HighlightMark } from '@/shared/components/ui/highlight'
 import { Popover, PopoverContent, PopoverTrigger } from '@/shared/components/ui/popover'
@@ -48,8 +52,9 @@ function LinkedEntryBlock({
   linkTitleOf: (linkType: string) => string
 }) {
   const schemas = useContentSchemas()
+  const titleOf = useItemTitleOf()
   const schema = schemas.get(entry.item.kind)
-  const title = itemTitle(schema, entry.item)
+  const title = titleOf(entry.item)
 
   return (
     <div className="space-y-2">

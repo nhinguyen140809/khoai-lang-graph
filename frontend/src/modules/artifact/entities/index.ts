@@ -25,8 +25,6 @@ export {
   useProjectArtifacts,
 } from './artifacts/hooks/useArtifactQueries'
 export { ArtifactDocument } from './components/ArtifactDocument'
-export { ArtifactItemDetails, ItemKeyLine } from './components/ArtifactItemDetails'
-export { ItemHeading } from './components/ItemHeading'
 export { createExport, getExport, listProjectExports } from './exports/exports.api'
 export { exportStatusLabels } from './exports/exports.constants'
 export { exportKeys } from './exports/exports.keys'

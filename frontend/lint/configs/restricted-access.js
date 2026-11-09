@@ -60,6 +60,7 @@ const localeOwners = [
   'src/shared/config/locale/**',
   'src/shared/lib/numbers/formatters.utils.ts',
   'src/shared/lib/time/formatters.utils.ts',
+  'src/shared/lib/text/list.utils.ts',
   'src/shared/lib/text/plural.utils.ts',
   'src/shared/components/form/number/number-input.utils.ts',
   'src/shared/components/ui/chart.tsx',

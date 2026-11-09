@@ -1,4 +1,4 @@
-import type { ReviewStatus } from '@/modules/artifact/entities'
+import type { ReviewStatus } from '@/modules/artifact/entities/@x/trace'
 
 // The graph of a trace, for drawing: an item is a node and a link is an edge. `items` and `links`
 // are the data of the trace; `nodes` and `edges` are the same data shaped for the drawing.

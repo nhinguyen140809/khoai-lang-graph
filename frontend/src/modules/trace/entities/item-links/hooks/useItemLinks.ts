@@ -5,9 +5,9 @@ import { useMemo } from 'react'
 import {
   contentFields,
   contentSchemasByKind,
-  itemTitle,
   mainField,
   useArtifactKinds,
+  useItemTitleOf,
   useWorkflowDefinition,
 } from '@/modules/workflow/entities/@x/trace'
 
@@ -24,6 +24,7 @@ export function useItemLinks(itemId: string): ItemLinksResult {
   const trace = useItemTrace(itemId, { direction: 'both', depth: 1 })
   const { data: definition } = useWorkflowDefinition()
   const { data: kinds } = useArtifactKinds()
+  const titleOf = useItemTitleOf()
 
   const result = useMemo<ItemLinksResult | undefined>(() => {
     const traceData = trace.data
@@ -35,7 +36,7 @@ export function useItemLinks(itemId: string): ItemLinksResult {
     const linkTypes = definition.link_types.map(({ key, title }) => ({ key, title }))
     const groups = itemLinkGroups(traceData, itemId, {
       linkTypes,
-      titleOf: (item) => itemTitle(schemas.get(item.kind), item),
+      titleOf,
       kindTitleOf: (item) => schemas.get(item.kind)?.title ?? item.kind,
     })
     const quotes = linkQuotesByItem(traceData).get(itemId) ?? []
@@ -57,7 +58,7 @@ export function useItemLinks(itemId: string): ItemLinksResult {
       fieldMarks,
       rowsByLinkId: new Map(rows.map((row) => [row.link.id, row])),
     }
-  }, [trace.data, definition, kinds, itemId])
+  }, [trace.data, definition, kinds, titleOf, itemId])
 
   if (trace.isError) return { state: 'error', retry: () => void trace.refetch() }
   if (result === undefined) return { state: 'pending' }

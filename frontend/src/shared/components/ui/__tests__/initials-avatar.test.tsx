@@ -3,7 +3,7 @@ import { describe, expect, it } from 'vitest'
 
 import { expectNoAccessibilityViolations } from '@/test/steps'
 
-import { InitialsAvatar } from '../InitialsAvatar'
+import { InitialsAvatar } from '../initials-avatar'
 
 describe('InitialsAvatar', () => {
   it('draws the initials of the name on the soft fill of its tone', () => {

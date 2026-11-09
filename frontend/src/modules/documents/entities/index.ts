@@ -6,6 +6,7 @@ export { useDocumentsUnderReview, useIsDocumentUnderReview } from './hooks/useDo
 export { useEditLockReason } from './hooks/useEditLockReason'
 export { useItemStatus } from './hooks/useItemStatus'
 export { useListedDocumentTitle } from './hooks/useListedDocumentTitle'
+export { useOpenDocument } from './hooks/useOpenDocument'
 export { useSubjectsWithoutArtifact } from './hooks/useSubjectsWithoutArtifact'
 export { useWritingArtifacts } from './hooks/useWritingArtifacts'
 export type { DocumentTabIconName } from './types/document-tab-icons.types'
