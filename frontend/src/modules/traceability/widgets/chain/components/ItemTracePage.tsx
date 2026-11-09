@@ -1,0 +1,127 @@
+'use client'
+
+import { useIsProjectWriting } from '@/modules/project/entities'
+import { liveTraceMs, useItemChain } from '@/modules/trace/entities'
+import { useEditorTab } from '@/shared/components/frame'
+import { ErrorState, LoadingState, NotFoundState } from '@/shared/components/state'
+import { Alert, AlertTitle } from '@/shared/components/ui/alert'
+import { Button } from '@/shared/components/ui/button'
+import { usePrefersReducedMotion } from '@/shared/lib/viewport'
+import { routes } from '@/shared/routes'
+
+import { useChainLayout } from '../hooks/useChainLayout'
+import { useChainSelection } from '../hooks/useChainSelection'
+import { itemTraceMessages } from '../item-trace.constants'
+import { ChainAsText } from './ChainAsText'
+import { ChainCanvas } from './ChainCanvas'
+import { ChainChosenLink } from './ChainChosenLink'
+import { ChainLegend } from './ChainLegend'
+
+/**
+ * The page of the chain of one item: the graph of what it is based on, down to the interviews on
+ * the left, and what was built from it on the right. The edges carry the title of their link and
+ * their look says how much they ask of the user; choosing one shows the words it quotes in its
+ * two nodes. A menu on a node holds the actions on its item, a menu on an edge the actions on
+ * its link, and under the graph the links read as a list.
+ */
+export function ItemTracePage({ projectId, itemId }: { projectId: string; itemId: string }) {
+  const isWriting = useIsProjectWriting(projectId)
+  const chain = useItemChain(projectId, itemId, {
+    refetchInterval: isWriting ? liveTraceMs : false,
+  })
+  const { selectedLinkId, select, clear } = useChainSelection()
+  const layout = useChainLayout(chain.state === 'success' ? chain.graph : undefined)
+  const isReducedMotion = usePrefersReducedMotion()
+
+  useEditorTab({
+    id: itemId,
+    title:
+      chain.state === 'success'
+        ? itemTraceMessages.title(chain.focus.title)
+        : chain.state === 'error'
+          ? itemTraceMessages.errorTab
+          : itemTraceMessages.loading,
+    href: routes.project(projectId).itemTrace(itemId),
+  })
+
+  if (chain.state === 'error') {
+    return (
+      <ErrorState
+        message={itemTraceMessages.loadError}
+        onRetry={() => {
+          chain.retry()
+        }}
+      />
+    )
+  }
+  if (chain.state === 'notFound') {
+    return (
+      <NotFoundState
+        title={itemTraceMessages.notFound.title}
+        description={itemTraceMessages.notFound.description}
+      />
+    )
+  }
+  if (chain.state === 'pending' || layout.state === 'pending') {
+    return <LoadingState label={itemTraceMessages.loading} />
+  }
+  if (layout.state === 'error') {
+    return <ErrorState message={itemTraceMessages.loadError} onRetry={layout.retry} />
+  }
+
+  const { graph, focus } = chain
+  const outOfDate = graph.edges.filter(({ madeFromVersion }) => madeFromVersion !== null)
+
+  return (
+    // The page scrolls as a whole: the graph takes what the window leaves, never less than its
+    // minimum, and the strip and the list of links open under it and are reached by scrolling.
+    <div className="flex h-full flex-col overflow-y-auto">
+      <header className="shrink-0 px-6 pt-6 pb-2">
+        <h1 className="text-2xl font-semibold">{itemTraceMessages.title(focus.title)}</h1>
+      </header>
+      <div className="relative min-h-96 flex-1">
+        {graph.edges.length === 0 && (
+          <div className="absolute top-2 left-1/2 z-10 -translate-x-1/2">
+            <Alert className="py-1.5">
+              <AlertTitle className="text-sm">{itemTraceMessages.noLink}</AlertTitle>
+            </Alert>
+          </div>
+        )}
+        {outOfDate.length > 0 && (
+          <div className="absolute top-2 left-1/2 z-10 -translate-x-1/2">
+            <Alert color="warning" className="gap-2 py-1.5 pr-2 pl-3">
+              <div className="flex items-center gap-2">
+                <AlertTitle className="text-sm">
+                  {itemTraceMessages.outOfDateLinks(outOfDate.length)}
+                </AlertTitle>
+                <Button
+                  type="button"
+                  variant="outline"
+                  size="xs"
+                  onClick={() => {
+                    const first = outOfDate[0]
+                    if (first !== undefined) select(first.id)
+                  }}
+                >
+                  {itemTraceMessages.showOutOfDate}
+                </Button>
+              </div>
+            </Alert>
+          </div>
+        )}
+        <ChainCanvas
+          graph={graph}
+          positions={layout.positions}
+          selectedLinkId={selectedLinkId}
+          onSelect={select}
+          onClear={clear}
+          onEscape={clear}
+          fitDuration={isReducedMotion ? 0 : 200}
+        />
+        <ChainLegend />
+      </div>
+      {selectedLinkId !== null && <ChainChosenLink graph={graph} linkId={selectedLinkId} />}
+      <ChainAsText graph={graph} />
+    </div>
+  )
+}
