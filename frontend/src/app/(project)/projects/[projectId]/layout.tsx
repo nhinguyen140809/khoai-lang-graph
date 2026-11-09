@@ -7,6 +7,7 @@ import { ProjectCommands } from '@/modules/project/widgets/commands'
 import { ProjectDialogs } from '@/modules/project/widgets/dialogs'
 import { ProjectSwitcher } from '@/modules/project/widgets/menu'
 import { ProjectRunStatusItem } from '@/modules/project/widgets/status'
+import { TraceDialogs } from '@/modules/trace/widgets/dialogs'
 import { MonthlyBudgetItem } from '@/modules/usage/entities'
 import { AccountMenuItem } from '@/modules/user/widgets/menu'
 import { TabbedWorkspace, UntabbedWorkspace, Workbench } from '@/shared/components/frame'
@@ -28,6 +29,7 @@ function projectContributions(projectId: string) {
       <ProjectDialogs />
       <ActivityDialogs />
       <DocumentDialogs />
+      <TraceDialogs projectId={projectId} />
       <ProjectRunStatusItem projectId={projectId} />
       <MonthlyBudgetItem />
       <DocumentsTabIcons />
