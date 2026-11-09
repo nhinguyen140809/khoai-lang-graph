@@ -1,7 +1,9 @@
 import { describe, expect, it } from 'vitest'
 
+import { itemFixtures } from '@/mocks/artifacts/fixtures/artifacts.fixtures'
 import { assertPresent } from '@/shared/lib/guards'
 
+import type { ArtifactItem } from '../../items/items.types'
 import { documentBlocks, hasTranscript } from '../document-blocks.utils'
 import type { OutlineNode } from '../outline.types'
 import {
@@ -11,6 +13,7 @@ import {
   itemAnchorProps,
   itemNodeId,
   outlineBreadcrumb,
+  outlineItemsOf,
   outlineNeighbors,
   outlineSequence,
   outlineStatuses,
@@ -155,6 +158,26 @@ describe('artifactOutline', () => {
         issueKinds: [],
       }),
     ).toEqual([])
+  })
+})
+
+describe('outlineItemsOf', () => {
+  it('reads a flat read of the items of a document as its outline does, with their depth', () => {
+    const document = mentorDocument('requirement_specification')
+    // A read of a whole project carries no depth: the outline reads it from the chain of parents.
+    const flat = itemFixtures.filter(({ artifact_id }) => artifact_id === document.artifact.id)
+
+    expect(outlineItemsOf(flat)).toEqual(document.items)
+  })
+
+  it('leaves the superseded items out', () => {
+    const document = mentorDocument('requirement_specification')
+    const flat = itemFixtures.filter(({ artifact_id }) => artifact_id === document.artifact.id)
+    const [one] = flat
+    if (one === undefined) throw new Error('The document has no items')
+
+    const superseded: ArtifactItem = { ...one, id: 'i-superseded', review_status: 'superseded' }
+    expect(outlineItemsOf([...flat, superseded])).toEqual(document.items)
   })
 })
 
