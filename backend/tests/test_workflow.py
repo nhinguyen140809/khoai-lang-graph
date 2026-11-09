@@ -601,3 +601,25 @@ def test_an_interview_that_reaches_the_turn_limit_is_closed_and_summed_up_too() 
         assert content["stop_reason"] == "max_turns"  # type: ignore[index]
         assert content["turn_count"] == 3  # type: ignore[index]
         assert transcript["summary"]
+
+
+def test_a_rework_directive_refers_to_its_issues_and_the_personas_to_interview_again() -> None:
+    sink = _finished_run()
+    analysis = sink.read_artifact("project-1", "requirements_analysis")
+    assert analysis is not None
+    conflicts = [
+        dict(entry)
+        for entry in sink.read_items(analysis["artifact_id"])
+        if entry["kind"] == "conflict"
+    ]
+    assert conflicts, "the scripted analysis records a conflict between personas"
+
+    items = nodes._rework_items(sink, run_state(), conflicts)
+
+    about = [item for item in items if item["role"] == "about"]
+    addressed = [item for item in items if item["role"] == "addressed_to"]
+    assert {item["item_id"] for item in about} == {str(c["item_id"]) for c in conflicts}
+    assert addressed, "the personas on each side of the conflict are interviewed again"
+    persona_kinds = {_item(sink, item["item_id"])["kind"] for item in addressed}
+    assert persona_kinds == {"persona"}
+    assert len({item["item_id"] for item in addressed}) == len(addressed)

@@ -17,6 +17,7 @@ from khoailanggraph.api.errors import ApiError
 from khoailanggraph.api.schemas import MAX_LIMIT, Page
 from khoailanggraph.features.runs import schemas, service
 from khoailanggraph.features.runs.models import (
+    DirectiveRow,
     HumanDecisionRow,
     InterruptRow,
     RunEventRow,
@@ -327,6 +328,63 @@ class ResumeBody(BaseModel):
     feedback: str | None = None
     answers: dict[str, Any] = {}
     modified_items: list[dict[str, Any]] = []
+
+
+@router.get("/runs/{run_id}/directives")
+async def list_directives(
+    run_id: UUID,
+    user: deps.CurrentUser,
+    db: deps.DbSession,
+    cursor: Annotated[int, Query(ge=0)] = 0,
+    limit: Annotated[int, Query(ge=1, le=MAX_LIMIT)] = 50,
+) -> Page[schemas.Directive]:
+    """The directives of a run with their items, ordered by iteration: why the run looped."""
+    await service.get_run_row(db, run_id)
+    rows = list(
+        (
+            await db.scalars(
+                select(DirectiveRow)
+                .where(DirectiveRow.run_id == run_id)
+                .order_by(DirectiveRow.iteration, DirectiveRow.created_at)
+                .offset(cursor)
+                .limit(limit + 1)
+            )
+        ).all()
+    )
+    views = [await service.directive_output(db, row) for row in rows[:limit]]
+    return Page(items=views, next_cursor=cursor + limit if len(rows) > limit else None)
+
+
+@router.get("/runs/{run_id}/state")
+async def get_run_state(
+    run_id: UUID,
+    user: deps.CurrentUser,
+    db: deps.DbSession,
+) -> schemas.RunState:
+    """The workflow state after the latest step that saved one (§5)."""
+    run = await service.get_run_row(db, run_id)
+    step = await db.scalar(
+        select(RunStepRow)
+        .where(RunStepRow.run_id == run_id, RunStepRow.state_json.is_not(None))
+        .order_by(RunStepRow.sequence.desc())
+        .limit(1)
+    )
+    return service.run_state_output(run, step)
+
+
+@router.get("/runs/{run_id}/steps/{step_id}/state")
+async def get_step_state(
+    run_id: UUID,
+    step_id: UUID,
+    user: deps.CurrentUser,
+    db: deps.DbSession,
+) -> schemas.RunState:
+    """The workflow state saved after one step: the starting point of a retry from the next."""
+    run = await service.get_run_row(db, run_id)
+    step = await db.get(RunStepRow, step_id)
+    if step is None or step.run_id != run_id or step.state_json is None:
+        raise ApiError(404, "not_found", "Not found", "No state was saved for this step.")
+    return service.run_state_output(run, step)
 
 
 @router.get("/runs/{run_id}/interrupts")

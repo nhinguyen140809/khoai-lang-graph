@@ -66,6 +66,7 @@ from khoailanggraph.agents.requirements_engineering.outputs import (
 )
 from khoailanggraph.agents.requirements_engineering.ports import (
     ArtifactSink,
+    DirectiveItem,
     DirectiveSink,
     ItemRecord,
 )
@@ -1460,6 +1461,33 @@ def analyst_node(
     }
 
 
+def _rework_items(
+    sink: ArtifactSink, state: REState, open_issues: list[dict[str, Any]]
+) -> list[DirectiveItem]:
+    """The items a rework directive refers to: the open issues that caused it (`about`) and the
+    personas that those issues involve, to interview again (`addressed_to`)."""
+    items: list[DirectiveItem] = [
+        {"item_id": str(issue["item_id"]), "role": "about"} for issue in open_issues
+    ]
+    catalog = sink.read_artifact(state["project_id"], "persona_catalog")
+    if catalog is None:
+        return items
+    personas = {
+        entry["key"]: str(entry["item_id"]) for entry in sink.read_items(catalog["artifact_id"])
+    }
+    involved = dict.fromkeys(
+        key
+        for issue in open_issues
+        for link in issue["links"]
+        if link["link_type"] == "involves"
+        for key in link["targets"]
+    )
+    items += [
+        {"item_id": personas[key], "role": "addressed_to"} for key in involved if key in personas
+    ]
+    return items
+
+
 @safe_node
 def rework_elicitation_node(
     state: REState,
@@ -1494,7 +1522,7 @@ def rework_elicitation_node(
         target_node="interviewer",
         iteration=int(state["iteration_count"]),
         instruction=instruction,
-        item_ids=[str(entry["item_id"]) for entry in open_issues],
+        items=_rework_items(sink, state, open_issues),
     )
     return {"rework_directives": [directive_id], "current_stage": "rework_planning"}
 
@@ -2145,7 +2173,11 @@ def intent_router_node(
         target_node=directive.target_node,
         iteration=int(state["iteration_count"]),
         instruction=directive.instruction,
-        item_ids=[],
+        items=[
+            {"item_id": str(entry["item_id"]), "role": "about"}
+            for entry in [*spec_items, *backlog_items]
+            if entry["key"] in set(directive.about)
+        ],
     )
     _sink(runnable_config).add_report(directive.report)
     return {

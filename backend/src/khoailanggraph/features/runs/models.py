@@ -74,6 +74,7 @@ class RunStepRow(Base):
     llm_calls: Mapped[int] = mapped_column(Integer, default=0, nullable=False)
     usage_json: Mapped[bytes] = mapped_column(default=b"{}", nullable=False)
     produced_json: Mapped[bytes] = mapped_column(default=b"[]", nullable=False)
+    state_json: Mapped[bytes | None] = mapped_column(nullable=True)
     error: Mapped[str | None] = mapped_column(Text, nullable=True)
     started_at: Mapped[datetime] = mapped_column(DateTime, nullable=False)
     finished_at: Mapped[datetime | None] = mapped_column(DateTime, nullable=True)
@@ -143,6 +144,7 @@ class DirectiveRow(Base):
     target_node: Mapped[str] = mapped_column(String, nullable=False)
     iteration: Mapped[int] = mapped_column(Integer, default=0, nullable=False)
     instruction: Mapped[str] = mapped_column(Text, nullable=False)
+    items_json: Mapped[bytes] = mapped_column(default=b"[]", nullable=False)
     details_json: Mapped[bytes] = mapped_column(default=b"{}", nullable=False)
     created_at: Mapped[datetime] = mapped_column(DateTime, default=utcnow, nullable=False)
 

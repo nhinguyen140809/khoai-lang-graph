@@ -171,6 +171,13 @@ class ArtifactSink(Protocol):
         ...
 
 
+class DirectiveItem(TypedDict):
+    """An item a directive refers to, and what it is to the directive."""
+
+    item_id: str
+    role: str
+
+
 @runtime_checkable
 class DirectiveSink(Protocol):
     """Where node-issued directives are recorded, so the UI can explain loops."""
@@ -183,7 +190,7 @@ class DirectiveSink(Protocol):
         target_node: str,
         iteration: int,
         instruction: str,
-        item_ids: list[str],
+        items: list[DirectiveItem],
     ) -> str:
         """Record one directive (`rework` or `intent`); returns its id."""
         ...

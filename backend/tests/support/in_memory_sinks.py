@@ -15,6 +15,7 @@ from khoailanggraph.agents.requirements_engineering import definition as wf
 from khoailanggraph.agents.requirements_engineering.ports import (
     ArtifactDirectiveRecord,
     ArtifactRecord,
+    DirectiveItem,
     ItemRecord,
     LinkRecord,
 )
@@ -433,7 +434,7 @@ class InMemoryDirectiveSink:
         target_node: str,
         iteration: int,
         instruction: str,
-        item_ids: list[str],
+        items: list[DirectiveItem],
     ) -> str:
         directive_id = f"directive-{len(self.rows) + 1:04d}"
         self.rows.append(
@@ -444,7 +445,8 @@ class InMemoryDirectiveSink:
                 "target_node": target_node,
                 "iteration": iteration,
                 "instruction": instruction,
-                "item_ids": list(item_ids),
+                "items": [dict(item) for item in items],
+                "item_ids": [item["item_id"] for item in items],
             }
         )
         return directive_id

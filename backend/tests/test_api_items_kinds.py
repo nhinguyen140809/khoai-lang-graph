@@ -2,6 +2,7 @@
 
 from __future__ import annotations
 
+import json
 from pathlib import Path
 from tempfile import gettempdir
 from typing import TYPE_CHECKING
@@ -10,6 +11,7 @@ from uuid import UUID, uuid4
 import pytest
 from httpx import ASGITransport, AsyncClient
 
+from khoailanggraph.features.runs.models import DirectiveRow
 from khoailanggraph.main import create_app
 from khoailanggraph.platform.db import (
     ensure_schema,
@@ -726,3 +728,128 @@ async def test_the_documents_of_a_run_carry_a_summary_of_what_they_say(client: A
     plan = next(entry for entry in artifacts if entry["kind"] == "elicitation_plan")
     assert "summary" not in plan["content"]
     assert "report" not in plan["content"]
+
+
+async def _the_run(client: AsyncClient, thread_id: str) -> str:
+    return str((await client.get(f"/api/v1/threads/{thread_id}/runs")).json()["items"][0]["id"])
+
+
+async def test_the_state_of_a_run_is_the_state_of_its_last_step(client: AsyncClient) -> None:
+    _project_id, thread_id = await seeded_run(client)
+    run_id = await _the_run(client, thread_id)
+
+    response = await client.get(f"/api/v1/runs/{run_id}/state")
+
+    body = response.json()
+    assert response.status_code == 200
+    assert set(body) == {"run_id", "step_id", "workflow_version", "values"}
+    assert body["run_id"] == run_id
+    assert body["workflow_version"] == 2
+    values = body["values"]
+    assert values["current_stage"] == "done"
+    assert len(values["personas"]) == 3
+    assert set(values["personas"][0]) == {"item_id", "kind", "key", "version"}
+    assert set(values["elicitation_plan"]) == {"artifact_id", "kind", "title", "version"}
+    schema = (await client.get("/api/v1/workflow/definition")).json()["state_schema"]["properties"]
+    assert set(values) <= set(schema), "the values follow the state schema of the definition"
+    steps = (await client.get(f"/api/v1/runs/{run_id}/steps")).json()["items"]
+    assert body["step_id"] == steps[-1]["id"]
+
+
+async def test_the_state_after_an_earlier_step_does_not_hold_what_came_later(
+    client: AsyncClient,
+) -> None:
+    _project_id, thread_id = await seeded_run(client)
+    run_id = await _the_run(client, thread_id)
+    steps = (await client.get(f"/api/v1/runs/{run_id}/steps")).json()["items"]
+    planner = next(step for step in steps if step["node"] == "planner")
+
+    early = await client.get(f"/api/v1/runs/{run_id}/steps/{planner['id']}/state")
+    last = await client.get(f"/api/v1/runs/{run_id}/steps/{steps[-1]['id']}/state")
+
+    assert early.status_code == 200
+    assert early.json()["step_id"] == planner["id"]
+    assert early.json()["values"]["current_stage"] == "planning"
+    assert early.json()["values"].get("elicitation_plan") is not None
+    assert not early.json()["values"].get("personas")
+    assert last.json()["values"]["current_stage"] == "done"
+    assert (await client.get(f"/api/v1/runs/{run_id}/steps/{uuid4()}/state")).status_code == 404
+    assert (
+        await client.get(f"/api/v1/runs/{uuid4()}/steps/{planner['id']}/state")
+    ).status_code == 404
+
+
+async def test_the_directives_of_a_run_explain_why_it_looped(client: AsyncClient) -> None:
+    _project_id, thread_id = await seeded_run(client)
+    run_id = await _the_run(client, thread_id)
+
+    response = await client.get(f"/api/v1/runs/{run_id}/directives")
+
+    body = response.json()
+    assert response.status_code == 200
+    assert body["next_cursor"] is None
+    iterations = [entry["iteration"] for entry in body["items"]]
+    assert iterations == sorted(iterations)
+    for directive in body["items"]:
+        assert set(directive) == {
+            "id",
+            "run_id",
+            "kind",
+            "issued_by_step_id",
+            "human_decision_id",
+            "target_node",
+            "iteration",
+            "instruction",
+            "items",
+            "details",
+            "created_at",
+        }
+        assert directive["kind"] in {"rework", "intent"}
+        for entry in directive["items"]:
+            assert set(entry["item"]) == {"item_id", "kind", "key", "version"}
+            assert entry["role"] in {"about", "addressed_to"}
+    assert (await client.get(f"/api/v1/runs/{uuid4()}/directives")).status_code == 404
+
+
+async def test_a_directive_lists_the_items_it_refers_to_with_their_roles(
+    app: FastAPI, client: AsyncClient
+) -> None:
+    project_id, thread_id = await seeded_run(client)
+    run_id = await _the_run(client, thread_id)
+    persona = (
+        await client.get(f"/api/v1/projects/{project_id}/items", params={"kind": "persona"})
+    ).json()["items"][0]
+    issue = (
+        await client.get(f"/api/v1/projects/{project_id}/items", params={"kind": "raw_requirement"})
+    ).json()["items"][0]
+    async with app.state.session_factory() as session:
+        for iteration, kind in ((2, "intent"), (1, "rework")):
+            session.add(
+                DirectiveRow(
+                    run_id=UUID(run_id),
+                    kind=kind,
+                    target_node="interviewer",
+                    iteration=iteration,
+                    instruction=f"Directive {iteration}",
+                    items_json=json.dumps(
+                        [
+                            {"item_id": issue["id"], "role": "about"},
+                            {"item_id": persona["id"], "role": "addressed_to"},
+                            {"item_id": str(uuid4()), "role": "about"},
+                        ]
+                    ).encode(),
+                )
+            )
+        await session.commit()
+
+    directives = (await client.get(f"/api/v1/runs/{run_id}/directives")).json()["items"]
+
+    assert [entry["instruction"] for entry in directives] == ["Directive 1", "Directive 2"]
+    first = directives[0]
+    assert [(entry["role"], entry["item"]["key"]) for entry in first["items"]] == [
+        ("about", issue["key"]),
+        ("addressed_to", persona["key"]),
+    ], "an item that does not exist is left out"
+    assert first["items"][0]["item"]["version"] == issue["version"]
+    assert first["issued_by_step_id"] is None
+    assert first["details"] == {}

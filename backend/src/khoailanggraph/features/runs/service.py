@@ -37,8 +37,13 @@ from khoailanggraph.settings import get_settings
 from khoailanggraph.tools.research import make_research_search
 
 if TYPE_CHECKING:
+    from collections.abc import Mapping
+
     from sqlalchemy.ext.asyncio import AsyncSession
 
+    from khoailanggraph.agents.requirements_engineering.ports import DirectiveItem
+
+from khoailanggraph.features.artifacts.models import ArtifactItemRow
 from khoailanggraph.features.projects.models import ProjectRow
 from khoailanggraph.features.runs import schemas
 from khoailanggraph.features.runs.models import (
@@ -327,9 +332,11 @@ def start_run_blocking(
             step_rows.append((node_sequence[0], node_label))
 
         result: dict[str, Any] = {"final": {}}
+        step_states: dict[int, dict[str, Any]] = {}
         try:
-            for update in graph.stream(
+            for mode, update in graph.stream(
                 state,
+                stream_mode=["updates", "values"],
                 config={
                     "configurable": {
                         "run_id": str(run.id),
@@ -343,11 +350,17 @@ def start_run_blocking(
                     }
                 },
             ):
-                for node in update:
+                if mode == "values":
+                    # The state after the step that just ran: the checkpoint of that step.
+                    step_states[node_sequence[0]] = workflow_state_values(
+                        cast("Mapping[str, Any]", update)
+                    )
+                    continue
+                for node in cast("dict[str, Any]", update):
                     if node in {"__interrupt__", "__end__"}:
                         continue
                     node_marker(node)
-                    chunk = update[node] or {}
+                    chunk = cast("dict[str, Any]", update)[node] or {}
                     events.append(("node_end", {"node": node, "step_id": node_sequence[0]}))
                     # Merge every chunk: a safe_node failure rides an early
                     # update while plain edges keep the walk going, so the
@@ -379,6 +392,7 @@ def start_run_blocking(
                     run_id=run.id,
                     sequence=sequence,
                     node=node_label,
+                    state_json=_dumps(step_states[sequence]) if sequence in step_states else None,
                     agent_role=None,
                     stage=str(run.current_stage or ""),
                     status="failed" if node_label == failed_node else "succeeded",
@@ -409,6 +423,16 @@ def start_run_blocking(
             thread.active_run_id = None
             thread.current_stage = run.current_stage
         session.commit()
+
+
+def workflow_state_values(state: Mapping[str, Any]) -> dict[str, Any]:
+    """The values of the workflow state that a run shows: the fields of the `state_schema` of
+    the definition, as plain JSON. They hold references to artifacts and items, never copies."""
+    fields = workflow_definition.state_schema()["properties"]
+    return cast(
+        "dict[str, Any]",
+        json.loads(json.dumps({k: v for k, v in state.items() if k in fields}, default=str)),
+    )
 
 
 def run_step_output(row: RunStepRow) -> schemas.RunStep:
@@ -467,7 +491,7 @@ class DirectiveSink:
         target_node: str,
         iteration: int,
         instruction: str,
-        item_ids: list[str],
+        items: list[DirectiveItem],
     ) -> str:
         row = DirectiveRow(
             id=uuid4(),
@@ -476,7 +500,8 @@ class DirectiveSink:
             target_node=target_node,
             iteration=iteration,
             instruction=instruction,
-            details_json=_dumps({"item_ids": item_ids}),
+            items_json=_dumps(items),
+            details_json=_dumps({}),
         )
         self.session.add(row)
         self.session.flush()
@@ -492,5 +517,50 @@ class DirectiveSink:
             "target_node": row.target_node,
             "iteration": row.iteration,
             "instruction": row.instruction,
-            "item_ids": (_loads(row.details_json) or {}).get("item_ids", []),
+            "item_ids": [str(entry["item_id"]) for entry in _loads(row.items_json) or []],
         }
+
+
+async def directive_output(session: AsyncSession, row: DirectiveRow) -> schemas.Directive:
+    """A directive with the items it refers to, each as the reference of the item now."""
+    entries = json.loads((row.items_json or b"[]").decode("utf-8"))
+    items: list[schemas.DirectiveItem] = []
+    for entry in entries:
+        item = await session.get(ArtifactItemRow, UUID(str(entry["item_id"])))
+        if item is not None:
+            items.append(
+                schemas.DirectiveItem(
+                    item=schemas.ItemRef(
+                        item_id=str(item.id), kind=item.kind, key=item.key, version=item.version
+                    ),
+                    role=str(entry["role"]),
+                )
+            )
+    return schemas.Directive(
+        id=str(row.id),
+        run_id=str(row.run_id),
+        kind=row.kind,
+        issued_by_step_id=str(row.issued_by_step_id) if row.issued_by_step_id else None,
+        human_decision_id=str(row.human_decision_id) if row.human_decision_id else None,
+        target_node=row.target_node,
+        iteration=row.iteration,
+        instruction=row.instruction,
+        items=items,
+        details=json.loads((row.details_json or b"{}").decode("utf-8")),
+        created_at=row.created_at,
+    )
+
+
+def run_state_output(run: RunRow, step: RunStepRow | None) -> schemas.RunState:
+    """The workflow state a step saved; a run without a saved step has no values yet."""
+    values = (
+        json.loads(step.state_json.decode("utf-8"))
+        if step is not None and step.state_json is not None
+        else {}
+    )
+    return schemas.RunState(
+        run_id=str(run.id),
+        step_id=str(step.id) if step is not None else None,
+        workflow_version=run.workflow_version,
+        values=values,
+    )

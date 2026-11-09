@@ -138,3 +138,36 @@ class Interrupt(BaseModel):
     created_at: IsoDatetime
     resolved_at: IsoDatetime | None
     decision: InterruptDecision | None
+
+
+class DirectiveItem(BaseModel):
+    """An item a directive refers to, and what it is to the directive."""
+
+    item: ItemRef
+    role: str
+
+
+class Directive(BaseModel):
+    """An instruction that one part of the workflow gives to another: to interview some
+    personas again, or to act on a message of the user."""
+
+    id: str
+    run_id: str
+    kind: str
+    issued_by_step_id: str | None
+    human_decision_id: str | None
+    target_node: str
+    iteration: int
+    instruction: str
+    items: list[DirectiveItem]
+    details: dict[str, Any]
+    created_at: IsoDatetime
+
+
+class RunState(BaseModel):
+    """The values of the workflow state after a step of a run."""
+
+    run_id: str
+    step_id: str | None
+    workflow_version: int
+    values: dict[str, Any]
