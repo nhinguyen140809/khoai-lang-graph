@@ -90,6 +90,9 @@ select = ["E", "F", "W", "I", "N", "UP", "B", "SIM", "RUF", "ASYNC", "S", "PL", 
 "src/khoailanggraph/features/artifacts/router.py" = ["PLR0913", "PLR0917"]
 "src/khoailanggraph/features/artifacts/editing.py" = ["PLR0913", "PLR0917"]
 "src/khoailanggraph/features/projects/router.py" = ["PLR0913", "PLR0917"]
+"src/khoailanggraph/features/exports/router.py" = ["PLR0913", "PLR0917", "TC003"]
+"src/khoailanggraph/features/exports/schemas.py" = ["TC001"]
+"src/khoailanggraph/features/exports/service.py" = ["TC003"]
 # uv scripts may print to stdout; they are developer tools.
 "scripts/**" = ["T201", "S108"]
 
@@ -143,6 +146,9 @@ ignore_imports = [
     "khoailanggraph.features.documents.router -> khoailanggraph.api.errors",
     "khoailanggraph.features.documents.router -> khoailanggraph.api.schemas",
     "khoailanggraph.features.documents.service -> khoailanggraph.api.errors",
+    "khoailanggraph.features.exports.router -> khoailanggraph.api.deps",
+    "khoailanggraph.features.exports.router -> khoailanggraph.api.schemas",
+    "khoailanggraph.features.exports.service -> khoailanggraph.api.errors",
     "khoailanggraph.features.me.router -> khoailanggraph.api.deps",
     "khoailanggraph.features.me.router -> khoailanggraph.api.errors",
     "khoailanggraph.features.me.service -> khoailanggraph.api.errors",

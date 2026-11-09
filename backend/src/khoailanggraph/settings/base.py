@@ -69,6 +69,8 @@ class Settings(BaseSettings):
     # bytes land under this directory as {uuid}.bin keys the API never
     # returns; uploads over the limit answer 422 too_large.
     documents_dir: Path = BACKEND_DIR / "data" / "documents"
+    # The files of the exports land under this directory as {uuid}.bin keys the API never returns.
+    exports_dir: Path = BACKEND_DIR / "data" / "exports"
     max_upload_mb: int = 10
     # The interactive API docs (/docs, /redoc, /openapi.json) are developer
     # tooling. None (the default) serves them outside `production` only;
