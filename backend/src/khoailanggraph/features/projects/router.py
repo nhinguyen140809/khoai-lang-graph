@@ -95,6 +95,33 @@ async def get_project(
     return await service.project_view(db, row)
 
 
+@router.patch("/projects/{project_id}")
+async def update_project(
+    project_id: UUID,
+    body: schemas.ProjectPatch,
+    user: deps.CurrentUser,
+    db: deps.DbSession,
+    _origin: Annotated[None, Depends(deps.check_origin)],
+) -> schemas.ProjectSummary:
+    """Change the name, description, status, run settings or model overrides of a project."""
+    row = await service.get_project_row(db, project_id)
+    await service.update_project(db, row, body)
+    return await service.project_view(db, row)
+
+
+@router.delete("/projects/{project_id}", status_code=204)
+async def delete_project(
+    project_id: UUID,
+    user: deps.CurrentUser,
+    db: deps.DbSession,
+    _origin: Annotated[None, Depends(deps.check_origin)],
+) -> Response:
+    """Soft delete a project; one with an unfinished run answers 409."""
+    row = await service.get_project_row(db, project_id)
+    await service.delete_project(db, row)
+    return Response(status_code=204)
+
+
 @router.get("/projects/{project_id}/threads")
 async def list_threads(
     project_id: UUID,
@@ -124,6 +151,49 @@ async def create_thread(
     )
     response.headers["Location"] = f"/api/v1/threads/{row.id}"
     return await thread_service.thread_view(db, row)
+
+
+@router.get("/threads")
+async def list_user_threads(
+    user: deps.CurrentUser,
+    db: deps.DbSession,
+    project_id: Annotated[UUID | None, Query()] = None,
+    cursor: Annotated[int, Query(ge=0)] = 0,
+    limit: Annotated[int, Query(ge=1, le=MAX_LIMIT)] = 50,
+) -> Page[thread_schemas.ThreadSummary]:
+    """The threads of the user across their projects, `?project_id=` keeps one project's;
+    newest message first (§5)."""
+    views, next_cursor = await thread_service.list_user_threads(
+        db, owner_id=UUID(str(user.id)), project_id=project_id, cursor=cursor, limit=limit
+    )
+    return Page(items=views, next_cursor=next_cursor)
+
+
+@router.patch("/threads/{thread_id}")
+async def update_thread(
+    thread_id: UUID,
+    body: thread_schemas.ThreadPatch,
+    user: deps.CurrentUser,
+    db: deps.DbSession,
+    _origin: Annotated[None, Depends(deps.check_origin)],
+) -> thread_schemas.ThreadSummary:
+    """Change the title or the status of a thread."""
+    row = await thread_service.get_thread_row(db, thread_id)
+    await thread_service.update_thread(db, row, body)
+    return await thread_service.thread_view(db, row)
+
+
+@router.delete("/threads/{thread_id}", status_code=204)
+async def delete_thread(
+    thread_id: UUID,
+    user: deps.CurrentUser,
+    db: deps.DbSession,
+    _origin: Annotated[None, Depends(deps.check_origin)],
+) -> Response:
+    """Soft delete a thread; one with an unfinished run answers 409."""
+    row = await thread_service.get_thread_row(db, thread_id)
+    await thread_service.delete_thread(db, row)
+    return Response(status_code=204)
 
 
 @router.get("/threads/{thread_id}")

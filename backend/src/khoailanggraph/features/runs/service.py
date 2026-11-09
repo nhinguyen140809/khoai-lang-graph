@@ -447,7 +447,8 @@ def run_step_output(row: RunStepRow) -> schemas.RunStep:
 
 async def get_run_row(session: AsyncSession, run_id: UUID) -> RunRow:
     row = await session.get(RunRow, run_id)
-    if row is None:
+    project = None if row is None else await session.get(ProjectRow, row.project_id)
+    if row is None or project is None or project.deleted_at is not None:
         raise ApiError(404, "not_found", "Not found", "The run does not exist.")
     return row
 

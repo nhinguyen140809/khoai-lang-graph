@@ -13,7 +13,8 @@ if TYPE_CHECKING:
     from sqlalchemy.ext.asyncio import AsyncSession
 
 from khoailanggraph.api.errors import ApiError
-from khoailanggraph.features.projects.service import get_project_row
+from khoailanggraph.features.projects.models import ProjectRow
+from khoailanggraph.features.projects.service import get_project_row, has_unfinished_thread_run
 from khoailanggraph.features.runs.models import RunRow
 from khoailanggraph.features.threads import schemas
 from khoailanggraph.features.threads.models import ThreadRow
@@ -56,6 +57,9 @@ async def get_thread_row(session: AsyncSession, thread_id: UUID) -> ThreadRow:
     """The thread row; 404 Problem carries a message the FE trusts."""
     row = await session.get(ThreadRow, thread_id)
     if row is None or row.deleted_at is not None:
+        raise ApiError(404, "not_found", "Not found", "The thread does not exist.")
+    project = await session.get(ProjectRow, row.project_id)
+    if project is None or project.deleted_at is not None:
         raise ApiError(404, "not_found", "Not found", "The thread does not exist.")
     return row
 
@@ -121,3 +125,77 @@ async def resolve_or_create_thread(
     if existing is not None:
         return existing
     return await create_thread(session, project_id=project_id, created_by=user_id)
+
+
+async def list_user_threads(
+    session: AsyncSession,
+    *,
+    owner_id: UUID,
+    project_id: UUID | None,
+    cursor: int,
+    limit: int,
+) -> tuple[list[schemas.ThreadSummary], int | None]:
+    """The threads of the user across their projects, or of one project, newest message first."""
+    conditions = [
+        ProjectRow.owner_id == owner_id,
+        ProjectRow.deleted_at.is_(None),
+        ThreadRow.deleted_at.is_(None),
+    ]
+    if project_id is not None:
+        conditions.append(ThreadRow.project_id == project_id)
+    rows = list(
+        (
+            await session.scalars(
+                select(ThreadRow)
+                .join(ProjectRow, ProjectRow.id == ThreadRow.project_id)
+                .where(*conditions)
+                .order_by(ThreadRow.last_message_at.desc(), ThreadRow.id)
+                .offset(cursor)
+                .limit(limit + 1)
+            )
+        ).all()
+    )
+    window = rows[:limit]
+    views = [await thread_view(session, row) for row in window]
+    return views, (cursor + limit if len(rows) > limit else None)
+
+
+async def update_thread(
+    session: AsyncSession, row: ThreadRow, body: schemas.ThreadPatch
+) -> ThreadRow:
+    """Change the title or the status of a thread. The title is a text with more than
+    whitespace and cannot be set back to null."""
+    given = body.model_fields_set
+    problems: list[dict[str, str]] = []
+    if "title" in given and (body.title is None or not body.title.strip()):
+        problems.append({"field": "title", "message": "Enter a title."})
+    if "status" in given and body.status is None:
+        problems.append({"field": "status", "message": "Choose active or archived."})
+    if problems:
+        raise ApiError(
+            422,
+            "validation_failed",
+            "Validation failed",
+            "The body has fields that are not valid.",
+            errors=problems,
+        )
+    if "title" in given and body.title is not None:
+        row.title = body.title.strip()
+    if "status" in given and body.status is not None:
+        row.status = body.status
+    row.updated_at = _now()
+    await session.flush()
+    return row
+
+
+async def delete_thread(session: AsyncSession, row: ThreadRow) -> None:
+    """Soft delete a thread; one with an unfinished run is refused: the run is stopped first."""
+    if await has_unfinished_thread_run(session, row.id):
+        raise ApiError(
+            409,
+            "invalid_state",
+            "Invalid state",
+            "A run of the thread is not finished; stop it first.",
+        )
+    row.deleted_at = _now()
+    await session.flush()

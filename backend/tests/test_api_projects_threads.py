@@ -5,11 +5,13 @@ from __future__ import annotations
 from pathlib import Path
 from tempfile import gettempdir
 from typing import TYPE_CHECKING
-from uuid import uuid4
+from uuid import UUID, uuid4
 
 import pytest
 from httpx import ASGITransport, AsyncClient
 
+from khoailanggraph.features.runs.models import RunRow
+from khoailanggraph.features.threads.models import ThreadRow
 from khoailanggraph.main import create_app
 from khoailanggraph.platform.db import (
     ensure_schema,
@@ -266,3 +268,216 @@ async def test_the_project_list_is_filtered_by_the_status_of_the_latest_runs(
     thread_view = (await signed_in.get(f"/api/v1/threads/{thread}")).json()
     assert thread_view["latest_run_status"] == "succeeded"
     assert thread_view["active_run_id"] is None
+
+
+async def _create(signed_in: AsyncClient, **body: object) -> str:
+    response = await signed_in.post("/api/v1/projects", json={"name": "P", **body})
+    return str(response.json()["id"])
+
+
+async def _add_run(app: FastAPI, project_id: str, thread_id: str, status: str) -> None:
+    """A run of a thread in a status, written straight into the database."""
+    async with app.state.session_factory() as session:
+        thread = await session.get(ThreadRow, UUID(thread_id))
+        assert thread is not None
+        session.add(
+            RunRow(
+                thread_id=UUID(thread_id),
+                project_id=UUID(project_id),
+                number=1,
+                started_by=thread.created_by,
+                workflow_name="requirements_engineering",
+                workflow_version=2,
+                status=status,
+                current_stage="planning",
+                run_config_json=b"{}",
+            )
+        )
+        await session.commit()
+
+
+async def test_a_project_can_be_renamed_and_archived(signed_in: AsyncClient) -> None:
+    project_id = await _create(signed_in)
+
+    response = await signed_in.patch(
+        f"/api/v1/projects/{project_id}",
+        json={"name": "  Mentors  ", "description": "Find mentors", "status": "archived"},
+    )
+
+    body = response.json()
+    assert response.status_code == 200
+    assert (body["name"], body["description"], body["status"]) == (
+        "Mentors",
+        "Find mentors",
+        "archived",
+    )
+    assert set(body) >= {"item_counts", "unfinished_run_counts", "rollup_run_status"}
+    active = (await signed_in.get("/api/v1/projects")).json()["items"]
+    assert active == []
+    archived = (await signed_in.get("/api/v1/projects", params={"status": "archived"})).json()[
+        "items"
+    ]
+    assert [entry["id"] for entry in archived] == [project_id]
+
+
+async def test_a_field_left_out_of_a_patch_keeps_its_value(signed_in: AsyncClient) -> None:
+    project_id = await _create(signed_in, description="Keep me")
+
+    response = await signed_in.patch(f"/api/v1/projects/{project_id}", json={"status": "archived"})
+
+    assert response.json()["description"] == "Keep me"
+    assert response.json()["name"] == "P"
+    cleared = await signed_in.patch(f"/api/v1/projects/{project_id}", json={"description": None})
+    assert cleared.json()["description"] is None
+
+
+async def test_the_run_settings_and_the_models_of_a_project_are_checked(
+    signed_in: AsyncClient,
+) -> None:
+    project_id = await _create(signed_in)
+
+    ok = await signed_in.patch(
+        f"/api/v1/projects/{project_id}",
+        json={
+            "run_config": {
+                "review_checkpoints": ["checkpoint_analysis"],
+                "max_steps": 40,
+                "max_cost_usd": 1.5,
+                "parameters": {"max_turns": 8},
+            },
+            "model_overrides": {"analyst": "openai:gpt-4.1-mini"},
+        },
+    )
+    assert ok.status_code == 200
+    assert ok.json()["run_config"]["parameters"] == {"max_turns": 8}
+    assert ok.json()["model_overrides"] == {"analyst": "openai:gpt-4.1-mini"}
+
+    bad = await signed_in.patch(
+        f"/api/v1/projects/{project_id}",
+        json={
+            "name": "   ",
+            "run_config": {
+                "review_checkpoints": ["checkpoint_analysis", "checkpoint_analysis", "nowhere"],
+                "max_steps": 0,
+                "max_cost_usd": -1,
+                "parameters": {"max_turns": 500, "speed": 1},
+            },
+            "model_overrides": {"cook": "openai:gpt-4.1", "analyst": "nobody:nothing"},
+        },
+    )
+
+    assert bad.status_code == 422
+    assert bad.json()["code"] == "validation_failed"
+    fields = {error["field"] for error in bad.json()["errors"]}
+    assert fields == {
+        "name",
+        "run_config.review_checkpoints.1",
+        "run_config.review_checkpoints.2",
+        "run_config.max_steps",
+        "run_config.max_cost_usd",
+        "run_config.parameters.max_turns",
+        "run_config.parameters.speed",
+        "model_overrides.cook",
+        "model_overrides.analyst",
+    }
+    unchanged = (await signed_in.get(f"/api/v1/projects/{project_id}")).json()
+    assert unchanged["name"] == "P"
+    assert unchanged["run_config"]["max_steps"] == 40
+
+
+async def test_a_patch_with_a_field_that_does_not_exist_is_refused(signed_in: AsyncClient) -> None:
+    project_id = await _create(signed_in)
+
+    response = await signed_in.patch(f"/api/v1/projects/{project_id}", json={"owner_id": "x"})
+
+    assert response.status_code == 422
+
+
+async def test_a_deleted_project_and_everything_under_it_is_gone(signed_in: AsyncClient) -> None:
+    project_id = await _create(signed_in)
+    thread_id = (await signed_in.post(f"/api/v1/projects/{project_id}/threads")).json()["id"]
+
+    response = await signed_in.delete(f"/api/v1/projects/{project_id}")
+
+    assert response.status_code == 204
+    assert (await signed_in.get(f"/api/v1/projects/{project_id}")).status_code == 404
+    assert (await signed_in.get(f"/api/v1/threads/{thread_id}")).status_code == 404
+    assert (await signed_in.get(f"/api/v1/projects/{project_id}/threads")).status_code == 404
+    assert (await signed_in.get("/api/v1/projects")).json()["items"] == []
+    assert (await signed_in.get("/api/v1/threads")).json()["items"] == []
+    assert (await signed_in.delete(f"/api/v1/projects/{project_id}")).status_code == 404
+
+
+@pytest.mark.parametrize("status", ["queued", "running", "interrupted"])
+async def test_a_project_with_an_unfinished_run_is_not_deleted(
+    app: FastAPI, signed_in: AsyncClient, status: str
+) -> None:
+    project_id = await _create(signed_in)
+    thread_id = (await signed_in.post(f"/api/v1/projects/{project_id}/threads")).json()["id"]
+    await _add_run(app, project_id, thread_id, status)
+
+    response = await signed_in.delete(f"/api/v1/projects/{project_id}")
+
+    assert response.status_code == 409
+    assert response.json()["code"] == "invalid_state"
+    assert (await signed_in.get(f"/api/v1/projects/{project_id}")).status_code == 200
+
+
+async def test_a_project_whose_run_ended_can_be_deleted(
+    app: FastAPI, signed_in: AsyncClient
+) -> None:
+    project_id = await _create(signed_in)
+    thread_id = (await signed_in.post(f"/api/v1/projects/{project_id}/threads")).json()["id"]
+    await _add_run(app, project_id, thread_id, "failed")
+
+    assert (await signed_in.delete(f"/api/v1/projects/{project_id}")).status_code == 204
+
+
+async def test_the_threads_of_the_user_come_across_projects(signed_in: AsyncClient) -> None:
+    first = await _create(signed_in)
+    second = await _create(signed_in)
+    older = (await signed_in.post(f"/api/v1/projects/{first}/threads")).json()["id"]
+    newer = (await signed_in.post(f"/api/v1/projects/{second}/threads")).json()["id"]
+
+    everything = (await signed_in.get("/api/v1/threads")).json()
+    one = (await signed_in.get("/api/v1/threads", params={"project_id": first})).json()
+
+    assert [entry["id"] for entry in everything["items"]] == [newer, older]
+    assert [entry["id"] for entry in one["items"]] == [older]
+    paged = (await signed_in.get("/api/v1/threads", params={"limit": 1})).json()
+    assert [entry["id"] for entry in paged["items"]] == [newer]
+    assert paged["next_cursor"] == 1
+
+
+async def test_a_thread_can_be_retitled_archived_and_deleted(signed_in: AsyncClient) -> None:
+    project_id = await _create(signed_in)
+    thread_id = (await signed_in.post(f"/api/v1/projects/{project_id}/threads")).json()["id"]
+
+    changed = await signed_in.patch(
+        f"/api/v1/threads/{thread_id}", json={"title": " Booking ", "status": "archived"}
+    )
+    cleared = await signed_in.patch(f"/api/v1/threads/{thread_id}", json={"title": None})
+    blank = await signed_in.patch(f"/api/v1/threads/{thread_id}", json={"title": "  "})
+    wrong = await signed_in.patch(f"/api/v1/threads/{thread_id}", json={"status": "gone"})
+    removed = await signed_in.delete(f"/api/v1/threads/{thread_id}")
+
+    assert (changed.json()["title"], changed.json()["status"]) == ("Booking", "archived")
+    assert cleared.status_code == 422
+    assert cleared.json()["errors"][0]["field"] == "title"
+    assert blank.status_code == 422
+    assert wrong.status_code == 422
+    assert removed.status_code == 204
+    assert (await signed_in.get(f"/api/v1/threads/{thread_id}")).status_code == 404
+    assert (await signed_in.get(f"/api/v1/projects/{project_id}/threads")).json()["items"] == []
+
+
+async def test_a_thread_with_an_unfinished_run_is_not_deleted(
+    app: FastAPI, signed_in: AsyncClient
+) -> None:
+    project_id = await _create(signed_in)
+    thread_id = (await signed_in.post(f"/api/v1/projects/{project_id}/threads")).json()["id"]
+    await _add_run(app, project_id, thread_id, "interrupted")
+
+    response = await signed_in.delete(f"/api/v1/threads/{thread_id}")
+
+    assert response.status_code == 409

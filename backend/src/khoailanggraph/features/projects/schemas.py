@@ -60,3 +60,15 @@ class ProjectBody(BaseModel):
     name: str | None = Field(default=None)
     description: str | None = None
     output_language: OutputLanguage | None = None
+
+
+class ProjectPatch(BaseModel):
+    """PATCH /projects/{id}: the fields to change; a field left out keeps its value."""
+
+    model_config = ConfigDict(extra="forbid")
+
+    name: str | None = None
+    description: str | None = None
+    status: ProjectStatus | None = None
+    run_config: RunDefaults | None = None
+    model_overrides: dict[str, str] | None = None

@@ -28,6 +28,7 @@ from khoailanggraph.features.artifacts.models import ArtifactItemRow
 from khoailanggraph.features.me.models import UserSettingsRow
 from khoailanggraph.features.projects import schemas
 from khoailanggraph.features.projects.models import ProjectRow
+from khoailanggraph.features.projects.validation import model_problems, run_defaults_problems
 from khoailanggraph.features.runs.models import RunRow
 
 UNFINISHED_STATUSES = ("queued", "running", "interrupted")
@@ -212,3 +213,98 @@ async def create_project(
     session.add(row)
     await session.flush()
     return row
+
+
+def _problems(*groups: list[dict[str, str]]) -> None:
+    """Answer `422 validation_failed` for the problems of a body, when there are any."""
+    problems = [problem for group in groups for problem in group]
+    if problems:
+        raise ApiError(
+            422,
+            "validation_failed",
+            "Validation failed",
+            "The body has fields that are not valid.",
+            errors=problems,
+        )
+
+
+def patch_problems(body: schemas.ProjectPatch) -> list[dict[str, str]]:
+    """The problems of a PATCH body: the name is a text with more than whitespace, the settings
+    follow the rules of run settings, and each model override is a model of the catalog that
+    serves its role."""
+    given = body.model_fields_set
+    problems: list[dict[str, str]] = []
+    if "name" in given and (body.name is None or not body.name.strip()):
+        problems.append({"field": "name", "message": "Enter a name."})
+    if "status" in given and body.status is None:
+        problems.append({"field": "status", "message": "Choose a status."})
+    if "run_config" in given:
+        problems += (
+            [{"field": "run_config", "message": "Give the settings."}]
+            if body.run_config is None
+            else run_defaults_problems("run_config", body.run_config)
+        )
+    if "model_overrides" in given:
+        problems += (
+            [{"field": "model_overrides", "message": "Give the models."}]
+            if body.model_overrides is None
+            else model_problems("model_overrides", body.model_overrides)
+        )
+    return problems
+
+
+async def update_project(
+    session: AsyncSession, row: ProjectRow, body: schemas.ProjectPatch
+) -> ProjectRow:
+    """Change the fields of a project that the body names, after checking all of them."""
+    _problems(patch_problems(body))
+    given = body.model_fields_set
+    if "name" in given and body.name is not None:
+        row.name = body.name.strip()
+    if "description" in given:
+        row.description = body.description
+    if "status" in given and body.status is not None:
+        row.status = body.status
+    if "run_config" in given and body.run_config is not None:
+        row.run_config_json = body.run_config.model_dump_json().encode("utf-8")
+    if "model_overrides" in given and body.model_overrides is not None:
+        row.model_overrides_json = json.dumps(body.model_overrides).encode("utf-8")
+    row.updated_at = _now()
+    await session.flush()
+    return row
+
+
+async def has_unfinished_run(session: AsyncSession, project_id: UUID) -> bool:
+    """Whether a run of the project is queued, running or waiting for a review."""
+    return bool(
+        await session.scalar(
+            select(func.count()).where(
+                RunRow.project_id == project_id, RunRow.status.in_(UNFINISHED_STATUSES)
+            )
+        )
+    )
+
+
+async def delete_project(session: AsyncSession, row: ProjectRow) -> None:
+    """Soft delete: the project is left out of lists and its endpoints answer 404. A project
+    with an unfinished run is refused: the run is stopped first."""
+    if await has_unfinished_run(session, row.id):
+        raise ApiError(
+            409,
+            "invalid_state",
+            "Invalid state",
+            "A run of the project is not finished; stop it first.",
+        )
+    row.deleted_at = _now()
+    await session.flush()
+
+
+async def has_unfinished_thread_run(session: AsyncSession, thread_id: UUID) -> bool:
+    """Whether a run of the thread is queued, running or waiting for a review."""
+    return bool(
+        await session.scalar(
+            select(func.count()).where(
+                RunRow.thread_id == thread_id, RunRow.status.in_(UNFINISHED_STATUSES)
+            )
+        )
+    )

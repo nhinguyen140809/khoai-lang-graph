@@ -12,6 +12,15 @@ ThreadStatus = Literal["active", "archived"]
 RunStatus = Literal["queued", "running", "interrupted", "succeeded", "failed", "cancelled"]
 
 
+class ThreadPatch(BaseModel):
+    """PATCH /threads/{id}: the fields to change; a field left out keeps its value."""
+
+    model_config = ConfigDict(extra="forbid")
+
+    title: str | None = None
+    status: ThreadStatus | None = None
+
+
 class ThreadSummary(BaseModel):
     """The shape of every thread row the FE reads (mock parity)."""
 
