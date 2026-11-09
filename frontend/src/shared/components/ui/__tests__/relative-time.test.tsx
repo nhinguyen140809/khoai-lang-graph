@@ -29,4 +29,17 @@ describe('RelativeTime', () => {
 
     expect(screen.getByText('2 min ago')).toBeInTheDocument()
   })
+
+  it('counts from the moment a parent gives it, and starts no clock of its own', () => {
+    vi.useFakeTimers()
+    vi.setSystemTime(new Date('2026-10-30T10:00:00'))
+    render(<RelativeTime date="2026-10-30T09:55:00" now={new Date('2026-10-30T09:58:00')} />)
+
+    expect(screen.getByText('3 min ago')).toBeInTheDocument()
+    expect(vi.getTimerCount()).toBe(0)
+
+    advanceTimers(120_000)
+
+    expect(screen.getByText('3 min ago')).toBeInTheDocument()
+  })
 })
