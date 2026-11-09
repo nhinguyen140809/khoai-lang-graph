@@ -6,7 +6,7 @@ import { server } from '@/mocks/msw-server.setup'
 import { HttpMethod } from '@/shared/api/http'
 import { serverErrorOn } from '@/test/msw'
 
-import { fetchAllPages, fetchPage } from '../api-page.utils'
+import { collectAllPages, fetchAllPages, fetchPage } from '../api-page.utils'
 import { allPagesCases, pageCases, things } from './api-page.utils.data'
 
 const itemSchema = z.object({ id: z.string() })
@@ -57,5 +57,36 @@ describe('fetchAllPages', () => {
 
     expect(items.map(({ id }) => id)).toEqual(ids)
     expect(sent).toEqual(queries)
+  })
+})
+
+describe('collectAllPages', () => {
+  it('asks for the first page with no cursor, then for each page by the cursor of the one before', async () => {
+    const asked: (string | null)[] = []
+    const pages: Record<string, { items: string[]; next_cursor: string | null }> = {
+      first: { items: ['a', 'b'], next_cursor: '2' },
+      '2': { items: ['c'], next_cursor: '3' },
+      '3': { items: ['d'], next_cursor: null },
+    }
+
+    const items = await collectAllPages((cursor) => {
+      asked.push(cursor)
+      return Promise.resolve(pages[cursor ?? 'first'] ?? { items: [], next_cursor: null })
+    })
+
+    expect(items).toEqual(['a', 'b', 'c', 'd'])
+    expect(asked).toEqual([null, '2', '3'])
+  })
+
+  it('gives no items for a list that has none', async () => {
+    await expect(
+      collectAllPages(() => Promise.resolve({ items: [], next_cursor: null })),
+    ).resolves.toEqual([])
+  })
+
+  it('stops with the error of a page that fails', async () => {
+    await expect(collectAllPages(() => Promise.reject(new Error('page failed')))).rejects.toThrow(
+      'page failed',
+    )
   })
 })
