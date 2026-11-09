@@ -1,3 +1,4 @@
+import type { ContentSchema, ContentValues } from '@/modules/workflow/entities/@x/trace'
 import type { HighlightRange } from '@/shared/components/ui/highlight'
 import type { Tone } from '@/shared/lib/tone'
 
@@ -46,3 +47,11 @@ export type ItemLinksResult =
       /** The row of each link, so that a mark finds the entries of its card. */
       rowsByLinkId: ReadonlyMap<string, ItemLinkRow>
     }
+
+/** An item as a card of its quoted words reads it: what its title and its words come from. */
+export interface QuotedItem {
+  key: string
+  content: ContentValues
+  /** The schema of its kind; none while the kinds load or for a kind without one. */
+  schema: ContentSchema | undefined
+}

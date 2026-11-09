@@ -11,13 +11,13 @@ import {
 } from '@/modules/workflow/entities/@x/trace'
 import { PageLink } from '@/shared/components/frame'
 import { ColoredText } from '@/shared/components/ui/colored-text'
-import { HighlightMark } from '@/shared/components/ui/highlight'
 import { Popover, PopoverContent, PopoverTrigger } from '@/shared/components/ui/popover'
 import { Separator } from '@/shared/components/ui/separator'
 
 import type { LinkedEntry } from '../item-links.types'
 import { linkedItemMessages } from '../linked-items.constants'
 import { relationSentence } from './LinkedItemsPopover'
+import { QuotedItemBody } from './QuotedItemBody'
 
 /** One entry of the card: the card of the item with the words at its other end inside, and the
  * sentence of the link under it. */
@@ -47,17 +47,13 @@ function QuotedEntryBlock({
         className="group flex w-full items-center gap-3 rounded-lg border border-input px-3 py-2 text-left hover:bg-muted hover:no-underline"
       >
         <span className="min-w-0 flex-1 space-y-1.5">
-          <span className="block text-xs font-normal text-muted-foreground">{kindTitle}</span>
-          <span className="block text-sm font-semibold underline-offset-4 group-hover:underline">
-            {title}
-          </span>
-          {entry.otherQuote !== null && (
-            <span className="block text-sm">
-              <HighlightMark variant="soft" color={entry.quoteColor}>
-                {entry.otherQuote}
-              </HighlightMark>
-            </span>
-          )}
+          <QuotedItemBody
+            kind={kindTitle}
+            item={{ key: entry.item.key, content: entry.item.content, schema }}
+            quote={entry.otherQuote}
+            color={entry.quoteColor}
+            titleClassName="underline-offset-4 group-hover:underline"
+          />
         </span>
         <ChevronRightIcon
           aria-hidden

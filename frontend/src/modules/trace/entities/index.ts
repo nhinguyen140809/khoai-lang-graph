@@ -43,12 +43,19 @@ export type {
 } from './issues/open-issues.types'
 export { openIssueEntries } from './issues/open-issues.utils'
 export { LinkedItemsPopover } from './item-links/components/LinkedItemsPopover'
+export { QuotedItemCard } from './item-links/components/QuotedItemCard'
 export { QuotedWordsPopover } from './item-links/components/QuotedWordsPopover'
 export { useItemLinks } from './item-links/hooks/useItemLinks'
-export type { ItemLinksResult, LinkedEntry, LinkMarkRange } from './item-links/item-links.types'
+export type {
+  ItemLinksResult,
+  LinkedEntry,
+  LinkMarkRange,
+  QuotedItem,
+} from './item-links/item-links.types'
 export { quoteMarkColors } from './item-links/link-marks.constants'
 export { fieldMarksOf, markRangesOf } from './item-links/link-marks.utils'
 export { linkedItemMessages } from './item-links/linked-items.constants'
+export { quotedItemView } from './item-links/quoted-item.utils'
 export { useLinkTargets } from './links/hooks/useLinkTargets'
 export { useLinksCiting, useProjectTraceLinks } from './links/hooks/useTraceLinkQueries'
 export { createTraceLink, deleteTraceLink, listProjectTraceLinks } from './links/trace-links.api'

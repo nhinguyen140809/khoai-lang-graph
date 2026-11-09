@@ -7,11 +7,13 @@ import { rangesOfQuery, splitByRanges, type TextRange } from '@/shared/lib/text'
 import { type Tone, toneClasses } from '@/shared/lib/tone'
 
 // `variant` is how the words are marked and `color` the meaning; the color sets the --tone
-// variables these read. The words keep their own color, except in `solid`. Hover, focus and an
+// variables these read. The fill of a mark stays clear of the words around it: its padding is the
+// room of the fill and its margin a little more, so the fill never covers a neighbor. The words keep
+// their own color, except in `solid`. Hover, focus and an
 // open popup (`data-state=open`) paint the fill of the tone at half strength under the words and
 // hide the line, so a line mark becomes the fill it stands for, and a soft mark deepens.
 const highlightStyles = cva(
-  '-mx-[0.2em] rounded-[0.25em] bg-transparent box-decoration-clone px-[0.2em] py-[0.12em] text-inherit transition-colors outline-none focus-visible:ring-[3px] focus-visible:ring-ring/50 data-interactive:cursor-pointer',
+  'mx-[0.1em] rounded-[0.25em] bg-transparent box-decoration-clone px-[0.2em] py-[0.12em] text-inherit transition-colors outline-none focus-visible:ring-[3px] focus-visible:ring-ring/50 data-interactive:cursor-pointer',
   {
     variants: {
       variant: {

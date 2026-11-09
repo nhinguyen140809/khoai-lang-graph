@@ -9,13 +9,15 @@ import {
   useLinkTitleOf,
 } from '@/modules/workflow/entities/@x/trace'
 import { ColoredText } from '@/shared/components/ui/colored-text'
-import { HighlightMark } from '@/shared/components/ui/highlight'
 import { Popover, PopoverContent, PopoverTrigger } from '@/shared/components/ui/popover'
 import { Separator } from '@/shared/components/ui/separator'
 
+import { linkTypeWords } from '../../links/trace-links.constants'
+import { hasALinkTo } from '../../links/trace-links.utils'
 import type { LinkedEntry, LinkedRelation } from '../item-links.types'
 import { linkedItemMessages } from '../linked-items.constants'
 import { LinkedItemCard } from './LinkedItemCard'
+import { QuotedItemBody } from './QuotedItemBody'
 
 /**
  * How the item of the card relates to the one the page shows, as one sentence under the card: the
@@ -28,7 +30,7 @@ export function relationSentence(
   titleOf: (linkType: string) => string,
 ): string {
   const wordsOf = (linkType: string) =>
-    linkedItemMessages.linkTypeWords[linkType] ?? linkedItemMessages.hasALinkTo(titleOf(linkType))
+    (linkTypeWords[linkType] ?? hasALinkTo(titleOf(linkType))).now
   switch (relation.direction) {
     case 'outgoing':
       return `${linkedItemMessages.thisItem} ${wordsOf(relation.linkType)} ${otherTitle}.`
@@ -39,8 +41,9 @@ export function relationSentence(
   }
 }
 
-/** One entry of the card: the card of the item, the sentence of the relation under it, the words
- * the link quotes at its other end in the color of that end, and the problem of an old link. */
+/** One entry of the card: the card of the item, with the words the link quotes at its other end
+ * where the item holds them, in the color of that end, the sentence of the relation under it, and
+ * the problem of an old link. */
 function LinkedEntryBlock({
   entry,
   hrefOf,
@@ -57,24 +60,26 @@ function LinkedEntryBlock({
   const schemas = useContentSchemas()
   const titleOf = useItemTitleOf()
   const schema = schemas.get(entry.item.kind)
+  const kindTitle = schema?.title ?? entry.item.kind
   const title = titleOf(entry.item)
 
   return (
     <div className="space-y-2">
       <LinkedItemCard
         href={hrefOf(entry.item)}
-        over={schema?.title ?? entry.item.kind}
+        over={kindTitle}
         title={title}
+        body={
+          <QuotedItemBody
+            kind={kindTitle}
+            item={{ key: entry.item.key, content: entry.item.content, schema }}
+            quote={entry.otherQuote}
+            color={entry.quoteColor}
+          />
+        }
         actions={actions}
       />
       <p className="text-xs">{relationSentence(entry.relation, title, linkTitleOf)}</p>
-      {entry.otherQuote !== null && (
-        <p className="text-sm">
-          <HighlightMark variant="soft" color={entry.quoteColor}>
-            {entry.otherQuote}
-          </HighlightMark>
-        </p>
-      )}
       {entry.isOutOfDate && entry.madeFromVersion !== null && (
         <p className="text-xs">
           <ColoredText color="warning">

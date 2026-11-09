@@ -57,6 +57,56 @@ describe('QuotedWordsPopover', () => {
     expect(screen.getByText(/quotes these words\./)).toBeInTheDocument()
   })
 
+  it('puts the words a link quotes where the item holds them: in the title of an item that has only its title', async () => {
+    const user = userEvent.setup()
+    const message = {
+      ...analyzed,
+      kind: 'interview_message',
+      content: {
+        turn: 2,
+        speaker: 'PER-001',
+        content: 'I ask seniors in my club, but I never know who is free this week, so I give up.',
+      },
+    }
+    renderWithProviders(
+      <QuotedWordsPopover
+        projectId={projectId}
+        entries={[entryOf(message, { otherQuote: 'who is free this week' })]}
+      >
+        <button type="button">Open the card</button>
+      </QuotedWordsPopover>,
+    )
+
+    await user.click(screen.getByRole('button', { name: 'Open the card' }))
+
+    // The words are marked in the title, which is the item's own words, and said once.
+    const mark = await screen.findByText('who is free this week')
+    expect(mark.tagName).toBe('MARK')
+    expect(mark.closest('[data-slot="quote-excerpt"]')).toBeNull()
+    expect(document.querySelectorAll('mark')).toHaveLength(1)
+    expect(document.querySelector('[data-slot="quote-excerpt"]')).toBeNull()
+  })
+
+  it('marks the words in the sentence of the field that holds them, under the title', async () => {
+    const user = userEvent.setup()
+    renderWithProviders(
+      <QuotedWordsPopover
+        projectId={projectId}
+        entries={[entryOf(analyzed, { otherQuote: 'lists mentors by field of study' })]}
+      >
+        <button type="button">Open the card</button>
+      </QuotedWordsPopover>,
+    )
+
+    await user.click(screen.getByRole('button', { name: 'Open the card' }))
+
+    // The statement of the analysis holds the words, so the title stays plain and the sentence shows them.
+    const mark = await screen.findByText('lists mentors by field of study')
+    expect(mark.closest('[data-slot="quote-excerpt"]')).toHaveTextContent(
+      'The system lists mentors by field of study.',
+    )
+  })
+
   it('has no accessibility violation', async () => {
     const user = userEvent.setup()
     const { container } = renderWithProviders(

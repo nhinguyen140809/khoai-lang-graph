@@ -17,6 +17,8 @@ interface LinkedItemCardProps {
   over: string
   /** The title of the record, the line the card is about. */
   title: string
+  /** What the card says in place of the kind over the title, such as the title with quoted words marked. */
+  body?: ReactNode | undefined
   /** What the card offers to do with the link it shows, such as removing it. */
   actions?: ReactNode | undefined
   className?: string | undefined
@@ -28,7 +30,14 @@ interface LinkedItemCardProps {
  * the sign of the page it opens at the end, held in the middle of the height. The whole card
  * opens the page, and the fill it takes on hover says so.
  */
-export function LinkedItemCard({ href, over, title, actions, className }: LinkedItemCardProps) {
+export function LinkedItemCard({
+  href,
+  over,
+  title,
+  body,
+  actions,
+  className,
+}: LinkedItemCardProps) {
   return (
     <div className="flex w-full items-center gap-2">
       <PageLink
@@ -39,7 +48,11 @@ export function LinkedItemCard({ href, over, title, actions, className }: Linked
           className,
         )}
       >
-        <RecordName kind={over} title={title} layout="stacked" className="flex-1" />
+        {body === undefined ? (
+          <RecordName kind={over} title={title} layout="stacked" className="flex-1" />
+        ) : (
+          <span className="min-w-0 flex-1 space-y-1">{body}</span>
+        )}
         <ExternalLinkIcon
           aria-hidden
           className="size-4 shrink-0 text-muted-foreground transition-colors group-hover:text-foreground"
