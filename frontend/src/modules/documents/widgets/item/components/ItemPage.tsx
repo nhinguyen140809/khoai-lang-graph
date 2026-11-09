@@ -113,7 +113,11 @@ function ItemPageBody({ projectId, record }: { projectId: string; record: Artifa
           <article className="mx-auto max-w-3xl space-y-4 p-6 pb-20">
             <header className="space-y-2">
               <div className="flex flex-wrap items-center gap-4">
-                <ItemHeading schema={page.schema} title={page.title} place={page.neighbors.index} />
+                <ItemHeading
+                  hasAvatar={page.view?.hasAvatar ?? false}
+                  title={page.title}
+                  place={page.neighbors.index}
+                />
                 {!isEditing && (
                   <EditRecordButton target={target} lockedReason={page.lockedReason} />
                 )}
@@ -124,7 +128,7 @@ function ItemPageBody({ projectId, record }: { projectId: string; record: Artifa
                     item={record}
                     status={page.status}
                     isUnderReview={page.isUnderReview}
-                    schema={page.schema}
+                    fields={page.view?.keyLineFields}
                   />
                   <ErrorBoundary
                     resetKeys={[record.id]}
@@ -155,11 +159,12 @@ function ItemPageBody({ projectId, record }: { projectId: string; record: Artifa
             ) : page.isHistoryOpen && page.schema !== undefined ? (
               <RevisionContent target={target} view={page.history} fields={page.fields} />
             ) : (
-              page.schema !== undefined && (
+              page.view !== undefined && (
                 <>
                   <ItemDetails
                     item={record}
-                    schema={page.schema}
+                    layout={page.view.layout}
+                    fields={page.view.bodyFields}
                     fieldMarks={links.state === 'success' ? links.fieldMarks : undefined}
                     renderFieldMark={(range, children) => (
                       <ErrorBoundary resetKeys={[record.id]} fallbackRender={() => children}>

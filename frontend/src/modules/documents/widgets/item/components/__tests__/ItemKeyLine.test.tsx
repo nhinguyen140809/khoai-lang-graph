@@ -8,12 +8,13 @@ import type { ItemStatus } from '@/modules/artifact/entities'
 import { renderWithProviders } from '@/test/render'
 import { expectNoAccessibilityViolations } from '@/test/steps'
 
+import { itemPageViewOf } from '../../item-layout.utils'
 import { ItemKeyLine } from '../ItemKeyLine'
 
 const requirement = itemFixtureByKey(projectIds.mentor, 'REQ-001')
-const schema = contentSchemaFixtureByKind('spec_requirement')
+const requirementView = itemPageViewOf(contentSchemaFixtureByKind('spec_requirement'))
 const persona = itemFixtureByKey(projectIds.mentor, 'PER-001')
-const personaSchema = contentSchemaFixtureByKind('persona')
+const personaView = itemPageViewOf(contentSchemaFixtureByKind('persona'))
 
 function renderKeyLine(status: ItemStatus, isUnderReview = false) {
   return renderWithProviders(
@@ -24,7 +25,12 @@ function renderKeyLine(status: ItemStatus, isUnderReview = false) {
 describe('ItemKeyLine', () => {
   it('names the item by its status, with its version and its key last', () => {
     renderWithProviders(
-      <ItemKeyLine item={requirement} status="approved" isUnderReview={false} schema={schema} />,
+      <ItemKeyLine
+        item={requirement}
+        status="approved"
+        isUnderReview={false}
+        fields={requirementView.keyLineFields}
+      />,
     )
 
     const line = screen.getByText(/Approved/).closest('p')
@@ -34,7 +40,7 @@ describe('ItemKeyLine', () => {
     expect(screen.getByText('REQ-001')).toHaveClass('text-muted-foreground')
   })
 
-  it('names the item while the schema of it has not loaded yet', () => {
+  it('names the item while the fields of its key line are not known yet', () => {
     renderKeyLine('approved')
 
     expect(screen.getByText(/Approved/)).toBeInTheDocument()
@@ -43,7 +49,12 @@ describe('ItemKeyLine', () => {
 
   it('shows the fields of one line of a persona above the label of its status', () => {
     renderWithProviders(
-      <ItemKeyLine item={persona} status="approved" isUnderReview={false} schema={personaSchema} />,
+      <ItemKeyLine
+        item={persona}
+        status="approved"
+        isUnderReview={false}
+        fields={personaView.keyLineFields}
+      />,
     )
 
     const stakeholder = screen.getByText('Student').closest('p')

@@ -8,11 +8,7 @@ import {
 } from '@/modules/artifact/entities'
 import {
   type ContentField,
-  type ContentSchema,
   InlineFieldValues,
-  type ItemPageLayout,
-  pageLayoutOf,
-  profileFields,
   useWorkflowDefinition,
 } from '@/modules/workflow/entities'
 import { ColoredText } from '@/shared/components/ui/colored-text'
@@ -24,31 +20,26 @@ interface ItemKeyLineProps {
   status: ItemStatus
   /** Whether the document of the item waits for the review of the user. */
   isUnderReview: boolean
-  /** The schema of the kind of the item, which names the fields that follow the key; none while it loads. */
-  schema?: ContentSchema | undefined
+  /** The fields that follow the key, as the page layout of the item names them; none while its schema loads. */
+  fields?: readonly ContentField[] | undefined
 }
 
-/** What follows the key on the key line, by the page layout of the item. */
-const keyLineFields = {
-  fields: () => [],
-  profile: (schema: ContentSchema) => profileFields(schema).line,
-} as const satisfies Record<ItemPageLayout, (schema: ContentSchema) => ContentField[]>
+const noFields: ContentField[] = []
 
 /**
  * The key line of an item: the fields of one line that its page layout names, above its kind, the
  * label of its status in its color and its version, with the key of the item last, small and
  * muted. The page draws the line right under the title, with the links of the item under it.
  */
-export function ItemKeyLine({ item, status, isUnderReview, schema }: ItemKeyLineProps) {
+export function ItemKeyLine({ item, status, isUnderReview, fields = noFields }: ItemKeyLineProps) {
   const { data: definition } = useWorkflowDefinition()
   const look = useItemStatusLook(status, { isUnderReview })
-  const line = schema === undefined ? [] : keyLineFields[pageLayoutOf(schema)](schema)
 
   return (
     <div className="space-y-0.5 text-sm">
-      {line.length > 0 && (
+      {fields.length > 0 && (
         <p className="flex flex-wrap items-center gap-x-4 gap-y-1">
-          <InlineFieldValues fields={line} content={item.content} definition={definition} />
+          <InlineFieldValues fields={fields} content={item.content} definition={definition} />
         </p>
       )}
       <p className="flex flex-wrap items-baseline gap-x-4 gap-y-1">

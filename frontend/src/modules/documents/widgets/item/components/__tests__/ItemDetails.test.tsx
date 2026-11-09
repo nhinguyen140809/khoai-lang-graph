@@ -7,19 +7,21 @@ import { contentSchemaFixtureByKind } from '@/mocks/workflow/artifact-kinds.fixt
 import { renderWithProviders } from '@/test/render'
 import { expectNoAccessibilityViolations } from '@/test/steps'
 
+import { itemPageViewOf } from '../../item-layout.utils'
 import { ItemDetails } from '../ItemDetails'
 
 const requirement = itemFixtureByKey(projectIds.mentor, 'REQ-001')
-const schema = contentSchemaFixtureByKind('spec_requirement')
+const requirementView = itemPageViewOf(contentSchemaFixtureByKind('spec_requirement'))
 const persona = itemFixtureByKey(projectIds.mentor, 'PER-001')
-const personaSchema = contentSchemaFixtureByKind('persona')
+const personaView = itemPageViewOf(contentSchemaFixtureByKind('persona'))
 
 /** The details with the marks that a page adds. */
 function renderWithMarks() {
   return renderWithProviders(
     <ItemDetails
       item={requirement}
-      schema={schema}
+      layout={requirementView.layout}
+      fields={requirementView.bodyFields}
       fieldMarks={new Map([['statement', [{ start: 17, end: 45 }]]])}
       renderFieldMark={(range, children) => <em key={range.start}>{children}</em>}
     />,
@@ -53,7 +55,9 @@ describe('ItemDetails', () => {
 
 describe('ItemDetails of a profile', () => {
   it('draws the body without the name, the stakeholder type and the status, each list in one column and each text across', () => {
-    renderWithProviders(<ItemDetails item={persona} schema={personaSchema} />)
+    renderWithProviders(
+      <ItemDetails item={persona} layout={personaView.layout} fields={personaView.bodyFields} />,
+    )
 
     expect(screen.queryByRole('heading', { name: 'Name' })).not.toBeInTheDocument()
     expect(screen.queryByRole('heading', { name: 'Stakeholder type' })).not.toBeInTheDocument()
@@ -69,7 +73,8 @@ describe('ItemDetails of a profile', () => {
     renderWithProviders(
       <ItemDetails
         item={persona}
-        schema={personaSchema}
+        layout={personaView.layout}
+        fields={personaView.bodyFields}
         fieldMarks={new Map([['background', [{ start: 0, end: 11 }]]])}
         renderFieldMark={(range, children) => <em key={range.start}>{children}</em>}
       />,

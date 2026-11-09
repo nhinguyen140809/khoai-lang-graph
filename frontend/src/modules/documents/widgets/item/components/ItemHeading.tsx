@@ -1,33 +1,22 @@
 'use client'
 
-import {
-  type ContentSchema,
-  type ItemPageLayout,
-  nonStatusTone,
-  pageLayoutOf,
-} from '@/modules/workflow/entities'
+import { nonStatusTone } from '@/modules/workflow/entities'
 import { InitialsAvatar } from '@/shared/components/ui/initials-avatar'
 
-// Whether an avatar leads the title of the page, by the page layout.
-const headingAvatars = { fields: false, profile: true } as const satisfies Record<
-  ItemPageLayout,
-  boolean
->
-
 interface ItemHeadingProps {
-  schema: ContentSchema | undefined
+  /** Whether an avatar leads the title, as the page layout of the item decides. */
+  hasAvatar: boolean
   title: string
   /** The place of the item among the items of its document, from 1, which gives the tone of its avatar. */
   place: number
 }
 
 /**
- * The heading of an item page: its title, after the avatar of the item when its page layout
- * (`pageLayoutOf`) has one in `headingAvatars`, in the tone of the card it is drawn on. The key of
+ * The heading of an item page: its title, after the avatar of the item when its page layout has
+ * one, in the tone of the card it is drawn on. The key of
  * the item sits on the key line, under the title.
  */
-export function ItemHeading({ schema, title, place }: ItemHeadingProps) {
-  const hasAvatar = schema !== undefined && headingAvatars[pageLayoutOf(schema)]
+export function ItemHeading({ hasAvatar, title, place }: ItemHeadingProps) {
   return (
     <>
       {hasAvatar && <InitialsAvatar name={title} tone={nonStatusTone(place)} size="lg" />}

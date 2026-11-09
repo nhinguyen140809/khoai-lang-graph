@@ -16,6 +16,8 @@ import { contentFields, itemTitle, useIssueKinds } from '@/modules/workflow/enti
 import { useOpenPage } from '@/shared/components/frame'
 import { routes } from '@/shared/routes'
 
+import { itemPageViewOf } from '../item-layout.utils'
+
 const noSteps: BreadcrumbStep[] = []
 
 /**
@@ -36,6 +38,8 @@ export function useItemPage(projectId: string, record: ArtifactItem, { isEditing
   const openPage = useOpenPage()
 
   const fields = useMemo(() => (schema === undefined ? [] : contentFields(schema)), [schema])
+  // The page layout of the kind, worked out once for the heading, the key line and the body.
+  const view = useMemo(() => (schema === undefined ? undefined : itemPageViewOf(schema)), [schema])
   const history = useHistoryView(record.version, { isHidden: isEditing })
 
   const title = itemTitle(schema, record)
@@ -50,6 +54,7 @@ export function useItemPage(projectId: string, record: ArtifactItem, { isEditing
   return {
     title,
     schema,
+    view,
     fields,
     // Unknown until the kinds with issues load, so an item with an open issue never shows as a draft first.
     status: issueKinds.data === undefined ? undefined : status.status,

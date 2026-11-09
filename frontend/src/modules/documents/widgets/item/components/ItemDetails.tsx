@@ -5,28 +5,21 @@ import type { ReactNode } from 'react'
 import type { ArtifactItem } from '@/modules/artifact/entities'
 import {
   type ContentField,
-  contentFields,
   ContentFieldValue,
-  type ContentSchema,
   hasListValue,
   type ItemPageLayout,
-  pageLayoutOf,
-  profileFields,
   useWorkflowDefinition,
   type ValueDefinition,
 } from '@/modules/workflow/entities'
 import type { HighlightRange } from '@/shared/components/ui/highlight'
 import { isEmpty } from '@/shared/lib/guards'
 
-/** The fields that the body of the page draws, by the page layout of the item. */
-const bodyFields = {
-  fields: (schema: ContentSchema) => contentFields(schema),
-  profile: (schema: ContentSchema) => profileFields(schema).body,
-} as const satisfies Record<ItemPageLayout, (schema: ContentSchema) => ContentField[]>
-
 interface ItemDetailsProps<Range extends HighlightRange = HighlightRange> {
   item: ArtifactItem
-  schema: ContentSchema
+  /** The page layout of the kind of the item, which sets how its fields are drawn. */
+  layout: ItemPageLayout
+  /** The fields that the body draws, filled or not; the empty ones are left out. */
+  fields: readonly ContentField[]
   /** The quoted words of the item, by field name. */
   fieldMarks?: ReadonlyMap<string, readonly Range[]> | undefined
   /** Wraps the marked words of a field, for example in the trigger of a popover. */
@@ -121,20 +114,19 @@ const detailBodies = {
  */
 export function ItemDetails<Range extends HighlightRange = HighlightRange>({
   item,
-  schema,
+  layout,
+  fields,
   fieldMarks,
   renderFieldMark,
 }: ItemDetailsProps<Range>) {
   const { data: definition } = useWorkflowDefinition()
-  const fields = bodyFields[pageLayoutOf(schema)](schema).filter(
-    (field) => !isEmpty(item.content[field.name]),
-  )
-  const Body = detailBodies[pageLayoutOf(schema)]
+  const filled = fields.filter((field) => !isEmpty(item.content[field.name]))
+  const Body = detailBodies[layout]
 
   return (
     <Body
       item={item}
-      fields={fields}
+      fields={filled}
       definition={definition}
       fieldMarks={fieldMarks}
       renderFieldMark={renderFieldMark}
