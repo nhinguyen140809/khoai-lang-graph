@@ -1,0 +1,59 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "$id": "items/stakeholder_observation/v1",
+  "title": "Stakeholder observation",
+  "description": "One evaluative dimension of one stakeholder group, mined from one source document with verbatim evidence.",
+  "x-level": "item",
+  "x-kind": "stakeholder_observation",
+  "x-schema-version": 1,
+  "x-key-prefix": "OBS",
+  "x-ui-display": "cards",
+  "x-ui-title-field": "stakeholder_name",
+  "x-ui-list-fields": [
+    "stakeholder_name",
+    "dimension"
+  ],
+  "x-ui-field-order": [
+    "stakeholder_name",
+    "description",
+    "dimension",
+    "evidence",
+    "source"
+  ],
+  "type": "object",
+  "additionalProperties": false,
+  "properties": {
+    "stakeholder_name": {
+      "type": "string",
+      "description": "The stakeholder group as the document itself names it, for example \"commuter students\".",
+      "x-ui-widget": "text"
+    },
+    "description": {
+      "type": "string",
+      "description": "What this group is, as the document presents it.",
+      "x-ui-widget": "textarea"
+    },
+    "dimension": {
+      "type": "string",
+      "description": "Short label of what this group evaluates: a need, value, objection or expectation.",
+      "x-ui-widget": "text"
+    },
+    "evidence": {
+      "type": "string",
+      "description": "The exact sentence from the document that proves the dimension.",
+      "x-ui-widget": "textarea"
+    },
+    "source": {
+      "type": "string",
+      "description": "Key of the source document, such as SRC-002.",
+      "x-ui-widget": "text"
+    }
+  },
+  "required": [
+    "stakeholder_name",
+    "description",
+    "dimension",
+    "evidence",
+    "source"
+  ]
+}

@@ -1,0 +1,469 @@
+version: '1.0'
+design_note: This is an author-defined, project-level scenario set. It varies domain, risk, data sensitivity, stakeholder
+  multiplicity, workflow complexity, and ambiguity while keeping inputs short enough for direct and agentic methods
+  to receive exactly the same evidence.
+scenarios:
+- id: it_incident_response
+  title: Shared IT incident response hub
+  domain: information_technology
+  subdomain: devops_and_service_management
+  intent: We need a shared incident-response hub where engineering and support teams can report service disruptions,
+    coordinate a response, and keep affected customers informed.
+  context: A mid-sized SaaS company currently coordinates incidents across chat, tickets, and spreadsheets. Teams
+    work in two time zones and need a reliable handover between shifts.
+  stakeholders:
+  - support_agent
+  - incident_commander
+  - software_engineer
+  - customer
+  - service_owner
+  constraints:
+  - Existing monitoring and ticketing tools must remain in use during the first release.
+  - Customer-facing updates require incident-commander approval.
+  ambiguity_level: medium
+  risk_profile:
+  - service_availability
+  - access_control
+  - auditability
+  - integration
+  rationale: Represents an IT operations workflow with many handoffs, state transitions, and legacy-tool boundaries;
+    it tests whether methods discover coordination and traceability needs.
+  provenance: author_defined
+  provenance_note: Inspired by the project-level input style used in the attached studies, not copied from a study
+    dataset.
+  goals:
+  - Coordinate incident response and preserve reliable handover between shifts.
+  - Keep affected customers informed through approved communications.
+  in_scope:
+  - Incident reporting and coordinated response.
+  - Shift handover and incident history.
+  - Approved customer-facing incident updates.
+  - Coexistence with existing monitoring and ticketing tools.
+  out_of_scope:
+  - Implementation, deployment, and sprint commitment are outside this requirements-and-product-backlog task.
+  - Replacing existing monitoring or ticketing tools in the first release.
+  - Autonomous production remediation.
+  priority_drivers:
+  - For this benchmark, satisfy explicit constraints before optional enhancements; justify other ordering or leave
+    it unspecified.
+  known_unknowns:
+  - Delivery-team capacity, implementation effort, and release dates are not supplied.
+  - Unstated business policies and numeric quality targets must remain open questions or explicit assumptions.
+  - The severity taxonomy, notification channels, retention duration, and measurable service targets are unspecified.
+  interaction_policy: static
+  evidence:
+  - id: E-01
+    text: We need a shared incident-response hub where engineering and support teams can report service disruptions,
+      coordinate a response, and keep affected customers informed.
+  - id: E-02
+    text: A mid-sized SaaS company currently coordinates incidents across chat, tickets, and spreadsheets. Teams
+      work in two time zones and need a reliable handover between shifts.
+  - id: E-03
+    text: Existing monitoring and ticketing tools must remain in use during the first release.
+  - id: E-04
+    text: Customer-facing updates require incident-commander approval.
+- id: healthcare_care_coordination
+  title: Outpatient care coordination
+  domain: healthcare
+  subdomain: appointments_and_medication_adherence
+  intent: We need an application that helps outpatient-clinic patients arrange appointments, receive medication
+    reminders, and share selected care information with their clinical team.
+  context: Patients have different levels of digital confidence. Clinicians need to distinguish patient-entered
+    information from clinic-verified information, and urgent medical concerns must not be handled as routine messages.
+  stakeholders:
+  - patient
+  - caregiver
+  - clinician
+  - clinic_scheduler
+  - privacy_officer
+  constraints:
+  - The product provides coordination support and must not present itself as diagnosing or prescribing.
+  - Patients control which caregiver can view their information.
+  ambiguity_level: medium
+  risk_profile:
+  - patient_safety
+  - privacy
+  - accessibility
+  - identity
+  - data_provenance
+  rationale: Adds safety- and privacy-sensitive requirements plus accessibility and provenance concerns that are
+    usually less dominant in ordinary business applications.
+  provenance: author_defined
+  provenance_note: Original scenario; no jurisdiction-specific regulation is assumed.
+  goals:
+  - Coordinate appointments and medication reminders.
+  - Share selected care information with appropriate participants while preserving patient control.
+  in_scope:
+  - Appointment coordination.
+  - Medication reminders.
+  - Patient/caregiver/clinical-team information sharing.
+  - Distinguish patient-entered and clinic-verified information.
+  out_of_scope:
+  - Implementation, deployment, and sprint commitment are outside this requirements-and-product-backlog task.
+  - Diagnosis, prescribing, or automated clinical triage decisions.
+  priority_drivers:
+  - For this benchmark, satisfy explicit constraints before optional enhancements; justify other ordering or leave
+    it unspecified.
+  known_unknowns:
+  - Delivery-team capacity, implementation effort, and release dates are not supplied.
+  - Unstated business policies and numeric quality targets must remain open questions or explicit assumptions.
+  - The handling route for urgent concerns, reminder timing, retention and consent revocation workflow are unspecified.
+  interaction_policy: static
+  evidence:
+  - id: E-01
+    text: We need an application that helps outpatient-clinic patients arrange appointments, receive medication
+      reminders, and share selected care information with their clinical team.
+  - id: E-02
+    text: Patients have different levels of digital confidence. Clinicians need to distinguish patient-entered information
+      from clinic-verified information, and urgent medical concerns must not be handled as routine messages.
+  - id: E-03
+    text: The product provides coordination support and must not present itself as diagnosing or prescribing.
+  - id: E-04
+    text: Patients control which caregiver can view their information.
+- id: finance_small_business_books
+  title: Small-business bookkeeping assistant
+  domain: finance
+  subdomain: bookkeeping_and_cashflow
+  intent: We need a bookkeeping assistant for small businesses that organizes income and expenses, supports reconciliation,
+    and gives owners a current cash-flow view.
+  context: Owners may upload statements from multiple accounts and collaborate with an external bookkeeper. Imported
+    records can contain duplicates or later corrections.
+  stakeholders:
+  - business_owner
+  - bookkeeper
+  - auditor
+  - finance_administrator
+  constraints:
+  - Every manual adjustment must retain who made it and why.
+  - Original imported records must remain recoverable after corrections.
+  ambiguity_level: medium
+  risk_profile:
+  - financial_integrity
+  - auditability
+  - authorization
+  - data_quality
+  rationale: Echoes the broad bookkeeping domain seen in iReDev/QUARE while supplying an original, richer project
+    description that stresses integrity, correction history, and role separation.
+  provenance: paper_adapted
+  provenance_note: Domain adapted from benchmark systems named in iReDev and QUARE; wording and details are newly
+    authored.
+  goals:
+  - Keep a current view of small-business income, expenses and cash flow.
+  - Support reliable reconciliation and accountable corrections.
+  in_scope:
+  - Statement import across multiple accounts.
+  - Reconciliation and duplicate/correction handling.
+  - Owner and external-bookkeeper collaboration.
+  - Recoverable source records and adjustment history.
+  out_of_scope:
+  - Implementation, deployment, and sprint commitment are outside this requirements-and-product-backlog task.
+  - Tax filing, investment advice, and executing bank payments.
+  priority_drivers:
+  - For this benchmark, satisfy explicit constraints before optional enhancements; justify other ordering or leave
+    it unspecified.
+  known_unknowns:
+  - Delivery-team capacity, implementation effort, and release dates are not supplied.
+  - Unstated business policies and numeric quality targets must remain open questions or explicit assumptions.
+  - Import formats, account integration methods, reconciliation rules and retention durations are unspecified.
+  interaction_policy: static
+  evidence:
+  - id: E-01
+    text: We need a bookkeeping assistant for small businesses that organizes income and expenses, supports reconciliation,
+      and gives owners a current cash-flow view.
+  - id: E-02
+    text: Owners may upload statements from multiple accounts and collaborate with an external bookkeeper. Imported
+      records can contain duplicates or later corrections.
+  - id: E-03
+    text: Every manual adjustment must retain who made it and why.
+  - id: E-04
+    text: Original imported records must remain recoverable after corrections.
+- id: education_feedback
+  title: Course assignment feedback platform
+  domain: education
+  subdomain: formative_assessment
+  intent: We need a platform that gives students timely feedback on submitted programming assignments and lets instructors
+    review feedback before it affects course decisions.
+  context: A university course has large enrollment, multiple teaching assistants, published rubrics, and resubmissions.
+    Students should understand which evidence led to each feedback point.
+  stakeholders:
+  - student
+  - instructor
+  - teaching_assistant
+  - academic_integrity_officer
+  constraints:
+  - Published course rubrics are the authoritative assessment criteria.
+  - Automated feedback cannot assign or change an official grade without instructor approval.
+  ambiguity_level: low
+  risk_profile:
+  - fairness
+  - explainability
+  - academic_integrity
+  - scalability
+  rationale: Provides a traceability- and human-oversight case in a high-volume workflow, complementing the feedback-platform
+    domain reported by VibeIntent without reusing its project evidence.
+  provenance: paper_adapted
+  provenance_note: Domain and high-level task are adapted from VibeIntent; scenario details are newly authored.
+  goals:
+  - Give students timely, evidence-based assignment feedback.
+  - Preserve instructor authority over official course decisions.
+  in_scope:
+  - Programming-assignment submission and resubmission feedback.
+  - Published-rubric-based feedback.
+  - Instructor/TA review.
+  - Explain evidence behind feedback points.
+  out_of_scope:
+  - Implementation, deployment, and sprint commitment are outside this requirements-and-product-backlog task.
+  - Autonomous assignment of official grades.
+  - Defining institutional disciplinary policy.
+  priority_drivers:
+  - For this benchmark, satisfy explicit constraints before optional enhancements; justify other ordering or leave
+    it unspecified.
+  known_unknowns:
+  - Delivery-team capacity, implementation effort, and release dates are not supplied.
+  - Unstated business policies and numeric quality targets must remain open questions or explicit assumptions.
+  - Rubric contents, course scale, feedback time targets, and programming-language support are unspecified.
+  interaction_policy: static
+  evidence:
+  - id: E-01
+    text: We need a platform that gives students timely feedback on submitted programming assignments and lets instructors
+      review feedback before it affects course decisions.
+  - id: E-02
+    text: A university course has large enrollment, multiple teaching assistants, published rubrics, and resubmissions.
+      Students should understand which evidence led to each feedback point.
+  - id: E-03
+    text: Published course rubrics are the authoritative assessment criteria.
+  - id: E-04
+    text: Automated feedback cannot assign or change an official grade without instructor approval.
+- id: ecommerce_circular_marketplace
+  title: Used-goods marketplace with returns
+  domain: ecommerce
+  subdomain: peer_to_peer_marketplace
+  intent: We need a marketplace where people can list, buy, and return eligible used household items, with enough
+    transaction history to resolve disputes.
+  context: Buyers and sellers do not know each other. Item condition is subjective, payments are handled by an existing
+    provider, and moderators investigate reports of misleading listings.
+  stakeholders:
+  - buyer
+  - seller
+  - moderator
+  - customer_support
+  - marketplace_operator
+  constraints:
+  - Payment-card data is handled only by the existing payment provider.
+  - Return eligibility depends on a policy maintained by marketplace staff.
+  ambiguity_level: medium
+  risk_profile:
+  - fraud
+  - trust
+  - disputes
+  - moderation
+  - third_party_dependency
+  rationale: Tests two-sided incentives, exception paths, evidence retention, and an external payment boundary instead
+    of only a happy-path shopping workflow.
+  provenance: author_defined
+  provenance_note: Original scenario; only the broad shopping-platform domain overlaps common benchmarks.
+  goals:
+  - Support listing, purchasing and eligible returns of used household goods.
+  - Preserve sufficient transaction evidence for dispute handling.
+  in_scope:
+  - Used-item listings and purchases.
+  - Policy-based returns.
+  - Misleading-listing reports and moderator review.
+  - Existing external payment-provider boundary.
+  out_of_scope:
+  - Implementation, deployment, and sprint commitment are outside this requirements-and-product-backlog task.
+  - Storing payment-card data.
+  - Inventing fixed return windows or refund policy.
+  priority_drivers:
+  - For this benchmark, satisfy explicit constraints before optional enhancements; justify other ordering or leave
+    it unspecified.
+  known_unknowns:
+  - Delivery-team capacity, implementation effort, and release dates are not supplied.
+  - Unstated business policies and numeric quality targets must remain open questions or explicit assumptions.
+  - Return eligibility details, item-condition categories, dispute deadlines and provider APIs are unspecified.
+  interaction_policy: static
+  evidence:
+  - id: E-01
+    text: We need a marketplace where people can list, buy, and return eligible used household items, with enough
+      transaction history to resolve disputes.
+  - id: E-02
+    text: Buyers and sellers do not know each other. Item condition is subjective, payments are handled by an existing
+      provider, and moderators investigate reports of misleading listings.
+  - id: E-03
+    text: Payment-card data is handled only by the existing payment provider.
+  - id: E-04
+    text: Return eligibility depends on a policy maintained by marketplace staff.
+- id: government_permit_portal
+  title: Municipal permit application portal
+  domain: public_services
+  subdomain: permit_case_management
+  intent: We need an online portal for residents and contractors to submit permit applications, respond to information
+    requests, and track decisions from the municipal office.
+  context: Applications may be incomplete, can involve several reviewing departments, and must also be usable by
+    people who need assisted or offline service.
+  stakeholders:
+  - resident
+  - contractor
+  - intake_clerk
+  - reviewer
+  - department_supervisor
+  constraints:
+  - Staff must be able to record submissions received through assisted-service channels.
+  - Applicants must receive the stated reason for a rejection or request for more information.
+  ambiguity_level: high
+  risk_profile:
+  - procedural_fairness
+  - accessibility
+  - records_management
+  - transparency
+  rationale: Introduces public accountability, parallel reviewers, incomplete cases, and digital-exclusion concerns,
+    broadening stakeholder and governance coverage.
+  provenance: author_defined
+  provenance_note: Original scenario.
+  goals:
+  - Support permit submission, requests for information and decision tracking.
+  - Preserve assisted-service access and understandable decisions.
+  in_scope:
+  - Resident/contractor permit applications.
+  - Incomplete applications and information requests.
+  - Coordination across reviewing departments.
+  - Assisted/offline intake recorded by staff.
+  out_of_scope:
+  - Implementation, deployment, and sprint commitment are outside this requirements-and-product-backlog task.
+  - Inventing jurisdiction-specific permit law, fees or approval deadlines.
+  priority_drivers:
+  - For this benchmark, satisfy explicit constraints before optional enhancements; justify other ordering or leave
+    it unspecified.
+  known_unknowns:
+  - Delivery-team capacity, implementation effort, and release dates are not supplied.
+  - Unstated business policies and numeric quality targets must remain open questions or explicit assumptions.
+  - Permit types, legal criteria, department sequencing, evidence requirements and service deadlines are unspecified.
+  interaction_policy: static
+  evidence:
+  - id: E-01
+    text: We need an online portal for residents and contractors to submit permit applications, respond to information
+      requests, and track decisions from the municipal office.
+  - id: E-02
+    text: Applications may be incomplete, can involve several reviewing departments, and must also be usable by
+      people who need assisted or offline service.
+  - id: E-03
+    text: Staff must be able to record submissions received through assisted-service channels.
+  - id: E-04
+    text: Applicants must receive the stated reason for a rejection or request for more information.
+- id: mobility_fleet_charging
+  title: Electric fleet charging coordinator
+  domain: transportation
+  subdomain: commercial_fleet_operations
+  intent: We need a system that schedules charging for a delivery company's electric vehicles so that vehicles are
+    ready for assigned routes without exceeding the site's power limit.
+  context: Route assignments change during the day, chargers can fail, and dispatchers need to override a plan while
+    understanding the operational effect.
+  stakeholders:
+  - dispatcher
+  - driver
+  - fleet_manager
+  - maintenance_technician
+  - energy_manager
+  constraints:
+  - The configured site power limit must never be exceeded by planned charging.
+  - A manual override must identify the operator and show affected route readiness.
+  ambiguity_level: high
+  risk_profile:
+  - operational_safety
+  - optimization
+  - availability
+  - human_override
+  rationale: Adds a cyber-physical scheduling problem with hard limits, changing inputs, degraded equipment, and
+    accountable human override.
+  provenance: author_defined
+  provenance_note: Original scenario; chosen as a non-autonomous mobility case distinct from QUARE's autonomous-driving
+    system.
+  goals:
+  - Prepare vehicles for assigned routes while respecting the site power limit.
+  - Support operational response to route changes, charger failure and human override.
+  in_scope:
+  - Charging-plan scheduling.
+  - Updated route assignments.
+  - Failed-charger handling.
+  - Accountable dispatcher override with readiness impact.
+  out_of_scope:
+  - Implementation, deployment, and sprint commitment are outside this requirements-and-product-backlog task.
+  - Autonomous driving and vehicle control.
+  - Inventing site power, battery capacities or optimization weights.
+  priority_drivers:
+  - For this benchmark, satisfy explicit constraints before optional enhancements; justify other ordering or leave
+    it unspecified.
+  known_unknowns:
+  - Delivery-team capacity, implementation effort, and release dates are not supplied.
+  - Unstated business policies and numeric quality targets must remain open questions or explicit assumptions.
+  - Power-limit value, charger/vehicle telemetry, readiness thresholds and optimization priorities are unspecified.
+  interaction_policy: static
+  evidence:
+  - id: E-01
+    text: We need a system that schedules charging for a delivery company's electric vehicles so that vehicles are
+      ready for assigned routes without exceeding the site's power limit.
+  - id: E-02
+    text: Route assignments change during the day, chargers can fail, and dispatchers need to override a plan while
+      understanding the operational effect.
+  - id: E-03
+    text: The configured site power limit must never be exceeded by planned charging.
+  - id: E-04
+    text: A manual override must identify the operator and show affected route readiness.
+- id: hr_onboarding
+  title: Inclusive employee onboarding
+  domain: human_resources
+  subdomain: onboarding_and_access_provisioning
+  intent: We need an onboarding workspace that coordinates tasks for new employees, managers, HR, and IT from accepted
+    offer through the employee's first month.
+  context: Employees may be remote or office-based, start dates can change, and some tasks contain private employment
+    information. Managers want reusable plans without exposing one employee's data to another.
+  stakeholders:
+  - new_employee
+  - hiring_manager
+  - hr_partner
+  - it_administrator
+  - facilities_coordinator
+  constraints:
+  - Access to private employment information follows job responsibility.
+  - Changing a start date must not silently discard completed tasks or approvals.
+  ambiguity_level: medium
+  risk_profile:
+  - privacy
+  - access_provisioning
+  - workflow_dependencies
+  - usability
+  rationale: Exercises multi-party workflow dependencies, templating, date changes, privacy boundaries, and the
+    join between administrative and technical provisioning.
+  provenance: author_defined
+  provenance_note: Original scenario.
+  goals:
+  - Coordinate onboarding from accepted offer through the first month.
+  - Support reusable plans, changed start dates and appropriate privacy boundaries.
+  in_scope:
+  - HR/IT/manager/new-employee task coordination.
+  - Remote and office-based onboarding.
+  - Reusable onboarding plans.
+  - Changed dates with preserved task and approval history.
+  out_of_scope:
+  - Implementation, deployment, and sprint commitment are outside this requirements-and-product-backlog task.
+  - Payroll processing and recruitment selection.
+  - Inventing employment-law obligations or fixed access-permission matrices.
+  priority_drivers:
+  - For this benchmark, satisfy explicit constraints before optional enhancements; justify other ordering or leave
+    it unspecified.
+  known_unknowns:
+  - Delivery-team capacity, implementation effort, and release dates are not supplied.
+  - Unstated business policies and numeric quality targets must remain open questions or explicit assumptions.
+  - Task templates, approval hierarchy, access-system integration and retention policies are unspecified.
+  interaction_policy: static
+  evidence:
+  - id: E-01
+    text: We need an onboarding workspace that coordinates tasks for new employees, managers, HR, and IT from accepted
+      offer through the employee's first month.
+  - id: E-02
+    text: Employees may be remote or office-based, start dates can change, and some tasks contain private employment
+      information. Managers want reusable plans without exposing one employee's data to another.
+  - id: E-03
+    text: Access to private employment information follows job responsibility.
+  - id: E-04
+    text: Changing a start date must not silently discard completed tasks or approvals.

@@ -1,0 +1,167 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "$id": "items/persona/v2",
+  "title": "Persona",
+  "description": "A simulated stakeholder grounded in evidence mined from research documents.",
+  "x-level": "item",
+  "x-kind": "persona",
+  "x-schema-version": 2,
+  "x-key-prefix": "PER",
+  "x-ui-display": "cards",
+  "x-ui-title-field": "name",
+  "x-ui-list-fields": [
+    "name",
+    "stakeholder_type",
+    "interview_status"
+  ],
+  "x-ui-field-order": [
+    "name",
+    "stakeholder_type",
+    "evaluative_dimension",
+    "grounded_in",
+    "background",
+    "expertise",
+    "goals",
+    "interests",
+    "constraints",
+    "priorities",
+    "concerns",
+    "behavioral_tendencies",
+    "evidence",
+    "interview_status"
+  ],
+  "type": "object",
+  "additionalProperties": false,
+  "properties": {
+    "name": {
+      "type": "string",
+      "description": "Display name, for example \"Minh, 3rd-year CS student\".",
+      "x-ui-widget": "text"
+    },
+    "stakeholder_type": {
+      "type": "string",
+      "x-value-from": "elicitation_plan.stakeholder_types",
+      "description": "One of the stakeholder types of the elicitation plan.",
+      "x-ui-widget": "select"
+    },
+    "evaluative_dimension": {
+      "type": "string",
+      "description": "The dimension this persona evaluates the product by, distilled from its mined evidence.",
+      "x-ui-widget": "text"
+    },
+    "grounded_in": {
+      "type": "array",
+      "items": {
+        "type": "string"
+      },
+      "description": "Keys of the stakeholder observations this persona is built from.",
+      "x-ui-widget": "list"
+    },
+    "background": {
+      "type": "string",
+      "description": "History, context, situation.",
+      "x-ui-widget": "textarea"
+    },
+    "expertise": {
+      "type": "string",
+      "description": "Technical and domain familiarity.",
+      "x-ui-widget": "textarea"
+    },
+    "goals": {
+      "type": "array",
+      "items": {
+        "type": "string"
+      },
+      "description": "What this persona wants the system to do.",
+      "x-ui-widget": "list"
+    },
+    "interests": {
+      "type": "array",
+      "items": {
+        "type": "string"
+      },
+      "description": "What they care about.",
+      "x-ui-widget": "list"
+    },
+    "constraints": {
+      "type": "array",
+      "items": {
+        "type": "string"
+      },
+      "description": "Limits they operate under.",
+      "x-ui-widget": "list"
+    },
+    "priorities": {
+      "type": "array",
+      "items": {
+        "type": "string"
+      },
+      "description": "How they rank their interests, most important first.",
+      "x-ui-widget": "list"
+    },
+    "concerns": {
+      "type": "array",
+      "items": {
+        "type": "string"
+      },
+      "description": "Risks, worries, objections.",
+      "x-ui-widget": "list"
+    },
+    "behavioral_tendencies": {
+      "type": "string",
+      "description": "How they tend to communicate.",
+      "x-ui-widget": "textarea"
+    },
+    "evidence": {
+      "type": "array",
+      "items": {
+        "type": "object",
+        "additionalProperties": false,
+        "properties": {
+          "observation": {
+            "type": "string",
+            "description": "Key of the stakeholder observation."
+          },
+          "source": {
+            "type": "string",
+            "description": "Key of the research document the quote comes from."
+          },
+          "quote": {
+            "type": "string",
+            "description": "The exact sentence mined from the document, copied unchanged."
+          }
+        },
+        "required": ["observation", "source", "quote"]
+      },
+      "description": "The document evidence this persona was built from, each with its observation, source and verbatim quote.",
+      "x-ui-widget": "list"
+    },
+    "interview_status": {
+      "type": "string",
+      "enum": [
+        "not_started",
+        "in_progress",
+        "completed"
+      ],
+      "description": "Progress of the interview with this persona. Set by the system.",
+      "x-ui-widget": "select",
+      "readOnly": true
+    }
+  },
+  "required": [
+    "name",
+    "stakeholder_type",
+    "evaluative_dimension",
+    "grounded_in",
+    "background",
+    "expertise",
+    "goals",
+    "interests",
+    "constraints",
+    "priorities",
+    "concerns",
+    "behavioral_tendencies",
+    "evidence",
+    "interview_status"
+  ]
+}
