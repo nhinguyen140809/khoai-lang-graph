@@ -14,6 +14,11 @@ from sqlalchemy import DateTime, ForeignKey, Integer, String, Text, Uuid
 from sqlalchemy.orm import Mapped, mapped_column
 
 from khoailanggraph.platform.db import Base
+from khoailanggraph.platform.origin import (
+    ChangedOriginMixin,
+    CreatedOriginMixin,
+    UpdatedOriginMixin,
+)
 
 
 def utcnow() -> datetime:
@@ -21,7 +26,7 @@ def utcnow() -> datetime:
     return datetime.now(UTC)
 
 
-class ArtifactRow(Base):
+class ArtifactRow(CreatedOriginMixin, UpdatedOriginMixin, Base):
     __tablename__ = "artifacts"
 
     id: Mapped[uuid.UUID] = mapped_column(Uuid(), primary_key=True, default=uuid.uuid4)
@@ -41,7 +46,7 @@ class ArtifactRow(Base):
     deleted_at: Mapped[datetime | None] = mapped_column(DateTime, nullable=True)
 
 
-class ArtifactItemRow(Base):
+class ArtifactItemRow(CreatedOriginMixin, UpdatedOriginMixin, Base):
     __tablename__ = "artifact_items"
 
     id: Mapped[uuid.UUID] = mapped_column(Uuid(), primary_key=True, default=uuid.uuid4)
@@ -64,7 +69,7 @@ class ArtifactItemRow(Base):
     deleted_at: Mapped[datetime | None] = mapped_column(DateTime, nullable=True)
 
 
-class ArtifactRevisionRow(Base):
+class ArtifactRevisionRow(ChangedOriginMixin, Base):
     __tablename__ = "artifact_revisions"
 
     artifact_id: Mapped[uuid.UUID] = mapped_column(
@@ -79,7 +84,7 @@ class ArtifactRevisionRow(Base):
     )
 
 
-class ItemRevisionRow(Base):
+class ItemRevisionRow(ChangedOriginMixin, Base):
     __tablename__ = "item_revisions"
 
     item_id: Mapped[uuid.UUID] = mapped_column(
@@ -104,7 +109,8 @@ class TraceLinkRow(Base):
     source_item_id: Mapped[uuid.UUID] = mapped_column(Uuid(), nullable=False, index=True)
     target_item_id: Mapped[uuid.UUID] = mapped_column(Uuid(), nullable=False, index=True)
     target_version: Mapped[int] = mapped_column(Integer, nullable=False)
-    quote: Mapped[str | None] = mapped_column(Text, nullable=True)
+    source_quote: Mapped[str | None] = mapped_column(Text, nullable=True)
+    target_quote: Mapped[str | None] = mapped_column(Text, nullable=True)
     note: Mapped[str | None] = mapped_column(Text, nullable=True)
     created_by_run_id: Mapped[uuid.UUID | None] = mapped_column(nullable=True)
     created_by_step_id: Mapped[uuid.UUID | None] = mapped_column(nullable=True)

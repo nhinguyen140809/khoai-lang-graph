@@ -137,7 +137,8 @@ class ArtifactSink(Protocol):
         source_id: str,
         target_id: str,
         link_type: str,
-        quote: str | None = None,
+        source_quote: str | None = None,
+        target_quote: str | None = None,
         note: str | None = None,
     ) -> None:
         """One trace link, checked against the pairs of the definition in use."""

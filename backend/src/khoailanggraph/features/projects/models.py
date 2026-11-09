@@ -23,7 +23,7 @@ class ProjectRow(Base):
     owner_id: Mapped[uuid.UUID] = mapped_column(
         Uuid(), ForeignKey("users.id"), nullable=False, index=True
     )
-    name: Mapped[str] = mapped_column(String, nullable=False)
+    name: Mapped[str | None] = mapped_column(String, nullable=True)
     description: Mapped[str | None] = mapped_column(Text, nullable=True)
     status: Mapped[str] = mapped_column(String, default="active", nullable=False)
     output_language: Mapped[str] = mapped_column(String, default="en", nullable=False)

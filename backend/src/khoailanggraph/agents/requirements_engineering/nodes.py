@@ -379,7 +379,7 @@ def _evidence_links(
             source_id=source_id,
             target_id=target["item_id"],
             link_type="evidenced_by",
-            quote=entry.quote,
+            target_quote=entry.quote,
         )
 
 

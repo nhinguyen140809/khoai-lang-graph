@@ -51,6 +51,8 @@ class MessageRow(Base):
     content: Mapped[str] = mapped_column(Text, nullable=False)
     delivery: Mapped[str | None] = mapped_column(String, nullable=True, index=True)
     delivered_in_step_id: Mapped[uuid.UUID | None] = mapped_column(nullable=True)
+    artifact_refs_json: Mapped[bytes] = mapped_column(default=b"[]", nullable=False)
+    item_refs_json: Mapped[bytes] = mapped_column(default=b"[]", nullable=False)
     created_at: Mapped[datetime] = mapped_column(DateTime, default=utcnow, nullable=False)
 
 

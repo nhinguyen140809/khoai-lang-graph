@@ -325,8 +325,8 @@ class SqlArtifactSink:
                 continue
             slot = grouped.setdefault(str(link.link_type), {"targets": [], "quotes": {}})
             slot["targets"].append(str(target.key))
-            if link.quote:
-                slot["quotes"][str(target.key)] = str(link.quote)
+            if link.target_quote:
+                slot["quotes"][str(target.key)] = str(link.target_quote)
         records: list[LinkRecord] = [
             LinkRecord(link_type=link_type, targets=slot["targets"], quotes=slot["quotes"])
             for link_type, slot in grouped.items()
@@ -494,7 +494,8 @@ class SqlArtifactSink:
         source_id: str,
         target_id: str,
         link_type: str,
-        quote: str | None = None,
+        source_quote: str | None = None,
+        target_quote: str | None = None,
         note: str | None = None,
     ) -> None:
         source = self.session.get(ArtifactItemRow, UUID(source_id))
@@ -533,7 +534,8 @@ class SqlArtifactSink:
                 source_item_id=UUID(source_id),
                 target_item_id=UUID(target_id),
                 target_version=target.version,
-                quote=quote,
+                source_quote=source_quote,
+                target_quote=target_quote,
                 note=note,
             )
         )
@@ -730,7 +732,7 @@ async def list_project_links(
             source=_ref_view(source_row),
             target=_ref_view(target_row),
             target_version=link.target_version,
-            quote=link.quote,
+            quote=link.target_quote,
             note=link.note,
         )
         for link, source_row, target_row in rows

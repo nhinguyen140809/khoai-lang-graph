@@ -316,7 +316,8 @@ class InMemoryArtifactSink:
         source_id: str,
         target_id: str,
         link_type: str,
-        quote: str | None = None,
+        source_quote: str | None = None,
+        target_quote: str | None = None,
         note: str | None = None,
     ) -> None:
         source = next((e for e in self.items if e["item_id"] == source_id), None)
@@ -359,7 +360,8 @@ class InMemoryArtifactSink:
                 "target_id": target_id,
                 "target_key": target["key"],
                 "link_type": link_type,
-                "quote": quote,
+                "source_quote": source_quote,
+                "quote": target_quote,
                 "note": note,
             }
         )

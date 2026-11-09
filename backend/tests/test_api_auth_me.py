@@ -162,7 +162,7 @@ async def test_settings_get_put(client: AsyncClient) -> None:
     default_settings = await client.get("/api/v1/me/settings")
     assert default_settings.status_code == 200
     body = default_settings.json()
-    assert body["theme"] == "dark"
+    assert body["theme"] == "system"
     assert {
         "user_id",
         "theme",

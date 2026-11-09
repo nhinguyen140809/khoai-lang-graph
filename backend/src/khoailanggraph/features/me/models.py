@@ -52,7 +52,7 @@ class UserSettingsRow(Base):
     __tablename__ = "user_settings"
 
     user_id: Mapped[uuid.UUID] = mapped_column(Uuid(), ForeignKey("users.id"), primary_key=True)
-    theme: Mapped[str] = mapped_column(String, default="dark", nullable=False)
+    theme: Mapped[str] = mapped_column(String, default="system", nullable=False)
     ui_language: Mapped[str] = mapped_column(String, default="en", nullable=False)
     default_output_language: Mapped[str] = mapped_column(String, default="en", nullable=False)
     default_run_config_json: Mapped[bytes] = mapped_column(default=b"{}", nullable=False)
