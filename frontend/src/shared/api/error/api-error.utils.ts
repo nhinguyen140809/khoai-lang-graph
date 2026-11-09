@@ -1,7 +1,7 @@
 import { z } from 'zod'
 
 import { HttpStatus } from '../http'
-import { type ApiErrorMessages, type FieldProblem } from './api-error.types'
+import { ApiErrorCode, type ApiErrorMessages, type FieldProblem } from './api-error.types'
 
 // The error body of the API (RFC 9457 Problem Details). Fields are optional so that an error from
 // a proxy, which has no such body, still becomes an ApiError.
@@ -47,6 +47,11 @@ export function toApiError(status: number, body: unknown, fallback: string): Api
 /** Whether a request failed because what it asked for does not exist. */
 export function isNotFoundError(error: unknown): boolean {
   return error instanceof ApiError && error.status === HttpStatus.NotFound
+}
+
+/** Whether a request failed because the record it changes moved on since the caller read it. */
+export function isVersionConflict(error: unknown): boolean {
+  return error instanceof ApiError && error.code === ApiErrorCode.VersionConflict
 }
 
 /**

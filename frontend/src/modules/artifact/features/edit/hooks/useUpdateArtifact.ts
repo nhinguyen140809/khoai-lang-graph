@@ -12,10 +12,10 @@ import {
   type UpdateArtifactBody,
   useApplyRecordChange,
 } from '@/modules/artifact/entities'
+import { isVersionConflict } from '@/shared/api/error'
 import { formErrorOf, showFieldProblems } from '@/shared/components/form'
 
 import { editMessages } from '../edit.constants'
-import { isVersionConflict } from '../edit.utils'
 import { type EditArtifactFormValues } from '../schemas/edit-artifact.schema'
 import { useEditingActions } from './useEditingRecord'
 

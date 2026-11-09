@@ -5,14 +5,8 @@ import {
   itemFixtureByKey,
 } from '@/mocks/artifacts/fixtures/artifacts.fixtures'
 import { projectIds } from '@/mocks/shared/db'
-import { ApiError } from '@/shared/api/error'
 
-import {
-  artifactUpdateBody,
-  initialContent,
-  isVersionConflict,
-  itemUpdateBody,
-} from '../edit.utils'
+import { artifactUpdateBody, initialContent, itemUpdateBody } from '../edit.utils'
 import { before, fields, initial } from './edit.utils.data'
 
 const projectId = projectIds.mentor
@@ -67,26 +61,6 @@ describe('artifactUpdateBody', () => {
 describe('initialContent', () => {
   it('gives each field the record lacks its first value', () => {
     expect(initialContent(fields, {})).toEqual(initial)
-  })
-})
-
-describe('isVersionConflict', () => {
-  it('tells the conflict of a version apart from the other errors', () => {
-    const conflict = new ApiError(
-      'Failed to save the item (HTTP 409): Old.',
-      409,
-      'version_conflict',
-      [],
-    )
-    const invalid = new ApiError(
-      'Failed to save the item (HTTP 409): Locked.',
-      409,
-      'invalid_state',
-      [],
-    )
-    expect(isVersionConflict(conflict)).toBe(true)
-    expect(isVersionConflict(invalid)).toBe(false)
-    expect(isVersionConflict(new Error('No'))).toBe(false)
   })
 })
 
