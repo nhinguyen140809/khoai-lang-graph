@@ -1,6 +1,5 @@
 import { type Coverage, isLinkOutOfDate } from '@/modules/trace/entities'
 import { assertPresent } from '@/shared/lib/guards'
-import { snakeToSentenceCase } from '@/shared/lib/text'
 
 import type { GapRule } from '../trace-links.types'
 import {
@@ -10,11 +9,11 @@ import {
   derivedKinds,
   topKinds,
 } from '../traceability.constants'
-import { kindsTitle } from '../traceability.utils'
 import { distinctById, itemsAndLinksOf, toSummary } from './project-links.lookup'
 
 // The coverage of a project: the items whose links leave something to look at. The kinds come from
-// the chain of the definition: the top of the chain is built from the level under it.
+// the chain of the definition: the top of the chain is built from the level under it. The words
+// of each gap are those the user reads, as the API gives them.
 
 const topKind = assertPresent(topKinds[0], 'The top of the chain holds a kind')
 
@@ -22,8 +21,9 @@ const topKind = assertPresent(topKinds[0], 'The top of the chain holds a kind')
 const gapRules: GapRule[] = [
   {
     key: `no_${topKind}`,
-    title: `No ${snakeToSentenceCase(topKind).toLowerCase()}`,
-    description: `${kindsTitle(builtFromTopKinds)} that no ${kindsTitle(topKinds).toLowerCase()} was derived from.`,
+    title: 'Requirements without a user story',
+    description:
+      'These specified requirements have no user stories in the backlog that is built from them yet.',
     itemsIn: ({ items, sourcesOf }) =>
       items.filter(
         (item) =>
@@ -33,8 +33,8 @@ const gapRules: GapRule[] = [
   },
   {
     key: 'no_source',
-    title: 'No source',
-    description: `${kindsTitle(derivedKinds)} that were not derived from anything.`,
+    title: 'Requirements without a source',
+    description: 'These requirements are not based on any need from the interviews.',
     itemsIn: ({ items, targetsOf }) =>
       items.filter(
         (item) =>
@@ -43,8 +43,9 @@ const gapRules: GapRule[] = [
   },
   {
     key: 'needs_review',
-    title: 'Needs review',
-    description: 'Items derived from a version of another item that has changed since.',
+    title: 'Links to check',
+    description:
+      'The item that each of these links is based on changed after the link was made, or was replaced.',
     itemsIn: ({ itemById, links }) =>
       distinctById(
         links
@@ -57,6 +58,23 @@ const gapRules: GapRule[] = [
               : []
           }),
       ),
+    changedTargetsOf: (item, { itemById, links }) =>
+      links
+        .filter(({ link_type }) => chainLinkTypes.includes(link_type))
+        .flatMap((link) => {
+          if (link.source_item_id !== item.id) return []
+          const target = itemById.get(link.target_item_id)
+          return target !== undefined && isLinkOutOfDate(link, target)
+            ? [
+                {
+                  target: toSummary(target),
+                  link_type: link.link_type,
+                  made_from_version: link.target_version,
+                  current_version: target.version,
+                },
+              ]
+            : []
+        }),
   },
 ]
 
@@ -64,11 +82,16 @@ const gapRules: GapRule[] = [
 export function coverageOf(projectId: string): Coverage {
   const project = itemsAndLinksOf(projectId)
   return {
-    gaps: gapRules.map(({ key, title, description, itemsIn }) => ({
+    gaps: gapRules.map(({ key, title, description, itemsIn, changedTargetsOf }) => ({
       key,
       title,
       description,
-      items: itemsIn(project).map(toSummary),
+      items: itemsIn(project).map((item) => ({
+        ...toSummary(item),
+        ...(changedTargetsOf !== undefined
+          ? { changed_targets: changedTargetsOf(item, project) }
+          : {}),
+      })),
     })),
   }
 }

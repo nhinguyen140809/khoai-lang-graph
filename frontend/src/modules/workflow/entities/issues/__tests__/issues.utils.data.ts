@@ -7,12 +7,22 @@ export const issueKindCases = [
       {
         kind: 'conflict',
         schema_version: 1,
-        issue: { status_field: 'status', open_values: ['open'] },
+        issue: {
+          status_field: 'status',
+          open_values: ['open'],
+          about_link_types: ['concerns'],
+          party_link_types: ['involves'],
+        },
       },
       {
         kind: 'doubt',
         schema_version: 2,
-        issue: { status_field: 'state', open_values: ['raised', 'reopened'] },
+        issue: {
+          status_field: 'state',
+          open_values: ['raised', 'reopened'],
+          about_link_types: ['flags'],
+          party_link_types: [],
+        },
       },
     ],
     expected: [
@@ -24,6 +34,23 @@ export const issueKindCases = [
     name: 'no issue kind when no item kind records a problem',
     itemKinds: [{ kind: 'section', schema_version: 1, issue: null }],
     expected: [],
+  },
+]
+
+/** The item kinds the definition lists, and the link types of the issues of each issue kind. */
+export const issueLinkTypeCases = [
+  {
+    name: 'the link types that each issue kind names',
+    itemKinds: issueKindCases[0]?.itemKinds ?? [],
+    expected: {
+      conflict: { about: ['concerns'], parties: ['involves'] },
+      doubt: { about: ['flags'], parties: [] },
+    },
+  },
+  {
+    name: 'no kind when no item kind records a problem',
+    itemKinds: [{ kind: 'section', schema_version: 1, issue: null }],
+    expected: {},
   },
 ]
 

@@ -10,4 +10,7 @@ export const chainKeys = {
   /** The chains of all the items of one artifact. */
   ofArtifact: (artifactId: string, query: TraceQuery) =>
     [...chainKeys.all(), 'artifact', artifactId, query] as const,
+  /** The places of the nodes of one chain, laid out once per set of node and edge ids. */
+  layout: (nodeIds: readonly string[], edgeIds: readonly string[]) =>
+    [...chainKeys.all(), 'layout', nodeIds.join(','), edgeIds.join(',')] as const,
 }

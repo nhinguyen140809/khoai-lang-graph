@@ -465,8 +465,9 @@ const requirementsAnalysis: ArtifactSpec = {
       key: 'AMB-001',
       kind: 'ambiguity_issue',
       content: {
-        title: '"Fast" has no number',
-        description: '"Fast" search has no number.',
+        title: 'Where "2 seconds" comes from',
+        description:
+          'The interviews say only "a couple of seconds"; the requirement names 2, and the quote marks the place.',
         ambiguity_type: 'vague',
         ambiguous_text: 'Fast. I do not wait for a page that takes more than a couple of seconds.',
         clarifying_question: 'How many seconds are too many, and for how many mentors?',
@@ -861,15 +862,19 @@ const validationReport: ArtifactSpec = {
 }
 
 // The analysis is still under review, but the user has begun: some items are approved, some are
-// refused, so that a document shows every state of an item next to the drafts.
-const analysisReview: Record<string, 'approved' | 'rejected'> = {
+// refused, and some were replaced by a later item, so that a document shows every state of an item
+// next to the drafts.
+const analysisReview: Record<string, 'approved' | 'rejected' | 'superseded'> = {
   'RAW-001': 'approved',
   'RAW-002': 'approved',
   'RAW-008': 'rejected',
   'AR-001': 'approved',
   'AR-002': 'approved',
+  'AR-009': 'superseded',
+  'LN-001': 'superseded',
   'LN-002': 'rejected',
   'ASM-003': 'rejected',
+  'ASM-004': 'superseded',
 }
 
 function withReview(specs: ItemSpec[]): ItemSpec[] {

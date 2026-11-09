@@ -48,10 +48,14 @@ export const definedArtifactKindSchema = z.object({
 
 export type DefinedArtifactKind = z.infer<typeof definedArtifactKindSchema>
 
-/** Where the content of an issue says whether it is still open. */
+/** Where the content of an issue says whether it is still open, and the link types that tie it to what it is about. */
 const issueRuleSchema = z.object({
   status_field: z.string(),
   open_values: z.array(z.string()).min(1),
+  /** The keys of the link types that tie an issue of the kind to the items it is about. */
+  about_link_types: z.array(z.string()),
+  /** The keys of the link types that tie an issue of the kind to the people it involves. */
+  party_link_types: z.array(z.string()),
 })
 
 /**
@@ -86,12 +90,21 @@ export const linkTypeSchema = z.object({
   title: z.string(),
   /** Following links of the type from an item never returns to it. */
   acyclic: z.boolean(),
+  /** Only the agents create links of the type, during a run; the user never starts one by hand. */
+  agent_only: z.boolean(),
   pairs: z.array(linkPairSchema),
   /** Which side of a link of this type may quote words. */
   quotes: linkQuotesSchema,
 })
 
 export type LinkType = z.infer<typeof linkTypeSchema>
+
+/** A kind of link that an item of one kind may start, with its title and the kinds it may lead to. */
+export interface LinkTypeChoice {
+  key: string
+  title: string
+  targetKinds: string[]
+}
 
 /** A named list of values that a content field takes its value from. */
 export const valueListSchema = z.object({

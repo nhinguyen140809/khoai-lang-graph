@@ -36,6 +36,7 @@ import { SampleGroup, SampleLabel } from '../Sample'
 
 const nodeVariants = ['outline', 'soft', 'solid'] as const
 const edgeVariants = ['solid', 'dashed', 'dotted'] as const
+const edgeWeights = ['thin', 'regular', 'strong'] as const
 
 function TraceItemNode({ data }: NodeProps<TraceNode>) {
   return (
@@ -79,7 +80,9 @@ function LinkEdge({
       labelX={labelX}
       labelY={labelY}
       variant={data?.variant}
+      weight={data?.weight}
       color={data?.color}
+      arrow
     />
   )
 }
@@ -131,17 +134,32 @@ const edgeSampleNodes: (SamplePoint | SampleCaption)[] = [
       point(`${variant}-${color}-to`, column * COLUMN_WIDTH + EDGE_LENGTH, row * ROW_HEIGHT),
     ]),
   ]),
+  // One more row for the weights of an edge, under the colors.
+  caption('weight', -16, tones.length * ROW_HEIGHT, [1, 0.5]),
+  ...edgeWeights.flatMap((weight, column) => [
+    point(`weight-${weight}-from`, column * COLUMN_WIDTH, tones.length * ROW_HEIGHT),
+    point(`weight-${weight}-to`, column * COLUMN_WIDTH + EDGE_LENGTH, tones.length * ROW_HEIGHT),
+  ]),
 ]
 
-const edgeSampleEdges: TraceEdge[] = tones.flatMap((color) =>
-  edgeVariants.map((variant) => ({
-    id: `${variant}-${color}`,
+const edgeSampleEdges: TraceEdge[] = [
+  ...tones.flatMap((color): TraceEdge[] =>
+    edgeVariants.map((variant) => ({
+      id: `${variant}-${color}`,
+      type: 'link',
+      source: `${variant}-${color}-from`,
+      target: `${variant}-${color}-to`,
+      data: { variant, color },
+    })),
+  ),
+  ...edgeWeights.map((weight): TraceEdge => ({
+    id: `weight-${weight}`,
     type: 'link',
-    source: `${variant}-${color}-from`,
-    target: `${variant}-${color}-to`,
-    data: { variant, color },
+    source: `weight-${weight}-from`,
+    target: `weight-${weight}-to`,
+    data: { variant: 'solid', color: 'neutral', weight },
   })),
-)
+]
 
 export function GraphCard() {
   return (
@@ -149,8 +167,8 @@ export function GraphCard() {
       <CardHeader className="border-b pb-3">
         <CardTitle>Trace graph</CardTitle>
         <CardDescription>
-          Nodes take <Code>variant</Code> and <Code>color</Code> like badges, edges a line style and
-          a color; the ring shows the run status (REQ-001 is loading).
+          Nodes take <Code>variant</Code> and <Code>color</Code> like badges, edges a line style, a
+          weight and a color; the ring shows the run status (REQ-001 is loading).
         </CardDescription>
       </CardHeader>
       <CardContent className="flex flex-col gap-3 p-0">
@@ -180,7 +198,7 @@ export function GraphCard() {
           </SampleGroup>
         ))}
         <SampleGroup label="edges" className="px-4">
-          <div className="h-52 rounded-md border bg-background">
+          <div className="h-64 rounded-md border bg-background">
             <Flow
               defaultNodes={edgeSampleNodes}
               defaultEdges={edgeSampleEdges}

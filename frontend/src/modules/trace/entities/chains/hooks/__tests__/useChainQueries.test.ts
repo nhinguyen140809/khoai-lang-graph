@@ -58,12 +58,14 @@ describe('enabling', () => {
 })
 
 describe('useOutOfDateItemIds', () => {
-  it('gives REQ-003 of the specification, empty while it loads', async () => {
+  it('gives REQ-002 and REQ-003 of the specification, empty while it loads', async () => {
     const { result } = renderHookWithProviders(() => useOutOfDateItemIds(specification.id))
 
     expect(result.current.size).toBe(0)
     await waitFor(() => {
-      expect([...result.current]).toEqual([itemFixtureByKey(projectId, 'REQ-003').id])
+      expect([...result.current].toSorted()).toEqual(
+        ['REQ-002', 'REQ-003'].map((key) => itemFixtureByKey(projectId, key).id).toSorted(),
+      )
     })
   })
 })

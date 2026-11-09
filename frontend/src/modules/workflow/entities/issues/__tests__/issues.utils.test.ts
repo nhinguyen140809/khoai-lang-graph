@@ -2,8 +2,8 @@ import { describe, expect, it } from 'vitest'
 
 import { workflowDefinitionFixture } from '@/mocks/workflow/workflow.fixtures'
 
-import { isOpenIssue, issueKinds } from '../issues.utils'
-import { issueKindCases, openIssueCases } from './issues.utils.data'
+import { isOpenIssue, issueKinds, issueLinkTypesByKind } from '../issues.utils'
+import { issueKindCases, issueLinkTypeCases, openIssueCases } from './issues.utils.data'
 
 describe('issueKinds', () => {
   it('lists the three issue kinds of version 1 with where their status is', () => {
@@ -16,6 +16,24 @@ describe('issueKinds', () => {
 
   it.each(issueKindCases)('gives $name', ({ itemKinds, expected }) => {
     expect(issueKinds({ ...workflowDefinitionFixture, item_kinds: itemKinds })).toEqual(expected)
+  })
+})
+
+describe('issueLinkTypesByKind', () => {
+  it('names the link types of the three issue kinds of version 1', () => {
+    expect(issueLinkTypesByKind(workflowDefinitionFixture)).toEqual(
+      new Map([
+        ['ambiguity_issue', { about: ['concerns'], parties: [] }],
+        ['conflict', { about: ['concerns'], parties: ['involves'] }],
+        ['validation_issue', { about: ['flags'], parties: [] }],
+      ]),
+    )
+  })
+
+  it.each(issueLinkTypeCases)('gives $name', ({ itemKinds, expected }) => {
+    const kinds = issueLinkTypesByKind({ ...workflowDefinitionFixture, item_kinds: itemKinds })
+
+    expect(Object.fromEntries(kinds)).toEqual(expected)
   })
 })
 

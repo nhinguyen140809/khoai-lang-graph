@@ -35,3 +35,54 @@ export const quoteCases = [
   { name: 'words that are not in the text', text, quote: 'I never sleep', expected: null },
   { name: 'a blank quote', text, quote: '  ', expected: null },
 ]
+
+import type { TextRange } from '../text.types'
+
+const longText =
+  'A mentor sets the weekly hours when sessions can be booked, and a student sees those free hours while searching for a mentor in the field of study.'
+
+// Where a quote sits in the long text, cut to at most 60 characters.
+const middle = longText.indexOf('free hours')
+const first = longText.indexOf('A mentor')
+const last = longText.indexOf('field of study')
+
+/** Where the cut falls: after the quote only, around it, or before it only. */
+type CutSide = 'start' | 'middle' | 'end'
+
+interface CutCase {
+  name: string
+  text: string
+  range: TextRange
+  maxLength: number
+  expectedFrom: CutSide
+}
+
+export const wholeExcerptCase = {
+  text: 'It lasts one hour.',
+  range: { start: 9, end: 17 },
+  maxLength: 60,
+}
+
+export const cutExcerptCases: CutCase[] = [
+  {
+    name: 'a quote at the start, cut after it only',
+    text: longText,
+    range: { start: first, end: first + 'A mentor sets'.length },
+    maxLength: 60,
+    expectedFrom: 'start',
+  },
+  {
+    name: 'a quote in the middle, cut at both ends',
+    text: longText,
+    range: { start: middle, end: middle + 'free hours'.length },
+    maxLength: 60,
+    expectedFrom: 'middle',
+  },
+  {
+    name: 'a quote at the end, cut before it only',
+    text: longText,
+    range: { start: last, end: longText.length - 1 },
+    maxLength: 60,
+    expectedFrom: 'end',
+  },
+]

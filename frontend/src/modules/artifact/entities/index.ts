@@ -75,6 +75,7 @@ export { subjectTitlesOf } from './items/items.utils'
 export { documentBlocks, hasTranscript } from './outline/document-blocks.utils'
 export { useArtifactDocument } from './outline/hooks/useArtifactDocument'
 export { useArtifactOutline } from './outline/hooks/useArtifactOutline'
+export { useKindViews } from './outline/hooks/useKindViews'
 export { useOutlineItems } from './outline/hooks/useOutlineItems'
 export type {
   ArtifactDocumentData,
@@ -95,6 +96,7 @@ export {
   itemAnchorId,
   itemNodeId,
   outlineBreadcrumb,
+  outlineItemsOf,
   outlineNeighbors,
   outlineSequence,
   outlineStatuses,
@@ -141,3 +143,4 @@ export {
   itemStatus,
   itemStatusLook,
 } from './status/item-status.utils'
+export { reviewStatusNodeLooks } from './status/review-status-look.constants'

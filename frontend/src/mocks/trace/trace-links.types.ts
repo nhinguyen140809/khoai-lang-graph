@@ -1,5 +1,5 @@
 import type { ArtifactItem } from '@/modules/artifact/entities'
-import type { ItemSummary, TraceLink } from '@/modules/trace/entities'
+import type { ChangedTarget, ItemSummary, TraceLink } from '@/modules/trace/entities'
 import type { LinkType } from '@/modules/workflow/entities'
 import type { FieldProblem } from '@/shared/api/error'
 
@@ -49,6 +49,8 @@ export interface GapRule {
   title: string
   description: string
   itemsIn: (project: ProjectLinks) => ArtifactItem[]
+  /** What the answer carries for each item: the targets that changed under its links, if the gap is about them. */
+  changedTargetsOf?: (item: ArtifactItem, project: ProjectLinks) => ChangedTarget[]
 }
 
 /** A link that a request asks for, with the project it is for, the items at its two ends and its type. */

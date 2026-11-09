@@ -9,9 +9,9 @@ import { groupBy } from '@/shared/lib/collections'
 import { isEmpty } from '@/shared/lib/guards'
 import { ancestorsOf } from '@/shared/lib/hierarchy'
 
-import type { Artifact } from '../artifacts/artifacts.types'
+import { type Artifact, reviewStatus } from '../artifacts/artifacts.types'
 import { itemHierarchy } from '../items/item-hierarchy.utils'
-import type { OutlineItem } from '../items/items.types'
+import type { ArtifactItem, OutlineItem } from '../items/items.types'
 import type { ItemStatus, StatusCount } from '../status/item-status.types'
 import { itemStatus, mergeStatusCounts } from '../status/item-status.utils'
 import type {
@@ -78,6 +78,22 @@ function placeUnder(
 /** The items of an artifact in the order of its document (see the top of this file). */
 export function arrangeItems(input: ArrangeInput): ArrangedPlace {
   return placeUnder(null, input, new Set(input.items.map(({ id }) => id)))
+}
+
+/**
+ * The items of one document as its outline reads them: without the superseded, each with the
+ * depth of its place. A read of the items of one artifact already comes with the depth, so this
+ * serves the reads of a whole project, which have no place of their own.
+ */
+export function outlineItemsOf(items: readonly ArtifactItem[]): OutlineItem[] {
+  const own = items.filter(({ review_status }) => review_status !== reviewStatus.superseded)
+  return own.map((item) => ({ ...item, depth: depthOf(item, own) }))
+}
+
+/** The depth of an item in its outline: 1 at the top, one more under each parent. */
+function depthOf(item: ArtifactItem, own: readonly ArtifactItem[]): number {
+  const parent = own.find(({ id }) => id === item.parent_item_id)
+  return parent === undefined ? 1 : depthOf(parent, own) + 1
 }
 
 function countOf(place: ArrangedPlace): number {

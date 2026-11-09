@@ -4,7 +4,7 @@ export {
   useContentSchema,
   useContentSchemas,
 } from '../artifact-kinds/hooks/useArtifactKindQueries'
-export { useKindTitleOf } from '../artifact-kinds/hooks/useKindTitleOf'
+export { useKindTitles } from '../artifact-kinds/hooks/useKindTitles'
 export { contentSchemasByKind, kindSchemasByKind } from '../artifact-kinds/kind-schemas.utils'
 export { ContentFieldValue } from '../content/components/ContentFieldValue'
 export { FieldSeparator } from '../content/components/FieldSeparator'
@@ -38,6 +38,7 @@ export { useItemTitleOf } from '../content/values/hooks/useItemTitleOf'
 export { extensionFieldText, fieldText, itemTitle } from '../content/values/item-title.utils'
 export type { ExportFormat } from '../definition/export-templates.types'
 export { exportFormats } from '../definition/export-templates.types'
+export { useArtifactItemKinds } from '../definition/hooks/useArtifactItemKinds'
 export { useWorkflowDefinition } from '../definition/hooks/useWorkflowDefinition'
 export type { WorkflowDefinition } from '../definition/workflow-definition.types'
 export { findAgentRole } from '../definition/workflow-definition.utils'

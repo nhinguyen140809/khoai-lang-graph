@@ -7,10 +7,10 @@ import { projectIds, runIds, threadIds } from '@/mocks/shared/db'
 import { pathParam } from '@/mocks/shared/http/request'
 import { apiEndpoints } from '@/shared/api/endpoints'
 import { HttpMethod } from '@/shared/api/http'
-import { serverError, serverErrorOn } from '@/test/msw'
+import { openPage, serverError, serverErrorOn } from '@/test/msw'
 import { createTestQueryClient, renderHookWithProviders } from '@/test/render'
 
-import { useProjectRunResult } from '../useProjectRunResult'
+import { useIsProjectWriting, useProjectRunResult } from '../useProjectRunResult'
 import { emptyPage, latestRunOf, twoThreads } from './useProjectRunResult.data'
 
 // The threads of the project and the latest run of each of them, as the API answers them.
@@ -117,5 +117,34 @@ describe('useProjectRunResult', () => {
     await act(() => queryClient.invalidateQueries())
 
     expect(result.current.state).toBe('success')
+  })
+})
+
+describe('useIsProjectWriting', () => {
+  it('says that the agents write while the shown run works', async () => {
+    openPage('/?mock-run-status=running')
+    const { result } = renderHookWithProviders(() => useIsProjectWriting(projectIds.mentor))
+
+    await waitFor(() => {
+      expect(result.current).toBe(true)
+    })
+  })
+
+  it('says that the agents write nothing while the run waits for the user', async () => {
+    openPage('/')
+    const { result } = renderHookWithProviders(() => useIsProjectWriting(projectIds.mentor))
+
+    await waitFor(() => {
+      expect(result.current).toBe(false)
+    })
+  })
+
+  it('says that the agents write nothing for a run that ended', async () => {
+    openPage('/?mock-run-status=done')
+    const { result } = renderHookWithProviders(() => useIsProjectWriting(projectIds.mentor))
+
+    await waitFor(() => {
+      expect(result.current).toBe(false)
+    })
   })
 })

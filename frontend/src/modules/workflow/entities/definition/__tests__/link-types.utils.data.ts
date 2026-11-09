@@ -5,6 +5,7 @@ function linkType(pairs: LinkType['pairs']): LinkType {
     key: 'test',
     title: 'Test',
     acyclic: false,
+    agent_only: false,
     pairs,
     quotes: { source: false, target: false },
   }

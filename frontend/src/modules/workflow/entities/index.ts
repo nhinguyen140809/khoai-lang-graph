@@ -11,7 +11,7 @@ export {
   useContentSchema,
   useContentSchemas,
 } from './artifact-kinds/hooks/useArtifactKindQueries'
-export { useKindTitleOf } from './artifact-kinds/hooks/useKindTitleOf'
+export { useKindTitles } from './artifact-kinds/hooks/useKindTitles'
 export { contentSchemasByKind, kindSchemasByKind } from './artifact-kinds/kind-schemas.utils'
 export type { ReviewableCheckpoint } from './checkpoints/checkpoints.types'
 export { reviewableCheckpoints } from './checkpoints/checkpoints.utils'
@@ -54,15 +54,19 @@ export {
 } from './content/values/content-values.utils'
 export { useItemTitleOf } from './content/values/hooks/useItemTitleOf'
 export { extensionFieldText, itemTitle } from './content/values/item-title.utils'
+export type { QuotePlace } from './content/values/quote-place.types'
+export { placeQuote } from './content/values/quote-place.utils'
 export type { ExportFormat, ExportTemplate } from './definition/export-templates.types'
 export { exportFormats } from './definition/export-templates.types'
 export { useAgentRoleLabels } from './definition/hooks/useAgentRoleLabels'
+export { useArtifactItemKinds } from './definition/hooks/useArtifactItemKinds'
 export { useLinkTitleOf } from './definition/hooks/useLinkTitleOf'
 export { useWorkflowDefinition } from './definition/hooks/useWorkflowDefinition'
 export {
   canLinkTypeConnect,
   findLinkType,
   kindLevelsOf,
+  linkTypesFrom,
   targetKindsOf,
 } from './definition/link-types.utils'
 export { getWorkflowDefinition } from './definition/workflow.api'
@@ -92,6 +96,7 @@ export type {
   DirectiveKind,
   LinkQuotes,
   LinkType,
+  LinkTypeChoice,
   ValueList,
   WorkflowStage,
 } from './definition/workflow-vocabulary.types'

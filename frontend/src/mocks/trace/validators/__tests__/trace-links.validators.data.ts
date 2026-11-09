@@ -43,6 +43,11 @@ export const refusedLinkCases = [
     fields: ['target_item_id'],
   },
   {
+    name: 'a link type that only the agents create',
+    body: body('REQ-001', 'REQ-002', 'supersedes'),
+    fields: ['link_type'],
+  },
+  {
     name: 'a pair of kinds the type does not connect',
     body: body('REQ-001', 'PER-001', 'derived_from'),
     fields: ['link_type'],

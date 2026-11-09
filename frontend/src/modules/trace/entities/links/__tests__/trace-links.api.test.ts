@@ -22,12 +22,12 @@ describe('trace links api', () => {
   it('makes a link that the next read lists', async () => {
     const link = await createTraceLink(projectId, newLink)
 
-    const page = await listProjectTraceLinks(projectId, null, 200, { linkType: 'depends_on' })
+    const page = await listProjectTraceLinks(projectId, null, 200, { linkType: 'involves' })
 
     expect(link).toMatchObject({
       source_item_id: newLink.source_item_id,
       target_item_id: newLink.target_item_id,
-      link_type: 'depends_on',
+      link_type: 'involves',
       note: newLink.note,
     })
     expect(page.items.map(({ id }) => id)).toContain(link.id)
@@ -38,7 +38,7 @@ describe('trace links api', () => {
 
     await deleteTraceLink(link.id)
 
-    const page = await listProjectTraceLinks(projectId, null, 200, { linkType: 'depends_on' })
+    const page = await listProjectTraceLinks(projectId, null, 200, { linkType: 'involves' })
     expect(page.items.map(({ id }) => id)).not.toContain(link.id)
   })
 

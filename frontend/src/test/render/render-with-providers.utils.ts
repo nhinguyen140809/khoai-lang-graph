@@ -11,21 +11,31 @@ import { TestProviders } from './TestProviders'
 
 interface ProviderOptions {
   /** The query cache to render with, to look at it in the test. */
-  queryClient?: QueryClient
+  queryClient?: QueryClient | undefined
+  /** The project of the screen to render in; the mentor project when left out. */
+  projectId?: string | undefined
 }
 
-function wrapperFor(queryClient: QueryClient | undefined) {
+function wrapperFor({ queryClient, projectId }: ProviderOptions) {
   return function Wrapper({ children }: { children: ReactNode }) {
-    return createElement(TestProviders, queryClient ? { queryClient, children } : { children })
+    return createElement(TestProviders, {
+      ...(queryClient ? { queryClient } : {}),
+      ...(projectId === undefined ? {} : { projectId }),
+      children,
+    })
   }
 }
 
 /** Renders a component with the providers of `TestProviders`. */
 export function renderWithProviders(
   ui: ReactElement,
-  { queryClient, ...options }: Omit<RenderOptions, 'wrapper' | 'queries'> & ProviderOptions = {},
+  {
+    queryClient,
+    projectId,
+    ...options
+  }: Omit<RenderOptions, 'wrapper' | 'queries'> & ProviderOptions = {},
 ) {
-  return render(ui, { ...options, wrapper: wrapperFor(queryClient) })
+  return render(ui, { ...options, wrapper: wrapperFor({ queryClient, projectId }) })
 }
 
 /** Renders a hook with the providers of `TestProviders`. */
@@ -33,8 +43,9 @@ export function renderHookWithProviders<Result, Props>(
   callback: (props: Props) => Result,
   {
     queryClient,
+    projectId,
     ...options
   }: Omit<RenderHookOptions<Props>, 'wrapper' | 'queries'> & ProviderOptions = {},
 ) {
-  return renderHook(callback, { ...options, wrapper: wrapperFor(queryClient) })
+  return renderHook(callback, { ...options, wrapper: wrapperFor({ queryClient, projectId }) })
 }

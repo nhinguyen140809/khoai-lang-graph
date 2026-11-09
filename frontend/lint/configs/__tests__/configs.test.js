@@ -1,6 +1,7 @@
 import { ESLint } from 'eslint'
 import { describe, expect, it } from 'vitest'
 
+import { moduleImports } from '../../lib/modules/module-imports.constants.js'
 import { frontendRoot } from '../../lib/paths.utils.js'
 import fileNames from '../file-names.js'
 
@@ -71,6 +72,31 @@ describe('the resolved config', () => {
       'no-restricted-imports',
     )
     expect(JSON.stringify(test)).not.toContain('topicEntityModules')
+  })
+
+  it('gives the new topics of trace their one-way reads, and keeps traceability listed with no cycle', async () => {
+    const issues = await ruleOf(
+      'src/modules/trace/entities/issues/issues.utils.ts',
+      'no-restricted-imports',
+    )
+    expect(JSON.stringify(issues)).toContain('issues reads links')
+    const graph = await ruleOf(
+      'src/modules/trace/entities/graph/hooks/useGraphQueries.ts',
+      'no-restricted-imports',
+    )
+    expect(JSON.stringify(graph)).toContain('graph reads chains, links, issues, traceability')
+    // The table above resolves for every module on disk, so traceability is listed above the
+    // modules it reads without a cycle; the module itself comes with its widgets.
+    expect(moduleImports.traceability).toEqual([
+      'workflow',
+      'artifact',
+      'trace',
+      'run',
+      'review',
+      'thread',
+      'project',
+      'documents',
+    ])
   })
 
   it('keeps the browser environment in the files that own it', async () => {

@@ -9,4 +9,7 @@ export const traceLinkKeys = {
   /** The links of one project, narrowed by the filters. */
   ofProject: (projectId: string, filters: TraceLinkFilters) =>
     [...traceLinkKeys.lists(), projectId, filters] as const,
+  /** The first page of the items that a link may lead to, narrowed by the search; no kind names every kind. */
+  targets: (projectId: string, filters: { kind: string | null; text: string }) =>
+    [...traceLinkKeys.all(), 'targets', projectId, filters] as const,
 }
