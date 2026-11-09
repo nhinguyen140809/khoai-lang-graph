@@ -84,6 +84,20 @@ screenshots('Design system', (shot) => {
     })
   })
 
+  shot('Trace graph', async ({ page, shoot }) => {
+    const width = page.viewportSize()?.width ?? 1920
+    await page.setViewportSize({ width, height: 2400 })
+    await page.goto('/design-system')
+
+    // Every line style, weight and color of an edge with its arrowhead, and every fill and color
+    // of a node, in one card.
+    await shoot({
+      part: page.locator('[data-slot="card"]').filter({
+        has: page.locator('[data-slot="card-title"]', { hasText: 'Trace graph' }),
+      }),
+    })
+  })
+
   shot('Document diff', async ({ page, shoot }) => {
     const width = page.viewportSize()?.width ?? 1920
     await page.setViewportSize({ width, height: 2400 })

@@ -2,7 +2,7 @@
 
 import type { Edge, Node } from '@xyflow/react'
 
-import type { EdgeVariant } from '@/shared/components/ui/edge'
+import type { EdgeVariant, EdgeWeight } from '@/shared/components/ui/edge'
 import type { NodeVariant } from '@/shared/components/ui/node'
 import type { NodeStatus } from '@/shared/components/ui/node-status-indicator'
 import type { Tone } from '@/shared/lib/tone'
@@ -163,6 +163,7 @@ export const traceNodes: TraceNode[] = [
 
 export interface TraceEdgeData extends Record<string, unknown> {
   variant: EdgeVariant
+  weight?: EdgeWeight | undefined
   color: Tone
 }
 

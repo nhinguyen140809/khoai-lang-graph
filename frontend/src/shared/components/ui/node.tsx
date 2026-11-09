@@ -12,6 +12,13 @@ const nodeVariants = cva(
     'relative rounded-md border text-xs/relaxed transition-[border-color,box-shadow]',
     'hover:ring-[3px] hover:ring-(--tone-strong)/20',
     'flow-selected:shadow-lg flow-selected:ring-[3px] flow-selected:ring-(--tone-strong)/40',
+    // The node a screen names as its subject (the record of its page, what it is about) draws
+    // a ring from its data-focus attribute, in the strong color of its own tone, so the subject
+    // keeps the meaning of its fill.
+    'data-focus:ring-2 data-focus:ring-(--tone-strong)',
+    // A node that is set aside is drawn faded and with a dashed border, from its data-faded
+    // attribute, so it reads as set aside whatever its color.
+    'data-faded:border-dashed data-faded:opacity-60',
   ],
   {
     variants: {
@@ -39,16 +46,20 @@ function Node({
   className,
   variant = 'outline',
   color = 'neutral',
+  isFaded = false,
   ...props
 }: Omit<React.ComponentProps<'div'>, 'color'> & {
   variant?: NodeVariant | undefined
   color?: Tone | undefined
+  /** Whether the node is drawn faded, as a node that is set aside. */
+  isFaded?: boolean | undefined
 }) {
   return (
     <div
       data-slot="node"
       data-variant={variant}
       data-color={color}
+      data-faded={isFaded ? '' : undefined}
       className={cn(nodeVariants({ variant, color }), className)}
       {...props}
     />
