@@ -52,10 +52,27 @@ export { linkedItemMessages } from './item-links/linked-items.constants'
 export { useLinkTargets } from './links/hooks/useLinkTargets'
 export { useLinksCiting, useProjectTraceLinks } from './links/hooks/useTraceLinkQueries'
 export { createTraceLink, deleteTraceLink, listProjectTraceLinks } from './links/trace-links.api'
-export { derivedFrom, evidencedBy, linkTargetsPageSize } from './links/trace-links.constants'
+export {
+  derivedFrom,
+  evidencedBy,
+  linkTargetsPageSize,
+  linkTypeWords,
+} from './links/trace-links.constants'
 export { traceLinkKeys } from './links/trace-links.keys'
-export type { CreateTraceLinkBody, TraceLink, TraceLinkFilters } from './links/trace-links.types'
-export { isLinkOutOfDate } from './links/trace-links.utils'
+export type {
+  CreateTraceLinkBody,
+  LinkSentenceTense,
+  TraceLink,
+  TraceLinkFilters,
+} from './links/trace-links.types'
+export {
+  hasALinkTo,
+  isLinkOutOfDate,
+  linkKeyOf,
+  linkSentence,
+  linkSentenceParts,
+  parseLinkKey,
+} from './links/trace-links.utils'
 export { liveTraceMs } from './live-trace.constants'
 export type { LiveTraceOptions } from './live-trace.types'
 export { traceModuleKeys } from './trace-module.keys'

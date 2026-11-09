@@ -47,3 +47,15 @@ export interface CreateTraceLinkBody {
   source_quote?: string | null | undefined
   note?: string | null | undefined
 }
+
+/** When a sentence of a link holds: now, at the making of the link, or after its removal. */
+export type LinkSentenceTense = 'now' | 'will' | 'noLonger'
+
+/** The pieces of one sentence of a link, so a screen can draw the titles of both items as links. */
+export interface LinkSentenceParts {
+  before: string
+  source: string
+  between: string
+  target: string
+  after: string
+}
