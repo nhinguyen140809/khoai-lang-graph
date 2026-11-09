@@ -7,24 +7,17 @@ import { contentSchemaFixtureByKind } from '@/mocks/workflow/artifact-kinds.fixt
 import { renderWithProviders } from '@/test/render'
 import { expectNoAccessibilityViolations } from '@/test/steps'
 
-import type { ItemStatus } from '../../status/item-status.types'
-import { ArtifactItemDetails, ItemKeyLine } from '../ArtifactItemDetails'
+import { ItemDetails } from '../ItemDetails'
 
 const requirement = itemFixtureByKey(projectIds.mentor, 'REQ-001')
 const schema = contentSchemaFixtureByKind('spec_requirement')
 const persona = itemFixtureByKey(projectIds.mentor, 'PER-001')
 const personaSchema = contentSchemaFixtureByKind('persona')
 
-function renderKeyLine(status: ItemStatus, isUnderReview = false) {
-  return renderWithProviders(
-    <ItemKeyLine item={requirement} status={status} isUnderReview={isUnderReview} />,
-  )
-}
-
 /** The details with the marks that a page adds. */
 function renderWithMarks() {
   return renderWithProviders(
-    <ArtifactItemDetails
+    <ItemDetails
       item={requirement}
       schema={schema}
       fieldMarks={new Map([['statement', [{ start: 17, end: 45 }]]])}
@@ -33,61 +26,7 @@ function renderWithMarks() {
   )
 }
 
-describe('ItemKeyLine', () => {
-  it('names the item by its status, with its version and its key last', () => {
-    renderWithProviders(
-      <ItemKeyLine item={requirement} status="approved" isUnderReview={false} schema={schema} />,
-    )
-
-    const line = screen.getByText(/Approved/).closest('p')
-    if (line === null) throw new Error('The key line lost its line')
-    expect(line).toHaveTextContent(/version \d/)
-    expect(line).toHaveTextContent('REQ-001')
-    expect(screen.getByText('REQ-001')).toHaveClass('text-muted-foreground')
-  })
-
-  it('names the item while the schema of it has not loaded yet', () => {
-    renderKeyLine('approved')
-
-    expect(screen.getByText(/Approved/)).toBeInTheDocument()
-    expect(screen.getByText('REQ-001')).toBeInTheDocument()
-  })
-
-  it('shows the fields of one line of a persona above the label of its status', () => {
-    renderWithProviders(
-      <ItemKeyLine item={persona} status="approved" isUnderReview={false} schema={personaSchema} />,
-    )
-
-    const stakeholder = screen.getByText('Student').closest('p')
-    const status = screen.getByText(/Approved/).closest('p')
-    if (stakeholder === null || status === null) throw new Error('The key line lost a line')
-    expect(stakeholder.textContent).toContain('Stakeholder type: Student')
-    expect(screen.getByText('Interviewed')).toBeInTheDocument()
-    expect(stakeholder).not.toBe(status)
-    expect(stakeholder.compareDocumentPosition(status)).toBe(Node.DOCUMENT_POSITION_FOLLOWING)
-    expect(screen.queryByText('Background')).not.toBeInTheDocument()
-  })
-
-  it('writes the status in the color of its level', () => {
-    renderKeyLine('draft', true)
-
-    expect(screen.getByText('Needs your review')).toHaveClass('text-(--tone-strong)')
-  })
-
-  it('writes a rejected item muted', () => {
-    renderKeyLine('rejected')
-
-    expect(screen.getByText(/Rejected/)).toHaveAttribute('data-color', 'muted')
-  })
-
-  it('has no accessibility violation', async () => {
-    const { container } = renderKeyLine('approved')
-
-    await expectNoAccessibilityViolations(container)
-  })
-})
-
-describe('ArtifactItemDetails', () => {
+describe('ItemDetails', () => {
   it('shows the filled fields with their label above their value, and hides the empty ones', () => {
     renderWithMarks()
 
@@ -112,9 +51,9 @@ describe('ArtifactItemDetails', () => {
   })
 })
 
-describe('ArtifactItemDetails of a profile', () => {
+describe('ItemDetails of a profile', () => {
   it('draws the body without the name, the stakeholder type and the status, each list in one column and each text across', () => {
-    renderWithProviders(<ArtifactItemDetails item={persona} schema={personaSchema} />)
+    renderWithProviders(<ItemDetails item={persona} schema={personaSchema} />)
 
     expect(screen.queryByRole('heading', { name: 'Name' })).not.toBeInTheDocument()
     expect(screen.queryByRole('heading', { name: 'Stakeholder type' })).not.toBeInTheDocument()
@@ -128,7 +67,7 @@ describe('ArtifactItemDetails of a profile', () => {
 
   it('keeps the marks of the fields on the page of a profile', () => {
     renderWithProviders(
-      <ArtifactItemDetails
+      <ItemDetails
         item={persona}
         schema={personaSchema}
         fieldMarks={new Map([['background', [{ start: 0, end: 11 }]]])}

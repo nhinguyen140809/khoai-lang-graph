@@ -18,10 +18,12 @@ export { reviewableCheckpoints } from './checkpoints/checkpoints.utils'
 export { useReviewableCheckpoints } from './checkpoints/hooks/useCheckpointQueries'
 export { ContentFieldInput } from './content/components/content-input/ContentFieldInput'
 export { ContentFieldValue } from './content/components/ContentFieldValue'
+export { InlineFieldValues } from './content/components/InlineFieldValues'
 export type {
   ContentDisplay,
   ContentField,
   FieldWidget,
+  ItemPageLayout,
 } from './content/fields/content-fields.types'
 export { contentDisplays } from './content/fields/content-fields.types'
 export {
@@ -29,17 +31,21 @@ export {
   contentFields,
   isNavigable,
   mainField,
+  pageLayoutOf,
+  profileFields,
   summaryFields,
 } from './content/fields/content-fields.utils'
 export { useValueLabelOf } from './content/value-labels/hooks/useValueLabelOf'
+export { nonStatusTone } from './content/value-labels/value-labels.utils'
 export type { ContentFormValues } from './content/values/content-form.schema'
 export { contentFormValuesSchema, withContentProblems } from './content/values/content-form.schema'
-export type { ContentValues } from './content/values/content-values.types'
+export type { ContentValues, ValueDefinition } from './content/values/content-values.types'
 export { contentValuesSchema } from './content/values/content-values.types'
 export {
   changedFields,
   contentChanges,
   findQuote,
+  hasListValue,
   initialValue,
   toStoredContent,
   validateContent,

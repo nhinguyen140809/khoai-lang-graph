@@ -5,7 +5,7 @@ import {
   type ItemPageLayout,
   nonStatusTone,
   pageLayoutOf,
-} from '@/modules/workflow/entities/@x/artifact'
+} from '@/modules/workflow/entities'
 import { InitialsAvatar } from '@/shared/components/ui/initials-avatar'
 
 // Whether an avatar leads the title of the page, by the page layout.

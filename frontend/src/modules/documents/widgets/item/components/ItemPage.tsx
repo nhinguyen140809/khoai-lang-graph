@@ -6,10 +6,7 @@ import { ErrorBoundary } from 'react-error-boundary'
 
 import {
   type ArtifactItem,
-  ArtifactItemDetails,
   HistorySurface,
-  ItemHeading,
-  ItemKeyLine,
   RevisionContent,
   useItem,
   useItemSchema,
@@ -36,6 +33,9 @@ import { useItemCommands } from '../hooks/useItemCommands'
 import { useItemPage } from '../hooks/useItemPage'
 import { useItemTab } from '../hooks/useItemTab'
 import { itemPageMessages, navigatorIdleMs } from '../item-page.constants'
+import { ItemDetails } from './ItemDetails'
+import { ItemHeading } from './ItemHeading'
+import { ItemKeyLine } from './ItemKeyLine'
 import { ItemLinkLine } from './ItemLinkLine'
 import { ItemNavigator } from './ItemNavigator'
 
@@ -157,7 +157,7 @@ function ItemPageBody({ projectId, record }: { projectId: string; record: Artifa
             ) : (
               page.schema !== undefined && (
                 <>
-                  <ArtifactItemDetails
+                  <ItemDetails
                     item={record}
                     schema={page.schema}
                     fieldMarks={links.state === 'success' ? links.fieldMarks : undefined}

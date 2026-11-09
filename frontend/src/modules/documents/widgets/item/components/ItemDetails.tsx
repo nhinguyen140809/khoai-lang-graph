@@ -2,44 +2,21 @@
 
 import type { ReactNode } from 'react'
 
+import type { ArtifactItem } from '@/modules/artifact/entities'
 import {
   type ContentField,
   contentFields,
   ContentFieldValue,
   type ContentSchema,
   hasListValue,
-  InlineFieldValues,
   type ItemPageLayout,
   pageLayoutOf,
   profileFields,
   useWorkflowDefinition,
   type ValueDefinition,
-} from '@/modules/workflow/entities/@x/artifact'
-import { ColoredText } from '@/shared/components/ui/colored-text'
+} from '@/modules/workflow/entities'
 import type { HighlightRange } from '@/shared/components/ui/highlight'
-import { KeyText } from '@/shared/components/ui/key-text'
 import { isEmpty } from '@/shared/lib/guards'
-import { lowerFirst } from '@/shared/lib/text'
-
-import type { ArtifactItem } from '../items/items.types'
-import { revisionMessages } from '../revisions/revisions.constants'
-import { useItemStatusLook } from '../status/hooks/useItemStatusLook'
-import type { ItemStatus } from '../status/item-status.types'
-
-interface ItemKeyLineProps {
-  item: ArtifactItem
-  status: ItemStatus
-  /** Whether the document of the item waits for the review of the user. */
-  isUnderReview: boolean
-  /** The schema of the kind of the item, which names the fields that follow the key; none while it loads. */
-  schema?: ContentSchema | undefined
-}
-
-/** What follows the key on the key line, by the page layout of the item. */
-const keyLineFields = {
-  fields: () => [],
-  profile: (schema: ContentSchema) => profileFields(schema).line,
-} as const satisfies Record<ItemPageLayout, (schema: ContentSchema) => ContentField[]>
 
 /** The fields that the body of the page draws, by the page layout of the item. */
 const bodyFields = {
@@ -47,37 +24,7 @@ const bodyFields = {
   profile: (schema: ContentSchema) => profileFields(schema).body,
 } as const satisfies Record<ItemPageLayout, (schema: ContentSchema) => ContentField[]>
 
-/**
- * The key line of an item: the fields of one line that its page layout names, above its kind, the
- * label of its status in its color and its version, with the key of the item last, small and
- * muted. The page draws the line right under the title, with the links of the item under it.
- */
-export function ItemKeyLine({ item, status, isUnderReview, schema }: ItemKeyLineProps) {
-  const { data: definition } = useWorkflowDefinition()
-  const look = useItemStatusLook(status, { isUnderReview })
-  const line = schema === undefined ? [] : keyLineFields[pageLayoutOf(schema)](schema)
-
-  return (
-    <div className="space-y-0.5 text-sm">
-      {line.length > 0 && (
-        <p className="flex flex-wrap items-center gap-x-4 gap-y-1">
-          <InlineFieldValues fields={line} content={item.content} definition={definition} />
-        </p>
-      )}
-      <p className="flex flex-wrap items-baseline gap-x-4 gap-y-1">
-        <ColoredText color={look.color} className="font-semibold">
-          {look.label}
-        </ColoredText>
-        <span className="text-xs text-muted-foreground">
-          {lowerFirst(revisionMessages.version(item.version))}
-        </span>
-        <KeyText>{item.key}</KeyText>
-      </p>
-    </div>
-  )
-}
-
-interface ArtifactItemDetailsProps<Range extends HighlightRange = HighlightRange> {
+interface ItemDetailsProps<Range extends HighlightRange = HighlightRange> {
   item: ArtifactItem
   schema: ContentSchema
   /** The quoted words of the item, by field name. */
@@ -172,12 +119,12 @@ const detailBodies = {
  * value, with the words that links quote marked. The title, the key line and the links are the
  * page's; the body follows the page layout of the kind of the item.
  */
-export function ArtifactItemDetails<Range extends HighlightRange = HighlightRange>({
+export function ItemDetails<Range extends HighlightRange = HighlightRange>({
   item,
   schema,
   fieldMarks,
   renderFieldMark,
-}: ArtifactItemDetailsProps<Range>) {
+}: ItemDetailsProps<Range>) {
   const { data: definition } = useWorkflowDefinition()
   const fields = bodyFields[pageLayoutOf(schema)](schema).filter(
     (field) => !isEmpty(item.content[field.name]),
