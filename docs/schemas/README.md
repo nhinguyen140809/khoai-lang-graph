@@ -11,6 +11,8 @@ schemas/
 ├── artifacts/
 │   ├── elicitation_plan.v1.json
 │   ├── persona_catalog.v1.json
+│   ├── persona_catalog.v2.json
+│   ├── research_corpus.v1.json
 │   ├── interview_transcript.v1.json
 │   ├── requirements_analysis.v1.json
 │   ├── requirement_specification.v1.json
@@ -19,6 +21,9 @@ schemas/
 └── items/
     ├── section.v1.json
     ├── persona.v1.json
+    ├── persona.v2.json
+    ├── source_document.v1.json
+    ├── stakeholder_observation.v1.json
     ├── interview_message.v1.json
     ├── raw_requirement.v1.json
     ├── analyzed_requirement.v1.json
@@ -34,14 +39,17 @@ schemas/
 | Level | Kind | File | Key prefix | Inside artifact kind |
 |---|---|---|---|---|
 | Artifact | `elicitation_plan` | [`artifacts/elicitation_plan.v1.json`](artifacts/elicitation_plan.v1.json) | - | - |
-| Artifact | `persona_catalog` | [`artifacts/persona_catalog.v1.json`](artifacts/persona_catalog.v1.json) | - | - |
+| Artifact | `persona_catalog` | [`artifacts/persona_catalog.v1.json`](artifacts/persona_catalog.v1.json), version 2 from workflow definition version 2: [`v2`](artifacts/persona_catalog.v2.json) | - | - |
+| Artifact | `research_corpus` | [`artifacts/research_corpus.v1.json`](artifacts/research_corpus.v1.json) | - | - |
 | Artifact | `interview_transcript` | [`artifacts/interview_transcript.v1.json`](artifacts/interview_transcript.v1.json) | - | - |
 | Artifact | `requirements_analysis` | [`artifacts/requirements_analysis.v1.json`](artifacts/requirements_analysis.v1.json) | - | - |
 | Artifact | `requirement_specification` | [`artifacts/requirement_specification.v1.json`](artifacts/requirement_specification.v1.json) | - | - |
 | Artifact | `product_backlog` | [`artifacts/product_backlog.v1.json`](artifacts/product_backlog.v1.json) | - | - |
 | Artifact | `validation_report` | [`artifacts/validation_report.v1.json`](artifacts/validation_report.v1.json) | - | - |
 | Item | `section` | [`items/section.v1.json`](items/section.v1.json) | `SEC` | Every artifact kind with items, except `interview_transcript` |
-| Item | `persona` | [`items/persona.v1.json`](items/persona.v1.json) | `PER` | `persona_catalog` |
+| Item | `persona` | [`items/persona.v1.json`](items/persona.v1.json), version 2 from workflow definition version 2: [`v2`](items/persona.v2.json) | `PER` | `persona_catalog` |
+| Item | `source_document` | [`items/source_document.v1.json`](items/source_document.v1.json) | `SRC` | `research_corpus` |
+| Item | `stakeholder_observation` | [`items/stakeholder_observation.v1.json`](items/stakeholder_observation.v1.json) | `OBS` | `research_corpus` |
 | Item | `interview_message` | [`items/interview_message.v1.json`](items/interview_message.v1.json) | Persona key, `#`, position | `interview_transcript` |
 | Item | `raw_requirement` | [`items/raw_requirement.v1.json`](items/raw_requirement.v1.json) | `RAW` | `requirements_analysis` |
 | Item | `analyzed_requirement` | [`items/analyzed_requirement.v1.json`](items/analyzed_requirement.v1.json) | `AR` | `requirements_analysis` |

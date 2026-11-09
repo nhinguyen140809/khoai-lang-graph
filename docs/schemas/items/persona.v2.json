@@ -1,18 +1,21 @@
 {
   "$schema": "https://json-schema.org/draft/2020-12/schema",
   "$id": "items/persona/v2",
-  "title": "Persona",
-  "description": "A simulated stakeholder grounded in evidence mined from research documents.",
+  "title": "Interviewee",
+  "description": "A simulated interviewee, grounded in evidence mined from research documents.",
   "x-level": "item",
   "x-kind": "persona",
   "x-schema-version": 2,
   "x-key-prefix": "PER",
-  "x-ui-display": "cards",
+  "x-ui-display": "profile",
+  "x-ui-navigable": true,
   "x-ui-title-field": "name",
   "x-ui-list-fields": [
     "name",
     "stakeholder_type",
-    "interview_status"
+    "interview_status",
+    "background",
+    "goals"
   ],
   "x-ui-field-order": [
     "name",
@@ -34,40 +37,47 @@
   "additionalProperties": false,
   "properties": {
     "name": {
+      "title": "Name",
       "type": "string",
       "description": "Display name, for example \"Minh, 3rd-year CS student\".",
       "x-ui-widget": "text"
     },
     "stakeholder_type": {
+      "title": "Stakeholder type",
       "type": "string",
       "x-value-from": "elicitation_plan.stakeholder_types",
       "description": "One of the stakeholder types of the elicitation plan.",
       "x-ui-widget": "select"
     },
     "evaluative_dimension": {
+      "title": "Judges the product by",
       "type": "string",
-      "description": "The dimension this persona evaluates the product by, distilled from its mined evidence.",
+      "description": "The dimension this interviewee evaluates the product by, distilled from the evidence found.",
       "x-ui-widget": "text"
     },
     "grounded_in": {
+      "title": "Based on",
       "type": "array",
+      "description": "The keys of the stakeholder observations this interviewee is built from.",
+      "x-ui-widget": "list",
       "items": {
         "type": "string"
-      },
-      "description": "Keys of the stakeholder observations this persona is built from.",
-      "x-ui-widget": "list"
+      }
     },
     "background": {
+      "title": "Background",
       "type": "string",
       "description": "History, context, situation.",
       "x-ui-widget": "textarea"
     },
     "expertise": {
+      "title": "Expertise",
       "type": "string",
       "description": "Technical and domain familiarity.",
       "x-ui-widget": "textarea"
     },
     "goals": {
+      "title": "Goals",
       "type": "array",
       "items": {
         "type": "string"
@@ -76,6 +86,7 @@
       "x-ui-widget": "list"
     },
     "interests": {
+      "title": "Interests",
       "type": "array",
       "items": {
         "type": "string"
@@ -84,6 +95,7 @@
       "x-ui-widget": "list"
     },
     "constraints": {
+      "title": "Constraints",
       "type": "array",
       "items": {
         "type": "string"
@@ -92,6 +104,7 @@
       "x-ui-widget": "list"
     },
     "priorities": {
+      "title": "Priorities",
       "type": "array",
       "items": {
         "type": "string"
@@ -100,6 +113,7 @@
       "x-ui-widget": "list"
     },
     "concerns": {
+      "title": "Concerns",
       "type": "array",
       "items": {
         "type": "string"
@@ -108,12 +122,16 @@
       "x-ui-widget": "list"
     },
     "behavioral_tendencies": {
+      "title": "Behavioral tendencies",
       "type": "string",
       "description": "How they tend to communicate.",
       "x-ui-widget": "textarea"
     },
     "evidence": {
+      "title": "Evidence",
       "type": "array",
+      "description": "The words of the research documents that support this interviewee, each with the observation and the document it comes from.",
+      "x-ui-widget": "list",
       "items": {
         "type": "object",
         "additionalProperties": false,
@@ -131,12 +149,15 @@
             "description": "The exact sentence mined from the document, copied unchanged."
           }
         },
-        "required": ["observation", "source", "quote"]
-      },
-      "description": "The document evidence this persona was built from, each with its observation, source and verbatim quote.",
-      "x-ui-widget": "list"
+        "required": [
+          "observation",
+          "source",
+          "quote"
+        ]
+      }
     },
     "interview_status": {
+      "title": "Interview status",
       "type": "string",
       "enum": [
         "not_started",
@@ -144,7 +165,7 @@
         "completed"
       ],
       "description": "Progress of the interview with this persona. Set by the system.",
-      "x-ui-widget": "select",
+      "x-ui-widget": "badge",
       "readOnly": true
     }
   },
