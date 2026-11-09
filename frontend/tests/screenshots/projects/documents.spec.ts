@@ -289,7 +289,7 @@ screenshots('Documents', (shot) => {
     async ({ page, user, shoot }) => {
       await openItem(page, analysis, 'Search within 2 seconds')
 
-      await user.expectRole('button', 'Point to clarify, "Fast" has no number')
+      await user.expectRole('button', 'Point to clarify, Where "2 seconds" comes from')
       await shoot({ fullPage: true })
     },
   )
