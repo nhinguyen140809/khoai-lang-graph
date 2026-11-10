@@ -4,27 +4,27 @@
   "description": "Elicits requirements from a product idea: builds a research corpus of real documents (member uploads first, live search after), mines evidence-backed stakeholder perspectives from them, grounds the simulated stakeholder personas in that evidence, interviews them, then analyzes, specifies, backlogizes and validates the requirements, with human review at three checkpoints.",
   "entry": { "first_run": "planner", "later_runs": "intent_router", "pending_messages": "intent_router" },
   "agent_roles": [
-    { "key": "planner", "label": "Planner", "description": "Turns the intent into an elicitation plan.", "prompt_version": 1 },
-    { "key": "corpus_builder", "label": "Corpus builder", "description": "Chooses the documents that the interviewees are based on.", "prompt_version": 1 },
+    { "key": "planner", "label": "Planner", "description": "Turns the intent into an elicitation plan.", "prompt_version": 2 },
+    { "key": "corpus_builder", "label": "Corpus builder", "description": "Chooses the documents that the interviewees are based on.", "prompt_version": 2 },
     {
       "key": "stakeholder_miner",
       "label": "Stakeholder miner",
       "description": "Finds what each kind of stakeholder cares about in those documents.",
-      "prompt_version": 1
+      "prompt_version": 2
     },
     {
       "key": "persona_generator",
       "label": "Persona generator",
       "description": "Creates the interviewees from the evidence found in those documents.",
-      "prompt_version": 2
+      "prompt_version": 3
     },
-    { "key": "interviewer", "label": "Interviewer", "description": "Asks interview questions.", "prompt_version": 1 },
-    { "key": "persona_agent", "label": "Persona agent", "description": "Answers as one persona.", "prompt_version": 1 },
-    { "key": "analyst", "label": "Analyst", "description": "Extracts and analyzes requirements.", "prompt_version": 1 },
-    { "key": "requirement_engineer", "label": "Requirement engineer", "description": "Writes the requirement specification.", "prompt_version": 1 },
-    { "key": "backlog_manager", "label": "Backlog manager", "description": "Writes the product backlog.", "prompt_version": 1 },
-    { "key": "validator", "label": "Validator", "description": "Checks the outputs and reports issues.", "prompt_version": 1 },
-    { "key": "intent_router", "label": "Intent router", "description": "Decides which node a message sent by the user should go to.", "prompt_version": 1 }
+    { "key": "interviewer", "label": "Interviewer", "description": "Asks interview questions.", "prompt_version": 2 },
+    { "key": "persona_agent", "label": "Persona agent", "description": "Answers as one persona.", "prompt_version": 2 },
+    { "key": "analyst", "label": "Analyst", "description": "Extracts and analyzes requirements.", "prompt_version": 2 },
+    { "key": "requirement_engineer", "label": "Requirement engineer", "description": "Writes the requirement specification.", "prompt_version": 2 },
+    { "key": "backlog_manager", "label": "Backlog manager", "description": "Writes the product backlog.", "prompt_version": 2 },
+    { "key": "validator", "label": "Validator", "description": "Checks the outputs and reports issues.", "prompt_version": 2 },
+    { "key": "intent_router", "label": "Intent router", "description": "Decides which node a message sent by the user should go to.", "prompt_version": 2 }
   ],
   "stages": [
     { "key": "intent_routing", "title": "Intent routing", "internal": true, "parent": null },

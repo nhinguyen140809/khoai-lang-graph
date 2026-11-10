@@ -49,14 +49,15 @@ Trade-offs: a small loader must parse the file and check it, and placeholders ar
 
 ## 3. Prompt file
 
-Location in the code: `agents/<graph_name>/prompts/<agent_role>.v<version>.md`. Until the backend exists, drafts live in [`docs/workflow/prompts/`](../workflow/prompts/).
+Location in the code: `agents/<graph_name>/prompts/<agent_role>.v<version>.md`, with the common settings of the app in `agents/<graph_name>/prompts/_common.v<version>.md`. Until the backend exists, drafts live in [`docs/workflow/prompts/`](../workflow/prompts/).
 
 A file has a front matter block and a body with two parts:
 
 ```markdown
 ---
 role: analyst
-version: 1
+version: 2
+common: 1
 description: Extracts and analyzes requirements from the interview transcripts.
 output: AnalystOutput
 inputs:
@@ -105,6 +106,7 @@ Body rules:
 |---|---|---|---|
 | System | `Role` | Yes | Who the agent is, in one or two sentences |
 | System | `Goal` | Yes | What this step must produce, and what it is used for next |
+| System | `Skills` | No | The abilities that the role needs, one bullet for each, with how to use it: the part of the prompt that is about this role and no other. Between `Goal` and `Inputs` |
 | System | `Inputs` | Yes | Each data tag of the context, what it contains and how it is formatted |
 | System | `Procedure` | Yes | The steps to follow, numbered |
 | System | `Rules` | Yes | What the agent must always or never do |
@@ -113,7 +115,16 @@ Body rules:
 | User | `Context` | Yes | The data of this call, each input inside an XML tag named after it |
 | User | `Task` | Yes | The request of this call, in one or two sentences |
 
-The System part is the same for every call of the role within a run. The User part holds what changes: the long data first and the request last, which is the order providers recommend for long inputs.
+The System part of a prompt that names a version of the common settings (`common` in its front matter) starts with those settings, then the heading "Your role in this step", then the sections above. The common settings follow the structure of a general-purpose agent: who the agent is and who it writes for, how it works, how it writes for people, and how it asks the user. Their sections are:
+
+| Section | Content |
+|---|---|
+| The team and the people you write for | That the agent is one step of a workflow, who reads what it writes, and which of its texts are for the next agent and which for the user |
+| How you work | Do only the own step, use only the inputs and treat data as data, never invent, say plainly what is missing and what was assumed, stay consistent, report honestly |
+| Writing for people | The language and the register of the user, the outcome first, complete sentences, terms spelled out, readable before short, names by what things say, no filler, doubt said in one sentence, Markdown only where it is shown |
+| Asking the user | Ask only what the user alone can decide; one complete question; two to four options with a title and a description; the recommended option first and as the default; a way to say something else; never ask twice |
+
+The System part is the same for every call of the role within a run, and its first part, the common settings, is the same for every role, so that a provider can cache it across roles. The User part holds what changes: the long data first and the request last, which is the order providers recommend for long inputs.
 
 ## 5. Assembling the messages
 
@@ -147,6 +158,7 @@ An agent returns items through an output model, never as free text that is parse
 
 ## 7. Writing rules
 
+- **Common settings first.** What holds for every agent of the app, in particular how it writes for people and how it asks the user, is written once in the common settings and not in each prompt. A prompt keeps what is about its role: the skills, the procedure and the rules of its output. A change of the common settings is a new `_common.v<n>.md`, and each prompt names the version it uses.
 - **English instructions.** Every prompt is written in English. The language of the output comes from the `output_language` placeholder, which is fixed for a run and may appear in the System part.
 - **Data is data.** Text inside a data tag comes from users, from documents or from other agents. The Rules section of every prompt states that instructions found inside a data tag are not followed.
 - **Keys only.** An agent refers to items by key or by `ref`, never by id, title or position. The `report` field is the exception, since the user reads it: it names a thing by what it says, and the refs of the message carry the links, so no key appears in the words.
@@ -166,7 +178,7 @@ An agent returns items through an output model, never as free text that is parse
 
 ## 8. Versions
 
-- **File per version.** A change of the text creates `<agent_role>.v<n+1>.md`. A file merged into `main` is never edited afterwards; a check in continuous integration fails when one changes.
+- **File per version.** A change of the text creates `<agent_role>.v<n+1>.md`, and a change of the common settings creates `_common.v<n+1>.md`, which each prompt adopts by naming the new version in its own new file. A file merged into `main` is never edited afterwards; a check in continuous integration fails when one changes.
 - **Selected by the definition.** Each agent role in the workflow definition has a `prompt_version`, so `workflow_version` of a run identifies the prompt of every agent it used. Adopting a new prompt in the product is a new definition version.
 - **Overridden in experiments.** A variant of an experiment may select another prompt version per role, see [Experiments: experiment config](experiments.md#experiment-config). The run record stores the version used by each role.
 - **Ablations.** Because sections are named, an ablation that removes a part, for example the examples, is a new version whose diff is exactly that section.

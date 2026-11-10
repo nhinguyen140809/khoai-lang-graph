@@ -21,7 +21,9 @@ if TYPE_CHECKING:
 from yaml import safe_load
 
 _REQUIRED_SYSTEM_H2 = ["role", "goal", "inputs", "procedure", "rules"]
-_OPTIONAL_SYSTEM_H2 = ["output", "examples"]
+_OPTIONAL_SYSTEM_H2 = ["skills", "output", "examples"]
+# The sections of the System part in the order they may appear.
+_SYSTEM_H2_ORDER = ["role", "goal", "skills", "inputs", "procedure", "rules", "output", "examples"]
 _REQUIRED_USER_H2 = ["context", "task"]
 _PLACEHOLDER_PATTERN = re.compile(r"\{\{ ([a-zA-Z][a-zA-Z0-9_]*) \}\}")
 _COMMENT_PATTERN = re.compile(r"<!--.*?-->", flags=re.DOTALL)
@@ -36,7 +38,10 @@ class PromptInput(BaseModel):
 
 
 class LoadedPrompt(BaseModel):
-    """The validated face of one `<role>.v<version>.md` file."""
+    """The validated face of one `<role>.v<version>.md` file.
+
+    `system` is the whole System part: the common settings of the app first when the prompt
+    names a version of them (`common` in its front matter), then the sections of the role."""
 
     role: str
     version: int
@@ -52,6 +57,16 @@ def read_prompt(graph_package: str, role: str, version: int) -> str:
     return (resources.files(graph_package) / "prompts" / f"{role}.v{version}.md").read_text(
         encoding="utf-8"
     )
+
+
+def read_common(graph_package: str, version: int) -> str:
+    """The raw Markdown of one version of the common settings, which every role may name."""
+    return (resources.files(graph_package) / "prompts" / f"_common.v{version}.md").read_text(
+        encoding="utf-8"
+    )
+
+
+COMMON_HEADING = "# Your role in this step"
 
 
 def strip_comments(text: str) -> str:
@@ -93,6 +108,10 @@ def load_prompt(graph_package: str, role: str, version: int) -> LoadedPrompt:
     parsed = _split_sections(markdown)
     _validate_system_sections(role, version, parsed["system"])
     _validate_user_sections(role, version, parsed["user"])
+    common_version = int(str(front.get("common", "0")))
+    if common_version:
+        common = strip_comments(read_common(graph_package, common_version)).strip()
+        parsed["system"] = f"{common}\n\n{COMMON_HEADING}\n\n{parsed['system'].strip()}\n"
     _validate_placeholders(role, version, parsed, inputs)
 
     return LoadedPrompt(
@@ -122,10 +141,11 @@ def _validate_system_sections(role: str, version: int, system: str) -> None:
             msg = f"prompt '{role}' v{version}: unknown System section '{title}'"
             raise ValueError(msg)
     required_present = [title for title in titles if title in _REQUIRED_SYSTEM_H2]
-    if required_present != _REQUIRED_SYSTEM_H2:
+    in_order = titles == sorted(titles, key=_SYSTEM_H2_ORDER.index)
+    if required_present != _REQUIRED_SYSTEM_H2 or not in_order:
         msg = (
             f"prompt '{role}' v{version}: System sections must appear in the order "
-            f"{_REQUIRED_SYSTEM_H2} (optionals last); found {titles}"
+            f"{_SYSTEM_H2_ORDER} (the optional ones may be left out); found {titles}"
         )
         raise ValueError(msg)
 
