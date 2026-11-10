@@ -17,7 +17,7 @@ export const activityChatMessages = {
     `${kind} - ${key}, version ${String(version)}`,
   quickLook: (key: string) => `Quick look at ${key}`,
   toReview: 'To review:',
-  showWrites: 'Show what it wrote',
+  showDetails: 'Show what it noted and wrote',
   prompt: {
     label: 'Message to the agents',
     placeholder: 'Ask or request a change',

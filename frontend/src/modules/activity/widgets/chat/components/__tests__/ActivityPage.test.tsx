@@ -1,7 +1,9 @@
 import { screen, waitFor } from '@testing-library/react'
+import userEvent from '@testing-library/user-event'
 import { describe, expect, it } from 'vitest'
 
 import { projectIds } from '@/mocks/shared/db'
+import { assertPresent } from '@/shared/lib/guards'
 import { openPage } from '@/test/msw'
 import { setQuery } from '@/test/next-stubs'
 import { renderWithProviders } from '@/test/render'
@@ -21,9 +23,16 @@ describe('ActivityPage', () => {
     ).toBeInTheDocument()
   })
 
-  it('shows the notes that a step wrote while it worked, as Markdown, under its line', async () => {
+  it('keeps the notes of finished work closed, and shows them as Markdown when its line is opened', async () => {
     openPage('/?mock-run-status=done')
     renderWithProviders(<ActivityPage projectId={projectIds.mentor} />)
+
+    // The thread shows its runs oldest first, and the latest run is the one with the notes.
+    const lines = await screen.findAllByText('Analysing the interviews')
+    const line = assertPresent(lines.at(-1), 'the line of the latest run')
+    expect(document.body).not.toHaveTextContent('I compared what the three people said')
+
+    await userEvent.click(assertPresent(line.closest('button'), 'the trigger of the line'))
 
     // Markdown cuts a text into elements as it renders it, so the page is read as one text.
     await waitFor(() => {
