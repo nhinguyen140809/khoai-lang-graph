@@ -22,6 +22,9 @@ from __future__ import annotations
 import asyncio
 import json
 import threading
+import time
+from concurrent.futures import ThreadPoolExecutor
+from concurrent.futures import TimeoutError as FutureTimeout
 from dataclasses import dataclass, field
 from datetime import UTC, datetime
 from typing import TYPE_CHECKING, Any, cast
@@ -83,6 +86,7 @@ ARTIFACT_FIELDS = {
     "validation_report": "validation_report",
 }
 PROJECT_NAME_LENGTH = 60
+TOKEN_GROUP_SECONDS = 0.2
 ENTRY_NODES = {"planner", "intent_router"}
 
 
@@ -175,6 +179,13 @@ class UsageGate:
 
     def before_call(self, role: str) -> None:
         walker = self.walker
+        limit_seconds = get_settings().node_timeout_seconds
+        if walker.step is not None and time.monotonic() - walker.step_started > limit_seconds:
+            msg = f"The step took longer than {limit_seconds:g} seconds."
+            raise RunLimitError("timeout", msg)
+        # What the node wrote so far is saved before the wait for the model, so the stream shows
+        # it and no write lock is held while the model works.
+        walker.commit()
         spent = walker.run_usage["cost_usd"]
         limit = walker.config.get("max_cost_usd")
         if limit is not None and spent >= float(limit):
@@ -185,8 +196,12 @@ class UsageGate:
             msg = f"The monthly budget of {budget} US dollars is spent."
             raise RunLimitError("budget_exceeded", msg)
 
+    def record_text(self, role: str, text: str) -> None:
+        self.walker.buffer_text(text)
+
     def record_call(self, role: str, model_id: str, usage: Usage) -> None:
         walker = self.walker
+        walker.flush_text()
         walker.step_usage = add_usage(walker.step_usage, usage)
         walker.run_usage = add_usage(walker.run_usage, usage)
         walker.step_calls += 1
@@ -217,6 +232,9 @@ class RunWalker:
     paused: bool = False
     failure: tuple[str, str] | None = None
     pending_for_router: list[dict[str, str]] = field(default_factory=list)
+    step_started: float = 0.0
+    text_buffer: list[str] = field(default_factory=list)
+    text_flushed_at: float = 0.0
 
     # — entry points —
     def execute(self, resume_interrupt: UUID | None = None) -> UUID | None:
@@ -242,7 +260,7 @@ class RunWalker:
             self.thread.active_run_id = run.id
             try:
                 state = self._entry(resume_interrupt)
-                self._commit()
+                self.commit()
                 self._walk(state)
             except Exception as exc:
                 session.rollback()
@@ -491,12 +509,70 @@ class RunWalker:
                 "llm_gate": UsageGate(self),
                 "models": self.config.get("models", {}),
                 "pending_messages": self.pending_for_router,
-                "research_search": service.make_research_search(get_settings()),
-                "project_documents": lambda project_id: sync_latest_texts(
-                    engine, UUID(str(project_id))
+                "research_search": self.tool(
+                    "research_search",
+                    service.make_research_search(get_settings()),
+                    lambda queries: {"queries": list(queries)},
+                ),
+                "project_documents": self.tool(
+                    "project_documents",
+                    lambda project_id: sync_latest_texts(engine, UUID(str(project_id))),
+                    lambda project_id: {"project_id": str(project_id)},
                 ),
             },
         }
+
+    def buffer_text(self, text: str) -> None:
+        """Text the model generates is stored in pieces of at most 200 ms of output."""
+        self.text_buffer.append(text)
+        if time.monotonic() - self.text_flushed_at >= TOKEN_GROUP_SECONDS:
+            self.flush_text()
+
+    def flush_text(self) -> None:
+        """Store the text collected since the last piece as one `token` event."""
+        self.text_flushed_at = time.monotonic()
+        if not self.text_buffer or self.step is None:
+            self.text_buffer = []
+            return
+        text = "".join(self.text_buffer)
+        self.text_buffer = []
+        self.sink.emit(
+            "token",
+            {"node": self.step.node, "step_id": str(self.step.id), "text": text},
+            step_id=self.step.id,
+        )
+        self.commit()
+
+    def tool(
+        self, name: str, call: Callable[..., Any], describe: Callable[..., dict[str, Any]]
+    ) -> Callable[..., Any]:
+        """A tool of the run: each call is an event, and it may take only so long."""
+
+        def run(*args: Any) -> Any:
+            if self.step is not None:
+                self.sink.emit(
+                    "tool_call",
+                    {
+                        "node": self.step.node,
+                        "step_id": str(self.step.id),
+                        "tool": name,
+                        "args": describe(*args),
+                    },
+                    step_id=self.step.id,
+                )
+                self.commit()
+            pool = ThreadPoolExecutor(max_workers=1)
+            future = pool.submit(call, *args)
+            limit = get_settings().tool_timeout_seconds
+            try:
+                return future.result(timeout=limit)
+            except FutureTimeout:
+                msg = f"The tool {name} took longer than {limit:g} seconds."
+                raise RunLimitError("timeout", msg) from None
+            finally:
+                pool.shutdown(wait=False)
+
+        return run
 
     def _cancelled(self) -> bool:
         self.session.refresh(self.run, attribute_names=["status"])
@@ -556,6 +632,8 @@ class RunWalker:
         self.run.current_stage = step.stage
         self.session.flush()
         self.step = step
+        self.step_started = time.monotonic()
+        self.text_buffer = []
         self.chunk = {}
         self.step_usage = zero_usage()
         self.step_calls = 0
@@ -576,7 +654,7 @@ class RunWalker:
         self._name_project(step)
         if node == "intent_router":
             self._hand_messages_to_router(step)
-        self._commit()
+        self.commit()
 
     def _name_project(self, step: RunStepRow) -> None:
         """A project created without a name gets one from the intent of its first run."""
@@ -643,7 +721,7 @@ class RunWalker:
         self._record_checkpoint(step)
         self.step = None
         self.sink.step_id = None
-        self._commit()
+        self.commit()
         return self.paused or failed or self._cancelled()
 
     def _record_checkpoint(self, step: RunStepRow) -> None:
@@ -718,7 +796,7 @@ class RunWalker:
             artifacts_json=_dumps(payload.get("review_artifacts", [])),
         )
 
-    def _commit(self) -> None:
+    def commit(self) -> None:
         top = self.session.scalar(
             select(func.max(RunEventRow.sequence)).where(RunEventRow.run_id == self.run.id)
         )
@@ -752,7 +830,7 @@ class RunWalker:
             return None
         if self.paused:
             run.status = "interrupted"
-            self._commit()
+            self.commit()
             return None
         current = cast("dict[str, Any]", self.state or {})
         final = current.get("status", "succeeded")
@@ -780,7 +858,7 @@ class RunWalker:
         follow_up = self._start_follow_up() if run.status == "succeeded" else None
         if run.status == "failed":
             self._undeliver_pending()
-        self._commit()
+        self.commit()
         return follow_up
 
     def _end_thread(self) -> None:

@@ -12,11 +12,12 @@ A run maps a role to `fake:demo` via its run config to use this model.
 
 from __future__ import annotations
 
+import json
 from typing import TYPE_CHECKING, Any, cast
 
 from langchain_core.language_models.chat_models import BaseChatModel
-from langchain_core.messages import AIMessage, BaseMessage
-from langchain_core.outputs import ChatGeneration, ChatResult
+from langchain_core.messages import AIMessage, AIMessageChunk, BaseMessage
+from langchain_core.outputs import ChatGeneration, ChatGenerationChunk, ChatResult
 from pydantic import BaseModel, ConfigDict, PrivateAttr
 
 if TYPE_CHECKING:
@@ -100,6 +101,15 @@ class FakeChatModel(BaseChatModel):
                     // 4,
                 },
             )
+        if run_manager is not None and schema is not None:
+            # A real provider streams the arguments of the tool call piece by piece.
+            text = json.dumps(message.tool_calls[0]["args"], ensure_ascii=False)
+            for start in range(0, len(text), 400):
+                piece = text[start : start + 400]
+                run_manager.on_llm_new_token(
+                    piece,
+                    chunk=ChatGenerationChunk(message=AIMessageChunk(content=piece)),
+                )
         return ChatResult(generations=[ChatGeneration(message=message)])
 
 

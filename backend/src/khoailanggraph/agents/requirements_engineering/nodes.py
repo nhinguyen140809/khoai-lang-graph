@@ -189,7 +189,9 @@ def _invoke[T: BaseModel](
     for attempt in range(_LLM_PARSE_ATTEMPTS):
         if gate is not None:
             gate.before_call(role)
-        handler = UsageHandler()
+        handler = UsageHandler(
+            on_text=None if gate is None else (lambda text: gate.record_text(role, text))
+        )
         started = time.monotonic()
         try:
             answer = model.with_structured_output(schema).invoke(

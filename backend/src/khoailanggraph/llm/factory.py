@@ -63,12 +63,17 @@ def build_chat_model(model_id: str, temperature: float | None = None) -> BaseCha
             max_retries=default_registry().max_retries,
             max_tokens=32768,
             streaming=True,
+            timeout=settings.llm_call_timeout_seconds,
             **credentials,
         )
     if provider == "anthropic":
         from langchain_anthropic import ChatAnthropic  # noqa: PLC0415 - provider is imported only when used
 
-        return ChatAnthropic(model=name, temperature=temperature)
+        return ChatAnthropic(
+            model=name,
+            temperature=temperature,
+            timeout=get_settings().llm_call_timeout_seconds,
+        )
 
     msg = f"Unknown LLM provider '{provider}' in model id '{model_id}'."
     raise ValueError(msg)

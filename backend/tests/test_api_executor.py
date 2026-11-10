@@ -2,6 +2,8 @@
 
 from __future__ import annotations
 
+import json as jsonlib
+import time
 from pathlib import Path
 from tempfile import gettempdir
 from typing import TYPE_CHECKING, Any
@@ -12,6 +14,7 @@ from httpx import ASGITransport, AsyncClient
 from sqlalchemy import select
 
 from khoailanggraph.features.me.models import UserRow
+from khoailanggraph.features.runs import service as runs_service
 from khoailanggraph.features.runs.models import DirectiveRow, RunEventRow
 from khoailanggraph.main import create_app
 from khoailanggraph.platform.db import (
@@ -20,7 +23,7 @@ from khoailanggraph.platform.db import (
     make_session_factory,
     make_sync_engine,
 )
-from khoailanggraph.settings import Settings
+from khoailanggraph.settings import Settings, get_settings
 from support.api_helpers import REGISTER, TASK
 
 if TYPE_CHECKING:
@@ -339,3 +342,67 @@ async def test_a_user_edits_while_the_run_waits_and_the_run_goes_on_with_the_edi
         f"{API}/items/{target['id']}", json={"content": {**target["content"], "statement": "Late."}}
     )
     assert late.status_code == 409
+
+
+async def _events(app: FastAPI, run_id: str, kind: str) -> list[RunEventRow]:
+    async with app.state.session_factory() as session:
+        return list(
+            (
+                await session.scalars(
+                    select(RunEventRow)
+                    .where(RunEventRow.run_id == UUID(run_id), RunEventRow.type == kind)
+                    .order_by(RunEventRow.sequence)
+                )
+            ).all()
+        )
+
+
+async def test_the_text_a_node_generates_and_the_tools_it_calls_are_events(
+    client: AsyncClient, app: FastAPI
+) -> None:
+    run = (await _send(client, await _thread(client), []))["run"]
+
+    tokens = await _events(app, run["id"], "token")
+    tools = await _events(app, run["id"], "tool_call")
+
+    assert tokens
+    first = jsonlib.loads(tokens[0].data_json)
+    assert first["text"]
+    assert first["node"] == "planner"
+    assert tokens[0].step_id is not None
+    assert str(tokens[0].step_id) == first["step_id"]
+    called = [jsonlib.loads(event.data_json)["tool"] for event in tools]
+    assert "research_search" in called
+    search = next(e for e in tools if jsonlib.loads(e.data_json)["tool"] == "research_search")
+    assert jsonlib.loads(search.data_json)["args"]["queries"]
+    sequences = [event.sequence for event in [*tokens, *tools]]
+    assert len(sequences) == len(set(sequences))
+
+
+async def test_a_step_that_runs_too_long_fails_the_run_with_timeout(
+    client: AsyncClient, monkeypatch: pytest.MonkeyPatch
+) -> None:
+    monkeypatch.setattr(get_settings(), "node_timeout_seconds", 0.0)
+
+    run = (await _send(client, await _thread(client), []))["run"]
+
+    assert run["status"] == "failed"
+    assert run["error"]["code"] == "timeout"
+
+
+async def test_a_tool_that_runs_too_long_fails_the_run_with_timeout(
+    client: AsyncClient, monkeypatch: pytest.MonkeyPatch
+) -> None:
+    monkeypatch.setattr(get_settings(), "tool_timeout_seconds", 0.05)
+
+    def slow(_queries: object) -> list[dict[str, object]]:
+        time.sleep(0.5)
+        return []
+
+    monkeypatch.setattr(runs_service, "make_research_search", lambda _settings: slow)
+
+    run = (await _send(client, await _thread(client), []))["run"]
+
+    assert run["status"] == "failed"
+    assert run["error"]["code"] == "timeout"
+    assert "research_search" in run["error"]["message"]

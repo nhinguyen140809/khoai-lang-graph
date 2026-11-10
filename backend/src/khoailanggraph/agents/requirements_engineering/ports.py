@@ -222,6 +222,10 @@ class LlmGate(Protocol):
         allow another call."""
         ...
 
+    def record_text(self, role: str, text: str) -> None:
+        """A piece of the text the model is generating."""
+        ...
+
     def record_call(self, role: str, model_id: str, usage: Usage) -> None:
         """Add the usage of one call to the step in progress and to the run."""
         ...

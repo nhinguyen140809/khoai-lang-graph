@@ -82,6 +82,12 @@ class Settings(BaseSettings):
     # The budget of a user per calendar month in UTC (US dollars) when the user has none of
     # their own; None means no limit.
     default_monthly_budget_usd: float | None = 20.0
+    # Time limits (seconds): a node may work this long before its next call to a model is
+    # refused (error code `timeout`), a tool call (search, documents) this long, and one call to
+    # a model this long before the client gives up.
+    node_timeout_seconds: float = 900.0
+    tool_timeout_seconds: float = 60.0
+    llm_call_timeout_seconds: float = 300.0
     # Requests per minute and per user that the API accepts (429 rate_limited after that).
     requests_per_minute: int = 300
     # Attempts per minute and per IP address on login and registration.

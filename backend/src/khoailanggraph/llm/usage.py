@@ -14,7 +14,10 @@ from langchain_core.callbacks import BaseCallbackHandler
 from khoailanggraph.llm.registry import default_registry
 
 if TYPE_CHECKING:
-    from langchain_core.outputs import LLMResult
+    from collections.abc import Callable
+    from uuid import UUID
+
+    from langchain_core.outputs import ChatGenerationChunk, GenerationChunk, LLMResult
 
 PER_MILLION = 1_000_000
 
@@ -82,13 +85,36 @@ def cost_of(model_id: str, usage: Usage) -> float:
 
 
 class UsageHandler(BaseCallbackHandler):
-    """Collects the token counts that the provider reports for the calls it is attached to."""
+    """Collects the token counts that the provider reports for the calls it is attached to, and
+    hands the text the model generates to `on_text` while it is generated."""
 
-    def __init__(self) -> None:
+    def __init__(self, on_text: Callable[[str], None] | None = None) -> None:
+        self.text_sink = on_text
         self.input_tokens = 0
         self.output_tokens = 0
         self.cache_read_tokens = 0
         self.cache_write_tokens = 0
+
+    def on_llm_new_token(
+        self,
+        token: str | list[str | dict[str, Any]],
+        *,
+        chunk: GenerationChunk | ChatGenerationChunk | None = None,
+        run_id: UUID,
+        parent_run_id: UUID | None = None,
+        tags: list[str] | None = None,
+        **kwargs: Any,
+    ) -> None:
+        """A piece of generated text; for an answer given as a tool call, the piece of its
+        arguments."""
+        if self.text_sink is None:
+            return
+        text = token if isinstance(token, str) else ""
+        message = getattr(chunk, "message", None)
+        for piece in getattr(message, "tool_call_chunks", None) or []:
+            text += str(piece.get("args") or "")
+        if text:
+            self.text_sink(text)
 
     def on_llm_end(self, response: LLMResult, **kwargs: Any) -> None:
         for generations in response.generations:

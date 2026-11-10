@@ -132,6 +132,9 @@ Settings (environment variables, all optional):
 | `RUN_EXECUTION` | `background` | `inline` walks the run inside the request (tests, scripts) |
 | `DEFAULT_REVIEW_CHECKPOINTS` | every checkpoint | JSON list of the reviews a run pauses at when no level names any; `[]` pauses at none |
 | `DEFAULT_MONTHLY_BUDGET_USD` | `20.0` | Budget of a user without one of their own; `429 budget_exceeded` when spent |
+| `NODE_TIMEOUT_SECONDS` | `900` | A step older than this gets no further call to a model (`timeout`) |
+| `TOOL_TIMEOUT_SECONDS` | `60` | One call of a tool (search, documents); over it the run fails with `timeout` |
+| `LLM_CALL_TIMEOUT_SECONDS` | `300` | One call to a model, set on the client |
 | `REQUESTS_PER_MINUTE` | `300` | Per user; `429 rate_limited` with `Retry-After` |
 | `AUTH_ATTEMPTS_PER_MINUTE` | `20` | Per IP address, on login and register |
 
