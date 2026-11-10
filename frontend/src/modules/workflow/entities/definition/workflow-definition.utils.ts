@@ -27,6 +27,13 @@ export function toolsOf(definition: Pick<WorkflowDefinition, 'tools'>): Map<stri
   return new Map(definition.tools.map((tool) => [tool.key, tool]))
 }
 
+/** The title of each link type of a definition, by its key. */
+export function linkTypeTitles(
+  definition: Pick<WorkflowDefinition, 'link_types'>,
+): Map<string, string> {
+  return new Map(definition.link_types.map(({ key, title }) => [key, title]))
+}
+
 /** The kinds of item that each kind of artifact holds, in the order of the definition, by its kind. */
 export function itemKindsByArtifactKind(
   definition: Pick<WorkflowDefinition, 'artifact_kinds'>,

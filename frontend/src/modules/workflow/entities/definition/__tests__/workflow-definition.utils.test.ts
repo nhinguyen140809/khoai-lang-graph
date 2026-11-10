@@ -9,6 +9,7 @@ import {
   findAgentRole,
   findNode,
   findValueList,
+  linkTypeTitles,
   toolsOf,
 } from '../workflow-definition.utils'
 import { edgeCases, nodeCases, valueListCases } from './workflow-definition.utils.data'
@@ -51,6 +52,15 @@ describe('agentRoleLabels', () => {
 
     expect(labels.get('interviewer')).toBe('Interviewer')
     expect(labels.size).toBe(workflowDefinitionFixture.agent_roles.length)
+  })
+})
+
+describe('linkTypeTitles', () => {
+  it('gives the title of each link type of the definition, by its key', () => {
+    const titles = linkTypeTitles(workflowDefinitionFixture)
+
+    expect(titles.get('derived_from')).toBe('Based on')
+    expect(titles.size).toBe(workflowDefinitionFixture.link_types.length)
   })
 })
 
