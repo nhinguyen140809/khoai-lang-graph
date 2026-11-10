@@ -1,9 +1,11 @@
 'use client'
 
-import { ChevronsDownIcon, ChevronsUpIcon, ChevronUpIcon, HistoryIcon } from 'lucide-react'
-import { type ReactNode, useEffect, useRef } from 'react'
+import { cn } from 'cn'
+import { ChevronsDownIcon, ChevronUpIcon, HistoryIcon } from 'lucide-react'
+import { type KeyboardEventHandler, type ReactNode, useEffect, useRef } from 'react'
 
 import { ErrorState } from '@/shared/components/state'
+import { AnimatedSize } from '@/shared/components/ui/animated-size'
 import { Button } from '@/shared/components/ui/button'
 import { Checkbox } from '@/shared/components/ui/checkbox'
 import { DisabledReason } from '@/shared/components/ui/disabled-reason'
@@ -27,8 +29,8 @@ interface HistorySurfaceProps {
 
 /**
  * The thin bar above the content of the history surface: it minimizes the surface back to its
- * button. It stays a thin strip with a small arrow in the muted color of the sides, and grows on
- * the pointer, so it is easy to hit and to see.
+ * button. It stays a thin strip with a small arrow in the muted color of the sides, and takes a
+ * background on the pointer, so it is easy to hit and to see.
  */
 function MinimizeBar({ onClick }: { onClick: () => void }) {
   return (
@@ -37,9 +39,9 @@ function MinimizeBar({ onClick }: { onClick: () => void }) {
         type="button"
         aria-label={revisionMessages.minimize}
         onClick={onClick}
-        className="group flex h-3 w-full items-center justify-center rounded-md text-muted-foreground transition-all hover:h-5 hover:bg-muted hover:text-foreground"
+        className="flex h-4 w-full items-center justify-center rounded-md text-muted-foreground transition-colors hover:bg-muted hover:text-foreground"
       >
-        <ChevronUpIcon aria-hidden className="size-3 transition-all group-hover:size-4" />
+        <ChevronUpIcon aria-hidden className="size-3.5" />
       </button>
     </div>
   )
@@ -47,17 +49,17 @@ function MinimizeBar({ onClick }: { onClick: () => void }) {
 
 /**
  * The centered line under the content of the history surface: it opens the list of every version
- * or collapses it back to the stepper. A small line of muted text with an arrow that points the
- * way it goes, thin until the pointer is on it.
+ * or collapses it back to the stepper. A small line of muted text with an arrow that turns to
+ * point the way it goes, and takes a background on the pointer.
  */
 function ExpandLine({
   label,
+  isExpanded,
   onClick,
-  children,
 }: {
   label: string
+  isExpanded: boolean
   onClick: () => void
-  children: ReactNode
 }) {
   return (
     <div className="pt-2">
@@ -65,12 +67,74 @@ function ExpandLine({
         type="button"
         aria-label={label}
         onClick={onClick}
-        className="flex w-full items-center justify-center gap-1 rounded-md py-0.5 text-xs text-muted-foreground transition-all hover:bg-muted hover:py-1.5 hover:text-foreground"
+        className="flex w-full items-center justify-center gap-1 rounded-md py-1 text-xs text-muted-foreground transition-colors hover:bg-muted hover:text-foreground"
       >
         {label}
-        {children}
+        <ChevronsDownIcon
+          aria-hidden
+          className={cn(
+            'size-3 transition-transform duration-200 motion-reduce:transition-none',
+            isExpanded && 'rotate-180',
+          )}
+        />
       </button>
     </div>
+  )
+}
+
+/**
+ * One surface for every level, so that it grows and shrinks between them instead of being
+ * replaced. What a level brings in fades in while the surface moves to its size. While it is
+ * closed the surface is the button itself: no padding of its own, so the focus ring of the button
+ * runs around the whole surface.
+ */
+function HistoryFrame({
+  contentClassName,
+  onKeyDown,
+  children,
+}: {
+  contentClassName?: string
+  onKeyDown?: KeyboardEventHandler<HTMLDivElement>
+  children: ReactNode
+}) {
+  return (
+    <FloatingSurface corner="top-right" variant="glass" size="none" onKeyDown={onKeyDown}>
+      <AnimatedSize contentClassName={contentClassName}>{children}</AnimatedSize>
+    </FloatingSurface>
+  )
+}
+
+interface HistoryContentProps extends Pick<
+  HistorySurfaceProps,
+  'view' | 'currentVersion' | 'renderRestore'
+> {
+  history: ReturnType<typeof useRevisionHistory>
+}
+
+/** What the surface shows under its heading: the error, the list of versions or the stepper. */
+function HistoryContent({ view, history, currentVersion, renderRestore }: HistoryContentProps) {
+  if (history.state === 'error') {
+    return (
+      <ErrorState size="compact" message={revisionMessages.loadError} onRetry={history.retry} />
+    )
+  }
+  if (view.level === 'list') {
+    return (
+      <VersionList
+        view={view}
+        history={history}
+        currentVersion={currentVersion}
+        renderRestore={renderRestore}
+      />
+    )
+  }
+  return (
+    <VersionStepper
+      view={view}
+      currentVersion={currentVersion}
+      history={history}
+      renderRestore={renderRestore}
+    />
   )
 }
 
@@ -119,31 +183,28 @@ export function HistorySurface({
     previousLevel.current = view.level
   }, [view.level])
 
-  // While it is closed the surface is the button itself: no padding of its own, so the focus
-  // ring of the button runs around the whole surface.
   if (!isOpen) {
     return (
-      <FloatingSurface corner="top-right" variant="glass" size="none">
-        <Button
-          ref={button}
-          type="button"
-          variant="ghost"
-          aria-expanded="false"
-          onClick={view.open}
-        >
-          <HistoryIcon data-icon="inline-start" />
-          {revisionMessages.title}
-        </Button>
-      </FloatingSurface>
+      <HistoryFrame>
+        <div key="closed" className="animate-in duration-200 fade-in-0 motion-reduce:animate-none">
+          <Button
+            ref={button}
+            type="button"
+            variant="ghost"
+            aria-expanded="false"
+            onClick={view.open}
+          >
+            <HistoryIcon data-icon="inline-start" />
+            {revisionMessages.title}
+          </Button>
+        </div>
+      </HistoryFrame>
     )
   }
 
   return (
-    <FloatingSurface
-      corner="top-right"
-      variant="glass"
-      size="none"
-      className="w-80"
+    <HistoryFrame
+      contentClassName="w-80"
       onKeyDown={(event) => {
         // Escape steps the levels down: the list to the stepper, the stepper to closed.
         if (event.key === 'Escape') {
@@ -152,64 +213,53 @@ export function HistorySurface({
         }
       }}
     >
-      <MinimizeBar onClick={view.close} />
-      <div className="space-y-3 px-3">
-        <header className="flex items-center justify-between gap-2">
-          <h2
-            ref={heading}
-            tabIndex={-1}
-            className="flex items-center gap-1.5 text-lg font-semibold focus-visible:outline-none"
+      <div key="open" className="animate-in duration-200 fade-in-0 motion-reduce:animate-none">
+        <MinimizeBar onClick={view.close} />
+        <div className="space-y-3 px-3">
+          <header className="flex items-center justify-between gap-2">
+            <h2
+              ref={heading}
+              tabIndex={-1}
+              className="flex items-center gap-1.5 text-lg font-semibold focus-visible:outline-none"
+            >
+              <HistoryIcon aria-hidden className="size-5" />
+              {revisionMessages.title}
+            </h2>
+            <DisabledReason
+              reason={view.selectedVersion === 1 ? revisionMessages.firstVersion : null}
+            >
+              <label className="flex items-center gap-2 text-sm">
+                <Checkbox
+                  checked={view.showsChanges}
+                  onCheckedChange={(checked) => {
+                    view.setShowsChanges(checked === true)
+                  }}
+                  disabled={view.selectedVersion === 1}
+                />
+                {revisionMessages.showChanges}
+              </label>
+            </DisabledReason>
+          </header>
+          <div
+            key={view.level}
+            className="animate-in duration-200 fade-in-0 motion-reduce:animate-none"
           >
-            <HistoryIcon aria-hidden className="size-5" />
-            {revisionMessages.title}
-          </h2>
-          <DisabledReason
-            reason={view.selectedVersion === 1 ? revisionMessages.firstVersion : null}
-          >
-            <label className="flex items-center gap-2 text-sm">
-              <Checkbox
-                checked={view.showsChanges}
-                onCheckedChange={(checked) => {
-                  view.setShowsChanges(checked === true)
-                }}
-                disabled={view.selectedVersion === 1}
-              />
-              {revisionMessages.showChanges}
-            </label>
-          </DisabledReason>
-        </header>
-        {history.state === 'error' ? (
-          <ErrorState size="compact" message={revisionMessages.loadError} onRetry={history.retry} />
-        ) : (
-          <>
-            {view.level === 'list' ? (
-              <VersionList
-                view={view}
-                history={history}
-                currentVersion={currentVersion}
-                renderRestore={renderRestore}
-              />
-            ) : (
-              <VersionStepper
-                view={view}
-                currentVersion={currentVersion}
-                history={history}
-                renderRestore={renderRestore}
-              />
-            )}
-          </>
+            <HistoryContent
+              view={view}
+              history={history}
+              currentVersion={currentVersion}
+              renderRestore={renderRestore}
+            />
+          </div>
+        </div>
+        {history.state !== 'error' && (
+          <ExpandLine
+            label={view.level === 'list' ? revisionMessages.collapse : revisionMessages.showAll}
+            isExpanded={view.level === 'list'}
+            onClick={view.toggleList}
+          />
         )}
       </div>
-      {history.state !== 'error' &&
-        (view.level === 'list' ? (
-          <ExpandLine label={revisionMessages.collapse} onClick={view.toggleList}>
-            <ChevronsUpIcon aria-hidden className="size-3" />
-          </ExpandLine>
-        ) : (
-          <ExpandLine label={revisionMessages.showAll} onClick={view.toggleList}>
-            <ChevronsDownIcon aria-hidden className="size-3" />
-          </ExpandLine>
-        ))}
-    </FloatingSurface>
+    </HistoryFrame>
   )
 }
