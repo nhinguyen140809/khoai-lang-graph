@@ -115,7 +115,7 @@
         ]
       },
       "description": "For each topic, what an interview must bring back before the topic counts as covered.",
-      "x-ui-widget": "list"
+      "x-ui-widget": "object-list"
     },
     "persona_aspects": {
       "title": "Persona aspects",
@@ -164,7 +164,7 @@
         ]
       },
       "description": "The aspects proposed for this project, on top of the aspects that the system scores every persona on. At most four, each different from the system's aspects and from each other.",
-      "x-ui-widget": "list"
+      "x-ui-widget": "object-list"
     }
   },
   "required": [

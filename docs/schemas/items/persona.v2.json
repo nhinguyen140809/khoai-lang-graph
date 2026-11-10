@@ -137,7 +137,7 @@
       "title": "Evidence",
       "type": "array",
       "description": "The words of the research documents that support this interviewee, each with the observation and the document it comes from.",
-      "x-ui-widget": "list",
+      "x-ui-widget": "object-list",
       "items": {
         "type": "object",
         "additionalProperties": false,
@@ -245,7 +245,10 @@
         ]
       },
       "description": "How the person scores on each aspect: the aspects that the system defines and the ones the plan proposes.",
-      "x-ui-widget": "list"
+      "x-ui-widget": "rating-list",
+      "x-ui-label-field": "aspect",
+      "x-ui-value-field": "score",
+      "x-ui-note-field": "rationale"
     }
   },
   "required": [
