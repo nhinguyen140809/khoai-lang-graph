@@ -44,7 +44,7 @@
     "title": {
       "title": "Title",
       "type": "string",
-      "description": "Short name.",
+      "description": "A short name of at most 60 characters that tells the point of the item at a glance, for example \"List mentors by field\".",
       "x-ui-widget": "text"
     },
     "as_a": {
