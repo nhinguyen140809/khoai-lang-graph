@@ -94,6 +94,9 @@ class Settings(BaseSettings):
     node_timeout_seconds: float = 900.0
     tool_timeout_seconds: float = 60.0
     llm_call_timeout_seconds: float = 300.0
+    # The most tokens one call to a model may generate, hidden reasoning included; a reply cut
+    # at this length cannot be parsed, so the call is tried again.
+    llm_max_output_tokens: int = 65536
     # Requests per minute and per user that the API accepts (429 rate_limited after that).
     requests_per_minute: int = 1200
     # Attempts per minute and per IP address on login and registration.

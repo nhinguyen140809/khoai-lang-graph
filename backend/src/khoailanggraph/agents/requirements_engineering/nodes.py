@@ -160,6 +160,17 @@ def _language(run_config: RunConfig) -> str:
     return "English" if run_config.output_language == "en" else "Vietnamese"
 
 
+def _reply_tail(exc: Exception) -> str:
+    """The last characters of a reply that was cut at the length limit, '' for other errors."""
+    try:
+        message = exc.completion.choices[0].message  # type: ignore[attr-defined]
+        calls = message.tool_calls or []
+        text = calls[0].function.arguments if calls else (message.content or "")
+    except (AttributeError, IndexError, TypeError):
+        return ""
+    return f"{len(text)} chars, ends: {text[-300:]!r}"
+
+
 def _invoke[T: BaseModel](
     role: str,
     config: Mapping[str, Any] | RunnableConfig | None,
@@ -210,6 +221,7 @@ def _invoke[T: BaseModel](
                     role=role,
                     attempt=attempt + 1,
                     error=f"{type(exc).__name__}: {str(exc)[:200]}",
+                    reply_tail=_reply_tail(exc),
                 )
         finally:
             # A call that failed was paid for as well: its tokens count.

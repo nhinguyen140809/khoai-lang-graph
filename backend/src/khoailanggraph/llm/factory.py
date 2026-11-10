@@ -54,14 +54,15 @@ def build_chat_model(model_id: str, temperature: float | None = None) -> BaseCha
         # (verified 2026-10-27 against the real gateway). The token cap
         # bounds a degenerate streamed generation (one looped to 386KB of
         # carriage returns) so the _invoke retry takes over instead of a
-        # runaway — 32k left room for the largest lawful output (the
-        # analyst's one-call batch: RAW+AR+latent+assumptions+conflicts)
-        # which truncated at 16k on the real run of 2026-10-27.
+        # runaway. The largest lawful output (the analyst's one-call batch:
+        # RAW+AR+latent+assumptions+conflicts) truncated at 16k on the real
+        # run of 2026-10-27 and at 32k, hidden reasoning included, on the
+        # run of 2026-11-10, so the cap is the `llm_max_output_tokens` setting.
         return ChatOpenAI(
             model=name,
             temperature=temperature,
             max_retries=default_registry().max_retries,
-            max_tokens=32768,
+            max_tokens=settings.llm_max_output_tokens,
             streaming=True,
             timeout=settings.llm_call_timeout_seconds,
             **credentials,
