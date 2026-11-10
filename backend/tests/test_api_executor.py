@@ -1,0 +1,296 @@
+"""How a run pauses at a review, continues from the answer, and stops: the executor over HTTP."""
+
+from __future__ import annotations
+
+from pathlib import Path
+from tempfile import gettempdir
+from typing import TYPE_CHECKING, Any
+from uuid import UUID, uuid4
+
+import pytest
+from httpx import ASGITransport, AsyncClient
+from sqlalchemy import select
+
+from khoailanggraph.features.me.models import UserRow
+from khoailanggraph.features.runs.models import DirectiveRow, RunEventRow
+from khoailanggraph.main import create_app
+from khoailanggraph.platform.db import (
+    ensure_schema,
+    make_async_engine,
+    make_session_factory,
+    make_sync_engine,
+)
+from khoailanggraph.settings import Settings
+from support.api_helpers import REGISTER, TASK
+
+if TYPE_CHECKING:
+    from collections.abc import AsyncIterator
+
+    from fastapi import FastAPI
+
+TEST_DB = Path(gettempdir()) / "khoailang-white-box-executor.db"
+API = "/api/v1"
+
+
+@pytest.fixture
+async def app() -> AsyncIterator[FastAPI]:
+    TEST_DB.unlink(missing_ok=True)
+    settings = Settings(
+        app_env="test",
+        database_url=f"sqlite+aiosqlite:///{TEST_DB}",
+        log_level="WARNING",
+        log_format="json",
+    )
+    application = create_app(settings)
+    engine = make_async_engine(settings)
+    await ensure_schema(engine)
+    application.state.session_factory = make_session_factory(engine)
+    application.state.sync_engine = make_sync_engine(settings)
+    try:
+        yield application
+    finally:
+        await engine.dispose()
+        application.state.sync_engine.dispose()
+        TEST_DB.unlink(missing_ok=True)
+
+
+@pytest.fixture
+async def client(app: FastAPI) -> AsyncIterator[AsyncClient]:
+    transport = ASGITransport(app=app)
+    async with AsyncClient(
+        transport=transport,
+        base_url="http://testserver",
+        headers={"Origin": "http://localhost:3000"},
+    ) as http:
+        yield http
+
+
+async def _thread(client: AsyncClient) -> str:
+    await client.post(f"{API}/auth/register", json=REGISTER)
+    await client.post(f"{API}/auth/login", json={"email": REGISTER["email"], "password": "secret"})
+    project = await client.post(f"{API}/projects", json={"name": "Mentors"})
+    thread = await client.post(f"{API}/projects/{project.json()['id']}/threads")
+    return str(thread.json()["id"])
+
+
+async def _send(
+    client: AsyncClient, thread_id: str, reviews: list[str] | None = None, **extra: Any
+) -> dict[str, Any]:
+    body: dict[str, Any] = {"content": TASK, **extra}
+    if reviews is not None:
+        body["run_config"] = {"review_checkpoints": reviews}
+    response = await client.post(f"{API}/threads/{thread_id}/messages", json=body)
+    assert response.status_code == 201, response.text
+    return dict(response.json())
+
+
+async def _pending(client: AsyncClient, run_id: str) -> dict[str, Any]:
+    response = await client.get(f"{API}/runs/{run_id}/interrupts", params={"status": "pending"})
+    items = response.json()["items"]
+    assert len(items) == 1, items
+    return dict(items[0])
+
+
+async def _resume(client: AsyncClient, run_id: str, interrupt: dict[str, Any], **body: Any) -> Any:
+    return await client.post(
+        f"{API}/runs/{run_id}/resume", json={"interrupt_id": interrupt["id"], **body}
+    )
+
+
+async def test_a_run_pauses_at_a_review_and_waits_for_the_user(client: AsyncClient) -> None:
+    thread_id = await _thread(client)
+    run = (await _send(client, thread_id, ["checkpoint_personas"]))["run"]
+
+    assert run["status"] == "interrupted"
+    interrupt = await _pending(client, run["id"])
+    assert interrupt["node"] == "checkpoint_personas"
+    assert interrupt["allow_edits"] is True
+    assert [ref["kind"] for ref in interrupt["review_artifacts"]] == ["persona_catalog"]
+    assert [option["key"] for option in interrupt["options"]] == ["approve"]
+    thread = (await client.get(f"{API}/threads/{thread_id}")).json()
+    assert thread["active_run_id"] == run["id"]
+
+
+async def test_the_answer_continues_the_run_from_the_chosen_option(client: AsyncClient) -> None:
+    thread_id = await _thread(client)
+    run = (await _send(client, thread_id, ["checkpoint_personas"]))["run"]
+    interrupt = await _pending(client, run["id"])
+
+    response = await _resume(client, run["id"], interrupt, option="approve")
+
+    assert response.status_code == 202
+    finished = (await client.get(f"{API}/runs/{run['id']}")).json()
+    assert finished["status"] == "succeeded"
+    resolved = (await client.get(f"{API}/runs/{run['id']}/interrupts")).json()["items"][0]
+    assert resolved["status"] == "resolved"
+    assert resolved["decision"]["option"] == "approve"
+    assert resolved["decision"]["decided_by"] is not None
+    catalog = next(
+        a
+        for a in (await client.get(f"{API}/projects/{run['project_id']}/artifacts")).json()["items"]
+        if a["kind"] == "persona_catalog"
+    )
+    assert catalog["review_status"] == "approved"
+    steps = (await client.get(f"{API}/runs/{run['id']}/steps", params={"limit": 200})).json()
+    assert steps["items"][0]["usage"]["output_tokens"] > 0
+    assert finished["usage"]["output_tokens"] > 0
+
+
+async def test_a_bad_answer_is_refused_and_a_second_answer_conflicts(client: AsyncClient) -> None:
+    thread_id = await _thread(client)
+    run = (await _send(client, thread_id, ["checkpoint_personas"]))["run"]
+    interrupt = await _pending(client, run["id"])
+
+    wrong_option = await _resume(client, run["id"], interrupt, option="nope")
+    assert wrong_option.status_code == 422
+    assert wrong_option.json()["errors"][0]["field"] == "option"
+    unknown = await client.post(
+        f"{API}/runs/{run['id']}/resume", json={"interrupt_id": str(uuid4()), "option": "approve"}
+    )
+    assert unknown.status_code == 404
+
+    assert (await _resume(client, run["id"], interrupt, option="approve")).status_code == 202
+    again = await _resume(client, run["id"], interrupt, option="approve")
+    assert again.status_code == 409
+
+
+async def test_rejecting_with_feedback_sends_the_run_back_with_a_directive(
+    client: AsyncClient, app: FastAPI
+) -> None:
+    thread_id = await _thread(client)
+    run = (await _send(client, thread_id, ["checkpoint_analysis"]))["run"]
+    interrupt = await _pending(client, run["id"])
+    assert interrupt["node"] == "checkpoint_analysis"
+
+    without = await _resume(client, run["id"], interrupt, option="reject_reanalyse")
+    assert without.status_code == 422
+    assert without.json()["errors"][0]["field"] == "feedback"
+
+    response = await _resume(
+        client, run["id"], interrupt, option="reject_reanalyse", feedback="Merge the duplicates."
+    )
+
+    assert response.status_code == 202
+    again = (await client.get(f"{API}/runs/{run['id']}")).json()
+    assert again["status"] == "interrupted"  # the analyst ran again and the review waits again
+    second = await _pending(client, run["id"])
+    assert second["id"] != interrupt["id"]
+    async with app.state.session_factory() as session:
+        directives = (
+            await session.scalars(
+                select(DirectiveRow).where(DirectiveRow.run_id == UUID(run["id"]))
+            )
+        ).all()
+    human = [d for d in directives if d.human_decision_id is not None]
+    assert [d.instruction for d in human] == ["Merge the duplicates."]
+    assert human[0].issued_by_step_id is None
+
+
+async def test_a_run_is_cancelled_while_it_waits(client: AsyncClient, app: FastAPI) -> None:
+    thread_id = await _thread(client)
+    run = (await _send(client, thread_id, ["checkpoint_personas"]))["run"]
+
+    response = await client.post(f"{API}/runs/{run['id']}/cancel")
+
+    assert response.status_code == 202
+    assert response.json()["status"] == "cancelled"
+    interrupts = (await client.get(f"{API}/runs/{run['id']}/interrupts")).json()["items"]
+    assert [entry["status"] for entry in interrupts] == ["cancelled"]
+    async with app.state.session_factory() as session:
+        done = (
+            await session.scalars(
+                select(RunEventRow).where(
+                    RunEventRow.run_id == UUID(run["id"]), RunEventRow.type == "done"
+                )
+            )
+        ).all()
+    assert len(done) == 1
+    thread = (await client.get(f"{API}/threads/{thread_id}")).json()
+    assert thread["active_run_id"] is None
+
+
+async def test_the_step_limit_fails_the_run(client: AsyncClient) -> None:
+    thread_id = await _thread(client)
+    body = await _send(client, thread_id, [])
+    assert body["run"]["status"] == "succeeded"
+    second_thread = (
+        await client.post(f"{API}/projects/{body['run']['project_id']}/threads")
+    ).json()["id"]
+
+    response = await client.post(
+        f"{API}/threads/{second_thread}/messages",
+        json={"content": "More", "run_config": {"max_steps": 2, "review_checkpoints": []}},
+    )
+
+    run = response.json()["run"]
+    assert run["status"] == "failed"
+    assert run["error"]["code"] == "step_limit_exceeded"
+    assert run["step_count"] == 2
+
+
+async def test_a_spent_budget_refuses_new_work(client: AsyncClient, app: FastAPI) -> None:
+    thread_id = await _thread(client)
+    async with app.state.session_factory() as session:
+        user = (await session.scalars(select(UserRow))).one()
+        user.monthly_budget_usd = 0.0
+        await session.commit()
+
+    response = await client.post(f"{API}/threads/{thread_id}/messages", json={"content": TASK})
+
+    assert response.status_code == 429
+    assert response.json()["code"] == "budget_exceeded"
+
+
+async def test_a_repeated_request_with_the_same_key_gives_the_first_answer(
+    client: AsyncClient,
+) -> None:
+    thread_id = await _thread(client)
+    headers = {"Idempotency-Key": "key-1"}
+    first = await client.post(
+        f"{API}/threads/{thread_id}/messages",
+        json={"content": TASK, "run_config": {"review_checkpoints": []}},
+        headers=headers,
+    )
+    second = await client.post(
+        f"{API}/threads/{thread_id}/messages",
+        json={"content": TASK, "run_config": {"review_checkpoints": []}},
+        headers=headers,
+    )
+
+    assert first.status_code == second.status_code == 201
+    assert first.json() == second.json()
+    runs = (await client.get(f"{API}/threads/{thread_id}/runs")).json()["items"]
+    assert len(runs) == 1
+    other = await client.post(
+        f"{API}/projects", json={"name": "x"}, headers=headers
+    )  # same key, another request
+    assert other.status_code == 422
+
+
+async def test_a_later_message_starts_a_run_at_the_intent_router(client: AsyncClient) -> None:
+    thread_id = await _thread(client)
+    first = (await _send(client, thread_id, []))["run"]
+    assert first["status"] == "succeeded"
+
+    second = (
+        await client.post(
+            f"{API}/threads/{thread_id}/messages",
+            json={"content": "Also support alumni.", "run_config": {"review_checkpoints": []}},
+        )
+    ).json()["run"]
+
+    assert second["number"] == 2
+    steps = (await client.get(f"{API}/runs/{second['id']}/steps", params={"limit": 200})).json()
+    assert steps["items"][0]["node"] == "intent_router"
+
+
+async def test_a_user_over_the_request_limit_waits(app: FastAPI, client: AsyncClient) -> None:
+    app.state.settings = app.state.settings.model_copy(update={"requests_per_minute": 3})
+    await _thread(client)  # register and login, then the user is known
+
+    answers = [await client.get(f"{API}/projects") for _ in range(6)]
+
+    limited = [answer for answer in answers if answer.status_code == 429]
+    assert limited
+    assert limited[0].json()["code"] == "rate_limited"
+    assert int(limited[0].headers["Retry-After"]) >= 1

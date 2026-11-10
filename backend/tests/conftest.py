@@ -10,11 +10,18 @@ from httpx import ASGITransport, AsyncClient
 
 from khoailanggraph.llm import factory as llm_factory
 from khoailanggraph.main import create_app
+from khoailanggraph.platform.db import (
+    ensure_schema,
+    make_async_engine,
+    make_session_factory,
+    make_sync_engine,
+)
 from khoailanggraph.settings import Settings, get_settings
 from support.hermetic import install_fake_provider
 
 if TYPE_CHECKING:
     from collections.abc import AsyncIterator, Iterator
+    from pathlib import Path
 
     from fastapi import FastAPI
 
@@ -65,4 +72,38 @@ async def client(app: FastAPI) -> AsyncIterator[AsyncClient]:
         app.router.lifespan_context(app),
         AsyncClient(transport=transport, base_url="http://test") as http,
     ):
+        yield http
+
+
+@pytest.fixture
+async def file_app(tmp_path: Path) -> AsyncIterator[FastAPI]:
+    """An app on a database file, so the runs of the executor (sync engine) and the requests
+    (async engine) see the same rows."""
+    settings = Settings(
+        app_env="test",
+        database_url=f"sqlite+aiosqlite:///{tmp_path / 'test.db'}",
+        log_level="WARNING",
+        log_format="json",
+    )
+    application = create_app(settings)
+    engine = make_async_engine(settings)
+    await ensure_schema(engine)
+    application.state.session_factory = make_session_factory(engine)
+    application.state.sync_engine = make_sync_engine(settings)
+    try:
+        yield application
+    finally:
+        await engine.dispose()
+        application.state.sync_engine.dispose()
+
+
+@pytest.fixture
+async def file_client(file_app: FastAPI) -> AsyncIterator[AsyncClient]:
+    """A client of `file_app` that sends the origin of the web app."""
+    transport = ASGITransport(app=file_app)
+    async with AsyncClient(
+        transport=transport,
+        base_url="http://testserver",
+        headers={"Origin": "http://localhost:3000"},
+    ) as http:
         yield http

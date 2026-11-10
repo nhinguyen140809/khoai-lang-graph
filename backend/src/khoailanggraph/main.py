@@ -11,7 +11,7 @@ from fastapi.exceptions import RequestValidationError
 from fastapi.responses import JSONResponse
 
 import khoailanggraph.api.models_registry  # noqa: F401 - registers every table
-from khoailanggraph.api import deps
+from khoailanggraph.api import deps, rate_limit
 from khoailanggraph.api.errors import ApiError, api_error_handler, integrity_error_handler
 from khoailanggraph.api.router import api_router
 from khoailanggraph.domain.errors import IntegrityError
@@ -96,6 +96,7 @@ async def session_middleware(
             resolved = await me_service.user_by_session_token(session, token)
             if resolved is not None:
                 request.state.user = resolved[0]
+                request.state.session_id = resolved[1].id
                 await session.commit()
         finally:
             await session.close()
@@ -129,6 +130,7 @@ def create_app(settings: Settings | None = None) -> FastAPI:
         await readiness_check(resolved)
         return {"status": "ready"}
 
+    rate_limit.install(app)  # inside the session middleware: it needs the user
     app.middleware("http")(session_middleware)
     app.include_router(api_router)
 

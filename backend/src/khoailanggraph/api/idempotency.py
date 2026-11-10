@@ -11,12 +11,15 @@ import json
 from datetime import UTC, datetime, timedelta
 from typing import TYPE_CHECKING, Any
 
+from fastapi.responses import JSONResponse
+
 from khoailanggraph.api.errors import ApiError
 from khoailanggraph.platform.idempotency import IdempotencyKeyRow
 
 if TYPE_CHECKING:
     import uuid
 
+    from fastapi import Request
     from sqlalchemy.ext.asyncio import AsyncSession
 
 KEY_LIFETIME = timedelta(hours=24)
@@ -68,3 +71,33 @@ async def store_response(  # noqa: PLR0913, PLR0917
         )
     )
     await session.flush()
+
+
+async def replay(
+    request: Request, session: AsyncSession, user_id: uuid.UUID
+) -> JSONResponse | None:
+    """The stored response when the request repeats one that carried the same key."""
+    stored = await find_response(
+        session, user_id, request.headers.get("Idempotency-Key"), f"POST {request.url.path}"
+    )
+    return None if stored is None else JSONResponse(status_code=stored[0], content=stored[1])
+
+
+async def remember(  # noqa: PLR0913, PLR0917
+    request: Request,
+    session: AsyncSession,
+    user_id: uuid.UUID,
+    status: int,
+    body: Any,
+    headers: dict[str, str] | None = None,
+) -> JSONResponse:
+    """Store the response of a request that carries a key and send it."""
+    await store_response(
+        session,
+        user_id,
+        request.headers.get("Idempotency-Key"),
+        f"POST {request.url.path}",
+        status,
+        body,
+    )
+    return JSONResponse(status_code=status, content=body, headers=headers)

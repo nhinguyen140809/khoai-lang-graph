@@ -3,13 +3,13 @@
 from __future__ import annotations
 
 from pathlib import Path
-from typing import Annotated
+from typing import Annotated, Any
 from uuid import UUID
 
-from fastapi import APIRouter, Depends, Query, Request, Response
+from fastapi import APIRouter, Depends, Query, Request
 from fastapi.responses import FileResponse
 
-from khoailanggraph.api import deps
+from khoailanggraph.api import deps, idempotency
 from khoailanggraph.api.schemas import MAX_LIMIT, Page
 from khoailanggraph.features.exports import renderers, schemas, service
 from khoailanggraph.features.projects.service import get_project_row
@@ -24,12 +24,15 @@ async def create_export(
     request: Request,
     user: deps.CurrentUser,
     db: deps.DbSession,
-    response: Response,
     _origin: Annotated[None, Depends(deps.check_origin)],
-) -> schemas.Export:
+) -> Any:
     """Request a document: a template of the workflow and one of its formats. The file is
     generated at once from the current versions of the documents; `included_artifacts` names
-    the exact versions it holds."""
+    the exact versions it holds. A repeated request with the same `Idempotency-Key` gives the
+    first answer and makes no second export."""
+    replayed = await idempotency.replay(request, db, UUID(str(user.id)))
+    if replayed is not None:
+        return replayed
     project = await get_project_row(db, project_id)
     row = await service.create_export(
         db,
@@ -38,8 +41,14 @@ async def create_export(
         user=user,
         body=body,
     )
-    response.headers["Location"] = f"/api/v1/exports/{row.id}"
-    return service.export_view(row)
+    return await idempotency.remember(
+        request,
+        db,
+        UUID(str(user.id)),
+        202,
+        service.export_view(row).model_dump(mode="json"),
+        {"Location": f"/api/v1/exports/{row.id}"},
+    )
 
 
 @router.get("/projects/{project_id}/exports")

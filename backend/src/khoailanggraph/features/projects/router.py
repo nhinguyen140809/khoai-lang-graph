@@ -3,12 +3,12 @@
 from __future__ import annotations
 
 from datetime import datetime  # noqa: TC003 - FastAPI reads the annotation at run time
-from typing import Annotated
+from typing import Annotated, Any
 from uuid import UUID
 
-from fastapi import APIRouter, Depends, Query, Response
+from fastapi import APIRouter, Depends, Query, Request, Response
 
-from khoailanggraph.api import deps
+from khoailanggraph.api import deps, idempotency
 from khoailanggraph.api.errors import ApiError
 from khoailanggraph.api.schemas import MAX_LIMIT, Page
 from khoailanggraph.features.projects import schemas, service
@@ -58,13 +58,17 @@ async def list_projects(
 @router.post("/projects", status_code=201)
 async def create_project(
     body: schemas.ProjectBody,
+    request: Request,
     user: deps.CurrentUser,
     db: deps.DbSession,
-    response: Response,
     _origin: Annotated[None, Depends(deps.check_origin)],
-) -> schemas.ProjectSummary:
+) -> Any:
     """Create a project. The name is optional: without it, the first run names the project from
-    its initial intent. A language left out is the default language of the user (§5)."""
+    its initial intent. A language left out is the default language of the user (§5). A repeated
+    request with the same `Idempotency-Key` gives the first answer and creates nothing."""
+    replayed = await idempotency.replay(request, db, UUID(str(user.id)))
+    if replayed is not None:
+        return replayed
     name = None if body.name is None else body.name.strip()
     if name == "":
         raise ApiError(
@@ -80,8 +84,15 @@ async def create_project(
             name=name, description=body.description, output_language=body.output_language
         ),
     )
-    response.headers["Location"] = f"/api/v1/projects/{row.id}"
-    return await service.project_view(db, row)
+    view = await service.project_view(db, row)
+    return await idempotency.remember(
+        request,
+        db,
+        UUID(str(user.id)),
+        201,
+        view.model_dump(mode="json"),
+        {"Location": f"/api/v1/projects/{row.id}"},
+    )
 
 
 @router.get("/projects/{project_id}")

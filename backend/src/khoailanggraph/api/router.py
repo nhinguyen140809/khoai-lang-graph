@@ -12,12 +12,14 @@ from khoailanggraph.api.errors import ApiError, unauthenticated
 from khoailanggraph.features.artifacts.router import router as artifacts_router
 from khoailanggraph.features.documents.router import router as documents_router
 from khoailanggraph.features.exports.router import router as exports_router
+from khoailanggraph.features.me.account_router import router as account_router
 from khoailanggraph.features.me.router import router as me_router
 from khoailanggraph.features.projects.router import router as projects_router
 from khoailanggraph.features.runs.router import router as runs_router
 
 api_router = APIRouter(prefix="/api/v1")
 api_router.include_router(me_router)
+api_router.include_router(account_router)
 api_router.include_router(projects_router)
 api_router.include_router(runs_router)
 api_router.include_router(artifacts_router)
