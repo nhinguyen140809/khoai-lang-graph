@@ -44,7 +44,8 @@ Report = Annotated[
         description=(
             "One to three sentences to the user, in the output language, about what you did: "
             "what was done in plain words first, then only what needs their attention. "
-            "Name things by what they say, never by their key."
+            "Name things by what they say, never by their key. You may use Markdown for "
+            "**bold** and a short list; never headings, tables, links or code."
         ),
     ),
 ]
@@ -75,8 +76,8 @@ Notes = Annotated[
             "words, as you would explain it to a colleague who does not build software. Name "
             "things by what they say, never by their keys, ids or field names, and never mention "
             "JSON, prompts or tools. Do not repeat the report: notes tell how the work went, the "
-            "report tells what it ended with. Leave the list empty when there is nothing worth "
-            "saying; never pad it."
+            "report tells what it ended with. You may use Markdown for **bold** only. Leave the "
+            "list empty when there is nothing worth saying; never pad it."
         ),
     ),
 ]
@@ -97,8 +98,8 @@ class ReviewOptionOutput(_Output):
     label: str | None = Field(
         default=None,
         description=(
-            "What the option says in this case, at most 40 characters, in the output language. "
-            "Leave it out to keep the usual words."
+            "What the option says in this case, at most 40 characters, in the output language, "
+            "in plain text. Leave it out to keep the usual words."
         ),
     )
     suggested_feedback: str | None = Field(
@@ -106,20 +107,23 @@ class ReviewOptionOutput(_Output):
         description=(
             "Only for an option that asks the user for feedback: what the user would most likely "
             "say, at most 300 characters, written as the user speaking, in the output language, "
-            "so that one click sends it. Leave it out for an option that asks for none."
+            "in plain text, so that one click sends it. Leave it out for an option that asks for "
+            "none."
         ),
     )
 
 
 class ReviewChoiceOutput(_Output):
     key: str = Field(description="A short key in lower case with underscores, such as `students`.")
-    label: str = Field(description="What the user reads, at most 60 characters.")
+    label: str = Field(description="What the user reads, at most 60 characters, in plain text.")
 
 
 class ReviewQuestionOutput(_Output):
     key: str = Field(description="A short key in lower case with underscores, unique here.")
     kind: Literal["single_select", "multi_select", "free_text"]
-    prompt: str = Field(description="The question in one sentence of at most 140 characters.")
+    prompt: str = Field(
+        description="The question in one sentence of at most 140 characters, in plain text."
+    )
     choices: list[ReviewChoiceOutput] = Field(
         default_factory=list,
         description="Two to four choices for a selection; none for a `free_text`.",
@@ -141,7 +145,8 @@ class ReviewOutput(_Output):
         description=(
             "One to three sentences to the user, at most 300 characters, in the output language: "
             "what to look at in this review, with what you found, for example how many conflicts "
-            "are still open and what they are about. Plain words, never keys."
+            "are still open and what they are about. Plain words, never keys, in plain text "
+            "without Markdown."
         )
     )
     options: list[ReviewOptionOutput] = Field(
@@ -388,8 +393,9 @@ class InterviewerTurnOutput(_Output):
             "When you stop: one to three sentences to the user, in the output language, about "
             "what this interview showed: who the person is and what matters most to them. The "
             "summary is for the document; this is for the user, so say it in your own words and "
-            "do not copy the summary. Name things by what they say, never by their key. Null "
-            "when you ask a question."
+            "do not copy the summary. Name things by what they say, never by their key. You may "
+            "use Markdown for **bold** and a short list; never headings, tables, links or code. "
+            "Null when you ask a question."
         ),
     )
 

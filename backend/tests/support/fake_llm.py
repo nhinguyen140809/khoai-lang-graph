@@ -194,7 +194,10 @@ _REVIEWS = {
         ],
     },
     "AnalystOutput": {
-        "prompt": "I wrote the requirements analysis and found open questions. Check them, then approve it.",
+        "prompt": (
+            "I wrote the requirements analysis and found open questions. "
+            "Check them, then approve it."
+        ),
         "options": [
             {
                 "key": "reject_reanalyse",
