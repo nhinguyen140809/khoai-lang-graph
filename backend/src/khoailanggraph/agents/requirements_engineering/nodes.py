@@ -63,6 +63,7 @@ from khoailanggraph.agents.requirements_engineering.outputs import (
     PersonaAnswerOutput,
     PlannerOutput,
     ValidatorOutput,
+    generator_output_for,
 )
 from khoailanggraph.agents.requirements_engineering.ports import (
     ArtifactSink,
@@ -807,7 +808,7 @@ def persona_generator_node(
     draft: GeneratorOutputV2 = _invoke(
         "persona_generator",
         config or {},
-        GeneratorOutputV2,
+        generator_output_for(sorted(known_observations)),
         {
             "output_language": _language(cfg),
             "intent": state["initial_intent"],

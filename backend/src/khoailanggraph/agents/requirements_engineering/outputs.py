@@ -10,11 +10,14 @@ them into trace-link rows.
 
 from __future__ import annotations
 
-from typing import Annotated, Literal
+from typing import TYPE_CHECKING, Annotated, Any, Literal
 
-from pydantic import BaseModel, ConfigDict, Field, model_validator
+from pydantic import BaseModel, ConfigDict, Field, create_model, model_validator
 
 from khoailanggraph.domain.artifacts import ElicitationPlanContent
+
+if TYPE_CHECKING:
+    from collections.abc import Sequence
 
 DEFAULT_QUALITY = None
 
@@ -208,6 +211,39 @@ class GeneratorOutputV2(_Output):
     stakeholder_groups: list[StakeholderGroup]
     uncovered_stakeholder_types: list[str]
     personas: list[NewPersonaV2]
+
+
+def generator_output_for(observation_keys: Sequence[str]) -> type[GeneratorOutputV2]:
+    """`GeneratorOutputV2` whose observation keys can only be the ones given.
+
+    The schema sent to the model lists the keys as the allowed values of every field that cites
+    one (groups, `grounded_in`, evidence), so a provider that constrains its decoding cannot
+    produce another key, and a parse that names one is refused and asked again.
+    """
+    if not observation_keys:
+        return GeneratorOutputV2
+    key: Any = Literal[tuple(observation_keys)]
+    evidence: Any = create_model(
+        "PersonaEvidence", __base__=PersonaEvidence, observation=(key, ...)
+    )
+    persona: Any = create_model(
+        "NewPersonaV2",
+        __base__=NewPersonaV2,
+        grounded_in=(list[key], Field(min_length=1)),
+        evidence=(list[evidence], Field(min_length=1)),
+    )
+    group: Any = create_model(
+        "StakeholderGroup",
+        __base__=StakeholderGroup,
+        observations=(list[key], Field(min_length=1)),
+    )
+    schema: Any = create_model(
+        "GeneratorOutputV2",
+        __base__=GeneratorOutputV2,
+        stakeholder_groups=(list[group], ...),
+        personas=(list[persona], ...),
+    )
+    return schema
 
 
 class PlannerOutput(ElicitationPlanContent):
