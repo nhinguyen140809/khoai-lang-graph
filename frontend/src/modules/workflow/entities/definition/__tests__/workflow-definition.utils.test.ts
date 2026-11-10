@@ -10,6 +10,7 @@ import {
   findNode,
   findValueList,
   linkTypeTitles,
+  subjectKindByStage,
   toolsOf,
 } from '../workflow-definition.utils'
 import { edgeCases, nodeCases, valueListCases } from './workflow-definition.utils.data'
@@ -61,6 +62,16 @@ describe('linkTypeTitles', () => {
 
     expect(titles.get('derived_from')).toBe('Based on')
     expect(titles.size).toBe(workflowDefinitionFixture.link_types.length)
+  })
+})
+
+describe('subjectKindByStage', () => {
+  it('gives the subject item kind of each stage that runs once for each subject', () => {
+    const subjectsOfStage = subjectKindByStage(workflowDefinitionFixture)
+
+    expect(subjectsOfStage.get('interviewing')).toBe('persona')
+    // A kind with one artifact for the project gives its stage no subject.
+    expect(subjectsOfStage.has('planning')).toBe(false)
   })
 })
 

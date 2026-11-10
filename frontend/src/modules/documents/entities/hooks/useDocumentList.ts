@@ -7,6 +7,7 @@ import { isUnfinishedRunStatus } from '@/modules/run/entities/@x/documents'
 import {
   itemTitle,
   kindSchemasByKind,
+  subjectKindByStage,
   useArtifactKinds,
   useKindTitleOf,
   useWorkflowDefinition,
@@ -30,10 +31,7 @@ export function useDocumentList(projectId: string): DocumentListResult {
   const kindTitleOf = useKindTitleOf()
 
   const subjectItemKinds = useMemo(
-    () =>
-      (definition.data?.artifact_kinds ?? []).flatMap(({ subject_item_kind }) =>
-        subject_item_kind === null ? [] : [subject_item_kind],
-      ),
+    () => (definition.data === undefined ? [] : [...subjectKindByStage(definition.data).values()]),
     [definition.data],
   )
   const subjectItems = useSubjectsWithoutArtifact(projectId, subjectItemKinds, {
