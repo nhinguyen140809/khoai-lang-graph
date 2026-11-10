@@ -90,6 +90,8 @@ async def _read_stream(client: AsyncClient, run_id: str, after: int = 0) -> list
     ) as response:
         assert response.status_code == 200
         assert response.headers["content-type"].startswith("text/event-stream")
+        # A proxy in front of the API must neither compress nor hold the stream.
+        assert "no-transform" in response.headers["cache-control"]
         async for chunk in response.aiter_text():
             lines.append(chunk)
     return lines
