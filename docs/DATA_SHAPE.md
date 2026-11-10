@@ -792,10 +792,13 @@ One current plan per project. The plan is an artifact with no items; the fields 
 |---|---|---|
 | `objectives` | string[] | For example "understand mentor discovery needs" |
 | `topics` | string[] | Subjects to cover in interviews |
+| `data_to_collect` | { topic, needed[] }[] | For each topic, the concrete data an interview must bring back before the topic counts as covered, such as how often the person does it or what they do when it fails. The interviewer checks it to know that it has enough |
+| `opening_questions` | string[] | Two to four open questions that an interview can start with, with one thing in each and none that leads the answer |
 | `information_gaps` | string[] | For example "how students judge mentor quality" |
 | `stakeholder_types` | string[] | For example "Student", "Mentor", "Administrator" |
+| `persona_aspects` | { key, title, description, low, high }[] | The second tier of the [persona aspects](#persona-aspects): up to four aspects that the planner proposes for this project |
 | `strategies` | string[] | How to ask: question styles and techniques |
-| `stopping_conditions` | string[] | When the interviews have gathered enough |
+| `stopping_conditions` | string[] | When the interviews have gathered enough. Each condition names what must be known, so that it can be checked |
 
 Deck: all six fields.
 
@@ -816,17 +819,32 @@ A simulated stakeholder. The profile is application data; a template renders it 
 |---|---|---|
 | `name` | string | The name shown for the interviewee, at most 60 characters. For example "Minh, 3rd-year CS student" |
 | `stakeholder_type` | string | One of the plan's `stakeholder_types` |
+| `occupation` | string | From definition version 2. What the person does for a living or in their studies |
+| `age_range` | string | From definition version 2. For example "20-22" |
 | `background` | string | History, context, situation |
+| `typical_day` | string | From definition version 2. A normal day around the subject of the product |
 | `expertise` | string | Technical and domain familiarity |
+| `current_workarounds` | string[] | From definition version 2. What the person does today without the product |
+| `vocabulary` | string[] | From definition version 2. The words the person uses for the subject |
 | `goals` | string[] | What this persona wants the system to do |
 | `interests` | string[] | What they care about |
 | `constraints` | string[] | Limits they operate under |
 | `priorities` | string[] | How they rank their interests |
 | `concerns` | string[] | Risks, worries, objections |
 | `behavioral_tendencies` | string | How they tend to communicate |
+| `scores` | { aspect, score, rationale }[] | From definition version 2. One score from 1 to 5 for each [persona aspect](#persona-aspects), with a sentence that says what supports it |
 | `interview_status` | enum | `not_started`, `in_progress`, `completed` |
 
 Deck: every field except `interview_status`. The deck's example calls the stakeholder type `role`.
+
+#### Persona aspects
+
+Every persona is scored from 1 to 5 on a set of aspects, in two tiers:
+
+- **First tier, defined by the system.** The `persona_aspects` of the workflow definition: domain expertise, usage frequency, technology comfort, pain severity and decision influence. Each has a title, what it measures and what the scores 1 and 5 mean.
+- **Second tier, proposed for the project.** The planner proposes up to four more in `persona_aspects` of the plan, each different from the first tier and from the others, for what makes people differ for this product, such as how urgent a booking is.
+
+The persona generator scores every persona once on every aspect of both tiers, and writes a sentence for each score that says what in the observations supports it; when the observations are silent it gives the typical value of the group and says so. The scores shape how the persona is interviewed: the interviewer adapts its questions to them, and the persona agent lets them show in how it speaks.
 
 ### InterviewTranscript and InterviewMessage (MVP)
 

@@ -20,16 +20,22 @@
   "x-ui-field-order": [
     "name",
     "stakeholder_type",
+    "occupation",
+    "age_range",
     "evaluative_dimension",
     "grounded_in",
     "background",
+    "typical_day",
     "expertise",
+    "current_workarounds",
+    "vocabulary",
     "goals",
     "interests",
     "constraints",
     "priorities",
     "concerns",
     "behavioral_tendencies",
+    "scores",
     "evidence",
     "interview_status"
   ],
@@ -167,21 +173,100 @@
       "description": "Progress of the interview with this persona. Set by the system.",
       "x-ui-widget": "badge",
       "readOnly": true
+    },
+    "occupation": {
+      "title": "Occupation",
+      "type": "string",
+      "description": "What the person does for a living or in their studies, in a few words.",
+      "x-ui-widget": "text"
+    },
+    "age_range": {
+      "title": "Age range",
+      "type": "string",
+      "description": "The range of age of the person, such as 18-24.",
+      "x-ui-widget": "text"
+    },
+    "typical_day": {
+      "title": "A typical day",
+      "type": "string",
+      "description": "A short account of a normal day around the subject of the product: when, where and with whom the person meets the problem.",
+      "x-ui-widget": "textarea"
+    },
+    "current_workarounds": {
+      "title": "How they cope today",
+      "type": "array",
+      "items": {
+        "type": "string"
+      },
+      "description": "What the person does today without the product, including the tools they use and the tricks they have made.",
+      "x-ui-widget": "list"
+    },
+    "vocabulary": {
+      "title": "Their words",
+      "type": "array",
+      "items": {
+        "type": "string"
+      },
+      "description": "Words and phrases that the person uses for the subject, as they say them.",
+      "x-ui-widget": "tags"
+    },
+    "scores": {
+      "title": "Scores",
+      "type": "array",
+      "items": {
+        "type": "object",
+        "additionalProperties": false,
+        "properties": {
+          "aspect": {
+            "title": "Aspect",
+            "type": "string",
+            "description": "The key of an aspect: one of the aspects of the system, or one proposed in the plan.",
+            "x-ui-widget": "text"
+          },
+          "score": {
+            "title": "Score",
+            "type": "integer",
+            "minimum": 1,
+            "maximum": 5,
+            "description": "From 1 to 5, as the aspect describes its two ends.",
+            "x-ui-widget": "number"
+          },
+          "rationale": {
+            "title": "Why",
+            "type": "string",
+            "description": "One sentence that says what in the evidence or in the profile supports the score.",
+            "x-ui-widget": "text"
+          }
+        },
+        "required": [
+          "aspect",
+          "score",
+          "rationale"
+        ]
+      },
+      "description": "How the person scores on each aspect: the aspects that the system defines and the ones the plan proposes.",
+      "x-ui-widget": "list"
     }
   },
   "required": [
     "name",
     "stakeholder_type",
+    "occupation",
+    "age_range",
     "evaluative_dimension",
     "grounded_in",
     "background",
+    "typical_day",
     "expertise",
+    "current_workarounds",
+    "vocabulary",
     "goals",
     "interests",
     "constraints",
     "priorities",
     "concerns",
     "behavioral_tendencies",
+    "scores",
     "evidence",
     "interview_status"
   ]

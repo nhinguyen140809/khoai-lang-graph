@@ -47,6 +47,9 @@ from khoailanggraph.agents.requirements_engineering.definition import (
 )
 from khoailanggraph.agents.requirements_engineering.definition import link_types as get_link_types
 from khoailanggraph.agents.requirements_engineering.definition import nodes as definition_nodes
+from khoailanggraph.agents.requirements_engineering.definition import (
+    persona_aspects as definition_persona_aspects,
+)
 from khoailanggraph.agents.requirements_engineering.definition import value_lists as get_value_lists
 from khoailanggraph.agents.requirements_engineering.outputs import (
     AnalystOutput,
@@ -846,10 +849,13 @@ def persona_generator_node(
         prompt_views(observation_records) or "(none mined; fall back to the intent)"
     )
 
+    aspects = persona_aspect_list(
+        cast("dict[str, Any]", plan_record["content"]) if plan_record is not None else None
+    )
     draft: GeneratorOutputV2 = _invoke(
         "persona_generator",
         config or {},
-        generator_output_for(sorted(known_observations)),
+        generator_output_for(sorted(known_observations), [entry["key"] for entry in aspects]),
         {
             "output_language": _language(cfg),
             "intent": state["initial_intent"],
@@ -859,6 +865,7 @@ def persona_generator_node(
                 else "(no plan; cover the intent's obvious stakeholder types)"
             ),
             "observations": observations_lines,
+            "aspects": aspect_lines(aspects),
             "target_personas_num": str(cfg.parameters.target_personas_num),
         },
     )
@@ -1018,16 +1025,7 @@ def _ask_interviewer(
     plan_record = sink.read_artifact(state["project_id"], "elicitation_plan")
     plan_lines = "(no plan)"
     if plan_record is not None:
-        plan_content = cast("dict[str, list[str]]", plan_record["content"])
-        plan_lines = "\n".join(
-            [
-                *(f"topic: {topic}" for topic in plan_content.get("topics", [])),
-                *(
-                    f"stop when: {condition}"
-                    for condition in plan_content.get("stopping_conditions", [])
-                ),
-            ]
-        )
+        plan_lines = plan_lines_of(cast("dict[str, Any]", plan_record["content"]))
     turn: InterviewerTurnOutput = _invoke(
         "interviewer",
         config,
@@ -1213,6 +1211,59 @@ def interviewer_node(
         }
 
 
+def plan_lines_of(plan: Mapping[str, Any]) -> str:
+    """The plan as the interviewer reads it, one line each: the questions to open with, the topics
+    with the data to bring back for each, and when to stop."""
+    lines = [f"opening question: {question}" for question in plan.get("opening_questions", [])]
+    needed = {
+        str(entry["topic"]): [str(item) for item in entry["needed"]]
+        for entry in plan.get("data_to_collect", [])
+    }
+    for topic in plan.get("topics", []):
+        lines.append(f"topic: {topic}")
+        lines.extend(f"  data to collect: {item}" for item in needed.get(str(topic), []))
+    lines.extend(f"stop when: {condition}" for condition in plan.get("stopping_conditions", []))
+    return "\n".join(lines)
+
+
+def persona_aspect_list(plan: Mapping[str, Any] | None) -> list[dict[str, str]]:
+    """The aspects every persona is scored on: the ones the system defines (the first tier), then
+    the ones that the plan proposes for the project (the second tier), without a repeated key."""
+    aspects = [{**entry, "tier": "system"} for entry in definition_persona_aspects()]
+    taken = {entry["key"] for entry in aspects}
+    for entry in [] if plan is None else plan.get("persona_aspects", []):
+        if str(entry["key"]) not in taken:
+            taken.add(str(entry["key"]))
+            aspects.append({**{k: str(v) for k, v in entry.items()}, "tier": "plan"})
+    return aspects
+
+
+def aspect_lines(aspects: Sequence[Mapping[str, str]]) -> str:
+    """The aspects as the persona generator reads them, one line each."""
+    return "\n".join(
+        f"- {entry['key']} ({entry['tier']}): {entry['title']}. {entry['description']} "
+        f"1 means: {entry['low']}. 5 means: {entry['high']}."
+        for entry in aspects
+    )
+
+
+PERSONA_ANSWER_LIMIT = 600
+
+
+def _clip_answer(text: str, limit: int = PERSONA_ANSWER_LIMIT) -> str:
+    """A persona answer that is far longer than a person would say is cut at the end of the last
+    sentence that fits; a text of one long sentence is cut at a word."""
+    text = text.strip()
+    if len(text) <= limit:
+        return text
+    head = text[:limit]
+    ends = [head.rfind(mark) for mark in (". ", "? ", "! ")]
+    end = max(ends)
+    if end > limit // 2:
+        return head[: end + 1]
+    return head[: head.rfind(" ")].rstrip(",;:") + "..."
+
+
 PERSONA_KNOWLEDGE_LINES = 12
 PERSONA_KNOWLEDGE_CHARS = 4000
 
@@ -1290,7 +1341,7 @@ def persona_agent_node(
         {
             "turn": turn_no,
             "speaker": str(persona["key"]),
-            "content": answer.answer,
+            "content": _clip_answer(answer.answer),
             "iteration": int(state["iteration_count"]),
             "topic": None,
         },

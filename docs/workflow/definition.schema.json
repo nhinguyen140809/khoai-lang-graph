@@ -69,6 +69,11 @@
       "items": { "$ref": "#/$defs/valueList" },
       "description": "Every named list of allowed values for a content field that names it with x-value-list."
     },
+    "persona_aspects": {
+      "type": "array",
+      "items": { "$ref": "#/$defs/personaAspect" },
+      "description": "The aspects that every persona is scored on, defined by the system: the first tier. The agent that plans the interviews may propose more for a project: the second tier."
+    },
     "directive_kinds": {
       "type": "array",
       "items": { "$ref": "#/$defs/directiveKind" },
@@ -481,6 +486,18 @@
         }
       },
       "required": ["source", "target"]
+    },
+    "personaAspect": {
+      "type": "object",
+      "additionalProperties": false,
+      "properties": {
+        "key": { "$ref": "#/$defs/name" },
+        "title": { "type": "string", "description": "What the user reads." },
+        "description": { "type": "string", "description": "What the aspect measures, in one sentence." },
+        "low": { "type": "string", "description": "What a score of 1 means." },
+        "high": { "type": "string", "description": "What a score of 5 means." }
+      },
+      "required": ["key", "title", "description", "low", "high"]
     },
     "valueList": {
       "type": "object",

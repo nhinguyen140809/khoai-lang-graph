@@ -116,6 +116,11 @@ def node_of_edge_options(node_id: str) -> list[dict[str, Any]]:
     return list(nodes().get(node_id, {}).get("options", []))
 
 
+def persona_aspects() -> list[dict[str, Any]]:
+    """The aspects that every persona is scored on, defined by the system (the first tier)."""
+    return [dict(entry) for entry in DEFINITION.get("persona_aspects", [])]
+
+
 def run_parameters_schema() -> dict[str, Any]:
     """The JSON Schema of the run config `parameters` of this definition."""
     return dict(DEFINITION["run_parameters_schema"])

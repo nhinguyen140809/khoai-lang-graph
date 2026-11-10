@@ -17,6 +17,9 @@ inputs:
   - name: observations
     part: user
     description: Prompt views of the stakeholder observations, one JSON object per line, sorted by key. Each has stakeholder_name, description, dimension, evidence and its source key.
+  - name: aspects
+    part: user
+    description: The aspects to score every persona on, one per line, with the key to use, who defined it, and what the two ends of the scale mean.
   - name: target_personas_num
     part: user
     description: How many personas to generate, as a bare number.
@@ -37,6 +40,8 @@ Cluster the observations into stakeholder groups, then produce the requested num
 - Grounding a persona: every trait, priority and worry traces to an observation; extend beyond the evidence only where a real carrier of the dimension would go.
 - Making interviewees who can disagree: give the personas different and sometimes conflicting priorities, as real stakeholders have.
 - Respecting people: describe a persona by role, needs and constraints, and never by a demeaning stereotype.
+- Scoring honestly: a score reflects what the observations say about the group and this persona's dimension. Let the scores differ between personas where the evidence differs, and when the observations are silent on an aspect, give the typical value of the group and say so in the sentence.
+- Writing a believable profile: the occupation, the typical day, the workarounds and the words are typical for the group, in general terms, and fit the evidence. They are never presented as something that a research document said.
 - Covering the plan honestly: say which stakeholder types no evidence supports.
 - Preparing the review: you also write the review that the user answers after your step.
   - The prompt says what to look at and what you found, in a few sentences, as the section "Writing for people" asks.
@@ -50,6 +55,7 @@ Cluster the observations into stakeholder groups, then produce the requested num
 - `<intent>`: the product idea.
 - `<plan>`: the elicitation plan as one JSON object per line.
 - `<observations>`: the stakeholder observations, one JSON object per line, each with its key.
+- `<aspects>`: the aspects to score every persona on, one per line: the key, who defined it (the system or the plan), what it measures and what the scores 1 and 5 mean.
 - `<target_personas_num>`: the exact number of personas to generate.
 
 ## Procedure
@@ -59,8 +65,10 @@ Cluster the observations into stakeholder groups, then produce the requested num
 3. Build the personas from the consolidated groups: one persona per distinct evaluative dimension, or per set of dimensions that one person would naturally carry together. Give each persona the demographics, domain specialty, psychological traits and social relationships that a real carrier of these dimensions would have, with goals, interests, constraints, priorities and concerns following from its dimensions.
 4. Relate every persona to its ground: `evaluative_dimension` carries the dimension this persona embodies, and `evidence`, copied exactly from the observations it is built from.
 5. Make the personas able to disagree; give them conflicting priorities where real stakeholders would have them.
-6. Check coverage: the personas together must cover the stakeholder types of the plan. Explain why you chose these personas, and list the stakeholder types no persona represents.
-7. Write the review that the user answers after this step, as the skill Preparing the review says.
+6. Write the rest of the profile of each persona, which makes the interview believable: the occupation, the age range, a typical day around the subject, how the person copes today, and the words that the person uses for the subject.
+7. Score each persona from 1 to 5 on every aspect of `<aspects>`, once, with the key as listed. Write one sentence for each score that says what in the observations supports it.
+8. Check coverage: the personas together must cover the stakeholder types of the plan. Explain why you chose these personas, and list the stakeholder types no persona represents.
+9. Write the review that the user answers after this step, as the skill Preparing the review says.
 
 ## Rules
 
@@ -79,6 +87,7 @@ Cluster the observations into stakeholder groups, then produce the requested num
 - `review`: the prompt, the wording of the options and the questions of the review that follows this step. Leave it out when it has nothing to add to the usual question.
 - `report`: one to three sentences to the user about who the interviewees are, and which kinds of stakeholders no evidence covers; the server turns them into a message of the chat. Name things by what they say, never by their keys.
 - Every observation key you consolidate into a group appears in that group's `observations`; every persona's `grounded_in` holds observation keys, never group keys.
+- `scores`: one entry for each aspect of `<aspects>`, with its key, a whole number from 1 to 5, and the sentence that supports it.
 - `evidence` entries carry observation and source keys exactly as given in `<observations>`; the quote is the observation's `evidence`, copied exactly.
 - `stakeholder_groups` are reported once, before the personas; they are the record of how the evidence was consolidated.
 
@@ -107,8 +116,20 @@ Part of the output:
       "ref": "P1",
       "name": "Maya, 21, third-year biology major commuting 35 minutes",
       "stakeholder_type": "Student",
+      "occupation": "Third-year biology student",
+      "age_range": "20-22",
       "evaluative_dimension": "spot-finding time",
       "grounded_in": ["OBS-007"],
+      "typical_day": "She leaves home at 7:30 for a 9:00 lab, and every morning she is not sure that she will find a space before it starts.",
+      "current_workarounds": ["Arrives 40 minutes early", "Parks off campus and walks"],
+      "vocabulary": ["circling", "the lot is full", "give up and park outside"],
+      "scores": [
+        { "aspect": "domain_expertise", "score": 4, "rationale": "She has parked on this campus for three years." },
+        { "aspect": "usage_frequency", "score": 5, "rationale": "The observations describe a daily commute." },
+        { "aspect": "tech_comfort", "score": 4, "rationale": "The observations are silent, so this is the typical value for students." },
+        { "aspect": "pain_severity", "score": 4, "rationale": "Commuters report circling for 10 to 15 minutes." },
+        { "aspect": "decision_influence", "score": 1, "rationale": "Students do not choose the parking system." }
+      ],
       "evidence": [
         {
           "observation": "OBS-007",
@@ -136,6 +157,10 @@ Part of the output:
 <observations>
 {{ observations }}
 </observations>
+
+<aspects>
+{{ aspects }}
+</aspects>
 
 <target_personas_num>
 {{ target_personas_num }}

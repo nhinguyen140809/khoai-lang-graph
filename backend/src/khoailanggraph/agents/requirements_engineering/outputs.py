@@ -329,22 +329,62 @@ class PersonaEvidence(_Output):
     quote: str
 
 
+class PersonaScoreOutput(_Output):
+    """The score of a persona on one aspect."""
+
+    aspect: str = Field(description="The key of the aspect, as it is listed for you.")
+    score: int = Field(
+        ge=1,
+        le=5,
+        description=(
+            "From 1 to 5, as the aspect describes its two ends. Do not give every persona the "
+            "same score."
+        ),
+    )
+    rationale: str = Field(
+        description=(
+            "One sentence, in the output language, that says what in the observations supports "
+            "the score. When the observations are silent, say that you gave the typical value of "
+            "the group."
+        )
+    )
+
+
 class NewPersonaV2(_Output):
     """A persona draft grounded in mined observations; the system assigns the key."""
 
     ref: str
     name: str
     stakeholder_type: str
+    occupation: str = Field(
+        description="What the person does for a living or in their studies, in a few words."
+    )
+    age_range: str = Field(description="A range of age such as 18-24.")
     evaluative_dimension: str
     grounded_in: list[str] = Field(min_length=1)
     background: str
+    typical_day: str = Field(
+        description=(
+            "Two or three sentences about a normal day around the subject of the product: when, "
+            "where and with whom the person meets the problem."
+        )
+    )
     expertise: str
+    current_workarounds: list[str] = Field(
+        description="What the person does today without the product, including tools and tricks."
+    )
+    vocabulary: list[str] = Field(
+        description="Three to six words or phrases that the person uses for the subject."
+    )
     goals: list[str]
     interests: list[str]
     constraints: list[str]
     priorities: list[str]
     concerns: list[str]
     behavioral_tendencies: str
+    scores: list[PersonaScoreOutput] = Field(
+        description="One score for each aspect that is listed for you, the system's and the plan's."
+    )
     evidence: list[PersonaEvidence] = Field(min_length=1)
 
 
@@ -374,35 +414,69 @@ class GeneratorOutputV2(_Narrated):
     personas: list[NewPersonaV2]
 
 
-def generator_output_for(observation_keys: Sequence[str]) -> type[GeneratorOutputV2]:
-    """`GeneratorOutputV2` whose observation keys can only be the ones given.
+def generator_output_for(
+    observation_keys: Sequence[str], aspect_keys: Sequence[str] = ()
+) -> type[GeneratorOutputV2]:
+    """`GeneratorOutputV2` whose observation keys and aspect keys can only be the ones given.
 
-    The schema sent to the model lists the keys as the allowed values of every field that cites
-    one (groups, `grounded_in`, evidence), so a provider that constrains its decoding cannot
-    produce another key, and a parse that names one is refused and asked again.
+    The schema sent to the model lists the observation keys as the allowed values of every field
+    that cites one (groups, `grounded_in`, evidence), and the aspect keys as the allowed values of
+    a score, so a provider that constrains its decoding cannot produce another key, and a parse
+    that names one is refused and asked again. Every persona must have exactly one score for each
+    aspect.
     """
-    if not observation_keys:
+    if not observation_keys and not aspect_keys:
         return GeneratorOutputV2
-    key: Any = Literal[tuple(observation_keys)]
-    evidence: Any = create_model(
-        "PersonaEvidence", __base__=PersonaEvidence, observation=(key, ...)
-    )
-    persona: Any = create_model(
-        "NewPersonaV2",
-        __base__=NewPersonaV2,
-        grounded_in=(list[key], Field(min_length=1)),
-        evidence=(list[evidence], Field(min_length=1)),
-    )
-    group: Any = create_model(
-        "StakeholderGroup",
-        __base__=StakeholderGroup,
-        observations=(list[key], Field(min_length=1)),
-    )
+    persona_fields: dict[str, Any] = {}
+    output_fields: dict[str, Any] = {}
+    if observation_keys:
+        key: Any = Literal[tuple(observation_keys)]
+        evidence: Any = create_model(
+            "PersonaEvidence", __base__=PersonaEvidence, observation=(key, ...)
+        )
+        group: Any = create_model(
+            "StakeholderGroup",
+            __base__=StakeholderGroup,
+            observations=(list[key], Field(min_length=1)),
+        )
+        persona_fields["grounded_in"] = (list[key], Field(min_length=1))
+        persona_fields["evidence"] = (list[evidence], Field(min_length=1))
+        output_fields["stakeholder_groups"] = (list[group], ...)
+    validators: dict[str, Any] = {}
+    if aspect_keys:
+        aspect: Any = Literal[tuple(aspect_keys)]
+        score: Any = create_model(
+            "PersonaScoreOutput", __base__=PersonaScoreOutput, aspect=(aspect, ...)
+        )
+        persona_fields["scores"] = (
+            list[score],
+            Field(
+                min_length=len(aspect_keys),
+                max_length=len(aspect_keys),
+                description=(
+                    "One score for each aspect that is listed for you, the system's and the plan's."
+                ),
+            ),
+        )
+
+        def _one_score_for_each_aspect(self: Any) -> Any:
+            for persona in self.personas:
+                given = [entry.aspect for entry in persona.scores]
+                if sorted(given) != sorted(aspect_keys):
+                    msg = f"score {persona.name} once on each aspect: {', '.join(aspect_keys)}"
+                    raise ValueError(msg)
+            return self
+
+        validators["_one_score_for_each_aspect"] = model_validator(mode="after")(
+            _one_score_for_each_aspect
+        )
+    persona: Any = create_model("NewPersonaV2", __base__=NewPersonaV2, **persona_fields)
+    output_fields["personas"] = (list[persona], ...)
     schema: Any = create_model(
         "GeneratorOutputV2",
         __base__=GeneratorOutputV2,
-        stakeholder_groups=(list[group], ...),
-        personas=(list[persona], ...),
+        __validators__=validators,
+        **output_fields,
     )
     return schema
 
@@ -450,7 +524,13 @@ class InterviewerTurnOutput(_Output):
 
 
 class PersonaAnswerOutput(_Output):
-    answer: str
+    answer: str = Field(
+        description=(
+            "What the person says, in first person, in one to three sentences and at most 400 "
+            "characters, as in a real interview. Say more only when asked to walk through "
+            "something."
+        )
+    )
 
 
 class RawRequirementDraft(_Output):
