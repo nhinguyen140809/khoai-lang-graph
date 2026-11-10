@@ -18,6 +18,15 @@ class Participant(BaseModel):
     item_id: str | None
 
 
+class DataCoverage(BaseModel):
+    """Whether the interview brought back one item of the data that the plan asks for."""
+
+    model_config = ConfigDict(extra="forbid")
+
+    data: str
+    covered: bool
+
+
 class InterviewTranscriptContent(BaseModel):
     """The system-computed state of one persona's interview.
 
@@ -32,3 +41,6 @@ class InterviewTranscriptContent(BaseModel):
     status: Literal["in_progress", "completed"]
     turn_count: int = Field(ge=0)
     stop_reason: Literal["max_turns", "interviewer_stopped", "stopping_condition_met"] | None
+    data_coverage: list[DataCoverage] = Field(default_factory=list)
+    top_findings: list[str] = Field(default_factory=list)
+    follow_ups: list[str] = Field(default_factory=list)

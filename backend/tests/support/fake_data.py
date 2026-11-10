@@ -769,15 +769,33 @@ def _interviewer_turn(system: str, user: str, call_number: int) -> dict[str, Any
     stops deterministically after the plan's three questions per persona.
     """
     asked = user.count(" interviewer:")
+    topics = re.findall(r"^topic: (.+)$", user, flags=re.MULTILINE)
+    answers = re.findall(r"^(\S+#\d+) persona:", user, flags=re.MULTILINE)
+    # What the last answer gave: the first item of the plan that this interview has not ticked.
+    open_items = re.findall(r"^- \[ \] (.+)$", user, flags=re.MULTILINE)
+    covered = open_items[:1] if answers else []
     if asked >= _QUESTS_PER_PERSONA or "<limit_reached>\nyes" in user:
         return {
             "question": "",
             "stop": True,
             "summary": _summary_for(user),
             "report": "I finished the interview and noted what matters most to this person.",
+            "covered_by_last_answer": covered,
+            "top_findings": [_summary_for(user)],
+            "follow_ups": ["Ask what a good week looks like once the platform exists."],
         }
     script = _INTERVIEWS[_role_in(user)]
-    return {"question": script[min(asked, len(script) - 1)][0], "stop": False}
+    kinds = ["opening", "follow_up", "new_topic"]
+    turn: dict[str, Any] = {
+        "question": script[min(asked, len(script) - 1)][0],
+        "stop": False,
+        "question_kind": kinds[min(asked, len(kinds) - 1)],
+        "covered_by_last_answer": covered,
+        "topic": topics[min(asked, len(topics) - 1)] if topics else None,
+    }
+    if turn["question_kind"] == "follow_up" and answers:
+        turn["follows_up_on"] = answers[-1]
+    return turn
 
 
 def _persona_answer(system: str, user: str, call_number: int) -> dict[str, Any]:

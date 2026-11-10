@@ -9,7 +9,9 @@ from khoailanggraph.agents.requirements_engineering.outputs import InterviewerTu
 
 
 def test_a_question_has_neither_a_summary_nor_a_report() -> None:
-    turn = InterviewerTurnOutput(question="How do you book a session today?")
+    turn = InterviewerTurnOutput(
+        question="How do you book a session today?", question_kind="opening"
+    )
 
     assert turn.stop is False
     assert turn.summary is None
@@ -22,6 +24,7 @@ def test_a_stop_comes_with_a_summary_and_a_report() -> None:
         stop=True,
         summary="A commuter student who wants a spot quickly.",
         report="I finished talking with Minh, who cares most about finding a spot fast.",
+        top_findings=["He waits weeks for an answer from a mentor."],
     )
 
     assert turn.stop is True
@@ -31,9 +34,10 @@ def test_a_stop_comes_with_a_summary_and_a_report() -> None:
 @pytest.mark.parametrize(
     ("fields", "missing"),
     [
-        ({"summary": "A student."}, "report"),
-        ({"report": "I finished the interview."}, "summary"),
-        ({"summary": "A student.", "report": "  "}, "report"),
+        ({"summary": "A student.", "top_findings": ["x"]}, "report"),
+        ({"report": "I finished the interview.", "top_findings": ["x"]}, "summary"),
+        ({"summary": "A student.", "report": "  ", "top_findings": ["x"]}, "report"),
+        ({"summary": "A student.", "report": "Done."}, "stood out"),
     ],
 )
 def test_a_stop_without_its_summary_or_its_report_is_refused(

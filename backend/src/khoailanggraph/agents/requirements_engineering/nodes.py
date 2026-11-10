@@ -67,6 +67,7 @@ from khoailanggraph.agents.requirements_engineering.outputs import (
     PlannerOutput,
     ValidatorOutput,
     generator_output_for,
+    interviewer_output_for,
 )
 from khoailanggraph.agents.requirements_engineering.ports import (
     ArtifactSink,
@@ -994,6 +995,9 @@ def _transcript_of(
             "status": "in_progress",
             "turn_count": 0,
             "stop_reason": None,
+            "data_coverage": [],
+            "top_findings": [],
+            "follow_ups": [],
         },
         subject_id=persona["item_id"],
     )
@@ -1030,15 +1034,22 @@ def _ask_interviewer(
     sink = _sink(config)
     plan_record = sink.read_artifact(state["project_id"], "elicitation_plan")
     plan_lines = "(no plan)"
-    if plan_record is not None:
-        plan_lines = plan_lines_of(cast("dict[str, Any]", plan_record["content"]))
+    plan = cast("dict[str, Any]", plan_record["content"]) if plan_record is not None else None
+    if plan is not None:
+        plan_lines = plan_lines_of(plan)
+    data_items = plan_data_items(plan)
     turn: InterviewerTurnOutput = _invoke(
         "interviewer",
         config,
-        InterviewerTurnOutput,
+        interviewer_output_for(
+            data_items,
+            [str(topic) for topic in (plan or {}).get("topics", [])],
+            [str(message["key"]) for message in messages[-TRANSCRIPT_TAIL:]],
+        ),
         {
             "output_language": _language(cfg),
             "plan": plan_lines,
+            "coverage": coverage_lines(data_items, messages),
             "persona": json.dumps(prompt_view(persona), ensure_ascii=False),
             "transcript": "\n".join(transcript_lines(persona["key"], messages[-TRANSCRIPT_TAIL:]))
             or "(none yet; this is the opening turn)",
@@ -1053,26 +1064,41 @@ def _ask_interviewer(
     return turn
 
 
+def data_items_of(state: REState, sink: ArtifactSink) -> list[str]:
+    """The items of data that the plan of the project asks the interviews to bring back."""
+    plan_record = sink.read_artifact(state["project_id"], "elicitation_plan")
+    return plan_data_items(
+        cast("dict[str, Any]", plan_record["content"]) if plan_record is not None else None
+    )
+
+
 def _close_interview(
     sink: ArtifactSink,
     transcript: dict[str, Any],
     stop_reason: str,
-    summary: str | None,
-    report: str | None,
+    turn: InterviewerTurnOutput,
+    coverage: list[dict[str, Any]],
 ) -> ArtifactRef:
     """End the interview of a persona: the transcript is completed, and the sentence that the
     interviewer wrote about what the persona said becomes its summary. What the interviewer
     tells the user about the interview is the report, a message of the chat."""
     closed = sink.update_artifact_content(
         transcript["artifact_id"],
-        dict(transcript["content"]) | {"status": "completed", "stop_reason": stop_reason},
+        dict(transcript["content"])
+        | {
+            "status": "completed",
+            "stop_reason": stop_reason,
+            "data_coverage": coverage,
+            "top_findings": list(turn.top_findings),
+            "follow_ups": list(turn.follow_ups),
+        },
     )
-    if summary:
-        sink.set_artifact_summary(transcript["artifact_id"], summary)
+    if turn.summary:
+        sink.set_artifact_summary(transcript["artifact_id"], turn.summary)
     else:
         logger.warning("interview closed without a summary", artifact=transcript["artifact_id"])
-    if report:
-        sink.add_report(report)
+    if turn.report:
+        sink.add_report(turn.report)
     return closed
 
 
@@ -1115,7 +1141,14 @@ def interviewer_node(
             persona = orchestrator.active_persona(state, sink)
             transcript, messages = _transcript_of(state, sink, persona)
             last = _ask_interviewer(state, runnable_config, persona, messages, limit_reached=True)
-            closed = _close_interview(sink, transcript, "max_turns", last.summary, last.report)
+            _record_what_the_last_answer_gave(sink, messages, last)
+            closed = _close_interview(
+                sink,
+                transcript,
+                "max_turns",
+                last,
+                _coverage_of(data_items_of(state, sink), messages, last.covered_by_last_answer),
+            )
             if int(state["active_persona_index"]) + 1 >= len(state["personas"]):
                 return {
                     **cursor,
@@ -1184,9 +1217,14 @@ def interviewer_node(
                 f"persona {persona['key']} llm_stop={turn.stop} final_stop={stop}",
             )
 
+        _record_what_the_last_answer_gave(sink, messages, turn)
         if stop:
             closed = _close_interview(
-                sink, transcript, "interviewer_stopped", turn.summary, turn.report
+                sink,
+                transcript,
+                "interviewer_stopped",
+                turn,
+                _coverage_of(data_items_of(state, sink), messages, turn.covered_by_last_answer),
             )
             if int(state["active_persona_index"]) + 1 >= len(state["personas"]):
                 return {
@@ -1207,7 +1245,10 @@ def interviewer_node(
                 "speaker": INTERVIEWER_KEY,
                 "content": turn.question,
                 "iteration": int(state["iteration_count"]),
-                "topic": None,
+                "topic": turn.topic,
+                "message_kind": "opening" if not messages else (turn.question_kind or "follow_up"),
+                "follows_up_on": turn.follows_up_on,
+                "covers": [],
             },
         )
         return {
@@ -1215,6 +1256,51 @@ def interviewer_node(
             "interview_transcripts": _merge_transcripts(state, transcript),
             "current_stage": "interviewing",
         }
+
+
+def plan_data_items(plan: Mapping[str, Any] | None) -> list[str]:
+    """Every item of the data that the plan asks the interviews to bring back, once, in the order of
+    the plan."""
+    items: list[str] = []
+    for entry in [] if plan is None else plan.get("data_to_collect", []):
+        items.extend(str(item) for item in entry["needed"] if str(item) not in items)
+    return items
+
+
+def _covers_of(message: ItemRecord) -> list[str]:
+    """The data of the plan that the judged answer gave; empty for a question."""
+    return [str(item) for item in cast("list[object]", message["content"].get("covers", []))]
+
+
+def coverage_lines(data_items: Sequence[str], messages: Sequence[ItemRecord]) -> str:
+    """What the interview has brought back so far, one line for each item of data of the plan: the
+    ones that an answer gave are ticked."""
+    if not data_items:
+        return "(the plan lists no data to collect)"
+    covered = {item for message in messages for item in _covers_of(message)}
+    return "\n".join(f"- [{'x' if item in covered else ' '}] {item}" for item in data_items)
+
+
+def _coverage_of(
+    data_items: Sequence[str], messages: Sequence[ItemRecord], last: Sequence[str]
+) -> list[dict[str, Any]]:
+    """For each item of data of the plan, whether any answer of the interview gave it."""
+    covered = {item for message in messages for item in _covers_of(message)}
+    covered.update(last)
+    return [{"data": item, "covered": item in covered} for item in data_items]
+
+
+def _record_what_the_last_answer_gave(
+    sink: ArtifactSink, messages: Sequence[ItemRecord], turn: InterviewerTurnOutput
+) -> None:
+    """The interviewer judged what the last answer of the persona told: it is written on that
+    message, which the persona never reads."""
+    if not messages or messages[-1]["content"]["speaker"] == INTERVIEWER_KEY:
+        return
+    last = messages[-1]
+    sink.update_item_content(
+        str(last["item_id"]), {**last["content"], "covers": list(turn.covered_by_last_answer)}
+    )
 
 
 def plan_lines_of(plan: Mapping[str, Any]) -> str:
@@ -1349,7 +1435,10 @@ def persona_agent_node(
             "speaker": str(persona["key"]),
             "content": _clip_answer(answer.answer),
             "iteration": int(state["iteration_count"]),
-            "topic": None,
+            "topic": messages[-1]["content"].get("topic"),
+            "message_kind": "answer",
+            "follows_up_on": None,
+            "covers": [],
         },
     )
     closed = sink.update_artifact_content(

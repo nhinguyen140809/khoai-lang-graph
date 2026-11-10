@@ -512,6 +512,54 @@ class InterviewerTurnOutput(_Output):
         ),
     )
 
+    covered_by_last_answer: list[str] = Field(
+        default_factory=list,
+        description=(
+            "The data of the plan that the last answer of the person gave, each copied exactly as "
+            "the plan lists it. Judge by what the person actually said, not by what they might "
+            "know. Empty on the first turn and when the answer gave none."
+        ),
+    )
+    topic: str | None = Field(
+        default=None,
+        description="The topic of the plan that your question is about, copied as written.",
+    )
+    question_kind: Literal["opening", "follow_up", "new_topic"] | None = Field(
+        default=None,
+        description=(
+            "`opening` for the question that starts the interview, `follow_up` when it digs into "
+            "what the person just said, `new_topic` when it moves on. Null when you stop."
+        ),
+    )
+    follows_up_on: str | None = Field(
+        default=None,
+        description=(
+            "For a follow-up, the key of the message that it digs into, as it is listed in the "
+            "transcript. Null otherwise."
+        ),
+    )
+    top_findings: list[str] = Field(
+        default_factory=list,
+        description=(
+            "When you stop: the three or four problems or wishes that this interview raised, one "
+            "plain sentence each, in the output language, using only what the person said."
+        ),
+    )
+    follow_ups: list[str] = Field(
+        default_factory=list,
+        description=(
+            "When you stop: questions that the interview left open for a later round, in the "
+            "output language. Empty when nothing is left open."
+        ),
+    )
+
+    @model_validator(mode="after")
+    def _a_question_has_its_kind(self) -> InterviewerTurnOutput:
+        if not self.stop and self.question_kind is None:
+            msg = "say what kind of question you ask"
+            raise ValueError(msg)
+        return self
+
     @model_validator(mode="after")
     def _a_stop_comes_with_a_summary_and_a_report(self) -> InterviewerTurnOutput:
         if self.stop and not (self.summary and self.summary.strip()):
@@ -520,7 +568,53 @@ class InterviewerTurnOutput(_Output):
         if self.stop and not (self.report and self.report.strip()):
             msg = "write the report of the interview when you stop"
             raise ValueError(msg)
+        if self.stop and not self.top_findings:
+            msg = "write what stood out in the interview when you stop"
+            raise ValueError(msg)
         return self
+
+
+def interviewer_output_for(
+    data_items: Sequence[str], topics: Sequence[str], message_keys: Sequence[str]
+) -> type[InterviewerTurnOutput]:
+    """`InterviewerTurnOutput` whose data, topic and message keys can only be the ones given.
+
+    The schema lists them as the allowed values of the fields that name one, so what the
+    interviewer ties to the plan and to the transcript always exists there.
+    """
+    fields: dict[str, Any] = {}
+    if data_items:
+        data: Any = Literal[tuple(data_items)]
+        fields["covered_by_last_answer"] = (
+            list[data],
+            Field(
+                default_factory=list,
+                description=InterviewerTurnOutput.model_fields[
+                    "covered_by_last_answer"
+                ].description,
+            ),
+        )
+    if topics:
+        topic: Any = Literal[tuple(topics)]
+        fields["topic"] = (
+            topic | None,
+            Field(
+                default=None, description=InterviewerTurnOutput.model_fields["topic"].description
+            ),
+        )
+    if message_keys:
+        key: Any = Literal[tuple(message_keys)]
+        fields["follows_up_on"] = (
+            key | None,
+            Field(
+                default=None,
+                description=InterviewerTurnOutput.model_fields["follows_up_on"].description,
+            ),
+        )
+    if not fields:
+        return InterviewerTurnOutput
+    schema: Any = create_model("InterviewerTurnOutput", __base__=InterviewerTurnOutput, **fields)
+    return schema
 
 
 class PersonaAnswerOutput(_Output):

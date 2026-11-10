@@ -172,7 +172,7 @@
           "const": true
         },
         "x-ui-widget": {
-          "enum": ["text", "textarea", "select", "number", "list", "tags", "object-list", "separator", "avatar-list", "badge", "rating-list"]
+          "enum": ["text", "textarea", "select", "number", "list", "tags", "object-list", "separator", "avatar-list", "badge", "rating-list", "boolean"]
         },
         "x-ui-label-field": {
           "type": "string",

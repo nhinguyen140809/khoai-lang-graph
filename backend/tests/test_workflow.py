@@ -36,6 +36,7 @@ from khoailanggraph.agents.requirements_engineering.graph import build_re_graph
 from khoailanggraph.agents.requirements_engineering.nodes import PROMPTS_PACKAGE
 from khoailanggraph.agents.requirements_engineering.outputs import InterviewerTurnOutput
 from khoailanggraph.agents.requirements_engineering.state import REState, make_initial_state
+from khoailanggraph.agents.requirements_engineering.views import transcript_lines
 from khoailanggraph.domain import rules as domain_rules
 from khoailanggraph.domain.errors import IntegrityError
 from khoailanggraph.llm import reset_model_cache
@@ -639,3 +640,60 @@ def test_a_rework_directive_refers_to_its_issues_and_the_personas_to_interview_a
     persona_kinds = {_item(sink, item["item_id"])["kind"] for item in addressed}
     assert persona_kinds == {"persona"}
     assert len({item["item_id"] for item in addressed}) == len(addressed)
+
+
+def _messages(sink: InMemoryArtifactSink, speaker_is_interviewer: bool) -> list[dict[str, object]]:
+    return [
+        entry["content"]
+        for entry in sink.items
+        if entry["kind"] == "interview_message"
+        and (entry["content"]["speaker"] == "interviewer") == speaker_is_interviewer
+    ]
+
+
+def test_the_interviewer_tells_what_kind_of_question_it_asks_and_what_it_digs_into() -> None:
+    sink = _finished_run()
+
+    questions = _messages(sink, speaker_is_interviewer=True)
+
+    kinds = [str(question["message_kind"]) for question in questions]
+    assert kinds[:3] == ["opening", "follow_up", "new_topic"]
+    follow_up = next(question for question in questions if question["message_kind"] == "follow_up")
+    assert str(follow_up["follows_up_on"]).startswith("PER-001#")
+    assert all(question["covers"] == [] for question in questions)
+
+
+def test_the_interviewer_judges_what_each_answer_gave_and_the_persona_never_sees_it() -> None:
+    sink = _finished_run()
+
+    answers = _messages(sink, speaker_is_interviewer=False)
+
+    assert all(answer["message_kind"] == "answer" for answer in answers)
+    assert any(answer["covers"] for answer in answers), "an answer was judged to give data"
+    first = next(entry for entry in sink.items if entry["kind"] == "interview_message")
+    lines = transcript_lines("PER-001", [cast("Any", first)])
+    assert all("covers" not in line for line in lines)
+
+
+def test_a_closed_transcript_says_what_was_covered_and_what_stood_out() -> None:
+    sink = _finished_run()
+
+    for transcript in _transcripts(sink):
+        content = cast("dict[str, Any]", transcript["content"])
+        assert content["top_findings"], "the interviewer wrote what stood out"
+        assert content["follow_ups"]
+        coverage = content["data_coverage"]
+        assert coverage
+        assert {entry["covered"] for entry in coverage} <= {True, False}
+        assert any(entry["covered"] for entry in coverage)
+
+
+def test_the_interviewer_is_given_what_is_still_to_collect() -> None:
+    items = ["how often", "what it costs"]
+    message: Any = {"content": {"speaker": "PER-001", "covers": ["how often"]}, "key": "PER-001#2"}
+    messages = [message]
+
+    lines = nodes.coverage_lines(items, messages)
+
+    assert lines == "- [x] how often\n- [ ] what it costs"
+    assert nodes.coverage_lines([], messages).startswith("(the plan lists no data")

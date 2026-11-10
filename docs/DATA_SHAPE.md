@@ -858,6 +858,9 @@ InterviewTranscript:
 | `status` | enum | `in_progress`, `completed` |
 | `turn_count` | int | |
 | `stop_reason` | enum? | `max_turns`, `interviewer_stopped`, `stopping_condition_met` |
+| `data_coverage` | { data, covered }[] | For each item of the `data_to_collect` of the plan, whether any answer of this interview gave it. Computed when the interview ends from what the interviewer judged of each answer |
+| `top_findings` | string[] | The three or four problems or wishes that stood out, written by the interviewer when it stops |
+| `follow_ups` | string[] | Questions that the interview left open for a later round |
 
 The `summary` of the transcript artifact is one sentence about what the persona said, written by the `interviewer` when the interview ends, with its stop, or in one last turn when the turn limit ended it; a rework round writes it again. The fields above are the `content` of the transcript artifact. The persona being interviewed is its `subject_item_id`, which is also the `item_id` of the participant of that persona. The messages are the items of the transcript, ordered by `position`.
 
@@ -869,7 +872,11 @@ InterviewMessage:
 | `speaker` | string | The `key` of the participant of the transcript who says the words |
 | `content` | string | |
 | `iteration` | int | 0 for the first interview, higher for rework rounds |
-| `topic` | string? | The plan topic the question targets; one of the plan's `topics` |
+| `topic` | string? | The plan topic the question targets; one of the plan's `topics`. The answer to a question has the topic of the question |
+| `message_kind` | string | `opening`, `follow_up`, `new_topic` or `answer`, from the value list `message_kind`. The interviewer classifies its own questions; the workflow sets `answer` on what the persona says |
+| `follows_up_on` | string? | The key of the earlier message that a follow-up question digs into, chosen by the interviewer among the messages it was shown |
+| `covers` | string[] | The items of the `data_to_collect` of the plan that an answer gave. The interviewer judges each answer at its next turn and writes it on the answer; the persona agent never receives this field |
+
 An interview message is an item of the transcript artifact, with its order in the transcript as `position`. Its `key` is `<persona key>#<position>`, for example `PER-001#4`, which is how prompts cite it. A message is never edited after it is written.
 
 Deck: `interview_transcripts` keyed by persona; `InterviewMessage(role, content, turn)`; `active_persona_index`, `interview_turn`, `interviewer_stop` as workflow counters.

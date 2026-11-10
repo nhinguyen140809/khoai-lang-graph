@@ -286,6 +286,16 @@
   ],
   "value_lists": [
     {
+      "key": "message_kind",
+      "title": "Kind of message",
+      "values": [
+        { "key": "opening", "title": "Opening question", "description": "The question that starts the interview." },
+        { "key": "follow_up", "title": "Follow-up question", "description": "A question that digs into what the person just said." },
+        { "key": "new_topic", "title": "Question on a new topic", "description": "A question that moves on to another topic of the plan." },
+        { "key": "answer", "title": "Answer", "description": "What the person says in reply to a question." }
+      ]
+    },
+    {
       "key": "priority",
       "title": "Priority",
       "values": [
