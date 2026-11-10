@@ -41,9 +41,15 @@ export async function expectReviewPrompt(page: Page, prompt: Text) {
 /** Picks an option of the review that waits. */
 export async function chooseReviewOption(page: Page, label: string) {
   const option = page.getByRole('radio', { name: label })
+  const next = page.getByRole('button', { name: 'Next step' })
   // A click before the page has hydrated picks nothing, so it is repeated until the option is picked.
   await expect(async () => {
-    await option.click()
+    // A review that asks questions shows them first and its options on the last step; the
+    // questions keep their defaults.
+    if (!(await option.isVisible()) && (await next.isEnabled({ timeout: 500 }))) {
+      await next.click()
+    }
+    await option.click({ timeout: 1_000 })
     await expect(option).toBeChecked({ timeout: 1_000 })
   }).toPass()
 }
