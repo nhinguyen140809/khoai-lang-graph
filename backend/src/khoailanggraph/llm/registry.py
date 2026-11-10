@@ -12,7 +12,7 @@ from __future__ import annotations
 from functools import lru_cache
 from typing import TYPE_CHECKING, Any, Literal
 
-from pydantic import BaseModel, Field
+from pydantic import BaseModel, Field, model_validator
 from yaml import safe_load
 
 from khoailanggraph.settings import get_settings
@@ -48,6 +48,15 @@ class ModelProfile(BaseModel):
     cache_read_price_per_mtok: float | None = None
     cache_write_price_per_mtok: float | None = None
     allowed_roles: list[str] | None = None
+
+    @model_validator(mode="after")
+    def _endpoint_names_its_key(self) -> ModelProfile:
+        """A model at its own address names the variable of its key: without one, the client
+        library would send the key of `OPENAI_API_KEY` to an address that is not the gateway."""
+        if self.base_url and not self.api_key_env:
+            msg = f"Model '{self.id}' sets base_url, so it must set api_key_env as well."
+            raise ValueError(msg)
+        return self
 
 
 class ModelCatalogEntry(BaseModel):

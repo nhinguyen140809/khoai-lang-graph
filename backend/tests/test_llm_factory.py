@@ -75,6 +75,11 @@ def test_an_unlisted_provider_without_a_base_url_is_refused(registry: ModelRegis
         factory.build_chat_model("mistral:large")
 
 
+def test_a_base_url_without_a_key_variable_is_refused() -> None:
+    with pytest.raises(ValueError, match="api_key_env"):
+        _profile("local:qwen3", base_url="http://localhost:8000/v1")
+
+
 def test_env_value_reads_the_environment_and_ignores_empty(
     monkeypatch: pytest.MonkeyPatch, tmp_path: Path
 ) -> None:
