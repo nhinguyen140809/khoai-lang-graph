@@ -61,7 +61,7 @@ API_PROXY_TARGET=http://localhost:8001 pnpm dev     # NOT dev:mock
 Sign in as `linh.pham@example.com` / `secret`; the seed creates the
 fixture projects plus one finished run for «Mentor platform». The CSRF
 rule accepts the application origins of `settings.csrf_allowed_origins`
-(the Next server on `:3000` by default) — see `gap-report.md` §1.1.
+(the Next server on `:3000` by default).
 
 Every role answers through a real model — `config/models.yaml` defaults to
 `openai:glm-5.2` through the BioTuring gateway (the vn endpoint for low
@@ -149,7 +149,3 @@ Settings (environment variables, all optional):
 | `REQUESTS_PER_MINUTE` | `1200` | Per user; `429 rate_limited` with `Retry-After`. Opening the activity of a finished run reads about 60 items |
 | `AUTH_ATTEMPTS_PER_MINUTE` | `20` | Per IP address, on login and register |
 
-## Follow-ups (parked, not ported)
-
-- `decisions.py` hybrid decision layer of the source prototype — see
-  [gap-report.md](gap-report.md); lands as a separate review-policy port later.
