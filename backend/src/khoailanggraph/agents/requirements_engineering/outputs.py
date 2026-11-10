@@ -287,13 +287,38 @@ class RawRequirementDraft(_Output):
     supersedes: list[str] = Field(default_factory=list)
 
 
+
+from khoailanggraph.agents.requirements_engineering.definition import (
+    value_lists as _value_lists,
+)
+
+
+def _enum(name: str, fallback: tuple[str, ...]) -> object:
+    """A Literal of the value list of the current definition version.
+
+    The provider enforces the enum at generation time, so a value outside the
+    list cannot reach the store; the analyst normalizer stays as a second
+    line of defence for older records.
+    """
+    values = tuple(str(entry["key"]) for entry in _value_lists().get(name, [])) or fallback
+    return Literal[values]  # noqa: TC006 - dynamic Literal needs the tuple
+
+
+Priority = _enum("priority", ("must", "should", "could", "wont"))
+AmbiguityType = _enum(
+    "ambiguity_type", ("lexical", "syntactic", "semantic", "vague", "incomplete")
+)
+ConflictType = _enum(
+    "conflict_type", ("between_requirements", "between_stakeholders", "with_constraint")
+)
+
 class AnalyzedRequirementDraft(_Output):
     ref: str
     title: ItemTitle
     statement: str
     type: Literal["functional", "non_functional", "constraint"]
     quality_category: str | None = DEFAULT_QUALITY
-    priority: str
+    priority: Priority  # type: ignore[valid-type]
     rationale: str
     derived_from: list[LinkRef] = Field(min_length=1)
     involves: list[str]
@@ -327,7 +352,7 @@ class AmbiguityIssueDraft(_Output):
     ref: str
     title: ItemTitle
     description: str
-    ambiguity_type: str
+    ambiguity_type: AmbiguityType  # type: ignore[valid-type]
     ambiguous_text: str
     clarifying_question: str
     status: Literal["open", "resolved", "dismissed"]
@@ -341,7 +366,7 @@ class ConflictDraft(_Output):
     ref: str
     title: ItemTitle
     description: str
-    conflict_type: str
+    conflict_type: ConflictType  # type: ignore[valid-type]
     severity: Literal["low", "medium", "high"]
     proposed_resolutions: list[str]
     status: Literal["open", "resolved", "dismissed"]
@@ -376,7 +401,7 @@ class NewSpecRequirement(_Output):
     statement: str
     type: Literal["functional", "non_functional", "constraint"]
     quality_category: str | None = DEFAULT_QUALITY
-    priority: str
+    priority: Priority  # type: ignore[valid-type]
     rationale: str
     acceptance_criteria: list[str]
     fit_criterion: str | None
@@ -412,7 +437,7 @@ class NewBacklogItem(_Output):
     i_want: str | None
     so_that: str | None
     acceptance_criteria: list[AcceptanceCriterionDraft]
-    priority: str
+    priority: Priority  # type: ignore[valid-type]
     story_points: int | None
     derived_from: list[LinkRef] = Field(min_length=1)
     depends_on: list[str]
