@@ -94,17 +94,19 @@ PROJECTS = [
 ]
 
 
-async def wipe(session) -> None:
-    """Empty every table, children before the tables they refer to."""
-    for table in reversed(Base.metadata.sorted_tables):
-        await session.execute(table.delete())
-    await session.commit()
+async def wipe(engine) -> None:
+    """Drop every table, so that the tables made again have the columns of the models of now: a
+    database file from before a change of the schema would lack them."""
+    async with engine.begin() as connection:
+        await connection.run_sync(Base.metadata.drop_all)
     print("database reset")
 
 
 async def seed(reset: bool) -> None:
     settings = get_settings()
     engine = make_async_engine(settings)
+    if reset:
+        await wipe(engine)
     await ensure_schema(engine)
     factory = make_session_factory(engine)
     sync_engine = make_sync_engine(settings)
@@ -114,8 +116,6 @@ async def seed(reset: bool) -> None:
         if existing and not reset:
             print("database already seeded; use --reset to wipe and start over")
             return
-        if reset:
-            await wipe(session)
 
         user = me_models.UserRow(
             id=DEMO_USER_ID,
@@ -198,7 +198,7 @@ async def seed(reset: bool) -> None:
 def main() -> None:
     parser = argparse.ArgumentParser(description=__doc__)
     parser.add_argument(
-        "--reset", action="store_true", help="wipe the seeded tables before seeding again"
+        "--reset", action="store_true", help="drop the tables and make them again before seeding"
     )
     args = parser.parse_args()
     asyncio.run(seed(args.reset))
