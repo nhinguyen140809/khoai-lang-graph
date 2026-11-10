@@ -1,9 +1,10 @@
 # Image of the web app for development: the dependencies are installed here, the source is
 # mounted by the compose file, and `next dev` reloads on every change.
-FROM node:22-slim
+FROM node:26-slim
 
 ENV NEXT_TELEMETRY_DISABLED=1
-RUN corepack enable && corepack prepare pnpm@11.5.2 --activate
+# Node 26 does not ship corepack; the version is the one of `packageManager` in package.json.
+RUN npm install -g pnpm@11.5.2
 
 WORKDIR /app
 
