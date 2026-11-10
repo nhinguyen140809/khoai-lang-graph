@@ -34,6 +34,8 @@ export interface ApiClient {
     file: { name: string; mimeType: string; text: string },
     fields?: Record<string, string>,
   ) => Promise<ApiReply<Body>>
+  /** Posts JSON to any address, outside the prefix of the API, such as the hooks of the demo server. */
+  postTo: (address: string, body: unknown) => Promise<ApiReply>
   /** Reads a file at an address the API gave, `download_url` of an export, and gives its text. */
   download: (address: string) => Promise<ApiReply<string>>
 }
@@ -89,6 +91,19 @@ export function apiClientOf(request: APIRequestContext, origin: string): ApiClie
       return {
         status: response.status(),
         body: (text === '' ? null : JSON.parse(text)) as never,
+        headers: response.headers(),
+      }
+    },
+    postTo: async (address, body) => {
+      const response = await request.fetch(address, {
+        method: 'POST',
+        data: body,
+        headers: { Origin: origin },
+      })
+      const text = await response.text()
+      return {
+        status: response.status(),
+        body: text === '' ? null : JSON.parse(text),
         headers: response.headers(),
       }
     },

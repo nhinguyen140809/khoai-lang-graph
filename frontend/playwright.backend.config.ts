@@ -51,6 +51,9 @@ export default defineConfig({
       env: {
         DATABASE_URL: `sqlite:///${databaseFile}`,
         CSRF_ALLOWED_ORIGINS: JSON.stringify([frontendUrl]),
+        // All the specs act as one user, and the pages they open read many lists a minute: the
+        // limit has its own tests in the backend.
+        REQUESTS_PER_MINUTE: '100000',
       },
     },
     {

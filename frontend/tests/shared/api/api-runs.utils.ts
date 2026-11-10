@@ -1,10 +1,12 @@
 import { expect } from '@playwright/test'
 
+import { backendUrl } from '../backend-env.constants'
 import type { ApiClient } from './api-client.utils'
 import {
   type ApiPage,
   expectAccepted,
   expectCreated,
+  expectNoContent,
   expectOk,
   expectPage,
 } from './api-responses.utils'
@@ -256,4 +258,12 @@ export function editItem(api: ApiClient, item: ApiItem, content: Record<string, 
 /** The reply to the request of an export of a project, as it is. */
 export function createExport(api: ApiClient, projectId: string, template: string, format: string) {
   return api.post<ApiExport>(`/projects/${projectId}/exports`, { template, format })
+}
+
+/**
+ * Makes each call of the scripted model of the demo server wait this many seconds, so that a run
+ * can be watched while it works; zero puts it back. A test that sets it puts it back at the end.
+ */
+export async function setModelDelay(api: ApiClient, seconds: number) {
+  expectNoContent(await api.postTo(`${backendUrl}/test-support/model-delay`, { seconds }))
 }
