@@ -99,3 +99,59 @@ test('fills the feedback with the suggestion of the option, which the user may r
   await user.chooseReviewOption(analysisReview.option)
   await expect(box).toHaveValue('Ask the librarian too.')
 })
+
+test('offers something else next to the options: it needs words, and the words go on as a message', async ({
+  api,
+  client,
+}) => {
+  const { run, threadId } = await api.startRun(idea, { reviews: [analysisReview.node] })
+  const review = await api.waitForReview(run.id)
+
+  const other = review.options.find(({ key }) => key === analysisReview.somethingElse.key)
+  expect(other).toMatchObject({
+    label: analysisReview.somethingElse.label,
+    requires_feedback: true,
+    approves: false,
+  })
+  expect(other?.suggested_feedback).toBeUndefined()
+  expectProblem(
+    await api.answerReview(review, { option: analysisReview.somethingElse.key }),
+    422,
+    'validation_failed',
+    'feedback',
+  )
+
+  await api.resumeRun(review, {
+    option: analysisReview.somethingElse.key,
+    feedback: analysisReview.somethingElse.words,
+  })
+
+  await expect
+    .poll(async () => (await api.listSteps(run.id)).some(({ node }) => node === 'intent_router'))
+    .toBe(true)
+  const messages = await client.get<{ items: { author: string; content: string }[] }>(
+    `/threads/${threadId}/messages`,
+  )
+  const said = messages.body.items
+    .filter(({ content }) => content === analysisReview.somethingElse.words)
+    .map(({ author, content }) => ({ author, content }))
+  expect(said).toEqual([{ author: 'user', content: analysisReview.somethingElse.words }])
+})
+
+test('says under each option what choosing it does, and opens an empty box for something else', async ({
+  api,
+  page,
+  user,
+}) => {
+  const { projectId, run } = await api.startRun(idea, { reviews: [analysisReview.node] })
+  await api.waitForReview(run.id)
+  await user.openActivity(projectId)
+
+  await user.expectText(analysisReview.descriptions.accept)
+  await user.expectText(analysisReview.descriptions.reject_reanalyse)
+
+  await user.chooseReviewOption(analysisReview.somethingElse.label)
+  await expect(
+    page.getByRole('textbox', { name: `Feedback for "${analysisReview.somethingElse.label}"` }),
+  ).toHaveValue('')
+})

@@ -42,9 +42,11 @@ export type InterruptDecision = z.infer<typeof interruptDecisionSchema>
 
 /**
  * An option of an interrupt: an option of the checkpoint, which the agent before it may have worded
- * for the case, with the feedback it suggests for an option that asks for one.
+ * for the case: its label is the title of the answer, with a description of what choosing it does,
+ * and the feedback it suggests for an option that asks for one.
  */
 export const interruptOptionSchema = checkpointOptionSchema.extend({
+  description: z.string().optional(),
   suggested_feedback: z.string().optional(),
 })
 

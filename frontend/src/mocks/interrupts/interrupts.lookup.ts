@@ -103,19 +103,36 @@ function interruptStatusOf(run: Run, step: RunStep): InterruptStatus {
   return step.status === 'running' && run.status === 'interrupted' ? 'pending' : 'cancelled'
 }
 
-// What the agent before a checkpoint suggests for an option that asks for feedback.
-const suggestedFeedbacks: Record<string, string> = {
-  reject_reanalyse:
-    'Settle the two open conflicts in favour of the students, then redo the analysis.',
-  reject_reinterview: 'Interview the mentors again about how they approve a session.',
-  not_ok: 'Make every requirement testable, and say how long a booking may take.',
+// What the agent before a checkpoint says of each option: what choosing it does, and for an option
+// that asks for feedback, what the user would most likely say.
+const agentWords: Record<string, { description: string; suggestedFeedback?: string }> = {
+  approve: { description: 'The interviews start with these people.' },
+  accept: { description: 'The analysis goes on to the specification.' },
+  reject_reanalyse: {
+    description: 'The analysis is written again, settling the open conflicts.',
+    suggestedFeedback:
+      'Settle the two open conflicts in favour of the students, then redo the analysis.',
+  },
+  reject_reinterview: {
+    description: 'The mentors are asked again about how they approve a session.',
+    suggestedFeedback: 'Interview the mentors again about how they approve a session.',
+  },
+  ok: { description: 'The specification goes on to the backlog.' },
+  not_ok: {
+    description: 'The specification is revised with your remarks.',
+    suggestedFeedback: 'Make every requirement testable, and say how long a booking may take.',
+  },
 }
 
-function withSuggestion(option: CheckpointOption): InterruptOption {
-  const suggestion = suggestedFeedbacks[option.key]
-  return option.requires_feedback && suggestion !== undefined
-    ? { ...option, suggested_feedback: suggestion }
-    : option
+function withAgentWords(option: CheckpointOption): InterruptOption {
+  const words = agentWords[option.key]
+  if (words === undefined) return option
+  return {
+    ...option,
+    description: words.description,
+    ...(option.requires_feedback &&
+      words.suggestedFeedback !== undefined && { suggested_feedback: words.suggestedFeedback }),
+  }
 }
 
 // What the interrupt asks: the prompt, the options and the questions of the checkpoint; for the
@@ -134,7 +151,7 @@ function checkpointAskOf(
   }))
   return {
     prompt: node.prompt,
-    options: node.options.map((option) => withSuggestion(option)),
+    options: node.options.map((option) => withAgentWords(option)),
     questions: definitionQuestions,
   }
 }

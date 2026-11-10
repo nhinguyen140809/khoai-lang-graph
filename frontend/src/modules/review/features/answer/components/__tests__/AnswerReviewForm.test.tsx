@@ -65,10 +65,28 @@ describe('AnswerReviewForm', () => {
       'aria-checked',
       'false',
     )
-    // An option that asks for words says so in one line until it is chosen.
-    expect(screen.getAllByText('This choice needs a short description from you.')).toHaveLength(2)
+    // Each option says what choosing it does, chosen or not, and the one that is described to the
+    // radio by its words.
+    expect(screen.getByText('The analysis goes on to the specification.')).toBeInTheDocument()
+    expect(
+      screen.getByText('The analysis is written again, settling the open conflicts.'),
+    ).toBeInTheDocument()
+    expect(screen.getByRole('radio', { name: 'Redo the analysis' })).toHaveAccessibleDescription(
+      'The analysis is written again, settling the open conflicts.',
+    )
     expect(screen.queryByRole('textbox')).not.toBeInTheDocument()
     await expectNoAccessibilityViolations()
+  })
+
+  it('says that an option asks for words, until it is chosen, when the agent described none', async () => {
+    const interrupt = await readPending()
+    const undescribed = {
+      ...interrupt,
+      options: interrupt.options.map((option) => ({ ...option, description: undefined })),
+    }
+    await formOf(undescribed)
+
+    expect(screen.getAllByText('This choice needs a short description from you.')).toHaveLength(2)
   })
 
   it('sends the default option when nothing else is chosen', async () => {

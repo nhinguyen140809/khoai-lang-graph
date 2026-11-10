@@ -24,4 +24,15 @@ export const analysisReview = {
   optionKey: 'reject_reanalyse',
   suggestion: 'Settle the open questions in favour of the students.',
   otherOption: 'Interview again',
+  /** What the scripted agent says choosing each option does. */
+  descriptions: {
+    accept: 'The analysis goes on to the specification.',
+    reject_reanalyse: 'The analysis is written again, settling the open questions.',
+  },
+  /** The option that none of the others say, and what the user writes for it. */
+  somethingElse: {
+    key: 'other',
+    label: 'Something else',
+    words: 'Also cover cancelling a booking.',
+  },
 }

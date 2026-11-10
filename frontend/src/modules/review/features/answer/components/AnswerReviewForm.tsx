@@ -2,7 +2,7 @@
 
 import { cn } from 'cn'
 import { ChevronLeftIcon, ChevronRightIcon } from 'lucide-react'
-import { useEffect, useRef, useState } from 'react'
+import { useEffect, useId, useRef, useState } from 'react'
 
 import type { Interrupt, InterruptOption } from '@/modules/review/entities'
 import type { Run } from '@/modules/run/entities'
@@ -182,7 +182,11 @@ function OptionsColumn({
   )
 }
 
-/** One option of the answer: while it is not chosen, a line says what choosing it asks for. */
+/**
+ * One option of the answer: its title, then the description of what choosing it does, which shows
+ * for every option. An option that asks for words and has no description says that, while it is
+ * not chosen.
+ */
 function OptionRow({
   option,
   isChosen,
@@ -202,6 +206,7 @@ function OptionRow({
 }) {
   const state = isChosen ? 'chosen' : 'idle'
   const box = useRef<HTMLTextAreaElement | null>(null)
+  const descriptionId = useId()
 
   // Choosing the option that asks for words puts the writer straight into them.
   useEffect(() => {
@@ -214,9 +219,10 @@ function OptionRow({
         type="button"
         role="radio"
         aria-checked={isChosen}
+        {...(option.description !== undefined && { 'aria-describedby': descriptionId })}
         className={cn(
           'flex w-full items-center gap-2 p-2 text-left',
-          option.requires_feedback && 'pb-1',
+          (option.requires_feedback || option.description !== undefined) && 'pb-1',
         )}
         onClick={() => {
           onSelect(option)
@@ -228,9 +234,17 @@ function OptionRow({
         />
         <span className="text-xs font-medium">{option.label}</span>
       </button>
+      {option.description !== undefined && (
+        <p
+          id={descriptionId}
+          className={cn('pl-8 text-xs text-muted-foreground', !option.requires_feedback && 'pb-2')}
+        >
+          {option.description}
+        </p>
+      )}
       {option.requires_feedback &&
         (isChosen ? (
-          <div className="px-2 pb-2">
+          <div className="px-2 pt-1 pb-2">
             <Textarea
               ref={box}
               rows={2}
@@ -245,7 +259,9 @@ function OptionRow({
             />
           </div>
         ) : (
-          <p className="pb-2 pl-8 text-xs text-muted-foreground">{words.asksForDescription}</p>
+          option.description === undefined && (
+            <p className="pb-2 pl-8 text-xs text-muted-foreground">{words.asksForDescription}</p>
+          )
         ))}
     </div>
   )
