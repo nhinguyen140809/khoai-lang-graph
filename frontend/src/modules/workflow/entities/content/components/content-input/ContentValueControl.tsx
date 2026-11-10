@@ -200,6 +200,7 @@ const widgetControls = {
   separator: SeparatorControl,
   'avatar-list': EntriesOf,
   badge: SelectControl,
+  'rating-list': EntriesOf,
 } as const satisfies Record<
   ContentField['widget'],
   (props: ContentValueControlProps) => React.ReactNode

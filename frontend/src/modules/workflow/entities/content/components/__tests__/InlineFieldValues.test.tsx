@@ -2,7 +2,7 @@ import { screen } from '@testing-library/react'
 import { describe, expect, it } from 'vitest'
 
 import { renderWithProviders } from '@/test/render'
-import { expectNoAccessibilityViolations } from '@/test/steps'
+import { expectNoAccessibilityViolations, expectNoText, expectText } from '@/test/steps'
 
 import type { ContentField } from '../../fields/content-fields.types'
 import { InlineFieldValues } from '../InlineFieldValues'
@@ -26,6 +26,7 @@ function field(overrides: Partial<ContentField>): ContentField {
     integer: false,
     defaultValue: null,
     entryFields: [],
+    rating: null,
     ...overrides,
   }
 }
@@ -42,7 +43,7 @@ const fields = [
 ]
 
 describe('InlineFieldValues', () => {
-  it('shows the filled fields in their order, each after its title for assistive technology', () => {
+  it('shows the filled fields in their order, each after its title for assistive technology', async () => {
     renderWithProviders(
       <InlineFieldValues
         fields={fields}
@@ -51,15 +52,15 @@ describe('InlineFieldValues', () => {
       />,
     )
 
-    expect(screen.getByText('Student')).toBeInTheDocument()
-    expect(screen.getByText('Interviewed')).toBeInTheDocument()
+    await expectText('Student')
+    await expectText('Interviewed')
     expect(screen.getByText('Type:')).toHaveClass('sr-only')
     expect(screen.getByText('Status:')).toHaveClass('sr-only')
     // The second value of the line sits at a gap from the first.
     expect(screen.getByText('Interviewed').parentElement).toHaveClass('ml-3')
   })
 
-  it('leaves out the empty fields', () => {
+  it('leaves out the empty fields', async () => {
     renderWithProviders(
       <InlineFieldValues
         fields={fields}
@@ -68,8 +69,8 @@ describe('InlineFieldValues', () => {
       />,
     )
 
-    expect(screen.getByText('Student')).toBeInTheDocument()
-    expect(screen.queryByText('Status:')).not.toBeInTheDocument()
+    await expectText('Student')
+    expectNoText('Status:')
   })
 
   it('has no accessibility violation', async () => {

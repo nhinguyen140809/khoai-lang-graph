@@ -4,7 +4,7 @@ import { quoteRange, textOf, type TextRange } from '@/shared/lib/text'
 
 import type { WorkflowDefinition } from '../../definition/workflow-definition.types'
 import { findValueList } from '../../definition/workflow-definition.utils'
-import type { ContentField } from '../fields/content-fields.types'
+import { type ContentField, hasObjectEntries } from '../fields/content-fields.types'
 import type { ContentValues } from './content-values.types'
 import { widgetValueRules } from './widget-value-rules.utils'
 
@@ -105,7 +105,7 @@ export function contentChanges(
 
 /**
  * The content without the entries that hold nothing: a blank entry of a `list` or `tags` field,
- * and an entry of an `object-list` whose every field is empty. Other fields stay as they are.
+ * and an entry of an `object-list` or a `rating-list` whose every field is empty. Other fields stay as they are.
  */
 export function withoutEmptyEntries(
   fields: readonly ContentField[],
@@ -113,12 +113,12 @@ export function withoutEmptyEntries(
 ): ContentValues {
   const kept: ContentValues = { ...content }
   for (const field of fields) {
-    if (field.widget !== 'list' && field.widget !== 'tags' && field.widget !== 'object-list')
+    if (field.widget !== 'list' && field.widget !== 'tags' && !hasObjectEntries(field.widget))
       continue
     const value = kept[field.name]
     if (!Array.isArray(value)) continue
     kept[field.name] = value.filter((entry) =>
-      field.widget === 'object-list'
+      hasObjectEntries(field.widget)
         ? isRecord(entry) && field.entryFields.some(({ name }) => !isEmpty(entry[name]))
         : !isBlank(entry),
     )

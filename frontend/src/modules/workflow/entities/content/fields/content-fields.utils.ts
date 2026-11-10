@@ -13,12 +13,14 @@ import {
   type ContentField,
   type FieldWidget,
   fieldWidgets,
+  hasObjectEntries,
   type ItemDisplay,
   itemDisplays,
   type ItemPageLayout,
   itemPageLayouts,
   oneLineWidgets,
   type ProfileFields,
+  type RatingFields,
 } from './content-fields.types'
 
 // The fields of a content, read from the JSON schema of its kind: the widget, title, limits and
@@ -41,6 +43,21 @@ function fieldWidgetOf(property: SchemaProperty): FieldWidget {
   if (types.includes('array')) return 'list'
   if (types.includes('boolean')) return 'boolean'
   return 'text'
+}
+
+/** How the entries of a rating list are read, from the keywords of its property; null without a label field and a value field. */
+function ratingFieldsOf(property: SchemaProperty): RatingFields | null {
+  const label = property['x-ui-label-field']
+  const value = property['x-ui-value-field']
+  if (label === undefined || value === undefined) return null
+  const scale = property.items?.properties?.[value]
+  return {
+    label,
+    value,
+    note: property['x-ui-note-field'] ?? null,
+    min: scale?.minimum ?? 1,
+    max: scale?.maximum ?? 5,
+  }
 }
 
 function fieldOf(
@@ -69,12 +86,12 @@ function fieldOf(
     maximum: property.maximum ?? null,
     integer: typesOf(property).includes('integer'),
     defaultValue: property.default ?? null,
-    entryFields:
-      widget === 'object-list'
-        ? Object.entries(entryProperties).map(([entryName, entry]) =>
-            fieldOf(`${path}.${entryName}`, entryName, entry, requiredNames.includes(entryName)),
-          )
-        : [],
+    entryFields: hasObjectEntries(widget)
+      ? Object.entries(entryProperties).map(([entryName, entry]) =>
+          fieldOf(`${path}.${entryName}`, entryName, entry, requiredNames.includes(entryName)),
+        )
+      : [],
+    rating: widget === 'rating-list' ? ratingFieldsOf(property) : null,
   }
 }
 

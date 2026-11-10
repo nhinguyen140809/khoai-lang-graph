@@ -6,8 +6,9 @@ import { Badge } from '@/shared/components/ui/badge'
 import { Button } from '@/shared/components/ui/button'
 import { Highlight, type HighlightRange } from '@/shared/components/ui/highlight'
 import { InitialsAvatar } from '@/shared/components/ui/initials-avatar'
+import { SegmentedBar } from '@/shared/components/ui/segmented-bar'
 import { isEmpty, isRecord } from '@/shared/lib/guards'
-import { textOf } from '@/shared/lib/text'
+import { snakeToSentenceCase, textOf } from '@/shared/lib/text'
 
 import type { ContentField, FieldWidget } from '../fields/content-fields.types'
 import { isChoiceField } from '../fields/content-fields.utils'
@@ -100,6 +101,53 @@ function EntriesValue({
           )}
         </li>
       ))}
+    </ul>
+  )
+}
+
+/** What an entry of a rating list rates: a key such as `tech_comfort` reads as a sentence, other text as it is. */
+function ratedLabel(label: string): string {
+  return /^[a-z][a-z0-9_]*$/.test(label) ? snakeToSentenceCase(label) : label
+}
+
+/**
+ * The entries of a rating list, one under the other: what is rated on the left and, on the right,
+ * where the value stands in words, then a bar of the scale, and the note that says why. A list
+ * whose schema names no label and value field reads as an object list.
+ */
+function RatingListValue({
+  field,
+  items,
+  definition,
+}: {
+  field: ContentField
+  items: unknown[]
+  definition: ValueDefinition
+}) {
+  const { rating } = field
+  if (rating === null) return <EntriesValue field={field} items={items} definition={definition} />
+  return (
+    <ul className="space-y-3">
+      {items.filter(isRecord).map((entry, index) => {
+        const value = entry[rating.value]
+        const note = rating.note === null ? '' : textOf(entry[rating.note])
+        const level =
+          typeof value === 'number'
+            ? contentValueMessages.level(value, rating.min, rating.max)
+            : null
+        return (
+          <li key={index} className="flex flex-col gap-1.5">
+            <span className="flex items-baseline justify-between gap-3">
+              <span>{ratedLabel(textOf(entry[rating.label]))}</span>
+              <span className="shrink-0 text-muted-foreground">{level?.words}</span>
+            </span>
+            {typeof value === 'number' && level !== null && (
+              <SegmentedBar value={value} min={rating.min} max={rating.max} label={level.label} />
+            )}
+            {note !== '' && <span className="text-xs text-muted-foreground">{note}</span>}
+          </li>
+        )
+      })}
     </ul>
   )
 }
@@ -259,6 +307,10 @@ const widgetValueViews = {
   badge: ({ field, value, definition }) => (
     <BadgeValue field={field} value={textOf(value)} definition={definition} />
   ),
+  'rating-list': ({ field, value, definition }) =>
+    Array.isArray(value) ? (
+      <RatingListValue field={field} items={value} definition={definition} />
+    ) : null,
 } as const satisfies Record<FieldWidget, (props: WidgetValueViewProps) => React.ReactNode>
 
 /**
