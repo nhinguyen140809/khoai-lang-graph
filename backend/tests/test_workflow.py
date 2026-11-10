@@ -327,6 +327,13 @@ def test_research_gates_fail_the_run_at_the_lying_node() -> None:
             sources.append(fake)
             return answer
 
+    class EmptyCorpusData(DemoData):
+        @staticmethod
+        def CorpusBuilderOutput(system: str, user: str, call_number: int) -> dict[str, object]:  # noqa: N802 - schema name
+            answer = _corpus(system, user, call_number)
+            answer["sources"] = []
+            return answer
+
     class AlteredEvidenceData(DemoData):
         @staticmethod
         def GeneratorOutputV2(system: str, user: str, call_number: int) -> dict[str, object]:  # noqa: N802 - schema name
@@ -342,6 +349,7 @@ def test_research_gates_fail_the_run_at_the_lying_node() -> None:
         # generator fails when its fixture cites the skipped key.
         (DriftingQuotesData, "persona_generator_node: ", "consolidates unknown observation key"),
         (InventedUrlsData, "corpus_builder_node: ", "selected invented documents"),
+        (EmptyCorpusData, "corpus_builder_node: ", "research found no source document"),
         (AlteredEvidenceData, "persona_generator_node: ", "altered the evidence quote of OBS-001"),
     ]
     for dataset_class, node_prefix, needle in cases:

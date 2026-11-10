@@ -616,6 +616,14 @@ def corpus_builder_node(
         msg = f"corpus builder selected invented documents: {outside}"
         raise ValueError(msg)
 
+    if not draft.sources:
+        msg = (
+            "research found no source document to mine: the web search returned "
+            f"{len(hits)} usable result(s). Upload documents to the project or set "
+            "TAVILY_API_KEY, then run again"
+        )
+        raise ValueError(msg)
+
     corpus = sink.create_artifact(
         state["project_id"],
         "research_corpus",
