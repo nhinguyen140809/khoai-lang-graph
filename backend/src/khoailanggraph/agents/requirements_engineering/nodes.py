@@ -907,6 +907,12 @@ def persona_generator_node(
     for persona_draft in draft.personas:
         _check_persona_grounding(persona_draft, known_observations)
         content = persona_draft.model_dump(mode="json", exclude={"ref"})
+        # The trait as the user reads it comes from the aspect, not from the model.
+        titles = {entry["key"]: entry["title"] for entry in aspects}
+        content["scores"] = [
+            {**score, "title": titles.get(score["aspect"], score["aspect"])}
+            for score in content.get("scores", [])
+        ]
         if allowed:
             matched = match_plan_value(str(content.get("stakeholder_type", "")), allowed)
             if matched is None:

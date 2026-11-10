@@ -175,13 +175,13 @@
       "readOnly": true
     },
     "occupation": {
-      "title": "Occupation",
+      "title": "What they do",
       "type": "string",
       "description": "What the person does for a living or in their studies, in a few words.",
       "x-ui-widget": "text"
     },
     "age_range": {
-      "title": "Age range",
+      "title": "Age",
       "type": "string",
       "description": "The range of age of the person, such as 18-24.",
       "x-ui-widget": "text"
@@ -211,16 +211,22 @@
       "x-ui-widget": "tags"
     },
     "scores": {
-      "title": "Scores",
+      "title": "Traits",
       "type": "array",
       "items": {
         "type": "object",
         "additionalProperties": false,
         "properties": {
           "aspect": {
-            "title": "Aspect",
+            "title": "Trait key",
             "type": "string",
-            "description": "The key of an aspect: one of the aspects of the system, or one proposed in the plan.",
+            "description": "The key of the trait: one of the system's traits, or one proposed in the plan.",
+            "x-ui-widget": "text"
+          },
+          "title": {
+            "title": "Trait",
+            "type": "string",
+            "description": "The trait as the user reads it, such as \"Comfort with technology\".",
             "x-ui-widget": "text"
           },
           "score": {
@@ -240,13 +246,14 @@
         },
         "required": [
           "aspect",
+          "title",
           "score",
           "rationale"
         ]
       },
-      "description": "How the person scores on each aspect: the aspects that the system defines and the ones the plan proposes.",
+      "description": "How the person compares on each trait, from 1 to 5: the traits that the system always uses and the ones proposed for this project. Each has a short reason.",
       "x-ui-widget": "rating-list",
-      "x-ui-label-field": "aspect",
+      "x-ui-label-field": "title",
       "x-ui-value-field": "score",
       "x-ui-note-field": "rationale"
     }

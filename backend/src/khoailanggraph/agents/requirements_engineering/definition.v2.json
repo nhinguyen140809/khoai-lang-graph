@@ -385,11 +385,11 @@
     }
   ],
   "persona_aspects": [
-    { "key": "domain_expertise", "title": "Domain expertise", "description": "How well the person knows the subject that the product is about.", "low": "Knows little about it", "high": "Is an expert in it" },
-    { "key": "usage_frequency", "title": "Usage frequency", "description": "How often the person would use the product.", "low": "Rarely, a few times a year", "high": "Every day" },
-    { "key": "tech_comfort", "title": "Technology comfort", "description": "How at ease the person is with new software.", "low": "Avoids new tools", "high": "Adopts new tools first" },
-    { "key": "pain_severity", "title": "Pain severity", "description": "How much the problem that the product solves hurts this person today.", "low": "A small annoyance", "high": "Blocks their work" },
-    { "key": "decision_influence", "title": "Decision influence", "description": "How much say the person has in whether the product is adopted.", "low": "None", "high": "Decides alone" }
+    { "key": "domain_expertise", "title": "Knowledge of the subject", "description": "How well the person knows the subject that the product is about.", "low": "Knows little about it", "high": "Is an expert in it" },
+    { "key": "usage_frequency", "title": "Frequency of use", "description": "How often the person would use the product.", "low": "Rarely, a few times a year", "high": "Every day" },
+    { "key": "tech_comfort", "title": "Comfort with technology", "description": "How at ease the person is with new software.", "low": "Avoids new tools", "high": "Adopts new tools first" },
+    { "key": "pain_severity", "title": "Severity of the problem", "description": "How much the problem that the product solves hurts this person today.", "low": "A small annoyance", "high": "Blocks their work" },
+    { "key": "decision_influence", "title": "Influence on decisions", "description": "How much influence the person has on whether the product is adopted.", "low": "None", "high": "Decides alone" }
   ],
   "directive_kinds": [
     {

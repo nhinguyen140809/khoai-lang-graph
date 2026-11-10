@@ -23,6 +23,7 @@ class PersonaScore(BaseModel):
     model_config = ConfigDict(extra="forbid")
 
     aspect: str
+    title: str = ""
     score: int = Field(ge=1, le=5)
     rationale: str
 

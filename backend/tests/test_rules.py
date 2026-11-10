@@ -38,7 +38,12 @@ VALID_PERSONA: dict[str, Any] = {
     "concerns": ["Mentors who never reply"],
     "behavioral_tendencies": "Direct, concise answers.",
     "scores": [
-        {"aspect": "tech_comfort", "score": 5, "rationale": "Uses his phone for everything."}
+        {
+            "aspect": "tech_comfort",
+            "title": "Comfort with technology",
+            "score": 5,
+            "rationale": "Uses his phone for everything.",
+        }
     ],
     "evidence": [
         {

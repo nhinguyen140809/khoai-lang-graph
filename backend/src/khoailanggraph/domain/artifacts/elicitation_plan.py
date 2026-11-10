@@ -29,7 +29,12 @@ class PersonaAspect(BaseModel):
         pattern=r"^[a-z][a-z0-9_]{0,39}$",
         description="A short key in lower case with underscores, unique in the plan.",
     )
-    title: str = Field(description="What the user reads, in a few words.")
+    title: str = Field(
+        description=(
+            "What the user reads: a short noun phrase in plain, formal words, such as "
+            '"Need for quick answers" or "Concern about privacy".'
+        )
+    )
     description: str = Field(description="What the aspect measures, in one sentence.")
     low: str = Field(description="What a score of 1 means, in a few words.")
     high: str = Field(description="What a score of 5 means, in a few words.")

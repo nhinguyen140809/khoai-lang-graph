@@ -87,7 +87,7 @@
       "x-ui-widget": "list"
     },
     "data_to_collect": {
-      "title": "Data to collect",
+      "title": "What to find out",
       "type": "array",
       "items": {
         "type": "object",
@@ -100,7 +100,7 @@
             "x-ui-widget": "text"
           },
           "needed": {
-            "title": "Needed",
+            "title": "What to learn",
             "type": "array",
             "items": {
               "type": "string"
@@ -118,22 +118,22 @@
       "x-ui-widget": "object-list"
     },
     "persona_aspects": {
-      "title": "Persona aspects",
+      "title": "What sets people apart",
       "type": "array",
       "items": {
         "type": "object",
         "additionalProperties": false,
         "properties": {
           "key": {
-            "title": "Key",
+            "title": "Short name",
             "type": "string",
             "description": "A short key in lower case with underscores, unique in the plan.",
             "x-ui-widget": "text"
           },
           "title": {
-            "title": "Title",
+            "title": "Shown as",
             "type": "string",
-            "description": "What the user reads.",
+            "description": "A short noun phrase that the user reads, such as \"Need for quick answers\".",
             "x-ui-widget": "text"
           },
           "description": {
@@ -143,13 +143,13 @@
             "x-ui-widget": "text"
           },
           "low": {
-            "title": "Score 1",
+            "title": "Lowest score means",
             "type": "string",
             "description": "What a score of 1 means.",
             "x-ui-widget": "text"
           },
           "high": {
-            "title": "Score 5",
+            "title": "Highest score means",
             "type": "string",
             "description": "What a score of 5 means.",
             "x-ui-widget": "text"
