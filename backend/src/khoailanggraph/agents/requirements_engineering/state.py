@@ -14,7 +14,7 @@ the run's routed target, so the edges stay pure functions of the state.
 from __future__ import annotations
 
 import operator
-from typing import Annotated, TypedDict
+from typing import Annotated, Any, TypedDict
 
 
 class ItemRef(TypedDict):
@@ -91,6 +91,8 @@ class REState(TypedDict):
     start_at: str
     # The review a checkpoint hands to the executor when it pauses the run.
     interrupt_payload: dict[str, object] | None
+    # What the node before each checkpoint wrote for its review, by the id of the checkpoint.
+    review_briefs: dict[str, dict[str, Any]]
 
     # — run bookkeeping —
     active_persona_index: int
@@ -137,6 +139,7 @@ def make_initial_state(
         routed_target="",
         start_at="",
         interrupt_payload=None,
+        review_briefs={},
         active_persona_index=0,
         interview_turn=0,
         interviewer_stop=False,

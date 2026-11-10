@@ -175,6 +175,27 @@ _NOTES = {
 }
 
 
+# What a node writes for the review that follows it, as a scripted model writes it.
+_REVIEWS = {
+    "GeneratorOutputV2": {
+        "prompt": "I proposed the interviewees. Check that they cover the people who matter.",
+        "options": [],
+        "questions": [
+            {
+                "key": "focus",
+                "kind": "single_select",
+                "prompt": "Whom should the interviews focus on?",
+                "choices": [
+                    {"key": "students", "label": "The students"},
+                    {"key": "mentors", "label": "The mentors"},
+                ],
+                "default_choice_keys": ["students"],
+            }
+        ],
+    },
+}
+
+
 # What the documents say, for the outputs that may carry a summary of the artifact.
 _SUMMARIES = {
     "PlannerOutput": "Three kinds of stakeholders and the topics to ask each of them about.",
@@ -192,6 +213,8 @@ def _with_reports(answer: dict[str, Any], schema_name: str) -> dict[str, Any]:
         answer.setdefault("summary", _SUMMARIES[schema_name])
     if schema_name in _NOTES:
         answer.setdefault("notes", _NOTES[schema_name])
+    if schema_name in _REVIEWS:
+        answer.setdefault("review", _REVIEWS[schema_name])
     return answer
 
 

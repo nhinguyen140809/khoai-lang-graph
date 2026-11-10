@@ -90,6 +90,75 @@ class _Narrated(_Output):
     notes: Notes
 
 
+class ReviewOptionOutput(_Output):
+    """What a node suggests for one answer of the review after it."""
+
+    key: str = Field(description="The key of one option of the review, as it is given to you.")
+    label: str | None = Field(
+        default=None,
+        description=(
+            "What the option says in this case, at most 40 characters, in the output language. "
+            "Leave it out to keep the usual words."
+        ),
+    )
+    suggested_feedback: str | None = Field(
+        default=None,
+        description=(
+            "Only for an option that asks the user for feedback: what the user would most likely "
+            "say, at most 300 characters, written as the user speaking, in the output language, "
+            "so that one click sends it. Leave it out for an option that asks for none."
+        ),
+    )
+
+
+class ReviewChoiceOutput(_Output):
+    key: str = Field(description="A short key in lower case with underscores, such as `students`.")
+    label: str = Field(description="What the user reads, at most 60 characters.")
+
+
+class ReviewQuestionOutput(_Output):
+    key: str = Field(description="A short key in lower case with underscores, unique here.")
+    kind: Literal["single_select", "multi_select", "free_text"]
+    prompt: str = Field(description="The question in one sentence of at most 140 characters.")
+    choices: list[ReviewChoiceOutput] = Field(
+        default_factory=list,
+        description="Two to four choices for a selection; none for a `free_text`.",
+    )
+    default_choice_keys: list[str] = Field(
+        default_factory=list,
+        description=(
+            "Your own assumption: the key of the choice you would take (one for `single_select`). "
+            "Always give it, so that the user can accept the review without answering."
+        ),
+    )
+
+
+class ReviewOutput(_Output):
+    """What the user is asked at the review that follows the node: what to look at, the answers
+    it suggests, and the few decisions that only the user can make."""
+
+    prompt: str = Field(
+        description=(
+            "One to three sentences to the user, at most 300 characters, in the output language: "
+            "what to look at in this review, with what you found, for example how many conflicts "
+            "are still open and what they are about. Plain words, never keys."
+        )
+    )
+    options: list[ReviewOptionOutput] = Field(
+        default_factory=list,
+        description="Suggestions for the options of the review, only for the ones that exist.",
+    )
+    questions: list[ReviewQuestionOutput] = Field(
+        default_factory=list,
+        description=(
+            "At most three questions about decisions that only the user can make and that you "
+            "cannot settle from what you read, for example which of two conflicting wishes wins. "
+            "Do not ask what you can decide yourself, and never ask the same thing twice. Leave "
+            "the list empty when there is nothing to ask."
+        ),
+    )
+
+
 # The summary of a document: what its content says, for the top of the artifact. It is not the
 # report, which says what the step did.
 Summary = Annotated[
@@ -248,6 +317,13 @@ class GeneratorOutputV2(_Narrated):
     """The frame of the evidence-grounded persona catalog plus its personas."""
 
     report: Report
+    review: ReviewOutput | None = Field(
+        default=None,
+        description=(
+            "The review that follows this step: what the user is asked. Leave it out when the "
+            "review has nothing to add to its usual question."
+        ),
+    )
     selection_rationale: str
     stakeholder_groups: list[StakeholderGroup]
     uncovered_stakeholder_types: list[str]
@@ -409,6 +485,13 @@ class ConflictDraft(_Output):
 
 class AnalystOutput(_Narrated):
     report: Report
+    review: ReviewOutput | None = Field(
+        default=None,
+        description=(
+            "The review that follows this step: what the user is asked. Leave it out when the "
+            "review has nothing to add to its usual question."
+        ),
+    )
     summary: Summary
     raw_requirements: list[RawRequirementDraft]
     analyzed_requirements: list[AnalyzedRequirementDraft]
@@ -445,6 +528,13 @@ class EngineerOutput(_Narrated):
     """The frame of the specification plus its requirement items."""
 
     report: Report
+    review: ReviewOutput | None = Field(
+        default=None,
+        description=(
+            "The review that follows this step: what the user is asked. Leave it out when the "
+            "review has nothing to add to its usual question."
+        ),
+    )
     summary: Summary
     purpose: str
     scope: str

@@ -59,7 +59,7 @@
       "allow_edits": true,
       "options": [ { "key": "approve", "label": "Approve the interviewees", "requires_feedback": false, "approves": true, "is_default": true } ],
       "questions": [],
-      "agent_questions": false
+      "agent_questions": true
     },
     { "id": "interviewer", "kind": "agent", "label": "interviewer", "stage": "interviewing", "agent_role": "interviewer" },
     { "id": "persona_agent", "kind": "agent", "label": "persona_agent", "stage": "interviewing", "agent_role": "persona_agent" },
@@ -80,7 +80,7 @@
         { "key": "reject_reinterview", "label": "Interview again", "requires_feedback": true, "approves": false, "is_default": false }
       ],
       "questions": [],
-      "agent_questions": false
+      "agent_questions": true
     },
     { "id": "requirement_engineer", "kind": "agent", "label": "requirement_engineer", "stage": "specification", "agent_role": "requirement_engineer" },
     {
@@ -97,7 +97,7 @@
         { "key": "not_ok", "label": "Ask for changes", "requires_feedback": true, "approves": false, "is_default": false }
       ],
       "questions": [],
-      "agent_questions": false
+      "agent_questions": true
     },
     { "id": "backlog_manager", "kind": "agent", "label": "backlog_manager", "stage": "backlog", "agent_role": "backlog_manager" },
     { "id": "validator", "kind": "agent", "label": "validator", "stage": "validation", "agent_role": "validator" },

@@ -598,7 +598,7 @@ Resume rules:
 - When the chosen option approves, the artifacts under review and their items that are still `draft` become `approved`, each as a new version with `change_reason` `reviewed`.
 - The server stores a human decision, marks the interrupt resolved, gives the decision as `decision` of the interrupt, and continues the run. The response is `202` with the run.
 
-An interrupt can ask several questions of different types and is answered at once. The checkpoints of definition version 1 ask none; the example comes from a checkpoint that clarifies the intent of a project, see [Runtime: open points](architecture/runtime.md#8-open-points):
+An interrupt can ask several questions of different types and is answered at once. The checkpoints of definition version 1 ask none of their own. A checkpoint with `agent_questions` set lets the agent node before it add up to three, each with `source` `agent`, a default that is the agent's own assumption and, for a selection, a last choice `other` that asks for text. A question of the agent is not required: leaving it alone accepts its default, so the review can be approved without a word, and the agents after the checkpoint read the answers as part of their instruction. The same node words the `prompt` for the case and may suggest the feedback of an option (`suggested_feedback`). The example comes from a checkpoint that clarifies the intent of a project, see [Runtime: open points](architecture/runtime.md#8-open-points):
 
 ```json
 {

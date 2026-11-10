@@ -479,3 +479,49 @@ async def test_a_step_keeps_the_notes_it_wrote_and_the_stream_sends_each_one(
     assert all(step["notes"] == [] for step in steps if step["node"] != "planner")
     # The notes of a step come before its end, and its report comes after them.
     assert text.index("event: step_note") < text.index("event: node_end")
+
+
+async def test_a_review_fits_the_case_and_asks_what_only_the_user_can_decide(
+    client: AsyncClient,
+) -> None:
+    thread_id = await _thread(client)
+    run = (await _send(client, thread_id, ["checkpoint_personas"]))["run"]
+
+    interrupt = await _pending(client, run["id"])
+
+    assert interrupt["prompt"].startswith("I proposed the interviewees.")
+    (question,) = interrupt["questions"]
+    assert question["source"] == "agent"
+    assert question["key"] == "focus"
+    assert question["default_answer"]["choice_keys"] == ["students"]
+    assert [choice["key"] for choice in question["choices"]] == ["students", "mentors", "other"]
+
+
+async def test_the_answers_to_the_questions_of_the_agent_are_checked_and_continue_the_run(
+    client: AsyncClient,
+) -> None:
+    thread_id = await _thread(client)
+    run = (await _send(client, thread_id, ["checkpoint_personas"]))["run"]
+    interrupt = await _pending(client, run["id"])
+
+    refused = await _resume(
+        client,
+        run["id"],
+        interrupt,
+        option="approve",
+        answers={"focus": {"choice_keys": ["other"], "text": None, "number": None}},
+    )
+    accepted = await _resume(
+        client,
+        run["id"],
+        interrupt,
+        option="approve",
+        answers={"focus": {"choice_keys": ["mentors"], "text": None, "number": None}},
+    )
+
+    assert refused.status_code == 422
+    assert accepted.status_code == 202
+    decision = (await client.get(f"{API}/runs/{run['id']}/interrupts")).json()["items"][0][
+        "decision"
+    ]
+    assert decision["answers"]["focus"]["choice_keys"] == ["mentors"]

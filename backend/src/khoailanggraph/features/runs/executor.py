@@ -34,7 +34,7 @@ from sqlalchemy import func, select
 from sqlalchemy.orm import Session  # noqa: TC002 - runtime type of the session factory
 
 from khoailanggraph.agents.requirements_engineering import definition as workflow_definition
-from khoailanggraph.agents.requirements_engineering import routing
+from khoailanggraph.agents.requirements_engineering import review, routing
 from khoailanggraph.agents.requirements_engineering.graph import build_re_graph
 from khoailanggraph.agents.requirements_engineering.ports import RunLimitError
 from khoailanggraph.agents.requirements_engineering.state import REState, make_initial_state
@@ -383,7 +383,10 @@ class RunWalker:
             raise ValueError(msg)
         state = cast("REState", _loads(step.state_json))
         option = str(decision.option)
-        feedback = decision.feedback or ""
+        decided = review.describe_answers(
+            _loads(interrupt.questions_json) or [], _loads(decision.answers_json) or {}
+        )
+        feedback = "\n\n".join(part for part in (decision.feedback or "", decided) if part)
         state["checkpoint_outcomes"] = [
             *state["checkpoint_outcomes"],
             {"node": interrupt.node, "option": option, "feedback": feedback, "automatic": False},

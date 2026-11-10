@@ -33,7 +33,7 @@ from langchain_core.runnables import RunnableConfig
 from pydantic import BaseModel
 
 from khoailanggraph.agents import prompts as prompt_loader
-from khoailanggraph.agents.requirements_engineering import orchestrator
+from khoailanggraph.agents.requirements_engineering import orchestrator, review
 from khoailanggraph.agents.requirements_engineering.decisions import (
     AppliedDecision,
     DecisionResult,
@@ -130,6 +130,29 @@ def _log_decision(
 def _configurable(config: Mapping[str, Any] | RunnableConfig | None) -> Mapping[str, Any]:
     value = dict(config or {}).get("configurable", {})
     return value if isinstance(value, dict) else {}
+
+
+def _review_for(state: REState, checkpoint: str, output: Any) -> dict[str, Any]:
+    """The state update that keeps what a node wrote for the review after it."""
+    brief = getattr(output, "review", None)
+    if brief is None:
+        return {}
+    briefs = {**state.get("review_briefs", {}), checkpoint: brief.model_dump(mode="json")}
+    return {"review_briefs": briefs}
+
+
+def _decisions_of(state: REState, checkpoint: str) -> str:
+    """What the user decided at the latest review of `checkpoint`, when they answered questions of
+    the agent there: the lines that the agents after it read as part of their instruction."""
+    for outcome in reversed(state["checkpoint_outcomes"]):
+        if outcome["node"] == checkpoint:
+            return outcome["feedback"] if not outcome.get("automatic") else ""
+    return ""
+
+
+def _instruction(*parts: str) -> str:
+    """The parts that are not empty, one after the other."""
+    return "\n\n".join(part for part in parts if part)
 
 
 def _tell_user(sink: ArtifactSink, output: Any) -> None:
@@ -909,6 +932,7 @@ def persona_generator_node(
         "active_persona_index": 0,
         "interviewer_stop": False,
         "current_stage": "persona_generation",
+        **_review_for(state, "checkpoint_personas", draft),
     }
 
 
@@ -1016,7 +1040,10 @@ def _ask_interviewer(
             or "(none yet; this is the opening turn)",
             "turn": str(int(state["interview_turn"]) + 1),
             "limit_reached": "yes" if limit_reached else "",
-            "directive": _directive_for(state, config, "checkpoint_analysis"),
+            "directive": _instruction(
+                _decisions_of(state, "checkpoint_personas"),
+                _directive_for(state, config, "checkpoint_analysis"),
+            ),
         },
     )
     return turn
@@ -1512,6 +1539,7 @@ def analyst_node(
         **refs,
         "response_analyst_status": "needs_interviews" if unresolved else "ok",
         "current_stage": "analysis",
+        **_review_for(state, "checkpoint_analysis", analysis),
     }
 
 
@@ -1684,7 +1712,10 @@ def requirement_engineer_node(
             )
             or "(none)",
             "current_specification": current_lines,
-            "directive": _directive_for(state, runnable_config, "checkpoint_spec"),
+            "directive": _instruction(
+                _decisions_of(state, "checkpoint_analysis"),
+                _directive_for(state, runnable_config, "checkpoint_spec"),
+            ),
         },
     )
 
@@ -1819,7 +1850,11 @@ def requirement_engineer_node(
         _link_each(sink, str(item["item_id"]), "depends_on", placeholder, spec_draft.depends_on)
 
     _tell_user(sink, draft)
-    return {"requirement_specification": written, "current_stage": "specification"}
+    return {
+        "requirement_specification": written,
+        "current_stage": "specification",
+        **_review_for(state, "checkpoint_spec", draft),
+    }
 
 
 @safe_node
@@ -2128,11 +2163,12 @@ def make_checkpoint(
             for record in records
         ]
         if node_id in cfg.review_checkpoints:
+            asked = review.checkpoint_review(spec, state.get("review_briefs", {}).get(node_id))
             payload: dict[str, object] = {
                 "node": node_id,
-                "prompt": str(spec.get("prompt", "")),
-                "options": options,
-                "questions": list(spec.get("questions", [])),
+                "prompt": asked["prompt"],
+                "options": asked["options"],
+                "questions": asked["questions"],
                 "allow_edits": bool(spec.get("allow_edits", False)),
                 "review_artifacts": review_artifacts,
             }

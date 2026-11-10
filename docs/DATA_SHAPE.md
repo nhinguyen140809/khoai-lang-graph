@@ -551,7 +551,7 @@ A pause in which the run asks the user for input. A checkpoint node creates one 
 | `run_id` | ref\<Run\> | |
 | `step_id` | ref\<RunStep\> | The step of the checkpoint node that created it |
 | `node` | string | The node that paused the run, for example `checkpoint_analysis` |
-| `prompt` | string | What the user is asked |
+| `prompt` | string | What the user is asked. The agent node before the checkpoint writes it for the case; the definition's prompt stands when it wrote none |
 | `options` | InterruptOption[] | The decision that chooses where the run continues. Empty when the interrupt only asks questions |
 | `questions` | Question[] | Further questions, answered together with the option. Empty when there are none |
 | `allow_edits` | bool | Whether the user may edit items of the artifacts under review before answering |
@@ -562,7 +562,7 @@ A pause in which the run asks the user for input. A checkpoint node creates one 
 
 An interrupt has at least one option or one question. One shape serves every use: a review that decides where the run goes (options and artifacts under review), questions only, or a review with questions. The lists that a use does not need are empty, so an interrupt has no kind field, and its options and questions are stored as JSON in its row, since they are always read and written with it.
 
-`InterruptOption` is `{ key: string, label: string, requires_feedback: bool, approves: bool, is_default: bool }`.
+`InterruptOption` is `{ key: string, label: string, requires_feedback: bool, approves: bool, is_default: bool, suggested_feedback: string? }`. The definition gives the keys and what each option does: it approves or not, it asks for feedback or not, which edge it follows. The agent node before the checkpoint may word the label for the case and, for an option that asks for feedback, suggest the `suggested_feedback` that the user can send as it is or change.
 
 - The workflow definition lists the options of each checkpoint. Each option key matches an outgoing edge of the checkpoint node, so the run continues along the edge of the chosen option.
 - `approves` tells the backend to set the artifacts under review, and their items that are still `draft`, to `approved`.
