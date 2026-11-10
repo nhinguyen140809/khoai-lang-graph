@@ -403,7 +403,11 @@ class RunWalker:
             for ref in _loads(interrupt.artifacts_json) or []:
                 self.sink.approve_artifact(str(ref["artifact_id"]))
         target = routing.next_after_checkpoint(interrupt.node, state)
-        if not chosen.get("approves"):
+        if option == routing.OTHER_OPTION:
+            # Something else: the words of the user are a message of the thread, which goes to the
+            # intent router, and the router writes the directive for the step that does the work.
+            self._say_something_else(decision.feedback or "")
+        elif not chosen.get("approves"):
             directive = DirectiveRow(
                 id=uuid4(),
                 run_id=self.run.id,
@@ -426,6 +430,26 @@ class RunWalker:
         state["start_at"] = target
         self.run.current_stage = str(state["current_stage"])
         return state
+
+    def _say_something_else(self, text: str) -> None:
+        """The answer of the user that no option says, as their message in the thread: it waits for
+        the intent router, which reads it at the start of the walk."""
+        count = self.session.scalar(
+            select(func.count())
+            .select_from(MessageRow)
+            .where(MessageRow.thread_id == self.thread.id)
+        )
+        self.session.add(
+            MessageRow(
+                thread_id=self.thread.id,
+                sequence=int(count or 0) + 1,
+                author="user",
+                content=text,
+                delivery="pending",
+            )
+        )
+        self.thread.last_message_at = _now()
+        self.session.flush()
 
     def _retried_state(self, from_step_id: UUID) -> REState:
         """The state saved before a step of another run, to walk from that step again."""

@@ -2,13 +2,21 @@
 
 from __future__ import annotations
 
-from typing import Any
+from typing import TYPE_CHECKING, Any
 
 from khoailanggraph.agents.requirements_engineering import definition as wf
+from khoailanggraph.agents.requirements_engineering.outputs import (
+    AnalystOutput,
+    EngineerOutput,
+    GeneratorOutputV2,
+)
 from khoailanggraph.agents.requirements_engineering.review import (
     checkpoint_review,
     describe_answers,
 )
+
+if TYPE_CHECKING:
+    from pydantic import BaseModel
 
 SPEC = wf.nodes()["checkpoint_analysis"]
 
@@ -142,3 +150,38 @@ def test_questions_of_the_definition_are_not_repeated_in_the_decisions() -> None
     question = {"key": "q", "source": "definition", "prompt": "P", "choices": []}
 
     assert describe_answers([question], {"q": {"text": "x"}}) == ""
+
+
+def test_the_suggestions_of_a_review_can_only_name_the_options_of_its_checkpoint() -> None:
+    outputs: list[tuple[type[BaseModel], str]] = [
+        (GeneratorOutputV2, "checkpoint_personas"),
+        (AnalystOutput, "checkpoint_analysis"),
+        (EngineerOutput, "checkpoint_spec"),
+    ]
+    for model, checkpoint in outputs:
+        option = model.model_json_schema()["$defs"][f"ReviewOptionOf_{checkpoint}"]
+
+        assert option["properties"]["key"]["enum"] == [
+            entry["key"] for entry in wf.nodes()[checkpoint]["options"]
+        ]
+
+
+def test_something_else_has_words_of_its_own_and_never_a_suggested_text() -> None:
+    brief = {
+        "options": [
+            {
+                "key": "other",
+                "label": "Tell me what to change",
+                "description": "Say it in your own words; the right step does it again.",
+                "suggested_feedback": "never suggested",
+            }
+        ]
+    }
+
+    asked = checkpoint_review(SPEC, brief)
+
+    other = next(option for option in asked["options"] if option["key"] == "other")
+    assert other["label"] == "Tell me what to change"
+    assert other["description"].startswith("Say it in your own words")
+    assert "suggested_feedback" not in other
+    assert other["requires_feedback"] is True

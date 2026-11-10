@@ -42,10 +42,18 @@ def route_start(state: REState) -> str:
     return "intent_router"
 
 
+# The answer of a review that none of its options say: the words of the user go to the intent
+# router as a message, and it decides which step does the work again.
+OTHER_OPTION = "other"
+
+
 def route_after_personas(state: REState) -> str:
-    """`checkpoint_personas → interviewer` (approve); the node never rejects."""
+    """`checkpoint_personas → {interviewer, intent_router}`: the interviews start when the
+    interviewees are approved; something else goes to the intent router."""
     if route_error(state):
         return route_error(state)
+    if _latest_outcome(state, "checkpoint_personas") == OTHER_OPTION:
+        return "intent_router"
     return "interviewer"
 
 
@@ -71,10 +79,13 @@ def route_after_analyst(state: REState) -> str:
 
 
 def route_after_analysis(state: REState) -> str:
-    """`checkpoint_analysis → {requirement_engineer, analyst, rework_elicitation}`."""
+    """`checkpoint_analysis` goes to the next stage, back to the analyst or the interviews, or,
+    for something else, to the intent router."""
     if route_error(state):
         return route_error(state)
     option = _latest_outcome(state, "checkpoint_analysis")
+    if option == OTHER_OPTION:
+        return "intent_router"
     if option == "reject_reanalyse":
         return "analyst"
     if option == "reject_reinterview":
@@ -87,6 +98,8 @@ def route_after_spec(state: REState) -> str:
     if route_error(state):
         return route_error(state)
     option = _latest_outcome(state, "checkpoint_spec")
+    if option == OTHER_OPTION:
+        return "intent_router"
     if option == "not_ok":
         return "requirement_engineer"
     return "backlog_manager"

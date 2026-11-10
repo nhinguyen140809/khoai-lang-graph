@@ -57,7 +57,10 @@
       "prompt": "Review the personas. Edit them if needed, then approve them.",
       "review_artifact_kinds": ["persona_catalog"],
       "allow_edits": true,
-      "options": [ { "key": "approve", "label": "Approve the interviewees", "requires_feedback": false, "approves": true, "is_default": true } ],
+      "options": [
+        { "key": "approve", "label": "Approve the interviewees", "requires_feedback": false, "approves": true, "is_default": true },
+        { "key": "other", "label": "Something else", "requires_feedback": true, "approves": false, "is_default": false }
+      ],
       "questions": [],
       "agent_questions": true
     },
@@ -77,7 +80,8 @@
       "options": [
         { "key": "accept", "label": "Approve analysis", "requires_feedback": false, "approves": true, "is_default": true },
         { "key": "reject_reanalyse", "label": "Redo the analysis", "requires_feedback": true, "approves": false, "is_default": false },
-        { "key": "reject_reinterview", "label": "Interview again", "requires_feedback": true, "approves": false, "is_default": false }
+        { "key": "reject_reinterview", "label": "Interview again", "requires_feedback": true, "approves": false, "is_default": false },
+        { "key": "other", "label": "Something else", "requires_feedback": true, "approves": false, "is_default": false }
       ],
       "questions": [],
       "agent_questions": true
@@ -94,7 +98,8 @@
       "allow_edits": true,
       "options": [
         { "key": "ok", "label": "Approve the specification", "requires_feedback": false, "approves": true, "is_default": true },
-        { "key": "not_ok", "label": "Ask for changes", "requires_feedback": true, "approves": false, "is_default": false }
+        { "key": "not_ok", "label": "Ask for changes", "requires_feedback": true, "approves": false, "is_default": false },
+        { "key": "other", "label": "Something else", "requires_feedback": true, "approves": false, "is_default": false }
       ],
       "questions": [],
       "agent_questions": true
@@ -116,6 +121,7 @@
     { "source": "stakeholder_miner", "target": "persona_generator", "label": null, "conditional": false, "option": null },
     { "source": "persona_generator", "target": "checkpoint_personas", "label": null, "conditional": false, "option": null },
     { "source": "checkpoint_personas", "target": "interviewer", "label": "approve / modify", "conditional": true, "option": "approve" },
+    { "source": "checkpoint_personas", "target": "intent_router", "label": "something else", "conditional": true, "option": "other" },
     { "source": "interviewer", "target": "persona_agent", "label": "question", "conditional": true, "option": null },
     { "source": "persona_agent", "target": "interviewer", "label": "answer", "conditional": false, "option": null },
     { "source": "interviewer", "target": "analyst", "label": "all personas interviewed", "conditional": true, "option": null },
@@ -125,9 +131,11 @@
     { "source": "checkpoint_analysis", "target": "requirement_engineer", "label": "accept", "conditional": true, "option": "accept" },
     { "source": "checkpoint_analysis", "target": "analyst", "label": "reject + re-analyse", "conditional": true, "option": "reject_reanalyse" },
     { "source": "checkpoint_analysis", "target": "rework_elicitation", "label": "reject + re-interview", "conditional": true, "option": "reject_reinterview" },
+    { "source": "checkpoint_analysis", "target": "intent_router", "label": "something else", "conditional": true, "option": "other" },
     { "source": "requirement_engineer", "target": "checkpoint_spec", "label": null, "conditional": false, "option": null },
     { "source": "checkpoint_spec", "target": "backlog_manager", "label": "OK", "conditional": true, "option": "ok" },
     { "source": "checkpoint_spec", "target": "requirement_engineer", "label": "not OK", "conditional": true, "option": "not_ok" },
+    { "source": "checkpoint_spec", "target": "intent_router", "label": "something else", "conditional": true, "option": "other" },
     { "source": "backlog_manager", "target": "validator", "label": null, "conditional": false, "option": null },
     { "source": "validator", "target": "__end__", "label": "pass", "conditional": true, "option": null },
     { "source": "validator", "target": "requirement_engineer", "label": "fail", "conditional": true, "option": null }

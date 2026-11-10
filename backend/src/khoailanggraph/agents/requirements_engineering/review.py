@@ -28,6 +28,7 @@ FEEDBACK_LENGTH = 300
 
 _KEY = re.compile(r"^[a-z][a-z0-9_]{0,39}$")
 OTHER_KEY = "other"
+OTHER_OPTION_KEY = "other"
 OTHER_LABEL = "Something else, please tell me"
 
 
@@ -59,7 +60,7 @@ def checkpoint_review(spec: Mapping[str, Any], brief: Mapping[str, Any] | None) 
         if description:
             merged["description"] = description
         feedback = _text(suggestion.get("suggested_feedback"), FEEDBACK_LENGTH)
-        if feedback and option.get("requires_feedback"):
+        if feedback and option.get("requires_feedback") and option["key"] != OTHER_OPTION_KEY:
             merged["suggested_feedback"] = feedback
         options.append(merged)
     questions = [dict(question) for question in spec.get("questions", [])]

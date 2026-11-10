@@ -594,6 +594,7 @@ Resume rules:
 - `option` is the key of one of the options of the interrupt; the set of options comes from the workflow definition, so the API does not change when a checkpoint gains or loses an option. An unknown key answers `422 validation_failed`.
 - `feedback` is required when the chosen option requires it.
 - `answers` has one entry per answered question, by question key, in the shape of `Answer` in the [data shape](DATA_SHAPE.md#humandecision-mvp). Every required question is answered, every choice is a choice of its question, and `text` is present when a chosen choice requires it; otherwise `422 validation_failed` with the question key in the field path.
+- The option `other`, "Something else", asks for `feedback`; the run records it as a message of the user, which the intent router reads, and continues at the step that the router chooses. It creates no rework directive of its own.
 - `modified_items` is accepted only when the interrupt allows edits.
 - When the chosen option approves, the artifacts under review and their items that are still `draft` become `approved`, each as a new version with `change_reason` `reviewed`.
 - The server stores a human decision, marks the interrupt resolved, gives the decision as `decision` of the interrupt, and continues the run. The response is `202` with the run.

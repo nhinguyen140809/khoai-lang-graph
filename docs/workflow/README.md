@@ -54,7 +54,7 @@ In `link_types`, `any` stands for every item kind except `section`, which is nev
 
 ## 3. Version 1
 
-[`requirements_engineering.v1.json`](requirements_engineering.v1.json) contains 9 agent roles, each at prompt version 1, 12 stages, 15 nodes, 25 edges, 7 artifact kinds, 12 item kinds, 10 link types, 5 value lists, 2 directive kinds, 5 export templates and 4 run parameters.
+[`requirements_engineering.v1.json`](requirements_engineering.v1.json) contains 9 agent roles, each at prompt version 1, 12 stages, 15 nodes, 25 edges (the version 2 of the definition has 30 edges, which add the option `other` to each checkpoint), 7 artifact kinds, 12 item kinds, 10 link types, 5 value lists, 2 directive kinds, 5 export templates and 4 run parameters.
 
 The values come from the tables of the [data shape](../DATA_SHAPE.md) and from the [agent workflow diagram](../architecture/README.md#5-agent-workflow): the nodes and edges are those of the diagram, and the item kinds and schema versions are those of the [content schemas](../schemas/README.md). The values that appear in neither are proposals, listed in [Open points](#7-open-points).
 

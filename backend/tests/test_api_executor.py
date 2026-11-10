@@ -110,7 +110,7 @@ async def test_a_run_pauses_at_a_review_and_waits_for_the_user(client: AsyncClie
     assert interrupt["node"] == "checkpoint_personas"
     assert interrupt["allow_edits"] is True
     assert [ref["kind"] for ref in interrupt["review_artifacts"]] == ["persona_catalog"]
-    assert [option["key"] for option in interrupt["options"]] == ["approve"]
+    assert [option["key"] for option in interrupt["options"]] == ["approve", "other"]
     thread = (await client.get(f"{API}/threads/{thread_id}")).json()
     assert thread["active_run_id"] == run["id"]
 
@@ -525,3 +525,36 @@ async def test_the_answers_to_the_questions_of_the_agent_are_checked_and_continu
         "decision"
     ]
     assert decision["answers"]["focus"]["choice_keys"] == ["mentors"]
+
+
+async def test_something_else_needs_words_and_goes_to_the_intent_router_as_a_message(
+    client: AsyncClient,
+) -> None:
+    thread_id = await _thread(client)
+    run = (await _send(client, thread_id, ["checkpoint_personas"]))["run"]
+    interrupt = await _pending(client, run["id"])
+    other = next(option for option in interrupt["options"] if option["key"] == "other")
+
+    refused = await _resume(client, run["id"], interrupt, option="other")
+    accepted = await _resume(
+        client,
+        run["id"],
+        interrupt,
+        option="other",
+        feedback="Also interview a librarian.",
+    )
+
+    assert other["requires_feedback"] is True
+    assert other["approves"] is False
+    assert refused.status_code == 422
+    assert accepted.status_code == 202
+    messages = (await client.get(f"{API}/threads/{thread_id}/messages")).json()["items"]
+    said = [message for message in messages if message["content"] == "Also interview a librarian."]
+    assert [message["author"] for message in said] == ["user"]
+    deadline = time.monotonic() + 30
+    while time.monotonic() < deadline:
+        steps = (await client.get(f"{API}/runs/{run['id']}/steps")).json()["items"]
+        if any(step["node"] == "intent_router" for step in steps):
+            break
+        await asyncio.sleep(0.5)
+    assert any(step["node"] == "intent_router" for step in steps)

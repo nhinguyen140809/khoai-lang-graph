@@ -108,7 +108,7 @@ def build_re_graph(
     builder.add_conditional_edges(
         "checkpoint_personas",
         routing.route_after_personas,
-        ["interviewer", END],
+        ["interviewer", "intent_router", END],
     )
     builder.add_conditional_edges(
         "interviewer",
@@ -125,13 +125,13 @@ def build_re_graph(
     builder.add_conditional_edges(
         "checkpoint_analysis",
         routing.route_after_analysis,
-        ["requirement_engineer", "analyst", "rework_elicitation", END],
+        ["requirement_engineer", "analyst", "rework_elicitation", "intent_router", END],
     )
     builder.add_edge("requirement_engineer", "checkpoint_spec")
     builder.add_conditional_edges(
         "checkpoint_spec",
         routing.route_after_spec,
-        ["backlog_manager", "requirement_engineer", END],
+        ["backlog_manager", "requirement_engineer", "intent_router", END],
     )
     builder.add_edge("backlog_manager", "validator")
     builder.add_conditional_edges(

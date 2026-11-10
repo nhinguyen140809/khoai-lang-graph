@@ -14,6 +14,7 @@ from typing import TYPE_CHECKING, Annotated, Any, Literal
 
 from pydantic import BaseModel, ConfigDict, Field, create_model, model_validator
 
+from khoailanggraph.agents.requirements_engineering import definition as workflow_definition
 from khoailanggraph.domain.artifacts import ElicitationPlanContent
 
 if TYPE_CHECKING:
@@ -170,6 +171,36 @@ class ReviewOutput(_Output):
             "the list empty when there is nothing to ask."
         ),
     )
+
+
+def _review_for(checkpoint: str) -> type[ReviewOutput]:
+    """The review of one checkpoint: the key of each suggestion is one of the options that the
+    checkpoint has, which the schema tells the model with what each one is."""
+    options = workflow_definition.nodes()[checkpoint]["options"]
+    keys: Any = Literal[tuple(str(option["key"]) for option in options)]
+    meaning = "; ".join(f'`{option["key"]}` is "{option["label"]}"' for option in options)
+    option_model: Any = create_model(
+        f"ReviewOptionOf_{checkpoint}",
+        __base__=ReviewOptionOutput,
+        key=(keys, Field(description=f"The option this is about: {meaning}.")),
+    )
+    return create_model(
+        f"ReviewOf_{checkpoint}",
+        __base__=ReviewOutput,
+        options=(
+            list[option_model],
+            Field(
+                default_factory=list,
+                description="Suggestions for the options of the review, only for the ones you "
+                "have something to say about.",
+            ),
+        ),
+    )
+
+
+PersonasReview = _review_for("checkpoint_personas")
+AnalysisReview = _review_for("checkpoint_analysis")
+SpecificationReview = _review_for("checkpoint_spec")
 
 
 # The summary of a document: what its content says, for the top of the artifact. It is not the
@@ -330,7 +361,7 @@ class GeneratorOutputV2(_Narrated):
     """The frame of the evidence-grounded persona catalog plus its personas."""
 
     report: Report
-    review: ReviewOutput | None = Field(
+    review: PersonasReview | None = Field(  # type: ignore[valid-type]
         default=None,
         description=(
             "The review that follows this step: what the user is asked. Leave it out when the "
@@ -499,7 +530,7 @@ class ConflictDraft(_Output):
 
 class AnalystOutput(_Narrated):
     report: Report
-    review: ReviewOutput | None = Field(
+    review: AnalysisReview | None = Field(  # type: ignore[valid-type]
         default=None,
         description=(
             "The review that follows this step: what the user is asked. Leave it out when the "
@@ -542,7 +573,7 @@ class EngineerOutput(_Narrated):
     """The frame of the specification plus its requirement items."""
 
     report: Report
-    review: ReviewOutput | None = Field(
+    review: SpecificationReview | None = Field(  # type: ignore[valid-type]
         default=None,
         description=(
             "The review that follows this step: what the user is asked. Leave it out when the "
