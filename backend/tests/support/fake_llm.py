@@ -193,6 +193,16 @@ _REVIEWS = {
             }
         ],
     },
+    "AnalystOutput": {
+        "prompt": "I wrote the requirements analysis and found open questions. Check them, then approve it.",
+        "options": [
+            {
+                "key": "reject_reanalyse",
+                "suggested_feedback": "Settle the open questions in favour of the students.",
+            }
+        ],
+        "questions": [],
+    },
 }
 
 
