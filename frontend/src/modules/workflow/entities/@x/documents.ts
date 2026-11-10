@@ -1,4 +1,5 @@
 export { useArtifactKinds } from '../artifact-kinds/hooks/useArtifactKindQueries'
+export { useKindTitleOf } from '../artifact-kinds/hooks/useKindTitleOf'
 export { kindSchemasByKind } from '../artifact-kinds/kind-schemas.utils'
 export type { ContentDisplay } from '../content/fields/content-fields.types'
 export { documentDisplaysByKind } from '../content/fields/content-fields.utils'
