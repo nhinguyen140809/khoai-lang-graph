@@ -1,0 +1,77 @@
+# Development stack: the API and the web app, each reloading on a change of its source.
+#
+#   docker compose -f infra/docker-compose.yml up --build
+#   docker compose -f infra/docker-compose.yml --profile tools run --rm seed
+#
+# The web app is on http://localhost:3000 and the API on http://localhost:8000. The database is a
+# SQLite file in the `api-data` volume. Secrets come from backend/.env (git-ignored).
+name: khoai-lang-graph
+
+x-api: &api
+  build:
+    context: ../backend
+  env_file:
+    - path: ../backend/.env
+      required: false
+  environment:
+    APP_ENV: local
+    # Outranks the DATABASE_URL of backend/.env, which names a path of the host.
+    DATABASE_URL: sqlite+aiosqlite:////app/data/dev.db
+    # The models of the BioTuring gateway; set MODELS_CONFIG_FILE=/app/config/models.yaml for the
+    # models of the default catalog.
+    MODELS_CONFIG_FILE: ${MODELS_CONFIG_FILE:-/app/config/models.gateway.yaml}
+  volumes:
+    - api-data:/app/data
+    - ../backend/config:/app/config:ro
+
+services:
+  api:
+    <<: *api
+    command:
+      - uvicorn
+      - khoailanggraph.main:app
+      - --host=0.0.0.0
+      - --port=8000
+      - --reload
+      - --reload-dir=src
+    ports:
+      - "8000:8000"
+    volumes:
+      - api-data:/app/data
+      - ../backend/config:/app/config:ro
+      - ../backend/src:/app/src
+    healthcheck:
+      test: ["CMD", "python", "-c", "import urllib.request; urllib.request.urlopen('http://localhost:8000/ready')"]
+      interval: 5s
+      timeout: 3s
+      retries: 20
+      start_period: 10s
+
+  web:
+    build:
+      context: ../frontend
+      dockerfile: Dockerfile.dev
+    ports:
+      - "3000:3000"
+    environment:
+      NEXT_PUBLIC_API_MOCKING: disabled
+      API_PROXY_TARGET: http://api:8000
+      # File events of a mounted folder do not always reach the container; poll as a fallback.
+      WATCHPACK_POLLING: "true"
+    volumes:
+      - ../frontend:/app
+      # The dependencies of the image stay; the mounted folder has none of its own.
+      - /app/node_modules
+      - /app/.next
+    depends_on:
+      api:
+        condition: service_healthy
+
+  # One-off: empties the database and loads the demo data. Stop `api` first.
+  seed:
+    <<: *api
+    profiles: ["tools"]
+    command: ["python", "scripts/seed_demo.py", "--reset"]
+
+volumes:
+  api-data:
