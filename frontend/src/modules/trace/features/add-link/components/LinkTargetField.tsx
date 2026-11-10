@@ -2,7 +2,7 @@
 
 import type { ArtifactItem } from '@/modules/artifact/entities'
 import { linkTargetsPageSize } from '@/modules/trace/entities'
-import { useItemTitleOf, useKindTitles } from '@/modules/workflow/entities'
+import { useItemTitleOf, useKindTitleOf } from '@/modules/workflow/entities'
 import {
   Combobox,
   ComboboxContent,
@@ -41,7 +41,7 @@ export function LinkTargetField({
   onSearch,
 }: LinkTargetFieldProps) {
   const titleOf = useItemTitleOf()
-  const kindTitles = useKindTitles()
+  const kindTitleOf = useKindTitleOf()
 
   return (
     <Field>
@@ -61,7 +61,7 @@ export function LinkTargetField({
             {(item: ArtifactItem) => (
               <ComboboxItem key={item.id} value={item}>
                 <RecordName
-                  kind={kindTitles.get(item.kind) ?? item.kind}
+                  kind={kindTitleOf(item.kind)}
                   title={titleOf(item)}
                   code={item.key}
                   layout="stacked"

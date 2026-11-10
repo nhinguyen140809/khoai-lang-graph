@@ -1,5 +1,4 @@
 export { useArtifactKinds, useContentSchemas } from '../artifact-kinds/hooks/useArtifactKindQueries'
-export { useKindTitleOf } from '../artifact-kinds/hooks/useKindTitleOf'
 export { kindSchemasByKind } from '../artifact-kinds/kind-schemas.utils'
 export { isNavigable } from '../content/fields/content-fields.utils'
 export { useVisibleStages } from '../stages/hooks/useStageQueries'

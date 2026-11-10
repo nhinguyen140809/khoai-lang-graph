@@ -60,7 +60,7 @@ describe('documentEntries', () => {
   }) {
     return documentEntries({
       kinds: definedKinds,
-      titles: titleFixtures,
+      kindTitleOf: (kind) => titleFixtures.get(kind) ?? kind,
       artifacts: options.artifacts ?? earlyArtifacts,
       writingIds: noIds,
       reviewIds: new Set(options.reviewIds),

@@ -8,6 +8,7 @@ import {
   itemTitle,
   kindSchemasByKind,
   useArtifactKinds,
+  useKindTitleOf,
   useWorkflowDefinition,
 } from '@/modules/workflow/entities/@x/documents'
 
@@ -26,13 +27,7 @@ export function useDocumentList(projectId: string): DocumentListResult {
   const writingIds = useWritingArtifacts(projectId)
 
   const hasUnfinishedRun = run !== null && isUnfinishedRunStatus(run.status)
-  const titles = useMemo(
-    () =>
-      new Map(
-        Array.from(kindSchemasByKind(kinds.data), ([kind, { schema }]) => [kind, schema.title]),
-      ),
-    [kinds.data],
-  )
+  const kindTitleOf = useKindTitleOf()
 
   const subjectItemKinds = useMemo(
     () =>
@@ -60,14 +55,14 @@ export function useDocumentList(projectId: string): DocumentListResult {
         ? []
         : documentEntries({
             kinds: definition.data.artifact_kinds,
-            titles,
+            kindTitleOf,
             artifacts: artifacts.data,
             writingIds,
             reviewIds,
             subjects,
             hasUnfinishedRun,
           }),
-    [definition.data, artifacts.data, titles, writingIds, reviewIds, subjects, hasUnfinishedRun],
+    [definition.data, artifacts.data, kindTitleOf, writingIds, reviewIds, subjects, hasUnfinishedRun],
   )
   const isUnderReview = useCallback((artifactId: string) => reviewIds.has(artifactId), [reviewIds])
 

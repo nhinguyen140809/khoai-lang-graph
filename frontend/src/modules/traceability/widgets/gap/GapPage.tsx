@@ -10,7 +10,7 @@ import {
   useTraceabilityCoverage,
 } from '@/modules/trace/entities'
 import { ViewTraceButton } from '@/modules/trace/features/view-trace'
-import { useKindTitles, useLinkTitleOf } from '@/modules/workflow/entities'
+import { useKindTitleOf, useLinkTitleOf } from '@/modules/workflow/entities'
 import { PageLink, useEditorTab } from '@/shared/components/frame'
 import { EmptyState, ErrorState, LoadingState } from '@/shared/components/state'
 import { Badge } from '@/shared/components/ui/badge'
@@ -31,7 +31,7 @@ export function GapPage({ projectId, gapKey }: { projectId: string; gapKey: stri
   const coverage = useTraceabilityCoverage(projectId, {
     refetchInterval: isWriting ? liveTraceMs : false,
   })
-  const kindTitles = useKindTitles()
+  const kindTitleOf = useKindTitleOf()
   const linkTitleOf = useLinkTitleOf()
 
   const gap = coverage.data?.gaps.find((found) => found.key === gapKey)
@@ -69,13 +69,13 @@ export function GapPage({ projectId, gapKey }: { projectId: string; gapKey: stri
         </h1>
         {gap !== undefined && <p className="text-sm text-muted-foreground">{gap.description}</p>}
       </header>
-      {items.length === 0 ? (
+          {items.length === 0 ? (
         <EmptyState title={gapPageMessages.empty} />
       ) : (
         <ul className="space-y-2">
           {items.map((item) => (
             <li key={item.item_id}>
-              <GapRow item={item} kindTitles={kindTitles} linkTitleOf={linkTitleOf} />
+              <GapRow item={item} kindTitleOf={kindTitleOf} linkTitleOf={linkTitleOf} />
             </li>
           ))}
         </ul>
@@ -93,11 +93,12 @@ export function GapPage({ projectId, gapKey }: { projectId: string; gapKey: stri
  */
 function GapRow({
   item,
-  kindTitles,
+  kindTitleOf,
   linkTitleOf,
 }: {
   item: CoverageItem
-  kindTitles: ReadonlyMap<string, string>
+  /** The title of a kind, as the definition names it. */
+  kindTitleOf: (kind: string) => string
   /** The title of the type of a link, as the definition names it. */
   linkTitleOf: (linkType: string) => string
 }) {
@@ -109,9 +110,7 @@ function GapRow({
       <ItemContent className="gap-3">
         <div className="flex items-start justify-between gap-2">
           <div className="min-w-0">
-            <span className="block text-xs text-muted-foreground">
-              {kindTitles.get(item.kind) ?? item.kind}
-            </span>
+            <span className="block text-xs text-muted-foreground">{kindTitleOf(item.kind)}</span>
             <span className="block text-base font-semibold">{item.title}</span>
           </div>
           <div className="flex shrink-0 items-center gap-0.5">
@@ -134,7 +133,7 @@ function GapRow({
                 className="no-underline hover:no-underline"
               >
                 <RecordName
-                  kind={kindTitles.get(changed.target.kind) ?? changed.target.kind}
+                  kind={kindTitleOf(changed.target.kind)}
                   title={changed.target.title}
                   layout="line"
                   className="text-sm font-semibold"
