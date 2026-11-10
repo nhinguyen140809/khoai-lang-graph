@@ -4,7 +4,7 @@ from __future__ import annotations
 
 from typing import Literal
 
-from pydantic import BaseModel, ConfigDict
+from pydantic import BaseModel, ConfigDict, Field
 
 
 class AssumptionContent(BaseModel):
@@ -20,4 +20,6 @@ class AssumptionContent(BaseModel):
     statement: str
     reasoning: str
     impact_if_wrong: str
+    impact: int = Field(default=3, ge=1, le=5)
     validation_status: Literal["unverified", "confirmed", "invalidated"]
+    validation_plan: str = ""

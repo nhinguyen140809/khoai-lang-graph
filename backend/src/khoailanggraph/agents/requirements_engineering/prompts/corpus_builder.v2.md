@@ -63,6 +63,7 @@ From the given search hits, select the documents that carry real voices of the s
 
 ## Output
 
+- `source_type`: the kind of each document you keep, one of the values the field lists. Use `other` when none fits.
 - `report`: one to three sentences to the user about the documents you kept and anything the corpus lacks; the server turns them into a message of the chat. Name things by what they say, never by their keys.
 
 # User

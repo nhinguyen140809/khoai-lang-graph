@@ -37,6 +37,18 @@ class _Output(BaseModel):
     model_config = ConfigDict(extra="forbid")
 
 
+def _keys_of(list_name: str) -> str:
+    """The keys of a value list of the definition, as a phrase for a field description."""
+    values = workflow_definition.DEFINITION.get("value_lists", [])
+    keys = [
+        str(value["key"])
+        for entry in values
+        if entry["key"] == list_name
+        for value in entry["values"]
+    ]
+    return ", ".join(f"`{key}`" for key in keys)
+
+
 # The report of a node: what the user reads in the chat about what the node did.
 Report = Annotated[
     str,
@@ -288,6 +300,9 @@ class NewSource(_Output):
     title: str
     url: str
     publisher: str
+    source_type: str = Field(
+        description="What kind of document this is: one of " + _keys_of("source_type") + "."
+    )
     year: str = ""
     excerpt: str
     text: str = ""
@@ -668,7 +683,21 @@ class AssumptionDraft(_Output):
     statement: str
     reasoning: str
     impact_if_wrong: str
+    impact: int = Field(
+        ge=1,
+        le=5,
+        description=(
+            "From 1 to 5: how much the work would change if the assumption were wrong. Use 5 for "
+            "an assumption that the whole design rests on, and 1 for one that changes a detail."
+        ),
+    )
     validation_status: Literal["unverified", "confirmed", "invalidated"]
+    validation_plan: str = Field(
+        description=(
+            "One sentence, in the output language, that says how the assumption can be checked and "
+            "who can confirm it, such as asking the coordinator at the next interview."
+        )
+    )
     concerns: list[LinkRef]
     supersedes: list[str] = Field(default_factory=list)
 
@@ -679,6 +708,13 @@ class AmbiguityIssueDraft(_Output):
     description: str
     ambiguity_type: str
     ambiguous_text: str
+    interpretations: list[str] = Field(
+        description=(
+            "The different ways the wording can be read, one in each entry, in the output "
+            "language, so that the user can settle the issue by choosing one. Two or more; "
+            "leave it empty only for missing information, where nothing can be chosen yet."
+        )
+    )
     clarifying_question: str
     status: Literal["open", "resolved", "dismissed"]
     resolution: str | None
@@ -696,6 +732,14 @@ class ConflictDraft(_Output):
     proposed_resolutions: list[str]
     status: Literal["open", "resolved", "dismissed"]
     resolution: str | None
+    resolution_strategy: str | None = Field(
+        default=None,
+        description=(
+            "When the conflict is resolved, how it was settled: one of "
+            + _keys_of("resolution_strategy")
+            + ". Null while it is open."
+        ),
+    )
     concerns: list[LinkRef]
     involves: list[str]
     resolved_by: str | MessageLink | None
@@ -790,6 +834,13 @@ class BacklogOutput(_Narrated):
     summary: Summary
     product_goal: str
     prioritization_notes: str | None
+    definition_of_done: list[str] = Field(
+        description=(
+            "What every item must meet before it counts as done, for the whole team, in the "
+            "output language, three to six conditions such as that the criteria pass and the "
+            "change is reviewed. It is apart from the acceptance criteria of one item."
+        )
+    )
     items: list[NewBacklogItem]
 
 
@@ -803,9 +854,28 @@ class ValidationIssueDraft(_Output):
     flags: list[LinkRef]
 
 
+class ValidationCheckDraft(_Output):
+    check: str = Field(
+        description=(
+            "What you checked, in the output language, such as that every requirement can be "
+            "tested or that every story implements a requirement."
+        )
+    )
+    result: str = Field(
+        description="How the check came out: one of " + _keys_of("check_result") + "."
+    )
+    note: str = Field(description="One sentence, in the output language, that says why.")
+
+
 class ValidatorOutput(_Narrated):
     report: Report
     status: Literal["pass", "fail"]
+    checks: list[ValidationCheckDraft] = Field(
+        description=(
+            "Every check that you made, one entry each, so that a pass says what it passed. "
+            "Cover completeness, consistency, testability and traceability."
+        )
+    )
     issues: list[ValidationIssueDraft]
 
 

@@ -941,7 +941,9 @@ Something taken as true without confirmation.
 | `statement` | string | |
 | `reasoning` | string | Why it was assumed |
 | `impact_if_wrong` | string | |
+| `impact` | int | From 1 to 5: how much the work would change if the assumption were wrong. Orders what to check first |
 | `validation_status` | enum | `unverified`, `confirmed`, `invalidated` |
+| `validation_plan` | string | How the assumption can be checked and who can confirm it |
 
 Links: `concerns` to the requirements whose meaning depends on the assumption.
 
@@ -955,6 +957,7 @@ A statement that can be read in more than one way or lacks needed detail.
 | `description` | string | |
 | `ambiguity_type` | string | From the value list `ambiguity_type`; version 1: `lexical`, `syntactic`, `semantic`, `vague`, `incomplete` |
 | `ambiguous_text` | string | The exact wording at issue |
+| `interpretations` | string[] | The different readings that the wording allows, one in each entry. The user settles the issue by choosing one. Empty only for missing information |
 | `clarifying_question` | string | What to ask to resolve it |
 | `status` | enum | `open`, `resolved`, `dismissed` |
 | `resolution` | string? | |
@@ -974,6 +977,7 @@ Two or more requirements, or the wishes of two or more personas, that cannot all
 | `proposed_resolutions` | string[] | |
 | `status` | enum | `open`, `resolved`, `dismissed` |
 | `resolution` | string? | |
+| `resolution_strategy` | string? | How a resolved conflict was settled, from the value list `resolution_strategy`: `prioritize`, `compromise`, `split`, `alternative`, `drop`. Null while it is open |
 
 Links: `concerns` to the requirements in conflict; `involves` to the personas on the conflicting sides; `resolved_by` to the interview message whose answer settled it, once it is resolved in an interview.
 
@@ -1018,6 +1022,7 @@ The artifact that holds the epics and user stories. The fields below are its `co
 |---|---|---|
 | `product_goal` | string | The long-term objective the backlog works toward |
 | `prioritization_notes` | string? | How the order of the items was decided |
+| `definition_of_done` | string[] | What every item must meet to count as done, for the whole team; apart from the acceptance criteria of one item |
 
 ### BacklogItem (MVP)
 
@@ -1049,6 +1054,7 @@ ValidationReport:
 |---|---|---|
 | `iteration` | int | |
 | `status` | enum | `pass`, `fail` |
+| `checks` | { check, result, note }[] | What the validation checked and how each check came out (`passed`, `failed`, `partly`), so that a pass says what it passed |
 
 ValidationIssue:
 

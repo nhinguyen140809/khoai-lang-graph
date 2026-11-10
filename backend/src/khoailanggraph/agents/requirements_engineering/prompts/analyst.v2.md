@@ -84,6 +84,9 @@ Turn what the stakeholders said into a requirements analysis: raw requirements, 
 
 ## Output
 
+- `impact` and `validation_plan` of an assumption: how much the work would change if it were wrong, from 1 to 5, and how it can be checked and who can confirm it.
+- `interpretations` of an ambiguity issue: the different readings of the wording, one in each entry, so that the user can settle it by choosing one.
+- `resolution_strategy` of a conflict that you resolve: how it was settled, one of the values the field lists. Null while it is open.
 - `review`: the prompt, the wording of the options and the questions of the review that follows this step. Leave it out when it has nothing to add to the usual question.
 - `report`: one to three sentences to the user about what this analysis did and what it found; the server turns them into a message of the chat.
 - `summary`: one or two sentences about what the analysis says, for the top of the artifact; describe the content, not what you did, which is the `report`. Leave it out when you only change a few items of an existing one.

@@ -22,7 +22,8 @@
     "severity",
     "proposed_resolutions",
     "status",
-    "resolution"
+    "resolution",
+    "resolution_strategy"
   ],
   "type": "object",
   "additionalProperties": false,
@@ -85,6 +86,16 @@
       ],
       "description": "How it was resolved. Null while open.",
       "x-ui-widget": "textarea"
+    },
+    "resolution_strategy": {
+      "title": "Resolution method",
+      "type": [
+        "string",
+        "null"
+      ],
+      "x-value-list": "resolution_strategy",
+      "description": "The method by which the conflict was resolved. It is empty while the conflict is open.",
+      "x-ui-widget": "select"
     }
   },
   "required": [
@@ -94,6 +105,7 @@
     "severity",
     "proposed_resolutions",
     "status",
-    "resolution"
+    "resolution",
+    "resolution_strategy"
   ]
 }

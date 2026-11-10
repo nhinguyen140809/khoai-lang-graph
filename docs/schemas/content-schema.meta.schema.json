@@ -164,6 +164,9 @@
         "minimum": {
           "type": "number"
         },
+        "maximum": {
+          "type": "number"
+        },
         "minItems": {
           "type": "integer",
           "minimum": 0

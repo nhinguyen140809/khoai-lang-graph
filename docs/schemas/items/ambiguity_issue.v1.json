@@ -20,6 +20,7 @@
     "description",
     "ambiguity_type",
     "ambiguous_text",
+    "interpretations",
     "clarifying_question",
     "status",
     "resolution"
@@ -51,6 +52,15 @@
       "type": "string",
       "description": "The exact wording at issue.",
       "x-ui-widget": "textarea"
+    },
+    "interpretations": {
+      "title": "Possible interpretations",
+      "type": "array",
+      "items": {
+        "type": "string"
+      },
+      "description": "The different ways in which the wording can be interpreted, one in each entry. The user settles the issue by choosing the interpretation that is meant.",
+      "x-ui-widget": "list"
     },
     "clarifying_question": {
       "title": "Clarifying question",
@@ -84,6 +94,7 @@
     "description",
     "ambiguity_type",
     "ambiguous_text",
+    "interpretations",
     "clarifying_question",
     "status",
     "resolution"

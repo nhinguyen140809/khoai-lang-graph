@@ -2086,6 +2086,7 @@ def backlog_manager_node(
             | {
                 "product_goal": draft.product_goal,
                 "prioritization_notes": draft.prioritization_notes,
+                "definition_of_done": list(draft.definition_of_done),
             },
         )
         artifact_id: str = str(ref["artifact_id"])
@@ -2098,6 +2099,7 @@ def backlog_manager_node(
             content={
                 "product_goal": draft.product_goal,
                 "prioritization_notes": draft.prioritization_notes,
+                "definition_of_done": list(draft.definition_of_done),
             },
             summary=draft.summary,
         )
@@ -2124,6 +2126,16 @@ def backlog_manager_node(
 
     _tell_user(sink, draft)
     return {"product_backlog": written, "current_stage": "backlog"}
+
+
+def _normalized_check(check: Any) -> dict[str, str]:
+    """A check of the validator as the report keeps it: a result that is not in the value list
+    reads as the closest one, and `partly` when none is close."""
+    allowed = sorted(str(entry["key"]) for entry in get_value_lists().get("check_result", []))
+    result = str(check.result)
+    if result not in allowed:
+        result = match_plan_value(result, allowed) or "partly"
+    return {"check": str(check.check), "result": result, "note": str(check.note)}
 
 
 @safe_node
@@ -2257,7 +2269,11 @@ def validator_node(
         state["project_id"],
         "validation_report",
         title=f"Validation report, iteration {iteration}",
-        content={"iteration": iteration, "status": final_status},
+        content={
+            "iteration": iteration,
+            "status": final_status,
+            "checks": [_normalized_check(check) for check in draft.checks],
+        },
         summary=f"{len(draft.issues)} issue(s)",
     )
     for issue in draft.issues:

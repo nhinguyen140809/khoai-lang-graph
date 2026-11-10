@@ -4,7 +4,7 @@ from __future__ import annotations
 
 from typing import Literal
 
-from pydantic import BaseModel, ConfigDict
+from pydantic import BaseModel, ConfigDict, Field
 
 
 class AmbiguityIssueContent(BaseModel):
@@ -21,6 +21,7 @@ class AmbiguityIssueContent(BaseModel):
     description: str
     ambiguity_type: str
     ambiguous_text: str
+    interpretations: list[str] = Field(default_factory=list)
     clarifying_question: str
     status: Literal["open", "resolved", "dismissed"]
     resolution: str | None

@@ -17,6 +17,7 @@
     "title",
     "url",
     "publisher",
+    "source_type",
     "year",
     "excerpt",
     "text",
@@ -44,6 +45,13 @@
       "description": "Site, journal or forum that published it.",
       "x-ui-widget": "text"
     },
+    "source_type": {
+      "title": "Type of source",
+      "type": "string",
+      "x-value-list": "source_type",
+      "description": "The type of the document, such as a study, a survey or a forum thread.",
+      "x-ui-widget": "select"
+    },
     "year": {
       "title": "Year",
       "type": "string",
@@ -62,12 +70,6 @@
       "description": "The document text the search hit brought, copied verbatim; the miner extracts its evidence quotes from it.",
       "x-ui-widget": "textarea"
     },
-    "relevance_reason": {
-      "title": "Why it matters",
-      "type": "string",
-      "description": "Which stakeholder types or topics of the plan this document covers.",
-      "x-ui-widget": "textarea"
-    },
     "origin": {
       "title": "Origin",
       "type": "string",
@@ -77,17 +79,24 @@
       ],
       "description": "Where the document came from: a live-search hit or a member upload.",
       "x-ui-widget": "select"
+    },
+    "relevance_reason": {
+      "title": "Relevance to the plan",
+      "type": "string",
+      "description": "The stakeholder types or topics of the plan that this document covers.",
+      "x-ui-widget": "textarea"
     }
   },
   "required": [
     "title",
     "url",
     "publisher",
+    "source_type",
     "year",
     "excerpt",
     "text",
-    "relevance_reason",
-    "origin"
+    "origin",
+    "relevance_reason"
   ],
   "x-ui-navigable": true
 }

@@ -120,6 +120,7 @@ def _corpus(system: str, user: str, call_number: int) -> dict[str, Any]:
                 "title": str(hit["title"]),
                 "url": str(hit["url"]),
                 "publisher": str(hit.get("publisher", "upload")),
+                "source_type": "interview",
                 "year": str(hit.get("year", "")),
                 "excerpt": str(hit["text"])[:120],
                 "text": str(hit["text"]),
@@ -135,6 +136,7 @@ def _corpus(system: str, user: str, call_number: int) -> dict[str, Any]:
                 "title": str(hit["title"]),
                 "url": str(hit["url"]),
                 "publisher": str(hit["publisher"]),
+                "source_type": ["survey", "forum_thread", "study"][index % 3],
                 "year": str(hit["year"]),
                 "excerpt": f"SRC excerpt {number}: {hit['title']}.",
                 "text": str(hit["text"]),
@@ -944,7 +946,9 @@ def _upload_flow_analysis() -> dict[str, Any]:
                 "statement": "Mentors reply to student requests within a few days.",
                 "reasoning": "The record never says how long a reply may take.",
                 "impact_if_wrong": "Students lose interest before an answer arrives.",
+                "impact": 4,
                 "validation_status": "unverified",
+                "validation_plan": "Ask a mentor how long a reply usually takes.",
                 "concerns": ["A1"],
             }
         ],
@@ -1092,7 +1096,9 @@ def _analyst(system: str, user: str, call_number: int) -> dict[str, Any]:
                 "an institutional vetting pipeline exists.",
                 "impact_if_wrong": "Verification would need a different trust "
                 "anchor, changing the onboarding flow.",
+                "impact": 5,
                 "validation_status": "unverified",
+                "validation_plan": "Ask the administrator who vets mentors today.",
                 "concerns": ["AR-003"],
             },
             {
@@ -1101,7 +1107,9 @@ def _analyst(system: str, user: str, call_number: int) -> dict[str, Any]:
                 "reasoning": "The student persona asked for quick exchanges, not long calls.",
                 "impact_if_wrong": "Booking granularity and mentor capacity "
                 "rules would need new limits.",
+                "impact": 2,
                 "validation_status": "unverified",
+                "validation_plan": "Ask a mentor how long a session usually runs.",
                 "concerns": ["AR-002"],
             },
         ],
@@ -1112,6 +1120,10 @@ def _analyst(system: str, user: str, call_number: int) -> dict[str, Any]:
                 "student's demand is unspecified.",
                 "ambiguity_type": "incomplete",
                 "ambiguous_text": "simple and fast to use",
+                "interpretations": [
+                    "A booking takes under two minutes.",
+                    "A page opens in under two seconds.",
+                ],
                 "clarifying_question": "Define measurable load-time and booking-effort targets.",
                 "status": "open",
                 "resolution": None,
@@ -1135,6 +1147,7 @@ def _analyst(system: str, user: str, call_number: int) -> dict[str, Any]:
                 ],
                 "status": "open",
                 "resolution": None,
+                "resolution_strategy": None,
                 "concerns": ["AR-001", "AR-005"],
                 "involves": ["PER-001", "PER-003"],
                 "resolved_by": None,
@@ -1397,6 +1410,10 @@ def _upload_flow_backlog() -> dict[str, Any]:
 
     # BacklogItemContent fields per the schema; delivery_status set by user.
     return {
+        "definition_of_done": [
+            "Every acceptance criterion of the item passes.",
+            "The change is reviewed by a second person.",
+        ],
         "product_goal": "Answer the uploaded record: find, book, stay private.",
         "prioritization_notes": "One story per requirement of the record.",
         "items": [
@@ -1442,6 +1459,11 @@ def _backlog(system: str, user: str, call_number: int) -> dict[str, Any]:
 
     def frame(items: list[dict[str, Any]]) -> dict[str, Any]:
         return {
+            "definition_of_done": [
+                "Every acceptance criterion of the item passes.",
+                "The change is reviewed by a second person.",
+                "The screens work on a phone as well as on a laptop.",
+            ],
             "product_goal": "Students find, book and learn from verified mentors.",
             "prioritization_notes": "Discovery and booking first; verification "
             "keeps the platform trusted.",
@@ -1554,13 +1576,40 @@ def _backlog(system: str, user: str, call_number: int) -> dict[str, Any]:
     )
 
 
+_CHECKS_PASSED = [
+    {
+        "check": "Every requirement can be tested",
+        "result": "passed",
+        "note": "Each one has criteria that a tester can run.",
+    },
+    {
+        "check": "Every story implements a requirement",
+        "result": "passed",
+        "note": "All the stories are linked to a requirement.",
+    },
+]
+_CHECKS_FAILED = [
+    {
+        "check": "Every requirement can be tested",
+        "result": "partly",
+        "note": "One requirement has no measurable criterion.",
+    },
+    {
+        "check": "Every story implements a requirement",
+        "result": "passed",
+        "note": "All the stories are linked to a requirement.",
+    },
+]
+
+
 def _validation(system: str, user: str, call_number: int) -> dict[str, Any]:
     """The validator: one backlog-category failure, then a pass."""
     if "uploaded record" in user:
-        return {"status": "pass", "issues": []}
+        return {"status": "pass", "checks": _CHECKS_PASSED, "issues": []}
     if call_number <= 1:
         return {
             "status": "fail",
+            "checks": _CHECKS_FAILED,
             "issues": [
                 {
                     "ref": "V1",
@@ -1577,7 +1626,7 @@ def _validation(system: str, user: str, call_number: int) -> dict[str, Any]:
                 }
             ],
         }
-    return {"status": "pass", "issues": []}
+    return {"status": "pass", "checks": _CHECKS_PASSED, "issues": []}
 
 
 def _intent_directive(system: str, user: str, call_number: int) -> dict[str, Any]:
@@ -1620,6 +1669,7 @@ class AlwaysFailValidatorData(DemoData):
     ValidatorOutput = staticmethod(
         lambda system, user, call_number: {
             "status": "fail",
+            "checks": _CHECKS_FAILED,
             "issues": [
                 {
                     "ref": "V1",
