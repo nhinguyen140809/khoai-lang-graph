@@ -33,7 +33,7 @@
     "title": {
       "title": "Title",
       "type": "string",
-      "description": "Short name, for example \"Search mentors\".",
+      "description": "A short name of at most 60 characters that tells the point of the item at a glance, for example \"Search mentors\".",
       "x-ui-widget": "text"
     },
     "statement": {

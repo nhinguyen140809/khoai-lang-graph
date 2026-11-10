@@ -23,7 +23,7 @@
     "title": {
       "title": "Title",
       "type": "string",
-      "description": "Heading text, without its number. The number, for example 3.2, is derived from the position of the section.",
+      "description": "Heading text of at most 60 characters, without its number. The number, for example 3.2, is derived from the position of the section.",
       "x-ui-widget": "text"
     },
     "introduction": {
