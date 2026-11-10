@@ -73,6 +73,17 @@ keyless — Tavily when `TAVILY_API_KEY` is set. The test suite
 own scripted model and fixture corpus at the same seams, so they never call
 a gateway whatever `.env` contains.
 
+To browse the web app, or run its end-to-end tests, with that scripted model (a run
+finishes in seconds and costs nothing), serve the API with `scripts/serve_demo.py` in
+place of `uvicorn`:
+
+```bash
+DATABASE_URL="sqlite:///$(pwd)/data/dev.db" uv run python scripts/serve_demo.py --port 8001
+```
+
+Reviews follow `DEFAULT_REVIEW_CHECKPOINTS` (every checkpoint when it is unset), or the
+`run_config` of the message that starts the run.
+
 ## Decision layer (Jev)
 
 The three workflow gate points — should an interview stop
