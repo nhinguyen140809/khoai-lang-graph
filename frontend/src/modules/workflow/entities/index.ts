@@ -11,6 +11,7 @@ export {
   useContentSchema,
   useContentSchemas,
 } from './artifact-kinds/hooks/useArtifactKindQueries'
+export { useKindTitleOf } from './artifact-kinds/hooks/useKindTitleOf'
 export { useKindTitles } from './artifact-kinds/hooks/useKindTitles'
 export { contentSchemasByKind, kindSchemasByKind } from './artifact-kinds/kind-schemas.utils'
 export type { ReviewableCheckpoint } from './checkpoints/checkpoints.types'
