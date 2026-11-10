@@ -2128,6 +2128,47 @@ def validator_node(
 # The checkpoint factory (HITL per the v1 option keys: approval or feedback)
 
 
+
+def _agent_questions(state: REState, config: RunnableConfig | None) -> list[dict[str, Any]]:
+    """1-3 clarifying questions the agent asks the user at a checkpoint."""
+    class QuestionList(BaseModel):
+        questions: list[str]
+
+    from langchain_core.messages import HumanMessage, SystemMessage
+
+    from khoailanggraph.llm.factory import get_chat_model
+
+    model = get_chat_model("planner", config or {}).with_structured_output(QuestionList)
+    answer = model.invoke(
+        [
+            SystemMessage(
+                content=(
+                    "You prepare a requirements interview. From the project intent, write 1-3 "
+                    "short questions whose answers would change the requirements (domain, scale, "
+                    "region, compliance, integration) and that cannot be inferred from the intent. "
+                    "One sentence each, no jargon."
+                )
+            ),
+            HumanMessage(content=str(state.get("initial_intent", ""))),
+        ]
+    )
+    questions = [q.strip() for q in answer.questions if q.strip()][:3]
+    return [
+        {
+            "key": f"q{index + 1}",
+            "type": "free_text",
+            "prompt": question,
+            "required": False,
+            "choices": [],
+            "min_selected": None,
+            "max_selected": None,
+            "default_answer": None,
+            "source": "agent",
+        }
+        for index, question in enumerate(questions)
+    ]
+
+
 def make_checkpoint(
     node_id: str,
     artifact_kind: str,
@@ -2168,11 +2209,14 @@ def make_checkpoint(
             for record in records
         ]
         if node_id in cfg.review_checkpoints:
+            questions = list(spec.get("questions", []))
+            if bool(spec.get("agent_questions")) and not questions:
+                questions = _agent_questions(state, config)
             payload: dict[str, object] = {
                 "node": node_id,
                 "prompt": str(spec.get("prompt", "")),
                 "options": options,
-                "questions": list(spec.get("questions", [])),
+                "questions": questions,
                 "allow_edits": bool(spec.get("allow_edits", False)),
                 "review_artifacts": review_artifacts,
             }

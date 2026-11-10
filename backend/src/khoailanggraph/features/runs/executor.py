@@ -383,6 +383,26 @@ class RunWalker:
         ]
         if feedback:
             state["human_feedback"] = [*state["human_feedback"], feedback]
+        answers = _loads(decision.answers_json or b"{}")
+        prompts = {
+            str(q.get("key")): str(q.get("prompt", q.get("key")))
+            for q in _loads(interrupt.questions_json or b"[]")
+        }
+        clarifications = []
+        for key, answer in (answers or {}).items():
+            if not isinstance(answer, dict):
+                continue
+            text = answer.get("text") or ", ".join(answer.get("choice_keys") or [])
+            if not text and answer.get("number") is not None:
+                text = str(answer.get("number"))
+            if text:
+                clarifications.append(f"- {prompts.get(str(key), str(key))}: {text}")
+        if clarifications:
+            state["initial_intent"] = (
+                str(state.get("initial_intent", ""))
+                + "\n\nClarifications from the user:\n"
+                + "\n".join(clarifications)
+            )
         state["status"] = "running"
         state["interrupt_payload"] = None
         chosen: dict[str, Any] = next(
