@@ -1281,6 +1281,57 @@ def _normalize_analyzed_quality(analysis: AnalystOutput) -> None:
             analyzed_draft.quality_category = None
 
 
+
+_AMBIGUITY_SYNONYMS = {
+    "ambiguous": "vague", "inconsistent": "semantic", "contradictory": "semantic",
+    "conflicting": "semantic", "unclear": "vague", "missing": "incomplete",
+    "undefined": "incomplete", "grammar": "syntactic", "wording": "lexical",
+    "terminology": "lexical",
+}
+_CONFLICT_SYNONYMS = {
+    "requirements": "between_requirements", "requirement": "between_requirements",
+    "stakeholders": "between_stakeholders", "stakeholder": "between_stakeholders",
+    "constraint": "with_constraint", "constraints": "with_constraint",
+}
+_PRIORITY_SYNONYMS = {
+    "high": "must", "critical": "must", "mandatory": "must", "required": "must",
+    "medium": "should", "normal": "should", "low": "could", "optional": "could",
+}
+
+
+def _normalize_enum(value: object, allowed: list[str], synonyms: dict[str, str], fallback: str) -> str:
+    text = str(value)
+    if text in allowed:
+        return text
+    matched = match_plan_value(text, allowed) or synonyms.get(text.strip().casefold())
+    return matched if matched in allowed else fallback
+
+
+def _normalize_analyst_enums(analysis: AnalystOutput) -> None:
+    """Map the model's enum words onto the value lists before the items are
+    written (an out-of-list value would fail the whole run at the sink)."""
+    ambiguity_values = [str(e["key"]) for e in get_value_lists().get("ambiguity_type", [])]
+    if ambiguity_values:
+        fallback = "vague" if "vague" in ambiguity_values else ambiguity_values[0]
+        for ambiguity in analysis.ambiguity_issues:
+            ambiguity.ambiguity_type = _normalize_enum(
+                ambiguity.ambiguity_type, ambiguity_values, _AMBIGUITY_SYNONYMS, fallback
+            )
+    conflict_values = [str(e["key"]) for e in get_value_lists().get("conflict_type", [])]
+    if conflict_values:
+        fallback = "between_requirements" if "between_requirements" in conflict_values else conflict_values[0]
+        for conflict in analysis.conflicts:
+            conflict.conflict_type = _normalize_enum(
+                conflict.conflict_type, conflict_values, _CONFLICT_SYNONYMS, fallback
+            )
+    priorities = [str(e["key"]) for e in get_value_lists().get("priority", [])]
+    if priorities:
+        fallback = "should" if "should" in priorities else priorities[0]
+        for analyzed in analysis.analyzed_requirements:
+            analyzed.priority = _normalize_enum(
+                analyzed.priority, priorities, _PRIORITY_SYNONYMS, fallback
+            )
+
 def _normalize_analyst_links(analysis: AnalystOutput, known: Known) -> None:
     """Drop link refs whose target kind the trace law doesn't allow for
     that field — a model citing a latent_need in concerns is over-citing.
@@ -1410,6 +1461,7 @@ def analyst_node(
         return item
 
     _normalize_raw_topics(analysis, plan_topic_values)
+    _normalize_analyst_enums(analysis)
     _normalize_analyst_links(analysis, known)
     _normalize_analyzed_quality(analysis)
 
