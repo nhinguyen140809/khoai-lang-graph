@@ -349,19 +349,21 @@
 
 /*
  * A short wash of the color of the element, the primary color without one, that fades out to show
- * that a value has just changed.
+ * that a value has just changed. It has no end value, so the element returns to its own fill.
  */
 @theme {
   --animate-flash: flash 1s ease-out;
 
   @keyframes flash {
     from {
-      background-color: color-mix(in oklab, var(--tone, var(--primary)) 30%, transparent);
-    }
-    to {
-      background-color: transparent;
+      background-color: color-mix(in oklab, var(--flash-tone, var(--tone, var(--primary))) 30%, transparent);
     }
   }
+}
+
+/* The yellow of the charts for a wash that `flash` draws, whatever tone the element has otherwise. */
+@utility flash-chart {
+  --flash-tone: var(--chart);
 }
 
 @layer base {

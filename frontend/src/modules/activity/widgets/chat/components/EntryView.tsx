@@ -7,6 +7,7 @@ import type { ActivityEntry } from '@/modules/activity/entities'
 import { entryAnchorId } from '@/modules/activity/entities'
 import { isNeverRead, messageAuthorLooks, messageBubbleLooks } from '@/modules/thread/entities'
 import { useAgentRoleLabels } from '@/modules/workflow/entities'
+import { targetFadeMs } from '@/shared/components/feed'
 import { Bubble, BubbleContent } from '@/shared/components/ui/bubble'
 import { CopyButton } from '@/shared/components/ui/copy-button'
 import {
@@ -37,7 +38,7 @@ interface EntryAnchorProps {
   children: ReactNode
 }
 
-/** The anchor of an entry in the chat: the target of the address takes the focus and a ring. */
+/** The anchor of an entry in the chat: the target of the address takes the focus and a fill that fades. */
 function EntryAnchor({ entryId, isTarget, className, children }: EntryAnchorProps) {
   return (
     <div
@@ -45,9 +46,11 @@ function EntryAnchor({ entryId, isTarget, className, children }: EntryAnchorProp
       tabIndex={isTarget ? -1 : undefined}
       {...(isTarget ? { 'data-target': true } : {})}
       className={cn(
-        'group/entry rounded-lg outline-none data-[target]:ring-2 data-[target]:ring-ring/50',
+        'group/entry rounded-lg outline-none data-[target]:animate-flash motion-reduce:animate-none',
+        'flash-chart',
         className,
       )}
+      style={{ animationDuration: `${String(targetFadeMs)}ms` }}
     >
       {children}
     </div>
@@ -69,7 +72,7 @@ function MessageView({ entry, isTarget }: EntryViewProps<'message'>) {
   const bubbleLook = messageBubbleLooks[entry.message.delivery ?? 'delivered']
 
   return (
-    <EntryAnchor entryId={entry.id} isTarget={isTarget} className="px-1 pt-1.5 pb-0.5">
+    <EntryAnchor entryId={entry.id} isTarget={isTarget} className="mb-5 px-1 pt-1.5">
       <Message align={align}>
         <MessageContent>
           {isAgent && roleLabel !== null && (
@@ -92,9 +95,15 @@ function MessageView({ entry, isTarget }: EntryViewProps<'message'>) {
               <MessageEntry message={entry.message} projectId={projectId} runStatus={run.status} />
             </div>
           )}
-          {/* The copy of the words sits under the message, where the reading ends. The row stays
-              short: no padding of its own, a small button, and little space under the entry. */}
-          <MessageFooter className="px-0 opacity-0 transition-opacity group-focus-within/entry:opacity-100 group-hover/entry:opacity-100 pointer-coarse:opacity-100">
+          {/* The copy of the words hangs under the message, in the space below the entry, where the
+              reading ends. It takes no height inside the entry, so the fill of the target stops at
+              the words. */}
+          <MessageFooter
+            className={cn(
+              'absolute top-full px-0 opacity-0 transition-opacity group-focus-within/entry:opacity-100 group-hover/entry:opacity-100 pointer-coarse:opacity-100',
+              isUser ? 'right-0' : 'left-0',
+            )}
+          >
             {isNeverRead(entry.message, run.status) && thread !== null && (
               <ResendButton
                 content={entry.message.content}
