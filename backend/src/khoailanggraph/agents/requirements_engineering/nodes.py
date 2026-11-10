@@ -888,15 +888,11 @@ def persona_generator_node(
         # persona left without evidence is skipped instead of failing the run.
         kept_evidence = []
         for entry in persona_draft.evidence:
-            record = known_observations.get(entry.observation)
-            content = cast("dict[str, Any]", record["content"]) if record else {}
-            if (
-                record is None
-                or entry.quote != str(content.get("evidence"))
-                or entry.source != str(content.get("source"))
-            ):
+            if entry.observation not in known_observations:
+                # An invented key (INTENT-001) is dropped; a quote that drifts
+                # from a real observation still fails the run in the check below.
                 logger.warning(
-                    "persona evidence dropped",
+                    "persona evidence dropped: unknown observation",
                     persona=str(getattr(persona_draft, "name", "?")),
                     observation=str(entry.observation),
                 )
@@ -939,6 +935,9 @@ def persona_generator_node(
                 link_type="grounded_in",
             )
     sink.add_report(draft.report)
+    if not personas:
+        msg = "every persona cited unknown observations; nothing grounded to write"
+        raise ValueError(msg)
     return {
         "personas": personas,
         "interview_transcripts": [],

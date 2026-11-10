@@ -349,7 +349,7 @@ def test_research_gates_fail_the_run_at_the_lying_node() -> None:
         # Drifted quotes are now SKIPPED (logged) instead of crashing the
         # miner; the observation never enters the store, so the persona
         # generator fails when its fixture cites the skipped key.
-        (DriftingQuotesData, "persona_generator_node: ", "consolidates unknown observation key"),
+        (DriftingQuotesData, "persona_generator_node: ", "nothing grounded to write"),
         (InventedUrlsData, "corpus_builder_node: ", "selected invented documents"),
         (EmptyCorpusData, "corpus_builder_node: ", "research found no source document"),
         (AlteredEvidenceData, "persona_generator_node: ", "altered the evidence quote of OBS-001"),
