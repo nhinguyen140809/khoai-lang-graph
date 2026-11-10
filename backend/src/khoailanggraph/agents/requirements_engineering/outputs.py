@@ -49,6 +49,37 @@ Report = Annotated[
     ),
 ]
 
+
+class StepNoteOutput(BaseModel):
+    """One short note of a node to the user, written while it worked."""
+
+    model_config = ConfigDict(extra="forbid")
+
+    kind: Literal["doing", "finding"]
+    text: str
+
+
+# The notes of a node: how its work went, in a few short lines. The server keeps the first three
+# and cuts each at 280 characters, so a long answer is shortened instead of refused.
+Notes = Annotated[
+    list[StepNoteOutput],
+    Field(
+        default_factory=list,
+        description=(
+            "Up to three short notes to the user about how your work went, in the order it "
+            "happened, each with a `kind` and a `text`. Use `doing` for what you looked at or "
+            'tried, in one sentence, such as "I compared what the three students said about '
+            'booking." Use `finding` for something the user may care about, such as a conflict, '
+            "a gap or a surprise, in one or two sentences. Write in the output language, in plain "
+            "words, as you would explain it to a colleague who does not build software. Name "
+            "things by what they say, never by their keys, ids or field names, and never mention "
+            "JSON, prompts or tools. Do not repeat the report: notes tell how the work went, the "
+            "report tells what it ended with. Leave the list empty when there is nothing worth "
+            "saying; never pad it."
+        ),
+    ),
+]
+
 # The summary of a document: what its content says, for the top of the artifact. It is not the
 # report, which says what the step did.
 Summary = Annotated[
@@ -122,6 +153,7 @@ class GeneratorOutput(_Output):
     """The frame of the persona catalog plus its persona items."""
 
     report: Report
+    notes: Notes
     selection_rationale: str
     uncovered_stakeholder_types: list[str]
     personas: list[NewPersona]
@@ -145,6 +177,7 @@ class CorpusBuilderOutput(_Output):
     """The kept documents of the research corpus, with the reason each was kept."""
 
     report: Report
+    notes: Notes
     selection_rationale: str
     sources: list[NewSource]
 
@@ -164,6 +197,7 @@ class MinerOutput(_Output):
     """The stakeholder observations mined from one source document."""
 
     report: Report
+    notes: Notes
     observations: list[NewObservation]
 
 
@@ -207,6 +241,7 @@ class GeneratorOutputV2(_Output):
     """The frame of the evidence-grounded persona catalog plus its personas."""
 
     report: Report
+    notes: Notes
     selection_rationale: str
     stakeholder_groups: list[StakeholderGroup]
     uncovered_stakeholder_types: list[str]
@@ -250,6 +285,7 @@ class PlannerOutput(ElicitationPlanContent):
     """The plan content verbatim, and the report; the planner produces no items."""
 
     report: Report
+    notes: Notes
     summary: Summary
 
 
@@ -368,6 +404,7 @@ class ConflictDraft(_Output):
 
 class AnalystOutput(_Output):
     report: Report
+    notes: Notes
     summary: Summary
     raw_requirements: list[RawRequirementDraft]
     analyzed_requirements: list[AnalyzedRequirementDraft]
@@ -404,6 +441,7 @@ class EngineerOutput(_Output):
     """The frame of the specification plus its requirement items."""
 
     report: Report
+    notes: Notes
     summary: Summary
     purpose: str
     scope: str
@@ -437,6 +475,7 @@ class BacklogOutput(_Output):
     """The frame of the backlog plus its items, in backlog order."""
 
     report: Report
+    notes: Notes
     summary: Summary
     product_goal: str
     prioritization_notes: str | None
@@ -455,6 +494,7 @@ class ValidationIssueDraft(_Output):
 
 class ValidatorOutput(_Output):
     report: Report
+    notes: Notes
     status: Literal["pass", "fail"]
     issues: list[ValidationIssueDraft]
 
@@ -466,6 +506,7 @@ ROUTER_TARGETS = Literal[
 
 class IntentDirectiveOutput(_Output):
     report: Report
+    notes: Notes
     target_node: ROUTER_TARGETS
     instruction: str
     about: list[str]

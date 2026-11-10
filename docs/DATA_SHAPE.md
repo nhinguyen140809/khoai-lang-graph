@@ -513,18 +513,18 @@ One execution of one node. It backs the step timeline and the highlighted node i
 | `llm_calls` | int | Number of LLM calls made by the step |
 | `usage` | Usage | Sum over the LLM calls of the step |
 | `produced` | ItemRef[] | Derived. Items created or changed by this step, from the item revisions the step wrote |
-| `notes` | StepNote[] | Later. The short notes the step wrote while it worked, in the order written; empty when it wrote none |
+| `notes` | StepNote[] | The short notes the step wrote while it worked, in the order written; empty when it wrote none |
 | `error` | string? | |
 | `started_at` | datetime | |
 | `finished_at` | datetime? | |
 
-#### StepNote (Later)
+#### StepNote (MVP)
 
 One short note of a step to the user, shown inside the line of the step in the chat. It is part of the step, not a [Message](#message-mvp): the report of the step, which says what the step ended with, is the message.
 
 | Field | Type | Notes |
 |---|---|---|
-| `kind` | enum | `doing`: what the step looked at or tried. `finding`: something the user may care about, such as a conflict or a gap. `thinking`: a summary of the reasoning, only when the model provider returns one |
+| `kind` | enum | `doing`: what the step looked at or tried. `finding`: something the user may care about, such as a conflict or a gap. `thinking` (Later): a summary of the reasoning, only when the model provider returns one |
 | `text` | string | Markdown, one to three sentences, in the output language of the run |
 | `created_at` | datetime | |
 

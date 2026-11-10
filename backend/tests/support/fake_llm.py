@@ -149,8 +149,9 @@ def invoke_demo(
     return _with_reports(_with_titles(answer), schema_name)
 
 
-# What each node says to the user in its report, as a scripted model writes it. The interview
-# turns (`InterviewerTurnOutput`, `PersonaAnswerOutput`) have no report: they are the transcript.
+# What each node says to the user in its report, as a scripted model writes it. The answers of the
+# persona (`PersonaAnswerOutput`) have no report: they are the transcript, and the interviewer
+# reports once, when it stops.
 _REPORTS = {
     "PlannerOutput": "I read your idea and planned the interviews around who will use it.",
     "CorpusBuilderOutput": "I gathered the documents the interviewees will be based on.",
@@ -162,6 +163,15 @@ _REPORTS = {
     "BacklogOutput": "I turned the specification into a backlog of user stories.",
     "ValidatorOutput": "I checked the documents and listed what still needs a fix.",
     "IntentDirectiveOutput": "I will go back to the step your message is about.",
+}
+
+
+# The notes of the nodes that write some, as a scripted model writes them.
+_NOTES = {
+    "PlannerOutput": [
+        {"kind": "doing", "text": "I listed who the idea affects."},
+        {"kind": "finding", "text": "The idea does not say who **approves** a session."},
+    ],
 }
 
 
@@ -180,6 +190,8 @@ def _with_reports(answer: dict[str, Any], schema_name: str) -> dict[str, Any]:
         answer.setdefault("report", _REPORTS[schema_name])
     if schema_name in _SUMMARIES:
         answer.setdefault("summary", _SUMMARIES[schema_name])
+    if schema_name in _NOTES:
+        answer.setdefault("notes", _NOTES[schema_name])
     return answer
 
 

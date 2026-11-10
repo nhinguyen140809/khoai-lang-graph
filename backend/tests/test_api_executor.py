@@ -458,3 +458,24 @@ async def test_a_tool_that_runs_too_long_fails_the_run_with_timeout(
     assert run["status"] == "failed"
     assert run["error"]["code"] == "timeout"
     assert "research_search" in run["error"]["message"]
+
+
+async def test_a_step_keeps_the_notes_it_wrote_and_the_stream_sends_each_one(
+    client: AsyncClient, app: FastAPI
+) -> None:
+    thread_id = await _thread(client)
+    run = (await _send(client, thread_id, ["checkpoint_personas"]))["run"]
+
+    steps = (await client.get(f"{API}/runs/{run['id']}/steps")).json()["items"]
+    planner = next(step for step in steps if step["node"] == "planner")
+    text = await _listen(app, client, f"{API}/runs/{run['id']}/stream", 1.5)
+
+    assert [(note["kind"], note["text"]) for note in planner["notes"]] == [
+        ("doing", "I listed who the idea affects."),
+        ("finding", "The idea does not say who **approves** a session."),
+    ]
+    assert all(note["created_at"].endswith("Z") for note in planner["notes"])
+    assert text.count("event: step_note") == 2
+    assert all(step["notes"] == [] for step in steps if step["node"] != "planner")
+    # The notes of a step come before its end, and its report comes after them.
+    assert text.index("event: step_note") < text.index("event: node_end")

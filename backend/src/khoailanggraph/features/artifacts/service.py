@@ -47,17 +47,22 @@ from khoailanggraph.features.artifacts.models import (
     TraceLinkRow,
 )
 from khoailanggraph.features.projects.models import ProjectKeyCounterRow
-from khoailanggraph.features.runs.models import RunEventRow
+from khoailanggraph.features.runs.models import RunEventRow, RunStepRow
 from khoailanggraph.features.threads.models import MessageRow, ThreadRow
 from khoailanggraph.platform import origin as origins
 from khoailanggraph.platform.origin import Origin
 
 if TYPE_CHECKING:
+    from collections.abc import Mapping, Sequence
+
     from sqlalchemy import Engine
     from sqlalchemy.ext.asyncio import AsyncSession
 
 
 REVISION_VERSION = 1
+# The notes of a node that the server keeps, and the longest a note may be.
+STEP_NOTES_PER_CALL = 3
+STEP_NOTE_LENGTH = 280
 
 
 def utcnow() -> datetime:
@@ -179,6 +184,29 @@ class SqlArtifactSink:
         self.agent_role = agent_role
         self._touched_artifacts.clear()
         self._touched_items.clear()
+
+    def add_notes(self, notes: Sequence[Mapping[str, str]]) -> None:
+        """The notes of the running step: kept with the step, and one `step_note` event for each
+        as it is written. At most three, each cut at 280 characters; an empty note is left out."""
+        if self.run_id is None or self.step_id is None or not notes:
+            return
+        step = self.session.get(RunStepRow, self.step_id)
+        if step is None:
+            return
+        kept = json.loads((step.notes_json or b"[]").decode("utf-8"))
+        for note in notes[:STEP_NOTES_PER_CALL]:
+            text = str(note["text"]).strip()[:STEP_NOTE_LENGTH].strip()
+            if not text:
+                continue
+            kind = str(note["kind"])
+            kept.append({"kind": kind, "text": text, "created_at": utcnow().isoformat()})
+            self.emit(
+                "step_note",
+                {"step_id": str(self.step_id), "kind": kind, "text": text},
+                step_id=self.step_id,
+            )
+        step.notes_json = _dumps(kept)
+        self.session.flush()
 
     def add_report(self, content: str) -> None:
         """The report of the node as a message of the thread: the agent says what it did, with

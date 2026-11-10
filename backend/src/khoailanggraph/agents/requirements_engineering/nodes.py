@@ -132,6 +132,12 @@ def _configurable(config: Mapping[str, Any] | RunnableConfig | None) -> Mapping[
     return value if isinstance(value, dict) else {}
 
 
+def _tell_user(sink: ArtifactSink, output: Any) -> None:
+    """What the node tells the user: its notes while it worked, then its report as a message."""
+    sink.add_notes([note.model_dump() for note in output.notes])
+    sink.add_report(output.report)
+
+
 def _sink(config: Mapping[str, Any] | RunnableConfig | None) -> ArtifactSink:
     sink = _configurable(config).get("artifact_sink")
     if sink is None:
@@ -544,10 +550,10 @@ def planner_node(
         state["project_id"],
         "elicitation_plan",
         title="Elicitation plan",
-        content=plan.model_dump(mode="json", exclude={"report", "summary"}),
+        content=plan.model_dump(mode="json", exclude={"report", "notes", "summary"}),
         summary=plan.summary,
     )
-    sink.add_report(plan.report)
+    _tell_user(sink, plan)
     return {"elicitation_plan": dict(created), "current_stage": "planning"}
 
 
@@ -657,7 +663,7 @@ def corpus_builder_node(
             ref=source.ref,
         )
         sources.append(dict(item))
-    sink.add_report(draft.report)
+    _tell_user(sink, draft)
     return {
         "research_corpus": dict(corpus),
         "current_stage": "research",
@@ -742,7 +748,7 @@ def stakeholder_miner_node(
                 ),
             )
             observations.append(dict(item))
-        sink.add_report(draft.report)
+        _tell_user(sink, draft)
     return {
         "observations": observations,
         "current_stage": "research",
@@ -895,7 +901,7 @@ def persona_generator_node(
                 target_id=known_observations[key]["item_id"],
                 link_type="grounded_in",
             )
-    sink.add_report(draft.report)
+    _tell_user(sink, draft)
     return {
         "personas": personas,
         "interview_transcripts": [],
@@ -1501,7 +1507,7 @@ def analyst_node(
         for issue in analysis.conflicts
         if issue.status == "open" and not issue.proposed_resolutions
     ]
-    sink.add_report(analysis.report)
+    _tell_user(sink, analysis)
     return {
         **refs,
         "response_analyst_status": "needs_interviews" if unresolved else "ok",
@@ -1812,7 +1818,7 @@ def requirement_engineer_node(
     for spec_draft, item in zip(draft.requirements, written, strict=True):
         _link_each(sink, str(item["item_id"]), "depends_on", placeholder, spec_draft.depends_on)
 
-    sink.add_report(draft.report)
+    _tell_user(sink, draft)
     return {"requirement_specification": written, "current_stage": "specification"}
 
 
@@ -1900,7 +1906,7 @@ def backlog_manager_node(
     for draft_item, item in zip(draft.items, written, strict=True):
         _link_each(sink, str(item["item_id"]), "depends_on", placeholder, draft_item.depends_on)
 
-    sink.add_report(draft.report)
+    _tell_user(sink, draft)
     return {"product_backlog": written, "current_stage": "backlog"}
 
 
@@ -2074,7 +2080,7 @@ def validator_node(
         updates["current_stage"] = "done"
     else:
         updates["current_stage"] = "validation"
-    sink.add_report(draft.report)
+    _tell_user(sink, draft)
     return {**updates, "response_validator_status": final_status}
 
 
@@ -2219,7 +2225,7 @@ def intent_router_node(
             if entry["key"] in set(directive.about)
         ],
     )
-    _sink(runnable_config).add_report(directive.report)
+    _tell_user(_sink(runnable_config), directive)
     return {
         "rework_directives": [directive_id],
         "current_stage": "intent_routing",

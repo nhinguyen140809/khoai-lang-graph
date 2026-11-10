@@ -9,7 +9,7 @@ afresh (a new validation report per iteration).
 
 from __future__ import annotations
 
-from typing import Any, cast
+from typing import TYPE_CHECKING, Any, cast
 
 from khoailanggraph.agents.requirements_engineering import definition as wf
 from khoailanggraph.agents.requirements_engineering.ports import (
@@ -31,6 +31,9 @@ from khoailanggraph.domain.keys import (
 )
 from khoailanggraph.domain.rules import LinkCandidate
 
+if TYPE_CHECKING:
+    from collections.abc import Mapping, Sequence
+
 ARTIFACT_KINDS = wf.artifact_kinds()
 LINK_TYPES = wf.link_types()
 VALUE_LISTS = wf.value_lists()
@@ -48,6 +51,7 @@ class InMemoryArtifactSink:
         self.written: list[str] = []  # references of the current response pass
         self.agent_role: str | None = None
         self.reports: list[dict[str, Any]] = []
+        self.notes: list[dict[str, Any]] = []
         self._touched_artifacts: dict[str, None] = {}
         self._touched_items: dict[str, None] = {}
 
@@ -55,6 +59,9 @@ class InMemoryArtifactSink:
         self.agent_role = agent_role
         self._touched_artifacts.clear()
         self._touched_items.clear()
+
+    def add_notes(self, notes: Sequence[Mapping[str, str]]) -> None:
+        self.notes.extend({"agent_role": self.agent_role, **note} for note in notes)
 
     def add_report(self, content: str) -> None:
         self.reports.append(

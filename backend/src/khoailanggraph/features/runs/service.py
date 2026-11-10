@@ -215,6 +215,7 @@ def run_step_output(row: RunStepRow) -> schemas.RunStep:
 
     usage = json.loads((row.usage_json or b"null").decode("utf-8")) or {}
     produced = json.loads((row.produced_json or b"null").decode("utf-8")) or []
+    notes = json.loads((row.notes_json or b"null").decode("utf-8")) or []
     return schemas.RunStep(
         id=str(row.id),
         run_id=str(row.run_id),
@@ -238,6 +239,7 @@ def run_step_output(row: RunStepRow) -> schemas.RunStep:
             }
         ),
         produced=[schemas.ItemRef.model_validate(item) for item in produced],
+        notes=[schemas.StepNote.model_validate(note) for note in notes],
         error=row.error,
         started_at=row.started_at,
         finished_at=row.finished_at,

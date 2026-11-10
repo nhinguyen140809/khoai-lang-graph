@@ -43,6 +43,14 @@ class ItemRef(BaseModel):
     version: int
 
 
+class StepNote(BaseModel):
+    """A short note of a step to the user, in Markdown."""
+
+    kind: Literal["doing", "finding", "thinking"]
+    text: str
+    created_at: IsoDatetime
+
+
 class RunStep(BaseModel):
     id: str
     run_id: str
@@ -57,6 +65,7 @@ class RunStep(BaseModel):
     llm_calls: int
     usage: Usage
     produced: list[ItemRef]
+    notes: list[StepNote]
     error: str | None
     started_at: IsoDatetime
     finished_at: IsoDatetime | None
