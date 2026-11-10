@@ -753,12 +753,26 @@ def _check_groups(
     draft: GeneratorOutputV2,
     known_observations: dict[str, ItemRecord],
 ) -> None:
-    """Every consolidated group cites observation keys that exist."""
+    """A group keeps only observation keys that exist; unknown ones are dropped.
+
+    The model sometimes cites a key it invented (INTENT-01) when the corpus is
+    thin; dropping the key keeps the run alive instead of failing at the
+    generator, and the warning names what was dropped."""
+    kept_groups = []
     for group in draft.stakeholder_groups:
-        for key in group.observations:
-            if key not in known_observations:
-                msg = f"group '{group.name}' consolidates unknown observation key '{key}'"
-                raise ValueError(msg)
+        valid = [key for key in group.observations if key in known_observations]
+        dropped = [key for key in group.observations if key not in known_observations]
+        if dropped:
+            logger.warning(
+                "persona group keys dropped",
+                group=group.name,
+                dropped=dropped,
+                kept=valid,
+            )
+        group.observations = valid
+        if valid:
+            kept_groups.append(group)
+    draft.stakeholder_groups = kept_groups
 
 
 def _check_persona_grounding(
@@ -869,6 +883,35 @@ def persona_generator_node(
     )
     personas: list[ItemRefDict] = []
     for persona_draft in draft.personas:
+        # The generator sometimes cites a key it invented (INTENT-001) or alters
+        # the quote when the corpus is thin. Drop what cannot be grounded; a
+        # persona left without evidence is skipped instead of failing the run.
+        kept_evidence = []
+        for entry in persona_draft.evidence:
+            record = known_observations.get(entry.observation)
+            content = cast("dict[str, Any]", record["content"]) if record else {}
+            if (
+                record is None
+                or entry.quote != str(content.get("evidence"))
+                or entry.source != str(content.get("source"))
+            ):
+                logger.warning(
+                    "persona evidence dropped",
+                    persona=str(getattr(persona_draft, "name", "?")),
+                    observation=str(entry.observation),
+                )
+                continue
+            kept_evidence.append(entry)
+        persona_draft.evidence = kept_evidence
+        persona_draft.grounded_in = [
+            key for key in persona_draft.grounded_in if key in known_observations
+        ]
+        if not kept_evidence:
+            logger.warning(
+                "persona skipped: no grounded evidence",
+                persona=str(getattr(persona_draft, "name", "?")),
+            )
+            continue
         _check_persona_grounding(persona_draft, known_observations)
         content = persona_draft.model_dump(mode="json", exclude={"ref"})
         if allowed:
