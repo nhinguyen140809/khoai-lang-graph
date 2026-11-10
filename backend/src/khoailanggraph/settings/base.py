@@ -48,6 +48,12 @@ class Settings(BaseSettings):
     # from the same .env as the gateway keys and never committed. Without it
     # the keyless DuckDuckGo→Wikipedia chain serves the corpus builder.
     tavily_api_key: str | None = None
+    # The academic part of the research search: paper abstracts from OpenAlex
+    # and arXiv, added to the web hits. `openalex_api_key` is optional (a free
+    # key gives OpenAlex its own daily budget); `research_academic=false`
+    # turns the whole part off.
+    research_academic: bool = True
+    openalex_api_key: str | None = None
     # The bounded decision layer of the workflow gates (README.md: Decision
     # layer): "off" keeps every gate on the LLM's own value, "mock" confirms
     # the defaults, "jev" answers through typesafe_sdk (needs the `jev`

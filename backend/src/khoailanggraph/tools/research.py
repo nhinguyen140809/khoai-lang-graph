@@ -9,9 +9,11 @@ queries the node built from the plan and returns raw search hits:
     [{"title": ..., "url": ..., "publisher": ..., "year": ..., "text": ...}]
 
 Plain data the corpus_builder prompt receives inside `<search_results>`; the
-node treats it as data, never as instructions. Two implementations: the Tavily
-tool calls the real API with the `TAVILY_API_KEY` of `.env` — never committed —
-and the keyless chain (DuckDuckGo HTML, then Wikipedia) serves without a key.
+node treats it as data, never as instructions. The web part is the Tavily
+tool (real API, `TAVILY_API_KEY` of `.env`, never committed) or, without a key,
+the keyless chain (DuckDuckGo HTML, then Wikipedia). Next to it the academic
+part adds paper abstracts from OpenAlex (optional `OPENALEX_API_KEY`) and arXiv,
+which need no sign-up; a failing academic source only contributes nothing.
 """
 
 from __future__ import annotations
@@ -23,6 +25,7 @@ import time
 import urllib.error
 import urllib.parse
 import urllib.request
+import xml.etree.ElementTree as ET
 from collections.abc import Callable, Mapping, Sequence
 from typing import TYPE_CHECKING, Any
 
@@ -82,19 +85,33 @@ def tavily_research_search(
 
 
 def make_research_search(settings: Settings) -> ResearchSearch:
-    """The run's search tool: Tavily with a key, else the keyless live chain.
+    """The run's search tool: the web part plus the academic part.
 
-    Tavily serves richer pages (needs `TAVILY_API_KEY` of .env); without a
-    key the DuckDuckGo HTML endpoint — Wikipedia behind it — keeps every run
-    on real pages, no key anyone has to sign up for. Never None — a network
-    failure surfaces as an exception the safe node turns into a failed run
-    (an honest error, never a fabricated corpus).
+    The web part is Tavily with a key (`TAVILY_API_KEY` of .env), else the
+    keyless DuckDuckGo HTML endpoint with Wikipedia behind it. Unless
+    `research_academic` is off, paper abstracts from OpenAlex and arXiv are
+    added to its hits. Never None - a Tavily failure surfaces as an exception
+    the safe node turns into a failed run (an honest error, never a fabricated
+    corpus).
     """
+    web: ResearchSearch = live_research_search
     if settings.tavily_api_key:
-        return lambda queries: tavily_research_search(
-            queries, api_key=settings.tavily_api_key or ""
-        )
-    return live_research_search
+        tavily_key = settings.tavily_api_key
+        web = lambda queries: tavily_research_search(queries, api_key=tavily_key)  # noqa: E731
+    if not settings.research_academic:
+        return web
+    openalex_key = settings.openalex_api_key
+
+    def search(queries: Sequence[str]) -> list[dict[str, Any]]:
+        hits = web(queries)
+        seen = {str(hit["url"]) for hit in hits}
+        for hit in academic_research_search(queries, openalex_api_key=openalex_key):
+            if str(hit["url"]) not in seen:
+                seen.add(str(hit["url"]))
+                hits.append(hit)
+        return hits
+
+    return search
 
 
 _DDG_URL = "https://html.duckduckgo.com/html/"
@@ -387,3 +404,133 @@ def research_queries(
         queries.append(_head_keywords(topic))
     queries = [query for query in queries if query.strip() != "needs" and query.strip()]
     return queries or [f"{_head_keywords(intent, 6)} stakeholder needs".strip()]
+
+
+_OPENALEX_URL = "https://api.openalex.org/works"
+_OPENALEX_FIELDS = "title,publication_year,abstract_inverted_index,doi,id,primary_location"
+_ARXIV_URL = "https://export.arxiv.org/api/query"
+_ARXIV_DELAY_S = 3.0  # arXiv asks for at most one request every three seconds
+_ATOM = "{http://www.w3.org/2005/Atom}"
+_ACADEMIC_HITS_PER_QUERY = 3
+_ABSTRACT_LIMIT = 3000
+_ACADEMIC_AGENT = "khoailanggraph-research/0.1 (capstone student project)"
+
+
+def _abstract_of(inverted: Mapping[str, Sequence[int]] | None) -> str:
+    """The abstract text of an OpenAlex work, rebuilt from its inverted index."""
+    if not inverted:
+        return ""
+    words = {pos: word for word, positions in inverted.items() for pos in positions}
+    return " ".join(words[pos] for pos in sorted(words))[:_ABSTRACT_LIMIT]
+
+
+def openalex_research_search(
+    queries: Sequence[str], *, api_key: str | None = None
+) -> list[dict[str, Any]]:
+    """Paper abstracts from OpenAlex, a few per query, works without abstract skipped.
+
+    Works without a key on a small daily budget shared by the network; the free
+    `OPENALEX_API_KEY` gives its own budget. Any network failure yields no hits.
+    """
+    hits: list[dict[str, Any]] = []
+    seen_urls: set[str] = set()
+    for query in queries:
+        params = {
+            "search": str(query),
+            "filter": "has_abstract:true",
+            "per-page": _ACADEMIC_HITS_PER_QUERY,
+            "select": _OPENALEX_FIELDS,
+        }
+        if api_key:
+            params["api_key"] = api_key
+        request = urllib.request.Request(
+            f"{_OPENALEX_URL}?{urllib.parse.urlencode(params)}",
+            headers={"User-Agent": _ACADEMIC_AGENT},
+        )
+        try:
+            with urllib.request.urlopen(request, timeout=20) as response:
+                payload = json.loads(response.read().decode("utf-8"))
+        except (urllib.error.URLError, urllib.error.HTTPError, TimeoutError, ValueError):
+            continue
+        for work in payload.get("results", []):
+            url = str(work.get("doi") or work.get("id") or "")
+            text = _abstract_of(work.get("abstract_inverted_index"))
+            if not url or not text or url in seen_urls:
+                continue
+            seen_urls.add(url)
+            source = (work.get("primary_location") or {}).get("source") or {}
+            hits.append(
+                {
+                    "title": str(work.get("title") or ""),
+                    "url": url,
+                    "publisher": str(source.get("display_name") or "OpenAlex"),
+                    "year": str(work.get("publication_year") or ""),
+                    "text": text,
+                }
+            )
+    return hits
+
+
+def parse_arxiv_atom(feed: str) -> list[dict[str, Any]]:
+    """The hits of one arXiv Atom feed: title, abstract page, year, abstract."""
+    try:
+        root = ET.fromstring(feed)  # noqa: S314 - the feed comes from the fixed arXiv endpoint
+    except ET.ParseError:
+        return []
+    hits: list[dict[str, Any]] = []
+    for entry in root.findall(f"{_ATOM}entry"):
+        url = (entry.findtext(f"{_ATOM}id") or "").strip()
+        text = " ".join((entry.findtext(f"{_ATOM}summary") or "").split())[:_ABSTRACT_LIMIT]
+        if not url or not text:
+            continue
+        hits.append(
+            {
+                "title": " ".join((entry.findtext(f"{_ATOM}title") or "").split()),
+                "url": url,
+                "publisher": "arxiv.org",
+                "year": (entry.findtext(f"{_ATOM}published") or "")[:4],
+                "text": text,
+            }
+        )
+    return hits
+
+
+def arxiv_research_search(queries: Sequence[str]) -> list[dict[str, Any]]:
+    """Paper abstracts from arXiv, a few per query, every keyword required."""
+    hits: list[dict[str, Any]] = []
+    seen_urls: set[str] = set()
+    for index, query in enumerate(queries):
+        words = str(query).split()
+        if not words:
+            continue
+        if index:
+            time.sleep(_ARXIV_DELAY_S)
+        params = urllib.parse.urlencode(
+            {
+                "search_query": " AND ".join(f"all:{word}" for word in words),
+                "max_results": _ACADEMIC_HITS_PER_QUERY,
+            }
+        )
+        request = urllib.request.Request(
+            f"{_ARXIV_URL}?{params}", headers={"User-Agent": _ACADEMIC_AGENT}
+        )
+        try:
+            with urllib.request.urlopen(request, timeout=20) as response:
+                feed = response.read().decode("utf-8", errors="replace")
+        except (urllib.error.URLError, urllib.error.HTTPError, TimeoutError):
+            continue
+        for hit in parse_arxiv_atom(feed):
+            if hit["url"] not in seen_urls:
+                seen_urls.add(hit["url"])
+                hits.append(hit)
+    return hits
+
+
+def academic_research_search(
+    queries: Sequence[str], *, openalex_api_key: str | None = None
+) -> list[dict[str, Any]]:
+    """The paper abstracts of every academic source for one set of queries."""
+    return [
+        *openalex_research_search(queries, api_key=openalex_api_key),
+        *arxiv_research_search(queries),
+    ]
