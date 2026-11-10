@@ -35,6 +35,14 @@ roles:
 # Models a user may pick in the UI (GET /api/v1/models serves this catalog). Prices are US dollars
 # per million tokens; a price a provider does not publish is left out. `allowed_roles` is left out
 # for a model that may serve every role.
+# A model may also set `base_url` and `api_key_env` (the NAME of a variable in .env, never the
+# key) to be called at its own OpenAI-compatible address instead of OPENAI_BASE_URL, for example:
+#   - id: gemini:gemini-2.5-flash
+#     label: Gemini 2.5 Flash
+#     base_url: https://generativelanguage.googleapis.com/v1beta/openai/
+#     api_key_env: GEMINI_API_KEY
+#     capabilities: [tool_calling, structured_output, streaming]
+#     context_window: 1048576
 allowlist:
   - id: openai:gpt-4.1
     label: GPT-4.1

@@ -29,10 +29,18 @@ class ModelProfile(BaseModel):
 
     `allowed_roles` names the agent roles the model may serve; left out, it serves every role
     (the catalog lists the roles of the workflow definition in use).
+
+    `base_url` and `api_key_env` say where the model is served. A model with a `base_url` is
+    called through the OpenAI-compatible protocol, whatever the name before the colon of its id
+    (for example `gemini:gemini-2.5-flash`). `api_key_env` is the NAME of the variable that holds
+    the key, read from the environment or `backend/.env`; a key never sits in this file. A model
+    with neither uses the `OPENAI_BASE_URL` and `OPENAI_API_KEY` settings, as before.
     """
 
     id: str
     label: str
+    base_url: str | None = None
+    api_key_env: str | None = None
     capabilities: list[Capability] = Field(default_factory=list)
     context_window: int
     input_price_per_mtok: float | None = None
@@ -84,6 +92,10 @@ class ModelRegistry(BaseModel):
             )
             for entry in sorted(self.allowlist, key=lambda profile: profile.id)
         ]
+
+    def profile(self, model_id: str) -> ModelProfile | None:
+        """The allowlist entry of a model id, None for a model that is not listed."""
+        return next((entry for entry in self.allowlist if entry.id == model_id), None)
 
     def model_for_role(self, role: str) -> str:
         """The `provider:model` of a role; an unlisted role uses the default."""
