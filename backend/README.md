@@ -66,8 +66,7 @@ rule accepts the application origins of `settings.csrf_allowed_origins`
 Every role answers through a real model — `config/models.yaml` defaults to
 `openai:glm-5.2` through the BioTuring gateway (the vn endpoint for low
 latency), so `backend/.env` needs `OPENAI_BASE_URL` + `OPENAI_API_KEY`, and
-a full real run takes 15–45 minutes — the log pages in only when the whole
-workflow finishes (known follow-up §2.3 of `gap-report.md`). The research
+a full real run takes 15–45 minutes and reports each step as it ends. The research
 corpus is real too: DuckDuckGo's HTML endpoint with a Wikipedia fallback,
 keyless — Tavily when `TAVILY_API_KEY` is set. The test suite
 (`tests/conftest.py`) and the seed (`scripts/seed_demo.py`) install their
@@ -115,6 +114,26 @@ uv run mypy src tests                          # strict type checking
 uv run lint-imports                           # layering (import-linter)
 uv run pytest                                 # unit + API tests
 ```
+
+## Runs, reviews and limits
+
+A message starts a run that walks the workflow on a thread of the API process; the request
+answers at once with the run in `queued` and the stream (`GET /runs/{id}/stream`) follows it. The
+state after every step is stored, so a run that reaches a review the user asked for
+(`review_checkpoints`) stops there with status `interrupted` and costs nothing while it waits;
+`POST /runs/{id}/resume` continues it, and `retry` and a delivered message start a walk the same
+way. After a restart the API fails the runs that were in a step (`server_restarted`) and starts the
+queued ones.
+
+Settings (environment variables, all optional):
+
+| Variable | Default | Meaning |
+|---|---|---|
+| `RUN_EXECUTION` | `background` | `inline` walks the run inside the request (tests, scripts) |
+| `DEFAULT_REVIEW_CHECKPOINTS` | every checkpoint | JSON list of the reviews a run pauses at when no level names any; `[]` pauses at none |
+| `DEFAULT_MONTHLY_BUDGET_USD` | `20.0` | Budget of a user without one of their own; `429 budget_exceeded` when spent |
+| `REQUESTS_PER_MINUTE` | `300` | Per user; `429 rate_limited` with `Retry-After` |
+| `AUTH_ATTEMPTS_PER_MINUTE` | `20` | Per IP address, on login and register |
 
 ## Follow-ups (parked, not ported)
 

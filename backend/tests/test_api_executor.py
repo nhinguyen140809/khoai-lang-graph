@@ -294,3 +294,48 @@ async def test_a_user_over_the_request_limit_waits(app: FastAPI, client: AsyncCl
     assert limited
     assert limited[0].json()["code"] == "rate_limited"
     assert int(limited[0].headers["Retry-After"]) >= 1
+
+
+async def test_a_user_edits_while_the_run_waits_and_the_run_goes_on_with_the_edit(
+    client: AsyncClient,
+) -> None:
+    thread_id = await _thread(client)
+    run = (await _send(client, thread_id, ["checkpoint_analysis"]))["run"]
+    interrupt = await _pending(client, run["id"])
+    analysis = interrupt["review_artifacts"][0]
+    items = (await client.get(f"{API}/artifacts/{analysis['artifact_id']}/items")).json()["items"]
+    target = next(item for item in items if item["kind"] == "analyzed_requirement")
+
+    edited = await client.patch(
+        f"{API}/items/{target['id']}",
+        json={"content": {**target["content"], "statement": "Edited."}},
+    )
+    assert edited.status_code == 200, edited.text
+    assert edited.json()["version"] == target["version"] + 1
+    too_far = await _resume(
+        client,
+        run["id"],
+        interrupt,
+        option="accept",
+        modified_items=[{"item_id": target["id"], "version": 99}],
+    )
+    assert too_far.status_code == 422
+
+    response = await _resume(
+        client,
+        run["id"],
+        interrupt,
+        option="accept",
+        modified_items=[{"item_id": target["id"], "version": edited.json()["version"]}],
+    )
+
+    assert response.status_code == 202
+    assert (await client.get(f"{API}/runs/{run['id']}")).json()["status"] == "succeeded"
+    decision = (await client.get(f"{API}/runs/{run['id']}/interrupts")).json()["items"]
+    resolved = next(entry for entry in decision if entry["id"] == interrupt["id"])
+    assert resolved["decision"]["option"] == "accept"
+    # Once the run has moved on, the review is over: edits are refused again.
+    late = await client.patch(
+        f"{API}/items/{target['id']}", json={"content": {**target["content"], "statement": "Late."}}
+    )
+    assert late.status_code == 409

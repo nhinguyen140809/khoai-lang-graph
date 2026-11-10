@@ -17,6 +17,7 @@ from __future__ import annotations
 
 import argparse
 import asyncio
+import json
 import sys
 from datetime import datetime
 from pathlib import Path
@@ -29,14 +30,18 @@ from khoailanggraph.features.artifacts import models as artifacts_models
 from khoailanggraph.features.me import hashing
 from khoailanggraph.features.me import models as me_models
 from khoailanggraph.features.projects import models as project_models
+from khoailanggraph.features.runs import config as runs_config
 from khoailanggraph.features.runs import models as run_models
 from khoailanggraph.features.runs import service as runs_service
+from khoailanggraph.features.runs.executor import run_job
 from khoailanggraph.features.threads import models as thread_models
+from khoailanggraph.platform import idempotency
 from khoailanggraph.platform.db import (
     ensure_schema,
     make_async_engine,
     make_session_factory,
     make_sync_engine,
+    make_sync_session_factory,
 )
 from khoailanggraph.settings import get_settings
 
@@ -99,6 +104,8 @@ WIPE_MODELS = (
 async def wipe(session) -> None:
 
     for model in (
+        idempotency.IdempotencyKeyRow,
+        me_models.ModelSettingsRow,
         run_models.HumanDecisionRow,
         run_models.DirectiveRow,
         run_models.InterruptRow,
@@ -174,16 +181,44 @@ async def seed(reset: bool) -> None:
     # install the fake provider and the fixture corpus at the same seams
     # the test suite uses, then walk the workflow once.
     install_fake_provider()
-    config = runs_service.run_config_for(output_language="en")
-    runs_service.start_run_blocking(
-        sync_engine,
-        run_id=MENTOR_RUN_ID,
-        thread_id=MENTOR_THREAD_ID,
-        user_id=DEMO_USER_ID,
-        initial_intent=DEMO_INTENT,
-        first_run=True,
-        config=config,
-    )
+    config = {
+        "models": runs_service.role_models(),
+        "review_checkpoints": [],
+        "output_language": "en",
+        "max_steps": 400,
+        "max_cost_usd": None,
+        "parameters": runs_config.parameter_defaults(),
+    }
+    with make_sync_session_factory(sync_engine)() as session:
+        message = thread_models.MessageRow(
+            thread_id=MENTOR_THREAD_ID,
+            sequence=1,
+            run_id=MENTOR_RUN_ID,
+            author="user",
+            content=DEMO_INTENT,
+            delivery="started_run",
+        )
+        session.add(message)
+        session.flush()
+        project = session.get(project_models.ProjectRow, PROJECT_IDS["mentor"])
+        project.initial_message_id = message.id
+        session.add(
+            run_models.RunRow(
+                id=MENTOR_RUN_ID,
+                thread_id=MENTOR_THREAD_ID,
+                project_id=PROJECT_IDS["mentor"],
+                number=1,
+                started_by=DEMO_USER_ID,
+                workflow_name=runs_service.WF_NAME,
+                workflow_version=runs_service.WF_VERSION,
+                status="queued",
+                current_stage="planning",
+                run_config_json=json.dumps(config).encode("utf-8"),
+                usage_json=json.dumps(runs_service.ZERO_USAGE).encode("utf-8"),
+            )
+        )
+        session.commit()
+    run_job(sync_engine, MENTOR_RUN_ID)
     sync_engine.dispose()
     print("seed complete: linh.pham@example.com / secret; run 1 for «Mentor platform»")
 
