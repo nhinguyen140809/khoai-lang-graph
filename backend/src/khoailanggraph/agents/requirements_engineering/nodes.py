@@ -2143,10 +2143,11 @@ def _agent_questions(state: REState, config: RunnableConfig | None) -> list[dict
         [
             SystemMessage(
                 content=(
-                    "You prepare a requirements interview. From the project intent, write 1-3 "
+                    "You prepare a requirements interview. From the project intent, write up to 3 "
                     "short questions whose answers would change the requirements (domain, scale, "
                     "region, compliance, integration) and that cannot be inferred from the intent. "
-                    "One sentence each, no jargon."
+                    "Ask only what the intent leaves open: if it already fixes these, return an "
+                    "empty list. One sentence each, no jargon."
                 )
             ),
             HumanMessage(content=str(state.get("initial_intent", ""))),
@@ -2212,6 +2213,26 @@ def make_checkpoint(
             questions = list(spec.get("questions", []))
             if bool(spec.get("agent_questions")) and not questions:
                 questions = _agent_questions(state, config)
+                if not questions:
+                    # Nothing the intent leaves open: no question to ask, so the
+                    # run takes the default option instead of pausing for review.
+                    pass
+            if not questions and bool(definition_nodes()[node_id].get("agent_questions")):
+                chosen_default = next(
+                    opt for opt in options if opt.get("is_default")
+                )
+                return {
+                    "status": "running",
+                    "checkpoint_outcomes": [
+                        *state.get("checkpoint_outcomes", []),
+                        {
+                            "node": node_id,
+                            "option": str(chosen_default.get("key")),
+                            "feedback": "",
+                            "automatic": True,
+                        },
+                    ],
+                }
             payload: dict[str, object] = {
                 "node": node_id,
                 "prompt": str(spec.get("prompt", "")),
