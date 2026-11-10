@@ -1,6 +1,7 @@
 import type { ArtifactItem } from '@/modules/artifact/entities'
 import type {
   Interrupt,
+  InterruptOption,
   InterruptQuestion,
   ModifiedItem,
   ResumeRunBody,
@@ -11,8 +12,22 @@ import { isBlank } from '@/shared/lib/guards'
 import type { AnswerProblem, AnswerReviewFormValues } from './answer-review.types'
 
 /** The option that the form starts with: the default one, else the first; none without options. */
-export function defaultOption(options: readonly CheckpointOption[]): CheckpointOption | undefined {
+export function defaultOption<T extends CheckpointOption>(options: readonly T[]): T | undefined {
   return options.find(({ is_default }) => is_default) ?? options[0]
+}
+
+/**
+ * The feedback after the user chooses an option: the feedback that the option suggests, unless the
+ * user has written their own, which stays. Feedback is the user's own when it is not empty and is
+ * not the suggestion of the option that was chosen before.
+ */
+export function feedbackAfterSelect(
+  current: string,
+  previous: InterruptOption | undefined,
+  next: InterruptOption,
+): string {
+  const isUntouched = isBlank(current) || current === previous?.suggested_feedback
+  return isUntouched ? (next.suggested_feedback ?? '') : current
 }
 
 /** The answers that the form starts with: the default answer of each question. */

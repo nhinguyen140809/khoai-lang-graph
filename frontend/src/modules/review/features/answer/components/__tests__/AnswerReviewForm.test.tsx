@@ -100,12 +100,27 @@ describe('AnswerReviewForm', () => {
     await sentAnswer(requests)
   })
 
+  it('fills the feedback with what the agent suggests for the chosen option, which can be changed', async () => {
+    const interrupt = await readPending()
+    await formOf(interrupt)
+
+    await userEvent.click(screen.getByRole('radio', { name: 'Interview again' }))
+    const box = screen.getByRole('textbox', { name: 'Feedback for "Interview again"' })
+    expect(box).toHaveValue('Interview the mentors again about how they approve a session.')
+
+    await userEvent.click(screen.getByRole('radio', { name: 'Redo the analysis' }))
+    expect(screen.getByRole('textbox', { name: 'Feedback for "Redo the analysis"' })).toHaveValue(
+      'Settle the two open conflicts in favour of the students, then redo the analysis.',
+    )
+  })
+
   it('asks for the feedback when the chosen option needs it and it stays blank', async () => {
     const requests = recordRequests()
     const interrupt = await readPending()
     await formOf(interrupt)
 
     await userEvent.click(screen.getByRole('radio', { name: 'Interview again' }))
+    await userEvent.clear(screen.getByRole('textbox', { name: 'Feedback for "Interview again"' }))
     await pressButton('Send')
 
     expect(await screen.findByText('Write the feedback.')).toBeInTheDocument()
@@ -145,6 +160,7 @@ describe('AnswerReviewForm', () => {
 
     await userEvent.click(screen.getByRole('radio', { name: 'Redo the analysis' }))
     const box = screen.getByRole('textbox', { name: 'Feedback for "Redo the analysis"' })
+    await userEvent.clear(box)
     await typeText(box, 'Ask the student and the admin whether a layered design works.')
     await pressButton('Send')
 

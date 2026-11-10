@@ -4,9 +4,8 @@ import { cn } from 'cn'
 import { ChevronLeftIcon, ChevronRightIcon } from 'lucide-react'
 import { useEffect, useRef, useState } from 'react'
 
-import type { Interrupt } from '@/modules/review/entities'
+import type { Interrupt, InterruptOption } from '@/modules/review/entities'
 import type { Run } from '@/modules/run/entities'
-import type { CheckpointOption } from '@/modules/workflow/entities'
 import { Button } from '@/shared/components/ui/button'
 import { PendingButton } from '@/shared/components/ui/pending-button'
 import { Questionnaire } from '@/shared/components/ui/questionnaire'
@@ -157,10 +156,10 @@ function OptionsColumn({
   onFeedbackKey,
   words,
 }: {
-  options: readonly CheckpointOption[]
+  options: readonly InterruptOption[]
   chosen: string | null
   feedback: string
-  onSelect: (option: CheckpointOption) => void
+  onSelect: (option: InterruptOption) => void
   onFeedback: (text: string) => void
   onFeedbackKey: (event: React.KeyboardEvent) => void
   words: typeof answerReviewMessages
@@ -193,10 +192,10 @@ function OptionRow({
   onFeedbackKey,
   words,
 }: {
-  option: CheckpointOption
+  option: InterruptOption
   isChosen: boolean
   feedback: string
-  onSelect: (option: CheckpointOption) => void
+  onSelect: (option: InterruptOption) => void
   onFeedback: (text: string) => void
   onFeedbackKey: (event: React.KeyboardEvent) => void
   words: typeof answerReviewMessages

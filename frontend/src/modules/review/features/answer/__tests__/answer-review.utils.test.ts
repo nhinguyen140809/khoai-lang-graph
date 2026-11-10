@@ -1,12 +1,13 @@
 import { describe, expect, it } from 'vitest'
 
 import type { ArtifactItem } from '@/modules/artifact/entities'
-import type { InterruptQuestion } from '@/modules/review/entities'
+import type { InterruptOption, InterruptQuestion } from '@/modules/review/entities'
 import type { CheckpointOption, QuestionAnswer } from '@/modules/workflow/entities'
 
 import {
   answerProblem,
   defaultOption,
+  feedbackAfterSelect,
   initialAnswers,
   modifiedItemsOf,
   resumeRunBody,
@@ -42,7 +43,7 @@ describe('defaultOption', () => {
     expect(defaultOption(options)?.key).toBe('accept')
     const second = options.find(({ key }) => key === 'reject')
     expect(defaultOption(second === undefined ? [] : [second])?.key).toBe('reject')
-    expect(defaultOption([])).toBeUndefined()
+    expect(defaultOption<CheckpointOption>([])).toBeUndefined()
   })
 })
 
@@ -134,5 +135,36 @@ describe('resumeRunBody and modifiedItemsOf', () => {
 
     expect(modifiedItemsOf({ allow_edits: false }, items)).toEqual([])
     expect(modifiedItemsOf({ allow_edits: true }, items)).toEqual([{ item_id: 'i1', version: 2 }])
+  })
+})
+
+describe('feedbackAfterSelect', () => {
+  const [accept, reject] = options as [InterruptOption, InterruptOption]
+  const withSuggestion: InterruptOption = { ...reject, suggested_feedback: 'Settle the conflicts.' }
+  const another: InterruptOption = {
+    ...reject,
+    key: 'redo',
+    suggested_feedback: 'Interview again.',
+  }
+
+  it('fills the feedback with the suggestion of the option that was chosen', () => {
+    expect(feedbackAfterSelect('', accept, withSuggestion)).toBe('Settle the conflicts.')
+    expect(feedbackAfterSelect('   ', undefined, withSuggestion)).toBe('Settle the conflicts.')
+  })
+
+  it('replaces the suggestion of the earlier option, which the user did not touch', () => {
+    expect(feedbackAfterSelect('Settle the conflicts.', withSuggestion, another)).toBe(
+      'Interview again.',
+    )
+  })
+
+  it('empties the feedback that was only a suggestion when the new option suggests none', () => {
+    expect(feedbackAfterSelect('Settle the conflicts.', withSuggestion, accept)).toBe('')
+  })
+
+  it('keeps what the user wrote', () => {
+    expect(feedbackAfterSelect('Ask the mentors too.', withSuggestion, another)).toBe(
+      'Ask the mentors too.',
+    )
   })
 })

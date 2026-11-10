@@ -1,6 +1,11 @@
-import type { Interrupt, InterruptQuestion, InterruptStatus } from '@/modules/review/entities'
+import type {
+  Interrupt,
+  InterruptOption,
+  InterruptQuestion,
+  InterruptStatus,
+} from '@/modules/review/entities'
 import type { Run, RunStep } from '@/modules/run/entities'
-import type { CheckpointNode } from '@/modules/workflow/entities'
+import type { CheckpointNode, CheckpointOption } from '@/modules/workflow/entities'
 import { findNode } from '@/modules/workflow/entities'
 
 import { artifactRefOf } from '../artifacts/artifact-refs.utils'
@@ -98,6 +103,21 @@ function interruptStatusOf(run: Run, step: RunStep): InterruptStatus {
   return step.status === 'running' && run.status === 'interrupted' ? 'pending' : 'cancelled'
 }
 
+// What the agent before a checkpoint suggests for an option that asks for feedback.
+const suggestedFeedbacks: Record<string, string> = {
+  reject_reanalyse:
+    'Settle the two open conflicts in favour of the students, then redo the analysis.',
+  reject_reinterview: 'Interview the mentors again about how they approve a session.',
+  not_ok: 'Make every requirement testable, and say how long a booking may take.',
+}
+
+function withSuggestion(option: CheckpointOption): InterruptOption {
+  const suggestion = suggestedFeedbacks[option.key]
+  return option.requires_feedback && suggestion !== undefined
+    ? { ...option, suggested_feedback: suggestion }
+    : option
+}
+
 // What the interrupt asks: the prompt, the options and the questions of the checkpoint; for the
 // one that waits, the scenario may ask the agent questions only, with no review around them.
 function checkpointAskOf(
@@ -114,7 +134,7 @@ function checkpointAskOf(
   }))
   return {
     prompt: node.prompt,
-    options: node.options,
+    options: node.options.map((option) => withSuggestion(option)),
     questions: definitionQuestions,
   }
 }

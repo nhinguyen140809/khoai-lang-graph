@@ -4,15 +4,14 @@ import { zodResolver } from '@hookform/resolvers/zod'
 import { useMemo } from 'react'
 import { useForm } from 'react-hook-form'
 
-import type { Interrupt } from '@/modules/review/entities'
+import type { Interrupt, InterruptOption } from '@/modules/review/entities'
 import type { Run } from '@/modules/run/entities'
-import type { CheckpointOption } from '@/modules/workflow/entities'
 import { ariaKeyShortcuts, isHotkeyPressed } from '@/shared/lib/hotkey'
 
 import { answerReviewMessages, sendFeedbackHotkey } from '../answer-review.constants'
 import { answerReviewFormSchema } from '../answer-review.schema'
 import type { AnswerReviewFormValues } from '../answer-review.types'
-import { defaultOption, initialAnswers } from '../answer-review.utils'
+import { defaultOption, feedbackAfterSelect, initialAnswers } from '../answer-review.utils'
 import { useAnswerReview } from './useAnswerReview'
 
 /**
@@ -23,17 +22,20 @@ export function useAnswerReviewForm(interrupt: Interrupt, run: Run) {
   const { answer, isPending, isItemsLoading } = useAnswerReview(run, interrupt)
   const isBusy = isPending || isItemsLoading
   const schema = useMemo(() => answerReviewFormSchema(interrupt), [interrupt])
+  const startOption = defaultOption(interrupt.options)
   const form = useForm<AnswerReviewFormValues>({
     resolver: zodResolver(schema),
     defaultValues: {
-      option: defaultOption(interrupt.options)?.key ?? null,
-      feedback: '',
+      option: startOption?.key ?? null,
+      feedback: startOption?.suggested_feedback ?? '',
       answers: initialAnswers(interrupt.questions),
     },
   })
 
-  const selectOption = (option: CheckpointOption) => {
+  const selectOption = (option: InterruptOption) => {
     if (isBusy) return
+    const previous = interrupt.options.find(({ key }) => key === form.getValues('option'))
+    form.setValue('feedback', feedbackAfterSelect(form.getValues('feedback'), previous, option))
     form.setValue('option', option.key)
   }
 

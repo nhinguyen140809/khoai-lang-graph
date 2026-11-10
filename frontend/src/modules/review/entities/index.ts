@@ -12,6 +12,7 @@ export type {
   Interrupt,
   InterruptDecision,
   InterruptFilters,
+  InterruptOption,
   InterruptQuestion,
   InterruptStatus,
   ModifiedItem,

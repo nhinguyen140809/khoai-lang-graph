@@ -40,6 +40,16 @@ export const interruptDecisionSchema = z.object({
 
 export type InterruptDecision = z.infer<typeof interruptDecisionSchema>
 
+/**
+ * An option of an interrupt: an option of the checkpoint, which the agent before it may have worded
+ * for the case, with the feedback it suggests for an option that asks for one.
+ */
+export const interruptOptionSchema = checkpointOptionSchema.extend({
+  suggested_feedback: z.string().optional(),
+})
+
+export type InterruptOption = z.infer<typeof interruptOptionSchema>
+
 /** A pause of a run that waits for the user, with what it asks and what it reviews. */
 export const interruptSchema = z.object({
   id: z.string(),
@@ -49,7 +59,7 @@ export const interruptSchema = z.object({
   node: z.string(),
   prompt: z.string(),
   /** Empty when the interrupt only asks questions. */
-  options: z.array(checkpointOptionSchema),
+  options: z.array(interruptOptionSchema),
   questions: z.array(interruptQuestionSchema),
   allow_edits: z.boolean(),
   review_artifacts: z.array(artifactRefSchema),
