@@ -20,8 +20,15 @@ import uvicorn
 # The test doubles live with the test suite; the script reaches them through its directory.
 sys.path.insert(0, str(Path(__file__).resolve().parent.parent / "tests"))
 
+from pydantic import BaseModel
+
 from khoailanggraph.main import app
+from support.fake_llm import set_call_delay
 from support.hermetic import install_fake_provider
+
+
+class ModelDelay(BaseModel):
+    seconds: float
 
 
 def main() -> None:
@@ -30,6 +37,12 @@ def main() -> None:
     parser.add_argument("--host", default="127.0.0.1")
     args = parser.parse_args()
     install_fake_provider()
+
+    @app.post("/test-support/model-delay", status_code=204)
+    async def model_delay(body: ModelDelay) -> None:
+        """Make each call of the scripted model wait, to watch a run while it works."""
+        set_call_delay(body.seconds)
+
     uvicorn.run(app, host=args.host, port=args.port, log_level="warning")
 
 

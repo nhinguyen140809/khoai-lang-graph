@@ -13,6 +13,7 @@ A run maps a role to `fake:demo` via its run config to use this model.
 from __future__ import annotations
 
 import json
+import time
 from typing import TYPE_CHECKING, Any, cast
 
 from langchain_core.language_models.chat_models import BaseChatModel
@@ -22,6 +23,17 @@ from pydantic import BaseModel, ConfigDict, PrivateAttr
 
 if TYPE_CHECKING:
     from collections.abc import Sequence
+
+
+# Seconds that each call of the model waits before it answers: zero for the tests, raised by the
+# demo server on request so that a run can be watched while it works.
+_call_delay_seconds = 0.0
+
+
+def set_call_delay(seconds: float) -> None:
+    """Make every later call of the scripted model wait this long."""
+    global _call_delay_seconds  # noqa: PLW0603 - one switch for the whole process
+    _call_delay_seconds = max(seconds, 0.0)
 
 
 class DemoCalls:
@@ -78,6 +90,8 @@ class FakeChatModel(BaseChatModel):
         run_manager: Any = None,
         **kwargs: Any,
     ) -> ChatResult:
+        if _call_delay_seconds:
+            time.sleep(_call_delay_seconds)
         schema = self._bound_schema
         system = str(messages[0].content) if messages and messages[0].type == "system" else ""
         user = str(messages[-1].content) if messages else ""

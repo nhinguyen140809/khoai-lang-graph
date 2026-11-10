@@ -86,8 +86,9 @@ def sync_database_url(settings: Settings) -> str:
 
 
 def make_async_engine(settings: Settings) -> AsyncEngine:
-    """The process-wide async engine; SQLite runs in WAL for mixed access."""
-    engine = create_async_engine(async_database_url(settings), echo=False)
+    """The process-wide async engine; SQLite runs in WAL for mixed access. A connection is tried
+    before it is lent: one whose request was cancelled in the middle of a query can be dead."""
+    engine = create_async_engine(async_database_url(settings), echo=False, pool_pre_ping=True)
     if settings.database_url.startswith("sqlite"):
 
         @event.listens_for(engine.sync_engine, "connect")
