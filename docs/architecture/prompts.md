@@ -175,6 +175,8 @@ An agent returns items through an output model, never as free text that is parse
 - **One task per prompt.** A role with two different jobs has two prompts, each with its own output model.
 - **No repetition of the schema.** The meaning of a field is written once, in the description of the content schema; the Output section adds only what the schema cannot say.
 - **Plain, direct sentences.** Numbered steps in Procedure, one rule per bullet in Rules.
+- **A reason with each hard rule.** A rule that the agent is most likely to break, or that protects a later step, ends with one sentence that says why, for example that a made-up fact becomes a requirement that nobody wanted. An agent that knows the reason handles a case that the rule did not foresee. Rules about the format of the output need no reason.
+- **An example for each hard field.** A field that the schema cannot explain, such as a review with its options and its question, a turn of the interviewer or an issue of the validator, has a short example in Examples, in a domain that no other example uses. A weak and a better version of the hard sentence stand beside it, and a check validates every JSON example against the output model, so that no example teaches a field that does not exist.
 
 ## 8. Versions
 
