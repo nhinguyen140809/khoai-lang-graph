@@ -56,7 +56,7 @@ class StepNoteOutput(BaseModel):
     model_config = ConfigDict(extra="forbid")
 
     kind: Literal["doing", "finding"]
-    text: str
+    text: str = Field(description="The note in plain words, at most 280 characters.")
 
 
 # The notes of a node: how its work went, in a few short lines. The server keeps the first three
@@ -70,7 +70,8 @@ Notes = Annotated[
             "happened, each with a `kind` and a `text`. Use `doing` for what you looked at or "
             'tried, in one sentence, such as "I compared what the three students said about '
             'booking." Use `finding` for something the user may care about, such as a conflict, '
-            "a gap or a surprise, in one or two sentences. Write in the output language, in plain "
+            "a gap or a surprise, in one or two sentences. Each `text` has at most 280 "
+            "characters; a longer one is cut. Write in the output language, in plain "
             "words, as you would explain it to a colleague who does not build software. Name "
             "things by what they say, never by their keys, ids or field names, and never mention "
             "JSON, prompts or tools. Do not repeat the report: notes tell how the work went, the "
