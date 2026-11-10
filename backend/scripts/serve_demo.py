@@ -20,9 +20,8 @@ import uvicorn
 # The test doubles live with the test suite; the script reaches them through its directory.
 sys.path.insert(0, str(Path(__file__).resolve().parent.parent / "tests"))
 
-from support.hermetic import install_fake_provider
-
 from khoailanggraph.main import app
+from support.hermetic import install_fake_provider
 
 
 def main() -> None:

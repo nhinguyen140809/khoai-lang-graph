@@ -23,10 +23,9 @@ from datetime import datetime
 from pathlib import Path
 from uuid import UUID
 
-from sqlalchemy import delete, func, select
+from sqlalchemy import func, select
 
 import khoailanggraph.api.models_registry  # noqa: F401 - registers every table
-from khoailanggraph.features.artifacts import models as artifacts_models
 from khoailanggraph.features.me import hashing
 from khoailanggraph.features.me import models as me_models
 from khoailanggraph.features.projects import models as project_models
@@ -35,8 +34,8 @@ from khoailanggraph.features.runs import models as run_models
 from khoailanggraph.features.runs import service as runs_service
 from khoailanggraph.features.runs.executor import run_job
 from khoailanggraph.features.threads import models as thread_models
-from khoailanggraph.platform import idempotency
 from khoailanggraph.platform.db import (
+    Base,
     ensure_schema,
     make_async_engine,
     make_session_factory,
@@ -94,38 +93,11 @@ PROJECTS = [
     ),
 ]
 
-# Wipe order respects foreign keys (children first).
-WIPE_MODELS = (
-    runs_service.__dict__.get("HumanDecisionRow"),
-    None,
-)
-
 
 async def wipe(session) -> None:
-
-    for model in (
-        idempotency.IdempotencyKeyRow,
-        me_models.ModelSettingsRow,
-        run_models.HumanDecisionRow,
-        run_models.DirectiveRow,
-        run_models.InterruptRow,
-        run_models.RunEventRow,
-        run_models.RunStepRow,
-        run_models.RunRow,
-        thread_models.MessageRow,
-        thread_models.ThreadRow,
-        artifacts_models.TraceLinkRow,
-        artifacts_models.ItemRevisionRow,
-        artifacts_models.ArtifactItemRow,
-        artifacts_models.ArtifactRevisionRow,
-        artifacts_models.ArtifactRow,
-        project_models.ProjectKeyCounterRow,
-        project_models.ProjectRow,
-        me_models.SessionRow,
-        me_models.UserSettingsRow,
-        me_models.UserRow,
-    ):
-        await session.execute(delete(model))
+    """Empty every table, children before the tables they refer to."""
+    for table in reversed(Base.metadata.sorted_tables):
+        await session.execute(table.delete())
     await session.commit()
     print("database reset")
 
