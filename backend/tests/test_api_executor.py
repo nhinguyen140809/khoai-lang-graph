@@ -2,6 +2,7 @@
 
 from __future__ import annotations
 
+import asyncio
 import json as jsonlib
 import time
 from pathlib import Path
@@ -112,6 +113,57 @@ async def test_a_run_pauses_at_a_review_and_waits_for_the_user(client: AsyncClie
     assert [option["key"] for option in interrupt["options"]] == ["approve"]
     thread = (await client.get(f"{API}/threads/{thread_id}")).json()
     assert thread["active_run_id"] == run["id"]
+
+
+async def _listen(app: FastAPI, client: AsyncClient, path: str, seconds: float) -> str:
+    """What the SSE route sends in `seconds`, read at the ASGI level: a transport of the test
+    client waits for the end of a response, which a stream that stays open never has."""
+    cookies = "; ".join(f"{cookie.name}={cookie.value}" for cookie in client.cookies.jar)
+    scope = {
+        "type": "http",
+        "asgi": {"version": "3.0"},
+        "http_version": "1.1",
+        "method": "GET",
+        "scheme": "http",
+        "path": path,
+        "raw_path": path.encode(),
+        "query_string": b"",
+        "headers": [(b"host", b"testserver"), (b"cookie", cookies.encode())],
+        "client": ("127.0.0.1", 1),
+        "server": ("testserver", 80),
+        "state": {},
+    }
+    received: list[bytes] = []
+
+    async def receive() -> dict[str, Any]:
+        await asyncio.sleep(3600)
+        return {"type": "http.disconnect"}
+
+    async def send(message: dict[str, Any]) -> None:
+        if message["type"] == "http.response.body":
+            received.append(message.get("body", b""))
+
+    try:
+        async with asyncio.timeout(seconds):
+            await app(scope, receive, send)  # type: ignore[arg-type]
+    except TimeoutError:
+        pass
+    return b"".join(received).decode()
+
+
+async def test_the_stream_of_a_paused_run_sends_each_event_once_and_stays_open(
+    client: AsyncClient, app: FastAPI
+) -> None:
+    thread_id = await _thread(client)
+    run = (await _send(client, thread_id, ["checkpoint_personas"]))["run"]
+
+    text = await _listen(app, client, f"{API}/runs/{run['id']}/stream", 1.5)
+
+    ids = [line[4:] for line in text.splitlines() if line.startswith("id: ")]
+    assert ids
+    assert len(ids) == len(set(ids))
+    assert "event: done" not in text
+    assert text.count("event: interrupt") == 1
 
 
 async def test_the_answer_continues_the_run_from_the_chosen_option(client: AsyncClient) -> None:

@@ -274,9 +274,13 @@ async def stream_run_events(
     """
     await service.get_run_row(db, run_id)
     header_id = request.headers.get("last-event-id") or request.headers.get("Last-Event-ID")
-    cursor = int(header_id) if header_id is not None else after if after is not None else 0
+    start = int(header_id) if header_id is not None else after if after is not None else 0
 
     async def event_source() -> AsyncIterator[bytes]:
+        # A first line at once makes a proxy in front of the API send the headers and open the
+        # stream, instead of holding it until the first event or ping.
+        yield b": open\n\n"
+        cursor = start
         idle_seconds = 0.0
         heartbeat_seconds = 15.0
         while True:
@@ -291,6 +295,8 @@ async def stream_run_events(
             )
             await asyncio.sleep(0)
             finished = False
+            if rows:
+                cursor = rows[-1].sequence
             for row in rows:
                 if row.type == "done":
                     finished = True

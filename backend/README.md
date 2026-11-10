@@ -135,7 +135,7 @@ Settings (environment variables, all optional):
 | `NODE_TIMEOUT_SECONDS` | `900` | A step older than this gets no further call to a model (`timeout`) |
 | `TOOL_TIMEOUT_SECONDS` | `60` | One call of a tool (search, documents); over it the run fails with `timeout` |
 | `LLM_CALL_TIMEOUT_SECONDS` | `300` | One call to a model, set on the client |
-| `REQUESTS_PER_MINUTE` | `300` | Per user; `429 rate_limited` with `Retry-After` |
+| `REQUESTS_PER_MINUTE` | `1200` | Per user; `429 rate_limited` with `Retry-After`. Opening the activity of a finished run reads about 60 items |
 | `AUTH_ATTEMPTS_PER_MINUTE` | `20` | Per IP address, on login and register |
 
 ## Follow-ups (parked, not ported)

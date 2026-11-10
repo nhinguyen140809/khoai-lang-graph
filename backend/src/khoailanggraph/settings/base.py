@@ -89,7 +89,7 @@ class Settings(BaseSettings):
     tool_timeout_seconds: float = 60.0
     llm_call_timeout_seconds: float = 300.0
     # Requests per minute and per user that the API accepts (429 rate_limited after that).
-    requests_per_minute: int = 300
+    requests_per_minute: int = 1200
     # Attempts per minute and per IP address on login and registration.
     auth_attempts_per_minute: int = 20
     # The interactive API docs (/docs, /redoc, /openapi.json) are developer
