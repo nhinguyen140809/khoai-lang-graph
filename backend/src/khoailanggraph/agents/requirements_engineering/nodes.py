@@ -1213,6 +1213,40 @@ def interviewer_node(
         }
 
 
+PERSONA_KNOWLEDGE_LINES = 12
+PERSONA_KNOWLEDGE_CHARS = 4000
+
+
+def _persona_knowledge(state: REState, sink: ArtifactSink, persona: ItemRecord) -> str:
+    """What the persona knows from research, besides its own profile: what the stakeholder group it
+    is built from said in the research documents, one line for each observation. The observations
+    the persona is grounded in come first. Without mined observations the persona has only its
+    profile."""
+    records = [sink.read_item(reference["item_id"]) for reference in state.get("observations", [])]
+    if not records:
+        return "(none)"
+    grounded = set(cast("list[str]", persona["content"].get("grounded_in", [])))
+    groups = {
+        str(record["content"]["stakeholder_name"])
+        for record in records
+        if record["key"] in grounded
+    }
+    own = [record for record in records if record["key"] in grounded]
+    others = [
+        record
+        for record in records
+        if record["key"] not in grounded and str(record["content"]["stakeholder_name"]) in groups
+    ]
+    lines: list[str] = []
+    for record in [*own, *others][:PERSONA_KNOWLEDGE_LINES]:
+        content = record["content"]
+        lines.append(
+            f"- {content['stakeholder_name']}, judging by {content['dimension']}: "
+            f'{content["description"]} In a research document: "{content["evidence"]}"'
+        )
+    return "\n".join(lines)[:PERSONA_KNOWLEDGE_CHARS] or "(none)"
+
+
 @safe_node
 def persona_agent_node(
     state: REState,
@@ -1243,6 +1277,7 @@ def persona_agent_node(
         {
             "output_language": _language(cfg),
             "persona": json.dumps(prompt_view(persona), ensure_ascii=False),
+            "knowledge": _persona_knowledge(state, sink, persona),
             "question": question,
             "conversation": "\n".join(transcript_lines(persona["key"], messages[-TRANSCRIPT_TAIL:]))
             or "(none)",

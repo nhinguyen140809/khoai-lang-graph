@@ -69,7 +69,7 @@ Cluster the observations into stakeholder groups, then produce the requested num
 - Every persona is built from at least one observation. Add nothing to a persona that contradicts all its observations; extend beyond the evidence only where a real carrier of the dimension would reasonably go.
 - `evidence` quotes are copied exactly from the observations in `<observations>`; keep the source keys exactly.
 - Write every text field in {{ output_language }}.
-- The demographics and the background that the observations do not give are yours to write, plausibly. Whatever claims evidence, the `evidence` quotes and the `grounded_in` keys, stays inside the observations.
+- Where the observations do not give a detail of the background, write only what is typical for the stakeholder group, in general terms, and never present it as something that a research document said. The `evidence` quotes and the `grounded_in` keys stay inside the observations.
 - Produce exactly the requested number of personas. Do not set `interview_status`; the system maintains it.
 - Each persona's `stakeholder_type` is copied verbatim from the plan's `stakeholder_types`: the exact term only, never a synonym, a sentence or an explanation.
 - `grounded_in` holds the keys of the observations a persona is built from, so every persona stays traceable to its evidence.
