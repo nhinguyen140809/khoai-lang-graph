@@ -14,6 +14,7 @@ import {
   useContentSchemas,
   useIssueKinds,
   useIssueLinkTypes,
+  useKindTitleOf,
 } from '@/modules/workflow/entities/@x/trace'
 import { collectAllPages } from '@/shared/api/request'
 
@@ -55,6 +56,7 @@ export function useOpenIssues(
   const kinds = useIssueKinds()
   const linkTypes = useIssueLinkTypes()
   const schemas = useContentSchemas()
+  const kindTitleOf = useKindTitleOf()
 
   const result = useMemo<OpenIssuesResult | undefined>(() => {
     const items = query.data?.items
@@ -65,7 +67,7 @@ export function useOpenIssues(
     const groups = openIssueEntries(items, links, {
       issueKinds: kinds.data,
       linkTypesOf: (kind) => linkTypesByKind.get(kind) ?? { about: [], parties: [] },
-      kindTitleOf: (kind) => schemas.get(kind)?.title ?? kind,
+      kindTitleOf,
       mainTextOf: (item) => {
         const schema = schemas.get(item.kind)
         const field = schema === undefined ? undefined : mainField(schema)
@@ -79,7 +81,7 @@ export function useOpenIssues(
       artifactByItem: new Map(items.map((item) => [item.id, item.artifact_id])),
       items,
     }
-  }, [query.data, kinds.data, linkTypes.data, schemas])
+  }, [query.data, kinds.data, linkTypes.data, schemas, kindTitleOf])
 
   if (query.isError)
     return { state: 'error', error: query.error, retry: () => void query.refetch() }
