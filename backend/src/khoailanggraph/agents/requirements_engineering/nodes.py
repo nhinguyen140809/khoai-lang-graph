@@ -1021,9 +1021,11 @@ def _close_interview(
     transcript: dict[str, Any],
     stop_reason: str,
     summary: str | None,
+    report: str | None,
 ) -> ArtifactRef:
     """End the interview of a persona: the transcript is completed, and the sentence that the
-    interviewer wrote about what the persona said becomes its summary."""
+    interviewer wrote about what the persona said becomes its summary. What the interviewer
+    tells the user about the interview is the report, a message of the chat."""
     closed = sink.update_artifact_content(
         transcript["artifact_id"],
         dict(transcript["content"]) | {"status": "completed", "stop_reason": stop_reason},
@@ -1032,6 +1034,8 @@ def _close_interview(
         sink.set_artifact_summary(transcript["artifact_id"], summary)
     else:
         logger.warning("interview closed without a summary", artifact=transcript["artifact_id"])
+    if report:
+        sink.add_report(report)
     return closed
 
 
@@ -1074,7 +1078,7 @@ def interviewer_node(
             persona = orchestrator.active_persona(state, sink)
             transcript, messages = _transcript_of(state, sink, persona)
             last = _ask_interviewer(state, runnable_config, persona, messages, limit_reached=True)
-            closed = _close_interview(sink, transcript, "max_turns", last.summary)
+            closed = _close_interview(sink, transcript, "max_turns", last.summary, last.report)
             if int(state["active_persona_index"]) + 1 >= len(state["personas"]):
                 return {
                     **cursor,
@@ -1144,7 +1148,9 @@ def interviewer_node(
             )
 
         if stop:
-            closed = _close_interview(sink, transcript, "interviewer_stopped", turn.summary)
+            closed = _close_interview(
+                sink, transcript, "interviewer_stopped", turn.summary, turn.report
+            )
             if int(state["active_persona_index"]) + 1 >= len(state["personas"]):
                 return {
                     **cursor,

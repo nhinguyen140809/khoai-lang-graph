@@ -554,7 +554,7 @@ def test_an_agent_whose_quote_is_not_exact_still_links_the_items() -> None:
     assert sink.links[-1]["quote"] is None
 
 
-def test_every_agent_step_reports_to_the_user_except_the_interview_turns() -> None:
+def test_every_agent_step_reports_to_the_user_except_the_persona_answers() -> None:
     sink = _finished_run()
 
     roles = [report["agent_role"] for report in sink.reports]
@@ -564,7 +564,9 @@ def test_every_agent_step_reports_to_the_user_except_the_interview_turns() -> No
     assert roles.count("stakeholder_miner") == 3, "one report for each document that was read"
     assert {"persona_generator", "analyst", "requirement_engineer", "backlog_manager"} <= set(roles)
     assert "validator" in roles
-    assert "interviewer" not in roles
+    assert roles.count("interviewer") == len(_transcripts(sink)), (
+        "one report for each interview, when the interviewer stops"
+    )
     assert "persona_agent" not in roles
     assert all(report["content"].strip() for report in sink.reports)
 

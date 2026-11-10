@@ -265,10 +265,24 @@ class InterviewerTurnOutput(_Output):
         ),
     )
 
+    report: str | None = Field(
+        default=None,
+        description=(
+            "When you stop: one to three sentences to the user, in the output language, about "
+            "what this interview showed: who the person is and what matters most to them. The "
+            "summary is for the document; this is for the user, so say it in your own words and "
+            "do not copy the summary. Name things by what they say, never by their key. Null "
+            "when you ask a question."
+        ),
+    )
+
     @model_validator(mode="after")
-    def _a_stop_comes_with_a_summary(self) -> InterviewerTurnOutput:
+    def _a_stop_comes_with_a_summary_and_a_report(self) -> InterviewerTurnOutput:
         if self.stop and not (self.summary and self.summary.strip()):
             msg = "write the summary of the interview when you stop"
+            raise ValueError(msg)
+        if self.stop and not (self.report and self.report.strip()):
+            msg = "write the report of the interview when you stop"
             raise ValueError(msg)
         return self
 

@@ -536,7 +536,12 @@ def _interviewer_turn(system: str, user: str, call_number: int) -> dict[str, Any
     """
     asked = user.count(" interviewer:")
     if asked >= _QUESTS_PER_PERSONA or "<limit_reached>\nyes" in user:
-        return {"question": "", "stop": True, "summary": _summary_for(user)}
+        return {
+            "question": "",
+            "stop": True,
+            "summary": _summary_for(user),
+            "report": "I finished the interview and noted what matters most to this person.",
+        }
     index = min(asked, len(_QUESTIONS) - 1)
     return {"question": _QUESTIONS[index], "stop": False}
 
