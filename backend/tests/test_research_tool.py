@@ -43,8 +43,8 @@ def test_research_queries_follow_the_plan() -> None:
     )
 
     assert queries == [
-        "University students seeking mentorship mentoring platform needs",
-        "mentoring platform Mentor profiles vetting verification",
+        "University students seeking mentorship needs",
+        "Mentor profiles vetting verification",
     ]
 
 

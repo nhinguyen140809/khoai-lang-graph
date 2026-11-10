@@ -588,7 +588,10 @@ def corpus_builder_node(
     search = research_search_of(config or {})
     documents_tool = (dict(config or {}).get("configurable") or {}).get("project_documents")
     uploaded = documents_tool(str(state["project_id"])) if documents_tool is not None else []
-    hits = [*uploaded, *search(research_queries(topics, stakeholder_types))]
+    hits = [
+        *uploaded,
+        *search(research_queries(topics, stakeholder_types, state["initial_intent"])),
+    ]
     known_urls = {str(hit.get("url", "")) for hit in hits}
     hits_lines = "\n".join(json.dumps(hit, ensure_ascii=False) for hit in hits) or "(no hits)"
 

@@ -370,16 +370,20 @@ def _head_keywords(sentence: str, limit: int = 4) -> str:
     return " ".join(kept)
 
 
-def research_queries(topics: Sequence[str], stakeholder_types: Sequence[str]) -> list[str]:
+def research_queries(
+    topics: Sequence[str], stakeholder_types: Sequence[str], intent: str = ""
+) -> list[str]:
     """The queries the corpus builder node builds from the plan.
 
     Deterministic node-side query building (no LLM round trip): one query
-    per stakeholder type and one per topic, reduced to leading keywords —
-    the plan names what to research, the keywords make engines find it.
+    per stakeholder type and one per topic, reduced to leading keywords -
+    the plan names what to research, the keywords make engines find it. A
+    plan without terms falls back to the leading keywords of the intent.
     """
     queries: list[str] = []
     for stakeholder in stakeholder_types:
-        queries.append(f"{_head_keywords(stakeholder)} mentoring platform needs")
+        queries.append(f"{_head_keywords(stakeholder)} needs")
     for topic in topics:
-        queries.append(f"mentoring platform {_head_keywords(topic)}")
-    return queries or ["mentoring platform stakeholder needs"]
+        queries.append(_head_keywords(topic))
+    queries = [query for query in queries if query.strip() != "needs" and query.strip()]
+    return queries or [f"{_head_keywords(intent, 6)} stakeholder needs".strip()]
