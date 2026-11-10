@@ -24,7 +24,7 @@ export { runErrorLabel } from './runs/run-error.utils'
 export { runModuleKeys } from './runs/run-module.keys'
 export { cancelRun, findLatestRun, getRun, listThreadRuns, retryRun } from './runs/runs.api'
 export { runKeys } from './runs/runs.keys'
-export type { Run, RunErrorCode, RunUsage } from './runs/runs.types'
+export type { Run, RunErrorCode, RunUsage, StepNoteKind } from './runs/runs.types'
 export { runErrorCodes } from './runs/runs.types'
 export { refetchIntervalOf } from './runs/runs.utils'
 export { useStageProgress } from './stages/hooks/useStageProgress'
@@ -68,6 +68,7 @@ export type {
   RunProgress,
   RunStep,
   StepEntry,
+  StepNote,
 } from './steps/run-steps.types'
 export { groupSteps } from './steps/step-groups.utils'
 export { durationWords } from './work/duration-words.utils'
@@ -76,5 +77,6 @@ export { useWorkWords } from './work/hooks/useWorkWords'
 export { workMessages, workStatusLabels } from './work/work.constants'
 export type { WorkEntry, WorkStatus, WorkWords } from './work/work.types'
 export { workEntries } from './work/work-entries.utils'
+export { visibleNotes } from './work/work-notes.utils'
 export { workStatusLooks } from './work/work-status-look.constants'
 export { isWorkStatusInProgress, workStatusLook } from './work/work-status-look.utils'

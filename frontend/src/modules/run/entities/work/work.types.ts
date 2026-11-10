@@ -1,6 +1,6 @@
 import type { ItemRef } from '@/modules/artifact/entities/@x/run'
 
-import type { RunStep } from '../steps/run-steps.types'
+import type { RunStep, StepNote } from '../steps/run-steps.types'
 
 /** What a line of the work of a run is doing: running, paused at a review, stopped with the run, done or failed. */
 export type WorkStatus = 'running' | 'waiting' | 'stopped' | 'done' | 'failed'
@@ -30,6 +30,8 @@ export interface WorkEntry {
   created: ItemRef[]
   /** The items that its steps changed, each once at its last version. */
   changed: ItemRef[]
+  /** The notes its steps wrote while they worked, in the order written. */
+  notes: StepNote[]
   /** The error of its failed step; null when none failed. */
   error: string | null
 }

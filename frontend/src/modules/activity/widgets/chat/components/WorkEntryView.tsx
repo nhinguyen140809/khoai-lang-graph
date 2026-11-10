@@ -1,14 +1,16 @@
 'use client'
 
-import { PencilIcon, PlusIcon } from 'lucide-react'
+import type { LucideIcon } from 'lucide-react'
+import { ArrowRightIcon, BrainIcon, LightbulbIcon, PencilIcon, PlusIcon } from 'lucide-react'
 
 import type { ActivityEntry } from '@/modules/activity/entities'
 import { useItem, useItemSchema } from '@/modules/artifact/entities'
-import type { WorkEntry } from '@/modules/run/entities'
-import { useWorkStatusLook, useWorkWords, workMessages } from '@/modules/run/entities'
+import type { StepNote, StepNoteKind, WorkEntry } from '@/modules/run/entities'
+import { useWorkStatusLook, useWorkWords, visibleNotes, workMessages } from '@/modules/run/entities'
 import { itemTitle } from '@/modules/workflow/entities'
 import { useOpenPage } from '@/shared/components/frame'
 import { Button } from '@/shared/components/ui/button'
+import { Markdown } from '@/shared/components/ui/markdown'
 import {
   Trace,
   TraceCollapsible,
@@ -47,13 +49,19 @@ export function WorkEntryView({ work, stageTitle, subjectTitle, kindGroups }: Wo
 
   if (kindGroups.length === 0) {
     return (
-      <TraceLine {...(look.traceStatus !== null && { status: look.traceStatus })} color={look.tone}>
-        <TraceIcon>
-          <Mark aria-hidden />
-        </TraceIcon>
-        <TraceTitle>{title}</TraceTitle>
-        <WorkWordsLine words={words} />
-      </TraceLine>
+      <div className="flex min-w-0 flex-col gap-1">
+        <TraceLine
+          {...(look.traceStatus !== null && { status: look.traceStatus })}
+          color={look.tone}
+        >
+          <TraceIcon>
+            <Mark aria-hidden />
+          </TraceIcon>
+          <TraceTitle>{title}</TraceTitle>
+          <WorkWordsLine words={words} />
+        </TraceLine>
+        <StepNotes notes={work.notes} />
+      </div>
     )
   }
 
@@ -76,6 +84,7 @@ export function WorkEntryView({ work, stageTitle, subjectTitle, kindGroups }: Wo
           </TraceLine>
         </TraceCollapsibleTrigger>
       </div>
+      <StepNotes notes={work.notes} />
       <TraceCollapsibleContent>
         {view === 'user' ? (
           <div className="flex flex-col gap-1">
@@ -111,6 +120,46 @@ export function WorkEntryView({ work, stageTitle, subjectTitle, kindGroups }: Wo
         )}
       </TraceCollapsibleContent>
     </TraceCollapsible>
+  )
+}
+
+// The mark of each kind of note, looked up by the kind instead of branched on, so that a new kind
+// fails to compile until it has a mark.
+const noteMarks = {
+  doing: ArrowRightIcon,
+  finding: LightbulbIcon,
+  thinking: BrainIcon,
+} as const satisfies Record<StepNoteKind, LucideIcon>
+
+/**
+ * What a line of work noted while it worked, under its line, one line for each note in the order
+ * written: a mark for its kind, then its Markdown, in the text colour for what it found and muted
+ * for the rest.
+ */
+function StepNotes({ notes }: { notes: readonly StepNote[] }) {
+  const view = useView()
+  const shown = visibleNotes(notes, view)
+  if (shown.length === 0) {
+    return null
+  }
+  return (
+    <div className="flex min-w-0 flex-col gap-1 pl-6">
+      {shown.map((note, index) => {
+        const Mark = noteMarks[note.kind]
+        return (
+          <div
+            key={index}
+            data-kind={note.kind}
+            className="flex min-w-0 items-start gap-2 text-muted-foreground data-[kind=finding]:text-foreground"
+          >
+            <Mark aria-hidden className="mt-1 size-4 shrink-0" />
+            <div className="min-w-0 flex-1">
+              <Markdown>{note.text}</Markdown>
+            </div>
+          </div>
+        )
+      })}
+    </div>
   )
 }
 

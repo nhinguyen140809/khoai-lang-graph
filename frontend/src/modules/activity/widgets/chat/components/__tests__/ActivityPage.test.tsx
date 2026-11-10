@@ -5,7 +5,7 @@ import { projectIds } from '@/mocks/shared/db'
 import { openPage } from '@/test/msw'
 import { setQuery } from '@/test/next-stubs'
 import { renderWithProviders } from '@/test/render'
-import { expectNoAccessibilityViolations } from '@/test/steps'
+import { expectNoAccessibilityViolations, expectRole, expectText } from '@/test/steps'
 
 import { ActivityPage } from '../ActivityPage'
 
@@ -13,12 +13,27 @@ describe('ActivityPage', () => {
   it('shows the runs of the thread oldest first, with their separators', async () => {
     renderWithProviders(<ActivityPage projectId={projectIds.mentor} />)
 
-    expect(await screen.findByText('Also ask about group sessions.')).toBeInTheDocument()
+    await expectText('Also ask about group sessions.')
     expect(
       screen.getByText(
         'I want to build an online platform for university students to find mentors.',
       ),
     ).toBeInTheDocument()
+  })
+
+  it('shows the notes that a step wrote while it worked, as Markdown, under its line', async () => {
+    openPage('/?mock-run-status=done')
+    renderWithProviders(<ActivityPage projectId={projectIds.mentor} />)
+
+    // Markdown cuts a text into elements as it renders it, so the page is read as one text.
+    await waitFor(() => {
+      expect(document.body).toHaveTextContent(
+        'I compared what the three people said about booking a session.',
+      )
+    })
+    expect(document.body).toHaveTextContent('Two of them disagree on who approves a session:')
+    // The text between ** is bold, shown without its marks.
+    expect(document.body).not.toHaveTextContent('**')
   })
 
   it('shows the review card of the run that waits for the user, as a polite live region', async () => {
@@ -36,7 +51,7 @@ describe('ActivityPage', () => {
     renderWithProviders(<ActivityPage projectId={projectIds.mentor} />)
 
     await screen.findByText('Not read: the work ended before this message.')
-    expect(screen.getByRole('button', { name: 'Send it again' })).toBeInTheDocument()
+    await expectRole('button', 'Send it again')
   })
 
   it('shows a message that no run took in as the bubble of the user, after the runs', async () => {
@@ -59,7 +74,7 @@ describe('ActivityPage', () => {
     openPage('/?mock-threads=empty')
     renderWithProviders(<ActivityPage projectId={projectIds.mentor} />)
 
-    expect(await screen.findByText('No activity yet')).toBeInTheDocument()
+    await expectText('No activity yet')
     await waitFor(() => {
       expect(screen.getByPlaceholderText('Ask or request a change')).toHaveFocus()
     })

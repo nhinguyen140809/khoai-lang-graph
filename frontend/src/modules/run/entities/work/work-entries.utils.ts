@@ -92,6 +92,7 @@ export function workEntries(steps: RunStep[], run: Pick<Run, 'status'> | null): 
         costUsd: grouped.reduce((total, { usage }) => total + usage.cost_usd, 0),
         created: atLastVersion.filter(({ item_id }) => createdIds.has(item_id)),
         changed: atLastVersion.filter(({ item_id }) => !createdIds.has(item_id)),
+        notes: grouped.flatMap(({ notes }) => notes),
         error: grouped.find(({ error }) => error !== null)?.error ?? null,
       }
     })

@@ -1,13 +1,14 @@
 import type { RunEventType } from './run-events.types'
 
 /**
- * The events of a run after which what it did may differ: the work of a step, a review, a message
- * taken in, a failure and the end. The others, such as the text that a step writes, leave it as
+ * The events of a run after which what it did may differ: the work of a step, a note of a step, a
+ * review, a message taken in, a failure and the end. The others, such as the text that a step writes, leave it as
  * it is.
  */
 export const runProgressEvents = [
   'node_start',
   'node_end',
+  'step_note',
   'interrupt',
   'message_delivered',
   'error',

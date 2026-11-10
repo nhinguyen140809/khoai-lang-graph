@@ -44,6 +44,34 @@ describe('workEntries', () => {
     expect(workEntries([], { status: 'running' })).toEqual([])
   })
 
+  it('joins the notes of the steps of a line, in the order the steps wrote them', () => {
+    const note = (text: string, kind: 'doing' | 'finding') => ({
+      kind,
+      text,
+      created_at: '2026-10-06T08:30:00Z',
+    })
+    const entries = workEntries(
+      [
+        buildStep({
+          sequence: 1,
+          agent_role: 'interviewer',
+          subject_item_id: 'p1',
+          notes: [note('First.', 'doing')],
+        }),
+        buildStep({
+          sequence: 2,
+          agent_role: 'interviewer',
+          subject_item_id: 'p1',
+          notes: [note('Second.', 'finding')],
+        }),
+      ],
+      null,
+    )
+
+    expect(entries).toHaveLength(1)
+    expect(entries[0]?.notes.map(({ text }) => text)).toEqual(['First.', 'Second.'])
+  })
+
   it('anchors each line at the id of its first step', () => {
     const entries = workEntries([buildStep({ sequence: 7, agent_role: 'analyst' })], null)
 
