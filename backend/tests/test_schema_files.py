@@ -29,11 +29,6 @@ def _load(path: Path) -> dict[str, Any]:
     return json.loads(path.read_text(encoding="utf-8"))  # type: ignore[no-any-return]
 
 
-# Navigable kinds of `main` whose title field does not say "60 characters" yet; the README
-# rule is not met there. Remove a name from the set once its description is fixed.
-_SHORT_TITLE_NOT_YET = {"backlog_item", "persona", "section", "spec_requirement"}
-
-
 def _ids(path: Path) -> str:
     return f"{path.parent.name}/{path.name}"
 
@@ -83,8 +78,6 @@ def test_title_of_a_navigable_kind_is_short(path: Path) -> None:
     schema = _load(path)
     if schema.get("x-ui-navigable") is not True:
         pytest.skip("not a navigable kind")
-    if schema["x-kind"] in _SHORT_TITLE_NOT_YET:
-        pytest.xfail("the title field of this kind of main does not state its length yet")
     description = schema["properties"][schema["x-ui-title-field"]]["description"]
 
     assert "60 characters" in description

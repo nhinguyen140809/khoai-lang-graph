@@ -39,7 +39,7 @@
     "name": {
       "title": "Name",
       "type": "string",
-      "description": "Display name, for example \"Minh, 3rd-year CS student\".",
+      "description": "The name shown for the interviewee, in at most 60 characters, for example \"Minh, 3rd-year CS student\".",
       "x-ui-widget": "text"
     },
     "stakeholder_type": {
