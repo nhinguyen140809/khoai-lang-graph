@@ -15,7 +15,7 @@ from sqlalchemy import func, select
 
 from khoailanggraph.api import deps, idempotency
 from khoailanggraph.api.errors import ApiError
-from khoailanggraph.api.schemas import MAX_LIMIT, Page
+from khoailanggraph.api.schemas import MAX_LIMIT, Cursor, Page
 from khoailanggraph.features.artifacts.models import ArtifactItemRow
 from khoailanggraph.features.projects.models import ProjectRow
 from khoailanggraph.features.projects.schemas import RunDefaults  # noqa: TC001 - body model
@@ -59,7 +59,7 @@ async def list_messages(
     thread_id: UUID,
     user: deps.CurrentUser,
     db: deps.DbSession,
-    cursor: Annotated[int, Query(ge=0)] = 0,
+    cursor: Cursor = 0,
     limit: Annotated[int, Query(ge=1, le=MAX_LIMIT)] = 50,
 ) -> Page[schemas.Message]:
     """The chat messages of a thread in the order they were sent: what the user wrote and the
@@ -217,7 +217,7 @@ async def list_runs(
     thread_id: UUID,
     user: deps.CurrentUser,
     db: deps.DbSession,
-    cursor: Annotated[int, Query(ge=0)] = 0,
+    cursor: Cursor = 0,
     limit: Annotated[int, Query(ge=1, le=MAX_LIMIT)] = 50,
 ) -> Page[schemas.Run]:
     """The runs of one thread, newest first (§5)."""
@@ -245,7 +245,7 @@ async def get_run_steps(
     run_id: UUID,
     user: deps.CurrentUser,
     db: deps.DbSession,
-    cursor: Annotated[int, Query(ge=0)] = 0,
+    cursor: Cursor = 0,
     limit: Annotated[int, Query(ge=1, le=MAX_LIMIT)] = 50,
 ) -> Page[schemas.RunStep]:
     """Run steps in order, with usage and produced ItemRefs (§5)."""
@@ -324,7 +324,7 @@ async def list_directives(
     run_id: UUID,
     user: deps.CurrentUser,
     db: deps.DbSession,
-    cursor: Annotated[int, Query(ge=0)] = 0,
+    cursor: Cursor = 0,
     limit: Annotated[int, Query(ge=1, le=MAX_LIMIT)] = 50,
 ) -> Page[schemas.Directive]:
     """The directives of a run with their items, ordered by iteration: why the run looped."""
@@ -382,7 +382,7 @@ async def list_interrupts(
     user: deps.CurrentUser,
     db: deps.DbSession,
     status: Annotated[Literal["pending", "resolved", "cancelled"] | None, Query()] = None,
-    cursor: Annotated[int, Query(ge=0)] = 0,
+    cursor: Cursor = 0,
     limit: Annotated[int, Query(ge=1, le=MAX_LIMIT)] = 50,
 ) -> Page[schemas.Interrupt]:
     """The interrupts of a run, the oldest first, each with the decision that resolved it;

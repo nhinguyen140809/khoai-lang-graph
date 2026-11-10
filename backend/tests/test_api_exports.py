@@ -13,6 +13,7 @@ from uuid import uuid4
 import pytest
 from httpx import ASGITransport, AsyncClient
 
+from khoailanggraph.api.schemas import encode_cursor
 from khoailanggraph.main import create_app
 from khoailanggraph.platform.db import (
     ensure_schema,
@@ -263,7 +264,14 @@ async def test_the_exports_of_a_project_come_newest_first(client: AsyncClient) -
     assert [entry["id"] for entry in listing["items"]] == ids[::-1]
     assert listing["next_cursor"] is None
     assert [entry["id"] for entry in paged["items"]] == ids[::-1][:2]
-    assert paged["next_cursor"] == 2
+    assert paged["next_cursor"] == encode_cursor(2)
+    rest = (
+        await client.get(
+            f"{API}/projects/{project_id}/exports",
+            params={"limit": 2, "cursor": paged["next_cursor"]},
+        )
+    ).json()
+    assert [entry["id"] for entry in rest["items"]] == ids[::-1][2:]
 
 
 async def test_an_export_that_does_not_exist_or_whose_project_is_gone_answers_404(

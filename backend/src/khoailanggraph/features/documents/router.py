@@ -11,7 +11,7 @@ from fastapi.responses import JSONResponse, Response
 
 from khoailanggraph.api import deps
 from khoailanggraph.api.errors import ApiError
-from khoailanggraph.api.schemas import MAX_LIMIT, Page
+from khoailanggraph.api.schemas import MAX_LIMIT, Cursor, Page
 from khoailanggraph.features.documents import schemas, service
 from khoailanggraph.features.documents.models import SourceDocumentRow
 from khoailanggraph.features.projects.service import get_project_row
@@ -69,7 +69,7 @@ async def list_documents(
     project_id: UUID,
     user: deps.CurrentUser,
     db: deps.DbSession,
-    cursor: Annotated[int, Query(ge=0)] = 0,
+    cursor: Cursor = 0,
     limit: Annotated[int, Query(ge=1, le=MAX_LIMIT)] = 50,
 ) -> Page[schemas.Document]:
     """Documents of the project, newest first (API.md envelope)."""

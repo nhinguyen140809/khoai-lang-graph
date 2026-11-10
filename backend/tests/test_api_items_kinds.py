@@ -11,6 +11,7 @@ from uuid import UUID, uuid4
 import pytest
 from httpx import ASGITransport, AsyncClient
 
+from khoailanggraph.api.schemas import encode_cursor
 from khoailanggraph.features.runs.models import DirectiveRow
 from khoailanggraph.main import create_app
 from khoailanggraph.platform.db import (
@@ -651,7 +652,7 @@ async def test_the_chat_holds_the_message_of_the_user_and_the_report_of_each_ste
     assert (await client.get(f"/api/v1/items/{first['item_id']}")).status_code == 200
     paged = await client.get(f"/api/v1/threads/{thread_id}/messages", params={"limit": 2})
     assert len(paged.json()["items"]) == 2
-    assert paged.json()["next_cursor"] == 2
+    assert paged.json()["next_cursor"] == encode_cursor(2)
     assert (await client.get(f"/api/v1/threads/{uuid4()}/messages")).status_code == 404
     assert project_id
 

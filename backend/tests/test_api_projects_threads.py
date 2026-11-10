@@ -10,6 +10,7 @@ from uuid import UUID, uuid4
 import pytest
 from httpx import ASGITransport, AsyncClient
 
+from khoailanggraph.api.schemas import encode_cursor
 from khoailanggraph.features.runs.models import RunRow
 from khoailanggraph.features.threads.models import ThreadRow
 from khoailanggraph.main import create_app
@@ -446,7 +447,20 @@ async def test_the_threads_of_the_user_come_across_projects(signed_in: AsyncClie
     assert [entry["id"] for entry in one["items"]] == [older]
     paged = (await signed_in.get("/api/v1/threads", params={"limit": 1})).json()
     assert [entry["id"] for entry in paged["items"]] == [newer]
-    assert paged["next_cursor"] == 1
+    assert paged["next_cursor"] == encode_cursor(1)
+    rest = (
+        await signed_in.get("/api/v1/threads", params={"limit": 1, "cursor": paged["next_cursor"]})
+    ).json()
+    assert [entry["id"] for entry in rest["items"]] == [older]
+    assert rest["next_cursor"] is None
+
+
+async def test_a_cursor_that_no_list_returned_is_refused(signed_in: AsyncClient) -> None:
+    for cursor in ("2", "not-a-cursor", encode_cursor(-1)):
+        response = await signed_in.get("/api/v1/threads", params={"cursor": cursor})
+
+        assert response.status_code == 422
+        assert response.json()["code"] == "validation_failed"
 
 
 async def test_a_thread_can_be_retitled_archived_and_deleted(signed_in: AsyncClient) -> None:

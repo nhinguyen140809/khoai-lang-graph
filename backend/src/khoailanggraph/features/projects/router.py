@@ -10,7 +10,7 @@ from fastapi import APIRouter, Depends, Query, Request, Response
 
 from khoailanggraph.api import deps, idempotency
 from khoailanggraph.api.errors import ApiError
-from khoailanggraph.api.schemas import MAX_LIMIT, Page
+from khoailanggraph.api.schemas import MAX_LIMIT, Cursor, Page
 from khoailanggraph.features.projects import schemas, service
 from khoailanggraph.features.projects.service import ROLLUP_ORDER
 from khoailanggraph.features.threads import schemas as thread_schemas
@@ -30,7 +30,7 @@ async def list_projects(
     status: Annotated[str, Query()] = "active",
     rollup_run_status: Annotated[list[str] | None, Query()] = None,
     last_activity_after: Annotated[datetime | None, Query()] = None,
-    cursor: Annotated[int, Query(ge=0)] = 0,
+    cursor: Cursor = 0,
     limit: Annotated[int, Query(ge=1, le=MAX_LIMIT)] = 50,
 ) -> Page[schemas.ProjectSummary]:
     """The projects of the user with one status, the latest activity first. `rollup_run_status`
@@ -138,7 +138,7 @@ async def list_threads(
     project_id: UUID,
     user: deps.CurrentUser,
     db: deps.DbSession,
-    cursor: Annotated[int, Query(ge=0)] = 0,
+    cursor: Cursor = 0,
     limit: Annotated[int, Query(ge=1, le=MAX_LIMIT)] = 50,
 ) -> Page[thread_schemas.ThreadSummary]:
     """The conversation of the project, newest message first (§5)."""
@@ -169,7 +169,7 @@ async def list_user_threads(
     user: deps.CurrentUser,
     db: deps.DbSession,
     project_id: Annotated[UUID | None, Query()] = None,
-    cursor: Annotated[int, Query(ge=0)] = 0,
+    cursor: Cursor = 0,
     limit: Annotated[int, Query(ge=1, le=MAX_LIMIT)] = 50,
 ) -> Page[thread_schemas.ThreadSummary]:
     """The threads of the user across their projects, `?project_id=` keeps one project's;

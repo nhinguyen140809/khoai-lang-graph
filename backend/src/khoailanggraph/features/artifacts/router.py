@@ -14,7 +14,7 @@ from pydantic import BaseModel, ConfigDict
 from khoailanggraph.agents.requirements_engineering import definition as workflow
 from khoailanggraph.api import deps
 from khoailanggraph.api.errors import ApiError
-from khoailanggraph.api.schemas import MAX_LIMIT, Page
+from khoailanggraph.api.schemas import MAX_LIMIT, Cursor, Page
 from khoailanggraph.features.artifacts import editing, schemas, service
 from khoailanggraph.features.artifacts.models import ArtifactItemRow, ArtifactRow, TraceLinkRow
 from khoailanggraph.features.projects.service import get_project_row
@@ -35,7 +35,7 @@ async def search_items(
     kind: Annotated[str | None, Query()] = None,
     review_status: Annotated[str | None, Query()] = None,
     run_id: Annotated[UUID | None, Query()] = None,
-    cursor: Annotated[int, Query(ge=0)] = 0,
+    cursor: Cursor = 0,
     limit: Annotated[int, Query(ge=1, le=MAX_LIMIT)] = 50,
 ) -> Page[schemas.Item]:
     """Search the items of a project by key or text, with the filters of
@@ -62,7 +62,7 @@ async def list_project_artifacts(
     *,
     kind: Annotated[str | None, Query()] = None,
     review_status: Annotated[str | None, Query()] = None,
-    cursor: Annotated[int, Query(ge=0)] = 0,
+    cursor: Cursor = 0,
     limit: Annotated[int, Query(ge=1, le=MAX_LIMIT)] = 50,
 ) -> Page[schemas.Artifact]:
     """The artifacts of the project (§5), filtered by kind and review status."""
@@ -82,7 +82,7 @@ async def list_project_trace_links(
     link_type: Annotated[str | None, Query()] = None,
     source_item_id: Annotated[UUID | None, Query()] = None,
     target_item_id: Annotated[UUID | None, Query()] = None,
-    cursor: Annotated[int, Query(ge=0)] = 0,
+    cursor: Cursor = 0,
     limit: Annotated[int, Query(ge=1, le=MAX_LIMIT)] = 200,
 ) -> Page[schemas.TraceLink]:
     """Current links of the project, both ends resolved (API.md §5); the
@@ -174,7 +174,7 @@ async def list_artifact_items(
     parent_item_id: Annotated[UUID | None, Query()] = None,
     shape: Annotated[Literal["flat", "tree"], Query()] = "flat",
     version: Annotated[int | None, Query(ge=1)] = None,
-    cursor: Annotated[int, Query(ge=0)] = 0,
+    cursor: Cursor = 0,
     limit: Annotated[int, Query(ge=1, le=MAX_LIMIT)] = 200,
 ) -> Page[schemas.NestedOutlineItem] | Page[schemas.OutlineItem]:
     """The items of one artifact in outline order; `?shape=tree` nests each item under its
@@ -273,7 +273,7 @@ async def get_workflow_definition(
 @router.get("/models")
 async def list_models(
     user: deps.CurrentUser,
-    cursor: Annotated[int, Query(ge=0)] = 0,
+    cursor: Cursor = 0,
     limit: Annotated[int, Query(ge=1, le=MAX_LIMIT)] = 50,
 ) -> Page[ModelCatalogEntry]:
     """The models a user may pick, ordered by `model_id` (§5)."""

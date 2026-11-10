@@ -10,7 +10,7 @@ from fastapi import APIRouter, Depends, Query, Request
 from fastapi.responses import FileResponse
 
 from khoailanggraph.api import deps, idempotency
-from khoailanggraph.api.schemas import MAX_LIMIT, Page
+from khoailanggraph.api.schemas import MAX_LIMIT, Cursor, Page
 from khoailanggraph.features.exports import renderers, schemas, service
 from khoailanggraph.features.projects.service import get_project_row
 
@@ -56,7 +56,7 @@ async def list_exports(
     project_id: UUID,
     user: deps.CurrentUser,
     db: deps.DbSession,
-    cursor: Annotated[int, Query(ge=0)] = 0,
+    cursor: Cursor = 0,
     limit: Annotated[int, Query(ge=1, le=MAX_LIMIT)] = 50,
 ) -> Page[schemas.Export]:
     """The exports of a project, newest first."""
