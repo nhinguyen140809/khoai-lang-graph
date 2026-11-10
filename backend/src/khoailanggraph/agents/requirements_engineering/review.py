@@ -21,6 +21,7 @@ MIN_CHOICES = 2
 MAX_CHOICES = 4
 PROMPT_LENGTH = 300
 LABEL_LENGTH = 40
+DESCRIPTION_LENGTH = 120
 QUESTION_LENGTH = 140
 CHOICE_LENGTH = 60
 FEEDBACK_LENGTH = 300
@@ -54,6 +55,9 @@ def checkpoint_review(spec: Mapping[str, Any], brief: Mapping[str, Any] | None) 
         label = _text(suggestion.get("label"), LABEL_LENGTH)
         if label:
             merged["label"] = label
+        description = _text(suggestion.get("description"), DESCRIPTION_LENGTH)
+        if description:
+            merged["description"] = description
         feedback = _text(suggestion.get("suggested_feedback"), FEEDBACK_LENGTH)
         if feedback and option.get("requires_feedback"):
             merged["suggested_feedback"] = feedback

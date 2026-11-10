@@ -199,10 +199,12 @@ _REVIEWS = {
             "Check them, then approve it."
         ),
         "options": [
+            {"key": "accept", "description": "The analysis goes on to the specification."},
             {
                 "key": "reject_reanalyse",
+                "description": "The analysis is written again, settling the open questions.",
                 "suggested_feedback": "Settle the open questions in favour of the students.",
-            }
+            },
         ],
         "questions": [],
     },

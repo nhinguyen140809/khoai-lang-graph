@@ -45,7 +45,7 @@ Report = Annotated[
             "One to three sentences to the user, in the output language, about what you did: "
             "what was done in plain words first, then only what needs their attention. "
             "Name things by what they say, never by their key. You may use Markdown for "
-            "**bold** and a short list; never headings, tables, links or code."
+            "**bold**, *italic* and a short list; never headings, tables, links or code."
         ),
     ),
 ]
@@ -76,8 +76,8 @@ Notes = Annotated[
             "words, as you would explain it to a colleague who does not build software. Name "
             "things by what they say, never by their keys, ids or field names, and never mention "
             "JSON, prompts or tools. Do not repeat the report: notes tell how the work went, the "
-            "report tells what it ended with. You may use Markdown for **bold** only. Leave the "
-            "list empty when there is nothing worth saying; never pad it."
+            "report tells what it ended with. You may use Markdown for **bold** and *italic* "
+            "only. Leave the list empty when there is nothing worth saying; never pad it."
         ),
     ),
 ]
@@ -100,6 +100,14 @@ class ReviewOptionOutput(_Output):
         description=(
             "What the option says in this case, at most 40 characters, in the output language, "
             "in plain text. Leave it out to keep the usual words."
+        ),
+    )
+    description: str | None = Field(
+        default=None,
+        description=(
+            "What happens if the user picks this option, in one sentence of at most 120 "
+            "characters, in the output language, in plain text, for example which conflicts the "
+            "analysis will settle. Leave it out when the label already says it."
         ),
     )
     suggested_feedback: str | None = Field(
@@ -394,8 +402,8 @@ class InterviewerTurnOutput(_Output):
             "what this interview showed: who the person is and what matters most to them. The "
             "summary is for the document; this is for the user, so say it in your own words and "
             "do not copy the summary. Name things by what they say, never by their key. You may "
-            "use Markdown for **bold** and a short list; never headings, tables, links or code. "
-            "Null when you ask a question."
+            "use Markdown for **bold**, *italic* and a short list; never headings, tables, "
+            "links or code. Null when you ask a question."
         ),
     )
 

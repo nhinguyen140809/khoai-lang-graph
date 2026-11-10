@@ -44,7 +44,11 @@ def test_the_prompt_fits_the_case_and_an_option_may_suggest_what_to_say() -> Non
                 "label": "Settle the conflicts",
                 "suggested_feedback": "Settle both conflicts in favour of the students.",
             },
-            {"key": "accept", "suggested_feedback": "not for an option without feedback"},
+            {
+                "key": "accept",
+                "description": "The analysis goes on to the specification.",
+                "suggested_feedback": "not for an option without feedback",
+            },
             {"key": "unknown_key", "label": "ignored"},
         ],
     }
@@ -57,6 +61,8 @@ def test_the_prompt_fits_the_case_and_an_option_may_suggest_what_to_say() -> Non
     assert by_key["reject_reanalyse"]["suggested_feedback"].startswith("Settle both")
     assert by_key["reject_reanalyse"]["requires_feedback"] is True
     assert "suggested_feedback" not in by_key["accept"]
+    assert by_key["accept"]["description"] == "The analysis goes on to the specification."
+    assert "description" not in by_key["reject_reanalyse"], "left out, nothing is added"
     assert by_key["accept"]["label"] == "Approve analysis"
     assert len(asked["options"]) == len(SPEC["options"])
 
