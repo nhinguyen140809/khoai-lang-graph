@@ -81,6 +81,15 @@ Notes = Annotated[
     ),
 ]
 
+
+class _Narrated(_Output):
+    """An output that tells the user how the work went. `notes` is its first field, so that a
+    model that writes the fields in order writes them before the rest, and the server can send
+    each note while the answer is still being written."""
+
+    notes: Notes
+
+
 # The summary of a document: what its content says, for the top of the artifact. It is not the
 # report, which says what the step did.
 Summary = Annotated[
@@ -150,11 +159,10 @@ class NewPersona(_Output):
     behavioral_tendencies: str
 
 
-class GeneratorOutput(_Output):
+class GeneratorOutput(_Narrated):
     """The frame of the persona catalog plus its persona items."""
 
     report: Report
-    notes: Notes
     selection_rationale: str
     uncovered_stakeholder_types: list[str]
     personas: list[NewPersona]
@@ -174,11 +182,10 @@ class NewSource(_Output):
     origin: Literal["web", "upload"] = "web"
 
 
-class CorpusBuilderOutput(_Output):
+class CorpusBuilderOutput(_Narrated):
     """The kept documents of the research corpus, with the reason each was kept."""
 
     report: Report
-    notes: Notes
     selection_rationale: str
     sources: list[NewSource]
 
@@ -194,11 +201,10 @@ class NewObservation(_Output):
     source: str
 
 
-class MinerOutput(_Output):
+class MinerOutput(_Narrated):
     """The stakeholder observations mined from one source document."""
 
     report: Report
-    notes: Notes
     observations: list[NewObservation]
 
 
@@ -238,11 +244,10 @@ class StakeholderGroup(_Output):
     observations: list[str] = Field(min_length=1)
 
 
-class GeneratorOutputV2(_Output):
+class GeneratorOutputV2(_Narrated):
     """The frame of the evidence-grounded persona catalog plus its personas."""
 
     report: Report
-    notes: Notes
     selection_rationale: str
     stakeholder_groups: list[StakeholderGroup]
     uncovered_stakeholder_types: list[str]
@@ -282,11 +287,10 @@ def generator_output_for(observation_keys: Sequence[str]) -> type[GeneratorOutpu
     return schema
 
 
-class PlannerOutput(ElicitationPlanContent):
+class PlannerOutput(ElicitationPlanContent, _Narrated):
     """The plan content verbatim, and the report; the planner produces no items."""
 
     report: Report
-    notes: Notes
     summary: Summary
 
 
@@ -403,9 +407,8 @@ class ConflictDraft(_Output):
     supersedes: list[str] = Field(default_factory=list)
 
 
-class AnalystOutput(_Output):
+class AnalystOutput(_Narrated):
     report: Report
-    notes: Notes
     summary: Summary
     raw_requirements: list[RawRequirementDraft]
     analyzed_requirements: list[AnalyzedRequirementDraft]
@@ -438,11 +441,10 @@ class NewSpecRequirement(_Output):
     supersedes: list[str] = Field(default_factory=list)
 
 
-class EngineerOutput(_Output):
+class EngineerOutput(_Narrated):
     """The frame of the specification plus its requirement items."""
 
     report: Report
-    notes: Notes
     summary: Summary
     purpose: str
     scope: str
@@ -472,11 +474,10 @@ class NewBacklogItem(_Output):
     supersedes: list[str] = Field(default_factory=list)
 
 
-class BacklogOutput(_Output):
+class BacklogOutput(_Narrated):
     """The frame of the backlog plus its items, in backlog order."""
 
     report: Report
-    notes: Notes
     summary: Summary
     product_goal: str
     prioritization_notes: str | None
@@ -493,9 +494,8 @@ class ValidationIssueDraft(_Output):
     flags: list[LinkRef]
 
 
-class ValidatorOutput(_Output):
+class ValidatorOutput(_Narrated):
     report: Report
-    notes: Notes
     status: Literal["pass", "fail"]
     issues: list[ValidationIssueDraft]
 
@@ -505,9 +505,8 @@ ROUTER_TARGETS = Literal[
 ]
 
 
-class IntentDirectiveOutput(_Output):
+class IntentDirectiveOutput(_Narrated):
     report: Report
-    notes: Notes
     target_node: ROUTER_TARGETS
     instruction: str
     about: list[str]

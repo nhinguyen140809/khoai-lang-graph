@@ -203,7 +203,7 @@ docs/workflow/prompts/
 2. **Removing a section at run time.** An experiment could drop an optional section without a new file. It is left out: a version per variant keeps every prompt that a run used in git.
 3. **Wording per provider.** One prompt serves every provider. If a model family needs different wording, the choice is a version per family selected with the model, or conditions inside one file; neither is designed.
 4. **Prompts of the other roles.** Only the analyst prompt is written as an example. The others are written with the backend, from the template.
-5. **Notes written live.** A model writes its notes inside one structured answer, so they arrive when the call ends, not while it writes. A `notes` field placed first in the output model would let the server read its text while the answer streams; it needs a reader of unfinished JSON and is left out.
+5. **Notes written live.** `notes` is the first field of every output model that has it, and the server reads the notes out of the answer while it streams, so a note is sent when its closing brace arrives. This relies on the model writing the fields in the order of the schema; which models do is not checked. A call that is retried after a failed parse may have sent notes of the failed answer.
 6. **Thinking from the provider.** Whether a provider returns a summary of its reasoning, and in which field, differs by provider and by gateway. The `thinking` note is added per provider only when one is checked to return a usable summary.
 
 ## 12. Review checklist

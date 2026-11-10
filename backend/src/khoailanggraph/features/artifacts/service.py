@@ -63,6 +63,7 @@ REVISION_VERSION = 1
 # The notes of a node that the server keeps, and the longest a note may be.
 STEP_NOTES_PER_CALL = 3
 STEP_NOTE_LENGTH = 280
+STEP_NOTE_KINDS = frozenset({"doing", "finding", "thinking"})
 
 
 def utcnow() -> datetime:
@@ -194,11 +195,14 @@ class SqlArtifactSink:
         if step is None:
             return
         kept = json.loads((step.notes_json or b"[]").decode("utf-8"))
+        # A note that was sent while the model wrote it comes again with the finished answer.
+        known = {(entry["kind"], entry["text"]) for entry in kept}
         for note in notes[:STEP_NOTES_PER_CALL]:
             text = str(note["text"]).strip()[:STEP_NOTE_LENGTH].strip()
-            if not text:
-                continue
             kind = str(note["kind"])
+            if not text or kind not in STEP_NOTE_KINDS or (kind, text) in known:
+                continue
+            known.add((kind, text))
             kept.append({"kind": kind, "text": text, "created_at": utcnow().isoformat()})
             self.emit(
                 "step_note",

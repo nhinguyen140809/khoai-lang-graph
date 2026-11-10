@@ -55,6 +55,7 @@ from khoailanggraph.features.runs.models import (
 )
 from khoailanggraph.features.threads.models import MessageRow, ThreadRow
 from khoailanggraph.llm import reset_model_cache
+from khoailanggraph.llm.note_stream import NoteStream
 from khoailanggraph.llm.usage import Usage, add_usage, zero_usage
 from khoailanggraph.platform.db import make_sync_session_factory
 from khoailanggraph.platform.origin import Origin
@@ -176,8 +177,11 @@ class UsageGate:
 
     def __init__(self, walker: RunWalker) -> None:
         self.walker = walker
+        # Reads the notes of the answer that the model writes now; each call starts a new one.
+        self.notes = NoteStream()
 
     def before_call(self, role: str) -> None:
+        self.notes = NoteStream()
         walker = self.walker
         limit_seconds = get_settings().node_timeout_seconds
         if walker.step is not None and time.monotonic() - walker.step_started > limit_seconds:
@@ -198,6 +202,9 @@ class UsageGate:
 
     def record_text(self, role: str, text: str) -> None:
         self.walker.buffer_text(text)
+        # A note is sent as soon as the model has written it, not when the whole answer is done.
+        for note in self.notes.feed(text):
+            self.walker.stream_note(note)
 
     def record_call(self, role: str, model_id: str, usage: Usage) -> None:
         walker = self.walker
@@ -527,6 +534,13 @@ class RunWalker:
         self.text_buffer.append(text)
         if time.monotonic() - self.text_flushed_at >= TOKEN_GROUP_SECONDS:
             self.flush_text()
+
+    def stream_note(self, note: Mapping[str, str]) -> None:
+        """A note that the model has just written: kept with the step and sent at once."""
+        if self.step is None:
+            return
+        self.sink.add_notes([note])
+        self.commit()
 
     def flush_text(self) -> None:
         """Store the text collected since the last piece as one `token` event."""
