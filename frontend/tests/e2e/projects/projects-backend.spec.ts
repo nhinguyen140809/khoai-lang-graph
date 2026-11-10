@@ -1,10 +1,16 @@
 import { expect } from '@playwright/test'
 
-import { type ApiPage, expectPage, expectProblem } from '../../shared/api'
+import {
+  type ApiPage,
+  expectNoContent,
+  expectOk,
+  expectPage,
+  expectProblem,
+} from '../../shared/api'
 import { seededProjects } from '../../shared/backend-env.constants'
 import { test } from '../../shared/fixtures.utils'
 import { idea } from '../runs/runs-backend.data'
-import { badCursors, emptyPages, pagedLists } from './projects-backend.data'
+import { badCursors, emptyPages, pagedLists, projectFilters } from './projects-backend.data'
 
 test('lists the projects of the seed and opens the one that is done', async ({ page, user }) => {
   const { mentor, campus } = seededProjects
@@ -65,3 +71,51 @@ test('opens each document of a finished project', async ({ page, user, api }) =>
     await user.expectNoRole('heading', 'Something went wrong')
   }
 })
+
+test('makes a project, changes it, archives it and removes it', async ({ api, client }) => {
+  const projectId = await api.createProject('Library kiosk')
+
+  const changed = expectOk(
+    await api.updateProject(projectId, { name: 'Library kiosk 2', description: 'Lend books.' }),
+  )
+  expect(changed.name).toBe('Library kiosk 2')
+  expect(changed.description).toBe('Lend books.')
+  expectOk(await api.updateProject(projectId, { status: 'archived' }))
+  expect((await api.listProjects('active')).map((project) => project.id)).not.toContain(projectId)
+  expect((await api.listProjects('archived')).map((project) => project.id)).toContain(projectId)
+  expectNoContent(await api.deleteProject(projectId))
+
+  expectProblem(await client.get(`/projects/${projectId}`), 404, 'not_found')
+})
+
+test('refuses a project without a name', async ({ client }) => {
+  expectProblem(await client.post('/projects', { name: '   ' }), 422, 'validation_failed', 'name')
+})
+
+test('answers 404 for a project that does not exist', async ({ client }) => {
+  expectProblem(
+    await client.get('/projects/00000000-0000-4000-8000-000000000000'),
+    404,
+    'not_found',
+  )
+})
+
+for (const { name, archived } of projectFilters) {
+  test(`shows a project of ${name} in its own list only`, async ({ api, page, user }) => {
+    const projectName = `Filter ${archived ? 'archived' : 'active'} ${Date.now().toString()}`
+    const projectId = await api.createProject(projectName)
+    if (archived) expectOk(await api.updateProject(projectId, { status: 'archived' }))
+    await page.goto('/projects')
+
+    if (archived) {
+      await user.expectRole('heading', 'Your projects')
+      await user.expectNoRole('link', projectName)
+      await user.pressButton('Archived')
+      await user.expectRole('link', projectName)
+    } else {
+      await user.expectRole('link', projectName)
+      await user.pressButton('Archived')
+      await user.expectNoRole('link', projectName)
+    }
+  })
+}

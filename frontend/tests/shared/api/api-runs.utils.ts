@@ -99,6 +99,8 @@ export async function createThread(api: ApiClient, projectId: string): Promise<s
 interface SendOptions {
   /** The reviews the run stops at; none by default, so that the run goes on to its end. */
   reviews?: string[]
+  /** The most steps the run may take; the server default when it is not given. */
+  maxSteps?: number
   idempotencyKey?: string | undefined
 }
 
@@ -107,12 +109,18 @@ export async function sendMessage(
   api: ApiClient,
   threadId: string,
   content: string,
-  { reviews = [], idempotencyKey }: SendOptions = {},
+  { reviews = [], maxSteps, idempotencyKey }: SendOptions = {},
 ): Promise<ApiRun> {
   const created = expectCreated(
     await api.post<{ run: ApiRun }>(
       `/threads/${threadId}/messages`,
-      { content, run_config: { review_checkpoints: reviews } },
+      {
+        content,
+        run_config: {
+          review_checkpoints: reviews,
+          ...(maxSteps === undefined ? {} : { max_steps: maxSteps }),
+        },
+      },
       { idempotencyKey },
     ),
   )
@@ -152,18 +160,28 @@ export async function waitForRun(
   return getRun(api, runId)
 }
 
-/** Waits until the run stops at a review, and gives what it waits for. */
-export async function waitForReview(api: ApiClient, runId: string): Promise<ApiInterrupt> {
-  await waitForRun(api, runId, ['interrupted'])
+/** The review that the run waits at now, or null when it waits for none. */
+export async function pendingReview(api: ApiClient, runId: string): Promise<ApiInterrupt | null> {
   const page = expectPage(
     await api.get<ApiPage<ApiInterrupt>>(`/runs/${runId}/interrupts`, {
       status: 'pending',
       limit: 1,
     }),
   )
-  const [pending] = page.items
-  if (pending === undefined) throw new Error(`The run ${runId} waits for no review.`)
-  return pending
+  return page.items[0] ?? null
+}
+
+/** Waits until the run stops at a review, and gives what it waits for. */
+export async function waitForReview(api: ApiClient, runId: string): Promise<ApiInterrupt> {
+  await expect
+    .poll(() => pendingReview(api, runId), {
+      timeout: 30_000,
+      message: 'the run to wait at a review',
+    })
+    .not.toBeNull()
+  const review = await pendingReview(api, runId)
+  if (review === null) throw new Error(`The run ${runId} waits for no review.`)
+  return review
 }
 
 interface Answer {

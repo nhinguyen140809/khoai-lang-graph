@@ -14,3 +14,9 @@ export const emptyPages: { name: string; path: string; heading: string }[] = [
   { name: 'the documents', path: 'documents', heading: 'Choose a document' },
   { name: 'the trace', path: 'trace', heading: 'No trace is open' },
 ]
+
+/** The two lists of projects, by the button that picks them. */
+export const projectFilters = [
+  { name: 'active projects', archived: false },
+  { name: 'archived projects', archived: true },
+]

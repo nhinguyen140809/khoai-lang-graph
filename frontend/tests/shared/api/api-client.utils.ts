@@ -28,6 +28,12 @@ export interface ApiClient {
   put: <Body = unknown>(path: string, body?: unknown) => Promise<ApiReply<Body>>
   patch: <Body = unknown>(path: string, body?: unknown) => Promise<ApiReply<Body>>
   remove: <Body = unknown>(path: string) => Promise<ApiReply<Body>>
+  /** Sends a form with one file, as the upload of a document does. */
+  upload: <Body = unknown>(
+    path: string,
+    file: { name: string; mimeType: string; text: string },
+    fields?: Record<string, string>,
+  ) => Promise<ApiReply<Body>>
   /** Reads a file at an address the API gave, `download_url` of an export, and gives its text. */
   download: (address: string) => Promise<ApiReply<string>>
 }
@@ -70,6 +76,22 @@ export function apiClientOf(request: APIRequestContext, origin: string): ApiClie
     put: (path, body) => send('PUT', path, { body }),
     patch: (path, body) => send('PATCH', path, { body }),
     remove: (path) => send('DELETE', path),
+    upload: async (path, file, fields = {}) => {
+      const response = await request.fetch(`${apiPrefix}${path}`, {
+        method: 'POST',
+        multipart: {
+          ...fields,
+          file: { name: file.name, mimeType: file.mimeType, buffer: Buffer.from(file.text) },
+        },
+        headers: { Origin: origin },
+      })
+      const text = await response.text()
+      return {
+        status: response.status(),
+        body: (text === '' ? null : JSON.parse(text)) as never,
+        headers: response.headers(),
+      }
+    },
     download: async (address) => {
       const response = await request.fetch(address, { headers: { Origin: origin } })
       return { status: response.status(), body: await response.text(), headers: response.headers() }

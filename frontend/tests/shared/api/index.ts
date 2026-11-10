@@ -1,5 +1,6 @@
 export type { ApiClient, ApiReply } from './api-client.utils'
 export { apiClientOf } from './api-client.utils'
+export type { ApiDocument, ApiProject, ApiThread } from './api-projects.utils'
 export type { ApiPage } from './api-responses.utils'
 export {
   expectAccepted,

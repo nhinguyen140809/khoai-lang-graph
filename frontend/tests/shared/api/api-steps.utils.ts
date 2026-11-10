@@ -1,5 +1,16 @@
 import type { ApiClient } from './api-client.utils'
 import {
+  deleteDocument,
+  deleteProject,
+  deleteThread,
+  listDocuments,
+  listProjects,
+  listThreads,
+  updateProject,
+  updateThread,
+  uploadDocument,
+} from './api-projects.utils'
+import {
   answerReview,
   approveEveryReview,
   cancelRun,
@@ -11,6 +22,7 @@ import {
   listArtifacts,
   listItems,
   listSteps,
+  pendingReview,
   resumeRun,
   retryRun,
   sendMessage,
@@ -21,6 +33,15 @@ import {
 } from './api-runs.utils'
 
 const steps = {
+  deleteDocument,
+  deleteProject,
+  deleteThread,
+  listDocuments,
+  listProjects,
+  listThreads,
+  updateProject,
+  updateThread,
+  uploadDocument,
   answerReview,
   approveEveryReview,
   cancelRun,
@@ -32,6 +53,7 @@ const steps = {
   listArtifacts,
   listItems,
   listSteps,
+  pendingReview,
   resumeRun,
   retryRun,
   sendMessage,

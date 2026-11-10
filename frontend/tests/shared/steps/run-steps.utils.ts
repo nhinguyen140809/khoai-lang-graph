@@ -59,3 +59,15 @@ export async function stopRun(page: Page) {
   await page.getByRole('contentinfo').getByRole('button', { name: 'Stop' }).click()
   await page.getByRole('alertdialog').getByRole('button', { name: 'Stop run' }).click()
 }
+
+/** Writes the feedback that an option of the review asks for. */
+export async function fillReviewFeedback(page: Page, option: string, feedback: string) {
+  await page.getByRole('textbox', { name: `Feedback for "${option}"` }).fill(feedback)
+}
+
+/** Types a message to the agents in the chat and sends it with the keyboard. */
+export async function sendChatMessage(page: Page, message: string) {
+  const box = page.getByRole('textbox', { name: 'Message to the agents' })
+  await box.fill(message)
+  await box.press('Enter')
+}
