@@ -82,6 +82,7 @@ export {
   findAgentRole,
   findNode,
   findValueList,
+  subjectKindByStage,
   toolsOf,
 } from './definition/workflow-definition.utils'
 export type {
