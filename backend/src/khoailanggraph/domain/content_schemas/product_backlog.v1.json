@@ -1,0 +1,37 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "$id": "artifacts/product_backlog/v1",
+  "title": "User stories",
+  "description": "The ordered backlog. Epics and user stories are the items of the artifact.",
+  "x-level": "artifact",
+  "x-kind": "product_backlog",
+  "x-schema-version": 1,
+  "x-ui-display": "document",
+  "x-ui-field-order": [
+    "product_goal",
+    "prioritization_notes"
+  ],
+  "type": "object",
+  "additionalProperties": false,
+  "properties": {
+    "product_goal": {
+      "title": "Product goal",
+      "type": "string",
+      "description": "The long-term objective the backlog works toward.",
+      "x-ui-widget": "textarea"
+    },
+    "prioritization_notes": {
+      "title": "Prioritization notes",
+      "type": [
+        "string",
+        "null"
+      ],
+      "description": "How the order of the items was decided.",
+      "x-ui-widget": "textarea"
+    }
+  },
+  "required": [
+    "product_goal",
+    "prioritization_notes"
+  ]
+}

@@ -1,0 +1,38 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "$id": "artifacts/persona_catalog/v1",
+  "title": "Interviewees",
+  "description": "The set of personas generated for the project.",
+  "x-level": "artifact",
+  "x-kind": "persona_catalog",
+  "x-schema-version": 1,
+  "x-ui-display": "document",
+  "x-ui-field-order": [
+    "selection_rationale",
+    "uncovered_stakeholder_types"
+  ],
+  "type": "object",
+  "additionalProperties": false,
+  "properties": {
+    "selection_rationale": {
+      "title": "Selection rationale",
+      "type": "string",
+      "description": "Why these personas were chosen for the stakeholder types of the plan.",
+      "x-ui-widget": "textarea"
+    },
+    "uncovered_stakeholder_types": {
+      "title": "Uncovered stakeholder types",
+      "type": "array",
+      "items": {
+        "type": "string"
+      },
+      "x-value-from": "elicitation_plan.stakeholder_types",
+      "description": "Stakeholder types of the plan that no persona represents.",
+      "x-ui-widget": "tags"
+    }
+  },
+  "required": [
+    "selection_rationale",
+    "uncovered_stakeholder_types"
+  ]
+}

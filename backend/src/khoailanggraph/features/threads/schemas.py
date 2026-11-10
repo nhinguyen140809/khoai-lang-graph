@@ -1,0 +1,39 @@
+"""Pydantic shapes of the threads feature (frontend Zod contracts §5)."""
+
+from __future__ import annotations
+
+from typing import Literal
+
+from pydantic import BaseModel, ConfigDict
+
+from khoailanggraph.platform.serialization import IsoDatetime
+
+ThreadStatus = Literal["active", "archived"]
+RunStatus = Literal["queued", "running", "interrupted", "succeeded", "failed", "cancelled"]
+
+
+class ThreadPatch(BaseModel):
+    """PATCH /threads/{id}: the fields to change; a field left out keeps its value."""
+
+    model_config = ConfigDict(extra="forbid")
+
+    title: str | None = None
+    status: ThreadStatus | None = None
+
+
+class ThreadSummary(BaseModel):
+    """The shape of every thread row the FE reads (mock parity)."""
+
+    model_config = ConfigDict(extra="forbid")
+
+    id: str
+    project_id: str
+    created_by: str
+    title: str | None
+    status: ThreadStatus
+    current_stage: str | None
+    active_run_id: str | None
+    latest_run_status: RunStatus | None
+    last_message_at: IsoDatetime
+    created_at: IsoDatetime
+    updated_at: IsoDatetime

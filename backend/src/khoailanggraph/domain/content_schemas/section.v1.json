@@ -1,0 +1,43 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "$id": "items/section/v1",
+  "title": "Section",
+  "description": "A heading that groups related items inside an artifact. Sections can contain sections. A section is not traced.",
+  "x-level": "item",
+  "x-kind": "section",
+  "x-schema-version": 1,
+  "x-key-prefix": "SEC",
+  "x-ui-display": "heading",
+  "x-ui-navigable": true,
+  "x-ui-title-field": "title",
+  "x-ui-list-fields": [
+    "title"
+  ],
+  "x-ui-field-order": [
+    "title",
+    "introduction"
+  ],
+  "type": "object",
+  "additionalProperties": false,
+  "properties": {
+    "title": {
+      "title": "Title",
+      "type": "string",
+      "description": "Heading text of at most 60 characters, without its number. The number, for example 3.2, is derived from the position of the section.",
+      "x-ui-widget": "text"
+    },
+    "introduction": {
+      "title": "Introduction",
+      "type": [
+        "string",
+        "null"
+      ],
+      "description": "Short text shown under the heading. Null when the section has none.",
+      "x-ui-widget": "textarea"
+    }
+  },
+  "required": [
+    "title",
+    "introduction"
+  ]
+}

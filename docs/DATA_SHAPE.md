@@ -119,7 +119,7 @@ The entities are grouped into six areas. An area is a group that changes togethe
 |---|---|---|
 | Identity and account | User, AuthIdentity, Session | MVP: User, Session. Later: AuthIdentity for external login |
 | Settings | UserSettings, ModelSettings, ModelCatalogEntry, ProviderCredential | MVP: first three. Later: ProviderCredential |
-| Workspace | Project, ProjectMember, SourceDocument, DocumentChunk | MVP: Project. Later: the other three |
+| Workspace | Project, ProjectMember, SourceDocument, DocumentVersion, DocumentChunk | MVP: Project, SourceDocument, DocumentVersion. Later: the other two |
 | Conversation and execution | Thread, Message, Run, RunStep, RunEvent, Interrupt, HumanDecision, Directive | MVP |
 | Requirements engineering artifacts | Artifact (7 kinds), ArtifactItem (12 kinds), ItemEmbedding | MVP: Artifact, ArtifactItem. Later: ItemEmbedding |
 | Cross-cutting | ArtifactRevision, ItemRevision, TraceLink, Comment, Export, ActivityEvent, Notification | MVP: ArtifactRevision, ItemRevision, TraceLink, Export. Later: the other three |
@@ -136,8 +136,9 @@ erDiagram
     User ||--o{ ProviderCredential : "supplies (Later)"
     User ||--o{ Notification : "receives (Later)"
     Project ||--o{ ProjectMember : "shared with (Later)"
-    Project ||--o{ SourceDocument : "contains (Later)"
-    SourceDocument ||--o{ DocumentChunk : "split into (Later)"
+    Project ||--o{ SourceDocument : contains
+    SourceDocument ||--o{ DocumentVersion : "has versions"
+    DocumentVersion ||--o{ DocumentChunk : "split into (Later)"
     Project ||--o{ Thread : contains
     Project |o--o| Message : "initial intent"
     Thread ||--o{ Message : contains
@@ -291,7 +292,7 @@ The master keys are kept in the server environment, never in the database, each 
 | `run_config` | RunDefaults | Settings for the runs of the project; a field left empty takes the value of the user, see [RunDefaults](#rundefaults-mvp) |
 | `initial_message_id` | ref\<Message\>? | The user message that started the first run of the project, for example "I want to build an online platform for university students to find mentors." Its content is the initial intent of the project. Null until the first run starts, so a run that starts while it is null is the first run of the project and begins at the planner |
 | `model_overrides` | map\<AgentRole, string\> | Optional `provider:model` per role for this project |
-| `item_counts` | map\<ItemKind, int\> | Derived, read-only. Shown on the project card |
+| `item_counts` | map\<ItemKind, int\> | Derived, read-only. The number of live items of each kind, in the list of projects and in the detail of one |
 | `unfinished_run_counts` | RunCounts | Derived, read-only. The number of unfinished runs of the project in each status, see below. `interrupted` counts the reviews that wait for the user |
 | `rollup_run_status` | enum? | Derived, read-only. The status that the latest [Run](#run-mvp) of each thread of the project rolls up to: the one that needs the user most, in the order `interrupted`, `failed`, `running`, `queued`, `cancelled`, `succeeded`. A run that a later run of its thread replaced no longer counts, so a failed run that was run again does not show. Null before the first run. The project list shows it |
 | `last_activity_at` | datetime | Derived, stored. Kept in a column so that the project list can be sorted by it |
@@ -309,22 +310,31 @@ Sharing a project with other users. Real-time collaboration on one thread stays 
 | `role` | enum | `owner`, `editor`, `viewer` |
 | `invited_by` | ref\<User\> | |
 
-### SourceDocument (Later)
+### SourceDocument (MVP)
 
-A file the user uploads as context for elicitation, for example an existing brief or meeting notes.
+A file the user uploads as context for elicitation, for example an existing brief or meeting notes. The row is the identity of the document; its content is in its [DocumentVersion](#documentversion-mvp) rows.
 
 | Field | Type | Notes |
 |---|---|---|
 | `project_id` | ref\<Project\> | |
-| `uploaded_by` | ref\<User\> | |
-| `first_version_id` | ref\<SourceDocument\> | The first version of the document, shared by all its versions; equal to `id` on version 1. Unique together with `version` |
-| `version` | int | Starts at 1. A changed document is uploaded as a new version with the same `first_version_id`; a stored version is never edited |
-| `file_name` | string | |
-| `media_type` | string | |
-| `size_bytes` | int | |
-| `storage_key` | server-only string | Location in object storage |
-| `extraction_status` | enum | `pending`, `ready`, `failed` |
-| `summary` | string? | Short summary used in prompts in place of the full text |
+| `title` | string | Taken from the file name when the upload gives none |
+| `filename` | string | The name of the file of the first upload |
+| `format` | enum | `txt`, `md`, `html`, `json` |
+| `latest_version` | int | The `version` of its newest DocumentVersion, from 1 |
+
+Later: `uploaded_by`, `extraction_status` (`pending`, `ready`, `failed`) and `summary` (a short text used in prompts in place of the full text), which a parser that runs after the upload needs.
+
+### DocumentVersion (MVP)
+
+One stored version of a document. A changed document is uploaded as a new version, which gets the next number; a stored version is never edited.
+
+| Field | Type | Notes |
+|---|---|---|
+| `document_id` | ref\<SourceDocument\> | Unique together with `version` |
+| `version` | int | Starts at 1 |
+| `size_bytes` | int | Size of the uploaded file |
+| `text` | string | The plain text extracted at upload, at most 20,000 characters; the research stage quotes it |
+| `storage_key` | server-only string | Location of the file bytes |
 
 ### DocumentChunk (Later)
 
@@ -332,7 +342,7 @@ A passage of the extracted text of a source document, with its embedding, so tha
 
 | Field | Type | Notes |
 |---|---|---|
-| `source_document_id` | ref\<SourceDocument\> | The document version the chunk comes from |
+| `document_version_id` | ref\<DocumentVersion\> | The document version the chunk comes from |
 | `project_id` | ref\<Project\> | Repeated so that a search stays inside one project |
 | `position` | int | Order of the chunk in the document, from 1 |
 | `text` | string | The passage |
@@ -357,6 +367,13 @@ A passage of the extracted text of a source document, with its embedding, so tha
 | `backlog_manager` | backlog manager | Writes the product backlog |
 | `validator` | validator | Checks the outputs and reports issues |
 | `intent_router` | intent router | Decides which node a message sent by the user should go to |
+
+Workflow definition version 2 keeps these roles and adds two.
+
+| Role | Node in the deck | Job |
+|---|---|---|
+| `corpus_builder` | corpus builder | Chooses the research documents that the interviewees are based on |
+| `stakeholder_miner` | stakeholder miner | Notes what each kind of stakeholder cares about in those documents, with the words of the document |
 
 ### Workflow stages
 
@@ -813,7 +830,7 @@ InterviewTranscript:
 | `turn_count` | int | |
 | `stop_reason` | enum? | `max_turns`, `interviewer_stopped`, `stopping_condition_met` |
 
-The fields above are the `content` of the transcript artifact. The persona being interviewed is its `subject_item_id`, which is also the `item_id` of the participant of that persona. The messages are the items of the transcript, ordered by `position`.
+The `summary` of the transcript artifact is one sentence about what the persona said, written by the `interviewer` when the interview ends, with its stop, or in one last turn when the turn limit ended it; a rework round writes it again. The fields above are the `content` of the transcript artifact. The persona being interviewed is its `subject_item_id`, which is also the `item_id` of the participant of that persona. The messages are the items of the transcript, ordered by `position`.
 
 InterviewMessage:
 
@@ -1225,6 +1242,8 @@ flowchart RL
 
 When an item changes, every item reachable through forward links may be out of date.
 Each link stores the version of the target it was created against (`target_version`). A link whose `target_version` is lower than the target's current `version` marks its source as needing review. A link whose target is `superseded` marks its source the same way: it must be derived again from the item that replaces the target.
+
+Approving an item at a review writes a new version with the same content. A link that was up to date with the item before the approval follows it to the new version, so a review does not mark anything as out of date; a link that was already behind stays behind.
 
 ## 9. Mapping to the agent workflow
 

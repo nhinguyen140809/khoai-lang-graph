@@ -1,0 +1,193 @@
+[project]
+name = "khoailanggraph"
+version = "0.1.0"
+description = "Multi-agent requirements engineering workflow on LangGraph (capstone: khoai-lang-graph)."
+readme = "README.md"
+requires-python = ">=3.12"
+dependencies = [
+    "fastapi>=0.115",
+    "uvicorn[standard]>=0.30",
+    "pydantic[email]>=2.7",
+    "pydantic-settings>=2.2",
+    "structlog>=24.1",
+    "jsonschema>=4.21",
+    "langgraph>=1.2",
+    "langchain-core>=0.3",
+    "pyyaml>=6.0",
+    "python-multipart>=0.0.9",
+    "sqlalchemy[asyncio]>=2.0",
+    "aiosqlite>=0.20",
+    "alembic>=1.13",
+    "langgraph-checkpoint-sqlite>=2.0",
+]
+
+[dependency-groups]
+dev = [
+    "pytest>=8.0",
+    "pytest-asyncio>=0.23",
+    "pytest-cov>=5.0",
+    "httpx>=0.27",
+    "ruff>=0.5",
+    "mypy>=1.10",
+    "import-linter>=2.0",
+    "types-jsonschema>=4.26.0.20261006",
+    "langchain>=1.0",
+    "types-pyyaml>=6.0.12.20260906",
+    "langchain-openai>=1.0",
+    "langchain-anthropic>=1.0",
+]
+# The bounded decision provider of the workflow gates (DECISION_PROVIDER=jev):
+# optional, so a default install works without it (falls back to mock).
+jev = [
+    "typesafe-sdk>=0.7",
+]
+
+[build-system]
+requires = ["hatchling"]
+build-backend = "hatchling.build"
+
+[tool.hatch.build.targets.wheel]
+packages = ["src/khoailanggraph"]
+
+[tool.ruff]
+line-length = 100
+src = ["src", "tests"]
+
+[tool.ruff.lint]
+# The rule sets of the repository conventions (CONTRIBUTING.md: Python backend).
+select = ["E", "F", "W", "I", "N", "UP", "B", "SIM", "RUF", "ASYNC", "S", "PL", "PT", "TC"]
+
+[tool.ruff.lint.per-file-ignores]
+# Tests use assertions and broad fixtures by design.
+"tests/**" = ["S101", "S106", "PLR2004"]
+# These signatures follow the documented store protocols (docs/DATA_SHAPE §8
+# and ports.py) and the workflow node shapes of definition v1; splitting them
+# would scatter the contract.
+"src/khoailanggraph/agents/requirements_engineering/ports.py" = ["PLR0913"]
+"src/khoailanggraph/agents/requirements_engineering/nodes.py" = ["PLR0915"]
+"tests/support/fake_data.py" = ["PLR0913", "PLR0917"]
+"tests/support/in_memory_sinks.py" = ["PLR0913"]
+"tests/test_workflow.py" = ["PLR0915"]
+# Migration files are Alembic-generated; their length is the schema itself.
+"migrations/**" = ["PLR0915", "PLC0415", "E402", "TC003"]
+# Pydantic models resolve their annotations at runtime; the schemas that carry
+# `datetime` fields tolerate the rule with the import being runtime-import.
+"src/khoailanggraph/features/projects/schemas.py" = ["TC001", "TC003"]
+"src/khoailanggraph/features/threads/schemas.py" = ["TC001", "TC003"]
+"src/khoailanggraph/features/me/schemas.py" = ["TC001", "TC003"]
+# `IsoDatetime` is a runtime Annotated alias Pydantic must see when the
+# schema class is built; TYPE_CHECKING would 500 every response.
+"src/khoailanggraph/features/artifacts/schemas.py" = ["TC001"]
+"src/khoailanggraph/features/runs/schemas.py" = ["TC001", "TC003"]
+# The run executor is one narrative worker; its wires are the §5 contract.
+"src/khoailanggraph/features/runs/service.py" = ["PLR0912", "PLR0913", "PLR0915", "PLR0917"]
+"src/khoailanggraph/features/runs/router.py" = ["PLC0415", "PLR0913", "PLR0917"]
+"src/khoailanggraph/features/runs/executor.py" = ["PLR0911", "PLR0912", "PLR0913", "PLR0915", "PLR0917"]
+# The documents feature follows the same §5 contract shape as its siblings.
+"src/khoailanggraph/features/documents/router.py" = ["PLR0913", "PLR0917", "TC003"]
+"src/khoailanggraph/features/documents/service.py" = ["PLR0913"]
+"src/khoailanggraph/features/documents/schemas.py" = ["TC001", "TC003"]
+"src/khoailanggraph/features/artifacts/service.py" = ["PLR0913", "PLR0917", "TC002"]
+"src/khoailanggraph/features/artifacts/router.py" = ["PLR0913", "PLR0917"]
+"src/khoailanggraph/features/artifacts/editing.py" = ["PLR0913", "PLR0917"]
+"src/khoailanggraph/features/projects/router.py" = ["PLR0913", "PLR0917"]
+"src/khoailanggraph/features/exports/router.py" = ["PLR0913", "PLR0917", "TC003"]
+"src/khoailanggraph/features/exports/schemas.py" = ["TC001"]
+"src/khoailanggraph/features/exports/service.py" = ["TC003"]
+# uv scripts may print to stdout; they are developer tools.
+"scripts/**" = ["T201", "S108"]
+
+[tool.mypy]
+strict = true
+python_version = "3.12"
+plugins = ["pydantic.mypy"]
+
+[[tool.mypy.overrides]]
+# The optional jev provider (README.md: Decision layer): absent without
+# `uv sync --group jev`, present and typed when installed.
+module = ["typesafe_sdk.*"]
+ignore_missing_imports = true
+
+[tool.pytest.ini_options]
+testpaths = ["tests"]
+asyncio_mode = "auto"
+addopts = "-q"
+
+[tool.coverage.run]
+source = ["src/khoailanggraph"]
+omit = ["src/khoailanggraph/settings/logging.py"]
+
+[tool.importlinter]
+root_packages = ["khoailanggraph"]
+include_external_packages = true
+
+[[tool.importlinter.contracts]]
+name = "Backend layered imports (CONTRIBUTING: import rules)"
+type = "layers"
+layers = [
+    "khoailanggraph.api",
+    "khoailanggraph.features",
+    "khoailanggraph.agents",
+    "khoailanggraph.llm | khoailanggraph.tools | khoailanggraph.integrations | khoailanggraph.platform",
+    "khoailanggraph.settings",
+    "khoailanggraph.domain",
+]
+# The feature routers/services ARE the HTTP adapter of their use cases
+# (docs/API.md §4): they raise `ApiError` problems, take the `require_user`
+# dependency and answer with `Page` envelopes directly. Every exception is
+# enumerated, never wildcarded; the domain-error translation that would
+# remove these is a follow-up in backend/gap-report.md.
+ignore_imports = [
+    "khoailanggraph.features.artifacts.editing -> khoailanggraph.api.errors",
+    "khoailanggraph.features.artifacts.router -> khoailanggraph.api.deps",
+    "khoailanggraph.features.artifacts.router -> khoailanggraph.api.errors",
+    "khoailanggraph.features.artifacts.router -> khoailanggraph.api.schemas",
+    "khoailanggraph.features.artifacts.service -> khoailanggraph.api.errors",
+    "khoailanggraph.features.documents.router -> khoailanggraph.api.deps",
+    "khoailanggraph.features.documents.router -> khoailanggraph.api.errors",
+    "khoailanggraph.features.documents.router -> khoailanggraph.api.schemas",
+    "khoailanggraph.features.documents.service -> khoailanggraph.api.errors",
+    "khoailanggraph.features.exports.router -> khoailanggraph.api.deps",
+    "khoailanggraph.features.exports.router -> khoailanggraph.api.idempotency",
+    "khoailanggraph.features.exports.router -> khoailanggraph.api.schemas",
+    "khoailanggraph.features.exports.service -> khoailanggraph.api.errors",
+    "khoailanggraph.features.me.account -> khoailanggraph.api.errors",
+    "khoailanggraph.features.me.account_router -> khoailanggraph.api.deps",
+    "khoailanggraph.features.me.account_router -> khoailanggraph.api.schemas",
+    "khoailanggraph.features.me.router -> khoailanggraph.api.deps",
+    "khoailanggraph.features.me.router -> khoailanggraph.api.errors",
+    "khoailanggraph.features.me.service -> khoailanggraph.api.errors",
+    "khoailanggraph.features.projects.router -> khoailanggraph.api.deps",
+    "khoailanggraph.features.projects.router -> khoailanggraph.api.errors",
+    "khoailanggraph.features.projects.router -> khoailanggraph.api.idempotency",
+    "khoailanggraph.features.projects.router -> khoailanggraph.api.schemas",
+    "khoailanggraph.features.projects.service -> khoailanggraph.api.errors",
+    "khoailanggraph.features.runs.router -> khoailanggraph.api.deps",
+    "khoailanggraph.features.runs.config -> khoailanggraph.api.errors",
+    "khoailanggraph.features.runs.router -> khoailanggraph.api.errors",
+    "khoailanggraph.features.runs.router -> khoailanggraph.api.idempotency",
+    "khoailanggraph.features.runs.router -> khoailanggraph.api.schemas",
+    "khoailanggraph.features.runs.service -> khoailanggraph.api.errors",
+    "khoailanggraph.features.threads.service -> khoailanggraph.api.errors",
+]
+
+[[tool.importlinter.contracts]]
+name = "Domain imports no internal package"
+type = "forbidden"
+source_modules = ["khoailanggraph.domain"]
+forbidden_modules = [
+    "khoailanggraph.api",
+    "khoailanggraph.features",
+    "khoailanggraph.agents",
+    "khoailanggraph.llm",
+    "khoailanggraph.tools",
+    "khoailanggraph.integrations",
+    "khoailanggraph.platform",
+    "khoailanggraph.settings",
+]
+
+[[tool.importlinter.contracts]]
+name = "Agents never import the API layer or features"
+type = "forbidden"
+source_modules = ["khoailanggraph.agents"]
+forbidden_modules = ["khoailanggraph.api", "khoailanggraph.features", "fastapi"]
