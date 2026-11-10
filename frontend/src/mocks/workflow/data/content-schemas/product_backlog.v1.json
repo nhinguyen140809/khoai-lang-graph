@@ -7,7 +7,11 @@
   "x-kind": "product_backlog",
   "x-schema-version": 1,
   "x-ui-display": "document",
-  "x-ui-field-order": ["product_goal", "prioritization_notes"],
+  "x-ui-field-order": [
+    "product_goal",
+    "prioritization_notes",
+    "definition_of_done"
+  ],
   "type": "object",
   "additionalProperties": false,
   "properties": {
@@ -19,10 +23,26 @@
     },
     "prioritization_notes": {
       "title": "Prioritization notes",
-      "type": ["string", "null"],
+      "type": [
+        "string",
+        "null"
+      ],
       "description": "How the order of the items was decided.",
       "x-ui-widget": "textarea"
+    },
+    "definition_of_done": {
+      "title": "Conditions for completion",
+      "type": "array",
+      "items": {
+        "type": "string"
+      },
+      "description": "The conditions that every item must meet before it counts as done. They apply to the whole team and are separate from the acceptance criteria of one item.",
+      "x-ui-widget": "list"
     }
   },
-  "required": ["product_goal", "prioritization_notes"]
+  "required": [
+    "product_goal",
+    "prioritization_notes",
+    "definition_of_done"
+  ]
 }

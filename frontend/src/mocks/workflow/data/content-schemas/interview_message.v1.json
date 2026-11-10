@@ -19,8 +19,11 @@
     "turn",
     "speaker",
     "content",
-    "iteration",
-    "topic"
+    "message_kind",
+    "topic",
+    "follows_up_on",
+    "covers",
+    "iteration"
   ],
   "type": "object",
   "additionalProperties": false,
@@ -44,12 +47,13 @@
       "description": "The text of the message.",
       "x-ui-widget": "textarea"
     },
-    "iteration": {
-      "title": "Iteration",
-      "type": "integer",
-      "minimum": 0,
-      "description": "0 for the first interview, higher for rework rounds.",
-      "x-ui-widget": "number"
+    "message_kind": {
+      "title": "What it does",
+      "type": "string",
+      "x-value-list": "message_kind",
+      "description": "What the message is: the question that opens the interview, a question that digs into what was just said, a question on a new topic, or an answer.",
+      "x-ui-widget": "badge",
+      "readOnly": true
     },
     "topic": {
       "title": "Topic",
@@ -60,13 +64,43 @@
       "x-value-from": "elicitation_plan.topics",
       "description": "The plan topic the question targets.",
       "x-ui-widget": "select"
+    },
+    "follows_up_on": {
+      "title": "Digs into",
+      "type": [
+        "string",
+        "null"
+      ],
+      "description": "The earlier message that this question follows up on; empty when the question is not a follow-up.",
+      "x-ui-widget": "text",
+      "readOnly": true
+    },
+    "covers": {
+      "title": "What it told us",
+      "type": "array",
+      "items": {
+        "type": "string"
+      },
+      "description": "The data of the plan that this answer gave, as the interviewer judged it. The person who answers never sees it.",
+      "x-ui-widget": "list",
+      "readOnly": true
+    },
+    "iteration": {
+      "title": "Iteration",
+      "type": "integer",
+      "minimum": 0,
+      "description": "0 for the first interview, higher for rework rounds.",
+      "x-ui-widget": "number"
     }
   },
   "required": [
     "turn",
     "speaker",
     "content",
-    "iteration",
-    "topic"
+    "message_kind",
+    "topic",
+    "follows_up_on",
+    "covers",
+    "iteration"
   ]
 }
