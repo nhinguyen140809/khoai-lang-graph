@@ -276,6 +276,8 @@ async def stream_run_events(
     header_id = request.headers.get("last-event-id") or request.headers.get("Last-Event-ID")
     start = int(header_id) if header_id is not None else after if after is not None else 0
 
+    session_factory = request.app.state.session_factory
+
     async def event_source() -> AsyncIterator[bytes]:
         # A first line at once makes a proxy in front of the API send the headers and open the
         # stream, instead of holding it until the first event or ping.
@@ -284,16 +286,20 @@ async def stream_run_events(
         idle_seconds = 0.0
         heartbeat_seconds = 15.0
         while True:
-            rows = list(
-                (
-                    await db.execute(
-                        select(RunEventRow)
-                        .where(RunEventRow.run_id == run_id, RunEventRow.sequence > cursor)
-                        .order_by(RunEventRow.sequence)
-                    )
-                ).scalars()
-            )
-            await asyncio.sleep(0)
+            if await request.is_disconnected():
+                return
+            # Each read has a session of its own: a stream lives far longer than the request
+            # session, which is closed when the client leaves.
+            async with session_factory() as session:
+                rows = list(
+                    (
+                        await session.execute(
+                            select(RunEventRow)
+                            .where(RunEventRow.run_id == run_id, RunEventRow.sequence > cursor)
+                            .order_by(RunEventRow.sequence)
+                        )
+                    ).scalars()
+                )
             finished = False
             if rows:
                 cursor = rows[-1].sequence
@@ -306,7 +312,6 @@ async def stream_run_events(
                     f"event: {row.type}\n"
                     f"data: {jsonlib.dumps(payload, ensure_ascii=False)}\n\n"
                 ).encode()
-            await db.commit()
             if finished:
                 return
             if rows:
