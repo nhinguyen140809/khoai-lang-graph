@@ -172,7 +172,7 @@ function WorkWordsLine({ words }: { words: ReturnType<typeof useWorkWords> }) {
   return (
     <>
       <TraceDescription className="flex flex-wrap gap-x-2">
-        {[words.status, words.round, words.took, words.writes, ...words.details]
+        {[words.continued, words.status, words.round, words.took, words.writes, ...words.details]
           .filter((part): part is string => part !== null)
           .map((part, index) => (
             <span key={index}>{part}</span>

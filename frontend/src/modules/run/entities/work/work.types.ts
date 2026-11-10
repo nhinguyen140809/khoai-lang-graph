@@ -22,6 +22,9 @@ export interface WorkEntry {
   /** The key of that item, from what the steps produced; null without one. */
   subjectKey: string | null
   status: WorkStatus
+  /** Whether the line carries on a line of the same work that a message cut short. */
+  continues: boolean
+  /** When the line began; for a line that continues, when the message that cut the one before came. */
   startedAt: string
   /** Null while a step runs. */
   durationMs: number | null
@@ -42,6 +45,8 @@ export interface WorkWords {
   round: string | null
   took: string | null
   writes: string | null
+  /** Says that the line carries on the work above it; null for a line that starts the work. */
+  continued: string | null
   /** Developer view: the steps, the model and the cost; empty in the user view. */
   details: string[]
   failure: string | null

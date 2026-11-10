@@ -46,5 +46,7 @@ export const workMessages = {
   counts: (created: number, changed: number) => `+${String(created)} ~${String(changed)}`,
   steps: (count: number) =>
     `${String(count)} ${pluralForm(count, { one: 'step', other: 'steps' })}`,
+  /** On a line of work that carries on after a message cut the line before it short. */
+  continued: 'Continued',
   failedWithoutReason: 'The work stopped because of an error.',
 } as const

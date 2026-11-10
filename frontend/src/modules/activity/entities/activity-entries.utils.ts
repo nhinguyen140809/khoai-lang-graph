@@ -1,6 +1,6 @@
 import type { ItemRef } from '@/modules/artifact/entities/@x/activity'
 import type { Interrupt } from '@/modules/review/entities/@x/activity'
-import type { WorkEntry } from '@/modules/run/entities/@x/activity'
+import { splitWork, type WorkEntry } from '@/modules/run/entities/@x/activity'
 import type { Message } from '@/modules/thread/entities/@x/activity'
 import { groupBy, rankIn } from '@/shared/lib/collections'
 import type { View } from '@/shared/lib/view'
@@ -23,6 +23,8 @@ function kindGroupsOf(work: WorkEntry, kindTitles: ReadonlyMap<string, string>):
 
 /**
  * The entries of a run in the order of their time: a message first, then work, then a review.
+ * A line of work that a message or a review comes in the middle of is cut there, and what the work
+ * does next is a line that continues it, so that nothing shows before what happened before it.
  * In the user view, a line of a stage that the user does not see is left out; the developer view
  * keeps it with its stage title null.
  */
@@ -35,6 +37,10 @@ export function runEntries(input: {
   kindTitles: ReadonlyMap<string, string>
   view: View
 }): ActivityEntry[] {
+  const cuts = [
+    ...input.messages.map(({ created_at }) => created_at),
+    ...input.interrupts.map(({ created_at }) => created_at),
+  ]
   const entries: ActivityEntry[] = [
     ...input.messages.map((message) => ({
       type: 'message' as const,
@@ -42,18 +48,20 @@ export function runEntries(input: {
       time: message.created_at,
       message,
     })),
-    ...input.work.map((work) => ({
-      type: 'work' as const,
-      id: work.id,
-      time: work.startedAt,
-      work,
-      stageTitle: input.stageTitles.get(work.stage) ?? null,
-      subjectTitle:
-        work.subjectItemId === null
-          ? null
-          : (input.subjectTitles.get(work.subjectItemId) ?? work.subjectKey),
-      kindGroups: kindGroupsOf(work, input.kindTitles),
-    })),
+    ...input.work
+      .flatMap((line) => splitWork(line, cuts))
+      .map((work) => ({
+        type: 'work' as const,
+        id: work.id,
+        time: work.startedAt,
+        work,
+        stageTitle: input.stageTitles.get(work.stage) ?? null,
+        subjectTitle:
+          work.subjectItemId === null
+            ? null
+            : (input.subjectTitles.get(work.subjectItemId) ?? work.subjectKey),
+        kindGroups: kindGroupsOf(work, input.kindTitles),
+      })),
     ...input.interrupts.map((interrupt) => ({
       type: 'review' as const,
       id: interrupt.id,

@@ -84,6 +84,7 @@ export function workEntries(steps: RunStep[], run: Pick<Run, 'status'> | null): 
         subjectItemId,
         subjectKey: subjectKey === null ? null : subjectKeyOfMessage(subjectKey),
         status: workStatusOf(grouped, run),
+        continues: false,
         startedAt: first?.started_at ?? '',
         durationMs:
           last?.finished_at === null || last?.finished_at === undefined || first === undefined
@@ -96,4 +97,57 @@ export function workEntries(steps: RunStep[], run: Pick<Run, 'status'> | null): 
         error: grouped.find(({ error }) => error !== null)?.error ?? null,
       }
     })
+}
+
+/**
+ * A line of work in the parts that the given times cut it into, in order. A step writes its notes
+ * as it works, so a message that comes while it works lands between its notes: the line stops
+ * there, and what the step notes next is a new line that continues it. Only the last part keeps
+ * the steps, the cost, what was written and how the work ended; the parts before it are done.
+ * A time cuts only where it leaves notes on both sides, or a step still running after it, so the
+ * report that a step posts as it ends does not make a line of its own, and two times with no note
+ * between them make one cut. The line comes back whole when nothing cuts it.
+ */
+export function splitWork(work: WorkEntry, cuts: readonly string[]): WorkEntry[] {
+  const lastStep = work.steps.at(-1)
+  const startMs = Date.parse(work.startedAt)
+  const endMs = lastStep?.finished_at ? Date.parse(lastStep.finished_at) : null
+  const notes = work.notes.map((note) => ({ note, at: Date.parse(note.created_at) }))
+
+  const kept: { at: number; time: string }[] = []
+  for (const time of cuts.toSorted((first, second) => Date.parse(first) - Date.parse(second))) {
+    const at = Date.parse(time)
+    const isInside = at > startMs && (endMs === null || at < endMs)
+    if (!isInside) continue
+    const from = kept.at(-1)?.at ?? Number.NEGATIVE_INFINITY
+    const hasNotesBefore =
+      kept.length === 0 || notes.some((entry) => entry.at >= from && entry.at < at)
+    const hasNotesAfter = endMs === null || notes.some((entry) => entry.at >= at)
+    if (hasNotesBefore && hasNotesAfter) kept.push({ at, time })
+  }
+  if (kept.length === 0) return [work]
+
+  const starts = [Number.NEGATIVE_INFINITY, ...kept.map(({ at }) => at)]
+  return starts.map((from, index) => {
+    const to = starts[index + 1] ?? Number.POSITIVE_INFINITY
+    const part = {
+      ...work,
+      id: index === 0 ? work.id : `${work.id}~${String(index)}`,
+      continues: index > 0,
+      startedAt: kept[index - 1]?.time ?? work.startedAt,
+      notes: notes.filter((entry) => entry.at >= from && entry.at < to).map(({ note }) => note),
+    }
+    return index === starts.length - 1
+      ? part
+      : {
+          ...part,
+          status: 'done' as const,
+          durationMs: null,
+          costUsd: 0,
+          steps: [],
+          created: [],
+          changed: [],
+          error: null,
+        }
+  })
 }

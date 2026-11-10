@@ -1,5 +1,6 @@
 import { describe, expect, it } from 'vitest'
 
+import { buildMessage } from '@/mocks/messages/messages.fixtures'
 import { buildStep } from '@/mocks/runs/fixtures/runs.fixtures'
 import { runIds } from '@/mocks/shared/db'
 import { workEntries } from '@/modules/run/entities'
@@ -119,5 +120,56 @@ describe('messagesByRun', () => {
 describe('entryAnchorId', () => {
   it('anchors an entry by its id', () => {
     expect(entryAnchorId('i1')).toBe('entry-i1')
+  })
+
+  it('cuts a line of work where a message comes while it works, and puts each part in its time', () => {
+    const at = (clock: string) => `2026-10-06T10:${clock}Z`
+    const work = workEntries(
+      [
+        buildStep({
+          sequence: 1,
+          agent_role: 'stakeholder_miner',
+          stage: 'research',
+          started_at: at('00:00'),
+          finished_at: at('12:00'),
+          notes: [
+            { kind: 'finding', text: 'First.', created_at: at('03:00') },
+            { kind: 'finding', text: 'Second.', created_at: at('04:00') },
+          ],
+        }),
+      ],
+      run,
+    )
+    const entries = runEntries({
+      messages: [
+        buildMessage({
+          id: 'm-a',
+          thread_id: run.thread_id,
+          sequence: 2,
+          created_at: at('03:30'),
+          run_id: run.id,
+        }),
+        buildMessage({
+          id: 'm-b',
+          thread_id: run.thread_id,
+          sequence: 3,
+          created_at: at('11:59'),
+          run_id: run.id,
+        }),
+      ],
+      work,
+      interrupts: [],
+      stageTitles: new Map([['research', 'Finding evidence']]),
+      subjectTitles,
+      kindTitles,
+      view: 'user',
+    })
+
+    expect(entries.map(({ type, id }) => `${type}:${id}`)).toEqual([
+      'work:s1',
+      'message:m-a',
+      'work:s1~1',
+      'message:m-b',
+    ])
   })
 })
