@@ -30,7 +30,11 @@ class ResizeObserverStub {
   }
 }
 if (!('ResizeObserver' in globalThis)) {
-  Object.defineProperty(globalThis, 'ResizeObserver', { value: ResizeObserverStub, writable: true })
+  Object.defineProperty(globalThis, 'ResizeObserver', {
+    value: ResizeObserverStub,
+    writable: true,
+    configurable: true,
+  })
 }
 // jsdom declares matchMedia without implementing it.
 Object.defineProperty(window, 'matchMedia', {
