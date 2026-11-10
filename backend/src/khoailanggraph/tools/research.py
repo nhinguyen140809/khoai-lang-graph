@@ -352,10 +352,12 @@ def _wiki_page_text(title: str) -> str:
 def live_research_search(queries: Sequence[str]) -> list[dict[str, Any]]:
     """The keyless live chain: DuckDuckGo's web results, Wikipedia when the
     open web answers with nothing (its anomaly page, a captive portal, ...)."""
-    hits = duckduckgo_research_search(queries)
+    # Wikipedia first: its API is fast and stable, while the DuckDuckGo HTML
+    # endpoint throttles and can stall a run for minutes.
+    hits = wikipedia_research_search(queries)
     if hits:
         return hits
-    return wikipedia_research_search(queries)
+    return duckduckgo_research_search(queries)
 
 
 def research_search_of(config: Mapping[str, Any]) -> ResearchSearch:

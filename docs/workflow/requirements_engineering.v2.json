@@ -3,7 +3,7 @@
   "version": 2,
   "description": "Elicits requirements from a product idea: builds a research corpus of real documents (member uploads first, live search after), mines evidence-backed stakeholder perspectives from them, grounds the simulated stakeholder personas in that evidence, interviews them, then analyzes, specifies, backlogizes and validates the requirements, with human review at three checkpoints.",
   "entry": {
-    "first_run": "planner",
+    "first_run": "intent_router",
     "later_runs": "intent_router",
     "pending_messages": "intent_router"
   },
@@ -85,6 +85,12 @@
     {
       "key": "planning",
       "title": "Planning the interviews",
+      "internal": false,
+      "parent": null
+    },
+    {
+      "key": "planning_review",
+      "title": "Plan review",
       "internal": false,
       "parent": null
     },
@@ -176,6 +182,29 @@
       "agent_role": "planner"
     },
     {
+      "id": "checkpoint_plan",
+      "kind": "checkpoint",
+      "label": "checkpoint_plan",
+      "title": "Answer the clarifying questions",
+      "stage": "planning_review",
+      "prompt": "Review the plan. Answer the questions below so the personas and the interviews match the real context.",
+      "review_artifact_kinds": [
+        "elicitation_plan"
+      ],
+      "allow_edits": true,
+      "options": [
+        {
+          "key": "approve",
+          "label": "Approve the interviewees",
+          "requires_feedback": false,
+          "approves": true,
+          "is_default": true
+        }
+      ],
+      "questions": [],
+      "agent_questions": true
+    },
+    {
       "id": "corpus_builder",
       "kind": "agent",
       "label": "corpus_builder",
@@ -217,7 +246,7 @@
         }
       ],
       "questions": [],
-      "agent_questions": true
+      "agent_questions": false
     },
     {
       "id": "interviewer",
@@ -391,8 +420,8 @@
       "option": null
     },
     {
-      "source": "planner",
-      "target": "corpus_builder",
+      "source": "intent_router",
+      "target": "checkpoint_plan",
       "label": null,
       "conditional": false,
       "option": null
@@ -528,6 +557,20 @@
       "target": "requirement_engineer",
       "label": "fail",
       "conditional": true,
+      "option": null
+    },
+    {
+      "source": "checkpoint_plan",
+      "target": "planner",
+      "label": "approve",
+      "conditional": true,
+      "option": "approve"
+    },
+    {
+      "source": "planner",
+      "target": "corpus_builder",
+      "label": null,
+      "conditional": false,
       "option": null
     }
   ],

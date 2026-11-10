@@ -2238,6 +2238,7 @@ def make_checkpoint(
     return node
 
 
+checkpoint_plan = make_checkpoint("checkpoint_plan", "elicitation_plan")
 checkpoint_personas = make_checkpoint("checkpoint_personas", "persona_catalog")
 checkpoint_analysis = make_checkpoint("checkpoint_analysis", "requirements_analysis")
 checkpoint_spec = make_checkpoint("checkpoint_spec", "requirement_specification")

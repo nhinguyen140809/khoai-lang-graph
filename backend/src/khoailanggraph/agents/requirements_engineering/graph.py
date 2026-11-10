@@ -28,6 +28,7 @@ from khoailanggraph.agents.requirements_engineering.nodes import (
     backlog_manager_node,
     checkpoint_analysis,
     checkpoint_personas,
+    checkpoint_plan,
     checkpoint_spec,
     corpus_builder_node,
     intent_router_node,
@@ -52,6 +53,7 @@ NODE_NAMES = (
     "corpus_builder",
     "stakeholder_miner",
     "persona_generator",
+    "checkpoint_plan",
     "checkpoint_personas",
     "interviewer",
     "persona_agent",
@@ -66,7 +68,7 @@ NODE_NAMES = (
     "__end__",
 )
 
-EDGE_COUNT = 27
+EDGE_COUNT = 28
 
 
 def build_re_graph(
@@ -79,6 +81,7 @@ def build_re_graph(
     builder.add_node("corpus_builder", corpus_builder_node)
     builder.add_node("stakeholder_miner", stakeholder_miner_node)
     builder.add_node("persona_generator", persona_generator_node)
+    builder.add_node("checkpoint_plan", checkpoint_plan)
     builder.add_node("checkpoint_personas", checkpoint_personas)
     builder.add_node("interviewer", interviewer_node)
     builder.add_node("persona_agent", persona_agent_node)
@@ -99,9 +102,14 @@ def build_re_graph(
     builder.add_conditional_edges(
         "intent_router",
         routing.route_after_intent_router,
-        ["planner", "interviewer", "analyst", "requirement_engineer", "backlog_manager"],
+        ["planner", "checkpoint_plan", "interviewer", "analyst", "requirement_engineer", "backlog_manager"],
     )
     builder.add_edge("planner", "corpus_builder")
+    builder.add_conditional_edges(
+        "checkpoint_plan",
+        routing.route_after_plan,
+        ["planner", END],
+    )
     builder.add_edge("corpus_builder", "stakeholder_miner")
     builder.add_edge("stakeholder_miner", "persona_generator")
     builder.add_edge("persona_generator", "checkpoint_personas")
