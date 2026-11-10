@@ -128,6 +128,8 @@ class HumanDecisionRow(Base):
     option: Mapped[str | None] = mapped_column(String, nullable=True)
     feedback: Mapped[str | None] = mapped_column(Text, nullable=True)
     answers_json: Mapped[bytes] = mapped_column(default=b"{}", nullable=False)
+    # The items the user edited before answering, each as an ItemRef at the version it has now.
+    modified_items_json: Mapped[bytes] = mapped_column(default=b"[]", nullable=False)
     created_at: Mapped[datetime] = mapped_column(DateTime, default=utcnow, nullable=False)
 
 

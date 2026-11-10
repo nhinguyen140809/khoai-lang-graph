@@ -72,6 +72,20 @@ class Settings(BaseSettings):
     # The files of the exports land under this directory as {uuid}.bin keys the API never returns.
     exports_dir: Path = BACKEND_DIR / "data" / "exports"
     max_upload_mb: int = 10
+    # How runs execute: "background" walks the workflow on a thread of the API process and
+    # answers at once; "inline" walks it inside the request (tests and scripts that need the
+    # finished run in the response).
+    run_execution: str = "background"
+    # The reviews a run pauses for when neither the request, the project nor the user settings
+    # name any: None pauses at every checkpoint of the workflow, an empty list at none.
+    default_review_checkpoints: list[str] | None = None
+    # The budget of a user per calendar month in UTC (US dollars) when the user has none of
+    # their own; None means no limit.
+    default_monthly_budget_usd: float | None = 20.0
+    # Requests per minute and per user that the API accepts (429 rate_limited after that).
+    requests_per_minute: int = 300
+    # Attempts per minute and per IP address on login and registration.
+    auth_attempts_per_minute: int = 20
     # The interactive API docs (/docs, /redoc, /openapi.json) are developer
     # tooling. None (the default) serves them outside `production` only;
     # API_DOCS_ENABLED=true|false sets the rule explicitly.

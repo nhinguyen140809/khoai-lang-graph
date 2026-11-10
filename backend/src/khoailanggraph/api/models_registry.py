@@ -13,3 +13,4 @@ from khoailanggraph.features.me.models import *  # noqa: F403
 from khoailanggraph.features.projects.models import *  # noqa: F403
 from khoailanggraph.features.runs.models import *  # noqa: F403
 from khoailanggraph.features.threads.models import *  # noqa: F403
+from khoailanggraph.platform.idempotency import *  # noqa: F403

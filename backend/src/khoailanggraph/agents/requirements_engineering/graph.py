@@ -94,7 +94,7 @@ def build_re_graph(
     builder.add_conditional_edges(
         START,
         routing.route_start,
-        ["planner", "intent_router"],
+        [name for name in NODE_NAMES if name not in {"__start__", "__end__"}],
     )
     builder.add_conditional_edges(
         "intent_router",

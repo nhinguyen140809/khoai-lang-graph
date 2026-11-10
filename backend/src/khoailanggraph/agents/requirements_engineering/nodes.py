@@ -23,13 +23,13 @@ through untouched. Nothing here imports FastAPI or the features layer.
 """
 
 import json
+import time
 from collections.abc import Callable, Mapping, Sequence
 from functools import wraps
 from typing import TYPE_CHECKING, Any, TypeVar, cast
 
 import structlog
 from langchain_core.runnables import RunnableConfig
-from langgraph.types import interrupt
 from pydantic import BaseModel
 
 from khoailanggraph.agents import prompts as prompt_loader
@@ -69,6 +69,8 @@ from khoailanggraph.agents.requirements_engineering.ports import (
     DirectiveItem,
     DirectiveSink,
     ItemRecord,
+    LlmGate,
+    RunLimitError,
 )
 from khoailanggraph.agents.requirements_engineering.state import ArtifactRef, REState
 from khoailanggraph.agents.requirements_engineering.views import (
@@ -78,7 +80,8 @@ from khoailanggraph.agents.requirements_engineering.views import (
 )
 from khoailanggraph.domain import rules as domain_rules
 from khoailanggraph.domain.run_config import RunConfig
-from khoailanggraph.llm import get_chat_model
+from khoailanggraph.llm import get_chat_model, resolve_model_id
+from khoailanggraph.llm.usage import UsageHandler
 from khoailanggraph.tools.research import research_queries, research_search_of
 
 if TYPE_CHECKING:
@@ -176,14 +179,22 @@ def _invoke[T: BaseModel](
     prompt = prompt_loader.load_cached(PROMPTS_PACKAGE, role, int(entry["prompt_version"]))
     messages = prompt_loader.assemble_prompt(prompt, prompt_values)
     model: BaseChatModel = get_chat_model(role, config)
+    gate = cast("LlmGate | None", _configurable(config).get("llm_gate"))
+    model_id = resolve_model_id(role, cast("Mapping[str, Any]", config))
     # A streamed generation can degenerate (a repetition loop that ends in a
     # truncated, unparseable tool call — seen as 386KB of junk on the real
     # gateway 2026-10-27). One fresh attempt is almost always clean, so a bad
     # parse retries instead of failing the whole run.
     last_error: Exception | None = None
     for attempt in range(_LLM_PARSE_ATTEMPTS):
+        if gate is not None:
+            gate.before_call(role)
+        handler = UsageHandler()
+        started = time.monotonic()
         try:
-            answer = model.with_structured_output(schema).invoke(messages)
+            answer = model.with_structured_output(schema).invoke(
+                messages, config={"callbacks": [handler]}
+            )
             if not isinstance(answer, schema):
                 msg = f"{role} returned {type(answer).__name__}, expected {schema.__name__}"
                 raise TypeError(msg)
@@ -197,6 +208,11 @@ def _invoke[T: BaseModel](
                     attempt=attempt + 1,
                     error=f"{type(exc).__name__}: {str(exc)[:200]}",
                 )
+        finally:
+            # A call that failed was paid for as well: its tokens count.
+            if gate is not None:
+                elapsed = int((time.monotonic() - started) * 1000)
+                gate.record_call(role, model_id, handler.usage(model_id, elapsed))
     if last_error is None:  # unreachable: the loop always ran at least once
         msg = f"{role} produced no answer"
         raise RuntimeError(msg)
@@ -232,7 +248,7 @@ def safe_node(fn: NodeFn) -> NodeFn:
         except Exception as exc:
             return {
                 "error": {
-                    "code": "node_failed",
+                    "code": exc.code if isinstance(exc, RunLimitError) else "node_failed",
                     "message": f"{fn.__name__}: {exc}",
                     "stage": str(state.get("current_stage", "")),
                 },
@@ -2040,20 +2056,17 @@ def make_checkpoint(
 ) -> NodeFn:
     """Build one human-review checkpoint node from the definition's node.
 
-    When the checkpoint is off (not in `run_config.review_checkpoints`, what
-    experiment runs use), or its default option approves, the artifacts under
-    review turn approved at once. Otherwise, LangGraph's `interrupt` pauses
-    the run with the checkpoint payload of the v1 API and resumes with the
-    human decision; the resolved option walks the conditional edge of the
-    same key, and `checkpoint_outcomes` carries it to the routing functions
-    (the API layer may also read the stored decision).
+    When the checkpoint is off (not in `run_config.review_checkpoints`, what experiment runs use)
+    the default option is taken at once: the outcome is recorded as automatic and the artifacts
+    under review turn approved when that option approves. When it is on, the node does not wait:
+    it hands the review to the executor in `interrupt_payload` and ends the walk with the status
+    `interrupted`. The executor stores the interrupt and, when the user answers, continues the
+    workflow from the node that the chosen option leads to, so the state saved at this step is all
+    a resume needs and no process has to stay alive while the user thinks.
     """
     spec = definition_nodes()[node_id]
     stage = str(spec.get("stage", ""))
     options = list(spec.get("options", []))
-
-    def is_review_on(cfg: RunConfig) -> bool:
-        return node_id in cfg.review_checkpoints
 
     @safe_node
     def node(
@@ -2062,46 +2075,41 @@ def make_checkpoint(
     ) -> dict[str, Any]:
         sink = _sink(config or {})
         cfg = _run_config(state)
-        record = sink.read_artifact(state["project_id"], artifact_kind)
-        [
-            dict(record)
-            for record in [sink.read_artifact(state["project_id"], artifact_kind, subject_id=None)]
-            if record is not None
+        records = [
+            record
+            for kind in spec.get("review_artifact_kinds", [artifact_kind])
+            if (record := sink.read_artifact(state["project_id"], str(kind))) is not None
         ]
-        # Spec exceptions — validation reports are per validator execution, we
-        # keep them out of the checkpoint payload; only spec/backlog show all.
-        subjectless_review = [dict(record)] if record is not None else []
-
-        prompt = str(spec.get("prompt", ""))
-        allow_edits = bool(spec.get("allow_edits", False))
-
-        if not is_review_on(cfg):
-            chosen_option = next(opt for opt in options if opt.get("is_default"))
-            option_key = str(chosen_option["key"])
-            feedback = "auto-approved (checkpoint not in review_checkpoints)"
-        else:
-            payload: dict[str, Any] = {
-                "interrupt_id": "pending",
+        review_artifacts = [
+            ArtifactRef(
+                artifact_id=record["artifact_id"],
+                kind=record["kind"],
+                title=record["title"],
+                version=record["version"],
+            )
+            for record in records
+        ]
+        if node_id in cfg.review_checkpoints:
+            payload: dict[str, object] = {
                 "node": node_id,
-                "prompt": prompt,
+                "prompt": str(spec.get("prompt", "")),
                 "options": options,
-                "questions": [],
-                "allow_edits": allow_edits,
-                "review_artifacts": subjectless_review,
+                "questions": list(spec.get("questions", [])),
+                "allow_edits": bool(spec.get("allow_edits", False)),
+                "review_artifacts": review_artifacts,
             }
-            decision = interrupt(dict(payload))
-            option_key = str(decision["option"])
-            feedback = str(decision.get("feedback") or "")
-            for item in decision.get("modified_items", []):
-                target = sink.read_item(str(item["item_id"]))
-                patch = dict(target["content"])
-                patch.update(item.get("content", {}))
-                sink.update_item_content(target["item_id"], patch)
+            return {"status": "interrupted", "current_stage": stage, "interrupt_payload": payload}
 
-        outcome = {"node": node_id, "option": option_key, "feedback": feedback}
-        chosen = next(opt for opt in options if str(opt["key"]) == option_key)
-        if bool(chosen.get("approves")) and record is not None:
-            sink.approve_artifact(record["artifact_id"])
+        chosen = next(opt for opt in options if opt.get("is_default"))
+        outcome = {
+            "node": node_id,
+            "option": str(chosen["key"]),
+            "feedback": "",
+            "automatic": True,
+        }
+        if bool(chosen.get("approves")):
+            for record in records:
+                sink.approve_artifact(record["artifact_id"])
         return {"checkpoint_outcomes": [outcome], "current_stage": stage}
 
     node.__name__ = node_id  # safe_node logs the wrapper under the node id

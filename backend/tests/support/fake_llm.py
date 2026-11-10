@@ -94,9 +94,10 @@ class FakeChatModel(BaseChatModel):
                     {"name": name, "args": model.model_dump(mode="json"), "id": f"call_{name}"}
                 ],
                 usage_metadata={
-                    "input_tokens": 0,
-                    "output_tokens": 0,
-                    "total_tokens": 0,
+                    "input_tokens": len(system + user) // 4,
+                    "output_tokens": len(str(model.model_dump(mode="json"))) // 4,
+                    "total_tokens": (len(system + user) + len(str(model.model_dump(mode="json"))))
+                    // 4,
                 },
             )
         return ChatResult(generations=[ChatGeneration(message=message)])

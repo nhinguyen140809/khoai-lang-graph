@@ -164,6 +164,8 @@ class SqlArtifactSink:
         # The agent role of the node that is writing; the user whose decision the writes follow
         # (an approval, an edit at a review), when there is one.
         self.agent_role: str | None = None
+        # The step of the run that is writing: its id goes on every event and every revision.
+        self.step_id: UUID | None = None
         self.user_id = user_id
         # The user makes every write of this sink (a change in a document), not an agent.
         self.as_user = as_user
@@ -230,7 +232,7 @@ class SqlArtifactSink:
         """Who the next write is credited to: the user of a decision, else the running agent."""
         if (by_user or self.as_user) and self.user_id is not None:
             return Origin(actor="user", user_id=self.user_id, run_id=self.run_id)
-        return Origin.of_agent(self.agent_role, self.run_id)
+        return Origin.of_agent(self.agent_role, self.run_id, self.step_id)
 
     # — session plumbing —
     def bind(self, session: Session) -> None:
@@ -252,12 +254,38 @@ class SqlArtifactSink:
             RunEventRow(
                 run_id=self.run_id,
                 sequence=sequence_hint,
-                step_id=None,
+                step_id=self.step_id,
                 type=event_type,
                 data_json=_dumps(data),
             )
         )
         self.session.flush()
+
+    def emit(self, event_type: str, data: dict[str, Any], *, step_id: UUID | None = None) -> int:
+        """Append one event to the log of the run, for a step or (without one) for the whole
+        run, and return its sequence; a sink without a run keeps no log."""
+        if self.run_id is None:
+            return 0
+        sequence = self.next_sequence()
+        self.session.add(
+            RunEventRow(
+                run_id=self.run_id,
+                sequence=sequence,
+                step_id=step_id,
+                type=event_type,
+                data_json=_dumps(data),
+            )
+        )
+        self.session.flush()
+        return sequence
+
+    def produced(self) -> list[ItemRef]:
+        """The items the node in progress or the last node wrote, as references."""
+        rows = [self.session.get(ArtifactItemRow, key) for key in self._touched_items]
+        return [
+            ItemRef(item_id=str(row.id), kind=row.kind, key=row.key, version=row.version)
+            for row in sorted((r for r in rows if r is not None), key=lambda r: str(r.key))
+        ]
 
     def next_sequence(self) -> int:
         """The next run-event id (increasing per run; resume start)."""

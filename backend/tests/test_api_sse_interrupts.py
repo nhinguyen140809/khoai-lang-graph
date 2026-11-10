@@ -136,12 +136,24 @@ async def test_stream_closes_only_after_done_event(client: AsyncClient) -> None:
     assert "event: done" in raw
 
 
-async def test_interrupts_empty_for_auto_approve_run(client: AsyncClient) -> None:
-    """With review_checkpoints=[] the demo run passes; no pending interrupt."""
+async def test_a_run_without_reviews_records_the_defaults_it_took(client: AsyncClient) -> None:
+    """With no review checkpoint the run does not pause: every checkpoint is recorded as an
+    interrupt resolved at once, with a decision that has no user."""
     run_id = await _run_once(client)
     response = await client.get(f"/api/v1/runs/{run_id}/interrupts")
+
     assert response.status_code == 200
-    assert response.json() == {"items": [], "next_cursor": None}
+    items = response.json()["items"]
+    assert [entry["node"] for entry in items][:3] == [
+        "checkpoint_personas",
+        "checkpoint_analysis",
+        "checkpoint_spec",
+    ]
+    assert {entry["status"] for entry in items} == {"resolved"}
+    assert all(entry["decision"]["decided_by"] is None for entry in items)
+    assert (
+        await client.get(f"/api/v1/runs/{run_id}/interrupts", params={"status": "pending"})
+    ).json()["items"] == []
 
 
 async def test_resume_answers_409_when_not_interrupted(client: AsyncClient) -> None:
@@ -185,14 +197,14 @@ async def test_interrupts_come_oldest_first_with_the_decision_of_a_resolved_one(
             options_json=json.dumps(options).encode(),
             allow_edits=True,
             status="resolved",
-            created_at=datetime(2026, 11, 1, tzinfo=UTC),
-            resolved_at=datetime(2026, 11, 1, 1, tzinfo=UTC),
+            created_at=datetime(2020, 1, 1, tzinfo=UTC),
+            resolved_at=datetime(2020, 1, 1, 1, tzinfo=UTC),
         )
         pending = InterruptRow(
             run_id=UUID(run_id),
             node="checkpoint_analysis",
             prompt="Review the analysis.",
-            created_at=datetime(2026, 11, 2, tzinfo=UTC),
+            created_at=datetime(2020, 1, 2, tzinfo=UTC),
         )
         session.add_all([pending, resolved])
         await session.flush()
@@ -203,12 +215,13 @@ async def test_interrupts_come_oldest_first_with_the_decision_of_a_resolved_one(
                 option="approve",
                 feedback=None,
                 answers_json=b"{}",
-                created_at=datetime(2026, 11, 1, 1, tzinfo=UTC),
+                created_at=datetime(2020, 1, 1, 1, tzinfo=UTC),
             )
         )
         await session.commit()
 
-    everything = (await client.get(f"/api/v1/runs/{run_id}/interrupts")).json()["items"]
+    # The run took its default at its own checkpoints; the two rows above are the oldest.
+    everything = (await client.get(f"/api/v1/runs/{run_id}/interrupts")).json()["items"][:2]
     waiting = (
         await client.get(f"/api/v1/runs/{run_id}/interrupts", params={"status": "pending"})
     ).json()["items"]

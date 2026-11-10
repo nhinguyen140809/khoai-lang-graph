@@ -13,6 +13,18 @@ from typing import TYPE_CHECKING, Protocol, TypedDict, runtime_checkable
 
 if TYPE_CHECKING:
     from khoailanggraph.agents.requirements_engineering.state import ArtifactRef, ItemRef
+    from khoailanggraph.llm.usage import Usage
+
+
+class RunLimitError(Exception):
+    """A limit of the run or of the user stopped the next call to a model.
+
+    `code` is the error code the run fails with: `cost_limit_exceeded` or `budget_exceeded`.
+    """
+
+    def __init__(self, code: str, message: str) -> None:
+        super().__init__(message)
+        self.code = code
 
 
 class LinkRecord(TypedDict):
@@ -197,4 +209,19 @@ class DirectiveSink(Protocol):
 
     def read_directive(self, directive_id: str) -> ArtifactDirectiveRecord | None:
         """One directive, for the nodes that re-enter a stage."""
+        ...
+
+
+@runtime_checkable
+class LlmGate(Protocol):
+    """The one place around every call to a model: it checks the limits before the call and
+    records the usage after it."""
+
+    def before_call(self, role: str) -> None:
+        """Raise `RunLimitError` when the cost limit of the run or the budget of the user does not
+        allow another call."""
+        ...
+
+    def record_call(self, role: str, model_id: str, usage: Usage) -> None:
+        """Add the usage of one call to the step in progress and to the run."""
         ...

@@ -43,6 +43,8 @@ class CheckpointOutcome(TypedDict):
     node: str
     option: str
     feedback: str
+    # True when the checkpoint was not in `review_checkpoints` and took its default option.
+    automatic: bool
 
 
 class REState(TypedDict):
@@ -83,6 +85,12 @@ class REState(TypedDict):
     response_validator_status: str
     # Where the intent router routed this round (§2.1's five targets).
     routed_target: str
+
+    # — runtime channels of the executor, not part of the workflow state it shows —
+    # The node that a walk begins at (a resume or a retry) instead of the entry rule.
+    start_at: str
+    # The review a checkpoint hands to the executor when it pauses the run.
+    interrupt_payload: dict[str, object] | None
 
     # — run bookkeeping —
     active_persona_index: int
@@ -127,6 +135,8 @@ def make_initial_state(
         response_analyst_status="",
         response_validator_status="",
         routed_target="",
+        start_at="",
+        interrupt_payload=None,
         active_persona_index=0,
         interview_turn=0,
         interviewer_stop=False,

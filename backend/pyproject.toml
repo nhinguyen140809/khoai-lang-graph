@@ -82,6 +82,7 @@ select = ["E", "F", "W", "I", "N", "UP", "B", "SIM", "RUF", "ASYNC", "S", "PL", 
 # The run executor is one narrative worker; its wires are the §5 contract.
 "src/khoailanggraph/features/runs/service.py" = ["PLR0912", "PLR0913", "PLR0915", "PLR0917"]
 "src/khoailanggraph/features/runs/router.py" = ["PLC0415", "PLR0913", "PLR0917"]
+"src/khoailanggraph/features/runs/executor.py" = ["PLR0911", "PLR0912", "PLR0913", "PLR0915", "PLR0917"]
 # The documents feature follows the same §5 contract shape as its siblings.
 "src/khoailanggraph/features/documents/router.py" = ["PLR0913", "PLR0917", "TC003"]
 "src/khoailanggraph/features/documents/service.py" = ["PLR0913"]
@@ -157,7 +158,9 @@ ignore_imports = [
     "khoailanggraph.features.projects.router -> khoailanggraph.api.schemas",
     "khoailanggraph.features.projects.service -> khoailanggraph.api.errors",
     "khoailanggraph.features.runs.router -> khoailanggraph.api.deps",
+    "khoailanggraph.features.runs.config -> khoailanggraph.api.errors",
     "khoailanggraph.features.runs.router -> khoailanggraph.api.errors",
+    "khoailanggraph.features.runs.router -> khoailanggraph.api.idempotency",
     "khoailanggraph.features.runs.router -> khoailanggraph.api.schemas",
     "khoailanggraph.features.runs.service -> khoailanggraph.api.errors",
     "khoailanggraph.features.threads.service -> khoailanggraph.api.errors",

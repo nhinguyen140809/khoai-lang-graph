@@ -62,7 +62,21 @@ class UserSettingsRow(Base):
     updated_at: Mapped[datetime] = mapped_column(DateTime, default=utcnow, nullable=False)
 
 
+class ModelSettingsRow(Base):
+    """The model a user chose for one agent role (a role without a row uses the server default)."""
+
+    __tablename__ = "user_model_settings"
+
+    user_id: Mapped[uuid.UUID] = mapped_column(Uuid(), ForeignKey("users.id"), primary_key=True)
+    agent_role: Mapped[str] = mapped_column(String, primary_key=True)
+    model_id: Mapped[str] = mapped_column(String, nullable=False)
+    temperature: Mapped[float | None] = mapped_column(nullable=True)
+    created_at: Mapped[datetime] = mapped_column(DateTime, default=utcnow, nullable=False)
+    updated_at: Mapped[datetime] = mapped_column(DateTime, default=utcnow, nullable=False)
+
+
 __all__ = [
+    "ModelSettingsRow",
     "SessionRow",
     "UserRow",
     "UserSettingsRow",

@@ -10,7 +10,7 @@ from httpx import ASGITransport, AsyncClient
 
 from khoailanggraph.llm import factory as llm_factory
 from khoailanggraph.main import create_app
-from khoailanggraph.settings import Settings
+from khoailanggraph.settings import Settings, get_settings
 from support.hermetic import install_fake_provider
 
 if TYPE_CHECKING:
@@ -27,6 +27,10 @@ if TYPE_CHECKING:
 os.environ.pop("OPENAI_API_KEY", None)
 os.environ.pop("OPENAI_BASE_URL", None)
 os.environ["DECISION_PROVIDER"] = "off"
+# Runs finish inside the request and pause at no review, so a test sees the whole run at once.
+os.environ["RUN_EXECUTION"] = "inline"
+os.environ["DEFAULT_REVIEW_CHECKPOINTS"] = "[]"
+get_settings.cache_clear()
 install_fake_provider()
 
 
@@ -47,6 +51,8 @@ def app() -> FastAPI:
             database_url="sqlite+aiosqlite:///:memory:",
             log_level="WARNING",
             log_format="json",
+            run_execution="inline",
+            default_review_checkpoints=[],
         )
     )
 

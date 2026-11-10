@@ -16,6 +16,7 @@ from khoailanggraph.api.errors import ApiError, api_error_handler, integrity_err
 from khoailanggraph.api.router import api_router
 from khoailanggraph.domain.errors import IntegrityError
 from khoailanggraph.features.me import service as me_service
+from khoailanggraph.features.runs.executor import RunExecutor, recover_runs, run_job
 from khoailanggraph.platform.db import (
     ensure_schema,
     make_async_engine,
@@ -49,6 +50,8 @@ async def lifespan(app: FastAPI) -> AsyncIterator[None]:
         await ensure_schema(engine)
     app.state.sync_engine = make_sync_engine(settings)
     app.state.session_factory = make_session_factory(engine)
+    app.state.executor = RunExecutor(settings.run_execution)
+    await start_pending_runs(app)
     structlog.contextvars.bind_contextvars(app_env=settings.app_env)
     logger.info(
         "khoailanggraph backend started",
@@ -58,8 +61,20 @@ async def lifespan(app: FastAPI) -> AsyncIterator[None]:
     try:
         yield
     finally:
+        app.state.executor.wait()
         await engine.dispose()
         logger.info("khoailanggraph backend stopped")
+
+
+async def start_pending_runs(app: FastAPI) -> None:
+    """Close the runs a stop of the process left in a step and start the queued ones."""
+    engine = app.state.sync_engine
+    try:
+        queued = recover_runs(engine)
+    except Exception:
+        return
+    for run_id in queued:
+        await app.state.executor.submit(lambda run_id=run_id: run_job(engine, run_id))
 
 
 def _has_factory(request: Request) -> bool:

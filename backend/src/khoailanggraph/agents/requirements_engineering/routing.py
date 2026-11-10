@@ -26,13 +26,17 @@ def _status(state: REState) -> str:
 
 
 def route_error(state: REState) -> str:
-    """Every router's first clause: a failed node drains to the graph exit."""
-    return END if _status(state) == "failed" else ""
+    """Every router's first clause: a failed node, and a checkpoint that waits for the user,
+    drain to the graph exit; the executor decides what happens next."""
+    return END if _status(state) in {"failed", "interrupted"} else ""
 
 
 def route_start(state: REState) -> str:
     """`__start__ → {planner (first run), intent_router (later runs)}`; the entry
-    clause is §2.1 (the entry of a run began earlier, before the intents edge)."""
+    clause is §2.1 (the entry of a run began earlier, before the intents edge). A walk that
+    continues a run (a resume, a retry, a delivered message) names its node in `start_at`."""
+    if state.get("start_at"):
+        return str(state["start_at"])
     if state.get("first_run", False) or not state.get("personas"):
         return "planner"
     return "intent_router"
@@ -113,3 +117,16 @@ def route_after_intent_router(state: REState) -> str:
         "backlog_manager",
     }
     return target if target in allowed else "analyst"
+
+
+CHECKPOINT_ROUTES = {
+    "checkpoint_personas": route_after_personas,
+    "checkpoint_analysis": route_after_analysis,
+    "checkpoint_spec": route_after_spec,
+}
+
+
+def next_after_checkpoint(node_id: str, state: REState) -> str:
+    """The node the workflow continues at once a checkpoint holds its outcome: the edge the chosen
+    option names; the end of the walk when the state is failed."""
+    return CHECKPOINT_ROUTES[node_id](state)

@@ -1,17 +1,8 @@
-"""Run creation + the executor: message POST, the runs shim, and the
-background task that walks the whole 15-node workflow through the DB sink
-(§5 run lifecycle). The executor runs the workflow with the roles resolved
-per `config/models.yaml` against the gateway and writes artifacts, items,
-links, steps and events as it goes — the same walk Phase C proves
-in-process, now persisted, and serving the shapes the reads (runs, steps,
-search, SSE) answer from.
+"""The views of runs, steps, messages, interrupts and directives, and the small rules around them.
 
-The executor is deliberately synchronous-inline: POST /messages answers with
-{message, run} of a run in `queued`, runs the graph to completion (or to its
-first interrupt) before answering — good enough for the API contract and
-dramatically simpler than task infrastructure; the async-polling SSE endpoint
-replays over the events the run already recorded. A later change moves the
-walk into a background thread without touching this contract.
+The walk of a run lives in `executor`; the settings a run starts with are resolved in `config`.
+`role_models` and `make_research_search` are the two seams a test or a script replaces to run the
+workflow offline.
 """
 
 from __future__ import annotations
@@ -19,41 +10,34 @@ from __future__ import annotations
 import json
 from datetime import UTC, datetime
 from typing import TYPE_CHECKING, Any, cast
-from uuid import UUID, uuid4
+from uuid import UUID
 
 from sqlalchemy import func, select
-from sqlalchemy.orm import Session, sessionmaker  # noqa: TC002 - runtime types
 
 from khoailanggraph.agents.requirements_engineering import definition as workflow_definition
-from khoailanggraph.agents.requirements_engineering.graph import build_re_graph
-from khoailanggraph.agents.requirements_engineering.state import make_initial_state
 from khoailanggraph.api.errors import ApiError
-from khoailanggraph.features.artifacts.service import SqlArtifactSink
-from khoailanggraph.features.documents.service import sync_latest_texts
 from khoailanggraph.features.threads.models import MessageRow, ThreadRow
-from khoailanggraph.llm import reset_model_cache
-from khoailanggraph.platform.db import make_sync_session_factory
-from khoailanggraph.settings import get_settings
-from khoailanggraph.tools.research import make_research_search
 
 if TYPE_CHECKING:
     from collections.abc import Mapping
 
     from sqlalchemy.ext.asyncio import AsyncSession
 
-    from khoailanggraph.agents.requirements_engineering.ports import DirectiveItem
+    from khoailanggraph.features.me.models import UserRow
+
 
 from khoailanggraph.features.artifacts.models import ArtifactItemRow
 from khoailanggraph.features.projects.models import ProjectRow
-from khoailanggraph.features.runs import schemas
+from khoailanggraph.features.runs import schemas, usage
 from khoailanggraph.features.runs.models import (
     DirectiveRow,
     HumanDecisionRow,
     InterruptRow,
-    RunEventRow,
     RunRow,
     RunStepRow,
 )
+from khoailanggraph.settings import get_settings
+from khoailanggraph.tools.research import make_research_search as make_research_search  # noqa: PLC0414 - the seam
 
 WF_NAME = "requirements_engineering"
 WF_VERSION = workflow_definition.WORKFLOW_VERSION
@@ -81,33 +65,10 @@ ZERO_USAGE: dict[str, Any] = {
 }
 
 
-DEFAULT_RUN_CONFIG: dict[str, Any] = {
-    "models": {},
-    "review_checkpoints": [],
-    "output_language": "en",
-    "max_steps": 400,
-    "max_cost_usd": None,
-    "parameters": {
-        "target_sources_num": 3,
-        "target_personas_num": 3,
-        "max_personas": 3,
-        "max_turns": 6,
-        "max_iterations": 2,
-    },
-}
-
-
 def role_models() -> dict[str, str]:
     """The per-role model map of a run: empty — each role resolves through
     `config/models.yaml` (defaults/roles) against the gateway env keys."""
     return {}
-
-
-def run_config_for(output_language: str = "en") -> dict[str, Any]:
-    config = dict(DEFAULT_RUN_CONFIG)
-    config["models"] = role_models()
-    config["output_language"] = output_language
-    return config
 
 
 def runs_output(row: RunRow) -> schemas.Run:
@@ -239,192 +200,6 @@ async def append_message(
     return row
 
 
-def start_run_blocking(
-    engine: Any,
-    *,
-    run_id: UUID,
-    thread_id: UUID,
-    user_id: UUID,
-    initial_intent: str,
-    first_run: bool,
-    config: dict[str, Any],
-    started_by_message: UUID | None = None,
-) -> None:
-    """Run the whole workflow through the DB sink (the executor, §5 runs).
-
-    Writes the RunRow + every step + event onto the sync engine in one worker
-    thread, so the async app either awaits or replays what this recorded.
-    """
-    reset_model_cache()
-
-    factory: sessionmaker[Session] = make_sync_session_factory(engine)
-    with factory() as session:
-        thread = session.get(ThreadRow, thread_id)
-        if thread is None:
-            msg = f"thread {thread_id} does not exist"
-            raise ValueError(msg)
-        # The router created the queued run row this worker now drives (§5).
-        run = session.get(RunRow, run_id)
-        if run is None:
-            run = RunRow(
-                id=run_id,
-                thread_id=thread_id,
-                project_id=thread.project_id,
-                number=1,
-                started_by=user_id,
-                workflow_name=WF_NAME,
-                workflow_version=WF_VERSION,
-                status="queued",
-                current_stage="intent_routing",
-                run_config_json=_dumps(config),
-                usage_json=_dumps(ZERO_USAGE),
-            )
-            session.add(run)
-            session.flush()
-        run.status = "running"
-        run.started_at = run.started_at or utcnow()
-        message = session.scalar(select(MessageRow).where(MessageRow.run_id == run.id))
-        if message is None:
-            # The caller did not record one (the seed path): the intent itself
-            # is the message that started this run (§5 messages).
-            count = (
-                session.scalar(
-                    select(func.count())
-                    .select_from(MessageRow)
-                    .where(MessageRow.thread_id == thread.id)
-                )
-                or 0
-            )
-            message = MessageRow(
-                thread_id=thread.id,
-                sequence=int(count) + 1,
-                author="user",
-                content=initial_intent,
-                run_id=run.id,
-                delivery="started_run",
-            )
-            session.add(message)
-            session.flush()
-            thread.last_message_at = utcnow()
-        project = session.get(ProjectRow, thread.project_id)
-        if project is not None and project.initial_message_id is None:
-            project.initial_message_id = message.id
-            session.flush()
-        thread.active_run_id = run.id
-        sink = SqlArtifactSink(engine, run_id=run.id, thread_id=thread.id)
-        sink.bind(session)
-        state = make_initial_state(
-            str(thread.project_id) if thread else str(run_id),
-            initial_intent,
-            config,
-            first_run=first_run,
-        )
-        # node_start/node_end events for every visited node, with the final state.
-        graph = build_re_graph()
-        node_sequence = [0]
-        events: list[tuple[str, dict[str, Any]]] = []
-        step_rows: list[tuple[int, str]] = []
-
-        def node_marker(node: str) -> None:
-            node_sequence[0] += 1
-            events.append(("node_start", {"node": node, "step_id": node_sequence[0]}))
-            node_label = str(node).replace("__start__", "start").replace("__end__", "end")
-            step_rows.append((node_sequence[0], node_label))
-
-        result: dict[str, Any] = {"final": {}}
-        step_states: dict[int, dict[str, Any]] = {}
-        try:
-            for mode, update in graph.stream(
-                state,
-                stream_mode=["updates", "values"],
-                config={
-                    "configurable": {
-                        "run_id": str(run.id),
-                        "artifact_sink": sink,
-                        "directive_sink": DirectiveSink(session),
-                        "models": config["models"],
-                        "research_search": make_research_search(get_settings()),
-                        "project_documents": lambda project_id: sync_latest_texts(
-                            engine, UUID(str(project_id))
-                        ),
-                    }
-                },
-            ):
-                if mode == "values":
-                    # The state after the step that just ran: the checkpoint of that step.
-                    step_states[node_sequence[0]] = workflow_state_values(
-                        cast("Mapping[str, Any]", update)
-                    )
-                    continue
-                for node in cast("dict[str, Any]", update):
-                    if node in {"__interrupt__", "__end__"}:
-                        continue
-                    node_marker(node)
-                    chunk = cast("dict[str, Any]", update)[node] or {}
-                    events.append(("node_end", {"node": node, "step_id": node_sequence[0]}))
-                    # Merge every chunk: a safe_node failure rides an early
-                    # update while plain edges keep the walk going, so the
-                    # last chunk alone would bury it (and fake a success).
-                    result["final"].update(chunk)
-                    if str(chunk.get("status", "")) == "failed":
-                        result["final"]["failed_node"] = node
-            final = result["final"]
-            status = str(final.get("status", "succeeded") or "succeeded")
-            run.status = (
-                "succeeded" if status not in {"failed", "cancelled", "interrupted"} else status
-            )
-            run.current_stage = str(final.get("current_stage", "done") or "done")
-            if run.status == "failed":
-                error = dict(final.get("error") or {})
-                run.error_code = str(error.get("code") or "node_failed")
-                run.error_message = str(error.get("message") or "the workflow failed")
-                run.error_stage = str(error.get("stage") or run.current_stage)
-                events.append(("error", {"message": run.error_message}))
-        except Exception as exc:
-            run.status = "failed"
-            run.error_code = "provider_error"
-            run.error_message = f"run executor: {exc}"
-        failed_node = result["final"].get("failed_node")
-        for sequence, node_label in step_rows:
-            session.add(
-                RunStepRow(
-                    id=uuid4(),
-                    run_id=run.id,
-                    sequence=sequence,
-                    node=node_label,
-                    state_json=_dumps(step_states[sequence]) if sequence in step_states else None,
-                    agent_role=None,
-                    stage=str(run.current_stage or ""),
-                    status="failed" if node_label == failed_node else "succeeded",
-                    started_at=run.started_at or utcnow(),
-                    finished_at=utcnow(),
-                )
-            )
-        # Append lifecycle/events after the walk so the ids follow the artifacts.
-        events.append(("done", {"status": run.status}))
-        top = session.scalar(
-            select(func.max(RunEventRow.sequence)).where(RunEventRow.run_id == run.id)
-        )
-        seq = int(top or 0)
-        for event_type, payload in events:
-            seq += 1
-            session.add(
-                RunEventRow(
-                    run_id=run.id,
-                    sequence=seq,
-                    type=event_type,
-                    data_json=_dumps(payload),
-                )
-            )
-        run.last_event_id = seq
-        run.step_count = node_sequence[0]
-        run.finished_at = utcnow()
-        if thread is not None:
-            thread.active_run_id = None
-            thread.current_stage = run.current_stage
-        session.commit()
-
-
 def workflow_state_values(state: Mapping[str, Any]) -> dict[str, Any]:
     """The values of the workflow state that a run shows: the fields of the `state_schema` of
     the definition, as plain JSON. They hold references to artifacts and items, never copies."""
@@ -477,50 +252,6 @@ async def get_run_row(session: AsyncSession, run_id: UUID) -> RunRow:
     return row
 
 
-class DirectiveSink:
-    """The DB DirectiveSink: run-scoped (its own session)."""
-
-    def __init__(self, session: Session) -> None:
-        self.session = session
-
-    def create_directive(
-        self,
-        run_id: str,
-        kind: str,
-        *,
-        target_node: str,
-        iteration: int,
-        instruction: str,
-        items: list[DirectiveItem],
-    ) -> str:
-        row = DirectiveRow(
-            id=uuid4(),
-            run_id=UUID(run_id),
-            kind=kind,
-            target_node=target_node,
-            iteration=iteration,
-            instruction=instruction,
-            items_json=_dumps(items),
-            details_json=_dumps({}),
-        )
-        self.session.add(row)
-        self.session.flush()
-        return str(row.id)
-
-    def read_directive(self, directive_id: str) -> Any:
-        row = self.session.get(DirectiveRow, UUID(directive_id))
-        if row is None:
-            return None
-        return {
-            "id": str(row.id),
-            "kind": row.kind,
-            "target_node": row.target_node,
-            "iteration": row.iteration,
-            "instruction": row.instruction,
-            "item_ids": [str(entry["item_id"]) for entry in _loads(row.items_json) or []],
-        }
-
-
 async def directive_output(session: AsyncSession, row: DirectiveRow) -> schemas.Directive:
     """A directive with the items it refers to, each as the reference of the item now."""
     entries = json.loads((row.items_json or b"[]").decode("utf-8"))
@@ -554,7 +285,7 @@ async def directive_output(session: AsyncSession, row: DirectiveRow) -> schemas.
 def run_state_output(run: RunRow, step: RunStepRow | None) -> schemas.RunState:
     """The workflow state a step saved; a run without a saved step has no values yet."""
     values = (
-        json.loads(step.state_json.decode("utf-8"))
+        workflow_state_values(json.loads(step.state_json.decode("utf-8")))
         if step is not None and step.state_json is not None
         else {}
     )
@@ -564,3 +295,50 @@ def run_state_output(run: RunRow, step: RunStepRow | None) -> schemas.RunState:
         workflow_version=run.workflow_version,
         values=values,
     )
+
+
+async def unfinished_run_of_thread(session: AsyncSession, thread_id: UUID) -> RunRow | None:
+    """The run of the thread that is queued, running or waiting for a review, if there is one."""
+    return await session.scalar(
+        select(RunRow)
+        .where(
+            RunRow.thread_id == thread_id, RunRow.status.in_(("queued", "running", "interrupted"))
+        )
+        .order_by(RunRow.number.desc())
+        .limit(1)
+    )
+
+
+async def next_run_number(session: AsyncSession, thread_id: UUID) -> int:
+    """The number of the next run of a thread: from 1, without gaps."""
+    top = await session.scalar(select(func.max(RunRow.number)).where(RunRow.thread_id == thread_id))
+    return int(top or 0) + 1
+
+
+async def undeliver_pending(session: AsyncSession, thread_id: UUID) -> None:
+    """The messages of a thread that waited for a run that ended without taking them in."""
+    for message in (
+        await session.scalars(
+            select(MessageRow).where(
+                MessageRow.thread_id == thread_id, MessageRow.delivery == "pending"
+            )
+        )
+    ).all():
+        message.delivery = "undelivered"
+
+
+async def ensure_budget(session: AsyncSession, user: UserRow) -> None:
+    """Answer `429 budget_exceeded` when the month of the user has no budget left for more work."""
+    budget = (
+        user.monthly_budget_usd
+        if user.monthly_budget_usd is not None
+        else get_settings().default_monthly_budget_usd
+    )
+    if budget is None:
+        return
+    start, end = usage.month_bounds()
+    runs = (await session.scalars(usage.runs_of_user_in(UUID(str(user.id)), start, end))).all()
+    if usage.total_usage(list(runs))["cost_usd"] >= budget:
+        raise ApiError(
+            429, "budget_exceeded", "Budget exceeded", "The budget of this month is spent."
+        )

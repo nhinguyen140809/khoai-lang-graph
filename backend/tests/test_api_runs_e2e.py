@@ -180,7 +180,7 @@ async def test_items_written_by_the_workflow_are_searchable(
 
 
 async def test_retry_creates_queued_run_with_lineage(client: AsyncClient) -> None:
-    """POST /runs/{id}/retry records lineage and queues the new run."""
+    """POST /runs/{id}/retry records lineage and runs again from the chosen step."""
     await client.post("/api/v1/auth/register", json=REGISTER)
     await client.post("/api/v1/auth/login", json={"email": REGISTER["email"], "password": "secret"})
     project = await client.post("/api/v1/projects", json=PROJECT_BODY)
@@ -190,15 +190,17 @@ async def test_retry_creates_queued_run_with_lineage(client: AsyncClient) -> Non
         f"/api/v1/threads/{thread.json()['id']}/messages", json={"content": TASK}
     )
     run_id = message.json()["run"]["id"]
-    steps = await client.get(f"/api/v1/runs/{run_id}/steps")
-    step_id = steps.json()["items"][0]["id"]
+    steps = await client.get(f"/api/v1/runs/{run_id}/steps", params={"limit": 200})
+    # The last step: the validator runs again on the documents as they were before it.
+    step_id = steps.json()["items"][-1]["id"]
 
     retry = await client.post(f"/api/v1/runs/{run_id}/retry", json={"from_step_id": step_id})
 
     body = retry.json()
     assert retry.status_code == 202
     assert body["retry_of_run_id"] == run_id
-    assert body["status"] == "queued"
+    assert body["error"] is None, body
+    assert body["status"] == "succeeded"  # the test settings run a job inside the request
     assert body["number"] == 2
 
 

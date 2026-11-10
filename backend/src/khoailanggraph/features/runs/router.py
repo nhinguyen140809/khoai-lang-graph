@@ -4,18 +4,25 @@ from __future__ import annotations
 
 import asyncio
 import json as jsonlib
-from typing import TYPE_CHECKING, Annotated, Any, Literal
+from datetime import UTC, datetime
+from typing import TYPE_CHECKING, Annotated, Any, Literal, cast
 from uuid import UUID, uuid4
 
 from fastapi import APIRouter, Depends, Query, Request
-from fastapi.responses import StreamingResponse
+from fastapi.responses import JSONResponse, StreamingResponse
 from pydantic import BaseModel, ConfigDict
-from sqlalchemy import select
+from sqlalchemy import func, select
 
-from khoailanggraph.api import deps
+from khoailanggraph.api import deps, idempotency
 from khoailanggraph.api.errors import ApiError
 from khoailanggraph.api.schemas import MAX_LIMIT, Page
+from khoailanggraph.features.artifacts.models import ArtifactItemRow
+from khoailanggraph.features.projects.models import ProjectRow
+from khoailanggraph.features.projects.schemas import RunDefaults  # noqa: TC001 - body model
+from khoailanggraph.features.runs import config as run_config
+from khoailanggraph.features.runs import resume as resume_rules
 from khoailanggraph.features.runs import schemas, service
+from khoailanggraph.features.runs.executor import RunExecutor, run_job
 from khoailanggraph.features.runs.models import (
     DirectiveRow,
     HumanDecisionRow,
@@ -31,16 +38,11 @@ from khoailanggraph.platform.db import make_sync_engine
 if TYPE_CHECKING:
     from collections.abc import AsyncIterator
 
+    from sqlalchemy.ext.asyncio import AsyncSession
+
+    from khoailanggraph.features.me.models import UserRow
+
 router = APIRouter()
-
-
-class CreateRunShim(BaseModel):
-    """The chat's current wire: {input} -> {run_id} (TODO remove once the
-    frontend moves to POST /threads/{id}/messages)."""
-
-    model_config = ConfigDict(extra="forbid")
-
-    input: str
 
 
 def _sync_engine(request: Request) -> Any:
@@ -81,88 +83,118 @@ async def list_messages(
     )
 
 
-@router.post("/threads/{thread_id}/messages", status_code=201)
-async def send_message(
-    thread_id: UUID,
-    user: deps.CurrentUser,
-    db: deps.DbSession,
+class MessageBody(BaseModel):
+    """POST /threads/{id}/messages: the text, and the settings a run started by it uses."""
+
+    model_config = ConfigDict(extra="forbid")
+
+    content: str
+    run_config: RunDefaults | None = None
+    models: dict[str, str] | None = None
+
+
+def _executor(request: Request) -> RunExecutor:
+    """The executor on app.state, created on first use when missing."""
+    executor = getattr(request.app.state, "executor", None)
+    if executor is None:
+        executor = RunExecutor(request.app.state.settings.run_execution)
+        request.app.state.executor = executor
+    return cast("RunExecutor", executor)
+
+
+async def _start_job(request: Request, run_id: UUID, resume_interrupt: UUID | None = None) -> None:
+    engine = _sync_engine(request)
+    await _executor(request).submit(
+        lambda: run_job(engine, run_id, resume_interrupt=resume_interrupt)
+    )
+
+
+async def _send(
     request: Request,
-    body: dict[str, Any],
-    _origin: Annotated[None, Depends(deps.check_origin)],
-) -> Any:
-    """201 {message, run}: the task starts a new run, or waits as `pending`.
-
-    The executor runs the workflow synchronously before answering, so
-    the 201 already carries the finished run; the SSE endpoint replays the
-    events this walk recorded.
-    """
-    import asyncio
-
-    thread = await thread_service.get_thread_row(db, thread_id)
-    content = str(body.get("content", ""))
-    if not content.strip():
+    db: AsyncSession,
+    user: UserRow,
+    thread: ThreadRow,
+    body: MessageBody,
+) -> dict[str, Any]:
+    """Store a message of the user; start a run with it, or leave it to the unfinished run."""
+    if not body.content.strip():
         raise ApiError(
             422,
             "validation_failed",
             "Validation failed",
             errors=[{"field": "content", "message": "Enter a value."}],
         )
-    run_config = service.run_config_for(output_language="en")
-    unfinished = await service.project_has_active_run(db, thread.project_id)
-    message = await service.append_message(db, thread=thread, content=content)
-    if unfinished:
-        # §5: the message is never rejected; a busy run stores it as pending.
+    run_config.request_problems(body.run_config, body.models)
+    await service.ensure_budget(db, user)
+    user_id = UUID(str(user.id))
+    unfinished = await service.unfinished_run_of_thread(db, thread.id)
+    message = await service.append_message(db, thread=thread, content=body.content)
+    if unfinished is not None:
         message.delivery = "pending"
-        latest_run = await db.scalar(
-            select(RunRow)
-            .where(RunRow.thread_id == thread.id)
-            .order_by(RunRow.created_at.desc())
-            .limit(1)
-        )
         await db.flush()
-        if latest_run is None:
-            raise ApiError(
-                409, "invalid_state", "Invalid state", "No run of this thread exists yet."
-            )
         return {
             "message": service.message_output(message).model_dump(mode="json"),
-            "run": service.runs_output(latest_run).model_dump(mode="json"),
+            "run": service.runs_output(unfinished).model_dump(mode="json"),
         }
-
-    run_id = uuid4()
-    user_id = UUID(str(user.id))
+    project = await db.get(ProjectRow, thread.project_id)
+    resolved = await run_config.resolve_run_config(
+        db, cast("ProjectRow", project), user_id, run_config=body.run_config, models=body.models
+    )
     run = RunRow(
-        id=run_id,
+        id=uuid4(),
         thread_id=thread.id,
         project_id=thread.project_id,
-        number=1,
+        number=await service.next_run_number(db, thread.id),
         started_by=user_id,
         workflow_name=service.WF_NAME,
         workflow_version=service.WF_VERSION,
         status="queued",
         current_stage="intent_routing",
-        run_config_json=jsonlib.dumps(run_config).encode("utf-8"),
+        run_config_json=jsonlib.dumps(resolved).encode("utf-8"),
         usage_json=jsonlib.dumps(service.ZERO_USAGE).encode("utf-8"),
     )
     db.add(run)
     message.run_id = run.id
     thread.active_run_id = run.id
     await db.commit()  # the worker's connection must see the queued rows
-    await asyncio.to_thread(
-        service.start_run_blocking,
-        _sync_engine(request),
-        run_id=run_id,
-        thread_id=thread.id,
-        user_id=user_id,
-        initial_intent=content,
-        first_run=not thread.current_stage,
-        config=run_config,
-    )
+    await _start_job(request, run.id)
     await db.refresh(run)  # what the worker wrote (status, stage, usage)
+    await db.refresh(message)
     return {
         "message": service.message_output(message).model_dump(mode="json"),
         "run": service.runs_output(run).model_dump(mode="json"),
     }
+
+
+@router.post("/threads/{thread_id}/messages", status_code=201)
+async def send_message(
+    thread_id: UUID,
+    user: deps.CurrentUser,
+    db: deps.DbSession,
+    request: Request,
+    body: MessageBody,
+    _origin: Annotated[None, Depends(deps.check_origin)],
+) -> Any:
+    """201 {message, run}: the message starts a new run, or waits as `pending` in the run that
+    is unfinished (§5). The run executes in the background; the stream follows it."""
+    thread = await thread_service.get_thread_row(db, thread_id)
+    key = request.headers.get("Idempotency-Key")
+    scope = f"POST {request.url.path}"
+    user_id = UUID(str(user.id))
+    stored = await idempotency.find_response(db, user_id, key, scope)
+    if stored is not None:
+        return JSONResponse(status_code=stored[0], content=stored[1])
+    result = await _send(request, db, user, thread, body)
+    await idempotency.store_response(db, user_id, key, scope, 201, result)
+    return JSONResponse(status_code=201, content=result)
+
+
+class CreateRunShim(BaseModel):
+    """The chat's current wire: {input} -> {run_id}."""
+
+    model_config = ConfigDict(extra="forbid")
+
+    input: str
 
 
 @router.post("/threads/{thread_id}/runs")
@@ -175,40 +207,9 @@ async def create_run_shim(
     _origin: Annotated[None, Depends(deps.check_origin)],
 ) -> dict[str, str]:
     """Compat shim: {input} -> {run_id}, the wire the chat reads today."""
-    import asyncio
-
     thread = await thread_service.get_thread_row(db, thread_id)
-    run_config = service.run_config_for(output_language="en")
-    run_id = uuid4()
-    user_id = UUID(str(user.id))
-    run = RunRow(
-        id=run_id,
-        thread_id=thread.id,
-        project_id=thread.project_id,
-        number=1,
-        started_by=user_id,
-        workflow_name=service.WF_NAME,
-        workflow_version=service.WF_VERSION,
-        status="queued",
-        current_stage="intent_routing",
-        run_config_json=jsonlib.dumps(run_config).encode("utf-8"),
-        usage_json=jsonlib.dumps(service.ZERO_USAGE).encode("utf-8"),
-        input_json=jsonlib.dumps({"input": body.input}).encode("utf-8"),
-    )
-    db.add(run)
-    thread.active_run_id = run.id
-    await db.commit()  # worker connection must see the queued rows
-    await asyncio.to_thread(
-        service.start_run_blocking,
-        _sync_engine(request),
-        run_id=run_id,
-        thread_id=thread.id,
-        user_id=user_id,
-        initial_intent=body.input,
-        first_run=not thread.current_stage,
-        config=run_config,
-    )
-    return {"run_id": str(run_id)}
+    result = await _send(request, db, user, thread, MessageBody(content=body.input))
+    return {"run_id": str(result["run"]["id"])}
 
 
 @router.get("/threads/{thread_id}/runs")
@@ -318,18 +319,6 @@ async def stream_run_events(
     )
 
 
-class ResumeBody(BaseModel):
-    """POST /runs/{id}/resume (§5): the answer to a pending interrupt."""
-
-    model_config = ConfigDict(extra="forbid")
-
-    interrupt_id: str
-    option: str
-    feedback: str | None = None
-    answers: dict[str, Any] = {}
-    modified_items: list[dict[str, Any]] = []
-
-
 @router.get("/runs/{run_id}/directives")
 async def list_directives(
     run_id: UUID,
@@ -414,78 +403,135 @@ async def list_interrupts(
     return Page(items=window, next_cursor=next_cursor)
 
 
-@router.post("/runs/{run_id}/resume")
+class ModifiedItem(BaseModel):
+    """An item the user edited before answering, at the version it has now."""
+
+    model_config = ConfigDict(extra="forbid")
+
+    item_id: str
+    version: int
+
+
+class ResumeBody(BaseModel):
+    """POST /runs/{id}/resume (§5): the answer to the pending interrupt."""
+
+    model_config = ConfigDict(extra="forbid")
+
+    interrupt_id: str
+    option: str | None = None
+    feedback: str | None = None
+    answers: dict[str, Any] = {}
+    modified_items: list[ModifiedItem] = []
+
+
+async def _modified_item_problems(
+    db: AsyncSession, interrupt: InterruptRow, body: ResumeBody
+) -> tuple[list[dict[str, str]], list[dict[str, Any]]]:
+    """The problems of the edited items a resume lists, and the references to store."""
+    if not body.modified_items:
+        return [], []
+    if not interrupt.allow_edits:
+        return [{"field": "modified_items", "message": "This review does not take edits."}], []
+    listed = {
+        UUID(str(ref["artifact_id"]))
+        for ref in jsonlib.loads((interrupt.artifacts_json or b"[]").decode("utf-8"))
+    }
+    problems: list[dict[str, str]] = []
+    refs: list[dict[str, Any]] = []
+    for index, entry in enumerate(body.modified_items):
+        field = f"modified_items.{index}"
+        try:
+            item = await db.get(ArtifactItemRow, UUID(entry.item_id))
+        except ValueError:
+            item = None
+        if item is None or item.artifact_id not in listed:
+            problems.append({"field": field, "message": "Not an item of the artifacts in review."})
+        elif not 1 <= entry.version <= item.version:
+            problems.append({"field": field, "message": "Not a version of this item."})
+        else:
+            refs.append(
+                {
+                    "item_id": str(item.id),
+                    "kind": item.kind,
+                    "key": item.key,
+                    "version": entry.version,
+                }
+            )
+    return problems, refs
+
+
+@router.post("/runs/{run_id}/resume", status_code=202)
 async def resume_run(
     run_id: UUID,
     user: deps.CurrentUser,
     db: deps.DbSession,
+    request: Request,
     body: ResumeBody,
     _origin: Annotated[None, Depends(deps.check_origin)],
-) -> schemas.Run:
-    """Answer the pending interrupt; the run continues along the option's edge.
+) -> Any:
+    """Answer the pending interrupt; the run continues along the edge of the option (§5).
 
-    A run that is not waiting at a checkpoint answers 409 invalid_state (§5).
+    A run that is not waiting at this interrupt answers 409 invalid_state.
     """
-    from datetime import UTC, datetime
-
-    from khoailanggraph.features.runs.models import HumanDecisionRow, InterruptRow
-
-    run = await db.get(RunRow, run_id)
-    if run is None:
-        raise ApiError(404, "not_found", "Not found", "The run does not exist.")
-    pending = await db.scalar(
-        select(InterruptRow)
-        .where(InterruptRow.run_id == run_id, InterruptRow.status == "pending")
-        .order_by(InterruptRow.created_at.desc())
-    )
-    if pending is None or (run.status != "interrupted" and pending is None):
+    user_id = UUID(str(user.id))
+    key = request.headers.get("Idempotency-Key")
+    scope = f"POST {request.url.path}"
+    stored = await idempotency.find_response(db, user_id, key, scope)
+    if stored is not None:
+        return JSONResponse(status_code=stored[0], content=stored[1])
+    run = await service.get_run_row(db, run_id)
+    if run.status != "interrupted":
         raise ApiError(
-            409, "invalid_state", "Invalid state", "The run is not waiting at a checkpoint."
+            409, "invalid_state", "Invalid state", "The run is not waiting for a review."
         )
-    options = jsonlib.loads((pending.options_json or b"[]").decode("utf-8"))
-    known = {option.get("key") for option in options}
-    if body.option not in known:
+    try:
+        interrupt = await db.get(InterruptRow, UUID(body.interrupt_id))
+    except ValueError:
+        interrupt = None
+    if interrupt is None or interrupt.run_id != run_id:
+        raise ApiError(404, "not_found", "Not found", "The interrupt does not exist.")
+    if interrupt.status != "pending":
+        raise ApiError(
+            409, "invalid_state", "Invalid state", "The run is not waiting at this interrupt."
+        )
+    options = jsonlib.loads((interrupt.options_json or b"[]").decode("utf-8"))
+    questions = jsonlib.loads((interrupt.questions_json or b"[]").decode("utf-8"))
+    item_problems, modified = await _modified_item_problems(db, interrupt, body)
+    problems = [
+        *resume_rules.option_problems(options, body.option, body.feedback),
+        *resume_rules.answer_problems(questions, body.answers),
+        *item_problems,
+    ]
+    if problems:
         raise ApiError(
             422,
             "validation_failed",
             "Validation failed",
-            errors=[
-                {
-                    "field": "option",
-                    "message": f"Choose one of: {', '.join(sorted(str(k) for k in known if k))}",
-                }
-            ],
+            "The body has fields that are not valid.",
+            errors=problems,
         )
-    approving = next(
-        (o for o in options if o.get("key") == body.option and bool(o.get("approves"))),
-        None,
-    )
-    if approving is not None:
-        from khoailanggraph.features.artifacts.models import ArtifactRow
-
-        artifact = (
-            await db.get(ArtifactRow, UUID(approving.get("artifact_id", "")))
-            if approving.get("artifact_id")
-            else None
+    await service.ensure_budget(db, user)
+    db.add(
+        HumanDecisionRow(
+            id=uuid4(),
+            interrupt_id=interrupt.id,
+            run_id=run_id,
+            decided_by=user_id,
+            option=body.option,
+            feedback=body.feedback,
+            answers_json=jsonlib.dumps(body.answers).encode("utf-8"),
+            modified_items_json=jsonlib.dumps(modified).encode("utf-8"),
         )
-        if artifact is not None:
-            artifact.review_status = "approved"
-    decision = HumanDecisionRow(
-        id=uuid4(),
-        interrupt_id=pending.id,
-        run_id=run_id,
-        decided_by=UUID(str(user.id)) if user.id else None,
-        option=body.option,
-        feedback=body.feedback,
     )
-    db.add(decision)
-    pending.status = "resolved"
-    pending.resolved_at = datetime.now(UTC)
+    interrupt.status = "resolved"
+    interrupt.resolved_at = datetime.now(UTC)
     run.status = "running"
-    await db.flush()
-    # Note: with review_checkpoints=[] no interrupt exists, so the
-    # workflow-level continuation lives in the checkpointer path (gap-report).
-    return service.runs_output(run)
+    await db.commit()
+    await _start_job(request, run_id, resume_interrupt=interrupt.id)
+    await db.refresh(run)
+    result = service.runs_output(run).model_dump(mode="json")
+    await idempotency.store_response(db, user_id, key, scope, 202, result)
+    return JSONResponse(status_code=202, content=result)
 
 
 class RetryBody(BaseModel):
@@ -501,20 +547,20 @@ async def retry_run(
     run_id: UUID,
     user: deps.CurrentUser,
     db: deps.DbSession,
+    request: Request,
     body: RetryBody,
-    _origin: Annotated[None, Depends(deps.check_origin)] = None,
-) -> schemas.Run:
-    """Create a new run that starts from a step of this run (API.md).
-
-    The artifacts are brought back to the versions the state of that step
-    references when a retry executes; v1 records the lineage (retry_of_run_id)
-    and queues the run — full state-restore execution is a documented
-    follow-up of the executor.
-    """
-    run = await db.get(RunRow, run_id)
-    if run is None:
-        raise ApiError(404, "not_found", "Not found", "The run does not exist.")
-    if await service.project_has_active_run(db, UUID(str(run.project_id))):
+    _origin: Annotated[None, Depends(deps.check_origin)],
+) -> Any:
+    """Create a new run that starts from a step of this run (§5). The new run resolves its
+    settings now; earlier steps are not executed again."""
+    user_id = UUID(str(user.id))
+    key = request.headers.get("Idempotency-Key")
+    scope = f"POST {request.url.path}"
+    stored = await idempotency.find_response(db, user_id, key, scope)
+    if stored is not None:
+        return JSONResponse(status_code=stored[0], content=stored[1])
+    run = await service.get_run_row(db, run_id)
+    if await service.project_has_active_run(db, run.project_id):
         raise ApiError(
             409,
             "run_already_active",
@@ -522,45 +568,82 @@ async def retry_run(
             "A run of this project is already running or waiting.",
         )
     step = await db.get(RunStepRow, body.from_step_id)
-    if step is None or str(step.run_id) != str(run_id):
+    if step is None or step.run_id != run_id:
         raise ApiError(
             422,
             "validation_failed",
             "Validation failed",
-            "from_step_id must be a step of this run.",
+            errors=[{"field": "from_step_id", "message": "Not a step of this run."}],
         )
-    thread = await db.get(ThreadRow, run.thread_id)
+    await service.ensure_budget(db, user)
+    thread = await thread_service.get_thread_row(db, run.thread_id)
+    project = cast("ProjectRow", await db.get(ProjectRow, run.project_id))
+    resolved = await run_config.resolve_run_config(db, project, user_id)
     retry = RunRow(
+        id=uuid4(),
         thread_id=run.thread_id,
         project_id=run.project_id,
-        number=run.number + 1,
-        started_by=user.id,
+        number=await service.next_run_number(db, run.thread_id),
+        started_by=user_id,
         workflow_name=run.workflow_name,
         workflow_version=run.workflow_version,
         status="queued",
-        current_stage=str(step.stage or ""),
-        run_config_json=run.run_config_json,
+        current_stage=step.stage,
+        run_config_json=jsonlib.dumps(resolved).encode("utf-8"),
         usage_json=jsonlib.dumps(service.ZERO_USAGE).encode("utf-8"),
         retry_of_run_id=run.id,
+        input_json=jsonlib.dumps({"retry_from_step_id": str(step.id)}).encode("utf-8"),
     )
     db.add(retry)
-    if thread is not None:
-        thread.active_run_id = retry.id
-        await db.flush()
-    return service.runs_output(retry)
+    thread.active_run_id = retry.id
+    await db.commit()
+    await _start_job(request, retry.id)
+    await db.refresh(retry)
+    result = service.runs_output(retry).model_dump(mode="json")
+    await idempotency.store_response(db, user_id, key, scope, 202, result)
+    return JSONResponse(status_code=202, content=result)
 
 
-@router.post("/runs/{run_id}/cancel")
+@router.post("/runs/{run_id}/cancel", status_code=202)
 async def cancel_run(
     run_id: UUID,
     user: deps.CurrentUser,
     db: deps.DbSession,
     _origin: Annotated[None, Depends(deps.check_origin)],
 ) -> schemas.Run:
-    """Cancel an unfinished run; finished runs answer 409 (§5)."""
+    """Stop an unfinished run (§5): the run becomes cancelled, a pending interrupt is cancelled
+    with it and the stream sends `done`. A walk in progress stops at the end of its step; items
+    already written stay. A finished run answers 409."""
     row = await service.get_run_row(db, run_id)
     if row.status in {"succeeded", "failed", "cancelled"}:
         raise ApiError(409, "invalid_state", "Invalid state", f"The run already {row.status}.")
     row.status = "cancelled"
+    row.finished_at = datetime.now(UTC)
+    for pending in (
+        await db.scalars(
+            select(InterruptRow).where(
+                InterruptRow.run_id == run_id, InterruptRow.status == "pending"
+            )
+        )
+    ).all():
+        pending.status = "cancelled"
+    top = await db.scalar(
+        select(func.max(RunEventRow.sequence)).where(RunEventRow.run_id == run_id)
+    )
+    sequence = int(top or 0) + 1
+    db.add(
+        RunEventRow(
+            run_id=run_id,
+            sequence=sequence,
+            type="done",
+            data_json=jsonlib.dumps({"status": "cancelled"}).encode("utf-8"),
+        )
+    )
+    row.last_event_id = sequence
+    thread = await db.get(ThreadRow, row.thread_id)
+    if thread is not None:
+        thread.active_run_id = None
+        thread.current_stage = row.current_stage
+    await service.undeliver_pending(db, row.thread_id)
     await db.flush()
     return service.runs_output(row)

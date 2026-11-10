@@ -95,6 +95,7 @@ def make_async_engine(settings: Settings) -> AsyncEngine:
             cursor = dbapi_connection.cursor()  # type: ignore[attr-defined]
             cursor.execute("PRAGMA journal_mode=WAL")
             cursor.execute("PRAGMA foreign_keys=ON")
+            cursor.execute("PRAGMA busy_timeout=15000")
             cursor.close()
 
     return engine
@@ -115,6 +116,7 @@ def make_sync_engine(settings: Settings) -> Engine:
             cursor = dbapi_connection.cursor()  # type: ignore[attr-defined]
             cursor.execute("PRAGMA journal_mode=WAL")
             cursor.execute("PRAGMA foreign_keys=ON")
+            cursor.execute("PRAGMA busy_timeout=15000")
             cursor.close()
 
     return engine

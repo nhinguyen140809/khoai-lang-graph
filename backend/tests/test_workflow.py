@@ -258,8 +258,13 @@ def test_get_graph_topology_matches_definition() -> None:
     edges = {tuple(pair) for pair in edge_pairs}
     # The definition's 27 rows, error drains aside (backend-only, routing.py).
     definition_pairs = {(str(row["source"]), str(row["target"])) for row in wf.edges()}
+    # Backend-only edges: every error drains to the end, and a walk that continues a run may
+    # begin at any node (`start_at`).
     application_edges = {
-        pair for pair in edges if not (pair[1] == "__end__" and pair[0] != "validator")
+        pair
+        for pair in edges
+        if not (pair[1] == "__end__" and pair[0] != "validator")
+        and not (pair[0] == "__start__" and pair not in definition_pairs)
     }
     assert application_edges == definition_pairs
 
@@ -446,7 +451,7 @@ def test_invoke_retries_a_degenerate_generation() -> None:
         def with_structured_output(self, _schema: type) -> FlakyModel:
             return self
 
-        def invoke(self, _messages: object) -> Probe:
+        def invoke(self, _messages: object, config: object = None) -> Probe:
             FlakyModel.calls += 1
             if FlakyModel.calls == 1:
                 msg = "Invalid JSON: EOF while parsing an object"
