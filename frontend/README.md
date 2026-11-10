@@ -77,11 +77,37 @@ In `src/`, read variables through `env` of `@/shared/config/env`, which checks t
 | `pnpm test:watch`      | Run the unit tests in watch mode.                                                                                                              |
 | `pnpm e2e`             | Run the Playwright tests. They start their own dev server on port 3100 with mocks enabled.                                                     |
 | `pnpm e2e:install`     | Download the Chromium build used by Playwright. Needed once per machine before the first `pnpm e2e`.                                           |
+| `pnpm e2e:backend`     | Run the Playwright tests against the real backend, see [E2E against the backend](#e2e-against-the-backend).                                    |
 | `pnpm screenshots`     | Take a screenshot of each mock state of each screen, in both themes, see [Screenshots](#screenshots).                                          |
 | `pnpm ui:add <name>`   | Add a shadcn/ui component, see [Adding shadcn/ui components](#adding-shadcnui-components).                                                     |
 | `pnpm codegen`         | Generate the typed API client from `openapi.json`.                                                                                             |
 
 Stop `pnpm dev` before `pnpm e2e` or `pnpm screenshots`, since Next.js allows one dev server per project folder, or start it with mocks on their port: `pnpm dev:mock --port 3100`. They use a server that runs there.
+
+## E2E against the backend
+
+`pnpm e2e` runs on the mock server. `pnpm e2e:backend` runs the specs named `<feature>-backend.spec.ts` of `tests/e2e/` against the real
+backend instead (`playwright.backend.config.ts`). It starts the backend on port 8011 over
+`backend/data/e2e.db`, made again at each start from the demo seed, and the app on port 3100 proxied to
+it. The backend answers with the scripted model and the fixture corpus of its tests, so no gateway key is
+needed and a run finishes in seconds. It needs the Chromium build of `pnpm e2e:install` and `uv` for the
+backend. Stop `pnpm dev` first: the specs start their own servers and do not reuse a running one.
+
+The specs share one account and one database, run one at a time, and each makes the project it needs.
+`tests/shared/global-setup.utils.ts` signs in once and keeps the cookies in `tests/.auth/`, which every test
+starts with (the login is limited per address).
+
+The helpers come first, so that a spec reads as the steps of a user:
+
+| Helper                               | Where                                     | What it does                                                                                                                                  |
+| ------------------------------------ | ----------------------------------------- | --------------------------------------------------------------------------------------------------------------------------------------------- |
+| `user` (`pressButton`, `submitForm`) | `tests/shared/steps`                      | The steps of any page, shared with the mock E2E, and of the pages of a run: `startProject`, `expectRunStatus`, `answerReviewWith`, `stopRun`. |
+| `api` (`startRun`, `waitForReview`)  | `tests/shared/api/api-runs.utils.ts`      | Make a project, thread and run, wait for a status or a review, answer it, approve every review.                                               |
+| `client` (`get`, `post`, ...)        | `tests/shared/api/api-client.utils.ts`    | The API as the signed-in user: JSON in and out, the origin and the `Idempotency-Key` set.                                                     |
+| `expectPage`, `expectProblem`, ...   | `tests/shared/api/api-responses.utils.ts` | The answers every endpoint shares: a list with an opaque cursor, an error with its code and field.                                            |
+| `reviewsInOrder`, `seededProjects`   | `tests/shared/*.constants.ts`             | The reviews of a full run and what the demo seed creates.                                                                                     |
+
+A spec is `<feature>-backend.spec.ts` in the folder of its feature, with its cases in `<feature>-backend.data.ts`, as the mock specs beside it, and imports `test` from `tests/shared/fixtures.utils.ts`. A new step goes into the file of its kind under `tests/shared/steps/` or `tests/shared/api/` and into the list of its folder (`user-steps.utils.ts`, `api-steps.utils.ts`), so a spec never passes the page or the client itself.
 
 ## Project layout
 
@@ -107,9 +133,9 @@ frontend/
 │   ├── mocks/               # MSW handlers shared by dev mocking, unit tests, and E2E
 │   └── test/                # Vitest setup and the helpers of the unit tests: msw/ (calls to the mock server and the requests it records), suites/ (the tests that several files share, as `it*` functions; `requests/`: the request each API function sends and the error it throws, the requests the mock server refuses; `screens/`: the dialog an action asks with before it runs, the fields a form refuses, the states of a query, the toast of a result), next-stubs/ (the router and links of Next.js), render/ (providers and components for rendering), steps/ (what a test does after it has rendered: waiting for a query, answering the dialog of an action, typing in a form, reading a toast, checking what shows on the screen and the page the router was sent to, checking accessibility with axe)
 └── tests/
-    ├── e2e/                 # Playwright specs, one folder per feature, their cases in .data.ts
+    ├── e2e/                 # Playwright specs, one folder per feature, their cases in .data.ts; <feature>-backend.spec.ts runs against the real backend
     ├── screenshots/         # the screenshots of the mock states, one folder per feature
-    └── shared/              # what both share: steps/ (typing in a form, pressing a button of a dialog, checking the address and what shows) and the account the mock server knows
+    └── shared/              # what both share: steps/ (typing in a form, pressing a button of a dialog, checking the address and what shows, starting a project and answering a review), api/ (the API client, the checks of its answers and the calls on runs, for the specs that run against the backend) and the account the mock server knows
 ```
 
 ## Adding shadcn/ui components

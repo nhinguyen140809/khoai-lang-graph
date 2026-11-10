@@ -20,24 +20,42 @@ import {
   submitForm,
 } from './form.utils'
 import { pressKey, typeText } from './keyboard.utils'
+import {
+  answerReviewWith,
+  chooseReviewOption,
+  expectReviewPrompt,
+  expectRunStatus,
+  openActivity,
+  sendReview,
+  startProject,
+  stopRun,
+} from './run-steps.utils'
 
 const steps = {
+  answerReviewWith,
+  chooseReviewOption,
   expectAlert,
   expectFieldErrors,
   expectFieldValue,
   expectLabel,
   expectNoRole,
+  expectReviewPrompt,
   expectRole,
+  expectRunStatus,
   expectText,
   expectUrl,
   fillFields,
   fillTextbox,
+  openActivity,
   pressAlertDialogButton,
   pressButton,
   pressDialogButton,
   pressKey,
   pressLink,
   pressMenuItem,
+  sendReview,
+  startProject,
+  stopRun,
   submitForm,
   typeText,
 }

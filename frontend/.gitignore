@@ -37,3 +37,4 @@ blob-report
 .env
 .env.*
 !.env.example
+tests/.auth/
