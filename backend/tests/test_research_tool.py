@@ -2,6 +2,8 @@
 
 from __future__ import annotations
 
+import time
+import urllib.request
 from typing import TYPE_CHECKING
 
 from khoailanggraph.settings import Settings
@@ -55,11 +57,12 @@ def test_research_queries_follow_the_plan() -> None:
 
 def test_live_mode_prefers_tavily_then_the_keyless_chain(monkeypatch: pytest.MonkeyPatch) -> None:
     web_calls: list[str] = []
-    monkeypatch.setattr(
-        research,
-        "tavily_research_search",
-        lambda queries, *, api_key: web_calls.append(api_key) or [],
-    )
+
+    def fake_tavily(queries: list[str], *, api_key: str) -> list[dict[str, str]]:
+        web_calls.append(api_key)
+        return []
+
+    monkeypatch.setattr(research, "tavily_research_search", fake_tavily)
     monkeypatch.setattr(research, "live_research_search", lambda queries: [])
     monkeypatch.setattr(research, "academic_research_search", lambda queries, **_: [])
 
@@ -89,13 +92,14 @@ def test_academic_hits_join_the_web_hits_without_duplicate_urls(
         "text": "p",
     }
     monkeypatch.setattr(research, "live_research_search", lambda queries: [dict(web)])
-    monkeypatch.setattr(
-        research,
-        "academic_research_search",
-        lambda queries, *, openalex_api_key=None, deadline=None: (
-            seen_keys.append(openalex_api_key) or [dict(web), dict(paper)]
-        ),
-    )
+
+    def fake_academic(
+        queries: list[str], *, openalex_api_key: str | None = None, deadline: float | None = None
+    ) -> list[dict[str, str]]:
+        seen_keys.append(openalex_api_key)
+        return [dict(web), dict(paper)]
+
+    monkeypatch.setattr(research, "academic_research_search", fake_academic)
 
     settings = Settings(app_env="test", tavily_api_key=None, openalex_api_key="oa-key")
     hits = research.make_research_search(settings)(["q"])
@@ -154,7 +158,7 @@ def test_academic_sources_start_no_request_after_the_deadline(
     def refuse(*_args: object, **_kwargs: object) -> None:
         raise AssertionError("a request started after the deadline")
 
-    monkeypatch.setattr(research.urllib.request, "urlopen", refuse)
-    past = research.time.monotonic() - 1.0
+    monkeypatch.setattr(urllib.request, "urlopen", refuse)
+    past = time.monotonic() - 1.0
 
     assert research.academic_research_search(["q", "r"], deadline=past) == []

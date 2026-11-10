@@ -12,7 +12,7 @@ definition.
 
 from __future__ import annotations
 
-from typing import TYPE_CHECKING, cast
+from typing import TYPE_CHECKING, Any, cast
 from unittest.mock import patch
 
 import pytest
@@ -20,6 +20,7 @@ from pydantic import BaseModel
 
 import khoailanggraph.llm.factory as llm_factory
 from khoailanggraph.agents.requirements_engineering import nodes
+from khoailanggraph.agents.requirements_engineering.outputs import MessageLink
 
 if TYPE_CHECKING:
     from collections.abc import Generator
@@ -148,7 +149,7 @@ def test_full_workflow_succeeds_and_passes_domain_rules() -> None:
         for entry in content["evidence"]:
             assert entry["quote"] == str(obs_by_key[entry["observation"]]["content"]["evidence"])
             assert entry["source"] == str(obs_by_key[entry["observation"]]["content"]["source"])
-    catalog_groups = list(catalog["content"]["stakeholder_groups"])
+    catalog_groups = list(cast("list[dict[str, Any]]", catalog["content"]["stakeholder_groups"]))
     assert len(catalog_groups) == 3
     assert all(group["observations"] for group in catalog_groups), (
         "every consolidated group cites its observations"
@@ -391,7 +392,7 @@ def test_uploaded_documents_lead_the_corpus_and_ground_the_persona() -> None:
         ]
 
     base = fake_config(sink, directives)
-    config = {
+    config: RunnableConfig = {
         "configurable": {
             **base["configurable"],
             "project_documents": project_documents,
@@ -546,7 +547,7 @@ def test_an_agent_whose_quote_is_not_exact_still_links_the_items() -> None:
         str(raw["item_id"]),
         "evidenced_by",
         known,
-        [nodes.MessageLink(message=str(other["key"]), target_quote="words that nobody said")],
+        [MessageLink(message=str(other["key"]), target_quote="words that nobody said")],
     )
 
     assert sink.links[-1]["target_id"] == other["item_id"]

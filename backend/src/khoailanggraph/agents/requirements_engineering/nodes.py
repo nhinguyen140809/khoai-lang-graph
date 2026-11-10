@@ -599,7 +599,7 @@ def corpus_builder_node(
     plan_record, topics, stakeholder_types = _plan_terms(sink, state)
 
     search = research_search_of(config or {})
-    documents_tool = (dict(config or {}).get("configurable") or {}).get("project_documents")
+    documents_tool = _configurable(config).get("project_documents")
     uploaded = documents_tool(str(state["project_id"])) if documents_tool is not None else []
     hits = [
         *uploaded,
