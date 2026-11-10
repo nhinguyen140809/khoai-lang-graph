@@ -35,9 +35,8 @@ export function useItemLinks(itemId: string): ItemLinksResult {
     }
 
     const schemas = contentSchemasByKind(kinds)
-    const linkTypes = definition.link_types.map(({ key, title }) => ({ key, title }))
     const groups = itemLinkGroups(traceData, itemId, {
-      linkTypes,
+      linkTypes: definition.link_types,
       titleOf,
       kindTitleOf: (item) => kindTitleOf(item.kind),
     })
