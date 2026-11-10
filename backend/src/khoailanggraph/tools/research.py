@@ -27,6 +27,8 @@ import urllib.parse
 import urllib.request
 import xml.etree.ElementTree as ET
 from collections.abc import Callable, Mapping, Sequence
+from concurrent.futures import ThreadPoolExecutor
+from concurrent.futures import TimeoutError as FutureTimeout
 from typing import TYPE_CHECKING, Any
 
 if TYPE_CHECKING:
@@ -101,11 +103,30 @@ def make_research_search(settings: Settings) -> ResearchSearch:
     if not settings.research_academic:
         return web
     openalex_key = settings.openalex_api_key
+    # The run refuses a tool call that outlasts its limit, so the sources work side by side and
+    # the academic ones stop asking once their share of that limit is spent.
+    limit = settings.tool_timeout_seconds
+    academic_share = max(limit * 0.55, 5.0)
 
     def search(queries: Sequence[str]) -> list[dict[str, Any]]:
-        hits = web(queries)
+        started = time.monotonic()
+        pool = ThreadPoolExecutor(max_workers=2)
+        web_future = pool.submit(web, queries)
+        academic_future = pool.submit(
+            academic_research_search,
+            queries,
+            openalex_api_key=openalex_key,
+            deadline=started + academic_share,
+        )
+        pool.shutdown(wait=False)
+        hits = web_future.result(timeout=max(limit - 5.0, 1.0))
         seen = {str(hit["url"]) for hit in hits}
-        for hit in academic_research_search(queries, openalex_api_key=openalex_key):
+        wait = max(started + academic_share + _ACADEMIC_REQUEST_S + 2.0 - time.monotonic(), 0.0)
+        try:
+            papers = academic_future.result(timeout=wait)
+        except FutureTimeout:
+            papers = []
+        for hit in papers:
             if str(hit["url"]) not in seen:
                 seen.add(str(hit["url"]))
                 hits.append(hit)
@@ -412,6 +433,7 @@ _ARXIV_URL = "https://export.arxiv.org/api/query"
 _ARXIV_DELAY_S = 3.0  # arXiv asks for at most one request every three seconds
 _ATOM = "{http://www.w3.org/2005/Atom}"
 _ACADEMIC_HITS_PER_QUERY = 3
+_ACADEMIC_REQUEST_S = 10.0
 _ABSTRACT_LIMIT = 3000
 _ACADEMIC_AGENT = "khoailanggraph-research/0.1 (capstone student project)"
 
@@ -424,17 +446,24 @@ def _abstract_of(inverted: Mapping[str, Sequence[int]] | None) -> str:
     return " ".join(words[pos] for pos in sorted(words))[:_ABSTRACT_LIMIT]
 
 
+def _spent(deadline: float | None) -> bool:
+    return deadline is not None and time.monotonic() >= deadline
+
+
 def openalex_research_search(
-    queries: Sequence[str], *, api_key: str | None = None
+    queries: Sequence[str], *, api_key: str | None = None, deadline: float | None = None
 ) -> list[dict[str, Any]]:
     """Paper abstracts from OpenAlex, a few per query, works without abstract skipped.
 
     Works without a key on a small daily budget shared by the network; the free
-    `OPENALEX_API_KEY` gives its own budget. Any network failure yields no hits.
+    `OPENALEX_API_KEY` gives its own budget. Any network failure yields no hits, and
+    no new request starts after the `deadline` (a time.monotonic() value).
     """
     hits: list[dict[str, Any]] = []
     seen_urls: set[str] = set()
     for query in queries:
+        if _spent(deadline):
+            break
         params = {
             "search": str(query),
             "filter": "has_abstract:true",
@@ -448,7 +477,7 @@ def openalex_research_search(
             headers={"User-Agent": _ACADEMIC_AGENT},
         )
         try:
-            with urllib.request.urlopen(request, timeout=20) as response:
+            with urllib.request.urlopen(request, timeout=_ACADEMIC_REQUEST_S) as response:
                 payload = json.loads(response.read().decode("utf-8"))
         except (urllib.error.URLError, urllib.error.HTTPError, TimeoutError, ValueError):
             continue
@@ -495,7 +524,9 @@ def parse_arxiv_atom(feed: str) -> list[dict[str, Any]]:
     return hits
 
 
-def arxiv_research_search(queries: Sequence[str]) -> list[dict[str, Any]]:
+def arxiv_research_search(
+    queries: Sequence[str], *, deadline: float | None = None
+) -> list[dict[str, Any]]:
     """Paper abstracts from arXiv, a few per query, every keyword required."""
     hits: list[dict[str, Any]] = []
     seen_urls: set[str] = set()
@@ -505,6 +536,8 @@ def arxiv_research_search(queries: Sequence[str]) -> list[dict[str, Any]]:
             continue
         if index:
             time.sleep(_ARXIV_DELAY_S)
+        if _spent(deadline):
+            break
         params = urllib.parse.urlencode(
             {
                 "search_query": " AND ".join(f"all:{word}" for word in words),
@@ -515,7 +548,7 @@ def arxiv_research_search(queries: Sequence[str]) -> list[dict[str, Any]]:
             f"{_ARXIV_URL}?{params}", headers={"User-Agent": _ACADEMIC_AGENT}
         )
         try:
-            with urllib.request.urlopen(request, timeout=20) as response:
+            with urllib.request.urlopen(request, timeout=_ACADEMIC_REQUEST_S) as response:
                 feed = response.read().decode("utf-8", errors="replace")
         except (urllib.error.URLError, urllib.error.HTTPError, TimeoutError):
             continue
@@ -527,10 +560,20 @@ def arxiv_research_search(queries: Sequence[str]) -> list[dict[str, Any]]:
 
 
 def academic_research_search(
-    queries: Sequence[str], *, openalex_api_key: str | None = None
+    queries: Sequence[str],
+    *,
+    openalex_api_key: str | None = None,
+    deadline: float | None = None,
 ) -> list[dict[str, Any]]:
-    """The paper abstracts of every academic source for one set of queries."""
-    return [
-        *openalex_research_search(queries, api_key=openalex_api_key),
-        *arxiv_research_search(queries),
-    ]
+    """The paper abstracts of every academic source for one set of queries.
+
+    The sources run side by side (arXiv spaces its own requests), so the slow
+    one does not hold the other back.
+    """
+    pool = ThreadPoolExecutor(max_workers=2)
+    openalex = pool.submit(
+        openalex_research_search, queries, api_key=openalex_api_key, deadline=deadline
+    )
+    arxiv = pool.submit(arxiv_research_search, queries, deadline=deadline)
+    pool.shutdown(wait=True)
+    return [*openalex.result(), *arxiv.result()]

@@ -66,7 +66,7 @@ def test_live_mode_prefers_tavily_then_the_keyless_chain(monkeypatch: pytest.Mon
     research.make_research_search(Settings(app_env="test", tavily_api_key="test-key"))(["q"])
     assert web_calls == ["test-key"]
 
-    web_only = Settings(app_env="test", research_academic=False)
+    web_only = Settings(app_env="test", tavily_api_key=None, research_academic=False)
     assert research.make_research_search(web_only) is research.live_research_search
 
 
@@ -92,12 +92,13 @@ def test_academic_hits_join_the_web_hits_without_duplicate_urls(
     monkeypatch.setattr(
         research,
         "academic_research_search",
-        lambda queries, *, openalex_api_key=None: (
+        lambda queries, *, openalex_api_key=None, deadline=None: (
             seen_keys.append(openalex_api_key) or [dict(web), dict(paper)]
         ),
     )
 
-    hits = research.make_research_search(Settings(app_env="test", openalex_api_key="oa-key"))(["q"])
+    settings = Settings(app_env="test", tavily_api_key=None, openalex_api_key="oa-key")
+    hits = research.make_research_search(settings)(["q"])
 
     assert [hit["url"] for hit in hits] == ["https://a.test/x", "https://doi.org/1"]
     assert seen_keys == ["oa-key"]
@@ -145,3 +146,15 @@ def test_extract_page_text_drops_noise_and_collapses() -> None:
     assert "color: red" not in text
     assert "circling lots for 10 to 15 minutes" in text
     assert "Second paragraph." in text
+
+
+def test_academic_sources_start_no_request_after_the_deadline(
+    monkeypatch: pytest.MonkeyPatch,
+) -> None:
+    def refuse(*_args: object, **_kwargs: object) -> None:
+        raise AssertionError("a request started after the deadline")
+
+    monkeypatch.setattr(research.urllib.request, "urlopen", refuse)
+    past = research.time.monotonic() - 1.0
+
+    assert research.academic_research_search(["q", "r"], deadline=past) == []
