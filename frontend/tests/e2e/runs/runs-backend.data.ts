@@ -11,3 +11,5 @@ const [personas, analysis, specification] = reviewsInOrder
 export const reviewStops = [personas, analysis, specification, specification].map(
   ({ status, prompt, approve }) => ({ status, prompt, approve }),
 )
+
+export const laterIdea = 'Also let neighbours rate each other.'

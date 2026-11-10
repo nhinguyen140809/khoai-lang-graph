@@ -8,3 +8,9 @@ export const pagedLists: { name: string; path: string; limit: number }[] = [
 
 /** What the client sends as a cursor and the API refuses. */
 export const badCursors = ['2', 'not-a-cursor', '!!!']
+
+/** A page of a project that opens with nothing chosen: its address, and what it says. */
+export const emptyPages: { name: string; path: string; heading: string }[] = [
+  { name: 'the documents', path: 'documents', heading: 'Choose a document' },
+  { name: 'the trace', path: 'trace', heading: 'No trace is open' },
+]

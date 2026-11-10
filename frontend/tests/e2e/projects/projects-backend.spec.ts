@@ -4,7 +4,7 @@ import { type ApiPage, expectPage, expectProblem } from '../../shared/api'
 import { seededProjects } from '../../shared/backend-env.constants'
 import { test } from '../../shared/fixtures.utils'
 import { idea } from '../runs/runs-backend.data'
-import { badCursors, pagedLists } from './projects-backend.data'
+import { badCursors, emptyPages, pagedLists } from './projects-backend.data'
 
 test('lists the projects of the seed and opens the one that is done', async ({ page, user }) => {
   const { mentor, campus } = seededProjects
@@ -44,3 +44,24 @@ for (const cursor of badCursors) {
     expectProblem(await client.get('/projects', { cursor }), 422, 'validation_failed')
   })
 }
+
+for (const { name, path, heading } of emptyPages) {
+  test(`opens ${name} of a finished project with nothing chosen`, async ({ page, user }) => {
+    await page.goto(`/projects/${seededProjects.mentor.id}/${path}`)
+
+    await user.expectRole('heading', heading)
+    await user.expectNoRole('alert', /could not be loaded/)
+  })
+}
+
+test('opens each document of a finished project', async ({ page, user, api }) => {
+  const artifacts = await api.listArtifacts(seededProjects.mentor.id)
+  expect(artifacts.length).toBeGreaterThan(0)
+
+  for (const artifact of artifacts) {
+    await page.goto(`/projects/${seededProjects.mentor.id}/documents/${artifact.id}`)
+
+    await user.expectRole('heading', artifact.title)
+    await user.expectNoRole('heading', 'Something went wrong')
+  }
+})

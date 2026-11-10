@@ -10,6 +10,15 @@ export {
   expectProblem,
   expectStatus,
 } from './api-responses.utils'
-export type { ApiInterrupt, ApiOption, ApiRun, RunStatus } from './api-runs.utils'
+export type {
+  ApiArtifact,
+  ApiExport,
+  ApiInterrupt,
+  ApiItem,
+  ApiOption,
+  ApiRun,
+  ApiStep,
+  RunStatus,
+} from './api-runs.utils'
 export type { ApiSteps } from './api-steps.utils'
 export { apiOf } from './api-steps.utils'

@@ -28,6 +28,8 @@ export interface ApiClient {
   put: <Body = unknown>(path: string, body?: unknown) => Promise<ApiReply<Body>>
   patch: <Body = unknown>(path: string, body?: unknown) => Promise<ApiReply<Body>>
   remove: <Body = unknown>(path: string) => Promise<ApiReply<Body>>
+  /** Reads a file at an address the API gave, `download_url` of an export, and gives its text. */
+  download: (address: string) => Promise<ApiReply<string>>
 }
 
 /**
@@ -68,5 +70,9 @@ export function apiClientOf(request: APIRequestContext, origin: string): ApiClie
     put: (path, body) => send('PUT', path, { body }),
     patch: (path, body) => send('PATCH', path, { body }),
     remove: (path) => send('DELETE', path),
+    download: async (address) => {
+      const response = await request.fetch(address, { headers: { Origin: origin } })
+      return { status: response.status(), body: await response.text(), headers: response.headers() }
+    },
   }
 }

@@ -1,6 +1,6 @@
 import { expect } from '@playwright/test'
 
-import { expectAccepted, expectProblem, expectStatus } from '../../shared/api'
+import { expectAccepted, expectOk, expectProblem, expectStatus } from '../../shared/api'
 import { test } from '../../shared/fixtures.utils'
 import { reviewNodes } from '../../shared/reviews.constants'
 import { idea, refusedAnswers } from './reviews-backend.data'
@@ -58,4 +58,31 @@ test('goes on to the end when every review is approved', async ({ api }) => {
 
   expect(finished.status).toBe('succeeded')
   expect(finished.error).toBeNull()
+})
+
+test('goes on with the edit that the user made while the review waited', async ({ api }) => {
+  const { run } = await api.startRun(idea, { reviews: [reviewNodes.analysis] })
+  const review = await api.waitForReview(run.id)
+  const [artifact] = review.review_artifacts
+  const items = await api.listItems(artifact?.artifact_id ?? '')
+  const target = items.find((item) => item.kind === 'analyzed_requirement')
+  if (target === undefined) throw new Error('The analysis has no requirement to edit.')
+
+  const edited = expectOk(await api.editItem(target, { statement: 'Edited by the user.' }))
+  expect(edited.version).toBe(target.version + 1)
+  expectProblem(
+    await api.answerReview(review, {
+      option: 'accept',
+      modified_items: [{ item_id: target.id, version: 99 }],
+    }),
+    422,
+    'validation_failed',
+  )
+  await api.resumeRun(review, {
+    option: 'accept',
+    modified_items: [{ item_id: target.id, version: edited.version }],
+  })
+
+  await api.waitForRun(run.id, ['succeeded'])
+  expectProblem(await api.editItem(target, { statement: 'Too late.' }), 409, 'invalid_state')
 })
