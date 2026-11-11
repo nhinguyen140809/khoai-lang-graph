@@ -58,7 +58,10 @@ Report = Annotated[
             "One to three sentences to the user, in the output language, about what you did: "
             "what was done in plain words first, then only what needs their attention. "
             "Name things by what they say, never by their key. You may use Markdown for "
-            "**bold**, *italic* and a short list; never headings, tables, links or code."
+            "**bold**, *italic* and a short list; never headings, tables, links or code. "
+            "When you name three or more things side by side, write one sentence that "
+            "introduces them and then a Markdown list with one `- ` bullet per thing, each on "
+            "its own line, instead of a long sentence with commas."
         ),
     ),
 ]
@@ -526,7 +529,8 @@ class InterviewerTurnOutput(_Output):
             "summary is for the document; this is for the user, so say it in your own words and "
             "do not copy the summary. Name things by what they say, never by their key. You may "
             "use Markdown for **bold**, *italic* and a short list; never headings, tables, "
-            "links or code. Null when you ask a question."
+            "links or code. When you name three or more things side by side, put them in a "
+            "list with one `- ` bullet per thing. Null when you ask a question."
         ),
     )
 
