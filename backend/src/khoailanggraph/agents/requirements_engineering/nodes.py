@@ -909,6 +909,22 @@ def _check_persona_grounding(
             raise ValueError(msg)
 
 
+def _plan_types_only(values: Sequence[str], allowed: Sequence[str]) -> list[str]:
+    """The stakeholder types of `values` that the plan names, written as the plan writes them.
+
+    The model phrases a plan term without its sentence punctuation, so the match is tolerant. The
+    list of uncovered types is a note for the user: a type outside the plan is left out (logged)
+    instead of failing the run."""
+    kept = []
+    for value in values:
+        matched = match_plan_value(value, allowed)
+        if matched is None:
+            logger.warning("stakeholder type outside plan dropped", value=value)
+        else:
+            kept.append(matched)
+    return kept
+
+
 @safe_node
 def persona_generator_node(
     state: REState,
@@ -959,17 +975,9 @@ def persona_generator_node(
     if plan_record is not None:
         plan_content = cast("dict[str, list[str]]", plan_record["content"])
         allowed = plan_content.get("stakeholder_types", [])
-        # Same tolerant matching as the personas themselves: the model phrases
-        # a plan term without its sentence punctuation ("…staff" for the
-        # plan's "…staff."), and punctuation must not decide the match.
-        outside = [
-            value
-            for value in draft.uncovered_stakeholder_types
-            if match_plan_value(value, allowed) is None
-        ]
-        if outside:
-            msg = f"personas listed unknown stakeholder types: {outside}"
-            raise ValueError(msg)
+        draft.uncovered_stakeholder_types = _plan_types_only(
+            draft.uncovered_stakeholder_types, allowed
+        )
     else:
         allowed = []
     _check_groups(draft, known_observations)
