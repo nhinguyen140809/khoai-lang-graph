@@ -12,14 +12,14 @@ definition.
 
 from __future__ import annotations
 
-from typing import TYPE_CHECKING, Any, cast
+from typing import TYPE_CHECKING, Any, ClassVar, cast
 from unittest.mock import patch
 
 import pytest
 from pydantic import BaseModel
 
 import khoailanggraph.llm.factory as llm_factory
-from khoailanggraph.agents.requirements_engineering import nodes
+from khoailanggraph.agents.requirements_engineering import nodes, routing
 from khoailanggraph.agents.requirements_engineering.outputs import MessageLink
 
 if TYPE_CHECKING:
@@ -40,7 +40,7 @@ from khoailanggraph.agents.requirements_engineering.views import transcript_line
 from khoailanggraph.domain import rules as domain_rules
 from khoailanggraph.domain.errors import IntegrityError
 from khoailanggraph.llm import reset_model_cache
-from support.fake_data import DEMO_INTENT, DemoData, _corpus, _personas
+from support.fake_data import DEMO_INTENT, DemoData, _corpus, _personas, _plain
 from support.fake_llm import FakeChatModel
 from support.fake_search import demo_research_search
 from support.in_memory_sinks import InMemoryArtifactSink, InMemoryDirectiveSink
@@ -224,7 +224,6 @@ def test_full_workflow_succeeds_and_passes_domain_rules() -> None:
     assert spec["review_status"] == "approved"
     outcomes = final["checkpoint_outcomes"]
     assert {outcome["node"] for outcome in outcomes} == {
-        "checkpoint_plan",
         "ask_personas",
         "checkpoint_personas",
         "ask_analysis",
@@ -457,7 +456,10 @@ def test_invoke_retries_a_degenerate_generation() -> None:
 
     with patch.object(nodes, "get_chat_model", lambda _role, _cfg: FlakyModel()):
         result = nodes._invoke(
-            "planner", {"configurable": {}}, Probe, {"output_language": "English", "intent": "test"}
+            "planner",
+            {"configurable": {}},
+            Probe,
+            {"output_language": "English", "intent": "test", "task": "plan"},
         )
     assert result.answer == "clean"
     assert FlakyModel.calls == 2
@@ -556,6 +558,101 @@ def test_every_agent_step_reports_to_the_user_except_the_persona_answers() -> No
     )
     assert "persona_agent" not in roles
     assert all(report["content"].strip() for report in sink.reports)
+    mined = next(r for r in sink.reports if r["agent_role"] == "stakeholder_miner")
+    assert mined["content"].count("\n- **") == 2, "one bullet for each document, under its title"
+
+
+class _AskingPlannerData(DemoData):
+    """A planner that has one question for the user before it plans."""
+
+    seen_by_the_plan: ClassVar[list[str]] = []
+
+    PlannerQuestionsOutput = staticmethod(
+        lambda system, user, call_number: {
+            "questions": [
+                {
+                    "key": "login",
+                    "kind": "single_select",
+                    "prompt": "How do students sign in?",
+                    "choices": [
+                        {"key": "campus", "label": "With their campus account"},
+                        {"key": "own", "label": "With an account of this app"},
+                    ],
+                    "default_choice_keys": ["campus"],
+                }
+            ],
+        }
+    )
+
+    @staticmethod
+    def PlannerOutput(system: str, user: str, call_number: int) -> dict[str, object]:  # noqa: N802 - schema name
+        _AskingPlannerData.seen_by_the_plan.append(user)
+        return _plain(system, user, call_number)
+
+
+def _state_asking_before_the_plan() -> REState:
+    state = run_state()
+    state["run_config"]["review_checkpoints"] = ["checkpoint_plan"]
+    return state
+
+
+def test_the_planner_asks_first_and_the_questions_never_become_a_part_of_the_plan() -> None:
+    """The first round of a project, with the plan checkpoint on, ends with the questions: they
+    wait in the brief of the checkpoint that asks them, and no plan is written yet."""
+    sink = InMemoryArtifactSink()
+
+    with patch.object(llm_factory, "make_demo_data", lambda _name: _AskingPlannerData()):
+        reset_model_cache()
+        update = nodes.planner_node(
+            _state_asking_before_the_plan(), fake_config(sink, InMemoryDirectiveSink())
+        )
+    reset_model_cache()
+
+    (question,) = update["review_briefs"]["checkpoint_plan"]["questions"]
+    assert question["key"] == "login"
+    assert "elicitation_plan" not in update, "no plan before the answers"
+    assert sink.read_artifact("project-1", "elicitation_plan") is None
+    assert routing.route_after_planner({**run_state(), **update}) == "checkpoint_plan"
+
+
+def test_after_the_answers_the_planner_writes_the_plan_from_them_and_asks_nothing_more() -> None:
+    _AskingPlannerData.seen_by_the_plan.clear()
+    state = _state_asking_before_the_plan()
+    state["initial_intent"] += "\n\nClarifications from the user:\n- How do students sign in?: own"
+    state["checkpoint_outcomes"] = [
+        {"node": "checkpoint_plan", "option": "", "feedback": "", "automatic": False}
+    ]
+    state["review_briefs"] = {
+        "checkpoint_plan": {"questions": [{"key": "login", "kind": "free_text", "prompt": "?"}]}
+    }
+    sink = InMemoryArtifactSink()
+
+    with patch.object(llm_factory, "make_demo_data", lambda _name: _AskingPlannerData()):
+        reset_model_cache()
+        update = nodes.planner_node(state, fake_config(sink, InMemoryDirectiveSink()))
+    reset_model_cache()
+
+    assert "elicitation_plan" in update
+    assert update["review_briefs"]["checkpoint_plan"] == {"questions": []}
+    assert "How do students sign in?: own" in _AskingPlannerData.seen_by_the_plan[0]
+    plan = sink.read_artifact("project-1", "elicitation_plan")
+    assert "questions" not in plan["content"], "the questions are asked, not documented"
+    assert routing.route_after_planner({**state, **update}) == "corpus_builder"
+
+
+def test_a_plan_that_has_no_question_clears_the_brief_of_the_round_before() -> None:
+    """A planning round that asks nothing must not leave the questions of the round before
+    waiting in the brief, or a later plan would re-ask what the user already settled."""
+    state = run_state()
+    state["review_briefs"] = {
+        "checkpoint_plan": {
+            "questions": [{"key": "stale", "kind": "free_text", "prompt": "An old question?"}]
+        }
+    }
+
+    update = nodes.planner_node(state, fake_config(InMemoryArtifactSink(), InMemoryDirectiveSink()))
+
+    assert update["review_briefs"]["checkpoint_plan"] == {"questions": []}
 
 
 def test_a_report_refers_to_what_its_step_wrote() -> None:

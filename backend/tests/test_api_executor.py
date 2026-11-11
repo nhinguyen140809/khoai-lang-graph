@@ -8,15 +8,18 @@ import time
 from pathlib import Path
 from tempfile import gettempdir
 from typing import TYPE_CHECKING, Any
+from unittest.mock import patch
 from uuid import UUID, uuid4
 
 import pytest
 from httpx import ASGITransport, AsyncClient
 from sqlalchemy import select
 
+import khoailanggraph.llm.factory as llm_factory
 from khoailanggraph.features.me.models import UserRow
 from khoailanggraph.features.runs import service as runs_service
 from khoailanggraph.features.runs.models import DirectiveRow, RunEventRow
+from khoailanggraph.llm import reset_model_cache
 from khoailanggraph.main import create_app
 from khoailanggraph.platform.db import (
     ensure_schema,
@@ -26,6 +29,7 @@ from khoailanggraph.platform.db import (
 )
 from khoailanggraph.settings import Settings, get_settings
 from support.api_helpers import REGISTER, TASK
+from support.fake_data import DemoData, _plain
 
 if TYPE_CHECKING:
     from collections.abc import AsyncIterator
@@ -514,6 +518,74 @@ async def test_the_questions_of_the_agent_and_the_review_are_separate_interrupts
     assert review["questions"] == [], "a review holds the documents and no question"
     assert review["review_artifacts"]
     assert review["prompt"].startswith("I proposed the interviewees.")
+
+
+async def test_the_planner_asks_before_the_plan_and_writes_it_from_the_answers(
+    client: AsyncClient,
+) -> None:
+    seen_by_the_plan: list[str] = []
+
+    class AskingPlannerData(DemoData):
+        PlannerQuestionsOutput = staticmethod(
+            lambda system, user, call_number: {
+                "questions": [
+                    {
+                        "key": "login",
+                        "kind": "single_select",
+                        "prompt": "How do students sign in?",
+                        "choices": [
+                            {"key": "campus", "label": "With their campus account"},
+                            {"key": "own", "label": "With an account of this app"},
+                        ],
+                        "default_choice_keys": ["campus"],
+                    }
+                ],
+            }
+        )
+
+        @staticmethod
+        def PlannerOutput(system: str, user: str, call_number: int) -> dict[str, Any]:  # noqa: N802 - schema name
+            seen_by_the_plan.append(user)
+            return _plain(system, user, call_number)
+
+    thread_id = await _thread(client)
+    with patch.object(llm_factory, "make_demo_data", lambda _name, cls=AskingPlannerData: cls()):
+        reset_model_cache()
+        run = (await _send(client, thread_id, ["checkpoint_plan"]))["run"]
+
+        assert run["status"] == "interrupted"
+        ask = await _pending(client, run["id"])
+
+        assert (ask["node"], ask["purpose"]) == ("checkpoint_plan", "ask")
+        assert ask["review_artifacts"] == [], "there is no plan yet: the questions come first"
+        assert ask["options"] == []
+        (question,) = ask["questions"]
+        assert (question["key"], question["default_answer"]["choice_keys"]) == (
+            "login",
+            ["campus"],
+        )
+        assert seen_by_the_plan == [], "the plan is not written before the answers"
+
+        accepted = await _resume(
+            client,
+            run["id"],
+            ask,
+            answers={"login": {"choice_keys": ["own"], "text": None, "number": None}},
+        )
+    reset_model_cache()
+
+    assert accepted.status_code == 202
+    finished = (await client.get(f"{API}/runs/{run['id']}")).json()
+    assert finished["status"] == "succeeded"
+    # The planner comes back with the answers as a part of the idea and writes the plan.
+    assert "How do students sign in?: own" in seen_by_the_plan[0]
+    steps = (await client.get(f"{API}/runs/{run['id']}/steps", params={"limit": 200})).json()
+    assert [step["node"] for step in steps["items"]][:4] == [
+        "planner",
+        "checkpoint_plan",
+        "planner",
+        "corpus_builder",
+    ]
 
 
 async def test_the_answers_to_the_questions_of_the_agent_are_checked_and_continue_the_run(

@@ -147,7 +147,13 @@ class ReviewChoiceOutput(_Output):
 
 class ReviewQuestionOutput(_Output):
     key: str = Field(description="A short key in lower case with underscores, unique here.")
-    kind: Literal["single_select", "multi_select", "free_text"]
+    kind: Literal["single_select", "multi_select", "free_text"] = Field(
+        description=(
+            "Prefer `single_select` (one answer) or `multi_select` (several) with choices that "
+            "you propose, so that the user only picks. Use `free_text` only when no set of "
+            "choices could fit. The user can always answer something else."
+        )
+    )
     prompt: str = Field(
         description="The question in one sentence of at most 140 characters, in plain text."
     )
@@ -185,8 +191,10 @@ class ReviewOutput(_Output):
         description=(
             "At most three questions about decisions that only the user can make and that you "
             "cannot settle from what you read, for example which of two conflicting wishes wins. "
-            "Do not ask what you can decide yourself, and never ask the same thing twice. Leave "
-            "the list empty when there is nothing to ask."
+            "Do not ask what you can decide yourself, and never ask the same thing twice. Make "
+            "each one a choice that you propose, with your own assumption as the default, so "
+            "that the user answers by picking and types only when the proposal is not right. "
+            "Leave the list empty when there is nothing to ask."
         ),
     )
 
@@ -526,6 +534,28 @@ class PlannerOutput(ElicitationPlanContent, _Narrated):
 
     report: Report
     summary: Summary
+
+
+class PlannerQuestionsOutput(_Narrated):
+    """What the planner asks the user before it writes the plan: the questions that the idea
+    leaves open, or none. The questions are not a part of the plan document."""
+
+    report: Report
+    questions: list[ReviewQuestionOutput] = Field(
+        default_factory=list,
+        description=(
+            "At most three questions whose answers would change the plan, the research and the "
+            "interviews that follow and that the idea does not settle, such as who the users "
+            "are, the scale, the region, a rule that must hold or a system to connect to. Ask "
+            "only what the idea leaves open; return an empty list when it already settles "
+            "these. Prefer `single_select` or `multi_select` with two to four choices that "
+            "you propose from what you understand of the idea, and always give your own "
+            "assumption in `default_choice_keys`, so that the user only has to pick and may "
+            "accept the proposal without typing. Use `free_text` only when no set of choices "
+            "could fit. The user can always answer something else, so do not add a choice "
+            "for it."
+        ),
+    )
 
 
 class InterviewerTurnOutput(_Output):

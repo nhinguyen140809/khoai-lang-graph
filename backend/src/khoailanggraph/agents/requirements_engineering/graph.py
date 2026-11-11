@@ -1,14 +1,15 @@
 """Graph assembly of the requirements engineering workflow (version 2).
 
-The 17 nodes and 27 conditional/plain edges below are `definition.v2.json`
+The 21 nodes and 35 conditional/plain edges below are `definition.v2.json`
 mapped onto LangGraph under the §2.1 mapping: `__start__ → {planner |
-intent_router}`, the research stage of the evidence-grounded persona pipeline
-(`planner → corpus_builder → stakeholder_miner → persona_generator`, the
-MAJ-EVAL mechanism of arXiv:2507.21028), the interview loop under the in-node
-orchestrator, the analyst with the rework control node, the v1 checkpoint
-options on the conditional edges that carry their keys, and the iteration
-guard on the validator (a still-failing run closes at `max_iterations`; it
-never fails).
+intent_router}`, the plan questions of the checkpoint that asks them, the
+research stage of the evidence-grounded persona pipeline
+(`planner ⇄ checkpoint_plan, planner → corpus_builder → stakeholder_miner →
+persona_generator`, the MAJ-EVAL mechanism of arXiv:2507.21028), the interview
+loop under the in-node orchestrator, the analyst with the rework control node,
+the v1 checkpoint options on the conditional edges that carry their keys, and
+the iteration guard on the validator (a still-failing run closes at
+`max_iterations`; it never fails).
 
 Checkpoint prompts and their options are read from the definition — not
 re-declared in Python — and the graph runs without the API: agents get their
@@ -74,7 +75,7 @@ NODE_NAMES = (
     "__end__",
 )
 
-EDGE_COUNT = 28
+EDGE_COUNT = 35
 
 
 def build_re_graph(
@@ -111,14 +112,18 @@ def build_re_graph(
     builder.add_conditional_edges(
         "intent_router",
         routing.route_after_intent_router,
-        ["planner", "checkpoint_plan", "interviewer", "analyst", "requirement_engineer", "backlog_manager"],
+        [
+            "planner",
+            "interviewer",
+            "analyst",
+            "requirement_engineer",
+            "backlog_manager",
+        ],
     )
-    builder.add_edge("planner", "corpus_builder")
     builder.add_conditional_edges(
-        "checkpoint_plan",
-        routing.route_after_plan,
-        ["planner", END],
+        "planner", routing.route_after_planner, ["checkpoint_plan", "corpus_builder", END]
     )
+    builder.add_conditional_edges("checkpoint_plan", routing.route_after_plan, ["planner", END])
     builder.add_edge("corpus_builder", "stakeholder_miner")
     builder.add_edge("stakeholder_miner", "persona_generator")
     builder.add_edge("persona_generator", "ask_personas")

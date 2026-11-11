@@ -5,6 +5,7 @@ from __future__ import annotations
 from typing import TYPE_CHECKING, Any
 
 from khoailanggraph.agents.requirements_engineering import definition as wf
+from khoailanggraph.agents.requirements_engineering import nodes
 from khoailanggraph.agents.requirements_engineering.outputs import (
     AnalystOutput,
     EngineerOutput,
@@ -186,3 +187,37 @@ def test_something_else_has_words_of_its_own_and_never_a_suggested_text() -> Non
     assert other["description"].startswith("Say it in your own words")
     assert "suggested_feedback" not in other
     assert other["requires_feedback"] is True
+
+
+def test_the_questions_before_the_research_are_choices_with_the_assumption_of_the_planner() -> None:
+    ask = wf.nodes()["checkpoint_plan"]
+    # The brief as the planner leaves it: what it asks the user before the research begins.
+    brief = {
+        "questions": [
+            {
+                "key": "login",
+                "kind": "single_select",
+                "prompt": "How do students sign in?",
+                "choices": [
+                    {"key": "campus", "label": "With their campus account"},
+                    {"key": "own", "label": "With an account of this app"},
+                ],
+                "default_choice_keys": ["campus"],
+            },
+            {"key": "notes", "kind": "free_text", "prompt": "Anything else to know?"},
+        ]
+    }
+    state = {"review_briefs": {"checkpoint_plan": brief}}
+
+    questions = nodes._questions_to_ask(ask, state)  # type: ignore[arg-type]
+
+    login = questions[0]
+    assert login["type"] == "single_select"
+    assert login["default_answer"]["choice_keys"] == ["campus"]
+    assert [choice["key"] for choice in login["choices"]] == ["campus", "own", "other"]
+    assert login["choices"][-1]["requires_text"] is True
+    assert questions[1]["type"] == "free_text"
+
+
+def test_an_ask_without_a_brief_has_no_question() -> None:
+    assert nodes._questions_to_ask(wf.nodes()["ask_personas"], {}) == []  # type: ignore[arg-type]

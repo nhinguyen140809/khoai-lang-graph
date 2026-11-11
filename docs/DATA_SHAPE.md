@@ -368,7 +368,7 @@ A passage of the extracted text of a source document, with its embedding, so tha
 | `validator` | validator | Checks the outputs and reports issues |
 | `intent_router` | intent router | Decides which node a message sent by the user should go to |
 
-Workflow definition version 2 keeps these roles and adds two.
+Workflow definition version 2 keeps these roles and adds two. Before it writes the plan, the planner may ask the user the few things that the idea leaves open, as choices with its own assumption as the default; it asks nothing when the idea settles what matters, and it writes the plan from the idea and the answers.
 
 | Role | Node in the deck | Job |
 |---|---|---|

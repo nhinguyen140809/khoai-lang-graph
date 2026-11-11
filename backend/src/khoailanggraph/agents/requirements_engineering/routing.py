@@ -40,7 +40,7 @@ def route_start(state: REState) -> str:
     if state.get("start_at"):
         return str(state["start_at"])
     if state.get("first_run", False) or not state.get("personas"):
-        return "checkpoint_plan"
+        return "planner"
     return "intent_router"
 
 
@@ -134,11 +134,21 @@ def route_after_intent_router(state: REState) -> str:
     return target if target in allowed else "analyst"
 
 
-def route_after_plan(state: REState) -> str:
-    """`checkpoint_plan → corpus_builder`: the plan questions are answered, the research begins."""
+def route_after_planner(state: REState) -> str:
+    """`planner → {checkpoint_plan, corpus_builder}`: a planning round that left questions to ask
+    goes to the checkpoint that asks them, and the planner comes back to write the plan; a round
+    that wrote the plan goes on to the research."""
     if route_error(state):
         return route_error(state)
-    return "corpus_builder"
+    waiting = state.get("review_briefs", {}).get("checkpoint_plan", {}).get("questions")
+    return "checkpoint_plan" if waiting else "corpus_builder"
+
+
+def route_after_plan(state: REState) -> str:
+    """`checkpoint_plan → planner`: the answers are in the idea, and the plan is written."""
+    if route_error(state):
+        return route_error(state)
+    return "planner"
 
 
 def _route_after_ask(review_node: str) -> Callable[[REState], str]:

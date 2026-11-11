@@ -160,6 +160,7 @@ def invoke_demo(
 # persona (`PersonaAnswerOutput`) have no report: they are the transcript, and the interviewer
 # reports once, when it stops.
 _REPORTS = {
+    "PlannerQuestionsOutput": "I read your idea and have nothing to ask you, so I plan next.",
     "PlannerOutput": "I read your idea and planned the interviews around who will use it.",
     "CorpusBuilderOutput": "I gathered the documents the interviewees will be based on.",
     "MinerOutput": "I read a document and noted what its stakeholders care about.",

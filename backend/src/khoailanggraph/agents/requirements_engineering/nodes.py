@@ -67,6 +67,7 @@ from khoailanggraph.agents.requirements_engineering.outputs import (
     NewSource,
     PersonaAnswerOutput,
     PlannerOutput,
+    PlannerQuestionsOutput,
     ValidatorOutput,
     generator_output_for,
     interviewer_output_for,
@@ -590,14 +591,41 @@ def planner_node(
     state: REState,
     config: RunnableConfig | None = None,
 ) -> dict[str, Any]:
+    """Plan the elicitation, in one or two rounds.
+
+    The first round of a project first asks whether the idea leaves open what would change the
+    plan. With questions, the round ends there: the checkpoint asks them and the planner comes
+    back, with the answers as a part of the idea, to write the plan. With none, or when that
+    checkpoint is off, the plan is written at once."""
     cfg = _run_config(state)
+    sink = _sink(config or {})
+    if _may_ask_first(state, cfg):
+        asked: PlannerQuestionsOutput = _invoke(
+            "planner",
+            config or {},
+            PlannerQuestionsOutput,
+            {
+                "output_language": _language(cfg),
+                "intent": state["initial_intent"],
+                "task": PLANNER_CLARIFY_TASK,
+            },
+        )
+        _tell_user(sink, asked)
+        if asked.questions:
+            return {
+                "review_briefs": _plan_brief(state, asked.questions),
+                "current_stage": "planning",
+            }
     plan: PlannerOutput = _invoke(
         "planner",
         config or {},
         PlannerOutput,
-        {"output_language": _language(cfg), "intent": state["initial_intent"]},
+        {
+            "output_language": _language(cfg),
+            "intent": state["initial_intent"],
+            "task": PLANNER_PLAN_TASK,
+        },
     )
-    sink = _sink(config or {})
     created = sink.create_artifact(
         state["project_id"],
         "elicitation_plan",
@@ -606,7 +634,46 @@ def planner_node(
         summary=plan.summary,
     )
     _tell_user(sink, plan)
-    return {"elicitation_plan": dict(created), "current_stage": "planning"}
+    # Nothing waits to be asked any more: a later planning round must not ask what is settled.
+    return {
+        "elicitation_plan": dict(created),
+        "review_briefs": _plan_brief(state, []),
+        "current_stage": "planning",
+    }
+
+
+PLANNER_CLARIFY_TASK = (
+    "Do not write the plan yet. Read the idea and decide whether it leaves open something that "
+    "would change the plan, the research or the interviews. Return the questions for the user, "
+    "or none, in the output format."
+)
+PLANNER_PLAN_TASK = (
+    "Plan the elicitation for the product above. If the idea includes clarifications from the "
+    "user, they are settled: write the plan from the idea and from them. Return the elicitation "
+    "plan in the output format."
+)
+
+
+def _may_ask_first(state: REState, cfg: Any) -> bool:
+    """Whether this planning round starts by asking: the first round of a project, with the plan
+    checkpoint on and not yet answered."""
+    answered = any(
+        outcome["node"] == "checkpoint_plan" for outcome in state.get("checkpoint_outcomes", [])
+    )
+    return bool(
+        state.get("first_run", False)
+        and "checkpoint_plan" in cfg.review_checkpoints
+        and not answered
+    )
+
+
+def _plan_brief(state: REState, questions: Sequence[BaseModel]) -> dict[str, Any]:
+    """The review briefs with the questions that the plan checkpoint asks, replacing any left by
+    an earlier round."""
+    return {
+        **state.get("review_briefs", {}),
+        "checkpoint_plan": {"questions": [q.model_dump(mode="json") for q in questions]},
+    }
 
 
 def _plan_terms(
@@ -628,8 +695,8 @@ def _plan_terms(
 def _stop_prior_failure(state: REState) -> bool:
     """True when a node earlier in the plain-edge chain already failed.
 
-    The research stage sits on plain edges (`planner → corpus_builder →
-    stakeholder_miner → persona_generator → checkpoint_personas`), and
+    The research stage sits on plain edges (`planner → checkpoint_plan →
+    corpus_builder → stakeholder_miner → persona_generator → ask_personas`), and
     conditional routing reads `status` only at routing points — so without
     this guard, a failed node's plain successors still execute and their
     own surface error would overwrite the root cause's.
@@ -1758,7 +1825,11 @@ def _normalize_analyst_enums(analysis: AnalystOutput) -> None:
             )
     conflict_values = [str(e["key"]) for e in get_value_lists().get("conflict_type", [])]
     if conflict_values:
-        fallback = "between_requirements" if "between_requirements" in conflict_values else conflict_values[0]
+        fallback = (
+            "between_requirements"
+            if "between_requirements" in conflict_values
+            else conflict_values[0]
+        )
         for conflict in analysis.conflicts:
             conflict.conflict_type = _normalize_enum(
                 conflict.conflict_type, conflict_values, _CONFLICT_SYNONYMS, fallback
@@ -2644,6 +2715,10 @@ def make_checkpoint(
         state: REState,
         config: RunnableConfig | None = None,
     ) -> dict[str, Any]:
+        # A checkpoint sits on a plain edge in places (checkpoint_plan right after the
+        # planner), so a failure earlier in the chain must not become a wait for the user.
+        if _stop_prior_failure(state):
+            return {}
         sink = _sink(config or {})
         cfg = _run_config(state)
         records = [

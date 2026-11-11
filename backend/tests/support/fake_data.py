@@ -1662,6 +1662,8 @@ class DemoData:
         self.calls = DemoCalls()
 
     PlannerOutput = staticmethod(_plain)
+    # The idea settles what matters, so the planner has nothing to ask before it plans.
+    PlannerQuestionsOutput = staticmethod(lambda system, user, call_number: {"questions": []})
     CorpusBuilderOutput = staticmethod(_corpus)
     MinerOutput = staticmethod(_mined)
     GeneratorOutputV2 = staticmethod(_personas)
