@@ -68,7 +68,7 @@ def checkpoint_review(spec: Mapping[str, Any], brief: Mapping[str, Any] | None) 
         taken = {str(question["key"]) for question in questions}
         asked = 0
         for raw in brief.get("questions") or []:
-            question = _agent_question(raw, taken)
+            question = agent_question(raw, taken)
             if question is None:
                 continue
             taken.add(question["key"])
@@ -79,7 +79,7 @@ def checkpoint_review(spec: Mapping[str, Any], brief: Mapping[str, Any] | None) 
     return {"prompt": prompt, "options": options, "questions": questions}
 
 
-def _agent_question(raw: object, taken: set[str]) -> dict[str, Any] | None:
+def agent_question(raw: object, taken: set[str]) -> dict[str, Any] | None:
     """A question of the agent as the interrupt carries it, or None when it breaks a rule."""
     if not isinstance(raw, dict):
         return None

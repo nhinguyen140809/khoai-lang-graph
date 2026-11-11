@@ -140,14 +140,15 @@ async def test_stream_closes_only_after_done_event(client: AsyncClient) -> None:
 
 async def test_a_run_without_reviews_records_the_defaults_it_took(client: AsyncClient) -> None:
     """With no review checkpoint the run does not pause: every checkpoint is recorded as an
-    interrupt resolved at once, with a decision that has no user."""
+    interrupt resolved at once, with a decision that has no user, except a checkpoint with nothing
+    under review."""
     run_id = await _run_once(client)
     response = await client.get(f"/api/v1/runs/{run_id}/interrupts")
 
     assert response.status_code == 200
     items = response.json()["items"]
-    assert [entry["node"] for entry in items][:4] == [
-        "checkpoint_plan",
+    # The plan review has no document under review yet, so it records no default.
+    assert [entry["node"] for entry in items][:3] == [
         "checkpoint_personas",
         "checkpoint_analysis",
         "checkpoint_spec",

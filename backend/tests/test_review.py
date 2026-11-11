@@ -18,7 +18,8 @@ from khoailanggraph.agents.requirements_engineering.review import (
 if TYPE_CHECKING:
     from pydantic import BaseModel
 
-SPEC = wf.nodes()["checkpoint_analysis"]
+# The questions of the agent come with an `ask` checkpoint; its spec is the review one with them on.
+SPEC = {**wf.nodes()["checkpoint_analysis"], "agent_questions": True}
 
 
 def _question(**fields: Any) -> dict[str, Any]:

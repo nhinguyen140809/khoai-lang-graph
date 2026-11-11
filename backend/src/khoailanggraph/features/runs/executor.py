@@ -382,7 +382,7 @@ class RunWalker:
             msg = "the step of the interrupt saved no state"
             raise ValueError(msg)
         state = cast("REState", _loads(step.state_json))
-        option = str(decision.option)
+        option = str(decision.option or "")
         decided = review.describe_answers(
             _loads(interrupt.questions_json) or [], _loads(decision.answers_json) or {}
         )
@@ -407,7 +407,10 @@ class RunWalker:
                 text = str(answer.get("number"))
             if text:
                 clarifications.append(f"- {prompts.get(str(key), str(key))}: {text}")
-        if clarifications:
+        asked = workflow_definition.nodes().get(interrupt.node, {})
+        # The answers to the questions asked before the research begins (the plan step wrote
+        # them) become part of the idea that the research and the interviews read.
+        if clarifications and asked.get("purpose") == "ask" and "asks_before" not in asked:
             state["initial_intent"] = (
                 str(state.get("initial_intent", ""))
                 + "\n\nClarifications from the user:\n"
@@ -427,7 +430,7 @@ class RunWalker:
             # Something else: the words of the user are a message of the thread, which goes to the
             # intent router, and the router writes the directive for the step that does the work.
             self._say_something_else(decision.feedback or "")
-        elif not chosen.get("approves"):
+        elif option and not chosen.get("approves"):
             directive = DirectiveRow(
                 id=uuid4(),
                 run_id=self.run.id,
@@ -818,7 +821,7 @@ class RunWalker:
             )
             return
         for outcome in self.chunk.get("checkpoint_outcomes", []):
-            if not outcome.get("automatic"):
+            if not outcome.get("automatic") or outcome.get("silent"):
                 continue
             row = self._interrupt_row(
                 step,

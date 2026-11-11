@@ -69,6 +69,13 @@ def test_checkpoint_options_route_and_default_exactly_once() -> None:
             per_node_targets.setdefault(str(edge["source"]), set()).add(str(edge["option"]))
 
     for node_id, node in wf.checkpoint_nodes().items():
+        if node.get("purpose") == "ask":
+            # A checkpoint that only asks has no option: the run goes on to the next node.
+            assert node["options"] == [], node_id
+            leaving = [edge for edge in wf.edges() if edge["source"] == node_id]
+            assert len(leaving) == 1, node_id
+            assert leaving[0]["option"] is None, node_id
+            continue
         options = {str(option["key"]) for option in node.get("options", [])}
         is_defaults = [option for option in node.get("options", []) if option.get("is_default")]
         assert len(is_defaults) == 1, f"{node_id} needs exactly one default option"

@@ -131,13 +131,15 @@ class InterruptDecision(BaseModel):
 
 
 class Interrupt(BaseModel):
-    """A pause of a run for a review, with its options and questions and, once resolved, the
-    decision that resolved it."""
+    """A pause of a run, with its options and questions and, once resolved, the decision that
+    resolved it. A `review` asks the user to look at documents and approve them or ask for changes;
+    an `ask` puts questions of the agent to the user, with no document under review."""
 
     id: str
     run_id: str
     step_id: str | None
     node: str
+    purpose: Literal["review", "ask"]
     prompt: str
     options: list[dict[str, Any]]
     questions: list[dict[str, Any]]

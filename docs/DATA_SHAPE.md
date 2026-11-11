@@ -551,6 +551,7 @@ A pause in which the run asks the user for input. A checkpoint node creates one 
 | `run_id` | ref\<Run\> | |
 | `step_id` | ref\<RunStep\> | The step of the checkpoint node that created it |
 | `node` | string | The node that paused the run, for example `checkpoint_analysis` |
+| `purpose` | enum | `review`: the user looks at documents and approves them or asks for changes; it holds no question of the agent. `ask`: the user answers questions of the agent and nothing is under review. Taken from the `purpose` of the checkpoint node in the workflow definition |
 | `prompt` | string | What the user is asked. The agent node before the checkpoint writes it for the case; the definition's prompt stands when it wrote none |
 | `options` | InterruptOption[] | The decision that chooses where the run continues. Empty when the interrupt only asks questions |
 | `questions` | Question[] | Further questions, answered together with the option. Empty when there are none |

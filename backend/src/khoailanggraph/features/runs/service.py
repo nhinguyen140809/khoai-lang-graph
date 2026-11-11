@@ -9,7 +9,7 @@ from __future__ import annotations
 
 import json
 from datetime import UTC, datetime
-from typing import TYPE_CHECKING, Any, cast
+from typing import TYPE_CHECKING, Any, Literal, cast
 from uuid import UUID
 
 from sqlalchemy import func, select
@@ -137,6 +137,10 @@ def interrupt_output(row: InterruptRow, decision: HumanDecisionRow | None) -> sc
         run_id=str(row.run_id),
         step_id=str(row.step_id) if row.step_id else None,
         node=row.node,
+        purpose=cast(
+            "Literal['review', 'ask']",
+            workflow_definition.nodes().get(row.node, {}).get("purpose", "review"),
+        ),
         prompt=row.prompt,
         options=json.loads((row.options_json or b"[]").decode("utf-8")),
         questions=[{"source": "definition", **question} for question in questions],

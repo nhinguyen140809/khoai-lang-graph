@@ -25,6 +25,9 @@ from langgraph.graph import END, START, StateGraph
 from khoailanggraph.agents.requirements_engineering import routing
 from khoailanggraph.agents.requirements_engineering.nodes import (
     analyst_node,
+    ask_analysis,
+    ask_personas,
+    ask_spec,
     backlog_manager_node,
     checkpoint_analysis,
     checkpoint_personas,
@@ -54,13 +57,16 @@ NODE_NAMES = (
     "stakeholder_miner",
     "persona_generator",
     "checkpoint_plan",
+    "ask_personas",
     "checkpoint_personas",
     "interviewer",
     "persona_agent",
     "analyst",
     "rework_elicitation",
+    "ask_analysis",
     "checkpoint_analysis",
     "requirement_engineer",
+    "ask_spec",
     "checkpoint_spec",
     "backlog_manager",
     "validator",
@@ -82,13 +88,16 @@ def build_re_graph(
     builder.add_node("stakeholder_miner", stakeholder_miner_node)
     builder.add_node("persona_generator", persona_generator_node)
     builder.add_node("checkpoint_plan", checkpoint_plan)
+    builder.add_node("ask_personas", ask_personas)
     builder.add_node("checkpoint_personas", checkpoint_personas)
     builder.add_node("interviewer", interviewer_node)
     builder.add_node("persona_agent", persona_agent_node)
     builder.add_node("analyst", analyst_node)
     builder.add_node("rework_elicitation", rework_elicitation_node)
+    builder.add_node("ask_analysis", ask_analysis)
     builder.add_node("checkpoint_analysis", checkpoint_analysis)
     builder.add_node("requirement_engineer", requirement_engineer_node)
+    builder.add_node("ask_spec", ask_spec)
     builder.add_node("checkpoint_spec", checkpoint_spec)
     builder.add_node("backlog_manager", backlog_manager_node)
     builder.add_node("validator", validator_node)
@@ -112,7 +121,10 @@ def build_re_graph(
     )
     builder.add_edge("corpus_builder", "stakeholder_miner")
     builder.add_edge("stakeholder_miner", "persona_generator")
-    builder.add_edge("persona_generator", "checkpoint_personas")
+    builder.add_edge("persona_generator", "ask_personas")
+    builder.add_conditional_edges(
+        "ask_personas", routing.route_after_ask_personas, ["checkpoint_personas", END]
+    )
     builder.add_conditional_edges(
         "checkpoint_personas",
         routing.route_after_personas,
@@ -127,7 +139,10 @@ def build_re_graph(
     builder.add_conditional_edges(
         "analyst",
         routing.route_after_analyst,
-        ["rework_elicitation", "checkpoint_analysis", END],
+        ["rework_elicitation", "ask_analysis", END],
+    )
+    builder.add_conditional_edges(
+        "ask_analysis", routing.route_after_ask_analysis, ["checkpoint_analysis", END]
     )
     builder.add_edge("rework_elicitation", "interviewer")
     builder.add_conditional_edges(
@@ -135,7 +150,10 @@ def build_re_graph(
         routing.route_after_analysis,
         ["requirement_engineer", "analyst", "rework_elicitation", "intent_router", END],
     )
-    builder.add_edge("requirement_engineer", "checkpoint_spec")
+    builder.add_edge("requirement_engineer", "ask_spec")
+    builder.add_conditional_edges(
+        "ask_spec", routing.route_after_ask_spec, ["checkpoint_spec", END]
+    )
     builder.add_conditional_edges(
         "checkpoint_spec",
         routing.route_after_spec,

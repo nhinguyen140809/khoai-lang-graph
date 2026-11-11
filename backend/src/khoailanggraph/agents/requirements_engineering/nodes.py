@@ -2592,46 +2592,33 @@ def validator_node(
 # The checkpoint factory (HITL per the v1 option keys: approval or feedback)
 
 
+def _take_default(node_id: str, stage: str, options: Sequence[Mapping[str, Any]]) -> dict[str, Any]:
+    """The outcome of a checkpoint that has nothing to ask: its default option, taken at once."""
+    outcome = {
+        "node": node_id,
+        "option": _default_key(options),
+        "feedback": "",
+        "automatic": True,
+        # Nothing was asked, so there is no answer for the user to read in the record.
+        "silent": True,
+    }
+    return {"checkpoint_outcomes": [outcome], "current_stage": stage}
 
-def _agent_questions(state: REState, config: RunnableConfig | None) -> list[dict[str, Any]]:
-    """1-3 clarifying questions the agent asks the user at a checkpoint."""
-    class QuestionList(BaseModel):
-        questions: list[str]
 
-    from langchain_core.messages import HumanMessage, SystemMessage
+def _default_key(options: Sequence[Mapping[str, Any]]) -> str:
+    """The key of the default option; empty for a checkpoint that only asks and has no option."""
+    chosen = next((opt for opt in options if opt.get("is_default")), None)
+    return "" if chosen is None else str(chosen["key"])
 
-    from khoailanggraph.llm.factory import get_chat_model
 
-    model = get_chat_model("planner", config or {}).with_structured_output(QuestionList)
-    answer = model.invoke(
-        [
-            SystemMessage(
-                content=(
-                    "You prepare a requirements interview. From the project intent, write up to 3 "
-                    "short questions whose answers would change the requirements (domain, scale, "
-                    "region, compliance, integration) and that cannot be inferred from the intent. "
-                    "Ask only what the intent leaves open: if it already fixes these, return an "
-                    "empty list. One sentence each, no jargon."
-                )
-            ),
-            HumanMessage(content=str(state.get("initial_intent", ""))),
-        ]
-    )
-    questions = [q.strip() for q in answer.questions if q.strip()][:3]
-    return [
-        {
-            "key": f"q{index + 1}",
-            "type": "free_text",
-            "prompt": question,
-            "required": False,
-            "choices": [],
-            "min_selected": None,
-            "max_selected": None,
-            "default_answer": None,
-            "source": "agent",
-        }
-        for index, question in enumerate(questions)
-    ]
+def _questions_to_ask(spec: Mapping[str, Any], state: REState) -> list[dict[str, Any]]:
+    """The questions of an `ask` checkpoint, which the agent chose.
+
+    They are in the brief that an agent wrote for the review that follows (`asks_before`), or, with
+    no review after it, in the brief written for the checkpoint itself."""
+    key = str(spec.get("asks_before") or spec["id"])
+    brief = state.get("review_briefs", {}).get(key)
+    return review.checkpoint_review({**spec, "agent_questions": True}, brief)["questions"]
 
 
 def make_checkpoint(
@@ -2674,7 +2661,14 @@ def make_checkpoint(
             for record in records
         ]
         if node_id in cfg.review_checkpoints:
-            asked = review.checkpoint_review(spec, state.get("review_briefs", {}).get(node_id))
+            if spec.get("purpose") == "ask":
+                questions = _questions_to_ask(spec, state)
+                if not questions:
+                    # Nothing to ask: the run goes on at once, without a pause that has no point.
+                    return _take_default(node_id, stage, options)
+                asked = {"prompt": spec["prompt"], "options": options, "questions": questions}
+            else:
+                asked = review.checkpoint_review(spec, state.get("review_briefs", {}).get(node_id))
             payload: dict[str, object] = {
                 "node": node_id,
                 "prompt": asked["prompt"],
@@ -2685,12 +2679,15 @@ def make_checkpoint(
             }
             return {"status": "interrupted", "current_stage": stage, "interrupt_payload": payload}
 
-        chosen = next(opt for opt in options if opt.get("is_default"))
+        chosen = next((opt for opt in options if opt.get("is_default")), {})
         outcome = {
             "node": node_id,
-            "option": str(chosen["key"]),
+            "option": _default_key(options),
             "feedback": "",
             "automatic": True,
+            # A checkpoint with no document under review has nothing to answer yet, so the
+            # record does not show a default that nobody could have given.
+            "silent": not records,
         }
         if bool(chosen.get("approves")):
             for record in records:
@@ -2702,6 +2699,9 @@ def make_checkpoint(
 
 
 checkpoint_plan = make_checkpoint("checkpoint_plan", "elicitation_plan")
+ask_personas = make_checkpoint("ask_personas", "persona_catalog")
+ask_analysis = make_checkpoint("ask_analysis", "requirements_analysis")
+ask_spec = make_checkpoint("ask_spec", "requirement_specification")
 checkpoint_personas = make_checkpoint("checkpoint_personas", "persona_catalog")
 checkpoint_analysis = make_checkpoint("checkpoint_analysis", "requirements_analysis")
 checkpoint_spec = make_checkpoint("checkpoint_spec", "requirement_specification")

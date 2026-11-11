@@ -139,23 +139,14 @@
     {
       "id": "checkpoint_plan",
       "kind": "checkpoint",
+      "purpose": "ask",
       "label": "checkpoint_plan",
       "title": "Answer the clarifying questions",
       "stage": "planning_review",
       "prompt": "Before the plan is written, a few questions to make the interviews fit your situation. Answer what you can; any of them may be left blank.",
-      "review_artifact_kinds": [
-        "elicitation_plan"
-      ],
-      "allow_edits": true,
-      "options": [
-        {
-          "key": "approve",
-          "label": "Approve the interviewees",
-          "requires_feedback": false,
-          "approves": true,
-          "is_default": true
-        }
-      ],
+      "review_artifact_kinds": [],
+      "allow_edits": false,
+      "options": [],
       "questions": [],
       "agent_questions": true
     },
@@ -181,8 +172,24 @@
       "agent_role": "persona_generator"
     },
     {
+      "id": "ask_personas",
+      "kind": "checkpoint",
+      "purpose": "ask",
+      "label": "ask_personas",
+      "title": "Questions about the interviewees",
+      "stage": "persona_review",
+      "prompt": "A few questions about the interviewees, so that the interviews focus on what matters to you. Answer what you can; any of them may be left blank.",
+      "review_artifact_kinds": [],
+      "allow_edits": false,
+      "asks_before": "checkpoint_personas",
+      "options": [],
+      "questions": [],
+      "agent_questions": true
+    },
+    {
       "id": "checkpoint_personas",
       "kind": "checkpoint",
+      "purpose": "review",
       "label": "checkpoint_personas",
       "title": "Finalize the interviewees",
       "stage": "persona_review",
@@ -196,7 +203,7 @@
         { "key": "other", "label": "Something else", "requires_feedback": true, "approves": false, "is_default": false }
       ],
       "questions": [],
-      "agent_questions": true
+      "agent_questions": false
     },
     {
       "id": "interviewer",
@@ -226,8 +233,24 @@
       "stage": "interviewing"
     },
     {
+      "id": "ask_analysis",
+      "kind": "checkpoint",
+      "purpose": "ask",
+      "label": "ask_analysis",
+      "title": "Questions about the analysis",
+      "stage": "analysis_review",
+      "prompt": "A few questions about the analysis, so that the specification settles what only you can decide. Answer what you can; any of them may be left blank.",
+      "review_artifact_kinds": [],
+      "allow_edits": false,
+      "asks_before": "checkpoint_analysis",
+      "options": [],
+      "questions": [],
+      "agent_questions": true
+    },
+    {
       "id": "checkpoint_analysis",
       "kind": "checkpoint",
+      "purpose": "review",
       "label": "checkpoint_analysis",
       "title": "Review the analysis",
       "stage": "analysis_review",
@@ -243,7 +266,7 @@
         { "key": "other", "label": "Something else", "requires_feedback": true, "approves": false, "is_default": false }
       ],
       "questions": [],
-      "agent_questions": true
+      "agent_questions": false
     },
     {
       "id": "requirement_engineer",
@@ -253,8 +276,24 @@
       "agent_role": "requirement_engineer"
     },
     {
+      "id": "ask_spec",
+      "kind": "checkpoint",
+      "purpose": "ask",
+      "label": "ask_spec",
+      "title": "Questions about the specification",
+      "stage": "specification_review",
+      "prompt": "A few questions about the specification, before the backlog is written from it. Answer what you can; any of them may be left blank.",
+      "review_artifact_kinds": [],
+      "allow_edits": false,
+      "asks_before": "checkpoint_spec",
+      "options": [],
+      "questions": [],
+      "agent_questions": true
+    },
+    {
       "id": "checkpoint_spec",
       "kind": "checkpoint",
+      "purpose": "review",
       "label": "checkpoint_spec",
       "title": "Review the specification",
       "stage": "specification_review",
@@ -269,7 +308,7 @@
         { "key": "other", "label": "Something else", "requires_feedback": true, "approves": false, "is_default": false }
       ],
       "questions": [],
-      "agent_questions": true
+      "agent_questions": false
     },
     {
       "id": "backlog_manager",
@@ -294,30 +333,32 @@
   "edges": [
     { "source": "__start__", "target": "planner", "label": null, "conditional": true, "option": null },
     { "source": "__start__", "target": "intent_router", "label": "later runs", "conditional": true, "option": null },
-    { "source": "intent_router", "target": "planner", "label": null, "conditional": true, "option": null },
+    { "source": "intent_router", "target": "checkpoint_plan", "label": null, "conditional": false, "option": null },
     { "source": "intent_router", "target": "interviewer", "label": null, "conditional": true, "option": null },
     { "source": "intent_router", "target": "analyst", "label": null, "conditional": true, "option": null },
     { "source": "intent_router", "target": "requirement_engineer", "label": null, "conditional": true, "option": null },
     { "source": "intent_router", "target": "backlog_manager", "label": null, "conditional": true, "option": null },
-    { "source": "intent_router", "target": "checkpoint_plan", "label": null, "conditional": false, "option": null },
     { "source": "checkpoint_plan", "target": "planner", "label": "approve", "conditional": true, "option": "approve" },
     { "source": "planner", "target": "corpus_builder", "label": null, "conditional": false, "option": null },
     { "source": "corpus_builder", "target": "stakeholder_miner", "label": null, "conditional": false, "option": null },
     { "source": "stakeholder_miner", "target": "persona_generator", "label": null, "conditional": false, "option": null },
-    { "source": "persona_generator", "target": "checkpoint_personas", "label": null, "conditional": false, "option": null },
+    { "source": "persona_generator", "target": "ask_personas", "label": null, "conditional": false, "option": null },
+    { "source": "ask_personas", "target": "checkpoint_personas", "label": null, "conditional": false, "option": null },
     { "source": "checkpoint_personas", "target": "interviewer", "label": "approve / modify", "conditional": true, "option": "approve" },
     { "source": "checkpoint_personas", "target": "intent_router", "label": "something else", "conditional": true, "option": "other" },
     { "source": "interviewer", "target": "persona_agent", "label": "question", "conditional": true, "option": null },
     { "source": "persona_agent", "target": "interviewer", "label": "answer", "conditional": false, "option": null },
     { "source": "interviewer", "target": "analyst", "label": "all personas interviewed", "conditional": true, "option": null },
     { "source": "analyst", "target": "rework_elicitation", "label": "not OK", "conditional": true, "option": null },
-    { "source": "analyst", "target": "checkpoint_analysis", "label": "OK", "conditional": true, "option": null },
+    { "source": "analyst", "target": "ask_analysis", "label": "OK", "conditional": true, "option": null },
+    { "source": "ask_analysis", "target": "checkpoint_analysis", "label": null, "conditional": false, "option": null },
     { "source": "rework_elicitation", "target": "interviewer", "label": "rework directive", "conditional": false, "option": null },
     { "source": "checkpoint_analysis", "target": "requirement_engineer", "label": "accept", "conditional": true, "option": "accept" },
     { "source": "checkpoint_analysis", "target": "analyst", "label": "reject + re-analyse", "conditional": true, "option": "reject_reanalyse" },
     { "source": "checkpoint_analysis", "target": "rework_elicitation", "label": "reject + re-interview", "conditional": true, "option": "reject_reinterview" },
     { "source": "checkpoint_analysis", "target": "intent_router", "label": "something else", "conditional": true, "option": "other" },
-    { "source": "requirement_engineer", "target": "checkpoint_spec", "label": null, "conditional": false, "option": null },
+    { "source": "requirement_engineer", "target": "ask_spec", "label": null, "conditional": false, "option": null },
+    { "source": "ask_spec", "target": "checkpoint_spec", "label": null, "conditional": false, "option": null },
     { "source": "checkpoint_spec", "target": "backlog_manager", "label": "OK", "conditional": true, "option": "ok" },
     { "source": "checkpoint_spec", "target": "requirement_engineer", "label": "not OK", "conditional": true, "option": "not_ok" },
     { "source": "checkpoint_spec", "target": "intent_router", "label": "something else", "conditional": true, "option": "other" },

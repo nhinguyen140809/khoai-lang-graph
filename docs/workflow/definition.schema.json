@@ -255,7 +255,16 @@
         },
         "agent_questions": {
           "type": "boolean",
-          "description": "Whether the agent node before the checkpoint may add questions at run time, each with a default."
+          "description": "Whether the agent may add questions at run time, each with a default."
+        },
+        "purpose": {
+          "enum": ["review", "ask"],
+          "default": "review",
+          "description": "What the user does at this checkpoint. `review`: look at documents and approve them or ask for changes; it holds no question of the agent. `ask`: answer the questions of the agent, with no document under review; the run does not pause when the agent has no question."
+        },
+        "asks_before": {
+          "$ref": "#/$defs/name",
+          "description": "For an `ask` checkpoint: the review checkpoint that follows it. The questions are those that the agent wrote for that review. Without it, the agent writes the questions from the idea of the product."
         }
       },
       "required": ["id", "kind", "label", "title", "stage", "prompt", "review_artifact_kinds", "allow_edits", "options", "questions", "agent_questions"]

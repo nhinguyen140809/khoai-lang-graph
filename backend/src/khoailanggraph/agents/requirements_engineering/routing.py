@@ -8,6 +8,8 @@ state field is written by nodes only; to stay pure, none of these functions
 touches the store or a model.
 """
 
+from collections.abc import Callable
+
 from langgraph.graph import END
 
 from khoailanggraph.agents.requirements_engineering import orchestrator
@@ -75,7 +77,7 @@ def route_after_analyst(state: REState) -> str:
     review_pending = state.get("response_analyst_status", "")
     if review_pending == "needs_interviews":
         return "rework_elicitation"
-    return "checkpoint_analysis"
+    return "ask_analysis"
 
 
 def route_after_analysis(state: REState) -> str:
@@ -129,20 +131,35 @@ def route_after_intent_router(state: REState) -> str:
         "requirement_engineer",
         "backlog_manager",
     }
-    if target == "planner":
-        return "checkpoint_plan"
     return target if target in allowed else "analyst"
 
 
 def route_after_plan(state: REState) -> str:
-    """`checkpoint_plan → corpus_builder` once the plan is approved."""
+    """`checkpoint_plan → corpus_builder`: the plan questions are answered, the research begins."""
     if route_error(state):
         return route_error(state)
-    return "planner"
+    return "corpus_builder"
+
+
+def _route_after_ask(review_node: str) -> Callable[[REState], str]:
+    """The route of an `ask` checkpoint: after the answers, on to the review it precedes."""
+
+    def route(state: REState) -> str:
+        return route_error(state) or review_node
+
+    return route
+
+
+route_after_ask_personas = _route_after_ask("checkpoint_personas")
+route_after_ask_analysis = _route_after_ask("checkpoint_analysis")
+route_after_ask_spec = _route_after_ask("checkpoint_spec")
 
 
 CHECKPOINT_ROUTES = {
     "checkpoint_plan": route_after_plan,
+    "ask_personas": route_after_ask_personas,
+    "ask_analysis": route_after_ask_analysis,
+    "ask_spec": route_after_ask_spec,
     "checkpoint_personas": route_after_personas,
     "checkpoint_analysis": route_after_analysis,
     "checkpoint_spec": route_after_spec,

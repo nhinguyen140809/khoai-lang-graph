@@ -225,11 +225,14 @@ def test_full_workflow_succeeds_and_passes_domain_rules() -> None:
     outcomes = final["checkpoint_outcomes"]
     assert {outcome["node"] for outcome in outcomes} == {
         "checkpoint_plan",
+        "ask_personas",
         "checkpoint_personas",
+        "ask_analysis",
         "checkpoint_analysis",
+        "ask_spec",
         "checkpoint_spec",
     }
-    assert all(outcome["option"] in {"approve", "accept", "ok"} for outcome in outcomes)
+    assert all(outcome["option"] in {"", "approve", "accept", "ok"} for outcome in outcomes)
 
     # Directives: the rework round a checkpoint reject triggered was `rework`;
     # the auto-approve pass records none (§2.4), so this set is data-driven.
@@ -246,7 +249,7 @@ def test_get_graph_topology_matches_definition() -> None:
         if isinstance(drawn, dict)
         else {getattr(node, "id", node) for node in drawn.nodes}
     )
-    assert len(node_ids) == 18
+    assert len(node_ids) == 21
     assert "planner" in node_ids
     assert "corpus_builder" in node_ids
     assert "stakeholder_miner" in node_ids
@@ -260,7 +263,7 @@ def test_get_graph_topology_matches_definition() -> None:
         else [(edge.source, edge.target) for edge in drawn.edges]
     )
     edges = {tuple(pair) for pair in edge_pairs}
-    # The definition's 28 rows, error drains aside (backend-only, routing.py).
+    # The definition's rows, error drains aside (backend-only, routing.py).
     definition_pairs = {(str(row["source"]), str(row["target"])) for row in wf.edges()}
     # Backend-only edges: every error drains to the end, and a walk that continues a run may
     # begin at any node (`start_at`).

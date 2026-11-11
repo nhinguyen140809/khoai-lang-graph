@@ -254,7 +254,7 @@ async def test_a_run_is_cancelled_while_it_waits(client: AsyncClient, app: FastA
     assert response.status_code == 202
     assert response.json()["status"] == "cancelled"
     interrupts = (await client.get(f"{API}/runs/{run['id']}/interrupts")).json()["items"]
-    assert [entry["status"] for entry in interrupts] == ["resolved", "cancelled"]
+    assert [entry["status"] for entry in interrupts] == ["cancelled"]
     async with app.state.session_factory() as session:
         done = (
             await session.scalars(
@@ -474,6 +474,11 @@ async def test_a_step_keeps_the_notes_it_wrote_and_the_stream_sends_each_one(
     planner = next(step for step in steps if step["node"] == "planner")
     text = await _listen(app, client, f"{API}/runs/{run['id']}/stream", 1.5)
 
+    assert [(note["kind"], note["text"]) for note in planner["notes"]] == [
+        ("doing", "I am listing who the idea affects."),
+        ("finding", "The idea does not say who **approves** a session."),
+    ]
+    assert all(note["created_at"].endswith("Z") for note in planner["notes"])
     assert text.count("event: step_note") >= len(planner["notes"])
     corpus = next(step for step in steps if step["node"] == "corpus_builder")
     searched = [
@@ -485,50 +490,57 @@ async def test_a_step_keeps_the_notes_it_wrote_and_the_stream_sends_each_one(
     assert text.index("event: step_note") < planner_end
 
 
-async def test_a_review_fits_the_case_and_asks_what_only_the_user_can_decide(
+async def test_the_questions_of_the_agent_and_the_review_are_separate_interrupts(
     client: AsyncClient,
 ) -> None:
     thread_id = await _thread(client)
-    run = (await _send(client, thread_id, ["checkpoint_personas"]))["run"]
+    run = (await _send(client, thread_id, ["ask_personas", "checkpoint_personas"]))["run"]
 
-    interrupt = await _pending(client, run["id"])
+    ask = await _pending(client, run["id"])
 
-    assert interrupt["prompt"].startswith("I proposed the interviewees.")
-    (question,) = interrupt["questions"]
+    assert (ask["node"], ask["purpose"]) == ("ask_personas", "ask")
+    assert ask["review_artifacts"] == []
+    (question,) = ask["questions"]
     assert question["source"] == "agent"
     assert question["key"] == "focus"
     assert question["default_answer"]["choice_keys"] == ["students"]
     assert [choice["key"] for choice in question["choices"]] == ["students", "mentors", "other"]
+
+    assert ask["options"] == [], "an ask has no option: its form is the questions"
+    assert (await _resume(client, run["id"], ask)).status_code == 202
+    review = await _pending(client, run["id"])
+
+    assert (review["node"], review["purpose"]) == ("checkpoint_personas", "review")
+    assert review["questions"] == [], "a review holds the documents and no question"
+    assert review["review_artifacts"]
+    assert review["prompt"].startswith("I proposed the interviewees.")
 
 
 async def test_the_answers_to_the_questions_of_the_agent_are_checked_and_continue_the_run(
     client: AsyncClient,
 ) -> None:
     thread_id = await _thread(client)
-    run = (await _send(client, thread_id, ["checkpoint_personas"]))["run"]
+    run = (await _send(client, thread_id, ["ask_personas"]))["run"]
     interrupt = await _pending(client, run["id"])
 
     refused = await _resume(
         client,
         run["id"],
         interrupt,
-        option="approve",
         answers={"focus": {"choice_keys": ["other"], "text": None, "number": None}},
     )
     accepted = await _resume(
         client,
         run["id"],
         interrupt,
-        option="approve",
         answers={"focus": {"choice_keys": ["mentors"], "text": None, "number": None}},
     )
 
     assert refused.status_code == 422
     assert accepted.status_code == 202
-    decision = (await client.get(f"{API}/runs/{run['id']}/interrupts")).json()["items"][0][
-        "decision"
-    ]
-    assert decision["answers"]["focus"]["choice_keys"] == ["mentors"]
+    interrupts = (await client.get(f"{API}/runs/{run['id']}/interrupts")).json()["items"]
+    ask = next(item for item in interrupts if item["node"] == "ask_personas")
+    assert ask["decision"]["answers"]["focus"]["choice_keys"] == ["mentors"]
 
 
 async def test_something_else_needs_words_and_goes_to_the_intent_router_as_a_message(
