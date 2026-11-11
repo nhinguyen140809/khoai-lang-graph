@@ -16,20 +16,17 @@ export const runStatusesByAttention = [
 ] as const satisfies readonly RunStatus[]
 
 /**
- * The label of each run status in each view: "Waiting for review" for a developer, "Waiting for
- * you" for a user.
+ * The label of each run status in each view; the user view reads the label of the developer view
+ * until a status has words of its own for it.
  */
 export const runStatusLabels = {
-  queued: { developer: 'Queued', user: 'Starting' },
-  running: { developer: 'Running', user: 'Working' },
-  interrupted: { developer: 'Waiting for review', user: 'Waiting for you' },
-  succeeded: { developer: 'Done', user: 'Done' },
-  failed: { developer: 'Failed', user: 'Failed' },
-  cancelled: { developer: 'Cancelled', user: 'Stopped' },
+  queued: { developer: 'Starting' },
+  running: { developer: 'Working' },
+  interrupted: { developer: 'Waiting for you' },
+  succeeded: { developer: 'Done' },
+  failed: { developer: 'Failed' },
+  cancelled: { developer: 'Stopped' },
 } as const satisfies Record<RunStatus, Wording>
 
 /** The label of a project or a thread that has no run yet, in each view. */
-export const noRunLabel = {
-  developer: 'No run yet',
-  user: 'Not started',
-} as const satisfies Wording
+export const noRunLabel = { developer: 'Not started' } as const satisfies Wording

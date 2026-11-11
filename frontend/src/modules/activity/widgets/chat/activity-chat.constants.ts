@@ -14,7 +14,6 @@ export const activityChatMessages = {
   runLoading: 'Loading the work',
   runError: 'The work of this run could not be loaded.',
   entryError: 'This entry could not be shown.',
-  run: (number: number) => `Run ${String(number)}`,
   answered: 'Answered:',
   answeredWithDefault: 'Answered with the default:',
   stopped: 'Stopped with the run',
