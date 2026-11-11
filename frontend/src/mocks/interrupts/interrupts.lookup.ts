@@ -140,16 +140,22 @@ function withAgentWords(option: CheckpointOption): InterruptOption {
 function checkpointAskOf(
   status: InterruptStatus,
   node: CheckpointNode,
-): Pick<Interrupt, 'prompt' | 'options' | 'questions'> {
+): Pick<Interrupt, 'purpose' | 'prompt' | 'options' | 'questions'> {
   const mode = status === 'pending' ? agentQuestionMode() : null
   if (mode === 'only') {
-    return { prompt: onlyQuestionsPromptFixture, options: [], questions: agentQuestionFixtures }
+    return {
+      purpose: 'ask',
+      prompt: onlyQuestionsPromptFixture,
+      options: [],
+      questions: agentQuestionFixtures,
+    }
   }
   const definitionQuestions = node.questions.map((question): InterruptQuestion => ({
     ...question,
     source: 'definition',
   }))
   return {
+    purpose: 'review',
     prompt: node.prompt,
     options: node.options.map((option) => withAgentWords(option)),
     questions: definitionQuestions,
