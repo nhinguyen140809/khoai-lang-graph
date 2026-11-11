@@ -142,7 +142,7 @@
       "label": "checkpoint_plan",
       "title": "Answer the clarifying questions",
       "stage": "planning_review",
-      "prompt": "Review the plan. Answer the questions below so the personas and the interviews match the real context.",
+      "prompt": "Before the plan is written, a few questions to make the interviews fit your situation. Answer what you can; any of them may be left blank.",
       "review_artifact_kinds": [
         "elicitation_plan"
       ],
