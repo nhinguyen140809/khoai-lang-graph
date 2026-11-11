@@ -26,6 +26,7 @@ import {
   MessageScrollerProvider,
   MessageScrollerViewport,
 } from '@/shared/components/ui/message-scroller'
+import { useKeptScroll } from '@/shared/lib/memory'
 import { useScrollIntoViewById } from '@/shared/lib/viewport'
 import { RouteParam, routes, useRouteParam } from '@/shared/routes'
 
@@ -102,6 +103,7 @@ function ActivityChat({
       runStatus: runOnScreen?.status,
     }).data ?? null
 
+  const keptScroll = useKeptScroll('chat', { from: 'end' })
   const target = useRouteParam(RouteParam.Entry)
   const isTarget = (entryId: string) => target === entryId
   const runIds = (runs.data?.pages ?? [])
@@ -152,7 +154,7 @@ function ActivityChat({
       ) : (
         <MessageScrollerProvider>
           <MessageScroller className="min-h-0 flex-1">
-            <MessageScrollerViewport>
+            <MessageScrollerViewport ref={keptScroll}>
               <MessageScrollerContent className="mx-auto max-w-3xl px-4 pt-4">
                 {runIds.map((run) => (
                   <MessageScrollerItem key={run.id} scrollAnchor={run === runIds.at(-1)}>

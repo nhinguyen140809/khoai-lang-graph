@@ -8,6 +8,7 @@ import { useEditorTab } from '@/shared/components/frame'
 import { ErrorState, LoadingState, NotFoundState } from '@/shared/components/state'
 import { Button } from '@/shared/components/ui/button'
 import { FloatingSurface } from '@/shared/components/ui/floating-surface'
+import { useKeptScroll } from '@/shared/lib/memory'
 import { routes } from '@/shared/routes'
 
 import { useChainLayout } from '../hooks/useChainLayout'
@@ -32,6 +33,7 @@ export function ItemTracePage({ projectId, itemId }: { projectId: string; itemId
   })
   const { selectedLinkId, select, clear } = useChainSelection()
   const layout = useChainLayout(chain.state === 'success' ? chain.graph : undefined)
+  const keptScroll = useKeptScroll('page')
 
   useEditorTab({
     id: itemId,
@@ -75,7 +77,7 @@ export function ItemTracePage({ projectId, itemId }: { projectId: string; itemId
   return (
     // The page scrolls as a whole: the graph takes what the window leaves, never less than its
     // minimum, and the strip and the list of links open under it and are reached by scrolling.
-    <div className="flex h-full flex-col overflow-y-auto">
+    <div ref={keptScroll} className="flex h-full flex-col overflow-y-auto">
       <header className="shrink-0 px-6 pt-6 pb-2">
         <h1 className="text-2xl font-semibold">{itemTraceMessages.title(focus.title)}</h1>
       </header>

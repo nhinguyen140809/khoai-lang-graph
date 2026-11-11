@@ -90,7 +90,7 @@ function ItemPageBody({ projectId, record }: { projectId: string; record: Artifa
           <ItemBreadcrumb />
         </header>
         <div className="relative min-h-0 flex-1">
-          <ScrollArea selfScrolling className="h-full">
+          <ScrollArea selfScrolling keepScroll="page" className="h-full">
             <ViewTransition
               key={record.id}
               name="item-content"

@@ -19,6 +19,11 @@ export default defineConfig([
     },
   },
   {
+    // The route configs that Next.js reads from a page or a layout keep its names, such as `instant`.
+    files: ['src/app/**/{page,layout}.tsx'],
+    rules: { 'local/boolean-name': 'off' },
+  },
+  {
     // find... in the helpers of the tests waits for the element and throws, as findBy... does.
     files: ['src/test/**/*.ts', 'src/**/__tests__/**/*.{ts,tsx}'],
     rules: { 'local/find-get-name': 'off' },
