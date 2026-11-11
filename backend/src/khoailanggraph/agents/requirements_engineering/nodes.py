@@ -718,7 +718,7 @@ def _search_for_corpus(
         lambda messages: _chat_turn("corpus_builder", config, model, messages),
         search,
         corpus_search.task_messages(str(state["initial_intent"]), plan_json, target),
-        on_search=lambda query: sink.add_notes([corpus_search.note_of(query)]),
+        on_search=lambda note: sink.add_notes([note]),
     )
 
 

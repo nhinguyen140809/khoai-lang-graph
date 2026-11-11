@@ -485,10 +485,9 @@ async def test_a_step_keeps_the_notes_it_wrote_and_the_stream_sends_each_one(
     assert all(note["created_at"].endswith("Z") for note in planner["notes"])
     assert text.count("event: step_note") >= len(planner["notes"])
     corpus = next(step for step in steps if step["node"] == "corpus_builder")
-    searched = [
-        note["text"] for note in corpus["notes"] if note["text"].startswith("I am searching")
-    ]
+    searched = [note for note in corpus["notes"] if note["kind"] == "tool"]
     assert len(searched) == 2, "one note for each search that the agent made"
+    assert {note["tool"] for note in searched} == {"search"}
     # The notes of a step come before its end, and its report comes after them.
     planner_end = text.index("event: node_end", text.index('"node": "planner"'))
     assert text.index("event: step_note") < planner_end

@@ -8,7 +8,14 @@ from langchain_core.messages import AIMessage
 from pydantic import ValidationError
 
 from khoailanggraph.agents.requirements_engineering import corpus_search
-from khoailanggraph.agents.requirements_engineering.corpus_search import SearchWeb, run_search_loop
+from khoailanggraph.agents.requirements_engineering import definition as workflow_definition
+from khoailanggraph.agents.requirements_engineering.corpus_search import (
+    SEARCH_TOOL,
+    SEARCH_TOOL_DESCRIPTION,
+    SearchWeb,
+    note_of,
+    run_search_loop,
+)
 
 PAGE = {"title": "T", "url": "https://a.test/1", "publisher": "a.test", "text": "Words."}
 
@@ -35,6 +42,7 @@ def test_the_tool_tells_the_agent_how_to_search_and_lists_the_kinds() -> None:
     assert "Search for voices, not for rules" in schema["description"]
     assert set(schema["properties"]) == {
         "query",
+        "note",
         "source_type",
         "allowed_domains",
         "blocked_domains",
@@ -64,16 +72,31 @@ def test_the_agent_searches_until_it_calls_no_tool_and_every_page_counts_once() 
         AIMessage(content="", tool_calls=[_call("1", query="students room complaints")]),
         AIMessage(
             content="",
-            tool_calls=[_call("2", query="staff survey", source_type="survey", news=True)],
+            tool_calls=[
+                _call(
+                    "2",
+                    query="staff survey",
+                    source_type="survey",
+                    news=True,
+                    note="Checking what the librarians say about the load.",
+                )
+            ],
         ),
         AIMessage(content="Enough."),
     )
-    told: list[str] = []
+    told: list[dict[str, str]] = []
 
     pages = run_search_loop(chat, search, [], on_search=told.append)
 
     assert [page["url"] for page in pages] == ["https://a.test/1"]
-    assert told == ["students room complaints", "staff survey"]
+    assert told == [
+        {"kind": "tool", "tool": "search", "text": "Searching: students room complaints"},
+        {
+            "kind": "tool",
+            "tool": "search",
+            "text": "Checking what the librarians say about the load.",
+        },
+    ]
     assert searches[0] == (["students room complaints"],)
     assert searches[1] == (["staff survey"], {"news": True})
     assert pages[0].get("searched_as") is None
@@ -112,3 +135,16 @@ def test_the_agent_gets_the_error_of_a_bad_call_and_the_loop_is_bounded() -> Non
 
     assert run_search_loop(chat, search, []) == []
     assert chat.replies == []
+
+
+def test_the_search_note_names_a_tool_that_the_definition_lists() -> None:
+    note = note_of("Checking how students talk about rooms.", "students rooms")
+
+    assert note["kind"] == "tool"
+    assert note["tool"] == SEARCH_TOOL
+    assert SEARCH_TOOL in workflow_definition.tools()
+
+
+def test_the_description_of_the_tool_is_read_from_its_file() -> None:
+    assert SEARCH_TOOL_DESCRIPTION.startswith("Search the web and academic papers")
+    assert SEARCH_TOOL_DESCRIPTION.endswith("You have at most six rounds.")

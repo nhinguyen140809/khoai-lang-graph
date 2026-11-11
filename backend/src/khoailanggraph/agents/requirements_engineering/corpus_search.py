@@ -10,12 +10,14 @@ back a compact list of what was found and stops after a few rounds.
 from __future__ import annotations
 
 import json
+from importlib import resources
 from typing import TYPE_CHECKING, Any, Literal
 
 from langchain_core.messages import AIMessage, BaseMessage, HumanMessage, SystemMessage, ToolMessage
 from pydantic import BaseModel, Field, ValidationError, create_model
 
 from khoailanggraph.agents.requirements_engineering import definition as workflow_definition
+from khoailanggraph.llm.note_stream import fit_note
 
 if TYPE_CHECKING:
     from collections.abc import Callable, Mapping, Sequence
@@ -25,7 +27,6 @@ MAX_CALLS_PER_ROUND = 3
 MAX_SEARCHES = 10
 SNIPPET_LENGTH = 300
 HITS_SHOWN_PER_SEARCH = 8
-NOTE_LENGTH = 160
 
 # Words that real voices use for each kind of document. The search adds them to a query that does
 # not carry them yet, so that naming a kind steers the engine without the agent knowing its tricks.
@@ -84,6 +85,19 @@ def _search_web_schema() -> type[BaseModel]:
                 ),
             ),
         ),
+        note=(
+            str | None,
+            Field(
+                default=None,
+                description=(
+                    "One short sentence for the user, in your own words and different every "
+                    'time, about what this search looks for and why, such as "Checking how '
+                    'students talk about rooms that stay empty." It may join two or three '
+                    "ideas. Do not repeat the query word for word, and do not start it with "
+                    '"I am searching".'
+                ),
+            ),
+        ),
         source_type=(
             kind | None,
             Field(
@@ -130,28 +144,12 @@ def _search_web_schema() -> type[BaseModel]:
     )
 
 
-SEARCH_TOOL_DESCRIPTION = """\
-Search the web and academic papers for documents in which real people speak about the topic of \
-the study. Returns the title, the address, the publisher and the start of the text of each page.
+# The key of the tool in the `tools` of the definition: its title, its words and its mark.
+SEARCH_TOOL = "search"
 
-How to search well:
-- Write queries like a search engine query: three to eight keywords that name the people and the \
-situation, such as `students study room booking complaints`. One idea per query; do not paste the \
-plan.
-- Search for voices, not for rules. Pages that an organization wrote about itself (policies, \
-how-to guides, opening hours, FAQ, product pages) hold no stakeholder voice. Add words that \
-people use when they talk: complaints, frustrated, survey results, interview, review, experience, \
-forum.
-- Look for different kinds of documents: studies and papers, surveys, interviews, forum threads \
-and community discussions, complaint or review records, news reporting. Name the kind in \
-`source_type` so that the search adds the right words.
-- Use `allowed_domains` to aim at a place where people talk (a forum, a community site, a \
-research site) and `blocked_domains` to drop a site that keeps returning noise. Use `news` for \
-recent events.
-- Cover every stakeholder type of the plan, with at least one query for each.
-- Read what came back before the next query. If the results are thin or off topic, change the \
-angle (other words, another kind, another place) instead of repeating the same query.
-- Stop when the plan is covered by documents of several kinds. You have at most six rounds."""
+SEARCH_TOOL_DESCRIPTION = (
+    (resources.files(__package__) / "tools" / "search_web.md").read_text(encoding="utf-8").strip()
+)
 
 
 SearchWeb = _search_web_schema()
@@ -212,17 +210,19 @@ def _shown(hits: Sequence[Mapping[str, Any]]) -> str:
     return "\n".join(lines)
 
 
-def note_of(query: str) -> dict[str, str]:
-    """The note that tells the user what is being searched, cut to the length of a note."""
-    text = f"I am searching for: {query}"
-    return {"kind": "doing", "text": text[:NOTE_LENGTH]}
+def note_of(note: str | None, query: str) -> dict[str, str]:
+    """The note that tells the user what is being searched: the sentence of the agent, or, when
+    it wrote none, the query on its own after a short fixed word. It is a note of the tool, so
+    that the searches of a step can be shown together."""
+    text = " ".join((note or "").split()) or f"Searching: {query}"
+    return {"kind": "tool", "tool": SEARCH_TOOL, "text": fit_note(text)}
 
 
 def run_search_loop(
     chat: Callable[[list[BaseMessage]], AIMessage],
     search: Callable[..., list[dict[str, Any]]],
     messages: list[BaseMessage],
-    on_search: Callable[[str], None] | None = None,
+    on_search: Callable[[dict[str, str]], None] | None = None,
 ) -> list[dict[str, Any]]:
     """Let the agent search until it stops, and return every distinct page it found.
 
@@ -256,7 +256,7 @@ def _answer_call(
     call: Mapping[str, Any],
     search: Callable[..., list[dict[str, Any]]],
     found: dict[str, dict[str, Any]],
-    on_search: Callable[[str], None] | None,
+    on_search: Callable[[dict[str, str]], None] | None,
     *,
     allowed: bool,
 ) -> tuple[str, bool]:
@@ -269,7 +269,7 @@ def _answer_call(
         return f"The call was refused: {exc.errors()[0]['msg']}. Correct it and call again.", False
     query = _query_of(parsed)
     if on_search is not None:
-        on_search(str(parsed.query))  # type: ignore[attr-defined]
+        on_search(note_of(parsed.note, str(parsed.query)))  # type: ignore[attr-defined]
     options = _options_of(parsed)
     hits = search([query], options) if options else search([query])
     fresh = []
