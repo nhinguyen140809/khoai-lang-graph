@@ -137,7 +137,7 @@ def invoke_demo(
     schema_name: str,
     system: str,
     user: str,
-) -> dict[str, Any]:
+) -> dict[str, Any] | None:
     """Route one request to the demo dataset by schema name.
 
     The dataset carries its own call history (a `DemoCalls` on the demo
