@@ -1,5 +1,7 @@
 import type { Route } from 'next'
 
+import { routes } from '@/shared/routes'
+
 /** A page opened with the side panel hidden, and the side panel and tab that follow. */
 export const openPageCases: {
   name: string
@@ -18,7 +20,7 @@ export const openPageCases: {
   },
   {
     name: 'a page that belongs to no feature, and leaves the side panel',
-    href: '/',
+    href: routes.home(),
     chosen: null,
     sideVisible: false,
     keepNext: null,

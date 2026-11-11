@@ -16,8 +16,9 @@ const nextConfig: NextConfig = {
     // Pin the root to this folder so the rest of the monorepo is neither resolved nor watched.
     root: import.meta.dirname,
   },
-  // The dev server is also opened through a forwarded port at 127.0.0.1.
-  allowedDevOrigins: ['127.0.0.1'],
+  // The dev server is also opened through a forwarded port at 127.0.0.1, and at dev.localhost,
+  // the host of the developer view.
+  allowedDevOrigins: ['127.0.0.1', 'dev.localhost'],
   experimental: {
     // Run PostCSS in worker threads instead of a pool of child Node.js processes.
     turbopackPluginRuntimeStrategy: 'workerThreads',

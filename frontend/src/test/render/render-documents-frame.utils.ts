@@ -3,6 +3,7 @@ import { createElement, type ReactNode } from 'react'
 import { projectIds } from '@/mocks/shared/db'
 import { documentsDestination, DocumentsTabIcons } from '@/modules/documents/widgets/panel'
 import { TabbedWorkspace, Workbench } from '@/shared/components/frame'
+import { routes } from '@/shared/routes'
 
 import { openPage } from '../msw'
 import { setParams, setPathname } from '../next-stubs'
@@ -34,7 +35,7 @@ export function renderDocumentsFrame(
   return renderWithProviders(
     createElement(Workbench, {
       crumb: 'Mentor platform',
-      homeHref: '/',
+      homeHref: routes.home(),
       destinations: [documentsDestination(projectId)],
       contributions: createElement(DocumentsTabIcons),
       children: createElement(TabbedWorkspace, { tabGroup: projectId, children: page }),

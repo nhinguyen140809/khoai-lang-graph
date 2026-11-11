@@ -9,10 +9,13 @@ export const ViewContext = createContext<View>('developer')
 
 interface ViewProviderProps {
   children: ReactNode
-  value?: View
+  value: View
 }
 
-/** Provides the wording view for an application subtree. */
-export function ViewProvider({ children, value = 'developer' }: ViewProviderProps) {
+/**
+ * Gives the pages under it their view. The layout at the root of the pages of a view states it, so
+ * no component finds out which view it is in.
+ */
+export function ViewProvider({ children, value }: ViewProviderProps) {
   return <ViewContext value={value}>{children}</ViewContext>
 }
