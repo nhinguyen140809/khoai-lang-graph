@@ -10,7 +10,13 @@ test('keeps the notes that a step wrote while it worked, in the order written', 
 
   const planner = steps.find(({ node }) => node === 'planner')
   expect(planner?.notes.map(({ kind, text }) => ({ kind, text }))).toEqual(plannerNotes)
-  expect(steps.filter(({ node }) => node !== 'planner').flatMap(({ notes }) => notes)).toEqual([])
+  // A note of a tool names the tool, and every other note names none.
+  const searches = steps.find(({ node }) => node === 'corpus_builder')?.notes ?? []
+  expect(searches.filter(({ kind }) => kind === 'tool').map(({ tool }) => tool)).toEqual([
+    'search',
+    'search',
+  ])
+  expect(planner?.notes.every(({ tool }) => tool === null)).toBe(true)
 })
 
 test('shows the notes of finished work behind its line, as Markdown, once the line is opened', async ({

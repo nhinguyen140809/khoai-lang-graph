@@ -59,6 +59,11 @@ export async function sendReview(page: Page) {
   await page.getByRole('button', { name: 'Send', exact: true }).click()
 }
 
+/** Sends the answers to the questions that the agent asks. */
+export async function sendAnswers(page: Page) {
+  await page.getByRole('button', { name: 'Send answers', exact: true }).click()
+}
+
 /** Picks an option of the review that waits and sends it. */
 export async function answerReviewWith(page: Page, label: string) {
   await chooseReviewOption(page, label)

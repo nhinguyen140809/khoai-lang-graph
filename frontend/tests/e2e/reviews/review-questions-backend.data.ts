@@ -2,12 +2,13 @@ import { reviewNodes, reviewsInOrder } from '../../shared/reviews.constants'
 
 export const idea = 'A web app where students book study rooms'
 
-const [personas, analysis] = reviewsInOrder
+const [, analysis] = reviewsInOrder
 
-/** What the scripted agent before the personas review asks, as the review words it. */
-export const personasReview = {
-  node: reviewNodes.personas,
-  prompt: personas.prompt,
+/** What the scripted agent asks about the interviewees, in a step of its own before the review. */
+export const personasAsk = {
+  node: 'ask_personas',
+  prompt:
+    'A few questions about the interviewees, so that the interviews focus on what matters to you. Answer what you can; any of them may be left blank.',
   question: {
     key: 'focus',
     prompt: 'Whom should the interviews focus on?',

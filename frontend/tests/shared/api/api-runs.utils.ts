@@ -62,7 +62,7 @@ export interface ApiStep {
   sequence: number
   node: string
   status: string
-  notes: { kind: string; text: string; created_at: string }[]
+  notes: { kind: string; text: string; tool: string | null; created_at: string }[]
 }
 
 export interface ApiItem {

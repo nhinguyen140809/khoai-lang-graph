@@ -2,37 +2,37 @@ import { expect } from '@playwright/test'
 
 import { expectProblem } from '../../shared/api'
 import { test } from '../../shared/fixtures.utils'
-import { analysisReview, idea, personasReview } from './review-questions-backend.data'
+import { analysisReview, idea, personasAsk } from './review-questions-backend.data'
 
-test('words the review for the case and asks a question that has its own default', async ({
+test('asks a question that has its own default, in a step with no option and no document', async ({
   api,
 }) => {
-  const { run } = await api.startRun(idea, { reviews: [personasReview.node] })
+  const { run } = await api.startRun(idea, { reviews: [personasAsk.node] })
 
-  const review = await api.waitForReview(run.id)
+  const ask = await api.waitForReview(run.id)
 
-  expect(review.prompt).toBe(personasReview.prompt)
-  const [question] = review.questions
-  expect(review.questions).toHaveLength(1)
+  expect(ask).toMatchObject({ node: personasAsk.node, purpose: 'ask', options: [] })
+  expect(ask.prompt).toBe(personasAsk.prompt)
+  const [question] = ask.questions
+  expect(ask.questions).toHaveLength(1)
   expect(question).toMatchObject({
     source: 'agent',
-    key: personasReview.question.key,
-    prompt: personasReview.question.prompt,
+    key: personasAsk.question.key,
+    prompt: personasAsk.question.prompt,
     required: false,
   })
-  expect(question?.choices.map(({ key }) => key)).toEqual(personasReview.question.choices)
-  expect(question?.default_answer?.choice_keys).toEqual([personasReview.question.defaultChoice])
+  expect(question?.choices.map(({ key }) => key)).toEqual(personasAsk.question.choices)
+  expect(question?.default_answer?.choice_keys).toEqual([personasAsk.question.defaultChoice])
 })
 
 test('goes on when the question is left alone, and refuses something else without a word', async ({
   api,
 }) => {
-  const { run } = await api.startRun(idea, { reviews: [personasReview.node] })
-  const review = await api.waitForReview(run.id)
+  const { run } = await api.startRun(idea, { reviews: [personasAsk.node] })
+  const ask = await api.waitForReview(run.id)
 
   expectProblem(
-    await api.answerReview(review, {
-      option: 'approve',
+    await api.answerReview(ask, {
       answers: { focus: { choice_keys: ['other'], text: null, number: null } },
     }),
     422,
@@ -41,7 +41,7 @@ test('goes on when the question is left alone, and refuses something else withou
   )
   expect((await api.getRun(run.id)).status).toBe('interrupted')
 
-  await api.resumeRun(review, { option: 'approve' })
+  await api.resumeRun(ask, {})
 
   const finished = await api.waitForRun(run.id, ['succeeded'])
   expect(finished.error).toBeNull()
@@ -62,19 +62,17 @@ test('suggests what to say for an option that asks for feedback, and for no othe
   expect(suggestions.accept).toBeNull()
 })
 
-test('shows the question before the options, and goes on with its default when it is left alone', async ({
+test('shows the question of an ask, and goes on with its default when it is left alone', async ({
   api,
-  page,
   user,
 }) => {
-  const { projectId, run } = await api.startRun(idea, { reviews: [personasReview.node] })
+  const { projectId, run } = await api.startRun(idea, { reviews: [personasAsk.node] })
   await api.waitForReview(run.id)
   await user.openActivity(projectId)
 
-  await user.expectReviewPrompt(personasReview.prompt)
-  await user.expectText(personasReview.question.prompt)
-  await page.getByRole('button', { name: 'Next step' }).click()
-  await user.sendReview()
+  await user.expectText(personasAsk.prompt)
+  await user.expectText(personasAsk.question.prompt)
+  await user.sendAnswers()
 
   const finished = await api.waitForRun(run.id, ['succeeded'])
   expect(finished.error).toBeNull()
