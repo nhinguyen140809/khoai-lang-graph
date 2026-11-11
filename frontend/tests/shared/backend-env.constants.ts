@@ -4,8 +4,11 @@ import path from 'node:path'
 export const frontendPort = 3100
 export const backendPort = 8011
 
-/** The app, which proxies `/api` to the backend: the tests reach everything through it. */
-export const frontendUrl = `http://localhost:${String(frontendPort)}`
+/**
+ * The app, which proxies `/api` to the backend: the tests reach everything through it, at the
+ * host of the developer view.
+ */
+export const frontendUrl = `http://dev.localhost:${String(frontendPort)}`
 export const backendUrl = `http://localhost:${String(backendPort)}`
 
 /** Where the sign-in of `globalSetup` keeps its cookies, for the page and the requests of every test. */
