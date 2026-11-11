@@ -52,5 +52,6 @@ export const fillTones = {
     outline: 'neutral',
     ghost: 'neutral',
     link: 'primary',
+    text: 'neutral',
   },
 } as const satisfies ToneVariants<Fill, string>
