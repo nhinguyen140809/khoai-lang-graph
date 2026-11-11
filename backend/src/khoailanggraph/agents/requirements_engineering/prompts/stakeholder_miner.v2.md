@@ -62,7 +62,7 @@ Return one observation for every distinct evaluative dimension a stakeholder gro
 
 ## Output
 
-- `report`: one to three sentences to the user about what the stakeholders of this document care about; the server turns them into a message of the chat. Name things by what they say, never by their keys.
+- `report`: one to three sentences to the user about what the stakeholders of this document care about; the server puts them in a message of the chat under the title of the document, so do not name the document yourself. Say in the first words what kind of text it is and whether it holds any stakeholder voice. Name things by what they say, never by their keys.
 - The server links each observation to its document and uses `evidence` as the quote of that link, so copy `evidence` exactly from the document.
 
 # User

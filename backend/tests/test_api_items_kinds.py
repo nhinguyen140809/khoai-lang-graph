@@ -635,7 +635,11 @@ async def test_the_chat_holds_the_message_of_the_user_and_the_report_of_each_ste
     assert messages[0]["author"] == "user"
     assert messages[0]["delivery"] == "started_run"
     reports = [entry for entry in messages if entry["author"] == "agent"]
-    assert [entry["agent_role"] for entry in reports][:2] == ["planner", "corpus_builder"]
+    assert [entry["agent_role"] for entry in reports][:3] == [
+        "planner",
+        "corpus_builder",
+        "stakeholder_miner",
+    ]
     assert all(entry["content"] and entry["delivery"] is None for entry in reports)
     analyst = next(entry for entry in reports if entry["agent_role"] == "analyst")
     assert analyst["artifact_refs"][0]["kind"] == "requirements_analysis"

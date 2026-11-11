@@ -726,6 +726,67 @@ def corpus_builder_node(
     }
 
 
+SALVAGE_SENTENCE_MIN = 60
+SALVAGE_SENTENCE_MAX = 400
+
+
+def _salvage_observations(
+    sink: ArtifactSink,
+    artifact_id: str,
+    source_records: Sequence[Mapping[str, Any]],
+    observations: list[dict[str, Any]],
+    ref_number: int,
+) -> int:
+    """Keep one verbatim sentence per document when the model quoted loosely on every source.
+
+    The corpus stays mineable and every quote stays in its source; the warning records that this
+    was a salvage path. Returns the last observation number used."""
+    for record in source_records:
+        sentence = next(
+            (
+                part.strip()
+                for part in str(record["content"].get("text", "")).split(". ")
+                if SALVAGE_SENTENCE_MIN <= len(part.strip()) <= SALVAGE_SENTENCE_MAX
+            ),
+            "",
+        )
+        if not sentence:
+            continue
+        ref_number += 1
+        item = sink.add_item(
+            artifact_id,
+            "stakeholder_observation",
+            {
+                "stakeholder_name": "Document",
+                "description": "Context stated by the source document.",
+                "dimension": "context",
+                "evidence": sentence,
+                "source": str(record["key"]),
+            },
+            ref=f"O{ref_number}",
+        )
+        sink.add_link(
+            source_id=item["item_id"],
+            target_id=record["item_id"],
+            link_type="evidenced_by",
+        )
+        observations.append(dict(item))
+        logger.warning("miner salvaged a sentence", source=str(record["key"]))
+    return ref_number
+
+
+def _reading_report(readings: Sequence[tuple[str, str]]) -> str:
+    """One message for the whole mining step: what was found in each document, under its title.
+
+    A single document gives one line; several give one bullet each, so the user can tell which
+    document each finding is about."""
+    lines = [
+        f"**{title.replace('*', '').strip() or 'Document'}**: {report.strip()}"
+        for title, report in readings
+    ]
+    return lines[0] if len(lines) == 1 else "\n".join(f"- {line}" for line in lines)
+
+
 @safe_node
 def stakeholder_miner_node(
     state: REState,
@@ -754,6 +815,7 @@ def stakeholder_miner_node(
 
     observations: list[ItemRefDict] = []
     ref_number = 0
+    readings: list[tuple[str, str]] = []
     for record in source_records:
         document = str(record["content"].get("text", ""))
         draft: MinerOutput = _invoke(
@@ -811,42 +873,15 @@ def stakeholder_miner_node(
                 ),
             )
             observations.append(dict(item))
-        _tell_user(sink, draft)
+        sink.add_notes([note.model_dump() for note in draft.notes])
+        readings.append((str(record["content"].get("title", "")), draft.report))
     if not observations:
-        # The model quoted loosely on every source. Keep one verbatim sentence
-        # per document so the corpus is mineable and every quote stays in its
-        # source; the warning records that this was a salvage path.
-        for record in source_records:
-            document = str(record["content"].get("text", ""))
-            sentence = ""
-            for candidate in document.split(". "):
-                candidate = candidate.strip()
-                if 60 <= len(candidate) <= 400:
-                    sentence = candidate
-                    break
-            if not sentence:
-                continue
-            ref_number += 1
-            item = sink.add_item(
-                corpus["artifact_id"],
-                "stakeholder_observation",
-                {
-                    "stakeholder_name": "Document",
-                    "description": "Context stated by the source document.",
-                    "dimension": "context",
-                    "evidence": sentence,
-                    "source": str(record["key"]),
-                },
-                ref=f"O{ref_number}",
-            )
-            sink.add_link(
-                source_id=item["item_id"],
-                target_id=record["item_id"],
-                link_type="evidenced_by",
-            )
-            observations.append(dict(item))
-            logger.warning("miner salvaged a sentence", source=str(record["key"]))
+        ref_number = _salvage_observations(
+            sink, corpus["artifact_id"], source_records, observations, ref_number
+        )
 
+    if readings:
+        sink.add_report(_reading_report(readings))
     return {
         "observations": observations,
         "current_stage": "research",

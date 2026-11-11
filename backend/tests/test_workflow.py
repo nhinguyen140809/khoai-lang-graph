@@ -544,9 +544,8 @@ def test_every_agent_step_reports_to_the_user_except_the_persona_answers() -> No
 
     roles = [report["agent_role"] for report in sink.reports]
 
-    assert roles[0] == "planner"
-    assert roles[1] == "corpus_builder"
-    assert roles.count("stakeholder_miner") == 3, "one report for each document that was read"
+    assert roles[:3] == ["planner", "corpus_builder", "stakeholder_miner"]
+    assert roles.count("stakeholder_miner") == 1, "one report for the whole mining step"
     assert {"persona_generator", "analyst", "requirement_engineer", "backlog_manager"} <= set(roles)
     assert "validator" in roles
     assert roles.count("interviewer") == len(_transcripts(sink)), (
