@@ -12,6 +12,10 @@ interface HomeLayoutProps {
   children: ReactNode
 }
 
+// Pages are kept, hidden, when the user leaves them (Cache Components). The frame reads the address
+// before anything shows, so the route is allowed to block.
+export const instant = false
+
 /**
  * Screens outside a project: the frame, with the commands that open or create a project, the
  * dialogs of the projects, the budget of the month and the account menu, and the page.
