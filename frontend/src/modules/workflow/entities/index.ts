@@ -61,6 +61,7 @@ export { exportFormats } from './definition/export-templates.types'
 export { useAgentRoleLabels } from './definition/hooks/useAgentRoleLabels'
 export { useArtifactItemKinds } from './definition/hooks/useArtifactItemKinds'
 export { useLinkTitleOf } from './definition/hooks/useLinkTitleOf'
+export { useTools } from './definition/hooks/useTools'
 export { useWorkflowDefinition } from './definition/hooks/useWorkflowDefinition'
 export {
   canLinkTypeConnect,
@@ -69,6 +70,7 @@ export {
   linkTypesFrom,
   targetKindsOf,
 } from './definition/link-types.utils'
+export { toolUsesLine } from './definition/tool-uses.utils'
 export { getWorkflowDefinition } from './definition/workflow.api'
 export { workflowKeys } from './definition/workflow.keys'
 export type { ObjectSchema, WorkflowDefinition } from './definition/workflow-definition.types'
@@ -78,6 +80,7 @@ export {
   findAgentRole,
   findNode,
   findValueList,
+  toolsOf,
 } from './definition/workflow-definition.utils'
 export type {
   CheckpointNode,
@@ -97,9 +100,11 @@ export type {
   LinkQuotes,
   LinkType,
   LinkTypeChoice,
+  Tool,
   ValueList,
   WorkflowStage,
 } from './definition/workflow-vocabulary.types'
+export { toolIcons } from './definition/workflow-vocabulary.types'
 export { useIssueKinds } from './issues/hooks/useIssueQueries'
 export type { IssueKind } from './issues/issues.types'
 export { isOpenIssue, issueKinds } from './issues/issues.utils'

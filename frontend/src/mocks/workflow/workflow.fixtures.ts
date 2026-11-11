@@ -5,8 +5,8 @@ import definition from './requirements_engineering.v1.json' with { type: 'json' 
 // The JSON is a copy of the definition file of the docs; the test of the workflow API reads it
 // through the schema of the definition, which checks that the cast holds.
 
-/** The workflow definition at version 1, the only version of the mock data. */
-export const workflowDefinitionFixture = definition as WorkflowDefinition
+/** The workflow definition at version 1, the only version of the mock data; it lists no tools. */
+export const workflowDefinitionFixture = { ...definition, tools: [] } as WorkflowDefinition
 
 /**
  * The definition with one more run parameter of each kind that the one of the docs has none of: a

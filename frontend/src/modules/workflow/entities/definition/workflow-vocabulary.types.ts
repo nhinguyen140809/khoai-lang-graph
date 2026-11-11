@@ -106,6 +106,21 @@ export interface LinkTypeChoice {
   targetKinds: string[]
 }
 
+/** The marks a client draws for a tool: its own, or the plain one. */
+export const toolIcons = ['search', 'tool'] as const
+
+/** A tool that an agent may use while it works, with the words for its uses in a row. */
+export const toolSchema = z.object({
+  key: z.string(),
+  title: z.string(),
+  description: z.string(),
+  /** The line for the uses of the tool in a row: one use, or several, where `{count}` is the number. */
+  uses: z.object({ one: z.string(), other: z.string() }),
+  icon: z.enum(toolIcons),
+})
+
+export type Tool = z.infer<typeof toolSchema>
+
 /** A named list of values that a content field takes its value from. */
 export const valueListSchema = z.object({
   key: z.string(),
