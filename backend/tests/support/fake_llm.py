@@ -102,6 +102,11 @@ class FakeChatModel(BaseChatModel):
         else:
             name = schema.__name__
             answer = invoke_demo(self.demo, name, system, user)
+            if answer is None:
+                # A model that has the tools it needs answers in words and calls none.
+                return ChatResult(
+                    generations=[ChatGeneration(message=AIMessage(content="I have what I need."))]
+                )
             model = schema.model_validate(answer)
             message = AIMessage(
                 content="",
@@ -145,7 +150,9 @@ def invoke_demo(
     if handler is None:
         msg = f"the demo dataset has no answer for schema '{schema_name}'"
         raise LookupError(msg)
-    answer = cast("dict[str, Any]", handler(system, user, call_number))
+    answer = cast("dict[str, Any] | None", handler(system, user, call_number))
+    if answer is None:
+        return None
     return _with_reports(_with_titles(answer), schema_name)
 
 

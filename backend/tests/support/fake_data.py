@@ -1638,6 +1638,17 @@ def _intent_directive(system: str, user: str, call_number: int) -> dict[str, Any
     }
 
 
+_SEARCHES = [
+    {"query": "students mentoring platform booking complaints", "source_type": "complaint_log"},
+    {"query": "mentors volunteer time decline requests survey", "source_type": "survey"},
+]
+
+
+def _search_web(system: str, user: str, call_number: int) -> dict[str, Any] | None:
+    """The corpus builder searches twice, then answers without a tool call."""
+    return dict(_SEARCHES[call_number - 1]) if call_number <= len(_SEARCHES) else None
+
+
 class DemoData:
     """Method-per-schema dataset; the fake model calls `demo.<SchemaName>(...)`.
 
@@ -1661,6 +1672,7 @@ class DemoData:
     BacklogOutput = staticmethod(_backlog)
     ValidatorOutput = staticmethod(_validation)
     IntentDirectiveOutput = staticmethod(_intent_directive)
+    SearchWeb = staticmethod(_search_web)
 
 
 class AlwaysFailValidatorData(DemoData):

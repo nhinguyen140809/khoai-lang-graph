@@ -29,11 +29,12 @@ from functools import wraps
 from typing import TYPE_CHECKING, Any, TypeVar, cast
 
 import structlog
+from langchain_core.messages import AIMessage, BaseMessage
 from langchain_core.runnables import RunnableConfig
 from pydantic import BaseModel
 
 from khoailanggraph.agents import prompts as prompt_loader
-from khoailanggraph.agents.requirements_engineering import orchestrator, review
+from khoailanggraph.agents.requirements_engineering import corpus_search, orchestrator, review
 from khoailanggraph.agents.requirements_engineering.decisions import (
     AppliedDecision,
     DecisionResult,
@@ -266,6 +267,29 @@ def _invoke[T: BaseModel](
         msg = f"{role} produced no answer"
         raise RuntimeError(msg)
     raise last_error
+
+
+def _chat_turn(
+    role: str,
+    config: Mapping[str, Any] | RunnableConfig | None,
+    model: Any,
+    messages: list[BaseMessage],
+) -> AIMessage:
+    """One turn of a conversation with a model that has tools, counted like any other call."""
+    gate = cast("LlmGate | None", _configurable(config).get("llm_gate"))
+    model_id = resolve_model_id(role, cast("Mapping[str, Any]", config))
+    if gate is not None:
+        gate.before_call(role)
+    handler = UsageHandler(
+        on_text=None if gate is None else (lambda text: gate.record_text(role, text))
+    )
+    started = time.monotonic()
+    try:
+        return cast("AIMessage", model.invoke(messages, config={"callbacks": [handler]}))
+    finally:
+        if gate is not None:
+            elapsed = int((time.monotonic() - started) * 1000)
+            gate.record_call(role, model_id, handler.usage(model_id, elapsed))
 
 
 # ---------------------------------------------------------------------------
@@ -613,6 +637,24 @@ def _stop_prior_failure(state: REState) -> bool:
     return bool(state.get("status") == "failed")
 
 
+def _search_for_corpus(
+    state: REState,
+    config: RunnableConfig | None,
+    search: Callable[..., list[dict[str, Any]]],
+    plan_json: str,
+    target: int,
+) -> list[dict[str, Any]]:
+    """The pages that the corpus builder finds by searching on its own, for the plan."""
+    model = get_chat_model("corpus_builder", config or {}).bind_tools([corpus_search.SearchWeb])
+    sink = _sink(config or {})
+    return corpus_search.run_search_loop(
+        lambda messages: _chat_turn("corpus_builder", config, model, messages),
+        search,
+        corpus_search.task_messages(str(state["initial_intent"]), plan_json, target),
+        on_search=lambda query: sink.add_notes([corpus_search.note_of(query)]),
+    )
+
+
 @safe_node
 def corpus_builder_node(
     state: REState,
@@ -635,10 +677,19 @@ def corpus_builder_node(
     search = research_search_of(config or {})
     documents_tool = _configurable(config).get("project_documents")
     uploaded = documents_tool(str(state["project_id"])) if documents_tool is not None else []
-    hits = [
-        *uploaded,
-        *search(research_queries(topics, stakeholder_types, state["initial_intent"])),
-    ]
+    plan_json = (
+        json.dumps(plan_record["content"], ensure_ascii=False)
+        if plan_record is not None
+        else "(no plan; cover the intent's obvious stakeholder types)"
+    )
+    found = _search_for_corpus(
+        state, config, search, plan_json, int(cfg.parameters.target_sources_num)
+    )
+    if not found:
+        # The agent searched for nothing (a model that never calls the tool): fall back to the
+        # queries that the plan itself suggests, so that a run still has documents to choose from.
+        found = search(research_queries(topics, stakeholder_types, state["initial_intent"]))
+    hits = [*uploaded, *found]
     known_urls = {str(hit.get("url", "")) for hit in hits}
     hits_lines = "\n".join(json.dumps(hit, ensure_ascii=False) for hit in hits) or "(no hits)"
 
@@ -649,11 +700,7 @@ def corpus_builder_node(
         {
             "output_language": _language(cfg),
             "intent": state["initial_intent"],
-            "plan": (
-                json.dumps(plan_record["content"], ensure_ascii=False)
-                if plan_record is not None
-                else "(no plan; cover the intent's obvious stakeholder types)"
-            ),
+            "plan": plan_json,
             "target_sources_num": str(cfg.parameters.target_sources_num),
             "search_results": hits_lines,
         },

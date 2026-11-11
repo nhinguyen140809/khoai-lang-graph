@@ -566,7 +566,10 @@ class RunWalker:
                 "research_search": self.tool(
                     "research_search",
                     service.make_research_search(get_settings()),
-                    lambda queries: {"queries": list(queries)},
+                    lambda queries, options=None: {
+                        "queries": list(queries),
+                        **({"options": dict(options)} if options else {}),
+                    },
                 ),
                 "project_documents": self.tool(
                     "project_documents",

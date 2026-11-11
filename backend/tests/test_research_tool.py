@@ -58,7 +58,9 @@ def test_research_queries_follow_the_plan() -> None:
 def test_live_mode_prefers_tavily_then_the_keyless_chain(monkeypatch: pytest.MonkeyPatch) -> None:
     web_calls: list[str] = []
 
-    def fake_tavily(queries: list[str], *, api_key: str) -> list[dict[str, str]]:
+    def fake_tavily(
+        queries: list[str], *, api_key: str, options: object = None
+    ) -> list[dict[str, str]]:
         web_calls.append(api_key)
         return []
 
@@ -70,7 +72,7 @@ def test_live_mode_prefers_tavily_then_the_keyless_chain(monkeypatch: pytest.Mon
     assert web_calls == ["test-key"]
 
     web_only = Settings(app_env="test", tavily_api_key=None, research_academic=False)
-    assert research.make_research_search(web_only) is research.live_research_search
+    assert research.make_research_search(web_only)(["q"]) == []
 
 
 def test_academic_hits_join_the_web_hits_without_duplicate_urls(
@@ -162,3 +164,39 @@ def test_academic_sources_start_no_request_after_the_deadline(
     past = time.monotonic() - 1.0
 
     assert research.academic_research_search(["q", "r"], deadline=past) == []
+
+
+def test_the_domain_options_of_a_search_keep_or_drop_pages() -> None:
+    hits = [
+        {"title": "A", "url": "https://www.reddit.com/r/x/1"},
+        {"title": "B", "url": "https://old.reddit.com/r/x/2"},
+        {"title": "C", "url": "https://library.example.edu/rules"},
+    ]
+
+    only = research.filter_by_domain(hits, allowed=["reddit.com"])
+    without = research.filter_by_domain(hits, blocked=["example.edu"])
+
+    assert [hit["title"] for hit in only] == ["A", "B"]
+    assert [hit["title"] for hit in without] == ["A", "B"]
+    assert research.filter_by_domain(hits) == hits
+
+
+def test_tavily_takes_the_domains_the_news_flag_and_the_count_of_a_search() -> None:
+    plain = research._tavily_body("k", "q", {})
+    aimed = research._tavily_body(
+        "k",
+        "q",
+        {
+            "allowed_domains": ["reddit.com"],
+            "blocked_domains": ["a.test"],
+            "news": True,
+            "max_results": 3,
+        },
+    )
+
+    assert "include_domains" not in plain
+    assert "topic" not in plain
+    assert aimed["include_domains"] == ["reddit.com"]
+    assert aimed["exclude_domains"] == ["a.test"]
+    assert aimed["topic"] == "news"
+    assert aimed["max_results"] == 3

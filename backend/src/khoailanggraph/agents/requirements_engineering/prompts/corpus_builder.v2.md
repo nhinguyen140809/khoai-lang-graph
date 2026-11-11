@@ -58,7 +58,8 @@ From the given search hits, select the documents that carry real voices of the s
 - Select only from the given search hits. Never invent a document or a URL. A document that is not among the hits cannot be opened later, and the next step would mine something that does not exist.
 - Copy `title`, `url` and `publisher` exactly from the hit; copy the excerpt verbatim from its snippet. Quotes of later steps are checked against this text, so a changed word breaks them.
 - Copy the hit's `text` field verbatim into the source's `text`; when the hit carries none, write an empty string.
-- Prefer primary material: studies, surveys, interviews, forum threads, complaint logs.
+- Prefer primary material: studies, surveys, interviews, forum threads, complaint logs. Drop a page that the organization wrote about itself (rules, how-to steps, opening hours, FAQ): it holds no stakeholder voice, however well it matches the topic. A hit may carry `searched_as`, the kind that the search was aiming at; check it against the text instead of trusting it.
+- Mix the kinds of document when the hits allow it, and say in the report when only one kind was found.
 - Write every text field of the output in {{ output_language }}; keep `url` exactly as given.
 
 ## Output
