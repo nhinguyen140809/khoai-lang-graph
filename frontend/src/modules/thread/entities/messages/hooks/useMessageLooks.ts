@@ -1,6 +1,6 @@
 'use client'
 
-import { useView } from '@/shared/lib/view'
+import { inView, useView } from '@/shared/lib/view'
 
 import { messageDeliveryLooks } from '../message-look.constants'
 import { messageDeliveryLabels } from '../messages.constants'
@@ -12,6 +12,6 @@ export function useMessageDeliveryLook(delivery: MessageDelivery | null) {
   // A message that is not of the user has no delivery: the primary look without a label.
   return {
     tone: delivery === null ? 'primary' : messageDeliveryLooks[delivery],
-    label: delivery === null ? null : messageDeliveryLabels[delivery][view],
+    label: delivery === null ? null : inView(messageDeliveryLabels[delivery], view),
   }
 }

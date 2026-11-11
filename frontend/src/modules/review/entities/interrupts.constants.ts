@@ -7,9 +7,9 @@ import type { InterruptStatus } from './interrupts.types'
  * was answered, and one that was dropped with its run.
  */
 export const interruptStatusLabels = {
-  pending: { developer: 'Waiting for review', user: 'Waiting for you' },
-  resolved: { developer: 'Resolved', user: 'Reviewed' },
-  cancelled: { developer: 'Cancelled', user: 'Stopped' },
+  pending: { developer: 'Waiting for you' },
+  resolved: { developer: 'Reviewed' },
+  cancelled: { developer: 'Stopped' },
 } as const satisfies Record<InterruptStatus, Wording>
 
 // How many interrupts a page of the interrupts of a run holds; the next page loads on demand.

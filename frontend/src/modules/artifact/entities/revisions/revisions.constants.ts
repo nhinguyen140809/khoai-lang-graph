@@ -8,12 +8,12 @@ import type { ChangeReason } from './revisions.types'
  * exists, as the history of a record reads it.
  */
 export const changeReasonLabels = {
-  generated: { developer: 'Generated', user: 'Written by the agents' },
-  user_edit: { developer: 'User edit', user: 'Your edit' },
-  rework: { developer: 'Rework', user: 'Reworked' },
-  reviewed: { developer: 'Reviewed', user: 'Approved in a review' },
-  restored: { developer: 'Restored', user: 'Restored' },
-  deleted: { developer: 'Deleted', user: 'Deleted' },
+  generated: { developer: 'Written by the agents' },
+  user_edit: { developer: 'Your edit' },
+  rework: { developer: 'Reworked' },
+  reviewed: { developer: 'Approved in a review' },
+  restored: { developer: 'Restored' },
+  deleted: { developer: 'Deleted' },
 } as const satisfies Record<ChangeReason, Wording>
 
 /** How a change reason shows. */

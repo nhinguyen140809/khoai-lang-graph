@@ -5,8 +5,9 @@ import { describe, expect, it } from 'vitest'
 import { ViewProvider } from '../../ViewProvider'
 import { useWording } from '../useWording'
 
-// The words of one value of the test, one for each view.
+// A value with words of its own in the user view, and one that both views read the same.
 const wording = { developer: 'Waiting for review', user: 'Waiting for you' } as const
+const sharedWording = { developer: 'Done' } as const
 
 // Wraps the hook in a provider of the given view.
 function withView(view: 'user' | 'developer') {
@@ -28,9 +29,15 @@ describe('useWording', () => {
     expect(result.current).toBe('Waiting for review')
   })
 
-  it('reads the words of the default view, which is the user one', () => {
+  it('reads the words of the developer view for a value without words in the user view', () => {
+    const { result } = renderHook(() => useWording(sharedWording), { wrapper: withView('user') })
+
+    expect(result.current).toBe('Done')
+  })
+
+  it('reads the words of the developer view under no provider', () => {
     const { result } = renderHook(() => useWording(wording))
 
-    expect(result.current).toBe('Waiting for you')
+    expect(result.current).toBe('Waiting for review')
   })
 })

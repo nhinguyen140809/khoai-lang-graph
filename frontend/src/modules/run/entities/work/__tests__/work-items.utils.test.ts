@@ -44,7 +44,6 @@ describe('phaseItems', () => {
         note('finding', 'Found.', '04:00'),
         note('tool', 'Three.', '05:00', 'search'),
       ]),
-      'user',
     )
 
     expect(items.map(({ type }) => type)).toEqual(['note', 'tool', 'note', 'tool'])
@@ -54,13 +53,9 @@ describe('phaseItems', () => {
   })
 
   it('marks the last item as in progress while the phase works: a note that says what it does, or a tool in use', () => {
-    const doing = phaseItems(
-      phase([note('finding', 'A.', '01:00'), note('doing', 'B.', '02:00')]),
-      'user',
-    )
+    const doing = phaseItems(phase([note('finding', 'A.', '01:00'), note('doing', 'B.', '02:00')]))
     const tool = phaseItems(
       phase([note('doing', 'A.', '01:00'), note('tool', 'B.', '02:00', 'search')]),
-      'user',
     )
 
     expect(doing.map((item) => item.type === 'note' && item.isInProgress)).toEqual([false, true])
@@ -68,11 +63,8 @@ describe('phaseItems', () => {
   })
 
   it('marks nothing as in progress once the phase is done, or when its last note is a finding', () => {
-    const done = phaseItems(phase([note('doing', 'A.', '01:00')], true), 'user')
-    const found = phaseItems(
-      phase([note('doing', 'A.', '01:00'), note('finding', 'B.', '02:00')]),
-      'user',
-    )
+    const done = phaseItems(phase([note('doing', 'A.', '01:00')], true))
+    const found = phaseItems(phase([note('doing', 'A.', '01:00'), note('finding', 'B.', '02:00')]))
 
     expect(done[0]?.type === 'note' && done[0].isInProgress).toBe(false)
     expect(found.some((item) => item.type === 'note' && item.isInProgress)).toBe(false)
@@ -85,18 +77,16 @@ describe('phaseItems', () => {
         note('finding', 'Found.', '02:00'),
         note('tool', 'Two.', '03:00', 'search'),
       ]),
-      'user',
     )
     const ids = items.flatMap((item) => (item.type === 'tool' ? [item.use.id] : []))
 
     expect(new Set(ids).size).toBe(2)
   })
 
-  it('leaves the reasoning of the model out of the user view and keeps it in the developer view', () => {
+  it('leaves the reasoning of the model out', () => {
     const entry = phase([note('thinking', 'Hmm.', '01:00'), note('doing', 'A.', '02:00')])
 
-    expect(phaseItems(entry, 'user')).toHaveLength(1)
-    expect(phaseItems(entry, 'developer')).toHaveLength(2)
+    expect(phaseItems(entry)).toHaveLength(1)
   })
 })
 
