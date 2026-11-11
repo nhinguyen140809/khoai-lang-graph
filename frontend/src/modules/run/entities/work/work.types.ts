@@ -53,8 +53,6 @@ export interface WorkWords {
   writes: string | null
   /** Says that the line carries on the work above it; null for a line that starts the work. */
   continued: string | null
-  /** Developer view: the steps, the model and the cost; empty in the user view. */
-  details: string[]
   failure: string | null
 }
 

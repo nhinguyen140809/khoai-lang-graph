@@ -59,7 +59,7 @@ export const projectStatusCases = [
 /** A view of the app, a page address, and what the status says in that view. */
 export const viewCases: { view: View; address: string; status: string }[] = [
   { view: 'user', address: '/', status: 'Waiting for you: Reviewing the analysis' },
-  { view: 'developer', address: '/', status: 'Waiting for review: Reviewing the analysis' },
+  { view: 'developer', address: '/', status: 'Waiting for you: Reviewing the analysis' },
   { view: 'user', address: '/?mock-runs=empty', status: 'Not started' },
-  { view: 'developer', address: '/?mock-runs=empty', status: 'No run yet' },
+  { view: 'developer', address: '/?mock-runs=empty', status: 'Not started' },
 ]

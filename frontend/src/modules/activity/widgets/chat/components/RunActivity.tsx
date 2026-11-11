@@ -7,7 +7,6 @@ import { messageAuthorLooks } from '@/modules/thread/entities'
 import { ErrorState, LoadingState } from '@/shared/components/state'
 import { Marker } from '@/shared/components/ui/marker'
 import { formatDateTime } from '@/shared/lib/time'
-import { useView } from '@/shared/lib/view'
 
 import { activityChatMessages } from '../activity-chat.constants'
 import { usePhaseOpen } from '../hooks/usePhaseOpen'
@@ -34,7 +33,6 @@ interface RunActivityProps {
  */
 export function RunActivity({ run, messages, thread, projectId, targetEntryId }: RunActivityProps) {
   const entries = useRunEntries(run, messages, projectId)
-  const view = useView()
   const phases = usePhaseOpen()
   useRevealNewMessage(
     entries.state === 'success'
@@ -74,7 +72,6 @@ export function RunActivity({ run, messages, thread, projectId, targetEntryId }:
   return (
     <RunActivityProvider value={{ run, thread, projectId, targetEntryId }}>
       <Marker variant="separator" className="mb-2 text-xs">
-        {view === 'developer' ? `${activityChatMessages.run(run.number)} ` : ''}
         {first !== undefined ? formatDateTime(first.time) : null}
       </Marker>
       {blocks.map((block) => {

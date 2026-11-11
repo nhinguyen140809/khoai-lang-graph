@@ -17,9 +17,9 @@ export const labelCases: { name: string; status: RunStatus | null; label: Wordin
   {
     name: 'a review that waits',
     status: 'interrupted',
-    label: { developer: 'Waiting for review', user: 'Waiting for you' },
+    label: { developer: 'Waiting for you' },
   },
-  { name: 'no run yet', status: null, label: { developer: 'No run yet', user: 'Not started' } },
+  { name: 'no run yet', status: null, label: { developer: 'Not started' } },
 ]
 
 /** A status of a run, and whether its label names the stage. */

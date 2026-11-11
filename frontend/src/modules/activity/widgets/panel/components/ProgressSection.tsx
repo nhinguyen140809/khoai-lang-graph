@@ -18,7 +18,6 @@ import { Collapsible, CollapsibleContent } from '@/shared/components/ui/collapsi
 import { Stepper, StepperItem, StepperTitle, StepperTrigger } from '@/shared/components/ui/stepper'
 import { Tooltip, TooltipContent, TooltipTrigger } from '@/shared/components/ui/tooltip'
 import { useOpenKeys } from '@/shared/lib/disclosure'
-import { useView } from '@/shared/lib/view'
 import { routes } from '@/shared/routes'
 
 import { activityPanelMessages, stepMarkerLooks } from '../activity-panel.constants'
@@ -246,7 +245,6 @@ function SubjectItem({
   label: string
   projectId: string
 }) {
-  const view = useView()
   const openPage = useOpenPage()
   const look = useStageStatusLook(subject.status)
   const workId = subject.workId
@@ -285,9 +283,6 @@ function SubjectItem({
                 {subject.subject.title}
               </StepperTitle>
               <span className="sr-only">, {look.label}</span>
-              {view === 'developer' && (
-                <span className="text-3xs text-muted-foreground">{subject.subject.key}</span>
-              )}
             </span>
           </StepperTrigger>
         </TooltipTrigger>

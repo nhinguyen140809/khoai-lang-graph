@@ -2,7 +2,7 @@ import { roundedDuration } from '@/shared/lib/time'
 
 import { workMessages } from './work.constants'
 
-/** The words of how long a line of work took, in the user view. */
+/** The words of how long a line of work took. */
 export function durationWords(durationMs: number): string {
   const duration = roundedDuration(durationMs)
   if (duration.kind === 'lessThanAMinute') return workMessages.took.lessThanAMinute

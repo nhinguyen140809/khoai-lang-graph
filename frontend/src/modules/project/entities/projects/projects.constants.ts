@@ -22,8 +22,8 @@ export const projectMessages = {
 
 /** The label of each project status in each view, as the list of projects reads it. */
 export const projectStatusLabels = {
-  active: { developer: 'Active', user: 'Active' },
-  archived: { developer: 'Archived', user: 'Archived' },
+  active: { developer: 'Active' },
+  archived: { developer: 'Archived' },
 } as const satisfies Record<ProjectStatus, Wording>
 
 /** The filters of a list of projects that narrow nothing. */

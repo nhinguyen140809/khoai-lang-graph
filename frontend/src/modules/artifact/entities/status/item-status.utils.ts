@@ -1,6 +1,6 @@
 import { isOpenIssue, type IssueKind } from '@/modules/workflow/entities/@x/artifact'
 import { assertPresent } from '@/shared/lib/guards'
-import type { View } from '@/shared/lib/view'
+import { inView, type View } from '@/shared/lib/view'
 
 import type { ArtifactItem, OutlineItem } from '../items/items.types'
 import { attentionLevels, itemStatusLooks, itemStatusMessages } from './item-status.constants'
@@ -70,7 +70,9 @@ export function itemStatusLook(
     level,
     color: attentionLevels[level].color,
     letter,
-    label: isDraftInReview ? itemStatusMessages.statuses.draftInReview.label : look.label[view],
+    label: isDraftInReview
+      ? itemStatusMessages.statuses.draftInReview.label
+      : inView(look.label, view),
   }
 }
 
