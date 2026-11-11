@@ -49,6 +49,7 @@ from khoailanggraph.agents.requirements_engineering.definition import link_types
 from khoailanggraph.agents.requirements_engineering.definition import nodes as definition_nodes
 from khoailanggraph.agents.requirements_engineering.definition import value_lists as get_value_lists
 from khoailanggraph.agents.requirements_engineering.outputs import (
+    NewSource,
     AnalystOutput,
     BacklogOutput,
     CorpusBuilderOutput,
@@ -629,6 +630,33 @@ def corpus_builder_node(
         msg = f"corpus builder selected invented documents: {outside}"
         raise ValueError(msg)
 
+    if not draft.sources and hits:
+        # The model kept nothing although the search answered (seen on thin
+        # results). Keep the top hits instead of failing: they are real search
+        # results, and the transcript/corpus still trace to real URLs.
+        wanted = max(1, int(cfg.parameters.target_sources_num))
+        fallback = []
+        for index, hit in enumerate(hits[:wanted], 1):
+            text = str(hit.get("text", "") or "")
+            fallback.append(
+                NewSource(
+                    ref=f"SRC-{index:03d}",
+                    title=str(hit.get("title", "") or f"Source {index}"),
+                    url=str(hit.get("url", "")),
+                    publisher=str(hit.get("publisher", "") or "web"),
+                    year=str(hit.get("year", "") or ""),
+                    excerpt=text[:400],
+                    text=text,
+                    relevance_reason="Kept automatically: top search result for the plan topics.",
+                    origin="web",
+                )
+            )
+        draft.sources = fallback
+        logger.warning(
+            "corpus builder kept nothing; top search hits kept instead",
+            kept=len(fallback),
+            hits=len(hits),
+        )
     if not draft.sources:
         msg = (
             "research found no source document to mine: the web search returned "
@@ -715,6 +743,13 @@ def stakeholder_miner_node(
                 )
                 continue
             if mined.evidence not in document:
+                # The model may quote with different casing; recover the exact
+                # words from the document so the quote stays verbatim.
+                lowered = document.lower()
+                position = lowered.find(str(mined.evidence).lower())
+                if position != -1 and str(mined.evidence):
+                    mined.evidence = document[position : position + len(str(mined.evidence))]
+            if mined.evidence not in document:
                 logger.warning(
                     "miner observation skipped: evidence not verbatim",
                     dimension=str(mined.dimension),
@@ -743,6 +778,41 @@ def stakeholder_miner_node(
             )
             observations.append(dict(item))
         sink.add_report(draft.report)
+    if not observations:
+        # The model quoted loosely on every source. Keep one verbatim sentence
+        # per document so the corpus is mineable and every quote stays in its
+        # source; the warning records that this was a salvage path.
+        for record in source_records:
+            document = str(record["content"].get("text", ""))
+            sentence = ""
+            for candidate in document.split(". "):
+                candidate = candidate.strip()
+                if 60 <= len(candidate) <= 400:
+                    sentence = candidate
+                    break
+            if not sentence:
+                continue
+            ref_number += 1
+            item = sink.add_item(
+                corpus["artifact_id"],
+                "stakeholder_observation",
+                {
+                    "stakeholder_name": "Document",
+                    "description": "Context stated by the source document.",
+                    "dimension": "context",
+                    "evidence": sentence,
+                    "source": str(record["key"]),
+                },
+                ref=f"O{ref_number}",
+            )
+            sink.add_link(
+                source_id=item["item_id"],
+                target_id=record["item_id"],
+                link_type="evidenced_by",
+            )
+            observations.append(dict(item))
+            logger.warning("miner salvaged a sentence", source=str(record["key"]))
+
     return {
         "observations": observations,
         "current_stage": "research",
