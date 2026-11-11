@@ -28,12 +28,12 @@
     { "key": "requirement_engineer", "label": "Requirement engineer", "description": "Writes the requirement specification.", "prompt_version": 2 },
     { "key": "backlog_manager", "label": "Backlog manager", "description": "Writes the product backlog.", "prompt_version": 2 },
     { "key": "validator", "label": "Validator", "description": "Checks the outputs and reports issues.", "prompt_version": 2 },
-    { "key": "intent_router", "label": "Intent router", "description": "Decides which node a message sent by the user should go to.", "prompt_version": 2 }
+    { "key": "intent_router", "label": "Request coordinator", "description": "Takes a request or a question you send after the first run and hands it to the step that should deal with it.", "prompt_version": 2 }
   ],
   "stages": [
     {
       "key": "intent_routing",
-      "title": "Intent routing",
+      "title": "Handling your request",
       "internal": true,
       "parent": null
     },

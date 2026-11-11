@@ -132,7 +132,7 @@ DEFINITION_V1 = WorkflowDefinition(
     graph=build_graph,  # nodes and edges are read from the compiled graph
     entry=Entry(first_run="planner", later_runs="intent_router", pending_messages="intent_router"),
     agent_roles=[AgentRole("planner", "Planner", "Turns the intent into an elicitation plan.", prompt_version=1), ...],
-    stages=[Stage("intent_routing", "Intent routing", internal=True, parent=None), ...],
+    stages=[Stage("intent_routing", "Handling your request", internal=True, parent=None), ...],
     node_data={
         "checkpoint_analysis": Checkpoint(
             stage="analysis_review",
