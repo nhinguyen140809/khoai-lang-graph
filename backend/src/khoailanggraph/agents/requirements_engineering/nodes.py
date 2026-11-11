@@ -52,6 +52,7 @@ from khoailanggraph.agents.requirements_engineering.definition import (
 )
 from khoailanggraph.agents.requirements_engineering.definition import value_lists as get_value_lists
 from khoailanggraph.agents.requirements_engineering.outputs import (
+    NewSource,
     AnalystOutput,
     BacklogOutput,
     CorpusBuilderOutput,
@@ -662,6 +663,33 @@ def corpus_builder_node(
         msg = f"corpus builder selected invented documents: {outside}"
         raise ValueError(msg)
 
+    if not draft.sources and hits:
+        # The model kept nothing although the search answered (seen on thin
+        # results). Keep the top hits instead of failing: they are real search
+        # results, and the transcript/corpus still trace to real URLs.
+        wanted = max(1, int(cfg.parameters.target_sources_num))
+        fallback = []
+        for index, hit in enumerate(hits[:wanted], 1):
+            text = str(hit.get("text", "") or "")
+            fallback.append(
+                NewSource(
+                    ref=f"SRC-{index:03d}",
+                    title=str(hit.get("title", "") or f"Source {index}"),
+                    url=str(hit.get("url", "")),
+                    publisher=str(hit.get("publisher", "") or "web"),
+                    year=str(hit.get("year", "") or ""),
+                    excerpt=text[:400],
+                    text=text,
+                    relevance_reason="Kept automatically: top search result for the plan topics.",
+                    origin="web",
+                )
+            )
+        draft.sources = fallback
+        logger.warning(
+            "corpus builder kept nothing; top search hits kept instead",
+            kept=len(fallback),
+            hits=len(hits),
+        )
     if not draft.sources:
         msg = (
             "research found no source document to mine: the web search returned "
@@ -748,6 +776,13 @@ def stakeholder_miner_node(
                 )
                 continue
             if mined.evidence not in document:
+                # The model may quote with different casing; recover the exact
+                # words from the document so the quote stays verbatim.
+                lowered = document.lower()
+                position = lowered.find(str(mined.evidence).lower())
+                if position != -1 and str(mined.evidence):
+                    mined.evidence = document[position : position + len(str(mined.evidence))]
+            if mined.evidence not in document:
                 logger.warning(
                     "miner observation skipped: evidence not verbatim",
                     dimension=str(mined.dimension),
@@ -776,6 +811,41 @@ def stakeholder_miner_node(
             )
             observations.append(dict(item))
         _tell_user(sink, draft)
+    if not observations:
+        # The model quoted loosely on every source. Keep one verbatim sentence
+        # per document so the corpus is mineable and every quote stays in its
+        # source; the warning records that this was a salvage path.
+        for record in source_records:
+            document = str(record["content"].get("text", ""))
+            sentence = ""
+            for candidate in document.split(". "):
+                candidate = candidate.strip()
+                if 60 <= len(candidate) <= 400:
+                    sentence = candidate
+                    break
+            if not sentence:
+                continue
+            ref_number += 1
+            item = sink.add_item(
+                corpus["artifact_id"],
+                "stakeholder_observation",
+                {
+                    "stakeholder_name": "Document",
+                    "description": "Context stated by the source document.",
+                    "dimension": "context",
+                    "evidence": sentence,
+                    "source": str(record["key"]),
+                },
+                ref=f"O{ref_number}",
+            )
+            sink.add_link(
+                source_id=item["item_id"],
+                target_id=record["item_id"],
+                link_type="evidenced_by",
+            )
+            observations.append(dict(item))
+            logger.warning("miner salvaged a sentence", source=str(record["key"]))
+
     return {
         "observations": observations,
         "current_stage": "research",
@@ -786,12 +856,26 @@ def _check_groups(
     draft: GeneratorOutputV2,
     known_observations: dict[str, ItemRecord],
 ) -> None:
-    """Every consolidated group cites observation keys that exist."""
+    """A group keeps only observation keys that exist; unknown ones are dropped.
+
+    The model sometimes cites a key it invented (INTENT-01) when the corpus is
+    thin; dropping the key keeps the run alive instead of failing at the
+    generator, and the warning names what was dropped."""
+    kept_groups = []
     for group in draft.stakeholder_groups:
-        for key in group.observations:
-            if key not in known_observations:
-                msg = f"group '{group.name}' consolidates unknown observation key '{key}'"
-                raise ValueError(msg)
+        valid = [key for key in group.observations if key in known_observations]
+        dropped = [key for key in group.observations if key not in known_observations]
+        if dropped:
+            logger.warning(
+                "persona group keys dropped",
+                group=group.name,
+                dropped=dropped,
+                kept=valid,
+            )
+        group.observations = valid
+        if valid:
+            kept_groups.append(group)
+    draft.stakeholder_groups = kept_groups
 
 
 def _check_persona_grounding(
@@ -906,6 +990,31 @@ def persona_generator_node(
     )
     personas: list[ItemRefDict] = []
     for persona_draft in draft.personas:
+        # The generator sometimes cites a key it invented (INTENT-001) or alters
+        # the quote when the corpus is thin. Drop what cannot be grounded; a
+        # persona left without evidence is skipped instead of failing the run.
+        kept_evidence = []
+        for entry in persona_draft.evidence:
+            if entry.observation not in known_observations:
+                # An invented key (INTENT-001) is dropped; a quote that drifts
+                # from a real observation still fails the run in the check below.
+                logger.warning(
+                    "persona evidence dropped: unknown observation",
+                    persona=str(getattr(persona_draft, "name", "?")),
+                    observation=str(entry.observation),
+                )
+                continue
+            kept_evidence.append(entry)
+        persona_draft.evidence = kept_evidence
+        persona_draft.grounded_in = [
+            key for key in persona_draft.grounded_in if key in known_observations
+        ]
+        if not kept_evidence:
+            logger.warning(
+                "persona skipped: no grounded evidence",
+                persona=str(getattr(persona_draft, "name", "?")),
+            )
+            continue
         _check_persona_grounding(persona_draft, known_observations)
         content = persona_draft.model_dump(mode="json", exclude={"ref"})
         # The trait as the user reads it comes from the aspect, not from the model.
@@ -1501,6 +1610,57 @@ def _normalize_analyzed_quality(analysis: AnalystOutput) -> None:
             analyzed_draft.quality_category = None
 
 
+
+_AMBIGUITY_SYNONYMS = {
+    "ambiguous": "vague", "inconsistent": "semantic", "contradictory": "semantic",
+    "conflicting": "semantic", "unclear": "vague", "missing": "incomplete",
+    "undefined": "incomplete", "grammar": "syntactic", "wording": "lexical",
+    "terminology": "lexical",
+}
+_CONFLICT_SYNONYMS = {
+    "requirements": "between_requirements", "requirement": "between_requirements",
+    "stakeholders": "between_stakeholders", "stakeholder": "between_stakeholders",
+    "constraint": "with_constraint", "constraints": "with_constraint",
+}
+_PRIORITY_SYNONYMS = {
+    "high": "must", "critical": "must", "mandatory": "must", "required": "must",
+    "medium": "should", "normal": "should", "low": "could", "optional": "could",
+}
+
+
+def _normalize_enum(value: object, allowed: list[str], synonyms: dict[str, str], fallback: str) -> str:
+    text = str(value)
+    if text in allowed:
+        return text
+    matched = match_plan_value(text, allowed) or synonyms.get(text.strip().casefold())
+    return matched if matched in allowed else fallback
+
+
+def _normalize_analyst_enums(analysis: AnalystOutput) -> None:
+    """Map the model's enum words onto the value lists before the items are
+    written (an out-of-list value would fail the whole run at the sink)."""
+    ambiguity_values = [str(e["key"]) for e in get_value_lists().get("ambiguity_type", [])]
+    if ambiguity_values:
+        fallback = "vague" if "vague" in ambiguity_values else ambiguity_values[0]
+        for ambiguity in analysis.ambiguity_issues:
+            ambiguity.ambiguity_type = _normalize_enum(
+                ambiguity.ambiguity_type, ambiguity_values, _AMBIGUITY_SYNONYMS, fallback
+            )
+    conflict_values = [str(e["key"]) for e in get_value_lists().get("conflict_type", [])]
+    if conflict_values:
+        fallback = "between_requirements" if "between_requirements" in conflict_values else conflict_values[0]
+        for conflict in analysis.conflicts:
+            conflict.conflict_type = _normalize_enum(
+                conflict.conflict_type, conflict_values, _CONFLICT_SYNONYMS, fallback
+            )
+    priorities = [str(e["key"]) for e in get_value_lists().get("priority", [])]
+    if priorities:
+        fallback = "should" if "should" in priorities else priorities[0]
+        for analyzed in analysis.analyzed_requirements:
+            analyzed.priority = _normalize_enum(
+                analyzed.priority, priorities, _PRIORITY_SYNONYMS, fallback
+            )
+
 def _normalize_analyst_links(analysis: AnalystOutput, known: Known) -> None:
     """Drop link refs whose target kind the trace law doesn't allow for
     that field — a model citing a latent_need in concerns is over-citing.
@@ -1630,6 +1790,7 @@ def analyst_node(
         return item
 
     _normalize_raw_topics(analysis, plan_topic_values)
+    _normalize_analyst_enums(analysis)
     _normalize_analyst_links(analysis, known)
     _normalize_analyzed_quality(analysis)
 
@@ -2320,6 +2481,48 @@ def validator_node(
 # The checkpoint factory (HITL per the v1 option keys: approval or feedback)
 
 
+
+def _agent_questions(state: REState, config: RunnableConfig | None) -> list[dict[str, Any]]:
+    """1-3 clarifying questions the agent asks the user at a checkpoint."""
+    class QuestionList(BaseModel):
+        questions: list[str]
+
+    from langchain_core.messages import HumanMessage, SystemMessage
+
+    from khoailanggraph.llm.factory import get_chat_model
+
+    model = get_chat_model("planner", config or {}).with_structured_output(QuestionList)
+    answer = model.invoke(
+        [
+            SystemMessage(
+                content=(
+                    "You prepare a requirements interview. From the project intent, write up to 3 "
+                    "short questions whose answers would change the requirements (domain, scale, "
+                    "region, compliance, integration) and that cannot be inferred from the intent. "
+                    "Ask only what the intent leaves open: if it already fixes these, return an "
+                    "empty list. One sentence each, no jargon."
+                )
+            ),
+            HumanMessage(content=str(state.get("initial_intent", ""))),
+        ]
+    )
+    questions = [q.strip() for q in answer.questions if q.strip()][:3]
+    return [
+        {
+            "key": f"q{index + 1}",
+            "type": "free_text",
+            "prompt": question,
+            "required": False,
+            "choices": [],
+            "min_selected": None,
+            "max_selected": None,
+            "default_answer": None,
+            "source": "agent",
+        }
+        for index, question in enumerate(questions)
+    ]
+
+
 def make_checkpoint(
     node_id: str,
     artifact_kind: str,
@@ -2387,6 +2590,7 @@ def make_checkpoint(
     return node
 
 
+checkpoint_plan = make_checkpoint("checkpoint_plan", "elicitation_plan")
 checkpoint_personas = make_checkpoint("checkpoint_personas", "persona_catalog")
 checkpoint_analysis = make_checkpoint("checkpoint_analysis", "requirements_analysis")
 checkpoint_spec = make_checkpoint("checkpoint_spec", "requirement_specification")

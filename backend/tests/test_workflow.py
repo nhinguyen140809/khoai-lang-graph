@@ -224,6 +224,7 @@ def test_full_workflow_succeeds_and_passes_domain_rules() -> None:
     assert spec["review_status"] == "approved"
     outcomes = final["checkpoint_outcomes"]
     assert {outcome["node"] for outcome in outcomes} == {
+        "checkpoint_plan",
         "checkpoint_personas",
         "checkpoint_analysis",
         "checkpoint_spec",
@@ -245,12 +246,13 @@ def test_get_graph_topology_matches_definition() -> None:
         if isinstance(drawn, dict)
         else {getattr(node, "id", node) for node in drawn.nodes}
     )
-    assert len(node_ids) == 17
+    assert len(node_ids) == 18
     assert "planner" in node_ids
     assert "corpus_builder" in node_ids
     assert "stakeholder_miner" in node_ids
     assert "validator" in node_ids
     assert "intent_router" in node_ids
+    assert "checkpoint_plan" in node_ids
 
     edge_pairs = (
         drawn["edges"]
@@ -258,7 +260,7 @@ def test_get_graph_topology_matches_definition() -> None:
         else [(edge.source, edge.target) for edge in drawn.edges]
     )
     edges = {tuple(pair) for pair in edge_pairs}
-    # The definition's 27 rows, error drains aside (backend-only, routing.py).
+    # The definition's 28 rows, error drains aside (backend-only, routing.py).
     definition_pairs = {(str(row["source"]), str(row["target"])) for row in wf.edges()}
     # Backend-only edges: every error drains to the end, and a walk that continues a run may
     # begin at any node (`start_at`).
@@ -349,7 +351,7 @@ def test_research_gates_fail_the_run_at_the_lying_node() -> None:
         # Drifted quotes are now SKIPPED (logged) instead of crashing the
         # miner; the observation never enters the store, so the persona
         # generator fails when its fixture cites the skipped key.
-        (DriftingQuotesData, "persona_generator_node: ", "consolidates unknown observation key"),
+        (DriftingQuotesData, "persona_generator_node: ", "nothing grounded to write"),
         (InventedUrlsData, "corpus_builder_node: ", "selected invented documents"),
         (EmptyCorpusData, "corpus_builder_node: ", "research found no source document"),
         (AlteredEvidenceData, "persona_generator_node: ", "altered the evidence quote of OBS-001"),

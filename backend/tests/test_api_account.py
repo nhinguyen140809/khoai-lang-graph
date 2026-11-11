@@ -76,9 +76,9 @@ async def test_model_settings_are_replaced_and_checked(file_client: AsyncClient)
         f"{API}/me/model-settings",
         json={
             "items": [
-                {"agent_role": "nobody", "model_id": "openai:gpt-4.1"},
+                {"agent_role": "nobody", "model_id": "openai:deepseek-v4.1-flash"},
                 {"agent_role": "analyst", "model_id": "openai:unknown"},
-                {"agent_role": "planner", "model_id": "openai:gpt-4.1", "temperature": 3},
+                {"agent_role": "planner", "model_id": "openai:deepseek-v4.1-flash", "temperature": 3},
             ]
         },
     )
@@ -91,11 +91,11 @@ async def test_model_settings_are_replaced_and_checked(file_client: AsyncClient)
 
     good = await file_client.put(
         f"{API}/me/model-settings",
-        json={"items": [{"agent_role": "analyst", "model_id": "openai:gpt-4.1-mini"}]},
+        json={"items": [{"agent_role": "analyst", "model_id": "openai:deepseek-v4.1-flash"}]},
     )
     assert good.status_code == 200
     assert good.json()["items"] == [
-        {"agent_role": "analyst", "model_id": "openai:gpt-4.1-mini", "temperature": None}
+        {"agent_role": "analyst", "model_id": "openai:deepseek-v4.1-flash", "temperature": None}
     ]
 
 

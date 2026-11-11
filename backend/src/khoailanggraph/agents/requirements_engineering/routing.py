@@ -38,7 +38,7 @@ def route_start(state: REState) -> str:
     if state.get("start_at"):
         return str(state["start_at"])
     if state.get("first_run", False) or not state.get("personas"):
-        return "planner"
+        return "checkpoint_plan"
     return "intent_router"
 
 
@@ -129,10 +129,20 @@ def route_after_intent_router(state: REState) -> str:
         "requirement_engineer",
         "backlog_manager",
     }
+    if target == "planner":
+        return "checkpoint_plan"
     return target if target in allowed else "analyst"
 
 
+def route_after_plan(state: REState) -> str:
+    """`checkpoint_plan → corpus_builder` once the plan is approved."""
+    if route_error(state):
+        return route_error(state)
+    return "planner"
+
+
 CHECKPOINT_ROUTES = {
+    "checkpoint_plan": route_after_plan,
     "checkpoint_personas": route_after_personas,
     "checkpoint_analysis": route_after_analysis,
     "checkpoint_spec": route_after_spec,

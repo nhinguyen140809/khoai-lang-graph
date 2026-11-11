@@ -373,7 +373,7 @@ async def test_models_catalog_serves_allowlist(client: AsyncClient) -> None:
     assert [entry["model_id"] for entry in entries] == sorted(
         entry["model_id"] for entry in entries
     )
-    entry = next(entry for entry in entries if entry["model_id"] == "openai:gpt-4.1")
+    entry = next(entry for entry in entries if entry["model_id"] == "openai:deepseek-v4.1-flash")
     assert set(entry) == {
         "model_id",
         "provider",

@@ -146,7 +146,8 @@ async def test_a_run_without_reviews_records_the_defaults_it_took(client: AsyncC
 
     assert response.status_code == 200
     items = response.json()["items"]
-    assert [entry["node"] for entry in items][:3] == [
+    assert [entry["node"] for entry in items][:4] == [
+        "checkpoint_plan",
         "checkpoint_personas",
         "checkpoint_analysis",
         "checkpoint_spec",

@@ -176,7 +176,11 @@ async def test_the_answer_continues_the_run_from_the_chosen_option(client: Async
     assert response.status_code == 202
     finished = (await client.get(f"{API}/runs/{run['id']}")).json()
     assert finished["status"] == "succeeded"
-    resolved = (await client.get(f"{API}/runs/{run['id']}/interrupts")).json()["items"][0]
+    resolved = next(
+        entry
+        for entry in (await client.get(f"{API}/runs/{run['id']}/interrupts")).json()["items"]
+        if entry["node"] == "checkpoint_personas"
+    )
     assert resolved["status"] == "resolved"
     assert resolved["decision"]["option"] == "approve"
     assert resolved["decision"]["decided_by"] is not None
@@ -187,7 +191,7 @@ async def test_the_answer_continues_the_run_from_the_chosen_option(client: Async
     )
     assert catalog["review_status"] == "approved"
     steps = (await client.get(f"{API}/runs/{run['id']}/steps", params={"limit": 200})).json()
-    assert steps["items"][0]["usage"]["output_tokens"] > 0
+    assert max(step["usage"]["output_tokens"] for step in steps["items"]) > 0
     assert finished["usage"]["output_tokens"] > 0
 
 
@@ -250,7 +254,7 @@ async def test_a_run_is_cancelled_while_it_waits(client: AsyncClient, app: FastA
     assert response.status_code == 202
     assert response.json()["status"] == "cancelled"
     interrupts = (await client.get(f"{API}/runs/{run['id']}/interrupts")).json()["items"]
-    assert [entry["status"] for entry in interrupts] == ["cancelled"]
+    assert [entry["status"] for entry in interrupts] == ["resolved", "cancelled"]
     async with app.state.session_factory() as session:
         done = (
             await session.scalars(

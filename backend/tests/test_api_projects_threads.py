@@ -346,12 +346,12 @@ async def test_the_run_settings_and_the_models_of_a_project_are_checked(
                 "max_cost_usd": 1.5,
                 "parameters": {"max_turns": 8},
             },
-            "model_overrides": {"analyst": "openai:gpt-4.1-mini"},
+            "model_overrides": {"analyst": "openai:deepseek-v4.1-flash"},
         },
     )
     assert ok.status_code == 200
     assert ok.json()["run_config"]["parameters"] == {"max_turns": 8}
-    assert ok.json()["model_overrides"] == {"analyst": "openai:gpt-4.1-mini"}
+    assert ok.json()["model_overrides"] == {"analyst": "openai:deepseek-v4.1-flash"}
 
     bad = await signed_in.patch(
         f"/api/v1/projects/{project_id}",
