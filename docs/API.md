@@ -1075,7 +1075,7 @@ The type names are the ones defined in [Planning: agent run lifecycle](PLANNING.
 | `artifact_delta` | An artifact changed: an item was added, changed or removed, or a field of the artifact changed | `artifact_id`, `delta` | `version`, `item_id`, `item_key`, `change` with one of `item_created`, `item_updated`, `item_deleted`, `artifact_updated` |
 | `message_delivered` | A pending user message was taken in by a step | - | `message_id`, `step_id`, `node` |
 | `project_named` | The run named its project, which was created without a name | - | `step_id`, `project_id`, `name` |
-| `step_note` | A step wrote a short note to the user while it worked | - | `step_id`, `kind` (`doing`, `finding` or `thinking`), `text` (Markdown) |
+| `step_note` | A step wrote a short note to the user while it worked | - | `step_id`, `kind` (`doing`, `finding`, `tool` or `thinking`), `tool` (only with kind `tool`), `text` (Markdown) |
 | `interrupt` | The run paused for input. Not sent for an interrupt resolved at once with the defaults | `node`, `payload` | `step_id`; `payload` contains `interrupt_id`, `prompt`, `options`, `questions`, `allow_edits`, `review_artifacts` |
 | `error` | The run failed | `message` | `code`, one of the codes in [Runtime: failures](architecture/runtime.md#failures); `stage` |
 | `done` | The run ended | - | `status` with one of `succeeded`, `failed`, `cancelled` |

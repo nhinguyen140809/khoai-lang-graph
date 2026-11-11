@@ -803,6 +803,15 @@
       ]
     }
   ],
+  "tools": [
+    {
+      "key": "search",
+      "title": "Web search",
+      "description": "Searches the web and academic papers for documents in which real people speak about the topic.",
+      "uses": { "one": "Searched once", "other": "Searched {count} times" },
+      "icon": "search"
+    }
+  ],
   "value_lists": [
     {
       "key": "resolution_strategy",

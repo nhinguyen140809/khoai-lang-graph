@@ -49,6 +49,7 @@ from khoailanggraph.features.artifacts.models import (
 from khoailanggraph.features.projects.models import ProjectKeyCounterRow
 from khoailanggraph.features.runs.models import RunEventRow, RunStepRow
 from khoailanggraph.features.threads.models import MessageRow, ThreadRow
+from khoailanggraph.llm.note_stream import MAX_NOTES_PER_ANSWER, fit_note
 from khoailanggraph.platform import origin as origins
 from khoailanggraph.platform.origin import Origin
 
@@ -61,9 +62,7 @@ if TYPE_CHECKING:
 
 REVISION_VERSION = 1
 # The notes of a node that the server keeps, and the longest a note may be.
-STEP_NOTES_PER_CALL = 3
-STEP_NOTE_LENGTH = 160
-STEP_NOTE_KINDS = frozenset({"doing", "finding", "thinking"})
+STEP_NOTE_KINDS = frozenset({"doing", "finding", "thinking", "tool"})
 
 
 def utcnow() -> datetime:
@@ -102,6 +101,19 @@ def _changed(by: Origin) -> dict[str, Any]:
 
 def _loads(blob: bytes) -> Any:
     return json.loads((blob or b"null").decode("utf-8"))
+
+
+def step_note_fields(note: Mapping[str, str]) -> dict[str, str] | None:
+    """The kind, the text and, for a note of a tool, the tool of a note to keep; None when the note
+    is empty, of an unknown kind, or tells of a tool that the definition does not list."""
+    text = fit_note(str(note.get("text", "")))
+    kind = str(note.get("kind", ""))
+    if not text or kind not in STEP_NOTE_KINDS:
+        return None
+    if kind != "tool":
+        return {"kind": kind, "text": text}
+    tool = str(note.get("tool") or "")
+    return {"kind": kind, "tool": tool, "text": text} if tool in wf.tools() else None
 
 
 def _dumps(value: Any) -> bytes:
@@ -188,7 +200,8 @@ class SqlArtifactSink:
 
     def add_notes(self, notes: Sequence[Mapping[str, str]]) -> None:
         """The notes of the running step: kept with the step, and one `step_note` event for each
-        as it is written. At most three, each cut at 160 characters; an empty note is left out."""
+        as it is written. At most five, each shortened to 160 characters; an empty note is left
+        out. A note of kind `tool` also names the tool whose use it tells of."""
         if self.run_id is None or self.step_id is None or not notes:
             return
         step = self.session.get(RunStepRow, self.step_id)
@@ -197,18 +210,13 @@ class SqlArtifactSink:
         kept = json.loads((step.notes_json or b"[]").decode("utf-8"))
         # A note that was sent while the model wrote it comes again with the finished answer.
         known = {(entry["kind"], entry["text"]) for entry in kept}
-        for note in notes[:STEP_NOTES_PER_CALL]:
-            text = str(note["text"]).strip()[:STEP_NOTE_LENGTH].strip()
-            kind = str(note["kind"])
-            if not text or kind not in STEP_NOTE_KINDS or (kind, text) in known:
+        for note in notes[:MAX_NOTES_PER_ANSWER]:
+            fields = step_note_fields(note)
+            if fields is None or (fields["kind"], fields["text"]) in known:
                 continue
-            known.add((kind, text))
-            kept.append({"kind": kind, "text": text, "created_at": utcnow().isoformat()})
-            self.emit(
-                "step_note",
-                {"step_id": str(self.step_id), "kind": kind, "text": text},
-                step_id=self.step_id,
-            )
+            known.add((fields["kind"], fields["text"]))
+            kept.append({**fields, "created_at": utcnow().isoformat()})
+            self.emit("step_note", {"step_id": str(self.step_id), **fields}, step_id=self.step_id)
         step.notes_json = _dumps(kept)
         self.session.flush()
 

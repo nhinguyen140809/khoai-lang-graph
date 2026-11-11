@@ -44,10 +44,12 @@ class ItemRef(BaseModel):
 
 
 class StepNote(BaseModel):
-    """A short note of a step to the user, in Markdown."""
+    """A short note of a step to the user, in Markdown. A note of kind `tool` tells of one use of
+    the tool named in `tool`."""
 
-    kind: Literal["doing", "finding", "thinking"]
+    kind: Literal["doing", "finding", "thinking", "tool"]
     text: str
+    tool: str | None = None
     created_at: IsoDatetime
 
 

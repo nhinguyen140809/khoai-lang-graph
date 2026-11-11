@@ -3,7 +3,7 @@
 The committed `definition.v2.json` beside this module is the single description
 of the graph: the name a run records, the entry points, the agent roles and
 their prompt versions, the stages, the nodes with their checkpoint options,
-the edges, the artifact and item kinds, the link types, the value lists, the
+the edges, the artifact and item kinds, the link types, the tools, the value lists, the
 directive kinds, the export templates, and the schemas of the run parameters
 and the workflow state. The file is a copy of `docs/workflow/`; run
 `scripts/sync_from_docs.py` after a change there. A file never changes once
@@ -64,6 +64,11 @@ def _keyed(name: str) -> dict[str, dict[str, Any]]:
 def value_lists() -> dict[str, list[dict[str, Any]]]:
     """Every named value list of the definition: name -> its value entries."""
     return {str(entry["key"]): list(entry.get("values", [])) for entry in DEFINITION["value_lists"]}
+
+
+def tools() -> dict[str, dict[str, Any]]:
+    """The tools of the definition, keyed by tool. A definition may have none."""
+    return {str(entry["key"]): entry for entry in DEFINITION.get("tools", [])}
 
 
 def artifact_kinds() -> dict[str, dict[str, Any]]:

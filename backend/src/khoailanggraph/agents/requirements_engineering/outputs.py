@@ -12,10 +12,19 @@ from __future__ import annotations
 
 from typing import TYPE_CHECKING, Annotated, Any, Literal
 
-from pydantic import BaseModel, ConfigDict, Field, create_model, field_validator, model_validator
+from pydantic import (
+    BaseModel,
+    BeforeValidator,
+    ConfigDict,
+    Field,
+    create_model,
+    field_validator,
+    model_validator,
+)
 
 from khoailanggraph.agents.requirements_engineering import definition as workflow_definition
 from khoailanggraph.domain.artifacts import ElicitationPlanContent
+from khoailanggraph.llm.note_stream import fit_note
 
 if TYPE_CHECKING:
     from collections.abc import Sequence
@@ -67,36 +76,47 @@ Report = Annotated[
 ]
 
 
+def _shortened(value: object) -> object:
+    """A note that is too long, shortened at a word; anything else is left for the schema."""
+    return fit_note(value) if isinstance(value, str) else value
+
+
 class StepNoteOutput(BaseModel):
     """One short note of a node to the user, written while it worked."""
 
     model_config = ConfigDict(extra="forbid")
 
     kind: Literal["doing", "finding"]
-    text: str = Field(description="The note in plain words, at most 160 characters.")
+    text: Annotated[str, BeforeValidator(_shortened)] = Field(
+        description="The note in plain words: one short sentence, about 100 characters.",
+    )
 
 
-# The notes of a node: how its work went, in a few short lines. The server keeps the first three
-# and cuts each at 160 characters, so a long answer is shortened instead of refused.
+# The notes of a node: how its work went, in a few short lines. The server keeps the first five
+# and shortens each to 160 characters at a word, so a long answer is shortened instead of refused.
 Notes = Annotated[
     list[StepNoteOutput],
     Field(
         min_length=1,
         description=(
-            "One to three short notes to the user, in the order you write them, each with a "
-            "`kind` and a `text`. Begin with a `doing` note: one short sentence, under 160 "
-            "characters, in the present tense, that says what you are doing now or are about "
-            'to do, such as "I am comparing what the three students said about booking." '
-            "Add a `finding` for something the user may care about, such as a conflict, a gap "
-            "or a surprise: one short sentence, under 160 characters. Each `text` has at most "
-            "160 characters; a longer one is cut. Write in "
-            "the output language, in plain words, as you would explain it to a colleague who "
-            "does not build software. Name things by what they say, never by their keys, ids "
-            "or field names, and never mention JSON, prompts or tools. Do not repeat the "
-            "report: notes tell what you are doing and what you notice on the way, the report "
-            "tells what the work ended with. You may use Markdown for **bold** and *italic* "
-            "only. Always write the `doing` note; add a `finding` only when you have one, and "
-            "never pad."
+            "One to five short notes to the user, in the order you write them, each with a "
+            "`kind` and a `text`. Begin with a `doing` note, in the present tense, that says "
+            'what you are doing now or are about to do, such as "I am comparing what the '
+            'students and the librarians say about booking." Add a `finding` for something '
+            "the user may care about, such as a conflict, a gap or a surprise; a `finding` says "
+            "one thing, so two findings are two notes. Keep every note to one short sentence "
+            "of at most 100 characters that names two or three concrete things at most; never "
+            'list everything you looked at, and do not join two points with "but" or '
+            '"and". A good `finding`: "The idea does not say how a group of eight is '
+            'recognised." When there is more to say, write another note instead of a '
+            "longer one: the notes arrive one after another, so several short ones read "
+            "better than one long one. Write in the output "
+            "language, in plain words, as you would explain it to a colleague who does not "
+            "build software. Name things by what they say, never by their keys, ids or field "
+            "names, and never mention JSON, prompts or tools. Do not repeat the report: notes "
+            "tell what you are doing and what you notice on the way, the report tells what the "
+            "work ended with. You may use Markdown for **bold** and *italic* only. Always "
+            "write the `doing` note; add a `finding` only when you have one, and never pad."
         ),
     ),
 ]

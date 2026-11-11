@@ -69,6 +69,11 @@
       "items": { "$ref": "#/$defs/valueList" },
       "description": "Every named list of allowed values for a content field that names it with x-value-list."
     },
+    "tools": {
+      "type": "array",
+      "items": { "$ref": "#/$defs/tool" },
+      "description": "Every tool that an agent may use while it works. A note of a step that tells of the use of a tool names one of them, and a client takes its words and its icon from here."
+    },
     "persona_aspects": {
       "type": "array",
       "items": { "$ref": "#/$defs/personaAspect" },
@@ -507,6 +512,32 @@
         "high": { "type": "string", "description": "What a score of 5 means." }
       },
       "required": ["key", "title", "description", "low", "high"]
+    },
+    "tool": {
+      "type": "object",
+      "additionalProperties": false,
+      "properties": {
+        "key": { "$ref": "#/$defs/name" },
+        "title": { "type": "string", "description": "What the tool is, in a few words." },
+        "description": { "type": "string", "description": "What the tool is for." },
+        "uses": {
+          "type": "object",
+          "additionalProperties": false,
+          "properties": {
+            "one": { "type": "string" },
+            "other": {
+              "type": "string",
+              "description": "The line for the uses of the tool that follow one another in a step. `{count}` stands for their number."
+            }
+          },
+          "required": ["one", "other"]
+        },
+        "icon": {
+          "enum": ["search", "tool"],
+          "description": "The mark of the tool in a client, from a fixed set that a client draws."
+        }
+      },
+      "required": ["key", "title", "description", "uses", "icon"]
     },
     "valueList": {
       "type": "object",

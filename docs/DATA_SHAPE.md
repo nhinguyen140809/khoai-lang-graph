@@ -524,8 +524,9 @@ One short note of a step to the user, shown inside the line of the step in the c
 
 | Field | Type | Notes |
 |---|---|---|
-| `kind` | enum | `doing`: what the step is doing now or is about to do, in the present tense. `finding`: something the user may care about, such as a conflict or a gap. `thinking` (Later): a summary of the reasoning, only when the model provider returns one |
-| `text` | string | Markdown, one sentence of at most 160 characters, in the output language of the run |
+| `kind` | enum | `doing`: what the step is doing now or is about to do, in the present tense. `finding`: something the user may care about, such as a conflict or a gap. `tool`: one use of a tool by the agent, such as a web search, written as one short sentence; clients may group the notes of one tool that come one after another. `thinking` (Later): a summary of the reasoning, only when the model provider returns one |
+| `tool` | string? | Only on a note of kind `tool`: the key of a tool of the [workflow definition](workflow/README.md). A client takes the words and the mark for the uses of the tool from the definition, and shows a tool it does not know with plain words |
+| `text` | string | Markdown, one short sentence of at most 100 characters that the agent writes, shortened to 160 characters at a word by the server when it is longer, in the output language of the run |
 | `created_at` | datetime | |
 
 ### RunEvent (MVP)

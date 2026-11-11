@@ -8,7 +8,7 @@ from typing import TYPE_CHECKING, cast
 import pytest
 
 from khoailanggraph.features.runs.executor import UsageGate
-from khoailanggraph.llm.note_stream import NoteStream
+from khoailanggraph.llm.note_stream import NoteStream, fit_note
 
 if TYPE_CHECKING:
     from khoailanggraph.features.runs.executor import RunWalker
@@ -112,3 +112,16 @@ def test_the_gate_sends_each_note_while_the_answer_is_still_coming() -> None:
     # Both notes are out before the rest of the answer has been written.
     assert walker.notes == NOTES
     assert "report" not in "".join(walker.text)
+
+
+def test_a_note_that_is_too_long_is_cut_at_a_word_and_ends_with_dots() -> None:
+    short = "I am comparing the two groups."
+    long = "I am comparing " + "what the students and the librarians say about booking " * 5
+
+    assert fit_note(short) == short
+    cut = fit_note(long)
+    assert len(cut) <= 160
+    assert cut.endswith("...")
+    assert not cut[:-3].endswith(" "), "the cut falls after a whole word"
+    assert long.startswith(cut[:-3])
+    assert fit_note("word " * 100, 20) == "word word word..."

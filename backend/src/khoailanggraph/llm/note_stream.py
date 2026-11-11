@@ -16,10 +16,28 @@ _NOTES_KEY = re.compile(r'"notes"\s*:\s*\[')
 _SEARCH_LIMIT = 2000
 
 
+# The notes that one answer may carry, and the longest note, after which a note is shortened.
+MAX_NOTES_PER_ANSWER = 5
+NOTE_LENGTH = 160
+
+
+def fit_note(text: str, limit: int = NOTE_LENGTH) -> str:
+    """The note within `limit` characters: cut at the last word that fits and ended with `...`,
+    instead of in the middle of a word."""
+    text = " ".join(text.split())
+    if len(text) <= limit:
+        return text
+    cut = text[: limit - 3]
+    space = cut.rfind(" ")
+    if space > limit // 2:
+        cut = cut[:space]
+    return cut.rstrip(" ,;:-.") + "..."
+
+
 class NoteStream:
     """Collects the pieces of one answer and returns its notes as they become complete."""
 
-    def __init__(self, max_notes: int = 3) -> None:
+    def __init__(self, max_notes: int = MAX_NOTES_PER_ANSWER) -> None:
         self._max_notes = max_notes
         self._text = ""
         self._scan_from: int | None = None

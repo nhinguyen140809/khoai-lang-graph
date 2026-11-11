@@ -128,3 +128,13 @@ def test_run_parameter_defaults_validate() -> None:
 
 def test_state_schema_is_valid_json_schema() -> None:
     Draft202012Validator.check_schema(wf.state_schema())
+
+
+def test_every_tool_has_its_words_and_a_mark_the_schema_allows(
+    definition_schema: dict[str, Any],
+) -> None:
+    marks = set(definition_schema["$defs"]["tool"]["properties"]["icon"]["enum"])
+    for key, tool in wf.tools().items():
+        assert tool["uses"]["one"].strip(), key
+        assert "{count}" in tool["uses"]["other"], key
+        assert tool["icon"] in marks, key
