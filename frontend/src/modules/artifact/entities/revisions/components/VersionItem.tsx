@@ -14,7 +14,7 @@ import {
 } from '@/shared/components/ui/dropdown-menu'
 import { Toggle, toggleVariants } from '@/shared/components/ui/toggle'
 import { formatDateTime } from '@/shared/lib/time'
-import { useView } from '@/shared/lib/view'
+import { useWording } from '@/shared/lib/view'
 
 import {
   changeReasonLabels,
@@ -45,7 +45,7 @@ interface VersionItemProps {
  */
 export function VersionItem({ revision, isSelected, onSelect, menu, className }: VersionItemProps) {
   const { data: definition } = useWorkflowDefinition()
-  const viewOfApp = useView()
+  const changeReason = useWording(changeReasonLabels[revision.change_reason])
 
   const content = (
     <div className="w-full space-y-0.5">
@@ -62,7 +62,7 @@ export function VersionItem({ revision, isSelected, onSelect, menu, className }:
           color={changeReasonLooks[revision.change_reason].color}
           className="font-medium"
         >
-          {changeReasonLabels[revision.change_reason][viewOfApp]}
+          {changeReason}
         </ColoredText>
       </p>
       <p className="text-xs text-muted-foreground">{revisionMessages.version(revision.version)}</p>

@@ -42,23 +42,14 @@ export const itemStatusLooks = {
   },
   edited: {
     letter: itemStatusMessages.statuses.edited.letter,
-    label: {
-      developer: itemStatusMessages.statuses.edited.label,
-      user: itemStatusMessages.statuses.edited.label,
-    },
+    label: { developer: itemStatusMessages.statuses.edited.label },
   },
   openIssue: {
     letter: itemStatusMessages.statuses.openIssue.letter,
-    label: {
-      developer: itemStatusMessages.statuses.openIssue.label,
-      user: itemStatusMessages.statuses.openIssue.label,
-    },
+    label: { developer: itemStatusMessages.statuses.openIssue.label },
   },
   outOfDate: {
     letter: itemStatusMessages.statuses.outOfDate.letter,
-    label: {
-      developer: itemStatusMessages.statuses.outOfDate.label,
-      user: itemStatusMessages.statuses.outOfDate.label,
-    },
+    label: { developer: itemStatusMessages.statuses.outOfDate.label },
   },
 } as const satisfies Record<ItemStatus, { letter: string | null; label: Wording }>

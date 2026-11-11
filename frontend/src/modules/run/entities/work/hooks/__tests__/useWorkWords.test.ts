@@ -1,10 +1,8 @@
 import { renderHook } from '@testing-library/react'
-import { createElement, type ReactNode } from 'react'
 import { describe, expect, it } from 'vitest'
 
 import { buildStep } from '@/mocks/runs/fixtures/runs.fixtures'
 import { assertPresent } from '@/shared/lib/guards'
-import { ViewProvider } from '@/shared/lib/view'
 
 import type { RunStep } from '../../../steps/run-steps.types'
 import { workEntries } from '../../work-entries.utils'
@@ -13,7 +11,6 @@ import { useWorkWords } from '../useWorkWords'
 function wordsOf(
   steps: (Partial<RunStep> & Pick<RunStep, 'sequence'>)[],
   run: { error: { code: string; message: string; stage: string } | null } | null,
-  view: 'user' | 'developer' = 'user',
 ) {
   const entry = assertPresent(
     workEntries(
@@ -22,15 +19,12 @@ function wordsOf(
     )[0],
     'the line of work',
   )
-  const { result } = renderHook(() => useWorkWords(entry, run), {
-    wrapper: ({ children }: { children: ReactNode }) =>
-      createElement(ViewProvider, { value: view, children }),
-  })
+  const { result } = renderHook(() => useWorkWords(entry, run))
   return result.current
 }
 
 describe('useWorkWords', () => {
-  it('reads the words of the user view, with nothing for the status of a line that is done', () => {
+  it('reads the words of a line that is done, with nothing for its status', () => {
     const words = wordsOf(
       [
         {
@@ -51,40 +45,11 @@ describe('useWorkWords', () => {
       round: 'Round 2',
       took: 'Took 2 minutes',
       writes: '1 written',
-      details: [],
       failure: null,
     })
   })
 
-  it('reads the words of the developer view', () => {
-    const words = wordsOf(
-      [
-        {
-          sequence: 1,
-          agent_role: 'analyst',
-          stage: 'analysis',
-          model_id: 'anthropic:claude-sonnet-5',
-          started_at: '2026-10-06T08:30:00Z',
-          finished_at: '2026-10-06T08:32:05Z',
-          produced: [
-            { item_id: 'i1', kind: 'analyzed_requirement', key: 'AR-001', version: 1 },
-            { item_id: 'i2', kind: 'persona', key: 'PER-001', version: 2 },
-          ],
-        },
-      ],
-      null,
-      'developer',
-    )
-
-    expect(words).toMatchObject({
-      round: null,
-      took: '2 min 5 s',
-      writes: '+1 ~1',
-      details: ['1 step', 'anthropic:claude-sonnet-5', '$0.00'],
-    })
-  })
-
-  it('says why a failed line stopped, in the words of the user view', () => {
+  it('says why a failed line stopped', () => {
     const words = wordsOf(
       [{ sequence: 1, agent_role: 'analyst', stage: 'analysis', status: 'failed' }],
       {

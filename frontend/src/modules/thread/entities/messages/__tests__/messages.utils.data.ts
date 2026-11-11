@@ -1,6 +1,6 @@
 import type { RunStatus } from '@/modules/run/entities'
 
-/** A delivery, the status of the run, and the note under the message in the user view. */
+/** A delivery, the status of the run, and the note under the message. */
 export const messageDeliveryNoteCases: {
   name: string
   delivery: 'started_run' | 'delivered' | 'pending' | 'undelivered' | null
