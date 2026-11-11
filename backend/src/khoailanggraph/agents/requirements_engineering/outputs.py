@@ -70,27 +70,30 @@ class StepNoteOutput(BaseModel):
     model_config = ConfigDict(extra="forbid")
 
     kind: Literal["doing", "finding"]
-    text: str = Field(description="The note in plain words, at most 280 characters.")
+    text: str = Field(description="The note in plain words, at most 160 characters.")
 
 
 # The notes of a node: how its work went, in a few short lines. The server keeps the first three
-# and cuts each at 280 characters, so a long answer is shortened instead of refused.
+# and cuts each at 160 characters, so a long answer is shortened instead of refused.
 Notes = Annotated[
     list[StepNoteOutput],
     Field(
-        default_factory=list,
+        min_length=1,
         description=(
-            "Up to three short notes to the user about how your work went, in the order it "
-            "happened, each with a `kind` and a `text`. Use `doing` for what you looked at or "
-            'tried, in one sentence, such as "I compared what the three students said about '
-            'booking." Use `finding` for something the user may care about, such as a conflict, '
-            "a gap or a surprise, in one or two sentences. Each `text` has at most 280 "
-            "characters; a longer one is cut. Write in the output language, in plain "
-            "words, as you would explain it to a colleague who does not build software. Name "
-            "things by what they say, never by their keys, ids or field names, and never mention "
-            "JSON, prompts or tools. Do not repeat the report: notes tell how the work went, the "
-            "report tells what it ended with. You may use Markdown for **bold** and *italic* "
-            "only. Leave the list empty when there is nothing worth saying; never pad it."
+            "One to three short notes to the user, in the order you write them, each with a "
+            "`kind` and a `text`. Begin with a `doing` note: one short sentence, under 160 "
+            "characters, in the present tense, that says what you are doing now or are about "
+            'to do, such as "I am comparing what the three students said about booking." '
+            "Add a `finding` for something the user may care about, such as a conflict, a gap "
+            "or a surprise: one short sentence, under 160 characters. Each `text` has at most "
+            "160 characters; a longer one is cut. Write in "
+            "the output language, in plain words, as you would explain it to a colleague who "
+            "does not build software. Name things by what they say, never by their keys, ids "
+            "or field names, and never mention JSON, prompts or tools. Do not repeat the "
+            "report: notes tell what you are doing and what you notice on the way, the report "
+            "tells what the work ended with. You may use Markdown for **bold** and *italic* "
+            "only. Always write the `doing` note; add a `finding` only when you have one, and "
+            "never pad."
         ),
     ),
 ]

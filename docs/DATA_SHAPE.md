@@ -524,8 +524,8 @@ One short note of a step to the user, shown inside the line of the step in the c
 
 | Field | Type | Notes |
 |---|---|---|
-| `kind` | enum | `doing`: what the step looked at or tried. `finding`: something the user may care about, such as a conflict or a gap. `thinking` (Later): a summary of the reasoning, only when the model provider returns one |
-| `text` | string | Markdown, one to three sentences, in the output language of the run |
+| `kind` | enum | `doing`: what the step is doing now or is about to do, in the present tense. `finding`: something the user may care about, such as a conflict or a gap. `thinking` (Later): a summary of the reasoning, only when the model provider returns one |
+| `text` | string | Markdown, one sentence of at most 160 characters, in the output language of the run |
 | `created_at` | datetime | |
 
 ### RunEvent (MVP)

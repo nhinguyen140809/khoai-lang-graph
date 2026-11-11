@@ -169,10 +169,14 @@ _REPORTS = {
 # The notes of the nodes that write some, as a scripted model writes them.
 _NOTES = {
     "PlannerOutput": [
-        {"kind": "doing", "text": "I listed who the idea affects."},
+        {"kind": "doing", "text": "I am listing who the idea affects."},
         {"kind": "finding", "text": "The idea does not say who **approves** a session."},
     ],
 }
+
+
+# The notes of every other node that writes some: it says what it is doing, and nothing more.
+_DEFAULT_NOTES = [{"kind": "doing", "text": "I am working through what I was given."}]
 
 
 # What a node writes for the review that follows it, as a scripted model writes it.
@@ -226,8 +230,8 @@ def _with_reports(answer: dict[str, Any], schema_name: str) -> dict[str, Any]:
         answer.setdefault("report", _REPORTS[schema_name])
     if schema_name in _SUMMARIES:
         answer.setdefault("summary", _SUMMARIES[schema_name])
-    if schema_name in _NOTES:
-        answer.setdefault("notes", _NOTES[schema_name])
+    if schema_name in _REPORTS:
+        answer.setdefault("notes", _NOTES.get(schema_name, _DEFAULT_NOTES))
     if schema_name in _REVIEWS:
         answer.setdefault("review", _REVIEWS[schema_name])
     return answer

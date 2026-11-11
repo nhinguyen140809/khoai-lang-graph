@@ -62,7 +62,7 @@ if TYPE_CHECKING:
 REVISION_VERSION = 1
 # The notes of a node that the server keeps, and the longest a note may be.
 STEP_NOTES_PER_CALL = 3
-STEP_NOTE_LENGTH = 280
+STEP_NOTE_LENGTH = 160
 STEP_NOTE_KINDS = frozenset({"doing", "finding", "thinking"})
 
 
@@ -188,7 +188,7 @@ class SqlArtifactSink:
 
     def add_notes(self, notes: Sequence[Mapping[str, str]]) -> None:
         """The notes of the running step: kept with the step, and one `step_note` event for each
-        as it is written. At most three, each cut at 280 characters; an empty note is left out."""
+        as it is written. At most three, each cut at 160 characters; an empty note is left out."""
         if self.run_id is None or self.step_id is None or not notes:
             return
         step = self.session.get(RunStepRow, self.step_id)

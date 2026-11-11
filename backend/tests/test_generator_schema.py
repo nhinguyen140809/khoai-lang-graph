@@ -20,6 +20,7 @@ def _answer(key: str, aspects: tuple[str, ...] = ()) -> dict[str, object]:
     evidence = {"observation": key, "source": "SRC-001", "quote": "A quote."}
     scores = [{"aspect": aspect, "score": 3, "rationale": "r"} for aspect in aspects]
     return {
+        "notes": [{"kind": "doing", "text": "I am writing the interviewees."}],
         "report": "A report.",
         "selection_rationale": "why",
         "stakeholder_groups": [
