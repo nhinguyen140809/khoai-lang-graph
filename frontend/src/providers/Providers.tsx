@@ -5,7 +5,6 @@ import type { ReactNode } from 'react'
 
 import { Toaster } from '@/shared/components/ui/sonner'
 import { TooltipProvider } from '@/shared/components/ui/tooltip'
-import { ViewProvider } from '@/shared/lib/view'
 
 import { MockingProvider } from './MockingProvider'
 import { QueryProvider } from './QueryProvider'
@@ -24,13 +23,10 @@ export function Providers({ children }: ProvidersProps) {
     <ThemeProvider attribute="class" defaultTheme="dark" enableSystem>
       <MockingProvider>
         <QueryProvider>
-          {/* The view of the app: the user view, until a setting switches it to the developer view. */}
-          <ViewProvider>
-            <TooltipProvider>
-              {children}
-              <Toaster />
-            </TooltipProvider>
-          </ViewProvider>
+          <TooltipProvider>
+            {children}
+            <Toaster />
+          </TooltipProvider>
         </QueryProvider>
       </MockingProvider>
     </ThemeProvider>

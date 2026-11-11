@@ -1,6 +1,7 @@
 import { createElement, type ReactNode } from 'react'
 
 import { Workbench } from '@/shared/components/frame'
+import { routes } from '@/shared/routes'
 
 import { renderWithProviders } from './render-with-providers.utils'
 
@@ -9,7 +10,7 @@ import { renderWithProviders } from './render-with-providers.utils'
 function workbenchWith(contributions: ReactNode) {
   return createElement(Workbench, {
     crumb: 'Mentor platform',
-    homeHref: '/',
+    homeHref: routes.home(),
     contributions,
     children: createElement('main'),
   })

@@ -58,7 +58,7 @@ export const instant = false
 export default async function ProjectLayout({
   children,
   params,
-}: LayoutProps<'/projects/[projectId]'>) {
+}: LayoutProps<'/developer/projects/[projectId]'>) {
   const { projectId } = await params
   const crumb = <ProjectSwitcher projectId={projectId} />
   // The features of a project join the activity bar as they are built.
