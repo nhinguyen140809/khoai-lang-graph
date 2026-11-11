@@ -2,6 +2,7 @@ export type {
   ActivityEntry,
   ActivityThreadResult,
   KindGroup,
+  PhaseItemEntry,
   RunEntriesResult,
 } from './activity-entries.types'
 export { entryAnchorId, messagesByRun, runEntries } from './activity-entries.utils'

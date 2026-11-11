@@ -15,6 +15,8 @@ export type RunStepStatus = (typeof runStepStatuses)[number]
 /** A short note of a step to the user, in Markdown. */
 export const stepNoteSchema = z.object({
   kind: z.enum(stepNoteKinds),
+  /** The name of the tool, on a note of kind `tool`. */
+  tool: z.string().nullish(),
   text: z.string(),
   created_at: z.iso.datetime(),
 })

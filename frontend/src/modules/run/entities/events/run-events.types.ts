@@ -42,7 +42,12 @@ export const runEventSchemas = {
   }),
   message_delivered: z.object({ message_id: z.string(), step_id: z.string(), node: z.string() }),
   project_named: z.object({ step_id: z.string(), project_id: z.string(), name: z.string() }),
-  step_note: z.object({ step_id: z.string(), kind: z.enum(stepNoteKinds), text: z.string() }),
+  step_note: z.object({
+    step_id: z.string(),
+    kind: z.enum(stepNoteKinds),
+    tool: z.string().nullish(),
+    text: z.string(),
+  }),
   // `payload` stays unknown: `run` cannot read the schemas of `review`, so the activity reloads
   // the interrupts instead of reading it.
   interrupt: z.object({ node: z.string(), step_id: z.string(), payload: z.unknown() }),

@@ -46,6 +46,9 @@ export const workMessages = {
   counts: (created: number, changed: number) => `+${String(created)} ~${String(changed)}`,
   steps: (count: number) =>
     `${String(count)} ${pluralForm(count, { one: 'step', other: 'steps' })}`,
+  /** The line for the uses in a row of a tool that the definition does not list. */
+  unknownToolUses: (tool: string, count: number) =>
+    `Used ${tool} ${String(count)} ${pluralForm(count, { one: 'time', other: 'times' })}`,
   /** On a line of work that carries on after a message cut the line before it short. */
   continued: 'Continued',
   failedWithoutReason: 'The work stopped because of an error.',

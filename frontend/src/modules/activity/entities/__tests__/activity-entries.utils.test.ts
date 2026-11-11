@@ -3,11 +3,11 @@ import { describe, expect, it } from 'vitest'
 import { buildMessage } from '@/mocks/messages/messages.fixtures'
 import { buildStep } from '@/mocks/runs/fixtures/runs.fixtures'
 import { runIds } from '@/mocks/shared/db'
+import type { StepNote } from '@/modules/run/entities'
 import { workEntries } from '@/modules/run/entities'
 import type { Message } from '@/modules/thread/entities'
 
-import type { ActivityEntry } from '../activity-entries.types'
-import { entryAnchorId, messagesByRun, runEntries } from '../activity-entries.utils'
+import { entryAnchorId, messagesByRun, runEntries, shownWork } from '../activity-entries.utils'
 import {
   kindTitles,
   messages,
@@ -33,26 +33,22 @@ describe('runEntries', () => {
   it('orders the entries by their time', () => {
     const entries = entriesOf('user')
 
-    expect(entries.map(({ type, id }) => `${type}:${id}`)).toEqual(['message:m1', 'work:s1'])
+    expect(entries.map(({ type, id }) => `${type}:${id}`)).toEqual(['message:m1', 'phase:s1'])
   })
 
-  it('leaves a line of a stage the user does not see out of the user view, and keeps it in the developer view', () => {
-    expect(entriesOf('user').map(({ type }) => type)).toEqual(['message', 'work'])
-    expect(entriesOf('developer').map(({ type }) => type)).toEqual(['message', 'work', 'work'])
+  it('leaves a phase of a stage the user does not see out of the user view, and keeps it in the developer view', () => {
+    expect(entriesOf('user').map(({ type }) => type)).toEqual(['message', 'phase'])
+    expect(entriesOf('developer').map(({ type }) => type)).toEqual(['message', 'phase', 'phase'])
   })
 
-  it('gives each line of work the titles of its stage, its subject and what it wrote', () => {
-    const entries = entriesOf('user')
-    const first = entries.find(({ type }) => type === 'work') as Extract<
-      ActivityEntry,
-      { type: 'work' }
-    >
+  it('gives each phase the titles of its stage and its subject', () => {
+    const first = entriesOf('user').find(({ type }) => type === 'phase')
 
-    expect(first.stageTitle).toBe('Planning the interviews')
-    expect(first.subjectTitle).toBeNull()
+    expect(first?.type === 'phase' && first.stageTitle).toBe('Planning the interviews')
+    expect(first?.type === 'phase' && first.subjectTitle).toBeNull()
   })
 
-  it('groups what a line wrote by kind, with the title of each kind', () => {
+  it('puts what a phase wrote under it, by kind, with the title of each kind', () => {
     const produced = [
       { item_id: 'i1', kind: 'analyzed_requirement', key: 'AR-001', version: 1 },
       { item_id: 'i2', kind: 'persona', key: 'PER-001', version: 1 },
@@ -82,11 +78,14 @@ describe('runEntries', () => {
       view: 'user',
     })
 
-    const groups = (entries[0] as Extract<ActivityEntry, { type: 'work' }>).kindGroups
+    expect(entries.map(({ type }) => type)).toEqual(['phase', 'written'])
+    const written = entries[1]
+    const groups = written?.type === 'written' ? written.kindGroups : []
     expect(groups.map(({ title, created }) => [title, created.length])).toEqual([
       ['Analysed requirement', 1],
       ['Persona', 1],
     ])
+    expect(written?.type === 'written' && written.phaseId).toBe('s1')
   })
 })
 
@@ -121,55 +120,159 @@ describe('entryAnchorId', () => {
   it('anchors an entry by its id', () => {
     expect(entryAnchorId('i1')).toBe('entry-i1')
   })
+})
 
-  it('cuts a line of work where a message comes while it works, and puts each part in its time', () => {
-    const at = (clock: string) => `2026-10-06T10:${clock}Z`
-    const work = workEntries(
-      [
+describe('shownWork', () => {
+  const work = [{ stage: 'intent_routing' }, { stage: 'planning' }]
+  const titles = new Map([['planning', 'Planning the interviews']])
+
+  it('leaves out the lines of an internal stage for the user', () => {
+    expect(shownWork(work, titles, 'user')).toEqual([{ stage: 'planning' }])
+  })
+
+  it('keeps every line for the developer', () => {
+    expect(shownWork(work, titles, 'developer')).toEqual(work)
+  })
+
+  it('leaves nothing out while the stage titles have not loaded', () => {
+    expect(shownWork(work, new Map(), 'user')).toEqual(work)
+  })
+})
+
+describe('runEntries with phases', () => {
+  const at = (clock: string) => `2026-10-06T10:${clock}Z`
+  const stages = new Map([
+    ['research', 'Finding evidence'],
+    ['planning', 'Planning'],
+  ])
+  const search = (text: string, clock: string) => ({
+    kind: 'tool' as const,
+    tool: 'search',
+    text,
+    created_at: at(clock),
+  })
+
+  function entriesOfSteps(input: {
+    steps: Parameters<typeof workEntries>[0]
+    messages?: Message[]
+    interrupts?: Parameters<typeof runEntries>[0]['interrupts']
+  }) {
+    return runEntries({
+      messages: input.messages ?? [],
+      work: workEntries(input.steps, run),
+      interrupts: input.interrupts ?? [],
+      stageTitles: stages,
+      subjectTitles,
+      kindTitles,
+      view: 'user',
+    })
+  }
+
+  const researchStep = (sequence: number, role: string, notes: StepNote[]) =>
+    buildStep({
+      sequence,
+      agent_role: role,
+      stage: 'research',
+      node: role,
+      started_at: at(`0${String(sequence)}:00`),
+      finished_at: at(`0${String(sequence)}:50`),
+      notes,
+    })
+
+  it('puts one separator for the steps of a stage, with the notes and the uses of a tool under it in the order written', () => {
+    const entries = entriesOfSteps({
+      steps: [
+        researchStep(1, 'corpus_builder', [
+          { kind: 'doing', text: 'Starting.', created_at: at('01:10') },
+          search('One.', '01:20'),
+          search('Two.', '01:30'),
+          { kind: 'finding', text: 'Found.', created_at: at('01:40') },
+        ]),
+        researchStep(2, 'stakeholder_miner', [
+          { kind: 'doing', text: 'Reading.', created_at: at('02:10') },
+        ]),
+      ],
+    })
+
+    expect(entries.map(({ type }) => type)).toEqual(['phase', 'note', 'tool', 'note', 'note'])
+    const tool = entries[2]
+    expect(tool?.type === 'tool' && tool.use.notes.map(({ text }) => text)).toEqual([
+      'One.',
+      'Two.',
+    ])
+    expect(entries.slice(1).every((entry) => 'phaseId' in entry && entry.phaseId === 's1')).toBe(
+      true,
+    )
+  })
+
+  it('starts a new phase for a stage that comes after another', () => {
+    const entries = entriesOfSteps({
+      steps: [
+        researchStep(1, 'corpus_builder', []),
         buildStep({
-          sequence: 1,
-          agent_role: 'stakeholder_miner',
-          stage: 'research',
-          started_at: at('00:00'),
-          finished_at: at('12:00'),
-          notes: [
-            { kind: 'finding', text: 'First.', created_at: at('03:00') },
-            { kind: 'finding', text: 'Second.', created_at: at('04:00') },
-          ],
+          sequence: 2,
+          agent_role: 'planner',
+          stage: 'planning',
+          started_at: at('02:00'),
+          finished_at: at('02:50'),
         }),
       ],
-      run,
-    )
-    const entries = runEntries({
+    })
+
+    expect(entries.filter(({ type }) => type === 'phase')).toHaveLength(2)
+  })
+
+  it('does not cut a phase at a message, which comes between its items where it was written', () => {
+    const entries = entriesOfSteps({
+      steps: [
+        researchStep(1, 'corpus_builder', [
+          { kind: 'doing', text: 'First.', created_at: at('01:10') },
+          { kind: 'finding', text: 'Second.', created_at: at('01:30') },
+        ]),
+      ],
       messages: [
         buildMessage({
           id: 'm-a',
           thread_id: run.thread_id,
           sequence: 2,
-          created_at: at('03:30'),
-          run_id: run.id,
-        }),
-        buildMessage({
-          id: 'm-b',
-          thread_id: run.thread_id,
-          sequence: 3,
-          created_at: at('11:59'),
+          created_at: at('01:20'),
           run_id: run.id,
         }),
       ],
-      work,
-      interrupts: [],
-      stageTitles: new Map([['research', 'Finding evidence']]),
-      subjectTitles,
-      kindTitles,
-      view: 'user',
     })
 
-    expect(entries.map(({ type, id }) => `${type}:${id}`)).toEqual([
-      'work:s1',
-      'message:m-a',
-      'work:s1~1',
-      'message:m-b',
-    ])
+    expect(entries.map(({ type }) => type)).toEqual(['phase', 'note', 'message', 'note'])
+  })
+
+  it('puts the failure of a phase last, as an item under it', () => {
+    const entries = entriesOfSteps({
+      steps: [
+        buildStep({
+          sequence: 1,
+          agent_role: 'corpus_builder',
+          stage: 'research',
+          status: 'failed',
+          error: 'It broke.',
+          started_at: at('01:00'),
+          finished_at: at('01:50'),
+          notes: [{ kind: 'doing', text: 'Starting.', created_at: at('01:10') }],
+        }),
+      ],
+    })
+
+    expect(entries.map(({ type }) => type)).toEqual(['phase', 'note', 'failure'])
+  })
+
+  it('keeps the use of a tool in order when it has the time of the note after it', () => {
+    const entries = entriesOfSteps({
+      steps: [
+        researchStep(1, 'corpus_builder', [
+          search('One.', '01:20'),
+          { kind: 'finding', text: 'Found.', created_at: at('01:20') },
+        ]),
+      ],
+    })
+
+    expect(entries.map(({ type }) => type)).toEqual(['phase', 'tool', 'note'])
   })
 })

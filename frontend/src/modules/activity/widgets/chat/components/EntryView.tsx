@@ -19,16 +19,28 @@ import {
 import { toneClasses } from '@/shared/lib/tone'
 
 import { useRunActivity } from '../hooks/useRunActivity'
+import { FailureEntryView } from './FailureEntryView'
 import { MessageEntry } from './MessageEntry'
+import { PhaseEntryView } from './PhaseEntryView'
 import { ResendButton } from './ResendButton'
 import { ReviewEntry } from './ReviewEntry'
-import { WorkEntryView } from './WorkEntryView'
+import { StepNoteLine } from './StepNoteLine'
+import { ToolUseEntryView } from './ToolUseEntryView'
+import { WrittenEntryView } from './WrittenEntryView'
 
 type EntryOfType<Type extends ActivityEntry['type']> = Extract<ActivityEntry, { type: Type }>
+
+/** How the reader opens and closes a phase of work: whether it shows its items, and the switch. */
+export interface PhaseControl {
+  isOpen: boolean
+  onToggle: () => void
+}
 
 interface EntryViewProps<Type extends ActivityEntry['type'] = ActivityEntry['type']> {
   entry: EntryOfType<Type>
   isTarget: boolean
+  /** Given to the separator of a phase, which opens and closes the items under it. */
+  phase?: PhaseControl | undefined
 }
 
 interface EntryAnchorProps {
@@ -74,7 +86,9 @@ function MessageView({ entry, isTarget }: EntryViewProps<'message'>) {
   return (
     <EntryAnchor entryId={entry.id} isTarget={isTarget} className="mb-5 px-1 pt-1.5">
       <Message align={align}>
-        <MessageContent>
+        {/* The role, the words and the documents of a message are one group with one gap, smaller than
+            the gap between the entries of the chat, so that the group reads as one. */}
+        <MessageContent className="gap-1.5">
           {isAgent && roleLabel !== null && (
             <MessageHeader className={cn('px-0 text-(--tone-strong)', toneClasses.chart)}>
               {roleLabel}
@@ -125,16 +139,56 @@ function MessageView({ entry, isTarget }: EntryViewProps<'message'>) {
   )
 }
 
-/** A line of the work of the run. */
-function WorkView({ entry, isTarget }: EntryViewProps<'work'>) {
+/** The separator of a phase of the work of the run. */
+function PhaseView({ entry, isTarget, phase }: EntryViewProps<'phase'>) {
   return (
-    <EntryAnchor entryId={entry.id} isTarget={isTarget} className="px-1 py-1.5">
-      <WorkEntryView
+    <EntryAnchor entryId={entry.id} isTarget={isTarget} className="px-1 pt-4 pb-1">
+      <PhaseEntryView
         work={entry.work}
         stageTitle={entry.stageTitle}
         subjectTitle={entry.subjectTitle}
-        kindGroups={entry.kindGroups}
+        isOpen={phase?.isOpen ?? true}
+        onToggle={phase?.onToggle ?? (() => undefined)}
       />
+    </EntryAnchor>
+  )
+}
+
+// An item under a phase sits a little in from its separator and close to the item before it.
+const itemClassName = 'py-0.5 pr-1 pl-5'
+
+/** A note of a phase: what it is doing now or has found. */
+function NoteView({ entry, isTarget }: EntryViewProps<'note'>) {
+  return (
+    <EntryAnchor entryId={entry.id} isTarget={isTarget} className={itemClassName}>
+      <StepNoteLine note={entry.note} inProgress={entry.isInProgress} />
+    </EntryAnchor>
+  )
+}
+
+/** What a phase wrote. */
+function WrittenView({ entry, isTarget }: EntryViewProps<'written'>) {
+  return (
+    <EntryAnchor entryId={entry.id} isTarget={isTarget} className={itemClassName}>
+      <WrittenEntryView kindGroups={entry.kindGroups} />
+    </EntryAnchor>
+  )
+}
+
+/** How a phase failed. */
+function FailureView({ entry, isTarget }: EntryViewProps<'failure'>) {
+  return (
+    <EntryAnchor entryId={entry.id} isTarget={isTarget} className={itemClassName}>
+      <FailureEntryView work={entry.work} />
+    </EntryAnchor>
+  )
+}
+
+/** The use of a tool, between the lines of the work that used it. */
+function ToolView({ entry, isTarget }: EntryViewProps<'tool'>) {
+  return (
+    <EntryAnchor entryId={entry.id} isTarget={isTarget} className={itemClassName}>
+      <ToolUseEntryView use={entry.use} />
     </EntryAnchor>
   )
 }
@@ -152,13 +206,17 @@ function ReviewView({ entry, isTarget }: EntryViewProps<'review'>) {
 // of entry fails to compile until it has a view.
 const entryViews = {
   message: MessageView,
-  work: WorkView,
+  phase: PhaseView,
+  note: NoteView,
+  tool: ToolView,
+  written: WrittenView,
+  failure: FailureView,
   review: ReviewView,
 } as const satisfies {
   [Type in ActivityEntry['type']]: (props: EntryViewProps<Type>) => ReactNode
 }
 
-/** The view of an entry, chosen by its type: a message, a line of work or a review. */
+/** The view of an entry, chosen by its type: a message, the separator of a phase, an item under it or a review. */
 export function EntryView(props: EntryViewProps) {
   const View = entryViews[props.entry.type] as (props: EntryViewProps) => ReactNode
   return <View {...props} />

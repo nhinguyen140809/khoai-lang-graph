@@ -153,7 +153,7 @@ function ActivityChat({
         <MessageScrollerProvider>
           <MessageScroller className="min-h-0 flex-1">
             <MessageScrollerViewport>
-              <MessageScrollerContent className="mx-auto max-w-3xl px-4">
+              <MessageScrollerContent className="mx-auto max-w-3xl px-4 pt-4">
                 {runIds.map((run) => (
                   <MessageScrollerItem key={run.id} scrollAnchor={run === runIds.at(-1)}>
                     <RunActivity

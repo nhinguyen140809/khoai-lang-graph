@@ -49,54 +49,78 @@ function stepsOfEntry(entry: StepEntry): RunStep[] {
   return entry.type === 'group' ? entry.steps : [entry.step]
 }
 
+/** The steps of a phase: those of the stage, the subject and the round that follow one another. */
+function isSamePhase(first: RunStep | undefined, second: RunStep | undefined): boolean {
+  if (first === undefined || second === undefined) return false
+  return (
+    first.stage === second.stage &&
+    first.subject_item_id === second.subject_item_id &&
+    first.iteration === second.iteration
+  )
+}
+
+/** The lists of steps, with those that make one phase next to each other joined. */
+function joinedPhases(lists: RunStep[][]): RunStep[][] {
+  const phases: RunStep[][] = []
+  for (const steps of lists) {
+    const last = phases.at(-1)
+    if (last !== undefined && isSamePhase(last[0], steps[0])) last.push(...steps)
+    else phases.push([...steps])
+  }
+  return phases
+}
+
 /**
- * The work of a run as lines, in order: the steps of the agents, those on one subject joined.
+ * The work of a run as phases, in order: the steps of the agents, those that follow one another in
+ * one stage, on one subject and in one round joined.
  * Steps without an agent role, such as a checkpoint or a control node, are left out: they do no
  * work that the user reads, and a checkpoint shows as the review it waits for.
  */
 export function workEntries(steps: RunStep[], run: Pick<Run, 'status'> | null): WorkEntry[] {
-  return groupSteps(steps)
-    .map(stepsOfEntry)
-    .filter((grouped) => grouped[0]?.agent_role !== null)
-    .map((grouped) => {
-      const first = grouped[0]
-      const last = grouped.at(-1)
-      const produced = grouped.flatMap(({ produced }) => produced)
-      const atLastVersion = versionOfEach(produced, 1)
-      const createdIds = new Set(
-        versionOfEach(produced, -1)
-          .filter(({ version }) => version === 1)
-          .map(({ item_id }) => item_id),
-      )
-      const subjectItemId = first?.subject_item_id ?? null
-      const subjectKey =
-        subjectItemId === null
+  return joinedPhases(
+    groupSteps(steps)
+      .map(stepsOfEntry)
+      .filter((grouped) => grouped[0]?.agent_role !== null),
+  ).map((grouped) => {
+    const first = grouped[0]
+    const last = grouped.at(-1)
+    const produced = grouped.flatMap(({ produced }) => produced)
+    const atLastVersion = versionOfEach(produced, 1)
+    const createdIds = new Set(
+      versionOfEach(produced, -1)
+        .filter(({ version }) => version === 1)
+        .map(({ item_id }) => item_id),
+    )
+    const subjectItemId = first?.subject_item_id ?? null
+    const subjectKey =
+      subjectItemId === null
+        ? null
+        : (produced.find(({ item_id }) => item_id === subjectItemId)?.key ?? null)
+    return {
+      id: first?.id ?? '',
+      steps: grouped,
+      stage: first?.stage ?? '',
+      node: first?.node ?? '',
+      nodes: [...new Set(grouped.map(({ node }) => node))],
+      agentRole: first?.agent_role ?? '',
+      modelId: last?.model_id ?? null,
+      iteration: first?.iteration ?? 0,
+      subjectItemId,
+      subjectKey: subjectKey === null ? null : subjectKeyOfMessage(subjectKey),
+      status: workStatusOf(grouped, run),
+      continues: false,
+      startedAt: first?.started_at ?? '',
+      durationMs:
+        last?.finished_at === null || last?.finished_at === undefined || first === undefined
           ? null
-          : (produced.find(({ item_id }) => item_id === subjectItemId)?.key ?? null)
-      return {
-        id: first?.id ?? '',
-        steps: grouped,
-        stage: first?.stage ?? '',
-        node: first?.node ?? '',
-        agentRole: first?.agent_role ?? '',
-        modelId: last?.model_id ?? null,
-        iteration: first?.iteration ?? 0,
-        subjectItemId,
-        subjectKey: subjectKey === null ? null : subjectKeyOfMessage(subjectKey),
-        status: workStatusOf(grouped, run),
-        continues: false,
-        startedAt: first?.started_at ?? '',
-        durationMs:
-          last?.finished_at === null || last?.finished_at === undefined || first === undefined
-            ? null
-            : msBetween(first.started_at, last.finished_at),
-        costUsd: grouped.reduce((total, { usage }) => total + usage.cost_usd, 0),
-        created: atLastVersion.filter(({ item_id }) => createdIds.has(item_id)),
-        changed: atLastVersion.filter(({ item_id }) => !createdIds.has(item_id)),
-        notes: grouped.flatMap(({ notes }) => notes),
-        error: grouped.find(({ error }) => error !== null)?.error ?? null,
-      }
-    })
+          : msBetween(first.started_at, last.finished_at),
+      costUsd: grouped.reduce((total, { usage }) => total + usage.cost_usd, 0),
+      created: atLastVersion.filter(({ item_id }) => createdIds.has(item_id)),
+      changed: atLastVersion.filter(({ item_id }) => !createdIds.has(item_id)),
+      notes: grouped.flatMap(({ notes }) => notes),
+      error: grouped.find(({ error }) => error !== null)?.error ?? null,
+    }
+  })
 }
 
 /**

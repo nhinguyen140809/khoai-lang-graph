@@ -14,7 +14,7 @@ import {
 import { useView } from '@/shared/lib/view'
 
 import type { ActivityEntry, RunEntriesResult } from '../activity-entries.types'
-import { runEntries } from '../activity-entries.utils'
+import { runEntries, shownWork } from '../activity-entries.utils'
 
 /**
  * The entries of a run: its messages, its work and its reviews, with the titles they read. Only a
@@ -54,9 +54,13 @@ export function useRunEntries(
     const subjectTitles = subjectTitlesOf(subjects)
     const entries: ActivityEntry[] = runEntries({
       messages,
-      work: workEntries(
-        stepPages.flatMap(({ items }) => items),
-        run,
+      work: shownWork(
+        workEntries(
+          stepPages.flatMap(({ items }) => items),
+          run,
+        ),
+        stageTitles,
+        view,
       ),
       interrupts: interruptPages.flatMap(({ items }) => items),
       stageTitles,
