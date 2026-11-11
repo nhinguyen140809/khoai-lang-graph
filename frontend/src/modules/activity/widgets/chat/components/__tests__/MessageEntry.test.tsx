@@ -1,4 +1,5 @@
 import { screen } from '@testing-library/react'
+import userEvent from '@testing-library/user-event'
 import { describe, expect, it } from 'vitest'
 
 import { messageFixtures } from '@/mocks/messages/messages.fixtures'
@@ -22,21 +23,71 @@ const pending = assertPresent(
 )
 
 describe('MessageEntry', () => {
-  it('shows the words of an agent with the document and the item it names as cards', async () => {
+  it('shows the first document an agent names as a card, with a button for the others', async () => {
     renderWithProviders(
       <MessageEntry message={analyst} projectId={projectIds.mentor} runStatus={null} />,
     )
 
     // The words of the agent read as Markdown, and name no key of an item.
     expect(screen.getByText('one conflict')).toBeInTheDocument()
-    // The analysis it names, as a card with the version it refers to.
+    // The analysis it names first, as a card with the version it refers to.
     expect(screen.getByText('Requirements analysis')).toBeInTheDocument()
     expect(screen.getByText('version 4')).toBeInTheDocument()
-    // The conflict it found, as a card titled by the item, with its kind, key and version beside.
+    // The conflict it found waits behind the button.
+    expect(screen.getByRole('button', { name: '+1 item' })).toBeInTheDocument()
+    expect(screen.queryByText('Who approves a booking')).not.toBeInTheDocument()
+    await expectNoAccessibilityViolations()
+  })
+
+  it('opens the others as short rows when the button is pressed, and closes them again', async () => {
+    renderWithProviders(
+      <MessageEntry message={analyst} projectId={projectIds.mentor} runStatus={null} />,
+    )
+
+    await userEvent.click(screen.getByRole('button', { name: '+1 item' }))
+
+    // The conflict, as a row titled by the item, with its kind, key and version beside.
     expect(await screen.findByText('Who approves a booking')).toBeInTheDocument()
     expect(screen.getByText('Disagreement - CONF-001, version 1')).toBeInTheDocument()
     expect(screen.getByRole('button', { name: 'Quick look at CONF-001' })).toBeInTheDocument()
+    expect(screen.getByText('Requirements analysis')).toBeInTheDocument()
     await expectNoAccessibilityViolations()
+
+    await userEvent.click(screen.getByRole('button', { name: 'Show fewer' }))
+
+    expect(screen.queryByText('Who approves a booking')).not.toBeInTheDocument()
+    expect(screen.getByRole('button', { name: '+1 item' })).toBeInTheDocument()
+  })
+
+  it('counts the others with the right plural', () => {
+    const many = {
+      ...analyst,
+      artifact_refs: [
+        { artifact_id: 'a1', kind: 'analysis', title: 'One', version: 1 },
+        { artifact_id: 'a2', kind: 'analysis', title: 'Two', version: 1 },
+        { artifact_id: 'a3', kind: 'analysis', title: 'Three', version: 1 },
+      ],
+      item_refs: [],
+    }
+    renderWithProviders(
+      <MessageEntry message={many} projectId={projectIds.mentor} runStatus={null} />,
+    )
+
+    expect(screen.getByRole('button', { name: '+2 items' })).toBeInTheDocument()
+  })
+
+  it('shows no button for a message that names one document', () => {
+    const one = {
+      ...analyst,
+      artifact_refs: [{ artifact_id: 'a1', kind: 'analysis', title: 'One', version: 1 }],
+      item_refs: [],
+    }
+    renderWithProviders(
+      <MessageEntry message={one} projectId={projectIds.mentor} runStatus={null} />,
+    )
+
+    expect(screen.getByText('One')).toBeInTheDocument()
+    expect(screen.queryByRole('button', { name: /^\+/ })).not.toBeInTheDocument()
   })
 
   it('shows the words of the user as plain text, with the note of when the agents read them', () => {

@@ -1,3 +1,5 @@
+import { pluralForm } from '@/shared/lib/text'
+
 /** The words of the chat of the activity of a project. */
 export const activityChatMessages = {
   tabTitle: 'Activity',
@@ -17,6 +19,9 @@ export const activityChatMessages = {
     `${kind} - ${key}, version ${String(version)}`,
   quickLook: (key: string) => `Quick look at ${key}`,
   toReview: 'To review:',
+  moreReferences: (count: number) =>
+    `+${String(count)} ${pluralForm(count, { one: 'item', other: 'items' })}`,
+  fewerReferences: 'Show fewer',
   showDetails: 'Show what it noted and wrote',
   prompt: {
     label: 'Message to the agents',
