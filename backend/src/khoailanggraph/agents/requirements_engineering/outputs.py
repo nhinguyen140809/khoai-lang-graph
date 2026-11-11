@@ -12,7 +12,7 @@ from __future__ import annotations
 
 from typing import TYPE_CHECKING, Annotated, Any, Literal
 
-from pydantic import BaseModel, ConfigDict, Field, create_model, model_validator
+from pydantic import BaseModel, ConfigDict, Field, create_model, field_validator, model_validator
 
 from khoailanggraph.agents.requirements_engineering import definition as workflow_definition
 from khoailanggraph.domain.artifacts import ElicitationPlanContent
@@ -299,6 +299,18 @@ class GeneratorOutput(_Narrated):
     personas: list[NewPersona]
 
 
+def kind_of_source(value: object) -> object:
+    """The key of the list `source_type` that `value` means, or `other` when it means none."""
+    keys = [str(entry["key"]) for entry in workflow_definition.value_lists().get("source_type", [])]
+    if not isinstance(value, str) or not keys or value in keys:
+        return value
+    words = set(value.strip().lower().replace("-", "_").replace(" ", "_").split("_"))
+    for key in keys:
+        if key != "other" and words & set(key.split("_")):
+            return key
+    return "other" if "other" in keys else value
+
+
 class NewSource(_Output):
     """A curated research document draft; the system assigns the key."""
 
@@ -314,6 +326,13 @@ class NewSource(_Output):
     text: str = ""
     relevance_reason: str
     origin: Literal["web", "upload"] = "web"
+
+    @field_validator("source_type", mode="before")
+    @classmethod
+    def _a_kind_of_the_list(cls, value: object) -> object:
+        """A kind the model phrased its own way (`news_article`) is read as the kind of the list
+        it names (`news`); one that names none is `other`."""
+        return kind_of_source(value)
 
 
 class CorpusBuilderOutput(_Narrated):

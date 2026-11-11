@@ -7,6 +7,7 @@ from typing import TYPE_CHECKING, Any
 
 from khoailanggraph.agents.requirements_engineering import definition as wf
 from khoailanggraph.agents.requirements_engineering import nodes
+from khoailanggraph.agents.requirements_engineering.outputs import kind_of_source
 from test_workflow import _finished_run
 
 if TYPE_CHECKING:
@@ -83,3 +84,11 @@ def test_the_result_of_a_check_that_is_not_in_the_list_reads_as_the_closest_one(
 def test_the_value_lists_have_the_new_kinds_of_ambiguity_and_conflict() -> None:
     assert {"pragmatic", "referential"} <= _keys("ambiguity_type")
     assert "organizational" in _keys("conflict_type")
+
+
+def test_a_kind_of_source_in_other_words_is_read_as_the_kind_of_the_list() -> None:
+    assert kind_of_source("news_article") == "news"
+    assert kind_of_source("Forum post") == "forum_thread"
+    assert kind_of_source("complaint") == "complaint_log"
+    assert kind_of_source("blog") == "other"
+    assert kind_of_source("survey") == "survey"
