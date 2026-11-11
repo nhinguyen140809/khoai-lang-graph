@@ -6,6 +6,8 @@ const env = process.env as { NODE_ENV?: string }
 env.NODE_ENV ||= 'development'
 
 const PORT = 3100
+// The specs test the developer view, which the host `dev.` shows.
+const BASE_URL = `http://dev.localhost:${String(PORT)}`
 
 export default defineConfig({
   testDir: './tests/e2e',
@@ -18,14 +20,14 @@ export default defineConfig({
   // The dev server renders a page on the first visit, which can be slow.
   expect: { timeout: 20_000 },
   use: {
-    baseURL: `http://localhost:${String(PORT)}`,
+    baseURL: BASE_URL,
     trace: 'on-first-retry',
   },
   projects: [{ name: 'chromium', use: { ...devices['Desktop Chrome'] } }],
   // E2E runs against the MSW mocks so it does not need the backend.
   webServer: {
     command: `pnpm exec next dev --port ${String(PORT)}`,
-    url: `http://localhost:${String(PORT)}`,
+    url: BASE_URL,
     reuseExistingServer: !process.env.CI,
     env: { NEXT_PUBLIC_API_MOCKING: 'enabled' },
   },
