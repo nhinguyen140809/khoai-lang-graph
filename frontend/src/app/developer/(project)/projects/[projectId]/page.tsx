@@ -8,7 +8,7 @@ import { routes } from '@/shared/routes'
 export const instant = false
 
 /** A project opens at Activity. */
-export default async function Page({ params }: PageProps<'/projects/[projectId]'>) {
+export default async function Page({ params }: PageProps<'/developer/projects/[projectId]'>) {
   const { projectId } = await params
   redirect(routes.project(projectId).activity())
 }

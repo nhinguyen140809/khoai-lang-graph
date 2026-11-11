@@ -1,8 +1,9 @@
-import { routes } from '../routes.utils'
+import { routes, userRoutes } from '../routes.utils'
 
 /** A page, how `routes` builds its address, and the address. */
 export const routeCases = [
   { page: 'the home page', href: () => routes.home(), path: '/' },
+  { page: 'the home page of the user view', href: () => userRoutes.home(), path: '/' },
   { page: 'the settings', href: () => routes.settings(), path: '/settings' },
   { page: 'the list of the projects', href: () => routes.projects(), path: '/projects' },
   {
