@@ -677,6 +677,7 @@ def corpus_builder_node(
                     title=str(hit.get("title", "") or f"Source {index}"),
                     url=str(hit.get("url", "")),
                     publisher=str(hit.get("publisher", "") or "web"),
+                    source_type="other",
                     year=str(hit.get("year", "") or ""),
                     excerpt=text[:400],
                     text=text,
@@ -1048,6 +1049,9 @@ def persona_generator_node(
                 link_type="grounded_in",
             )
     _tell_user(sink, draft)
+    if not personas:
+        msg = "every persona cited unknown observations; nothing grounded to write"
+        raise ValueError(msg)
     return {
         "personas": personas,
         "interview_transcripts": [],

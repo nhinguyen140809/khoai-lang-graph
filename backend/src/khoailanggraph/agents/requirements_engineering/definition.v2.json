@@ -20,7 +20,7 @@
       "key": "persona_generator",
       "label": "Persona generator",
       "description": "Creates the interviewees from the evidence found in those documents.",
-      "prompt_version": 2
+      "prompt_version": 3
     },
     { "key": "interviewer", "label": "Interviewer", "description": "Asks interview questions.", "prompt_version": 2 },
     { "key": "persona_agent", "label": "Persona agent", "description": "Answers as one persona.", "prompt_version": 2 },
@@ -299,6 +299,8 @@
     { "source": "intent_router", "target": "analyst", "label": null, "conditional": true, "option": null },
     { "source": "intent_router", "target": "requirement_engineer", "label": null, "conditional": true, "option": null },
     { "source": "intent_router", "target": "backlog_manager", "label": null, "conditional": true, "option": null },
+    { "source": "intent_router", "target": "checkpoint_plan", "label": null, "conditional": false, "option": null },
+    { "source": "checkpoint_plan", "target": "planner", "label": "approve", "conditional": true, "option": "approve" },
     { "source": "planner", "target": "corpus_builder", "label": null, "conditional": false, "option": null },
     { "source": "corpus_builder", "target": "stakeholder_miner", "label": null, "conditional": false, "option": null },
     { "source": "stakeholder_miner", "target": "persona_generator", "label": null, "conditional": false, "option": null },
@@ -321,210 +323,7 @@
     { "source": "checkpoint_spec", "target": "intent_router", "label": "something else", "conditional": true, "option": "other" },
     { "source": "backlog_manager", "target": "validator", "label": null, "conditional": false, "option": null },
     { "source": "validator", "target": "__end__", "label": "pass", "conditional": true, "option": null },
-    { "source": "validator", "target": "requirement_engineer", "label": "fail", "conditional": true, "option": null },
-    {
-      "source": "__start__",
-      "target": "planner",
-      "label": null,
-      "conditional": true,
-      "option": null
-    },
-    {
-      "source": "__start__",
-      "target": "intent_router",
-      "label": "later runs",
-      "conditional": true,
-      "option": null
-    },
-    {
-      "source": "intent_router",
-      "target": "planner",
-      "label": null,
-      "conditional": true,
-      "option": null
-    },
-    {
-      "source": "intent_router",
-      "target": "interviewer",
-      "label": null,
-      "conditional": true,
-      "option": null
-    },
-    {
-      "source": "intent_router",
-      "target": "analyst",
-      "label": null,
-      "conditional": true,
-      "option": null
-    },
-    {
-      "source": "intent_router",
-      "target": "requirement_engineer",
-      "label": null,
-      "conditional": true,
-      "option": null
-    },
-    {
-      "source": "intent_router",
-      "target": "backlog_manager",
-      "label": null,
-      "conditional": true,
-      "option": null
-    },
-    {
-      "source": "intent_router",
-      "target": "checkpoint_plan",
-      "label": null,
-      "conditional": false,
-      "option": null
-    },
-    {
-      "source": "corpus_builder",
-      "target": "stakeholder_miner",
-      "label": null,
-      "conditional": false,
-      "option": null
-    },
-    {
-      "source": "stakeholder_miner",
-      "target": "persona_generator",
-      "label": null,
-      "conditional": false,
-      "option": null
-    },
-    {
-      "source": "persona_generator",
-      "target": "checkpoint_personas",
-      "label": null,
-      "conditional": false,
-      "option": null
-    },
-    {
-      "source": "checkpoint_personas",
-      "target": "interviewer",
-      "label": "approve / modify",
-      "conditional": true,
-      "option": "approve"
-    },
-    {
-      "source": "interviewer",
-      "target": "persona_agent",
-      "label": "question",
-      "conditional": true,
-      "option": null
-    },
-    {
-      "source": "persona_agent",
-      "target": "interviewer",
-      "label": "answer",
-      "conditional": false,
-      "option": null
-    },
-    {
-      "source": "interviewer",
-      "target": "analyst",
-      "label": "all personas interviewed",
-      "conditional": true,
-      "option": null
-    },
-    {
-      "source": "analyst",
-      "target": "rework_elicitation",
-      "label": "not OK",
-      "conditional": true,
-      "option": null
-    },
-    {
-      "source": "analyst",
-      "target": "checkpoint_analysis",
-      "label": "OK",
-      "conditional": true,
-      "option": null
-    },
-    {
-      "source": "rework_elicitation",
-      "target": "interviewer",
-      "label": "rework directive",
-      "conditional": false,
-      "option": null
-    },
-    {
-      "source": "checkpoint_analysis",
-      "target": "requirement_engineer",
-      "label": "accept",
-      "conditional": true,
-      "option": "accept"
-    },
-    {
-      "source": "checkpoint_analysis",
-      "target": "analyst",
-      "label": "reject + re-analyse",
-      "conditional": true,
-      "option": "reject_reanalyse"
-    },
-    {
-      "source": "checkpoint_analysis",
-      "target": "rework_elicitation",
-      "label": "reject + re-interview",
-      "conditional": true,
-      "option": "reject_reinterview"
-    },
-    {
-      "source": "requirement_engineer",
-      "target": "checkpoint_spec",
-      "label": null,
-      "conditional": false,
-      "option": null
-    },
-    {
-      "source": "checkpoint_spec",
-      "target": "backlog_manager",
-      "label": "OK",
-      "conditional": true,
-      "option": "ok"
-    },
-    {
-      "source": "checkpoint_spec",
-      "target": "requirement_engineer",
-      "label": "not OK",
-      "conditional": true,
-      "option": "not_ok"
-    },
-    {
-      "source": "backlog_manager",
-      "target": "validator",
-      "label": null,
-      "conditional": false,
-      "option": null
-    },
-    {
-      "source": "validator",
-      "target": "__end__",
-      "label": "pass",
-      "conditional": true,
-      "option": null
-    },
-    {
-      "source": "validator",
-      "target": "requirement_engineer",
-      "label": "fail",
-      "conditional": true,
-      "option": null
-    },
-    {
-      "source": "checkpoint_plan",
-      "target": "planner",
-      "label": "approve",
-      "conditional": true,
-      "option": "approve"
-    },
-    {
-      "source": "planner",
-      "target": "corpus_builder",
-      "label": null,
-      "conditional": false,
-      "option": null
-    }
+    { "source": "validator", "target": "requirement_engineer", "label": "fail", "conditional": true, "option": null }
   ],
   "artifact_kinds": [
     {

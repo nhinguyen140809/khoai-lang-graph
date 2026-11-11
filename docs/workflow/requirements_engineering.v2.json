@@ -299,6 +299,8 @@
     { "source": "intent_router", "target": "analyst", "label": null, "conditional": true, "option": null },
     { "source": "intent_router", "target": "requirement_engineer", "label": null, "conditional": true, "option": null },
     { "source": "intent_router", "target": "backlog_manager", "label": null, "conditional": true, "option": null },
+    { "source": "intent_router", "target": "checkpoint_plan", "label": null, "conditional": false, "option": null },
+    { "source": "checkpoint_plan", "target": "planner", "label": "approve", "conditional": true, "option": "approve" },
     { "source": "planner", "target": "corpus_builder", "label": null, "conditional": false, "option": null },
     { "source": "corpus_builder", "target": "stakeholder_miner", "label": null, "conditional": false, "option": null },
     { "source": "stakeholder_miner", "target": "persona_generator", "label": null, "conditional": false, "option": null },

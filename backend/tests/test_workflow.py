@@ -40,7 +40,7 @@ from khoailanggraph.agents.requirements_engineering.views import transcript_line
 from khoailanggraph.domain import rules as domain_rules
 from khoailanggraph.domain.errors import IntegrityError
 from khoailanggraph.llm import reset_model_cache
-from support.fake_data import DEMO_INTENT, DemoData, _corpus, _mined, _personas
+from support.fake_data import DEMO_INTENT, DemoData, _corpus, _personas
 from support.fake_llm import FakeChatModel
 from support.fake_search import demo_research_search
 from support.in_memory_sinks import InMemoryArtifactSink, InMemoryDirectiveSink
@@ -311,14 +311,6 @@ def test_research_gates_fail_the_run_at_the_lying_node() -> None:
     fail on exactly that node's gate message.
     """
 
-    class DriftingQuotesData(DemoData):
-        @staticmethod
-        def MinerOutput(system: str, user: str, call_number: int) -> dict[str, object]:  # noqa: N802 - schema name
-            answer = _mined(system, user, call_number)
-            for observation in cast("list[dict[str, object]]", answer["observations"]):
-                observation["evidence"] = str(observation["evidence"]) + " plus absent words"
-            return answer
-
     class InventedUrlsData(DemoData):
         @staticmethod
         def CorpusBuilderOutput(system: str, user: str, call_number: int) -> dict[str, object]:  # noqa: N802 - schema name
@@ -331,13 +323,6 @@ def test_research_gates_fail_the_run_at_the_lying_node() -> None:
             sources.append(fake)
             return answer
 
-    class EmptyCorpusData(DemoData):
-        @staticmethod
-        def CorpusBuilderOutput(system: str, user: str, call_number: int) -> dict[str, object]:  # noqa: N802 - schema name
-            answer = _corpus(system, user, call_number)
-            answer["sources"] = []
-            return answer
-
     class AlteredEvidenceData(DemoData):
         @staticmethod
         def GeneratorOutputV2(system: str, user: str, call_number: int) -> dict[str, object]:  # noqa: N802 - schema name
@@ -348,12 +333,9 @@ def test_research_gates_fail_the_run_at_the_lying_node() -> None:
             return answer
 
     cases = [
-        # Drifted quotes are now SKIPPED (logged) instead of crashing the
-        # miner; the observation never enters the store, so the persona
-        # generator fails when its fixture cites the skipped key.
-        (DriftingQuotesData, "persona_generator_node: ", "nothing grounded to write"),
+        # A drifted quote is salvaged from the document and an empty selection falls back to the
+        # top search hits, so neither fails a run any more.
         (InventedUrlsData, "corpus_builder_node: ", "selected invented documents"),
-        (EmptyCorpusData, "corpus_builder_node: ", "research found no source document"),
         (AlteredEvidenceData, "persona_generator_node: ", "altered the evidence quote of OBS-001"),
     ]
     for dataset_class, node_prefix, needle in cases:
