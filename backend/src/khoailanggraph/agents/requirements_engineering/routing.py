@@ -34,13 +34,11 @@ def route_error(state: REState) -> str:
 
 
 def route_start(state: REState) -> str:
-    """`__start__ → {planner (first run), intent_router (later runs)}`; the entry
-    clause is §2.1 (the entry of a run began earlier, before the intents edge). A walk that
-    continues a run (a resume, a retry, a delivered message) names its node in `start_at`."""
+    """`__start__ -> intent_router`: every run begins by reading the message it starts with, which
+    says that it got the message and what happens next. A walk that continues a run (a resume, a
+    retry, a delivered message) names its node in `start_at`."""
     if state.get("start_at"):
         return str(state["start_at"])
-    if state.get("first_run", False) or not state.get("personas"):
-        return "planner"
     return "intent_router"
 
 
@@ -131,6 +129,8 @@ def route_after_intent_router(state: REState) -> str:
         "requirement_engineer",
         "backlog_manager",
     }
+    if target == "ask_message":
+        return "ask_message"
     return target if target in allowed else "analyst"
 
 
@@ -163,6 +163,7 @@ def _route_after_ask(review_node: str) -> Callable[[REState], str]:
 route_after_ask_personas = _route_after_ask("checkpoint_personas")
 route_after_ask_analysis = _route_after_ask("checkpoint_analysis")
 route_after_ask_spec = _route_after_ask("checkpoint_spec")
+route_after_ask_message = _route_after_ask("intent_router")
 
 
 CHECKPOINT_ROUTES = {
@@ -170,6 +171,7 @@ CHECKPOINT_ROUTES = {
     "ask_personas": route_after_ask_personas,
     "ask_analysis": route_after_ask_analysis,
     "ask_spec": route_after_ask_spec,
+    "ask_message": route_after_ask_message,
     "checkpoint_personas": route_after_personas,
     "checkpoint_analysis": route_after_analysis,
     "checkpoint_spec": route_after_spec,

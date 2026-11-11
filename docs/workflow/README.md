@@ -56,7 +56,7 @@ In `link_types`, `any` stands for every item kind except `section`, which is nev
 
 ## 3. Version 1
 
-[`requirements_engineering.v1.json`](requirements_engineering.v1.json) contains 9 agent roles, each at prompt version 1, 12 stages, 15 nodes, 25 edges (the version 2 of the definition has 35 edges, which add the option `other` to each checkpoint and the `ask` checkpoints that put the questions of the agents to the user), 7 artifact kinds, 12 item kinds, 10 link types, 5 value lists, 2 directive kinds, 5 export templates and 4 run parameters.
+[`requirements_engineering.v1.json`](requirements_engineering.v1.json) contains 9 agent roles, each at prompt version 1, 12 stages, 15 nodes, 25 edges (the version 2 of the definition has 36 edges, which add the option `other` to each checkpoint and the `ask` checkpoints that put the questions of the agents to the user), 7 artifact kinds, 12 item kinds, 10 link types, 5 value lists, 2 directive kinds, 5 export templates and 4 run parameters.
 
 The values come from the tables of the [data shape](../DATA_SHAPE.md) and from the [agent workflow diagram](../architecture/README.md#5-agent-workflow): the nodes and edges are those of the diagram, and the item kinds and schema versions are those of the [content schemas](../schemas/README.md). The values that appear in neither are proposals, listed in [Open points](#7-open-points).
 
@@ -104,7 +104,7 @@ These rules relate parts of one definition to each other, or a definition to the
 | Value lists | Keys of the lists and of the values inside each list are unique. Every `x-value-list` in the content schemas that the definition uses names one of its lists |
 | Roles in use | Every agent role is the role of at least one agent node |
 | Options and edges | Every option of a review checkpoint leads along exactly one edge of that checkpoint, every edge leaving it names one of its options, and it has exactly one default option. An `ask` checkpoint has no option: one edge leaves it, with no option, and the user answers its questions only |
-| Purpose | A checkpoint has `purpose` `review` (documents under review, no question of the agent; the default) or `ask` (questions of the agent, no document under review). An `ask` may name the review that follows it in `asks_before`; the questions are then those that the agent wrote for that review. Without it, the questions are those that the agent of the step before the checkpoint wrote: `checkpoint_plan` asks the few questions the planner chose from the idea of the product, and the run returns to the planner to write the plan from the answers. |
+| Purpose | A checkpoint has `purpose` `review` (documents under review, no question of the agent; the default) or `ask` (questions of the agent, no document under review). An `ask` may name the review that follows it in `asks_before`; the questions are then those that the agent wrote for that review. Without it, the questions are those that the agent of the step before the checkpoint wrote: `checkpoint_plan` asks the few questions the planner chose from the idea of the product, and the run returns to the planner to write the plan from the answers. `ask_message` asks the questions that the intent router chose when a message is too unclear to act on, and the run returns to the router, which reads the message with the answers. |
 | Questions | A checkpoint has at least one option, one question, or `agent_questions` set. Question keys are unique in the checkpoint. A `single_select` or `multi_select` question has at least two choices, and a question of another type has none. `min_selected` and `max_selected` are set only on `multi_select`, with `min_selected <= max_selected <=` the number of choices when both are set. `default_answer` is null only for a question that is not required; otherwise it is a valid answer to the question, and it never contains a choice that requires text |
 | Items have a home | Every item kind is contained in at least one artifact kind |
 | Subject item | `subject_item_kind` is set exactly when `per_project` is `one_per_subject` |
@@ -132,7 +132,7 @@ DEFINITION_V1 = WorkflowDefinition(
     name="requirements_engineering",
     version=1,
     graph=build_graph,  # nodes and edges are read from the compiled graph
-    entry=Entry(first_run="planner", later_runs="intent_router", pending_messages="intent_router"),
+    entry=Entry(first_run="intent_router", later_runs="intent_router", pending_messages="intent_router"),
     agent_roles=[AgentRole("planner", "Planner", "Turns the intent into an elicitation plan.", prompt_version=1), ...],
     stages=[Stage("intent_routing", "Handling your request", internal=True, parent=None), ...],
     node_data={

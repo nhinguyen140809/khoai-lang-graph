@@ -87,6 +87,9 @@ ARTIFACT_FIELDS = {
     "validation_report": "validation_report",
 }
 PROJECT_NAME_LENGTH = 60
+# The earlier messages that the router reads: how many, and how much of each.
+HISTORY_MESSAGES = 8
+HISTORY_LINE_LENGTH = 300
 TOKEN_GROUP_SECONDS = 0.2
 ENTRY_NODES = {"planner", "intent_router"}
 
@@ -312,12 +315,14 @@ class RunWalker:
         intent = first_message.content if first_message is not None else ""
         first_run = starting is not None and self.project.initial_message_id == starting.id
         state = make_initial_state(str(self.project.id), intent, self.config, first_run=first_run)
+        # Every run begins at the intent router, which reads the message the run starts with: the
+        # first message is the idea itself, and a later one says what to do next.
+        if starting is not None:
+            self.pending_for_router = [{"id": str(starting.id), "content": starting.content}]
         if not first_run:
             cast("dict[str, Any]", state).update(self._project_refs())
             state["current_stage"] = self.run.current_stage
             state["start_at"] = "intent_router"
-            if starting is not None:
-                self.pending_for_router = [{"id": str(starting.id), "content": starting.content}]
         return state
 
     def _project_refs(self) -> dict[str, Any]:
@@ -407,15 +412,6 @@ class RunWalker:
                 text = str(answer.get("number"))
             if text:
                 clarifications.append(f"- {prompts.get(str(key), str(key))}: {text}")
-        asked = workflow_definition.nodes().get(interrupt.node, {})
-        # The answers to the questions asked before the research begins (the plan step wrote
-        # them) become part of the idea that the research and the interviews read.
-        if clarifications and asked.get("purpose") == "ask" and "asks_before" not in asked:
-            state["initial_intent"] = (
-                str(state.get("initial_intent", ""))
-                + "\n\nClarifications from the user:\n"
-                + "\n".join(clarifications)
-            )
         state["status"] = "running"
         state["interrupt_payload"] = None
         chosen: dict[str, Any] = next(
@@ -426,6 +422,7 @@ class RunWalker:
             for ref in _loads(interrupt.artifacts_json) or []:
                 self.sink.approve_artifact(str(ref["artifact_id"]))
         target = routing.next_after_checkpoint(interrupt.node, state)
+        self._settle_asked_idea(interrupt.node, target, state, clarifications)
         if option == routing.OTHER_OPTION:
             # Something else: the words of the user are a message of the thread, which goes to the
             # intent router, and the router writes the directive for the step that does the work.
@@ -453,6 +450,30 @@ class RunWalker:
         state["start_at"] = target
         self.run.current_stage = str(state["current_stage"])
         return state
+
+    @staticmethod
+    def _settle_asked_idea(
+        node: str, target: str, state: REState, clarifications: list[str]
+    ) -> None:
+        """What the user answered to questions that no review follows.
+
+        Questions asked about the idea before the research begin become part of the idea that the
+        research and the interviews read. Questions asked about a message go back to the router
+        with the message, so that it reads the message together with the answers, even when the
+        user left them blank."""
+        spec = workflow_definition.nodes().get(node, {})
+        if spec.get("purpose") != "ask" or "asks_before" in spec:
+            return
+        text = "\n\nClarifications from the user:\n" + "\n".join(clarifications)
+        if target == "intent_router":
+            briefs = dict(state.get("review_briefs", {}))
+            brief = dict(briefs.get(node, {}))
+            brief["answered_message"] = str(brief.get("message", "")) + (
+                text if clarifications else "\n\n(The user left the questions unanswered.)"
+            )
+            state["review_briefs"] = {**briefs, node: brief}
+        elif clarifications:
+            state["initial_intent"] = str(state.get("initial_intent", "")) + text
 
     def _say_something_else(self, text: str) -> None:
         """The answer of the user that no option says, as their message in the thread: it waits for
@@ -502,8 +523,10 @@ class RunWalker:
                 str(self.project.id),
                 first.content if first is not None else "",
                 self.config,
-                first_run=original.node == "planner",
+                first_run=starting is not None and self.project.initial_message_id == starting.id,
             )
+            if original.node == "intent_router" and starting is not None:
+                self.pending_for_router = [{"id": str(starting.id), "content": starting.content}]
         else:
             state = cast("REState", _loads(previous.state_json))
             state["status"] = "running"
@@ -566,6 +589,7 @@ class RunWalker:
                 "llm_gate": UsageGate(self),
                 "models": self.config.get("models", {}),
                 "pending_messages": self.pending_for_router,
+                "message_history": self._message_history(),
                 "research_search": self.tool(
                     "research_search",
                     service.make_research_search(get_settings()),
@@ -581,6 +605,24 @@ class RunWalker:
                 ),
             },
         }
+
+    def _message_history(self) -> list[str]:
+        """The last messages of the thread before the ones the router reads now, oldest first, one
+        line each, so that the router knows what was said and done until now."""
+        waiting = {entry["id"] for entry in self.pending_for_router}
+        rows = self.session.scalars(
+            select(MessageRow)
+            .where(MessageRow.thread_id == self.thread.id)
+            .order_by(MessageRow.sequence.desc())
+            .limit(HISTORY_MESSAGES + len(waiting))
+        ).all()
+        lines = []
+        for row in reversed(rows):
+            if str(row.id) in waiting:
+                continue
+            who = "user" if row.author == "user" else f"agent ({row.agent_role or 'workflow'})"
+            lines.append(f"{who}: {' '.join(row.content.split())[:HISTORY_LINE_LENGTH]}")
+        return lines[-HISTORY_MESSAGES:]
 
     def buffer_text(self, text: str) -> None:
         """Text the model generates is stored in pieces of at most 200 ms of output."""

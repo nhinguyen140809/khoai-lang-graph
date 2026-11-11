@@ -1,6 +1,6 @@
 """Graph assembly of the requirements engineering workflow (version 2).
 
-The 21 nodes and 35 conditional/plain edges below are `definition.v2.json`
+The 22 nodes and 36 conditional/plain edges below are `definition.v2.json`
 mapped onto LangGraph under the §2.1 mapping: `__start__ → {planner |
 intent_router}`, the plan questions of the checkpoint that asks them, the
 research stage of the evidence-grounded persona pipeline
@@ -27,6 +27,7 @@ from khoailanggraph.agents.requirements_engineering import routing
 from khoailanggraph.agents.requirements_engineering.nodes import (
     analyst_node,
     ask_analysis,
+    ask_message,
     ask_personas,
     ask_spec,
     backlog_manager_node,
@@ -72,10 +73,11 @@ NODE_NAMES = (
     "backlog_manager",
     "validator",
     "intent_router",
+    "ask_message",
     "__end__",
 )
 
-EDGE_COUNT = 35
+EDGE_COUNT = 36
 
 
 def build_re_graph(
@@ -103,6 +105,7 @@ def build_re_graph(
     builder.add_node("backlog_manager", backlog_manager_node)
     builder.add_node("validator", validator_node)
     builder.add_node("intent_router", intent_router_node)
+    builder.add_node("ask_message", ask_message)
 
     builder.add_conditional_edges(
         START,
@@ -118,7 +121,12 @@ def build_re_graph(
             "analyst",
             "requirement_engineer",
             "backlog_manager",
+            "ask_message",
+            END,
         ],
+    )
+    builder.add_conditional_edges(
+        "ask_message", routing.route_after_ask_message, ["intent_router", END]
     )
     builder.add_conditional_edges(
         "planner", routing.route_after_planner, ["checkpoint_plan", "corpus_builder", END]

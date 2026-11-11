@@ -57,6 +57,7 @@ def fake_config(sink: ArtifactSink, directives: InMemoryDirectiveSink) -> Runnab
             "models": {role: "fake:demo" for role in ROLES},
             "research_search": demo_research_search,
             "project_documents": lambda _project_id: [],
+            "pending_messages": [{"id": "m0", "content": DEMO_INTENT}],
         }
     }
 
@@ -248,7 +249,7 @@ def test_get_graph_topology_matches_definition() -> None:
         if isinstance(drawn, dict)
         else {getattr(node, "id", node) for node in drawn.nodes}
     )
-    assert len(node_ids) == 21
+    assert len(node_ids) == 22
     assert "planner" in node_ids
     assert "corpus_builder" in node_ids
     assert "stakeholder_miner" in node_ids
@@ -383,6 +384,7 @@ def test_uploaded_documents_lead_the_corpus_and_ground_the_persona() -> None:
         "configurable": {
             **base["configurable"],
             "project_documents": project_documents,
+            "pending_messages": [{"id": "m0", "content": DEMO_INTENT}],
         }
     }
     graph = build_re_graph()
@@ -459,7 +461,13 @@ def test_invoke_retries_a_degenerate_generation() -> None:
             "planner",
             {"configurable": {}},
             Probe,
-            {"output_language": "English", "intent": "test", "task": "plan"},
+            {
+                "output_language": "English",
+                "intent": "test",
+                "directive": "",
+                "current_plan": "(none yet)",
+                "task": "plan",
+            },
         )
     assert result.answer == "clean"
     assert FlakyModel.calls == 2
@@ -549,7 +557,7 @@ def test_every_agent_step_reports_to_the_user_except_the_persona_answers() -> No
 
     roles = [report["agent_role"] for report in sink.reports]
 
-    assert roles[:3] == ["planner", "corpus_builder", "stakeholder_miner"]
+    assert roles[:3] == ["intent_router", "planner", "corpus_builder"]
     assert roles.count("stakeholder_miner") == 1, "one report for the whole mining step"
     assert {"persona_generator", "analyst", "requirement_engineer", "backlog_manager"} <= set(roles)
     assert "validator" in roles
@@ -780,3 +788,195 @@ def test_the_interviewer_is_given_what_is_still_to_collect() -> None:
 
     assert lines == "- [x] how often\n- [ ] what it costs"
     assert nodes.coverage_lines([], messages).startswith("(the plan lists no data")
+
+
+class _UnclearMessageData(DemoData):
+    """A router that cannot tell what the message wants changed, and asks."""
+
+    IntentDirectiveOutput = staticmethod(
+        lambda system, user, call_number: {
+            "target_node": "requirement_engineer",
+            "instruction": "Change the booking limit.",
+            "about": [],
+            "questions": [
+                {
+                    "key": "limit",
+                    "kind": "single_select",
+                    "prompt": "Which limit do you mean?",
+                    "choices": [
+                        {"key": "length", "label": "How long a room is booked"},
+                        {"key": "ahead", "label": "How far ahead a room is booked"},
+                    ],
+                    "default_choice_keys": ["length"],
+                }
+            ],
+        }
+    )
+
+
+def _router_config(message: str) -> RunnableConfig:
+    config = fake_config(InMemoryArtifactSink(), InMemoryDirectiveSink())
+    config["configurable"]["pending_messages"] = [{"id": "m1", "content": message}]  # type: ignore[index]
+    return config
+
+
+def _router_state(*, asks_on: bool) -> REState:
+    """A project that holds every document, so that any step can read what it needs."""
+    state = run_state()
+    state["first_run"] = False
+    state["run_config"]["review_checkpoints"] = ["ask_message"] if asks_on else []
+    ref = [{"item_id": "i1", "key": "K-1", "version": 1}]
+    for name in (
+        "personas",
+        "interview_transcripts",
+        "analyzed_requirements",
+        "requirement_specification",
+    ):
+        state[name] = ref  # type: ignore[literal-required]
+    return state
+
+
+def test_the_router_asks_when_the_message_is_too_unclear_and_comes_back_with_the_answers() -> None:
+    with patch.object(llm_factory, "make_demo_data", lambda _name: _UnclearMessageData()):
+        reset_model_cache()
+        update = nodes.intent_router_node(
+            _router_state(asks_on=True), _router_config("Change the limit")
+        )
+    reset_model_cache()
+
+    brief = update["review_briefs"]["ask_message"]
+    assert [question["key"] for question in brief["questions"]] == ["limit"]
+    assert brief["message"].endswith("Change the limit")
+    assert update["routed_target"] == "ask_message"
+    assert "rework_directives" not in update, "no directive before the message is understood"
+    assert routing.route_after_intent_router({**run_state(), **update}) == "ask_message"
+    assert routing.next_after_checkpoint("ask_message", run_state()) == "intent_router"
+
+
+def test_the_router_reads_the_message_with_the_answers_and_does_not_ask_twice() -> None:
+    state = _router_state(asks_on=True)
+    state["review_briefs"] = {
+        "ask_message": {
+            "questions": [],
+            "message": "1. Change the limit",
+            "answered_message": (
+                "1. Change the limit\n\nClarifications from the user:\n- Which: length"
+            ),
+        }
+    }
+
+    with patch.object(llm_factory, "make_demo_data", lambda _name: _UnclearMessageData()):
+        reset_model_cache()
+        config = fake_config(InMemoryArtifactSink(), InMemoryDirectiveSink())
+        update = nodes.intent_router_node(state, config)
+    reset_model_cache()
+
+    assert update["routed_target"] == "requirement_engineer"
+    assert update["review_briefs"]["ask_message"] == {}, "the next message starts clean"
+    assert update["rework_directives"]
+
+
+def test_the_directive_of_the_first_message_is_not_a_rework_instruction() -> None:
+    state = run_state()
+    state["first_run"] = True
+
+    update = nodes.intent_router_node(state, _router_config(DEMO_INTENT))
+
+    assert update["routed_target"] == "planner"
+    assert "rework_directives" not in update, "the steps after the plan would read it as rework"
+
+
+def test_a_router_whose_ask_is_off_acts_on_its_best_guess() -> None:
+    with patch.object(llm_factory, "make_demo_data", lambda _name: _UnclearMessageData()):
+        reset_model_cache()
+        update = nodes.intent_router_node(_router_state(asks_on=False), _router_config("Change it"))
+    reset_model_cache()
+
+    assert update["routed_target"] == "requirement_engineer"
+
+
+def test_a_later_planning_round_reads_what_the_user_asked_to_change_and_the_plan_that_exists() -> (
+    None
+):
+    seen: list[str] = []
+
+    class RecordingPlannerData(DemoData):
+        @staticmethod
+        def PlannerOutput(system: str, user: str, call_number: int) -> dict[str, object]:  # noqa: N802 - schema name
+            seen.append(user)
+            return _plain(system, user, call_number)
+
+    sink = InMemoryArtifactSink()
+    directives = InMemoryDirectiveSink()
+    config = fake_config(sink, directives)
+
+    with patch.object(llm_factory, "make_demo_data", lambda _name: RecordingPlannerData()):
+        reset_model_cache()
+        nodes.planner_node(run_state(), config)
+        later = run_state()
+        later["first_run"] = False
+        later["rework_directives"] = [
+            directives.create_directive(
+                "run-1",
+                "intent",
+                target_node="planner",
+                iteration=0,
+                instruction="Include the faculty among the stakeholders.",
+                items=[],
+            )
+        ]
+        nodes.planner_node(later, config)
+    reset_model_cache()
+
+    assert "(none yet)" in seen[0]
+    assert "Include the faculty among the stakeholders." in seen[1]
+    assert "(none yet)" not in seen[1], "the plan that exists is given to the planner"
+    assert '"objectives"' in seen[1]
+
+
+def test_a_step_that_has_nothing_to_read_sends_the_message_to_the_step_that_makes_it() -> None:
+    """The router chooses the step; the server only moves the choice back to the earliest step
+    whose input is missing, so that a new project, which holds nothing, always starts at the
+    planner, and the router needs no rule about first messages."""
+
+    def routed(
+        state: REState, *, asks_on: bool = True
+    ) -> tuple[dict[str, Any], InMemoryDirectiveSink]:
+        state["run_config"]["review_checkpoints"] = ["ask_message"] if asks_on else []
+        directives = InMemoryDirectiveSink()
+        config = fake_config(InMemoryArtifactSink(), directives)
+        with patch.object(llm_factory, "make_demo_data", lambda _name: _UnclearMessageData()):
+            reset_model_cache()
+            update = nodes.intent_router_node(state, config)
+        reset_model_cache()
+        return update, directives
+
+    # The model wants the requirement engineer, and a new project holds no document at all.
+    update, directives = routed(run_state())
+    assert update["routed_target"] == "planner"
+    assert [row["target_node"] for row in directives.rows] == ["planner"]
+    assert not update["review_briefs"]["ask_message"], "the planner asks its own questions"
+    assert routing.route_start(run_state()) == "intent_router"
+
+    # Interviews are held but nothing was analyzed: the analyst comes first.
+    held = run_state()
+    for name in ("personas", "interview_transcripts"):
+        held[name] = [{"item_id": "i1", "key": "K-1", "version": 1}]  # type: ignore[literal-required]
+    update, _ = routed(held, asks_on=False)
+    assert update["routed_target"] == "analyst"
+
+
+def test_the_router_reads_what_the_project_holds_one_line_for_each_stage_of_the_work() -> None:
+    sink = InMemoryArtifactSink()
+    fresh = nodes._project_overview(run_state(), sink)
+
+    assert "interview plan: none yet" in fresh
+    assert "personas: none yet" in fresh
+
+    state = _router_state(asks_on=False)
+    state["current_stage"] = "analysis_review"
+    overview = nodes._project_overview(state, sink)
+
+    assert "personas: 1" in overview
+    assert "specification requirements: 1" in overview
+    assert "the run was last at: analysis_review" in overview

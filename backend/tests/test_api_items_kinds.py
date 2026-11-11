@@ -636,9 +636,9 @@ async def test_the_chat_holds_the_message_of_the_user_and_the_report_of_each_ste
     assert messages[0]["delivery"] == "started_run"
     reports = [entry for entry in messages if entry["author"] == "agent"]
     assert [entry["agent_role"] for entry in reports][:3] == [
+        "intent_router",
         "planner",
         "corpus_builder",
-        "stakeholder_miner",
     ]
     assert all(entry["content"] and entry["delivery"] is None for entry in reports)
     analyst = next(entry for entry in reports if entry["agent_role"] == "analyst")
@@ -861,8 +861,9 @@ async def test_a_directive_lists_the_items_it_refers_to_with_their_roles(
 
     directives = (await client.get(f"/api/v1/runs/{run_id}/directives")).json()["items"]
 
-    assert [entry["instruction"] for entry in directives] == ["Directive 1", "Directive 2"]
-    first = directives[0]
+    # The router wrote the directive of the first message; the two above follow it by iteration.
+    assert [entry["instruction"] for entry in directives][-2:] == ["Directive 1", "Directive 2"]
+    first = directives[-2]
     assert [(entry["role"], entry["item"]["key"]) for entry in first["items"]] == [
         ("about", issue["key"]),
         ("addressed_to", persona["key"]),

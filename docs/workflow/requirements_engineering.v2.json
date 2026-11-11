@@ -3,7 +3,7 @@
   "version": 2,
   "description": "Elicits requirements from a product idea: builds a research corpus of real documents (member uploads first, live search after), mines evidence-backed stakeholder perspectives from them, grounds the simulated stakeholder personas in that evidence, interviews them, then analyzes, specifies, backlogizes and validates the requirements, with human review at three checkpoints.",
   "entry": {
-    "first_run": "planner",
+    "first_run": "intent_router",
     "later_runs": "intent_router",
     "pending_messages": "intent_router"
   },
@@ -121,6 +121,20 @@
       "id": "__start__",
       "kind": "start",
       "label": "START"
+    },
+    {
+      "id": "ask_message",
+      "kind": "checkpoint",
+      "purpose": "ask",
+      "label": "ask_message",
+      "title": "Questions about your message",
+      "stage": "intent_routing",
+      "prompt": "A few questions, so that I understand what you want changed. Answer what you can; any of them may be left blank.",
+      "review_artifact_kinds": [],
+      "allow_edits": false,
+      "options": [],
+      "questions": [],
+      "agent_questions": true
     },
     {
       "id": "intent_router",
@@ -331,8 +345,9 @@
     }
   ],
   "edges": [
-    { "source": "__start__", "target": "planner", "label": null, "conditional": true, "option": null },
-    { "source": "__start__", "target": "intent_router", "label": "later runs", "conditional": true, "option": null },
+    { "source": "__start__", "target": "intent_router", "label": null, "conditional": true, "option": null },
+    { "source": "intent_router", "target": "ask_message", "label": "questions", "conditional": true, "option": null },
+    { "source": "ask_message", "target": "intent_router", "label": null, "conditional": false, "option": null },
     { "source": "intent_router", "target": "planner", "label": null, "conditional": true, "option": null },
     { "source": "intent_router", "target": "interviewer", "label": null, "conditional": true, "option": null },
     { "source": "intent_router", "target": "analyst", "label": null, "conditional": true, "option": null },

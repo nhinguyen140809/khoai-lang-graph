@@ -593,22 +593,20 @@ def planner_node(
 ) -> dict[str, Any]:
     """Plan the elicitation, in one or two rounds.
 
-    The first round of a project first asks whether the idea leaves open what would change the
-    plan. With questions, the round ends there: the checkpoint asks them and the planner comes
-    back, with the answers as a part of the idea, to write the plan. With none, or when that
-    checkpoint is off, the plan is written at once."""
+    A round first asks whether what the planner knows (the idea, what the user asked to change
+    and the plan that exists) leaves open something that would change the plan. With questions,
+    the round ends there: the checkpoint asks them and the planner comes back, with the answers
+    as a part of the idea, to write the plan. With none, or when that checkpoint is off, the plan
+    is written at once."""
     cfg = _run_config(state)
     sink = _sink(config or {})
-    if _may_ask_first(state, cfg):
+    context = _planner_context(state, config, sink)
+    if _may_ask(state, cfg):
         asked: PlannerQuestionsOutput = _invoke(
             "planner",
             config or {},
             PlannerQuestionsOutput,
-            {
-                "output_language": _language(cfg),
-                "intent": state["initial_intent"],
-                "task": PLANNER_CLARIFY_TASK,
-            },
+            {**context, "task": PLANNER_CLARIFY_TASK},
         )
         _tell_user(sink, asked)
         if asked.questions:
@@ -620,11 +618,7 @@ def planner_node(
         "planner",
         config or {},
         PlannerOutput,
-        {
-            "output_language": _language(cfg),
-            "intent": state["initial_intent"],
-            "task": PLANNER_PLAN_TASK,
-        },
+        {**context, "task": PLANNER_PLAN_TASK},
     )
     created = sink.create_artifact(
         state["project_id"],
@@ -649,22 +643,35 @@ PLANNER_CLARIFY_TASK = (
 )
 PLANNER_PLAN_TASK = (
     "Plan the elicitation for the product above. If the idea includes clarifications from the "
-    "user, they are settled: write the plan from the idea and from them. Return the elicitation "
-    "plan in the output format."
+    "user, they are settled: write the plan from the idea and from them. If there is a directive "
+    "and a current plan, make the plan again as the directive says. Return the elicitation plan "
+    "in the output format."
 )
 
 
-def _may_ask_first(state: REState, cfg: Any) -> bool:
-    """Whether this planning round starts by asking: the first round of a project, with the plan
-    checkpoint on and not yet answered."""
+def _planner_context(
+    state: REState, config: RunnableConfig | None, sink: ArtifactSink
+) -> dict[str, str]:
+    """What the planner reads in every round: the idea, what the user asked to change when the
+    plan is made again, and the plan that exists."""
+    record = sink.read_artifact(state["project_id"], "elicitation_plan")
+    return {
+        "output_language": _language(_run_config(state)),
+        "intent": state["initial_intent"],
+        "directive": _directive_for(state, config, "checkpoint_plan"),
+        "current_plan": "(none yet)"
+        if record is None
+        else json.dumps(record["content"], ensure_ascii=False),
+    }
+
+
+def _may_ask(state: REState, cfg: Any) -> bool:
+    """Whether this planning round starts by asking: the plan checkpoint is on and the user has
+    not answered it in this run. The planner itself decides whether it has a question."""
     answered = any(
         outcome["node"] == "checkpoint_plan" for outcome in state.get("checkpoint_outcomes", [])
     )
-    return bool(
-        state.get("first_run", False)
-        and "checkpoint_plan" in cfg.review_checkpoints
-        and not answered
-    )
+    return "checkpoint_plan" in cfg.review_checkpoints and not answered
 
 
 def _plan_brief(state: REState, questions: Sequence[BaseModel]) -> dict[str, Any]:
@@ -2777,6 +2784,7 @@ checkpoint_plan = make_checkpoint("checkpoint_plan", "elicitation_plan")
 ask_personas = make_checkpoint("ask_personas", "persona_catalog")
 ask_analysis = make_checkpoint("ask_analysis", "requirements_analysis")
 ask_spec = make_checkpoint("ask_spec", "requirement_specification")
+ask_message = make_checkpoint("ask_message", "elicitation_plan")
 checkpoint_personas = make_checkpoint("checkpoint_personas", "persona_catalog")
 checkpoint_analysis = make_checkpoint("checkpoint_analysis", "requirements_analysis")
 checkpoint_spec = make_checkpoint("checkpoint_spec", "requirement_specification")
@@ -2794,6 +2802,57 @@ TRANSCRIPT_TAIL = 8
 # The intent router and the state bookkeeping of later runs
 
 
+# The steps that can start a walk, in the order of the work, each with what it needs to read.
+_WORK_ORDER = (
+    ("planner", None),
+    ("interviewer", "personas"),
+    ("analyst", "interview_transcripts"),
+    ("requirement_engineer", "analyzed_requirements"),
+    ("backlog_manager", "requirement_specification"),
+)
+
+
+def _reachable_target(target: str, state: REState) -> str:
+    """The step the router sends the message to: the one it chose when the project holds what that
+    step reads, and otherwise the step that makes what is missing, the earliest one first. A new
+    project holds nothing, so any choice leads to the planner."""
+    names = [name for name, _needs in _WORK_ORDER]
+    if target not in names:
+        return target
+    for index in range(1, names.index(target) + 1):
+        needs = _WORK_ORDER[index][1]
+        if needs is not None and not state.get(needs):
+            return _WORK_ORDER[index - 1][0]
+    return target
+
+
+def _project_overview(state: REState, sink: ArtifactSink) -> str:
+    """What the project holds now, one line for each stage of the work, for the router to read."""
+    plan = sink.read_artifact(state["project_id"], "elicitation_plan")
+    plan_line = "none yet"
+    if plan is not None:
+        content = cast("dict[str, Any]", plan["content"])
+        plan_line = (
+            f"written, {len(content.get('topics', []))} topics, "
+            f"{len(content.get('stakeholder_types', []))} stakeholder types"
+        )
+    counts = [
+        ("personas", len(state.get("personas", []))),
+        ("interviews held", len(state.get("interview_transcripts", []))),
+        ("analyzed requirements", len(state.get("analyzed_requirements", []))),
+        (
+            "open ambiguities and conflicts",
+            len(state.get("ambiguities", [])) + len(state.get("conflicts", [])),
+        ),
+        ("specification requirements", len(state.get("requirement_specification", []))),
+        ("backlog items", len(state.get("product_backlog", []))),
+    ]
+    lines = [f"- interview plan: {plan_line}"]
+    lines += [f"- {name}: {count if count else 'none yet'}" for name, count in counts]
+    lines.append(f"- the run was last at: {state.get('current_stage') or 'the start'}")
+    return "\n".join(lines)
+
+
 @safe_node
 def intent_router_node(
     state: REState,
@@ -2803,13 +2862,18 @@ def intent_router_node(
     sink = _sink(config or {})
     runnable_config = config or {}
     pending = [dict(entry) for entry in _configurable(runnable_config).get("pending_messages", [])]
-    if not pending:
+    # What the user answered when the router asked about a message: the message with the answers,
+    # which stands in for the pending ones this once.
+    clarified = str(
+        state.get("review_briefs", {}).get("ask_message", {}).get("answered_message", "")
+    )
+    if not pending and not clarified:
         msg = (
             "intent_router reached with no pending message; the executor "
-            "must route first runs at the planner"
+            "must start a run with the message that begins it"
         )
         raise ValueError(msg)
-    messages = "\n".join(
+    messages = clarified or "\n".join(
         f"{index}. {entry['content']}" for index, entry in enumerate(pending, start=1)
     )
     spec_record = sink.read_artifact(state["project_id"], "requirement_specification")
@@ -2832,14 +2896,41 @@ def intent_router_node(
         {
             "output_language": _language(cfg),
             "messages": messages,
+            "history": "\n".join(_configurable(runnable_config).get("message_history", []))
+            or "(none)",
+            "project": _project_overview(state, sink),
             "specification": listed_lines_spec,
             "backlog": listed_lines_backlog,
         },
     )
+    target = _reachable_target(directive.target_node, state)
+    if target != directive.target_node:
+        logger.warning("router target moved back", wanted=directive.target_node, to=target)
+    # The planner asks its own questions about the idea: the router asks for the other steps.
+    if (
+        directive.questions
+        and not clarified
+        and target != "planner"
+        and "ask_message" in cfg.review_checkpoints
+    ):
+        # The message is too unclear to act on: the checkpoint asks, and the router comes back.
+        _tell_user(sink, directive)
+        briefs = {
+            **state.get("review_briefs", {}),
+            "ask_message": {
+                "questions": [q.model_dump(mode="json") for q in directive.questions],
+                "message": messages,
+            },
+        }
+        return {
+            "review_briefs": briefs,
+            "current_stage": "intent_routing",
+            "routed_target": "ask_message",
+        }
     directive_id = _directive_sink(runnable_config).create_directive(
         _run_id(runnable_config),
         "intent",
-        target_node=directive.target_node,
+        target_node=target,
         iteration=int(state["iteration_count"]),
         instruction=directive.instruction,
         items=[
@@ -2849,8 +2940,14 @@ def intent_router_node(
         ],
     )
     _tell_user(_sink(runnable_config), directive)
-    return {
-        "rework_directives": [directive_id],
+    update: dict[str, Any] = {
+        # What was asked about this message is settled: the next message starts clean.
+        "review_briefs": {**state.get("review_briefs", {}), "ask_message": {}},
         "current_stage": "intent_routing",
-        "routed_target": directive.target_node,
+        "routed_target": target,
     }
+    # The first message is the idea itself. Its directive is kept with the run, but it is not an
+    # instruction to rework a document: the steps after the plan would read it as one.
+    if not state.get("first_run", False):
+        update["rework_directives"] = [directive_id]
+    return update

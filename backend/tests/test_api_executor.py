@@ -18,6 +18,7 @@ from sqlalchemy import select
 import khoailanggraph.llm.factory as llm_factory
 from khoailanggraph.features.me.models import UserRow
 from khoailanggraph.features.runs import service as runs_service
+from khoailanggraph.features.runs.executor import RunWalker
 from khoailanggraph.features.runs.models import DirectiveRow, RunEventRow
 from khoailanggraph.llm import reset_model_cache
 from khoailanggraph.main import create_app
@@ -428,7 +429,7 @@ async def test_the_text_a_node_generates_and_the_tools_it_calls_are_events(
     assert tokens
     first = jsonlib.loads(tokens[0].data_json)
     assert first["text"]
-    assert first["node"] == "planner"
+    assert first["node"] == "intent_router"
     assert tokens[0].step_id is not None
     assert str(tokens[0].step_id) == first["step_id"]
     called = [jsonlib.loads(event.data_json)["tool"] for event in tools]
@@ -464,7 +465,7 @@ async def test_a_tool_that_runs_too_long_fails_the_run_with_timeout(
     run = (await _send(client, await _thread(client), []))["run"]
 
     assert run["status"] == "failed"
-    assert run["error"]["code"] == "timeout"
+    assert run["error"]["code"] == "timeout", run["error"]
     assert "research_search" in run["error"]["message"]
 
 
@@ -579,7 +580,8 @@ async def test_the_planner_asks_before_the_plan_and_writes_it_from_the_answers(
     # The planner comes back with the answers as a part of the idea and writes the plan.
     assert "How do students sign in?: own" in seen_by_the_plan[0]
     steps = (await client.get(f"{API}/runs/{run['id']}/steps", params={"limit": 200})).json()
-    assert [step["node"] for step in steps["items"]][:4] == [
+    assert [step["node"] for step in steps["items"]][:5] == [
+        "intent_router",
         "planner",
         "checkpoint_plan",
         "planner",
@@ -645,3 +647,30 @@ async def test_something_else_needs_words_and_goes_to_the_intent_router_as_a_mes
             break
         await asyncio.sleep(0.5)
     assert any(step["node"] == "intent_router" for step in steps)
+
+
+def test_the_answers_about_a_message_go_back_to_the_router_with_the_message() -> None:
+    state: Any = {
+        "initial_intent": "A booking app",
+        "review_briefs": {"ask_message": {"message": "1. Change the limit"}},
+    }
+    RunWalker._settle_asked_idea("ask_message", "intent_router", state, ["- Which: length"])
+
+    answered = state["review_briefs"]["ask_message"]["answered_message"]
+    assert answered.startswith("1. Change the limit")
+    assert "- Which: length" in answered
+    assert state["initial_intent"] == "A booking app"
+
+    blank: Any = {"review_briefs": {"ask_message": {"message": "1. Change it"}}}
+    RunWalker._settle_asked_idea("ask_message", "intent_router", blank, [])
+    assert (
+        "left the questions unanswered" in blank["review_briefs"]["ask_message"]["answered_message"]
+    )
+
+
+def test_the_answers_about_the_idea_become_a_part_of_the_idea() -> None:
+    state: Any = {"initial_intent": "A booking app", "review_briefs": {}}
+    RunWalker._settle_asked_idea("checkpoint_plan", "planner", state, ["- Login: campus"])
+
+    assert state["initial_intent"].endswith("Clarifications from the user:\n- Login: campus")
+    assert state["review_briefs"] == {}

@@ -984,3 +984,16 @@ class IntentDirectiveOutput(_Narrated):
     target_node: ROUTER_TARGETS
     instruction: str
     about: list[str]
+    questions: list[ReviewQuestionOutput] = Field(
+        default_factory=list,
+        description=(
+            "Only when the message is too unclear for you to tell which step should act or what "
+            "it should change: at most three questions that settle it, and then the target and "
+            "the instruction are only your best guess. Leave the list empty when the message is "
+            "clear enough, which is the usual case. Prefer `single_select` or `multi_select` "
+            "with two to four choices that you propose and your own assumption in "
+            "`default_choice_keys`, so that the user only has to pick. Use `free_text` only "
+            "when no set of choices could fit. The user can always answer something else, so "
+            "do not add a choice for it."
+        ),
+    )
