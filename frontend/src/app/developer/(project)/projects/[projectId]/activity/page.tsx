@@ -8,7 +8,9 @@ import { ActivityPage } from '@/modules/activity/widgets/chat'
 export const instant = false
 
 /** The chat of the activity of a project, with its prompt. */
-export default async function Page({ params }: PageProps<'/projects/[projectId]/activity'>) {
+export default async function Page({
+  params,
+}: PageProps<'/developer/projects/[projectId]/activity'>) {
   const { projectId } = await params
   return (
     <Suspense fallback={null}>
