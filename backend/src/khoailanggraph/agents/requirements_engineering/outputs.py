@@ -652,12 +652,6 @@ class RawRequirementDraft(_Output):
     supersedes: list[str] = Field(default_factory=list)
 
 
-
-from khoailanggraph.agents.requirements_engineering.definition import (
-    value_lists as _value_lists,
-)
-
-
 def _enum(name: str, fallback: tuple[str, ...]) -> object:
     """A Literal of the value list of the current definition version.
 
@@ -665,17 +659,17 @@ def _enum(name: str, fallback: tuple[str, ...]) -> object:
     list cannot reach the store; the analyst normalizer stays as a second
     line of defence for older records.
     """
-    values = tuple(str(entry["key"]) for entry in _value_lists().get(name, [])) or fallback
-    return Literal[values]  # noqa: TC006 - dynamic Literal needs the tuple
+    entries = workflow_definition.value_lists().get(name, [])
+    values = tuple(str(entry["key"]) for entry in entries) or fallback
+    return Literal[values]
 
 
 Priority = _enum("priority", ("must", "should", "could", "wont"))
-AmbiguityType = _enum(
-    "ambiguity_type", ("lexical", "syntactic", "semantic", "vague", "incomplete")
-)
+AmbiguityType = _enum("ambiguity_type", ("lexical", "syntactic", "semantic", "vague", "incomplete"))
 ConflictType = _enum(
     "conflict_type", ("between_requirements", "between_stakeholders", "with_constraint")
 )
+
 
 class AnalyzedRequirementDraft(_Output):
     ref: str

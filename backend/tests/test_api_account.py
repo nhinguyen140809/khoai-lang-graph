@@ -78,7 +78,11 @@ async def test_model_settings_are_replaced_and_checked(file_client: AsyncClient)
             "items": [
                 {"agent_role": "nobody", "model_id": "openai:deepseek-v4.1-flash"},
                 {"agent_role": "analyst", "model_id": "openai:unknown"},
-                {"agent_role": "planner", "model_id": "openai:deepseek-v4.1-flash", "temperature": 3},
+                {
+                    "agent_role": "planner",
+                    "model_id": "openai:deepseek-v4.1-flash",
+                    "temperature": 3,
+                },
             ]
         },
     )
