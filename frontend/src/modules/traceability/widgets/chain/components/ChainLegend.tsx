@@ -19,7 +19,7 @@ import { chainNodeProps } from '../item-trace.utils'
 export function ChainLegend() {
   const modifierKey = useModifierKeyName()
   return (
-    <FloatingSurface placement="top-right" variant="popover" size="sm" className="p-1">
+    <FloatingSurface placement="top-right" variant="popover" size="sm" className="flex p-1">
       <Popover>
         <PopoverTrigger asChild>
           <Button variant="ghost" size="icon-sm" className="text-muted-foreground">
