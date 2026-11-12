@@ -9,6 +9,7 @@ import {
   messagesByRun,
   useActivityStream,
   useActivityThread,
+  withLatestRun,
 } from '@/modules/activity/entities'
 import { usePendingInterrupt } from '@/modules/review/entities'
 import { type Run, useLatestRun, useThreadRuns } from '@/modules/run/entities'
@@ -103,9 +104,10 @@ function ActivityChat({
 
   const keptScroll = useKeptScroll('chat', { from: 'end' })
   const target = useRouteParam(RouteParam.Entry)
-  const runIds = (runs.data?.pages ?? [])
-    .flatMap(({ items }) => items)
-    .toSorted((a, b) => a.number - b.number)
+  const runIds = withLatestRun(
+    (runs.data?.pages ?? []).flatMap(({ items }) => items),
+    latestRun.data,
+  ).toSorted((a, b) => a.number - b.number)
   const byRun = useMemo(
     () =>
       messages.data === undefined

@@ -14,6 +14,7 @@ import {
   messagesByRun,
   runEntries,
   shownWork,
+  withLatestRun,
 } from '../activity-entries.utils'
 import {
   kinds,
@@ -128,6 +129,21 @@ describe('messagesByRun', () => {
 describe('entryAnchorId', () => {
   it('anchors an entry by its id', () => {
     expect(entryAnchorId('i1')).toBe('entry-i1')
+  })
+})
+
+describe('withLatestRun', () => {
+  const stale = { id: 'r2', status: 'running' }
+  const fresh = { id: 'r2', status: 'failed' }
+  const older = { id: 'r1', status: 'failed' }
+
+  it('reads the newest run as the polled query last saw it, and keeps the order', () => {
+    expect(withLatestRun([older, stale], fresh)).toEqual([older, fresh])
+  })
+
+  it('leaves the runs as they are while the newest has not loaded, or is not in the list', () => {
+    expect(withLatestRun([older, stale], undefined)).toEqual([older, stale])
+    expect(withLatestRun([older], fresh)).toEqual([older])
   })
 })
 

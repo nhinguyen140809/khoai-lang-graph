@@ -201,3 +201,16 @@ export function shownWork<T extends { stage: string }>(
     ? work.filter(({ stage }) => stageTitles.has(stage))
     : work
 }
+
+/**
+ * The runs of a thread with the newest one as the polled query read it last. The list of the runs
+ * is read once and not again, so the status it holds for the newest run is the one it had then,
+ * and a run that has since ended would still read as running: its failure would show without the
+ * button that runs it again. The runs keep their order.
+ */
+export function withLatestRun<T extends { id: string }>(
+  runs: readonly T[],
+  latest: T | null | undefined,
+): T[] {
+  return runs.map((run) => (run.id === latest?.id ? latest : run))
+}
