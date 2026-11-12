@@ -74,7 +74,7 @@ export function PendingReview({
         )}
       </div>
       <div className="px-3 py-3">
-        <AnswerReviewForm interrupt={interrupt} run={run} />
+        <AnswerReviewForm key={interrupt.id} interrupt={interrupt} run={run} />
       </div>
     </div>
   )
