@@ -9,12 +9,19 @@ import { projectIds, runIds, threadIds } from '@/mocks/shared/db'
 import type { Interrupt } from '@/modules/review/entities'
 import { apiEndpoints } from '@/shared/api/endpoints'
 import { HttpStatus } from '@/shared/api/http'
+import { assertPresent } from '@/shared/lib/guards'
 import { recordRequests } from '@/test/msw'
 import { renderWithProviders } from '@/test/render'
 import {
+  expectAttribute,
+  expectDisabled,
   expectNoAccessibilityViolations,
+  expectNoRole,
+  expectNoText,
+  expectText,
   pressButton,
   pressKeys,
+  pressRole,
   spyOnToast,
   typeText,
 } from '@/test/steps'
@@ -57,24 +64,18 @@ describe('AnswerReviewForm', () => {
     const interrupt = await readPending()
     await formOf(interrupt)
 
-    expect(screen.getByRole('radio', { name: 'Approve analysis' })).toHaveAttribute(
-      'aria-checked',
-      'true',
-    )
-    expect(screen.getByRole('radio', { name: 'Redo the analysis' })).toHaveAttribute(
-      'aria-checked',
-      'false',
-    )
+    expectAttribute('radio', 'Approve analysis', 'aria-checked', 'true')
+    expectAttribute('radio', 'Redo the analysis', 'aria-checked', 'false')
     // Each option says what choosing it does, chosen or not, and the one that is described to the
     // radio by its words.
-    expect(screen.getByText('The analysis goes on to the specification.')).toBeInTheDocument()
+    await expectText('The analysis goes on to the specification.')
     expect(
       screen.getByText('The analysis is written again, settling the open conflicts.'),
     ).toBeInTheDocument()
     expect(screen.getByRole('radio', { name: 'Redo the analysis' })).toHaveAccessibleDescription(
       'The analysis is written again, settling the open conflicts.',
     )
-    expect(screen.queryByRole('textbox')).not.toBeInTheDocument()
+    expectNoRole('textbox')
     await expectNoAccessibilityViolations()
   })
 
@@ -104,7 +105,7 @@ describe('AnswerReviewForm', () => {
     const interrupt = await readPending()
     await formOf(interrupt)
 
-    await userEvent.click(screen.getByRole('radio', { name: 'Redo the analysis' }))
+    await pressRole('radio', 'Redo the analysis')
 
     const box = await screen.findByRole('textbox', { name: 'Feedback for "Redo the analysis"' })
     expect(box).toHaveFocus()
@@ -122,11 +123,11 @@ describe('AnswerReviewForm', () => {
     const interrupt = await readPending()
     await formOf(interrupt)
 
-    await userEvent.click(screen.getByRole('radio', { name: 'Interview again' }))
+    await pressRole('radio', 'Interview again')
     const box = screen.getByRole('textbox', { name: 'Feedback for "Interview again"' })
     expect(box).toHaveValue('Interview the mentors again about how they approve a session.')
 
-    await userEvent.click(screen.getByRole('radio', { name: 'Redo the analysis' }))
+    await pressRole('radio', 'Redo the analysis')
     expect(screen.getByRole('textbox', { name: 'Feedback for "Redo the analysis"' })).toHaveValue(
       'Settle the two open conflicts in favour of the students, then redo the analysis.',
     )
@@ -137,11 +138,11 @@ describe('AnswerReviewForm', () => {
     const interrupt = await readPending()
     await formOf(interrupt)
 
-    await userEvent.click(screen.getByRole('radio', { name: 'Interview again' }))
+    await pressRole('radio', 'Interview again')
     await userEvent.clear(screen.getByRole('textbox', { name: 'Feedback for "Interview again"' }))
     await pressButton('Send')
 
-    expect(await screen.findByText('Write the feedback.')).toBeInTheDocument()
+    await expectText('Write the feedback.')
     expect(requests.some(({ method }) => method === 'POST')).toBe(false)
   })
 
@@ -151,19 +152,35 @@ describe('AnswerReviewForm', () => {
     await formOf(interrupt)
 
     // One question at a time: the first shows, the second waits behind it.
-    expect(screen.getByText('Students')).toBeInTheDocument()
-    expect(screen.getByText('1 / 4')).toBeInTheDocument()
+    await expectText('Students')
+    await expectText('1 / 4')
 
     await pressButton('Next step')
-    expect(screen.queryByText('Students')).not.toBeInTheDocument()
+    // The first question slides out as the second slides in, and is gone once it has.
+    await waitFor(() => {
+      expectNoText('Students')
+    })
     await pressButton('Next step')
     await pressButton('Next step')
-    expect(screen.getByText('4 / 4')).toBeInTheDocument()
-    expect(screen.queryByRole('button', { name: 'Next step' })).toBeDisabled()
+    await expectText('4 / 4')
+    expectDisabled('button', 'Next step')
 
     await pressButton('Send answers')
 
     await sentAnswer(requests)
+  })
+
+  it('moves between the questions with the left and right keys, and takes the focus along', async () => {
+    const interrupt = await readPending('?mock-agent-questions=only')
+    await formOf(interrupt)
+    const first = screen.getAllByRole('checkbox')[0]
+    assertPresent(first, 'The first question holds choices').focus()
+
+    await pressKeys('{ArrowRight}')
+
+    await expectText('2 / 4')
+    await pressKeys('{ArrowLeft}')
+    await expectText('1 / 4')
   })
 
   it('keeps the values and shows the reason when the send fails', async () => {
@@ -176,7 +193,7 @@ describe('AnswerReviewForm', () => {
     const interrupt = await readPending()
     await formOf(interrupt)
 
-    await userEvent.click(screen.getByRole('radio', { name: 'Redo the analysis' }))
+    await pressRole('radio', 'Redo the analysis')
     const box = screen.getByRole('textbox', { name: 'Feedback for "Redo the analysis"' })
     await userEvent.clear(box)
     await typeText(box, 'Ask the student and the admin whether a layered design works.')

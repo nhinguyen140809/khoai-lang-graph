@@ -3,14 +3,23 @@ import { describe, expect, it } from 'vitest'
 import type { ArtifactItem } from '@/modules/artifact/entities'
 import type { InterruptOption, InterruptQuestion } from '@/modules/review/entities'
 import type { CheckpointOption, QuestionAnswer } from '@/modules/workflow/entities'
+import { ApiError } from '@/shared/api/error'
 
 import {
   answerProblem,
+  answersOf,
   defaultOption,
   feedbackAfterSelect,
   initialAnswers,
+  isChoice,
+  isChosen,
+  isKeptByField,
+  isTextLine,
   modifiedItemsOf,
+  neighborOf,
+  problemsOf,
   resumeRunBody,
+  stepKeyOf,
 } from '../answer-review.utils'
 
 const options: CheckpointOption[] = [
@@ -166,5 +175,135 @@ describe('feedbackAfterSelect', () => {
     expect(feedbackAfterSelect('Ask the mentors too.', withSuggestion, another)).toBe(
       'Ask the mentors too.',
     )
+  })
+})
+
+describe('neighborOf', () => {
+  const list = ['a', 'b', 'c']
+
+  it('gives the element before and after, and none past the ends', () => {
+    expect(neighborOf(list, 'b', 1)).toBe('c')
+    expect(neighborOf(list, 'b', -1)).toBe('a')
+    expect(neighborOf(list, 'c', 1)).toBeUndefined()
+    expect(neighborOf(list, 'a', -1)).toBeUndefined()
+  })
+
+  it('gives the first going down and the last going up for an element that is not in the list', () => {
+    expect(neighborOf(list, 'x', 1)).toBe('a')
+    expect(neighborOf(list, 'x', -1)).toBe('c')
+  })
+})
+
+describe('problemsOf', () => {
+  it('names each field that the API found wrong, one line for each', () => {
+    const error = new ApiError('Validation failed', 422, 'validation_failed', [
+      { field: 'answers.users', message: 'Answer this question.' },
+      { field: 'option', message: 'Choose one of: accept, reject.' },
+    ])
+
+    expect(problemsOf(error)).toBe(
+      'answers.users: Answer this question.\noption: Choose one of: accept, reject.',
+    )
+  })
+
+  it('says nothing for an error that names no field', () => {
+    expect(problemsOf(new ApiError('Down', 500, null, []))).toBeUndefined()
+    expect(problemsOf(new Error('Offline'))).toBeUndefined()
+  })
+})
+
+describe('stepKeyOf', () => {
+  const press = (key: string, held: Partial<KeyboardEvent> = {}) => ({
+    key,
+    altKey: false,
+    ctrlKey: false,
+    metaKey: false,
+    shiftKey: false,
+    ...held,
+  })
+
+  it('reads an arrow key as a move to a step or to an answer', () => {
+    expect(stepKeyOf(press('ArrowRight'))).toEqual({ kind: 'step', by: 1 })
+    expect(stepKeyOf(press('ArrowUp'))).toEqual({ kind: 'answer', by: -1 })
+  })
+
+  it('ignores another key and an arrow with a modifier held', () => {
+    expect(stepKeyOf(press('a'))).toBeUndefined()
+    expect(stepKeyOf(press('ArrowLeft', { shiftKey: true }))).toBeUndefined()
+  })
+})
+
+describe('isKeptByField', () => {
+  const step = { kind: 'step', by: 1 } as const
+  const answer = { kind: 'answer', by: 1 } as const
+
+  it('keeps every arrow in a box of text', () => {
+    expect(isKeptByField(document.createElement('textarea'), step)).toBe(true)
+  })
+
+  it('lets go of the arrow that leaves a line of text at the edge of its caret', () => {
+    const input = document.createElement('input')
+    input.value = 'abc'
+    input.setSelectionRange(3, 3)
+    expect(isKeptByField(input, step)).toBe(false)
+    input.setSelectionRange(1, 1)
+    expect(isKeptByField(input, step)).toBe(true)
+    expect(isKeptByField(input, answer)).toBe(true)
+  })
+
+  it('lets every arrow through a radio button and anything that is not a field', () => {
+    const radio = document.createElement('input')
+    radio.type = 'radio'
+    expect(isKeptByField(radio, answer)).toBe(false)
+    expect(isKeptByField(document.createElement('button'), answer)).toBe(false)
+  })
+})
+
+describe('the controls of a step', () => {
+  function formWith(html: string): HTMLFormElement {
+    const form = document.createElement('form')
+    form.innerHTML = html
+    document.body.append(form)
+    return form
+  }
+
+  it('tells a choice from a line of text', () => {
+    const form = formWith(
+      '<input type="radio"><input type="checkbox"><button type="button" role="radio"></button><input type="text"><input type="number"><button type="submit"></button>',
+    )
+    const controls = Array.from(form.elements)
+
+    expect(controls.map((element) => isChoice(element))).toEqual([
+      true,
+      true,
+      true,
+      false,
+      false,
+      false,
+    ])
+    expect(controls.map((element) => isTextLine(element))).toEqual([
+      false,
+      false,
+      false,
+      true,
+      true,
+      false,
+    ])
+  })
+
+  it('tells the choice that is chosen, for an input and for an option of the review', () => {
+    const form = formWith(
+      '<input type="radio" checked><button type="button" role="radio" aria-checked="true"></button><button type="button" role="radio" aria-checked="false"></button>',
+    )
+
+    expect(answersOf(form).map((element) => isChosen(element))).toEqual([true, true, false])
+  })
+
+  it('leaves out the controls of a step that is inert, such as the one sliding out of view', () => {
+    const form = formWith(
+      '<div inert><input type="radio"></div><div><input type="radio" id="shown"></div>',
+    )
+
+    expect(answersOf(form).map(({ id }) => id)).toEqual(['shown'])
   })
 })

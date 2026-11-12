@@ -1,8 +1,10 @@
-import { render, screen } from '@testing-library/react'
+import { screen } from '@testing-library/react'
 import { describe, expect, it } from 'vitest'
 
 import { agentQuestionFixtures } from '@/mocks/interrupts/interrupts.fixtures'
 import type { Interrupt } from '@/modules/review/entities'
+import { renderWithProviders } from '@/test/render'
+import { expectNoText, expectText } from '@/test/steps'
 
 import { ReviewEntry } from '../ReviewEntry'
 
@@ -24,12 +26,12 @@ const base: Interrupt = {
 }
 
 describe('ReviewEntry', () => {
-  it('lists what the user answered to the questions of an agent, not the stop of a run', () => {
+  it('lists what the user answered to the questions of an agent, not the stop of a run', async () => {
     const [first] = agentQuestionFixtures
     if (first === undefined) throw new Error('The fixtures hold a question')
     const choice = first.choices[0]
     if (choice === undefined) throw new Error('The first question holds a choice')
-    render(
+    renderWithProviders(
       <ReviewEntry
         interrupt={{
           ...base,
@@ -44,14 +46,14 @@ describe('ReviewEntry', () => {
       />,
     )
 
-    expect(screen.getByText('Answered:')).toBeInTheDocument()
+    await expectText('Answered:')
     expect(screen.getByText(first.prompt, { exact: false })).toBeInTheDocument()
     expect(screen.getByText(choice.label)).toBeInTheDocument()
-    expect(screen.queryByText(/Stopped with the run/)).not.toBeInTheDocument()
+    expectNoText(/Stopped with the run/)
   })
 
-  it('says that the defaults were taken when nobody answered', () => {
-    render(
+  it('says that the defaults were taken when nobody answered', async () => {
+    renderWithProviders(
       <ReviewEntry
         interrupt={{
           ...base,
@@ -66,17 +68,17 @@ describe('ReviewEntry', () => {
       />,
     )
 
-    expect(screen.getByText('Answered with the default:')).toBeInTheDocument()
+    await expectText('Answered with the default:')
   })
 
-  it('says that a cancelled ask stopped with the run', () => {
-    render(<ReviewEntry interrupt={{ ...base, status: 'cancelled' }} />)
+  it('says that a cancelled ask stopped with the run', async () => {
+    renderWithProviders(<ReviewEntry interrupt={{ ...base, status: 'cancelled' }} />)
 
-    expect(screen.getByText('Stopped with the run')).toBeInTheDocument()
+    await expectText('Stopped with the run')
   })
 
-  it('words the option that answered a review', () => {
-    render(
+  it('words the option that answered a review', async () => {
+    renderWithProviders(
       <ReviewEntry
         interrupt={{
           ...base,
@@ -101,7 +103,8 @@ describe('ReviewEntry', () => {
       />,
     )
 
-    expect(screen.getByText(/Answered: Approve/)).toBeInTheDocument()
-    expect(screen.getByText('Looks right.')).toBeInTheDocument()
+    await expectText('Answered:')
+    await expectText(/Approve/)
+    await expectText('Looks right.')
   })
 })

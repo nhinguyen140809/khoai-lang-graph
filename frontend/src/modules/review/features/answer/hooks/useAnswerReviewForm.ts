@@ -8,7 +8,7 @@ import type { Interrupt, InterruptOption } from '@/modules/review/entities'
 import type { Run } from '@/modules/run/entities'
 import { ariaKeyShortcuts, isHotkeyPressed } from '@/shared/lib/hotkey'
 
-import { answerReviewMessages, sendFeedbackHotkey } from '../answer-review.constants'
+import { sendFeedbackHotkey } from '../answer-review.constants'
 import { answerReviewFormSchema } from '../answer-review.schema'
 import type { AnswerReviewFormValues } from '../answer-review.types'
 import { defaultOption, feedbackAfterSelect, initialAnswers } from '../answer-review.utils'
@@ -57,6 +57,5 @@ export function useAnswerReviewForm(interrupt: Interrupt, run: Run) {
     sendOnKey,
     isPending: isBusy,
     keys: ariaKeyShortcuts(sendFeedbackHotkey),
-    words: answerReviewMessages,
   }
 }

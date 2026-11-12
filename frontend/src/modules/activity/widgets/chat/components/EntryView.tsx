@@ -144,7 +144,7 @@ function MessageView({ entry, isTarget }: EntryViewProps<'message'>) {
 /** The separator of a phase of the work of the run. */
 function PhaseView({ entry, isTarget, phase }: EntryViewProps<'phase'>) {
   return (
-    <EntryAnchor entryId={entry.id} isTarget={isTarget} className="px-1 pt-8">
+    <EntryAnchor entryId={entry.id} isTarget={isTarget} className="px-1 pt-6">
       <PhaseEntryView
         work={entry.work}
         stageTitle={entry.stageTitle}
@@ -199,7 +199,7 @@ function ToolView({ entry, isTarget }: EntryViewProps<'tool'>) {
 /** A review of the run that no longer waits: the line of its answer. */
 function ReviewView({ entry, isTarget }: EntryViewProps<'review'>) {
   return (
-    <EntryAnchor entryId={entry.id} isTarget={isTarget} className="px-1 pt-3 pb-1.5">
+    <EntryAnchor entryId={entry.id} isTarget={isTarget} className="px-1 pt-6">
       <ReviewEntry interrupt={entry.interrupt} />
     </EntryAnchor>
   )
