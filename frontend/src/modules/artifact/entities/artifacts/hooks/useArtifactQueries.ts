@@ -23,10 +23,15 @@ export function useProjectArtifacts(
 }
 
 /** One artifact; with `version`, the artifact as it was at that version. */
-export function useArtifact(artifactId: string, version?: number) {
+export function useArtifact(
+  artifactId: string,
+  version?: number,
+  { isEnabled = true }: HookQueryOptions = {},
+) {
   return useQuery({
     queryKey: artifactKeys.detail(artifactId, version),
     queryFn: () => getArtifact(artifactId, version),
+    enabled: isEnabled,
   })
 }
 

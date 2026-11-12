@@ -126,11 +126,23 @@ function nodeIdOfItem(
   return id in nodes ? id : undefined
 }
 
-/** The panel with an open document: it loads the outline of that document. */
-function PanelWithOutline(props: Omit<PanelBodyProps, 'outline'> & { artifactId: string }) {
+/**
+ * The panel, with the outline of the open document when there is one. It is one component whether
+ * a document is open or not, so that the tree keeps its state, its scroll and the rows the user
+ * collapsed when the user goes from one page to another.
+ */
+function PanelWithOutline(
+  props: Omit<PanelBodyProps, 'outline' | 'openArtifactId'> & { artifactId: string | undefined },
+) {
   const { artifactId, ...rest } = props
   const outline = useArtifactOutline(artifactId)
-  return <PanelBody {...rest} outline={outline} />
+  return (
+    <PanelBody
+      {...rest}
+      openArtifactId={artifactId}
+      outline={artifactId === undefined ? null : outline}
+    />
+  )
 }
 
 /**
@@ -155,26 +167,13 @@ export function DocumentsPanel({ projectId }: { projectId: string }) {
       </SidePanel>
     )
   }
-  if (artifactId === undefined) {
-    return (
-      <PanelBody
-        projectId={projectId}
-        list={list}
-        outline={null}
-        openArtifactId={undefined}
-        openItemId={undefined}
-        isUnderReview={false}
-      />
-    )
-  }
   return (
     <PanelWithOutline
       projectId={projectId}
       list={list}
       artifactId={artifactId}
-      openArtifactId={artifactId}
       openItemId={itemId}
-      isUnderReview={list.isUnderReview(artifactId)}
+      isUnderReview={artifactId !== undefined && list.isUnderReview(artifactId)}
     />
   )
 }
