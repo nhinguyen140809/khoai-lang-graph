@@ -24,7 +24,12 @@ describe('useRunStageTitle', () => {
 
   it('gives nothing while the definition loads', () => {
     const { result } = renderHookWithProviders(() =>
-      useRunStageTitle({ status: 'running', workflow_version: 1, current_stage: 'analysis' }),
+      useRunStageTitle({
+        id: 'r1',
+        status: 'running',
+        workflow_version: 1,
+        current_stage: 'analysis',
+      }),
     )
 
     expect(result.current).toBeUndefined()

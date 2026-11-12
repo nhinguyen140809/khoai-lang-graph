@@ -3,8 +3,7 @@
 import { cn } from 'cn'
 
 import type { Run } from '@/modules/run/entities'
-import { useRunStatusLook } from '@/modules/run/entities'
-import { useStageTitles } from '@/modules/workflow/entities'
+import { useRunStageTitle, useRunStatusLook } from '@/modules/run/entities'
 import { Shimmer } from '@/shared/components/animation'
 import { toneClasses } from '@/shared/lib/tone'
 
@@ -19,7 +18,7 @@ import { runStatusLineStatuses } from '../activity-chat.constants'
  */
 export function RunStatusLine({ run }: { run: Run }) {
   const look = useRunStatusLook(run.status)
-  const stageTitle = useStageTitles(run.workflow_version).get(run.current_stage)
+  const stageTitle = useRunStageTitle(run)
 
   if (!runStatusLineStatuses.includes(run.status)) return null
 

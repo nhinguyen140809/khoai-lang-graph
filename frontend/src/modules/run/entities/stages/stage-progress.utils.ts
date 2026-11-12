@@ -8,6 +8,7 @@ import type { RunStep } from '../steps/run-steps.types'
 import { orderedSteps } from '../steps/run-steps.utils'
 import type { WorkEntry, WorkStatus } from '../work/work.types'
 import { workEntries } from '../work/work-entries.utils'
+import { stageOfRun } from './stage-of-run.utils'
 import type { StageProgress, StageStatus, SubjectProgress } from './stage-progress.types'
 
 /** The statuses of a stage or of a subject, from the one that needs the user most. */
@@ -44,15 +45,17 @@ function flatStages(stages: readonly VisibleStage[]): VisibleStage[] {
   return stages.flatMap((stage) => [stage, ...flatStages(stage.children)])
 }
 
-/** The stage the run is in, as the user sees it: the one it names, else the one of its latest visible step. */
+/** The stage the run is in, as the user sees it: the one of the step that runs now, or the one the run names, else the one of its latest visible step. */
 function currentStageOf(
   run: Pick<Run, 'status' | 'current_stage'> | null,
   steps: readonly RunStep[],
   visibleKeys: ReadonlySet<string>,
 ): string | null {
   if (run === null) return null
-  if (visibleKeys.has(run.current_stage)) return run.current_stage
-  for (const step of orderedSteps([...steps]).toReversed()) {
+  const ordered = orderedSteps([...steps])
+  const stage = stageOfRun(run, ordered)
+  if (visibleKeys.has(stage)) return stage
+  for (const step of ordered.toReversed()) {
     if (visibleKeys.has(step.stage)) return step.stage
   }
   return null
