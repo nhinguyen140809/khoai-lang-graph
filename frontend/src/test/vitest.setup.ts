@@ -1,6 +1,6 @@
 import '@testing-library/jest-dom/vitest'
 
-import { cleanup } from '@testing-library/react'
+import { cleanup, configure } from '@testing-library/react'
 import { afterAll, afterEach, beforeAll, vi } from 'vitest'
 
 import { server } from '@/mocks/msw-server.setup'
@@ -8,6 +8,10 @@ import { resetMockData } from '@/mocks/shared/db'
 import { EventSourceStub, resetEventSources } from '@/test/event-source'
 import { openPage } from '@/test/msw'
 import { resetNextStubs } from '@/test/next-stubs'
+
+// A busy machine renders a page slower than the 1 second that `findBy` and `waitFor` wait by
+// default, so they wait longer; a test that passes does not wait for it.
+configure({ asyncUtilTimeout: 3000 })
 
 // Unit tests run without the Next.js router, so every test gets the stand-ins of next/navigation
 // and next/link (src/test/next-stubs/next-stubs.utils.ts). The mock handlers loaded here import

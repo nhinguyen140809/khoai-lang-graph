@@ -131,8 +131,7 @@ describe('DocumentPage', () => {
     await screen.findByRole('heading', { name: /Stated need/ })
 
     await expectNoAccessibilityViolations(container)
-    // Axe walks the whole page, which takes longer than the default 5 seconds on a busy machine.
-  }, 20_000)
+  })
 })
 
 describe('DocumentsHomePage', () => {
