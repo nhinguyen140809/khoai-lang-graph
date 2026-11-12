@@ -116,7 +116,7 @@ export function ItemLinkLine({
             <TriangleAlertIcon aria-hidden className="size-3 shrink-0 text-warning-strong" />
           )}
           <span className="shrink-0 text-muted-foreground">{row.kindTitle}</span>
-          <span className="whitespace-normal">{row.title}</span>
+          <span className="max-w-64 truncate">{row.title}</span>
         </Button>
       </LinkedItemsPopover>
     ))
