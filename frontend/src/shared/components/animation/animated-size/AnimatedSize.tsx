@@ -3,11 +3,17 @@
 import { cn } from 'cn'
 import type * as React from 'react'
 
-import { useElementSize } from '@/shared/lib/animation'
+import { motionMs, useElementSize } from '@/shared/lib/animation'
 
 interface AnimatedSizeProps extends Omit<React.ComponentProps<'div'>, 'style'> {
-  /** The classes of the box that holds the children, which sets the width they take, such as `w-80`; they take the width of their content when left out. */
+  /**
+   * The classes of the box that holds the children, which sets the width they take, such as `w-80`
+   * or `max-w-xs` for text that wraps; they take the width of their content when left out. The
+   * box does not take a width from its own box, which is the size it follows.
+   */
   contentClassName?: string | undefined
+  /** How long the box takes to move to a new size, in milliseconds. */
+  duration?: number
 }
 
 /**
@@ -18,20 +24,29 @@ interface AnimatedSizeProps extends Omit<React.ComponentProps<'div'>, 'style'> {
  * clips what overflows while it moves, and it takes its size from the children at once on the
  * first render and when the user asked for less motion.
  */
-function AnimatedSize({ className, contentClassName, children, ...props }: AnimatedSizeProps) {
+function AnimatedSize({
+  className,
+  contentClassName,
+  duration = motionMs,
+  children,
+  ...props
+}: AnimatedSizeProps) {
   const { ref, size } = useElementSize<HTMLDivElement>()
 
   return (
     <div
       data-slot="animated-size"
-      style={size ? { width: size.width, height: size.height } : undefined}
+      style={{
+        transitionDuration: `${String(duration)}ms`,
+        ...(size && { width: size.width, height: size.height }),
+      }}
       className={cn(
-        'max-w-full overflow-hidden transition-[width,height] duration-200 ease-out motion-reduce:transition-none',
+        'max-w-full overflow-hidden transition-size motion-reduce:transition-none',
         className,
       )}
       {...props}
     >
-      <div ref={ref} className={cn('w-max max-w-full', contentClassName)}>
+      <div ref={ref} className={cn('w-max', contentClassName)}>
         {children}
       </div>
     </div>
