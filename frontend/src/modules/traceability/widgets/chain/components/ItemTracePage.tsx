@@ -63,7 +63,7 @@ export function ItemTracePage({ projectId, itemId }: { projectId: string; itemId
     )
   }
   if (chain.state === 'pending' || layout.state === 'pending') {
-    return <LoadingState label={itemTraceMessages.loading} />
+    return <LoadingState label={itemTraceMessages.loading} layout="detail" rows={3} />
   }
   if (layout.state === 'error') {
     return <ErrorState message={itemTraceMessages.loadError} onRetry={layout.retry} />
