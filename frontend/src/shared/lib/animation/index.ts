@@ -1,2 +1,5 @@
+export { motionMs } from './animation.constants'
 export type { ElementSize } from './animation.types'
 export { useElementSize } from './hooks/useElementSize'
+export { useHasPainted } from './hooks/useHasPainted'
+export { type LeavingRow, useLeavingRows } from './hooks/useLeavingRows'
