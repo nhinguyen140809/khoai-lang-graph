@@ -356,9 +356,36 @@
 
   @keyframes flash {
     from {
-      background-color: color-mix(in oklab, var(--flash-tone, var(--tone, var(--primary))) 30%, transparent);
+      background-color: color-mix(
+        in oklab,
+        var(--flash-tone, var(--tone, var(--primary))) 30%,
+        transparent
+      );
     }
   }
+}
+
+/*
+ * The light of a `shimmer` in the color of the tone of the element: the text keeps its own color
+ * and the band that crosses it is the tone's. The band is wide and soft: it is a layer of the tone
+ * that grows from nothing to its full color and back, over a layer of the color of the text, so
+ * that the text takes the tone as a color laid over it, and not as a mix of two hues, which turns
+ * a yellow band on blue text green at its edges. `shimmer-spread-*` sets how wide it is.
+ */
+@utility shimmer-tone {
+  --shimmer-spread: calc(8ch + 80px);
+  --shimmer-image:
+    linear-gradient(
+      calc(90deg + var(--shimmer-angle)),
+      transparent calc(50% - var(--_spread)),
+      color-mix(in srgb, var(--tone-strong) 30%, transparent) calc(50% - var(--_spread) * 0.6),
+      color-mix(in srgb, var(--tone-strong) 70%, transparent) calc(50% - var(--_spread) * 0.25),
+      var(--tone-strong) 50%,
+      color-mix(in srgb, var(--tone-strong) 70%, transparent) calc(50% + var(--_spread) * 0.25),
+      color-mix(in srgb, var(--tone-strong) 30%, transparent) calc(50% + var(--_spread) * 0.6),
+      transparent calc(50% + var(--_spread))
+    ),
+    linear-gradient(currentColor, currentColor);
 }
 
 /* The yellow of the charts for a wash that `flash` draws, whatever tone the element has otherwise. */
