@@ -118,6 +118,16 @@ function endEntries(work: WorkEntry, kinds: ReadonlyMap<string, KindLook>): Acti
 }
 
 /**
+ * When a review takes its place among the entries: when it was answered, since the entry is the
+ * line of the answer, and what the work does after the question comes after it. A review that was
+ * not answered, such as one that stopped with the run, takes the time it ended, else the time it
+ * was asked.
+ */
+function answeredAt(interrupt: Interrupt): string {
+  return interrupt.decision?.decided_at ?? interrupt.resolved_at ?? interrupt.created_at
+}
+
+/**
  * The entries of a run in the order of their time: a message first, then work, then a review.
  * The work is a separator for each phase, with its notes, its uses of a tool, what it wrote and
  * how it failed under it. A phase that a review comes in the middle of is cut there, and what the
@@ -147,7 +157,7 @@ export function runEntries(input: {
     ...input.interrupts.map((interrupt) => ({
       type: 'review' as const,
       id: interrupt.id,
-      time: interrupt.created_at,
+      time: answeredAt(interrupt),
       interrupt,
     })),
   ]

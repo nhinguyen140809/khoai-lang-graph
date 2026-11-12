@@ -3,6 +3,7 @@ import { describe, expect, it } from 'vitest'
 import { buildMessage } from '@/mocks/messages/messages.fixtures'
 import { buildStep } from '@/mocks/runs/fixtures/runs.fixtures'
 import { runIds } from '@/mocks/shared/db'
+import type { Interrupt } from '@/modules/review/entities'
 import type { StepNote } from '@/modules/run/entities'
 import { workEntries } from '@/modules/run/entities'
 import type { Message } from '@/modules/thread/entities'
@@ -287,6 +288,44 @@ describe('runEntries with phases', () => {
     })
 
     expect(entries.map(({ type }) => type)).toEqual(['phase', 'note', 'message', 'note'])
+  })
+
+  it('puts the answer to a question where it was given, before the work that goes on from it', () => {
+    const asked: Interrupt = {
+      id: 'ask-1',
+      run_id: run.id,
+      step_id: 's1',
+      node: 'ask_plan',
+      purpose: 'ask',
+      prompt: 'Three questions.',
+      options: [],
+      questions: [],
+      allow_edits: false,
+      review_artifacts: [],
+      status: 'resolved',
+      created_at: at('01:20'),
+      resolved_at: at('01:40'),
+      decision: {
+        option: null,
+        feedback: null,
+        answers: {},
+        decided_by: 'u1',
+        decided_at: at('01:40'),
+      },
+    }
+    const entries = entriesOfSteps({
+      steps: [
+        researchStep(1, 'corpus_builder', [
+          { kind: 'doing', text: 'Asking.', created_at: at('01:10') },
+          { kind: 'finding', text: 'Goes on.', created_at: at('01:50') },
+        ]),
+      ],
+      interrupts: [asked],
+    })
+
+    // The work is cut where the question came; what it does after the answer is a phase that
+    // continues, which comes after the answer and not before it.
+    expect(entries.map(({ type }) => type)).toEqual(['phase', 'note', 'review', 'phase', 'note'])
   })
 
   it('puts the failure of a phase last, as an item under it', () => {

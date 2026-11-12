@@ -49,7 +49,8 @@ describe('splitWork', () => {
 
     expect(textsOf(parts)).toEqual([['First.'], ['Second.'], ['Third.']])
     expect(parts.map(({ continues }) => continues)).toEqual([false, true, true])
-    expect(parts.map(({ startedAt }) => startedAt)).toEqual([at('00:00'), at('03:30'), at('04:30')])
+    // A part that continues begins with its first note, after the time that cut it.
+    expect(parts.map(({ startedAt }) => startedAt)).toEqual([at('00:00'), at('04:00'), at('11:30')])
     expect(new Set(parts.map(({ id }) => id)).size).toBe(3)
     expect(parts[0]?.id).toBe('s1')
   })

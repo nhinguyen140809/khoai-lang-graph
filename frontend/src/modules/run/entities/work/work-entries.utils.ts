@@ -163,12 +163,20 @@ export function splitWork(work: WorkEntry, cuts: readonly string[]): WorkEntry[]
   const starts = [Number.NEGATIVE_INFINITY, ...kept.map(({ at }) => at)]
   return starts.map((from, index) => {
     const to = starts[index + 1] ?? Number.POSITIVE_INFINITY
+    const partNotes = notes
+      .filter((entry) => entry.at >= from && entry.at < to)
+      .map(({ note }) => note)
     const part = {
       ...work,
       id: index === 0 ? work.id : `${work.id}~${String(index)}`,
       continues: index > 0,
-      startedAt: kept[index - 1]?.time ?? work.startedAt,
-      notes: notes.filter((entry) => entry.at >= from && entry.at < to).map(({ note }) => note),
+      // A part that continues begins with its first note: the cut is when the question was asked,
+      // and the work goes on only after it was answered.
+      startedAt:
+        index === 0
+          ? work.startedAt
+          : (partNotes[0]?.created_at ?? kept[index - 1]?.time ?? work.startedAt),
+      notes: partNotes,
     }
     return index === starts.length - 1
       ? part
