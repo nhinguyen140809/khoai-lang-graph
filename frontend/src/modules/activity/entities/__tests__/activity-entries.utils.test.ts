@@ -9,7 +9,7 @@ import type { Message } from '@/modules/thread/entities'
 
 import { entryAnchorId, messagesByRun, runEntries, shownWork } from '../activity-entries.utils'
 import {
-  kindTitles,
+  kinds,
   messages,
   run,
   stageTitles,
@@ -24,7 +24,7 @@ function entriesOf(view: 'user' | 'developer') {
     interrupts: [],
     stageTitles,
     subjectTitles,
-    kindTitles,
+    kinds,
     view,
   })
 }
@@ -71,9 +71,9 @@ describe('runEntries', () => {
       interrupts: [],
       stageTitles,
       subjectTitles,
-      kindTitles: new Map([
-        ['analyzed_requirement', 'Analysed requirement'],
-        ['persona', 'Persona'],
+      kinds: new Map([
+        ['analyzed_requirement', { title: 'Analysed requirement', isNavigable: true }],
+        ['persona', { title: 'Persona', isNavigable: false }],
       ]),
       view: 'user',
     })
@@ -85,6 +85,8 @@ describe('runEntries', () => {
       ['Analysed requirement', 1],
       ['Persona', 1],
     ])
+    // A kind without pages is only counted by the chat; a kind that is not known takes them.
+    expect(groups.map(({ isNavigable }) => isNavigable)).toEqual([true, false])
     expect(written?.type === 'written' && written.phaseId).toBe('s1')
   })
 })
@@ -163,7 +165,7 @@ describe('runEntries with phases', () => {
       interrupts: input.interrupts ?? [],
       stageTitles: stages,
       subjectTitles,
-      kindTitles,
+      kinds,
       view: 'user',
     })
   }

@@ -5,7 +5,7 @@ import type { Message } from '@/modules/thread/entities/@x/activity'
 import { groupBy } from '@/shared/lib/collections'
 import type { View } from '@/shared/lib/view'
 
-import type { ActivityEntry, KindGroup } from './activity-entries.types'
+import type { ActivityEntry, KindGroup, KindLook } from './activity-entries.types'
 
 // The order of the entries that share a time: a message first, then work, then a review. The
 // separator of a phase and its items share a rank, so that they keep the order they were made in.
@@ -20,11 +20,13 @@ const entryTypeRank = {
 } as const satisfies Record<ActivityEntry['type'], number>
 
 /** What a line of work wrote, by kind of item, in the order of the first item of each kind. */
-function kindGroupsOf(work: WorkEntry, kindTitles: ReadonlyMap<string, string>): KindGroup[] {
+function kindGroupsOf(work: WorkEntry, kinds: ReadonlyMap<string, KindLook>): KindGroup[] {
   const produced: ItemRef[] = [...work.created, ...work.changed]
   return groupBy(produced, ({ kind }) => kind).map(({ key: kind, items }) => ({
     kind,
-    title: kindTitles.get(kind) ?? kind,
+    title: kinds.get(kind)?.title ?? kind,
+    // A kind that is not known yet is taken to have pages, as most do.
+    isNavigable: kinds.get(kind)?.isNavigable ?? true,
     created: items.filter((item) => work.created.includes(item)),
     changed: items.filter((item) => work.changed.includes(item)),
   }))
@@ -33,7 +35,7 @@ function kindGroupsOf(work: WorkEntry, kindTitles: ReadonlyMap<string, string>):
 interface PhaseTitles {
   stageTitles: ReadonlyMap<string, string>
   subjectTitles: ReadonlyMap<string, string>
-  kindTitles: ReadonlyMap<string, string>
+  kinds: ReadonlyMap<string, KindLook>
   view: View
 }
 
@@ -59,7 +61,7 @@ function phaseEntries(work: WorkEntry, titles: PhaseTitles): ActivityEntry[] {
         }
   })
   const endedAt = work.steps.at(-1)?.finished_at ?? work.notes.at(-1)?.created_at ?? work.startedAt
-  const kindGroups = kindGroupsOf(work, titles.kindTitles)
+  const kindGroups = kindGroupsOf(work, titles.kinds)
   return [
     {
       type: 'phase',
@@ -111,7 +113,7 @@ export function runEntries(input: {
   interrupts: readonly Interrupt[]
   stageTitles: ReadonlyMap<string, string>
   subjectTitles: ReadonlyMap<string, string>
-  kindTitles: ReadonlyMap<string, string>
+  kinds: ReadonlyMap<string, KindLook>
   view: View
 }): ActivityEntry[] {
   const cuts = input.interrupts.map(({ created_at }) => created_at)

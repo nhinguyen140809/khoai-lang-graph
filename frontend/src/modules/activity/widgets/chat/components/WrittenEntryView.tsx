@@ -71,11 +71,13 @@ function KindGroup({
   openPage: ReturnType<typeof useOpenPage>
 }) {
   const items = [...group.created, ...group.changed]
+  const words = workMessages.kindWrites(group.title, group.created.length, group.changed.length)
+  // The items of a kind without pages, such as the turns of an interview, are short and many, and
+  // none opens by itself: the line that counts them is all the chat shows of them.
+  if (!group.isNavigable) return <p className="text-sm text-muted-foreground">{words}</p>
   return (
     <div className="flex flex-col gap-2">
-      <p className="text-base text-muted-foreground">
-        {workMessages.kindWrites(group.title, group.created.length, group.changed.length)}
-      </p>
+      <p className="text-sm text-muted-foreground">{words}</p>
       {/* However many the phase wrote, the list keeps to one height and scrolls. */}
       <div className="flex max-h-56 flex-col overflow-y-auto rounded-xl border bg-card p-1.5">
         {items.map((item) => (

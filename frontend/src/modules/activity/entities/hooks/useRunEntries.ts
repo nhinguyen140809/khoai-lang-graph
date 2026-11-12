@@ -7,6 +7,7 @@ import { useRunInterrupts } from '@/modules/review/entities/@x/activity'
 import { type Run, useRunSteps, workEntries } from '@/modules/run/entities/@x/activity'
 import type { Message } from '@/modules/thread/entities/@x/activity'
 import {
+  isNavigable,
   kindSchemasByKind,
   useArtifactKinds,
   useStageTitles,
@@ -65,7 +66,12 @@ export function useRunEntries(
       interrupts: interruptPages.flatMap(({ items }) => items),
       stageTitles,
       subjectTitles,
-      kindTitles: new Map([...kindSchemas].map(([kind, { schema }]) => [kind, schema.title])),
+      kinds: new Map(
+        [...kindSchemas].map(([kind, { schema }]) => [
+          kind,
+          { title: schema.title, isNavigable: isNavigable(schema) },
+        ]),
+      ),
       view,
     })
     return { state: 'success', entries }
