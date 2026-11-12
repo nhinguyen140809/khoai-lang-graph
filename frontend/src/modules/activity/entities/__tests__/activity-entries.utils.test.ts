@@ -7,7 +7,13 @@ import type { StepNote } from '@/modules/run/entities'
 import { workEntries } from '@/modules/run/entities'
 import type { Message } from '@/modules/thread/entities'
 
-import { entryAnchorId, messagesByRun, runEntries, shownWork } from '../activity-entries.utils'
+import {
+  entryAnchorId,
+  hasRunEnded,
+  messagesByRun,
+  runEntries,
+  shownWork,
+} from '../activity-entries.utils'
 import {
   kinds,
   messages,
@@ -121,6 +127,43 @@ describe('messagesByRun', () => {
 describe('entryAnchorId', () => {
   it('anchors an entry by its id', () => {
     expect(entryAnchorId('i1')).toBe('entry-i1')
+  })
+})
+
+describe('hasRunEnded', () => {
+  const at = (clock: string) => `2026-10-06T10:${clock}Z`
+  const failed = buildStep({
+    sequence: 1,
+    agent_role: 'corpus_builder',
+    stage: 'research',
+    status: 'failed',
+    error: 'It broke.',
+    started_at: at('01:00'),
+    finished_at: at('01:50'),
+  })
+
+  function entriesFor(status: 'failed' | 'succeeded') {
+    return runEntries({
+      messages: [],
+      work: workEntries([{ ...failed, status }], run),
+      interrupts: [],
+      stageTitles: new Map([['research', 'Finding evidence']]),
+      subjectTitles,
+      kinds,
+      view: 'user',
+    })
+  }
+
+  it('says that a run has ended when its last entry is the failure of a phase', () => {
+    expect(hasRunEnded(entriesFor('failed'))).toBe(true)
+  })
+
+  it('says that a run goes on when its last entry is not an end', () => {
+    expect(hasRunEnded(entriesFor('succeeded'))).toBe(false)
+  })
+
+  it('says that a run with no entry has not ended', () => {
+    expect(hasRunEnded([])).toBe(false)
   })
 })
 

@@ -1,4 +1,8 @@
+import type { RunStatus } from '@/modules/run/entities'
 import { pluralForm } from '@/shared/lib/text'
+
+/** The statuses of a run that show a status line at the end of its entries: the run is going on or about to. */
+export const runStatusLineStatuses: readonly RunStatus[] = ['queued', 'running']
 
 /** The words of the chat of the activity of a project. */
 export const activityChatMessages = {

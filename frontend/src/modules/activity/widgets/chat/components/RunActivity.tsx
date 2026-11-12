@@ -1,6 +1,6 @@
 'use client'
 
-import { useRunEntries } from '@/modules/activity/entities'
+import { hasRunEnded, useRunEntries } from '@/modules/activity/entities'
 import type { Run } from '@/modules/run/entities'
 import type { Message, Thread } from '@/modules/thread/entities'
 import { ErrorState, LoadingState } from '@/shared/components/state'
@@ -14,6 +14,7 @@ import { phaseBlocks } from '../phase-blocks.utils'
 import { ChatEntry } from './ChatEntry'
 import { PhaseBlockView } from './PhaseBlockView'
 import { RunActivityProvider } from './RunActivityContext'
+import { RunStatusLine } from './RunStatusLine'
 
 interface RunActivityProps {
   run: Run
@@ -84,6 +85,9 @@ export function RunActivity({ run, messages, thread, projectId, targetEntryId }:
           />
         )
       })}
+      {/* The status of the run reaches the page a little after its steps do: a run whose last
+          entry says that it has ended is not shown as working. */}
+      {!hasRunEnded(entries.entries) && <RunStatusLine run={run} />}
     </RunActivityProvider>
   )
 }

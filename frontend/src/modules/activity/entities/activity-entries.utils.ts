@@ -19,6 +19,25 @@ const entryTypeRank = {
   review: 2,
 } as const satisfies Record<ActivityEntry['type'], number>
 
+// Whether an entry, when it is the last of a run, says that the work has ended whatever status the
+// run still shows. The status of a run reaches the page a little after its steps do, so the entries
+// are the sooner word. A new type of entry fails to compile until it says which it is.
+const entryEndsRun = {
+  message: false,
+  phase: false,
+  note: false,
+  tool: false,
+  written: false,
+  failure: true,
+  review: false,
+} as const satisfies Record<ActivityEntry['type'], boolean>
+
+/** Whether the last entry of a run says that its work has ended, such as the failure of a phase. */
+export function hasRunEnded(entries: readonly ActivityEntry[]): boolean {
+  const last = entries.at(-1)
+  return last !== undefined && entryEndsRun[last.type]
+}
+
 /** What a line of work wrote, by kind of item, in the order of the first item of each kind. */
 function kindGroupsOf(work: WorkEntry, kinds: ReadonlyMap<string, KindLook>): KindGroup[] {
   const produced: ItemRef[] = [...work.created, ...work.changed]
