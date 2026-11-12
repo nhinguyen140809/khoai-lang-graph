@@ -5,7 +5,7 @@ import { cn } from 'cn'
 import { Button } from '@/shared/components/ui/button'
 import { Code } from '@/shared/components/ui/code'
 import {
-  type FloatingCorner,
+  type FloatingPlacement,
   type FloatingSize,
   FloatingSurface,
   type FloatingVariant,
@@ -18,7 +18,7 @@ const corners = [
   'top-right',
   'bottom-left',
   'bottom-right',
-] as const satisfies readonly FloatingCorner[]
+] as const satisfies readonly FloatingPlacement[]
 
 const variants = ['default', 'popover', 'glass'] as const satisfies readonly FloatingVariant[]
 
@@ -55,7 +55,7 @@ export function FloatingSurfaceCard() {
       <SampleGroup label="corners">
         <FloatingArea>
           {corners.map((corner) => (
-            <FloatingSurface key={corner} corner={corner} size="sm" variant="popover">
+            <FloatingSurface key={corner} placement={corner} size="sm" variant="popover">
               {corner}
             </FloatingSurface>
           ))}
@@ -65,7 +65,7 @@ export function FloatingSurfaceCard() {
         <div className="grid grid-cols-3 gap-2">
           {variants.map((variant) => (
             <FloatingArea key={variant}>
-              <FloatingSurface corner="bottom-right" size="sm" variant={variant}>
+              <FloatingSurface placement="bottom-right" size="sm" variant={variant}>
                 {variant}
               </FloatingSurface>
             </FloatingArea>
@@ -76,7 +76,7 @@ export function FloatingSurfaceCard() {
         <div className="grid grid-cols-3 gap-2">
           {sizes.map((size) => (
             <FloatingArea key={size}>
-              <FloatingSurface corner="bottom-right" size={size}>
+              <FloatingSurface placement="bottom-right" size={size}>
                 <Button size="sm" variant="ghost">
                   Copy
                 </Button>

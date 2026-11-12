@@ -98,7 +98,7 @@ function HistoryFrame({
   children: ReactNode
 }) {
   return (
-    <FloatingSurface corner="top-right" variant="glass" size="none" onKeyDown={onKeyDown}>
+    <FloatingSurface placement="top-right" variant="glass" size="none" onKeyDown={onKeyDown}>
       <AnimatedSize contentClassName={contentClassName}>{children}</AnimatedSize>
     </FloatingSurface>
   )
