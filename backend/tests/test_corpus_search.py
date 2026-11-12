@@ -52,6 +52,14 @@ def test_the_tool_tells_the_agent_how_to_search_and_lists_the_kinds() -> None:
     assert "forum_thread" in str(schema["properties"]["source_type"])
 
 
+def test_the_agent_is_told_to_name_the_places_where_people_talk() -> None:
+    """A plain query returns pages that organizations wrote about themselves, so the task and the
+    tool both ask the agent to name sites in `allowed_domains` for the voices of people."""
+    assert "allowed_domains" in corpus_search.SEARCH_TASK
+    assert "reddit.com" in SEARCH_TOOL_DESCRIPTION
+    assert "allowed_domains" in SearchWeb.model_json_schema()["properties"]
+
+
 def test_a_call_that_breaks_the_schema_is_refused() -> None:
     for args in ({"query": "ab"}, {"query": "valid words", "max_results": 50}):
         try:

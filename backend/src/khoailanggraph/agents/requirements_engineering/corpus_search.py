@@ -50,6 +50,9 @@ again with a different angle until the plan is covered. Cover each stakeholder t
 and look for documents of different kinds. The kinds are:
 {kinds}
 
+A plain query mostly returns what organizations wrote about themselves. To reach the voices of
+people, name the places where they talk in `allowed_domains`, such as a forum for a forum thread.
+
 When you have enough, or when more searches would find nothing new, answer with one short
 sentence and no tool call. A later step chooses the documents to keep, so collect more than the
 {target} that will be kept."""
@@ -113,8 +116,9 @@ def _search_web_schema() -> type[BaseModel]:
             Field(
                 default_factory=list,
                 description=(
-                    "Only return pages from these domains, such as `reddit.com`. Leave empty to "
-                    "search the whole web."
+                    "Only return pages from these domains, such as `reddit.com`. Name the places "
+                    "where the people of the plan talk, for a forum thread, a complaint record or "
+                    "news. Leave empty only to search the whole web."
                 ),
             ),
         ),
