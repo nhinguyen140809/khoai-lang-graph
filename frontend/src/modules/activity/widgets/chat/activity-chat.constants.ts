@@ -20,8 +20,7 @@ export const activityChatMessages = {
   quickLook: (key: string) => `Quick look at ${key}`,
   toReview: 'To review:',
   moreReferences: (count: number) =>
-    `+${String(count)} ${pluralForm(count, { one: 'item', other: 'items' })}`,
-  fewerReferences: 'Show fewer',
+    `${String(count)} more ${pluralForm(count, { one: 'item', other: 'items' })}`,
   showDetails: 'Show what it noted and wrote',
   prompt: {
     label: 'Message to the agents',

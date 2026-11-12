@@ -7,12 +7,12 @@ import { useItem, useItemSchema } from '@/modules/artifact/entities'
 import { workMessages } from '@/modules/run/entities'
 import { itemTitle } from '@/modules/workflow/entities'
 import { useOpenPage } from '@/shared/components/frame'
-import { Button } from '@/shared/components/ui/button'
 import { Trace, TraceIcon, TraceLine, TraceTitle } from '@/shared/components/ui/trace'
 import { useView } from '@/shared/lib/view'
 import { routes } from '@/shared/routes'
 
 import { useRunActivity } from '../hooks/useRunActivity'
+import { RowButton } from './RowButton'
 
 /**
  * What a phase wrote, under its notes: in the user view, its words and one row for each item of
@@ -25,7 +25,7 @@ export function WrittenEntryView({ kindGroups }: { kindGroups: readonly KindGrou
 
   if (view === 'user') {
     return (
-      <div className="flex flex-col gap-1">
+      <div className="flex flex-col gap-4">
         {kindGroups.map((group) => (
           <KindGroup key={group.kind} group={group} projectId={projectId} openPage={openPage} />
         ))}
@@ -72,18 +72,21 @@ function KindGroup({
 }) {
   const items = [...group.created, ...group.changed]
   return (
-    <div className="flex flex-col gap-1">
-      <p className="text-sm text-muted-foreground">
+    <div className="flex flex-col gap-2">
+      <p className="text-base text-muted-foreground">
         {workMessages.kindWrites(group.title, group.created.length, group.changed.length)}
       </p>
-      {items.map((item) => (
-        <WrittenItem
-          key={item.item_id}
-          reference={item}
-          projectId={projectId}
-          openPage={openPage}
-        />
-      ))}
+      {/* However many the phase wrote, the list keeps to one height and scrolls. */}
+      <div className="flex max-h-56 flex-col overflow-y-auto rounded-xl border bg-card p-1.5">
+        {items.map((item) => (
+          <WrittenItem
+            key={item.item_id}
+            reference={item}
+            projectId={projectId}
+            openPage={openPage}
+          />
+        ))}
+      </div>
     </div>
   )
 }
@@ -101,17 +104,15 @@ function WrittenItem({
   const item = useItem(reference.item_id, reference.version)
   const { schema } = useItemSchema(item.data)
   return (
-    <Button
-      variant="ghost"
-      size="xs"
-      className="h-auto justify-start py-0.5 pl-0 font-normal"
+    <RowButton
+      className="shrink-0"
       onClick={() => {
         openPage(routes.project(projectId).item(reference.item_id))
       }}
     >
-      <span className="truncate">
+      <span className="min-w-0 truncate text-sm">
         {item.data === undefined ? reference.key : itemTitle(schema, item.data)}
       </span>
-    </Button>
+    </RowButton>
   )
 }
