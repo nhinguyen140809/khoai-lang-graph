@@ -18,8 +18,6 @@ interface ItemLinkLineProps {
   /** Why the document of the item cannot change, which a change of a link needs; null when it can. */
   lockedReason: string | null
   /** The link whose chips and marks show active, held by the page. */
-  activeLinkId: string | null
-  onActiveLinkChange: (linkId: string | null) => void
 }
 
 /** What the menu of the card of an outgoing chip offers: removing the link, when its document may change. */
@@ -49,13 +47,7 @@ function RemoveLinkMenuItem({
  * "this item". A chip opens the card of the items at the other end, which says the sentence of the
  * link. Five chips of a group show, "N more" the rest.
  */
-export function ItemLinkLine({
-  projectId,
-  links,
-  lockedReason,
-  activeLinkId,
-  onActiveLinkChange,
-}: ItemLinkLineProps) {
+export function ItemLinkLine({ projectId, links, lockedReason }: ItemLinkLineProps) {
   const [expandedGroups, setExpandedGroups] = useState<ReadonlySet<string>>(new Set())
   const isExpanded = (group: string) => expandedGroups.has(group)
 
@@ -91,26 +83,12 @@ export function ItemLinkLine({
           type="button"
           variant="ghost"
           size="xs"
-          className={
-            activeLinkId === row.link.id ? 'bg-primary/10 ring-2 ring-ring/50' : 'bg-primary/10'
-          }
+          className="bg-primary/10"
           aria-label={
             row.isOutOfDate
               ? linkedItemMessages.chipLabelOutOfDate(row.kindTitle, row.title)
               : linkedItemMessages.itemLabel(row.kindTitle, row.title)
           }
-          onMouseEnter={() => {
-            onActiveLinkChange(row.link.id)
-          }}
-          onFocus={() => {
-            onActiveLinkChange(row.link.id)
-          }}
-          onMouseLeave={() => {
-            onActiveLinkChange(null)
-          }}
-          onBlur={() => {
-            onActiveLinkChange(null)
-          }}
         >
           {row.isOutOfDate && (
             <TriangleAlertIcon aria-hidden className="size-3 shrink-0 text-warning-strong" />

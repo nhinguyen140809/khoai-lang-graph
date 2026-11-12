@@ -28,8 +28,7 @@ export function ItemArticleHeader() {
 
 /** The key line and the link line, which only the reading of the item shows. */
 function ItemLines() {
-  const { projectId, record, page, links, isEditing, activeLinkId, setActiveLinkId } =
-    useItemPageContext()
+  const { projectId, record, page, links, isEditing } = useItemPageContext()
 
   if (isEditing || page.isHistoryOpen || page.status === undefined) return null
 
@@ -45,13 +44,7 @@ function ItemLines() {
         resetKeys={[record.id]}
         fallbackRender={({ resetErrorBoundary }) => <LinkLineError onRetry={resetErrorBoundary} />}
       >
-        <ItemLinkLineBlock
-          projectId={projectId}
-          links={links}
-          lockedReason={page.lockedReason}
-          activeLinkId={activeLinkId}
-          onActiveLinkChange={setActiveLinkId}
-        />
+        <ItemLinkLineBlock projectId={projectId} links={links} lockedReason={page.lockedReason} />
       </ErrorBoundary>
     </>
   )

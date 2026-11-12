@@ -13,9 +13,6 @@ export interface ItemPageContextValue {
   page: ReturnType<typeof useItemPage>
   links: ReturnType<typeof useItemLinks>
   isEditing: boolean
-  /** The link whose chip or mark is open, so that the two ends of a link light up together. */
-  activeLinkId: string | null
-  setActiveLinkId: (linkId: string | null) => void
   /** Keeps the tab of the item, once the user has begun to edit it. */
   keepTab: () => void
 }

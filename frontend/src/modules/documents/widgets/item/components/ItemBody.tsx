@@ -12,8 +12,7 @@ import { ItemDetails } from './ItemDetails'
  * selected version in the place of the fields, or the fields with the quoted words marked.
  */
 export function ItemBody() {
-  const { projectId, record, page, links, isEditing, setActiveLinkId, keepTab } =
-    useItemPageContext()
+  const { projectId, record, page, links, isEditing, keepTab } = useItemPageContext()
 
   if (isEditing) {
     if (page.schema === undefined) return null
@@ -46,12 +45,7 @@ export function ItemBody() {
       fieldMarks={links.state === 'success' ? links.fieldMarks : undefined}
       renderFieldMark={(range, children) => (
         <ErrorBoundary resetKeys={[record.id]} fallbackRender={() => children}>
-          <FieldMarkPopover
-            projectId={projectId}
-            links={links}
-            range={range}
-            onActiveLinkChange={setActiveLinkId}
-          >
+          <FieldMarkPopover projectId={projectId} links={links} range={range}>
             {children}
           </FieldMarkPopover>
         </ErrorBoundary>

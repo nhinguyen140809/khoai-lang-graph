@@ -79,15 +79,7 @@ const links = {
 } satisfies ItemLinksResult
 
 function renderLine() {
-  return renderWithProviders(
-    <ItemLinkLine
-      projectId="p1"
-      links={links}
-      lockedReason={null}
-      activeLinkId={null}
-      onActiveLinkChange={() => undefined}
-    />,
-  )
+  return renderWithProviders(<ItemLinkLine projectId="p1" links={links} lockedReason={null} />)
 }
 
 describe('ItemLinkLine', () => {
@@ -156,8 +148,6 @@ describe('ItemLinkLine', () => {
         projectId="p1"
         links={links}
         lockedReason="Documents cannot change while the agents work."
-        activeLinkId={null}
-        onActiveLinkChange={() => undefined}
       />,
     )
 

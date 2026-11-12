@@ -1,6 +1,6 @@
 'use client'
 
-import { useDeferredValue, useRef, useState, ViewTransition } from 'react'
+import { useDeferredValue, useRef, ViewTransition } from 'react'
 
 import {
   type ArtifactItem,
@@ -69,7 +69,6 @@ function ItemPageBody({ projectId, record }: { projectId: string; record: Artifa
   const keepTab = useItemTab(projectId, record.id, record)
   const page = useItemPage(projectId, record, { isEditing })
   const links = useItemLinks(record.id)
-  const [activeLinkId, setActiveLinkId] = useState<string | null>(null)
   const pageRef = useRef<HTMLDivElement>(null)
   const { isShown, show, holdProps } = useIdleVisibility(pageRef, { idleMs: navigatorIdleMs })
   useItemCommands(page.neighbors, page.moveTo, show, { isEnabled: !isEditing })
@@ -82,8 +81,6 @@ function ItemPageBody({ projectId, record }: { projectId: string; record: Artifa
         page,
         links,
         isEditing,
-        activeLinkId,
-        setActiveLinkId,
         keepTab,
       }}
     >
