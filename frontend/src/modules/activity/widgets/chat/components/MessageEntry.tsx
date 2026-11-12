@@ -70,7 +70,7 @@ const authorWords = {
 export function MessageEntry({ message, projectId, runStatus }: MessageEntryProps) {
   const Words = authorWords[message.author]
   return (
-    <div className="flex min-w-0 flex-col gap-1.5">
+    <div className="flex min-w-0 flex-col gap-3">
       <Words message={message} projectId={projectId} runStatus={runStatus} />
     </div>
   )

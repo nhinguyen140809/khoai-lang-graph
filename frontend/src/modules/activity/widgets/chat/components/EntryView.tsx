@@ -16,6 +16,7 @@ import {
   MessageFooter,
   MessageHeader,
 } from '@/shared/components/ui/message'
+import { RelativeTime } from '@/shared/components/ui/relative-time'
 import { toneClasses } from '@/shared/lib/tone'
 
 import { useRunActivity } from '../hooks/useRunActivity'
@@ -84,11 +85,13 @@ function MessageView({ entry, isTarget }: EntryViewProps<'message'>) {
   const bubbleLook = messageBubbleLooks[entry.message.delivery ?? 'delivered']
 
   return (
-    <EntryAnchor entryId={entry.id} isTarget={isTarget} className="mb-5 px-1 pt-1.5">
+    <EntryAnchor entryId={entry.id} isTarget={isTarget} className="mb-10 px-1 pt-3">
       <Message align={align}>
         {/* The role, the words and the documents of a message are one group with one gap, smaller than
-            the gap between the entries of the chat, so that the group reads as one. */}
-        <MessageContent className="gap-1.5">
+            the gap between the entries of the chat, so that the group reads as one. The words have
+            room above their first line that the small name above them has not, so the name sits
+            closer by that much, and the two spaces look the same. */}
+        <MessageContent className="gap-2">
           {isAgent && roleLabel !== null && (
             <MessageHeader className={cn('px-0 text-(--tone-strong)', toneClasses.chart)}>
               {roleLabel}
@@ -96,7 +99,7 @@ function MessageView({ entry, isTarget }: EntryViewProps<'message'>) {
           )}
           {isUser ? (
             <Bubble variant={bubbleLook} align="end">
-              <BubbleContent>
+              <BubbleContent className="px-4 py-2.5 text-base leading-7">
                 <MessageEntry
                   message={entry.message}
                   projectId={projectId}
@@ -105,19 +108,23 @@ function MessageView({ entry, isTarget }: EntryViewProps<'message'>) {
               </BubbleContent>
             </Bubble>
           ) : (
-            <div className="text-sm leading-6">
+            <div className="text-base leading-7">
               <MessageEntry message={entry.message} projectId={projectId} runStatus={run.status} />
             </div>
           )}
-          {/* The copy of the words hangs under the message, in the space below the entry, where the
-              reading ends. It takes no height inside the entry, so the fill of the target stops at
-              the words. */}
+          {/* The time, the resend and the copy of the words hang under the message, in the space
+              below the entry, where the reading ends. They take no height inside the entry, so the
+              fill of the target stops at the words. */}
           <MessageFooter
             className={cn(
-              'absolute top-full px-0 opacity-0 transition-opacity group-focus-within/entry:opacity-100 group-hover/entry:opacity-100 pointer-coarse:opacity-100',
-              isUser ? 'right-0' : 'left-0',
+              'absolute top-full gap-1.5 px-0 pt-1.5 opacity-0 transition-opacity group-focus-within/entry:opacity-100 group-hover/entry:opacity-100 pointer-coarse:opacity-100',
+              isUser ? 'right-0' : 'left-0 flex-row-reverse',
             )}
           >
+            <RelativeTime
+              date={entry.time}
+              className="px-1 text-xs font-normal text-muted-foreground"
+            />
             {isNeverRead(entry.message, run.status) && thread !== null && (
               <ResendButton
                 content={entry.message.content}
@@ -126,12 +133,7 @@ function MessageView({ entry, isTarget }: EntryViewProps<'message'>) {
                 display="icon"
               />
             )}
-            <CopyButton
-              value={entry.message.content}
-              display="icon"
-              size="icon-xs"
-              className="size-4"
-            />
+            <CopyButton value={entry.message.content} display="icon" size="icon-sm" />
           </MessageFooter>
         </MessageContent>
       </Message>

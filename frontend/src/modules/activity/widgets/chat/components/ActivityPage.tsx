@@ -2,7 +2,7 @@
 
 import { cn } from 'cn'
 import { ActivityIcon } from 'lucide-react'
-import { Suspense, useMemo } from 'react'
+import { type ComponentProps, Suspense, useMemo } from 'react'
 
 import {
   entryAnchorId,
@@ -37,6 +37,11 @@ import { RunActivity } from './RunActivity'
 
 /** The messages of a run without any; one list, so that its entries do not compute again. */
 const EMPTY_MESSAGES: Message[] = []
+
+/** The column of the chat: wide enough to read in comfort, with room at its sides. */
+function ChatColumn({ className, ...props }: ComponentProps<'div'>) {
+  return <div className={cn('mx-auto w-full max-w-4xl px-6', className)} {...props} />
+}
 
 interface ActivityPageProps {
   projectId: string
@@ -155,7 +160,7 @@ function ActivityChat({
         <MessageScrollerProvider>
           <MessageScroller className="min-h-0 flex-1">
             <MessageScrollerViewport ref={keptScroll}>
-              <MessageScrollerContent className="mx-auto max-w-3xl px-4 pt-4">
+              <MessageScrollerContent className="mx-auto max-w-4xl px-6 pt-6">
                 {runIds.map((run) => (
                   <MessageScrollerItem key={run.id} scrollAnchor={run === runIds.at(-1)}>
                     <RunActivity
@@ -179,16 +184,11 @@ function ActivityChat({
         </MessageScrollerProvider>
       )}
       {runOnScreen !== null && pendingReview !== null && (
-        <div className="mx-auto w-full max-w-3xl px-4 pt-4">
+        <ChatColumn className="pt-4">
           <PendingReview interrupt={pendingReview} run={runOnScreen} projectId={projectId} />
-        </div>
+        </ChatColumn>
       )}
-      <div
-        className={cn(
-          'mx-auto w-full max-w-3xl px-4 pb-2',
-          pendingReview === null ? 'pt-4' : 'pt-2',
-        )}
-      >
+      <ChatColumn className={cn('pb-2', pendingReview === null ? 'pt-4' : 'pt-2')}>
         <ActivityPrompt
           projectId={projectId}
           thread={thread}
@@ -196,7 +196,7 @@ function ActivityChat({
           shouldFocus={isEmpty}
           size={pendingReview === null ? 'compact' : 'slim'}
         />
-      </div>
+      </ChatColumn>
       <TargetScroller target={target} />
     </>
   )
