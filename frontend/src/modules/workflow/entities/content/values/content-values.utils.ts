@@ -113,17 +113,22 @@ export function withoutEmptyEntries(
 ): ContentValues {
   const kept: ContentValues = { ...content }
   for (const field of fields) {
-    if (field.widget !== 'list' && field.widget !== 'tags' && !hasObjectEntries(field.widget))
-      continue
     const value = kept[field.name]
-    if (!Array.isArray(value)) continue
-    kept[field.name] = value.filter((entry) =>
-      hasObjectEntries(field.widget)
-        ? isRecord(entry) && field.entryFields.some(({ name }) => !isEmpty(entry[name]))
-        : !isBlank(entry),
-    )
+    if (!hasEntryList(field) || !Array.isArray(value)) continue
+    kept[field.name] = value.filter((entry) => isEntryFilled(field, entry))
   }
   return kept
+}
+
+/** Whether a field is a list of entries that may be left blank: a `list`, `tags`, `object-list` or `rating-list`. */
+function hasEntryList(field: Pick<ContentField, 'widget'>): boolean {
+  return field.widget === 'list' || field.widget === 'tags' || hasObjectEntries(field.widget)
+}
+
+/** Whether an entry holds anything: a text that is not blank, or an object with a field that is not empty. */
+function isEntryFilled(field: ContentField, entry: unknown): boolean {
+  if (!hasObjectEntries(field.widget)) return !isBlank(entry)
+  return isRecord(entry) && field.entryFields.some(({ name }) => !isEmpty(entry[name]))
 }
 
 /**
