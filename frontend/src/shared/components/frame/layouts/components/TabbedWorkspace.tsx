@@ -2,6 +2,7 @@
 
 import type { ReactNode } from 'react'
 
+import { ScrollArea } from '@/shared/components/ui/scroll-area'
 import { Surface } from '@/shared/components/ui/surface'
 
 import { useSideFeature } from '../../destinations/hooks/useSideFeature'
@@ -32,8 +33,14 @@ export function TabbedWorkspace({ tabGroup, children }: TabbedWorkspaceProps) {
       <Surface className="flex h-full min-w-0 flex-col">
         <TabGroupContext value={tabGroup}>
           <EditorTabs rootHref={feature?.href} />
-          {/* The page fills the editor and scrolls itself: a ScrollArea when its content flows. */}
-          <main className="min-h-0 flex-1">{children}</main>
+          {/* Every page scrolls in the editor, so no page makes a scroll area of its own: a page
+              taller than the editor scrolls it, and a page that fills its height with `h-full`
+              fills it and keeps the scrolling of its own parts. */}
+          <main className="min-h-0 flex-1">
+            <ScrollArea fillContent className="h-full">
+              {children}
+            </ScrollArea>
+          </main>
         </TabGroupContext>
       </Surface>
     </SideFeatureSplit>
