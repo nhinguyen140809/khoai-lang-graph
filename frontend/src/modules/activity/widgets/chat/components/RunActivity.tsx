@@ -21,14 +21,15 @@ interface RunActivityProps {
   /** The thread the run belongs to, so an entry can act on it, such as sending a message again. */
   thread: Thread | null
   projectId: string
-  isTarget: (entryId: string) => boolean
+  /** The id of the entry that the address names, if any. */
+  targetEntryId: string | null
 }
 
-// What every entry of this run holds; the views below read it through the provider instead of a
-// prop that each layer passes on.
-
-/** One run in the chat: its separator, then each of its entries in the order of its time. */
-export function RunActivity({ run, messages, thread, projectId, isTarget }: RunActivityProps) {
+/**
+ * One run in the chat: its separator, then each of its entries in the order of its time. What
+ * every entry of the run holds is given through the provider, not as a prop each layer passes on.
+ */
+export function RunActivity({ run, messages, thread, projectId, targetEntryId }: RunActivityProps) {
   const entries = useRunEntries(run, messages, projectId)
   const view = useView()
   const phases = usePhaseOpen()
@@ -59,20 +60,14 @@ export function RunActivity({ run, messages, thread, projectId, isTarget }: RunA
     ),
   )
   return (
-    <RunActivityProvider value={{ run, thread, projectId }}>
+    <RunActivityProvider value={{ run, thread, projectId, targetEntryId }}>
       <Marker variant="separator" className="mb-2 text-xs">
         {view === 'developer' ? `${activityChatMessages.run(run.number)} ` : ''}
         {first !== undefined ? formatDateTime(first.time) : null}
       </Marker>
       {blocks.map((block) => {
         if (block.type === 'entry') {
-          return (
-            <ChatEntry
-              key={block.entry.id}
-              entry={block.entry}
-              isTarget={isTarget(block.entry.id)}
-            />
-          )
+          return <ChatEntry key={block.entry.id} entry={block.entry} />
         }
         const work = phaseWork.get(block.phaseId)
         if (work === undefined) return null
@@ -80,7 +75,6 @@ export function RunActivity({ run, messages, thread, projectId, isTarget }: RunA
           <PhaseBlockView
             key={block.header?.id ?? block.items[0]?.id}
             block={block}
-            isTarget={isTarget}
             phase={{
               isOpen: phases.isOpen(work),
               onToggle: () => {

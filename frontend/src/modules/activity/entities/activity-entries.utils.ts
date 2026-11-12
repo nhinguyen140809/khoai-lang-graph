@@ -47,57 +47,55 @@ interface PhaseTitles {
 function phaseEntries(work: WorkEntry, titles: PhaseTitles): ActivityEntry[] {
   const stageTitle = titles.stageTitles.get(work.stage) ?? null
   if (stageTitle === null && titles.view !== 'developer') return []
-  const items = phaseItems(work, titles.view).map((item, index): ActivityEntry => {
-    const id = `${work.id}~${String(index)}`
-    return item.type === 'tool'
-      ? { type: 'tool', id: item.use.id, time: item.use.startedAt, phaseId: work.id, use: item.use }
-      : {
-          type: 'note',
-          id,
-          time: item.note.created_at,
-          phaseId: work.id,
-          note: item.note,
-          isInProgress: item.isInProgress,
-        }
+  const separator: ActivityEntry = {
+    type: 'phase',
+    id: work.id,
+    time: work.startedAt,
+    work,
+    stageTitle,
+    subjectTitle:
+      work.subjectItemId === null
+        ? null
+        : (titles.subjectTitles.get(work.subjectItemId) ?? work.subjectKey),
+  }
+  return [separator, ...itemEntries(work, titles.view), ...endEntries(work, titles.kinds)]
+}
+
+/** The notes and the uses of a tool of a phase, each an entry under its separator. */
+function itemEntries(work: WorkEntry, view: View): ActivityEntry[] {
+  return phaseItems(work, view).map((item, index): ActivityEntry => {
+    if (item.type === 'tool') {
+      return {
+        type: 'tool',
+        id: item.use.id,
+        time: item.use.startedAt,
+        phaseId: work.id,
+        use: item.use,
+      }
+    }
+    return {
+      type: 'note',
+      id: `${work.id}~${String(index)}`,
+      time: item.note.created_at,
+      phaseId: work.id,
+      note: item.note,
+      isInProgress: item.isInProgress,
+    }
   })
-  const endedAt = work.steps.at(-1)?.finished_at ?? work.notes.at(-1)?.created_at ?? work.startedAt
-  const kindGroups = kindGroupsOf(work, titles.kinds)
-  return [
-    {
-      type: 'phase',
-      id: work.id,
-      time: work.startedAt,
-      work,
-      stageTitle,
-      subjectTitle:
-        work.subjectItemId === null
-          ? null
-          : (titles.subjectTitles.get(work.subjectItemId) ?? work.subjectKey),
-    },
-    ...items,
-    ...(kindGroups.length === 0
-      ? []
-      : [
-          {
-            type: 'written' as const,
-            id: `${work.id}~written`,
-            time: endedAt,
-            phaseId: work.id,
-            kindGroups,
-          },
-        ]),
-    ...(work.status === 'failed'
-      ? [
-          {
-            type: 'failure' as const,
-            id: `${work.id}~failure`,
-            time: endedAt,
-            phaseId: work.id,
-            work,
-          },
-        ]
-      : []),
-  ]
+}
+
+/** What a phase wrote and the failure that ended it, at the time it ended. */
+function endEntries(work: WorkEntry, kinds: ReadonlyMap<string, KindLook>): ActivityEntry[] {
+  const time = work.steps.at(-1)?.finished_at ?? work.notes.at(-1)?.created_at ?? work.startedAt
+  const entries: ActivityEntry[] = []
+  const kindGroups = kindGroupsOf(work, kinds)
+  if (kindGroups.length > 0) {
+    entries.push({ type: 'written', id: `${work.id}~written`, time, phaseId: work.id, kindGroups })
+  }
+  if (work.status === 'failed') {
+    entries.push({ type: 'failure', id: `${work.id}~failure`, time, phaseId: work.id, work })
+  }
+  return entries
 }
 
 /**

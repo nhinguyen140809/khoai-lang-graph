@@ -4,12 +4,12 @@ import { TraceCollapsible, TraceCollapsibleContent } from '@/shared/components/u
 
 import type { PhaseBlock } from '../phase-blocks.types'
 import { ChatEntry } from './ChatEntry'
-import type { PhaseControl } from './EntryView'
+import type { PhaseControl } from './PhaseControlContext'
+import { PhaseControlProvider } from './PhaseControlContext'
 
 interface PhaseBlockViewProps {
   block: Extract<PhaseBlock, { type: 'phase' }>
   phase: PhaseControl
-  isTarget: (entryId: string) => boolean
 }
 
 /**
@@ -17,19 +17,19 @@ interface PhaseBlockViewProps {
  * in the content of a trace, which grows and shrinks as it opens and closes and hangs them on a
  * line down from the separator.
  */
-export function PhaseBlockView({ block, phase, isTarget }: PhaseBlockViewProps) {
+export function PhaseBlockView({ block, phase }: PhaseBlockViewProps) {
   return (
-    <TraceCollapsible open={phase.isOpen}>
-      {block.header !== null && (
-        <ChatEntry entry={block.header} isTarget={isTarget(block.header.id)} phase={phase} />
-      )}
-      {block.items.length > 0 && (
-        <TraceCollapsibleContent>
-          {block.items.map((entry) => (
-            <ChatEntry key={entry.id} entry={entry} isTarget={isTarget(entry.id)} />
-          ))}
-        </TraceCollapsibleContent>
-      )}
-    </TraceCollapsible>
+    <PhaseControlProvider value={phase}>
+      <TraceCollapsible open={phase.isOpen}>
+        {block.header !== null && <ChatEntry entry={block.header} />}
+        {block.items.length > 0 && (
+          <TraceCollapsibleContent>
+            {block.items.map((entry) => (
+              <ChatEntry key={entry.id} entry={entry} />
+            ))}
+          </TraceCollapsibleContent>
+        )}
+      </TraceCollapsible>
+    </PhaseControlProvider>
   )
 }

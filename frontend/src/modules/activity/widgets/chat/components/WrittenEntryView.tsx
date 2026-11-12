@@ -1,6 +1,6 @@
 'use client'
 
-import { PencilIcon, PlusIcon } from 'lucide-react'
+import { type LucideIcon, PencilIcon, PlusIcon } from 'lucide-react'
 
 import type { KindGroup as KindGroupData } from '@/modules/activity/entities'
 import { useItem, useItemSchema } from '@/modules/artifact/entities'
@@ -35,28 +35,26 @@ export function WrittenEntryView({ kindGroups }: { kindGroups: readonly KindGrou
   return (
     <Trace>
       {kindGroups.flatMap(({ created, changed }) => [
-        ...created.map((item) => (
-          <TraceLine key={`+${item.item_id}`} color="neutral">
-            <TraceIcon>
-              <PlusIcon />
-            </TraceIcon>
-            <TraceTitle>
-              {item.key} v{String(item.version)}
-            </TraceTitle>
-          </TraceLine>
-        )),
+        ...created.map((item) => <ItemLine key={`+${item.item_id}`} item={item} Mark={PlusIcon} />),
         ...changed.map((item) => (
-          <TraceLine key={`~${item.item_id}`} color="neutral">
-            <TraceIcon>
-              <PencilIcon />
-            </TraceIcon>
-            <TraceTitle>
-              {item.key} v{String(item.version)}
-            </TraceTitle>
-          </TraceLine>
+          <ItemLine key={`~${item.item_id}`} item={item} Mark={PencilIcon} />
         )),
       ])}
     </Trace>
+  )
+}
+
+/** The line of an item in the developer view: a mark for created or changed, its key and version. */
+function ItemLine({ item, Mark }: { item: { key: string; version: number }; Mark: LucideIcon }) {
+  return (
+    <TraceLine color="neutral">
+      <TraceIcon>
+        <Mark />
+      </TraceIcon>
+      <TraceTitle>
+        {item.key} v{String(item.version)}
+      </TraceTitle>
+    </TraceLine>
   )
 }
 

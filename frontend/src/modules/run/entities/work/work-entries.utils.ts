@@ -70,6 +70,54 @@ function joinedPhases(lists: RunStep[][]): RunStep[][] {
   return phases
 }
 
+/** How long a line of work took, from its first step to the end of its last; none while it still runs. */
+function durationOf(first: RunStep | undefined, last: RunStep | undefined): number | null {
+  if (first === undefined || last?.finished_at == null) return null
+  return msBetween(first.started_at, last.finished_at)
+}
+
+/** The key of the subject of a line of work: the key of the item it produced, in the words of a message. */
+function subjectKeyOf(subjectItemId: string | null, produced: readonly ItemRef[]): string | null {
+  if (subjectItemId === null) return null
+  const key = produced.find(({ item_id }) => item_id === subjectItemId)?.key
+  return key === undefined ? null : subjectKeyOfMessage(key)
+}
+
+/** One phase of work from the steps that make it. */
+function workOf(steps: RunStep[], run: Pick<Run, 'status'> | null): WorkEntry {
+  const first = steps[0]
+  const last = steps.at(-1)
+  const produced = steps.flatMap(({ produced }) => produced)
+  const atLastVersion = versionOfEach(produced, 1)
+  const createdIds = new Set(
+    versionOfEach(produced, -1)
+      .filter(({ version }) => version === 1)
+      .map(({ item_id }) => item_id),
+  )
+  const subjectItemId = first?.subject_item_id ?? null
+  return {
+    id: first?.id ?? '',
+    steps,
+    stage: first?.stage ?? '',
+    node: first?.node ?? '',
+    nodes: [...new Set(steps.map(({ node }) => node))],
+    agentRole: first?.agent_role ?? '',
+    modelId: last?.model_id ?? null,
+    iteration: first?.iteration ?? 0,
+    subjectItemId,
+    subjectKey: subjectKeyOf(subjectItemId, produced),
+    status: workStatusOf(steps, run),
+    continues: false,
+    startedAt: first?.started_at ?? '',
+    durationMs: durationOf(first, last),
+    costUsd: steps.reduce((total, { usage }) => total + usage.cost_usd, 0),
+    created: atLastVersion.filter(({ item_id }) => createdIds.has(item_id)),
+    changed: atLastVersion.filter(({ item_id }) => !createdIds.has(item_id)),
+    notes: steps.flatMap(({ notes }) => notes),
+    error: steps.find(({ error }) => error !== null)?.error ?? null,
+  }
+}
+
 /**
  * The work of a run as phases, in order: the steps of the agents, those that follow one another in
  * one stage, on one subject and in one round joined.
@@ -81,46 +129,7 @@ export function workEntries(steps: RunStep[], run: Pick<Run, 'status'> | null): 
     groupSteps(steps)
       .map(stepsOfEntry)
       .filter((grouped) => grouped[0]?.agent_role !== null),
-  ).map((grouped) => {
-    const first = grouped[0]
-    const last = grouped.at(-1)
-    const produced = grouped.flatMap(({ produced }) => produced)
-    const atLastVersion = versionOfEach(produced, 1)
-    const createdIds = new Set(
-      versionOfEach(produced, -1)
-        .filter(({ version }) => version === 1)
-        .map(({ item_id }) => item_id),
-    )
-    const subjectItemId = first?.subject_item_id ?? null
-    const subjectKey =
-      subjectItemId === null
-        ? null
-        : (produced.find(({ item_id }) => item_id === subjectItemId)?.key ?? null)
-    return {
-      id: first?.id ?? '',
-      steps: grouped,
-      stage: first?.stage ?? '',
-      node: first?.node ?? '',
-      nodes: [...new Set(grouped.map(({ node }) => node))],
-      agentRole: first?.agent_role ?? '',
-      modelId: last?.model_id ?? null,
-      iteration: first?.iteration ?? 0,
-      subjectItemId,
-      subjectKey: subjectKey === null ? null : subjectKeyOfMessage(subjectKey),
-      status: workStatusOf(grouped, run),
-      continues: false,
-      startedAt: first?.started_at ?? '',
-      durationMs:
-        last?.finished_at === null || last?.finished_at === undefined || first === undefined
-          ? null
-          : msBetween(first.started_at, last.finished_at),
-      costUsd: grouped.reduce((total, { usage }) => total + usage.cost_usd, 0),
-      created: atLastVersion.filter(({ item_id }) => createdIds.has(item_id)),
-      changed: atLastVersion.filter(({ item_id }) => !createdIds.has(item_id)),
-      notes: grouped.flatMap(({ notes }) => notes),
-      error: grouped.find(({ error }) => error !== null)?.error ?? null,
-    }
-  })
+  ).map((grouped) => workOf(grouped, run))
 }
 
 /**

@@ -11,7 +11,7 @@ import {
   useActivityThread,
 } from '@/modules/activity/entities'
 import { usePendingInterrupt } from '@/modules/review/entities'
-import { useLatestRun, useThreadRuns } from '@/modules/run/entities'
+import { type Run, useLatestRun, useThreadRuns } from '@/modules/run/entities'
 import type { Message, Thread } from '@/modules/thread/entities'
 import { useThreadMessages } from '@/modules/thread/entities'
 import { useEditorTab } from '@/shared/components/frame'
@@ -31,6 +31,8 @@ import { useScrollIntoViewById } from '@/shared/lib/viewport'
 import { RouteParam, routes, useRouteParam } from '@/shared/routes'
 
 import { activityChatMessages } from '../activity-chat.constants'
+import type { ChatState } from '../chat-state.types'
+import { chatStateOf } from '../chat-state.utils'
 import { ActivityPrompt } from './ActivityPrompt'
 import { PendingReview } from './PendingReview'
 import { RunActivity } from './RunActivity'
@@ -60,16 +62,7 @@ export function ActivityPage({ projectId }: ActivityPageProps) {
 
   return (
     <div className="flex h-full min-h-0 flex-col">
-      {isPending && (
-        <LoadingState
-          label={activityChatMessages.loading}
-          layout="lines"
-          alternate
-          rows={6}
-          gap={4}
-          itemHeight={10}
-        />
-      )}
+      {isPending && <ChatLoading />}
       {thread.state === 'error' && (
         <ErrorState
           message={activityChatMessages.loadError}
@@ -110,7 +103,6 @@ function ActivityChat({
 
   const keptScroll = useKeptScroll('chat', { from: 'end' })
   const target = useRouteParam(RouteParam.Entry)
-  const isTarget = (entryId: string) => target === entryId
   const runIds = (runs.data?.pages ?? [])
     .flatMap(({ items }) => items)
     .toSorted((a, b) => a.number - b.number)
@@ -121,68 +113,29 @@ function ActivityChat({
         : messagesByRun(messages.data.pages.flatMap(({ items }) => items)),
     [messages.data],
   )
-  const isNoThread = thread === null
-  const isActivityPending = !isNoThread && (runs.isPending || messages.isPending)
-  const isActivityError = messages.isError || runs.isError
-  const hasActivity = runIds.length > 0 || (byRun.get(null) ?? EMPTY_MESSAGES).length > 0
-  const isEmpty = isNoThread || (!isActivityPending && !isActivityError && !hasActivity)
+  const state = chatStateOf({
+    hasThread: thread !== null,
+    isPending: runs.isPending || messages.isPending,
+    isError: runs.isError || messages.isError,
+    hasActivity: runIds.length > 0 || (byRun.get(null) ?? EMPTY_MESSAGES).length > 0,
+  })
+  const isEmpty = state === 'empty'
 
   return (
     <>
-      {isEmpty ? (
-        <div className="flex min-h-0 flex-1 flex-col">
-          <div className="flex flex-1 items-center justify-center">
-            <EmptyState
-              icon={ActivityIcon}
-              title={activityChatMessages.emptyTitle}
-              description={activityChatMessages.emptyDescription}
-            />
-          </div>
-        </div>
-      ) : isActivityPending ? (
-        <LoadingState
-          label={activityChatMessages.loading}
-          layout="lines"
-          alternate
-          rows={6}
-          gap={4}
-          itemHeight={10}
-        />
-      ) : isActivityError ? (
-        <ErrorState
-          message={activityChatMessages.loadError}
-          onRetry={() => {
-            void messages.refetch()
-            void runs.refetch()
-          }}
-        />
-      ) : (
-        <MessageScrollerProvider>
-          <MessageScroller className="min-h-0 flex-1">
-            <MessageScrollerViewport ref={keptScroll}>
-              <MessageScrollerContent className="mx-auto max-w-4xl px-6 pt-6">
-                {runIds.map((run) => (
-                  <MessageScrollerItem key={run.id} scrollAnchor={run === runIds.at(-1)}>
-                    <RunActivity
-                      run={run}
-                      messages={byRun.get(run.id) ?? EMPTY_MESSAGES}
-                      thread={thread}
-                      projectId={projectId}
-                      isTarget={isTarget}
-                    />
-                  </MessageScrollerItem>
-                ))}
-                {(byRun.get(null) ?? EMPTY_MESSAGES).map((message) => (
-                  <MessageScrollerItem key={message.id}>
-                    <UserMessageBubble message={message} />
-                  </MessageScrollerItem>
-                ))}
-              </MessageScrollerContent>
-            </MessageScrollerViewport>
-            <MessageScrollerButton />
-          </MessageScroller>
-        </MessageScrollerProvider>
-      )}
+      <ChatBody
+        state={state}
+        runs={runIds}
+        byRun={byRun}
+        thread={thread}
+        projectId={projectId}
+        targetEntryId={target}
+        scrollRef={keptScroll}
+        onRetry={() => {
+          void messages.refetch()
+          void runs.refetch()
+        }}
+      />
       {runOnScreen !== null && pendingReview !== null && (
         <ChatColumn className="pt-4">
           <PendingReview interrupt={pendingReview} run={runOnScreen} projectId={projectId} />
@@ -199,6 +152,88 @@ function ActivityChat({
       </ChatColumn>
       <TargetScroller target={target} />
     </>
+  )
+}
+
+interface ChatBodyProps {
+  state: ChatState
+  runs: readonly Run[]
+  byRun: ReadonlyMap<string | null, Message[]>
+  thread: Thread | null
+  projectId: string
+  targetEntryId: string | null
+  scrollRef: ComponentProps<typeof MessageScrollerViewport>['ref']
+  onRetry: () => void
+}
+
+/** What the chat shows in the place of its messages: the empty state, the load, its failure, or the runs one after another. */
+function ChatBody({
+  state,
+  runs,
+  byRun,
+  thread,
+  projectId,
+  targetEntryId,
+  scrollRef,
+  onRetry,
+}: ChatBodyProps) {
+  if (state === 'empty') {
+    return (
+      <div className="flex min-h-0 flex-1 flex-col">
+        <div className="flex flex-1 items-center justify-center">
+          <EmptyState
+            icon={ActivityIcon}
+            title={activityChatMessages.emptyTitle}
+            description={activityChatMessages.emptyDescription}
+          />
+        </div>
+      </div>
+    )
+  }
+  if (state === 'pending') return <ChatLoading />
+  if (state === 'error') {
+    return <ErrorState message={activityChatMessages.loadError} onRetry={onRetry} />
+  }
+  return (
+    <MessageScrollerProvider>
+      <MessageScroller className="min-h-0 flex-1">
+        <MessageScrollerViewport ref={scrollRef}>
+          <MessageScrollerContent className="mx-auto max-w-4xl px-6 pt-6">
+            {runs.map((run) => (
+              <MessageScrollerItem key={run.id} scrollAnchor={run === runs.at(-1)}>
+                <RunActivity
+                  run={run}
+                  messages={byRun.get(run.id) ?? EMPTY_MESSAGES}
+                  thread={thread}
+                  projectId={projectId}
+                  targetEntryId={targetEntryId}
+                />
+              </MessageScrollerItem>
+            ))}
+            {(byRun.get(null) ?? EMPTY_MESSAGES).map((message) => (
+              <MessageScrollerItem key={message.id}>
+                <UserMessageBubble message={message} />
+              </MessageScrollerItem>
+            ))}
+          </MessageScrollerContent>
+        </MessageScrollerViewport>
+        <MessageScrollerButton />
+      </MessageScroller>
+    </MessageScrollerProvider>
+  )
+}
+
+/** The lines that stand for the chat while it loads. */
+function ChatLoading() {
+  return (
+    <LoadingState
+      label={activityChatMessages.loading}
+      layout="lines"
+      alternate
+      rows={6}
+      gap={4}
+      itemHeight={10}
+    />
   )
 }
 

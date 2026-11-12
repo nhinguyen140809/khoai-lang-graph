@@ -1,5 +1,6 @@
 'use client'
 
+import { cva, type VariantProps } from 'class-variance-authority'
 import { cn } from 'cn'
 import type { ReactNode } from 'react'
 
@@ -19,6 +20,7 @@ import {
 import { RelativeTime } from '@/shared/components/ui/relative-time'
 import { toneClasses } from '@/shared/lib/tone'
 
+import { usePhaseControl } from '../hooks/usePhaseControl'
 import { useRunActivity } from '../hooks/useRunActivity'
 import { FailureEntryView } from './FailureEntryView'
 import { MessageEntry } from './MessageEntry'
@@ -31,38 +33,44 @@ import { WrittenEntryView } from './WrittenEntryView'
 
 type EntryOfType<Type extends ActivityEntry['type']> = Extract<ActivityEntry, { type: Type }>
 
-/** How the reader opens and closes a phase of work: whether it shows its items, and the switch. */
-export interface PhaseControl {
-  isOpen: boolean
-  onToggle: () => void
-}
-
 export interface EntryViewProps<Type extends ActivityEntry['type'] = ActivityEntry['type']> {
   entry: EntryOfType<Type>
-  isTarget: boolean
-  /** Given to the separator of a phase, which opens and closes the items under it. */
-  phase?: PhaseControl | undefined
 }
 
-interface EntryAnchorProps {
+// The space around each entry, by its type. A message and the separators stand apart; an item under
+// a phase sits close to the item before it, as the line it hangs on is the one of the content that
+// holds them. A new type of entry fails to compile until it has its space.
+const entryAnchorStyles = cva(
+  'group/entry rounded-lg outline-none flash-chart data-[target]:animate-flash motion-reduce:animate-none',
+  {
+    variants: {
+      type: {
+        message: 'mb-10 px-1 pt-3',
+        phase: 'px-1 pt-6',
+        review: 'px-1 pt-6',
+        note: 'py-0.5',
+        tool: 'py-0.5',
+        written: 'py-0.5',
+        failure: 'py-0.5',
+      } satisfies Record<ActivityEntry['type'], string>,
+    },
+  },
+)
+
+interface EntryAnchorProps extends Required<VariantProps<typeof entryAnchorStyles>> {
   entryId: string
   isTarget: boolean
-  className?: string | undefined
   children: ReactNode
 }
 
 /** The anchor of an entry in the chat: the target of the address takes the focus and a fill that fades. */
-function EntryAnchor({ entryId, isTarget, className, children }: EntryAnchorProps) {
+function EntryAnchor({ entryId, isTarget, type, children }: EntryAnchorProps) {
   return (
     <div
       id={entryAnchorId(entryId)}
       tabIndex={isTarget ? -1 : undefined}
       {...(isTarget ? { 'data-target': true } : {})}
-      className={cn(
-        'group/entry rounded-lg outline-none data-[target]:animate-flash motion-reduce:animate-none',
-        'flash-chart',
-        className,
-      )}
+      className={entryAnchorStyles({ type })}
       style={{ animationDuration: `${String(targetFadeMs)}ms` }}
     >
       {children}
@@ -71,7 +79,7 @@ function EntryAnchor({ entryId, isTarget, className, children }: EntryAnchorProp
 }
 
 /** A message of the user or an agent, in the bubble of its side of the chat. */
-function MessageView({ entry, isTarget }: EntryViewProps<'message'>) {
+function MessageBody({ entry }: EntryViewProps<'message'>) {
   const { run, thread, projectId } = useRunActivity()
   const author = messageAuthorLooks[entry.message.author]
   const isUser = author.isUser
@@ -85,142 +93,117 @@ function MessageView({ entry, isTarget }: EntryViewProps<'message'>) {
   const bubbleLook = messageBubbleLooks[entry.message.delivery ?? 'delivered']
 
   return (
-    <EntryAnchor entryId={entry.id} isTarget={isTarget} className="mb-10 px-1 pt-3">
-      <Message align={align}>
-        {/* The role, the words and the documents of a message are one group with one gap, smaller than
+    <Message align={align}>
+      {/* The role, the words and the documents of a message are one group with one gap, smaller than
             the gap between the entries of the chat, so that the group reads as one. The words have
             room above their first line that the small name above them has not, so the name sits
             closer by that much, and the two spaces look the same. */}
-        <MessageContent className="gap-2">
-          {isAgent && roleLabel !== null && (
-            <MessageHeader className={cn('px-0 text-(--tone-strong)', toneClasses.chart)}>
-              {roleLabel}
-            </MessageHeader>
-          )}
-          {isUser ? (
-            <Bubble variant={bubbleLook} align="end">
-              <BubbleContent>
-                <MessageEntry
-                  message={entry.message}
-                  projectId={projectId}
-                  runStatus={run.status}
-                />
-              </BubbleContent>
-            </Bubble>
-          ) : (
-            <div className="text-sm leading-6">
+      <MessageContent className="gap-2">
+        {isAgent && roleLabel !== null && (
+          <MessageHeader className={cn('px-0 text-(--tone-strong)', toneClasses.chart)}>
+            {roleLabel}
+          </MessageHeader>
+        )}
+        {isUser ? (
+          <Bubble variant={bubbleLook} align="end">
+            <BubbleContent>
               <MessageEntry message={entry.message} projectId={projectId} runStatus={run.status} />
-            </div>
-          )}
-          {/* The time, the resend and the copy of the words hang under the message, in the space
+            </BubbleContent>
+          </Bubble>
+        ) : (
+          <div className="text-sm leading-6">
+            <MessageEntry message={entry.message} projectId={projectId} runStatus={run.status} />
+          </div>
+        )}
+        {/* The time, the resend and the copy of the words hang under the message, in the space
               below the entry, where the reading ends. They take no height inside the entry, so the
               fill of the target stops at the words. */}
-          <MessageFooter
-            className={cn(
-              'absolute top-full gap-1.5 px-0 pt-1.5 opacity-0 transition-opacity group-focus-within/entry:opacity-100 group-hover/entry:opacity-100 pointer-coarse:opacity-100',
-              isUser ? 'right-0' : 'left-0 flex-row-reverse',
-            )}
-          >
-            <RelativeTime
-              date={entry.time}
-              className="px-1 text-xs font-normal text-muted-foreground"
+        <MessageFooter
+          className={cn(
+            'absolute top-full gap-1.5 px-0 pt-1.5 opacity-0 transition-opacity group-focus-within/entry:opacity-100 group-hover/entry:opacity-100 pointer-coarse:opacity-100',
+            isUser ? 'right-0' : 'left-0 flex-row-reverse',
+          )}
+        >
+          <RelativeTime
+            date={entry.time}
+            className="px-1 text-xs font-normal text-muted-foreground"
+          />
+          {isNeverRead(entry.message, run.status) && thread !== null && (
+            <ResendButton
+              content={entry.message.content}
+              projectId={projectId}
+              thread={thread}
+              display="icon"
             />
-            {isNeverRead(entry.message, run.status) && thread !== null && (
-              <ResendButton
-                content={entry.message.content}
-                projectId={projectId}
-                thread={thread}
-                display="icon"
-              />
-            )}
-            <CopyButton value={entry.message.content} display="icon" size="icon-sm" />
-          </MessageFooter>
-        </MessageContent>
-      </Message>
-    </EntryAnchor>
+          )}
+          <CopyButton value={entry.message.content} display="icon" size="icon-sm" />
+        </MessageFooter>
+      </MessageContent>
+    </Message>
   )
 }
 
 /** The separator of a phase of the work of the run. */
-function PhaseView({ entry, isTarget, phase }: EntryViewProps<'phase'>) {
+function PhaseBody({ entry }: EntryViewProps<'phase'>) {
+  const { isOpen, onToggle } = usePhaseControl()
   return (
-    <EntryAnchor entryId={entry.id} isTarget={isTarget} className="px-1 pt-6">
-      <PhaseEntryView
-        work={entry.work}
-        stageTitle={entry.stageTitle}
-        subjectTitle={entry.subjectTitle}
-        isOpen={phase?.isOpen ?? true}
-        onToggle={phase?.onToggle ?? (() => undefined)}
-      />
-    </EntryAnchor>
+    <PhaseEntryView
+      work={entry.work}
+      stageTitle={entry.stageTitle}
+      subjectTitle={entry.subjectTitle}
+      isOpen={isOpen}
+      onToggle={onToggle}
+    />
   )
 }
 
-// An item under a phase sits close to the item before it; the line it hangs on is the one of the
-// content that holds the items.
-const itemClassName = 'py-0.5'
-
 /** A note of a phase: what it is doing now or has found. */
-function NoteView({ entry, isTarget }: EntryViewProps<'note'>) {
-  return (
-    <EntryAnchor entryId={entry.id} isTarget={isTarget} className={itemClassName}>
-      <StepNoteLine note={entry.note} inProgress={entry.isInProgress} />
-    </EntryAnchor>
-  )
+function NoteBody({ entry }: EntryViewProps<'note'>) {
+  return <StepNoteLine note={entry.note} inProgress={entry.isInProgress} />
 }
 
 /** What a phase wrote. */
-function WrittenView({ entry, isTarget }: EntryViewProps<'written'>) {
-  return (
-    <EntryAnchor entryId={entry.id} isTarget={isTarget} className={itemClassName}>
-      <WrittenEntryView kindGroups={entry.kindGroups} />
-    </EntryAnchor>
-  )
+function WrittenBody({ entry }: EntryViewProps<'written'>) {
+  return <WrittenEntryView kindGroups={entry.kindGroups} />
 }
 
 /** How a phase failed. */
-function FailureView({ entry, isTarget }: EntryViewProps<'failure'>) {
-  return (
-    <EntryAnchor entryId={entry.id} isTarget={isTarget} className={itemClassName}>
-      <FailureEntryView work={entry.work} />
-    </EntryAnchor>
-  )
+function FailureBody({ entry }: EntryViewProps<'failure'>) {
+  return <FailureEntryView work={entry.work} />
 }
 
 /** The use of a tool, between the lines of the work that used it. */
-function ToolView({ entry, isTarget }: EntryViewProps<'tool'>) {
-  return (
-    <EntryAnchor entryId={entry.id} isTarget={isTarget} className={itemClassName}>
-      <ToolUseEntryView use={entry.use} />
-    </EntryAnchor>
-  )
+function ToolBody({ entry }: EntryViewProps<'tool'>) {
+  return <ToolUseEntryView use={entry.use} />
 }
 
 /** A review of the run that no longer waits: the line of its answer. */
-function ReviewView({ entry, isTarget }: EntryViewProps<'review'>) {
-  return (
-    <EntryAnchor entryId={entry.id} isTarget={isTarget} className="px-1 pt-6">
-      <ReviewEntry interrupt={entry.interrupt} />
-    </EntryAnchor>
-  )
+function ReviewBody({ entry }: EntryViewProps<'review'>) {
+  return <ReviewEntry interrupt={entry.interrupt} />
 }
 
 // How each entry of the chat shows, looked up by its type instead of branched on, so a new type
-// of entry fails to compile until it has a view.
-const entryViews = {
-  message: MessageView,
-  phase: PhaseView,
-  note: NoteView,
-  tool: ToolView,
-  written: WrittenView,
-  failure: FailureView,
-  review: ReviewView,
+// of entry fails to compile until it has a body and a place.
+const entryBodies = {
+  message: MessageBody,
+  phase: PhaseBody,
+  note: NoteBody,
+  tool: ToolBody,
+  written: WrittenBody,
+  failure: FailureBody,
+  review: ReviewBody,
 } as const satisfies {
   [Type in ActivityEntry['type']]: (props: EntryViewProps<Type>) => ReactNode
 }
 
 /** The view of an entry, chosen by its type: a message, the separator of a phase, an item under it or a review. */
 export function EntryView(props: EntryViewProps) {
-  const View = entryViews[props.entry.type] as (props: EntryViewProps) => ReactNode
-  return <View {...props} />
+  const { entry } = props
+  const { targetEntryId } = useRunActivity()
+  const Body = entryBodies[entry.type] as (props: EntryViewProps) => ReactNode
+  return (
+    <EntryAnchor entryId={entry.id} isTarget={targetEntryId === entry.id} type={entry.type}>
+      <Body {...props} />
+    </EntryAnchor>
+  )
 }
