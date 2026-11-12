@@ -1,13 +1,13 @@
 'use client'
 
-import { TriangleAlertIcon, Unlink2Icon } from 'lucide-react'
+import { TriangleAlertIcon } from 'lucide-react'
 import { useState } from 'react'
 
 import type { ItemLinksResult, TraceLink } from '@/modules/trace/entities'
 import { linkedItemMessages, LinkedItemsPopover, quoteMarkColors } from '@/modules/trace/entities'
 import { useUnlinkAction } from '@/modules/trace/features/remove-link'
 import { Button } from '@/shared/components/ui/button'
-import { DisabledReason } from '@/shared/components/ui/disabled-reason'
+import { DropdownActionItem } from '@/shared/components/ui/menu-action'
 
 import { itemPageMessages, linkChipsShown } from '../item-page.constants'
 
@@ -22,8 +22,8 @@ interface ItemLinkLineProps {
   onActiveLinkChange: (linkId: string | null) => void
 }
 
-/** What the card of an outgoing chip offers: removing the link, when its document may change. */
-function RemoveLinkButton({
+/** What the menu of the card of an outgoing chip offers: removing the link, when its document may change. */
+function RemoveLinkMenuItem({
   link,
   lockedReason,
 }: {
@@ -33,19 +33,13 @@ function RemoveLinkButton({
   const remove = useUnlinkAction(link, lockedReason)
 
   return (
-    <DisabledReason reason={remove.disabledReason}>
-      <Button
-        type="button"
-        variant="ghost"
-        color="destructive"
-        size="xs"
-        disabled={remove.disabledReason !== null}
-        onClick={remove.run}
-      >
-        <Unlink2Icon aria-hidden />
-        {remove.label}
-      </Button>
-    </DisabledReason>
+    <DropdownActionItem
+      icon={remove.icon}
+      label={remove.label}
+      disabledReason={remove.disabledReason}
+      tone={remove.tone}
+      onSelect={remove.run}
+    />
   )
 }
 
@@ -87,9 +81,9 @@ export function ItemLinkLine({
             madeFromVersion: row.isOutOfDate ? row.link.target_version : null,
           },
         ]}
-        renderActions={
+        renderMenu={
           isOutgoing
-            ? () => <RemoveLinkButton link={row.link} lockedReason={lockedReason} />
+            ? () => <RemoveLinkMenuItem link={row.link} lockedReason={lockedReason} />
             : undefined
         }
       >

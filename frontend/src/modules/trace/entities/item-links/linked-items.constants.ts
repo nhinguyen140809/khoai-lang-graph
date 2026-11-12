@@ -2,6 +2,7 @@ const thisItem = 'This item'
 
 export const linkedItemMessages = {
   thisItem,
+  moreActions: 'More actions',
   itemLabel: (kindTitle: string, title: string) => `${kindTitle}, ${title}`,
   chipLabelOutOfDate: (kindTitle: string, title: string) =>
     `${kindTitle}, ${title}, made from an older version`,
