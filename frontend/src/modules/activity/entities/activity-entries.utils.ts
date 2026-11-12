@@ -19,6 +19,9 @@ const entryTypeRank = {
   review: 2,
 } as const satisfies Record<ActivityEntry['type'], number>
 
+// A message that closes a phase comes after the entries of the phase and before a review.
+const closingMessageRank = 1.5
+
 // Whether an entry, when it is the last of a run, says that the work has ended whatever status the
 // run still shows. The status of a run reaches the page a little after its steps do, so the entries
 // are the sooner word. A new type of entry fails to compile until it says which it is.
@@ -103,9 +106,14 @@ function itemEntries(work: WorkEntry, view: View): ActivityEntry[] {
   })
 }
 
+/** When a phase ended: its last step finished, else its last note, else it started. */
+function endTimeOf(work: WorkEntry): string {
+  return work.steps.at(-1)?.finished_at ?? work.notes.at(-1)?.created_at ?? work.startedAt
+}
+
 /** What a phase wrote and the failure that ended it, at the time it ended. */
 function endEntries(work: WorkEntry, kinds: ReadonlyMap<string, KindLook>): ActivityEntry[] {
-  const time = work.steps.at(-1)?.finished_at ?? work.notes.at(-1)?.created_at ?? work.startedAt
+  const time = endTimeOf(work)
   const entries: ActivityEntry[] = []
   const kindGroups = kindGroupsOf(work, kinds)
   if (kindGroups.length > 0) {
@@ -144,6 +152,8 @@ export function runEntries(input: {
   view: View
 }): ActivityEntry[] {
   const cuts = input.interrupts.map(({ created_at }) => created_at)
+  const phases = input.work.flatMap((line) => splitWork(line, cuts))
+  const phaseEntryLists = phases.map((work) => phaseEntries(work, input))
   const entries: ActivityEntry[] = [
     ...input.messages.map((message) => ({
       type: 'message' as const,
@@ -151,9 +161,7 @@ export function runEntries(input: {
       time: message.created_at,
       message,
     })),
-    ...input.work
-      .flatMap((line) => splitWork(line, cuts))
-      .flatMap((work) => phaseEntries(work, input)),
+    ...phaseEntryLists.flat(),
     ...input.interrupts.map((interrupt) => ({
       type: 'review' as const,
       id: interrupt.id,
@@ -162,11 +170,29 @@ export function runEntries(input: {
     })),
   ]
 
-  return entries.toSorted(
-    (first, second) =>
-      first.time.localeCompare(second.time) ||
-      entryTypeRank[first.type] - entryTypeRank[second.type],
-  )
+  // A message that a phase wrote after its last item sums the phase up, so it comes under what
+  // the phase wrote and not between that and the items.
+  const closing = new Set<string>()
+  for (const message of input.messages) {
+    const index = phases.findIndex(
+      (work) => work.startedAt <= message.created_at && message.created_at <= endTimeOf(work),
+    )
+    const items = phaseEntryLists[index]?.filter(({ type }) => type === 'note' || type === 'tool')
+    if (items?.every(({ time }) => time <= message.created_at) === true) closing.add(message.id)
+  }
+  const sortKeyOf = (entry: ActivityEntry): { time: string; rank: number } => {
+    if (entry.type !== 'message' || !closing.has(entry.id)) {
+      return { time: entry.time, rank: entryTypeRank[entry.type] }
+    }
+    const end = phases.find((work) => work.startedAt <= entry.time && entry.time <= endTimeOf(work))
+    return { time: end === undefined ? entry.time : endTimeOf(end), rank: closingMessageRank }
+  }
+
+  return entries.toSorted((first, second) => {
+    const a = sortKeyOf(first)
+    const b = sortKeyOf(second)
+    return a.time.localeCompare(b.time) || a.rank - b.rank
+  })
 }
 
 /** The messages of a thread by the run they belong to, in order; `null` holds those of no run. */

@@ -306,6 +306,38 @@ describe('runEntries with phases', () => {
     expect(entries.map(({ type }) => type)).toEqual(['phase', 'note', 'message', 'note'])
   })
 
+  it('puts a message that a phase wrote after its last item under what the phase wrote', () => {
+    const entries = runEntries({
+      messages: [
+        buildMessage({
+          id: 'm-sum',
+          thread_id: run.thread_id,
+          sequence: 2,
+          created_at: at('01:45'),
+          run_id: run.id,
+        }),
+      ],
+      work: workEntries(
+        [
+          buildStep({
+            ...researchStep(1, 'corpus_builder', [
+              { kind: 'doing', text: 'First.', created_at: at('01:10') },
+            ]),
+            produced: [{ item_id: 'i1', kind: 'persona', key: 'PER-001', version: 1 }],
+          }),
+        ],
+        run,
+      ),
+      interrupts: [],
+      stageTitles: stages,
+      subjectTitles,
+      kinds: new Map([['persona', { title: 'Persona', isNavigable: false }]]),
+      view: 'user',
+    })
+
+    expect(entries.map(({ type }) => type)).toEqual(['phase', 'note', 'written', 'message'])
+  })
+
   it('puts the answer to a question where it was given, before the work that goes on from it', () => {
     const asked: Interrupt = {
       id: 'ask-1',
