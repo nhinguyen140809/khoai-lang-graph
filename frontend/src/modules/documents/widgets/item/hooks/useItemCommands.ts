@@ -2,6 +2,7 @@ import type { OutlineNeighbors } from '@/modules/artifact/entities'
 import { PaletteGroup, useCommands } from '@/shared/components/frame'
 
 import { itemPageMessages } from '../item-page.constants'
+import type { ItemMove } from '../item-page.types'
 
 /**
  * Registers `J` and `K` for the item page while it is on screen: the next and the previous item of
@@ -10,18 +11,24 @@ import { itemPageMessages } from '../item-page.constants'
  */
 export function useItemCommands(
   neighbors: OutlineNeighbors,
-  move: (target: { id: string }) => void,
+  move: (target: { id: string }, move: ItemMove) => void,
   onMoved: () => void,
   { isEnabled = true }: { isEnabled?: boolean } = {},
 ) {
-  const command = (id: string, label: string, key: string, target: { id: string } | null) => ({
+  const command = (
+    id: string,
+    label: string,
+    key: string,
+    target: { id: string } | null,
+    direction: ItemMove,
+  ) => ({
     id,
     label,
     group: PaletteGroup.View,
     hotkey: { key },
     ...(target !== null && {
       run: () => {
-        move(target)
+        move(target, direction)
         onMoved()
       },
     }),
@@ -30,8 +37,14 @@ export function useItemCommands(
   useCommands(
     isEnabled
       ? [
-          command('documents.nextItem', itemPageMessages.next, 'j', neighbors.next),
-          command('documents.previousItem', itemPageMessages.previous, 'k', neighbors.previous),
+          command('documents.nextItem', itemPageMessages.next, 'j', neighbors.next, 'next'),
+          command(
+            'documents.previousItem',
+            itemPageMessages.previous,
+            'k',
+            neighbors.previous,
+            'previous',
+          ),
         ]
       : [],
   )

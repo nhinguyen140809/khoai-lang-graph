@@ -149,7 +149,20 @@ describe('ItemPage', () => {
 
     await userEvent.click(screen.getByRole('button', { name: 'Next item' }))
 
-    expect(routerMock.push).toHaveBeenCalledWith(expect.stringMatching(/\/items\//))
+    expect(routerMock.push).toHaveBeenCalledWith(expect.stringMatching(/\/items\//), {
+      transitionTypes: ['item-next'],
+    })
+  })
+
+  it('moves back with the type of the previous item', async () => {
+    renderItem(last?.id ?? '')
+    await findNavigator()
+
+    await userEvent.click(screen.getByRole('button', { name: 'Previous item' }))
+
+    expect(routerMock.push).toHaveBeenCalledWith(expect.stringMatching(/\/items\//), {
+      transitionTypes: ['item-previous'],
+    })
   })
 
   it('goes to the next and the previous item with J and K', async () => {

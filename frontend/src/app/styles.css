@@ -259,6 +259,76 @@
 }
 
 /*
+ * The move from an item to the one before or after it in its document: the old content slides out
+ * the way of the move while it fades, and the new content slides in from the other side. The box
+ * that holds them does not move, so only the content does.
+ */
+@keyframes item-fade {
+  from {
+    opacity: 0;
+  }
+  to {
+    opacity: 1;
+  }
+}
+
+@keyframes item-slide {
+  from {
+    transform: translateX(var(--item-offset));
+  }
+  to {
+    transform: none;
+  }
+}
+
+::view-transition-group(.item-previous),
+::view-transition-group(.item-next),
+::view-transition-group(.item-fade) {
+  animation: none;
+}
+
+::view-transition-old(.item-next),
+::view-transition-new(.item-previous) {
+  --item-offset: -24px;
+}
+
+::view-transition-new(.item-next),
+::view-transition-old(.item-previous) {
+  --item-offset: 24px;
+}
+
+::view-transition-old(.item-next),
+::view-transition-old(.item-previous) {
+  animation:
+    150ms ease-in both item-fade reverse,
+    250ms ease-in-out both item-slide reverse;
+}
+
+::view-transition-new(.item-next),
+::view-transition-new(.item-previous) {
+  animation:
+    200ms ease-out 100ms both item-fade,
+    250ms ease-in-out both item-slide;
+}
+
+::view-transition-old(.item-fade) {
+  animation: 150ms ease-in both item-fade reverse;
+}
+
+::view-transition-new(.item-fade) {
+  animation: 200ms ease-out both item-fade;
+}
+
+@media (prefers-reduced-motion: reduce) {
+  ::view-transition-old(*),
+  ::view-transition-new(*),
+  ::view-transition-group(*) {
+    animation-duration: 0s !important;
+    animation-delay: 0s !important;
+  }
+}
+
+/*
  * A row of a tree that has just gone: it fades and folds up to nothing, while the rows below it
  * move up with it. A browser that cannot animate a height from `auto` still fades the row.
  */

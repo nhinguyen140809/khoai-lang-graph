@@ -23,6 +23,8 @@ interface OpenPageOptions {
   inPlace?: boolean
   /** What the opener calls the page, which names its tab until the page knows its own title. */
   title?: string
+  /** What kind of move this is, so that the parts that animate a change of page can tell them apart. */
+  transitionTypes?: string[]
 }
 
 /**
@@ -49,6 +51,7 @@ export function useOpenPage() {
       const tabId = useEditorTabsStore.getState().onScreen[group]
       if (tabId !== undefined) replacePage(href, tabId)
     }
-    router.push(href)
+    if (options.transitionTypes === undefined) router.push(href)
+    else router.push(href, { transitionTypes: options.transitionTypes })
   }
 }
