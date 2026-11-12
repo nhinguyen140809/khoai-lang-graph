@@ -4,6 +4,7 @@ import { ChevronRightIcon } from 'lucide-react'
 
 import type { WorkEntry } from '@/modules/run/entities'
 import { useWorkStatusLook, useWorkWords } from '@/modules/run/entities'
+import { Shimmer } from '@/shared/components/animation'
 import { Marker } from '@/shared/components/ui/marker'
 import { TraceDescription, TraceIcon, TraceLine, TraceTitle } from '@/shared/components/ui/trace'
 import { useView } from '@/shared/lib/view'
@@ -21,8 +22,8 @@ interface PhaseEntryViewProps {
 
 /**
  * The separator of a phase of work: its title and, in words, how it went. It opens and closes the
- * items under it. It carries no mark of its status: its title shimmers while it works, and the
- * items under it, such as its failure, are where the reader looks.
+ * items under it. It carries no mark of its status: its title shimmers in the yellow of the charts
+ * while it works, and the items under it, such as its failure, are where the reader looks.
  */
 export function PhaseEntryView({
   work,
@@ -49,8 +50,12 @@ export function PhaseEntryView({
         onClick={onToggle}
         className="group/phase cursor-pointer text-left transition-colors outline-none hover:text-foreground focus-visible:ring-3 focus-visible:ring-ring/50"
       >
-        <TraceLine {...(look.traceStatus === 'running' && { status: 'running' as const })}>
-          <TraceTitle className="text-accent-foreground">{title}</TraceTitle>
+        <TraceLine>
+          <TraceTitle className="text-accent-foreground">
+            <Shimmer color="chart" isActive={look.traceStatus === 'running'}>
+              {title}
+            </Shimmer>
+          </TraceTitle>
           <TraceDescription className="flex flex-wrap gap-x-2">
             {[
               words.continued,
