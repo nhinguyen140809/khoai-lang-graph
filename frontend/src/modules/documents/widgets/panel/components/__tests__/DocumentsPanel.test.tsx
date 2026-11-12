@@ -53,24 +53,23 @@ describe('DocumentsPanel icons', () => {
 })
 
 describe('DocumentsPanel tooltips', () => {
-  it('names a document by its full title, with its status under it', async () => {
+  it('says the state of a document in words, and not its title again', async () => {
     renderPanel()
 
     await userEvent.hover(within(await findRow('Interviewees')).getByText('Interviewees'))
 
-    expect(await screen.findByRole('tooltip')).toHaveTextContent('IntervieweesApproved, version 2')
+    const tooltip = await screen.findByRole('tooltip')
+    expect(tooltip).toHaveTextContent(/^Approved, version 2$/)
   })
 
-  it('ends the path of a row with its own title, so a title cut short reads in full', async () => {
+  it('says one thing of a row under others, the state of the row, and not the path to it', async () => {
     renderPanel({ artifactId: analysis.id })
 
     await userEvent.hover(
       within(await findRow('Session length unknown')).getByText('Session length unknown'),
     )
 
-    expect(await screen.findByRole('tooltip')).toHaveTextContent(
-      'Requirements analysis / Point to clarify / Session length unknownIssue to resolve',
-    )
+    expect(await screen.findByRole('tooltip')).toHaveTextContent(/^Issue to resolve$/)
   })
 })
 

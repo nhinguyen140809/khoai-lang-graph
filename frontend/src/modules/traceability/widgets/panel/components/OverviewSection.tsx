@@ -13,6 +13,7 @@ import { ErrorState, LoadingState } from '@/shared/components/state'
 import { Badge } from '@/shared/components/ui/badge'
 import { Tooltip, TooltipContent, TooltipTrigger } from '@/shared/components/ui/tooltip'
 import { Tree, TreeItem, TreeItemLabel } from '@/shared/components/ui/tree'
+import { useLeavingRows } from '@/shared/lib/animation'
 import { routes } from '@/shared/routes'
 
 import { useOverviewTree } from '../hooks/useOverviewTree'
@@ -62,15 +63,21 @@ export function OverviewSection({ live }: OverviewSectionProps) {
 /** The rows of the overview over the flat tree that draws them. */
 function OverviewTree({ rows }: { rows: Readonly<Record<string, OverviewRow>> }) {
   const tree = useOverviewTree(rows)
+  const treeRows = useLeavingRows(tree.getItems(), (item) => item.getId())
   const pathname = usePathname()
 
   return (
     <Tree indent={0} tree={tree} aria-label={tracePanelMessages.overview} className="pb-1">
-      {tree.getItems().map((item) => {
+      {treeRows.map(({ row: item, isLeaving }) => {
         const row = item.getItemData()
         const isCurrent = pathname === row.href
         return (
-          <TreeItem key={item.getId()} item={item} aria-current={isCurrent ? 'page' : undefined}>
+          <TreeItem
+            key={item.getId()}
+            item={item}
+            isLeaving={isLeaving}
+            aria-current={isCurrent ? 'page' : undefined}
+          >
             <Tooltip>
               <TooltipTrigger asChild>
                 <TreeItemLabel
