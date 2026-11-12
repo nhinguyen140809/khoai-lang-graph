@@ -249,6 +249,25 @@
 }
 
 /*
+ * A row of a tree that has just gone: it fades and folds up to nothing, while the rows below it
+ * move up with it. A browser that cannot animate a height from `auto` still fades the row.
+ */
+@theme {
+  --animate-tree-row-leave: tree-row-leave 160ms ease-out forwards;
+
+  @keyframes tree-row-leave {
+    from {
+      height: auto;
+      opacity: 1;
+    }
+    to {
+      height: 0;
+      opacity: 0;
+    }
+  }
+}
+
+/*
  * A short wash of the color of the element, the primary color without one, that fades out to show
  * that a value has just changed.
  */

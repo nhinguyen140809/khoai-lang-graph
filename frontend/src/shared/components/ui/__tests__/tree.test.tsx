@@ -6,6 +6,7 @@ import { Tree, TreeItem } from '../tree'
 
 // Only what a row reads of its item.
 const row = {
+  getId: () => 'row',
   getItemMeta: () => ({ level: 2 }),
   isExpanded: () => false,
   isFolder: () => false,
@@ -44,5 +45,27 @@ describe('Tree', () => {
     expect(renderRow(false, folder)).toHaveAttribute('aria-expanded', 'false')
     document.body.replaceChildren()
     expect(renderRow(false)).not.toHaveAttribute('aria-expanded')
+  })
+
+  it('shows a row that has gone from the tree at the level it had, out of reach', () => {
+    const { rerender } = render(
+      <Tree indent={16} aria-label="Files">
+        <TreeItem item={row}>Row</TreeItem>
+      </Tree>,
+    )
+    const gone = { ...row, getItemMeta: () => undefined } as unknown as ItemInstance<unknown>
+
+    rerender(
+      <Tree indent={16} aria-label="Files">
+        <TreeItem item={gone} isLeaving>
+          Row
+        </TreeItem>
+      </Tree>,
+    )
+
+    const leaving = screen.getByText('Row')
+    expect(leaving).toHaveAttribute('data-leaving')
+    expect(leaving).toHaveAttribute('aria-hidden', 'true')
+    expect(leaving).toHaveStyle({ '--tree-padding': '32px' })
   })
 })
