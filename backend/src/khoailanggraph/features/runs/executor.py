@@ -495,18 +495,34 @@ class RunWalker:
         self.thread.last_message_at = _now()
         self.session.flush()
 
+    def _step_before(self, step: RunStepRow) -> RunStepRow | None:
+        """The step that saved the state a step began with, which may belong to an earlier run.
+
+        A run that retries starts its own steps at one, so the first of them began with the state
+        saved by the step before the one that its run retried from, in the run it retried.
+        """
+        previous = self.session.scalar(
+            select(RunStepRow).where(
+                RunStepRow.run_id == step.run_id,
+                RunStepRow.sequence == step.sequence - 1,
+            )
+        )
+        if previous is not None:
+            return previous
+        run = self.session.get(RunRow, step.run_id)
+        retried_from = (_loads(run.input_json) or {}).get("retry_from_step_id") if run else None
+        if not retried_from:
+            return None
+        retried = self.session.get(RunStepRow, UUID(str(retried_from)))
+        return self._step_before(retried) if retried is not None else None
+
     def _retried_state(self, from_step_id: UUID) -> REState:
         """The state saved before a step of another run, to walk from that step again."""
         original = self.session.get(RunStepRow, from_step_id)
         if original is None:
             msg = "the step to retry from does not exist"
             raise ValueError(msg)
-        previous = self.session.scalar(
-            select(RunStepRow).where(
-                RunStepRow.run_id == original.run_id,
-                RunStepRow.sequence == original.sequence - 1,
-            )
-        )
+        previous = self._step_before(original)
         if previous is None or previous.state_json is None:
             starting = self.session.scalar(
                 select(MessageRow)

@@ -11,7 +11,7 @@ derived_from, supersedes) are all in place.
 
 from __future__ import annotations
 
-from typing import TYPE_CHECKING
+from typing import TYPE_CHECKING, Any
 
 if TYPE_CHECKING:
     from collections.abc import AsyncIterator
@@ -202,6 +202,42 @@ async def test_retry_creates_queued_run_with_lineage(client: AsyncClient) -> Non
     assert body["error"] is None, body
     assert body["status"] == "succeeded"  # the test settings run a job inside the request
     assert body["number"] == 2
+
+
+async def test_a_retry_of_a_retry_starts_from_the_state_the_first_run_saved(
+    client: AsyncClient,
+) -> None:
+    """The steps of a retry start over at one: the state before the first of them is the one the
+    run it retried saved before the step it retried from, not an empty one."""
+    await client.post("/api/v1/auth/register", json=REGISTER)
+    await client.post("/api/v1/auth/login", json={"email": REGISTER["email"], "password": "secret"})
+    project = await client.post("/api/v1/projects", json=PROJECT_BODY)
+    thread = await client.post(f"/api/v1/projects/{project.json()['id']}/threads")
+    message = await client.post(
+        f"/api/v1/threads/{thread.json()['id']}/messages", json={"content": TASK}
+    )
+    first = message.json()["run"]["id"]
+    first_steps = (await client.get(f"/api/v1/runs/{first}/steps", params={"limit": 200})).json()
+    validator = first_steps["items"][-1]
+
+    async def retried(run_id: str, step_id: str) -> tuple[dict[str, Any], dict[str, Any]]:
+        response = await client.post(f"/api/v1/runs/{run_id}/retry", json={"from_step_id": step_id})
+        run = response.json()
+        steps = await client.get(f"/api/v1/runs/{run['id']}/steps", params={"limit": 200})
+        assert len(steps.json()["items"]) == 1
+        return run, steps.json()["items"][0]
+
+    second, second_step = await retried(first, validator["id"])
+    third, third_step = await retried(second["id"], second_step["id"])
+
+    assert second["status"] == third["status"] == "succeeded", (second, third)
+    assert third["retry_of_run_id"] == second["id"]
+    assert third_step["node"] == validator["node"]
+    # The validator reads the documents the first run saved, so it finds issues again; from an
+    # empty state it would find nothing to check and write nothing.
+    kinds = [{item["kind"] for item in step["produced"]} for step in (second_step, third_step)]
+    assert kinds[0], second_step
+    assert kinds[0] == kinds[1]
 
 
 async def test_retry_rejects_step_of_another_run(client: AsyncClient) -> None:
