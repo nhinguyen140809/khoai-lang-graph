@@ -2,6 +2,9 @@
 
 import type { Route } from 'next'
 
+import { useHasPainted, useLeavingRows } from '@/shared/lib/animation'
+
+import { tabLeaveMs } from '../editor-tabs.constants'
 import { useEditorTabs } from '../hooks/useEditorTabs'
 import { useTabGroup } from '../hooks/useTabGroup'
 import { TabStripContext } from '../hooks/useTabStrip'
@@ -40,6 +43,10 @@ interface GroupTabsProps extends EditorTabsProps {
 /** The strip of one tab group, once the group has a tab. */
 function GroupTabs({ group, rootHref }: GroupTabsProps) {
   const strip = useEditorTabs(group, rootHref)
+  // A tab that closes or is replaced stays a moment longer and folds up, while the tab that takes
+  // its place grows; the tabs of the first render come in at once.
+  const rows = useLeavingRows(strip.tabs, (tab) => tab.id, tabLeaveMs)
+  const isReady = useHasPainted()
 
   if (strip.tabs.length === 0) return null
 
@@ -47,8 +54,8 @@ function GroupTabs({ group, rootHref }: GroupTabsProps) {
     <TabStripContext value={strip}>
       <nav aria-label="Open editors" className="flex h-10 shrink-0 border-b bg-sidebar">
         <ul className="flex min-w-0 flex-1 scrollbar-none overflow-x-auto">
-          {strip.tabs.map((tab) => (
-            <TabItem key={tab.id} tab={tab} />
+          {rows.map(({ row: tab, isLeaving }) => (
+            <TabItem key={tab.id} tab={tab} isLeaving={isLeaving} isStripReady={isReady} />
           ))}
         </ul>
         <OpenTabsMenu />

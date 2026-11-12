@@ -30,7 +30,9 @@ export function TabLabel({ tab, preview }: TabLabelProps) {
       >
         {icon}
       </span>
-      <span className="truncate group-data-[preview=true]/tab:italic">{tab.title}</span>
+      {/* The padding on the right keeps the slant of the last letter of an italic title inside the
+          box that the truncation clips, so it is not cut. */}
+      <span className="truncate pr-1 group-data-[preview=true]/tab:italic">{tab.title}</span>
       {preview && <span className="sr-only">, preview</span>}
     </>
   )
