@@ -8,6 +8,7 @@ import { useDestinations } from '../destinations/hooks/useDestinations'
 import { useSideFeature } from '../destinations/hooks/useSideFeature'
 import { useEditorTabsStore } from '../tabs/editor-tabs.store'
 import { useTabGroup } from '../tabs/hooks/useTabGroup'
+import { notePageOpen } from '../tabs/last-page-open.utils'
 
 interface OpenPageOptions {
   /**
@@ -39,6 +40,7 @@ export function useOpenPage() {
   const group = useTabGroup()
 
   return (href: Route, options: OpenPageOptions = {}) => {
+    notePageOpen(href)
     const feature = destinationOfHref(destinations, href)
     if (feature !== undefined) show(feature.id)
     if (options.title !== undefined) namePage(href, options.title)

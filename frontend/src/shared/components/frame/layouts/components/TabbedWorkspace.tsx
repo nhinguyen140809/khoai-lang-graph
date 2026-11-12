@@ -5,6 +5,7 @@ import type { ReactNode } from 'react'
 import { Surface } from '@/shared/components/ui/surface'
 
 import { useSideFeature } from '../../destinations/hooks/useSideFeature'
+import { useKeepOnDoubleClick } from '../../hooks/useKeepOnDoubleClick'
 import { EditorTabs } from '../../tabs/components/EditorTabs'
 import { TabGroupContext } from '../../tabs/hooks/useTabGroup'
 import { SideFeatureSplit } from './SideFeatureSplit'
@@ -19,10 +20,12 @@ interface TabbedWorkspaceProps {
 /**
  * The side panel and the editor. The side panel is the one of the feature chosen on the activity
  * bar, and the editor follows the tabs, so choosing a feature does not change the editor. The
- * panel keeps its width in pixels when the window is resized.
+ * panel keeps its width in pixels when the window is resized. A double click that follows the click
+ * that opened a page keeps the tab of that page, wherever the second click lands.
  */
 export function TabbedWorkspace({ tabGroup, children }: TabbedWorkspaceProps) {
   const { feature } = useSideFeature()
+  useKeepOnDoubleClick()
 
   return (
     <SideFeatureSplit>
