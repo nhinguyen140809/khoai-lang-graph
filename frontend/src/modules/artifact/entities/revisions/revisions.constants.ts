@@ -70,3 +70,6 @@ export const recordChangeMessages = {
 
 /** The motion of the stepper when it moves to another version: a slide of half the content. */
 export const versionSwap = { distance: 0.5, duration: 300 }
+
+/** The motion of the surface when it moves between the list and the stepper: a short slide. */
+export const levelSwap = { distance: 0.15, duration: 300 }

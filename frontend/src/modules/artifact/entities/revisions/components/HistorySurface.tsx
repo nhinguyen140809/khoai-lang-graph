@@ -4,7 +4,7 @@ import { cn } from 'cn'
 import { ChevronsDownIcon, ChevronUpIcon, HistoryIcon } from 'lucide-react'
 import { type KeyboardEventHandler, type ReactNode, useEffect, useRef } from 'react'
 
-import { AnimatedSize } from '@/shared/components/animation'
+import { AnimatedSize, DirectionalSwap } from '@/shared/components/animation'
 import { ErrorState } from '@/shared/components/state'
 import { Button } from '@/shared/components/ui/button'
 import { Checkbox } from '@/shared/components/ui/checkbox'
@@ -12,7 +12,7 @@ import { DisabledReason } from '@/shared/components/ui/disabled-reason'
 import { FloatingSurface } from '@/shared/components/ui/floating-surface'
 
 import { useRevisionHistory } from '../../revisions/hooks/useRevisionQueries'
-import { revisionMessages } from '../../revisions/revisions.constants'
+import { levelSwap, revisionMessages } from '../../revisions/revisions.constants'
 import type { HistoryLevel, HistoryView, RevisionTarget } from '../../revisions/revisions.types'
 import { VersionList } from './VersionList'
 import { VersionStepper } from './VersionStepper'
@@ -50,7 +50,8 @@ function MinimizeBar({ onClick }: { onClick: () => void }) {
 /**
  * The centered line under the content of the history surface: it opens the list of every version
  * or collapses it back to the stepper. A small line of muted text with an arrow that turns to
- * point the way it goes, and takes a background on the pointer.
+ * point the way it goes, in the primary color while the list is open, and takes a background on
+ * the pointer.
  */
 function ExpandLine({
   label,
@@ -66,6 +67,7 @@ function ExpandLine({
       <button
         type="button"
         aria-label={label}
+        aria-expanded={isExpanded}
         onClick={onClick}
         className="flex w-full items-center justify-center gap-1 rounded-md py-1 text-xs text-muted-foreground transition-colors hover:bg-muted hover:text-foreground"
       >
@@ -191,6 +193,7 @@ export function HistorySurface({
             ref={button}
             type="button"
             variant="ghost"
+            size="sm"
             aria-expanded="false"
             onClick={view.open}
           >
@@ -220,15 +223,15 @@ export function HistorySurface({
             <h2
               ref={heading}
               tabIndex={-1}
-              className="flex items-center gap-1.5 text-lg font-semibold focus-visible:outline-none"
+              className="flex items-center gap-1.5 text-sm font-semibold text-primary focus-visible:outline-none"
             >
-              <HistoryIcon aria-hidden className="size-5" />
+              <HistoryIcon aria-hidden className="size-4" />
               {revisionMessages.title}
             </h2>
             <DisabledReason
               reason={view.selectedVersion === 1 ? revisionMessages.firstVersion : null}
             >
-              <label className="flex items-center gap-2 text-sm">
+              <label className="flex items-center gap-2 text-xs">
                 <Checkbox
                   checked={view.showsChanges}
                   onCheckedChange={(checked) => {
@@ -240,9 +243,13 @@ export function HistorySurface({
               </label>
             </DisabledReason>
           </header>
-          <div
-            key={view.level}
-            className="animate-in duration-200 fade-in-0 motion-reduce:animate-none"
+          {/* The list opens from below, where the arrow under it points, and the stepper comes back
+              from there; what leaves only fades, as the surface changes size. */}
+          <DirectionalSwap
+            swapKey={view.level}
+            direction={view.level === 'list' ? 'up' : 'down'}
+            exit="fade"
+            {...levelSwap}
           >
             <HistoryContent
               view={view}
@@ -250,7 +257,7 @@ export function HistorySurface({
               currentVersion={currentVersion}
               renderRestore={renderRestore}
             />
-          </div>
+          </DirectionalSwap>
         </div>
         {history.state !== 'error' && (
           <ExpandLine
