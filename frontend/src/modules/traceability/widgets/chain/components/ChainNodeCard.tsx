@@ -76,8 +76,10 @@ export function ChainNodeCard({ data }: NodeProps<ChainFlowNode>) {
                   size="icon-xs"
                   className={cn(
                     // The button is taller than the kind it sits beside; its margin keeps the row the height of
-                    // the text, so the kind stays close to the title under it.
-                    'nodrag nopan -my-1 shrink-0 in-data-[variant=solid]:text-(--tone-foreground)',
+                    // the text, so the kind stays close to the title under it. On a solid node it is a
+                    // ghost of the color of the text of the node: no fill of its own, a faint tint of that
+                    // color on hover.
+                    'nodrag nopan -my-1 shrink-0 in-data-[variant=solid]:text-inherit! in-data-[variant=solid]:hover:bg-current/15! in-data-[variant=solid]:hover:text-inherit! in-data-[variant=solid]:aria-expanded:bg-current/15! in-data-[variant=solid]:aria-expanded:text-inherit!',
                     isMenuOpen
                       ? 'opacity-100'
                       : 'opacity-0 group-hover:opacity-100 focus-visible:opacity-100 pointer-coarse:opacity-100',

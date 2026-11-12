@@ -67,3 +67,9 @@ export const revisionMessages = {
 export const recordChangeMessages = {
   locked: 'This document cannot change now. It can change while it waits for your review.',
 } as const
+
+/** The motion of the stepper when it moves to another version: a slide of half the content. */
+export const versionSwap = { distance: 0.5, duration: 300 }
+
+/** The motion of the surface when it moves between the list and the stepper: a short slide. */
+export const levelSwap = { distance: 0.15, duration: 300 }

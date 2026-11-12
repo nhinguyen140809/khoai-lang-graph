@@ -26,7 +26,6 @@ interface ChainCanvasProps {
   selectedLinkId: string | null
   onSelect: (linkId: string) => void
   onClear: () => void
-  fitDuration: number
   /** What the key of Escape does inside the canvas, where the focus of the graph sits. */
   onEscape: () => void
 }
@@ -38,7 +37,6 @@ export function ChainCanvas({
   selectedLinkId,
   onSelect,
   onClear,
-  fitDuration,
   onEscape,
 }: ChainCanvasProps) {
   const projectId = useProjectId()
@@ -58,7 +56,10 @@ export function ChainCanvas({
       zoomOnScroll={false}
       preventScrolling={false}
       fitView
-      fitViewOptions={{ duration: fitDuration, maxZoom: 1 }}
+      // The first fit is not animated: the nodes would appear at the default zoom and shrink to
+      // the fit in front of the reader. The canvas fades in instead.
+      fitViewOptions={{ duration: 0, maxZoom: 1 }}
+      className="animate-in duration-200 fade-in-0 motion-reduce:animate-none"
       onKeyDown={(event) => {
         if (event.key === 'Escape') onEscape()
       }}

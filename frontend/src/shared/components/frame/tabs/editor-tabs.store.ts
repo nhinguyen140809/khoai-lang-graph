@@ -2,6 +2,7 @@ import { create } from 'zustand'
 import { persist } from 'zustand/middleware'
 
 import { parseStored, persistStorageByEntry, storageKey } from '@/shared/lib/storage'
+import { pathOf } from '@/shared/lib/url'
 
 import {
   type EditorTab,
@@ -37,12 +38,17 @@ interface PendingOpen {
   title: string | null
 }
 
-/** What the page at `href` was already asked of its tab, else nothing. */
+/**
+ * What the page at `href` was already asked of its tab, else nothing. A tab holds the page, so an
+ * address meets its tab at the path: an item read in place in its document has the address of the
+ * document with the item in a query.
+ */
 function pendingOf(state: Pick<EditorTabsState, 'pendingOpen'>, href: string): PendingOpen {
   const { pendingOpen } = state
-  return pendingOpen?.href === href
+  const page = pathOf(href)
+  return pendingOpen?.href === page
     ? pendingOpen
-    : { href, keep: false, replaceTabId: null, title: null }
+    : { href: page, keep: false, replaceTabId: null, title: null }
 }
 
 /** The tab strips of every group, which are stored, and what the tabs keep for the session only. */
@@ -104,7 +110,7 @@ export const useEditorTabsStore = create<EditorTabsState>()(
       pendingOpen: null,
       openTab: (group, tab, options = {}) => {
         set((state) => {
-          const pending = state.pendingOpen?.href === tab.href ? state.pendingOpen : null
+          const pending = state.pendingOpen?.href === pathOf(tab.href) ? state.pendingOpen : null
           const tabs = state.groups[group] ?? []
           const open = tabs.find(({ id }) => id === tab.id)
           const providedTitle = open === undefined ? (pending?.title ?? tab.title) : open.title
@@ -133,7 +139,7 @@ export const useEditorTabsStore = create<EditorTabsState>()(
       keepPage: (href) => {
         set((state) => {
           for (const [group, tabs] of Object.entries(state.groups)) {
-            const open = tabs.find((tab) => tab.href === href)
+            const open = tabs.find((tab) => pathOf(tab.href) === pathOf(href))
             if (open !== undefined) return { preview: clearGroupTab(state.preview, group, open.id) }
           }
           return { pendingOpen: { ...pendingOf(state, href), keep: true } }
@@ -146,7 +152,7 @@ export const useEditorTabsStore = create<EditorTabsState>()(
         set((state) => {
           // A tab that is open already has its title; nothing opens for the hint to name.
           const isOpen = Object.values(state.groups).some((tabs) =>
-            tabs.some((tab) => tab.href === href),
+            tabs.some((tab) => pathOf(tab.href) === pathOf(href)),
           )
           return isOpen ? state : { pendingOpen: { ...pendingOf(state, href), title } }
         })

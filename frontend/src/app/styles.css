@@ -224,12 +224,22 @@
  * pages, text-xs (12px) for labels, captions and hints, which people glance at instead of reading.
  * Below them, two sizes for indicators: text-3xs (11px) for counts, ids and times, and text-4xs
  * (10px) for the count inside a badge.
+ *
+ * The space between lines is set here, once, for every size: a number without a unit, so it is a
+ * share of the size of the text and grows with it. It is a little more open than the one of
+ * Tailwind, which suits text that wraps over several lines; a size of heading keeps a tighter one.
  */
 @theme {
   --text-3xs: 0.6875rem;
-  --text-3xs--line-height: calc(0.875 / 0.6875);
+  --text-3xs--line-height: 1.45;
   --text-4xs: 0.625rem;
-  --text-4xs--line-height: calc(0.75 / 0.625);
+  --text-4xs--line-height: 1.4;
+  --text-xs--line-height: 1.5;
+  --text-sm--line-height: 1.6;
+  --text-base--line-height: 1.65;
+  --text-lg--line-height: 1.6;
+  --text-xl--line-height: 1.5;
+  --text-2xl--line-height: 1.4;
 }
 
 /*
@@ -248,6 +258,112 @@
   --grid-template-rows-body-footer: minmax(0, 1fr) auto;
 }
 
+/*
+ * The move from an item to the one before or after it in its document: the old content slides out
+ * the way of the move while it fades, and the new content slides in from the other side. The box
+ * that holds them does not move, so only the content does.
+ */
+@keyframes item-fade {
+  from {
+    opacity: 0;
+  }
+  to {
+    opacity: 1;
+  }
+}
+
+@keyframes item-slide {
+  from {
+    transform: translateX(var(--item-offset));
+  }
+  to {
+    transform: none;
+  }
+}
+
+::view-transition-group(.item-previous),
+::view-transition-group(.item-next),
+::view-transition-group(.item-fade) {
+  animation: none;
+}
+
+::view-transition-old(.item-next),
+::view-transition-new(.item-previous) {
+  --item-offset: -24px;
+}
+
+::view-transition-new(.item-next),
+::view-transition-old(.item-previous) {
+  --item-offset: 24px;
+}
+
+::view-transition-old(.item-next),
+::view-transition-old(.item-previous) {
+  animation:
+    150ms ease-in both item-fade reverse,
+    250ms ease-in-out both item-slide reverse;
+}
+
+::view-transition-new(.item-next),
+::view-transition-new(.item-previous) {
+  animation:
+    200ms ease-out 100ms both item-fade,
+    250ms ease-in-out both item-slide;
+}
+
+::view-transition-old(.item-fade) {
+  animation: 150ms ease-in both item-fade reverse;
+}
+
+::view-transition-new(.item-fade) {
+  animation: 200ms ease-out both item-fade;
+}
+
+@media (prefers-reduced-motion: reduce) {
+  ::view-transition-old(*),
+  ::view-transition-new(*),
+  ::view-transition-group(*) {
+    animation-duration: 0s !important;
+    animation-delay: 0s !important;
+  }
+}
+
+/*
+ * A row of a tree that has just gone: it fades and folds up to nothing, while the rows below it
+ * move up with it. A browser that cannot animate a height from `auto` still fades the row.
+ */
+@theme {
+  --animate-tree-row-leave: tree-row-leave 160ms ease-out forwards;
+
+  @keyframes tree-row-leave {
+    from {
+      height: auto;
+      opacity: 1;
+    }
+    to {
+      height: 0;
+      opacity: 0;
+    }
+  }
+}
+
+/*
+ * A short wash of the color of the element, the primary color without one, that fades out to show
+ * that a value has just changed.
+ */
+@theme {
+  --animate-flash: flash 1s ease-out;
+
+  @keyframes flash {
+    from {
+      background-color: color-mix(in oklab, var(--tone, var(--primary)) 30%, transparent);
+    }
+    to {
+      background-color: transparent;
+    }
+  }
+}
+
 @layer base {
   * {
     @apply border-border outline-ring/50;
@@ -257,6 +373,13 @@
   }
   html {
     @apply font-sans;
+  }
+
+  /* The window never stretches or goes back a page when the wheel or the pad goes on past the end
+     of what scrolls: a gesture to the side or past the top is not an action of the app. */
+  html,
+  body {
+    overscroll-behavior: none;
   }
 
   /* Heading sizes follow nova: its largest title is text-lg, card and dialog titles are
@@ -280,7 +403,7 @@
   }
 
   body {
-    line-height: 1.5;
+    line-height: 1.65;
   }
 
   code,
@@ -306,11 +429,23 @@
 }
 
 /*
+ * A transition on the width and the height only, for a box that follows the size of what it
+ * holds.
+ */
+@utility transition-size {
+  transition-property: width, height;
+  transition-timing-function: var(--ease-out);
+  transition-duration: 200ms;
+}
+
+/*
  * React Flow reads these variables for the canvas, edges, handles, nodes, controls, and minimap.
  * Each one points to a design token, so a graph follows the light and dark theme. The canvas
  * itself stays transparent and shows the surface it is placed on.
  */
 .react-flow {
+  /* A canvas that is panned never hands what it did not use to the page around it. */
+  overscroll-behavior: contain;
   --xy-background-color: transparent;
   --xy-background-pattern-color: var(--border);
   --xy-edge-stroke: var(--muted-foreground);

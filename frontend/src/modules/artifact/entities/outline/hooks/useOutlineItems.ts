@@ -11,11 +11,12 @@ import { useKindViews } from './useKindViews'
 
 /**
  * The items of an artifact in outline order without the superseded ones, every page loaded, with
- * the kinds that draw them. Loads the next page as long as there is one.
+ * the kinds that draw them. With no artifact it loads nothing and stays pending. Loads the next page as long as there is one.
  */
-export function useOutlineItems(artifactId: string): OutlineItemsResult {
-  const artifact = useArtifact(artifactId)
-  const items = useArtifactItems(artifactId)
+export function useOutlineItems(artifactId: string | undefined): OutlineItemsResult {
+  const isEnabled = artifactId !== undefined
+  const artifact = useArtifact(artifactId ?? '', undefined, { isEnabled })
+  const items = useArtifactItems(artifactId ?? '', {}, { isEnabled })
   const kinds = useArtifactKinds()
   const itemKindsByKind = useArtifactItemKinds()
   const kindViews = useKindViews()

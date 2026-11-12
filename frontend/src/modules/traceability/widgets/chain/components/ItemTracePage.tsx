@@ -1,12 +1,13 @@
 'use client'
 
+import { TriangleAlertIcon } from 'lucide-react'
+
 import { useIsProjectWriting } from '@/modules/project/entities'
 import { liveTraceMs, useItemChain } from '@/modules/trace/entities'
 import { useEditorTab } from '@/shared/components/frame'
 import { ErrorState, LoadingState, NotFoundState } from '@/shared/components/state'
-import { Alert, AlertTitle } from '@/shared/components/ui/alert'
 import { Button } from '@/shared/components/ui/button'
-import { usePrefersReducedMotion } from '@/shared/lib/viewport'
+import { FloatingSurface } from '@/shared/components/ui/floating-surface'
 import { routes } from '@/shared/routes'
 
 import { useChainLayout } from '../hooks/useChainLayout'
@@ -31,7 +32,6 @@ export function ItemTracePage({ projectId, itemId }: { projectId: string; itemId
   })
   const { selectedLinkId, select, clear } = useChainSelection()
   const layout = useChainLayout(chain.state === 'success' ? chain.graph : undefined)
-  const isReducedMotion = usePrefersReducedMotion()
 
   useEditorTab({
     id: itemId,
@@ -63,7 +63,7 @@ export function ItemTracePage({ projectId, itemId }: { projectId: string; itemId
     )
   }
   if (chain.state === 'pending' || layout.state === 'pending') {
-    return <LoadingState label={itemTraceMessages.loading} />
+    return <LoadingState label={itemTraceMessages.loading} layout="detail" rows={3} />
   }
   if (layout.state === 'error') {
     return <ErrorState message={itemTraceMessages.loadError} onRetry={layout.retry} />
@@ -80,34 +80,48 @@ export function ItemTracePage({ projectId, itemId }: { projectId: string; itemId
         <h1 className="text-2xl font-semibold">{itemTraceMessages.title(focus.title)}</h1>
       </header>
       <div className="relative min-h-96 flex-1">
+        {/* The banners sit at the top, in the middle, at the height of the button of the legend
+            at the right: the same surface, the same padding and a row as tall as its button. */}
         {graph.edges.length === 0 && (
-          <div className="absolute top-2 left-1/2 z-10 -translate-x-1/2">
-            <Alert className="py-1.5">
-              <AlertTitle className="text-sm">{itemTraceMessages.noLink}</AlertTitle>
-            </Alert>
-          </div>
+          <FloatingSurface
+            placement="top-center"
+            variant="popover"
+            size="sm"
+            role="alert"
+            className="p-1"
+          >
+            <p className="flex h-7 items-center px-2 text-sm font-semibold">
+              {itemTraceMessages.noLink}
+            </p>
+          </FloatingSurface>
         )}
         {outOfDate.length > 0 && (
-          <div className="absolute top-2 left-1/2 z-10 -translate-x-1/2">
-            <Alert color="warning" className="gap-2 py-1.5 pr-2 pl-3">
-              <div className="flex items-center gap-2">
-                <AlertTitle className="text-sm">
-                  {itemTraceMessages.outOfDateLinks(outOfDate.length)}
-                </AlertTitle>
-                <Button
-                  type="button"
-                  variant="outline"
-                  size="xs"
-                  onClick={() => {
-                    const first = outOfDate[0]
-                    if (first !== undefined) select(first.id)
-                  }}
-                >
-                  {itemTraceMessages.showOutOfDate}
-                </Button>
-              </div>
-            </Alert>
-          </div>
+          <FloatingSurface
+            placement="top-center"
+            variant="popover"
+            size="sm"
+            color="warning"
+            role="alert"
+            className="p-1"
+          >
+            <div className="flex h-7 items-center gap-2 pl-2">
+              <TriangleAlertIcon aria-hidden className="size-4 text-warning-strong" />
+              <p className="text-sm font-semibold">
+                {itemTraceMessages.outOfDateLinks(outOfDate.length)}
+              </p>
+              <Button
+                type="button"
+                variant="outline"
+                size="xs"
+                onClick={() => {
+                  const first = outOfDate[0]
+                  if (first !== undefined) select(first.id)
+                }}
+              >
+                {itemTraceMessages.showOutOfDate}
+              </Button>
+            </div>
+          </FloatingSurface>
         )}
         <ChainCanvas
           graph={graph}
@@ -116,7 +130,6 @@ export function ItemTracePage({ projectId, itemId }: { projectId: string; itemId
           onSelect={select}
           onClear={clear}
           onEscape={clear}
-          fitDuration={isReducedMotion ? 0 : 200}
         />
         <ChainLegend />
       </div>

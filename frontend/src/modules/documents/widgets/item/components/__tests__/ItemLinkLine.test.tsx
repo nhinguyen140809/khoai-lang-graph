@@ -79,15 +79,7 @@ const links = {
 } satisfies ItemLinksResult
 
 function renderLine() {
-  return renderWithProviders(
-    <ItemLinkLine
-      projectId="p1"
-      links={links}
-      lockedReason={null}
-      activeLinkId={null}
-      onActiveLinkChange={() => undefined}
-    />,
-  )
+  return renderWithProviders(<ItemLinkLine projectId="p1" links={links} lockedReason={null} />)
 }
 
 describe('ItemLinkLine', () => {
@@ -134,17 +126,19 @@ describe('ItemLinkLine', () => {
     ).toBeInTheDocument()
   })
 
-  it('offers to remove the link in the card of an outgoing chip, not of an incoming one', async () => {
+  it('offers to remove the link in the menu of the card of an outgoing chip, not of an incoming one', async () => {
     const user = userEvent.setup()
     renderLine()
 
     await user.click(screen.getByRole('button', { name: 'Analysed requirement, Requirement 1' }))
-    expect(await screen.findByText('Remove this link')).toBeInTheDocument()
+    await user.click(await screen.findByRole('button', { name: 'More actions' }))
+    expect(await screen.findByRole('menuitem', { name: 'Remove this link' })).toBeInTheDocument()
 
+    await pressEscape()
     await pressEscape()
     await user.click(screen.getByRole('button', { name: 'Point to clarify, Fast has no number' }))
     expect(await screen.findByText(/applies to this item/)).toBeInTheDocument()
-    expect(screen.queryByText('Remove this link')).not.toBeInTheDocument()
+    expect(screen.queryByRole('button', { name: 'More actions' })).not.toBeInTheDocument()
   })
 
   it('sits the removal of an outgoing chip disabled with its reason', async () => {
@@ -154,13 +148,15 @@ describe('ItemLinkLine', () => {
         projectId="p1"
         links={links}
         lockedReason="Documents cannot change while the agents work."
-        activeLinkId={null}
-        onActiveLinkChange={() => undefined}
       />,
     )
 
     await user.click(screen.getByRole('button', { name: 'Analysed requirement, Requirement 1' }))
-    expect(await screen.findByText('Remove this link')).toBeDisabled()
+    await user.click(await screen.findByRole('button', { name: 'More actions' }))
+    expect(await screen.findByRole('menuitem', { name: 'Remove this link' })).toHaveAttribute(
+      'aria-disabled',
+      'true',
+    )
   })
 
   it('has no accessibility violation', async () => {

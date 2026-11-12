@@ -8,6 +8,8 @@ function ScrollArea({
   className,
   children,
   scrollbars = 'vertical',
+  fillContent = false,
+  selfScrolling = false,
   ...props
 }: React.ComponentProps<typeof ScrollAreaPrimitive.Root> & {
   /**
@@ -15,10 +17,21 @@ function ScrollArea({
    * `ScrollBar` included, scrolls with it.
    */
   scrollbars?: 'vertical' | 'horizontal' | 'both'
+  /**
+   * Gives the content the height of the area, so that a page that fills its height with `h-full`
+   * fills this one, and a page taller than it scrolls the area as usual.
+   */
+  fillContent?: boolean
+  /**
+   * Declares that this area is the scroll of a page. An area around the page, such as the one of
+   * the tabs, then stays still and leaves the scrolling to this one.
+   */
+  selfScrolling?: boolean
 }) {
   return (
     <ScrollAreaPrimitive.Root
       data-slot="scroll-area"
+      data-self-scrolling={selfScrolling ? '' : undefined}
       className={cn('relative', className)}
       {...props}
     >
@@ -27,7 +40,10 @@ function ScrollArea({
           wide content such as a multi-column layout instead of wrapping it; it is made a block. */}
       <ScrollAreaPrimitive.Viewport
         data-slot="scroll-area-viewport"
-        className="relative size-full rounded-[inherit] transition-[color,box-shadow] outline-none focus-visible:ring-[3px] focus-visible:ring-ring/50 focus-visible:outline-1 [&>div]:block!"
+        className={cn(
+          'relative size-full rounded-[inherit] transition-[color,box-shadow] outline-none focus-visible:ring-[3px] focus-visible:ring-ring/50 focus-visible:outline-1 has-data-self-scrolling:overflow-hidden! [&>div]:block!',
+          fillContent && '[&>div]:h-full',
+        )}
       >
         {children}
       </ScrollAreaPrimitive.Viewport>

@@ -27,31 +27,31 @@ export const surfaceCases: FloatingSurfaceCase[] = [
   },
   {
     name: 'at the top-left corner',
-    props: { corner: 'top-left' },
+    props: { placement: 'top-left' },
     classes: ['top-4', 'left-4'],
   },
   {
     name: 'at the top-right corner',
-    props: { corner: 'top-right' },
+    props: { placement: 'top-right' },
     classes: ['top-4', 'right-4'],
   },
   {
     name: 'at the bottom-left corner',
-    props: { corner: 'bottom-left' },
+    props: { placement: 'bottom-left' },
     classes: ['bottom-4', 'left-4'],
   },
   {
-    name: 'against the edges of its corner',
+    name: 'against the edges of its placement',
     props: { offset: 'none' },
     classes: ['bottom-0', 'right-0'],
   },
   {
-    name: 'close to the edges of its corner',
+    name: 'close to the edges of its placement',
     props: { offset: 'sm' },
     classes: ['bottom-2', 'right-2'],
   },
   {
-    name: 'far from the edges of its corner',
+    name: 'far from the edges of its placement',
     props: { offset: 'lg' },
     classes: ['bottom-6', 'right-6'],
   },
@@ -74,5 +74,20 @@ export const surfaceCases: FloatingSurfaceCase[] = [
     name: 'large',
     props: { size: 'lg' },
     classes: ['p-4'],
+  },
+  {
+    name: 'in the middle of the top edge',
+    props: { placement: 'top-center' },
+    classes: ['top-4', 'left-1/2', '-translate-x-1/2'],
+  },
+  {
+    name: 'in the middle of the bottom edge',
+    props: { placement: 'bottom-center', offset: 'sm' },
+    classes: ['bottom-2', 'left-1/2', '-translate-x-1/2'],
+  },
+  {
+    name: 'with a border and a tint of its color',
+    props: { color: 'warning' },
+    classes: ['border-(--tone-border)', 'from-(--tone-soft)', 'to-(--tone-soft)'],
   },
 ]

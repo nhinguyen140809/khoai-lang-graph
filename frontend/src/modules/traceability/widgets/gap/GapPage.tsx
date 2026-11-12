@@ -53,7 +53,8 @@ export function GapPage({ projectId, gapKey }: { projectId: string; gapKey: stri
       />
     )
   }
-  if (coverage.data === undefined) return <LoadingState label={gapPageMessages.loading} />
+  if (coverage.data === undefined)
+    return <LoadingState label={gapPageMessages.loading} layout="cards" rows={4} />
 
   const items = gap?.items ?? []
 

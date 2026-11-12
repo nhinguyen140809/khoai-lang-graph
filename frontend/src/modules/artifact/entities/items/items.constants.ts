@@ -4,3 +4,6 @@
 export const outlinePageSize = 200
 
 export const itemsPageSize = 50
+
+/** How long an item loaded ahead of time counts as fresh, in milliseconds. */
+export const prefetchStaleMs = 30_000

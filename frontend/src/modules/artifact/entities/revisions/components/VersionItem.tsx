@@ -53,11 +53,11 @@ export function VersionItem({ revision, isSelected, onSelect, menu, className }:
         <span className="font-medium">
           {revisionMessages.byAuthor(revisionAuthor(revision.changed_by, definition))}
         </span>
-        <time dateTime={revision.created_at} className="text-sm text-muted-foreground">
+        <time dateTime={revision.created_at} className="text-xs text-muted-foreground">
           {formatDateTime(revision.created_at)}
         </time>
       </p>
-      <p className="text-sm">
+      <p className="text-xs">
         <ColoredText
           color={changeReasonLooks[revision.change_reason].color}
           className="font-medium"
@@ -65,7 +65,7 @@ export function VersionItem({ revision, isSelected, onSelect, menu, className }:
           {changeReasonLabels[revision.change_reason][viewOfApp]}
         </ColoredText>
       </p>
-      <p className="text-sm text-muted-foreground">{revisionMessages.version(revision.version)}</p>
+      <p className="text-xs text-muted-foreground">{revisionMessages.version(revision.version)}</p>
     </div>
   )
 
@@ -76,7 +76,7 @@ export function VersionItem({ revision, isSelected, onSelect, menu, className }:
       <div
         className={cn(
           toggleVariants({ variant: 'outline' }),
-          'h-auto w-full justify-start bg-muted px-4 py-2.5 text-left text-base font-normal whitespace-normal',
+          'h-auto w-full justify-start bg-muted px-4 py-2.5 text-left text-sm font-normal whitespace-normal',
         )}
         aria-current={isSelected ? 'true' : undefined}
       >
@@ -89,7 +89,7 @@ export function VersionItem({ revision, isSelected, onSelect, menu, className }:
         onPressedChange={() => {
           onSelect()
         }}
-        className="h-auto w-full justify-start px-4 py-2.5 text-left text-base font-normal whitespace-normal"
+        className="h-auto w-full justify-start px-4 py-2.5 text-left text-sm font-normal whitespace-normal"
         aria-current={isSelected ? 'true' : undefined}
       >
         {content}

@@ -54,7 +54,16 @@ export function ActivityPage({ projectId }: ActivityPageProps) {
 
   return (
     <div className="flex h-full min-h-0 flex-col">
-      {isPending && <LoadingState label={activityChatMessages.loading} />}
+      {isPending && (
+        <LoadingState
+          label={activityChatMessages.loading}
+          layout="lines"
+          alternate
+          rows={6}
+          gap={4}
+          itemHeight={10}
+        />
+      )}
       {thread.state === 'error' && (
         <ErrorState
           message={activityChatMessages.loadError}
@@ -124,7 +133,14 @@ function ActivityChat({
           </div>
         </div>
       ) : isActivityPending ? (
-        <LoadingState label={activityChatMessages.loading} />
+        <LoadingState
+          label={activityChatMessages.loading}
+          layout="lines"
+          alternate
+          rows={6}
+          gap={4}
+          itemHeight={10}
+        />
       ) : isActivityError ? (
         <ErrorState
           message={activityChatMessages.loadError}

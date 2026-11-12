@@ -4,6 +4,7 @@ import { hotkeysCoreFeature, selectionFeature, syncDataLoaderFeature } from '@he
 import { useTree } from '@headless-tree/react'
 
 import { Tree, TreeItem, TreeItemLabel } from '@/shared/components/ui/tree'
+import { useLeavingRows } from '@/shared/lib/animation'
 
 import { type ExplorerNode, explorerNodes } from '../design-system.fixtures'
 
@@ -34,10 +35,12 @@ export function ArtifactTree({ className }: { className?: string }) {
     features: [syncDataLoaderFeature, selectionFeature, hotkeysCoreFeature],
   })
 
+  const treeRows = useLeavingRows(tree.getItems(), (item) => item.getId())
+
   return (
     <Tree indent={INDENT} tree={tree} guides aria-label="Artifacts" className={className}>
-      {tree.getItems().map((item) => (
-        <TreeItem key={item.getId()} item={item}>
+      {treeRows.map(({ row: item, isLeaving }) => (
+        <TreeItem key={item.getId()} item={item} isLeaving={isLeaving}>
           <TreeItemLabel />
         </TreeItem>
       ))}

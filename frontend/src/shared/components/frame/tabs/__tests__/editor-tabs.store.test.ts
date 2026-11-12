@@ -63,6 +63,26 @@ describe('useEditorTabsStore', () => {
     })
   })
 
+  it('meets a page and an address of it that has a query at the path', () => {
+    const state = useEditorTabsStore.getState()
+
+    // Kept before its tab opens: the address of an item read in its document carries a query.
+    state.keepPage(`${requirement.href}?item=i9`)
+    expect(useEditorTabsStore.getState().pendingOpen).toMatchObject({
+      href: requirement.href,
+      keep: true,
+    })
+
+    useEditorTabsStore.getState().openTab(group, requirement)
+    expect(useEditorTabsStore.getState().preview[group]).toBeUndefined()
+
+    // Kept after its tab opened as a preview: the query does not hide the tab.
+    useEditorTabsStore.getState().openTab(group, ambiguity)
+    expect(useEditorTabsStore.getState().preview[group]).toBe(ambiguity.id)
+    useEditorTabsStore.getState().keepPage(`${ambiguity.href}?item=i9`)
+    expect(useEditorTabsStore.getState().preview[group]).toBeUndefined()
+  })
+
   it.each(storedTabsCases)('reads $name', async ({ stored, groups, preview }) => {
     for (const [tabGroup, tabs] of Object.entries(stored)) {
       browserStorage.setItem(keyOf(tabGroup), JSON.stringify(tabs))

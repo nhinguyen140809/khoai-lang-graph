@@ -1,5 +1,5 @@
-import { useInfiniteQuery, useQueries, useQuery } from '@tanstack/react-query'
-import { useMemo } from 'react'
+import { useInfiniteQuery, useQueries, useQuery, useQueryClient } from '@tanstack/react-query'
+import { useCallback, useMemo } from 'react'
 
 import {
   type ContentSchema,
@@ -10,7 +10,7 @@ import {
 import { cursorPagesOptions, type HookQueryOptions } from '@/shared/api/query-client'
 
 import { getItem, listArtifactItems, listProjectItems } from '../items.api'
-import { itemsPageSize, outlinePageSize } from '../items.constants'
+import { itemsPageSize, outlinePageSize, prefetchStaleMs } from '../items.constants'
 import { itemKeys } from '../items.keys'
 import type { ArtifactItem, ArtifactItemFilters, ProjectItemFilters } from '../items.types'
 
@@ -78,6 +78,27 @@ export function useItem(
     queryFn: () => getItem(itemId, version),
     enabled: isEnabled,
   })
+}
+
+/**
+ * Loads an item ahead of time, so that the page of the item opens with its content already
+ * there. An item that is already loaded is not asked for again.
+ */
+export function usePrefetchItem() {
+  const queryClient = useQueryClient()
+  return useCallback(
+    (itemId: string) => {
+      // A failure here is not shown: the page asks again when the item is opened.
+      queryClient
+        .query({
+          queryKey: itemKeys.detail(itemId),
+          queryFn: () => getItem(itemId),
+          staleTime: prefetchStaleMs,
+        })
+        .catch(() => undefined)
+    },
+    [queryClient],
+  )
 }
 
 /**

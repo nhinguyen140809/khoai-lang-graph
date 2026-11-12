@@ -55,7 +55,8 @@ export function OpenIssuesPage({ projectId }: { projectId: string }) {
       />
     )
   }
-  if (issues.state === 'pending') return <LoadingState label={openIssuesMessages.title} />
+  if (issues.state === 'pending')
+    return <LoadingState label={openIssuesMessages.title} layout="list" rows={6} />
   if (issues.count === 0) {
     return (
       <EmptyState

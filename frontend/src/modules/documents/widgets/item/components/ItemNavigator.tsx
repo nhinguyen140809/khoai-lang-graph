@@ -67,7 +67,7 @@ export function ItemNavigator({
     <FloatingSurface
       aria-label={itemPageMessages.navigator}
       role="group"
-      corner="bottom-right"
+      placement="bottom-right"
       variant="glass"
       size="sm"
       className={cn(

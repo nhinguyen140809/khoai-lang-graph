@@ -48,14 +48,14 @@ function LinkedEntryBlock({
   entry,
   hrefOf,
   linkTitleOf,
-  actions,
+  menu,
 }: {
   entry: LinkedEntry
   hrefOf: ReturnType<typeof useItemHref>
   /** The title of the type of a link, as the definition of the workflow names it. */
   linkTitleOf: (linkType: string) => string
-  /** What the caller offers to do with the link of this entry, such as removing it. */
-  actions: ReactNode
+  /** The entries of the menu of this entry, what the caller offers to do with its link, such as removing it. */
+  menu: ReactNode
 }) {
   const schemas = useContentSchemas()
   const titleOf = useItemTitleOf()
@@ -77,7 +77,7 @@ function LinkedEntryBlock({
             color={entry.quoteColor}
           />
         }
-        actions={actions}
+        menu={menu}
       />
       <p className="text-xs">{relationSentence(entry.relation, title, linkTitleOf)}</p>
       {entry.isOutOfDate && entry.madeFromVersion !== null && (
@@ -93,19 +93,19 @@ function LinkedEntryBlock({
 
 /**
  * A card that opens on a click of its trigger, with the items at the other end of a link: each one
- * a card of its own that opens its page, the sentence of the relation under it, and the words the
- * link quotes at its other end, in the color of that end.
+ * a card of its own that opens its page, with the menu of its link at its end, the sentence of the
+ * relation under it, and the words the link quotes at its other end, in the color of that end.
  */
 export function LinkedItemsPopover({
   projectId,
   entries,
-  renderActions,
+  renderMenu,
   children,
 }: {
   projectId: string
   entries: readonly LinkedEntry[]
-  /** Draws what the card of each entry offers to do with its link; nothing by default. */
-  renderActions?: ((entry: LinkedEntry) => ReactNode) | undefined
+  /** Draws the entries of the menu of the card of each entry, what it offers to do with its link; no menu by default. */
+  renderMenu?: ((entry: LinkedEntry) => ReactNode) | undefined
   children: ReactNode
 }) {
   const hrefOf = useItemHref(projectId)
@@ -122,7 +122,7 @@ export function LinkedItemsPopover({
               entry={entry}
               hrefOf={hrefOf}
               linkTitleOf={linkTitleOf}
-              actions={renderActions?.(entry) ?? null}
+              menu={renderMenu?.(entry)}
             />
           </div>
         ))}
