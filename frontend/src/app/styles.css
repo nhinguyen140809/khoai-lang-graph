@@ -248,6 +248,23 @@
   --grid-template-rows-body-footer: minmax(0, 1fr) auto;
 }
 
+/*
+ * A short wash of the color of the element, the primary color without one, that fades out to show
+ * that a value has just changed.
+ */
+@theme {
+  --animate-flash: flash 1s ease-out;
+
+  @keyframes flash {
+    from {
+      background-color: color-mix(in oklab, var(--tone, var(--primary)) 30%, transparent);
+    }
+    to {
+      background-color: transparent;
+    }
+  }
+}
+
 @layer base {
   * {
     @apply border-border outline-ring/50;
