@@ -3,6 +3,7 @@
 import { hasRunEnded, useRunEntries } from '@/modules/activity/entities'
 import type { Run } from '@/modules/run/entities'
 import type { Message, Thread } from '@/modules/thread/entities'
+import { messageAuthorLooks } from '@/modules/thread/entities'
 import { ErrorState, LoadingState } from '@/shared/components/state'
 import { Marker } from '@/shared/components/ui/marker'
 import { formatDateTime } from '@/shared/lib/time'
@@ -10,6 +11,7 @@ import { useView } from '@/shared/lib/view'
 
 import { activityChatMessages } from '../activity-chat.constants'
 import { usePhaseOpen } from '../hooks/usePhaseOpen'
+import { useRevealNewMessage } from '../hooks/useRevealNewMessage'
 import { phaseBlocks } from '../phase-blocks.utils'
 import { ChatEntry } from './ChatEntry'
 import { PhaseBlockView } from './PhaseBlockView'
@@ -34,6 +36,15 @@ export function RunActivity({ run, messages, thread, projectId, targetEntryId }:
   const entries = useRunEntries(run, messages, projectId)
   const view = useView()
   const phases = usePhaseOpen()
+  useRevealNewMessage(
+    entries.state === 'success'
+      ? entries.entries.flatMap((entry) =>
+          entry.type === 'message' && messageAuthorLooks[entry.message.author].isAgent
+            ? [entry.id]
+            : [],
+        )
+      : null,
+  )
 
   if (entries.state === 'pending') {
     return <LoadingState size="compact" rows={3} label={activityChatMessages.runLoading} />

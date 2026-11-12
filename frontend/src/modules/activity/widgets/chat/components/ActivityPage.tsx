@@ -195,7 +195,7 @@ function ChatBody({
     return <ErrorState message={activityChatMessages.loadError} onRetry={onRetry} />
   }
   return (
-    <MessageScrollerProvider>
+    <MessageScrollerProvider autoScroll>
       <MessageScroller className="min-h-0 flex-1">
         <MessageScrollerViewport ref={scrollRef}>
           <MessageScrollerContent className="mx-auto max-w-4xl px-6 pt-6">

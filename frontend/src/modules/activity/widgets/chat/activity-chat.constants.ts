@@ -33,3 +33,10 @@ export const activityChatMessages = {
     keys: 'Enter to send, Shift+Enter for a new line',
   },
 } as const
+
+/**
+ * How long the chat waits, after a long message arrives, before it moves the start of the message
+ * into view: the scroller has first followed the end of the chat, and a move that comes within
+ * that time is taken for part of it, so the scroller would follow the end again at the next line.
+ */
+export const revealDelayMs = 250
