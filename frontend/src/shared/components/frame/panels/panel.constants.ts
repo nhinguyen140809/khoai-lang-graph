@@ -34,3 +34,6 @@ export const panelLayouts: Record<PanelRegion, PanelLayout> = {
     editorMinSize: '20%',
   },
 }
+
+/** Time after the motion for the last size to arrive, before sizes count as the user's again. */
+export const panelSettleMs = 50

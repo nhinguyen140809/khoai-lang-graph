@@ -1,4 +1,4 @@
-import { act, fireEvent, render, screen } from '@testing-library/react'
+import { act, fireEvent, render, screen, waitFor } from '@testing-library/react'
 import type { Route } from 'next'
 import type { ReactNode } from 'react'
 import { beforeEach, describe, expect, it } from 'vitest'
@@ -78,7 +78,7 @@ describe('TabbedWorkspace', () => {
     expect(screen.getByRole('main')).toHaveTextContent('editor')
   })
 
-  it('hides the side panel with Ctrl+B and shows it again as it was', () => {
+  it('hides the side panel with Ctrl+B and shows it again as it was', async () => {
     renderTabbedWorkspace([
       {
         ...feature('artifacts', 'Artifacts', ''),
@@ -90,12 +90,18 @@ describe('TabbedWorkspace', () => {
       },
     ])
     fireEvent.click(screen.getByRole('button', { name: 'Outline' }))
+    const panel = screen.getByRole('complementary', { name: 'Artifacts' })
 
     fireEvent.keyDown(document, { key: 'b', ctrlKey: true })
-    expect(screen.getByRole('complementary', { name: 'Artifacts', hidden: true })).not.toBeVisible()
+    // The panel shrinks first and leaves the view when it is done.
+    await waitFor(() => {
+      expect(panel).not.toBeVisible()
+    })
 
     fireEvent.keyDown(document, { key: 'b', ctrlKey: true })
-    expect(screen.getByRole('complementary', { name: 'Artifacts' })).toBeVisible()
+    await waitFor(() => {
+      expect(panel).toBeVisible()
+    })
     // Hidden, not unmounted: the section is still collapsed.
     expectAttribute('button', 'Outline', 'aria-expanded', 'false')
   })
