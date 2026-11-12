@@ -6,7 +6,6 @@ import { useEditorTab } from '@/shared/components/frame'
 import { ErrorState, LoadingState, NotFoundState } from '@/shared/components/state'
 import { Alert, AlertTitle } from '@/shared/components/ui/alert'
 import { Button } from '@/shared/components/ui/button'
-import { usePrefersReducedMotion } from '@/shared/lib/viewport'
 import { routes } from '@/shared/routes'
 
 import { useChainLayout } from '../hooks/useChainLayout'
@@ -31,7 +30,6 @@ export function ItemTracePage({ projectId, itemId }: { projectId: string; itemId
   })
   const { selectedLinkId, select, clear } = useChainSelection()
   const layout = useChainLayout(chain.state === 'success' ? chain.graph : undefined)
-  const isReducedMotion = usePrefersReducedMotion()
 
   useEditorTab({
     id: itemId,
@@ -116,7 +114,6 @@ export function ItemTracePage({ projectId, itemId }: { projectId: string; itemId
           onSelect={select}
           onClear={clear}
           onEscape={clear}
-          fitDuration={isReducedMotion ? 0 : 200}
         />
         <ChainLegend />
       </div>
