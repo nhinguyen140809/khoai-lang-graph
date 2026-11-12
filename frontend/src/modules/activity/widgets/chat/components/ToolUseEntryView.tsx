@@ -11,6 +11,7 @@ import {
   TraceCollapsible,
   TraceCollapsibleContent,
   TraceCollapsibleTrigger,
+  TraceDescription,
   TraceIcon,
   TraceLine,
   TraceTitle,
@@ -21,8 +22,8 @@ import { useOpenWhileWorking } from '../hooks/useOpenWhileWorking'
 import { useRunActivity } from '../hooks/useRunActivity'
 import { StepNoteLine } from './StepNoteLine'
 
-// The mark that a definition may name for a tool, looked up by its name; the wrench is the plain
-// mark of a tool that names none or is not listed.
+// The mark that a definition may name for a tool, looked up by its name. A tool that names none or
+// is not listed is most often a lookup, so it takes the magnifier.
 const toolMarks = {
   search: SearchIcon,
   tool: WrenchIcon,
@@ -38,7 +39,8 @@ export function ToolUseEntryView({ use }: { use: ToolUse }) {
   const tools = useTools(run.workflow_version)
   const tool = tools.get(use.tool)
   const [open, setOpen] = useOpenWhileWorking(use.isRunning)
-  const Mark = toolMarks[tool?.icon ?? 'tool']
+  const lastNote = use.notes.at(-1)
+  const Mark = toolMarks[tool?.icon ?? 'search']
   const line =
     tool === undefined
       ? workMessages.unknownToolUses(use.tool, use.notes.length)
@@ -52,6 +54,10 @@ export function ToolUseEntryView({ use }: { use: ToolUse }) {
             <Mark />
           </TraceIcon>
           <TraceTitle>{line}</TraceTitle>
+          {/* While it is closed, the line says what the last use looked up. */}
+          {!open && lastNote !== undefined && (
+            <TraceDescription className="min-w-0 shrink truncate">{lastNote.text}</TraceDescription>
+          )}
         </TraceLine>
       </TraceCollapsibleTrigger>
       <TraceCollapsibleContent>

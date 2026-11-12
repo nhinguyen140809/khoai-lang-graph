@@ -1,7 +1,6 @@
 import { screen } from '@testing-library/react'
-import userEvent from '@testing-library/user-event'
 import { http, HttpResponse } from 'msw'
-import { describe, expect, it } from 'vitest'
+import { describe, it } from 'vitest'
 
 import { server } from '@/mocks/msw-server.setup'
 import { buildRun } from '@/mocks/runs/fixtures/runs.fixtures'
@@ -10,6 +9,7 @@ import { workflowDefinitionFixture } from '@/mocks/workflow/workflow.fixtures'
 import type { ToolUse } from '@/modules/run/entities'
 import { apiEndpoints } from '@/shared/api/endpoints'
 import { renderWithProviders } from '@/test/render'
+import { expectNoText, expectText, pressRole } from '@/test/steps'
 
 import { activityChatMessages } from '../../activity-chat.constants'
 import { RunActivityProvider } from '../RunActivityContext'
@@ -71,8 +71,8 @@ describe('ToolUseEntryView', () => {
     serveSearchTool()
     renderUse(useOf(false))
 
-    expect(await screen.findByText('Searched 2 times')).toBeInTheDocument()
-    expect(screen.queryByText('Checking how students talk.')).not.toBeInTheDocument()
+    await expectText('Searched 2 times')
+    expectNoText('Checking how students talk.')
   })
 
   it('opens to the note of each use', async () => {
@@ -80,22 +80,22 @@ describe('ToolUseEntryView', () => {
     renderUse(useOf(false))
     await screen.findByText('Searched 2 times')
 
-    await userEvent.click(screen.getByRole('button', { name: activityChatMessages.showDetails }))
+    await pressRole('button', activityChatMessages.showDetails)
 
-    expect(screen.getByText('Checking how students talk.')).toBeInTheDocument()
-    expect(screen.getByText('Looking at librarian forums.')).toBeInTheDocument()
+    await expectText('Checking how students talk.')
+    await expectText('Looking at librarian forums.')
   })
 
   it('is open while the tool is in use', async () => {
     serveSearchTool()
     renderUse(useOf(true))
 
-    expect(await screen.findByText('Looking at librarian forums.')).toBeInTheDocument()
+    await expectText('Looking at librarian forums.')
   })
 
-  it('names a tool that the definition does not list in plain words', () => {
+  it('names a tool that the definition does not list in plain words', async () => {
     renderUse(useOf(false))
 
-    expect(screen.getByText('Used search 2 times')).toBeInTheDocument()
+    await expectText('Looked up with search, 2 times')
   })
 })

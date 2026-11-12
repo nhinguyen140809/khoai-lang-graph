@@ -1,7 +1,5 @@
 'use client'
 
-import { ErrorBoundary } from 'react-error-boundary'
-
 import { useRunEntries } from '@/modules/activity/entities'
 import type { Run } from '@/modules/run/entities'
 import type { Message, Thread } from '@/modules/thread/entities'
@@ -12,7 +10,9 @@ import { useView } from '@/shared/lib/view'
 
 import { activityChatMessages } from '../activity-chat.constants'
 import { usePhaseOpen } from '../hooks/usePhaseOpen'
-import { EntryView } from './EntryView'
+import { phaseBlocks } from '../phase-blocks.utils'
+import { ChatEntry } from './ChatEntry'
+import { PhaseBlockView } from './PhaseBlockView'
 import { RunActivityProvider } from './RunActivityContext'
 
 interface RunActivityProps {
@@ -52,42 +52,44 @@ export function RunActivity({ run, messages, thread, projectId, isTarget }: RunA
   const phaseWork = new Map(
     entries.entries.flatMap((entry) => (entry.type === 'phase' ? [[entry.id, entry.work]] : [])),
   )
-  // The items of a phase that the reader has closed, or that is done, are left out.
-  const shown = entries.entries.filter((entry) => {
-    if (entry.type === 'review') return entry.interrupt.status !== 'pending'
-    if (!('phaseId' in entry)) return true
-    const work = phaseWork.get(entry.phaseId)
-    return work === undefined || phases.isOpen(work)
-  })
+  // A review that waits is not an entry of the chat: the page lays it over its end.
+  const blocks = phaseBlocks(
+    entries.entries.filter(
+      (entry) => entry.type !== 'review' || entry.interrupt.status !== 'pending',
+    ),
+  )
   return (
     <RunActivityProvider value={{ run, thread, projectId }}>
       <Marker variant="separator" className="mb-2 text-xs">
         {view === 'developer' ? `${activityChatMessages.run(run.number)} ` : ''}
         {first !== undefined ? formatDateTime(first.time) : null}
       </Marker>
-      {/* A review that waits is not an entry of the chat: the page lays it over its end. */}
-      {shown.map((entry) => (
-        <ErrorBoundary
-          key={entry.id}
-          fallback={<p className="text-sm text-destructive">{activityChatMessages.entryError}</p>}
-          resetKeys={[entry]}
-        >
-          <EntryView
-            entry={entry}
-            isTarget={isTarget(entry.id)}
-            phase={
-              entry.type === 'phase'
-                ? {
-                    isOpen: phases.isOpen(entry.work),
-                    onToggle: () => {
-                      phases.toggle(entry.work)
-                    },
-                  }
-                : undefined
-            }
+      {blocks.map((block) => {
+        if (block.type === 'entry') {
+          return (
+            <ChatEntry
+              key={block.entry.id}
+              entry={block.entry}
+              isTarget={isTarget(block.entry.id)}
+            />
+          )
+        }
+        const work = phaseWork.get(block.phaseId)
+        if (work === undefined) return null
+        return (
+          <PhaseBlockView
+            key={block.header?.id ?? block.items[0]?.id}
+            block={block}
+            isTarget={isTarget}
+            phase={{
+              isOpen: phases.isOpen(work),
+              onToggle: () => {
+                phases.toggle(work)
+              },
+            }}
           />
-        </ErrorBoundary>
-      ))}
+        )
+      })}
     </RunActivityProvider>
   )
 }

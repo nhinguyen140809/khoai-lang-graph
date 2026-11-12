@@ -1,7 +1,7 @@
 'use client'
 
 import type { LucideIcon } from 'lucide-react'
-import { ArrowRightIcon, BrainIcon, LightbulbIcon, WrenchIcon } from 'lucide-react'
+import { BrainIcon, ChevronRightIcon, SparkleIcon, WrenchIcon } from 'lucide-react'
 
 import type { StepNote, StepNoteKind } from '@/modules/run/entities'
 import { Markdown } from '@/shared/components/ui/markdown'
@@ -9,8 +9,8 @@ import { Markdown } from '@/shared/components/ui/markdown'
 // The mark of each kind of note, looked up by the kind instead of branched on, so that a new kind
 // fails to compile until it has a mark.
 const noteMarks = {
-  doing: ArrowRightIcon,
-  finding: LightbulbIcon,
+  doing: ChevronRightIcon,
+  finding: SparkleIcon,
   tool: WrenchIcon,
   thinking: BrainIcon,
 } as const satisfies Record<StepNoteKind, LucideIcon>
@@ -26,9 +26,12 @@ export function StepNoteLine({ note, inProgress }: { note: StepNote; inProgress:
     <div
       data-kind={note.kind}
       {...(inProgress && { 'data-status': 'running' })}
-      className="flex min-w-0 items-start gap-2 text-muted-foreground data-[kind=finding]:text-foreground"
+      className="group/note flex min-w-0 items-start gap-2 text-muted-foreground data-[kind=finding]:text-foreground"
     >
-      <Mark aria-hidden className="mt-1 size-4 shrink-0" />
+      <Mark
+        aria-hidden
+        className="mt-1 size-3.5 shrink-0 group-data-[kind=finding]/note:fill-current group-data-[kind=finding]/note:text-primary"
+      />
       <div className="min-w-0 flex-1 in-data-[status=running]:shimmer motion-reduce:shimmer-none">
         <Markdown>{note.text}</Markdown>
       </div>

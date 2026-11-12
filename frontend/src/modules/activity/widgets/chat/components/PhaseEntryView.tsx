@@ -4,6 +4,7 @@ import { ChevronRightIcon } from 'lucide-react'
 
 import type { WorkEntry } from '@/modules/run/entities'
 import { useWorkStatusLook, useWorkWords } from '@/modules/run/entities'
+import { Marker } from '@/shared/components/ui/marker'
 import { TraceDescription, TraceIcon, TraceLine, TraceTitle } from '@/shared/components/ui/trace'
 import { useView } from '@/shared/lib/view'
 
@@ -40,26 +41,36 @@ export function PhaseEntryView({
       : `${work.nodes.join(', ')}${subjectTitle === null ? '' : `: ${subjectTitle}`}`
 
   return (
-    <button
-      type="button"
-      aria-expanded={isOpen}
-      aria-label={activityChatMessages.showDetails}
-      onClick={onToggle}
-      className="group/phase flex w-fit max-w-full min-w-0 cursor-pointer items-center gap-1 rounded-md text-left text-muted-foreground transition-colors outline-none hover:text-foreground focus-visible:ring-3 focus-visible:ring-ring/50"
-    >
-      <TraceLine {...(look.traceStatus === 'running' && { status: 'running' as const })}>
-        <TraceTitle>{title}</TraceTitle>
-        <TraceDescription className="flex flex-wrap gap-x-2">
-          {[words.continued, words.status, words.round, words.took, words.writes, ...words.details]
-            .filter((part): part is string => part !== null)
-            .map((part, index) => (
-              <span key={index}>{part}</span>
-            ))}
-        </TraceDescription>
-      </TraceLine>
-      <TraceIcon className="transition-transform group-aria-expanded/phase:rotate-90">
-        <ChevronRightIcon />
-      </TraceIcon>
-    </button>
+    <Marker variant="border" asChild>
+      <button
+        type="button"
+        aria-expanded={isOpen}
+        aria-label={activityChatMessages.showDetails}
+        onClick={onToggle}
+        className="group/phase cursor-pointer text-left transition-colors outline-none hover:text-foreground focus-visible:ring-3 focus-visible:ring-ring/50"
+      >
+        <TraceLine {...(look.traceStatus === 'running' && { status: 'running' as const })}>
+          <TraceTitle className="text-accent-foreground">{title}</TraceTitle>
+          <TraceDescription className="flex flex-wrap gap-x-2">
+            {[
+              words.continued,
+              words.status,
+              words.round,
+              words.took,
+              words.writes,
+              ...words.details,
+            ]
+              .filter((part): part is string => part !== null)
+              .map((part, index) => (
+                <span key={index}>{part}</span>
+              ))}
+          </TraceDescription>
+        </TraceLine>
+        {/* The arrow follows the words, on the same side, and turns down while the items show. */}
+        <TraceIcon className="transition-transform group-aria-expanded/phase:rotate-90">
+          <ChevronRightIcon />
+        </TraceIcon>
+      </button>
+    </Marker>
   )
 }

@@ -37,7 +37,7 @@ export interface PhaseControl {
   onToggle: () => void
 }
 
-interface EntryViewProps<Type extends ActivityEntry['type'] = ActivityEntry['type']> {
+export interface EntryViewProps<Type extends ActivityEntry['type'] = ActivityEntry['type']> {
   entry: EntryOfType<Type>
   isTarget: boolean
   /** Given to the separator of a phase, which opens and closes the items under it. */
@@ -99,7 +99,7 @@ function MessageView({ entry, isTarget }: EntryViewProps<'message'>) {
           )}
           {isUser ? (
             <Bubble variant={bubbleLook} align="end">
-              <BubbleContent className="px-4 py-2.5 text-base leading-7">
+              <BubbleContent>
                 <MessageEntry
                   message={entry.message}
                   projectId={projectId}
@@ -108,7 +108,7 @@ function MessageView({ entry, isTarget }: EntryViewProps<'message'>) {
               </BubbleContent>
             </Bubble>
           ) : (
-            <div className="text-base leading-7">
+            <div className="text-sm leading-6">
               <MessageEntry message={entry.message} projectId={projectId} runStatus={run.status} />
             </div>
           )}
@@ -144,7 +144,7 @@ function MessageView({ entry, isTarget }: EntryViewProps<'message'>) {
 /** The separator of a phase of the work of the run. */
 function PhaseView({ entry, isTarget, phase }: EntryViewProps<'phase'>) {
   return (
-    <EntryAnchor entryId={entry.id} isTarget={isTarget} className="px-1 pt-4 pb-1">
+    <EntryAnchor entryId={entry.id} isTarget={isTarget} className="px-1 pt-8">
       <PhaseEntryView
         work={entry.work}
         stageTitle={entry.stageTitle}
@@ -156,8 +156,9 @@ function PhaseView({ entry, isTarget, phase }: EntryViewProps<'phase'>) {
   )
 }
 
-// An item under a phase sits a little in from its separator and close to the item before it.
-const itemClassName = 'py-0.5 pr-1 pl-5'
+// An item under a phase sits close to the item before it; the line it hangs on is the one of the
+// content that holds the items.
+const itemClassName = 'py-0.5'
 
 /** A note of a phase: what it is doing now or has found. */
 function NoteView({ entry, isTarget }: EntryViewProps<'note'>) {
@@ -198,7 +199,7 @@ function ToolView({ entry, isTarget }: EntryViewProps<'tool'>) {
 /** A review of the run that no longer waits: the line of its answer. */
 function ReviewView({ entry, isTarget }: EntryViewProps<'review'>) {
   return (
-    <EntryAnchor entryId={entry.id} isTarget={isTarget} className="px-1 py-1.5">
+    <EntryAnchor entryId={entry.id} isTarget={isTarget} className="px-1 pt-3 pb-1.5">
       <ReviewEntry interrupt={entry.interrupt} />
     </EntryAnchor>
   )
