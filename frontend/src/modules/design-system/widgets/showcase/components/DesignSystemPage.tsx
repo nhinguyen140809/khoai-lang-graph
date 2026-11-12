@@ -1,6 +1,7 @@
 import { ScrollArea } from '@/shared/components/ui/scroll-area'
 
 import { AlertsCard } from './cards/AlertsCard'
+import { AnimationCard } from './cards/AnimationCard'
 import { ArtifactTableCard } from './cards/ArtifactTableCard'
 import { BadgesCard } from './cards/BadgesCard'
 import { ButtonsCard } from './cards/ButtonsCard'
@@ -82,10 +83,16 @@ export function DesignSystemPage() {
             <CommandCard />
             <CalendarCard />
             <CarouselCard />
-            <SkeletonCard />
             <StepperCard />
             <TimelineCard />
             <TraceCard />
+          </div>
+          {/* Outside the columns: the browser shares the cards between columns by their height, so
+              a card that changes its own height, as these two do, would send other cards to
+              another column each time. */}
+          <div className="grid items-start gap-4 lg:grid-cols-2">
+            <AnimationCard />
+            <SkeletonCard />
           </div>
         </main>
       </ScrollArea>
