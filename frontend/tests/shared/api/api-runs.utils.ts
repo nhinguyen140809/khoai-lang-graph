@@ -31,6 +31,17 @@ export interface ApiOption {
   label: string
   requires_feedback: boolean
   approves: boolean
+  suggested_feedback?: string
+}
+
+export interface ApiQuestion {
+  key: string
+  type: string
+  prompt: string
+  required: boolean
+  source: string
+  choices: { key: string; label: string; requires_text: boolean }[]
+  default_answer: { choice_keys: string[]; text: string | null; number: number | null } | null
 }
 
 /** What a run waits for. */
@@ -41,6 +52,7 @@ export interface ApiInterrupt {
   prompt: string
   status: string
   options: ApiOption[]
+  questions: ApiQuestion[]
   allow_edits: boolean
   review_artifacts: { artifact_id: string; kind: string; title: string; version: number }[]
 }
@@ -50,6 +62,7 @@ export interface ApiStep {
   sequence: number
   node: string
   status: string
+  notes: { kind: string; text: string; tool: string | null; created_at: string }[]
 }
 
 export interface ApiItem {

@@ -9,11 +9,15 @@ import { ChevronDownIcon } from 'lucide-react'
 import { Slot } from 'radix-ui'
 import * as React from 'react'
 
+import { useHasPainted } from '@/shared/lib/animation'
+
 interface TreeContextValue<T = unknown> {
   indent: number
   guides?: boolean | undefined
   currentItem?: ItemInstance<T> | undefined
   tree?: TreeInstance<T> | undefined
+  /** True once the tree has been on screen for a moment: a row that mounts after it fades in. */
+  isReady?: boolean | undefined
 }
 
 const TreeContext = React.createContext<TreeContextValue>({
@@ -45,6 +49,7 @@ function Tree<T = unknown>({
   // The container props of headless-tree come first, so what the caller names (the aria-label of
   // the tree) wins over them.
   const mergedProps = { ...containerProps, ...props }
+  const isReady = useHasPainted()
 
   // Extract style from mergedProps to merge with our custom styles
   const { style: propStyle, ...otherProps } = mergedProps
@@ -57,7 +62,12 @@ function Tree<T = unknown>({
 
   return (
     <TreeContext.Provider
-      value={{ indent, guides, tree: tree as TreeInstance<unknown> | undefined }}
+      value={{
+        indent,
+        guides,
+        isReady,
+        tree: tree as TreeInstance<unknown> | undefined,
+      }}
     >
       <div
         className={cn('flex flex-col', className)}
@@ -73,16 +83,53 @@ interface TreeItemProps<T = unknown> extends React.HTMLAttributes<HTMLButtonElem
   item: ItemInstance<T>
   indent?: number
   asChild?: boolean
+  /**
+   * The row has just gone from the tree and is shown a moment longer, folding up. It cannot be
+   * reached: it takes no focus and no pointer.
+   */
+  isLeaving?: boolean
 }
 
 function TreeItem<T = unknown>({
   item,
   className,
   asChild,
+  isLeaving = false,
   children,
   ...props
 }: Omit<TreeItemProps<T>, 'indent'>) {
-  const { indent, guides } = useTreeContext<T>()
+  const { indent, guides, isReady } = useTreeContext<T>()
+  // Read once, as the row mounts: the rows of the first render stay still, and the rows that come
+  // later, as a folder opens, fade in and slide down a little. A row that goes away leaves at once.
+  const [isEntering] = React.useState(isReady === true)
+
+  // A row that has gone from the tree has no place in it any more: it keeps the level it had.
+  const [shownLevel, setShownLevel] = React.useState(isLeaving ? 0 : item.getItemMeta().level)
+  const level = isLeaving ? shownLevel : item.getItemMeta().level
+  if (!isLeaving && level !== shownLevel) setShownLevel(level)
+
+  const Comp = asChild ? Slot.Root : 'button'
+
+  if (isLeaving) {
+    return (
+      <TreeContext.Provider value={{ currentItem: item as ItemInstance<unknown>, indent, guides }}>
+        <Comp
+          aria-hidden
+          inert
+          className={cn(
+            'pointer-events-none z-10 animate-tree-row-leave overflow-hidden ps-(--tree-padding) select-none [interpolate-size:allow-keywords] not-last:pb-0.5 motion-reduce:hidden',
+            className,
+          )}
+          data-folder={item.isFolder()}
+          data-leaving=""
+          data-slot="tree-item"
+          style={{ '--tree-padding': `${String(level * indent)}px` } as React.CSSProperties}
+        >
+          {children}
+        </Comp>
+      </TreeContext.Provider>
+    )
+  }
 
   const itemProps: React.HTMLAttributes<HTMLButtonElement> =
     typeof item.getProps === 'function' ? item.getProps() : {}
@@ -94,16 +141,16 @@ function TreeItem<T = unknown>({
   // Merge styles
   const mergedStyle = {
     ...propStyle,
-    '--tree-padding': `${item.getItemMeta().level * indent}px`,
+    '--tree-padding': `${String(level * indent)}px`,
   } as React.CSSProperties
-
-  const Comp = asChild ? Slot.Root : 'button'
 
   return (
     <TreeContext.Provider value={{ currentItem: item as ItemInstance<unknown>, indent, guides }}>
       <Comp
         aria-expanded={item.isFolder() ? item.isExpanded() : undefined}
         className={cn(
+          isEntering &&
+            'animate-in duration-200 fade-in-0 slide-in-from-top-1 motion-reduce:animate-none',
           'z-10 ps-(--tree-padding) outline-hidden select-none not-last:pb-0.5 focus:z-20 data-[disabled]:pointer-events-none data-[disabled]:opacity-50',
           // A line at each level of indent, one pixel wide, drawn in the padding of the row: the row
           // is as wide as its own indent, so a line never crosses its title.
@@ -160,7 +207,7 @@ function TreeItemLabel<T = unknown>({
       {...props}
     >
       {item.isFolder() && (
-        <ChevronDownIcon className="size-4 text-muted-foreground in-aria-[expanded=false]:-rotate-90" />
+        <ChevronDownIcon className="size-4 text-muted-foreground transition-transform duration-200 in-aria-[expanded=false]:-rotate-90 motion-reduce:transition-none" />
       )}
       {children || (typeof item.getItemName === 'function' ? item.getItemName() : null)}
     </span>

@@ -8,6 +8,7 @@ import { useTabIcon } from '@/shared/components/frame'
 import { ColoredText } from '@/shared/components/ui/colored-text'
 import { Tooltip, TooltipContent, TooltipTrigger } from '@/shared/components/ui/tooltip'
 import { Tree, TreeItem, TreeItemLabel } from '@/shared/components/ui/tree'
+import { useLeavingRows } from '@/shared/lib/animation'
 import { useScrollIntoView } from '@/shared/lib/viewport'
 
 import type { RowLook, TreeNode } from '../document-tree.types'
@@ -55,25 +56,27 @@ function RowContent({ node, item }: { node: TreeNode; item: ItemInstance<TreeNod
   const { count, location } = node
   const look = item.isExpanded() ? node.look : node.collapsedLook
   const hasCount = count !== null && count > 0 && !item.isExpanded()
+  const row = (
+    <span className="flex min-w-0 flex-1 items-center gap-1">
+      <RowIcon name={node.icon} look={look} />
+      <ColoredText color={look.color} className="min-w-0 flex-1 truncate text-left">
+        {node.name}
+      </ColoredText>
+      {hasCount && <RowCount count={count} />}
+      <RowLetter look={look} />
+    </span>
+  )
+  // One thing, the one the row does not say: its state in words, which its color and its letter
+  // only hint at. A row with no state says where it sits, when it sits under others; the title
+  // alone, which the row already shows, is never repeated.
+  const hint =
+    look.text ?? (location.length > 0 ? documentsMessages.location([...location, node.name]) : null)
+  if (hint === null) return row
+
   return (
     <Tooltip>
-      <TooltipTrigger asChild>
-        <span className="flex min-w-0 flex-1 items-center gap-1">
-          <RowIcon name={node.icon} look={look} />
-          <ColoredText color={look.color} className="min-w-0 flex-1 truncate text-left">
-            {node.name}
-          </ColoredText>
-          {hasCount && <RowCount count={count} />}
-          <RowLetter look={look} />
-        </span>
-      </TooltipTrigger>
-      <TooltipContent side="right">
-        {/* The path down to the row ends with its own title, which the row may cut short. */}
-        <span className="flex flex-col">
-          <span>{documentsMessages.location([...location, node.name])}</span>
-          {look.text !== null && <span>{look.text}</span>}
-        </span>
-      </TooltipContent>
+      <TooltipTrigger asChild>{row}</TooltipTrigger>
+      <TooltipContent>{hint}</TooltipContent>
     </Tooltip>
   )
 }
@@ -85,6 +88,7 @@ function RowContent({ node, item }: { node: TreeNode; item: ItemInstance<TreeNod
  */
 export function DocumentTree({ nodes, currentId, onRetry }: DocumentTreeProps) {
   const { tree, indent, open } = useDocumentTree(nodes, onRetry)
+  const treeRows = useLeavingRows(tree.getItems(), (item) => item.getId())
 
   useScrollIntoView(
     () => (currentId === undefined ? undefined : tree.getItemInstance(currentId).getElement()),
@@ -93,13 +97,14 @@ export function DocumentTree({ nodes, currentId, onRetry }: DocumentTreeProps) {
 
   return (
     <Tree indent={indent} tree={tree} guides aria-label={documentsMessages.title} className="pb-2">
-      {tree.getItems().map((item) => {
+      {treeRows.map(({ row: item, isLeaving }) => {
         const node = item.getItemData()
         const isCurrent = item.getId() === currentId
         return (
           <TreeItem
             key={item.getId()}
             item={item}
+            isLeaving={isLeaving}
             aria-current={isCurrent ? 'page' : undefined}
             onDoubleClick={() => {
               open(item.getId(), { keep: true })

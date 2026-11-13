@@ -1,13 +1,14 @@
 'use client'
 
-import { ChevronDownIcon, ChevronUpIcon } from 'lucide-react'
-import { type ReactNode, useEffect, useRef } from 'react'
+import { ChevronDownIcon, ChevronUpIcon, type LucideIcon } from 'lucide-react'
+import { type ReactNode, useEffect, useRef, useState } from 'react'
 
+import { DirectionalSwap, type SlideDirection } from '@/shared/components/animation'
 import { Button } from '@/shared/components/ui/button'
 import { Skeleton } from '@/shared/components/ui/skeleton'
 import { isFocused } from '@/shared/lib/viewport'
 
-import { revisionMessages } from '../../revisions/revisions.constants'
+import { revisionMessages, versionSwap } from '../../revisions/revisions.constants'
 import type { HistoryView, RevisionHistoryResult } from '../../revisions/revisions.types'
 import { VersionItem } from './VersionItem'
 
@@ -20,6 +21,28 @@ interface VersionStepperProps {
   history: RevisionHistoryResult
   /** The entries of the menu of the item of a version, from the feature that the page places. */
   renderRestore: (version: number) => ReactNode
+}
+
+/**
+ * One of the two arrows of the stepper: only its stroke, with no padding and no fill in any state.
+ * The stroke is the text color, turns primary on the pointer and on the focus, and is muted once
+ * the arrow cannot step any further.
+ */
+function StepArrow({
+  icon: Icon,
+  ...props
+}: React.ComponentProps<typeof Button> & { icon: LucideIcon }) {
+  return (
+    <Button
+      type="button"
+      variant="ghost"
+      size="icon"
+      className="size-auto border-0 p-0 text-foreground hover:bg-transparent! hover:text-primary focus-visible:bg-transparent! focus-visible:text-primary disabled:text-muted-foreground/40 disabled:opacity-100 aria-expanded:bg-transparent!"
+      {...props}
+    >
+      <Icon aria-hidden className="size-6" strokeWidth={2.5} />
+    </Button>
+  )
 }
 
 /**
@@ -39,6 +62,19 @@ export function VersionStepper({
     history.state === 'success'
       ? history.revisions.find(({ version }) => version === view.selectedVersion)
       : undefined
+
+  // Stepping to an older version moves the content up, as the list of versions runs down the
+  // page, and stepping to a newer one moves it down.
+  const [shown, setShown] = useState<{ version: number; direction: SlideDirection }>({
+    version: view.selectedVersion,
+    direction: 'up',
+  })
+  if (shown.version !== view.selectedVersion) {
+    setShown({
+      version: view.selectedVersion,
+      direction: view.selectedVersion < shown.version ? 'up' : 'down',
+    })
+  }
 
   // Newer is disabled on the current version and Older on version 1; the focus moves to the other
   // one, so it never rests on a control that no longer works.
@@ -66,28 +102,18 @@ export function VersionStepper({
   return (
     <div className="flex items-center gap-2">
       <div className="flex flex-col gap-0.5">
-        <Button
+        <StepArrow
           ref={newer}
-          type="button"
-          variant="ghost"
-          color="primary"
-          size="icon"
-          className="w-7"
+          icon={ChevronUpIcon}
           aria-label={revisionMessages.newer}
           disabled={view.selectedVersion >= currentVersion}
           onClick={() => {
             stepTo(view.selectedVersion + 1)
           }}
-        >
-          <ChevronUpIcon className="size-6" />
-        </Button>
-        <Button
+        />
+        <StepArrow
           ref={older}
-          type="button"
-          variant="ghost"
-          color="primary"
-          size="icon"
-          className="w-7"
+          icon={ChevronDownIcon}
           aria-label={revisionMessages.older}
           disabled={
             view.selectedVersion <= 1 || history.state !== 'success' || history.isLoadingMore
@@ -95,20 +121,24 @@ export function VersionStepper({
           onClick={() => {
             stepTo(view.selectedVersion - 1)
           }}
-        >
-          <ChevronDownIcon className="size-6" />
-        </Button>
-      </div>
-      {revision === undefined ? (
-        <Skeleton className="m-1 h-12 w-40" />
-      ) : (
-        <VersionItem
-          revision={revision}
-          isSelected
-          menu={revision.version === currentVersion ? undefined : renderRestore(revision.version)}
-          className="min-w-0 flex-1"
         />
-      )}
+      </div>
+      <DirectionalSwap
+        swapKey={view.selectedVersion}
+        direction={shown.direction}
+        {...versionSwap}
+        className="min-w-0 flex-1"
+      >
+        {revision === undefined ? (
+          <Skeleton className="m-1 h-12 w-40" />
+        ) : (
+          <VersionItem
+            revision={revision}
+            isSelected
+            menu={revision.version === currentVersion ? undefined : renderRestore(revision.version)}
+          />
+        )}
+      </DirectionalSwap>
     </div>
   )
 }

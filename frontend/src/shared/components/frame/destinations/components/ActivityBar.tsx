@@ -105,7 +105,7 @@ function ActivityBarButton({ icon, label, children, ...props }: ActivityBarButto
       className="relative flex w-full flex-col items-center gap-1 rounded-md py-1.5 text-muted-foreground transition-colors outline-none not-aria-disabled:hover:text-foreground focus-visible:ring-2 focus-visible:ring-ring/50 aria-disabled:opacity-50 aria-pressed:bg-sidebar-accent aria-pressed:font-semibold aria-pressed:text-foreground motion-reduce:transition-none"
       {...props}
     >
-      <span aria-hidden className="flex h-7 w-10 items-center justify-center [&_svg]:size-5">
+      <span aria-hidden className="flex h-8 w-10 items-center justify-center [&_svg]:size-6">
         {icon}
       </span>
       <span className="max-w-full truncate px-0.5 text-xs">{label}</span>

@@ -8,6 +8,7 @@ import { useDestinations } from '../destinations/hooks/useDestinations'
 import { useSideFeature } from '../destinations/hooks/useSideFeature'
 import { useEditorTabsStore } from '../tabs/editor-tabs.store'
 import { useTabGroup } from '../tabs/hooks/useTabGroup'
+import { notePageOpen } from '../tabs/last-page-open.utils'
 
 interface OpenPageOptions {
   /**
@@ -22,6 +23,8 @@ interface OpenPageOptions {
   inPlace?: boolean
   /** What the opener calls the page, which names its tab until the page knows its own title. */
   title?: string
+  /** What kind of move this is, so that the parts that animate a change of page can tell them apart. */
+  transitionTypes?: string[]
 }
 
 /**
@@ -39,6 +42,7 @@ export function useOpenPage() {
   const group = useTabGroup()
 
   return (href: Route, options: OpenPageOptions = {}) => {
+    notePageOpen(href)
     const feature = destinationOfHref(destinations, href)
     if (feature !== undefined) show(feature.id)
     if (options.title !== undefined) namePage(href, options.title)
@@ -47,6 +51,7 @@ export function useOpenPage() {
       const tabId = useEditorTabsStore.getState().onScreen[group]
       if (tabId !== undefined) replacePage(href, tabId)
     }
-    router.push(href)
+    if (options.transitionTypes === undefined) router.push(href)
+    else router.push(href, { transitionTypes: options.transitionTypes })
   }
 }

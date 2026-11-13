@@ -18,6 +18,16 @@ export const runUsageSchema = z.object({
 
 export type RunUsage = z.infer<typeof runUsageSchema>
 
+/**
+ * The kinds of a short note that a step wrote while it worked: what it looked at (`doing`),
+ * something the user may care about (`finding`), one use of a tool (`tool`, which also names the
+ * tool), and a summary of the reasoning that the model provider returned (`thinking`). The step
+ * carries the notes, and the stream sends each one.
+ */
+export const stepNoteKinds = ['doing', 'finding', 'tool', 'thinking'] as const
+
+export type StepNoteKind = (typeof stepNoteKinds)[number]
+
 export const runSchema = z.object({
   id: z.string(),
   thread_id: z.string(),

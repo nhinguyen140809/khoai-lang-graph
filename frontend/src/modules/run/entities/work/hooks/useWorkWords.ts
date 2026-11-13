@@ -39,10 +39,15 @@ const workWords = {
   },
   details: {
     user: () => [],
+    // A line that a message cut short holds no step: its steps, model and cost are on its last part.
     developer: (entry) =>
-      [workMessages.steps(entry.steps.length), entry.modelId, formatCurrency(entry.costUsd)].filter(
-        (detail) => detail !== null,
-      ),
+      entry.steps.length === 0
+        ? []
+        : [
+            workMessages.steps(entry.steps.length),
+            entry.modelId,
+            formatCurrency(entry.costUsd),
+          ].filter((detail) => detail !== null),
   },
   failure: {
     user: (_entry, errorLabel) => errorLabel?.user ?? workMessages.failedWithoutReason,
@@ -61,6 +66,7 @@ export function useWorkWords(entry: WorkEntry, run: Pick<Run, 'error'> | null): 
 
   return {
     status: look.isCompleted ? null : workStatusLabels[entry.status][view],
+    continued: entry.continues ? workMessages.continued : null,
     round: entry.iteration > 0 ? workWords.round[view](entry.iteration) : null,
     took:
       entry.durationMs !== null && (look.isCompleted || look.isFailed)

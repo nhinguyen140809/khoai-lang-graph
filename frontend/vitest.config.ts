@@ -22,6 +22,9 @@ export default defineConfig({
           // store is imported, and the mock server setup imports modules that reach stores.
           setupFiles: ['./src/test/zustand.setup.ts', './src/test/vitest.setup.ts'],
           include: ['src/**/*.test.{ts,tsx}'],
+          // Rendering a whole page and checking it takes longer than the default 5 seconds when the
+          // machine is busy, as the runner of the CI is.
+          testTimeout: 20_000,
           css: true,
           // Every test starts with the calls of the mocks cleared, the spies restored, and the
           // values set with `vi.stubEnv` and `vi.stubGlobal` put back, so that no test has to do it

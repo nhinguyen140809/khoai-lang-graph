@@ -73,4 +73,5 @@ export const widgetValueRules = {
   separator: { ...plainValue, valueProblem: separatorProblem },
   'avatar-list': entriesList,
   badge: { ...plainValue, valueProblem: selectProblem },
+  'rating-list': entriesList,
 } as const satisfies Record<FieldWidget, WidgetValueRule>

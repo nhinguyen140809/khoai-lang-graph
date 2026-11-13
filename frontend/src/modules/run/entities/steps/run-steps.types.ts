@@ -2,7 +2,7 @@ import { z } from 'zod'
 
 import { itemRefSchema } from '@/modules/artifact/entities/@x/run'
 
-import { runUsageSchema } from '../runs/runs.types'
+import { runUsageSchema, stepNoteKinds } from '../runs/runs.types'
 
 // Temporary hand-written schema for the steps of a run.
 // TODO: replace with the types generated into src/shared/api/generated/ once they exist.
@@ -11,6 +11,17 @@ import { runUsageSchema } from '../runs/runs.types'
 export const runStepStatuses = ['running', 'succeeded', 'failed', 'skipped'] as const
 
 export type RunStepStatus = (typeof runStepStatuses)[number]
+
+/** A short note of a step to the user, in Markdown. */
+export const stepNoteSchema = z.object({
+  kind: z.enum(stepNoteKinds),
+  /** The name of the tool, on a note of kind `tool`. */
+  tool: z.string().nullish(),
+  text: z.string(),
+  created_at: z.iso.datetime(),
+})
+
+export type StepNote = z.infer<typeof stepNoteSchema>
 
 /** One step of a run: a node of the workflow that ran, with what it used and produced. */
 export const runStepSchema = z.object({
@@ -27,6 +38,8 @@ export const runStepSchema = z.object({
   llm_calls: z.number().int(),
   usage: runUsageSchema,
   produced: z.array(itemRefSchema),
+  // A step of a backend that sends no notes has none.
+  notes: z.array(stepNoteSchema).default([]),
   error: z.string().nullable(),
   started_at: z.iso.datetime(),
   finished_at: z.iso.datetime().nullable(),

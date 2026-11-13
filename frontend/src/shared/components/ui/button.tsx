@@ -21,6 +21,7 @@ const buttonStyles = cva(
         outline: 'border-(--tone-border) hover:bg-(--tone-soft) aria-expanded:bg-(--tone-soft)',
         ghost: 'hover:bg-(--tone-soft) aria-expanded:bg-(--tone-soft)',
         link: 'text-(--tone-strong) underline-offset-4 hover:underline',
+        text: 'text-muted-foreground hover:text-foreground active:translate-y-0 aria-expanded:text-foreground',
       },
       color: toneClasses,
       size: {
@@ -43,6 +44,13 @@ const buttonStyles = cva(
         variant: ['outline', 'ghost'],
         color: ['primary', 'success', 'warning', 'destructive'],
         class: 'text-(--tone-strong)',
+      },
+      // A colored text button takes the strong color of its tone, a little softer until hovered.
+      {
+        variant: 'text',
+        color: ['primary', 'success', 'warning', 'destructive'],
+        class:
+          'text-(--tone-strong)/70 hover:text-(--tone-strong) aria-expanded:text-(--tone-strong)',
       },
       // A status color also tints the focus ring.
       {

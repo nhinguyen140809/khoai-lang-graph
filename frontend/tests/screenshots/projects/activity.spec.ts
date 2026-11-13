@@ -44,6 +44,17 @@ screenshots('Activity', (shot) => {
     await shoot()
   })
 
+  shot('Review with suggested feedback', async ({ page, shoot }) => {
+    await page.goto(`${project}/activity`)
+
+    // The agent suggests what to say for the option, so the box is filled before the user writes.
+    await page.getByRole('radio', { name: 'Redo the analysis' }).click()
+    await expect(
+      page.getByRole('textbox', { name: 'Feedback for "Redo the analysis"' }),
+    ).not.toHaveValue('')
+    await shoot()
+  })
+
   shot('Message under the pointer', async ({ page, shoot }) => {
     await page.goto(`${project}/activity`)
 

@@ -35,6 +35,10 @@ export function ActivityPrompt({
   const [text, setText] = useState('')
   const inputRef = useRef<HTMLTextAreaElement>(null)
 
+  // The prompt takes the focus as the chat opens, so that the next message can be typed at once.
+  useEffect(() => {
+    inputRef.current?.focus()
+  }, [])
   useEffect(() => {
     if (shouldFocus) inputRef.current?.focus()
   }, [shouldFocus])
@@ -56,6 +60,8 @@ export function ActivityPrompt({
           onSent: () => {
             setText('')
             if (thread !== null) clearChosen(thread.id)
+            // A click on Send takes the focus to the button; it goes back to the box.
+            inputRef.current?.focus()
           },
         })
       }}

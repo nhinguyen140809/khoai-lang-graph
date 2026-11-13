@@ -2,6 +2,7 @@
 
 import type { ReactNode } from 'react'
 
+import { Reveal } from '@/shared/components/animation'
 import { PendingButton } from '@/shared/components/ui/pending-button'
 import { ScrollArea } from '@/shared/components/ui/scroll-area'
 
@@ -29,18 +30,19 @@ export function VersionList({ view, currentVersion, history, renderRestore }: Ve
     <ScrollArea className="max-h-history-list">
       <div className="space-y-1 pb-1">
         {history.state === 'success' &&
-          history.revisions.map((revision) => (
-            <VersionItem
-              key={revision.version}
-              revision={revision}
-              isSelected={revision.version === view.selectedVersion}
-              onSelect={() => {
-                view.select(revision.version)
-              }}
-              menu={
-                revision.version === currentVersion ? undefined : renderRestore(revision.version)
-              }
-            />
+          history.revisions.map((revision, index) => (
+            <Reveal key={revision.version} index={index}>
+              <VersionItem
+                revision={revision}
+                isSelected={revision.version === view.selectedVersion}
+                onSelect={() => {
+                  view.select(revision.version)
+                }}
+                menu={
+                  revision.version === currentVersion ? undefined : renderRestore(revision.version)
+                }
+              />
+            </Reveal>
           ))}
         {history.state === 'success' && history.hasMore && (
           <PendingButton

@@ -1,6 +1,6 @@
 'use client'
 
-import { useMemo } from 'react'
+import { useEffect, useMemo } from 'react'
 
 import {
   type ArtifactItem,
@@ -9,6 +9,7 @@ import {
   outlineNeighbors,
   useHistoryView,
   useItemSchema,
+  usePrefetchItem,
 } from '@/modules/artifact/entities'
 import { useDocumentOutline, useEditLockReason, useItemStatus } from '@/modules/documents/entities'
 import { useReloadTraces } from '@/modules/trace/entities'
@@ -17,6 +18,8 @@ import { useOpenPage } from '@/shared/components/frame'
 import { routes } from '@/shared/routes'
 
 import { itemPageViewOf } from '../item-layout.utils'
+import { itemMoveTypes } from '../item-page.constants'
+import type { ItemMove } from '../item-page.types'
 
 const noSteps: BreadcrumbStep[] = []
 
@@ -46,6 +49,15 @@ export function useItemPage(projectId: string, record: ArtifactItem, { isEditing
 
   const nodes = outline.state === 'success' ? outline.nodes : undefined
   const neighbors = useMemo(() => outlineNeighbors(nodes ?? [], record.id), [nodes, record.id])
+  // The neighbors load while the item is read, so that moving to one shows its content at once,
+  // which the slide between the two items needs.
+  const prefetchItem = usePrefetchItem()
+  const previousId = neighbors.previous?.id
+  const nextId = neighbors.next?.id
+  useEffect(() => {
+    if (previousId !== undefined) prefetchItem(previousId)
+    if (nextId !== undefined) prefetchItem(nextId)
+  }, [previousId, nextId, prefetchItem])
   const steps = useMemo(
     () => (outline.state === 'success' ? outlineBreadcrumb(record, outline) : noSteps),
     [outline, record],
@@ -66,9 +78,14 @@ export function useItemPage(projectId: string, record: ArtifactItem, { isEditing
     isHistoryOpen: history.level !== 'closed',
     lockedReason,
     reloadTraces,
-    /** Opens an item in the place of the tab on screen; does nothing for no item. */
-    moveTo: (target: { id: string } | null) => {
-      if (target !== null) openPage(project.item(target.id), { inPlace: true })
+    /** Opens a neighbor in the place of the tab on screen; does nothing for no item. */
+    moveTo: (target: { id: string } | null, move: ItemMove) => {
+      if (target !== null) {
+        openPage(project.item(target.id), {
+          inPlace: true,
+          transitionTypes: [itemMoveTypes[move]],
+        })
+      }
     },
   }
 }

@@ -43,6 +43,11 @@ function projectContributions(projectId: string) {
   )
 }
 
+// Pages are kept, hidden, when the user leaves them (Cache Components), so a tab that is visited
+// again shows its state as it was left. The params are read before anything shows, so the route
+// is allowed to block, as it did before.
+export const instant = false
+
 /**
  * Every screen of a project: the frame with the menu of the project on the top bar, its dialogs,
  * the budget of the month and the account menu, and the project workspace with the editor. The

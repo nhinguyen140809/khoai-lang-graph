@@ -11,25 +11,13 @@ export function ItemLinkLineBlock({
   projectId,
   links,
   lockedReason,
-  activeLinkId,
-  onActiveLinkChange,
 }: {
   projectId: string
   links: ReturnType<typeof useItemLinks>
   lockedReason: string | null
-  activeLinkId: string | null
-  onActiveLinkChange: (linkId: string | null) => void
 }) {
   if (links.state !== 'success' || links.count === 0) return null
-  return (
-    <ItemLinkLine
-      projectId={projectId}
-      links={links}
-      lockedReason={lockedReason}
-      activeLinkId={activeLinkId}
-      onActiveLinkChange={onActiveLinkChange}
-    />
-  )
+  return <ItemLinkLine projectId={projectId} links={links} lockedReason={lockedReason} />
 }
 
 /** The error of the links block, with its way to try again. */

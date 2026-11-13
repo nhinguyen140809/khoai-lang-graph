@@ -13,14 +13,15 @@ export const reviewsInOrder = [
   {
     node: reviewNodes.personas,
     status: 'Finalizing the interviewees',
-    prompt: 'Review the personas. Edit them if needed, then approve them.',
+    prompt: 'I proposed the interviewees. Check that they cover the people who matter.',
     approve: 'Approve the interviewees',
     approveKey: 'approve',
   },
   {
     node: reviewNodes.analysis,
     status: 'Reviewing the analysis',
-    prompt: 'Review the requirements analysis. Accept it, or reject it with feedback.',
+    prompt:
+      'I wrote the requirements analysis and found open questions. Check them, then approve it.',
     approve: 'Approve analysis',
     approveKey: 'accept',
   },

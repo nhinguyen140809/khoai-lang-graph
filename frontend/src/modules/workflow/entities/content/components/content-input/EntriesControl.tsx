@@ -11,7 +11,7 @@ import { Textarea } from '@/shared/components/ui/textarea'
 import { isRecord, isString } from '@/shared/lib/guards'
 
 import type { WorkflowDefinition } from '../../../definition/workflow-definition.types'
-import type { ContentField } from '../../fields/content-fields.types'
+import { type ContentField, hasObjectEntries } from '../../fields/content-fields.types'
 import { contentInputMessages } from './content-input.constants'
 import { ContentValueControl } from './ContentValueControl'
 
@@ -30,7 +30,7 @@ interface EntriesControlProps {
 // What the entry of an empty list starts as: a text for a list and for tags, an object for an
 // object list.
 function emptyEntry(field: ContentField): unknown {
-  return field.widget === 'object-list' ? {} : ''
+  return hasObjectEntries(field.widget) ? {} : ''
 }
 
 /**
@@ -99,45 +99,20 @@ export function EntriesControl({
           }}
         >
           <div className="min-w-0 flex-1">
-            {field.widget === 'object-list' ? (
-              <FieldSet className="rounded-lg border p-4">
-                {field.entryFields.map((entryField) => {
-                  const id = `${baseId}-${String(index)}-${entryField.name}`
-                  return (
-                    <Field key={entryField.name}>
-                      <FieldLabel htmlFor={id}>{entryField.title}</FieldLabel>
-                      <ContentValueControl
-                        field={entryField}
-                        value={isRecord(entry) ? entry[entryField.name] : undefined}
-                        onChange={(value) => {
-                          changeEntryField(index, entryField.name, value)
-                        }}
-                        allowedValues={allowedValues}
-                        definition={definition}
-                        controlProps={{ id, 'aria-invalid': false }}
-                      />
-                    </Field>
-                  )
-                })}
-              </FieldSet>
-            ) : field.widget === 'list' ? (
-              <Textarea
-                {...entryControlProps(index)}
-                className="field-sizing-content min-h-16"
-                value={isString(entry) ? entry : ''}
-                onChange={(event) => {
-                  changeEntry(index, event.target.value)
-                }}
-              />
-            ) : (
-              <Input
-                {...entryControlProps(index)}
-                value={isString(entry) ? entry : ''}
-                onChange={(event) => {
-                  changeEntry(index, event.target.value)
-                }}
-              />
-            )}
+            <EntryControl
+              field={field}
+              entry={entry}
+              baseId={`${baseId}-${String(index)}`}
+              allowedValues={allowedValues}
+              definition={definition}
+              controlProps={entryControlProps(index)}
+              onChange={(value) => {
+                changeEntry(index, value)
+              }}
+              onChangeField={(name, value) => {
+                changeEntryField(index, name, value)
+              }}
+            />
           </div>
           <Button
             type="button"
@@ -158,4 +133,68 @@ export function EntriesControl({
       </Button>
     </div>
   )
+}
+
+interface EntryControlProps extends Pick<
+  EntriesControlProps,
+  'field' | 'allowedValues' | 'definition'
+> {
+  entry: unknown
+  /** The start of the ids of the controls of an object entry, one for each of its fields. */
+  baseId: string
+  controlProps: Partial<FieldControlProps> | undefined
+  onChange: (value: unknown) => void
+  onChangeField: (name: string, value: unknown) => void
+}
+
+/** The control of one entry, by the widget of its field: a box of fields for an object, a text box for a list, a line for tags. */
+function EntryControl({
+  field,
+  entry,
+  baseId,
+  allowedValues,
+  definition,
+  controlProps,
+  onChange,
+  onChangeField,
+}: EntryControlProps) {
+  if (hasObjectEntries(field.widget)) {
+    return (
+      <FieldSet className="rounded-lg border p-4">
+        {field.entryFields.map((entryField) => {
+          const id = `${baseId}-${entryField.name}`
+          return (
+            <Field key={entryField.name}>
+              <FieldLabel htmlFor={id}>{entryField.title}</FieldLabel>
+              <ContentValueControl
+                field={entryField}
+                value={isRecord(entry) ? entry[entryField.name] : undefined}
+                onChange={(value) => {
+                  onChangeField(entryField.name, value)
+                }}
+                allowedValues={allowedValues}
+                definition={definition}
+                controlProps={{ id, 'aria-invalid': false }}
+              />
+            </Field>
+          )
+        })}
+      </FieldSet>
+    )
+  }
+  const text = isString(entry) ? entry : ''
+  const onText = (event: { target: { value: string } }) => {
+    onChange(event.target.value)
+  }
+  if (field.widget === 'list') {
+    return (
+      <Textarea
+        {...controlProps}
+        className="field-sizing-content min-h-16"
+        value={text}
+        onChange={onText}
+      />
+    )
+  }
+  return <Input {...controlProps} value={text} onChange={onText} />
 }

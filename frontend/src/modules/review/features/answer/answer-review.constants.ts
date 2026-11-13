@@ -30,3 +30,11 @@ export const answerReviewMessages = {
 
 /** The keys that send the answer from a box of the form: Ctrl or Cmd+Enter. */
 export const sendFeedbackHotkey = { key: 'Enter', mod: true } as const satisfies Hotkey
+
+/** What each arrow key does on the steps of the answer: go to another step or to another answer. */
+export const answerStepKeys = {
+  ArrowLeft: { kind: 'step', by: -1 },
+  ArrowRight: { kind: 'step', by: 1 },
+  ArrowUp: { kind: 'answer', by: -1 },
+  ArrowDown: { kind: 'answer', by: 1 },
+} as const

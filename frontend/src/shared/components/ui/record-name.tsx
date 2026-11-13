@@ -63,13 +63,15 @@ export function RecordNameTooltip({ kind, title, code, children }: RecordNameToo
     <Tooltip>
       <TooltipTrigger asChild>{children}</TooltipTrigger>
       <TooltipContent>
-        <span className="block text-xs text-muted-foreground">{kind}</span>
-        <span className="block font-semibold">{title}</span>
-        {code !== undefined && (
-          <span className="mt-0.5 block">
-            <KeyText>{code}</KeyText>
-          </span>
-        )}
+        <span className="flex flex-col gap-0.5">
+          <span className="text-xs text-muted-foreground">{kind}</span>
+          <span className="font-semibold">{title}</span>
+          {code !== undefined && (
+            <span>
+              <KeyText>{code}</KeyText>
+            </span>
+          )}
+        </span>
       </TooltipContent>
     </Tooltip>
   )

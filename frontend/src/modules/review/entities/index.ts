@@ -9,14 +9,17 @@ export { findPendingInterrupt, listRunInterrupts, resumeRun } from './interrupts
 export { interruptStatusLabels } from './interrupts.constants'
 export { interruptKeys } from './interrupts.keys'
 export type {
+  AnswerLine,
   Interrupt,
   InterruptDecision,
   InterruptFilters,
+  InterruptOption,
+  InterruptPurpose,
   InterruptQuestion,
   InterruptStatus,
   ModifiedItem,
   QuestionSource,
   ResumeRunBody,
 } from './interrupts.types'
-export { interruptStatuses } from './interrupts.types'
-export { decisionOption } from './interrupts.utils'
+export { interruptPurposes, interruptStatuses } from './interrupts.types'
+export { answerLines, decisionOption } from './interrupts.utils'

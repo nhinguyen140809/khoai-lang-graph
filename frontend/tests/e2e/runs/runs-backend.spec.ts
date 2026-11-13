@@ -17,12 +17,11 @@ test('stops at each review of a new project and finishes after the last answer',
 }) => {
   await user.startProject(idea)
 
-  for (const { status, prompt, approve, hasAsk } of reviewStops) {
+  for (const { status, prompt, approve } of reviewStops) {
     await user.expectRunStatus(`Waiting for you: ${status}`)
-    // The agent asks what it needs before a review; the answer it suggests is sent.
-    if (hasAsk) await user.pressButton('Send answers')
     await user.expectReviewPrompt(prompt)
-    await user.answerReviewWith(approve)
+    if (approve === null) await user.sendAnswers()
+    else await user.answerReviewWith(approve)
   }
 
   await user.expectRunStatus('Done')

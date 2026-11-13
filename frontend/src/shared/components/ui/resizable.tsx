@@ -7,14 +7,31 @@ function ResizablePanelGroup({ className, ...props }: ResizablePrimitive.GroupPr
   return (
     <ResizablePrimitive.Group
       data-slot="resizable-panel-group"
-      className={cn('flex h-full w-full aria-[orientation=vertical]:flex-col', className)}
+      className={cn(
+        'flex h-full w-full aria-[orientation=vertical]:flex-col *:data-animated:transition-[flex-grow] *:data-animated:duration-200 *:data-animated:ease-out motion-reduce:*:data-animated:transition-none',
+        className,
+      )}
       {...props}
     />
   )
 }
 
-function ResizablePanel({ ...props }: ResizablePrimitive.PanelProps) {
-  return <ResizablePrimitive.Panel data-slot="resizable-panel" {...props} />
+/**
+ * A panel of the group. While `animated` is set, a change of its size made by a call such as
+ * collapse or expand runs over a short time; a size that the user drags always follows the
+ * pointer at once, so leave it off then.
+ */
+function ResizablePanel({
+  animated = false,
+  ...props
+}: ResizablePrimitive.PanelProps & { animated?: boolean }) {
+  return (
+    <ResizablePrimitive.Panel
+      data-slot="resizable-panel"
+      data-animated={animated ? '' : undefined}
+      {...props}
+    />
+  )
 }
 
 function ResizableHandle({

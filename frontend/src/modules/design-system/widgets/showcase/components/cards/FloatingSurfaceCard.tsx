@@ -5,22 +5,33 @@ import { cn } from 'cn'
 import { Button } from '@/shared/components/ui/button'
 import { Code } from '@/shared/components/ui/code'
 import {
-  type FloatingCorner,
+  type FloatingPlacement,
   type FloatingSize,
   FloatingSurface,
   type FloatingVariant,
 } from '@/shared/components/ui/floating-surface'
+import type { Tone } from '@/shared/lib/tone'
 
 import { SampleCard, SampleGroup } from '../Sample'
 
-const corners = [
+const placements = [
   'top-left',
+  'top-center',
   'top-right',
   'bottom-left',
+  'bottom-center',
   'bottom-right',
-] as const satisfies readonly FloatingCorner[]
+] as const satisfies readonly FloatingPlacement[]
 
 const variants = ['default', 'popover', 'glass'] as const satisfies readonly FloatingVariant[]
+
+const colors = [
+  'neutral',
+  'primary',
+  'success',
+  'warning',
+  'destructive',
+] as const satisfies readonly Tone[]
 
 const sizes = ['sm', 'default', 'lg'] as const satisfies FloatingSize[]
 
@@ -28,7 +39,7 @@ const sizes = ['sm', 'default', 'lg'] as const satisfies FloatingSize[]
 const sampleText =
   'The analysis lists the requirements that the interviews produced, with the evidence behind each one.'
 
-/** A positioned area that holds text, which a surface floats at a corner of. */
+/** A positioned area that holds text, which a surface floats at a place of. */
 function FloatingArea({ className, children }: { className?: string; children: React.ReactNode }) {
   return (
     <div className={cn('relative h-28 overflow-hidden rounded-md border bg-muted/30', className)}>
@@ -44,19 +55,20 @@ export function FloatingSurfaceCard() {
       title="Floating surface"
       description={
         <>
-          A <Code>Surface</Code> that floats at a corner of the area that contains it, above its
-          content; the area needs <Code>relative</Code>. <Code>corner</Code>, <Code>offset</Code>,{' '}
-          <Code>variant</Code> and <Code>size</Code> shape it, and <Code>className</Code> changes
-          the rest, such as the z-index.
+          A <Code>Surface</Code> that floats at a corner, or in the middle of the top or bottom
+          edge, of the area that contains it, above its content; the area needs{' '}
+          <Code>relative</Code>. <Code>placement</Code>, <Code>offset</Code>, <Code>variant</Code>,{' '}
+          <Code>color</Code> and <Code>size</Code> shape it, and <Code>className</Code> changes the
+          rest, such as the z-index.
         </>
       }
       className="flex flex-col gap-4"
     >
-      <SampleGroup label="corners">
+      <SampleGroup label="placements">
         <FloatingArea>
-          {corners.map((corner) => (
-            <FloatingSurface key={corner} corner={corner} size="sm" variant="popover">
-              {corner}
+          {placements.map((placement) => (
+            <FloatingSurface key={placement} placement={placement} size="sm" variant="popover">
+              {placement}
             </FloatingSurface>
           ))}
         </FloatingArea>
@@ -65,8 +77,19 @@ export function FloatingSurfaceCard() {
         <div className="grid grid-cols-3 gap-2">
           {variants.map((variant) => (
             <FloatingArea key={variant}>
-              <FloatingSurface corner="bottom-right" size="sm" variant={variant}>
+              <FloatingSurface placement="bottom-right" size="sm" variant={variant}>
                 {variant}
+              </FloatingSurface>
+            </FloatingArea>
+          ))}
+        </div>
+      </SampleGroup>
+      <SampleGroup label="colors: the border and a tint">
+        <div className="grid grid-cols-3 gap-2">
+          {colors.map((color) => (
+            <FloatingArea key={color}>
+              <FloatingSurface placement="top-center" size="sm" variant="popover" color={color}>
+                {color}
               </FloatingSurface>
             </FloatingArea>
           ))}
@@ -76,7 +99,7 @@ export function FloatingSurfaceCard() {
         <div className="grid grid-cols-3 gap-2">
           {sizes.map((size) => (
             <FloatingArea key={size}>
-              <FloatingSurface corner="bottom-right" size={size}>
+              <FloatingSurface placement="bottom-right" size={size}>
                 <Button size="sm" variant="ghost">
                   Copy
                 </Button>
