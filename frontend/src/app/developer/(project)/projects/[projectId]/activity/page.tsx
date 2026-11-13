@@ -1,6 +1,7 @@
 import { Suspense } from 'react'
 
-import { ActivityPage } from '@/modules/activity/widgets/chat'
+import { ActivityChat } from '@/modules/activity/widgets/chat'
+import { ActivityTab } from '@/modules/activity/widgets/tab'
 
 // Pages are kept, hidden, when the user leaves them (Cache Components), so a tab that is visited
 // again shows its state as it was left. The params are read before anything shows, so the route
@@ -14,7 +15,9 @@ export default async function Page({
   const { projectId } = await params
   return (
     <Suspense fallback={null}>
-      <ActivityPage projectId={projectId} />
+      <ActivityTab projectId={projectId}>
+        <ActivityChat projectId={projectId} />
+      </ActivityTab>
     </Suspense>
   )
 }

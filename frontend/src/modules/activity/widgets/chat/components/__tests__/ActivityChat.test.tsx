@@ -9,11 +9,11 @@ import { setQuery } from '@/test/next-stubs'
 import { renderWithProviders } from '@/test/render'
 import { expectNoAccessibilityViolations, expectRole, expectText } from '@/test/steps'
 
-import { ActivityPage } from '../ActivityPage'
+import { ActivityChat } from '../ActivityChat'
 
-describe('ActivityPage', () => {
+describe('ActivityChat', () => {
   it('shows the runs of the thread oldest first, with their separators', async () => {
-    renderWithProviders(<ActivityPage projectId={projectIds.mentor} />)
+    renderWithProviders(<ActivityChat projectId={projectIds.mentor} />)
 
     await expectText('Also ask about group sessions.')
     expect(
@@ -25,7 +25,7 @@ describe('ActivityPage', () => {
 
   it('keeps the notes of finished work closed, and shows them as Markdown when its line is opened', async () => {
     openPage('/?mock-run-status=done')
-    renderWithProviders(<ActivityPage projectId={projectIds.mentor} />)
+    renderWithProviders(<ActivityChat projectId={projectIds.mentor} />)
 
     // The thread shows its runs oldest first, and the latest run is the one with the notes.
     const lines = await screen.findAllByText('Analysing the interviews')
@@ -46,7 +46,7 @@ describe('ActivityPage', () => {
   })
 
   it('shows the review card of the run that waits for the user, as a polite live region', async () => {
-    renderWithProviders(<ActivityPage projectId={projectIds.mentor} />)
+    renderWithProviders(<ActivityChat projectId={projectIds.mentor} />)
 
     const prompt = await screen.findByText(
       'Review the requirements analysis. Accept it, or reject it with feedback.',
@@ -57,14 +57,14 @@ describe('ActivityPage', () => {
 
   it('offers to send a message again when no agent will ever read it', async () => {
     openPage('/?mock-run-status=done')
-    renderWithProviders(<ActivityPage projectId={projectIds.mentor} />)
+    renderWithProviders(<ActivityChat projectId={projectIds.mentor} />)
 
     await expectText('Not read: the work ended before this message.')
     await expectRole('button', 'Send it again')
   })
 
   it('shows a message that no run took in as the bubble of the user, after the runs', async () => {
-    renderWithProviders(<ActivityPage projectId={projectIds.campus} />)
+    renderWithProviders(<ActivityChat projectId={projectIds.campus} />)
 
     const first = await screen.findByText(
       'Students order food from the campus canteens and pick it up.',
@@ -74,14 +74,14 @@ describe('ActivityPage', () => {
   })
 
   it('shows the prompt under the chat', async () => {
-    renderWithProviders(<ActivityPage projectId={projectIds.mentor} />)
+    renderWithProviders(<ActivityChat projectId={projectIds.mentor} />)
 
     expect(await screen.findByPlaceholderText('Ask or request a change')).toBeInTheDocument()
   })
 
   it('shows the empty state and focuses the prompt when the project has no thread', async () => {
     openPage('/?mock-threads=empty')
-    renderWithProviders(<ActivityPage projectId={projectIds.mentor} />)
+    renderWithProviders(<ActivityChat projectId={projectIds.mentor} />)
 
     await expectText('No activity yet')
     await waitFor(() => {
@@ -91,7 +91,7 @@ describe('ActivityPage', () => {
 
   it('names the target entry the address gives', async () => {
     setQuery('?entry=i1')
-    renderWithProviders(<ActivityPage projectId={projectIds.mentor} />)
+    renderWithProviders(<ActivityChat projectId={projectIds.mentor} />)
 
     await waitFor(() => {
       expect(screen.queryByPlaceholderText('Ask or request a change')).toBeInTheDocument()
@@ -99,7 +99,7 @@ describe('ActivityPage', () => {
   })
 
   it('has no accessibility violation', async () => {
-    renderWithProviders(<ActivityPage projectId={projectIds.mentor} />)
+    renderWithProviders(<ActivityChat projectId={projectIds.mentor} />)
 
     await expectText('Also ask about group sessions.')
     await expectNoAccessibilityViolations()
