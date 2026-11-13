@@ -7,7 +7,7 @@ from tempfile import gettempdir
 from typing import TYPE_CHECKING
 
 import pytest
-from httpx import ASGITransport, AsyncClient
+from httpx import ASGITransport, AsyncClient, Response
 
 from khoailanggraph.main import create_app
 from khoailanggraph.platform.db import (
@@ -71,10 +71,12 @@ async def project_id(client: AsyncClient) -> str:
         "/api/v1/projects",
         json={"name": "Mentor platform", "description": None, "output_language": "en"},
     )
-    return created.json()["id"]
+    return str(created.json()["id"])
 
 
-async def upload(client: AsyncClient, project: str, name: str, content: bytes | str, **fields):
+async def upload(
+    client: AsyncClient, project: str, name: str, content: bytes | str, **fields: str
+) -> Response:
     payload = content.encode("utf-8") if isinstance(content, str) else content
     files = {"file": (name, payload, "text/plain")}
     return await client.post(f"/api/v1/projects/{project}/documents", files=files, data=fields)

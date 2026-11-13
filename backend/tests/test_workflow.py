@@ -12,14 +12,15 @@ definition.
 
 from __future__ import annotations
 
-from typing import TYPE_CHECKING, cast
+from typing import TYPE_CHECKING, Any, ClassVar, cast
 from unittest.mock import patch
 
 import pytest
 from pydantic import BaseModel
 
 import khoailanggraph.llm.factory as llm_factory
-from khoailanggraph.agents.requirements_engineering import nodes
+from khoailanggraph.agents.requirements_engineering import nodes, routing
+from khoailanggraph.agents.requirements_engineering.outputs import MessageLink
 
 if TYPE_CHECKING:
     from collections.abc import Generator
@@ -35,10 +36,11 @@ from khoailanggraph.agents.requirements_engineering.graph import build_re_graph
 from khoailanggraph.agents.requirements_engineering.nodes import PROMPTS_PACKAGE
 from khoailanggraph.agents.requirements_engineering.outputs import InterviewerTurnOutput
 from khoailanggraph.agents.requirements_engineering.state import REState, make_initial_state
+from khoailanggraph.agents.requirements_engineering.views import transcript_lines
 from khoailanggraph.domain import rules as domain_rules
 from khoailanggraph.domain.errors import IntegrityError
 from khoailanggraph.llm import reset_model_cache
-from support.fake_data import DEMO_INTENT, DemoData, _corpus, _mined, _personas
+from support.fake_data import DEMO_INTENT, DemoData, _corpus, _personas, _plain
 from support.fake_llm import FakeChatModel
 from support.fake_search import demo_research_search
 from support.in_memory_sinks import InMemoryArtifactSink, InMemoryDirectiveSink
@@ -55,6 +57,7 @@ def fake_config(sink: ArtifactSink, directives: InMemoryDirectiveSink) -> Runnab
             "models": {role: "fake:demo" for role in ROLES},
             "research_search": demo_research_search,
             "project_documents": lambda _project_id: [],
+            "pending_messages": [{"id": "m0", "content": DEMO_INTENT}],
         }
     }
 
@@ -148,7 +151,7 @@ def test_full_workflow_succeeds_and_passes_domain_rules() -> None:
         for entry in content["evidence"]:
             assert entry["quote"] == str(obs_by_key[entry["observation"]]["content"]["evidence"])
             assert entry["source"] == str(obs_by_key[entry["observation"]]["content"]["source"])
-    catalog_groups = list(catalog["content"]["stakeholder_groups"])
+    catalog_groups = list(cast("list[dict[str, Any]]", catalog["content"]["stakeholder_groups"]))
     assert len(catalog_groups) == 3
     assert all(group["observations"] for group in catalog_groups), (
         "every consolidated group cites its observations"
@@ -222,11 +225,14 @@ def test_full_workflow_succeeds_and_passes_domain_rules() -> None:
     assert spec["review_status"] == "approved"
     outcomes = final["checkpoint_outcomes"]
     assert {outcome["node"] for outcome in outcomes} == {
+        "ask_personas",
         "checkpoint_personas",
+        "ask_analysis",
         "checkpoint_analysis",
+        "ask_spec",
         "checkpoint_spec",
     }
-    assert all(outcome["option"] in {"approve", "accept", "ok"} for outcome in outcomes)
+    assert all(outcome["option"] in {"", "approve", "accept", "ok"} for outcome in outcomes)
 
     # Directives: the rework round a checkpoint reject triggered was `rework`;
     # the auto-approve pass records none (§2.4), so this set is data-driven.
@@ -243,12 +249,13 @@ def test_get_graph_topology_matches_definition() -> None:
         if isinstance(drawn, dict)
         else {getattr(node, "id", node) for node in drawn.nodes}
     )
-    assert len(node_ids) == 17
+    assert len(node_ids) == 22
     assert "planner" in node_ids
     assert "corpus_builder" in node_ids
     assert "stakeholder_miner" in node_ids
     assert "validator" in node_ids
     assert "intent_router" in node_ids
+    assert "checkpoint_plan" in node_ids
 
     edge_pairs = (
         drawn["edges"]
@@ -256,7 +263,7 @@ def test_get_graph_topology_matches_definition() -> None:
         else [(edge.source, edge.target) for edge in drawn.edges]
     )
     edges = {tuple(pair) for pair in edge_pairs}
-    # The definition's 27 rows, error drains aside (backend-only, routing.py).
+    # The definition's rows, error drains aside (backend-only, routing.py).
     definition_pairs = {(str(row["source"]), str(row["target"])) for row in wf.edges()}
     # Backend-only edges: every error drains to the end, and a walk that continues a run may
     # begin at any node (`start_at`).
@@ -307,14 +314,6 @@ def test_research_gates_fail_the_run_at_the_lying_node() -> None:
     fail on exactly that node's gate message.
     """
 
-    class DriftingQuotesData(DemoData):
-        @staticmethod
-        def MinerOutput(system: str, user: str, call_number: int) -> dict[str, object]:  # noqa: N802 - schema name
-            answer = _mined(system, user, call_number)
-            for observation in cast("list[dict[str, object]]", answer["observations"]):
-                observation["evidence"] = str(observation["evidence"]) + " plus absent words"
-            return answer
-
     class InventedUrlsData(DemoData):
         @staticmethod
         def CorpusBuilderOutput(system: str, user: str, call_number: int) -> dict[str, object]:  # noqa: N802 - schema name
@@ -327,13 +326,6 @@ def test_research_gates_fail_the_run_at_the_lying_node() -> None:
             sources.append(fake)
             return answer
 
-    class EmptyCorpusData(DemoData):
-        @staticmethod
-        def CorpusBuilderOutput(system: str, user: str, call_number: int) -> dict[str, object]:  # noqa: N802 - schema name
-            answer = _corpus(system, user, call_number)
-            answer["sources"] = []
-            return answer
-
     class AlteredEvidenceData(DemoData):
         @staticmethod
         def GeneratorOutputV2(system: str, user: str, call_number: int) -> dict[str, object]:  # noqa: N802 - schema name
@@ -344,12 +336,9 @@ def test_research_gates_fail_the_run_at_the_lying_node() -> None:
             return answer
 
     cases = [
-        # Drifted quotes are now SKIPPED (logged) instead of crashing the
-        # miner; the observation never enters the store, so the persona
-        # generator fails when its fixture cites the skipped key.
-        (DriftingQuotesData, "persona_generator_node: ", "consolidates unknown observation key"),
+        # A drifted quote is salvaged from the document and an empty selection falls back to the
+        # top search hits, so neither fails a run any more.
         (InventedUrlsData, "corpus_builder_node: ", "selected invented documents"),
-        (EmptyCorpusData, "corpus_builder_node: ", "research found no source document"),
         (AlteredEvidenceData, "persona_generator_node: ", "altered the evidence quote of OBS-001"),
     ]
     for dataset_class, node_prefix, needle in cases:
@@ -391,10 +380,11 @@ def test_uploaded_documents_lead_the_corpus_and_ground_the_persona() -> None:
         ]
 
     base = fake_config(sink, directives)
-    config = {
+    config: RunnableConfig = {
         "configurable": {
             **base["configurable"],
             "project_documents": project_documents,
+            "pending_messages": [{"id": "m0", "content": DEMO_INTENT}],
         }
     }
     graph = build_re_graph()
@@ -468,7 +458,16 @@ def test_invoke_retries_a_degenerate_generation() -> None:
 
     with patch.object(nodes, "get_chat_model", lambda _role, _cfg: FlakyModel()):
         result = nodes._invoke(
-            "planner", {"configurable": {}}, Probe, {"output_language": "English", "intent": "test"}
+            "planner",
+            {"configurable": {}},
+            Probe,
+            {
+                "output_language": "English",
+                "intent": "test",
+                "directive": "",
+                "current_plan": "(none yet)",
+                "task": "plan",
+            },
         )
     assert result.answer == "clean"
     assert FlakyModel.calls == 2
@@ -546,26 +545,123 @@ def test_an_agent_whose_quote_is_not_exact_still_links_the_items() -> None:
         str(raw["item_id"]),
         "evidenced_by",
         known,
-        [nodes.MessageLink(message=str(other["key"]), target_quote="words that nobody said")],
+        [MessageLink(message=str(other["key"]), target_quote="words that nobody said")],
     )
 
     assert sink.links[-1]["target_id"] == other["item_id"]
     assert sink.links[-1]["quote"] is None
 
 
-def test_every_agent_step_reports_to_the_user_except_the_interview_turns() -> None:
+def test_every_agent_step_reports_to_the_user_except_the_persona_answers() -> None:
     sink = _finished_run()
 
     roles = [report["agent_role"] for report in sink.reports]
 
-    assert roles[0] == "planner"
-    assert roles[1] == "corpus_builder"
-    assert roles.count("stakeholder_miner") == 3, "one report for each document that was read"
+    assert roles[:3] == ["intent_router", "planner", "corpus_builder"]
+    assert roles.count("stakeholder_miner") == 1, "one report for the whole mining step"
     assert {"persona_generator", "analyst", "requirement_engineer", "backlog_manager"} <= set(roles)
     assert "validator" in roles
-    assert "interviewer" not in roles
+    assert roles.count("interviewer") == len(_transcripts(sink)), (
+        "one report for each interview, when the interviewer stops"
+    )
     assert "persona_agent" not in roles
     assert all(report["content"].strip() for report in sink.reports)
+    mined = next(r for r in sink.reports if r["agent_role"] == "stakeholder_miner")
+    assert mined["content"].count("\n- **") == 2, "one bullet for each document, under its title"
+
+
+class _AskingPlannerData(DemoData):
+    """A planner that has one question for the user before it plans."""
+
+    seen_by_the_plan: ClassVar[list[str]] = []
+
+    PlannerQuestionsOutput = staticmethod(
+        lambda system, user, call_number: {
+            "questions": [
+                {
+                    "key": "login",
+                    "kind": "single_select",
+                    "prompt": "How do students sign in?",
+                    "choices": [
+                        {"key": "campus", "label": "With their campus account"},
+                        {"key": "own", "label": "With an account of this app"},
+                    ],
+                    "default_choice_keys": ["campus"],
+                }
+            ],
+        }
+    )
+
+    @staticmethod
+    def PlannerOutput(system: str, user: str, call_number: int) -> dict[str, object]:  # noqa: N802 - schema name
+        _AskingPlannerData.seen_by_the_plan.append(user)
+        return _plain(system, user, call_number)
+
+
+def _state_asking_before_the_plan() -> REState:
+    state = run_state()
+    state["run_config"]["review_checkpoints"] = ["checkpoint_plan"]
+    return state
+
+
+def test_the_planner_asks_first_and_the_questions_never_become_a_part_of_the_plan() -> None:
+    """The first round of a project, with the plan checkpoint on, ends with the questions: they
+    wait in the brief of the checkpoint that asks them, and no plan is written yet."""
+    sink = InMemoryArtifactSink()
+
+    with patch.object(llm_factory, "make_demo_data", lambda _name: _AskingPlannerData()):
+        reset_model_cache()
+        update = nodes.planner_node(
+            _state_asking_before_the_plan(), fake_config(sink, InMemoryDirectiveSink())
+        )
+    reset_model_cache()
+
+    (question,) = update["review_briefs"]["checkpoint_plan"]["questions"]
+    assert question["key"] == "login"
+    assert "elicitation_plan" not in update, "no plan before the answers"
+    assert sink.read_artifact("project-1", "elicitation_plan") is None
+    assert routing.route_after_planner({**run_state(), **update}) == "checkpoint_plan"  # type: ignore[typeddict-item]
+
+
+def test_after_the_answers_the_planner_writes_the_plan_from_them_and_asks_nothing_more() -> None:
+    _AskingPlannerData.seen_by_the_plan.clear()
+    state = _state_asking_before_the_plan()
+    state["initial_intent"] += "\n\nClarifications from the user:\n- How do students sign in?: own"
+    state["checkpoint_outcomes"] = [
+        {"node": "checkpoint_plan", "option": "", "feedback": "", "automatic": False}
+    ]
+    state["review_briefs"] = {
+        "checkpoint_plan": {"questions": [{"key": "login", "kind": "free_text", "prompt": "?"}]}
+    }
+    sink = InMemoryArtifactSink()
+
+    with patch.object(llm_factory, "make_demo_data", lambda _name: _AskingPlannerData()):
+        reset_model_cache()
+        update = nodes.planner_node(state, fake_config(sink, InMemoryDirectiveSink()))
+    reset_model_cache()
+
+    assert "elicitation_plan" in update
+    assert update["review_briefs"]["checkpoint_plan"] == {"questions": []}
+    assert "How do students sign in?: own" in _AskingPlannerData.seen_by_the_plan[0]
+    plan = sink.read_artifact("project-1", "elicitation_plan")
+    assert plan is not None
+    assert "questions" not in plan["content"], "the questions are asked, not documented"
+    assert routing.route_after_planner({**state, **update}) == "corpus_builder"  # type: ignore[typeddict-item]
+
+
+def test_a_plan_that_has_no_question_clears_the_brief_of_the_round_before() -> None:
+    """A planning round that asks nothing must not leave the questions of the round before
+    waiting in the brief, or a later plan would re-ask what the user already settled."""
+    state = run_state()
+    state["review_briefs"] = {
+        "checkpoint_plan": {
+            "questions": [{"key": "stale", "kind": "free_text", "prompt": "An old question?"}]
+        }
+    }
+
+    update = nodes.planner_node(state, fake_config(InMemoryArtifactSink(), InMemoryDirectiveSink()))
+
+    assert update["review_briefs"]["checkpoint_plan"] == {"questions": []}
 
 
 def test_a_report_refers_to_what_its_step_wrote() -> None:
@@ -636,3 +732,252 @@ def test_a_rework_directive_refers_to_its_issues_and_the_personas_to_interview_a
     persona_kinds = {_item(sink, item["item_id"])["kind"] for item in addressed}
     assert persona_kinds == {"persona"}
     assert len({item["item_id"] for item in addressed}) == len(addressed)
+
+
+def _messages(sink: InMemoryArtifactSink, speaker_is_interviewer: bool) -> list[dict[str, object]]:
+    return [
+        entry["content"]
+        for entry in sink.items
+        if entry["kind"] == "interview_message"
+        and (entry["content"]["speaker"] == "interviewer") == speaker_is_interviewer
+    ]
+
+
+def test_the_interviewer_tells_what_kind_of_question_it_asks_and_what_it_digs_into() -> None:
+    sink = _finished_run()
+
+    questions = _messages(sink, speaker_is_interviewer=True)
+
+    kinds = [str(question["message_kind"]) for question in questions]
+    assert kinds[:3] == ["opening", "follow_up", "new_topic"]
+    follow_up = next(question for question in questions if question["message_kind"] == "follow_up")
+    assert str(follow_up["follows_up_on"]).startswith("PER-001#")
+    assert all(question["covers"] == [] for question in questions)
+
+
+def test_the_interviewer_judges_what_each_answer_gave_and_the_persona_never_sees_it() -> None:
+    sink = _finished_run()
+
+    answers = _messages(sink, speaker_is_interviewer=False)
+
+    assert all(answer["message_kind"] == "answer" for answer in answers)
+    assert any(answer["covers"] for answer in answers), "an answer was judged to give data"
+    first = next(entry for entry in sink.items if entry["kind"] == "interview_message")
+    lines = transcript_lines("PER-001", [cast("Any", first)])
+    assert all("covers" not in line for line in lines)
+
+
+def test_a_closed_transcript_says_what_was_covered_and_what_stood_out() -> None:
+    sink = _finished_run()
+
+    for transcript in _transcripts(sink):
+        content = cast("dict[str, Any]", transcript["content"])
+        assert content["top_findings"], "the interviewer wrote what stood out"
+        assert content["follow_ups"]
+        coverage = content["data_coverage"]
+        assert coverage
+        assert {entry["covered"] for entry in coverage} <= {True, False}
+        assert any(entry["covered"] for entry in coverage)
+
+
+def test_the_interviewer_is_given_what_is_still_to_collect() -> None:
+    items = ["how often", "what it costs"]
+    message: Any = {"content": {"speaker": "PER-001", "covers": ["how often"]}, "key": "PER-001#2"}
+    messages = [message]
+
+    lines = nodes.coverage_lines(items, messages)
+
+    assert lines == "- [x] how often\n- [ ] what it costs"
+    assert nodes.coverage_lines([], messages).startswith("(the plan lists no data")
+
+
+class _UnclearMessageData(DemoData):
+    """A router that cannot tell what the message wants changed, and asks."""
+
+    IntentDirectiveOutput = staticmethod(
+        lambda system, user, call_number: {
+            "target_node": "requirement_engineer",
+            "instruction": "Change the booking limit.",
+            "about": [],
+            "questions": [
+                {
+                    "key": "limit",
+                    "kind": "single_select",
+                    "prompt": "Which limit do you mean?",
+                    "choices": [
+                        {"key": "length", "label": "How long a room is booked"},
+                        {"key": "ahead", "label": "How far ahead a room is booked"},
+                    ],
+                    "default_choice_keys": ["length"],
+                }
+            ],
+        }
+    )
+
+
+def _router_config(message: str) -> RunnableConfig:
+    config = fake_config(InMemoryArtifactSink(), InMemoryDirectiveSink())
+    config["configurable"]["pending_messages"] = [{"id": "m1", "content": message}]
+    return config
+
+
+def _router_state(*, asks_on: bool) -> REState:
+    """A project that holds every document, so that any step can read what it needs."""
+    state = run_state()
+    state["first_run"] = False
+    state["run_config"]["review_checkpoints"] = ["ask_message"] if asks_on else []
+    ref = [{"item_id": "i1", "key": "K-1", "version": 1}]
+    for name in (
+        "personas",
+        "interview_transcripts",
+        "analyzed_requirements",
+        "requirement_specification",
+    ):
+        state[name] = ref  # type: ignore[typeddict-item]
+    return state
+
+
+def test_the_router_asks_when_the_message_is_too_unclear_and_comes_back_with_the_answers() -> None:
+    with patch.object(llm_factory, "make_demo_data", lambda _name: _UnclearMessageData()):
+        reset_model_cache()
+        update = nodes.intent_router_node(
+            _router_state(asks_on=True), _router_config("Change the limit")
+        )
+    reset_model_cache()
+
+    brief = update["review_briefs"]["ask_message"]
+    assert [question["key"] for question in brief["questions"]] == ["limit"]
+    assert brief["message"].endswith("Change the limit")
+    assert update["routed_target"] == "ask_message"
+    assert "rework_directives" not in update, "no directive before the message is understood"
+    assert routing.route_after_intent_router({**run_state(), **update}) == "ask_message"  # type: ignore[typeddict-item]
+    assert routing.next_after_checkpoint("ask_message", run_state()) == "intent_router"
+
+
+def test_the_router_reads_the_message_with_the_answers_and_does_not_ask_twice() -> None:
+    state = _router_state(asks_on=True)
+    state["review_briefs"] = {
+        "ask_message": {
+            "questions": [],
+            "message": "1. Change the limit",
+            "answered_message": (
+                "1. Change the limit\n\nClarifications from the user:\n- Which: length"
+            ),
+        }
+    }
+
+    with patch.object(llm_factory, "make_demo_data", lambda _name: _UnclearMessageData()):
+        reset_model_cache()
+        config = fake_config(InMemoryArtifactSink(), InMemoryDirectiveSink())
+        update = nodes.intent_router_node(state, config)
+    reset_model_cache()
+
+    assert update["routed_target"] == "requirement_engineer"
+    assert update["review_briefs"]["ask_message"] == {}, "the next message starts clean"
+    assert update["rework_directives"]
+
+
+def test_the_directive_of_the_first_message_is_not_a_rework_instruction() -> None:
+    state = run_state()
+    state["first_run"] = True
+
+    update = nodes.intent_router_node(state, _router_config(DEMO_INTENT))
+
+    assert update["routed_target"] == "planner"
+    assert "rework_directives" not in update, "the steps after the plan would read it as rework"
+
+
+def test_a_router_whose_ask_is_off_acts_on_its_best_guess() -> None:
+    with patch.object(llm_factory, "make_demo_data", lambda _name: _UnclearMessageData()):
+        reset_model_cache()
+        update = nodes.intent_router_node(_router_state(asks_on=False), _router_config("Change it"))
+    reset_model_cache()
+
+    assert update["routed_target"] == "requirement_engineer"
+
+
+def test_a_later_planning_round_reads_what_the_user_asked_to_change_and_the_plan_that_exists() -> (
+    None
+):
+    seen: list[str] = []
+
+    class RecordingPlannerData(DemoData):
+        @staticmethod
+        def PlannerOutput(system: str, user: str, call_number: int) -> dict[str, object]:  # noqa: N802 - schema name
+            seen.append(user)
+            return _plain(system, user, call_number)
+
+    sink = InMemoryArtifactSink()
+    directives = InMemoryDirectiveSink()
+    config = fake_config(sink, directives)
+
+    with patch.object(llm_factory, "make_demo_data", lambda _name: RecordingPlannerData()):
+        reset_model_cache()
+        nodes.planner_node(run_state(), config)
+        later = run_state()
+        later["first_run"] = False
+        later["rework_directives"] = [
+            directives.create_directive(
+                "run-1",
+                "intent",
+                target_node="planner",
+                iteration=0,
+                instruction="Include the faculty among the stakeholders.",
+                items=[],
+            )
+        ]
+        nodes.planner_node(later, config)
+    reset_model_cache()
+
+    assert "(none yet)" in seen[0]
+    assert "Include the faculty among the stakeholders." in seen[1]
+    assert "(none yet)" not in seen[1], "the plan that exists is given to the planner"
+    assert '"objectives"' in seen[1]
+
+
+def test_a_step_that_has_nothing_to_read_sends_the_message_to_the_step_that_makes_it() -> None:
+    """The router chooses the step; the server only moves the choice back to the earliest step
+    whose input is missing, so that a new project, which holds nothing, always starts at the
+    planner, and the router needs no rule about first messages."""
+
+    def routed(
+        state: REState, *, asks_on: bool = True
+    ) -> tuple[dict[str, Any], InMemoryDirectiveSink]:
+        state["run_config"]["review_checkpoints"] = ["ask_message"] if asks_on else []
+        directives = InMemoryDirectiveSink()
+        config = fake_config(InMemoryArtifactSink(), directives)
+        with patch.object(llm_factory, "make_demo_data", lambda _name: _UnclearMessageData()):
+            reset_model_cache()
+            update = nodes.intent_router_node(state, config)
+        reset_model_cache()
+        return update, directives
+
+    # The model wants the requirement engineer, and a new project holds no document at all.
+    update, directives = routed(run_state())
+    assert update["routed_target"] == "planner"
+    assert [row["target_node"] for row in directives.rows] == ["planner"]
+    assert not update["review_briefs"]["ask_message"], "the planner asks its own questions"
+    assert routing.route_start(run_state()) == "intent_router"
+
+    # Interviews are held but nothing was analyzed: the analyst comes first.
+    held = run_state()
+    for name in ("personas", "interview_transcripts"):
+        held[name] = [{"item_id": "i1", "key": "K-1", "version": 1}]  # type: ignore[typeddict-item]
+    update, _ = routed(held, asks_on=False)
+    assert update["routed_target"] == "analyst"
+
+
+def test_the_router_reads_what_the_project_holds_one_line_for_each_stage_of_the_work() -> None:
+    sink = InMemoryArtifactSink()
+    fresh = nodes._project_overview(run_state(), sink)
+
+    assert "interview plan: none yet" in fresh
+    assert "personas: none yet" in fresh
+
+    state = _router_state(asks_on=False)
+    state["current_stage"] = "analysis_review"
+    overview = nodes._project_overview(state, sink)
+
+    assert "personas: 1" in overview
+    assert "specification requirements: 1" in overview
+    assert "the run was last at: analysis_review" in overview

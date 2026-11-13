@@ -34,16 +34,61 @@ from typing import TYPE_CHECKING, Any
 if TYPE_CHECKING:
     from khoailanggraph.settings.base import Settings
 
-ResearchSearch = Callable[[Sequence[str]], list[dict[str, Any]]]
+# A search takes the queries and, optionally, the options of the search tool: `allowed_domains`,
+# `blocked_domains`, `news` and `max_results`.
+ResearchSearch = Callable[..., list[dict[str, Any]]]
 
 _HITS_PER_QUERY = 8
 _TAVILY_URL = "https://api.tavily.com/search"
+
+
+def _tavily_body(api_key: str, query: str, options: Mapping[str, Any]) -> dict[str, Any]:
+    """The request of one Tavily search, with the options of the search tool that Tavily knows."""
+    body: dict[str, Any] = {
+        "api_key": api_key,
+        "query": query,
+        "search_depth": "basic",
+        "max_results": int(options.get("max_results") or _HITS_PER_QUERY),
+    }
+    if options.get("allowed_domains"):
+        body["include_domains"] = list(options["allowed_domains"])
+    if options.get("blocked_domains"):
+        body["exclude_domains"] = list(options["blocked_domains"])
+    if options.get("news"):
+        body["topic"] = "news"
+    return body
+
+
+def filter_by_domain(
+    hits: Sequence[dict[str, Any]],
+    allowed: Sequence[str] = (),
+    blocked: Sequence[str] = (),
+) -> list[dict[str, Any]]:
+    """The hits whose host is in `allowed` (when given) and not in `blocked`.
+
+    A domain matches its own host and every sub-domain, so `reddit.com` keeps `old.reddit.com`."""
+
+    def host_of(hit: Mapping[str, Any]) -> str:
+        return urllib.parse.urlparse(str(hit.get("url", ""))).netloc.lower().removeprefix("www.")
+
+    def matches(host: str, domains: Sequence[str]) -> bool:
+        return any(
+            host == name or host.endswith("." + name)
+            for name in (domain.lower().removeprefix("www.") for domain in domains)
+        )
+
+    return [
+        hit
+        for hit in hits
+        if (not allowed or matches(host_of(hit), allowed)) and not matches(host_of(hit), blocked)
+    ]
 
 
 def tavily_research_search(
     queries: Sequence[str],
     *,
     api_key: str,
+    options: Mapping[str, Any] | None = None,
 ) -> list[dict[str, Any]]:
     """The live answer: Tavily search, one call per query, URLs deduplicated.
 
@@ -56,14 +101,7 @@ def tavily_research_search(
     for query in queries:
         request = urllib.request.Request(
             _TAVILY_URL,
-            data=json.dumps(
-                {
-                    "api_key": api_key,
-                    "query": str(query),
-                    "search_depth": "basic",
-                    "max_results": _HITS_PER_QUERY,
-                }
-            ).encode("utf-8"),
+            data=json.dumps(_tavily_body(api_key, str(query), options or {})).encode("utf-8"),
             headers={"Content-Type": "application/json"},
             method="POST",
         )
@@ -96,22 +134,28 @@ def make_research_search(settings: Settings) -> ResearchSearch:
     the safe node turns into a failed run (an honest error, never a fabricated
     corpus).
     """
-    web: ResearchSearch = live_research_search
+    web: Callable[..., list[dict[str, Any]]] = lambda queries, options=None: live_research_search(  # noqa: E731
+        queries
+    )
     if settings.tavily_api_key:
         tavily_key = settings.tavily_api_key
-        web = lambda queries: tavily_research_search(queries, api_key=tavily_key)  # noqa: E731
+        web = lambda queries, options=None: tavily_research_search(  # noqa: E731
+            queries, api_key=tavily_key, options=options
+        )
     if not settings.research_academic:
-        return web
+        return _filtered(web)
     openalex_key = settings.openalex_api_key
     # The run refuses a tool call that outlasts its limit, so the sources work side by side and
     # the academic ones stop asking once their share of that limit is spent.
     limit = settings.tool_timeout_seconds
     academic_share = max(limit * 0.55, 5.0)
 
-    def search(queries: Sequence[str]) -> list[dict[str, Any]]:
+    def search(
+        queries: Sequence[str], options: Mapping[str, Any] | None = None
+    ) -> list[dict[str, Any]]:
         started = time.monotonic()
         pool = ThreadPoolExecutor(max_workers=2)
-        web_future = pool.submit(web, queries)
+        web_future = pool.submit(web, queries, options)
         academic_future = pool.submit(
             academic_research_search,
             queries,
@@ -130,7 +174,31 @@ def make_research_search(settings: Settings) -> ResearchSearch:
             if str(hit["url"]) not in seen:
                 seen.add(str(hit["url"]))
                 hits.append(hit)
+        return _kept_by_domain(hits, options)
+
+    return search
+
+
+def _kept_by_domain(
+    hits: list[dict[str, Any]], options: Mapping[str, Any] | None
+) -> list[dict[str, Any]]:
+    """The hits that the domain options of a search allow; all of them without options."""
+    if not options or not (options.get("allowed_domains") or options.get("blocked_domains")):
         return hits
+    return filter_by_domain(
+        hits, options.get("allowed_domains") or (), options.get("blocked_domains") or ()
+    )
+
+
+def _filtered(
+    web: Callable[..., list[dict[str, Any]]],
+) -> Callable[..., list[dict[str, Any]]]:
+    """A web search that also applies the domain options to the hits."""
+
+    def search(
+        queries: Sequence[str], options: Mapping[str, Any] | None = None
+    ) -> list[dict[str, Any]]:
+        return _kept_by_domain(web(queries, options), options)
 
     return search
 
@@ -352,10 +420,12 @@ def _wiki_page_text(title: str) -> str:
 def live_research_search(queries: Sequence[str]) -> list[dict[str, Any]]:
     """The keyless live chain: DuckDuckGo's web results, Wikipedia when the
     open web answers with nothing (its anomaly page, a captive portal, ...)."""
-    hits = duckduckgo_research_search(queries)
+    # Wikipedia first: its API is fast and stable, while the DuckDuckGo HTML
+    # endpoint throttles and can stall a run for minutes.
+    hits = wikipedia_research_search(queries)
     if hits:
         return hits
-    return wikipedia_research_search(queries)
+    return duckduckgo_research_search(queries)
 
 
 def research_search_of(config: Mapping[str, Any]) -> ResearchSearch:

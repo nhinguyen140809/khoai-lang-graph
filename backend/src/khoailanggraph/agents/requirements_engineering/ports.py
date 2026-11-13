@@ -12,6 +12,8 @@ from __future__ import annotations
 from typing import TYPE_CHECKING, Protocol, TypedDict, runtime_checkable
 
 if TYPE_CHECKING:
+    from collections.abc import Mapping, Sequence
+
     from khoailanggraph.agents.requirements_engineering.state import ArtifactRef, ItemRef
     from khoailanggraph.llm.usage import Usage
 
@@ -89,6 +91,11 @@ class ArtifactSink(Protocol):
 
     def begin_node(self, agent_role: str | None) -> None:
         """The node about to run, by its agent role (none for a node that is no agent)."""
+        ...
+
+    def add_notes(self, notes: Sequence[Mapping[str, str]]) -> None:
+        """The short notes of the node to the user, each with a `kind` and a `text`, in the
+        order written: they are kept with the step and sent to the stream as they come."""
         ...
 
     def add_report(self, content: str) -> None:

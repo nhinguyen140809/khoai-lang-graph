@@ -1,6 +1,7 @@
 ---
 role: agent_role_key
 version: 1
+common: 1
 description: One line on what this prompt makes the agent do.
 output: OutputModelName
 inputs:
@@ -30,6 +31,11 @@ You are a ...
 
 <!-- What this step must produce, and what the next step uses it for. -->
 Produce ... so that ... can ...
+
+## Skills
+
+<!-- The abilities this role needs, one bullet for each: its name, then how to use it. Only what is about this role; what holds for every agent is in the common settings. -->
+- Name of a skill: how to use it.
 
 ## Inputs
 

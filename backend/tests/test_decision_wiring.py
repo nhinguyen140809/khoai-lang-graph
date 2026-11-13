@@ -43,6 +43,7 @@ def _config(sink: ArtifactSink, directives: InMemoryDirectiveSink) -> RunnableCo
             "models": {role: "fake:demo" for role in ROLES},
             "research_search": demo_research_search,
             "project_documents": lambda _project_id: [],
+            "pending_messages": [{"id": "m0", "content": DEMO_INTENT}],
         }
     }
 

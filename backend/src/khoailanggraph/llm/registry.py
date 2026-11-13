@@ -12,7 +12,7 @@ from __future__ import annotations
 from functools import lru_cache
 from typing import TYPE_CHECKING, Any, Literal
 
-from pydantic import BaseModel, Field
+from pydantic import BaseModel, Field, model_validator
 from yaml import safe_load
 
 from khoailanggraph.settings import get_settings
@@ -29,10 +29,18 @@ class ModelProfile(BaseModel):
 
     `allowed_roles` names the agent roles the model may serve; left out, it serves every role
     (the catalog lists the roles of the workflow definition in use).
+
+    `base_url` and `api_key_env` say where the model is served. A model with a `base_url` is
+    called through the OpenAI-compatible protocol, whatever the name before the colon of its id
+    (for example `gemini:gemini-2.5-flash`). `api_key_env` is the NAME of the variable that holds
+    the key, read from the environment or `backend/.env`; a key never sits in this file. A model
+    with neither uses the `OPENAI_BASE_URL` and `OPENAI_API_KEY` settings, as before.
     """
 
     id: str
     label: str
+    base_url: str | None = None
+    api_key_env: str | None = None
     capabilities: list[Capability] = Field(default_factory=list)
     context_window: int
     input_price_per_mtok: float | None = None
@@ -40,6 +48,15 @@ class ModelProfile(BaseModel):
     cache_read_price_per_mtok: float | None = None
     cache_write_price_per_mtok: float | None = None
     allowed_roles: list[str] | None = None
+
+    @model_validator(mode="after")
+    def _endpoint_names_its_key(self) -> ModelProfile:
+        """A model at its own address names the variable of its key: without one, the client
+        library would send the key of `OPENAI_API_KEY` to an address that is not the gateway."""
+        if self.base_url and not self.api_key_env:
+            msg = f"Model '{self.id}' sets base_url, so it must set api_key_env as well."
+            raise ValueError(msg)
+        return self
 
 
 class ModelCatalogEntry(BaseModel):
@@ -84,6 +101,10 @@ class ModelRegistry(BaseModel):
             )
             for entry in sorted(self.allowlist, key=lambda profile: profile.id)
         ]
+
+    def profile(self, model_id: str) -> ModelProfile | None:
+        """The allowlist entry of a model id, None for a model that is not listed."""
+        return next((entry for entry in self.allowlist if entry.id == model_id), None)
 
     def model_for_role(self, role: str) -> str:
         """The `provider:model` of a role; an unlisted role uses the default."""

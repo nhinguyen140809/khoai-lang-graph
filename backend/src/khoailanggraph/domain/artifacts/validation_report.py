@@ -7,6 +7,16 @@ from typing import Literal
 from pydantic import BaseModel, ConfigDict, Field
 
 
+class ValidationCheck(BaseModel):
+    """One check that the validation made, and how it came out."""
+
+    model_config = ConfigDict(extra="forbid")
+
+    check: str
+    result: str
+    note: str
+
+
 class ValidationReportContent(BaseModel):
     """The verdict of one validator execution; the issues are its items.
 
@@ -18,3 +28,4 @@ class ValidationReportContent(BaseModel):
 
     iteration: int = Field(ge=0)
     status: Literal["pass", "fail"]
+    checks: list[ValidationCheck] = Field(default_factory=list)

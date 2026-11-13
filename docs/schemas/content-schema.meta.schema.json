@@ -164,6 +164,9 @@
         "minimum": {
           "type": "number"
         },
+        "maximum": {
+          "type": "number"
+        },
         "minItems": {
           "type": "integer",
           "minimum": 0
@@ -172,7 +175,19 @@
           "const": true
         },
         "x-ui-widget": {
-          "enum": ["text", "textarea", "select", "number", "list", "tags", "object-list", "separator", "avatar-list", "badge"]
+          "enum": ["text", "textarea", "select", "number", "list", "tags", "object-list", "separator", "avatar-list", "badge", "rating-list", "boolean"]
+        },
+        "x-ui-label-field": {
+          "type": "string",
+          "description": "Of a rating-list: the field of an entry that names what is rated."
+        },
+        "x-ui-value-field": {
+          "type": "string",
+          "description": "Of a rating-list: the integer field of an entry that holds the rating; its minimum and maximum give the scale."
+        },
+        "x-ui-note-field": {
+          "type": "string",
+          "description": "Of a rating-list: the field of an entry that says why, shown under the rating."
         },
         "x-value-list": {
           "type": "string",
@@ -197,6 +212,13 @@
         {
           "if": { "properties": { "x-ui-widget": { "const": "avatar-list" } } },
           "then": { "properties": { "type": { "const": "array" } } }
+        },
+        {
+          "if": { "properties": { "x-ui-widget": { "const": "rating-list" } } },
+          "then": {
+            "properties": { "type": { "const": "array" } },
+            "required": ["x-ui-label-field", "x-ui-value-field"]
+          }
         }
       ]
     }

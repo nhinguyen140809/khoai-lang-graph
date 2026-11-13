@@ -8,6 +8,8 @@ state field is written by nodes only; to stay pure, none of these functions
 touches the store or a model.
 """
 
+from collections.abc import Callable
+
 from langgraph.graph import END
 
 from khoailanggraph.agents.requirements_engineering import orchestrator
@@ -32,20 +34,26 @@ def route_error(state: REState) -> str:
 
 
 def route_start(state: REState) -> str:
-    """`__start__ → {planner (first run), intent_router (later runs)}`; the entry
-    clause is §2.1 (the entry of a run began earlier, before the intents edge). A walk that
-    continues a run (a resume, a retry, a delivered message) names its node in `start_at`."""
+    """`__start__ -> intent_router`: every run begins by reading the message it starts with, which
+    says that it got the message and what happens next. A walk that continues a run (a resume, a
+    retry, a delivered message) names its node in `start_at`."""
     if state.get("start_at"):
         return str(state["start_at"])
-    if state.get("first_run", False) or not state.get("personas"):
-        return "planner"
     return "intent_router"
 
 
+# The answer of a review that none of its options say: the words of the user go to the intent
+# router as a message, and it decides which step does the work again.
+OTHER_OPTION = "other"
+
+
 def route_after_personas(state: REState) -> str:
-    """`checkpoint_personas → interviewer` (approve); the node never rejects."""
+    """`checkpoint_personas → {interviewer, intent_router}`: the interviews start when the
+    interviewees are approved; something else goes to the intent router."""
     if route_error(state):
         return route_error(state)
+    if _latest_outcome(state, "checkpoint_personas") == OTHER_OPTION:
+        return "intent_router"
     return "interviewer"
 
 
@@ -67,14 +75,17 @@ def route_after_analyst(state: REState) -> str:
     review_pending = state.get("response_analyst_status", "")
     if review_pending == "needs_interviews":
         return "rework_elicitation"
-    return "checkpoint_analysis"
+    return "ask_analysis"
 
 
 def route_after_analysis(state: REState) -> str:
-    """`checkpoint_analysis → {requirement_engineer, analyst, rework_elicitation}`."""
+    """`checkpoint_analysis` goes to the next stage, back to the analyst or the interviews, or,
+    for something else, to the intent router."""
     if route_error(state):
         return route_error(state)
     option = _latest_outcome(state, "checkpoint_analysis")
+    if option == OTHER_OPTION:
+        return "intent_router"
     if option == "reject_reanalyse":
         return "analyst"
     if option == "reject_reinterview":
@@ -87,6 +98,8 @@ def route_after_spec(state: REState) -> str:
     if route_error(state):
         return route_error(state)
     option = _latest_outcome(state, "checkpoint_spec")
+    if option == OTHER_OPTION:
+        return "intent_router"
     if option == "not_ok":
         return "requirement_engineer"
     return "backlog_manager"
@@ -116,10 +129,49 @@ def route_after_intent_router(state: REState) -> str:
         "requirement_engineer",
         "backlog_manager",
     }
+    if target == "ask_message":
+        return "ask_message"
     return target if target in allowed else "analyst"
 
 
+def route_after_planner(state: REState) -> str:
+    """`planner → {checkpoint_plan, corpus_builder}`: a planning round that left questions to ask
+    goes to the checkpoint that asks them, and the planner comes back to write the plan; a round
+    that wrote the plan goes on to the research."""
+    if route_error(state):
+        return route_error(state)
+    waiting = state.get("review_briefs", {}).get("checkpoint_plan", {}).get("questions")
+    return "checkpoint_plan" if waiting else "corpus_builder"
+
+
+def route_after_plan(state: REState) -> str:
+    """`checkpoint_plan → planner`: the answers are in the idea, and the plan is written."""
+    if route_error(state):
+        return route_error(state)
+    return "planner"
+
+
+def _route_after_ask(review_node: str) -> Callable[[REState], str]:
+    """The route of an `ask` checkpoint: after the answers, on to the review it precedes."""
+
+    def route(state: REState) -> str:
+        return route_error(state) or review_node
+
+    return route
+
+
+route_after_ask_personas = _route_after_ask("checkpoint_personas")
+route_after_ask_analysis = _route_after_ask("checkpoint_analysis")
+route_after_ask_spec = _route_after_ask("checkpoint_spec")
+route_after_ask_message = _route_after_ask("intent_router")
+
+
 CHECKPOINT_ROUTES = {
+    "checkpoint_plan": route_after_plan,
+    "ask_personas": route_after_ask_personas,
+    "ask_analysis": route_after_ask_analysis,
+    "ask_spec": route_after_ask_spec,
+    "ask_message": route_after_ask_message,
     "checkpoint_personas": route_after_personas,
     "checkpoint_analysis": route_after_analysis,
     "checkpoint_spec": route_after_spec,

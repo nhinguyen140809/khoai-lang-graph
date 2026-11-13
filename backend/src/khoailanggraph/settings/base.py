@@ -2,13 +2,25 @@
 
 from __future__ import annotations
 
+import os
 from functools import lru_cache
 from pathlib import Path
 
+from dotenv import dotenv_values
 from pydantic_settings import BaseSettings, SettingsConfigDict
 
 # src/khoailanggraph/settings/base.py -> parents[3] is the backend/ directory.
 BACKEND_DIR = Path(__file__).resolve().parents[3]
+
+
+def env_value(name: str) -> str | None:
+    """The value of a variable that a file names (for example the `api_key_env` of a model).
+
+    The process environment wins, then `backend/.env`; a variable that is not set, or is empty,
+    gives None. Such a variable has no field in `Settings`, so it is read by name.
+    """
+    value = os.environ.get(name) or dotenv_values(BACKEND_DIR / ".env").get(name)
+    return value or None
 
 
 class Settings(BaseSettings):

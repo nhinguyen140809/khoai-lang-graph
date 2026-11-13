@@ -21,6 +21,7 @@ class SourceDocumentContent(BaseModel):
     title: str
     url: str
     publisher: str
+    source_type: str = "other"
     year: str
     excerpt: str
     text: str

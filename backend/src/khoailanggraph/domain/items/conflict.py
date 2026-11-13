@@ -26,3 +26,4 @@ class ConflictContent(BaseModel):
     proposed_resolutions: list[str]
     status: Literal["open", "resolved", "dismissed"]
     resolution: str | None
+    resolution_strategy: str | None = None

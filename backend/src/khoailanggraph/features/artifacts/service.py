@@ -47,17 +47,22 @@ from khoailanggraph.features.artifacts.models import (
     TraceLinkRow,
 )
 from khoailanggraph.features.projects.models import ProjectKeyCounterRow
-from khoailanggraph.features.runs.models import RunEventRow
+from khoailanggraph.features.runs.models import RunEventRow, RunStepRow
 from khoailanggraph.features.threads.models import MessageRow, ThreadRow
+from khoailanggraph.llm.note_stream import MAX_NOTES_PER_ANSWER, fit_note
 from khoailanggraph.platform import origin as origins
 from khoailanggraph.platform.origin import Origin
 
 if TYPE_CHECKING:
+    from collections.abc import Mapping, Sequence
+
     from sqlalchemy import Engine
     from sqlalchemy.ext.asyncio import AsyncSession
 
 
 REVISION_VERSION = 1
+# The notes of a node that the server keeps, and the longest a note may be.
+STEP_NOTE_KINDS = frozenset({"doing", "finding", "thinking", "tool"})
 
 
 def utcnow() -> datetime:
@@ -96,6 +101,19 @@ def _changed(by: Origin) -> dict[str, Any]:
 
 def _loads(blob: bytes) -> Any:
     return json.loads((blob or b"null").decode("utf-8"))
+
+
+def step_note_fields(note: Mapping[str, str]) -> dict[str, str] | None:
+    """The kind, the text and, for a note of a tool, the tool of a note to keep; None when the note
+    is empty, of an unknown kind, or tells of a tool that the definition does not list."""
+    text = fit_note(str(note.get("text", "")))
+    kind = str(note.get("kind", ""))
+    if not text or kind not in STEP_NOTE_KINDS:
+        return None
+    if kind != "tool":
+        return {"kind": kind, "text": text}
+    tool = str(note.get("tool") or "")
+    return {"kind": kind, "tool": tool, "text": text} if tool in wf.tools() else None
 
 
 def _dumps(value: Any) -> bytes:
@@ -179,6 +197,28 @@ class SqlArtifactSink:
         self.agent_role = agent_role
         self._touched_artifacts.clear()
         self._touched_items.clear()
+
+    def add_notes(self, notes: Sequence[Mapping[str, str]]) -> None:
+        """The notes of the running step: kept with the step, and one `step_note` event for each
+        as it is written. At most five, each shortened to 160 characters; an empty note is left
+        out. A note of kind `tool` also names the tool whose use it tells of."""
+        if self.run_id is None or self.step_id is None or not notes:
+            return
+        step = self.session.get(RunStepRow, self.step_id)
+        if step is None:
+            return
+        kept = json.loads((step.notes_json or b"[]").decode("utf-8"))
+        # A note that was sent while the model wrote it comes again with the finished answer.
+        known = {(entry["kind"], entry["text"]) for entry in kept}
+        for note in notes[:MAX_NOTES_PER_ANSWER]:
+            fields = step_note_fields(note)
+            if fields is None or (fields["kind"], fields["text"]) in known:
+                continue
+            known.add((fields["kind"], fields["text"]))
+            kept.append({**fields, "created_at": utcnow().isoformat()})
+            self.emit("step_note", {"step_id": str(self.step_id), **fields}, step_id=self.step_id)
+        step.notes_json = _dumps(kept)
+        self.session.flush()
 
     def add_report(self, content: str) -> None:
         """The report of the node as a message of the thread: the agent says what it did, with

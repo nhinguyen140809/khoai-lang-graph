@@ -20,16 +20,22 @@
   "x-ui-field-order": [
     "name",
     "stakeholder_type",
+    "occupation",
+    "age_range",
     "evaluative_dimension",
     "grounded_in",
     "background",
+    "typical_day",
     "expertise",
+    "current_workarounds",
+    "vocabulary",
     "goals",
     "interests",
     "constraints",
     "priorities",
     "concerns",
     "behavioral_tendencies",
+    "scores",
     "evidence",
     "interview_status"
   ],
@@ -131,7 +137,7 @@
       "title": "Evidence",
       "type": "array",
       "description": "The words of the research documents that support this interviewee, each with the observation and the document it comes from.",
-      "x-ui-widget": "list",
+      "x-ui-widget": "object-list",
       "items": {
         "type": "object",
         "additionalProperties": false,
@@ -167,21 +173,110 @@
       "description": "Progress of the interview with this persona. Set by the system.",
       "x-ui-widget": "badge",
       "readOnly": true
+    },
+    "occupation": {
+      "title": "What they do",
+      "type": "string",
+      "description": "What the person does for a living or in their studies, in a few words.",
+      "x-ui-widget": "text"
+    },
+    "age_range": {
+      "title": "Age",
+      "type": "string",
+      "description": "The range of age of the person, such as 18-24.",
+      "x-ui-widget": "text"
+    },
+    "typical_day": {
+      "title": "A typical day",
+      "type": "string",
+      "description": "A short account of a normal day around the subject of the product: when, where and with whom the person meets the problem.",
+      "x-ui-widget": "textarea"
+    },
+    "current_workarounds": {
+      "title": "How they cope today",
+      "type": "array",
+      "items": {
+        "type": "string"
+      },
+      "description": "What the person does today without the product, including the tools they use and the tricks they have made.",
+      "x-ui-widget": "list"
+    },
+    "vocabulary": {
+      "title": "Their words",
+      "type": "array",
+      "items": {
+        "type": "string"
+      },
+      "description": "Words and phrases that the person uses for the subject, as they say them.",
+      "x-ui-widget": "tags"
+    },
+    "scores": {
+      "title": "Traits",
+      "type": "array",
+      "items": {
+        "type": "object",
+        "additionalProperties": false,
+        "properties": {
+          "aspect": {
+            "title": "Trait key",
+            "type": "string",
+            "description": "The key of the trait: one of the system's traits, or one proposed in the plan.",
+            "x-ui-widget": "text"
+          },
+          "title": {
+            "title": "Trait",
+            "type": "string",
+            "description": "The trait as the user reads it, such as \"Comfort with technology\".",
+            "x-ui-widget": "text"
+          },
+          "score": {
+            "title": "Score",
+            "type": "integer",
+            "minimum": 1,
+            "maximum": 5,
+            "description": "From 1 to 5, as the aspect describes its two ends.",
+            "x-ui-widget": "number"
+          },
+          "rationale": {
+            "title": "Why",
+            "type": "string",
+            "description": "One sentence that says what in the evidence or in the profile supports the score.",
+            "x-ui-widget": "text"
+          }
+        },
+        "required": [
+          "aspect",
+          "title",
+          "score",
+          "rationale"
+        ]
+      },
+      "description": "How the person compares on each trait, from 1 to 5: the traits that the system always uses and the ones proposed for this project. Each has a short reason.",
+      "x-ui-widget": "rating-list",
+      "x-ui-label-field": "title",
+      "x-ui-value-field": "score",
+      "x-ui-note-field": "rationale"
     }
   },
   "required": [
     "name",
     "stakeholder_type",
+    "occupation",
+    "age_range",
     "evaluative_dimension",
     "grounded_in",
     "background",
+    "typical_day",
     "expertise",
+    "current_workarounds",
+    "vocabulary",
     "goals",
     "interests",
     "constraints",
     "priorities",
     "concerns",
     "behavioral_tendencies",
+    "scores",
     "evidence",
     "interview_status"
   ]

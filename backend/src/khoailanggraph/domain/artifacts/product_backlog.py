@@ -2,7 +2,7 @@
 
 from __future__ import annotations
 
-from pydantic import BaseModel, ConfigDict
+from pydantic import BaseModel, ConfigDict, Field
 
 
 class ProductBacklogContent(BaseModel):
@@ -15,3 +15,4 @@ class ProductBacklogContent(BaseModel):
 
     product_goal: str
     prioritization_notes: str | None
+    definition_of_done: list[str] = Field(default_factory=list)

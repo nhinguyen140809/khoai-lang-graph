@@ -16,10 +16,12 @@ from collections.abc import Mapping
 from typing import TYPE_CHECKING, Any
 
 from khoailanggraph.llm.registry import default_registry
-from khoailanggraph.settings import get_settings
+from khoailanggraph.settings import env_value, get_settings
 
 if TYPE_CHECKING:
     from langchain_core.language_models.chat_models import BaseChatModel
+
+    from khoailanggraph.llm.registry import ModelProfile
 
 _model_cache: dict[tuple[str, float | None], BaseChatModel] = {}
 
@@ -33,19 +35,42 @@ def resolve_model_id(role: str, config: Mapping[str, Any] | None = None) -> str:
     return default_registry().model_for_role(role)
 
 
+def _credentials(model_id: str, profile: ModelProfile | None) -> dict[str, Any]:
+    """The endpoint and key of a model called through the OpenAI-compatible protocol.
+
+    A model of the allowlist with its own `base_url` or `api_key_env` uses them, and never the
+    gateway of the settings, so one run can call several endpoints. Any other model uses the
+    `OPENAI_BASE_URL` and `OPENAI_API_KEY` settings, and what is left out stays with the client
+    library, which reads the process environment itself.
+    """
+    settings = get_settings()
+    credentials: dict[str, Any] = {}
+    if profile is not None and profile.api_key_env:
+        key = env_value(profile.api_key_env)
+        if key is None:
+            msg = f"Model '{model_id}' needs the variable {profile.api_key_env}, which is not set."
+            raise ValueError(msg)
+        credentials["api_key"] = key
+    elif profile is None or not profile.base_url:
+        if settings.openai_api_key:
+            credentials["api_key"] = settings.openai_api_key
+    if profile is not None and profile.base_url:
+        credentials["base_url"] = profile.base_url
+    elif settings.openai_base_url:
+        credentials["base_url"] = settings.openai_base_url
+    return credentials
+
+
 def build_chat_model(model_id: str, temperature: float | None = None) -> BaseChatModel:
     """One chat model per `provider:model` id, without importing lazy providers
     that a keyless run never uses."""
     provider, _, name = model_id.partition(":")
-    if provider == "openai":
+    profile = default_registry().profile(model_id)
+    if provider != "anthropic" and (provider == "openai" or (profile and profile.base_url)):
         from langchain_openai import ChatOpenAI  # noqa: PLC0415 - provider is imported only when used
 
         settings = get_settings()
-        credentials: dict[str, Any] = {}
-        if settings.openai_api_key:
-            credentials["api_key"] = settings.openai_api_key
-        if settings.openai_base_url:
-            credentials["base_url"] = settings.openai_base_url
+        credentials = _credentials(model_id, profile)
         # Transient gateway errors (5xx timeouts) retry with the openai
         # client; a long agent conversation tolerates the added latency.
         # Streaming keeps bytes flowing so the gateway's ~90s no-response

@@ -286,6 +286,50 @@
   ],
   "value_lists": [
     {
+      "key": "resolution_strategy",
+      "title": "Resolution method",
+      "values": [
+        { "key": "prioritize", "title": "Priority to one wish", "description": "One of the wishes takes priority over the other." },
+        { "key": "compromise", "title": "Compromise", "description": "Both sides give up part of what they want." },
+        { "key": "split", "title": "Division by scope", "description": "Each side receives what it wants in a different part or a different release." },
+        { "key": "alternative", "title": "Alternative solution", "description": "A third option serves both sides." },
+        { "key": "drop", "title": "Removal", "description": "The requirement or the wish is left out." }
+      ]
+    },
+    {
+      "key": "source_type",
+      "title": "Type of source",
+      "values": [
+        { "key": "study", "title": "Study", "description": "A published study or research paper." },
+        { "key": "survey", "title": "Survey", "description": "The answers of many people to the same questions." },
+        { "key": "interview", "title": "Interview", "description": "A conversation with one person." },
+        { "key": "forum_thread", "title": "Forum thread", "description": "A discussion between users on a forum or a community site." },
+        { "key": "complaint_log", "title": "Complaint records", "description": "Complaints or support requests, as they were written." },
+        { "key": "news", "title": "News article", "description": "An article of a newspaper or a news site." },
+        { "key": "vendor", "title": "Company material", "description": "Material that a company wrote to describe or sell its product." },
+        { "key": "other", "title": "Other", "description": "A source that fits none of the kinds above." }
+      ]
+    },
+    {
+      "key": "check_result",
+      "title": "Result of a check",
+      "values": [
+        { "key": "passed", "title": "Passed", "description": "The documents meet what the check asks." },
+        { "key": "failed", "title": "Failed", "description": "The documents do not meet what the check asks." },
+        { "key": "partly", "title": "Partly passed", "description": "Some of the documents meet it and some do not." }
+      ]
+    },
+    {
+      "key": "message_kind",
+      "title": "Kind of message",
+      "values": [
+        { "key": "opening", "title": "Opening question", "description": "The question that starts the interview." },
+        { "key": "follow_up", "title": "Follow-up question", "description": "A question that digs into what the person just said." },
+        { "key": "new_topic", "title": "Question on a new topic", "description": "A question that moves on to another topic of the plan." },
+        { "key": "answer", "title": "Answer", "description": "What the person says in reply to a question." }
+      ]
+    },
+    {
       "key": "priority",
       "title": "Priority",
       "values": [
@@ -316,7 +360,9 @@
         { "key": "syntactic", "title": "Unclear sentence", "description": "A sentence structure that allows more than one reading." },
         { "key": "semantic", "title": "Unclear meaning", "description": "A sentence whose meaning in its context is unclear." },
         { "key": "vague", "title": "Vague", "description": "A term without a measurable meaning, such as fast or easy." },
-        { "key": "incomplete", "title": "Missing information", "description": "Information needed to act on the statement is missing." }
+        { "key": "incomplete", "title": "Missing information", "description": "Information needed to act on the statement is missing." },
+        { "key": "pragmatic", "title": "Dependence on context", "description": "A sentence that means different things in different situations." },
+        { "key": "referential", "title": "Unclear reference", "description": "A word such as it or they that could point to more than one thing." }
       ]
     },
     {
@@ -325,7 +371,8 @@
       "values": [
         { "key": "between_requirements", "title": "Between requirements", "description": "Two requirements that cannot both be met." },
         { "key": "between_stakeholders", "title": "Between stakeholders", "description": "Personas who want things that cannot all hold." },
-        { "key": "with_constraint", "title": "With a constraint", "description": "A requirement that breaks a stated constraint." }
+        { "key": "with_constraint", "title": "With a constraint", "description": "A requirement that breaks a stated constraint." },
+        { "key": "organizational", "title": "With organizational policy", "description": "A requirement that clashes with a rule, a policy or the interest of another team." }
       ]
     },
     {

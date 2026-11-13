@@ -29,11 +29,12 @@ from functools import wraps
 from typing import TYPE_CHECKING, Any, TypeVar, cast
 
 import structlog
+from langchain_core.messages import AIMessage, BaseMessage
 from langchain_core.runnables import RunnableConfig
 from pydantic import BaseModel
 
 from khoailanggraph.agents import prompts as prompt_loader
-from khoailanggraph.agents.requirements_engineering import orchestrator
+from khoailanggraph.agents.requirements_engineering import corpus_search, orchestrator, review
 from khoailanggraph.agents.requirements_engineering.decisions import (
     AppliedDecision,
     DecisionResult,
@@ -47,6 +48,9 @@ from khoailanggraph.agents.requirements_engineering.definition import (
 )
 from khoailanggraph.agents.requirements_engineering.definition import link_types as get_link_types
 from khoailanggraph.agents.requirements_engineering.definition import nodes as definition_nodes
+from khoailanggraph.agents.requirements_engineering.definition import (
+    persona_aspects as definition_persona_aspects,
+)
 from khoailanggraph.agents.requirements_engineering.definition import value_lists as get_value_lists
 from khoailanggraph.agents.requirements_engineering.outputs import (
     AnalystOutput,
@@ -60,10 +64,13 @@ from khoailanggraph.agents.requirements_engineering.outputs import (
     LinkRef,
     MessageLink,
     MinerOutput,
+    NewSource,
     PersonaAnswerOutput,
     PlannerOutput,
+    PlannerQuestionsOutput,
     ValidatorOutput,
     generator_output_for,
+    interviewer_output_for,
 )
 from khoailanggraph.agents.requirements_engineering.ports import (
     ArtifactSink,
@@ -130,6 +137,35 @@ def _log_decision(
 def _configurable(config: Mapping[str, Any] | RunnableConfig | None) -> Mapping[str, Any]:
     value = dict(config or {}).get("configurable", {})
     return value if isinstance(value, dict) else {}
+
+
+def _review_for(state: REState, checkpoint: str, output: Any) -> dict[str, Any]:
+    """The state update that keeps what a node wrote for the review after it."""
+    brief = getattr(output, "review", None)
+    if brief is None:
+        return {}
+    briefs = {**state.get("review_briefs", {}), checkpoint: brief.model_dump(mode="json")}
+    return {"review_briefs": briefs}
+
+
+def _decisions_of(state: REState, checkpoint: str) -> str:
+    """What the user decided at the latest review of `checkpoint`, when they answered questions of
+    the agent there: the lines that the agents after it read as part of their instruction."""
+    for outcome in reversed(state["checkpoint_outcomes"]):
+        if outcome["node"] == checkpoint:
+            return outcome["feedback"] if not outcome.get("automatic") else ""
+    return ""
+
+
+def _instruction(*parts: str) -> str:
+    """The parts that are not empty, one after the other."""
+    return "\n\n".join(part for part in parts if part)
+
+
+def _tell_user(sink: ArtifactSink, output: Any) -> None:
+    """What the node tells the user: its notes while it worked, then its report as a message."""
+    sink.add_notes([note.model_dump() for note in output.notes])
+    sink.add_report(output.report)
 
 
 def _sink(config: Mapping[str, Any] | RunnableConfig | None) -> ArtifactSink:
@@ -234,6 +270,29 @@ def _invoke[T: BaseModel](
     raise last_error
 
 
+def _chat_turn(
+    role: str,
+    config: Mapping[str, Any] | RunnableConfig | None,
+    model: Any,
+    messages: list[BaseMessage],
+) -> AIMessage:
+    """One turn of a conversation with a model that has tools, counted like any other call."""
+    gate = cast("LlmGate | None", _configurable(config).get("llm_gate"))
+    model_id = resolve_model_id(role, cast("Mapping[str, Any]", config))
+    if gate is not None:
+        gate.before_call(role)
+    handler = UsageHandler(
+        on_text=None if gate is None else (lambda text: gate.record_text(role, text))
+    )
+    started = time.monotonic()
+    try:
+        return cast("AIMessage", model.invoke(messages, config={"callbacks": [handler]}))
+    finally:
+        if gate is not None:
+            elapsed = int((time.monotonic() - started) * 1000)
+            gate.record_call(role, model_id, handler.usage(model_id, elapsed))
+
+
 # ---------------------------------------------------------------------------
 # The safe_node wrapper (kept from the prototype)
 
@@ -300,7 +359,7 @@ def _content_words(text: str) -> frozenset[str]:
     )
 
 
-def match_plan_value(value: str, allowed: list[str]) -> str | None:
+def match_plan_value(value: str, allowed: Sequence[str]) -> str | None:
     """The plan term `value` stands for, verbatim; None when it matches none.
 
     The controlled vocabulary of the plan is the one the artifacts must
@@ -532,23 +591,96 @@ def planner_node(
     state: REState,
     config: RunnableConfig | None = None,
 ) -> dict[str, Any]:
+    """Plan the elicitation, in one or two rounds.
+
+    A round first asks whether what the planner knows (the idea, what the user asked to change
+    and the plan that exists) leaves open something that would change the plan. With questions,
+    the round ends there: the checkpoint asks them and the planner comes back, with the answers
+    as a part of the idea, to write the plan. With none, or when that checkpoint is off, the plan
+    is written at once."""
     cfg = _run_config(state)
+    sink = _sink(config or {})
+    context = _planner_context(state, config, sink)
+    if _may_ask(state, cfg):
+        asked: PlannerQuestionsOutput = _invoke(
+            "planner",
+            config or {},
+            PlannerQuestionsOutput,
+            {**context, "task": PLANNER_CLARIFY_TASK},
+        )
+        _tell_user(sink, asked)
+        if asked.questions:
+            return {
+                "review_briefs": _plan_brief(state, asked.questions),
+                "current_stage": "planning",
+            }
     plan: PlannerOutput = _invoke(
         "planner",
         config or {},
         PlannerOutput,
-        {"output_language": _language(cfg), "intent": state["initial_intent"]},
+        {**context, "task": PLANNER_PLAN_TASK},
     )
-    sink = _sink(config or {})
     created = sink.create_artifact(
         state["project_id"],
         "elicitation_plan",
         title="Elicitation plan",
-        content=plan.model_dump(mode="json", exclude={"report", "summary"}),
+        content=plan.model_dump(mode="json", exclude={"report", "notes", "summary"}),
         summary=plan.summary,
     )
-    sink.add_report(plan.report)
-    return {"elicitation_plan": dict(created), "current_stage": "planning"}
+    _tell_user(sink, plan)
+    # Nothing waits to be asked any more: a later planning round must not ask what is settled.
+    return {
+        "elicitation_plan": dict(created),
+        "review_briefs": _plan_brief(state, []),
+        "current_stage": "planning",
+    }
+
+
+PLANNER_CLARIFY_TASK = (
+    "Do not write the plan yet. Read the idea and decide whether it leaves open something that "
+    "would change the plan, the research or the interviews. Return the questions for the user, "
+    "or none, in the output format."
+)
+PLANNER_PLAN_TASK = (
+    "Plan the elicitation for the product above. If the idea includes clarifications from the "
+    "user, they are settled: write the plan from the idea and from them. If there is a directive "
+    "and a current plan, make the plan again as the directive says. Return the elicitation plan "
+    "in the output format."
+)
+
+
+def _planner_context(
+    state: REState, config: RunnableConfig | None, sink: ArtifactSink
+) -> dict[str, str]:
+    """What the planner reads in every round: the idea, what the user asked to change when the
+    plan is made again, and the plan that exists."""
+    record = sink.read_artifact(state["project_id"], "elicitation_plan")
+    return {
+        "output_language": _language(_run_config(state)),
+        "intent": state["initial_intent"],
+        "directive": _directive_for(state, config, "checkpoint_plan"),
+        "current_plan": "(none yet)"
+        if record is None
+        else json.dumps(record["content"], ensure_ascii=False),
+    }
+
+
+def _may_ask(state: REState, cfg: Any) -> bool:
+    """Whether this planning round starts by asking: the plan checkpoint is on and the user has
+    not answered it in this run. The planner itself decides whether it has a question."""
+    answered = any(
+        outcome["node"] == "checkpoint_plan" for outcome in state.get("checkpoint_outcomes", [])
+    )
+    return "checkpoint_plan" in cfg.review_checkpoints and not answered
+
+
+def _plan_brief(state: REState, questions: Sequence[BaseModel]) -> dict[str, Any]:
+    """The review briefs with the questions that the plan checkpoint asks, replacing any left by
+    an earlier round."""
+    return {
+        **state.get("review_briefs", {}),
+        "checkpoint_plan": {"questions": [q.model_dump(mode="json") for q in questions]},
+    }
 
 
 def _plan_terms(
@@ -570,13 +702,31 @@ def _plan_terms(
 def _stop_prior_failure(state: REState) -> bool:
     """True when a node earlier in the plain-edge chain already failed.
 
-    The research stage sits on plain edges (`planner → corpus_builder →
-    stakeholder_miner → persona_generator → checkpoint_personas`), and
+    The research stage sits on plain edges (`planner → checkpoint_plan →
+    corpus_builder → stakeholder_miner → persona_generator → ask_personas`), and
     conditional routing reads `status` only at routing points — so without
     this guard, a failed node's plain successors still execute and their
     own surface error would overwrite the root cause's.
     """
     return bool(state.get("status") == "failed")
+
+
+def _search_for_corpus(
+    state: REState,
+    config: RunnableConfig | None,
+    search: Callable[..., list[dict[str, Any]]],
+    plan_json: str,
+    target: int,
+) -> list[dict[str, Any]]:
+    """The pages that the corpus builder finds by searching on its own, for the plan."""
+    model = get_chat_model("corpus_builder", config or {}).bind_tools([corpus_search.SearchWeb])
+    sink = _sink(config or {})
+    return corpus_search.run_search_loop(
+        lambda messages: _chat_turn("corpus_builder", config, model, messages),
+        search,
+        corpus_search.task_messages(str(state["initial_intent"]), plan_json, target),
+        on_search=lambda note: sink.add_notes([note]),
+    )
 
 
 @safe_node
@@ -599,12 +749,21 @@ def corpus_builder_node(
     plan_record, topics, stakeholder_types = _plan_terms(sink, state)
 
     search = research_search_of(config or {})
-    documents_tool = (dict(config or {}).get("configurable") or {}).get("project_documents")
+    documents_tool = _configurable(config).get("project_documents")
     uploaded = documents_tool(str(state["project_id"])) if documents_tool is not None else []
-    hits = [
-        *uploaded,
-        *search(research_queries(topics, stakeholder_types, state["initial_intent"])),
-    ]
+    plan_json = (
+        json.dumps(plan_record["content"], ensure_ascii=False)
+        if plan_record is not None
+        else "(no plan; cover the intent's obvious stakeholder types)"
+    )
+    found = _search_for_corpus(
+        state, config, search, plan_json, int(cfg.parameters.target_sources_num)
+    )
+    if not found:
+        # The agent searched for nothing (a model that never calls the tool): fall back to the
+        # queries that the plan itself suggests, so that a run still has documents to choose from.
+        found = search(research_queries(topics, stakeholder_types, state["initial_intent"]))
+    hits = [*uploaded, *found]
     known_urls = {str(hit.get("url", "")) for hit in hits}
     hits_lines = "\n".join(json.dumps(hit, ensure_ascii=False) for hit in hits) or "(no hits)"
 
@@ -615,11 +774,7 @@ def corpus_builder_node(
         {
             "output_language": _language(cfg),
             "intent": state["initial_intent"],
-            "plan": (
-                json.dumps(plan_record["content"], ensure_ascii=False)
-                if plan_record is not None
-                else "(no plan; cover the intent's obvious stakeholder types)"
-            ),
+            "plan": plan_json,
             "target_sources_num": str(cfg.parameters.target_sources_num),
             "search_results": hits_lines,
         },
@@ -629,6 +784,34 @@ def corpus_builder_node(
         msg = f"corpus builder selected invented documents: {outside}"
         raise ValueError(msg)
 
+    if not draft.sources and hits:
+        # The model kept nothing although the search answered (seen on thin
+        # results). Keep the top hits instead of failing: they are real search
+        # results, and the transcript/corpus still trace to real URLs.
+        wanted = max(1, int(cfg.parameters.target_sources_num))
+        fallback = []
+        for index, hit in enumerate(hits[:wanted], 1):
+            text = str(hit.get("text", "") or "")
+            fallback.append(
+                NewSource(
+                    ref=f"SRC-{index:03d}",
+                    title=str(hit.get("title", "") or f"Source {index}"),
+                    url=str(hit.get("url", "")),
+                    publisher=str(hit.get("publisher", "") or "web"),
+                    source_type="other",
+                    year=str(hit.get("year", "") or ""),
+                    excerpt=text[:400],
+                    text=text,
+                    relevance_reason="Kept automatically: top search result for the plan topics.",
+                    origin="web",
+                )
+            )
+        draft.sources = fallback
+        logger.warning(
+            "corpus builder kept nothing; top search hits kept instead",
+            kept=len(fallback),
+            hits=len(hits),
+        )
     if not draft.sources:
         msg = (
             "research found no source document to mine: the web search returned "
@@ -657,11 +840,72 @@ def corpus_builder_node(
             ref=source.ref,
         )
         sources.append(dict(item))
-    sink.add_report(draft.report)
+    _tell_user(sink, draft)
     return {
         "research_corpus": dict(corpus),
         "current_stage": "research",
     }
+
+
+SALVAGE_SENTENCE_MIN = 60
+SALVAGE_SENTENCE_MAX = 400
+
+
+def _salvage_observations(
+    sink: ArtifactSink,
+    artifact_id: str,
+    source_records: Sequence[Mapping[str, Any]],
+    observations: list[dict[str, Any]],
+    ref_number: int,
+) -> int:
+    """Keep one verbatim sentence per document when the model quoted loosely on every source.
+
+    The corpus stays mineable and every quote stays in its source; the warning records that this
+    was a salvage path. Returns the last observation number used."""
+    for record in source_records:
+        sentence = next(
+            (
+                part.strip()
+                for part in str(record["content"].get("text", "")).split(". ")
+                if SALVAGE_SENTENCE_MIN <= len(part.strip()) <= SALVAGE_SENTENCE_MAX
+            ),
+            "",
+        )
+        if not sentence:
+            continue
+        ref_number += 1
+        item = sink.add_item(
+            artifact_id,
+            "stakeholder_observation",
+            {
+                "stakeholder_name": "Document",
+                "description": "Context stated by the source document.",
+                "dimension": "context",
+                "evidence": sentence,
+                "source": str(record["key"]),
+            },
+            ref=f"O{ref_number}",
+        )
+        sink.add_link(
+            source_id=item["item_id"],
+            target_id=record["item_id"],
+            link_type="evidenced_by",
+        )
+        observations.append(dict(item))
+        logger.warning("miner salvaged a sentence", source=str(record["key"]))
+    return ref_number
+
+
+def _reading_report(readings: Sequence[tuple[str, str]]) -> str:
+    """One message for the whole mining step: what was found in each document, under its title.
+
+    A single document gives one line; several give one bullet each, so the user can tell which
+    document each finding is about."""
+    lines = [
+        f"**{title.replace('*', '').strip() or 'Document'}**: {report.strip()}"
+        for title, report in readings
+    ]
+    return lines[0] if len(lines) == 1 else "\n".join(f"- {line}" for line in lines)
 
 
 @safe_node
@@ -692,6 +936,7 @@ def stakeholder_miner_node(
 
     observations: list[ItemRefDict] = []
     ref_number = 0
+    readings: list[tuple[str, str]] = []
     for record in source_records:
         document = str(record["content"].get("text", ""))
         draft: MinerOutput = _invoke(
@@ -714,6 +959,13 @@ def stakeholder_miner_node(
                     actual=str(record["key"]),
                 )
                 continue
+            if mined.evidence not in document:
+                # The model may quote with different casing; recover the exact
+                # words from the document so the quote stays verbatim.
+                lowered = document.lower()
+                position = lowered.find(str(mined.evidence).lower())
+                if position != -1 and str(mined.evidence):
+                    mined.evidence = document[position : position + len(str(mined.evidence))]
             if mined.evidence not in document:
                 logger.warning(
                     "miner observation skipped: evidence not verbatim",
@@ -742,7 +994,15 @@ def stakeholder_miner_node(
                 ),
             )
             observations.append(dict(item))
-        sink.add_report(draft.report)
+        sink.add_notes([note.model_dump() for note in draft.notes])
+        readings.append((str(record["content"].get("title", "")), draft.report))
+    if not observations:
+        ref_number = _salvage_observations(
+            sink, corpus["artifact_id"], source_records, observations, ref_number
+        )
+
+    if readings:
+        sink.add_report(_reading_report(readings))
     return {
         "observations": observations,
         "current_stage": "research",
@@ -753,12 +1013,26 @@ def _check_groups(
     draft: GeneratorOutputV2,
     known_observations: dict[str, ItemRecord],
 ) -> None:
-    """Every consolidated group cites observation keys that exist."""
+    """A group keeps only observation keys that exist; unknown ones are dropped.
+
+    The model sometimes cites a key it invented (INTENT-01) when the corpus is
+    thin; dropping the key keeps the run alive instead of failing at the
+    generator, and the warning names what was dropped."""
+    kept_groups = []
     for group in draft.stakeholder_groups:
-        for key in group.observations:
-            if key not in known_observations:
-                msg = f"group '{group.name}' consolidates unknown observation key '{key}'"
-                raise ValueError(msg)
+        valid = [key for key in group.observations if key in known_observations]
+        dropped = [key for key in group.observations if key not in known_observations]
+        if dropped:
+            logger.warning(
+                "persona group keys dropped",
+                group=group.name,
+                dropped=dropped,
+                kept=valid,
+            )
+        group.observations = valid
+        if valid:
+            kept_groups.append(group)
+    draft.stakeholder_groups = kept_groups
 
 
 def _check_persona_grounding(
@@ -791,6 +1065,22 @@ def _check_persona_grounding(
             raise ValueError(msg)
 
 
+def _plan_types_only(values: Sequence[str], allowed: Sequence[str]) -> list[str]:
+    """The stakeholder types of `values` that the plan names, written as the plan writes them.
+
+    The model phrases a plan term without its sentence punctuation, so the match is tolerant. The
+    list of uncovered types is a note for the user: a type outside the plan is left out (logged)
+    instead of failing the run."""
+    kept = []
+    for value in values:
+        matched = match_plan_value(value, allowed)
+        if matched is None:
+            logger.warning("stakeholder type outside plan dropped", value=value)
+        else:
+            kept.append(matched)
+    return kept
+
+
 @safe_node
 def persona_generator_node(
     state: REState,
@@ -817,10 +1107,13 @@ def persona_generator_node(
         prompt_views(observation_records) or "(none mined; fall back to the intent)"
     )
 
+    aspects = persona_aspect_list(
+        cast("dict[str, Any]", plan_record["content"]) if plan_record is not None else None
+    )
     draft: GeneratorOutputV2 = _invoke(
         "persona_generator",
         config or {},
-        generator_output_for(sorted(known_observations)),
+        generator_output_for(sorted(known_observations), [entry["key"] for entry in aspects]),
         {
             "output_language": _language(cfg),
             "intent": state["initial_intent"],
@@ -830,6 +1123,7 @@ def persona_generator_node(
                 else "(no plan; cover the intent's obvious stakeholder types)"
             ),
             "observations": observations_lines,
+            "aspects": aspect_lines(aspects),
             "target_personas_num": str(cfg.parameters.target_personas_num),
         },
     )
@@ -837,17 +1131,9 @@ def persona_generator_node(
     if plan_record is not None:
         plan_content = cast("dict[str, list[str]]", plan_record["content"])
         allowed = plan_content.get("stakeholder_types", [])
-        # Same tolerant matching as the personas themselves: the model phrases
-        # a plan term without its sentence punctuation ("…staff" for the
-        # plan's "…staff."), and punctuation must not decide the match.
-        outside = [
-            value
-            for value in draft.uncovered_stakeholder_types
-            if match_plan_value(value, allowed) is None
-        ]
-        if outside:
-            msg = f"personas listed unknown stakeholder types: {outside}"
-            raise ValueError(msg)
+        draft.uncovered_stakeholder_types = _plan_types_only(
+            draft.uncovered_stakeholder_types, allowed
+        )
     else:
         allowed = []
     _check_groups(draft, known_observations)
@@ -869,8 +1155,39 @@ def persona_generator_node(
     )
     personas: list[ItemRefDict] = []
     for persona_draft in draft.personas:
+        # The generator sometimes cites a key it invented (INTENT-001) or alters
+        # the quote when the corpus is thin. Drop what cannot be grounded; a
+        # persona left without evidence is skipped instead of failing the run.
+        kept_evidence = []
+        for entry in persona_draft.evidence:
+            if entry.observation not in known_observations:
+                # An invented key (INTENT-001) is dropped; a quote that drifts
+                # from a real observation still fails the run in the check below.
+                logger.warning(
+                    "persona evidence dropped: unknown observation",
+                    persona=str(getattr(persona_draft, "name", "?")),
+                    observation=str(entry.observation),
+                )
+                continue
+            kept_evidence.append(entry)
+        persona_draft.evidence = kept_evidence
+        persona_draft.grounded_in = [
+            key for key in persona_draft.grounded_in if key in known_observations
+        ]
+        if not kept_evidence:
+            logger.warning(
+                "persona skipped: no grounded evidence",
+                persona=str(getattr(persona_draft, "name", "?")),
+            )
+            continue
         _check_persona_grounding(persona_draft, known_observations)
         content = persona_draft.model_dump(mode="json", exclude={"ref"})
+        # The trait as the user reads it comes from the aspect, not from the model.
+        titles = {entry["key"]: entry["title"] for entry in aspects}
+        content["scores"] = [
+            {**score, "title": titles.get(score["aspect"], score["aspect"])}
+            for score in content.get("scores", [])
+        ]
         if allowed:
             matched = match_plan_value(str(content.get("stakeholder_type", "")), allowed)
             if matched is None:
@@ -895,7 +1212,10 @@ def persona_generator_node(
                 target_id=known_observations[key]["item_id"],
                 link_type="grounded_in",
             )
-    sink.add_report(draft.report)
+    _tell_user(sink, draft)
+    if not personas:
+        msg = "every persona cited unknown observations; nothing grounded to write"
+        raise ValueError(msg)
     return {
         "personas": personas,
         "interview_transcripts": [],
@@ -903,6 +1223,7 @@ def persona_generator_node(
         "active_persona_index": 0,
         "interviewer_stop": False,
         "current_stage": "persona_generation",
+        **_review_for(state, "checkpoint_personas", draft),
     }
 
 
@@ -951,6 +1272,9 @@ def _transcript_of(
             "status": "in_progress",
             "turn_count": 0,
             "stop_reason": None,
+            "data_coverage": [],
+            "top_findings": [],
+            "follow_ups": [],
         },
         subject_id=persona["item_id"],
     )
@@ -987,51 +1311,71 @@ def _ask_interviewer(
     sink = _sink(config)
     plan_record = sink.read_artifact(state["project_id"], "elicitation_plan")
     plan_lines = "(no plan)"
-    if plan_record is not None:
-        plan_content = cast("dict[str, list[str]]", plan_record["content"])
-        plan_lines = "\n".join(
-            [
-                *(f"topic: {topic}" for topic in plan_content.get("topics", [])),
-                *(
-                    f"stop when: {condition}"
-                    for condition in plan_content.get("stopping_conditions", [])
-                ),
-            ]
-        )
+    plan = cast("dict[str, Any]", plan_record["content"]) if plan_record is not None else None
+    if plan is not None:
+        plan_lines = plan_lines_of(plan)
+    data_items = plan_data_items(plan)
     turn: InterviewerTurnOutput = _invoke(
         "interviewer",
         config,
-        InterviewerTurnOutput,
+        interviewer_output_for(
+            data_items,
+            [str(topic) for topic in (plan or {}).get("topics", [])],
+            [str(message["key"]) for message in messages[-TRANSCRIPT_TAIL:]],
+        ),
         {
             "output_language": _language(cfg),
             "plan": plan_lines,
+            "coverage": coverage_lines(data_items, messages),
             "persona": json.dumps(prompt_view(persona), ensure_ascii=False),
             "transcript": "\n".join(transcript_lines(persona["key"], messages[-TRANSCRIPT_TAIL:]))
             or "(none yet; this is the opening turn)",
             "turn": str(int(state["interview_turn"]) + 1),
             "limit_reached": "yes" if limit_reached else "",
-            "directive": _directive_for(state, config, "checkpoint_analysis"),
+            "directive": _instruction(
+                _decisions_of(state, "checkpoint_personas"),
+                _directive_for(state, config, "checkpoint_analysis"),
+            ),
         },
     )
     return turn
+
+
+def data_items_of(state: REState, sink: ArtifactSink) -> list[str]:
+    """The items of data that the plan of the project asks the interviews to bring back."""
+    plan_record = sink.read_artifact(state["project_id"], "elicitation_plan")
+    return plan_data_items(
+        cast("dict[str, Any]", plan_record["content"]) if plan_record is not None else None
+    )
 
 
 def _close_interview(
     sink: ArtifactSink,
     transcript: dict[str, Any],
     stop_reason: str,
-    summary: str | None,
+    turn: InterviewerTurnOutput,
+    coverage: list[dict[str, Any]],
 ) -> ArtifactRef:
     """End the interview of a persona: the transcript is completed, and the sentence that the
-    interviewer wrote about what the persona said becomes its summary."""
+    interviewer wrote about what the persona said becomes its summary. What the interviewer
+    tells the user about the interview is the report, a message of the chat."""
     closed = sink.update_artifact_content(
         transcript["artifact_id"],
-        dict(transcript["content"]) | {"status": "completed", "stop_reason": stop_reason},
+        dict(transcript["content"])
+        | {
+            "status": "completed",
+            "stop_reason": stop_reason,
+            "data_coverage": coverage,
+            "top_findings": list(turn.top_findings),
+            "follow_ups": list(turn.follow_ups),
+        },
     )
-    if summary:
-        sink.set_artifact_summary(transcript["artifact_id"], summary)
+    if turn.summary:
+        sink.set_artifact_summary(transcript["artifact_id"], turn.summary)
     else:
         logger.warning("interview closed without a summary", artifact=transcript["artifact_id"])
+    if turn.report:
+        sink.add_report(turn.report)
     return closed
 
 
@@ -1074,7 +1418,14 @@ def interviewer_node(
             persona = orchestrator.active_persona(state, sink)
             transcript, messages = _transcript_of(state, sink, persona)
             last = _ask_interviewer(state, runnable_config, persona, messages, limit_reached=True)
-            closed = _close_interview(sink, transcript, "max_turns", last.summary)
+            _record_what_the_last_answer_gave(sink, messages, last)
+            closed = _close_interview(
+                sink,
+                transcript,
+                "max_turns",
+                last,
+                _coverage_of(data_items_of(state, sink), messages, last.covered_by_last_answer),
+            )
             if int(state["active_persona_index"]) + 1 >= len(state["personas"]):
                 return {
                     **cursor,
@@ -1143,8 +1494,15 @@ def interviewer_node(
                 f"persona {persona['key']} llm_stop={turn.stop} final_stop={stop}",
             )
 
+        _record_what_the_last_answer_gave(sink, messages, turn)
         if stop:
-            closed = _close_interview(sink, transcript, "interviewer_stopped", turn.summary)
+            closed = _close_interview(
+                sink,
+                transcript,
+                "interviewer_stopped",
+                turn,
+                _coverage_of(data_items_of(state, sink), messages, turn.covered_by_last_answer),
+            )
             if int(state["active_persona_index"]) + 1 >= len(state["personas"]):
                 return {
                     **cursor,
@@ -1164,7 +1522,10 @@ def interviewer_node(
                 "speaker": INTERVIEWER_KEY,
                 "content": turn.question,
                 "iteration": int(state["iteration_count"]),
-                "topic": None,
+                "topic": turn.topic,
+                "message_kind": "opening" if not messages else (turn.question_kind or "follow_up"),
+                "follows_up_on": turn.follows_up_on,
+                "covers": [],
             },
         )
         return {
@@ -1172,6 +1533,138 @@ def interviewer_node(
             "interview_transcripts": _merge_transcripts(state, transcript),
             "current_stage": "interviewing",
         }
+
+
+def plan_data_items(plan: Mapping[str, Any] | None) -> list[str]:
+    """Every item of the data that the plan asks the interviews to bring back, once, in the order of
+    the plan."""
+    items: list[str] = []
+    for entry in [] if plan is None else plan.get("data_to_collect", []):
+        items.extend(str(item) for item in entry["needed"] if str(item) not in items)
+    return items
+
+
+def _covers_of(message: ItemRecord) -> list[str]:
+    """The data of the plan that the judged answer gave; empty for a question."""
+    return [str(item) for item in cast("list[object]", message["content"].get("covers", []))]
+
+
+def coverage_lines(data_items: Sequence[str], messages: Sequence[ItemRecord]) -> str:
+    """What the interview has brought back so far, one line for each item of data of the plan: the
+    ones that an answer gave are ticked."""
+    if not data_items:
+        return "(the plan lists no data to collect)"
+    covered = {item for message in messages for item in _covers_of(message)}
+    return "\n".join(f"- [{'x' if item in covered else ' '}] {item}" for item in data_items)
+
+
+def _coverage_of(
+    data_items: Sequence[str], messages: Sequence[ItemRecord], last: Sequence[str]
+) -> list[dict[str, Any]]:
+    """For each item of data of the plan, whether any answer of the interview gave it."""
+    covered = {item for message in messages for item in _covers_of(message)}
+    covered.update(last)
+    return [{"data": item, "covered": item in covered} for item in data_items]
+
+
+def _record_what_the_last_answer_gave(
+    sink: ArtifactSink, messages: Sequence[ItemRecord], turn: InterviewerTurnOutput
+) -> None:
+    """The interviewer judged what the last answer of the persona told: it is written on that
+    message, which the persona never reads."""
+    if not messages or messages[-1]["content"]["speaker"] == INTERVIEWER_KEY:
+        return
+    last = messages[-1]
+    sink.update_item_content(
+        str(last["item_id"]), {**last["content"], "covers": list(turn.covered_by_last_answer)}
+    )
+
+
+def plan_lines_of(plan: Mapping[str, Any]) -> str:
+    """The plan as the interviewer reads it, one line each: the questions to open with, the topics
+    with the data to bring back for each, and when to stop."""
+    lines = [f"opening question: {question}" for question in plan.get("opening_questions", [])]
+    needed = {
+        str(entry["topic"]): [str(item) for item in entry["needed"]]
+        for entry in plan.get("data_to_collect", [])
+    }
+    for topic in plan.get("topics", []):
+        lines.append(f"topic: {topic}")
+        lines.extend(f"  data to collect: {item}" for item in needed.get(str(topic), []))
+    lines.extend(f"stop when: {condition}" for condition in plan.get("stopping_conditions", []))
+    return "\n".join(lines)
+
+
+def persona_aspect_list(plan: Mapping[str, Any] | None) -> list[dict[str, str]]:
+    """The aspects every persona is scored on: the ones the system defines (the first tier), then
+    the ones that the plan proposes for the project (the second tier), without a repeated key."""
+    aspects = [{**entry, "tier": "system"} for entry in definition_persona_aspects()]
+    taken = {entry["key"] for entry in aspects}
+    for entry in [] if plan is None else plan.get("persona_aspects", []):
+        if str(entry["key"]) not in taken:
+            taken.add(str(entry["key"]))
+            aspects.append({**{k: str(v) for k, v in entry.items()}, "tier": "plan"})
+    return aspects
+
+
+def aspect_lines(aspects: Sequence[Mapping[str, str]]) -> str:
+    """The aspects as the persona generator reads them, one line each."""
+    return "\n".join(
+        f"- {entry['key']} ({entry['tier']}): {entry['title']}. {entry['description']} "
+        f"1 means: {entry['low']}. 5 means: {entry['high']}."
+        for entry in aspects
+    )
+
+
+PERSONA_ANSWER_LIMIT = 600
+
+
+def _clip_answer(text: str, limit: int = PERSONA_ANSWER_LIMIT) -> str:
+    """A persona answer that is far longer than a person would say is cut at the end of the last
+    sentence that fits; a text of one long sentence is cut at a word."""
+    text = text.strip()
+    if len(text) <= limit:
+        return text
+    head = text[:limit]
+    ends = [head.rfind(mark) for mark in (". ", "? ", "! ")]
+    end = max(ends)
+    if end > limit // 2:
+        return head[: end + 1]
+    return head[: head.rfind(" ")].rstrip(",;:") + "..."
+
+
+PERSONA_KNOWLEDGE_LINES = 12
+PERSONA_KNOWLEDGE_CHARS = 4000
+
+
+def _persona_knowledge(state: REState, sink: ArtifactSink, persona: ItemRecord) -> str:
+    """What the persona knows from research, besides its own profile: what the stakeholder group it
+    is built from said in the research documents, one line for each observation. The observations
+    the persona is grounded in come first. Without mined observations the persona has only its
+    profile."""
+    records = [sink.read_item(reference["item_id"]) for reference in state.get("observations", [])]
+    if not records:
+        return "(none)"
+    grounded = set(cast("list[str]", persona["content"].get("grounded_in", [])))
+    groups = {
+        str(record["content"]["stakeholder_name"])
+        for record in records
+        if record["key"] in grounded
+    }
+    own = [record for record in records if record["key"] in grounded]
+    others = [
+        record
+        for record in records
+        if record["key"] not in grounded and str(record["content"]["stakeholder_name"]) in groups
+    ]
+    lines: list[str] = []
+    for record in [*own, *others][:PERSONA_KNOWLEDGE_LINES]:
+        content = record["content"]
+        lines.append(
+            f"- {content['stakeholder_name']}, judging by {content['dimension']}: "
+            f'{content["description"]} In a research document: "{content["evidence"]}"'
+        )
+    return "\n".join(lines)[:PERSONA_KNOWLEDGE_CHARS] or "(none)"
 
 
 @safe_node
@@ -1204,6 +1697,7 @@ def persona_agent_node(
         {
             "output_language": _language(cfg),
             "persona": json.dumps(prompt_view(persona), ensure_ascii=False),
+            "knowledge": _persona_knowledge(state, sink, persona),
             "question": question,
             "conversation": "\n".join(transcript_lines(persona["key"], messages[-TRANSCRIPT_TAIL:]))
             or "(none)",
@@ -1216,9 +1710,12 @@ def persona_agent_node(
         {
             "turn": turn_no,
             "speaker": str(persona["key"]),
-            "content": answer.answer,
+            "content": _clip_answer(answer.answer),
             "iteration": int(state["iteration_count"]),
-            "topic": None,
+            "topic": messages[-1]["content"].get("topic"),
+            "message_kind": "answer",
+            "follows_up_on": None,
+            "covers": [],
         },
     )
     closed = sink.update_artifact_content(
@@ -1279,6 +1776,78 @@ def _normalize_analyzed_quality(analysis: AnalystOutput) -> None:
                 note="value outside the quality_category value list",
             )
             analyzed_draft.quality_category = None
+
+
+_AMBIGUITY_SYNONYMS = {
+    "ambiguous": "vague",
+    "inconsistent": "semantic",
+    "contradictory": "semantic",
+    "conflicting": "semantic",
+    "unclear": "vague",
+    "missing": "incomplete",
+    "undefined": "incomplete",
+    "grammar": "syntactic",
+    "wording": "lexical",
+    "terminology": "lexical",
+}
+_CONFLICT_SYNONYMS = {
+    "requirements": "between_requirements",
+    "requirement": "between_requirements",
+    "stakeholders": "between_stakeholders",
+    "stakeholder": "between_stakeholders",
+    "constraint": "with_constraint",
+    "constraints": "with_constraint",
+}
+_PRIORITY_SYNONYMS = {
+    "high": "must",
+    "critical": "must",
+    "mandatory": "must",
+    "required": "must",
+    "medium": "should",
+    "normal": "should",
+    "low": "could",
+    "optional": "could",
+}
+
+
+def _normalize_enum(
+    value: object, allowed: list[str], synonyms: dict[str, str], fallback: str
+) -> str:
+    text = str(value)
+    if text in allowed:
+        return text
+    matched = match_plan_value(text, allowed) or synonyms.get(text.strip().casefold())
+    return matched if matched in allowed else fallback
+
+
+def _normalize_analyst_enums(analysis: AnalystOutput) -> None:
+    """Map the model's enum words onto the value lists before the items are
+    written (an out-of-list value would fail the whole run at the sink)."""
+    ambiguity_values = [str(e["key"]) for e in get_value_lists().get("ambiguity_type", [])]
+    if ambiguity_values:
+        fallback = "vague" if "vague" in ambiguity_values else ambiguity_values[0]
+        for ambiguity in analysis.ambiguity_issues:
+            ambiguity.ambiguity_type = _normalize_enum(
+                ambiguity.ambiguity_type, ambiguity_values, _AMBIGUITY_SYNONYMS, fallback
+            )
+    conflict_values = [str(e["key"]) for e in get_value_lists().get("conflict_type", [])]
+    if conflict_values:
+        fallback = (
+            "between_requirements"
+            if "between_requirements" in conflict_values
+            else conflict_values[0]
+        )
+        for conflict in analysis.conflicts:
+            conflict.conflict_type = _normalize_enum(
+                conflict.conflict_type, conflict_values, _CONFLICT_SYNONYMS, fallback
+            )
+    priorities = [str(e["key"]) for e in get_value_lists().get("priority", [])]
+    if priorities:
+        fallback = "should" if "should" in priorities else priorities[0]
+        for analyzed in analysis.analyzed_requirements:
+            analyzed.priority = _normalize_enum(
+                analyzed.priority, priorities, _PRIORITY_SYNONYMS, fallback
+            )
 
 
 def _normalize_analyst_links(analysis: AnalystOutput, known: Known) -> None:
@@ -1410,6 +1979,7 @@ def analyst_node(
         return item
 
     _normalize_raw_topics(analysis, plan_topic_values)
+    _normalize_analyst_enums(analysis)
     _normalize_analyst_links(analysis, known)
     _normalize_analyzed_quality(analysis)
 
@@ -1495,11 +2065,12 @@ def analyst_node(
         for issue in analysis.conflicts
         if issue.status == "open" and not issue.proposed_resolutions
     ]
-    sink.add_report(analysis.report)
+    _tell_user(sink, analysis)
     return {
         **refs,
         "response_analyst_status": "needs_interviews" if unresolved else "ok",
         "current_stage": "analysis",
+        **_review_for(state, "checkpoint_analysis", analysis),
     }
 
 
@@ -1672,7 +2243,10 @@ def requirement_engineer_node(
             )
             or "(none)",
             "current_specification": current_lines,
-            "directive": _directive_for(state, runnable_config, "checkpoint_spec"),
+            "directive": _instruction(
+                _decisions_of(state, "checkpoint_analysis"),
+                _directive_for(state, runnable_config, "checkpoint_spec"),
+            ),
         },
     )
 
@@ -1806,8 +2380,12 @@ def requirement_engineer_node(
     for spec_draft, item in zip(draft.requirements, written, strict=True):
         _link_each(sink, str(item["item_id"]), "depends_on", placeholder, spec_draft.depends_on)
 
-    sink.add_report(draft.report)
-    return {"requirement_specification": written, "current_stage": "specification"}
+    _tell_user(sink, draft)
+    return {
+        "requirement_specification": written,
+        "current_stage": "specification",
+        **_review_for(state, "checkpoint_spec", draft),
+    }
 
 
 @safe_node
@@ -1858,6 +2436,7 @@ def backlog_manager_node(
             | {
                 "product_goal": draft.product_goal,
                 "prioritization_notes": draft.prioritization_notes,
+                "definition_of_done": list(draft.definition_of_done),
             },
         )
         artifact_id: str = str(ref["artifact_id"])
@@ -1870,6 +2449,7 @@ def backlog_manager_node(
             content={
                 "product_goal": draft.product_goal,
                 "prioritization_notes": draft.prioritization_notes,
+                "definition_of_done": list(draft.definition_of_done),
             },
             summary=draft.summary,
         )
@@ -1894,8 +2474,18 @@ def backlog_manager_node(
     for draft_item, item in zip(draft.items, written, strict=True):
         _link_each(sink, str(item["item_id"]), "depends_on", placeholder, draft_item.depends_on)
 
-    sink.add_report(draft.report)
+    _tell_user(sink, draft)
     return {"product_backlog": written, "current_stage": "backlog"}
+
+
+def _normalized_check(check: Any) -> dict[str, str]:
+    """A check of the validator as the report keeps it: a result that is not in the value list
+    reads as the closest one, and `partly` when none is close."""
+    allowed = sorted(str(entry["key"]) for entry in get_value_lists().get("check_result", []))
+    result = str(check.result)
+    if result not in allowed:
+        result = match_plan_value(result, allowed) or "partly"
+    return {"check": str(check.check), "result": result, "note": str(check.note)}
 
 
 @safe_node
@@ -2029,7 +2619,11 @@ def validator_node(
         state["project_id"],
         "validation_report",
         title=f"Validation report, iteration {iteration}",
-        content={"iteration": iteration, "status": final_status},
+        content={
+            "iteration": iteration,
+            "status": final_status,
+            "checks": [_normalized_check(check) for check in draft.checks],
+        },
         summary=f"{len(draft.issues)} issue(s)",
     )
     for issue in draft.issues:
@@ -2068,12 +2662,44 @@ def validator_node(
         updates["current_stage"] = "done"
     else:
         updates["current_stage"] = "validation"
-    sink.add_report(draft.report)
+    _tell_user(sink, draft)
     return {**updates, "response_validator_status": final_status}
 
 
 # ---------------------------------------------------------------------------
 # The checkpoint factory (HITL per the v1 option keys: approval or feedback)
+
+
+def _take_default(node_id: str, stage: str, options: Sequence[Mapping[str, Any]]) -> dict[str, Any]:
+    """The outcome of a checkpoint that has nothing to ask: its default option, taken at once."""
+    outcome = {
+        "node": node_id,
+        "option": _default_key(options),
+        "feedback": "",
+        "automatic": True,
+        # Nothing was asked, so there is no answer for the user to read in the record.
+        "silent": True,
+    }
+    return {"checkpoint_outcomes": [outcome], "current_stage": stage}
+
+
+def _default_key(options: Sequence[Mapping[str, Any]]) -> str:
+    """The key of the default option; empty for a checkpoint that only asks and has no option."""
+    chosen = next((opt for opt in options if opt.get("is_default")), None)
+    return "" if chosen is None else str(chosen["key"])
+
+
+def _questions_to_ask(spec: Mapping[str, Any], state: REState) -> list[dict[str, Any]]:
+    """The questions of an `ask` checkpoint, which the agent chose.
+
+    They are in the brief that an agent wrote for the review that follows (`asks_before`), or, with
+    no review after it, in the brief written for the checkpoint itself."""
+    key = str(spec.get("asks_before") or spec["id"])
+    brief = state.get("review_briefs", {}).get(key)
+    questions: list[dict[str, Any]] = review.checkpoint_review(
+        {**spec, "agent_questions": True}, brief
+    )["questions"]
+    return questions
 
 
 def make_checkpoint(
@@ -2099,6 +2725,10 @@ def make_checkpoint(
         state: REState,
         config: RunnableConfig | None = None,
     ) -> dict[str, Any]:
+        # A checkpoint sits on a plain edge in places (checkpoint_plan right after the
+        # planner), so a failure earlier in the chain must not become a wait for the user.
+        if _stop_prior_failure(state):
+            return {}
         sink = _sink(config or {})
         cfg = _run_config(state)
         records = [
@@ -2116,22 +2746,33 @@ def make_checkpoint(
             for record in records
         ]
         if node_id in cfg.review_checkpoints:
+            if spec.get("purpose") == "ask":
+                questions = _questions_to_ask(spec, state)
+                if not questions:
+                    # Nothing to ask: the run goes on at once, without a pause that has no point.
+                    return _take_default(node_id, stage, options)
+                asked = {"prompt": spec["prompt"], "options": options, "questions": questions}
+            else:
+                asked = review.checkpoint_review(spec, state.get("review_briefs", {}).get(node_id))
             payload: dict[str, object] = {
                 "node": node_id,
-                "prompt": str(spec.get("prompt", "")),
-                "options": options,
-                "questions": list(spec.get("questions", [])),
+                "prompt": asked["prompt"],
+                "options": asked["options"],
+                "questions": asked["questions"],
                 "allow_edits": bool(spec.get("allow_edits", False)),
                 "review_artifacts": review_artifacts,
             }
             return {"status": "interrupted", "current_stage": stage, "interrupt_payload": payload}
 
-        chosen = next(opt for opt in options if opt.get("is_default"))
+        chosen: dict[str, Any] = next((opt for opt in options if opt.get("is_default")), {})
         outcome = {
             "node": node_id,
-            "option": str(chosen["key"]),
+            "option": _default_key(options),
             "feedback": "",
             "automatic": True,
+            # A checkpoint with no document under review has nothing to answer yet, so the
+            # record does not show a default that nobody could have given.
+            "silent": not records,
         }
         if bool(chosen.get("approves")):
             for record in records:
@@ -2142,6 +2783,11 @@ def make_checkpoint(
     return node
 
 
+checkpoint_plan = make_checkpoint("checkpoint_plan", "elicitation_plan")
+ask_personas = make_checkpoint("ask_personas", "persona_catalog")
+ask_analysis = make_checkpoint("ask_analysis", "requirements_analysis")
+ask_spec = make_checkpoint("ask_spec", "requirement_specification")
+ask_message = make_checkpoint("ask_message", "elicitation_plan")
 checkpoint_personas = make_checkpoint("checkpoint_personas", "persona_catalog")
 checkpoint_analysis = make_checkpoint("checkpoint_analysis", "requirements_analysis")
 checkpoint_spec = make_checkpoint("checkpoint_spec", "requirement_specification")
@@ -2159,6 +2805,57 @@ TRANSCRIPT_TAIL = 8
 # The intent router and the state bookkeeping of later runs
 
 
+# The steps that can start a walk, in the order of the work, each with what it needs to read.
+_WORK_ORDER = (
+    ("planner", None),
+    ("interviewer", "personas"),
+    ("analyst", "interview_transcripts"),
+    ("requirement_engineer", "analyzed_requirements"),
+    ("backlog_manager", "requirement_specification"),
+)
+
+
+def _reachable_target(target: str, state: REState) -> str:
+    """The step the router sends the message to: the one it chose when the project holds what that
+    step reads, and otherwise the step that makes what is missing, the earliest one first. A new
+    project holds nothing, so any choice leads to the planner."""
+    names = [name for name, _needs in _WORK_ORDER]
+    if target not in names:
+        return target
+    for index in range(1, names.index(target) + 1):
+        needs = _WORK_ORDER[index][1]
+        if needs is not None and not state.get(needs):
+            return _WORK_ORDER[index - 1][0]
+    return target
+
+
+def _project_overview(state: REState, sink: ArtifactSink) -> str:
+    """What the project holds now, one line for each stage of the work, for the router to read."""
+    plan = sink.read_artifact(state["project_id"], "elicitation_plan")
+    plan_line = "none yet"
+    if plan is not None:
+        content = cast("dict[str, Any]", plan["content"])
+        plan_line = (
+            f"written, {len(content.get('topics', []))} topics, "
+            f"{len(content.get('stakeholder_types', []))} stakeholder types"
+        )
+    counts = [
+        ("personas", len(state.get("personas", []))),
+        ("interviews held", len(state.get("interview_transcripts", []))),
+        ("analyzed requirements", len(state.get("analyzed_requirements", []))),
+        (
+            "open ambiguities and conflicts",
+            len(state.get("ambiguities", [])) + len(state.get("conflicts", [])),
+        ),
+        ("specification requirements", len(state.get("requirement_specification", []))),
+        ("backlog items", len(state.get("product_backlog", []))),
+    ]
+    lines = [f"- interview plan: {plan_line}"]
+    lines += [f"- {name}: {count if count else 'none yet'}" for name, count in counts]
+    lines.append(f"- the run was last at: {state.get('current_stage') or 'the start'}")
+    return "\n".join(lines)
+
+
 @safe_node
 def intent_router_node(
     state: REState,
@@ -2168,13 +2865,18 @@ def intent_router_node(
     sink = _sink(config or {})
     runnable_config = config or {}
     pending = [dict(entry) for entry in _configurable(runnable_config).get("pending_messages", [])]
-    if not pending:
+    # What the user answered when the router asked about a message: the message with the answers,
+    # which stands in for the pending ones this once.
+    clarified = str(
+        state.get("review_briefs", {}).get("ask_message", {}).get("answered_message", "")
+    )
+    if not pending and not clarified:
         msg = (
             "intent_router reached with no pending message; the executor "
-            "must route first runs at the planner"
+            "must start a run with the message that begins it"
         )
         raise ValueError(msg)
-    messages = "\n".join(
+    messages = clarified or "\n".join(
         f"{index}. {entry['content']}" for index, entry in enumerate(pending, start=1)
     )
     spec_record = sink.read_artifact(state["project_id"], "requirement_specification")
@@ -2197,14 +2899,41 @@ def intent_router_node(
         {
             "output_language": _language(cfg),
             "messages": messages,
+            "history": "\n".join(_configurable(runnable_config).get("message_history", []))
+            or "(none)",
+            "project": _project_overview(state, sink),
             "specification": listed_lines_spec,
             "backlog": listed_lines_backlog,
         },
     )
+    target = _reachable_target(directive.target_node, state)
+    if target != directive.target_node:
+        logger.warning("router target moved back", wanted=directive.target_node, to=target)
+    # The planner asks its own questions about the idea: the router asks for the other steps.
+    if (
+        directive.questions
+        and not clarified
+        and target != "planner"
+        and "ask_message" in cfg.review_checkpoints
+    ):
+        # The message is too unclear to act on: the checkpoint asks, and the router comes back.
+        _tell_user(sink, directive)
+        briefs = {
+            **state.get("review_briefs", {}),
+            "ask_message": {
+                "questions": [q.model_dump(mode="json") for q in directive.questions],
+                "message": messages,
+            },
+        }
+        return {
+            "review_briefs": briefs,
+            "current_stage": "intent_routing",
+            "routed_target": "ask_message",
+        }
     directive_id = _directive_sink(runnable_config).create_directive(
         _run_id(runnable_config),
         "intent",
-        target_node=directive.target_node,
+        target_node=target,
         iteration=int(state["iteration_count"]),
         instruction=directive.instruction,
         items=[
@@ -2213,9 +2942,15 @@ def intent_router_node(
             if entry["key"] in set(directive.about)
         ],
     )
-    _sink(runnable_config).add_report(directive.report)
-    return {
-        "rework_directives": [directive_id],
+    _tell_user(_sink(runnable_config), directive)
+    update: dict[str, Any] = {
+        # What was asked about this message is settled: the next message starts clean.
+        "review_briefs": {**state.get("review_briefs", {}), "ask_message": {}},
         "current_stage": "intent_routing",
-        "routed_target": directive.target_node,
+        "routed_target": target,
     }
+    # The first message is the idea itself. Its directive is kept with the run, but it is not an
+    # instruction to rework a document: the steps after the plan would read it as one.
+    if not state.get("first_run", False):
+        update["rework_directives"] = [directive_id]
+    return update

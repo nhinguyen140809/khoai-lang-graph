@@ -34,7 +34,7 @@ from sqlalchemy import func, select
 from sqlalchemy.orm import Session  # noqa: TC002 - runtime type of the session factory
 
 from khoailanggraph.agents.requirements_engineering import definition as workflow_definition
-from khoailanggraph.agents.requirements_engineering import routing
+from khoailanggraph.agents.requirements_engineering import review, routing
 from khoailanggraph.agents.requirements_engineering.graph import build_re_graph
 from khoailanggraph.agents.requirements_engineering.ports import RunLimitError
 from khoailanggraph.agents.requirements_engineering.state import REState, make_initial_state
@@ -55,6 +55,7 @@ from khoailanggraph.features.runs.models import (
 )
 from khoailanggraph.features.threads.models import MessageRow, ThreadRow
 from khoailanggraph.llm import reset_model_cache
+from khoailanggraph.llm.note_stream import NoteStream
 from khoailanggraph.llm.usage import Usage, add_usage, zero_usage
 from khoailanggraph.platform.db import make_sync_session_factory
 from khoailanggraph.platform.origin import Origin
@@ -86,6 +87,9 @@ ARTIFACT_FIELDS = {
     "validation_report": "validation_report",
 }
 PROJECT_NAME_LENGTH = 60
+# The earlier messages that the router reads: how many, and how much of each.
+HISTORY_MESSAGES = 8
+HISTORY_LINE_LENGTH = 300
 TOKEN_GROUP_SECONDS = 0.2
 ENTRY_NODES = {"planner", "intent_router"}
 
@@ -176,8 +180,11 @@ class UsageGate:
 
     def __init__(self, walker: RunWalker) -> None:
         self.walker = walker
+        # Reads the notes of the answer that the model writes now; each call starts a new one.
+        self.notes = NoteStream()
 
     def before_call(self, role: str) -> None:
+        self.notes = NoteStream()
         walker = self.walker
         limit_seconds = get_settings().node_timeout_seconds
         if walker.step is not None and time.monotonic() - walker.step_started > limit_seconds:
@@ -198,6 +205,9 @@ class UsageGate:
 
     def record_text(self, role: str, text: str) -> None:
         self.walker.buffer_text(text)
+        # A note is sent as soon as the model has written it, not when the whole answer is done.
+        for note in self.notes.feed(text):
+            self.walker.stream_note(note)
 
     def record_call(self, role: str, model_id: str, usage: Usage) -> None:
         walker = self.walker
@@ -305,12 +315,14 @@ class RunWalker:
         intent = first_message.content if first_message is not None else ""
         first_run = starting is not None and self.project.initial_message_id == starting.id
         state = make_initial_state(str(self.project.id), intent, self.config, first_run=first_run)
+        # Every run begins at the intent router, which reads the message the run starts with: the
+        # first message is the idea itself, and a later one says what to do next.
+        if starting is not None:
+            self.pending_for_router = [{"id": str(starting.id), "content": starting.content}]
         if not first_run:
             cast("dict[str, Any]", state).update(self._project_refs())
             state["current_stage"] = self.run.current_stage
             state["start_at"] = "intent_router"
-            if starting is not None:
-                self.pending_for_router = [{"id": str(starting.id), "content": starting.content}]
         return state
 
     def _project_refs(self) -> dict[str, Any]:
@@ -375,14 +387,31 @@ class RunWalker:
             msg = "the step of the interrupt saved no state"
             raise ValueError(msg)
         state = cast("REState", _loads(step.state_json))
-        option = str(decision.option)
-        feedback = decision.feedback or ""
+        option = str(decision.option or "")
+        decided = review.describe_answers(
+            _loads(interrupt.questions_json) or [], _loads(decision.answers_json) or {}
+        )
+        feedback = "\n\n".join(part for part in (decision.feedback or "", decided) if part)
         state["checkpoint_outcomes"] = [
             *state["checkpoint_outcomes"],
             {"node": interrupt.node, "option": option, "feedback": feedback, "automatic": False},
         ]
         if feedback:
             state["human_feedback"] = [*state["human_feedback"], feedback]
+        answers = _loads(decision.answers_json or b"{}")
+        prompts = {
+            str(q.get("key")): str(q.get("prompt", q.get("key")))
+            for q in _loads(interrupt.questions_json or b"[]")
+        }
+        clarifications = []
+        for key, answer in (answers or {}).items():
+            if not isinstance(answer, dict):
+                continue
+            text = answer.get("text") or ", ".join(answer.get("choice_keys") or [])
+            if not text and answer.get("number") is not None:
+                text = str(answer.get("number"))
+            if text:
+                clarifications.append(f"- {prompts.get(str(key), str(key))}: {text}")
         state["status"] = "running"
         state["interrupt_payload"] = None
         chosen: dict[str, Any] = next(
@@ -393,7 +422,12 @@ class RunWalker:
             for ref in _loads(interrupt.artifacts_json) or []:
                 self.sink.approve_artifact(str(ref["artifact_id"]))
         target = routing.next_after_checkpoint(interrupt.node, state)
-        if not chosen.get("approves"):
+        self._settle_asked_idea(interrupt.node, target, state, clarifications)
+        if option == routing.OTHER_OPTION:
+            # Something else: the words of the user are a message of the thread, which goes to the
+            # intent router, and the router writes the directive for the step that does the work.
+            self._say_something_else(decision.feedback or "")
+        elif option and not chosen.get("approves"):
             directive = DirectiveRow(
                 id=uuid4(),
                 run_id=self.run.id,
@@ -417,18 +451,78 @@ class RunWalker:
         self.run.current_stage = str(state["current_stage"])
         return state
 
+    @staticmethod
+    def _settle_asked_idea(
+        node: str, target: str, state: REState, clarifications: list[str]
+    ) -> None:
+        """What the user answered to questions that no review follows.
+
+        Questions asked about the idea before the research begin become part of the idea that the
+        research and the interviews read. Questions asked about a message go back to the router
+        with the message, so that it reads the message together with the answers, even when the
+        user left them blank."""
+        spec = workflow_definition.nodes().get(node, {})
+        if spec.get("purpose") != "ask" or "asks_before" in spec:
+            return
+        text = "\n\nClarifications from the user:\n" + "\n".join(clarifications)
+        if target == "intent_router":
+            briefs = dict(state.get("review_briefs", {}))
+            brief = dict(briefs.get(node, {}))
+            brief["answered_message"] = str(brief.get("message", "")) + (
+                text if clarifications else "\n\n(The user left the questions unanswered.)"
+            )
+            state["review_briefs"] = {**briefs, node: brief}
+        elif clarifications:
+            state["initial_intent"] = str(state.get("initial_intent", "")) + text
+
+    def _say_something_else(self, text: str) -> None:
+        """The answer of the user that no option says, as their message in the thread: it waits for
+        the intent router, which reads it at the start of the walk."""
+        count = self.session.scalar(
+            select(func.count())
+            .select_from(MessageRow)
+            .where(MessageRow.thread_id == self.thread.id)
+        )
+        self.session.add(
+            MessageRow(
+                thread_id=self.thread.id,
+                sequence=int(count or 0) + 1,
+                author="user",
+                content=text,
+                delivery="pending",
+            )
+        )
+        self.thread.last_message_at = _now()
+        self.session.flush()
+
+    def _step_before(self, step: RunStepRow) -> RunStepRow | None:
+        """The step that saved the state a step began with, which may belong to an earlier run.
+
+        A run that retries starts its own steps at one, so the first of them began with the state
+        saved by the step before the one that its run retried from, in the run it retried.
+        """
+        previous = self.session.scalar(
+            select(RunStepRow).where(
+                RunStepRow.run_id == step.run_id,
+                RunStepRow.sequence == step.sequence - 1,
+            )
+        )
+        if previous is not None:
+            return previous
+        run = self.session.get(RunRow, step.run_id)
+        retried_from = (_loads(run.input_json) or {}).get("retry_from_step_id") if run else None
+        if not retried_from:
+            return None
+        retried = self.session.get(RunStepRow, UUID(str(retried_from)))
+        return self._step_before(retried) if retried is not None else None
+
     def _retried_state(self, from_step_id: UUID) -> REState:
         """The state saved before a step of another run, to walk from that step again."""
         original = self.session.get(RunStepRow, from_step_id)
         if original is None:
             msg = "the step to retry from does not exist"
             raise ValueError(msg)
-        previous = self.session.scalar(
-            select(RunStepRow).where(
-                RunStepRow.run_id == original.run_id,
-                RunStepRow.sequence == original.sequence - 1,
-            )
-        )
+        previous = self._step_before(original)
         if previous is None or previous.state_json is None:
             starting = self.session.scalar(
                 select(MessageRow)
@@ -445,8 +539,10 @@ class RunWalker:
                 str(self.project.id),
                 first.content if first is not None else "",
                 self.config,
-                first_run=original.node == "planner",
+                first_run=starting is not None and self.project.initial_message_id == starting.id,
             )
+            if original.node == "intent_router" and starting is not None:
+                self.pending_for_router = [{"id": str(starting.id), "content": starting.content}]
         else:
             state = cast("REState", _loads(previous.state_json))
             state["status"] = "running"
@@ -509,10 +605,14 @@ class RunWalker:
                 "llm_gate": UsageGate(self),
                 "models": self.config.get("models", {}),
                 "pending_messages": self.pending_for_router,
+                "message_history": self._message_history(),
                 "research_search": self.tool(
                     "research_search",
                     service.make_research_search(get_settings()),
-                    lambda queries: {"queries": list(queries)},
+                    lambda queries, options=None: {
+                        "queries": list(queries),
+                        **({"options": dict(options)} if options else {}),
+                    },
                 ),
                 "project_documents": self.tool(
                     "project_documents",
@@ -522,11 +622,36 @@ class RunWalker:
             },
         }
 
+    def _message_history(self) -> list[str]:
+        """The last messages of the thread before the ones the router reads now, oldest first, one
+        line each, so that the router knows what was said and done until now."""
+        waiting = {entry["id"] for entry in self.pending_for_router}
+        rows = self.session.scalars(
+            select(MessageRow)
+            .where(MessageRow.thread_id == self.thread.id)
+            .order_by(MessageRow.sequence.desc())
+            .limit(HISTORY_MESSAGES + len(waiting))
+        ).all()
+        lines = []
+        for row in reversed(rows):
+            if str(row.id) in waiting:
+                continue
+            who = "user" if row.author == "user" else f"agent ({row.agent_role or 'workflow'})"
+            lines.append(f"{who}: {' '.join(row.content.split())[:HISTORY_LINE_LENGTH]}")
+        return lines[-HISTORY_MESSAGES:]
+
     def buffer_text(self, text: str) -> None:
         """Text the model generates is stored in pieces of at most 200 ms of output."""
         self.text_buffer.append(text)
         if time.monotonic() - self.text_flushed_at >= TOKEN_GROUP_SECONDS:
             self.flush_text()
+
+    def stream_note(self, note: Mapping[str, str]) -> None:
+        """A note that the model has just written: kept with the step and sent at once."""
+        if self.step is None:
+            return
+        self.sink.add_notes([note])
+        self.commit()
 
     def flush_text(self) -> None:
         """Store the text collected since the last piece as one `token` event."""
@@ -754,7 +879,7 @@ class RunWalker:
             )
             return
         for outcome in self.chunk.get("checkpoint_outcomes", []):
-            if not outcome.get("automatic"):
+            if not outcome.get("automatic") or outcome.get("silent"):
                 continue
             row = self._interrupt_row(
                 step,

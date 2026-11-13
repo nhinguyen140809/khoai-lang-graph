@@ -6,6 +6,7 @@ import pytest
 
 from khoailanggraph.agents.requirements_engineering import definition as wf
 from khoailanggraph.agents.requirements_engineering import nodes
+from khoailanggraph.agents.requirements_engineering.outputs import ItemLink, MessageLink
 from khoailanggraph.domain import rules
 from support.quote_cases import CASES, QuoteCase
 
@@ -29,8 +30,8 @@ def test_a_quote_holds_or_breaks_a_rule(case: QuoteCase) -> None:
 
 def test_an_agent_names_a_link_by_a_key_or_an_object() -> None:
     by_key = "R1"
-    by_object = nodes.ItemLink(item="R2", source_quote="a", target_quote="b")
-    by_message = nodes.MessageLink(message="M1", target_quote="c")
+    by_object = ItemLink(item="R2", source_quote="a", target_quote="b")
+    by_message = MessageLink(message="M1", target_quote="c")
 
     assert [nodes._key_of(ref) for ref in (by_key, by_object, by_message)] == ["R1", "R2", "M1"]
     assert [nodes._quotes_of(ref) for ref in (by_key, by_object, by_message)] == [

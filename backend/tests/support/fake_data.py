@@ -120,6 +120,7 @@ def _corpus(system: str, user: str, call_number: int) -> dict[str, Any]:
                 "title": str(hit["title"]),
                 "url": str(hit["url"]),
                 "publisher": str(hit.get("publisher", "upload")),
+                "source_type": "interview",
                 "year": str(hit.get("year", "")),
                 "excerpt": str(hit["text"])[:120],
                 "text": str(hit["text"]),
@@ -135,6 +136,7 @@ def _corpus(system: str, user: str, call_number: int) -> dict[str, Any]:
                 "title": str(hit["title"]),
                 "url": str(hit["url"]),
                 "publisher": str(hit["publisher"]),
+                "source_type": ["survey", "forum_thread", "study"][index % 3],
                 "year": str(hit["year"]),
                 "excerpt": f"SRC excerpt {number}: {hit['title']}.",
                 "text": str(hit["text"]),
@@ -154,7 +156,7 @@ def _corpus(system: str, user: str, call_number: int) -> dict[str, Any]:
     return {"selection_rationale": rationale, "sources": sources}
 
 
-def _upload_grounded_personas(observations: list[dict[str, Any]]) -> dict[str, Any]:
+def _upload_grounded_personas(observations: list[dict[str, Any]], user: str) -> dict[str, Any]:
     """A single persona built on the first observation the upload produced."""
     first = observations[0] if observations else None
     if first is None:  # pragma: no cover - persona gen never runs unmined
@@ -182,16 +184,22 @@ def _upload_grounded_personas(observations: list[dict[str, Any]]) -> dict[str, A
                 "ref": "P1",
                 "name": "Uploaded voice",
                 "stakeholder_type": "Student",
+                "occupation": "Member who wrote the uploaded document",
+                "age_range": "20-30",
                 "evaluative_dimension": dimension,
                 "grounded_in": [key],
                 "background": "A stakeholder speaking through a member-uploaded document.",
+                "typical_day": "Described only by what the uploaded document records.",
                 "expertise": "Everyday experience of the platform's domain.",
+                "current_workarounds": ["Whatever the uploaded document describes"],
+                "vocabulary": ["the words of the uploaded document"],
                 "goals": ["Make the recorded concerns heard in the plan"],
                 "interests": ["The topics the upload raises"],
                 "constraints": ["Answers only from what the upload records"],
                 "priorities": [dimension],
                 "concerns": ["Being misquoted beyond the uploaded record"],
                 "behavioral_tendencies": "Speaks plainly from the uploaded record.",
+                "scores": _scores(user, {}, {}),
                 "evidence": [{"observation": key, "source": source, "quote": quote}],
             }
         ],
@@ -321,6 +329,10 @@ def _mined(system: str, user: str, call_number: int) -> dict[str, Any]:
     return {"observations": [dict(entry) for entry in _MINED_BY_SOURCE[key]]}
 
 
+def _no_questions(system: str, user: str, call_number: int) -> dict[str, Any]:
+    return {"questions": []}
+
+
 def _plain(system: str, user: str, call_number: int) -> dict[str, Any]:
     """The plan of the mentor platform (PlannerOutput)."""
     return {
@@ -337,12 +349,72 @@ def _plain(system: str, user: str, call_number: int) -> dict[str, Any]:
             "verification and moderation",
             "usage reporting",
         ],
+        "data_to_collect": [
+            {
+                "topic": "mentor discovery and search",
+                "needed": [
+                    "how the person looked for a mentor or advice the last time",
+                    "how long it took and how many people answered",
+                ],
+            },
+            {
+                "topic": "session booking and scheduling",
+                "needed": [
+                    "how often sessions happen or are wanted",
+                    "what is arranged by message today and what goes wrong",
+                ],
+            },
+            {
+                "topic": "privacy of student interactions",
+                "needed": ["what the person is not willing to show to others"],
+            },
+            {
+                "topic": "mentor availability limits",
+                "needed": [
+                    "how many hours a week a mentor can give",
+                    "what a request must contain to be accepted",
+                ],
+            },
+            {
+                "topic": "verification and moderation",
+                "needed": [
+                    "which checks are required before a mentor is shown",
+                    "who answers when a session goes wrong",
+                ],
+            },
+            {
+                "topic": "usage reporting",
+                "needed": ["which figures are reported, how often and to whom"],
+            },
+        ],
+        "opening_questions": [
+            "Walk me through the last time you looked for a mentor or career advice.",
+            "Tell me about the last time a student asked you for help.",
+            "How does a new service that students use under the university's name get "
+            "approved today?",
+        ],
         "information_gaps": [
             "How students judge mentor quality before contacting them",
             "What verification steps administrators require",
             "Which usage metrics matter for semester reports",
         ],
         "stakeholder_types": ["Student", "Mentor", "Administrator"],
+        "persona_aspects": [
+            {
+                "key": "booking_urgency",
+                "title": "Booking urgency",
+                "description": "How soon the person needs an answer from a mentor.",
+                "low": "Can wait weeks",
+                "high": "Needs an answer the same day",
+            },
+            {
+                "key": "privacy_sensitivity",
+                "title": "Privacy sensitivity",
+                "description": "How much the person worries about who can see their conversations.",
+                "low": "Does not mind",
+                "high": "Will not use a service that shows them",
+            },
+        ],
         "strategies": [
             "Interview each stakeholder persona separately, starting from "
             "their goals, then constraints, then risks; probe for examples.",
@@ -355,6 +427,26 @@ def _plain(system: str, user: str, call_number: int) -> dict[str, Any]:
             "No new information in the last two turns",
         ],
     }
+
+
+def _aspect_keys(user: str) -> list[str]:
+    """The keys of the aspects that the prompt lists, in the order listed."""
+    return re.findall(r"^- ([a-z][a-z0-9_]*) \(", user, flags=re.MULTILINE)
+
+
+def _scores(user: str, base: dict[str, int], reasons: dict[str, str]) -> list[dict[str, Any]]:
+    """One score for each listed aspect: the persona's own where it has one, else a middle value
+    that says the observations are silent."""
+    return [
+        {
+            "aspect": key,
+            "score": base.get(key, 3),
+            "rationale": reasons.get(
+                key, "The observations are silent, so this is the typical value of the group."
+            ),
+        }
+        for key in _aspect_keys(user)
+    ]
 
 
 def _personas(system: str, user: str, call_number: int) -> dict[str, Any]:
@@ -375,7 +467,7 @@ def _personas(system: str, user: str, call_number: int) -> dict[str, Any]:
         _ADMIN_Q2,
     }
     if not {str(entry.get("evidence", "")) for entry in observations} <= fixture_quotes:
-        return _upload_grounded_personas(observations)
+        return _upload_grounded_personas(observations, user)
     student_evidence = [
         {"observation": "OBS-001", "source": "SRC-001", "quote": _STUDENT_Q1},
         {"observation": "OBS-002", "source": "SRC-001", "quote": _STUDENT_Q2},
@@ -425,13 +517,24 @@ def _personas(system: str, user: str, call_number: int) -> dict[str, Any]:
                 "ref": "P1",
                 "name": "Minh — 3rd-year CS student",
                 "stakeholder_type": "Student",
+                "occupation": "Third-year computer science student",
+                "age_range": "20-22",
                 "evaluative_dimension": "simplicity and speed of booking",
                 "grounded_in": ["OBS-001", "OBS-002"],
                 "background": (
                     "A busy undergraduate who wants career guidance and "
                     "internship preparation, prefers quick asynchronous steps."
                 ),
+                "typical_day": (
+                    "Lectures from 8:00 to 15:00, a part-time shift in the library, and "
+                    "evenings on assignments. He looks for advice on his phone in the gaps."
+                ),
                 "expertise": "Basic programming, no industry experience",
+                "current_workarounds": [
+                    "Messages engineers he finds on LinkedIn",
+                    "Asks seniors in his student club",
+                ],
+                "vocabulary": ["quick chat", "intro", "reply", "internship"],
                 "goals": [
                     "Find a mentor working in my target career field",
                     "Get honest advice on skills and internships",
@@ -452,19 +555,49 @@ def _personas(system: str, user: str, call_number: int) -> dict[str, Any]:
                 "behavioral_tendencies": (
                     "Direct, concise answers; grows impatient with long forms."
                 ),
+                "scores": _scores(
+                    user,
+                    {
+                        "domain_expertise": 2,
+                        "usage_frequency": 3,
+                        "tech_comfort": 5,
+                        "pain_severity": 4,
+                        "decision_influence": 1,
+                        "booking_urgency": 4,
+                        "privacy_sensitivity": 4,
+                    },
+                    {
+                        "domain_expertise": (
+                            "He has no industry experience, which the observations describe."
+                        ),
+                        "pain_severity": "Students report that finding a mentor takes weeks.",
+                        "decision_influence": "Students do not choose the platform.",
+                    },
+                ),
                 "evidence": student_evidence,
             },
             {
                 "ref": "P2",
                 "name": "Dr. Lan — senior engineer, part-time mentor",
                 "stakeholder_type": "Mentor",
+                "occupation": "Senior software engineer",
+                "age_range": "35-44",
                 "evaluative_dimension": "filtering low-effort requests, clear agendas",
                 "grounded_in": ["OBS-003", "OBS-004"],
                 "background": (
                     "An experienced engineer willing to mentor a few students "
                     "per month if requests are well-prepared and bounded."
                 ),
+                "typical_day": (
+                    "Full workdays at her company, with student requests arriving by email "
+                    "late in the evening, which she answers in one batch at the weekend."
+                ),
                 "expertise": "10 years industry experience, career coaching",
+                "current_workarounds": [
+                    "Answers student emails in one batch each weekend",
+                    "Keeps a short template that asks what the student already tried",
+                ],
+                "vocabulary": ["request", "agenda", "bounded", "slot"],
                 "goals": [
                     "Give back to the student community",
                     "Guide a small number of students well",
@@ -481,19 +614,46 @@ def _personas(system: str, user: str, call_number: int) -> dict[str, Any]:
                 "behavioral_tendencies": (
                     "Asks clarifying questions before accepting anything; sets firm boundaries."
                 ),
+                "scores": _scores(
+                    user,
+                    {
+                        "domain_expertise": 5,
+                        "usage_frequency": 2,
+                        "tech_comfort": 4,
+                        "pain_severity": 3,
+                        "decision_influence": 3,
+                        "booking_urgency": 2,
+                        "privacy_sensitivity": 3,
+                    },
+                    {
+                        "domain_expertise": "She has ten years of industry experience.",
+                        "usage_frequency": "She can give about two hours a week.",
+                    },
+                ),
                 "evidence": mentor_evidence,
             },
             {
                 "ref": "P3",
                 "name": "Mr. Bao — platform administrator",
                 "stakeholder_type": "Administrator",
+                "occupation": "Academic IT operations manager",
+                "age_range": "45-54",
                 "evaluative_dimension": "verification and reporting before go-live",
                 "grounded_in": ["OBS-005", "OBS-006"],
                 "background": (
                     "Responsible for the platform's safe operation and its "
                     "acceptance by the university administration."
                 ),
+                "typical_day": (
+                    "Meetings with the faculty offices in the morning, reviews of service "
+                    "requests in the afternoon, and a monthly report to the vice dean."
+                ),
                 "expertise": "Academic IT operations, compliance processes",
+                "current_workarounds": [
+                    "Reviews every external service on a checklist",
+                    "Collects complaints in a spreadsheet",
+                ],
+                "vocabulary": ["review", "compliance", "audit", "sign-off"],
                 "goals": [
                     "Keep the platform safe and compliant",
                     "Ensure mentor quality through verification",
@@ -510,6 +670,24 @@ def _personas(system: str, user: str, call_number: int) -> dict[str, Any]:
                 "behavioral_tendencies": (
                     "Formal, policy-oriented; wants every rule written down."
                 ),
+                "scores": _scores(
+                    user,
+                    {
+                        "domain_expertise": 4,
+                        "usage_frequency": 3,
+                        "tech_comfort": 3,
+                        "pain_severity": 4,
+                        "decision_influence": 5,
+                        "booking_urgency": 1,
+                        "privacy_sensitivity": 5,
+                    },
+                    {
+                        "decision_influence": "He signs off whether the platform goes live.",
+                        "pain_severity": (
+                            "Unverified mentors and misuse are what he worries about most."
+                        ),
+                    },
+                ),
                 "evidence": admin_evidence,
             },
         ],
@@ -517,14 +695,76 @@ def _personas(system: str, user: str, call_number: int) -> dict[str, Any]:
 
 
 _QUESTS_PER_PERSONA = 3
-_QUESTIONS = [
-    "What would you personally want to achieve with this mentoring platform, "
-    "and what does success look like for you?",
-    "When you imagine using it in a typical week, what steps would you expect "
-    "to go through, and where could it go wrong for you?",
-    "Are there limits, rules, or constraints on your side that the platform must respect?",
-    "What problems or risks would make you stop using the platform entirely?",
-]
+# What each interview asks and answers, turn by turn. The second question picks up a detail of
+# the first answer, and the third asks for what the person would need, as an interviewer who
+# listens does; the answers are what a person says in an interview, a few sentences each.
+_INTERVIEWS: dict[str, list[tuple[str, str]]] = {
+    "Student": [
+        (
+            "Walk me through the last time you looked for a mentor or career advice.",
+            "Last month I needed help with internship applications. I scrolled LinkedIn for an "
+            "hour and messaged four engineers. Only one answered, three weeks later.",
+        ),
+        (
+            "You said only one of the four answered, after three weeks. What did you do in "
+            "the meantime?",
+            "I asked a senior in my club, but she was busy too. In the end I copied a template "
+            "from a forum, and I did not trust it much.",
+        ),
+        (
+            "What would have made you comfortable sending that first message?",
+            "Knowing the person really takes students, and that my question stays between us. I "
+            "do not want my career worries visible to everyone.",
+        ),
+    ],
+    "Mentor": [
+        (
+            "Tell me about the last time a student asked you for help.",
+            "A student emailed me at eleven at night and wanted his resume reviewed by the next "
+            "morning. No context at all. I get two or three of those a month.",
+        ),
+        (
+            "You mentioned the late request with no context. What did you do with it?",
+            "I asked which role he was aiming for, and then he never wrote back. That was half "
+            "an hour of my evening for nothing.",
+        ),
+        (
+            "What would a request need to contain for you to accept it?",
+            "A specific question, what he already tried, and a time window. I can give about two "
+            "hours a week, so one session a week at most.",
+        ),
+    ],
+    "Administrator": [
+        (
+            "How does a new service that students use under the university's name get approved "
+            "today?",
+            "Every outside service goes through a review of data handling, who is accountable, "
+            "and who can be reported. It usually takes about three weeks.",
+        ),
+        (
+            "You said it takes about three weeks. Which part of the review takes longest?",
+            "Verifying the people. If we cannot confirm that a mentor is who they say they are, "
+            "the review stops there.",
+        ),
+        (
+            "What reports would you need once the platform is running?",
+            "Each semester: how many sessions took place, how many mentors were active, and any "
+            "complaints with how they were handled. The vice dean asks for it.",
+        ),
+    ],
+}
+_ROLES = list(_INTERVIEWS)
+
+
+def _role_in(user: str) -> str:
+    """The stakeholder type of the persona that the prompt shows."""
+    for role in _ROLES:
+        if f'stakeholder_type": "{role}' in user:
+            return role
+    for role in _ROLES:
+        if role in user:
+            return role
+    return "Student"
 
 
 def _interviewer_turn(system: str, user: str, call_number: int) -> dict[str, Any]:
@@ -535,47 +775,40 @@ def _interviewer_turn(system: str, user: str, call_number: int) -> dict[str, Any
     stops deterministically after the plan's three questions per persona.
     """
     asked = user.count(" interviewer:")
+    topics = re.findall(r"^topic: (.+)$", user, flags=re.MULTILINE)
+    answers = re.findall(r"^(\S+#\d+) persona:", user, flags=re.MULTILINE)
+    # What the last answer gave: the first item of the plan that this interview has not ticked.
+    open_items = re.findall(r"^- \[ \] (.+)$", user, flags=re.MULTILINE)
+    covered = open_items[:1] if answers else []
     if asked >= _QUESTS_PER_PERSONA or "<limit_reached>\nyes" in user:
-        return {"question": "", "stop": True, "summary": _summary_for(user)}
-    index = min(asked, len(_QUESTIONS) - 1)
-    return {"question": _QUESTIONS[index], "stop": False}
-
-
-_ANSWERS: dict[str, str] = {
-    "Student": (
-        "Honestly, I barely have time between classes, so the system should "
-        "be simple and fast to use. I want to search for mentors by skill or "
-        "career field, see a short profile, and book a 30-minute chat without "
-        "a complicated process. I also worry about privacy — I don't want my "
-        "questions visible to everyone."
-    ),
-    "Mentor": (
-        "I'm willing to guide two or three students per month, but I can "
-        "only offer about two hours a week. I'm concerned about spam requests "
-        "and unclear expectations — I don't want students to treat this as a "
-        "homework-solving service. A clear agenda before each session and an "
-        "easy way to decline requests would help."
-    ),
-    "Administrator": (
-        "From my side, safety and oversight come first. Administrators need "
-        "detailed configuration, approval workflows, and audit reports. Every "
-        "mentor profile must be verified before it goes live, sessions should "
-        "be moderated or at least reportable, and I need usage reports each "
-        "semester. A matching algorithm sounds nice, but I will not approve "
-        "the platform without verification and reporting."
-    ),
-}
+        return {
+            "question": "",
+            "stop": True,
+            "summary": _summary_for(user),
+            "report": "I finished the interview and noted what matters most to this person.",
+            "covered_by_last_answer": covered,
+            "top_findings": [_summary_for(user)],
+            "follow_ups": ["Ask what a good week looks like once the platform exists."],
+        }
+    script = _INTERVIEWS[_role_in(user)]
+    kinds = ["opening", "follow_up", "new_topic"]
+    turn: dict[str, Any] = {
+        "question": script[min(asked, len(script) - 1)][0],
+        "stop": False,
+        "question_kind": kinds[min(asked, len(kinds) - 1)],
+        "covered_by_last_answer": covered,
+        "topic": topics[min(asked, len(topics) - 1)] if topics else None,
+    }
+    if turn["question_kind"] == "follow_up" and answers:
+        turn["follows_up_on"] = answers[-1]
+    return turn
 
 
 def _persona_answer(system: str, user: str, call_number: int) -> dict[str, Any]:
-    """The persona's answer, chosen by the persona in the prompt."""
-    for role, answer in _ANSWERS.items():
-        if f'stakeholder_type": "{role}' in user:
-            return {"answer": answer}
-    for role, answer in _ANSWERS.items():
-        if role in user:
-            return {"answer": answer}
-    return {"answer": _ANSWERS["Student"]}
+    """The persona's answer to the question it is asked now, chosen by the persona in the prompt."""
+    script = _INTERVIEWS[_role_in(user)]
+    asked = max(user.count(" interviewer:"), 1)
+    return {"answer": script[min(asked, len(script)) - 1][1]}
 
 
 _SUMMARIES: dict[str, str] = {
@@ -598,51 +831,52 @@ _EVIDENCE = {
         (
             "The platform shall let students search for mentors by skill or career field.",
             "mentor discovery and search",
-            "I want to search for mentors by skill or career field",
+            "I scrolled LinkedIn for an hour and messaged four engineers",
         ),
         (
-            "Students shall be able to book a 30-minute session with a mentor.",
+            "The platform shall show when a mentor is available, so that students do not wait "
+            "for weeks.",
             "session booking and scheduling",
-            "book a 30-minute chat without a complicated process",
+            "she was busy too",
         ),
         (
             "Student questions shall remain private and not visible to other users.",
             "privacy of student interactions",
-            "I don't want my questions visible to everyone",
+            "my question stays between us",
         ),
     ],
     "Mentor": [
         (
-            "Mentors shall be able to limit the number of students they mentor per month.",
+            "Mentors shall be able to limit the number of requests they receive per month.",
             "mentor availability limits",
-            "two or three students per month",
+            "two or three of those a month",
         ),
         (
             "Mentors shall have a way to decline requests without penalty.",
             "session booking and scheduling",
-            "an easy way to decline requests",
+            "half an hour of my evening for nothing",
         ),
         (
-            "Each session shall have a clear agenda agreed before it starts.",
+            "Each request shall state a specific question, what was tried and a time window.",
             "session booking and scheduling",
-            "A clear agenda before each session",
+            "A specific question, what he already tried, and a time window",
         ),
     ],
     "Administrator": [
         (
+            "The platform shall show who is accountable for each session and who can be reported.",
+            "verification and moderation",
+            "who is accountable, and who can be reported",
+        ),
+        (
             "Every mentor profile shall be verified by an administrator before publication.",
             "verification and moderation",
-            "Every mentor profile must be verified before it goes live",
+            "If we cannot confirm that a mentor is who they say they are",
         ),
         (
             "The platform shall provide usage reports to administrators each semester.",
             "usage reporting",
-            "usage reports each semester",
-        ),
-        (
-            "Sessions shall be reportable and subject to moderation.",
-            "verification and moderation",
-            "moderated or at least reportable",
+            "how many sessions took place, how many mentors were active",
         ),
     ],
 }
@@ -716,7 +950,9 @@ def _upload_flow_analysis() -> dict[str, Any]:
                 "statement": "Mentors reply to student requests within a few days.",
                 "reasoning": "The record never says how long a reply may take.",
                 "impact_if_wrong": "Students lose interest before an answer arrives.",
+                "impact": 4,
                 "validation_status": "unverified",
+                "validation_plan": "Ask a mentor how long a reply usually takes.",
                 "concerns": ["A1"],
             }
         ],
@@ -846,14 +1082,14 @@ def _analyst(system: str, user: str, call_number: int) -> dict[str, Any]:
                 "Students need trust signals such as a verified badge before contacting a mentor.",
                 "PER-001",
                 "PER-001#6",
-                "I also worry about privacy",
+                "my question stays between us",
             ),
             latent(
                 "L2",
                 "Administrators need automated moderation support to keep their workload feasible.",
                 "PER-003",
                 "PER-003#6",
-                "sessions should be moderated or at least reportable",
+                "complaints with how they were handled",
             ),
         ],
         "assumptions": [
@@ -864,16 +1100,20 @@ def _analyst(system: str, user: str, call_number: int) -> dict[str, Any]:
                 "an institutional vetting pipeline exists.",
                 "impact_if_wrong": "Verification would need a different trust "
                 "anchor, changing the onboarding flow.",
+                "impact": 5,
                 "validation_status": "unverified",
+                "validation_plan": "Ask the administrator who vets mentors today.",
                 "concerns": ["AR-003"],
             },
             {
                 "ref": "S2",
                 "statement": "A typical mentoring session lasts about 30 minutes.",
-                "reasoning": "The student persona specified 30-minute chats.",
+                "reasoning": "The student persona asked for quick exchanges, not long calls.",
                 "impact_if_wrong": "Booking granularity and mentor capacity "
                 "rules would need new limits.",
+                "impact": 2,
                 "validation_status": "unverified",
+                "validation_plan": "Ask a mentor how long a session usually runs.",
                 "concerns": ["AR-002"],
             },
         ],
@@ -884,6 +1124,10 @@ def _analyst(system: str, user: str, call_number: int) -> dict[str, Any]:
                 "student's demand is unspecified.",
                 "ambiguity_type": "incomplete",
                 "ambiguous_text": "simple and fast to use",
+                "interpretations": [
+                    "A booking takes under two minutes.",
+                    "A page opens in under two seconds.",
+                ],
                 "clarifying_question": "Define measurable load-time and booking-effort targets.",
                 "status": "open",
                 "resolution": None,
@@ -907,6 +1151,7 @@ def _analyst(system: str, user: str, call_number: int) -> dict[str, Any]:
                 ],
                 "status": "open",
                 "resolution": None,
+                "resolution_strategy": None,
                 "concerns": ["AR-001", "AR-005"],
                 "involves": ["PER-001", "PER-003"],
                 "resolved_by": None,
@@ -1169,6 +1414,10 @@ def _upload_flow_backlog() -> dict[str, Any]:
 
     # BacklogItemContent fields per the schema; delivery_status set by user.
     return {
+        "definition_of_done": [
+            "Every acceptance criterion of the item passes.",
+            "The change is reviewed by a second person.",
+        ],
         "product_goal": "Answer the uploaded record: find, book, stay private.",
         "prioritization_notes": "One story per requirement of the record.",
         "items": [
@@ -1214,6 +1463,11 @@ def _backlog(system: str, user: str, call_number: int) -> dict[str, Any]:
 
     def frame(items: list[dict[str, Any]]) -> dict[str, Any]:
         return {
+            "definition_of_done": [
+                "Every acceptance criterion of the item passes.",
+                "The change is reviewed by a second person.",
+                "The screens work on a phone as well as on a laptop.",
+            ],
             "product_goal": "Students find, book and learn from verified mentors.",
             "prioritization_notes": "Discovery and booking first; verification "
             "keeps the platform trusted.",
@@ -1326,13 +1580,40 @@ def _backlog(system: str, user: str, call_number: int) -> dict[str, Any]:
     )
 
 
+_CHECKS_PASSED = [
+    {
+        "check": "Every requirement can be tested",
+        "result": "passed",
+        "note": "Each one has criteria that a tester can run.",
+    },
+    {
+        "check": "Every story implements a requirement",
+        "result": "passed",
+        "note": "All the stories are linked to a requirement.",
+    },
+]
+_CHECKS_FAILED = [
+    {
+        "check": "Every requirement can be tested",
+        "result": "partly",
+        "note": "One requirement has no measurable criterion.",
+    },
+    {
+        "check": "Every story implements a requirement",
+        "result": "passed",
+        "note": "All the stories are linked to a requirement.",
+    },
+]
+
+
 def _validation(system: str, user: str, call_number: int) -> dict[str, Any]:
     """The validator: one backlog-category failure, then a pass."""
     if "uploaded record" in user:
-        return {"status": "pass", "issues": []}
+        return {"status": "pass", "checks": _CHECKS_PASSED, "issues": []}
     if call_number <= 1:
         return {
             "status": "fail",
+            "checks": _CHECKS_FAILED,
             "issues": [
                 {
                     "ref": "V1",
@@ -1349,7 +1630,7 @@ def _validation(system: str, user: str, call_number: int) -> dict[str, Any]:
                 }
             ],
         }
-    return {"status": "pass", "issues": []}
+    return {"status": "pass", "checks": _CHECKS_PASSED, "issues": []}
 
 
 def _intent_directive(system: str, user: str, call_number: int) -> dict[str, Any]:
@@ -1359,6 +1640,17 @@ def _intent_directive(system: str, user: str, call_number: int) -> dict[str, Any
         "instruction": "Adapt the specification to the new message from the user.",
         "about": [],
     }
+
+
+_SEARCHES = [
+    {"query": "students mentoring platform booking complaints", "source_type": "complaint_log"},
+    {"query": "mentors volunteer time decline requests survey", "source_type": "survey"},
+]
+
+
+def _search_web(system: str, user: str, call_number: int) -> dict[str, Any] | None:
+    """The corpus builder searches twice, then answers without a tool call."""
+    return dict(_SEARCHES[call_number - 1]) if call_number <= len(_SEARCHES) else None
 
 
 class DemoData:
@@ -1374,6 +1666,8 @@ class DemoData:
         self.calls = DemoCalls()
 
     PlannerOutput = staticmethod(_plain)
+    # The idea settles what matters, so the planner has nothing to ask before it plans.
+    PlannerQuestionsOutput = staticmethod(_no_questions)
     CorpusBuilderOutput = staticmethod(_corpus)
     MinerOutput = staticmethod(_mined)
     GeneratorOutputV2 = staticmethod(_personas)
@@ -1384,6 +1678,7 @@ class DemoData:
     BacklogOutput = staticmethod(_backlog)
     ValidatorOutput = staticmethod(_validation)
     IntentDirectiveOutput = staticmethod(_intent_directive)
+    SearchWeb = staticmethod(_search_web)
 
 
 class AlwaysFailValidatorData(DemoData):
@@ -1392,6 +1687,7 @@ class AlwaysFailValidatorData(DemoData):
     ValidatorOutput = staticmethod(
         lambda system, user, call_number: {
             "status": "fail",
+            "checks": _CHECKS_FAILED,
             "issues": [
                 {
                     "ref": "V1",

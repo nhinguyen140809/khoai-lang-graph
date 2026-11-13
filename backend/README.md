@@ -61,14 +61,22 @@ API_PROXY_TARGET=http://localhost:8001 pnpm dev     # NOT dev:mock
 Sign in as `linh.pham@example.com` / `secret`; the seed creates the
 fixture projects plus one finished run for «Mentor platform». The CSRF
 rule accepts the application origins of `settings.csrf_allowed_origins`
-(the Next server on `:3000` by default) — see `gap-report.md` §1.1.
+(the Next server on `:3000` by default).
 
 Every role answers through a real model — `config/models.yaml` defaults to
 `openai:glm-5.2` through the BioTuring gateway (the vn endpoint for low
 latency), so `backend/.env` needs `OPENAI_BASE_URL` + `OPENAI_API_KEY`, and
 a full real run takes 15–45 minutes and reports each step as it ends. The research
 corpus is real too: DuckDuckGo's HTML endpoint with a Wikipedia fallback,
-keyless — Tavily when `TAVILY_API_KEY` is set. The test suite
+keyless — Tavily when `TAVILY_API_KEY` is set.
+
+A model of the `allowlist` in `config/models.yaml` may set `base_url` and
+`api_key_env` (the name of a variable in `backend/.env`, never the key). It is then
+called through the OpenAI-compatible protocol at that address with that key, so one
+run can use the gateway for some roles and another provider for others, for example
+`gemini:gemini-2.5-flash` at `https://generativelanguage.googleapis.com/v1beta/openai/`
+with `api_key_env: GEMINI_API_KEY`. A model without them uses `OPENAI_BASE_URL` and
+`OPENAI_API_KEY`. The test suite
 (`tests/conftest.py`) and the seed (`scripts/seed_demo.py`) install their
 own scripted model and fixture corpus at the same seams, so they never call
 a gateway whatever `.env` contains.
@@ -148,8 +156,3 @@ Settings (environment variables, all optional):
 | `LLM_CALL_TIMEOUT_SECONDS` | `300` | One call to a model, set on the client |
 | `REQUESTS_PER_MINUTE` | `1200` | Per user; `429 rate_limited` with `Retry-After`. Opening the activity of a finished run reads about 60 items |
 | `AUTH_ATTEMPTS_PER_MINUTE` | `20` | Per IP address, on login and register |
-
-## Follow-ups (parked, not ported)
-
-- `decisions.py` hybrid decision layer of the source prototype — see
-  [gap-report.md](gap-report.md); lands as a separate review-policy port later.

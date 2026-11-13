@@ -102,6 +102,11 @@ class FakeChatModel(BaseChatModel):
         else:
             name = schema.__name__
             answer = invoke_demo(self.demo, name, system, user)
+            if answer is None:
+                # A model that has the tools it needs answers in words and calls none.
+                return ChatResult(
+                    generations=[ChatGeneration(message=AIMessage(content="I have what I need."))]
+                )
             model = schema.model_validate(answer)
             message = AIMessage(
                 content="",
@@ -132,7 +137,7 @@ def invoke_demo(
     schema_name: str,
     system: str,
     user: str,
-) -> dict[str, Any]:
+) -> dict[str, Any] | None:
     """Route one request to the demo dataset by schema name.
 
     The dataset carries its own call history (a `DemoCalls` on the demo
@@ -145,13 +150,17 @@ def invoke_demo(
     if handler is None:
         msg = f"the demo dataset has no answer for schema '{schema_name}'"
         raise LookupError(msg)
-    answer = cast("dict[str, Any]", handler(system, user, call_number))
+    answer = cast("dict[str, Any] | None", handler(system, user, call_number))
+    if answer is None:
+        return None
     return _with_reports(_with_titles(answer), schema_name)
 
 
-# What each node says to the user in its report, as a scripted model writes it. The interview
-# turns (`InterviewerTurnOutput`, `PersonaAnswerOutput`) have no report: they are the transcript.
+# What each node says to the user in its report, as a scripted model writes it. The answers of the
+# persona (`PersonaAnswerOutput`) have no report: they are the transcript, and the interviewer
+# reports once, when it stops.
 _REPORTS = {
+    "PlannerQuestionsOutput": "I read your idea and have nothing to ask you, so I plan next.",
     "PlannerOutput": "I read your idea and planned the interviews around who will use it.",
     "CorpusBuilderOutput": "I gathered the documents the interviewees will be based on.",
     "MinerOutput": "I read a document and noted what its stakeholders care about.",
@@ -162,6 +171,55 @@ _REPORTS = {
     "BacklogOutput": "I turned the specification into a backlog of user stories.",
     "ValidatorOutput": "I checked the documents and listed what still needs a fix.",
     "IntentDirectiveOutput": "I will go back to the step your message is about.",
+}
+
+
+# The notes of the nodes that write some, as a scripted model writes them.
+_NOTES = {
+    "PlannerOutput": [
+        {"kind": "doing", "text": "I am listing who the idea affects."},
+        {"kind": "finding", "text": "The idea does not say who **approves** a session."},
+    ],
+}
+
+
+# The notes of every other node that writes some: it says what it is doing, and nothing more.
+_DEFAULT_NOTES = [{"kind": "doing", "text": "I am working through what I was given."}]
+
+
+# What a node writes for the review that follows it, as a scripted model writes it.
+_REVIEWS = {
+    "GeneratorOutputV2": {
+        "prompt": "I proposed the interviewees. Check that they cover the people who matter.",
+        "options": [],
+        "questions": [
+            {
+                "key": "focus",
+                "kind": "single_select",
+                "prompt": "Whom should the interviews focus on?",
+                "choices": [
+                    {"key": "students", "label": "The students"},
+                    {"key": "mentors", "label": "The mentors"},
+                ],
+                "default_choice_keys": ["students"],
+            }
+        ],
+    },
+    "AnalystOutput": {
+        "prompt": (
+            "I wrote the requirements analysis and found open questions. "
+            "Check them, then approve it."
+        ),
+        "options": [
+            {"key": "accept", "description": "The analysis goes on to the specification."},
+            {
+                "key": "reject_reanalyse",
+                "description": "The analysis is written again, settling the open questions.",
+                "suggested_feedback": "Settle the open questions in favour of the students.",
+            },
+        ],
+        "questions": [],
+    },
 }
 
 
@@ -180,6 +238,10 @@ def _with_reports(answer: dict[str, Any], schema_name: str) -> dict[str, Any]:
         answer.setdefault("report", _REPORTS[schema_name])
     if schema_name in _SUMMARIES:
         answer.setdefault("summary", _SUMMARIES[schema_name])
+    if schema_name in _REPORTS:
+        answer.setdefault("notes", _NOTES.get(schema_name, _DEFAULT_NOTES))
+    if schema_name in _REVIEWS:
+        answer.setdefault("review", _REVIEWS[schema_name])
     return answer
 
 

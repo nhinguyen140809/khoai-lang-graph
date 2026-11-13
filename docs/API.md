@@ -390,7 +390,7 @@ Response `201`:
 |---|---|---|
 | `GET /threads/{thread_id}/runs` | Runs of a thread; ordered by `created_at` descending | MVP |
 | `GET /runs/{run_id}` | Number in the thread, status, stage, iteration, step count, usage, error, `workflow_name`, `workflow_version`, `last_event_id`. The status transitions are listed in [Runtime: lifecycle](architecture/runtime.md#3-lifecycle) | MVP |
-| `GET /runs/{run_id}/steps` | Run steps; ordered by `sequence` | MVP |
+| `GET /runs/{run_id}/steps` | Run steps; ordered by `sequence`. A step also carries its `notes` ([StepNote](DATA_SHAPE.md#stepnote-later)) | MVP |
 | `GET /runs/{run_id}/state` | The current workflow state of the run, see [workflow state](#workflow-state) | MVP |
 | `GET /runs/{run_id}/steps/{step_id}/state` | The workflow state saved after that step; the starting point of a retry from the next step | MVP |
 | `GET /runs/{run_id}/stream` | Event stream, see [section 6](#6-run-event-stream) | MVP |
@@ -523,6 +523,7 @@ The pending interrupt, `GET /runs/5f2d.../interrupts?status=pending`. The `inter
       "run_id": "5f2d...",
       "step_id": "e9d2...",
       "node": "checkpoint_analysis",
+      "purpose": "review",
       "prompt": "Review the requirements analysis. Accept it, or reject it with feedback.",
       "options": [
         { "key": "accept", "label": "Accept", "requires_feedback": false, "approves": true, "is_default": true },
@@ -594,11 +595,12 @@ Resume rules:
 - `option` is the key of one of the options of the interrupt; the set of options comes from the workflow definition, so the API does not change when a checkpoint gains or loses an option. An unknown key answers `422 validation_failed`.
 - `feedback` is required when the chosen option requires it.
 - `answers` has one entry per answered question, by question key, in the shape of `Answer` in the [data shape](DATA_SHAPE.md#humandecision-mvp). Every required question is answered, every choice is a choice of its question, and `text` is present when a chosen choice requires it; otherwise `422 validation_failed` with the question key in the field path.
+- The option `other`, "Something else", asks for `feedback`; the run records it as a message of the user, which the intent router reads, and continues at the step that the router chooses. It creates no rework directive of its own.
 - `modified_items` is accepted only when the interrupt allows edits.
 - When the chosen option approves, the artifacts under review and their items that are still `draft` become `approved`, each as a new version with `change_reason` `reviewed`.
 - The server stores a human decision, marks the interrupt resolved, gives the decision as `decision` of the interrupt, and continues the run. The response is `202` with the run.
 
-An interrupt can ask several questions of different types and is answered at once. The checkpoints of definition version 1 ask none; the example comes from a checkpoint that clarifies the intent of a project, see [Runtime: open points](architecture/runtime.md#8-open-points):
+An interrupt can ask several questions of different types and is answered at once. The checkpoints of definition version 1 ask none of their own. The questions of the agent and the review of documents are separate interrupts, told apart by `purpose`. A `review` holds the documents and its options and no question of the agent. An `ask` holds up to three questions that the agent chose, each with `source` `agent`, a default that is the agent's own assumption and, for a selection, a last choice `other` that asks for text; it has no option and no document under review (the answer has no `option`), and it is not created at all when the agent has no question. The agent proposes choices for a question, so that the user picks and types only when the proposal is not right. A question of the agent is not required: leaving it alone accepts its default, and the agents after the checkpoint read the answers as part of their instruction. The same node words the `prompt` for the case and may suggest the feedback of an option (`suggested_feedback`). The example comes from a checkpoint that clarifies the intent of a project, see [Runtime: open points](architecture/runtime.md#8-open-points):
 
 ```json
 {
@@ -1073,6 +1075,7 @@ The type names are the ones defined in [Planning: agent run lifecycle](PLANNING.
 | `artifact_delta` | An artifact changed: an item was added, changed or removed, or a field of the artifact changed | `artifact_id`, `delta` | `version`, `item_id`, `item_key`, `change` with one of `item_created`, `item_updated`, `item_deleted`, `artifact_updated` |
 | `message_delivered` | A pending user message was taken in by a step | - | `message_id`, `step_id`, `node` |
 | `project_named` | The run named its project, which was created without a name | - | `step_id`, `project_id`, `name` |
+| `step_note` | A step wrote a short note to the user while it worked | - | `step_id`, `kind` (`doing`, `finding`, `tool` or `thinking`), `tool` (only with kind `tool`), `text` (Markdown) |
 | `interrupt` | The run paused for input. Not sent for an interrupt resolved at once with the defaults | `node`, `payload` | `step_id`; `payload` contains `interrupt_id`, `prompt`, `options`, `questions`, `allow_edits`, `review_artifacts` |
 | `error` | The run failed | `message` | `code`, one of the codes in [Runtime: failures](architecture/runtime.md#failures); `stage` |
 | `done` | The run ended | - | `status` with one of `succeeded`, `failed`, `cancelled` |
@@ -1084,6 +1087,7 @@ Rules:
 - **Events carry references, not content.** An artifact event gives the ids and versions; the client fetches the artifact or the item when it needs the content. A reconnecting client therefore never applies a stale copy. `name` in `artifact_created` is the title of the artifact.
 - **A name is a record of the step.** `project_named` gives the name that the run chose. The client reads the current name from the project, which the user may have changed since, so a replayed event never brings back an old name.
 - **Token text is grouped.** The server stores and sends token text in chunks of at most 200 ms of output, not one event per token, so the event log stays small and a replay is fast.
+- **A note is a record of the step.** `step_note` carries its short text, which is also stored in the `notes` of the step, so a client that reloads the steps gets the same notes as one that read the stream. `thinking` (Later) is sent only when the model provider returns a summary of its reasoning; with a provider that returns none, a run has no `thinking` note. The server sends a note as soon as the model has written it, not when the whole answer is done, when the model writes the `notes` field first, as the output models ask; with a model that writes the fields in another order the notes come after the answer, still before the `node_end`.
 - **Unknown types are ignored.** A client skips an event type it does not know, so a type can be added without a new API version.
 
 ## 7. Main flows

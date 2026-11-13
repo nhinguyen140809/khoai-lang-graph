@@ -8,15 +8,19 @@ import time
 from pathlib import Path
 from tempfile import gettempdir
 from typing import TYPE_CHECKING, Any
+from unittest.mock import patch
 from uuid import UUID, uuid4
 
 import pytest
 from httpx import ASGITransport, AsyncClient
 from sqlalchemy import select
 
+import khoailanggraph.llm.factory as llm_factory
 from khoailanggraph.features.me.models import UserRow
 from khoailanggraph.features.runs import service as runs_service
+from khoailanggraph.features.runs.executor import RunWalker
 from khoailanggraph.features.runs.models import DirectiveRow, RunEventRow
+from khoailanggraph.llm import reset_model_cache
 from khoailanggraph.main import create_app
 from khoailanggraph.platform.db import (
     ensure_schema,
@@ -26,6 +30,7 @@ from khoailanggraph.platform.db import (
 )
 from khoailanggraph.settings import Settings, get_settings
 from support.api_helpers import REGISTER, TASK
+from support.fake_data import DemoData, _plain
 
 if TYPE_CHECKING:
     from collections.abc import AsyncIterator
@@ -110,7 +115,7 @@ async def test_a_run_pauses_at_a_review_and_waits_for_the_user(client: AsyncClie
     assert interrupt["node"] == "checkpoint_personas"
     assert interrupt["allow_edits"] is True
     assert [ref["kind"] for ref in interrupt["review_artifacts"]] == ["persona_catalog"]
-    assert [option["key"] for option in interrupt["options"]] == ["approve"]
+    assert [option["key"] for option in interrupt["options"]] == ["approve", "other"]
     thread = (await client.get(f"{API}/threads/{thread_id}")).json()
     assert thread["active_run_id"] == run["id"]
 
@@ -176,7 +181,11 @@ async def test_the_answer_continues_the_run_from_the_chosen_option(client: Async
     assert response.status_code == 202
     finished = (await client.get(f"{API}/runs/{run['id']}")).json()
     assert finished["status"] == "succeeded"
-    resolved = (await client.get(f"{API}/runs/{run['id']}/interrupts")).json()["items"][0]
+    resolved = next(
+        entry
+        for entry in (await client.get(f"{API}/runs/{run['id']}/interrupts")).json()["items"]
+        if entry["node"] == "checkpoint_personas"
+    )
     assert resolved["status"] == "resolved"
     assert resolved["decision"]["option"] == "approve"
     assert resolved["decision"]["decided_by"] is not None
@@ -187,7 +196,7 @@ async def test_the_answer_continues_the_run_from_the_chosen_option(client: Async
     )
     assert catalog["review_status"] == "approved"
     steps = (await client.get(f"{API}/runs/{run['id']}/steps", params={"limit": 200})).json()
-    assert steps["items"][0]["usage"]["output_tokens"] > 0
+    assert max(step["usage"]["output_tokens"] for step in steps["items"]) > 0
     assert finished["usage"]["output_tokens"] > 0
 
 
@@ -420,7 +429,7 @@ async def test_the_text_a_node_generates_and_the_tools_it_calls_are_events(
     assert tokens
     first = jsonlib.loads(tokens[0].data_json)
     assert first["text"]
-    assert first["node"] == "planner"
+    assert first["node"] == "intent_router"
     assert tokens[0].step_id is not None
     assert str(tokens[0].step_id) == first["step_id"]
     called = [jsonlib.loads(event.data_json)["tool"] for event in tools]
@@ -456,5 +465,212 @@ async def test_a_tool_that_runs_too_long_fails_the_run_with_timeout(
     run = (await _send(client, await _thread(client), []))["run"]
 
     assert run["status"] == "failed"
-    assert run["error"]["code"] == "timeout"
+    assert run["error"]["code"] == "timeout", run["error"]
     assert "research_search" in run["error"]["message"]
+
+
+async def test_a_step_keeps_the_notes_it_wrote_and_the_stream_sends_each_one(
+    client: AsyncClient, app: FastAPI
+) -> None:
+    thread_id = await _thread(client)
+    run = (await _send(client, thread_id, ["checkpoint_personas"]))["run"]
+
+    steps = (await client.get(f"{API}/runs/{run['id']}/steps")).json()["items"]
+    planner = next(step for step in steps if step["node"] == "planner")
+    text = await _listen(app, client, f"{API}/runs/{run['id']}/stream", 1.5)
+
+    assert [(note["kind"], note["text"]) for note in planner["notes"]] == [
+        ("doing", "I am listing who the idea affects."),
+        ("finding", "The idea does not say who **approves** a session."),
+    ]
+    assert all(note["created_at"].endswith("Z") for note in planner["notes"])
+    assert text.count("event: step_note") >= len(planner["notes"])
+    corpus = next(step for step in steps if step["node"] == "corpus_builder")
+    searched = [note for note in corpus["notes"] if note["kind"] == "tool"]
+    assert len(searched) == 2, "one note for each search that the agent made"
+    assert {note["tool"] for note in searched} == {"search"}
+    # The notes of a step come before its end, and its report comes after them.
+    planner_end = text.index("event: node_end", text.index('"node": "planner"'))
+    assert text.index("event: step_note") < planner_end
+
+
+async def test_the_questions_of_the_agent_and_the_review_are_separate_interrupts(
+    client: AsyncClient,
+) -> None:
+    thread_id = await _thread(client)
+    run = (await _send(client, thread_id, ["ask_personas", "checkpoint_personas"]))["run"]
+
+    ask = await _pending(client, run["id"])
+
+    assert (ask["node"], ask["purpose"]) == ("ask_personas", "ask")
+    assert ask["review_artifacts"] == []
+    (question,) = ask["questions"]
+    assert question["source"] == "agent"
+    assert question["key"] == "focus"
+    assert question["default_answer"]["choice_keys"] == ["students"]
+    assert [choice["key"] for choice in question["choices"]] == ["students", "mentors", "other"]
+
+    assert ask["options"] == [], "an ask has no option: its form is the questions"
+    assert (await _resume(client, run["id"], ask)).status_code == 202
+    review = await _pending(client, run["id"])
+
+    assert (review["node"], review["purpose"]) == ("checkpoint_personas", "review")
+    assert review["questions"] == [], "a review holds the documents and no question"
+    assert review["review_artifacts"]
+    assert review["prompt"].startswith("I proposed the interviewees.")
+
+
+async def test_the_planner_asks_before_the_plan_and_writes_it_from_the_answers(
+    client: AsyncClient,
+) -> None:
+    seen_by_the_plan: list[str] = []
+
+    class AskingPlannerData(DemoData):
+        PlannerQuestionsOutput = staticmethod(
+            lambda system, user, call_number: {
+                "questions": [
+                    {
+                        "key": "login",
+                        "kind": "single_select",
+                        "prompt": "How do students sign in?",
+                        "choices": [
+                            {"key": "campus", "label": "With their campus account"},
+                            {"key": "own", "label": "With an account of this app"},
+                        ],
+                        "default_choice_keys": ["campus"],
+                    }
+                ],
+            }
+        )
+
+        @staticmethod
+        def PlannerOutput(system: str, user: str, call_number: int) -> dict[str, Any]:  # noqa: N802 - schema name
+            seen_by_the_plan.append(user)
+            return _plain(system, user, call_number)
+
+    thread_id = await _thread(client)
+    with patch.object(llm_factory, "make_demo_data", lambda _name, cls=AskingPlannerData: cls()):
+        reset_model_cache()
+        run = (await _send(client, thread_id, ["checkpoint_plan"]))["run"]
+
+        assert run["status"] == "interrupted"
+        ask = await _pending(client, run["id"])
+
+        assert (ask["node"], ask["purpose"]) == ("checkpoint_plan", "ask")
+        assert ask["review_artifacts"] == [], "there is no plan yet: the questions come first"
+        assert ask["options"] == []
+        (question,) = ask["questions"]
+        assert (question["key"], question["default_answer"]["choice_keys"]) == (
+            "login",
+            ["campus"],
+        )
+        assert seen_by_the_plan == [], "the plan is not written before the answers"
+
+        accepted = await _resume(
+            client,
+            run["id"],
+            ask,
+            answers={"login": {"choice_keys": ["own"], "text": None, "number": None}},
+        )
+    reset_model_cache()
+
+    assert accepted.status_code == 202
+    finished = (await client.get(f"{API}/runs/{run['id']}")).json()
+    assert finished["status"] == "succeeded"
+    # The planner comes back with the answers as a part of the idea and writes the plan.
+    assert "How do students sign in?: own" in seen_by_the_plan[0]
+    steps = (await client.get(f"{API}/runs/{run['id']}/steps", params={"limit": 200})).json()
+    assert [step["node"] for step in steps["items"]][:5] == [
+        "intent_router",
+        "planner",
+        "checkpoint_plan",
+        "planner",
+        "corpus_builder",
+    ]
+
+
+async def test_the_answers_to_the_questions_of_the_agent_are_checked_and_continue_the_run(
+    client: AsyncClient,
+) -> None:
+    thread_id = await _thread(client)
+    run = (await _send(client, thread_id, ["ask_personas"]))["run"]
+    interrupt = await _pending(client, run["id"])
+
+    refused = await _resume(
+        client,
+        run["id"],
+        interrupt,
+        answers={"focus": {"choice_keys": ["other"], "text": None, "number": None}},
+    )
+    accepted = await _resume(
+        client,
+        run["id"],
+        interrupt,
+        answers={"focus": {"choice_keys": ["mentors"], "text": None, "number": None}},
+    )
+
+    assert refused.status_code == 422
+    assert accepted.status_code == 202
+    interrupts = (await client.get(f"{API}/runs/{run['id']}/interrupts")).json()["items"]
+    ask = next(item for item in interrupts if item["node"] == "ask_personas")
+    assert ask["decision"]["answers"]["focus"]["choice_keys"] == ["mentors"]
+
+
+async def test_something_else_needs_words_and_goes_to_the_intent_router_as_a_message(
+    client: AsyncClient,
+) -> None:
+    thread_id = await _thread(client)
+    run = (await _send(client, thread_id, ["checkpoint_personas"]))["run"]
+    interrupt = await _pending(client, run["id"])
+    other = next(option for option in interrupt["options"] if option["key"] == "other")
+
+    refused = await _resume(client, run["id"], interrupt, option="other")
+    accepted = await _resume(
+        client,
+        run["id"],
+        interrupt,
+        option="other",
+        feedback="Also interview a librarian.",
+    )
+
+    assert other["requires_feedback"] is True
+    assert other["approves"] is False
+    assert refused.status_code == 422
+    assert accepted.status_code == 202
+    messages = (await client.get(f"{API}/threads/{thread_id}/messages")).json()["items"]
+    said = [message for message in messages if message["content"] == "Also interview a librarian."]
+    assert [message["author"] for message in said] == ["user"]
+    deadline = time.monotonic() + 30
+    while time.monotonic() < deadline:
+        steps = (await client.get(f"{API}/runs/{run['id']}/steps")).json()["items"]
+        if any(step["node"] == "intent_router" for step in steps):
+            break
+        await asyncio.sleep(0.5)
+    assert any(step["node"] == "intent_router" for step in steps)
+
+
+def test_the_answers_about_a_message_go_back_to_the_router_with_the_message() -> None:
+    state: Any = {
+        "initial_intent": "A booking app",
+        "review_briefs": {"ask_message": {"message": "1. Change the limit"}},
+    }
+    RunWalker._settle_asked_idea("ask_message", "intent_router", state, ["- Which: length"])
+
+    answered = state["review_briefs"]["ask_message"]["answered_message"]
+    assert answered.startswith("1. Change the limit")
+    assert "- Which: length" in answered
+    assert state["initial_intent"] == "A booking app"
+
+    blank: Any = {"review_briefs": {"ask_message": {"message": "1. Change it"}}}
+    RunWalker._settle_asked_idea("ask_message", "intent_router", blank, [])
+    assert (
+        "left the questions unanswered" in blank["review_briefs"]["ask_message"]["answered_message"]
+    )
+
+
+def test_the_answers_about_the_idea_become_a_part_of_the_idea() -> None:
+    state: Any = {"initial_intent": "A booking app", "review_briefs": {}}
+    RunWalker._settle_asked_idea("checkpoint_plan", "planner", state, ["- Login: campus"])
+
+    assert state["initial_intent"].endswith("Clarifications from the user:\n- Login: campus")
+    assert state["review_briefs"] == {}

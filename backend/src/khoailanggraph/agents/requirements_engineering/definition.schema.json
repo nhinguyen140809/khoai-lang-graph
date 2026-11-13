@@ -69,6 +69,16 @@
       "items": { "$ref": "#/$defs/valueList" },
       "description": "Every named list of allowed values for a content field that names it with x-value-list."
     },
+    "tools": {
+      "type": "array",
+      "items": { "$ref": "#/$defs/tool" },
+      "description": "Every tool that an agent may use while it works. A note of a step that tells of the use of a tool names one of them, and a client takes its words and its icon from here."
+    },
+    "persona_aspects": {
+      "type": "array",
+      "items": { "$ref": "#/$defs/personaAspect" },
+      "description": "The aspects that every persona is scored on, defined by the system: the first tier. The agent that plans the interviews may propose more for a project: the second tier."
+    },
     "directive_kinds": {
       "type": "array",
       "items": { "$ref": "#/$defs/directiveKind" },
@@ -250,7 +260,16 @@
         },
         "agent_questions": {
           "type": "boolean",
-          "description": "Whether the agent node before the checkpoint may add questions at run time, each with a default."
+          "description": "Whether the agent may add questions at run time, each with a default."
+        },
+        "purpose": {
+          "enum": ["review", "ask"],
+          "default": "review",
+          "description": "What the user does at this checkpoint. `review`: look at documents and approve them or ask for changes; it holds no question of the agent. `ask`: answer the questions of the agent, with no document under review; the run does not pause when the agent has no question."
+        },
+        "asks_before": {
+          "$ref": "#/$defs/name",
+          "description": "For an `ask` checkpoint: the review checkpoint that follows it. The questions are those that the agent wrote for that review. Without it, the agent writes the questions from the idea of the product."
         }
       },
       "required": ["id", "kind", "label", "title", "stage", "prompt", "review_artifact_kinds", "allow_edits", "options", "questions", "agent_questions"]
@@ -481,6 +500,44 @@
         }
       },
       "required": ["source", "target"]
+    },
+    "personaAspect": {
+      "type": "object",
+      "additionalProperties": false,
+      "properties": {
+        "key": { "$ref": "#/$defs/name" },
+        "title": { "type": "string", "description": "What the user reads." },
+        "description": { "type": "string", "description": "What the aspect measures, in one sentence." },
+        "low": { "type": "string", "description": "What a score of 1 means." },
+        "high": { "type": "string", "description": "What a score of 5 means." }
+      },
+      "required": ["key", "title", "description", "low", "high"]
+    },
+    "tool": {
+      "type": "object",
+      "additionalProperties": false,
+      "properties": {
+        "key": { "$ref": "#/$defs/name" },
+        "title": { "type": "string", "description": "What the tool is, in a few words." },
+        "description": { "type": "string", "description": "What the tool is for." },
+        "uses": {
+          "type": "object",
+          "additionalProperties": false,
+          "properties": {
+            "one": { "type": "string" },
+            "other": {
+              "type": "string",
+              "description": "The line for the uses of the tool that follow one another in a step. `{count}` stands for their number."
+            }
+          },
+          "required": ["one", "other"]
+        },
+        "icon": {
+          "enum": ["search", "tool"],
+          "description": "The mark of the tool in a client, from a fixed set that a client draws."
+        }
+      },
+      "required": ["key", "title", "description", "uses", "icon"]
     },
     "valueList": {
       "type": "object",

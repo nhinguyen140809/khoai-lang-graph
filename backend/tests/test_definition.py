@@ -69,6 +69,13 @@ def test_checkpoint_options_route_and_default_exactly_once() -> None:
             per_node_targets.setdefault(str(edge["source"]), set()).add(str(edge["option"]))
 
     for node_id, node in wf.checkpoint_nodes().items():
+        if node.get("purpose") == "ask":
+            # A checkpoint that only asks has no option: the run goes on to the next node.
+            assert node["options"] == [], node_id
+            leaving = [edge for edge in wf.edges() if edge["source"] == node_id]
+            assert len(leaving) == 1, node_id
+            assert leaving[0]["option"] is None, node_id
+            continue
         options = {str(option["key"]) for option in node.get("options", [])}
         is_defaults = [option for option in node.get("options", []) if option.get("is_default")]
         assert len(is_defaults) == 1, f"{node_id} needs exactly one default option"
@@ -121,3 +128,13 @@ def test_run_parameter_defaults_validate() -> None:
 
 def test_state_schema_is_valid_json_schema() -> None:
     Draft202012Validator.check_schema(wf.state_schema())
+
+
+def test_every_tool_has_its_words_and_a_mark_the_schema_allows(
+    definition_schema: dict[str, Any],
+) -> None:
+    marks = set(definition_schema["$defs"]["tool"]["properties"]["icon"]["enum"])
+    for key, tool in wf.tools().items():
+        assert tool["uses"]["one"].strip(), key
+        assert "{count}" in tool["uses"]["other"], key
+        assert tool["icon"] in marks, key

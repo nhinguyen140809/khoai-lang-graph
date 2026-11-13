@@ -9,7 +9,7 @@ from __future__ import annotations
 
 import json
 from datetime import UTC, datetime
-from typing import TYPE_CHECKING, Any, cast
+from typing import TYPE_CHECKING, Any, Literal, cast
 from uuid import UUID
 
 from sqlalchemy import func, select
@@ -137,6 +137,10 @@ def interrupt_output(row: InterruptRow, decision: HumanDecisionRow | None) -> sc
         run_id=str(row.run_id),
         step_id=str(row.step_id) if row.step_id else None,
         node=row.node,
+        purpose=cast(
+            "Literal['review', 'ask']",
+            workflow_definition.nodes().get(row.node, {}).get("purpose", "review"),
+        ),
         prompt=row.prompt,
         options=json.loads((row.options_json or b"[]").decode("utf-8")),
         questions=[{"source": "definition", **question} for question in questions],
@@ -215,6 +219,7 @@ def run_step_output(row: RunStepRow) -> schemas.RunStep:
 
     usage = json.loads((row.usage_json or b"null").decode("utf-8")) or {}
     produced = json.loads((row.produced_json or b"null").decode("utf-8")) or []
+    notes = json.loads((row.notes_json or b"null").decode("utf-8")) or []
     return schemas.RunStep(
         id=str(row.id),
         run_id=str(row.run_id),
@@ -238,6 +243,7 @@ def run_step_output(row: RunStepRow) -> schemas.RunStep:
             }
         ),
         produced=[schemas.ItemRef.model_validate(item) for item in produced],
+        notes=[schemas.StepNote.model_validate(note) for note in notes],
         error=row.error,
         started_at=row.started_at,
         finished_at=row.finished_at,

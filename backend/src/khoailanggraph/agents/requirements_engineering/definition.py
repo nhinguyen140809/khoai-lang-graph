@@ -3,7 +3,7 @@
 The committed `definition.v2.json` beside this module is the single description
 of the graph: the name a run records, the entry points, the agent roles and
 their prompt versions, the stages, the nodes with their checkpoint options,
-the edges, the artifact and item kinds, the link types, the value lists, the
+the edges, the artifact and item kinds, the link types, the tools, the value lists, the
 directive kinds, the export templates, and the schemas of the run parameters
 and the workflow state. The file is a copy of `docs/workflow/`; run
 `scripts/sync_from_docs.py` after a change there. A file never changes once
@@ -66,6 +66,11 @@ def value_lists() -> dict[str, list[dict[str, Any]]]:
     return {str(entry["key"]): list(entry.get("values", [])) for entry in DEFINITION["value_lists"]}
 
 
+def tools() -> dict[str, dict[str, Any]]:
+    """The tools of the definition, keyed by tool. A definition may have none."""
+    return {str(entry["key"]): entry for entry in DEFINITION.get("tools", [])}
+
+
 def artifact_kinds() -> dict[str, dict[str, Any]]:
     """The artifact kinds of the definition, keyed by kind."""
     return {str(entry["kind"]): entry for entry in DEFINITION["artifact_kinds"]}
@@ -114,6 +119,11 @@ def agent_nodes() -> dict[str, dict[str, Any]]:
 def node_of_edge_options(node_id: str) -> list[dict[str, Any]]:
     """The options of a checkpoint node (empty for other nodes)."""
     return list(nodes().get(node_id, {}).get("options", []))
+
+
+def persona_aspects() -> list[dict[str, Any]]:
+    """The aspects that every persona is scored on, defined by the system (the first tier)."""
+    return [dict(entry) for entry in DEFINITION.get("persona_aspects", [])]
 
 
 def run_parameters_schema() -> dict[str, Any]:

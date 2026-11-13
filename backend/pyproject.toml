@@ -136,7 +136,7 @@ layers = [
 # (docs/API.md §4): they raise `ApiError` problems, take the `require_user`
 # dependency and answer with `Page` envelopes directly. Every exception is
 # enumerated, never wildcarded; the domain-error translation that would
-# remove these is a follow-up in backend/gap-report.md.
+# remove these is a follow-up.
 ignore_imports = [
     "khoailanggraph.features.artifacts.editing -> khoailanggraph.api.errors",
     "khoailanggraph.features.artifacts.router -> khoailanggraph.api.deps",

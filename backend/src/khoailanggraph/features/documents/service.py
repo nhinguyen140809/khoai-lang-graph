@@ -88,9 +88,10 @@ async def save_document(
         document_id = document.id
         version_number = 1
     else:
-        document = await session.get(SourceDocumentRow, first_version_id)
-        if document is None or document.deleted_at is not None or document.project_id != project_id:
+        found = await session.get(SourceDocumentRow, first_version_id)
+        if found is None or found.deleted_at is not None or found.project_id != project_id:
             raise ApiError(404, "not_found", "Not found", "The document does not exist.")
+        document = found
         version_number = document.latest_version + 1
         document.latest_version = version_number
         document.updated_at = utcnow()

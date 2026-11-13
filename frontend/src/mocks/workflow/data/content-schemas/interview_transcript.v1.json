@@ -12,7 +12,10 @@
     "participants",
     "turn_count",
     "status",
-    "stop_reason"
+    "stop_reason",
+    "data_coverage",
+    "top_findings",
+    "follow_ups"
   ],
   "type": "object",
   "additionalProperties": false,
@@ -102,12 +105,64 @@
       "description": "Why the interview ended. Null while it is in progress.",
       "x-ui-widget": "separator",
       "readOnly": true
+    },
+    "data_coverage": {
+      "title": "What was covered",
+      "type": "array",
+      "items": {
+        "type": "object",
+        "additionalProperties": false,
+        "properties": {
+          "data": {
+            "title": "What to find out",
+            "type": "string",
+            "description": "One item of the data that the plan asks the interviews to bring back.",
+            "x-ui-widget": "text"
+          },
+          "covered": {
+            "title": "Covered",
+            "type": "boolean",
+            "description": "Whether the interview brought that data back.",
+            "x-ui-widget": "boolean"
+          }
+        },
+        "required": [
+          "data",
+          "covered"
+        ]
+      },
+      "description": "For each item of the data that the plan asks for, whether this interview brought it back.",
+      "x-ui-widget": "object-list",
+      "readOnly": true
+    },
+    "top_findings": {
+      "title": "What stood out",
+      "type": "array",
+      "items": {
+        "type": "string"
+      },
+      "description": "The three or four problems or wishes that the interview raised, in plain words.",
+      "x-ui-widget": "list",
+      "readOnly": true
+    },
+    "follow_ups": {
+      "title": "Still to ask",
+      "type": "array",
+      "items": {
+        "type": "string"
+      },
+      "description": "Questions that the interview left open for a later round.",
+      "x-ui-widget": "list",
+      "readOnly": true
     }
   },
   "required": [
     "participants",
     "turn_count",
     "status",
-    "stop_reason"
+    "stop_reason",
+    "data_coverage",
+    "top_findings",
+    "follow_ups"
   ]
 }

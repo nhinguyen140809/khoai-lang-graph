@@ -22,16 +22,29 @@ from khoailanggraph.domain.rules import (
 VALID_PERSONA: dict[str, Any] = {
     "name": "Minh — 3rd-year CS student",
     "stakeholder_type": "Student",
+    "occupation": "Student",
+    "age_range": "20-22",
     "evaluative_dimension": "simplicity and speed of booking",
     "grounded_in": ["OBS-001"],
     "background": "A busy undergraduate.",
+    "typical_day": "Lectures all day.",
     "expertise": "Basic programming",
+    "current_workarounds": ["Asks seniors"],
+    "vocabulary": ["quick chat"],
     "goals": ["Find a mentor"],
     "interests": ["Internships"],
     "constraints": ["Full course load"],
     "priorities": ["Relevant matches"],
     "concerns": ["Mentors who never reply"],
     "behavioral_tendencies": "Direct, concise answers.",
+    "scores": [
+        {
+            "aspect": "tech_comfort",
+            "title": "Comfort with technology",
+            "score": 5,
+            "rationale": "Uses his phone for everything.",
+        }
+    ],
     "evidence": [
         {
             "observation": "OBS-001",

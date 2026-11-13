@@ -2,145 +2,405 @@
   "name": "requirements_engineering",
   "version": 2,
   "description": "Elicits requirements from a product idea: builds a research corpus of real documents (member uploads first, live search after), mines evidence-backed stakeholder perspectives from them, grounds the simulated stakeholder personas in that evidence, interviews them, then analyzes, specifies, backlogizes and validates the requirements, with human review at three checkpoints.",
-  "entry": { "first_run": "planner", "later_runs": "intent_router", "pending_messages": "intent_router" },
+  "entry": {
+    "first_run": "intent_router",
+    "later_runs": "intent_router",
+    "pending_messages": "intent_router"
+  },
   "agent_roles": [
-    { "key": "planner", "label": "Planner", "description": "Turns the intent into an elicitation plan.", "prompt_version": 1 },
-    { "key": "corpus_builder", "label": "Corpus builder", "description": "Chooses the documents that the interviewees are based on.", "prompt_version": 1 },
+    { "key": "planner", "label": "Planner", "description": "Turns the intent into an elicitation plan.", "prompt_version": 2 },
+    { "key": "corpus_builder", "label": "Corpus builder", "description": "Chooses the documents that the interviewees are based on.", "prompt_version": 2 },
     {
       "key": "stakeholder_miner",
       "label": "Stakeholder miner",
       "description": "Finds what each kind of stakeholder cares about in those documents.",
-      "prompt_version": 1
+      "prompt_version": 2
     },
     {
       "key": "persona_generator",
       "label": "Persona generator",
       "description": "Creates the interviewees from the evidence found in those documents.",
-      "prompt_version": 2
+      "prompt_version": 3
     },
-    { "key": "interviewer", "label": "Interviewer", "description": "Asks interview questions.", "prompt_version": 1 },
-    { "key": "persona_agent", "label": "Persona agent", "description": "Answers as one persona.", "prompt_version": 1 },
-    { "key": "analyst", "label": "Analyst", "description": "Extracts and analyzes requirements.", "prompt_version": 1 },
-    { "key": "requirement_engineer", "label": "Requirement engineer", "description": "Writes the requirement specification.", "prompt_version": 1 },
-    { "key": "backlog_manager", "label": "Backlog manager", "description": "Writes the product backlog.", "prompt_version": 1 },
-    { "key": "validator", "label": "Validator", "description": "Checks the outputs and reports issues.", "prompt_version": 1 },
-    { "key": "intent_router", "label": "Intent router", "description": "Decides which node a message sent by the user should go to.", "prompt_version": 1 }
+    { "key": "interviewer", "label": "Interviewer", "description": "Asks interview questions.", "prompt_version": 2 },
+    { "key": "persona_agent", "label": "Persona agent", "description": "Answers as one persona.", "prompt_version": 2 },
+    { "key": "analyst", "label": "Analyst", "description": "Extracts and analyzes requirements.", "prompt_version": 2 },
+    { "key": "requirement_engineer", "label": "Requirement engineer", "description": "Writes the requirement specification.", "prompt_version": 2 },
+    { "key": "backlog_manager", "label": "Backlog manager", "description": "Writes the product backlog.", "prompt_version": 2 },
+    { "key": "validator", "label": "Validator", "description": "Checks the outputs and reports issues.", "prompt_version": 2 },
+    { "key": "intent_router", "label": "Request coordinator", "description": "Takes a request or a question you send after the first run and hands it to the step that should deal with it.", "prompt_version": 2 }
   ],
   "stages": [
-    { "key": "intent_routing", "title": "Intent routing", "internal": true, "parent": null },
-    { "key": "planning", "title": "Planning the interviews", "internal": false, "parent": null },
-    { "key": "research", "title": "Finding evidence for the interviewees", "internal": false, "parent": null },
-    { "key": "persona_generation", "title": "Proposing the interviewees", "internal": false, "parent": null },
-    { "key": "persona_review", "title": "Finalizing the interviewees", "internal": false, "parent": null },
-    { "key": "interviewing", "title": "Interviewing", "internal": false, "parent": null },
-    { "key": "analysis", "title": "Analysing the interviews", "internal": false, "parent": null },
-    { "key": "analysis_review", "title": "Reviewing the analysis", "internal": false, "parent": null },
-    { "key": "specification", "title": "Writing the specification", "internal": false, "parent": null },
-    { "key": "specification_review", "title": "Reviewing the specification", "internal": false, "parent": null },
-    { "key": "backlog", "title": "Writing the user stories", "internal": false, "parent": null },
-    { "key": "validation", "title": "Verifying the documents", "internal": false, "parent": null },
-    { "key": "done", "title": "Finished", "internal": false, "parent": null }
+    {
+      "key": "intent_routing",
+      "title": "Handling your request",
+      "internal": true,
+      "parent": null
+    },
+    {
+      "key": "planning",
+      "title": "Planning the interviews",
+      "internal": false,
+      "parent": null
+    },
+    {
+      "key": "planning_review",
+      "title": "Plan review",
+      "internal": false,
+      "parent": null
+    },
+    {
+      "key": "research",
+      "title": "Finding evidence for the interviewees",
+      "internal": false,
+      "parent": null
+    },
+    {
+      "key": "persona_generation",
+      "title": "Proposing the interviewees",
+      "internal": false,
+      "parent": null
+    },
+    {
+      "key": "persona_review",
+      "title": "Finalizing the interviewees",
+      "internal": false,
+      "parent": null
+    },
+    {
+      "key": "interviewing",
+      "title": "Interviewing",
+      "internal": false,
+      "parent": null
+    },
+    {
+      "key": "analysis",
+      "title": "Analysing the interviews",
+      "internal": false,
+      "parent": null
+    },
+    {
+      "key": "analysis_review",
+      "title": "Reviewing the analysis",
+      "internal": false,
+      "parent": null
+    },
+    {
+      "key": "specification",
+      "title": "Writing the specification",
+      "internal": false,
+      "parent": null
+    },
+    {
+      "key": "specification_review",
+      "title": "Reviewing the specification",
+      "internal": false,
+      "parent": null
+    },
+    {
+      "key": "backlog",
+      "title": "Writing the user stories",
+      "internal": false,
+      "parent": null
+    },
+    {
+      "key": "validation",
+      "title": "Verifying the documents",
+      "internal": false,
+      "parent": null
+    },
+    {
+      "key": "done",
+      "title": "Finished",
+      "internal": false,
+      "parent": null
+    }
   ],
   "nodes": [
-    { "id": "__start__", "kind": "start", "label": "START" },
-    { "id": "intent_router", "kind": "agent", "label": "intent_router", "stage": "intent_routing", "agent_role": "intent_router" },
-    { "id": "planner", "kind": "agent", "label": "planner", "stage": "planning", "agent_role": "planner" },
-    { "id": "corpus_builder", "kind": "agent", "label": "corpus_builder", "stage": "research", "agent_role": "corpus_builder" },
-    { "id": "stakeholder_miner", "kind": "agent", "label": "stakeholder_miner", "stage": "research", "agent_role": "stakeholder_miner" },
-    { "id": "persona_generator", "kind": "agent", "label": "persona_generator", "stage": "persona_generation", "agent_role": "persona_generator" },
+    {
+      "id": "__start__",
+      "kind": "start",
+      "label": "START"
+    },
+    {
+      "id": "ask_message",
+      "kind": "checkpoint",
+      "purpose": "ask",
+      "label": "ask_message",
+      "title": "Questions about your message",
+      "stage": "intent_routing",
+      "prompt": "A few questions, so that I understand what you want changed. Answer what you can; any of them may be left blank.",
+      "review_artifact_kinds": [],
+      "allow_edits": false,
+      "options": [],
+      "questions": [],
+      "agent_questions": true
+    },
+    {
+      "id": "intent_router",
+      "kind": "agent",
+      "label": "intent_router",
+      "stage": "intent_routing",
+      "agent_role": "intent_router"
+    },
+    {
+      "id": "planner",
+      "kind": "agent",
+      "label": "planner",
+      "stage": "planning",
+      "agent_role": "planner"
+    },
+    {
+      "id": "checkpoint_plan",
+      "kind": "checkpoint",
+      "purpose": "ask",
+      "label": "checkpoint_plan",
+      "title": "Answer the clarifying questions",
+      "stage": "planning_review",
+      "prompt": "A few questions, so that the plan, the research and the interviews fit your situation. Answer what you can; any of them may be left blank.",
+      "review_artifact_kinds": [],
+      "allow_edits": false,
+      "options": [],
+      "questions": [],
+      "agent_questions": true
+    },
+    {
+      "id": "corpus_builder",
+      "kind": "agent",
+      "label": "corpus_builder",
+      "stage": "research",
+      "agent_role": "corpus_builder"
+    },
+    {
+      "id": "stakeholder_miner",
+      "kind": "agent",
+      "label": "stakeholder_miner",
+      "stage": "research",
+      "agent_role": "stakeholder_miner"
+    },
+    {
+      "id": "persona_generator",
+      "kind": "agent",
+      "label": "persona_generator",
+      "stage": "persona_generation",
+      "agent_role": "persona_generator"
+    },
+    {
+      "id": "ask_personas",
+      "kind": "checkpoint",
+      "purpose": "ask",
+      "label": "ask_personas",
+      "title": "Questions about the interviewees",
+      "stage": "persona_review",
+      "prompt": "A few questions about the interviewees, so that the interviews focus on what matters to you. Answer what you can; any of them may be left blank.",
+      "review_artifact_kinds": [],
+      "allow_edits": false,
+      "asks_before": "checkpoint_personas",
+      "options": [],
+      "questions": [],
+      "agent_questions": true
+    },
     {
       "id": "checkpoint_personas",
       "kind": "checkpoint",
+      "purpose": "review",
       "label": "checkpoint_personas",
       "title": "Finalize the interviewees",
       "stage": "persona_review",
       "prompt": "Review the personas. Edit them if needed, then approve them.",
-      "review_artifact_kinds": ["persona_catalog"],
+      "review_artifact_kinds": [
+        "persona_catalog"
+      ],
       "allow_edits": true,
-      "options": [ { "key": "approve", "label": "Approve the interviewees", "requires_feedback": false, "approves": true, "is_default": true } ],
+      "options": [
+        { "key": "approve", "label": "Approve the interviewees", "requires_feedback": false, "approves": true, "is_default": true },
+        { "key": "other", "label": "Something else", "requires_feedback": true, "approves": false, "is_default": false }
+      ],
       "questions": [],
       "agent_questions": false
     },
-    { "id": "interviewer", "kind": "agent", "label": "interviewer", "stage": "interviewing", "agent_role": "interviewer" },
-    { "id": "persona_agent", "kind": "agent", "label": "persona_agent", "stage": "interviewing", "agent_role": "persona_agent" },
-    { "id": "analyst", "kind": "agent", "label": "analyst", "stage": "analysis", "agent_role": "analyst" },
-    { "id": "rework_elicitation", "kind": "control", "label": "rework_elicitation", "stage": "interviewing" },
+    {
+      "id": "interviewer",
+      "kind": "agent",
+      "label": "interviewer",
+      "stage": "interviewing",
+      "agent_role": "interviewer"
+    },
+    {
+      "id": "persona_agent",
+      "kind": "agent",
+      "label": "persona_agent",
+      "stage": "interviewing",
+      "agent_role": "persona_agent"
+    },
+    {
+      "id": "analyst",
+      "kind": "agent",
+      "label": "analyst",
+      "stage": "analysis",
+      "agent_role": "analyst"
+    },
+    {
+      "id": "rework_elicitation",
+      "kind": "control",
+      "label": "rework_elicitation",
+      "stage": "interviewing"
+    },
+    {
+      "id": "ask_analysis",
+      "kind": "checkpoint",
+      "purpose": "ask",
+      "label": "ask_analysis",
+      "title": "Questions about the analysis",
+      "stage": "analysis_review",
+      "prompt": "A few questions about the analysis, so that the specification settles what only you can decide. Answer what you can; any of them may be left blank.",
+      "review_artifact_kinds": [],
+      "allow_edits": false,
+      "asks_before": "checkpoint_analysis",
+      "options": [],
+      "questions": [],
+      "agent_questions": true
+    },
     {
       "id": "checkpoint_analysis",
       "kind": "checkpoint",
+      "purpose": "review",
       "label": "checkpoint_analysis",
       "title": "Review the analysis",
       "stage": "analysis_review",
       "prompt": "Review the requirements analysis. Accept it, or reject it with feedback.",
-      "review_artifact_kinds": ["requirements_analysis"],
+      "review_artifact_kinds": [
+        "requirements_analysis"
+      ],
       "allow_edits": true,
       "options": [
         { "key": "accept", "label": "Approve analysis", "requires_feedback": false, "approves": true, "is_default": true },
         { "key": "reject_reanalyse", "label": "Redo the analysis", "requires_feedback": true, "approves": false, "is_default": false },
-        { "key": "reject_reinterview", "label": "Interview again", "requires_feedback": true, "approves": false, "is_default": false }
+        { "key": "reject_reinterview", "label": "Interview again", "requires_feedback": true, "approves": false, "is_default": false },
+        { "key": "other", "label": "Something else", "requires_feedback": true, "approves": false, "is_default": false }
       ],
       "questions": [],
       "agent_questions": false
     },
-    { "id": "requirement_engineer", "kind": "agent", "label": "requirement_engineer", "stage": "specification", "agent_role": "requirement_engineer" },
+    {
+      "id": "requirement_engineer",
+      "kind": "agent",
+      "label": "requirement_engineer",
+      "stage": "specification",
+      "agent_role": "requirement_engineer"
+    },
+    {
+      "id": "ask_spec",
+      "kind": "checkpoint",
+      "purpose": "ask",
+      "label": "ask_spec",
+      "title": "Questions about the specification",
+      "stage": "specification_review",
+      "prompt": "A few questions about the specification, before the backlog is written from it. Answer what you can; any of them may be left blank.",
+      "review_artifact_kinds": [],
+      "allow_edits": false,
+      "asks_before": "checkpoint_spec",
+      "options": [],
+      "questions": [],
+      "agent_questions": true
+    },
     {
       "id": "checkpoint_spec",
       "kind": "checkpoint",
+      "purpose": "review",
       "label": "checkpoint_spec",
       "title": "Review the specification",
       "stage": "specification_review",
       "prompt": "Review the requirement specification. Mark it OK, or not OK with feedback.",
-      "review_artifact_kinds": ["requirement_specification"],
+      "review_artifact_kinds": [
+        "requirement_specification"
+      ],
       "allow_edits": true,
       "options": [
         { "key": "ok", "label": "Approve the specification", "requires_feedback": false, "approves": true, "is_default": true },
-        { "key": "not_ok", "label": "Ask for changes", "requires_feedback": true, "approves": false, "is_default": false }
+        { "key": "not_ok", "label": "Ask for changes", "requires_feedback": true, "approves": false, "is_default": false },
+        { "key": "other", "label": "Something else", "requires_feedback": true, "approves": false, "is_default": false }
       ],
       "questions": [],
       "agent_questions": false
     },
-    { "id": "backlog_manager", "kind": "agent", "label": "backlog_manager", "stage": "backlog", "agent_role": "backlog_manager" },
-    { "id": "validator", "kind": "agent", "label": "validator", "stage": "validation", "agent_role": "validator" },
-    { "id": "__end__", "kind": "end", "label": "END" }
+    {
+      "id": "backlog_manager",
+      "kind": "agent",
+      "label": "backlog_manager",
+      "stage": "backlog",
+      "agent_role": "backlog_manager"
+    },
+    {
+      "id": "validator",
+      "kind": "agent",
+      "label": "validator",
+      "stage": "validation",
+      "agent_role": "validator"
+    },
+    {
+      "id": "__end__",
+      "kind": "end",
+      "label": "END"
+    }
   ],
   "edges": [
-    { "source": "__start__", "target": "planner", "label": null, "conditional": true, "option": null },
-    { "source": "__start__", "target": "intent_router", "label": "later runs", "conditional": true, "option": null },
+    { "source": "__start__", "target": "intent_router", "label": null, "conditional": true, "option": null },
+    { "source": "intent_router", "target": "ask_message", "label": "questions", "conditional": true, "option": null },
+    { "source": "ask_message", "target": "intent_router", "label": null, "conditional": false, "option": null },
     { "source": "intent_router", "target": "planner", "label": null, "conditional": true, "option": null },
     { "source": "intent_router", "target": "interviewer", "label": null, "conditional": true, "option": null },
     { "source": "intent_router", "target": "analyst", "label": null, "conditional": true, "option": null },
     { "source": "intent_router", "target": "requirement_engineer", "label": null, "conditional": true, "option": null },
     { "source": "intent_router", "target": "backlog_manager", "label": null, "conditional": true, "option": null },
-    { "source": "planner", "target": "corpus_builder", "label": null, "conditional": false, "option": null },
+    { "source": "checkpoint_plan", "target": "planner", "label": null, "conditional": false, "option": null },
+    { "source": "planner", "target": "checkpoint_plan", "label": "questions", "conditional": true, "option": null },
+    { "source": "planner", "target": "corpus_builder", "label": "plan written", "conditional": true, "option": null },
     { "source": "corpus_builder", "target": "stakeholder_miner", "label": null, "conditional": false, "option": null },
     { "source": "stakeholder_miner", "target": "persona_generator", "label": null, "conditional": false, "option": null },
-    { "source": "persona_generator", "target": "checkpoint_personas", "label": null, "conditional": false, "option": null },
+    { "source": "persona_generator", "target": "ask_personas", "label": null, "conditional": false, "option": null },
+    { "source": "ask_personas", "target": "checkpoint_personas", "label": null, "conditional": false, "option": null },
     { "source": "checkpoint_personas", "target": "interviewer", "label": "approve / modify", "conditional": true, "option": "approve" },
+    { "source": "checkpoint_personas", "target": "intent_router", "label": "something else", "conditional": true, "option": "other" },
     { "source": "interviewer", "target": "persona_agent", "label": "question", "conditional": true, "option": null },
     { "source": "persona_agent", "target": "interviewer", "label": "answer", "conditional": false, "option": null },
     { "source": "interviewer", "target": "analyst", "label": "all personas interviewed", "conditional": true, "option": null },
     { "source": "analyst", "target": "rework_elicitation", "label": "not OK", "conditional": true, "option": null },
-    { "source": "analyst", "target": "checkpoint_analysis", "label": "OK", "conditional": true, "option": null },
+    { "source": "analyst", "target": "ask_analysis", "label": "OK", "conditional": true, "option": null },
+    { "source": "ask_analysis", "target": "checkpoint_analysis", "label": null, "conditional": false, "option": null },
     { "source": "rework_elicitation", "target": "interviewer", "label": "rework directive", "conditional": false, "option": null },
     { "source": "checkpoint_analysis", "target": "requirement_engineer", "label": "accept", "conditional": true, "option": "accept" },
     { "source": "checkpoint_analysis", "target": "analyst", "label": "reject + re-analyse", "conditional": true, "option": "reject_reanalyse" },
     { "source": "checkpoint_analysis", "target": "rework_elicitation", "label": "reject + re-interview", "conditional": true, "option": "reject_reinterview" },
-    { "source": "requirement_engineer", "target": "checkpoint_spec", "label": null, "conditional": false, "option": null },
+    { "source": "checkpoint_analysis", "target": "intent_router", "label": "something else", "conditional": true, "option": "other" },
+    { "source": "requirement_engineer", "target": "ask_spec", "label": null, "conditional": false, "option": null },
+    { "source": "ask_spec", "target": "checkpoint_spec", "label": null, "conditional": false, "option": null },
     { "source": "checkpoint_spec", "target": "backlog_manager", "label": "OK", "conditional": true, "option": "ok" },
     { "source": "checkpoint_spec", "target": "requirement_engineer", "label": "not OK", "conditional": true, "option": "not_ok" },
+    { "source": "checkpoint_spec", "target": "intent_router", "label": "something else", "conditional": true, "option": "other" },
     { "source": "backlog_manager", "target": "validator", "label": null, "conditional": false, "option": null },
     { "source": "validator", "target": "__end__", "label": "pass", "conditional": true, "option": null },
     { "source": "validator", "target": "requirement_engineer", "label": "fail", "conditional": true, "option": null }
   ],
   "artifact_kinds": [
-    { "kind": "elicitation_plan", "schema_version": 1, "stage": "planning", "per_project": "one", "subject_item_kind": null, "item_kinds": [] },
+    {
+      "kind": "elicitation_plan",
+      "schema_version": 1,
+      "stage": "planning",
+      "per_project": "one",
+      "subject_item_kind": null,
+      "item_kinds": []
+    },
     {
       "kind": "research_corpus",
       "schema_version": 1,
       "stage": "research",
       "per_project": "one",
       "subject_item_kind": null,
-      "item_kinds": ["source_document", "stakeholder_observation"]
+      "item_kinds": [
+        "source_document",
+        "stakeholder_observation"
+      ]
     },
     {
       "kind": "persona_catalog",
@@ -148,7 +408,10 @@
       "stage": "persona_generation",
       "per_project": "one",
       "subject_item_kind": null,
-      "item_kinds": ["section", "persona"]
+      "item_kinds": [
+        "section",
+        "persona"
+      ]
     },
     {
       "kind": "interview_transcript",
@@ -156,7 +419,9 @@
       "stage": "interviewing",
       "per_project": "one_per_subject",
       "subject_item_kind": "persona",
-      "item_kinds": ["interview_message"]
+      "item_kinds": [
+        "interview_message"
+      ]
     },
     {
       "kind": "requirements_analysis",
@@ -164,7 +429,15 @@
       "stage": "analysis",
       "per_project": "one",
       "subject_item_kind": null,
-      "item_kinds": ["section", "raw_requirement", "analyzed_requirement", "latent_need", "assumption", "ambiguity_issue", "conflict"]
+      "item_kinds": [
+        "section",
+        "raw_requirement",
+        "analyzed_requirement",
+        "latent_need",
+        "assumption",
+        "ambiguity_issue",
+        "conflict"
+      ]
     },
     {
       "kind": "requirement_specification",
@@ -172,7 +445,10 @@
       "stage": "specification",
       "per_project": "one",
       "subject_item_kind": null,
-      "item_kinds": ["section", "spec_requirement"]
+      "item_kinds": [
+        "section",
+        "spec_requirement"
+      ]
     },
     {
       "kind": "product_backlog",
@@ -180,7 +456,10 @@
       "stage": "backlog",
       "per_project": "one",
       "subject_item_kind": null,
-      "item_kinds": ["section", "backlog_item"]
+      "item_kinds": [
+        "section",
+        "backlog_item"
+      ]
     },
     {
       "kind": "validation_report",
@@ -188,35 +467,111 @@
       "stage": "validation",
       "per_project": "many",
       "subject_item_kind": null,
-      "item_kinds": ["section", "validation_issue"]
+      "item_kinds": [
+        "section",
+        "validation_issue"
+      ]
     }
   ],
   "item_kinds": [
-    { "kind": "section", "schema_version": 1, "issue": null },
-    { "kind": "source_document", "schema_version": 1, "issue": null },
-    { "kind": "stakeholder_observation", "schema_version": 1, "issue": null },
-    { "kind": "persona", "schema_version": 2, "issue": null },
-    { "kind": "interview_message", "schema_version": 1, "issue": null },
-    { "kind": "raw_requirement", "schema_version": 1, "issue": null },
-    { "kind": "analyzed_requirement", "schema_version": 1, "issue": null },
-    { "kind": "latent_need", "schema_version": 1, "issue": null },
-    { "kind": "assumption", "schema_version": 1, "issue": null },
+    {
+      "kind": "section",
+      "schema_version": 1,
+      "issue": null
+    },
+    {
+      "kind": "source_document",
+      "schema_version": 1,
+      "issue": null
+    },
+    {
+      "kind": "stakeholder_observation",
+      "schema_version": 1,
+      "issue": null
+    },
+    {
+      "kind": "persona",
+      "schema_version": 2,
+      "issue": null
+    },
+    {
+      "kind": "interview_message",
+      "schema_version": 1,
+      "issue": null
+    },
+    {
+      "kind": "raw_requirement",
+      "schema_version": 1,
+      "issue": null
+    },
+    {
+      "kind": "analyzed_requirement",
+      "schema_version": 1,
+      "issue": null
+    },
+    {
+      "kind": "latent_need",
+      "schema_version": 1,
+      "issue": null
+    },
+    {
+      "kind": "assumption",
+      "schema_version": 1,
+      "issue": null
+    },
     {
       "kind": "ambiguity_issue",
       "schema_version": 1,
-      "issue": { "status_field": "status", "open_values": ["open"], "about_link_types": ["concerns"], "party_link_types": [] }
+      "issue": {
+        "status_field": "status",
+        "open_values": [
+          "open"
+        ],
+        "about_link_types": [
+          "concerns"
+        ],
+        "party_link_types": []
+      }
     },
     {
       "kind": "conflict",
       "schema_version": 1,
-      "issue": { "status_field": "status", "open_values": ["open"], "about_link_types": ["concerns"], "party_link_types": ["involves"] }
+      "issue": {
+        "status_field": "status",
+        "open_values": [
+          "open"
+        ],
+        "about_link_types": [
+          "concerns"
+        ],
+        "party_link_types": [
+          "involves"
+        ]
+      }
     },
-    { "kind": "spec_requirement", "schema_version": 1, "issue": null },
-    { "kind": "backlog_item", "schema_version": 1, "issue": null },
+    {
+      "kind": "spec_requirement",
+      "schema_version": 1,
+      "issue": null
+    },
+    {
+      "kind": "backlog_item",
+      "schema_version": 1,
+      "issue": null
+    },
     {
       "kind": "validation_issue",
       "schema_version": 1,
-      "issue": { "status_field": "status", "open_values": ["open"], "about_link_types": ["flags"], "party_link_types": [] }
+      "issue": {
+        "status_field": "status",
+        "open_values": [
+          "open"
+        ],
+        "about_link_types": [
+          "flags"
+        ],
+        "party_link_types": []
+      }
     }
   ],
   "link_types": [
@@ -225,10 +580,28 @@
       "title": "Evidenced by",
       "acyclic": false,
       "agent_only": false,
-      "quotes": { "source": false, "target": true },
+      "quotes": {
+        "source": false,
+        "target": true
+      },
       "pairs": [
-        { "source": ["raw_requirement", "latent_need"], "target": ["interview_message"] },
-        { "source": ["stakeholder_observation"], "target": ["source_document"] }
+        {
+          "source": [
+            "raw_requirement",
+            "latent_need"
+          ],
+          "target": [
+            "interview_message"
+          ]
+        },
+        {
+          "source": [
+            "stakeholder_observation"
+          ],
+          "target": [
+            "source_document"
+          ]
+        }
       ]
     },
     {
@@ -236,27 +609,78 @@
       "title": "Stated by",
       "acyclic": false,
       "agent_only": false,
-      "quotes": { "source": false, "target": false },
-      "pairs": [ { "source": ["raw_requirement"], "target": ["persona"] } ]
+      "quotes": {
+        "source": false,
+        "target": false
+      },
+      "pairs": [
+        {
+          "source": [
+            "raw_requirement"
+          ],
+          "target": [
+            "persona"
+          ]
+        }
+      ]
     },
     {
       "key": "involves",
       "title": "Involves",
       "acyclic": false,
       "agent_only": false,
-      "quotes": { "source": false, "target": false },
-      "pairs": [ { "source": ["analyzed_requirement", "latent_need", "conflict"], "target": ["persona"] } ]
+      "quotes": {
+        "source": false,
+        "target": false
+      },
+      "pairs": [
+        {
+          "source": [
+            "analyzed_requirement",
+            "latent_need",
+            "conflict"
+          ],
+          "target": [
+            "persona"
+          ]
+        }
+      ]
     },
     {
       "key": "derived_from",
       "title": "Based on",
       "acyclic": true,
       "agent_only": false,
-      "quotes": { "source": true, "target": true },
+      "quotes": {
+        "source": true,
+        "target": true
+      },
       "pairs": [
-        { "source": ["analyzed_requirement"], "target": ["raw_requirement", "latent_need"] },
-        { "source": ["spec_requirement"], "target": ["analyzed_requirement"] },
-        { "source": ["backlog_item"], "target": ["spec_requirement"] }
+        {
+          "source": [
+            "analyzed_requirement"
+          ],
+          "target": [
+            "raw_requirement",
+            "latent_need"
+          ]
+        },
+        {
+          "source": [
+            "spec_requirement"
+          ],
+          "target": [
+            "analyzed_requirement"
+          ]
+        },
+        {
+          "source": [
+            "backlog_item"
+          ],
+          "target": [
+            "spec_requirement"
+          ]
+        }
       ]
     },
     {
@@ -264,80 +688,255 @@
       "title": "Applies to",
       "acyclic": false,
       "agent_only": false,
-      "quotes": { "source": false, "target": true },
-      "pairs": [ { "source": ["assumption", "ambiguity_issue", "conflict"], "target": ["raw_requirement", "analyzed_requirement", "spec_requirement"] } ]
+      "quotes": {
+        "source": false,
+        "target": true
+      },
+      "pairs": [
+        {
+          "source": [
+            "assumption",
+            "ambiguity_issue",
+            "conflict"
+          ],
+          "target": [
+            "raw_requirement",
+            "analyzed_requirement",
+            "spec_requirement"
+          ]
+        }
+      ]
     },
     {
       "key": "resolved_by",
       "title": "Resolved by",
       "acyclic": false,
       "agent_only": false,
-      "quotes": { "source": false, "target": true },
-      "pairs": [ { "source": ["ambiguity_issue", "conflict"], "target": ["interview_message"] } ]
+      "quotes": {
+        "source": false,
+        "target": true
+      },
+      "pairs": [
+        {
+          "source": [
+            "ambiguity_issue",
+            "conflict"
+          ],
+          "target": [
+            "interview_message"
+          ]
+        }
+      ]
     },
     {
       "key": "flags",
       "title": "Points out",
       "acyclic": false,
       "agent_only": false,
-      "quotes": { "source": false, "target": true },
-      "pairs": [ { "source": ["validation_issue"], "target": "any" } ]
+      "quotes": {
+        "source": false,
+        "target": true
+      },
+      "pairs": [
+        {
+          "source": [
+            "validation_issue"
+          ],
+          "target": "any"
+        }
+      ]
     },
     {
       "key": "depends_on",
       "title": "Depends on",
       "acyclic": true,
       "agent_only": false,
-      "quotes": { "source": false, "target": false },
-      "pairs": [ { "source": ["spec_requirement", "backlog_item"], "target": "same" } ]
+      "quotes": {
+        "source": false,
+        "target": false
+      },
+      "pairs": [
+        {
+          "source": [
+            "spec_requirement",
+            "backlog_item"
+          ],
+          "target": "same"
+        }
+      ]
     },
     {
       "key": "duplicates",
       "title": "Same as",
       "acyclic": false,
       "agent_only": true,
-      "quotes": { "source": false, "target": false },
-      "pairs": [ { "source": "any", "target": "same" } ]
+      "quotes": {
+        "source": false,
+        "target": false
+      },
+      "pairs": [
+        {
+          "source": "any",
+          "target": "same"
+        }
+      ]
     },
     {
       "key": "supersedes",
       "title": "Replaces",
       "acyclic": true,
       "agent_only": true,
-      "quotes": { "source": false, "target": false },
-      "pairs": [ { "source": "any", "target": "same" } ]
+      "quotes": {
+        "source": false,
+        "target": false
+      },
+      "pairs": [
+        {
+          "source": "any",
+          "target": "same"
+        }
+      ]
     },
     {
       "key": "grounded_in",
       "title": "Based on",
       "acyclic": false,
       "agent_only": true,
-      "quotes": { "source": false, "target": false },
-      "pairs": [ { "source": ["persona"], "target": ["stakeholder_observation"] } ]
+      "quotes": {
+        "source": false,
+        "target": false
+      },
+      "pairs": [
+        {
+          "source": [
+            "persona"
+          ],
+          "target": [
+            "stakeholder_observation"
+          ]
+        }
+      ]
+    }
+  ],
+  "tools": [
+    {
+      "key": "search",
+      "title": "Web search",
+      "description": "Searches the web and academic papers for documents in which real people speak about the topic.",
+      "uses": { "one": "Searched once", "other": "Searched {count} times" },
+      "icon": "search"
     }
   ],
   "value_lists": [
     {
+      "key": "resolution_strategy",
+      "title": "Resolution method",
+      "values": [
+        { "key": "prioritize", "title": "Priority to one wish", "description": "One of the wishes takes priority over the other." },
+        { "key": "compromise", "title": "Compromise", "description": "Both sides give up part of what they want." },
+        { "key": "split", "title": "Division by scope", "description": "Each side receives what it wants in a different part or a different release." },
+        { "key": "alternative", "title": "Alternative solution", "description": "A third option serves both sides." },
+        { "key": "drop", "title": "Removal", "description": "The requirement or the wish is left out." }
+      ]
+    },
+    {
+      "key": "source_type",
+      "title": "Type of source",
+      "values": [
+        { "key": "study", "title": "Study", "description": "A published study or research paper." },
+        { "key": "survey", "title": "Survey", "description": "The answers of many people to the same questions." },
+        { "key": "interview", "title": "Interview", "description": "A conversation with one person." },
+        { "key": "forum_thread", "title": "Forum thread", "description": "A discussion between users on a forum or a community site." },
+        { "key": "complaint_log", "title": "Complaint records", "description": "Complaints or support requests, as they were written." },
+        { "key": "news", "title": "News article", "description": "An article of a newspaper or a news site." },
+        { "key": "vendor", "title": "Company material", "description": "Material that a company wrote to describe or sell its product." },
+        { "key": "other", "title": "Other", "description": "A source that fits none of the kinds above." }
+      ]
+    },
+    {
+      "key": "check_result",
+      "title": "Result of a check",
+      "values": [
+        { "key": "passed", "title": "Passed", "description": "The documents meet what the check asks." },
+        { "key": "failed", "title": "Failed", "description": "The documents do not meet what the check asks." },
+        { "key": "partly", "title": "Partly passed", "description": "Some of the documents meet it and some do not." }
+      ]
+    },
+    {
+      "key": "message_kind",
+      "title": "Kind of message",
+      "values": [
+        { "key": "opening", "title": "Opening question", "description": "The question that starts the interview." },
+        { "key": "follow_up", "title": "Follow-up question", "description": "A question that digs into what the person just said." },
+        { "key": "new_topic", "title": "Question on a new topic", "description": "A question that moves on to another topic of the plan." },
+        { "key": "answer", "title": "Answer", "description": "What the person says in reply to a question." }
+      ]
+    },
+    {
       "key": "priority",
       "title": "Priority",
       "values": [
-        { "key": "must", "title": "Must have", "description": "The product fails a stakeholder's goal without it." },
-        { "key": "should", "title": "Should have", "description": "It matters, but a workaround exists." },
-        { "key": "could", "title": "Could have", "description": "Desirable; the first to leave out when time is short." },
-        { "key": "wont", "title": "Won't have this time", "description": "Agreed to be left out of this release." }
+        {
+          "key": "must",
+          "title": "Must have",
+          "description": "The product fails a stakeholder's goal without it."
+        },
+        {
+          "key": "should",
+          "title": "Should have",
+          "description": "It matters, but a workaround exists."
+        },
+        {
+          "key": "could",
+          "title": "Could have",
+          "description": "Desirable; the first to leave out when time is short."
+        },
+        {
+          "key": "wont",
+          "title": "Won't have this time",
+          "description": "Agreed to be left out of this release."
+        }
       ]
     },
     {
       "key": "quality_category",
       "title": "Quality category",
       "values": [
-        { "key": "performance", "title": "Performance", "description": "Response time, throughput and use of resources under the expected load." },
-        { "key": "security", "title": "Security", "description": "Protection of data and functions against access and changes that are not allowed." },
-        { "key": "usability", "title": "Usability", "description": "How easily the intended users learn and use the system, accessibility included." },
-        { "key": "reliability", "title": "Reliability", "description": "Availability, tolerance of faults and recovery after a failure." },
-        { "key": "maintainability", "title": "Maintainability", "description": "How easily the system is analyzed, changed and tested." },
-        { "key": "compatibility", "title": "Compatibility", "description": "Working with other systems and sharing an environment with them." },
-        { "key": "portability", "title": "Portability", "description": "Moving the system to other platforms and environments." }
+        {
+          "key": "performance",
+          "title": "Performance",
+          "description": "Response time, throughput and use of resources under the expected load."
+        },
+        {
+          "key": "security",
+          "title": "Security",
+          "description": "Protection of data and functions against access and changes that are not allowed."
+        },
+        {
+          "key": "usability",
+          "title": "Usability",
+          "description": "How easily the intended users learn and use the system, accessibility included."
+        },
+        {
+          "key": "reliability",
+          "title": "Reliability",
+          "description": "Availability, tolerance of faults and recovery after a failure."
+        },
+        {
+          "key": "maintainability",
+          "title": "Maintainability",
+          "description": "How easily the system is analyzed, changed and tested."
+        },
+        {
+          "key": "compatibility",
+          "title": "Compatibility",
+          "description": "Working with other systems and sharing an environment with them."
+        },
+        {
+          "key": "portability",
+          "title": "Portability",
+          "description": "Moving the system to other platforms and environments."
+        }
       ]
     },
     {
@@ -348,7 +947,9 @@
         { "key": "syntactic", "title": "Unclear sentence", "description": "A sentence structure that allows more than one reading." },
         { "key": "semantic", "title": "Unclear meaning", "description": "A sentence whose meaning in its context is unclear." },
         { "key": "vague", "title": "Vague", "description": "A term without a measurable meaning, such as fast or easy." },
-        { "key": "incomplete", "title": "Missing information", "description": "Information needed to act on the statement is missing." }
+        { "key": "incomplete", "title": "Missing information", "description": "Information needed to act on the statement is missing." },
+        { "key": "pragmatic", "title": "Dependence on context", "description": "A sentence that means different things in different situations." },
+        { "key": "referential", "title": "Unclear reference", "description": "A word such as it or they that could point to more than one thing." }
       ]
     },
     {
@@ -357,58 +958,127 @@
       "values": [
         { "key": "between_requirements", "title": "Between requirements", "description": "Two requirements that cannot both be met." },
         { "key": "between_stakeholders", "title": "Between stakeholders", "description": "Personas who want things that cannot all hold." },
-        { "key": "with_constraint", "title": "With a constraint", "description": "A requirement that breaks a stated constraint." }
+        { "key": "with_constraint", "title": "With a constraint", "description": "A requirement that breaks a stated constraint." },
+        { "key": "organizational", "title": "With organizational policy", "description": "A requirement that clashes with a rule, a policy or the interest of another team." }
       ]
     },
     {
       "key": "validation_category",
       "title": "Validation category",
       "values": [
-        { "key": "elicitation", "title": "Elicitation", "description": "Information missing from the interviews, or taken from them wrongly." },
-        { "key": "analysis", "title": "Analysing the interviews", "description": "An error in the analyzed requirements, the issues or the assumptions." },
+        {
+          "key": "elicitation",
+          "title": "Elicitation",
+          "description": "Information missing from the interviews, or taken from them wrongly."
+        },
+        {
+          "key": "analysis",
+          "title": "Analysing the interviews",
+          "description": "An error in the analyzed requirements, the issues or the assumptions."
+        },
         {
           "key": "specification",
           "title": "Writing the specification",
           "description": "A specified requirement that is unclear, cannot be tested, or contradicts another."
         },
-        { "key": "backlog", "title": "Writing the user stories", "description": "A backlog item that does not match its requirement." },
-        { "key": "traceability", "title": "Traceability", "description": "A trace link that is missing or wrong." }
+        {
+          "key": "backlog",
+          "title": "Writing the user stories",
+          "description": "A backlog item that does not match its requirement."
+        },
+        {
+          "key": "traceability",
+          "title": "Traceability",
+          "description": "A trace link that is missing or wrong."
+        }
       ]
     }
+  ],
+  "persona_aspects": [
+    { "key": "domain_expertise", "title": "Knowledge of the subject", "description": "How well the person knows the subject that the product is about.", "low": "Knows little about it", "high": "Is an expert in it" },
+    { "key": "usage_frequency", "title": "Frequency of use", "description": "How often the person would use the product.", "low": "Rarely, a few times a year", "high": "Every day" },
+    { "key": "tech_comfort", "title": "Comfort with technology", "description": "How at ease the person is with new software.", "low": "Avoids new tools", "high": "Adopts new tools first" },
+    { "key": "pain_severity", "title": "Severity of the problem", "description": "How much the problem that the product solves hurts this person today.", "low": "A small annoyance", "high": "Blocks their work" },
+    { "key": "decision_influence", "title": "Influence on decisions", "description": "How much influence the person has on whether the product is adopted.", "low": "None", "high": "Decides alone" }
   ],
   "directive_kinds": [
     {
       "kind": "rework",
       "title": "Redo instruction",
-      "item_roles": ["addressed_to", "about"],
-      "details_schema": { "type": "object", "additionalProperties": false, "properties": {}, "required": [] }
+      "item_roles": [
+        "addressed_to",
+        "about"
+      ],
+      "details_schema": {
+        "type": "object",
+        "additionalProperties": false,
+        "properties": {},
+        "required": []
+      }
     },
     {
       "kind": "intent",
       "title": "Your message",
-      "item_roles": ["about"],
-      "details_schema": { "type": "object", "additionalProperties": false, "properties": {}, "required": [] }
+      "item_roles": [
+        "about"
+      ],
+      "details_schema": {
+        "type": "object",
+        "additionalProperties": false,
+        "properties": {},
+        "required": []
+      }
     }
   ],
   "export_templates": [
     {
       "key": "requirement_specification",
       "title": "Requirement specification",
-      "artifact_kinds": ["requirement_specification"],
-      "formats": ["markdown", "pdf", "docx"]
+      "artifact_kinds": [
+        "requirement_specification"
+      ],
+      "formats": [
+        "markdown",
+        "pdf",
+        "docx"
+      ]
     },
-    { "key": "product_backlog", "title": "User stories", "artifact_kinds": ["product_backlog"], "formats": ["markdown", "csv", "json"] },
+    {
+      "key": "product_backlog",
+      "title": "User stories",
+      "artifact_kinds": [
+        "product_backlog"
+      ],
+      "formats": [
+        "markdown",
+        "csv",
+        "json"
+      ]
+    },
     {
       "key": "traceability_matrix",
       "title": "Requirement-to-source table",
-      "artifact_kinds": ["requirements_analysis", "requirement_specification", "product_backlog"],
-      "formats": ["csv", "markdown"]
+      "artifact_kinds": [
+        "requirements_analysis",
+        "requirement_specification",
+        "product_backlog"
+      ],
+      "formats": [
+        "csv",
+        "markdown"
+      ]
     },
     {
       "key": "interview_transcripts",
       "title": "Interview transcripts",
-      "artifact_kinds": ["persona_catalog", "interview_transcript"],
-      "formats": ["markdown", "pdf"]
+      "artifact_kinds": [
+        "persona_catalog",
+        "interview_transcript"
+      ],
+      "formats": [
+        "markdown",
+        "pdf"
+      ]
     },
     {
       "key": "full_project",
@@ -422,7 +1092,10 @@
         "product_backlog",
         "validation_report"
       ],
-      "formats": ["json", "markdown"]
+      "formats": [
+        "json",
+        "markdown"
+      ]
     }
   ],
   "run_parameters_schema": {
@@ -470,7 +1143,12 @@
         "description": "How many documents the research keeps as evidence."
       }
     },
-    "required": ["target_personas_num", "max_personas", "max_turns", "max_iterations"]
+    "required": [
+      "target_personas_num",
+      "max_personas",
+      "max_turns",
+      "max_iterations"
+    ]
   },
   "state_schema": {
     "type": "object",
@@ -482,63 +1160,221 @@
         "additionalProperties": false,
         "description": "An item at the version the step used.",
         "properties": {
-          "item_id": { "type": "string", "format": "uuid" },
-          "kind": { "type": "string" },
-          "key": { "type": "string" },
-          "version": { "type": "integer", "minimum": 1 }
+          "item_id": {
+            "type": "string",
+            "format": "uuid"
+          },
+          "kind": {
+            "type": "string"
+          },
+          "key": {
+            "type": "string"
+          },
+          "version": {
+            "type": "integer",
+            "minimum": 1
+          }
         },
-        "required": ["item_id", "kind", "key", "version"]
+        "required": [
+          "item_id",
+          "kind",
+          "key",
+          "version"
+        ]
       },
       "artifactRef": {
         "type": "object",
         "additionalProperties": false,
         "description": "An artifact at the version the step used.",
         "properties": {
-          "artifact_id": { "type": "string", "format": "uuid" },
-          "kind": { "type": "string" },
-          "title": { "type": "string" },
-          "version": { "type": "integer", "minimum": 1 }
+          "artifact_id": {
+            "type": "string",
+            "format": "uuid"
+          },
+          "kind": {
+            "type": "string"
+          },
+          "title": {
+            "type": "string"
+          },
+          "version": {
+            "type": "integer",
+            "minimum": 1
+          }
         },
-        "required": ["artifact_id", "kind", "title", "version"]
+        "required": [
+          "artifact_id",
+          "kind",
+          "title",
+          "version"
+        ]
       }
     },
     "properties": {
-      "project_id": { "type": "string", "format": "uuid" },
-      "initial_intent": { "type": "string", "description": "The message that started the first run of the project." },
-      "current_stage": { "type": "string", "description": "A stage of this definition." },
-      "status": { "type": "string" },
-      "error": { "type": ["object", "null"] },
-      "iteration_count": { "type": "integer", "description": "Number of rework loops so far." },
-      "active_persona_index": { "type": "integer", "description": "Position of the persona being interviewed." },
-      "interview_turn": { "type": "integer", "description": "Turn of the current interview." },
-      "interviewer_stop": { "type": "boolean", "description": "Whether the interviewer ended the current interview." },
-      "run_config": { "type": "object" },
-      "elicitation_plan": { "anyOf": [ { "$ref": "#/$defs/artifactRef" }, { "type": "null" } ], "description": "The elicitation plan." },
-      "research_corpus": { "anyOf": [ { "$ref": "#/$defs/artifactRef" }, { "type": "null" } ], "description": "The research corpus of curated documents." },
+      "project_id": {
+        "type": "string",
+        "format": "uuid"
+      },
+      "initial_intent": {
+        "type": "string",
+        "description": "The message that started the first run of the project."
+      },
+      "current_stage": {
+        "type": "string",
+        "description": "A stage of this definition."
+      },
+      "status": {
+        "type": "string"
+      },
+      "error": {
+        "type": [
+          "object",
+          "null"
+        ]
+      },
+      "iteration_count": {
+        "type": "integer",
+        "description": "Number of rework loops so far."
+      },
+      "active_persona_index": {
+        "type": "integer",
+        "description": "Position of the persona being interviewed."
+      },
+      "interview_turn": {
+        "type": "integer",
+        "description": "Turn of the current interview."
+      },
+      "interviewer_stop": {
+        "type": "boolean",
+        "description": "Whether the interviewer ended the current interview."
+      },
+      "run_config": {
+        "type": "object"
+      },
+      "elicitation_plan": {
+        "anyOf": [
+          {
+            "$ref": "#/$defs/artifactRef"
+          },
+          {
+            "type": "null"
+          }
+        ],
+        "description": "The elicitation plan."
+      },
+      "research_corpus": {
+        "anyOf": [
+          {
+            "$ref": "#/$defs/artifactRef"
+          },
+          {
+            "type": "null"
+          }
+        ],
+        "description": "The research corpus of curated documents."
+      },
       "observations": {
         "type": "array",
-        "items": { "$ref": "#/$defs/itemRef" },
+        "items": {
+          "$ref": "#/$defs/itemRef"
+        },
         "description": "Stakeholder observations mined from the corpus, each carrying verbatim evidence."
       },
-      "personas": { "type": "array", "items": { "$ref": "#/$defs/itemRef" }, "description": "The personas." },
-      "interview_transcripts": { "type": "array", "items": { "$ref": "#/$defs/artifactRef" }, "description": "One interview transcript per persona." },
-      "raw_requirements": { "type": "array", "items": { "$ref": "#/$defs/itemRef" }, "description": "Raw requirements." },
-      "analyzed_requirements": { "type": "array", "items": { "$ref": "#/$defs/itemRef" }, "description": "Analyzed requirements." },
-      "latent_needs": { "type": "array", "items": { "$ref": "#/$defs/itemRef" }, "description": "Latent needs." },
-      "assumptions": { "type": "array", "items": { "$ref": "#/$defs/itemRef" }, "description": "Assumptions." },
-      "ambiguities": { "type": "array", "items": { "$ref": "#/$defs/itemRef" }, "description": "Ambiguity issues." },
-      "conflicts": { "type": "array", "items": { "$ref": "#/$defs/itemRef" }, "description": "Conflicts." },
-      "requirement_specification": { "type": "array", "items": { "$ref": "#/$defs/itemRef" }, "description": "Requirements of the specification." },
-      "product_backlog": { "type": "array", "items": { "$ref": "#/$defs/itemRef" }, "description": "Backlog items." },
-      "validation_report": { "anyOf": [ { "$ref": "#/$defs/artifactRef" }, { "type": "null" } ], "description": "The latest validation report." },
+      "personas": {
+        "type": "array",
+        "items": {
+          "$ref": "#/$defs/itemRef"
+        },
+        "description": "The personas."
+      },
+      "interview_transcripts": {
+        "type": "array",
+        "items": {
+          "$ref": "#/$defs/artifactRef"
+        },
+        "description": "One interview transcript per persona."
+      },
+      "raw_requirements": {
+        "type": "array",
+        "items": {
+          "$ref": "#/$defs/itemRef"
+        },
+        "description": "Raw requirements."
+      },
+      "analyzed_requirements": {
+        "type": "array",
+        "items": {
+          "$ref": "#/$defs/itemRef"
+        },
+        "description": "Analyzed requirements."
+      },
+      "latent_needs": {
+        "type": "array",
+        "items": {
+          "$ref": "#/$defs/itemRef"
+        },
+        "description": "Latent needs."
+      },
+      "assumptions": {
+        "type": "array",
+        "items": {
+          "$ref": "#/$defs/itemRef"
+        },
+        "description": "Assumptions."
+      },
+      "ambiguities": {
+        "type": "array",
+        "items": {
+          "$ref": "#/$defs/itemRef"
+        },
+        "description": "Ambiguity issues."
+      },
+      "conflicts": {
+        "type": "array",
+        "items": {
+          "$ref": "#/$defs/itemRef"
+        },
+        "description": "Conflicts."
+      },
+      "requirement_specification": {
+        "type": "array",
+        "items": {
+          "$ref": "#/$defs/itemRef"
+        },
+        "description": "Requirements of the specification."
+      },
+      "product_backlog": {
+        "type": "array",
+        "items": {
+          "$ref": "#/$defs/itemRef"
+        },
+        "description": "Backlog items."
+      },
+      "validation_report": {
+        "anyOf": [
+          {
+            "$ref": "#/$defs/artifactRef"
+          },
+          {
+            "type": "null"
+          }
+        ],
+        "description": "The latest validation report."
+      },
       "human_feedback": {
         "type": "array",
-        "items": { "type": "string", "format": "uuid" },
+        "items": {
+          "type": "string",
+          "format": "uuid"
+        },
         "description": "Ids of the decisions taken at checkpoints in this run."
       },
       "rework_directives": {
         "type": "array",
-        "items": { "type": "string", "format": "uuid" },
+        "items": {
+          "type": "string",
+          "format": "uuid"
+        },
         "description": "Ids of the rework directives issued in this run."
       }
     },

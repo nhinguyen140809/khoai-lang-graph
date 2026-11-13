@@ -21,3 +21,6 @@ class InterviewMessageContent(BaseModel):
     content: str
     iteration: int = Field(ge=0)
     topic: str | None
+    message_kind: str = "answer"
+    follows_up_on: str | None = None
+    covers: list[str] = Field(default_factory=list)
