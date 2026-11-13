@@ -273,6 +273,9 @@ async def stream_run_events(
     stays open (heartbeats only) while the run waits at an interrupt.
     """
     await service.get_run_row(db, run_id)
+    # The stream reads with sessions of its own. This one goes back to the pool now, so that a
+    # stream that is cancelled does not keep a connection checked out.
+    await db.close()
     header_id = request.headers.get("last-event-id") or request.headers.get("Last-Event-ID")
     start = int(header_id) if header_id is not None else after if after is not None else 0
 
