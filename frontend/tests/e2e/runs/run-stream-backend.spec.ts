@@ -63,10 +63,15 @@ test('keeps the state of the run and of each step it took', async ({ api, client
   expect(steps.map((step) => step.sequence)).toEqual(steps.map((_, index) => index + 1))
 })
 
-test('lists no directive for a run that nobody sent back', async ({ api, client }) => {
+test('lists only the directive of the idea for a run that nobody sent back', async ({
+  api,
+  client,
+}) => {
   const { run } = await api.startFinishedRun(idea)
 
-  const directives = expectPage(await client.get<ApiPage<unknown>>(`/runs/${run.id}/directives`))
+  const directives = expectPage(
+    await client.get<ApiPage<{ kind: string }>>(`/runs/${run.id}/directives`),
+  )
 
-  expect(directives.items).toHaveLength(0)
+  expect(directives.items.map(({ kind }) => kind)).toEqual(['intent'])
 })
