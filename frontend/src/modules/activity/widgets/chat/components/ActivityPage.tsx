@@ -162,7 +162,13 @@ function ActivityChat({
       )}
       {runOnScreen !== null && pendingReview !== null && (
         <div className="mx-auto w-full max-w-3xl px-4 pt-4">
-          <PendingReview interrupt={pendingReview} run={runOnScreen} projectId={projectId} />
+          {/* Each review has its own form: the answers of the question before it are not its own. */}
+          <PendingReview
+            key={pendingReview.id}
+            interrupt={pendingReview}
+            run={runOnScreen}
+            projectId={projectId}
+          />
         </div>
       )}
       <div
