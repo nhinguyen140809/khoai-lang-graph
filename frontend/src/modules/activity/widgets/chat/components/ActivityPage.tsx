@@ -140,7 +140,13 @@ function ActivityChat({
       />
       {runOnScreen !== null && pendingReview !== null && (
         <ChatColumn className="pt-4">
-          <PendingReview interrupt={pendingReview} run={runOnScreen} projectId={projectId} />
+          {/* Each review has its own form: the answers of the question before it are not its own. */}
+          <PendingReview
+            key={pendingReview.id}
+            interrupt={pendingReview}
+            run={runOnScreen}
+            projectId={projectId}
+          />
         </ChatColumn>
       )}
       <ChatColumn className={cn('pb-2', pendingReview === null ? 'pt-4' : 'pt-2')}>
