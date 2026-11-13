@@ -7,14 +7,13 @@ import { useWorkStatusLook, useWorkWords } from '@/modules/run/entities'
 import { Shimmer } from '@/shared/components/animation'
 import { Marker } from '@/shared/components/ui/marker'
 import { TraceDescription, TraceIcon, TraceLine, TraceTitle } from '@/shared/components/ui/trace'
-import { useView } from '@/shared/lib/view'
 
 import { activityChatMessages } from '../activity-chat.constants'
 import { useRunActivity } from '../hooks/useRunActivity'
 
 interface PhaseEntryViewProps {
   work: WorkEntry
-  stageTitle: string | null
+  stageTitle: string
   subjectTitle: string | null
   isOpen: boolean
   onToggle: () => void
@@ -35,11 +34,7 @@ export function PhaseEntryView({
   const { run } = useRunActivity()
   const look = useWorkStatusLook(work.status)
   const words = useWorkWords(work, run)
-  const view = useView()
-  const title =
-    view === 'user'
-      ? [stageTitle, subjectTitle].filter((part) => part !== null).join(': ')
-      : `${work.nodes.join(', ')}${subjectTitle === null ? '' : `: ${subjectTitle}`}`
+  const title = subjectTitle === null ? stageTitle : `${stageTitle}: ${subjectTitle}`
 
   return (
     <Marker variant="border" asChild>
@@ -57,14 +52,7 @@ export function PhaseEntryView({
             </Shimmer>
           </TraceTitle>
           <TraceDescription className="flex flex-wrap gap-x-2">
-            {[
-              words.continued,
-              words.status,
-              words.round,
-              words.took,
-              words.writes,
-              ...words.details,
-            ]
+            {[words.continued, words.status, words.round, words.took, words.writes]
               .filter((part): part is string => part !== null)
               .map((part, index) => (
                 <span key={index}>{part}</span>

@@ -6,12 +6,12 @@ import type { ActivityEntry } from '@/modules/activity/entities'
 import type { RunStatus } from '@/modules/run/entities'
 import { type MessageAuthor, messageDeliveryNote } from '@/modules/thread/entities'
 import { Markdown } from '@/shared/components/ui/markdown'
+import { useWording, type Wording } from '@/shared/lib/view'
 
 import { RefLinks } from './RefLinks'
 
 interface MessageEntryProps {
   message: Extract<ActivityEntry, { type: 'message' }>['message']
-  projectId: string
   runStatus: RunStatus | null
 }
 
@@ -26,11 +26,11 @@ function UserWords({ message, runStatus }: MessageEntryProps) {
 }
 
 /** The words of an agent: Markdown, with the documents and the items it names as cards. */
-function AgentWords({ message, projectId }: MessageEntryProps) {
+function AgentWords({ message }: MessageEntryProps) {
   return (
     <>
       <Markdown>{message.content}</Markdown>
-      <RefLinks message={message} projectId={projectId} />
+      <RefLinks message={message} />
     </>
   )
 }
@@ -49,11 +49,11 @@ const authorWords = {
 } as const satisfies Record<MessageAuthor, (props: MessageEntryProps) => ReactNode>
 
 /** A message of the chat: of the user, of an agent or of the app. */
-export function MessageEntry({ message, projectId, runStatus }: MessageEntryProps) {
+export function MessageEntry({ message, runStatus }: MessageEntryProps) {
   const Words = authorWords[message.author]
   return (
     <div className="flex min-w-0 flex-col gap-3">
-      <Words message={message} projectId={projectId} runStatus={runStatus} />
+      <Words message={message} runStatus={runStatus} />
     </div>
   )
 }
@@ -68,5 +68,10 @@ function DeliveryNote({
 }) {
   const note = messageDeliveryNote(message, runStatus)
   if (note === null) return null
-  return <p className="text-xs text-muted-foreground">{note.user}</p>
+  return <DeliveryNoteText note={note} />
+}
+
+/** The words of the note of a message, in the view of the app. */
+function DeliveryNoteText({ note }: { note: Wording }) {
+  return <p className="text-xs text-muted-foreground">{useWording(note)}</p>
 }
