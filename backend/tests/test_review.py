@@ -220,4 +220,4 @@ def test_the_questions_before_the_research_are_choices_with_the_assumption_of_th
 
 
 def test_an_ask_without_a_brief_has_no_question() -> None:
-    assert nodes._questions_to_ask(wf.nodes()["ask_personas"], {}) == []  # type: ignore[arg-type]
+    assert nodes._questions_to_ask(wf.nodes()["ask_personas"], {}) == []  # type: ignore[typeddict-item]

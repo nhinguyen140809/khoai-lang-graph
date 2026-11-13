@@ -359,7 +359,7 @@ def _content_words(text: str) -> frozenset[str]:
     )
 
 
-def match_plan_value(value: str, allowed: list[str]) -> str | None:
+def match_plan_value(value: str, allowed: Sequence[str]) -> str | None:
     """The plan term `value` stands for, verbatim; None when it matches none.
 
     The controlled vocabulary of the plan is the one the artifacts must
@@ -2696,7 +2696,10 @@ def _questions_to_ask(spec: Mapping[str, Any], state: REState) -> list[dict[str,
     no review after it, in the brief written for the checkpoint itself."""
     key = str(spec.get("asks_before") or spec["id"])
     brief = state.get("review_briefs", {}).get(key)
-    return review.checkpoint_review({**spec, "agent_questions": True}, brief)["questions"]
+    questions: list[dict[str, Any]] = review.checkpoint_review(
+        {**spec, "agent_questions": True}, brief
+    )["questions"]
+    return questions
 
 
 def make_checkpoint(
@@ -2761,7 +2764,7 @@ def make_checkpoint(
             }
             return {"status": "interrupted", "current_stage": stage, "interrupt_payload": payload}
 
-        chosen = next((opt for opt in options if opt.get("is_default")), {})
+        chosen: dict[str, Any] = next((opt for opt in options if opt.get("is_default")), {})
         outcome = {
             "node": node_id,
             "option": _default_key(options),

@@ -329,6 +329,10 @@ def _mined(system: str, user: str, call_number: int) -> dict[str, Any]:
     return {"observations": [dict(entry) for entry in _MINED_BY_SOURCE[key]]}
 
 
+def _no_questions(system: str, user: str, call_number: int) -> dict[str, Any]:
+    return {"questions": []}
+
+
 def _plain(system: str, user: str, call_number: int) -> dict[str, Any]:
     """The plan of the mentor platform (PlannerOutput)."""
     return {
@@ -1663,7 +1667,7 @@ class DemoData:
 
     PlannerOutput = staticmethod(_plain)
     # The idea settles what matters, so the planner has nothing to ask before it plans.
-    PlannerQuestionsOutput = staticmethod(lambda system, user, call_number: {"questions": []})
+    PlannerQuestionsOutput = staticmethod(_no_questions)
     CorpusBuilderOutput = staticmethod(_corpus)
     MinerOutput = staticmethod(_mined)
     GeneratorOutputV2 = staticmethod(_personas)

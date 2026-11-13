@@ -74,7 +74,7 @@ def _source_types() -> list[dict[str, Any]]:
 def _search_web_schema() -> type[BaseModel]:
     """The tool schema, with the kinds of document taken from the value list of the definition."""
     keys = tuple(str(entry["key"]) for entry in _source_types()) or tuple(KIND_WORDS)
-    kind: Any = Literal[keys]  # type: ignore[valid-type]
+    kind: Any = Literal[keys]
     return create_model(
         "SearchWeb",
         __doc__=SEARCH_TOOL_DESCRIPTION,

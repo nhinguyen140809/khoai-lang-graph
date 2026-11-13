@@ -620,7 +620,7 @@ def test_the_planner_asks_first_and_the_questions_never_become_a_part_of_the_pla
     assert question["key"] == "login"
     assert "elicitation_plan" not in update, "no plan before the answers"
     assert sink.read_artifact("project-1", "elicitation_plan") is None
-    assert routing.route_after_planner({**run_state(), **update}) == "checkpoint_plan"
+    assert routing.route_after_planner({**run_state(), **update}) == "checkpoint_plan"  # type: ignore[typeddict-item]
 
 
 def test_after_the_answers_the_planner_writes_the_plan_from_them_and_asks_nothing_more() -> None:
@@ -644,8 +644,9 @@ def test_after_the_answers_the_planner_writes_the_plan_from_them_and_asks_nothin
     assert update["review_briefs"]["checkpoint_plan"] == {"questions": []}
     assert "How do students sign in?: own" in _AskingPlannerData.seen_by_the_plan[0]
     plan = sink.read_artifact("project-1", "elicitation_plan")
+    assert plan is not None
     assert "questions" not in plan["content"], "the questions are asked, not documented"
-    assert routing.route_after_planner({**state, **update}) == "corpus_builder"
+    assert routing.route_after_planner({**state, **update}) == "corpus_builder"  # type: ignore[typeddict-item]
 
 
 def test_a_plan_that_has_no_question_clears_the_brief_of_the_round_before() -> None:
@@ -816,7 +817,7 @@ class _UnclearMessageData(DemoData):
 
 def _router_config(message: str) -> RunnableConfig:
     config = fake_config(InMemoryArtifactSink(), InMemoryDirectiveSink())
-    config["configurable"]["pending_messages"] = [{"id": "m1", "content": message}]  # type: ignore[index]
+    config["configurable"]["pending_messages"] = [{"id": "m1", "content": message}]
     return config
 
 
@@ -832,7 +833,7 @@ def _router_state(*, asks_on: bool) -> REState:
         "analyzed_requirements",
         "requirement_specification",
     ):
-        state[name] = ref  # type: ignore[literal-required]
+        state[name] = ref  # type: ignore[typeddict-item]
     return state
 
 
@@ -849,7 +850,7 @@ def test_the_router_asks_when_the_message_is_too_unclear_and_comes_back_with_the
     assert brief["message"].endswith("Change the limit")
     assert update["routed_target"] == "ask_message"
     assert "rework_directives" not in update, "no directive before the message is understood"
-    assert routing.route_after_intent_router({**run_state(), **update}) == "ask_message"
+    assert routing.route_after_intent_router({**run_state(), **update}) == "ask_message"  # type: ignore[typeddict-item]
     assert routing.next_after_checkpoint("ask_message", run_state()) == "intent_router"
 
 
@@ -961,7 +962,7 @@ def test_a_step_that_has_nothing_to_read_sends_the_message_to_the_step_that_make
     # Interviews are held but nothing was analyzed: the analyst comes first.
     held = run_state()
     for name in ("personas", "interview_transcripts"):
-        held[name] = [{"item_id": "i1", "key": "K-1", "version": 1}]  # type: ignore[literal-required]
+        held[name] = [{"item_id": "i1", "key": "K-1", "version": 1}]  # type: ignore[typeddict-item]
     update, _ = routed(held, asks_on=False)
     assert update["routed_target"] == "analyst"
 
