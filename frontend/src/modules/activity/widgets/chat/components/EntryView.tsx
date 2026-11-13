@@ -107,12 +107,12 @@ function MessageBody({ entry }: EntryViewProps<'message'>) {
         {isUser ? (
           <Bubble variant={bubbleLook} align="end">
             <BubbleContent>
-              <MessageEntry message={entry.message} projectId={projectId} runStatus={run.status} />
+              <MessageEntry message={entry.message} runStatus={run.status} />
             </BubbleContent>
           </Bubble>
         ) : (
           <div className="text-sm leading-6">
-            <MessageEntry message={entry.message} projectId={projectId} runStatus={run.status} />
+            <MessageEntry message={entry.message} runStatus={run.status} />
           </div>
         )}
         {/* The time, the resend and the copy of the words hang under the message, in the space

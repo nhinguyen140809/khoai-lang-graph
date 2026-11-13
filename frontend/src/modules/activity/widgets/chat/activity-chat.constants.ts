@@ -6,7 +6,6 @@ export const runStatusLineStatuses: readonly RunStatus[] = ['queued', 'running']
 
 /** The words of the chat of the activity of a project. */
 export const activityChatMessages = {
-  tabTitle: 'Activity',
   loading: 'Loading the activity',
   loadError: 'The activity could not be loaded.',
   emptyTitle: 'No activity yet',
