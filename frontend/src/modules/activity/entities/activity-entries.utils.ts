@@ -4,7 +4,6 @@ import { phaseItems, splitWork, type WorkEntry } from '@/modules/run/entities/@x
 import type { Message } from '@/modules/thread/entities/@x/activity'
 import type { KindLook } from '@/modules/workflow/entities/@x/activity'
 import { groupBy } from '@/shared/lib/collections'
-import type { View } from '@/shared/lib/view'
 
 import type { ActivityEntry, KindGroup } from './activity-entries.types'
 
@@ -59,17 +58,16 @@ interface PhaseTitles {
   stageTitles: ReadonlyMap<string, string>
   subjectTitles: ReadonlyMap<string, string>
   kinds: ReadonlyMap<string, KindLook>
-  view: View
 }
 
 /**
- * The separator of a phase and the items under it. A phase of a stage that the user does not see
- * has none in the user view; the developer view keeps it with its stage title null. What the
- * phase wrote and the failure that ended it come last, at the time it ended.
+ * The separator of a phase and the items under it; none for a phase of a stage without a title,
+ * which the chat does not show. What the phase wrote and the failure that ended it come last, at
+ * the time it ended.
  */
 function phaseEntries(work: WorkEntry, titles: PhaseTitles): ActivityEntry[] {
-  const stageTitle = titles.stageTitles.get(work.stage) ?? null
-  if (stageTitle === null && titles.view !== 'developer') return []
+  const stageTitle = titles.stageTitles.get(work.stage)
+  if (stageTitle === undefined) return []
   const separator: ActivityEntry = {
     type: 'phase',
     id: work.id,
@@ -81,12 +79,12 @@ function phaseEntries(work: WorkEntry, titles: PhaseTitles): ActivityEntry[] {
         ? null
         : (titles.subjectTitles.get(work.subjectItemId) ?? work.subjectKey),
   }
-  return [separator, ...itemEntries(work, titles.view), ...endEntries(work, titles.kinds)]
+  return [separator, ...itemEntries(work), ...endEntries(work, titles.kinds)]
 }
 
 /** The notes and the uses of a tool of a phase, each an entry under its separator. */
-function itemEntries(work: WorkEntry, view: View): ActivityEntry[] {
-  return phaseItems(work, view).map((item, index): ActivityEntry => {
+function itemEntries(work: WorkEntry): ActivityEntry[] {
+  return phaseItems(work).map((item, index): ActivityEntry => {
     if (item.type === 'tool') {
       return {
         type: 'tool',
@@ -150,7 +148,6 @@ export function runEntries(input: {
   stageTitles: ReadonlyMap<string, string>
   subjectTitles: ReadonlyMap<string, string>
   kinds: ReadonlyMap<string, KindLook>
-  view: View
 }): ActivityEntry[] {
   const cuts = input.interrupts.map(({ created_at }) => created_at)
   const phases = input.work.flatMap((line) => splitWork(line, cuts))
@@ -216,17 +213,14 @@ export function entryAnchorId(entryId: string): string {
 /**
  * The lines of work the user reads. A step of an internal stage, such as the one that reads a
  * message and decides what to do with it, is left out: what it says arrives as a message of the
- * chat. The developer view keeps every line. Stage titles that have not loaded yet leave nothing
- * out, so that no line disappears while the definition loads.
+ * chat. Stage titles that have not loaded yet leave nothing out, so that no line disappears while
+ * the definition loads.
  */
 export function shownWork<T extends { stage: string }>(
   work: T[],
   stageTitles: ReadonlyMap<string, string>,
-  view: View,
 ): T[] {
-  return view === 'user' && stageTitles.size > 0
-    ? work.filter(({ stage }) => stageTitles.has(stage))
-    : work
+  return stageTitles.size > 0 ? work.filter(({ stage }) => stageTitles.has(stage)) : work
 }
 
 /**

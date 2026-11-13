@@ -7,14 +7,13 @@ import { useRunInterrupts } from '@/modules/review/entities/@x/activity'
 import { type Run, useRunSteps, workEntries } from '@/modules/run/entities/@x/activity'
 import type { Message } from '@/modules/thread/entities/@x/activity'
 import { useKindLooks, useStageTitles } from '@/modules/workflow/entities/@x/activity'
-import { useView } from '@/shared/lib/view'
 
 import type { ActivityEntry, RunEntriesResult } from '../activity-entries.types'
 import { runEntries, shownWork } from '../activity-entries.utils'
 
 /**
  * The entries of a run: its messages, its work and its reviews, with the titles they read. Only a
- * reload of what it reads, a new message or a switch of the view computes the entries again. No
+ * reload of what it reads or a new message computes the entries again. No
  * query polls: the stream of the activity loads them again while the run works.
  */
 export function useRunEntries(
@@ -27,7 +26,6 @@ export function useRunEntries(
   const stageTitles = useStageTitles(run.workflow_version)
   const subjects = useStageSubjects(projectId, run.workflow_version)
   const kinds = useKindLooks()
-  const view = useView()
   const stepPages = steps.data?.pages
   const interruptPages = interrupts.data?.pages
   const isError = steps.isError || interrupts.isError
@@ -55,13 +53,11 @@ export function useRunEntries(
           run,
         ),
         stageTitles,
-        view,
       ),
       interrupts: interruptPages.flatMap(({ items }) => items),
       stageTitles,
       subjectTitles,
       kinds,
-      view,
     })
     return { state: 'success', entries }
   }, [
@@ -75,6 +71,5 @@ export function useRunEntries(
     kinds,
     messages,
     run,
-    view,
   ])
 }

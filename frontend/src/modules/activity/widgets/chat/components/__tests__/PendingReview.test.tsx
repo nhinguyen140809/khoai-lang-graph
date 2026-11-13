@@ -31,20 +31,12 @@ async function readPending(): Promise<Interrupt> {
 describe('PendingReview', () => {
   it('starts the answer again when the run asks another review, whatever was chosen for the one before', async () => {
     const first = await readPending()
-    const view = renderWithProviders(
-      <PendingReview interrupt={first} run={run} projectId={projectIds.mentor} />,
-    )
+    const view = renderWithProviders(<PendingReview interrupt={first} run={run} />)
     const redo = await screen.findByRole('radio', { name: 'Redo the analysis' })
     await press(redo)
     expect(redo).toHaveAttribute('aria-checked', 'true')
 
-    view.rerender(
-      <PendingReview
-        interrupt={{ ...first, id: 'another-review' }}
-        run={run}
-        projectId={projectIds.mentor}
-      />,
-    )
+    view.rerender(<PendingReview interrupt={{ ...first, id: 'another-review' }} run={run} />)
 
     await waitFor(() => {
       expectAttribute('radio', 'Approve analysis', 'aria-checked', 'true')

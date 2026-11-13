@@ -14,7 +14,6 @@ import {
 import { type Run, useLatestRun, useThreadRuns } from '@/modules/run/entities'
 import type { Message, Thread } from '@/modules/thread/entities'
 import { useThreadMessages } from '@/modules/thread/entities'
-import { useEditorTab } from '@/shared/components/frame'
 import { EmptyState, ErrorState, LoadingState } from '@/shared/components/state'
 import { Bubble, BubbleContent } from '@/shared/components/ui/bubble'
 import { Message as MessageRow, MessageContent } from '@/shared/components/ui/message'
@@ -28,7 +27,7 @@ import {
 } from '@/shared/components/ui/message-scroller'
 import { useKeptScroll } from '@/shared/lib/memory'
 import { useScrollIntoViewById } from '@/shared/lib/viewport'
-import { RouteParam, routes, useRouteParam } from '@/shared/routes'
+import { RouteParam, useRouteParam } from '@/shared/routes'
 
 import { activityChatMessages } from '../activity-chat.constants'
 import type { ChatState } from '../chat-state.types'
@@ -46,17 +45,15 @@ function ChatColumn({ className, ...props }: ComponentProps<'div'>) {
   return <div className={cn('mx-auto w-full max-w-4xl px-6', className)} {...props} />
 }
 
-interface ActivityPageProps {
+interface ActivityChatProps {
   projectId: string
 }
 
-/** The chat of the activity of a project: its runs one after another, and the prompt under them. */
-export function ActivityPage({ projectId }: ActivityPageProps) {
-  useEditorTab({
-    id: 'activity',
-    title: activityChatMessages.tabTitle,
-    href: routes.project(projectId).activity(),
-  })
+/**
+ * The chat of the activity of a project: its runs one after another, and the prompt under them.
+ * It knows no frame: the page that places it says what opening a document or an item does.
+ */
+export function ActivityChat({ projectId }: ActivityChatProps) {
   const thread = useActivityThread(projectId)
   const isPending = thread.state === 'pending'
   const threadId = thread.state === 'success' ? thread.thread?.id : undefined
@@ -74,7 +71,7 @@ export function ActivityPage({ projectId }: ActivityPageProps) {
       )}
       {thread.state === 'success' && (
         <Suspense fallback={null}>
-          <ActivityChat projectId={projectId} thread={thread.thread} threadId={threadId ?? null} />
+          <ThreadChat projectId={projectId} thread={thread.thread} threadId={threadId ?? null} />
         </Suspense>
       )}
     </div>
@@ -82,7 +79,7 @@ export function ActivityPage({ projectId }: ActivityPageProps) {
 }
 
 /** The chat of a thread: its runs with their entries, and the prompt that sends to it. */
-function ActivityChat({
+function ThreadChat({
   projectId,
   thread,
   threadId,
@@ -139,12 +136,7 @@ function ActivityChat({
       {runOnScreen !== null && pendingReview !== null && (
         <ChatColumn className="pt-4">
           {/* Each review has its own form: the answers of the question before it are not its own. */}
-          <PendingReview
-            key={pendingReview.id}
-            interrupt={pendingReview}
-            run={runOnScreen}
-            projectId={projectId}
-          />
+          <PendingReview key={pendingReview.id} interrupt={pendingReview} run={runOnScreen} />
         </ChatColumn>
       )}
       <ChatColumn className={cn('pb-2', pendingReview === null ? 'pt-4' : 'pt-2')}>

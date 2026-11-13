@@ -1,9 +1,8 @@
 'use client'
 
 import { ChevronRightIcon } from 'lucide-react'
-import type { Route } from 'next'
 
-import { useOpenPage } from '@/shared/components/frame'
+import { type ChatReference, useReferenceOpener } from '@/modules/activity/entities'
 import {
   Attachment,
   AttachmentContent,
@@ -28,7 +27,6 @@ interface RefLinksProps {
     artifact_refs: { artifact_id: string; title: string; version: number }[]
     item_refs: { item_id: string; key: string; version: number }[]
   }
-  projectId: string
 }
 
 /**
@@ -36,8 +34,7 @@ interface RefLinksProps {
  * card that opens it. The others wait in one box under it, whose first row says how many there
  * are and opens and closes the rest, a row for each, so that they read as one group.
  */
-export function RefLinks({ message, projectId }: RefLinksProps) {
-  const openPage = useOpenPage()
+export function RefLinks({ message }: RefLinksProps) {
   const references: Reference[] = [
     ...message.artifact_refs.map(({ artifact_id, title, version }): Reference => ({
       type: 'artifact',
@@ -57,7 +54,7 @@ export function RefLinks({ message, projectId }: RefLinksProps) {
 
   return (
     <div className="flex w-full animate-in flex-col gap-2 duration-300 fade-in-0 motion-reduce:animate-none">
-      <RefCard reference={first} projectId={projectId} openPage={openPage} />
+      <RefCard reference={first} />
       {others.length > 0 && (
         <Collapsible className="rounded-xl border bg-card p-1.5">
           <CollapsibleTrigger asChild>
@@ -72,12 +69,7 @@ export function RefLinks({ message, projectId }: RefLinksProps) {
           <CollapsibleContent>
             <div className="flex flex-col">
               {others.map((reference) => (
-                <RefRow
-                  key={`${reference.type}:${reference.id}`}
-                  reference={reference}
-                  projectId={projectId}
-                  openPage={openPage}
-                />
+                <RefRow key={`${reference.type}:${reference.id}`} reference={reference} />
               ))}
             </div>
           </CollapsibleContent>
@@ -87,23 +79,20 @@ export function RefLinks({ message, projectId }: RefLinksProps) {
   )
 }
 
-interface RefProps {
-  reference: Reference
-  projectId: string
-  openPage: (href: Route) => void
+/** What the chat opens for a reference of a message. */
+function chatReferenceOf(reference: Reference): ChatReference {
+  return reference.type === 'artifact'
+    ? { kind: 'document', artifactId: reference.id }
+    : { kind: 'item', itemId: reference.id }
 }
 
-/** A card of a document or an item that a message names, which opens it. */
-function RefCard(props: RefProps) {
-  const look = useRefLook(props.reference, props.projectId)
+/** A card of a document or an item that a message names, which opens it where the page says. */
+function RefCard({ reference }: { reference: Reference }) {
+  const look = useRefLook(reference)
+  const open = useReferenceOpener(chatReferenceOf(reference))
   return (
     <Attachment size="default" className="w-full">
-      <AttachmentTrigger
-        aria-label={look.label}
-        onClick={() => {
-          props.openPage(look.href)
-        }}
-      />
+      {open !== null && <AttachmentTrigger aria-label={look.label} onClick={open} />}
       <AttachmentMedia className="w-12">
         <look.Mark aria-hidden className="size-5" />
       </AttachmentMedia>
@@ -116,15 +105,11 @@ function RefCard(props: RefProps) {
 }
 
 /** A row of the list of the others: a ghost button as tall as it needs, so the rows need no gap. */
-function RefRow(props: RefProps) {
-  const look = useRefLook(props.reference, props.projectId)
+function RefRow({ reference }: { reference: Reference }) {
+  const look = useRefLook(reference)
+  const open = useReferenceOpener(chatReferenceOf(reference))
   return (
-    <RowButton
-      aria-label={look.label}
-      onClick={() => {
-        props.openPage(look.href)
-      }}
-    >
+    <RowButton aria-label={look.label} disabled={open === null} onClick={open ?? undefined}>
       <look.Mark aria-hidden className="size-4 shrink-0 text-muted-foreground" />
       <span className="min-w-0 truncate text-sm font-medium">{look.title}</span>
       <span className="ml-auto shrink-0 text-xs text-muted-foreground">{look.description}</span>

@@ -1,1 +1,1 @@
-export { ActivityPage } from './components/ActivityPage'
+export { ActivityChat } from './components/ActivityChat'
