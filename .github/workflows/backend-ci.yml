@@ -72,7 +72,11 @@ jobs:
       - run: uv run ruff format --check .
       - run: uv run mypy src tests
       - run: uv run lint-imports
-      - run: uv run pytest
+      # -v prints each test as it starts, so a hang shows which test it is; after 120 s without
+      # an end, faulthandler prints the stack of every thread. Output is not buffered.
+      - run: uv run pytest -v -o faulthandler_timeout=120 --durations=15
+        env:
+          PYTHONUNBUFFERED: '1'
 
   # The pages against the real backend, which answers with the scripted model and the fixture
   # corpus (no key, no cost). It runs for a change of the backend, or by hand.
