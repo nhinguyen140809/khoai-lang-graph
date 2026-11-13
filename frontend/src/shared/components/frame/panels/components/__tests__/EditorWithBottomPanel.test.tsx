@@ -1,4 +1,4 @@
-import { fireEvent, render, screen } from '@testing-library/react'
+import { fireEvent, render, screen, waitFor } from '@testing-library/react'
 import { describe, expect, it } from 'vitest'
 
 import { expectFieldValue, pressButton } from '@/test/steps'
@@ -23,7 +23,10 @@ describe('EditorWithBottomPanel', () => {
 
     await pressButton('Hide Trace and timeline')
 
-    expect(screen.getByText('trace of REQ-001')).not.toBeVisible()
+    // The panel shrinks first and leaves the view when it is done.
+    await waitFor(() => {
+      expect(screen.getByText('trace of REQ-001')).not.toBeVisible()
+    })
     expect(screen.getByText('REQ-001 Search mentors')).toBeVisible()
 
     await pressButton('Show Trace and timeline')
@@ -34,7 +37,7 @@ describe('EditorWithBottomPanel', () => {
     ).not.toBeInTheDocument()
   })
 
-  it('hides and shows the panel with Ctrl+`', () => {
+  it('hides and shows the panel with Ctrl+`', async () => {
     render(
       <EditorWithBottomPanel panelLabel="Trace" sections={trace}>
         <p>REQ-001 Search mentors</p>
@@ -42,7 +45,9 @@ describe('EditorWithBottomPanel', () => {
     )
 
     fireEvent.keyDown(document, { key: '`', ctrlKey: true })
-    expect(screen.getByText('trace of REQ-001')).not.toBeVisible()
+    await waitFor(() => {
+      expect(screen.getByText('trace of REQ-001')).not.toBeVisible()
+    })
 
     fireEvent.keyDown(document, { key: '`', ctrlKey: true })
     expect(screen.getByText('trace of REQ-001')).toBeVisible()

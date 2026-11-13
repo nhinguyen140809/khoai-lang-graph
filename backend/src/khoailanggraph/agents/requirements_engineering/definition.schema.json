@@ -1,0 +1,605 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "$id": "workflow/definition",
+  "title": "Workflow definition",
+  "description": "One version of a workflow: its graph, the names its runs may store, and the schemas of its run parameters and of its state.",
+  "type": "object",
+  "additionalProperties": false,
+  "properties": {
+    "name": {
+      "$ref": "#/$defs/name",
+      "description": "Name of the workflow. Stored as workflow_name of every run."
+    },
+    "version": {
+      "type": "integer",
+      "minimum": 1,
+      "description": "Version of the definition. Stored as workflow_version of every run. A version never changes once published."
+    },
+    "description": {
+      "type": "string",
+      "description": "What the workflow does, in one or two sentences."
+    },
+    "entry": {
+      "$ref": "#/$defs/entry"
+    },
+    "agent_roles": {
+      "type": "array",
+      "minItems": 1,
+      "items": { "$ref": "#/$defs/agentRole" },
+      "description": "Every agent role, with the version of its prompt. A model is chosen per role."
+    },
+    "stages": {
+      "type": "array",
+      "minItems": 1,
+      "items": { "$ref": "#/$defs/stage" },
+      "description": "Every stage, in workflow order, as a flat list. The parent of a stage makes the tree."
+    },
+    "nodes": {
+      "type": "array",
+      "minItems": 2,
+      "items": { "$ref": "#/$defs/node" },
+      "description": "Every node of the graph, including the start node and the end node."
+    },
+    "edges": {
+      "type": "array",
+      "minItems": 1,
+      "items": { "$ref": "#/$defs/edge" },
+      "description": "Every edge of the graph."
+    },
+    "artifact_kinds": {
+      "type": "array",
+      "minItems": 1,
+      "items": { "$ref": "#/$defs/artifactKind" },
+      "description": "Every artifact kind a run may create, with the content schema version it uses."
+    },
+    "item_kinds": {
+      "type": "array",
+      "minItems": 1,
+      "items": { "$ref": "#/$defs/itemKind" },
+      "description": "Every item kind a run may create, with the content schema version it uses."
+    },
+    "link_types": {
+      "type": "array",
+      "minItems": 1,
+      "items": { "$ref": "#/$defs/linkType" },
+      "description": "Every trace link type, with the pairs of item kinds it may connect."
+    },
+    "value_lists": {
+      "type": "array",
+      "items": { "$ref": "#/$defs/valueList" },
+      "description": "Every named list of allowed values for a content field that names it with x-value-list."
+    },
+    "tools": {
+      "type": "array",
+      "items": { "$ref": "#/$defs/tool" },
+      "description": "Every tool that an agent may use while it works. A note of a step that tells of the use of a tool names one of them, and a client takes its words and its icon from here."
+    },
+    "persona_aspects": {
+      "type": "array",
+      "items": { "$ref": "#/$defs/personaAspect" },
+      "description": "The aspects that every persona is scored on, defined by the system: the first tier. The agent that plans the interviews may propose more for a project: the second tier."
+    },
+    "directive_kinds": {
+      "type": "array",
+      "items": { "$ref": "#/$defs/directiveKind" },
+      "description": "Every directive kind, with its item roles and the schema of its details."
+    },
+    "export_templates": {
+      "type": "array",
+      "items": { "$ref": "#/$defs/exportTemplate" },
+      "description": "Every export template."
+    },
+    "run_parameters_schema": {
+      "$ref": "#/$defs/objectSchema",
+      "description": "JSON Schema of parameters in the run configuration."
+    },
+    "state_schema": {
+      "$ref": "#/$defs/objectSchema",
+      "description": "JSON Schema of the workflow state returned by the state endpoints."
+    }
+  },
+  "required": [
+    "name",
+    "version",
+    "description",
+    "entry",
+    "agent_roles",
+    "stages",
+    "nodes",
+    "edges",
+    "artifact_kinds",
+    "item_kinds",
+    "link_types",
+    "value_lists",
+    "directive_kinds",
+    "export_templates",
+    "run_parameters_schema",
+    "state_schema"
+  ],
+  "$defs": {
+    "name": {
+      "type": "string",
+      "pattern": "^[a-z][a-z0-9_]*$",
+      "description": "A lower-case name with underscores, for example checkpoint_analysis."
+    },
+    "nodeId": {
+      "type": "string",
+      "pattern": "^(__start__|__end__|[a-z][a-z0-9_]*)$"
+    },
+    "names": {
+      "type": "array",
+      "items": { "$ref": "#/$defs/name" },
+      "uniqueItems": true
+    },
+    "objectSchema": {
+      "type": "object",
+      "required": ["type", "properties"],
+      "properties": {
+        "type": { "const": "object" },
+        "properties": { "type": "object" }
+      },
+      "description": "A JSON Schema whose instances are objects."
+    },
+    "entry": {
+      "type": "object",
+      "additionalProperties": false,
+      "properties": {
+        "first_run": {
+          "$ref": "#/$defs/name",
+          "description": "Node at which the first run of a project starts."
+        },
+        "later_runs": {
+          "$ref": "#/$defs/name",
+          "description": "Node at which every later run of a thread starts."
+        },
+        "pending_messages": {
+          "$ref": "#/$defs/name",
+          "description": "Node a run goes to after any node when user messages are pending."
+        }
+      },
+      "required": ["first_run", "later_runs", "pending_messages"]
+    },
+    "agentRole": {
+      "type": "object",
+      "additionalProperties": false,
+      "properties": {
+        "key": { "$ref": "#/$defs/name" },
+        "label": { "type": "string" },
+        "description": { "type": "string" },
+        "prompt_version": {
+          "type": "integer",
+          "minimum": 1,
+          "description": "Version of the prompt file of the role that runs of this definition use."
+        }
+      },
+      "required": ["key", "label", "description", "prompt_version"]
+    },
+    "stage": {
+      "type": "object",
+      "additionalProperties": false,
+      "properties": {
+        "key": { "$ref": "#/$defs/name" },
+        "title": {
+          "type": "string",
+          "description": "The name of the stage as shown to the user, for example in the status bar and the progress view."
+        },
+        "internal": {
+          "type": "boolean",
+          "description": "True for a stage that is a step of the system and not of the user's work. The client does not show it to the user and keeps the title of the previous stage."
+        },
+        "parent": {
+          "anyOf": [{ "$ref": "#/$defs/name" }, { "type": "null" }],
+          "description": "The stage this one belongs to, or null for a top-level stage. A stage with children groups them as a tree; it is listed before its children."
+        }
+      },
+      "required": ["key", "title", "internal", "parent"]
+    },
+    "node": {
+      "oneOf": [
+        { "$ref": "#/$defs/terminalNode" },
+        { "$ref": "#/$defs/agentNode" },
+        { "$ref": "#/$defs/checkpointNode" },
+        { "$ref": "#/$defs/controlNode" }
+      ]
+    },
+    "terminalNode": {
+      "type": "object",
+      "additionalProperties": false,
+      "properties": {
+        "id": { "enum": ["__start__", "__end__"] },
+        "kind": { "enum": ["start", "end"] },
+        "label": { "type": "string" }
+      },
+      "required": ["id", "kind", "label"]
+    },
+    "agentNode": {
+      "type": "object",
+      "additionalProperties": false,
+      "properties": {
+        "id": { "$ref": "#/$defs/name" },
+        "kind": { "const": "agent" },
+        "label": { "type": "string" },
+        "stage": { "$ref": "#/$defs/name" },
+        "agent_role": { "$ref": "#/$defs/name" }
+      },
+      "required": ["id", "kind", "label", "stage", "agent_role"]
+    },
+    "checkpointNode": {
+      "type": "object",
+      "additionalProperties": false,
+      "properties": {
+        "id": { "$ref": "#/$defs/name" },
+        "kind": { "const": "checkpoint" },
+        "label": { "type": "string" },
+        "title": {
+          "type": "string",
+          "description": "The name of the checkpoint as shown to the user, for example in the list of reviews the user may turn on and in the status bar."
+        },
+        "stage": { "$ref": "#/$defs/name" },
+        "prompt": {
+          "type": "string",
+          "description": "What the user is asked when the run pauses here."
+        },
+        "review_artifact_kinds": {
+          "$ref": "#/$defs/names",
+          "description": "Kinds of the artifacts under review. Their current versions become review_artifacts of the interrupt."
+        },
+        "allow_edits": {
+          "type": "boolean",
+          "description": "Whether the user may edit items of the artifacts under review before answering."
+        },
+        "options": {
+          "type": "array",
+          "items": { "$ref": "#/$defs/option" },
+          "description": "The decision that chooses where the run continues. Empty when the checkpoint only asks questions."
+        },
+        "questions": {
+          "type": "array",
+          "items": { "$ref": "#/$defs/question" },
+          "description": "Further questions asked every time, answered together with the option."
+        },
+        "agent_questions": {
+          "type": "boolean",
+          "description": "Whether the agent may add questions at run time, each with a default."
+        },
+        "purpose": {
+          "enum": ["review", "ask"],
+          "default": "review",
+          "description": "What the user does at this checkpoint. `review`: look at documents and approve them or ask for changes; it holds no question of the agent. `ask`: answer the questions of the agent, with no document under review; the run does not pause when the agent has no question."
+        },
+        "asks_before": {
+          "$ref": "#/$defs/name",
+          "description": "For an `ask` checkpoint: the review checkpoint that follows it. The questions are those that the agent wrote for that review. Without it, the agent writes the questions from the idea of the product."
+        }
+      },
+      "required": ["id", "kind", "label", "title", "stage", "prompt", "review_artifact_kinds", "allow_edits", "options", "questions", "agent_questions"]
+    },
+    "controlNode": {
+      "type": "object",
+      "additionalProperties": false,
+      "properties": {
+        "id": { "$ref": "#/$defs/name" },
+        "kind": { "const": "control" },
+        "label": { "type": "string" },
+        "stage": { "$ref": "#/$defs/name" }
+      },
+      "required": ["id", "kind", "label", "stage"]
+    },
+    "option": {
+      "type": "object",
+      "additionalProperties": false,
+      "properties": {
+        "key": { "$ref": "#/$defs/name" },
+        "label": { "type": "string" },
+        "requires_feedback": { "type": "boolean" },
+        "approves": {
+          "type": "boolean",
+          "description": "Choosing it sets the artifacts under review, and their items that are still draft, to approved."
+        },
+        "is_default": {
+          "type": "boolean",
+          "description": "Taken without asking when the checkpoint is not in review_checkpoints of the run."
+        }
+      },
+      "required": ["key", "label", "requires_feedback", "approves", "is_default"]
+    },
+    "question": {
+      "type": "object",
+      "additionalProperties": false,
+      "properties": {
+        "key": { "$ref": "#/$defs/name" },
+        "type": { "enum": ["single_select", "multi_select", "free_text", "number"] },
+        "prompt": { "type": "string" },
+        "required": { "type": "boolean" },
+        "choices": {
+          "type": "array",
+          "items": { "$ref": "#/$defs/choice" },
+          "description": "At least two for single_select and multi_select; empty for the other types."
+        },
+        "min_selected": {
+          "type": ["integer", "null"],
+          "minimum": 0,
+          "description": "For multi_select only: the fewest choices an answer may pick. Null means no bound."
+        },
+        "max_selected": {
+          "type": ["integer", "null"],
+          "minimum": 1,
+          "description": "For multi_select only: the most choices an answer may pick. Null means no bound."
+        },
+        "default_answer": {
+          "anyOf": [{ "$ref": "#/$defs/answer" }, { "type": "null" }],
+          "description": "The answer taken without asking, valid as an answer to the question. Null only when the question is not required."
+        }
+      },
+      "required": ["key", "type", "prompt", "required", "choices", "min_selected", "max_selected", "default_answer"]
+    },
+    "answer": {
+      "type": "object",
+      "additionalProperties": false,
+      "properties": {
+        "choice_keys": {
+          "$ref": "#/$defs/names",
+          "description": "The keys of the chosen choices; empty for free_text and number."
+        },
+        "text": {
+          "type": ["string", "null"],
+          "description": "The answer of a free_text question, or the explanation of a chosen choice that requires text."
+        },
+        "number": {
+          "type": ["number", "null"],
+          "description": "The answer of a number question."
+        }
+      },
+      "required": ["choice_keys", "text", "number"]
+    },
+    "choice": {
+      "type": "object",
+      "additionalProperties": false,
+      "properties": {
+        "key": { "$ref": "#/$defs/name" },
+        "label": { "type": "string" },
+        "requires_text": {
+          "type": "boolean",
+          "description": "Choosing it asks the user to explain it in text, for example an Other choice. Never a default."
+        }
+      },
+      "required": ["key", "label", "requires_text"]
+    },
+    "edge": {
+      "type": "object",
+      "additionalProperties": false,
+      "properties": {
+        "source": { "$ref": "#/$defs/nodeId" },
+        "target": { "$ref": "#/$defs/nodeId" },
+        "label": {
+          "type": ["string", "null"],
+          "description": "The condition as shown on the graph."
+        },
+        "conditional": {
+          "type": "boolean",
+          "description": "True when the edge is taken only under a condition."
+        },
+        "option": {
+          "anyOf": [{ "$ref": "#/$defs/name" }, { "type": "null" }],
+          "description": "The checkpoint option that leads along the edge."
+        }
+      },
+      "required": ["source", "target", "label", "conditional", "option"]
+    },
+    "artifactKind": {
+      "type": "object",
+      "additionalProperties": false,
+      "properties": {
+        "kind": { "$ref": "#/$defs/name" },
+        "schema_version": { "type": "integer", "minimum": 1 },
+        "stage": {
+          "$ref": "#/$defs/name",
+          "description": "The stage that produces it. Artifacts are listed in the order of these stages."
+        },
+        "per_project": {
+          "enum": ["one", "one_per_subject", "many"],
+          "description": "How many artifacts of the kind a project may have. one_per_subject means one per subject item."
+        },
+        "subject_item_kind": {
+          "anyOf": [{ "$ref": "#/$defs/name" }, { "type": "null" }],
+          "description": "Kind of the subject item, when per_project is one_per_subject."
+        },
+        "item_kinds": {
+          "$ref": "#/$defs/names",
+          "description": "Item kinds an artifact of this kind contains. Empty for an artifact with no items."
+        }
+      },
+      "required": ["kind", "schema_version", "stage", "per_project", "subject_item_kind", "item_kinds"]
+    },
+    "itemKind": {
+      "type": "object",
+      "additionalProperties": false,
+      "properties": {
+        "kind": { "$ref": "#/$defs/name" },
+        "schema_version": { "type": "integer", "minimum": 1 },
+        "issue": {
+          "anyOf": [{ "$ref": "#/$defs/issueRule" }, { "type": "null" }],
+          "description": "Set for a kind of item that records a problem to settle: where its content says whether it is still open. Null for any other kind."
+        }
+      },
+      "required": ["kind", "schema_version", "issue"]
+    },
+    "issueRule": {
+      "type": "object",
+      "additionalProperties": false,
+      "properties": {
+        "status_field": {
+          "$ref": "#/$defs/name",
+          "description": "The field of the content that holds the status of the issue."
+        },
+        "open_values": {
+          "type": "array",
+          "items": { "type": "string" },
+          "minItems": 1,
+          "uniqueItems": true,
+          "description": "The values of that field while the issue is still open."
+        },
+        "about_link_types": {
+          "type": "array",
+          "items": { "$ref": "#/$defs/name" },
+          "uniqueItems": true,
+          "description": "The keys of the link types that tie an issue of the kind to the items it is about."
+        },
+        "party_link_types": {
+          "type": "array",
+          "items": { "$ref": "#/$defs/name" },
+          "uniqueItems": true,
+          "description": "The keys of the link types that tie an issue of the kind to the people it involves."
+        }
+      },
+      "required": ["status_field", "open_values", "about_link_types", "party_link_types"]
+    },
+    "linkType": {
+      "type": "object",
+      "additionalProperties": false,
+      "properties": {
+        "key": { "$ref": "#/$defs/name" },
+        "title": { "type": "string" },
+        "acyclic": {
+          "type": "boolean",
+          "description": "Following links of this type from an item must never return to it."
+        },
+        "agent_only": {
+          "type": "boolean",
+          "description": "Whether only the agents create links of this type during a run; the user never creates one by hand."
+        },
+        "quotes": {
+          "type": "object",
+          "additionalProperties": false,
+          "description": "Which item of a link of this type may be quoted: words of the source (source_quote), words of the target (target_quote). A quote is optional where it is allowed.",
+          "properties": {
+            "source": { "type": "boolean" },
+            "target": { "type": "boolean" }
+          },
+          "required": ["source", "target"]
+        },
+        "pairs": {
+          "type": "array",
+          "minItems": 1,
+          "items": { "$ref": "#/$defs/linkPair" }
+        }
+      },
+      "required": ["key", "title", "acyclic", "agent_only", "quotes", "pairs"]
+    },
+    "linkPair": {
+      "type": "object",
+      "additionalProperties": false,
+      "properties": {
+        "source": {
+          "anyOf": [{ "$ref": "#/$defs/names" }, { "const": "any" }],
+          "description": "Item kinds allowed as source, or any for every item kind except section."
+        },
+        "target": {
+          "anyOf": [{ "$ref": "#/$defs/names" }, { "enum": ["any", "same"] }],
+          "description": "Item kinds allowed as target, any for every item kind except section, or same for the kind of the source."
+        }
+      },
+      "required": ["source", "target"]
+    },
+    "personaAspect": {
+      "type": "object",
+      "additionalProperties": false,
+      "properties": {
+        "key": { "$ref": "#/$defs/name" },
+        "title": { "type": "string", "description": "What the user reads." },
+        "description": { "type": "string", "description": "What the aspect measures, in one sentence." },
+        "low": { "type": "string", "description": "What a score of 1 means." },
+        "high": { "type": "string", "description": "What a score of 5 means." }
+      },
+      "required": ["key", "title", "description", "low", "high"]
+    },
+    "tool": {
+      "type": "object",
+      "additionalProperties": false,
+      "properties": {
+        "key": { "$ref": "#/$defs/name" },
+        "title": { "type": "string", "description": "What the tool is, in a few words." },
+        "description": { "type": "string", "description": "What the tool is for." },
+        "uses": {
+          "type": "object",
+          "additionalProperties": false,
+          "properties": {
+            "one": { "type": "string" },
+            "other": {
+              "type": "string",
+              "description": "The line for the uses of the tool that follow one another in a step. `{count}` stands for their number."
+            }
+          },
+          "required": ["one", "other"]
+        },
+        "icon": {
+          "enum": ["search", "tool"],
+          "description": "The mark of the tool in a client, from a fixed set that a client draws."
+        }
+      },
+      "required": ["key", "title", "description", "uses", "icon"]
+    },
+    "valueList": {
+      "type": "object",
+      "additionalProperties": false,
+      "properties": {
+        "key": { "$ref": "#/$defs/name" },
+        "title": { "type": "string" },
+        "values": {
+          "type": "array",
+          "minItems": 1,
+          "items": {
+            "type": "object",
+            "additionalProperties": false,
+            "properties": {
+              "key": { "$ref": "#/$defs/name" },
+              "title": { "type": "string" },
+              "description": {
+                "type": "string",
+                "description": "What the value means. Shown in the client and given to agents in their prompts."
+              }
+            },
+            "required": ["key", "title", "description"]
+          }
+        }
+      },
+      "required": ["key", "title", "values"]
+    },
+    "directiveKind": {
+      "type": "object",
+      "additionalProperties": false,
+      "properties": {
+        "kind": { "$ref": "#/$defs/name" },
+        "title": { "type": "string" },
+        "item_roles": {
+          "$ref": "#/$defs/names",
+          "description": "The roles an item can have in a directive of this kind."
+        },
+        "details_schema": {
+          "$ref": "#/$defs/objectSchema",
+          "description": "JSON Schema of details of a directive of this kind."
+        }
+      },
+      "required": ["kind", "title", "item_roles", "details_schema"]
+    },
+    "exportTemplate": {
+      "type": "object",
+      "additionalProperties": false,
+      "properties": {
+        "key": { "$ref": "#/$defs/name" },
+        "title": { "type": "string" },
+        "artifact_kinds": {
+          "$ref": "#/$defs/names",
+          "description": "Kinds of the artifacts the document is built from."
+        },
+        "formats": {
+          "type": "array",
+          "minItems": 1,
+          "uniqueItems": true,
+          "items": { "enum": ["markdown", "pdf", "docx", "csv", "json"] }
+        }
+      },
+      "required": ["key", "title", "artifact_kinds", "formats"]
+    }
+  }
+}

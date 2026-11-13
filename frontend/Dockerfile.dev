@@ -1,0 +1,17 @@
+# Image of the web app for development: the dependencies are installed here, the source is
+# mounted by the compose file, and `next dev` reloads on every change.
+FROM node:26-slim
+
+ENV NEXT_TELEMETRY_DISABLED=1
+# Node 26 does not ship corepack; the version is the one of `packageManager` in package.json.
+RUN npm install -g pnpm@11.5.2
+
+WORKDIR /app
+
+COPY package.json pnpm-lock.yaml pnpm-workspace.yaml ./
+RUN pnpm install --frozen-lockfile
+
+COPY . .
+
+EXPOSE 3000
+CMD ["pnpm", "exec", "next", "dev", "--hostname", "0.0.0.0", "--port", "3000"]

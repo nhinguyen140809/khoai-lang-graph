@@ -1,0 +1,63 @@
+# Model profiles of the backend (README.md: Model Configuration).
+#
+# Agents ask the llm layer for a role, never for a model; the resolver merges
+# this file with environment overrides (LLM__DEFAULT_MODEL, LLM__ROLES__<ROLE>),
+# user settings and run requests, in that order (later wins).
+#
+# Current setup: one default model for every role (deepseek-v4.1-flash),
+# served by the OpenAI-compatible endpoint configured in .env. Providers and
+# credentials are deployment settings; changing them needs no code change.
+
+defaults:
+  model: openai:deepseek-v4.1-flash
+  temperature: 0.2
+  # Agent conversations span dozens of calls; transient 5xx timeouts retry
+  # instead of failing the whole run.
+  max_retries: 4
+
+# A role not listed uses defaults.model (gpt-4.1). The persona generator,
+# analyst and stakeholder miner all produce structured batches that must
+# reuse the plan's exact vocabulary verbatim and quote evidence word for
+# word (mini drifted on both: a parent persona outside the plan, and a
+# paraphrased evidence quote — both on 2026-10-31). The planner, corpus
+# builder, engineer, backlog manager and validator keep the reasoning
+# default; the interview loop stays mini — short in-character turns,
+# many calls.
+roles:
+  interviewer: openai:deepseek-v4.1-flash
+  persona_agent: openai:deepseek-v4.1-flash
+  stakeholder_miner: openai:deepseek-v4.1-flash
+  persona_generator: openai:deepseek-v4.1-flash
+  analyst: openai:deepseek-v4.1-flash
+
+# Models a user may pick in the UI (GET /api/v1/models serves this catalog). Prices are US dollars
+# per million tokens; a price a provider does not publish is left out. `allowed_roles` is left out
+# for a model that may serve every role.
+# A model may also set `base_url` and `api_key_env` (the NAME of a variable in .env, never the
+# key) to be called at its own OpenAI-compatible address instead of OPENAI_BASE_URL, for example:
+#   - id: gemini:gemini-2.5-flash
+#     label: Gemini 2.5 Flash
+#     base_url: https://generativelanguage.googleapis.com/v1beta/openai/
+#     api_key_env: GEMINI_API_KEY
+#     capabilities: [tool_calling, structured_output, streaming]
+#     context_window: 1048576
+allowlist:
+  - id: openai:deepseek-v4.1-flash
+    label: GPT-4.1
+    capabilities: [tool_calling, structured_output, streaming]
+    context_window: 1047576
+    input_price_per_mtok: 2.0
+    output_price_per_mtok: 8.0
+    cache_read_price_per_mtok: 0.5
+  - id: openai:deepseek-v4.1-flash
+    label: GPT-4.1 mini
+    capabilities: [tool_calling, structured_output, streaming]
+    context_window: 1047576
+    input_price_per_mtok: 0.4
+    output_price_per_mtok: 1.6
+    cache_read_price_per_mtok: 0.1
+  - id: openai:deepseek-v4.1-flash-High
+    label: GPT-5.2
+    capabilities: [tool_calling, structured_output, streaming]
+    # TODO(P2): confirm the context window and the prices of this model with the provider.
+    context_window: 400000

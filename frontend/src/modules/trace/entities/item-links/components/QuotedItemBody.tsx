@@ -56,7 +56,15 @@ export function QuotedItemBody({
   return (
     <>
       <span className="-mb-0.5 block text-xs text-muted-foreground">{kind}</span>
-      <span className={cn('block text-sm font-semibold', titleClassName)}>
+      {/* A long title is cut with an ellipsis: on one line, or on three when it carries the marked
+          words, which the cut must not hide as far as it can help. */}
+      <span
+        className={cn(
+          'block text-sm font-semibold',
+          place?.type === 'title' ? 'line-clamp-3' : 'truncate',
+          titleClassName,
+        )}
+      >
         {wrapTitle === undefined ? marked : wrapTitle(marked)}
       </span>
       {excerpt !== null && (

@@ -70,6 +70,11 @@ export const streamHandlers = [
     }
 
     send('node_start', start)
+    send('step_note', {
+      step_id: start.step_id,
+      kind: 'doing',
+      text: 'I am reading the **last interview** first.',
+    })
     for (const text of MOCK_TOKENS) {
       await delay(50)
       send('token', { node: start.node, text, step_id: start.step_id })

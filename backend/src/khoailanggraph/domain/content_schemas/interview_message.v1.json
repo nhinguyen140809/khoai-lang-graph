@@ -1,0 +1,106 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "$id": "items/interview_message/v1",
+  "title": "Interview message",
+  "description": "One question or answer in an interview. Its key is the persona key, '#', and its position.",
+  "x-level": "item",
+  "x-kind": "interview_message",
+  "x-schema-version": 1,
+  "x-ui-display": "transcript",
+  "x-ui-navigable": false,
+  "x-ui-title-field": "content",
+  "x-ui-role-field": "speaker",
+  "x-ui-list-fields": [
+    "turn",
+    "speaker",
+    "content"
+  ],
+  "x-ui-field-order": [
+    "turn",
+    "speaker",
+    "content",
+    "message_kind",
+    "topic",
+    "follows_up_on",
+    "covers",
+    "iteration"
+  ],
+  "type": "object",
+  "additionalProperties": false,
+  "properties": {
+    "turn": {
+      "title": "Turn",
+      "type": "integer",
+      "minimum": 1,
+      "description": "A question and its answer share a turn.",
+      "x-ui-widget": "separator"
+    },
+    "speaker": {
+      "title": "Speaker",
+      "type": "string",
+      "description": "The key of the participant of the transcript who says the words.",
+      "x-ui-widget": "text"
+    },
+    "content": {
+      "title": "Content",
+      "type": "string",
+      "description": "The text of the message.",
+      "x-ui-widget": "textarea"
+    },
+    "message_kind": {
+      "title": "What it does",
+      "type": "string",
+      "x-value-list": "message_kind",
+      "description": "What the message is: the question that opens the interview, a question that digs into what was just said, a question on a new topic, or an answer.",
+      "x-ui-widget": "badge",
+      "readOnly": true
+    },
+    "topic": {
+      "title": "Topic",
+      "type": [
+        "string",
+        "null"
+      ],
+      "x-value-from": "elicitation_plan.topics",
+      "description": "The plan topic the question targets.",
+      "x-ui-widget": "select"
+    },
+    "follows_up_on": {
+      "title": "Digs into",
+      "type": [
+        "string",
+        "null"
+      ],
+      "description": "The earlier message that this question follows up on; empty when the question is not a follow-up.",
+      "x-ui-widget": "text",
+      "readOnly": true
+    },
+    "covers": {
+      "title": "What it told us",
+      "type": "array",
+      "items": {
+        "type": "string"
+      },
+      "description": "The data of the plan that this answer gave, as the interviewer judged it. The person who answers never sees it.",
+      "x-ui-widget": "list",
+      "readOnly": true
+    },
+    "iteration": {
+      "title": "Iteration",
+      "type": "integer",
+      "minimum": 0,
+      "description": "0 for the first interview, higher for rework rounds.",
+      "x-ui-widget": "number"
+    }
+  },
+  "required": [
+    "turn",
+    "speaker",
+    "content",
+    "message_kind",
+    "topic",
+    "follows_up_on",
+    "covers",
+    "iteration"
+  ]
+}

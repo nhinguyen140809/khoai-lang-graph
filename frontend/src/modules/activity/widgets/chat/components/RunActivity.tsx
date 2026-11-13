@@ -1,18 +1,22 @@
 'use client'
 
-import { ErrorBoundary } from 'react-error-boundary'
-
-import { useRunEntries } from '@/modules/activity/entities'
+import { hasRunEnded, useRunEntries } from '@/modules/activity/entities'
 import type { Run } from '@/modules/run/entities'
 import type { Message, Thread } from '@/modules/thread/entities'
+import { messageAuthorLooks } from '@/modules/thread/entities'
 import { ErrorState, LoadingState } from '@/shared/components/state'
 import { Marker } from '@/shared/components/ui/marker'
 import { formatDateTime } from '@/shared/lib/time'
 import { useView } from '@/shared/lib/view'
 
 import { activityChatMessages } from '../activity-chat.constants'
-import { EntryView } from './EntryView'
+import { usePhaseOpen } from '../hooks/usePhaseOpen'
+import { useRevealNewMessage } from '../hooks/useRevealNewMessage'
+import { phaseBlocks } from '../phase-blocks.utils'
+import { ChatEntry } from './ChatEntry'
+import { PhaseBlockView } from './PhaseBlockView'
 import { RunActivityProvider } from './RunActivityContext'
+import { RunStatusLine } from './RunStatusLine'
 
 interface RunActivityProps {
   run: Run
@@ -20,16 +24,27 @@ interface RunActivityProps {
   /** The thread the run belongs to, so an entry can act on it, such as sending a message again. */
   thread: Thread | null
   projectId: string
-  isTarget: (entryId: string) => boolean
+  /** The id of the entry that the address names, if any. */
+  targetEntryId: string | null
 }
 
-// What every entry of this run holds; the views below read it through the provider instead of a
-// prop that each layer passes on.
-
-/** One run in the chat: its separator, then each of its entries in the order of its time. */
-export function RunActivity({ run, messages, thread, projectId, isTarget }: RunActivityProps) {
+/**
+ * One run in the chat: its separator, then each of its entries in the order of its time. What
+ * every entry of the run holds is given through the provider, not as a prop each layer passes on.
+ */
+export function RunActivity({ run, messages, thread, projectId, targetEntryId }: RunActivityProps) {
   const entries = useRunEntries(run, messages, projectId)
   const view = useView()
+  const phases = usePhaseOpen()
+  useRevealNewMessage(
+    entries.state === 'success'
+      ? entries.entries.flatMap((entry) =>
+          entry.type === 'message' && messageAuthorLooks[entry.message.author].isAgent
+            ? [entry.id]
+            : [],
+        )
+      : null,
+  )
 
   if (entries.state === 'pending') {
     return <LoadingState size="compact" rows={3} label={activityChatMessages.runLoading} />
@@ -47,24 +62,43 @@ export function RunActivity({ run, messages, thread, projectId, isTarget }: RunA
   }
 
   const first = entries.entries[0]
+  const phaseWork = new Map(
+    entries.entries.flatMap((entry) => (entry.type === 'phase' ? [[entry.id, entry.work]] : [])),
+  )
+  // A review that waits is not an entry of the chat: the page lays it over its end.
+  const blocks = phaseBlocks(
+    entries.entries.filter(
+      (entry) => entry.type !== 'review' || entry.interrupt.status !== 'pending',
+    ),
+  )
   return (
-    <RunActivityProvider value={{ run, thread, projectId }}>
+    <RunActivityProvider value={{ run, thread, projectId, targetEntryId }}>
       <Marker variant="separator" className="mb-2 text-xs">
         {view === 'developer' ? `${activityChatMessages.run(run.number)} ` : ''}
         {first !== undefined ? formatDateTime(first.time) : null}
       </Marker>
-      {/* A review that waits is not an entry of the chat: the page lays it over its end. */}
-      {entries.entries
-        .filter((entry) => entry.type !== 'review' || entry.interrupt.status !== 'pending')
-        .map((entry) => (
-          <ErrorBoundary
-            key={entry.id}
-            fallback={<p className="text-sm text-destructive">{activityChatMessages.entryError}</p>}
-            resetKeys={[entry]}
-          >
-            <EntryView entry={entry} isTarget={isTarget(entry.id)} />
-          </ErrorBoundary>
-        ))}
+      {blocks.map((block) => {
+        if (block.type === 'entry') {
+          return <ChatEntry key={block.entry.id} entry={block.entry} />
+        }
+        const work = phaseWork.get(block.phaseId)
+        if (work === undefined) return null
+        return (
+          <PhaseBlockView
+            key={block.header?.id ?? block.items[0]?.id}
+            block={block}
+            phase={{
+              isOpen: phases.isOpen(work),
+              onToggle: () => {
+                phases.toggle(work)
+              },
+            }}
+          />
+        )
+      })}
+      {/* The status of the run reaches the page a little after its steps do: a run whose last
+          entry says that it has ended is not shown as working. */}
+      {!hasRunEnded(entries.entries) && <RunStatusLine run={run} />}
     </RunActivityProvider>
   )
 }

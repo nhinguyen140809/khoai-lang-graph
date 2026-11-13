@@ -1,0 +1,168 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "$id": "artifacts/interview_transcript/v1",
+  "title": "Interview transcript",
+  "description": "The interview with one persona. The messages are the items of the artifact, each said by one of its participants.",
+  "x-level": "artifact",
+  "x-kind": "interview_transcript",
+  "x-schema-version": 1,
+  "x-ui-display": "transcript",
+  "x-ui-participants-field": "participants",
+  "x-ui-field-order": [
+    "participants",
+    "turn_count",
+    "status",
+    "stop_reason",
+    "data_coverage",
+    "top_findings",
+    "follow_ups"
+  ],
+  "type": "object",
+  "additionalProperties": false,
+  "properties": {
+    "participants": {
+      "title": "Participants",
+      "type": "array",
+      "minItems": 2,
+      "items": {
+        "type": "object",
+        "additionalProperties": false,
+        "properties": {
+          "key": {
+            "title": "Key",
+            "type": "string",
+            "description": "The key that the messages of the participant name as their speaker: interviewer, or the key of the persona.",
+            "x-ui-widget": "text"
+          },
+          "name": {
+            "title": "Name",
+            "type": "string",
+            "description": "The name shown beside the messages of the participant.",
+            "x-ui-widget": "text"
+          },
+          "role": {
+            "title": "Role",
+            "type": "string",
+            "enum": [
+              "interviewer",
+              "persona"
+            ],
+            "description": "What the participant does in the interview.",
+            "x-ui-widget": "select"
+          },
+          "item_id": {
+            "title": "Item",
+            "type": [
+              "string",
+              "null"
+            ],
+            "description": "The id of the item that the participant is, such as its persona; null for an agent.",
+            "x-ui-widget": "text"
+          }
+        },
+        "required": [
+          "key",
+          "name",
+          "role",
+          "item_id"
+        ]
+      },
+      "description": "The people of the interview, the one who leads first. Set by the system.",
+      "x-ui-widget": "avatar-list",
+      "readOnly": true
+    },
+    "turn_count": {
+      "title": "Turns",
+      "type": "integer",
+      "minimum": 0,
+      "description": "Number of question and answer turns so far.",
+      "x-ui-widget": "number",
+      "readOnly": true
+    },
+    "status": {
+      "title": "Status",
+      "type": "string",
+      "enum": [
+        "in_progress",
+        "completed"
+      ],
+      "description": "Whether the interview is still running.",
+      "x-ui-widget": "separator",
+      "readOnly": true
+    },
+    "stop_reason": {
+      "title": "Stop reason",
+      "type": [
+        "string",
+        "null"
+      ],
+      "enum": [
+        "max_turns",
+        "interviewer_stopped",
+        "stopping_condition_met",
+        null
+      ],
+      "description": "Why the interview ended. Null while it is in progress.",
+      "x-ui-widget": "separator",
+      "readOnly": true
+    },
+    "data_coverage": {
+      "title": "What was covered",
+      "type": "array",
+      "items": {
+        "type": "object",
+        "additionalProperties": false,
+        "properties": {
+          "data": {
+            "title": "What to find out",
+            "type": "string",
+            "description": "One item of the data that the plan asks the interviews to bring back.",
+            "x-ui-widget": "text"
+          },
+          "covered": {
+            "title": "Covered",
+            "type": "boolean",
+            "description": "Whether the interview brought that data back.",
+            "x-ui-widget": "boolean"
+          }
+        },
+        "required": [
+          "data",
+          "covered"
+        ]
+      },
+      "description": "For each item of the data that the plan asks for, whether this interview brought it back.",
+      "x-ui-widget": "object-list",
+      "readOnly": true
+    },
+    "top_findings": {
+      "title": "What stood out",
+      "type": "array",
+      "items": {
+        "type": "string"
+      },
+      "description": "The three or four problems or wishes that the interview raised, in plain words.",
+      "x-ui-widget": "list",
+      "readOnly": true
+    },
+    "follow_ups": {
+      "title": "Still to ask",
+      "type": "array",
+      "items": {
+        "type": "string"
+      },
+      "description": "Questions that the interview left open for a later round.",
+      "x-ui-widget": "list",
+      "readOnly": true
+    }
+  },
+  "required": [
+    "participants",
+    "turn_count",
+    "status",
+    "stop_reason",
+    "data_coverage",
+    "top_findings",
+    "follow_ups"
+  ]
+}

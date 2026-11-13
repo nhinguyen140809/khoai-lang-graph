@@ -123,6 +123,8 @@ Errors use the Problem Details format (RFC 9457) with media type `application/pr
 | 409 | `invalid_state` | The action does not apply to the current status, for example resume on a run that is not interrupted |
 | 409 | `idempotency_conflict` | The idempotency key was used before with a different body |
 | 422 | `validation_failed` | A field fails validation |
+| 422 | `unsupported_format` | Uploaded document format is not one the server parses |
+| 422 | `too_large` | Uploaded document exceeds the size limit |
 | 429 | `rate_limited` | Too many requests; `Retry-After` gives the wait in seconds |
 | 429 | `budget_exceeded` | The monthly budget of the user is reached; the request would start or continue LLM work |
 | 502 | `provider_error` | The LLM provider failed and the fallback also failed |
@@ -165,6 +167,7 @@ The budget is checked before every LLM call, not only when the run starts. A cli
 │       ├── /threads
 │       ├── /artifacts
 │       ├── /items
+│       ├── /documents
 │       ├── /trace-links
 │       ├── /traceability
 │       └── /exports
@@ -195,6 +198,7 @@ The budget is checked before every LLM call, not only when the run starts. A cli
 │       ├── /revisions
 │       ├── /restore
 │       └── /trace
+├── /documents/{document_id}
 ├── /trace-links/{link_id}
 └── /exports/{export_id}
 ```
@@ -312,7 +316,7 @@ Rules:
 
 | Method and path | Purpose | Phase |
 |---|---|---|
-| `GET /projects` | Projects of the user; filters `status`, `rollup_run_status` (one or more values; `none` matches a project without a run) and `last_activity_after`; ordered by `last_activity_at` descending. Each item has `rollup_run_status`, which the project list shows; `item_counts` comes only with `GET /projects/{project_id}` | MVP |
+| `GET /projects` | Projects of the user; filters `status`, `rollup_run_status` (one or more values; `none` matches a project without a run) and `last_activity_after`; ordered by `last_activity_at` descending. Each item has `item_counts`, `unfinished_run_counts` and `rollup_run_status`, the same fields as `GET /projects/{project_id}` | MVP |
 | `POST /projects` | Create; body `name`, `description`, `output_language`. `output_language` left out takes `default_output_language` of the user settings. `name` is optional: without it, the first run names the project from its initial intent, and the event stream of that run sends `project_named`. Accepts an `Idempotency-Key`, so that a retry after a lost answer creates no second project | MVP |
 | `GET /projects/{project_id}` | One project, with `item_counts`, `unfinished_run_counts` and `rollup_run_status` | MVP |
 | `PATCH /projects/{project_id}` | Change name, description, status, `run_config`, `model_overrides`. Each key of `model_overrides` is an agent role of the current workflow definition and each value a model of the catalog whose `allowed_roles` holds the role; otherwise `422 validation_failed` at `model_overrides.<role>` | MVP |
@@ -386,7 +390,7 @@ Response `201`:
 |---|---|---|
 | `GET /threads/{thread_id}/runs` | Runs of a thread; ordered by `created_at` descending | MVP |
 | `GET /runs/{run_id}` | Number in the thread, status, stage, iteration, step count, usage, error, `workflow_name`, `workflow_version`, `last_event_id`. The status transitions are listed in [Runtime: lifecycle](architecture/runtime.md#3-lifecycle) | MVP |
-| `GET /runs/{run_id}/steps` | Run steps; ordered by `sequence` | MVP |
+| `GET /runs/{run_id}/steps` | Run steps; ordered by `sequence`. A step also carries its `notes` ([StepNote](DATA_SHAPE.md#stepnote-later)) | MVP |
 | `GET /runs/{run_id}/state` | The current workflow state of the run, see [workflow state](#workflow-state) | MVP |
 | `GET /runs/{run_id}/steps/{step_id}/state` | The workflow state saved after that step; the starting point of a retry from the next step | MVP |
 | `GET /runs/{run_id}/stream` | Event stream, see [section 6](#6-run-event-stream) | MVP |
@@ -519,6 +523,7 @@ The pending interrupt, `GET /runs/5f2d.../interrupts?status=pending`. The `inter
       "run_id": "5f2d...",
       "step_id": "e9d2...",
       "node": "checkpoint_analysis",
+      "purpose": "review",
       "prompt": "Review the requirements analysis. Accept it, or reject it with feedback.",
       "options": [
         { "key": "accept", "label": "Accept", "requires_feedback": false, "approves": true, "is_default": true },
@@ -590,11 +595,12 @@ Resume rules:
 - `option` is the key of one of the options of the interrupt; the set of options comes from the workflow definition, so the API does not change when a checkpoint gains or loses an option. An unknown key answers `422 validation_failed`.
 - `feedback` is required when the chosen option requires it.
 - `answers` has one entry per answered question, by question key, in the shape of `Answer` in the [data shape](DATA_SHAPE.md#humandecision-mvp). Every required question is answered, every choice is a choice of its question, and `text` is present when a chosen choice requires it; otherwise `422 validation_failed` with the question key in the field path.
+- The option `other`, "Something else", asks for `feedback`; the run records it as a message of the user, which the intent router reads, and continues at the step that the router chooses. It creates no rework directive of its own.
 - `modified_items` is accepted only when the interrupt allows edits.
 - When the chosen option approves, the artifacts under review and their items that are still `draft` become `approved`, each as a new version with `change_reason` `reviewed`.
 - The server stores a human decision, marks the interrupt resolved, gives the decision as `decision` of the interrupt, and continues the run. The response is `202` with the run.
 
-An interrupt can ask several questions of different types and is answered at once. The checkpoints of definition version 1 ask none; the example comes from a checkpoint that clarifies the intent of a project, see [Runtime: open points](architecture/runtime.md#8-open-points):
+An interrupt can ask several questions of different types and is answered at once. The checkpoints of definition version 1 ask none of their own. The questions of the agent and the review of documents are separate interrupts, told apart by `purpose`. A `review` holds the documents and its options and no question of the agent. An `ask` holds up to three questions that the agent chose, each with `source` `agent`, a default that is the agent's own assumption and, for a selection, a last choice `other` that asks for text; it has no option and no document under review (the answer has no `option`), and it is not created at all when the agent has no question. The agent proposes choices for a question, so that the user picks and types only when the proposal is not right. A question of the agent is not required: leaving it alone accepts its default, and the agents after the checkpoint read the answers as part of their instruction. The same node words the `prompt` for the case and may suggest the feedback of an option (`suggested_feedback`). The example comes from a checkpoint that clarifies the intent of a project, see [Runtime: open points](architecture/runtime.md#8-open-points):
 
 ```json
 {
@@ -937,6 +943,41 @@ Each gap is one list of items that need attention, with its own title and a sent
 }
 ```
 
+### Source documents
+
+Uploaded research documents of a project - the user-supplied half of the
+research corpus that grounds the personas; the other half comes from the
+workflow's live search. The upload stores the file bytes server-side and
+never returns them in JSON; responses carry the metadata and the plain text
+the server extracted at upload time (the text the mining stage quotes
+verbatim, capped at 20,000 characters).
+
+| Method and path | Purpose | Phase |
+|---|---|---|
+| `GET /projects/{project_id}/documents` | Documents of the project; ordered by `created_at` descending | MVP |
+| `POST /projects/{project_id}/documents` | Upload one: `multipart/form-data` with `file`, optional `title` (taken from the filename when absent), optional `first_version_id` to add a new version to an existing document. `201` with the created document and a `Location` header | MVP |
+| `GET /documents/{document_id}` | One document with its versions; `?version=` reads any stored version's text, not just the latest | MVP |
+| `DELETE /documents/{document_id}` | Soft delete: the document leaves the lists, its versions stay readable. `204` | MVP |
+
+Rules:
+
+- Allowed formats (MVP): `txt`, `md`, `html`, `json`; each upload answers
+  `422 unsupported_format` otherwise. PDF and DOCX arrive with the
+  corresponding parsers.
+- One file per request, at most 10 MB (`max_upload_mb`); over -> `422 too_large`.
+- A changed document is uploaded again as a new version with the
+  `first_version_id` of the document; the server gives it the next version
+  number. A version is never edited in place, the same rule the artifacts
+  follow.
+- The storage location of the bytes is `server-only` (section 3): it never appears
+  in a response.
+- An uploaded document joins the research corpus of the workspace's later
+  runs as a `source_document` item with `origin: "upload"`: its extracted
+  text is quoted verbatim by the mining stage, like any web hit (runs already
+  in flight keep the corpus they started with).
+- `html` uploads are reduced to their readable text; a future workflow run
+  draws on the extracted `text` exactly as it draws on the live-search hits.
+
 ### Exports
 
 | Method and path | Purpose | Phase |
@@ -944,13 +985,13 @@ Each gap is one list of items that need attention, with its own title and a sent
 | `POST /projects/{project_id}/exports` | Request a document; body `template`, `format`. The template is one of the export templates of the current workflow definition version, and the format one of its formats, otherwise `422 validation_failed`. `202` | MVP |
 | `GET /projects/{project_id}/exports` | Exports of a project; ordered by `created_at` descending | MVP |
 | `GET /exports/{export_id}` | Status; when `ready`, includes `download_url`, valid for a limited time | MVP |
+| `GET /exports/{export_id}/file` | The file of a ready export, as a download; the address that `download_url` gives. `404` while the export is not ready | MVP |
 
 ### Later phase
 
 | Method and path | Purpose |
 |---|---|
 | `GET`, `POST /projects/{project_id}/members`; `PATCH`, `DELETE /projects/{project_id}/members/{user_id}` | Share a project |
-| `GET`, `POST /projects/{project_id}/documents`; `GET`, `DELETE /documents/{document_id}` | Upload source documents. A changed document is uploaded as a new version, with the `first_version_id` of the document; the server gives it the next version number. A version is never edited in place |
 | `GET`, `POST /artifacts/{artifact_id}/comments`; `GET`, `POST /items/{item_id}/comments`; `PATCH`, `DELETE /comments/{comment_id}` | Comment on an artifact or on one item |
 | `GET /projects/{project_id}/activity` | Activity feed |
 | `GET /me/notifications`; `POST /me/notifications/{notification_id}/read` | Notifications |
@@ -1034,6 +1075,7 @@ The type names are the ones defined in [Planning: agent run lifecycle](PLANNING.
 | `artifact_delta` | An artifact changed: an item was added, changed or removed, or a field of the artifact changed | `artifact_id`, `delta` | `version`, `item_id`, `item_key`, `change` with one of `item_created`, `item_updated`, `item_deleted`, `artifact_updated` |
 | `message_delivered` | A pending user message was taken in by a step | - | `message_id`, `step_id`, `node` |
 | `project_named` | The run named its project, which was created without a name | - | `step_id`, `project_id`, `name` |
+| `step_note` | A step wrote a short note to the user while it worked | - | `step_id`, `kind` (`doing`, `finding`, `tool` or `thinking`), `tool` (only with kind `tool`), `text` (Markdown) |
 | `interrupt` | The run paused for input. Not sent for an interrupt resolved at once with the defaults | `node`, `payload` | `step_id`; `payload` contains `interrupt_id`, `prompt`, `options`, `questions`, `allow_edits`, `review_artifacts` |
 | `error` | The run failed | `message` | `code`, one of the codes in [Runtime: failures](architecture/runtime.md#failures); `stage` |
 | `done` | The run ended | - | `status` with one of `succeeded`, `failed`, `cancelled` |
@@ -1045,6 +1087,7 @@ Rules:
 - **Events carry references, not content.** An artifact event gives the ids and versions; the client fetches the artifact or the item when it needs the content. A reconnecting client therefore never applies a stale copy. `name` in `artifact_created` is the title of the artifact.
 - **A name is a record of the step.** `project_named` gives the name that the run chose. The client reads the current name from the project, which the user may have changed since, so a replayed event never brings back an old name.
 - **Token text is grouped.** The server stores and sends token text in chunks of at most 200 ms of output, not one event per token, so the event log stays small and a replay is fast.
+- **A note is a record of the step.** `step_note` carries its short text, which is also stored in the `notes` of the step, so a client that reloads the steps gets the same notes as one that read the stream. `thinking` (Later) is sent only when the model provider returns a summary of its reasoning; with a provider that returns none, a run has no `thinking` note. The server sends a note as soon as the model has written it, not when the whole answer is done, when the model writes the `notes` field first, as the output models ask; with a model that writes the fields in another order the notes come after the answer, still before the `node_end`.
 - **Unknown types are ignored.** A client skips an event type it does not know, so a type can be added without a new API version.
 
 ## 7. Main flows

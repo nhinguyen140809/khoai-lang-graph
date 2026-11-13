@@ -1,0 +1,181 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "$id": "artifacts/elicitation_plan/v1",
+  "title": "Interview plan",
+  "description": "What the interviews must find out and how.",
+  "x-level": "artifact",
+  "x-kind": "elicitation_plan",
+  "x-schema-version": 1,
+  "x-ui-display": "document",
+  "x-ui-field-order": [
+    "objectives",
+    "topics",
+    "data_to_collect",
+    "opening_questions",
+    "information_gaps",
+    "stakeholder_types",
+    "persona_aspects",
+    "strategies",
+    "stopping_conditions"
+  ],
+  "type": "object",
+  "additionalProperties": false,
+  "properties": {
+    "objectives": {
+      "title": "Objectives",
+      "type": "array",
+      "items": {
+        "type": "string"
+      },
+      "description": "What the elicitation must achieve.",
+      "minItems": 1,
+      "x-ui-widget": "list"
+    },
+    "topics": {
+      "title": "Topics",
+      "type": "array",
+      "items": {
+        "type": "string"
+      },
+      "description": "Subjects to cover in the interviews.",
+      "x-ui-widget": "tags"
+    },
+    "information_gaps": {
+      "title": "Information gaps",
+      "type": "array",
+      "items": {
+        "type": "string"
+      },
+      "description": "What is not known yet and must be asked.",
+      "x-ui-widget": "list"
+    },
+    "stakeholder_types": {
+      "title": "Stakeholder types",
+      "type": "array",
+      "items": {
+        "type": "string"
+      },
+      "description": "Types of stakeholder to interview. Personas are generated from this list.",
+      "minItems": 1,
+      "x-ui-widget": "tags"
+    },
+    "strategies": {
+      "title": "Strategies",
+      "type": "array",
+      "items": {
+        "type": "string"
+      },
+      "description": "How to ask: question styles and techniques.",
+      "x-ui-widget": "list"
+    },
+    "stopping_conditions": {
+      "title": "Stopping conditions",
+      "type": "array",
+      "items": {
+        "type": "string"
+      },
+      "description": "When the interviews have gathered enough: each condition names what must be known, so that it can be checked.",
+      "x-ui-widget": "list"
+    },
+    "opening_questions": {
+      "title": "Opening questions",
+      "type": "array",
+      "items": {
+        "type": "string"
+      },
+      "description": "Open questions that an interview can start with, in plain words, one thing in each.",
+      "x-ui-widget": "list"
+    },
+    "data_to_collect": {
+      "title": "What to find out",
+      "type": "array",
+      "items": {
+        "type": "object",
+        "additionalProperties": false,
+        "properties": {
+          "topic": {
+            "title": "Topic",
+            "type": "string",
+            "description": "One of the topics of the plan.",
+            "x-ui-widget": "text"
+          },
+          "needed": {
+            "title": "What to learn",
+            "type": "array",
+            "items": {
+              "type": "string"
+            },
+            "description": "The concrete data that an interview must bring back for the topic, such as how often the person does it, what they do when it fails, or what it costs them.",
+            "x-ui-widget": "list"
+          }
+        },
+        "required": [
+          "topic",
+          "needed"
+        ]
+      },
+      "description": "For each topic, what an interview must bring back before the topic counts as covered.",
+      "x-ui-widget": "object-list"
+    },
+    "persona_aspects": {
+      "title": "What sets people apart",
+      "type": "array",
+      "items": {
+        "type": "object",
+        "additionalProperties": false,
+        "properties": {
+          "key": {
+            "title": "Short name",
+            "type": "string",
+            "description": "A short key in lower case with underscores, unique in the plan.",
+            "x-ui-widget": "text"
+          },
+          "title": {
+            "title": "Shown as",
+            "type": "string",
+            "description": "A short noun phrase that the user reads, such as \"Need for quick answers\".",
+            "x-ui-widget": "text"
+          },
+          "description": {
+            "title": "Description",
+            "type": "string",
+            "description": "What the aspect measures, in one sentence.",
+            "x-ui-widget": "text"
+          },
+          "low": {
+            "title": "Lowest score means",
+            "type": "string",
+            "description": "What a score of 1 means.",
+            "x-ui-widget": "text"
+          },
+          "high": {
+            "title": "Highest score means",
+            "type": "string",
+            "description": "What a score of 5 means.",
+            "x-ui-widget": "text"
+          }
+        },
+        "required": [
+          "key",
+          "title",
+          "description",
+          "low",
+          "high"
+        ]
+      },
+      "description": "The aspects proposed for this project, on top of the aspects that the system scores every persona on. At most four, each different from the system's aspects and from each other.",
+      "x-ui-widget": "object-list"
+    }
+  },
+  "required": [
+    "objectives",
+    "topics",
+    "data_to_collect",
+    "opening_questions",
+    "information_gaps",
+    "stakeholder_types",
+    "persona_aspects",
+    "strategies",
+    "stopping_conditions"
+  ]
+}

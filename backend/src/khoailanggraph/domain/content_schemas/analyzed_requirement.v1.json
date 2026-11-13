@@ -1,0 +1,84 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "$id": "items/analyzed_requirement/v1",
+  "title": "Analysed requirement",
+  "description": "A requirement after analysis: merged, classified and prioritized.",
+  "x-level": "item",
+  "x-kind": "analyzed_requirement",
+  "x-schema-version": 1,
+  "x-key-prefix": "AR",
+  "x-ui-display": "table",
+  "x-ui-navigable": true,
+  "x-ui-title-field": "title",
+  "x-ui-list-fields": [
+    "title",
+    "type",
+    "priority"
+  ],
+  "x-ui-field-order": [
+    "title",
+    "statement",
+    "type",
+    "quality_category",
+    "priority",
+    "rationale"
+  ],
+  "type": "object",
+  "additionalProperties": false,
+  "properties": {
+    "title": {
+      "title": "Title",
+      "type": "string",
+      "description": "A short name of at most 60 characters that tells the point of the item at a glance, for example \"Find a mentor in my field\".",
+      "x-ui-widget": "text"
+    },
+    "statement": {
+      "title": "Statement",
+      "type": "string",
+      "description": "The requirement, rewritten to be clear and atomic.",
+      "x-ui-widget": "textarea"
+    },
+    "type": {
+      "title": "Type",
+      "type": "string",
+      "enum": [
+        "functional",
+        "non_functional",
+        "constraint"
+      ],
+      "description": "Kind of requirement.",
+      "x-ui-widget": "select"
+    },
+    "quality_category": {
+      "title": "Quality category",
+      "type": [
+        "string",
+        "null"
+      ],
+      "x-value-list": "quality_category",
+      "description": "Quality attribute. Required when type is non_functional, null otherwise.",
+      "x-ui-widget": "select"
+    },
+    "priority": {
+      "title": "Priority",
+      "type": "string",
+      "x-value-list": "priority",
+      "description": "Importance.",
+      "x-ui-widget": "select"
+    },
+    "rationale": {
+      "title": "Rationale",
+      "type": "string",
+      "description": "Why it matters.",
+      "x-ui-widget": "textarea"
+    }
+  },
+  "required": [
+    "title",
+    "statement",
+    "type",
+    "quality_category",
+    "priority",
+    "rationale"
+  ]
+}

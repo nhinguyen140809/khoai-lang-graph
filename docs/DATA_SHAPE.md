@@ -119,7 +119,7 @@ The entities are grouped into six areas. An area is a group that changes togethe
 |---|---|---|
 | Identity and account | User, AuthIdentity, Session | MVP: User, Session. Later: AuthIdentity for external login |
 | Settings | UserSettings, ModelSettings, ModelCatalogEntry, ProviderCredential | MVP: first three. Later: ProviderCredential |
-| Workspace | Project, ProjectMember, SourceDocument, DocumentChunk | MVP: Project. Later: the other three |
+| Workspace | Project, ProjectMember, SourceDocument, DocumentVersion, DocumentChunk | MVP: Project, SourceDocument, DocumentVersion. Later: the other two |
 | Conversation and execution | Thread, Message, Run, RunStep, RunEvent, Interrupt, HumanDecision, Directive | MVP |
 | Requirements engineering artifacts | Artifact (7 kinds), ArtifactItem (12 kinds), ItemEmbedding | MVP: Artifact, ArtifactItem. Later: ItemEmbedding |
 | Cross-cutting | ArtifactRevision, ItemRevision, TraceLink, Comment, Export, ActivityEvent, Notification | MVP: ArtifactRevision, ItemRevision, TraceLink, Export. Later: the other three |
@@ -136,8 +136,9 @@ erDiagram
     User ||--o{ ProviderCredential : "supplies (Later)"
     User ||--o{ Notification : "receives (Later)"
     Project ||--o{ ProjectMember : "shared with (Later)"
-    Project ||--o{ SourceDocument : "contains (Later)"
-    SourceDocument ||--o{ DocumentChunk : "split into (Later)"
+    Project ||--o{ SourceDocument : contains
+    SourceDocument ||--o{ DocumentVersion : "has versions"
+    DocumentVersion ||--o{ DocumentChunk : "split into (Later)"
     Project ||--o{ Thread : contains
     Project |o--o| Message : "initial intent"
     Thread ||--o{ Message : contains
@@ -291,7 +292,7 @@ The master keys are kept in the server environment, never in the database, each 
 | `run_config` | RunDefaults | Settings for the runs of the project; a field left empty takes the value of the user, see [RunDefaults](#rundefaults-mvp) |
 | `initial_message_id` | ref\<Message\>? | The user message that started the first run of the project, for example "I want to build an online platform for university students to find mentors." Its content is the initial intent of the project. Null until the first run starts, so a run that starts while it is null is the first run of the project and begins at the planner |
 | `model_overrides` | map\<AgentRole, string\> | Optional `provider:model` per role for this project |
-| `item_counts` | map\<ItemKind, int\> | Derived, read-only. Shown on the project card |
+| `item_counts` | map\<ItemKind, int\> | Derived, read-only. The number of live items of each kind, in the list of projects and in the detail of one |
 | `unfinished_run_counts` | RunCounts | Derived, read-only. The number of unfinished runs of the project in each status, see below. `interrupted` counts the reviews that wait for the user |
 | `rollup_run_status` | enum? | Derived, read-only. The status that the latest [Run](#run-mvp) of each thread of the project rolls up to: the one that needs the user most, in the order `interrupted`, `failed`, `running`, `queued`, `cancelled`, `succeeded`. A run that a later run of its thread replaced no longer counts, so a failed run that was run again does not show. Null before the first run. The project list shows it |
 | `last_activity_at` | datetime | Derived, stored. Kept in a column so that the project list can be sorted by it |
@@ -309,22 +310,31 @@ Sharing a project with other users. Real-time collaboration on one thread stays 
 | `role` | enum | `owner`, `editor`, `viewer` |
 | `invited_by` | ref\<User\> | |
 
-### SourceDocument (Later)
+### SourceDocument (MVP)
 
-A file the user uploads as context for elicitation, for example an existing brief or meeting notes.
+A file the user uploads as context for elicitation, for example an existing brief or meeting notes. The row is the identity of the document; its content is in its [DocumentVersion](#documentversion-mvp) rows.
 
 | Field | Type | Notes |
 |---|---|---|
 | `project_id` | ref\<Project\> | |
-| `uploaded_by` | ref\<User\> | |
-| `first_version_id` | ref\<SourceDocument\> | The first version of the document, shared by all its versions; equal to `id` on version 1. Unique together with `version` |
-| `version` | int | Starts at 1. A changed document is uploaded as a new version with the same `first_version_id`; a stored version is never edited |
-| `file_name` | string | |
-| `media_type` | string | |
-| `size_bytes` | int | |
-| `storage_key` | server-only string | Location in object storage |
-| `extraction_status` | enum | `pending`, `ready`, `failed` |
-| `summary` | string? | Short summary used in prompts in place of the full text |
+| `title` | string | Taken from the file name when the upload gives none |
+| `filename` | string | The name of the file of the first upload |
+| `format` | enum | `txt`, `md`, `html`, `json` |
+| `latest_version` | int | The `version` of its newest DocumentVersion, from 1 |
+
+Later: `uploaded_by`, `extraction_status` (`pending`, `ready`, `failed`) and `summary` (a short text used in prompts in place of the full text), which a parser that runs after the upload needs.
+
+### DocumentVersion (MVP)
+
+One stored version of a document. A changed document is uploaded as a new version, which gets the next number; a stored version is never edited.
+
+| Field | Type | Notes |
+|---|---|---|
+| `document_id` | ref\<SourceDocument\> | Unique together with `version` |
+| `version` | int | Starts at 1 |
+| `size_bytes` | int | Size of the uploaded file |
+| `text` | string | The plain text extracted at upload, at most 20,000 characters; the research stage quotes it |
+| `storage_key` | server-only string | Location of the file bytes |
 
 ### DocumentChunk (Later)
 
@@ -332,7 +342,7 @@ A passage of the extracted text of a source document, with its embedding, so tha
 
 | Field | Type | Notes |
 |---|---|---|
-| `source_document_id` | ref\<SourceDocument\> | The document version the chunk comes from |
+| `document_version_id` | ref\<DocumentVersion\> | The document version the chunk comes from |
 | `project_id` | ref\<Project\> | Repeated so that a search stays inside one project |
 | `position` | int | Order of the chunk in the document, from 1 |
 | `text` | string | The passage |
@@ -357,6 +367,13 @@ A passage of the extracted text of a source document, with its embedding, so tha
 | `backlog_manager` | backlog manager | Writes the product backlog |
 | `validator` | validator | Checks the outputs and reports issues |
 | `intent_router` | intent router | Decides which node a message sent by the user should go to |
+
+Workflow definition version 2 keeps these roles and adds two. Before it writes the plan, the planner may ask the user the few things that the idea leaves open, as choices with its own assumption as the default; it asks nothing when the idea settles what matters, and it writes the plan from the idea and the answers.
+
+| Role | Node in the deck | Job |
+|---|---|---|
+| `corpus_builder` | corpus builder | Chooses the research documents that the interviewees are based on |
+| `stakeholder_miner` | stakeholder miner | Notes what each kind of stakeholder cares about in those documents, with the words of the document |
 
 ### Workflow stages
 
@@ -496,9 +513,21 @@ One execution of one node. It backs the step timeline and the highlighted node i
 | `llm_calls` | int | Number of LLM calls made by the step |
 | `usage` | Usage | Sum over the LLM calls of the step |
 | `produced` | ItemRef[] | Derived. Items created or changed by this step, from the item revisions the step wrote |
+| `notes` | StepNote[] | The short notes the step wrote while it worked, in the order written; empty when it wrote none |
 | `error` | string? | |
 | `started_at` | datetime | |
 | `finished_at` | datetime? | |
+
+#### StepNote (MVP)
+
+One short note of a step to the user, shown inside the line of the step in the chat. It is part of the step, not a [Message](#message-mvp): the report of the step, which says what the step ended with, is the message.
+
+| Field | Type | Notes |
+|---|---|---|
+| `kind` | enum | `doing`: what the step is doing now or is about to do, in the present tense. `finding`: something the user may care about, such as a conflict or a gap. `tool`: one use of a tool by the agent, such as a web search, written as one short sentence; clients may group the notes of one tool that come one after another. `thinking` (Later): a summary of the reasoning, only when the model provider returns one |
+| `tool` | string? | Only on a note of kind `tool`: the key of a tool of the [workflow definition](workflow/README.md). A client takes the words and the mark for the uses of the tool from the definition, and shows a tool it does not know with plain words |
+| `text` | string | Markdown, one short sentence of at most 100 characters that the agent writes, shortened to 160 characters at a word by the server when it is longer, in the output language of the run |
+| `created_at` | datetime | |
 
 ### RunEvent (MVP)
 
@@ -523,7 +552,8 @@ A pause in which the run asks the user for input. A checkpoint node creates one 
 | `run_id` | ref\<Run\> | |
 | `step_id` | ref\<RunStep\> | The step of the checkpoint node that created it |
 | `node` | string | The node that paused the run, for example `checkpoint_analysis` |
-| `prompt` | string | What the user is asked |
+| `purpose` | enum | `review`: the user looks at documents and approves them or asks for changes; it holds no question of the agent. `ask`: the user answers questions of the agent and nothing is under review. Taken from the `purpose` of the checkpoint node in the workflow definition |
+| `prompt` | string | What the user is asked. The agent node before the checkpoint writes it for the case; the definition's prompt stands when it wrote none |
 | `options` | InterruptOption[] | The decision that chooses where the run continues. Empty when the interrupt only asks questions |
 | `questions` | Question[] | Further questions, answered together with the option. Empty when there are none |
 | `allow_edits` | bool | Whether the user may edit items of the artifacts under review before answering |
@@ -534,7 +564,7 @@ A pause in which the run asks the user for input. A checkpoint node creates one 
 
 An interrupt has at least one option or one question. One shape serves every use: a review that decides where the run goes (options and artifacts under review), questions only, or a review with questions. The lists that a use does not need are empty, so an interrupt has no kind field, and its options and questions are stored as JSON in its row, since they are always read and written with it.
 
-`InterruptOption` is `{ key: string, label: string, requires_feedback: bool, approves: bool, is_default: bool }`.
+`InterruptOption` is `{ key: string, label: string, requires_feedback: bool, approves: bool, is_default: bool, description: string?, suggested_feedback: string? }`. The definition gives the keys and what each option does: it approves or not, it asks for feedback or not, which edge it follows. Every checkpoint has the option `other`, "Something else", which asks for feedback and approves nothing: the words of the user become a message of the thread that goes to the intent router, and the router decides which step does the work again. It has no suggested feedback. The agent node before the checkpoint may word the label (the title of the answer) for the case, add a `description` of at most 120 characters that says what happens if the option is picked, and, for an option that asks for feedback, suggest the `suggested_feedback` that the user can send as it is or change.
 
 - The workflow definition lists the options of each checkpoint. Each option key matches an outgoing edge of the checkpoint node, so the run continues along the edge of the chosen option.
 - `approves` tells the backend to set the artifacts under review, and their items that are still `draft`, to `approved`.
@@ -764,10 +794,13 @@ One current plan per project. The plan is an artifact with no items; the fields 
 |---|---|---|
 | `objectives` | string[] | For example "understand mentor discovery needs" |
 | `topics` | string[] | Subjects to cover in interviews |
+| `data_to_collect` | { topic, needed[] }[] | For each topic, the concrete data an interview must bring back before the topic counts as covered, such as how often the person does it or what they do when it fails. The interviewer checks it to know that it has enough |
+| `opening_questions` | string[] | Two to four open questions that an interview can start with, with one thing in each and none that leads the answer |
 | `information_gaps` | string[] | For example "how students judge mentor quality" |
 | `stakeholder_types` | string[] | For example "Student", "Mentor", "Administrator" |
+| `persona_aspects` | { key, title, description, low, high }[] | The second tier of the [persona aspects](#persona-aspects): up to four aspects that the planner proposes for this project |
 | `strategies` | string[] | How to ask: question styles and techniques |
-| `stopping_conditions` | string[] | When the interviews have gathered enough |
+| `stopping_conditions` | string[] | When the interviews have gathered enough. Each condition names what must be known, so that it can be checked |
 
 Deck: all six fields.
 
@@ -788,17 +821,32 @@ A simulated stakeholder. The profile is application data; a template renders it 
 |---|---|---|
 | `name` | string | The name shown for the interviewee, at most 60 characters. For example "Minh, 3rd-year CS student" |
 | `stakeholder_type` | string | One of the plan's `stakeholder_types` |
+| `occupation` | string | From definition version 2. What the person does for a living or in their studies |
+| `age_range` | string | From definition version 2. For example "20-22" |
 | `background` | string | History, context, situation |
+| `typical_day` | string | From definition version 2. A normal day around the subject of the product |
 | `expertise` | string | Technical and domain familiarity |
+| `current_workarounds` | string[] | From definition version 2. What the person does today without the product |
+| `vocabulary` | string[] | From definition version 2. The words the person uses for the subject |
 | `goals` | string[] | What this persona wants the system to do |
 | `interests` | string[] | What they care about |
 | `constraints` | string[] | Limits they operate under |
 | `priorities` | string[] | How they rank their interests |
 | `concerns` | string[] | Risks, worries, objections |
 | `behavioral_tendencies` | string | How they tend to communicate |
+| `scores` | { aspect, score, rationale }[] | From definition version 2. One score from 1 to 5 for each [persona aspect](#persona-aspects), with a sentence that says what supports it |
 | `interview_status` | enum | `not_started`, `in_progress`, `completed` |
 
 Deck: every field except `interview_status`. The deck's example calls the stakeholder type `role`.
+
+#### Persona aspects
+
+Every persona is scored from 1 to 5 on a set of aspects, in two tiers:
+
+- **First tier, defined by the system.** The `persona_aspects` of the workflow definition: domain expertise, usage frequency, technology comfort, pain severity and decision influence. Each has a title, what it measures and what the scores 1 and 5 mean.
+- **Second tier, proposed for the project.** The planner proposes up to four more in `persona_aspects` of the plan, each different from the first tier and from the others, for what makes people differ for this product, such as how urgent a booking is.
+
+The persona generator scores every persona once on every aspect of both tiers, and writes a sentence for each score that says what in the observations supports it; when the observations are silent it gives the typical value of the group and says so. The scores shape how the persona is interviewed: the interviewer adapts its questions to them, and the persona agent lets them show in how it speaks.
 
 ### InterviewTranscript and InterviewMessage (MVP)
 
@@ -812,8 +860,11 @@ InterviewTranscript:
 | `status` | enum | `in_progress`, `completed` |
 | `turn_count` | int | |
 | `stop_reason` | enum? | `max_turns`, `interviewer_stopped`, `stopping_condition_met` |
+| `data_coverage` | { data, covered }[] | For each item of the `data_to_collect` of the plan, whether any answer of this interview gave it. Computed when the interview ends from what the interviewer judged of each answer |
+| `top_findings` | string[] | The three or four problems or wishes that stood out, written by the interviewer when it stops |
+| `follow_ups` | string[] | Questions that the interview left open for a later round |
 
-The fields above are the `content` of the transcript artifact. The persona being interviewed is its `subject_item_id`, which is also the `item_id` of the participant of that persona. The messages are the items of the transcript, ordered by `position`.
+The `summary` of the transcript artifact is one sentence about what the persona said, written by the `interviewer` when the interview ends, with its stop, or in one last turn when the turn limit ended it; a rework round writes it again. The fields above are the `content` of the transcript artifact. The persona being interviewed is its `subject_item_id`, which is also the `item_id` of the participant of that persona. The messages are the items of the transcript, ordered by `position`.
 
 InterviewMessage:
 
@@ -823,7 +874,11 @@ InterviewMessage:
 | `speaker` | string | The `key` of the participant of the transcript who says the words |
 | `content` | string | |
 | `iteration` | int | 0 for the first interview, higher for rework rounds |
-| `topic` | string? | The plan topic the question targets; one of the plan's `topics` |
+| `topic` | string? | The plan topic the question targets; one of the plan's `topics`. The answer to a question has the topic of the question |
+| `message_kind` | string | `opening`, `follow_up`, `new_topic` or `answer`, from the value list `message_kind`. The interviewer classifies its own questions; the workflow sets `answer` on what the persona says |
+| `follows_up_on` | string? | The key of the earlier message that a follow-up question digs into, chosen by the interviewer among the messages it was shown |
+| `covers` | string[] | The items of the `data_to_collect` of the plan that an answer gave. The interviewer judges each answer at its next turn and writes it on the answer; the persona agent never receives this field |
+
 An interview message is an item of the transcript artifact, with its order in the transcript as `position`. Its `key` is `<persona key>#<position>`, for example `PER-001#4`, which is how prompts cite it. A message is never edited after it is written.
 
 Deck: `interview_transcripts` keyed by persona; `InterviewMessage(role, content, turn)`; `active_persona_index`, `interview_turn`, `interviewer_stop` as workflow counters.
@@ -888,7 +943,9 @@ Something taken as true without confirmation.
 | `statement` | string | |
 | `reasoning` | string | Why it was assumed |
 | `impact_if_wrong` | string | |
+| `impact` | int | From 1 to 5: how much the work would change if the assumption were wrong. Orders what to check first |
 | `validation_status` | enum | `unverified`, `confirmed`, `invalidated` |
+| `validation_plan` | string | How the assumption can be checked and who can confirm it |
 
 Links: `concerns` to the requirements whose meaning depends on the assumption.
 
@@ -902,6 +959,7 @@ A statement that can be read in more than one way or lacks needed detail.
 | `description` | string | |
 | `ambiguity_type` | string | From the value list `ambiguity_type`; version 1: `lexical`, `syntactic`, `semantic`, `vague`, `incomplete` |
 | `ambiguous_text` | string | The exact wording at issue |
+| `interpretations` | string[] | The different readings that the wording allows, one in each entry. The user settles the issue by choosing one. Empty only for missing information |
 | `clarifying_question` | string | What to ask to resolve it |
 | `status` | enum | `open`, `resolved`, `dismissed` |
 | `resolution` | string? | |
@@ -921,6 +979,7 @@ Two or more requirements, or the wishes of two or more personas, that cannot all
 | `proposed_resolutions` | string[] | |
 | `status` | enum | `open`, `resolved`, `dismissed` |
 | `resolution` | string? | |
+| `resolution_strategy` | string? | How a resolved conflict was settled, from the value list `resolution_strategy`: `prioritize`, `compromise`, `split`, `alternative`, `drop`. Null while it is open |
 
 Links: `concerns` to the requirements in conflict; `involves` to the personas on the conflicting sides; `resolved_by` to the interview message whose answer settled it, once it is resolved in an interview.
 
@@ -965,6 +1024,7 @@ The artifact that holds the epics and user stories. The fields below are its `co
 |---|---|---|
 | `product_goal` | string | The long-term objective the backlog works toward |
 | `prioritization_notes` | string? | How the order of the items was decided |
+| `definition_of_done` | string[] | What every item must meet to count as done, for the whole team; apart from the acceptance criteria of one item |
 
 ### BacklogItem (MVP)
 
@@ -996,6 +1056,7 @@ ValidationReport:
 |---|---|---|
 | `iteration` | int | |
 | `status` | enum | `pass`, `fail` |
+| `checks` | { check, result, note }[] | What the validation checked and how each check came out (`passed`, `failed`, `partly`), so that a pass says what it passed |
 
 ValidationIssue:
 
@@ -1225,6 +1286,8 @@ flowchart RL
 
 When an item changes, every item reachable through forward links may be out of date.
 Each link stores the version of the target it was created against (`target_version`). A link whose `target_version` is lower than the target's current `version` marks its source as needing review. A link whose target is `superseded` marks its source the same way: it must be derived again from the item that replaces the target.
+
+Approving an item at a review writes a new version with the same content. A link that was up to date with the item before the approval follows it to the new version, so a review does not mark anything as out of date; a link that was already behind stays behind.
 
 ## 9. Mapping to the agent workflow
 

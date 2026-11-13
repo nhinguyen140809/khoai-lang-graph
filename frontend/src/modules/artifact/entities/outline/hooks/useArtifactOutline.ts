@@ -16,10 +16,10 @@ import { useOutlineItems } from './useOutlineItems'
  * reader of the trace supplies; without them no item reads as out of date.
  */
 export function useArtifactOutline(
-  artifactId: string,
+  artifactId: string | undefined,
   { outOfDateIds }: { outOfDateIds?: ReadonlySet<string> } = {},
 ): ArtifactOutlineResult {
-  const artifact = useArtifact(artifactId)
+  const artifact = useArtifact(artifactId ?? '', undefined, { isEnabled: artifactId !== undefined })
   const { schema, isError: isSchemaError, retry: retrySchema } = useItemSchema(artifact.data)
   const issueKinds = useIssueKinds()
   const outline = useOutlineItems(artifactId)

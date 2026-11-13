@@ -49,7 +49,10 @@ export interface ToneVariantProps<Config extends ToneVariants<string, string>> {
   color?: Tone | undefined
 }
 
-/** The fills of Badge and Button, from the strongest to the weakest. */
-export const fills = ['solid', 'soft', 'outline', 'ghost', 'link'] as const
+/**
+ * The fills of Badge and Button, from the strongest to the weakest. `text` is the weakest: words
+ * with no fill or border in any state, which only change color on hover or when pressed.
+ */
+export const fills = ['solid', 'soft', 'outline', 'ghost', 'link', 'text'] as const
 
 export type Fill = (typeof fills)[number]

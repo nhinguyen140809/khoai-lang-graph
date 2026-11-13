@@ -77,6 +77,18 @@ function TextareaControl({
   )
 }
 
+/** The option with no value: "None" for a field that may be empty, else a disabled prompt until a value is chosen. */
+function PlaceholderOption({ isNullable, isChosen }: { isNullable: boolean; isChosen: boolean }) {
+  if (isNullable)
+    return <NativeSelectOption value="">{contentInputMessages.none}</NativeSelectOption>
+  if (isChosen) return null
+  return (
+    <NativeSelectOption value="" disabled>
+      {contentInputMessages.chooseValue}
+    </NativeSelectOption>
+  )
+}
+
 function SelectControl({
   field,
   value,
@@ -96,13 +108,7 @@ function SelectControl({
         onChange(event.target.value === '' && field.nullable ? null : event.target.value)
       }}
     >
-      {field.nullable ? (
-        <NativeSelectOption value="">{contentInputMessages.none}</NativeSelectOption>
-      ) : chosen === null ? (
-        <NativeSelectOption value="" disabled>
-          {contentInputMessages.chooseValue}
-        </NativeSelectOption>
-      ) : null}
+      <PlaceholderOption isNullable={field.nullable} isChosen={chosen !== null} />
       {options.map((option) => (
         <NativeSelectOption key={option} value={option}>
           {labelOf(option)}
@@ -175,15 +181,11 @@ function TagsControlBySource(props: ContentValueControlProps) {
   return <Control {...props} />
 }
 
-// The control of a separator, by the type of its field: a choice as a select, a number as a
-// number input, any other value as text.
+/** The control of a separator, by the type of its field: a choice as a select, a number as a number input, any other value as text. */
 function SeparatorControl(props: ContentValueControlProps) {
-  const Control = isChoiceField(props.field)
-    ? SelectControl
-    : isNumberField(props.field)
-      ? NumberControl
-      : TextControl
-  return <Control {...props} />
+  if (isChoiceField(props.field)) return <SelectControl {...props} />
+  if (isNumberField(props.field)) return <NumberControl {...props} />
+  return <TextControl {...props} />
 }
 
 // The control of a value by its widget, without a label: a new widget fails to compile until it
@@ -200,6 +202,7 @@ const widgetControls = {
   separator: SeparatorControl,
   'avatar-list': EntriesOf,
   badge: SelectControl,
+  'rating-list': EntriesOf,
 } as const satisfies Record<
   ContentField['widget'],
   (props: ContentValueControlProps) => React.ReactNode

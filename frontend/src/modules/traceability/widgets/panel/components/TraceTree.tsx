@@ -28,6 +28,7 @@ import { ErrorState, LoadingState } from '@/shared/components/state'
 import { ColoredText } from '@/shared/components/ui/colored-text'
 import { Tooltip, TooltipContent, TooltipTrigger } from '@/shared/components/ui/tooltip'
 import { Tree, TreeItem, TreeItemLabel } from '@/shared/components/ui/tree'
+import { useLeavingRows } from '@/shared/lib/animation'
 import { routes } from '@/shared/routes'
 
 import { useTraceTree } from '../hooks/useTraceTree'
@@ -174,6 +175,7 @@ function TraceTreeBody({
   )
 
   const { tree, indent } = useTraceTree(rows.rows)
+  const treeRows = useLeavingRows(tree.getItems(), (item) => item.getId())
   const openPage = useOpenPage()
   const currentRowId = currentItemId === undefined ? undefined : rows.rowOfItem.get(currentItemId)
 
@@ -185,13 +187,14 @@ function TraceTreeBody({
       aria-label={tracePanelMessages.documents}
       className="pb-2"
     >
-      {tree.getItems().map((item) => {
+      {treeRows.map(({ row: item, isLeaving }) => {
         const row = item.getItemData()
         const isCurrent = item.getId() === currentRowId
         return (
           <TreeItem
             key={item.getId()}
             item={item}
+            isLeaving={isLeaving}
             aria-current={isCurrent ? 'page' : undefined}
             onDoubleClick={() => {
               if (row.href !== null) openPage(row.href, { keep: true, title: row.name })
@@ -215,13 +218,9 @@ function TraceTreeBody({
                   )}
                 </TreeItemLabel>
               </TooltipTrigger>
-              {row.reasons !== null && (
-                <TooltipContent>
-                  {row.reasons.map((reason) => (
-                    <p key={reason}>{reason}</p>
-                  ))}
-                </TooltipContent>
-              )}
+              {/* One reason, the first, which is the one that asks the most; assistive technology
+                  reads all of them in the row. */}
+              {row.reasons?.[0] !== undefined && <TooltipContent>{row.reasons[0]}</TooltipContent>}
             </Tooltip>
           </TreeItem>
         )

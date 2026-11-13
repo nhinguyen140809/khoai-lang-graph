@@ -1,0 +1,78 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "$id": "artifacts/validation_report/v1",
+  "title": "Verification report",
+  "description": "The result of one validator execution. The issues are the items of the artifact.",
+  "x-level": "artifact",
+  "x-kind": "validation_report",
+  "x-schema-version": 1,
+  "x-ui-display": "document",
+  "x-ui-field-order": [
+    "iteration",
+    "status",
+    "checks"
+  ],
+  "type": "object",
+  "additionalProperties": false,
+  "properties": {
+    "iteration": {
+      "title": "Iteration",
+      "type": "integer",
+      "minimum": 0,
+      "description": "The rework loop the report belongs to.",
+      "x-ui-widget": "number",
+      "readOnly": true
+    },
+    "status": {
+      "title": "Status",
+      "type": "string",
+      "enum": [
+        "pass",
+        "fail"
+      ],
+      "description": "Overall result.",
+      "x-ui-widget": "badge"
+    },
+    "checks": {
+      "title": "Checks performed",
+      "type": "array",
+      "items": {
+        "type": "object",
+        "additionalProperties": false,
+        "properties": {
+          "check": {
+            "title": "Check",
+            "type": "string",
+            "description": "The check that was made, such as whether every requirement can be tested.",
+            "x-ui-widget": "text"
+          },
+          "result": {
+            "title": "Result",
+            "type": "string",
+            "x-value-list": "check_result",
+            "description": "The outcome of the check.",
+            "x-ui-widget": "select"
+          },
+          "note": {
+            "title": "Explanation",
+            "type": "string",
+            "description": "One sentence that explains the result in plain words.",
+            "x-ui-widget": "text"
+          }
+        },
+        "required": [
+          "check",
+          "result",
+          "note"
+        ]
+      },
+      "description": "The checks that the validation made and how each one came out, so that a pass states what it passed.",
+      "x-ui-widget": "object-list"
+    }
+  },
+  "required": [
+    "iteration",
+    "status",
+    "checks"
+  ]
+}

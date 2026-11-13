@@ -40,6 +40,7 @@ export {
   useArtifactItems,
   useItem,
   useItemSchema,
+  usePrefetchItem,
   useProjectItems,
   useProjectItemsOfKinds,
 } from './items/hooks/useItemQueries'

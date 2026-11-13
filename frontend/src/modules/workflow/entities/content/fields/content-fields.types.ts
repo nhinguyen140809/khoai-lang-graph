@@ -16,6 +16,7 @@ export const fieldWidgets = [
   'separator',
   'avatar-list',
   'badge',
+  'rating-list',
 ] as const
 
 export type FieldWidget = (typeof fieldWidgets)[number]
@@ -104,8 +105,25 @@ export interface ContentField {
   integer: boolean
   /** The `default` of the property; null without one. */
   defaultValue: unknown
-  /** The fields of one entry of an `object-list`. */
+  /** The fields of one entry of an `object-list` or a `rating-list`. */
   entryFields: ContentField[]
+  /** How the entries of a `rating-list` are read; null for the other widgets, and for a rating list whose schema names no label or value field. */
+  rating: RatingFields | null
+}
+
+/** Which fields of an entry of a `rating-list` name what is rated, hold the rating and say why, and the scale of the rating. */
+export interface RatingFields {
+  label: string
+  value: string
+  /** The field that says why; null when the schema names none. */
+  note: string | null
+  min: number
+  max: number
+}
+
+/** Whether the entries of the widget are objects with fields of their own. */
+export function hasObjectEntries(widget: FieldWidget): boolean {
+  return widget === 'object-list' || widget === 'rating-list'
 }
 
 /** The fields of a kind whose display is `profile`, as its cards and the page of one item draw them. */

@@ -21,6 +21,7 @@ const badgeStyles = cva(
         outline: 'border-(--tone-border) text-(--tone-strong) [a]:hover:bg-(--tone-soft)',
         ghost: 'text-(--tone-strong) hover:bg-(--tone-soft)',
         link: 'text-(--tone-strong) underline-offset-4 hover:underline',
+        text: 'text-(--tone-strong)',
       },
       color: toneClasses,
     },

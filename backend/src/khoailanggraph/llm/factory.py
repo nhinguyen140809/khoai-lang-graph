@@ -1,0 +1,120 @@
+"""The single entry point every agent uses to obtain its chat model.
+
+`get_chat_model(role, config)` resolves the role to a `provider:model` string
+(run override > project > user > the role's models.yaml default; the run's
+frozen map arrives as `config["configurable"]["models"]`) and builds — or
+reuses — the chat model for it. Every model id resolves through the provider
+registry (models.yaml) — production always uses a real provider.
+
+A node never hard-codes a model and never builds a chat model itself
+(CONTRIBUTING: LangGraph/agents): it asks for its role.
+"""
+
+from __future__ import annotations
+
+from collections.abc import Mapping
+from typing import TYPE_CHECKING, Any
+
+from khoailanggraph.llm.registry import default_registry
+from khoailanggraph.settings import env_value, get_settings
+
+if TYPE_CHECKING:
+    from langchain_core.language_models.chat_models import BaseChatModel
+
+    from khoailanggraph.llm.registry import ModelProfile
+
+_model_cache: dict[tuple[str, float | None], BaseChatModel] = {}
+
+
+def resolve_model_id(role: str, config: Mapping[str, Any] | None = None) -> str:
+    """The `provider:model` a role uses for this run, per the resolution order."""
+    configurable = dict(config or {}).get("configurable", {})
+    overrides = configurable.get("models") if isinstance(configurable, Mapping) else None
+    if overrides and role in overrides:
+        return str(overrides[role])
+    return default_registry().model_for_role(role)
+
+
+def _credentials(model_id: str, profile: ModelProfile | None) -> dict[str, Any]:
+    """The endpoint and key of a model called through the OpenAI-compatible protocol.
+
+    A model of the allowlist with its own `base_url` or `api_key_env` uses them, and never the
+    gateway of the settings, so one run can call several endpoints. Any other model uses the
+    `OPENAI_BASE_URL` and `OPENAI_API_KEY` settings, and what is left out stays with the client
+    library, which reads the process environment itself.
+    """
+    settings = get_settings()
+    credentials: dict[str, Any] = {}
+    if profile is not None and profile.api_key_env:
+        key = env_value(profile.api_key_env)
+        if key is None:
+            msg = f"Model '{model_id}' needs the variable {profile.api_key_env}, which is not set."
+            raise ValueError(msg)
+        credentials["api_key"] = key
+    elif profile is None or not profile.base_url:
+        if settings.openai_api_key:
+            credentials["api_key"] = settings.openai_api_key
+    if profile is not None and profile.base_url:
+        credentials["base_url"] = profile.base_url
+    elif settings.openai_base_url:
+        credentials["base_url"] = settings.openai_base_url
+    return credentials
+
+
+def build_chat_model(model_id: str, temperature: float | None = None) -> BaseChatModel:
+    """One chat model per `provider:model` id, without importing lazy providers
+    that a keyless run never uses."""
+    provider, _, name = model_id.partition(":")
+    profile = default_registry().profile(model_id)
+    if provider != "anthropic" and (provider == "openai" or (profile and profile.base_url)):
+        from langchain_openai import ChatOpenAI  # noqa: PLC0415 - provider is imported only when used
+
+        settings = get_settings()
+        credentials = _credentials(model_id, profile)
+        # Transient gateway errors (5xx timeouts) retry with the openai
+        # client; a long agent conversation tolerates the added latency.
+        # Streaming keeps bytes flowing so the gateway's ~90s no-response
+        # proxy ceiling never fires: a persona call generating 2-3k tokens
+        # ran 305s streamed where every non-streamed attempt 504'd
+        # (verified 2026-10-27 against the real gateway). The token cap
+        # bounds a degenerate streamed generation (one looped to 386KB of
+        # carriage returns) so the _invoke retry takes over instead of a
+        # runaway. The largest lawful output (the analyst's one-call batch:
+        # RAW+AR+latent+assumptions+conflicts) truncated at 16k on the real
+        # run of 2026-10-27 and at 32k, hidden reasoning included, on the
+        # run of 2026-11-10, so the cap is the `llm_max_output_tokens` setting.
+        return ChatOpenAI(
+            model=name,
+            temperature=temperature,
+            max_retries=default_registry().max_retries,
+            max_tokens=settings.llm_max_output_tokens,
+            streaming=True,
+            timeout=settings.llm_call_timeout_seconds,
+            **credentials,
+        )
+    if provider == "anthropic":
+        from langchain_anthropic import ChatAnthropic  # noqa: PLC0415 - provider is imported only when used
+
+        return ChatAnthropic(
+            model=name,
+            temperature=temperature,
+            timeout=get_settings().llm_call_timeout_seconds,
+        )
+
+    msg = f"Unknown LLM provider '{provider}' in model id '{model_id}'."
+    raise ValueError(msg)
+
+
+def get_chat_model(role: str, config: Mapping[str, Any] | None = None) -> BaseChatModel:
+    """The chat model a node with `role` uses for the run of `config`."""
+    model_id = resolve_model_id(role, config)
+    temperature = default_registry().default_temperature
+    key = (model_id, temperature)
+    if key not in _model_cache:
+        _model_cache[key] = build_chat_model(model_id, temperature)
+    return _model_cache[key]
+
+
+def reset_model_cache() -> None:
+    """Drop the cached models; each run (and test) starts with fresh ones."""
+    _model_cache.clear()

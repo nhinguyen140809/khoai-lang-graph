@@ -19,6 +19,7 @@ function field(overrides: Partial<ContentField>): ContentField {
     integer: false,
     defaultValue: null,
     entryFields: [],
+    rating: null,
     ...overrides,
   }
 }
@@ -30,6 +31,30 @@ export const objectListCase = {
   }),
   value: [{ who: 'Ann', what: '' }],
   shown: ['Who:', 'Ann'],
+}
+
+export const ratingListCase = {
+  field: field({
+    widget: 'rating-list',
+    entryFields: [
+      field({ name: 'aspect', title: 'Aspect' }),
+      field({ name: 'score', title: 'Score', widget: 'number' }),
+      field({ name: 'rationale', title: 'Why' }),
+    ],
+    rating: { label: 'aspect', value: 'score', note: 'rationale', min: 1, max: 5 },
+  }),
+  value: [
+    {
+      aspect: 'Comfortable with technology',
+      score: 4,
+      rationale: 'Uses his phone for everything.',
+    },
+    {
+      aspect: 'Has a say in the decision',
+      score: 1,
+      rationale: 'Students do not choose the system.',
+    },
+  ],
 }
 
 export const valueCases = [

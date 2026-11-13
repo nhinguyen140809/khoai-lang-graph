@@ -12,9 +12,9 @@ import type { workflowDefinitionWithEveryParameterType } from '../workflow.fixtu
 import { definitionRejectedCases } from './workflow.handlers.data'
 
 // The definition file that the mock copies, read from the root of the repository.
-const documented: unknown = JSON.parse(
+const documented = JSON.parse(
   readFileSync(resolve(process.cwd(), '../docs/workflow/requirements_engineering.v1.json'), 'utf8'),
-)
+) as Record<string, unknown>
 
 describe('the workflow handlers', () => {
   it('serve the definition of the docs', async () => {
@@ -23,7 +23,8 @@ describe('the workflow handlers', () => {
       path: apiEndpoints.workflowDefinition.path(),
     })
 
-    expect(answer.body).toEqual(documented)
+    // Version 1 of the docs lists no tools, and the mock gives it an empty list.
+    expect(answer.body).toEqual({ ...documented, tools: [] })
   })
 
   it('serve the definition with every kind of run parameter in the all-types scenario', async () => {

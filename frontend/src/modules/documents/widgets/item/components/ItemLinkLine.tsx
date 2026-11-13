@@ -1,13 +1,13 @@
 'use client'
 
-import { TriangleAlertIcon, Unlink2Icon } from 'lucide-react'
+import { TriangleAlertIcon } from 'lucide-react'
 import { useState } from 'react'
 
 import type { ItemLinksResult, TraceLink } from '@/modules/trace/entities'
 import { linkedItemMessages, LinkedItemsPopover, quoteMarkColors } from '@/modules/trace/entities'
 import { useUnlinkAction } from '@/modules/trace/features/remove-link'
 import { Button } from '@/shared/components/ui/button'
-import { DisabledReason } from '@/shared/components/ui/disabled-reason'
+import { DropdownActionItem } from '@/shared/components/ui/menu-action'
 
 import { itemPageMessages, linkChipsShown } from '../item-page.constants'
 
@@ -18,12 +18,10 @@ interface ItemLinkLineProps {
   /** Why the document of the item cannot change, which a change of a link needs; null when it can. */
   lockedReason: string | null
   /** The link whose chips and marks show active, held by the page. */
-  activeLinkId: string | null
-  onActiveLinkChange: (linkId: string | null) => void
 }
 
-/** What the card of an outgoing chip offers: removing the link, when its document may change. */
-function RemoveLinkButton({
+/** What the menu of the card of an outgoing chip offers: removing the link, when its document may change. */
+function RemoveLinkMenuItem({
   link,
   lockedReason,
 }: {
@@ -33,19 +31,13 @@ function RemoveLinkButton({
   const remove = useUnlinkAction(link, lockedReason)
 
   return (
-    <DisabledReason reason={remove.disabledReason}>
-      <Button
-        type="button"
-        variant="ghost"
-        color="destructive"
-        size="xs"
-        disabled={remove.disabledReason !== null}
-        onClick={remove.run}
-      >
-        <Unlink2Icon aria-hidden />
-        {remove.label}
-      </Button>
-    </DisabledReason>
+    <DropdownActionItem
+      icon={remove.icon}
+      label={remove.label}
+      disabledReason={remove.disabledReason}
+      tone={remove.tone}
+      onSelect={remove.run}
+    />
   )
 }
 
@@ -55,13 +47,7 @@ function RemoveLinkButton({
  * "this item". A chip opens the card of the items at the other end, which says the sentence of the
  * link. Five chips of a group show, "N more" the rest.
  */
-export function ItemLinkLine({
-  projectId,
-  links,
-  lockedReason,
-  activeLinkId,
-  onActiveLinkChange,
-}: ItemLinkLineProps) {
+export function ItemLinkLine({ projectId, links, lockedReason }: ItemLinkLineProps) {
   const [expandedGroups, setExpandedGroups] = useState<ReadonlySet<string>>(new Set())
   const isExpanded = (group: string) => expandedGroups.has(group)
 
@@ -87,9 +73,9 @@ export function ItemLinkLine({
             madeFromVersion: row.isOutOfDate ? row.link.target_version : null,
           },
         ]}
-        renderActions={
+        renderMenu={
           isOutgoing
-            ? () => <RemoveLinkButton link={row.link} lockedReason={lockedReason} />
+            ? () => <RemoveLinkMenuItem link={row.link} lockedReason={lockedReason} />
             : undefined
         }
       >
@@ -97,32 +83,18 @@ export function ItemLinkLine({
           type="button"
           variant="ghost"
           size="xs"
-          className={
-            activeLinkId === row.link.id ? 'bg-primary/10 ring-2 ring-ring/50' : 'bg-primary/10'
-          }
+          className="bg-primary/10"
           aria-label={
             row.isOutOfDate
               ? linkedItemMessages.chipLabelOutOfDate(row.kindTitle, row.title)
               : linkedItemMessages.itemLabel(row.kindTitle, row.title)
           }
-          onMouseEnter={() => {
-            onActiveLinkChange(row.link.id)
-          }}
-          onFocus={() => {
-            onActiveLinkChange(row.link.id)
-          }}
-          onMouseLeave={() => {
-            onActiveLinkChange(null)
-          }}
-          onBlur={() => {
-            onActiveLinkChange(null)
-          }}
         >
           {row.isOutOfDate && (
             <TriangleAlertIcon aria-hidden className="size-3 shrink-0 text-warning-strong" />
           )}
           <span className="shrink-0 text-muted-foreground">{row.kindTitle}</span>
-          <span className="whitespace-normal">{row.title}</span>
+          <span className="max-w-64 truncate">{row.title}</span>
         </Button>
       </LinkedItemsPopover>
     ))

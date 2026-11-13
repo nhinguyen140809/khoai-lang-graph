@@ -12,6 +12,10 @@ export default defineConfig([
           group: ['**/shared/steps/*'],
           message: 'Import the steps from the index of their folder, tests/shared/steps.',
         },
+        {
+          group: ['**/shared/api/*'],
+          message: 'Import the API helpers from the index of their folder, tests/shared/api.',
+        },
       ],
     }),
   },

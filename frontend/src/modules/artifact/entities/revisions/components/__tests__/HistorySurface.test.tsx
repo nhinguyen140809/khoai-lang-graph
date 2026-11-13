@@ -57,7 +57,10 @@ describe('HistorySurface', () => {
     await user.click(screen.getByRole('button', { name: 'History' }))
 
     await user.click(screen.getByRole('button', { name: 'Older version' }))
-    expect(screen.getByText(`Version ${String(historyCurrentVersion - 1)}`)).toBeInTheDocument()
+    // The old version goes out first, and the next one comes in after it.
+    expect(
+      await screen.findByText(`Version ${String(historyCurrentVersion - 1)}`),
+    ).toBeInTheDocument()
 
     await user.click(screen.getByRole('button', { name: 'Newer version' }))
     expect(screen.getByRole('button', { name: 'Newer version' })).toBeDisabled()
@@ -108,7 +111,7 @@ describe('HistorySurface', () => {
 
     expect(screen.queryByRole('button', { name: /Restore/ })).not.toBeInTheDocument()
     await user.click(screen.getByRole('button', { name: 'Older version' }))
-    await user.click(screen.getByRole('button', { name: 'More actions' }))
+    await user.click(await screen.findByRole('button', { name: 'More actions' }))
     expect(
       await screen.findByRole('button', { name: `Restore ${String(historyCurrentVersion - 1)}` }),
     ).toBeInTheDocument()

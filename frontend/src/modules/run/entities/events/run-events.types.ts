@@ -1,6 +1,6 @@
 import { z } from 'zod'
 
-import { runUsageSchema } from '../runs/runs.types'
+import { runUsageSchema, stepNoteKinds } from '../runs/runs.types'
 
 // Temporary hand-written schemas for the run event stream. Payload fields are provisional.
 // TODO: replace with the types generated into src/shared/api/generated/ once they exist.
@@ -42,6 +42,12 @@ export const runEventSchemas = {
   }),
   message_delivered: z.object({ message_id: z.string(), step_id: z.string(), node: z.string() }),
   project_named: z.object({ step_id: z.string(), project_id: z.string(), name: z.string() }),
+  step_note: z.object({
+    step_id: z.string(),
+    kind: z.enum(stepNoteKinds),
+    tool: z.string().nullish(),
+    text: z.string(),
+  }),
   // `payload` stays unknown: `run` cannot read the schemas of `review`, so the activity reloads
   // the interrupts instead of reading it.
   interrupt: z.object({ node: z.string(), step_id: z.string(), payload: z.unknown() }),

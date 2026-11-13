@@ -11,6 +11,8 @@ schemas/
 ├── artifacts/
 │   ├── elicitation_plan.v1.json
 │   ├── persona_catalog.v1.json
+│   ├── persona_catalog.v2.json
+│   ├── research_corpus.v1.json
 │   ├── interview_transcript.v1.json
 │   ├── requirements_analysis.v1.json
 │   ├── requirement_specification.v1.json
@@ -19,6 +21,9 @@ schemas/
 └── items/
     ├── section.v1.json
     ├── persona.v1.json
+    ├── persona.v2.json
+    ├── source_document.v1.json
+    ├── stakeholder_observation.v1.json
     ├── interview_message.v1.json
     ├── raw_requirement.v1.json
     ├── analyzed_requirement.v1.json
@@ -34,14 +39,17 @@ schemas/
 | Level | Kind | File | Key prefix | Inside artifact kind |
 |---|---|---|---|---|
 | Artifact | `elicitation_plan` | [`artifacts/elicitation_plan.v1.json`](artifacts/elicitation_plan.v1.json) | - | - |
-| Artifact | `persona_catalog` | [`artifacts/persona_catalog.v1.json`](artifacts/persona_catalog.v1.json) | - | - |
+| Artifact | `persona_catalog` | [`artifacts/persona_catalog.v1.json`](artifacts/persona_catalog.v1.json), version 2 from workflow definition version 2: [`v2`](artifacts/persona_catalog.v2.json) | - | - |
+| Artifact | `research_corpus` | [`artifacts/research_corpus.v1.json`](artifacts/research_corpus.v1.json) | - | - |
 | Artifact | `interview_transcript` | [`artifacts/interview_transcript.v1.json`](artifacts/interview_transcript.v1.json) | - | - |
 | Artifact | `requirements_analysis` | [`artifacts/requirements_analysis.v1.json`](artifacts/requirements_analysis.v1.json) | - | - |
 | Artifact | `requirement_specification` | [`artifacts/requirement_specification.v1.json`](artifacts/requirement_specification.v1.json) | - | - |
 | Artifact | `product_backlog` | [`artifacts/product_backlog.v1.json`](artifacts/product_backlog.v1.json) | - | - |
 | Artifact | `validation_report` | [`artifacts/validation_report.v1.json`](artifacts/validation_report.v1.json) | - | - |
 | Item | `section` | [`items/section.v1.json`](items/section.v1.json) | `SEC` | Every artifact kind with items, except `interview_transcript` |
-| Item | `persona` | [`items/persona.v1.json`](items/persona.v1.json) | `PER` | `persona_catalog` |
+| Item | `persona` | [`items/persona.v1.json`](items/persona.v1.json), version 2 from workflow definition version 2: [`v2`](items/persona.v2.json) | `PER` | `persona_catalog` |
+| Item | `source_document` | [`items/source_document.v1.json`](items/source_document.v1.json) | `SRC` | `research_corpus` |
+| Item | `stakeholder_observation` | [`items/stakeholder_observation.v1.json`](items/stakeholder_observation.v1.json) | `OBS` | `research_corpus` |
 | Item | `interview_message` | [`items/interview_message.v1.json`](items/interview_message.v1.json) | Persona key, `#`, position | `interview_transcript` |
 | Item | `raw_requirement` | [`items/raw_requirement.v1.json`](items/raw_requirement.v1.json) | `RAW` | `requirements_analysis` |
 | Item | `analyzed_requirement` | [`items/analyzed_requirement.v1.json`](items/analyzed_requirement.v1.json) | `AR` | `requirements_analysis` |
@@ -113,8 +121,10 @@ At field level:
 
 | Keyword | Values | Meaning |
 |---|---|---|
-| `x-ui-widget` | `text`, `textarea`, `select`, `number`, `list`, `tags`, `object-list`, `separator`, `avatar-list`, `badge` | The input used to show and edit the field: one line, several lines, a choice from the `enum` or from the values that `x-value-from` names, a number, a list of lines, a list of short tags, a list of objects with their own fields. `separator`: a value that marks a place of a sequence; in a transcript, a separator where the value of a message changes from the message before, or after the last message for a field of the artifact, and its value elsewhere; edited as its type. `avatar-list`: a list of people whose entries have a `name` and an `item_id`, each shown as an avatar and its name, which opens the item when it has one. `badge`: a choice from the `enum` or from a value list, shown as a badge |
+| `x-ui-widget` | `text`, `textarea`, `select`, `number`, `list`, `tags`, `object-list`, `separator`, `avatar-list`, `badge`, `rating-list`, `boolean` | The input used to show and edit the field: one line, several lines, a choice from the `enum` or from the values that `x-value-from` names, a number, a list of lines, a list of short tags, a list of objects with their own fields. `separator`: a value that marks a place of a sequence; in a transcript, a separator where the value of a message changes from the message before, or after the last message for a field of the artifact, and its value elsewhere; edited as its type. `avatar-list`: a list of people whose entries have a `name` and an `item_id`, each shown as an avatar and its name, which opens the item when it has one. `badge`: a choice from the `enum` or from a value list, shown as a badge. `boolean`: a yes or no. `rating-list`: a list of objects of which one field names what is rated (`x-ui-label-field`), one integer field holds the rating on the scale given by its `minimum` and `maximum` (`x-ui-value-field`), and an optional field says why (`x-ui-note-field`); each entry is shown as its label, a rating on its scale and its note, and edited as an `object-list` |
 | `readOnly` | `true` | A standard JSON Schema keyword. The field is set by the system: the user cannot edit it, and the output format given to an agent leaves it out |
+
+**Wording.** The `title` and the `description` of a field, the titles of the entries of a list, and the titles of the values of a list are read by users. They use formal but friendly words, the plain words of the user and not the terms of the system: "Comfort with technology", not "Tech comfort". A title is a short noun phrase. It has no phrasal verb and no spoken phrase, so "Influence on decisions" is better than "Has a say in the decision", and "Frequency of use" is better than "Would use it often". A description is a complete sentence with a subject and a verb. A key, an id or a field name is never shown as a label; a value that is stored as a key has a title for the user next to it.
 
 A field without `x-ui-widget` is shown by its type. The label of a field is derived from its name, for example `fit_criterion` becomes "Fit criterion".
 

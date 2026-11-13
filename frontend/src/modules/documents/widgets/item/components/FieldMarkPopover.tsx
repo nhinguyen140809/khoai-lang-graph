@@ -10,13 +10,11 @@ export function FieldMarkPopover({
   projectId,
   links,
   range,
-  onActiveLinkChange,
   children,
 }: {
   projectId: string
   links: ReturnType<typeof useItemLinks>
   range: { id: string; linkIds: string[] }
-  onActiveLinkChange: (linkId: string | null) => void
   children: ReactNode
 }) {
   if (links.state !== 'success') return children
@@ -41,16 +39,7 @@ export function FieldMarkPopover({
         madeFromVersion: row.isOutOfDate ? row.link.target_version : null,
       }))}
     >
-      <span
-        onMouseEnter={() => {
-          onActiveLinkChange(rows[0]?.link.id ?? null)
-        }}
-        onMouseLeave={() => {
-          onActiveLinkChange(null)
-        }}
-      >
-        {children}
-      </span>
+      <span>{children}</span>
     </QuotedWordsPopover>
   )
 }

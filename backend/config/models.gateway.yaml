@@ -1,0 +1,10 @@
+# Local run through the BioTuring gateway: one model for every role, no prices published.
+defaults:
+  model: openai:glm-5.3-Preserved-Think
+  temperature: 0.2
+  max_retries: 4
+allowlist:
+  - id: openai:glm-5.3-Preserved-Think
+    label: GLM 5.3 (preserved thinking)
+    capabilities: [tool_calling, structured_output, streaming]
+    context_window: 200000

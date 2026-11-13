@@ -8,6 +8,7 @@ import {
   definedItemKindSchema,
   directiveKindSchema,
   linkTypeSchema,
+  toolSchema,
   valueListSchema,
   workflowStageSchema,
 } from './workflow-vocabulary.types'
@@ -39,6 +40,8 @@ export const workflowDefinitionSchema = z.object({
   artifact_kinds: z.array(definedArtifactKindSchema),
   item_kinds: z.array(definedItemKindSchema),
   link_types: z.array(linkTypeSchema),
+  /** Absent from a version that has no tools. */
+  tools: z.array(toolSchema).default([]),
   value_lists: z.array(valueListSchema),
   directive_kinds: z.array(directiveKindSchema),
   export_templates: z.array(exportTemplateSchema),

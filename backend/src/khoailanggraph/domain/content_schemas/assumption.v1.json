@@ -1,0 +1,88 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "$id": "items/assumption/v1",
+  "title": "Assumption",
+  "description": "Something taken as true without confirmation.",
+  "x-level": "item",
+  "x-kind": "assumption",
+  "x-schema-version": 1,
+  "x-key-prefix": "ASM",
+  "x-ui-display": "table",
+  "x-ui-navigable": true,
+  "x-ui-title-field": "title",
+  "x-ui-list-fields": [
+    "title",
+    "validation_status"
+  ],
+  "x-ui-field-order": [
+    "title",
+    "statement",
+    "reasoning",
+    "impact_if_wrong",
+    "impact",
+    "validation_status",
+    "validation_plan"
+  ],
+  "type": "object",
+  "additionalProperties": false,
+  "properties": {
+    "title": {
+      "title": "Title",
+      "type": "string",
+      "description": "A short name of at most 60 characters that tells the point of the item at a glance, for example \"Find a mentor in my field\".",
+      "x-ui-widget": "text"
+    },
+    "statement": {
+      "title": "Statement",
+      "type": "string",
+      "description": "What is assumed.",
+      "x-ui-widget": "textarea"
+    },
+    "reasoning": {
+      "title": "Reasoning",
+      "type": "string",
+      "description": "Why it was assumed.",
+      "x-ui-widget": "textarea"
+    },
+    "impact_if_wrong": {
+      "title": "Impact if wrong",
+      "type": "string",
+      "description": "What changes if the assumption does not hold.",
+      "x-ui-widget": "textarea"
+    },
+    "impact": {
+      "title": "Impact if incorrect",
+      "type": "integer",
+      "minimum": 1,
+      "maximum": 5,
+      "description": "A rating from 1 to 5 of how much the work would change if the assumption proved incorrect.",
+      "x-ui-widget": "number"
+    },
+    "validation_status": {
+      "title": "Validation status",
+      "type": "string",
+      "enum": [
+        "unverified",
+        "confirmed",
+        "invalidated"
+      ],
+      "description": "Whether the assumption was checked.",
+      "x-ui-widget": "badge"
+    },
+    "validation_plan": {
+      "title": "Method of confirmation",
+      "type": "string",
+      "description": "The way in which the assumption can be confirmed, and the person who can confirm it.",
+      "x-ui-widget": "textarea"
+    }
+  },
+  "required": [
+    "title",
+    "statement",
+    "reasoning",
+    "impact_if_wrong",
+    "impact",
+    "validation_status",
+    "validation_plan"
+  ]
+}

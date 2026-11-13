@@ -1,14 +1,17 @@
 'use client'
 
-import { Activity, type ReactNode, useState } from 'react'
+import { cn } from 'cn'
+import { type ReactNode, useState } from 'react'
 
 import {
   ResizableHandle,
   ResizablePanel,
   ResizablePanelGroup,
+  usePanelRef,
 } from '@/shared/components/ui/resizable'
 
 import { usePanel } from '../hooks/usePanel'
+import { usePanelMotion } from '../hooks/usePanelMotion'
 import { panelLayouts } from '../panel.constants'
 import type { PanelRegion } from '../panel.types'
 
@@ -52,32 +55,50 @@ interface StoredPanelProps {
 
 /**
  * The panel, which the user resizes and hides; the frame stores both. It keeps its size in pixels
- * when the window is resized. Hiding it does not unmount it: it keeps its state, such as the text
- * of a search or a collapsed section, and the group gives it back its last size.
+ * when the window is resized. Hiding it shrinks it to nothing and showing it grows it back to its
+ * last size, over a short time. It is never unmounted: it keeps its state, such as the text of a
+ * search or a collapsed section. Once shrunk it cannot be seen or reached with the keyboard.
+ * Dragging it narrower than its smallest size hides it.
  */
 function StoredPanel({ region, children }: StoredPanelProps) {
   const { position, minSize, maxSize } = panelLayouts[region]
   const panel = usePanel(region)
+  const panelRef = usePanelRef()
   // Read once: a stored size passed back while the user drags makes the panel register again,
   // which ends the drag after its first step.
   const [defaultSize] = useState(panel.storedSize)
+  const { isAnimating, isShrunk } = usePanelMotion(panel, panelRef)
+
+  const handle = <ResizableHandle className={cn(isShrunk && !isAnimating && 'hidden')} />
 
   return (
-    <Activity mode={panel.visible ? 'visible' : 'hidden'}>
-      {position === 'after' && <ResizableHandle />}
+    <>
+      {position === 'after' && handle}
       <ResizablePanel
         id={`${region}-panel`}
-        defaultSize={defaultSize}
+        panelRef={panelRef}
+        animated={isAnimating}
+        collapsible
+        collapsedSize={0}
+        defaultSize={panel.visible ? defaultSize : 0}
         minSize={minSize}
         maxSize={maxSize}
         groupResizeBehavior="preserve-pixel-size"
         onResize={(size) => {
-          panel.resize(Math.round(size.inPixels))
+          // While it moves, the sizes in between are not the size the user chose.
+          if (isAnimating || !panel.visible) return
+          if (size.inPixels > 0) panel.resize(Math.round(size.inPixels))
+          else if (panelRef.current?.isCollapsed()) panel.toggle()
         }}
       >
-        {children}
+        <div
+          className="h-full"
+          style={isShrunk && !isAnimating ? { visibility: 'hidden' } : undefined}
+        >
+          {children}
+        </div>
       </ResizablePanel>
-      {position === 'before' && <ResizableHandle />}
-    </Activity>
+      {position === 'before' && handle}
+    </>
   )
 }

@@ -42,6 +42,7 @@ const environmentOwners = [
   'src/shared/lib/hotkey/hooks/useModifierKeyName.ts',
   'src/shared/lib/clipboard/hooks/useClipboard.ts',
   'src/shared/components/frame/commands/hooks/useCommands.ts',
+  'src/shared/components/frame/hooks/useKeepOnDoubleClick.ts',
   'src/shared/lib/storage/browser-storage.utils.ts',
   'src/shared/lib/url/reload.utils.ts',
   'src/shared/api/request/api-url.utils.ts',

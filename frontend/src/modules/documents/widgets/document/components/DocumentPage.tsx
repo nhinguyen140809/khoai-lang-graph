@@ -34,7 +34,7 @@ function DocumentBody({
 }) {
   switch (document.state) {
     case 'pending':
-      return <LoadingState label={documentPageMessages.loading} />
+      return <LoadingState label={documentPageMessages.loading} layout="document" rows={4} />
     case 'notFound':
       return (
         <NotFoundState
