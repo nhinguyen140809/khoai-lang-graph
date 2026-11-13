@@ -1,6 +1,6 @@
 {
   "name": "khoai-lang-graph",
-  "image": "mcr.microsoft.com/devcontainers/typescript-node:1-22-bookworm",
+  "image": "mcr.microsoft.com/devcontainers/typescript-node:5-26-bookworm",
   "hostRequirements": {
     "cpus": 2,
     "memory": "8gb"
@@ -21,7 +21,7 @@
       "onAutoForward": "silent"
     }
   },
-  "onCreateCommand": "sudo corepack enable && pipx install uv && pipx install rust-just",
+  "onCreateCommand": "pipx install uv && pipx install rust-just",
   // Runs after creation and again whenever the repo content is updated (prebuilds), so a
   // changed lockfile is picked up without a manual install.
   "updateContentCommand": "cd frontend && pnpm install --frozen-lockfile",

@@ -8,9 +8,9 @@ setup. Personal preferences (theme, font, personal extensions, dotfiles) are not
 
 | Item | Value |
 |---|---|
-| Base image | Node 22 (Debian bookworm) |
+| Base image | Node 26 (Debian bookworm) |
 | Python | 3.12 (devcontainer feature) |
-| Tools | pnpm (corepack), uv, just (pipx), Docker-in-Docker |
+| Tools | pnpm (in the image), uv, just (pipx), Docker-in-Docker |
 | Minimum machine | 2 cores, 8 GB RAM |
 | Forwarded ports | 3000 (Next dev server), 8000 (API server) |
 | Extensions | Python, Ruff, mypy, just, ESLint, Prettier, Tailwind CSS, GitHub Actions, DBML, Draw.io |
@@ -18,7 +18,7 @@ setup. Personal preferences (theme, font, personal extensions, dotfiles) are not
 
 Lifecycle:
 
-- `onCreateCommand`: runs once when the codespace is created; enables corepack and installs uv and just.
+- `onCreateCommand`: runs once when the codespace is created; installs uv and just.
 - `updateContentCommand`: runs after creation and whenever the repo content is updated (prebuilds); runs `pnpm install --frozen-lockfile` in `frontend/`.
 - A stopped codespace keeps its disk, so resuming it runs nothing again. Start the servers by hand.
 

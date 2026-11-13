@@ -23,10 +23,10 @@ This file covers running and working on the frontend. For the overall architectu
 
 ## Prerequisites
 
-| Tool    | Version | Notes                                                                                                                                 |
-| ------- | ------- | ------------------------------------------------------------------------------------------------------------------------------------- |
-| Node.js | 22      | Pinned in [`../.nvmrc`](../.nvmrc). Run `nvm use` or `fnm use` from the repo root. `package.json` also declares `engines.node >= 22`. |
-| pnpm    | 11      | Pinned by the `packageManager` field in `package.json`. Run `corepack enable` once and the right version is used automatically.       |
+| Tool    | Version | Notes                                                                                                                                                                            |
+| ------- | ------- | -------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
+| Node.js | 26      | Pinned in [`../.nvmrc`](../.nvmrc). Run `nvm use` or `fnm use` from the repo root. `package.json` also declares `engines.node >= 22`.                                            |
+| pnpm    | 11      | Pinned by the `packageManager` field in `package.json`. Install it once with `npm install -g pnpm` (Node 26 does not ship corepack) and the right version is used automatically. |
 
 On Windows, work inside WSL2 and keep the repo on the Linux filesystem (not under `/mnt/c`).
 

@@ -336,8 +336,8 @@ khoailanggraph/
 | Git | >= 2.40 | - |
 | Python | 3.12+ | managed by `uv` |
 | uv | latest | `curl -LsSf https://astral.sh/uv/install.sh \| sh` |
-| Node.js | 22 LTS | via `fnm` or `nvm` (see `.nvmrc`) |
-| pnpm | 9+ | `corepack enable` |
+| Node.js | 26 LTS | via `fnm` or `nvm` (see `.nvmrc`) |
+| pnpm | 11 | `npm install -g pnpm` (Node 26 does not ship corepack) |
 | Docker + Compose | latest | Docker Desktop / Engine |
 | just | latest | `uv tool install rust-just` or package manager |
 
