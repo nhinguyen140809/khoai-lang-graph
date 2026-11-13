@@ -86,7 +86,7 @@ export function LoadedDocument({
 
   return (
     <div className="relative h-full">
-      <ScrollArea selfScrolling className="h-full">
+      <ScrollArea selfScrolling keepScroll="page" className="h-full">
         {isEditing ? (
           <div className="mx-auto max-w-3xl space-y-6 p-6">
             <h1 className="text-2xl font-semibold">{document.artifact.title}</h1>

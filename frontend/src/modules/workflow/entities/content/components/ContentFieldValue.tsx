@@ -6,8 +6,9 @@ import { Badge } from '@/shared/components/ui/badge'
 import { Button } from '@/shared/components/ui/button'
 import { Highlight, type HighlightRange } from '@/shared/components/ui/highlight'
 import { InitialsAvatar } from '@/shared/components/ui/initials-avatar'
+import { SegmentedBar } from '@/shared/components/ui/segmented-bar'
 import { isEmpty, isRecord } from '@/shared/lib/guards'
-import { textOf } from '@/shared/lib/text'
+import { snakeToSentenceCase, textOf } from '@/shared/lib/text'
 
 import type { ContentField, FieldWidget } from '../fields/content-fields.types'
 import { isChoiceField } from '../fields/content-fields.utils'
@@ -58,6 +59,13 @@ function MarkedText<Range extends HighlightRange>({
   )
 }
 
+/** What the views of a list of values take: the field, its values and the definition that titles them. */
+interface ListValueProps {
+  field: ContentField
+  items: unknown[]
+  definition: ValueDefinition
+}
+
 function TextValue({ text }: { text: string }) {
   return (
     <>
@@ -80,15 +88,7 @@ function TextsValue({ items }: { items: unknown[] }) {
   )
 }
 
-function EntriesValue({
-  field,
-  items,
-  definition,
-}: {
-  field: ContentField
-  items: unknown[]
-  definition: ValueDefinition
-}) {
+function EntriesValue({ field, items, definition }: ListValueProps) {
   return (
     <ul className="list-disc space-y-1 pl-5">
       {items.map((entry, index) => (
@@ -104,15 +104,55 @@ function EntriesValue({
   )
 }
 
-function TagsValue({
-  field,
-  items,
-  definition,
+/** What an entry of a rating list rates: a key such as `tech_comfort` reads as a sentence, other text as it is. */
+function ratedLabel(label: string): string {
+  return /^[a-z][a-z0-9_]*$/.test(label) ? snakeToSentenceCase(label) : label
+}
+
+/**
+ * The entries of a rating list, one under the other: what is rated on the left and, on the right,
+ * where the value stands in words, then a bar of the scale, and the note that says why. A list
+ * whose schema names no label and value field reads as an object list.
+ */
+function RatingListValue({ field, items, definition }: ListValueProps) {
+  const { rating } = field
+  if (rating === null) return <EntriesValue field={field} items={items} definition={definition} />
+  return (
+    <ul className="space-y-3">
+      {items.filter(isRecord).map((entry, index) => (
+        <RatingEntry key={index} entry={entry} rating={rating} />
+      ))}
+    </ul>
+  )
+}
+
+/** One entry of a rating list: what it rates and where it stands, the bar of the scale and its note. */
+function RatingEntry({
+  entry,
+  rating,
 }: {
-  field: ContentField
-  items: unknown[]
-  definition: ValueDefinition
+  entry: Record<string, unknown>
+  rating: NonNullable<ContentField['rating']>
 }) {
+  const value = entry[rating.value]
+  const note = rating.note === null ? '' : textOf(entry[rating.note])
+  const level =
+    typeof value === 'number' ? contentValueMessages.level(value, rating.min, rating.max) : null
+  return (
+    <li className="flex flex-col gap-1.5">
+      <span className="flex items-baseline justify-between gap-3">
+        <span>{ratedLabel(textOf(entry[rating.label]))}</span>
+        <span className="shrink-0 text-muted-foreground">{level?.words}</span>
+      </span>
+      {typeof value === 'number' && level !== null && (
+        <SegmentedBar value={value} min={rating.min} max={rating.max} label={level.label} />
+      )}
+      {note !== '' && <span className="text-xs text-muted-foreground">{note}</span>}
+    </li>
+  )
+}
+
+function TagsValue({ field, items, definition }: ListValueProps) {
   return (
     <span className="flex flex-wrap gap-2">
       {items.map((tag, index) => (
@@ -259,6 +299,10 @@ const widgetValueViews = {
   badge: ({ field, value, definition }) => (
     <BadgeValue field={field} value={textOf(value)} definition={definition} />
   ),
+  'rating-list': ({ field, value, definition }) =>
+    Array.isArray(value) ? (
+      <RatingListValue field={field} items={value} definition={definition} />
+    ) : null,
 } as const satisfies Record<FieldWidget, (props: WidgetValueViewProps) => React.ReactNode>
 
 /**

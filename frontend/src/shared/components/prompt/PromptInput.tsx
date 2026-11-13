@@ -110,7 +110,7 @@ export function PromptInput({
             onValueChange(event.target.value)
           }}
           onKeyDown={submitOnEnter}
-          className={cn('max-h-60 leading-relaxed', looks.minHeight)}
+          className={cn('max-h-48 overflow-y-auto leading-relaxed', looks.minHeight)}
         />
         <InputGroupAddon align={looks.addon} className={looks.addonLook}>
           {/* Only assistive technology reads the keys; on screen, the arrow sends the text. */}

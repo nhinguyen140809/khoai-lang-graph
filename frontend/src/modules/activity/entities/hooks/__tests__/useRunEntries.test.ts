@@ -26,7 +26,7 @@ describe('useRunEntries', () => {
     })
     if (result.current.state !== 'success') return
     const types = result.current.entries.map(({ type }) => type)
-    expect(types).toContain('work')
+    expect(types).toContain('phase')
     expect(types).toContain('review')
   })
 

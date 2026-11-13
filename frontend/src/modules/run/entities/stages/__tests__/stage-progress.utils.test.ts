@@ -96,6 +96,24 @@ describe('stageProgress', () => {
     ])
   })
 
+  it('keeps a stage done that only an earlier run went through, as a retry starts its steps over', () => {
+    const stages = stageProgress(visibleStages, {
+      steps: stepsOfStages('interviewing'),
+      earlierRuns: [stepsOfStages('planning')],
+      run: runWith('running', 'interviewing'),
+      subjects: new Map(),
+    })
+
+    expect(stages.map(({ status }) => status)).toEqual([
+      'done',
+      'not_started',
+      'not_started',
+      'running',
+      'not_started',
+      'not_started',
+    ])
+  })
+
   it('gives way to the stage of the latest visible step when the run names one the user does not see', () => {
     const stages = stageProgress(visibleStages, {
       steps: stepsOfStages('planning', 'interviewing'),
@@ -155,6 +173,21 @@ describe('stageProgress', () => {
       { key: 'PER-002', status: 'done', number: 1 },
       { key: 'PER-001', status: 'done', number: 2 },
       { key: 'PER-003', status: 'not_started', number: 3 },
+    ])
+  })
+
+  it('keeps the subjects that an earlier run took, as a retry starts its steps over', () => {
+    const subjects = new Map([['interviewing', [subject(1), subject(2)]]])
+    const stages = stageProgress(visibleStages, {
+      steps: interviewSteps(2, 5),
+      earlierRuns: [[...stepsOfStages('planning'), ...interviewSteps(1, 2)]],
+      run: runWith('running', 'interviewing'),
+      subjects,
+    })
+
+    expect(viewOf(assertPresent(stages[3], 'interviewing')).subjects).toEqual([
+      { key: 'PER-001', status: 'done', number: 1 },
+      { key: 'PER-002', status: 'done', number: 2 },
     ])
   })
 

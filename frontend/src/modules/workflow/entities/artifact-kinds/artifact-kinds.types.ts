@@ -47,6 +47,10 @@ export const schemaPropertySchema = z.looseObject({
   readOnly: z.boolean().optional(),
   default: z.unknown().optional(),
   'x-ui-widget': z.string().optional(),
+  /** Of a `rating-list`: the fields of an entry that name what is rated, hold the rating and say why. */
+  'x-ui-label-field': z.string().optional(),
+  'x-ui-value-field': z.string().optional(),
+  'x-ui-note-field': z.string().optional(),
   'x-value-from': z.string().optional(),
   'x-value-list': z.string().optional(),
 })

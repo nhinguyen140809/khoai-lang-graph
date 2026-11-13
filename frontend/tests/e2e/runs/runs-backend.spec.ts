@@ -20,7 +20,8 @@ test('stops at each review of a new project and finishes after the last answer',
   for (const { status, prompt, approve } of reviewStops) {
     await user.expectRunStatus(`Waiting for you: ${status}`)
     await user.expectReviewPrompt(prompt)
-    await user.answerReviewWith(approve)
+    if (approve === null) await user.sendAnswers()
+    else await user.answerReviewWith(approve)
   }
 
   await user.expectRunStatus('Done')

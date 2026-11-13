@@ -5,6 +5,7 @@ import {
   contentSchemaFixtureByKind,
 } from '@/mocks/workflow/artifact-kinds.fixtures'
 
+import type { ContentSchema, SchemaProperty } from '../../../artifact-kinds/artifact-kinds.types'
 import { itemDisplays, itemPageLayouts } from '../content-fields.types'
 import {
   artifactDisplayOf,
@@ -94,6 +95,64 @@ describe('contentFields', () => {
     expect(widgets).toContainEqual(['participants', 'avatar-list'])
     expect(widgets).toContainEqual(['status', 'separator'])
     expect(widgets).toContainEqual(['interview_status', 'badge'])
+  })
+})
+
+describe('a rating list', () => {
+  const entries: NonNullable<SchemaProperty['items']> = {
+    type: 'object',
+    properties: {
+      aspect: { title: 'Aspect', type: 'string' },
+      score: { title: 'Score', type: 'integer', minimum: 1, maximum: 5 },
+      rationale: { title: 'Why', type: 'string' },
+    },
+    required: ['aspect', 'score', 'rationale'],
+  }
+
+  function ratingSchema(keywords: Record<string, string>): ContentSchema {
+    return {
+      title: 'Person',
+      'x-level': 'item',
+      properties: {
+        scores: {
+          title: 'Scores',
+          type: 'array',
+          'x-ui-widget': 'rating-list',
+          items: entries,
+          ...keywords,
+        },
+      },
+    }
+  }
+
+  it('reads which fields of an entry are the label, the rating and the note, and the scale', () => {
+    const [scores] = contentFields(
+      ratingSchema({
+        'x-ui-label-field': 'aspect',
+        'x-ui-value-field': 'score',
+        'x-ui-note-field': 'rationale',
+      }),
+    )
+
+    expect(scores?.widget).toBe('rating-list')
+    expect(scores?.rating).toEqual({
+      label: 'aspect',
+      value: 'score',
+      note: 'rationale',
+      min: 1,
+      max: 5,
+    })
+    expect(scores?.entryFields.map(({ name }) => name)).toEqual(['aspect', 'score', 'rationale'])
+  })
+
+  it('has no rating fields when the schema names no label or value field', () => {
+    const [scores] = contentFields(ratingSchema({ 'x-ui-value-field': 'score' }))
+
+    expect(scores?.rating).toBeNull()
+  })
+
+  it('has none for another widget', () => {
+    expect(contentFields(messageSchema).every(({ rating }) => rating === null)).toBe(true)
   })
 })
 

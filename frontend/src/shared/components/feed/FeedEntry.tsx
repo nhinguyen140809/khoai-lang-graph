@@ -5,6 +5,8 @@ import type { ReactNode } from 'react'
 
 import { type Tone, toneClasses } from '@/shared/lib/tone'
 
+import { targetFadeMs } from './feed.constants'
+
 interface FeedEntryProps {
   /** The id of the element, which the address of a page can name to scroll to it. */
   anchorId: string
@@ -16,7 +18,7 @@ interface FeedEntryProps {
   label: string
   /** Whether the entry carries a fill of its own, as the entries of the user do. */
   isFilled?: boolean | undefined
-  /** Whether the address of the page names this entry: it takes the focus and a ring. */
+  /** Whether the address of the page names this entry: it takes the focus and a fill that fades. */
   isTarget?: boolean | undefined
   /** Buttons under the entry, shown on hover and focus, always on a touch screen. */
   actions?: ReactNode
@@ -26,7 +28,7 @@ interface FeedEntryProps {
 /**
  * An entry of a feed: full width, a small mark at its start, a fill of its own for what the user
  * wrote, and actions under it that show on hover and focus. The address can name it: it takes the
- * focus and a ring.
+ * focus and a yellow fill that fades in a few seconds.
  */
 export function FeedEntry({
   anchorId,
@@ -44,9 +46,10 @@ export function FeedEntry({
       tabIndex={isTarget ? -1 : undefined}
       {...(isFilled ? { 'data-filled': true } : {})}
       {...(isTarget ? { 'data-target': true } : {})}
+      style={{ animationDuration: `${String(targetFadeMs)}ms` }}
       className={cn(
         'group/entry flex gap-3 rounded-lg px-3 py-2 data-[filled]:bg-muted',
-        'data-[target]:ring-2 data-[target]:ring-ring/50',
+        'flash-chart data-[target]:animate-flash motion-reduce:animate-none',
         markColor && toneClasses[markColor],
       )}
     >

@@ -7,6 +7,7 @@ import { useRunInterrupts } from '@/modules/review/entities/@x/activity'
 import { type Run, useRunSteps, workEntries } from '@/modules/run/entities/@x/activity'
 import type { Message } from '@/modules/thread/entities/@x/activity'
 import {
+  isNavigable,
   kindSchemasByKind,
   useArtifactKinds,
   useStageTitles,
@@ -14,7 +15,7 @@ import {
 import { useView } from '@/shared/lib/view'
 
 import type { ActivityEntry, RunEntriesResult } from '../activity-entries.types'
-import { runEntries } from '../activity-entries.utils'
+import { runEntries, shownWork } from '../activity-entries.utils'
 
 /**
  * The entries of a run: its messages, its work and its reviews, with the titles they read. Only a
@@ -54,14 +55,23 @@ export function useRunEntries(
     const subjectTitles = subjectTitlesOf(subjects)
     const entries: ActivityEntry[] = runEntries({
       messages,
-      work: workEntries(
-        stepPages.flatMap(({ items }) => items),
-        run,
+      work: shownWork(
+        workEntries(
+          stepPages.flatMap(({ items }) => items),
+          run,
+        ),
+        stageTitles,
+        view,
       ),
       interrupts: interruptPages.flatMap(({ items }) => items),
       stageTitles,
       subjectTitles,
-      kindTitles: new Map([...kindSchemas].map(([kind, { schema }]) => [kind, schema.title])),
+      kinds: new Map(
+        [...kindSchemas].map(([kind, { schema }]) => [
+          kind,
+          { title: schema.title, isNavigable: isNavigable(schema) },
+        ]),
+      ),
       view,
     })
     return { state: 'success', entries }

@@ -53,6 +53,16 @@ describe('the resolved config', () => {
     expect(JSON.stringify(page)).not.toContain('named export')
   })
 
+  it('lets a page or a layout export the route configs of Next.js under their own names', async () => {
+    expect(await ruleOf('src/app/(auth)/login/page.tsx', 'local/boolean-name')).toEqual([0])
+    expect(
+      await ruleOf(
+        'src/modules/project/widgets/list/components/ProjectList.tsx',
+        'local/boolean-name',
+      ),
+    ).toEqual([2])
+  })
+
   it('keeps the UI components out of the naming rules of the app', async () => {
     const rule = await ruleOf(
       'src/shared/components/ui/button.tsx',

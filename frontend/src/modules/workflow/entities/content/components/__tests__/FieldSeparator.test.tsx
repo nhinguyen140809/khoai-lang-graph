@@ -2,7 +2,7 @@ import { screen } from '@testing-library/react'
 import { describe, expect, it } from 'vitest'
 
 import { renderWithProviders } from '@/test/render'
-import { expectNoAccessibilityViolations } from '@/test/steps'
+import { expectNoAccessibilityViolations, expectText } from '@/test/steps'
 
 import type { ContentField } from '../../fields/content-fields.types'
 import { FieldSeparator } from '../FieldSeparator'
@@ -26,6 +26,7 @@ function field(overrides: Partial<ContentField>): ContentField {
     integer: false,
     defaultValue: null,
     entryFields: [],
+    rating: null,
     ...overrides,
   }
 }
@@ -34,20 +35,20 @@ const turn = field({ name: 'turn', title: 'Turn', integer: true, minimum: 1 })
 const status = field({ name: 'status', title: 'Status', options: ['in_progress', 'completed'] })
 
 describe('FieldSeparator', () => {
-  it('reads a number as its title and its value', () => {
+  it('reads a number as its title and its value', async () => {
     renderWithProviders(
       <FieldSeparator fields={[turn]} content={{ turn: 2 }} definition={undefined} />,
     )
 
-    expect(screen.getByText('Turn 2')).toBeInTheDocument()
+    await expectText('Turn 2')
   })
 
-  it('reads a choice as the label of its value', () => {
+  it('reads a choice as the label of its value', async () => {
     renderWithProviders(
       <FieldSeparator fields={[status]} content={{ status: 'completed' }} definition={undefined} />,
     )
 
-    expect(screen.getByText('Completed')).toBeInTheDocument()
+    await expectText('Completed')
   })
 
   it('holds the fields that change at one place side by side', () => {
@@ -64,7 +65,7 @@ describe('FieldSeparator', () => {
     expect(screen.getByText('Completed')).toHaveClass('ml-3')
   })
 
-  it('reads a text as itself', () => {
+  it('reads a text as itself', async () => {
     renderWithProviders(
       <FieldSeparator
         fields={[field({ name: 'note', title: 'Note' })]}
@@ -73,7 +74,7 @@ describe('FieldSeparator', () => {
       />,
     )
 
-    expect(screen.getByText('A place')).toBeInTheDocument()
+    await expectText('A place')
   })
 
   it('shows nothing when no field is filled', () => {

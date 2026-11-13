@@ -5,6 +5,8 @@ import type { Run, RunStep } from '@/modules/run/entities'
 import { workEntries } from '@/modules/run/entities'
 import type { Message } from '@/modules/thread/entities'
 
+import type { KindLook } from '../activity-entries.types'
+
 export const run: Run = buildRun({
   id: runIds.mentorMain3,
   thread_id: threadIds.mentorMain,
@@ -53,4 +55,4 @@ export const stageTitles = new Map([
 ])
 
 export const subjectTitles = new Map<string, string>()
-export const kindTitles = new Map<string, string>()
+export const kinds = new Map<string, KindLook>()

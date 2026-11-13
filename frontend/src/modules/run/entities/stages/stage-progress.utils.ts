@@ -8,6 +8,7 @@ import type { RunStep } from '../steps/run-steps.types'
 import { orderedSteps } from '../steps/run-steps.utils'
 import type { WorkEntry, WorkStatus } from '../work/work.types'
 import { workEntries } from '../work/work-entries.utils'
+import { stageOfRun } from './stage-of-run.utils'
 import type { StageProgress, StageStatus, SubjectProgress } from './stage-progress.types'
 
 /** The statuses of a stage or of a subject, from the one that needs the user most. */
@@ -44,15 +45,17 @@ function flatStages(stages: readonly VisibleStage[]): VisibleStage[] {
   return stages.flatMap((stage) => [stage, ...flatStages(stage.children)])
 }
 
-/** The stage the run is in, as the user sees it: the one it names, else the one of its latest visible step. */
+/** The stage the run is in, as the user sees it: the one of the step that runs now, or the one the run names, else the one of its latest visible step. */
 function currentStageOf(
   run: Pick<Run, 'status' | 'current_stage'> | null,
   steps: readonly RunStep[],
   visibleKeys: ReadonlySet<string>,
 ): string | null {
   if (run === null) return null
-  if (visibleKeys.has(run.current_stage)) return run.current_stage
-  for (const step of orderedSteps([...steps]).toReversed()) {
+  const ordered = orderedSteps([...steps])
+  const stage = stageOfRun(run, ordered)
+  if (visibleKeys.has(stage)) return stage
+  for (const step of ordered.toReversed()) {
     if (visibleKeys.has(step.stage)) return step.stage
   }
   return null
@@ -116,14 +119,21 @@ export function stageProgress(
   stages: readonly VisibleStage[],
   input: {
     steps: RunStep[]
+    /** The steps of each run that the run retried from, the oldest run first: the work they did stays. */
+    earlierRuns?: readonly (readonly RunStep[])[]
     run: Pick<Run, 'status' | 'current_stage'> | null
     subjects: ReadonlyMap<string, StageSubject[]>
   },
 ): StageProgress[] {
-  const { steps, run, subjects } = input
+  const { steps, run, subjects, earlierRuns = [] } = input
   const visibleKeys = new Set(flatStages(stages).map(({ key }) => key))
   const current = currentStageOf(run, steps, visibleKeys)
-  const work = workEntries(steps, run)
+  const earlierSteps = earlierRuns.flat()
+  // The runs before have ended, so what their steps did is settled whatever status a step shows.
+  const work = [
+    ...earlierRuns.flatMap((earlier) => workEntries([...earlier], null)),
+    ...workEntries(steps, run),
+  ]
 
   function build(stage: VisibleStage, number: number): StageProgress {
     const stepsOfStage = steps.filter((step) => step.stage === stage.key)
@@ -131,7 +141,7 @@ export function stageProgress(
     const ownStatus: StageStatus =
       stage.key === current && run !== null
         ? stageStatusOfRun[run.status]
-        : stepsOfStage.length > 0
+        : stepsOfStage.length > 0 || earlierSteps.some((step) => step.stage === stage.key)
           ? 'done'
           : 'not_started'
     const status =

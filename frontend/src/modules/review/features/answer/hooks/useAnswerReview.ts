@@ -16,7 +16,7 @@ import { newIdempotencyKey } from '@/shared/api/idempotency'
 
 import { answerReviewMessages } from '../answer-review.constants'
 import type { AnswerReviewFormValues } from '../answer-review.types'
-import { resumeRunBody } from '../answer-review.utils'
+import { problemsOf, resumeRunBody } from '../answer-review.utils'
 
 /**
  * Answers the pending review of a run: sends the answer, shows a toast, and loads the run, its
@@ -48,7 +48,9 @@ export function useAnswerReview(run: Run, interrupt: Pick<Interrupt, 'review_art
       ])
     },
     onError: async (error) => {
-      toast.error(`${answerReviewMessages.notSent} ${errorMessageOf(error, {})}`)
+      toast.error(`${answerReviewMessages.notSent} ${errorMessageOf(error, {})}`, {
+        description: problemsOf(error),
+      })
       // Another tab may have answered first: the interrupts load again either way.
       await queryClient.invalidateQueries({ queryKey: interruptKeys.all() })
     },

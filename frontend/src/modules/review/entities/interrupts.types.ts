@@ -40,6 +40,26 @@ export const interruptDecisionSchema = z.object({
 
 export type InterruptDecision = z.infer<typeof interruptDecisionSchema>
 
+/**
+ * An option of an interrupt: an option of the checkpoint, which the agent before it may have worded
+ * for the case: its label is the title of the answer, with a description of what choosing it does,
+ * and the feedback it suggests for an option that asks for one.
+ */
+export const interruptOptionSchema = checkpointOptionSchema.extend({
+  description: z.string().optional(),
+  suggested_feedback: z.string().optional(),
+})
+
+export type InterruptOption = z.infer<typeof interruptOptionSchema>
+
+/**
+ * What a pause is for: a `review` holds documents and its options, an `ask` holds the questions
+ * that an agent chose, with no option and no document.
+ */
+export const interruptPurposes = ['review', 'ask'] as const
+
+export type InterruptPurpose = (typeof interruptPurposes)[number]
+
 /** A pause of a run that waits for the user, with what it asks and what it reviews. */
 export const interruptSchema = z.object({
   id: z.string(),
@@ -47,9 +67,10 @@ export const interruptSchema = z.object({
   /** The step of the checkpoint node that created it. */
   step_id: z.string(),
   node: z.string(),
+  purpose: z.enum(interruptPurposes),
   prompt: z.string(),
   /** Empty when the interrupt only asks questions. */
-  options: z.array(checkpointOptionSchema),
+  options: z.array(interruptOptionSchema),
   questions: z.array(interruptQuestionSchema),
   allow_edits: z.boolean(),
   review_artifacts: z.array(artifactRefSchema),
@@ -79,4 +100,10 @@ export interface ResumeRunBody {
 /** What a list of interrupts is narrowed to; a field left out narrows nothing. */
 export interface InterruptFilters {
   status?: InterruptStatus | undefined
+}
+
+/** One answered question of an interrupt, in words: what was asked and what the user answered. */
+export interface AnswerLine {
+  prompt: string
+  text: string
 }

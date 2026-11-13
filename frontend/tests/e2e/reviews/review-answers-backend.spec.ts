@@ -15,6 +15,8 @@ test('asks for the feedback of a rejection and sends the run back once it is giv
   await user.expectReviewPrompt(/requirements analysis/)
 
   await user.chooseReviewOption(rework.option)
+  // The agent suggests the feedback of the option; the user clears it, and the answer is refused.
+  await user.fillReviewFeedback(rework.option, '')
   await user.sendReview()
   await user.expectText(rework.missing)
   expect((await api.getRun(run.id)).status).toBe('interrupted')

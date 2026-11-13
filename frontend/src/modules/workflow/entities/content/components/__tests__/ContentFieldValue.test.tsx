@@ -1,12 +1,24 @@
-import { screen, waitFor } from '@testing-library/react'
+import { screen } from '@testing-library/react'
 import { describe, expect, it } from 'vitest'
 
 import { workflowDefinitionFixture } from '@/mocks/workflow/workflow.fixtures'
 import { renderWithProviders } from '@/test/render'
-import { expectNoAccessibilityViolations } from '@/test/steps'
+import {
+  expectNoAccessibilityViolations,
+  expectNoRole,
+  expectNoText,
+  expectRole,
+  expectText,
+} from '@/test/steps'
 
 import { ContentFieldValue } from '../ContentFieldValue'
-import { emptyCases, field, objectListCase, valueCases } from './ContentFieldValue.data'
+import {
+  emptyCases,
+  field,
+  objectListCase,
+  ratingListCase,
+  valueCases,
+} from './ContentFieldValue.data'
 
 describe('ContentFieldValue', () => {
   it.each(valueCases)('shows $name', async ({ field: contentField, value, shown }) => {
@@ -19,9 +31,7 @@ describe('ContentFieldValue', () => {
     )
 
     for (const text of shown) {
-      await waitFor(() => {
-        expect(screen.getByText(text)).toBeInTheDocument()
-      })
+      await expectText(text)
     }
   })
 
@@ -42,8 +52,39 @@ describe('ContentFieldValue', () => {
       />,
     )
 
-    expect(screen.queryByText('What:')).not.toBeInTheDocument()
+    expectNoText('What:')
     await expectNoAccessibilityViolations(container)
+  })
+
+  it('shows each entry of a rating list as what is rated, where it stands in words, a bar and why', async () => {
+    const { container } = renderWithProviders(
+      <ContentFieldValue
+        field={ratingListCase.field}
+        value={ratingListCase.value}
+        definition={undefined}
+      />,
+    )
+
+    await expectText('Comfortable with technology')
+    await expectText('High')
+    await expectText('Very low')
+    await expectRole('meter', 'High, 4 of 5')
+    await expectRole('meter', 'Very low, 1 of 5')
+    await expectText('Uses his phone for everything.')
+    await expectNoAccessibilityViolations(container)
+  })
+
+  it('reads a rating list without a label and value field as a list of its entries', () => {
+    renderWithProviders(
+      <ContentFieldValue
+        field={{ ...ratingListCase.field, rating: null }}
+        value={ratingListCase.value}
+        definition={undefined}
+      />,
+    )
+
+    expect(screen.getAllByText('Aspect:')).toHaveLength(2)
+    expectNoRole('meter')
   })
 
   it('shows a value of a badge in the tone written for the field, with no dot', () => {
@@ -65,7 +106,7 @@ describe('ContentFieldValue', () => {
     expect(badge?.querySelectorAll('*').length).toBe(0)
   })
 
-  it('draws the people of an avatar list, each its avatar and its name', () => {
+  it('draws the people of an avatar list, each its avatar and its name', async () => {
     renderWithProviders(
       <ContentFieldValue
         field={field({ widget: 'avatar-list' })}
@@ -77,10 +118,10 @@ describe('ContentFieldValue', () => {
       />,
     )
 
-    expect(screen.getByText('Interviewer')).toBeInTheDocument()
-    expect(screen.getByText('Ann')).toBeInTheDocument()
-    expect(screen.getByText('I')).toBeInTheDocument()
-    expect(screen.getByText('A')).toBeInTheDocument()
+    await expectText('Interviewer')
+    await expectText('Ann')
+    await expectText('I')
+    await expectText('A')
   })
 
   it('draws a person with an item as the link the caller gives, in the look of a button', () => {
@@ -106,7 +147,7 @@ describe('ContentFieldValue', () => {
     )
   })
 
-  it('draws a person without an item, or without a link, as its avatar and name only', () => {
+  it('draws a person without an item, or without a link, as its avatar and name only', async () => {
     const cases = [
       { key: 'PER-001', name: 'Ann', role: 'persona', item_id: null },
       { key: 'PER-002', name: 'Bea', role: 'persona', item_id: 'item-2' },
@@ -119,7 +160,7 @@ describe('ContentFieldValue', () => {
         definition={undefined}
       />,
     )
-    expect(screen.queryByRole('link')).not.toBeInTheDocument()
+    expectNoRole('link')
 
     rerender(
       <ContentFieldValue
@@ -134,8 +175,8 @@ describe('ContentFieldValue', () => {
       />,
     )
     // The person without an item is not a link; only the one with an item is.
-    expect(screen.queryByRole('link', { name: 'Ann' })).not.toBeInTheDocument()
-    expect(screen.getByRole('link', { name: 'Bea' })).toBeInTheDocument()
+    expectNoRole('link', 'Ann')
+    await expectRole('link', 'Bea')
   })
 })
 
@@ -156,7 +197,7 @@ describe('ContentFieldValue with marks', () => {
     expect(marked.closest('mark')).not.toBeNull()
   })
 
-  it('ignores the marks of a value that is not a text', () => {
+  it('ignores the marks of a value that is not a text', async () => {
     const { container } = renderWithProviders(
       <ContentFieldValue
         field={field({ widget: 'boolean' })}
@@ -166,7 +207,7 @@ describe('ContentFieldValue with marks', () => {
       />,
     )
 
-    expect(screen.getByText('Yes')).toBeInTheDocument()
+    await expectText('Yes')
     expect(container.querySelector('mark')).toBeNull()
   })
 })
