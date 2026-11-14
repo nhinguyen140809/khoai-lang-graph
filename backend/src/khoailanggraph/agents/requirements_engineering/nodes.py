@@ -382,6 +382,13 @@ def match_plan_value(value: str, allowed: Sequence[str]) -> str | None:
         return value
     lowered = _plan_term(value)
     candidates = [(term, _plan_term(term)) for term in allowed]
+    # A plan term carries its reason after ", because"; the name is what stands before it, and
+    # a value that shortens the term to its name is the same term.
+    candidates += [
+        (term, _plan_term(term.split(", because")[0]))
+        for term in allowed
+        if ", because" in term
+    ]
     for original, candidate in candidates:
         if candidate == lowered:
             return original

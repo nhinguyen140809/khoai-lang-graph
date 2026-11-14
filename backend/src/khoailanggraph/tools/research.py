@@ -204,6 +204,8 @@ def _filtered(
 
 
 _DDG_URL = "https://html.duckduckgo.com/html/"
+# The endpoint throttles and can stall; the encyclopedia answers within seconds behind it.
+_LIVE_WEB_BUDGET_S = 45.0
 _DDG_DELAY_S = 0.8
 _DDG_AGENT = (
     "Mozilla/5.0 (Macintosh; Intel Mac OS X 10_15_7) AppleWebKit/537.36 "
@@ -420,12 +422,17 @@ def _wiki_page_text(title: str) -> str:
 def live_research_search(queries: Sequence[str]) -> list[dict[str, Any]]:
     """The keyless live chain: DuckDuckGo's web results, Wikipedia when the
     open web answers with nothing (its anomaly page, a captive portal, ...)."""
-    # Wikipedia first: its API is fast and stable, while the DuckDuckGo HTML
-    # endpoint throttles and can stall a run for minutes.
-    hits = wikipedia_research_search(queries)
-    if hits:
-        return hits
-    return duckduckgo_research_search(queries)
+    # The web first: its pages report what people do, while an encyclopedia answers the words
+    # of the query and leaves the plan uncovered. Wikipedia is the fallback of a throttled day,
+    # and the web call runs on a budget so a stall cannot hold the run.
+    pool = ThreadPoolExecutor(max_workers=1)
+    future = pool.submit(duckduckgo_research_search, queries)
+    try:
+        hits = future.result(timeout=_LIVE_WEB_BUDGET_S)
+    except Exception:  # noqa: BLE001 - the keyless chain never fails a run on its own
+        hits = []
+    pool.shutdown(wait=False)
+    return hits or wikipedia_research_search(queries)
 
 
 def research_search_of(config: Mapping[str, Any]) -> ResearchSearch:

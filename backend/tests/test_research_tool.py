@@ -200,3 +200,22 @@ def test_tavily_takes_the_domains_the_news_flag_and_the_count_of_a_search() -> N
     assert aimed["exclude_domains"] == ["a.test"]
     assert aimed["topic"] == "news"
     assert aimed["max_results"] == 3
+
+
+def test_the_live_chain_answers_with_the_web_and_keeps_wikipedia_behind_it(
+    monkeypatch: pytest.MonkeyPatch,
+) -> None:
+    web = {"title": "A study", "url": "https://example.org/study", "text": "people said"}
+    called: list[str] = []
+
+    monkeypatch.setattr(research, "duckduckgo_research_search", lambda queries: [dict(web)])
+    monkeypatch.setattr(
+        research, "wikipedia_research_search", lambda queries: called.append("wiki") or []
+    )
+
+    assert research.live_research_search(["q"]) == [web]
+    assert called == []
+
+    monkeypatch.setattr(research, "duckduckgo_research_search", lambda queries: [])
+    research.live_research_search(["q"])
+    assert called == ["wiki"]
