@@ -31,10 +31,16 @@ from typing import TYPE_CHECKING, Any, TypeVar, cast
 import structlog
 from langchain_core.messages import AIMessage, BaseMessage
 from langchain_core.runnables import RunnableConfig
+from langchain_core.tools import StructuredTool
 from pydantic import BaseModel
 
 from khoailanggraph.agents import prompts as prompt_loader
-from khoailanggraph.agents.requirements_engineering import corpus_search, orchestrator, review
+from khoailanggraph.agents.requirements_engineering import (
+    agent_loop,
+    corpus_search,
+    orchestrator,
+    review,
+)
 from khoailanggraph.agents.requirements_engineering.decisions import (
     AppliedDecision,
     DecisionResult,
@@ -269,6 +275,35 @@ def _invoke[T: BaseModel](
         raise RuntimeError(msg)
     raise last_error
 
+
+
+
+def _invoke_agent[T: BaseModel](
+    role: str,
+    config: Mapping[str, Any] | RunnableConfig | None,
+    schema: type[T],
+    prompt_values: Mapping[str, str],
+    tools: list[Any],
+    max_rounds: int = agent_loop.MAX_ROUNDS,
+) -> T:
+    """Run the role as an agent: its own prompt, its tools, and a `finish` call that carries the
+    structured output of the node."""
+    entry = definition_agent_roles().get(role)
+    if entry is None:
+        msg = f"role '{role}' has no agent_roles entry in the workflow definition"
+        raise ValueError(msg)
+    prompt = prompt_loader.load_cached(PROMPTS_PACKAGE, role, int(entry["prompt_version"]))
+    messages = prompt_loader.assemble_prompt(prompt, prompt_values)
+    return agent_loop.run_agent(
+        role=role,
+        model=get_chat_model(role, config),
+        messages=messages,
+        finish=schema,
+        tools=tools,
+        gate=cast("LlmGate | None", _configurable(config).get("llm_gate")),
+        model_id=resolve_model_id(role, cast("Mapping[str, Any]", config)),
+        max_rounds=max_rounds,
+    )
 
 def _chat_turn(
     role: str,
@@ -621,11 +656,12 @@ def planner_node(
                 "review_briefs": _plan_brief(state, asked.questions),
                 "current_stage": "planning",
             }
-    plan: PlannerOutput = _invoke(
+    plan: PlannerOutput = _invoke_agent(
         "planner",
         config or {},
         PlannerOutput,
         {**context, "task": PLANNER_PLAN_TASK},
+        tools=_documents_tool(config, str(state["project_id"])),
     )
     created = sink.create_artifact(
         state["project_id"],
@@ -1117,7 +1153,7 @@ def persona_generator_node(
     aspects = persona_aspect_list(
         cast("dict[str, Any]", plan_record["content"]) if plan_record is not None else None
     )
-    draft: GeneratorOutputV2 = _invoke(
+    draft: GeneratorOutputV2 = _invoke_agent(
         "persona_generator",
         config or {},
         generator_output_for(sorted(known_observations), [entry["key"] for entry in aspects]),
@@ -1133,6 +1169,12 @@ def persona_generator_node(
             "aspects": aspect_lines(aspects),
             "target_personas_num": str(cfg.parameters.target_personas_num),
         },
+        tools=_item_tools(
+            observation_records,
+            noun="observation",
+            read_description="Read one mined observation by its key, for example OBS-001.",
+            list_description="List the mined observations with their keys and stakeholders.",
+        ),
     )
 
     if plan_record is not None:
@@ -1890,6 +1932,107 @@ def _keep_valid[RefT: str | ItemLink](
     return kept
 
 
+
+
+def _transcript_tool(state: REState, sink: ArtifactSink, personas: list[Any]) -> Any:
+    """The analyst's tool: the full interview of one persona, read by its key.
+
+    The prompt carries every interview; the tool lets the agent go back to one of them and read
+    it again before it writes a finding, instead of trusting its first reading.
+    """
+    texts: dict[str, str] = {}
+    for persona in personas:
+        key = str(persona["key"])
+        record = sink.read_artifact(
+            state["project_id"], "interview_transcript", subject_id=persona["item_id"]
+        )
+        lines = (
+            transcript_lines(key, sink.read_items(record["artifact_id"]))
+            if record is not None
+            else []
+        )
+        texts[key] = "\n".join(lines) or "(no interview)"
+
+    def read_transcript(persona_key: str) -> str:
+        """Read the full interview of one persona, by its key (for example PER-001)."""
+        return texts.get(persona_key, f"No interview of {persona_key}. Keys: {', '.join(texts)}")
+
+    return StructuredTool.from_function(
+        func=read_transcript,
+        name="read_transcript",
+        description="Read the full interview of one persona by its key, for example PER-001.",
+    )
+
+
+
+def _item_tools(
+    items: list[ItemRecord],
+    *,
+    noun: str,
+    read_description: str,
+    list_description: str,
+) -> list[Any]:
+    """The reading tools of a node: one item by its key, or every key it may read.
+
+    The prompt of a node carries its data already; the tools let the agent go back to one item
+    before it writes, instead of trusting its first reading of a long list.
+    """
+    by_key = {str(entry["key"]): entry for entry in items}
+
+    def read_item(key: str) -> str:
+        entry = by_key.get(key)
+        if entry is None:
+            return f"No {noun} {key}. Keys: {', '.join(by_key)}."
+        return f"{key} ({entry['kind']}): " + json.dumps(entry["content"], ensure_ascii=False)
+
+    def list_items() -> str:
+        if not by_key:
+            return f"(no {noun})"
+        return "\n".join(
+            f"{key} | {entry['kind']} | "
+            + json.dumps(entry["content"], ensure_ascii=False)[:160]
+            for key, entry in by_key.items()
+        )
+
+    read_item.__doc__ = read_description
+    list_items.__doc__ = list_description
+    return [
+        StructuredTool.from_function(func=read_item, name=f"read_{noun}", description=read_description),
+        StructuredTool.from_function(
+            func=list_items, name=f"list_{noun}s", description=list_description
+        ),
+    ]
+
+
+def _documents_tool(
+    config: Mapping[str, Any] | RunnableConfig | None, project_id: str
+) -> list[Any]:
+    """The planner's tool: the documents the project holds, read on demand."""
+    documents_tool = _configurable(config).get("project_documents")
+
+    def read_project_documents() -> str:
+        """Read the documents the user uploaded to this project, newest first."""
+        if documents_tool is None:
+            return "(the project holds no documents)"
+        try:
+            entries = documents_tool(str(_configurable(config).get("project_id", "")))
+        except Exception as exc:  # noqa: BLE001 - the model reads the failure
+            return f"The documents could not be read: {type(exc).__name__}: {exc}"
+        if not entries:
+            return "(the project holds no documents)"
+        return "\n\n".join(
+            f"[{index}] {entry.get('title', 'document')}\n{str(entry.get('text', ''))[:4000]}"
+            for index, entry in enumerate(entries, start=1)
+        )
+
+    return [
+        StructuredTool.from_function(
+            func=read_project_documents,
+            name="read_project_documents",
+            description="Read the documents the user uploaded to this project.",
+        )
+    ]
+
 @safe_node
 def analyst_node(
     state: REState,
@@ -1927,7 +2070,7 @@ def analyst_node(
     current_keys = {entry["key"]: dict(entry) for entry in current_items}
     current_lines = prompt_views(current_items) if current_items else "(empty)"
 
-    analysis: AnalystOutput = _invoke(
+    analysis: AnalystOutput = _invoke_agent(
         "analyst",
         runnable_config,
         AnalystOutput,
@@ -1939,6 +2082,7 @@ def analyst_node(
             "current_analysis": current_lines,
             "directive": _directive_for(state, runnable_config, "checkpoint_analysis"),
         },
+        tools=[_transcript_tool(state, sink, personas)],
     )
 
     if analysis_record is not None:
@@ -2221,7 +2365,7 @@ def requirement_engineer_node(
     # Only verified analysis flows back into the law the way analyst.v1 demands.
     verified_lines = prompt_views(analysis_items) if analysis_items else "(none)"
 
-    draft: EngineerOutput = _invoke(
+    draft: EngineerOutput = _invoke_agent(
         "requirement_engineer",
         runnable_config,
         EngineerOutput,
@@ -2255,6 +2399,12 @@ def requirement_engineer_node(
                 _directive_for(state, runnable_config, "checkpoint_spec"),
             ),
         },
+        tools=_item_tools(
+            analysis_items,
+            noun="analysis item",
+            read_description="Read one analysis item by its key, for example AR-001.",
+            list_description="List the analysis items with their keys and kinds.",
+        ),
     )
 
     _normalize_engineer_quality(draft)
@@ -2414,7 +2564,7 @@ def backlog_manager_node(
     current_keys = {entry["key"]: dict(entry) for entry in current_items}
     current_lines = prompt_views(current_items) if current_items else "(empty)"
 
-    draft: BacklogOutput = _invoke(
+    draft: BacklogOutput = _invoke_agent(
         "backlog_manager",
         runnable_config,
         BacklogOutput,
@@ -2424,6 +2574,12 @@ def backlog_manager_node(
             "current_backlog": current_lines,
             "directive": _directive_for(state, runnable_config, "checkpoint_spec"),
         },
+        tools=_item_tools(
+            spec_items,
+            noun="spec requirement",
+            read_description="Read one specification requirement by its key, for example REQ-001.",
+            list_description="List the specification requirements with their keys.",
+        ),
     )
 
     known: Known = {
@@ -2520,7 +2676,7 @@ def validator_node(
     ]
 
     iteration = int(state["iteration_count"]) + 1
-    draft: ValidatorOutput = _invoke(
+    draft: ValidatorOutput = _invoke_agent(
         "validator",
         runnable_config,
         ValidatorOutput,
@@ -2531,6 +2687,20 @@ def validator_node(
             "open_issues": prompt_views(open_issues) if open_issues else "(empty)",
             "iteration": str(iteration),
         },
+        tools=[
+            *_item_tools(
+                spec_items,
+                noun="spec requirement",
+                read_description="Read one specification requirement by its key.",
+                list_description="List the specification requirements with their keys.",
+            ),
+            *_item_tools(
+                backlog_items,
+                noun="backlog item",
+                read_description="Read one backlog item by its key.",
+                list_description="List the backlog items with their keys.",
+            ),
+        ],
     )
 
     # Gate point 3/3 — validation_status_review: the bounded decision layer
