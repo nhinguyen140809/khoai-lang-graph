@@ -1,8 +1,8 @@
-import type { ProjectFilters } from '@/modules/project/entities'
 import type { FilterValues } from '@/shared/components/filter'
 import { isOneOf } from '@/shared/lib/guards'
 
 import { projectFilterKeys, projectRunFilters } from './project-filters.constants'
+import type { ProjectFilters } from './projects.types'
 
 /** The filters of the project list from the values chosen in its filters. */
 export function projectFiltersOf(values: FilterValues): ProjectFilters {

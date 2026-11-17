@@ -1,6 +1,6 @@
 import { useMemo } from 'react'
 
-import { runStatusLabel } from '@/modules/run/entities'
+import { runStatusLabel } from '@/modules/run/entities/@x/project'
 import type { FilterField } from '@/shared/components/filter'
 import { inView, useView } from '@/shared/lib/view'
 
@@ -9,7 +9,7 @@ import {
   projectFilterKeys,
   projectFilterMessages,
   projectRunFilters,
-} from './project-filters.constants'
+} from '../project-filters.constants'
 
 /**
  * The filters of the project list: the status of a project, in the view of the app, any number of

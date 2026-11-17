@@ -9,4 +9,4 @@ export {
 export type { RouteParamName } from './route-params'
 export { nextParam, RouteParam, useRouteParam } from './route-params'
 export { routes, userRoutes } from './routes.utils'
-export { routeOfAddress } from './typed-route'
+export { routeOfAddress, useViewStartHref, viewStartHref } from './typed-route'

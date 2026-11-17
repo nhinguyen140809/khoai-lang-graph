@@ -4,6 +4,17 @@ import { routes, userRoutes } from '../routes.utils'
 export const routeCases = [
   { page: 'the home page', href: () => routes.home(), path: '/' },
   { page: 'the home page of the user view', href: () => userRoutes.home(), path: '/' },
+  { page: 'every project in the user view', href: () => userRoutes.recents(), path: '/recents' },
+  {
+    page: 'the settings of the user view',
+    href: () => userRoutes.settings(),
+    path: '/settings',
+  },
+  {
+    page: 'the chat of a project in the user view',
+    href: () => userRoutes.project('a/b c'),
+    path: '/projects/a%2Fb%20c',
+  },
   { page: 'the settings', href: () => routes.settings(), path: '/settings' },
   { page: 'the list of the projects', href: () => routes.projects(), path: '/projects' },
   {

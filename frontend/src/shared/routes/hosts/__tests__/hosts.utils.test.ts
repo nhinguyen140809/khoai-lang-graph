@@ -1,13 +1,7 @@
 import { describe, expect, it } from 'vitest'
 
-import {
-  addressOfAreaPath,
-  hostOfView,
-  isAreaPath,
-  areaPathOf,
-  viewOfHost,
-} from '../hosts.utils'
-import { addressCases, hostCases, hostOfViewCases, areaPathCases } from './hosts.utils.data'
+import { addressOfAreaPath, areaPathOf, hostOfView, isAreaPath, viewOfHost } from '../hosts.utils'
+import { addressCases, areaPathCases, hostCases, hostOfViewCases } from './hosts.utils.data'
 
 describe('viewOfHost', () => {
   it.each(hostCases)('shows the $view view on $host', ({ host, view }) => {

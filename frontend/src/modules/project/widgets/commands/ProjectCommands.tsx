@@ -7,6 +7,7 @@ import {
   projectMessages,
   projectName,
   useProject,
+  useProjectPages,
   useRecentProjects,
 } from '@/modules/project/entities'
 import { createProjectMessages, useOpenProjectPrompt } from '@/modules/project/features/create'
@@ -15,22 +16,24 @@ import {
   useOpenRenameProjectDialog,
 } from '@/modules/project/features/rename'
 import { type PaletteCommand, useCommands } from '@/shared/components/frame'
-import { routes } from '@/shared/routes'
 
 interface ProjectCommandsProps {
   /** The open project, left out of the projects to open. */
   currentProjectId?: string
+  /** How many recent projects it offers to open; a few by default, so that the palette stays short. */
+  count?: number
 }
 
 const GROUP = 'Projects'
 
 /**
- * Registers the commands that open a recent project or the project list, or start a project, and
+ * Registers the commands that open a recent project or the page where projects start, or start a project, and
  * in a project the command that renames it, in the dialog of `ProjectDialogs`.
  */
-export function ProjectCommands({ currentProjectId }: ProjectCommandsProps) {
+export function ProjectCommands({ currentProjectId, count }: ProjectCommandsProps) {
   const router = useRouter()
-  const projects = useRecentProjects()
+  const pages = useProjectPages()
+  const projects = useRecentProjects(count)
   const current = useProject(currentProjectId)
   const openProjectPrompt = useOpenProjectPrompt()
   const openRename = useOpenRenameProjectDialog()
@@ -58,7 +61,7 @@ export function ProjectCommands({ currentProjectId }: ProjectCommandsProps) {
       group: GROUP,
       icon: <FolderIcon />,
       run: () => {
-        router.push(routes.project(id).activity())
+        router.push(pages.project(id))
       },
     })
   }
@@ -69,7 +72,7 @@ export function ProjectCommands({ currentProjectId }: ProjectCommandsProps) {
       group: GROUP,
       icon: <LayoutListIcon />,
       run: () => {
-        router.push(routes.projects())
+        router.push(pages.start())
       },
     },
     {

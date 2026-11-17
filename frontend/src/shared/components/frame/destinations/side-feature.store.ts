@@ -2,7 +2,7 @@ import { z } from 'zod'
 import { create } from 'zustand'
 import { persist } from 'zustand/middleware'
 
-import { parseStored, persistStorage, storageKey } from '@/shared/lib/storage'
+import { browserPersistOptions } from '@/shared/lib/storage'
 
 const persistedSideFeatureSchema = z.object({
   /** The id of the feature whose side panel is shown, once chosen; the editor is not tied to it. */
@@ -27,18 +27,11 @@ export const useSideFeatureStore = create<SideFeatureState>()(
         set({ chosen })
       },
     }),
-    {
-      name: storageKey('side-feature'),
-      skipHydration: true,
-      // Changes are stored only once the stored state has been read.
-      storage: persistStorage<PersistedSideFeature>({
-        ready: (): boolean => useSideFeatureStore.persist.hasHydrated(),
-      }),
+    browserPersistOptions({
+      name: 'side-feature',
+      schema: persistedSideFeatureSchema,
       partialize: ({ chosen }): PersistedSideFeature => ({ chosen }),
-      merge: (persisted, current) => ({
-        ...current,
-        ...parseStored(persistedSideFeatureSchema, persisted),
-      }),
-    },
+      hasHydrated: (): boolean => useSideFeatureStore.persist.hasHydrated(),
+    }),
   ),
 )

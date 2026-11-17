@@ -13,7 +13,7 @@ import {
 } from 'lucide-react'
 import type { ReactNode } from 'react'
 
-import { LogoMark } from '@/shared/components/frame'
+import { LogoMark } from '@/shared/components/brand'
 import {
   Breadcrumb,
   BreadcrumbItem,

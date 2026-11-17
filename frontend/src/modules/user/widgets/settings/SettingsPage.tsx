@@ -1,4 +1,5 @@
 import { ThemePicker } from '@/modules/user/features/theme'
+import { LayoutChoice, layoutChoiceMessages } from '@/modules/user/features/view'
 import {
   Card,
   CardContent,
@@ -9,8 +10,17 @@ import {
 
 export function SettingsPage() {
   return (
-    <div className="mx-auto flex max-w-2xl flex-col gap-4 p-6">
+    <div className="mx-auto flex max-w-4xl flex-col gap-4 p-6">
       <h1 className="text-2xl font-semibold tracking-tight">Settings</h1>
+      <Card>
+        <CardHeader>
+          <CardTitle>{layoutChoiceMessages.title}</CardTitle>
+          <CardDescription>{layoutChoiceMessages.hint}</CardDescription>
+        </CardHeader>
+        <CardContent>
+          <LayoutChoice marksViewOnShow />
+        </CardContent>
+      </Card>
       <Card>
         <CardHeader>
           <CardTitle>Theme</CardTitle>

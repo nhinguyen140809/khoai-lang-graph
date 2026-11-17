@@ -2,7 +2,7 @@ import { z } from 'zod'
 import { create } from 'zustand'
 import { persist } from 'zustand/middleware'
 
-import { parseStored, persistStorage, storageKey } from '@/shared/lib/storage'
+import { browserPersistOptions } from '@/shared/lib/storage'
 
 import { panelLayouts } from './panel.constants'
 import { PanelRegion } from './panel.types'
@@ -54,18 +54,11 @@ export const usePanelsStore = create<PanelsState>()(
         }))
       },
     }),
-    {
-      name: storageKey('panels'),
-      skipHydration: true,
-      // Changes are stored only once the stored state has been read.
-      storage: persistStorage<PersistedPanels>({
-        ready: (): boolean => usePanelsStore.persist.hasHydrated(),
-      }),
+    browserPersistOptions({
+      name: 'panels',
+      schema: persistedPanelsSchema,
       partialize: ({ panels }): PersistedPanels => ({ panels }),
-      merge: (persisted, current) => ({
-        ...current,
-        ...parseStored(persistedPanelsSchema, persisted),
-      }),
-    },
+      hasHydrated: (): boolean => usePanelsStore.persist.hasHydrated(),
+    }),
   ),
 )

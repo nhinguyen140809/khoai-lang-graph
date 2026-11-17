@@ -1,6 +1,8 @@
 import { ESLint } from 'eslint'
 import { describe, expect, it } from 'vitest'
 
+import { storageIndexPattern } from '../../lib/imports/folder-index-patterns.constants.js'
+import { viewAreaPattern } from '../../lib/imports/area-patterns.constants.js'
 import { moduleImports } from '../../lib/modules/module-imports.constants.js'
 import { frontendRoot } from '../../lib/paths.utils.js'
 import fileNames from '../file-names.js'
@@ -107,6 +109,46 @@ describe('the resolved config', () => {
       'project',
       'documents',
     ])
+  })
+
+  it('keeps the pages of each view to the slices of their own frame', async () => {
+    const user = JSON.stringify(
+      await ruleOf('src/app/user/(home)/layout.tsx', 'no-restricted-imports'),
+    )
+    expect(user).toContain('@/modules/project/widgets/list')
+    // Both frames sit in one folder: the user pages take only the names of the desk.
+    expect(user).toContain('"allowImportNames":["Desk"')
+    expect(user).not.toContain('@/modules/project/widgets/sidebar')
+    const developer = JSON.stringify(
+      await ruleOf('src/app/developer/(home)/layout.tsx', 'no-restricted-imports'),
+    )
+    expect(developer).toContain('@/modules/project/widgets/sidebar')
+    expect(developer).toContain('"importNames":["Desk"')
+    expect(developer).not.toContain('@/modules/project/widgets/list')
+    // Each block keeps the patterns that every file follows.
+    expect(user).toContain(storageIndexPattern.message)
+    expect(developer).toContain(storageIndexPattern.message)
+  })
+
+  it('keeps the rule of the hosts and the areas in the proxy and the route helper', async () => {
+    const readers = ['src/proxy.ts', 'src/shared/routes/typed-route/typed-route.utils.ts']
+    const others = [
+      'src/modules/project/widgets/sidebar/components/ProjectSidebar.tsx',
+      'src/modules/project/entities/projects/projects.constants.ts',
+      'src/shared/routes/routes.utils.ts',
+      'src/shared/components/frame/layouts/components/Workbench.tsx',
+      'src/shared/components/ui/sidebar.tsx',
+    ]
+    for (const file of readers) {
+      expect(JSON.stringify(await ruleOf(file, 'no-restricted-imports'))).not.toContain(
+        viewAreaPattern.message,
+      )
+    }
+    for (const file of others) {
+      expect(JSON.stringify(await ruleOf(file, 'no-restricted-imports'))).toContain(
+        viewAreaPattern.message,
+      )
+    }
   })
 
   it('keeps the browser environment in the files that own it', async () => {

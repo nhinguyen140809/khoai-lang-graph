@@ -4,6 +4,8 @@ import { FolderOpenIcon, FunnelXIcon } from 'lucide-react'
 import Link from 'next/link'
 
 import {
+  isFiltered,
+  projectFilterMessages,
   type ProjectFilters,
   projectMessages,
   projectName,
@@ -27,8 +29,6 @@ import {
 import { formatRelativeTime, useNow } from '@/shared/lib/time'
 import { routes } from '@/shared/routes'
 
-import { projectFilterMessages } from '../project-filters.constants'
-import { isFiltered } from '../project-filters.utils'
 import { ProjectActionsMenu } from './ProjectActionsMenu'
 import { ProjectRunCell } from './ProjectRunCell'
 

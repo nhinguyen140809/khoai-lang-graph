@@ -203,4 +203,14 @@ describe('CommandPalette', () => {
       expect(first).toHaveAttribute('aria-selected', 'true')
     })
   })
+
+  it('tells the keys that move through it, open a command and close it', () => {
+    useCommandsStore.getState().setOpen(true)
+    render(<CommandPalette />)
+
+    const dialog = screen.getByRole('dialog')
+    expect(within(dialog).getByText('Move')).toBeInTheDocument()
+    expect(within(dialog).getByText('Open')).toBeInTheDocument()
+    expect(within(dialog).getByText('Close')).toBeInTheDocument()
+  })
 })

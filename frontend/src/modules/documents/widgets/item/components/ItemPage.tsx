@@ -13,6 +13,7 @@ import { RestoreVersionMenuItem } from '@/modules/artifact/features/restore'
 import { useItemLinks } from '@/modules/trace/entities'
 import { isNavigable } from '@/modules/workflow/entities'
 import { isNotFoundError } from '@/shared/api/error'
+import { PageColumn } from '@/shared/components/frame'
 import { ErrorState, LoadingState, NotFoundState } from '@/shared/components/state'
 import { ScrollArea } from '@/shared/components/ui/scroll-area'
 import { useIdleVisibility } from '@/shared/lib/idle-visibility'
@@ -54,7 +55,9 @@ export function ItemPage({ projectId, itemId }: { projectId: string; itemId: str
   if (record === undefined) {
     return (
       <ViewTransition name="item-content" share={itemContentShare} default="none">
-        <LoadingState label={itemPageMessages.loading} layout="detail" rows={3} />
+        <PageColumn isFlush className="h-full">
+          <LoadingState label={itemPageMessages.loading} layout="detail" rows={3} />
+        </PageColumn>
       </ViewTransition>
     )
   }

@@ -200,7 +200,8 @@ interface StepSpec {
   costUsd?: number
   subject?: string
   produced?: RunStep['produced']
-  notes?: RunStep['notes']
+  /** The notes of the step, each written some seconds after the step starts. */
+  notes?: (Omit<RunStep['notes'][number], 'created_at'> & { afterSeconds: number })[]
 }
 
 function buildSteps(
@@ -232,7 +233,10 @@ function buildSteps(
           ? { ...noUsage, duration_ms: spec.seconds * 1000 }
           : usage(costUsd, spec.seconds * 1000, Math.round(costUsd * 120_000)),
       produced: spec.produced ?? [],
-      notes: spec.notes ?? [],
+      notes: (spec.notes ?? []).map(({ afterSeconds, ...note }) => ({
+        ...note,
+        created_at: isoTime(new Date(start + afterSeconds * 1000)),
+      })),
       error: null,
       started_at: isoTime(new Date(start)),
       finished_at: isoTime(new Date(clock)),
@@ -286,7 +290,7 @@ const mentorRun3Specs: StepSpec[] = [
       {
         kind: 'doing',
         text: 'I read your idea and listed who it affects: **mentors**, **mentees** and the **program staff**.',
-        created_at: '2026-10-06T08:30:04Z',
+        afterSeconds: 3,
       },
     ],
   },
@@ -312,12 +316,12 @@ const mentorRun3Specs: StepSpec[] = [
       {
         kind: 'doing',
         text: 'I compared what the three people said about booking a session.',
-        created_at: '2026-10-06T08:36:10Z',
+        afterSeconds: 10,
       },
       {
         kind: 'finding',
         text: 'Two of them **disagree** on who approves a session:\n\n- the coordinator wants to approve every one\n- the mentees want to book in a few minutes',
-        created_at: '2026-10-06T08:36:40Z',
+        afterSeconds: 40,
       },
     ],
   },
