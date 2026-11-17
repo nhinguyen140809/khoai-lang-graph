@@ -13,6 +13,9 @@ import time
 from dataclasses import dataclass
 from typing import TYPE_CHECKING, Any
 
+if TYPE_CHECKING:
+    from collections.abc import Mapping
+
 import structlog
 from langchain_core.messages import HumanMessage, ToolMessage
 from pydantic import ValidationError
@@ -57,6 +60,7 @@ def run_agent[T: BaseModel](  # noqa: PLR0913 - the loop is one place, the knobs
     model_id: str = "",
     max_rounds: int = MAX_ROUNDS,
     on_round: Any = None,
+    on_tool: Any = None,
 ) -> T:
     """Run the node's agent loop and return the validated `finish` payload."""
     bound = model.bind_tools([finish, *tools])
@@ -108,6 +112,7 @@ def run_agent[T: BaseModel](  # noqa: PLR0913 - the loop is one place, the knobs
         for call in calls:
             tool = by_name.get(str(call["name"]))
             used.append(str(call["name"]))
+            _note(on_tool, call)
             if tool is None:
                 text = f"Unknown tool. Use one of: {', '.join(by_name)}."
             else:
@@ -150,6 +155,17 @@ def _structured[T: BaseModel](
         if gate is not None:
             elapsed = int((time.monotonic() - started) * 1000)
             gate.record_call(role, model_id, handler.usage(model_id, elapsed))
+
+
+def _note(on_tool: Any, call: Mapping[str, Any]) -> None:
+    """A tool call as the user sees it: the sentence the model wrote for it, under the tool."""
+    if on_tool is None:
+        return
+    args = call.get("args") or {}
+    note = str(args.get("note") or "").strip()
+    kind = str(args.get("kind") or "").strip()
+    text = note or f"{str(call['name']).title()} {kind}".strip()
+    on_tool({"kind": "tool", "tool": str(call["name"]), "text": text[:300]})
 
 
 def _log(role: str, round_no: int, tools: list[str], on_round: Any) -> None:

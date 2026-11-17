@@ -126,23 +126,25 @@ def test_the_loop_stops_when_the_model_never_finishes() -> None:
         )
 
 
-def test_the_item_reader_reads_many_keys_in_one_call() -> None:
-    from khoailanggraph.agents.requirements_engineering.nodes import _item_tools
 
-    items = [
-        {"key": "OBS-001", "kind": "stakeholder_observation", "content": {"evidence": "a"}},
-        {"key": "OBS-002", "kind": "stakeholder_observation", "content": {"evidence": "b"}},
-    ]
-    read_items, list_items = _item_tools(
-        items,  # type: ignore[arg-type]
-        name="observations",
-        read_description="Read observations by key.",
-        list_description="List observations.",
+def test_the_reader_reads_many_keys_in_one_call_and_takes_a_note() -> None:
+    from khoailanggraph.agents.requirements_engineering.nodes import _reader_tools
+
+    tools = _reader_tools(
+        {"observation": {"OBS-001": "a", "OBS-002": "b"}},
+        what="mined observations",
     )
+    read, list_items = tools
 
-    answer = read_items.invoke({"keys": ["OBS-001", "OBS-002", "OBS-999"]})
+    answer = read.invoke(
+        {
+            "kind": "observation",
+            "keys": ["OBS-001", "OBS-002", "OBS-999"],
+            "note": "Reading what students said about switching apps.",
+        }
+    )
 
     assert "OBS-001" in answer and "a" in answer
     assert "OBS-002" in answer and "b" in answer
-    assert "OBS-999" in answer and "No item with key" in answer
-    assert "OBS-001" in list_items.invoke({})
+    assert "OBS-999" in answer and "No observation with key" in answer
+    assert "OBS-001" in list_items.invoke({"kind": "observation"})
