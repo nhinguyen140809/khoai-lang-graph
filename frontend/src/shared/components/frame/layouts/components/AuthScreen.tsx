@@ -2,7 +2,7 @@ import type { Route } from 'next'
 import Link from 'next/link'
 import type { ReactNode } from 'react'
 
-import { LogoMark } from '../../bars/components/LogoMark'
+import { LogoMark } from '@/shared/components/brand'
 
 interface AuthScreenProps {
   title: string

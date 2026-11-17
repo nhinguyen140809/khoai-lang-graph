@@ -5,6 +5,7 @@ import type { Route } from 'next'
 import Link from 'next/link'
 import type { ReactNode } from 'react'
 
+import { AppName } from '@/shared/components/brand'
 import {
   Breadcrumb,
   BreadcrumbItem,
@@ -16,7 +17,6 @@ import { ariaKeyShortcuts, hotkeyKeys, useModifierKeyName } from '@/shared/lib/h
 
 import { paletteHotkey } from '../../commands/command.constants'
 import { useCommandPalette } from '../../commands/hooks/useCommandPalette'
-import { LogoMark } from './LogoMark'
 
 interface TopBarProps {
   /** What follows "khoai /": a page name, or the menu of the current project. */
@@ -28,7 +28,7 @@ interface TopBarProps {
 /** The bar at the top of every screen: the app, where the user is, and search. */
 export function TopBar({ crumb, homeHref }: TopBarProps) {
   return (
-    <header className="flex h-14 shrink-0 items-center gap-3 bg-sidebar px-3 text-sm text-sidebar-foreground">
+    <header className="flex h-14 shrink-0 items-center gap-3 border-b border-sidebar-border bg-sidebar px-3 text-sm text-sidebar-foreground">
       <Trail crumb={crumb} homeHref={homeHref} />
       <SearchButton />
       {/* As wide as the trail, so that the search box stays in the middle of the bar. */}
@@ -58,10 +58,9 @@ function HomeLink({ href }: { href: Route }) {
   return (
     <Link
       href={href}
-      className="flex items-center gap-2 rounded-md px-1 py-0.5 outline-none hover:bg-sidebar-accent focus-visible:ring-2 focus-visible:ring-ring/50"
+      className="flex cursor-pointer items-center gap-2 rounded-md px-1 py-0.5 outline-none focus-visible:ring-2 focus-visible:ring-ring/50"
     >
-      <LogoMark />
-      khoai
+      <AppName />
     </Link>
   )
 }

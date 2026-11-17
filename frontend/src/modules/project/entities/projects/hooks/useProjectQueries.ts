@@ -11,14 +11,16 @@ import { cursorPagesOptions, pageItems } from '@/shared/api/query-client'
 import { type ListPage } from '@/shared/api/request'
 
 import { getProject, listProjects } from '../projects.api'
+import { noProjectFilters } from '../projects.constants'
 import { projectKeys } from '../projects.keys'
 import type { Project, ProjectFilters, ProjectStatus } from '../projects.types'
+import { projectsMatching } from '../projects.utils'
 
 // How many projects a page of the list holds; the next page loads on demand.
 const PAGE_SIZE = 50
 
-// How many projects the menus offer to open, so that they stay short; the project list has the
-// others.
+// How many projects the menus offer to open by default, so that they stay short; the project list
+// has the others.
 const RECENT_COUNT = 5
 
 // A project that a list of projects has loaded, or undefined. The lists are the pages of the
@@ -63,10 +65,27 @@ export function useProjectList(status: ProjectStatus, filters: ProjectFilters) {
   })
 }
 
-/** The active projects with the latest activity, for the menus that open a project. */
-export function useRecentProjects() {
+/**
+ * The active projects with the latest activity, as many as `count`, for the menus and the lists
+ * that open a project and lead to the others, narrowed by the filters.
+ */
+export function useRecentProjects(count = RECENT_COUNT, filters = noProjectFilters) {
   return useQuery({
-    queryKey: projectKeys.recent(),
-    queryFn: async () => (await listProjects('active', null, RECENT_COUNT)).items,
+    queryKey: projectKeys.recent(count, filters),
+    queryFn: async () => (await listProjects('active', null, count, filters)).items,
   })
+}
+
+/**
+ * The projects of the user with one status whose name holds the search, the latest activity first,
+ * among the pages loaded so far: the list has no search of its own, so `projects`, the query, loads
+ * the next page on demand. `matching` holds every loaded project for no search.
+ */
+export function useProjectSearch(
+  status: ProjectStatus,
+  search: string,
+  filters = noProjectFilters,
+) {
+  const projects = useProjectList(status, filters)
+  return { projects, matching: projectsMatching(pageItems(projects.data), search) }
 }

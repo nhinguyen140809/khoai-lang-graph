@@ -3,15 +3,18 @@
 import { ArchiveIcon } from 'lucide-react'
 import { Suspense, useId, useState } from 'react'
 
-import { projectMessages, type ProjectStatus } from '@/modules/project/entities'
+import {
+  projectFiltersOf,
+  projectMessages,
+  type ProjectStatus,
+  useProjectFilterFields,
+} from '@/modules/project/entities'
 import { NewProjectDialog, NewProjectPrompt } from '@/modules/project/features/create'
 import { FilterMenu, useFilters } from '@/shared/components/filter'
 import { LoadingState } from '@/shared/components/state'
 import { ScrollArea } from '@/shared/components/ui/scroll-area'
 import { Toggle } from '@/shared/components/ui/toggle'
 
-import { projectFiltersOf } from '../project-filters.utils'
-import { useProjectFilterFields } from '../useProjectFilterFields'
 import { ProjectTable } from './ProjectTable'
 
 /**

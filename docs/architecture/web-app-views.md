@@ -48,7 +48,7 @@ The drivers, from the most important:
 | Wording | About 20 `constants` files hold a `Wording` for each value (run status, stage status, item status, value labels, ...). The sentences of the widgets (`activityChatMessages`, ...) are plain strings in the words of the user view | The values already have both words. The sentences have one |
 | View as behavior | Five places in `activity` branch on the view for content, not for words: `useRunEntries` and `activity-entries.utils.ts` (a phase without a stage title is dropped in the user view), `PhaseEntryView` (stage title or node ids), `WrittenEntryView`, `RunActivity`, `ProgressSection` | The chat already knows how to be shown to two readers |
 | Frame | `shared/components/frame/`: `Workbench` (top bar, activity bar, side panel, tabs, status bar, command palette), filled by `src/app/` through `crumb`, `destinations` and `contributions` | The frame holds no object of the product. A second frame can be filled the same way |
-| Routes | `app/(auth)`, `app/(home)`, `app/(project)/projects/[projectId]/...`; `shared/routes/` writes every address once, checked by `typedRoutes` | One tree. A page file is 5 to 15 lines: it places a widget |
+| Routes | `app/(auth)`, `app/(home)`, `app/(project)/projects/[projectId]/...`; `shared/routes/` writes every address once, checked by `typedRoutes` | One area. A page file is 5 to 15 lines: it places a widget |
 | Chat | `activity/widgets/chat`: `ActivityPage` registers an editor tab (`useEditorTab`) and then draws the chat. `MessageEntry`, `WrittenEntryView` and `PendingReview` open a document or an item with `useOpenPage` of the frame and `routes.project(id).document(...)` / `.item(...)` | Three couplings to the workbench: the tab, the opener, and the addresses of pages that the user view will not have |
 | Session | httpOnly cookie, `Secure`, `SameSite=Lax`, set by the login endpoint. The browser calls `/api` on its own origin; Next.js rewrites it to the backend. The stream is an `EventSource` with the same cookie | The cookie belongs to one host unless the backend sets its `Domain` |
 | Server | No `proxy.ts` (the file that Next.js 16 runs before a request, called `middleware.ts` before). Next.js 16.3, `cacheComponents: true`, `typedRoutes: true` | Nothing reads the host today |
@@ -96,18 +96,18 @@ The drivers, from the most important:
 |---|---|---|---|---|
 | A. Two apps in a workspace | `apps/dev`, `apps/user`, and `modules/` + `shared/` moved to packages | Good, after the move to packages | Two dev servers to see both, two builds, two typechecks. The move touches every import | Full |
 | B. One app, built twice | A build variable chooses the page files (`pageExtensions`: `page.dev.tsx`, `page.user.tsx`) | Good | Two builds, two route type sets, two dev servers to see both | Full |
-| C. One app, one build, two trees | Both route trees in one `src/app/`; the host chooses the tree at request time | Good, nothing moves out of `src/` | One of each | Full |
-| D. One app, one tree | Each layout and page reads the host and draws one of two frames | Good | One of each | Poor: a route that one view lacks needs a guard, and every layout branches |
+| C. One app, one build, two areas | Both route areas in one `src/app/`; the host chooses the area at request time | Good, nothing moves out of `src/` | One of each | Full |
+| D. One app, one area | Each layout and page reads the host and draws one of two frames | Good | One of each | Poor: a route that one view lacks needs a guard, and every layout branches |
 
 **Evaluation**
 
 - A and B keep the code of one view out of the bundle of the other. C does nearly the same for free: Next.js splits the code by route, so the browser of a user never loads the workbench, the graph or the tabs.
 - D breaks D1: the layout of a project would import both frames and choose, and reading the host in a layout makes the route dynamic.
-- C fits how the code is already cut: the app layer only places widgets, so a second tree is a second set of small layout and page files.
+- C fits how the code is already cut: the app layer only places widgets, so a second area is a second set of small layout and page files.
 
 **Decision (Proposed):** C.
 
-**Trade-offs:** both trees ship in one deployment, so the user host can never be deployed alone. A person who knows the developer host can open it; that is fine under R7.
+**Trade-offs:** both areas ship in one deployment, so the user host can never be deployed alone. A person who knows the developer host can open it; that is fine under R7.
 
 **Discussion**
 
@@ -115,22 +115,22 @@ The drivers, from the most important:
 
 ## 6. Decision 3: how a host reaches its screens
 
-**Requirement:** `dev.khoai.ai/projects/1/activity` and `khoai.ai/projects/1` are served by two different trees, and neither address names the view.
+**Requirement:** `dev.khoai.ai/projects/1/activity` and `khoai.ai/projects/1` are served by two different areas, and neither address names the view.
 
 **Options**
 
 | Option | How |
 |---|---|
 | A. `rewrites` of `next.config.ts` with `has: [{ type: 'host' }]` | Static rules: a request to the developer host is rewritten to `/developer/:path*`, the others to `/user/:path*` |
-| B. `src/proxy.ts` | Code that reads the host, finds the view in a table, and rewrites the path to the tree of that view |
+| B. `src/proxy.ts` | Code that reads the host, finds the view in a table, and rewrites the path to the area of that view |
 
-In both, the tree is a real top folder that the address bar never shows:
+In both, the area is a real top folder that the address bar never shows:
 
 ```text
 src/app/
 ├── layout.tsx                 # html, body, Providers
 ├── (auth)/                    # login, register: the same on both hosts, not rewritten
-├── developer/                 # the tree of today, moved with git mv
+├── developer/                 # the area of today, moved with git mv
 │   ├── layout.tsx             # <ViewProvider value="developer">
 │   ├── (home)/                # projects, settings (Workbench + UntabbedWorkspace)
 │   └── (project)/projects/[projectId]/...
@@ -150,19 +150,19 @@ src/app/
 
 **Trade-offs:** one more moving part on every request. The proxy must stay free of data reads.
 
-**Spike (2026-11-11), on `feat/fe/activity-and-ratings`, dev server with mocks.** The tree of today moved under `app/developer/`, a two-page `app/user/`, and a `proxy.ts` of 20 lines that rewrites by host:
+**Spike (2026-11-11), on `feat/fe/activity-and-ratings`, dev server with mocks.** The area of today moved under `app/developer/`, a two-page `app/user/`, and a `proxy.ts` of 20 lines that rewrites by host:
 
 | Check | Result |
 |---|---|
-| `localhost:3111/` and `/projects/abc` | The user tree answers |
+| `localhost:3111/` and `/projects/abc` | The user area answers |
 | `dev.localhost:3111/` | Redirects to `/projects`, then the workbench with the project table |
-| `localhost:3111/projects` (a page only the developer tree has) | 404 |
+| `localhost:3111/projects` (a page only the developer area has) | 404 |
 | `/developer/projects` asked directly | 404 |
 | `/login` on both hosts | The same page, not rewritten |
 | A click on a link, on each host (headless browser) | The address stays without a prefix; the RSC request of the navigation goes to the public path and the proxy rewrites it; the tabs of the workbench work |
 | Cost of the proxy | 1 to 2 ms per request |
 
-Covered afterwards, in the build of the setup itself: a production build passes, the pages stay static or partly prerendered, and the prefetch of a link asks the address without the folder and gets 200 through the proxy. The dev error "Could not validate that a segment in your UI has instant navigation", which showed for `developer/(home)/layout.tsx` and for the user tree. showed before the move too: with the mocks, the provider that starts them renders nothing on the server, so every layout and page must set `export const instant = false`, and some did not. They do now.
+Covered afterwards, in the build of the setup itself: a production build passes, the pages stay static or partly prerendered, and the prefetch of a link asks the address without the folder and gets 200 through the proxy. The dev error "Could not validate that a segment in your UI has instant navigation", which showed for `developer/(home)/layout.tsx` and for the user area. showed before the move too: with the mocks, the provider that starts them renders nothing on the server, so every layout and page must set `export const instant = false`, and some did not. They do now.
 
 **Discussion**
 
@@ -174,8 +174,8 @@ Covered afterwards, in the build of the setup itself: a production build passes,
 
 | Page | Developer host | User host |
 |---|---|---|
-| Start | `/` -> `/projects` | `/`: a prompt that starts a project, and the recent projects |
-| Projects | `/projects` (table) | In the side list of the frame; no page |
+| Start | `/` -> `/projects` | `/`: a prompt that starts a project; the projects are in the side list |
+| Projects | `/projects` (table) | The latest in the side list of the frame, with View all to `/recents`: every project, with the tabs Active and Archived and a search |
 | A project | `/projects/[id]` -> `/projects/[id]/activity` | `/projects/[id]`: the chat |
 | Documents, items | `/projects/[id]/documents/...`, `/projects/[id]/items/[itemId]` | None at first (see [Decision 8](#11-decision-8-what-the-user-view-shows-of-documents-and-reviews)) |
 | Trace | `/projects/[id]/trace/...` | None |
@@ -183,11 +183,11 @@ Covered afterwards, in the build of the setup itself: a production build passes,
 | Login, register | `/login`, `/register` | The same pages |
 | Design system | `/design-system` | None |
 
-**The address helper.** With two trees, `typedRoutes` knows `/developer/projects/[projectId]/activity`, but a link must carry `/projects/1/activity`. Options:
+**The address helper.** With two areas, `typedRoutes` knows `/developer/projects/[projectId]/activity`, but a link must carry `/projects/1/activity`. Options:
 
 | Option | How | Cost |
 |---|---|---|
-| A. Two route maps | `shared/routes/` gives `developerRoutes` and `userRoutes`. Each leaf still writes its whole path through `checkedRoute`, which checks the path with the folder of the tree and returns it without | The one cast that exists today stays in `typed-route.utils.ts`. `Link href` no longer rejects a hand-written path, so the lint rule "addresses come from `routes`" carries the check |
+| A. Two route maps | `shared/routes/` gives `developerRoutes` and `userRoutes`. Each leaf still writes its whole path through `checkedRoute`, which checks the path with the folder of the area and returns it without | The one cast that exists today stays in `typed-route.utils.ts`. `Link href` no longer rejects a hand-written path, so the lint rule "addresses come from `routes`" carries the check |
 | B. Turn `typedRoutes` off | Plain strings | Loses the check that a page exists |
 
 **Decision (Proposed):** A. Code that belongs to one frame imports the map of that frame. Code shared by both frames (the chat) imports neither: it gets what it needs from the app layer ([Decision 7](#10-decision-7-reusing-the-chat-of-activity)).
@@ -202,7 +202,7 @@ A link across views is an absolute address: `hostOf(view)` from the env config, 
 
 ## 8. Decision 5: where the view comes from, and the wording
 
-**The view.** It stops being a setting. Each tree states its view in its root layout (`<ViewProvider value="developer">` in `app/developer/layout.tsx`), so no component reads the host and nothing becomes dynamic. `Providers` no longer mounts `ViewProvider`; the auth pages take the default.
+**The view.** It stops being a setting. Each area states its view in its root layout (`<ViewProvider value="developer">` in `app/developer/layout.tsx`), so no component reads the host and nothing becomes dynamic. `Providers` no longer mounts `ViewProvider`; the auth pages take the default.
 
 **The wording (Decided).** The constants are rewritten:
 
@@ -246,6 +246,8 @@ A link across views is an absolute address: `hostOf(view)` from the env config, 
 
 **Decision (Proposed):** A first, since it moves no file; B when the common part grows past the palette.
 
+**As built (2026-11-17):** one folder, `shared/components/frame/`, holds both frames by part, the way the workbench was already cut: `layouts/` has `Workbench` and `Desk`, the frame of the user view, named as the workbench is, by what it is; `bars/` has the bars of both, and `sidebar/` the side list of the desk beside `panels/` and `tabs/`. The bar of the desk holds no content of its own: the pages place their items in it, as in the status bar. The index gives both frames; ESLint lets the user area import only the names of the desk, and keeps them out of the developer area.
+
 **New widgets for the user frame** (in the modules that own the objects):
 
 | Widget | Module | What it is |
@@ -272,7 +274,7 @@ A link across views is an absolute address: `hostOf(view)` from the env config, 
 | `MessageEntry`, `WrittenEntryView`, `PendingReview` call `useOpenPage` and build `routes.project(id).document(...)` / `.item(...)` | The chat takes "what happens when a reference is chosen" from the app layer: a prop of `ActivityChat` carried by `RunActivityContext`, such as `openReference(ref)`. The developer page gives the opener of the workbench. The user page gives its own, or none, and then a reference shows as text |
 | `ActivityPrompt` shows the run settings button; `ActivityDialogs` is mounted by the project layout | A slot or a flag on the prompt. The user view probably hides the run settings and uses the defaults |
 
-**What already works for both:** `useRunEntries` and the entry components branch on `useView()` for content, and the view now comes from the tree, so the user view gets stage titles and the developer view gets node ids with no new code.
+**What already works for both:** `useRunEntries` and the entry components branch on `useView()` for content, and the view now comes from the area, so the user view gets stage titles and the developer view gets node ids with no new code.
 
 **Options for the place of the chat**
 
@@ -299,7 +301,7 @@ This is a product question more than a code question, and it decides how much of
 |---|---|---|
 | A. Nothing but the chat | The agent's summary in the message, the options and the questions | None. A review of a document the person cannot read is weak |
 | B. A read-only sheet beside the chat | Choosing a reference opens the document in a panel that slides over, with no tree, no tabs, no Trace | `artifact/entities/components` already draw a document and an item. A small widget and the `openReference` of Decision 7 |
-| C. A plain page | `/projects/[id]/documents/[artifactId]` on the user host, read-only | One route in the user tree and the same views |
+| C. A plain page | `/projects/[id]/documents/[artifactId]` on the user host, read-only | One route in the user area and the same views |
 | D. A link to the developer host | The reference opens the workbench | Only the cross-view link. Breaks the idea of a simple view |
 
 **Decision (Decided):** B, a read-only sheet that opens beside the chat. Editing items before answering (`allow_edits`) stays in the developer view until we see a user ask for it.
@@ -317,7 +319,7 @@ Each step is one PR and leaves the app working.
 | Step | Change | What changes on screen |
 |---|---|---|
 | 1 | Spike of Decision 3 (done, see its results there) | Nothing (not merged) |
-| 2 | `proxy.ts` with the host rule; `git mv` the tree of today under `app/developer/`; `developerRoutes`; `ViewProvider` in the tree layout; the constants rewritten as in Decision 5 | Nothing: the developer view reads the words of today |
+| 2 | `proxy.ts` with the host rule; `git mv` the area of today under `app/developer/`; `developerRoutes`; `ViewProvider` in the area layout; the constants rewritten as in Decision 5 | Nothing: the developer view reads the words of today |
 | 3 | Split `ActivityChat` from `ActivityPage`; `openReference` through the context; the prompt slot | Nothing |
 | 4 | `ChatFrame`, the side list, `app/user/` with the start page and the chat of a project; `userRoutes` | The user host exists |
 | 5 | The read-only sheet of Decision 8 beside the chat | A reference of the chat opens its document |
@@ -339,7 +341,7 @@ Docs to update with step 2: [Web App Modules](web-app-modules.md) sections 1 and
 - **Session in development.** A cookie does not see the port, and a cookie of `localhost` is host-only, so `localhost` and `dev.localhost` each keep their own session: sign in once on each. With the mocks there is no login to do.
 - **Unit tests.** The render helper wraps a screen in `ViewProvider`; a test of a shared slice names its view.
 - **E2E and screenshots.** The specs of today run at `dev.localhost`; a spec of the user view names `localhost`. One server serves both.
-- **Machine.** One dev server, one build, one typecheck, as today. The route types grow by the pages of the user tree.
+- **Machine.** One dev server, one build, one typecheck, as today. The route types grow by the pages of the user area.
 - **Deployment.** One deployment with two host names. The backend gets the cookie `Domain` and the two origins in its allowed list if it checks the `Origin` header for CSRF.
 
 ## 14. Open questions
@@ -358,10 +360,10 @@ Docs to update with step 2: [Web App Modules](web-app-modules.md) sections 1 and
 | # | Decision | Status | Date |
 |---|---|---|---|
 | 1 | Two hosts of one domain, shared session cookie | Proposed | - |
-| 2 | One app, one build, two route trees | Proposed | - |
+| 2 | One app, one build, two route areas | Proposed | - |
 | 3 | `proxy.ts` rewrites by host to a hidden top folder, no view override | Built, see the [plan](../frontend-v-two-views-plan.md) | 2026-11-11 |
 | 4 | One route map per view; shared code imports none | Proposed | - |
-| 5 | The tree states its view; the words of today become the developer words; `user` is optional and falls back | Decided | 2026-11-11 |
+| 5 | The area states its view; the words of today become the developer words; `user` is optional and falls back | Decided | 2026-11-11 |
 | 6 | A second frame in shared code, filled by `app/user/` | Proposed | - |
 | 7 | The chat stays in `activity`, split from the tab, with `openReference` from above | Proposed | - |
 | 8 | A read-only sheet beside the chat | Decided | 2026-11-11 |

@@ -9,6 +9,7 @@ import {
 } from '../lib/imports/frame-patterns.constants.js'
 import { restrictImports } from '../lib/imports/restrict-imports.utils.js'
 import { sharedCodePatterns } from '../lib/imports/shared-patterns.constants.js'
+import { viewAreaPattern } from '../lib/imports/area-patterns.constants.js'
 import { wrappedLibraryImports } from '../lib/imports/wrapped-libraries.constants.js'
 
 export default defineConfig([
@@ -54,5 +55,13 @@ export default defineConfig([
     // The wrappers in src/shared/components/ui import the libraries they wrap.
     files: ['src/shared/components/ui/**/*.{ts,tsx}'],
     rules: restrictImports({ patterns: sharedCodePatterns }),
+  },
+  {
+    // The route helper writes the address of a page without the folder of the area that holds it.
+    files: ['src/shared/routes/typed-route/**/*.ts'],
+    rules: restrictImports({
+      paths: wrappedLibraryImports,
+      patterns: sharedCodePatterns.filter((pattern) => pattern !== viewAreaPattern),
+    }),
   },
 ])

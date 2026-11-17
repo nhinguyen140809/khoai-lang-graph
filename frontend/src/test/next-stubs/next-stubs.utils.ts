@@ -46,15 +46,21 @@ export const navigationMock = {
   useParams: () => params,
 }
 
-type LinkProps = AnchorHTMLAttributes<HTMLAnchorElement> & { href: string; children?: ReactNode }
+type LinkProps = AnchorHTMLAttributes<HTMLAnchorElement> & {
+  href: string
+  children?: ReactNode
+  /** Whether the page scrolls to the top after the navigation; the anchor keeps it as `data-scroll`. */
+  scroll?: boolean
+}
 
 export const linkMock = {
   // A plain anchor; jsdom cannot navigate, so the default action is prevented after onClick.
-  default: ({ href, children, onClick, ...props }: LinkProps) =>
+  default: ({ href, children, onClick, scroll, ...props }: LinkProps) =>
     createElement(
       'a',
       {
         href,
+        'data-scroll': scroll === undefined ? undefined : String(scroll),
         ...props,
         onClick: (event: MouseEvent<HTMLAnchorElement>) => {
           onClick?.(event)

@@ -1,9 +1,9 @@
 import { type NextRequest, NextResponse } from 'next/server'
 
-import { isTreePath, treePathOf, viewOfHost } from '@/shared/lib/view-tree'
+import { areaPathOf, isAreaPath, viewOfHost } from '@/shared/routes/hosts'
 
 // The pages that every view has, which no folder of a view holds.
-const SHARED_PAGES: readonly string[] = ['/login', '/register']
+const SHARED_PAGES: readonly string[] = ['/login', '/register', '/views']
 
 // A path that no page has, so that the app answers it as not found.
 const NO_PAGE = '/no-page'
@@ -19,9 +19,9 @@ export function proxy(request: NextRequest) {
   if (SHARED_PAGES.includes(pathname)) return NextResponse.next()
 
   const url = request.nextUrl.clone()
-  url.pathname = isTreePath(pathname)
+  url.pathname = isAreaPath(pathname)
     ? NO_PAGE
-    : treePathOf(viewOfHost(request.headers.get('host')), pathname)
+    : areaPathOf(viewOfHost(request.headers.get('host')), pathname)
   return NextResponse.rewrite(url)
 }
 
