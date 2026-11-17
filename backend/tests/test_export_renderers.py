@@ -213,3 +213,19 @@ def test_a_template_in_a_supported_format_renders_bytes(template: str, fmt: str)
 
     assert isinstance(content, bytes)
     assert content.endswith(b"\n")
+
+
+def test_text_is_the_markdown_without_its_marks() -> None:
+    rendered = renderers.txt(DATA)
+
+    assert "Requirement specification" in rendered
+    assert "**" not in rendered
+    assert not rendered.lstrip().startswith("#")
+    assert "Statement of" in rendered
+
+
+def test_pdf_is_a_document_a_reader_opens() -> None:
+    rendered = renderers.render("requirement_specification", "pdf", DATA)
+
+    assert rendered.startswith(b"%PDF-")
+    assert len(rendered) > 1000

@@ -26,15 +26,21 @@ import json
 import time
 from collections.abc import Callable, Mapping, Sequence
 from functools import wraps
-from typing import TYPE_CHECKING, Any, TypeVar, cast
+from typing import TYPE_CHECKING, Any, Literal, TypeVar, cast
 
 import structlog
-from langchain_core.messages import AIMessage, BaseMessage
+from langchain_core.messages import AIMessage, BaseMessage, HumanMessage
 from langchain_core.runnables import RunnableConfig
+from langchain_core.tools import StructuredTool
 from pydantic import BaseModel
 
 from khoailanggraph.agents import prompts as prompt_loader
-from khoailanggraph.agents.requirements_engineering import corpus_search, orchestrator, review
+from khoailanggraph.agents.requirements_engineering import (
+    agent_loop,
+    corpus_search,
+    orchestrator,
+    review,
+)
 from khoailanggraph.agents.requirements_engineering.decisions import (
     AppliedDecision,
     DecisionResult,
@@ -241,9 +247,22 @@ def _invoke[T: BaseModel](
             on_text=None if gate is None else (lambda text: gate.record_text(role, text))
         )
         started = time.monotonic()
+        ask = messages
+        if attempt:
+            # The retry carries the reason the last answer was refused: the same prompt buys
+            # the same answer, a prompt with the error buys a corrected one.
+            ask = [
+                *messages,
+                HumanMessage(
+                    content=(
+                        f"The previous answer was refused: {type(last_error).__name__}: "
+                        f"{str(last_error)[:300]}. Answer again, in the required format."
+                    )
+                ),
+            ]
         try:
             answer = model.with_structured_output(schema).invoke(
-                messages, config={"callbacks": [handler]}
+                ask, config={"callbacks": [handler]}
             )
             if not isinstance(answer, schema):
                 msg = f"{role} returned {type(answer).__name__}, expected {schema.__name__}"
@@ -252,6 +271,7 @@ def _invoke[T: BaseModel](
         except Exception as exc:
             last_error = exc
             if attempt < _LLM_PARSE_ATTEMPTS - 1:
+                time.sleep(0.5 * (attempt + 1))
                 logger.warning(
                     "llm retry",
                     role=role,
@@ -269,6 +289,52 @@ def _invoke[T: BaseModel](
         raise RuntimeError(msg)
     raise last_error
 
+
+
+
+# How many rounds each node may use. A node that reads a few items settles in one or two
+# rounds; the ones that check a long artifact get one more. The cap is what keeps an agent from
+# reading the same list for ten rounds.
+ROLE_MAX_ROUNDS = {
+    "planner": 2,
+    "analyst": 2,
+    "persona_generator": 3,
+    "requirement_engineer": 3,
+    "backlog_manager": 2,
+    "validator": 3,
+}
+
+
+def _invoke_agent[T: BaseModel](
+    role: str,
+    config: Mapping[str, Any] | RunnableConfig | None,
+    schema: type[T],
+    prompt_values: Mapping[str, str],
+    tools: list[Any],
+    max_rounds: int | None = None,
+) -> T:
+    """Run the role as an agent: its own prompt, its tools, and a `finish` call that carries the
+    structured output of the node."""
+    entry = definition_agent_roles().get(role)
+    if entry is None:
+        msg = f"role '{role}' has no agent_roles entry in the workflow definition"
+        raise ValueError(msg)
+    prompt = prompt_loader.load_cached(PROMPTS_PACKAGE, role, int(entry["prompt_version"]))
+    messages = prompt_loader.assemble_prompt(prompt, prompt_values)
+    sink = _configurable(config).get("artifact_sink")
+    return agent_loop.run_agent(
+        role=role,
+        model=get_chat_model(role, config),
+        messages=messages,
+        finish=schema,
+        tools=tools,
+        gate=cast("LlmGate | None", _configurable(config).get("llm_gate")),
+        model_id=resolve_model_id(role, cast("Mapping[str, Any]", config)),
+        max_rounds=max_rounds or ROLE_MAX_ROUNDS.get(role, agent_loop.MAX_ROUNDS),
+        on_tool=None
+        if sink is None
+        else (lambda note: sink.add_notes([note])),
+    )
 
 def _chat_turn(
     role: str,
@@ -382,6 +448,13 @@ def match_plan_value(value: str, allowed: Sequence[str]) -> str | None:
         return value
     lowered = _plan_term(value)
     candidates = [(term, _plan_term(term)) for term in allowed]
+    # A plan term carries its reason after ", because"; the name is what stands before it, and
+    # a value that shortens the term to its name is the same term.
+    candidates += [
+        (term, _plan_term(term.split(", because")[0]))
+        for term in allowed
+        if ", because" in term
+    ]
     for original, candidate in candidates:
         if candidate == lowered:
             return original
@@ -614,11 +687,15 @@ def planner_node(
                 "review_briefs": _plan_brief(state, asked.questions),
                 "current_stage": "planning",
             }
-    plan: PlannerOutput = _invoke(
+    plan: PlannerOutput = _invoke_agent(
         "planner",
         config or {},
         PlannerOutput,
         {**context, "task": PLANNER_PLAN_TASK},
+        tools=_reader_tools(
+            _document_sources(config, str(state["project_id"])),
+            what="project documents",
+        ),
     )
     created = sink.create_artifact(
         state["project_id"],
@@ -783,6 +860,21 @@ def corpus_builder_node(
     if outside:
         msg = f"corpus builder selected invented documents: {outside}"
         raise ValueError(msg)
+    # A document with no body text cannot be mined: the miner needs words to quote, and a page
+    # whose text is a title alone would leave the persona step without a single observation.
+    kept = [
+        source
+        for source in draft.sources
+        if str(source.url).startswith("upload://")
+        or source.origin == "upload"
+        or len(str(source.text).strip()) >= MIN_SOURCE_TEXT
+    ]
+    if len(kept) != len(draft.sources):
+        logger.warning(
+            "corpus sources dropped: no text to mine",
+            dropped=[str(source.url) for source in draft.sources if source not in kept],
+        )
+        draft.sources = kept
 
     if not draft.sources and hits:
         # The model kept nothing although the search answered (seen on thin
@@ -814,7 +906,7 @@ def corpus_builder_node(
         )
     if not draft.sources:
         msg = (
-            "research found no source document to mine: the web search returned "
+            "research found no source document with text to mine: the web search returned "
             f"{len(hits)} usable result(s). Upload documents to the project or set "
             "TAVILY_API_KEY, then run again"
         )
@@ -1009,6 +1101,18 @@ def stakeholder_miner_node(
     }
 
 
+
+def _persona_quotas(types_in_order: list[str], total: int) -> dict[str, int]:
+    """N personas over T types: every type gets N // T, the remainder goes in plan order."""
+    if not types_in_order:
+        return {}
+    base, extra = divmod(max(total, 0), len(types_in_order))
+    return {
+        name: base + (1 if index < extra else 0)
+        for index, name in enumerate(types_in_order)
+    }
+
+
 def _check_groups(
     draft: GeneratorOutputV2,
     known_observations: dict[str, ItemRecord],
@@ -1110,7 +1214,7 @@ def persona_generator_node(
     aspects = persona_aspect_list(
         cast("dict[str, Any]", plan_record["content"]) if plan_record is not None else None
     )
-    draft: GeneratorOutputV2 = _invoke(
+    draft: GeneratorOutputV2 = _invoke_agent(
         "persona_generator",
         config or {},
         generator_output_for(sorted(known_observations), [entry["key"] for entry in aspects]),
@@ -1126,6 +1230,9 @@ def persona_generator_node(
             "aspects": aspect_lines(aspects),
             "target_personas_num": str(cfg.parameters.target_personas_num),
         },
+        tools=_reader_tools(
+            {"observation": _item_source(observation_records)}, what="mined observations"
+        ),
     )
 
     if plan_record is not None:
@@ -1153,8 +1260,44 @@ def persona_generator_node(
             f"{len(draft.personas)} personas, grounded in {len(observation_records)} observations"
         ),
     )
-    personas: list[ItemRefDict] = []
+    # The plan's types are the lawful vocabulary of a persona, and the evidence must speak for
+    # the type the persona claims. Then the personas are spread over the types: N over T, the
+    # remainder in plan order, so one loud group cannot fill the catalog.
+    typed: list[tuple[Any, str]] = []
     for persona_draft in draft.personas:
+        if not allowed:
+            typed.append((persona_draft, ""))
+            continue
+        matched_type = match_plan_value(str(persona_draft.stakeholder_type), allowed)
+        if matched_type is None:
+            logger.warning(
+                "persona skipped: stakeholder_type outside plan",
+                name=str(getattr(persona_draft, "name", "?")),
+                stakeholder_type=str(persona_draft.stakeholder_type),
+                plan_types=sorted(allowed),
+            )
+            continue
+        typed.append((persona_draft, matched_type))
+    if allowed and typed:
+        present = [name for name in allowed if any(matched == name for _, matched in typed)]
+        quotas = _persona_quotas(present, cfg.parameters.target_personas_num)
+        taken: dict[str, int] = {}
+        kept: list[tuple[Any, str]] = []
+        for persona_draft, matched_type in typed:
+            taken[matched_type] = taken.get(matched_type, 0) + 1
+            if taken[matched_type] > quotas.get(matched_type, 0):
+                logger.warning(
+                    "persona skipped: the type already has its share",
+                    name=str(getattr(persona_draft, "name", "?")),
+                    stakeholder_type=matched_type,
+                    quota=quotas.get(matched_type, 0),
+                )
+                continue
+            kept.append((persona_draft, matched_type))
+        typed = kept
+
+    personas: list[ItemRefDict] = []
+    for persona_draft, _matched_type in typed:
         # The generator sometimes cites a key it invented (INTENT-001) or alters
         # the quote when the corpus is thin. Drop what cannot be grounded; a
         # persona left without evidence is skipped instead of failing the run.
@@ -1189,7 +1332,7 @@ def persona_generator_node(
             for score in content.get("scores", [])
         ]
         if allowed:
-            matched = match_plan_value(str(content.get("stakeholder_type", "")), allowed)
+            matched = _matched_type or match_plan_value(str(content.get("stakeholder_type", "")), allowed)
             if matched is None:
                 # The plan's stakeholder_types are the lawful vocabulary: a
                 # persona typed outside it is skipped (logged) — the evidence
@@ -1315,6 +1458,15 @@ def _ask_interviewer(
     if plan is not None:
         plan_lines = plan_lines_of(plan)
     data_items = plan_data_items(plan)
+    focus = _persona_focus(plan, persona)
+    coverage = coverage_lines(data_items, messages)
+    if focus:
+        coverage = (
+            f"{focus}\n"
+            "Do not stop before at least two topics have data, unless this persona cannot "
+            "speak to any other.\n"
+            f"{coverage}"
+        )
     turn: InterviewerTurnOutput = _invoke(
         "interviewer",
         config,
@@ -1326,7 +1478,7 @@ def _ask_interviewer(
         {
             "output_language": _language(cfg),
             "plan": plan_lines,
-            "coverage": coverage_lines(data_items, messages),
+            "coverage": coverage,
             "persona": json.dumps(prompt_view(persona), ensure_ascii=False),
             "transcript": "\n".join(transcript_lines(persona["key"], messages[-TRANSCRIPT_TAIL:]))
             or "(none yet; this is the opening turn)",
@@ -1533,6 +1685,26 @@ def interviewer_node(
             "interview_transcripts": _merge_transcripts(state, transcript),
             "current_stage": "interviewing",
         }
+
+
+
+def _persona_focus(plan: Mapping[str, Any] | None, persona: ItemRecord) -> str:
+    """The topics this persona's own evidence touches, strongest first.
+
+    The interviewer is told to work by what is missing for this persona, but with an empty
+    transcript the first question tends to follow the plan's order. This line makes the opener
+    the persona's own: the topics whose words its background and evidence already use.
+    """
+    topics = [str(topic) for topic in (plan or {}).get("topics", [])]
+    if not topics:
+        return ""
+    material = json.dumps(persona["content"], ensure_ascii=False)
+    words = _content_words(material)
+    scored = sorted(((len(_content_words(topic) & words), topic) for topic in topics), reverse=True)
+    best = [topic for score, topic in scored[:3] if score]
+    if not best:
+        return ""
+    return "This persona's own evidence speaks most about: " + "; ".join(best) + "."
 
 
 def plan_data_items(plan: Mapping[str, Any] | None) -> list[str]:
@@ -1883,6 +2055,99 @@ def _keep_valid[RefT: str | ItemLink](
     return kept
 
 
+
+
+def _item_source(items: list[ItemRecord]) -> dict[str, str]:
+    """One shelf of the reader: an item key, and what the model reads of it."""
+    return {
+        str(entry["key"]): f"({entry['kind']}) "
+        + json.dumps(entry["content"], ensure_ascii=False)
+        for entry in items
+    }
+
+
+def _transcript_sources(
+    state: REState, sink: ArtifactSink, personas: list[Any]
+) -> dict[str, dict[str, str]]:
+    """The interviews as a shelf of the reader: one persona key, its full transcript."""
+    shelf: dict[str, str] = {}
+    for persona in personas:
+        key = str(persona["key"])
+        record = sink.read_artifact(
+            state["project_id"], "interview_transcript", subject_id=persona["item_id"]
+        )
+        lines = (
+            transcript_lines(key, sink.read_items(record["artifact_id"]))
+            if record is not None
+            else []
+        )
+        shelf[key] = "\n".join(lines) or "(no interview)"
+    return {"transcript": shelf}
+
+
+def _document_sources(
+    config: Mapping[str, Any] | RunnableConfig | None, project_id: str
+) -> dict[str, dict[str, str]]:
+    """The uploaded documents as a shelf of the reader: the title of each, its text."""
+    documents_tool = _configurable(config).get("project_documents")
+    if documents_tool is None:
+        return {"document": {}}
+    try:
+        entries = documents_tool(project_id)
+    except Exception as exc:  # noqa: BLE001 - the model reads the failure as an empty shelf
+        logger.warning("documents unavailable", error=f"{type(exc).__name__}: {exc}")
+        return {"document": {}}
+    return {
+        "document": {
+            str(entry.get("title") or f"document-{index}"): str(entry.get("text", ""))[:4000]
+            for index, entry in enumerate(entries, start=1)
+        }
+    }
+
+
+def _reader_tools(
+    sources: dict[str, dict[str, str]],
+    *,
+    what: str,
+) -> list[Any]:
+    """The reading tools of a node, named the way the search tool is named.
+
+    One tool is `read` and one is `list`, whatever the node reads; `kind` says which shelf,
+    `keys` says which entries, and `note` carries the sentence the user sees in the step. The
+    tool name never changes across nodes, so the activity view can say "read 9 times" and show
+    the notes underneath, exactly as it does for the searches.
+    """
+    kinds = tuple(sources)
+    Kind = Literal[*kinds]  # noqa: N806 - a type built from the shelves of this node
+
+    def read(kind: Kind, keys: list[str], note: str = "") -> str:
+        shelf = sources.get(str(kind), {})
+        blocks = [f"{key}: {shelf[key]}" for key in keys if key in shelf]
+        missing = [key for key in keys if key not in shelf]
+        if missing:
+            blocks.append(f"No {kind} with key: {', '.join(missing)}")
+        return "\n\n".join(blocks) or "(no keys given; list them first with list)"
+
+    def list_items(kind: Kind, note: str = "") -> str:
+        shelf = sources.get(str(kind), {})
+        if not shelf:
+            return f"(no {kind})"
+        return "\n".join(f"{key} | {text[:160]}" for key, text in shelf.items())
+
+    read.__doc__ = (
+        f"Read one or more {what} by kind and key, all in one call. Put in `note` one short "
+        "sentence to the user about what you are reading and why."
+    )
+    list_items.__doc__ = (
+        f"List the {what} this step holds, by kind: the keys you may pass to read. Put in "
+        "`note` one short sentence to the user about why you need the list."
+    )
+    return [
+        StructuredTool.from_function(func=read, name="read", description=read.__doc__),
+        StructuredTool.from_function(func=list_items, name="list", description=list_items.__doc__),
+    ]
+
+
 @safe_node
 def analyst_node(
     state: REState,
@@ -1920,7 +2185,7 @@ def analyst_node(
     current_keys = {entry["key"]: dict(entry) for entry in current_items}
     current_lines = prompt_views(current_items) if current_items else "(empty)"
 
-    analysis: AnalystOutput = _invoke(
+    analysis: AnalystOutput = _invoke_agent(
         "analyst",
         runnable_config,
         AnalystOutput,
@@ -1932,6 +2197,7 @@ def analyst_node(
             "current_analysis": current_lines,
             "directive": _directive_for(state, runnable_config, "checkpoint_analysis"),
         },
+        tools=_reader_tools(_transcript_sources(state, sink, personas), what="interviews"),
     )
 
     if analysis_record is not None:
@@ -2158,6 +2424,32 @@ def _normalize_engineer_quality(draft: EngineerOutput) -> None:
             spec_draft.quality_category = None
 
 
+
+
+def _drop_unknown_engineer_refs(draft: EngineerOutput, known: Known) -> None:
+    """Keep every reference of the engineer to an item that exists.
+
+    A model that read the specification sometimes cites a key it imagined (REQ-093 when the
+    specification stops at REQ-044). A reference is a link, not evidence: an unknown one is
+    dropped with a warning, and the requirement itself still fails later if it has no lawful
+    parent at all.
+    """
+    for spec_draft in draft.requirements:
+        # depends_on is linked after every requirement of this draft is written, so those refs
+        # are not in `known` yet; only supersedes points at the items that already exist.
+        for field in ("supersedes",):
+            refs = list(getattr(spec_draft, field))
+            kept = [ref for ref in refs if known.get(_key_of(ref)) is not None]
+            if len(kept) == len(refs):
+                continue
+            logger.warning(
+                "engineer refs dropped",
+                requirement=str(spec_draft.ref),
+                field=field,
+                dropped=[_key_of(ref) for ref in refs if ref not in kept],
+            )
+            setattr(spec_draft, field, kept)
+
 def _normalize_engineer_derived_from(draft: EngineerOutput, known: Known) -> None:
     """Keep derived_from lawful: only analyzed_requirement refs.
 
@@ -2210,11 +2502,21 @@ def requirement_engineer_node(
     current_items = sink.read_items(spec_record["artifact_id"]) if spec_record else []
     current_keys = {entry["key"]: dict(entry) for entry in current_items}
     current_lines = prompt_views(current_items) if current_items else "(empty)"
+    for entry in current_items:
+        known.setdefault(
+            entry["key"],
+            {
+                "item_id": entry["item_id"],
+                "kind": entry["kind"],
+                "key": entry["key"],
+                "version": entry["version"],
+            },
+        )
 
     # Only verified analysis flows back into the law the way analyst.v1 demands.
     verified_lines = prompt_views(analysis_items) if analysis_items else "(none)"
 
-    draft: EngineerOutput = _invoke(
+    draft: EngineerOutput = _invoke_agent(
         "requirement_engineer",
         runnable_config,
         EngineerOutput,
@@ -2248,9 +2550,13 @@ def requirement_engineer_node(
                 _directive_for(state, runnable_config, "checkpoint_spec"),
             ),
         },
+        tools=_reader_tools(
+            {"analysis_item": _item_source(analysis_items)}, what="analysis items"
+        ),
     )
 
     _normalize_engineer_quality(draft)
+    _drop_unknown_engineer_refs(draft, known)
 
     # Gate point 2/3 — spec_type_priority_review: the bounded decision layer
     # (Jev/mock via DECISION_PROVIDER, off by default) reviews every
@@ -2407,7 +2713,7 @@ def backlog_manager_node(
     current_keys = {entry["key"]: dict(entry) for entry in current_items}
     current_lines = prompt_views(current_items) if current_items else "(empty)"
 
-    draft: BacklogOutput = _invoke(
+    draft: BacklogOutput = _invoke_agent(
         "backlog_manager",
         runnable_config,
         BacklogOutput,
@@ -2417,6 +2723,9 @@ def backlog_manager_node(
             "current_backlog": current_lines,
             "directive": _directive_for(state, runnable_config, "checkpoint_spec"),
         },
+        tools=_reader_tools(
+            {"spec_requirement": _item_source(spec_items)}, what="specification requirements"
+        ),
     )
 
     known: Known = {
@@ -2513,7 +2822,7 @@ def validator_node(
     ]
 
     iteration = int(state["iteration_count"]) + 1
-    draft: ValidatorOutput = _invoke(
+    draft: ValidatorOutput = _invoke_agent(
         "validator",
         runnable_config,
         ValidatorOutput,
@@ -2524,6 +2833,13 @@ def validator_node(
             "open_issues": prompt_views(open_issues) if open_issues else "(empty)",
             "iteration": str(iteration),
         },
+        tools=_reader_tools(
+            {
+                "spec_requirement": _item_source(spec_items),
+                "backlog_item": _item_source(backlog_items),
+            },
+            what="specification requirements and backlog items",
+        ),
     )
 
     # Gate point 3/3 — validation_status_review: the bounded decision layer
@@ -2777,6 +3093,13 @@ def make_checkpoint(
         if bool(chosen.get("approves")):
             for record in records:
                 sink.approve_artifact(record["artifact_id"])
+            if records:
+                logger.info(
+                    "checkpoint approved without review",
+                    node=node_id,
+                    verdict=str(outcome["option"]),
+                    artifacts=len(records),
+                )
         return {"checkpoint_outcomes": [outcome], "current_stage": stage}
 
     node.__name__ = node_id  # safe_node logs the wrapper under the node id
@@ -2799,6 +3122,8 @@ checkpoint_spec = make_checkpoint("checkpoint_spec", "requirement_specification"
 # keeping only this tail bounds them: the conversational nodes answer coherently
 # from the recent lines, and no late turn can outgrow the ceiling.
 TRANSCRIPT_TAIL = 8
+# A source the miner can quote from: a page with a body, not a title and a link.
+MIN_SOURCE_TEXT = 300
 
 
 # ---------------------------------------------------------------------------

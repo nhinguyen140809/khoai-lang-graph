@@ -118,7 +118,14 @@ export function LoadedDocument({
                 <RevisionContent target={target} view={history} fields={fields} />
               ) : undefined
             }
-            actions={<DocumentActionsMenu target={target} lockedReason={lockedReason} />}
+            actions={
+                <DocumentActionsMenu
+                  projectId={projectId}
+                  kind={document.artifact.kind}
+                  target={target}
+                  lockedReason={lockedReason}
+                />
+              }
             renderItemLink={(item, title) => (
               <PageLink href={project.item(item.id)}>{title}</PageLink>
             )}

@@ -4,7 +4,7 @@ import { z } from 'zod'
 // TODO: replace with the types generated into src/shared/api/generated/ once they exist.
 
 /** The file formats an export can produce. */
-export const exportFormats = ['markdown', 'pdf', 'docx', 'csv', 'json'] as const
+export const exportFormats = ['markdown', 'pdf', 'docx', 'csv', 'json', 'txt'] as const
 
 export type ExportFormat = (typeof exportFormats)[number]
 

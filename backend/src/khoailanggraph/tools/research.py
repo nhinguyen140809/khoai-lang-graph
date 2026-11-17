@@ -124,6 +124,29 @@ def tavily_research_search(
     return hits
 
 
+# A step that runs again asks the same questions of the same engines: a short-lived cache keeps
+# a retry from paying the web twice, while a fresh run after the TTL still sees the world.
+_CACHE_TTL_SECONDS = 600.0
+_CACHE: dict[tuple[str, ...], tuple[float, list[dict[str, Any]]]] = {}
+
+
+def _cached(search: ResearchSearch) -> ResearchSearch:
+    def wrapped(queries: Sequence[str], options: Mapping[str, Any] | None = None) -> list[dict[str, Any]]:
+        key = tuple(str(query) for query in queries)
+        now = time.monotonic()
+        hit = _CACHE.get(key)
+        if hit is not None and now - hit[0] < _CACHE_TTL_SECONDS:
+            return [dict(entry) for entry in hit[1]]
+        found = search(queries, options) if options else search(queries)
+        _CACHE[key] = (now, [dict(entry) for entry in found])
+        if len(_CACHE) > 64:
+            oldest = min(_CACHE, key=lambda candidate: _CACHE[candidate][0])
+            _CACHE.pop(oldest, None)
+        return found
+
+    return wrapped
+
+
 def make_research_search(settings: Settings) -> ResearchSearch:
     """The run's search tool: the web part plus the academic part.
 
@@ -143,7 +166,8 @@ def make_research_search(settings: Settings) -> ResearchSearch:
             queries, api_key=tavily_key, options=options
         )
     if not settings.research_academic:
-        return _filtered(web)
+        web_only = _filtered(web)
+        return web_only if settings.app_env == "test" else _cached(web_only)
     openalex_key = settings.openalex_api_key
     # The run refuses a tool call that outlasts its limit, so the sources work side by side and
     # the academic ones stop asking once their share of that limit is spent.
@@ -176,7 +200,7 @@ def make_research_search(settings: Settings) -> ResearchSearch:
                 hits.append(hit)
         return _kept_by_domain(hits, options)
 
-    return search
+    return search if settings.app_env == "test" else _cached(search)
 
 
 def _kept_by_domain(
@@ -204,6 +228,8 @@ def _filtered(
 
 
 _DDG_URL = "https://html.duckduckgo.com/html/"
+# The endpoint throttles and can stall; the encyclopedia answers within seconds behind it.
+_LIVE_WEB_BUDGET_S = 45.0
 _DDG_DELAY_S = 0.8
 _DDG_AGENT = (
     "Mozilla/5.0 (Macintosh; Intel Mac OS X 10_15_7) AppleWebKit/537.36 "
@@ -420,12 +446,17 @@ def _wiki_page_text(title: str) -> str:
 def live_research_search(queries: Sequence[str]) -> list[dict[str, Any]]:
     """The keyless live chain: DuckDuckGo's web results, Wikipedia when the
     open web answers with nothing (its anomaly page, a captive portal, ...)."""
-    # Wikipedia first: its API is fast and stable, while the DuckDuckGo HTML
-    # endpoint throttles and can stall a run for minutes.
-    hits = wikipedia_research_search(queries)
-    if hits:
-        return hits
-    return duckduckgo_research_search(queries)
+    # The web first: its pages report what people do, while an encyclopedia answers the words
+    # of the query and leaves the plan uncovered. Wikipedia is the fallback of a throttled day,
+    # and the web call runs on a budget so a stall cannot hold the run.
+    pool = ThreadPoolExecutor(max_workers=1)
+    future = pool.submit(duckduckgo_research_search, queries)
+    try:
+        hits = future.result(timeout=_LIVE_WEB_BUDGET_S)
+    except Exception:  # noqa: BLE001 - the keyless chain never fails a run on its own
+        hits = []
+    pool.shutdown(wait=False)
+    return hits or wikipedia_research_search(queries)
 
 
 def research_search_of(config: Mapping[str, Any]) -> ResearchSearch:
