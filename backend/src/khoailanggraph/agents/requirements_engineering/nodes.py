@@ -278,13 +278,26 @@ def _invoke[T: BaseModel](
 
 
 
+# How many rounds each node may use. A node that reads a few items settles in one or two
+# rounds; the ones that check a long artifact get one more. The cap is what keeps an agent from
+# reading the same list for ten rounds.
+ROLE_MAX_ROUNDS = {
+    "planner": 2,
+    "analyst": 2,
+    "persona_generator": 3,
+    "requirement_engineer": 3,
+    "backlog_manager": 2,
+    "validator": 3,
+}
+
+
 def _invoke_agent[T: BaseModel](
     role: str,
     config: Mapping[str, Any] | RunnableConfig | None,
     schema: type[T],
     prompt_values: Mapping[str, str],
     tools: list[Any],
-    max_rounds: int = agent_loop.MAX_ROUNDS,
+    max_rounds: int | None = None,
 ) -> T:
     """Run the role as an agent: its own prompt, its tools, and a `finish` call that carries the
     structured output of the node."""
@@ -302,7 +315,7 @@ def _invoke_agent[T: BaseModel](
         tools=tools,
         gate=cast("LlmGate | None", _configurable(config).get("llm_gate")),
         model_id=resolve_model_id(role, cast("Mapping[str, Any]", config)),
-        max_rounds=max_rounds,
+        max_rounds=max_rounds or ROLE_MAX_ROUNDS.get(role, agent_loop.MAX_ROUNDS),
     )
 
 def _chat_turn(
@@ -1171,8 +1184,11 @@ def persona_generator_node(
         },
         tools=_item_tools(
             observation_records,
-            noun="observation",
-            read_description="Read one mined observation by its key, for example OBS-001.",
+            name="observations",
+            read_description=(
+                "Read the mined observations whose keys you pass, all in one call, for "
+                "example [\"OBS-001\", \"OBS-002\"]."
+            ),
             list_description="List the mined observations with their keys and stakeholders.",
         ),
     )
@@ -1968,38 +1984,47 @@ def _transcript_tool(state: REState, sink: ArtifactSink, personas: list[Any]) ->
 def _item_tools(
     items: list[ItemRecord],
     *,
-    noun: str,
+    name: str,
     read_description: str,
     list_description: str,
 ) -> list[Any]:
-    """The reading tools of a node: one item by its key, or every key it may read.
+    """The reading tools of a node: one list of keys in one call, or every key it may read.
 
-    The prompt of a node carries its data already; the tools let the agent go back to one item
-    before it writes, instead of trusting its first reading of a long list.
+    The prompt of a node carries its data already; the tools let the agent go back to the items
+    before it writes, instead of trusting its first reading of a long list. Keys are read in
+    one call so that ten items cost one round, not ten.
     """
     by_key = {str(entry["key"]): entry for entry in items}
 
-    def read_item(key: str) -> str:
-        entry = by_key.get(key)
-        if entry is None:
-            return f"No {noun} {key}. Keys: {', '.join(by_key)}."
-        return f"{key} ({entry['kind']}): " + json.dumps(entry["content"], ensure_ascii=False)
+    def read_items(keys: list[str]) -> str:
+        blocks = [
+            f"{key} ({by_key[key]['kind']}): "
+            + json.dumps(by_key[key]["content"], ensure_ascii=False)
+            for key in keys
+            if key in by_key
+        ]
+        missing = [key for key in keys if key not in by_key]
+        if missing:
+            blocks.append(f"No item with key: {', '.join(missing)}")
+        return "\n\n".join(blocks) or f"(no keys given; list them first with list_{name})"
 
     def list_items() -> str:
         if not by_key:
-            return f"(no {noun})"
+            return "(empty)"
         return "\n".join(
             f"{key} | {entry['kind']} | "
             + json.dumps(entry["content"], ensure_ascii=False)[:160]
             for key, entry in by_key.items()
         )
 
-    read_item.__doc__ = read_description
+    read_items.__doc__ = read_description
     list_items.__doc__ = list_description
     return [
-        StructuredTool.from_function(func=read_item, name=f"read_{noun}", description=read_description),
         StructuredTool.from_function(
-            func=list_items, name=f"list_{noun}s", description=list_description
+            func=read_items, name=f"read_{name}", description=read_description
+        ),
+        StructuredTool.from_function(
+            func=list_items, name=f"list_{name}", description=list_description
         ),
     ]
 
@@ -2401,8 +2426,11 @@ def requirement_engineer_node(
         },
         tools=_item_tools(
             analysis_items,
-            noun="analysis item",
-            read_description="Read one analysis item by its key, for example AR-001.",
+            name="analysis_items",
+            read_description=(
+                "Read the analysis items whose keys you pass, all in one call, for example "
+                "[\"AR-001\", \"AR-002\"]."
+            ),
             list_description="List the analysis items with their keys and kinds.",
         ),
     )
@@ -2576,8 +2604,11 @@ def backlog_manager_node(
         },
         tools=_item_tools(
             spec_items,
-            noun="spec requirement",
-            read_description="Read one specification requirement by its key, for example REQ-001.",
+            name="spec_requirements",
+            read_description=(
+                "Read the specification requirements whose keys you pass, all in one call, "
+                "for example [\"REQ-001\", \"REQ-002\"]."
+            ),
             list_description="List the specification requirements with their keys.",
         ),
     )
@@ -2690,14 +2721,18 @@ def validator_node(
         tools=[
             *_item_tools(
                 spec_items,
-                noun="spec requirement",
-                read_description="Read one specification requirement by its key.",
+                name="spec_requirements",
+                read_description=(
+                    "Read the specification requirements whose keys you pass, all in one call."
+                ),
                 list_description="List the specification requirements with their keys.",
             ),
             *_item_tools(
                 backlog_items,
-                noun="backlog item",
-                read_description="Read one backlog item by its key.",
+                name="backlog_items",
+                read_description=(
+                    "Read the backlog items whose keys you pass, all in one call."
+                ),
                 list_description="List the backlog items with their keys.",
             ),
         ],

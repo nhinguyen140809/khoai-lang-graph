@@ -124,3 +124,25 @@ def test_the_loop_stops_when_the_model_never_finishes() -> None:
             finish=Answer,
             max_rounds=3,
         )
+
+
+def test_the_item_reader_reads_many_keys_in_one_call() -> None:
+    from khoailanggraph.agents.requirements_engineering.nodes import _item_tools
+
+    items = [
+        {"key": "OBS-001", "kind": "stakeholder_observation", "content": {"evidence": "a"}},
+        {"key": "OBS-002", "kind": "stakeholder_observation", "content": {"evidence": "b"}},
+    ]
+    read_items, list_items = _item_tools(
+        items,  # type: ignore[arg-type]
+        name="observations",
+        read_description="Read observations by key.",
+        list_description="List observations.",
+    )
+
+    answer = read_items.invoke({"keys": ["OBS-001", "OBS-002", "OBS-999"]})
+
+    assert "OBS-001" in answer and "a" in answer
+    assert "OBS-002" in answer and "b" in answer
+    assert "OBS-999" in answer and "No item with key" in answer
+    assert "OBS-001" in list_items.invoke({})
