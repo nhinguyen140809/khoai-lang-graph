@@ -219,3 +219,21 @@ def test_the_live_chain_answers_with_the_web_and_keeps_wikipedia_behind_it(
     monkeypatch.setattr(research, "duckduckgo_research_search", lambda queries: [])
     research.live_research_search(["q"])
     assert called == ["wiki"]
+
+
+def test_the_search_of_a_step_is_cached_for_a_retry(monkeypatch: pytest.MonkeyPatch) -> None:
+    calls: list[tuple[str, ...]] = []
+
+    def web(queries: list[str]) -> list[dict[str, str]]:
+        calls.append(tuple(queries))
+        return [{"title": "T", "url": "https://a.test/1", "publisher": "a.test", "text": "W"}]
+
+    monkeypatch.setattr(research, "live_research_search", web)
+    tool = research.make_research_search(
+        Settings(app_env="local", research_academic=False, tavily_api_key=None)
+    )
+
+    tool(["same"])
+    tool(["same"])
+
+    assert len(calls) == 1

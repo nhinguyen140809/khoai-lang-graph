@@ -156,3 +156,20 @@ def test_the_search_note_names_a_tool_that_the_definition_lists() -> None:
 def test_the_description_of_the_tool_is_read_from_its_file() -> None:
     assert SEARCH_TOOL_DESCRIPTION.startswith("Search the web and academic papers")
     assert SEARCH_TOOL_DESCRIPTION.endswith("You have at most six rounds.")
+
+
+def test_a_round_runs_at_most_the_searches_it_allows() -> None:
+    calls = [_call(f"c{index}", query=f"query-{index}") for index in range(5)]
+    made: list[list[str]] = []
+
+    def search(queries: list[str], options: Any = None) -> list[dict[str, Any]]:
+        made.append(list(queries))
+        return [dict(PAGE, url=f"https://a.test/{len(made)}")]
+
+    run_search_loop(
+        Script(AIMessage(content="", tool_calls=calls), AIMessage(content="done")),
+        search,
+        [],
+    )
+
+    assert len(made) == corpus_search.MAX_CALLS_PER_ROUND

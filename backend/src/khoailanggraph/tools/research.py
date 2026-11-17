@@ -124,6 +124,29 @@ def tavily_research_search(
     return hits
 
 
+# A step that runs again asks the same questions of the same engines: a short-lived cache keeps
+# a retry from paying the web twice, while a fresh run after the TTL still sees the world.
+_CACHE_TTL_SECONDS = 600.0
+_CACHE: dict[tuple[str, ...], tuple[float, list[dict[str, Any]]]] = {}
+
+
+def _cached(search: ResearchSearch) -> ResearchSearch:
+    def wrapped(queries: Sequence[str], options: Mapping[str, Any] | None = None) -> list[dict[str, Any]]:
+        key = tuple(str(query) for query in queries)
+        now = time.monotonic()
+        hit = _CACHE.get(key)
+        if hit is not None and now - hit[0] < _CACHE_TTL_SECONDS:
+            return [dict(entry) for entry in hit[1]]
+        found = search(queries, options) if options else search(queries)
+        _CACHE[key] = (now, [dict(entry) for entry in found])
+        if len(_CACHE) > 64:
+            oldest = min(_CACHE, key=lambda candidate: _CACHE[candidate][0])
+            _CACHE.pop(oldest, None)
+        return found
+
+    return wrapped
+
+
 def make_research_search(settings: Settings) -> ResearchSearch:
     """The run's search tool: the web part plus the academic part.
 
@@ -143,7 +166,8 @@ def make_research_search(settings: Settings) -> ResearchSearch:
             queries, api_key=tavily_key, options=options
         )
     if not settings.research_academic:
-        return _filtered(web)
+        web_only = _filtered(web)
+        return web_only if settings.app_env == "test" else _cached(web_only)
     openalex_key = settings.openalex_api_key
     # The run refuses a tool call that outlasts its limit, so the sources work side by side and
     # the academic ones stop asking once their share of that limit is spent.
@@ -176,7 +200,7 @@ def make_research_search(settings: Settings) -> ResearchSearch:
                 hits.append(hit)
         return _kept_by_domain(hits, options)
 
-    return search
+    return search if settings.app_env == "test" else _cached(search)
 
 
 def _kept_by_domain(

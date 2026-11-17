@@ -46,8 +46,9 @@ stakeholders say, do, need, fear or value, so you are looking for their voices, 
 rules or the advertising of the organization that runs a service.
 
 Use the tool `SearchWeb` to find them. Think of your own queries, read what comes back, and search
-again with a different angle until the plan is covered. Cover each stakeholder type of the plan
-and look for documents of different kinds. The kinds are:
+again with a different angle until the plan is covered. Cover each stakeholder type of the plan:
+do not stop while a type has no page in which a person of that type speaks, and if one cannot be
+found, say which type in your last sentence. Look for documents of different kinds. The kinds are:
 {kinds}
 
 A plain query mostly returns what organizations wrote about themselves. To reach the voices of
@@ -242,7 +243,20 @@ def run_search_loop(
         if not calls:
             break
         messages.append(reply)
-        for call in calls:
+        for index, call in enumerate(calls):
+            if index >= MAX_CALLS_PER_ROUND:
+                # A reply that asks for ten searches is one round of thinking, not ten: the
+                # extra calls are answered without running, so the next round sees the result.
+                messages.append(
+                    ToolMessage(
+                        content=(
+                            f"No more searches this round (at most {MAX_CALLS_PER_ROUND}). "
+                            "Read what came back and call again."
+                        ),
+                        tool_call_id=call["id"],
+                    )
+                )
+                continue
             result = _answer_call(call, search, found, on_search, allowed=searches < MAX_SEARCHES)
             searches += 1 if result[1] else 0
             messages.append(ToolMessage(content=result[0], tool_call_id=call["id"]))

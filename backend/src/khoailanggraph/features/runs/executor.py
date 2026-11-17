@@ -565,28 +565,40 @@ class RunWalker:
         while True:
             restart = False
             self.state = state
-            for mode, payload in cast("Any", graph).stream(
+            stream = cast("Any", graph).stream(
                 state,
                 stream_mode=["tasks", "updates", "values"],
                 config=sink_config,
-            ):
-                if mode == "tasks":
-                    task = cast("dict[str, Any]", payload)
-                    if "input" in task:
-                        verdict = self._on_task_start(str(task["name"]))
-                        if verdict == "stop":
+            )
+            try:
+                for mode, payload in cast("Any", graph).stream(
+                    state,
+                    stream_mode=["tasks", "updates", "values"],
+                    config=sink_config,
+                ):
+                    if mode == "tasks":
+                        task = cast("dict[str, Any]", payload)
+                        if "input" in task:
+                            verdict = self._on_task_start(str(task["name"]))
+                            if verdict == "stop":
+                                return
+                            if verdict == "router":
+                                restart = True
+                                break
+                    elif mode == "updates":
+                        for node, chunk in cast("dict[str, Any]", payload).items():
+                            if node not in {"__interrupt__", "__end__"}:
+                                self.chunk.update(chunk or {})
+                    else:
+                        self.state = cast("REState", payload)
+                        if self.step is not None and self._on_step_done():
                             return
-                        if verdict == "router":
-                            restart = True
-                            break
-                elif mode == "updates":
-                    for node, chunk in cast("dict[str, Any]", payload).items():
-                        if node not in {"__interrupt__", "__end__"}:
-                            self.chunk.update(chunk or {})
-                else:
-                    self.state = cast("REState", payload)
-                    if self.step is not None and self._on_step_done():
-                        return
+            finally:
+                # The walk leaves the generator the moment a step stops it; closing it here
+                # runs the cleanup of the graph now, not when the garbage collector comes.
+                close = getattr(stream, "close", None)
+                if callable(close):
+                    close()
             if not restart:
                 return
             state = cast("REState", dict(self.state or state))
