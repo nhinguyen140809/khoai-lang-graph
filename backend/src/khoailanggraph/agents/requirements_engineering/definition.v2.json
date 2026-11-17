@@ -1530,9 +1530,10 @@
         "requirement_specification"
       ],
       "formats": [
+        "docx",
         "markdown",
         "pdf",
-        "docx"
+        "txt"
       ]
     },
     {
@@ -1542,9 +1543,11 @@
         "product_backlog"
       ],
       "formats": [
-        "markdown",
         "csv",
-        "json"
+        "json",
+        "markdown",
+        "pdf",
+        "txt"
       ]
     },
     {

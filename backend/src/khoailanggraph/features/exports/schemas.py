@@ -9,7 +9,7 @@ from pydantic import BaseModel, ConfigDict
 from khoailanggraph.platform.serialization import IsoDatetime
 
 ExportStatus = Literal["pending", "ready", "failed"]
-ExportFormat = Literal["markdown", "pdf", "docx", "csv", "json"]
+ExportFormat = Literal["markdown", "pdf", "docx", "csv", "json", "txt"]
 
 
 class ArtifactRef(BaseModel):

@@ -10,19 +10,25 @@ from __future__ import annotations
 import csv
 import io
 import json
+import os
+import re
 from dataclasses import dataclass, field
+from functools import lru_cache
+from pathlib import Path
 from typing import Any
 
 from khoailanggraph.domain.registry import schema_dict
 
-# The formats that can be generated; the definition may list more (pdf, docx), which are refused.
-SUPPORTED_FORMATS = ("markdown", "csv", "json")
+# The formats that can be generated; the definition may list more (docx), which are refused.
+SUPPORTED_FORMATS = ("markdown", "csv", "json", "txt", "pdf")
 MEDIA_TYPES = {
     "markdown": "text/markdown; charset=utf-8",
     "csv": "text/csv; charset=utf-8",
     "json": "application/json",
+    "txt": "text/plain; charset=utf-8",
+    "pdf": "application/pdf",
 }
-EXTENSIONS = {"markdown": "md", "csv": "csv", "json": "json"}
+EXTENSIONS = {"markdown": "md", "csv": "csv", "json": "json", "txt": "txt", "pdf": "pdf"}
 
 
 @dataclass(frozen=True)
@@ -153,6 +159,113 @@ def _matrix_markdown(matrix: dict[str, Any]) -> list[str]:
     return [*out, ""]
 
 
+# - plain text -
+
+
+_BOLD = re.compile(r"\*\*(.+?)\*\*")
+_ITALIC = re.compile(r"_(.+?)_")
+
+
+def _plain_line(line: str) -> str:
+    """One line of the markdown as a reader of plain text sees it."""
+    without_bold = _BOLD.sub(r"\1", line)
+    without_marks = _ITALIC.sub(r"\1", without_bold)
+    if without_marks.startswith("#"):
+        return without_marks.lstrip("#").strip()
+    return without_marks
+
+
+def txt(data: ExportData) -> str:
+    """The documents as one plain-text file: the lines of the markdown, without its marks."""
+    return "\n".join(_plain_line(line) for line in markdown(data).splitlines()).rstrip() + "\n"
+
+
+# - pdf -
+
+# A PDF needs a font that carries the language of the project: the system's Unicode font when it
+# has one, DejaVu on a Linux box, or the file named by KHOAI_PDF_FONT. Without one, a text of the
+# Latin-1 range still renders in Helvetica and anything beyond it is replaced, never garbled.
+_FONT_CANDIDATES = (
+    "/System/Library/Fonts/Supplemental/Arial Unicode.ttf",
+    "/Library/Fonts/Arial Unicode.ttf",
+    "/usr/share/fonts/truetype/dejavu/DejaVuSans.ttf",
+    "/usr/share/fonts/truetype/noto/NotoSans-Regular.ttf",
+)
+
+
+@lru_cache(maxsize=1)
+def _body_font() -> str:
+    """The font the PDF is written in, registered once."""
+    from reportlab.pdfbase import pdfmetrics
+    from reportlab.pdfbase.ttfonts import TTFont
+
+    for candidate in (os.environ.get("KHOAI_PDF_FONT"), *_FONT_CANDIDATES):
+        if candidate and Path(candidate).exists():
+            try:
+                pdfmetrics.registerFont(TTFont("KhoaiBody", candidate))
+                return "KhoaiBody"
+            except Exception:  # noqa: BLE001, S112 - the next font may work
+                continue
+    return "Helvetica"
+
+
+def _safe(text: str, font: str) -> str:
+    """The text in the characters the font carries; a missing glyph becomes a question mark."""
+    if font != "Helvetica":
+        return text
+    return "".join(char if ord(char) < 256 else "?" for char in text)
+
+
+def pdf(data: ExportData) -> bytes:
+    """The documents as a PDF: headings, bullets and paragraphs of the markdown."""
+    from reportlab.lib.pagesizes import A4
+    from reportlab.lib.styles import ParagraphStyle
+    from reportlab.lib.units import mm
+    from reportlab.platypus import Paragraph, SimpleDocTemplate, Spacer
+
+    font = _body_font()
+    buffer = io.BytesIO()
+    document = SimpleDocTemplate(
+        buffer,
+        pagesize=A4,
+        title=data.template_title,
+        leftMargin=18 * mm,
+        rightMargin=18 * mm,
+        topMargin=18 * mm,
+        bottomMargin=18 * mm,
+    )
+    styles = {
+        level: ParagraphStyle(
+            f"h{level}",
+            fontName=font,
+            fontSize=size,
+            leading=size + 4,
+            spaceBefore=8 if level > 1 else 4,
+            spaceAfter=4,
+        )
+        for level, size in ((1, 18), (2, 14), (3, 12))
+    }
+    body_style = ParagraphStyle("body", fontName=font, fontSize=10, leading=15)
+    bullet_style = ParagraphStyle("bullet", parent=body_style, leftIndent=14, bulletIndent=4)
+    story: list[Any] = []
+    for raw in markdown(data).splitlines():
+        line = raw.rstrip()
+        if not line:
+            story.append(Spacer(1, 4))
+            continue
+        if line.startswith("#"):
+            level = len(line) - len(line.lstrip("#"))
+            story.append(Paragraph(_safe(_plain_line(line), font), styles[min(level, 3)]))
+        elif line.startswith("- "):
+            story.append(
+                Paragraph(_safe(_plain_line(line[2:]), font), bullet_style, bulletText="•")
+            )
+        else:
+            story.append(Paragraph(_safe(_plain_line(line), font), body_style))
+    document.build(story)
+    return buffer.getvalue()
+
+
 # - json -
 
 
@@ -234,7 +347,11 @@ def matrix_csv(data: ExportData) -> str:
 
 RENDERERS = {
     ("requirement_specification", "markdown"): markdown,
+    ("requirement_specification", "txt"): txt,
+    ("requirement_specification", "pdf"): pdf,
     ("product_backlog", "markdown"): markdown,
+    ("product_backlog", "txt"): txt,
+    ("product_backlog", "pdf"): pdf,
     ("product_backlog", "csv"): items_csv,
     ("product_backlog", "json"): json_file,
     ("traceability_matrix", "markdown"): markdown,
@@ -247,4 +364,5 @@ RENDERERS = {
 
 def render(template: str, fmt: str, data: ExportData) -> bytes:
     """The file of a template in a format; a pair with no renderer is a mistake of the caller."""
-    return RENDERERS[(template, fmt)](data).encode("utf-8")
+    rendered = RENDERERS[(template, fmt)](data)
+    return rendered if isinstance(rendered, bytes) else rendered.encode("utf-8")

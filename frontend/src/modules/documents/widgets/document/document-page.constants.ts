@@ -1,6 +1,10 @@
 /** The words of the menu that gathers the actions of a document. */
 export const documentActionsMessages = {
   more: 'More actions',
+  downloadTxt: 'Download as TXT',
+  downloadPdf: 'Download as PDF',
+  preparing: 'Preparing the file…',
+  downloadFailed: 'The document could not be downloaded.',
 } as const
 
 export const documentPageMessages = {

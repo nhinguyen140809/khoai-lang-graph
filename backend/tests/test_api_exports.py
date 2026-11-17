@@ -218,7 +218,6 @@ async def test_every_document_is_exported_in_one_file(client: AsyncClient) -> No
     [
         ({"template": "novel", "format": "markdown"}, "template"),
         ({"template": "product_backlog", "format": "docx"}, "format"),
-        ({"template": "requirement_specification", "format": "pdf"}, "format"),
         ({"template": "requirement_specification", "format": "docx"}, "format"),
     ],
 )
