@@ -8,6 +8,7 @@ import {
   fieldText,
   type ItemDisplay,
   itemTitle,
+  listColumns,
   summaryFields,
   useWorkflowDefinition,
   type ValueDefinition,
@@ -76,14 +77,20 @@ function ItemsTable<Range extends HighlightRange = HighlightRange>({
   const fields = summaryFields(view.schema)
   const titleField = view.schema['x-ui-title-field']
   const linkedName = fields.some(({ name }) => name === titleField) ? titleField : fields[0]?.name
+  const columns = listColumns(view.schema)
   return (
     <Table>
       <TableHeader>
         <TableRow>
-          <TableHead className="w-24">{artifactViewMessages.key}</TableHead>
-          {fields.map((field) => (
-            <TableHead key={field.name}>{field.title}</TableHead>
-          ))}
+          {columns.map((column) =>
+            column.type === 'key' ? (
+              <TableHead key="key" className="w-24">
+                {artifactViewMessages.key}
+              </TableHead>
+            ) : (
+              <TableHead key={column.field.name}>{column.field.title}</TableHead>
+            ),
+          )}
         </TableRow>
       </TableHeader>
       <TableBody>
@@ -93,20 +100,25 @@ function ItemsTable<Range extends HighlightRange = HighlightRange>({
             className="data-[target]:bg-accent/50"
             {...itemAnchorProps(item.id, targetItemId)}
           >
-            <TableCell className="font-mono text-xs">{item.key}</TableCell>
-            {fields.map((field) => (
-              <TableCell key={field.name} className="align-top whitespace-normal">
-                {field.name === linkedName ? (
-                  renderItemLink(item, itemTitleOf(view, item, field))
-                ) : (
-                  <ContentFieldValue
-                    field={field}
-                    value={item.content[field.name]}
-                    definition={definition}
-                  />
-                )}
-              </TableCell>
-            ))}
+            {columns.map((column) =>
+              column.type === 'key' ? (
+                <TableCell key="key" className="align-top font-mono text-xs text-muted-foreground">
+                  {item.key}
+                </TableCell>
+              ) : (
+                <TableCell key={column.field.name} className="align-top whitespace-normal">
+                  {column.field.name === linkedName ? (
+                    renderItemLink(item, itemTitleOf(view, item, column.field))
+                  ) : (
+                    <ContentFieldValue
+                      field={column.field}
+                      value={item.content[column.field.name]}
+                      definition={definition}
+                    />
+                  )}
+                </TableCell>
+              ),
+            )}
           </TableRow>
         ))}
       </TableBody>

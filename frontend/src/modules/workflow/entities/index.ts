@@ -30,6 +30,7 @@ export {
   contentDisplayOf,
   contentFields,
   isNavigable,
+  listColumns,
   mainField,
   pageLayoutOf,
   profileFields,
