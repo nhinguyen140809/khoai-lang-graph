@@ -13,7 +13,8 @@
   "x-ui-list-fields": [
     "title",
     "type",
-    "priority"
+    "priority",
+    "key"
   ],
   "x-ui-field-order": [
     "title",

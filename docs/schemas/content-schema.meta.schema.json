@@ -62,7 +62,7 @@
       "minItems": 1,
       "uniqueItems": true,
       "items": { "type": "string" },
-      "description": "Item kinds only. The fields shown as table columns, on a card, and on the card of a profile: the fields that read on one line under its title, then the others."
+      "description": "Item kinds only. The fields shown as table columns, on a card, and on the card of a profile: the fields that read on one line under its title, then the others. The name `key` stands for the key of the item (REQ-001), which a table shows as a column at that place; it is never the first name, and it is no property."
     },
     "x-ui-field-order": {
       "type": "array",

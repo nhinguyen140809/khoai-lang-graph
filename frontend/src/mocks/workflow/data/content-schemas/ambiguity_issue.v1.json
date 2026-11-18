@@ -13,7 +13,8 @@
   "x-ui-list-fields": [
     "title",
     "ambiguity_type",
-    "status"
+    "status",
+    "key"
   ],
   "x-ui-field-order": [
     "title",

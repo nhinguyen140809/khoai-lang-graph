@@ -13,7 +13,8 @@
   "x-ui-list-fields": [
     "title",
     "confidence",
-    "disposition"
+    "disposition",
+    "key"
   ],
   "x-ui-field-order": [
     "title",

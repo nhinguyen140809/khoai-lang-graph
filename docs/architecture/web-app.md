@@ -223,7 +223,7 @@ The artifact panel draws every kind from its content schema and the display keyw
 |---|---|
 | `document` | The fields of the artifact, above its items |
 | `heading` | A section heading with its number and the items it contains |
-| `table` | A table with the columns of `x-ui-list-fields`; the `x-ui-title-field` is the link to the item |
+| `table` | A table with the columns of `x-ui-list-fields`; the `x-ui-title-field` is the link to the item. The name `key` in the list is the column of the key of the item, last in every kind, small and muted: a key is how the item is cited, not what the reader looks for first |
 | `cards` | One card per item with the fields of `x-ui-list-fields` |
 | `transcript` | The messages in order, as a conversation |
 
@@ -266,11 +266,11 @@ Example. With the [items example](../API.md#artifacts-and-items) and the `spec_r
 3      Functional requirements                                    (section: heading)
 3.1    Mentor discovery                                           (section: heading)
        How a student finds a mentor.
-       Title            Type         Priority   Verification method    (spec_requirement: table)
-       Search mentors   functional   must       test
+       Title            Type         Priority   Verification method   Key    (spec_requirement: table)
+       Search mentors   functional   must       test                  REQ-001
 ```
 
-The columns are `x-ui-list-fields` and "Search mentors", the `x-ui-title-field`, links to `REQ-001`. Opening `REQ-001` shows its fields in `x-ui-field-order`:
+The columns are `x-ui-list-fields`, with the key last, and "Search mentors", the `x-ui-title-field`, links to `REQ-001`. Opening `REQ-001` shows its fields in `x-ui-field-order`:
 
 | `name` | `label` | `widget` | `nullable` | `options` |
 |---|---|---|---|---|
