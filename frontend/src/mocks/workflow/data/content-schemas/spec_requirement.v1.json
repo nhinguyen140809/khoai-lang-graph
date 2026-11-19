@@ -14,7 +14,8 @@
     "title",
     "type",
     "priority",
-    "verification_method"
+    "verification_method",
+    "key"
   ],
   "x-ui-field-order": [
     "title",

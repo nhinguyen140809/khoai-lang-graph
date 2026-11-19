@@ -22,7 +22,7 @@ fields in artifact `x-ui-field-order` (all artifact kinds are x-ui-display
 "document") + items by item-kind `x-ui-display`:
 - `heading` (section): number + title + contains items
 - `table` (spec/backlog/raw/analyzed/latent/assumption/ambiguity/conflict/
-  validation): columns = `x-ui-list-fields`, title-field cell = link
+  validation): columns = `x-ui-list-fields` (`key` = the key of the item, last), title-field cell = link
 - `cards` (persona), `transcript` (interview_message): conversation order;
   highlighted quote with citing items in the margin (`quote` on an
   `evidenced_by` link).

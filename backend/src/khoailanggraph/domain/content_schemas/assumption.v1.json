@@ -12,7 +12,8 @@
   "x-ui-title-field": "title",
   "x-ui-list-fields": [
     "title",
-    "validation_status"
+    "validation_status",
+    "key"
   ],
   "x-ui-field-order": [
     "title",

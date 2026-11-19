@@ -18,6 +18,9 @@ REPO_ROOT = Path(__file__).resolve().parents[2]
 SCHEMAS = REPO_ROOT / "docs" / "schemas"
 WORKFLOW = REPO_ROOT / "docs" / "workflow"
 META = json.loads((SCHEMAS / "content-schema.meta.schema.json").read_text(encoding="utf-8"))
+# The name that `x-ui-list-fields` gives to the key of an item (REQ-001), which is no property.
+ITEM_KEY_COLUMN = "key"
+
 FILES = sorted([*(SCHEMAS / "artifacts").glob("*.json"), *(SCHEMAS / "items").glob("*.json")])
 DEFINITIONS = [
     json.loads(path.read_text(encoding="utf-8"))
@@ -68,9 +71,19 @@ def test_named_fields_are_properties(path: Path) -> None:
         for key in ("x-ui-title-field", "x-ui-role-field", "x-ui-participants-field")
         if key in schema
     ]
-    named += schema.get("x-ui-list-fields", [])
+    named += [name for name in schema.get("x-ui-list-fields", []) if name != ITEM_KEY_COLUMN]
 
     assert set(named) <= names
+
+
+@pytest.mark.parametrize("path", FILES, ids=_ids)
+def test_key_of_an_item_is_a_column_that_never_comes_first(path: Path) -> None:
+    schema = _load(path)
+    columns = schema.get("x-ui-list-fields", [])
+
+    assert ITEM_KEY_COLUMN not in schema["properties"]
+    assert columns.count(ITEM_KEY_COLUMN) <= 1
+    assert not columns or columns[0] != ITEM_KEY_COLUMN
 
 
 @pytest.mark.parametrize("path", FILES, ids=_ids)

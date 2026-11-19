@@ -773,7 +773,7 @@ Kinds and their schemas, `GET /artifact-kinds`. The display name of a kind is th
             "x-ui-display": "table",
             "x-ui-navigable": true,
             "x-ui-title-field": "title",
-            "x-ui-list-fields": ["title", "type", "priority", "verification_method"],
+            "x-ui-list-fields": ["title", "type", "priority", "verification_method", "key"],
             "x-ui-field-order": ["title", "statement", "type", "quality_category", "priority", "rationale", "acceptance_criteria", "fit_criterion", "verification_method"],
             "type": "object",
             "additionalProperties": false,

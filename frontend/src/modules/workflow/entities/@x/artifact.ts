@@ -15,6 +15,7 @@ export type {
   ContentField,
   ItemDisplay,
   ItemPageLayout,
+  ListColumn,
   ProfileFields,
 } from '../content/fields/content-fields.types'
 export {
@@ -25,6 +26,7 @@ export {
   isNavigable,
   isOneLineField,
   isSeparatorField,
+  listColumns,
   mainField,
   pageLayoutOf,
   profileFields,

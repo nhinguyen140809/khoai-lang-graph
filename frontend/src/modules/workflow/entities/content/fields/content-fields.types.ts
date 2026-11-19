@@ -137,3 +137,6 @@ export interface ProfileFields {
   /** Every field but the title and the line, in field order: the body of the page. */
   body: ContentField[]
 }
+
+/** A column of a table of items: the key of the item, or one of its fields. */
+export type ListColumn = { type: 'key' } | { type: 'field'; field: ContentField }

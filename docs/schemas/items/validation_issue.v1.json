@@ -14,7 +14,8 @@
     "title",
     "category",
     "severity",
-    "status"
+    "status",
+    "key"
   ],
   "x-ui-field-order": [
     "title",

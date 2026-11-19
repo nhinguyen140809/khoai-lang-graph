@@ -12,7 +12,8 @@
   "x-ui-title-field": "title",
   "x-ui-list-fields": [
     "title",
-    "topic"
+    "topic",
+    "key"
   ],
   "x-ui-field-order": [
     "title",

@@ -8,6 +8,7 @@ import {
   fieldText,
   type ItemDisplay,
   itemTitle,
+  listColumns,
   summaryFields,
   useWorkflowDefinition,
   type ValueDefinition,
@@ -66,23 +67,61 @@ function itemTitleOf(view: KindView, item: OutlineItem, field: ContentField): Re
   return fieldText(item, field.name) ?? itemTitle(view.schema, item)
 }
 
-function ItemsTable<Range extends HighlightRange = HighlightRange>({
-  items,
-  view,
-  renderItemLink,
-  definition,
-  targetItemId,
-}: RunViewProps<Range>) {
+/** A column of a table of items: what its head says and what each of its cells shows. */
+interface TableColumn {
+  id: string
+  head: ReactNode
+  headClassName?: string
+  cellClassName: string
+  cell: (item: OutlineItem) => ReactNode
+}
+
+/** The column of the key of an item, which the schema places where it lists `key`. */
+function keyColumn(): TableColumn {
+  return {
+    id: 'key',
+    head: artifactViewMessages.key,
+    headClassName: 'w-24',
+    cellClassName: 'align-top font-mono text-xs text-muted-foreground',
+    cell: (item) => item.key,
+  }
+}
+
+/** The column of a field of an item: the title of the item is a link, the other fields show their value. */
+function fieldColumn<Range extends HighlightRange = HighlightRange>(
+  field: ContentField,
+  linkedName: string | undefined,
+  { view, renderItemLink, definition }: RunViewProps<Range>,
+): TableColumn {
+  return {
+    id: field.name,
+    head: field.title,
+    cellClassName: 'align-top whitespace-normal',
+    cell: (item) =>
+      field.name === linkedName ? (
+        renderItemLink(item, itemTitleOf(view, item, field))
+      ) : (
+        <ContentFieldValue field={field} value={item.content[field.name]} definition={definition} />
+      ),
+  }
+}
+
+function ItemsTable<Range extends HighlightRange = HighlightRange>(props: RunViewProps<Range>) {
+  const { items, view, targetItemId } = props
   const fields = summaryFields(view.schema)
   const titleField = view.schema['x-ui-title-field']
   const linkedName = fields.some(({ name }) => name === titleField) ? titleField : fields[0]?.name
+  const columns = listColumns(view.schema).map((column) =>
+    column.type === 'key' ? keyColumn() : fieldColumn(column.field, linkedName, props),
+  )
   return (
     <Table>
       <TableHeader>
         <TableRow>
-          <TableHead className="w-24">{artifactViewMessages.key}</TableHead>
-          {fields.map((field) => (
-            <TableHead key={field.name}>{field.title}</TableHead>
+          {columns.map(({ id, head, headClassName }) => (
+            <TableHead key={id} className={headClassName}>
+              {head}
+            </TableHead>
           ))}
         </TableRow>
       </TableHeader>
@@ -93,18 +132,9 @@ function ItemsTable<Range extends HighlightRange = HighlightRange>({
             className="data-[target]:bg-accent/50"
             {...itemAnchorProps(item.id, targetItemId)}
           >
-            <TableCell className="font-mono text-xs">{item.key}</TableCell>
-            {fields.map((field) => (
-              <TableCell key={field.name} className="align-top whitespace-normal">
-                {field.name === linkedName ? (
-                  renderItemLink(item, itemTitleOf(view, item, field))
-                ) : (
-                  <ContentFieldValue
-                    field={field}
-                    value={item.content[field.name]}
-                    definition={definition}
-                  />
-                )}
+            {columns.map(({ id, cellClassName, cell }) => (
+              <TableCell key={id} className={cellClassName}>
+                {cell(item)}
               </TableCell>
             ))}
           </TableRow>

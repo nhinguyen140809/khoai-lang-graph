@@ -15,7 +15,8 @@
     "item_type",
     "priority",
     "story_points",
-    "delivery_status"
+    "delivery_status",
+    "key"
   ],
   "x-ui-field-order": [
     "item_type",

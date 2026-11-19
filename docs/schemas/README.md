@@ -72,7 +72,7 @@ Rules that relate a file to itself or to its name are not expressible in a JSON 
 | Name | `$id` is `<artifacts or items>/<x-kind>/v<x-schema-version>`, the level matches `x-level`, and the file is `<x-kind>.v<x-schema-version>.json` |
 | Every field is required | `required` lists exactly the names in `properties` |
 | Field order | `x-ui-field-order` lists exactly the names in `properties` |
-| Known fields | `x-ui-title-field`, `x-ui-role-field`, `x-ui-participants-field` and every name in `x-ui-list-fields` is a property |
+| Known fields | `x-ui-title-field`, `x-ui-role-field`, `x-ui-participants-field` and every name in `x-ui-list-fields` is a property, except `key`, which stands for the key of the item, and is never the first name of the list. No property is named `key` |
 | Title of a navigable kind | When `x-ui-navigable` is `true`, the field that `x-ui-title-field` names is a short title: its description says it has at most 60 characters. The length is not a keyword of the schema, because the structured output of LLM providers does not accept it |
 | Value lists | Every `x-value-list` names a list of the workflow definition that uses the file, and a field has either an `enum` or one of `x-value-list` and `x-value-from`, never both |
 
@@ -114,7 +114,7 @@ At schema level:
 | `x-ui-title-field` | One property name | The field that names an item in lists, links, the outline and trace views. Item kinds only |
 | `x-ui-role-field` | One property name | The field whose value is the key of the participant who says the words of a message, shown as the speaker of a transcript. Item kinds only |
 | `x-ui-participants-field` | One property name | The field that lists the people of a conversation, the one who leads first: an object list whose entries have `key`, `name`, `role` and `item_id`. The participants who share the role of the first one are drawn on its side of the conversation, the others on the other side. Artifact kinds only |
-| `x-ui-list-fields` | Property names, in order | The fields shown as table columns, on a card, and on the card of a profile: the fields that read on one line under its title, then the others. Item kinds only |
+| `x-ui-list-fields` | Property names, in order, and `key` | The fields shown as table columns, on a card, and on the card of a profile: the fields that read on one line under its title, then the others. `key` stands for the key of the item (`REQ-001`): a table shows it as a column at that place, a kind that does not name it shows no key column, and the key is never first, because it is not what the reader looks for first. Item kinds only |
 | `x-ui-field-order` | Every property name, in order | The order of the fields in the detail view and the edit form |
 
 At field level:
@@ -135,15 +135,15 @@ A field without `x-ui-widget` is shown by its type. The label of a field is deri
 | `section` | `heading` | `true` | `title` | `title` |
 | `persona` | `profile` | `true` | `name` | `name`, `stakeholder_type`, `interview_status`, `background`, `goals` |
 | `interview_message` | `transcript` | `false` | `content` | `turn`, `speaker`, `content` |
-| `raw_requirement` | `table` | `true` | `title` | `title`, `topic` |
-| `analyzed_requirement` | `table` | `true` | `title` | `title`, `type`, `priority` |
-| `latent_need` | `table` | `true` | `title` | `title`, `confidence`, `disposition` |
-| `assumption` | `table` | `true` | `title` | `title`, `validation_status` |
-| `ambiguity_issue` | `table` | `true` | `title` | `title`, `ambiguity_type`, `status` |
-| `conflict` | `table` | `true` | `title` | `title`, `severity`, `status` |
-| `spec_requirement` | `table` | `true` | `title` | `title`, `type`, `priority`, `verification_method` |
-| `backlog_item` | `table` | `true` | `title` | `title`, `item_type`, `priority`, `story_points`, `delivery_status` |
-| `validation_issue` | `table` | `true` | `title` | `title`, `category`, `severity`, `status` |
+| `raw_requirement` | `table` | `true` | `title` | `title`, `topic`, `key` |
+| `analyzed_requirement` | `table` | `true` | `title` | `title`, `type`, `priority`, `key` |
+| `latent_need` | `table` | `true` | `title` | `title`, `confidence`, `disposition`, `key` |
+| `assumption` | `table` | `true` | `title` | `title`, `validation_status`, `key` |
+| `ambiguity_issue` | `table` | `true` | `title` | `title`, `ambiguity_type`, `status`, `key` |
+| `conflict` | `table` | `true` | `title` | `title`, `severity`, `status`, `key` |
+| `spec_requirement` | `table` | `true` | `title` | `title`, `type`, `priority`, `verification_method`, `key` |
+| `backlog_item` | `table` | `true` | `title` | `title`, `item_type`, `priority`, `story_points`, `delivery_status`, `key` |
+| `validation_issue` | `table` | `true` | `title` | `title`, `category`, `severity`, `status`, `key` |
 
 `interview_transcript` names its participants with `x-ui-participants-field: participants`, and `interview_message` its speaker with `x-ui-role-field: speaker`. In version 1, `status` and `stop_reason` of an interview transcript and `turn` of an interview message are separators, `participants` of an interview transcript is an avatar list, and `interview_status` of a persona is a badge.
 

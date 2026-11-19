@@ -13,7 +13,8 @@
   "x-ui-list-fields": [
     "title",
     "severity",
-    "status"
+    "status",
+    "key"
   ],
   "x-ui-field-order": [
     "title",
