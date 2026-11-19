@@ -41,6 +41,15 @@
     "x-ui-display": {
       "enum": ["document", "heading", "table", "cards", "transcript", "profile"]
     },
+    "x-ui-media": {
+      "enum": ["text", "diagram"],
+      "description": "What the content of the kind is: text, or a diagram. A client draws a block of its own for each. When the keyword is absent the content is text."
+    },
+    "x-ui-icon": {
+      "type": ["string", "null"],
+      "pattern": "^[a-z][a-z0-9-]*$",
+      "description": "The name of the icon that a client puts on the block of the kind, such as user. null, or no keyword, gives the block no icon."
+    },
     "x-ui-navigable": {
       "type": "boolean",
       "description": "Item kinds only. Whether the items of the kind can be reached one by one: a row in the outline of the document that holds them, and a page of their own. Items short enough to read in place in the page of the document, such as the messages of an interview, are not navigable."
