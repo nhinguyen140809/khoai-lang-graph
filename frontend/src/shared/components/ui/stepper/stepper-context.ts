@@ -13,7 +13,6 @@ export type StepIndicators = {
 export interface StepperContextValue {
   activeStep: number
   setActiveStep: (step: number) => void
-  stepsCount: number
   orientation: StepperOrientation
   registerTrigger: (node: HTMLButtonElement | null) => void
   triggerNodes: HTMLButtonElement[]

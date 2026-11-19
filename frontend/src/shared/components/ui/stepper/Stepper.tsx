@@ -3,8 +3,8 @@
 'use client'
 
 import { cn } from 'cn'
-import type { HTMLAttributes, ReactElement } from 'react'
-import { Children, isValidElement, useCallback, useMemo, useState } from 'react'
+import type { HTMLAttributes } from 'react'
+import { useCallback, useMemo, useState } from 'react'
 
 import { useStepper } from './hooks/useStepper'
 import {
@@ -75,11 +75,6 @@ export function Stepper({
     () => ({
       activeStep: currentStep,
       setActiveStep: handleSetActiveStep,
-      stepsCount: Children.toArray(children).filter(
-        (child): child is ReactElement =>
-          isValidElement(child) &&
-          (child.type as { displayName?: string }).displayName === 'StepperItem',
-      ).length,
       orientation,
       registerTrigger,
       focusNext,
@@ -89,7 +84,7 @@ export function Stepper({
       triggerNodes,
       indicators,
     }),
-    [currentStep, handleSetActiveStep, children, orientation, registerTrigger, triggerNodes],
+    [currentStep, handleSetActiveStep, orientation, registerTrigger, triggerNodes, indicators],
   )
 
   return (
