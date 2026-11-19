@@ -2,7 +2,7 @@ import { describe, expect, it } from 'vitest'
 
 import { artifactKindFixtures } from '@/mocks/workflow/artifact-kinds.fixtures'
 
-import { contentSchemasByKind, kindSchemasByKind } from '../kind-schemas.utils'
+import { contentSchemasByKind, hasItemBlocks, kindSchemasByKind } from '../kind-schemas.utils'
 import { kindCases } from './kind-schemas.utils.data'
 
 describe('kindSchemasByKind', () => {
@@ -25,5 +25,18 @@ describe('contentSchemasByKind', () => {
 
   it('maps nothing before the kinds have loaded', () => {
     expect(contentSchemasByKind(undefined).size).toBe(0)
+  })
+})
+
+describe('hasItemBlocks', () => {
+  it('is true for a document of items that open one by one, and false for one of text alone', () => {
+    expect(hasItemBlocks(artifactKindFixtures, 'persona_catalog')).toBe(true)
+    expect(hasItemBlocks(artifactKindFixtures, 'interview_transcript')).toBe(false)
+    expect(hasItemBlocks(artifactKindFixtures, 'elicitation_plan')).toBe(false)
+  })
+
+  it('is false for a kind that is not there, and before the kinds have loaded', () => {
+    expect(hasItemBlocks(artifactKindFixtures, 'no_such_kind')).toBe(false)
+    expect(hasItemBlocks(undefined, 'persona_catalog')).toBe(false)
   })
 })

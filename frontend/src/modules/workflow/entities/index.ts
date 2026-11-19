@@ -1,3 +1,4 @@
+export type { ArtifactKindDisplay } from './artifact-kinds/artifact-kind-display.types'
 export { getArtifactKinds, getContentSchema } from './artifact-kinds/artifact-kinds.api'
 export { artifactKindKeys } from './artifact-kinds/artifact-kinds.keys'
 export type {
@@ -6,19 +7,22 @@ export type {
   KindSchema,
   SchemaProperty,
 } from './artifact-kinds/artifact-kinds.types'
+export type { KindMedia } from './artifact-kinds/artifact-kinds.types'
+export { useArtifactKindDisplays } from './artifact-kinds/hooks/useArtifactKindDisplays'
 export {
   useArtifactKinds,
   useContentSchema,
   useContentSchemas,
 } from './artifact-kinds/hooks/useArtifactKindQueries'
-export { useKindLooks } from './artifact-kinds/hooks/useKindLooks'
 export { useKindTitleOf } from './artifact-kinds/hooks/useKindTitleOf'
 export { useKindTitles } from './artifact-kinds/hooks/useKindTitles'
-export type { KindLook } from './artifact-kinds/kind-look.types'
 export {
   contentSchemasByKind,
+  hasItemBlocks,
+  iconOf,
   isNavigable,
   kindSchemasByKind,
+  mediaOf,
 } from './artifact-kinds/kind-schemas.utils'
 export type { ReviewableCheckpoint } from './checkpoints/checkpoints.types'
 export { reviewableCheckpoints } from './checkpoints/checkpoints.utils'
@@ -67,6 +71,7 @@ export type { ExportFormat, ExportTemplate } from './definition/export-templates
 export { exportFormats } from './definition/export-templates.types'
 export { useAgentRoleLabels } from './definition/hooks/useAgentRoleLabels'
 export { useArtifactItemKinds } from './definition/hooks/useArtifactItemKinds'
+export { useLinkedKinds } from './definition/hooks/useLinkedKinds'
 export { useLinkTitleOf } from './definition/hooks/useLinkTitleOf'
 export { useTool } from './definition/hooks/useTool'
 export { useWorkflowDefinition } from './definition/hooks/useWorkflowDefinition'

@@ -4,7 +4,7 @@ import { projectIds, runIds, threadIds } from '@/mocks/shared/db'
 import type { Run, RunStep } from '@/modules/run/entities'
 import { workEntries } from '@/modules/run/entities'
 import type { Message } from '@/modules/thread/entities'
-import type { KindLook } from '@/modules/workflow/entities/@x/activity'
+import type { ArtifactKindDisplay } from '@/modules/workflow/entities/@x/activity'
 
 export const run: Run = buildRun({
   id: runIds.mentorMain3,
@@ -54,4 +54,4 @@ export const stageTitles = new Map([
 ])
 
 export const subjectTitles = new Map<string, string>()
-export const kinds = new Map<string, KindLook>()
+export const kinds = new Map<string, ArtifactKindDisplay>()
