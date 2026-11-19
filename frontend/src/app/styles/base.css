@@ -1,0 +1,54 @@
+@layer base {
+  * {
+    @apply border-border outline-ring/50;
+  }
+  body {
+    @apply bg-background text-foreground;
+  }
+  html {
+    @apply font-sans;
+  }
+
+  /* The window never stretches or goes back a page when the wheel or the pad goes on past the end
+     of what scrolls: a gesture to the side or past the top is not an action of the app. */
+  html,
+  body {
+    overscroll-behavior: none;
+  }
+
+  /* Heading sizes follow nova: its largest title is text-lg, card and dialog titles are
+     text-base, and text inside components is text-sm. */
+  h1 {
+    @apply font-heading text-lg font-medium;
+  }
+
+  h2 {
+    @apply font-heading text-base font-medium;
+  }
+
+  h3 {
+    @apply font-heading text-sm font-medium;
+  }
+
+  h4,
+  h5,
+  h6 {
+    @apply font-heading text-xs font-medium;
+  }
+
+  body {
+    line-height: 1.65;
+  }
+
+  code,
+  pre {
+    font-family: var(--font-mono);
+  }
+
+  /* Tailwind 4 gives buttons the arrow cursor of the browser. A button that can be pressed shows
+     the hand, like a link; a disabled one keeps the arrow, and a cursor-* class still wins. */
+  button:not(:disabled, [aria-disabled='true']),
+  [role='button']:not([aria-disabled='true']) {
+    cursor: pointer;
+  }
+}
