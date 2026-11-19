@@ -1,6 +1,6 @@
 import type { Route } from 'next'
 
-import { addressOfTreePath } from '@/shared/lib/view-tree'
+import { addressOfAreaPath } from '@/shared/routes/hosts'
 
 /**
  * The address of a page, given the path of the page as its folders of `src/app/` write it, with
@@ -9,7 +9,7 @@ import { addressOfTreePath } from '@/shared/lib/view-tree'
  * address leaves the folder of the view out, since the host of the page chooses the view.
  */
 export function checkedRoute<T extends string>(page: Route<T>): Route {
-  return addressOfTreePath(page) as Route
+  return addressOfAreaPath(page) as Route
 }
 
 /**
