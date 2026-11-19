@@ -59,7 +59,7 @@ describe('ActivityPage', () => {
     openPage('/?mock-run-status=done')
     renderWithProviders(<ActivityPage projectId={projectIds.mentor} />)
 
-    await screen.findByText('Not read: the work ended before this message.')
+    await expectText('Not read: the work ended before this message.')
     await expectRole('button', 'Send it again')
   })
 
@@ -101,7 +101,7 @@ describe('ActivityPage', () => {
   it('has no accessibility violation', async () => {
     renderWithProviders(<ActivityPage projectId={projectIds.mentor} />)
 
-    await screen.findByText('Also ask about group sessions.')
+    await expectText('Also ask about group sessions.')
     await expectNoAccessibilityViolations()
   })
 })

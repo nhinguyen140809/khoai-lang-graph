@@ -1,4 +1,3 @@
-import { screen } from '@testing-library/react'
 import { http, HttpResponse } from 'msw'
 import { describe, it } from 'vitest'
 
@@ -78,7 +77,7 @@ describe('ToolUseEntryView', () => {
   it('opens to the note of each use', async () => {
     serveSearchTool()
     renderUse(useOf(false))
-    await screen.findByText('Searched 2 times')
+    await expectText('Searched 2 times')
 
     await pressRole('button', activityChatMessages.showDetails)
 

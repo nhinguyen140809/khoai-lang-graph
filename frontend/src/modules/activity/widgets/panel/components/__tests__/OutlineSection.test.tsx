@@ -6,9 +6,8 @@ import { IdPrefix, mockId, projectIds, threadIds } from '@/mocks/shared/db'
 import { buildThread } from '@/mocks/threads/threads.fixtures'
 import type { Thread } from '@/modules/thread/entities'
 import { routes } from '@/shared/routes'
-import { routerMock } from '@/test/next-stubs'
 import { renderWithProviders } from '@/test/render'
-import { expectNoAccessibilityViolations } from '@/test/steps'
+import { expectNoAccessibilityViolations, expectPushedTo, expectText } from '@/test/steps'
 
 import { OutlineSection } from '../OutlineSection'
 
@@ -48,7 +47,7 @@ describe('OutlineSection', () => {
       await screen.findByRole('button', { name: /Also ask about group sessions/ }),
     )
 
-    expect(routerMock.push).toHaveBeenCalledWith(
+    await expectPushedTo(
       routes.project(projectIds.mentor).activity({ entryId: mockId(IdPrefix.Message, 9) }),
     )
   })
@@ -56,7 +55,7 @@ describe('OutlineSection', () => {
   it('has no accessibility violation', async () => {
     renderWithProviders(<OutlineSection thread={mentorThread} projectId={projectIds.mentor} />)
 
-    await screen.findByText('Also ask about group sessions.')
+    await expectText('Also ask about group sessions.')
     await expectNoAccessibilityViolations()
   })
 })

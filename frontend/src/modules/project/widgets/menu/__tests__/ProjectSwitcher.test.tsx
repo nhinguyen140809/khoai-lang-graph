@@ -93,7 +93,7 @@ describe('ProjectSwitcher', () => {
 
   it('keeps the name of the project when loading it again fails', async () => {
     renderWithProviders(<ProjectSwitcher projectId={projectIds.mentor} />)
-    await screen.findByRole('button', { name: 'Mentor platform' })
+    await expectRole('button', 'Mentor platform')
     server.use(serverErrorOn(HttpMethod.Get, apiEndpoints.project.pattern))
 
     // Coming back to the window loads the project again.

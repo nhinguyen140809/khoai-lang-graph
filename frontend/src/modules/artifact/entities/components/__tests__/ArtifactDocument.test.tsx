@@ -8,7 +8,7 @@ import {
 import { projectIds } from '@/mocks/shared/db'
 import { assertPresent } from '@/shared/lib/guards'
 import { renderWithProviders } from '@/test/render'
-import { expectNoAccessibilityViolations } from '@/test/steps'
+import { expectNoAccessibilityViolations, expectText } from '@/test/steps'
 
 import { useArtifactDocument } from '../../outline/hooks/useArtifactDocument'
 import { ArtifactDocument } from '../ArtifactDocument'
@@ -222,7 +222,7 @@ describe('ArtifactDocument of a transcript', () => {
 
   it('has no accessibility violation on the conversation', async () => {
     const { container } = renderDocument('interview_transcript')
-    await screen.findByText('How do you look for a mentor today?')
+    await expectText('How do you look for a mentor today?')
 
     await expectNoAccessibilityViolations(container)
   })

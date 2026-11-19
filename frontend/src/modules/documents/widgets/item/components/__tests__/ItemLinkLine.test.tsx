@@ -4,7 +4,7 @@ import { describe, expect, it } from 'vitest'
 
 import type { ItemLinksResult } from '@/modules/trace/entities'
 import { renderWithProviders } from '@/test/render'
-import { expectNoAccessibilityViolations, pressEscape } from '@/test/steps'
+import { expectNoAccessibilityViolations, pressButton, pressEscape } from '@/test/steps'
 
 import { ItemLinkLine } from '../ItemLinkLine'
 
@@ -131,7 +131,7 @@ describe('ItemLinkLine', () => {
     renderLine()
 
     await user.click(screen.getByRole('button', { name: 'Analysed requirement, Requirement 1' }))
-    await user.click(await screen.findByRole('button', { name: 'More actions' }))
+    await pressButton('More actions')
     expect(await screen.findByRole('menuitem', { name: 'Remove this link' })).toBeInTheDocument()
 
     await pressEscape()
@@ -152,7 +152,7 @@ describe('ItemLinkLine', () => {
     )
 
     await user.click(screen.getByRole('button', { name: 'Analysed requirement, Requirement 1' }))
-    await user.click(await screen.findByRole('button', { name: 'More actions' }))
+    await pressButton('More actions')
     expect(await screen.findByRole('menuitem', { name: 'Remove this link' })).toHaveAttribute(
       'aria-disabled',
       'true',

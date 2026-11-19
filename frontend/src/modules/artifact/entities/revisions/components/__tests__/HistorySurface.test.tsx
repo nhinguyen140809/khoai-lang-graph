@@ -6,7 +6,7 @@ import { apiEndpoints } from '@/shared/api/endpoints'
 import { HttpMethod } from '@/shared/api/http'
 import { serverErrorOn } from '@/test/msw'
 import { renderWithProviders } from '@/test/render'
-import { expectNoAccessibilityViolations, pressKey } from '@/test/steps'
+import { expectNoAccessibilityViolations, expectText, pressButton, pressKey } from '@/test/steps'
 import { itShowsQueryStates } from '@/test/suites'
 
 import { useHistoryView } from '../../../revisions/hooks/useHistoryView'
@@ -111,7 +111,7 @@ describe('HistorySurface', () => {
 
     expect(screen.queryByRole('button', { name: /Restore/ })).not.toBeInTheDocument()
     await user.click(screen.getByRole('button', { name: 'Older version' }))
-    await user.click(await screen.findByRole('button', { name: 'More actions' }))
+    await pressButton('More actions')
     expect(
       await screen.findByRole('button', { name: `Restore ${String(historyCurrentVersion - 1)}` }),
     ).toBeInTheDocument()
@@ -143,7 +143,7 @@ describe('HistorySurface', () => {
     const user = userEvent.setup()
     const { container } = renderSurface()
     await user.click(screen.getByRole('button', { name: 'History' }))
-    await screen.findByText('Your edit')
+    await expectText('Your edit')
 
     await expectNoAccessibilityViolations(container)
   })

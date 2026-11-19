@@ -7,7 +7,7 @@ import { apiEndpoints } from '@/shared/api/endpoints'
 import { HttpMethod, HttpStatus } from '@/shared/api/http'
 import { openPage, recordRequests } from '@/test/msw'
 import { renderWithProviders } from '@/test/render'
-import { fillFields, pressButton, pressKeys, spyOnToast, typeText } from '@/test/steps'
+import { expectText, fillFields, pressButton, pressKeys, spyOnToast, typeText } from '@/test/steps'
 
 import { addLinkMessages } from '../../add-link.constants'
 import { AddLinkDialog } from '../AddLinkDialog'
@@ -29,7 +29,7 @@ function renderDialog(item = source) {
  * keyboard, since the popup of the combobox sits outside the dialog that opened it. */
 async function chooseTarget(title: string) {
   await typeText(screen.getByLabelText(addLinkMessages.target), title.slice(0, 4))
-  await screen.findByText(title)
+  await expectText(title)
   await pressKeys('{ArrowDown}{Enter}')
 }
 
@@ -56,7 +56,7 @@ describe('AddLinkDialog', () => {
 
   it('chooses the first kind of link of the item', async () => {
     renderDialog()
-    await screen.findByText('Link Search with free hours to another item')
+    await expectText('Link Search with free hours to another item')
 
     expect(screen.getByRole('combobox', { name: addLinkMessages.linkType })).toHaveTextContent(
       'Involves',

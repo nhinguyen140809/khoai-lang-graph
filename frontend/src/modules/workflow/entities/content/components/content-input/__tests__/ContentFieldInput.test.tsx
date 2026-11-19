@@ -5,7 +5,7 @@ import { FormProvider, useForm } from 'react-hook-form'
 import { describe, expect, it } from 'vitest'
 
 import { assertPresent } from '@/shared/lib/guards'
-import { expectNoAccessibilityViolations, typeText } from '@/test/steps'
+import { expectNoAccessibilityViolations, expectRole, typeText } from '@/test/steps'
 
 import type { ContentFormValues } from '../../../values/content-form.schema'
 import { contentFormValuesSchema, withContentProblems } from '../../../values/content-form.schema'
@@ -184,7 +184,7 @@ describe('ContentFieldInput', () => {
 
   it('has no accessibility violation', async () => {
     const { container } = render(<InputForm field={fieldOf('mood')} onSaved={() => undefined} />)
-    await screen.findByRole('combobox', { name: 'Mood' })
+    await expectRole('combobox', 'Mood')
 
     await expectNoAccessibilityViolations(container)
   })

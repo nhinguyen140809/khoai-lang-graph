@@ -5,6 +5,7 @@ import { describe, expect, it } from 'vitest'
 
 import { routerMock } from '@/test/next-stubs'
 import { renderWithProviders } from '@/test/render'
+import { expectPushedTo } from '@/test/steps'
 
 import { useEditorTabsStore } from '../../editor-tabs.store'
 import { PageLink } from '../PageLink'
@@ -21,7 +22,7 @@ describe('PageLink', () => {
 
     await userEvent.click(screen.getByRole('link', { name: 'A raw requirement' }))
 
-    expect(routerMock.push).toHaveBeenCalledWith(href)
+    await expectPushedTo(href)
     expect(useEditorTabsStore.getState().pendingOpen).toBeNull()
   })
 
@@ -30,7 +31,7 @@ describe('PageLink', () => {
 
     await userEvent.dblClick(screen.getByRole('link', { name: 'A raw requirement' }))
 
-    expect(routerMock.push).toHaveBeenCalledWith(href)
+    await expectPushedTo(href)
     expect(useEditorTabsStore.getState().pendingOpen).toMatchObject({ href, keep: true })
   })
 

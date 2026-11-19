@@ -7,7 +7,7 @@ import { contentSchemaFixtureByKind } from '@/mocks/workflow/artifact-kinds.fixt
 import { updateItem } from '@/modules/artifact/entities'
 import { contentFields } from '@/modules/workflow/entities'
 import { renderWithProviders } from '@/test/render'
-import { expectNoAccessibilityViolations } from '@/test/steps'
+import { expectNoAccessibilityViolations, expectText } from '@/test/steps'
 
 import type { HistoryLevel, HistoryView } from '../../../revisions/revisions.types'
 import { RevisionContent } from '../RevisionContent'
@@ -102,7 +102,7 @@ describe('RevisionContent', () => {
     const { container } = renderContent(
       viewOf({ level: 'version', selectedVersion: 2, showsChanges: false }),
     )
-    await screen.findByText(/two layers/)
+    await expectText(/two layers/)
 
     await expectNoAccessibilityViolations(container)
   })

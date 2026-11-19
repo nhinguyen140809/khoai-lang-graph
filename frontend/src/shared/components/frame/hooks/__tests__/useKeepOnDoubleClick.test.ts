@@ -1,5 +1,7 @@
 import { renderHook } from '@testing-library/react'
-import { beforeEach, describe, expect, it, vi } from 'vitest'
+import { beforeEach, describe, expect, it } from 'vitest'
+
+import { advanceTimers, withFakeTimers } from '@/test/steps'
 
 import { useEditorTabsStore } from '../../tabs/editor-tabs.store'
 import { notePageOpen } from '../../tabs/last-page-open.utils'
@@ -12,8 +14,8 @@ function click(type: 'click' | 'dblclick', x: number, y: number) {
 }
 
 describe('useKeepOnDoubleClick', () => {
+  withFakeTimers()
   beforeEach(() => {
-    vi.useFakeTimers()
     useEditorTabsStore.setState({ pendingOpen: null })
   })
 
@@ -24,7 +26,7 @@ describe('useKeepOnDoubleClick', () => {
 
     click('click', 100, 200)
     notePageOpen('/projects/p1/items/i1')
-    vi.advanceTimersByTime(150)
+    advanceTimers(150)
     click('click', 102, 201)
     click('dblclick', 102, 201)
 
@@ -40,7 +42,7 @@ describe('useKeepOnDoubleClick', () => {
     })
 
     // Long after any click of the other tests, so that nothing opened this page by a click.
-    vi.advanceTimersByTime(5000)
+    advanceTimers(5000)
     notePageOpen('/projects/p1/items/i2')
     click('dblclick', 100, 200)
 
@@ -57,7 +59,7 @@ describe('useKeepOnDoubleClick', () => {
     click('dblclick', 400, 200)
     expect(useEditorTabsStore.getState().pendingOpen).toBeNull()
 
-    vi.advanceTimersByTime(2000)
+    advanceTimers(2000)
     click('dblclick', 100, 200)
     expect(useEditorTabsStore.getState().pendingOpen).toBeNull()
   })

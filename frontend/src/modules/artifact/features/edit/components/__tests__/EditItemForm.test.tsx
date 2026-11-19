@@ -3,7 +3,13 @@ import userEvent from '@testing-library/user-event'
 import { describe, expect, it, vi } from 'vitest'
 
 import { renderWithProviders } from '@/test/render'
-import { expectNoAccessibilityViolations, replaceText, typeText } from '@/test/steps'
+import {
+  expectNoAccessibilityViolations,
+  expectRole,
+  pressButton,
+  replaceText,
+  typeText,
+} from '@/test/steps'
 
 import { useDiscardChangesDialogStore } from '../../stores/discard-changes-dialog.store'
 import { useEditingRecordStore } from '../../stores/editing-record.store'
@@ -77,7 +83,7 @@ describe('EditItemForm', () => {
     useEditingRecordStore.getState().startEditing({ type: 'item', id: editableItem.id })
     renderEditItemForm()
 
-    await user.click(await screen.findByRole('button', { name: 'Cancel' }))
+    await pressButton('Cancel')
     expect(useEditingRecordStore.getState().recordKey).toBeNull()
     expect(screen.queryByRole('alertdialog')).not.toBeInTheDocument()
 
@@ -96,14 +102,14 @@ describe('EditItemForm', () => {
   it('shows the reason of a lock beside a Save that it disables, and the alert above', async () => {
     renderEditItemForm({ lockedReason: 'Documents cannot change while the agents work.' })
 
-    await screen.findByRole('textbox', { name: 'Title' })
+    await expectRole('textbox', 'Title')
     expect(screen.getByRole('button', { name: 'Save' })).toBeDisabled()
     expect(screen.getByText('Documents cannot change while the agents work.')).toBeInTheDocument()
   })
 
   it('has no accessibility violation', async () => {
     const { container } = renderEditItemForm()
-    await screen.findByRole('textbox', { name: 'Title' })
+    await expectRole('textbox', 'Title')
 
     await expectNoAccessibilityViolations(container)
   })

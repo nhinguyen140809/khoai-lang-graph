@@ -1,8 +1,8 @@
 import { renderHook } from '@testing-library/react'
-import { afterEach, beforeEach, describe, expect, it, vi } from 'vitest'
+import { beforeEach, describe, expect, it } from 'vitest'
 
 import { setPathname } from '@/test/next-stubs'
-import { advanceTimers } from '@/test/steps'
+import { advanceTimers, withFakeTimers } from '@/test/steps'
 
 import { useKeptScroll } from '../useKeptScroll'
 
@@ -28,12 +28,9 @@ function show(
 }
 
 describe('useKeptScroll', () => {
+  withFakeTimers()
   beforeEach(() => {
-    vi.useFakeTimers()
     setPathname('/projects/p1/documents/d1')
-  })
-  afterEach(() => {
-    vi.useRealTimers()
   })
 
   it('puts a scroller back where the reader left it', () => {
