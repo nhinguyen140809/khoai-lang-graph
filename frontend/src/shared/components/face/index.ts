@@ -1,0 +1,5 @@
+export { Face } from './Face'
+export type { Mood } from './face.types'
+export { moods } from './face.types'
+export { eyeShapes } from './face-look.types'
+export { FaceName } from './FaceName'

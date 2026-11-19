@@ -1,0 +1,191 @@
+/* Text in the colors of a face: a line from its first color to its second, or to a darker shade of the first. */
+@utility face-text {
+  background-image: linear-gradient(90deg, var(--face-a), var(--face-b));
+  background-clip: text;
+  color: transparent;
+}
+
+/*
+ * The color of a face: a pale base, and two blobs of color on it, each blurred by a share of the
+ * width of the face (a container length, so that it holds at every size). The base fills the circle
+ * to its edge, so the edge stays sharp.
+ */
+@utility face-blur {
+  container-type: inline-size;
+  background-color: var(--face-base);
+}
+
+@utility face-blob {
+  position: absolute;
+  translate: -50% -50%;
+  filter: blur(11cqw);
+}
+
+/* The shapes of a blob: how long it is across its width, which also stretches its width so that a long one still shows its color, and its outline. */
+@utility face-shape-round {
+  --face-stretch: 1;
+  aspect-ratio: 1;
+  border-radius: 9999px;
+}
+
+/* An outline more uneven than `rounded-blob`: the blur softens an outline a good deal, so a slight unevenness is lost. */
+@utility face-shape-blob {
+  --face-stretch: 1.1;
+  aspect-ratio: 1.25;
+  border-radius: 28% 72% 64% 36% / 40% 30% 70% 60%;
+}
+
+@utility face-shape-ellipse {
+  --face-stretch: 1.3;
+  aspect-ratio: 1.9;
+  border-radius: 9999px;
+}
+
+@utility face-shape-streak {
+  --face-stretch: 1.55;
+  aspect-ratio: 2.9;
+  border-radius: 9999px;
+}
+
+/* The deep color: near the center, about the size that its reach gives it. */
+@utility face-blob-core {
+  left: var(--face-ax);
+  top: var(--face-ay);
+  width: calc(var(--face-reach) * 0.85 * var(--face-stretch));
+  rotate: var(--face-core-turn);
+  background-color: var(--face-a);
+}
+
+/* The second color: larger, from its own place. */
+@utility face-blob-second {
+  left: var(--face-bx);
+  top: var(--face-by);
+  width: calc(80% * var(--face-stretch));
+  rotate: var(--face-second-turn);
+  background-color: var(--face-b);
+}
+
+@theme {
+  --duration-face-blob: 6000ms;
+  --animate-face-blob: face-blob var(--duration-face-blob) ease-in-out infinite alternate;
+
+  @keyframes face-blob {
+    from {
+      translate: calc(-50% - 5cqw) calc(-50% + 4cqw);
+    }
+    to {
+      translate: calc(-50% + 5cqw) calc(-50% - 4cqw);
+    }
+  }
+}
+
+/*
+ * The life of a face: its eyes close for an instant now and then, and look about as its mood says;
+ * its blobs drift while it is at work. The face sets the delay of each, so that faces side by side
+ * do not blink or glance together.
+ */
+@theme {
+  --duration-face-blink: 5200ms;
+  --duration-face-wander: 9000ms;
+  --duration-face-circle: 3400ms;
+  --duration-face-scan: 1100ms;
+  --duration-face-swap: 110ms;
+  --duration-face-morph: 260ms;
+  --animate-face-blink: face-blink var(--duration-face-blink) ease-in-out infinite;
+  --animate-face-wander: face-wander var(--duration-face-wander) ease-in-out infinite;
+  --animate-face-circle: face-circle var(--duration-face-circle) ease-in-out infinite;
+  --animate-face-scan: face-scan var(--duration-face-scan) ease-in-out infinite alternate;
+
+  @keyframes face-blink {
+    0%,
+    90%,
+    100% {
+      transform: scaleY(1);
+    }
+    94% {
+      transform: scaleY(0.12);
+    }
+  }
+
+  /* Glances to six places, with a pause at each and a rest between: mostly the eyes look ahead. */
+  @keyframes face-wander {
+    0%,
+    30%,
+    100% {
+      transform: translate(0, 0);
+    }
+    35%,
+    42% {
+      transform: translate(-2.4px, -1.4px);
+    }
+    48%,
+    54% {
+      transform: translate(2.6px, 0.4px);
+    }
+    58%,
+    62% {
+      transform: translate(0, 0);
+    }
+    66%,
+    72% {
+      transform: translate(1.8px, 2px);
+    }
+    77%,
+    82% {
+      transform: translate(-0.6px, -2.2px);
+    }
+    87%,
+    93% {
+      transform: translate(-2.6px, 1.6px);
+    }
+    97% {
+      transform: translate(0, 0);
+    }
+  }
+
+  /* Round and round: up, to the right, down, to the left. */
+  @keyframes face-circle {
+    0%,
+    100% {
+      transform: translate(0, -2.2px);
+    }
+    25% {
+      transform: translate(2.4px, 0);
+    }
+    50% {
+      transform: translate(0, 2.2px);
+    }
+    75% {
+      transform: translate(-2.4px, 0);
+    }
+  }
+
+  /* Along a line, as if reading. */
+  @keyframes face-scan {
+    from {
+      transform: translateX(-2.2px);
+    }
+    to {
+      transform: translateX(2.2px);
+    }
+  }
+}
+
+/*
+ * What makes a change of mood gentle. The eyes close for an instant (`face-squash`) while the look
+ * of the eyes changes, and a brow or a mouth moves to its new shape and fades in or out (`face-morph`),
+ * each in its own time. A browser that cannot move a shape between two paths shows the new shape at
+ * once, and still fades it.
+ */
+@utility face-squash {
+  transition:
+    transform var(--duration-face-swap) var(--ease-standard),
+    scale var(--duration-face-swap) var(--ease-standard);
+}
+
+@utility face-morph {
+  transition:
+    d var(--duration-face-morph) var(--ease-standard),
+    opacity var(--duration-face-morph) var(--ease-standard),
+    fill var(--duration-face-morph) var(--ease-standard);
+}
