@@ -1,13 +1,13 @@
 import { act, render, screen } from '@testing-library/react'
-import { beforeEach, describe, expect, it, vi } from 'vitest'
+import { describe, expect, it, vi } from 'vitest'
+
+import { withFakeTimers } from '@/test/steps'
 
 import { swapMs } from '../directional-swap.constants'
 import { DirectionalSwap } from '../DirectionalSwap'
 
 describe('DirectionalSwap', () => {
-  beforeEach(() => {
-    vi.useFakeTimers()
-  })
+  withFakeTimers()
 
   it('brings the content in from below by default, over half its height', () => {
     render(<DirectionalSwap swapKey="a">one</DirectionalSwap>)

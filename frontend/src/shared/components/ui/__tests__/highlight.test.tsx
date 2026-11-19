@@ -1,7 +1,9 @@
-import { render, screen } from '@testing-library/react'
+import { render } from '@testing-library/react'
 import userEvent from '@testing-library/user-event'
 import { cloneElement } from 'react'
 import { describe, expect, it, vi } from 'vitest'
+
+import { expectFocused } from '@/test/steps'
 
 import { Highlight } from '../highlight'
 
@@ -106,7 +108,7 @@ describe('Highlight', () => {
     )
 
     await user.tab()
-    expect(screen.getByRole('button', { name: 'b' })).toHaveFocus()
+    expectFocused('button', 'b')
     await user.keyboard('{Enter}')
     await user.keyboard(' ')
 

@@ -4,7 +4,7 @@ import { describe, expect, it } from 'vitest'
 
 import { assertPresent } from '@/shared/lib/guards'
 import { renderWithProviders } from '@/test/render'
-import { expectNoAccessibilityViolations, expectRole } from '@/test/steps'
+import { expectNoAccessibilityViolations, expectNoRole, expectRole } from '@/test/steps'
 
 import { Button } from '../button'
 import { DisabledReason } from '../disabled-reason'
@@ -36,7 +36,7 @@ describe('DisabledReason', () => {
     const button = screen.getByRole('button', { name: 'Edit' })
     expect(container.firstElementChild).toBe(button)
     await user.hover(button)
-    expect(screen.queryByRole('tooltip')).not.toBeInTheDocument()
+    expectNoRole('tooltip')
   })
 
   it('shows the reason in a tooltip on hover, as the description of the wrapper', async () => {

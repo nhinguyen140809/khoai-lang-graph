@@ -1,10 +1,10 @@
-import { beforeEach, describe, expect, it, vi } from 'vitest'
+import { describe, expect, it, vi } from 'vitest'
+
+import { withFakeTimers } from '@/test/steps'
 
 import { sleep } from '../sleep.utils'
 
-beforeEach(() => {
-  vi.useFakeTimers()
-})
+withFakeTimers()
 
 describe('sleep', () => {
   it('stays pending until the time has passed', async () => {

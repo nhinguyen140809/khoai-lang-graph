@@ -5,7 +5,7 @@ import { describe, expect, it } from 'vitest'
 import { projectIds } from '@/mocks/shared/db'
 import { routerMock } from '@/test/next-stubs'
 import { renderWithProviders } from '@/test/render'
-import { expectPushedTo } from '@/test/steps'
+import { expectNoRole, expectNoText, expectPushedTo, expectText } from '@/test/steps'
 
 import { GapPage } from '../GapPage'
 
@@ -19,7 +19,7 @@ describe('GapPage', () => {
   it('names the page after the gap and lists its items', async () => {
     renderPage('needs_review')
 
-    expect(await screen.findByText('Links to check')).toBeInTheDocument()
+    await expectText('Links to check')
     expect(
       screen.getByText(
         'The item that each of these links is based on changed after the link was made, or was replaced.',
@@ -32,10 +32,10 @@ describe('GapPage', () => {
     renderPage('needs_review')
 
     // The row names the item only: its kind and its title, without the document it sits in.
-    expect(await screen.findByText('Book a session')).toBeInTheDocument()
+    await expectText('Book a session')
     expect(screen.getAllByText('Requirement').length).toBeGreaterThan(0)
     // The key is left out: the kind and the title say which item the row is.
-    expect(screen.queryByText('REQ-003')).not.toBeInTheDocument()
+    expectNoText('REQ-003')
   })
 
   it('opens a page named after the key for a gap the coverage does not list, with its list empty', async () => {
@@ -45,8 +45,8 @@ describe('GapPage', () => {
     expect(
       await screen.findByRole('heading', { level: 1, name: /No such gap/ }),
     ).toBeInTheDocument()
-    expect(screen.getByText('This list is empty.')).toBeInTheDocument()
-    expect(screen.queryByRole('button', { name: 'Back to the overview' })).not.toBeInTheDocument()
+    await expectText('This list is empty.')
+    expectNoRole('button', 'Back to the overview')
   })
 
   it('boxes each target that changed under its item, with the versions as two badges', async () => {

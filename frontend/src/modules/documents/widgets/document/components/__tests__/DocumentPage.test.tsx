@@ -45,7 +45,7 @@ describe('DocumentPage', () => {
     expect(
       await screen.findByRole('heading', { level: 1, name: analysis.title }),
     ).toBeInTheDocument()
-    expect(await screen.findByRole('heading', { name: /Stated need/ })).toBeInTheDocument()
+    await expectRole('heading', /Stated need/)
   })
 
   it('opens a tab titled with the document, with the icon of a review while it waits for one', async () => {
@@ -60,7 +60,7 @@ describe('DocumentPage', () => {
   it('opens a tab for a document that does not exist, with the state in it', async () => {
     renderDocument('missing-document')
 
-    expect(await screen.findByText('Document not found')).toBeInTheDocument()
+    await expectText('Document not found')
     await findTab('Document')
   })
 
@@ -77,7 +77,7 @@ describe('DocumentPage', () => {
   it('opens a tab named by the list for a document that fails to load, with the error in it', async () => {
     renderDocument(analysis.id, '/?mock-artifact=error')
 
-    expect(await screen.findByText('The document could not load.')).toBeInTheDocument()
+    await expectText('The document could not load.')
     await findTab(analysis.title)
   })
 

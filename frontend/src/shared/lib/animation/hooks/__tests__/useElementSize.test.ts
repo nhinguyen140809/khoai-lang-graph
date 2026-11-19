@@ -1,5 +1,5 @@
 import { act, renderHook } from '@testing-library/react'
-import { afterEach, describe, expect, it, vi } from 'vitest'
+import { describe, expect, it, vi } from 'vitest'
 
 import { useElementSize } from '../useElementSize'
 
@@ -39,10 +39,6 @@ function renderMeasured() {
 }
 
 describe('useElementSize', () => {
-  afterEach(() => {
-    vi.unstubAllGlobals()
-  })
-
   it('has no size before the first measure', () => {
     stubResizeObserver()
 

@@ -7,7 +7,12 @@ import { buildThread } from '@/mocks/threads/threads.fixtures'
 import type { Thread } from '@/modules/thread/entities'
 import { routes } from '@/shared/routes'
 import { renderWithProviders } from '@/test/render'
-import { expectNoAccessibilityViolations, expectPushedTo, expectText } from '@/test/steps'
+import {
+  expectNoAccessibilityViolations,
+  expectNoText,
+  expectPushedTo,
+  expectText,
+} from '@/test/steps'
 
 import { OutlineSection } from '../OutlineSection'
 
@@ -21,8 +26,8 @@ describe('OutlineSection', () => {
     renderWithProviders(<OutlineSection thread={mentorThread} projectId={projectIds.mentor} />)
 
     // The messages of the agents never show; the pending one is the newest.
-    expect(await screen.findByText('Also ask about group sessions.')).toBeInTheDocument()
-    expect(screen.queryByText(/one conflict/)).not.toBeInTheDocument()
+    await expectText('Also ask about group sessions.')
+    expectNoText(/one conflict/)
   })
 
   it('says its empty state for a thread without messages of the user', async () => {

@@ -119,7 +119,6 @@ describe('listenToRun', () => {
     expect(openedEventSources()[0]?.closed).toBe(true)
     expect(openedEventSources()).toHaveLength(1)
     stop()
-    vi.useRealTimers()
   })
 
   it('tells the listeners that the connection failed and opens it after the last event read', () => {
@@ -135,7 +134,6 @@ describe('listenToRun', () => {
     expect(openedEventSources()).toHaveLength(2)
     expect(openedEventSources()[1]?.url).toMatch(/after=7$/)
     stop()
-    vi.useRealTimers()
   })
 
   it('does not open the stream again when the last listener left after the failure', () => {
@@ -147,7 +145,6 @@ describe('listenToRun', () => {
     vi.advanceTimersByTime(streamReopenMs)
 
     expect(openedEventSources()).toHaveLength(1)
-    vi.useRealTimers()
   })
 
   it('drops an event that does not parse', () => {

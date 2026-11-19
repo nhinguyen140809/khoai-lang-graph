@@ -1,8 +1,7 @@
 import { render, screen } from '@testing-library/react'
-import userEvent from '@testing-library/user-event'
 import { describe, expect, it } from 'vitest'
 
-import { expectNoAccessibilityViolations } from '@/test/steps'
+import { expectNoAccessibilityViolations, pressButton } from '@/test/steps'
 
 import { Button } from '../button'
 import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogTrigger } from '../dialog'
@@ -31,7 +30,7 @@ describe('DialogContent', () => {
     { name: 'xl', size: 'xl' as const, data: 'xl' },
   ])('names its width, $name', async ({ size, data }) => {
     render(dialogWith(size))
-    await userEvent.click(screen.getByRole('button', { name: 'Open' }))
+    await pressButton('Open')
 
     const dialog = await screen.findByRole('dialog')
     expect(dialog).toHaveAttribute('data-size', data)
@@ -40,14 +39,14 @@ describe('DialogContent', () => {
 
   it('scrolls its body when asked', async () => {
     render(dialogWith(undefined, true))
-    await userEvent.click(screen.getByRole('button', { name: 'Open' }))
+    await pressButton('Open')
 
     expect(await screen.findByRole('dialog')).toHaveAttribute('data-scroll-body', 'true')
   })
 
   it('keeps the fill of the install without the props', async () => {
     render(dialogWith())
-    await userEvent.click(screen.getByRole('button', { name: 'Open' }))
+    await pressButton('Open')
 
     const dialog = await screen.findByRole('dialog')
     expect(dialog).toHaveAttribute('data-scroll-body', 'false')

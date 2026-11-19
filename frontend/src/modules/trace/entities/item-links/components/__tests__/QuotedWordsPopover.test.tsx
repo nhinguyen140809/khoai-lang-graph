@@ -1,11 +1,10 @@
 import { screen } from '@testing-library/react'
-import userEvent from '@testing-library/user-event'
 import { describe, expect, it } from 'vitest'
 
 import { itemFixtureByKey } from '@/mocks/artifacts/fixtures/artifacts.fixtures'
 import { projectIds } from '@/mocks/shared/db'
 import { renderWithProviders } from '@/test/render'
-import { expectNoAccessibilityViolations, expectText } from '@/test/steps'
+import { expectNoAccessibilityViolations, expectText, pressButton } from '@/test/steps'
 
 import type { LinkedEntry } from '../../item-links.types'
 import { QuotedWordsPopover } from '../QuotedWordsPopover'
@@ -28,7 +27,6 @@ function entryOf(item: typeof analyzed, overrides: Partial<LinkedEntry> = {}): L
 
 describe('QuotedWordsPopover', () => {
   it('opens on a click of its trigger and shows the card with the words of the other end in it', async () => {
-    const user = userEvent.setup()
     renderWithProviders(
       <QuotedWordsPopover
         projectId={projectId}
@@ -45,20 +43,19 @@ describe('QuotedWordsPopover', () => {
       </QuotedWordsPopover>,
     )
 
-    await user.click(screen.getByRole('button', { name: 'AR-001' }))
+    await pressButton('AR-001')
 
-    expect(await screen.findByText('Analysed requirement')).toBeInTheDocument()
+    await expectText('Analysed requirement')
     expect(
       screen.getByRole('link', { name: 'Analysed requirement, List mentors by field' }),
     ).toBeInTheDocument()
-    expect(screen.getByText('This item is based on List mentors by field.')).toBeInTheDocument()
-    expect(screen.getByText('lists mentors by field of study')).toBeInTheDocument()
-    expect(screen.getByText('words that are gone')).toBeInTheDocument()
-    expect(screen.getByText(/quotes these words\./)).toBeInTheDocument()
+    await expectText('This item is based on List mentors by field.')
+    await expectText('lists mentors by field of study')
+    await expectText('words that are gone')
+    await expectText(/quotes these words\./)
   })
 
   it('puts the words a link quotes where the item holds them: in the title of an item that has only its title', async () => {
-    const user = userEvent.setup()
     const message = {
       ...analyzed,
       kind: 'interview_message',
@@ -77,7 +74,7 @@ describe('QuotedWordsPopover', () => {
       </QuotedWordsPopover>,
     )
 
-    await user.click(screen.getByRole('button', { name: 'Open the card' }))
+    await pressButton('Open the card')
 
     // The words are marked in the title, which is the item's own words, and said once.
     const mark = await screen.findByText('who is free this week')
@@ -88,7 +85,6 @@ describe('QuotedWordsPopover', () => {
   })
 
   it('marks the words in the sentence of the field that holds them, under the title', async () => {
-    const user = userEvent.setup()
     renderWithProviders(
       <QuotedWordsPopover
         projectId={projectId}
@@ -98,7 +94,7 @@ describe('QuotedWordsPopover', () => {
       </QuotedWordsPopover>,
     )
 
-    await user.click(screen.getByRole('button', { name: 'Open the card' }))
+    await pressButton('Open the card')
 
     // The statement of the analysis holds the words, so the title stays plain and the sentence shows them.
     const mark = await screen.findByText('lists mentors by field of study')
@@ -108,13 +104,12 @@ describe('QuotedWordsPopover', () => {
   })
 
   it('has no accessibility violation', async () => {
-    const user = userEvent.setup()
     const { container } = renderWithProviders(
       <QuotedWordsPopover projectId={projectId} entries={[entryOf(analyzed)]}>
         <button type="button">AR-001</button>
       </QuotedWordsPopover>,
     )
-    await user.click(screen.getByRole('button', { name: 'AR-001' }))
+    await pressButton('AR-001')
     await expectText('This item is based on List mentors by field.')
 
     await expectNoAccessibilityViolations(container)

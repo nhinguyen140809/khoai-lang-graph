@@ -7,7 +7,12 @@ import { contentSchemaFixtureByKind } from '@/mocks/workflow/artifact-kinds.fixt
 import { updateItem } from '@/modules/artifact/entities'
 import { contentFields } from '@/modules/workflow/entities'
 import { renderWithProviders } from '@/test/render'
-import { expectNoAccessibilityViolations, expectText } from '@/test/steps'
+import {
+  expectNoAccessibilityViolations,
+  expectNoRole,
+  expectNoText,
+  expectText,
+} from '@/test/steps'
 
 import type { HistoryLevel, HistoryView } from '../../../revisions/revisions.types'
 import { RevisionContent } from '../RevisionContent'
@@ -66,8 +71,8 @@ describe('RevisionContent', () => {
         'A booking runs in two layers: a request, then the approval of the mentor or the admin.',
       ),
     ).toBeInTheDocument()
-    expect(screen.queryByText(/Version 2 of 2/)).not.toBeInTheDocument()
-    expect(screen.queryByRole('button', { name: 'Close the history' })).not.toBeInTheDocument()
+    expectNoText(/Version 2 of 2/)
+    expectNoRole('button', 'Close the history')
   })
 
   it('marks the fields that a version changed, and reads one without a change as it is', async () => {
@@ -80,10 +85,10 @@ describe('RevisionContent', () => {
       id: changed.id,
     })
 
-    expect(await screen.findByText('Changed')).toBeInTheDocument()
-    expect(screen.getByText(/search results fast/)).toBeInTheDocument()
-    expect(screen.getByText(/search result is listed/)).toBeInTheDocument()
-    expect(screen.getByText('Students leave a slow page.')).toBeInTheDocument()
+    await expectText('Changed')
+    await expectText(/search results fast/)
+    await expectText(/search result is listed/)
+    await expectText('Students leave a slow page.')
   })
 
   it('says that a version without a change of content did not change', async () => {
@@ -95,7 +100,7 @@ describe('RevisionContent', () => {
       id: unchanged.id,
     })
 
-    expect(await screen.findByText('The content did not change.')).toBeInTheDocument()
+    await expectText('The content did not change.')
   })
 
   it('has no accessibility violation', async () => {

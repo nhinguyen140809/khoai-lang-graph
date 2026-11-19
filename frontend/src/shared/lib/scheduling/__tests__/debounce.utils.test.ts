@@ -1,10 +1,10 @@
-import { beforeEach, describe, expect, it, vi } from 'vitest'
+import { describe, expect, it, vi } from 'vitest'
+
+import { withFakeTimers } from '@/test/steps'
 
 import { debounce } from '../debounce.utils'
 
-beforeEach(() => {
-  vi.useFakeTimers()
-})
+withFakeTimers()
 
 describe('debounce', () => {
   it('runs once after the wait, with the arguments of the last call', () => {

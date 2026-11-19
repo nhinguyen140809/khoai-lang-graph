@@ -5,7 +5,7 @@ import { itemFixtureByKey } from '@/mocks/artifacts/fixtures/artifacts.fixtures'
 import { projectIds } from '@/mocks/shared/db'
 import { contentSchemaFixtureByKind } from '@/mocks/workflow/artifact-kinds.fixtures'
 import { renderWithProviders } from '@/test/render'
-import { expectNoAccessibilityViolations } from '@/test/steps'
+import { expectNoAccessibilityViolations, expectNoRole, expectRole } from '@/test/steps'
 
 import { itemPageViewOf } from '../../item-layout.utils'
 import { ItemDetails } from '../ItemDetails'
@@ -54,15 +54,15 @@ describe('ItemDetails', () => {
 })
 
 describe('ItemDetails of a profile', () => {
-  it('draws the body without the name, the stakeholder type and the status, each list in one column and each text across', () => {
+  it('draws the body without the name, the stakeholder type and the status, each list in one column and each text across', async () => {
     renderWithProviders(
       <ItemDetails item={persona} layout={personaView.layout} fields={personaView.bodyFields} />,
     )
 
-    expect(screen.queryByRole('heading', { name: 'Name' })).not.toBeInTheDocument()
-    expect(screen.queryByRole('heading', { name: 'Stakeholder type' })).not.toBeInTheDocument()
-    expect(screen.queryByRole('heading', { name: 'Interview status' })).not.toBeInTheDocument()
-    expect(screen.getByRole('heading', { name: 'Background' })).toBeInTheDocument()
+    expectNoRole('heading', 'Name')
+    expectNoRole('heading', 'Stakeholder type')
+    expectNoRole('heading', 'Interview status')
+    await expectRole('heading', 'Background')
     const goals = screen.getByRole('heading', { name: 'Goals' }).closest('section')
     expect(goals).not.toHaveAttribute('data-wide')
     const background = screen.getByRole('heading', { name: 'Background' }).closest('section')

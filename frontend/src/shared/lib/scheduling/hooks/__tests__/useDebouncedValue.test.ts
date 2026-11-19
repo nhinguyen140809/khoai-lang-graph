@@ -1,16 +1,12 @@
 import { act, renderHook } from '@testing-library/react'
-import { afterEach, beforeEach, describe, expect, it, vi } from 'vitest'
+import { describe, expect, it, vi } from 'vitest'
+
+import { withFakeTimers } from '@/test/steps'
 
 import { useDebouncedValue } from '../useDebouncedValue'
 
 describe('useDebouncedValue', () => {
-  beforeEach(() => {
-    vi.useFakeTimers()
-  })
-  afterEach(() => {
-    vi.useRealTimers()
-  })
-
+  withFakeTimers()
   it('starts as the value it is given', () => {
     const { result } = renderHook(() => useDebouncedValue('first', 250))
 
