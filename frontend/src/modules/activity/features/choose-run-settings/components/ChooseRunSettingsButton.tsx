@@ -15,17 +15,19 @@ interface ChooseRunSettingsButtonProps {
   thread: Thread | null
 }
 
+/** Why the settings cannot be chosen now, in words; null while they can. */
+function disabledReasonOf(thread: Thread | null): string | null {
+  if (thread === null) return chooseRunSettingsMessages.noThread
+  if (hasUnfinishedRun(thread)) return chooseRunSettingsMessages.inRun
+  return null
+}
+
 /** The item of the start side of the row under the prompt: it opens the dialog of the run settings. */
 export function ChooseRunSettingsButton({ thread }: ChooseRunSettingsButtonProps) {
   const chosen = useChosenRunSettings(thread?.id ?? null)
   const openRunSettings = useOpenRunSettingsDialog()
-  const isDisabled = thread === null || hasUnfinishedRun(thread)
-  const reason =
-    thread === null
-      ? chooseRunSettingsMessages.noThread
-      : isDisabled
-        ? chooseRunSettingsMessages.inRun
-        : null
+  const reason = disabledReasonOf(thread)
+  const isDisabled = reason !== null
 
   return (
     <DisabledReason reason={reason}>
