@@ -1,5 +1,6 @@
 import type { ArtifactItem } from '@/modules/artifact/entities'
 import type { TraceLink } from '@/modules/trace/entities'
+import { indexBy } from '@/shared/lib/collections'
 
 import { IdPrefix, mockId } from '../../shared/db'
 import type { LinkSpec } from '../trace-links.types'
@@ -9,7 +10,7 @@ import type { LinkSpec } from '../trace-links.types'
  * from the ids of the others; a spec that names a key the items do not hold is left out.
  */
 export function buildTraceLinks(specs: LinkSpec[], items: ArtifactItem[], n: number): TraceLink[] {
-  const byKey = new Map(items.map((item) => [item.key, item]))
+  const byKey = indexBy(items, (item) => item.key)
   return specs.flatMap((spec, index) => {
     const source = byKey.get(spec.source)
     const target = byKey.get(spec.target)

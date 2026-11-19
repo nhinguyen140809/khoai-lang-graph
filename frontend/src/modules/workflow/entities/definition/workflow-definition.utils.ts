@@ -1,3 +1,5 @@
+import { indexBy } from '@/shared/lib/collections'
+
 import type { WorkflowDefinition } from './workflow-definition.types'
 import type { CheckpointNode, WorkflowEdge, WorkflowNode } from './workflow-graph.types'
 import type { AgentRole, Tool, ValueList } from './workflow-vocabulary.types'
@@ -19,19 +21,27 @@ export function edgesFrom(definition: WorkflowDefinition, nodeId: string): Workf
 
 /** The label of each agent role of a definition, by its key. */
 export function agentRoleLabels(definition: WorkflowDefinition): Map<string, string> {
-  return new Map(definition.agent_roles.map(({ key, label }) => [key, label]))
+  return indexBy(
+    definition.agent_roles,
+    ({ key }) => key,
+    ({ label }) => label,
+  )
 }
 
 /** The tools of a definition, by their key. */
 export function toolsOf(definition: Pick<WorkflowDefinition, 'tools'>): Map<string, Tool> {
-  return new Map(definition.tools.map((tool) => [tool.key, tool]))
+  return indexBy(definition.tools, (tool) => tool.key)
 }
 
 /** The title of each link type of a definition, by its key. */
 export function linkTypeTitles(
   definition: Pick<WorkflowDefinition, 'link_types'>,
 ): Map<string, string> {
-  return new Map(definition.link_types.map(({ key, title }) => [key, title]))
+  return indexBy(
+    definition.link_types,
+    ({ key }) => key,
+    ({ title }) => title,
+  )
 }
 
 /** The kinds of item that each kind of artifact holds, in the order of the definition, by its kind. */

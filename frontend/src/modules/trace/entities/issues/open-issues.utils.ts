@@ -1,5 +1,6 @@
 import type { ArtifactItem } from '@/modules/artifact/entities/@x/trace'
 import { isOpenIssue } from '@/modules/workflow/entities/@x/trace'
+import { indexBy } from '@/shared/lib/collections'
 
 import type { TraceLink } from '../links/trace-links.types'
 import type { IssueContext, OpenIssueEntry, OpenIssueGroup } from './open-issues.types'
@@ -15,7 +16,7 @@ export function openIssueEntries(
   links: readonly TraceLink[],
   context: IssueContext,
 ): OpenIssueGroup[] {
-  const byId = new Map(items.map((item) => [item.id, item]))
+  const byId = indexBy(items, (item) => item.id)
   return context.issueKinds.flatMap(({ kind }) => {
     const { about, parties } = context.linkTypesOf(kind)
     const entries = items

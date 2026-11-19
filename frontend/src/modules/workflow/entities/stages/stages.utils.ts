@@ -1,10 +1,16 @@
+import { indexBy } from '@/shared/lib/collections'
+
 import type { WorkflowDefinition } from '../definition/workflow-definition.types'
 import type { WorkflowStage } from '../definition/workflow-vocabulary.types'
 import type { VisibleStage } from './stages.types'
 
 /** The title of each stage, by the key of the stage. */
 export function stageTitles(definition: WorkflowDefinition): Map<string, string> {
-  return new Map(definition.stages.map(({ key, title }) => [key, title]))
+  return indexBy(
+    definition.stages,
+    ({ key }) => key,
+    ({ title }) => title,
+  )
 }
 
 /**

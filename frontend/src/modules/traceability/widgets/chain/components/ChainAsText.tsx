@@ -11,6 +11,7 @@ import {
   CollapsibleContent,
   CollapsibleTrigger,
 } from '@/shared/components/ui/collapsible'
+import { indexBy } from '@/shared/lib/collections'
 import { routes } from '@/shared/routes'
 
 import { itemTraceMessages } from '../item-trace.constants'
@@ -23,7 +24,7 @@ import { itemTraceMessages } from '../item-trace.constants'
 export function ChainAsText({ graph }: { graph: ChainGraph }) {
   const project = routes.project(useProjectId())
   // One pass over the nodes, so each sentence finds both its titles without walking the list again.
-  const nodeById = new Map(graph.nodes.map((node) => [node.id, node]))
+  const nodeById = indexBy(graph.nodes, (node) => node.id)
   return (
     <Collapsible className="shrink-0 border-t px-6 py-2">
       <CollapsibleTrigger asChild>
