@@ -47,7 +47,7 @@ const environmentOwners = [
   'src/shared/lib/url/reload.utils.ts',
   'src/shared/api/request/api-url.utils.ts',
   'src/shared/routes/auth/auth-redirect.utils.ts',
-  'src/shared/components/ui/sidebar.tsx',
+  'src/shared/components/ui/sidebar/SidebarProvider.tsx',
   'src/modules/design-system/widgets/showcase/components/cards/CommandCard.tsx',
   'src/test/msw/scenario-address.utils.ts',
   'src/mocks/shared/scenario/mock-scenario.utils.ts',
