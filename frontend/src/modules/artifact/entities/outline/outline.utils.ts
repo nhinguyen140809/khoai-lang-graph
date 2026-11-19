@@ -196,6 +196,21 @@ export function isBranch(node: OutlineNode): node is Extract<OutlineNode, { chil
   return node.type === 'section' || node.type === 'group'
 }
 
+/**
+ * The rows from the top of the outline down to the row with this id, itself included, in that
+ * order; empty when no row has the id.
+ */
+export function outlinePath(nodes: readonly OutlineNode[], id: string): OutlineNode[] {
+  for (const node of nodes) {
+    if (node.id === id) return [node]
+    if (isBranch(node)) {
+      const below = outlinePath(node.children, id)
+      if (below.length > 0) return [node, ...below]
+    }
+  }
+  return []
+}
+
 /** The rows of type `item` that a reader goes through, in order. */
 function outlineLeaves(nodes: readonly OutlineNode[]): Extract<OutlineNode, { type: 'item' }>[] {
   return nodes.flatMap((node) => {
