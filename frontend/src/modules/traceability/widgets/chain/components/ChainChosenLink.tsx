@@ -4,6 +4,7 @@ import { useProjectId } from '@/modules/project/entities'
 import { type ChainGraph, type LinkQuote, QuotedItemCard } from '@/modules/trace/entities'
 import { useContentSchemas } from '@/modules/workflow/entities'
 import { Alert, AlertTitle } from '@/shared/components/ui/alert'
+import { indexBy } from '@/shared/lib/collections'
 import { routes } from '@/shared/routes'
 
 import { chainEdgeLooks } from '../item-trace.constants'
@@ -19,7 +20,7 @@ export function ChainChosenLink({ graph, linkId }: { graph: ChainGraph; linkId: 
   const schemas = useContentSchemas()
   const edge = graph.edges.find(({ id }) => id === linkId)
   if (edge === undefined) return null
-  const nodeById = new Map(graph.nodes.map((node) => [node.id, node]))
+  const nodeById = indexBy(graph.nodes, (node) => node.id)
 
   const card = (side: LinkQuote['side'], quote: string | null) => {
     const node = nodeById.get(side === 'source' ? edge.source : edge.target)

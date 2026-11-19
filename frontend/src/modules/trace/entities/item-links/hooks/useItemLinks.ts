@@ -11,6 +11,7 @@ import {
   useKindTitleOf,
   useWorkflowDefinition,
 } from '@/modules/workflow/entities/@x/trace'
+import { indexBy } from '@/shared/lib/collections'
 
 import { itemLinkGroups, linkQuotesByItem } from '../../chains/chains.utils'
 import { useItemTrace } from '../../chains/hooks/useChainQueries'
@@ -57,7 +58,7 @@ export function useItemLinks(itemId: string): ItemLinksResult {
       incoming: groups.incoming,
       count: rows.length,
       fieldMarks,
-      rowsByLinkId: new Map(rows.map((row) => [row.link.id, row])),
+      rowsByLinkId: indexBy(rows, (row) => row.link.id),
     }
   }, [trace.data, definition, kinds, titleOf, kindTitleOf, itemId])
 

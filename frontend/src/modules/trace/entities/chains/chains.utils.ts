@@ -1,4 +1,4 @@
-import { collectBy, rankIn } from '@/shared/lib/collections'
+import { collectBy, indexBy, rankIn } from '@/shared/lib/collections'
 
 import type { TraceLink } from '../links/trace-links.types'
 import { isLinkOutOfDate } from '../links/trace-links.utils'
@@ -8,7 +8,7 @@ import type { ItemLinkGroup, ItemLinkRow, LinkQuote, Trace, TraceItem } from './
 // version of what they link to, and the links of an item by type.
 
 function itemById(trace: Trace): Map<string, TraceItem> {
-  return new Map(trace.items.map((item) => [item.id, item]))
+  return indexBy(trace.items, (item) => item.id)
 }
 
 /**
