@@ -1,7 +1,7 @@
-import { act, render, screen } from '@testing-library/react'
-import { describe, expect, it, vi } from 'vitest'
+import { render, screen } from '@testing-library/react'
+import { describe, expect, it } from 'vitest'
 
-import { withFakeTimers } from '@/test/steps'
+import { advanceTimers, withFakeTimers } from '@/test/steps'
 
 import { swapMs } from '../directional-swap.constants'
 import { DirectionalSwap } from '../DirectionalSwap'
@@ -49,9 +49,7 @@ describe('DirectionalSwap', () => {
     expect(old.style.getPropertyValue('--tw-exit-translate-y')).toBe('-50%')
     expect(screen.getByText('two')).toBeInTheDocument()
 
-    act(() => {
-      vi.advanceTimersByTime(swapMs)
-    })
+    advanceTimers(swapMs)
 
     expect(screen.queryByText('one')).not.toBeInTheDocument()
     expect(screen.getByText('two')).toBeInTheDocument()
@@ -129,9 +127,7 @@ describe('DirectionalSwap', () => {
     expect(screen.getByText('one')).toBeInTheDocument()
     expect(screen.queryByText('two')).not.toBeInTheDocument()
 
-    act(() => {
-      vi.advanceTimersByTime(swapMs)
-    })
+    advanceTimers(swapMs)
 
     expect(screen.queryByText('one')).not.toBeInTheDocument()
     expect(screen.getByText('two')).toBeInTheDocument()

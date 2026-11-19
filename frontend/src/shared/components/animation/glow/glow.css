@@ -1,0 +1,41 @@
+/* The softest edge of a glow, for one so large that the usual blur leaves its outline in sight. */
+@utility blur-glow {
+  filter: blur(120px);
+}
+
+/* The outline of a blob of light: round, but not a circle or an ellipse. */
+@utility rounded-blob {
+  border-radius: 42% 58% 55% 45% / 48% 42% 58% 52%;
+}
+
+/*
+ * The motion of a `Glow`: it drifts slowly over a corner of its place and back, or breathes, a little
+ * larger and smaller. The time of each is the time of one way, its token above, unless the glow
+ * is given another.
+ */
+@theme {
+  --duration-glow-drift: 18000ms;
+  --duration-glow-pulse: 6000ms;
+  --animate-glow-drift: glow-drift var(--duration-glow-drift) var(--ease-standard) infinite
+    alternate;
+  --animate-glow-pulse: glow-pulse var(--duration-glow-pulse) var(--ease-standard) infinite
+    alternate;
+
+  @keyframes glow-drift {
+    from {
+      transform: translate3d(-4%, -3%, 0) scale(1);
+    }
+    to {
+      transform: translate3d(4%, 4%, 0) scale(1.1);
+    }
+  }
+
+  @keyframes glow-pulse {
+    from {
+      transform: scale(0.92);
+    }
+    to {
+      transform: scale(1.08);
+    }
+  }
+}

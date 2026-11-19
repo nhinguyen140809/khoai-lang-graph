@@ -20,6 +20,16 @@ describe('Shimmer', () => {
     expect(text.className).toContain('--tone-strong:var(--success-strong)')
   })
 
+  it('fills the text with the tone and crosses it with the foreground in the solid variant', () => {
+    render(
+      <Shimmer color="success" variant="solid">
+        Working
+      </Shimmer>,
+    )
+
+    expect(screen.getByText('Working')).toHaveClass('shimmer-tone-solid')
+  })
+
   it('crosses the text for as long as it is asked to', () => {
     render(<Shimmer duration={1200}>Working</Shimmer>)
 

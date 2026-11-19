@@ -32,7 +32,7 @@
   --max-height-dialog: 80dvh;
   --max-height-history-list: min(24rem, 50vh);
   --max-width-popover: calc(100vw - 2rem);
-  --padding-prompt-top: 18vh;
+  --padding-prompt-top: 26vh;
   --grid-template-rows-header-body: auto minmax(0, 1fr);
   --grid-template-rows-body-footer: minmax(0, 1fr) auto;
 }

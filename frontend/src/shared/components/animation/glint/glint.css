@@ -1,0 +1,381 @@
+/*
+ * The work that goes on, after the loading indicator of Material 3 and the sparkle icon: one solid
+ * four-point star that fills out to a rounded square and draws back, while it turns. Every shape
+ * has the same number of points, so the browser can move between them.
+ */
+@theme {
+  --duration-glint-morph: 2400ms;
+  --duration-glint-mesh: 3200ms;
+  --blur-glint: 2.5px;
+  --opacity-glint: 0.65;
+  /* How far the glow reaches past the star; the frame of the glint clips at this distance. */
+  --spacing-glint-reach: 1.25rem;
+  --animate-glint-turn: glint-turn 4.8s linear infinite;
+
+  @keyframes glint-morph {
+    0% {
+      clip-path: polygon(
+        100% 50%,
+        79.9% 53.9%,
+        74.4% 56.5%,
+        70.9% 58.7%,
+        68.3% 60.6%,
+        66.1% 62.4%,
+        64.2% 64.2%,
+        62.4% 66.1%,
+        60.6% 68.3%,
+        58.7% 70.9%,
+        56.5% 74.4%,
+        53.9% 79.9%,
+        50% 100%,
+        46.1% 79.9%,
+        43.5% 74.4%,
+        41.3% 70.9%,
+        39.4% 68.3%,
+        37.6% 66.1%,
+        35.8% 64.2%,
+        33.9% 62.4%,
+        31.7% 60.6%,
+        29.1% 58.7%,
+        25.6% 56.5%,
+        20.1% 53.9%,
+        0% 50%,
+        20.1% 46.1%,
+        25.6% 43.5%,
+        29.1% 41.3%,
+        31.7% 39.4%,
+        33.9% 37.6%,
+        35.8% 35.8%,
+        37.6% 33.9%,
+        39.4% 31.7%,
+        41.3% 29.1%,
+        43.5% 25.6%,
+        46.1% 20.1%,
+        50% 0%,
+        53.9% 20.1%,
+        56.5% 25.6%,
+        58.7% 29.1%,
+        60.6% 31.7%,
+        62.4% 33.9%,
+        64.2% 35.8%,
+        66.1% 37.6%,
+        68.3% 39.4%,
+        70.9% 41.3%,
+        74.4% 43.5%,
+        79.9% 46.1%
+      );
+    }
+    25% {
+      clip-path: polygon(
+        100% 50%,
+        91.2% 55.4%,
+        85.9% 59.6%,
+        81.7% 63.1%,
+        78.2% 66.3%,
+        75.1% 69.2%,
+        72.1% 72.1%,
+        69.2% 75.1%,
+        66.3% 78.2%,
+        63.1% 81.7%,
+        59.6% 85.9%,
+        55.4% 91.2%,
+        50% 100%,
+        44.6% 91.2%,
+        40.4% 85.9%,
+        36.9% 81.7%,
+        33.7% 78.2%,
+        30.8% 75.1%,
+        27.9% 72.1%,
+        24.9% 69.2%,
+        21.8% 66.3%,
+        18.3% 63.1%,
+        14.1% 59.6%,
+        8.8% 55.4%,
+        0% 50%,
+        8.8% 44.6%,
+        14.1% 40.4%,
+        18.3% 36.9%,
+        21.8% 33.7%,
+        24.9% 30.8%,
+        27.9% 27.9%,
+        30.8% 24.9%,
+        33.7% 21.8%,
+        36.9% 18.3%,
+        40.4% 14.1%,
+        44.6% 8.8%,
+        50% 0%,
+        55.4% 8.8%,
+        59.6% 14.1%,
+        63.1% 18.3%,
+        66.3% 21.8%,
+        69.2% 24.9%,
+        72.1% 27.9%,
+        75.1% 30.8%,
+        78.2% 33.7%,
+        81.7% 36.9%,
+        85.9% 40.4%,
+        91.2% 44.6%
+      );
+    }
+    50% {
+      clip-path: polygon(
+        100% 50%,
+        99.1% 56.5%,
+        97.1% 62.6%,
+        94.4% 68.4%,
+        91.1% 73.8%,
+        87.4% 78.7%,
+        83.3% 83.3%,
+        78.7% 87.4%,
+        73.8% 91.1%,
+        68.4% 94.4%,
+        62.6% 97.1%,
+        56.5% 99.1%,
+        50% 100%,
+        43.5% 99.1%,
+        37.4% 97.1%,
+        31.6% 94.4%,
+        26.2% 91.1%,
+        21.3% 87.4%,
+        16.7% 83.3%,
+        12.6% 78.7%,
+        8.9% 73.8%,
+        5.6% 68.4%,
+        2.9% 62.6%,
+        0.9% 56.5%,
+        0% 50%,
+        0.9% 43.5%,
+        2.9% 37.4%,
+        5.6% 31.6%,
+        8.9% 26.2%,
+        12.6% 21.3%,
+        16.7% 16.7%,
+        21.3% 12.6%,
+        26.2% 8.9%,
+        31.6% 5.6%,
+        37.4% 2.9%,
+        43.5% 0.9%,
+        50% 0%,
+        56.5% 0.9%,
+        62.6% 2.9%,
+        68.4% 5.6%,
+        73.8% 8.9%,
+        78.7% 12.6%,
+        83.3% 16.7%,
+        87.4% 21.3%,
+        91.1% 26.2%,
+        94.4% 31.6%,
+        97.1% 37.4%,
+        99.1% 43.5%
+      );
+    }
+    75% {
+      clip-path: polygon(
+        100% 50%,
+        91.2% 55.4%,
+        85.9% 59.6%,
+        81.7% 63.1%,
+        78.2% 66.3%,
+        75.1% 69.2%,
+        72.1% 72.1%,
+        69.2% 75.1%,
+        66.3% 78.2%,
+        63.1% 81.7%,
+        59.6% 85.9%,
+        55.4% 91.2%,
+        50% 100%,
+        44.6% 91.2%,
+        40.4% 85.9%,
+        36.9% 81.7%,
+        33.7% 78.2%,
+        30.8% 75.1%,
+        27.9% 72.1%,
+        24.9% 69.2%,
+        21.8% 66.3%,
+        18.3% 63.1%,
+        14.1% 59.6%,
+        8.8% 55.4%,
+        0% 50%,
+        8.8% 44.6%,
+        14.1% 40.4%,
+        18.3% 36.9%,
+        21.8% 33.7%,
+        24.9% 30.8%,
+        27.9% 27.9%,
+        30.8% 24.9%,
+        33.7% 21.8%,
+        36.9% 18.3%,
+        40.4% 14.1%,
+        44.6% 8.8%,
+        50% 0%,
+        55.4% 8.8%,
+        59.6% 14.1%,
+        63.1% 18.3%,
+        66.3% 21.8%,
+        69.2% 24.9%,
+        72.1% 27.9%,
+        75.1% 30.8%,
+        78.2% 33.7%,
+        81.7% 36.9%,
+        85.9% 40.4%,
+        91.2% 44.6%
+      );
+    }
+    100% {
+      clip-path: polygon(
+        100% 50%,
+        79.9% 53.9%,
+        74.4% 56.5%,
+        70.9% 58.7%,
+        68.3% 60.6%,
+        66.1% 62.4%,
+        64.2% 64.2%,
+        62.4% 66.1%,
+        60.6% 68.3%,
+        58.7% 70.9%,
+        56.5% 74.4%,
+        53.9% 79.9%,
+        50% 100%,
+        46.1% 79.9%,
+        43.5% 74.4%,
+        41.3% 70.9%,
+        39.4% 68.3%,
+        37.6% 66.1%,
+        35.8% 64.2%,
+        33.9% 62.4%,
+        31.7% 60.6%,
+        29.1% 58.7%,
+        25.6% 56.5%,
+        20.1% 53.9%,
+        0% 50%,
+        20.1% 46.1%,
+        25.6% 43.5%,
+        29.1% 41.3%,
+        31.7% 39.4%,
+        33.9% 37.6%,
+        35.8% 35.8%,
+        37.6% 33.9%,
+        39.4% 31.7%,
+        41.3% 29.1%,
+        43.5% 25.6%,
+        46.1% 20.1%,
+        50% 0%,
+        53.9% 20.1%,
+        56.5% 25.6%,
+        58.7% 29.1%,
+        60.6% 31.7%,
+        62.4% 33.9%,
+        64.2% 35.8%,
+        66.1% 37.6%,
+        68.3% 39.4%,
+        70.9% 41.3%,
+        74.4% 43.5%,
+        79.9% 46.1%
+      );
+    }
+  }
+
+  @keyframes glint-slide {
+    from {
+      translate: 0 0;
+    }
+    to {
+      translate: -180cqw 0;
+    }
+  }
+
+  @keyframes glint-shift {
+    0%,
+    100% {
+      --glint-mix: 0;
+    }
+    50% {
+      --glint-mix: 1;
+    }
+  }
+
+  @keyframes glint-turn {
+    to {
+      transform: rotate(360deg);
+    }
+  }
+}
+
+/*
+ * Two ways to colour the star of the glint with two colors that the element sets as `--glint-a` and
+ * `--glint-b`. `glint-mesh` is a background of both colors, wider than the star, that slides behind it while it morphs, with a blurred seam between the colors. `glint-shift` changes the color of the star from the first to the second and back, once for each
+ * morph, in the oklch space so that the middle of the change is not gray (the hue goes round the
+ * color wheel, through green from blue to yellow).
+ */
+@property --glint-mix {
+  syntax: '<number>';
+  inherits: false;
+  initial-value: 0;
+}
+
+/* The blurred copy of the star: the blur is made on the wrapper, as the star cuts off what it draws outside of its shape. */
+@utility glint-glow {
+  filter: blur(var(--blur-glint));
+  opacity: var(--opacity-glint);
+  transform: scale(1.15);
+}
+
+/* The box of the glint stays still and clips what is drawn past the reach of the glow, so that a turning star does not change the scrollable size around it. */
+@utility glint-frame {
+  overflow: clip;
+  overflow-clip-margin: var(--spacing-glint-reach);
+}
+
+@utility glint-solid {
+  background-color: currentcolor;
+  animation: glint-morph var(--duration-glint-morph) var(--ease-standard) infinite;
+}
+
+/*
+ * The star of the mesh: the color is a background several times wider than the star, in two
+ * halves, one color each (`glint-blob`), that slides back and forth behind the star while it
+ * turns. Only the blur at the seam between the halves mixes the colors. The sizes are shares of
+ * the width of the star, so that it holds at every size.
+ */
+@utility glint-mesh {
+  container-type: inline-size;
+  animation: glint-morph var(--duration-glint-morph) var(--ease-standard) infinite;
+}
+
+/* One half of the background of the mesh, `--glint-blob` its color: it is as wide as one and a half stars, taller than the star, and blurred at its edges. */
+@utility glint-blob {
+  position: absolute;
+  top: -25%;
+  width: 150cqw;
+  height: 150%;
+  background-color: var(--glint-blob);
+  filter: blur(18cqw);
+  animation: glint-slide var(--duration-glint-mesh) ease-in-out infinite alternate;
+}
+
+@utility glint-blob-a {
+  left: 0;
+}
+
+@utility glint-blob-b {
+  left: 150cqw;
+}
+
+@utility glint-shift {
+  background-color: color-mix(
+    in oklch,
+    var(--glint-b) calc(var(--glint-mix) * 100%),
+    var(--glint-a)
+  );
+  animation:
+    glint-morph var(--duration-glint-morph) var(--ease-standard) infinite,
+    glint-shift var(--duration-glint-morph) var(--ease-standard) infinite;
+}
+
+/* The glint stops at the first frame of its animations, a star that does not turn. */
+@media (prefers-reduced-motion: reduce) {
+  [data-slot='glint'],
+  [data-slot='glint'] * {
+    animation-play-state: paused;
+  }
+}
