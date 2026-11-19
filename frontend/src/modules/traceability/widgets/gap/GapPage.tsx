@@ -11,7 +11,7 @@ import {
 } from '@/modules/trace/entities'
 import { ViewTraceButton } from '@/modules/trace/features/view-trace'
 import { useKindTitleOf, useLinkTitleOf } from '@/modules/workflow/entities'
-import { PageLink, useEditorTab } from '@/shared/components/frame'
+import { PageColumn, PageLink, useEditorTab } from '@/shared/components/frame'
 import { EmptyState, ErrorState, LoadingState } from '@/shared/components/state'
 import { Badge } from '@/shared/components/ui/badge'
 import { Item, ItemContent } from '@/shared/components/ui/item'
@@ -53,13 +53,18 @@ export function GapPage({ projectId, gapKey }: { projectId: string; gapKey: stri
       />
     )
   }
-  if (coverage.data === undefined)
-    return <LoadingState label={gapPageMessages.loading} layout="cards" rows={4} />
+  if (coverage.data === undefined) {
+    return (
+      <PageColumn isFlush className="h-full">
+        <LoadingState label={gapPageMessages.loading} layout="cards" rows={4} />
+      </PageColumn>
+    )
+  }
 
   const items = gap?.items ?? []
 
   return (
-    <div className="mx-auto max-w-3xl space-y-4 p-6 pb-20">
+    <PageColumn className="space-y-4 pb-20">
       <header className="space-y-1">
         <h1 className="flex items-center gap-3 text-2xl font-semibold">
           {title}
@@ -69,7 +74,7 @@ export function GapPage({ projectId, gapKey }: { projectId: string; gapKey: stri
         </h1>
         {gap !== undefined && <p className="text-sm text-muted-foreground">{gap.description}</p>}
       </header>
-          {items.length === 0 ? (
+      {items.length === 0 ? (
         <EmptyState title={gapPageMessages.empty} />
       ) : (
         <ul className="space-y-2">
@@ -80,7 +85,7 @@ export function GapPage({ projectId, gapKey }: { projectId: string; gapKey: stri
           ))}
         </ul>
       )}
-    </div>
+    </PageColumn>
   )
 }
 
