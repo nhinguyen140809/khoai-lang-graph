@@ -138,12 +138,11 @@ export function stageProgress(
   function build(stage: VisibleStage, number: number): StageProgress {
     const stepsOfStage = steps.filter((step) => step.stage === stage.key)
     const children = stage.children.map((child, index) => build(child, index + 1))
+    const hasSteps =
+      stepsOfStage.length > 0 || earlierSteps.some((step) => step.stage === stage.key)
+    const idleStatus: StageStatus = hasSteps ? 'done' : 'not_started'
     const ownStatus: StageStatus =
-      stage.key === current && run !== null
-        ? stageStatusOfRun[run.status]
-        : stepsOfStage.length > 0 || earlierSteps.some((step) => step.stage === stage.key)
-          ? 'done'
-          : 'not_started'
+      stage.key === current && run !== null ? stageStatusOfRun[run.status] : idleStatus
     const status =
       children.length > 0
         ? (firstInOrder(
