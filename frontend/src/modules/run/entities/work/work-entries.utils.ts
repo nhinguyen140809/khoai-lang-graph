@@ -83,6 +83,18 @@ function subjectKeyOf(subjectItemId: string | null, produced: readonly ItemRef[]
   return key === undefined ? null : subjectKeyOfMessage(key)
 }
 
+/** What the first step of a phase says of it: where in the workflow it is, and when it began. */
+function startOf(first: RunStep | undefined) {
+  return {
+    id: first?.id ?? '',
+    stage: first?.stage ?? '',
+    node: first?.node ?? '',
+    agentRole: first?.agent_role ?? '',
+    iteration: first?.iteration ?? 0,
+    startedAt: first?.started_at ?? '',
+  }
+}
+
 /** One phase of work from the steps that make it. */
 function workOf(steps: RunStep[], run: Pick<Run, 'status'> | null): WorkEntry {
   const first = steps[0]
@@ -96,19 +108,14 @@ function workOf(steps: RunStep[], run: Pick<Run, 'status'> | null): WorkEntry {
   )
   const subjectItemId = first?.subject_item_id ?? null
   return {
-    id: first?.id ?? '',
+    ...startOf(first),
     steps,
-    stage: first?.stage ?? '',
-    node: first?.node ?? '',
     nodes: [...new Set(steps.map(({ node }) => node))],
-    agentRole: first?.agent_role ?? '',
     modelId: last?.model_id ?? null,
-    iteration: first?.iteration ?? 0,
     subjectItemId,
     subjectKey: subjectKeyOf(subjectItemId, produced),
     status: workStatusOf(steps, run),
     continues: false,
-    startedAt: first?.started_at ?? '',
     durationMs: durationOf(first, last),
     costUsd: steps.reduce((total, { usage }) => total + usage.cost_usd, 0),
     created: atLastVersion.filter(({ item_id }) => createdIds.has(item_id)),
