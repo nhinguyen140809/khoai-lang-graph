@@ -32,7 +32,6 @@ describe('useKeptScroll', () => {
   beforeEach(() => {
     setPathname('/projects/p1/documents/d1')
   })
-
   it('puts a scroller back where the reader left it', () => {
     const first = renderHook(() => useKeptScroll('page'))
     const before = scroller()

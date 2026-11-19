@@ -1,7 +1,7 @@
-import { act, renderHook } from '@testing-library/react'
-import { describe, expect, it, vi } from 'vitest'
+import { renderHook } from '@testing-library/react'
+import { describe, expect, it } from 'vitest'
 
-import { withFakeTimers } from '@/test/steps'
+import { advanceTimers, withFakeTimers } from '@/test/steps'
 
 import { motionMs } from '../../animation.constants'
 import { useLeavingRows } from '../useLeavingRows'
@@ -29,9 +29,7 @@ describe('useLeavingRows', () => {
     rerender({ rows: ['a', 'c'] })
     expect(names(result.current)).toEqual(['a', 'b*', 'c'])
 
-    act(() => {
-      vi.advanceTimersByTime(motionMs)
-    })
+    advanceTimers(motionMs)
     expect(names(result.current)).toEqual(['a', 'c'])
   })
 
