@@ -186,15 +186,6 @@ export function listColumns(schema: ContentSchema): ListColumn[] {
   )
 }
 
-/**
- * Whether the items of a kind can be reached one by one, with a row in the outline of a document
- * and a page of their own. A kind without the keyword can; the items that cannot are short enough
- * to read in place in the page of the document.
- */
-export function isNavigable(schema: ContentSchema): boolean {
-  return schema['x-ui-navigable'] !== false
-}
-
 /** The field that an extension of the schema names; undefined when there is none. */
 export function extensionField(
   schema: ContentSchema,

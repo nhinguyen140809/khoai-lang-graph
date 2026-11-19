@@ -6,12 +6,7 @@ import { subjectTitlesOf, useStageSubjects } from '@/modules/artifact/entities/@
 import { useRunInterrupts } from '@/modules/review/entities/@x/activity'
 import { type Run, useRunSteps, workEntries } from '@/modules/run/entities/@x/activity'
 import type { Message } from '@/modules/thread/entities/@x/activity'
-import {
-  isNavigable,
-  kindSchemasByKind,
-  useArtifactKinds,
-  useStageTitles,
-} from '@/modules/workflow/entities/@x/activity'
+import { useKindLooks, useStageTitles } from '@/modules/workflow/entities/@x/activity'
 import { useView } from '@/shared/lib/view'
 
 import type { ActivityEntry, RunEntriesResult } from '../activity-entries.types'
@@ -31,7 +26,7 @@ export function useRunEntries(
   const interrupts = useRunInterrupts(run.id)
   const stageTitles = useStageTitles(run.workflow_version)
   const subjects = useStageSubjects(projectId, run.workflow_version)
-  const { data: kinds } = useArtifactKinds()
+  const kinds = useKindLooks()
   const view = useView()
   const stepPages = steps.data?.pages
   const interruptPages = interrupts.data?.pages
@@ -51,7 +46,6 @@ export function useRunEntries(
     }
     if (stepPages === undefined || interruptPages === undefined) return { state: 'pending' }
 
-    const kindSchemas = kindSchemasByKind(kinds)
     const subjectTitles = subjectTitlesOf(subjects)
     const entries: ActivityEntry[] = runEntries({
       messages,
@@ -66,12 +60,7 @@ export function useRunEntries(
       interrupts: interruptPages.flatMap(({ items }) => items),
       stageTitles,
       subjectTitles,
-      kinds: new Map(
-        [...kindSchemas].map(([kind, { schema }]) => [
-          kind,
-          { title: schema.title, isNavigable: isNavigable(schema) },
-        ]),
-      ),
+      kinds,
       view,
     })
     return { state: 'success', entries }

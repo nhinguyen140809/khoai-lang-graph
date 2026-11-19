@@ -2,10 +2,11 @@ import type { ItemRef } from '@/modules/artifact/entities/@x/activity'
 import type { Interrupt } from '@/modules/review/entities/@x/activity'
 import { phaseItems, splitWork, type WorkEntry } from '@/modules/run/entities/@x/activity'
 import type { Message } from '@/modules/thread/entities/@x/activity'
+import type { KindLook } from '@/modules/workflow/entities/@x/activity'
 import { groupBy } from '@/shared/lib/collections'
 import type { View } from '@/shared/lib/view'
 
-import type { ActivityEntry, KindGroup, KindLook } from './activity-entries.types'
+import type { ActivityEntry, KindGroup } from './activity-entries.types'
 
 // The order of the entries that share a time: a message first, then work, then a review. The
 // separator of a phase and its items share a rank, so that they keep the order they were made in.

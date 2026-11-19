@@ -11,9 +11,15 @@ export {
   useContentSchema,
   useContentSchemas,
 } from './artifact-kinds/hooks/useArtifactKindQueries'
+export { useKindLooks } from './artifact-kinds/hooks/useKindLooks'
 export { useKindTitleOf } from './artifact-kinds/hooks/useKindTitleOf'
 export { useKindTitles } from './artifact-kinds/hooks/useKindTitles'
-export { contentSchemasByKind, kindSchemasByKind } from './artifact-kinds/kind-schemas.utils'
+export type { KindLook } from './artifact-kinds/kind-look.types'
+export {
+  contentSchemasByKind,
+  isNavigable,
+  kindSchemasByKind,
+} from './artifact-kinds/kind-schemas.utils'
 export type { ReviewableCheckpoint } from './checkpoints/checkpoints.types'
 export { reviewableCheckpoints } from './checkpoints/checkpoints.utils'
 export { useReviewableCheckpoints } from './checkpoints/hooks/useCheckpointQueries'
@@ -30,7 +36,6 @@ export { contentDisplays } from './content/fields/content-fields.types'
 export {
   contentDisplayOf,
   contentFields,
-  isNavigable,
   listColumns,
   mainField,
   pageLayoutOf,
