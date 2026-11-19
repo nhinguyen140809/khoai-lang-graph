@@ -2,12 +2,6 @@ import type { Interrupt } from '@/modules/review/entities/@x/activity'
 import type { StepNote, ToolUse, WorkEntry } from '@/modules/run/entities/@x/activity'
 import type { Message, Thread } from '@/modules/thread/entities/@x/activity'
 
-/** How a kind of item reads in the chat: its title, and whether its items can be opened one by one. */
-export interface KindLook {
-  title: string
-  isNavigable: boolean
-}
-
 /** What a line of work wrote of one kind of item. */
 export interface KindGroup {
   kind: string

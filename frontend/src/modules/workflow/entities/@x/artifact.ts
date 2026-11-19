@@ -5,7 +5,11 @@ export {
   useContentSchemas,
 } from '../artifact-kinds/hooks/useArtifactKindQueries'
 export { useKindTitles } from '../artifact-kinds/hooks/useKindTitles'
-export { contentSchemasByKind, kindSchemasByKind } from '../artifact-kinds/kind-schemas.utils'
+export {
+  contentSchemasByKind,
+  isNavigable,
+  kindSchemasByKind,
+} from '../artifact-kinds/kind-schemas.utils'
 export { ContentFieldValue } from '../content/components/ContentFieldValue'
 export { FieldSeparator } from '../content/components/FieldSeparator'
 export { InlineFieldValues } from '../content/components/InlineFieldValues'
@@ -23,7 +27,6 @@ export {
   contentDisplayOf,
   contentFields,
   extensionField,
-  isNavigable,
   isOneLineField,
   isSeparatorField,
   listColumns,
