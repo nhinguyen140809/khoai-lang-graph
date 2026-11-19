@@ -3,12 +3,13 @@
 import { cn } from 'cn'
 import * as React from 'react'
 
+import { isHotkeyPressed } from '@/shared/lib/hotkey'
 import { useIsMobile } from '@/shared/lib/viewport'
 
 import {
   sidebarCookieMaxAge,
   sidebarCookieName,
-  sidebarKeyboardShortcut,
+  sidebarHotkey,
   sidebarWidth,
   sidebarWidthIcon,
 } from './sidebar.constants'
@@ -57,7 +58,7 @@ export function SidebarProvider({
   // Adds a keyboard shortcut to toggle the sidebar.
   React.useEffect(() => {
     const handleKeyDown = (event: KeyboardEvent) => {
-      if (event.key === sidebarKeyboardShortcut && (event.metaKey || event.ctrlKey)) {
+      if (isHotkeyPressed(event, sidebarHotkey)) {
         event.preventDefault()
         toggleSidebar()
       }
