@@ -42,4 +42,9 @@ export interface TraceRowsInput {
   outlines: ReadonlyMap<string, readonly OutlineNode[]>
   attention: TraceAttentionResult
   itemTrace: (itemId: string) => Route
+  /**
+   * Whether the items of a kind have a chain to draw. The tree leaves out the items that have not,
+   * and the sections and groups that hold nothing else; every item stays until this is given.
+   */
+  isTraceable?: (kind: string) => boolean
 }
