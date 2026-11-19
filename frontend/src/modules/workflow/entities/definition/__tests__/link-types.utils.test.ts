@@ -6,6 +6,7 @@ import {
   canLinkTypeConnect,
   findLinkType,
   kindLevelsOf,
+  linkedKindsOf,
   linkTypesFrom,
   targetKindsOf,
 } from '../link-types.utils'
@@ -139,5 +140,19 @@ describe('linkTypesFrom', () => {
     expect(linkTypesFrom(definition, 'analyzed_requirement').map(({ key }) => key)).toEqual([
       'by_people',
     ])
+  })
+})
+
+describe('linkedKindsOf', () => {
+  it('lists the kinds that a pair names, as a source or as a target', () => {
+    const kinds = linkedKindsOf(workflowDefinitionFixture)
+
+    expect(kinds.has('raw_requirement')).toBe(true)
+    expect(kinds.has('persona')).toBe(true)
+    expect(kinds.has('interview_message')).toBe(true)
+  })
+
+  it('leaves out the kinds that no pair names', () => {
+    expect(linkedKindsOf(workflowDefinitionFixture).has('section')).toBe(false)
   })
 })

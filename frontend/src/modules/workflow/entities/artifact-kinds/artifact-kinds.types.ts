@@ -22,6 +22,11 @@ import { z } from 'zod'
 
 const jsonTypeSchema = z.enum(['string', 'number', 'integer', 'boolean', 'array', 'object', 'null'])
 
+/** What the content of a kind is, which decides the block that draws it: text, or a diagram. */
+export const kindMedias = ['text', 'diagram'] as const
+
+export type KindMedia = (typeof kindMedias)[number]
+
 /** One field of a content schema, with the keywords that the app reads. */
 export const schemaPropertySchema = z.looseObject({
   type: z.union([jsonTypeSchema, z.array(jsonTypeSchema)]).optional(),
@@ -68,6 +73,9 @@ export const contentSchemaSchema = z.looseObject({
   'x-key-prefix': z.string().optional(),
   'x-ui-display': z.string().optional(),
   'x-ui-navigable': z.boolean().optional(),
+  'x-ui-media': z.enum(kindMedias).optional(),
+  /** The name of the icon on the block of the kind; `null` says there is none. */
+  'x-ui-icon': z.string().nullable().optional(),
   'x-ui-title-field': z.string().optional(),
   'x-ui-role-field': z.string().optional(),
   'x-ui-participants-field': z.string().optional(),

@@ -1,4 +1,4 @@
-export type { ContentSchema } from '../artifact-kinds/artifact-kinds.types'
+export type { ContentSchema, KindMedia } from '../artifact-kinds/artifact-kinds.types'
 export {
   useArtifactKinds,
   useContentSchema,
@@ -7,8 +7,10 @@ export {
 export { useKindTitles } from '../artifact-kinds/hooks/useKindTitles'
 export {
   contentSchemasByKind,
+  iconOf,
   isNavigable,
   kindSchemasByKind,
+  mediaOf,
 } from '../artifact-kinds/kind-schemas.utils'
 export { ContentFieldValue } from '../content/components/ContentFieldValue'
 export { FieldSeparator } from '../content/components/FieldSeparator'

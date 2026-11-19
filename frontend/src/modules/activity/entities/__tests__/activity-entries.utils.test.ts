@@ -36,6 +36,8 @@ function entries() {
   })
 }
 
+const look = { isTraceable: true, media: 'text', icon: null } as const
+
 describe('runEntries', () => {
   it('orders the entries by their time', () => {
     expect(entries().map(({ type, id }) => `${type}:${id}`)).toEqual(['message:m1', 'phase:s1'])
@@ -76,8 +78,8 @@ describe('runEntries', () => {
       stageTitles,
       subjectTitles,
       kinds: new Map([
-        ['analyzed_requirement', { title: 'Analysed requirement', isNavigable: true }],
-        ['persona', { title: 'Persona', isNavigable: false }],
+        ['analyzed_requirement', { ...look, title: 'Analysed requirement', isNavigable: true }],
+        ['persona', { ...look, title: 'Persona', isNavigable: false }],
       ]),
     })
 
@@ -320,7 +322,7 @@ describe('runEntries with phases', () => {
       interrupts: [],
       stageTitles: stages,
       subjectTitles,
-      kinds: new Map([['persona', { title: 'Persona', isNavigable: false }]]),
+      kinds: new Map([['persona', { ...look, title: 'Persona', isNavigable: false }]]),
     })
 
     expect(entries.map(({ type }) => type)).toEqual(['phase', 'note', 'written', 'message'])

@@ -16,6 +16,19 @@ function listedPairs(linkType: LinkType): { source: string[]; target: string[] }
   )
 }
 
+/**
+ * The kinds that some link type lists in a pair, as a source or as a target. An item of any other
+ * kind has no link to draw, so it has no chain. Only the pairs that list their kinds count: `any`
+ * and `same` name no kind.
+ */
+export function linkedKindsOf(definition: WorkflowDefinition): Set<string> {
+  return new Set(
+    definition.link_types.flatMap((linkType) =>
+      listedPairs(linkType).flatMap(({ source, target }) => [...source, ...target]),
+    ),
+  )
+}
+
 /** The kinds that the pairs of a link type lead to, without a repeat, in the order they are listed. */
 export function targetKindsOf(linkType: LinkType): string[] {
   return [...new Set(listedPairs(linkType).flatMap(({ target }) => target))]

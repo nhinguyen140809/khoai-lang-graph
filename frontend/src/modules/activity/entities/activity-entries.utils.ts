@@ -2,7 +2,7 @@ import type { ItemRef } from '@/modules/artifact/entities/@x/activity'
 import type { Interrupt } from '@/modules/review/entities/@x/activity'
 import { phaseItems, splitWork, type WorkEntry } from '@/modules/run/entities/@x/activity'
 import type { Message } from '@/modules/thread/entities/@x/activity'
-import type { KindLook } from '@/modules/workflow/entities/@x/activity'
+import type { ArtifactKindDisplay } from '@/modules/workflow/entities/@x/activity'
 import { groupBy } from '@/shared/lib/collections'
 
 import type { ActivityEntry, KindGroup } from './activity-entries.types'
@@ -42,7 +42,10 @@ export function hasRunEnded(entries: readonly ActivityEntry[]): boolean {
 }
 
 /** What a line of work wrote, by kind of item, in the order of the first item of each kind. */
-function kindGroupsOf(work: WorkEntry, kinds: ReadonlyMap<string, KindLook>): KindGroup[] {
+function kindGroupsOf(
+  work: WorkEntry,
+  kinds: ReadonlyMap<string, ArtifactKindDisplay>,
+): KindGroup[] {
   const produced: ItemRef[] = [...work.created, ...work.changed]
   return groupBy(produced, ({ kind }) => kind).map(({ key: kind, items }) => ({
     kind,
@@ -57,7 +60,7 @@ function kindGroupsOf(work: WorkEntry, kinds: ReadonlyMap<string, KindLook>): Ki
 interface PhaseTitles {
   stageTitles: ReadonlyMap<string, string>
   subjectTitles: ReadonlyMap<string, string>
-  kinds: ReadonlyMap<string, KindLook>
+  kinds: ReadonlyMap<string, ArtifactKindDisplay>
 }
 
 /**
@@ -111,7 +114,10 @@ function endTimeOf(work: WorkEntry): string {
 }
 
 /** What a phase wrote and the failure that ended it, at the time it ended. */
-function endEntries(work: WorkEntry, kinds: ReadonlyMap<string, KindLook>): ActivityEntry[] {
+function endEntries(
+  work: WorkEntry,
+  kinds: ReadonlyMap<string, ArtifactKindDisplay>,
+): ActivityEntry[] {
   const time = endTimeOf(work)
   const entries: ActivityEntry[] = []
   const kindGroups = kindGroupsOf(work, kinds)
@@ -147,7 +153,7 @@ export function runEntries(input: {
   interrupts: readonly Interrupt[]
   stageTitles: ReadonlyMap<string, string>
   subjectTitles: ReadonlyMap<string, string>
-  kinds: ReadonlyMap<string, KindLook>
+  kinds: ReadonlyMap<string, ArtifactKindDisplay>
 }): ActivityEntry[] {
   const cuts = input.interrupts.map(({ created_at }) => created_at)
   const phases = input.work.flatMap((line) => splitWork(line, cuts))
