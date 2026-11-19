@@ -274,12 +274,23 @@ export interface StepperStep {
   key: string
   title: string
   status: 'done' | 'running' | 'waiting' | 'failed' | 'stopped' | 'not_started'
+  /** The steps under it, such as one for each interviewee; they show while the step is open. */
+  subSteps?: StepperStep[]
 }
 
 export const stepperSteps: StepperStep[] = [
   { key: 'planning', title: 'Planning the interviews', status: 'done' },
   { key: 'personas', title: 'Proposing the interviewees', status: 'done' },
-  { key: 'interviewing', title: 'Interviewing', status: 'running' },
+  {
+    key: 'interviewing',
+    title: 'Interviewing',
+    status: 'running',
+    subSteps: [
+      { key: 'linh', title: 'Linh, a mentor', status: 'done' },
+      { key: 'minh', title: 'Minh, a student', status: 'running' },
+      { key: 'an', title: 'An, a parent', status: 'not_started' },
+    ],
+  },
   { key: 'analysis', title: 'Analysing the interviews', status: 'waiting' },
   { key: 'specification', title: 'Writing the specification', status: 'not_started' },
 ]
