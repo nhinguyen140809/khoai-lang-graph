@@ -1,5 +1,7 @@
 import type { ReactNode } from 'react'
 
+import { ViewGate } from '@/modules/user/features/view'
+import { AccountCommands } from '@/modules/user/widgets/commands'
 import { ViewProvider } from '@/shared/lib/view'
 
 // Pages are kept, hidden, when the user leaves them (Cache Components). The layout is allowed to
@@ -12,5 +14,11 @@ interface DeveloperLayoutProps {
 
 /** The pages of the developer view, which the host `dev.` shows: the workbench and its screens. */
 export default function DeveloperLayout({ children }: DeveloperLayoutProps) {
-  return <ViewProvider value="developer">{children}</ViewProvider>
+  return (
+    <ViewProvider value="developer">
+      <ViewGate />
+      <AccountCommands />
+      {children}
+    </ViewProvider>
+  )
 }
