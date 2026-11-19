@@ -61,14 +61,13 @@ export function deleteThread(api: ApiClient, threadId: string) {
 export async function uploadDocument(
   api: ApiClient,
   projectId: string,
-  name: string,
-  text: string,
+  file: { name: string; text: string },
   fields: Record<string, string> = {},
 ): Promise<ApiDocument> {
   return expectCreated(
     await api.upload<ApiDocument>(
       `/projects/${projectId}/documents`,
-      { name, mimeType: 'text/plain', text },
+      { name: file.name, mimeType: 'text/plain', text: file.text },
       fields,
     ),
   )
