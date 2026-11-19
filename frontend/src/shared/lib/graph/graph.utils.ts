@@ -29,15 +29,25 @@ export function distancesFrom(
   let lastLevel = [...distances.keys()]
   for (let distance = 1; lastLevel.length > 0; distance += 1) {
     if (maxDistance !== null && distance > maxDistance) break
-    const nextLevel: string[] = []
-    for (const id of lastLevel) {
-      for (const successor of successorsOf(id)) {
-        if (distances.has(successor)) continue
-        distances.set(successor, distance)
-        nextLevel.push(successor)
-      }
-    }
-    lastLevel = nextLevel
+    lastLevel = unseenSuccessors(lastLevel, successorsOf, distances, distance)
   }
   return distances
+}
+
+/** The nodes that the nodes of a level lead to and that have no distance yet; each gets `distance`. */
+function unseenSuccessors(
+  level: readonly string[],
+  successorsOf: (id: string) => readonly string[],
+  distances: Map<string, number>,
+  distance: number,
+): string[] {
+  const unseen: string[] = []
+  for (const id of level) {
+    for (const successor of successorsOf(id)) {
+      if (distances.has(successor)) continue
+      distances.set(successor, distance)
+      unseen.push(successor)
+    }
+  }
+  return unseen
 }

@@ -11,6 +11,14 @@ import type { DiffPart } from './diff.types'
 export function wordDiff(before: string, after: string): DiffPart[] {
   return diffWords(before, after).map(({ value, added, removed }) => ({
     text: value,
-    change: added ? 'added' : removed ? 'removed' : 'same',
+    change: changeOf(added, removed),
   }))
+}
+
+function changeOf(
+  isAdded: boolean | undefined,
+  isRemoved: boolean | undefined,
+): DiffPart['change'] {
+  if (isAdded) return 'added'
+  return isRemoved ? 'removed' : 'same'
 }
