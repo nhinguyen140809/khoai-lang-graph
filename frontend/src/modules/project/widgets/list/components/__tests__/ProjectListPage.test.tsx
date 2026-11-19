@@ -17,6 +17,7 @@ import {
   pressButton,
   pressEscape,
   pressKey,
+  pressRole,
 } from '@/test/steps'
 
 import { ProjectListPage } from '../ProjectListPage'
@@ -27,11 +28,7 @@ function renderPage() {
 
 /** Types an idea in the prompt and sends it, which opens the new project dialog. */
 async function startProject(idea: string) {
-  await userEvent.click(
-    screen.getByRole('textbox', {
-      name: 'What product do you want to write the requirements for?',
-    }),
-  )
+  await pressRole('textbox', 'What do you want to build?')
   await pasteText(idea)
   await pressKey('Enter')
   return screen.findByRole('dialog', { name: 'Create project' })
