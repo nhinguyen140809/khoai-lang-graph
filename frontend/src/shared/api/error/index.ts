@@ -7,6 +7,7 @@ export {
 export {
   ApiError,
   errorMessageOf,
+  fieldProblemsOf,
   isNotFoundError,
   isUnauthorizedError,
   isVersionConflict,

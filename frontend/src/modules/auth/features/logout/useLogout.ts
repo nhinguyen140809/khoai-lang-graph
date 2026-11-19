@@ -19,7 +19,7 @@ export function useLogout() {
     onError: (error) => {
       // Without a session the query client opens the login page already.
       if (isUnauthorizedError(error)) return
-      toast.error(errorMessageOf(error, {}))
+      toast.error(errorMessageOf(error))
     },
   })
 }

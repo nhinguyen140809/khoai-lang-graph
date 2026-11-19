@@ -30,7 +30,7 @@ export function useArchiveProject() {
       toast.success(archiveProjectMessages.restored, { description: projectName(project) })
     },
     onError: (error) => {
-      toast.error(errorMessageOf(error, {}))
+      toast.error(errorMessageOf(error))
     },
   })
   const archive = useMutation({
@@ -49,7 +49,7 @@ export function useArchiveProject() {
       })
     },
     onError: (error) => {
-      toast.error(errorMessageOf(error, {}))
+      toast.error(errorMessageOf(error))
     },
   })
 

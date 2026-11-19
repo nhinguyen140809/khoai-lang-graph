@@ -3,7 +3,6 @@ import { describe, expect, it } from 'vitest'
 import type { ArtifactItem } from '@/modules/artifact/entities'
 import type { InterruptOption, InterruptQuestion } from '@/modules/review/entities'
 import type { CheckpointOption, QuestionAnswer } from '@/modules/workflow/entities'
-import { ApiError } from '@/shared/api/error'
 
 import {
   answerProblem,
@@ -17,7 +16,6 @@ import {
   isTextLine,
   modifiedItemsOf,
   neighborOf,
-  problemsOf,
   resumeRunBody,
   stepKeyOf,
 } from '../answer-review.utils'
@@ -191,24 +189,6 @@ describe('neighborOf', () => {
   it('gives the first going down and the last going up for an element that is not in the list', () => {
     expect(neighborOf(list, 'x', 1)).toBe('a')
     expect(neighborOf(list, 'x', -1)).toBe('c')
-  })
-})
-
-describe('problemsOf', () => {
-  it('names each field that the API found wrong, one line for each', () => {
-    const error = new ApiError('Validation failed', 422, 'validation_failed', [
-      { field: 'answers.users', message: 'Answer this question.' },
-      { field: 'option', message: 'Choose one of: accept, reject.' },
-    ])
-
-    expect(problemsOf(error)).toBe(
-      'answers.users: Answer this question.\noption: Choose one of: accept, reject.',
-    )
-  })
-
-  it('says nothing for an error that names no field', () => {
-    expect(problemsOf(new ApiError('Down', 500, null, []))).toBeUndefined()
-    expect(problemsOf(new Error('Offline'))).toBeUndefined()
   })
 })
 

@@ -113,6 +113,28 @@ export const errorMessageCases = [
   },
 ]
 
+/** An error, and the lines that `fieldProblemsOf` gives for the fields it names. */
+export const fieldProblemsCases = [
+  {
+    name: 'one line for each field that the API found wrong',
+    error: new ApiError('Validation failed', HttpStatus.UnprocessableContent, 'validation_failed', [
+      { field: 'answers.users', message: 'Answer this question.' },
+      { field: 'option', message: 'Choose one of: accept, reject.' },
+    ]),
+    problems: 'answers.users: Answer this question.\noption: Choose one of: accept, reject.',
+  },
+  {
+    name: 'nothing for an error of the API that names no field',
+    error: new ApiError('Down', HttpStatus.InternalServerError, null, []),
+    problems: undefined,
+  },
+  {
+    name: 'nothing for an error that is not of the API',
+    error: new Error('Offline'),
+    problems: undefined,
+  },
+]
+
 /** An error, and whether it says that what the request asked for does not exist. */
 export const notFoundCases = [
   {

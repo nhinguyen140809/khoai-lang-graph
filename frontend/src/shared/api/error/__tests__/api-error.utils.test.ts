@@ -3,6 +3,7 @@ import { describe, expect, it } from 'vitest'
 import {
   ApiError,
   errorMessageOf,
+  fieldProblemsOf,
   isNotFoundError,
   isUnauthorizedError,
   isVersionConflict,
@@ -10,6 +11,7 @@ import {
 } from '../api-error.utils'
 import {
   errorMessageCases,
+  fieldProblemsCases,
   messages,
   notFoundCases,
   toApiErrorCases,
@@ -29,6 +31,19 @@ describe('toApiError', () => {
 describe('errorMessageOf', () => {
   it.each(errorMessageCases)('gives $name', ({ error, message }) => {
     expect(errorMessageOf(error, messages)).toBe(message)
+  })
+})
+
+describe('errorMessageOf without messages', () => {
+  it('gives the message of the error, whatever its code and status', () => {
+    expect(errorMessageOf(errorMessageCases[0]?.error ?? new Error('x'))).toBe('x')
+    expect(errorMessageOf(new Error('Network down'))).toBe('Network down')
+  })
+})
+
+describe('fieldProblemsOf', () => {
+  it.each(fieldProblemsCases)('gives $name', ({ error, problems }) => {
+    expect(fieldProblemsOf(error)).toBe(problems)
   })
 })
 

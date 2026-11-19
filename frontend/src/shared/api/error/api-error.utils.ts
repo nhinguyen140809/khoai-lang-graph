@@ -61,9 +61,10 @@ export function isVersionConflict(error: unknown): boolean {
 
 /**
  * What a page says for a failed request: the words that `messages` gives for the code of the
- * answer, else for its status, else the message of the error.
+ * answer, else for its status, else the message of the error. Without `messages` it is the message
+ * of the error.
  */
-export function errorMessageOf(error: Error, messages: ApiErrorMessages): string {
+export function errorMessageOf(error: Error, messages: ApiErrorMessages = {}): string {
   if (!(error instanceof ApiError)) return error.message
   const byCode = messages.code as Partial<Record<string, string>> | undefined
   const byStatus = messages.status as Partial<Record<number, string>> | undefined
@@ -72,4 +73,13 @@ export function errorMessageOf(error: Error, messages: ApiErrorMessages): string
     byStatus?.[error.status] ??
     error.message
   )
+}
+
+/**
+ * What the API found wrong with the fields of a request, one line for each field it names; none
+ * for an error that names no field.
+ */
+export function fieldProblemsOf(error: Error): string | undefined {
+  if (!(error instanceof ApiError) || error.fieldErrors.length === 0) return undefined
+  return error.fieldErrors.map(({ field, message }) => `${field}: ${message}`).join('\n')
 }
