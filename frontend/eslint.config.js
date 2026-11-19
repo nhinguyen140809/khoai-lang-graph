@@ -9,6 +9,7 @@ import importsMocks from './lint/configs/imports-mocks.js'
 import importsPublicApi from './lint/configs/imports-public-api.js'
 import importsShared from './lint/configs/imports-shared.js'
 import importsSlices from './lint/configs/imports-slices.js'
+import importsAreas from './lint/configs/imports-areas.js'
 import names from './lint/configs/names.js'
 import restrictedAccess from './lint/configs/restricted-access.js'
 import syntax from './lint/configs/syntax.js'
@@ -27,6 +28,7 @@ export default defineConfig([
   ...importsShared,
   ...importsMocks,
   ...importsSlices,
+  ...importsAreas,
   ...fileNames,
   ...uiComponents,
   ...importsE2e,
