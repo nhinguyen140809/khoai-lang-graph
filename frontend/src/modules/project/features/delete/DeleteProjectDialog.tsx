@@ -3,10 +3,14 @@
 import { CircleStopIcon, Trash2Icon } from 'lucide-react'
 import { useRouter } from 'next/navigation'
 
-import { type Project, projectName, unfinishedRunCount } from '@/modules/project/entities'
+import {
+  type Project,
+  projectName,
+  unfinishedRunCount,
+  useProjectPages,
+} from '@/modules/project/entities'
 import { ConfirmDialog } from '@/shared/components/ui/confirm-dialog'
 import { pluralForm } from '@/shared/lib/text'
-import { routes } from '@/shared/routes'
 
 import { useDeleteProject } from './hooks/useDeleteProject'
 
@@ -56,11 +60,12 @@ function ConfirmDeleteDialog({ project, open, onOpenChange, onClosed }: DeletePr
 }
 
 /**
- * Says that a project cannot be deleted while a run of it is not finished, and opens the project at
- * its activity, where the run is stopped.
+ * Says that a project cannot be deleted while a run of it is not finished, and opens the project on
+ * its page in the frame on show, where the run is stopped.
  */
 function StopRunFirstDialog({ project, open, onOpenChange, onClosed }: DeleteProjectDialogProps) {
   const router = useRouter()
+  const pages = useProjectPages()
   const runs = unfinishedRunCount(project)
 
   return (
@@ -81,7 +86,7 @@ function StopRunFirstDialog({ project, open, onOpenChange, onClosed }: DeletePro
       cancelLabel="Close"
       confirmLabel="Open project"
       onConfirm={() => {
-        router.push(routes.project(project.id).activity())
+        router.push(pages.project(project.id))
       }}
     />
   )
