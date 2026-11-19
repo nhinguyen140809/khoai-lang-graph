@@ -4,6 +4,7 @@ import { type KindGroup as KindGroupData, useReferenceOpener } from '@/modules/a
 import { useItem, useItemSchema } from '@/modules/artifact/entities'
 import { workMessages } from '@/modules/run/entities'
 import { itemTitle } from '@/modules/workflow/entities'
+import { ScrollArea } from '@/shared/components/ui/scroll-area'
 
 import { RowButton } from './RowButton'
 
@@ -32,11 +33,13 @@ function KindGroup({ group }: { group: KindGroupData }) {
     <div className="flex flex-col gap-2">
       <p className="text-sm text-muted-foreground">{words}</p>
       {/* However many the phase wrote, the list keeps to one height and scrolls. */}
-      <div className="flex max-h-56 flex-col overflow-y-auto rounded-xl border bg-card p-1.5">
-        {items.map((item) => (
-          <WrittenItem key={item.item_id} reference={item} />
-        ))}
-      </div>
+      <ScrollArea className="rounded-xl border bg-card *:data-[slot=scroll-area-viewport]:max-h-56">
+        <div className="flex flex-col p-1.5">
+          {items.map((item) => (
+            <WrittenItem key={item.item_id} reference={item} />
+          ))}
+        </div>
+      </ScrollArea>
     </div>
   )
 }

@@ -1,10 +1,9 @@
-import { screen } from '@testing-library/react'
-import userEvent from '@testing-library/user-event'
 import { describe, expect, it } from 'vitest'
 
 import { type ChatReference, useReferenceOpener } from '@/modules/activity/entities'
 import { routerMock } from '@/test/next-stubs'
 import { renderWithProviders } from '@/test/render'
+import { pressButton } from '@/test/steps'
 
 import { ActivityTab } from '../ActivityTab'
 import { referenceCases } from './ActivityTab.data'
@@ -27,7 +26,7 @@ describe('ActivityTab', () => {
       </ActivityTab>,
     )
 
-    await userEvent.click(screen.getByRole('button', { name: 'Open' }))
+    await pressButton('Open')
 
     expect(routerMock.push).toHaveBeenCalledExactlyOnceWith(href)
   })

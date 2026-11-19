@@ -64,7 +64,7 @@ export function ToolUseEntryView({ use }: { use: ToolUse }) {
         <div className="flex min-w-0 flex-col gap-1">
           {use.notes.map((note, index) => (
             <StepNoteLine
-              key={index}
+              key={`${note.created_at}-${note.text}`}
               note={note}
               hasMark={false}
               inProgress={use.isRunning && index === use.notes.length - 1}
