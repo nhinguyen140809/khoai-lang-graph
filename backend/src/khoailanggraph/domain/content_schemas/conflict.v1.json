@@ -9,6 +9,7 @@
   "x-key-prefix": "CONF",
   "x-ui-display": "table",
   "x-ui-navigable": true,
+  "x-ui-icon": "triangle-alert",
   "x-ui-title-field": "title",
   "x-ui-list-fields": [
     "title",

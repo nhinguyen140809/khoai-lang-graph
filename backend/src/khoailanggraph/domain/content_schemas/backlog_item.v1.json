@@ -9,6 +9,7 @@
   "x-key-prefix": "US for a user story, EP for an epic",
   "x-ui-display": "table",
   "x-ui-navigable": true,
+  "x-ui-icon": "list-todo",
   "x-ui-title-field": "title",
   "x-ui-list-fields": [
     "title",

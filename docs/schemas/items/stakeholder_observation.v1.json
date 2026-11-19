@@ -8,6 +8,7 @@
   "x-schema-version": 1,
   "x-key-prefix": "OBS",
   "x-ui-display": "cards",
+  "x-ui-icon": "eye",
   "x-ui-title-field": "stakeholder_name",
   "x-ui-list-fields": [
     "stakeholder_name",

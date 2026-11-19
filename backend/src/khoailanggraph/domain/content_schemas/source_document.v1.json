@@ -8,6 +8,7 @@
   "x-schema-version": 1,
   "x-key-prefix": "SRC",
   "x-ui-display": "cards",
+  "x-ui-icon": "file-text",
   "x-ui-title-field": "title",
   "x-ui-list-fields": [
     "title",

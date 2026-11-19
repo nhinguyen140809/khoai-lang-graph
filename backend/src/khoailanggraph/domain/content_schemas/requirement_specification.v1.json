@@ -7,6 +7,7 @@
   "x-kind": "requirement_specification",
   "x-schema-version": 1,
   "x-ui-display": "document",
+  "x-ui-icon": "file-check",
   "x-ui-field-order": [
     "purpose",
     "scope",

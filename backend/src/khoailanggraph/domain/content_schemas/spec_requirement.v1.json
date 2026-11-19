@@ -9,6 +9,7 @@
   "x-key-prefix": "REQ",
   "x-ui-display": "table",
   "x-ui-navigable": true,
+  "x-ui-icon": "clipboard-check",
   "x-ui-title-field": "title",
   "x-ui-list-fields": [
     "title",

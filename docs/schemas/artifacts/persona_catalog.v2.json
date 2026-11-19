@@ -7,6 +7,7 @@
   "x-kind": "persona_catalog",
   "x-schema-version": 2,
   "x-ui-display": "document",
+  "x-ui-icon": "users",
   "x-ui-field-order": [
     "selection_rationale",
     "stakeholder_groups",
