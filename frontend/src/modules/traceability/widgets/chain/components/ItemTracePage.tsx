@@ -37,12 +37,7 @@ export function ItemTracePage({ projectId, itemId }: { projectId: string; itemId
 
   useEditorTab({
     id: itemId,
-    title:
-      chain.state === 'success'
-        ? itemTraceMessages.title(chain.focus.title)
-        : chain.state === 'error'
-          ? itemTraceMessages.errorTab
-          : itemTraceMessages.loading,
+    title: tabTitleOf(chain),
     href: routes.project(projectId).itemTrace(itemId),
   })
 
@@ -139,4 +134,10 @@ export function ItemTracePage({ projectId, itemId }: { projectId: string; itemId
       <ChainAsText graph={graph} />
     </div>
   )
+}
+
+/** The title of the tab of the page: the item once it has loaded, or the words of the state. */
+function tabTitleOf(chain: ReturnType<typeof useItemChain>): string {
+  if (chain.state === 'success') return itemTraceMessages.title(chain.focus.title)
+  return chain.state === 'error' ? itemTraceMessages.errorTab : itemTraceMessages.loading
 }

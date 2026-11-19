@@ -42,7 +42,7 @@ export function overviewRows({
       name: title,
       href: gapOf(key),
       count: items.length,
-      tone: items.length === 0 ? 'neutral' : isActGap(key) ? 'warning' : 'primary',
+      tone: gapTone(items.length, isActGap(key)),
       description,
       children: [],
     })
@@ -68,4 +68,10 @@ export function overviewRows({
     children,
   }
   return rows
+}
+
+/** The tone of the count of a gap: none for an empty gap, warning when it asks the user to act now. */
+function gapTone(count: number, isAct: boolean): OverviewRow['tone'] {
+  if (count === 0) return 'neutral'
+  return isAct ? 'warning' : 'primary'
 }
