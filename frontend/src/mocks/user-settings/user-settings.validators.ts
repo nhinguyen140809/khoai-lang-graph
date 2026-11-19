@@ -1,6 +1,7 @@
 import { type ReplaceUserSettingsBody, themes, uiLanguages } from '@/modules/user/entities'
 import type { FieldProblem } from '@/shared/api/error'
 import { outputLanguages } from '@/shared/config/output-language'
+import { views } from '@/shared/lib/view'
 
 import { validateRunDefaults } from '../runs/runs.validators'
 import { bodyProblems } from '../shared/http/validation'
@@ -14,6 +15,7 @@ const userSettingsBodySchema = {
   properties: {
     theme: { enum: [...themes] },
     ui_language: { enum: [...uiLanguages] },
+    preferred_view: { enum: [...views] },
     default_output_language: { enum: [...outputLanguages] },
     // Checked apart, with the rules of the run settings.
     default_run_config: {},

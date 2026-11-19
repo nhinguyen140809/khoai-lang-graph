@@ -1,3 +1,4 @@
+import type { Route } from 'next'
 import { z } from 'zod'
 
 import { runDefaultsSchema, type RunStatus, runStatuses } from '@/modules/run/entities/@x/project'
@@ -56,4 +57,13 @@ export interface ProjectFilters {
   runStatuses: readonly ProjectRunFilter[]
   /** The projects with activity in this many days before now; null for any time. */
   activeWithinDays: number | null
+}
+
+/**
+ * Where the pages of the projects are in the frame that shows them: the page a project opens on,
+ * and the page where a project starts, which also leads to the others.
+ */
+export interface ProjectPages {
+  project: (projectId: string) => Route
+  start: () => Route
 }

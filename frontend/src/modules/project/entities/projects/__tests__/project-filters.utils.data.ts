@@ -1,4 +1,5 @@
-import { noProjectFilters, type ProjectFilters } from '@/modules/project/entities'
+import { noProjectFilters } from '../projects.constants'
+import type { ProjectFilters } from '../projects.types'
 
 /** The values chosen in the filters of the project list, and the filters they give. */
 export const projectFiltersCases = [

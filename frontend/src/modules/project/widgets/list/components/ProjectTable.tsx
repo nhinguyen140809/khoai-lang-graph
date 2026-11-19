@@ -4,6 +4,8 @@ import { FolderOpenIcon, FunnelXIcon } from 'lucide-react'
 import Link from 'next/link'
 
 import {
+  isFiltered,
+  projectFilterMessages,
   type ProjectFilters,
   projectMessages,
   projectName,
@@ -12,6 +14,7 @@ import {
 } from '@/modules/project/entities'
 import { errorMessageOf } from '@/shared/api/error'
 import { pageItems } from '@/shared/api/query-client'
+import { Reveal } from '@/shared/components/animation'
 import { filterMessages } from '@/shared/components/filter'
 import { EmptyState, ErrorState, LoadingState } from '@/shared/components/state'
 import { Button } from '@/shared/components/ui/button'
@@ -29,10 +32,11 @@ import {
 import { useNow } from '@/shared/lib/time'
 import { routes } from '@/shared/routes'
 
-import { projectFilterMessages } from '../project-filters.constants'
-import { isFiltered } from '../project-filters.utils'
 import { ProjectActionsMenu } from './ProjectActionsMenu'
 import { ProjectRunCell } from './ProjectRunCell'
+
+/** The rows come in a little after the prompt above them has begun to, one after another. */
+const listRevealDelayMs = 400
 
 interface ProjectTableProps {
   status: ProjectStatus
@@ -113,27 +117,29 @@ export function ProjectTable({ status, filters, onClearFilters }: ProjectTablePr
           </TableRow>
         </TableHeader>
         <TableBody>
-          {rows.map((project) => (
-            <TableRow key={project.id} className="relative">
-              <TableCell className="font-medium text-primary">
-                {/* The link covers the row, so that the whole row opens the project. */}
-                <Link
-                  href={routes.project(project.id).activity()}
-                  className="outline-none after:absolute after:inset-0 focus-visible:after:ring-2 focus-visible:after:ring-ring/50 focus-visible:after:ring-inset"
-                >
-                  {projectName(project)}
-                </Link>
-              </TableCell>
-              <TableCell>
-                <ProjectRunCell project={project} />
-              </TableCell>
-              <TableCell className="text-right text-muted-foreground">
-                <RelativeTime date={project.last_activity_at} now={now} />
-              </TableCell>
-              <TableCell className="text-right">
-                <ProjectActionsMenu project={project} />
-              </TableCell>
-            </TableRow>
+          {rows.map((project, index) => (
+            <Reveal key={project.id} asChild index={index} delay={listRevealDelayMs}>
+              <TableRow className="relative">
+                <TableCell className="font-medium text-primary">
+                  {/* The link covers the row, so that the whole row opens the project. */}
+                  <Link
+                    href={routes.project(project.id).activity()}
+                    className="outline-none after:absolute after:inset-0 focus-visible:after:ring-2 focus-visible:after:ring-ring/50 focus-visible:after:ring-inset"
+                  >
+                    {projectName(project)}
+                  </Link>
+                </TableCell>
+                <TableCell>
+                  <ProjectRunCell project={project} />
+                </TableCell>
+                <TableCell className="text-right text-muted-foreground">
+                  <RelativeTime date={project.last_activity_at} now={now} />
+                </TableCell>
+                <TableCell className="text-right">
+                  <ProjectActionsMenu project={project} />
+                </TableCell>
+              </TableRow>
+            </Reveal>
           ))}
         </TableBody>
       </Table>
