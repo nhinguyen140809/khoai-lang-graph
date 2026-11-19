@@ -5,7 +5,7 @@ import { describe, expect, it } from 'vitest'
 import { itemFixtureByKey } from '@/mocks/artifacts/fixtures/artifacts.fixtures'
 import { projectIds } from '@/mocks/shared/db'
 import { renderWithProviders } from '@/test/render'
-import { expectNoAccessibilityViolations } from '@/test/steps'
+import { expectNoAccessibilityViolations, expectText } from '@/test/steps'
 
 import type { LinkedEntry } from '../../item-links.types'
 import { LinkedItemsPopover } from '../LinkedItemsPopover'
@@ -147,7 +147,7 @@ describe('LinkedItemsPopover', () => {
       </LinkedItemsPopover>,
     )
     await user.click(screen.getByRole('button', { name: 'AR-001' }))
-    await screen.findByText('This item is based on List mentors by field.')
+    await expectText('This item is based on List mentors by field.')
 
     await expectNoAccessibilityViolations(container)
   })

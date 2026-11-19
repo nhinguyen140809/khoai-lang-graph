@@ -4,9 +4,14 @@ import { describe, expect, it } from 'vitest'
 
 import { artifactFixtureByKind } from '@/mocks/artifacts/fixtures/artifacts.fixtures'
 import { projectIds } from '@/mocks/shared/db'
-import { routerMock } from '@/test/next-stubs'
 import { renderDocumentsFrame } from '@/test/render'
-import { expectNoAccessibilityViolations, expectNoText, expectRole, expectText } from '@/test/steps'
+import {
+  expectNoAccessibilityViolations,
+  expectNoText,
+  expectPushedTo,
+  expectRole,
+  expectText,
+} from '@/test/steps'
 
 const projectId = projectIds.mentor
 const analysis = artifactFixtureByKind(projectId, 'requirements_analysis')
@@ -146,7 +151,7 @@ describe('DocumentsPanel opening', () => {
 
     await userEvent.click(await findRow(analysis.title))
 
-    expect(routerMock.push).toHaveBeenCalledWith(`${documentsPath}/${analysis.id}`)
+    await expectPushedTo(`${documentsPath}/${analysis.id}`)
   })
 
   it('opens a document again on a double click, which keeps its tab', async () => {
@@ -154,7 +159,7 @@ describe('DocumentsPanel opening', () => {
 
     await userEvent.dblClick(await findRow(analysis.title))
 
-    expect(routerMock.push).toHaveBeenCalledWith(`${documentsPath}/${analysis.id}`)
+    await expectPushedTo(`${documentsPath}/${analysis.id}`)
   })
 })
 
@@ -233,7 +238,7 @@ describe('DocumentsPanel outline', () => {
     const button = await screen.findByRole('button', { name: /to review/ })
     await userEvent.click(button)
 
-    expect(routerMock.push).toHaveBeenCalledWith(expect.stringMatching(/\/items\//))
+    await expectPushedTo(expect.stringMatching(/\/items\//))
   })
 
   it('renders no footer for a document with nothing to count', async () => {

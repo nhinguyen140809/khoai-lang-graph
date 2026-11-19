@@ -5,7 +5,7 @@ import { describe, expect, it } from 'vitest'
 import { buildRun } from '@/mocks/runs/fixtures/runs.fixtures'
 import { projectIds, runIds } from '@/mocks/shared/db'
 import { renderWithProviders } from '@/test/render'
-import { expectNoAccessibilityViolations } from '@/test/steps'
+import { expectNoAccessibilityViolations, expectText } from '@/test/steps'
 
 import { ProgressSection } from '../ProgressSection'
 
@@ -58,7 +58,7 @@ describe('ProgressSection', () => {
       />,
     )
 
-    await screen.findByText('Interviewing')
+    await expectText('Interviewing')
     expect(screen.getAllByRole('tab')[0]).toHaveAttribute('tabindex', '0')
   })
 
@@ -79,7 +79,7 @@ describe('ProgressSection', () => {
   it('has no accessibility violation', async () => {
     renderWithProviders(<ProgressSection run={waitingRun} projectId={projectIds.mentor} />)
 
-    await screen.findByText('Interviewing')
+    await expectText('Interviewing')
     await expectNoAccessibilityViolations()
   })
 })

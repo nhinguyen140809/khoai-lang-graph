@@ -9,7 +9,12 @@ import {
 import { projectIds } from '@/mocks/shared/db'
 import { routerMock } from '@/test/next-stubs'
 import { renderDocumentsFrame } from '@/test/render'
-import { expectNoAccessibilityViolations, expectRole, expectText } from '@/test/steps'
+import {
+  expectNoAccessibilityViolations,
+  expectPushedTo,
+  expectRole,
+  expectText,
+} from '@/test/steps'
 
 import { DocumentPage } from '../DocumentPage'
 import { DocumentsHomePage } from '../DocumentsHomePage'
@@ -91,11 +96,11 @@ describe('DocumentPage', () => {
 
     const link = await screen.findByRole('link', { name: /Find a mentor in my field/ })
     await userEvent.click(link)
-    expect(routerMock.push).toHaveBeenCalledWith(href)
+    await expectPushedTo(href)
 
     routerMock.push.mockClear()
     await userEvent.dblClick(link)
-    expect(routerMock.push).toHaveBeenCalledWith(href)
+    await expectPushedTo(href)
   })
 
   it('opens the page of a persona from the participants of a transcript', async () => {
@@ -105,7 +110,7 @@ describe('DocumentPage', () => {
     const link = await screen.findByRole('link', { name: 'Minh' })
     expect(link).toHaveAttribute('href', `/projects/${projectId}/items/${persona.id}`)
     await userEvent.click(link)
-    expect(routerMock.push).toHaveBeenCalledWith(`/projects/${projectId}/items/${persona.id}`)
+    await expectPushedTo(`/projects/${projectId}/items/${persona.id}`)
   })
 
   it('shows a loading state while the document loads', async () => {
@@ -128,7 +133,7 @@ describe('DocumentPage', () => {
 
   it('has no accessibility violation', async () => {
     const { container } = renderDocument(analysis.id)
-    await screen.findByRole('heading', { name: /Stated need/ })
+    await expectRole('heading', /Stated need/)
 
     await expectNoAccessibilityViolations(container)
   })

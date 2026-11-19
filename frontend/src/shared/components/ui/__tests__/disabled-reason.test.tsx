@@ -4,7 +4,7 @@ import { describe, expect, it } from 'vitest'
 
 import { assertPresent } from '@/shared/lib/guards'
 import { renderWithProviders } from '@/test/render'
-import { expectNoAccessibilityViolations } from '@/test/steps'
+import { expectNoAccessibilityViolations, expectRole } from '@/test/steps'
 
 import { Button } from '../button'
 import { DisabledReason } from '../disabled-reason'
@@ -58,7 +58,7 @@ describe('DisabledReason', () => {
 
   it('has no accessibility violation', async () => {
     const { container } = renderEdit(reason)
-    await screen.findByRole('button', { name: 'Edit' })
+    await expectRole('button', 'Edit')
 
     await expectNoAccessibilityViolations(container)
   })

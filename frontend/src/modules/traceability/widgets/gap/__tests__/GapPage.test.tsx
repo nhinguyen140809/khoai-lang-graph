@@ -1,10 +1,11 @@
-import { screen, waitFor } from '@testing-library/react'
+import { screen } from '@testing-library/react'
 import userEvent from '@testing-library/user-event'
 import { describe, expect, it } from 'vitest'
 
 import { projectIds } from '@/mocks/shared/db'
 import { routerMock } from '@/test/next-stubs'
 import { renderWithProviders } from '@/test/render'
+import { expectPushedTo } from '@/test/steps'
 
 import { GapPage } from '../GapPage'
 
@@ -71,18 +72,12 @@ describe('GapPage', () => {
     const open = (await screen.findAllByRole('button', { name: 'Open in a new tab' }))[0]
     if (open === undefined) throw new Error('The gap holds no item')
     await user.click(open)
-    await waitFor(() => {
-      expect(routerMock.push).toHaveBeenCalledWith(expect.stringContaining(`/items/`))
-    })
+    await expectPushedTo(expect.stringContaining(`/items/`))
 
     routerMock.push.mockClear()
     const trace = screen.getAllByRole('button', { name: 'View its trace' })[0]
     if (trace === undefined) throw new Error('The gap holds no item')
     await user.click(trace)
-    await waitFor(() => {
-      expect(routerMock.push).toHaveBeenCalledWith(
-        expect.stringContaining(`/projects/${projectId}/trace/items/`),
-      )
-    })
+    await expectPushedTo(expect.stringContaining(`/projects/${projectId}/trace/items/`))
   })
 })

@@ -1,11 +1,11 @@
-import { screen, waitFor } from '@testing-library/react'
+import { screen } from '@testing-library/react'
 import userEvent from '@testing-library/user-event'
 import { describe, expect, it } from 'vitest'
 
 import { projectIds } from '@/mocks/shared/db'
 import { routerMock } from '@/test/next-stubs'
 import { renderWithProviders } from '@/test/render'
-import { expectNoAccessibilityViolations } from '@/test/steps'
+import { expectNoAccessibilityViolations, expectPushedTo } from '@/test/steps'
 
 import { OpenInNewTabButton } from '../OpenInNewTabButton'
 
@@ -26,9 +26,7 @@ describe('OpenInNewTabButton', () => {
 
     await user.click(screen.getByRole('button', { name: 'Open in a new tab' }))
 
-    await waitFor(() => {
-      expect(routerMock.push).toHaveBeenCalledWith(expect.stringContaining('/items/item-1'))
-    })
+    await expectPushedTo(expect.stringContaining('/items/item-1'))
   })
 
   it('has no accessibility violations', async () => {

@@ -7,6 +7,7 @@ import { projectIds } from '@/mocks/shared/db'
 import { openPage } from '@/test/msw'
 import { routerMock } from '@/test/next-stubs'
 import { renderWithProviders } from '@/test/render'
+import { expectPushedTo, expectText, pressMenuItem } from '@/test/steps'
 
 import { ItemTracePage } from '../ItemTracePage'
 
@@ -39,7 +40,7 @@ describe('ItemTracePage', () => {
     const item = itemFixtureByKey(projectId, 'AR-003')
     renderPage(item.id)
 
-    await screen.findByText('Trust before booking')
+    await expectText('Trust before booking')
     // Each node carries the look of what its item asks, or is: one to check, one to follow, an
     // approved one, a draft and one that is set aside read differently (the buttons inside a node carry a variant of their own).
     const looks = new Set(
@@ -69,7 +70,7 @@ describe('ItemTracePage', () => {
     const item = itemFixtureByKey(projectId, 'AR-003')
     renderPage(item.id)
 
-    await screen.findByText('Trace of Search with free hours')
+    await expectText('Trace of Search with free hours')
     expect(screen.queryByText(/The items on the left are what this item is based on/)).toBeNull()
 
     await user.click(screen.getByRole('button', { name: 'How to read this page' }))
@@ -162,14 +163,12 @@ describe('ItemTracePage', () => {
       return button
     })
     await user.click(more)
-    await user.click(await screen.findByRole('menuitem', { name: 'View its trace' }))
+    await pressMenuItem('View its trace')
 
     await waitFor(() => {
       expect(routerMock.push).toHaveBeenCalledTimes(1)
     })
-    expect(routerMock.push).toHaveBeenCalledWith(
-      expect.stringContaining(`/projects/${projectId}/trace/items/${item.id}`),
-    )
+    await expectPushedTo(expect.stringContaining(`/projects/${projectId}/trace/items/${item.id}`))
   })
 
   it('carries the words of the chosen link in the data of its nodes, ready to draw', async () => {
@@ -247,10 +246,6 @@ describe('ItemTracePage', () => {
     // a node is pressed and throws on in jsdom; the node answers to the click alone.
     fireEvent.click(title)
 
-    await waitFor(() => {
-      expect(routerMock.push).toHaveBeenCalledWith(
-        expect.stringContaining(`/projects/${projectId}/items/${target.id}`),
-      )
-    })
+    await expectPushedTo(expect.stringContaining(`/projects/${projectId}/items/${target.id}`))
   })
 })

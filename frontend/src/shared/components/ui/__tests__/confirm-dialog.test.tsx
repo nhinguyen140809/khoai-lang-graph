@@ -228,7 +228,7 @@ describe('ConfirmDialog', () => {
         {...props}
       />,
     )
-    await screen.findByRole('alertdialog')
+    await expectRole('alertdialog')
 
     expect(shownIcon()).toBe(icon)
   })

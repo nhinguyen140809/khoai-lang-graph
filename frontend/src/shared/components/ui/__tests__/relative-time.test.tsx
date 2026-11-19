@@ -1,15 +1,16 @@
 import { render, screen } from '@testing-library/react'
 import { describe, expect, it, vi } from 'vitest'
 
-import { advanceTimers } from '@/test/steps'
+import { advanceTimers, withFakeTimers } from '@/test/steps'
 
 import { RelativeTime } from '../relative-time'
 
 // The times of the test are local on purpose: the words and the title format in the zone of
 // the machine that runs them, and a local string reads the same in every zone.
 describe('RelativeTime', () => {
+  withFakeTimers()
+
   it('reads the words, and names the exact time for whoever hovers or parses', () => {
-    vi.useFakeTimers()
     vi.setSystemTime(new Date('2026-10-30T10:00:00'))
     render(<RelativeTime date="2026-10-30T09:55:00" />)
 
@@ -19,7 +20,6 @@ describe('RelativeTime', () => {
   })
 
   it('reads the words again a minute later, so they stay true', () => {
-    vi.useFakeTimers()
     vi.setSystemTime(new Date('2026-10-30T10:00:00'))
     render(<RelativeTime date="2026-10-30T09:59:00" />)
 

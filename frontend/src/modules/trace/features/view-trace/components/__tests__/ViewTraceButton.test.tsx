@@ -1,11 +1,11 @@
-import { screen, waitFor } from '@testing-library/react'
+import { screen } from '@testing-library/react'
 import userEvent from '@testing-library/user-event'
 import { describe, expect, it } from 'vitest'
 
 import { projectIds } from '@/mocks/shared/db'
 import { routerMock } from '@/test/next-stubs'
 import { renderWithProviders } from '@/test/render'
-import { expectNoAccessibilityViolations } from '@/test/steps'
+import { expectNoAccessibilityViolations, expectPushedTo } from '@/test/steps'
 
 import { ViewTraceButton } from '../ViewTraceButton'
 
@@ -25,11 +25,7 @@ describe('ViewTraceButton', () => {
 
     await user.click(screen.getByRole('button', { name: 'View its trace' }))
 
-    await waitFor(() => {
-      expect(routerMock.push).toHaveBeenCalledWith(
-        expect.stringContaining('/trace/items/subject-1'),
-      )
-    })
+    await expectPushedTo(expect.stringContaining('/trace/items/subject-1'))
   })
 
   it('has no accessibility violations', async () => {

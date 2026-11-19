@@ -36,5 +36,5 @@ export {
 } from './keyboard.utils'
 export { waitForQueries, waitForSuccess } from './query-states.utils'
 export { expectPushedTo, expectReplacedWith } from './router-expectations.utils'
-export { advanceTimers, advanceTimersAsync } from './timers.utils'
+export { advanceTimers, advanceTimersAsync, withFakeTimers } from './timers.utils'
 export { spyOnToast } from './toast.utils'

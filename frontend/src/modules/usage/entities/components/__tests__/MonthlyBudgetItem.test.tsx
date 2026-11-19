@@ -4,7 +4,7 @@ import { describe, expect, it } from 'vitest'
 
 import { openPage } from '@/test/msw'
 import { renderWorkbench } from '@/test/render'
-import { expectNoAccessibilityViolations, statusBar } from '@/test/steps'
+import { expectNoAccessibilityViolations, expectRole, statusBar } from '@/test/steps'
 
 import { MonthlyBudgetItem } from '../MonthlyBudgetItem'
 import { monthlyBudgetShownCases } from './MonthlyBudgetItem.data'
@@ -19,7 +19,7 @@ describe('MonthlyBudgetItem', () => {
 
     if (shown === null) {
       // The usage loads after the first render, which shows nothing either.
-      await screen.findByRole('contentinfo')
+      await expectRole('contentinfo')
       await waitFor(() => {
         expect(within(statusBar()).queryByRole('progressbar')).toBeNull()
       })

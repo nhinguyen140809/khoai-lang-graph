@@ -2,7 +2,7 @@ import { renderHook } from '@testing-library/react'
 import { afterEach, beforeEach, describe, expect, it, vi } from 'vitest'
 
 import { scrollToStartIfTall } from '@/shared/lib/viewport'
-import { advanceTimers } from '@/test/steps'
+import { advanceTimers, withFakeTimers } from '@/test/steps'
 
 import { revealDelayMs } from '../../activity-chat.constants'
 import { useRevealNewMessage } from '../useRevealNewMessage'
@@ -15,8 +15,8 @@ vi.mock('@/shared/components/ui/message-scroller', () => ({
 vi.mock('@/shared/lib/viewport', () => ({ scrollToStartIfTall: vi.fn() }))
 
 describe('useRevealNewMessage', () => {
+  withFakeTimers()
   beforeEach(() => {
-    vi.useFakeTimers()
     vi.mocked(scrollToStartIfTall).mockClear()
     scroller.end = false
   })

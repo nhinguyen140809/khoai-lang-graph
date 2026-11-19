@@ -9,6 +9,7 @@ import { HttpMethod } from '@/shared/api/http'
 import { serverErrorOn } from '@/test/msw'
 import { resetNextStubs, routerMock, setPathname } from '@/test/next-stubs'
 import { renderWithProviders } from '@/test/render'
+import { expectPushedTo } from '@/test/steps'
 import { itShowsQueryStates } from '@/test/suites'
 
 import { TracePanel } from '../TracePanel'
@@ -60,11 +61,7 @@ describe('TracePanel', () => {
 
     await user.click(await screen.findByText('Links to check'))
 
-    await waitFor(() => {
-      expect(routerMock.push).toHaveBeenCalledWith(
-        expect.stringContaining(`/projects/${projectId}/trace/gaps/needs_review`),
-      )
-    })
+    await expectPushedTo(expect.stringContaining(`/projects/${projectId}/trace/gaps/needs_review`))
   })
 
   it('colors the title of a document row by how much its items ask of the user', async () => {
@@ -102,10 +99,6 @@ describe('TracePanel', () => {
     const row = await screen.findByText('Find a mentor in my field')
     await user.click(row)
 
-    await waitFor(() => {
-      expect(routerMock.push).toHaveBeenCalledWith(
-        expect.stringContaining(`/projects/${projectId}/trace/items/${item.id}`),
-      )
-    })
+    await expectPushedTo(expect.stringContaining(`/projects/${projectId}/trace/items/${item.id}`))
   })
 })

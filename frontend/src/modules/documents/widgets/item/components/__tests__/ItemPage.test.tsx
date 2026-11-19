@@ -11,7 +11,13 @@ import { projectIds } from '@/mocks/shared/db'
 import { assertPresent } from '@/shared/lib/guards'
 import { routerMock } from '@/test/next-stubs'
 import { renderDocumentsFrame } from '@/test/render'
-import { advanceTimers, expectNoAccessibilityViolations, expectText, pressKey } from '@/test/steps'
+import {
+  advanceTimers,
+  expectNoAccessibilityViolations,
+  expectPushedTo,
+  expectText,
+  pressKey,
+} from '@/test/steps'
 
 import { navigatorIdleMs } from '../../item-page.constants'
 import { ItemPage } from '../ItemPage'
@@ -34,7 +40,7 @@ function renderItem(itemId: string, scenario?: string) {
 /** The navigator over the page, once the page has the order of its document. */
 async function findNavigator() {
   const navigator = await screen.findByRole('group', { name: 'Go through the items' })
-  await screen.findByText(/^\d+ of \d+$/)
+  await expectText(/^\d+ of \d+$/)
   return navigator
 }
 
@@ -149,7 +155,7 @@ describe('ItemPage', () => {
 
     await userEvent.click(screen.getByRole('button', { name: 'Next item' }))
 
-    expect(routerMock.push).toHaveBeenCalledWith(expect.stringMatching(/\/items\//), {
+    await expectPushedTo(expect.stringMatching(/\/items\//), {
       transitionTypes: ['item-next'],
     })
   })
@@ -160,7 +166,7 @@ describe('ItemPage', () => {
 
     await userEvent.click(screen.getByRole('button', { name: 'Previous item' }))
 
-    expect(routerMock.push).toHaveBeenCalledWith(expect.stringMatching(/\/items\//), {
+    await expectPushedTo(expect.stringMatching(/\/items\//), {
       transitionTypes: ['item-previous'],
     })
   })
