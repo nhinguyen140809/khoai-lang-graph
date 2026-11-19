@@ -34,6 +34,7 @@ export function StepperTrigger({
   } = stepperCtx
   const { step, isDisabled } = useStepItem()
   const isSelected = activeStep === step
+  const selectedTabIndex = isSelected ? 0 : -1
   const id = `stepper-tab-${step}`
   const panelId = `stepper-panel-${step}`
 
@@ -84,7 +85,7 @@ export function StepperTrigger({
     id,
     'aria-selected': isSelected,
     'aria-controls': panelId,
-    tabIndex: typeof tabIndex === 'number' ? tabIndex : isSelected ? 0 : -1,
+    tabIndex: typeof tabIndex === 'number' ? tabIndex : selectedTabIndex,
     'data-slot': 'stepper-trigger',
     'data-state': state,
     'data-loading': isLoading,
