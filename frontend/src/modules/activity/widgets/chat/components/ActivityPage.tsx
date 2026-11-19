@@ -11,7 +11,6 @@ import {
   useActivityThread,
   withLatestRun,
 } from '@/modules/activity/entities'
-import { usePendingInterrupt } from '@/modules/review/entities'
 import { type Run, useLatestRun, useThreadRuns } from '@/modules/run/entities'
 import type { Message, Thread } from '@/modules/thread/entities'
 import { useThreadMessages } from '@/modules/thread/entities'
@@ -34,6 +33,7 @@ import { RouteParam, routes, useRouteParam } from '@/shared/routes'
 import { activityChatMessages } from '../activity-chat.constants'
 import type { ChatState } from '../chat-state.types'
 import { chatStateOf } from '../chat-state.utils'
+import { usePendingReview } from '../hooks/usePendingReview'
 import { ActivityPrompt } from './ActivityPrompt'
 import { PendingReview } from './PendingReview'
 import { RunActivity } from './RunActivity'
@@ -91,16 +91,14 @@ function ActivityChat({
   thread: Thread | null
   threadId: string | null
 }) {
-  const runs = useThreadRuns(threadId ?? '', { isEnabled: threadId !== null })
-  const messages = useThreadMessages(threadId ?? '', { isEnabled: threadId !== null })
-  const latestRun = useLatestRun(threadId ?? '', { isEnabled: threadId !== null })
+  const id = threadId ?? ''
+  const isEnabled = threadId !== null
+  const runs = useThreadRuns(id, { isEnabled })
+  const messages = useThreadMessages(id, { isEnabled })
+  const latestRun = useLatestRun(id, { isEnabled })
   const runOnScreen = latestRun.data ?? null
-  useActivityStream(runOnScreen, threadId ?? '')
-  const pendingReview =
-    usePendingInterrupt(runOnScreen?.id ?? '', {
-      isEnabled: runOnScreen !== null,
-      runStatus: runOnScreen?.status,
-    }).data ?? null
+  useActivityStream(runOnScreen, id)
+  const pendingReview = usePendingReview(runOnScreen)
 
   const keptScroll = useKeptScroll('chat', { from: 'end' })
   const target = useRouteParam(RouteParam.Entry)

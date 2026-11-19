@@ -3,7 +3,7 @@
 import { useEffect, useState } from 'react'
 
 import { useActivityThread } from '@/modules/activity/entities'
-import { useLatestRun } from '@/modules/run/entities'
+import { type Run, useLatestRun } from '@/modules/run/entities'
 import { SidePanel } from '@/shared/components/frame'
 import { ErrorState, LoadingState } from '@/shared/components/state'
 import {
@@ -70,31 +70,13 @@ export function ActivityPanel({ projectId }: ActivityPanelProps) {
           className="min-h-0"
         >
           <ScrollArea className="h-full">
-            {thread.thread === null ? (
-              <ProgressSection
-                run={null}
-                projectId={projectId}
-                open={isProgressOpen}
-                onOpenChange={setProgressOpen}
-              />
-            ) : latestRun.isPending ? (
-              <LoadingState size="compact" rows={5} label={activityPanelMessages.progressLoading} />
-            ) : latestRun.isError ? (
-              <ErrorState
-                size="compact"
-                message={activityPanelMessages.progressError}
-                onRetry={() => {
-                  void latestRun.refetch()
-                }}
-              />
-            ) : (
-              <ProgressSection
-                run={latestRun.data}
-                projectId={projectId}
-                open={isProgressOpen}
-                onOpenChange={setProgressOpen}
-              />
-            )}
+            <ProgressBody
+              hasThread={thread.thread !== null}
+              latestRun={latestRun}
+              projectId={projectId}
+              isOpen={isProgressOpen}
+              onOpenChange={setProgressOpen}
+            />
           </ScrollArea>
         </ResizablePanel>
         {/*
@@ -122,4 +104,42 @@ export function ActivityPanel({ projectId }: ActivityPanelProps) {
       </ResizablePanelGroup>
     </SidePanel>
   )
+}
+
+interface ProgressBodyProps {
+  hasThread: boolean
+  latestRun: ReturnType<typeof useLatestRun>
+  projectId: string
+  isOpen: boolean
+  onOpenChange: (isOpen: boolean) => void
+}
+
+/** The progress of the latest run: the words of the state while it loads or fails, else its stages. */
+function ProgressBody({
+  hasThread,
+  latestRun,
+  projectId,
+  isOpen,
+  onOpenChange,
+}: ProgressBodyProps) {
+  const section = (run: Run | null) => (
+    <ProgressSection run={run} projectId={projectId} open={isOpen} onOpenChange={onOpenChange} />
+  )
+
+  if (!hasThread) return section(null)
+  if (latestRun.isPending) {
+    return <LoadingState size="compact" rows={5} label={activityPanelMessages.progressLoading} />
+  }
+  if (latestRun.isError) {
+    return (
+      <ErrorState
+        size="compact"
+        message={activityPanelMessages.progressError}
+        onRetry={() => {
+          void latestRun.refetch()
+        }}
+      />
+    )
+  }
+  return section(latestRun.data)
 }
