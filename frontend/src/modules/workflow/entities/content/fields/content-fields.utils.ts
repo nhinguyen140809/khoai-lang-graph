@@ -61,6 +61,25 @@ function ratingFieldsOf(property: SchemaProperty): RatingFields | null {
   }
 }
 
+/** What describes a field, and where its values come from. */
+function sourcesOf(property: SchemaProperty) {
+  return {
+    description: property.description ?? null,
+    allowedValuesFrom: property['x-value-from'] ?? null,
+    valueList: property['x-value-list'] ?? null,
+  }
+}
+
+/** The bounds of a field and the value it starts with. */
+function limitsOf(property: SchemaProperty) {
+  return {
+    minItems: property.minItems ?? null,
+    minimum: property.minimum ?? null,
+    maximum: property.maximum ?? null,
+    defaultValue: property.default ?? null,
+  }
+}
+
 function fieldOf(
   path: string,
   name: string,
@@ -79,14 +98,9 @@ function fieldOf(
     required: isRequired,
     readOnly: property.readOnly === true,
     options: (property.enum ?? []).filter(isString),
-    description: property.description ?? null,
-    allowedValuesFrom: property['x-value-from'] ?? null,
-    valueList: property['x-value-list'] ?? null,
-    minItems: property.minItems ?? null,
-    minimum: property.minimum ?? null,
-    maximum: property.maximum ?? null,
+    ...sourcesOf(property),
+    ...limitsOf(property),
     integer: typesOf(property).includes('integer'),
-    defaultValue: property.default ?? null,
     entryFields: hasObjectEntries(widget)
       ? Object.entries(entryProperties).map(([entryName, entry]) =>
           fieldOf(`${path}.${entryName}`, entryName, entry, requiredNames.includes(entryName)),
