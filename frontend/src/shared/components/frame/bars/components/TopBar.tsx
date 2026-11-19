@@ -2,9 +2,9 @@
 
 import { SearchIcon } from 'lucide-react'
 import type { Route } from 'next'
-import Link from 'next/link'
 import type { ReactNode } from 'react'
 
+import { BrandLink } from '@/shared/components/brand'
 import {
   Breadcrumb,
   BreadcrumbItem,
@@ -16,7 +16,6 @@ import { ariaKeyShortcuts, hotkeyKeys, useModifierKeyName } from '@/shared/lib/h
 
 import { paletteHotkey } from '../../commands/command.constants'
 import { useCommandPalette } from '../../commands/hooks/useCommandPalette'
-import { LogoMark } from './LogoMark'
 
 interface TopBarProps {
   /** What follows "khoai /": a page name, or the menu of the current project. */
@@ -43,26 +42,13 @@ function Trail({ crumb, homeHref }: TopBarProps) {
     <Breadcrumb className="min-w-0 flex-1">
       <BreadcrumbList className="flex-nowrap">
         <BreadcrumbItem className="shrink-0">
-          <HomeLink href={homeHref} />
+          <BrandLink href={homeHref} className="py-0.5" />
         </BreadcrumbItem>
         <BreadcrumbSeparator>/</BreadcrumbSeparator>
         {/* Bold, as the menu of a project that a crumb can be, which sets its own weight. */}
         <BreadcrumbItem className="min-w-0 font-bold text-foreground">{crumb}</BreadcrumbItem>
       </BreadcrumbList>
     </Breadcrumb>
-  )
-}
-
-/** The mark and the name of the app, which lead to the home page. */
-function HomeLink({ href }: { href: Route }) {
-  return (
-    <Link
-      href={href}
-      className="flex items-center gap-2 rounded-md px-1 py-0.5 outline-none hover:bg-sidebar-accent focus-visible:ring-2 focus-visible:ring-ring/50"
-    >
-      <LogoMark />
-      khoai
-    </Link>
   )
 }
 
