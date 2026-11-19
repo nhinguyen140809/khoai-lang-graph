@@ -49,6 +49,7 @@ const environmentOwners = [
   'src/shared/lib/url/download.utils.ts',
   'src/shared/api/request/api-url.utils.ts',
   'src/shared/routes/auth/auth-redirect.utils.ts',
+  'src/shared/routes/typed-route/hooks/useViewStartHref.ts',
   'src/shared/components/ui/sidebar/SidebarProvider.tsx',
   'src/modules/design-system/widgets/showcase/components/cards/CommandCard.tsx',
   'src/test/msw/scenario-address.utils.ts',
