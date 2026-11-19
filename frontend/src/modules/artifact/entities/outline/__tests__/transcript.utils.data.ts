@@ -59,7 +59,7 @@ export function messageOf(id: string, content: ContentValues): OutlineItem {
 /** The participants of a conversation of four: the one who leads, two who share its role, one who does not. */
 export const fourParticipants = [
   { key: 'interviewer', name: 'Interviewer', itemId: null, side: 'end', tone: 'primary' },
-  { key: 'mentor', name: 'Mentor', itemId: 'item-2', side: 'end', tone: 'chart' },
+  { key: 'mentor', name: 'Mentor', itemId: 'item-2', side: 'end', tone: 'secondary' },
   { key: 'admin', name: 'Admin', itemId: 'item-3', side: 'start', tone: 'neutral' },
-  { key: 'student', name: 'Student', itemId: 'item-4', side: 'start', tone: 'chart' },
+  { key: 'student', name: 'Student', itemId: 'item-4', side: 'start', tone: 'secondary' },
 ] as const

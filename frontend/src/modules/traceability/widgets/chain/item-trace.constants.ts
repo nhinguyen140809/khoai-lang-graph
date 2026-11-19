@@ -59,7 +59,7 @@ export const chainNodeAttentionLooks = {
  * status and what it asks, with a ring of its tone around it. It is the one solid node of the
  * graph, so the eye starts from it.
  */
-export const chainSubjectLook = { variant: 'solid', color: 'chart' } as const satisfies {
+export const chainSubjectLook = { variant: 'solid', color: 'secondary' } as const satisfies {
   variant: NodeVariant
   color: Tone
 }

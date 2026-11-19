@@ -16,7 +16,7 @@ describe('ItemHeading', () => {
     const avatar = screen.getByText('M').closest('[data-slot="avatar"]')
     expect(avatar).toBeInTheDocument()
     expect(avatar?.compareDocumentPosition(heading)).toBe(Node.DOCUMENT_POSITION_FOLLOWING)
-    expect(screen.getByText('M')).toHaveAttribute('data-color', 'chart')
+    expect(screen.getByText('M')).toHaveAttribute('data-color', 'secondary')
     expect(screen.getByText('M')).toHaveAttribute('data-variant', 'soft')
   })
 

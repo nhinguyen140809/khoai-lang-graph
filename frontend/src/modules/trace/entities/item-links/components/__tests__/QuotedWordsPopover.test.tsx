@@ -19,7 +19,7 @@ function entryOf(item: typeof analyzed, overrides: Partial<LinkedEntry> = {}): L
     relation: { direction: 'outgoing', linkType: 'derived_from' },
     isOutOfDate: false,
     otherQuote: null,
-    quoteColor: 'chart',
+    quoteColor: 'secondary',
     madeFromVersion: null,
     ...overrides,
   }

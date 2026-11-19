@@ -1,6 +1,6 @@
 /**
  * The colors that Badge, Button, Alert, Code, Highlight, Node, Edge, Marker, Progress, and Spinner
- * take. `chart` is the yellow of the charts, with its own tokens in each theme; `muted` and
+ * take. `secondary` is the yellow of the interface, with its own tokens in each theme; `muted` and
  * `accent` are the gray and the blue tint of the themes.
  */
 export const tones = [
@@ -9,7 +9,7 @@ export const tones = [
   'success',
   'warning',
   'destructive',
-  'chart',
+  'secondary',
   'muted',
   'accent',
 ] as const
@@ -26,7 +26,7 @@ export const statusTones = ['success', 'warning', 'destructive'] as const satisf
  */
 export const nonStatusTones = [
   'primary',
-  'chart',
+  'secondary',
   'accent',
   'muted',
   'neutral',

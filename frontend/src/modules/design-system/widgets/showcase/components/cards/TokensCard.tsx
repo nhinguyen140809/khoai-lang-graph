@@ -14,7 +14,11 @@ const groups: { title: string; tokens: string[] }[] = [
     tokens: ['primary', 'success', 'success-strong', 'warning', 'warning-strong', 'destructive'],
   },
   {
-    title: 'Chart, yellow in order',
+    title: 'Strong and line',
+    tokens: ['secondary-strong', 'secondary-line', 'warning-line', 'accent-line'],
+  },
+  {
+    title: 'Chart',
     tokens: ['chart-1', 'chart-2', 'chart-3', 'chart-4', 'chart-5'],
   },
 ]
@@ -23,7 +27,7 @@ export function TokensCard() {
   return (
     <SampleCard
       title="Color tokens"
-      description="Night Owl surfaces and blue, and a yellow chart ramp."
+      description="Night Owl surfaces and blue, a yellow secondary, and five chart colors."
       className="flex flex-col gap-4"
     >
       {groups.map((group) => (
