@@ -3,7 +3,7 @@ import { ChevronRightIcon } from 'lucide-react'
 import { describe, expect, it } from 'vitest'
 
 import { Button } from '@/shared/components/ui/button'
-import { expectNoAccessibilityViolations, expectText } from '@/test/steps'
+import { expectNoAccessibilityViolations, expectNoRole, expectRole, expectText } from '@/test/steps'
 
 import { FeedEntry } from '../FeedEntry'
 
@@ -28,7 +28,7 @@ describe('FeedEntry', () => {
     )
 
     expect(screen.getAllByRole('generic', { hidden: true }).length).toBeGreaterThan(0)
-    expect(screen.queryByRole('img')).not.toBeInTheDocument()
+    expectNoRole('img')
   })
 
   it('fills the entries of the user and marks the one the address names', () => {
@@ -64,7 +64,7 @@ describe('FeedEntry', () => {
     expect(document.activeElement?.id).toBe('entry-4')
   })
 
-  it('shows its actions on focus within', () => {
+  it('shows its actions on focus within', async () => {
     render(
       <FeedEntry
         anchorId="entry-5"
@@ -76,6 +76,6 @@ describe('FeedEntry', () => {
       </FeedEntry>,
     )
 
-    expect(screen.getByRole('button', { name: 'Copy' })).toBeInTheDocument()
+    await expectRole('button', 'Copy')
   })
 })

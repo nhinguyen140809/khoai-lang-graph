@@ -7,7 +7,7 @@ import {
 } from '@/mocks/artifacts/fixtures/artifacts.fixtures'
 import { projectIds } from '@/mocks/shared/db'
 import { renderWithProviders } from '@/test/render'
-import { pressButton, spyOnToast } from '@/test/steps'
+import { expectText, pressButton, spyOnToast } from '@/test/steps'
 
 import { RestoreVersionDialog } from '../RestoreVersionDialog'
 
@@ -83,6 +83,6 @@ describe('RestoreVersionDialog', () => {
     expect(await screen.findByRole('alertdialog')).toHaveTextContent(
       'Restore version 2 of this document?',
     )
-    expect(screen.getByText(/The document and each of its items/)).toBeInTheDocument()
+    await expectText(/The document and each of its items/)
   })
 })

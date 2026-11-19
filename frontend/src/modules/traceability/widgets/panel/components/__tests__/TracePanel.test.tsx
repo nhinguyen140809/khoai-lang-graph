@@ -9,7 +9,7 @@ import { HttpMethod } from '@/shared/api/http'
 import { serverErrorOn } from '@/test/msw'
 import { resetNextStubs, routerMock, setPathname } from '@/test/next-stubs'
 import { renderWithProviders } from '@/test/render'
-import { expectPushedTo } from '@/test/steps'
+import { expectPushedTo, expectText } from '@/test/steps'
 import { itShowsQueryStates } from '@/test/suites'
 
 import { TracePanel } from '../TracePanel'
@@ -39,12 +39,12 @@ describe('TracePanel', () => {
   it('shows one row per gap with its count, and the open issues with theirs', async () => {
     renderPanel()
 
-    await waitFor(() => {
-      expect(screen.getByText('Requirements without a user story')).toBeInTheDocument()
+    await waitFor(async () => {
+      await expectText('Requirements without a user story')
     })
-    expect(screen.getByText('Requirements without a source')).toBeInTheDocument()
-    expect(screen.getByText('Links to check')).toBeInTheDocument()
-    expect(screen.getByText('Open issues')).toBeInTheDocument()
+    await expectText('Requirements without a source')
+    await expectText('Links to check')
+    await expectText('Open issues')
 
     // The counts of the gaps of the mentor platform, and its open issues, show as badges.
     const badges = screen

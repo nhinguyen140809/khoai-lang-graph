@@ -1,18 +1,20 @@
 import { render, screen } from '@testing-library/react'
 import { describe, expect, it } from 'vitest'
 
+import { expectRole, expectText } from '@/test/steps'
+
 import { SidePanel } from '../SidePanel'
 
 describe('SidePanel', () => {
-  it('shows its title and its content', () => {
+  it('shows its title and its content', async () => {
     render(
       <SidePanel title="Documents">
         <p>The tree</p>
       </SidePanel>,
     )
 
-    expect(screen.getByRole('complementary', { name: 'Documents' })).toBeInTheDocument()
-    expect(screen.getByText('The tree')).toBeInTheDocument()
+    await expectRole('complementary', 'Documents')
+    await expectText('The tree')
   })
 
   it('shows a footer under the content', () => {

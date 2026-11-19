@@ -1,9 +1,9 @@
 import { render, screen } from '@testing-library/react'
-import userEvent from '@testing-library/user-event'
 import { useState } from 'react'
 import { describe, expect, it } from 'vitest'
 
 import { assertPresent } from '@/shared/lib/guards'
+import { expectFocused, expectNoRole, expectRole, pressButton } from '@/test/steps'
 
 import type { ContentField } from '../../../fields/content-fields.types'
 import { EntriesControl } from '../EntriesControl'
@@ -24,10 +24,9 @@ function entryValues() {
 
 describe('EntriesControl', () => {
   it('appends an empty entry on Add and focuses its control', async () => {
-    const user = userEvent.setup()
     render(<EntriesProbe field={fieldOf('criteria')} initial={[]} />)
 
-    await user.click(screen.getByRole('button', { name: 'Add' }))
+    await pressButton('Add')
 
     const entry = assertPresent(screen.queryByRole('textbox'), 'No entry was added')
     expect(entry).toHaveFocus()
@@ -35,39 +34,36 @@ describe('EntriesControl', () => {
   })
 
   it('focuses the entry that takes the place of a removed one', async () => {
-    const user = userEvent.setup()
     render(<EntriesProbe field={fieldOf('criteria')} initial={['Given', 'When', 'Then']} />)
 
-    await user.click(screen.getByRole('button', { name: 'Remove entry 2 of Criteria' }))
+    await pressButton('Remove entry 2 of Criteria')
 
     expect(entryValues()).toEqual(['Given', 'Then'])
     expect(screen.getAllByRole('textbox')[1]).toHaveFocus()
   })
 
   it('focuses the entry before one that is removed last', async () => {
-    const user = userEvent.setup()
     render(<EntriesProbe field={fieldOf('criteria')} initial={['Given', 'When']} />)
 
-    await user.click(screen.getByRole('button', { name: 'Remove entry 2 of Criteria' }))
+    await pressButton('Remove entry 2 of Criteria')
 
     expect(entryValues()).toEqual(['Given'])
     expect(screen.getAllByRole('textbox')[0]).toHaveFocus()
   })
 
   it('focuses Add when the only entry is removed', async () => {
-    const user = userEvent.setup()
     render(<EntriesProbe field={fieldOf('criteria')} initial={['Given']} />)
 
-    await user.click(screen.getByRole('button', { name: 'Remove entry 1 of Criteria' }))
+    await pressButton('Remove entry 1 of Criteria')
 
-    expect(screen.queryByRole('textbox')).not.toBeInTheDocument()
-    expect(screen.getByRole('button', { name: 'Add' })).toHaveFocus()
+    expectNoRole('textbox')
+    expectFocused('button', 'Add')
   })
 
-  it('shows the fields of an entry of an object list, each with its label', () => {
+  it('shows the fields of an entry of an object list, each with its label', async () => {
     render(<EntriesProbe field={fieldOf('roles')} initial={[{ who: 'Ann' }]} />)
 
     expect(screen.getByRole('textbox', { name: 'Who' })).toHaveValue('Ann')
-    expect(screen.getByRole('textbox', { name: 'What' })).toBeInTheDocument()
+    await expectRole('textbox', 'What')
   })
 })

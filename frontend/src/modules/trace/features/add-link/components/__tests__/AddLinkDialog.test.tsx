@@ -7,7 +7,15 @@ import { apiEndpoints } from '@/shared/api/endpoints'
 import { HttpMethod, HttpStatus } from '@/shared/api/http'
 import { openPage, recordRequests } from '@/test/msw'
 import { renderWithProviders } from '@/test/render'
-import { expectText, fillFields, pressButton, pressKeys, spyOnToast, typeText } from '@/test/steps'
+import {
+  expectRole,
+  expectText,
+  fillFields,
+  pressButton,
+  pressKeys,
+  spyOnToast,
+  typeText,
+} from '@/test/steps'
 
 import { addLinkMessages } from '../../add-link.constants'
 import { AddLinkDialog } from '../AddLinkDialog'
@@ -68,7 +76,7 @@ describe('AddLinkDialog', () => {
 
     await chooseTarget('Minh')
 
-    expect(await screen.findByText('Search with free hours will involve Minh.')).toBeInTheDocument()
+    await expectText('Search with free hours will involve Minh.')
   })
 
   it('makes a link from the chosen kind, item and note', async () => {
@@ -124,7 +132,7 @@ describe('AddLinkDialog', () => {
     await chooseTarget('Minh')
     await pressButton(addLinkMessages.add)
 
-    expect(await screen.findByText('Choose an item that the type allows.')).toBeInTheDocument()
+    await expectText('Choose an item that the type allows.')
   })
 
   it('says the reason of a document that cannot change, under the form', async () => {
@@ -162,8 +170,8 @@ describe('AddLinkDialog', () => {
     await pressButton(addLinkMessages.add)
 
     // A failure keeps its words in the form, under the fields, and the dialog stays open.
-    expect(await screen.findByText('Failed to add the link (HTTP 500)')).toBeInTheDocument()
-    expect(screen.getByRole('dialog')).toBeInTheDocument()
+    await expectText('Failed to add the link (HTTP 500)')
+    await expectRole('dialog')
     expect(success).not.toHaveBeenCalled()
   })
 })

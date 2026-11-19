@@ -1,5 +1,7 @@
-import { render, screen } from '@testing-library/react'
+import { render } from '@testing-library/react'
 import { describe, expect, it } from 'vitest'
+
+import { expectText } from '@/test/steps'
 
 import { DiffView } from '../diff-view'
 
@@ -38,12 +40,12 @@ describe('DiffView', () => {
     ])
   })
 
-  it('marks nothing when the texts read the same', () => {
+  it('marks nothing when the texts read the same', async () => {
     const { container } = render(
       <DiffView before="Nothing changed here." after="Nothing changed here." />,
     )
 
     expect(marksOf(container)).toHaveLength(0)
-    expect(screen.getByText('Nothing changed here.')).toBeInTheDocument()
+    await expectText('Nothing changed here.')
   })
 })

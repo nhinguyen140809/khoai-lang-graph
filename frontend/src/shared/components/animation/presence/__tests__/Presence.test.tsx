@@ -1,14 +1,13 @@
 import { act, render, screen } from '@testing-library/react'
-import { beforeEach, describe, expect, it, vi } from 'vitest'
+import { describe, expect, it, vi } from 'vitest'
 
 import { motionMs } from '@/shared/lib/animation'
+import { withFakeTimers } from '@/test/steps'
 
 import { Presence } from '../Presence'
 
 describe('Presence', () => {
-  beforeEach(() => {
-    vi.useFakeTimers()
-  })
+  withFakeTimers()
 
   it('shows the content while it is present', () => {
     render(<Presence present>note</Presence>)

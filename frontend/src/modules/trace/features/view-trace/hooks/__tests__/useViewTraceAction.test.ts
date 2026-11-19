@@ -5,6 +5,7 @@ import { describe, expect, it } from 'vitest'
 import { projectIds } from '@/mocks/shared/db'
 import { routerMock } from '@/test/next-stubs'
 import { renderHookWithProviders } from '@/test/render'
+import { expectPushedTo } from '@/test/steps'
 
 import { useViewTraceAction } from '../useViewTraceAction'
 
@@ -21,7 +22,7 @@ describe('useViewTraceAction', () => {
     })
   })
 
-  it('opens the page of the trace of the item', () => {
+  it('opens the page of the trace of the item', async () => {
     const { result } = renderHookWithProviders(() => useViewTraceAction(projectId))
     routerMock.push.mockClear()
 
@@ -29,10 +30,10 @@ describe('useViewTraceAction', () => {
       result.current({ id: 'item-1', title: 'Search' }).run()
     })
 
-    expect(routerMock.push).toHaveBeenCalledWith(`/projects/${projectId}/trace/items/item-1`)
+    await expectPushedTo(`/projects/${projectId}/trace/items/item-1`)
   })
 
-  it('opens the trace of an item that has no title yet', () => {
+  it('opens the trace of an item that has no title yet', async () => {
     const { result } = renderHookWithProviders(() => useViewTraceAction(projectId))
     routerMock.push.mockClear()
 
@@ -40,6 +41,6 @@ describe('useViewTraceAction', () => {
       result.current({ id: 'item-1' }).run()
     })
 
-    expect(routerMock.push).toHaveBeenCalledWith(`/projects/${projectId}/trace/items/item-1`)
+    await expectPushedTo(`/projects/${projectId}/trace/items/item-1`)
   })
 })

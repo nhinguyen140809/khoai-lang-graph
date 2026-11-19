@@ -4,6 +4,7 @@ import { describe, expect, it } from 'vitest'
 import { projectIds } from '@/mocks/shared/db'
 import { routerMock } from '@/test/next-stubs'
 import { renderHookWithProviders } from '@/test/render'
+import { expectPushedTo } from '@/test/steps'
 
 import { useOpenItemActions } from '../useOpenItemActions'
 
@@ -37,7 +38,7 @@ describe('useOpenItemActions', () => {
     ])
   })
 
-  it('opens the page of an item that has no title yet', () => {
+  it('opens the page of an item that has no title yet', async () => {
     const { result } = renderHookWithProviders(() => useOpenItemActions(projectId))
     routerMock.push.mockClear()
 
@@ -45,6 +46,6 @@ describe('useOpenItemActions', () => {
       result.current({ id: 'item-1' }).open.run()
     })
 
-    expect(routerMock.push).toHaveBeenCalledWith(`/projects/${projectId}/items/item-1`)
+    await expectPushedTo(`/projects/${projectId}/items/item-1`)
   })
 })

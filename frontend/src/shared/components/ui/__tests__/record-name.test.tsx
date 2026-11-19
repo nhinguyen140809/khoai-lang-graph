@@ -3,6 +3,7 @@ import userEvent from '@testing-library/user-event'
 import { describe, expect, it } from 'vitest'
 
 import { renderWithProviders } from '@/test/render'
+import { expectText } from '@/test/steps'
 
 import { RecordName, RecordNameTooltip } from '../record-name'
 
@@ -26,10 +27,10 @@ describe('RecordName', () => {
     expect(text.indexOf('AR-003')).toBeGreaterThan(text.indexOf('Layered booking flow'))
   })
 
-  it('leaves the key out when the kind and the title say which record it is', () => {
+  it('leaves the key out when the kind and the title say which record it is', async () => {
     renderWithProviders(<RecordName kind="Persona" title="Minh" layout="line" />)
 
-    expect(screen.getByText('Minh')).toBeInTheDocument()
+    await expectText('Minh')
     expect(document.querySelector('[data-slot="key-text"]')).not.toBeInTheDocument()
   })
 

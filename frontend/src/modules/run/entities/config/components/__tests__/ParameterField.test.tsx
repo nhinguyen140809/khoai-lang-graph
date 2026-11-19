@@ -1,10 +1,10 @@
 import { render, screen } from '@testing-library/react'
-import userEvent from '@testing-library/user-event'
 import { useForm } from 'react-hook-form'
 import { describe, expect, it } from 'vitest'
 
 import type { RunParameterField } from '@/modules/workflow/entities/@x/run'
 import { assertPresent } from '@/shared/lib/guards'
+import { pressRole } from '@/test/steps'
 
 import { ParameterField } from '../ParameterField'
 import {
@@ -62,30 +62,28 @@ describe('ParameterField', () => {
   })
 
   it('shows a choice as its values and sets the one that is picked', async () => {
-    const user = userEvent.setup()
     render(<ParameterForm field={assertPresent(choiceField, 'No choice field')} initial="" />)
 
     expect(screen.getByRole('combobox', { name: 'Mode' })).toHaveTextContent('Default')
 
-    await user.click(screen.getByRole('combobox', { name: 'Mode' }))
+    await pressRole('combobox', 'Mode')
     expect(screen.getAllByRole('option').map((option) => option.textContent)).toEqual([
       'Default',
       'fast',
       'deep',
     ])
-    await user.click(screen.getByRole('option', { name: 'deep' }))
+    await pressRole('option', 'deep')
 
     expect(screen.getByRole('combobox', { name: 'Mode' })).toHaveTextContent('deep')
   })
 
   it('changes a flag from the default to on and off', async () => {
-    const user = userEvent.setup()
     render(<ParameterForm field={assertPresent(flagField, 'No flag field')} initial={null} />)
 
-    await user.click(screen.getByRole('radio', { name: 'On' }))
+    await pressRole('radio', 'On')
     expect(screen.getByRole('radio', { name: 'On' })).toBeChecked()
 
-    await user.click(screen.getByRole('radio', { name: 'Off' }))
+    await pressRole('radio', 'Off')
     expect(screen.getByRole('radio', { name: 'Off' })).toBeChecked()
   })
 })

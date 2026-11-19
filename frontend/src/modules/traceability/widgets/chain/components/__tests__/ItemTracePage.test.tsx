@@ -7,7 +7,7 @@ import { projectIds } from '@/mocks/shared/db'
 import { openPage } from '@/test/msw'
 import { routerMock } from '@/test/next-stubs'
 import { renderWithProviders } from '@/test/render'
-import { expectPushedTo, expectText, pressMenuItem } from '@/test/steps'
+import { expectPushedTo, expectRole, expectText, pressButton, pressMenuItem } from '@/test/steps'
 
 import { ItemTracePage } from '../ItemTracePage'
 
@@ -22,14 +22,14 @@ describe('ItemTracePage', () => {
     const item = itemFixtureByKey(projectId, 'AR-003')
     renderPage(item.id)
 
-    expect(await screen.findByText('Trace of Search with free hours')).toBeInTheDocument()
+    await expectText('Trace of Search with free hours')
     // The chain reaches both walks: the interview messages on the left, the backlog on the right.
     expect(
       await screen.findByText(
         'I ask seniors in my club, but I never know who is free this week, so I give up.',
       ),
     ).toBeInTheDocument()
-    expect(screen.getByText('Filter by free hours')).toBeInTheDocument()
+    await expectText('Filter by free hours')
     // The more button of a node names the item it acts on.
     expect(
       document.querySelector('button[aria-label="More actions for See who is free this week"]'),
@@ -66,14 +66,13 @@ describe('ItemTracePage', () => {
   })
 
   it('keeps the explanation of the page behind its information button, not under the title', async () => {
-    const user = userEvent.setup()
     const item = itemFixtureByKey(projectId, 'AR-003')
     renderPage(item.id)
 
     await expectText('Trace of Search with free hours')
     expect(screen.queryByText(/The items on the left are what this item is based on/)).toBeNull()
 
-    await user.click(screen.getByRole('button', { name: 'How to read this page' }))
+    await pressButton('How to read this page')
 
     expect(
       await screen.findByText(/The items on the left are what this item is based on/),
@@ -112,8 +111,8 @@ describe('ItemTracePage', () => {
   it('answers notFound for an item that does not exist', async () => {
     renderPage('00000000-0000-4000-8000-000000000000')
 
-    await waitFor(() => {
-      expect(screen.getByText('This item does not exist.')).toBeInTheDocument()
+    await waitFor(async () => {
+      await expectText('This item does not exist.')
     })
   })
 
@@ -122,8 +121,8 @@ describe('ItemTracePage', () => {
     const item = itemFixtureByKey(projectId, 'AR-003')
     renderPage(item.id)
 
-    await waitFor(() => {
-      expect(screen.getByText('The trace could not load.')).toBeInTheDocument()
+    await waitFor(async () => {
+      await expectText('The trace could not load.')
     })
   })
 
@@ -141,12 +140,12 @@ describe('ItemTracePage', () => {
     })
     await user.click(more)
 
-    expect(await screen.findByRole('menuitem', { name: 'Open' })).toBeInTheDocument()
+    await expectRole('menuitem', 'Open')
     expect(
       await screen.findByRole('menuitem', { name: 'Link to another item' }),
     ).toBeInTheDocument()
-    expect(screen.getByRole('menuitem', { name: 'Open in a new tab' })).toBeInTheDocument()
-    expect(screen.getByRole('menuitem', { name: 'View its trace' })).toBeInTheDocument()
+    await expectRole('menuitem', 'Open in a new tab')
+    await expectRole('menuitem', 'View its trace')
   })
 
   it('opens no page when the menu of a node opens, and one page when an action of it is chosen', async () => {
@@ -177,7 +176,7 @@ describe('ItemTracePage', () => {
     const item = itemFixtureByKey(projectId, 'AR-003')
     renderPage(item.id)
 
-    expect(await screen.findByText('Trace of Search with free hours')).toBeInTheDocument()
+    await expectText('Trace of Search with free hours')
     expect(document.querySelector('.react-flow__edgelabel-renderer')).toBeInTheDocument()
   })
 

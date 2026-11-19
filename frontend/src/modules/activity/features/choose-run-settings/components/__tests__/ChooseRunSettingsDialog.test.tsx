@@ -2,7 +2,7 @@ import { screen, within } from '@testing-library/react'
 import { describe, expect, it } from 'vitest'
 
 import { renderWithProviders } from '@/test/render'
-import { expectNoAccessibilityViolations, pressButton, typeText } from '@/test/steps'
+import { expectNoAccessibilityViolations, expectNoRole, pressButton, typeText } from '@/test/steps'
 
 import { useChosenRunSettingsStore } from '../../stores/chosen-run-settings.store'
 import { useRunSettingsDialogStore } from '../../stores/run-settings-dialog.store'
@@ -29,7 +29,7 @@ describe('ChooseRunSettingsDialog', () => {
     await pressButton('Apply')
 
     expect(useChosenRunSettingsStore.getState().settingsByThread.t1?.max_steps).toBe(40)
-    expect(screen.queryByRole('dialog')).not.toBeInTheDocument()
+    expectNoRole('dialog')
   })
 
   it('empties every field on Reset, and keeps the dialog open', async () => {

@@ -10,6 +10,7 @@ import {
   DropdownMenuTrigger,
 } from '@/shared/components/ui/dropdown-menu'
 import { renderWithProviders } from '@/test/render'
+import { pressMenuItem } from '@/test/steps'
 
 import { useRestoreVersionDialogStore } from '../../restore-version-dialog.store'
 import { RestoreVersionMenuItem } from '../RestoreVersionMenuItem'
@@ -32,10 +33,9 @@ function renderEntry(lockedReason: string | null = null) {
 
 describe('RestoreVersionMenuItem', () => {
   it('opens the dialog of the version through its store', async () => {
-    const user = userEvent.setup()
     renderEntry()
 
-    await user.click(screen.getByRole('menuitem', { name: 'Restore this version' }))
+    await pressMenuItem('Restore this version')
 
     expect(useRestoreVersionDialogStore.getState().open).toBe(true)
     expect(useRestoreVersionDialogStore.getState().targetId).toBe(`item:${item.id}@1`)

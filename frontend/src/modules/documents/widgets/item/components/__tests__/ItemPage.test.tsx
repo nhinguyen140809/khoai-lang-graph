@@ -13,9 +13,13 @@ import { routerMock } from '@/test/next-stubs'
 import { renderDocumentsFrame } from '@/test/render'
 import {
   advanceTimers,
+  expectDisabled,
+  expectEnabled,
   expectNoAccessibilityViolations,
+  expectNoRole,
   expectPushedTo,
   expectText,
+  pressButton,
   pressKey,
 } from '@/test/steps'
 
@@ -69,13 +73,13 @@ describe('ItemPage', () => {
     const heading = await screen.findByRole('heading', { level: 1, name: 'Minh' })
     // The key of the persona sits on the key line, under the title, no longer beside it.
     expect(heading.parentElement).not.toHaveTextContent('PER-001')
-    expect(screen.getByText('PER-001')).toBeInTheDocument()
+    await expectText('PER-001')
     // The avatar leads the title, in the tone of the place of the persona among the items.
     expect(screen.getByText('M')).toHaveAttribute('data-color', 'chart')
     // The fields of one line sit above the label of the status, under the title.
     const stakeholder = screen.getByText('Student').closest('p')
     expect(stakeholder?.textContent).toContain('Stakeholder type: Student')
-    expect(screen.getByText('Interviewed')).toBeInTheDocument()
+    await expectText('Interviewed')
     expect(stakeholder?.compareDocumentPosition(screen.getByText(/Approved/))).toBe(
       Node.DOCUMENT_POSITION_FOLLOWING,
     )
@@ -84,7 +88,7 @@ describe('ItemPage', () => {
     const background = screen.getByRole('heading', { name: 'Background' }).closest('section')
     expect(goals).not.toHaveAttribute('data-wide')
     expect(background).toHaveAttribute('data-wide')
-    expect(screen.queryByRole('heading', { name: 'Name' })).not.toBeInTheDocument()
+    expectNoRole('heading', 'Name')
   })
 
   it('shows the sections and the group above the item in the breadcrumb, from the top down', async () => {
@@ -130,30 +134,30 @@ describe('ItemPage', () => {
 
     await findNavigator()
 
-    expect(screen.getByText(/^1 of \d+$/)).toBeInTheDocument()
+    await expectText(/^1 of \d+$/)
   })
 
   it('disables Previous on the first item', async () => {
     renderItem(first.id)
     await findNavigator()
 
-    expect(screen.getByRole('button', { name: 'Previous item' })).toBeDisabled()
-    expect(screen.getByRole('button', { name: 'Next item' })).toBeEnabled()
+    expectDisabled('button', 'Previous item')
+    expectEnabled('button', 'Next item')
   })
 
   it('disables Next on the last item', async () => {
     renderItem(last?.id ?? '')
     await findNavigator()
 
-    expect(screen.getByRole('button', { name: 'Next item' })).toBeDisabled()
-    expect(screen.getByRole('button', { name: 'Previous item' })).toBeEnabled()
+    expectDisabled('button', 'Next item')
+    expectEnabled('button', 'Previous item')
   })
 
   it('opens the next item in the place of the tab on screen', async () => {
     renderItem(first.id)
     await findNavigator()
 
-    await userEvent.click(screen.getByRole('button', { name: 'Next item' }))
+    await pressButton('Next item')
 
     await expectPushedTo(expect.stringMatching(/\/items\//), {
       transitionTypes: ['item-next'],
@@ -164,7 +168,7 @@ describe('ItemPage', () => {
     renderItem(last?.id ?? '')
     await findNavigator()
 
-    await userEvent.click(screen.getByRole('button', { name: 'Previous item' }))
+    await pressButton('Previous item')
 
     await expectPushedTo(expect.stringMatching(/\/items\//), {
       transitionTypes: ['item-previous'],

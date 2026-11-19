@@ -5,7 +5,7 @@ import { describe, expect, it } from 'vitest'
 import { buildThread } from '@/mocks/threads/threads.fixtures'
 import type { Thread } from '@/modules/thread/entities'
 import { renderWithProviders } from '@/test/render'
-import { expectDisabled, expectEnabled } from '@/test/steps'
+import { expectDisabled, expectEnabled, pressButton } from '@/test/steps'
 
 import { ChooseRunSettingsButton } from '../ChooseRunSettingsButton'
 
@@ -20,7 +20,7 @@ describe('ChooseRunSettingsButton', () => {
   it('opens the dialog of the run settings of the thread', async () => {
     buttonOf(idle)
 
-    await userEvent.click(screen.getByRole('button', { name: 'Run settings' }))
+    await pressButton('Run settings')
   })
 
   it('is enabled for a thread without an unfinished run', () => {

@@ -1,11 +1,10 @@
 import { zodResolver } from '@hookform/resolvers/zod'
 import { render, screen } from '@testing-library/react'
-import userEvent from '@testing-library/user-event'
 import { useForm } from 'react-hook-form'
 import { describe, expect, it } from 'vitest'
 import { z } from 'zod'
 
-import { expectAlert, expectText, pressButton } from '@/test/steps'
+import { expectAlert, expectText, pressButton, pressRole } from '@/test/steps'
 
 import { FormFieldSet } from '../FormFieldSet'
 
@@ -69,7 +68,7 @@ describe('FormFieldSet', () => {
     const submitted: unknown[] = []
     render(<ColorsForm onSubmit={(values) => submitted.push(values)} />)
 
-    await userEvent.click(screen.getByRole('checkbox', { name: 'Blue' }))
+    await pressRole('checkbox', 'Blue')
     await pressButton('Save')
 
     await expect.poll(() => submitted).toEqual([{ colors: ['Blue'] }])

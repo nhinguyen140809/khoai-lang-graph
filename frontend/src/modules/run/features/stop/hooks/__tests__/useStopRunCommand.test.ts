@@ -1,10 +1,15 @@
-import { screen } from '@testing-library/react'
 import { createElement } from 'react'
-import { describe, expect, it } from 'vitest'
+import { describe, it } from 'vitest'
 
 import type { Run } from '@/modules/run/entities'
 import { renderWorkbench } from '@/test/render'
-import { expectRole, findConfirmDialog, openCommandPalette, pressRole } from '@/test/steps'
+import {
+  expectNoRole,
+  expectRole,
+  findConfirmDialog,
+  openCommandPalette,
+  pressRole,
+} from '@/test/steps'
 
 import { runWith } from '../../__tests__/stop-run.utils.data'
 import { StopRunDialog } from '../../components/StopRunDialog'
@@ -43,7 +48,7 @@ describe('useStopRunCommand', () => {
     await openCommandPalette()
 
     await expectRole('dialog', /Command palette/)
-    expect(screen.queryByRole('option', { name: /Stop run/ })).not.toBeInTheDocument()
+    expectNoRole('option', /Stop run/)
   })
 
   it('opens the Stop dialog when the command runs', async () => {

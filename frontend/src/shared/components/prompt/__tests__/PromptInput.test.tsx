@@ -3,7 +3,13 @@ import { useState } from 'react'
 import { describe, expect, it, vi } from 'vitest'
 
 import { renderWithProviders } from '@/test/render'
-import { expectNoAccessibilityViolations, typeText } from '@/test/steps'
+import {
+  expectDisabled,
+  expectNoAccessibilityViolations,
+  expectNoRole,
+  expectRole,
+  typeText,
+} from '@/test/steps'
 
 import { PromptInput } from '../PromptInput'
 
@@ -77,27 +83,27 @@ describe('PromptInput', () => {
     const box = screen.getByRole('textbox')
     await typeText(box, 'A request')
 
-    expect(screen.getByRole('button', { name: 'Send' })).toBeDisabled()
+    expectDisabled('button', 'Send')
     await typeText(box, '{Enter}')
 
     expect(onSubmit).not.toHaveBeenCalled()
   })
 
-  it('renders the submit action passed in instead of the default send', () => {
+  it('renders the submit action passed in instead of the default send', async () => {
     promptWith({ endActions: <button type="button">Stop</button> })
 
-    expect(screen.getByRole('button', { name: 'Stop' })).toBeInTheDocument()
-    expect(screen.queryByRole('button', { name: 'Send' })).not.toBeInTheDocument()
+    await expectRole('button', 'Stop')
+    expectNoRole('button', 'Send')
   })
 
-  it('renders the row inside the box with both sides', () => {
+  it('renders the row inside the box with both sides', async () => {
     promptWith({
       startActions: <button type="button">Attach</button>,
       endActions: <button type="button">Voice</button>,
     })
 
-    expect(screen.getByRole('button', { name: 'Attach' })).toBeInTheDocument()
-    expect(screen.getByRole('button', { name: 'Voice' })).toBeInTheDocument()
+    await expectRole('button', 'Attach')
+    await expectRole('button', 'Voice')
   })
 
   it('puts its send in the row of the text when slim, not under it', () => {
@@ -109,18 +115,18 @@ describe('PromptInput', () => {
     expect(addon).toHaveAttribute('data-align', 'inline-end')
   })
 
-  it('renders the row under the box with both sides, and nothing without them', () => {
+  it('renders the row under the box with both sides, and nothing without them', async () => {
     const { rerender } = promptWith({
       footerStart: <button type="button">Run settings</button>,
       footerEnd: <button type="button">Later</button>,
     })
 
-    expect(screen.getByRole('button', { name: 'Run settings' })).toBeInTheDocument()
-    expect(screen.getByRole('button', { name: 'Later' })).toBeInTheDocument()
+    await expectRole('button', 'Run settings')
+    await expectRole('button', 'Later')
 
     rerender(<TestPrompt />)
 
-    expect(screen.queryByRole('button', { name: 'Run settings' })).not.toBeInTheDocument()
+    expectNoRole('button', 'Run settings')
   })
 
   it('reads its keys to assistive technology only', async () => {

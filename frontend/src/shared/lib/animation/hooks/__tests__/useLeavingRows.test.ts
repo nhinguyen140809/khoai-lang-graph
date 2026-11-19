@@ -1,5 +1,7 @@
 import { act, renderHook } from '@testing-library/react'
-import { beforeEach, describe, expect, it, vi } from 'vitest'
+import { describe, expect, it, vi } from 'vitest'
+
+import { withFakeTimers } from '@/test/steps'
 
 import { motionMs } from '../../animation.constants'
 import { useLeavingRows } from '../useLeavingRows'
@@ -11,9 +13,7 @@ function names(rows: { row: string; isLeaving: boolean }[]) {
 }
 
 describe('useLeavingRows', () => {
-  beforeEach(() => {
-    vi.useFakeTimers()
-  })
+  withFakeTimers()
 
   it('gives the rows as they are, none of them leaving', () => {
     const { result } = renderHook(() => useLeavingRows(['a', 'b'], key))
