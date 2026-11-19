@@ -58,7 +58,7 @@ export function ProjectTable({ status, filters, onClearFilters }: ProjectTablePr
   if (projects.data === undefined) {
     return (
       <ErrorState
-        message={errorMessageOf(projects.error, {})}
+        message={errorMessageOf(projects.error)}
         onRetry={() => void projects.refetch()}
         className="px-0"
       />
@@ -141,11 +141,7 @@ export function ProjectTable({ status, filters, onClearFilters }: ProjectTablePr
         <div className="flex flex-col items-center gap-2">
           {/* The button tries the page again. */}
           {projects.isFetchNextPageError && (
-            <ErrorState
-              size="compact"
-              message={errorMessageOf(projects.error, {})}
-              className="p-0"
-            />
+            <ErrorState size="compact" message={errorMessageOf(projects.error)} className="p-0" />
           )}
           <PendingButton
             variant="outline"

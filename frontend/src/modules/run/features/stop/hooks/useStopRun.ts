@@ -22,7 +22,7 @@ export function useStopRun() {
       toast.success(stopRunMessages.stopped)
     },
     onError: (error) => {
-      toast.error(errorMessageOf(error, {}))
+      toast.error(errorMessageOf(error))
     },
   })
 }

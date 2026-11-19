@@ -11,12 +11,12 @@ import {
   type ResumeRunBody,
 } from '@/modules/review/entities'
 import { type Run, runKeys } from '@/modules/run/entities'
-import { errorMessageOf } from '@/shared/api/error'
+import { errorMessageOf, fieldProblemsOf } from '@/shared/api/error'
 import { newIdempotencyKey } from '@/shared/api/idempotency'
 
 import { answerReviewMessages } from '../answer-review.constants'
 import type { AnswerReviewFormValues } from '../answer-review.types'
-import { problemsOf, resumeRunBody } from '../answer-review.utils'
+import { resumeRunBody } from '../answer-review.utils'
 
 /**
  * Answers the pending review of a run: sends the answer, shows a toast, and loads the run, its
@@ -48,8 +48,8 @@ export function useAnswerReview(run: Run, interrupt: Pick<Interrupt, 'review_art
       ])
     },
     onError: async (error) => {
-      toast.error(`${answerReviewMessages.notSent} ${errorMessageOf(error, {})}`, {
-        description: problemsOf(error),
+      toast.error(`${answerReviewMessages.notSent} ${errorMessageOf(error)}`, {
+        description: fieldProblemsOf(error),
       })
       // Another tab may have answered first: the interrupts load again either way.
       await queryClient.invalidateQueries({ queryKey: interruptKeys.all() })
