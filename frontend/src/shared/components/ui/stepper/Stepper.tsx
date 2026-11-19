@@ -40,13 +40,11 @@ export function Stepper({
   // Register/unregister triggers
   const registerTrigger = useCallback((node: HTMLButtonElement | null) => {
     setTriggerNodes((prev) => {
-      if (node && !prev.includes(node)) {
-        return [...prev, node]
-      } else if (!node && prev.includes(node as unknown as HTMLButtonElement)) {
+      if (node && !prev.includes(node)) return [...prev, node]
+      if (!node && prev.includes(node as unknown as HTMLButtonElement)) {
         return prev.filter((n) => n !== node)
-      } else {
-        return prev
       }
+      return prev
     })
   }, [])
 
@@ -128,8 +126,9 @@ export function StepperItem({
 }: StepperItemProps) {
   const { activeStep } = useStepper()
 
-  const state: StepState =
-    completed || step < activeStep ? 'completed' : activeStep === step ? 'active' : 'inactive'
+  const isCompleted = completed || step < activeStep
+  const pendingState: StepState = activeStep === step ? 'active' : 'inactive'
+  const state: StepState = isCompleted ? 'completed' : pendingState
 
   const isLoading = loading && step === activeStep
 
