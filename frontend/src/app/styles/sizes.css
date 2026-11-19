@@ -1,0 +1,38 @@
+/*
+ * The text sizes are the ones of Tailwind: text-sm (14px) for the text of components and of
+ * pages, text-xs (12px) for labels, captions and hints, which people glance at instead of reading.
+ * Below them, two sizes for indicators: text-3xs (11px) for counts, ids and times, and text-4xs
+ * (10px) for the count inside a badge.
+ *
+ * The space between lines is set here, once, for every size: a number without a unit, so it is a
+ * share of the size of the text and grows with it. It is a little more open than the one of
+ * Tailwind, which suits text that wraps over several lines; a size of heading keeps a tighter one.
+ */
+@theme {
+  --text-3xs: 0.6875rem;
+  --text-3xs--line-height: 1.45;
+  --text-4xs: 0.625rem;
+  --text-4xs--line-height: 1.4;
+  --text-xs--line-height: 1.5;
+  --text-sm--line-height: 1.6;
+  --text-base--line-height: 1.65;
+  --text-lg--line-height: 1.6;
+  --text-xl--line-height: 1.5;
+  --text-2xl--line-height: 1.4;
+}
+
+/*
+ * Sizes that follow the window instead of the spacing scale: a dialog grows to 80% of the window
+ * height at most, a popover keeps 1rem from each side of the window, and the prompt of the project
+ * list starts 18% of the window height below the top on wider screens. The rows of a dialog, and
+ * of the form inside it, give the space left to the part between the header and the buttons,
+ * which scrolls.
+ */
+@theme {
+  --max-height-dialog: 80dvh;
+  --max-height-history-list: min(24rem, 50vh);
+  --max-width-popover: calc(100vw - 2rem);
+  --padding-prompt-top: 18vh;
+  --grid-template-rows-header-body: auto minmax(0, 1fr);
+  --grid-template-rows-body-footer: minmax(0, 1fr) auto;
+}

@@ -1,0 +1,3 @@
+/* The styles of the animation components, each from its own folder. */
+@import './flash/flash.css';
+@import './shimmer/shimmer.css';
