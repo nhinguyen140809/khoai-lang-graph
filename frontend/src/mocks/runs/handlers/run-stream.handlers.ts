@@ -39,10 +39,41 @@ function nodeStartOf(step: RunStep | undefined) {
   }
 }
 
+/** How the stream of a run ends, by the status the run has. */
+const endOfStream: Record<RunStatus, 'succeeded' | 'failed' | 'cancelled'> = {
+  queued: 'succeeded',
+  running: 'succeeded',
+  interrupted: 'succeeded',
+  succeeded: 'succeeded',
+  failed: 'failed',
+  cancelled: 'cancelled',
+}
+
+type Send = (event: string, payload: unknown) => void
+
+/** Writes into the artifact in progress a few times, as an agent does while it works. */
+async function streamArtifactDeltas(
+  send: Send,
+  written: { id: string; version: number },
+  item: RunStep['produced'][number] | undefined,
+) {
+  for (let count = 0; count < 3; count += 1) {
+    await delay(400)
+    send('artifact_delta', {
+      artifact_id: written.id,
+      delta: ' ...',
+      version: written.version,
+      item_id: item?.item_id ?? null,
+      item_key: item?.key ?? null,
+      change: 'item_created',
+    })
+  }
+}
+
 export const streamHandlers = [
   sse(apiEndpoints.runStream.pattern, async ({ client, params }) => {
     let id = 0
-    const send = (event: string, payload: unknown) => {
+    const send: Send = (event, payload) => {
       id += 1
       client.send({ id: String(id), event, data: JSON.stringify(payload) } as never)
     }
@@ -54,18 +85,7 @@ export const streamHandlers = [
     if (run !== undefined && written !== undefined) {
       // The node in progress writes an artifact and goes on: the stream stays open, with no end.
       send('node_start', start)
-      const item = step?.produced.at(-1)
-      for (let count = 0; count < 3; count += 1) {
-        await delay(400)
-        send('artifact_delta', {
-          artifact_id: written.id,
-          delta: ' ...',
-          version: written.version,
-          item_id: item?.item_id ?? null,
-          item_key: item?.key ?? null,
-          change: 'item_created',
-        })
-      }
+      await streamArtifactDeltas(send, written, step?.produced.at(-1))
       return
     }
 
@@ -85,14 +105,6 @@ export const streamHandlers = [
       status: 'succeeded',
       usage: step?.usage ?? noUsage,
     })
-    const ended: Record<RunStatus, 'succeeded' | 'failed' | 'cancelled'> = {
-      queued: 'succeeded',
-      running: 'succeeded',
-      interrupted: 'succeeded',
-      succeeded: 'succeeded',
-      failed: 'failed',
-      cancelled: 'cancelled',
-    }
-    send('done', { status: run === undefined ? 'succeeded' : ended[run.status] })
+    send('done', { status: run === undefined ? 'succeeded' : endOfStream[run.status] })
   }),
 ]
