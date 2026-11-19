@@ -7,11 +7,11 @@ import { InitialsAvatar } from '../initials-avatar'
 
 describe('InitialsAvatar', () => {
   it('draws the initials of the name on the soft fill of its tone', () => {
-    render(<InitialsAvatar name="Ann Smith" tone="chart" />)
+    render(<InitialsAvatar name="Ann Smith" tone="secondary" />)
 
     const fallback = screen.getByText('AS')
     expect(fallback).toHaveAttribute('data-variant', 'soft')
-    expect(fallback).toHaveAttribute('data-color', 'chart')
+    expect(fallback).toHaveAttribute('data-color', 'secondary')
   })
 
   it('takes a size', () => {

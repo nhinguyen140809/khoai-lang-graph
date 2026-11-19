@@ -75,7 +75,7 @@ describe('ItemPage', () => {
     expect(heading.parentElement).not.toHaveTextContent('PER-001')
     await expectText('PER-001')
     // The avatar leads the title, in the tone of the place of the persona among the items.
-    expect(screen.getByText('M')).toHaveAttribute('data-color', 'chart')
+    expect(screen.getByText('M')).toHaveAttribute('data-color', 'secondary')
     // The fields of one line sit above the label of the status, under the title.
     const stakeholder = screen.getByText('Student').closest('p')
     expect(stakeholder?.textContent).toContain('Stakeholder type: Student')

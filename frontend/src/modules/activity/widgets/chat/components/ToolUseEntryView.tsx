@@ -49,7 +49,7 @@ export function ToolUseEntryView({ use }: { use: ToolUse }) {
   return (
     <TraceCollapsible open={open} onOpenChange={setOpen}>
       <TraceCollapsibleTrigger aria-label={activityChatMessages.showDetails}>
-        <TraceLine color="chart" {...(use.isRunning && { status: 'running' as const })}>
+        <TraceLine color="secondary" {...(use.isRunning && { status: 'running' as const })}>
           <TraceIcon>
             <Mark />
           </TraceIcon>

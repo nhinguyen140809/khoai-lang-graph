@@ -16,7 +16,7 @@
   }
 }
 
-/* The yellow of the charts for a wash that `flash` draws, whatever tone the element has otherwise. */
-@utility flash-chart {
-  --flash-tone: var(--chart);
+/* The yellow of the secondary color for a wash that `flash` draws, whatever tone the element has otherwise. */
+@utility flash-secondary {
+  --flash-tone: var(--secondary);
 }

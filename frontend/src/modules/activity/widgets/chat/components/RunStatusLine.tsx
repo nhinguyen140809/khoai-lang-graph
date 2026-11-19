@@ -29,11 +29,11 @@ export function RunStatusLine({ run }: { run: Run }) {
       aria-live="polite"
       className={cn(
         'flex items-center gap-2 px-1 pt-4 text-sm text-muted-foreground',
-        toneClasses.chart,
+        toneClasses.secondary,
       )}
     >
       <Mark aria-hidden className="size-4 shrink-0 text-(--tone-strong)" />
-      <Shimmer color="chart">
+      <Shimmer color="secondary">
         {stageTitle === undefined ? look.label : `${look.label}: ${stageTitle}`}
       </Shimmer>
     </p>

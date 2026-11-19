@@ -89,7 +89,7 @@ const thread: ThreadEntry[] = [
   {
     kind: 'message',
     initials: 'AN',
-    tone: 'chart',
+    tone: 'secondary',
     author: 'analyst',
     text: 'PER-001 and PER-003 disagree on who approves a booking, see CONF-001.',
     time: '0:52',
@@ -151,7 +151,7 @@ function ThreadRow({ entry }: { entry: ThreadEntry }) {
       )
     case 'running':
       return (
-        <Marker role="status" color="primary">
+        <Marker role="status" color="secondary">
           <MarkerIcon>
             <Spinner />
           </MarkerIcon>

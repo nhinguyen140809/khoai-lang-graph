@@ -38,7 +38,7 @@ function mergeInto(marks: LinkMarkRange[], range: LinkMarkRange) {
     start: Math.min(whole.start, part.start),
     end: Math.max(whole.end, part.end),
     variant: whole.variant ?? part.variant,
-    color: whole.color === 'chart' || part.color === 'chart' ? 'chart' : 'primary',
+    color: whole.color === 'secondary' || part.color === 'secondary' ? 'secondary' : 'primary',
     strokeWidth: whole.strokeWidth ?? part.strokeWidth,
   }))
   apart.push(merged)
