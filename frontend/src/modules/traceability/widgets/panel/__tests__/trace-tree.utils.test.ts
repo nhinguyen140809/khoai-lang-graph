@@ -32,6 +32,21 @@ describe('outlineNodesOf', () => {
 })
 
 describe('traceRows', () => {
+  it('leaves out the items of a kind with no chain, and the groups that hold nothing else', () => {
+    const traced = traceRows({
+      entries,
+      outlines: outlinesOf(),
+      attention,
+      itemTrace,
+      isTraceable: (kind) => kind !== 'requirement',
+    })
+
+    expect(traced.rows['document:a-spec']?.children).toEqual([])
+    expect(traced.rows['document:a-spec:group:root:requirement']).toBeUndefined()
+    expect(traced.rowOfItem.has('i-1')).toBe(false)
+    expect(traced.rows['document:a-tra:group:root:message:item:i-3']).toBeDefined()
+  })
+
   const rows = traceRows({
     entries,
     outlines: outlinesOf(),

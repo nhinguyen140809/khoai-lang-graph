@@ -71,7 +71,13 @@ export function outlineNodesOf({
 
 /** Builds the rows of the tree: every document of the project with the items of it, the title of
  * each row in the color of how much it asks of the user. */
-export function traceRows({ entries, outlines, attention, itemTrace }: TraceRowsInput): TraceRows {
+export function traceRows({
+  entries,
+  outlines,
+  attention,
+  itemTrace,
+  isTraceable = () => true,
+}: TraceRowsInput): TraceRows {
   const rows: Record<string, TraceRow> = {}
   const rowOfItem = new Map<string, string>()
   const rootChildren: string[] = []
@@ -86,6 +92,7 @@ export function traceRows({ entries, outlines, attention, itemTrace }: TraceRows
     nodes.flatMap((node) => {
       const id = `${prefix}:${node.id}`
       if (node.type === 'item') {
+        if (!isTraceable(node.item.kind)) return []
         const level = attentionOf?.(node.item)
         rows[id] = {
           id,
@@ -98,10 +105,11 @@ export function traceRows({ entries, outlines, attention, itemTrace }: TraceRows
         rowOfItem.set(node.item.id, id)
         return [id]
       }
-      rows[id] = {
-        ...labelRow(id, node.title),
-        children: node.type === 'field' ? [] : outlineChildren(id, node.children),
-      }
+      // The fields of an artifact are no items: they have no chain.
+      if (node.type === 'field') return []
+      const children = outlineChildren(id, node.children)
+      if (children.length === 0) return []
+      rows[id] = { ...labelRow(id, node.title), children }
       return [id]
     })
 
