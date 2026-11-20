@@ -58,6 +58,8 @@ export const schemaPropertySchema = z.looseObject({
   'x-ui-label-field': z.string().optional(),
   'x-ui-value-field': z.string().optional(),
   'x-ui-note-field': z.string().optional(),
+  /** Of a `rating-list`: the field of an entry whose text heads the group that the entry belongs to. */
+  'x-ui-group-field': z.string().optional(),
   'x-value-from': z.string().optional(),
   'x-value-list': z.string().optional(),
 })

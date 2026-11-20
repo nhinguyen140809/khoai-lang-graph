@@ -59,6 +59,7 @@ export {
   changedFields,
   contentChanges,
   findQuote,
+  hasGroupedRatings,
   hasListValue,
   initialValue,
   toStoredContent,

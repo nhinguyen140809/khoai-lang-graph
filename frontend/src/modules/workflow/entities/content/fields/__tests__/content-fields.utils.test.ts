@@ -6,6 +6,7 @@ import {
 } from '@/mocks/workflow/artifact-kinds.fixtures'
 
 import type { ContentSchema, SchemaProperty } from '../../../artifact-kinds/artifact-kinds.types'
+import { ratingGroups } from '../../values/content-values.utils'
 import { itemDisplays, itemPageLayouts } from '../content-fields.types'
 import {
   artifactDisplayOf,
@@ -140,10 +141,36 @@ describe('a rating list', () => {
       label: 'aspect',
       value: 'score',
       note: 'rationale',
+      group: null,
       min: 1,
       max: 5,
     })
     expect(scores?.entryFields.map(({ name }) => name)).toEqual(['aspect', 'score', 'rationale'])
+  })
+
+  it('reads the field that heads the group of an entry, and groups the entries by its text', () => {
+    const [scores] = contentFields(
+      ratingSchema({
+        'x-ui-label-field': 'aspect',
+        'x-ui-value-field': 'score',
+        'x-ui-group-field': 'group',
+      }),
+    )
+    const rating = scores?.rating ?? null
+
+    expect(rating?.group).toBe('group')
+    expect(
+      ratingGroups(rating ?? { group: null }, [
+        { aspect: 'a', group: 'First' },
+        { aspect: 'b', group: 'Second' },
+        { aspect: 'c', group: 'First' },
+        { aspect: 'd' },
+      ]).map(({ heading, entries }) => [heading, entries.length]),
+    ).toEqual([
+      ['First', 2],
+      ['Second', 1],
+      [null, 1],
+    ])
   })
 
   it('has no rating fields when the schema names no label or value field', () => {

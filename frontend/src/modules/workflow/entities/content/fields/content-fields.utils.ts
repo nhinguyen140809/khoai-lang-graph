@@ -57,6 +57,7 @@ function ratingFieldsOf(property: SchemaProperty): RatingFields | null {
     label,
     value,
     note: property['x-ui-note-field'] ?? null,
+    group: property['x-ui-group-field'] ?? null,
     min: scale?.minimum ?? 1,
     max: scale?.maximum ?? 5,
   }

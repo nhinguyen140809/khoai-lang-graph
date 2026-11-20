@@ -113,12 +113,14 @@ export interface ContentField {
   rating: RatingFields | null
 }
 
-/** Which fields of an entry of a `rating-list` name what is rated, hold the rating and say why, and the scale of the rating. */
+/** Which fields of an entry of a `rating-list` name what is rated, hold the rating and say why and head their group, and the scale of the rating. */
 export interface RatingFields {
   label: string
   value: string
   /** The field that says why; null when the schema names none. */
   note: string | null
+  /** The field whose text heads the group of an entry; null when the schema names none. */
+  group: string | null
   min: number
   max: number
 }

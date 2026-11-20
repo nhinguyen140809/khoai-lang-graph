@@ -25,7 +25,7 @@ interface SimpleProject {
 }
 
 // What a persona of each of the two stakeholder types of the plan says about itself; the name and the goal come from the project.
-const traitsOf = (scores: [number, number, number, number, number]) =>
+const characteristicsOf = (scores: [number, number, number, number, number]) =>
   [
     [
       'domain_expertise',
@@ -41,6 +41,7 @@ const traitsOf = (scores: [number, number, number, number, number]) =>
     title,
     score: scores[index] ?? 3,
     rationale,
+    group: 'Standard characteristics',
   }))
 
 const userProfile = {
@@ -59,7 +60,7 @@ const userProfile = {
   priorities: ['Speed', 'Fewer steps'],
   concerns: ['Losing work that was done'],
   behavioral_tendencies: 'Prefers a short path to the result.',
-  scores: traitsOf([3, 5, 4, 3, 2]),
+  scores: characteristicsOf([3, 5, 4, 3, 2]),
   evidence: [],
 }
 
@@ -82,7 +83,7 @@ const administratorProfile = {
   priorities: ['Control', 'Reports'],
   concerns: ['Changes that nobody can trace'],
   behavioral_tendencies: 'Wants a record of every change.',
-  scores: traitsOf([4, 4, 4, 3, 5]),
+  scores: characteristicsOf([4, 4, 4, 3, 5]),
   evidence: [],
 }
 

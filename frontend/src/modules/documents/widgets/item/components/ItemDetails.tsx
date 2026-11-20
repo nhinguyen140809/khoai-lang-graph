@@ -8,6 +8,7 @@ import {
   ContentFieldList,
   ContentFieldValue,
   type ContentSection,
+  hasGroupedRatings,
   hasListValue,
   type ItemPageLayout,
   useWorkflowDefinition,
@@ -71,7 +72,7 @@ function ProfileField<Range extends HighlightRange = HighlightRange>({
 }: DetailBodyProps<Range> & { field: ContentField }) {
   return (
     <section
-      data-wide={hasListValue(field) ? undefined : true}
+      data-wide={hasListValue(field) && !hasGroupedRatings(field) ? undefined : true}
       className="space-y-1 sm:data-wide:col-span-2"
     >
       <h2 className="text-sm font-semibold text-muted-foreground">{field.title}</h2>

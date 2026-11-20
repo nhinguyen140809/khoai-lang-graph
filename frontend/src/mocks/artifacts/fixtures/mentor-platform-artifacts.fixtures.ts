@@ -10,7 +10,7 @@ import type { ArtifactSpec, ItemSpec } from '../artifacts.types'
 const topics = ['search', 'booking', 'reminders', 'administration']
 const stakeholderTypes = ['student', 'mentor', 'admin']
 
-// The traits of the personas: the aspects that the system defines, then those that the plan adds.
+// The characteristics of the personas: the aspects that the system defines, then those that the plan adds.
 const planAspects = [
   {
     key: 'need_for_reminders',
@@ -27,7 +27,18 @@ const planAspects = [
     high: 'Follows a long process to the end',
   },
 ]
-const aspects = [...definition.persona_aspects, ...planAspects]
+// The headings of the groups of characteristics: those of the system, then those that the plan adds.
+const characteristicGroups = {
+  system: 'Standard characteristics',
+  plan: 'Characteristics for this project',
+} as const
+const aspects = [
+  ...definition.persona_aspects.map((aspect) => ({
+    ...aspect,
+    group: characteristicGroups.system,
+  })),
+  ...planAspects.map((aspect) => ({ ...aspect, group: characteristicGroups.plan })),
+]
 
 const elicitationPlan: ArtifactSpec = {
   kind: 'elicitation_plan',
@@ -73,12 +84,12 @@ export const observationQuotes = {
     'Staff must hand a report to the dean each term, and the booking history is the only source.',
 } as const
 
-/** The traits of a persona: a score from 1 to 5 and a reason for each aspect, titled as the aspect is. */
+/** The characteristics of a persona: a score from 1 to 5 and a reason for each aspect, titled as the aspect is. */
 function traits(entries: Record<string, [score: number, rationale: string]>): ContentValues[] {
-  return aspects.map(({ key, title }) => {
+  return aspects.map(({ key, title, group }) => {
     const entry = entries[key]
     if (entry === undefined) throw new Error(`The persona has no score for the aspect ${key}`)
-    return { aspect: key, title, score: entry[0], rationale: entry[1] }
+    return { aspect: key, title, score: entry[0], rationale: entry[1], group }
   })
 }
 
