@@ -12,6 +12,11 @@
     { "key": "fetch", "title": "Fetching", "description": "Documents drop toward the face from above." },
     { "key": "review", "title": "Reviewing", "description": "A check mark is drawn over a page, then the page is set aside." },
     { "key": "compare", "title": "Comparing", "description": "Two pages swing side by side, with a mark where they differ." },
-    { "key": "save", "title": "Saving", "description": "A page folds into a box that closes." }
+    { "key": "save", "title": "Saving", "description": "A page folds into a box that closes." },
+    { "key": "typing", "title": "Typing", "description": "A cursor blinks and keys tap while letters appear in a line beside the face." },
+    { "key": "interview", "title": "Interviewing", "description": "Speech bubbles of two sizes take turns beside the face, one answering the other." },
+    { "key": "summarize", "title": "Summarizing", "description": "Several lines are drawn together into one short line." },
+    { "key": "link", "title": "Linking", "description": "A line is drawn from one dot to another, and the dots light up." },
+    { "key": "export", "title": "Exporting", "description": "A page slides out of a tray toward the edge." }
   ]
 }

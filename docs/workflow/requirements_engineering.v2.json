@@ -41,7 +41,8 @@
       "key": "planning",
       "title": "Planning the interviews",
       "internal": false,
-      "parent": null
+      "parent": null,
+      "acts": ["plan", "write"]
     },
     {
       "key": "planning_review",
@@ -53,13 +54,15 @@
       "key": "research",
       "title": "Finding evidence for the interviewees",
       "internal": false,
-      "parent": null
+      "parent": null,
+      "acts": ["search", "fetch", "read"]
     },
     {
       "key": "persona_generation",
       "title": "Proposing the interviewees",
       "internal": false,
-      "parent": null
+      "parent": null,
+      "acts": ["summarize", "typing"]
     },
     {
       "key": "persona_review",
@@ -71,13 +74,15 @@
       "key": "interviewing",
       "title": "Interviewing",
       "internal": false,
-      "parent": null
+      "parent": null,
+      "acts": ["interview", "typing", "question"]
     },
     {
       "key": "analysis",
       "title": "Analysing the interviews",
       "internal": false,
-      "parent": null
+      "parent": null,
+      "acts": ["read", "analyze", "link"]
     },
     {
       "key": "analysis_review",
@@ -89,7 +94,8 @@
       "key": "specification",
       "title": "Writing the specification",
       "internal": false,
-      "parent": null
+      "parent": null,
+      "acts": ["write", "typing"]
     },
     {
       "key": "specification_review",
@@ -101,13 +107,15 @@
       "key": "backlog",
       "title": "Writing the user stories",
       "internal": false,
-      "parent": null
+      "parent": null,
+      "acts": ["plan", "write", "link"]
     },
     {
       "key": "validation",
       "title": "Verifying the documents",
       "internal": false,
-      "parent": null
+      "parent": null,
+      "acts": ["compare", "review", "calculate"]
     },
     {
       "key": "done",
@@ -824,7 +832,8 @@
       "title": "Web search",
       "description": "Searches the web and academic papers for documents in which real people speak about the topic.",
       "uses": { "one": "Searched once", "other": "Searched {count} times" },
-      "icon": "search"
+      "icon": "search",
+      "acts": ["search", "read"]
     }
   ],
   "value_lists": [

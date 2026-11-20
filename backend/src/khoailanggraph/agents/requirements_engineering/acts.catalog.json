@@ -1,0 +1,22 @@
+{
+  "description": "Every act that a client can show around the face of an agent while it works. A stage and a tool name acts by key in their `acts`.",
+  "acts": [
+    { "key": "write", "title": "Writing", "description": "A pen writes a few lines of text that rise and fade." },
+    { "key": "read", "title": "Reading", "description": "A page of text scrolls upward while the eyes follow its lines." },
+    { "key": "search", "title": "Searching", "description": "A magnifying glass turns and grows and shrinks over a few results." },
+    { "key": "analyze", "title": "Analyzing", "description": "Vertical bars rise and fall beside a line that traces them." },
+    { "key": "question", "title": "Asking", "description": "Question marks appear above the face one after another." },
+    { "key": "code", "title": "Coding", "description": "Brackets and a cursor blink beside the face." },
+    { "key": "calculate", "title": "Calculating", "description": "Numbers and signs flip in turn beside the face." },
+    { "key": "plan", "title": "Planning", "description": "A checklist is ticked item by item." },
+    { "key": "fetch", "title": "Fetching", "description": "Documents drop toward the face from above." },
+    { "key": "review", "title": "Reviewing", "description": "A check mark is drawn over a page, then the page is set aside." },
+    { "key": "compare", "title": "Comparing", "description": "Two pages swing side by side, with a mark where they differ." },
+    { "key": "save", "title": "Saving", "description": "A page folds into a box that closes." },
+    { "key": "typing", "title": "Typing", "description": "A cursor blinks and keys tap while letters appear in a line beside the face." },
+    { "key": "interview", "title": "Interviewing", "description": "Speech bubbles of two sizes take turns beside the face, one answering the other." },
+    { "key": "summarize", "title": "Summarizing", "description": "Several lines are drawn together into one short line." },
+    { "key": "link", "title": "Linking", "description": "A line is drawn from one dot to another, and the dots light up." },
+    { "key": "export", "title": "Exporting", "description": "A page slides out of a tray toward the edge." }
+  ]
+}
