@@ -1,5 +1,6 @@
 export type { ReviewableCheckpoint } from '../checkpoints/checkpoints.types'
 export { useReviewableCheckpoints } from '../checkpoints/hooks/useCheckpointQueries'
+export { useActsOf } from '../definition/hooks/useActsOf'
 export { useWorkflowDefinition } from '../definition/hooks/useWorkflowDefinition'
 export {
   type RunParameterField,

@@ -2,7 +2,7 @@ import { screen, waitFor } from '@testing-library/react'
 import { describe, expect, it } from 'vitest'
 
 import { buildRun } from '@/mocks/runs/fixtures/runs.fixtures'
-import { projectIds, threadIds } from '@/mocks/shared/db'
+import { projectIds, runIds, threadIds } from '@/mocks/shared/db'
 import type { RunStatus } from '@/modules/run/entities'
 import { renderWithProviders } from '@/test/render'
 import { expectNoRole } from '@/test/steps'
@@ -28,6 +28,23 @@ describe('RunStatusLine', () => {
     expect(screen.getByRole('status')).toHaveTextContent('Working')
     await waitFor(() => {
       expect(screen.getByRole('status')).toHaveTextContent(/^Working: .+/)
+    })
+  })
+
+  it('puts the agent at work before the words, with the acts of its stage around it', async () => {
+    const run = buildRun({
+      id: runIds.mentorMain3,
+      thread_id: threadIds.mentorMain,
+      project_id: projectIds.mentor,
+      number: 1,
+      status: 'running',
+      current_stage: 'interviewing',
+      workflow_version: 2,
+    })
+    const { container } = renderWithProviders(<RunStatusLine run={run} />)
+
+    await waitFor(() => {
+      expect(container.querySelector('[data-slot=actor]')).toHaveAttribute('data-act', 'interview')
     })
   })
 

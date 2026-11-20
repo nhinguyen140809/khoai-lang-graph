@@ -18,6 +18,8 @@ export interface RunActivityContextValue {
   projectId: string
   /** The id of the entry that the address names, which takes the focus and a wash of color; none when it names none. */
   targetEntryId?: string | null | undefined
+  /** The id of the phase that goes on at the end of a live run; its agent shows at the end of the chat, so its separator holds back the face. None when no phase is. */
+  livePhaseId?: string | null | undefined
 }
 
 export const RunActivityContext = createContext<RunActivityContextValue | undefined>(undefined)
