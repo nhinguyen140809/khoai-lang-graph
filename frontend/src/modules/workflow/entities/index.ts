@@ -46,6 +46,7 @@ export {
   mainField,
   pageLayoutOf,
   profileFields,
+  shownFields,
   summaryFields,
 } from './content/fields/content-fields.utils'
 export { useValueLabelOf } from './content/value-labels/hooks/useValueLabelOf'

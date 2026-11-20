@@ -18,6 +18,7 @@ import {
   mainField,
   pageLayoutOf,
   profileFields,
+  shownFields,
   summaryFields,
 } from '../content-fields.utils'
 import {
@@ -360,7 +361,6 @@ describe('the blocks of a profile', () => {
       'Goals and priorities',
       'Concerns and behavior',
       'Product evaluation',
-      'Supporting evidence',
     ])
     const names = sections.flatMap(({ fields }) => fields.map(({ name }) => name))
     expect([...names].sort()).toEqual(body.map(({ name }) => name).sort())
@@ -398,5 +398,26 @@ describe('the field that groups the items of a kind', () => {
 
     expect(extensionField(observation, 'x-ui-group-by')?.name).toBe('stakeholder_name')
     expect(extensionField(contentSchemaFixtureByKind('persona'), 'x-ui-group-by')).toBeUndefined()
+  })
+})
+
+describe('a field that the page hides', () => {
+  const persona = contentSchemaFixtureByKind('persona')
+
+  it('is known to the schema, and is left out of what a page shows', () => {
+    const hidden = contentFields(persona).filter((field) => field.isHidden)
+
+    expect(hidden.map(({ name }) => name)).toEqual(['grounded_in', 'evidence'])
+    expect(shownFields(persona).map(({ name }) => name)).not.toContain('evidence')
+    const body = profileFields(persona).body.map(({ name }) => name)
+    expect(body).not.toContain('grounded_in')
+    expect(body).not.toContain('evidence')
+  })
+
+  it('has no block for what a persona is based on, since its links say it', () => {
+    const titles = profileFields(persona).sections.map(({ title }) => title)
+
+    expect(titles).not.toContain('Supporting evidence')
+    expect(titles).toContain('Product evaluation')
   })
 })

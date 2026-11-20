@@ -1,9 +1,9 @@
 import {
-  contentFields,
   type ContentSchema,
   type ItemPageLayout,
   pageLayoutOf,
   profileFields,
+  shownFields,
 } from '@/modules/workflow/entities'
 
 import type { ItemLayoutView, ItemPageView } from './item-layout.types'
@@ -14,7 +14,7 @@ const itemLayoutViews = {
   fields: {
     hasAvatar: false,
     keyLineFields: () => [],
-    bodyFields: contentFields,
+    bodyFields: shownFields,
     sections: () => [],
   },
   profile: {

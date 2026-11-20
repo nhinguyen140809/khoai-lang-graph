@@ -9,6 +9,7 @@ function field(overrides: Partial<ContentField>): ContentField {
     nullable: false,
     required: false,
     readOnly: false,
+    isHidden: false,
     options: [],
     description: null,
     allowedValuesFrom: null,

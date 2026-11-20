@@ -90,6 +90,8 @@ export interface ContentField {
   nullable: boolean
   required: boolean
   readOnly: boolean
+  /** The page of an item and its document do not show the field (`x-ui-hidden`); the edit form still does. */
+  isHidden: boolean
   /** The values of a select, without `null`; empty for the other widgets. */
   options: string[]
   description: string | null

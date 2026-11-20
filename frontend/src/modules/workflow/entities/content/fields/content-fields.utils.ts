@@ -98,6 +98,7 @@ function fieldOf(
     nullable: typesOf(property).includes('null') || property.enum?.includes(null) === true,
     required: isRequired,
     readOnly: property.readOnly === true,
+    isHidden: property['x-ui-hidden'] === true,
     options: (property.enum ?? []).filter(isString),
     ...sourcesOf(property),
     ...limitsOf(property),
@@ -166,6 +167,11 @@ export function contentFields(schema: ContentSchema): ContentField[] {
   return names.map((name) =>
     fieldOf(`${kind}.${name}`, name, properties[name] ?? {}, required.includes(name)),
   )
+}
+
+/** The fields of the schema that a page shows: every field but those that `x-ui-hidden` leaves out. */
+export function shownFields(schema: ContentSchema): ContentField[] {
+  return contentFields(schema).filter((field) => !field.isHidden)
 }
 
 /** The first field of the schema that is not its title field: what an item says, such as the statement of a requirement. */
@@ -237,7 +243,7 @@ export function isSeparatorField(field: Pick<ContentField, 'widget'>): boolean {
 /** The fields of a kind whose display is `profile`, as its cards and the page of one item draw them. */
 export function profileFields(schema: ContentSchema): ProfileFields {
   const titleName = schema['x-ui-title-field']
-  const fields = contentFields(schema)
+  const fields = shownFields(schema)
   const listed = summaryFields(schema)
   const line = listed.filter((field) => field.name !== titleName && isOneLineField(field))
   const lineNames = new Set(line.map(({ name }) => name))

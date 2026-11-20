@@ -50,6 +50,8 @@ export const schemaPropertySchema = z.looseObject({
   minimum: z.number().optional(),
   maximum: z.number().optional(),
   readOnly: z.boolean().optional(),
+  /** The page of an item does not show the field. */
+  'x-ui-hidden': z.boolean().optional(),
   default: z.unknown().optional(),
   'x-ui-widget': z.string().optional(),
   /** Of a `rating-list`: the fields of an entry that name what is rated, hold the rating and say why. */
