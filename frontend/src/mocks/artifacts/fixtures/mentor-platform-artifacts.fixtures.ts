@@ -41,6 +41,93 @@ const elicitationPlan: ArtifactSpec = {
   items: [],
 }
 
+const researchCorpus: ArtifactSpec = {
+  kind: 'research_corpus',
+  title: 'Research corpus',
+  summary: 'Two documents that report what students and mentors say about booking.',
+  status: 'approved',
+  content: {
+    selection_rationale: 'Both documents record what students and mentors say, in their own words.',
+  },
+  items: [
+    {
+      key: 'SRC-001',
+      kind: 'source_document',
+      content: {
+        title: 'What students want from a mentoring program',
+        url: 'https://example.edu/reports/mentoring-students',
+        publisher: 'University of Example',
+        source_type: 'survey',
+        year: '2025',
+        excerpt: 'A survey of 400 students about finding and booking a mentor.',
+        text: 'Students told us they want a mentor in their own field. "I do not know who is free this week" was the most common complaint about booking.',
+        origin: 'web',
+        relevance_reason: 'It reports the voice of the students who book sessions.',
+      },
+    },
+    {
+      key: 'SRC-002',
+      kind: 'source_document',
+      content: {
+        title: 'Mentors on the cost of administration',
+        url: 'https://example.edu/reports/mentoring-mentors',
+        publisher: 'University of Example',
+        source_type: 'interview',
+        year: '2024',
+        excerpt: 'Interviews with 12 lecturers who mentor next to teaching.',
+        text: 'Mentors said they have no time for administration. "I can give two afternoons a week, no more" was how one lecturer put it.',
+        origin: 'upload',
+        relevance_reason: 'It reports the voice of the mentors who give the sessions.',
+      },
+    },
+    {
+      key: 'OBS-001',
+      kind: 'stakeholder_observation',
+      content: {
+        stakeholder_name: 'Students',
+        description: 'Undergraduates who look for a mentor next to their studies.',
+        dimension: 'Finding a mentor in their own field',
+        evidence: 'Students told us they want a mentor in their own field.',
+        source: 'SRC-001',
+      },
+    },
+    {
+      key: 'OBS-002',
+      kind: 'stakeholder_observation',
+      content: {
+        stakeholder_name: 'Students',
+        description: 'Undergraduates who look for a mentor next to their studies.',
+        dimension: 'Knowing who is free',
+        evidence:
+          '"I do not know who is free this week" was the most common complaint about booking.',
+        source: 'SRC-001',
+      },
+    },
+    {
+      key: 'OBS-003',
+      kind: 'stakeholder_observation',
+      content: {
+        stakeholder_name: 'Mentors',
+        description: 'Lecturers who mentor next to teaching.',
+        dimension: 'Time spent on administration',
+        evidence: 'Mentors said they have no time for administration.',
+        source: 'SRC-002',
+      },
+    },
+    {
+      key: 'OBS-004',
+      kind: 'stakeholder_observation',
+      content: {
+        stakeholder_name: 'mentors',
+        description: 'Lecturers who mentor next to teaching.',
+        dimension: 'Hours they can give',
+        evidence: '"I can give two afternoons a week, no more" was how one lecturer put it.',
+        source: 'SRC-002',
+      },
+    },
+  ],
+}
+
 const personaCatalog: ArtifactSpec = {
   kind: 'persona_catalog',
   title: 'Interviewees',
@@ -60,6 +147,13 @@ const personaCatalog: ArtifactSpec = {
       content: {
         name: 'Minh',
         stakeholder_type: 'student',
+        occupation: 'Third-year computer science student',
+        age_range: '20-22',
+        evaluative_dimension: 'How quickly a session can be booked',
+        typical_day:
+          'Has classes until the afternoon and looks for a mentor in the evening, on the phone.',
+        current_workarounds: ['Asks friends for names of mentors', 'Writes to lecturers by email'],
+        vocabulary: ['slot', 'free hour', 'advice'],
         background: 'Third-year undergraduate who wants advice on a research career.',
         expertise: 'Knows the courses of the faculty, not the people behind them.',
         goals: ['Find a mentor in my field', 'Book a session in a few minutes'],
@@ -887,6 +981,7 @@ function withReview(specs: ItemSpec[]): ItemSpec[] {
 
 export const mentorArtifactSpecs: ArtifactSpec[] = [
   elicitationPlan,
+  researchCorpus,
   personaCatalog,
   ...interviews,
   { ...requirementsAnalysis, items: withReview(requirementsAnalysis.items) },
