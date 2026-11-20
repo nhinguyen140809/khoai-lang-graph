@@ -81,6 +81,10 @@ export const contentSchemaSchema = z.looseObject({
   'x-ui-participants-field': z.string().optional(),
   'x-ui-list-fields': z.array(z.string()).optional(),
   'x-ui-field-order': z.array(z.string()).optional(),
+  /** The blocks of the page of one item: a title and the names of the fields that it holds. */
+  'x-ui-sections': z.array(z.object({ title: z.string(), fields: z.array(z.string()) })).optional(),
+  /** The property whose values the items of a run of cards are grouped by. */
+  'x-ui-group-by': z.string().optional(),
   properties: z.record(z.string(), schemaPropertySchema).optional(),
   required: z.array(z.string()).optional(),
 })

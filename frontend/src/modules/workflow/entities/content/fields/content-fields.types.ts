@@ -136,6 +136,15 @@ export interface ProfileFields {
   card: ContentField[]
   /** Every field but the title and the line, in field order: the body of the page. */
   body: ContentField[]
+  /** The blocks of the page, each with its heading and fields; empty when the schema names none. A field of the body that no block holds is in a last block with no title. */
+  sections: ContentSection[]
+}
+
+/** One block of the page of an item: a heading and the fields under it. */
+export interface ContentSection {
+  /** The heading; null for the block of the fields that no block of the schema holds. */
+  title: string | null
+  fields: ContentField[]
 }
 
 /** A column of a table of items: the key of the item, or one of its fields. */

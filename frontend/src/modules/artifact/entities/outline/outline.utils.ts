@@ -1,6 +1,7 @@
 import {
   contentFields,
   type ContentSchema,
+  extensionFieldText,
   isNavigable,
   type IssueKind,
   itemTitle,
@@ -18,6 +19,7 @@ import type {
   ArrangedPlace,
   ArrangeInput,
   BreadcrumbStep,
+  ItemGroup,
   KindView,
   OutlineNeighbors,
   OutlineNode,
@@ -259,4 +261,22 @@ export function outlineBreadcrumb(
   const kind = outline.kinds.get(item.kind)
   if (kind?.display === 'heading') return sections
   return [...sections, { id: `group:${item.kind}`, title: kind?.title ?? item.kind }]
+}
+
+/**
+ * The items of a run in groups by the text of the field that `x-ui-group-by` names, the groups in
+ * the order their values first appear; a value that differs only in case or spacing is the group
+ * of the first written, and the items with no text there share a group of their own.
+ */
+export function groupItemsBy(items: readonly OutlineItem[], schema: ContentSchema): ItemGroup[] {
+  const plain = (text: string) => text.trim().replace(/\s+/g, ' ').toLowerCase()
+  const groups = new Map<string, ItemGroup>()
+  for (const item of items) {
+    const value = extensionFieldText(schema, item, 'x-ui-group-by').trim().replace(/\s+/g, ' ')
+    const key = plain(value)
+    const group = groups.get(key)
+    if (group === undefined) groups.set(key, { value, items: [item] })
+    else group.items.push(item)
+  }
+  return [...groups.values()]
 }

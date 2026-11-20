@@ -347,3 +347,56 @@ describe('profileFields', () => {
     expect(fields.body).toEqual([])
   })
 })
+
+describe('the blocks of a profile', () => {
+  const persona = contentSchemaFixtureByKind('persona')
+
+  it('gives a formal heading to each block and holds every field of the body once', () => {
+    const { sections, body } = profileFields(persona)
+
+    expect(sections.map(({ title }) => title)).toEqual([
+      'Personal details',
+      'Current practices',
+      'Goals and priorities',
+      'Concerns and behavior',
+      'Product evaluation',
+      'Supporting evidence',
+    ])
+    const names = sections.flatMap(({ fields }) => fields.map(({ name }) => name))
+    expect([...names].sort()).toEqual(body.map(({ name }) => name).sort())
+  })
+
+  it('puts the fields that no block names last, in a block with no heading, and drops a block with none of its fields', () => {
+    const schema: ContentSchema = {
+      title: 'Kind',
+      'x-ui-sections': [
+        { title: 'First', fields: ['a'] },
+        { title: 'Gone', fields: ['missing'] },
+      ],
+      'x-ui-title-field': 'c',
+      'x-ui-list-fields': ['c'],
+      properties: {
+        a: { type: 'string' },
+        b: { type: 'string' },
+        c: { type: 'string' },
+      },
+    }
+    const { sections } = profileFields(schema)
+
+    expect(sections.map(({ title }) => title)).toEqual(['First', null])
+    expect(sections[1]?.fields.map(({ name }) => name)).toEqual(['b'])
+  })
+
+  it('has no blocks when the schema names none', () => {
+    expect(profileFields(profileSchema).sections).toEqual([])
+  })
+})
+
+describe('the field that groups the items of a kind', () => {
+  it('is the field that x-ui-group-by names, read as the other extensions are', () => {
+    const observation = contentSchemaFixtureByKind('stakeholder_observation')
+
+    expect(extensionField(observation, 'x-ui-group-by')?.name).toBe('stakeholder_name')
+    expect(extensionField(contentSchemaFixtureByKind('persona'), 'x-ui-group-by')).toBeUndefined()
+  })
+})

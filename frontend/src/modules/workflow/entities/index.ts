@@ -34,6 +34,7 @@ export { InlineFieldValues } from './content/components/InlineFieldValues'
 export type {
   ContentDisplay,
   ContentField,
+  ContentSection,
   FieldWidget,
   ItemPageLayout,
 } from './content/fields/content-fields.types'

@@ -7,11 +7,13 @@ import {
   type ContentField,
   ContentFieldList,
   ContentFieldValue,
+  type ContentSection,
   hasListValue,
   type ItemPageLayout,
   useWorkflowDefinition,
   type ValueDefinition,
 } from '@/modules/workflow/entities'
+import { Card, CardContent, CardHeader, CardTitle } from '@/shared/components/ui/card'
 import type { HighlightRange } from '@/shared/components/ui/highlight'
 import { isEmpty } from '@/shared/lib/guards'
 
@@ -21,6 +23,8 @@ interface ItemDetailsProps<Range extends HighlightRange = HighlightRange> {
   layout: ItemPageLayout
   /** The fields that the body draws, filled or not; the empty ones are left out. */
   fields: readonly ContentField[]
+  /** The blocks of the body of a profile, each with a heading; the body is the fields in a grid when there are none. */
+  sections?: readonly ContentSection[] | undefined
   /** The quoted words of the item, by field name. */
   fieldMarks?: ReadonlyMap<string, readonly Range[]> | undefined
   /** Wraps the marked words of a field, for example in the trigger of a popover. */
@@ -31,6 +35,7 @@ interface ItemDetailsProps<Range extends HighlightRange = HighlightRange> {
 interface DetailBodyProps<Range extends HighlightRange = HighlightRange> {
   item: ArtifactItem
   fields: readonly ContentField[]
+  sections: readonly ContentSection[]
   definition: ValueDefinition
   fieldMarks?: ReadonlyMap<string, readonly Range[]> | undefined
   renderFieldMark?: ((range: Range, children: ReactNode) => ReactNode) | undefined
@@ -85,6 +90,26 @@ function ProfileField<Range extends HighlightRange = HighlightRange>({
 
 /** The body of the page of a profile: the fields in a grid, a list in one column and any other field across. */
 function ProfileGrid<Range extends HighlightRange = HighlightRange>(props: DetailBodyProps<Range>) {
+  if (props.sections.length > 0) {
+    return (
+      <div className="grid gap-4">
+        {props.sections.map((section) => (
+          <Card key={section.title ?? 'more'} size="sm">
+            {section.title !== null && (
+              <CardHeader>
+                <CardTitle>{section.title}</CardTitle>
+              </CardHeader>
+            )}
+            <CardContent className="grid gap-6 sm:grid-cols-2">
+              {section.fields.map((field) => (
+                <ProfileField key={field.name} {...props} field={field} />
+              ))}
+            </CardContent>
+          </Card>
+        ))}
+      </div>
+    )
+  }
   return (
     <div className="grid gap-6 sm:grid-cols-2">
       {props.fields.map((field) => (
@@ -109,17 +134,25 @@ export function ItemDetails<Range extends HighlightRange = HighlightRange>({
   item,
   layout,
   fields,
+  sections = [],
   fieldMarks,
   renderFieldMark,
 }: ItemDetailsProps<Range>) {
   const { data: definition } = useWorkflowDefinition()
   const filled = fields.filter((field) => !isEmpty(item.content[field.name]))
+  const filledSections = sections
+    .map((section) => ({
+      ...section,
+      fields: section.fields.filter((field) => !isEmpty(item.content[field.name])),
+    }))
+    .filter((section) => section.fields.length > 0)
   const Body = detailBodies[layout]
 
   return (
     <Body
       item={item}
       fields={filled}
+      sections={filledSections}
       definition={definition}
       fieldMarks={fieldMarks}
       renderFieldMark={renderFieldMark}

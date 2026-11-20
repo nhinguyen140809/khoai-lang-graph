@@ -11,11 +11,17 @@ import type { ItemLayoutView, ItemPageView } from './item-layout.types'
 // What each page layout of an item decides, in one place: a profile leads its title with an avatar
 // and sets some of its fields on the key line; any other page draws every field in its body.
 const itemLayoutViews = {
-  fields: { hasAvatar: false, keyLineFields: () => [], bodyFields: contentFields },
+  fields: {
+    hasAvatar: false,
+    keyLineFields: () => [],
+    bodyFields: contentFields,
+    sections: () => [],
+  },
   profile: {
     hasAvatar: true,
     keyLineFields: (schema) => profileFields(schema).line,
     bodyFields: (schema) => profileFields(schema).body,
+    sections: (schema) => profileFields(schema).sections,
   },
 } as const satisfies Record<ItemPageLayout, ItemLayoutView>
 
@@ -28,5 +34,6 @@ export function itemPageViewOf(schema: ContentSchema): ItemPageView {
     hasAvatar: view.hasAvatar,
     keyLineFields: view.keyLineFields(schema),
     bodyFields: view.bodyFields(schema),
+    sections: view.sections(schema),
   }
 }

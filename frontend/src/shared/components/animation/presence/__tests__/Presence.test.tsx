@@ -29,7 +29,7 @@ describe('Presence', () => {
     expect(screen.getByText('note')).toHaveAttribute('data-state', 'closed')
 
     advanceTimers(motionMs)
-    expect(screen.queryByText('note')).not.toBeInTheDocument()
+    expectNoText('note')
   })
 
   it('keeps the content when it comes back during the exit', () => {

@@ -42,6 +42,7 @@ export function ItemBody() {
       item={record}
       layout={page.view.layout}
       fields={page.view.bodyFields}
+      sections={page.view.sections}
       fieldMarks={links.state === 'success' ? links.fieldMarks : undefined}
       renderFieldMark={(range, children) => (
         <ErrorBoundary resetKeys={[record.id]} fallbackRender={() => children}>

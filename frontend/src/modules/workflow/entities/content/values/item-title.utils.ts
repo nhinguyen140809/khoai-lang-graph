@@ -25,7 +25,7 @@ export function fieldText(item: { content: ContentValues }, name: string): strin
 export function extensionFieldText(
   schema: ContentSchema | undefined,
   item: { content: ContentValues },
-  extension: 'x-ui-title-field' | 'x-ui-role-field',
+  extension: 'x-ui-title-field' | 'x-ui-role-field' | 'x-ui-group-by',
 ): string {
   const name = schema?.[extension]
   return name === undefined ? '' : (fieldText(item, name) ?? '')

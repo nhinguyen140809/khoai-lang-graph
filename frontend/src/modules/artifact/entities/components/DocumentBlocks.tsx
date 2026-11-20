@@ -5,6 +5,7 @@ import type { ReactNode } from 'react'
 import {
   type ContentField,
   ContentFieldValue,
+  extensionField,
   fieldText,
   type ItemDisplay,
   itemTitle,
@@ -26,7 +27,7 @@ import {
 
 import type { OutlineItem } from '../items/items.types'
 import type { DocumentBlock, KindView, Participant, RenderItemLink } from '../outline/outline.types'
-import { itemAnchorProps } from '../outline/outline.utils'
+import { groupItemsBy, itemAnchorProps } from '../outline/outline.utils'
 import { artifactViewMessages } from './artifact-view.constants'
 import { ItemAvatarCards } from './ItemAvatarCards'
 import { ItemTranscript } from './ItemTranscript'
@@ -144,7 +145,83 @@ function ItemsTable<Range extends HighlightRange = HighlightRange>(props: RunVie
   )
 }
 
-function ItemCards<Range extends HighlightRange = HighlightRange>({
+/**
+ * The items of a kind that names `x-ui-group-by`: one card for each value of the field, headed by the value
+ * and the count of its items, with one row for each item: the first of its fields a link to the item, then the others.
+ */
+function GroupedCards<Range extends HighlightRange = HighlightRange>({
+  items,
+  view,
+  renderItemLink,
+  definition,
+  targetItemId,
+  groupField,
+}: RunViewProps<Range> & { groupField: ContentField }) {
+  const fields = summaryFields(view.schema).filter((field) => field.name !== groupField.name)
+  const [first, ...others] = fields
+  return (
+    <div className="grid gap-3">
+      {groupItemsBy(items, view.schema).map((group) => (
+        <Card key={group.value} size="sm">
+          <CardHeader>
+            <CardTitle>
+              {group.value === '' ? artifactViewMessages.noGroup : group.value}{' '}
+              <span className="text-sm font-normal text-muted-foreground">
+                ({group.items.length})
+              </span>
+            </CardTitle>
+          </CardHeader>
+          <CardContent>
+            <Table>
+              <TableHeader>
+                <TableRow>
+                  {fields.map((field) => (
+                    <TableHead key={field.name}>{field.title}</TableHead>
+                  ))}
+                </TableRow>
+              </TableHeader>
+              <TableBody>
+                {group.items.map((item) => (
+                  <TableRow
+                    key={item.id}
+                    className="data-[target]:bg-accent/50"
+                    {...itemAnchorProps(item.id, targetItemId)}
+                  >
+                    {first !== undefined && (
+                      <TableCell className="align-top whitespace-normal">
+                        {renderItemLink(item, itemTitleOf(view, item, first))}
+                      </TableCell>
+                    )}
+                    {others.map((field) => (
+                      <TableCell key={field.name} className="align-top whitespace-normal">
+                        <ContentFieldValue
+                          field={field}
+                          value={item.content[field.name]}
+                          definition={definition}
+                        />
+                      </TableCell>
+                    ))}
+                  </TableRow>
+                ))}
+              </TableBody>
+            </Table>
+          </CardContent>
+        </Card>
+      ))}
+    </div>
+  )
+}
+
+function ItemCards<Range extends HighlightRange = HighlightRange>(props: RunViewProps<Range>) {
+  const groupField = extensionField(props.view.schema, 'x-ui-group-by')
+  return groupField === undefined ? (
+    <PlainCards {...props} />
+  ) : (
+    <GroupedCards {...props} groupField={groupField} />
+  )
+}
+
+function PlainCards<Range extends HighlightRange = HighlightRange>({
   items,
   view,
   renderItemLink,
