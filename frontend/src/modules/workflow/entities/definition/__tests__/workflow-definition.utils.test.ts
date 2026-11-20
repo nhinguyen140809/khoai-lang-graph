@@ -8,10 +8,10 @@ import {
   edgesFrom,
   findAgentRole,
   findNode,
+  findTool,
   findValueList,
   linkTypeTitles,
   subjectKindByStage,
-  toolsOf,
 } from '../workflow-definition.utils'
 import { edgeCases, nodeCases, valueListCases } from './workflow-definition.utils.data'
 
@@ -87,8 +87,8 @@ describe('findAgentRole', () => {
   })
 })
 
-describe('toolsOf', () => {
-  it('gives each tool of the definition by its key', () => {
+describe('findTool', () => {
+  it('gives the tool of the definition with the key', () => {
     const tool = {
       key: 'search',
       title: 'Web search',
@@ -97,13 +97,10 @@ describe('toolsOf', () => {
       icon: 'search',
     } as const
 
-    const tools = toolsOf({ tools: [tool] })
-
-    expect(tools.get('search')).toEqual(tool)
-    expect(tools.size).toBe(1)
+    expect(findTool({ tools: [tool] }, 'search')).toEqual(tool)
   })
 
-  it('gives none for a definition without tools', () => {
-    expect(toolsOf(workflowDefinitionFixture).size).toBe(0)
+  it('gives undefined for a key that the definition does not list', () => {
+    expect(findTool(workflowDefinitionFixture, 'search')).toBeUndefined()
   })
 })

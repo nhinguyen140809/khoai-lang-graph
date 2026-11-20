@@ -68,7 +68,7 @@ export { exportFormats } from './definition/export-templates.types'
 export { useAgentRoleLabels } from './definition/hooks/useAgentRoleLabels'
 export { useArtifactItemKinds } from './definition/hooks/useArtifactItemKinds'
 export { useLinkTitleOf } from './definition/hooks/useLinkTitleOf'
-export { useTools } from './definition/hooks/useTools'
+export { useTool } from './definition/hooks/useTool'
 export { useWorkflowDefinition } from './definition/hooks/useWorkflowDefinition'
 export {
   canLinkTypeConnect,
@@ -86,9 +86,9 @@ export {
   edgesFrom,
   findAgentRole,
   findNode,
+  findTool,
   findValueList,
   subjectKindByStage,
-  toolsOf,
 } from './definition/workflow-definition.utils'
 export type {
   CheckpointNode,

@@ -28,9 +28,12 @@ export function agentRoleLabels(definition: WorkflowDefinition): Map<string, str
   )
 }
 
-/** The tools of a definition, by their key. */
-export function toolsOf(definition: Pick<WorkflowDefinition, 'tools'>): Map<string, Tool> {
-  return indexBy(definition.tools, (tool) => tool.key)
+/** The tool of a definition with this key, or undefined when it lists none. */
+export function findTool(
+  definition: Pick<WorkflowDefinition, 'tools'>,
+  key: string,
+): Tool | undefined {
+  return definition.tools.find((tool) => tool.key === key)
 }
 
 /** The title of each link type of a definition, by its key. */
