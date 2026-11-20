@@ -1,0 +1,17 @@
+{
+  "description": "Every act that a client can show around the face of an agent while it works. A stage and a tool name acts by key in their `acts`.",
+  "acts": [
+    { "key": "write", "title": "Writing", "description": "A pen writes a few lines of text that rise and fade." },
+    { "key": "read", "title": "Reading", "description": "A page of text scrolls upward while the eyes follow its lines." },
+    { "key": "search", "title": "Searching", "description": "A magnifying glass turns and grows and shrinks over a few results." },
+    { "key": "analyze", "title": "Analyzing", "description": "Vertical bars rise and fall beside a line that traces them." },
+    { "key": "question", "title": "Asking", "description": "Question marks appear above the face one after another." },
+    { "key": "code", "title": "Coding", "description": "Brackets and a cursor blink beside the face." },
+    { "key": "calculate", "title": "Calculating", "description": "Numbers and signs flip in turn beside the face." },
+    { "key": "plan", "title": "Planning", "description": "A checklist is ticked item by item." },
+    { "key": "fetch", "title": "Fetching", "description": "Documents drop toward the face from above." },
+    { "key": "review", "title": "Reviewing", "description": "A check mark is drawn over a page, then the page is set aside." },
+    { "key": "compare", "title": "Comparing", "description": "Two pages swing side by side, with a mark where they differ." },
+    { "key": "save", "title": "Saving", "description": "A page folds into a box that closes." }
+  ]
+}
