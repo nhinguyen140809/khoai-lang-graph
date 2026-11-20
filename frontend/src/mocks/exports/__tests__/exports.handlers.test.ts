@@ -4,6 +4,7 @@ import { apiEndpoints } from '@/shared/api/endpoints'
 import { HttpHeader, HttpStatus, MediaType } from '@/shared/api/http'
 import { apiUrl } from '@/shared/api/request'
 import { type ApiCall, callApi } from '@/test/msw'
+import { withFakeTimers } from '@/test/steps'
 
 import { projectIds, userId } from '../../shared/db'
 
@@ -54,23 +55,26 @@ describe('the export handlers', () => {
     expect(answer.body).toMatchObject({ code: 'idempotency_conflict' })
   })
 
-  it('serves the generated file when an export is ready', async () => {
-    vi.useFakeTimers()
-    const created = await callApi({
-      method: 'POST',
-      path: projectPath,
-      body: { template: 'full_project', format: 'markdown' },
-      headers: { [HttpHeader.IdempotencyKey]: 'file-export' },
+  describe('when an export is ready', () => {
+    withFakeTimers()
+
+    it('serves the generated file', async () => {
+      const created = await callApi({
+        method: 'POST',
+        path: projectPath,
+        body: { template: 'full_project', format: 'markdown' },
+        headers: { [HttpHeader.IdempotencyKey]: 'file-export' },
+      })
+      const exportId = (created.body as ExportBody).id
+      vi.setSystemTime(Date.now() + 1600)
+
+      const file = await fetch(apiUrl(apiEndpoints.exportEntryFile.path({ exportId })))
+
+      expect(file.status).toBe(HttpStatus.Ok)
+      expect(file.headers.get(HttpHeader.ContentType)).toBe(MediaType.PlainText)
+      expect(file.headers.get(HttpHeader.ContentDisposition)).toContain('full_project.md')
+      expect(await file.text()).toContain('Export: full_project')
     })
-    const exportId = (created.body as ExportBody).id
-    vi.setSystemTime(Date.now() + 1600)
-
-    const file = await fetch(apiUrl(apiEndpoints.exportEntryFile.path({ exportId })))
-
-    expect(file.status).toBe(HttpStatus.Ok)
-    expect(file.headers.get(HttpHeader.ContentType)).toBe(MediaType.PlainText)
-    expect(file.headers.get(HttpHeader.ContentDisposition)).toContain('full_project.md')
-    expect(await file.text()).toContain('Export: full_project')
   })
 
   it('rejects a template-format pair that the definition does not offer', async () => {

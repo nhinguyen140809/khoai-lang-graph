@@ -19,10 +19,11 @@ describe('OpenIssuesPage', () => {
     renderPage()
 
     await waitFor(() => {
+      // eslint-disable-next-line local/expect-steps -- the heading has a level, an option the step does not take
       expect(screen.getByRole('heading', { level: 1, name: 'Open issues' })).toBeInTheDocument()
     })
     expect(screen.getAllByRole('heading', { level: 2 }).length).toBeGreaterThan(0)
-    expect(screen.getByText(openIssuesDescription)).toBeInTheDocument()
+    await expectText(openIssuesDescription)
   })
 
   it('groups the item an issue concerns in one card, with the quoted words marked in the statement', async () => {

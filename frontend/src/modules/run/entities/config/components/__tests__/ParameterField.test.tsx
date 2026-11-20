@@ -4,7 +4,7 @@ import { describe, expect, it } from 'vitest'
 
 import type { RunParameterField } from '@/modules/workflow/entities/@x/run'
 import { assertPresent } from '@/shared/lib/guards'
-import { pressRole } from '@/test/steps'
+import { expectRole, pressRole } from '@/test/steps'
 
 import { ParameterField } from '../ParameterField'
 import {
@@ -25,12 +25,12 @@ function ParameterForm({ field, initial = '' }: { field: RunParameterField; init
 }
 
 describe('ParameterField', () => {
-  it.each(controlCases)('shows $name as a $role', ({ field, role, label }) => {
+  it.each(controlCases)('shows $name as a $role', async ({ field, role, label }) => {
     if (field === undefined) throw new Error('The case has no field')
 
     render(<ParameterForm field={field} />)
 
-    expect(screen.getByRole(role, { name: label })).toBeInTheDocument()
+    await expectRole(role, label)
   })
 
   it.each([

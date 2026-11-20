@@ -1,9 +1,8 @@
 import { screen } from '@testing-library/react'
-import userEvent from '@testing-library/user-event'
 import { describe, expect, it, vi } from 'vitest'
 
 import { renderWithProviders } from '@/test/render'
-import { expectNoRole, expectRole, pressButton } from '@/test/steps'
+import { expectNoRole, expectRole, hoverOver, pressButton } from '@/test/steps'
 
 import { CopyButton } from '../copy-button'
 
@@ -38,11 +37,10 @@ describe('CopyButton', () => {
 
   it('shows the label in a tooltip when only the icon shows', async () => {
     writeText.mockClear()
-    const user = userEvent.setup()
     stubClipboard()
     renderWithProviders(<CopyButton value="REQ-001" label="Copy the key" />)
 
-    await user.hover(screen.getByRole('button', { name: 'Copy the key' }))
+    await hoverOver(screen.getByRole('button', { name: 'Copy the key' }))
 
     expect(await screen.findByRole('tooltip')).toHaveTextContent('Copy the key')
   })

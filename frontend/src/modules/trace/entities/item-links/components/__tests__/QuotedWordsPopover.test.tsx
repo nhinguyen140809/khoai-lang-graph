@@ -4,7 +4,7 @@ import { describe, expect, it } from 'vitest'
 import { itemFixtureByKey } from '@/mocks/artifacts/fixtures/artifacts.fixtures'
 import { projectIds } from '@/mocks/shared/db'
 import { renderWithProviders } from '@/test/render'
-import { expectNoAccessibilityViolations, expectText, pressButton } from '@/test/steps'
+import { expectNoAccessibilityViolations, expectRole, expectText, pressButton } from '@/test/steps'
 
 import type { LinkedEntry } from '../../item-links.types'
 import { QuotedWordsPopover } from '../QuotedWordsPopover'
@@ -46,9 +46,7 @@ describe('QuotedWordsPopover', () => {
     await pressButton('AR-001')
 
     await expectText('Analysed requirement')
-    expect(
-      screen.getByRole('link', { name: 'Analysed requirement, List mentors by field' }),
-    ).toBeInTheDocument()
+    await expectRole('link', 'Analysed requirement, List mentors by field')
     await expectText('This item is based on List mentors by field.')
     await expectText('lists mentors by field of study')
     await expectText('words that are gone')

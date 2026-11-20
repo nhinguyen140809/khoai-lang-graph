@@ -69,9 +69,7 @@ describe('AnswerReviewForm', () => {
     // Each option says what choosing it does, chosen or not, and the one that is described to the
     // radio by its words.
     await expectText('The analysis goes on to the specification.')
-    expect(
-      screen.getByText('The analysis is written again, settling the open conflicts.'),
-    ).toBeInTheDocument()
+    await expectText('The analysis is written again, settling the open conflicts.')
     expect(screen.getByRole('radio', { name: 'Redo the analysis' })).toHaveAccessibleDescription(
       'The analysis is written again, settling the open conflicts.',
     )

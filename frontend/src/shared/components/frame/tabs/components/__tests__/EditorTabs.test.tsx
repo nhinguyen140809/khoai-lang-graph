@@ -1,11 +1,10 @@
 import { fireEvent, render, screen } from '@testing-library/react'
-import userEvent from '@testing-library/user-event'
 import { FileTextIcon, PlayIcon, SearchIcon } from 'lucide-react'
 import type { Route } from 'next'
 import { beforeEach, describe, expect, it } from 'vitest'
 
 import { routerMock } from '@/test/next-stubs'
-import { expectNoRole, expectPushedTo, pressButton, pressMenuItem } from '@/test/steps'
+import { expectNoRole, expectPushedTo, pressButton, pressMenuItem, pressTwice } from '@/test/steps'
 
 import { frameWrapper } from '../../../__tests__/frame-wrapper.utils.data'
 import { seedTabs, tabsOf } from '../../../__tests__/tab-state.utils.data'
@@ -66,7 +65,7 @@ describe('EditorTabs', () => {
 
     const previewTab = screen.getByRole('link', { name: 'AMB-001, preview' })
     expect(previewTab.closest('li')).toHaveAttribute('data-preview', 'true')
-    await userEvent.dblClick(previewTab)
+    await pressTwice(previewTab)
 
     expect(tabsOf('p1:search').preview).toBeNull()
     expect(screen.getByRole('link', { name: 'AMB-001' }).closest('li')).toHaveAttribute(

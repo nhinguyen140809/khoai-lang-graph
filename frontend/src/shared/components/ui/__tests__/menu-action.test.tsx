@@ -1,12 +1,11 @@
 import { screen } from '@testing-library/react'
-import userEvent from '@testing-library/user-event'
 import { Link2Icon, Unlink2Icon } from 'lucide-react'
 import { createRef } from 'react'
 import { describe, expect, it, vi } from 'vitest'
 
 import { assertPresent } from '@/shared/lib/guards'
 import { renderWithProviders } from '@/test/render'
-import { expectRole, press, pressButton } from '@/test/steps'
+import { expectRole, hoverOver, press, pressButton } from '@/test/steps'
 
 import { ContextMenu, ContextMenuContent, ContextMenuTrigger } from '../context-menu'
 import { DropdownMenu, DropdownMenuContent, DropdownMenuTrigger } from '../dropdown-menu'
@@ -133,10 +132,9 @@ describe('ActionIconButton', () => {
   })
 
   it('says the words of the action in its tooltip', async () => {
-    const user = userEvent.setup()
     renderWithProviders(<ActionIconButton action={linkAction} />)
 
-    await user.hover(screen.getByRole('button', { name: 'Link to another item' }))
+    await hoverOver(screen.getByRole('button', { name: 'Link to another item' }))
 
     expect(await screen.findByRole('tooltip')).toHaveTextContent('Link to another item')
   })
@@ -151,7 +149,6 @@ describe('ActionIconButton', () => {
   })
 
   it('is disabled while the action cannot run, and gives the reason in the tooltip of its wrapper', async () => {
-    const user = userEvent.setup()
     const run = vi.fn()
     renderWithProviders(
       <ActionIconButton
@@ -161,7 +158,7 @@ describe('ActionIconButton', () => {
 
     const button = screen.getByRole('button', { name: 'Link to another item' })
     await press(button)
-    await user.hover(assertPresent(button.parentElement, 'The disabled button has no wrapper'))
+    await hoverOver(assertPresent(button.parentElement, 'The disabled button has no wrapper'))
 
     expect(button).toBeDisabled()
     expect(run).not.toHaveBeenCalled()

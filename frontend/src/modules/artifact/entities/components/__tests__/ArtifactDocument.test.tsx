@@ -91,9 +91,7 @@ describe('ArtifactDocument', () => {
     expect(links.map((link) => link.textContent)).toContain('Minh')
     expect(screen.getAllByRole('heading', { level: 3 }).length).toBe(3)
     expect(screen.getAllByText('Interviewed').length).toBe(3)
-    expect(
-      screen.getByText('Third-year undergraduate who wants advice on a research career.'),
-    ).toBeInTheDocument()
+    await expectText('Third-year undergraduate who wants advice on a research career.')
     expect(screen.getAllByText(/Goals:/).length).toBe(3)
     expectNoRole('table')
   })
@@ -151,7 +149,7 @@ describe('ArtifactDocument of a transcript', () => {
 
     const first = await screen.findByText('How do you look for a mentor today?')
     for (const turn of ['Turn 1', 'Turn 2', 'Turn 3', 'Turn 4']) {
-      expect(screen.getByText(turn)).toBeInTheDocument()
+      await expectText(turn)
     }
     // The interviewer, who leads, sits at the right; the student at the left.
     expect(first.closest('[data-slot="message"]')).toHaveAttribute('data-align', 'end')

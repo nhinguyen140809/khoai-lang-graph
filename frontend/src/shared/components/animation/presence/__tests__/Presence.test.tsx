@@ -1,8 +1,9 @@
-import { act, render, screen } from '@testing-library/react'
-import { describe, expect, it, vi } from 'vitest'
+/* eslint-disable local/expect-steps -- under fake timers a step never finishes waiting, so these tests read with getBy* (CONTRIBUTING: Fake timers) */
+import { render, screen } from '@testing-library/react'
+import { describe, expect, it } from 'vitest'
 
 import { motionMs } from '@/shared/lib/animation'
-import { withFakeTimers } from '@/test/steps'
+import { advanceTimers, expectNoText, withFakeTimers } from '@/test/steps'
 
 import { Presence } from '../Presence'
 
@@ -18,7 +19,7 @@ describe('Presence', () => {
   it('renders nothing while it has not been present', () => {
     render(<Presence present={false}>note</Presence>)
 
-    expect(screen.queryByText('note')).not.toBeInTheDocument()
+    expectNoText('note')
   })
 
   it('plays the exit before it removes the content', () => {
@@ -27,9 +28,7 @@ describe('Presence', () => {
     rerender(<Presence present={false}>note</Presence>)
     expect(screen.getByText('note')).toHaveAttribute('data-state', 'closed')
 
-    act(() => {
-      vi.advanceTimersByTime(motionMs)
-    })
+    advanceTimers(motionMs)
     expect(screen.queryByText('note')).not.toBeInTheDocument()
   })
 
@@ -38,9 +37,7 @@ describe('Presence', () => {
 
     rerender(<Presence present={false}>note</Presence>)
     rerender(<Presence present>note</Presence>)
-    act(() => {
-      vi.advanceTimersByTime(motionMs)
-    })
+    advanceTimers(motionMs)
 
     expect(screen.getByText('note')).toHaveAttribute('data-state', 'open')
   })
@@ -68,14 +65,10 @@ describe('Presence', () => {
         note
       </Presence>,
     )
-    act(() => {
-      vi.advanceTimersByTime(motionMs)
-    })
+    advanceTimers(motionMs)
     expect(screen.getByText('note')).toBeInTheDocument()
 
-    act(() => {
-      vi.advanceTimersByTime(800 - motionMs)
-    })
-    expect(screen.queryByText('note')).not.toBeInTheDocument()
+    advanceTimers(800 - motionMs)
+    expectNoText('note')
   })
 })

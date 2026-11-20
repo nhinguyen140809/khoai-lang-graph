@@ -94,15 +94,9 @@ describe('ItemLinkLine', () => {
 
     await expectText('Based on')
     await expectText('Applies to this item')
-    expect(
-      screen.getByRole('button', { name: 'Analysed requirement, Requirement 1' }),
-    ).toBeInTheDocument()
-    expect(
-      screen.getByRole('button', { name: 'Analysed requirement, Requirement 5' }),
-    ).toBeInTheDocument()
-    expect(
-      screen.queryByRole('button', { name: 'Analysed requirement, Requirement 6' }),
-    ).not.toBeInTheDocument()
+    await expectRole('button', 'Analysed requirement, Requirement 1')
+    await expectRole('button', 'Analysed requirement, Requirement 5')
+    expectNoRole('button', 'Analysed requirement, Requirement 6')
     await expectRole('button', '1 more')
   })
 
@@ -120,14 +114,10 @@ describe('ItemLinkLine', () => {
     renderLine()
 
     await pressButton('1 more')
-    expect(
-      screen.getByRole('button', { name: /Analysed requirement, Requirement 6/ }),
-    ).toBeInTheDocument()
+    await expectRole('button', /Analysed requirement, Requirement 6/)
 
     await pressButton('Analysed requirement, Requirement 1')
-    expect(
-      await screen.findByRole('link', { name: 'Analysed requirement, Requirement 1' }),
-    ).toBeInTheDocument()
+    await expectRole('link', 'Analysed requirement, Requirement 1')
   })
 
   it('offers to remove the link in the menu of the card of an outgoing chip, not of an incoming one', async () => {

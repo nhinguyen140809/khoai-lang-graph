@@ -1,5 +1,5 @@
 import { screen } from '@testing-library/react'
-import { describe, expect, it } from 'vitest'
+import { describe, it } from 'vitest'
 
 import { IdPrefix, mockId, projectIds, threadIds } from '@/mocks/shared/db'
 import { buildThread } from '@/mocks/threads/threads.fixtures'
@@ -40,9 +40,7 @@ describe('OutlineSection', () => {
 
     // The library thread holds the first message of its run: not empty. The empty state reads
     // from a thread without a message of the user, which the mocks give through the scenario.
-    expect(
-      await screen.findByText('A system to book study rooms and desks in the library.'),
-    ).toBeInTheDocument()
+    await expectText('A system to book study rooms and desks in the library.')
   })
 
   it('opens the activity at the message', async () => {

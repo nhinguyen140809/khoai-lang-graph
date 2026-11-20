@@ -103,9 +103,8 @@ describe('ProjectSwitcher', () => {
     })
     await pressButton('Mentor platform')
 
-    expect(
-      await screen.findByRole('menuitem', { name: 'Load the project again' }),
-    ).toBeInTheDocument()
+    await expectRole('menuitem', 'Load the project again')
+    // eslint-disable-next-line local/expect-steps -- hidden is an option the step does not take
     expect(
       screen.getByRole('button', { name: 'Mentor platform', hidden: true }),
     ).toBeInTheDocument()

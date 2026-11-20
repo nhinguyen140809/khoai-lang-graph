@@ -1,3 +1,4 @@
+/* eslint-disable local/expect-steps -- under fake timers a step never finishes waiting, so these tests read with getBy* (CONTRIBUTING: Fake timers) */
 import { render, screen } from '@testing-library/react'
 import { describe, expect, it, vi } from 'vitest'
 
@@ -31,7 +32,6 @@ describe('RelativeTime', () => {
   })
 
   it('counts from the moment a parent gives it, and starts no clock of its own', () => {
-    vi.useFakeTimers()
     vi.setSystemTime(new Date('2026-10-30T10:00:00'))
     render(<RelativeTime date="2026-10-30T09:55:00" now={new Date('2026-10-30T09:58:00')} />)
 

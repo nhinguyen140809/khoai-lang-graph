@@ -1,10 +1,9 @@
 import { act, screen } from '@testing-library/react'
-import userEvent from '@testing-library/user-event'
 import { describe, expect, it } from 'vitest'
 
 import { assertPresent } from '@/shared/lib/guards'
 import { renderWithProviders } from '@/test/render'
-import { expectFocused, pressButton } from '@/test/steps'
+import { expectFocused, hoverOver, pressButton } from '@/test/steps'
 
 import { useEditingRecordStore } from '../../stores/editing-record.store'
 import { EditRecordButton } from '../EditRecordButton'
@@ -25,12 +24,11 @@ describe('EditRecordButton', () => {
   })
 
   it('is disabled, with its reason in the tooltip of its wrapper', async () => {
-    const user = userEvent.setup()
     renderButton('Only the documents under review can change now.')
 
     const button = screen.getByRole('button', { name: 'Edit' })
     expect(button).toBeDisabled()
-    await user.hover(assertWrapper(button))
+    await hoverOver(assertWrapper(button))
     expect(await screen.findByRole('tooltip')).toHaveTextContent(
       'Only the documents under review can change now.',
     )

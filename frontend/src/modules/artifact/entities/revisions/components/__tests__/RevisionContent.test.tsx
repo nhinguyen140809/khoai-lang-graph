@@ -1,4 +1,3 @@
-import { screen } from '@testing-library/react'
 import { describe, expect, it } from 'vitest'
 
 import { itemFixtureByKey } from '@/mocks/artifacts/fixtures/artifacts.fixtures'
@@ -66,11 +65,9 @@ describe('RevisionContent', () => {
   it('shows the fields of the selected version, without a banner', async () => {
     renderContent(viewOf({ level: 'version', selectedVersion: 2, showsChanges: false }))
 
-    expect(
-      await screen.findByText(
-        'A booking runs in two layers: a request, then the approval of the mentor or the admin.',
-      ),
-    ).toBeInTheDocument()
+    await expectText(
+      'A booking runs in two layers: a request, then the approval of the mentor or the admin.',
+    )
     expectNoText(/Version 2 of 2/)
     expectNoRole('button', 'Close the history')
   })

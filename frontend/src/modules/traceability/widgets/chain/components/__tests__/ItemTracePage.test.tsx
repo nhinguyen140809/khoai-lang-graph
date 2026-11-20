@@ -30,11 +30,9 @@ describe('ItemTracePage', () => {
 
     await expectText('Trace of Search with free hours')
     // The chain reaches both walks: the interview messages on the left, the backlog on the right.
-    expect(
-      await screen.findByText(
-        'I ask seniors in my club, but I never know who is free this week, so I give up.',
-      ),
-    ).toBeInTheDocument()
+    await expectText(
+      'I ask seniors in my club, but I never know who is free this week, so I give up.',
+    )
     await expectText('Filter by free hours')
     // The more button of a node names the item it acts on.
     expect(
@@ -146,9 +144,7 @@ describe('ItemTracePage', () => {
     await press(more)
 
     await expectRole('menuitem', 'Open')
-    expect(
-      await screen.findByRole('menuitem', { name: 'Link to another item' }),
-    ).toBeInTheDocument()
+    await expectRole('menuitem', 'Link to another item')
     await expectRole('menuitem', 'Open in a new tab')
     await expectRole('menuitem', 'View its trace')
   })

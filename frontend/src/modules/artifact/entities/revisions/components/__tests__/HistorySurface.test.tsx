@@ -55,7 +55,7 @@ describe('HistorySurface', () => {
     await pressButton('History')
 
     expectFocused('heading', 'History')
-    expect(screen.getByText(`Version ${String(historyCurrentVersion)}`)).toBeInTheDocument()
+    await expectText(`Version ${String(historyCurrentVersion)}`)
     await expectRole('checkbox', 'Show changes')
   })
 
@@ -65,9 +65,7 @@ describe('HistorySurface', () => {
 
     await pressButton('Older version')
     // The old version goes out first, and the next one comes in after it.
-    expect(
-      await screen.findByText(`Version ${String(historyCurrentVersion - 1)}`),
-    ).toBeInTheDocument()
+    await expectText(`Version ${String(historyCurrentVersion - 1)}`)
 
     await pressButton('Newer version')
     expectDisabled('button', 'Newer version')
@@ -116,9 +114,7 @@ describe('HistorySurface', () => {
     expectNoRole('button', /Restore/)
     await pressButton('Older version')
     await pressButton('More actions')
-    expect(
-      await screen.findByRole('button', { name: `Restore ${String(historyCurrentVersion - 1)}` }),
-    ).toBeInTheDocument()
+    await expectRole('button', `Restore ${String(historyCurrentVersion - 1)}`)
   })
 
   itShowsQueryStates({

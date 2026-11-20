@@ -26,6 +26,26 @@ export function pressMenuItem(name: string | RegExp) {
   return pressRole('menuitem', name)
 }
 
+/** Presses the control twice, as the double click that opens a tab or a file. */
+export async function pressTwice(control: Element) {
+  await userEvent.dblClick(control)
+}
+
+/** Holds the pointer over the control, as its tooltip or its menu needs. */
+export async function hoverOver(control: Element) {
+  await userEvent.hover(control)
+}
+
+/** Moves the pointer off the control again. */
+export async function hoverAway(control: Element) {
+  await userEvent.unhover(control)
+}
+
+/** Chooses this option of the select; `''` chooses its empty option. */
+export async function chooseOption(select: Element, value: string) {
+  await userEvent.selectOptions(select, value)
+}
+
 /** Replaces the text of a field with this one; the text may hold keys, such as `{Enter}`. */
 export async function replaceText(field: HTMLElement, text: string) {
   await userEvent.clear(field)

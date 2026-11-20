@@ -1,5 +1,4 @@
 import { screen, waitFor, within } from '@testing-library/react'
-import userEvent from '@testing-library/user-event'
 import { describe, expect, it } from 'vitest'
 
 import { artifactFixtureByKind } from '@/mocks/artifacts/fixtures/artifacts.fixtures'
@@ -11,7 +10,9 @@ import {
   expectPushedTo,
   expectRole,
   expectText,
+  hoverOver,
   press,
+  pressTwice,
 } from '@/test/steps'
 
 const projectId = projectIds.mentor
@@ -62,7 +63,7 @@ describe('DocumentsPanel tooltips', () => {
   it('says the state of a document in words, and not its title again', async () => {
     renderPanel()
 
-    await userEvent.hover(within(await findRow('Interviewees')).getByText('Interviewees'))
+    await hoverOver(within(await findRow('Interviewees')).getByText('Interviewees'))
 
     const tooltip = await screen.findByRole('tooltip')
     expect(tooltip).toHaveTextContent(/^Approved, version 2$/)
@@ -71,7 +72,7 @@ describe('DocumentsPanel tooltips', () => {
   it('says one thing of a row under others, the state of the row, and not the path to it', async () => {
     renderPanel({ artifactId: analysis.id })
 
-    await userEvent.hover(
+    await hoverOver(
       within(await findRow('Session length unknown')).getByText('Session length unknown'),
     )
 
@@ -158,7 +159,7 @@ describe('DocumentsPanel opening', () => {
   it('opens a document again on a double click, which keeps its tab', async () => {
     renderPanel()
 
-    await userEvent.dblClick(await findRow(analysis.title))
+    await pressTwice(await findRow(analysis.title))
 
     await expectPushedTo(`${documentsPath}/${analysis.id}`)
   })

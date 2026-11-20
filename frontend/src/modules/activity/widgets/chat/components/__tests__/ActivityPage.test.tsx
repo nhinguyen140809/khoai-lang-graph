@@ -15,11 +15,7 @@ describe('ActivityPage', () => {
     renderWithProviders(<ActivityPage projectId={projectIds.mentor} />)
 
     await expectText('Also ask about group sessions.')
-    expect(
-      screen.getByText(
-        'I want to build an online platform for university students to find mentors.',
-      ),
-    ).toBeInTheDocument()
+    await expectText('I want to build an online platform for university students to find mentors.')
   })
 
   it('keeps the notes of finished work closed, and shows them as Markdown when its line is opened', async () => {

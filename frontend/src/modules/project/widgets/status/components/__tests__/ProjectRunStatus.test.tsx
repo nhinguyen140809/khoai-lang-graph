@@ -1,5 +1,4 @@
 import { screen, waitFor } from '@testing-library/react'
-import userEvent from '@testing-library/user-event'
 import { http } from 'msw'
 import { describe, expect, it } from 'vitest'
 
@@ -15,6 +14,7 @@ import {
   expectNoAccessibilityViolations,
   expectNoRole,
   expectRole,
+  hoverOver,
   pressButton,
 } from '@/test/steps'
 
@@ -77,7 +77,7 @@ describe('ProjectRunStatus', () => {
     openPage('/?mock-run-status=failed')
     renderWithProviders(<ProjectRunStatus projectId={projectIds.mentor} />)
 
-    await userEvent.hover(await screen.findByRole('link', { name: /^Failed/ }))
+    await hoverOver(await screen.findByRole('link', { name: /^Failed/ }))
 
     expect(await screen.findByRole('tooltip')).toHaveTextContent(
       'The model provider failed, after the retries and the fallback models.',

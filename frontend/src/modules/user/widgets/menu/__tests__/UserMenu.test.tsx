@@ -69,9 +69,7 @@ describe('UserMenu', () => {
 
     await pressButton('Account')
 
-    expect(
-      await screen.findByRole('menuitem', { name: 'Failed to load your account. Try again' }),
-    ).toBeInTheDocument()
+    await expectRole('menuitem', 'Failed to load your account. Try again')
   })
 
   it('shows that the account is loading', async () => {

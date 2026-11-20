@@ -11,7 +11,7 @@ import { costQueryMeta } from '@/shared/api/query-client'
 import { sleep } from '@/shared/lib/scheduling'
 import { openedEventSources } from '@/test/event-source'
 import { renderHookWithProviders } from '@/test/render'
-import { advanceTimers } from '@/test/steps'
+import { advanceTimers, withFakeTimers } from '@/test/steps'
 
 import { useLatestRun } from '../../../runs/hooks/useRunQueries'
 import type { RunStatus } from '../../../status/run-status.types'
@@ -193,41 +193,43 @@ describe('useRunStatusEvents', () => {
     expect(onReloaded).not.toHaveBeenCalled()
   })
 
-  it('opens the stream again a moment after its connection fails for good', async () => {
-    vi.useFakeTimers({ shouldAdvanceTime: true })
-    const { source } = await followedStream()
+  describe('when the stream comes back', () => {
+    withFakeTimers({ shouldAdvanceTime: true })
 
-    act(() => {
-      source?.fail()
-    })
-    advanceTimers(streamReopenMs)
+    it('opens the stream again a moment after its connection fails for good', async () => {
+      const { source } = await followedStream()
 
-    await waitFor(() => {
-      expect(openedEventSources()).toHaveLength(2)
-    })
-    expect(openedEventSources()[1]?.closed).toBe(false)
-  })
+      act(() => {
+        source?.fail()
+      })
+      advanceTimers(streamReopenMs)
 
-  it('opens the stream again after the latest event that the run loaded with', async () => {
-    vi.useFakeTimers({ shouldAdvanceTime: true })
-    const { result, source } = await followedStream()
-    server.use(answerRunWith('interrupted', 250))
-    act(() => {
-      source?.emit('node_end', NODE_END, '250')
-    })
-    await waitFor(() => {
-      expect(result.current.data?.last_event_id).toBe(250)
+      await waitFor(() => {
+        expect(openedEventSources()).toHaveLength(2)
+      })
+      expect(openedEventSources()[1]?.closed).toBe(false)
     })
 
-    act(() => {
-      source?.fail()
-    })
-    advanceTimers(streamReopenMs)
+    it('opens the stream again after the latest event that the run loaded with', async () => {
+      const { result, source } = await followedStream()
+      server.use(answerRunWith('interrupted', 250))
+      act(() => {
+        source?.emit('node_end', NODE_END, '250')
+      })
+      await waitFor(() => {
+        expect(result.current.data?.last_event_id).toBe(250)
+      })
 
-    await waitFor(() => {
-      expect(openedEventSources()).toHaveLength(2)
+      act(() => {
+        source?.fail()
+      })
+      advanceTimers(streamReopenMs)
+
+      await waitFor(() => {
+        expect(openedEventSources()).toHaveLength(2)
+      })
+      expect(openedEventSources()[1]?.url).toMatch(/after=250$/)
     })
-    expect(openedEventSources()[1]?.url).toMatch(/after=250$/)
   })
 
   it('opens no stream for a run that ended', async () => {

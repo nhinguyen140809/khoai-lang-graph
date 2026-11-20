@@ -1,8 +1,9 @@
-import { render, screen } from '@testing-library/react'
+import { render } from '@testing-library/react'
 import { describe, expect, it } from 'vitest'
 
 import { buildRun } from '@/mocks/runs/fixtures/runs.fixtures'
 import { projectIds, runIds } from '@/mocks/shared/db'
+import { expectText } from '@/test/steps'
 
 import { useRunActivity } from '../../hooks/useRunActivity'
 import { RunActivityProvider } from '../RunActivityContext'
@@ -25,14 +26,14 @@ function Entry() {
 }
 
 describe('RunActivityContext', () => {
-  it('gives the run of the provider to the entries under it', () => {
+  it('gives the run of the provider to the entries under it', async () => {
     render(
       <RunActivityProvider value={{ run, thread: null, projectId: projectIds.mentor }}>
         <Entry />
       </RunActivityProvider>,
     )
 
-    expect(screen.getByText(`${run.id} no thread ${projectIds.mentor}`)).toBeInTheDocument()
+    await expectText(`${run.id} no thread ${projectIds.mentor}`)
   })
 
   it('refuses to read a run outside a provider', () => {

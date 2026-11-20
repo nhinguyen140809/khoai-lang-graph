@@ -1,6 +1,5 @@
 import { act, screen, waitFor, within } from '@testing-library/react'
-import userEvent from '@testing-library/user-event'
-import { describe, expect, it, vi } from 'vitest'
+import { describe, expect, it } from 'vitest'
 
 import {
   artifactFixtureByKind,
@@ -19,8 +18,11 @@ import {
   expectNoRole,
   expectPushedTo,
   expectText,
+  hoverAway,
+  hoverOver,
   pressButton,
   pressKey,
+  withFakeTimers,
 } from '@/test/steps'
 
 import { navigatorIdleMs } from '../../item-page.constants'
@@ -207,8 +209,9 @@ describe('ItemPage', () => {
 })
 
 describe('ItemPage navigator', () => {
+  withFakeTimers({ shouldAdvanceTime: true })
+
   async function renderIdle() {
-    vi.useFakeTimers({ shouldAdvanceTime: true })
     renderItem(first.id)
     return findNavigator()
   }
@@ -257,11 +260,11 @@ describe('ItemPage navigator', () => {
   it('stays while the pointer is over it, and hides after the pointer leaves', async () => {
     const navigator = await renderIdle()
 
-    await userEvent.hover(navigator)
+    await hoverOver(navigator)
     advanceTimers(navigatorIdleMs * 2)
     expect(navigator).not.toHaveClass('opacity-0')
 
-    await userEvent.unhover(navigator)
+    await hoverAway(navigator)
     advanceTimers(navigatorIdleMs + 100)
     expect(navigator).toHaveClass('opacity-0')
   })

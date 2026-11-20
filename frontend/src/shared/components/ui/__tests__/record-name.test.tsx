@@ -1,9 +1,8 @@
 import { screen } from '@testing-library/react'
-import userEvent from '@testing-library/user-event'
 import { describe, expect, it } from 'vitest'
 
 import { renderWithProviders } from '@/test/render'
-import { expectText } from '@/test/steps'
+import { expectText, hoverOver } from '@/test/steps'
 
 import { RecordName, RecordNameTooltip } from '../record-name'
 
@@ -53,14 +52,13 @@ describe('RecordName', () => {
 
 describe('RecordNameTooltip', () => {
   it('holds the kind, the title and the key of the record over its drawn title', async () => {
-    const user = userEvent.setup()
     renderWithProviders(
       <RecordNameTooltip kind="Analyzed requirement" title="Layered booking flow" code="AR-003">
         <a href="#ar-003">Layered booking flow</a>
       </RecordNameTooltip>,
     )
 
-    await user.hover(screen.getByRole('link', { name: 'Layered booking flow' }))
+    await hoverOver(screen.getByRole('link', { name: 'Layered booking flow' }))
 
     const tooltip = await screen.findByRole('tooltip')
     expect(tooltip).toHaveTextContent('Analyzed requirement')
@@ -69,14 +67,13 @@ describe('RecordNameTooltip', () => {
   })
 
   it('holds the kind and the title alone when no key helps', async () => {
-    const user = userEvent.setup()
     renderWithProviders(
       <RecordNameTooltip kind="Persona" title="Minh">
         <a href="#minh">Minh</a>
       </RecordNameTooltip>,
     )
 
-    await user.hover(screen.getByRole('link', { name: 'Minh' }))
+    await hoverOver(screen.getByRole('link', { name: 'Minh' }))
 
     const tooltip = await screen.findByRole('tooltip')
     expect(tooltip).toHaveTextContent('Persona')

@@ -1,11 +1,11 @@
 import { zodResolver } from '@hookform/resolvers/zod'
 import { render, screen } from '@testing-library/react'
-import userEvent from '@testing-library/user-event'
 import { FormProvider, useForm } from 'react-hook-form'
 import { describe, expect, it } from 'vitest'
 
 import { assertPresent } from '@/shared/lib/guards'
 import {
+  chooseOption,
   expectDisabled,
   expectNoAccessibilityViolations,
   expectNoRole,
@@ -71,7 +71,7 @@ function InputForm({
 }
 
 /** Changes the control of the field as the case says. */
-async function changeControl(user: ReturnType<typeof userEvent.setup>, change: FieldChange) {
+async function changeControl(change: FieldChange) {
   switch (change.kind) {
     case 'type': {
       const control = assertPresent(
@@ -83,7 +83,7 @@ async function changeControl(user: ReturnType<typeof userEvent.setup>, change: F
       return
     }
     case 'select':
-      await user.selectOptions(screen.getByRole('combobox'), change.option)
+      await chooseOption(screen.getByRole('combobox'), change.option)
       return
     case 'click':
       await press(screen.getByRole('switch'))
@@ -104,7 +104,6 @@ describe('ContentFieldInput', () => {
   it.each(widgetCases)(
     'changes the form value of $name',
     async ({ field, change, saved, allowedValues }) => {
-      const user = userEvent.setup()
       const savedValues: ContentFormValues[] = []
       render(
         <InputForm
@@ -114,7 +113,7 @@ describe('ContentFieldInput', () => {
         />,
       )
 
-      await changeControl(user, change)
+      await changeControl(change)
       await pressButton('Save')
 
       expect(savedValues[0]?.content).toMatchObject({ ...initialContent, ...saved })
@@ -122,7 +121,6 @@ describe('ContentFieldInput', () => {
   )
 
   it('stores null for a nullable select that is set to None', async () => {
-    const user = userEvent.setup()
     const savedValues: ContentFormValues[] = []
     render(
       <InputForm
@@ -132,14 +130,13 @@ describe('ContentFieldInput', () => {
       />,
     )
 
-    await user.selectOptions(screen.getByRole('combobox'), '')
+    await chooseOption(screen.getByRole('combobox'), '')
     await pressButton('Save')
 
     expect(savedValues[0]?.content).toMatchObject({ quality_category: null })
   })
 
   it('offers the allowed values of a select that takes them from another artifact', async () => {
-    const user = userEvent.setup()
     const savedValues: ContentFormValues[] = []
     render(
       <InputForm
@@ -151,7 +148,7 @@ describe('ContentFieldInput', () => {
 
     const select = screen.getByRole('combobox', { name: 'Pick' })
     expectDisabled('option', 'Choose a value')
-    await user.selectOptions(select, 'booking')
+    await chooseOption(select, 'booking')
     await pressButton('Save')
 
     expect(savedValues[0]?.content).toMatchObject({ pick: 'booking' })

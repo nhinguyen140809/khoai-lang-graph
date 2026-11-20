@@ -1,5 +1,4 @@
 import { screen, waitFor, within } from '@testing-library/react'
-import userEvent from '@testing-library/user-event'
 import { describe, expect, it } from 'vitest'
 
 import {
@@ -15,6 +14,7 @@ import {
   expectRole,
   expectText,
   press,
+  pressTwice,
 } from '@/test/steps'
 
 import { DocumentPage } from '../DocumentPage'
@@ -43,6 +43,7 @@ describe('DocumentPage', () => {
   it('shows the title, the status line and the groups of the document', async () => {
     renderDocument(analysis.id)
 
+    // eslint-disable-next-line local/expect-steps -- the heading has a level, an option the step does not take
     expect(
       await screen.findByRole('heading', { level: 1, name: analysis.title }),
     ).toBeInTheDocument()
@@ -100,7 +101,7 @@ describe('DocumentPage', () => {
     await expectPushedTo(href)
 
     routerMock.push.mockClear()
-    await userEvent.dblClick(link)
+    await pressTwice(link)
     await expectPushedTo(href)
   })
 

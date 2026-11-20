@@ -4,7 +4,7 @@ import { describe, expect, it } from 'vitest'
 import { itemFixtureByKey } from '@/mocks/artifacts/fixtures/artifacts.fixtures'
 import { projectIds } from '@/mocks/shared/db'
 import { renderWithProviders } from '@/test/render'
-import { expectNoAccessibilityViolations, expectText, pressButton } from '@/test/steps'
+import { expectNoAccessibilityViolations, expectRole, expectText, pressButton } from '@/test/steps'
 
 import type { LinkedEntry } from '../../item-links.types'
 import { LinkedItemsPopover } from '../LinkedItemsPopover'
@@ -35,13 +35,9 @@ describe('LinkedItemsPopover', () => {
 
     await pressButton('AR-001')
 
-    expect(
-      await screen.findByText('This item is based on List mentors by field.'),
-    ).toBeInTheDocument()
+    await expectText('This item is based on List mentors by field.')
     await expectText('Analysed requirement')
-    expect(
-      screen.getByRole('link', { name: 'Analysed requirement, List mentors by field' }),
-    ).toBeInTheDocument()
+    await expectRole('link', 'Analysed requirement, List mentors by field')
   })
 
   it('shows the words the link quotes at its other end, in the color of that end', async () => {
@@ -80,9 +76,7 @@ describe('LinkedItemsPopover', () => {
 
     await pressButton('AR-001')
 
-    expect(
-      await screen.findByText('This link was made from version 1, and the item is now version 1.'),
-    ).toBeInTheDocument()
+    await expectText('This link was made from version 1, and the item is now version 1.')
   })
 
   it('puts the words a link quotes where the item holds them: in the title of an item that has only its title', async () => {

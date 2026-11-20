@@ -1,5 +1,4 @@
-import { screen } from '@testing-library/react'
-import { describe, expect, it } from 'vitest'
+import { describe, it } from 'vitest'
 
 import { renderWithProviders } from '@/test/render'
 import { expectText } from '@/test/steps'
@@ -11,10 +10,8 @@ describe('TraceHomePage', () => {
     renderWithProviders(<TraceHomePage />)
 
     await expectText('No trace is open')
-    expect(
-      screen.getByText(
-        'An item, a list or the open issues can be opened from the side panel of Trace.',
-      ),
-    ).toBeInTheDocument()
+    await expectText(
+      'An item, a list or the open issues can be opened from the side panel of Trace.',
+    )
   })
 })

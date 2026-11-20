@@ -49,17 +49,15 @@ describe('AddLinkDialog', () => {
     await fillFields(typed)
     await pressButton(addLinkMessages.add)
 
-    for (const message of messages) expect(await screen.findByText(message)).toBeInTheDocument()
+    for (const message of messages) await expectText(message)
     expect(requests.filter(({ method }) => method === HttpMethod.Post)).toEqual([])
   })
 
   it('names the dialog after the item, and says what a link is', async () => {
     renderDialog()
 
-    expect(
-      await screen.findByText('Link Search with free hours to another item'),
-    ).toBeInTheDocument()
-    expect(screen.getByText(addLinkMessages.description)).toBeInTheDocument()
+    await expectText('Link Search with free hours to another item')
+    await expectText(addLinkMessages.description)
   })
 
   it('chooses the first kind of link of the item', async () => {
@@ -141,9 +139,7 @@ describe('AddLinkDialog', () => {
     await chooseTarget('Search with free hours')
     await pressButton(addLinkMessages.add)
 
-    expect(
-      await screen.findByText(/An artifact changes only during a review that allows edits/),
-    ).toBeInTheDocument()
+    await expectText(/An artifact changes only during a review that allows edits/)
   })
 
   it('toasts the result of making a link', async () => {

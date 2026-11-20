@@ -223,9 +223,7 @@ describe('ProjectTable', () => {
       activeWithinDays: null,
     })
 
-    expect(
-      await screen.findByRole('heading', { name: 'No projects match the filters' }),
-    ).toBeInTheDocument()
+    await expectRole('heading', 'No projects match the filters')
     await pressButton('Clear filters')
     expect(onClearFilters).toHaveBeenCalledOnce()
   })

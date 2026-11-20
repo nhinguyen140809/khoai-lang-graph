@@ -19,11 +19,9 @@ describe('GapPage', () => {
     renderPage('needs_review')
 
     await expectText('Links to check')
-    expect(
-      screen.getByText(
-        'The item that each of these links is based on changed after the link was made, or was replaced.',
-      ),
-    ).toBeInTheDocument()
+    await expectText(
+      'The item that each of these links is based on changed after the link was made, or was replaced.',
+    )
     expect(screen.getAllByRole('link').length).toBeGreaterThan(0)
   })
 
@@ -41,6 +39,7 @@ describe('GapPage', () => {
     renderPage('no_such_gap')
 
     // The page opens as any gap does, so the tab and the title say which list it is.
+    // eslint-disable-next-line local/expect-steps -- the heading has a level, an option the step does not take
     expect(
       await screen.findByRole('heading', { level: 1, name: /No such gap/ }),
     ).toBeInTheDocument()
