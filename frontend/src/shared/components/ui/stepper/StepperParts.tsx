@@ -1,11 +1,13 @@
 'use client'
 
 import { cn } from 'cn'
+import type { ReactNode } from 'react'
 
 import { type Tone, toneClasses } from '@/shared/lib/tone'
 
 import { useStepItem } from './hooks/useStepItem'
 import { useStepper } from './hooks/useStepper'
+import type { StepState } from './stepper-context'
 
 export function StepperIndicator({
   children,
@@ -21,6 +23,16 @@ export function StepperIndicator({
 }) {
   const { state, isLoading } = useStepItem()
   const { indicators } = useStepper()
+
+  // The indicator that the stepper gives for each state of the step; what the item holds when it
+  // gives none. A step that loads stands in its loading indicator, even as the step is active.
+  const indicatorByState: Record<StepState, ReactNode | undefined> = {
+    active: indicators.active,
+    completed: indicators.completed,
+    inactive: indicators.inactive,
+    loading: indicators.loading,
+  }
+  const indicator = indicatorByState[isLoading ? 'loading' : state]
 
   return (
     <div
@@ -38,18 +50,7 @@ export function StepperIndicator({
       )}
       {...props}
     >
-      <div className="absolute">
-        {indicators &&
-        ((isLoading && indicators.loading) ||
-          (state === 'completed' && indicators.completed) ||
-          (state === 'active' && indicators.active) ||
-          (state === 'inactive' && indicators.inactive))
-          ? (isLoading && indicators.loading) ||
-            (state === 'completed' && indicators.completed) ||
-            (state === 'active' && indicators.active) ||
-            (state === 'inactive' && indicators.inactive)
-          : children}
-      </div>
+      <div className="absolute">{indicator ?? children}</div>
     </div>
   )
 }

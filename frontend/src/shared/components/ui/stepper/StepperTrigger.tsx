@@ -20,8 +20,7 @@ export function StepperTrigger({
   render,
   ...props
 }: StepperTriggerProps) {
-  const { state, isLoading } = useStepItem()
-  const stepperCtx = useStepper()
+  const { step, state, isLoading, isDisabled } = useStepItem()
   const {
     setActiveStep,
     activeStep,
@@ -31,8 +30,7 @@ export function StepperTrigger({
     focusPrev,
     focusFirst,
     focusLast,
-  } = stepperCtx
-  const { step, isDisabled } = useStepItem()
+  } = useStepper()
   const isSelected = activeStep === step
   const selectedTabIndex = isSelected ? 0 : -1
   const id = `stepper-tab-${step}`
@@ -57,20 +55,20 @@ export function StepperTrigger({
       case 'ArrowRight':
       case 'ArrowDown':
         e.preventDefault()
-        if (myIdx !== -1 && focusNext) focusNext(myIdx)
+        if (myIdx !== -1) focusNext(myIdx)
         break
       case 'ArrowLeft':
       case 'ArrowUp':
         e.preventDefault()
-        if (myIdx !== -1 && focusPrev) focusPrev(myIdx)
+        if (myIdx !== -1) focusPrev(myIdx)
         break
       case 'Home':
         e.preventDefault()
-        if (focusFirst) focusFirst()
+        focusFirst()
         break
       case 'End':
         e.preventDefault()
-        if (focusLast) focusLast()
+        focusLast()
         break
       case 'Enter':
       case ' ':

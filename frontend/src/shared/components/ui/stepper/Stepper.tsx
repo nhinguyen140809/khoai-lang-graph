@@ -1,17 +1,14 @@
-/* eslint-disable react-hooks/exhaustive-deps */
-
 'use client'
 
 import { cn } from 'cn'
 import type { HTMLAttributes } from 'react'
-import { useCallback, useMemo, useState } from 'react'
 
 import { useStepper } from './hooks/useStepper'
+import { useStepperState } from './hooks/useStepperState'
 import {
   type StepIndicators,
   StepItemContext,
   StepperContext,
-  type StepperContextValue,
   type StepperOrientation,
   type StepState,
 } from './stepper-context'
@@ -34,61 +31,10 @@ export function Stepper({
   indicators = {},
   ...props
 }: StepperProps) {
-  const [activeStep, setActiveStep] = useState(defaultValue)
-  const [triggerNodes, setTriggerNodes] = useState<HTMLButtonElement[]>([])
-
-  // Register/unregister triggers
-  const registerTrigger = useCallback((node: HTMLButtonElement | null) => {
-    setTriggerNodes((prev) => {
-      if (node && !prev.includes(node)) return [...prev, node]
-      if (!node && prev.includes(node as unknown as HTMLButtonElement)) {
-        return prev.filter((n) => n !== node)
-      }
-      return prev
-    })
-  }, [])
-
-  const handleSetActiveStep = useCallback(
-    (step: number) => {
-      if (value === undefined) {
-        setActiveStep(step)
-      }
-      onValueChange?.(step)
-    },
-    [value, onValueChange],
-  )
-
-  const currentStep = value ?? activeStep
-
-  // Keyboard navigation logic
-  const focusTrigger = (idx: number) => {
-    if (triggerNodes[idx]) triggerNodes[idx].focus()
-  }
-  const focusNext = (currentIdx: number) => focusTrigger((currentIdx + 1) % triggerNodes.length)
-  const focusPrev = (currentIdx: number) =>
-    focusTrigger((currentIdx - 1 + triggerNodes.length) % triggerNodes.length)
-  const focusFirst = () => focusTrigger(0)
-  const focusLast = () => focusTrigger(triggerNodes.length - 1)
-
-  // Context value
-  const contextValue = useMemo<StepperContextValue>(
-    () => ({
-      activeStep: currentStep,
-      setActiveStep: handleSetActiveStep,
-      orientation,
-      registerTrigger,
-      focusNext,
-      focusPrev,
-      focusFirst,
-      focusLast,
-      triggerNodes,
-      indicators,
-    }),
-    [currentStep, handleSetActiveStep, orientation, registerTrigger, triggerNodes, indicators],
-  )
+  const stepper = useStepperState({ defaultValue, value, onValueChange, orientation, indicators })
 
   return (
-    <StepperContext.Provider value={contextValue}>
+    <StepperContext.Provider value={stepper}>
       <div
         role="tablist"
         aria-orientation={orientation}
