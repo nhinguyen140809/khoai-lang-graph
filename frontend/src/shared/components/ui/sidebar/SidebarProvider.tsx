@@ -3,6 +3,8 @@
 import { cn } from 'cn'
 import * as React from 'react'
 
+import { browserCookies } from '@/shared/lib/cookies'
+import { useHotkey } from '@/shared/lib/hotkey'
 import { useIsMobile } from '@/shared/lib/viewport'
 
 import {
@@ -44,7 +46,7 @@ export function SidebarProvider({
       }
 
       // This sets the cookie to keep the sidebar state.
-      document.cookie = `${sidebarCookieName}=${openState}; path=/; max-age=${sidebarCookieMaxAge}`
+      browserCookies.set(sidebarCookieName, String(openState), { maxAge: sidebarCookieMaxAge })
     },
     [setOpenProp, open],
   )
@@ -55,17 +57,7 @@ export function SidebarProvider({
   }, [isMobile, setOpen, setOpenMobile])
 
   // Adds a keyboard shortcut to toggle the sidebar.
-  React.useEffect(() => {
-    const handleKeyDown = (event: KeyboardEvent) => {
-      if (event.key === sidebarKeyboardShortcut && (event.metaKey || event.ctrlKey)) {
-        event.preventDefault()
-        toggleSidebar()
-      }
-    }
-
-    window.addEventListener('keydown', handleKeyDown)
-    return () => window.removeEventListener('keydown', handleKeyDown)
-  }, [toggleSidebar])
+  useHotkey({ key: sidebarKeyboardShortcut, mod: true }, toggleSidebar)
 
   // We add a state so that we can do data-state="expanded" or "collapsed".
   // This makes it easier to style the sidebar with Tailwind classes.
