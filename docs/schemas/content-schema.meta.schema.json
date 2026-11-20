@@ -232,6 +232,10 @@
           "type": "string",
           "description": "Of a rating-list: the field of an entry that says why, shown under the rating."
         },
+        "x-ui-group-field": {
+          "type": "string",
+          "description": "Of a rating-list: the field of an entry whose text is the heading of the group that the entry belongs to; the groups are shown as blocks side by side. An entry with no text there belongs to a group with no heading."
+        },
         "x-value-list": {
           "type": "string",
           "pattern": "^[a-z][a-z0-9_]*$",

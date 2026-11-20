@@ -256,7 +256,7 @@
       "x-ui-widget": "tags"
     },
     "scores": {
-      "title": "Traits",
+      "title": "Characteristics",
       "type": "array",
       "items": {
         "type": "object",
@@ -287,20 +287,31 @@
             "type": "string",
             "description": "One sentence that says what in the evidence or in the profile supports the score.",
             "x-ui-widget": "text"
+          },
+          "group": {
+            "title": "Group",
+            "type": [
+              "string",
+              "null"
+            ],
+            "description": "The heading of the group of traits that the trait belongs to, set by the system: the traits that every persona has, or the traits that the plan adds.",
+            "x-ui-widget": "text"
           }
         },
         "required": [
           "aspect",
           "title",
           "score",
-          "rationale"
+          "rationale",
+          "group"
         ]
       },
       "description": "How the person compares on each trait, from 1 to 5: the traits that the system always uses and the ones proposed for this project. Each has a short reason.",
       "x-ui-widget": "rating-list",
       "x-ui-label-field": "title",
       "x-ui-value-field": "score",
-      "x-ui-note-field": "rationale"
+      "x-ui-note-field": "rationale",
+      "x-ui-group-field": "group"
     }
   },
   "required": [

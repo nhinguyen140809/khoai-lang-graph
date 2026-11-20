@@ -1201,8 +1201,13 @@ def persona_generator_node(
         content = persona_draft.model_dump(mode="json", exclude={"ref"})
         # The trait as the user reads it comes from the aspect, not from the model.
         titles = {entry["key"]: entry["title"] for entry in aspects}
+        groups = {entry["key"]: ASPECT_GROUP_TITLES.get(entry["tier"]) for entry in aspects}
         content["scores"] = [
-            {**score, "title": titles.get(score["aspect"], score["aspect"])}
+            {
+                **score,
+                "title": titles.get(score["aspect"], score["aspect"]),
+                "group": groups.get(score["aspect"]),
+            }
             for score in content.get("scores", [])
         ]
         if allowed:
@@ -1610,6 +1615,11 @@ def plan_lines_of(plan: Mapping[str, Any]) -> str:
         lines.extend(f"  data to collect: {item}" for item in needed.get(str(topic), []))
     lines.extend(f"stop when: {condition}" for condition in plan.get("stopping_conditions", []))
     return "\n".join(lines)
+
+
+# The headings of the groups of characteristics of a persona, by the tier of the aspect: the aspects that the
+# system defines for every persona, and the ones that the plan adds for the project.
+ASPECT_GROUP_TITLES = {"system": "Standard characteristics", "plan": "Characteristics for this project"}
 
 
 def persona_aspect_list(plan: Mapping[str, Any] | None) -> list[dict[str, str]]:
