@@ -97,7 +97,7 @@ export function PromptInput({
     >
       {/* The box of the prompt keeps the fill of a card, and a line a little thicker than the
           others, so that it stands out, where other inputs have neither. */}
-      <InputGroup thickness="medium" className="bg-card dark:bg-card">
+      <InputGroup thickness="medium" className={cn(looks.corner, 'bg-card dark:bg-card')}>
         <InputGroupTextarea
           ref={inputRef}
           aria-labelledby={labelledBy}
