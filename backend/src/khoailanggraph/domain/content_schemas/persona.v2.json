@@ -18,6 +18,55 @@
     "background",
     "goals"
   ],
+  "x-ui-sections": [
+    {
+      "title": "Personal details",
+      "fields": [
+        "occupation",
+        "age_range",
+        "background",
+        "expertise"
+      ]
+    },
+    {
+      "title": "Current practices",
+      "fields": [
+        "typical_day",
+        "current_workarounds",
+        "vocabulary"
+      ]
+    },
+    {
+      "title": "Goals and priorities",
+      "fields": [
+        "goals",
+        "interests",
+        "priorities"
+      ]
+    },
+    {
+      "title": "Concerns and behavior",
+      "fields": [
+        "concerns",
+        "constraints",
+        "behavioral_tendencies"
+      ]
+    },
+    {
+      "title": "Product evaluation",
+      "fields": [
+        "evaluative_dimension",
+        "scores"
+      ]
+    },
+    {
+      "title": "Supporting evidence",
+      "fields": [
+        "grounded_in",
+        "evidence"
+      ]
+    }
+  ],
   "x-ui-field-order": [
     "name",
     "stakeholder_type",
@@ -57,7 +106,7 @@
       "x-ui-widget": "select"
     },
     "evaluative_dimension": {
-      "title": "Judges the product by",
+      "title": "Evaluation focus",
       "type": "string",
       "description": "The dimension this interviewee evaluates the product by, distilled from the evidence found.",
       "x-ui-widget": "text"
@@ -176,25 +225,25 @@
       "readOnly": true
     },
     "occupation": {
-      "title": "What they do",
+      "title": "Occupation",
       "type": "string",
       "description": "What the person does for a living or in their studies, in a few words.",
       "x-ui-widget": "text"
     },
     "age_range": {
-      "title": "Age",
+      "title": "Age range",
       "type": "string",
       "description": "The range of age of the person, such as 18-24.",
       "x-ui-widget": "text"
     },
     "typical_day": {
-      "title": "A typical day",
+      "title": "Typical day",
       "type": "string",
       "description": "A short account of a normal day around the subject of the product: when, where and with whom the person meets the problem.",
       "x-ui-widget": "textarea"
     },
     "current_workarounds": {
-      "title": "How they cope today",
+      "title": "Current workarounds",
       "type": "array",
       "items": {
         "type": "string"
@@ -203,7 +252,7 @@
       "x-ui-widget": "list"
     },
     "vocabulary": {
-      "title": "Their words",
+      "title": "Vocabulary",
       "type": "array",
       "items": {
         "type": "string"

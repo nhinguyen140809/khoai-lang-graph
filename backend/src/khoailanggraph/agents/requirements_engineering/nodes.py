@@ -908,6 +908,20 @@ def _reading_report(readings: Sequence[tuple[str, str]]) -> str:
     return lines[0] if len(lines) == 1 else "\n".join(f"- {line}" for line in lines)
 
 
+def _group_name(name: str, known: list[str]) -> str:
+    """The name of a stakeholder group as the earlier documents wrote it: a name that differs
+    from a known one only in case or spacing is that one; any other is new and is remembered."""
+
+    def plain(text: str) -> str:
+        return " ".join(text.casefold().split())
+
+    for existing in known:
+        if plain(existing) == plain(name):
+            return existing
+    known.append(" ".join(name.split()))
+    return known[-1]
+
+
 @safe_node
 def stakeholder_miner_node(
     state: REState,
@@ -937,6 +951,7 @@ def stakeholder_miner_node(
     observations: list[ItemRefDict] = []
     ref_number = 0
     readings: list[tuple[str, str]] = []
+    known_groups: list[str] = []
     for record in source_records:
         document = str(record["content"].get("text", ""))
         draft: MinerOutput = _invoke(
@@ -946,6 +961,7 @@ def stakeholder_miner_node(
             {
                 "output_language": _language(cfg),
                 "intent": state["initial_intent"],
+                "known_groups": json.dumps(known_groups, ensure_ascii=False),
                 "source": json.dumps(prompt_view(record), ensure_ascii=False),
                 "document": document,
             },
@@ -974,6 +990,7 @@ def stakeholder_miner_node(
                     source=str(record["key"]),
                 )
                 continue
+            mined.stakeholder_name = _group_name(str(mined.stakeholder_name), known_groups)
             ref_number += 1
             item = sink.add_item(
                 corpus["artifact_id"],

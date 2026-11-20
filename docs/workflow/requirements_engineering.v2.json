@@ -14,7 +14,7 @@
       "key": "stakeholder_miner",
       "label": "Stakeholder miner",
       "description": "Finds what each kind of stakeholder cares about in those documents.",
-      "prompt_version": 2
+      "prompt_version": 3
     },
     {
       "key": "persona_generator",

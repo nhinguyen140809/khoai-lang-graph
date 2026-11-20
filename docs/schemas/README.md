@@ -73,6 +73,7 @@ Rules that relate a file to itself or to its name are not expressible in a JSON 
 | Every field is required | `required` lists exactly the names in `properties` |
 | Field order | `x-ui-field-order` lists exactly the names in `properties` |
 | Known fields | `x-ui-title-field`, `x-ui-role-field`, `x-ui-participants-field` and every name in `x-ui-list-fields` is a property, except `key`, which stands for the key of the item, and is never the first name of the list. No property is named `key` |
+| Sections and groups | Every name in `x-ui-sections` and `x-ui-group-by` is a property, no section names the title field or a name twice, and every section has a title |
 | Title of a navigable kind | When `x-ui-navigable` is `true`, the field that `x-ui-title-field` names is a short title: its description says it has at most 60 characters. The length is not a keyword of the schema, because the structured output of LLM providers does not accept it |
 | Value lists | Every `x-value-list` names a list of the workflow definition that uses the file, and a field has either an `enum` or one of `x-value-list` and `x-value-from`, never both |
 
@@ -117,6 +118,8 @@ At schema level:
 | `x-ui-role-field` | One property name | The field whose value is the key of the participant who says the words of a message, shown as the speaker of a transcript. Item kinds only |
 | `x-ui-participants-field` | One property name | The field that lists the people of a conversation, the one who leads first: an object list whose entries have `key`, `name`, `role` and `item_id`. The participants who share the role of the first one are drawn on its side of the conversation, the others on the other side. Artifact kinds only |
 | `x-ui-list-fields` | Property names, in order, and `key` | The fields shown as table columns, on a card, and on the card of a profile: the fields that read on one line under its title, then the others. `key` stands for the key of the item (`REQ-001`): a table shows it as a column at that place, a kind that does not name it shows no key column, and the key is never first, because it is not what the reader looks for first. Item kinds only |
+| `x-ui-sections` | A list of `{ title, fields }` | Item kinds whose display is `profile`. The blocks of the page of one item: each has a `title`, a short and formal heading read by users, and the property names of its `fields`, in order. The title field and the fields of the line under the title (the one-line fields of `x-ui-list-fields`) are not in a block, a field is in at most one block, and a field in no block is drawn after the blocks |
+| `x-ui-group-by` | One property name | Item kinds whose display is `cards`. The items of a run are drawn together, one card for each value of this property, headed by the value with the count of its items; each item is a row of the card, with the fields of `x-ui-list-fields` other than this one |
 | `x-ui-field-order` | Every property name, in order | The order of the fields in the detail view and the edit form |
 
 At field level:
@@ -136,6 +139,7 @@ A field without `x-ui-widget` is shown by its type. The label of a field is deri
 | `interview_transcript` | `transcript` | - | - | - |
 | `section` | `heading` | `true` | `title` | `title` |
 | `persona` | `profile` | `true` | `name` | `name`, `stakeholder_type`, `interview_status`, `background`, `goals` |
+| `stakeholder_observation` | `cards`, grouped by `stakeholder_name` | `true` | `stakeholder_name` | `stakeholder_name`, `dimension`, `evidence`, `source` |
 | `interview_message` | `transcript` | `false` | `content` | `turn`, `speaker`, `content` |
 | `raw_requirement` | `table` | `true` | `title` | `title`, `topic`, `key` |
 | `analyzed_requirement` | `table` | `true` | `title` | `title`, `type`, `priority`, `key` |

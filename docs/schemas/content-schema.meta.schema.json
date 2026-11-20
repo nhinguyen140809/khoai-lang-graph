@@ -73,6 +73,34 @@
       "items": { "type": "string" },
       "description": "Item kinds only. The fields shown as table columns, on a card, and on the card of a profile: the fields that read on one line under its title, then the others. The name `key` stands for the key of the item (REQ-001), which a table shows as a column at that place; it is never the first name, and it is no property."
     },
+    "x-ui-sections": {
+      "type": "array",
+      "minItems": 1,
+      "items": {
+        "type": "object",
+        "additionalProperties": false,
+        "required": ["title", "fields"],
+        "properties": {
+          "title": {
+            "type": "string",
+            "minLength": 1,
+            "description": "The heading of the section as shown to the user: a short, formal noun phrase."
+          },
+          "fields": {
+            "type": "array",
+            "minItems": 1,
+            "uniqueItems": true,
+            "items": { "type": "string" },
+            "description": "The names of the properties that the section holds, in order."
+          }
+        }
+      },
+      "description": "Item kinds whose display is profile. The blocks of the page of one item, each with a heading and the fields it holds, in order. The title field and the fields of the line under the title are not in a block, and a field is in at most one. A field in no block is drawn after the blocks."
+    },
+    "x-ui-group-by": {
+      "type": "string",
+      "description": "Item kinds whose display is cards. The name of a property: the items of a run are drawn together in one card for each of its values, headed by the value, and each item is a row of the card."
+    },
     "x-ui-field-order": {
       "type": "array",
       "minItems": 1,
@@ -124,7 +152,9 @@
           "x-ui-navigable": false,
           "x-ui-title-field": false,
           "x-ui-role-field": false,
-          "x-ui-list-fields": false
+          "x-ui-list-fields": false,
+          "x-ui-sections": false,
+          "x-ui-group-by": false
         }
       },
       "else": {

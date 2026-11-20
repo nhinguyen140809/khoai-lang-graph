@@ -8,11 +8,14 @@
   "x-schema-version": 1,
   "x-key-prefix": "OBS",
   "x-ui-display": "cards",
+  "x-ui-group-by": "stakeholder_name",
   "x-ui-icon": "eye",
   "x-ui-title-field": "stakeholder_name",
   "x-ui-list-fields": [
     "stakeholder_name",
-    "dimension"
+    "dimension",
+    "evidence",
+    "source"
   ],
   "x-ui-field-order": [
     "stakeholder_name",
@@ -37,7 +40,7 @@
       "x-ui-widget": "textarea"
     },
     "dimension": {
-      "title": "Aspect",
+      "title": "Topic",
       "type": "string",
       "description": "Short label of what this group evaluates: a need, value, objection or expectation.",
       "x-ui-widget": "text"

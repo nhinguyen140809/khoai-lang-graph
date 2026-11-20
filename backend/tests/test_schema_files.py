@@ -87,6 +87,20 @@ def test_key_of_an_item_is_a_column_that_never_comes_first(path: Path) -> None:
 
 
 @pytest.mark.parametrize("path", FILES, ids=_ids)
+def test_sections_and_groups_name_properties_once(path: Path) -> None:
+    schema = _load(path)
+    sections = schema.get("x-ui-sections", [])
+    named = [name for section in sections for name in section["fields"]]
+
+    assert set(named) <= set(schema["properties"])
+    assert len(named) == len(set(named))
+    assert schema.get("x-ui-title-field") not in named
+    assert all(section["title"].strip() for section in sections)
+    if "x-ui-group-by" in schema:
+        assert schema["x-ui-group-by"] in schema["properties"]
+
+
+@pytest.mark.parametrize("path", FILES, ids=_ids)
 def test_title_of_a_navigable_kind_is_short(path: Path) -> None:
     schema = _load(path)
     if schema.get("x-ui-navigable") is not True:
