@@ -144,6 +144,10 @@ export interface ProfileFields {
   sections: ContentSection[]
 }
 
+/** The extensions of a schema that name one of its fields. */
+export type FieldExtension =
+  'x-ui-title-field' | 'x-ui-role-field' | 'x-ui-participants-field' | 'x-ui-group-by'
+
 /** One block of the page of an item: a heading and the fields under it. */
 export interface ContentSection {
   /** The heading; null for the block of the fields that no block of the schema holds. */

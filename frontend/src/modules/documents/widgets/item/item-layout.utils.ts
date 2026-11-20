@@ -1,10 +1,14 @@
+import type { ArtifactItem } from '@/modules/artifact/entities'
 import {
+  type ContentField,
   type ContentSchema,
+  type ContentSection,
   type ItemPageLayout,
   pageLayoutOf,
   profileFields,
   shownFields,
 } from '@/modules/workflow/entities'
+import { isEmpty } from '@/shared/lib/guards'
 
 import type { ItemLayoutView, ItemPageView } from './item-layout.types'
 
@@ -36,4 +40,19 @@ export function itemPageViewOf(schema: ContentSchema): ItemPageView {
     bodyFields: view.bodyFields(schema),
     sections: view.sections(schema),
   }
+}
+
+/** The fields that the item has a value for, in their order. */
+export function filledFields(item: ArtifactItem, fields: readonly ContentField[]): ContentField[] {
+  return fields.filter((field) => !isEmpty(item.content[field.name]))
+}
+
+/** The blocks of the page of an item, each with only the fields that the item has a value for; a block left with none is dropped. */
+export function filledSections(
+  item: ArtifactItem,
+  sections: readonly ContentSection[],
+): ContentSection[] {
+  return sections
+    .map((section) => ({ ...section, fields: filledFields(item, section.fields) }))
+    .filter((section) => section.fields.length > 0)
 }

@@ -5,16 +5,12 @@ import type { ReactNode } from 'react'
 import {
   type ContentField,
   ContentFieldValue,
-  extensionField,
-  fieldText,
   type ItemDisplay,
-  itemTitle,
   listColumns,
   summaryFields,
   useWorkflowDefinition,
   type ValueDefinition,
 } from '@/modules/workflow/entities/@x/artifact'
-import { Card, CardContent, CardHeader, CardTitle } from '@/shared/components/ui/card'
 import type { HighlightRange } from '@/shared/components/ui/highlight'
 import {
   Table,
@@ -27,9 +23,10 @@ import {
 
 import type { OutlineItem } from '../items/items.types'
 import type { DocumentBlock, KindView, Participant, RenderItemLink } from '../outline/outline.types'
-import { groupItemsBy, itemAnchorProps } from '../outline/outline.utils'
+import { itemAnchorProps, itemTitleOf } from '../outline/outline.utils'
 import { artifactViewMessages } from './artifact-view.constants'
 import { ItemAvatarCards } from './ItemAvatarCards'
+import { ItemCards } from './ItemCards'
 import { ItemTranscript } from './ItemTranscript'
 
 interface DocumentBlocksProps<Range extends HighlightRange = HighlightRange> {
@@ -63,10 +60,6 @@ const headings = { 2: 'h2', 3: 'h3', 4: 'h4', 5: 'h5' } as const
 // The size of a section heading by its level: the top level one step above the body text, the
 // levels nested under it at the size of the body, set apart by their weight alone.
 const headingSizes = { 2: 'text-lg', 3: 'text-base', 4: 'text-base', 5: 'text-base' } as const
-
-function itemTitleOf(view: KindView, item: OutlineItem, field: ContentField): ReactNode {
-  return fieldText(item, field.name) ?? itemTitle(view.schema, item)
-}
 
 /** A column of a table of items: what its head says and what each of its cells shows. */
 interface TableColumn {
@@ -142,125 +135,6 @@ function ItemsTable<Range extends HighlightRange = HighlightRange>(props: RunVie
         ))}
       </TableBody>
     </Table>
-  )
-}
-
-/**
- * The items of a kind that names `x-ui-group-by`: one card for each value of the field, headed by the value
- * and the count of its items, with one row for each item: the first of its fields a link to the item, then the others.
- */
-function GroupedCards<Range extends HighlightRange = HighlightRange>({
-  items,
-  view,
-  renderItemLink,
-  definition,
-  targetItemId,
-  groupField,
-}: RunViewProps<Range> & { groupField: ContentField }) {
-  const fields = summaryFields(view.schema).filter((field) => field.name !== groupField.name)
-  const [first, ...others] = fields
-  return (
-    <div className="grid gap-3">
-      {groupItemsBy(items, view.schema).map((group) => (
-        <Card key={group.value} size="sm">
-          <CardHeader>
-            <CardTitle>
-              {group.value === '' ? artifactViewMessages.noGroup : group.value}{' '}
-              <span className="text-sm font-normal text-muted-foreground">
-                ({group.items.length})
-              </span>
-            </CardTitle>
-          </CardHeader>
-          <CardContent>
-            <Table>
-              <TableHeader>
-                <TableRow>
-                  {fields.map((field) => (
-                    <TableHead key={field.name}>{field.title}</TableHead>
-                  ))}
-                </TableRow>
-              </TableHeader>
-              <TableBody>
-                {group.items.map((item) => (
-                  <TableRow
-                    key={item.id}
-                    className="data-[target]:bg-accent/50"
-                    {...itemAnchorProps(item.id, targetItemId)}
-                  >
-                    {first !== undefined && (
-                      <TableCell className="align-top whitespace-normal">
-                        {renderItemLink(item, itemTitleOf(view, item, first))}
-                      </TableCell>
-                    )}
-                    {others.map((field) => (
-                      <TableCell key={field.name} className="align-top whitespace-normal">
-                        <ContentFieldValue
-                          field={field}
-                          value={item.content[field.name]}
-                          definition={definition}
-                        />
-                      </TableCell>
-                    ))}
-                  </TableRow>
-                ))}
-              </TableBody>
-            </Table>
-          </CardContent>
-        </Card>
-      ))}
-    </div>
-  )
-}
-
-function ItemCards<Range extends HighlightRange = HighlightRange>(props: RunViewProps<Range>) {
-  const groupField = extensionField(props.view.schema, 'x-ui-group-by')
-  return groupField === undefined ? (
-    <PlainCards {...props} />
-  ) : (
-    <GroupedCards {...props} groupField={groupField} />
-  )
-}
-
-function PlainCards<Range extends HighlightRange = HighlightRange>({
-  items,
-  view,
-  renderItemLink,
-  definition,
-  targetItemId,
-}: RunViewProps<Range>) {
-  const fields = summaryFields(view.schema)
-  const [first, ...others] = fields
-  return (
-    <div className="grid gap-3 sm:grid-cols-2">
-      {items.map((item) => (
-        <Card
-          key={item.id}
-          size="sm"
-          className="data-[target]:bg-accent/50"
-          {...itemAnchorProps(item.id, targetItemId)}
-        >
-          <CardHeader>
-            <CardTitle>
-              {renderItemLink(
-                item,
-                first === undefined ? item.key : itemTitleOf(view, item, first),
-              )}
-            </CardTitle>
-          </CardHeader>
-          <CardContent className="space-y-1 text-sm">
-            {others.map((field) => (
-              <div key={field.name}>
-                <ContentFieldValue
-                  field={field}
-                  value={item.content[field.name]}
-                  definition={definition}
-                />
-              </div>
-            ))}
-          </CardContent>
-        </Card>
-      ))}
-    </div>
   )
 }
 

@@ -1,7 +1,9 @@
 import {
+  type ContentField,
   contentFields,
   type ContentSchema,
   extensionFieldText,
+  fieldText,
   isNavigable,
   type IssueKind,
   itemTitle,
@@ -9,6 +11,7 @@ import {
 import { groupBy } from '@/shared/lib/collections'
 import { isEmpty } from '@/shared/lib/guards'
 import { ancestorsOf } from '@/shared/lib/hierarchy'
+import { collapseSpaces } from '@/shared/lib/text'
 
 import { type Artifact, reviewStatus } from '../artifacts/artifacts.types'
 import { itemHierarchy } from '../items/item-hierarchy.utils'
@@ -269,14 +272,18 @@ export function outlineBreadcrumb(
  * of the first written, and the items with no text there share a group of their own.
  */
 export function groupItemsBy(items: readonly OutlineItem[], schema: ContentSchema): ItemGroup[] {
-  const plain = (text: string) => text.trim().replace(/\s+/g, ' ').toLowerCase()
   const groups = new Map<string, ItemGroup>()
   for (const item of items) {
-    const value = extensionFieldText(schema, item, 'x-ui-group-by').trim().replace(/\s+/g, ' ')
-    const key = plain(value)
+    const value = collapseSpaces(extensionFieldText(schema, item, 'x-ui-group-by'))
+    const key = value.toLowerCase()
     const group = groups.get(key)
     if (group === undefined) groups.set(key, { value, items: [item] })
     else group.items.push(item)
   }
   return [...groups.values()]
+}
+
+/** What a field of an item calls the item in a list: the text of the field when it has some, else the title of the item. */
+export function itemTitleOf(view: KindView, item: OutlineItem, field: ContentField): string {
+  return fieldText(item, field.name) ?? itemTitle(view.schema, item)
 }

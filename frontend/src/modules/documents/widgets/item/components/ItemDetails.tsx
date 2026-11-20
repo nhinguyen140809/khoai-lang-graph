@@ -16,7 +16,11 @@ import {
 } from '@/modules/workflow/entities'
 import { Card, CardContent, CardHeader, CardTitle } from '@/shared/components/ui/card'
 import type { HighlightRange } from '@/shared/components/ui/highlight'
-import { isEmpty } from '@/shared/lib/guards'
+
+import { filledFields, filledSections } from '../item-layout.utils'
+
+/** The key of the block of the fields that no block of the schema holds, which has no title. */
+const untitledSectionKey = 'untitled'
 
 interface ItemDetailsProps<Range extends HighlightRange = HighlightRange> {
   item: ArtifactItem
@@ -70,11 +74,10 @@ function ProfileField<Range extends HighlightRange = HighlightRange>({
   fieldMarks,
   renderFieldMark,
 }: DetailBodyProps<Range> & { field: ContentField }) {
+  // A list stays in one column, but a list in groups has two side by side and so goes across.
+  const isNarrow = hasListValue(field) && !hasGroupedRatings(field)
   return (
-    <section
-      data-wide={hasListValue(field) && !hasGroupedRatings(field) ? undefined : true}
-      className="space-y-1 sm:data-wide:col-span-2"
-    >
+    <section data-wide={isNarrow ? undefined : true} className="space-y-1 sm:data-wide:col-span-2">
       <h2 className="text-sm font-semibold text-muted-foreground">{field.title}</h2>
       <div className="space-y-2">
         <ContentFieldValue
@@ -95,7 +98,7 @@ function ProfileGrid<Range extends HighlightRange = HighlightRange>(props: Detai
     return (
       <div className="grid gap-4">
         {props.sections.map((section) => (
-          <Card key={section.title ?? 'more'} size="sm">
+          <Card key={section.title ?? untitledSectionKey} size="sm">
             {section.title !== null && (
               <CardHeader>
                 <CardTitle>{section.title}</CardTitle>
@@ -140,20 +143,13 @@ export function ItemDetails<Range extends HighlightRange = HighlightRange>({
   renderFieldMark,
 }: ItemDetailsProps<Range>) {
   const { data: definition } = useWorkflowDefinition()
-  const filled = fields.filter((field) => !isEmpty(item.content[field.name]))
-  const filledSections = sections
-    .map((section) => ({
-      ...section,
-      fields: section.fields.filter((field) => !isEmpty(item.content[field.name])),
-    }))
-    .filter((section) => section.fields.length > 0)
   const Body = detailBodies[layout]
 
   return (
     <Body
       item={item}
-      fields={filled}
-      sections={filledSections}
+      fields={filledFields(item, fields)}
+      sections={filledSections(item, sections)}
       definition={definition}
       fieldMarks={fieldMarks}
       renderFieldMark={renderFieldMark}

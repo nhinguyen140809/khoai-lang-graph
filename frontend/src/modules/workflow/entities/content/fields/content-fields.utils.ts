@@ -12,6 +12,7 @@ import {
   type ContentDisplay,
   type ContentField,
   type ContentSection,
+  type FieldExtension,
   type FieldWidget,
   fieldWidgets,
   hasObjectEntries,
@@ -211,7 +212,7 @@ export function listColumns(schema: ContentSchema): ListColumn[] {
 /** The field that an extension of the schema names; undefined when there is none. */
 export function extensionField(
   schema: ContentSchema,
-  extension: 'x-ui-title-field' | 'x-ui-role-field' | 'x-ui-participants-field' | 'x-ui-group-by',
+  extension: FieldExtension,
 ): ContentField | undefined {
   const name = schema[extension]
   return name === undefined ? undefined : contentFields(schema).find((field) => field.name === name)
@@ -269,7 +270,7 @@ export function sectionsOf(schema: ContentSchema, body: readonly ContentField[])
   const used = new Set(named.flatMap(({ fields }) => fields))
   const blocks = named.map(({ title, fields }): ContentSection => ({
     title,
-    fields: fields.flatMap((name) => body.filter((field) => field.name === name)),
+    fields: fields.flatMap((name) => body.find((field) => field.name === name) ?? []),
   }))
   const rest = body.filter((field) => !used.has(field.name))
   return [...blocks, { title: null, fields: rest }].filter(({ fields }) => fields.length > 0)

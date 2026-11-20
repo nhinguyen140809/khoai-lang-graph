@@ -31,7 +31,7 @@ export function hasListValue(field: Pick<ContentField, 'widget'>): boolean {
 
 /** Whether the entries of a rating list are in groups, each under its own heading: its schema names a group field. */
 export function hasGroupedRatings(field: Pick<ContentField, 'rating'>): boolean {
-  return field.rating?.group != null
+  return field.rating !== null && field.rating.group !== null
 }
 
 /** The entries of a rating list in groups by the text of their group field, in the order the groups first appear; the entries with no text there share a group with no heading. */
@@ -39,12 +39,17 @@ export function ratingGroups(
   rating: Pick<RatingFields, 'group'>,
   entries: readonly Record<string, unknown>[],
 ): { heading: string | null; entries: Record<string, unknown>[] }[] {
-  const groups = new Map<string | null, Record<string, unknown>[]>()
+  const groups = new Map<
+    string | null,
+    { heading: string | null; entries: Record<string, unknown>[] }
+  >()
   for (const entry of entries) {
-    const text = rating.group === null ? null : fieldText({ content: entry }, rating.group)
-    groups.set(text, [...(groups.get(text) ?? []), entry])
+    const heading = rating.group === null ? null : fieldText({ content: entry }, rating.group)
+    const group = groups.get(heading)
+    if (group === undefined) groups.set(heading, { heading, entries: [entry] })
+    else group.entries.push(entry)
   }
-  return [...groups].map(([heading, grouped]) => ({ heading, entries: grouped }))
+  return [...groups.values()]
 }
 
 /** The problem with a value, in the words of a form, or null when the value is fine. */

@@ -1,6 +1,14 @@
 import { describe, expect, it } from 'vitest'
 
-import { articleOf, firstLineOf, foldText, hasTextPart, joinPresent, textOf } from '../text.utils'
+import {
+  articleOf,
+  collapseSpaces,
+  firstLineOf,
+  foldText,
+  hasTextPart,
+  joinPresent,
+  textOf,
+} from '../text.utils'
 import {
   firstLineCases,
   foldTextCases,
@@ -46,5 +54,18 @@ describe('articleOf', () => {
     { word: 'Involves', article: 'an' },
   ])('reads the article of $word', ({ word, article }) => {
     expect(articleOf(word)).toBe(article)
+  })
+})
+
+describe('collapseSpaces', () => {
+  it('trims the text and makes every run of spaces, tabs and line breaks one space', () => {
+    expect(collapseSpaces('  Commuter \t students\n at   night ')).toBe(
+      'Commuter students at night',
+    )
+  })
+
+  it('leaves a text with no extra space as it is, and a blank text empty', () => {
+    expect(collapseSpaces('Staff')).toBe('Staff')
+    expect(collapseSpaces(' \n ')).toBe('')
   })
 })

@@ -114,6 +114,9 @@ function ratedLabel(label: string): string {
  * where the value stands in words, then a bar of the scale, and the note that says why. A list
  * whose schema names no label and value field reads as an object list.
  */
+/** The key of the group of entries that has no heading. */
+const untitledGroupKey = 'untitled'
+
 function RatingListValue({ field, items, definition }: ListValueProps) {
   const { rating } = field
   if (rating === null) return <EntriesValue field={field} items={items} definition={definition} />
@@ -124,7 +127,7 @@ function RatingListValue({ field, items, definition }: ListValueProps) {
   return (
     <div className="grid gap-x-8 gap-y-5 sm:grid-cols-2">
       {groups.map((group) => (
-        <section key={group.heading ?? ''} className="space-y-2">
+        <section key={group.heading ?? untitledGroupKey} className="space-y-2">
           {group.heading !== null && (
             <h3 className="text-sm font-semibold text-muted-foreground">{group.heading}</h3>
           )}

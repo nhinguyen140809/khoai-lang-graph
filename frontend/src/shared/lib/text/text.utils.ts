@@ -8,6 +8,11 @@ export function foldText(text: string): string {
   return text.normalize('NFD').replace(/\p{M}/gu, '').toLowerCase().replaceAll('đ', 'd')
 }
 
+/** The text without the spaces around it, and with every run of spaces, tabs and line breaks inside it as one space. */
+export function collapseSpaces(text: string): string {
+  return text.trim().replace(/\s+/g, ' ')
+}
+
 /** Whether `text` holds `part`, whatever the case and the accents of either. */
 export function hasTextPart(text: string, part: string): boolean {
   return foldText(text).includes(foldText(part))
