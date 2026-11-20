@@ -10,7 +10,7 @@
   "x-ui-display": "cards",
   "x-ui-group-by": "stakeholder_name",
   "x-ui-icon": "eye",
-  "x-ui-title-field": "stakeholder_name",
+  "x-ui-title-field": "dimension",
   "x-ui-list-fields": [
     "stakeholder_name",
     "dimension",
@@ -42,7 +42,7 @@
     "dimension": {
       "title": "Topic",
       "type": "string",
-      "description": "Short label of what this group evaluates: a need, value, objection or expectation.",
+      "description": "Short label of what this group evaluates, in at most 60 characters: a need, value, objection or expectation.",
       "x-ui-widget": "text"
     },
     "evidence": {

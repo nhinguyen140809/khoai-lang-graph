@@ -139,7 +139,7 @@ A field without `x-ui-widget` is shown by its type. The label of a field is deri
 | `interview_transcript` | `transcript` | - | - | - |
 | `section` | `heading` | `true` | `title` | `title` |
 | `persona` | `profile` | `true` | `name` | `name`, `stakeholder_type`, `interview_status`, `background`, `goals` |
-| `stakeholder_observation` | `cards`, grouped by `stakeholder_name` | `true` | `stakeholder_name` | `stakeholder_name`, `dimension`, `evidence`, `source` |
+| `stakeholder_observation` | `cards`, grouped by `stakeholder_name` | `true` | `dimension` | `stakeholder_name`, `dimension`, `evidence`, `source` |
 | `interview_message` | `transcript` | `false` | `content` | `turn`, `speaker`, `content` |
 | `raw_requirement` | `table` | `true` | `title` | `title`, `topic`, `key` |
 | `analyzed_requirement` | `table` | `true` | `title` | `title`, `type`, `priority`, `key` |
