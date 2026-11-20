@@ -61,6 +61,7 @@ export default defineConfig([
       'defaultExport',
       'userEventKeys',
       'testQueryClient',
+      'fakeTimers',
     ),
   },
   {
@@ -84,6 +85,7 @@ export default defineConfig([
       'defaultExport',
       'userEventKeys',
       'testQueryClient',
+      'fakeTimers',
     ),
   },
   {
