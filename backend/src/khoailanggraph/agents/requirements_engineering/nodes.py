@@ -910,16 +910,15 @@ def _reading_report(readings: Sequence[tuple[str, str]]) -> str:
 
 def _group_name(name: str, known: list[str]) -> str:
     """The name of a stakeholder group as the earlier documents wrote it: a name that differs
-    from a known one only in case or spacing is that one; any other is new and is remembered."""
+    from a known one only in case or spacing is that one; any other, with its spacing tidied."""
 
     def plain(text: str) -> str:
         return " ".join(text.casefold().split())
 
-    for existing in known:
-        if plain(existing) == plain(name):
-            return existing
-    known.append(" ".join(name.split()))
-    return known[-1]
+    return next(
+        (existing for existing in known if plain(existing) == plain(name)),
+        " ".join(name.split()),
+    )
 
 
 @safe_node
@@ -991,6 +990,8 @@ def stakeholder_miner_node(
                 )
                 continue
             mined.stakeholder_name = _group_name(str(mined.stakeholder_name), known_groups)
+            if mined.stakeholder_name not in known_groups:
+                known_groups.append(mined.stakeholder_name)
             ref_number += 1
             item = sink.add_item(
                 corpus["artifact_id"],
@@ -1617,9 +1618,12 @@ def plan_lines_of(plan: Mapping[str, Any]) -> str:
     return "\n".join(lines)
 
 
-# The headings of the groups of characteristics of a persona, by the tier of the aspect: the aspects that the
-# system defines for every persona, and the ones that the plan adds for the project.
-ASPECT_GROUP_TITLES = {"system": "Standard characteristics", "plan": "Characteristics for this project"}
+# The headings of the groups of characteristics of a persona, by the tier of the aspect: the
+# aspects that the system defines for every persona, and the ones that the plan adds.
+ASPECT_GROUP_TITLES = {
+    "system": "Standard characteristics",
+    "plan": "Characteristics for this project",
+}
 
 
 def persona_aspect_list(plan: Mapping[str, Any] | None) -> list[dict[str, str]]:
