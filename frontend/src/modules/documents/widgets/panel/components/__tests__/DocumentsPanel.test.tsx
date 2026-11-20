@@ -11,6 +11,7 @@ import {
   expectPushedTo,
   expectRole,
   expectText,
+  press,
 } from '@/test/steps'
 
 const projectId = projectIds.mentor
@@ -149,7 +150,7 @@ describe('DocumentsPanel opening', () => {
   it('opens a document on a click', async () => {
     renderPanel()
 
-    await userEvent.click(await findRow(analysis.title))
+    await press(await findRow(analysis.title))
 
     await expectPushedTo(`${documentsPath}/${analysis.id}`)
   })
@@ -174,7 +175,7 @@ describe('DocumentsPanel outline', () => {
   it('shows a loading row while the outline loads, and an error row that tries again', async () => {
     renderPanel({ artifactId: analysis.id, scenario: '/?mock-artifact=error' })
 
-    await userEvent.click(await findRow('The outline could not load.'))
+    await press(await findRow('The outline could not load.'))
 
     await findRow('The outline could not load.')
   })
@@ -224,7 +225,7 @@ describe('DocumentsPanel outline', () => {
     renderPanel({ artifactId: analysis.id })
     const group = await findRow('Stated need')
 
-    await userEvent.click(group)
+    await press(group)
 
     await waitFor(() => {
       expect(within(group).getByText('Stated need')).toHaveClass('text-(--tone-strong)')
@@ -236,7 +237,7 @@ describe('DocumentsPanel outline', () => {
     renderPanel({ artifactId: analysis.id })
 
     const button = await screen.findByRole('button', { name: /to review/ })
-    await userEvent.click(button)
+    await press(button)
 
     await expectPushedTo(expect.stringMatching(/\/items\//))
   })

@@ -23,7 +23,7 @@ export {
   expectValidField,
   waitForCall,
 } from './expectations.utils'
-export { fillFields, pressButton, pressMenuItem, pressRole, replaceText } from './form.utils'
+export { fillFields, press, pressButton, pressMenuItem, pressRole, replaceText } from './form.utils'
 export { openCommandPalette, statusBar } from './frame.utils'
 export {
   clickHolding,

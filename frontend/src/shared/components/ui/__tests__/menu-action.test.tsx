@@ -6,7 +6,7 @@ import { describe, expect, it, vi } from 'vitest'
 
 import { assertPresent } from '@/shared/lib/guards'
 import { renderWithProviders } from '@/test/render'
-import { expectRole, pressButton } from '@/test/steps'
+import { expectRole, press, pressButton } from '@/test/steps'
 
 import { ContextMenu, ContextMenuContent, ContextMenuTrigger } from '../context-menu'
 import { DropdownMenu, DropdownMenuContent, DropdownMenuTrigger } from '../dropdown-menu'
@@ -67,7 +67,7 @@ describe('DropdownActionItem', () => {
       </DropdownMenu>,
     )
 
-    await userEvent.setup().click(screen.getByRole('menuitem', { name: 'Link to another item' }))
+    await press(screen.getByRole('menuitem', { name: 'Link to another item' }))
 
     expect(onSelect).toHaveBeenCalled()
   })
@@ -160,7 +160,7 @@ describe('ActionIconButton', () => {
     )
 
     const button = screen.getByRole('button', { name: 'Link to another item' })
-    await user.click(button)
+    await press(button)
     await user.hover(assertPresent(button.parentElement, 'The disabled button has no wrapper'))
 
     expect(button).toBeDisabled()

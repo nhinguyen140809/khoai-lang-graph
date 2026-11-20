@@ -1,10 +1,9 @@
 import { render, screen, within } from '@testing-library/react'
-import userEvent from '@testing-library/user-event'
 import { useForm } from 'react-hook-form'
 import { describe, expect, it } from 'vitest'
 
 import { assertPresent } from '@/shared/lib/guards'
-import { expectRole, expectText, pressRole } from '@/test/steps'
+import { expectRole, expectText, press, pressRole } from '@/test/steps'
 
 import { noRunDefaultsFieldValues } from '../../run-defaults.constants'
 import type { RunDefaultsFieldValues } from '../../run-defaults.schema'
@@ -72,9 +71,7 @@ describe('RunDefaultsFields', () => {
     const second = within(screen.getByRole('group', { name: 'Second' }))
 
     // The label of the switch comes before the radio buttons of the flags, which are named alike.
-    await userEvent.click(
-      assertPresent(second.getAllByText('Default', { selector: 'label' })[0], 'No label'),
-    )
+    await press(assertPresent(second.getAllByText('Default', { selector: 'label' })[0], 'No label'))
 
     expect(first.getByRole('switch', { name: 'Default' })).toBeChecked()
     expect(second.getByRole('switch', { name: 'Default' })).not.toBeChecked()

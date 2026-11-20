@@ -1,6 +1,7 @@
 import { render, screen, within } from '@testing-library/react'
-import userEvent from '@testing-library/user-event'
 import { describe, expect, it } from 'vitest'
+
+import { press } from '@/test/steps'
 
 import { useCommandsStore } from '../../../commands/commands.store'
 import { TopBar } from '../TopBar'
@@ -21,7 +22,7 @@ describe('TopBar', () => {
     expect(search).toHaveAttribute('aria-keyshortcuts', 'Control+K Meta+K')
     expect(search).toHaveTextContent('CtrlK')
 
-    await userEvent.click(search)
+    await press(search)
 
     expect(useCommandsStore.getState().open).toBe(true)
   })

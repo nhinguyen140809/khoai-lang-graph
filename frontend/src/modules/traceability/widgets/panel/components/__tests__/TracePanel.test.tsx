@@ -1,5 +1,4 @@
 import { screen, waitFor } from '@testing-library/react'
-import userEvent from '@testing-library/user-event'
 import { describe, expect, it } from 'vitest'
 
 import { itemFixtureByKey } from '@/mocks/artifacts/fixtures/artifacts.fixtures'
@@ -9,7 +8,7 @@ import { HttpMethod } from '@/shared/api/http'
 import { serverErrorOn } from '@/test/msw'
 import { resetNextStubs, routerMock, setPathname } from '@/test/next-stubs'
 import { renderWithProviders } from '@/test/render'
-import { expectPushedTo, expectText } from '@/test/steps'
+import { expectPushedTo, expectText, press } from '@/test/steps'
 import { itShowsQueryStates } from '@/test/suites'
 
 import { TracePanel } from '../TracePanel'
@@ -55,11 +54,10 @@ describe('TracePanel', () => {
   })
 
   it('opens the page of a gap on a click of its row', async () => {
-    const user = userEvent.setup()
     routerMock.push.mockClear()
     renderPanel()
 
-    await user.click(await screen.findByText('Links to check'))
+    await press(await screen.findByText('Links to check'))
 
     await expectPushedTo(expect.stringContaining(`/projects/${projectId}/trace/gaps/needs_review`))
   })
@@ -88,7 +86,6 @@ describe('TracePanel', () => {
   })
 
   it('opens the chain of an item on a click of its row', async () => {
-    const user = userEvent.setup()
     const item = itemFixtureByKey(projectId, 'RAW-001')
     resetNextStubs()
     setPathname(`/projects/${projectId}/trace`)
@@ -97,7 +94,7 @@ describe('TracePanel', () => {
 
     // No document is open on screen, and the item still draws: every document comes with its items.
     const row = await screen.findByText('Find a mentor in my field')
-    await user.click(row)
+    await press(row)
 
     await expectPushedTo(expect.stringContaining(`/projects/${projectId}/trace/items/${item.id}`))
   })

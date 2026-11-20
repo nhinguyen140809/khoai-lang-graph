@@ -1,5 +1,4 @@
 import { render, screen } from '@testing-library/react'
-import userEvent from '@testing-library/user-event'
 import { type ComponentProps, useState } from 'react'
 import { describe, expect, it, vi } from 'vitest'
 
@@ -9,10 +8,12 @@ import {
   expectEnabled,
   expectFocused,
   pasteText,
+  press,
   pressButton,
   pressKey,
   pressKeys,
   pressTab,
+  replaceText,
   typeText,
 } from '@/test/steps'
 
@@ -100,8 +101,7 @@ describe('NumberInput', () => {
     const report = vi.fn()
     render(<Harness initial={5} onReport={report} />)
 
-    await userEvent.clear(input())
-
+    await replaceText(input(), '')
     expect(lastOf(report)).toBeNull()
   })
 
@@ -109,7 +109,7 @@ describe('NumberInput', () => {
     const report = vi.fn()
     render(<Harness props={{ integer: true }} onReport={report} />)
 
-    await userEvent.click(input())
+    await press(input())
     await pasteText('12.5')
 
     expect(input()).toHaveValue('12')
@@ -120,7 +120,7 @@ describe('NumberInput', () => {
     const report = vi.fn()
     render(<Harness initial={Number(testCase.start)} props={testCase.props} onReport={report} />)
 
-    await userEvent.click(input())
+    await press(input())
     await pressKeys(testCase.key)
 
     expect(lastOf(report)).toBe(testCase.reported)
@@ -147,7 +147,7 @@ describe('NumberInput', () => {
         const report = vi.fn()
         render(<Harness initial={from} props={props} onReport={report} />)
 
-        await userEvent.click(input())
+        await press(input())
         await pressKeys(keys)
 
         expect(lastOf(report)).toBe(to)
@@ -160,7 +160,7 @@ describe('NumberInput', () => {
     const report = vi.fn()
     render(<Harness onReport={report} />)
 
-    await userEvent.click(input())
+    await press(input())
     await pressKey('ArrowUp')
 
     expect(lastOf(report)).toBe(0)
@@ -179,7 +179,7 @@ describe('NumberInput', () => {
     const report = vi.fn()
     render(<Harness initial={5} onReport={report} />)
 
-    await userEvent.click(input())
+    await press(input())
     await pressButton('Increase')
     await pressButton('Decrease')
     await pressButton('Decrease')
@@ -246,7 +246,7 @@ describe('NumberInput', () => {
     const onBlur = vi.fn()
     render(<Harness props={{ onBlur }} />)
 
-    await userEvent.click(input())
+    await press(input())
     await pressTab()
 
     expect(onBlur).toHaveBeenCalledTimes(1)

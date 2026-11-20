@@ -1,5 +1,4 @@
 import { screen, within } from '@testing-library/react'
-import userEvent from '@testing-library/user-event'
 import { delay, http } from 'msw'
 import { describe, expect, it } from 'vitest'
 
@@ -14,6 +13,7 @@ import {
   expectReplacedWith,
   expectRole,
   pasteText,
+  press,
   pressButton,
   pressEscape,
   pressKey,
@@ -27,7 +27,7 @@ function renderPage() {
 
 /** Types an idea in the prompt and sends it, which opens the new project dialog. */
 async function startProject(idea: string) {
-  await userEvent.click(
+  await press(
     screen.getByRole('textbox', {
       name: 'What product do you want to write the requirements for?',
     }),
@@ -85,7 +85,7 @@ describe('ProjectListPage', () => {
     renderPage()
     const dialog = await startProject('Mentor platform')
 
-    await userEvent.click(within(dialog).getByRole('button', { name: 'Create project' }))
+    await press(within(dialog).getByRole('button', { name: 'Create project' }))
     await pressEscape()
 
     await expectRole('dialog', 'Create project')

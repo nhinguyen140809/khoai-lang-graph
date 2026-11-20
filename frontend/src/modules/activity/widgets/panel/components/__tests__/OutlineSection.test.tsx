@@ -1,5 +1,4 @@
 import { screen } from '@testing-library/react'
-import userEvent from '@testing-library/user-event'
 import { describe, expect, it } from 'vitest'
 
 import { IdPrefix, mockId, projectIds, threadIds } from '@/mocks/shared/db'
@@ -12,6 +11,7 @@ import {
   expectNoText,
   expectPushedTo,
   expectText,
+  press,
 } from '@/test/steps'
 
 import { OutlineSection } from '../OutlineSection'
@@ -48,9 +48,7 @@ describe('OutlineSection', () => {
   it('opens the activity at the message', async () => {
     renderWithProviders(<OutlineSection thread={mentorThread} projectId={projectIds.mentor} />)
 
-    await userEvent.click(
-      await screen.findByRole('button', { name: /Also ask about group sessions/ }),
-    )
+    await press(await screen.findByRole('button', { name: /Also ask about group sessions/ }))
 
     await expectPushedTo(
       routes.project(projectIds.mentor).activity({ entryId: mockId(IdPrefix.Message, 9) }),

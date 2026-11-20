@@ -14,6 +14,7 @@ import {
   expectPushedTo,
   expectRole,
   expectText,
+  press,
 } from '@/test/steps'
 
 import { DocumentPage } from '../DocumentPage'
@@ -95,7 +96,7 @@ describe('DocumentPage', () => {
     const href = `/projects/${projectId}/items/${item.id}`
 
     const link = await screen.findByRole('link', { name: /Find a mentor in my field/ })
-    await userEvent.click(link)
+    await press(link)
     await expectPushedTo(href)
 
     routerMock.push.mockClear()
@@ -109,7 +110,7 @@ describe('DocumentPage', () => {
 
     const link = await screen.findByRole('link', { name: 'Minh' })
     expect(link).toHaveAttribute('href', `/projects/${projectId}/items/${persona.id}`)
-    await userEvent.click(link)
+    await press(link)
     await expectPushedTo(`/projects/${projectId}/items/${persona.id}`)
   })
 

@@ -1,8 +1,8 @@
-import userEvent from '@testing-library/user-event'
 import { describe, expect, it, vi } from 'vitest'
 
 import { assertPresent } from '@/shared/lib/guards'
 import { renderWithProviders } from '@/test/render'
+import { press } from '@/test/steps'
 
 import { FloatingSurface } from '../floating-surface'
 import { surfaceCases } from './floating-surface.data'
@@ -32,13 +32,12 @@ describe('FloatingSurface', () => {
   })
 
   it('answers a click and renders as the element it is asked for', async () => {
-    const user = userEvent.setup()
     const onClick = vi.fn()
     const { container } = renderWithProviders(<FloatingSurface as="section" onClick={onClick} />)
 
     const surface = surfaceOf(container)
     expect(surface.tagName).toBe('SECTION')
-    await user.click(surface)
+    await press(surface)
     expect(onClick).toHaveBeenCalledOnce()
   })
 })

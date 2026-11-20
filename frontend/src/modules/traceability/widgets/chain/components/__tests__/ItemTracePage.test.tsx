@@ -1,5 +1,4 @@
 import { fireEvent, screen, waitFor, within } from '@testing-library/react'
-import userEvent from '@testing-library/user-event'
 import { describe, expect, it } from 'vitest'
 
 import { itemFixtureByKey } from '@/mocks/artifacts/fixtures/artifacts.fixtures'
@@ -7,7 +6,14 @@ import { projectIds } from '@/mocks/shared/db'
 import { openPage } from '@/test/msw'
 import { routerMock } from '@/test/next-stubs'
 import { renderWithProviders } from '@/test/render'
-import { expectPushedTo, expectRole, expectText, pressButton, pressMenuItem } from '@/test/steps'
+import {
+  expectPushedTo,
+  expectRole,
+  expectText,
+  press,
+  pressButton,
+  pressMenuItem,
+} from '@/test/steps'
 
 import { ItemTracePage } from '../ItemTracePage'
 
@@ -127,7 +133,6 @@ describe('ItemTracePage', () => {
   })
 
   it('opens the menu of a node with its actions', async () => {
-    const user = userEvent.setup()
     const item = itemFixtureByKey(projectId, 'AR-003')
     renderPage(item.id)
 
@@ -138,7 +143,7 @@ describe('ItemTracePage', () => {
       if (button === null) throw new Error('The more button is not there yet')
       return button
     })
-    await user.click(more)
+    await press(more)
 
     await expectRole('menuitem', 'Open')
     expect(
@@ -149,7 +154,6 @@ describe('ItemTracePage', () => {
   })
 
   it('opens no page when the menu of a node opens, and one page when an action of it is chosen', async () => {
-    const user = userEvent.setup()
     const item = itemFixtureByKey(projectId, 'AR-003')
     routerMock.push.mockClear()
     renderPage(item.id)
@@ -161,7 +165,7 @@ describe('ItemTracePage', () => {
       if (button === null) throw new Error('The more button is not there yet')
       return button
     })
-    await user.click(more)
+    await press(more)
     await pressMenuItem('View its trace')
 
     await waitFor(() => {
@@ -181,13 +185,12 @@ describe('ItemTracePage', () => {
   })
 
   it('shows the strip of a link below the graph once the link is chosen from the notice', async () => {
-    const user = userEvent.setup()
     const item = itemFixtureByKey(projectId, 'AR-007')
     renderPage(item.id)
 
     const notice = await screen.findByRole('alert')
     expect(notice).toHaveTextContent('1 link is out of date.')
-    await user.click(within(notice).getByRole('button', { name: 'Show the link' }))
+    await press(within(notice).getByRole('button', { name: 'Show the link' }))
 
     // The notice stays and the strip of the chosen link joins it, with the title of the link.
     const alerts = await screen.findAllByRole('alert')
@@ -196,7 +199,6 @@ describe('ItemTracePage', () => {
   })
 
   it('turns the chevron of the list of links when the list opens, as the sections of the panels do', async () => {
-    const user = userEvent.setup()
     const item = itemFixtureByKey(projectId, 'AR-003')
     renderPage(item.id)
 
@@ -205,19 +207,18 @@ describe('ItemTracePage', () => {
     expect(trigger).toHaveAttribute('data-state', 'closed')
     expect(chevron).toHaveClass('in-data-[state=open]:rotate-90')
 
-    await user.click(trigger)
+    await press(trigger)
 
     // The class reads the state of the trigger, which the click has turned to open.
     expect(trigger).toHaveAttribute('data-state', 'open')
   })
 
   it('reads the links as a list of sentences', async () => {
-    const user = userEvent.setup()
     const item = itemFixtureByKey(projectId, 'AR-003')
     renderPage(item.id)
 
     const trigger = await screen.findByRole('button', { name: 'Read the links as a list' })
-    await user.click(trigger)
+    await press(trigger)
 
     // Each sentence reads across the links of both titles, so it is read from its list item.
     const sentence = (await screen.findAllByRole('listitem')).find((item) =>

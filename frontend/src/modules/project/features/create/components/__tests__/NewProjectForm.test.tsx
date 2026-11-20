@@ -1,5 +1,4 @@
 import { screen } from '@testing-library/react'
-import userEvent from '@testing-library/user-event'
 import { http } from 'msw'
 import { describe, expect, it, vi } from 'vitest'
 
@@ -21,6 +20,7 @@ import {
   pasteText,
   pressButton,
   pressRole,
+  replaceText,
   spyOnToast,
 } from '@/test/steps'
 
@@ -47,7 +47,7 @@ function renderForm(onCreated = vi.fn()) {
 
 /** Replaces the text of a field with a paste, which takes an empty text too. */
 async function replace(name: string, text: string) {
-  await userEvent.clear(screen.getByRole('textbox', { name }))
+  await replaceText(screen.getByRole('textbox', { name }), '')
   await pasteText(text)
 }
 

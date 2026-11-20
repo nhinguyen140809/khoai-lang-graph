@@ -1,11 +1,10 @@
 import { screen } from '@testing-library/react'
-import userEvent from '@testing-library/user-event'
 import { describe, expect, it } from 'vitest'
 
 import { projectIds } from '@/mocks/shared/db'
 import { routerMock } from '@/test/next-stubs'
 import { renderWithProviders } from '@/test/render'
-import { expectNoRole, expectNoText, expectPushedTo, expectText } from '@/test/steps'
+import { expectNoRole, expectNoText, expectPushedTo, expectText, press } from '@/test/steps'
 
 import { GapPage } from '../GapPage'
 
@@ -65,19 +64,18 @@ describe('GapPage', () => {
   })
 
   it('opens the item of a row, and the chain of it, from its two buttons', async () => {
-    const user = userEvent.setup()
     routerMock.push.mockClear()
     renderPage('needs_review')
 
     const open = (await screen.findAllByRole('button', { name: 'Open in a new tab' }))[0]
     if (open === undefined) throw new Error('The gap holds no item')
-    await user.click(open)
+    await press(open)
     await expectPushedTo(expect.stringContaining(`/items/`))
 
     routerMock.push.mockClear()
     const trace = screen.getAllByRole('button', { name: 'View its trace' })[0]
     if (trace === undefined) throw new Error('The gap holds no item')
-    await user.click(trace)
+    await press(trace)
     await expectPushedTo(expect.stringContaining(`/projects/${projectId}/trace/items/`))
   })
 })

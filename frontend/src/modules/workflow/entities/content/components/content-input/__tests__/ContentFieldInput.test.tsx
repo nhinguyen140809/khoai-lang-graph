@@ -11,8 +11,10 @@ import {
   expectNoRole,
   expectRole,
   expectText,
+  press,
   pressButton,
   pressRole,
+  replaceText,
   typeText,
 } from '@/test/steps'
 
@@ -76,7 +78,7 @@ async function changeControl(user: ReturnType<typeof userEvent.setup>, change: F
         screen.queryByRole('textbox') ?? screen.queryByRole('spinbutton'),
         'The field has no control to type in',
       )
-      await user.clear(control)
+      await replaceText(control, '')
       await typeText(control, change.text)
       return
     }
@@ -84,7 +86,7 @@ async function changeControl(user: ReturnType<typeof userEvent.setup>, change: F
       await user.selectOptions(screen.getByRole('combobox'), change.option)
       return
     case 'click':
-      await user.click(screen.getByRole('switch'))
+      await press(screen.getByRole('switch'))
       return
     case 'addEntry':
       await pressButton('Add')

@@ -1,11 +1,10 @@
 import { screen } from '@testing-library/react'
-import userEvent from '@testing-library/user-event'
 import { describe, expect, it } from 'vitest'
 
 import { buildRun } from '@/mocks/runs/fixtures/runs.fixtures'
 import { projectIds, runIds } from '@/mocks/shared/db'
 import { renderWithProviders } from '@/test/render'
-import { expectNoAccessibilityViolations, expectRole, expectText } from '@/test/steps'
+import { expectNoAccessibilityViolations, expectRole, expectText, press } from '@/test/steps'
 
 import { ProgressSection } from '../ProgressSection'
 
@@ -73,7 +72,7 @@ describe('ProgressSection', () => {
 
     // A click on a done step without sub-steps navigates to its work in the chat.
     const step = await screen.findByText('Planning the interviews')
-    await userEvent.click(step)
+    await press(step)
   })
 
   it('has no accessibility violation', async () => {
