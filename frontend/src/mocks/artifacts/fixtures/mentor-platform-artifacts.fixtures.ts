@@ -41,13 +41,59 @@ const elicitationPlan: ArtifactSpec = {
   items: [],
 }
 
+// The sentences that the observations quote, each from its document, word for word.
+const quotes = {
+  field: 'Students told us they want a mentor in their own field.',
+  free: '"I do not know who is free this week" was the most common complaint about booking.',
+  admin: 'Mentors said they have no time for administration.',
+  hours: '"I can give two afternoons a week, no more" was how one lecturer put it.',
+  approval: '"We cannot say who approved this booking" appears in four of last year\'s complaints.',
+  report:
+    'Staff must hand a report to the dean each term, and the booking history is the only source.',
+} as const
+
+// How each trait of the personas is read, by its key, as the system words it.
+const traitTitles = {
+  domain_expertise: 'Knowledge of the subject',
+  usage_frequency: 'Frequency of use',
+  tech_comfort: 'Comfort with technology',
+  pain_severity: 'Severity of the problem',
+  decision_influence: 'Influence on decisions',
+} as const
+
+type Trait = keyof typeof traitTitles
+
+/** The traits of a persona: a score from 1 to 5 and a reason for each, in the order of the system. */
+function traits(entries: Record<Trait, [score: number, rationale: string]>): ContentValues[] {
+  return (Object.keys(traitTitles) as Trait[]).map((aspect) => ({
+    aspect,
+    title: traitTitles[aspect],
+    score: entries[aspect][0],
+    rationale: entries[aspect][1],
+  }))
+}
+
+const observation = (
+  key: string,
+  group: string,
+  description: string,
+  dimension: string,
+  evidence: string,
+  source: string,
+): ItemSpec => ({
+  key,
+  kind: 'stakeholder_observation',
+  content: { stakeholder_name: group, description, dimension, evidence, source },
+})
+
 const researchCorpus: ArtifactSpec = {
   kind: 'research_corpus',
   title: 'Research corpus',
-  summary: 'Two documents that report what students and mentors say about booking.',
+  summary: 'Three documents that report what students, mentors and the staff say about booking.',
   status: 'approved',
   content: {
-    selection_rationale: 'Both documents record what students and mentors say, in their own words.',
+    selection_rationale:
+      'Each document records what one side of a booking says, in the words of the people themselves.',
   },
   items: [
     {
@@ -60,7 +106,7 @@ const researchCorpus: ArtifactSpec = {
         source_type: 'survey',
         year: '2025',
         excerpt: 'A survey of 400 students about finding and booking a mentor.',
-        text: 'Students told us they want a mentor in their own field. "I do not know who is free this week" was the most common complaint about booking.',
+        text: `${quotes.field} ${quotes.free}`,
         origin: 'web',
         relevance_reason: 'It reports the voice of the students who book sessions.',
       },
@@ -75,56 +121,74 @@ const researchCorpus: ArtifactSpec = {
         source_type: 'interview',
         year: '2024',
         excerpt: 'Interviews with 12 lecturers who mentor next to teaching.',
-        text: 'Mentors said they have no time for administration. "I can give two afternoons a week, no more" was how one lecturer put it.',
+        text: `${quotes.admin} ${quotes.hours}`,
         origin: 'upload',
         relevance_reason: 'It reports the voice of the mentors who give the sessions.',
       },
     },
     {
-      key: 'OBS-001',
-      kind: 'stakeholder_observation',
+      key: 'SRC-003',
+      kind: 'source_document',
       content: {
-        stakeholder_name: 'Students',
-        description: 'Undergraduates who look for a mentor next to their studies.',
-        dimension: 'Finding a mentor in their own field',
-        evidence: 'Students told us they want a mentor in their own field.',
-        source: 'SRC-001',
+        title: 'Complaints about bookings, last academic year',
+        url: 'https://example.edu/reports/booking-complaints',
+        publisher: 'Office of the mentoring program',
+        source_type: 'complaint_log',
+        year: '2025',
+        excerpt: 'The complaints that the office of the program received about bookings.',
+        text: `${quotes.approval} ${quotes.report}`,
+        origin: 'upload',
+        relevance_reason: 'It reports the voice of the staff who answer for the bookings.',
       },
     },
-    {
-      key: 'OBS-002',
-      kind: 'stakeholder_observation',
-      content: {
-        stakeholder_name: 'Students',
-        description: 'Undergraduates who look for a mentor next to their studies.',
-        dimension: 'Knowing who is free',
-        evidence:
-          '"I do not know who is free this week" was the most common complaint about booking.',
-        source: 'SRC-001',
-      },
-    },
-    {
-      key: 'OBS-003',
-      kind: 'stakeholder_observation',
-      content: {
-        stakeholder_name: 'Mentors',
-        description: 'Lecturers who mentor next to teaching.',
-        dimension: 'Time spent on administration',
-        evidence: 'Mentors said they have no time for administration.',
-        source: 'SRC-002',
-      },
-    },
-    {
-      key: 'OBS-004',
-      kind: 'stakeholder_observation',
-      content: {
-        stakeholder_name: 'mentors',
-        description: 'Lecturers who mentor next to teaching.',
-        dimension: 'Hours they can give',
-        evidence: '"I can give two afternoons a week, no more" was how one lecturer put it.',
-        source: 'SRC-002',
-      },
-    },
+    observation(
+      'OBS-001',
+      'Students',
+      'Undergraduates who look for a mentor next to their studies.',
+      'Finding a mentor in their own field',
+      quotes.field,
+      'SRC-001',
+    ),
+    observation(
+      'OBS-002',
+      'Students',
+      'Undergraduates who look for a mentor next to their studies.',
+      'Knowing who is free',
+      quotes.free,
+      'SRC-001',
+    ),
+    observation(
+      'OBS-003',
+      'Mentors',
+      'Lecturers who mentor next to teaching.',
+      'Time spent on administration',
+      quotes.admin,
+      'SRC-002',
+    ),
+    observation(
+      'OBS-004',
+      'Mentors',
+      'Lecturers who mentor next to teaching.',
+      'Hours they can give',
+      quotes.hours,
+      'SRC-002',
+    ),
+    observation(
+      'OBS-005',
+      'Program staff',
+      'The staff who answer for the bookings of the program.',
+      'Knowing who approved a booking',
+      quotes.approval,
+      'SRC-003',
+    ),
+    observation(
+      'OBS-006',
+      'Program staff',
+      'The staff who answer for the bookings of the program.',
+      'Records for the dean',
+      quotes.report,
+      'SRC-003',
+    ),
   ],
 }
 
@@ -150,18 +214,33 @@ const personaCatalog: ArtifactSpec = {
         occupation: 'Third-year computer science student',
         age_range: '20-22',
         evaluative_dimension: 'How quickly a session can be booked',
-        typical_day:
-          'Has classes until the afternoon and looks for a mentor in the evening, on the phone.',
-        current_workarounds: ['Asks friends for names of mentors', 'Writes to lecturers by email'],
-        vocabulary: ['slot', 'free hour', 'advice'],
+        grounded_in: ['OBS-001', 'OBS-002'],
         background: 'Third-year undergraduate who wants advice on a research career.',
+        typical_day:
+          'Has classes until the afternoon, and looks for a mentor in the evening, on the phone, between two other tasks.',
         expertise: 'Knows the courses of the faculty, not the people behind them.',
+        current_workarounds: [
+          'Asks friends for the names of mentors',
+          'Writes to lecturers by email and waits for an answer',
+        ],
+        vocabulary: ['slot', 'free hour', 'advice'],
         goals: ['Find a mentor in my field', 'Book a session in a few minutes'],
         interests: ['Research', 'Internships'],
         constraints: ['Free only between classes'],
         priorities: ['Speed', 'Trust in the mentor'],
         concerns: ['Not knowing who is free this week'],
         behavioral_tendencies: 'Gives up when a task takes more than a few steps.',
+        scores: traits({
+          domain_expertise: [2, 'Knows the courses, not the mentors of the faculty.'],
+          usage_frequency: [3, 'Would book a session a few times a term.'],
+          tech_comfort: [5, 'Does everything on the phone.'],
+          pain_severity: [4, 'Cannot tell who is free, so each booking takes days.'],
+          decision_influence: [1, 'Has no say in how the program works.'],
+        }),
+        evidence: [
+          { observation: 'OBS-001', source: 'SRC-001', quote: quotes.field },
+          { observation: 'OBS-002', source: 'SRC-001', quote: quotes.free },
+        ],
         interview_status: 'completed',
       },
     },
@@ -172,14 +251,36 @@ const personaCatalog: ArtifactSpec = {
       content: {
         name: 'Lan',
         stakeholder_type: 'mentor',
+        occupation: 'Lecturer who mentors next to teaching',
+        age_range: '40-49',
+        evaluative_dimension: 'How little time the program takes from her',
+        grounded_in: ['OBS-003', 'OBS-004'],
         background: 'Lecturer who mentors students next to teaching.',
+        typical_day:
+          'Teaches in the morning, answers email at noon, and keeps two afternoons a week for students.',
         expertise: 'Ten years in the field, no time for administration.',
+        current_workarounds: [
+          'Keeps her free hours in a paper diary',
+          'Answers each request by email, one by one',
+        ],
+        vocabulary: ['office hours', 'advisee', 'free afternoon'],
         goals: ['Set the hours I am free', 'Meet students who match my field'],
         interests: ['Teaching'],
         constraints: ['Free two afternoons a week'],
         priorities: ['Control over my hours'],
         concerns: ['Students who book and do not come'],
         behavioral_tendencies: 'Answers short and wants a reminder for everything.',
+        scores: traits({
+          domain_expertise: [5, 'Ten years in the field.'],
+          usage_frequency: [2, 'Opens the program a few times a week, not every day.'],
+          tech_comfort: [3, 'Uses what the faculty gives her, and no more.'],
+          pain_severity: [3, 'Administration is a nuisance, not a block.'],
+          decision_influence: [3, 'Can ask the program for a change, not decide it.'],
+        }),
+        evidence: [
+          { observation: 'OBS-003', source: 'SRC-002', quote: quotes.admin },
+          { observation: 'OBS-004', source: 'SRC-002', quote: quotes.hours },
+        ],
         interview_status: 'completed',
       },
     },
@@ -190,14 +291,36 @@ const personaCatalog: ArtifactSpec = {
       content: {
         name: 'Tuan',
         stakeholder_type: 'admin',
+        occupation: 'Staff of the mentoring program',
+        age_range: '30-39',
+        evaluative_dimension: 'Whether each booking can be traced to a decision',
+        grounded_in: ['OBS-005', 'OBS-006'],
         background: 'Staff of the mentoring program.',
+        typical_day:
+          'Reads the new bookings in the morning, answers complaints at noon and prepares the report for the dean at the end of the term.',
         expertise: 'Knows the rules of the program and the complaints of past years.',
+        current_workarounds: [
+          'Copies each booking into a spreadsheet',
+          'Asks mentors by email whether they approved it',
+        ],
+        vocabulary: ['approval', 'term report', 'complaint'],
         goals: ['See who mentors whom', 'Remove accounts that break the rules'],
         interests: ['Quality of the program'],
         constraints: ['Has to report to the dean each term'],
         priorities: ['Safety', 'Reports'],
         concerns: ['Bookings that nobody approved'],
         behavioral_tendencies: 'Wants a record of every decision.',
+        scores: traits({
+          domain_expertise: [4, 'Knows the rules and the history of the complaints.'],
+          usage_frequency: [4, 'Opens the program every working day.'],
+          tech_comfort: [4, 'Works in spreadsheets and admin tools all day.'],
+          pain_severity: [4, 'Cannot answer a complaint without the booking history.'],
+          decision_influence: [5, 'Sets the rules of the program with the dean.'],
+        }),
+        evidence: [
+          { observation: 'OBS-005', source: 'SRC-003', quote: quotes.approval },
+          { observation: 'OBS-006', source: 'SRC-003', quote: quotes.report },
+        ],
         interview_status: 'completed',
       },
     },
