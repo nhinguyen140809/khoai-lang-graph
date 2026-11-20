@@ -5,7 +5,7 @@ import { assertPresent } from '@/shared/lib/guards'
 
 import type { StepNote } from '../../steps/run-steps.types'
 import { workEntries } from '../work-entries.utils'
-import { isPhaseOpenByDefault, phaseItems } from '../work-items.utils'
+import { isPhaseOpenByDefault, phaseItems, toolInUse } from '../work-items.utils'
 
 const at = (clock: string) => `2026-10-06T10:${clock}Z`
 const note = (kind: StepNote['kind'], text: string, clock: string, tool?: string): StepNote => ({
@@ -99,5 +99,20 @@ describe('isPhaseOpenByDefault', () => {
     ['done', false],
   ] as const)('is %s -> %s', (status, expected) => {
     expect(isPhaseOpenByDefault({ status })).toBe(expected)
+  })
+})
+
+describe('toolInUse', () => {
+  it('is the tool that the phase uses now, while it works', () => {
+    expect(
+      toolInUse(phase([note('doing', 'A.', '01:00'), note('tool', 'B.', '02:00', 'search')])),
+    ).toBe('search')
+  })
+
+  it('is none when the last item is not a tool, or the phase is over', () => {
+    expect(
+      toolInUse(phase([note('tool', 'A.', '01:00', 'search'), note('finding', 'B.', '02:00')])),
+    ).toBeNull()
+    expect(toolInUse(phase([note('tool', 'A.', '01:00', 'search')], true))).toBeNull()
   })
 })

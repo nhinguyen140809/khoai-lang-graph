@@ -51,3 +51,13 @@ export const emptyMessages: Message[] = []
 
 /** The slots around the agent on the corner of a review that waits that its act may use: those above and beside it, not those over the card. */
 export const pendingActSlots: readonly Slot[] = ['top', 'top-right', 'right']
+
+/** The slots around the agent at work at the end of the chat that its act may use: not the side that the chat column ends at. */
+export const statusLineSlots: readonly Slot[] = [
+  'top',
+  'top-right',
+  'right',
+  'bottom-right',
+  'bottom',
+  'center',
+]

@@ -21,7 +21,8 @@ interface PhaseEntryViewProps {
 }
 
 /**
- * The separator of a phase of work: the face of the agent that did it, in the mood of its status,
+ * The separator of a phase of work: the face of the agent that did it, in the mood of its status (not
+ * while the phase goes on at the end of the chat, where its agent shows at work),
  * its title and, in words, how it went. It opens and closes the items under it. Its title shimmers in the yellow of the secondary tone, crossed by a band of the foreground,
  * while it works, and the items under it, such as its failure, are where the reader looks.
  */
@@ -32,7 +33,7 @@ export function PhaseEntryView({
   isOpen,
   onToggle,
 }: PhaseEntryViewProps) {
-  const { run } = useRunActivity()
+  const { run, livePhaseId } = useRunActivity()
   const look = useWorkStatusLook(work.status)
   const words = useWorkWords(work, run)
   const title = subjectTitle === null ? stageTitle : `${stageTitle}: ${subjectTitle}`
@@ -47,7 +48,12 @@ export function PhaseEntryView({
         className="group/phase cursor-pointer text-left transition-colors outline-none hover:text-foreground focus-visible:ring-3 focus-visible:ring-ring/50"
       >
         <TraceLine>
-          <Face seed={work.agentRole} size="sm" mood={workMoodOf(work)} />
+          {/* The agent of the phase that goes on stands at the end of the chat, at work; its face comes here when the phase is over. The room is kept, so that the title does not move then. */}
+          {work.id === livePhaseId ? (
+            <span aria-hidden className="size-6 shrink-0" />
+          ) : (
+            <Face seed={work.agentRole} size="sm" mood={workMoodOf(work)} />
+          )}
           <TraceTitle className="text-accent-foreground">
             <Shimmer color="secondary" variant="solid" isActive={look.traceStatus === 'running'}>
               {title}

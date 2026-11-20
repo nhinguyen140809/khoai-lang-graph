@@ -37,3 +37,9 @@ export function phaseItems(work: WorkEntry): PhaseItem[] {
 export function isPhaseOpenByDefault(work: Pick<WorkEntry, 'status'>): boolean {
   return work.status !== 'done'
 }
+
+/** The key of the tool that a phase is using now, which is its last item while it works; null when it uses none. */
+export function toolInUse(work: WorkEntry): string | null {
+  const last = phaseItems(work).at(-1)
+  return last?.type === 'tool' && last.use.isRunning ? last.use.tool : null
+}

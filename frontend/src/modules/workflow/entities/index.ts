@@ -90,6 +90,7 @@ export { getWorkflowDefinition } from './definition/workflow.api'
 export { workflowKeys } from './definition/workflow.keys'
 export type { ObjectSchema, WorkflowDefinition } from './definition/workflow-definition.types'
 export {
+  actsOf,
   checkpointNodes,
   edgesFrom,
   findAgentRole,
