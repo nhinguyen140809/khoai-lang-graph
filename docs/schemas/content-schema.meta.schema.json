@@ -213,6 +213,10 @@
         "readOnly": {
           "const": true
         },
+        "x-ui-hidden": {
+          "const": true,
+          "description": "The page of an item and the document that holds it do not show the field; the content keeps it."
+        },
         "x-ui-widget": {
           "enum": ["text", "textarea", "select", "number", "list", "tags", "object-list", "separator", "avatar-list", "badge", "rating-list", "boolean"]
         },

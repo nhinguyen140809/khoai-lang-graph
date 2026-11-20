@@ -58,13 +58,6 @@
         "evaluative_dimension",
         "scores"
       ]
-    },
-    {
-      "title": "Supporting evidence",
-      "fields": [
-        "grounded_in",
-        "evidence"
-      ]
     }
   ],
   "x-ui-field-order": [
@@ -118,7 +111,8 @@
       "x-ui-widget": "list",
       "items": {
         "type": "string"
-      }
+      },
+      "x-ui-hidden": true
     },
     "background": {
       "title": "Background",
@@ -210,7 +204,8 @@
           "source",
           "quote"
         ]
-      }
+      },
+      "x-ui-hidden": true
     },
     "interview_status": {
       "title": "Interview status",

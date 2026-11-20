@@ -98,6 +98,9 @@ def test_sections_and_groups_name_properties_once(path: Path) -> None:
     assert all(section["title"].strip() for section in sections)
     if "x-ui-group-by" in schema:
         assert schema["x-ui-group-by"] in schema["properties"]
+    hidden = {name for name, prop in schema["properties"].items() if prop.get("x-ui-hidden")}
+    assert not hidden & set(named)
+    assert not hidden & set(schema.get("x-ui-list-fields", []))
 
 
 @pytest.mark.parametrize("path", FILES, ids=_ids)
