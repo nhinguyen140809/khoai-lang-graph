@@ -74,8 +74,17 @@ export default defineConfig([
     rules: { 'no-restricted-syntax': 'off' },
   },
   {
+    // The UI components, copied from shadcn/ui, keep their classes in brackets and their hooks
+    // beside their components; their tests type, press and click through the steps like the rest.
     files: ['src/shared/components/ui/**/*.{ts,tsx}'],
-    rules: restrictSyntax('persistStorage', 'innerHtml', 'inlineKeys', 'defaultExport'),
+    rules: restrictSyntax(
+      'persistStorage',
+      'innerHtml',
+      'inlineKeys',
+      'defaultExport',
+      'userEventKeys',
+      'testQueryClient',
+    ),
   },
   {
     // The charts of shadcn/ui write the CSS variables of their colors into a style element.

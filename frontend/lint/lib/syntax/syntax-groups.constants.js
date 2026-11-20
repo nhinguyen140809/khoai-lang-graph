@@ -81,13 +81,23 @@ export const syntaxGroups = {
       message: 'Use HttpMethod of @/shared/api/http.',
     },
   ],
-  // A unit test types, pastes and presses keys with the steps of @/test/steps.
+  // A unit test types, pastes, presses keys and clicks with the steps of @/test/steps.
   userEventKeys: [
     {
       selector:
         'CallExpression[callee.object.name=/^(user|userEvent)$/][callee.property.name=/^(keyboard|type|paste|tab)$/]',
       message:
         'Use typeText, pasteText, pressKey, pressKeys, pressTab or clickHolding of @/test/steps.',
+    },
+    {
+      selector:
+        "CallExpression[callee.object.name=/^(user|userEvent)$/][callee.property.name='click']",
+      message: 'Use press, pressButton, pressMenuItem or pressRole of @/test/steps.',
+    },
+    {
+      selector:
+        "CallExpression[callee.object.name=/^(user|userEvent)$/][callee.property.name='clear']",
+      message: 'Use replaceText of @/test/steps, which clears the field and types the text.',
     },
   ],
   // A unit test gets its query cache from @/test/render.
