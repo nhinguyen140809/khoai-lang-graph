@@ -1,5 +1,6 @@
 import type { ContentValues } from '@/modules/workflow/entities'
 
+import definition from '../../workflow/requirements_engineering.v2.json'
 import type { ArtifactSpec, ItemSpec } from '../artifacts.types'
 
 // The artifacts of the mentor platform, as the run of the API examples made them: the elicitation
@@ -8,6 +9,25 @@ import type { ArtifactSpec, ItemSpec } from '../artifacts.types'
 
 const topics = ['search', 'booking', 'reminders', 'administration']
 const stakeholderTypes = ['student', 'mentor', 'admin']
+
+// The traits of the personas: the aspects that the system defines, then those that the plan adds.
+const planAspects = [
+  {
+    key: 'need_for_reminders',
+    title: 'Need for reminders',
+    description: 'How much the person relies on being reminded of a booking.',
+    low: 'Remembers every booking alone',
+    high: 'Misses a booking without a reminder',
+  },
+  {
+    key: 'patience_with_steps',
+    title: 'Patience with extra steps',
+    description: 'How many steps the person accepts before giving up on a task.',
+    low: 'Gives up after two steps',
+    high: 'Follows a long process to the end',
+  },
+]
+const aspects = [...definition.persona_aspects, ...planAspects]
 
 const elicitationPlan: ArtifactSpec = {
   kind: 'elicitation_plan',
@@ -37,12 +57,13 @@ const elicitationPlan: ArtifactSpec = {
       'Every topic was asked about',
       'No new requirement in the last three turns',
     ],
+    persona_aspects: planAspects,
   },
   items: [],
 }
 
 // The sentences that the observations quote, each from its document, word for word.
-const quotes = {
+export const observationQuotes = {
   field: 'Students told us they want a mentor in their own field.',
   free: '"I do not know who is free this week" was the most common complaint about booking.',
   admin: 'Mentors said they have no time for administration.',
@@ -52,25 +73,13 @@ const quotes = {
     'Staff must hand a report to the dean each term, and the booking history is the only source.',
 } as const
 
-// How each trait of the personas is read, by its key, as the system words it.
-const traitTitles = {
-  domain_expertise: 'Knowledge of the subject',
-  usage_frequency: 'Frequency of use',
-  tech_comfort: 'Comfort with technology',
-  pain_severity: 'Severity of the problem',
-  decision_influence: 'Influence on decisions',
-} as const
-
-type Trait = keyof typeof traitTitles
-
-/** The traits of a persona: a score from 1 to 5 and a reason for each, in the order of the system. */
-function traits(entries: Record<Trait, [score: number, rationale: string]>): ContentValues[] {
-  return (Object.keys(traitTitles) as Trait[]).map((aspect) => ({
-    aspect,
-    title: traitTitles[aspect],
-    score: entries[aspect][0],
-    rationale: entries[aspect][1],
-  }))
+/** The traits of a persona: a score from 1 to 5 and a reason for each aspect, titled as the aspect is. */
+function traits(entries: Record<string, [score: number, rationale: string]>): ContentValues[] {
+  return aspects.map(({ key, title }) => {
+    const entry = entries[key]
+    if (entry === undefined) throw new Error(`The persona has no score for the aspect ${key}`)
+    return { aspect: key, title, score: entry[0], rationale: entry[1] }
+  })
 }
 
 const observation = (
@@ -106,7 +115,7 @@ const researchCorpus: ArtifactSpec = {
         source_type: 'survey',
         year: '2025',
         excerpt: 'A survey of 400 students about finding and booking a mentor.',
-        text: `${quotes.field} ${quotes.free}`,
+        text: `${observationQuotes.field} ${observationQuotes.free}`,
         origin: 'web',
         relevance_reason: 'It reports the voice of the students who book sessions.',
       },
@@ -121,7 +130,7 @@ const researchCorpus: ArtifactSpec = {
         source_type: 'interview',
         year: '2024',
         excerpt: 'Interviews with 12 lecturers who mentor next to teaching.',
-        text: `${quotes.admin} ${quotes.hours}`,
+        text: `${observationQuotes.admin} ${observationQuotes.hours}`,
         origin: 'upload',
         relevance_reason: 'It reports the voice of the mentors who give the sessions.',
       },
@@ -136,7 +145,7 @@ const researchCorpus: ArtifactSpec = {
         source_type: 'complaint_log',
         year: '2025',
         excerpt: 'The complaints that the office of the program received about bookings.',
-        text: `${quotes.approval} ${quotes.report}`,
+        text: `${observationQuotes.approval} ${observationQuotes.report}`,
         origin: 'upload',
         relevance_reason: 'It reports the voice of the staff who answer for the bookings.',
       },
@@ -146,7 +155,7 @@ const researchCorpus: ArtifactSpec = {
       'Students',
       'Undergraduates who look for a mentor next to their studies.',
       'Finding a mentor in their own field',
-      quotes.field,
+      observationQuotes.field,
       'SRC-001',
     ),
     observation(
@@ -154,7 +163,7 @@ const researchCorpus: ArtifactSpec = {
       'Students',
       'Undergraduates who look for a mentor next to their studies.',
       'Knowing who is free',
-      quotes.free,
+      observationQuotes.free,
       'SRC-001',
     ),
     observation(
@@ -162,7 +171,7 @@ const researchCorpus: ArtifactSpec = {
       'Mentors',
       'Lecturers who mentor next to teaching.',
       'Time spent on administration',
-      quotes.admin,
+      observationQuotes.admin,
       'SRC-002',
     ),
     observation(
@@ -170,7 +179,7 @@ const researchCorpus: ArtifactSpec = {
       'Mentors',
       'Lecturers who mentor next to teaching.',
       'Hours they can give',
-      quotes.hours,
+      observationQuotes.hours,
       'SRC-002',
     ),
     observation(
@@ -178,7 +187,7 @@ const researchCorpus: ArtifactSpec = {
       'Program staff',
       'The staff who answer for the bookings of the program.',
       'Knowing who approved a booking',
-      quotes.approval,
+      observationQuotes.approval,
       'SRC-003',
     ),
     observation(
@@ -186,7 +195,7 @@ const researchCorpus: ArtifactSpec = {
       'Program staff',
       'The staff who answer for the bookings of the program.',
       'Records for the dean',
-      quotes.report,
+      observationQuotes.report,
       'SRC-003',
     ),
   ],
@@ -211,11 +220,12 @@ const personaCatalog: ArtifactSpec = {
       content: {
         name: 'Minh',
         stakeholder_type: 'student',
-        occupation: 'Third-year computer science student',
+        occupation: 'Computer science student',
         age_range: '20-22',
         evaluative_dimension: 'How quickly a session can be booked',
         grounded_in: ['OBS-001', 'OBS-002'],
-        background: 'Third-year undergraduate who wants advice on a research career.',
+        background:
+          'In the third year of the degree, and thinking about a career in research after it.',
         typical_day:
           'Has classes until the afternoon, and looks for a mentor in the evening, on the phone, between two other tasks.',
         expertise: 'Knows the courses of the faculty, not the people behind them.',
@@ -236,10 +246,15 @@ const personaCatalog: ArtifactSpec = {
           tech_comfort: [5, 'Does everything on the phone.'],
           pain_severity: [4, 'Cannot tell who is free, so each booking takes days.'],
           decision_influence: [1, 'Has no say in how the program works.'],
+          need_for_reminders: [
+            3,
+            'Uses the calendar of the phone, and still forgets a session now and then.',
+          ],
+          patience_with_steps: [1, 'Drops a task that takes more than a few steps.'],
         }),
         evidence: [
-          { observation: 'OBS-001', source: 'SRC-001', quote: quotes.field },
-          { observation: 'OBS-002', source: 'SRC-001', quote: quotes.free },
+          { observation: 'OBS-001', source: 'SRC-001', quote: observationQuotes.field },
+          { observation: 'OBS-002', source: 'SRC-001', quote: observationQuotes.free },
         ],
         interview_status: 'completed',
       },
@@ -251,11 +266,12 @@ const personaCatalog: ArtifactSpec = {
       content: {
         name: 'Lan',
         stakeholder_type: 'mentor',
-        occupation: 'Lecturer who mentors next to teaching',
+        occupation: 'Lecturer in the faculty',
         age_range: '40-49',
         evaluative_dimension: 'How little time the program takes from her',
         grounded_in: ['OBS-003', 'OBS-004'],
-        background: 'Lecturer who mentors students next to teaching.',
+        background:
+          'Joined the faculty twelve years ago and has mentored students for ten of them, next to teaching.',
         typical_day:
           'Teaches in the morning, answers email at noon, and keeps two afternoons a week for students.',
         expertise: 'Ten years in the field, no time for administration.',
@@ -276,10 +292,12 @@ const personaCatalog: ArtifactSpec = {
           tech_comfort: [3, 'Uses what the faculty gives her, and no more.'],
           pain_severity: [3, 'Administration is a nuisance, not a block.'],
           decision_influence: [3, 'Can ask the program for a change, not decide it.'],
+          need_for_reminders: [5, 'Wants a reminder for every session, or she forgets it.'],
+          patience_with_steps: [2, 'Answers short and has no time for long forms.'],
         }),
         evidence: [
-          { observation: 'OBS-003', source: 'SRC-002', quote: quotes.admin },
-          { observation: 'OBS-004', source: 'SRC-002', quote: quotes.hours },
+          { observation: 'OBS-003', source: 'SRC-002', quote: observationQuotes.admin },
+          { observation: 'OBS-004', source: 'SRC-002', quote: observationQuotes.hours },
         ],
         interview_status: 'completed',
       },
@@ -291,11 +309,12 @@ const personaCatalog: ArtifactSpec = {
       content: {
         name: 'Tuan',
         stakeholder_type: 'admin',
-        occupation: 'Staff of the mentoring program',
+        occupation: 'Administrator of the mentoring program',
         age_range: '30-39',
         evaluative_dimension: 'Whether each booking can be traced to a decision',
         grounded_in: ['OBS-005', 'OBS-006'],
-        background: 'Staff of the mentoring program.',
+        background:
+          "Joined the office of the program five years ago, after working in the registrar's office.",
         typical_day:
           'Reads the new bookings in the morning, answers complaints at noon and prepares the report for the dean at the end of the term.',
         expertise: 'Knows the rules of the program and the complaints of past years.',
@@ -316,10 +335,12 @@ const personaCatalog: ArtifactSpec = {
           tech_comfort: [4, 'Works in spreadsheets and admin tools all day.'],
           pain_severity: [4, 'Cannot answer a complaint without the booking history.'],
           decision_influence: [5, 'Sets the rules of the program with the dean.'],
+          need_for_reminders: [2, 'Keeps the deadlines of the term in a spreadsheet.'],
+          patience_with_steps: [4, 'Follows a process step by step when a record is needed.'],
         }),
         evidence: [
-          { observation: 'OBS-005', source: 'SRC-003', quote: quotes.approval },
-          { observation: 'OBS-006', source: 'SRC-003', quote: quotes.report },
+          { observation: 'OBS-005', source: 'SRC-003', quote: observationQuotes.approval },
+          { observation: 'OBS-006', source: 'SRC-003', quote: observationQuotes.report },
         ],
         interview_status: 'completed',
       },

@@ -91,7 +91,9 @@ describe('ArtifactDocument', () => {
     expect(links.map((link) => link.textContent)).toContain('Minh')
     expect(screen.getAllByRole('heading', { level: 3 }).length).toBe(3)
     expect(screen.getAllByText('Interviewed').length).toBe(3)
-    await expectText('Third-year undergraduate who wants advice on a research career.')
+    await expectText(
+      'In the third year of the degree, and thinking about a career in research after it.',
+    )
     expect(screen.getAllByText(/Goals:/).length).toBe(3)
     expectNoRole('table')
   })
