@@ -7,6 +7,7 @@ import { type ComponentProps, Suspense } from 'react'
 import { entryAnchorId, useActivityThread } from '@/modules/activity/entities'
 import type { Run } from '@/modules/run/entities'
 import type { Message, Thread } from '@/modules/thread/entities'
+import { PageColumn } from '@/shared/components/frame'
 import { EmptyState, ErrorState, LoadingState } from '@/shared/components/state'
 import { Bubble, BubbleContent } from '@/shared/components/ui/bubble'
 import { Message as MessageRow, MessageContent } from '@/shared/components/ui/message'
@@ -106,13 +107,12 @@ function ThreadChat({
           <PendingReview key={pendingReview.id} interrupt={pendingReview} run={runOnScreen} />
         </ChatColumn>
       )}
-      <ChatColumn className={cn('pb-2', pendingReview === null ? 'pt-4' : 'pt-2')}>
+      <ChatColumn className={cn('pb-1', pendingReview === null ? 'pt-4' : 'pt-2')}>
         <ActivityPrompt
           projectId={projectId}
           thread={thread}
           run={runOnScreen}
           shouldFocus={isEmpty}
-          size={pendingReview === null ? 'compact' : 'slim'}
         />
       </ChatColumn>
       <TargetScroller target={target} />
@@ -201,14 +201,16 @@ function ChatBody({
 /** The lines that stand for the chat while it loads. */
 function ChatLoading() {
   return (
-    <LoadingState
-      label={activityChatMessages.loading}
-      layout="lines"
-      alternate
-      rows={6}
-      gap={4}
-      itemHeight={10}
-    />
+    <PageColumn width="chat" isFlush>
+      <LoadingState
+        label={activityChatMessages.loading}
+        layout="lines"
+        alternate
+        rows={6}
+        gap={4}
+        itemHeight={10}
+      />
+    </PageColumn>
   )
 }
 
