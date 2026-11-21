@@ -95,6 +95,9 @@ const controlNodeSchema = z.object({
   stage: z.string(),
 })
 
+/** What a checkpoint is for: `review` holds documents and its options, `ask` holds the questions of the agent. */
+export const checkpointPurposes = ['review', 'ask'] as const
+
 const checkpointNodeSchema = z.object({
   id: z.string(),
   kind: z.literal('checkpoint'),
@@ -102,6 +105,8 @@ const checkpointNodeSchema = z.object({
   /** The name of the checkpoint as the user reads it. */
   title: z.string(),
   stage: z.string(),
+  /** Absent from a version in which every checkpoint is a review. */
+  purpose: z.enum(checkpointPurposes).default('review'),
   /** What the user is asked when the run pauses here. */
   prompt: z.string(),
   /** The kinds of the artifacts under review. */

@@ -18,7 +18,7 @@ describe('useReviewableCheckpoints', () => {
   })
 
   it('lists the checkpoints of a version', async () => {
-    const { result } = renderHookWithProviders(() => useReviewableCheckpoints(1))
+    const { result } = renderHookWithProviders(() => useReviewableCheckpoints(2))
 
     await waitForSuccess(result)
     expect(result.current.data?.[1]?.title).toBe('Review the analysis')

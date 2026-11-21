@@ -9,6 +9,7 @@ const search: Tool = {
   description: 'Searches the web.',
   uses: { one: 'Searched once', other: 'Searched {count} times' },
   icon: 'search',
+  acts: [],
 }
 
 describe('toolUsesLine', () => {

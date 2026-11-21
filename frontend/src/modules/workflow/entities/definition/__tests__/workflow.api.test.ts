@@ -9,7 +9,7 @@ describe('workflow api', () => {
   it('reads the graph and the names of the definition', async () => {
     const definition = await getWorkflowDefinition()
 
-    expect(definition).toMatchObject({ name: 'requirements_engineering', version: 1 })
+    expect(definition).toMatchObject({ name: 'requirements_engineering', version: 2 })
     expect(definition.nodes.map(({ id }) => id)).toContain('checkpoint_analysis')
     expect(definition.stages.find(({ key }) => key === 'analysis_review')?.title).toBe(
       'Reviewing the analysis',

@@ -17,7 +17,7 @@ describe('the vocabulary of the workflow', () => {
       .filter((linkType) => linkType.agent_only)
       .map(({ key }) => key)
 
-    expect(agentOnly).toEqual(['duplicates', 'supersedes'])
+    expect(agentOnly).toEqual(['duplicates', 'supersedes', 'grounded_in'])
   })
 
   it('parses the definition of the mock', () => {

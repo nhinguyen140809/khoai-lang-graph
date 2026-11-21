@@ -85,7 +85,7 @@ describe('AnswerReviewForm', () => {
     }
     await formOf(undescribed)
 
-    expect(screen.getAllByText('This choice needs a short description from you.')).toHaveLength(2)
+    expect(screen.getAllByText('This choice needs a short description from you.')).toHaveLength(3)
   })
 
   it('sends the default option when nothing else is chosen', async () => {

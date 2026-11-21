@@ -7,7 +7,7 @@ export const definitionRejectedCases: RejectedRequestCase[] = [
   {
     name: 'finds no definition at another version',
     method: HttpMethod.Get,
-    path: `${apiEndpoints.workflowDefinition.path()}?version=2`,
+    path: `${apiEndpoints.workflowDefinition.path()}?version=1`,
     status: HttpStatus.NotFound,
   },
   {

@@ -67,7 +67,7 @@ function run(fields: Partial<Run> & Pick<Run, 'id' | 'thread_id' | 'project_id' 
   return {
     started_by: userId,
     workflow_name: 'requirements_engineering',
-    workflow_version: 1,
+    workflow_version: 2,
     status: 'succeeded',
     current_stage: 'done',
     iteration_count: 0,

@@ -8,7 +8,7 @@ import { useStageSubjects } from '../useStageSubjects'
 
 describe('useStageSubjects', () => {
   it('reads the subjects of each stage that runs once for each, by the key of the stage', async () => {
-    const { result } = renderHookWithProviders(() => useStageSubjects(projectIds.library, 1))
+    const { result } = renderHookWithProviders(() => useStageSubjects(projectIds.library, 2))
 
     await waitFor(() => {
       expect(result.current.get('interviewing')).toBeDefined()

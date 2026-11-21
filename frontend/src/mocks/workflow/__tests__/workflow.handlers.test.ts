@@ -13,7 +13,7 @@ import { definitionRejectedCases } from './workflow.handlers.data'
 
 // The definition file that the mock copies, read from the root of the repository.
 const documented = JSON.parse(
-  readFileSync(resolve(process.cwd(), '../docs/workflow/requirements_engineering.v1.json'), 'utf8'),
+  readFileSync(resolve(process.cwd(), '../docs/workflow/requirements_engineering.v2.json'), 'utf8'),
 ) as Record<string, unknown>
 
 describe('the workflow handlers', () => {
@@ -23,8 +23,7 @@ describe('the workflow handlers', () => {
       path: apiEndpoints.workflowDefinition.path(),
     })
 
-    // Version 1 of the docs lists no tools, and the mock gives it an empty list.
-    expect(answer.body).toEqual({ ...documented, tools: [] })
+    expect(answer.body).toEqual(documented)
   })
 
   it('serve the definition with every kind of run parameter in the all-types scenario', async () => {
@@ -50,7 +49,7 @@ describe('the workflow handlers', () => {
 
   it('let a version be kept for ever, and the current definition not', async () => {
     const path = apiEndpoints.workflowDefinition.path()
-    const version = await callApi({ method: HttpMethod.Get, path: `${path}?version=1` })
+    const version = await callApi({ method: HttpMethod.Get, path: `${path}?version=2` })
     const current = await callApi({ method: HttpMethod.Get, path })
 
     expect(version.headers.get(HttpHeader.CacheControl)).toContain('immutable')

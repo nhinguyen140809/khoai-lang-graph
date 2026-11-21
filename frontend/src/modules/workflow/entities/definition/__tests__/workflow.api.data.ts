@@ -17,10 +17,10 @@ export const sentRequestCases = [
   },
   {
     name: 'reads the workflow definition at a version',
-    call: () => getWorkflowDefinition(1),
+    call: () => getWorkflowDefinition(2),
     request: {
       method: 'GET',
-      path: `${apiEndpoints.workflowDefinition.path()}?version=1`,
+      path: `${apiEndpoints.workflowDefinition.path()}?version=2`,
       body: null,
     },
   },
