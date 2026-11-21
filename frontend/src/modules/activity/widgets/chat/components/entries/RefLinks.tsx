@@ -17,9 +17,9 @@ import {
   CollapsibleTrigger,
 } from '@/shared/components/ui/collapsible'
 
-import { activityChatMessages } from '../activity-chat.constants'
-import { useRefLook } from '../hooks/useRefLook'
-import type { Reference } from '../ref-links.types'
+import { activityChatMessages } from '../../activity-chat.constants'
+import { useRefLook } from '../../hooks/useRefLook'
+import type { Reference } from '../../ref-links.types'
 import { RowButton } from './RowButton'
 
 interface RefLinksProps {

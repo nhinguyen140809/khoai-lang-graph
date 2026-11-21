@@ -9,7 +9,7 @@ import {
 } from '@/modules/run/entities'
 import { SegmentedProgress, SegmentedProgressItem } from '@/shared/components/ui/segmented-progress'
 
-import { activityChatMessages } from '../activity-chat.constants'
+import { activityChatMessages } from '../../activity-chat.constants'
 
 /**
  * The progress of the work as a bar of one segment for each stage of the workflow, without a

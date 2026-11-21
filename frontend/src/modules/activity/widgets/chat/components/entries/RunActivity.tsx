@@ -8,14 +8,14 @@ import { ErrorState, LoadingState } from '@/shared/components/state'
 import { Marker } from '@/shared/components/ui/marker'
 import { formatDateTime } from '@/shared/lib/time'
 
-import { activityChatMessages } from '../activity-chat.constants'
-import { usePhaseOpen } from '../hooks/usePhaseOpen'
-import { useRevealNewMessage } from '../hooks/useRevealNewMessage'
-import { phaseBlocks } from '../phase-blocks.utils'
+import { activityChatMessages } from '../../activity-chat.constants'
+import { usePhaseOpen } from '../../hooks/usePhaseOpen'
+import { useRevealNewMessage } from '../../hooks/useRevealNewMessage'
+import { phaseBlocks } from '../../phase-blocks.utils'
+import { RunStatusLine } from '../states/RunStatusLine'
 import { ChatEntry } from './ChatEntry'
 import { PhaseBlockView } from './PhaseBlockView'
 import { RunActivityProvider } from './RunActivityContext'
-import { RunStatusLine } from './RunStatusLine'
 
 interface RunActivityProps {
   run: Run

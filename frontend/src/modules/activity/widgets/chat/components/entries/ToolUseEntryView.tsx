@@ -17,9 +17,9 @@ import {
   TraceTitle,
 } from '@/shared/components/ui/trace'
 
-import { activityChatMessages } from '../activity-chat.constants'
-import { useOpenWhileWorking } from '../hooks/useOpenWhileWorking'
-import { useRunActivity } from '../hooks/useRunActivity'
+import { activityChatMessages } from '../../activity-chat.constants'
+import { useOpenWhileWorking } from '../../hooks/useOpenWhileWorking'
+import { useRunActivity } from '../../hooks/useRunActivity'
 import { StepNoteLine } from './StepNoteLine'
 
 // The mark that a definition may name for a tool, looked up by its name. A tool that names none or

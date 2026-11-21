@@ -2,7 +2,7 @@
 
 import { TraceCollapsible, TraceCollapsibleContent } from '@/shared/components/ui/trace'
 
-import type { PhaseBlock } from '../phase-blocks.types'
+import type { PhaseBlock } from '../../phase-blocks.types'
 import { ChatEntry } from './ChatEntry'
 import type { PhaseControl } from './PhaseControlContext'
 import { PhaseControlProvider } from './PhaseControlContext'

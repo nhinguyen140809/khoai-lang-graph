@@ -16,7 +16,7 @@ import { hasText } from '@/shared/lib/guards'
 import { useView, type View } from '@/shared/lib/view'
 import { useFocusWhen } from '@/shared/lib/viewport'
 
-import { activityChatMessages } from '../activity-chat.constants'
+import { activityChatMessages } from '../../activity-chat.constants'
 import { StageProgressBar } from './StageProgressBar'
 
 interface FooterProps {

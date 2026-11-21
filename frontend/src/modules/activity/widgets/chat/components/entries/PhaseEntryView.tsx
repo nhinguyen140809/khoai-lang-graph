@@ -9,8 +9,8 @@ import { Face } from '@/shared/components/face'
 import { Marker } from '@/shared/components/ui/marker'
 import { TraceDescription, TraceIcon, TraceLine, TraceTitle } from '@/shared/components/ui/trace'
 
-import { activityChatMessages } from '../activity-chat.constants'
-import { useRunActivity } from '../hooks/useRunActivity'
+import { activityChatMessages } from '../../activity-chat.constants'
+import { useRunActivity } from '../../hooks/useRunActivity'
 
 interface PhaseEntryViewProps {
   work: WorkEntry

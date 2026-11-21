@@ -5,7 +5,7 @@ import { buildRun } from '@/mocks/runs/fixtures/runs.fixtures'
 import { projectIds, runIds } from '@/mocks/shared/db'
 import { expectText } from '@/test/steps'
 
-import { useRunActivity } from '../../hooks/useRunActivity'
+import { useRunActivity } from '../../../hooks/useRunActivity'
 import { RunActivityProvider } from '../RunActivityContext'
 
 const run = buildRun({

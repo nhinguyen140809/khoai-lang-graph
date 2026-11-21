@@ -10,7 +10,7 @@ import { apiEndpoints } from '@/shared/api/endpoints'
 import { renderWithProviders } from '@/test/render'
 import { expectNoText, expectText, pressRole } from '@/test/steps'
 
-import { activityChatMessages } from '../../activity-chat.constants'
+import { activityChatMessages } from '../../../activity-chat.constants'
 import { RunActivityProvider } from '../RunActivityContext'
 import { ToolUseEntryView } from '../ToolUseEntryView'
 

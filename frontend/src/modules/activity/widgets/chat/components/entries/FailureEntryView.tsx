@@ -5,7 +5,7 @@ import { useWorkWords } from '@/modules/run/entities'
 import { RetryRunButton } from '@/modules/run/features/retry'
 import { TraceLine, TraceTitle } from '@/shared/components/ui/trace'
 
-import { useRunActivity } from '../hooks/useRunActivity'
+import { useRunActivity } from '../../hooks/useRunActivity'
 
 /**
  * How a phase failed, as the last item under it, in the colour of an error, with the button that

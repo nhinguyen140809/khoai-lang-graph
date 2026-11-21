@@ -4,9 +4,9 @@ import { useRef } from 'react'
 
 import { ErrorState, LoadingState } from '@/shared/components/state'
 
-import { activityChatMessages } from '../activity-chat.constants'
-import type { OlderRuns as OlderRunsLoad } from '../chat-state.types'
-import { useLoadOlderRuns } from '../hooks/useLoadOlderRuns'
+import { activityChatMessages } from '../../activity-chat.constants'
+import type { OlderRuns as OlderRunsLoad } from '../../chat-state.types'
+import { useLoadOlderRuns } from '../../hooks/useLoadOlderRuns'
 
 interface OlderRunsProps {
   olderRuns: OlderRunsLoad

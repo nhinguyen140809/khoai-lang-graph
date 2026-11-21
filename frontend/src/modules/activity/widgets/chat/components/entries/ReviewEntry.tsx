@@ -6,7 +6,7 @@ import type { ReactNode } from 'react'
 import type { Interrupt } from '@/modules/review/entities'
 import { answerLines, decisionOption } from '@/modules/review/entities'
 
-import { activityChatMessages } from '../activity-chat.constants'
+import { activityChatMessages } from '../../activity-chat.constants'
 
 /** How an interrupt was answered: by the user, or by the defaults when nobody was asked. */
 function answeredWords(interrupt: Interrupt): string {

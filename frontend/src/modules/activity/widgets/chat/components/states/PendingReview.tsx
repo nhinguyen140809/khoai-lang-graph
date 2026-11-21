@@ -12,7 +12,7 @@ import { Face } from '@/shared/components/face'
 import { Button } from '@/shared/components/ui/button'
 import { toneClasses } from '@/shared/lib/tone'
 
-import { activityChatMessages } from '../activity-chat.constants'
+import { activityChatMessages } from '../../activity-chat.constants'
 
 /**
  * The review that waits for the user, laid over the end of the chat instead of an entry among the

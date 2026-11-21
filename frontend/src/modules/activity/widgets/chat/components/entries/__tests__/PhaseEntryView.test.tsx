@@ -7,7 +7,7 @@ import { workEntries } from '@/modules/run/entities'
 import { renderWithProviders } from '@/test/render'
 import { expectText, pressRole } from '@/test/steps'
 
-import { activityChatMessages } from '../../activity-chat.constants'
+import { activityChatMessages } from '../../../activity-chat.constants'
 import { FailureEntryView } from '../FailureEntryView'
 import { PhaseEntryView } from '../PhaseEntryView'
 import { RunActivityProvider } from '../RunActivityContext'

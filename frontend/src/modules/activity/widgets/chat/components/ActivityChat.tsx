@@ -26,11 +26,11 @@ import { RouteParam, useRouteParam } from '@/shared/routes'
 import { activityChatMessages, emptyMessages } from '../activity-chat.constants'
 import type { ChatState, OlderRuns as OlderRunsLoad } from '../chat-state.types'
 import { useThreadChat } from '../hooks/useThreadChat'
-import { ActivityPrompt } from './ActivityPrompt'
-import { LazyRun } from './LazyRun'
-import { OlderRuns } from './OlderRuns'
-import { PendingReview } from './PendingReview'
-import { RunActivity } from './RunActivity'
+import { RunActivity } from './entries/RunActivity'
+import { ActivityPrompt } from './prompt/ActivityPrompt'
+import { LazyRun } from './states/LazyRun'
+import { OlderRuns } from './states/OlderRuns'
+import { PendingReview } from './states/PendingReview'
 
 /** The column of the chat: wide enough to read in comfort, with room at its sides. */
 function ChatColumn({ className, ...props }: ComponentProps<'div'>) {

@@ -21,8 +21,8 @@ import {
 import { RelativeTime } from '@/shared/components/ui/relative-time'
 import { toneClasses } from '@/shared/lib/tone'
 
-import { usePhaseControl } from '../hooks/usePhaseControl'
-import { useRunActivity } from '../hooks/useRunActivity'
+import { usePhaseControl } from '../../hooks/usePhaseControl'
+import { useRunActivity } from '../../hooks/useRunActivity'
 import { FailureEntryView } from './FailureEntryView'
 import { MessageEntry } from './MessageEntry'
 import { PhaseEntryView } from './PhaseEntryView'

@@ -13,7 +13,7 @@ import { Glint, Shimmer } from '@/shared/components/animation'
 import { Face } from '@/shared/components/face'
 import { toneClasses } from '@/shared/lib/tone'
 
-import { runStatusLineStatuses } from '../activity-chat.constants'
+import { runStatusLineStatuses } from '../../activity-chat.constants'
 
 /**
  * The last line of a run that has not ended: what it is doing now, so that the reader at the end
