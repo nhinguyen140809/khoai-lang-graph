@@ -1,4 +1,4 @@
-import type { Act, ActKey, Slot } from './act.types'
+import type { Act, ActKey, ActSize, Slot } from './act.types'
 
 /**
  * Where each slot is, as shares of the size of the face from its middle (to the right and down), and
@@ -462,3 +462,10 @@ export const propSize = 0.42
  * it only when its act has none.
  */
 export const genericMood = 'working'
+
+/** The frame of an actor by the size of its face; whole class names, so that they are generated. */
+export const actorFrameClasses = {
+  lg: 'actor-frame-lg',
+  xl: 'actor-frame-xl',
+  '2xl': 'actor-frame-2xl',
+} as const satisfies Record<ActSize, string>

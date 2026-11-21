@@ -45,13 +45,8 @@ export function RunStatusLine({ run }: { run: Run }) {
     <div
       role="status"
       aria-live="polite"
-      // What the acts draw around the face and its turning reach past the face, up to a face and a
-      // half above and below it. Left to overflow, that moves the end of the scrolled chat with every
-      // frame, so the line keeps that room above and below it and clips what goes past it. Nothing is
-      // clipped at the sides, where the acts go left and right of the face and moving them changes
-      // no height.
       className={cn(
-        'flex items-center overflow-x-visible overflow-y-clip px-1 py-9 text-sm text-muted-foreground',
+        'flex items-center px-1 pt-6 text-sm text-muted-foreground',
         toneClasses.secondary,
       )}
     >

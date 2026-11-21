@@ -23,3 +23,46 @@
 [data-slot='act-prop'][data-tone='muted'] {
   color: var(--muted-foreground);
 }
+
+/*
+ * The frame of an actor: a box of the size of its face that keeps the room that its acts and the
+ * turn of its face reach into, so that what moves around the face never changes the layout of what
+ * is around it. The frame is larger than the layout it takes, by the room on each side, which
+ * its negative margins give back, so a place that puts an actor there is laid out as if it held the
+ * face alone. What goes past the frame above and below is cut off, and with it everything that
+ * would change the height that a page scrolls: the room is a share of the face, a little more
+ * than the acts reach. An actor with another agent beside it, as in an interview, takes the room
+ * that the other agent needs at its right, so that what stands after it is not covered.
+ */
+@utility actor-frame {
+  --actor-reach: calc(var(--actor-face) * 0.65);
+  --actor-reach-end: var(--actor-reach);
+  /* The room of the other agent, beside the face, that the layout keeps. */
+  --actor-partner-room: calc(var(--actor-face) * 1.1);
+  display: inline-flex;
+  flex-shrink: 0;
+  overflow-x: visible;
+  overflow-y: clip;
+  pointer-events: none;
+  padding: var(--actor-reach) var(--actor-reach-end) var(--actor-reach) var(--actor-reach);
+  margin: calc(var(--actor-reach) * -1) calc(var(--actor-reach-end) * -1)
+    calc(var(--actor-reach) * -1) calc(var(--actor-reach) * -1);
+
+  &[data-partner='true'] {
+    --actor-reach-end: calc(var(--actor-face) * 2.1);
+    margin-right: calc(var(--actor-partner-room) - var(--actor-reach-end));
+  }
+}
+
+/* The size of the face that the room of a frame is a share of. */
+@utility actor-frame-lg {
+  --actor-face: 2.5rem;
+}
+
+@utility actor-frame-xl {
+  --actor-face: 3.5rem;
+}
+
+@utility actor-frame-2xl {
+  --actor-face: 5rem;
+}
