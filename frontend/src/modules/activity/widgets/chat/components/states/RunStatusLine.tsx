@@ -15,6 +15,7 @@ import { Glint, Shimmer } from '@/shared/components/animation'
 import { toneClasses } from '@/shared/lib/tone'
 
 import { runStatusLineStatuses, statusLineSlots } from '../../activity-chat.constants'
+import { usePartnerSeed } from '../../hooks/usePartnerSeed'
 
 /**
  * The last line of a run that has not ended: what it is doing now, so that the reader at the end
@@ -23,7 +24,8 @@ import { runStatusLineStatuses, statusLineSlots } from '../../activity-chat.cons
  * the foreground. The agent at work stands before the words, large, with what it does drawn around
  * it: the acts of the tool that it uses, else those of its stage. When the workflow names none, it
  * has the mood of its phase, or of the status of the run between two phases. A glint stands where no
- * agent has run yet. A run that waits for the user, has ended or failed shows none: its review, its
+ * agent has run yet. A phase that works on a persona, such as an interview, draws the persona as a second
+ * agent, whose face comes from its role and its name.  A run that waits for the user, has ended or failed shows none: its review, its
  * answer and its failure are the last things the chat shows.
  */
 export function RunStatusLine({ run }: { run: Run }) {
@@ -31,6 +33,7 @@ export function RunStatusLine({ run }: { run: Run }) {
   const stageTitle = useRunStageTitle(run)
   const lastWork = useRunLastWork(run)
   const acts = useRunActs(run)
+  const partner = usePartnerSeed(lastWork?.subjectItemId)
   const agentRole = lastWork?.agentRole
   // The mood of the phase at work; between two phases, the mood of the status of the run.
   const mood = lastWork?.status === 'running' ? workMoodOf(lastWork) : look.mood
@@ -58,6 +61,7 @@ export function RunStatusLine({ run }: { run: Run }) {
           seed={agentRole}
           size="xl"
           acts={acts}
+          partner={partner}
           slots={statusLineSlots}
           {...(acts.length === 0 && { mood })}
         />
