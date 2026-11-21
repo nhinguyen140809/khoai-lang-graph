@@ -16,6 +16,7 @@
 @import './styles/react-flow.css';
 
 /* The styles of a component sit in its folder and are listed here, as only an import from this file reaches the tailwind that makes the utilities. */
+@import '../shared/components/act/act.css';
 @import '../shared/components/animation/animation.css';
 @import '../shared/components/face/face.css';
 @import '../shared/components/face/motion/face-motion.css';
