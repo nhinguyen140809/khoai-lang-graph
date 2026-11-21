@@ -908,6 +908,19 @@ def _reading_report(readings: Sequence[tuple[str, str]]) -> str:
     return lines[0] if len(lines) == 1 else "\n".join(f"- {line}" for line in lines)
 
 
+def _group_name(name: str, known: list[str]) -> str:
+    """The name of a stakeholder group as the earlier documents wrote it: a name that differs
+    from a known one only in case or spacing is that one; any other, with its spacing tidied."""
+
+    def plain(text: str) -> str:
+        return " ".join(text.casefold().split())
+
+    return next(
+        (existing for existing in known if plain(existing) == plain(name)),
+        " ".join(name.split()),
+    )
+
+
 @safe_node
 def stakeholder_miner_node(
     state: REState,
@@ -937,6 +950,7 @@ def stakeholder_miner_node(
     observations: list[ItemRefDict] = []
     ref_number = 0
     readings: list[tuple[str, str]] = []
+    known_groups: list[str] = []
     for record in source_records:
         document = str(record["content"].get("text", ""))
         draft: MinerOutput = _invoke(
@@ -946,6 +960,7 @@ def stakeholder_miner_node(
             {
                 "output_language": _language(cfg),
                 "intent": state["initial_intent"],
+                "known_groups": json.dumps(known_groups, ensure_ascii=False),
                 "source": json.dumps(prompt_view(record), ensure_ascii=False),
                 "document": document,
             },
@@ -974,6 +989,9 @@ def stakeholder_miner_node(
                     source=str(record["key"]),
                 )
                 continue
+            mined.stakeholder_name = _group_name(str(mined.stakeholder_name), known_groups)
+            if mined.stakeholder_name not in known_groups:
+                known_groups.append(mined.stakeholder_name)
             ref_number += 1
             item = sink.add_item(
                 corpus["artifact_id"],
@@ -1184,8 +1202,13 @@ def persona_generator_node(
         content = persona_draft.model_dump(mode="json", exclude={"ref"})
         # The trait as the user reads it comes from the aspect, not from the model.
         titles = {entry["key"]: entry["title"] for entry in aspects}
+        groups = {entry["key"]: ASPECT_GROUP_TITLES.get(entry["tier"]) for entry in aspects}
         content["scores"] = [
-            {**score, "title": titles.get(score["aspect"], score["aspect"])}
+            {
+                **score,
+                "title": titles.get(score["aspect"], score["aspect"]),
+                "group": groups.get(score["aspect"]),
+            }
             for score in content.get("scores", [])
         ]
         if allowed:
@@ -1593,6 +1616,14 @@ def plan_lines_of(plan: Mapping[str, Any]) -> str:
         lines.extend(f"  data to collect: {item}" for item in needed.get(str(topic), []))
     lines.extend(f"stop when: {condition}" for condition in plan.get("stopping_conditions", []))
     return "\n".join(lines)
+
+
+# The headings of the groups of characteristics of a persona, by the tier of the aspect: the
+# aspects that the system defines for every persona, and the ones that the plan adds.
+ASPECT_GROUP_TITLES = {
+    "system": "Standard characteristics",
+    "plan": "Characteristics for this project",
+}
 
 
 def persona_aspect_list(plan: Mapping[str, Any] | None) -> list[dict[str, str]]:

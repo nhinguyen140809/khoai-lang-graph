@@ -12,7 +12,8 @@ What is copied:
 - every `docs/schemas/{artifacts,items}/*.json` to `domain/content_schemas/`;
 - every `docs/workflow/requirements_engineering.v<N>.json` to
   `agents/requirements_engineering/definition.v<N>.json`;
-- `docs/workflow/definition.schema.json` to `agents/requirements_engineering/`;
+- `docs/workflow/definition.schema.json` and `docs/workflow/acts.catalog.json` to
+  `agents/requirements_engineering/`;
 - every `docs/workflow/prompts/*.md` (the template and the example prompts) to
   `agents/requirements_engineering/prompts/`. The prompts of the other roles live only in the
   package.
@@ -48,6 +49,7 @@ def plan() -> dict[Path, Path]:
         if match is not None:
             pairs[WORKFLOW_DST / f"definition.v{match.group(1)}.json"] = source
     pairs[WORKFLOW_DST / "definition.schema.json"] = WORKFLOW_SRC / "definition.schema.json"
+    pairs[WORKFLOW_DST / "acts.catalog.json"] = WORKFLOW_SRC / "acts.catalog.json"
     for source in sorted((WORKFLOW_SRC / "prompts").glob("*.md")):
         pairs[WORKFLOW_DST / "prompts" / source.name] = source
     return pairs

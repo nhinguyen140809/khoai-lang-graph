@@ -41,6 +41,15 @@
     "x-ui-display": {
       "enum": ["document", "heading", "table", "cards", "transcript", "profile"]
     },
+    "x-ui-media": {
+      "enum": ["text", "diagram"],
+      "description": "What the content of the kind is: text, or a diagram. A client draws a block of its own for each. When the keyword is absent the content is text."
+    },
+    "x-ui-icon": {
+      "type": ["string", "null"],
+      "pattern": "^[a-z][a-z0-9-]*$",
+      "description": "The name of the icon that a client puts on the block of the kind, such as user. null, or no keyword, gives the block no icon."
+    },
     "x-ui-navigable": {
       "type": "boolean",
       "description": "Item kinds only. Whether the items of the kind can be reached one by one: a row in the outline of the document that holds them, and a page of their own. Items short enough to read in place in the page of the document, such as the messages of an interview, are not navigable."
@@ -63,6 +72,34 @@
       "uniqueItems": true,
       "items": { "type": "string" },
       "description": "Item kinds only. The fields shown as table columns, on a card, and on the card of a profile: the fields that read on one line under its title, then the others. The name `key` stands for the key of the item (REQ-001), which a table shows as a column at that place; it is never the first name, and it is no property."
+    },
+    "x-ui-sections": {
+      "type": "array",
+      "minItems": 1,
+      "items": {
+        "type": "object",
+        "additionalProperties": false,
+        "required": ["title", "fields"],
+        "properties": {
+          "title": {
+            "type": "string",
+            "minLength": 1,
+            "description": "The heading of the section as shown to the user: a short, formal noun phrase."
+          },
+          "fields": {
+            "type": "array",
+            "minItems": 1,
+            "uniqueItems": true,
+            "items": { "type": "string" },
+            "description": "The names of the properties that the section holds, in order."
+          }
+        }
+      },
+      "description": "Item kinds whose display is profile. The blocks of the page of one item, each with a heading and the fields it holds, in order. The title field and the fields of the line under the title are not in a block, and a field is in at most one. A field in no block is drawn after the blocks."
+    },
+    "x-ui-group-by": {
+      "type": "string",
+      "description": "Item kinds whose display is cards. The name of a property: the items of a run are drawn together in one card for each of its values, headed by the value, and each item is a row of the card."
     },
     "x-ui-field-order": {
       "type": "array",
@@ -115,7 +152,9 @@
           "x-ui-navigable": false,
           "x-ui-title-field": false,
           "x-ui-role-field": false,
-          "x-ui-list-fields": false
+          "x-ui-list-fields": false,
+          "x-ui-sections": false,
+          "x-ui-group-by": false
         }
       },
       "else": {
@@ -174,6 +213,10 @@
         "readOnly": {
           "const": true
         },
+        "x-ui-hidden": {
+          "const": true,
+          "description": "The page of an item and the document that holds it do not show the field; the content keeps it."
+        },
         "x-ui-widget": {
           "enum": ["text", "textarea", "select", "number", "list", "tags", "object-list", "separator", "avatar-list", "badge", "rating-list", "boolean"]
         },
@@ -188,6 +231,10 @@
         "x-ui-note-field": {
           "type": "string",
           "description": "Of a rating-list: the field of an entry that says why, shown under the rating."
+        },
+        "x-ui-group-field": {
+          "type": "string",
+          "description": "Of a rating-list: the field of an entry whose text is the heading of the group that the entry belongs to; the groups are shown as blocks side by side. An entry with no text there belongs to a group with no heading."
         },
         "x-value-list": {
           "type": "string",

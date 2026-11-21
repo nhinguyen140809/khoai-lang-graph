@@ -138,3 +138,34 @@ def test_every_tool_has_its_words_and_a_mark_the_schema_allows(
         assert tool["uses"]["one"].strip(), key
         assert "{count}" in tool["uses"]["other"], key
         assert tool["icon"] in marks, key
+
+
+def test_act_catalog_keys_are_unique_and_described() -> None:
+    catalog = json.loads(
+        (
+            resources.files("khoailanggraph.agents.requirements_engineering") / "acts.catalog.json"
+        ).read_text(encoding="utf-8")
+    )
+    keys = [entry["key"] for entry in catalog["acts"]]
+    assert len(keys) == len(set(keys))
+    for entry in catalog["acts"]:
+        assert entry["title"].strip(), entry["key"]
+        assert entry["description"].strip(), entry["key"]
+
+
+def test_every_act_a_stage_or_a_tool_names_is_in_the_catalog() -> None:
+    catalog = wf.act_catalog()
+    named = [
+        (f"stage {stage['key']}", act)
+        for stage in wf.DEFINITION["stages"]
+        for act in stage.get("acts", [])
+    ] + [(f"tool {key}", act) for key, tool in wf.tools().items() for act in tool.get("acts", [])]
+    assert named, "the definition names no act"
+    for owner, act in named:
+        assert act in catalog, f"{owner} names the unknown act {act}"
+
+
+def test_a_stage_with_acts_is_not_internal() -> None:
+    for stage in wf.DEFINITION["stages"]:
+        if stage["internal"]:
+            assert not stage.get("acts"), stage["key"]

@@ -9,6 +9,7 @@
   "x-key-prefix": "LN",
   "x-ui-display": "table",
   "x-ui-navigable": true,
+  "x-ui-icon": "lightbulb",
   "x-ui-title-field": "title",
   "x-ui-list-fields": [
     "title",

@@ -43,6 +43,7 @@ VALID_PERSONA: dict[str, Any] = {
             "title": "Comfort with technology",
             "score": 5,
             "rationale": "Uses his phone for everything.",
+            "group": "Standard characteristics",
         }
     ],
     "evidence": [

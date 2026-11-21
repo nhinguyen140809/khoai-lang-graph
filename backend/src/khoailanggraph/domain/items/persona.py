@@ -26,6 +26,7 @@ class PersonaScore(BaseModel):
     title: str = ""
     score: int = Field(ge=1, le=5)
     rationale: str
+    group: str | None = None
 
 
 class PersonaContent(BaseModel):

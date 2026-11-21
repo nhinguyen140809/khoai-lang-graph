@@ -147,6 +147,8 @@ def test_full_workflow_succeeds_and_passes_domain_rules() -> None:
         content = persona["content"]
         assert content["evaluative_dimension"]
         assert content["grounded_in"], "every persona is grounded in observations"
+        assert content["scores"], "every persona is scored"
+        assert all(score["group"] for score in content["scores"]), "each trait has a group"
         assert all(key in obs_by_key for key in content["grounded_in"])
         for entry in content["evidence"]:
             assert entry["quote"] == str(obs_by_key[entry["observation"]]["content"]["evidence"])

@@ -190,6 +190,11 @@
         "parent": {
           "anyOf": [{ "$ref": "#/$defs/name" }, { "type": "null" }],
           "description": "The stage this one belongs to, or null for a top-level stage. A stage with children groups them as a tree; it is listed before its children."
+        },
+        "acts": {
+          "type": "array",
+          "items": { "$ref": "#/$defs/name" },
+          "description": "The acts a client shows around the face of the agent while the stage runs, one after another and then again from the first. Each names an act of the act catalog. Omitted or empty: the client shows only the mood of the face."
         }
       },
       "required": ["key", "title", "internal", "parent"]
@@ -535,6 +540,11 @@
         "icon": {
           "enum": ["search", "tool"],
           "description": "The mark of the tool in a client, from a fixed set that a client draws."
+        },
+        "acts": {
+          "type": "array",
+          "items": { "$ref": "#/$defs/name" },
+          "description": "The acts a client shows around the face of the agent while a use of the tool runs, one after another and then again from the first. They take the place of the acts of the stage for as long as the use runs. Each names an act of the act catalog."
         }
       },
       "required": ["key", "title", "description", "uses", "icon"]
