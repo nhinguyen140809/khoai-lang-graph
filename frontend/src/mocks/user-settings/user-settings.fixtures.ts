@@ -3,13 +3,14 @@ import type { Me, UserSettings } from '@/modules/user/entities'
 import { userId } from '../shared/db'
 
 /**
- * The settings of the user of the examples, who has saved some: a dark theme, runs of 60 steps at
+ * The settings of the user of the examples, who has saved some: a dark theme, the user view, runs of 60 steps at
  * most.
  */
 export const userSettingsFixture: UserSettings = {
   user_id: userId,
   theme: 'dark',
   ui_language: 'en',
+  preferred_view: 'user',
   default_output_language: 'en',
   default_run_config: {
     review_checkpoints: null,
@@ -29,6 +30,7 @@ export function defaultUserSettings(user: Me): UserSettings {
     user_id: user.id,
     theme: 'system',
     ui_language: 'en',
+    preferred_view: null,
     default_output_language: 'en',
     default_run_config: {
       review_checkpoints: null,
