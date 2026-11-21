@@ -9,6 +9,11 @@ interface ShimmerProps extends Omit<ComponentProps<'span'>, 'color'> {
   color?: Tone | undefined
   /** How long the light takes to cross the text once, in milliseconds. */
   duration?: number | undefined
+  /**
+   * `light`, the default: the text keeps its color and a band of the tone crosses it. `solid`: the
+   * text is in the tone and a narrower band of the foreground crosses it; it needs a `color`.
+   */
+  variant?: 'light' | 'solid' | undefined
   /** Whether the light moves; off, the text reads as it does without the component. */
   isActive?: boolean | undefined
   /** Puts the light on the element it wraps instead of a span of its own. */
@@ -25,6 +30,7 @@ interface ShimmerProps extends Omit<ComponentProps<'span'>, 'color'> {
 function Shimmer({
   color,
   duration,
+  variant = 'light',
   isActive = true,
   asChild = false,
   className,
@@ -38,7 +44,10 @@ function Shimmer({
       data-active={isActive}
       className={cn(
         'shimmer motion-reduce:shimmer-none',
-        color !== undefined && ['shimmer-tone', toneClasses[color]],
+        color !== undefined && [
+          variant === 'solid' ? 'shimmer-tone-solid' : 'shimmer-tone',
+          toneClasses[color],
+        ],
         !isActive && 'shimmer-none',
         className,
       )}

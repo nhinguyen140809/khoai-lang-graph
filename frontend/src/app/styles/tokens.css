@@ -41,6 +41,34 @@
 
   --background: #fafafd;
   --foreground: #403f53;
+  /* The color of the eyes and the brows of a face: the dark color that the interface puts on bright colors, in both themes. */
+  --face-features: var(--secondary-foreground);
+  /*
+   * The soft colors that a name takes its color from (the `--hue-` tokens): soft colors from the Night
+   * Owl palette, in the order of their hue around the color wheel. They are paler in the dark theme
+   * and a little deeper in the light theme, where the same pastel would fade into the page.
+   * `--face-lift` is what a face mixes into its
+   * colors to make them lighter, and `--face-layer-shade` is how much darker than its face the depth of a face is; `--face-text-shade` is how much of the text color the
+   * name of an agent takes, so that it reads on the page: none in the dark theme.
+   */
+  --hue-orange: #f09a6e;
+  --hue-yellow: #f7be51;
+  --hue-lime: #96d174;
+  --hue-mint: #5cc7ad;
+  --hue-sky: #5fb8e6;
+  --hue-blue: #7a9ce6;
+  --hue-violet: #b387e3;
+  --hue-pink: #e783b4;
+  --hue-rose: #ef7c8c;
+  --hue-coral: #f28979;
+  --face-lift: #ffffff;
+  /* How much of `--face-lift` the pale base of a face takes. The dark theme takes less: its colors are paler to begin with. */
+  --face-base-lift: 50%;
+  --face-text-shade: 48%;
+  --face-layer-shade: 30%;
+  /* How the deep color of a face is made from its token: the share of its chroma that it keeps, and a ceiling on the chroma, so that a vivid color does not glare. Its light is the light of the token, which is never lowered. The light theme keeps nearly all the chroma, as its colors are deep enough that more turns into a hard spot. */
+  --face-core-chroma: 1.16;
+  --face-core-chroma-max: 0.13;
   --card: #efeff4;
   --card-foreground: #403f53;
   --popover: #efeff4;
@@ -55,6 +83,7 @@
   --muted-foreground: #4b6875;
   --accent: #d3e8f8;
   --accent-foreground: #403f53;
+  --accent-line: #228cdd;
   --destructive: #b50c1b;
   --destructive-foreground: #ffffff;
   --destructive-strong: var(--destructive);
@@ -64,6 +93,7 @@
   --warning: #ffa37f;
   --warning-foreground: #011627;
   --warning-strong: #a94e28;
+  --warning-line: #fa6934;
   --border: #cedadf;
   --input: #c5ccda;
   --ring: #3755cd;
@@ -78,7 +108,6 @@
   --sidebar-primary-foreground: #ffffff;
   --sidebar-accent: #d3e8f8;
   --sidebar-accent-foreground: #403f53;
-  --accent-line: #228cdd;
   --sidebar-border: #cedadf;
   --sidebar-ring: #3755cd;
 
@@ -88,13 +117,29 @@
   --shadow: 0px 1px 3px 0px rgb(1 22 39 / 0.04), 0px 1px 2px -1px rgb(1 22 39 / 0.04);
   --shadow-md: 0px 1px 3px 0px rgb(1 22 39 / 0.04), 0px 2px 4px -1px rgb(1 22 39 / 0.04);
   --shadow-lg: 0px 1px 3px 0px rgb(1 22 39 / 0.04), 0px 4px 6px -1px rgb(1 22 39 / 0.04);
-  --warning-line: #fa6934;
   --shadow-xl: 0px 1px 3px 0px rgb(1 22 39 / 0.04), 0px 8px 10px -1px rgb(1 22 39 / 0.04);
   --shadow-2xl: 0px 1px 3px 0px rgb(1 22 39 / 0.1);
   --radius: 0.375rem;
 }
 
 .dark {
+  --hue-orange: #f9ae91;
+  --hue-yellow: #ffe08f;
+  --hue-lime: #b6eb9a;
+  --hue-mint: #9ae6d4;
+  --hue-sky: #8fd6f3;
+  --hue-blue: #9db8ff;
+  --hue-violet: #d1a9f0;
+  --hue-pink: #f5a3c7;
+  --hue-rose: #ff9aa8;
+  --hue-coral: #faa495;
+  --face-text-shade: 0%;
+  --face-layer-shade: 22%;
+  --face-lift: #d6deeb;
+  --face-base-lift: 22%;
+  --face-core-chroma: 1.3;
+  --face-core-chroma-max: 0.16;
+
   --background: #011627;
   --foreground: #d6deeb;
   --card: #021320;
@@ -111,6 +156,7 @@
   --muted-foreground: #a0b5c9;
   --accent: #14344f;
   --accent-foreground: #d6deeb;
+  --accent-line: #57a8e5;
   --destructive: #fe7770;
   --destructive-foreground: #011627;
   --destructive-strong: var(--destructive);
@@ -120,6 +166,7 @@
   --warning: #ffa37f;
   --warning-foreground: #011627;
   --warning-strong: var(--warning);
+  --warning-line: var(--warning-strong);
   --border: #5e81ce52;
   --input: #5f7e97;
   --ring: #8fa5ff;
@@ -150,7 +197,6 @@
 @theme inline {
   --font-sans: var(--font-ui);
   --font-mono: var(--font-code);
-  --accent-line: #57a8e5;
   --font-heading: var(--font-ui);
   --color-background: var(--background);
   --color-foreground: var(--foreground);
@@ -160,9 +206,9 @@
   --color-popover-foreground: var(--popover-foreground);
   --color-primary: var(--primary);
   --color-primary-foreground: var(--primary-foreground);
-  --warning-line: var(--warning-strong);
   --color-secondary: var(--secondary);
   --color-secondary-foreground: var(--secondary-foreground);
+  --color-secondary-strong: var(--secondary-strong);
   --color-muted: var(--muted);
   --color-muted-foreground: var(--muted-foreground);
   --color-accent: var(--accent);
@@ -202,7 +248,6 @@
   --radius-4xl: calc(var(--radius) * 2.6);
 
   --shadow-2xs: var(--shadow-2xs);
-  --color-secondary-strong: var(--secondary-strong);
   --shadow-xs: var(--shadow-xs);
   --shadow-sm: var(--shadow-sm);
   --shadow: var(--shadow);

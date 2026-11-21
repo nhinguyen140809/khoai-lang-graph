@@ -46,7 +46,7 @@ export function ChartCard() {
           <YAxis tickLine={false} axisLine={false} allowDecimals={false} />
           <ChartTooltip cursor={false} content={<ChartTooltipContent hideLabel />} />
           <Bar dataKey="count" radius={[4, 4, 0, 0]}>
-            {/* The light ramp is below 2:1 at its light end, so each bar also shows its value. */}
+            {/* A bar shows its value too, so that its meaning does not rest on its color alone. */}
             <LabelList dataKey="count" position="top" className="fill-foreground" fontSize={11} />
           </Bar>
         </BarChart>

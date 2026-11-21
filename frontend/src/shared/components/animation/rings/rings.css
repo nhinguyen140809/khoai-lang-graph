@@ -1,0 +1,54 @@
+/*
+ * Two rings that turn against each other while each goes through three shapes. The shapes are the
+ * `path()` values that the element sets as `--ring-a`, `--ring-b` and `--ring-c`; each has the same
+ * six curves, so the browser can move between them.
+ */
+@theme {
+  --blur-rings: 0.25px;
+  --duration-rings-turn-first: 4200ms;
+  --duration-rings-turn-second: 2600ms;
+  --duration-rings-morph-first: 3600ms;
+  --duration-rings-morph-second: 2800ms;
+  --animate-rings-turn-first: rings-turn var(--duration-rings-turn-first) linear infinite;
+  --animate-rings-turn-second: rings-turn var(--duration-rings-turn-second) linear infinite reverse;
+  --animate-rings-morph-first: rings-morph var(--duration-rings-morph-first) var(--ease-standard)
+    infinite;
+  --animate-rings-morph-second: rings-morph var(--duration-rings-morph-second) var(--ease-standard)
+    infinite;
+
+  @keyframes rings-turn {
+    to {
+      transform: rotate(360deg);
+    }
+  }
+
+  @keyframes rings-morph {
+    0%,
+    100% {
+      d: var(--ring-a);
+    }
+    33% {
+      d: var(--ring-b);
+    }
+    66% {
+      d: var(--ring-c);
+    }
+  }
+}
+
+@utility rings-ring {
+  transform-box: view-box;
+  transform-origin: center;
+}
+
+@utility rings-path {
+  d: var(--ring-a);
+  /* A little soft at the edge: less than a pixel of blur at the sizes that the rings are shown in. */
+  filter: blur(var(--blur-rings));
+}
+
+@media (prefers-reduced-motion: reduce) {
+  [data-slot='rings'] * {
+    animation-play-state: paused;
+  }
+}
