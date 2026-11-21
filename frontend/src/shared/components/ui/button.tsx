@@ -58,12 +58,12 @@ const buttonStyles = cva(
         class:
           'focus-visible:border-(--tone-strong)/40 focus-visible:ring-(--tone-strong)/20 dark:focus-visible:ring-(--tone-strong)/40',
       },
-      // Neutral solid and ghost buttons keep the look of the shadcn/ui secondary and ghost variants.
+      // Neutral solid and ghost buttons keep a pale look, the muted fill leaning to the page, for the shadcn/ui secondary and ghost variants.
       {
         variant: 'solid',
         color: 'neutral',
         class:
-          'hover:bg-[color-mix(in_oklch,var(--secondary),var(--foreground)_5%)] aria-expanded:bg-secondary aria-expanded:text-secondary-foreground',
+          'hover:bg-[color-mix(in_oklch,var(--tone),var(--foreground)_5%)] aria-expanded:bg-(--tone) aria-expanded:text-foreground',
       },
       // A neutral outline button looks like an outline Toggle: the input border, no fill, and the
       // muted fill on hover.

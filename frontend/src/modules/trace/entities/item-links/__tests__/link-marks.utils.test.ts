@@ -60,7 +60,7 @@ describe('fieldMarksOf', () => {
       { fields },
     )
 
-    expect(marks.get('statement')?.[0]?.color).toBe('chart')
+    expect(marks.get('statement')?.[0]?.color).toBe('secondary')
   })
 
   it('merges overlapping quotes of one field into one mark with both links', () => {
@@ -96,7 +96,7 @@ describe('fieldMarksOf', () => {
       { fields },
     )
 
-    expect(marks.get('statement')?.[0]?.color).toBe('chart')
+    expect(marks.get('statement')?.[0]?.color).toBe('secondary')
   })
 
   it('leaves a quote out that no field holds', () => {

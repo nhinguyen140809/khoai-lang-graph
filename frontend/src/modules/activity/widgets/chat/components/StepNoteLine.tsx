@@ -39,7 +39,7 @@ export function StepNoteLine({
       {...(inProgress && { 'data-status': 'running' })}
       className={cn(
         'group/note flex min-w-0 items-start gap-2 text-muted-foreground data-[kind=finding]:text-foreground',
-        toneClasses.chart,
+        toneClasses.secondary,
       )}
     >
       {hasMark && <Mark aria-hidden className="mt-1 size-3.5 shrink-0 text-(--tone-strong)" />}

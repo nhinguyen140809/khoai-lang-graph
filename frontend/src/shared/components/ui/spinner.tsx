@@ -16,7 +16,7 @@ function Spinner({
       aria-label="Loading"
       data-color={color}
       className={cn(
-        'size-4 animate-spin',
+        'size-4 animate-spin motion-reduce:animate-none',
         color && [toneClasses[color], 'text-(--tone-strong)'],
         className,
       )}

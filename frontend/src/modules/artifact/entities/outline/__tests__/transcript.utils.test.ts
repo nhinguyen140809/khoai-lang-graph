@@ -42,7 +42,7 @@ describe('transcriptParticipants', () => {
       ['interviewer', 'Interviewer', null],
       ['PER-001', 'Minh', persona.id],
     ])
-    expect(participants.map(({ tone }) => tone)).toEqual(['primary', 'chart'])
+    expect(participants.map(({ tone }) => tone)).toEqual(['primary', 'secondary'])
   })
 
   it('sits the participants who share the role of the first at the right, the others at the left', () => {
@@ -56,7 +56,7 @@ describe('transcriptParticipants', () => {
 
     expect(participants.map(({ key, side, tone }) => [key, side, tone])).toEqual([
       ['moderator', 'end', 'primary'],
-      ['mentor', 'end', 'chart'],
+      ['mentor', 'end', 'secondary'],
       ['student', 'start', 'accent'],
     ])
   })
@@ -72,7 +72,7 @@ describe('transcriptParts', () => {
   it('separates before the first message and wherever the turn changes, not where only the speaker changes', () => {
     const parts = transcriptParts(messageSchema, interviewItems(), [
       { key: 'interviewer', name: 'Interviewer', itemId: null, side: 'end', tone: 'primary' },
-      { key: 'PER-001', name: 'Minh', itemId: null, side: 'start', tone: 'chart' },
+      { key: 'PER-001', name: 'Minh', itemId: null, side: 'start', tone: 'secondary' },
     ])
 
     expect(shapeOf(parts)).toEqual([

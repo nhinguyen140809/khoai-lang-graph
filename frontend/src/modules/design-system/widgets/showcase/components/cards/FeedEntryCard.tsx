@@ -29,7 +29,7 @@ export function FeedEntryCard() {
       >
         Try a design that suits both the student and the admin.
       </FeedEntry>
-      <FeedEntry anchorId="feed-agent" mark={<DotIcon />} markColor="chart" label="Agents">
+      <FeedEntry anchorId="feed-agent" mark={<DotIcon />} markColor="secondary" label="Agents">
         The student and the admin disagree on who approves a booking, see CONF-001.
       </FeedEntry>
       <FeedEntry
