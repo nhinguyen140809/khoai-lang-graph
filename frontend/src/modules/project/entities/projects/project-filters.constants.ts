@@ -1,5 +1,6 @@
-import type { ProjectRunFilter } from '@/modules/project/entities'
-import { runStatusesByAttention } from '@/modules/run/entities'
+import { runStatusesByAttention } from '@/modules/run/entities/@x/project'
+
+import type { ProjectRunFilter } from './projects.types'
 
 // The filters of the project list: their keys, their values and their words.
 
