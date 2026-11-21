@@ -15,13 +15,20 @@ export { GlowBackdrop } from './glow/GlowBackdrop'
 export { GlowStage } from './glow/GlowStage'
 export type { DrawnIconProps } from './icon'
 export {
+  BarsIcon,
+  ChartSplineIcon,
   CheckIcon,
   CircleHelpIcon,
   CodeIcon,
   DownloadIcon,
+  EventListIcon,
+  ForkNodesIcon,
+  GanttChartIcon,
   GlobeIcon,
+  KanbanIcon,
   LaptopIcon,
   LayersIcon,
+  LibraryIcon,
   LinkIcon,
   MessageSquareIcon,
   NodesIcon,
@@ -33,6 +40,7 @@ export {
   TextLeftIcon,
   TextRightIcon,
   TypedLineIcon,
+  UngroupIcon,
   ZipFileIcon,
 } from './icon'
 export { Loop, LoopStep } from './loop-step/LoopStep'

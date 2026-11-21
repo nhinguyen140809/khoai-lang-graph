@@ -11,13 +11,21 @@ export const iconExtent = 18
  * looks, change its entry; to change how large they all look, change `iconExtent`.
  */
 export const iconBounds = {
+  bars: { x: 12, y: 12.5, size: 15 },
+  chartSpline: { x: 12.8, y: 10.2, size: 19.6 },
   check: { x: 12, y: 12, size: 16 },
   circleHelp: { x: 12, y: 12, size: 20 },
   code: { x: 12, y: 12, size: 18 },
   download: { x: 12, y: 12, size: 16 },
+  // Its rows come in and go out at the edges, so it is measured by the rows that are seen at rest.
+  eventList: { x: 12, y: 12, size: 20 },
+  fork: { x: 12, y: 12, size: 19.6 },
+  gantt: { x: 11.5, y: 12, size: 18 },
   globe: { x: 12, y: 12, size: 18 },
+  kanban: { x: 12, y: 12, size: 14.6 },
   laptop: { x: 12.6, y: 12.2, size: 19.2 },
   layers: { x: 12, y: 12, size: 21 },
+  library: { x: 9.6, y: 11.8, size: 16.4 },
   link: { x: 12, y: 12, size: 21 },
   messageSquare: { x: 12, y: 12, size: 21 },
   nodes: { x: 12, y: 12, size: 20 },
@@ -28,4 +36,6 @@ export const iconBounds = {
   text: { x: 12, y: 11.5, size: 20.6 },
   zip: { x: 12, y: 12, size: 18 },
   typedLine: { x: 13, y: 12, size: 22 },
+  // Its blocks are measured at rest, together, and not apart.
+  ungroup: { x: 12, y: 12, size: 17 },
 } as const
