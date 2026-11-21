@@ -6,6 +6,7 @@ import { useRef } from 'react'
 import { Face, type Mood } from '@/shared/components/face'
 import { useIsInView, usePrefersReducedMotion } from '@/shared/lib/viewport'
 
+import { actorFrameClasses } from './act.constants'
 import { type ActSize, type Slot, slots as allSlots } from './act.types'
 import { actOf, moodOf } from './act.utils'
 import { ActProps } from './ActProps'
@@ -33,7 +34,9 @@ interface ActorProps {
  * A face at work: the face of an agent with what it is doing drawn around it, in the colors of the interface, while
  * its eyes and its body follow the work. The list of acts goes round, each act a few rounds, and
  * one gives way to the next gently. The face has the mood that it is given, else that of its act. It does
- * nothing but show the face for a user who asked for less motion, and stops while out of sight.
+ * nothing but show the face for a user who asked for less motion, and stops while out of sight. A frame
+ * holds it, which keeps the room that the acts reach into without taking it from the layout (see
+ * `actor-frame`); the `className` is the frame's, so that it places the actor with the face where it says.
  */
 export function Actor({
   seed,
@@ -54,22 +57,28 @@ export function Actor({
 
   return (
     <span
-      ref={ref}
-      data-slot="actor"
-      data-act={shown ?? undefined}
-      className={cn('relative inline-flex shrink-0', className)}
+      data-slot="actor-frame"
+      data-partner={partner !== undefined}
+      className={cn('actor-frame', actorFrameClasses[size], className)}
     >
-      <Face seed={seed} mood={moodOf(mood, act)} size={size} drive={drive} />
-      {act !== null && (
-        <ActProps
-          act={act}
-          round={round}
-          gain={gain}
-          allowed={slots}
-          size={size}
-          partner={partner}
-        />
-      )}
+      <span
+        ref={ref}
+        data-slot="actor"
+        data-act={shown ?? undefined}
+        className="relative inline-flex shrink-0"
+      >
+        <Face seed={seed} mood={moodOf(mood, act)} size={size} drive={drive} />
+        {act !== null && (
+          <ActProps
+            act={act}
+            round={round}
+            gain={gain}
+            allowed={slots}
+            size={size}
+            partner={partner}
+          />
+        )}
+      </span>
     </span>
   )
 }

@@ -130,3 +130,23 @@ describe('Actor things', () => {
     expect(faces[1]).toHaveClass('size-14')
   })
 })
+
+describe('Actor frame', () => {
+  const frameOf = (actor: HTMLElement) => actor.closest<HTMLElement>('[data-slot=actor-frame]')
+
+  it('holds the actor in a frame of the size of its face, which the place styles', () => {
+    const lg = frameOf(renderActor({ className: 'absolute top-0' }))
+    const xl = frameOf(renderActor({ size: 'xl' }))
+
+    expect(lg).toHaveClass('actor-frame', 'actor-frame-lg', 'absolute')
+    expect(xl).toHaveClass('actor-frame-xl')
+  })
+
+  it('keeps the room of the other agent in the frame only when it is given one', () => {
+    expect(frameOf(renderActor({ acts: ['interview'], partner: 'persona:Minh' }))).toHaveAttribute(
+      'data-partner',
+      'true',
+    )
+    expect(frameOf(renderActor({ acts: ['interview'] }))).toHaveAttribute('data-partner', 'false')
+  })
+})
