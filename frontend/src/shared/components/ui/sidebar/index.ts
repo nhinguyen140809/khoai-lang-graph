@@ -1,5 +1,6 @@
 export { useSidebar } from './hooks/useSidebar'
 export { Sidebar, SidebarInset, SidebarRail, SidebarTrigger } from './Sidebar'
+export { sidebarHotkey } from './sidebar.constants'
 export {
   SidebarContent,
   SidebarFooter,
