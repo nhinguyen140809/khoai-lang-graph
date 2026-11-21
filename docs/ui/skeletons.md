@@ -77,7 +77,7 @@ A screen outside a project: its activity bar has no feature yet, only the accoun
 | (K) khoai / Projects                     [ Search or run a command   Ctrl+K ]         (user) |
 +----------------------------------------------------------------------------------------------+
 |                                                                                              |
-|                  What product do you want to write the requirements for?                     |
+|                  What do you want to build?                     |
 |                                                                                              |
 |          +------------------------------------------------------------------------+          |
 |          | > An online platform where university students find a mentor           |          |
