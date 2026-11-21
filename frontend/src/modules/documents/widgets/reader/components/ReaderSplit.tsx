@@ -1,9 +1,10 @@
 'use client'
 
 import { ArrowLeftIcon } from 'lucide-react'
-import { type ReactNode, useId } from 'react'
+import { type ReactNode, useId, useState } from 'react'
 
-import { ReferenceOpenerProvider } from '@/modules/activity/entities'
+import { ReferenceOpenerProvider, type ReferenceRevealer } from '@/modules/activity/entities'
+import { Reveal } from '@/shared/components/animation'
 import { Button } from '@/shared/components/ui/button'
 import {
   AnimatedResizablePanel,
@@ -17,9 +18,10 @@ import { useIsMobile } from '@/shared/lib/viewport'
 import { useReaderView } from '../hooks/useReaderView'
 import { readerMessages } from '../reader.constants'
 import type { ReaderView } from '../reader.types'
-import { viewKey } from '../reader.utils'
+import { isSameView, viewKey } from '../reader.utils'
 import { ReaderBreadcrumb } from './ReaderBreadcrumb'
 import { ReaderContent } from './ReaderContent'
+import { ReaderOffer } from './ReaderOffer'
 
 // The reader keeps no size of its own between openings: it starts at its share each time the
 // window changes, so there is nothing to store.
@@ -42,9 +44,34 @@ export function ReaderSplit({ projectId, children }: ReaderSplitProps) {
   const reader = useReaderView()
   const isMobile = useIsMobile()
   const beside = isMobile ? null : reader.shown
+  const [offer, setOffer] = useState<{ view: ReaderView; label: string } | null>(null)
+  // An offer lapses when the reader closes, and when it shows what the offer was about.
+  if (offer !== null && (reader.view === null || isSameView(reader.view, offer.view))) {
+    setOffer(null)
+  }
+  // The reader opens at once when it shows nothing; otherwise the user is asked, and keeps reading.
+  const reveal: ReferenceRevealer = (reference, label) => {
+    if (reader.view === null) reader.open(reference)
+    else if (!isSameView(reader.view, reference)) setOffer({ view: reference, label })
+  }
+  const offerNote =
+    offer === null ? null : (
+      <Reveal>
+        <ReaderOffer
+          label={offer.label}
+          onOpen={() => {
+            reader.open(offer.view)
+            setOffer(null)
+          }}
+          onDismiss={() => {
+            setOffer(null)
+          }}
+        />
+      </Reveal>
+    )
 
   return (
-    <ReferenceOpenerProvider opener={reader.open}>
+    <ReferenceOpenerProvider opener={reader.open} revealer={reveal}>
       <ResizablePanelGroup orientation="horizontal" className="min-h-0 flex-1">
         <ResizablePanel id="chat" minSize="30%">
           {children}
@@ -68,6 +95,7 @@ export function ReaderSplit({ projectId, children }: ReaderSplitProps) {
               hrefOf={reader.hrefOf}
               canGoBack={reader.canGoBack}
               onBack={reader.back}
+              offer={offerNote}
             />
           )}
         </AnimatedResizablePanel>
@@ -80,6 +108,7 @@ export function ReaderSplit({ projectId, children }: ReaderSplitProps) {
           }}
         >
           <SheetContent className="gap-0 data-[side=right]:w-full" aria-describedby={undefined}>
+            {offerNote}
             {reader.shown !== null && (
               <ReaderContent
                 key={viewKey(reader.shown)}
@@ -106,13 +135,15 @@ interface ReaderPaneProps {
   hrefOf: ReturnType<typeof useReaderView>['hrefOf']
   canGoBack: boolean
   onBack: () => void
+  /** The note that offers another view, which sits under the path while there is one. */
+  offer: ReactNode
 }
 
 /**
  * The reader beside the chat, named after its title. A button floats at its top left, while there
  * is a view before this one, and goes back to it.
  */
-function ReaderPane({ projectId, view, hrefOf, canGoBack, onBack }: ReaderPaneProps) {
+function ReaderPane({ projectId, view, hrefOf, canGoBack, onBack, offer }: ReaderPaneProps) {
   const titleId = useId()
 
   return (
@@ -138,6 +169,7 @@ function ReaderPane({ projectId, view, hrefOf, canGoBack, onBack }: ReaderPanePr
           <ReaderBreadcrumb view={view} hrefOf={hrefOf} />
         </div>
       )}
+      {offer}
       <div className="flex min-h-0 flex-1 flex-col">
         <ReaderContent
           projectId={projectId}

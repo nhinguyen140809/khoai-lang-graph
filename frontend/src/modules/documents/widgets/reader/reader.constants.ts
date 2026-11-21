@@ -28,6 +28,8 @@ export const readerMessages = {
       description: 'Its items will show here when they are written.',
     },
   },
+  /** The offer of another view while the reader shows one: it does not take the place of what is read until the user says so. */
+  offer: { open: 'Open', dismiss: 'Not now' },
   /** The label of the path above the content, which says where the reader is. */
   location: 'Where you are',
   /** The mark between two steps of the path. */

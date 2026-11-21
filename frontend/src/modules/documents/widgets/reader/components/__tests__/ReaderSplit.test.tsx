@@ -6,8 +6,12 @@ import {
   itemFixtureByKey,
 } from '@/mocks/artifacts/fixtures/artifacts.fixtures'
 import { projectIds } from '@/mocks/shared/db'
-import { type ChatReference, useReferenceOpener } from '@/modules/activity/entities'
-import { setPathname, setQuery } from '@/test/next-stubs'
+import {
+  type ChatReference,
+  useReferenceOpener,
+  useRevealReference,
+} from '@/modules/activity/entities'
+import { routerMock, setPathname, setQuery } from '@/test/next-stubs'
 import { renderWithProviders } from '@/test/render'
 import {
   expectNoRole,
@@ -15,6 +19,7 @@ import {
   expectReplacedWith,
   expectRole,
   expectText,
+  press,
   pressButton,
 } from '@/test/steps'
 
@@ -36,6 +41,21 @@ function OpenReference({ reference }: { reference: ChatReference }) {
   )
 }
 
+/** A control of the chat that offers the analysis, as a review that asks to read it would. */
+function RevealAnalysis() {
+  const reveal = useRevealReference()
+  return (
+    <button
+      type="button"
+      onClick={() => {
+        reveal({ kind: 'document', artifactId: analysis.id }, 'The review asks you to read the analysis')
+      }}
+    >
+      Reveal
+    </button>
+  )
+}
+
 /** Renders the chat of a project with its reader, at an address with this query; the mentor project by default. */
 function renderSplit(query: string, id: string = projectId) {
   setPathname(`/projects/${id}`)
@@ -44,6 +64,7 @@ function renderSplit(query: string, id: string = projectId) {
     <ReaderSplit projectId={id}>
       <p>The chat</p>
       <OpenReference reference={{ kind: 'document', artifactId: analysis.id }} />
+      <RevealAnalysis />
     </ReaderSplit>,
   )
 }
@@ -140,6 +161,50 @@ describe('ReaderSplit', () => {
     const link = await within(reader).findByRole('link', { name: /Requirements analysis/ })
     expect(link).toHaveAttribute('href', `${chat}?document=${analysis.id}`)
     expect(await within(reader).findByText('Waiting for your review')).toBeInTheDocument()
+  })
+
+  it('opens at once what is offered while the reader shows nothing', async () => {
+    renderSplit('')
+
+    await pressButton('Reveal')
+
+    await expectPushedTo(`${chat}?document=${analysis.id}`, { scroll: false })
+    expectNoRole('status')
+  })
+
+  it('asks first while the reader shows another view, and goes on reading meanwhile', async () => {
+    renderSplit('reader=documents')
+    await screen.findByRole('complementary', { name: 'Documents' })
+
+    await pressButton('Reveal')
+
+    const note = await screen.findByRole('status')
+    expect(note).toHaveTextContent('The review asks you to read the analysis')
+    expect(routerMock.push).not.toHaveBeenCalled()
+    await press(within(note).getByRole('button', { name: 'Open' }))
+    await expectPushedTo(`${chat}?document=${analysis.id}`, { scroll: false })
+  })
+
+  it('sets the offer aside when the user says not now, and leaves the reader as it was', async () => {
+    renderSplit('reader=documents')
+    await screen.findByRole('complementary', { name: 'Documents' })
+    await pressButton('Reveal')
+    await screen.findByRole('status')
+
+    await pressButton('Not now')
+
+    expectNoRole('status')
+    expect(routerMock.push).not.toHaveBeenCalled()
+  })
+
+  it('offers nothing about what the reader already shows', async () => {
+    renderSplit(`document=${analysis.id}`)
+    await screen.findByRole('complementary', { name: analysis.title })
+
+    await pressButton('Reveal')
+
+    expectNoRole('status')
+    expect(routerMock.push).not.toHaveBeenCalled()
   })
 
   it('lists the documents of one kind as a folder that opens them, even when it holds one', async () => {
