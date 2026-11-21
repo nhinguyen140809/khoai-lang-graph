@@ -27,6 +27,19 @@
 }
 
 /*
+ * The same line of a pixel and a half, in the primary color, for the border of what is chosen. The
+ * half pixel lies inside the border, not outside it: a box that fills the width of a parent that
+ * clips would lose the half pixel outside at its two sides and keep it above and below.
+ */
+@utility ring-half-primary {
+  --tw-ring-color: var(--primary);
+  --tw-ring-shadow: inset 0 0 0 calc(0.5px + var(--tw-ring-offset-width)) var(--tw-ring-color);
+  box-shadow:
+    var(--tw-inset-shadow), var(--tw-inset-ring-shadow), var(--tw-ring-offset-shadow),
+    var(--tw-ring-shadow), var(--tw-shadow);
+}
+
+/*
  * A text caret that is a steady block, as in a terminal. A browser without these properties keeps
  * its own caret.
  */
