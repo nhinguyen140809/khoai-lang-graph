@@ -21,7 +21,7 @@ interface MessageAuthorLook {
 /** How the author of each message shows: the mark of its entry in the chat. */
 export const messageAuthorLooks = {
   user: { tone: 'primary', icon: ChevronRightIcon, isUser: true, isAgent: false, isSystem: false },
-  agent: { tone: 'chart', icon: DotIcon, isUser: false, isAgent: true, isSystem: false },
+  agent: { tone: 'secondary', icon: DotIcon, isUser: false, isAgent: true, isSystem: false },
   system: { tone: 'neutral', icon: InfoIcon, isUser: false, isAgent: false, isSystem: true },
 } as const satisfies Record<MessageAuthor, MessageAuthorLook>
 

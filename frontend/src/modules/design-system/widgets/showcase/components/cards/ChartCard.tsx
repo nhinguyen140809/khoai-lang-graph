@@ -12,7 +12,7 @@ import {
 import { priorityCounts, priorityLabels } from '../../design-system.fixtures'
 import { SampleCard } from '../Sample'
 
-// Priority is ordered (must before won't), so each bar takes the next step of the yellow ramp.
+// Each bar takes one of the chart colors; the value of each bar is also written above it.
 const chartConfig = {
   count: { label: 'Requirements' },
   must: { label: priorityLabels.must, color: 'var(--chart-1)' },
@@ -51,7 +51,7 @@ export function ChartCard() {
           </Bar>
         </BarChart>
       </ChartContainer>
-      <div className="flex items-center gap-1" aria-label="Chart ramp, chart-1 to chart-5">
+      <div className="flex items-center gap-1" aria-label="Chart colors, chart-1 to chart-5">
         {ramp.map((token) => (
           <div
             key={token}

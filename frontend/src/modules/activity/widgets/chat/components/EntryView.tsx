@@ -41,7 +41,7 @@ export interface EntryViewProps<Type extends ActivityEntry['type'] = ActivityEnt
 // a phase sits close to the item before it, as the line it hangs on is the one of the content that
 // holds them. A new type of entry fails to compile until it has its space.
 const entryAnchorStyles = cva(
-  'group/entry rounded-lg outline-none flash-chart data-[target]:animate-flash motion-reduce:animate-none',
+  'group/entry rounded-lg outline-none flash-secondary data-[target]:animate-flash motion-reduce:animate-none',
   {
     variants: {
       type: {
@@ -100,7 +100,7 @@ function MessageBody({ entry }: EntryViewProps<'message'>) {
             closer by that much, and the two spaces look the same. */}
       <MessageContent className="gap-2">
         {isAgent && roleLabel !== null && (
-          <MessageHeader className={cn('px-0 text-(--tone-strong)', toneClasses.chart)}>
+          <MessageHeader className={cn('px-0 text-(--tone-strong)', toneClasses.secondary)}>
             {roleLabel}
           </MessageHeader>
         )}

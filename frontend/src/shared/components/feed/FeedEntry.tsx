@@ -49,7 +49,7 @@ export function FeedEntry({
       style={{ animationDuration: `${String(targetFadeMs)}ms` }}
       className={cn(
         'group/entry flex gap-3 rounded-lg px-3 py-2 data-[filled]:bg-muted',
-        'flash-chart data-[target]:animate-flash motion-reduce:animate-none',
+        'flash-secondary data-[target]:animate-flash motion-reduce:animate-none',
         markColor && toneClasses[markColor],
       )}
     >

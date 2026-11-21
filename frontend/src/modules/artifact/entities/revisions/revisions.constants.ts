@@ -28,7 +28,7 @@ interface ChangeReasonLook {
  * sits in one record next to their words.
  */
 export const changeReasonLooks = {
-  generated: { color: 'chart' },
+  generated: { color: 'secondary' },
   user_edit: { color: 'primary' },
   rework: { color: 'warning' },
   reviewed: { color: 'success' },

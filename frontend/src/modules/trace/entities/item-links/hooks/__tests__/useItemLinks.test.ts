@@ -53,7 +53,7 @@ describe('useItemLinks', () => {
     if (result.current.state !== 'success') return
 
     const marks = result.current.fieldMarks.get('statement') ?? []
-    expect(marks[0]?.color).toBe('chart')
+    expect(marks[0]?.color).toBe('secondary')
   })
 
   it('reads nothing for an item with no link', () => {

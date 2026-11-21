@@ -16,7 +16,7 @@ export function slideStyle(
 ): CSSProperties {
   const style: Record<string, string> = {
     animationDuration: `${String(ms)}ms`,
-    animationTimingFunction: 'cubic-bezier(0.4, 0, 0.2, 1)',
+    animationTimingFunction: phase === 'enter' ? 'var(--ease-enter)' : 'var(--ease-exit)',
   }
   if (!slides) return style
   const { axis, heading } = swapDirections[direction]

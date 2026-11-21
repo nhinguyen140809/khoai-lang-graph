@@ -18,8 +18,8 @@ const highlightStyles = cva(
     variants: {
       variant: {
         underline:
-          'underline [text-decoration-color:var(--tone-strong)] underline-offset-[0.2em] hover:bg-(--tone)/50 hover:[text-decoration-color:transparent] focus-visible:bg-(--tone)/50 focus-visible:[text-decoration-color:transparent] data-[state=open]:bg-(--tone)/50 data-[state=open]:[text-decoration-color:transparent]',
-        wavy: 'underline [text-decoration-color:var(--tone-strong)] decoration-wavy underline-offset-[0.2em] hover:bg-(--tone)/50 hover:[text-decoration-color:transparent] focus-visible:bg-(--tone)/50 focus-visible:[text-decoration-color:transparent] data-[state=open]:bg-(--tone)/50 data-[state=open]:[text-decoration-color:transparent]',
+          'underline [text-decoration-color:var(--tone-line)] underline-offset-[0.2em] hover:bg-(--tone)/50 hover:[text-decoration-color:transparent] focus-visible:bg-(--tone)/50 focus-visible:[text-decoration-color:transparent] data-[state=open]:bg-(--tone)/50 data-[state=open]:[text-decoration-color:transparent]',
+        wavy: 'underline [text-decoration-color:var(--tone-line)] decoration-wavy underline-offset-[0.2em] hover:bg-(--tone)/50 hover:[text-decoration-color:transparent] focus-visible:bg-(--tone)/50 focus-visible:[text-decoration-color:transparent] data-[state=open]:bg-(--tone)/50 data-[state=open]:[text-decoration-color:transparent]',
         soft: 'bg-(--tone)/50 hover:bg-(--tone)/70 focus-visible:bg-(--tone)/70 data-[state=open]:bg-(--tone)/70',
         solid:
           'bg-(--tone) text-(--tone-foreground) hover:bg-(--tone)/80 data-[state=open]:bg-(--tone)/80',

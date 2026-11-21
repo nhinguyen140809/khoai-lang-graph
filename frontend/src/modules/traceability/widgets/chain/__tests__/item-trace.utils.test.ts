@@ -43,7 +43,7 @@ describe('chainNodeProps', () => {
       for (const attention of levels) {
         expect(chainNodeProps({ status, attention, isSubject: true })).toEqual({
           variant: 'solid',
-          color: 'chart',
+          color: 'secondary',
           isFaded: false,
           'data-focus': '',
           'aria-current': 'page',

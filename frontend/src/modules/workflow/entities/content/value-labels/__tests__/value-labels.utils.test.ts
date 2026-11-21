@@ -44,7 +44,7 @@ describe('nonStatusTone', () => {
   it('gives the first place the primary tone, then every tone that is not a status, in turn', () => {
     expect([0, 1, 2, 3, 4, 5].map(nonStatusTone)).toEqual([
       'primary',
-      'chart',
+      'secondary',
       'accent',
       'muted',
       'neutral',

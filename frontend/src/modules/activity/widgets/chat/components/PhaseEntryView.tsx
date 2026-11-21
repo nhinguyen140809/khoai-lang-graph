@@ -52,7 +52,7 @@ export function PhaseEntryView({
       >
         <TraceLine>
           <TraceTitle className="text-accent-foreground">
-            <Shimmer color="chart" isActive={look.traceStatus === 'running'}>
+            <Shimmer color="secondary" isActive={look.traceStatus === 'running'}>
               {title}
             </Shimmer>
           </TraceTitle>

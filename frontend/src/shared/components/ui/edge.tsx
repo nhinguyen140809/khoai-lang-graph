@@ -62,11 +62,11 @@ function Edge({
       data-weight={weight}
       data-color={color}
       className={cn(
-        'group/edge [--xy-edge-label-color:var(--tone-strong)] [--xy-edge-stroke-selected:var(--tone-strong)]',
+        'group/edge [--xy-edge-label-color:var(--tone-strong)] [--xy-edge-stroke-selected:var(--tone-line)]',
         toneClasses[color],
         color === 'neutral'
           ? '[--xy-edge-stroke:var(--muted-foreground)]'
-          : '[--xy-edge-stroke:var(--tone-strong)]',
+          : '[--xy-edge-stroke:var(--tone-line)]',
       )}
     >
       {/* A wide translucent stroke of the same color under the path, like the ring of a node:

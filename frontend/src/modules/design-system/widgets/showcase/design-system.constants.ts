@@ -1,5 +1,4 @@
 import {
-  ChartColumnIcon,
   CircleCheckIcon,
   CircleDashedIcon,
   CircleDotIcon,
@@ -7,6 +6,7 @@ import {
   InfoIcon,
   type LucideIcon,
   OctagonXIcon,
+  StarIcon,
   TriangleAlertIcon,
 } from 'lucide-react'
 
@@ -19,7 +19,7 @@ export const toneIcons: Record<Tone, LucideIcon> = {
   success: CircleCheckIcon,
   warning: TriangleAlertIcon,
   destructive: OctagonXIcon,
-  chart: ChartColumnIcon,
+  secondary: StarIcon,
   muted: CircleOffIcon,
   accent: CircleDotIcon,
 }

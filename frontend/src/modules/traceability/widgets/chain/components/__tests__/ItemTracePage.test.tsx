@@ -55,7 +55,7 @@ describe('ItemTracePage', () => {
     )
     expect(looks).toEqual(
       new Set([
-        'solid:chart',
+        'solid:secondary',
         'soft:warning',
         'soft:primary',
         'solid:primary',

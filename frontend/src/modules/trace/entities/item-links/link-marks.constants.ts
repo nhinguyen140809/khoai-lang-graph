@@ -8,5 +8,5 @@ import type { LinkQuote } from '../chains/chains.types'
  */
 export const quoteMarkColors = {
   source: 'primary',
-  target: 'chart',
+  target: 'secondary',
 } as const satisfies Record<LinkQuote['side'], Tone>

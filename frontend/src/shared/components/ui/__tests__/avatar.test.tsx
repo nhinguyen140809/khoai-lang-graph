@@ -35,7 +35,7 @@ describe('AvatarFallback', () => {
   it('takes a solid fill with a color', () => {
     render(
       <Avatar>
-        <AvatarFallback variant="solid" color="chart">
+        <AvatarFallback variant="solid" color="secondary">
           YN
         </AvatarFallback>
       </Avatar>,
@@ -43,7 +43,7 @@ describe('AvatarFallback', () => {
 
     const fallback = screen.getByText('YN')
     expect(fallback).toHaveAttribute('data-variant', 'solid')
-    expect(fallback).toHaveAttribute('data-color', 'chart')
+    expect(fallback).toHaveAttribute('data-color', 'secondary')
     expect(fallback).toHaveClass('bg-(--tone)', 'text-(--tone-foreground)')
   })
 
