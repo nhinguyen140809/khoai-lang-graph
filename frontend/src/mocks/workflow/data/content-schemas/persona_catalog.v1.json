@@ -7,7 +7,11 @@
   "x-kind": "persona_catalog",
   "x-schema-version": 1,
   "x-ui-display": "document",
-  "x-ui-field-order": ["selection_rationale", "uncovered_stakeholder_types"],
+  "x-ui-icon": "users",
+  "x-ui-field-order": [
+    "selection_rationale",
+    "uncovered_stakeholder_types"
+  ],
   "type": "object",
   "additionalProperties": false,
   "properties": {
@@ -28,5 +32,8 @@
       "x-ui-widget": "tags"
     }
   },
-  "required": ["selection_rationale", "uncovered_stakeholder_types"]
+  "required": [
+    "selection_rationale",
+    "uncovered_stakeholder_types"
+  ]
 }

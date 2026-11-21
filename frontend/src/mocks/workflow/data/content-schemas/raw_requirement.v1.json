@@ -9,6 +9,7 @@
   "x-key-prefix": "RAW",
   "x-ui-display": "table",
   "x-ui-navigable": true,
+  "x-ui-icon": "message-square-quote",
   "x-ui-title-field": "title",
   "x-ui-list-fields": [
     "title",
