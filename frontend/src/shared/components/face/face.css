@@ -1,0 +1,188 @@
+/* Text in the colors of a face: a line from its first color to its second, or to a darker shade of the first. */
+@utility face-text {
+  background-image: linear-gradient(90deg, var(--face-a), var(--face-b));
+  background-clip: text;
+  color: transparent;
+}
+
+/*
+ * The color of a face: a pale base, and two blobs of color on it, each blurred by a share of the
+ * width of the face (a container length, so that it holds at every size). The base fills the circle
+ * to its edge, so the edge stays sharp.
+ */
+@utility face-blur {
+  container-type: inline-size;
+  background-color: var(--face-base);
+  /* Seen from behind, the face is gone and only the layers of its depth show. */
+  backface-visibility: hidden;
+}
+
+@utility face-blob {
+  position: absolute;
+  translate: -50% -50%;
+  filter: blur(11cqw);
+}
+
+/* The shapes of a blob: how long it is across its width, which also stretches its width so that a long one still shows its color, and its outline. */
+@utility face-shape-round {
+  --face-stretch: 1;
+  aspect-ratio: 1;
+  border-radius: 9999px;
+}
+
+/* An outline more uneven than `rounded-blob`: the blur softens an outline a good deal, so a slight unevenness is lost. */
+@utility face-shape-blob {
+  --face-stretch: 1.1;
+  aspect-ratio: 1.25;
+  border-radius: 28% 72% 64% 36% / 40% 30% 70% 60%;
+}
+
+@utility face-shape-ellipse {
+  --face-stretch: 1.3;
+  aspect-ratio: 1.9;
+  border-radius: 9999px;
+}
+
+@utility face-shape-streak {
+  --face-stretch: 1.55;
+  aspect-ratio: 2.9;
+  border-radius: 9999px;
+}
+
+/* The deep color: near the center, about the size that its reach gives it. */
+@utility face-blob-core {
+  left: var(--face-ax);
+  top: var(--face-ay);
+  width: calc(var(--face-reach) * 0.85 * var(--face-stretch));
+  rotate: var(--face-core-turn);
+  background-color: var(--face-a);
+}
+
+/* The second color: larger, from its own place. */
+@utility face-blob-second {
+  left: var(--face-bx);
+  top: var(--face-by);
+  width: calc(80% * var(--face-stretch));
+  rotate: var(--face-second-turn);
+  background-color: var(--face-b);
+}
+
+@theme {
+  --duration-face-blob: 6000ms;
+  --animate-face-blob: face-blob var(--duration-face-blob) ease-in-out infinite alternate;
+
+  @keyframes face-blob {
+    from {
+      translate: calc(-50% - 5cqw) calc(-50% + 4cqw);
+    }
+    to {
+      translate: calc(-50% + 5cqw) calc(-50% - 4cqw);
+    }
+  }
+}
+
+/*
+ * The outlines of a face: a mask in the square of the face, so that the color of the face is cut to
+ * the shape and the shape grows with the face. Each is as large as the square lets it be, and its
+ * eyes sit at the height that suits it (`shapeEyeLines`).
+ */
+@utility face-silhouette-circle {
+  mask: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 32 32'%3E%3Cg transform='translate%2816 16%29 scale%280.906%29 translate%28-16 -16%29'%3E%3Ccircle cx='16' cy='16' r='16'/%3E%3C/g%3E%3C/svg%3E")
+    center / 100% 100% no-repeat;
+}
+
+@utility face-silhouette-squircle {
+  mask: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 32 32'%3E%3Cg transform='translate%2816 16%29 scale%280.847%29 translate%28-16 -16%29'%3E%3Crect width='32' height='32' rx='11'/%3E%3C/g%3E%3C/svg%3E")
+    center / 100% 100% no-repeat;
+}
+
+@utility face-silhouette-blob {
+  mask: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 32 32'%3E%3Cg transform='translate%2816 16%29 scale%280.967%29 translate%28-16 -16%29'%3E%3Cpath d='M16 1.5C23 0.5 31 5 30.5 14C30 20 31.5 25 25 29.5C19 33 10 31 5 27C0.5 23 1.5 15 3.5 10C6 4 10 2.5 16 1.5Z'/%3E%3C/g%3E%3C/svg%3E")
+    center / 100% 100% no-repeat;
+}
+
+@utility face-silhouette-pill {
+  mask: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 32 32'%3E%3Crect y='3.6' width='32' height='24.8' rx='12.4'/%3E%3C/svg%3E")
+    center / 100% 100% no-repeat;
+}
+
+@utility face-silhouette-ghost {
+  mask: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 32 32'%3E%3Cg transform='translate%2816 16%29 scale%280.939%29 translate%28-16 -16%29'%3E%3Cpath d='M2 31V16C2 7.2 8 1 16 1S30 7.2 30 16V27C30 29.5 28.5 31 26 31H6C3.5 31 2 29.5 2 27Z'/%3E%3C/g%3E%3C/svg%3E")
+    center / 100% 100% no-repeat;
+}
+
+@utility face-silhouette-drop {
+  mask: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 32 32'%3E%3Cg transform='translate%2816 16%29 scale%281.034%29 translate%28-16 -16%29'%3E%3Cpath d='M16 2.5L23.59 8.1A12.8 12.8 0 1 1 8.41 8.1Z' stroke='black' stroke-width='2' stroke-linejoin='round'/%3E%3C/g%3E%3C/svg%3E")
+    center / 100% 100% no-repeat;
+}
+
+@utility face-silhouette-oval {
+  mask: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 32 32'%3E%3Cg transform='translate%2816 16%29 scale%280.968%29 translate%28-16 -16%29'%3E%3Cellipse cx='16' cy='16' rx='15.8' ry='14.2' transform='rotate%2810 16 16%29'/%3E%3C/g%3E%3C/svg%3E")
+    center / 100% 100% no-repeat;
+}
+
+@utility face-silhouette-hexagon {
+  mask: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 32 32'%3E%3Cg transform='translate%2816 16%29 scale%280.978%29 translate%28-16 -16%29'%3E%3Cpath d='M6.5 16L11.25 7.77H20.75L25.5 16L20.75 24.23H11.25Z' stroke='black' stroke-width='12' stroke-linejoin='round'/%3E%3C/g%3E%3C/svg%3E")
+    center / 100% 100% no-repeat;
+}
+
+/*
+ * The face is a body of some thickness: layers of its outline, one behind another, with the face in
+ * front of them, seen from the front, each a little larger than the one before it, so that a rim of them shows around the face and a turn shows its edge. `face-pose` holds the view
+ * and `face-body` the turns, both keeping their children in depth.
+ */
+/* The face seen from the front, in a perspective of its own that its turns do not move. */
+@utility face-stage {
+  perspective: 80px;
+}
+
+@utility face-pose {
+  display: block;
+  width: 100%;
+  height: 100%;
+  transform-style: preserve-3d;
+}
+
+/* The face turns about its own middle: the axis runs through the middle of its depth, not through its front. */
+@utility face-body {
+  display: block;
+  position: relative;
+  width: 100%;
+  height: 100%;
+  transform-style: preserve-3d;
+  transform-origin: 50% 50% calc(var(--face-layer-step) * var(--face-layers) * -0.5);
+}
+
+/*
+ * One layer of the depth of a face: its outline in the deep color, set back by its number and
+ * made as much larger as the perspective makes it smaller, so that at rest it lies exactly behind
+ * the face and a turn either way shows its edge on the side that turns away.
+ */
+@utility face-layer {
+  position: absolute;
+  inset: 0;
+  background-color: color-mix(in oklch, var(--face-base), black var(--face-layer-shade));
+  transform: translateZ(calc(var(--layer) * var(--face-layer-step) * -1));
+  scale: calc(1 + var(--layer) * (var(--face-layer-grow) + 0.012));
+}
+
+/* How much depth a face has by its size: the step between its layers. */
+@utility face-depth-sm {
+  --face-layer-step: 1.1px;
+  --face-layer-grow: 0.01375;
+}
+
+@utility face-depth-md {
+  --face-layer-step: 1.4px;
+  --face-layer-grow: 0.0175;
+}
+
+@utility face-depth-lg {
+  --face-layer-step: 1.7px;
+  --face-layer-grow: 0.02125;
+}
+
+@utility face-depth-xl {
+  --face-layer-step: 2.1px;
+  --face-layer-grow: 0.02625;
+}
