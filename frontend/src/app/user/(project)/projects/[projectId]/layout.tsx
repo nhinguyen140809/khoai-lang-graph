@@ -1,7 +1,7 @@
 import { ActivityDialogs } from '@/modules/activity/widgets/dialogs'
 import { ExportProjectButton } from '@/modules/artifact/features/export'
 import { ExportDialogs } from '@/modules/artifact/widgets/export'
-import { DocumentsButton } from '@/modules/documents/widgets/reader'
+import { DocumentsTool } from '@/modules/documents/widgets/reader'
 import { ProjectGate, ProjectNotFound } from '@/modules/project/entities'
 import { ProjectCommands } from '@/modules/project/widgets/commands'
 import { ProjectHeading } from '@/modules/project/widgets/heading'
@@ -18,9 +18,10 @@ const deskPaletteProjectCount = 30
 
 /**
  * The pages of a project: in the bar of the desk, the name of the project and its menu at the
- * left, and at the right the documents, which open in the reader, and the export; then the page,
- * with the dialogs of the chat and of the export. A project that does not exist shows as not
- * found, with no item in the bar.
+ * left, and at the right the export; the documents, which open in the reader, are a tool of the
+ * desk, which shows it in its bar or its rail as its arrangement says; then the page, with the
+ * dialogs of the chat and of the export. A project that does not exist shows as not found, with
+ * no item in the bar.
  */
 export default async function ProjectLayout({
   children,
@@ -34,8 +35,8 @@ export default async function ProjectLayout({
       <DeskBarItem side={DeskBarSide.Left}>
         <ProjectHeading projectId={projectId} />
       </DeskBarItem>
+      <DocumentsTool />
       <DeskBarItem side={DeskBarSide.Right}>
-        <DocumentsButton />
         <ExportProjectButton />
       </DeskBarItem>
       {children}

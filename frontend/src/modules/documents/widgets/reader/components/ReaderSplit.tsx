@@ -35,7 +35,7 @@ interface ReaderSplitProps {
 
 /**
  * The chat of a project with the reader, read-only, of the document or the item that the chat
- * names, or of the list of the documents that `DocumentsButton` opens. On a wide screen the reader
+ * names, or of the list of the documents that `DocumentsTool` opens. On a wide screen the reader
  * opens beside the chat, which stays in use: the two share the width, and the handle between them
  * resizes them. On a narrow screen the reader opens in a sheet over the chat. What the reader
  * shows is in the query of the page, so that Back closes it.
