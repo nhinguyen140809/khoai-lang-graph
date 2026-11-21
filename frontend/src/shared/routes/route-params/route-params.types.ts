@@ -9,6 +9,10 @@ export const RouteParam = {
   Item: 'item',
   /** The document, by the id of its artifact, that the reader beside a chat shows. */
   Document: 'document',
+  /** The folder of the document that the reader beside a chat shows, by its id in the outline, or `overview` for the page of the document itself. */
+  Folder: 'folder',
+  /** The kind of the documents, such as the interviews, whose folder the reader beside a chat shows. */
+  Group: 'group',
   /** What else the reader beside a chat shows, such as `documents`, the list of the documents. */
   Reader: 'reader',
   /** The entry of the chat of the activity that the page scrolls to and marks. */
