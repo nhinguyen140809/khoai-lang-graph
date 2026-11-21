@@ -1,3 +1,4 @@
+import { type RunStatus } from '@/modules/run/entities/@x/project'
 import { hasTextPart } from '@/shared/lib/text'
 
 import { projectMessages } from './projects.constants'
@@ -35,4 +36,15 @@ export function emptyProjectListMessage(status: ProjectStatus, search: string): 
 /** Whether the activity of a project is later than the last one seen; false when none was seen yet. */
 export function hasNews(seenAt: string | undefined, activityAt: string): boolean {
   return seenAt !== undefined && activityAt > seenAt
+}
+
+/** The statuses that a list of projects shows: the ones that ask for the user, or work. */
+const noticeableStatuses: ReadonlySet<RunStatus> = new Set(['interrupted', 'failed', 'running'])
+
+/**
+ * The status that a project shows in a list: one that asks for the user or works. A run that is
+ * done or stopped, and a project without a run, show none.
+ */
+export function noticeableRunStatus(status: RunStatus | null): RunStatus | null {
+  return status !== null && noticeableStatuses.has(status) ? status : null
 }

@@ -33,17 +33,3 @@ export const attentionCases: { name: string; projects: RankedProject[]; order: s
     order: ['starting', 'newer', 'older'],
   },
 ]
-
-/** The status of a project, and the status that its row shows. */
-export const noticeableCases: {
-  status: Project['rollup_run_status']
-  shown: Project['rollup_run_status']
-}[] = [
-  { status: 'interrupted', shown: 'interrupted' },
-  { status: 'failed', shown: 'failed' },
-  { status: 'running', shown: 'running' },
-  { status: 'queued', shown: 'queued' },
-  { status: 'cancelled', shown: null },
-  { status: 'succeeded', shown: null },
-  { status: null, shown: null },
-]

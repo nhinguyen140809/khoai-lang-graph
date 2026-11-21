@@ -25,7 +25,7 @@ export function NewProjectPrompt({ onStart }: NewProjectPromptProps) {
   useProjectPromptFocus(inputRef)
 
   return (
-    <div className="mx-auto flex w-full max-w-2xl flex-col gap-8">
+    <div className="mx-auto flex w-full max-w-2xl flex-col gap-14">
       <h1
         id={`${id}-title`}
         className="text-center text-2xl font-semibold tracking-tight text-balance"
