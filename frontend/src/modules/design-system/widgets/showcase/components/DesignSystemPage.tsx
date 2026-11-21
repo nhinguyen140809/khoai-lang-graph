@@ -33,6 +33,7 @@ import { OverlaysCard } from './cards/OverlaysCard'
 import { ReviewCard } from './cards/ReviewCard'
 import { SkeletonCard } from './cards/SkeletonCard'
 import { StepperCard } from './cards/StepperCard'
+import { ThumbnailsCard } from './cards/ThumbnailsCard'
 import { TimelineCard } from './cards/TimelineCard'
 import { TokensCard } from './cards/TokensCard'
 import { TraceCard } from './cards/TraceCard'
@@ -91,6 +92,7 @@ export function DesignSystemPage() {
             <TimelineCard />
             <TraceCard />
             <FaceCard />
+            <ThumbnailsCard />
           </div>
           {/* Outside the columns: the browser shares the cards between columns by their height, so
               a card that changes its own height, as these two do, would send other cards to

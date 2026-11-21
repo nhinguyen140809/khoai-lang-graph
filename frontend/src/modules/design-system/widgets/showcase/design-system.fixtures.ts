@@ -348,3 +348,60 @@ export const traceRows: TraceRow[] = [
     tone: 'destructive',
   },
 ]
+
+/** A kind of the workflow as a block: its title, the icon its schema names, and what it is. */
+interface BlockKind {
+  kind: string
+  title: string
+  icon: string | null
+  /** The documents are folders (they hold items); the items are pages of text. */
+  look: 'folder' | 'text' | 'diagram'
+}
+
+/** The kinds of document of the workflow, each a folder when it holds items that open one by one. */
+export const documentBlockKinds: BlockKind[] = [
+  { kind: 'elicitation_plan', title: 'Interview plan', icon: 'compass', look: 'text' },
+  { kind: 'research_corpus', title: 'Research corpus', icon: 'library', look: 'folder' },
+  { kind: 'persona_catalog', title: 'Interviewees', icon: 'users', look: 'folder' },
+  {
+    kind: 'interview_transcript',
+    title: 'Interview transcript',
+    icon: 'messages-square',
+    look: 'text',
+  },
+  { kind: 'requirements_analysis', title: 'Requirements analysis', icon: 'search', look: 'folder' },
+  {
+    kind: 'requirement_specification',
+    title: 'Requirement specification',
+    icon: 'file-check',
+    look: 'folder',
+  },
+  { kind: 'product_backlog', title: 'User stories', icon: 'list-todo', look: 'folder' },
+  { kind: 'validation_report', title: 'Verification report', icon: 'shield-check', look: 'folder' },
+]
+
+/** The kinds of item of the workflow, each a block of text that carries the icon of its kind. */
+export const itemBlockKinds: BlockKind[] = [
+  { kind: 'source_document', title: 'Research document', icon: 'file-text', look: 'text' },
+  { kind: 'stakeholder_observation', title: 'Stakeholder observation', icon: 'eye', look: 'text' },
+  { kind: 'persona', title: 'Interviewee', icon: 'user', look: 'text' },
+  { kind: 'raw_requirement', title: 'Stated need', icon: 'message-square-quote', look: 'text' },
+  {
+    kind: 'analyzed_requirement',
+    title: 'Analysed requirement',
+    icon: 'list-checks',
+    look: 'text',
+  },
+  { kind: 'latent_need', title: 'Unstated need', icon: 'lightbulb', look: 'text' },
+  { kind: 'assumption', title: 'Assumption', icon: 'flag', look: 'text' },
+  { kind: 'ambiguity_issue', title: 'Point to clarify', icon: 'circle-help', look: 'text' },
+  { kind: 'conflict', title: 'Disagreement', icon: 'triangle-alert', look: 'text' },
+  {
+    kind: 'spec_requirement',
+    title: 'Specified requirement',
+    icon: 'clipboard-check',
+    look: 'text',
+  },
+  { kind: 'backlog_item', title: 'User story', icon: 'list-todo', look: 'text' },
+  { kind: 'validation_issue', title: 'Problem to solve', icon: 'shield-alert', look: 'text' },
+]
