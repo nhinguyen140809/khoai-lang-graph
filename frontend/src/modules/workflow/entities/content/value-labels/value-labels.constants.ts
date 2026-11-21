@@ -23,6 +23,7 @@ import {
   requirementTypeLabels,
   verificationMethodLabels,
 } from './requirement-value-labels.constants'
+import { sourceOriginLabels } from './research-value-labels.constants'
 
 /**
  * The labels of the values of each select field that has some, by the path of the field, which is
@@ -46,4 +47,5 @@ export const valueLabelsByField: Readonly<Record<string, Readonly<Record<string,
   'spec_requirement.verification_method': verificationMethodLabels,
   'backlog_item.item_type': backlogItemTypeLabels,
   'backlog_item.delivery_status': deliveryStatusLabels,
+  'source_document.origin': sourceOriginLabels,
 }

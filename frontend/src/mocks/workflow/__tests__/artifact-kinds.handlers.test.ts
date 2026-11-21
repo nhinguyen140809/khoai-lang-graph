@@ -22,7 +22,7 @@ describe('the artifact kind handlers', () => {
   it('serve the content schema of a kind at the version of the definition', async () => {
     const answer = await callApi({
       method: 'GET',
-      path: apiEndpoints.contentSchema.path({ kind: 'persona', version: '1' }),
+      path: apiEndpoints.contentSchema.path({ kind: 'persona', version: '2' }),
     })
 
     expect(answer.body).toMatchObject({ title: 'Interviewee' })
@@ -31,16 +31,16 @@ describe('the artifact kind handlers', () => {
   it('serve the kinds of the one workflow version', async () => {
     const answer = await callApi({
       method: 'GET',
-      path: `${apiEndpoints.artifactKinds.path()}?workflow_version=1`,
+      path: `${apiEndpoints.artifactKinds.path()}?workflow_version=2`,
     })
 
-    expect(answer.body).toMatchObject({ workflow_version: 1 })
+    expect(answer.body).toMatchObject({ workflow_version: 2 })
   })
 
   it('let a content schema be kept for ever, and the kinds of the current version not', async () => {
     const schema = await callApi({
       method: 'GET',
-      path: apiEndpoints.contentSchema.path({ kind: 'persona', version: '1' }),
+      path: apiEndpoints.contentSchema.path({ kind: 'persona', version: '2' }),
     })
     const kinds = await callApi({ method: 'GET', path: apiEndpoints.artifactKinds.path() })
 
