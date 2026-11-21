@@ -8,8 +8,9 @@ import { expectRole, hoverOver, press, pressButton, pressKeys } from '@/test/ste
 
 import { DeskBarItem } from '../../../bars/components/DeskBarItem'
 import { DeskBarSide } from '../../../bars/desk-bar.types'
+import { useDeskTool } from '../../../bars/hooks/useDeskTool'
 import { useSidebarStore } from '../../../sidebar/sidebar.store'
-import { Desk } from '../Desk'
+import { LibraryFrame } from '../LibraryFrame'
 
 const STORAGE_KEY = useSidebarStore.persist.getOptions().name ?? ''
 
@@ -17,9 +18,10 @@ const STORAGE_KEY = useSidebarStore.persist.getOptions().name ?? ''
 function renderFrame({ withBarItems = true } = {}) {
   render(
     <TooltipProvider>
-      <Desk
+      <LibraryFrame
         homeHref={routeOfAddress('/')}
         sidebar={<nav aria-label="Projects" />}
+        accountMenu={null}
         contributions={<div role="dialog" />}
       >
         {withBarItems && (
@@ -33,9 +35,21 @@ function renderFrame({ withBarItems = true } = {}) {
           </>
         )}
         <p>The chat</p>
-      </Desk>
+      </LibraryFrame>
     </TooltipProvider>,
   )
+}
+
+/** Offers a tool, as a page does, and renders nothing in place. */
+function Tool() {
+  useDeskTool({
+    id: 'documents',
+    label: 'Documents',
+    icon: <span />,
+    isActive: false,
+    onSelect: () => undefined,
+  })
+  return null
 }
 
 /** The bar at the top of the desk. */
@@ -77,7 +91,7 @@ afterEach(() => {
   browserStorage.removeItem(STORAGE_KEY)
 })
 
-describe('Desk', () => {
+describe('LibraryFrame', () => {
   it('shows the side list, the page and what the desk holds besides', async () => {
     renderFrame()
 
@@ -92,6 +106,22 @@ describe('Desk', () => {
     const { left, right } = deskBar()
     expect(within(left).getByText('Mentor platform')).toBeInTheDocument()
     expect(within(right).getByRole('button', { name: 'Export' })).toBeInTheDocument()
+  })
+
+  it('shows the tools of the page as buttons with their names at the right of the bar, before its items', () => {
+    render(
+      <TooltipProvider>
+        <LibraryFrame homeHref={routeOfAddress('/')} sidebar={null} accountMenu={null}>
+          <Tool />
+          <DeskBarItem side={DeskBarSide.Right}>
+            <button type="button">Export</button>
+          </DeskBarItem>
+        </LibraryFrame>
+      </TooltipProvider>,
+    )
+
+    const buttons = within(deskBar().right).getAllByRole('button')
+    expect(buttons.map((button) => button.textContent)).toEqual(['Documents', 'Export'])
   })
 
   it('has no bar when the page places nothing in it, and keeps the button of the side list', () => {
