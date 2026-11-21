@@ -34,7 +34,7 @@ import {
   UngroupIcon,
   ZipFileIcon,
 } from '@/shared/components/animation'
-import { DotIcon, ExclamationIcon } from '@/shared/components/icon'
+import { DotIcon, ExclamationIcon, PauseSolidIcon, ZapSolidIcon } from '@/shared/components/icon'
 import { Toggle } from '@/shared/components/ui/toggle'
 import { ToggleGroup, ToggleGroupItem } from '@/shared/components/ui/toggle-group'
 import { useClock } from '@/shared/lib/animation'
@@ -76,6 +76,8 @@ const drawnIcons: readonly (readonly [string, ComponentType<DrawnIconProps>])[] 
 const ownIcons: readonly (readonly [string, ComponentType<{ className?: string }>])[] = [
   ['dot', DotIcon],
   ['exclamation', ExclamationIcon],
+  ['pause-solid', PauseSolidIcon],
+  ['zap-solid', ZapSolidIcon],
   ['spinning', SpinningIcon],
 ]
 
