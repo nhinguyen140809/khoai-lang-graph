@@ -1,4 +1,4 @@
-import { useWording } from '@/shared/lib/view'
+import { useView, useWording } from '@/shared/lib/view'
 
 import type { RunStatus } from '../run-status.types'
 import { runStatusLabel } from '../run-status.utils'
@@ -11,5 +11,5 @@ import { runStatusLook } from '../run-status-look.utils'
  */
 export function useRunStatusLook(status: RunStatus | null) {
   const label = useWording(runStatusLabel(status))
-  return { ...runStatusLook(status), label }
+  return { ...runStatusLook(status, useView()), label }
 }

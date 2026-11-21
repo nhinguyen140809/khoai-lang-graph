@@ -12,6 +12,7 @@ type TraceStatus = 'running' | 'error' | null
 export const workStatusLooks = {
   running: {
     tone: 'primary',
+    mood: 'working',
     /** The `status` of the trace line of the library, which shimmers its title while it runs. */
     traceStatus: 'running',
     icon: Spinner,
@@ -24,6 +25,7 @@ export const workStatusLooks = {
   },
   waiting: {
     tone: 'warning',
+    mood: 'waiting',
     traceStatus: null,
     icon: CirclePauseIcon,
     needsUser: true,
@@ -35,6 +37,7 @@ export const workStatusLooks = {
   },
   stopped: {
     tone: 'neutral',
+    mood: 'sleeping',
     traceStatus: null,
     icon: CircleStopIcon,
     needsUser: false,
@@ -46,6 +49,8 @@ export const workStatusLooks = {
   },
   done: {
     tone: 'success',
+    // A finished phase is calm: the chat keeps a face for each phase, and only the phases that work, wait or fail show a mood.
+    mood: 'idle',
     traceStatus: null,
     icon: CheckIcon,
     needsUser: false,
@@ -57,6 +62,7 @@ export const workStatusLooks = {
   },
   failed: {
     tone: 'destructive',
+    mood: 'worried',
     traceStatus: 'error',
     icon: XIcon,
     needsUser: true,
