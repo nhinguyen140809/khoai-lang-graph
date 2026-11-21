@@ -1,0 +1,7 @@
+export type { ActKey, ActSize, Slot } from './act.types'
+export { actKeys, actSizes, slots } from './act.types'
+export { drawnActsOf } from './act.utils'
+export { courses, effects, entrances, exits, faceMoves } from './act-motion.constants'
+export { Actor } from './Actor'
+export { default as actCatalog } from './acts.catalog.json'
+export { MotionDemo, type MotionDemoMotion } from './MotionDemo'
