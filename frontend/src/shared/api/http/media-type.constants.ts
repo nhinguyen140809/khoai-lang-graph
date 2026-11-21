@@ -3,4 +3,5 @@ export const MediaType = {
   Json: 'application/json',
   ProblemJson: 'application/problem+json',
   PlainText: 'text/plain',
+  Svg: 'image/svg+xml',
 } as const
