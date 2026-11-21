@@ -1,7 +1,7 @@
 import { act, renderHook } from '@testing-library/react'
 import { beforeEach, describe, expect, it, vi } from 'vitest'
 
-import { advanceTimersAsync } from '@/test/steps'
+import { advanceTimersAsync, withFakeTimers } from '@/test/steps'
 
 import { useClipboard } from '../useClipboard'
 
@@ -21,6 +21,8 @@ async function copy(hook: { copy: (value: string) => void }, value: string) {
 }
 
 describe('useClipboard', () => {
+  withFakeTimers()
+
   it('copies the value to the clipboard', async () => {
     const { result } = renderHook(() => useClipboard())
 
@@ -31,7 +33,6 @@ describe('useClipboard', () => {
   })
 
   it('goes back to copying two seconds after what was copied', async () => {
-    vi.useFakeTimers()
     const { result } = renderHook(() => useClipboard())
 
     await copy(result.current, 'REQ-001')
@@ -42,7 +43,6 @@ describe('useClipboard', () => {
   })
 
   it('starts the two seconds again on a copy while what was copied still holds', async () => {
-    vi.useFakeTimers()
     const { result } = renderHook(() => useClipboard())
 
     await copy(result.current, 'REQ-001')
@@ -67,7 +67,6 @@ describe('useClipboard', () => {
   })
 
   it('stops saying that it copied when a copy fails while one before it holds', async () => {
-    vi.useFakeTimers()
     const { result } = renderHook(() => useClipboard())
 
     await copy(result.current, 'REQ-001')

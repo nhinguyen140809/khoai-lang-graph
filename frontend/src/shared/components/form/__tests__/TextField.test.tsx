@@ -1,6 +1,5 @@
 import { zodResolver } from '@hookform/resolvers/zod'
 import { render, screen } from '@testing-library/react'
-import userEvent from '@testing-library/user-event'
 import type { ReactNode } from 'react'
 import { useForm } from 'react-hook-form'
 import { describe, expect, it } from 'vitest'
@@ -13,6 +12,7 @@ import {
   expectText,
   expectValidField,
   pasteText,
+  press,
   pressButton,
 } from '@/test/steps'
 
@@ -45,7 +45,7 @@ function NameForm({ onSubmit, action }: NameFormProps) {
 
 /** Types the name as a paste, which takes an empty text too, then saves. */
 async function enterName(text: string) {
-  await userEvent.click(screen.getByLabelText('Name'))
+  await press(screen.getByLabelText('Name'))
   await pasteText(text)
   await pressButton('Save')
 }

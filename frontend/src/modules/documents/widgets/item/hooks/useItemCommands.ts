@@ -15,13 +15,19 @@ export function useItemCommands(
   onMoved: () => void,
   { isEnabled = true }: { isEnabled?: boolean } = {},
 ) {
-  const command = (
-    id: string,
-    label: string,
-    key: string,
-    target: { id: string } | null,
-    direction: ItemMove,
-  ) => ({
+  const command = ({
+    id,
+    label,
+    key,
+    target,
+    direction,
+  }: {
+    id: string
+    label: string
+    key: string
+    target: { id: string } | null
+    direction: ItemMove
+  }) => ({
     id,
     label,
     group: PaletteGroup.View,
@@ -37,14 +43,20 @@ export function useItemCommands(
   useCommands(
     isEnabled
       ? [
-          command('documents.nextItem', itemPageMessages.next, 'j', neighbors.next, 'next'),
-          command(
-            'documents.previousItem',
-            itemPageMessages.previous,
-            'k',
-            neighbors.previous,
-            'previous',
-          ),
+          command({
+            id: 'documents.nextItem',
+            label: itemPageMessages.next,
+            key: 'j',
+            target: neighbors.next,
+            direction: 'next',
+          }),
+          command({
+            id: 'documents.previousItem',
+            label: itemPageMessages.previous,
+            key: 'k',
+            target: neighbors.previous,
+            direction: 'previous',
+          }),
         ]
       : [],
   )

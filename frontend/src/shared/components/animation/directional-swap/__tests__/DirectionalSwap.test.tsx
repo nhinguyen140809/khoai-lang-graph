@@ -1,13 +1,14 @@
-import { act, render, screen } from '@testing-library/react'
-import { beforeEach, describe, expect, it, vi } from 'vitest'
+/* eslint-disable local/expect-steps -- under fake timers a step never finishes waiting, so these tests read with getBy* (CONTRIBUTING: Fake timers) */
+import { render, screen } from '@testing-library/react'
+import { describe, expect, it } from 'vitest'
+
+import { advanceTimers, expectNoText, withFakeTimers } from '@/test/steps'
 
 import { swapMs } from '../directional-swap.constants'
 import { DirectionalSwap } from '../DirectionalSwap'
 
 describe('DirectionalSwap', () => {
-  beforeEach(() => {
-    vi.useFakeTimers()
-  })
+  withFakeTimers()
 
   it('brings the content in from below by default, over half its height', () => {
     render(<DirectionalSwap swapKey="a">one</DirectionalSwap>)
@@ -49,11 +50,9 @@ describe('DirectionalSwap', () => {
     expect(old.style.getPropertyValue('--tw-exit-translate-y')).toBe('-50%')
     expect(screen.getByText('two')).toBeInTheDocument()
 
-    act(() => {
-      vi.advanceTimersByTime(swapMs)
-    })
+    advanceTimers(swapMs)
 
-    expect(screen.queryByText('one')).not.toBeInTheDocument()
+    expectNoText('one')
     expect(screen.getByText('two')).toBeInTheDocument()
   })
 
@@ -127,13 +126,9 @@ describe('DirectionalSwap', () => {
       </DirectionalSwap>,
     )
     expect(screen.getByText('one')).toBeInTheDocument()
-    expect(screen.queryByText('two')).not.toBeInTheDocument()
-
-    act(() => {
-      vi.advanceTimersByTime(swapMs)
-    })
-
-    expect(screen.queryByText('one')).not.toBeInTheDocument()
+    expectNoText('two')
+    advanceTimers(swapMs)
+    expectNoText('one')
     expect(screen.getByText('two')).toBeInTheDocument()
   })
 
@@ -144,7 +139,7 @@ describe('DirectionalSwap', () => {
     rerender(<DirectionalSwap swapKey="b">next</DirectionalSwap>)
 
     expect(screen.getByText('loaded')).toHaveAttribute('aria-hidden', 'true')
-    expect(screen.queryByText('loading')).not.toBeInTheDocument()
+    expectNoText('loading')
   })
 
   it('lets the old content leave over the new one without taking room when they cross', () => {

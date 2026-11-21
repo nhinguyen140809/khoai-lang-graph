@@ -1,10 +1,9 @@
 import { screen, waitFor, within } from '@testing-library/react'
-import userEvent from '@testing-library/user-event'
 import { describe, expect, it } from 'vitest'
 
 import { openPage } from '@/test/msw'
 import { renderWorkbench } from '@/test/render'
-import { expectNoAccessibilityViolations, statusBar } from '@/test/steps'
+import { expectNoAccessibilityViolations, expectRole, hoverOver, statusBar } from '@/test/steps'
 
 import { MonthlyBudgetItem } from '../MonthlyBudgetItem'
 import { monthlyBudgetShownCases } from './MonthlyBudgetItem.data'
@@ -19,7 +18,7 @@ describe('MonthlyBudgetItem', () => {
 
     if (shown === null) {
       // The usage loads after the first render, which shows nothing either.
-      await screen.findByRole('contentinfo')
+      await expectRole('contentinfo')
       await waitFor(() => {
         expect(within(statusBar()).queryByRole('progressbar')).toBeNull()
       })
@@ -28,7 +27,7 @@ describe('MonthlyBudgetItem', () => {
     const bar = await within(statusBar()).findByRole('progressbar', { name: barName })
     expect(bar).toHaveAttribute('aria-valuetext', shown.percent)
     expect(bar).toHaveAttribute('aria-valuenow', shown.percent.replace('%', ''))
-    await userEvent.hover(within(statusBar()).getByRole('group'))
+    await hoverOver(within(statusBar()).getByRole('group'))
     expect(await screen.findByRole('tooltip')).toHaveTextContent(shown.amounts)
   })
 

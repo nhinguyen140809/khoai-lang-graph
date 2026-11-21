@@ -1,15 +1,17 @@
+/* eslint-disable local/expect-steps -- under fake timers a step never finishes waiting, so these tests read with getBy* (CONTRIBUTING: Fake timers) */
 import { render, screen } from '@testing-library/react'
 import { describe, expect, it, vi } from 'vitest'
 
-import { advanceTimers } from '@/test/steps'
+import { advanceTimers, withFakeTimers } from '@/test/steps'
 
 import { RelativeTime } from '../relative-time'
 
 // The times of the test are local on purpose: the words and the title format in the zone of
 // the machine that runs them, and a local string reads the same in every zone.
 describe('RelativeTime', () => {
+  withFakeTimers()
+
   it('reads the words, and names the exact time for whoever hovers or parses', () => {
-    vi.useFakeTimers()
     vi.setSystemTime(new Date('2026-10-30T10:00:00'))
     render(<RelativeTime date="2026-10-30T09:55:00" />)
 
@@ -19,7 +21,6 @@ describe('RelativeTime', () => {
   })
 
   it('reads the words again a minute later, so they stay true', () => {
-    vi.useFakeTimers()
     vi.setSystemTime(new Date('2026-10-30T10:00:00'))
     render(<RelativeTime date="2026-10-30T09:59:00" />)
 
@@ -28,5 +29,17 @@ describe('RelativeTime', () => {
     advanceTimers(60_000)
 
     expect(screen.getByText('2 min ago')).toBeInTheDocument()
+  })
+
+  it('counts from the moment a parent gives it, and starts no clock of its own', () => {
+    vi.setSystemTime(new Date('2026-10-30T10:00:00'))
+    render(<RelativeTime date="2026-10-30T09:55:00" now={new Date('2026-10-30T09:58:00')} />)
+
+    expect(screen.getByText('3 min ago')).toBeInTheDocument()
+    expect(vi.getTimerCount()).toBe(0)
+
+    advanceTimers(120_000)
+
+    expect(screen.getByText('3 min ago')).toBeInTheDocument()
   })
 })

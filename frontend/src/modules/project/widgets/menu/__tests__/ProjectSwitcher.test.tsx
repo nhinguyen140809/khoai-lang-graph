@@ -93,7 +93,7 @@ describe('ProjectSwitcher', () => {
 
   it('keeps the name of the project when loading it again fails', async () => {
     renderWithProviders(<ProjectSwitcher projectId={projectIds.mentor} />)
-    await screen.findByRole('button', { name: 'Mentor platform' })
+    await expectRole('button', 'Mentor platform')
     server.use(serverErrorOn(HttpMethod.Get, apiEndpoints.project.pattern))
 
     // Coming back to the window loads the project again.
@@ -103,9 +103,8 @@ describe('ProjectSwitcher', () => {
     })
     await pressButton('Mentor platform')
 
-    expect(
-      await screen.findByRole('menuitem', { name: 'Load the project again' }),
-    ).toBeInTheDocument()
+    await expectRole('menuitem', 'Load the project again')
+    // eslint-disable-next-line local/expect-steps -- hidden is an option the step does not take
     expect(
       screen.getByRole('button', { name: 'Mentor platform', hidden: true }),
     ).toBeInTheDocument()

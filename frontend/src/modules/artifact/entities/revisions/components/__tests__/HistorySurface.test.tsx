@@ -6,7 +6,16 @@ import { apiEndpoints } from '@/shared/api/endpoints'
 import { HttpMethod } from '@/shared/api/http'
 import { serverErrorOn } from '@/test/msw'
 import { renderWithProviders } from '@/test/render'
-import { expectNoAccessibilityViolations, pressKey } from '@/test/steps'
+import {
+  expectDisabled,
+  expectFocused,
+  expectNoAccessibilityViolations,
+  expectNoRole,
+  expectRole,
+  expectText,
+  pressButton,
+  pressKey,
+} from '@/test/steps'
 import { itShowsQueryStates } from '@/test/suites'
 
 import { useHistoryView } from '../../../revisions/hooks/useHistoryView'
@@ -41,40 +50,35 @@ describe('HistorySurface', () => {
   })
 
   it('opens at the level of the version and focuses its heading', async () => {
-    const user = userEvent.setup()
     renderSurface()
 
-    await user.click(screen.getByRole('button', { name: 'History' }))
+    await pressButton('History')
 
-    expect(screen.getByRole('heading', { name: 'History' })).toHaveFocus()
-    expect(screen.getByText(`Version ${String(historyCurrentVersion)}`)).toBeInTheDocument()
-    expect(screen.getByRole('checkbox', { name: 'Show changes' })).toBeInTheDocument()
+    expectFocused('heading', 'History')
+    await expectText(`Version ${String(historyCurrentVersion)}`)
+    await expectRole('checkbox', 'Show changes')
   })
 
   it('steps with Newer and Older, and disables them at the ends', async () => {
-    const user = userEvent.setup()
     renderSurface()
-    await user.click(screen.getByRole('button', { name: 'History' }))
+    await pressButton('History')
 
-    await user.click(screen.getByRole('button', { name: 'Older version' }))
+    await pressButton('Older version')
     // The old version goes out first, and the next one comes in after it.
-    expect(
-      await screen.findByText(`Version ${String(historyCurrentVersion - 1)}`),
-    ).toBeInTheDocument()
+    await expectText(`Version ${String(historyCurrentVersion - 1)}`)
 
-    await user.click(screen.getByRole('button', { name: 'Newer version' }))
-    expect(screen.getByRole('button', { name: 'Newer version' })).toBeDisabled()
+    await pressButton('Newer version')
+    expectDisabled('button', 'Newer version')
   })
 
   it('shows the list of every version, marks the selected one, and closes with Escape back to the button', async () => {
-    const user = userEvent.setup()
     renderSurface()
-    await user.click(screen.getByRole('button', { name: 'History' }))
-    await user.click(screen.getByRole('button', { name: 'Show all versions' }))
+    await pressButton('History')
+    await pressButton('Show all versions')
 
     const first = screen.getByRole('button', { name: /Version 2/ })
     expect(first).toHaveAttribute('aria-current', 'true')
-    await user.click(screen.getByRole('button', { name: /Version 1/ }))
+    await pressButton(/Version 1/)
     expect(screen.getByRole('button', { name: /Version 1/ })).toHaveAttribute(
       'aria-current',
       'true',
@@ -82,39 +86,35 @@ describe('HistorySurface', () => {
 
     // Escape steps down to the stepper, then to closed, and returns the focus to the button.
     await pressKey('Escape')
-    expect(screen.queryByRole('button', { name: /Version 1/ })).not.toBeInTheDocument()
+    expectNoRole('button', /Version 1/)
     await pressKey('Escape')
-    expect(screen.getByRole('button', { name: 'History' })).toHaveFocus()
+    expectFocused('button', 'History')
   })
 
   it('goes back from the list with the Collapse line, and minimizes to the button', async () => {
-    const user = userEvent.setup()
     renderSurface()
-    await user.click(screen.getByRole('button', { name: 'History' }))
-    await user.click(screen.getByRole('button', { name: 'Show all versions' }))
+    await pressButton('History')
+    await pressButton('Show all versions')
 
-    await user.click(screen.getByRole('button', { name: 'Collapse' }))
-    expect(screen.getByRole('button', { name: 'Newer version' })).toBeInTheDocument()
+    await pressButton('Collapse')
+    await expectRole('button', 'Newer version')
 
-    await user.click(screen.getByRole('button', { name: 'Minimize the history' }))
+    await pressButton('Minimize the history')
     expect(screen.getByRole('button', { name: 'History' })).toHaveAttribute(
       'aria-expanded',
       'false',
     )
-    expect(screen.getByRole('button', { name: 'History' })).toHaveFocus()
+    expectFocused('button', 'History')
   })
 
   it('offers the restore of a version that is not the current one, in the menu of its item', async () => {
-    const user = userEvent.setup()
     renderSurface()
-    await user.click(screen.getByRole('button', { name: 'History' }))
+    await pressButton('History')
 
-    expect(screen.queryByRole('button', { name: /Restore/ })).not.toBeInTheDocument()
-    await user.click(screen.getByRole('button', { name: 'Older version' }))
-    await user.click(await screen.findByRole('button', { name: 'More actions' }))
-    expect(
-      await screen.findByRole('button', { name: `Restore ${String(historyCurrentVersion - 1)}` }),
-    ).toBeInTheDocument()
+    expectNoRole('button', /Restore/)
+    await pressButton('Older version')
+    await pressButton('More actions')
+    await expectRole('button', `Restore ${String(historyCurrentVersion - 1)}`)
   })
 
   itShowsQueryStates({
@@ -140,10 +140,9 @@ describe('HistorySurface', () => {
   })
 
   it('has no accessibility violation', async () => {
-    const user = userEvent.setup()
     const { container } = renderSurface()
-    await user.click(screen.getByRole('button', { name: 'History' }))
-    await screen.findByText('Your edit')
+    await pressButton('History')
+    await expectText('Your edit')
 
     await expectNoAccessibilityViolations(container)
   })

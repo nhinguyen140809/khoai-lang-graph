@@ -7,7 +7,6 @@ import type {
   ResumeRunBody,
 } from '@/modules/review/entities'
 import type { CheckpointOption, QuestionAnswer } from '@/modules/workflow/entities'
-import { ApiError } from '@/shared/api/error'
 import { isBlank } from '@/shared/lib/guards'
 
 import { answerStepKeys } from './answer-review.constants'
@@ -165,12 +164,6 @@ export function answersOf(
     (element): element is HTMLElement =>
       element instanceof HTMLElement && matches(element) && !isInert(element),
   )
-}
-
-/** What the API found wrong with an answer, one line for each field it names; none when it names no field. */
-export function problemsOf(error: Error): string | undefined {
-  if (!(error instanceof ApiError) || error.fieldErrors.length === 0) return undefined
-  return error.fieldErrors.map(({ field, message }) => `${field}: ${message}`).join('\n')
 }
 
 /** Whether the caret of a line of text is at its start (`by` -1) or at its end (`by` 1); a field with no caret, such as a number, always is. */

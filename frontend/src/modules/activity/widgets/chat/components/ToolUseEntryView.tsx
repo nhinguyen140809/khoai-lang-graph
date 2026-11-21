@@ -6,7 +6,7 @@ import { SearchIcon, WrenchIcon } from 'lucide-react'
 import type { ToolUse } from '@/modules/run/entities'
 import { workMessages } from '@/modules/run/entities'
 import type { Tool } from '@/modules/workflow/entities'
-import { toolUsesLine, useTools } from '@/modules/workflow/entities'
+import { toolUsesLine, useTool } from '@/modules/workflow/entities'
 import {
   TraceCollapsible,
   TraceCollapsibleContent,
@@ -36,8 +36,7 @@ const toolMarks = {
  */
 export function ToolUseEntryView({ use }: { use: ToolUse }) {
   const { run } = useRunActivity()
-  const tools = useTools(run.workflow_version)
-  const tool = tools.get(use.tool)
+  const tool = useTool(run.workflow_version, use.tool)
   const [open, setOpen] = useOpenWhileWorking(use.isRunning)
   const lastNote = use.notes.at(-1)
   const Mark = toolMarks[tool?.icon ?? 'search']

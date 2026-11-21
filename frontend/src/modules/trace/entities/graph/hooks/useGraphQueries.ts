@@ -6,7 +6,7 @@ import { attentionLevels } from '@/modules/artifact/entities/@x/trace'
 import {
   useIssueKinds,
   useItemTitleOf,
-  useKindTitles,
+  useKindTitleOf,
   useLinkTitleOf,
 } from '@/modules/workflow/entities/@x/trace'
 import { isNotFoundError } from '@/shared/api/error'
@@ -146,7 +146,7 @@ export function useItemChain(
   const trace = useItemTrace(itemId, { direction: 'both', depth: chainDepth }, options)
   const kinds = useIssueKinds()
   const titleOf = useItemTitleOf()
-  const kindTitles = useKindTitles()
+  const kindTitleOf = useKindTitleOf()
   const linkTitleOf = useLinkTitleOf()
   const attention = useTraceAttention(projectId, options)
 
@@ -157,7 +157,7 @@ export function useItemChain(
       focusId: itemId,
       issueKinds: kinds.data,
       titleOf,
-      kindTitleOf: (item) => kindTitles.get(item.kind) ?? item.kind,
+      kindTitleOf: (item) => kindTitleOf(item.kind),
       linkTitleOf,
       attentionOf: attention.attentionOf,
     })
@@ -169,7 +169,7 @@ export function useItemChain(
         'The trace of an item holds the item itself',
       ),
     }
-  }, [trace.data, kinds.data, titleOf, kindTitles, linkTitleOf, attention, itemId])
+  }, [trace.data, kinds.data, titleOf, kindTitleOf, linkTitleOf, attention, itemId])
 
   if (trace.isError) {
     if (isNotFoundError(trace.error)) return { state: 'notFound' }

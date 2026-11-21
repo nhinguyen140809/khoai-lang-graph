@@ -1,5 +1,4 @@
 import { render, screen, within } from '@testing-library/react'
-import userEvent from '@testing-library/user-event'
 import { type ComponentProps, useState } from 'react'
 import { describe, expect, it, vi } from 'vitest'
 
@@ -12,6 +11,7 @@ import {
   expectNoConfirmDialog,
   expectRole,
   findConfirmDialog,
+  press,
   pressButton,
   pressEscape,
 } from '@/test/steps'
@@ -122,8 +122,8 @@ describe('ConfirmDialog', () => {
     const dialog = await openDialog()
     const confirm = within(dialog).getByRole('button', { name: 'Delete' })
 
-    await userEvent.click(confirm)
-    await userEvent.click(confirm)
+    await press(confirm)
+    await press(confirm)
 
     expect(confirm).toBeDisabled()
     expect(onConfirm).toHaveBeenCalledOnce()
@@ -228,7 +228,7 @@ describe('ConfirmDialog', () => {
         {...props}
       />,
     )
-    await screen.findByRole('alertdialog')
+    await expectRole('alertdialog')
 
     expect(shownIcon()).toBe(icon)
   })

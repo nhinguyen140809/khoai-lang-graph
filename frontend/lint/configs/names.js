@@ -29,6 +29,14 @@ export default defineConfig([
     rules: { 'local/find-get-name': 'off' },
   },
   {
+    // A unit test reads the screen through the expect* steps of @/test/steps, the ui folder
+    // included; under fake timers the steps hang, so such a test keeps its raw getBy*.
+    files: ['src/**/__tests__/**/*.{ts,tsx}', 'src/shared/components/ui/**/*.{ts,tsx}'],
+    ignores: ['src/test/**'],
+    plugins: { local: /** @type {import('eslint').ESLint.Plugin} */ (localRules) },
+    rules: { 'local/expect-steps': 'error' },
+  },
+  {
     // An exported value is camelCase, or PascalCase for a component, a context or an object used
     // as an enum; UPPER_SNAKE_CASE is for a setting private to its file. A variable or a
     // parameter is not named with a word that fits anything (data, info, res), an abbreviation

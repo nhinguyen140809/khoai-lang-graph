@@ -1,12 +1,13 @@
 import { beforeEach, describe, expect, it, vi } from 'vitest'
 
 import { server } from '@/mocks/msw-server.setup'
+import { withFakeTimers } from '@/test/steps'
 
 import { listProjects } from '../projects.api'
 import { listQueryCases, queryNow } from './projects.api.data'
 
+withFakeTimers({ toFake: ['Date'] })
 beforeEach(() => {
-  vi.useFakeTimers({ toFake: ['Date'] })
   vi.setSystemTime(queryNow)
 })
 

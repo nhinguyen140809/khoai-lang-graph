@@ -7,6 +7,7 @@
   "x-kind": "validation_report",
   "x-schema-version": 1,
   "x-ui-display": "document",
+  "x-ui-icon": "shield-check",
   "x-ui-field-order": [
     "iteration",
     "status",

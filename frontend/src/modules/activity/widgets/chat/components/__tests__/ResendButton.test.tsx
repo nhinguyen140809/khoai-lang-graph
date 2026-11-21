@@ -1,5 +1,4 @@
-import { screen, waitFor } from '@testing-library/react'
-import userEvent from '@testing-library/user-event'
+import { waitFor } from '@testing-library/react'
 import { describe, expect, it } from 'vitest'
 
 import { projectIds, threadIds } from '@/mocks/shared/db'
@@ -7,7 +6,7 @@ import { buildThread } from '@/mocks/threads/threads.fixtures'
 import { apiEndpoints } from '@/shared/api/endpoints'
 import { recordRequests } from '@/test/msw'
 import { renderWithProviders } from '@/test/render'
-import { expectNoAccessibilityViolations } from '@/test/steps'
+import { expectNoAccessibilityViolations, expectRole, pressButton } from '@/test/steps'
 
 import { ResendButton } from '../ResendButton'
 
@@ -27,7 +26,7 @@ describe('ResendButton', () => {
       />,
     )
 
-    await userEvent.click(screen.getByRole('button', { name: 'Try again' }))
+    await pressButton('Try again')
 
     await waitFor(() => {
       expect(
@@ -54,7 +53,7 @@ describe('ResendButton', () => {
       />,
     )
 
-    expect(screen.getByRole('button', { name: 'Send it again' })).toBeInTheDocument()
+    await expectRole('button', 'Send it again')
     await expectNoAccessibilityViolations()
   })
 })

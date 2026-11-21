@@ -1,9 +1,9 @@
 import { act, screen } from '@testing-library/react'
-import userEvent from '@testing-library/user-event'
 import { describe, expect, it } from 'vitest'
 
 import { assertPresent } from '@/shared/lib/guards'
 import { renderWithProviders } from '@/test/render'
+import { expectFocused, hoverOver, pressButton } from '@/test/steps'
 
 import { useEditingRecordStore } from '../../stores/editing-record.store'
 import { EditRecordButton } from '../EditRecordButton'
@@ -16,21 +16,19 @@ function renderButton(lockedReason: string | null = null) {
 
 describe('EditRecordButton', () => {
   it('starts the edit mode of its record', async () => {
-    const user = userEvent.setup()
     renderButton()
 
-    await user.click(screen.getByRole('button', { name: 'Edit' }))
+    await pressButton('Edit')
 
     expect(useEditingRecordStore.getState().recordKey).toBe('item:item-1')
   })
 
   it('is disabled, with its reason in the tooltip of its wrapper', async () => {
-    const user = userEvent.setup()
     renderButton('Only the documents under review can change now.')
 
     const button = screen.getByRole('button', { name: 'Edit' })
     expect(button).toBeDisabled()
-    await user.hover(assertWrapper(button))
+    await hoverOver(assertWrapper(button))
     expect(await screen.findByRole('tooltip')).toHaveTextContent(
       'Only the documents under review can change now.',
     )
@@ -44,7 +42,7 @@ describe('EditRecordButton', () => {
       useEditingRecordStore.getState().stopEditing()
     })
 
-    expect(screen.getByRole('button', { name: 'Edit' })).toHaveFocus()
+    expectFocused('button', 'Edit')
     expect(useEditingRecordStore.getState().endedKey).toBeNull()
     unmount()
   })

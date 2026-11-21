@@ -67,14 +67,8 @@ export async function expectLink(name: Text, href: string, scope: Scope = screen
 }
 
 /** Checks an attribute of a control of this role and name, such as `aria-pressed` or `aria-expanded`. */
-export function expectAttribute(
-  role: Role,
-  name: Text,
-  attribute: string,
-  value: string,
-  scope: Scope = screen,
-) {
-  expect(controlOf(scope, role, name)).toHaveAttribute(attribute, value)
+export function expectAttribute(role: Role, name: Text, attribute: string, value: string) {
+  expect(controlOf(screen, role, name)).toHaveAttribute(attribute, value)
 }
 
 /** Checks the value of a text field, given by its name. */

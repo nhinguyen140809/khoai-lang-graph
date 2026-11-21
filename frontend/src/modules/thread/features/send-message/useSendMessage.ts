@@ -63,7 +63,7 @@ export function useSendMessage({
       onSent()
     },
     onError: (error) => {
-      toast.error(`${sendMessageMessages.notSent} ${errorMessageOf(error, {})}`)
+      toast.error(`${sendMessageMessages.notSent} ${errorMessageOf(error)}`)
     },
   })
 

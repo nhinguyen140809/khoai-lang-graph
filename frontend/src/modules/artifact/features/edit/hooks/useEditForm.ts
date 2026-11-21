@@ -35,14 +35,14 @@ export function useEditForm<TValues extends FieldValues>({
   }, [form, firstField])
 
   useEffect(() => {
-    const subscription = form.watch(() => {
-      if (hasChanged.current) return
-      hasChanged.current = true
-      onFirstChange()
+    return form.subscribe({
+      formState: { values: true },
+      callback: () => {
+        if (hasChanged.current) return
+        hasChanged.current = true
+        onFirstChange()
+      },
     })
-    return () => {
-      subscription.unsubscribe()
-    }
   }, [form, onFirstChange])
 
   return form

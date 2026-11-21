@@ -113,6 +113,28 @@ export const errorMessageCases = [
   },
 ]
 
+/** An error, and the lines that `fieldProblemsOf` gives for the fields it names. */
+export const fieldProblemsCases = [
+  {
+    name: 'one line for each field that the API found wrong',
+    error: new ApiError('Validation failed', HttpStatus.UnprocessableContent, 'validation_failed', [
+      { field: 'answers.users', message: 'Answer this question.' },
+      { field: 'option', message: 'Choose one of: accept, reject.' },
+    ]),
+    problems: 'answers.users: Answer this question.\noption: Choose one of: accept, reject.',
+  },
+  {
+    name: 'nothing for an error of the API that names no field',
+    error: new ApiError('Down', HttpStatus.InternalServerError, null, []),
+    problems: undefined,
+  },
+  {
+    name: 'nothing for an error that is not of the API',
+    error: new Error('Offline'),
+    problems: undefined,
+  },
+]
+
 /** An error, and whether it says that what the request asked for does not exist. */
 export const notFoundCases = [
   {
@@ -127,4 +149,36 @@ export const notFoundCases = [
   },
   { name: 'an error that is not of the API', error: new Error('x'), notFound: false },
   { name: 'a value that is not an error', error: 'not found', notFound: false },
+]
+
+/** An error, and whether it says that the record the request changes moved on since it was read. */
+export const versionConflictCases = [
+  {
+    name: 'an ApiError with the code of a version conflict',
+    error: new ApiError('x', HttpStatus.Conflict, ApiErrorCode.VersionConflict, []),
+    isConflict: true,
+  },
+  {
+    name: 'an ApiError of another code with the same status',
+    error: new ApiError('x', HttpStatus.Conflict, ApiErrorCode.InvalidState, []),
+    isConflict: false,
+  },
+  { name: 'an error that is not of the API', error: new Error('x'), isConflict: false },
+  { name: 'a value that is not an error', error: 'version_conflict', isConflict: false },
+]
+
+/** An error, and whether it says that the request had no session. */
+export const unauthorizedCases = [
+  {
+    name: 'an ApiError with status 401',
+    error: new ApiError('x', HttpStatus.Unauthorized, null, []),
+    isUnauthorized: true,
+  },
+  {
+    name: 'an ApiError with another status',
+    error: new ApiError('x', HttpStatus.Forbidden, null, []),
+    isUnauthorized: false,
+  },
+  { name: 'an error that is not of the API', error: new Error('x'), isUnauthorized: false },
+  { name: 'a value that is not an error', error: 'unauthorized', isUnauthorized: false },
 ]

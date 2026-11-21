@@ -473,22 +473,21 @@ const scriptedStepCounts = {
   cancelled: 9,
 } as const
 
+/** How many steps of the workflow a run that has no script of its own has reached. */
+function scriptedStepCount(runItem: Run): number {
+  if (runItem.status === 'succeeded') return mentorRun3Specs.length
+  if (runItem.status === 'queued') return 0
+  if (runItem.status === 'interrupted' && runItem.current_stage === 'persona_review') return 3
+  return scriptedStepCounts[runItem.status]
+}
+
 /**
  * The steps of a run that has no script of its own: the first steps of the workflow, as many as
  * the state of the run reached. A run that ended well has them all; one that failed has its last
  * step failed, and one that runs has its last step running.
  */
 export function scriptedSteps(runItem: Run, runIndex: number): RunStep[] {
-  const isWaitingAtPersonas =
-    runItem.status === 'interrupted' && runItem.current_stage === 'persona_review'
-  const count =
-    runItem.status === 'succeeded'
-      ? mentorRun3Specs.length
-      : runItem.status === 'queued'
-        ? 0
-        : isWaitingAtPersonas
-          ? 3
-          : scriptedStepCounts[runItem.status]
+  const count = scriptedStepCount(runItem)
   const steps = buildSteps(
     runItem.id,
     runIndex,

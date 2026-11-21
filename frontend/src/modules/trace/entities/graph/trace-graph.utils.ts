@@ -1,3 +1,5 @@
+import { indexBy } from '@/shared/lib/collections'
+
 import type { Trace } from '../chains/chains.types'
 import { isLinkOutOfDate } from '../links/trace-links.utils'
 import { linkAttention } from './attention.utils'
@@ -10,7 +12,7 @@ import type { ChainContext, ChainGraph } from './trace-graph.types'
  * since the graph would have an edge to nothing.
  */
 export function chainGraphOf(trace: Trace, context: ChainContext): ChainGraph {
-  const itemById = new Map(trace.items.map((item) => [item.id, item]))
+  const itemById = indexBy(trace.items, (item) => item.id)
   return {
     nodes: trace.items.map((item) => ({
       id: item.id,

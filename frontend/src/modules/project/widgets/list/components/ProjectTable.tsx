@@ -10,11 +10,13 @@ import {
   type ProjectStatus,
   useProjectList,
 } from '@/modules/project/entities'
+import { errorMessageOf } from '@/shared/api/error'
 import { pageItems } from '@/shared/api/query-client'
 import { filterMessages } from '@/shared/components/filter'
 import { EmptyState, ErrorState, LoadingState } from '@/shared/components/state'
 import { Button } from '@/shared/components/ui/button'
 import { PendingButton } from '@/shared/components/ui/pending-button'
+import { RelativeTime } from '@/shared/components/ui/relative-time'
 import {
   Table,
   TableBody,
@@ -24,7 +26,7 @@ import {
   TableHeader,
   TableRow,
 } from '@/shared/components/ui/table'
-import { formatRelativeTime, useNow } from '@/shared/lib/time'
+import { useNow } from '@/shared/lib/time'
 import { routes } from '@/shared/routes'
 
 import { projectFilterMessages } from '../project-filters.constants'
@@ -45,6 +47,7 @@ interface ProjectTableProps {
  */
 export function ProjectTable({ status, filters, onClearFilters }: ProjectTableProps) {
   const projects = useProjectList(status, filters)
+  // One clock for the rows: each of them counts from it.
   const now = useNow()
 
   if (projects.isPending) {
@@ -55,7 +58,7 @@ export function ProjectTable({ status, filters, onClearFilters }: ProjectTablePr
   if (projects.data === undefined) {
     return (
       <ErrorState
-        message={projects.error.message}
+        message={errorMessageOf(projects.error)}
         onRetry={() => void projects.refetch()}
         className="px-0"
       />
@@ -125,9 +128,7 @@ export function ProjectTable({ status, filters, onClearFilters }: ProjectTablePr
                 <ProjectRunCell project={project} />
               </TableCell>
               <TableCell className="text-right text-muted-foreground">
-                <time dateTime={project.last_activity_at}>
-                  {formatRelativeTime(project.last_activity_at, now)}
-                </time>
+                <RelativeTime date={project.last_activity_at} now={now} />
               </TableCell>
               <TableCell className="text-right">
                 <ProjectActionsMenu project={project} />
@@ -140,7 +141,7 @@ export function ProjectTable({ status, filters, onClearFilters }: ProjectTablePr
         <div className="flex flex-col items-center gap-2">
           {/* The button tries the page again. */}
           {projects.isFetchNextPageError && (
-            <ErrorState size="compact" message={projects.error.message} className="p-0" />
+            <ErrorState size="compact" message={errorMessageOf(projects.error)} className="p-0" />
           )}
           <PendingButton
             variant="outline"

@@ -81,13 +81,47 @@ export const syntaxGroups = {
       message: 'Use HttpMethod of @/shared/api/http.',
     },
   ],
-  // A unit test types, pastes and presses keys with the steps of @/test/steps.
+  // A unit test types, pastes, presses keys and clicks with the steps of @/test/steps.
   userEventKeys: [
     {
       selector:
         'CallExpression[callee.object.name=/^(user|userEvent)$/][callee.property.name=/^(keyboard|type|paste|tab)$/]',
       message:
         'Use typeText, pasteText, pressKey, pressKeys, pressTab or clickHolding of @/test/steps.',
+    },
+    {
+      selector:
+        "CallExpression[callee.object.name=/^(user|userEvent)$/][callee.property.name='click']",
+      message: 'Use press, pressButton, pressMenuItem or pressRole of @/test/steps.',
+    },
+    {
+      selector:
+        "CallExpression[callee.object.name=/^(user|userEvent)$/][callee.property.name='clear']",
+      message: 'Use replaceText of @/test/steps, which clears the field and types the text.',
+    },
+    {
+      selector:
+        'CallExpression[callee.object.name=/^(user|userEvent)$/][callee.property.name=/^(hover|unhover)$/]',
+      message: 'Use hoverOver or hoverAway of @/test/steps.',
+    },
+    {
+      selector:
+        "CallExpression[callee.object.name=/^(user|userEvent)$/][callee.property.name='dblClick']",
+      message: 'Use pressTwice of @/test/steps.',
+    },
+    {
+      selector:
+        "CallExpression[callee.object.name=/^(user|userEvent)$/][callee.property.name='selectOptions']",
+      message: 'Use chooseOption of @/test/steps.',
+    },
+  ],
+  // A unit test starts and moves its fake clock through the steps of @/test/steps.
+  fakeTimers: [
+    {
+      selector:
+        "CallExpression[callee.object.name='vi'][callee.property.name=/^(useFakeTimers|runAllTimers|runOnlyPendingTimers|advanceTimersToNextTimer|advanceTimersByTime|advanceTimersByTimeAsync)$/]",
+      message:
+        'Start the fake timers of a whole block with withFakeTimers, and move its clock with advanceTimers or advanceTimersAsync of @/test/steps.',
     },
   ],
   // A unit test gets its query cache from @/test/render.

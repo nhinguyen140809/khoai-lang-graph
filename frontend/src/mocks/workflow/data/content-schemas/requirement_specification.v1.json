@@ -7,7 +7,13 @@
   "x-kind": "requirement_specification",
   "x-schema-version": 1,
   "x-ui-display": "document",
-  "x-ui-field-order": ["purpose", "scope", "out_of_scope", "definitions"],
+  "x-ui-icon": "file-check",
+  "x-ui-field-order": [
+    "purpose",
+    "scope",
+    "out_of_scope",
+    "definitions"
+  ],
   "type": "object",
   "additionalProperties": false,
   "properties": {
@@ -53,10 +59,18 @@
             "x-ui-widget": "textarea"
           }
         },
-        "required": ["term", "definition"]
+        "required": [
+          "term",
+          "definition"
+        ]
       },
       "x-ui-widget": "object-list"
     }
   },
-  "required": ["purpose", "scope", "out_of_scope", "definitions"]
+  "required": [
+    "purpose",
+    "scope",
+    "out_of_scope",
+    "definitions"
+  ]
 }

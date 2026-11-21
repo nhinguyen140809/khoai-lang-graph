@@ -116,7 +116,7 @@ frontend/
 ├── next.config.ts           # /api proxy, typed routes, dev memory options
 ├── components.json          # shadcn/ui CLI config (style, aliases, icon library)
 ├── src/
-│   ├── app/                 # routes (Next.js App Router) and styles.css
+│   ├── app/                 # routes (Next.js App Router), styles.css and styles/ (one file for each concern)
 │   ├── providers/           # global providers: query client, theme, API mocking, view of the app
 │   ├── modules/             # one folder per subject of the product, with entities/, features/ and widgets/
 │   ├── shared/              # code that knows no module
@@ -185,13 +185,13 @@ pnpm exec shadcn apply <preset> --only theme
 pnpm fix
 ```
 
-With `--only theme`, only the theme variables in `src/app/styles.css` change. Without `--only`, the CLI can also rewrite the components in `src/shared/components/ui/` in the preset's style; in that case review the diff of each component and run `pnpm fix` and `pnpm check`. Fonts are configured manually, see [Fonts](#fonts).
+With `--only theme`, only the theme variables in `src/app/styles/tokens.css` change. Without `--only`, the CLI can also rewrite the components in `src/shared/components/ui/` in the preset's style; in that case review the diff of each component and run `pnpm fix` and `pnpm check`. Fonts are configured manually, see [Fonts](#fonts).
 
 ## Theming and fonts
 
 ### Colors, radius, and dark mode
 
-- All design tokens are CSS variables in `src/app/styles.css`: `:root` holds the light theme, `.dark` the dark theme, and `@theme inline` maps them to Tailwind utilities (`bg-background`, `text-muted-foreground`, `border-border`, ...).
+- All design tokens are CSS variables in `src/app/styles/tokens.css`: `:root` holds the light theme, `.dark` the dark theme, and `@theme inline` maps them to Tailwind utilities (`bg-background`, `text-muted-foreground`, `border-border`, ...).
 - The text sizes are the ones of Tailwind, as the Nova style of shadcn/ui uses them: `text-sm` (14px) for the text of components and pages, which people read, and `text-xs` (12px) for labels, captions, hints, the status bar and the titles of panels, which people glance at. Below them, two sizes in `@theme` are for indicators: `text-3xs` (11px, 14px line) for counts, ids, and times, and `text-4xs` (10px, 12px line) for the count inside a badge.
 - A heading stands apart from the text around it by its size and its weight, always `font-semibold`: `font-medium` (500) is too close to regular text to set it apart, and shows as regular text in Segoe UI, the fallback on Windows, which has no such weight. For the same reason, words that stand out in a line, such as the name of the open project on the top bar, the name of the user in the account menu or the feature chosen on the activity bar, are `font-bold`. The sizes: `text-3xl` for the title of the login pages, `text-2xl` for the title of a page, `text-lg` for the heading of a section, the title of a state (empty, error, not found) and the titles of dialogs, alert dialogs, sheets and drawers, `text-base` for the titles of cards, empty blocks and questionnaires and for the legend of a group of fields, `text-sm` for the legend of a group inside another, for the heading of a folded group of fields (in the primary color, as large as the labels beside it, since it is one more setting), and for the title of the side panel, and `text-xs` for the title of a node of a graph.
 - `--radius` is the base corner radius. The `rounded-sm` ... `rounded-4xl` utilities are derived from it, so changing this one value rounds every component more or less.
@@ -239,7 +239,7 @@ With `--only theme`, only the theme variables in `src/app/styles.css` change. Wi
 
   Every text token has a contrast of at least 4.5:1 on its background, each `-strong` status color at least 4.5:1 on the background, the sidebar, cards, and its own soft fill (except the light `--warning-strong`, 4.0:1 on its soft fill, kept lighter on purpose), and each `-foreground` at least 4.5:1 on its solid fill. The light `--chart-strong` keeps 4.5:1 on the page and about 4.2:1 on its own soft fill, tuned like the light `--warning-strong`. The dark chart ramp passes the ordinal checks (hue spread within 40 degrees, monotone lightness, a step of at least 0.06 in OKLCH lightness, the step nearest the background at 2:1 or more). The light ramp passes all but the last: to stay a vivid yellow, `--chart-4` and `--chart-5` are 1.8:1 and 1.4:1 on the background, so a chart in the light theme labels its values or offers a table.
 
-- React Flow: `styles.css` imports its stylesheet into the `components` layer, so that utility classes override it, and sets its `--xy-*` variables to the tokens. The canvas is transparent, edges use `--muted-foreground` (`--primary` when selected; `Edge` sets its own from its color), nodes and handles `--card`, and controls and the minimap `--popover`. The `flow-selected:` variant applies while a node or edge is selected or focused from the keyboard, since React Flow removes their focus outline.
+- React Flow: `styles.css` imports its stylesheet into the `components` layer, so that utility classes override it, and `styles/react-flow.css` sets its `--xy-*` variables to the tokens. The canvas is transparent, edges use `--muted-foreground` (`--primary` when selected; `Edge` sets its own from its color), nodes and handles `--card`, and controls and the minimap `--popover`. The `flow-selected:` variant applies while a node or edge is selected or focused from the keyboard, since React Flow removes their focus outline.
 - Markdown code blocks use the Shiki themes `night-owl-light` and `night-owl`, the same colors as the editor.
 - Dark mode is class-based and handled by `next-themes`. Its `ThemeProvider` (in `src/providers/Providers.tsx`) sets the `dark` class on `<html>` before the page hydrates. The default theme is Dark, and the Settings page offers Light, Dark, and System. Components read the theme with `useTheme()` from `next-themes`. The stored theme is only known in the browser, so UI that depends on it must not differ between the server-rendered HTML and the first client render (see `SettingsPage.tsx`).
 

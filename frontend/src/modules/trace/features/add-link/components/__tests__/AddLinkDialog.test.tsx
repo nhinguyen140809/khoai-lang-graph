@@ -7,7 +7,15 @@ import { apiEndpoints } from '@/shared/api/endpoints'
 import { HttpMethod, HttpStatus } from '@/shared/api/http'
 import { openPage, recordRequests } from '@/test/msw'
 import { renderWithProviders } from '@/test/render'
-import { fillFields, pressButton, pressKeys, spyOnToast, typeText } from '@/test/steps'
+import {
+  expectRole,
+  expectText,
+  fillFields,
+  pressButton,
+  pressKeys,
+  spyOnToast,
+  typeText,
+} from '@/test/steps'
 
 import { addLinkMessages } from '../../add-link.constants'
 import { AddLinkDialog } from '../AddLinkDialog'
@@ -29,7 +37,7 @@ function renderDialog(item = source) {
  * keyboard, since the popup of the combobox sits outside the dialog that opened it. */
 async function chooseTarget(title: string) {
   await typeText(screen.getByLabelText(addLinkMessages.target), title.slice(0, 4))
-  await screen.findByText(title)
+  await expectText(title)
   await pressKeys('{ArrowDown}{Enter}')
 }
 
@@ -41,22 +49,20 @@ describe('AddLinkDialog', () => {
     await fillFields(typed)
     await pressButton(addLinkMessages.add)
 
-    for (const message of messages) expect(await screen.findByText(message)).toBeInTheDocument()
+    for (const message of messages) await expectText(message)
     expect(requests.filter(({ method }) => method === HttpMethod.Post)).toEqual([])
   })
 
   it('names the dialog after the item, and says what a link is', async () => {
     renderDialog()
 
-    expect(
-      await screen.findByText('Link Search with free hours to another item'),
-    ).toBeInTheDocument()
-    expect(screen.getByText(addLinkMessages.description)).toBeInTheDocument()
+    await expectText('Link Search with free hours to another item')
+    await expectText(addLinkMessages.description)
   })
 
   it('chooses the first kind of link of the item', async () => {
     renderDialog()
-    await screen.findByText('Link Search with free hours to another item')
+    await expectText('Link Search with free hours to another item')
 
     expect(screen.getByRole('combobox', { name: addLinkMessages.linkType })).toHaveTextContent(
       'Involves',
@@ -68,7 +74,7 @@ describe('AddLinkDialog', () => {
 
     await chooseTarget('Minh')
 
-    expect(await screen.findByText('Search with free hours will involve Minh.')).toBeInTheDocument()
+    await expectText('Search with free hours will involve Minh.')
   })
 
   it('makes a link from the chosen kind, item and note', async () => {
@@ -124,7 +130,7 @@ describe('AddLinkDialog', () => {
     await chooseTarget('Minh')
     await pressButton(addLinkMessages.add)
 
-    expect(await screen.findByText('Choose an item that the type allows.')).toBeInTheDocument()
+    await expectText('Choose an item that the type allows.')
   })
 
   it('says the reason of a document that cannot change, under the form', async () => {
@@ -133,9 +139,7 @@ describe('AddLinkDialog', () => {
     await chooseTarget('Search with free hours')
     await pressButton(addLinkMessages.add)
 
-    expect(
-      await screen.findByText(/An artifact changes only during a review that allows edits/),
-    ).toBeInTheDocument()
+    await expectText(/An artifact changes only during a review that allows edits/)
   })
 
   it('toasts the result of making a link', async () => {
@@ -162,8 +166,8 @@ describe('AddLinkDialog', () => {
     await pressButton(addLinkMessages.add)
 
     // A failure keeps its words in the form, under the fields, and the dialog stays open.
-    expect(await screen.findByText('Failed to add the link (HTTP 500)')).toBeInTheDocument()
-    expect(screen.getByRole('dialog')).toBeInTheDocument()
+    await expectText('Failed to add the link (HTTP 500)')
+    await expectRole('dialog')
     expect(success).not.toHaveBeenCalled()
   })
 })

@@ -3,6 +3,7 @@ import type { Route } from 'next'
 import { describe, expect, it } from 'vitest'
 
 import { routerMock } from '@/test/next-stubs'
+import { expectPushedTo } from '@/test/steps'
 
 import { frameWrapper } from '../../__tests__/frame-wrapper.utils.data'
 import type { Destination } from '../../destinations/destination.types'
@@ -61,12 +62,12 @@ describe('useOpenPage in place', () => {
     })
   })
 
-  it('opens the page as usual outside a workspace with tabs', () => {
+  it('opens the page as usual outside a workspace with tabs', async () => {
     const { result } = renderInGroup(null)
 
     result.current('/projects/p1/artifacts/b' as Route, { inPlace: true })
 
     expect(useEditorTabsStore.getState().pendingOpen).toBeNull()
-    expect(routerMock.push).toHaveBeenCalledWith('/projects/p1/artifacts/b')
+    await expectPushedTo('/projects/p1/artifacts/b')
   })
 })

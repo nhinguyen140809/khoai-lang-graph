@@ -1,5 +1,4 @@
 import { screen } from '@testing-library/react'
-import userEvent from '@testing-library/user-event'
 import { describe, expect, it } from 'vitest'
 
 import { itemFixtureByKey } from '@/mocks/artifacts/fixtures/artifacts.fixtures'
@@ -10,6 +9,7 @@ import {
   DropdownMenuTrigger,
 } from '@/shared/components/ui/dropdown-menu'
 import { renderWithProviders } from '@/test/render'
+import { hoverOver, pressMenuItem } from '@/test/steps'
 
 import { useRestoreVersionDialogStore } from '../../restore-version-dialog.store'
 import { RestoreVersionMenuItem } from '../RestoreVersionMenuItem'
@@ -32,22 +32,20 @@ function renderEntry(lockedReason: string | null = null) {
 
 describe('RestoreVersionMenuItem', () => {
   it('opens the dialog of the version through its store', async () => {
-    const user = userEvent.setup()
     renderEntry()
 
-    await user.click(screen.getByRole('menuitem', { name: 'Restore this version' }))
+    await pressMenuItem('Restore this version')
 
     expect(useRestoreVersionDialogStore.getState().open).toBe(true)
     expect(useRestoreVersionDialogStore.getState().targetId).toBe(`item:${item.id}@1`)
   })
 
   it('is disabled with its reason in the tooltip of its wrapper while the record cannot change', async () => {
-    const user = userEvent.setup()
     renderEntry('A document can change while it waits for your review.')
 
     const entry = screen.getByRole('menuitem', { name: 'Restore this version' })
     expect(entry).toHaveAttribute('aria-disabled', 'true')
-    await user.hover(assertWrapper(entry))
+    await hoverOver(assertWrapper(entry))
     expect(await screen.findByRole('tooltip')).toHaveTextContent(
       'A document can change while it waits for your review.',
     )

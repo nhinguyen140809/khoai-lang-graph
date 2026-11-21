@@ -1,6 +1,5 @@
 import { act, screen, waitFor, within } from '@testing-library/react'
-import userEvent from '@testing-library/user-event'
-import { describe, expect, it, vi } from 'vitest'
+import { describe, expect, it } from 'vitest'
 
 import {
   artifactFixtureByKind,
@@ -11,7 +10,20 @@ import { projectIds } from '@/mocks/shared/db'
 import { assertPresent } from '@/shared/lib/guards'
 import { routerMock } from '@/test/next-stubs'
 import { renderDocumentsFrame } from '@/test/render'
-import { advanceTimers, expectNoAccessibilityViolations, expectText, pressKey } from '@/test/steps'
+import {
+  advanceTimers,
+  expectDisabled,
+  expectEnabled,
+  expectNoAccessibilityViolations,
+  expectNoRole,
+  expectPushedTo,
+  expectText,
+  hoverAway,
+  hoverOver,
+  pressButton,
+  pressKey,
+  withFakeTimers,
+} from '@/test/steps'
 
 import { navigatorIdleMs } from '../../item-page.constants'
 import { ItemPage } from '../ItemPage'
@@ -34,7 +46,7 @@ function renderItem(itemId: string, scenario?: string) {
 /** The navigator over the page, once the page has the order of its document. */
 async function findNavigator() {
   const navigator = await screen.findByRole('group', { name: 'Go through the items' })
-  await screen.findByText(/^\d+ of \d+$/)
+  await expectText(/^\d+ of \d+$/)
   return navigator
 }
 
@@ -63,13 +75,13 @@ describe('ItemPage', () => {
     const heading = await screen.findByRole('heading', { level: 1, name: 'Minh' })
     // The key of the persona sits on the key line, under the title, no longer beside it.
     expect(heading.parentElement).not.toHaveTextContent('PER-001')
-    expect(screen.getByText('PER-001')).toBeInTheDocument()
+    await expectText('PER-001')
     // The avatar leads the title, in the tone of the place of the persona among the items.
     expect(screen.getByText('M')).toHaveAttribute('data-color', 'chart')
     // The fields of one line sit above the label of the status, under the title.
     const stakeholder = screen.getByText('Student').closest('p')
     expect(stakeholder?.textContent).toContain('Stakeholder type: Student')
-    expect(screen.getByText('Interviewed')).toBeInTheDocument()
+    await expectText('Interviewed')
     expect(stakeholder?.compareDocumentPosition(screen.getByText(/Approved/))).toBe(
       Node.DOCUMENT_POSITION_FOLLOWING,
     )
@@ -78,7 +90,7 @@ describe('ItemPage', () => {
     const background = screen.getByRole('heading', { name: 'Background' }).closest('section')
     expect(goals).not.toHaveAttribute('data-wide')
     expect(background).toHaveAttribute('data-wide')
-    expect(screen.queryByRole('heading', { name: 'Name' })).not.toBeInTheDocument()
+    expectNoRole('heading', 'Name')
   })
 
   it('shows the sections and the group above the item in the breadcrumb, from the top down', async () => {
@@ -124,32 +136,32 @@ describe('ItemPage', () => {
 
     await findNavigator()
 
-    expect(screen.getByText(/^1 of \d+$/)).toBeInTheDocument()
+    await expectText(/^1 of \d+$/)
   })
 
   it('disables Previous on the first item', async () => {
     renderItem(first.id)
     await findNavigator()
 
-    expect(screen.getByRole('button', { name: 'Previous item' })).toBeDisabled()
-    expect(screen.getByRole('button', { name: 'Next item' })).toBeEnabled()
+    expectDisabled('button', 'Previous item')
+    expectEnabled('button', 'Next item')
   })
 
   it('disables Next on the last item', async () => {
     renderItem(last?.id ?? '')
     await findNavigator()
 
-    expect(screen.getByRole('button', { name: 'Next item' })).toBeDisabled()
-    expect(screen.getByRole('button', { name: 'Previous item' })).toBeEnabled()
+    expectDisabled('button', 'Next item')
+    expectEnabled('button', 'Previous item')
   })
 
   it('opens the next item in the place of the tab on screen', async () => {
     renderItem(first.id)
     await findNavigator()
 
-    await userEvent.click(screen.getByRole('button', { name: 'Next item' }))
+    await pressButton('Next item')
 
-    expect(routerMock.push).toHaveBeenCalledWith(expect.stringMatching(/\/items\//), {
+    await expectPushedTo(expect.stringMatching(/\/items\//), {
       transitionTypes: ['item-next'],
     })
   })
@@ -158,9 +170,9 @@ describe('ItemPage', () => {
     renderItem(last?.id ?? '')
     await findNavigator()
 
-    await userEvent.click(screen.getByRole('button', { name: 'Previous item' }))
+    await pressButton('Previous item')
 
-    expect(routerMock.push).toHaveBeenCalledWith(expect.stringMatching(/\/items\//), {
+    await expectPushedTo(expect.stringMatching(/\/items\//), {
       transitionTypes: ['item-previous'],
     })
   })
@@ -197,8 +209,9 @@ describe('ItemPage', () => {
 })
 
 describe('ItemPage navigator', () => {
+  withFakeTimers({ shouldAdvanceTime: true })
+
   async function renderIdle() {
-    vi.useFakeTimers({ shouldAdvanceTime: true })
     renderItem(first.id)
     return findNavigator()
   }
@@ -247,11 +260,11 @@ describe('ItemPage navigator', () => {
   it('stays while the pointer is over it, and hides after the pointer leaves', async () => {
     const navigator = await renderIdle()
 
-    await userEvent.hover(navigator)
+    await hoverOver(navigator)
     advanceTimers(navigatorIdleMs * 2)
     expect(navigator).not.toHaveClass('opacity-0')
 
-    await userEvent.unhover(navigator)
+    await hoverAway(navigator)
     advanceTimers(navigatorIdleMs + 100)
     expect(navigator).toHaveClass('opacity-0')
   })

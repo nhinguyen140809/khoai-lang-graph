@@ -65,6 +65,34 @@ export function newKeyPrefix(schema: ContentSchema, content: ContentValues) {
   return content.item_type === 'epic' ? 'EP' : 'US'
 }
 
+// The problems of the fields of a new item that are known before its content is read: the kind,
+// the content and the parent.
+function newItemShapeProblems(
+  hasNoKind: boolean,
+  hasNoContent: boolean,
+  hasForeignParent: boolean,
+): FieldProblem[] {
+  const problems: FieldProblem[] = []
+  if (hasNoKind) problems.push({ field: 'kind', message: 'The artifact does not hold this kind.' })
+  if (hasNoContent) {
+    problems.push({ field: 'content', message: 'Send the fields of the content.' })
+  }
+  if (hasForeignParent) {
+    problems.push({ field: 'parent_item_id', message: 'Choose an item of the artifact.' })
+  }
+  return problems
+}
+
+// The prefix of the key of a new item, which needs its kind and its fields; null without them.
+function newItemKeyPrefix(
+  itemKind: { schema: ContentSchema } | undefined,
+  fields: ContentValues | undefined,
+) {
+  return itemKind === undefined || fields === undefined
+    ? null
+    : newKeyPrefix(itemKind.schema, fields)
+}
+
 // The new item that the body of POST /artifacts/{artifact_id}/items describes, or the problems of
 // its fields.
 export function validateNewItem(
@@ -75,21 +103,16 @@ export function validateNewItem(
   const fields = jsonObject(content)
   const itemKind = itemKindsOf(artifact.kind).find((entry) => entry.kind === kind)
   const parent = isString(parentItemId) ? findItem(parentItemId) : undefined
-  const problems: FieldProblem[] = []
-  if (itemKind === undefined) {
-    problems.push({ field: 'kind', message: 'The artifact does not hold this kind.' })
-  }
-  if (fields === undefined) {
-    problems.push({ field: 'content', message: 'Send the fields of the content.' })
-  }
-  if (parentItemId != null && parent?.artifact_id !== artifact.id) {
-    problems.push({ field: 'parent_item_id', message: 'Choose an item of the artifact.' })
-  }
+  const hasForeignParent = parentItemId != null && parent?.artifact_id !== artifact.id
+  const problems = newItemShapeProblems(
+    itemKind === undefined,
+    fields === undefined,
+    hasForeignParent,
+  )
   if (itemKind !== undefined && fields !== undefined) {
     problems.push(...contentProblems(itemKind.schema, fields, artifact.project_id))
   }
-  const keyPrefix =
-    itemKind === undefined || fields === undefined ? null : newKeyPrefix(itemKind.schema, fields)
+  const keyPrefix = newItemKeyPrefix(itemKind, fields)
   if (itemKind !== undefined && keyPrefix === null) {
     problems.push({ field: 'kind', message: 'The interview writes this kind, not the user.' })
   }

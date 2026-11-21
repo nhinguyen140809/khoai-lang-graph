@@ -1,5 +1,4 @@
 import { act, screen } from '@testing-library/react'
-import userEvent from '@testing-library/user-event'
 import { describe, expect, it } from 'vitest'
 
 import { itemFixtureByKey } from '@/mocks/artifacts/fixtures/artifacts.fixtures'
@@ -10,6 +9,7 @@ import {
 } from '@/modules/artifact/features/edit'
 import { useRestoreVersionDialogStore } from '@/modules/artifact/features/restore'
 import { renderWithProviders } from '@/test/render'
+import { expectNoRole, pressButton } from '@/test/steps'
 
 import { DocumentDialogs } from '../DocumentDialogs'
 
@@ -17,10 +17,9 @@ const item = itemFixtureByKey(projectIds.mentor, 'AR-007')
 
 describe('DocumentDialogs', () => {
   it('mounts the discard dialog, which ends the edit mode on Discard', async () => {
-    const user = userEvent.setup()
     renderWithProviders(<DocumentDialogs />)
 
-    expect(screen.queryByRole('alertdialog')).not.toBeInTheDocument()
+    expectNoRole('alertdialog')
 
     useEditingRecordStore.getState().startEditing({ type: 'item', id: item.id })
     act(() => {
@@ -29,12 +28,11 @@ describe('DocumentDialogs', () => {
 
     expect(await screen.findByRole('alertdialog')).toHaveTextContent('Discard your changes?')
 
-    await user.click(screen.getByRole('button', { name: 'Discard' }))
+    await pressButton('Discard')
     expect(useEditingRecordStore.getState().recordKey).toBeNull()
   })
 
   it('mounts the restore dialog, which restores the version of its key', async () => {
-    const user = userEvent.setup()
     renderWithProviders(<DocumentDialogs />)
 
     act(() => {
@@ -43,7 +41,7 @@ describe('DocumentDialogs', () => {
 
     expect(await screen.findByRole('alertdialog')).toHaveTextContent('Restore version 1?')
 
-    await user.click(screen.getByRole('button', { name: 'Restore' }))
+    await pressButton('Restore')
     await act(async () => {
       await Promise.resolve()
     })

@@ -1,6 +1,7 @@
 // `@x` and no merge: the workflow entity owns the versioned definition, which is read on its own,
 // and the artifact entity owns the items; each has its own reason to change.
 import { isOpenIssue, type IssueKind } from '@/modules/workflow/entities/@x/artifact'
+import { indexBy } from '@/shared/lib/collections'
 import { successorsFrom } from '@/shared/lib/graph'
 
 import type { IssueGroup, IssueItem, IssueLink } from './issues.types'
@@ -14,7 +15,7 @@ export function issuesWithSubjects<T extends IssueItem>(
   links: readonly IssueLink[],
   issueKinds: readonly IssueKind[],
 ): IssueGroup<T>[] {
-  const byId = new Map(items.map((item) => [item.id, item]))
+  const byId = indexBy(items, (item) => item.id)
   const subjectIdsOf = successorsFrom(
     links,
     (link) => link.source_item_id,

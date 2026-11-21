@@ -2,6 +2,7 @@ import { screen } from '@testing-library/react'
 import { describe, expect, it } from 'vitest'
 
 import { renderWithProviders } from '@/test/render'
+import { expectNoText } from '@/test/steps'
 
 import { ItemHeading } from '../ItemHeading'
 
@@ -24,6 +25,6 @@ describe('ItemHeading', () => {
 
     const heading = screen.getByRole('heading', { level: 1, name: 'Search mentors' })
     expect(heading.parentElement).not.toHaveTextContent('REQ-001')
-    expect(screen.queryByText('M')).not.toBeInTheDocument()
+    expectNoText('M')
   })
 })

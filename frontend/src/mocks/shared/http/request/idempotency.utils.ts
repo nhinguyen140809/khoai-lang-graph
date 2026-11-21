@@ -24,7 +24,7 @@ function keyConflict() {
     HttpStatus.Conflict,
     ApiErrorCode.IdempotencyConflict,
     'Idempotency conflict',
-    'The idempotency key was used before with a different body.',
+    { detail: 'The idempotency key was used before with a different body.' },
   )
 }
 

@@ -1,9 +1,8 @@
 import { act, screen } from '@testing-library/react'
-import userEvent from '@testing-library/user-event'
 import { describe, expect, it, vi } from 'vitest'
 
 import { renderWithProviders } from '@/test/render'
-import { expectDisabled, pasteText, pressButton, pressKey, typeText } from '@/test/steps'
+import { expectDisabled, pasteText, press, pressButton, pressKey, typeText } from '@/test/steps'
 
 import { useProjectPromptStore } from '../../project-prompt.store'
 import { NewProjectPrompt } from '../NewProjectPrompt'
@@ -21,7 +20,7 @@ describe('NewProjectPrompt', () => {
   it.each(startCases)('sends the idea with $by', async ({ by, idea, sent }) => {
     const { prompt, onStart } = renderPrompt()
 
-    await userEvent.click(prompt)
+    await press(prompt)
     await pasteText(idea)
     if (by === 'Enter') await pressKey('Enter')
     else await pressButton('Create project')
@@ -41,7 +40,7 @@ describe('NewProjectPrompt', () => {
   it.each(blankIdeas)('does not send the blank idea %j, nor offer to', async (idea) => {
     const { prompt, onStart } = renderPrompt()
 
-    await userEvent.click(prompt)
+    await press(prompt)
     await pasteText(idea)
     await pressKey('Enter')
 

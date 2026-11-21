@@ -8,8 +8,10 @@ import {
   edgesFrom,
   findAgentRole,
   findNode,
+  findTool,
   findValueList,
-  toolsOf,
+  linkTypeTitles,
+  subjectKindByStage,
 } from '../workflow-definition.utils'
 import { edgeCases, nodeCases, valueListCases } from './workflow-definition.utils.data'
 
@@ -54,6 +56,25 @@ describe('agentRoleLabels', () => {
   })
 })
 
+describe('linkTypeTitles', () => {
+  it('gives the title of each link type of the definition, by its key', () => {
+    const titles = linkTypeTitles(workflowDefinitionFixture)
+
+    expect(titles.get('derived_from')).toBe('Based on')
+    expect(titles.size).toBe(workflowDefinitionFixture.link_types.length)
+  })
+})
+
+describe('subjectKindByStage', () => {
+  it('gives the subject item kind of each stage that runs once for each subject', () => {
+    const subjectsOfStage = subjectKindByStage(workflowDefinitionFixture)
+
+    expect(subjectsOfStage.get('interviewing')).toBe('persona')
+    // A kind with one artifact for the project gives its stage no subject.
+    expect(subjectsOfStage.has('planning')).toBe(false)
+  })
+})
+
 describe('findAgentRole', () => {
   it('gives the agent role of its key', () => {
     const interviewer = findAgentRole(workflowDefinitionFixture, 'interviewer')
@@ -66,8 +87,8 @@ describe('findAgentRole', () => {
   })
 })
 
-describe('toolsOf', () => {
-  it('gives each tool of the definition by its key', () => {
+describe('findTool', () => {
+  it('gives the tool of the definition with the key', () => {
     const tool = {
       key: 'search',
       title: 'Web search',
@@ -76,13 +97,10 @@ describe('toolsOf', () => {
       icon: 'search',
     } as const
 
-    const tools = toolsOf({ tools: [tool] })
-
-    expect(tools.get('search')).toEqual(tool)
-    expect(tools.size).toBe(1)
+    expect(findTool({ tools: [tool] }, 'search')).toEqual(tool)
   })
 
-  it('gives none for a definition without tools', () => {
-    expect(toolsOf(workflowDefinitionFixture).size).toBe(0)
+  it('gives undefined for a key that the definition does not list', () => {
+    expect(findTool(workflowDefinitionFixture, 'search')).toBeUndefined()
   })
 })

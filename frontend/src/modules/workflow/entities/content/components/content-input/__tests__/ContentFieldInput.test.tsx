@@ -1,11 +1,22 @@
 import { zodResolver } from '@hookform/resolvers/zod'
 import { render, screen } from '@testing-library/react'
-import userEvent from '@testing-library/user-event'
 import { FormProvider, useForm } from 'react-hook-form'
 import { describe, expect, it } from 'vitest'
 
 import { assertPresent } from '@/shared/lib/guards'
-import { expectNoAccessibilityViolations, typeText } from '@/test/steps'
+import {
+  chooseOption,
+  expectDisabled,
+  expectNoAccessibilityViolations,
+  expectNoRole,
+  expectRole,
+  expectText,
+  press,
+  pressButton,
+  pressRole,
+  replaceText,
+  typeText,
+} from '@/test/steps'
 
 import type { ContentFormValues } from '../../../values/content-form.schema'
 import { contentFormValuesSchema, withContentProblems } from '../../../values/content-form.schema'
@@ -60,32 +71,32 @@ function InputForm({
 }
 
 /** Changes the control of the field as the case says. */
-async function changeControl(user: ReturnType<typeof userEvent.setup>, change: FieldChange) {
+async function changeControl(change: FieldChange) {
   switch (change.kind) {
     case 'type': {
       const control = assertPresent(
         screen.queryByRole('textbox') ?? screen.queryByRole('spinbutton'),
         'The field has no control to type in',
       )
-      await user.clear(control)
+      await replaceText(control, '')
       await typeText(control, change.text)
       return
     }
     case 'select':
-      await user.selectOptions(screen.getByRole('combobox'), change.option)
+      await chooseOption(screen.getByRole('combobox'), change.option)
       return
     case 'click':
-      await user.click(screen.getByRole('switch'))
+      await press(screen.getByRole('switch'))
       return
     case 'addEntry':
-      await user.click(screen.getByRole('button', { name: 'Add' }))
+      await pressButton('Add')
       await typeText(
         assertPresent(screen.getAllByRole('textbox')[0], 'The new entry has no control'),
         change.text,
       )
       return
     case 'check':
-      await user.click(screen.getByRole('checkbox', { name: change.label }))
+      await pressRole('checkbox', change.label)
   }
 }
 
@@ -93,7 +104,6 @@ describe('ContentFieldInput', () => {
   it.each(widgetCases)(
     'changes the form value of $name',
     async ({ field, change, saved, allowedValues }) => {
-      const user = userEvent.setup()
       const savedValues: ContentFormValues[] = []
       render(
         <InputForm
@@ -103,15 +113,14 @@ describe('ContentFieldInput', () => {
         />,
       )
 
-      await changeControl(user, change)
-      await user.click(screen.getByRole('button', { name: 'Save' }))
+      await changeControl(change)
+      await pressButton('Save')
 
       expect(savedValues[0]?.content).toMatchObject({ ...initialContent, ...saved })
     },
   )
 
   it('stores null for a nullable select that is set to None', async () => {
-    const user = userEvent.setup()
     const savedValues: ContentFormValues[] = []
     render(
       <InputForm
@@ -121,14 +130,13 @@ describe('ContentFieldInput', () => {
       />,
     )
 
-    await user.selectOptions(screen.getByRole('combobox'), '')
-    await user.click(screen.getByRole('button', { name: 'Save' }))
+    await chooseOption(screen.getByRole('combobox'), '')
+    await pressButton('Save')
 
     expect(savedValues[0]?.content).toMatchObject({ quality_category: null })
   })
 
   it('offers the allowed values of a select that takes them from another artifact', async () => {
-    const user = userEvent.setup()
     const savedValues: ContentFormValues[] = []
     render(
       <InputForm
@@ -139,14 +147,14 @@ describe('ContentFieldInput', () => {
     )
 
     const select = screen.getByRole('combobox', { name: 'Pick' })
-    expect(screen.getByRole('option', { name: 'Choose a value' })).toBeDisabled()
-    await user.selectOptions(select, 'booking')
-    await user.click(screen.getByRole('button', { name: 'Save' }))
+    expectDisabled('option', 'Choose a value')
+    await chooseOption(select, 'booking')
+    await pressButton('Save')
 
     expect(savedValues[0]?.content).toMatchObject({ pick: 'booking' })
   })
 
-  it('shows the value of a field the user cannot edit, without a control', () => {
+  it('shows the value of a field the user cannot edit, without a control', async () => {
     render(
       <InputForm
         field={assertPresent(readOnlyField, 'No read only field')}
@@ -155,11 +163,11 @@ describe('ContentFieldInput', () => {
       />,
     )
 
-    expect(screen.getByText('Interviewed')).toBeInTheDocument()
-    expect(screen.queryByRole('textbox')).not.toBeInTheDocument()
+    await expectText('Interviewed')
+    expectNoRole('textbox')
   })
 
-  it('shows the people of a read only avatar list, without a control', () => {
+  it('shows the people of a read only avatar list, without a control', async () => {
     render(
       <InputForm
         field={assertPresent(readOnlyPeopleField, 'No read only avatar list')}
@@ -168,23 +176,22 @@ describe('ContentFieldInput', () => {
       />,
     )
 
-    expect(screen.getByText('Interviewer')).toBeInTheDocument()
-    expect(screen.queryByRole('textbox')).not.toBeInTheDocument()
-    expect(screen.queryByRole('combobox')).not.toBeInTheDocument()
+    await expectText('Interviewer')
+    expectNoRole('textbox')
+    expectNoRole('combobox')
   })
 
   it('shows the problem of the field at the field', async () => {
-    const user = userEvent.setup()
     render(<InputForm field={fieldOf('name')} initial={{ name: '' }} onSaved={() => undefined} />)
 
-    await user.click(screen.getByRole('button', { name: 'Save' }))
+    await pressButton('Save')
 
-    expect(screen.getByText('Enter a value.')).toBeInTheDocument()
+    await expectText('Enter a value.')
   })
 
   it('has no accessibility violation', async () => {
     const { container } = render(<InputForm field={fieldOf('mood')} onSaved={() => undefined} />)
-    await screen.findByRole('combobox', { name: 'Mood' })
+    await expectRole('combobox', 'Mood')
 
     await expectNoAccessibilityViolations(container)
   })

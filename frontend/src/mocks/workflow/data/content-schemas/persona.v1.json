@@ -9,6 +9,7 @@
   "x-key-prefix": "PER",
   "x-ui-display": "profile",
   "x-ui-navigable": true,
+  "x-ui-icon": "user",
   "x-ui-title-field": "name",
   "x-ui-list-fields": [
     "name",

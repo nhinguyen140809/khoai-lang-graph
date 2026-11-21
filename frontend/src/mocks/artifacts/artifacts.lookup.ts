@@ -157,16 +157,18 @@ function fixtureRevisions(
   return Array.from({ length: base.version }, (_, index): Revision => {
     const version = base.version - index
     const isLatest = version === base.version && version > 1
+    // The versions after the first are the user's edits when the record is hers now, else reworks.
+    const laterReason = base.updated_by.actor === 'user' ? 'user_edit' : 'rework'
+    const laterAuthor = isLatest ? base.updated_by : userOrigin
     const historicalTime = isoTime(new Date(new Date(base.created_at).getTime() + version * 1000))
     return {
       version,
       // The first version is what the agents generated; the ones after it are the edits of the
       // user when the record is hers now, else the reworks of the agents.
-      change_reason:
-        version === 1 ? 'generated' : base.updated_by.actor === 'user' ? 'user_edit' : 'rework',
+      change_reason: version === 1 ? 'generated' : laterReason,
       // The author of the first version is the one that made the record; the user made the
       // versions between it and the last one.
-      changed_by: version === 1 ? base.created_by : isLatest ? base.updated_by : userOrigin,
+      changed_by: version === 1 ? base.created_by : laterAuthor,
       created_at: isLatest ? base.updated_at : historicalTime,
       content: version === base.version ? base.content : (before[version - 1] ?? base.content),
     }

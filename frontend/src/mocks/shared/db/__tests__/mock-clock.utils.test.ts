@@ -1,5 +1,7 @@
 import { beforeEach, describe, expect, it, vi } from 'vitest'
 
+import { advanceTimers, withFakeTimers } from '@/test/steps'
+
 import { isoTime, mockNow, msSince } from '../mock-clock.utils'
 import { isoTimeCases, msSinceCases } from './mock-clock.utils.data'
 
@@ -10,9 +12,7 @@ describe('isoTime', () => {
 })
 
 describe('mockNow', () => {
-  beforeEach(() => {
-    vi.useFakeTimers()
-  })
+  withFakeTimers()
 
   it('gives the current time as the fixtures write it', () => {
     vi.setSystemTime(new Date('2026-10-10T09:15:30.789Z'))
@@ -24,7 +24,7 @@ describe('mockNow', () => {
     vi.setSystemTime(new Date('2026-10-10T09:15:30Z'))
     const first = mockNow()
 
-    vi.advanceTimersByTime(2000)
+    advanceTimers(2000)
 
     expect(mockNow()).not.toBe(first)
     expect(mockNow()).toBe('2026-10-10T09:15:32Z')
@@ -32,8 +32,8 @@ describe('mockNow', () => {
 })
 
 describe('msSince', () => {
+  withFakeTimers()
   beforeEach(() => {
-    vi.useFakeTimers()
     vi.setSystemTime(new Date('2026-10-10T09:15:30Z'))
   })
 

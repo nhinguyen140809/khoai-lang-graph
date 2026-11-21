@@ -1,6 +1,5 @@
 import { zodResolver } from '@hookform/resolvers/zod'
 import { render, screen } from '@testing-library/react'
-import userEvent from '@testing-library/user-event'
 import { useForm } from 'react-hook-form'
 import { describe, expect, it } from 'vitest'
 import { z } from 'zod'
@@ -11,7 +10,9 @@ import {
   expectText,
   expectValidField,
   pasteText,
+  press,
   pressButton,
+  replaceText,
 } from '@/test/steps'
 
 import { NumberField } from '../NumberField'
@@ -51,7 +52,7 @@ function CountForm({ onSubmit, integer = true }: CountFormProps) {
 const field = () => screen.getByRole('spinbutton', { name: 'Count' })
 
 async function enterCount(typed: string) {
-  await userEvent.click(field())
+  await press(field())
   if (typed !== '') await pasteText(typed)
   await pressButton('Save')
 }
@@ -111,9 +112,9 @@ describe('NumberField', () => {
   it('gives the form no number again once the input is emptied', async () => {
     render(<CountForm onSubmit={() => undefined} />)
 
-    await userEvent.click(field())
+    await press(field())
     await pasteText('5')
-    await userEvent.clear(field())
+    await replaceText(field(), '')
     await pressButton('Save')
 
     await expectAlert('Enter a number.')

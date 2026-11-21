@@ -1,4 +1,4 @@
-import type { WorkflowDefinition } from '@/modules/workflow/entities/@x/artifact'
+import { findAgentRole, type WorkflowDefinition } from '@/modules/workflow/entities/@x/artifact'
 
 import type { Origin } from '../artifacts/artifacts.types'
 import { revisionMessages } from './revisions.constants'
@@ -16,7 +16,7 @@ export function revisionAuthor(
   const role =
     origin.agent_role === null || definition === undefined
       ? undefined
-      : definition.agent_roles.find(({ key }) => key === origin.agent_role)
+      : findAgentRole(definition, origin.agent_role)
   return role?.label ?? origin.agent_role ?? revisionMessages.theAgents
 }
 

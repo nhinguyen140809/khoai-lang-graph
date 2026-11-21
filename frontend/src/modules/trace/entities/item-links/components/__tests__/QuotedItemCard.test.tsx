@@ -5,7 +5,7 @@ import { projectIds } from '@/mocks/shared/db'
 import { contentSchemaFixtureByKind } from '@/mocks/workflow/artifact-kinds.fixtures'
 import { routes } from '@/shared/routes'
 import { renderWithProviders } from '@/test/render'
-import { expectNoAccessibilityViolations } from '@/test/steps'
+import { expectNoAccessibilityViolations, expectText } from '@/test/steps'
 
 import { QuotedItemCard } from '../QuotedItemCard'
 
@@ -95,10 +95,10 @@ describe('QuotedItemCard', () => {
     expect(marks[0]).toHaveTextContent('a couple of seconds')
   })
 
-  it('shows the kind and the title alone when the link quotes no words of the item', () => {
+  it('shows the kind and the title alone when the link quotes no words of the item', async () => {
     const { container } = renderCard(requirement, null)
 
-    expect(screen.getByText('Kind')).toBeInTheDocument()
+    await expectText('Kind')
     expect(screen.getByRole('link')).toHaveTextContent('Search within 2 seconds')
     expect(container.querySelectorAll('mark')).toHaveLength(0)
   })
