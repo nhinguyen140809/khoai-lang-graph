@@ -80,6 +80,7 @@ describe('documentEntries', () => {
 
     expect(entries.map(({ kind, type }) => `${kind}:${type}`)).toEqual([
       'elicitation_plan:document',
+      'research_corpus:document',
       'persona_catalog:document',
       'interview_transcript:group',
       'requirements_analysis:document',
