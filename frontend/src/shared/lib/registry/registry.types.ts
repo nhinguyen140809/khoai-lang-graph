@@ -17,3 +17,12 @@ export interface OrderedItem {
   /** From the lowest to the highest; two items of the same order keep the order in which they came. */
   order?: number | undefined
 }
+
+/** What a reader of a registry asks of its items, beyond their order. */
+export interface RegisteredItemsOptions<Item> {
+  /**
+   * Keeps only the items that every filter accepts, such as those of one side of a bar. A new list
+   * lists the items again, so keep it a constant of the module, or in `useMemo`.
+   */
+  filters?: readonly ((item: Item) => boolean)[] | undefined
+}
