@@ -14,8 +14,8 @@ import {
 } from '@/shared/components/ui/message'
 
 import type { OutlineItem } from '../items/items.types'
+import { itemAnchorProps } from '../outline/item-anchor.utils'
 import type { KindView, Participant } from '../outline/outline.types'
-import { itemAnchorProps } from '../outline/outline.utils'
 import { transcriptParts } from '../outline/transcript.utils'
 
 // The bubble of each side of the conversation: the leader at the right in a tinted one, the

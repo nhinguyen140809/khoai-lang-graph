@@ -18,8 +18,9 @@ import {
 } from '@/shared/components/ui/table'
 
 import type { OutlineItem } from '../items/items.types'
+import { itemAnchorProps } from '../outline/item-anchor.utils'
+import { groupItemsBy, itemTitleOf } from '../outline/item-list.utils'
 import type { ItemGroup, KindView, RenderItemLink } from '../outline/outline.types'
-import { groupItemsBy, itemAnchorProps, itemTitleOf } from '../outline/outline.utils'
 import { artifactViewMessages } from './artifact-view.constants'
 
 interface ItemCardsProps {

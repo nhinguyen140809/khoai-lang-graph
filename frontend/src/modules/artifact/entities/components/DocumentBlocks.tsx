@@ -22,8 +22,9 @@ import {
 } from '@/shared/components/ui/table'
 
 import type { OutlineItem } from '../items/items.types'
+import { itemAnchorProps } from '../outline/item-anchor.utils'
+import { itemTitleOf } from '../outline/item-list.utils'
 import type { DocumentBlock, KindView, Participant, RenderItemLink } from '../outline/outline.types'
-import { itemAnchorProps, itemTitleOf } from '../outline/outline.utils'
 import { artifactViewMessages } from './artifact-view.constants'
 import { ItemAvatarCards } from './ItemAvatarCards'
 import { ItemCards } from './ItemCards'

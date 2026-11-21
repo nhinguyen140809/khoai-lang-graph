@@ -85,6 +85,7 @@ export { useArtifactDocument } from './outline/hooks/useArtifactDocument'
 export { useArtifactOutline } from './outline/hooks/useArtifactOutline'
 export { useKindViews } from './outline/hooks/useKindViews'
 export { useOutlineItems } from './outline/hooks/useOutlineItems'
+export { itemAnchorId, itemNodeId } from './outline/item-anchor.utils'
 export type {
   ArtifactDocumentData,
   ArtifactDocumentResult,
@@ -98,18 +99,15 @@ export type {
   RenderItemIdLink,
   RenderItemLink,
 } from './outline/outline.types'
+export { artifactOutline, outlineItemsOf } from './outline/outline.utils'
 export {
-  artifactOutline,
   isBranch,
-  itemAnchorId,
-  itemNodeId,
   outlineBreadcrumb,
-  outlineItemsOf,
   outlineNeighbors,
   outlinePath,
   outlineSequence,
   outlineStatuses,
-} from './outline/outline.utils'
+} from './outline/outline-path.utils'
 export { HistorySurface } from './revisions/components/HistorySurface'
 export { RevisionContent } from './revisions/components/RevisionContent'
 export { useHistoryView } from './revisions/hooks/useHistoryView'
