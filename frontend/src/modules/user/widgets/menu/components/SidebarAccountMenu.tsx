@@ -26,6 +26,7 @@ import { AccountMenuContent, LogoutDialog, UserAvatar } from './AccountMenuConte
  * email.
  * Beside the items of `AccountMenuContent` it offers Settings. On the rail of a folded side list
  * the row is the avatar alone.
+ * @view user
  */
 export function SidebarAccountMenu() {
   // The dialog sits beside the menu, since the menu closes when one of its items is chosen.
