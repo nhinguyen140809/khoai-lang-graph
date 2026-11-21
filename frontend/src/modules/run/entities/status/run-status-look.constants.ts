@@ -9,13 +9,11 @@ import {
 
 import { SpinningIcon } from '@/shared/components/animation/icon'
 import type { Mood } from '@/shared/components/face'
-import { DotIcon, ExclamationIcon } from '@/shared/components/icon'
+import { DotIcon, ExclamationIcon, PauseSolidIcon, ZapSolidIcon } from '@/shared/components/icon'
 import type { Tone } from '@/shared/lib/tone'
 import type { ByView } from '@/shared/lib/view'
 
-import { PauseSolidIcon } from './PauseSolidIcon'
 import type { RunStatus } from './run-status.types'
-import { ZapSolidIcon } from './ZapSolidIcon'
 
 /** How a run status shows. */
 interface RunStatusLook {
