@@ -1,7 +1,12 @@
 import { screen, waitFor } from '@testing-library/react'
+import { http, HttpResponse } from 'msw'
 import { describe, expect, it } from 'vitest'
 
-import { projectIds } from '@/mocks/shared/db'
+import { messagesOfThread } from '@/mocks/messages/messages.lookup'
+import { server } from '@/mocks/msw-server.setup'
+import { runsOfThread } from '@/mocks/runs/lookup/runs.lookup'
+import { projectIds, threadIds } from '@/mocks/shared/db'
+import { apiEndpoints } from '@/shared/api/endpoints'
 import { assertPresent } from '@/shared/lib/guards'
 import { openPage } from '@/test/msw'
 import { setQuery } from '@/test/next-stubs'
@@ -98,5 +103,34 @@ describe('ActivityChat', () => {
 
     await expectText('Also ask about group sessions.')
     await expectNoAccessibilityViolations()
+  })
+
+  it('reads the messages to their end before it shows the runs, as the newest are on the last page', async () => {
+    const messages = messagesOfThread(threadIds.mentorMain)
+    server.use(
+      http.get(apiEndpoints.threadMessages.pattern, ({ request }) =>
+        new URL(request.url).searchParams.get('cursor') === null
+          ? HttpResponse.json({ items: messages.slice(0, -1), next_cursor: 'rest' })
+          : HttpResponse.json({ items: messages.slice(-1), next_cursor: null }),
+      ),
+    )
+    renderWithProviders(<ActivityChat projectId={projectIds.mentor} />)
+
+    await expectText('Also ask about group sessions.')
+  })
+
+  it('shows the newest runs first, and the runs before them when they are asked for', async () => {
+    const runs = runsOfThread(threadIds.mentorMain).toSorted((a, b) => b.number - a.number)
+    server.use(
+      http.get(apiEndpoints.threadRuns.pattern, ({ request }) =>
+        new URL(request.url).searchParams.get('cursor') === null
+          ? HttpResponse.json({ items: runs.slice(0, 1), next_cursor: 'older' })
+          : HttpResponse.json({ items: runs.slice(1), next_cursor: null }),
+      ),
+    )
+    renderWithProviders(<ActivityChat projectId={projectIds.mentor} />)
+
+    await expectText('Also ask about group sessions.')
+    await expectText('I want to build an online platform for university students to find mentors.')
   })
 })
