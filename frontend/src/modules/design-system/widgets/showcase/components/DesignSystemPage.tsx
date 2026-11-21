@@ -16,6 +16,7 @@ import { CopyButtonCard } from './cards/CopyButtonCard'
 import { DiffViewCard } from './cards/DiffViewCard'
 import { DisclosureCard } from './cards/DisclosureCard'
 import { ExplorerTreeCard } from './cards/ExplorerTreeCard'
+import { FaceCard } from './cards/FaceCard'
 import { FeedEntryCard } from './cards/FeedEntryCard'
 import { FloatingSurfaceCard } from './cards/FloatingSurfaceCard'
 import { FormCard } from './cards/FormCard'
@@ -86,6 +87,7 @@ export function DesignSystemPage() {
             <StepperCard />
             <TimelineCard />
             <TraceCard />
+            <FaceCard />
           </div>
           {/* Outside the columns: the browser shares the cards between columns by their height, so
               a card that changes its own height, as these two do, would send other cards to
