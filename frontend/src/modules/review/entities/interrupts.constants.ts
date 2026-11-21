@@ -1,6 +1,6 @@
 import type { Wording } from '@/shared/lib/view'
 
-import type { InterruptStatus } from './interrupts.types'
+import type { InterruptPurpose, InterruptStatus } from './interrupts.types'
 
 /**
  * The label of each interrupt status in each view: a review that waits for the user, one that
@@ -14,3 +14,9 @@ export const interruptStatusLabels = {
 
 // How many interrupts a page of the interrupts of a run holds; the next page loads on demand.
 export const interruptsPageSize = 100
+
+/** The acts shown around the agent that waits at an interrupt: a question for an ask, a page read for a review. */
+export const interruptActs: Readonly<Record<InterruptPurpose, readonly string[]>> = {
+  ask: ['question'],
+  review: ['review'],
+}

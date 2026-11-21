@@ -1,5 +1,6 @@
 import type { RunStatus } from '@/modules/run/entities'
 import type { Message } from '@/modules/thread/entities'
+import type { Slot } from '@/shared/components/act'
 import { pluralForm } from '@/shared/lib/text'
 
 /** The statuses of a run that show a status line at the end of its entries: the run is going on or about to. */
@@ -23,7 +24,8 @@ export const activityChatMessages = {
   itemMeta: (kind: string, key: string, version: number) =>
     `${kind} - ${key}, version ${String(version)}`,
   quickLook: (key: string) => `Quick look at ${key}`,
-  toReview: 'To review:',
+  /** A sentence around the documents that a review asks to read, so that it is not a label with a colon. */
+  readBeforeAnswering: { start: 'Please read', end: 'before you answer.' },
   moreReferences: (count: number) =>
     `${String(count)} more ${pluralForm(count, { one: 'item', other: 'items' })}`,
   /** Names the bar of the stages under the prompt, for assistive technology. */
@@ -46,3 +48,6 @@ export const revealDelayMs = 250
 
 /** The messages of a run without any; one list, so that its entries do not compute again. */
 export const emptyMessages: Message[] = []
+
+/** The slots around the agent on the corner of a review that waits that its act may use: those above and beside it, not those over the card. */
+export const pendingActSlots: readonly Slot[] = ['top', 'top-right', 'right']
