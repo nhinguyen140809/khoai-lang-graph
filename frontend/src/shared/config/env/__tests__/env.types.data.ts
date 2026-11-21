@@ -6,6 +6,10 @@ export const validEnvCases = [
     values: { NODE_ENV: 'development', NEXT_PUBLIC_API_MOCKING: 'enabled' },
   },
   {
+    name: 'an arrangement of the desk that exists',
+    values: { NODE_ENV: 'development', NEXT_PUBLIC_DESK_LAYOUT: 'studio' },
+  },
+  {
     name: 'mocks that are disabled',
     values: { NODE_ENV: 'test', NEXT_PUBLIC_API_MOCKING: 'disabled' },
   },
@@ -18,5 +22,9 @@ export const invalidEnvCases = [
   {
     name: 'a mocking flag that is neither',
     values: { NODE_ENV: 'test', NEXT_PUBLIC_API_MOCKING: 'yes' },
+  },
+  {
+    name: 'an arrangement of the desk that does not exist',
+    values: { NODE_ENV: 'development', NEXT_PUBLIC_DESK_LAYOUT: 'kiosk' },
   },
 ]
