@@ -7,7 +7,7 @@ import { useAgentRoleLabels } from '../useAgentRoleLabels'
 
 describe('useAgentRoleLabels', () => {
   it('reads the labels of the agent roles in a version of the workflow', async () => {
-    const { result } = renderHookWithProviders(() => useAgentRoleLabels(1))
+    const { result } = renderHookWithProviders(() => useAgentRoleLabels(2))
 
     await waitFor(() => {
       expect(result.current.size).toBeGreaterThan(0)

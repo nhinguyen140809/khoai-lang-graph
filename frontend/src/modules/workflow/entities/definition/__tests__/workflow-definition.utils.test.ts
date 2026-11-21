@@ -24,8 +24,13 @@ describe('findNode', () => {
 describe('checkpointNodes', () => {
   it('lists the checkpoints in the order of the definition', () => {
     expect(checkpointNodes(workflowDefinitionFixture).map(({ id }) => id)).toEqual([
+      'ask_message',
+      'checkpoint_plan',
+      'ask_personas',
       'checkpoint_personas',
+      'ask_analysis',
       'checkpoint_analysis',
+      'ask_spec',
       'checkpoint_spec',
     ])
   })
@@ -95,12 +100,13 @@ describe('findTool', () => {
       description: 'Searches the web.',
       uses: { one: 'Searched once', other: 'Searched {count} times' },
       icon: 'search',
+      acts: [] as string[],
     } as const
 
     expect(findTool({ tools: [tool] }, 'search')).toEqual(tool)
   })
 
   it('gives undefined for a key that the definition does not list', () => {
-    expect(findTool(workflowDefinitionFixture, 'search')).toBeUndefined()
+    expect(findTool({ tools: [] }, 'search')).toBeUndefined()
   })
 })

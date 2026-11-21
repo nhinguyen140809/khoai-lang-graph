@@ -8,11 +8,11 @@ export const nodeCases = [
 
 /** A node, and the targets of the edges that leave it, in the order of the definition. */
 export const edgeCases = [
-  { name: 'the start node', nodeId: '__start__', targets: ['planner', 'intent_router'] },
+  { name: 'the start node', nodeId: '__start__', targets: ['intent_router'] },
   {
-    name: 'a checkpoint with three options',
+    name: 'a checkpoint with three options and the one to say more',
     nodeId: 'checkpoint_analysis',
-    targets: ['requirement_engineer', 'analyst', 'rework_elicitation'],
+    targets: ['requirement_engineer', 'analyst', 'rework_elicitation', 'intent_router'],
   },
   { name: 'a node that is not there', nodeId: 'nothing', targets: [] },
 ]

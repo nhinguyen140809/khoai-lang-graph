@@ -7,10 +7,10 @@ import {
 import { isRecord, isString } from '@/shared/lib/guards'
 
 import { contentSchemaFiles } from './data/content-schemas'
-import definition from './requirements_engineering.v1.json' with { type: 'json' }
+import definition from './requirements_engineering.v2.json' with { type: 'json' }
 import { workflowDefinitionFixture } from './workflow.fixtures'
 
-// The response of GET /artifact-kinds for workflow definition version 1, built from copies of the
+// The response of GET /artifact-kinds for workflow definition version 2, built from copies of the
 // definition and of the content schemas (src/mocks/workflow/data/).
 
 // As GET /artifact-kinds serves a schema: a field that names a value list gets the values of that list in

@@ -22,7 +22,7 @@ describe('traceability api', () => {
       'Spec requirement',
       'Analyzed requirement',
       'Raw requirement / Latent need',
-      'Interview message',
+      'Interview message / Source document',
     ])
     expect(row?.cells.backlog_item?.[0]?.key).toBe('US-001')
     expect(row?.cells.analyzed_requirement?.[0]?.key).toBe('AR-001')
