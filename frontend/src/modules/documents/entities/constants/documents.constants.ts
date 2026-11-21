@@ -2,6 +2,13 @@ import type { AttentionLevel } from '@/modules/artifact/entities/@x/documents'
 
 import type { DocumentMark } from '../types/documents.types'
 
+/** The words for an item that is loading, that could not load, or that does not exist, wherever it is read. */
+export const itemLoadMessages = {
+  loading: 'Loading the item',
+  loadError: 'The item could not load.',
+  notFound: { title: 'Item not found', description: 'This item does not exist, or was deleted.' },
+} as const
+
 /**
  * How a document mark shows: the level of attention it asks (`act` is to act now, `follow` is
  * something in motion, `none` is nothing to do, `quiet` is not there yet; the level gives the
