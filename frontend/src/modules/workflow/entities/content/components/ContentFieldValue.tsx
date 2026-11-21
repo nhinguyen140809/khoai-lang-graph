@@ -11,7 +11,7 @@ import { isEmpty, isRecord } from '@/shared/lib/guards'
 import { snakeToSentenceCase, textOf } from '@/shared/lib/text'
 
 import type { ContentField, FieldWidget } from '../fields/content-fields.types'
-import { isChoiceField } from '../fields/content-fields.utils'
+import { isChoiceField } from '../fields/field-widget.utils'
 import { useValueLabel } from '../value-labels/hooks/useValueLabel'
 import { nonStatusTone, valueTone } from '../value-labels/value-labels.utils'
 import type { ValueDefinition } from '../values/content-values.types'

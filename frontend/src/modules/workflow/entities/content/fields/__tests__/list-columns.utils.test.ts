@@ -1,7 +1,10 @@
 import { describe, expect, it } from 'vitest'
 
+import { contentSchemaFixtureByKind } from '@/mocks/workflow/artifact-kinds.fixtures'
+
 import type { ContentSchema } from '../../../artifact-kinds/artifact-kinds.types'
-import { listColumns } from '../content-fields.utils'
+import { listColumns, summaryFields } from '../list-columns.utils'
+import { listFieldCases } from './content-fields.utils.data'
 
 const properties = {
   title: { type: 'string' },
@@ -40,5 +43,23 @@ describe('listColumns', () => {
       'type',
       'priority',
     ])
+  })
+})
+
+describe('summaryFields', () => {
+  it.each(listFieldCases)(
+    'lists the fields of a table of $kind in the order of the schema',
+    ({ kind, names }) => {
+      expect(summaryFields(contentSchemaFixtureByKind(kind)).map(({ name }) => name)).toEqual(names)
+    },
+  )
+
+  it('lists the first three fields when the schema names none', () => {
+    const schema = {
+      title: 'Kind',
+      properties: { a: {}, b: {}, c: {}, d: {} },
+    }
+
+    expect(summaryFields(schema).map(({ name }) => name)).toEqual(['a', 'b', 'c'])
   })
 })

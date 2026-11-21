@@ -31,6 +31,7 @@ export { ContentFieldInput } from './content/components/content-input/ContentFie
 export { ContentFieldList } from './content/components/ContentFieldList'
 export { ContentFieldValue } from './content/components/ContentFieldValue'
 export { InlineFieldValues } from './content/components/InlineFieldValues'
+export { contentDisplayOf, pageLayoutOf } from './content/fields/content-display.utils'
 export type {
   ContentDisplay,
   ContentField,
@@ -39,16 +40,9 @@ export type {
   ItemPageLayout,
 } from './content/fields/content-fields.types'
 export { contentDisplays } from './content/fields/content-fields.types'
-export {
-  contentDisplayOf,
-  contentFields,
-  listColumns,
-  mainField,
-  pageLayoutOf,
-  profileFields,
-  shownFields,
-  summaryFields,
-} from './content/fields/content-fields.utils'
+export { contentFields, mainField, shownFields } from './content/fields/content-fields.utils'
+export { profileFields } from './content/fields/content-profile.utils'
+export { listColumns, summaryFields } from './content/fields/list-columns.utils'
 export { useValueLabelOf } from './content/value-labels/hooks/useValueLabelOf'
 export { nonStatusTone } from './content/value-labels/value-labels.utils'
 export type { ContentFormValues } from './content/values/content-form.schema'

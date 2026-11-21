@@ -5,7 +5,7 @@ import { isBlank } from '@/shared/lib/guards'
 import { textOf } from '@/shared/lib/text'
 
 import type { ContentField } from '../fields/content-fields.types'
-import { isChoiceField, isNumberField } from '../fields/content-fields.utils'
+import { isChoiceField, isNumberField } from '../fields/field-widget.utils'
 import { useValueLabelOf } from '../value-labels/hooks/useValueLabelOf'
 import type { ContentValues, ValueDefinition } from '../values/content-values.types'
 

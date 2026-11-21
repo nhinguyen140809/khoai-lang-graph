@@ -15,6 +15,11 @@ export {
 export { ContentFieldValue } from '../content/components/ContentFieldValue'
 export { FieldSeparator } from '../content/components/FieldSeparator'
 export { InlineFieldValues } from '../content/components/InlineFieldValues'
+export {
+  artifactDisplayOf,
+  contentDisplayOf,
+  pageLayoutOf,
+} from '../content/fields/content-display.utils'
 export type {
   ArtifactDisplay,
   ContentDisplay,
@@ -24,19 +29,10 @@ export type {
   ListColumn,
   ProfileFields,
 } from '../content/fields/content-fields.types'
-export {
-  artifactDisplayOf,
-  contentDisplayOf,
-  contentFields,
-  extensionField,
-  isOneLineField,
-  isSeparatorField,
-  listColumns,
-  mainField,
-  pageLayoutOf,
-  profileFields,
-  summaryFields,
-} from '../content/fields/content-fields.utils'
+export { contentFields, extensionField, mainField } from '../content/fields/content-fields.utils'
+export { profileFields } from '../content/fields/content-profile.utils'
+export { isOneLineField, isSeparatorField } from '../content/fields/field-widget.utils'
+export { listColumns, summaryFields } from '../content/fields/list-columns.utils'
 export { nonStatusTone } from '../content/value-labels/value-labels.utils'
 export type { ContentValues, ValueDefinition } from '../content/values/content-values.types'
 export { contentValuesSchema } from '../content/values/content-values.types'
