@@ -13,12 +13,19 @@ export const iconExtent = 18
 export const iconBounds = {
   check: { x: 12, y: 12, size: 16 },
   circleHelp: { x: 12, y: 12, size: 20 },
+  code: { x: 12, y: 12, size: 18 },
   download: { x: 12, y: 12, size: 16 },
   globe: { x: 12, y: 12, size: 18 },
+  laptop: { x: 12.6, y: 12.2, size: 19.2 },
   layers: { x: 12, y: 12, size: 21 },
   link: { x: 12, y: 12, size: 21 },
   messageSquare: { x: 12, y: 12, size: 21 },
   nodes: { x: 12, y: 12, size: 20 },
+  // The pen, the glass and the plane move or leave a trail while the round goes: they are measured at rest.
+  pen: { x: 12, y: 12, size: 20 },
   search: { x: 12, y: 12, size: 18 },
   send: { x: 12, y: 12, size: 18 },
+  text: { x: 12, y: 11.5, size: 20.6 },
+  zip: { x: 12, y: 12, size: 18 },
+  typedLine: { x: 13, y: 12, size: 22 },
 } as const

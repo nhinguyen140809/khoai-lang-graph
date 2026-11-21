@@ -17,15 +17,23 @@ export type { DrawnIconProps } from './icon'
 export {
   CheckIcon,
   CircleHelpIcon,
+  CodeIcon,
   DownloadIcon,
   GlobeIcon,
+  LaptopIcon,
   LayersIcon,
   LinkIcon,
   MessageSquareIcon,
   NodesIcon,
+  PenIcon,
   SearchIcon,
   SendIcon,
   SpinningIcon,
+  TextCenterIcon,
+  TextLeftIcon,
+  TextRightIcon,
+  TypedLineIcon,
+  ZipFileIcon,
 } from './icon'
 export { Loop, LoopStep } from './loop-step/LoopStep'
 export { Presence } from './presence/Presence'
