@@ -11,6 +11,8 @@ import {
   useReferenceOpener,
   useRevealReference,
 } from '@/modules/activity/entities'
+import { Desk } from '@/shared/components/frame'
+import { routeOfAddress } from '@/shared/routes'
 import { routerMock, setPathname, setQuery } from '@/test/next-stubs'
 import { renderWithProviders } from '@/test/render'
 import {
@@ -23,7 +25,7 @@ import {
   pressButton,
 } from '@/test/steps'
 
-import { DocumentsButton } from '../DocumentsButton'
+import { DocumentsTool } from '../DocumentsTool'
 import { ReaderSplit } from '../ReaderSplit'
 
 const projectId = projectIds.mentor
@@ -69,6 +71,15 @@ function renderSplit(query: string, id: string = projectId) {
       <OpenReference reference={{ kind: 'document', artifactId: analysis.id }} />
       <RevealAnalysis />
     </ReaderSplit>,
+  )
+}
+
+/** Renders the tool of the documents in the desk, which shows it as a button with its name. */
+function renderTool() {
+  renderWithProviders(
+    <Desk homeHref={routeOfAddress('/')} sidebar={null} accountMenu={null}>
+      <DocumentsTool />
+    </Desk>,
   )
 }
 
@@ -147,10 +158,10 @@ describe('ReaderSplit', () => {
     await expectRole('heading', 'Document not found')
   })
 
-  it('leaves the address of the chat when the button of the bar hides the reader', async () => {
+  it('leaves the address of the chat when the tool of the desk hides the reader', async () => {
     setPathname(chat)
     setQuery(`document=${analysis.id}`)
-    renderWithProviders(<DocumentsButton />)
+    renderTool()
 
     await pressButton('Documents')
 
@@ -265,9 +276,9 @@ describe('ReaderSplit', () => {
     expect(within(reader).queryByText('Not started')).not.toBeInTheDocument()
   })
 
-  it('opens the list of the documents from the button of the bar', async () => {
+  it('opens the list of the documents from the tool of the desk', async () => {
     setPathname(chat)
-    renderWithProviders(<DocumentsButton />)
+    renderTool()
 
     await pressButton('Documents')
 

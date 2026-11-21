@@ -1,2 +1,2 @@
-export { DocumentsButton } from './components/DocumentsButton'
+export { DocumentsTool } from './components/DocumentsTool'
 export { ReaderSplit } from './components/ReaderSplit'
