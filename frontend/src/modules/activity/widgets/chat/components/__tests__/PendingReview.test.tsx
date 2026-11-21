@@ -29,6 +29,14 @@ async function readPending(): Promise<Interrupt> {
 }
 
 describe('PendingReview', () => {
+  it('stands the agent that waits on a corner of the card, in the mood of waiting', async () => {
+    renderWithProviders(<PendingReview interrupt={await readPending()} run={run} />)
+
+    await waitFor(() => {
+      expect(document.querySelector('[data-slot=face][data-mood=waiting]')).not.toBeNull()
+    })
+  })
+
   it('starts the answer again when the run asks another review, whatever was chosen for the one before', async () => {
     const first = await readPending()
     const view = renderWithProviders(<PendingReview interrupt={first} run={run} />)
