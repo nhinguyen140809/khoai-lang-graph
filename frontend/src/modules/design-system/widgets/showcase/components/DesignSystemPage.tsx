@@ -1,5 +1,6 @@
 import { ScrollArea } from '@/shared/components/ui/scroll-area'
 
+import { ActsCard } from './cards/ActsCard'
 import { AlertsCard } from './cards/AlertsCard'
 import { AnimationCard } from './cards/AnimationCard'
 import { ArtifactTableCard } from './cards/ArtifactTableCard'
@@ -25,6 +26,7 @@ import { HighlightCard } from './cards/HighlightCard'
 import { IconsCard } from './cards/IconsCard'
 import { ItemsCard } from './cards/ItemsCard'
 import { MarkdownCard } from './cards/MarkdownCard'
+import { MotionsCard } from './cards/MotionsCard'
 import { NavigationCard } from './cards/NavigationCard'
 import { NumbersCard } from './cards/NumbersCard'
 import { OverlaysCard } from './cards/OverlaysCard'
@@ -94,6 +96,8 @@ export function DesignSystemPage() {
               a card that changes its own height, as these two do, would send other cards to
               another column each time. */}
           <div className="grid items-start gap-4">
+            <ActsCard />
+            <MotionsCard />
             <IconsCard />
           </div>
           <div className="grid items-start gap-4 lg:grid-cols-2">
