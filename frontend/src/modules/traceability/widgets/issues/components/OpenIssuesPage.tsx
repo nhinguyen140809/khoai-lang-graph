@@ -20,7 +20,7 @@ import {
   useKindTitleOf,
   useLinkTitleOf,
 } from '@/modules/workflow/entities'
-import { useEditorTab } from '@/shared/components/frame'
+import { PageColumn, useEditorTab } from '@/shared/components/frame'
 import { EmptyState, ErrorState, LoadingState } from '@/shared/components/state'
 import { Badge } from '@/shared/components/ui/badge'
 import { Item, ItemContent, ItemTitle } from '@/shared/components/ui/item'
@@ -54,8 +54,13 @@ export function OpenIssuesPage({ projectId }: { projectId: string }) {
       />
     )
   }
-  if (issues.state === 'pending')
-    return <LoadingState label={openIssuesMessages.title} layout="list" rows={6} />
+  if (issues.state === 'pending') {
+    return (
+      <PageColumn isFlush className="h-full">
+        <LoadingState label={openIssuesMessages.title} layout="list" rows={6} />
+      </PageColumn>
+    )
+  }
   if (issues.count === 0) {
     return (
       <EmptyState
@@ -66,7 +71,7 @@ export function OpenIssuesPage({ projectId }: { projectId: string }) {
   }
 
   return (
-    <div className="mx-auto max-w-3xl space-y-8 p-6 pb-20">
+    <PageColumn className="space-y-8 pb-20">
       <header className="space-y-1">
         <h1 className="text-2xl font-semibold">{openIssuesMessages.title}</h1>
         <p className="text-sm text-muted-foreground">{openIssuesMessages.description}</p>
@@ -74,7 +79,7 @@ export function OpenIssuesPage({ projectId }: { projectId: string }) {
       {issues.groups.map((group) => (
         <IssueSection key={group.kind} group={group} schemas={schemas} />
       ))}
-    </div>
+    </PageColumn>
   )
 }
 
