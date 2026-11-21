@@ -15,6 +15,7 @@ import { Glint, Shimmer } from '@/shared/components/animation'
 import { toneClasses } from '@/shared/lib/tone'
 
 import { runStatusLineStatuses } from '../../activity-chat.constants'
+import { usePartnerSeed } from '../../hooks/usePartnerSeed'
 
 /**
  * The last line of a run that has not ended: what it is doing now, so that the reader at the end
@@ -24,7 +25,8 @@ import { runStatusLineStatuses } from '../../activity-chat.constants'
  * it, on every side: the acts of the tool that it uses, else those of its stage. It stands a little
  * to the right, so that what is drawn at its left stays in the chat. When the workflow names none, it
  * has the mood of its phase, or of the status of the run between two phases. A glint stands where no
- * agent has run yet, with the words close to it; they slide to the right when an agent takes its place. A run that waits for the user, has ended or failed shows none: its review, its
+ * agent has run yet, with the words close to it; they slide to the right when an agent takes its place. A phase that works on a persona, such as an interview, draws the persona as a second
+ * agent, whose face comes from its role and its name.  A run that waits for the user, has ended or failed shows none: its review, its
  * answer and its failure are the last things the chat shows.
  */
 export function RunStatusLine({ run }: { run: Run }) {
@@ -32,6 +34,7 @@ export function RunStatusLine({ run }: { run: Run }) {
   const stageTitle = useRunStageTitle(run)
   const lastWork = useRunLastWork(run)
   const acts = useRunActs(run)
+  const partner = usePartnerSeed(lastWork?.subjectItemId)
   const agentRole = lastWork?.agentRole
   // The mood of the phase at work; between two phases, the mood of the status of the run.
   const mood = lastWork?.status === 'running' ? workMoodOf(lastWork) : look.mood
@@ -59,6 +62,7 @@ export function RunStatusLine({ run }: { run: Run }) {
           seed={agentRole}
           size="xl"
           acts={acts}
+          partner={partner}
           className="ml-3"
           {...(acts.length === 0 && { mood })}
         />
