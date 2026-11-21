@@ -1,4 +1,4 @@
-import type { BlockTarget } from '@/modules/artifact/entities'
+import type { ThumbnailTarget } from '@/modules/artifact/entities'
 import type { DocumentEntry } from '@/modules/documents/entities'
 import { pathWithQuery } from '@/shared/lib/url'
 import { RouteParam } from '@/shared/routes'
@@ -101,8 +101,8 @@ export function readerAddress(path: string, view: ReaderView): string {
   }
 }
 
-/** The view that the block of a folder opens, in the document with this id. */
-export function viewOfBlock(target: BlockTarget, artifactId: string): ReaderView {
+/** The view that the thumbnail of a folder opens, in the document with this id. */
+export function viewOfThumbnail(target: ThumbnailTarget, artifactId: string): ReaderView {
   switch (target.type) {
     case 'overview':
       return { kind: 'overview', artifactId }

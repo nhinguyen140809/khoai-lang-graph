@@ -8,8 +8,8 @@ import {
   readerAddress,
   readerViewOf,
   trailAfter,
-  viewOfBlock,
   viewOfEntry,
+  viewOfThumbnail,
 } from '../reader.utils'
 import { addressCases, sameViewCases, trailCases, viewCases } from './reader.utils.data'
 
@@ -37,20 +37,20 @@ describe('trailAfter', () => {
   })
 })
 
-describe('viewOfBlock', () => {
+describe('viewOfThumbnail', () => {
   it('opens the overview, a folder or an item of the document', () => {
-    expect(viewOfBlock({ type: 'overview' }, 'a1')).toEqual({ kind: 'overview', artifactId: 'a1' })
-    expect(viewOfBlock({ type: 'folder', nodeId: 'section:s1' }, 'a1')).toEqual({
+    expect(viewOfThumbnail({ type: 'overview' }, 'a1')).toEqual({ kind: 'overview', artifactId: 'a1' })
+    expect(viewOfThumbnail({ type: 'folder', nodeId: 'section:s1' }, 'a1')).toEqual({
       kind: 'folder',
       artifactId: 'a1',
       nodeId: 'section:s1',
     })
     expect(
-      viewOfBlock(
+      viewOfThumbnail(
         {
           type: 'item',
           item: { id: 'i1' } as Extract<
-            Parameters<typeof viewOfBlock>[0],
+            Parameters<typeof viewOfThumbnail>[0],
             { type: 'item' }
           >['item'],
         },

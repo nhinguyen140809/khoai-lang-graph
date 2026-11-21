@@ -3,7 +3,7 @@
 import {
   ArtifactDocument,
   type ArtifactDocumentData,
-  rootBlocks,
+  rootThumbnails,
   useArtifactDocument,
   useArtifactOutline,
 } from '@/modules/artifact/entities'
@@ -12,12 +12,12 @@ import { ErrorState, LoadingState, NotFoundState } from '@/shared/components/sta
 
 import { readerMessages } from '../reader.constants'
 import type { ReaderBodyProps } from '../reader.types'
-import { ReaderBlocks } from './ReaderBlocks'
 import { ContentBody, ReaderLink } from './ReaderParts'
+import { ReaderThumbnails } from './ReaderThumbnails'
 
 /**
  * A document, its load, or why it does not show. A document that holds items is the grid of its
- * blocks, with its own text as the first of them (the overview); the overview, and a document that
+ * thumbnails, with its own text as the first of them (the overview); the overview, and a document that
  * holds nothing else, is the page of the document.
  */
 export function DocumentBody(props: ReaderBodyProps<'document'>) {
@@ -72,16 +72,16 @@ function ArtifactBody({
             </ContentBody>
           )
         }
-        const blocks =
+        const thumbnails =
           outline.state === 'success' && document.display !== 'transcript'
-            ? rootBlocks(outline.nodes, outline.kinds, { hasFields: document.fields.length > 0 })
+            ? rootThumbnails(outline.nodes, outline.kinds, { hasFields: document.fields.length > 0 })
             : []
-        if (blocks.some(({ target }) => target.type !== 'overview')) {
+        if (thumbnails.some(({ target }) => target.type !== 'overview')) {
           return (
             <ContentBody title={document.artifact.title} renderTitle={renderTitle}>
               <div className="space-y-4 p-6">
                 <h1 className="text-2xl font-semibold">{document.artifact.title}</h1>
-                <ReaderBlocks blocks={blocks} artifactId={artifactId} hrefOf={hrefOf} />
+                <ReaderThumbnails thumbnails={thumbnails} artifactId={artifactId} hrefOf={hrefOf} />
               </div>
             </ContentBody>
           )

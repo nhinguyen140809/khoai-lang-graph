@@ -1,28 +1,29 @@
 import { iconOf, mediaOf } from '@/modules/workflow/entities/@x/artifact'
+import type { ThumbnailLook } from '@/shared/components/thumbnail'
 
-import type { BlockLook, FolderBlock } from './folder-blocks.types'
+import type { FolderThumbnail } from './folder-thumbnails.types'
 import type { KindView, OutlineNode } from './outline.types'
 import { isBranch } from './outline.utils'
 
-/** The title of the block of the page of a document, which holds its own text. */
+/** The title of the thumbnail of the page of a document, which holds its own text. */
 export const overviewTitle = 'Overview'
 
 /**
- * The blocks of one place of a document, from its rows in the order of the outline. A section or a
+ * The thumbnails of one place of a document, from its rows in the order of the outline. A section or a
  * group that holds items under it is a folder; one that holds none is only text, which the overview
- * of the document reads, so it has no block. An item is a block of text or of a diagram, by what
+ * of the document reads, so it has no thumbnail. An item is a thumbnail of text or of a diagram, by what
  * its kind says its content is. The color of a folder comes from its title and the color of an item
  * from its kind.
  */
-export function folderBlocks(
+export function folderThumbnails(
   nodes: readonly OutlineNode[],
   kinds: ReadonlyMap<string, KindView>,
-): FolderBlock[] {
-  return nodes.flatMap((node): FolderBlock[] => {
+): FolderThumbnail[] {
+  return nodes.flatMap((node): FolderThumbnail[] => {
     if (node.type === 'field') return []
     if (node.type === 'item') {
       const schema = kinds.get(node.item.kind)?.schema
-      const look: BlockLook =
+      const look: ThumbnailLook =
         schema !== undefined && mediaOf(schema) === 'diagram' ? 'diagram' : 'text'
       return [
         {
@@ -35,7 +36,7 @@ export function folderBlocks(
         },
       ]
     }
-    if (folderBlocks(node.children, kinds).length === 0) return []
+    if (folderThumbnails(node.children, kinds).length === 0) return []
     const kind = node.type === 'section' ? node.item.kind : node.kind
     const schema = kinds.get(kind)?.schema
     return [
@@ -54,21 +55,21 @@ export function folderBlocks(
 /** Whether a place of a document has text of its own, besides its folders and items: a section that holds only text. */
 function hasText(nodes: readonly OutlineNode[], kinds: ReadonlyMap<string, KindView>): boolean {
   return nodes.some(
-    (node) => node.type === 'section' && folderBlocks(node.children, kinds).length === 0,
+    (node) => node.type === 'section' && folderThumbnails(node.children, kinds).length === 0,
   )
 }
 
 /**
- * The blocks of the top of a document: its overview first, when it has text of its own (filled
+ * The thumbnails of the top of a document: its overview first, when it has text of its own (filled
  * fields, or a section that holds only text), then its folders and items.
  */
-export function rootBlocks(
+export function rootThumbnails(
   nodes: readonly OutlineNode[],
   kinds: ReadonlyMap<string, KindView>,
   { hasFields }: { hasFields: boolean },
-): FolderBlock[] {
-  const blocks = folderBlocks(nodes, kinds)
-  if (!hasFields && !hasText(nodes, kinds) && blocks.length > 0) return blocks
+): FolderThumbnail[] {
+  const thumbnails = folderThumbnails(nodes, kinds)
+  if (!hasFields && !hasText(nodes, kinds) && thumbnails.length > 0) return thumbnails
   return [
     {
       id: 'overview',
@@ -78,11 +79,11 @@ export function rootBlocks(
       seed: 'overview',
       target: { type: 'overview' },
     },
-    ...blocks,
+    ...thumbnails,
   ]
 }
 
-/** Whether the row of the outline is a folder: it holds a block under it. */
+/** Whether the row of the outline is a folder: it holds a thumbnail under it. */
 export function isFolder(node: OutlineNode, kinds: ReadonlyMap<string, KindView>): boolean {
-  return isBranch(node) && folderBlocks(node.children, kinds).length > 0
+  return isBranch(node) && folderThumbnails(node.children, kinds).length > 0
 }

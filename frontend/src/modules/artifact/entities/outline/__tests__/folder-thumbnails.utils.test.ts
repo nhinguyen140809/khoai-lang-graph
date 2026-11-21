@@ -1,6 +1,6 @@
 import { describe, expect, it } from 'vitest'
 
-import { folderBlocks, isFolder, overviewTitle, rootBlocks } from '../folder-blocks.utils'
+import { folderThumbnails, isFolder, overviewTitle, rootThumbnails } from '../folder-thumbnails.utils'
 import { artifactOutline, isBranch, outlinePath } from '../outline.utils'
 import { issueKindFixtures, kindViewFixtures, mentorDocument } from './outline.utils.data'
 
@@ -16,63 +16,63 @@ function outlineOf(kind: string) {
   })
 }
 
-describe('folderBlocks', () => {
+describe('folderThumbnails', () => {
   it('makes a folder of a section or a group that holds items, colored by its title', () => {
     const nodes = outlineOf('requirements_analysis')
-    const blocks = folderBlocks(nodes, kindViewFixtures)
-    const folders = blocks.filter(({ look }) => look === 'folder')
+    const thumbnails = folderThumbnails(nodes, kindViewFixtures)
+    const folders = thumbnails.filter(({ look }) => look === 'folder')
 
     expect(folders.length).toBeGreaterThan(0)
     for (const folder of folders) expect(folder.seed).toBe(folder.title)
     for (const node of nodes) {
       if (node.type === 'section' || node.type === 'group') {
-        expect(isFolder(node, kindViewFixtures)).toBe(blocks.some(({ id }) => id === node.id))
+        expect(isFolder(node, kindViewFixtures)).toBe(thumbnails.some(({ id }) => id === node.id))
       }
     }
   })
 
-  it('makes a block of text of an item, colored by its kind, with the icon of the kind', () => {
+  it('makes a thumbnail of text of an item, colored by its kind, with the icon of the kind', () => {
     const nodes = outlineOf('persona_catalog')
-    const personas = folderBlocks(nodes, kindViewFixtures).flatMap((block) =>
-      block.target.type === 'item' ? [block] : [],
+    const personas = folderThumbnails(nodes, kindViewFixtures).flatMap((thumbnail) =>
+      thumbnail.target.type === 'item' ? [thumbnail] : [],
     )
     const groups = nodes.flatMap((node) => (node.type === 'group' ? [node] : []))
     const items = [
       ...personas,
-      ...folderBlocks(
+      ...folderThumbnails(
         groups.flatMap(({ children }) => children),
         kindViewFixtures,
       ),
     ]
 
     expect(items.length).toBeGreaterThan(0)
-    for (const block of items) {
-      expect(block.look).toBe('text')
-      expect(block.seed).toBe(block.target.type === 'item' ? block.target.item.kind : '')
+    for (const thumbnail of items) {
+      expect(thumbnail.look).toBe('text')
+      expect(thumbnail.seed).toBe(thumbnail.target.type === 'item' ? thumbnail.target.item.kind : '')
     }
     expect(items.every(({ icon }) => icon === 'user')).toBe(true)
   })
 })
 
-describe('rootBlocks', () => {
+describe('rootThumbnails', () => {
   it('puts the overview first when the document has fields of its own', () => {
-    const blocks = rootBlocks(outlineOf('persona_catalog'), kindViewFixtures, {
+    const thumbnails = rootThumbnails(outlineOf('persona_catalog'), kindViewFixtures, {
       hasFields: true,
     })
 
-    expect(blocks[0]).toMatchObject({ id: 'overview', look: 'text', title: overviewTitle })
-    expect(blocks[0]?.target).toEqual({ type: 'overview' })
+    expect(thumbnails[0]).toMatchObject({ id: 'overview', look: 'text', title: overviewTitle })
+    expect(thumbnails[0]?.target).toEqual({ type: 'overview' })
   })
 
   it('has no overview when there is no text of its own and something else to open', () => {
     const nodes = outlineOf('persona_catalog').filter(({ type }) => type !== 'section')
-    const blocks = rootBlocks(nodes, kindViewFixtures, { hasFields: false })
+    const thumbnails = rootThumbnails(nodes, kindViewFixtures, { hasFields: false })
 
-    expect(blocks.some(({ id }) => id === 'overview')).toBe(false)
+    expect(thumbnails.some(({ id }) => id === 'overview')).toBe(false)
   })
 
   it('is just the overview for a document that has no item', () => {
-    expect(rootBlocks([], kindViewFixtures, { hasFields: true })).toHaveLength(1)
+    expect(rootThumbnails([], kindViewFixtures, { hasFields: true })).toHaveLength(1)
   })
 })
 

@@ -1,7 +1,7 @@
 'use client'
 
 import {
-  folderBlocks,
+  folderThumbnails,
   isBranch,
   outlinePath,
   useArtifactOutline,
@@ -10,10 +10,10 @@ import { EmptyState, ErrorState, LoadingState, NotFoundState } from '@/shared/co
 
 import { readerMessages } from '../reader.constants'
 import type { ReaderBodyProps } from '../reader.types'
-import { ReaderBlocks } from './ReaderBlocks'
 import { ContentBody } from './ReaderParts'
+import { ReaderThumbnails } from './ReaderThumbnails'
 
-/** A folder of a document: the blocks that it holds in a grid, or why it does not show. */
+/** A folder of a document: the thumbnails that it holds in a grid, or why it does not show. */
 export function FolderBody({ view, hrefOf, renderTitle }: ReaderBodyProps<'folder'>) {
   const outline = useArtifactOutline(view.artifactId)
   const messages = readerMessages.folder
@@ -44,19 +44,19 @@ export function FolderBody({ view, hrefOf, renderTitle }: ReaderBodyProps<'folde
           </ContentBody>
         )
       }
-      const blocks = folderBlocks(node.children, outline.kinds)
+      const thumbnails = folderThumbnails(node.children, outline.kinds)
       return (
         <ContentBody title={node.title} renderTitle={renderTitle}>
           <div className="space-y-4 p-6">
             <h1 className="text-2xl font-semibold">{node.title}</h1>
-            {blocks.length === 0 ? (
+            {thumbnails.length === 0 ? (
               <EmptyState
                 title={messages.empty.title}
                 description={messages.empty.description}
                 className="px-0"
               />
             ) : (
-              <ReaderBlocks blocks={blocks} artifactId={view.artifactId} hrefOf={hrefOf} />
+              <ReaderThumbnails thumbnails={thumbnails} artifactId={view.artifactId} hrefOf={hrefOf} />
             )}
           </div>
         </ContentBody>
