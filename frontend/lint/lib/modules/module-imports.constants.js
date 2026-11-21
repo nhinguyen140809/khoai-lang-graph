@@ -11,7 +11,7 @@ export const moduleImports = {
   thread: ['workflow', 'artifact', 'run', 'review'],
   project: ['workflow', 'artifact', 'run', 'review', 'thread'],
   activity: ['workflow', 'artifact', 'run', 'review', 'thread'],
-  documents: ['workflow', 'artifact', 'trace', 'run', 'review', 'thread', 'project'],
+  documents: ['workflow', 'artifact', 'trace', 'run', 'review', 'thread', 'project', 'activity'],
   traceability: [
     'workflow',
     'artifact',
