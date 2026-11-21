@@ -13,6 +13,20 @@ export { Glow } from './glow/Glow'
 export type { GlowBlur, GlowEntrance, GlowMotion, GlowShape, GlowSize } from './glow/glow.types'
 export { GlowBackdrop } from './glow/GlowBackdrop'
 export { GlowStage } from './glow/GlowStage'
+export type { DrawnIconProps } from './icon'
+export {
+  CheckIcon,
+  CircleHelpIcon,
+  DownloadIcon,
+  GlobeIcon,
+  LayersIcon,
+  LinkIcon,
+  MessageSquareIcon,
+  NodesIcon,
+  SearchIcon,
+  SendIcon,
+  SpinningIcon,
+} from './icon'
 export { Loop, LoopStep } from './loop-step/LoopStep'
 export { Presence } from './presence/Presence'
 export { Reveal } from './reveal/Reveal'
