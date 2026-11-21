@@ -4,7 +4,7 @@ import type { UserSteps } from '../../shared/steps'
 import { screenshots } from '../screenshot.utils'
 
 const projects = '/projects'
-const prompt = 'What product do you want to write the requirements for?'
+const prompt = 'What do you want to build?'
 
 // A project whose runs ended, which can be deleted, and one archived.
 const campus = 'Campus food ordering'
