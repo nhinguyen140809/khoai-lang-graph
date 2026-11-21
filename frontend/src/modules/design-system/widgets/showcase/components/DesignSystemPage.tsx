@@ -22,6 +22,7 @@ import { FloatingSurfaceCard } from './cards/FloatingSurfaceCard'
 import { FormCard } from './cards/FormCard'
 import { GraphCard } from './cards/GraphCard'
 import { HighlightCard } from './cards/HighlightCard'
+import { IconsCard } from './cards/IconsCard'
 import { ItemsCard } from './cards/ItemsCard'
 import { MarkdownCard } from './cards/MarkdownCard'
 import { NavigationCard } from './cards/NavigationCard'
@@ -92,6 +93,9 @@ export function DesignSystemPage() {
           {/* Outside the columns: the browser shares the cards between columns by their height, so
               a card that changes its own height, as these two do, would send other cards to
               another column each time. */}
+          <div className="grid items-start gap-4">
+            <IconsCard />
+          </div>
           <div className="grid items-start gap-4 lg:grid-cols-2">
             <AnimationCard />
             <SkeletonCard />
