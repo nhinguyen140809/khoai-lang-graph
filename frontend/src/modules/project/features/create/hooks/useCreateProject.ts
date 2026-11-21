@@ -3,14 +3,18 @@ import { useRouter } from 'next/navigation'
 import type { UseFormSetError } from 'react-hook-form'
 import { toast } from 'sonner'
 
-import { createProject, projectKeys, updateProjectRunConfig } from '@/modules/project/entities'
+import {
+  createProject,
+  projectKeys,
+  updateProjectRunConfig,
+  useProjectPages,
+} from '@/modules/project/entities'
 import { isRunDefaultsEmpty, toRunDefaults } from '@/modules/run/entities'
 import { sendFirstMessage } from '@/modules/thread/entities'
 import type { RunParameterField } from '@/modules/workflow/entities'
 import { errorMessageOf } from '@/shared/api/error'
 import { newIdempotencyKey } from '@/shared/api/idempotency'
 import { formErrorOf, showFieldProblems } from '@/shared/components/form'
-import { routes } from '@/shared/routes'
 
 import { createProjectMessages } from '../new-project.constants'
 import type { NewProject, NewProjectForm, NewProjectFormSchema } from '../new-project.schema'
@@ -49,6 +53,7 @@ export function useCreateProject({
 }: CreateProjectOptions) {
   const queryClient = useQueryClient()
   const router = useRouter()
+  const pages = useProjectPages()
   const create = useMutation({
     mutationKey: projectKeys.create(),
     // Resolves to the project and the failure of a later step, if any.
@@ -85,7 +90,7 @@ export function useCreateProject({
         )
       }
       onCreated()
-      router.push(routes.project(project.id).activity())
+      router.push(pages.project(project.id))
     },
     onError: (error) => {
       showFieldProblems(setError, error, schema)
