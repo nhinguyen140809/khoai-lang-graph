@@ -47,8 +47,9 @@ describe('ReviewEntry', () => {
     )
 
     await expectText('Answered:')
+    // eslint-disable-next-line local/expect-steps -- the text matches in part, an option the step does not take
     expect(screen.getByText(first.prompt, { exact: false })).toBeInTheDocument()
-    expect(screen.getByText(choice.label)).toBeInTheDocument()
+    await expectText(choice.label)
     expectNoText(/Stopped with the run/)
   })
 

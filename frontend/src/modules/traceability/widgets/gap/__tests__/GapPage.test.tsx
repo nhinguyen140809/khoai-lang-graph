@@ -1,10 +1,10 @@
-import { screen, waitFor } from '@testing-library/react'
-import userEvent from '@testing-library/user-event'
+import { screen } from '@testing-library/react'
 import { describe, expect, it } from 'vitest'
 
 import { projectIds } from '@/mocks/shared/db'
 import { routerMock } from '@/test/next-stubs'
 import { renderWithProviders } from '@/test/render'
+import { expectNoRole, expectNoText, expectPushedTo, expectText, press } from '@/test/steps'
 
 import { GapPage } from '../GapPage'
 
@@ -18,12 +18,10 @@ describe('GapPage', () => {
   it('names the page after the gap and lists its items', async () => {
     renderPage('needs_review')
 
-    expect(await screen.findByText('Links to check')).toBeInTheDocument()
-    expect(
-      screen.getByText(
-        'The item that each of these links is based on changed after the link was made, or was replaced.',
-      ),
-    ).toBeInTheDocument()
+    await expectText('Links to check')
+    await expectText(
+      'The item that each of these links is based on changed after the link was made, or was replaced.',
+    )
     expect(screen.getAllByRole('link').length).toBeGreaterThan(0)
   })
 
@@ -31,21 +29,22 @@ describe('GapPage', () => {
     renderPage('needs_review')
 
     // The row names the item only: its kind and its title, without the document it sits in.
-    expect(await screen.findByText('Book a session')).toBeInTheDocument()
+    await expectText('Book a session')
     expect(screen.getAllByText('Requirement').length).toBeGreaterThan(0)
     // The key is left out: the kind and the title say which item the row is.
-    expect(screen.queryByText('REQ-003')).not.toBeInTheDocument()
+    expectNoText('REQ-003')
   })
 
   it('opens a page named after the key for a gap the coverage does not list, with its list empty', async () => {
     renderPage('no_such_gap')
 
     // The page opens as any gap does, so the tab and the title say which list it is.
+    // eslint-disable-next-line local/expect-steps -- the heading has a level, an option the step does not take
     expect(
       await screen.findByRole('heading', { level: 1, name: /No such gap/ }),
     ).toBeInTheDocument()
-    expect(screen.getByText('This list is empty.')).toBeInTheDocument()
-    expect(screen.queryByRole('button', { name: 'Back to the overview' })).not.toBeInTheDocument()
+    await expectText('This list is empty.')
+    expectNoRole('button', 'Back to the overview')
   })
 
   it('boxes each target that changed under its item, with the versions as two badges', async () => {
@@ -64,25 +63,18 @@ describe('GapPage', () => {
   })
 
   it('opens the item of a row, and the chain of it, from its two buttons', async () => {
-    const user = userEvent.setup()
     routerMock.push.mockClear()
     renderPage('needs_review')
 
     const open = (await screen.findAllByRole('button', { name: 'Open in a new tab' }))[0]
     if (open === undefined) throw new Error('The gap holds no item')
-    await user.click(open)
-    await waitFor(() => {
-      expect(routerMock.push).toHaveBeenCalledWith(expect.stringContaining(`/items/`))
-    })
+    await press(open)
+    await expectPushedTo(expect.stringContaining(`/items/`))
 
     routerMock.push.mockClear()
     const trace = screen.getAllByRole('button', { name: 'View its trace' })[0]
     if (trace === undefined) throw new Error('The gap holds no item')
-    await user.click(trace)
-    await waitFor(() => {
-      expect(routerMock.push).toHaveBeenCalledWith(
-        expect.stringContaining(`/projects/${projectId}/trace/items/`),
-      )
-    })
+    await press(trace)
+    await expectPushedTo(expect.stringContaining(`/projects/${projectId}/trace/items/`))
   })
 })

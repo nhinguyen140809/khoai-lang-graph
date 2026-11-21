@@ -1,5 +1,4 @@
 import { screen, waitFor, within } from '@testing-library/react'
-import userEvent from '@testing-library/user-event'
 import { describe, expect, it } from 'vitest'
 
 import {
@@ -9,7 +8,14 @@ import {
 import { projectIds } from '@/mocks/shared/db'
 import { routerMock } from '@/test/next-stubs'
 import { renderDocumentsFrame } from '@/test/render'
-import { expectNoAccessibilityViolations, expectRole, expectText } from '@/test/steps'
+import {
+  expectNoAccessibilityViolations,
+  expectPushedTo,
+  expectRole,
+  expectText,
+  press,
+  pressTwice,
+} from '@/test/steps'
 
 import { DocumentPage } from '../DocumentPage'
 import { DocumentsHomePage } from '../DocumentsHomePage'
@@ -37,10 +43,11 @@ describe('DocumentPage', () => {
   it('shows the title, the status line and the groups of the document', async () => {
     renderDocument(analysis.id)
 
+    // eslint-disable-next-line local/expect-steps -- the heading has a level, an option the step does not take
     expect(
       await screen.findByRole('heading', { level: 1, name: analysis.title }),
     ).toBeInTheDocument()
-    expect(await screen.findByRole('heading', { name: /Stated need/ })).toBeInTheDocument()
+    await expectRole('heading', /Stated need/)
   })
 
   it('opens a tab titled with the document, with the icon of a review while it waits for one', async () => {
@@ -55,7 +62,7 @@ describe('DocumentPage', () => {
   it('opens a tab for a document that does not exist, with the state in it', async () => {
     renderDocument('missing-document')
 
-    expect(await screen.findByText('Document not found')).toBeInTheDocument()
+    await expectText('Document not found')
     await findTab('Document')
   })
 
@@ -72,7 +79,7 @@ describe('DocumentPage', () => {
   it('opens a tab named by the list for a document that fails to load, with the error in it', async () => {
     renderDocument(analysis.id, '/?mock-artifact=error')
 
-    expect(await screen.findByText('The document could not load.')).toBeInTheDocument()
+    await expectText('The document could not load.')
     await findTab(analysis.title)
   })
 
@@ -90,12 +97,12 @@ describe('DocumentPage', () => {
     const href = `/projects/${projectId}/items/${item.id}`
 
     const link = await screen.findByRole('link', { name: /Find a mentor in my field/ })
-    await userEvent.click(link)
-    expect(routerMock.push).toHaveBeenCalledWith(href)
+    await press(link)
+    await expectPushedTo(href)
 
     routerMock.push.mockClear()
-    await userEvent.dblClick(link)
-    expect(routerMock.push).toHaveBeenCalledWith(href)
+    await pressTwice(link)
+    await expectPushedTo(href)
   })
 
   it('opens the page of a persona from the participants of a transcript', async () => {
@@ -104,8 +111,8 @@ describe('DocumentPage', () => {
 
     const link = await screen.findByRole('link', { name: 'Minh' })
     expect(link).toHaveAttribute('href', `/projects/${projectId}/items/${persona.id}`)
-    await userEvent.click(link)
-    expect(routerMock.push).toHaveBeenCalledWith(`/projects/${projectId}/items/${persona.id}`)
+    await press(link)
+    await expectPushedTo(`/projects/${projectId}/items/${persona.id}`)
   })
 
   it('shows a loading state while the document loads', async () => {
@@ -128,7 +135,7 @@ describe('DocumentPage', () => {
 
   it('has no accessibility violation', async () => {
     const { container } = renderDocument(analysis.id)
-    await screen.findByRole('heading', { name: /Stated need/ })
+    await expectRole('heading', /Stated need/)
 
     await expectNoAccessibilityViolations(container)
   })

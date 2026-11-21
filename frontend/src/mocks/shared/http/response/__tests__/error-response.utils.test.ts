@@ -7,13 +7,10 @@ import { errorResponseCases } from './error-response.utils.data'
 
 describe('errorResponse', () => {
   it('answers in the Problem Details format', async () => {
-    const answer = errorResponse(
-      HttpStatus.Conflict,
-      'invalid_state',
-      'Invalid state',
-      'The run has ended.',
-      [{ field: 'status', message: 'Ended.' }],
-    )
+    const answer = errorResponse(HttpStatus.Conflict, 'invalid_state', 'Invalid state', {
+      detail: 'The run has ended.',
+      errors: [{ field: 'status', message: 'Ended.' }],
+    })
 
     expect(answer.status).toBe(HttpStatus.Conflict)
     expect(answer.headers.get(HttpHeader.ContentType)).toBe(MediaType.ProblemJson)

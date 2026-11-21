@@ -8,9 +8,13 @@ import { notes, notesRevised } from './documents-backend.data'
 test('uploads a document, lists it, reads it and removes it', async ({ api, client }) => {
   const projectId = await api.createProject('Document owner')
 
-  const uploaded = await api.uploadDocument(projectId, notes.fileName, notes.text, {
-    title: notes.title,
-  })
+  const uploaded = await api.uploadDocument(
+    projectId,
+    { name: notes.fileName, text: notes.text },
+    {
+      title: notes.title,
+    },
+  )
 
   expect(uploaded.title).toBe(notes.title)
   expect((await api.listDocuments(projectId)).map((document) => document.id)).toEqual([uploaded.id])
@@ -26,14 +30,22 @@ test('keeps both texts when a document is uploaded again as a new version', asyn
   client,
 }) => {
   const projectId = await api.createProject('Versions owner')
-  const first = await api.uploadDocument(projectId, notes.fileName, notes.text, {
-    title: notes.title,
-  })
+  const first = await api.uploadDocument(
+    projectId,
+    { name: notes.fileName, text: notes.text },
+    {
+      title: notes.title,
+    },
+  )
 
-  const second = await api.uploadDocument(projectId, notes.fileName, notesRevised.text, {
-    title: notes.title,
-    first_version_id: first.id,
-  })
+  const second = await api.uploadDocument(
+    projectId,
+    { name: notes.fileName, text: notesRevised.text },
+    {
+      title: notes.title,
+      first_version_id: first.id,
+    },
+  )
 
   expect(second.id).toBe(first.id)
   const older = expectOk(await client.get<ApiDocument>(`/documents/${first.id}`, { version: 1 }))

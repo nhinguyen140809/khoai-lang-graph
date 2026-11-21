@@ -1,6 +1,7 @@
-import { describe, expect, it, vi } from 'vitest'
+import { describe, expect, it } from 'vitest'
 
 import { openedEventSources } from '@/test/event-source'
+import { advanceTimers, withFakeTimers } from '@/test/steps'
 
 import { listenToRun } from '../run-event-channels.api'
 import { streamReopenMs } from '../run-events.constants'
@@ -41,6 +42,8 @@ function recorder() {
 }
 
 describe('listenToRun', () => {
+  withFakeTimers()
+
   it('opens one stream for every listener of a run, from its first event', () => {
     const stops = [listenToRun('r1', recorder().listener), listenToRun('r1', recorder().listener)]
 
@@ -110,44 +113,38 @@ describe('listenToRun', () => {
   })
 
   it('closes the stream after the last event of the run, and opens it no more', () => {
-    vi.useFakeTimers()
     const stop = listenToRun('r1', recorder().listener)
 
     openedEventSources()[0]?.emit('done', { status: 'succeeded' }, '5')
-    vi.advanceTimersByTime(streamReopenMs)
+    advanceTimers(streamReopenMs)
 
     expect(openedEventSources()[0]?.closed).toBe(true)
     expect(openedEventSources()).toHaveLength(1)
     stop()
-    vi.useRealTimers()
   })
 
   it('tells the listeners that the connection failed and opens it after the last event read', () => {
-    vi.useFakeTimers()
     const watcher = recorder()
     const stop = listenToRun('r1', watcher.listener)
     openedEventSources()[0]?.emit('node_start', NODE_START, '7')
 
     openedEventSources()[0]?.fail()
-    vi.advanceTimersByTime(streamReopenMs)
+    advanceTimers(streamReopenMs)
 
     expect(watcher.types()).toEqual(['node_start', 'failed'])
     expect(openedEventSources()).toHaveLength(2)
     expect(openedEventSources()[1]?.url).toMatch(/after=7$/)
     stop()
-    vi.useRealTimers()
   })
 
   it('does not open the stream again when the last listener left after the failure', () => {
-    vi.useFakeTimers()
     const stop = listenToRun('r1', recorder().listener)
     openedEventSources()[0]?.fail()
 
     stop()
-    vi.advanceTimersByTime(streamReopenMs)
+    advanceTimers(streamReopenMs)
 
     expect(openedEventSources()).toHaveLength(1)
-    vi.useRealTimers()
   })
 
   it('drops an event that does not parse', () => {

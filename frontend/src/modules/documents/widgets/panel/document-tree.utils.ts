@@ -79,8 +79,7 @@ function addOutlineNodes(
   nodes: Nodes,
   outline: readonly OutlineNode[],
   parentId: string,
-  input: TreeInput,
-  open: OpenOutline,
+  { input, open }: { input: TreeInput; open: OpenOutline },
 ): string[] {
   const children: string[] = []
   for (const node of outline) {
@@ -100,7 +99,7 @@ function addOutlineNodes(
         count: node.count,
         icon: null,
       }
-      addOutlineNodes(nodes, node.children, node.id, input, open)
+      addOutlineNodes(nodes, node.children, node.id, { input, open })
     } else {
       const look =
         node.type === 'item'
@@ -126,7 +125,7 @@ function outlineChildren(
     })
     return [id]
   }
-  return addOutlineNodes(nodes, open.nodes, documentId, input, open)
+  return addOutlineNodes(nodes, open.nodes, documentId, { input, open })
 }
 
 /** Adds the row of a document, with the outline under it when it is the open one; gives its id. */

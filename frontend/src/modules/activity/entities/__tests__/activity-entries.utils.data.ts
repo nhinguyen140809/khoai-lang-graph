@@ -4,8 +4,7 @@ import { projectIds, runIds, threadIds } from '@/mocks/shared/db'
 import type { Run, RunStep } from '@/modules/run/entities'
 import { workEntries } from '@/modules/run/entities'
 import type { Message } from '@/modules/thread/entities'
-
-import type { KindLook } from '../activity-entries.types'
+import type { KindLook } from '@/modules/workflow/entities/@x/activity'
 
 export const run: Run = buildRun({
   id: runIds.mentorMain3,

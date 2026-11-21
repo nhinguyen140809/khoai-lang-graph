@@ -4,6 +4,7 @@ import { describe, expect, it } from 'vitest'
 import { projectIds } from '@/mocks/shared/db'
 import { openPage } from '@/test/msw'
 import { renderWithProviders } from '@/test/render'
+import { expectText } from '@/test/steps'
 
 import { OpenIssuesPage } from '../OpenIssuesPage'
 
@@ -18,10 +19,11 @@ describe('OpenIssuesPage', () => {
     renderPage()
 
     await waitFor(() => {
+      // eslint-disable-next-line local/expect-steps -- the heading has a level, an option the step does not take
       expect(screen.getByRole('heading', { level: 1, name: 'Open issues' })).toBeInTheDocument()
     })
     expect(screen.getAllByRole('heading', { level: 2 }).length).toBeGreaterThan(0)
-    expect(screen.getByText(openIssuesDescription)).toBeInTheDocument()
+    await expectText(openIssuesDescription)
   })
 
   it('groups the item an issue concerns in one card, with the quoted words marked in the statement', async () => {
@@ -48,10 +50,10 @@ describe('OpenIssuesPage', () => {
   it('shows the people of a disagreement beside its issue', async () => {
     renderPage()
 
-    await waitFor(() => {
-      expect(screen.getByText('PER-001')).toBeInTheDocument()
+    await waitFor(async () => {
+      await expectText('PER-001')
     })
-    expect(screen.getByText('PER-003')).toBeInTheDocument()
+    await expectText('PER-003')
   })
 
   it('shows the empty state while the issues load and none is open yet', async () => {
@@ -59,9 +61,9 @@ describe('OpenIssuesPage', () => {
     openPage('/?mock-items=empty&mock-trace-links=empty')
     renderPage()
 
-    await waitFor(() => {
+    await waitFor(async () => {
       // With no link, no issue is open: the page shows its empty state once the query settles.
-      expect(screen.getByText('No issue is open.')).toBeInTheDocument()
+      await expectText('No issue is open.')
     })
   })
 })

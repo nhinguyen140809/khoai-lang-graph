@@ -1,10 +1,9 @@
 import { screen } from '@testing-library/react'
-import userEvent from '@testing-library/user-event'
 import { describe, expect, it } from 'vitest'
 
 import { assertPresent } from '@/shared/lib/guards'
 import { renderWithProviders } from '@/test/render'
-import { expectNoAccessibilityViolations } from '@/test/steps'
+import { expectNoAccessibilityViolations, expectNoRole, expectRole, hoverOver } from '@/test/steps'
 
 import { Button } from '../button'
 import { DisabledReason } from '../disabled-reason'
@@ -30,21 +29,19 @@ function wrapperOfTrigger() {
 
 describe('DisabledReason', () => {
   it('leaves the control alone without a reason', async () => {
-    const user = userEvent.setup()
     const { container } = renderEdit(null)
 
     const button = screen.getByRole('button', { name: 'Edit' })
     expect(container.firstElementChild).toBe(button)
-    await user.hover(button)
-    expect(screen.queryByRole('tooltip')).not.toBeInTheDocument()
+    await hoverOver(button)
+    expectNoRole('tooltip')
   })
 
   it('shows the reason in a tooltip on hover, as the description of the wrapper', async () => {
-    const user = userEvent.setup()
     renderEdit(reason)
 
     const wrapper = wrapperOfTrigger()
-    await user.hover(wrapper)
+    await hoverOver(wrapper)
     expect(await screen.findByRole('tooltip')).toHaveTextContent(reason)
     expect(wrapper).toHaveAccessibleDescription(reason)
   })
@@ -58,7 +55,7 @@ describe('DisabledReason', () => {
 
   it('has no accessibility violation', async () => {
     const { container } = renderEdit(reason)
-    await screen.findByRole('button', { name: 'Edit' })
+    await expectRole('button', 'Edit')
 
     await expectNoAccessibilityViolations(container)
   })

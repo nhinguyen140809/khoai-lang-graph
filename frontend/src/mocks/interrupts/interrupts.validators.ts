@@ -72,18 +72,9 @@ function answerRuleProblems(
         problems.push({ field, message: 'Choose one of the choices.' })
       }
       break
-    case 'multi_select': {
-      if (hasUnknownKey) problems.push({ field, message: 'Choose the choices of the question.' })
-      const fewest = Math.max(question.min_selected ?? 0, question.required ? 1 : 0)
-      if (chosen.length < fewest) problems.push(tooFewChoicesProblem(field, fewest))
-      if (question.max_selected !== null && chosen.length > question.max_selected) {
-        problems.push({
-          field,
-          message: `Choose at most ${String(question.max_selected)} choices.`,
-        })
-      }
+    case 'multi_select':
+      problems.push(...multiSelectProblems(question, chosen.length, hasUnknownKey, field))
       break
-    }
     case 'free_text':
       if (question.required && !hasText(answer.text)) problems.push(requiredTextProblem(field))
       break
@@ -98,6 +89,24 @@ function answerRuleProblems(
   )
   if (hasChoiceThatRequiresText && !hasText(answer.text)) {
     problems.push(requiredTextProblem(field))
+  }
+  return problems
+}
+
+// The problems of a multiple choice: a key that is no choice, and a count of choices that is out of
+// the range that the question asks for.
+function multiSelectProblems(
+  question: InterruptQuestion,
+  count: number,
+  hasUnknownKey: boolean,
+  field: string,
+): FieldProblem[] {
+  const problems: FieldProblem[] = []
+  if (hasUnknownKey) problems.push({ field, message: 'Choose the choices of the question.' })
+  const fewest = Math.max(question.min_selected ?? 0, question.required ? 1 : 0)
+  if (count < fewest) problems.push(tooFewChoicesProblem(field, fewest))
+  if (question.max_selected !== null && count > question.max_selected) {
+    problems.push({ field, message: `Choose at most ${String(question.max_selected)} choices.` })
   }
   return problems
 }

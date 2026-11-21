@@ -7,7 +7,11 @@
   "x-kind": "requirements_analysis",
   "x-schema-version": 1,
   "x-ui-display": "document",
-  "x-ui-field-order": ["key_findings", "open_questions"],
+  "x-ui-icon": "search",
+  "x-ui-field-order": [
+    "key_findings",
+    "open_questions"
+  ],
   "type": "object",
   "additionalProperties": false,
   "properties": {
@@ -30,5 +34,8 @@
       "x-ui-widget": "list"
     }
   },
-  "required": ["key_findings", "open_questions"]
+  "required": [
+    "key_findings",
+    "open_questions"
+  ]
 }

@@ -1,6 +1,7 @@
 import { render, screen } from '@testing-library/react'
-import userEvent from '@testing-library/user-event'
 import { describe, expect, it } from 'vitest'
+
+import { pressButton } from '@/test/steps'
 
 import { Button, buttonVariants } from '../button'
 
@@ -33,7 +34,7 @@ describe('Button text variant', () => {
       </Button>,
     )
 
-    await userEvent.click(screen.getByRole('button', { name: '+2 items' }))
+    await pressButton('+2 items')
 
     expect(pressed).toBe(1)
     expect(screen.getByRole('button')).toHaveAttribute('data-variant', 'text')

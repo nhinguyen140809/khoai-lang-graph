@@ -7,7 +7,7 @@ import {
   isSeparatorField,
   nonStatusTone,
 } from '@/modules/workflow/entities/@x/artifact'
-import { isSameValue } from '@/shared/lib/collections'
+import { indexBy, isSameValue } from '@/shared/lib/collections'
 import { isRecord, isString } from '@/shared/lib/guards'
 
 import type { OutlineItem } from '../items/items.types'
@@ -60,7 +60,7 @@ export function transcriptParts(
   items: readonly OutlineItem[],
   participants: readonly Participant[],
 ): TranscriptPart[] {
-  const byKey = new Map(participants.map((participant) => [participant.key, participant]))
+  const byKey = indexBy(participants, (participant) => participant.key)
   const separatorFields = contentFields(schema).filter(isSeparatorField)
   const parts: TranscriptPart[] = []
   let run: RunPart | null = null

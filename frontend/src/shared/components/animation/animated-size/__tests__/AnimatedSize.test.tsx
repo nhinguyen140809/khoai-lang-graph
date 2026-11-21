@@ -1,5 +1,5 @@
 import { act, render, screen } from '@testing-library/react'
-import { afterEach, describe, expect, it, vi } from 'vitest'
+import { describe, expect, it, vi } from 'vitest'
 
 import { AnimatedSize } from '../AnimatedSize'
 
@@ -29,10 +29,6 @@ function stubResizeObserver() {
 }
 
 describe('AnimatedSize', () => {
-  afterEach(() => {
-    vi.unstubAllGlobals()
-  })
-
   it('sizes itself to its children until they are measured', () => {
     stubResizeObserver()
     render(<AnimatedSize>content</AnimatedSize>)

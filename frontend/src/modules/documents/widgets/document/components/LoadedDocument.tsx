@@ -56,7 +56,7 @@ export function LoadedDocument({
   const quotesError = quotes.state === 'error' ? quotes.error : null
   useEffect(() => {
     if (quotesError !== null) {
-      toast.error(errorMessageOf(quotesError, {}))
+      toast.error(errorMessageOf(quotesError))
     }
   }, [quotesError])
   const { schema: artifactSchema } = useItemSchema(document.artifact)

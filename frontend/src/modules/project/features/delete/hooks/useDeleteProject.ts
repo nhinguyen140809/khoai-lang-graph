@@ -22,7 +22,7 @@ export function useDeleteProject() {
       toast.success(deleteProjectMessages.deleted, { description: projectName(project) })
     },
     onError: (error) => {
-      toast.error(errorMessageOf(error, {}))
+      toast.error(errorMessageOf(error))
     },
   })
 }

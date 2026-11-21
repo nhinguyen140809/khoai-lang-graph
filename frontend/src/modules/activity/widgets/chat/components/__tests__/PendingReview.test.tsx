@@ -1,5 +1,4 @@
 import { screen, waitFor } from '@testing-library/react'
-import userEvent from '@testing-library/user-event'
 import { describe, expect, it } from 'vitest'
 
 import { buildRun } from '@/mocks/runs/fixtures/runs.fixtures'
@@ -8,7 +7,7 @@ import type { Interrupt } from '@/modules/review/entities'
 import { apiEndpoints } from '@/shared/api/endpoints'
 import { getApiItems } from '@/test/msw'
 import { renderWithProviders } from '@/test/render'
-import { expectAttribute } from '@/test/steps'
+import { expectAttribute, press } from '@/test/steps'
 
 import { PendingReview } from '../PendingReview'
 
@@ -36,7 +35,7 @@ describe('PendingReview', () => {
       <PendingReview interrupt={first} run={run} projectId={projectIds.mentor} />,
     )
     const redo = await screen.findByRole('radio', { name: 'Redo the analysis' })
-    await userEvent.click(redo)
+    await press(redo)
     expect(redo).toHaveAttribute('aria-checked', 'true')
 
     view.rerender(

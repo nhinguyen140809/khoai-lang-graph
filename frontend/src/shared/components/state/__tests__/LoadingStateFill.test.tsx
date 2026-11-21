@@ -1,5 +1,5 @@
 import { act, render, screen } from '@testing-library/react'
-import { afterEach, describe, expect, it, vi } from 'vitest'
+import { describe, expect, it, vi } from 'vitest'
 
 import { LoadingState } from '../LoadingState'
 import type { LoadingLayout } from '../state.types'
@@ -43,10 +43,6 @@ const addingRows: { layout: LoadingLayout; skeletons: number; unit: string }[] =
 ]
 
 describe('LoadingState filling its container', () => {
-  afterEach(() => {
-    vi.unstubAllGlobals()
-  })
-
   it.each(addingRows)('adds rows to $layout: $unit', ({ layout, skeletons }) => {
     const resizeTo = stubResizeObserver()
     const { container } = render(<LoadingState label="Loading" layout={layout} rows={2} />)

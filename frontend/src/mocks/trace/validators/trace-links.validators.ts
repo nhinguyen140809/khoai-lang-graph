@@ -26,6 +26,25 @@ function itemNamedBy(value: unknown) {
   return id === undefined ? undefined : findItem(id)
 }
 
+// The problem of each field of a link that the body does not give in a good shape.
+function linkFieldProblems(has: {
+  hasSource: boolean
+  hasTarget: boolean
+  hasLinkType: boolean
+  hasNote: boolean
+  hasTargetQuote: boolean
+  hasSourceQuote: boolean
+}): FieldProblem[] {
+  return [
+    has.hasSource ? null : chooseItemProblem('source_item_id'),
+    has.hasTarget ? null : chooseItemProblem('target_item_id'),
+    has.hasLinkType ? null : choiceProblem('link_type'),
+    has.hasNote ? null : optionalTextProblem('note'),
+    has.hasTargetQuote ? null : optionalTextProblem('target_quote'),
+    has.hasSourceQuote ? null : optionalTextProblem('source_quote'),
+  ].filter((problem) => problem !== null)
+}
+
 // The first step: the body names two items, a link type of the definition and a text for the note.
 // Every field that does not is a problem; whether the link is allowed is for the rules.
 function parseLink(
@@ -41,14 +60,14 @@ function parseLink(
   const targetQuote = optionalText(body.target_quote)
   const sourceQuote = optionalText(body.source_quote)
 
-  const problems = [
-    source === undefined ? chooseItemProblem('source_item_id') : null,
-    target === undefined ? chooseItemProblem('target_item_id') : null,
-    linkType === null ? choiceProblem('link_type') : null,
-    note === undefined ? optionalTextProblem('note') : null,
-    targetQuote === undefined ? optionalTextProblem('target_quote') : null,
-    sourceQuote === undefined ? optionalTextProblem('source_quote') : null,
-  ].filter((problem) => problem !== null)
+  const problems = linkFieldProblems({
+    hasSource: source !== undefined,
+    hasTarget: target !== undefined,
+    hasLinkType: linkType !== null,
+    hasNote: note !== undefined,
+    hasTargetQuote: targetQuote !== undefined,
+    hasSourceQuote: sourceQuote !== undefined,
+  })
   // Every problem is listed above; the checks here only let the compiler see that no field is missing.
   if (
     source === undefined ||

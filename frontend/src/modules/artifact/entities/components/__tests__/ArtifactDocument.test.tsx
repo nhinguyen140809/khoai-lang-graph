@@ -8,7 +8,13 @@ import {
 import { projectIds } from '@/mocks/shared/db'
 import { assertPresent } from '@/shared/lib/guards'
 import { renderWithProviders } from '@/test/render'
-import { expectNoAccessibilityViolations } from '@/test/steps'
+import {
+  expectNoAccessibilityViolations,
+  expectNoRole,
+  expectNoText,
+  expectRole,
+  expectText,
+} from '@/test/steps'
 
 import { useArtifactDocument } from '../../outline/hooks/useArtifactDocument'
 import { ArtifactDocument } from '../ArtifactDocument'
@@ -85,23 +91,21 @@ describe('ArtifactDocument', () => {
     expect(links.map((link) => link.textContent)).toContain('Minh')
     expect(screen.getAllByRole('heading', { level: 3 }).length).toBe(3)
     expect(screen.getAllByText('Interviewed').length).toBe(3)
-    expect(
-      screen.getByText('Third-year undergraduate who wants advice on a research career.'),
-    ).toBeInTheDocument()
+    await expectText('Third-year undergraduate who wants advice on a research career.')
     expect(screen.getAllByText(/Goals:/).length).toBe(3)
-    expect(screen.queryByRole('table')).not.toBeInTheDocument()
+    expectNoRole('table')
   })
 
   it('shows the badge of a persona that is not interviewed yet', async () => {
     renderDocument('persona_catalog', { projectId: libraryProjectId })
 
-    expect(await screen.findByText('Not interviewed')).toBeInTheDocument()
+    await expectText('Not interviewed')
   })
 
   it('shows the fields of an artifact that has no items', async () => {
     renderDocument('elicitation_plan')
 
-    expect(await screen.findByRole('heading', { name: 'Objectives' })).toBeInTheDocument()
+    await expectRole('heading', 'Objectives')
   })
 
   it('names the review that waits for the user in the color that asks for it', async () => {
@@ -126,7 +130,7 @@ describe('ArtifactDocument of a transcript', () => {
       await screen.findByText('Participants'),
       'The transcript shows no list of fields',
     ).closest('dl')
-    expect(screen.getByText('Turns')).toBeInTheDocument()
+    await expectText('Turns')
     expect(screen.getByText('Turns').closest('div')?.textContent).toContain('4')
     expect(
       within(assertPresent(list, 'No list of fields')).getByText('Interviewer'),
@@ -137,7 +141,7 @@ describe('ArtifactDocument of a transcript', () => {
       'href',
       `/participants/${itemFixtureByKey(mentorProjectId, 'PER-001').id}`,
     )
-    expect(screen.queryByRole('link', { name: 'Interviewer' })).not.toBeInTheDocument()
+    expectNoRole('link', 'Interviewer')
   })
 
   it('draws the conversation of its participants with a separator for each turn', async () => {
@@ -145,7 +149,7 @@ describe('ArtifactDocument of a transcript', () => {
 
     const first = await screen.findByText('How do you look for a mentor today?')
     for (const turn of ['Turn 1', 'Turn 2', 'Turn 3', 'Turn 4']) {
-      expect(screen.getByText(turn)).toBeInTheDocument()
+      await expectText(turn)
     }
     // The interviewer, who leads, sits at the right; the student at the left.
     expect(first.closest('[data-slot="message"]')).toHaveAttribute('data-align', 'end')
@@ -154,7 +158,7 @@ describe('ArtifactDocument of a transcript', () => {
     )
     expect(answer.closest('[data-slot="message"]')).toHaveAttribute('data-align', 'start')
     // The conversation has no heading of the kind of its messages.
-    expect(screen.queryByRole('heading', { name: /Interview message/ })).not.toBeInTheDocument()
+    expectNoRole('heading', /Interview message/)
   })
 
   it('ends with the separator of the artifact, after the last message', async () => {
@@ -168,8 +172,8 @@ describe('ArtifactDocument of a transcript', () => {
     expect(last.compareDocumentPosition(assertPresent(separator, 'No end separator'))).toBe(
       Node.DOCUMENT_POSITION_FOLLOWING,
     )
-    expect(screen.getByText('Stopping condition reached')).toBeInTheDocument()
-    expect(screen.queryByRole('heading', { name: 'Status' })).not.toBeInTheDocument()
+    await expectText('Stopping condition reached')
+    expectNoRole('heading', 'Status')
   })
 
   it('ends with the status alone while the interview runs', async () => {
@@ -182,9 +186,9 @@ describe('ArtifactDocument of a transcript', () => {
       <LoadedDocument artifactId={artifact.id} isUnderReview={false} slots={{}} />,
     )
 
-    expect(await screen.findByText('How do you manage the bookings today?')).toBeInTheDocument()
-    expect(screen.getByText('In progress')).toBeInTheDocument()
-    expect(screen.queryByText('Stopping condition reached')).not.toBeInTheDocument()
+    await expectText('How do you manage the bookings today?')
+    await expectText('In progress')
+    expectNoText('Stopping condition reached')
   })
 
   it('takes the version of the history in place of the list, without the end separator', async () => {
@@ -192,9 +196,9 @@ describe('ArtifactDocument of a transcript', () => {
       slots: { fieldsView: <p>The version of the history shows here.</p> },
     })
 
-    expect(await screen.findByText('The version of the history shows here.')).toBeInTheDocument()
-    expect(screen.queryByText('Participants')).not.toBeInTheDocument()
-    expect(screen.queryByText('Completed')).not.toBeInTheDocument()
+    await expectText('The version of the history shows here.')
+    expectNoText('Participants')
+    expectNoText('Completed')
   })
 
   it('anchors the bubble of a message and marks the target one', async () => {
@@ -222,7 +226,7 @@ describe('ArtifactDocument of a transcript', () => {
 
   it('has no accessibility violation on the conversation', async () => {
     const { container } = renderDocument('interview_transcript')
-    await screen.findByText('How do you look for a mentor today?')
+    await expectText('How do you look for a mentor today?')
 
     await expectNoAccessibilityViolations(container)
   })
@@ -246,7 +250,7 @@ describe('ArtifactDocument with the slots of a page', () => {
 
     const edit = await screen.findByRole('button', { name: 'Edit' })
     expect(edit.closest('div')?.querySelector('h1')).not.toBeNull()
-    expect(screen.getByText('The version of the history shows here.')).toBeInTheDocument()
-    expect(screen.queryByRole('heading', { name: 'Objectives' })).not.toBeInTheDocument()
+    await expectText('The version of the history shows here.')
+    expectNoRole('heading', 'Objectives')
   })
 })

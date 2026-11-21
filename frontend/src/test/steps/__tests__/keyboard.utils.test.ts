@@ -1,6 +1,6 @@
-import userEvent from '@testing-library/user-event'
 import { describe, expect, it, vi } from 'vitest'
 
+import { press } from '../form.utils'
 import { clickHolding, pasteText, pressKey, pressKeys, pressTab, typeText } from '../keyboard.utils'
 
 function renderFields() {
@@ -48,7 +48,7 @@ describe('the keyboard steps', () => {
     first.addEventListener('click', (event) => shifts.push(event.shiftKey))
 
     await clickHolding('Shift', first)
-    await userEvent.click(first)
+    await press(first)
 
     expect(shifts).toEqual([true, false])
   })

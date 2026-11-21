@@ -1,9 +1,9 @@
 import { render, screen, within } from '@testing-library/react'
-import userEvent from '@testing-library/user-event'
 import { useForm } from 'react-hook-form'
 import { describe, expect, it } from 'vitest'
 
 import { assertPresent } from '@/shared/lib/guards'
+import { expectRole, expectText, press, pressRole } from '@/test/steps'
 
 import { noRunDefaultsFieldValues } from '../../run-defaults.constants'
 import type { RunDefaultsFieldValues } from '../../run-defaults.schema'
@@ -43,14 +43,14 @@ function TwoLevelsForm() {
 }
 
 describe('RunDefaultsFields', () => {
-  it('shows the limits and the parameters of the workflow under the legend', () => {
+  it('shows the limits and the parameters of the workflow under the legend', async () => {
     render(<SettingsForm />)
 
     const fields = screen.getByRole('group', { name: 'Run settings' })
     expect(fields).toContainElement(screen.getByRole('spinbutton', { name: 'Maximum steps' }))
-    expect(screen.getByRole('spinbutton', { name: 'Cost limit (USD)' })).toBeInTheDocument()
-    expect(screen.getByRole('spinbutton', { name: 'Max turns' })).toBeInTheDocument()
-    expect(screen.getByText(/A run in progress keeps its settings/)).toBeInTheDocument()
+    await expectRole('spinbutton', 'Cost limit (USD)')
+    await expectRole('spinbutton', 'Max turns')
+    await expectText(/A run in progress keeps its settings/)
   })
 
   it('offers the reviews, in a group of their own, once the default is turned off', async () => {
@@ -60,7 +60,7 @@ describe('RunDefaultsFields', () => {
     expect(reviews).toContainElement(analysis)
     expect(analysis).toBeDisabled()
 
-    await userEvent.click(screen.getByRole('switch', { name: 'Default' }))
+    await pressRole('switch', 'Default')
 
     expect(analysis).toBeEnabled()
   })
@@ -71,9 +71,7 @@ describe('RunDefaultsFields', () => {
     const second = within(screen.getByRole('group', { name: 'Second' }))
 
     // The label of the switch comes before the radio buttons of the flags, which are named alike.
-    await userEvent.click(
-      assertPresent(second.getAllByText('Default', { selector: 'label' })[0], 'No label'),
-    )
+    await press(assertPresent(second.getAllByText('Default', { selector: 'label' })[0], 'No label'))
 
     expect(first.getByRole('switch', { name: 'Default' })).toBeChecked()
     expect(second.getByRole('switch', { name: 'Default' })).not.toBeChecked()

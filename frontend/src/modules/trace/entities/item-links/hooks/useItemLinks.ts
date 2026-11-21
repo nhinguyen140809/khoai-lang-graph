@@ -8,8 +8,10 @@ import {
   mainField,
   useArtifactKinds,
   useItemTitleOf,
+  useKindTitleOf,
   useWorkflowDefinition,
 } from '@/modules/workflow/entities/@x/trace'
+import { indexBy } from '@/shared/lib/collections'
 
 import { itemLinkGroups, linkQuotesByItem } from '../../chains/chains.utils'
 import { useItemTrace } from '../../chains/hooks/useChainQueries'
@@ -25,6 +27,7 @@ export function useItemLinks(itemId: string): ItemLinksResult {
   const { data: definition } = useWorkflowDefinition()
   const { data: kinds } = useArtifactKinds()
   const titleOf = useItemTitleOf()
+  const kindTitleOf = useKindTitleOf()
 
   const result = useMemo<ItemLinksResult | undefined>(() => {
     const traceData = trace.data
@@ -33,11 +36,10 @@ export function useItemLinks(itemId: string): ItemLinksResult {
     }
 
     const schemas = contentSchemasByKind(kinds)
-    const linkTypes = definition.link_types.map(({ key, title }) => ({ key, title }))
     const groups = itemLinkGroups(traceData, itemId, {
-      linkTypes,
+      linkTypes: definition.link_types,
       titleOf,
-      kindTitleOf: (item) => schemas.get(item.kind)?.title ?? item.kind,
+      kindTitleOf: (item) => kindTitleOf(item.kind),
     })
     const quotes = linkQuotesByItem(traceData).get(itemId) ?? []
     const item = traceData.items.find(({ id }) => id === itemId)
@@ -56,9 +58,9 @@ export function useItemLinks(itemId: string): ItemLinksResult {
       incoming: groups.incoming,
       count: rows.length,
       fieldMarks,
-      rowsByLinkId: new Map(rows.map((row) => [row.link.id, row])),
+      rowsByLinkId: indexBy(rows, (row) => row.link.id),
     }
-  }, [trace.data, definition, kinds, titleOf, itemId])
+  }, [trace.data, definition, kinds, titleOf, kindTitleOf, itemId])
 
   if (trace.isError) return { state: 'error', retry: () => void trace.refetch() }
   if (result === undefined) return { state: 'pending' }

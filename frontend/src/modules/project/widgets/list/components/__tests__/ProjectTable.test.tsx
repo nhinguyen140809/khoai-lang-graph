@@ -1,5 +1,4 @@
 import { screen, within } from '@testing-library/react'
-import userEvent from '@testing-library/user-event'
 import { http, HttpResponse } from 'msw'
 import { describe, expect, it, vi } from 'vitest'
 
@@ -26,6 +25,7 @@ import {
   expectRole,
   expectText,
   findConfirmDialog,
+  press,
   pressButton,
   pressMenuItem,
   replaceText,
@@ -160,7 +160,7 @@ describe('ProjectTable', () => {
   it('says to stop the run before deleting a project with a run not finished', async () => {
     const dialog = await chooseDelete('Mentor platform', 'Stop the run first')
 
-    await userEvent.click(within(dialog).getByRole('button', { name: 'Open project' }))
+    await press(within(dialog).getByRole('button', { name: 'Open project' }))
 
     await expectPushedTo(`/projects/${projectIds.mentor}/activity`)
     expect(within(dialog).queryByRole('button', { name: 'Delete project' })).not.toBeInTheDocument()
@@ -223,9 +223,7 @@ describe('ProjectTable', () => {
       activeWithinDays: null,
     })
 
-    expect(
-      await screen.findByRole('heading', { name: 'No projects match the filters' }),
-    ).toBeInTheDocument()
+    await expectRole('heading', 'No projects match the filters')
     await pressButton('Clear filters')
     expect(onClearFilters).toHaveBeenCalledOnce()
   })
@@ -234,7 +232,7 @@ describe('ProjectTable', () => {
     const showMore = await renderLongList()
     expect(screen.getAllByRole('link')).toHaveLength(50)
 
-    await userEvent.click(showMore)
+    await press(showMore)
 
     await vi.waitFor(() => {
       expectNoRole('button', 'Show more projects')
@@ -250,7 +248,7 @@ describe('ProjectTable', () => {
     )
     const showMore = await renderLongList()
 
-    await userEvent.click(showMore)
+    await press(showMore)
 
     await expectAlert('Failed to load projects (HTTP 500)')
     expect(screen.getAllByRole('link')).toHaveLength(50)

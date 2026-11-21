@@ -29,6 +29,12 @@ type ChainNodeProps = Pick<
   'variant' | 'color' | 'isFaded' | 'aria-current'
 > & { 'data-focus': '' | undefined }
 
+/** What the item asks of the user; an item that is set aside is quiet, whatever it asks. */
+function attentionLevelOf(attention: AttentionLevel, isSetAside: boolean): AttentionLevel {
+  if (attention === 'act' || attention === 'follow') return attention
+  return attention === 'quiet' || isSetAside ? 'quiet' : 'none'
+}
+
 /**
  * How a node of the chain is painted, from the state of its item, in one place: no part of the
  * screen works a color out for itself.
@@ -44,12 +50,7 @@ export function chainNodeProps({ status, attention, isSubject }: ChainNodeState)
     return { ...chainSubjectLook, isFaded: false, 'data-focus': '', 'aria-current': 'page' }
   }
   const isSetAside = status === reviewStatus.rejected || status === reviewStatus.superseded
-  const level: AttentionLevel =
-    attention === 'act' || attention === 'follow'
-      ? attention
-      : attention === 'quiet' || isSetAside
-        ? 'quiet'
-        : 'none'
+  const level = attentionLevelOf(attention, isSetAside)
   const look = chainNodeAttentionLooks[level] ?? reviewStatusNodeLooks[status]
   return {
     variant: look.variant,

@@ -1,10 +1,10 @@
-import { beforeEach, describe, expect, it, vi } from 'vitest'
+import { describe, expect, it, vi } from 'vitest'
+
+import { advanceTimers, withFakeTimers } from '@/test/steps'
 
 import { debounce } from '../debounce.utils'
 
-beforeEach(() => {
-  vi.useFakeTimers()
-})
+withFakeTimers()
 
 describe('debounce', () => {
   it('runs once after the wait, with the arguments of the last call', () => {
@@ -14,7 +14,7 @@ describe('debounce', () => {
     debounced('a')
     debounced('ab')
     debounced('abc')
-    vi.advanceTimersByTime(300)
+    advanceTimers(300)
 
     expect(run).toHaveBeenCalledTimes(1)
     expect(run).toHaveBeenCalledWith('abc')
@@ -25,7 +25,7 @@ describe('debounce', () => {
     const debounced = debounce(run, 300)
 
     debounced()
-    vi.advanceTimersByTime(299)
+    advanceTimers(299)
 
     expect(run).not.toHaveBeenCalled()
   })
@@ -35,12 +35,12 @@ describe('debounce', () => {
     const debounced = debounce(run, 300)
 
     debounced()
-    vi.advanceTimersByTime(200)
+    advanceTimers(200)
     debounced()
-    vi.advanceTimersByTime(200)
+    advanceTimers(200)
 
     expect(run).not.toHaveBeenCalled()
-    vi.advanceTimersByTime(100)
+    advanceTimers(100)
     expect(run).toHaveBeenCalledTimes(1)
   })
 
@@ -49,9 +49,9 @@ describe('debounce', () => {
     const debounced = debounce(run, 300)
 
     debounced('a')
-    vi.advanceTimersByTime(300)
+    advanceTimers(300)
     debounced('b')
-    vi.advanceTimersByTime(300)
+    advanceTimers(300)
 
     expect(run.mock.calls).toEqual([['a'], ['b']])
   })
@@ -62,7 +62,7 @@ describe('debounce', () => {
 
     debounced()
     debounced.cancel()
-    vi.advanceTimersByTime(300)
+    advanceTimers(300)
 
     expect(run).not.toHaveBeenCalled()
   })
@@ -73,7 +73,7 @@ describe('debounce', () => {
 
     debounced('a')
     debounced.flush()
-    vi.advanceTimersByTime(300)
+    advanceTimers(300)
 
     expect(run).toHaveBeenCalledTimes(1)
     expect(run).toHaveBeenCalledWith('a')
@@ -115,7 +115,7 @@ describe('debounce', () => {
     debounced('a')
     debounced.flush()
     debounced('b')
-    vi.advanceTimersByTime(300)
+    advanceTimers(300)
 
     expect(run.mock.calls).toEqual([['a'], ['b']])
   })

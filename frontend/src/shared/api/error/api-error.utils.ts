@@ -1,7 +1,7 @@
 import { z } from 'zod'
 
 import { HttpStatus } from '../http'
-import { type ApiErrorMessages, type FieldProblem } from './api-error.types'
+import { ApiErrorCode, type ApiErrorMessages, type FieldProblem } from './api-error.types'
 
 // The error body of the API (RFC 9457 Problem Details). Fields are optional so that an error from
 // a proxy, which has no such body, still becomes an ApiError.
@@ -49,11 +49,22 @@ export function isNotFoundError(error: unknown): boolean {
   return error instanceof ApiError && error.status === HttpStatus.NotFound
 }
 
+/** Whether a request failed because it was sent without a session, or with one that ended. */
+export function isUnauthorizedError(error: unknown): boolean {
+  return error instanceof ApiError && error.status === HttpStatus.Unauthorized
+}
+
+/** Whether a request failed because the record it changes moved on since the caller read it. */
+export function isVersionConflict(error: unknown): boolean {
+  return error instanceof ApiError && error.code === ApiErrorCode.VersionConflict
+}
+
 /**
  * What a page says for a failed request: the words that `messages` gives for the code of the
- * answer, else for its status, else the message of the error.
+ * answer, else for its status, else the message of the error. Without `messages` it is the message
+ * of the error.
  */
-export function errorMessageOf(error: Error, messages: ApiErrorMessages): string {
+export function errorMessageOf(error: Error, messages: ApiErrorMessages = {}): string {
   if (!(error instanceof ApiError)) return error.message
   const byCode = messages.code as Partial<Record<string, string>> | undefined
   const byStatus = messages.status as Partial<Record<number, string>> | undefined
@@ -62,4 +73,13 @@ export function errorMessageOf(error: Error, messages: ApiErrorMessages): string
     byStatus?.[error.status] ??
     error.message
   )
+}
+
+/**
+ * What the API found wrong with the fields of a request, one line for each field it names; none
+ * for an error that names no field.
+ */
+export function fieldProblemsOf(error: Error): string | undefined {
+  if (!(error instanceof ApiError) || error.fieldErrors.length === 0) return undefined
+  return error.fieldErrors.map(({ field, message }) => `${field}: ${message}`).join('\n')
 }

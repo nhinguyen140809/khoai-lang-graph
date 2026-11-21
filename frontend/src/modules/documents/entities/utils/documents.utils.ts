@@ -43,7 +43,7 @@ export function groupMark(documents: readonly Pick<MarkedArtifact, 'mark'>[]): D
  */
 export function documentEntries({
   kinds,
-  titles,
+  kindTitleOf,
   artifacts,
   writingIds,
   reviewIds,
@@ -51,7 +51,7 @@ export function documentEntries({
   hasUnfinishedRun,
 }: {
   kinds: readonly Pick<DefinedArtifactKind, 'kind' | 'per_project' | 'subject_item_kind'>[]
-  titles: ReadonlyMap<string, string>
+  kindTitleOf: (kind: string) => string
   artifacts: readonly Artifact[]
   writingIds: ReadonlySet<string>
   reviewIds: ReadonlySet<string>
@@ -60,7 +60,7 @@ export function documentEntries({
   hasUnfinishedRun: boolean
 }): DocumentEntry[] {
   return kinds.flatMap((definedKind): DocumentEntry[] => {
-    const title = titles.get(definedKind.kind) ?? definedKind.kind
+    const title = kindTitleOf(definedKind.kind)
     const own = artifacts.filter(({ kind }) => kind === definedKind.kind)
     const marked = own.map((artifact) => ({
       artifact,

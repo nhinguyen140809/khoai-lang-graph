@@ -1,3 +1,4 @@
+export { useHotkey } from './hooks/useHotkey'
 export { useModifierKeyName } from './hooks/useModifierKeyName'
 export type { Hotkey } from './hotkey.types'
 export {

@@ -1,9 +1,18 @@
 import { screen, waitFor } from '@testing-library/react'
-import userEvent from '@testing-library/user-event'
 import { describe, expect, it, vi } from 'vitest'
 
 import { renderWithProviders } from '@/test/render'
-import { expectNoAccessibilityViolations, replaceText, typeText } from '@/test/steps'
+import {
+  expectDisabled,
+  expectEnabled,
+  expectNoAccessibilityViolations,
+  expectNoRole,
+  expectRole,
+  expectText,
+  pressButton,
+  replaceText,
+  typeText,
+} from '@/test/steps'
 
 import { useDiscardChangesDialogStore } from '../../stores/discard-changes-dialog.store'
 import { useEditingRecordStore } from '../../stores/editing-record.store'
@@ -33,14 +42,13 @@ function renderEditItemForm({
 
 describe('EditItemForm', () => {
   it('asks for a required field left empty before sending', async () => {
-    const user = userEvent.setup()
     renderEditItemForm()
 
     const title = await screen.findByRole('textbox', { name: 'Title' })
     await replaceText(title, '   ')
-    await user.click(screen.getByRole('button', { name: 'Save' }))
+    await pressButton('Save')
 
-    expect(await screen.findByText('Enter a value.')).toBeInTheDocument()
+    await expectText('Enter a value.')
   })
 
   it('focuses its first field on open, keeps Save disabled until a change, and tells the page of the first change once', async () => {
@@ -49,22 +57,21 @@ describe('EditItemForm', () => {
 
     const title = await screen.findByRole('textbox', { name: 'Title' })
     expect(title).toHaveFocus()
-    expect(screen.getByRole('button', { name: 'Save' })).toBeDisabled()
+    expectDisabled('button', 'Save')
 
     await typeText(title, ' fast')
-    expect(screen.getByRole('button', { name: 'Save' })).toBeEnabled()
+    expectEnabled('button', 'Save')
     expect(onFirstChange).toHaveBeenCalledOnce()
   })
 
   it('saves the fields that changed, and returns to reading', async () => {
-    const user = userEvent.setup()
     const onChanged = vi.fn()
     useEditingRecordStore.getState().startEditing({ type: 'item', id: editableItem.id })
     renderEditItemForm({ onChanged })
 
     const title = await screen.findByRole('textbox', { name: 'Title' })
     await typeText(title, ' fast')
-    await user.click(screen.getByRole('button', { name: 'Save' }))
+    await pressButton('Save')
 
     await waitFor(() => {
       expect(onChanged).toHaveBeenCalledOnce()
@@ -73,18 +80,17 @@ describe('EditItemForm', () => {
   })
 
   it('ends the edit mode on a clean Cancel, and asks before a dirty one', async () => {
-    const user = userEvent.setup()
     useEditingRecordStore.getState().startEditing({ type: 'item', id: editableItem.id })
     renderEditItemForm()
 
-    await user.click(await screen.findByRole('button', { name: 'Cancel' }))
+    await pressButton('Cancel')
     expect(useEditingRecordStore.getState().recordKey).toBeNull()
-    expect(screen.queryByRole('alertdialog')).not.toBeInTheDocument()
+    expectNoRole('alertdialog')
 
     useEditingRecordStore.getState().startEditing({ type: 'item', id: editableItem.id })
     const title = await screen.findByRole('textbox', { name: 'Title' })
     await typeText(title, ' fast')
-    await user.click(screen.getByRole('button', { name: 'Cancel' }))
+    await pressButton('Cancel')
 
     // The dialog itself is mounted by DocumentDialogs; the form only opens it through its store.
     await waitFor(() => {
@@ -96,14 +102,14 @@ describe('EditItemForm', () => {
   it('shows the reason of a lock beside a Save that it disables, and the alert above', async () => {
     renderEditItemForm({ lockedReason: 'Documents cannot change while the agents work.' })
 
-    await screen.findByRole('textbox', { name: 'Title' })
-    expect(screen.getByRole('button', { name: 'Save' })).toBeDisabled()
-    expect(screen.getByText('Documents cannot change while the agents work.')).toBeInTheDocument()
+    await expectRole('textbox', 'Title')
+    expectDisabled('button', 'Save')
+    await expectText('Documents cannot change while the agents work.')
   })
 
   it('has no accessibility violation', async () => {
     const { container } = renderEditItemForm()
-    await screen.findByRole('textbox', { name: 'Title' })
+    await expectRole('textbox', 'Title')
 
     await expectNoAccessibilityViolations(container)
   })

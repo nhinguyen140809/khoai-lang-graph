@@ -81,19 +81,20 @@ function UserAvatar({ me }: { me: Me }) {
   )
 }
 
+/** The mark of the user in the button: a placeholder while they load, a plain icon when they cannot. */
+function AccountMark({ me }: { me: ReturnType<typeof useMe> }) {
+  if (me.isPending) return <Skeleton className="size-6 rounded-full" />
+  if (me.isError) return <UserIcon aria-hidden />
+  return <UserAvatar me={me.data} />
+}
+
 /** The button that opens the menu: the avatar of the user, named after them. */
 function AccountButton(props: ComponentProps<typeof Button>) {
   const me = useMe()
 
   return (
     <Button variant="ghost" size="icon-lg" className="rounded-full" {...props}>
-      {me.isPending ? (
-        <Skeleton className="size-6 rounded-full" />
-      ) : me.isError ? (
-        <UserIcon aria-hidden />
-      ) : (
-        <UserAvatar me={me.data} />
-      )}
+      <AccountMark me={me} />
       <span className="sr-only">{me.isSuccess ? me.data.display_name : 'Account'}</span>
     </Button>
   )

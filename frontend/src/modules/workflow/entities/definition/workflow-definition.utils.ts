@@ -1,3 +1,5 @@
+import { indexBy } from '@/shared/lib/collections'
+
 import type { WorkflowDefinition } from './workflow-definition.types'
 import type { CheckpointNode, WorkflowEdge, WorkflowNode } from './workflow-graph.types'
 import type { AgentRole, Tool, ValueList } from './workflow-vocabulary.types'
@@ -19,12 +21,30 @@ export function edgesFrom(definition: WorkflowDefinition, nodeId: string): Workf
 
 /** The label of each agent role of a definition, by its key. */
 export function agentRoleLabels(definition: WorkflowDefinition): Map<string, string> {
-  return new Map(definition.agent_roles.map(({ key, label }) => [key, label]))
+  return indexBy(
+    definition.agent_roles,
+    ({ key }) => key,
+    ({ label }) => label,
+  )
 }
 
-/** The tools of a definition, by their key. */
-export function toolsOf(definition: Pick<WorkflowDefinition, 'tools'>): Map<string, Tool> {
-  return new Map(definition.tools.map((tool) => [tool.key, tool]))
+/** The tool of a definition with this key, or undefined when it lists none. */
+export function findTool(
+  definition: Pick<WorkflowDefinition, 'tools'>,
+  key: string,
+): Tool | undefined {
+  return definition.tools.find((tool) => tool.key === key)
+}
+
+/** The title of each link type of a definition, by its key. */
+export function linkTypeTitles(
+  definition: Pick<WorkflowDefinition, 'link_types'>,
+): Map<string, string> {
+  return indexBy(
+    definition.link_types,
+    ({ key }) => key,
+    ({ title }) => title,
+  )
 }
 
 /** The kinds of item that each kind of artifact holds, in the order of the definition, by its kind. */
@@ -32,6 +52,22 @@ export function itemKindsByArtifactKind(
   definition: Pick<WorkflowDefinition, 'artifact_kinds'>,
 ): Map<string, string[]> {
   return new Map(definition.artifact_kinds.map(({ kind, item_kinds }) => [kind, item_kinds]))
+}
+
+/**
+ * The kind of the subject item that each stage works on one after another: for each artifact kind
+ * with one artifact for each subject, the kind of its subjects, by the key of the stage.
+ */
+export function subjectKindByStage(
+  definition: Pick<WorkflowDefinition, 'artifact_kinds'>,
+): Map<string, string> {
+  return new Map(
+    definition.artifact_kinds.flatMap(({ per_project, stage, subject_item_kind }) =>
+      per_project === 'one_per_subject' && subject_item_kind !== null
+        ? [[stage, subject_item_kind]]
+        : [],
+    ),
+  )
 }
 
 /** The agent role of the definition with this key, or undefined. */

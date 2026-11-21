@@ -1,5 +1,4 @@
 import { screen, waitFor } from '@testing-library/react'
-import userEvent from '@testing-library/user-event'
 import { describe, expect, it } from 'vitest'
 
 import { projectIds } from '@/mocks/shared/db'
@@ -7,7 +6,7 @@ import { assertPresent } from '@/shared/lib/guards'
 import { openPage } from '@/test/msw'
 import { setQuery } from '@/test/next-stubs'
 import { renderWithProviders } from '@/test/render'
-import { expectNoAccessibilityViolations, expectRole, expectText } from '@/test/steps'
+import { expectNoAccessibilityViolations, expectRole, expectText, press } from '@/test/steps'
 
 import { ActivityPage } from '../ActivityPage'
 
@@ -16,11 +15,7 @@ describe('ActivityPage', () => {
     renderWithProviders(<ActivityPage projectId={projectIds.mentor} />)
 
     await expectText('Also ask about group sessions.')
-    expect(
-      screen.getByText(
-        'I want to build an online platform for university students to find mentors.',
-      ),
-    ).toBeInTheDocument()
+    await expectText('I want to build an online platform for university students to find mentors.')
   })
 
   it('keeps the notes of finished work closed, and shows them as Markdown when its line is opened', async () => {
@@ -32,7 +27,7 @@ describe('ActivityPage', () => {
     const line = assertPresent(lines.at(-1), 'the line of the latest run')
     expect(document.body).not.toHaveTextContent('I compared what the three people said')
 
-    await userEvent.click(assertPresent(line.closest('button'), 'the trigger of the line'))
+    await press(assertPresent(line.closest('button'), 'the trigger of the line'))
 
     // Markdown cuts a text into elements as it renders it, so the page is read as one text.
     await waitFor(() => {
@@ -59,7 +54,7 @@ describe('ActivityPage', () => {
     openPage('/?mock-run-status=done')
     renderWithProviders(<ActivityPage projectId={projectIds.mentor} />)
 
-    await screen.findByText('Not read: the work ended before this message.')
+    await expectText('Not read: the work ended before this message.')
     await expectRole('button', 'Send it again')
   })
 
@@ -101,7 +96,7 @@ describe('ActivityPage', () => {
   it('has no accessibility violation', async () => {
     renderWithProviders(<ActivityPage projectId={projectIds.mentor} />)
 
-    await screen.findByText('Also ask about group sessions.')
+    await expectText('Also ask about group sessions.')
     await expectNoAccessibilityViolations()
   })
 })

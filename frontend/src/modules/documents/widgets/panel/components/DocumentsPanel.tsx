@@ -73,12 +73,9 @@ function PanelBody({
     displays,
   ])
 
-  const currentId =
-    openItemId === undefined
-      ? openArtifactId === undefined
-        ? undefined
-        : documentNodeId(openArtifactId)
-      : nodeIdOfItem(nodes, openItemId)
+  const openDocumentNodeId =
+    openArtifactId === undefined ? undefined : documentNodeId(openArtifactId)
+  const currentId = openItemId === undefined ? openDocumentNodeId : nodeIdOfItem(nodes, openItemId)
 
   const hasDocuments = list.entries.length > 0
   const counts =

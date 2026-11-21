@@ -1,7 +1,8 @@
-import { render, screen } from '@testing-library/react'
-import userEvent from '@testing-library/user-event'
+import { render } from '@testing-library/react'
 import { cloneElement } from 'react'
 import { describe, expect, it, vi } from 'vitest'
+
+import { expectFocused, pressKey, pressKeys, pressTab } from '@/test/steps'
 
 import { Highlight } from '../highlight'
 
@@ -97,7 +98,6 @@ describe('Highlight', () => {
   })
 
   it('wraps each mark with renderMark and makes the marks answer Enter and Space', async () => {
-    const user = userEvent.setup()
     const onOpen = vi.fn()
     render(
       <Highlight query="b" renderMark={(mark) => cloneElement(mark, { onClick: onOpen })}>
@@ -105,10 +105,10 @@ describe('Highlight', () => {
       </Highlight>,
     )
 
-    await user.tab()
-    expect(screen.getByRole('button', { name: 'b' })).toHaveFocus()
-    await user.keyboard('{Enter}')
-    await user.keyboard(' ')
+    await pressTab()
+    expectFocused('button', 'b')
+    await pressKey('Enter')
+    await pressKeys(' ')
 
     expect(onOpen).toHaveBeenCalledTimes(2)
   })

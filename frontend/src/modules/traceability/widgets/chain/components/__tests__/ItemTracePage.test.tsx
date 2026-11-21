@@ -1,5 +1,4 @@
 import { fireEvent, screen, waitFor, within } from '@testing-library/react'
-import userEvent from '@testing-library/user-event'
 import { describe, expect, it } from 'vitest'
 
 import { itemFixtureByKey } from '@/mocks/artifacts/fixtures/artifacts.fixtures'
@@ -7,6 +6,14 @@ import { projectIds } from '@/mocks/shared/db'
 import { openPage } from '@/test/msw'
 import { routerMock } from '@/test/next-stubs'
 import { renderWithProviders } from '@/test/render'
+import {
+  expectPushedTo,
+  expectRole,
+  expectText,
+  press,
+  pressButton,
+  pressMenuItem,
+} from '@/test/steps'
 
 import { ItemTracePage } from '../ItemTracePage'
 
@@ -21,14 +28,12 @@ describe('ItemTracePage', () => {
     const item = itemFixtureByKey(projectId, 'AR-003')
     renderPage(item.id)
 
-    expect(await screen.findByText('Trace of Search with free hours')).toBeInTheDocument()
+    await expectText('Trace of Search with free hours')
     // The chain reaches both walks: the interview messages on the left, the backlog on the right.
-    expect(
-      await screen.findByText(
-        'I ask seniors in my club, but I never know who is free this week, so I give up.',
-      ),
-    ).toBeInTheDocument()
-    expect(screen.getByText('Filter by free hours')).toBeInTheDocument()
+    await expectText(
+      'I ask seniors in my club, but I never know who is free this week, so I give up.',
+    )
+    await expectText('Filter by free hours')
     // The more button of a node names the item it acts on.
     expect(
       document.querySelector('button[aria-label="More actions for See who is free this week"]'),
@@ -39,7 +44,7 @@ describe('ItemTracePage', () => {
     const item = itemFixtureByKey(projectId, 'AR-003')
     renderPage(item.id)
 
-    await screen.findByText('Trust before booking')
+    await expectText('Trust before booking')
     // Each node carries the look of what its item asks, or is: one to check, one to follow, an
     // approved one, a draft and one that is set aside read differently (the buttons inside a node carry a variant of their own).
     const looks = new Set(
@@ -65,14 +70,13 @@ describe('ItemTracePage', () => {
   })
 
   it('keeps the explanation of the page behind its information button, not under the title', async () => {
-    const user = userEvent.setup()
     const item = itemFixtureByKey(projectId, 'AR-003')
     renderPage(item.id)
 
-    await screen.findByText('Trace of Search with free hours')
+    await expectText('Trace of Search with free hours')
     expect(screen.queryByText(/The items on the left are what this item is based on/)).toBeNull()
 
-    await user.click(screen.getByRole('button', { name: 'How to read this page' }))
+    await pressButton('How to read this page')
 
     expect(
       await screen.findByText(/The items on the left are what this item is based on/),
@@ -111,8 +115,8 @@ describe('ItemTracePage', () => {
   it('answers notFound for an item that does not exist', async () => {
     renderPage('00000000-0000-4000-8000-000000000000')
 
-    await waitFor(() => {
-      expect(screen.getByText('This item does not exist.')).toBeInTheDocument()
+    await waitFor(async () => {
+      await expectText('This item does not exist.')
     })
   })
 
@@ -121,13 +125,12 @@ describe('ItemTracePage', () => {
     const item = itemFixtureByKey(projectId, 'AR-003')
     renderPage(item.id)
 
-    await waitFor(() => {
-      expect(screen.getByText('The trace could not load.')).toBeInTheDocument()
+    await waitFor(async () => {
+      await expectText('The trace could not load.')
     })
   })
 
   it('opens the menu of a node with its actions', async () => {
-    const user = userEvent.setup()
     const item = itemFixtureByKey(projectId, 'AR-003')
     renderPage(item.id)
 
@@ -138,18 +141,15 @@ describe('ItemTracePage', () => {
       if (button === null) throw new Error('The more button is not there yet')
       return button
     })
-    await user.click(more)
+    await press(more)
 
-    expect(await screen.findByRole('menuitem', { name: 'Open' })).toBeInTheDocument()
-    expect(
-      await screen.findByRole('menuitem', { name: 'Link to another item' }),
-    ).toBeInTheDocument()
-    expect(screen.getByRole('menuitem', { name: 'Open in a new tab' })).toBeInTheDocument()
-    expect(screen.getByRole('menuitem', { name: 'View its trace' })).toBeInTheDocument()
+    await expectRole('menuitem', 'Open')
+    await expectRole('menuitem', 'Link to another item')
+    await expectRole('menuitem', 'Open in a new tab')
+    await expectRole('menuitem', 'View its trace')
   })
 
   it('opens no page when the menu of a node opens, and one page when an action of it is chosen', async () => {
-    const user = userEvent.setup()
     const item = itemFixtureByKey(projectId, 'AR-003')
     routerMock.push.mockClear()
     renderPage(item.id)
@@ -161,15 +161,13 @@ describe('ItemTracePage', () => {
       if (button === null) throw new Error('The more button is not there yet')
       return button
     })
-    await user.click(more)
-    await user.click(await screen.findByRole('menuitem', { name: 'View its trace' }))
+    await press(more)
+    await pressMenuItem('View its trace')
 
     await waitFor(() => {
       expect(routerMock.push).toHaveBeenCalledTimes(1)
     })
-    expect(routerMock.push).toHaveBeenCalledWith(
-      expect.stringContaining(`/projects/${projectId}/trace/items/${item.id}`),
-    )
+    await expectPushedTo(expect.stringContaining(`/projects/${projectId}/trace/items/${item.id}`))
   })
 
   it('carries the words of the chosen link in the data of its nodes, ready to draw', async () => {
@@ -178,18 +176,17 @@ describe('ItemTracePage', () => {
     const item = itemFixtureByKey(projectId, 'AR-003')
     renderPage(item.id)
 
-    expect(await screen.findByText('Trace of Search with free hours')).toBeInTheDocument()
+    await expectText('Trace of Search with free hours')
     expect(document.querySelector('.react-flow__edgelabel-renderer')).toBeInTheDocument()
   })
 
   it('shows the strip of a link below the graph once the link is chosen from the notice', async () => {
-    const user = userEvent.setup()
     const item = itemFixtureByKey(projectId, 'AR-007')
     renderPage(item.id)
 
     const notice = await screen.findByRole('alert')
     expect(notice).toHaveTextContent('1 link is out of date.')
-    await user.click(within(notice).getByRole('button', { name: 'Show the link' }))
+    await press(within(notice).getByRole('button', { name: 'Show the link' }))
 
     // The notice stays and the strip of the chosen link joins it, with the title of the link.
     const alerts = await screen.findAllByRole('alert')
@@ -198,7 +195,6 @@ describe('ItemTracePage', () => {
   })
 
   it('turns the chevron of the list of links when the list opens, as the sections of the panels do', async () => {
-    const user = userEvent.setup()
     const item = itemFixtureByKey(projectId, 'AR-003')
     renderPage(item.id)
 
@@ -207,19 +203,18 @@ describe('ItemTracePage', () => {
     expect(trigger).toHaveAttribute('data-state', 'closed')
     expect(chevron).toHaveClass('in-data-[state=open]:rotate-90')
 
-    await user.click(trigger)
+    await press(trigger)
 
     // The class reads the state of the trigger, which the click has turned to open.
     expect(trigger).toHaveAttribute('data-state', 'open')
   })
 
   it('reads the links as a list of sentences', async () => {
-    const user = userEvent.setup()
     const item = itemFixtureByKey(projectId, 'AR-003')
     renderPage(item.id)
 
     const trigger = await screen.findByRole('button', { name: 'Read the links as a list' })
-    await user.click(trigger)
+    await press(trigger)
 
     // Each sentence reads across the links of both titles, so it is read from its list item.
     const sentence = (await screen.findAllByRole('listitem')).find((item) =>
@@ -247,10 +242,6 @@ describe('ItemTracePage', () => {
     // a node is pressed and throws on in jsdom; the node answers to the click alone.
     fireEvent.click(title)
 
-    await waitFor(() => {
-      expect(routerMock.push).toHaveBeenCalledWith(
-        expect.stringContaining(`/projects/${projectId}/items/${target.id}`),
-      )
-    })
+    await expectPushedTo(expect.stringContaining(`/projects/${projectId}/items/${target.id}`))
   })
 })

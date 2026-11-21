@@ -4,4 +4,12 @@ export {
   type ApiErrorStatus,
   type FieldProblem,
 } from './api-error.types'
-export { ApiError, errorMessageOf, isNotFoundError, toApiError } from './api-error.utils'
+export {
+  ApiError,
+  errorMessageOf,
+  fieldProblemsOf,
+  isNotFoundError,
+  isUnauthorizedError,
+  isVersionConflict,
+  toApiError,
+} from './api-error.utils'

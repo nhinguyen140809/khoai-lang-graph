@@ -17,7 +17,7 @@ import {
   type ContentSchema,
   useContentSchemas,
   useItemTitleOf,
-  useKindTitles,
+  useKindTitleOf,
   useLinkTitleOf,
 } from '@/modules/workflow/entities'
 import { useEditorTab } from '@/shared/components/frame'
@@ -37,7 +37,6 @@ export function OpenIssuesPage({ projectId }: { projectId: string }) {
   const isWriting = useIsProjectWriting(projectId)
   const issues = useOpenIssues(projectId, { refetchInterval: isWriting ? liveTraceMs : false })
   const schemas = useContentSchemas()
-  const kindTitles = useKindTitles()
 
   useEditorTab({
     id: 'trace:issues',
@@ -73,7 +72,7 @@ export function OpenIssuesPage({ projectId }: { projectId: string }) {
         <p className="text-sm text-muted-foreground">{openIssuesMessages.description}</p>
       </header>
       {issues.groups.map((group) => (
-        <IssueSection key={group.kind} group={group} kindTitles={kindTitles} schemas={schemas} />
+        <IssueSection key={group.kind} group={group} schemas={schemas} />
       ))}
     </div>
   )
@@ -82,24 +81,24 @@ export function OpenIssuesPage({ projectId }: { projectId: string }) {
 /** One kind of issue with its count and its cards. */
 function IssueSection({
   group,
-  kindTitles,
   schemas,
 }: {
   group: OpenIssueGroup
-  kindTitles: ReadonlyMap<string, string>
   schemas: ReadonlyMap<string, ContentSchema>
 }) {
+  const kindTitleOf = useKindTitleOf()
+
   return (
     <section className="space-y-3" aria-label={group.kindTitle}>
       <h2 className="flex items-center gap-2 text-lg font-semibold">
-        {kindTitles.get(group.kind) ?? group.kindTitle}
+        {kindTitleOf(group.kind)}
         <Badge variant="soft" color="primary">
           {String(group.entries.length)}
         </Badge>
       </h2>
       <div className="space-y-3">
         {group.entries.map((entry) => (
-          <IssueCard key={entry.issue.id} entry={entry} kindTitles={kindTitles} schemas={schemas} />
+          <IssueCard key={entry.issue.id} entry={entry} schemas={schemas} />
         ))}
       </div>
     </section>
@@ -116,17 +115,16 @@ function IssueSection({
  */
 function IssueCard({
   entry,
-  kindTitles,
   schemas,
 }: {
   entry: OpenIssueEntry
-  kindTitles: ReadonlyMap<string, string>
   schemas: ReadonlyMap<string, ContentSchema>
 }) {
   const projectId = useProjectId()
   const hrefOf = useItemHref(projectId)
   const linkTitleOf = useLinkTitleOf()
   const titleOf = useItemTitleOf()
+  const kindTitleOf = useKindTitleOf()
   const issueTitle = titleOf(entry.issue)
   // The trace is the one of the item the issue is about, or of the issue itself when it is about
   // none; the title names the tab only when it is the title of the item that is traced.
@@ -153,7 +151,7 @@ function IssueCard({
             </p>
             <QuotedItemCard
               href={hrefOf(item)}
-              kind={kindTitles.get(item.kind) ?? item.kind}
+              kind={kindTitleOf(item.kind)}
               item={{ key: item.key, content: item.content, schema: schemas.get(item.kind) }}
               quote={link.target_quote}
               side="target"

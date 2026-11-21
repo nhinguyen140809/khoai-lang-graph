@@ -1,8 +1,7 @@
 import { render, screen } from '@testing-library/react'
-import userEvent from '@testing-library/user-event'
 import { describe, expect, it, vi } from 'vitest'
 
-import { expectAttribute, pressButton } from '@/test/steps'
+import { expectAttribute, press, pressButton } from '@/test/steps'
 
 import { SidePanelSection } from '../SidePanelSection'
 import { openingCases } from './SidePanelSection.data'
@@ -21,7 +20,7 @@ describe('SidePanelSection', () => {
       expect(title).toHaveAttribute('aria-expanded', String(open))
       expect(screen.queryByText('Content') !== null).toBe(open)
 
-      await userEvent.click(title)
+      await press(title)
 
       expect(title).toHaveAttribute('aria-expanded', String(!open))
       expect(screen.queryByText('Content') !== null).toBe(!open)

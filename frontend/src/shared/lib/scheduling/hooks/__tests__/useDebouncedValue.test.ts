@@ -1,16 +1,12 @@
-import { act, renderHook } from '@testing-library/react'
-import { afterEach, beforeEach, describe, expect, it, vi } from 'vitest'
+import { renderHook } from '@testing-library/react'
+import { describe, expect, it, vi } from 'vitest'
+
+import { advanceTimers, withFakeTimers } from '@/test/steps'
 
 import { useDebouncedValue } from '../useDebouncedValue'
 
 describe('useDebouncedValue', () => {
-  beforeEach(() => {
-    vi.useFakeTimers()
-  })
-  afterEach(() => {
-    vi.useRealTimers()
-  })
-
+  withFakeTimers()
   it('starts as the value it is given', () => {
     const { result } = renderHook(() => useDebouncedValue('first', 250))
 
@@ -23,14 +19,10 @@ describe('useDebouncedValue', () => {
     })
 
     rerender({ value: 'b' })
-    act(() => {
-      vi.advanceTimersByTime(249)
-    })
+    advanceTimers(249)
     expect(result.current).toBe('a')
 
-    act(() => {
-      vi.advanceTimersByTime(1)
-    })
+    advanceTimers(1)
     expect(result.current).toBe('b')
   })
 
@@ -41,15 +33,11 @@ describe('useDebouncedValue', () => {
 
     for (const value of ['s', 'se', 'sea']) {
       rerender({ value })
-      act(() => {
-        vi.advanceTimersByTime(100)
-      })
+      advanceTimers(100)
     }
     expect(result.current).toBe('')
 
-    act(() => {
-      vi.advanceTimersByTime(250)
-    })
+    advanceTimers(250)
     expect(result.current).toBe('sea')
   })
 

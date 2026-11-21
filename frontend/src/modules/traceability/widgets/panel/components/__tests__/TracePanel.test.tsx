@@ -1,5 +1,4 @@
 import { screen, waitFor } from '@testing-library/react'
-import userEvent from '@testing-library/user-event'
 import { describe, expect, it } from 'vitest'
 
 import { itemFixtureByKey } from '@/mocks/artifacts/fixtures/artifacts.fixtures'
@@ -9,6 +8,7 @@ import { HttpMethod } from '@/shared/api/http'
 import { serverErrorOn } from '@/test/msw'
 import { resetNextStubs, routerMock, setPathname } from '@/test/next-stubs'
 import { renderWithProviders } from '@/test/render'
+import { expectPushedTo, expectText, press } from '@/test/steps'
 import { itShowsQueryStates } from '@/test/suites'
 
 import { TracePanel } from '../TracePanel'
@@ -38,12 +38,12 @@ describe('TracePanel', () => {
   it('shows one row per gap with its count, and the open issues with theirs', async () => {
     renderPanel()
 
-    await waitFor(() => {
-      expect(screen.getByText('Requirements without a user story')).toBeInTheDocument()
+    await waitFor(async () => {
+      await expectText('Requirements without a user story')
     })
-    expect(screen.getByText('Requirements without a source')).toBeInTheDocument()
-    expect(screen.getByText('Links to check')).toBeInTheDocument()
-    expect(screen.getByText('Open issues')).toBeInTheDocument()
+    await expectText('Requirements without a source')
+    await expectText('Links to check')
+    await expectText('Open issues')
 
     // The counts of the gaps of the mentor platform, and its open issues, show as badges.
     const badges = screen
@@ -54,17 +54,12 @@ describe('TracePanel', () => {
   })
 
   it('opens the page of a gap on a click of its row', async () => {
-    const user = userEvent.setup()
     routerMock.push.mockClear()
     renderPanel()
 
-    await user.click(await screen.findByText('Links to check'))
+    await press(await screen.findByText('Links to check'))
 
-    await waitFor(() => {
-      expect(routerMock.push).toHaveBeenCalledWith(
-        expect.stringContaining(`/projects/${projectId}/trace/gaps/needs_review`),
-      )
-    })
+    await expectPushedTo(expect.stringContaining(`/projects/${projectId}/trace/gaps/needs_review`))
   })
 
   it('colors the title of a document row by how much its items ask of the user', async () => {
@@ -91,7 +86,6 @@ describe('TracePanel', () => {
   })
 
   it('opens the chain of an item on a click of its row', async () => {
-    const user = userEvent.setup()
     const item = itemFixtureByKey(projectId, 'RAW-001')
     resetNextStubs()
     setPathname(`/projects/${projectId}/trace`)
@@ -100,12 +94,8 @@ describe('TracePanel', () => {
 
     // No document is open on screen, and the item still draws: every document comes with its items.
     const row = await screen.findByText('Find a mentor in my field')
-    await user.click(row)
+    await press(row)
 
-    await waitFor(() => {
-      expect(routerMock.push).toHaveBeenCalledWith(
-        expect.stringContaining(`/projects/${projectId}/trace/items/${item.id}`),
-      )
-    })
+    await expectPushedTo(expect.stringContaining(`/projects/${projectId}/trace/items/${item.id}`))
   })
 })

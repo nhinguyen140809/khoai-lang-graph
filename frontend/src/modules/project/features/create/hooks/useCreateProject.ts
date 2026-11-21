@@ -80,8 +80,7 @@ export function useCreateProject({
             ? createProjectMessages.settingsNotSaved
             : createProjectMessages.ideaNotSent,
           {
-            description:
-              failure.error instanceof Error ? errorMessageOf(failure.error, {}) : undefined,
+            description: failure.error instanceof Error ? errorMessageOf(failure.error) : undefined,
           },
         )
       }

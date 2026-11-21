@@ -1,5 +1,4 @@
 import { screen } from '@testing-library/react'
-import userEvent from '@testing-library/user-event'
 import { http } from 'msw'
 import { describe, expect, it, vi } from 'vitest'
 
@@ -12,13 +11,16 @@ import { recordRequests, serverError } from '@/test/msw'
 import { routerMock } from '@/test/next-stubs'
 import { renderWithProviders } from '@/test/render'
 import {
+  expectEnabled,
   expectFieldValue,
   expectNoRole,
   expectPushedTo,
+  expectRole,
   expectText,
   pasteText,
   pressButton,
   pressRole,
+  replaceText,
   spyOnToast,
 } from '@/test/steps'
 
@@ -45,7 +47,7 @@ function renderForm(onCreated = vi.fn()) {
 
 /** Replaces the text of a field with a paste, which takes an empty text too. */
 async function replace(name: string, text: string) {
-  await userEvent.clear(screen.getByRole('textbox', { name }))
+  await replaceText(screen.getByRole('textbox', { name }), '')
   await pasteText(text)
 }
 
@@ -75,10 +77,10 @@ describe('NewProjectForm', () => {
 
     await pressButton('Agent settings')
 
-    expect(screen.getByRole('group', { name: 'Agent settings' })).toBeInTheDocument()
-    expect(screen.getByRole('group', { name: 'Reviews' })).toBeInTheDocument()
-    expect(screen.getByRole('spinbutton', { name: 'Maximum steps' })).toBeEnabled()
-    expect(screen.getByRole('spinbutton', { name: 'Cost limit (USD)' })).toBeEnabled()
+    await expectRole('group', 'Agent settings')
+    await expectRole('group', 'Reviews')
+    expectEnabled('spinbutton', 'Maximum steps')
+    expectEnabled('spinbutton', 'Cost limit (USD)')
     expect(
       await screen.findByRole('spinbutton', { name: 'Maximum turns per interviewee' }),
     ).toBeEnabled()
@@ -90,7 +92,7 @@ describe('NewProjectForm', () => {
     renderForm()
 
     await pressButton('Agent settings')
-    await userEvent.click(screen.getByRole('spinbutton', { name: 'Maximum steps' }))
+    await pressRole('spinbutton', 'Maximum steps')
     await pasteText('40')
     await create()
 
@@ -117,7 +119,7 @@ describe('NewProjectForm', () => {
     renderForm()
 
     await pressButton('Agent settings')
-    await userEvent.click(screen.getByRole('spinbutton', { name: 'Cost limit (USD)' }))
+    await pressRole('spinbutton', 'Cost limit (USD)')
     await pasteText('0')
     await create()
 
@@ -132,7 +134,7 @@ describe('NewProjectForm', () => {
     renderForm()
 
     await pressButton('Agent settings')
-    await userEvent.click(screen.getByRole('spinbutton', { name: 'Maximum steps' }))
+    await pressRole('spinbutton', 'Maximum steps')
     await pasteText('40')
     await create()
 

@@ -1,0 +1,8 @@
+/*
+ * A text caret that is a steady block, as in a terminal. A browser without these properties keeps
+ * its own caret.
+ */
+@utility caret-block {
+  caret-shape: block;
+  caret-animation: manual;
+}

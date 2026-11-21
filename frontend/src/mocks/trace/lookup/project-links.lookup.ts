@@ -1,6 +1,7 @@
 import type { ArtifactItem } from '@/modules/artifact/entities'
 import type { ItemSummary, TraceLink } from '@/modules/trace/entities'
 import { contentSchemasByKind, itemTitle } from '@/modules/workflow/entities'
+import { indexBy } from '@/shared/lib/collections'
 
 import { allItems } from '../../artifacts/artifacts.lookup'
 import { artifactKindFixtures } from '../../workflow/artifact-kinds.fixtures'
@@ -14,7 +15,7 @@ const contentSchemas = contentSchemasByKind(artifactKindFixtures)
 /** The items of a project and the links between them. */
 export function itemsAndLinksOf(projectId: string): ProjectLinks {
   const items = allItems().filter((item) => item.project_id === projectId)
-  const itemById = new Map(items.map((item) => [item.id, item]))
+  const itemById = indexBy(items, (item) => item.id)
   const links = projectTraceLinks(projectId).filter(({ target_item_id }) =>
     itemById.has(target_item_id),
   )
@@ -61,5 +62,5 @@ export function toSummary(item: ArtifactItem): ItemSummary {
 
 /** The items without a repeat of an item, in the order they first appear. */
 export function distinctById(items: ArtifactItem[]): ArtifactItem[] {
-  return [...new Map(items.map((item) => [item.id, item])).values()]
+  return [...indexBy(items, (item) => item.id).values()]
 }

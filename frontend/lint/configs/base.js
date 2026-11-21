@@ -41,8 +41,34 @@ export default defineConfig([
       'simple-import-sort/imports': 'error',
       'simple-import-sort/exports': 'error',
       'no-console': 'error',
+      // Clean code: flat control flow, read from the top down. A chain of conditions is a function
+      // of early returns or a lookup, not a ternary inside a ternary.
+      'no-nested-ternary': 'error',
+      'max-depth': ['error', 3],
+      'no-else-return': ['error', { allowElseIf: false }],
+      complexity: ['error', 15],
+      'max-params': ['error', 4],
+      'no-lonely-if': 'error',
+      'no-unneeded-ternary': 'error',
+      'no-useless-return': 'error',
+      'prefer-template': 'error',
+      eqeqeq: ['error', 'always', { null: 'ignore' }],
+      'no-implicit-coercion': ['error', { boolean: false }],
+      'object-shorthand': 'error',
       '@typescript-eslint/no-explicit-any': 'error',
       '@typescript-eslint/consistent-type-imports': 'error',
     },
+  },
+  {
+    // Rows of data are built by position, one call to a line, which reads as a table; a builder
+    // with many parameters is how a fixture stays short.
+    files: ['**/fixtures/**/*.{ts,tsx}', '**/*.data.{ts,tsx}'],
+    rules: { 'max-params': 'off' },
+  },
+  {
+    // The components of shadcn are kept close to their source, so that an update of it stays easy
+    // to read as a diff; they are long by design.
+    files: ['src/shared/components/ui/**/*.{ts,tsx}'],
+    rules: { complexity: 'off' },
   },
 ])

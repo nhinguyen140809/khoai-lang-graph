@@ -3,6 +3,7 @@ import { describe, expect, it, vi } from 'vitest'
 import { apiEndpoints } from '@/shared/api/endpoints'
 import { ApiError } from '@/shared/api/error'
 import { HttpStatus } from '@/shared/api/http'
+import { withFakeTimers } from '@/test/steps'
 import { itSendsRequests } from '@/test/suites'
 
 import { createExport, getExport, listProjectExports } from '../exports.api'
@@ -41,16 +42,19 @@ describe('exports api', () => {
     })
   })
 
-  it('returns an export after it becomes ready', async () => {
-    vi.useFakeTimers()
-    const created = await createExport(projectId, fullProjectAsJson, 'ready-key')
-    vi.setSystemTime(Date.now() + 1600)
+  describe('after the export becomes ready', () => {
+    withFakeTimers()
 
-    const ready = await getExport(created.id)
+    it('returns the export', async () => {
+      const created = await createExport(projectId, fullProjectAsJson, 'ready-key')
+      vi.setSystemTime(Date.now() + 1600)
 
-    expect(ready).toMatchObject({
-      status: 'ready',
-      download_url: apiEndpoints.exportEntryFile.path({ exportId: created.id }),
+      const ready = await getExport(created.id)
+
+      expect(ready).toMatchObject({
+        status: 'ready',
+        download_url: apiEndpoints.exportEntryFile.path({ exportId: created.id }),
+      })
     })
   })
 

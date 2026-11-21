@@ -1,7 +1,7 @@
 import { act, fireEvent, renderHook } from '@testing-library/react'
 import { afterEach, beforeEach, describe, expect, it, vi } from 'vitest'
 
-import { advanceTimers } from '@/test/steps'
+import { advanceTimers, withFakeTimers } from '@/test/steps'
 
 import { useIdleVisibility } from '../useIdleVisibility'
 
@@ -9,8 +9,8 @@ const idleMs = 1000
 
 let container: HTMLDivElement
 
+withFakeTimers()
 beforeEach(() => {
-  vi.useFakeTimers()
   container = document.createElement('div')
   document.body.append(container)
 })

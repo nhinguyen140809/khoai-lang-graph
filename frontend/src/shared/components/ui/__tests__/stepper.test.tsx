@@ -1,7 +1,7 @@
 import { render, screen } from '@testing-library/react'
 import { describe, expect, it } from 'vitest'
 
-import { expectNoAccessibilityViolations } from '@/test/steps'
+import { expectNoAccessibilityViolations, expectText } from '@/test/steps'
 
 import {
   Stepper,
@@ -44,11 +44,11 @@ describe('StepperIndicator', () => {
     expect(indicator?.className).not.toContain('bg-accent')
   })
 
-  it('names the color of what it holds', () => {
+  it('names the color of what it holds', async () => {
     render(stepWith({ variant: 'ghost', color: 'success' }))
 
     const indicator = screen.getByText('1').closest('[data-variant]')
     expect(indicator).toHaveAttribute('data-color', 'success')
-    expect(screen.getByText('1')).toBeInTheDocument()
+    await expectText('1')
   })
 })

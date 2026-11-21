@@ -61,6 +61,25 @@ function ratingFieldsOf(property: SchemaProperty): RatingFields | null {
   }
 }
 
+/** What describes a field, and where its values come from. */
+function sourcesOf(property: SchemaProperty) {
+  return {
+    description: property.description ?? null,
+    allowedValuesFrom: property['x-value-from'] ?? null,
+    valueList: property['x-value-list'] ?? null,
+  }
+}
+
+/** The bounds of a field and the value it starts with. */
+function limitsOf(property: SchemaProperty) {
+  return {
+    minItems: property.minItems ?? null,
+    minimum: property.minimum ?? null,
+    maximum: property.maximum ?? null,
+    defaultValue: property.default ?? null,
+  }
+}
+
 function fieldOf(
   path: string,
   name: string,
@@ -79,14 +98,9 @@ function fieldOf(
     required: isRequired,
     readOnly: property.readOnly === true,
     options: (property.enum ?? []).filter(isString),
-    description: property.description ?? null,
-    allowedValuesFrom: property['x-value-from'] ?? null,
-    valueList: property['x-value-list'] ?? null,
-    minItems: property.minItems ?? null,
-    minimum: property.minimum ?? null,
-    maximum: property.maximum ?? null,
+    ...sourcesOf(property),
+    ...limitsOf(property),
     integer: typesOf(property).includes('integer'),
-    defaultValue: property.default ?? null,
     entryFields: hasObjectEntries(widget)
       ? Object.entries(entryProperties).map(([entryName, entry]) =>
           fieldOf(`${path}.${entryName}`, entryName, entry, requiredNames.includes(entryName)),
@@ -184,15 +198,6 @@ export function listColumns(schema: ContentSchema): ListColumn[] {
       ? [{ type: 'key' }]
       : fields.filter((field) => field.name === name).map((field) => ({ type: 'field', field })),
   )
-}
-
-/**
- * Whether the items of a kind can be reached one by one, with a row in the outline of a document
- * and a page of their own. A kind without the keyword can; the items that cannot are short enough
- * to read in place in the page of the document.
- */
-export function isNavigable(schema: ContentSchema): boolean {
-  return schema['x-ui-navigable'] !== false
 }
 
 /** The field that an extension of the schema names; undefined when there is none. */

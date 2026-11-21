@@ -46,12 +46,12 @@ export function linkSentenceParts(
   { tense }: { tense: LinkSentenceTense },
 ): LinkSentenceParts {
   const words = linkTypeWords[linkType.key] ?? hasALinkTo(linkType.title)
-  const verb =
-    tense === 'now'
-      ? words.now
-      : tense === 'will'
-        ? `will ${words.will}`
-        : `will no longer ${words.will}`
+  const verbs: Record<LinkSentenceTense, string> = {
+    now: words.now,
+    will: `will ${words.will}`,
+    noLonger: `will no longer ${words.will}`,
+  }
+  const verb = verbs[tense]
   return {
     before: '',
     source,

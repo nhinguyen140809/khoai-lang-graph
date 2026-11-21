@@ -1,5 +1,4 @@
 import { screen } from '@testing-library/react'
-import userEvent from '@testing-library/user-event'
 import { http } from 'msw'
 import { describe, expect, it, vi } from 'vitest'
 
@@ -17,6 +16,7 @@ import {
   expectNoConfirmDialog,
   expectRole,
   findConfirmDialog,
+  press,
   pressButton,
   pressMenuItem,
   spyOnToast,
@@ -69,9 +69,7 @@ describe('UserMenu', () => {
 
     await pressButton('Account')
 
-    expect(
-      await screen.findByRole('menuitem', { name: 'Failed to load your account. Try again' }),
-    ).toBeInTheDocument()
+    await expectRole('menuitem', 'Failed to load your account. Try again')
   })
 
   it('shows that the account is loading', async () => {
@@ -101,7 +99,7 @@ describe('UserMenu', () => {
       name: 'Failed to load your account. Try again',
     })
     isFailing = false
-    await userEvent.click(retry)
+    await press(retry)
 
     await expectRole('button', 'Linh Pham')
   })

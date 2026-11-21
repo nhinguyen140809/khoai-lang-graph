@@ -1,7 +1,7 @@
 import { fireEvent, render, screen, waitFor } from '@testing-library/react'
 import { describe, expect, it } from 'vitest'
 
-import { expectFieldValue, pressButton } from '@/test/steps'
+import { expectFieldValue, expectNoRole, pressButton } from '@/test/steps'
 
 import type { BottomPanelSection } from '../../panel.types'
 import { EditorWithBottomPanel } from '../EditorWithBottomPanel'
@@ -32,9 +32,7 @@ describe('EditorWithBottomPanel', () => {
     await pressButton('Show Trace and timeline')
 
     expect(screen.getByText('trace of REQ-001')).toBeVisible()
-    expect(
-      screen.queryByRole('button', { name: 'Show Trace and timeline' }),
-    ).not.toBeInTheDocument()
+    expectNoRole('button', 'Show Trace and timeline')
   })
 
   it('hides and shows the panel with Ctrl+`', async () => {

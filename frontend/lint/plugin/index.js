@@ -1,4 +1,5 @@
 import { booleanName } from './boolean-name.js'
+import { expectSteps } from './expect-steps.js'
 import { findGetName } from './find-get-name.js'
 import { retiredWords } from './retired-words.js'
 import { sliceBoundary } from './slice-boundary.js'
@@ -7,6 +8,7 @@ import { sliceBoundary } from './slice-boundary.js'
 export default {
   rules: {
     'boolean-name': booleanName,
+    'expect-steps': expectSteps,
     'find-get-name': findGetName,
     'retired-words': retiredWords,
     'slice-boundary': sliceBoundary,

@@ -24,7 +24,7 @@ export function useRemoveLink(onRemoved: () => void) {
       onRemoved()
     },
     onError: (error) => {
-      toast.error(errorMessageOf(error, {}))
+      toast.error(errorMessageOf(error))
     },
   })
 }

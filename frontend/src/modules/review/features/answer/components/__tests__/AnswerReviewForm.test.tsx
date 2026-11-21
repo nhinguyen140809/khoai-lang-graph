@@ -1,5 +1,4 @@
 import { screen, waitFor } from '@testing-library/react'
-import userEvent from '@testing-library/user-event'
 import { http } from 'msw'
 import { describe, expect, it } from 'vitest'
 
@@ -22,6 +21,7 @@ import {
   pressButton,
   pressKeys,
   pressRole,
+  replaceText,
   spyOnToast,
   typeText,
 } from '@/test/steps'
@@ -69,9 +69,7 @@ describe('AnswerReviewForm', () => {
     // Each option says what choosing it does, chosen or not, and the one that is described to the
     // radio by its words.
     await expectText('The analysis goes on to the specification.')
-    expect(
-      screen.getByText('The analysis is written again, settling the open conflicts.'),
-    ).toBeInTheDocument()
+    await expectText('The analysis is written again, settling the open conflicts.')
     expect(screen.getByRole('radio', { name: 'Redo the analysis' })).toHaveAccessibleDescription(
       'The analysis is written again, settling the open conflicts.',
     )
@@ -139,7 +137,7 @@ describe('AnswerReviewForm', () => {
     await formOf(interrupt)
 
     await pressRole('radio', 'Interview again')
-    await userEvent.clear(screen.getByRole('textbox', { name: 'Feedback for "Interview again"' }))
+    await replaceText(screen.getByRole('textbox', { name: 'Feedback for "Interview again"' }), '')
     await pressButton('Send')
 
     await expectText('Write the feedback.')
@@ -195,7 +193,7 @@ describe('AnswerReviewForm', () => {
 
     await pressRole('radio', 'Redo the analysis')
     const box = screen.getByRole('textbox', { name: 'Feedback for "Redo the analysis"' })
-    await userEvent.clear(box)
+    await replaceText(box, '')
     await typeText(box, 'Ask the student and the admin whether a layered design works.')
     await pressButton('Send')
 
