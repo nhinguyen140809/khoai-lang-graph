@@ -6,17 +6,30 @@
  * a yellow band on blue text green at its edges. `shimmer-spread-*` sets how wide it is.
  */
 @utility shimmer-tone {
-  --shimmer-spread: calc(8ch + 80px);
+  --shimmer-spread: var(--shimmer-tone-spread, calc(8ch + 80px));
+  --_band: var(--shimmer-band, var(--tone-line));
   --shimmer-image:
     linear-gradient(
       calc(90deg + var(--shimmer-angle)),
       transparent calc(50% - var(--_spread)),
-      color-mix(in srgb, var(--tone-line) 30%, transparent) calc(50% - var(--_spread) * 0.6),
-      color-mix(in srgb, var(--tone-line) 70%, transparent) calc(50% - var(--_spread) * 0.25),
-      var(--tone-line) 50%,
-      color-mix(in srgb, var(--tone-line) 70%, transparent) calc(50% + var(--_spread) * 0.25),
-      color-mix(in srgb, var(--tone-line) 30%, transparent) calc(50% + var(--_spread) * 0.6),
+      color-mix(in srgb, var(--_band) 30%, transparent) calc(50% - var(--_spread) * 0.6),
+      color-mix(in srgb, var(--_band) 70%, transparent) calc(50% - var(--_spread) * 0.25),
+      var(--_band) 50%,
+      color-mix(in srgb, var(--_band) 70%, transparent) calc(50% + var(--_spread) * 0.25),
+      color-mix(in srgb, var(--_band) 30%, transparent) calc(50% + var(--_spread) * 0.6),
       transparent calc(50% + var(--_spread))
     ),
-    linear-gradient(currentColor, currentColor);
+    linear-gradient(var(--shimmer-ground, currentColor), var(--shimmer-ground, currentColor));
+}
+
+/*
+ * The other way round: the text is in the line color of the tone, and a narrower band of the
+ * foreground color crosses it, so that the tone fills most of the time and the light only says
+ * that the work goes on. The band is the foreground of the page, so it reads on both themes.
+ */
+@utility shimmer-tone-solid {
+  --shimmer-band: var(--foreground);
+  --shimmer-ground: var(--tone-line);
+  --shimmer-tone-spread: calc(3ch + 40px);
+  @apply shimmer-tone;
 }
