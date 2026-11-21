@@ -1,0 +1,90 @@
+{
+  "description": "Every act that a client can show around the face of an agent while it works. A stage and a tool name acts by key in their `acts`.",
+  "acts": [
+    {
+      "key": "write",
+      "title": "Writing",
+      "description": "A page of a few lines rises at the lower left of the face and a pen moves at its bottom."
+    },
+    {
+      "key": "read",
+      "title": "Reading",
+      "description": "Lines of text float down and up at the two sides of the face while the eyes go from one to the other."
+    },
+    {
+      "key": "search",
+      "title": "Searching",
+      "description": "A magnifying glass, turned to face the other way, floats up at the right of the face and pulses, with a globe at its upper right and a library at its lower right."
+    },
+    {
+      "key": "analyze",
+      "title": "Analyzing",
+      "description": "A curve, a few columns and lines of text go round the face on one flat ring while it thinks."
+    },
+    {
+      "key": "question",
+      "title": "Asking",
+      "description": "A single question mark wiggles beside the face."
+    },
+    {
+      "key": "code",
+      "title": "Coding",
+      "description": "Brackets and symbols of code fly up to the upper right while the face taps at a laptop at its lower right."
+    },
+    {
+      "key": "calculate",
+      "title": "Calculating",
+      "description": "Numbers and signs rise in three ways from above the face, straight up and slanting to each side, while its eyes go from one to the next."
+    },
+    {
+      "key": "plan",
+      "title": "Planning",
+      "description": "A chart of tasks, a board and a list of events go round the face on one flat ring."
+    },
+    {
+      "key": "fetch",
+      "title": "Fetching",
+      "description": "A pile of documents floats above the face while a tray receives an arrow beside it."
+    },
+    {
+      "key": "review",
+      "title": "Reviewing",
+      "description": "A small tick is drawn beside lines of text that blink, with a magnifying glass over the middle of the face."
+    },
+    {
+      "key": "compare",
+      "title": "Comparing",
+      "description": "Lines of text sweep at the two sides of the face with two boxes that move apart above it."
+    },
+    {
+      "key": "save",
+      "title": "Saving",
+      "description": "A tray with an arrow ticks while a tick is drawn beside the face."
+    },
+    {
+      "key": "typing",
+      "title": "Typing",
+      "description": "The face bobs gently while it types on a laptop at its lower right, and words fly up and away to the upper right."
+    },
+    {
+      "key": "interview",
+      "title": "Interviewing",
+      "description": "A second agent faces the face; speech bubbles that point opposite ways come in turn between them, with a question mark by the first."
+    },
+    {
+      "key": "summarize",
+      "title": "Summarizing",
+      "description": "Lines of text come in toward the face from all round it, one after another."
+    },
+    {
+      "key": "link",
+      "title": "Linking",
+      "description": "A thick line is drawn from one solid dot to another over the chin, and the dots light up; a node at the right of the face branches into two."
+    },
+    {
+      "key": "export",
+      "title": "Exporting",
+      "description": "A file at the left of the face is zipped shut while a pile of documents fans out at its right."
+    }
+  ]
+}
