@@ -1,6 +1,6 @@
 'use client'
 
-import { useId, useRef, useState } from 'react'
+import { useId, useRef } from 'react'
 import { toast } from 'sonner'
 
 import { Reveal, TypedText, typedTextMs } from '@/shared/components/animation'
@@ -17,10 +17,11 @@ import {
   PromptListeningGlow,
   PromptSend,
   PromptTextarea,
+  usePromptDraft,
 } from '@/shared/components/prompt'
 
 import { useProjectPromptFocus } from '../hooks/useOpenProjectPrompt'
-import { createProjectMessages } from '../new-project.constants'
+import { createProjectMessages, newProjectDraftName } from '../new-project.constants'
 
 interface NewProjectPromptProps {
   /** Starts a project from the idea, trimmed. */
@@ -35,7 +36,8 @@ interface NewProjectPromptProps {
 export function NewProjectPrompt({ onStart }: NewProjectPromptProps) {
   const id = useId()
   const inputRef = useRef<HTMLTextAreaElement>(null)
-  const [idea, setIdea] = useState('')
+  // The idea is kept as it is written, so that it is there again when the page loads.
+  const [idea, setIdea] = usePromptDraft(newProjectDraftName)
   useProjectPromptFocus(inputRef)
 
   return (

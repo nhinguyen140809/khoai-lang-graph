@@ -1,6 +1,6 @@
 'use client'
 
-import { type ReactNode, useRef, useState } from 'react'
+import { type ReactNode, useRef } from 'react'
 import { toast } from 'sonner'
 
 import {
@@ -27,6 +27,7 @@ import {
   PromptListeningGlow,
   PromptSend,
   PromptTextarea,
+  usePromptDraft,
 } from '@/shared/components/prompt'
 import { hasText } from '@/shared/lib/guards'
 import { useView, type View } from '@/shared/lib/view'
@@ -73,7 +74,8 @@ export function ActivityPrompt({
   size?: PromptInputSize
 }) {
   const view = useView()
-  const [text, setText] = useState('')
+  // The draft is kept for the chat of the project, so that it is there again when the page loads.
+  const [text, setText] = usePromptDraft(`chat:${projectId}`)
   const inputRef = useRef<HTMLTextAreaElement>(null)
 
   // The prompt takes the focus as the chat opens, so that the next message can be typed at once.

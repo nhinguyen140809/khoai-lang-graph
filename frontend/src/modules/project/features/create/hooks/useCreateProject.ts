@@ -15,8 +15,9 @@ import type { RunParameterField } from '@/modules/workflow/entities'
 import { errorMessageOf } from '@/shared/api/error'
 import { newIdempotencyKey } from '@/shared/api/idempotency'
 import { formErrorOf, showFieldProblems } from '@/shared/components/form'
+import { forgetPromptDraft } from '@/shared/components/prompt'
 
-import { createProjectMessages } from '../new-project.constants'
+import { createProjectMessages, newProjectDraftName } from '../new-project.constants'
 import type { NewProject, NewProjectForm, NewProjectFormSchema } from '../new-project.schema'
 
 interface CreateProjectOptions {
@@ -78,6 +79,8 @@ export function useCreateProject({
       return { project, failure: null }
     },
     onSuccess: ({ project, failure }) => {
+      // The idea has become the project, so the prompt starts empty the next time.
+      forgetPromptDraft(newProjectDraftName)
       void queryClient.invalidateQueries({ queryKey: projectKeys.lists() })
       if (failure !== null) {
         toast.error(

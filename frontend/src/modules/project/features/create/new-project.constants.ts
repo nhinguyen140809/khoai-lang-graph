@@ -12,3 +12,6 @@ export const createProjectMessages = {
   settingsNotSaved:
     'The project is created, but its run settings were not saved, so its idea was not sent.',
 }
+
+/** The name under which the prompt that starts a project keeps its draft. */
+export const newProjectDraftName = 'new-project'
