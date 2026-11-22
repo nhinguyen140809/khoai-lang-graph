@@ -96,3 +96,23 @@ export function depthScale(depth: number): number {
 export function toneOf(item: Pick<ActProp, 'tone'>): PropTone {
   return item.tone ?? 'primary'
 }
+
+/** How the travel of a course is laid out: as its own tracks say, turned sideways (out from the face), or turned up and down. */
+type CourseWay = 'own' | 'sideways' | 'upDown'
+
+/** The way that a thing takes: what it asks for (`axis`) against the way that its course goes by itself. */
+export function wayOf(
+  asked: 'vertical' | 'horizontal' | undefined,
+  own: 'horizontal' | undefined,
+): CourseWay {
+  if (asked === 'horizontal' && own !== 'horizontal') return 'sideways'
+  if (asked === 'vertical' && own === 'horizontal') return 'upDown'
+  return 'own'
+}
+
+/** Where a course takes a thing from its slot, in the units of its tracks, for the way that it takes. `side` is -1 for a slot at the left and 1 for the right. */
+export function courseShift(way: CourseWay, side: number, along: number, down: number) {
+  if (way === 'sideways') return { x: along - side * down, y: 0 }
+  if (way === 'upDown') return { x: 0, y: along + down }
+  return { x: along, y: down }
+}

@@ -53,10 +53,10 @@ export const emptyMessages: Message[] = []
 /**
  * The slots around the agent on the corner of what waits for the user that its act may use, by what
  * it asks: a question has its mark above and beside the agent; a review has the lines of text that it
- * reads at its left (the agent stands a little to the right for them, so that they stay on the card)
- * and the magnifying glass over its face. None is over the card.
+ * reads at its left, above that and below it (the agent stands a little to the right for them, so
+ * that they stay on the card) and the magnifying glass over its face.
  */
 export const pendingActSlots: Readonly<Record<InterruptPurpose, readonly Slot[]>> = {
   ask: ['top', 'top-right', 'right'],
-  review: ['left', 'center'],
+  review: ['left', 'top-left', 'bottom-left', 'center'],
 }

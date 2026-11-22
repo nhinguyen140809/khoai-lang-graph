@@ -4,12 +4,14 @@ import { acts, slotPlaces } from '../act.constants'
 import { actKeys, slots } from '../act.types'
 import {
   actOf,
+  courseShift,
   depthScale,
   drawnActsOf,
   isDrawnAct,
   moodOf,
   orbitPoint,
   toneOf,
+  wayOf,
 } from '../act.utils'
 import catalog from '../acts.catalog.json' with { type: 'json' }
 
@@ -179,5 +181,24 @@ describe('toneOf', () => {
   it('gives the primary color to a thing whose act names none, and the color that it names otherwise', () => {
     expect(toneOf({})).toBe('primary')
     expect(toneOf({ tone: 'muted' })).toBe('muted')
+  })
+})
+
+describe('the way of a course', () => {
+  it('goes its own way unless the thing asks for another', () => {
+    expect(wayOf(undefined, 'horizontal')).toBe('own')
+    expect(wayOf('horizontal', 'horizontal')).toBe('own')
+    expect(wayOf('vertical', undefined)).toBe('own')
+  })
+
+  it('turns an up and down course sideways, and a sweep up and down, when asked', () => {
+    expect(wayOf('horizontal', undefined)).toBe('sideways')
+    expect(wayOf('vertical', 'horizontal')).toBe('upDown')
+  })
+
+  it('shifts a thing along the way that it takes', () => {
+    expect(courseShift('own', 1, 0.1, 0.2)).toEqual({ x: 0.1, y: 0.2 })
+    expect(courseShift('sideways', -1, 0, 0.2)).toEqual({ x: 0.2, y: 0 })
+    expect(courseShift('upDown', 1, 0.1, 0)).toEqual({ x: 0, y: 0.1 })
   })
 })

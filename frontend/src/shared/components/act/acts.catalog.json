@@ -49,7 +49,7 @@
     {
       "key": "review",
       "title": "Reviewing",
-      "description": "A small tick is drawn beside lines of text that blink, with a magnifying glass over the middle of the face."
+      "description": "Lines of text come in turn at the left of the face, above it and below it, while a magnifying glass sweeps slowly across the face."
     },
     {
       "key": "compare",
