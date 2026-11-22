@@ -16,12 +16,17 @@ export const shapeEyeLines = {
   ghost: 15,
   drop: 19,
   hexagon: 16,
+  star: 17.5,
+  mochi: 17.5,
+  clover: 16,
   oval: 16,
 } as const satisfies Record<FaceShape, number>
 
 /**
  * How much of the extra reach of the eyes (`eyeReach`) each outline takes, from none to all: an oval
- * is the one with little room beside and above the eyes.
+ * is the one with little room beside and above the eyes. Below none the eyes travel less than the
+ * gaze path itself, as in a clover, whose notches at the sides leave no room for the eyes to look
+ * far aside.
  */
 export const shapeEyeReachShares = {
   circle: 1,
@@ -31,6 +36,9 @@ export const shapeEyeReachShares = {
   ghost: 1,
   drop: 1,
   hexagon: 1,
+  star: 0.7,
+  mochi: 1,
+  clover: -1,
   oval: 0.6,
 } as const satisfies Record<FaceShape, number>
 
@@ -64,6 +72,9 @@ export const faceSilhouetteClasses = {
   ghost: 'face-silhouette-ghost',
   drop: 'face-silhouette-drop',
   hexagon: 'face-silhouette-hexagon',
+  star: 'face-silhouette-star',
+  mochi: 'face-silhouette-mochi',
+  clover: 'face-silhouette-clover',
   oval: 'face-silhouette-oval',
 } as const satisfies Record<FaceShape, string>
 
