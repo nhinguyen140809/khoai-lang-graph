@@ -5,9 +5,11 @@ import { useState } from 'react'
 import {
   defaultFaceRules,
   Face,
+  faceMotions,
   FaceRulesProvider,
   faceShapes,
   type Mood,
+  type MoodOverride,
   moods,
 } from '@/shared/components/face'
 import { ToggleGroup, ToggleGroupItem } from '@/shared/components/ui/toggle-group'
@@ -47,6 +49,42 @@ const moodUses: Record<Mood, string> = {
   worried: 'failed',
   surprised: 'a new message',
   sleeping: 'stopped',
+}
+
+/** What a motion of a face is for, in the words of the run. */
+const motionUses = {
+  sway: 'a small sway to each side',
+  tilt: 'a tilt to one side, then the other',
+  rest: 'a slow breath in the plane of the page',
+  pulse: 'zooms in slowly, then fast',
+  breathe: 'a slow breath of the whole face',
+  bounce: 'jumps straight up and down',
+  turnaround: 'turns right around now and then',
+} as const
+
+/** The faces of one kind of motion, each with its name: the same agent in the same mood, with one part of what the mood does said otherwise. */
+function MotionFaces<Name extends string>({
+  names,
+  overrideOf,
+  uses,
+}: {
+  names: readonly Name[]
+  overrideOf: (name: Name) => MoodOverride
+  uses?: Partial<Record<Name, string>>
+}) {
+  return (
+    <div className="grid grid-cols-2 gap-x-4 gap-y-3 sm:grid-cols-4">
+      {names.map((name) => (
+        <div key={name} className="flex flex-col items-start gap-1">
+          <Face seed="analyst" size="lg" override={overrideOf(name)} />
+          <SampleLabel>{name}</SampleLabel>
+          {uses?.[name] !== undefined && (
+            <SampleLabel className="opacity-70">{uses[name]}</SampleLabel>
+          )}
+        </div>
+      ))}
+    </div>
+  )
 }
 
 export function FaceCard() {
@@ -101,6 +139,34 @@ export function FaceCard() {
             </div>
           ))}
         </div>
+      </SampleGroup>
+      <SampleGroup label="Pose: how the whole face moves in the plane of the page, pivoting on its bottom">
+        <MotionFaces
+          names={faceMotions.poses}
+          overrideOf={(pose) => ({ pose })}
+          uses={motionUses}
+        />
+      </SampleGroup>
+      <SampleGroup label="Body: what the face does as a whole, about the middle of its depth (the live face turns by a squeeze, as a flat file has no depth)">
+        <MotionFaces
+          names={faceMotions.bodies}
+          overrideOf={(body) => ({ body })}
+          uses={motionUses}
+        />
+      </SampleGroup>
+      <SampleGroup label="Eyes: the kinds of eye; a kind that is open blinks, the shut, the smiling, the cross and the spiral ones do not">
+        <MotionFaces names={faceMotions.eyes} overrideOf={(kind) => ({ eyes: [kind, kind] })} />
+      </SampleGroup>
+      <SampleGroup label="What an eye does by itself, besides the way it looks: still, swelling and shrinking, squinting now and then, or winking (one eye)">
+        <MotionFaces
+          names={faceMotions.eyeLives}
+          overrideOf={(life) => ({
+            eyeLives: life === 'wink' ? ['steady', 'wink'] : [life, life],
+          })}
+        />
+      </SampleGroup>
+      <SampleGroup label="Where the eyes look: each way of looking is a path over time, and the face turns a little with the eyes">
+        <MotionFaces names={faceMotions.gazes} overrideOf={(gaze) => ({ gaze })} />
       </SampleGroup>
       <SampleGroup label="The outlines that the rules allow; a face takes one of them from its seed">
         <div className="flex flex-wrap gap-x-4 gap-y-2">
