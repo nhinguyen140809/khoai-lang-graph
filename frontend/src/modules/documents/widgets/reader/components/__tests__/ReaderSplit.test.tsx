@@ -253,10 +253,29 @@ describe('ReaderSplit', () => {
     await expectRole('heading', 'Interview transcript', within(reader))
     const trail = await within(reader).findByRole('navigation', { name: 'Where you are' })
     const links = (await within(reader).findAllByRole('link')).filter(
-      (link) => !trail.contains(link),
+      (link) => !trail.contains(link) && link.textContent !== 'Up one level',
     )
     expect(links.length).toBeGreaterThan(0)
     for (const link of links) expect(link.getAttribute('href')).toContain(`${chat}?document=`)
+  })
+
+  it('goes up one level from the place that the path names, with no need of what the reader showed before', async () => {
+    renderSplit('group=interview_transcript')
+
+    const reader = await screen.findByRole('complementary', { name: 'Interview transcript' })
+
+    expect(await within(reader).findByRole('link', { name: 'Up one level' })).toHaveAttribute(
+      'href',
+      `${chat}?reader=documents`,
+    )
+  })
+
+  it('has no button to go up from the list of the documents', async () => {
+    renderSplit('reader=documents')
+
+    await screen.findByRole('complementary')
+
+    expectNoRole('link', 'Up one level')
   })
 
   it('shows the path of the folder of one kind: the list, then the folder itself', async () => {
