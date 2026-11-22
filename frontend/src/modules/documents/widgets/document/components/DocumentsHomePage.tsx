@@ -4,7 +4,10 @@ import { EmptyState } from '@/shared/components/state'
 
 import { documentPageMessages } from '../document-page.constants'
 
-/** The start page of Documents: it asks to choose a document in the side panel. */
+/**
+ * The start page of Documents: it asks to choose a document in the side panel.
+ * @view developer
+ */
 export function DocumentsHomePage() {
   return (
     <EmptyState

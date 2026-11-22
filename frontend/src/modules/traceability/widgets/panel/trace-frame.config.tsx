@@ -6,7 +6,10 @@ import { routes } from '@/shared/routes'
 
 import { TracePanel } from './components/TracePanel'
 
-/** Trace on the activity bar: the chain of an item, the gaps and the open issues of a project. */
+/**
+ * Trace on the activity bar: the chain of an item, the gaps and the open issues of a project.
+ * @view developer
+ */
 export function traceDestination(projectId: string): FeatureDestination {
   return {
     id: 'trace',

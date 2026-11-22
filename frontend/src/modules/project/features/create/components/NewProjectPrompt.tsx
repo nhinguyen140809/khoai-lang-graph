@@ -2,6 +2,7 @@
 
 import { useId, useRef, useState } from 'react'
 
+import { Reveal, TypedText, typedTextMs } from '@/shared/components/animation'
 import { PromptInput } from '@/shared/components/prompt'
 
 import { useProjectPromptFocus } from '../hooks/useOpenProjectPrompt'
@@ -29,18 +30,21 @@ export function NewProjectPrompt({ onStart }: NewProjectPromptProps) {
         id={`${id}-title`}
         className="text-center text-2xl font-semibold tracking-tight text-balance"
       >
-        What product do you want to write the requirements for?
+        <TypedText text={createProjectMessages.promptTitle} />
       </h1>
-      <PromptInput
-        labelledBy={`${id}-title`}
-        value={idea}
-        onValueChange={setIdea}
-        onSubmit={onStart}
-        inputRef={inputRef}
-        submitLabel={createProjectMessages.create}
-        keysHint="Enter to create the project, Shift+Enter for a new line"
-        placeholder="Describe the idea, who it is for and the problem it solves"
-      />
+      {/* The prompt fades in while the words of the title are typed, and is whole when the last one is. */}
+      <Reveal duration={typedTextMs(createProjectMessages.promptTitle)}>
+        <PromptInput
+          labelledBy={`${id}-title`}
+          value={idea}
+          onValueChange={setIdea}
+          onSubmit={onStart}
+          inputRef={inputRef}
+          submitLabel={createProjectMessages.create}
+          keysHint="Enter to create the project, Shift+Enter for a new line"
+          placeholder="Describe the idea, who it is for and the problem it solves"
+        />
+      </Reveal>
     </div>
   )
 }

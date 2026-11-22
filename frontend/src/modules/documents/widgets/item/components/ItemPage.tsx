@@ -13,6 +13,7 @@ import { RestoreVersionMenuItem } from '@/modules/artifact/features/restore'
 import { useItemLinks } from '@/modules/trace/entities'
 import { isNavigable } from '@/modules/workflow/entities'
 import { isNotFoundError } from '@/shared/api/error'
+import { PageColumn } from '@/shared/components/frame'
 import { ErrorState, LoadingState, NotFoundState } from '@/shared/components/state'
 import { ScrollArea } from '@/shared/components/ui/scroll-area'
 import { useIdleVisibility } from '@/shared/lib/idle-visibility'
@@ -33,6 +34,7 @@ import { ItemNavigator } from './ItemNavigator'
  * the card of the items at the other end of its link, with the history surface in the corner; History shows the selected version in
  * place of the fields; Edit shows the form alone. An item of a kind that is read in place in its
  * document, or that does not exist, shows the state instead.
+ * @view developer
  */
 export function ItemPage({ projectId, itemId }: { projectId: string; itemId: string }) {
   const item = useItem(itemId)
@@ -54,7 +56,9 @@ export function ItemPage({ projectId, itemId }: { projectId: string; itemId: str
   if (record === undefined) {
     return (
       <ViewTransition name="item-content" share={itemContentShare} default="none">
-        <LoadingState label={itemPageMessages.loading} layout="detail" rows={3} />
+        <PageColumn isFlush className="h-full">
+          <LoadingState label={itemPageMessages.loading} layout="detail" rows={3} />
+        </PageColumn>
       </ViewTransition>
     )
   }

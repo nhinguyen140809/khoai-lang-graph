@@ -1,3 +1,5 @@
+import { itemLoadMessages } from '@/modules/documents/entities'
+
 import type { ItemMove } from './item-page.types'
 
 export const itemPageMessages = {
@@ -9,9 +11,7 @@ export const itemPageMessages = {
   position: (index: number, count: number) => `${String(index)} of ${String(count)}`,
   previous: 'Previous item',
   next: 'Next item',
-  notFound: { title: 'Item not found', description: 'This item does not exist, or was deleted.' },
-  loading: 'Loading the item',
-  loadError: 'The item could not load.',
+  ...itemLoadMessages,
   linksLoading: 'Loading the links',
   moreLinks: (count: number) => `${String(count)} more`,
   linksLoadError: 'The links could not load.',

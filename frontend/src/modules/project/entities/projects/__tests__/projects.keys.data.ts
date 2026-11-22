@@ -9,7 +9,11 @@ export const keyCases = [
     key: projectKeys.list('archived', noProjectFilters),
     wider: projectKeys.lists(),
   },
-  { name: 'the recent projects', key: projectKeys.recent(), wider: projectKeys.lists() },
+  {
+    name: 'the recent projects',
+    key: projectKeys.recent(5, noProjectFilters),
+    wider: projectKeys.lists(),
+  },
   { name: 'one project', key: projectKeys.detail('p1'), wider: projectKeys.all() },
   { name: 'the creation of a project', key: projectKeys.create(), wider: projectKeys.all() },
 ]
@@ -27,8 +31,13 @@ export const distinctCases = [
     second: projectKeys.list('active', { ...noProjectFilters, activeWithinDays: 7 }),
   },
   {
+    name: 'the recent projects of two filters',
+    first: projectKeys.recent(5, noProjectFilters),
+    second: projectKeys.recent(5, { ...noProjectFilters, activeWithinDays: 7 }),
+  },
+  {
     name: 'the recent projects and one project',
-    first: projectKeys.recent(),
+    first: projectKeys.recent(5, noProjectFilters),
     second: projectKeys.detail('recent'),
   },
   {

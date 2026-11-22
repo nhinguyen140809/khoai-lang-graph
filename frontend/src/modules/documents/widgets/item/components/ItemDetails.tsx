@@ -5,6 +5,7 @@ import type { ReactNode } from 'react'
 import type { ArtifactItem } from '@/modules/artifact/entities'
 import {
   type ContentField,
+  ContentFieldList,
   ContentFieldValue,
   hasListValue,
   type ItemPageLayout,
@@ -44,22 +45,14 @@ function FieldList<Range extends HighlightRange = HighlightRange>({
   renderFieldMark,
 }: DetailBodyProps<Range>) {
   return (
-    <div className="max-w-190 space-y-6">
-      {fields.map((field) => (
-        <section key={field.name} className="space-y-1">
-          <h2 className="text-sm font-semibold text-muted-foreground">{field.title}</h2>
-          <div className="space-y-2">
-            <ContentFieldValue
-              field={field}
-              value={item.content[field.name]}
-              definition={definition}
-              marks={fieldMarks?.get(field.name)}
-              renderMark={renderFieldMark}
-            />
-          </div>
-        </section>
-      ))}
-    </div>
+    <ContentFieldList
+      fields={fields}
+      content={item.content}
+      definition={definition}
+      fieldMarks={fieldMarks}
+      renderFieldMark={renderFieldMark}
+      className="max-w-190"
+    />
   )
 }
 

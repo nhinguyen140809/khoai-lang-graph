@@ -63,17 +63,24 @@ function MessageScrollerContent({
   )
 }
 
+/**
+ * An item of the scroller. An item that is off screen is skipped by the browser, which clips what
+ * it draws to its own box. The `isLive` item is the one at the end that still changes, and may draw
+ * past its own box, such as the glow of a mark: it is always drawn in full.
+ */
 function MessageScrollerItem({
   className,
   scrollAnchor = false,
+  isLive = false,
   ...props
-}: React.ComponentProps<typeof MessageScrollerPrimitive.Item>) {
+}: React.ComponentProps<typeof MessageScrollerPrimitive.Item> & { isLive?: boolean }) {
   return (
     <MessageScrollerPrimitive.Item
       data-slot="message-scroller-item"
       scrollAnchor={scrollAnchor}
       className={cn(
-        'min-w-0 shrink-0 [contain-intrinsic-size:auto_10rem] [content-visibility:auto]',
+        'min-w-0 shrink-0 [contain-intrinsic-size:auto_10rem]',
+        isLive ? '[content-visibility:visible]' : '[content-visibility:auto]',
         className,
       )}
       {...props}

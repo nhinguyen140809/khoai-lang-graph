@@ -5,6 +5,7 @@ import {
 } from './folder-index-patterns.constants.js'
 import { outsideLayersGroup } from './layer-patterns.constants.js'
 import { messages } from './messages.constants.js'
+import { viewAreaPattern } from './area-patterns.constants.js'
 
 /** What shared code, outside the modules, may not import. */
 export const sharedCodePatterns = [
@@ -24,4 +25,5 @@ export const sharedCodePatterns = [
   storageIndexPattern,
   testHelpersIndexPattern,
   mockHelpersIndexPattern,
+  viewAreaPattern,
 ]

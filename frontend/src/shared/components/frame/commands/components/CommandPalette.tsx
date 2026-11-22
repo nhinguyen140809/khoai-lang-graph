@@ -1,6 +1,6 @@
 'use client'
 
-import { SearchIcon } from 'lucide-react'
+import { ArrowDownIcon, ArrowUpIcon, CornerDownLeftIcon, SearchIcon } from 'lucide-react'
 import { useState } from 'react'
 
 import {
@@ -13,9 +13,10 @@ import {
   CommandList,
   CommandShortcut,
 } from '@/shared/components/ui/command'
+import { Kbd, KbdGroup } from '@/shared/components/ui/kbd'
 import { hotkeyLabel, useModifierKeyName } from '@/shared/lib/hotkey'
 
-import { PaletteGroup, paletteHotkey } from '../command.constants'
+import { PaletteGroup, paletteHotkey, paletteKeyHints } from '../command.constants'
 import type { PaletteCommandGroup } from '../command.types'
 import { commandMatchScore, commandSearchText, groupsBySearch } from '../command.utils'
 import { useCommandPalette } from '../hooks/useCommandPalette'
@@ -46,6 +47,7 @@ export function CommandPalette() {
       open={open}
       onOpenChange={setOpen}
       title="Command palette"
+      className="top-12 sm:max-w-2xl"
       description="Go to a page or run a command."
     >
       <PaletteSearch
@@ -55,6 +57,33 @@ export function CommandPalette() {
         }}
       />
     </CommandDialog>
+  )
+}
+
+/**
+ * The keys that move through the palette, in a row under the commands: the arrows to move, Enter
+ * to choose, Escape to close. The palette reads the keys itself; this row only tells them.
+ */
+const rowKeyHints = [
+  { keys: [<ArrowUpIcon />, <ArrowDownIcon />], hint: paletteKeyHints.move },
+  { keys: [<CornerDownLeftIcon />], hint: paletteKeyHints.choose },
+  { keys: ['Esc'], hint: paletteKeyHints.close },
+]
+
+function PaletteKeyHints() {
+  return (
+    <div className="flex items-center gap-4 border-t px-3 py-2 text-xs text-muted-foreground">
+      {rowKeyHints.map(({ keys, hint }) => (
+        <span key={hint} className="flex items-center gap-1.5">
+          <KbdGroup aria-hidden>
+            {keys.map((key, index) => (
+              <Kbd key={index}>{key}</Kbd>
+            ))}
+          </KbdGroup>
+          {hint}
+        </span>
+      ))}
+    </div>
   )
 }
 
@@ -81,7 +110,7 @@ function PaletteSearch({ groups, onChosen }: PaletteSearchProps) {
         value={search}
         onValueChange={setSearch}
       />
-      <CommandList>
+      <CommandList className="max-h-120">
         <CommandEmpty>Nothing found.</CommandEmpty>
         {groupsBySearch(groups, search).map(({ heading, commands }) => (
           <CommandGroup key={heading} heading={heading}>
@@ -118,6 +147,7 @@ function PaletteSearch({ groups, onChosen }: PaletteSearchProps) {
           </CommandGroup>
         ))}
       </CommandList>
+      <PaletteKeyHints />
     </Command>
   )
 }

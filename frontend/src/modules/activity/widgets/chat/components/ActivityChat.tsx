@@ -2,18 +2,12 @@
 
 import { cn } from 'cn'
 import { ActivityIcon } from 'lucide-react'
-import { type ComponentProps, Suspense, useMemo } from 'react'
+import { type ComponentProps, Suspense } from 'react'
 
-import {
-  entryAnchorId,
-  messagesByRun,
-  useActivityStream,
-  useActivityThread,
-  withLatestRun,
-} from '@/modules/activity/entities'
-import { type Run, useLatestRun, useThreadRuns } from '@/modules/run/entities'
+import { entryAnchorId, useActivityThread } from '@/modules/activity/entities'
+import type { Run } from '@/modules/run/entities'
 import type { Message, Thread } from '@/modules/thread/entities'
-import { useThreadMessages } from '@/modules/thread/entities'
+import { PageColumn } from '@/shared/components/frame'
 import { EmptyState, ErrorState, LoadingState } from '@/shared/components/state'
 import { Bubble, BubbleContent } from '@/shared/components/ui/bubble'
 import { Message as MessageRow, MessageContent } from '@/shared/components/ui/message'
@@ -29,16 +23,14 @@ import { useKeptScroll } from '@/shared/lib/memory'
 import { useScrollIntoViewById } from '@/shared/lib/viewport'
 import { RouteParam, useRouteParam } from '@/shared/routes'
 
-import { activityChatMessages } from '../activity-chat.constants'
-import type { ChatState } from '../chat-state.types'
-import { chatStateOf } from '../chat-state.utils'
-import { usePendingReview } from '../hooks/usePendingReview'
-import { ActivityPrompt } from './ActivityPrompt'
-import { PendingReview } from './PendingReview'
-import { RunActivity } from './RunActivity'
-
-/** The messages of a run without any; one list, so that its entries do not compute again. */
-const EMPTY_MESSAGES: Message[] = []
+import { activityChatMessages, emptyMessages } from '../activity-chat.constants'
+import type { ChatState, OlderRuns as OlderRunsLoad } from '../chat-state.types'
+import { useThreadChat } from '../hooks/useThreadChat'
+import { RunActivity } from './entries/RunActivity'
+import { ActivityPrompt } from './prompt/ActivityPrompt'
+import { LazyRun } from './states/LazyRun'
+import { OlderRuns } from './states/OlderRuns'
+import { PendingReview } from './states/PendingReview'
 
 /** The column of the chat: wide enough to read in comfort, with room at its sides. */
 function ChatColumn({ className, ...props }: ComponentProps<'div'>) {
@@ -88,50 +80,26 @@ function ThreadChat({
   thread: Thread | null
   threadId: string | null
 }) {
-  const id = threadId ?? ''
-  const isEnabled = threadId !== null
-  const runs = useThreadRuns(id, { isEnabled })
-  const messages = useThreadMessages(id, { isEnabled })
-  const latestRun = useLatestRun(id, { isEnabled })
-  const runOnScreen = latestRun.data ?? null
-  useActivityStream(runOnScreen, id)
-  const pendingReview = usePendingReview(runOnScreen)
-
+  const { runs, byRun, runOnScreen, pendingReview, state, retry, olderRuns } = useThreadChat(
+    threadId,
+    thread !== null,
+  )
   const keptScroll = useKeptScroll('chat', { from: 'end' })
   const target = useRouteParam(RouteParam.Entry)
-  const runIds = withLatestRun(
-    (runs.data?.pages ?? []).flatMap(({ items }) => items),
-    latestRun.data,
-  ).toSorted((a, b) => a.number - b.number)
-  const byRun = useMemo(
-    () =>
-      messages.data === undefined
-        ? new Map<string | null, Message[]>()
-        : messagesByRun(messages.data.pages.flatMap(({ items }) => items)),
-    [messages.data],
-  )
-  const state = chatStateOf({
-    hasThread: thread !== null,
-    isPending: runs.isPending || messages.isPending,
-    isError: runs.isError || messages.isError,
-    hasActivity: runIds.length > 0 || (byRun.get(null) ?? EMPTY_MESSAGES).length > 0,
-  })
   const isEmpty = state === 'empty'
 
   return (
     <>
       <ChatBody
         state={state}
-        runs={runIds}
+        runs={runs}
         byRun={byRun}
+        olderRuns={olderRuns}
         thread={thread}
         projectId={projectId}
         targetEntryId={target}
         scrollRef={keptScroll}
-        onRetry={() => {
-          void messages.refetch()
-          void runs.refetch()
-        }}
+        onRetry={retry}
       />
       {runOnScreen !== null && pendingReview !== null && (
         <ChatColumn className="pt-4">
@@ -139,13 +107,12 @@ function ThreadChat({
           <PendingReview key={pendingReview.id} interrupt={pendingReview} run={runOnScreen} />
         </ChatColumn>
       )}
-      <ChatColumn className={cn('pb-2', pendingReview === null ? 'pt-4' : 'pt-2')}>
+      <ChatColumn className={cn('pb-1', pendingReview === null ? 'pt-4' : 'pt-2')}>
         <ActivityPrompt
           projectId={projectId}
           thread={thread}
           run={runOnScreen}
           shouldFocus={isEmpty}
-          size={pendingReview === null ? 'compact' : 'slim'}
         />
       </ChatColumn>
       <TargetScroller target={target} />
@@ -157,6 +124,7 @@ interface ChatBodyProps {
   state: ChatState
   runs: readonly Run[]
   byRun: ReadonlyMap<string | null, Message[]>
+  olderRuns: OlderRunsLoad
   thread: Thread | null
   projectId: string
   targetEntryId: string | null
@@ -169,6 +137,7 @@ function ChatBody({
   state,
   runs,
   byRun,
+  olderRuns,
   thread,
   projectId,
   targetEntryId,
@@ -197,18 +166,26 @@ function ChatBody({
       <MessageScroller className="min-h-0 flex-1">
         <MessageScrollerViewport ref={scrollRef}>
           <MessageScrollerContent className="mx-auto max-w-4xl px-6 pt-6">
+            <OlderRuns olderRuns={olderRuns} firstRunId={runs[0]?.id ?? null} />
             {runs.map((run) => (
-              <MessageScrollerItem key={run.id} scrollAnchor={run === runs.at(-1)}>
-                <RunActivity
-                  run={run}
-                  messages={byRun.get(run.id) ?? EMPTY_MESSAGES}
-                  thread={thread}
-                  projectId={projectId}
-                  targetEntryId={targetEntryId}
-                />
+              <MessageScrollerItem
+                key={run.id}
+                scrollAnchor={run === runs.at(-1)}
+                isLive={run === runs.at(-1)}
+              >
+                {/* A run far from the screen is drawn when the reader nears it, unless an entry of the chat is named by the address, which could be in any of them. */}
+                <LazyRun isEager={run === runs.at(-1) || targetEntryId !== null}>
+                  <RunActivity
+                    run={run}
+                    messages={byRun.get(run.id) ?? emptyMessages}
+                    thread={thread}
+                    projectId={projectId}
+                    targetEntryId={targetEntryId}
+                  />
+                </LazyRun>
               </MessageScrollerItem>
             ))}
-            {(byRun.get(null) ?? EMPTY_MESSAGES).map((message) => (
+            {(byRun.get(null) ?? emptyMessages).map((message) => (
               <MessageScrollerItem key={message.id}>
                 <UserMessageBubble message={message} />
               </MessageScrollerItem>
@@ -224,14 +201,16 @@ function ChatBody({
 /** The lines that stand for the chat while it loads. */
 function ChatLoading() {
   return (
-    <LoadingState
-      label={activityChatMessages.loading}
-      layout="lines"
-      alternate
-      rows={6}
-      gap={4}
-      itemHeight={10}
-    />
+    <PageColumn width="chat" isFlush>
+      <LoadingState
+        label={activityChatMessages.loading}
+        layout="lines"
+        alternate
+        rows={6}
+        gap={4}
+        itemHeight={10}
+      />
+    </PageColumn>
   )
 }
 

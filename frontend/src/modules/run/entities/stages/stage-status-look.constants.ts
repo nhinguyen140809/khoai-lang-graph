@@ -9,6 +9,7 @@ import type { StageStatus } from './stage-progress.types'
 export const stageStatusLooks = {
   done: {
     tone: 'success',
+    mood: 'happy',
     icon: CheckIcon,
     needsUser: false,
     isCompleted: true,
@@ -19,6 +20,7 @@ export const stageStatusLooks = {
   },
   running: {
     tone: 'primary',
+    mood: 'working',
     icon: Spinner,
     needsUser: false,
     isCompleted: false,
@@ -29,6 +31,7 @@ export const stageStatusLooks = {
   },
   waiting: {
     tone: 'warning',
+    mood: 'waiting',
     icon: CircleAlertIcon,
     needsUser: true,
     isCompleted: false,
@@ -39,6 +42,7 @@ export const stageStatusLooks = {
   },
   failed: {
     tone: 'destructive',
+    mood: 'worried',
     icon: CircleXIcon,
     needsUser: true,
     isCompleted: false,
@@ -49,6 +53,7 @@ export const stageStatusLooks = {
   },
   stopped: {
     tone: 'neutral',
+    mood: 'sleeping',
     icon: CircleStopIcon,
     needsUser: false,
     isCompleted: false,
@@ -59,6 +64,7 @@ export const stageStatusLooks = {
   },
   not_started: {
     tone: 'neutral',
+    mood: 'idle',
     icon: null,
     needsUser: false,
     isCompleted: false,

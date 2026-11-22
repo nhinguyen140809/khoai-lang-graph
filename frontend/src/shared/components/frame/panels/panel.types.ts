@@ -10,7 +10,10 @@ export const PanelRegion = {
 
 export type PanelRegion = (typeof PanelRegion)[keyof typeof PanelRegion]
 
-/** A part of the panel under the editor, shown in its own tab. */
+/**
+ * A part of the panel under the editor, shown in its own tab.
+ * @view developer
+ */
 export interface BottomPanelSection {
   /** Unique in the panel. */
   id: string

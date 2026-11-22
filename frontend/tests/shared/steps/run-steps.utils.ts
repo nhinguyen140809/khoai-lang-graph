@@ -2,7 +2,7 @@ import { expect, type Page } from '@playwright/test'
 
 type Text = string | RegExp
 
-const IDEA_PROMPT = 'What product do you want to write the requirements for?'
+const IDEA_PROMPT = 'What do you want to build?'
 
 /** Types an idea in the project list, creates the project, and gives its id once its activity opens. */
 export async function startProject(page: Page, idea: string): Promise<string> {

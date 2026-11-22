@@ -1,25 +1,18 @@
 'use client'
 
-import {
-  ArchiveIcon,
-  ArchiveRestoreIcon,
-  MoreHorizontalIcon,
-  PencilIcon,
-  Trash2Icon,
-} from 'lucide-react'
+import { MoreHorizontalIcon } from 'lucide-react'
 
-import { type Project, projectName } from '@/modules/project/entities'
+import {
+  type Project,
+  ProjectActionItems,
+  projectActionMessages,
+  projectName,
+} from '@/modules/project/entities'
 import { useArchiveProject } from '@/modules/project/features/archive'
 import { useOpenDeleteProjectDialog } from '@/modules/project/features/delete'
 import { useOpenRenameProjectDialog } from '@/modules/project/features/rename'
+import { Menu, MenuContent, MenuTrigger } from '@/shared/components/menu'
 import { Button } from '@/shared/components/ui/button'
-import {
-  DropdownMenu,
-  DropdownMenuContent,
-  DropdownMenuItem,
-  DropdownMenuSeparator,
-  DropdownMenuTrigger,
-} from '@/shared/components/ui/dropdown-menu'
 
 interface ProjectActionsMenuProps {
   project: Project
@@ -36,53 +29,35 @@ export function ProjectActionsMenu({ project }: ProjectActionsMenuProps) {
   const openDelete = useOpenDeleteProjectDialog()
 
   return (
-    <DropdownMenu>
-      <DropdownMenuTrigger asChild>
+    <Menu>
+      <MenuTrigger>
         {/* Positioned, so that it lies over the link that covers the row. */}
         <Button variant="ghost" size="icon-sm" className="relative text-muted-foreground">
           <MoreHorizontalIcon aria-hidden />
-          <span className="sr-only">Actions for {projectName(project)}</span>
+          <span className="sr-only">{projectActionMessages.menu(projectName(project))}</span>
         </Button>
-      </DropdownMenuTrigger>
-      <DropdownMenuContent align="end" className="w-40">
-        <DropdownMenuItem
-          onSelect={() => {
+      </MenuTrigger>
+      <MenuContent
+        title={projectActionMessages.menu(projectName(project))}
+        align="end"
+        className="w-40"
+      >
+        <ProjectActionItems
+          project={project}
+          onRename={() => {
             openRename(project.id)
           }}
-        >
-          <PencilIcon aria-hidden />
-          Rename
-        </DropdownMenuItem>
-        {project.status === 'archived' ? (
-          <DropdownMenuItem
-            onSelect={() => {
-              restore(project)
-            }}
-          >
-            <ArchiveRestoreIcon aria-hidden />
-            Restore
-          </DropdownMenuItem>
-        ) : (
-          <DropdownMenuItem
-            onSelect={() => {
-              archive(project)
-            }}
-          >
-            <ArchiveIcon aria-hidden />
-            Archive
-          </DropdownMenuItem>
-        )}
-        <DropdownMenuSeparator />
-        <DropdownMenuItem
-          variant="destructive"
-          onSelect={() => {
+          onArchive={() => {
+            archive(project)
+          }}
+          onRestore={() => {
+            restore(project)
+          }}
+          onDelete={() => {
             openDelete(project.id)
           }}
-        >
-          <Trash2Icon aria-hidden />
-          Delete
-        </DropdownMenuItem>
-      </DropdownMenuContent>
-    </DropdownMenu>
+        />
+      </MenuContent>
+    </Menu>
   )
 }

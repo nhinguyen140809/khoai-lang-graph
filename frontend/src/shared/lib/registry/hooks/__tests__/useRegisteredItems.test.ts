@@ -11,6 +11,11 @@ interface Item {
 
 const makeStore = () => createRegistryStore<Item>()
 
+const isNotExport = (item: Item) => item.label !== 'export'
+const isNotName = (item: Item) => item.label !== 'name'
+const withoutExport = { filters: [isNotExport] }
+const withoutExportAndName = { filters: [isNotExport, isNotName] }
+
 describe('useRegisteredItems', () => {
   it('gives the items from the lowest order to the highest, with their ids', () => {
     const store = makeStore()
@@ -55,5 +60,20 @@ describe('useRegisteredItems', () => {
     })
 
     expect(result.current.map(({ label }) => label)).toEqual(['b'])
+  })
+
+  it('keeps only the items that every filter accepts, in the same order', () => {
+    const store = makeStore()
+    act(() => {
+      store.getState().setItem('a', { label: 'name' })
+      store.getState().setItem('b', { label: 'export' })
+      store.getState().setItem('c', { label: 'menu', order: -1 })
+    })
+
+    const one = renderHook(() => useRegisteredItems(store, withoutExport))
+    const both = renderHook(() => useRegisteredItems(store, withoutExportAndName))
+
+    expect(one.result.current.map(({ label }) => label)).toEqual(['menu', 'name'])
+    expect(both.result.current.map(({ label }) => label)).toEqual(['menu'])
   })
 })

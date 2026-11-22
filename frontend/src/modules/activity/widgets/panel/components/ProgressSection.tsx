@@ -169,6 +169,9 @@ function StageItem({
                 className={cn(
                   'min-w-0 truncate text-sm leading-tight',
                   look.isNotStarted && 'text-muted-foreground',
+                  // A stage that is not over, running or waiting for the user, breathes, in place.
+                  isStageStatusInProgress(stage.status) &&
+                    'animate-breathe motion-reduce:animate-none',
                 )}
               >
                 {stage.title}

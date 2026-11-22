@@ -1,7 +1,7 @@
 import { test } from '../../shared/fixtures.utils'
 import { createdProjectCases, listCases, notFoundCases, openedProjectCases } from './projects.data'
 
-const prompt = 'What product do you want to write the requirements for?'
+const prompt = 'What do you want to build?'
 
 for (const { name, from, status, id } of openedProjectCases) {
   test(`opens ${name} from the list at its activity`, async ({ page, user }) => {

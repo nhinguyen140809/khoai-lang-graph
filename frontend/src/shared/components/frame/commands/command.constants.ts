@@ -13,3 +13,10 @@ export const PaletteGroup = {
 
 /** Opens and closes the palette, as the search box of the top bar does. */
 export const paletteHotkey: Hotkey = { key: 'k', mod: true }
+
+/** What each key does in the palette, in the row of hints under its commands. */
+export const paletteKeyHints = {
+  move: 'Move',
+  choose: 'Open',
+  close: 'Close',
+}

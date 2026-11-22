@@ -12,6 +12,7 @@ import { ProjectRunStatus } from './ProjectRunStatus'
  * Shows the status of the project at the left of the status bar while it is mounted, follows the
  * runs of the project so that the status follows them, and holds the one Stop dialog, which the
  * status and the command palette open. It renders nothing in place but the dialog.
+ * @view developer
  */
 export function ProjectRunStatusItem({ projectId }: { projectId: string }) {
   const content = useMemo(() => <ProjectRunStatus projectId={projectId} />, [projectId])

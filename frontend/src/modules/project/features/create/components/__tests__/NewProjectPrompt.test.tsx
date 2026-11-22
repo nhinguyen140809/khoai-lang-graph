@@ -11,7 +11,7 @@ import { blankIdeas, startCases } from './NewProjectPrompt.data'
 function renderPrompt(onStart = vi.fn()) {
   renderWithProviders(<NewProjectPrompt onStart={onStart} />)
   const prompt = screen.getByRole('textbox', {
-    name: 'What product do you want to write the requirements for?',
+    name: 'What do you want to build?',
   })
   return { prompt, onStart }
 }

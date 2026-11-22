@@ -10,7 +10,7 @@ import { useIsMobile } from '@/shared/lib/viewport'
 import {
   sidebarCookieMaxAge,
   sidebarCookieName,
-  sidebarKeyboardShortcut,
+  sidebarHotkey,
   sidebarWidth,
   sidebarWidthIcon,
 } from './sidebar.constants'
@@ -57,7 +57,7 @@ export function SidebarProvider({
   }, [isMobile, setOpen, setOpenMobile])
 
   // Adds a keyboard shortcut to toggle the sidebar.
-  useHotkey({ key: sidebarKeyboardShortcut, mod: true }, toggleSidebar)
+  useHotkey(sidebarHotkey, toggleSidebar)
 
   // We add a state so that we can do data-state="expanded" or "collapsed".
   // This makes it easier to style the sidebar with Tailwind classes.

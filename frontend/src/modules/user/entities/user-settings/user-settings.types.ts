@@ -2,6 +2,7 @@ import { z } from 'zod'
 
 import { runDefaultsSchema } from '@/modules/run/entities/@x/user'
 import { outputLanguages } from '@/shared/config/output-language'
+import { views } from '@/shared/lib/view'
 
 // Temporary hand-written schemas for the settings API.
 // TODO: replace with the types generated into src/shared/api/generated/ once they exist.
@@ -19,6 +20,8 @@ export const userSettingsSchema = z.object({
   user_id: z.string(),
   theme: z.enum(themes),
   ui_language: z.enum(uiLanguages),
+  /** The view of the app that the user chose, or null until they choose one. */
+  preferred_view: z.enum(views).nullable(),
   /** The language of the documents of a new project. */
   default_output_language: z.enum(outputLanguages),
   /** The run settings for every field that a project leaves empty. */
@@ -38,6 +41,7 @@ export type ReplaceUserSettingsBody = Partial<
     UserSettings,
     | 'theme'
     | 'ui_language'
+    | 'preferred_view'
     | 'default_output_language'
     | 'default_run_config'
     | 'notify_on_interrupt'

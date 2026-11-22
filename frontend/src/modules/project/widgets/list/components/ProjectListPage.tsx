@@ -3,20 +3,25 @@
 import { ArchiveIcon } from 'lucide-react'
 import { Suspense, useId, useState } from 'react'
 
-import { projectMessages, type ProjectStatus } from '@/modules/project/entities'
+import {
+  projectFiltersOf,
+  projectMessages,
+  type ProjectStatus,
+  useProjectFilterFields,
+} from '@/modules/project/entities'
 import { NewProjectDialog, NewProjectPrompt } from '@/modules/project/features/create'
+import { GlowStage } from '@/shared/components/animation'
 import { FilterMenu, useFilters } from '@/shared/components/filter'
 import { LoadingState } from '@/shared/components/state'
 import { ScrollArea } from '@/shared/components/ui/scroll-area'
 import { Toggle } from '@/shared/components/ui/toggle'
 
-import { projectFiltersOf } from '../project-filters.utils'
-import { useProjectFilterFields } from '../useProjectFilterFields'
 import { ProjectTable } from './ProjectTable'
 
 /**
  * The screen outside a project: the prompt that starts a project from an idea, with the dialog that
  * creates it, then the projects of the user. A row opens the project.
+ * @view developer
  */
 export function ProjectListPage() {
   // Kept with the page, so that the dialog does not open again when the page shows again.
@@ -25,18 +30,21 @@ export function ProjectListPage() {
   return (
     <>
       <ScrollArea className="h-full">
-        {/* The prompt keeps its place under the top, whatever the length of the list. */}
-        <div className="mx-auto flex w-full max-w-3xl flex-col gap-12 px-6 pt-16 pb-8 sm:pt-prompt-top">
-          <NewProjectPrompt
-            onStart={(idea) => {
-              setNewProject({ open: true, idea })
-            }}
-          />
-          {/* The filters are read from the address, which is known in the browser only. */}
-          <Suspense fallback={<ListFallback />}>
-            <ProjectsSection />
-          </Suspense>
-        </div>
+        {/* The glows stay at the top, by the prompt, whatever the length of the list. */}
+        <GlowStage backdropClassName="bottom-auto h-160">
+          {/* The prompt keeps its place under the top, whatever the length of the list. */}
+          <div className="mx-auto flex w-full max-w-3xl flex-col gap-32 px-6 pt-16 pb-8 sm:pt-prompt-top">
+            <NewProjectPrompt
+              onStart={(idea) => {
+                setNewProject({ open: true, idea })
+              }}
+            />
+            {/* The filters are read from the address, which is known in the browser only. */}
+            <Suspense fallback={<ListFallback />}>
+              <ProjectsSection />
+            </Suspense>
+          </div>
+        </GlowStage>
       </ScrollArea>
       <NewProjectDialog
         open={newProject.open}

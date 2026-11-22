@@ -23,6 +23,7 @@ interface TabbedWorkspaceProps {
  * bar, and the editor follows the tabs, so choosing a feature does not change the editor. The
  * panel keeps its width in pixels when the window is resized. A double click that follows the click
  * that opened a page keeps the tab of that page, wherever the second click lands.
+ * @view developer
  */
 export function TabbedWorkspace({ tabGroup, children }: TabbedWorkspaceProps) {
   const { feature } = useSideFeature()

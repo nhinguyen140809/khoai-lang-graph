@@ -1,4 +1,5 @@
 import type { RunStatus } from '@/modules/run/entities'
+import type { Message } from '@/modules/thread/entities'
 import { pluralForm } from '@/shared/lib/text'
 
 /** The statuses of a run that show a status line at the end of its entries: the run is going on or about to. */
@@ -11,6 +12,8 @@ export const activityChatMessages = {
   emptyTitle: 'No activity yet',
   emptyDescription: 'Send your idea or a request to start the work.',
   runLoading: 'Loading the work',
+  olderLoading: 'Loading the earlier work',
+  olderError: 'The earlier work could not be loaded.',
   runError: 'The work of this run could not be loaded.',
   entryError: 'This entry could not be shown.',
   answered: 'Answered:',
@@ -23,6 +26,8 @@ export const activityChatMessages = {
   toReview: 'To review:',
   moreReferences: (count: number) =>
     `${String(count)} more ${pluralForm(count, { one: 'item', other: 'items' })}`,
+  /** Names the bar of the stages under the prompt, for assistive technology. */
+  progress: 'Progress',
   showDetails: 'Show what it noted and wrote',
   prompt: {
     label: 'Message to the agents',
@@ -38,3 +43,6 @@ export const activityChatMessages = {
  * that time is taken for part of it, so the scroller would follow the end again at the next line.
  */
 export const revealDelayMs = 250
+
+/** The messages of a run without any; one list, so that its entries do not compute again. */
+export const emptyMessages: Message[] = []

@@ -95,9 +95,9 @@ export function PromptInput({
       }}
       className="flex flex-col gap-0"
     >
-      {/* The box of the prompt keeps the fill of a card, so that it stands out, where other
-          inputs have none. */}
-      <InputGroup className="bg-card dark:bg-card">
+      {/* The box of the prompt keeps the fill of a card, and a line a little thicker than the
+          others, so that it stands out, where other inputs have neither. */}
+      <InputGroup thickness="medium" className="bg-card dark:bg-card">
         <InputGroupTextarea
           ref={inputRef}
           aria-labelledby={labelledBy}

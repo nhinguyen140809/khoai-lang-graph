@@ -39,6 +39,7 @@ const noDestinations: readonly Destination[] = []
  * palette. The frame renders its bars itself; what they show from the features, the features
  * themselves included, is passed in as props from src/app/, or registered with hooks by the
  * components in `contributions`, such as the account menu with `useActivityBarItem`.
+ * @view developer
  */
 export function Workbench({
   crumb,

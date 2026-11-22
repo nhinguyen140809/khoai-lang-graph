@@ -30,6 +30,7 @@ interface SidePanelSectionProps {
 /**
  * A part of a side panel that collapses to its title. Sections stack in the panel, and a line
  * divides each one from the section above it.
+ * @view developer
  */
 export function SidePanelSection({
   title,

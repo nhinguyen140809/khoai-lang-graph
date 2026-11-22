@@ -1,7 +1,7 @@
 import type { Fill, Tone, ToneVariants } from './tone.types'
 
 /**
- * The classes that a `color` prop adds. Each color sets five CSS variables that the variant
+ * The classes that a `color` prop adds. Each color sets six CSS variables that the variant
  * classes of the components read:
  *
  * - `--tone`: solid fill

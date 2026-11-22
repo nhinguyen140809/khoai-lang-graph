@@ -8,3 +8,11 @@ export interface ChatLoad {
   isError: boolean
   hasActivity: boolean
 }
+
+/** What the chat knows of the runs before the ones it shows: whether there are more, whether they load or failed to, and how to load them. */
+export interface OlderRuns {
+  hasMore: boolean
+  isLoading: boolean
+  isError: boolean
+  load: () => void
+}

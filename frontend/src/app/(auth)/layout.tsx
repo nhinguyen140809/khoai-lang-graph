@@ -1,5 +1,7 @@
 import type { ReactNode } from 'react'
 
+import { GlowStage } from '@/shared/components/animation'
+
 interface AuthLayoutProps {
   children: ReactNode
 }
@@ -10,8 +12,12 @@ interface AuthLayoutProps {
  */
 export default function AuthLayout({ children }: AuthLayoutProps) {
   return (
-    <main className="flex min-h-svh items-start justify-center bg-background px-6 pt-16 pb-12 text-foreground sm:pt-24">
+    <GlowStage
+      as="main"
+      arrangement="mirror"
+      className="flex min-h-svh items-start justify-center px-6 pt-16 pb-12 text-foreground sm:pt-24"
+    >
       {children}
-    </main>
+    </GlowStage>
   )
 }

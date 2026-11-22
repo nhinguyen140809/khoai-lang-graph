@@ -5,7 +5,10 @@ import { routes } from '@/shared/routes'
 
 import { ActivityPanel } from './components/ActivityPanel'
 
-/** Activity on the activity bar of a project: the progress and the outline, with the chat in a tab. */
+/**
+ * Activity on the activity bar of a project: the progress and the outline, with the chat in a tab.
+ * @view developer
+ */
 export function activityDestination(projectId: string): FeatureDestination {
   return {
     id: 'activity',

@@ -1,5 +1,7 @@
 /** The words of the action that starts a project from an idea. */
 export const createProjectMessages = {
+  /** The title over the prompt that starts a project, which comes in one word after another. */
+  promptTitle: 'What do you want to build?',
   /** The action, wherever it is offered. */
   create: 'Create project',
   /** The section of the form that holds the settings that the runs of the project start from. */

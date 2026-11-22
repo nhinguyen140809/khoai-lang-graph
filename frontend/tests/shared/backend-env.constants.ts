@@ -9,6 +9,9 @@ export const backendPort = 8011
  * host of the developer view.
  */
 export const frontendUrl = `http://dev.localhost:${String(frontendPort)}`
+
+/** The same app at the host of the user view, which every host without `dev.` shows. */
+export const userViewUrl = `http://localhost:${String(frontendPort)}`
 export const backendUrl = `http://localhost:${String(backendPort)}`
 
 /** Where the sign-in of `globalSetup` keeps its cookies, for the page and the requests of every test. */
