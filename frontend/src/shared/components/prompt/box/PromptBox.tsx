@@ -4,6 +4,7 @@ import { cn } from 'cn'
 import type { ReactNode } from 'react'
 
 import { AnimatedSize, Presence, usePresence } from '@/shared/components/animation'
+import { useDictationContext } from '@/shared/components/dictation'
 import { InputGroup, InputGroupAddon, InputGroupTextarea } from '@/shared/components/ui/input-group'
 import { motionMs } from '@/shared/lib/animation'
 import { isSubmitKey } from '@/shared/lib/hotkey'
@@ -15,16 +16,23 @@ import {
   usePromptText,
 } from '../hooks/usePromptInput'
 
+interface PromptBoxProps {
+  /** What stands behind the box, such as a light: the box is over it, so only what goes past its edges shows. */
+  behind?: ReactNode
+  children: ReactNode
+}
+
 /**
  * The box of the prompt: the fill of a card and a line a little thicker than the others, so that it
  * stands out, where other inputs have neither. Its parts are the `PromptAttachments`, the
  * `PromptTextarea` and the `PromptBar`.
  */
-export function PromptBox({ children }: { children: ReactNode }) {
+export function PromptBox({ behind, children }: PromptBoxProps) {
   const { looks } = usePromptLooks()
 
   return (
     <div className="relative">
+      {behind}
       <InputGroup thickness="medium" className={cn(looks.corner, 'bg-card dark:bg-card')}>
         {children}
       </InputGroup>
@@ -64,12 +72,13 @@ export function PromptAttachments({ isPresent, children }: PromptAttachmentsProp
   )
 }
 
-/** The text of the prompt. Enter sends it. */
+/** The text of the prompt. Enter sends it, and while the prompt listens what is heard goes into it. */
 export function PromptTextarea({ placeholder }: { placeholder: string }) {
   const { labelledBy, label, keysId, inputRef } = usePromptField()
   const { value, onValueChange } = usePromptText()
   const { submit } = usePromptSubmit()
   const { looks } = usePromptLooks()
+  const dictation = useDictationContext()
 
   return (
     <InputGroupTextarea
@@ -79,6 +88,8 @@ export function PromptTextarea({ placeholder }: { placeholder: string }) {
       aria-describedby={keysId}
       value={value}
       rows={looks.rows}
+      // What is heard goes into the text, so typing would be overwritten by it.
+      readOnly={dictation?.isListening === true}
       placeholder={placeholder}
       onChange={(event) => {
         onValueChange(event.target.value)

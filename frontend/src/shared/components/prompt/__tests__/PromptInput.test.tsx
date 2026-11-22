@@ -2,8 +2,10 @@ import { screen } from '@testing-library/react'
 import { memo, type ReactNode, useState } from 'react'
 import { describe, expect, it, vi } from 'vitest'
 
+import { stubSpeechRecognition } from '@/test/browser'
 import { renderWithProviders } from '@/test/render'
 import {
+  expectAttribute,
   expectDisabled,
   expectFieldValue,
   expectNoAccessibilityViolations,
@@ -16,6 +18,9 @@ import {
 
 import { PromptBar, PromptBarEnd, PromptBarStart, PromptSend } from '../box/PromptBar'
 import { PromptAttachments, PromptBox, PromptTextarea } from '../box/PromptBox'
+import { PromptDictation } from '../dictation/PromptDictation'
+import { PromptDictationProvider } from '../dictation/PromptDictationProvider'
+import { PromptListeningGlow } from '../dictation/PromptListeningGlow'
 import { PromptAddMenu } from '../footer/PromptAddMenu'
 import { PromptFooter, PromptFooterEnd, PromptFooterStart } from '../footer/PromptFooter'
 import { usePromptLooks, usePromptSubmit, usePromptText } from '../hooks/usePromptInput'
@@ -66,18 +71,23 @@ function TestPrompt({
       {...(isPending !== undefined && { isPending })}
       {...(size !== undefined && { size })}
     >
-      <PromptBox>
-        {aboveText}
-        <PromptTextarea placeholder="Ask or request a change" />
-        <PromptBar>
-          <PromptBarStart>{barStart}</PromptBarStart>
-          <PromptBarEnd>{barEnd ?? <PromptSend label="Send" />}</PromptBarEnd>
-        </PromptBar>
-      </PromptBox>
-      <PromptFooter>
-        <PromptFooterStart>{footerStart}</PromptFooterStart>
-        <PromptFooterEnd>{footerEnd}</PromptFooterEnd>
-      </PromptFooter>
+      <PromptDictationProvider>
+        <PromptBox behind={<PromptListeningGlow />}>
+          {aboveText}
+          <PromptTextarea placeholder="Ask or request a change" />
+          <PromptBar>
+            <PromptBarStart>{barStart}</PromptBarStart>
+            <PromptBarEnd>{barEnd ?? <PromptSend label="Send" />}</PromptBarEnd>
+          </PromptBar>
+        </PromptBox>
+        <PromptFooter>
+          <PromptFooterStart>{footerStart}</PromptFooterStart>
+          <PromptFooterEnd>
+            {footerEnd}
+            <PromptDictation />
+          </PromptFooterEnd>
+        </PromptFooter>
+      </PromptDictationProvider>
     </PromptInput>
   )
 }
@@ -184,6 +194,62 @@ describe('PromptInput', () => {
     await expectText('notes.md')
   })
 
+  it('reads its keys to assistive technology only', async () => {
+    promptWith()
+
+    expect(screen.getByText('Enter to send, Shift+Enter for a new line')).toHaveClass('sr-only')
+    await expectNoAccessibilityViolations()
+  })
+})
+
+describe('PromptInput with a dictation', () => {
+  it('writes what is heard after the text that was there, and keeps it when it is stopped', async () => {
+    const { hear } = stubSpeechRecognition()
+    promptWith()
+    await typeText(screen.getByRole('textbox'), 'A mentor app')
+
+    await pressButton('Dictate')
+    hear('for students')
+
+    expectFieldValue(promptName, 'A mentor app for students')
+    expectAttribute('textbox', promptName, 'readonly', '')
+    await pressButton('Stop')
+    expectFieldValue(promptName, 'A mentor app for students')
+    await expectRole('button', 'Dictate')
+  })
+
+  it('lets go of the microphone when the text is sent, and writes no word that comes after it', async () => {
+    const { hear, state } = stubSpeechRecognition()
+    const onSubmit = vi.fn()
+    promptWith({ onSubmit })
+    await typeText(screen.getByRole('textbox'), 'A mentor app')
+    await pressButton('Dictate')
+    hear('for students')
+
+    await typeText(screen.getByRole('textbox'), '{Enter}')
+    hear('and teachers')
+
+    expect(onSubmit).toHaveBeenCalledWith('A mentor app for students')
+    expect(state.recognition?.abort).toHaveBeenCalled()
+    expectFieldValue(promptName, 'A mentor app for students')
+  })
+
+  it.each([
+    { size: 'comfortable', bars: 14, hasGlow: false },
+    { size: 'slim', bars: 4, hasGlow: true },
+  ] as const)(
+    'listens with $bars bars, and a light behind the box only if it is $hasGlow, in the $size size',
+    async ({ size, bars, hasGlow }) => {
+      stubSpeechRecognition()
+      const { container } = promptWith({ size })
+
+      await pressButton('Dictate')
+
+      expect(container.querySelectorAll('.animate-listen')).toHaveLength(bars)
+      expect(container.querySelector('[data-active="true"]') !== null).toBe(hasGlow)
+    },
+  )
+
   it('opens the menu of the plus with the items that the place gives it', async () => {
     promptWith({
       footerEnd: (
@@ -196,13 +262,6 @@ describe('PromptInput', () => {
     await expectRole('button', 'Add')
     await pressButton('Add')
     await expectText('An item')
-  })
-
-  it('reads its keys to assistive technology only', async () => {
-    promptWith()
-
-    expect(screen.getByText('Enter to send, Shift+Enter for a new line')).toHaveClass('sr-only')
-    await expectNoAccessibilityViolations()
   })
 })
 

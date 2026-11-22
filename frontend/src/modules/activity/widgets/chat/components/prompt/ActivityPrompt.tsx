@@ -1,6 +1,7 @@
 'use client'
 
 import { type ReactNode, useRef, useState } from 'react'
+import { toast } from 'sonner'
 
 import {
   ChooseRunSettingsButton,
@@ -11,14 +12,19 @@ import { isUnfinishedRunStatus, type Run } from '@/modules/run/entities'
 import { StopRunButton } from '@/modules/run/features/stop'
 import type { Thread } from '@/modules/thread/entities'
 import { useSendMessage } from '@/modules/thread/features/send-message'
+import { dictationProblemMessage } from '@/shared/components/dictation'
 import {
   PromptBar,
   PromptBarEnd,
   PromptBox,
+  PromptDictation,
+  PromptDictationProvider,
   PromptFooter,
+  PromptFooterEnd,
   PromptFooterStart,
   PromptInput,
   type PromptInputSize,
+  PromptListeningGlow,
   PromptSend,
   PromptTextarea,
 } from '@/shared/components/prompt'
@@ -78,7 +84,7 @@ export function ActivityPrompt({
   const isBlank = !hasText(text)
   const isStoppable = run !== null && isUnfinishedRunStatus(run.status)
 
-  const { footerStart } = footers[view]({ projectId, thread, run })
+  const { footerStart, footerEnd } = footers[view]({ projectId, thread, run })
 
   return (
     <PromptInput
@@ -101,21 +107,31 @@ export function ActivityPrompt({
       isPending={isPending}
       inputRef={inputRef}
     >
-      <PromptBox>
-        <PromptTextarea placeholder={activityChatMessages.prompt.placeholder} />
-        <PromptBar>
-          <PromptBarEnd>
-            {isBlank && isStoppable ? (
-              <StopRunButton run={run} display="icon" />
-            ) : (
-              <PromptSend label={activityChatMessages.prompt.send} />
-            )}
-          </PromptBarEnd>
-        </PromptBar>
-      </PromptBox>
-      <PromptFooter>
-        <PromptFooterStart>{footerStart}</PromptFooterStart>
-      </PromptFooter>
+      <PromptDictationProvider
+        onProblem={(problem) => {
+          toast.error(dictationProblemMessage(problem))
+        }}
+      >
+        <PromptBox behind={<PromptListeningGlow />}>
+          <PromptTextarea placeholder={activityChatMessages.prompt.placeholder} />
+          <PromptBar>
+            <PromptBarEnd>
+              {isBlank && isStoppable ? (
+                <StopRunButton run={run} display="icon" />
+              ) : (
+                <PromptSend label={activityChatMessages.prompt.send} />
+              )}
+            </PromptBarEnd>
+          </PromptBar>
+        </PromptBox>
+        <PromptFooter>
+          <PromptFooterStart>{footerStart}</PromptFooterStart>
+          <PromptFooterEnd>
+            <PromptDictation />
+            {footerEnd}
+          </PromptFooterEnd>
+        </PromptFooter>
+      </PromptDictationProvider>
     </PromptInput>
   )
 }

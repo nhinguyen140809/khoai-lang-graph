@@ -1,5 +1,8 @@
 export { PromptBar, PromptBarEnd, PromptBarStart, PromptSend } from './box/PromptBar'
 export { PromptAttachments, PromptBox, PromptTextarea } from './box/PromptBox'
+export { PromptDictation } from './dictation/PromptDictation'
+export { PromptDictationProvider } from './dictation/PromptDictationProvider'
+export { PromptListeningGlow } from './dictation/PromptListeningGlow'
 export { PromptAddMenu } from './footer/PromptAddMenu'
 export { PromptFooter, PromptFooterEnd, PromptFooterStart } from './footer/PromptFooter'
 export type { PromptInputSize } from './prompt-input.types'

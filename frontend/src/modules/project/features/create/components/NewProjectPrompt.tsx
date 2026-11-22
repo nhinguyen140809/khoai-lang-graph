@@ -1,13 +1,20 @@
 'use client'
 
 import { useId, useRef, useState } from 'react'
+import { toast } from 'sonner'
 
 import { Reveal, TypedText, typedTextMs } from '@/shared/components/animation'
+import { dictationProblemMessage } from '@/shared/components/dictation'
 import {
   PromptBar,
   PromptBarEnd,
   PromptBox,
+  PromptDictation,
+  PromptDictationProvider,
+  PromptFooter,
+  PromptFooterEnd,
   PromptInput,
+  PromptListeningGlow,
   PromptSend,
   PromptTextarea,
 } from '@/shared/components/prompt'
@@ -49,14 +56,25 @@ export function NewProjectPrompt({ onStart }: NewProjectPromptProps) {
           inputRef={inputRef}
           keysHint="Enter to create the project, Shift+Enter for a new line"
         >
-          <PromptBox>
-            <PromptTextarea placeholder="Describe the idea, who it is for and the problem it solves" />
-            <PromptBar>
-              <PromptBarEnd>
-                <PromptSend label={createProjectMessages.create} />
-              </PromptBarEnd>
-            </PromptBar>
-          </PromptBox>
+          <PromptDictationProvider
+            onProblem={(problem) => {
+              toast.error(dictationProblemMessage(problem))
+            }}
+          >
+            <PromptBox behind={<PromptListeningGlow />}>
+              <PromptTextarea placeholder="Describe the idea, who it is for and the problem it solves" />
+              <PromptBar>
+                <PromptBarEnd>
+                  <PromptSend label={createProjectMessages.create} />
+                </PromptBarEnd>
+              </PromptBar>
+            </PromptBox>
+            <PromptFooter>
+              <PromptFooterEnd>
+                <PromptDictation />
+              </PromptFooterEnd>
+            </PromptFooter>
+          </PromptDictationProvider>
         </PromptInput>
       </Reveal>
     </div>
