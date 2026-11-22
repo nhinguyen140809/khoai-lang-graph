@@ -36,7 +36,13 @@ export const viewCases: {
   },
   {
     name: 'the list of the documents',
-    params: { groupKind: null, folderId: null, documentId: null, itemId: null, reader: 'documents' },
+    params: {
+      groupKind: null,
+      folderId: null,
+      documentId: null,
+      itemId: null,
+      reader: 'documents',
+    },
     view: documents,
   },
   {
@@ -51,7 +57,13 @@ export const viewCases: {
   },
   {
     name: 'a folder of a document',
-    params: { groupKind: null, documentId: 'a1', folderId: 'section:s1', itemId: null, reader: null },
+    params: {
+      groupKind: null,
+      documentId: 'a1',
+      folderId: 'section:s1',
+      itemId: null,
+      reader: null,
+    },
     view: folder,
   },
   {
@@ -67,12 +79,24 @@ export const viewCases: {
   },
   {
     name: 'a folder without a document, as nothing',
-    params: { groupKind: null, documentId: null, folderId: 'section:s1', itemId: null, reader: null },
+    params: {
+      groupKind: null,
+      documentId: null,
+      folderId: 'section:s1',
+      itemId: null,
+      reader: null,
+    },
     view: null,
   },
   {
     name: 'a document and an item, as the document',
-    params: { groupKind: null, folderId: null, documentId: 'a1', itemId: 'i1', reader: 'documents' },
+    params: {
+      groupKind: null,
+      folderId: null,
+      documentId: 'a1',
+      itemId: 'i1',
+      reader: 'documents',
+    },
     view: document,
   },
 ]

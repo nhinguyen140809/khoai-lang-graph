@@ -56,7 +56,11 @@ export function FolderBody({ view, hrefOf, renderTitle }: ReaderBodyProps<'folde
                 className="px-0"
               />
             ) : (
-              <ReaderThumbnails thumbnails={thumbnails} artifactId={view.artifactId} hrefOf={hrefOf} />
+              <ReaderThumbnails
+                thumbnails={thumbnails}
+                artifactId={view.artifactId}
+                hrefOf={hrefOf}
+              />
             )}
           </div>
         </ContentBody>

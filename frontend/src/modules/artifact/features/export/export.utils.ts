@@ -47,7 +47,11 @@ export function startFormatsOf(
 }
 
 /** The requests that an export form asks for: one for all the documents, else one for each chosen one, each in its own file type. */
-export function exportBodiesOf({ isAll, templates, formats }: ExportFormValues): CreateExportBody[] {
+export function exportBodiesOf({
+  isAll,
+  templates,
+  formats,
+}: ExportFormValues): CreateExportBody[] {
   const keys = isAll ? [exportAllTemplateKey] : templates
   return keys.flatMap((template) => {
     const format = formats[template]

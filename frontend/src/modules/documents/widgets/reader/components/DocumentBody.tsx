@@ -74,7 +74,9 @@ function ArtifactBody({
         }
         const thumbnails =
           outline.state === 'success' && document.display !== 'transcript'
-            ? rootThumbnails(outline.nodes, outline.kinds, { hasFields: document.fields.length > 0 })
+            ? rootThumbnails(outline.nodes, outline.kinds, {
+                hasFields: document.fields.length > 0,
+              })
             : []
         if (thumbnails.some(({ target }) => target.type !== 'overview')) {
           return (

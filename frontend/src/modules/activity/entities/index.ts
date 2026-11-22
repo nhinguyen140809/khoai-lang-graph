@@ -18,8 +18,4 @@ export { useActivityThread } from './hooks/useActivityThread'
 export { useReferenceOpener } from './hooks/useReferenceOpener'
 export { useRevealReference } from './hooks/useRevealReference'
 export { useRunEntries } from './hooks/useRunEntries'
-export type {
-  ChatReference,
-  ReferenceOpener,
-  ReferenceRevealer,
-} from './reference-opener.types'
+export type { ChatReference, ReferenceOpener, ReferenceRevealer } from './reference-opener.types'

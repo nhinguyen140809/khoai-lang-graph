@@ -39,7 +39,10 @@ describe('trailAfter', () => {
 
 describe('viewOfThumbnail', () => {
   it('opens the overview, a folder or an item of the document', () => {
-    expect(viewOfThumbnail({ type: 'overview' }, 'a1')).toEqual({ kind: 'overview', artifactId: 'a1' })
+    expect(viewOfThumbnail({ type: 'overview' }, 'a1')).toEqual({
+      kind: 'overview',
+      artifactId: 'a1',
+    })
     expect(viewOfThumbnail({ type: 'folder', nodeId: 'section:s1' }, 'a1')).toEqual({
       kind: 'folder',
       artifactId: 'a1',

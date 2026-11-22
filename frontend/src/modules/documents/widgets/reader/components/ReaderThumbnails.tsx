@@ -25,7 +25,12 @@ export function ReaderThumbnails({
           href={hrefOf(viewOfThumbnail(thumbnail.target, artifactId))}
           className="rounded-md hover:no-underline"
         >
-          <Thumbnail look={thumbnail.look} title={thumbnail.title} icon={thumbnail.icon} seed={thumbnail.seed} />
+          <Thumbnail
+            look={thumbnail.look}
+            title={thumbnail.title}
+            icon={thumbnail.icon}
+            seed={thumbnail.seed}
+          />
         </ReaderLink>
       ))}
     </ThumbnailGrid>

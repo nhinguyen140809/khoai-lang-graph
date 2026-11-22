@@ -4,7 +4,12 @@ import { SearchIcon, XIcon } from 'lucide-react'
 import { useRef, useState } from 'react'
 
 import { Button } from '@/shared/components/ui/button'
-import { InputGroup, InputGroupAddon, InputGroupButton, InputGroupInput } from '@/shared/components/ui/input-group'
+import {
+  InputGroup,
+  InputGroupAddon,
+  InputGroupButton,
+  InputGroupInput,
+} from '@/shared/components/ui/input-group'
 
 import { projectRecentsMessages } from '../project-recents.constants'
 

@@ -1,6 +1,11 @@
 import { describe, expect, it } from 'vitest'
 
-import { folderThumbnails, isFolder, overviewTitle, rootThumbnails } from '../folder-thumbnails.utils'
+import {
+  folderThumbnails,
+  isFolder,
+  overviewTitle,
+  rootThumbnails,
+} from '../folder-thumbnails.utils'
 import { artifactOutline, isBranch, outlinePath } from '../outline.utils'
 import { issueKindFixtures, kindViewFixtures, mentorDocument } from './outline.utils.data'
 
@@ -48,7 +53,9 @@ describe('folderThumbnails', () => {
     expect(items.length).toBeGreaterThan(0)
     for (const thumbnail of items) {
       expect(thumbnail.look).toBe('text')
-      expect(thumbnail.seed).toBe(thumbnail.target.type === 'item' ? thumbnail.target.item.kind : '')
+      expect(thumbnail.seed).toBe(
+        thumbnail.target.type === 'item' ? thumbnail.target.item.kind : '',
+      )
     }
     expect(items.every(({ icon }) => icon === 'user')).toBe(true)
   })

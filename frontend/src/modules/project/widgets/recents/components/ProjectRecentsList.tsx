@@ -3,7 +3,17 @@
 import { MoreHorizontalIcon } from 'lucide-react'
 import Link from 'next/link'
 
-import { emptyProjectListMessage, type Project, ProjectActionItems, projectActionMessages, projectMessages, projectName, type ProjectStatus, useProjectPages, useProjectSearch } from '@/modules/project/entities'
+import {
+  emptyProjectListMessage,
+  type Project,
+  ProjectActionItems,
+  projectActionMessages,
+  projectMessages,
+  projectName,
+  type ProjectStatus,
+  useProjectPages,
+  useProjectSearch,
+} from '@/modules/project/entities'
 import { useArchiveProject } from '@/modules/project/features/archive'
 import { useOpenDeleteProjectDialog } from '@/modules/project/features/delete'
 import { useOpenRenameProjectDialog } from '@/modules/project/features/rename'
@@ -12,7 +22,14 @@ import { errorMessageOf } from '@/shared/api/error'
 import { Menu, MenuContent, MenuTrigger } from '@/shared/components/menu'
 import { EmptyState, ErrorState, LoadingState } from '@/shared/components/state'
 import { Button } from '@/shared/components/ui/button'
-import { Item, ItemActions, ItemContent, ItemDescription, ItemGroup, ItemTitle } from '@/shared/components/ui/item'
+import {
+  Item,
+  ItemActions,
+  ItemContent,
+  ItemDescription,
+  ItemGroup,
+  ItemTitle,
+} from '@/shared/components/ui/item'
 import { formatRelativeTime, useNow } from '@/shared/lib/time'
 
 import { projectRecentsMessages } from '../project-recents.constants'

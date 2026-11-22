@@ -98,10 +98,12 @@ describe('trailPlaceOf', () => {
     expect(trailPlaceOf({ kind: 'document', artifactId: 'a1' }, [folder])).toEqual({
       type: 'document',
     })
-    expect(trailPlaceOf({ kind: 'folder', artifactId: 'a1', nodeId: folder.id }, [folder])).toEqual({
-      type: 'folder',
-      nodeId: folder.id,
-    })
+    expect(trailPlaceOf({ kind: 'folder', artifactId: 'a1', nodeId: folder.id }, [folder])).toEqual(
+      {
+        type: 'folder',
+        nodeId: folder.id,
+      },
+    )
     expect(trailPlaceOf({ kind: 'item', itemId: 'i1' }, [folder])).toEqual({
       type: 'item',
       nodeId: 'item:i1',

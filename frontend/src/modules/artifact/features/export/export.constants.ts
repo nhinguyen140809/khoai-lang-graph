@@ -3,7 +3,8 @@ export const exportMessages = {
   button: 'Export',
   dialogTitle: 'Export',
   template: 'Documents',
-  templateHint: 'Choose one or more. Each one comes as its own file, in the file type that you pick for it.',
+  templateHint:
+    'Choose one or more. Each one comes as its own file, in the file type that you pick for it.',
   all: 'All documents',
   allHint: 'In one file',
   selectAll: 'Select all',

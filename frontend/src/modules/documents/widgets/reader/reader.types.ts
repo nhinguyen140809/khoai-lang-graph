@@ -46,4 +46,3 @@ export type TrailPlace =
   | { type: 'overview'; title: string }
   | { type: 'folder'; nodeId: string }
   | { type: 'item'; nodeId: string; title: string }
-

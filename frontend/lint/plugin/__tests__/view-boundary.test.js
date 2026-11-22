@@ -55,7 +55,10 @@ createTypedRuleTester().run('view-boundary', viewBoundary, {
       code: "import { ProjectHeading } from '@/modules/project/widgets/heading'",
       filename: developerPage,
       errors: [
-        { messageId: 'otherView', data: { name: 'ProjectHeading', tagged: 'user', own: 'developer' } },
+        {
+          messageId: 'otherView',
+          data: { name: 'ProjectHeading', tagged: 'user', own: 'developer' },
+        },
       ],
     },
     {

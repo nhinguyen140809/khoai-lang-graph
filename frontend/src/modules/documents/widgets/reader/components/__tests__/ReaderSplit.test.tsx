@@ -48,7 +48,10 @@ function RevealAnalysis() {
     <button
       type="button"
       onClick={() => {
-        reveal({ kind: 'document', artifactId: analysis.id }, 'The review asks you to read the analysis')
+        reveal(
+          { kind: 'document', artifactId: analysis.id },
+          'The review asks you to read the analysis',
+        )
       }}
     >
       Reveal
