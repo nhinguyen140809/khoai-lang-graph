@@ -28,13 +28,12 @@ interface FooterProps {
 /**
  * What each view puts in the row under the prompt. The developer view has the settings of the run
  * at the start, its progress being in the panel beside; the guided view shows the progress as a
- * bar of stages at the start and the settings as an icon at the end.
+ * bar of stages, and has the settings in the bar of the desk (`ChatSettingsBarItem`).
  */
 const footers = {
   developer: ({ thread }) => ({ footerStart: <ChooseRunSettingsButton thread={thread} /> }),
-  user: ({ projectId, thread, run }) => ({
+  user: ({ projectId, run }) => ({
     footerStart: <StageProgressBar run={run} projectId={projectId} />,
-    footerEnd: <ChooseRunSettingsButton thread={thread} display="icon" />,
   }),
 } satisfies Record<
   View,

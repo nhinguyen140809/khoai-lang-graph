@@ -1,3 +1,4 @@
+import { ChatSettingsBarItem } from '@/modules/activity/widgets/chat'
 import { ActivityDialogs } from '@/modules/activity/widgets/dialogs'
 import { ExportProjectButton } from '@/modules/artifact/features/export'
 import { ExportDialogs } from '@/modules/artifact/widgets/export'
@@ -18,7 +19,7 @@ const deskPaletteProjectCount = 30
 
 /**
  * The pages of a project: in the bar of the desk, the name of the project and its menu at the
- * left, and at the right the export; the documents, which open in the reader, are a tool of the
+ * left, and at the right the export, then at the very end the settings of the chat; the documents, which open in the reader, are a tool of the
  * desk, which shows it in its bar or its rail as its arrangement says; then the page, with the
  * dialogs of the chat and of the export. A project that does not exist shows as not found, with
  * no item in the bar.
@@ -39,6 +40,7 @@ export default async function ProjectLayout({
       <DeskBarItem side={DeskBarSide.Right}>
         <ExportProjectButton />
       </DeskBarItem>
+      <ChatSettingsBarItem projectId={projectId} />
       {children}
       <ActivityDialogs />
       <ExportDialogs projectId={projectId} />
