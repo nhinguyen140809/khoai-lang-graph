@@ -1,6 +1,6 @@
 'use client'
 
-import { useView } from '@/shared/lib/view'
+import { inView, useView } from '@/shared/lib/view'
 
 import type { WorkflowDefinition } from '../../../definition/workflow-definition.types'
 import type { ContentField } from '../../fields/content-fields.types'
@@ -19,6 +19,6 @@ export function useValueLabelOf(
   const view = useView()
   return (value: string) =>
     field.valueList === null
-      ? valueLabel(field.path, value)[view]
+      ? inView(valueLabel(field.path, value), view)
       : valueTitle(field, value, definition)
 }

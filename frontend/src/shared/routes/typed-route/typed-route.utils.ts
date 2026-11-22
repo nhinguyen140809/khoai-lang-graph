@@ -1,11 +1,15 @@
 import type { Route } from 'next'
 
+import { addressOfAreaPath } from '@/shared/routes/hosts'
+
 /**
- * The address, checked against the pages of the app as `Link` checks its `href`: a path that no
- * folder of `src/app/` has is a type error.
+ * The address of a page, given the path of the page as its folders of `src/app/` write it, with
+ * the folder of its view: `/developer/projects` gives `/projects`. The path is checked against the
+ * pages of the app as `Link` checks its `href`, so a path that no folder has is a type error. The
+ * address leaves the folder of the view out, since the host of the page chooses the view.
  */
-export function checkedRoute<T extends string>(href: Route<T>): Route {
-  return href as Route
+export function checkedRoute<T extends string>(page: Route<T>): Route {
+  return addressOfAreaPath(page) as Route
 }
 
 /**

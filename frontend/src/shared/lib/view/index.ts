@@ -2,5 +2,6 @@
 // imports them from here; files inside the folder import each other with relative paths.
 export { useView } from './hooks/useView'
 export { useWording } from './hooks/useWording'
-export { type View, views, type Wording } from './view.types'
+export { type ByView, type View, views, type Wording } from './view.types'
 export { ViewProvider } from './ViewProvider'
+export { inView } from './wording.utils'

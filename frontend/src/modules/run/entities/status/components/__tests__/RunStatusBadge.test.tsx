@@ -21,7 +21,7 @@ describe('RunStatusBadge', () => {
     },
   )
 
-  it('reads in the user view without a view given', async () => {
+  it('reads in the developer view without a view given', async () => {
     render(<RunStatusBadge status="running" />)
 
     await expectText('Working')

@@ -1,5 +1,3 @@
-import type { View } from '@/shared/lib/view'
-
 import type { PhaseItem, WorkEntry } from './work.types'
 import { groupNotes, visibleNotes } from './work-notes.utils'
 import { isWorkStatusInProgress } from './work-status-look.utils'
@@ -9,8 +7,8 @@ import { isWorkStatusInProgress } from './work-status-look.utils'
  * one tool as one item. While the phase works, its last item is in progress: a note that says what
  * it is doing, or a tool that is in use.
  */
-export function phaseItems(work: WorkEntry, view: View): PhaseItem[] {
-  const groups = groupNotes(visibleNotes(work.notes, view))
+export function phaseItems(work: WorkEntry): PhaseItem[] {
+  const groups = groupNotes(visibleNotes(work.notes))
   // A part that an earlier cut left holds no step and is over.
   const isWorking = work.steps.length > 0 && isWorkStatusInProgress(work.status)
   return groups.map((group, index): PhaseItem => {

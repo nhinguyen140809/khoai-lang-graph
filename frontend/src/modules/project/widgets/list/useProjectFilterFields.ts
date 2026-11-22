@@ -2,7 +2,7 @@ import { useMemo } from 'react'
 
 import { runStatusLabel } from '@/modules/run/entities'
 import type { FilterField } from '@/shared/components/filter'
-import { useView } from '@/shared/lib/view'
+import { inView, useView } from '@/shared/lib/view'
 
 import {
   lastActivityPeriods,
@@ -26,7 +26,7 @@ export function useProjectFilterFields(): FilterField[] {
         choose: 'many',
         options: projectRunFilters.map((value) => ({
           value,
-          label: runStatusLabel(value === 'none' ? null : value)[view],
+          label: inView(runStatusLabel(value === 'none' ? null : value), view),
         })),
       },
       {

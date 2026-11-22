@@ -1,8 +1,8 @@
 import { waitFor } from '@testing-library/react'
-import { describe, it } from 'vitest'
+import { describe, expect, it, vi } from 'vitest'
 
 import { messageFixtures } from '@/mocks/messages/messages.fixtures'
-import { projectIds } from '@/mocks/shared/db'
+import { ReferenceOpenerProvider } from '@/modules/activity/entities'
 import { assertPresent } from '@/shared/lib/guards'
 import { renderWithProviders } from '@/test/render'
 import {
@@ -30,9 +30,7 @@ const pending = assertPresent(
 
 describe('MessageEntry', () => {
   it('shows the first document an agent names as a card, with a line for the others', async () => {
-    renderWithProviders(
-      <MessageEntry message={analyst} projectId={projectIds.mentor} runStatus={null} />,
-    )
+    renderWithProviders(<MessageEntry message={analyst} runStatus={null} />)
 
     // The words of the agent read as Markdown, and name no key of an item.
     await expectText('one conflict')
@@ -46,9 +44,7 @@ describe('MessageEntry', () => {
   })
 
   it('opens the others as rows of a list when the line is pressed, and closes them again', async () => {
-    renderWithProviders(
-      <MessageEntry message={analyst} projectId={projectIds.mentor} runStatus={null} />,
-    )
+    renderWithProviders(<MessageEntry message={analyst} runStatus={null} />)
 
     await pressRole('button', '1 more item')
 
@@ -77,11 +73,36 @@ describe('MessageEntry', () => {
       ],
       item_refs: [],
     }
-    renderWithProviders(
-      <MessageEntry message={many} projectId={projectIds.mentor} runStatus={null} />,
-    )
+    renderWithProviders(<MessageEntry message={many} runStatus={null} />)
 
     await expectRole('button', '2 more items')
+  })
+
+  it('opens the document and the item of a card where the page opens references', async () => {
+    const openReference = vi.fn()
+    renderWithProviders(
+      <ReferenceOpenerProvider opener={openReference}>
+        <MessageEntry message={analyst} runStatus={null} />
+      </ReferenceOpenerProvider>,
+    )
+
+    await pressRole('button', 'Requirements analysis, version 4')
+    await pressRole('button', '1 more item')
+    await pressRole('button', 'Quick look at CONF-001')
+
+    const [document, item] = [analyst.artifact_refs[0], analyst.item_refs[0]]
+    expect(openReference).toHaveBeenNthCalledWith(1, {
+      kind: 'document',
+      artifactId: document?.artifact_id,
+    })
+    expect(openReference).toHaveBeenNthCalledWith(2, { kind: 'item', itemId: item?.item_id })
+  })
+
+  it('shows a card that only reads where the page opens no reference', async () => {
+    renderWithProviders(<MessageEntry message={analyst} runStatus={null} />)
+
+    await expectText('Requirements analysis')
+    expectNoRole('button', 'Requirements analysis, version 4')
   })
 
   it('shows no button for a message that names one document', async () => {
@@ -90,18 +111,14 @@ describe('MessageEntry', () => {
       artifact_refs: [{ artifact_id: 'a1', kind: 'analysis', title: 'One', version: 1 }],
       item_refs: [],
     }
-    renderWithProviders(
-      <MessageEntry message={one} projectId={projectIds.mentor} runStatus={null} />,
-    )
+    renderWithProviders(<MessageEntry message={one} runStatus={null} />)
 
     await expectText('One')
     expectNoRole('button', /more items?$/)
   })
 
   it('shows the words of the user as plain text, with the note of when the agents read them', async () => {
-    renderWithProviders(
-      <MessageEntry message={pending} projectId={projectIds.mentor} runStatus="running" />,
-    )
+    renderWithProviders(<MessageEntry message={pending} runStatus="running" />)
 
     await expectText('Also ask about group sessions.')
     await expectText('Will be read after the current step.')

@@ -2,14 +2,13 @@
 
 import { cn } from 'cn'
 
+import { useReferenceOpener } from '@/modules/activity/entities'
 import type { Interrupt } from '@/modules/review/entities'
 import { useInterruptStatusLook } from '@/modules/review/entities'
 import { AnswerReviewForm } from '@/modules/review/features/answer'
 import type { Run } from '@/modules/run/entities'
-import { useOpenPage } from '@/shared/components/frame'
 import { Button } from '@/shared/components/ui/button'
 import { toneClasses } from '@/shared/lib/tone'
-import { routes } from '@/shared/routes'
 
 import { activityChatMessages } from '../activity-chat.constants'
 
@@ -19,17 +18,8 @@ import { activityChatMessages } from '../activity-chat.constants'
  * the entry the chat keeps is the one line of the answer. The title announces itself once; the
  * changes of the run and of the card stay silent.
  */
-export function PendingReview({
-  interrupt,
-  run,
-  projectId,
-}: {
-  interrupt: Interrupt
-  run: Run
-  projectId: string
-}) {
+export function PendingReview({ interrupt, run }: { interrupt: Interrupt; run: Run }) {
   const look = useInterruptStatusLook(interrupt.status)
-  const openPage = useOpenPage()
   const Mark = look.icon
 
   return (
@@ -55,20 +45,7 @@ export function PendingReview({
           <div className="flex flex-wrap items-center gap-x-2 gap-y-1 pl-7 text-sm">
             <span className="text-muted-foreground">{activityChatMessages.toReview}</span>
             {interrupt.review_artifacts.map((ref) => (
-              <Button
-                key={ref.artifact_id}
-                variant="link"
-                size="xs"
-                className="h-auto p-0"
-                onClick={() => {
-                  openPage(routes.project(projectId).document(ref.artifact_id))
-                }}
-              >
-                {ref.title}{' '}
-                <span className="text-muted-foreground">
-                  {activityChatMessages.version(ref.version)}
-                </span>
-              </Button>
+              <ReviewDocumentLink key={ref.artifact_id} document={ref} />
             ))}
           </div>
         )}
@@ -77,5 +54,28 @@ export function PendingReview({
         <AnswerReviewForm key={interrupt.id} interrupt={interrupt} run={run} />
       </div>
     </div>
+  )
+}
+
+/** A document that the review asks to look at, which opens where the page of the chat says. */
+function ReviewDocumentLink({
+  document,
+}: {
+  document: { artifact_id: string; title: string; version: number }
+}) {
+  const open = useReferenceOpener({ kind: 'document', artifactId: document.artifact_id })
+  return (
+    <Button
+      variant="link"
+      size="xs"
+      className="h-auto p-0"
+      disabled={open === null}
+      onClick={open ?? undefined}
+    >
+      {document.title}{' '}
+      <span className="text-muted-foreground">
+        {activityChatMessages.version(document.version)}
+      </span>
+    </Button>
   )
 }

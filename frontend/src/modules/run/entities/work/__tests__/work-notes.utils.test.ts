@@ -10,16 +10,12 @@ const notes: StepNote[] = [
 ]
 
 describe('visibleNotes', () => {
-  it('shows what the step looked at and found, in the order written, in the user view', () => {
-    expect(visibleNotes(notes, 'user').map(({ kind }) => kind)).toEqual(['doing', 'finding'])
-  })
-
-  it('also shows the reasoning of the model in the developer view', () => {
-    expect(visibleNotes(notes, 'developer')).toEqual(notes)
+  it('shows what the step looked at and found, in the order written, without the reasoning of the model', () => {
+    expect(visibleNotes(notes).map(({ kind }) => kind)).toEqual(['doing', 'finding'])
   })
 
   it('has nothing to show for a step without notes', () => {
-    expect(visibleNotes([], 'user')).toEqual([])
+    expect(visibleNotes([])).toEqual([])
   })
 })
 

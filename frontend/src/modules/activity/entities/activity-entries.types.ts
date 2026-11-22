@@ -25,8 +25,8 @@ export type ActivityEntry =
       id: string
       time: string
       work: WorkEntry
-      /** The title of its stage; null for a stage that the user does not see (developer view). */
-      stageTitle: string | null
+      /** The title of its stage. */
+      stageTitle: string
       /** The title of its subject, else its key; null without a subject. */
       subjectTitle: string | null
     }

@@ -5,6 +5,6 @@ import { messageDeliveryNoteCases } from './messages.utils.data'
 
 describe('messageDeliveryNote', () => {
   it.each(messageDeliveryNoteCases)('$name', ({ delivery, runStatus, note }) => {
-    expect(messageDeliveryNote({ delivery }, runStatus)?.user ?? null).toBe(note)
+    expect(messageDeliveryNote({ delivery }, runStatus)?.developer ?? null).toBe(note)
   })
 })

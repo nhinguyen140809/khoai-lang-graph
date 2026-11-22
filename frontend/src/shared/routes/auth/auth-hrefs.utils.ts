@@ -15,8 +15,11 @@ const AuthPage = {
 
 const authPages: readonly string[] = Object.values(AuthPage)
 
-/** The page to return to after logging in, when none is given. */
-export const defaultAfterLogin: Route = '/'
+/**
+ * The page to return to after logging in, when none is given: the home page, which every view has
+ * at this address.
+ */
+export const defaultAfterLogin: Route = routeOfAddress('/')
 
 // Any origin works here: only a `next` that stays on it is kept.
 const BASE = 'http://app.invalid'
