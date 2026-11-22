@@ -1,39 +1,18 @@
 import { cn } from 'cn'
 import { motion } from 'motion/react'
-import { type CSSProperties, useRef } from 'react'
-
-import { useIsInView } from '@/shared/lib/viewport'
+import type { CSSProperties } from 'react'
 
 import {
   blobShapeClasses,
   faceLayerCount,
   faceSilhouetteClasses,
   faceSizeClasses,
-  shapeEyeReachShares,
 } from './face.constants'
-import type { FaceDrive, FaceState, Mood } from './face.types'
-import { isRestingMood } from './face.utils'
+import type { FaceProps } from './face.types'
 import { FaceFeatures } from './FaceFeatures'
-import { useFaceParts } from './hooks/useFaceParts'
-import { useFaceRules } from './hooks/useFaceRules'
-import { faceOf } from './look/face-look.utils'
+import { useFace } from './hooks/useFace'
 import { blobStyleOf } from './look/face-style.utils'
-import { restAfterMs, restingStates } from './mood/face-mood.constants'
-import { useRested } from './mood/hooks/useRested'
-import { blobMotionClasses, gazeLooks } from './motion/face-motion.constants'
-import { useFaceMotion } from './motion/hooks/useFaceMotion'
-import { useGaze } from './motion/hooks/useGaze'
-
-interface FaceProps {
-  /** What the face comes from, such as the key of an agent: its outline and its colors come from it alone. */
-  seed: string
-  /** What it is doing or feeling; idle by default. A change of mood is covered by a blink. */
-  mood?: Mood
-  /** What steers the look and the move of the face from outside, such as the acts around it; the mood stays its own. */
-  drive?: FaceDrive
-  size?: keyof typeof faceSizeClasses
-  className?: string
-}
+import { blobMotionClasses } from './motion/face-motion.constants'
 
 /**
  * A face: a shape of soft color (a circle, a ghost, a drop...) with two long eyes. The color is a pale
@@ -52,23 +31,12 @@ interface FaceProps {
  * less motion.
  */
 export function Face({ seed, mood = 'idle', drive, size = 'default', className }: FaceProps) {
-  const look = faceOf(seed, useFaceRules())
-  const ref = useRef<HTMLSpanElement>(null)
-  const isInView = useIsInView(ref)
-  const restingMood = isRestingMood(mood) ? mood : null
-  const isRested = useRested(restingMood, restAfterMs)
-  const state: FaceState = isRested && restingMood !== null ? restingStates[restingMood] : mood
-  const parts = useFaceParts(look, state)
+  const { look, ref, isInView, isRested, parts, gaze, poseStyle, bodyStyle } = useFace({
+    seed,
+    mood,
+    drive,
+  })
   const drift = blobMotionClasses[parts.moodLook.pace]
-  const gazeLook = gazeLooks[parts.moodLook.gaze]
-  const timing = {
-    phase: look.phase,
-    isChanging: parts.isChanging,
-    isRunning: isInView,
-    reachShare: shapeEyeReachShares[look.shape],
-  }
-  const gaze = useGaze(gazeLook, timing, drive?.look)
-  const { poseStyle, bodyStyle } = useFaceMotion(parts.moodLook, gaze.head, timing, drive?.move)
 
   return (
     <span
