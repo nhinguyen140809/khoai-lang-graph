@@ -5,12 +5,9 @@ import { type RefObject, useRef } from 'react'
 import { useIsInView } from '@/shared/lib/viewport'
 
 import { shapeEyeReachShares } from '../face.constants'
-import type { FaceProps, FaceState, GazeValues } from '../face.types'
-import { isRestingMood } from '../face.utils'
+import type { FaceProps, GazeValues } from '../face.types'
 import type { FaceLook } from '../look/face-look.types'
 import { faceOf } from '../look/face-look.utils'
-import { restAfterMs, restingStates } from '../mood/face-mood.constants'
-import { useRested } from '../mood/hooks/useRested'
 import { gazeLooks } from '../motion/face-motion.constants'
 import { useFaceMotion } from '../motion/hooks/useFaceMotion'
 import { useGaze } from '../motion/hooks/useGaze'
@@ -31,10 +28,9 @@ export function useFace({
   const look: FaceLook = faceOf(seed, useFaceRules())
   const ref: RefObject<HTMLSpanElement | null> = useRef<HTMLSpanElement>(null)
   const isInView = useIsInView(ref)
-  const restingMood = isRestingMood(mood) ? mood : null
-  const isRested = useRested(restingMood, restAfterMs)
-  const state: FaceState = isRested && restingMood !== null ? restingStates[restingMood] : mood
-  const parts = useFaceParts(look, state)
+  const parts = useFaceParts(look, mood)
+  // A face that has been given another mood is busy again at once, while the eyes are still closing.
+  const isRested = parts.state.startsWith('resting') && !parts.isChanging
   const timing = {
     phase: look.phase,
     isChanging: parts.isChanging,
