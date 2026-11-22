@@ -130,3 +130,15 @@ export interface GazeTiming {
   isRunning: boolean
   reachShare: number
 }
+
+/** What a face is given, whichever way it is drawn. */
+export interface FaceProps {
+  /** What the face comes from, such as the key of an agent: its outline and its colors come from it alone. */
+  seed: string
+  /** What it is doing or feeling; idle by default. A change of mood is covered by a blink. */
+  mood?: Mood
+  /** What steers the look and the move of the face from outside, such as the acts around it; the mood stays its own. */
+  drive?: FaceDrive | undefined
+  size?: 'sm' | 'default' | 'lg' | 'xl' | '2xl'
+  className?: string
+}
