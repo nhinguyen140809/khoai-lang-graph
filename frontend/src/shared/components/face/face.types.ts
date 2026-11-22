@@ -131,6 +131,11 @@ export interface GazeTiming {
   reachShare: number
 }
 
+/** Parts of what a mood does to a face that something else says instead of the mood, such as a design page that shows one motion at a time. */
+export type MoodOverride = Partial<
+  Pick<MoodLook, 'gaze' | 'eyes' | 'eyeScales' | 'tilts' | 'pose' | 'body' | 'eyeLives'>
+>
+
 /** What a face is given, whichever way it is drawn. */
 export interface FaceProps {
   /** What the face comes from, such as the key of an agent: its outline and its colors come from it alone. */
@@ -139,6 +144,8 @@ export interface FaceProps {
   mood?: Mood
   /** What steers the look and the move of the face from outside, such as the acts around it; the mood stays its own. */
   drive?: FaceDrive | undefined
+  /** Parts of the look of the mood to say otherwise, each replacing the one that the mood gives; the mood stays its own for the rest. */
+  override?: MoodOverride | undefined
   size?: 'sm' | 'default' | 'lg' | 'xl' | '2xl'
   className?: string
 }

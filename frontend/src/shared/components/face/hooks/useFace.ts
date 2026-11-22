@@ -25,11 +25,12 @@ export function useFace({
   seed,
   mood = 'idle',
   drive,
-}: Pick<FaceProps, 'seed' | 'mood' | 'drive'>) {
+  override,
+}: Pick<FaceProps, 'seed' | 'mood' | 'drive' | 'override'>) {
   const look: FaceLook = faceOf(seed, useFaceRules())
   const ref: RefObject<HTMLSpanElement | null> = useRef<HTMLSpanElement>(null)
   const isInView = useIsInView(ref)
-  const parts = useFaceParts(look, mood)
+  const parts = useFaceParts(look, mood, override)
   // A face that has been given another mood is busy again at once, while the eyes are still closing.
   const isRested = parts.state.startsWith('resting') && !parts.isChanging
   const timing = {

@@ -156,6 +156,15 @@ describe('Face', () => {
     expect(shapes.size).toBeGreaterThan(3)
   })
 
+  it('shows a part of its look that is overridden instead of the one of its mood', () => {
+    const face = renderFace({ seed: 'analyst', mood: 'idle', override: { body: 'bounce' } })
+
+    expect(face.querySelector('[data-body]')).toHaveAttribute('data-body', 'bounce')
+    expect(
+      renderFace({ seed: 'analyst', mood: 'idle' }).querySelector('[data-body]'),
+    ).toHaveAttribute('data-body', 'none')
+  })
+
   it('takes the size that it is given', () => {
     expect(renderFace({ seed: 'analyst', size: 'lg' })).toHaveClass('size-10')
   })
