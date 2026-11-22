@@ -142,3 +142,8 @@ export interface FaceProps {
   size?: 'sm' | 'default' | 'lg' | 'xl' | '2xl'
   className?: string
 }
+
+/** The ways that a face is drawn: plain, in CSS, which needs nothing to load. */
+export const faceStyleKeys = ['plain'] as const
+
+export type FaceStyleKey = (typeof faceStyleKeys)[number]
