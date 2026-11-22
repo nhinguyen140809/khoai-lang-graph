@@ -15,7 +15,7 @@ import {
 } from '@/test/steps'
 
 import { PromptBar, PromptBarEnd, PromptBarStart, PromptSend } from '../box/PromptBar'
-import { PromptBox, PromptTextarea } from '../box/PromptBox'
+import { PromptAttachments, PromptBox, PromptTextarea } from '../box/PromptBox'
 import { PromptAddMenu } from '../footer/PromptAddMenu'
 import { PromptFooter, PromptFooterEnd, PromptFooterStart } from '../footer/PromptFooter'
 import { usePromptLooks, usePromptSubmit, usePromptText } from '../hooks/usePromptInput'
@@ -170,6 +170,18 @@ describe('PromptInput', () => {
 
     await expectRole('button', 'Run settings')
     await expectRole('button', 'Later')
+  })
+
+  it('shows the parts that a place puts above the text in the room for the files', async () => {
+    promptWith({
+      aboveText: (
+        <PromptAttachments isPresent>
+          <p>notes.md</p>
+        </PromptAttachments>
+      ),
+    })
+
+    await expectText('notes.md')
   })
 
   it('opens the menu of the plus with the items that the place gives it', async () => {
