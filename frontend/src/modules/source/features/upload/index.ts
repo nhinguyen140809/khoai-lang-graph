@@ -1,3 +1,5 @@
 export { AttachedSources } from './components/AttachedSources'
+export { AttachedSourcesTray } from './components/AttachedSourcesTray'
+export { AttachSourceMenu } from './components/AttachSourceMenu'
 export { PickSourceItem } from './components/PickSourceItem'
 export { useUploadSources } from './hooks/useUploadSources'

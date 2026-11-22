@@ -1,3 +1,5 @@
+export { attachedSources, keepAttachedSources } from './attached-sources.utils'
+export { useAttachedSources } from './hooks/useAttachedSources'
 export { useProjectSources } from './hooks/useProjectSources'
 export {
   deleteSource,
