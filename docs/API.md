@@ -420,7 +420,7 @@ Run body, `GET /runs/5f2d...`, while the run waits at the analysis review. It is
     "output_language": "en",
     "max_steps": 80,
     "max_cost_usd": 2.0,
-    "parameters": { "target_personas_num": 3, "max_personas": 3, "max_turns": 12, "max_iterations": 2 }
+    "parameters": { "target_personas_num": 3, "max_turns": 12, "max_iterations": 2, "target_sources_num": 3 }
   },
   "retry_of_run_id": "4c18...",
   "error": null,

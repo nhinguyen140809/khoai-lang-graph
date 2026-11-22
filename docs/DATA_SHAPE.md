@@ -437,11 +437,12 @@ Value object stored on each Run: the complete configuration the run uses, resolv
 | Field | Type | Notes |
 |---|---|---|
 | `target_personas_num` | int | How many personas to generate |
-| `max_personas` | int | Upper bound on personas interviewed |
 | `max_turns` | int | Upper bound on question and answer turns per persona |
 | `max_iterations` | int | Upper bound on rework loops |
 
-Deck: `target_personas_num`, `max_turn`, `max_personas`. The deck also has `iteration_count` in the state, which `max_iterations` bounds.
+Deck: `target_personas_num`, `max_turn`. The deck also has `iteration_count` in the state, which `max_iterations` bounds.
+
+Version 2 adds `target_sources_num` and drops `max_personas`: the parameter was declared but no node read it, so it was removed rather than left looking enforced. A run config stored before the removal still parses, because the backend drops the retired key on read.
 
 ### RunDefaults (MVP)
 

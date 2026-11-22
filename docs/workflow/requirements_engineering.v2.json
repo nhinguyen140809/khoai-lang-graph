@@ -1119,14 +1119,6 @@
         "default": 3,
         "description": "How many interviewees take part in the interviews."
       },
-      "max_personas": {
-        "type": "integer",
-        "title": "Maximum interviewees",
-        "minimum": 1,
-        "maximum": 10,
-        "default": 3,
-        "description": "The largest number of interviewees who may be interviewed. It should not be lower than the number of interviewees above."
-      },
       "max_turns": {
         "type": "integer",
         "title": "Maximum turns per interviewee",
@@ -1154,7 +1146,6 @@
     },
     "required": [
       "target_personas_num",
-      "max_personas",
       "max_turns",
       "max_iterations"
     ]
