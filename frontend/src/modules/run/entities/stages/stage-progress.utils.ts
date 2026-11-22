@@ -165,3 +165,15 @@ export function stageProgress(
 
   return stages.map((stage, index) => build(stage, index + 1))
 }
+
+/**
+ * The stage that the work is at, for a line that names one stage: the one that is open (the current
+ * stage, or the one that holds it), else the last that has begun, else the first.
+ */
+export function stageNowOf(stages: readonly StageProgress[]): StageProgress | undefined {
+  return (
+    stages.find((stage) => stage.isOpen) ??
+    stages.findLast((stage) => stage.status !== 'not_started') ??
+    stages[0]
+  )
+}

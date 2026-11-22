@@ -1,20 +1,19 @@
-import { render, screen } from '@testing-library/react'
+import { screen, waitFor } from '@testing-library/react'
 import { describe, expect, it } from 'vitest'
 
-import { expectNoAccessibilityViolations } from '@/test/steps'
+import { stubResizeObserver } from '@/test/browser'
+import { renderWithProviders } from '@/test/render'
+import { expectNoAccessibilityViolations, hoverOver } from '@/test/steps'
 
 import { SegmentedProgress, SegmentedProgressItem } from '../segmented-progress'
-import { TooltipProvider } from '../tooltip'
 
-function renderBar() {
-  return render(
-    <TooltipProvider>
-      <SegmentedProgress label="Progress">
-        <SegmentedProgressItem label="Interviews, done" tone="success" />
-        <SegmentedProgressItem label="Analysis, running" tone="primary" isLive />
-        <SegmentedProgressItem label="Specification, not started" isQuiet />
-      </SegmentedProgress>
-    </TooltipProvider>,
+function renderBar(currentLabel?: string) {
+  return renderWithProviders(
+    <SegmentedProgress label="Progress" currentLabel={currentLabel}>
+      <SegmentedProgressItem label="Interviews, done" tone="success" />
+      <SegmentedProgressItem label="Analysis, running" tone="primary" isLive />
+      <SegmentedProgressItem label="Specification, not started" isQuiet />
+    </SegmentedProgress>,
   )
 }
 
@@ -47,5 +46,43 @@ describe('SegmentedProgress', () => {
       'true',
       'false',
     ])
+  })
+})
+
+describe('SegmentedProgress layout', () => {
+  it('draws the segments apart while each has room', async () => {
+    stubResizeObserver({ initialSize: { width: 288, height: 28 } })
+    renderBar('Analysis, running')
+
+    const bar = screen.getByRole('group', { name: 'Progress' })
+    await waitFor(() => {
+      expect(bar).toHaveAttribute('data-layout', 'segments')
+    })
+  })
+
+  it('draws one line with no gap when the bar is too narrow for its segments, rounded at the ends only', async () => {
+    stubResizeObserver({ initialSize: { width: 48, height: 28 } })
+    const { container } = renderBar('Analysis, running')
+
+    const bar = screen.getByRole('group', { name: 'Progress' })
+    await waitFor(() => {
+      expect(bar).toHaveAttribute('data-layout', 'continuous')
+    })
+    expect(bar).toHaveClass('data-[layout=continuous]:gap-0')
+    const first = container.querySelector('[data-quiet]')
+    expect(first).toHaveClass('group-first/segment:rounded-l-full')
+  })
+
+  it('names only the current step on hover when it is one line', async () => {
+    stubResizeObserver({ initialSize: { width: 48, height: 28 } })
+    renderBar('Analysis, running')
+    const bar = screen.getByRole('group', { name: 'Progress' })
+    await waitFor(() => {
+      expect(bar).toHaveAttribute('data-layout', 'continuous')
+    })
+
+    await hoverOver(screen.getByRole('group', { name: 'Progress' }))
+
+    expect(await screen.findByRole('tooltip')).toHaveTextContent('Analysis, running')
   })
 })
