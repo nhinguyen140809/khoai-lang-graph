@@ -1,6 +1,7 @@
 'use client'
 
 import { BrandLink } from '@/shared/components/brand'
+import { ScrollArea } from '@/shared/components/ui/scroll-area'
 
 import { DeskBar } from '../../bars/components/DeskBar'
 import { DeskRail } from '../../bars/components/DeskRail'
@@ -32,7 +33,13 @@ export function StudioFrame({ homeHref, accountMenu, contributions, children }: 
         />
       </div>
       <div className="flex min-h-0 flex-1">
-        <main className="flex min-h-0 min-w-0 flex-1 flex-col overflow-auto">{children}</main>
+        {/* Every page scrolls here, so no page makes a scroll area of its own: a page taller than
+            this scrolls it, and a page that fills its height keeps the scrolling of its own parts. */}
+        <main className="min-h-0 min-w-0 flex-1">
+          <ScrollArea fillContent className="h-full">
+            <div className="flex h-full flex-col">{children}</div>
+          </ScrollArea>
+        </main>
         <DeskRail />
       </div>
       <CommandPalette />

@@ -3,6 +3,7 @@
 import type { CSSProperties } from 'react'
 
 import { BrandLink, LogoMark } from '@/shared/components/brand'
+import { ScrollArea } from '@/shared/components/ui/scroll-area'
 import {
   Sidebar,
   SidebarHeader,
@@ -64,8 +65,11 @@ export function LibraryFrame({ sidebar, homeHref, contributions, children }: Des
           <SidebarToggle className="md:hidden" />
           <DeskBar />
         </div>
-        {/* The page fills the rest of the height and scrolls on its own. */}
-        <div className="flex min-h-0 flex-1 flex-col overflow-auto">{children}</div>
+        {/* Every page scrolls here, so no page makes a scroll area of its own: a page taller than
+            this scrolls it, and a page that fills its height keeps the scrolling of its own parts. */}
+        <ScrollArea fillContent className="min-h-0 flex-1">
+          <div className="flex h-full flex-col">{children}</div>
+        </ScrollArea>
       </SidebarInset>
       <DeskToolsInBar />
       <CommandPalette />
