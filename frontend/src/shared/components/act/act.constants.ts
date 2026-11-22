@@ -477,7 +477,7 @@ export const restingLook = [
 ] as const
 
 /** How large a thing around the face is, as a share of the face. */
-export const propSize = 0.42
+export const propSize = 0.5
 
 /**
  * The mood that stands for work in general, such as the mood of the status of a run that works.
