@@ -93,6 +93,7 @@ Every list endpoint uses cursor pagination and the same envelope.
 | Request | `?limit=` (default 50, maximum 200) and `?cursor=` (opaque string from the previous page) |
 | Response | `{ "items": [...], "next_cursor": "..." }`; `next_cursor` is `null` on the last page |
 | Order | Stated per endpoint and stable; ties are broken by `id` |
+| Cursor | The cursor is opaque and, in this build, stands for a position in the list rather than a key of the last item. A row inserted or removed between two pages can therefore move an item across the boundary: a client that pages while writing should reload from the first page instead of trusting the next one |
 | Filters | Query parameters named after the field, for example `?kind=spec_requirement&review_status=draft`. A filter given several times matches any of its values, for example `?rollup_run_status=interrupted&rollup_run_status=failed`. A filter on a time is the name of the field with `_after` and an ISO 8601 time, and keeps the items after that time, for example `?last_activity_after=2026-10-15T00:00:00Z` |
 
 ### Errors
@@ -272,6 +273,8 @@ Usage of the current month, `GET /me/usage?group_by=project`:
 ### Workflow definition
 
 `GET /workflow/definition` returns one version of the workflow definition: the graph, the names a run may store, the checkpoints with their options and questions, and the schemas of the run parameters and of the workflow state. The web app draws the graph, the stages, the reviews and the run settings from it, and the backend checks every name a run stores against it.
+
+`GET /workflow/acts` returns the acts a client may show around the face of an agent while it works, so a client reads them from the API instead of carrying a copy that drifts. `acts` holds one entry for each act, with its `key`, its `title` and a sentence about the animation; `keys_by_stage` and `keys_by_tool` give the acts that each stage and each tool names, which is what a client plays for the step it is drawing. A tool's acts replace the acts of its stage while a use of the tool runs.
 
 The response is a definition file as described in [Workflow definitions](workflow/README.md), valid against [`definition.schema.json`](workflow/definition.schema.json). Version 1 is written out in full in [`requirements_engineering.v1.json`](workflow/requirements_engineering.v1.json). An excerpt, where `"...": "..."` stands for the rest of the definition:
 
@@ -997,7 +1000,7 @@ Rules:
 
 | Method and path | Purpose | Phase |
 |---|---|---|
-| `POST /projects/{project_id}/exports` | Request a document; body `template`, `format`. The template is one of the export templates of the current workflow definition version, and the format one of its formats, otherwise `422 validation_failed`. `202` | MVP |
+| `POST /projects/{project_id}/exports` | Create a document; body `template`, `format`. The template is one of the export templates of the current workflow definition version, and the format one of its formats, otherwise `422 validation_failed`. The file is rendered during the request, so the export answers already `ready`. `201` | MVP |
 | `GET /projects/{project_id}/exports` | Exports of a project; ordered by `created_at` descending | MVP |
 | `GET /exports/{export_id}` | Status; when `ready`, includes `download_url`, valid for a limited time | MVP |
 | `GET /exports/{export_id}/file` | The file of a ready export, as a download; the address that `download_url` gives. `404` while the export is not ready | MVP |

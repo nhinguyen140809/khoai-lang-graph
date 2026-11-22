@@ -1,70 +1,103 @@
-<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 860 1298" font-family="system-ui, -apple-system, 'Segoe UI', Roboto, sans-serif">
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 860 1506" font-family="system-ui, -apple-system, 'Segoe UI', Roboto, sans-serif">
 <defs>
 <marker id="am" viewBox="0 0 10 10" refX="9" refY="5" markerWidth="7.5" markerHeight="7.5" orient="auto-start-reverse"><path d="M 0 0 L 10 5 L 0 10 z" fill="#57606a"/></marker>
 <marker id="am2" viewBox="0 0 10 10" refX="9" refY="5" markerWidth="7" markerHeight="7" orient="auto-start-reverse"><path d="M 0 0 L 10 5 L 0 10 z" fill="#8c959f"/></marker>
 </defs>
-<rect width="860" height="1298" fill="#ffffff"/>
-<path d="M 430 105 L 430 151" fill="none" stroke="#57606a" stroke-width="1.7" stroke-linejoin="round" marker-end="url(#am)"/>
-<path d="M 398 197 L 332 243" fill="none" stroke="#57606a" stroke-width="1.7" stroke-linejoin="round" marker-end="url(#am)"/>
-<path d="M 300 288 Q 430 318 560 288" fill="none" stroke="#57606a" stroke-width="1.7" stroke-linejoin="round" marker-end="url(#am)"/>
-<path d="M 528 289 L 462 335" fill="none" stroke="#57606a" stroke-width="1.7" stroke-linejoin="round" marker-end="url(#am)"/>
-<path d="M 430 381 L 430 427" fill="none" stroke="#57606a" stroke-width="1.7" stroke-linejoin="round" marker-end="url(#am)"/>
-<path d="M 398 473 L 332 519" fill="none" stroke="#57606a" stroke-width="1.7" stroke-linejoin="round" marker-end="url(#am)"/>
-<path d="M 300 564 Q 430 594 560 564" fill="none" stroke="#57606a" stroke-width="1.7" stroke-linejoin="round" marker-end="url(#am)"/>
-<path d="M 300 564 Q 430 594 560 564" fill="none" stroke="#57606a" stroke-width="1.7" stroke-linejoin="round" marker-end="url(#am)"/>
-<path d="M 332 565 L 398 611" fill="none" stroke="#57606a" stroke-width="1.7" stroke-linejoin="round" marker-end="url(#am)"/>
-<path d="M 430 657 L 430 703" fill="none" stroke="#57606a" stroke-width="1.7" stroke-linejoin="round" marker-end="url(#am)"/>
-<path d="M 430 749 L 430 795" fill="none" stroke="#57606a" stroke-width="1.7" stroke-linejoin="round" marker-end="url(#am)"/>
-<path d="M 430 841 L 430 887" fill="none" stroke="#57606a" stroke-width="1.7" stroke-linejoin="round" marker-end="url(#am)"/>
-<path d="M 430 933 L 430 979" fill="none" stroke="#57606a" stroke-width="1.7" stroke-linejoin="round" marker-end="url(#am)"/>
-<path d="M 430 1025 L 430 1071" fill="none" stroke="#57606a" stroke-width="1.7" stroke-linejoin="round" marker-end="url(#am)"/>
-<path d="M 430 1117 L 430 1163" fill="none" stroke="#57606a" stroke-width="1.7" stroke-linejoin="round" marker-end="url(#am)"/>
-<path d="M 430 1071 L 430 841" fill="none" stroke="#8c959f" stroke-width="1.4" stroke-dasharray="5 4" stroke-linejoin="round" marker-end="url(#am2)"/>
-<text x="559" y="948" font-size="11" fill="#8c959f" text-anchor="middle" font-style="italic">rework</text>
-<g id="n-__start__"><rect x="335" y="60" width="190" height="44" rx="22.0" fill="#fff" stroke="#1a7f37" stroke-width="1.5" />
-<text x="430" y="86" font-size="13.5" fill="#1a7f37" text-anchor="middle">START</text>
+<rect width="860" height="1506" fill="#ffffff"/>
+<path d="M 392 98 L 338 130" fill="none" stroke="#57606a" stroke-width="1.7" stroke-linejoin="round" marker-end="url(#am)"/>
+<path d="M 300 176 L 300 208" fill="none" stroke="#57606a" stroke-width="1.7" stroke-linejoin="round" marker-end="url(#am)"/>
+<path d="M 338 254 L 392 286" fill="none" stroke="#57606a" stroke-width="1.7" stroke-linejoin="round" marker-end="url(#am)"/>
+<path d="M 430 332 L 430 364" fill="none" stroke="#57606a" stroke-width="1.7" stroke-linejoin="round" marker-end="url(#am)"/>
+<path d="M 430 410 L 430 442" fill="none" stroke="#57606a" stroke-width="1.7" stroke-linejoin="round" marker-end="url(#am)"/>
+<path d="M 430 488 L 430 520" fill="none" stroke="#57606a" stroke-width="1.7" stroke-linejoin="round" marker-end="url(#am)"/>
+<path d="M 430 566 L 430 598" fill="none" stroke="#57606a" stroke-width="1.7" stroke-linejoin="round" marker-end="url(#am)"/>
+<path d="M 392 644 L 338 676" fill="none" stroke="#57606a" stroke-width="1.7" stroke-linejoin="round" marker-end="url(#am)"/>
+<path d="M 300 721 Q 430 751 560 721" fill="none" stroke="#57606a" stroke-width="1.7" stroke-linejoin="round" marker-end="url(#am)"/>
+<path d="M 300 722 L 300 754" fill="none" stroke="#57606a" stroke-width="1.7" stroke-linejoin="round" marker-end="url(#am)"/>
+<path d="M 338 800 L 392 832" fill="none" stroke="#57606a" stroke-width="1.7" stroke-linejoin="round" marker-end="url(#am)"/>
+<path d="M 430 878 L 430 910" fill="none" stroke="#57606a" stroke-width="1.7" stroke-linejoin="round" marker-end="url(#am)"/>
+<path d="M 430 956 L 430 988" fill="none" stroke="#57606a" stroke-width="1.7" stroke-linejoin="round" marker-end="url(#am)"/>
+<path d="M 430 1034 L 430 1066" fill="none" stroke="#57606a" stroke-width="1.7" stroke-linejoin="round" marker-end="url(#am)"/>
+<path d="M 430 1112 L 430 1144" fill="none" stroke="#57606a" stroke-width="1.7" stroke-linejoin="round" marker-end="url(#am)"/>
+<path d="M 430 1190 L 430 1222" fill="none" stroke="#57606a" stroke-width="1.7" stroke-linejoin="round" marker-end="url(#am)"/>
+<path d="M 430 1268 L 430 1300" fill="none" stroke="#57606a" stroke-width="1.7" stroke-linejoin="round" marker-end="url(#am)"/>
+<path d="M 430 1346 L 430 1378" fill="none" stroke="#57606a" stroke-width="1.7" stroke-linejoin="round" marker-end="url(#am)"/>
+<path d="M 300 253 Q 430 283 560 253" fill="none" stroke="#8c959f" stroke-width="1.4" stroke-dasharray="5 4" stroke-linejoin="round" marker-end="url(#am2)"/>
+<path d="M 300 721 Q 430 751 560 721" fill="none" stroke="#8c959f" stroke-width="1.4" stroke-dasharray="5 4" stroke-linejoin="round" marker-end="url(#am2)"/>
+<path d="M 335 621 L 153 621 L 153 153 L 205 153" fill="none" stroke="#8c959f" stroke-width="1.4" stroke-dasharray="5 4" stroke-linejoin="round" marker-end="url(#am2)"/>
+<path d="M 335 933 L 153 933 L 153 777 L 205 777" fill="none" stroke="#8c959f" stroke-width="1.4" stroke-dasharray="5 4" stroke-linejoin="round" marker-end="url(#am2)"/>
+<path d="M 335 933 L 153 933 L 153 777 L 465 777" fill="none" stroke="#8c959f" stroke-width="1.4" stroke-dasharray="5 4" stroke-linejoin="round" marker-end="url(#am2)"/>
+<path d="M 483 754 L 377 722" fill="none" stroke="#8c959f" stroke-width="1.4" stroke-dasharray="5 4" stroke-linejoin="round" marker-end="url(#am2)"/>
+<path d="M 335 1167 L 153 1167 L 153 1011 L 335 1011" fill="none" stroke="#8c959f" stroke-width="1.4" stroke-dasharray="5 4" stroke-linejoin="round" marker-end="url(#am2)"/>
+<path d="M 335 1323 L 153 1323 L 153 1011 L 335 1011" fill="none" stroke="#8c959f" stroke-width="1.4" stroke-dasharray="5 4" stroke-linejoin="round" marker-end="url(#am2)"/>
+<path d="M 300 175 Q 430 205 560 175" fill="none" stroke="#8c959f" stroke-width="1.4" stroke-dasharray="5 4" stroke-linejoin="round" marker-end="url(#am2)"/>
+<path d="M 300 175 Q 430 205 560 175" fill="none" stroke="#8c959f" stroke-width="1.4" stroke-dasharray="5 4" stroke-linejoin="round" marker-end="url(#am2)"/>
+<text x="141" y="1149" font-size="11" fill="#8c959f" text-anchor="end" font-style="italic">rework</text>
+<g id="n-__start__"><rect x="335" y="53" width="190" height="44" rx="22.0" fill="#fff" stroke="#1a7f37" stroke-width="1.5" />
+<text x="430" y="80" font-size="13.5" fill="#1a7f37" text-anchor="middle">START</text>
 </g>
-<g id="n-planner"><rect x="335" y="152" width="190" height="44" rx="8" fill="#f6f8fa" stroke="#d0d7de" stroke-width="1.5" />
-<text x="430" y="178" font-size="13.5" fill="#1f2328" text-anchor="middle">planner</text>
+<g id="n-intent_router"><rect x="205" y="131" width="190" height="44" rx="8" fill="#f6f8fa" stroke="#d0d7de" stroke-width="1.5" />
+<text x="300" y="158" font-size="13.5" fill="#1f2328" text-anchor="middle">intent router</text>
 </g>
-<g id="n-corpus_builder"><rect x="205" y="244" width="190" height="44" rx="8" fill="#f6f8fa" stroke="#d0d7de" stroke-width="1.5" />
-<text x="300" y="270" font-size="13.5" fill="#1f2328" text-anchor="middle">corpus builder</text>
+<g id="n-ask_message"><rect x="465" y="131" width="190" height="44" rx="8" fill="#fff" stroke="#0969da" stroke-width="1.5" stroke-dasharray="6 4"/>
+<text x="560" y="158" font-size="13.5" fill="#0969da" text-anchor="middle">ask message</text>
 </g>
-<g id="n-stakeholder_miner"><rect x="465" y="244" width="190" height="44" rx="8" fill="#f6f8fa" stroke="#d0d7de" stroke-width="1.5" />
-<text x="560" y="270" font-size="13.5" fill="#1f2328" text-anchor="middle">stakeholder miner</text>
+<g id="n-planner"><rect x="205" y="209" width="190" height="44" rx="8" fill="#f6f8fa" stroke="#d0d7de" stroke-width="1.5" />
+<text x="300" y="236" font-size="13.5" fill="#1f2328" text-anchor="middle">planner</text>
 </g>
-<g id="n-persona_generator"><rect x="335" y="336" width="190" height="44" rx="8" fill="#f6f8fa" stroke="#d0d7de" stroke-width="1.5" />
-<text x="430" y="362" font-size="13.5" fill="#1f2328" text-anchor="middle">persona generator</text>
+<g id="n-checkpoint_plan"><rect x="465" y="209" width="190" height="44" rx="8" fill="#fff" stroke="#0969da" stroke-width="1.5" stroke-dasharray="6 4"/>
+<text x="560" y="236" font-size="13.5" fill="#0969da" text-anchor="middle">checkpoint plan</text>
 </g>
-<g id="n-checkpoint_personas"><rect x="335" y="428" width="190" height="44" rx="8" fill="#fff" stroke="#0969da" stroke-width="1.5" stroke-dasharray="6 4"/>
-<text x="430" y="454" font-size="13.5" fill="#0969da" text-anchor="middle">checkpoint personas</text>
+<g id="n-corpus_builder"><rect x="335" y="287" width="190" height="44" rx="8" fill="#f6f8fa" stroke="#d0d7de" stroke-width="1.5" />
+<text x="430" y="314" font-size="13.5" fill="#1f2328" text-anchor="middle">corpus builder</text>
 </g>
-<g id="n-interviewer"><rect x="205" y="520" width="190" height="44" rx="8" fill="#f6f8fa" stroke="#d0d7de" stroke-width="1.5" />
-<text x="300" y="546" font-size="13.5" fill="#1f2328" text-anchor="middle">interviewer</text>
+<g id="n-stakeholder_miner"><rect x="335" y="365" width="190" height="44" rx="8" fill="#f6f8fa" stroke="#d0d7de" stroke-width="1.5" />
+<text x="430" y="392" font-size="13.5" fill="#1f2328" text-anchor="middle">stakeholder miner</text>
 </g>
-<g id="n-persona_agent"><rect x="465" y="520" width="190" height="44" rx="8" fill="#f6f8fa" stroke="#d0d7de" stroke-width="1.5" />
-<text x="560" y="546" font-size="13.5" fill="#1f2328" text-anchor="middle">persona agent</text>
+<g id="n-persona_generator"><rect x="335" y="443" width="190" height="44" rx="8" fill="#f6f8fa" stroke="#d0d7de" stroke-width="1.5" />
+<text x="430" y="470" font-size="13.5" fill="#1f2328" text-anchor="middle">persona generator</text>
 </g>
-<g id="n-analyst"><rect x="335" y="612" width="190" height="44" rx="8" fill="#f6f8fa" stroke="#d0d7de" stroke-width="1.5" />
-<text x="430" y="638" font-size="13.5" fill="#1f2328" text-anchor="middle">analyst</text>
+<g id="n-ask_personas"><rect x="335" y="521" width="190" height="44" rx="8" fill="#fff" stroke="#0969da" stroke-width="1.5" stroke-dasharray="6 4"/>
+<text x="430" y="548" font-size="13.5" fill="#0969da" text-anchor="middle">ask personas</text>
 </g>
-<g id="n-checkpoint_analysis"><rect x="335" y="704" width="190" height="44" rx="8" fill="#fff" stroke="#0969da" stroke-width="1.5" stroke-dasharray="6 4"/>
-<text x="430" y="730" font-size="13.5" fill="#0969da" text-anchor="middle">checkpoint analysis</text>
+<g id="n-checkpoint_personas"><rect x="335" y="599" width="190" height="44" rx="8" fill="#fff" stroke="#0969da" stroke-width="1.5" stroke-dasharray="6 4"/>
+<text x="430" y="626" font-size="13.5" fill="#0969da" text-anchor="middle">checkpoint personas</text>
 </g>
-<g id="n-requirement_engineer"><rect x="335" y="796" width="190" height="44" rx="8" fill="#f6f8fa" stroke="#d0d7de" stroke-width="1.5" />
-<text x="430" y="822" font-size="13.5" fill="#1f2328" text-anchor="middle">requirement engineer</text>
+<g id="n-interviewer"><rect x="205" y="677" width="190" height="44" rx="8" fill="#f6f8fa" stroke="#d0d7de" stroke-width="1.5" />
+<text x="300" y="704" font-size="13.5" fill="#1f2328" text-anchor="middle">interviewer</text>
 </g>
-<g id="n-checkpoint_spec"><rect x="335" y="888" width="190" height="44" rx="8" fill="#fff" stroke="#0969da" stroke-width="1.5" stroke-dasharray="6 4"/>
-<text x="430" y="914" font-size="13.5" fill="#0969da" text-anchor="middle">checkpoint spec</text>
+<g id="n-persona_agent"><rect x="465" y="677" width="190" height="44" rx="8" fill="#f6f8fa" stroke="#d0d7de" stroke-width="1.5" />
+<text x="560" y="704" font-size="13.5" fill="#1f2328" text-anchor="middle">persona agent</text>
 </g>
-<g id="n-backlog_manager"><rect x="335" y="980" width="190" height="44" rx="8" fill="#f6f8fa" stroke="#d0d7de" stroke-width="1.5" />
-<text x="430" y="1006" font-size="13.5" fill="#1f2328" text-anchor="middle">backlog manager</text>
+<g id="n-analyst"><rect x="205" y="755" width="190" height="44" rx="8" fill="#f6f8fa" stroke="#d0d7de" stroke-width="1.5" />
+<text x="300" y="782" font-size="13.5" fill="#1f2328" text-anchor="middle">analyst</text>
 </g>
-<g id="n-validator"><rect x="335" y="1072" width="190" height="44" rx="8" fill="#f6f8fa" stroke="#d0d7de" stroke-width="1.5" />
-<text x="430" y="1098" font-size="13.5" fill="#1f2328" text-anchor="middle">validator</text>
+<g id="n-rework_elicitation"><rect x="465" y="755" width="190" height="44" rx="8" fill="#f6f8fa" stroke="#8c959f" stroke-width="1.5" stroke-dasharray="6 4"/>
+<text x="560" y="782" font-size="13.5" fill="#57606a" text-anchor="middle">rework elicitation</text>
 </g>
-<g id="n-__end__"><rect x="335" y="1164" width="190" height="44" rx="22.0" fill="#fff" stroke="#1a7f37" stroke-width="1.5" />
-<text x="430" y="1190" font-size="13.5" fill="#1a7f37" text-anchor="middle">END</text>
+<g id="n-ask_analysis"><rect x="335" y="833" width="190" height="44" rx="8" fill="#fff" stroke="#0969da" stroke-width="1.5" stroke-dasharray="6 4"/>
+<text x="430" y="860" font-size="13.5" fill="#0969da" text-anchor="middle">ask analysis</text>
 </g>
-<text x="430.0" y="1272" font-size="11.5" fill="#8c959f" text-anchor="middle">Main flow · 15/17 nodes · 15+1/27 edges · definition.v3.json</text>
+<g id="n-checkpoint_analysis"><rect x="335" y="911" width="190" height="44" rx="8" fill="#fff" stroke="#0969da" stroke-width="1.5" stroke-dasharray="6 4"/>
+<text x="430" y="938" font-size="13.5" fill="#0969da" text-anchor="middle">checkpoint analysis</text>
+</g>
+<g id="n-requirement_engineer"><rect x="335" y="989" width="190" height="44" rx="8" fill="#f6f8fa" stroke="#d0d7de" stroke-width="1.5" />
+<text x="430" y="1016" font-size="13.5" fill="#1f2328" text-anchor="middle">requirement engineer</text>
+</g>
+<g id="n-ask_spec"><rect x="335" y="1067" width="190" height="44" rx="8" fill="#fff" stroke="#0969da" stroke-width="1.5" stroke-dasharray="6 4"/>
+<text x="430" y="1094" font-size="13.5" fill="#0969da" text-anchor="middle">ask spec</text>
+</g>
+<g id="n-checkpoint_spec"><rect x="335" y="1145" width="190" height="44" rx="8" fill="#fff" stroke="#0969da" stroke-width="1.5" stroke-dasharray="6 4"/>
+<text x="430" y="1172" font-size="13.5" fill="#0969da" text-anchor="middle">checkpoint spec</text>
+</g>
+<g id="n-backlog_manager"><rect x="335" y="1223" width="190" height="44" rx="8" fill="#f6f8fa" stroke="#d0d7de" stroke-width="1.5" />
+<text x="430" y="1250" font-size="13.5" fill="#1f2328" text-anchor="middle">backlog manager</text>
+</g>
+<g id="n-validator"><rect x="335" y="1301" width="190" height="44" rx="8" fill="#f6f8fa" stroke="#d0d7de" stroke-width="1.5" />
+<text x="430" y="1328" font-size="13.5" fill="#1f2328" text-anchor="middle">validator</text>
+</g>
+<g id="n-__end__"><rect x="335" y="1379" width="190" height="44" rx="22.0" fill="#fff" stroke="#1a7f37" stroke-width="1.5" />
+<text x="430" y="1406" font-size="13.5" fill="#1a7f37" text-anchor="middle">END</text>
+</g>
+<text x="430.0" y="1480" font-size="11.5" fill="#8c959f" text-anchor="middle">Main flow · 22/22 nodes · 18+10/36 edges · definition.v2.json</text>
 </svg>

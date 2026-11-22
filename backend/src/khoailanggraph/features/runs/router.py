@@ -64,7 +64,7 @@ async def list_messages(
 ) -> Page[schemas.Message]:
     """The chat messages of a thread in the order they were sent: what the user wrote and the
     report of each step of the agents, with the artifacts and the items it refers to (§5)."""
-    await thread_service.get_thread_row(db, thread_id)
+    await thread_service.get_thread_row(db, thread_id, UUID(str(user.id)))
     rows = list(
         (
             await db.scalars(
@@ -177,7 +177,7 @@ async def send_message(
 ) -> Any:
     """201 {message, run}: the message starts a new run, or waits as `pending` in the run that
     is unfinished (§5). The run executes in the background; the stream follows it."""
-    thread = await thread_service.get_thread_row(db, thread_id)
+    thread = await thread_service.get_thread_row(db, thread_id, UUID(str(user.id)))
     key = request.headers.get("Idempotency-Key")
     scope = f"POST {request.url.path}"
     user_id = UUID(str(user.id))
@@ -207,7 +207,7 @@ async def create_run_shim(
     _origin: Annotated[None, Depends(deps.check_origin)],
 ) -> dict[str, str]:
     """Compat shim: {input} -> {run_id}, the wire the chat reads today."""
-    thread = await thread_service.get_thread_row(db, thread_id)
+    thread = await thread_service.get_thread_row(db, thread_id, UUID(str(user.id)))
     result = await _send(request, db, user, thread, MessageBody(content=body.input))
     return {"run_id": str(result["run"]["id"])}
 
@@ -221,6 +221,7 @@ async def list_runs(
     limit: Annotated[int, Query(ge=1, le=MAX_LIMIT)] = 50,
 ) -> Page[schemas.Run]:
     """The runs of one thread, newest first (§5)."""
+    await thread_service.get_thread_row(db, thread_id, UUID(str(user.id)))
     statement = (
         select(RunRow).where(RunRow.thread_id == thread_id).order_by(RunRow.created_at.desc())
     )
@@ -236,7 +237,7 @@ async def get_run(
     user: deps.CurrentUser,
     db: deps.DbSession,
 ) -> schemas.Run:
-    row = await service.get_run_row(db, run_id)
+    row = await service.get_run_row(db, run_id, UUID(str(user.id)))
     return service.runs_output(row)
 
 
@@ -249,7 +250,7 @@ async def get_run_steps(
     limit: Annotated[int, Query(ge=1, le=MAX_LIMIT)] = 50,
 ) -> Page[schemas.RunStep]:
     """Run steps in order, with usage and produced ItemRefs (§5)."""
-    await service.get_run_row(db, run_id)
+    await service.get_run_row(db, run_id, UUID(str(user.id)))
     statement = select(RunStepRow).where(RunStepRow.run_id == run_id).order_by(RunStepRow.sequence)
     statement = statement.offset(cursor).limit(limit + 1) if cursor else statement.limit(limit + 1)
     rows = list((await db.scalars(statement)).all())
@@ -272,7 +273,7 @@ async def stream_run_events(
     connection warm every 15 s; the stream closes itself after `done` and
     stays open (heartbeats only) while the run waits at an interrupt.
     """
-    await service.get_run_row(db, run_id)
+    await service.get_run_row(db, run_id, UUID(str(user.id)))
     # The stream reads with sessions of its own. This one goes back to the pool now, so that a
     # stream that is cancelled does not keep a connection checked out.
     await db.close()
@@ -342,7 +343,7 @@ async def list_directives(
     limit: Annotated[int, Query(ge=1, le=MAX_LIMIT)] = 50,
 ) -> Page[schemas.Directive]:
     """The directives of a run with their items, ordered by iteration: why the run looped."""
-    await service.get_run_row(db, run_id)
+    await service.get_run_row(db, run_id, UUID(str(user.id)))
     rows = list(
         (
             await db.scalars(
@@ -365,7 +366,7 @@ async def get_run_state(
     db: deps.DbSession,
 ) -> schemas.RunState:
     """The workflow state after the latest step that saved one (§5)."""
-    run = await service.get_run_row(db, run_id)
+    run = await service.get_run_row(db, run_id, UUID(str(user.id)))
     step = await db.scalar(
         select(RunStepRow)
         .where(RunStepRow.run_id == run_id, RunStepRow.state_json.is_not(None))
@@ -383,7 +384,7 @@ async def get_step_state(
     db: deps.DbSession,
 ) -> schemas.RunState:
     """The workflow state saved after one step: the starting point of a retry from the next."""
-    run = await service.get_run_row(db, run_id)
+    run = await service.get_run_row(db, run_id, UUID(str(user.id)))
     step = await db.get(RunStepRow, step_id)
     if step is None or step.run_id != run_id or step.state_json is None:
         raise ApiError(404, "not_found", "Not found", "No state was saved for this step.")
@@ -401,6 +402,7 @@ async def list_interrupts(
 ) -> Page[schemas.Interrupt]:
     """The interrupts of a run, the oldest first, each with the decision that resolved it;
     `?status=pending` gives the one the user must answer (§5)."""
+    await service.get_run_row(db, run_id, UUID(str(user.id)))
     statement = select(InterruptRow).where(InterruptRow.run_id == run_id)
     if status is not None:
         statement = statement.where(InterruptRow.status == status)
@@ -493,7 +495,7 @@ async def resume_run(
     stored = await idempotency.find_response(db, user_id, key, scope)
     if stored is not None:
         return JSONResponse(status_code=stored[0], content=stored[1])
-    run = await service.get_run_row(db, run_id)
+    run = await service.get_run_row(db, run_id, UUID(str(user.id)))
     if run.status != "interrupted":
         raise ApiError(
             409, "invalid_state", "Invalid state", "The run is not waiting for a review."
@@ -573,7 +575,7 @@ async def retry_run(
     stored = await idempotency.find_response(db, user_id, key, scope)
     if stored is not None:
         return JSONResponse(status_code=stored[0], content=stored[1])
-    run = await service.get_run_row(db, run_id)
+    run = await service.get_run_row(db, run_id, UUID(str(user.id)))
     if await service.project_has_active_run(db, run.project_id):
         raise ApiError(
             409,
@@ -590,7 +592,7 @@ async def retry_run(
             errors=[{"field": "from_step_id", "message": "Not a step of this run."}],
         )
     await service.ensure_budget(db, user)
-    thread = await thread_service.get_thread_row(db, run.thread_id)
+    thread = await thread_service.get_thread_row(db, run.thread_id, UUID(str(user.id)))
     project = cast("ProjectRow", await db.get(ProjectRow, run.project_id))
     resolved = await run_config.resolve_run_config(db, project, user_id)
     retry = RunRow(
@@ -628,7 +630,7 @@ async def cancel_run(
     """Stop an unfinished run (§5): the run becomes cancelled, a pending interrupt is cancelled
     with it and the stream sends `done`. A walk in progress stops at the end of its step; items
     already written stay. A finished run answers 409."""
-    row = await service.get_run_row(db, run_id)
+    row = await service.get_run_row(db, run_id, UUID(str(user.id)))
     if row.status in {"succeeded", "failed", "cancelled"}:
         raise ApiError(409, "invalid_state", "Invalid state", f"The run already {row.status}.")
     row.status = "cancelled"

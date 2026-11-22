@@ -36,7 +36,7 @@ async def upload_document(
     metadata and the server-extracted text, never the raw bytes, with a
     `Location` header on the created document.
     """
-    await get_project_row(db, project_id)
+    await get_project_row(db, project_id, UUID(str(user.id)))
     settings = request.app.state.settings
     limit = settings.max_upload_mb * 1024 * 1024
     payload = await file.read(limit + 1)
@@ -73,7 +73,7 @@ async def list_documents(
     limit: Annotated[int, Query(ge=1, le=MAX_LIMIT)] = 50,
 ) -> Page[schemas.Document]:
     """Documents of the project, newest first (API.md envelope)."""
-    await get_project_row(db, project_id)
+    await get_project_row(db, project_id, UUID(str(user.id)))
     documents, next_cursor = await service.list_documents(
         db, project_id, limit=limit, cursor=cursor
     )
@@ -91,7 +91,7 @@ async def get_document(
     document = await db.get(SourceDocumentRow, document_id)
     if document is None or document.deleted_at is not None:
         raise ApiError(404, "not_found", "Not found", "The document does not exist.")
-    await get_project_row(db, document.project_id)
+    await get_project_row(db, document.project_id, UUID(str(user.id)))
     return await service.document_detail(db, document_id, version_requested=version)
 
 
@@ -106,6 +106,6 @@ async def delete_document(
     document = await db.get(SourceDocumentRow, document_id)
     if document is None or document.deleted_at is not None:
         raise ApiError(404, "not_found", "Not found", "The document does not exist.")
-    await get_project_row(db, document.project_id)
+    await get_project_row(db, document.project_id, UUID(str(user.id)))
     await service.delete_document(db, document_id)
     return Response(status_code=204)

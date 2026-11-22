@@ -168,6 +168,14 @@ The backend does not resume a `running` run by itself after a restart. The step 
 5. **Budgets in an LLM gateway.** The application enforces the monthly budget of each user itself. When the product opens to users outside the team, the check can move to an LLM gateway between the API and the providers, which would also hold the provider keys and per-user rate limits. The rules of [README: usage and cost control](../../README.md#model-configuration) keep that move inside the model layer and the deployment.
 6. **A first message that is not clear enough.** Every first message starts a run today. The chosen direction, not designed yet: the planner goes to a checkpoint node `clarify_intent` without options when the intent is unclear, the user answers in the chat box, the answer resumes the run and the planner runs again. The message still starts the first run, so `initial_message_id` does not change, and the intent of the project is that message with its clarifying answers. A chat message that answers a question without options is then taken as the answer, which settles open point 2 for that case.
 
+## 8a. Limits this build accepts
+
+These are known and deliberate, not defects to discover:
+
+- **A cycle is looked for inside one link type.** `derived_from`, `depends_on` and `supersedes` are each checked on their own, so a loop that mixes two of them passes. A mixed loop cannot be walked by the views, which follow one link type at a time, so it harms nothing today.
+- **A retry puts the documents back, not the conversation.** `bring_back` restores artifacts and items and drops the links a replayed step wrote. Messages, directives, interrupts and the usage already spent stay as they were: the cost of a step is never refunded.
+- **The rate limit lives in the process.** The windows of `api/rate_limit.py` are held in memory, so a deployment with several API workers multiplies the configured limit by the number of workers. One process is the deployment this document assumes.
+
 ## 9. Review checklist
 
 - [ ] Every status transition has a trigger

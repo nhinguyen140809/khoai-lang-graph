@@ -19,6 +19,7 @@ from khoailanggraph.features.artifacts.models import (
     ArtifactItemRow,
     ArtifactRevisionRow,
     ArtifactRow,
+    TraceLinkRow,
 )
 from khoailanggraph.features.artifacts.service import bump_artifact, item_revision_row
 from khoailanggraph.features.runs.models import RunStepRow
@@ -59,6 +60,25 @@ def bring_back(session: Session, project_id: UUID, from_step: RunStepRow, by: Or
         target = next((rev for rev in revisions if rev.changed_step_id not in later), None)
         if target is not None and target.version != artifact.version:
             editing.restore_artifact(session, artifact.id, target.version, by)
+    _drop_links_of_later_steps(session, project_id, later)
+
+
+def _drop_links_of_later_steps(session: Session, project_id: UUID, later: set[UUID]) -> None:
+    """Remove the links that a replayed step wrote: they describe documents that were put back.
+
+    A link a later step removed is not brought back, because a row keeps no record of the step
+    that removed it; the coverage view reports the gap instead.
+    """
+    now = datetime.now(UTC)
+    for link in session.scalars(
+        select(TraceLinkRow).where(
+            TraceLinkRow.project_id == project_id,
+            TraceLinkRow.deleted_at.is_(None),
+            TraceLinkRow.created_by_step_id.in_(later),
+        )
+    ).all():
+        link.deleted_at = now
+    session.flush()
 
 
 def _delete_with_items(session: Session, artifact: ArtifactRow, by: Origin) -> None:

@@ -160,7 +160,12 @@ How the web app uses these keywords is described in [Architecture: web app](../a
 
 ## Where the schemas live in the code
 
-These files are the specification until the backend exists. After that the source is code, and the files are generated from it.
+**These files are the source.** The backend carries a copy of each one in
+`backend/src/khoailanggraph/domain/content_schemas/`, byte for byte, and
+`backend/scripts/sync_from_docs.py` copies them there after a change here; `tests/test_schema_parity.py`
+fails when the two differ, so the copy cannot drift. The Pydantic content models in `domain/` mirror
+these files and `tests/test_content_models.py` checks that they still describe the same fields — the
+models are code, and code is what the checks run against, but a change starts in the schema.
 
 The kinds a run may use, and the schema version of each, are chosen by the workflow definition version of the run, in its `artifact_kinds` and `item_kinds`, see [Workflow definitions](../workflow/README.md). A new kind, or a new version of a schema, becomes available to runs through a new definition version.
 

@@ -18,6 +18,7 @@ from khoailanggraph.agents.requirements_engineering.ports import (
     DirectiveItem,
     ItemRecord,
     LinkRecord,
+    StaleItemError,
 )
 from khoailanggraph.agents.requirements_engineering.state import ArtifactRef, ItemRef
 from khoailanggraph.domain import links as link_rules
@@ -324,9 +325,20 @@ class InMemoryArtifactSink:
         self._touched_items[str(entry["item_id"])] = None
         return self._item_ref(entry)
 
-    def update_item_content(self, item_id: str, content: dict[str, Any]) -> ItemRef:
+    def update_item_content(
+        self,
+        item_id: str,
+        content: dict[str, Any],
+        *,
+        reason: str = "user_edit",
+        by_user: bool = True,
+        expected_version: int | None = None,
+    ) -> ItemRef:
         for entry in self.items:
             if entry["item_id"] == item_id:
+                if expected_version is not None and entry["version"] != expected_version:
+                    msg = f"{entry['key']} is at version {entry['version']}, not {expected_version}"
+                    raise StaleItemError(msg)
                 merged = {**entry["content"], **content}
                 self._raise(
                     domain_rules.validate_content(

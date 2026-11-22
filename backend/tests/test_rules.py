@@ -77,6 +77,17 @@ def make_link(
     )
 
 
+VALID_ASSUMPTION: dict[str, Any] = {
+    "title": "One administrator vets every mentor",
+    "statement": "A single administrator reviews every mentor application.",
+    "reasoning": "Nobody described a review team.",
+    "impact_if_wrong": "Mentor onboarding would need a second reviewer.",
+    "impact": 5,
+    "validation_status": "unverified",
+    "validation_plan": "Ask the administrator who vets mentors today.",
+}
+
+
 @pytest.fixture
 def value_lists() -> dict[str, Any]:
     return wf.value_lists()
@@ -140,6 +151,26 @@ class TestValidateContent:
         violations = validate_content("persona", content, value_lists=value_lists, plan_values={})
 
         assert any(violation.rule == "plan values" for violation in violations)
+
+    def test_an_assumption_at_impact_4_or_5_says_how_it_is_confirmed(
+        self, value_lists: dict[str, Any]
+    ) -> None:
+        assert validate_content("assumption", VALID_ASSUMPTION, value_lists=value_lists) == []
+
+        for blank in ("", "   "):
+            content = {**VALID_ASSUMPTION, "validation_plan": blank}
+
+            violations = validate_content("assumption", content, value_lists=value_lists)
+
+            assert any(violation.rule == "assumption plan" for violation in violations)
+            assert any(violation.path == "validation_plan" for violation in violations)
+
+    def test_an_assumption_below_impact_4_may_have_no_plan(
+        self, value_lists: dict[str, Any]
+    ) -> None:
+        content = {**VALID_ASSUMPTION, "impact": 3, "validation_plan": ""}
+
+        assert validate_content("assumption", content, value_lists=value_lists) == []
 
 
 class TestPlacementRules:

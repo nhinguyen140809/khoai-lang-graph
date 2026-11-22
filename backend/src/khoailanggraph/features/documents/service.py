@@ -192,6 +192,8 @@ async def list_documents(
                     SourceDocumentRow.deleted_at.is_(None),
                 )
                 .order_by(SourceDocumentRow.created_at.desc())
+                .offset(cursor)
+                .limit(limit + 1)
             )
         ).all()
     )
@@ -206,11 +208,10 @@ async def list_documents(
             created_at=row.created_at,
             updated_at=row.updated_at,
         )
-        for row in rows
+        for row in rows[:limit]
     ]
-    window = views[cursor : cursor + limit]
-    next_cursor = cursor + len(window) if cursor + len(window) < len(views) else None
-    return window, next_cursor
+    next_cursor = cursor + limit if len(rows) > limit else None
+    return views, next_cursor
 
 
 async def delete_document(session: AsyncSession, document_id: UUID) -> None:

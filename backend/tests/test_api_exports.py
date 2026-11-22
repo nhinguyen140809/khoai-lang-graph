@@ -74,7 +74,7 @@ async def _download(client: AsyncClient, project_id: str, template: str, fmt: st
     created = await client.post(
         f"{API}/projects/{project_id}/exports", json={"template": template, "format": fmt}
     )
-    assert created.status_code == 202, created.text
+    assert created.status_code == 201, created.text
     file = await client.get(created.json()["download_url"])
     assert file.status_code == 200
     return file.text
@@ -92,7 +92,7 @@ async def test_a_requested_export_is_ready_with_the_exact_versions_it_holds(
     )
 
     body = response.json()
-    assert response.status_code == 202
+    assert response.status_code == 201
     assert response.headers["location"] == f"{API}/exports/{body['id']}"
     assert set(body) == {
         "id",

@@ -53,13 +53,13 @@ async def thread_view(session: AsyncSession, row: ThreadRow) -> schemas.ThreadSu
     )
 
 
-async def get_thread_row(session: AsyncSession, thread_id: UUID) -> ThreadRow:
-    """The thread row; 404 Problem carries a message the FE trusts."""
+async def get_thread_row(session: AsyncSession, thread_id: UUID, owner_id: UUID) -> ThreadRow:
+    """The thread row of this owner; a thread of another user answers like a missing one."""
     row = await session.get(ThreadRow, thread_id)
     if row is None or row.deleted_at is not None:
         raise ApiError(404, "not_found", "Not found", "The thread does not exist.")
     project = await session.get(ProjectRow, row.project_id)
-    if project is None or project.deleted_at is not None:
+    if project is None or project.deleted_at is not None or project.owner_id != owner_id:
         raise ApiError(404, "not_found", "Not found", "The thread does not exist.")
     return row
 
@@ -68,11 +68,12 @@ async def list_threads(
     session: AsyncSession,
     *,
     project_id: UUID,
+    owner_id: UUID,
     cursor: int,
     limit: int,
 ) -> tuple[list[schemas.ThreadSummary], int | None]:
     """The threads of a project, newest message first (API.md §5)."""
-    await get_project_row(session, project_id)
+    await get_project_row(session, project_id, owner_id)
     statement = (
         select(ThreadRow)
         .where(
@@ -92,11 +93,12 @@ async def create_thread(
     session: AsyncSession,
     *,
     project_id: UUID,
+    owner_id: UUID,
     created_by: UUID,
     title: str | None = None,
 ) -> ThreadRow:
     """The empty conversation the first message later fills (§5)."""
-    await get_project_row(session, project_id)
+    await get_project_row(session, project_id, owner_id)
     row = ThreadRow(
         project_id=project_id,
         created_by=created_by,

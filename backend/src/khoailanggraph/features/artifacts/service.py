@@ -25,6 +25,7 @@ from khoailanggraph.agents.requirements_engineering.ports import (
     ArtifactRecord,
     ItemRecord,
     LinkRecord,
+    StaleItemError,
 )
 from khoailanggraph.agents.requirements_engineering.state import ArtifactRef, ItemRef
 from khoailanggraph.api.errors import ApiError
@@ -61,8 +62,10 @@ if TYPE_CHECKING:
 
 
 REVISION_VERSION = 1
-# The notes of a node that the server keeps, and the longest a note may be.
-STEP_NOTE_KINDS = frozenset({"doing", "finding", "thinking", "tool"})
+# The kinds of note a step may keep. `thinking` is not one of them: no output model produces it,
+# because no provider returns a summary of its reasoning, so a note of that kind is dropped here
+# rather than kept with a value nothing writes.
+STEP_NOTE_KINDS = frozenset({"doing", "finding", "tool"})
 
 
 def utcnow() -> datetime:
@@ -681,24 +684,42 @@ class SqlArtifactSink:
     def _write_item_revision(self, entry: ArtifactItemRow, reason: str, by: Origin) -> None:
         self.session.add(item_revision_row(entry, reason, by))
 
-    def update_item_content(self, item_id: str, content: dict[str, Any]) -> ItemRef:
+    def update_item_content(
+        self,
+        item_id: str,
+        content: dict[str, Any],
+        *,
+        reason: str = "user_edit",
+        by_user: bool = True,
+        expected_version: int | None = None,
+    ) -> ItemRef:
+        """Change an item in place as a new version.
+
+        A node that rewrites the lifecycle fields of an item it wrote passes `by_user=False` and a
+        `reason` of its own, so the revision credits the agent and not the person reading. With
+        `expected_version`, a write whose item moved in the meantime is refused: another run of the
+        project wrote it, and the caller reads it again.
+        """
         entry = self.session.get(ArtifactItemRow, UUID(item_id))
         if entry is None:
             msg = f"no item {item_id}"
             raise KeyError(msg)
+        if expected_version is not None and entry.version != expected_version:
+            msg = f"{entry.key} is at version {entry.version}, not {expected_version}"
+            raise StaleItemError(msg)
         merged = {**_loads(entry.content_json), **content}
         self._raise(
             domain_rules.validate_content(str(entry.kind), merged, value_lists=wf.value_lists())
         )
-        by = self._origin(by_user=True)
+        by = self._origin(by_user=by_user)
         entry.content_json = _dumps(merged)
         entry.version += 1
         origins.write(entry, "updated", by)
         entry.updated_at = utcnow()
         self.session.flush()
-        self._write_item_revision(entry, "user_edit", by)
+        self._write_item_revision(entry, reason, by)
         artifact = self._artifact_row(str(entry.artifact_id))
-        bump_artifact(self.session, artifact, "user_edit", by)
+        bump_artifact(self.session, artifact, reason, by)
         self.emit(
             "artifact_delta",
             {
@@ -1069,6 +1090,8 @@ async def list_project_artifacts(
                 select(ArtifactRow)
                 .where(*conditions)
                 .order_by(ArtifactRow.created_at, ArtifactRow.id)
+                .offset(cursor)
+                .limit(limit + 1)
             )
         ).all()
     )
@@ -1086,10 +1109,9 @@ async def list_project_artifacts(
         .tuples()
         .all()
     )
-    views = [artifact_view(row, int(counts.get(row.id, 0))) for row in rows]
-    window = views[cursor : cursor + limit]
-    next_cursor = cursor + len(window) if cursor + len(window) < len(views) else None
-    return window, next_cursor
+    views = [artifact_view(row, int(counts.get(row.id, 0))) for row in rows[:limit]]
+    next_cursor = cursor + limit if len(rows) > limit else None
+    return views, next_cursor
 
 
 async def _live_links(
