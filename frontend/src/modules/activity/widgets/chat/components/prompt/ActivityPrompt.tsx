@@ -10,10 +10,13 @@ import {
 } from '@/modules/activity/features/choose-run-settings'
 import { isUnfinishedRunStatus, type Run } from '@/modules/run/entities'
 import { StopRunButton } from '@/modules/run/features/stop'
+import { AttachedSources, PickSourceItem, useUploadSources } from '@/modules/source/features/upload'
 import type { Thread } from '@/modules/thread/entities'
 import { useSendMessage } from '@/modules/thread/features/send-message'
 import { dictationProblemMessage } from '@/shared/components/dictation'
 import {
+  PromptAddMenu,
+  PromptAttachments,
   PromptBar,
   PromptBarEnd,
   PromptBox,
@@ -57,7 +60,7 @@ const footers: Record<
   }),
 }
 
-/** The prompt of the chat: it joins Send with the settings of the run the next message starts. */
+/** The prompt of the chat: it joins Send with the settings of the run the next message starts, and its plus uploads sources to the project. */
 export function ActivityPrompt({
   projectId,
   thread,
@@ -83,6 +86,8 @@ export function ActivityPrompt({
   const chosen = useChosenRunSettings(thread?.id ?? null)
   const clearChosen = useClearChosenRunSettings()
   const { send, isPending } = useSendMessage({ projectId, thread })
+  // Kept here, not in the menu, so that an upload goes on after the menu has closed.
+  const upload = useUploadSources(projectId)
   const isBlank = !hasText(text)
   const isStoppable = run !== null && isUnfinishedRunStatus(run.status)
 
@@ -115,6 +120,10 @@ export function ActivityPrompt({
         }}
       >
         <PromptBox behind={<PromptListeningGlow />}>
+          {/* The files show while they go up, so that the wait has something to look at. */}
+          <PromptAttachments isPresent={upload.isPending}>
+            <AttachedSources files={upload.variables ?? []} state="uploading" />
+          </PromptAttachments>
           <PromptTextarea placeholder={activityChatMessages.prompt.placeholder} />
           <PromptBar>
             <PromptBarEnd>
@@ -129,6 +138,9 @@ export function ActivityPrompt({
         <PromptFooter>
           <PromptFooterStart>{footerStart}</PromptFooterStart>
           <PromptFooterEnd>
+            <PromptAddMenu>
+              <PickSourceItem onPick={upload.mutate} />
+            </PromptAddMenu>
             <PromptDictation />
             {footerEnd}
           </PromptFooterEnd>
