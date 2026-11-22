@@ -41,6 +41,7 @@ const environmentOwners = [
   'src/shared/lib/viewport/hooks/usePrefersReducedMotion.ts',
   'src/shared/lib/hotkey/hooks/useModifierKeyName.ts',
   'src/shared/lib/hotkey/hooks/useHotkey.ts',
+  'src/shared/lib/unload/hooks/useBeforeUnload.ts',
   'src/shared/lib/clipboard/hooks/useClipboard.ts',
   'src/shared/components/frame/commands/hooks/useCommands.ts',
   'src/shared/components/frame/hooks/useKeepOnDoubleClick.ts',
