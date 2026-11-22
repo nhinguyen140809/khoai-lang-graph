@@ -14,11 +14,17 @@ interface AnimatedSizeProps extends Omit<React.ComponentProps<'div'>, 'style'> {
   contentClassName?: string | undefined
   /** How long the box takes to move to a new size, in milliseconds. */
   duration?: number
+  /**
+   * Which sizes it follows: both by default; `height` leaves the width to the place around it, so
+   * that the box still takes the width it is given, and the children take that width and are
+   * measured at it.
+   */
+  axis?: 'both' | 'height'
 }
 
 /**
  * A box that grows and shrinks to what it holds instead of jumping, whatever changes the size
- * of its children: another layout, content that loads, a longer text. It follows the size of the
+ * of its children (the height only, with `axis="height"`): another layout, content that loads, a longer text. It follows the size of the
  * children and moves its own width and height to it, so the change runs over a short time. A
  * length that is `auto` cannot be animated, which is why the size is a measured number. It
  * clips what overflows while it moves, and it takes its size from the children at once on the
@@ -28,6 +34,7 @@ function AnimatedSize({
   className,
   contentClassName,
   duration = motionMs,
+  axis = 'both',
   children,
   ...props
 }: AnimatedSizeProps) {
@@ -38,7 +45,8 @@ function AnimatedSize({
       data-slot="animated-size"
       style={{
         transitionDuration: `${String(duration)}ms`,
-        ...(size && { width: size.width, height: size.height }),
+        ...(size && axis === 'both' && { width: size.width, height: size.height }),
+        ...(size && axis === 'height' && { height: size.height }),
       }}
       className={cn(
         'max-w-full overflow-hidden transition-size motion-reduce:transition-none',
@@ -46,7 +54,7 @@ function AnimatedSize({
       )}
       {...props}
     >
-      <div ref={ref} className={cn('w-max', contentClassName)}>
+      <div ref={ref} className={cn(axis === 'both' ? 'w-max' : 'w-full', contentClassName)}>
         {children}
       </div>
     </div>

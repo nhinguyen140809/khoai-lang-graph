@@ -44,6 +44,7 @@ export {
   ZipFileIcon,
 } from './icon'
 export { Loop, LoopStep } from './loop-step/LoopStep'
+export { usePresence } from './presence/hooks/usePresence'
 export { Presence } from './presence/Presence'
 export { Reveal } from './reveal/Reveal'
 export { Rings } from './rings/Rings'
