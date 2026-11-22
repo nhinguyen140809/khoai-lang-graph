@@ -47,6 +47,8 @@ const environmentOwners = [
   'src/shared/lib/cookies/browser-cookies.utils.ts',
   'src/shared/lib/files/download.utils.ts',
   'src/shared/lib/files/file-pick.utils.ts',
+  'src/shared/lib/speech/speech-recognition.utils.ts',
+  'src/shared/lib/speech/voice-meter.utils.ts',
   'src/shared/lib/storage/browser-storage.utils.ts',
   'src/shared/lib/title/hooks/usePageTitle.ts',
   'src/shared/lib/url/reload.utils.ts',
