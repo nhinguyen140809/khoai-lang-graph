@@ -38,13 +38,13 @@ export function DeskBar({ leading, divider, center, trailing }: DeskBarProps) {
     <header className="flex h-12 min-w-0 flex-1 items-center gap-2">
       {leading}
       {items[DeskBarSide.Left].length > 0 && divider}
-      <Stack direction="row" gap="1" className="min-w-0 flex-1 overflow-hidden">
+      <Stack direction="row" gap="2" className="min-w-0 flex-1 overflow-hidden">
         <BarItems items={items[DeskBarSide.Left]} />
       </Stack>
       {center}
       <Stack
         direction="row"
-        gap="1"
+        gap="2"
         className={cn('shrink-0', center !== undefined && 'flex-1 justify-end')}
       >
         <BarItems items={items[DeskBarSide.Right]} />
