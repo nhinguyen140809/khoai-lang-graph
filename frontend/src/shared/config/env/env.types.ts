@@ -12,4 +12,6 @@ export const envSchema = z.object({
   NEXT_PUBLIC_API_MOCKING: z.enum(['enabled', 'disabled']).optional(),
   /** The arrangement of the desk of the user view, for a developer who looks at one; the default when unset. */
   NEXT_PUBLIC_DESK_LAYOUT: z.enum(deskLayouts).optional(),
+  /** The address of the live link of the tool that builds the animation files (`ws://localhost:9640`), for a developer who edits one: the faces show each file as it is built, without a build of the file in `public/`. */
+  NEXT_PUBLIC_ANIMATION_LIVE_LINK: z.string().optional(),
 })

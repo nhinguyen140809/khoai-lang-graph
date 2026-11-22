@@ -1,1 +1,1 @@
-export { env, isMockingEnabled, isProduction } from './env.config'
+export { animationLiveLink, env, isMockingEnabled, isProduction } from './env.config'
