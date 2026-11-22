@@ -3,6 +3,7 @@
 import { type ReactNode, useState } from 'react'
 
 import { NewProjectDialog, NewProjectPrompt } from '@/modules/project/features/create'
+import { AttachedSourcesTray, AttachSourceMenu } from '@/modules/source/features/upload'
 import { GlowStage } from '@/shared/components/animation'
 
 interface ProjectStartPageProps {
@@ -31,6 +32,8 @@ export function ProjectStartPage({ projects }: ProjectStartPageProps) {
             onStart={(idea) => {
               setNewProject({ open: true, idea })
             }}
+            aboveText={<AttachedSourcesTray />}
+            footerEnd={<AttachSourceMenu />}
           />
         </div>
         {projects !== undefined && (

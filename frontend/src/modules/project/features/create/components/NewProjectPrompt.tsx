@@ -1,6 +1,6 @@
 'use client'
 
-import { useId, useRef } from 'react'
+import { type ReactNode, useId, useRef } from 'react'
 import { toast } from 'sonner'
 
 import { Reveal, TypedText, typedTextMs } from '@/shared/components/animation'
@@ -26,14 +26,19 @@ import { createProjectMessages, newProjectDraftName } from '../new-project.const
 interface NewProjectPromptProps {
   /** Starts a project from the idea, trimmed. */
   onStart: (idea: string) => void
+  /** Parts of the prompt that the place puts above the text in its box, such as the files chosen. */
+  aboveText?: ReactNode
+  /** Parts of the prompt that the place puts in the row under the box, before the dictation, such as a menu to add to the idea. */
+  footerEnd?: ReactNode
 }
 
 /**
  * The prompt that starts a project from an idea: Enter, or the arrow once the prompt has text,
  * sends the idea, and Shift+Enter adds a line. It takes the focus when a command that starts a
- * project asks for it.
+ * project asks for it. What a place adds to it comes as parts, put where they belong, so that a new
+ * one changes the place and not this prompt.
  */
-export function NewProjectPrompt({ onStart }: NewProjectPromptProps) {
+export function NewProjectPrompt({ onStart, aboveText, footerEnd }: NewProjectPromptProps) {
   const id = useId()
   const inputRef = useRef<HTMLTextAreaElement>(null)
   // The idea is kept as it is written, so that it is there again when the page loads.
@@ -64,6 +69,7 @@ export function NewProjectPrompt({ onStart }: NewProjectPromptProps) {
             }}
           >
             <PromptBox behind={<PromptListeningGlow />}>
+              {aboveText}
               <PromptTextarea placeholder="Describe the idea, who it is for and the problem it solves" />
               <PromptBar>
                 <PromptBarEnd>
@@ -73,6 +79,7 @@ export function NewProjectPrompt({ onStart }: NewProjectPromptProps) {
             </PromptBox>
             <PromptFooter>
               <PromptFooterEnd>
+                {footerEnd}
                 <PromptDictation />
               </PromptFooterEnd>
             </PromptFooter>

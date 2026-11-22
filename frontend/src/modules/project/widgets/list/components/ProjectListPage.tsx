@@ -10,6 +10,7 @@ import {
   useProjectFilterFields,
 } from '@/modules/project/entities'
 import { NewProjectDialog, NewProjectPrompt } from '@/modules/project/features/create'
+import { AttachedSourcesTray, AttachSourceMenu } from '@/modules/source/features/upload'
 import { GlowStage } from '@/shared/components/animation'
 import { FilterMenu, useFilters } from '@/shared/components/filter'
 import { LoadingState } from '@/shared/components/state'
@@ -36,6 +37,8 @@ export function ProjectListPage() {
             onStart={(idea) => {
               setNewProject({ open: true, idea })
             }}
+            aboveText={<AttachedSourcesTray />}
+            footerEnd={<AttachSourceMenu />}
           />
           {/* The filters are read from the address, which is known in the browser only. */}
           <Suspense fallback={<ListFallback />}>
