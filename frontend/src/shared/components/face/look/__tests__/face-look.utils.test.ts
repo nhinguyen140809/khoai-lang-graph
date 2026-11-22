@@ -14,6 +14,7 @@ import {
 } from '../face-look.constants'
 import { blobShapes, eyeGaps, faceShapes } from '../face-look.types'
 import { faceOf } from '../face-look.utils'
+import { facePresets } from '../face-preset.constants'
 
 const roles = [
   'planner',
@@ -172,5 +173,29 @@ describe('faceOf with shapes given', () => {
     )
 
     expect(used).toEqual(new Set(faceShapes))
+  })
+})
+
+describe('faceOf with faces made by hand', () => {
+  const rules = { ...defaultFaceRules, presets: facePresets }
+
+  it('gives the face at the place of an agent in its workflow, so that no two of them share one', () => {
+    const looks = facePresets.map((_, place) => faceOf('same-key', rules, place))
+
+    expect(new Set(looks.map((look) => JSON.stringify({ ...look, phase: 0 }))).size).toBe(
+      facePresets.length,
+    )
+  })
+
+  it('goes round when there are more agents than faces', () => {
+    expect(faceOf('a', rules, facePresets.length).shape).toBe(faceOf('a', rules, 0).shape)
+  })
+
+  it('takes the face its key hashes to when the agent has no place, the same one each time', () => {
+    expect(faceOf('persona_agent', rules)).toEqual(faceOf('persona_agent', rules))
+  })
+
+  it('keeps the phase of each agent its own, so that two agents with one face do not blink together', () => {
+    expect(faceOf('a', rules, 0).phase).not.toBe(faceOf('b', rules, 0).phase)
   })
 })

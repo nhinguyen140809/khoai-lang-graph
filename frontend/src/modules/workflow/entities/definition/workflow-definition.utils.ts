@@ -19,6 +19,11 @@ export function edgesFrom(definition: WorkflowDefinition, nodeId: string): Workf
   return definition.edges.filter(({ source }) => source === nodeId)
 }
 
+/** The keys of the agent roles of a definition, in the order that the workflow lists them. */
+export function agentRoleKeys(definition: WorkflowDefinition): readonly string[] {
+  return definition.agent_roles.map(({ key }) => key)
+}
+
 /** The label of each agent role of a definition, by its key. */
 export function agentRoleLabels(definition: WorkflowDefinition): Map<string, string> {
   return indexBy(

@@ -81,11 +81,11 @@ export function FaceCard() {
           </ToggleGroup>
         </div>
       </SampleGroup>
-      <SampleGroup label="The agents of the workflow, idle">
+      <SampleGroup label="The agents of the workflow, each with the face at its place, idle">
         <div className="grid grid-cols-2 gap-x-4 gap-y-3 sm:grid-cols-3">
-          {workflowAgents.map((agent) => (
+          {workflowAgents.map((agent, place) => (
             <div key={agent} className="flex items-center gap-2">
-              <Face seed={agent} />
+              <Face seed={agent} place={place} />
               <SampleLabel>{agent}</SampleLabel>
             </div>
           ))}

@@ -30,9 +30,17 @@ import { blobMotionClasses } from './motion/face-motion.constants'
  * face, so the face is hidden from assistive technology. It stands still when the user asked for
  * less motion.
  */
-export function PlainFace({ seed, mood = 'idle', drive, size = 'default', className }: FaceProps) {
+export function PlainFace({
+  seed,
+  place,
+  mood = 'idle',
+  drive,
+  size = 'default',
+  className,
+}: FaceProps) {
   const { look, ref, isInView, isRested, parts, gaze, poseStyle, bodyStyle } = useFace({
     seed,
+    place,
     mood,
     drive,
   })

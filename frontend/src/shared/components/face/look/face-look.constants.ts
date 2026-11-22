@@ -1,6 +1,7 @@
 import { paletteColors } from '@/shared/lib/palette'
 
 import { type FaceRules, faceShapes } from './face-look.types'
+import { facePresets } from './face-preset.constants'
 
 /**
  * How many places apart, around the color wheel, the two colors of a face are at least. Neighbors
@@ -68,3 +69,6 @@ export const defaultFaceRules: FaceRules = {
   blobLayouts,
   blobSpotTurn,
 }
+
+/** The rules that the faces of the interface follow: the faces made by hand, which an agent takes by its place in the workflow. The other rules are for faces that are not made by hand. */
+export const presetFaceRules: FaceRules = { ...defaultFaceRules, presets: facePresets }

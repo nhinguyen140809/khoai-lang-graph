@@ -15,6 +15,7 @@ import { gazeLooks } from '../motion/face-motion.constants'
 import { useFaceMotion } from '../motion/hooks/useFaceMotion'
 import { useGaze } from '../motion/hooks/useGaze'
 import { useFaceParts } from './useFaceParts'
+import { useFacePlace } from './useFacePlace'
 import { useFaceRules } from './useFaceRules'
 
 /**
@@ -25,10 +26,11 @@ import { useFaceRules } from './useFaceRules'
  */
 export function useFace({
   seed,
+  place,
   mood = 'idle',
   drive,
-}: Pick<FaceProps, 'seed' | 'mood' | 'drive'>) {
-  const look: FaceLook = faceOf(seed, useFaceRules())
+}: Pick<FaceProps, 'seed' | 'place' | 'mood' | 'drive'>) {
+  const look: FaceLook = faceOf(seed, useFaceRules(), useFacePlace(seed, place))
   const ref: RefObject<HTMLSpanElement | null> = useRef<HTMLSpanElement>(null)
   const isInView = useIsInView(ref)
   const restingMood = isRestingMood(mood) ? mood : null

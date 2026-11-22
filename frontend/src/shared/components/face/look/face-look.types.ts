@@ -92,4 +92,9 @@ export interface FaceRules {
   blobLayouts: readonly [BlobLayout, ...BlobLayout[]]
   /** How far the second blob may turn from the exact opposite of the first, in radians. */
   blobSpotTurn: number
+  /** The faces made by hand: when there are any, an agent takes one of them, and the rest of the rules are not used. */
+  presets?: readonly FacePreset[]
 }
+
+/** A face made by hand: everything of a look except the phase, which each agent has of its own. */
+export type FacePreset = Omit<FaceLook, 'phase'>

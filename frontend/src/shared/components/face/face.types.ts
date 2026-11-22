@@ -135,6 +135,8 @@ export interface GazeTiming {
 export interface FaceProps {
   /** What the face comes from, such as the key of an agent: its outline and its colors come from it alone. */
   seed: string
+  /** The place of the agent in its workflow: with it, the face is the one made by hand at that place, so that no two agents of a workflow share a face; without it, the seed picks one. */
+  place?: number | undefined
   /** What it is doing or feeling; idle by default. A change of mood is covered by a blink. */
   mood?: Mood
   /** What steers the look and the move of the face from outside, such as the acts around it; the mood stays its own. */

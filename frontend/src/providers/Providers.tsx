@@ -6,6 +6,7 @@ import type { ReactNode } from 'react'
 import { Toaster } from '@/shared/components/ui/sonner'
 import { TooltipProvider } from '@/shared/components/ui/tooltip'
 
+import { FacePlacesFromWorkflow } from './FacePlacesFromWorkflow'
 import { MockingProvider } from './MockingProvider'
 import { QueryProvider } from './QueryProvider'
 
@@ -23,10 +24,12 @@ export function Providers({ children }: ProvidersProps) {
     <ThemeProvider attribute="class" defaultTheme="dark" enableSystem>
       <MockingProvider>
         <QueryProvider>
-          <TooltipProvider>
-            {children}
-            <Toaster />
-          </TooltipProvider>
+          <FacePlacesFromWorkflow>
+            <TooltipProvider>
+              {children}
+              <Toaster />
+            </TooltipProvider>
+          </FacePlacesFromWorkflow>
         </QueryProvider>
       </MockingProvider>
     </ThemeProvider>

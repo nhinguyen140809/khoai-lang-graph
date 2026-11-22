@@ -9,6 +9,7 @@ import {
   eyeGaps,
   type FaceBlob,
   type FaceLook,
+  type FacePreset,
   type FaceRules,
   type FaceShape,
 } from './face-look.types'
@@ -107,14 +108,28 @@ function blobOf(next: () => number): FaceBlob {
   return { shape: pick(blobShapes, next), turn: Math.round(next() * 180) }
 }
 
+/** The face made by hand at a place in the list of presets (round and round when there are fewer than places), with the phase of the agent. */
+function presetOf(presets: readonly FacePreset[], place: number, phase: number): FaceLook {
+  const preset = presets[place % presets.length]
+  if (preset === undefined) throw new Error('No preset to take')
+  return { ...preset, phase }
+}
+
 /**
  * The face of a seed, such as the key of an agent: the colors and the places of its blobs, the shape
  * of its outline and how far apart its eyes are, within the rules given (the default ones otherwise). The
  * agents are named by the workflow, so nothing is drawn by hand for a name; any seed gives a face,
- * the same one each time for the same rules.
+ * the same one each time for the same rules. With presets in the rules, an agent that has a `place`
+ * (its place in the workflow) takes the preset at that place, so that no two agents of a workflow share a face; one without takes the preset its seed hashes to.
  */
-export function faceOf(seed: string, rules: FaceRules = defaultFaceRules): FaceLook {
+export function faceOf(
+  seed: string,
+  rules: FaceRules = defaultFaceRules,
+  place?: number,
+): FaceLook {
   const next = streamOf(stirred(hashOf(seed)))
+  const presets = rules.presets ?? []
+  if (presets.length > 0) return presetOf(presets, place ?? stirred(hashOf(seed)), next())
   const shape: FaceShape = pick(rules.shapes, next)
   const gap: EyeGap = pick(eyeGaps, next)
   const { apart, ...colors } = colorsOf(rules, next)
