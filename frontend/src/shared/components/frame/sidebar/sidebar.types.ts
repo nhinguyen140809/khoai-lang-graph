@@ -16,5 +16,8 @@ export interface SidebarWidths {
 /** The side list while its edge is dragged: open at a width, or folded to its rail. */
 export type SidebarSize = { open: true; width: number } | { open: false }
 
-/** How the side list shows: open, with its names, or folded to its rail of icons. */
+/**
+ * How the side list shows: open, with its names, or folded to its rail of icons.
+ * @view user
+ */
 export type SidebarLayout = 'expanded' | 'rail'

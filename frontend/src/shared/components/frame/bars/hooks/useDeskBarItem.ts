@@ -12,6 +12,7 @@ import type { DeskBarItem } from '../desk-bar.types'
  * item leaves with the page that placed it, as an item of the status bar does. The item takes a
  * new `content` on each render of the caller; keep it in `useMemo` when it depends on a few values
  * only.
+ * @view user
  */
 export function useDeskBarItem({ side, order = 0, content }: DeskBarItem) {
   const item = useMemo(() => ({ side, order, content }), [side, order, content])

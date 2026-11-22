@@ -21,6 +21,7 @@ const tabStatuses: readonly ProjectStatus[] = ['active', 'archived']
  * and Archived at the left, with the search and the button that starts a project at the right,
  * then the projects of the tab on show that match the search, the latest activity first, a page at
  * a time. A row links to the chat of its project and has the menu of its actions.
+ * @view user
  */
 export function ProjectRecentsPage() {
   const headingId = useId()

@@ -43,6 +43,7 @@ interface ProjectSwitcherProps {
  * The name of the open project in the top bar, with a menu to switch to a recent project, and last
  * to rename the open one, in the dialog of `ProjectDialogs`. A project that fails to load again
  * keeps the name it had.
+ * @view developer
  */
 export function ProjectSwitcher({ projectId }: ProjectSwitcherProps) {
   const project = useProject(projectId)

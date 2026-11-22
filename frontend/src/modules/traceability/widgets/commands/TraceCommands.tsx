@@ -13,6 +13,7 @@ const GROUP = 'Trace'
  * Registers the commands of Trace: the one that shows its start page, and the one that shows the
  * open issues of the project. A command that links two items needs the item it starts from,
  * which the palette cannot know, so the pages and menus hold that action instead.
+ * @view developer
  */
 export function TraceCommands({ projectId }: { projectId: string }) {
   const openPage = useOpenPage()

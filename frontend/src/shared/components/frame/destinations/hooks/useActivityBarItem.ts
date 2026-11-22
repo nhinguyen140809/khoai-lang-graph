@@ -12,6 +12,7 @@ import type { ActivityBarItem } from '../destination.types'
  * `useStatusBarItem` does for the status bar: what is on the activity bar of every screen, such as
  * the account menu, registers once instead of passing through every frame. The item takes a new
  * `content` on each render of the caller; keep it in `useMemo`.
+ * @view developer
  */
 export function useActivityBarItem({ order = 0, content }: ActivityBarItem) {
   const item = useMemo(() => ({ order, content }), [order, content])

@@ -63,6 +63,7 @@ function DocumentBody({
 /**
  * The page of one document, in a tab of its own: the tab is titled with the document and shows
  * the sign of a review while the document waits for the review of the user.
+ * @view developer
  */
 export function DocumentPage({ projectId, artifactId }: { projectId: string; artifactId: string }) {
   const project = routes.project(projectId)

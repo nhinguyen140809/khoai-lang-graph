@@ -17,6 +17,7 @@ interface SidebarActionItemProps {
 /**
  * A row of a `SidebarMenu` that does an action, such as starting new work: its icon and its label,
  * and on the rail of a folded side list its icon alone, with the label as its tooltip.
+ * @view user
  */
 export function SidebarActionItem({ label, onClick, className, children }: SidebarActionItemProps) {
   return (

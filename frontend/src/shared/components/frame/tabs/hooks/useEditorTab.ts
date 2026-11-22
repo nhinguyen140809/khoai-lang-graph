@@ -18,6 +18,7 @@ import { useTabGroup } from './useTabGroup'
  *
  * A page that shows a state of its own while it loads or fails opens its tab at once with a stand-in
  * title and sets `isTitleProvisional`: a tab that is already open keeps the title it has.
+ * @view developer
  */
 export function useEditorTab(
   tab: EditorTab | null,

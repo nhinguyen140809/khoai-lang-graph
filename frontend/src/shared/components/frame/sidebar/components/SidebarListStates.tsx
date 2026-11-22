@@ -11,7 +11,10 @@ interface SidebarRetryItemProps {
   onRetry: () => void
 }
 
-/** A list of the side list that failed to load: one row, which loads it again. */
+/**
+ * A list of the side list that failed to load: one row, which loads it again.
+ * @view user
+ */
 export function SidebarRetryItem({ label, onRetry }: SidebarRetryItemProps) {
   return (
     <SidebarMenu>
@@ -25,7 +28,10 @@ export function SidebarRetryItem({ label, onRetry }: SidebarRetryItemProps) {
   )
 }
 
-/** A line of quiet text in the side list, such as what a list without an item says. */
+/**
+ * A line of quiet text in the side list, such as what a list without an item says.
+ * @view user
+ */
 export function SidebarNote({ children }: { children: ReactNode }) {
   return <p className="px-2 py-1.5 text-sm text-muted-foreground">{children}</p>
 }

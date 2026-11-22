@@ -17,6 +17,7 @@ interface BottomPanelSectionsProps {
  * shows first. The row ends with the actions of the section shown. A section that another one
  * replaces on screen is hidden, not unmounted, so it keeps its state, such as where it was scrolled
  * to.
+ * @view developer
  */
 export function BottomPanelSections({ sections, controls }: BottomPanelSectionsProps) {
   const [selected, setSelected] = useState(sections[0]?.id)

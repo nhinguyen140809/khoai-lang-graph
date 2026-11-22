@@ -55,6 +55,7 @@ interface ProjectSidebarProps {
  * the chat of its project, marks the one on show, shows a mark at the end of its row only when it
  * asks for the user, works or has news, and has a menu that renames, archives, or deletes it in the dialogs of
  * `ProjectDialogs`.
+ * @view user
  */
 export function ProjectSidebar({ footer }: ProjectSidebarProps) {
   const openProjectPrompt = useOpenProjectPrompt()

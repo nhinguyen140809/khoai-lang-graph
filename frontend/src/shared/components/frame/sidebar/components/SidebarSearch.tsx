@@ -18,6 +18,7 @@ interface SidebarSearchProps {
  * The search of the side list, a row of a `SidebarMenu` that opens the command palette, as its
  * hotkey does, with the keys of the hotkey at its end. On the rail of a folded side list it is the
  * icon alone, with the label as its tooltip.
+ * @view user
  */
 export function SidebarSearch({ label }: SidebarSearchProps) {
   const { setOpen } = useCommandPalette()

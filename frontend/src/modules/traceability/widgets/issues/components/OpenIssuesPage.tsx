@@ -32,6 +32,7 @@ import { openIssuesMessages } from '../open-issues.constants'
  * The open issues of the project, one section per kind with its count and one card per issue:
  * the problem, where it applies with the words it quotes, the people a disagreement involves,
  * and the ways to open the issue or to see the trace of one of its items.
+ * @view developer
  */
 export function OpenIssuesPage({ projectId }: { projectId: string }) {
   const isWriting = useIsProjectWriting(projectId)

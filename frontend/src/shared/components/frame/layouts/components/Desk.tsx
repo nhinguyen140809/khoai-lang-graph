@@ -40,6 +40,7 @@ interface DeskProps {
  * (`useResizableSidebar`); folded, the button keeps its place at the top left. On a phone the side
  * list is never a rail: it opens over the page from a button at the top left of the page. The desk names no object of the product: what
  * the side list holds, the items of the bar and the dialogs come from the modules.
+ * @view user
  */
 export function Desk({ sidebar, homeHref, contributions, children }: DeskProps) {
   const { isOpen, setOpen, width, isResizing, edgeProps } = useResizableSidebar()

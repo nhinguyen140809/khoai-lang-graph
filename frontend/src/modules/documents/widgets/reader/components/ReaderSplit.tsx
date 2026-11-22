@@ -39,6 +39,7 @@ interface ReaderSplitProps {
  * opens beside the chat, which stays in use: the two share the width, and the handle between them
  * resizes them. On a narrow screen the reader opens in a sheet over the chat. What the reader
  * shows is in the query of the page, so that Back closes it.
+ * @view user
  */
 export function ReaderSplit({ projectId, children }: ReaderSplitProps) {
   const reader = useReaderView()

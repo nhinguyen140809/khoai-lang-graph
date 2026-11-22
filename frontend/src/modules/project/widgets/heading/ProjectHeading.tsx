@@ -21,6 +21,7 @@ import { projectHeadingMessages } from './project-heading.constants'
  * button, which opens the menu of the project: Rename, Archive or Restore, and Delete, in the
  * dialogs of `ProjectDialogs`. The menu offers no other project, since the side list holds them; a
  * project that failed to load offers to load it again.
+ * @view user
  */
 export function ProjectHeading({ projectId }: { projectId: string }) {
   const project = useProject(projectId)

@@ -1,6 +1,9 @@
 import type { ReactNode } from 'react'
 
-/** The sides of the bar of the desk, which hold the items registered with `useDeskBarItem`. */
+/**
+ * The sides of the bar of the desk, which hold the items registered with `useDeskBarItem`.
+ * @view user
+ */
 export const DeskBarSide = {
   /** What the page is about, such as the name of the open project and its menu. */
   Left: 'left',

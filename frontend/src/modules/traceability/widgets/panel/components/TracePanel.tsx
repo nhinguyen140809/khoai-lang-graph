@@ -13,6 +13,7 @@ import { TraceTreeSection } from './TraceTree'
  * The side panel of Trace, in two sections: an overview of what needs attention, one row per gap
  * of the coverage and one for the open issues, and the documents of the project with their items,
  * where choosing an item opens its chain. While the agents write, both reload every few seconds.
+ * @view developer
  */
 export function TracePanel({ projectId }: { projectId: string }) {
   const isWriting = useIsProjectWriting(projectId)

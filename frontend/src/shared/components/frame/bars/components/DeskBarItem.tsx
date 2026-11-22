@@ -17,6 +17,7 @@ interface DeskBarItemProps {
  * Shows its children in the bar at the top of the desk while it is mounted, and renders nothing
  * in place: the layout of a page, a Server Component that cannot call `useDeskBarItem`, places the
  * items of its bar with it.
+ * @view user
  */
 export function DeskBarItem({ side, order, children }: DeskBarItemProps) {
   useDeskBarItem({ side, order, content: children })

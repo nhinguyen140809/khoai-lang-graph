@@ -29,6 +29,7 @@ interface SidebarSectionProps {
  * A section of the side list: its title, which folds and unfolds it, with a chevron that turns as
  * it opens, its action at the end of the title, and its content. The rail of a folded side list
  * shows no section.
+ * @view user
  */
 export function SidebarSection({
   title,
@@ -68,6 +69,7 @@ interface SidebarSectionActionProps extends ComponentProps<typeof SidebarGroupAc
 /**
  * The action of a section, an icon at the end of its title. On a wide screen it shows while the
  * section is hovered or holds the focus; on a narrow one it always shows.
+ * @view user
  */
 export function SidebarSectionAction({ label, children, ...props }: SidebarSectionActionProps) {
   return (

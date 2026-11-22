@@ -36,6 +36,7 @@ interface SidebarLinkItemProps {
  * A row of a `SidebarMenu` that links to a page: marked while its page is on show, and closing the
  * side list on a narrow screen when it opens. On a wide screen the action takes the place of the
  * mark while the row is hovered or holds the focus; on a narrow one both show, the mark first.
+ * @view user
  */
 export function SidebarLinkItem({
   href,
@@ -102,6 +103,7 @@ interface SidebarItemMenuProps {
  * holds the focus, and always on a narrow screen, and the menu it opens: beside the side list on a
  * wide screen, a sheet from the foot of the screen on a narrow one. Its items are the items of
  * `Menu`.
+ * @view user
  */
 export function SidebarItemMenu({ label, children }: SidebarItemMenuProps) {
   return (

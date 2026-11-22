@@ -21,6 +21,7 @@ import { ProjectTable } from './ProjectTable'
 /**
  * The screen outside a project: the prompt that starts a project from an idea, with the dialog that
  * creates it, then the projects of the user. A row opens the project.
+ * @view developer
  */
 export function ProjectListPage() {
   // Kept with the page, so that the dialog does not open again when the page shows again.

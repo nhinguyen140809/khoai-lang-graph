@@ -12,7 +12,10 @@ import { Skeleton } from '@/shared/components/ui/skeleton'
 import { userMenuMessages } from '../user-menu.constants'
 import { AccountMenuContent, LogoutDialog, UserAvatar } from './AccountMenuContent'
 
-/** Shows the account menu at the bottom of the activity bar while it is mounted. */
+/**
+ * Shows the account menu at the bottom of the activity bar while it is mounted.
+ * @view developer
+ */
 export function AccountMenuItem() {
   const content = useMemo(() => <UserMenu />, [])
 

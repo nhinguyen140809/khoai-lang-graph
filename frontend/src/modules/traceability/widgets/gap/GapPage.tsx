@@ -25,6 +25,7 @@ import { gapPageMessages } from './gap-page.constants'
  * The items of one gap of the coverage, in a tab named after the gap: each is a card of its own.
  * A key that the coverage does not list is a gap that holds no item, so its page opens as usual,
  * named after the key, and says that its list is empty.
+ * @view developer
  */
 export function GapPage({ projectId, gapKey }: { projectId: string; gapKey: string }) {
   const isWriting = useIsProjectWriting(projectId)

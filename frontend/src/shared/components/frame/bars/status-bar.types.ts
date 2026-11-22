@@ -1,6 +1,9 @@
 import type { ReactNode } from 'react'
 
-/** The sides of the status bar, which hold the items registered with `useStatusBarItem`. */
+/**
+ * The sides of the status bar, which hold the items registered with `useStatusBarItem`.
+ * @view developer
+ */
 export const StatusBarSide = {
   /** What the screen reports about its work, such as the run of the project. */
   Left: 'left',
@@ -10,7 +13,10 @@ export const StatusBarSide = {
 
 export type StatusBarSide = (typeof StatusBarSide)[keyof typeof StatusBarSide]
 
-/** An item of the status bar, registered with `useStatusBarItem`. */
+/**
+ * An item of the status bar, registered with `useStatusBarItem`.
+ * @view developer
+ */
 export interface StatusBarItem {
   side: StatusBarSide
   /**

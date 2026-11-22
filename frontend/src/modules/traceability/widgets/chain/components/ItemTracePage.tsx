@@ -25,6 +25,7 @@ import { ChainLegend } from './ChainLegend'
  * their look says how much they ask of the user; choosing one shows the words it quotes in its
  * two nodes. A menu on a node holds the actions on its item, a menu on an edge the actions on
  * its link, and under the graph the links read as a list.
+ * @view developer
  */
 export function ItemTracePage({ projectId, itemId }: { projectId: string; itemId: string }) {
   const isWriting = useIsProjectWriting(projectId)

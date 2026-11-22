@@ -17,6 +17,7 @@ interface ActivityTabProps {
 /**
  * The chat of a project as a page of the workbench: it has a tab, and a document or an item that
  * the chat names opens as a page in a tab of its own.
+ * @view developer
  */
 export function ActivityTab({ projectId, children }: ActivityTabProps) {
   useEditorTab({

@@ -34,6 +34,7 @@ import { ItemNavigator } from './ItemNavigator'
  * the card of the items at the other end of its link, with the history surface in the corner; History shows the selected version in
  * place of the fields; Edit shows the form alone. An item of a kind that is read in place in its
  * document, or that does not exist, shows the state instead.
+ * @view developer
  */
 export function ItemPage({ projectId, itemId }: { projectId: string; itemId: string }) {
   const item = useItem(itemId)
