@@ -10,8 +10,8 @@ const nextConfig: NextConfig = {
   cacheComponents: true,
   // Do not write AGENTS.md / CLAUDE.md into the project on `next dev`.
   agentRules: false,
-  // The top right is free; the other corners would cover the account or notifications button.
-  devIndicators: { position: 'top-right' },
+  // The top right holds the account and the settings of the chat, so the indicator sits at the bottom right.
+  devIndicators: { position: 'bottom-right' },
   turbopack: {
     // Pin the root to this folder so the rest of the monorepo is neither resolved nor watched.
     root: import.meta.dirname,
