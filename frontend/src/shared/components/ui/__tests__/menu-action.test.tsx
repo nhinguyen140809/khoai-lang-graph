@@ -157,14 +157,16 @@ describe('ActionIconButton', () => {
     )
 
     const button = screen.getByRole('button', { name: 'Link to another item' })
-    await press(button)
+    // The tooltip first: a press before it leaves the pointer down for the tooltip, which then
+    // opens late or not at all when the machine is busy.
     await hoverOver(assertPresent(button.parentElement, 'The disabled button has no wrapper'))
-
-    expect(button).toBeDisabled()
-    expect(run).not.toHaveBeenCalled()
     expect(await screen.findByRole('tooltip')).toHaveTextContent(
       'Only a document under review can change.',
     )
+
+    await press(button)
+    expect(button).toBeDisabled()
+    expect(run).not.toHaveBeenCalled()
   })
 
   it('hands its button to the ref it is given, in the size it is given', () => {
