@@ -14,7 +14,7 @@ from contextlib import asynccontextmanager
 from pathlib import Path
 from typing import TYPE_CHECKING
 
-from sqlalchemy import Engine, MetaData, create_engine, event, text
+from sqlalchemy import Engine, MetaData, create_engine, event
 from sqlalchemy.ext.asyncio import (
     AsyncEngine,
     AsyncSession,
@@ -64,13 +64,12 @@ async def ensure_schema(engine: AsyncEngine) -> None:
     The lifespan calls this when `app_env` is local or test: SQLite needs no
     migration step and tests start from an empty file. Production (Postgres)
     runs `alembic upgrade head` instead (backend/README).
+
+    `create_all` checks each table on its own, so a database created by an
+    older build gains the tables added since.
     """
     async with engine.begin() as conn:
-        exists = await conn.scalar(
-            text("SELECT name FROM sqlite_master WHERE type='table' AND name='users'")
-        )
-        if exists is None:
-            await conn.run_sync(Base.metadata.create_all)
+        await conn.run_sync(Base.metadata.create_all)
 
 
 def sync_database_url(settings: Settings) -> str:

@@ -17,6 +17,10 @@ from pydantic import BaseModel, ConfigDict, Field, model_validator
 # that such a run can still be resumed or retried; nothing reads their value.
 RETIRED_PARAMETERS = frozenset({"max_personas"})
 
+# The step limit of a run that nothing else sets. One number for the model, the resolver and the
+# executor, so a run cannot be bounded by two different limits.
+DEFAULT_MAX_STEPS = 80
+
 
 class RunParameters(BaseModel):
     """The parameter set of workflow definition version 2, resolved per run."""
@@ -45,6 +49,6 @@ class RunConfig(BaseModel):
     models: dict[str, str]
     review_checkpoints: list[str]
     output_language: Literal["en", "vi"] = "en"
-    max_steps: int = Field(default=80, ge=1)
+    max_steps: int = Field(default=DEFAULT_MAX_STEPS, ge=1)
     max_cost_usd: float | None = None
     parameters: RunParameters = Field(default_factory=RunParameters)

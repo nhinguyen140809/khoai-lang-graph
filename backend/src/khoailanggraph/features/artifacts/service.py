@@ -418,7 +418,9 @@ class SqlArtifactSink:
             ArtifactRow.kind == kind,
             ArtifactRow.deleted_at.is_(None),
         )
-        row = self.session.scalars(statement).first()
+        # A kind with many live artifacts (validation_report) answers with its newest one, never
+        # with whichever row the store returns first.
+        row = self.session.scalars(statement.order_by(ArtifactRow.version.desc())).first()
         if row is None:
             return None
         if subject_id is not None:
@@ -695,7 +697,20 @@ class SqlArtifactSink:
         entry.updated_at = utcnow()
         self.session.flush()
         self._write_item_revision(entry, "user_edit", by)
-        bump_artifact(self.session, self._artifact_row(str(entry.artifact_id)), "user_edit", by)
+        artifact = self._artifact_row(str(entry.artifact_id))
+        bump_artifact(self.session, artifact, "user_edit", by)
+        self.emit(
+            "artifact_delta",
+            {
+                "artifact_id": str(artifact.id),
+                "delta": None,
+                "version": artifact.version,
+                "item_id": str(entry.id),
+                "item_key": str(entry.key),
+                "change": "item_updated",
+            },
+            step_id=self.step_id,
+        )
         return ItemRef(
             item_id=str(entry.id),
             kind=str(entry.kind),
@@ -714,8 +729,19 @@ class SqlArtifactSink:
         entry.updated_at = utcnow()
         self.session.flush()
         self._write_item_revision(entry, "generated", self._origin())
-        bump_artifact(
-            self.session, self._artifact_row(str(entry.artifact_id)), "generated", self._origin()
+        artifact = self._artifact_row(str(entry.artifact_id))
+        bump_artifact(self.session, artifact, "generated", self._origin())
+        self.emit(
+            "artifact_delta",
+            {
+                "artifact_id": str(artifact.id),
+                "delta": None,
+                "version": artifact.version,
+                "item_id": str(entry.id),
+                "item_key": str(entry.key),
+                "change": "item_updated",
+            },
+            step_id=self.step_id,
         )
         return ItemRef(
             item_id=str(entry.id),

@@ -130,6 +130,20 @@ Errors use the Problem Details format (RFC 9457) with media type `application/pr
 | 502 | `provider_error` | The LLM provider failed and the fallback also failed |
 | 500 | `internal_error` | Anything else |
 
+A run that fails stores a code of its own in `run.error.code` and sends it in the `error` event.
+These never arrive as an HTTP response, because the run executes after the request that started it
+has answered.
+
+| `run.error.code` | When |
+|---|---|
+| `node_failed` | A node raised an error that is not one of the limits below |
+| `provider_error` | The LLM provider failed, after the retries and the fallback models of the role |
+| `step_limit_exceeded` | The run reached its maximum number of steps |
+| `cost_limit_exceeded` | The next LLM call would exceed the cost limit of the run |
+| `budget_exceeded` | The next LLM call would exceed the monthly budget of the user |
+| `timeout` | A node or a tool took longer than its time limit |
+| `server_restarted` | The API process stopped while the run was in a step |
+
 ### Concurrent edits
 
 An artifact and an item each carry `version`. An update sends the version it was based on in the `If-Match` header; the server answers `409 version_conflict` when the stored version differs. This covers the user editing an item in two tabs and the user editing while an agent rewrites it.
@@ -289,7 +303,7 @@ Rules:
 {
   "run_id": "5f2d...",
   "step_id": "e9d1...",
-  "workflow_version": 1,
+  "workflow_version": 2,
   "values": {
     "current_stage": "interviewing",
     "active_persona_index": 1,
@@ -375,7 +389,7 @@ Response `201`:
     "number": 1,
     "status": "queued",
     "workflow_name": "requirements_engineering",
-    "workflow_version": 1,
+    "workflow_version": 2,
     "current_stage": "planning",
     "last_event_id": 0
   }
@@ -389,6 +403,7 @@ Response `201`:
 | Method and path | Purpose | Phase |
 |---|---|---|
 | `GET /threads/{thread_id}/runs` | Runs of a thread; ordered by `created_at` descending | MVP |
+| `POST /threads/{thread_id}/runs` | **Compatibility shim**, not part of this contract: body `{ "input": "..." }`, answer `{ "run_id": "..." }`. It starts a run from the text exactly as `POST /threads/{thread_id}/messages` does, for a client that still speaks the older wire. New clients use the messages endpoint | — |
 | `GET /runs/{run_id}` | Number in the thread, status, stage, iteration, step count, usage, error, `workflow_name`, `workflow_version`, `last_event_id`. The status transitions are listed in [Runtime: lifecycle](architecture/runtime.md#3-lifecycle) | MVP |
 | `GET /runs/{run_id}/steps` | Run steps; ordered by `sequence`. A step also carries its `notes` ([StepNote](DATA_SHAPE.md#stepnote-later)) | MVP |
 | `GET /runs/{run_id}/state` | The current workflow state of the run, see [workflow state](#workflow-state) | MVP |
@@ -410,7 +425,7 @@ Run body, `GET /runs/5f2d...`, while the run waits at the analysis review. It is
   "number": 3,
   "started_by": "11b7...",
   "workflow_name": "requirements_engineering",
-  "workflow_version": 1,
+  "workflow_version": 2,
   "status": "interrupted",
   "current_stage": "analysis_review",
   "iteration_count": 0,
@@ -606,12 +621,12 @@ An interrupt can ask several questions of different types and is answered at onc
 {
   "id": "8c1d...",
   "step_id": "e1b4...",
-  "node": "clarify_intent",
+  "node": "ask_message",
   "prompt": "Before I plan the interviews, tell me who will use the platform and what the first version must take care of.",
   "options": [],
   "questions": [
     {
-      "key": "users", "type": "multi_select", "prompt": "Who uses the platform in their day, so the interviews ask the right people?", "required": true,
+      "key": "users", "type": "multi_select", "prompt": "Who uses the platform in their day, so the interviews ask the right people?", "required": false,
       "choices": [
         { "key": "students", "label": "Students", "requires_text": false },
         { "key": "mentors", "label": "Mentors", "requires_text": false },
@@ -622,7 +637,7 @@ An interrupt can ask several questions of different types and is answered at onc
       "source": "agent"
     },
     {
-      "key": "payments", "type": "single_select", "prompt": "Should the first version already take payments, or is a free pilot enough?", "required": true,
+      "key": "payments", "type": "single_select", "prompt": "Should the first version already take payments, or is a free pilot enough?", "required": false,
       "choices": [
         { "key": "yes", "label": "Yes", "requires_text": false },
         { "key": "no", "label": "No", "requires_text": false }
@@ -752,7 +767,7 @@ Kinds and their schemas, `GET /artifact-kinds`. The display name of a kind is th
 
 ```json
 {
-  "workflow_version": 1,
+  "workflow_version": 2,
   "artifact_kinds": [
     {
       "kind": "requirement_specification",

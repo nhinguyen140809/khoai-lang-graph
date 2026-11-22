@@ -49,8 +49,7 @@ async def get_project_row(session: AsyncSession, project_id: UUID) -> ProjectRow
 
 
 async def _item_counts(session: AsyncSession, project_id: UUID) -> dict[str, int]:
-    """Grouped live item counts of one project, censoring zero-sized keys? No—
-    zero-sized keys stay (breaks nothing in TS; keeps the bootstrap cheap)."""
+    """Grouped live item counts of one project, one entry for each kind present."""
     statement = (
         select(ArtifactItemRow.kind, func.count())
         .where(

@@ -14,6 +14,7 @@ from sqlalchemy import select
 
 from khoailanggraph.agents.requirements_engineering import definition as wf
 from khoailanggraph.api.errors import ApiError
+from khoailanggraph.domain.run_config import DEFAULT_MAX_STEPS
 from khoailanggraph.features.me.models import ModelSettingsRow, UserSettingsRow
 from khoailanggraph.features.projects.validation import model_problems, run_defaults_problems
 from khoailanggraph.features.runs import service
@@ -109,7 +110,7 @@ async def resolve_run_config(
         "models": resolved_models,
         "review_checkpoints": first("review_checkpoints", server_review_checkpoints()),
         "output_language": project.output_language,
-        "max_steps": first("max_steps", 400),
+        "max_steps": first("max_steps", DEFAULT_MAX_STEPS),
         "max_cost_usd": first("max_cost_usd", None),
         "parameters": parameters,
     }

@@ -1,4 +1,4 @@
-"""Routing functions of the conditional edges of `definition.v1.json` (§2.1).
+"""Routing functions of the conditional edges of `definition.v2.json` (§2.1).
 
 Only these read `checkpoint_outcomes`, `pending_messages`, `routed_target`,
 and `status` to pick the next node — so the option of a checkpoint decides the

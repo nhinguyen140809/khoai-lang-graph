@@ -251,10 +251,10 @@ async def get_run_steps(
     """Run steps in order, with usage and produced ItemRefs (§5)."""
     await service.get_run_row(db, run_id)
     statement = select(RunStepRow).where(RunStepRow.run_id == run_id).order_by(RunStepRow.sequence)
-    statement = statement.offset(cursor).limit(limit) if cursor else statement.limit(limit)
+    statement = statement.offset(cursor).limit(limit + 1) if cursor else statement.limit(limit + 1)
     rows = list((await db.scalars(statement)).all())
-    items = [service.run_step_output(row) for row in rows]
-    return Page(items=items, next_cursor=cursor + len(items) if len(items) == limit else None)
+    items = [service.run_step_output(row) for row in rows[:limit]]
+    return Page(items=items, next_cursor=cursor + limit if len(rows) > limit else None)
 
 
 @router.get("/runs/{run_id}/stream")
