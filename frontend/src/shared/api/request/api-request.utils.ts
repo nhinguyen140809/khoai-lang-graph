@@ -8,6 +8,7 @@ interface ApiRequestOptions {
   /** What the request does, for the error message: "load projects" gives "Failed to load projects". */
   action: string
   method?: HttpMethod
+  /** A JSON body, or a `FormData` for a file upload. */
   body?: unknown
   headers?: Record<string, string>
   /** For a request that starts work: a repeat with the same key does not do the work again. */
@@ -30,11 +31,15 @@ async function send(
   path: string,
   { action, method = HttpMethod.Get, body, headers = {}, idempotencyKey }: ApiRequestOptions,
 ): Promise<Response> {
+  // A form is sent as it is, and the browser sets its content type with the boundary of its parts.
+  const isForm = body instanceof FormData
   const requestHeaders: Record<string, string> =
-    body === undefined ? { ...headers } : { [HttpHeader.ContentType]: MediaType.Json, ...headers }
+    body === undefined || isForm
+      ? { ...headers }
+      : { [HttpHeader.ContentType]: MediaType.Json, ...headers }
   if (idempotencyKey !== undefined) requestHeaders[HttpHeader.IdempotencyKey] = idempotencyKey
   const init: RequestInit = { method, headers: requestHeaders }
-  if (body !== undefined) init.body = JSON.stringify(body)
+  if (body !== undefined) init.body = isForm ? body : JSON.stringify(body)
   const response = await fetch(apiUrl(path), init)
   if (!response.ok) throw await readError(response, action)
   return response
