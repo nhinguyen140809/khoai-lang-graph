@@ -1,0 +1,105 @@
+/*
+ * The work that goes on, after the loading indicator of Material 3 and the sparkle icon: one solid
+ * four-point star that fills out to a rounded square and draws back, while it turns. The shape
+ * and the mix of the colors are drawn over time by `useGlintMorph`; the turn is the one motion here
+ * that is CSS.
+ */
+@theme {
+  --duration-glint-mesh: 3200ms;
+  --blur-glint: 2.5px;
+  --opacity-glint: 0.65;
+  /* How far the glow reaches past the star; the frame of the glint clips at this distance. */
+  --spacing-glint-reach: 1.25rem;
+  --animate-glint-turn: glint-turn 4.8s linear infinite;
+
+  @keyframes glint-slide {
+    from {
+      translate: 0 0;
+    }
+    to {
+      translate: -180cqw 0;
+    }
+  }
+
+  @keyframes glint-turn {
+    to {
+      transform: rotate(360deg);
+    }
+  }
+}
+
+/*
+ * Two ways to colour the star of the glint with two colors that the element sets as `--glint-a` and
+ * `--glint-b`. `glint-mesh` is a background of both colors, wider than the star, that slides behind it while it morphs, with a blurred seam between the colors. `glint-shift` changes the color of the star from the first to the second and back, once for each
+ * morph, in the oklch space so that the middle of the change is not gray (the hue goes round the
+ * color wheel, through green from blue to yellow).
+ */
+/* The blurred copy of the star: the blur is made on the wrapper, as the star cuts off what it draws outside of its shape. */
+@utility glint-glow {
+  filter: blur(var(--blur-glint));
+  opacity: var(--opacity-glint);
+  transform: scale(1.15);
+}
+
+/* The box of the glint stays still and clips what is drawn past the reach of the glow, so that a turning star does not change the scrollable size around it. */
+@utility glint-frame {
+  overflow: clip;
+  overflow-clip-margin: var(--spacing-glint-reach);
+}
+
+/* How the star is filled, by the variant the star says on itself: solid in the color of the text around it, or the mesh and the shift of two colors below. */
+[data-slot='glint-star'][data-variant='solid'] {
+  background-color: currentcolor;
+}
+
+/*
+ * The star of the mesh: the color is a background several times wider than the star, in two
+ * halves, one color each (`glint-blob`), that slides back and forth behind the star while it
+ * turns. Only the blur at the seam between the halves mixes the colors. The sizes are shares of
+ * the width of the star, so that it holds at every size.
+ */
+[data-slot='glint-star'][data-variant='mesh'] {
+  container-type: inline-size;
+}
+
+/* One half of the background of the mesh, `--glint-blob` its color: it is as wide as one and a half stars, taller than the star, and blurred at its edges. */
+@utility glint-blob {
+  position: absolute;
+  top: -25%;
+  width: 150cqw;
+  height: 150%;
+  background-color: var(--glint-blob);
+  filter: blur(18cqw);
+  animation: glint-slide var(--duration-glint-mesh) ease-in-out infinite alternate;
+}
+
+@utility glint-blob-a {
+  left: 0;
+}
+
+@utility glint-blob-b {
+  left: 150cqw;
+}
+
+[data-slot='glint-star'][data-variant='shift'] {
+  background-color: color-mix(
+    in oklch,
+    var(--glint-b) calc(var(--glint-mix) * 100%),
+    var(--glint-a)
+  );
+}
+
+/* A glint out of sight holds the animations of its own where they are; the morph is held by the glint itself. */
+@utility glint-paused {
+  & * {
+    animation-play-state: paused;
+  }
+}
+
+/* The glint stops at the first frame of its animations, a star that does not turn. */
+@media (prefers-reduced-motion: reduce) {
+  [data-slot='glint'],
+  [data-slot='glint'] * {
+    animation-play-state: paused;
+  }
+}

@@ -1,4 +1,32 @@
 /*
+ * A fine grain over a backdrop of soft color. A smooth gradient of a faint color shows steps, bands
+ * of one shade side by side, because a screen has few shades between two close colors; the grain
+ * breaks the bands up, so that the color reads as smooth. It is gray noise that lightens and darkens
+ * what is under it, a little, with no tint of its own, and so it works on both themes.
+ */
+@utility noise {
+  background-image: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='180' height='180'%3E%3Cfilter id='n' color-interpolation-filters='sRGB'%3E%3CfeTurbulence type='fractalNoise' baseFrequency='0.85' numOctaves='2' stitchTiles='stitch'/%3E%3CfeColorMatrix type='saturate' values='0'/%3E%3CfeColorMatrix values='1 0 0 0 0 0 1 0 0 0 0 0 1 0 0 0 0 0 0 1'/%3E%3C/filter%3E%3Crect width='100%25' height='100%25' filter='url(%23n)'/%3E%3C/svg%3E");
+  background-size: 180px 180px;
+  mix-blend-mode: overlay;
+  opacity: 0.28;
+}
+
+/*
+ * A ring of half a pixel in the color of the border of an input, which laid over a border of one
+ * pixel makes a line of a pixel and a half. A border cannot be that wide: the browser rounds it down
+ * to a whole pixel, and a ring does not. The color is set here and not by a `ring-*` class, which
+ * `cn` would take for a rival of this one and drop.
+ */
+@utility ring-half {
+  --tw-ring-color: var(--input);
+  --tw-ring-shadow: var(--tw-ring-inset,) 0 0 0 calc(0.5px + var(--tw-ring-offset-width))
+    var(--tw-ring-color, currentcolor);
+  box-shadow:
+    var(--tw-inset-shadow), var(--tw-inset-ring-shadow), var(--tw-ring-offset-shadow),
+    var(--tw-ring-shadow), var(--tw-shadow);
+}
+
+/*
  * A text caret that is a steady block, as in a terminal. A browser without these properties keeps
  * its own caret.
  */
