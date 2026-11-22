@@ -32,6 +32,9 @@ importers:
       '@hookform/resolvers':
         specifier: ^5.9.1
         version: 5.9.1(@standard-schema/spec@1.1.0)(ajv-formats@2.1.1(ajv@8.20.0))(ajv@8.20.0)(react-hook-form@7.89.0(@types/react@19.3.0)(react@19.3.0))(zod@4.6.5)
+      '@rive-app/react-webgl2':
+        specifier: ^4.41.0
+        version: 4.41.0(react@19.3.0)
       '@shadcn/react':
         specifier: ^0.3.1
         version: 0.3.1(@types/react@19.3.0)(react@19.3.0)
@@ -1878,6 +1881,14 @@ packages:
         optional: true
       react-redux:
         optional: true
+
+  '@rive-app/react-webgl2@4.41.0':
+    resolution: {integrity: sha512-T3IC50cUqoteMDFAX/XNPIkDHXsaSI2IZkpHAmQk3cmMdFNlratiIuN/pW3qyrQU0uq6Mu7183Npp1yOvR9GEA==}
+    peerDependencies:
+      react: ^16.8.0 || ^17.0.0 || ^18.0.0 || ^19.0
+
+  '@rive-app/webgl2@2.54.0':
+    resolution: {integrity: sha512-OCA/GGrVRigWiLUJW/DIytfW47aj4QI2ELVtr/d9fZB0bCkTWrds97lsI7e6Xpv3eJ7440sUKmw4rTBl5FLYbA==}
 
   '@rolldown/binding-android-arm-eabi@1.2.11':
     resolution: {integrity: sha512-A5kXfGKvKWWZE0TtPrfsvT+q4Y5d1QG8gGUzpYjGydM+fARM9MuX90PrXYXe0XbsDVgyxxNzHo6giCj90bsFNw==}
@@ -7510,6 +7521,13 @@ snapshots:
     optionalDependencies:
       react: 19.3.0
       react-redux: 9.3.0(@types/react@19.3.0)(react@19.3.0)(redux@5.0.1)
+
+  '@rive-app/react-webgl2@4.41.0(react@19.3.0)':
+    dependencies:
+      '@rive-app/webgl2': 2.54.0
+      react: 19.3.0
+
+  '@rive-app/webgl2@2.54.0': {}
 
   '@rolldown/binding-android-arm-eabi@1.2.11':
     optional: true

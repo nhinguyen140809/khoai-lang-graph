@@ -145,7 +145,7 @@ export interface FaceProps {
   className?: string
 }
 
-/** The ways that a face is drawn: plain, in CSS, which needs nothing to load. */
-export const faceStyleKeys = ['plain'] as const
+/** The ways that a face is drawn: plain, in CSS, which needs nothing to load; or live, by an animation file, which has more motion. */
+export const faceStyleKeys = ['plain', 'live'] as const
 
 export type FaceStyleKey = (typeof faceStyleKeys)[number]

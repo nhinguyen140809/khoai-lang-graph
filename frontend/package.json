@@ -40,6 +40,7 @@
     "@headless-tree/core": "^1.7.0",
     "@headless-tree/react": "^1.7.0",
     "@hookform/resolvers": "^5.9.1",
+    "@rive-app/react-webgl2": "^4.41.0",
     "@shadcn/react": "^0.3.1",
     "@stepperize/react": "^8.0.0",
     "@streamdown/code": "^2.0.0",

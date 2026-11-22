@@ -7,6 +7,9 @@ import {
   Face,
   FaceRulesProvider,
   faceShapes,
+  type FaceStyleKey,
+  faceStyleKeys,
+  FaceStyleProvider,
   type Mood,
   moods,
 } from '@/shared/components/face'
@@ -51,82 +54,104 @@ const moodUses: Record<Mood, string> = {
 
 export function FaceCard() {
   const [mood, setMood] = useState<Mood>('idle')
+  const [style, setStyle] = useState<FaceStyleKey>('plain')
 
   return (
-    <SampleCard
-      title="Faces"
-      description="A shape of soft color, a pale base with two blurred blobs on it, with two long eyes, worked out from a seed such as the key of an agent: the same key is the same face everywhere, and a key that no one has seen gets one too. The mood gives the eyes their size, their lean and a way of looking."
-      className="flex flex-col gap-5"
-    >
-      <SampleGroup label="A change of mood goes gently: the eyes close for an instant">
-        <div className="flex flex-wrap items-center gap-4">
-          <Face seed="requirement_engineer" size="lg" mood={mood} />
+    <FaceStyleProvider style={style}>
+      <SampleCard
+        title="Faces"
+        description="A shape of soft color, a pale base with two blurred blobs on it, with two long eyes, worked out from a seed such as the key of an agent: the same key is the same face everywhere, and a key that no one has seen gets one too. The mood gives the eyes their size, their lean and a way of looking."
+        className="flex flex-col gap-5"
+      >
+        <SampleGroup label="How the faces are drawn: plain, in CSS, or live, by an animation file">
           <ToggleGroup
             type="single"
             variant="outline"
             size="sm"
-            value={mood}
+            value={style}
             onValueChange={(next) => {
-              const chosen = moods.find((candidate) => candidate === next)
-              if (chosen !== undefined) setMood(chosen)
+              const chosen = faceStyleKeys.find((candidate) => candidate === next)
+              if (chosen !== undefined) setStyle(chosen)
             }}
-            aria-label="Mood"
-            className="flex-wrap"
+            aria-label="Drawn"
           >
-            {moods.map((candidate) => (
+            {faceStyleKeys.map((candidate) => (
               <ToggleGroupItem key={candidate} value={candidate}>
                 {candidate}
               </ToggleGroupItem>
             ))}
           </ToggleGroup>
-        </div>
-      </SampleGroup>
-      <SampleGroup label="The agents of the workflow, each with the face at its place, idle">
-        <div className="grid grid-cols-2 gap-x-4 gap-y-3 sm:grid-cols-3">
-          {workflowAgents.map((agent, place) => (
-            <div key={agent} className="flex items-center gap-2">
-              <Face seed={agent} place={place} />
-              <SampleLabel>{agent}</SampleLabel>
-            </div>
-          ))}
-        </div>
-      </SampleGroup>
-      <SampleGroup label="One agent in each mood">
-        <div className="grid grid-cols-2 gap-x-4 gap-y-3 sm:grid-cols-4">
-          {moods.map((mood) => (
-            <div key={mood} className="flex flex-col items-start gap-1">
-              <Face seed="analyst" size="lg" mood={mood} />
-              <SampleLabel>{mood}</SampleLabel>
-              <SampleLabel className="opacity-70">{moodUses[mood]}</SampleLabel>
-            </div>
-          ))}
-        </div>
-      </SampleGroup>
-      <SampleGroup label="The outlines that the rules allow; a face takes one of them from its seed">
-        <div className="flex flex-wrap gap-x-4 gap-y-2">
-          {faceShapes.map((shape) => (
-            <div key={shape} className="flex items-center gap-2">
-              <FaceRulesProvider rules={{ ...defaultFaceRules, shapes: [shape] }}>
-                <Face seed="interviewer" size="lg" />
-              </FaceRulesProvider>
-              <SampleLabel>{shape}</SampleLabel>
-            </div>
-          ))}
-        </div>
-      </SampleGroup>
-      <SampleGroup label="Any other key, and the sizes: sm, default, lg">
-        <div className="flex flex-wrap items-end gap-x-4 gap-y-2">
-          {otherAgents.map((agent) => (
-            <div key={agent} className="flex items-center gap-2">
-              <Face seed={agent} />
-              <SampleLabel>{agent}</SampleLabel>
-            </div>
-          ))}
-          <Face seed="validator" size="sm" />
-          <Face seed="validator" />
-          <Face seed="validator" size="lg" />
-        </div>
-      </SampleGroup>
-    </SampleCard>
+        </SampleGroup>
+        <SampleGroup label="A change of mood goes gently: the eyes close for an instant">
+          <div className="flex flex-wrap items-center gap-4">
+            <Face seed="requirement_engineer" size="lg" mood={mood} />
+            <ToggleGroup
+              type="single"
+              variant="outline"
+              size="sm"
+              value={mood}
+              onValueChange={(next) => {
+                const chosen = moods.find((candidate) => candidate === next)
+                if (chosen !== undefined) setMood(chosen)
+              }}
+              aria-label="Mood"
+              className="flex-wrap"
+            >
+              {moods.map((candidate) => (
+                <ToggleGroupItem key={candidate} value={candidate}>
+                  {candidate}
+                </ToggleGroupItem>
+              ))}
+            </ToggleGroup>
+          </div>
+        </SampleGroup>
+        <SampleGroup label="The agents of the workflow, each with the face at its place, idle">
+          <div className="grid grid-cols-2 gap-x-4 gap-y-3 sm:grid-cols-3">
+            {workflowAgents.map((agent, place) => (
+              <div key={agent} className="flex items-center gap-2">
+                <Face seed={agent} place={place} />
+                <SampleLabel>{agent}</SampleLabel>
+              </div>
+            ))}
+          </div>
+        </SampleGroup>
+        <SampleGroup label="One agent in each mood">
+          <div className="grid grid-cols-2 gap-x-4 gap-y-3 sm:grid-cols-4">
+            {moods.map((mood) => (
+              <div key={mood} className="flex flex-col items-start gap-1">
+                <Face seed="analyst" size="lg" mood={mood} />
+                <SampleLabel>{mood}</SampleLabel>
+                <SampleLabel className="opacity-70">{moodUses[mood]}</SampleLabel>
+              </div>
+            ))}
+          </div>
+        </SampleGroup>
+        <SampleGroup label="The outlines that the rules allow; a face takes one of them from its seed">
+          <div className="flex flex-wrap gap-x-4 gap-y-2">
+            {faceShapes.map((shape) => (
+              <div key={shape} className="flex items-center gap-2">
+                <FaceRulesProvider rules={{ ...defaultFaceRules, shapes: [shape] }}>
+                  <Face seed="interviewer" size="lg" />
+                </FaceRulesProvider>
+                <SampleLabel>{shape}</SampleLabel>
+              </div>
+            ))}
+          </div>
+        </SampleGroup>
+        <SampleGroup label="Any other key, and the sizes: sm, default, lg">
+          <div className="flex flex-wrap items-end gap-x-4 gap-y-2">
+            {otherAgents.map((agent) => (
+              <div key={agent} className="flex items-center gap-2">
+                <Face seed={agent} />
+                <SampleLabel>{agent}</SampleLabel>
+              </div>
+            ))}
+            <Face seed="validator" size="sm" />
+            <Face seed="validator" />
+            <Face seed="validator" size="lg" />
+          </div>
+        </SampleGroup>
+      </SampleCard>
+    </FaceStyleProvider>
   )
 }
