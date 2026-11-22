@@ -14,7 +14,7 @@ const arrangements = {
       color: 'primary',
       strength: 15,
       size: 'lg',
-      className: 'absolute top-1/6 left-1/2 -translate-x-3/4',
+      className: 'absolute top-2/5 left-1/2 -translate-x-3/4 -translate-y-1/2',
     },
     {
       color: 'secondary',
@@ -22,7 +22,7 @@ const arrangements = {
       size: 'md',
       entranceDelay: 300,
       motionDelay: -9000,
-      className: 'absolute top-1/4 left-1/2 translate-x-1/4',
+      className: 'absolute top-[45%] left-1/2 translate-x-1/4 -translate-y-1/2',
     },
   ],
   // The same two, on the other sides: the login.
