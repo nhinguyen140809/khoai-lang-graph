@@ -114,6 +114,8 @@ These rules relate parts of one definition to each other, or a definition to the
 | Prompts exist | Every agent role has a prompt file at its `prompt_version`. In these docs only the analyst prompt is written, so the rule applies to the code |
 | Valid schemas | `run_parameters_schema`, `state_schema` and every `details_schema` are valid JSON Schemas, and the parameter defaults are valid against `run_parameters_schema` |
 
+A property of `run_parameters_schema` may carry the keyword `x-ui-audience`, which says who is shown it in the run settings: `developer` for a parameter that only the developer view shows, and no keyword for a parameter that every view shows. The keyword only decides what a screen shows: the run configuration is checked, resolved and stored the same whatever it says, so adding or removing it changes no data and needs no migration. A parameter that the user view hides takes its value from the project, the settings of the user or its `default`.
+
 `max_personas` not lower than `target_personas_num` is a rule between two parameters. JSON Schema in the form used here cannot express it, so the run configuration check applies it, as the description of the parameter states.
 
 ## 5. Where the definition lives in the code
