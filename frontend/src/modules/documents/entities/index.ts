@@ -1,3 +1,4 @@
+export { ItemDetails } from './components/ItemDetails'
 export {
   documentMarkLooks,
   documentsMessages,
@@ -23,6 +24,8 @@ export type {
   MarkedArtifact,
   NotStartedSubject,
 } from './types/documents.types'
+export type { ItemLayoutView, ItemPageView } from './types/item-layout.types'
 export { documentTabIconName, itemTabIconName } from './utils/document-tab-icons.utils'
 export { documentEntries, documentMark, documentMarkLook, groupMark } from './utils/documents.utils'
 export { editAccessOf } from './utils/edit-access.utils'
+export { filledFields, filledSections, itemPageViewOf } from './utils/item-layout.utils'

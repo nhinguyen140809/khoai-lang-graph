@@ -6,7 +6,7 @@ import {
   useItem,
   useItemStatusLook,
 } from '@/modules/artifact/entities'
-import { ContentFieldList, useWorkflowDefinition } from '@/modules/workflow/entities'
+import { ItemDetails } from '@/modules/documents/entities'
 import { isNotFoundError } from '@/shared/api/error'
 import { ErrorState, LoadingState, NotFoundState } from '@/shared/components/state'
 import { ColoredText } from '@/shared/components/ui/colored-text'
@@ -46,7 +46,7 @@ export function ItemBody({ projectId, view, renderTitle }: ReaderBodyProps<'item
   return <LoadedItem projectId={projectId} record={item.data} renderTitle={renderTitle} />
 }
 
-/** An item: the title of its kind, its title and its status, then its filled fields under their titles. */
+/** An item: the title of its kind, its title and its status, then its fields as the page of the item lays them out, without the ones that its schema hides. */
 function LoadedItem({
   projectId,
   record,
@@ -57,7 +57,6 @@ function LoadedItem({
   renderTitle: RenderReaderTitle
 }) {
   const item = useReaderItem(projectId, record)
-  const { data: definition } = useWorkflowDefinition()
 
   return (
     <ContentBody title={item.title} renderTitle={renderTitle}>
@@ -69,7 +68,14 @@ function LoadedItem({
             <ItemStatusLine status={item.status} isUnderReview={item.isUnderReview} />
           )}
         </header>
-        <ContentFieldList fields={item.fields} content={record.content} definition={definition} />
+        {item.view !== undefined && (
+          <ItemDetails
+            item={record}
+            layout={item.view.layout}
+            fields={item.view.bodyFields}
+            sections={item.view.sections}
+          />
+        )}
       </article>
     </ContentBody>
   )

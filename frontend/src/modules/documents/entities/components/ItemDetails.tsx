@@ -2,7 +2,7 @@
 
 import type { ReactNode } from 'react'
 
-import type { ArtifactItem } from '@/modules/artifact/entities'
+import type { ArtifactItem } from '@/modules/artifact/entities/@x/documents'
 import {
   type ContentField,
   ContentFieldList,
@@ -13,11 +13,11 @@ import {
   type ItemPageLayout,
   useWorkflowDefinition,
   type ValueDefinition,
-} from '@/modules/workflow/entities'
+} from '@/modules/workflow/entities/@x/documents'
 import { Card, CardContent, CardHeader, CardTitle } from '@/shared/components/ui/card'
 import type { HighlightRange } from '@/shared/components/ui/highlight'
 
-import { filledFields, filledSections } from '../item-layout.utils'
+import { filledFields, filledSections } from '../utils/item-layout.utils'
 
 /** The key of the block of the fields that no block of the schema holds, which has no title. */
 const untitledSectionKey = 'untitled'

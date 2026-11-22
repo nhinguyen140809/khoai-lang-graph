@@ -3,7 +3,7 @@ import type {
   ContentSchema,
   ContentSection,
   ItemPageLayout,
-} from '@/modules/workflow/entities'
+} from '@/modules/workflow/entities/@x/documents'
 
 /** What one page layout of an item decides: whether an avatar leads the title, and which fields fill the key line and the body. */
 export interface ItemLayoutView {

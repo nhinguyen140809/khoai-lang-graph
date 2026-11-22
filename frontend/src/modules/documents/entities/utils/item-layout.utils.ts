@@ -1,4 +1,4 @@
-import type { ArtifactItem } from '@/modules/artifact/entities'
+import type { ArtifactItem } from '@/modules/artifact/entities/@x/documents'
 import {
   type ContentField,
   type ContentSchema,
@@ -7,10 +7,10 @@ import {
   pageLayoutOf,
   profileFields,
   shownFields,
-} from '@/modules/workflow/entities'
+} from '@/modules/workflow/entities/@x/documents'
 import { isEmpty } from '@/shared/lib/guards'
 
-import type { ItemLayoutView, ItemPageView } from './item-layout.types'
+import type { ItemLayoutView, ItemPageView } from '../types/item-layout.types'
 
 // What each page layout of an item decides, in one place: a profile leads its title with an avatar
 // and sets some of its fields on the key line; any other page draws every field in its body.
@@ -18,7 +18,8 @@ const itemLayoutViews = {
   fields: {
     hasAvatar: false,
     keyLineFields: () => [],
-    bodyFields: shownFields,
+    // Read when it is called, not when this module loads: the modules that it imports may still be loading.
+    bodyFields: (schema) => shownFields(schema),
     sections: () => [],
   },
   profile: {

@@ -7,7 +7,7 @@ import { contentSchemaFixtureByKind } from '@/mocks/workflow/artifact-kinds.fixt
 import { renderWithProviders } from '@/test/render'
 import { expectNoAccessibilityViolations, expectNoRole, expectRole, expectText } from '@/test/steps'
 
-import { itemPageViewOf } from '../../item-layout.utils'
+import { itemPageViewOf } from '../../utils/item-layout.utils'
 import { ItemDetails } from '../ItemDetails'
 
 const requirement = itemFixtureByKey(projectIds.mentor, 'REQ-001')
