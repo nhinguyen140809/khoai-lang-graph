@@ -1455,6 +1455,7 @@
       "target_personas_num": {
         "type": "integer",
         "title": "Number of interviewees",
+        "x-ui-audience": "developer",
         "minimum": 1,
         "maximum": 10,
         "default": 3,
@@ -1463,6 +1464,7 @@
       "max_personas": {
         "type": "integer",
         "title": "Maximum interviewees",
+        "x-ui-audience": "developer",
         "minimum": 1,
         "maximum": 10,
         "default": 3,
@@ -1471,6 +1473,7 @@
       "max_turns": {
         "type": "integer",
         "title": "Maximum turns per interviewee",
+        "x-ui-audience": "developer",
         "minimum": 1,
         "maximum": 20,
         "default": 6,
@@ -1479,6 +1482,7 @@
       "max_iterations": {
         "type": "integer",
         "title": "Maximum review rounds",
+        "x-ui-audience": "developer",
         "minimum": 0,
         "maximum": 5,
         "default": 2,
@@ -1487,6 +1491,7 @@
       "target_sources_num": {
         "type": "integer",
         "title": "Number of research documents",
+        "x-ui-audience": "developer",
         "minimum": 1,
         "maximum": 10,
         "default": 3,

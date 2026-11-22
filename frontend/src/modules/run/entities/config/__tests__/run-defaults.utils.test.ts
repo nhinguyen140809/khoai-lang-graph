@@ -1,9 +1,11 @@
 import { describe, expect, it } from 'vitest'
 
+import { runParameterFields } from '@/modules/workflow/entities/@x/run'
 import { assertPresent } from '@/shared/lib/guards'
 
 import {
   isRunDefaultsEmpty,
+  parameterFieldsOfView,
   runDefaultsFieldValuesOf,
   selectedCheckpoints,
   selectKeyOf,
@@ -62,5 +64,26 @@ describe('selectKeyOf', () => {
 describe('selectValueOf', () => {
   it.each(selectValueCases)('gives the value for $name', ({ key, value }) => {
     expect(selectValueOf(assertPresent(choiceField, 'No choice field'), key)).toBe(value)
+  })
+})
+
+describe('parameterFieldsOfView', () => {
+  const fields = runParameterFields({
+    type: 'object',
+    properties: {
+      strict: { type: 'boolean' },
+      max_turns: { type: 'integer', 'x-ui-audience': 'developer' },
+    },
+  })
+
+  it('shows every parameter in the developer view', () => {
+    expect(parameterFieldsOfView(fields, 'developer').map(({ name }) => name)).toEqual([
+      'strict',
+      'max_turns',
+    ])
+  })
+
+  it('leaves out of the user view the parameters that the definition keeps for the developer', () => {
+    expect(parameterFieldsOfView(fields, 'user').map(({ name }) => name)).toEqual(['strict'])
   })
 })

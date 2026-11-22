@@ -3,7 +3,8 @@ import { useForm } from 'react-hook-form'
 import { describe, expect, it } from 'vitest'
 
 import { assertPresent } from '@/shared/lib/guards'
-import { expectRole, expectText, press, pressRole } from '@/test/steps'
+import { ViewProvider } from '@/shared/lib/view'
+import { expectNoRole, expectRole, expectText, press, pressRole } from '@/test/steps'
 
 import { noRunDefaultsFieldValues } from '../../run-defaults.constants'
 import type { RunDefaultsFieldValues } from '../../run-defaults.schema'
@@ -43,6 +44,18 @@ function TwoLevelsForm() {
 }
 
 describe('RunDefaultsFields', () => {
+  it('leaves the number of steps out of the user view, which keeps the cost limit and the reviews', async () => {
+    render(
+      <ViewProvider value="user">
+        <SettingsForm />
+      </ViewProvider>,
+    )
+
+    expectNoRole('spinbutton', 'Maximum steps')
+    await expectRole('spinbutton', 'Cost limit (USD)')
+    await expectRole('group', 'Reviews')
+  })
+
   it('shows the limits and the parameters of the workflow under the legend', async () => {
     render(<SettingsForm />)
 
