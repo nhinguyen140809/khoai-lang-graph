@@ -27,6 +27,11 @@ export function drawnActsOf(keys: readonly string[]): ActKey[] {
   return keys.filter(isDrawnAct)
 }
 
+/** The act that a list of the acts that are drawn is at, going round it again and again: none when no act is drawn. */
+export function wantedActOf(drawn: readonly ActKey[], index: number): ActKey | null {
+  return drawn.length === 0 ? null : (drawn[index % drawn.length] ?? null)
+}
+
 /** The act of a key, or null when none is drawn for it. */
 export function actOf(key: ActKey | null): Act | null {
   return key === null ? null : (acts[key] ?? null)

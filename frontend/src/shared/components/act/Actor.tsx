@@ -10,9 +10,8 @@ import { actorFrameClasses } from './act.constants'
 import { type ActSize, type Slot, slots as allSlots } from './act.types'
 import { actOf, moodOf } from './act.utils'
 import { ActProps } from './ActProps'
+import { useActCycle } from './hooks/useActCycle'
 import { useActDrive } from './hooks/useActDrive'
-import { useActSequence } from './hooks/useActSequence'
-import { useShownAct } from './hooks/useShownAct'
 
 interface ActorProps {
   /** What the face comes from, such as the key of an agent. */
@@ -50,8 +49,7 @@ export function Actor({
   const ref = useRef<HTMLSpanElement>(null)
   const isInView = useIsInView(ref)
   const isStill = usePrefersReducedMotion()
-  const wanted = useActSequence(isStill ? [] : acts, isInView)
-  const { shown, swaps, gain } = useShownAct(wanted)
+  const { shown, swaps, gain } = useActCycle(isStill ? [] : acts, isInView)
   const act = actOf(shown)
   const { drive, round } = useActDrive(act, swaps, gain, isInView)
 
