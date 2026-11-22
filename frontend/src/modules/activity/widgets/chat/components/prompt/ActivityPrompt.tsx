@@ -11,7 +11,17 @@ import { isUnfinishedRunStatus, type Run } from '@/modules/run/entities'
 import { StopRunButton } from '@/modules/run/features/stop'
 import type { Thread } from '@/modules/thread/entities'
 import { useSendMessage } from '@/modules/thread/features/send-message'
-import { PromptInput, type PromptInputSize, PromptSubmitButton } from '@/shared/components/prompt'
+import {
+  PromptBar,
+  PromptBarEnd,
+  PromptBox,
+  PromptFooter,
+  PromptFooterStart,
+  PromptInput,
+  type PromptInputSize,
+  PromptSend,
+  PromptTextarea,
+} from '@/shared/components/prompt'
 import { hasText } from '@/shared/lib/guards'
 import { useView, type View } from '@/shared/lib/view'
 import { useFocusWhen } from '@/shared/lib/viewport'
@@ -30,18 +40,15 @@ interface FooterProps {
  * at the start, its progress being in the panel beside; the guided view shows the progress as a
  * bar of stages, and has the settings in the bar of the desk (`ChatSettingsBarItem`).
  */
-const footers = {
+const footers: Record<
+  View,
+  (props: FooterProps) => { footerStart?: ReactNode; footerEnd?: ReactNode }
+> = {
   developer: ({ thread }) => ({ footerStart: <ChooseRunSettingsButton thread={thread} /> }),
   user: ({ projectId, run }) => ({
     footerStart: <StageProgressBar run={run} projectId={projectId} />,
   }),
-} satisfies Record<
-  View,
-  (props: FooterProps) => {
-    footerStart?: ReactNode
-    footerEnd?: ReactNode
-  }
->
+}
 
 /** The prompt of the chat: it joins Send with the settings of the run the next message starts. */
 export function ActivityPrompt({
@@ -71,6 +78,8 @@ export function ActivityPrompt({
   const isBlank = !hasText(text)
   const isStoppable = run !== null && isUnfinishedRunStatus(run.status)
 
+  const { footerStart } = footers[view]({ projectId, thread, run })
+
   return (
     <PromptInput
       size={size}
@@ -88,23 +97,25 @@ export function ActivityPrompt({
           },
         })
       }}
-      submitLabel={activityChatMessages.prompt.send}
       keysHint={activityChatMessages.prompt.keys}
-      placeholder={activityChatMessages.prompt.placeholder}
       isPending={isPending}
       inputRef={inputRef}
-      endActions={
-        isBlank && isStoppable ? (
-          <StopRunButton run={run} display="icon" />
-        ) : (
-          <PromptSubmitButton
-            submitLabel={activityChatMessages.prompt.send}
-            isPending={isPending}
-            isDisabled={isBlank}
-          />
-        )
-      }
-      {...footers[view]({ projectId, thread, run })}
-    />
+    >
+      <PromptBox>
+        <PromptTextarea placeholder={activityChatMessages.prompt.placeholder} />
+        <PromptBar>
+          <PromptBarEnd>
+            {isBlank && isStoppable ? (
+              <StopRunButton run={run} display="icon" />
+            ) : (
+              <PromptSend label={activityChatMessages.prompt.send} />
+            )}
+          </PromptBarEnd>
+        </PromptBar>
+      </PromptBox>
+      <PromptFooter>
+        <PromptFooterStart>{footerStart}</PromptFooterStart>
+      </PromptFooter>
+    </PromptInput>
   )
 }

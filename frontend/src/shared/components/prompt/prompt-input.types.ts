@@ -23,7 +23,16 @@ export const promptInputLooks = {
     addon: 'inline-end',
     addonLook: 'justify-end',
   },
-} as const
+} as const satisfies Record<
+  string,
+  {
+    rows: number
+    minHeight: string
+    corner: string
+    addon: string
+    addonLook: string
+  }
+>
 
 /** The sizes of the prompt input: how many rows its box has and where its send sits. */
 export type PromptInputSize = keyof typeof promptInputLooks

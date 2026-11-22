@@ -1,3 +1,5 @@
+export { PromptBar, PromptBarEnd, PromptBarStart, PromptSend } from './box/PromptBar'
+export { PromptBox, PromptTextarea } from './box/PromptBox'
+export { PromptFooter, PromptFooterEnd, PromptFooterStart } from './footer/PromptFooter'
 export type { PromptInputSize } from './prompt-input.types'
 export { PromptInput } from './PromptInput'
-export { PromptSubmitButton } from './PromptSubmitButton'

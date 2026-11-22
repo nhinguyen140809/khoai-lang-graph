@@ -3,7 +3,14 @@
 import { useId, useRef, useState } from 'react'
 
 import { Reveal, TypedText, typedTextMs } from '@/shared/components/animation'
-import { PromptInput } from '@/shared/components/prompt'
+import {
+  PromptBar,
+  PromptBarEnd,
+  PromptBox,
+  PromptInput,
+  PromptSend,
+  PromptTextarea,
+} from '@/shared/components/prompt'
 
 import { useProjectPromptFocus } from '../hooks/useOpenProjectPrompt'
 import { createProjectMessages } from '../new-project.constants'
@@ -40,10 +47,17 @@ export function NewProjectPrompt({ onStart }: NewProjectPromptProps) {
           onValueChange={setIdea}
           onSubmit={onStart}
           inputRef={inputRef}
-          submitLabel={createProjectMessages.create}
           keysHint="Enter to create the project, Shift+Enter for a new line"
-          placeholder="Describe the idea, who it is for and the problem it solves"
-        />
+        >
+          <PromptBox>
+            <PromptTextarea placeholder="Describe the idea, who it is for and the problem it solves" />
+            <PromptBar>
+              <PromptBarEnd>
+                <PromptSend label={createProjectMessages.create} />
+              </PromptBarEnd>
+            </PromptBar>
+          </PromptBox>
+        </PromptInput>
       </Reveal>
     </div>
   )
