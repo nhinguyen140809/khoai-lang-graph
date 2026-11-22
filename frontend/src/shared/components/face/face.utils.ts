@@ -27,5 +27,5 @@ export function isRestingMood(mood: Mood): mood is RestingMood {
 
 /** Whether eyes of a kind blink: closed eyes do not. */
 export function canBlink(kind: EyeKind): boolean {
-  return kind !== 'arc' && kind !== 'shut'
+  return kind !== 'arc' && kind !== 'shut' && kind !== 'cross' && kind !== 'spiral'
 }

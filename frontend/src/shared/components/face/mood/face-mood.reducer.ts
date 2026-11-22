@@ -2,11 +2,13 @@ import { and, assign, setup } from 'xstate'
 
 import type { FaceState, Mood } from '../face.types'
 import { isRestingMood } from '../face.utils'
-import { restAfterMs, restingStates, swapFallbackMs } from './face-mood.constants'
+import { moodCycles, restAfterMs, restingStates, swapFallbackMs } from './face-mood.constants'
 
 /** What the machine of the mood of a face holds: the mood that it was last given, and the state that the face shows. */
 interface FaceMoodContext {
   mood: Mood
+  /** Which look of the cycle of the mood is next to show; 0 for a mood that has no cycle. */
+  step: number
   shown: FaceState
 }
 
@@ -34,15 +36,25 @@ export const faceMoodMachine = setup({
     events: {} as FaceMoodEvent,
     input: {} as { mood: Mood },
   },
-  delays: { rest: restAfterMs, cover: swapFallbackMs },
+  delays: {
+    rest: restAfterMs,
+    cover: swapFallbackMs,
+    cycle: ({ context }) => moodCycles[context.mood]?.[context.step]?.ms ?? 0,
+  },
   guards: {
     isNewMood: ({ context, event }) => event.type === 'MOOD' && event.mood !== context.mood,
     isStill: ({ event }) => event.type === 'MOOD' && event.isStill,
     comesToRest: ({ context }) => isRestingMood(context.mood),
+    hasCycle: ({ context }) => (moodCycles[context.mood]?.length ?? 0) > 1,
   },
   actions: {
-    takeMood: assign(({ event }) => (event.type === 'MOOD' ? { mood: event.mood } : {})),
-    showMood: assign(({ context }) => ({ shown: context.mood })),
+    takeMood: assign(({ event }) => (event.type === 'MOOD' ? { mood: event.mood, step: 0 } : {})),
+    nextStep: assign(({ context }) => ({
+      step: (context.step + 1) % (moodCycles[context.mood]?.length ?? 1),
+    })),
+    showMood: assign(({ context }) => ({
+      shown: moodCycles[context.mood]?.[context.step]?.state ?? context.mood,
+    })),
     showRest: assign(({ context }) => ({
       shown: isRestingMood(context.mood) ? restingStates[context.mood] : context.mood,
     })),
@@ -50,7 +62,7 @@ export const faceMoodMachine = setup({
 }).createMachine({
   id: 'faceMood',
   initial: 'steady',
-  context: ({ input }) => ({ mood: input.mood, shown: input.mood }),
+  context: ({ input }) => ({ mood: input.mood, step: 0, shown: input.mood }),
   on: {
     MOOD: [
       // For a user who asked for less motion: shown at once, with nothing to cover.
@@ -65,7 +77,10 @@ export const faceMoodMachine = setup({
   },
   states: {
     steady: {
-      after: { rest: { guard: 'comesToRest', target: 'resting' } },
+      after: {
+        rest: { guard: 'comesToRest', target: 'resting' },
+        cycle: { guard: 'hasCycle', target: 'covering', actions: 'nextStep' },
+      },
     },
     resting: { entry: 'showRest' },
     covering: {

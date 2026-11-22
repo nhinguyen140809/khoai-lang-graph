@@ -20,14 +20,17 @@ export type Mood = (typeof moods)[number]
 /** The moods whose face comes to rest after a long time of nothing to do: it stands still, and only an eye that can blink blinks. */
 export type RestingMood = 'idle' | 'happy'
 
-/** What a face looks like: one of its moods, or at rest in one of the moods that come to rest, which is not a mood that anyone sets. */
-export type FaceState = Mood | `resting-${RestingMood}`
+/** What a face looks like: one of its moods, at rest in one of the moods that come to rest, or at a step of a mood that goes through looks; none of the last two is a mood that anyone sets. */
+/** A step of a mood that goes through looks one after another, besides the first, which is the mood itself. */
+export type CycleStep = 'thinking-long' | 'thinking-squint'
+
+export type FaceState = Mood | `resting-${RestingMood}` | CycleStep
 
 /** Where the eyes look: now and then to the sides (`drift` is the same, much smaller), slowly from side to side only (`glance`), up and to the left and held long with a glance down now and then (`ponder`), along a line as if reading, down, to the side and held there (`toward`), or ahead. */
 export type Gaze = 'wander' | 'drift' | 'ponder' | 'glance' | 'scan' | 'down' | 'toward' | 'still'
 
 /** The eyes of a face: long ones, round ones, a long oval one and a flat oval one, closed smiling arcs, or shut ones. */
-export type EyeKind = 'long' | 'round' | 'tall' | 'flat' | 'arc' | 'shut'
+export type EyeKind = 'long' | 'round' | 'tall' | 'flat' | 'arc' | 'shut' | 'cross' | 'spiral'
 
 /** How a mood moves the blobs of a face: not at all, or by drifting. */
 export type Pace = 'calm' | 'busy'
@@ -39,7 +42,7 @@ export type Body = 'none' | 'pulse' | 'breathe' | 'bounce' | 'turnaround'
 export type Pose = 'sway' | 'tilt' | 'rest'
 
 /** What an eye does by itself: nothing, swells and shrinks slowly, or squints now and then. */
-export type EyeLife = 'steady' | 'breathe' | 'squint'
+export type EyeLife = 'steady' | 'breathe' | 'squint' | 'wink'
 
 /** What a mood does to a face. Each of its parts is given for the left eye and for the right eye. */
 export interface MoodLook {

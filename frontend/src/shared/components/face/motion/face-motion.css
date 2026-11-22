@@ -41,6 +41,8 @@
   --duration-face-blink: 380ms;
   --duration-face-eye-breathe: 3200ms;
   --duration-face-squint: 4300ms;
+  --duration-face-wink: 3600ms;
+  --duration-face-spin: 1600ms;
   --duration-face-swap: 160ms;
   --duration-face-open: 360ms;
 
@@ -48,6 +50,8 @@
   --animate-face-eye-breathe: face-eye-breathe var(--duration-face-eye-breathe) ease-in-out infinite
     alternate;
   --animate-face-eye-squint: face-eye-squint var(--duration-face-squint) ease-in-out infinite;
+  --animate-face-eye-wink: face-eye-wink var(--duration-face-wink) ease-in-out infinite;
+  --animate-face-spin: face-spin var(--duration-face-spin) linear infinite;
 
   /* One blink: the machine of the motions of a face starts it each time that the eyes blink. */
   @keyframes face-blink {
@@ -67,6 +71,25 @@
     }
     to {
       scale: 1.14;
+    }
+  }
+
+  /* One eye shuts quickly and opens again now and then: a wink. */
+  @keyframes face-eye-wink {
+    0%,
+    84%,
+    100% {
+      scale: 1 1;
+    }
+    90% {
+      scale: 1.12 0.06;
+    }
+  }
+
+  /* A spiral turns round its middle. */
+  @keyframes face-spin {
+    to {
+      rotate: 360deg;
     }
   }
 

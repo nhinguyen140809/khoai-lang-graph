@@ -50,6 +50,8 @@ export const eyeGeometries = {
   flat: { halfWidth: 3.8, halfHeight: 2.2 },
   arc: { halfWidth: 2.9, halfHeight: 1.3 },
   shut: { halfWidth: 2.9, halfHeight: 1.3 },
+  cross: { halfWidth: 3.6, halfHeight: 3.6 },
+  spiral: { halfWidth: 3.6, halfHeight: 3.6 },
 } as const satisfies Record<EyeKind, EyeGeometry>
 
 /** The clear space between the two eyes, by how far apart they are: it comes on top of the width of the eyes. */

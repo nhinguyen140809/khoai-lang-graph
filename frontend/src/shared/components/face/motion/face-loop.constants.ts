@@ -58,44 +58,24 @@ export const bodyLoops: Readonly<Record<Body, Loop | null>> = {
     isMirrored: true,
     tracks: { scale: { values: [0.96, 1.03], ease: easeInOut } },
   },
-  // A face hops from side to side, off the ground: it squashes where it lands, stretches as it rises, and falls faster than it rose.
+  // A face jumps straight up and down, off the ground: it squashes where it lands, stretches as it rises, and falls faster than it rose.
   bounce: {
-    durationMs: 1000,
+    durationMs: 800,
     tracks: {
-      x: {
-        times: [0, 0.25, 0.5, 0.75, 1],
-        values: [-0.14, 0, 0.14, 0, -0.14],
-        ease: [landing, falling, landing, falling],
-      },
       y: {
-        times: [0, 0.25, 0.5, 0.75, 1],
-        values: [0, -0.42, 0, -0.42, 0],
-        ease: [landing, falling, landing, falling],
-      },
-      rotate: {
-        times: [0, 0.25, 0.5, 0.75, 1],
-        values: [-7, 0, 7, 0, -7],
-        ease: [landing, falling, landing, falling],
-      },
-      rotateY: {
-        times: [0, 0.25, 0.5, 0.75, 1],
-        values: [-12, -6, 12, 6, -12],
-        ease: [landing, falling, landing, falling],
-      },
-      rotateX: {
-        times: [0, 0.25, 0.5, 0.75, 1],
-        values: [0, 7, 0, 7, 0],
-        ease: [landing, falling, landing, falling],
+        times: [0, 0.5, 1],
+        values: [0, -0.42, 0],
+        ease: [landing, falling],
       },
       scaleX: {
-        times: [0, 0.25, 0.5, 0.75, 1],
-        values: [1.14, 0.95, 1.14, 0.95, 1.14],
-        ease: [landing, falling, landing, falling],
+        times: [0, 0.5, 1],
+        values: [1.14, 0.95, 1.14],
+        ease: [landing, falling],
       },
       scaleY: {
-        times: [0, 0.25, 0.5, 0.75, 1],
-        values: [0.84, 1.1, 0.84, 1.1, 0.84],
-        ease: [landing, falling, landing, falling],
+        times: [0, 0.5, 1],
+        values: [0.84, 1.1, 0.84],
+        ease: [landing, falling],
       },
     },
   },

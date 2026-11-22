@@ -2,7 +2,7 @@ import { describe, expect, it } from 'vitest'
 import { createActor, SimulatedClock } from 'xstate'
 
 import type { Mood } from '../../face.types'
-import { restAfterMs, swapFallbackMs } from '../face-mood.constants'
+import { moodCycles, restAfterMs, swapFallbackMs } from '../face-mood.constants'
 import { faceMoodMachine } from '../face-mood.reducer'
 
 function started(mood: Mood) {
@@ -105,5 +105,49 @@ describe('faceMoodMachine', () => {
 
     clock.increment(1000)
     expect(actor.getSnapshot().context.shown).toBe('resting-happy')
+  })
+
+  describe('a mood that goes through looks', () => {
+    const [first, second, third] = moodCycles.thinking ?? []
+    const steps = [first, second, third]
+
+    it('covers each change with a blink and goes on from look to look, and round again', () => {
+      const { actor, clock } = started('thinking')
+      expect(actor.getSnapshot().context.shown).toBe(steps[0]?.state)
+
+      for (const [index, step] of steps.entries()) {
+        const next = steps[(index + 1) % steps.length]
+        clock.increment(step?.ms ?? 0)
+        expect(actor.getSnapshot().value).toBe('covering')
+        expect(actor.getSnapshot().context.shown).toBe(step?.state)
+
+        actor.send({ type: 'SETTLE' })
+        expect(actor.getSnapshot().value).toBe('steady')
+        expect(actor.getSnapshot().context.shown).toBe(next?.state)
+      }
+    })
+
+    it('starts again from the first look when the mood is another and comes back', () => {
+      const { actor, clock } = started('thinking')
+      clock.increment(first?.ms ?? 0)
+      actor.send({ type: 'SETTLE' })
+      expect(actor.getSnapshot().context.shown).toBe(second?.state)
+
+      actor.send(give('working'))
+      actor.send({ type: 'SETTLE' })
+      actor.send(give('thinking'))
+      actor.send({ type: 'SETTLE' })
+
+      expect(actor.getSnapshot().context.shown).toBe(first?.state)
+    })
+
+    it('leaves a mood without a cycle as it is', () => {
+      const { actor, clock } = started('working')
+
+      clock.increment(60000)
+
+      expect(actor.getSnapshot().value).toBe('steady')
+      expect(actor.getSnapshot().context.shown).toBe('working')
+    })
   })
 })

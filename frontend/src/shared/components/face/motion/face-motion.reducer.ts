@@ -43,7 +43,7 @@ const bodies = [
   'bounce',
   'turnaround',
 ] as const satisfies readonly Body[]
-const lives = ['steady', 'breathe', 'squint'] as const satisfies readonly EyeLife[]
+const lives = ['steady', 'breathe', 'squint', 'wink'] as const satisfies readonly EyeLife[]
 
 /**
  * A region of one state per kind of a motion, which goes to the state that a look asks for. It does
