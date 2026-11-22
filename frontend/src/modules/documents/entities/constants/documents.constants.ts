@@ -9,6 +9,17 @@ export const itemLoadMessages = {
   notFound: { title: 'Item not found', description: 'This item does not exist, or was deleted.' },
 } as const
 
+/** The words of the links of an item, wherever they show. */
+export const itemLinkMessages = {
+  moreLinks: (count: number) => `${String(count)} more`,
+  linksLoadError: 'The links could not load.',
+  /** The title of the folded links of a profile: what the item is linked to, which is not always what backs it. */
+  relations: 'Related items',
+} as const
+
+/** How many chips of one link group show before "N more" replaces the rest. */
+export const linkChipsShown = 5
+
 /**
  * How a document mark shows: the level of attention it asks (`act` is to act now, `follow` is
  * something in motion, `none` is nothing to do, `quiet` is not there yet; the level gives the

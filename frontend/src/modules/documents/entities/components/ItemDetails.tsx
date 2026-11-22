@@ -101,7 +101,7 @@ function ProfileGrid<Range extends HighlightRange = HighlightRange>(props: Detai
           <Card key={section.title ?? untitledSectionKey} size="sm">
             {section.title !== null && (
               <CardHeader>
-                <CardTitle>{section.title}</CardTitle>
+                <CardTitle className="group-data-[size=sm]/card:text-lg">{section.title}</CardTitle>
               </CardHeader>
             )}
             <CardContent className="grid gap-6 sm:grid-cols-2">

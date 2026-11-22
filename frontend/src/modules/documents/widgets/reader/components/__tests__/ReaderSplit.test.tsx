@@ -16,6 +16,7 @@ import { routeOfAddress } from '@/shared/routes'
 import { routerMock, setPathname, setQuery } from '@/test/next-stubs'
 import { renderWithProviders } from '@/test/render'
 import {
+  expectAttribute,
   expectNoRole,
   expectPushedTo,
   expectReplacedWith,
@@ -150,6 +151,22 @@ describe('ReaderSplit', () => {
       'href',
       `${chat}?reader=documents`,
     )
+  })
+
+  it('shows a persona in the reader as a profile: its avatar, its role and its status under its name, and its links folded at its foot', async () => {
+    const persona = itemFixtureByKey(projectId, 'PER-001')
+    renderSplit(`item=${persona.id}`)
+
+    const reader = await screen.findByRole('complementary', { name: 'Minh' })
+    const heading = await within(reader).findByRole('heading', { level: 1, name: 'Minh' })
+    // The avatar leads the name, and the role and the status stand under it, with no key.
+    expect(within(reader).getByText('M')).toHaveAttribute('data-color', 'secondary')
+    expect(heading.parentElement).toHaveTextContent('Student')
+    expect(heading.parentElement).toHaveTextContent('Interviewed')
+    expect(heading.parentElement).not.toHaveTextContent('PER-001')
+    // The links are folded, closed until they are opened.
+    await expectRole('button', 'Related items', within(reader))
+    expectAttribute('button', 'Related items', 'aria-expanded', 'false')
   })
 
   it('says that a document does not exist', async () => {

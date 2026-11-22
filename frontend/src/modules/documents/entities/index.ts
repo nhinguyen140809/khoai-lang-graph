@@ -1,7 +1,11 @@
 export { ItemDetails } from './components/ItemDetails'
+export { ItemHeading } from './components/ItemHeading'
+export { ItemLinkLine } from './components/ItemLinkLine'
+export { ItemRelated } from './components/ItemRelated'
 export {
   documentMarkLooks,
   documentsMessages,
+  itemLinkMessages,
   itemLoadMessages,
 } from './constants/documents.constants'
 export { useDocumentDisplays } from './hooks/useDocumentDisplays'

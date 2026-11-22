@@ -6,7 +6,8 @@ import {
   useItem,
   useItemStatusLook,
 } from '@/modules/artifact/entities'
-import { ItemDetails } from '@/modules/documents/entities'
+import { ItemDetails, ItemHeading, ItemLinkLine, ItemRelated } from '@/modules/documents/entities'
+import { InlineFieldValues, useWorkflowDefinition } from '@/modules/workflow/entities'
 import { isNotFoundError } from '@/shared/api/error'
 import { ErrorState, LoadingState, NotFoundState } from '@/shared/components/state'
 import { ColoredText } from '@/shared/components/ui/colored-text'
@@ -58,13 +59,17 @@ function LoadedItem({
 }) {
   const item = useReaderItem(projectId, record)
 
+  const hasAvatar = item.view?.hasAvatar === true
+
   return (
     <ContentBody title={item.title} renderTitle={renderTitle}>
       <article className="space-y-6 p-6">
         <header className="space-y-1">
           <p className="text-sm text-muted-foreground">{item.kindTitle}</p>
-          <h1 className="text-2xl font-semibold">{item.title}</h1>
-          {item.status !== undefined && (
+          <ItemHeading hasAvatar={hasAvatar} title={item.title} place={item.place}>
+            {hasAvatar && <ProfileKeyLine record={record} item={item} />}
+          </ItemHeading>
+          {!hasAvatar && item.status !== undefined && (
             <ItemStatusLine status={item.status} isUnderReview={item.isUnderReview} />
           )}
         </header>
@@ -76,8 +81,38 @@ function LoadedItem({
             sections={item.view.sections}
           />
         )}
+        {hasAvatar && item.links.state === 'success' && item.links.count > 0 && (
+          <ItemRelated>
+            <ItemLinkLine projectId={projectId} links={item.links} />
+          </ItemRelated>
+        )}
       </article>
     </ContentBody>
+  )
+}
+
+/** The key line of a profile in the reader: the fields of its role, then its status, and no more. */
+function ProfileKeyLine({
+  record,
+  item,
+}: {
+  record: ArtifactItem
+  item: ReturnType<typeof useReaderItem>
+}) {
+  const { data: definition } = useWorkflowDefinition()
+  const fields = item.view?.keyLineFields ?? []
+
+  return (
+    <div className="space-y-0.5">
+      {fields.length > 0 && (
+        <p className="flex flex-wrap items-center gap-x-4 gap-y-1 text-sm">
+          <InlineFieldValues fields={fields} content={record.content} definition={definition} />
+        </p>
+      )}
+      {item.status !== undefined && (
+        <ItemStatusLine status={item.status} isUnderReview={item.isUnderReview} />
+      )}
+    </div>
   )
 }
 
