@@ -4,13 +4,14 @@
 /** @type {Record<string, string[]>} */
 export const moduleImports = {
   workflow: [],
+  source: [],
   artifact: ['workflow'],
   trace: ['workflow', 'artifact'],
   run: ['workflow', 'artifact'],
   review: ['workflow', 'artifact', 'run'],
   thread: ['workflow', 'artifact', 'run', 'review'],
-  project: ['workflow', 'artifact', 'run', 'review', 'thread'],
-  activity: ['workflow', 'artifact', 'run', 'review', 'thread'],
+  project: ['workflow', 'artifact', 'run', 'review', 'thread', 'source'],
+  activity: ['workflow', 'artifact', 'run', 'review', 'thread', 'source'],
   documents: ['workflow', 'artifact', 'trace', 'run', 'review', 'thread', 'project', 'activity'],
   traceability: [
     'workflow',
