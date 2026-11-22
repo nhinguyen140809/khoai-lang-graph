@@ -111,23 +111,21 @@ describe('the resolved config', () => {
     ])
   })
 
-  it('keeps the pages of each view to the slices of their own frame', async () => {
-    const user = JSON.stringify(
-      await ruleOf('src/app/user/(home)/layout.tsx', 'no-restricted-imports'),
-    )
-    expect(user).toContain('@/modules/project/widgets/list')
-    // Both frames sit in one folder: the user pages take only the names of the desk.
-    expect(user).toContain('"allowImportNames":["Desk"')
-    expect(user).not.toContain('@/modules/project/widgets/sidebar')
-    const developer = JSON.stringify(
-      await ruleOf('src/app/developer/(home)/layout.tsx', 'no-restricted-imports'),
-    )
-    expect(developer).toContain('@/modules/project/widgets/sidebar')
-    expect(developer).toContain('"importNames":["Desk"')
-    expect(developer).not.toContain('@/modules/project/widgets/list')
-    // Each block keeps the patterns that every file follows.
-    expect(user).toContain(storageIndexPattern.message)
-    expect(developer).toContain(storageIndexPattern.message)
+  it('reads the tag of the view in the pages of each view, and keeps their shared patterns', async () => {
+    const pages = ['src/app/user/(home)/layout.tsx', 'src/app/developer/(home)/layout.tsx']
+    for (const page of pages) {
+      expect(await ruleOf(page, 'local/view-boundary')).toEqual([2])
+      expect(JSON.stringify(await ruleOf(page, 'no-restricted-imports'))).toContain(
+        storageIndexPattern.message,
+      )
+    }
+    // Only the pages of a view are checked; the slices that they import are not pages.
+    expect(
+      await ruleOf(
+        'src/modules/project/widgets/sidebar/components/ProjectSidebar.tsx',
+        'local/view-boundary',
+      ),
+    ).toBeUndefined()
   })
 
   it('keeps the rule of the hosts and the areas in the proxy and the route helper', async () => {
