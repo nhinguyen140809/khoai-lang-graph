@@ -58,6 +58,7 @@ export function PromptTextarea({ placeholder }: { placeholder: string }) {
       className={cn(
         'max-h-48 overflow-y-auto leading-relaxed transition-all motion-reduce:transition-none',
         looks.minHeight,
+        looks.textPadding,
       )}
     />
   )

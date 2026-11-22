@@ -1,16 +1,24 @@
 'use client'
 
+import { cn } from 'cn'
 import type { ReactNode } from 'react'
 
 import { Stack } from '@/shared/components/ui/stack'
 
-/** The row under the box whose two sides hold what the place adds: `PromptFooterStart` and `PromptFooterEnd`. */
+import { usePromptLooks } from '../hooks/usePromptInput'
+
+/** The row under the box, padded as the size of the prompt says so that its sides line up with the inside of the box, whose two sides hold what the place adds: `PromptFooterStart` and `PromptFooterEnd`. */
 export function PromptFooter({ children }: { children: ReactNode }) {
+  const { looks } = usePromptLooks()
+
   return (
     <div
       // The row is there only while one of its sides holds something: with nothing to show, such
       // as no dictation in this browser and nothing from the place, it takes no room under the box.
-      className="hidden h-7 items-center gap-2 text-xs text-muted-foreground has-[>:not(:empty)]:flex"
+      className={cn(
+        'hidden h-7 items-center gap-2 text-xs text-muted-foreground has-[>:not(:empty)]:flex',
+        looks.footerPadding,
+      )}
     >
       {children}
     </div>
