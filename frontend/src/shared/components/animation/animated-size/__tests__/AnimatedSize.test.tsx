@@ -1,32 +1,9 @@
-import { act, render, screen } from '@testing-library/react'
-import { describe, expect, it, vi } from 'vitest'
+import { render, screen } from '@testing-library/react'
+import { describe, expect, it } from 'vitest'
+
+import { stubResizeObserver } from '@/test/browser'
 
 import { AnimatedSize } from '../AnimatedSize'
-
-type Callback = (entries: { borderBoxSize: { inlineSize: number; blockSize: number }[] }[]) => void
-
-function stubResizeObserver() {
-  let callback: Callback | undefined
-  vi.stubGlobal(
-    'ResizeObserver',
-    class {
-      constructor(next: Callback) {
-        callback = next
-      }
-      observe() {
-        // The test decides when a size arrives.
-      }
-      disconnect() {
-        // Nothing is observed.
-      }
-    },
-  )
-  return (width: number, height: number) => {
-    act(() => {
-      callback?.([{ borderBoxSize: [{ inlineSize: width, blockSize: height }] }])
-    })
-  }
-}
 
 describe('AnimatedSize', () => {
   it('sizes itself to its children until they are measured', () => {
@@ -39,7 +16,7 @@ describe('AnimatedSize', () => {
   })
 
   it('takes the measured size of its children as its own width and height', () => {
-    const resizeTo = stubResizeObserver()
+    const { resizeTo } = stubResizeObserver()
     render(<AnimatedSize>content</AnimatedSize>)
 
     resizeTo(320, 120)
@@ -49,7 +26,7 @@ describe('AnimatedSize', () => {
   })
 
   it('moves to the next size when the children change it', () => {
-    const resizeTo = stubResizeObserver()
+    const { resizeTo } = stubResizeObserver()
     render(<AnimatedSize>content</AnimatedSize>)
 
     resizeTo(320, 120)

@@ -1,33 +1,10 @@
-import { act, render, screen } from '@testing-library/react'
-import { describe, expect, it, vi } from 'vitest'
+import { render, screen } from '@testing-library/react'
+import { describe, expect, it } from 'vitest'
+
+import { stubResizeObserver } from '@/test/browser'
 
 import { LoadingState } from '../LoadingState'
 import type { LoadingLayout } from '../state.types'
-
-type Callback = (entries: { borderBoxSize: { inlineSize: number; blockSize: number }[] }[]) => void
-
-function stubResizeObserver() {
-  let callback: Callback | undefined
-  vi.stubGlobal(
-    'ResizeObserver',
-    class {
-      constructor(next: Callback) {
-        callback = next
-      }
-      observe() {
-        // The test decides when a size arrives.
-      }
-      disconnect() {
-        // Nothing is observed.
-      }
-    },
-  )
-  return (height: number) => {
-    act(() => {
-      callback?.([{ borderBoxSize: [{ inlineSize: 800, blockSize: height }] }])
-    })
-  }
-}
 
 const skeletonsOf = (container: HTMLElement) =>
   container.querySelectorAll('[data-slot="skeleton"]').length
@@ -44,21 +21,21 @@ const addingRows: { layout: LoadingLayout; skeletons: number; unit: string }[] =
 
 describe('LoadingState filling its container', () => {
   it.each(addingRows)('adds rows to $layout: $unit', ({ layout, skeletons }) => {
-    const resizeTo = stubResizeObserver()
+    const { resizeTo } = stubResizeObserver()
     const { container } = render(<LoadingState label="Loading" layout={layout} rows={2} />)
     expect(skeletonsOf(container)).toBeLessThan(skeletons)
 
-    resizeTo(600)
+    resizeTo(800, 600)
 
     expect(skeletonsOf(container)).toBe(skeletons)
   })
 
   it('makes the blocks of a grid taller and keeps their rows', () => {
-    const resizeTo = stubResizeObserver()
+    const { resizeTo } = stubResizeObserver()
     const { container } = render(<LoadingState label="Loading" layout="grid" rows={2} />)
     const before = skeletonsOf(container)
 
-    resizeTo(600)
+    resizeTo(800, 600)
 
     expect(skeletonsOf(container)).toBe(before)
     expect(container.querySelector('[data-slot="skeleton"]')).toHaveStyle({
@@ -67,11 +44,11 @@ describe('LoadingState filling its container', () => {
   })
 
   it('makes the blocks of a detail taller and keeps its sections', () => {
-    const resizeTo = stubResizeObserver()
+    const { resizeTo } = stubResizeObserver()
     const { container } = render(<LoadingState label="Loading" layout="detail" rows={2} />)
     const before = skeletonsOf(container)
 
-    resizeTo(600)
+    resizeTo(800, 600)
 
     expect(skeletonsOf(container)).toBe(before)
     expect(container.querySelectorAll('[data-slot="skeleton"]')[5]).toHaveStyle({
@@ -80,12 +57,12 @@ describe('LoadingState filling its container', () => {
   })
 
   it('keeps the rows it was asked for when it is told not to fill', () => {
-    const resizeTo = stubResizeObserver()
+    const { resizeTo } = stubResizeObserver()
     const { container } = render(
       <LoadingState label="Loading" layout="list" rows={2} fill={false} />,
     )
 
-    resizeTo(600)
+    resizeTo(800, 600)
 
     expect(skeletonsOf(container)).toBe(6)
   })

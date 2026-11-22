@@ -1,33 +1,9 @@
 import { act, renderHook } from '@testing-library/react'
-import { describe, expect, it, vi } from 'vitest'
+import { describe, expect, it } from 'vitest'
+
+import { stubResizeObserver } from '@/test/browser'
 
 import { useElementSize } from '../useElementSize'
-
-type Callback = (entries: { borderBoxSize: { inlineSize: number; blockSize: number }[] }[]) => void
-
-/** A ResizeObserver whose callbacks the test calls, the way the browser calls them on a resize. */
-function stubResizeObserver() {
-  const callbacks: Callback[] = []
-  const disconnect = vi.fn()
-  vi.stubGlobal(
-    'ResizeObserver',
-    class {
-      constructor(callback: Callback) {
-        callbacks.push(callback)
-      }
-      observe() {
-        // The test decides when a size arrives.
-      }
-      disconnect = disconnect
-    },
-  )
-  const resizeTo = (width: number, height: number) => {
-    act(() => {
-      callbacks.at(-1)?.([{ borderBoxSize: [{ inlineSize: width, blockSize: height }] }])
-    })
-  }
-  return { resizeTo, disconnect }
-}
 
 /** The hook with an element handed to its ref, the way React hands it one. */
 function renderMeasured() {
