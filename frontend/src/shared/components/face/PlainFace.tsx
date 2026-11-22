@@ -31,7 +31,7 @@ import { blobMotionClasses } from './motion/face-motion.constants'
  * less motion.
  */
 export function PlainFace({ seed, mood = 'idle', drive, size = 'default', className }: FaceProps) {
-  const { look, ref, isInView, isRested, parts, gaze, poseStyle, bodyStyle } = useFace({
+  const { look, ref, isInView, isRested, parts, gaze, motions, poseStyle, bodyStyle } = useFace({
     seed,
     mood,
     drive,
@@ -54,7 +54,7 @@ export function PlainFace({ seed, mood = 'idle', drive, size = 'default', classN
       style={{ ...blobStyleOf(look), '--face-layers': faceLayerCount } as CSSProperties}
     >
       <motion.span className="face-pose" style={poseStyle}>
-        <motion.span data-body={parts.moodLook.body} className="face-body" style={bodyStyle}>
+        <motion.span data-body={motions.body} className="face-body" style={bodyStyle}>
           {Array.from({ length: faceLayerCount }, (_, layer) => (
             <span
               key={layer}
@@ -83,7 +83,7 @@ export function PlainFace({ seed, mood = 'idle', drive, size = 'default', classN
               )}
             />
             <span className="absolute inset-0 noise" />
-            <FaceFeatures parts={parts} gaze={gaze} />
+            <FaceFeatures parts={parts} gaze={gaze} motion={motions} />
           </span>
         </motion.span>
       </motion.span>

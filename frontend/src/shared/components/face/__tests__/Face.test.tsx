@@ -7,7 +7,7 @@ import { Face } from '../Face'
 import { type Mood, moods } from '../face.types'
 import { faceLooks, moodLooks, restAfterMs } from '../mood/face-mood.constants'
 import { bodyLoops, poseLoops } from '../motion/face-loop.constants'
-import { gazeLooks, gazePaths } from '../motion/face-motion.constants'
+import { blinkEveryMs, blinkMs, gazeLooks, gazePaths } from '../motion/face-motion.constants'
 
 function renderFace(props: Parameters<typeof Face>[0]) {
   const { container } = render(<Face {...props} />)
@@ -156,15 +156,6 @@ describe('Face', () => {
     expect(shapes.size).toBeGreaterThan(3)
   })
 
-  it('blinks, except with closed eyes', () => {
-    expect(
-      renderFace({ seed: 'analyst', mood: 'idle' }).querySelector('.animate-face-blink'),
-    ).not.toBeNull()
-    expect(
-      renderFace({ seed: 'analyst', mood: 'happy' }).querySelector('.animate-face-blink'),
-    ).toBeNull()
-  })
-
   it('takes the size that it is given', () => {
     expect(renderFace({ seed: 'analyst', size: 'lg' })).toHaveClass('size-10')
   })
@@ -184,6 +175,29 @@ describe('Face', () => {
 
     expect(squash()).not.toHaveClass('scale-y-10')
     expect(eyeTags()).toEqual(['circle', 'circle'])
+  })
+
+  describe('blinking', () => {
+    withFakeTimers()
+
+    it('blinks now and then, and has its eyes open between two blinks', () => {
+      const { container } = render(<Face seed="analyst" mood="idle" />)
+      const isBlinking = () => container.querySelector('.animate-face-blink') !== null
+
+      expect(isBlinking()).toBe(false)
+      advanceTimers(blinkEveryMs)
+      expect(isBlinking()).toBe(true)
+      advanceTimers(blinkMs)
+      expect(isBlinking()).toBe(false)
+    })
+
+    it('does not blink with closed eyes', () => {
+      const { container } = render(<Face seed="analyst" mood="happy" />)
+
+      advanceTimers(blinkEveryMs * 3)
+
+      expect(container.querySelector('.animate-face-blink')).toBeNull()
+    })
   })
 
   describe('when it is idle for long', () => {

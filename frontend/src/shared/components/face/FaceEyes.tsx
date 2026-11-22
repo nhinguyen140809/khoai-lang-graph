@@ -61,11 +61,6 @@ const eyeDrawers: Record<EyeKind, (cx: number, scale: number, line: number) => R
   shut: curvedEye('shut'),
 }
 
-/** Whether eyes of a kind blink: closed eyes do not. */
-export function canBlink(kind: EyeKind): boolean {
-  return kind !== 'arc' && kind !== 'shut'
-}
-
 interface EyeProps {
   kind: EyeKind
   /** The center of the eye, and the height of the line of the eyes, in the units of the face. */
@@ -131,6 +126,8 @@ interface FaceEyesProps {
   gazeValues: GazeValues['eye']
   /** The look of the eyes is about to change, so they are closed. */
   isChanging: boolean
+  /** The eyes are blinking now. */
+  isBlinking: boolean
   /** The eyes have closed, and the look may change. */
   onClosed: () => void
 }
@@ -149,9 +146,9 @@ export function FaceEyes({
   gaze,
   gazeValues,
   isChanging,
+  isBlinking,
   onClosed,
 }: FaceEyesProps) {
-  const canBlinkNow = kinds.every(canBlink) && !isChanging
   return (
     <g
       className={cn('face-squash', isChanging && 'scale-y-10 face-squash-closing')}
@@ -161,12 +158,8 @@ export function FaceEyes({
       }}
     >
       <g
-        className={cn(canBlinkNow && 'animate-face-blink motion-reduce:animate-none')}
-        style={{
-          transformBox: 'view-box',
-          transformOrigin: 'center',
-          ...(kinds.every(canBlink) && delayOf('--duration-face-blink')),
-        }}
+        className={cn(isBlinking && 'animate-face-blink motion-reduce:animate-none')}
+        style={{ transformBox: 'view-box', transformOrigin: 'center' }}
       >
         {centers.map((cx, index) => (
           <Eye

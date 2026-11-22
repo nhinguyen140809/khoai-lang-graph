@@ -10,6 +10,7 @@ import type { FaceLook } from '../look/face-look.types'
 import { faceOf } from '../look/face-look.utils'
 import { gazeLooks } from '../motion/face-motion.constants'
 import { useFaceMotion } from '../motion/hooks/useFaceMotion'
+import { useFaceMotionStates } from '../motion/hooks/useFaceMotionStates'
 import { useGaze } from '../motion/hooks/useGaze'
 import { useFaceParts } from './useFaceParts'
 import { useFaceRules } from './useFaceRules'
@@ -38,6 +39,10 @@ export function useFace({
     reachShare: shapeEyeReachShares[look.shape],
   }
   const gaze: GazeValues = useGaze(gazeLooks[parts.moodLook.gaze], timing, drive?.look)
-  const { poseStyle, bodyStyle } = useFaceMotion(parts.moodLook, gaze.head, timing, drive?.move)
-  return { look, ref, isInView, isRested, parts, gaze, poseStyle, bodyStyle }
+  const motions = useFaceMotionStates(parts.moodLook, {
+    isHeld: parts.isChanging || !isInView,
+    phase: look.phase,
+  })
+  const { poseStyle, bodyStyle } = useFaceMotion(motions, gaze.head, timing, drive?.move)
+  return { look, ref, isInView, isRested, parts, gaze, motions, poseStyle, bodyStyle }
 }

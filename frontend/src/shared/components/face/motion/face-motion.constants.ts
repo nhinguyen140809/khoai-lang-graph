@@ -122,3 +122,9 @@ export const eyeLifeLooks = {
     durationToken: '--duration-face-squint',
   },
 } as const satisfies Record<EyeLife, { className: string; durationToken: string | null }>
+
+/** How long one blink takes, in milliseconds: the eyes close and open again. It is the time of `--animate-face-blink`. */
+export const blinkMs = 380
+
+/** How long the eyes stay open between two blinks, in milliseconds. */
+export const blinkEveryMs = 3420

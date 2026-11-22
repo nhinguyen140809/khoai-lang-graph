@@ -38,24 +38,24 @@
 }
 
 @theme {
-  --duration-face-blink: 3800ms;
+  --duration-face-blink: 380ms;
   --duration-face-eye-breathe: 3200ms;
   --duration-face-squint: 4300ms;
   --duration-face-swap: 160ms;
   --duration-face-open: 360ms;
 
-  --animate-face-blink: face-blink var(--duration-face-blink) ease-in-out infinite;
+  --animate-face-blink: face-blink var(--duration-face-blink) ease-in-out;
   --animate-face-eye-breathe: face-eye-breathe var(--duration-face-eye-breathe) ease-in-out infinite
     alternate;
   --animate-face-eye-squint: face-eye-squint var(--duration-face-squint) ease-in-out infinite;
 
+  /* One blink: the machine of the motions of a face starts it each time that the eyes blink. */
   @keyframes face-blink {
     0%,
-    90%,
     100% {
       transform: scaleY(1);
     }
-    94% {
+    40% {
       transform: scaleY(0.12);
     }
   }

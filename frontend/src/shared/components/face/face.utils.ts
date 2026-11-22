@@ -24,3 +24,8 @@ export function eyeCentersOf(
 export function isRestingMood(mood: Mood): mood is RestingMood {
   return mood in restingStates
 }
+
+/** Whether eyes of a kind blink: closed eyes do not. */
+export function canBlink(kind: EyeKind): boolean {
+  return kind !== 'arc' && kind !== 'shut'
+}
