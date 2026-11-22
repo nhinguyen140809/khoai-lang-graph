@@ -119,6 +119,24 @@
 }
 
 /*
+ * The bars of a prompt that listens: each rises and falls in place, the one next to it a little
+ * later, so that they read as a voice. The owner gives each bar its delay.
+ */
+@theme {
+  --duration-listen: 700ms;
+  --animate-listen: listen var(--duration-listen) var(--ease-standard) infinite alternate;
+
+  @keyframes listen {
+    from {
+      transform: scaleY(0.3);
+    }
+    to {
+      transform: scaleY(1);
+    }
+  }
+}
+
+/*
  * A row of a tree that has just gone: it fades and folds up to nothing, while the rows below it
  * move up with it. A browser that cannot animate a height from `auto` still fades the row.
  */
