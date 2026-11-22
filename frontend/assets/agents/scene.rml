@@ -1,0 +1,486 @@
+<Rive version="1" kind="fragment">
+    <Artboard defaultStateMachineId="0:900" viewModelId="0:700" viewModelInstanceId="0:701" styleId="0:5" width="320" height="320" name="AgentFace" id="0:2">
+        <LayoutComponentStyle name="Artboard Style" id="0:5"/>
+
+        <!-- The eyes draw on top. Where they look, their kind, size and lean, and how far apart they are, all come from the view model; the mood of the face is only what sets those. -->
+        <Node x="160" y="160" name="Eyes" id="0:20">
+            <DataBindContext sourcePathIds="0:700-0:710" propertyKey="13" converterId="0:50"/>
+            <DataBindContext sourcePathIds="0:700-0:711" propertyKey="14" converterId="0:51"/>
+
+            <Node x="-34" name="LeftEye" id="0:21">
+                <DataBindContext sourcePathIds="0:700-0:715" propertyKey="13" converterId="0:52"/>
+                <DataBindContext sourcePathIds="0:700-0:722" propertyKey="15" converterId="0:61"/>
+                <Node name="LeftLid" id="0:22">
+                    <Shape name="LeftEyeShape" id="0:23">
+                        <DataBindContext sourcePathIds="0:700-0:729" propertyKey="18" converterId="0:60"/>
+                            <Ellipse width="24" height="48" name="Path" id="0:27">
+                                <DataBindContext sourcePathIds="0:700-0:720" propertyKey="20" converterId="0:60"/>
+                                <DataBindContext sourcePathIds="0:700-0:721" propertyKey="21" converterId="0:60"/>
+                            </Ellipse>
+                            <Fill name="Fill"><SolidColor colorValue="FF1A1A24" name="Ink"/></Fill>
+                        </Shape>
+                    <Shape name="LeftEyeArc" id="0:45">
+                        <DataBindContext sourcePathIds="0:700-0:730" propertyKey="18" converterId="0:60"/>
+                        <PointsPath name="Path">
+                            <CubicDetachedVertex x="-23.2" y="10.4" outRotation="-0.897734" outDistance="24.8108"/>
+                            <CubicDetachedVertex x="23.2" y="10.4" inRotation="-2.24386" inDistance="24.8108"/>
+                        </PointsPath>
+                        <Stroke thickness="17.6" cap="round" name="Stroke"><SolidColor colorValue="FF1A1A24" name="Ink"/></Stroke>
+                    </Shape>
+                    <Shape name="LeftEyeShut" id="0:46">
+                        <DataBindContext sourcePathIds="0:700-0:731" propertyKey="18" converterId="0:60"/>
+                        <PointsPath name="Path">
+                            <CubicDetachedVertex x="-23.2" y="-10.4" outRotation="0.897734" outDistance="24.8108"/>
+                            <CubicDetachedVertex x="23.2" y="-10.4" inRotation="2.24386" inDistance="24.8108"/>
+                        </PointsPath>
+                        <Stroke thickness="17.6" cap="round" name="Stroke"><SolidColor colorValue="FF1A1A24" name="Ink"/></Stroke>
+                    </Shape>
+                </Node>
+            </Node>
+
+            <Node x="34" name="RightEye" id="0:24">
+                <DataBindContext sourcePathIds="0:700-0:715" propertyKey="13" converterId="0:53"/>
+                <DataBindContext sourcePathIds="0:700-0:725" propertyKey="15" converterId="0:61"/>
+                <Node name="RightLid" id="0:25">
+                    <Shape name="RightEyeShape" id="0:26">
+                        <DataBindContext sourcePathIds="0:700-0:732" propertyKey="18" converterId="0:60"/>
+                            <Ellipse width="24" height="48" name="Path" id="0:28">
+                                <DataBindContext sourcePathIds="0:700-0:723" propertyKey="20" converterId="0:60"/>
+                                <DataBindContext sourcePathIds="0:700-0:724" propertyKey="21" converterId="0:60"/>
+                            </Ellipse>
+                            <Fill name="Fill"><SolidColor colorValue="FF1A1A24" name="Ink"/></Fill>
+                        </Shape>
+                    <Shape name="RightEyeArc" id="0:48">
+                        <DataBindContext sourcePathIds="0:700-0:733" propertyKey="18" converterId="0:60"/>
+                        <PointsPath name="Path">
+                            <CubicDetachedVertex x="-23.2" y="10.4" outRotation="-0.897734" outDistance="24.8108"/>
+                            <CubicDetachedVertex x="23.2" y="10.4" inRotation="-2.24386" inDistance="24.8108"/>
+                        </PointsPath>
+                        <Stroke thickness="17.6" cap="round" name="Stroke"><SolidColor colorValue="FF1A1A24" name="Ink"/></Stroke>
+                    </Shape>
+                    <Shape name="RightEyeShut" id="0:49">
+                        <DataBindContext sourcePathIds="0:700-0:734" propertyKey="18" converterId="0:60"/>
+                        <PointsPath name="Path">
+                            <CubicDetachedVertex x="-23.2" y="-10.4" outRotation="0.897734" outDistance="24.8108"/>
+                            <CubicDetachedVertex x="23.2" y="-10.4" inRotation="2.24386" inDistance="24.8108"/>
+                        </PointsPath>
+                        <Stroke thickness="17.6" cap="round" name="Stroke"><SolidColor colorValue="FF1A1A24" name="Ink"/></Stroke>
+                    </Shape>
+                </Node>
+            </Node>
+        </Node>
+
+        <!-- The outline of the face: one child per outline, each with its own base and blobs of color, and only the one that the view model names is drawn. -->
+        <Solo activeComponentId="0:200" name="Silhouettes" id="0:199">
+            <DataBindContext sourcePathIds="0:700-0:709" propertyKey="296"/>
+            <Node name="Circle" id="0:200">
+                <Shape x="0" y="0" name="BlobSecond" id="0:203">
+                    <Ellipse width="190" height="150" name="Path"/>
+                    <Fill fillRule="clockwise" name="Fill">
+                        <SolidColor colorValue="FFE79BC4" name="Color">
+                            <DataBindContext sourcePathIds="0:700-0:713" propertyKey="37"/>
+                        </SolidColor>
+                        <Feather strength="38" name="Feather"/>
+                    </Fill>
+                    <DataBindContext sourcePathIds="0:700-0:718" propertyKey="13"/>
+                    <DataBindContext sourcePathIds="0:700-0:719" propertyKey="14"/>
+                    <ClippingShape sourceId="0:201" name="Clip"/>
+                </Shape>
+                <Shape x="0" y="0" name="BlobCore" id="0:202">
+                    <Ellipse width="150" height="150" name="Path"/>
+                    <Fill fillRule="clockwise" name="Fill">
+                        <SolidColor colorValue="FF7C6AF0" name="Color">
+                            <DataBindContext sourcePathIds="0:700-0:712" propertyKey="37"/>
+                        </SolidColor>
+                        <Feather strength="38" name="Feather"/>
+                    </Fill>
+                    <DataBindContext sourcePathIds="0:700-0:716" propertyKey="13"/>
+                    <DataBindContext sourcePathIds="0:700-0:717" propertyKey="14"/>
+                    <ClippingShape sourceId="0:201" name="Clip"/>
+                </Shape>
+                <Shape x="160" y="160" name="Outline" id="0:201">
+                    <Ellipse width="235.6" height="235.6" name="Path"/>
+                    <Fill name="Base">
+                        <SolidColor colorValue="FFF3F0FA" name="Color">
+                            <DataBindContext sourcePathIds="0:700-0:714" propertyKey="37"/>
+                        </SolidColor>
+                    </Fill>
+                </Shape>
+            </Node>
+            <Node name="Squircle" id="0:210">
+                <Shape x="0" y="0" name="BlobSecond" id="0:213">
+                    <Ellipse width="190" height="150" name="Path"/>
+                    <Fill fillRule="clockwise" name="Fill">
+                        <SolidColor colorValue="FFE79BC4" name="Color">
+                            <DataBindContext sourcePathIds="0:700-0:713" propertyKey="37"/>
+                        </SolidColor>
+                        <Feather strength="38" name="Feather"/>
+                    </Fill>
+                    <DataBindContext sourcePathIds="0:700-0:718" propertyKey="13"/>
+                    <DataBindContext sourcePathIds="0:700-0:719" propertyKey="14"/>
+                    <ClippingShape sourceId="0:211" name="Clip"/>
+                </Shape>
+                <Shape x="0" y="0" name="BlobCore" id="0:212">
+                    <Ellipse width="150" height="150" name="Path"/>
+                    <Fill fillRule="clockwise" name="Fill">
+                        <SolidColor colorValue="FF7C6AF0" name="Color">
+                            <DataBindContext sourcePathIds="0:700-0:712" propertyKey="37"/>
+                        </SolidColor>
+                        <Feather strength="38" name="Feather"/>
+                    </Fill>
+                    <DataBindContext sourcePathIds="0:700-0:716" propertyKey="13"/>
+                    <DataBindContext sourcePathIds="0:700-0:717" propertyKey="14"/>
+                    <ClippingShape sourceId="0:211" name="Clip"/>
+                </Shape>
+                <Shape x="160" y="160" name="Outline" id="0:211">
+                    <Rectangle width="220" height="220" cornerRadiusTL="75.7" cornerRadiusTR="75.7" cornerRadiusBL="75.7" cornerRadiusBR="75.7" name="Path"/>
+                    <Fill name="Base">
+                        <SolidColor colorValue="FFF3F0FA" name="Color">
+                            <DataBindContext sourcePathIds="0:700-0:714" propertyKey="37"/>
+                        </SolidColor>
+                    </Fill>
+                </Shape>
+            </Node>
+            <Node name="Blob" id="0:220">
+                <Shape x="0" y="0" name="BlobSecond" id="0:223">
+                    <Ellipse width="190" height="150" name="Path"/>
+                    <Fill fillRule="clockwise" name="Fill">
+                        <SolidColor colorValue="FFE79BC4" name="Color">
+                            <DataBindContext sourcePathIds="0:700-0:713" propertyKey="37"/>
+                        </SolidColor>
+                        <Feather strength="38" name="Feather"/>
+                    </Fill>
+                    <DataBindContext sourcePathIds="0:700-0:718" propertyKey="13"/>
+                    <DataBindContext sourcePathIds="0:700-0:719" propertyKey="14"/>
+                    <ClippingShape sourceId="0:221" name="Clip"/>
+                </Shape>
+                <Shape x="0" y="0" name="BlobCore" id="0:222">
+                    <Ellipse width="150" height="150" name="Path"/>
+                    <Fill fillRule="clockwise" name="Fill">
+                        <SolidColor colorValue="FF7C6AF0" name="Color">
+                            <DataBindContext sourcePathIds="0:700-0:712" propertyKey="37"/>
+                        </SolidColor>
+                        <Feather strength="38" name="Feather"/>
+                    </Fill>
+                    <DataBindContext sourcePathIds="0:700-0:716" propertyKey="13"/>
+                    <DataBindContext sourcePathIds="0:700-0:717" propertyKey="14"/>
+                    <ClippingShape sourceId="0:221" name="Clip"/>
+                </Shape>
+                <Shape x="160" y="160" scaleX="7.8569" scaleY="7.8569" name="Outline" id="0:221">
+                    <PointsPath isClosed="true" name="Path">
+                                        <CubicDetachedVertex x="-0.165585" y="-14.8339" inRotation="2.97644" inDistance="6.08276" outRotation="-0.141897" outDistance="7.07107"/>
+                                        <CubicDetachedVertex x="14.3344" y="-2.33389" inRotation="-1.5153" inDistance="9.01388" outRotation="1.65394" outDistance="6.0208"/>
+                                        <CubicDetachedVertex x="8.83442" y="13.1661" inRotation="-0.605545" inDistance="7.90569" outRotation="2.61352" outDistance="6.94622"/>
+                                        <CubicDetachedVertex x="-11.1656" y="10.6661" inRotation="0.674741" inDistance="6.40312" outRotation="-2.41495" outDistance="6.0208"/>
+                                        <CubicDetachedVertex x="-12.6656" y="-6.33389" inRotation="1.9513" inDistance="5.38516" outRotation="-1.17601" outDistance="6.5"/>
+                                    </PointsPath>
+                    <Fill name="Base">
+                        <SolidColor colorValue="FFF3F0FA" name="Color">
+                            <DataBindContext sourcePathIds="0:700-0:714" propertyKey="37"/>
+                        </SolidColor>
+                    </Fill>
+                </Shape>
+            </Node>
+            <Node name="Pill" id="0:230">
+                <Shape x="0" y="0" name="BlobSecond" id="0:233">
+                    <Ellipse width="190" height="150" name="Path"/>
+                    <Fill fillRule="clockwise" name="Fill">
+                        <SolidColor colorValue="FFE79BC4" name="Color">
+                            <DataBindContext sourcePathIds="0:700-0:713" propertyKey="37"/>
+                        </SolidColor>
+                        <Feather strength="38" name="Feather"/>
+                    </Fill>
+                    <DataBindContext sourcePathIds="0:700-0:718" propertyKey="13"/>
+                    <DataBindContext sourcePathIds="0:700-0:719" propertyKey="14"/>
+                    <ClippingShape sourceId="0:231" name="Clip"/>
+                </Shape>
+                <Shape x="0" y="0" name="BlobCore" id="0:232">
+                    <Ellipse width="150" height="150" name="Path"/>
+                    <Fill fillRule="clockwise" name="Fill">
+                        <SolidColor colorValue="FF7C6AF0" name="Color">
+                            <DataBindContext sourcePathIds="0:700-0:712" propertyKey="37"/>
+                        </SolidColor>
+                        <Feather strength="38" name="Feather"/>
+                    </Fill>
+                    <DataBindContext sourcePathIds="0:700-0:716" propertyKey="13"/>
+                    <DataBindContext sourcePathIds="0:700-0:717" propertyKey="14"/>
+                    <ClippingShape sourceId="0:231" name="Clip"/>
+                </Shape>
+                <Shape x="160" y="160" name="Outline" id="0:231">
+                    <Rectangle width="260" height="201.5" cornerRadiusTL="100.8" cornerRadiusTR="100.8" cornerRadiusBL="100.8" cornerRadiusBR="100.8" name="Path"/>
+                    <Fill name="Base">
+                        <SolidColor colorValue="FFF3F0FA" name="Color">
+                            <DataBindContext sourcePathIds="0:700-0:714" propertyKey="37"/>
+                        </SolidColor>
+                    </Fill>
+                </Shape>
+            </Node>
+            <Node name="Ghost" id="0:240">
+                <Shape x="0" y="0" name="BlobSecond" id="0:243">
+                    <Ellipse width="190" height="150" name="Path"/>
+                    <Fill fillRule="clockwise" name="Fill">
+                        <SolidColor colorValue="FFE79BC4" name="Color">
+                            <DataBindContext sourcePathIds="0:700-0:713" propertyKey="37"/>
+                        </SolidColor>
+                        <Feather strength="38" name="Feather"/>
+                    </Fill>
+                    <DataBindContext sourcePathIds="0:700-0:718" propertyKey="13"/>
+                    <DataBindContext sourcePathIds="0:700-0:719" propertyKey="14"/>
+                    <ClippingShape sourceId="0:241" name="Clip"/>
+                </Shape>
+                <Shape x="0" y="0" name="BlobCore" id="0:242">
+                    <Ellipse width="150" height="150" name="Path"/>
+                    <Fill fillRule="clockwise" name="Fill">
+                        <SolidColor colorValue="FF7C6AF0" name="Color">
+                            <DataBindContext sourcePathIds="0:700-0:712" propertyKey="37"/>
+                        </SolidColor>
+                        <Feather strength="38" name="Feather"/>
+                    </Fill>
+                    <DataBindContext sourcePathIds="0:700-0:716" propertyKey="13"/>
+                    <DataBindContext sourcePathIds="0:700-0:717" propertyKey="14"/>
+                    <ClippingShape sourceId="0:241" name="Clip"/>
+                </Shape>
+                <Shape x="160" y="160" scaleX="7.6294" scaleY="7.6294" name="Outline" id="0:241">
+                    <PointsPath isClosed="true" name="Path">
+                                        <StraightVertex x="-14" y="15"/>
+                                        <CubicDetachedVertex x="-14" y="0" outRotation="-1.5708" outDistance="8.8"/>
+                                        <CubicMirroredVertex x="0" y="-15" rotation="0" distance="8"/>
+                                        <CubicDetachedVertex x="14" y="0" inRotation="-1.5708" inDistance="8.8"/>
+                                        <CubicDetachedVertex x="14" y="11" outRotation="1.5708" outDistance="2.5"/>
+                                        <CubicDetachedVertex x="10" y="15" inRotation="0" inDistance="2.5"/>
+                                        <CubicDetachedVertex x="-10" y="15" outRotation="3.14159" outDistance="2.5"/>
+                                        <CubicDetachedVertex x="-14" y="11" inRotation="1.5708" inDistance="2.5"/>
+                                    </PointsPath>
+                    <Fill name="Base">
+                        <SolidColor colorValue="FFF3F0FA" name="Color">
+                            <DataBindContext sourcePathIds="0:700-0:714" propertyKey="37"/>
+                        </SolidColor>
+                    </Fill>
+                </Shape>
+            </Node>
+            <Node name="Drop" id="0:250">
+                <Shape x="0" y="0" name="BlobSecond" id="0:253">
+                    <Ellipse width="190" height="150" name="Path"/>
+                    <Fill fillRule="clockwise" name="Fill">
+                        <SolidColor colorValue="FFE79BC4" name="Color">
+                            <DataBindContext sourcePathIds="0:700-0:713" propertyKey="37"/>
+                        </SolidColor>
+                        <Feather strength="38" name="Feather"/>
+                    </Fill>
+                    <DataBindContext sourcePathIds="0:700-0:718" propertyKey="13"/>
+                    <DataBindContext sourcePathIds="0:700-0:719" propertyKey="14"/>
+                    <ClippingShape sourceId="0:251" name="Clip"/>
+                </Shape>
+                <Shape x="0" y="0" name="BlobCore" id="0:252">
+                    <Ellipse width="150" height="150" name="Path"/>
+                    <Fill fillRule="clockwise" name="Fill">
+                        <SolidColor colorValue="FF7C6AF0" name="Color">
+                            <DataBindContext sourcePathIds="0:700-0:712" propertyKey="37"/>
+                        </SolidColor>
+                        <Feather strength="38" name="Feather"/>
+                    </Fill>
+                    <DataBindContext sourcePathIds="0:700-0:716" propertyKey="13"/>
+                    <DataBindContext sourcePathIds="0:700-0:717" propertyKey="14"/>
+                    <ClippingShape sourceId="0:251" name="Clip"/>
+                </Shape>
+                <Shape x="160" y="160" scaleX="8.4013" scaleY="8.4013" name="Outline" id="0:251">
+                    <PointsPath isClosed="true" name="Path">
+                                        <StraightVertex x="0" y="-14.3534"/>
+                                        <CubicDetachedVertex x="7.59" y="-8.75344" outRotation="0.634741" outDistance="5.53015"/>
+                                        <CubicMirroredVertex x="12.1608" y="5.54793" rotation="1.88817" distance="5.53015"/>
+                                        <CubicMirroredVertex x="0" y="14.3534" rotation="3.14159" distance="5.53015"/>
+                                        <CubicMirroredVertex x="-12.1608" y="5.54793" rotation="-1.88817" distance="5.53015"/>
+                                        <CubicDetachedVertex x="-7.59" y="-8.75344" inRotation="2.50685" inDistance="5.53015"/>
+                                    </PointsPath>
+                    <Fill name="Base">
+                        <SolidColor colorValue="FFF3F0FA" name="Color">
+                            <DataBindContext sourcePathIds="0:700-0:714" propertyKey="37"/>
+                        </SolidColor>
+                    </Fill>
+                </Shape>
+            </Node>
+            <Node name="Hexagon" id="0:260">
+                <Shape x="0" y="0" name="BlobSecond" id="0:263">
+                    <Ellipse width="190" height="150" name="Path"/>
+                    <Fill fillRule="clockwise" name="Fill">
+                        <SolidColor colorValue="FFE79BC4" name="Color">
+                            <DataBindContext sourcePathIds="0:700-0:713" propertyKey="37"/>
+                        </SolidColor>
+                        <Feather strength="38" name="Feather"/>
+                    </Fill>
+                    <DataBindContext sourcePathIds="0:700-0:718" propertyKey="13"/>
+                    <DataBindContext sourcePathIds="0:700-0:719" propertyKey="14"/>
+                    <ClippingShape sourceId="0:261" name="Clip"/>
+                </Shape>
+                <Shape x="0" y="0" name="BlobCore" id="0:262">
+                    <Ellipse width="150" height="150" name="Path"/>
+                    <Fill fillRule="clockwise" name="Fill">
+                        <SolidColor colorValue="FF7C6AF0" name="Color">
+                            <DataBindContext sourcePathIds="0:700-0:712" propertyKey="37"/>
+                        </SolidColor>
+                        <Feather strength="38" name="Feather"/>
+                    </Fill>
+                    <DataBindContext sourcePathIds="0:700-0:716" propertyKey="13"/>
+                    <DataBindContext sourcePathIds="0:700-0:717" propertyKey="14"/>
+                    <ClippingShape sourceId="0:261" name="Clip"/>
+                </Shape>
+                <Shape x="160" y="160" rotation="1.5708" name="Outline" id="0:261">
+                    <Polygon points="6" cornerRadius="40" width="226" height="246" name="Path"/>
+                    <Fill name="Base">
+                        <SolidColor colorValue="FFF3F0FA" name="Color">
+                            <DataBindContext sourcePathIds="0:700-0:714" propertyKey="37"/>
+                        </SolidColor>
+                    </Fill>
+                </Shape>
+            </Node>
+            <Node name="Oval" id="0:270">
+                <Shape x="0" y="0" name="BlobSecond" id="0:273">
+                    <Ellipse width="190" height="150" name="Path"/>
+                    <Fill fillRule="clockwise" name="Fill">
+                        <SolidColor colorValue="FFE79BC4" name="Color">
+                            <DataBindContext sourcePathIds="0:700-0:713" propertyKey="37"/>
+                        </SolidColor>
+                        <Feather strength="38" name="Feather"/>
+                    </Fill>
+                    <DataBindContext sourcePathIds="0:700-0:718" propertyKey="13"/>
+                    <DataBindContext sourcePathIds="0:700-0:719" propertyKey="14"/>
+                    <ClippingShape sourceId="0:271" name="Clip"/>
+                </Shape>
+                <Shape x="0" y="0" name="BlobCore" id="0:272">
+                    <Ellipse width="150" height="150" name="Path"/>
+                    <Fill fillRule="clockwise" name="Fill">
+                        <SolidColor colorValue="FF7C6AF0" name="Color">
+                            <DataBindContext sourcePathIds="0:700-0:712" propertyKey="37"/>
+                        </SolidColor>
+                        <Feather strength="38" name="Feather"/>
+                    </Fill>
+                    <DataBindContext sourcePathIds="0:700-0:716" propertyKey="13"/>
+                    <DataBindContext sourcePathIds="0:700-0:717" propertyKey="14"/>
+                    <ClippingShape sourceId="0:271" name="Clip"/>
+                </Shape>
+                <Shape x="160" y="160" rotation="0.1745" name="Outline" id="0:271">
+                    <Ellipse width="248.5" height="223.7" name="Path"/>
+                    <Fill name="Base">
+                        <SolidColor colorValue="FFF3F0FA" name="Color">
+                            <DataBindContext sourcePathIds="0:700-0:714" propertyKey="37"/>
+                        </SolidColor>
+                    </Fill>
+                </Shape>
+            </Node>
+        </Solo>
+
+        <StateMachine name="Face" id="0:900">
+            <StateMachineLayer name="Blink" id="0:901">
+                <AnyState x="200" y="-120"/>
+                <ExitState x="400" y="-120"/>
+                <EntryState>
+                    <StateTransition stateToId="0:902"/>
+                </EntryState>
+                <AnimationState x="200" animationId="0:90" id="0:902"/>
+            </StateMachineLayer>
+        </StateMachine>
+
+        <!-- The blink loops by itself; every other move of the eyes comes from the data. -->
+        <LinearAnimation loopValue="loop" duration="240" name="Blink" id="0:90">
+            <KeyedObject objectId="0:22">
+                <KeyedProperty property="scaleY">
+                    <KeyFrameDouble value="1" frame="0" interpolationType="linear"/>
+                    <KeyFrameDouble value="1" frame="226" interpolationType="linear"/>
+                    <KeyFrameDouble value="0.08" frame="232" interpolationType="linear"/>
+                    <KeyFrameDouble value="1" frame="240" interpolationType="linear"/>
+                </KeyedProperty>
+            </KeyedObject>
+            <KeyedObject objectId="0:25">
+                <KeyedProperty property="scaleY">
+                    <KeyFrameDouble value="1" frame="0" interpolationType="linear"/>
+                    <KeyFrameDouble value="1" frame="226" interpolationType="linear"/>
+                    <KeyFrameDouble value="0.08" frame="232" interpolationType="linear"/>
+                    <KeyFrameDouble value="1" frame="240" interpolationType="linear"/>
+                </KeyedProperty>
+            </KeyedObject>
+        </LinearAnimation>
+    </Artboard>
+
+    <!-- A bound position replaces the authored one, so each range is centered on the rest place of what it moves. A look of 1 is a unit of the face, 8 px; the range is 6 units to a side. -->
+    <DataConverterRangeMapper minInput="-6" maxInput="6" minOutput="112" maxOutput="208" clampLower="true" clampUpper="true" name="LookToX" id="0:50"/>
+    <DataConverterRangeMapper minInput="-6" maxInput="6" minOutput="112" maxOutput="208" clampLower="true" clampUpper="true" name="LookToY" id="0:51"/>
+    <!-- The gap is the distance of an eye from the middle, in px: the left eye is at minus that, the right one at plus that. -->
+    <DataConverterRangeMapper minInput="0" maxInput="100" minOutput="0" maxOutput="-100" name="GapToLeft" id="0:52"/>
+    <DataConverterRangeMapper minInput="0" maxInput="100" minOutput="0" maxOutput="100" name="GapToRight" id="0:53"/>
+
+    <!-- A change of size or lean eases over motionSeconds, and lands at once when that is 0, which is what a user who asked for less motion gets. -->
+    <DataConverterInterpolator interpolationType="cubic" name="Ease" id="0:60">
+        <DataBindContext sourcePathIds="0:700-0:726" propertyKey="756"/>
+        <CubicEaseInterpolator x1="0.42" y1="0" x2="0.58" y2="1"/>
+    </DataConverterInterpolator>
+    <DataConverterSystemDegsToRads operationType="2" operationValue="0.017453292" name="DegreesToRadians" id="0:62"/>
+    <DataConverterGroup name="EaseTilt" id="0:61">
+        <DataConverterGroupItem converterId="0:60"/>
+        <DataConverterGroupItem converterId="0:62"/>
+    </DataConverterGroup>
+
+    <DataEnumCustom name="Silhouette" id="0:70">
+        <DataEnumValue key="circle" value="Circle" id="0:80"/>
+        <DataEnumValue key="squircle" value="Squircle" id="0:81"/>
+        <DataEnumValue key="blob" value="Blob" id="0:82"/>
+        <DataEnumValue key="pill" value="Pill" id="0:83"/>
+        <DataEnumValue key="ghost" value="Ghost" id="0:84"/>
+        <DataEnumValue key="drop" value="Drop" id="0:85"/>
+        <DataEnumValue key="hexagon" value="Hexagon" id="0:86"/>
+        <DataEnumValue key="oval" value="Oval" id="0:87"/>
+    </DataEnumCustom>
+
+    <ViewModel defaultInstanceId="0:701" name="AgentFace" id="0:700">
+        <ViewModelPropertyEnumCustom enumId="0:70" name="silhouette" id="0:709"/>
+        <ViewModelPropertyNumber name="lookX" id="0:710"/>
+        <ViewModelPropertyNumber name="lookY" id="0:711"/>
+        <ViewModelPropertyColor name="colorCore" id="0:712"/>
+        <ViewModelPropertyColor name="colorSecond" id="0:713"/>
+        <ViewModelPropertyColor name="colorBase" id="0:714"/>
+        <ViewModelPropertyNumber name="eyeGap" id="0:715"/>
+        <ViewModelPropertyNumber name="coreX" id="0:716"/>
+        <ViewModelPropertyNumber name="coreY" id="0:717"/>
+        <ViewModelPropertyNumber name="secondX" id="0:718"/>
+        <ViewModelPropertyNumber name="secondY" id="0:719"/>
+        <ViewModelPropertyNumber name="eyeLeftWidth" id="0:720"/>
+        <ViewModelPropertyNumber name="eyeLeftHeight" id="0:721"/>
+        <ViewModelPropertyNumber name="eyeLeftTilt" id="0:722"/>
+        <ViewModelPropertyNumber name="eyeRightWidth" id="0:723"/>
+        <ViewModelPropertyNumber name="eyeRightHeight" id="0:724"/>
+        <ViewModelPropertyNumber name="eyeRightTilt" id="0:725"/>
+        <ViewModelPropertyNumber name="motionSeconds" id="0:726"/>
+        <ViewModelPropertyNumber name="eyeLeftOpen" id="0:729"/>
+        <ViewModelPropertyNumber name="eyeLeftArc" id="0:730"/>
+        <ViewModelPropertyNumber name="eyeLeftShut" id="0:731"/>
+        <ViewModelPropertyNumber name="eyeRightOpen" id="0:732"/>
+        <ViewModelPropertyNumber name="eyeRightArc" id="0:733"/>
+        <ViewModelPropertyNumber name="eyeRightShut" id="0:734"/>
+
+        <ViewModelInstance exports="true" name="Default" id="0:701">
+            <ViewModelInstanceEnum propertyValue="0:80" viewModelPropertyId="0:709"/>
+            <ViewModelInstanceNumber propertyValue="0" viewModelPropertyId="0:710"/>
+            <ViewModelInstanceNumber propertyValue="0" viewModelPropertyId="0:711"/>
+            <ViewModelInstanceColor propertyValue="FF7C6AF0" viewModelPropertyId="0:712"/>
+            <ViewModelInstanceColor propertyValue="FFE79BC4" viewModelPropertyId="0:713"/>
+            <ViewModelInstanceColor propertyValue="FFF3F0FA" viewModelPropertyId="0:714"/>
+            <ViewModelInstanceNumber propertyValue="34" viewModelPropertyId="0:715"/>
+            <ViewModelInstanceNumber propertyValue="130" viewModelPropertyId="0:716"/>
+            <ViewModelInstanceNumber propertyValue="135" viewModelPropertyId="0:717"/>
+            <ViewModelInstanceNumber propertyValue="205" viewModelPropertyId="0:718"/>
+            <ViewModelInstanceNumber propertyValue="205" viewModelPropertyId="0:719"/>
+            <ViewModelInstanceNumber propertyValue="24" viewModelPropertyId="0:720"/>
+            <ViewModelInstanceNumber propertyValue="48" viewModelPropertyId="0:721"/>
+            <ViewModelInstanceNumber propertyValue="0" viewModelPropertyId="0:722"/>
+            <ViewModelInstanceNumber propertyValue="24" viewModelPropertyId="0:723"/>
+            <ViewModelInstanceNumber propertyValue="48" viewModelPropertyId="0:724"/>
+            <ViewModelInstanceNumber propertyValue="0" viewModelPropertyId="0:725"/>
+            <ViewModelInstanceNumber propertyValue="0.2" viewModelPropertyId="0:726"/>
+            <ViewModelInstanceNumber propertyValue="1" viewModelPropertyId="0:729"/>
+            <ViewModelInstanceNumber propertyValue="0" viewModelPropertyId="0:730"/>
+            <ViewModelInstanceNumber propertyValue="0" viewModelPropertyId="0:731"/>
+            <ViewModelInstanceNumber propertyValue="1" viewModelPropertyId="0:732"/>
+            <ViewModelInstanceNumber propertyValue="0" viewModelPropertyId="0:733"/>
+            <ViewModelInstanceNumber propertyValue="0" viewModelPropertyId="0:734"/>
+        </ViewModelInstance>
+    </ViewModel>
+</Rive>
