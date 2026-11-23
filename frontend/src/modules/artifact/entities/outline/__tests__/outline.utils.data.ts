@@ -7,7 +7,8 @@ import { assertPresent } from '@/shared/lib/guards'
 
 import type { Artifact } from '../../artifacts/artifacts.types'
 import type { OutlineItem } from '../../items/items.types'
-import type { KindView } from '../outline.types'
+import type { KindView, OutlineNode } from '../outline.types'
+import { artifactOutline } from '../outline.utils'
 
 /** The kinds of the mentor platform as the outline reads them. */
 export const kindViewFixtures: ReadonlyMap<string, KindView> = new Map(
@@ -52,4 +53,15 @@ export function mentorDocument(kind: string): {
     items: own.map((item) => ({ ...item, depth: depthOf(item) })),
     itemKinds: defined.item_kinds,
   }
+}
+
+/** The outline of the document of a kind in the mentor project. */
+export function outlineOf(kind: string): OutlineNode[] {
+  const document = mentorDocument(kind)
+  return artifactOutline({
+    ...document,
+    artifactSchema: kindViewFixtures.get(kind)?.schema,
+    kinds: kindViewFixtures,
+    issueKinds: issueKindFixtures,
+  })
 }

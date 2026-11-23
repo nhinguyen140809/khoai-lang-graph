@@ -1,7 +1,9 @@
 import { screen } from '@testing-library/react'
+import { Trash2Icon } from 'lucide-react'
 import { describe, expect, it } from 'vitest'
 
 import type { ItemLinksResult } from '@/modules/trace/entities'
+import { DropdownActionItem } from '@/shared/components/ui/menu-action'
 import { renderWithProviders } from '@/test/render'
 import {
   expectNoAccessibilityViolations,
@@ -85,7 +87,20 @@ const links = {
 } satisfies ItemLinksResult
 
 function renderLine() {
-  return renderWithProviders(<ItemLinkLine projectId="p1" links={links} lockedReason={null} />)
+  return renderWithProviders(
+    <ItemLinkLine
+      projectId="p1"
+      links={links}
+      renderMenu={() => (
+        <DropdownActionItem
+          icon={Trash2Icon}
+          label="Remove this link"
+          disabledReason={null}
+          onSelect={() => undefined}
+        />
+      )}
+    />,
+  )
 }
 
 describe('ItemLinkLine', () => {
@@ -132,23 +147,6 @@ describe('ItemLinkLine', () => {
     await pressButton('Point to clarify, Fast has no number')
     await expectText(/applies to this item/)
     expectNoRole('button', 'More actions')
-  })
-
-  it('sits the removal of an outgoing chip disabled with its reason', async () => {
-    renderWithProviders(
-      <ItemLinkLine
-        projectId="p1"
-        links={links}
-        lockedReason="Documents cannot change while the agents work."
-      />,
-    )
-
-    await pressButton('Analysed requirement, Requirement 1')
-    await pressButton('More actions')
-    expect(await screen.findByRole('menuitem', { name: 'Remove this link' })).toHaveAttribute(
-      'aria-disabled',
-      'true',
-    )
   })
 
   it('has no accessibility violation', async () => {

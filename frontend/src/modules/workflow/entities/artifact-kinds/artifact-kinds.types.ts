@@ -50,12 +50,16 @@ export const schemaPropertySchema = z.looseObject({
   minimum: z.number().optional(),
   maximum: z.number().optional(),
   readOnly: z.boolean().optional(),
+  /** The page of an item does not show the field. */
+  'x-ui-hidden': z.boolean().optional(),
   default: z.unknown().optional(),
   'x-ui-widget': z.string().optional(),
   /** Of a `rating-list`: the fields of an entry that name what is rated, hold the rating and say why. */
   'x-ui-label-field': z.string().optional(),
   'x-ui-value-field': z.string().optional(),
   'x-ui-note-field': z.string().optional(),
+  /** Of a `rating-list`: the field of an entry whose text heads the group that the entry belongs to. */
+  'x-ui-group-field': z.string().optional(),
   'x-value-from': z.string().optional(),
   'x-value-list': z.string().optional(),
 })
@@ -81,6 +85,10 @@ export const contentSchemaSchema = z.looseObject({
   'x-ui-participants-field': z.string().optional(),
   'x-ui-list-fields': z.array(z.string()).optional(),
   'x-ui-field-order': z.array(z.string()).optional(),
+  /** The blocks of the page of one item: a title and the names of the fields that it holds. */
+  'x-ui-sections': z.array(z.object({ title: z.string(), fields: z.array(z.string()) })).optional(),
+  /** The property whose values the items of a run of cards are grouped by. */
+  'x-ui-group-by': z.string().optional(),
   properties: z.record(z.string(), schemaPropertySchema).optional(),
   required: z.array(z.string()).optional(),
 })

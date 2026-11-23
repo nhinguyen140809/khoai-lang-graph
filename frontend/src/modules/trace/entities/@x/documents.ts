@@ -1,1 +1,6 @@
 export { useOutOfDateItemIds } from '../chains/hooks/useChainQueries'
+export { LinkedItemsPopover } from '../item-links/components/LinkedItemsPopover'
+export type { ItemLinksResult } from '../item-links/item-links.types'
+export { quoteMarkColors } from '../item-links/link-marks.constants'
+export { linkedItemMessages } from '../item-links/linked-items.constants'
+export type { TraceLink } from '../links/trace-links.types'

@@ -13,8 +13,8 @@ import { isEmpty } from '@/shared/lib/guards'
 import { textOf } from '@/shared/lib/text'
 
 import type { OutlineItem } from '../items/items.types'
+import { itemAnchorProps } from '../outline/item-anchor.utils'
 import type { KindView, RenderItemLink } from '../outline/outline.types'
-import { itemAnchorProps } from '../outline/outline.utils'
 
 interface ItemAvatarCardsProps {
   items: readonly OutlineItem[]

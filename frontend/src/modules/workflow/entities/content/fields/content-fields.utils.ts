@@ -1,33 +1,20 @@
 import { isOneOf, isString } from '@/shared/lib/guards'
 import { snakeToSentenceCase } from '@/shared/lib/text'
 
-import type {
-  ArtifactKinds,
-  ContentSchema,
-  SchemaProperty,
-} from '../../artifact-kinds/artifact-kinds.types'
+import type { ContentSchema, SchemaProperty } from '../../artifact-kinds/artifact-kinds.types'
 import {
-  type ArtifactDisplay,
-  artifactDisplays,
-  type ContentDisplay,
   type ContentField,
+  type FieldExtension,
   type FieldWidget,
   fieldWidgets,
   hasObjectEntries,
-  type ItemDisplay,
-  itemDisplays,
-  type ItemPageLayout,
-  itemPageLayouts,
-  type ListColumn,
-  oneLineWidgets,
-  type ProfileFields,
   type RatingFields,
 } from './content-fields.types'
 
 // The fields of a content, read from the JSON schema of its kind: the widget, title, limits and
-// options of each field, in the order the schema asks for, and how a kind is shown (its display, the
-// fields of its table, the title of its items). The values of those fields are handled in
-// `content-values.utils.ts`.
+// options of each field, in the order the schema asks for. How a kind is shown, the columns of its
+// table and the profile of its items are read in the files beside this one; the values of the
+// fields are handled in `content-values.utils.ts`.
 
 function typesOf(property: SchemaProperty): string[] {
   if (property.type === undefined) return []
@@ -56,6 +43,7 @@ function ratingFieldsOf(property: SchemaProperty): RatingFields | null {
     label,
     value,
     note: property['x-ui-note-field'] ?? null,
+    group: property['x-ui-group-field'] ?? null,
     min: scale?.minimum ?? 1,
     max: scale?.maximum ?? 5,
   }
@@ -97,6 +85,7 @@ function fieldOf(
     nullable: typesOf(property).includes('null') || property.enum?.includes(null) === true,
     required: isRequired,
     readOnly: property.readOnly === true,
+    isHidden: property['x-ui-hidden'] === true,
     options: (property.enum ?? []).filter(isString),
     ...sourcesOf(property),
     ...limitsOf(property),
@@ -108,48 +97,6 @@ function fieldOf(
       : [],
     rating: widget === 'rating-list' ? ratingFieldsOf(property) : null,
   }
-}
-
-/** The layout that an artifact kind names for its document, else `document`. */
-export function artifactDisplayOf(schema: ContentSchema): ArtifactDisplay {
-  const named = schema['x-ui-display']
-  return isOneOf(artifactDisplays, named) ? named : 'document'
-}
-
-/** The display an item kind names, else `table`. */
-function itemDisplayOf(schema: ContentSchema): ItemDisplay {
-  const named = schema['x-ui-display']
-  return isOneOf(itemDisplays, named) ? named : 'table'
-}
-
-/** How a kind is shown: for an artifact, its layout; for an item, the display it names, else `table`. */
-export function contentDisplayOf(schema: ContentSchema): ContentDisplay {
-  return schema['x-level'] === 'artifact' ? artifactDisplayOf(schema) : itemDisplayOf(schema)
-}
-
-/** The layout of the page of one item of the kind: the row of its display in `itemPageLayouts`. */
-export function pageLayoutOf(schema: ContentSchema): ItemPageLayout {
-  return itemPageLayouts[itemDisplayOf(schema)]
-}
-
-/**
- * What each kind of artifact is made of, by kind name: the layout of its own schema when it names
- * one, else the display of the first kind of item that holds content, since a section only gives
- * the structure; `heading` for a kind that holds sections alone, and `document` for a kind that
- * holds no item.
- */
-export function documentDisplaysByKind(
-  kinds: ArtifactKinds | undefined,
-): Map<string, ContentDisplay> {
-  return new Map(
-    (kinds?.artifact_kinds ?? []).map(({ kind, schema, item_kinds }): [string, ContentDisplay] => {
-      const layout = artifactDisplayOf(schema)
-      if (layout !== 'document') return [kind, layout]
-      const displays = item_kinds.map(({ schema: itemSchema }) => contentDisplayOf(itemSchema))
-      const content = displays.find((display) => display !== 'heading')
-      return [kind, content ?? displays[0] ?? 'document']
-    }),
-  )
 }
 
 /** The fields of a content schema in the order of `x-ui-field-order`, then any others. */
@@ -167,83 +114,22 @@ export function contentFields(schema: ContentSchema): ContentField[] {
   )
 }
 
+/** The fields of the schema that a page shows: every field but those that `x-ui-hidden` leaves out. */
+export function shownFields(schema: ContentSchema): ContentField[] {
+  return contentFields(schema).filter((field) => !field.isHidden)
+}
+
 /** The first field of the schema that is not its title field: what an item says, such as the statement of a requirement. */
 export function mainField(schema: ContentSchema): ContentField | undefined {
   const title = schema['x-ui-title-field']
   return contentFields(schema).find((field) => field.name !== title)
 }
 
-/** The fields that a table or a card of an item kind shows, in the order of `x-ui-list-fields`. */
-export function summaryFields(schema: ContentSchema): ContentField[] {
-  const fields = contentFields(schema)
-  const names = schema['x-ui-list-fields'] ?? []
-  if (names.length === 0) return fields.slice(0, 3)
-  return names.flatMap((name) => fields.filter((field) => field.name === name))
-}
-
-/** The name that `x-ui-list-fields` gives to the key of an item (`REQ-001`), which is no property. */
-export const itemKeyColumn = 'key'
-
-/**
- * The columns of a table of items, in the order of `x-ui-list-fields`. The key of an item is a
- * column only where the list names it, and the schema puts it where it belongs, last. A kind with
- * no list shows its first fields and no key.
- */
-export function listColumns(schema: ContentSchema): ListColumn[] {
-  const fields = contentFields(schema)
-  const names = schema['x-ui-list-fields'] ?? []
-  if (names.length === 0) return fields.slice(0, 3).map((field) => ({ type: 'field', field }))
-  return names.flatMap((name): ListColumn[] =>
-    name === itemKeyColumn
-      ? [{ type: 'key' }]
-      : fields.filter((field) => field.name === name).map((field) => ({ type: 'field', field })),
-  )
-}
-
 /** The field that an extension of the schema names; undefined when there is none. */
 export function extensionField(
   schema: ContentSchema,
-  extension: 'x-ui-title-field' | 'x-ui-role-field' | 'x-ui-participants-field',
+  extension: FieldExtension,
 ): ContentField | undefined {
   const name = schema[extension]
   return name === undefined ? undefined : contentFields(schema).find((field) => field.name === name)
-}
-
-/** Whether a field offers values to choose from: an enum, a value list or the values of another artifact. */
-export function isChoiceField(
-  field: Pick<ContentField, 'options' | 'valueList' | 'allowedValuesFrom'>,
-): boolean {
-  return field.options.length > 0 || field.valueList !== null || field.allowedValuesFrom !== null
-}
-
-/** Whether the value of a field is a number, whatever its widget: the schema made it an integer or bounded it. */
-export function isNumberField(
-  field: Pick<ContentField, 'integer' | 'minimum' | 'maximum'>,
-): boolean {
-  return field.integer || field.minimum !== null || field.maximum !== null
-}
-
-/** Whether the value of a field reads on one line: its widget is one of `oneLineWidgets`. */
-export function isOneLineField(field: Pick<ContentField, 'widget'>): boolean {
-  return isOneOf(oneLineWidgets, field.widget)
-}
-
-/** Whether a field marks a place of a sequence: its widget is `separator`. */
-export function isSeparatorField(field: Pick<ContentField, 'widget'>): boolean {
-  return field.widget === 'separator'
-}
-
-/** The fields of a kind whose display is `profile`, as its cards and the page of one item draw them. */
-export function profileFields(schema: ContentSchema): ProfileFields {
-  const titleName = schema['x-ui-title-field']
-  const fields = contentFields(schema)
-  const listed = summaryFields(schema)
-  const line = listed.filter((field) => field.name !== titleName && isOneLineField(field))
-  const lineNames = new Set(line.map(({ name }) => name))
-  return {
-    title: titleName === undefined ? undefined : fields.find((field) => field.name === titleName),
-    line,
-    card: listed.filter((field) => field.name !== titleName && !lineNames.has(field.name)),
-    body: fields.filter((field) => field.name !== titleName && !lineNames.has(field.name)),
-  }
 }

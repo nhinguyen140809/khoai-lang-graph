@@ -74,6 +74,36 @@ describe('ContentFieldValue', () => {
     await expectNoAccessibilityViolations(container)
   })
 
+  it('shows the entries of a rating list in a block for each group, each under its heading', () => {
+    const field = {
+      ...ratingListCase.field,
+      rating: {
+        label: 'aspect',
+        value: 'score',
+        note: 'rationale',
+        group: 'group',
+        min: 1,
+        max: 5,
+      },
+    }
+    const { container } = renderWithProviders(
+      <ContentFieldValue
+        field={field}
+        value={[
+          { aspect: 'A', score: 4, rationale: 'Because.', group: 'Standard characteristics' },
+          { aspect: 'B', score: 2, rationale: 'Since.', group: 'Characteristics for this project' },
+          { aspect: 'C', score: 3, rationale: 'Hence.', group: 'Standard characteristics' },
+        ]}
+        definition={undefined}
+      />,
+    )
+
+    const headings = [...container.querySelectorAll('h3')].map((heading) => heading.textContent)
+    expect(headings).toEqual(['Standard characteristics', 'Characteristics for this project'])
+    expect(container.querySelectorAll('section')).toHaveLength(2)
+    expect(container.querySelectorAll('section')[0]?.querySelectorAll('li')).toHaveLength(2)
+  })
+
   it('reads a rating list without a label and value field as a list of its entries', () => {
     renderWithProviders(
       <ContentFieldValue

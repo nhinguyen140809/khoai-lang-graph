@@ -11,11 +11,11 @@ import { isEmpty, isRecord } from '@/shared/lib/guards'
 import { snakeToSentenceCase, textOf } from '@/shared/lib/text'
 
 import type { ContentField, FieldWidget } from '../fields/content-fields.types'
-import { isChoiceField } from '../fields/content-fields.utils'
+import { isChoiceField } from '../fields/field-widget.utils'
 import { useValueLabel } from '../value-labels/hooks/useValueLabel'
 import { nonStatusTone, valueTone } from '../value-labels/value-labels.utils'
 import type { ValueDefinition } from '../values/content-values.types'
-import { valueTitle } from '../values/content-values.utils'
+import { hasGroupedRatings, ratingGroups, valueTitle } from '../values/content-values.utils'
 import { fieldText } from '../values/item-title.utils'
 import { contentValueMessages } from './content-field-value.constants'
 
@@ -114,12 +114,41 @@ function ratedLabel(label: string): string {
  * where the value stands in words, then a bar of the scale, and the note that says why. A list
  * whose schema names no label and value field reads as an object list.
  */
+/** The key of the group of entries that has no heading. */
+const untitledGroupKey = 'untitled'
+
 function RatingListValue({ field, items, definition }: ListValueProps) {
   const { rating } = field
   if (rating === null) return <EntriesValue field={field} items={items} definition={definition} />
+  const groups = ratingGroups(rating, items.filter(isRecord))
+  if (!hasGroupedRatings(field)) {
+    return <RatingEntries entries={groups.flatMap((group) => group.entries)} rating={rating} />
+  }
+  return (
+    <div className="grid gap-x-8 gap-y-5 sm:grid-cols-2">
+      {groups.map((group) => (
+        <section key={group.heading ?? untitledGroupKey} className="space-y-2">
+          {group.heading !== null && (
+            <h3 className="text-sm font-semibold text-muted-foreground">{group.heading}</h3>
+          )}
+          <RatingEntries entries={group.entries} rating={rating} />
+        </section>
+      ))}
+    </div>
+  )
+}
+
+/** The entries of a rating list, one under the other. */
+function RatingEntries({
+  entries,
+  rating,
+}: {
+  entries: readonly Record<string, unknown>[]
+  rating: NonNullable<ContentField['rating']>
+}) {
   return (
     <ul className="space-y-3">
-      {items.filter(isRecord).map((entry, index) => (
+      {entries.map((entry, index) => (
         <RatingEntry key={index} entry={entry} rating={rating} />
       ))}
     </ul>
@@ -145,7 +174,13 @@ function RatingEntry({
         <span className="shrink-0 text-muted-foreground">{level?.words}</span>
       </span>
       {typeof value === 'number' && level !== null && (
-        <SegmentedBar value={value} min={rating.min} max={rating.max} label={level.label} />
+        <SegmentedBar
+          value={value}
+          min={rating.min}
+          max={rating.max}
+          label={level.label}
+          className="w-32"
+        />
       )}
       {note !== '' && <span className="text-xs text-muted-foreground">{note}</span>}
     </li>

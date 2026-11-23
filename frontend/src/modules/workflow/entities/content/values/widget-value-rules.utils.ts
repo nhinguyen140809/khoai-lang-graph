@@ -1,7 +1,7 @@
 import { isEmpty, isRecord } from '@/shared/lib/guards'
 
 import type { ContentField, FieldWidget } from '../fields/content-fields.types'
-import { isChoiceField, isNumberField } from '../fields/content-fields.utils'
+import { isChoiceField, isNumberField } from '../fields/field-widget.utils'
 
 // What each widget implies for the value of its field. Content checks look the widget up here
 // instead of branching on its name, so a widget that the schema can name has its row, and

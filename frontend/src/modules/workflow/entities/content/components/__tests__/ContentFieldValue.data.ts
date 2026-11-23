@@ -9,6 +9,7 @@ function field(overrides: Partial<ContentField>): ContentField {
     nullable: false,
     required: false,
     readOnly: false,
+    isHidden: false,
     options: [],
     description: null,
     allowedValuesFrom: null,
@@ -41,7 +42,14 @@ export const ratingListCase = {
       field({ name: 'score', title: 'Score', widget: 'number' }),
       field({ name: 'rationale', title: 'Why' }),
     ],
-    rating: { label: 'aspect', value: 'score', note: 'rationale', min: 1, max: 5 },
+    rating: {
+      label: 'aspect',
+      value: 'score',
+      note: 'rationale',
+      group: null,
+      min: 1,
+      max: 5,
+    },
   }),
   value: [
     {

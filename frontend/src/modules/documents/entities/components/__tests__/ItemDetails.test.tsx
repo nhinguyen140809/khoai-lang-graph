@@ -5,9 +5,9 @@ import { itemFixtureByKey } from '@/mocks/artifacts/fixtures/artifacts.fixtures'
 import { projectIds } from '@/mocks/shared/db'
 import { contentSchemaFixtureByKind } from '@/mocks/workflow/artifact-kinds.fixtures'
 import { renderWithProviders } from '@/test/render'
-import { expectNoAccessibilityViolations, expectNoRole, expectRole } from '@/test/steps'
+import { expectNoAccessibilityViolations, expectNoRole, expectRole, expectText } from '@/test/steps'
 
-import { itemPageViewOf } from '../../item-layout.utils'
+import { itemPageViewOf } from '../../utils/item-layout.utils'
 import { ItemDetails } from '../ItemDetails'
 
 const requirement = itemFixtureByKey(projectIds.mentor, 'REQ-001')
@@ -75,13 +75,32 @@ describe('ItemDetails of a profile', () => {
         item={persona}
         layout={personaView.layout}
         fields={personaView.bodyFields}
-        fieldMarks={new Map([['background', [{ start: 0, end: 11 }]]])}
+        fieldMarks={new Map([['background', [{ start: 0, end: 6 }]]])}
         renderFieldMark={(range, children) => <em key={range.start}>{children}</em>}
       />,
     )
 
-    const marked = screen.getByText('Third-year')
+    const marked = screen.getByText('In the')
     expect(marked.closest('em')).not.toBeNull()
     expect(marked.closest('mark')).not.toBeNull()
+  })
+})
+
+describe('ItemDetails of a profile with blocks', () => {
+  it('draws each block under its heading, with only the blocks that have a filled field', async () => {
+    renderWithProviders(
+      <ItemDetails
+        item={persona}
+        layout={personaView.layout}
+        fields={personaView.bodyFields}
+        sections={personaView.sections}
+      />,
+    )
+
+    for (const { title, fields } of personaView.sections) {
+      const isFilled = fields.some((field) => persona.content[field.name] !== undefined)
+      if (title !== null && isFilled) await expectText(title)
+    }
+    await expectText('Goals and priorities')
   })
 })

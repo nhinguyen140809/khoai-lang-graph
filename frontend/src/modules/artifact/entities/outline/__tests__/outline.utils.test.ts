@@ -1,34 +1,17 @@
 import { describe, expect, it } from 'vitest'
 
 import { itemFixtures } from '@/mocks/artifacts/fixtures/artifacts.fixtures'
-import { assertPresent } from '@/shared/lib/guards'
 
 import type { ArtifactItem } from '../../items/items.types'
-import { documentBlocks, hasTranscript } from '../document-blocks.utils'
 import type { OutlineNode } from '../outline.types'
+import { artifactOutline, outlineItemsOf } from '../outline.utils'
+import { isBranch, outlineStatuses } from '../outline-path.utils'
 import {
-  artifactOutline,
-  isBranch,
-  itemAnchorId,
-  itemAnchorProps,
-  itemNodeId,
-  outlineBreadcrumb,
-  outlineItemsOf,
-  outlineNeighbors,
-  outlineSequence,
-  outlineStatuses,
-} from '../outline.utils'
-import { issueKindFixtures, kindViewFixtures, mentorDocument } from './outline.utils.data'
-
-function outlineOf(kind: string): OutlineNode[] {
-  const document = mentorDocument(kind)
-  return artifactOutline({
-    ...document,
-    artifactSchema: kindViewFixtures.get(kind)?.schema,
-    kinds: kindViewFixtures,
-    issueKinds: issueKindFixtures,
-  })
-}
+  issueKindFixtures,
+  kindViewFixtures,
+  mentorDocument,
+  outlineOf,
+} from './outline.utils.data'
 
 function shapeOf(nodes: readonly OutlineNode[]): unknown[] {
   return nodes.map((node) => {
@@ -181,203 +164,6 @@ describe('outlineItemsOf', () => {
   })
 })
 
-describe('outlineSequence', () => {
-  it('goes through the items across the sections, in order', () => {
-    const keys = outlineSequence(outlineOf('requirement_specification')).map(({ key }) => key)
-    const expected = mentorDocument('requirement_specification')
-      .items.filter(({ kind }) => kind === 'spec_requirement')
-      .map(({ key }) => key)
-
-    expect(keys).toHaveLength(expected.length)
-    expect(new Set(keys)).toEqual(new Set(expected))
-  })
-
-  it('goes through no item of a kind that is not listed', () => {
-    expect(outlineSequence(outlineOf('interview_transcript'))).toEqual([])
-  })
-})
-
-describe('outlineNeighbors', () => {
-  const nodes = outlineOf('requirement_specification')
-  const sequence = outlineSequence(nodes)
-
-  it('gives the place of an item, with the item before and the one after it', () => {
-    const [first, second, third] = sequence
-
-    expect(outlineNeighbors(nodes, second?.id ?? '')).toEqual({
-      index: 2,
-      count: sequence.length,
-      previous: first,
-      next: third,
-    })
-  })
-
-  it('gives no previous item to the first, and no next item to the last', () => {
-    expect(outlineNeighbors(nodes, sequence[0]?.id ?? '')).toMatchObject({
-      index: 1,
-      previous: null,
-    })
-    expect(outlineNeighbors(nodes, sequence.at(-1)?.id ?? '')).toMatchObject({
-      index: sequence.length,
-      next: null,
-    })
-  })
-
-  it('gives the place 0 and no neighbor to an item that is not in the outline', () => {
-    expect(outlineNeighbors(nodes, 'missing')).toEqual({
-      index: 0,
-      count: sequence.length,
-      previous: null,
-      next: null,
-    })
-  })
-})
-
-describe('outlineBreadcrumb', () => {
-  const document = mentorDocument('requirement_specification')
-  const outline = { items: document.items, kinds: kindViewFixtures }
-  const itemOf = (key: string) =>
-    assertPresent(
-      document.items.find((candidate) => candidate.key === key),
-      `No item ${key}`,
-    )
-
-  it('gives the sections above an item from the top down, then the group of its kind', () => {
-    expect(outlineBreadcrumb(itemOf('REQ-001'), outline).map(({ title }) => title)).toEqual([
-      'Functional requirements',
-      'Mentor discovery',
-      kindViewFixtures.get(itemOf('REQ-001').kind)?.title,
-    ])
-  })
-
-  it('gives nothing for a section at the top', () => {
-    const top = assertPresent(
-      document.items.find(({ parent_item_id }) => parent_item_id === null),
-      'No item at the top',
-    )
-
-    expect(outlineBreadcrumb(top, outline)).toEqual([])
-  })
-})
-
-describe('documentBlocks', () => {
-  it('gives a heading for each section, at a level that follows its depth', () => {
-    const blocks = documentBlocks(
-      { ...mentorDocument('requirement_specification'), kinds: kindViewFixtures },
-      { artifactDisplay: 'document' },
-    )
-    const headings = blocks.flatMap((block) =>
-      block.type === 'heading' ? [`${String(block.level)} ${block.title}`] : [],
-    )
-
-    expect(headings).toEqual([
-      '2 Introduction',
-      '2 Overall description',
-      '2 Functional requirements',
-      '3 Mentor discovery',
-      '3 Booking',
-      '3 Mentor profile',
-      '2 Non-functional requirements',
-    ])
-  })
-
-  it('draws a run of items of one kind with the display of the kind', () => {
-    const blocks = documentBlocks(
-      { ...mentorDocument('requirement_specification'), kinds: kindViewFixtures },
-      { artifactDisplay: 'document' },
-    )
-    const runs = blocks.flatMap((block) =>
-      block.type === 'items' ? [`${block.display}:${String(block.items.length)}`] : [],
-    )
-
-    expect(runs).toEqual(['table:2', 'table:3', 'table:2', 'table:3'])
-  })
-
-  it('gives a heading with the count for each group of a document without sections', () => {
-    const blocks = documentBlocks(
-      { ...mentorDocument('requirements_analysis'), kinds: kindViewFixtures },
-      { artifactDisplay: 'document' },
-    )
-
-    expect(blocks.slice(0, 2)).toMatchObject([
-      { type: 'group', title: 'Stated need', count: 8 },
-      { type: 'items', display: 'table' },
-    ])
-  })
-
-  it('draws avatar cards and transcripts with their own display', () => {
-    const persona = documentBlocks(
-      { ...mentorDocument('persona_catalog'), kinds: kindViewFixtures },
-      { artifactDisplay: 'document' },
-    )
-    const transcript = documentBlocks(
-      { ...mentorDocument('interview_transcript'), kinds: kindViewFixtures },
-      { artifactDisplay: 'transcript' },
-    )
-
-    expect(persona.at(-1)).toMatchObject({ type: 'items', display: 'profile' })
-    expect(transcript.at(-1)).toMatchObject({ type: 'items', display: 'transcript' })
-  })
-
-  it('gives a transcript no heading for the group of its messages', () => {
-    const blocks = documentBlocks(
-      { ...mentorDocument('interview_transcript'), kinds: kindViewFixtures },
-      { artifactDisplay: 'transcript' },
-    )
-
-    expect(blocks.some((block) => block.type === 'group')).toBe(false)
-  })
-
-  it('gives nothing for a document without items', () => {
-    expect(
-      documentBlocks(
-        { ...mentorDocument('elicitation_plan'), kinds: kindViewFixtures },
-        { artifactDisplay: 'document' },
-      ),
-    ).toEqual([])
-  })
-})
-
-describe('isBranch', () => {
-  it('holds for a section and a group, not for the rows under them', () => {
-    const nodes = outlineOf('requirement_specification')
-    const types = new Map<string, boolean>()
-    const visit = (rows: readonly OutlineNode[]) => {
-      for (const node of rows) {
-        types.set(node.type, isBranch(node))
-        if (isBranch(node)) visit(node.children)
-      }
-    }
-    visit(nodes)
-
-    expect(types.get('section')).toBe(true)
-    expect(types.get('group')).toBe(true)
-    expect(types.get('item')).toBe(false)
-  })
-})
-
-describe('itemAnchorId', () => {
-  it('names the anchor of an item on the page of its document', () => {
-    expect(itemAnchorId('i1')).toBe('item-i1')
-    expect(itemAnchorId('i1')).not.toBe(itemNodeId('i1'))
-  })
-})
-
-describe('itemAnchorProps', () => {
-  it('ties the block of an item to the address of the page', () => {
-    expect(itemAnchorProps('i1', null)).toEqual({ id: 'item-i1', tabIndex: -1 })
-    expect(itemAnchorProps('i1', 'i2')).toEqual({ id: 'item-i1', tabIndex: -1 })
-  })
-
-  it('marks the block of the item that the address names, as a target of the focus', () => {
-    expect(itemAnchorProps('i1', 'i1')).toEqual({
-      id: 'item-i1',
-      tabIndex: -1,
-      'data-target': '',
-    })
-  })
-})
-
 describe('the out of date items of an outline', () => {
   it('reach the item rows and the counts of the sections and groups', () => {
     const document = mentorDocument('requirement_specification')
@@ -399,26 +185,5 @@ describe('the out of date items of an outline', () => {
       ['REQ-001', 'outOfDate'],
       ['REQ-002', 'approved'],
     ])
-  })
-})
-
-describe('hasTranscript', () => {
-  it('tells whether the blocks of a document draw messages of a transcript', () => {
-    expect(
-      hasTranscript(
-        documentBlocks(
-          { ...mentorDocument('interview_transcript'), kinds: kindViewFixtures },
-          { artifactDisplay: 'transcript' },
-        ),
-      ),
-    ).toBe(true)
-    expect(
-      hasTranscript(
-        documentBlocks(
-          { ...mentorDocument('requirement_specification'), kinds: kindViewFixtures },
-          { artifactDisplay: 'document' },
-        ),
-      ),
-    ).toBe(false)
   })
 })

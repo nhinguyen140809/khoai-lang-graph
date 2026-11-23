@@ -11,13 +11,17 @@ import {
   useItemSchema,
   usePrefetchItem,
 } from '@/modules/artifact/entities'
-import { useDocumentOutline, useEditLockReason, useItemStatus } from '@/modules/documents/entities'
+import {
+  itemPageViewOf,
+  useDocumentOutline,
+  useEditLockReason,
+  useItemStatus,
+} from '@/modules/documents/entities'
 import { useReloadTraces } from '@/modules/trace/entities'
 import { contentFields, itemTitle, useIssueKinds } from '@/modules/workflow/entities'
 import { useOpenPage } from '@/shared/components/frame'
 import { routes } from '@/shared/routes'
 
-import { itemPageViewOf } from '../item-layout.utils'
 import { itemMoveTypes } from '../item-page.constants'
 import type { ItemMove } from '../item-page.types'
 

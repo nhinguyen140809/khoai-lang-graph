@@ -1,44 +1,24 @@
 'use client'
 
 import { TriangleAlertIcon } from 'lucide-react'
-import { useState } from 'react'
+import { type ReactNode, useState } from 'react'
 
-import type { ItemLinksResult, TraceLink } from '@/modules/trace/entities'
-import { linkedItemMessages, LinkedItemsPopover, quoteMarkColors } from '@/modules/trace/entities'
-import { useUnlinkAction } from '@/modules/trace/features/remove-link'
+import type { ItemLinksResult, TraceLink } from '@/modules/trace/entities/@x/documents'
+import {
+  linkedItemMessages,
+  LinkedItemsPopover,
+  quoteMarkColors,
+} from '@/modules/trace/entities/@x/documents'
 import { Button } from '@/shared/components/ui/button'
-import { DropdownActionItem } from '@/shared/components/ui/menu-action'
 
-import { itemPageMessages, linkChipsShown } from '../item-page.constants'
+import { itemLinkMessages, linkChipsShown } from '../constants/documents.constants'
 
 interface ItemLinkLineProps {
   projectId: string
   /** The links of the item, from `useItemLinks`. */
   links: ItemLinksResult
-  /** Why the document of the item cannot change, which a change of a link needs; null when it can. */
-  lockedReason: string | null
-  /** The link whose chips and marks show active, held by the page. */
-}
-
-/** What the menu of the card of an outgoing chip offers: removing the link, when its document may change. */
-function RemoveLinkMenuItem({
-  link,
-  lockedReason,
-}: {
-  link: Pick<TraceLink, 'id' | 'source_item_id'>
-  lockedReason: string | null
-}) {
-  const remove = useUnlinkAction(link, lockedReason)
-
-  return (
-    <DropdownActionItem
-      icon={remove.icon}
-      label={remove.label}
-      disabledReason={remove.disabledReason}
-      tone={remove.tone}
-      onSelect={remove.run}
-    />
-  )
+  /** What the card of an outgoing chip offers besides its sentence, such as removing the link; none when the link line only reads. */
+  renderMenu?: ((link: TraceLink) => ReactNode) | undefined
 }
 
 /**
@@ -47,7 +27,7 @@ function RemoveLinkMenuItem({
  * "this item". A chip opens the card of the items at the other end, which says the sentence of the
  * link. Five chips of a group show, "N more" the rest.
  */
-export function ItemLinkLine({ projectId, links, lockedReason }: ItemLinkLineProps) {
+export function ItemLinkLine({ projectId, links, renderMenu }: ItemLinkLineProps) {
   const [expandedGroups, setExpandedGroups] = useState<ReadonlySet<string>>(new Set())
   const isExpanded = (group: string) => expandedGroups.has(group)
 
@@ -73,11 +53,7 @@ export function ItemLinkLine({ projectId, links, lockedReason }: ItemLinkLinePro
             madeFromVersion: row.isOutOfDate ? row.link.target_version : null,
           },
         ]}
-        renderMenu={
-          isOutgoing
-            ? () => <RemoveLinkMenuItem link={row.link} lockedReason={lockedReason} />
-            : undefined
-        }
+        renderMenu={isOutgoing && renderMenu !== undefined ? () => renderMenu(row.link) : undefined}
       >
         <Button
           type="button"
@@ -109,7 +85,7 @@ export function ItemLinkLine({ projectId, links, lockedReason }: ItemLinkLinePro
             setExpandedGroups((current) => new Set(current).add(linkType))
           }}
         >
-          {itemPageMessages.moreLinks(hidden)}
+          {itemLinkMessages.moreLinks(hidden)}
         </Button>,
       )
     }

@@ -1,3 +1,4 @@
+import { observationQuotes } from '../../artifacts/fixtures/mentor-platform-artifacts.fixtures'
 import type { LinkSpec } from '../trace-links.types'
 
 // The links of the trace, from the later item to the earlier one.
@@ -137,4 +138,56 @@ const concerns: LinkSpec[] = [
   { source: 'US-003', target: 'US-006', type: 'depends_on' },
 ]
 
-export const mentorPlatformLinkSpecs: LinkSpec[] = [...evidence, ...derivations, ...concerns]
+// What the personas are based on: each persona on its observations, and each observation on the
+// document whose sentence it quotes.
+const grounding: LinkSpec[] = [
+  { source: 'PER-001', target: 'OBS-001', type: 'grounded_in' },
+  { source: 'PER-001', target: 'OBS-002', type: 'grounded_in' },
+  { source: 'PER-002', target: 'OBS-003', type: 'grounded_in' },
+  { source: 'PER-002', target: 'OBS-004', type: 'grounded_in' },
+  { source: 'PER-003', target: 'OBS-005', type: 'grounded_in' },
+  { source: 'PER-003', target: 'OBS-006', type: 'grounded_in' },
+  {
+    source: 'OBS-001',
+    target: 'SRC-001',
+    type: 'evidenced_by',
+    targetQuote: observationQuotes.field,
+  },
+  {
+    source: 'OBS-002',
+    target: 'SRC-001',
+    type: 'evidenced_by',
+    targetQuote: observationQuotes.free,
+  },
+  {
+    source: 'OBS-003',
+    target: 'SRC-002',
+    type: 'evidenced_by',
+    targetQuote: observationQuotes.admin,
+  },
+  {
+    source: 'OBS-004',
+    target: 'SRC-002',
+    type: 'evidenced_by',
+    targetQuote: observationQuotes.hours,
+  },
+  {
+    source: 'OBS-005',
+    target: 'SRC-003',
+    type: 'evidenced_by',
+    targetQuote: observationQuotes.approval,
+  },
+  {
+    source: 'OBS-006',
+    target: 'SRC-003',
+    type: 'evidenced_by',
+    targetQuote: observationQuotes.report,
+  },
+]
+
+export const mentorPlatformLinkSpecs: LinkSpec[] = [
+  ...evidence,
+  ...derivations,
+  ...concerns,
+  ...grounding,
+]

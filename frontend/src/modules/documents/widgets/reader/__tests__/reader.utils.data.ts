@@ -159,29 +159,3 @@ export const addressCases: { name: string; view: ReaderView; address: string }[]
     address: '/projects/p1?item=a+b%2Fc',
   },
 ]
-
-const secondDocument: ReaderView = { kind: 'document', artifactId: 'a2' }
-
-export const trailCases: {
-  name: string
-  trail: ReaderView[]
-  view: ReaderView | null
-  result: ReaderView[]
-}[] = [
-  { name: 'a first view', trail: [], view: documents, result: [documents] },
-  { name: 'the same view again', trail: [documents], view: documents, result: [documents] },
-  { name: 'another view', trail: [documents], view: document, result: [documents, document] },
-  {
-    name: 'a third view',
-    trail: [documents, document],
-    view: item,
-    result: [documents, document, item],
-  },
-  {
-    name: 'the view before, which takes the last off',
-    trail: [documents, document],
-    view: documents,
-    result: [documents],
-  },
-  { name: 'a closed reader', trail: [documents, secondDocument], view: null, result: [] },
-]

@@ -3,7 +3,7 @@ import type { ThumbnailLook } from '@/shared/components/thumbnail'
 
 import type { FolderThumbnail } from './folder-thumbnails.types'
 import type { KindView, OutlineNode } from './outline.types'
-import { isBranch } from './outline.utils'
+import { isBranch } from './outline-path.utils'
 
 /** The title of the thumbnail of the page of a document, which holds its own text. */
 export const overviewTitle = 'Overview'

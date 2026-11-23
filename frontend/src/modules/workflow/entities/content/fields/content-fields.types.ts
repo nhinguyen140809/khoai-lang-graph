@@ -90,6 +90,8 @@ export interface ContentField {
   nullable: boolean
   required: boolean
   readOnly: boolean
+  /** The page of an item and its document do not show the field (`x-ui-hidden`); the edit form still does. */
+  isHidden: boolean
   /** The values of a select, without `null`; empty for the other widgets. */
   options: string[]
   description: string | null
@@ -111,12 +113,14 @@ export interface ContentField {
   rating: RatingFields | null
 }
 
-/** Which fields of an entry of a `rating-list` name what is rated, hold the rating and say why, and the scale of the rating. */
+/** Which fields of an entry of a `rating-list` name what is rated, hold the rating and say why and head their group, and the scale of the rating. */
 export interface RatingFields {
   label: string
   value: string
   /** The field that says why; null when the schema names none. */
   note: string | null
+  /** The field whose text heads the group of an entry; null when the schema names none. */
+  group: string | null
   min: number
   max: number
 }
@@ -136,6 +140,19 @@ export interface ProfileFields {
   card: ContentField[]
   /** Every field but the title and the line, in field order: the body of the page. */
   body: ContentField[]
+  /** The blocks of the page, each with its heading and fields; empty when the schema names none. A field of the body that no block holds is in a last block with no title. */
+  sections: ContentSection[]
+}
+
+/** The extensions of a schema that name one of its fields. */
+export type FieldExtension =
+  'x-ui-title-field' | 'x-ui-role-field' | 'x-ui-participants-field' | 'x-ui-group-by'
+
+/** One block of the page of an item: a heading and the fields under it. */
+export interface ContentSection {
+  /** The heading; null for the block of the fields that no block of the schema holds. */
+  title: string | null
+  fields: ContentField[]
 }
 
 /** A column of a table of items: the key of the item, or one of its fields. */

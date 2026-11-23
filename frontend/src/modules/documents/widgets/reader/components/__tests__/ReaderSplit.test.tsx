@@ -16,6 +16,7 @@ import { routeOfAddress } from '@/shared/routes'
 import { routerMock, setPathname, setQuery } from '@/test/next-stubs'
 import { renderWithProviders } from '@/test/render'
 import {
+  expectAttribute,
   expectNoRole,
   expectPushedTo,
   expectReplacedWith,
@@ -152,6 +153,22 @@ describe('ReaderSplit', () => {
     )
   })
 
+  it('shows a persona in the reader as a profile: its avatar, its role and its status under its name, and its links folded at its foot', async () => {
+    const persona = itemFixtureByKey(projectId, 'PER-001')
+    renderSplit(`item=${persona.id}`)
+
+    const reader = await screen.findByRole('complementary', { name: 'Minh' })
+    const heading = await within(reader).findByRole('heading', { level: 1, name: 'Minh' })
+    // The avatar leads the name, and the role and the status stand under it, with no key.
+    expect(within(reader).getByText('M')).toHaveAttribute('data-color', 'secondary')
+    expect(heading.parentElement).toHaveTextContent('Student')
+    expect(heading.parentElement).toHaveTextContent('Interviewed')
+    expect(heading.parentElement).not.toHaveTextContent('PER-001')
+    // The links are folded, closed until they are opened.
+    await expectRole('button', 'Related items', within(reader))
+    expectAttribute('button', 'Related items', 'aria-expanded', 'false')
+  })
+
   it('says that a document does not exist', async () => {
     renderSplit('document=missing')
 
@@ -236,10 +253,29 @@ describe('ReaderSplit', () => {
     await expectRole('heading', 'Interview transcript', within(reader))
     const trail = await within(reader).findByRole('navigation', { name: 'Where you are' })
     const links = (await within(reader).findAllByRole('link')).filter(
-      (link) => !trail.contains(link),
+      (link) => !trail.contains(link) && link.textContent !== 'Up one level',
     )
     expect(links.length).toBeGreaterThan(0)
     for (const link of links) expect(link.getAttribute('href')).toContain(`${chat}?document=`)
+  })
+
+  it('goes up one level from the place that the path names, with no need of what the reader showed before', async () => {
+    renderSplit('group=interview_transcript')
+
+    const reader = await screen.findByRole('complementary', { name: 'Interview transcript' })
+
+    expect(await within(reader).findByRole('link', { name: 'Up one level' })).toHaveAttribute(
+      'href',
+      `${chat}?reader=documents`,
+    )
+  })
+
+  it('has no button to go up from the list of the documents', async () => {
+    renderSplit('reader=documents')
+
+    await screen.findByRole('complementary')
+
+    expectNoRole('link', 'Up one level')
   })
 
   it('shows the path of the folder of one kind: the list, then the folder itself', async () => {

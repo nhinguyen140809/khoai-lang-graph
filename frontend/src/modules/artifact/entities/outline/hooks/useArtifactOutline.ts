@@ -7,7 +7,8 @@ import { useIssueKinds } from '@/modules/workflow/entities/@x/artifact'
 import { useArtifact } from '../../artifacts/hooks/useArtifactQueries'
 import { useItemSchema } from '../../items/hooks/useItemQueries'
 import type { ArtifactOutlineResult } from '../outline.types'
-import { artifactOutline, outlineStatuses } from '../outline.utils'
+import { artifactOutline } from '../outline.utils'
+import { outlineStatuses } from '../outline-path.utils'
 import { useOutlineItems } from './useOutlineItems'
 
 /**

@@ -14,7 +14,7 @@ import { Textarea } from '@/shared/components/ui/textarea'
 import { isString } from '@/shared/lib/guards'
 
 import type { ContentField } from '../../fields/content-fields.types'
-import { isChoiceField, isNumberField } from '../../fields/content-fields.utils'
+import { isChoiceField, isNumberField } from '../../fields/field-widget.utils'
 import { useValueLabelOf } from '../../value-labels/hooks/useValueLabelOf'
 import type { ValueDefinition } from '../../values/content-values.types'
 import { contentInputMessages } from './content-input.constants'

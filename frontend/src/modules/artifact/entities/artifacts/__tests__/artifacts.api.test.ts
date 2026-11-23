@@ -12,8 +12,9 @@ describe('artifacts api', () => {
   it('lists the artifacts of a project in the order of the stages that make them', async () => {
     const artifacts = await listProjectArtifacts(projectIds.mentor)
 
-    expect(artifacts.map(({ kind }) => kind).slice(0, 2)).toEqual([
+    expect(artifacts.map(({ kind }) => kind).slice(0, 3)).toEqual([
       'elicitation_plan',
+      'research_corpus',
       'persona_catalog',
     ])
   })
