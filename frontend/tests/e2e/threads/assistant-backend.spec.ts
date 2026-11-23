@@ -9,10 +9,7 @@ const idea = 'A web app where students book study rooms'
 interface Answer {
   message: { id: string; run_id: string | null; delivery: string | null }
   run: { id: string; number: number; status: string; workflow_name: string }
-  assistant: {
-    text: string
-    commands: { command: string; artifact_id: string | null; item_id: string | null }[]
-  } | null
+  commands: { command: string; artifact_id: string | null; item_id: string | null }[]
 }
 
 // The scripted model answers a message about the app as the real one is told to: it reads the
@@ -37,18 +34,19 @@ test.describe('the assistant that answers a message about the app', () => {
 
     expect(answer.run.workflow_name).toBe('assistance')
     expect(answer.run.status).toBe('succeeded')
-    expect(answer.assistant?.text).toContain(item?.key)
     const [step] = await api.listSteps(answer.run.id)
     expect(step?.notes.map(({ kind, tool }) => ({ kind, tool }))).toEqual([
       { kind: 'tool', tool: 'read_item' },
     ])
     // What the answer was read from shows under it, as the references of its message.
     const messages = expectOk(
-      await client.get<{ items: { agent_role: string | null; item_refs: { key: string }[] }[] }>(
-        `/threads/${threadId}/messages`,
-      ),
+      await client.get<{
+        items: { agent_role: string | null; content: string; item_refs: { key: string }[] }[]
+      }>(`/threads/${threadId}/messages`),
     ).items
     expect(messages.at(-1)?.agent_role).toBe('assistant')
+    // The words of the answer are the last message of the thread, the one of the run that answered.
+    expect(messages.at(-1)?.content).toContain(item?.key)
     expect(messages.at(-1)?.item_refs.map(({ key }) => key)).toEqual([item?.key])
   })
 
@@ -67,7 +65,7 @@ test.describe('the assistant that answers a message about the app', () => {
       }),
     )
 
-    expect(answer.assistant?.commands).toEqual([
+    expect(answer.commands).toEqual([
       {
         command: 'open_document',
         artifact_id: specification?.id,
@@ -109,7 +107,7 @@ test.describe('the assistant that answers a message about the app', () => {
     )
 
     expect(answered.run.workflow_name).toBe('assistance')
-    expect(answered.assistant?.commands.map(({ command }) => command)).toEqual(['open_review'])
+    expect(answered.commands.map(({ command }) => command)).toEqual(['open_review'])
     expect(pending.run.id).toBe(run.id)
     expect(pending.message.delivery).toBe('pending')
     const thread = expectOk(
