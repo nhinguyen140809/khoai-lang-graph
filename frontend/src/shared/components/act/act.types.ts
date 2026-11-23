@@ -1,4 +1,6 @@
-import type { Mood } from '@/shared/components/face'
+import type { ComponentType } from 'react'
+
+import type { FaceProps, Mood } from '@/shared/components/face'
 
 /** The acts that a client can show; the keys of the catalog of the workflow definition. */
 export const actKeys = [
@@ -163,4 +165,10 @@ export interface OrbitShape {
   tilt: number
   turn: number
   reach: number
+}
+
+/** Who is in the act: how a face is drawn, for the actor and for the other agent, and what the face of the other agent of a work done by two comes from (none: that agent is left out). */
+export interface ActCast {
+  face: ComponentType<FaceProps>
+  partner: string | undefined
 }

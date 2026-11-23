@@ -1,13 +1,14 @@
 'use client'
 
 import { useMotionValue } from 'motion/react'
-import { type ComponentType, useRef, useState } from 'react'
+import { type ComponentType, useMemo, useRef, useState } from 'react'
 
 import { AgentFace, type FaceProps } from '@/shared/components/face'
 import { useIsInView } from '@/shared/lib/viewport'
 
 import { restingLook } from './act.constants'
 import { type Act, type ActProp, type FaceMove, type IconKey, slots } from './act.types'
+import { ActCastContext } from './ActCastContext'
 import { ActProps } from './ActProps'
 import { useActDrive } from './hooks/useActDrive'
 
@@ -82,19 +83,14 @@ export function MotionDemo({ seed, motion, face: Face = AgentFace, className }: 
         : [],
   }))
   const { drive, round } = useActDrive(act, 0, gain, isInView)
+  const cast = useMemo(() => ({ face: Face, partner: undefined }), [Face])
 
   return (
     <span ref={ref} className={className ?? 'relative inline-flex shrink-0'}>
       <Face seed={seed} mood="working" size="xl" drive={drive} />
-      <ActProps
-        act={act}
-        round={round}
-        gain={gain}
-        allowed={slots}
-        size="xl"
-        partner={undefined}
-        face={Face}
-      />
+      <ActCastContext value={cast}>
+        <ActProps act={act} round={round} gain={gain} allowed={slots} size="xl" />
+      </ActCastContext>
     </span>
   )
 }

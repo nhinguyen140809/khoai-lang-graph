@@ -1,7 +1,7 @@
 'use client'
 
 import { cn } from 'cn'
-import { type ComponentType, useRef } from 'react'
+import { type ComponentType, useMemo, useRef } from 'react'
 
 import { AgentFace, type FaceProps, type Mood } from '@/shared/components/face'
 import { useIsInView, usePrefersReducedMotion } from '@/shared/lib/viewport'
@@ -9,6 +9,7 @@ import { useIsInView, usePrefersReducedMotion } from '@/shared/lib/viewport'
 import { actorFrameClasses } from './act.constants'
 import { type ActSize, type Slot, slots as allSlots } from './act.types'
 import { actOf, moodOf } from './act.utils'
+import { ActCastContext } from './ActCastContext'
 import { ActProps } from './ActProps'
 import { useActCycle } from './hooks/useActCycle'
 import { useActDrive } from './hooks/useActDrive'
@@ -54,6 +55,7 @@ export function Actor({
   const isStill = usePrefersReducedMotion()
   const { shown, swaps, gain } = useActCycle(isStill ? [] : acts, isInView)
   const act = actOf(shown)
+  const cast = useMemo(() => ({ face: Face, partner }), [Face, partner])
   const { drive, round } = useActDrive(act, swaps, gain, isInView)
 
   return (
@@ -70,15 +72,9 @@ export function Actor({
       >
         <Face seed={seed} mood={moodOf(mood, act)} size={size} drive={drive} />
         {act !== null && (
-          <ActProps
-            act={act}
-            round={round}
-            gain={gain}
-            allowed={slots}
-            size={size}
-            partner={partner}
-            face={Face}
-          />
+          <ActCastContext value={cast}>
+            <ActProps act={act} round={round} gain={gain} allowed={slots} size={size} />
+          </ActCastContext>
         )}
       </span>
     </span>

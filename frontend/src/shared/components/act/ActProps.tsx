@@ -2,9 +2,7 @@
 
 import { cn } from 'cn'
 import { motion, type MotionValue, useMotionValue, useTransform } from 'motion/react'
-import type { ComponentType } from 'react'
 
-import type { FaceProps } from '@/shared/components/face'
 import { stretchOf } from '@/shared/lib/animation'
 
 import { propSize, slotPlaces } from './act.constants'
@@ -20,6 +18,7 @@ import {
 } from './act-motion.constants'
 import { propIcons } from './act-props.constants'
 import { ActTokens } from './ActTokens'
+import { useActCast } from './hooks/useActCast'
 import { useOrbit } from './hooks/useOrbit'
 import { usePropTracks } from './hooks/usePropTracks'
 
@@ -33,14 +32,11 @@ interface ActPropsProps {
   allowed: readonly Slot[]
   /** The size of the face of the actor, which the size of the other agent follows. */
   size: ActSize
-  /** What the face of the other agent of a work done by two comes from; without it that agent is left out. */
-  partner: string | undefined
-  /** How a face is drawn: the other agent has the same kind of face as the actor. */
-  face: ComponentType<FaceProps>
 }
 
 /** What an act draws around a face: each of its things, at its slot, over its stretch of the round. */
-export function ActProps({ act, round, gain, allowed, size, partner, face }: ActPropsProps) {
+export function ActProps({ act, round, gain, allowed, size }: ActPropsProps) {
+  const { partner } = useActCast()
   return (
     <motion.span
       aria-hidden
@@ -59,8 +55,6 @@ export function ActProps({ act, round, gain, allowed, size, partner, face }: Act
               round={round}
               offset={copy / (item.copies ?? 1)}
               size={size}
-              partner={partner}
-              face={face}
             />
           )),
         )}
@@ -79,15 +73,11 @@ function Thing({
   round,
   offset,
   size,
-  partner,
-  face,
 }: {
   item: ActProp
   round: MotionValue<number>
   offset: number
   size: ActSize
-  partner: string | undefined
-  face: ComponentType<FaceProps>
 }) {
   const slot = slotPlaces[item.slot]
   const place = placeOf(item)
@@ -172,8 +162,6 @@ function Thing({
         item={item}
         progress={progress}
         size={size}
-        partner={partner}
-        face={face}
         lean={Math.sign(slot.x) as -1 | 0 | 1}
       />
     </motion.span>
@@ -184,15 +172,11 @@ function ThingContent({
   item,
   progress,
   size,
-  partner,
-  face,
   lean,
 }: {
   item: ActProp
   progress: MotionValue<number>
   size: ActSize
-  partner: string | undefined
-  face: ComponentType<FaceProps>
   lean: -1 | 0 | 1
 }) {
   if (item.icon !== undefined) {
@@ -200,23 +184,17 @@ function ThingContent({
   }
   if (item.tokens !== undefined)
     return <ActTokens progress={progress} tokens={item.tokens} lean={lean} />
-  return partner === undefined ? null : <PartnerFace face={face} seed={partner} size={size} />
+  return <PartnerFace size={size} />
 }
 
 /** The other agent of a work done by two: its eyes look toward the actor, which stands to the left of it. */
-function PartnerFace({
-  face: Face,
-  seed,
-  size,
-}: {
-  face: ComponentType<FaceProps>
-  seed: string
-  size: ActSize
-}) {
+function PartnerFace({ size }: { size: ActSize }) {
+  const { face: Face, partner } = useActCast()
   const x = useMotionValue(-2.6)
   const y = useMotionValue(0)
   const weight = useMotionValue(1)
-  return <Face seed={seed} size={size} mood="idle" drive={{ look: { x, y, weight } }} />
+  if (partner === undefined) return null
+  return <Face seed={partner} size={size} mood="idle" drive={{ look: { x, y, weight } }} />
 }
 
 function PropIcon({
