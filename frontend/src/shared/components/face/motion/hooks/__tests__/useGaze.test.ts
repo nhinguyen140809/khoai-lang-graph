@@ -69,3 +69,21 @@ describe('useBodyStyles with a head', () => {
     expect(bodyStyle).not.toHaveProperty('rotateZ')
   })
 })
+
+describe('useGaze with a share', () => {
+  const placed = { ...timing, phase: 0.3 }
+  const xOf = (share?: number) => {
+    const { result } = renderHook(() => useGaze(gazeLooks.glance, placed, undefined, share))
+    return result.current.eye.x.get()
+  }
+
+  it('takes all of the gaze when it is not given', () => {
+    expect(xOf()).not.toBe(0)
+    expect(xOf()).toBeCloseTo(xOf(1))
+  })
+
+  it('takes the part of the gaze that it says, for the eyes', () => {
+    expect(xOf(0.5)).toBeCloseTo(xOf(1) / 2)
+    expect(xOf(0)).toBe(0)
+  })
+})

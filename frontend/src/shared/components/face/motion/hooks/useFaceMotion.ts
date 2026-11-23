@@ -10,6 +10,9 @@ import { useBodyStyles } from './useBodyStyles'
 import { useFaceMotionStates } from './useFaceMotionStates'
 import { useGaze } from './useGaze'
 
+/** When a face moves (see `GazeTiming`; `isRunning` is found here), and how much of its gaze it takes: all of it (1) unless this says less. */
+export type FaceMotionTiming = Omit<GazeTiming, 'isRunning'> & { gazeShare?: number }
+
 /**
  * Every motion of a face that does not depend on what the face is drawn of: where it looks over
  * time, what it does as a whole (its pose and its body, with the turns that follow the gaze), and
@@ -21,13 +24,13 @@ import { useGaze } from './useGaze'
 export function useFaceMotion(
   moodLook: MotionLook,
   eyes: EyesMotion,
-  { phase, isChanging, reachShare }: Omit<GazeTiming, 'isRunning'>,
+  { phase, isChanging, reachShare, gazeShare }: FaceMotionTiming,
   drive?: FaceDrive,
 ) {
   const ref: RefObject<HTMLSpanElement | null> = useRef<HTMLSpanElement>(null)
   const isInView = useIsInView(ref)
   const timing: GazeTiming = { phase, isChanging, isRunning: isInView, reachShare }
-  const gaze: GazeValues = useGaze(gazeLooks[moodLook.gaze], timing, drive?.look)
+  const gaze: GazeValues = useGaze(gazeLooks[moodLook.gaze], timing, drive?.look, gazeShare)
   const motions = useFaceMotionStates(moodLook, eyes, { isHeld: isChanging || !isInView, phase })
   const { poseStyle, headStyle, bodyStyle } = useBodyStyles(motions, gaze.head, timing, drive?.move)
   return { ref, isInView, gaze, motions, poseStyle, headStyle, bodyStyle }
