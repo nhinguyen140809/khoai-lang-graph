@@ -82,6 +82,7 @@ export {
   linkTypesFrom,
   targetKindsOf,
 } from './definition/link-types.utils'
+export { mainWorkflowName } from './definition/main-workflow.constants'
 export { toolUsesLine } from './definition/tool-uses.utils'
 export { getWorkflowDefinition } from './definition/workflow.api'
 export { workflowKeys } from './definition/workflow.keys'

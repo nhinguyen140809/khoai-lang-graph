@@ -15,3 +15,11 @@ export function catalogEntries(file: string, list: 'acts' | 'commands'): Catalog
 export function catalogKeys(file: string, list: 'acts' | 'commands'): string[] {
   return catalogEntries(file, list).map(({ key }) => key)
 }
+
+/** The name that a definition file of `docs/workflow/` gives its workflow. */
+export function readWorkflowDefinitionName(file: string): string {
+  const definition = JSON.parse(
+    readFileSync(resolve(process.cwd(), '../docs/workflow', file), 'utf8'),
+  ) as { name: string }
+  return definition.name
+}
