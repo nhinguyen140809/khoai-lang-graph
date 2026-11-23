@@ -18,7 +18,7 @@
   "stages": [
     {
       "key": "lookup",
-      "title": "Looking into it",
+      "title": "Checking the project",
       "internal": false,
       "parent": null,
       "acts": [

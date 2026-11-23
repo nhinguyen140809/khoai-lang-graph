@@ -18,7 +18,7 @@ definition.
 The assistant is an agent of a workflow of its own.
 
 - `assistance` is a workflow definition like `requirements_engineering`: one agent role
-  (`assistant`), one stage (`lookup`, shown to the user as "Looking into it"), the graph `start -> assistant -> end`, its tools declared
+  (`assistant`), one stage (`lookup`, shown to the user as "Checking the project"), the graph `start -> assistant -> end`, its tools declared
   in `tools`, and `max_reads` among its run parameters.
 - A message that the assistant answers has a run of this workflow. The run is finished when the
   request answers: it has one step, whose notes are the reads that were made, with the usage and
