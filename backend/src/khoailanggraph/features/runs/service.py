@@ -17,6 +17,7 @@ from sqlalchemy.exc import IntegrityError
 
 from khoailanggraph.agents.requirements_engineering import definition as workflow_definition
 from khoailanggraph.api.errors import ApiError
+from khoailanggraph.domain.errors import NotNumberedError
 from khoailanggraph.features.threads.models import MessageRow, ThreadRow
 from khoailanggraph.features.threads.sequence import add_message
 
@@ -365,9 +366,7 @@ async def create_run(
                     raise RunConflictError(existing) from None
             continue
         return row
-    raise ApiError(
-        409, "invalid_state", "Invalid state", "The run could not be numbered; try again."
-    )
+    raise NotNumberedError("run")
 
 
 async def next_run_number(session: AsyncSession, thread_id: UUID) -> int:

@@ -503,3 +503,25 @@ async def test_many_questions_sent_together_are_each_answered_and_numbered_in_or
     messages = (await client.get(f"{API}/threads/{thread_id}/messages")).json()["items"]
     assert [message["sequence"] for message in messages] == list(range(1, 2 * asked + 1))
     assert len({message["run_id"] for message in messages}) == asked, "one run for each question"
+
+
+async def test_a_run_that_cannot_get_a_number_answers_409_and_not_a_server_error(
+    app: FastAPI,
+    client: AsyncClient,
+    project_and_thread: tuple[str, str],
+    monkeypatch: pytest.MonkeyPatch,
+) -> None:
+    project_id, thread_id = project_and_thread
+    await _seed_run(app, project_id, thread_id, status="succeeded", number=1)
+
+    async def always_taken(*_args: Any, **_kwargs: Any) -> int:
+        return 1
+
+    monkeypatch.setattr(runs_service, "next_run_number", always_taken)
+
+    with _assistant(kind="general", text="You can read the interviews first."):
+        reset_model_cache()
+        response = await _send(client, thread_id, "Which document should I read first?")
+
+    assert response.status_code == 409
+    assert response.json()["code"] == "invalid_state"

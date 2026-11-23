@@ -13,7 +13,7 @@ from typing import TYPE_CHECKING
 from sqlalchemy import func, select
 from sqlalchemy.exc import IntegrityError
 
-from khoailanggraph.api.errors import ApiError
+from khoailanggraph.domain.errors import NotNumberedError
 from khoailanggraph.features.threads.models import MessageRow
 
 if TYPE_CHECKING:
@@ -25,12 +25,6 @@ if TYPE_CHECKING:
 
 # How many times a message is written again when another message took its sequence.
 MESSAGE_SEQUENCE_ATTEMPTS = 8
-
-
-def _not_numbered() -> ApiError:
-    return ApiError(
-        409, "invalid_state", "Invalid state", "The message could not be numbered; try again."
-    )
 
 
 async def add_message(
@@ -49,7 +43,7 @@ async def add_message(
         except IntegrityError:
             continue
         return row
-    raise _not_numbered()
+    raise NotNumberedError("message")
 
 
 def add_message_sync(
@@ -67,4 +61,4 @@ def add_message_sync(
         except IntegrityError:
             continue
         return row
-    raise _not_numbered()
+    raise NotNumberedError("message")
