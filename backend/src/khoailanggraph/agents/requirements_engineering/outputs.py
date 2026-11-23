@@ -866,6 +866,21 @@ class Definition(_Output):
     definition: str
 
 
+class ResolutionDraft(_Output):
+    ambiguity: str = Field(
+        description=(
+            "The key of the open ambiguity or conflict of the analysis that these requirements "
+            "settle, as the analysis lists it."
+        )
+    )
+    resolution: str = Field(
+        description=(
+            "What this specification decides about it, in one sentence, in the output language: "
+            "the answer a reader would otherwise still be looking for."
+        )
+    )
+
+
 class NewSpecRequirement(_Output):
     ref: str
     title: str
@@ -899,6 +914,13 @@ class EngineerOutput(_Narrated):
     out_of_scope: list[str]
     definitions: list[Definition]
     requirements: list[NewSpecRequirement]
+    resolutions: list[ResolutionDraft] = Field(
+        default_factory=list,
+        description=(
+            "The open questions of the analysis that these requirements settle, one entry each. "
+            "Leave it empty when this pass settles none."
+        ),
+    )
 
 
 class AcceptanceCriterionDraft(_Output):

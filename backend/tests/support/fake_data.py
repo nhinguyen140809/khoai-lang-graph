@@ -1183,6 +1183,7 @@ def _upload_flow_spec() -> dict[str, Any]:
         quality: str | None,
         rationale: str,
         verification: str,
+        fit: str | None = None,
     ) -> dict[str, Any]:
         return {
             "ref": ref,
@@ -1193,7 +1194,7 @@ def _upload_flow_spec() -> dict[str, Any]:
             "priority": priority,
             "rationale": rationale,
             "acceptance_criteria": [f"{title} works as asked in the uploaded record."],
-            "fit_criterion": None,
+            "fit_criterion": fit,
             "verification_method": verification,
             "derived_from": [f"AR-00{ref[-1]}"],
             "depends_on": [],
@@ -1215,6 +1216,7 @@ def _upload_flow_spec() -> dict[str, Any]:
                 None,
                 "The discovery need the uploaded record leads with.",
                 "test",
+                fit="A search for a skill returns that mentor within one second, P95.",
             ),
             requirement(
                 "Q2",
@@ -1225,6 +1227,7 @@ def _upload_flow_spec() -> dict[str, Any]:
                 None,
                 "Quick booking is asked for the uploaded record.",
                 "test",
+                fit="A student books their first session in at most five steps.",
             ),
             requirement(
                 "Q3",
@@ -1235,6 +1238,7 @@ def _upload_flow_spec() -> dict[str, Any]:
                 "security",
                 "Privacy worries come straight from the uploaded record.",
                 "inspection",
+                fit="An inspection of twenty records finds no question outside its conversation.",
             ),
         ],
     }

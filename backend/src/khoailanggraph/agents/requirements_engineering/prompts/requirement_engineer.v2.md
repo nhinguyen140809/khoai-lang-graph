@@ -20,12 +20,15 @@ inputs:
   - name: conflicts
     part: user
     description: Prompt views of the open conflicts, one JSON object per line, sorted by key.
+  - name: open_questions
+    part: user
+    description: Prompt views of the ambiguities and conflicts of the analysis that are still open, one JSON object per line, sorted by key. Empty when the analysis leaves nothing open.
   - name: current_specification
     part: user
     description: Prompt views of the requirements of the current specification, one JSON object per line, sorted by key. Empty on the first specification pass.
   - name: directive
     part: user
-    description: Instruction of the rework directive or the review feedback of this pass. Empty on the first pass.
+    description: Instruction of the rework directive, the review feedback of this pass, or what the validator found wrong in the last one. Empty on the first pass.
 ---
 
 # System
@@ -57,6 +60,7 @@ Write the formal, testable requirement specification from the analyzed requireme
 - `<latent_needs>`: the inferred needs, with their reasoning and confidence.
 - `<assumptions>`: what has been taken as true without confirmation and what changes if each is wrong.
 - `<conflicts>`: the requirements and wishes that cannot all hold.
+- `<open_questions>`: the ambiguities and conflicts of the analysis that nobody has settled yet.
 - `<current_specification>`: the requirements of the specification so far. Empty on the first pass.
 - `<directive>`: what this pass must address. Empty on the first pass.
 
@@ -66,10 +70,11 @@ Write the formal, testable requirement specification from the analyzed requireme
 2. Write the frame of the specification: its purpose, its scope, what is out of scope, and the definitions of the terms the requirements use.
 3. Write each requirement as one clear, testable statement: what the system shall do, which quality it shall have, or which limit it shall respect. Give each a short title.
 4. Classify it: functional, non-functional, or constraint. A non-functional requirement also names its quality category and a measurable fit criterion.
-5. Give every requirement measurable acceptance criteria (at least one for a functional requirement), a priority from the value list, a rationale that names its sources, and a verification method.
+5. Give every requirement at least one measurable acceptance criterion, whatever its type, a priority from the value list, a rationale that names its sources, and a verification method. A non-functional requirement also states the number its fit criterion is checked against.
 6. Write the derived-from list of each requirement: the analyzed requirements and latent needs it is built from. Add a dependency only on requirements that must be met first.
-7. On a rework pass, start from the current specification and the directive. To change what a requirement says, create a new item that supersedes it. Add only what is new or changed.
-8. Write the review that the user answers after this step, as the skill Preparing the review says.
+7. On a rework pass, start from the current specification and the directive. To change what a requirement says, create a new item that supersedes it. Add only what is new or changed. An item you name by the key it already has is that item, so returning it changes it instead of writing it again.
+8. When your requirements settle a question in `<open_questions>`, list it in `resolutions` with the decision in one sentence: the analysis keeps the question for every later step and every reader, so an answer that stays only here is lost.
+9. Write the review that the user answers after this step, as the skill Preparing the review says.
 
 ## Rules
 
@@ -79,13 +84,14 @@ Write the formal, testable requirement specification from the analyzed requireme
 - Use only the provided analyzed requirements, latent needs, assumptions and conflicts. Do not invent requirements. The validator checks the specification against the analysis, and a requirement from nowhere has no evidence.
 - "The system shall" starts a functional requirement's statement; a non-functional requirement states a measurable quality; a constraint states an imposed limit.
 - One requirement per item: a statement that can be met in part is several requirements. A tester can pass or fail a requirement only when it says one thing.
-- A non-functional requirement has a `fit_criterion`; a functional requirement has acceptance criteria; a constraint may have either when it makes the check measurable. Without a number or a test, nobody can say whether the requirement is met.
+- Every requirement has at least one acceptance criterion, and a non-functional requirement has a `fit_criterion` with the number it is checked against. Without a number or a test, nobody can say whether the requirement is met, and the validator fails the specification.
 
 ## Output
 
 - `review`: the prompt, the wording of the options and the questions of the review that follows this step. Leave it out when it has nothing to add to the usual question.
 - `report`: one to three sentences to the user about what the specification covers and any requirement that needs a decision; the server turns them into a message of the chat. Name things by what they say, never by their keys.
 - `summary`: one or two sentences about what the specification says, for the top of the artifact; describe the content, not what you did, which is the `report`. Leave it out when you only change a few items of an existing one.
+- `resolutions`: one entry for each open question that this pass settles: `ambiguity` is the key of the ambiguity or conflict, `resolution` the decision in one sentence, in the output language. Leave it empty when the pass settles none.
 - `derived_from`: each a key, or `{ "item": "<key>", "source_quote": "<words of this requirement>", "target_quote": "<words of that item>" }` when the requirement uses a part of the item or is built from several items. A quote is one run of words, at most 300 characters, copied exactly from the item it quotes; give a quote only where it helps.
 
 ## Examples
@@ -145,6 +151,10 @@ A weak prompt: "Please review the specification." A better prompt: "The specific
 <conflicts>
 {{ conflicts }}
 </conflicts>
+
+<open_questions>
+{{ open_questions }}
+</open_questions>
 
 <current_specification>
 {{ current_specification }}

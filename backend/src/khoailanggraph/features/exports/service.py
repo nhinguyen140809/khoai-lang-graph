@@ -67,6 +67,30 @@ def check_request(body: schemas.ExportBody) -> dict[str, Any]:
     return dict(template)
 
 
+def _numbered(items: list[dict[str, Any]]) -> list[dict[str, Any]]:
+    """The items numbered over themselves, `1`, `2` … and `1.1` … as the outline of the file runs.
+
+    The number is what a reader counts, not the identity of the item (its key is): a row left out
+    of the document leaves no gap, so the fourth requirement of a file reads as 4. The depth comes
+    back with it, because the heading level of an item is read off it.
+    """
+    present = {item["id"] for item in items}
+    children: dict[str | None, list[dict[str, Any]]] = {}
+    for item in items:
+        parent = item["parent_item_id"] if item["parent_item_id"] in present else None
+        children.setdefault(parent, []).append(item)
+
+    def walk(parent: str | None, prefix: str, depth: int) -> None:
+        for index, item in enumerate(children.get(parent, []), start=1):
+            number = f"{prefix}{index}"
+            item["outline_number"] = number
+            item["depth"] = depth
+            walk(str(item["id"]), f"{number}.", depth + 1)
+
+    walk(None, "", 1)
+    return items
+
+
 async def _gather(
     session: AsyncSession, project: ProjectRow, template: dict[str, Any]
 ) -> renderers.ExportData:
@@ -88,10 +112,15 @@ async def _gather(
             limit=10_000,
             cursor=0,
         )
+        # A superseded item is history: the newer one that replaced it says what the document
+        # stands for, and printing both reads as the same thing twice.
+        kept = [
+            item.model_dump(mode="json") for item in items if item.review_status != "superseded"
+        ]
         documents.append(
             renderers.Document(
                 artifact=artifact.model_dump(mode="json"),
-                items=[item.model_dump(mode="json") for item in items],
+                items=_numbered(kept),
             )
         )
     matrix = None

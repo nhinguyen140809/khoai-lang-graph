@@ -176,7 +176,9 @@ async def test_items_written_by_the_workflow_are_searchable(
     assert counts["raw_requirement"] == 9
     assert counts["spec_requirement"] == 6  # 5 + the reworked one superseding REQ-004
     assert counts["backlog_item"] == 5
-    assert counts["validation_issue"] == 1  # the failing iteration's issue
+    # The failing iteration keeps the issue of the model and the one the code adds by itself: a
+    # requirement with no acceptance criterion cannot be tested, whatever the model looked past.
+    assert counts["validation_issue"] == 2
 
 
 async def test_retry_creates_queued_run_with_lineage(client: AsyncClient) -> None:
