@@ -6,12 +6,19 @@ import { messagesOfThread } from '@/mocks/messages/messages.lookup'
 import { server } from '@/mocks/msw-server.setup'
 import { runsOfThread } from '@/mocks/runs/lookup/runs.lookup'
 import { projectIds, threadIds } from '@/mocks/shared/db'
+import { assistanceDefinitionFixture } from '@/mocks/workflow/workflow.fixtures'
 import { apiEndpoints } from '@/shared/api/endpoints'
 import { assertPresent } from '@/shared/lib/guards'
 import { openPage } from '@/test/msw'
 import { setQuery } from '@/test/next-stubs'
 import { renderWithProviders } from '@/test/render'
-import { expectNoAccessibilityViolations, expectRole, expectText, press } from '@/test/steps'
+import {
+  expectNoAccessibilityViolations,
+  expectRole,
+  expectText,
+  press,
+  typeText,
+} from '@/test/steps'
 
 import { ActivityChat } from '../ActivityChat'
 
@@ -71,6 +78,29 @@ describe('ActivityChat', () => {
     )
     const unrun = screen.getByText('Let a group of students order and pay together.')
     expect(first.compareDocumentPosition(unrun)).toBe(Node.DOCUMENT_POSITION_FOLLOWING)
+  })
+
+  it('shows the answer of the assistant to a message about the app as a run of its own', async () => {
+    const [stage] = assistanceDefinitionFixture.stages
+    const runsBefore = runsOfThread(threadIds.mentorMain).length
+    renderWithProviders(<ActivityChat projectId={projectIds.mentor} />)
+    await expectText('Also ask about group sessions.')
+
+    await typeText(
+      await screen.findByPlaceholderText('Ask or request a change'),
+      'Where are the limits?{Enter}',
+    )
+
+    await expectText('The settings hold the limits that a run works under. I opened them.')
+    // The run of the assistant is drawn as any run is: a phase with the title its definition gives.
+    await expectText(stage?.title ?? '')
+    const runs = runsOfThread(threadIds.mentorMain)
+    expect(runs).toHaveLength(runsBefore + 1)
+    expect(
+      runs.find(({ workflow_name: name }) => name === assistanceDefinitionFixture.name),
+    ).toMatchObject({
+      status: 'succeeded',
+    })
   })
 
   it('shows the prompt under the chat', async () => {

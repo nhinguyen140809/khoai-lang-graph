@@ -36,6 +36,7 @@ export const sentMessage = {
     created_at: '2026-10-01T09:00:00Z',
   },
   run: buildRun({ id: 'r1', thread_id: 't1', project_id: 'p1', number: 1 }),
+  commands: [],
 }
 
 /** A call of the thread API, and the request it sends. */

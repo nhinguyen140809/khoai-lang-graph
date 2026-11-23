@@ -1,6 +1,7 @@
 import { describe, expect, it } from 'vitest'
 
 import { threadIds } from '@/mocks/shared/db'
+import { assistanceDefinitionFixture } from '@/mocks/workflow/workflow.fixtures'
 import { openPage } from '@/test/msw'
 import { itSendsRequests } from '@/test/suites'
 
@@ -26,7 +27,25 @@ describe('the message API', () => {
       delivery: 'started_run',
     })
     expect(sent.run).toMatchObject({ number: 4, status: 'running' })
+    expect(sent.commands).toEqual([])
     expect(sent.message.run_id).toBe(sent.run.id)
+  })
+
+  it('reads the answer of the assistant to a message about the app, with its finished run', async () => {
+    const sent = await sendMessage(
+      threadIds.mentorMain,
+      { content: 'Where are the limits?' },
+      'key-2',
+    )
+
+    expect(sent.run).toMatchObject({
+      workflow_name: assistanceDefinitionFixture.name,
+      status: 'succeeded',
+    })
+    expect(sent.message).toMatchObject({ run_id: sent.run.id, delivery: null })
+    expect(sent.commands).toMatchObject([
+      { command: 'open_settings', artifact_id: null, item_id: null },
+    ])
   })
 
   itSendsRequests(sentMessageRequestCases)

@@ -54,7 +54,31 @@ export interface SendMessageBody {
   models?: Record<string, string>
 }
 
-/** The answer of a sent message: the message, and the run that it started or was sent to. */
-export const sentMessageSchema = z.object({ message: messageSchema, run: runSchema })
+/**
+ * One thing that an answer asks the client to do once, such as opening a document, named by the
+ * key of a command of the catalog (`docs/workflow/commands.catalog.json`). It names the record that
+ * the command needs, and `label` is the short phrase the answer uses for it.
+ */
+export const uiCommandSchema = z.object({
+  command: z.string(),
+  artifact_id: z.string().nullable(),
+  item_id: z.string().nullable(),
+  label: z.string().nullable(),
+})
+
+export type UiCommand = z.infer<typeof uiCommandSchema>
+
+/**
+ * The answer of a sent message: the message, the run that took it, and the UI commands that the
+ * answer asks the client to run once. A message about the work starts a run of the requirements
+ * workflow or joins one, with no command; a message about the app is answered in a run of the
+ * assistance workflow that is already over, and the words of the answer are the message of that run.
+ */
+export const sentMessageSchema = z.object({
+  message: messageSchema,
+  run: runSchema,
+  // A server that has no command to ask for leaves the key out: it reads as none.
+  commands: z.array(uiCommandSchema).default([]),
+})
 
 export type SentMessage = z.infer<typeof sentMessageSchema>
