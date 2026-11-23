@@ -2,15 +2,16 @@ import { useCallback } from 'react'
 
 import type { WorkflowDefinition } from '../workflow-definition.types'
 import { actsOf } from '../workflow-definition.utils'
+import type { WorkflowRef } from '../workflow-ref.types'
 import { useDefinitionQuery } from './useDefinitionQuery'
 
 /**
  * The acts to show around the agent at work in a version of the workflow, so that a run reads with
  * the version it ran with: those of the tool in use when it names some, else those of the stage.
- * None without a version, and while the definition loads.
+ * None without a workflow, and while the definition loads.
  */
 export function useActsOf(
-  version: number | undefined,
+  workflow: WorkflowRef | undefined,
   stage: string | null,
   tool: string | null,
 ): string[] {
@@ -19,7 +20,7 @@ export function useActsOf(
     (definition: WorkflowDefinition) => actsOf(definition, { stage, tool }),
     [stage, tool],
   )
-  const acts = useDefinitionQuery(version, selectActs, { isEnabled: version !== undefined })
+  const acts = useDefinitionQuery(workflow, selectActs, { isEnabled: workflow !== undefined })
 
   return acts.data ?? []
 }

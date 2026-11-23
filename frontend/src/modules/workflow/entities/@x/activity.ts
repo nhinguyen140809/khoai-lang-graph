@@ -1,6 +1,8 @@
 export type { ArtifactKindDisplay } from '../artifact-kinds/artifact-kind-display.types'
 export { useArtifactKindDisplays } from '../artifact-kinds/hooks/useArtifactKindDisplays'
 export { useContentSchemas } from '../artifact-kinds/hooks/useArtifactKindQueries'
+export type { WorkflowRef } from '../definition/workflow-ref.types'
+export { workflowRefOf } from '../definition/workflow-ref.utils'
 export { useVisibleStages } from '../stages/hooks/useStageQueries'
 export { useStageTitles } from '../stages/hooks/useStageTitles'
 export type { VisibleStage } from '../stages/stages.types'

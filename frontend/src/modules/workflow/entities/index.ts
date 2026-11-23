@@ -106,6 +106,8 @@ export type {
   WorkflowNode,
 } from './definition/workflow-graph.types'
 export { questionAnswerSchema } from './definition/workflow-graph.types'
+export type { WorkflowRef } from './definition/workflow-ref.types'
+export { workflowRefOf } from './definition/workflow-ref.utils'
 export type {
   AgentRole,
   DefinedArtifactKind,

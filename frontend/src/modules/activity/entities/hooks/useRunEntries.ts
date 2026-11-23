@@ -6,7 +6,11 @@ import { subjectTitlesOf, useStageSubjects } from '@/modules/artifact/entities/@
 import { useRunInterrupts } from '@/modules/review/entities/@x/activity'
 import { type Run, useRunSteps, workEntries } from '@/modules/run/entities/@x/activity'
 import type { Message } from '@/modules/thread/entities/@x/activity'
-import { useArtifactKindDisplays, useStageTitles } from '@/modules/workflow/entities/@x/activity'
+import {
+  useArtifactKindDisplays,
+  useStageTitles,
+  workflowRefOf,
+} from '@/modules/workflow/entities/@x/activity'
 
 import type { ActivityEntry, RunEntriesResult } from '../activity-entries.types'
 import { runEntries, shownWork } from '../activity-entries.utils'
@@ -23,8 +27,8 @@ export function useRunEntries(
 ): RunEntriesResult {
   const steps = useRunSteps(run.id)
   const interrupts = useRunInterrupts(run.id)
-  const stageTitles = useStageTitles(run.workflow_version)
-  const subjects = useStageSubjects(projectId, run.workflow_version)
+  const stageTitles = useStageTitles(workflowRefOf(run))
+  const subjects = useStageSubjects(projectId, workflowRefOf(run))
   const kinds = useArtifactKindDisplays()
   const stepPages = steps.data?.pages
   const interruptPages = interrupts.data?.pages

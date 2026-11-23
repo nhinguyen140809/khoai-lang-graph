@@ -9,11 +9,17 @@ import { callApi, openPage } from '@/test/msw'
 import { itRejectsRequests } from '@/test/suites'
 
 import type { workflowDefinitionWithEveryParameterType } from '../workflow.fixtures'
+import { assistanceDefinitionFixture } from '../workflow.fixtures'
 import { definitionRejectedCases } from './workflow.handlers.data'
 
 // The definition file that the mock copies, read from the root of the repository.
 const documented = JSON.parse(
   readFileSync(resolve(process.cwd(), '../docs/workflow/requirements_engineering.v2.json'), 'utf8'),
+) as Record<string, unknown>
+
+// The definition of the assistance workflow, which the mock copies the same way.
+const documentedAssistance = JSON.parse(
+  readFileSync(resolve(process.cwd(), '../docs/workflow/assistance.v1.json'), 'utf8'),
 ) as Record<string, unknown>
 
 describe('the workflow handlers', () => {
@@ -24,6 +30,30 @@ describe('the workflow handlers', () => {
     })
 
     expect(answer.body).toEqual(documented)
+  })
+
+  it('serve the definition of the workflow that a name gives, current or pinned', async () => {
+    const current = await callApi({
+      method: HttpMethod.Get,
+      path: `${apiEndpoints.workflowDefinition.path()}?name=${assistanceDefinitionFixture.name}`,
+    })
+    const pinned = await callApi({
+      method: HttpMethod.Get,
+      path: `${apiEndpoints.workflowDefinition.path()}?name=${assistanceDefinitionFixture.name}&version=${String(assistanceDefinitionFixture.version)}`,
+    })
+    const missingVersion = await callApi({
+      method: HttpMethod.Get,
+      path: `${apiEndpoints.workflowDefinition.path()}?name=${assistanceDefinitionFixture.name}&version=${String(assistanceDefinitionFixture.version + 8)}`,
+    })
+    const unknown = await callApi({
+      method: HttpMethod.Get,
+      path: `${apiEndpoints.workflowDefinition.path()}?name=nothing`,
+    })
+
+    expect(current.body).toEqual(documentedAssistance)
+    expect(pinned.body).toEqual(documentedAssistance)
+    expect(missingVersion.status).toBe(404)
+    expect(unknown.status).toBe(404)
   })
 
   it('serve the definition with every kind of run parameter in the all-types scenario', async () => {

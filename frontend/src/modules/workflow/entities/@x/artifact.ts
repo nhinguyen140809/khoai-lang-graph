@@ -46,6 +46,7 @@ export { useWorkflowDefinition } from '../definition/hooks/useWorkflowDefinition
 export type { WorkflowDefinition } from '../definition/workflow-definition.types'
 export { findAgentRole } from '../definition/workflow-definition.utils'
 export { subjectKindByStage } from '../definition/workflow-definition.utils'
+export type { WorkflowRef } from '../definition/workflow-ref.types'
 export { useIssueKinds } from '../issues/hooks/useIssueQueries'
 export type { IssueKind } from '../issues/issues.types'
 export { isOpenIssue } from '../issues/issues.utils'
