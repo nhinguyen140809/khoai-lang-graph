@@ -27,7 +27,6 @@ import { useRunActivity } from '../../hooks/useRunActivity'
 import { FailureEntryView } from './FailureEntryView'
 import { MessageEntry } from './MessageEntry'
 import { PhaseEntryView } from './PhaseEntryView'
-import { RefLinks } from './RefLinks'
 import { ResendButton } from './ResendButton'
 import { ReviewEntry } from './ReviewEntry'
 import { StepNoteLine } from './StepNoteLine'
@@ -147,7 +146,6 @@ function MessageBody({ entry }: EntryViewProps<'message'>) {
                 <MessageEntry message={entry.message} runStatus={run.status} />
               </BubbleContent>
             </Bubble>
-            <RefLinks message={entry.message} />
           </div>
         )}
         {/* The time, the resend and the copy of the words hang under the message, in the space
