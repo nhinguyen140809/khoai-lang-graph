@@ -135,19 +135,29 @@ async def test_a_message_about_the_application_is_answered_without_a_run(
 
     assert response.status_code == 201
     body = response.json()
-    assert body["run"] is None
+    assert body["run"]["workflow_name"] == "assistance"
+    assert body["run"]["status"] == "succeeded"
+    assert body["message"]["run_id"] == body["run"]["id"]
     assert body["assistant"]["text"] == "You can read the interviews first."
     assert body["assistant"]["commands"] == []
     assert body["message"]["delivery"] == "delivered"
 
     runs = (await client.get(f"{API}/threads/{thread_id}/runs")).json()["items"]
-    assert runs == [], "a question about the application starts no run"
+    assert [run["workflow_name"] for run in runs] == ["assistance"], (
+        "the answer is a run of the assistance workflow, and the only one"
+    )
+    work = (await client.get(f"{API}/threads/{thread_id}/runs?kind=work")).json()["items"]
+    assert work == [], "it is not a run of the work of the project"
+    thread = (await client.get(f"{API}/threads/{thread_id}")).json()
+    assert thread["active_run_id"] is None, "an answer is over before anyone could follow it"
+    assert thread["latest_run_status"] is None, "and it is not the latest run of the thread"
 
     messages = (await client.get(f"{API}/threads/{thread_id}/messages")).json()["items"]
     assert [(entry["author"], entry["agent_role"]) for entry in messages] == [
         ("user", None),
         ("agent", "assistant"),
     ], "the answer is stored with the conversation and survives a reload"
+    assert {entry["run_id"] for entry in messages} == {body["run"]["id"]}, "both belong to its run"
 
     project = (await client.get(f"{API}/projects/{project_id}")).json()
     assert project["initial_message_id"] is None, "an answered question is not the project's idea"
@@ -257,6 +267,16 @@ async def test_a_read_comes_back_before_the_answer(
     )
     assert spec_id is not None
 
+    run_id = response.json()["run"]["id"]
+    steps = (await client.get(f"{API}/runs/{run_id}/steps")).json()["items"]
+    assert [(step["node"], step["agent_role"], step["stage"]) for step in steps] == [
+        ("assistant", "assistant", "guidance")
+    ]
+    assert [(note["kind"], note["tool"]) for note in steps[0]["notes"]] == [
+        ("tool", "read_item")
+    ], "each read is a note of kind tool, named by a tool of the assistance definition"
+    assert response.json()["run"]["step_count"] == 1
+
     messages = (await client.get(f"{API}/threads/{thread_id}/messages")).json()["items"]
     answer_message = messages[-1]
     assert answer_message["agent_role"] == "assistant"
@@ -307,3 +327,21 @@ async def _seed_item(app: FastAPI, project_id: str) -> str:
         )
         await session.commit()
         return str(artifact.id)
+
+
+async def test_the_definition_of_each_workflow_is_served_by_its_name(client: AsyncClient) -> None:
+    await client.post(f"{API}/auth/register", json=REGISTER)
+    await client.post(f"{API}/auth/login", json={"email": REGISTER["email"], "password": "secret"})
+
+    assistance = await client.get(f"{API}/workflow/definition?name=assistance")
+    pinned = await client.get(f"{API}/workflow/definition?name=assistance&version=1")
+    default = await client.get(f"{API}/workflow/definition")
+    unknown = await client.get(f"{API}/workflow/definition?name=nothing")
+    missing = await client.get(f"{API}/workflow/definition?name=assistance&version=9")
+
+    assert assistance.json()["name"] == "assistance"
+    assert pinned.json() == assistance.json()
+    assert "immutable" in pinned.headers["cache-control"]
+    assert default.json()["name"] == "requirements_engineering"
+    assert unknown.status_code == 404
+    assert missing.status_code == 404

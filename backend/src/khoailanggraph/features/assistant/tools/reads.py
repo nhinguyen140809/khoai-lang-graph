@@ -14,6 +14,7 @@ from uuid import UUID
 
 from sqlalchemy import select
 
+from khoailanggraph.agents import workflows
 from khoailanggraph.agents.requirements_engineering import definition as wf
 from khoailanggraph.features.artifacts.models import ArtifactItemRow, ArtifactRow
 from khoailanggraph.features.artifacts.service import (
@@ -158,7 +159,10 @@ async def latest_run(ctx: ToolContext, key: str | None) -> str:
     """How the last run of the project stands, and why it failed when it did."""
     run = await ctx.session.scalar(
         select(RunRow)
-        .where(RunRow.project_id == ctx.project.id)
+        .where(
+            RunRow.project_id == ctx.project.id,
+            RunRow.workflow_name.not_in(workflows.answer_workflow_names()),
+        )
         .order_by(RunRow.created_at.desc(), RunRow.number.desc())
         .limit(1)
     )

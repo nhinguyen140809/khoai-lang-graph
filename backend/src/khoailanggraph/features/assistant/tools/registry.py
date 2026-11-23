@@ -35,6 +35,8 @@ class ReadLog:
 
     artifacts: dict[str, dict[str, Any]] = field(default_factory=dict)
     items: dict[str, dict[str, Any]] = field(default_factory=dict)
+    # Each read that was made, as (tool, key), in order: the notes of the step that made them.
+    calls: list[tuple[str, str | None]] = field(default_factory=list)
 
     def note_artifact(self, row: ArtifactRow) -> None:
         if len(self.artifacts) < MAX_REFS:

@@ -21,11 +21,10 @@ from sqlalchemy import func, select
 if TYPE_CHECKING:
     from sqlalchemy.ext.asyncio import AsyncSession
 
-    from khoailanggraph.features.me.models import UserRow
-
+from khoailanggraph.agents import workflows
 from khoailanggraph.api.errors import ApiError
 from khoailanggraph.features.artifacts.models import ArtifactItemRow
-from khoailanggraph.features.me.models import UserSettingsRow
+from khoailanggraph.features.me.models import UserRow, UserSettingsRow
 from khoailanggraph.features.projects import schemas
 from khoailanggraph.features.projects.models import ProjectRow
 from khoailanggraph.features.projects.validation import model_problems, run_defaults_problems
@@ -97,7 +96,8 @@ async def rollup_run_status(session: AsyncSession, project_id: UUID) -> schemas.
     rows = (
         await session.execute(
             select(RunRow.thread_id, RunRow.number, RunRow.status).where(
-                RunRow.project_id == project_id
+                RunRow.project_id == project_id,
+                RunRow.workflow_name.not_in(workflows.answer_workflow_names()),
             )
         )
     ).all()

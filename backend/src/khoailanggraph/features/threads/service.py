@@ -12,6 +12,7 @@ from sqlalchemy import select
 if TYPE_CHECKING:
     from sqlalchemy.ext.asyncio import AsyncSession
 
+from khoailanggraph.agents import workflows
 from khoailanggraph.api.errors import ApiError
 from khoailanggraph.features.projects.models import ProjectRow
 from khoailanggraph.features.projects.service import get_project_row, has_unfinished_thread_run
@@ -28,7 +29,10 @@ async def latest_run_status(session: AsyncSession, thread_id: UUID) -> str | Non
     """The status of the latest run of a thread, unfinished or ended; null before its first run."""
     return await session.scalar(
         select(RunRow.status)
-        .where(RunRow.thread_id == thread_id)
+        .where(
+            RunRow.thread_id == thread_id,
+            RunRow.workflow_name.not_in(workflows.answer_workflow_names()),
+        )
         .order_by(RunRow.number.desc())
         .limit(1)
     )

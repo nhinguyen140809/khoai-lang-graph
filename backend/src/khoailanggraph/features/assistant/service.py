@@ -22,6 +22,7 @@ import structlog
 from sqlalchemy import func, select
 
 from khoailanggraph.agents import prompts as prompt_loader
+from khoailanggraph.agents import workflows
 from khoailanggraph.agents.assistance import definition as assistance
 from khoailanggraph.agents.requirements_engineering import definition as workflow
 from khoailanggraph.domain.run_config import DEFAULT_MAX_STEPS, RunParameters
@@ -101,7 +102,10 @@ async def _project_lines(session: AsyncSession, project: ProjectRow) -> str:
     latest = (
         await session.execute(
             select(RunRow.status, RunRow.current_stage)
-            .where(RunRow.project_id == project.id)
+            .where(
+                RunRow.project_id == project.id,
+                RunRow.workflow_name.not_in(workflows.answer_workflow_names()),
+            )
             .order_by(RunRow.created_at.desc(), RunRow.number.desc())
             .limit(1)
         )
@@ -348,6 +352,7 @@ async def decide(
             if step.tool is None:
                 answered = await _finish(session, project, step.answer)
                 return _outcome(answered, model_id, handler, started, context.reads)
+            context.reads.calls.append((step.tool, step.key))
             result = await run_tool(step.tool, context, step.key)
             messages.append(
                 ("human", f'<tool_result tool="{step.tool}">\n{result}\n</tool_result>')
@@ -399,7 +404,11 @@ async def record_turn(
 
 
 async def record_reply(
-    session: AsyncSession, thread: ThreadRow, decision: AssistantDecision, reads: ReadLog
+    session: AsyncSession,
+    thread: ThreadRow,
+    decision: AssistantDecision,
+    reads: ReadLog,
+    run_id: UUID | None = None,
 ) -> MessageRow:
     """The answer as a message of the thread, so it reads with the other lines after a reload.
 
@@ -414,6 +423,7 @@ async def record_reply(
     row = MessageRow(
         thread_id=thread.id,
         sequence=int(count) + 1,
+        run_id=run_id,
         author="agent",
         agent_role="assistant",
         content=decision.text,

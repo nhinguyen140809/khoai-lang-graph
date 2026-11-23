@@ -14,6 +14,7 @@ from uuid import UUID
 
 from sqlalchemy import func, select
 
+from khoailanggraph.agents import workflows
 from khoailanggraph.agents.requirements_engineering import definition as workflow_definition
 from khoailanggraph.api.errors import ApiError
 from khoailanggraph.features.threads.models import MessageRow, ThreadRow
@@ -316,7 +317,9 @@ async def unfinished_run_of_thread(session: AsyncSession, thread_id: UUID) -> Ru
     return await session.scalar(
         select(RunRow)
         .where(
-            RunRow.thread_id == thread_id, RunRow.status.in_(("queued", "running", "interrupted"))
+            RunRow.thread_id == thread_id,
+            RunRow.status.in_(("queued", "running", "interrupted")),
+            RunRow.workflow_name.not_in(workflows.answer_workflow_names()),
         )
         .order_by(RunRow.number.desc())
         .limit(1)

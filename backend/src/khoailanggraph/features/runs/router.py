@@ -13,10 +13,12 @@ from fastapi.responses import JSONResponse, StreamingResponse
 from pydantic import BaseModel, ConfigDict
 from sqlalchemy import func, select
 
+from khoailanggraph.agents import workflows
 from khoailanggraph.api import deps, idempotency
 from khoailanggraph.api.errors import ApiError
 from khoailanggraph.api.schemas import MAX_LIMIT, Cursor, Page
 from khoailanggraph.features.artifacts.models import ArtifactItemRow
+from khoailanggraph.features.assistant import recorder as assistant_recorder
 from khoailanggraph.features.assistant import service as assistant_service
 from khoailanggraph.features.projects import service as projects_service
 from khoailanggraph.features.projects.models import ProjectRow
@@ -139,21 +141,24 @@ async def _send(
     project = await projects_service.own_project_row(db, thread.project_id, user)
 
     outcome = await assistant_service.decide(db, project, thread, body.content, user)
-    await assistant_service.record_turn(db, user, project, thread, outcome)
     decision = outcome.decision
     if decision.kind == "general":
         message = await service.append_message(
             db, thread=thread, content=body.content, delivery="delivered"
         )
-        reply = await assistant_service.record_reply(db, thread, decision, outcome.reads)
+        # The answer is a run of the assistance workflow, over before the request answers: its step
+        # holds the usage and the cost, so no turn is kept for it.
+        run, _reply = await assistant_recorder.record_answer(db, user, thread, message, outcome)
         return {
             "message": service.message_output(message).model_dump(mode="json"),
-            "run": None,
+            "run": service.runs_output(run).model_dump(mode="json"),
             "assistant": {
-                "text": reply.content,
+                "text": decision.text,
                 "commands": [command.model_dump(mode="json") for command in decision.commands],
             },
         }
+    # A message about the work has no run of the assistant: what deciding cost is kept apart.
+    await assistant_service.record_turn(db, user, project, thread, outcome)
 
     unfinished = await service.unfinished_run_of_thread(db, thread.id)
     message = await service.append_message(db, thread=thread, content=body.content)
@@ -248,12 +253,17 @@ async def list_runs(
     db: deps.DbSession,
     cursor: Cursor = 0,
     limit: Annotated[int, Query(ge=1, le=MAX_LIMIT)] = 50,
+    kind: Annotated[Literal["work", "answer"] | None, Query()] = None,
 ) -> Page[schemas.Run]:
-    """The runs of one thread, newest first (§5)."""
+    """The runs of one thread, newest first (§5): every run, or only those of a kind of workflow
+    (`work` for the work of the project, `answer` for the runs that answered one message)."""
     await thread_service.get_thread_row(db, thread_id, UUID(str(user.id)))
     statement = (
         select(RunRow).where(RunRow.thread_id == thread_id).order_by(RunRow.created_at.desc())
     )
+    if kind is not None:
+        names = [name for name, flow in workflows.WORKFLOWS.items() if flow.kind == kind]
+        statement = statement.where(RunRow.workflow_name.in_(names))
     statement = statement.offset(cursor).limit(limit) if cursor else statement.limit(limit)
     rows = list((await db.scalars(statement)).all())
     items = [service.runs_output(row) for row in rows]
