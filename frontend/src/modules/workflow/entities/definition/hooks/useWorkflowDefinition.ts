@@ -1,5 +1,5 @@
+import type { WorkflowRef } from '../../workflow-ref/workflow-ref.types'
 import type { WorkflowDefinition } from '../workflow-definition.types'
-import type { WorkflowRef } from '../workflow-ref.types'
 import { useDefinitionQuery } from './useDefinitionQuery'
 
 /** The `select` of a hook that wants the definition itself, with no part of it picked out. */

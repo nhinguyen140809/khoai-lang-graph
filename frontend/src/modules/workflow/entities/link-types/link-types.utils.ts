@@ -1,5 +1,7 @@
-import type { WorkflowDefinition } from './workflow-definition.types'
-import type { LinkType, LinkTypeChoice } from './workflow-vocabulary.types'
+import { indexBy } from '@/shared/lib/collections'
+
+import type { WorkflowDefinition } from '../definition/workflow-definition.types'
+import type { LinkType, LinkTypeChoice } from '../definition/workflow-vocabulary.types'
 
 /** One end of a pair of a link type: the kinds it lists, any kind, or (for the target) the kind of the source. */
 type PairEnd = LinkType['pairs'][number]['source']
@@ -112,4 +114,15 @@ export function kindLevelsOf(linkType: LinkType): string[][] {
     for (const kind of level) placed.add(kind)
   }
   return levels
+}
+
+/** The title of each link type of a definition, by its key. */
+export function linkTypeTitles(
+  definition: Pick<WorkflowDefinition, 'link_types'>,
+): Map<string, string> {
+  return indexBy(
+    definition.link_types,
+    ({ key }) => key,
+    ({ title }) => title,
+  )
 }

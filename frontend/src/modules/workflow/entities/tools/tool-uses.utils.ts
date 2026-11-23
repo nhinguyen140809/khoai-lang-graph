@@ -1,4 +1,4 @@
-import type { Tool } from './workflow-vocabulary.types'
+import type { Tool } from '../definition/workflow-vocabulary.types'
 
 /**
  * The line that stands for the uses of a tool in a row, in the words of the tool: its line for one

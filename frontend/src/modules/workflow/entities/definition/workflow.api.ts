@@ -2,8 +2,8 @@ import { apiEndpoints } from '@/shared/api/endpoints'
 import { apiRequest } from '@/shared/api/request'
 import { pathWithQuery } from '@/shared/lib/url'
 
+import type { WorkflowRef } from '../workflow-ref/workflow-ref.types'
 import { type WorkflowDefinition, workflowDefinitionSchema } from './workflow-definition.types'
-import type { WorkflowRef } from './workflow-ref.types'
 
 // TODO: switch to the generated client in src/shared/api/generated/ once it is generated.
 

@@ -2,8 +2,8 @@
 
 import { useCallback } from 'react'
 
-import { linkTypeTitles } from '../workflow-definition.utils'
-import { useDefinitionQuery } from './useDefinitionQuery'
+import { useDefinitionQuery } from '../../definition/hooks/useDefinitionQuery'
+import { linkTypeTitles } from '../link-types.utils'
 
 /**
  * The title of a link type, by its key, as the definition of the workflow names it: the key itself

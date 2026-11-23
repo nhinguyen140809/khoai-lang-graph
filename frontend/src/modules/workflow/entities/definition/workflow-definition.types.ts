@@ -1,6 +1,6 @@
 import { z } from 'zod'
 
-import { exportTemplateSchema } from './export-templates.types'
+import { exportTemplateSchema } from '../export-templates/export-templates.types'
 import { workflowEdgeSchema, workflowEntrySchema, workflowNodeSchema } from './workflow-graph.types'
 import {
   agentRoleSchema,

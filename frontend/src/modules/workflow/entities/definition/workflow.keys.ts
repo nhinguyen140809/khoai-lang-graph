@@ -1,4 +1,4 @@
-import type { WorkflowRef } from './workflow-ref.types'
+import type { WorkflowRef } from '../workflow-ref/workflow-ref.types'
 
 /**
  * The query keys of the workflow, from the widest to the narrowest; each starts with the one above.

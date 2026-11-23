@@ -2,7 +2,7 @@
 
 import { useMemo } from 'react'
 
-import type { WorkflowRef } from '../../definition/workflow-ref.types'
+import type { WorkflowRef } from '../../workflow-ref/workflow-ref.types'
 import { stageTitlesOf } from '../stage-titles.utils'
 import { useVisibleStages } from './useStageQueries'
 

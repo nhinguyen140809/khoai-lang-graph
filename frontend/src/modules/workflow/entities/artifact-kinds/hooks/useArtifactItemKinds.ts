@@ -1,7 +1,7 @@
 'use client'
 
-import { itemKindsByArtifactKind } from '../workflow-definition.utils'
-import { useDefinitionQuery } from './useDefinitionQuery'
+import { useDefinitionQuery } from '../../definition/hooks/useDefinitionQuery'
+import { itemKindsByArtifactKind } from '../kind-schemas.utils'
 
 /**
  * The kinds of item that each kind of artifact holds, in the order of the definition, by the kind

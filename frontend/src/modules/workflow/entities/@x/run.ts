@@ -1,10 +1,7 @@
 export type { ReviewableCheckpoint } from '../checkpoints/checkpoints.types'
 export { useReviewableCheckpoints } from '../checkpoints/hooks/useCheckpointQueries'
-export { useActsOf } from '../definition/hooks/useActsOf'
 export { useWorkflowDefinition } from '../definition/hooks/useWorkflowDefinition'
-export { mainWorkflowName } from '../definition/main-workflow.constants'
-export type { WorkflowRef } from '../definition/workflow-ref.types'
-export { workflowRefOf } from '../definition/workflow-ref.utils'
+export { mainWorkflowName } from '../main-workflow/main-workflow.constants'
 export {
   type RunParameterField,
   runParameterValuesSchema,
@@ -19,3 +16,6 @@ export {
 export { useStageTitle } from '../stages/hooks/useStageQueries'
 export { useVisibleStages } from '../stages/hooks/useStageQueries'
 export type { VisibleStage } from '../stages/stages.types'
+export { useActsOf } from '../tools/hooks/useActsOf'
+export type { WorkflowRef } from '../workflow-ref/workflow-ref.types'
+export { workflowRefOf } from '../workflow-ref/workflow-ref.utils'

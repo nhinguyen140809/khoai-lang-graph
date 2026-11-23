@@ -2,7 +2,7 @@ import { useCallback } from 'react'
 
 import { useDefinitionQuery } from '../../definition/hooks/useDefinitionQuery'
 import type { WorkflowDefinition } from '../../definition/workflow-definition.types'
-import type { WorkflowRef } from '../../definition/workflow-ref.types'
+import type { WorkflowRef } from '../../workflow-ref/workflow-ref.types'
 import { visibleStages, visibleStageTitle } from '../stages.utils'
 
 /**

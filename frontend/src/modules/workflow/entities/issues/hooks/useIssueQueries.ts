@@ -1,5 +1,5 @@
 import { useDefinitionQuery } from '../../definition/hooks/useDefinitionQuery'
-import type { WorkflowRef } from '../../definition/workflow-ref.types'
+import type { WorkflowRef } from '../../workflow-ref/workflow-ref.types'
 import { issueKinds, issueLinkTypesByKind } from '../issues.utils'
 
 /**

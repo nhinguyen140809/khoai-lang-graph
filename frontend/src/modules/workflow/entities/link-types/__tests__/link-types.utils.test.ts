@@ -8,6 +8,7 @@ import {
   kindLevelsOf,
   linkedKindsOf,
   linkTypesFrom,
+  linkTypeTitles,
   targetKindsOf,
 } from '../link-types.utils'
 import { connectCases, levelCases, targetKindCases } from './link-types.utils.data'
@@ -154,5 +155,14 @@ describe('linkedKindsOf', () => {
 
   it('leaves out the kinds that no pair names', () => {
     expect(linkedKindsOf(workflowDefinitionFixture).has('section')).toBe(false)
+  })
+})
+
+describe('linkTypeTitles', () => {
+  it('gives the title of each link type of the definition, by its key', () => {
+    const titles = linkTypeTitles(workflowDefinitionFixture)
+
+    expect(titles.get('derived_from')).toBe('Based on')
+    expect(titles.size).toBe(workflowDefinitionFixture.link_types.length)
   })
 })

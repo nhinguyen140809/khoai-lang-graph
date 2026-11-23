@@ -1,4 +1,4 @@
-import type { LinkType } from '../workflow-vocabulary.types'
+import type { LinkType } from '../../definition/workflow-vocabulary.types'
 
 function linkType(pairs: LinkType['pairs']): LinkType {
   return {

@@ -2,8 +2,8 @@ import { describe, expect, it } from 'vitest'
 
 import { assistanceDefinitionFixture } from '@/mocks/workflow/workflow.fixtures'
 
+import type { Tool } from '../../definition/workflow-vocabulary.types'
 import { toolUsesLine } from '../tool-uses.utils'
-import type { Tool } from '../workflow-vocabulary.types'
 
 const search: Tool = {
   key: 'search',
