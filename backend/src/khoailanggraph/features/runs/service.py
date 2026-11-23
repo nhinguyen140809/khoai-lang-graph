@@ -18,6 +18,7 @@ from sqlalchemy.exc import IntegrityError
 from khoailanggraph.agents.requirements_engineering import definition as workflow_definition
 from khoailanggraph.api.errors import ApiError
 from khoailanggraph.features.threads.models import MessageRow, ThreadRow
+from khoailanggraph.features.threads.sequence import add_message
 
 if TYPE_CHECKING:
     from collections.abc import Callable, Mapping
@@ -190,19 +191,17 @@ async def append_message(
     A message the assistant answers is stored with `delivery="delivered"` and never becomes the
     project's initial intent, because no run reads it.
     """
-    count = (
-        await session.scalar(
-            select(func.count()).select_from(MessageRow).where(MessageRow.thread_id == thread.id)
-        )
-    ) or 0
-    row = MessageRow(
-        thread_id=thread.id,
-        sequence=int(count) + 1,
-        author="user",
-        content=content,
-        delivery=delivery,  # "pending" while a run is still open
+    row = await add_message(
+        session,
+        thread.id,
+        lambda sequence: MessageRow(
+            thread_id=thread.id,
+            sequence=sequence,
+            author="user",
+            content=content,
+            delivery=delivery,  # "pending" while a run is still open
+        ),
     )
-    session.add(row)
     thread.last_message_at = utcnow()
     await session.flush()
     project = await session.get(ProjectRow, thread.project_id)

@@ -43,6 +43,7 @@ from khoailanggraph.features.assistant.tools import (
 from khoailanggraph.features.runs import service as runs_service
 from khoailanggraph.features.runs.models import RunRow
 from khoailanggraph.features.threads.models import MessageRow, ThreadRow, utcnow
+from khoailanggraph.features.threads.sequence import add_message
 from khoailanggraph.llm import get_chat_model, resolve_model_id
 from khoailanggraph.llm.usage import Usage, UsageHandler, zero_usage
 
@@ -415,22 +416,20 @@ async def record_reply(
     It names the documents and items that were read to answer, as the messages of the agents name
     what they were written from.
     """
-    count = (
-        await session.scalar(
-            select(func.count()).select_from(MessageRow).where(MessageRow.thread_id == thread.id)
-        )
-    ) or 0
-    row = MessageRow(
-        thread_id=thread.id,
-        sequence=int(count) + 1,
-        run_id=run_id,
-        author="agent",
-        agent_role="assistant",
-        content=decision.text,
-        artifact_refs_json=json.dumps(list(reads.artifacts.values())).encode("utf-8"),
-        item_refs_json=json.dumps(list(reads.items.values())).encode("utf-8"),
+    row = await add_message(
+        session,
+        thread.id,
+        lambda sequence: MessageRow(
+            thread_id=thread.id,
+            sequence=sequence,
+            run_id=run_id,
+            author="agent",
+            agent_role="assistant",
+            content=decision.text,
+            artifact_refs_json=json.dumps(list(reads.artifacts.values())).encode("utf-8"),
+            item_refs_json=json.dumps(list(reads.items.values())).encode("utf-8"),
+        ),
     )
-    session.add(row)
     thread.last_message_at = utcnow()
     await session.flush()
     return row

@@ -57,6 +57,9 @@ the code does not trust what it read a moment before:
   messages wait for, while a request has started one: those messages wait for that run.
 - A unique index on `(thread_id, number)` keeps the order of the runs. A run that finds its number
   taken is written again with the next one, up to five times.
+- A unique index on `(thread_id, sequence)` keeps the order of the messages. A message that finds
+  its sequence taken, whether it is a message of the user, an answer of the assistant or the report
+  of an agent, is written again with the next one.
 - Starting a run again after a failure answers `409 run_already_active` when the thread already has an
   unfinished run of that workflow, also when another request started it a moment after the check.
 

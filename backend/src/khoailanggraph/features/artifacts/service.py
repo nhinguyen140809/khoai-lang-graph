@@ -50,6 +50,7 @@ from khoailanggraph.features.artifacts.models import (
 from khoailanggraph.features.projects.models import ProjectKeyCounterRow
 from khoailanggraph.features.runs.models import RunEventRow, RunStepRow
 from khoailanggraph.features.threads.models import MessageRow, ThreadRow
+from khoailanggraph.features.threads.sequence import add_message_sync
 from khoailanggraph.llm.note_stream import MAX_NOTES_PER_ANSWER, fit_note
 from khoailanggraph.platform import origin as origins
 from khoailanggraph.platform.origin import Origin
@@ -238,18 +239,12 @@ class SqlArtifactSink:
             (self.session.get(ArtifactItemRow, key) for key in self._touched_items),
             key=lambda row: str(row.key) if row is not None else "",
         )
-        count = (
-            self.session.scalar(
-                select(func.count())
-                .select_from(MessageRow)
-                .where(MessageRow.thread_id == self.thread_id)
-            )
-            or 0
-        )
-        self.session.add(
-            MessageRow(
+        add_message_sync(
+            self.session,
+            self.thread_id,
+            lambda sequence: MessageRow(
                 thread_id=self.thread_id,
-                sequence=int(count) + 1,
+                sequence=sequence,
                 run_id=self.run_id,
                 author="agent",
                 agent_role=self.agent_role,
@@ -264,7 +259,7 @@ class SqlArtifactSink:
                         if row is not None
                     ]
                 ),
-            )
+            ),
         )
         thread = self.session.get(ThreadRow, self.thread_id)
         if thread is not None:

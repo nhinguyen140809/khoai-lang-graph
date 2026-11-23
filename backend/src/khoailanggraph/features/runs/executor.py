@@ -57,6 +57,7 @@ from khoailanggraph.features.runs.models import (
     RunStepRow,
 )
 from khoailanggraph.features.threads.models import MessageRow, ThreadRow
+from khoailanggraph.features.threads.sequence import add_message_sync
 from khoailanggraph.llm import reset_model_cache
 from khoailanggraph.llm.note_stream import NoteStream
 from khoailanggraph.llm.usage import Usage, add_usage, zero_usage
@@ -480,19 +481,16 @@ class RunWalker:
     def _say_something_else(self, text: str) -> None:
         """The answer of the user that no option says, as their message in the thread: it waits for
         the intent router, which reads it at the start of the walk."""
-        count = self.session.scalar(
-            select(func.count())
-            .select_from(MessageRow)
-            .where(MessageRow.thread_id == self.thread.id)
-        )
-        self.session.add(
-            MessageRow(
+        add_message_sync(
+            self.session,
+            self.thread.id,
+            lambda sequence: MessageRow(
                 thread_id=self.thread.id,
-                sequence=int(count or 0) + 1,
+                sequence=sequence,
                 author="user",
                 content=text,
                 delivery="pending",
-            )
+            ),
         )
         self.thread.last_message_at = _now()
         self.session.flush()
