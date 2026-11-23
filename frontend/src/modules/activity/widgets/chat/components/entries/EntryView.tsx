@@ -8,7 +8,7 @@ import type { ActivityEntry } from '@/modules/activity/entities'
 import { entryAnchorId } from '@/modules/activity/entities'
 import { isNeverRead, messageAuthorLooks, messageBubbleLooks } from '@/modules/thread/entities'
 import { useAgentRoleLabels, workflowRefOf } from '@/modules/workflow/entities'
-import { Face, FaceName } from '@/shared/components/face'
+import { AgentFace, FaceName } from '@/shared/components/face'
 import { targetFadeMs } from '@/shared/components/feed'
 import { Bubble, BubbleContent } from '@/shared/components/ui/bubble'
 import { CopyButton } from '@/shared/components/ui/copy-button'
@@ -106,7 +106,7 @@ function MessageBody({ entry }: EntryViewProps<'message'>) {
             className={cn('items-center gap-1.5 px-0 text-(--tone-strong)', toneClasses.secondary)}
           >
             {entry.message.agent_role !== null && (
-              <Face seed={entry.message.agent_role} size="sm" />
+              <AgentFace seed={entry.message.agent_role} size="sm" />
             )}
             {entry.message.agent_role === null ? (
               roleLabel

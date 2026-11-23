@@ -21,6 +21,7 @@ export {
   CircleHelpIcon,
   CodeIcon,
   DownloadIcon,
+  DrawnDotIcon,
   EventListIcon,
   ForkNodesIcon,
   GanttChartIcon,

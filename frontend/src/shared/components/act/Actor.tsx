@@ -1,14 +1,15 @@
 'use client'
 
 import { cn } from 'cn'
-import { useRef } from 'react'
+import { type ComponentType, useMemo, useRef } from 'react'
 
-import { Face, type Mood } from '@/shared/components/face'
+import { AgentFace, type FaceProps, type Mood } from '@/shared/components/face'
 import { useIsInView, usePrefersReducedMotion } from '@/shared/lib/viewport'
 
 import { actorFrameClasses } from './act.constants'
 import { type ActSize, type Slot, slots as allSlots } from './act.types'
 import { actOf, moodOf } from './act.utils'
+import { ActCastContext } from './ActCastContext'
 import { ActProps } from './ActProps'
 import { useActCycle } from './hooks/useActCycle'
 import { useActDrive } from './hooks/useActDrive'
@@ -26,11 +27,13 @@ interface ActorProps {
   acts: readonly string[]
   /** The slots around the face that may be used, all of them by default. */
   slots?: readonly Slot[]
+  /** How a face is drawn, here and for the other agent: the face of an agent unless this says another. It is given what every face is given (`FaceProps`). */
+  face?: ComponentType<FaceProps>
   className?: string
 }
 
 /**
- * A face at work: the face of an agent with what it is doing drawn around it, in the colors of the interface, while
+ * A face at work: a face (the face of an agent unless `face` says another) with what it is doing drawn around it, in the colors of the interface, while
  * its eyes and its body follow the work. The list of acts goes round, each act a few rounds, and
  * one gives way to the next gently. The face has the mood that it is given, else that of its act. It does
  * nothing but show the face for a user who asked for less motion, and stops while out of sight. A frame
@@ -44,6 +47,7 @@ export function Actor({
   partner,
   acts,
   slots = allSlots,
+  face: Face = AgentFace,
   className,
 }: ActorProps) {
   const ref = useRef<HTMLSpanElement>(null)
@@ -51,6 +55,7 @@ export function Actor({
   const isStill = usePrefersReducedMotion()
   const { shown, swaps, gain } = useActCycle(isStill ? [] : acts, isInView)
   const act = actOf(shown)
+  const cast = useMemo(() => ({ face: Face, partner }), [Face, partner])
   const { drive, round } = useActDrive(act, swaps, gain, isInView)
 
   return (
@@ -67,14 +72,9 @@ export function Actor({
       >
         <Face seed={seed} mood={moodOf(mood, act)} size={size} drive={drive} />
         {act !== null && (
-          <ActProps
-            act={act}
-            round={round}
-            gain={gain}
-            allowed={slots}
-            size={size}
-            partner={partner}
-          />
+          <ActCastContext value={cast}>
+            <ActProps act={act} round={round} gain={gain} allowed={slots} size={size} />
+          </ActCastContext>
         )}
       </span>
     </span>

@@ -1,6 +1,7 @@
 import { render } from '@testing-library/react'
 import { afterEach, describe, expect, it, vi } from 'vitest'
 
+import type { FaceProps } from '@/shared/components/face'
 import { advanceTimers, withFakeTimers } from '@/test/steps'
 
 import { actFadeMs } from '../act.constants'
@@ -148,5 +149,24 @@ describe('Actor frame', () => {
       'true',
     )
     expect(frameOf(renderActor({ acts: ['interview'] }))).toHaveAttribute('data-partner', 'false')
+  })
+})
+
+describe('Actor with a face of its own', () => {
+  function OtherFace({ seed, mood }: FaceProps) {
+    return <span data-slot="other-face" data-seed={seed} data-mood={mood} />
+  }
+
+  it('draws the face it is given in place of the face of an agent', () => {
+    const actor = renderActor({ acts: ['analyze'], face: OtherFace, mood: 'waiting' })
+
+    expect(actor.querySelector('[data-slot=face]')).toBeNull()
+    expect(actor.querySelector('[data-slot=other-face]')).toHaveAttribute('data-mood', 'waiting')
+  })
+
+  it('draws the other agent of a work with the same kind of face', () => {
+    const actor = renderActor({ acts: ['interview'], partner: 'persona', face: OtherFace })
+
+    expect(actor.querySelectorAll('[data-slot=other-face]')).toHaveLength(2)
   })
 })

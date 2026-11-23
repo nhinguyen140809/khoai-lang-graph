@@ -4,7 +4,7 @@ import { describe, expect, it } from 'vitest'
 import { renderWithProviders } from '@/test/render'
 import { expectText, press } from '@/test/steps'
 
-import { IconsCard } from '../components/cards/IconsCard'
+import { IconsCard } from '../components/cards/identity/IconsCard'
 
 describe('IconsCard', () => {
   it('names every icon that is drawn by a clock and every icon of our own', async () => {
@@ -15,6 +15,7 @@ describe('IconsCard', () => {
       'typed-line',
       'ungroup',
       'dot',
+      'drawn-dot',
       'exclamation',
       'pause-solid',
       'zap-solid',

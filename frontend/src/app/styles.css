@@ -19,8 +19,9 @@
 @import '../shared/components/act/act.css';
 @import '../shared/components/animation/animation.css';
 @import '../shared/components/thumbnail/thumbnail.css';
-@import '../shared/components/face/face.css';
+@import '../shared/components/face/agent/agent-face.css';
 @import '../shared/components/face/motion/face-motion.css';
+@import '../shared/components/face/agent/agent-motion.css';
 
 /* Streamdown ships Tailwind classes that must be scanned. */
 @source '../../node_modules/streamdown/dist/*.js';

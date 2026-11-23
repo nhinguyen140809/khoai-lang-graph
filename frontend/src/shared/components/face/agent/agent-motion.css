@@ -1,0 +1,73 @@
+/*
+ * The motions of a face, each with a name of its own. A mood is a choice among them (see `moodLooks`).
+ *
+ *   Gazes      where the eyes look over time, and the turn of the face with them: not CSS, see
+ *              `gazePaths` and `useGaze`.
+ *   Loops      the face as a whole (the pose of the head or the face: sway, tilt; the body: pulse, breathe,
+ *              bounce, turnaround): not CSS, see `poseLoops`, `bodyLoops` and `useLoop`.
+ *   Eye lives  what one eye does by itself: `eye-breathe`, `eye-squint`, `eye-wink`.
+ *
+ * The blink and what covers a change of mood are in `face-motion.css`, as every face has them.
+ *
+ * The face sets the delay of each, from its phase, so that faces side by side do not move together.
+ */
+
+/* A hopping body squashes where it lands: its bounce holds to the ground it hops on. */
+.face-body[data-body='bounce'] {
+  transform-origin: bottom;
+}
+
+@theme {
+  --duration-face-eye-breathe: 3200ms;
+  --duration-face-squint: 4300ms;
+  --duration-face-wink: 3600ms;
+  --duration-face-spin: 1600ms;
+
+  --animate-face-eye-breathe: face-eye-breathe var(--duration-face-eye-breathe) ease-in-out infinite
+    alternate;
+  --animate-face-eye-squint: face-eye-squint var(--duration-face-squint) ease-in-out infinite;
+  --animate-face-eye-wink: face-eye-wink var(--duration-face-wink) ease-in-out infinite;
+  --animate-face-spin: face-spin var(--duration-face-spin) linear infinite;
+
+  /* One eye swells and shrinks slowly, as if it were weighing something. */
+  @keyframes face-eye-breathe {
+    from {
+      scale: 1;
+    }
+    to {
+      scale: 1.14;
+    }
+  }
+
+  /* One eye shuts quickly and opens again now and then: a wink. */
+  @keyframes face-eye-wink {
+    0%,
+    84%,
+    100% {
+      scale: 1 1;
+    }
+    90% {
+      scale: 1.12 0.06;
+    }
+  }
+
+  /* A spiral turns round its middle. */
+  @keyframes face-spin {
+    to {
+      rotate: 360deg;
+    }
+  }
+
+  /* The other squints now and then, on a time of its own. */
+  @keyframes face-eye-squint {
+    0%,
+    68%,
+    100% {
+      scale: 1 1;
+    }
+    76%,
+    84% {
+      scale: 1 0.45;
+    }
+  }
+}

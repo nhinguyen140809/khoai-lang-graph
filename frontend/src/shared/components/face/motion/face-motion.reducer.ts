@@ -4,7 +4,7 @@ import type { Body, EyeLife, Pose } from '../face.types'
 import { blinkEveryMs, blinkMs } from './face-motion.constants'
 
 /** What a mood asks of the motions of a face: the pose and the body, what each eye does by itself, and whether the eyes may blink. */
-export interface MotionLook {
+export interface MotionTarget {
   pose: Pose | 'none'
   body: Body
   lives: readonly [EyeLife, EyeLife]
@@ -21,7 +21,7 @@ export interface FaceMotionValue {
 }
 
 interface FaceMotionContext {
-  look: MotionLook
+  look: MotionTarget
   /** Where along its wait the first blink falls, from 0 to 1, so that faces side by side do not blink together. */
   phase: number
   isFirstWait: boolean
@@ -29,13 +29,13 @@ interface FaceMotionContext {
 
 type FaceMotionEvent =
   /** The face shows another state, so another look: each motion goes to the state that it asks for. */
-  | { type: 'LOOK'; look: MotionLook }
+  | { type: 'LOOK'; look: MotionTarget }
   /** Nothing should start: the mood is changing, or the face is out of sight. */
   | { type: 'HOLD' }
   /** The face moves again. */
   | { type: 'RELEASE' }
 
-const poses = ['none', 'sway', 'tilt', 'rest'] as const satisfies readonly (Pose | 'none')[]
+const poses = ['none', 'sway', 'tilt'] as const satisfies readonly (Pose | 'none')[]
 const bodies = [
   'none',
   'pulse',
@@ -52,7 +52,7 @@ const lives = ['steady', 'breathe', 'squint', 'wink'] as const satisfies readonl
  */
 function followingRegion<Kind extends string>(
   kinds: readonly Kind[],
-  read: (look: MotionLook) => Kind,
+  read: (look: MotionTarget) => Kind,
 ) {
   const states = Object.fromEntries(kinds.map((kind) => [kind, {}])) as Record<Kind, object>
   return {
@@ -92,7 +92,7 @@ export const faceMotionMachine = setup({
   types: {
     context: {} as FaceMotionContext,
     events: {} as FaceMotionEvent,
-    input: {} as { look: MotionLook; phase: number },
+    input: {} as { look: MotionTarget; phase: number },
   },
   delays: {
     wait: ({ context }) => (context.isFirstWait ? context.phase * blinkEveryMs : blinkEveryMs),

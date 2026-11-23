@@ -1,8 +1,8 @@
 import { and, assign, setup } from 'xstate'
 
 import type { FaceState, Mood } from '../face.types'
-import { isRestingMood } from '../face.utils'
 import { moodCycles, restAfterMs, restingStates, swapFallbackMs } from './face-mood.constants'
+import { isRestingMood } from './face-mood.utils'
 
 /** What the machine of the mood of a face holds: the mood that it was last given, and the state that the face shows. */
 interface FaceMoodContext {
