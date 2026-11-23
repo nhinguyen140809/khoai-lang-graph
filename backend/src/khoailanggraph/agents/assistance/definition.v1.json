@@ -17,8 +17,8 @@
   ],
   "stages": [
     {
-      "key": "assisting",
-      "title": "Assisting",
+      "key": "guidance",
+      "title": "Guidance",
       "internal": false,
       "parent": null,
       "acts": ["read"]
@@ -30,7 +30,7 @@
       "id": "assistant",
       "kind": "agent",
       "label": "Assistant",
-      "stage": "assisting",
+      "stage": "guidance",
       "agent_role": "assistant"
     },
     { "id": "__end__", "kind": "end", "label": "End" }

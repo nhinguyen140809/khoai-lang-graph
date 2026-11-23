@@ -32,3 +32,13 @@ def max_reads() -> int:
     """How many reads one message may make: the default of `max_reads` in the run parameters."""
     spec = DEFINITION["run_parameters_schema"]["properties"]["max_reads"]
     return int(spec["default"])
+
+
+def definition_bytes_for(version: int | None = None) -> bytes | None:
+    """The exact bytes of one published version of the definition (the current one without a
+    version), None when the version was never published."""
+    name = _DEFINITION_FILE if version is None else f"definition.v{version}.json"
+    try:
+        return (resources.files(_PACKAGE) / name).read_bytes()
+    except FileNotFoundError:
+        return None
