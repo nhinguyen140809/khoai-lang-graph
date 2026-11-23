@@ -37,6 +37,8 @@ class ReadLog:
     items: dict[str, dict[str, Any]] = field(default_factory=dict)
     # Each read that was made, as (tool, key), in order: the notes of the step that made them.
     calls: list[tuple[str, str | None]] = field(default_factory=list)
+    # What the tool that ran last read, when it read one record: its title, for the note of it.
+    subject: str | None = None
 
     def note_artifact(self, row: ArtifactRow) -> None:
         if len(self.artifacts) < MAX_REFS:
@@ -81,6 +83,9 @@ class Tool:
     description: str
     arg: str
     run: Callable[[ToolContext, str | None], Awaitable[str]]
+    # Whether `key` is words of the user to show in the note, such as a text to look for; any other
+    # key names a record, which the note shows by its title.
+    key_is_words: bool = False
 
 
 def catalog_of(tools: Sequence[Tool]) -> str:

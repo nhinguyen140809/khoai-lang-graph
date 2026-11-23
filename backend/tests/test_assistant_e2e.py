@@ -79,9 +79,15 @@ async def worked_project(client: AsyncClient) -> tuple[str, str]:
 
 
 async def _ask(client: AsyncClient, thread_id: str, content: str) -> dict[str, Any]:
+    """Send a message and return what the response says, with `commands` set to what the answer in
+    the thread asks the client to run (none when the message went to the work of the project)."""
     response = await client.post(f"{API}/threads/{thread_id}/messages", json={"content": content})
     assert response.status_code == 201, response.text
-    return dict(response.json())
+    body = dict(response.json())
+    assert set(body) == {"message", "run"}
+    last = (await client.get(f"{API}/threads/{thread_id}/messages")).json()["items"][-1]
+    body["commands"] = last["commands"] if last["author"] == "agent" else []
+    return body
 
 
 async def _answer_text(client: AsyncClient, thread_id: str) -> str:
@@ -134,7 +140,9 @@ async def test_a_question_about_an_item_is_answered_from_a_read_of_it(
     assert key in await _answer_text(client, thread_id), "it comes from what the read brought back"
     step = (await _steps(client, run["id"]))[0]
     assert [(note["kind"], note["tool"]) for note in step["notes"]] == [("tool", "read_item")]
-    assert key in step["notes"][0]["text"], "the note names what was read"
+    note = step["notes"][0]["text"]
+    assert note.startswith("Read an item: "), "the note says what the tool does"
+    assert note != f"Read an item: {key}", "and names what was read by its title, not by its key"
     messages = (await client.get(f"{API}/threads/{thread_id}/messages")).json()["items"]
     answer = messages[-1]
     assert (answer["agent_role"], answer["run_id"]) == ("assistant", run["id"])
@@ -169,8 +177,11 @@ async def test_asking_to_open_a_document_lists_the_documents_and_names_the_one_a
 
     assert [command["command"] for command in body["commands"]] == ["open_document"]
     assert body["commands"][0]["artifact_id"] == await _specification_id(app, project_id)
-    notes = (await _steps(client, body["run"]["id"]))[0]["notes"]
-    assert [note["tool"] for note in notes] == ["list_documents"], "it looked at what there is"
+    step = (await _steps(client, body["run"]["id"]))[0]
+    # The tool that lists the documents is not shown to the user: it leaves no note, and the call
+    # still counts, with the call of the model that answered.
+    assert step["notes"] == []
+    assert step["llm_calls"] == 2
 
 
 @pytest.mark.parametrize(

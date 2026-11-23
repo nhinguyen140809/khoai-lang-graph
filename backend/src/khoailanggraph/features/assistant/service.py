@@ -12,10 +12,11 @@ What each message costs is kept in `assistant_turns`, because no run step holds 
 
 from __future__ import annotations
 
+import asyncio
 import json
 import time
 from dataclasses import dataclass, field
-from typing import TYPE_CHECKING, Any
+from typing import TYPE_CHECKING, Any, Protocol
 from uuid import UUID
 
 import structlog
@@ -30,6 +31,7 @@ from khoailanggraph.features.assistant.models import AssistantTurnRow
 from khoailanggraph.features.assistant.schemas import (
     AssistantDecision,
     AssistantStep,
+    ToolCall,
     UiCommand,
 )
 from khoailanggraph.features.assistant.tools import (
@@ -37,6 +39,7 @@ from khoailanggraph.features.assistant.tools import (
     ReadLog,
     ToolContext,
     catalog_of,
+    known_tools,
     run_tool,
 )
 from khoailanggraph.features.runs import service as runs_service
@@ -240,6 +243,18 @@ class AssistantOutcome:
     usage: Usage
     # What the reads looked at: the references of the answer.
     reads: ReadLog = field(default_factory=ReadLog)
+    # The messages that came while the assistant worked and that it read in a later step.
+    arrived: tuple[MessageRow, ...] = ()
+
+
+class Watcher(Protocol):
+    """What the assistant tells, and asks, of the run that it works in while it works."""
+
+    async def called(self, tool: str, subject: str | None) -> None:
+        """A tool was called, on what `subject` names: the run shows it at once."""
+
+    async def arrived(self) -> list[MessageRow]:
+        """The messages that came into the run since the last time, now taken in."""
 
 
 async def _finish(
@@ -253,26 +268,58 @@ async def _finish(
     )
 
 
-def _answered(raw: Any, model: Any, messages: list[Any], handler: UsageHandler) -> Any:
-    """One structured step of the model, with the usage handler attached to the call."""
+async def _answered(raw: Any, model: Any, messages: list[Any], handler: UsageHandler) -> Any:
+    """One structured step of the model, with the usage handler attached to the call.
+
+    The call waits on the provider for seconds, so it runs off the event loop: the other requests
+    of the server go on meanwhile.
+    """
     bound = model.with_structured_output(raw)
-    return bound.invoke(messages, config={"callbacks": [handler]})
+    return await asyncio.to_thread(bound.invoke, messages, config={"callbacks": [handler]})
+
+
+def _subject_of(call: ToolCall, reads: ReadLog) -> str | None:
+    """What the note of a call says it was about: the title of the record that the tool read, or
+    the words of the user for a tool that looks for them; never the key of a record."""
+    tool = known_tools().get(call.tool)
+    if reads.subject:
+        return reads.subject
+    return call.key if tool is not None and tool.key_is_words else None
+
+
+async def _take_arrivals(
+    watcher: Watcher | None, messages: list[Any], arrivals: list[MessageRow]
+) -> None:
+    """Add the messages that came since the last step to what the model reads next."""
+    if watcher is None:
+        return
+    for message in await watcher.arrived():
+        arrivals.append(message)
+        messages.append(("human", f"<new_message>\n{message.content}\n</new_message>"))
+
+
+@dataclass(frozen=True)
+class Asked:
+    """A message to decide about, with the rows it is decided with."""
+
+    project: ProjectRow
+    thread: ThreadRow
+    content: str
+    user: UserRow
 
 
 async def decide(
-    session: AsyncSession,
-    project: ProjectRow,
-    thread: ThreadRow,
-    content: str,
-    user: UserRow,
+    session: AsyncSession, asked: Asked, watcher: Watcher | None = None
 ) -> AssistantOutcome:
     """Which kind the message is, and for a question about the application, its answer.
 
-    The model may ask to read one thing it lacks, as many times as `max_reads` of the assistance
-    definition allows; after that it answers from what it has. Anything a provider does with the
+    The model may call the tools of the assistance definition, as many times as `max_reads` of it
+    allows; after that it answers from what it has. A message that comes into the run meanwhile is
+    read in the next step, through `watcher`. Anything a provider does with the
     tools that this code does not expect ends the same way as a failure: the message enters the
     workflow, where it is never lost.
     """
+    project, thread, content, user = asked.project, asked.thread, asked.content, asked.user
     prompt = prompt_loader.load_cached(PROMPTS_PACKAGE, "assistant", ASSISTANT_PROMPT_VERSION)
     messages: list[Any] = list(
         prompt_loader.assemble_prompt(
@@ -298,41 +345,63 @@ async def decide(
     started = time.monotonic()
     context = ToolContext(session=session, project=project, user=user)
     reads_allowed = assistance.max_reads()
+    work = _Work(model_id=model_id, handler=handler, started=started, reads=context.reads)
+    arrivals = work.arrivals
     try:
-        for _step_no in range(reads_allowed):
-            step = AssistantStep.model_validate(_answered(AssistantStep, model, messages, handler))
-            if step.tool is None:
-                answered = await _finish(session, project, step.answer)
-                return _outcome(answered, model_id, handler, started, context.reads)
-            context.reads.calls.append((step.tool, step.key))
-            result = await run_tool(step.tool, context, step.key)
-            messages.append(
-                ("human", f'<tool_result tool="{step.tool}">\n{result}\n</tool_result>')
+        while len(context.reads.calls) < reads_allowed:
+            await _take_arrivals(watcher, messages, arrivals)
+            step = AssistantStep.model_validate(
+                await _answered(AssistantStep, model, messages, handler)
             )
+            if not step.tool_calls:
+                answered = await _finish(session, project, step.answer)
+                return _outcome(answered, work)
+            # The calls of a step are independent, so one call of the model asked for all of them;
+            # they run one after another on the session, and only the ones the limit still allows.
+            room = reads_allowed - len(context.reads.calls)
+            results: list[str] = []
+            for call in step.tool_calls[:room]:
+                context.reads.calls.append((call.tool, call.key))
+                context.reads.subject = None
+                result = await run_tool(call.tool, context, call.key)
+                if watcher is not None:
+                    await watcher.called(call.tool, _subject_of(call, context.reads))
+                results.append(f'<tool_result tool="{call.tool}">\n{result}\n</tool_result>')
+            messages.append(("human", "\n".join(results)))
+        await _take_arrivals(watcher, messages, arrivals)
         final = AssistantDecision.model_validate(
-            _answered(AssistantDecision, model, messages, handler)
+            await _answered(AssistantDecision, model, messages, handler)
         )
     except Exception as exc:  # a provider that fails must not lose the message
         logger.warning(
             "assistant decision failed; the message goes to the workflow",
             error=f"{type(exc).__name__}: {str(exc)[:200]}",
         )
-        return _outcome(_workflow(), model_id, handler, started, context.reads)
-    return _outcome(
-        await _finish(session, project, final), model_id, handler, started, context.reads
+        return _outcome(_workflow(), work)
+    return _outcome(await _finish(session, project, final), work)
+
+
+@dataclass
+class _Work:
+    """What a message cost the assistant while it decided, and what it looked at on the way."""
+
+    model_id: str
+    handler: UsageHandler
+    started: float
+    reads: ReadLog
+    arrivals: list[MessageRow] = field(default_factory=list)
+
+
+def _outcome(decision: AssistantDecision, work: _Work) -> AssistantOutcome:
+    elapsed_ms = int((time.monotonic() - work.started) * 1000)
+    usage = work.handler.usage(work.model_id, elapsed_ms) if work.model_id else zero_usage()
+    return AssistantOutcome(
+        decision=decision,
+        model_id=work.model_id,
+        usage=usage,
+        reads=work.reads,
+        arrived=tuple(work.arrivals),
     )
-
-
-def _outcome(
-    decision: AssistantDecision,
-    model_id: str,
-    handler: UsageHandler,
-    started: float,
-    reads: ReadLog,
-) -> AssistantOutcome:
-    elapsed_ms = int((time.monotonic() - started) * 1000)
-    usage = handler.usage(model_id, elapsed_ms) if model_id else zero_usage()
-    return AssistantOutcome(decision=decision, model_id=model_id, usage=usage, reads=reads)
 
 
 async def record_turn(
@@ -379,6 +448,9 @@ async def record_reply(
             content=decision.text,
             artifact_refs_json=json.dumps(list(reads.artifacts.values())).encode("utf-8"),
             item_refs_json=json.dumps(list(reads.items.values())).encode("utf-8"),
+            commands_json=json.dumps(
+                [command.model_dump(mode="json") for command in decision.commands]
+            ).encode("utf-8"),
         ),
     )
     thread.last_message_at = utcnow()

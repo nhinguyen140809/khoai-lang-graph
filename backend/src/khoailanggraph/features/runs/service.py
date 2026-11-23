@@ -30,6 +30,7 @@ if TYPE_CHECKING:
 
 
 from khoailanggraph.features.artifacts.models import ArtifactItemRow
+from khoailanggraph.features.assistant.schemas import UiCommand
 from khoailanggraph.features.projects.models import ProjectRow
 from khoailanggraph.features.runs import schemas, usage
 from khoailanggraph.features.runs.models import (
@@ -127,6 +128,10 @@ def message_output(row: MessageRow) -> schemas.Message:
         item_refs=[
             schemas.ItemRef.model_validate(ref)
             for ref in json.loads((row.item_refs_json or b"[]").decode("utf-8"))
+        ],
+        commands=[
+            UiCommand.model_validate(command)
+            for command in json.loads((row.commands_json or b"[]").decode("utf-8"))
         ],
         created_at=row.created_at,
     )

@@ -350,7 +350,7 @@ Rules:
 | `PATCH /threads/{thread_id}` | Change `title`, `status`. `title` is a text with more than whitespace and cannot be set back to `null`; `status` is `active` or `archived`; otherwise `422 validation_failed` at the field | MVP |
 | `DELETE /threads/{thread_id}` | Soft delete: the thread is left out of lists, and its endpoints answer `404`. A thread with an unfinished run (`queued`, `running` or `interrupted`) answers `409 invalid_state`; the run is stopped first | MVP |
 | `GET /threads/{thread_id}/messages` | Chat messages; ordered by `sequence` ascending. User messages carry `delivery` | MVP |
-| `POST /threads/{thread_id}/messages` | Send a user message. Body `content`, optional `run_config` with the fields of [RunDefaults](DATA_SHAPE.md#rundefaults-mvp) and optional `models`, a map of agent role to model, both used only when the message starts a run. Each key of `models` is an agent role of the current workflow definition and each value a model of the catalog whose `allowed_roles` holds the role; otherwise `422 validation_failed` at `models.<role>`. Returns `201` with the message and what answered it: `run`, the run it started or was sent to, or the finished run of the workflow `assistance` that answered it, when the message is about the application rather than the work (see [Assistance](architecture/assistance.md)). `commands` lists the UI commands that the answer asks the client to run once: it is empty for a message that starts or joins a run. An answered message has a run that is over: it is never the `active_run_id` of the thread, never the latest run that its status follows, and no message waits for it | MVP |
+| `POST /threads/{thread_id}/messages` | Send a user message. Body `content`, optional `run_config` with the fields of [RunDefaults](DATA_SHAPE.md#rundefaults-mvp) and optional `models`, a map of agent role to model, both used only when the message starts a run. Each key of `models` is an agent role of the current workflow definition and each value a model of the catalog whose `allowed_roles` holds the role; otherwise `422 validation_failed` at `models.<role>`. Returns `201` as soon as the message is stored, with the message and `run`: the run of the workflow `assistance` that is answering it, `running` (see [Assistance](architecture/assistance.md)). The assistant decides in the background whether the message is about the application or about the work. A message about the application is answered in that run, which then `succeeded`. A message about the work takes that run away and starts a run of the main workflow, or waits as `pending` in the one that is unfinished, as before; the client reads it from the runs of the thread. A thread has one run of `assistance` unfinished at a time: a message that comes meanwhile has that run as its `run` and is `pending`; the assistant reads it in its next step and answers both together, or, when it came after the last step, answers it in a run of its own when the first ends. A run of `assistance` is never the `active_run_id` of the thread and never the latest run that its status follows | MVP |
 
 Sending a message is the only way the chat box starts work, and it is never rejected because the thread has an unfinished run:
 
@@ -359,18 +359,19 @@ Sending a message is the only way the chat box starts work, and it is never reje
 - The full behavior, including what happens when the run ends first, is in [Runtime: messages during a run](architecture/runtime.md#5-messages-during-a-run).
 
 Before the message goes to the run, one call decides which of the two it is, and answers the ones
-about the application: about 1–3 sentences, a few reads of the project (`max_reads` of [`assistance.v1.json`](workflow/assistance.v1.json), 3 by default: an item, a document,
+about the application: about 1–3 sentences, a few reads of the project (`max_reads` of [`assistance.v1.json`](workflow/assistance.v1.json), 5 by default, and the reads that do not depend on each other go in one step:  an item, a document,
 the last run, the open findings, a trace, a step of the definition, the month's budget, the settings), and the
-commands for the client to run. Each command in `commands` of the response is
+commands for the client to run. Each command in `commands` of the answer message is
 `{command, artifact_id, item_id, label}`: `command` is a key of
 [`commands.catalog.json`](workflow/commands.catalog.json), which says in `needs` what is checked
 before a command leaves (nothing, a document or an item of the project, or a review that waits).
-A command that is not in the catalog, or that names a record outside the project, is dropped from the
-response and logged; a client skips a key it does not know. The answer is stored as a message of
+A command that is not in the catalog, or that names a record outside the project, is dropped
+and logged; a client skips a key it does not know. The answer is stored as a message of
 the thread with `author: "agent"` and `agent_role: "assistant"`, whose `artifact_refs` and
 `item_refs` name the documents and items that the reads looked at (up to ten of each, each once, in
-the order read), so that a client shows what the answer was read from; the commands are transient and
-travel only in the response. Every classified message writes its cost
+the order read), so that a client shows what the answer was read from. The commands are a field of
+the message, `commands`, empty on every other message; a client runs them once, when it saw the
+run end, and not when it loads the thread later. Every classified message writes its cost
 where `GET /me/usage` and the budget of the month read it.
 
 

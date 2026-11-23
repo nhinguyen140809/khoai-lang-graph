@@ -22,6 +22,7 @@ export interface ApiRun {
   status: RunStatus
   current_stage: string
   step_count: number
+  workflow_name?: string
   retry_of_run_id: string | null
   error: { code: string; message: string; stage: string } | null
 }
@@ -119,7 +120,11 @@ interface SendOptions {
   idempotencyKey?: string | undefined
 }
 
-/** Sends a message to the thread, which starts a run, and gives that run as it started. */
+/**
+ * Sends a message about the work to the thread, which starts a run, and gives that run as it
+ * started. The request answers with the run of the assistant that is deciding what the message is;
+ * the run of the work is the one that the message ends in once it has decided.
+ */
 export async function sendMessage(
   api: ApiClient,
   threadId: string,
@@ -127,7 +132,7 @@ export async function sendMessage(
   { reviews = [], maxSteps, idempotencyKey }: SendOptions = {},
 ): Promise<ApiRun> {
   const created = expectCreated(
-    await api.post<{ run: ApiRun }>(
+    await api.post<{ message: { id: string }; run: ApiRun }>(
       `/threads/${threadId}/messages`,
       {
         content,
@@ -139,7 +144,24 @@ export async function sendMessage(
       { idempotencyKey },
     ),
   )
-  return created.run
+  if (created.run.workflow_name !== 'assistance') return created.run
+  let runId = created.run.id
+  await expect
+    .poll(
+      async () => {
+        const { items } = expectPage(
+          await api.get<ApiPage<{ id: string; run_id: string | null }>>(
+            `/threads/${threadId}/messages`,
+            { limit: 100 },
+          ),
+        )
+        runId = items.find(({ id }) => id === created.message.id)?.run_id ?? runId
+        return runId
+      },
+      { message: 'the message to join the run of the work' },
+    )
+    .not.toBe(created.run.id)
+  return getRun(api, runId)
 }
 
 /** Makes a project and a thread and starts a run in it: the setup that most tests begin with. */

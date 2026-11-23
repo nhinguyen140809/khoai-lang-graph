@@ -64,15 +64,24 @@ ToolName = Literal[
 ]
 
 
-class AssistantStep(BaseModel):
-    """One move of the model: either a read to make, or the answer.
+class ToolCall(BaseModel):
+    """One use of a tool of the definition to make, and what it is about."""
 
-    Splitting them keeps the loop honest — the model names at most one read `max_reads` times,
-    and answers only with `answer`. A step that names a read and no answer is a read, never a guess.
+    model_config = ConfigDict(extra="forbid")
+
+    tool: ToolName
+    key: str | None = None
+
+
+class AssistantStep(BaseModel):
+    """One move of the model: the tools to call together, or the answer.
+
+    The calls of a step do not depend on each other, so they cost one call of the model, however
+    many there are. A step that names calls and no answer is a use of tools, never a guess;
+    `max_reads` of the definition counts every call, across the steps.
     """
 
     model_config = ConfigDict(extra="forbid")
 
-    tool: ToolName | None = None
-    key: str | None = None
+    tool_calls: list[ToolCall] = Field(default_factory=list)
     answer: AssistantDecision | None = None

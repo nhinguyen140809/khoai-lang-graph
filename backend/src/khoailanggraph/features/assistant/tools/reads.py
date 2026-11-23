@@ -19,6 +19,7 @@ from khoailanggraph.agents.requirements_engineering import definition as wf
 from khoailanggraph.domain.run_config import DEFAULT_MAX_STEPS, RunParameters
 from khoailanggraph.features.artifacts.models import ArtifactItemRow, ArtifactRow
 from khoailanggraph.features.artifacts.service import (
+    item_title,
     item_trace,
     list_artifact_items,
     list_project_artifacts,
@@ -140,6 +141,7 @@ async def read_item(ctx: ToolContext, key: str | None) -> str:
     if row is None:
         return f"This project has no item with the key {key.strip()}."
     ctx.reads.note_item(row)
+    ctx.reads.subject = item_title(row)
     content = _loads(row.content_json)
     head = f"{row.key} ({row.kind}), id {row.id}, version {row.version}, {row.review_status}"
     return _fit(head, _fields_of(content), ITEM_LIMIT)
@@ -163,6 +165,7 @@ async def read_document(ctx: ToolContext, kind: str | None) -> str:
         cursor=0,
     )
     ctx.reads.note_artifact(artifact)
+    ctx.reads.subject = artifact.title
     head = (
         f"{artifact.title} ({artifact.kind}), version {artifact.version}, "
         f"{artifact.review_status}, {len(items)} items listed"
@@ -256,6 +259,7 @@ async def trace_item(ctx: ToolContext, key: str | None) -> str:
     if row is None:
         return f"This project has no item with the key {key.strip()}."
     ctx.reads.note_item(row)
+    ctx.reads.subject = item_title(row)
     trace = await item_trace(ctx.session, UUID(str(row.id)), direction="both", depth=2)
     if not trace.links:
         return f"{row.key} has no trace link."
@@ -281,6 +285,7 @@ async def stage_info(ctx: ToolContext, key: str | None) -> str:
     node = nodes.get(name)
     if node is None:
         return f"There is no step called {name}. The steps are: " + ", ".join(sorted(nodes)) + "."
+    ctx.reads.subject = str(node.get("label") or name)
     parts = [f"{name}: {node.get('label') or name}"]
     if node.get("purpose"):
         parts.append(str(node["purpose"]))

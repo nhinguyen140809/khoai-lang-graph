@@ -1,12 +1,6 @@
 import { expect } from '@playwright/test'
 
-import {
-  type ApiPage,
-  expectAccepted,
-  expectCreated,
-  expectOk,
-  expectProblem,
-} from '../../shared/api'
+import { type ApiPage, expectAccepted, expectOk, expectProblem } from '../../shared/api'
 import { test } from '../../shared/fixtures.utils'
 import { reviewNodes } from '../../shared/reviews.constants'
 import { idea, laterIdea, reviewStops } from './runs-backend.data'
@@ -58,17 +52,20 @@ test('hands a message sent to a run that waits to that run and delivers it', asy
   const { threadId, run } = await api.startRun(idea, { reviews: [reviewNodes.personas] })
   const review = await api.waitForReview(run.id)
 
-  const sent = expectCreated(
-    await client.post<{ message: { delivery: string }; run: { id: string } }>(
+  // The assistant decides in the background that the message is about the work: it joins the run
+  // that waits, and the helper gives that run.
+  const joined = await api.sendMessage(threadId, laterIdea)
+  const waiting = expectOk(
+    await client.get<ApiPage<{ content: string; delivery: string }>>(
       `/threads/${threadId}/messages`,
-      { content: laterIdea },
+      { limit: 200 },
     ),
   )
+  expect(waiting.items.find((message) => message.content === laterIdea)?.delivery).toBe('pending')
   await api.resumeRun(review, { option: 'approve' })
   await api.waitForRun(run.id, ['succeeded'])
 
-  expect(sent.run.id).toBe(run.id)
-  expect(sent.message.delivery).toBe('pending')
+  expect(joined.id).toBe(run.id)
   const messages = expectOk(
     await client.get<ApiPage<{ content: string; delivery: string }>>(
       `/threads/${threadId}/messages`,

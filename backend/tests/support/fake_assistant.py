@@ -69,18 +69,17 @@ def _first_line(text: str) -> str:
 
 def _answer(text: str, *commands: dict[str, Any]) -> dict[str, Any]:
     return {
-        "tool": None,
-        "key": None,
+        "tool_calls": [],
         "answer": {"kind": "general", "text": text, "commands": list(commands)},
     }
 
 
 def _read_first(tool: str, key: str | None = None) -> dict[str, Any]:
-    return {"tool": tool, "key": key, "answer": None}
+    return {"tool_calls": [{"tool": tool, "key": key}], "answer": None}
 
 
 def _workflow() -> dict[str, Any]:
-    return {"tool": None, "key": None, "answer": {"kind": "workflow", "text": "", "commands": []}}
+    return {"tool_calls": [], "answer": {"kind": "workflow", "text": "", "commands": []}}
 
 
 def _about_an_item(prompt: _Prompt, key: str) -> dict[str, Any]:

@@ -76,7 +76,8 @@ and one line in the registry.
 ## 4. A message, step by step
 
 1. The assistant reads the project and the message and decides `workflow` or `general`. It may
-   read first, as many times as `max_reads` allows. Each read is a call of the model.
+   read first: the reads that do not depend on each other are asked for in one step, and `max_reads`
+   counts them all. A step is a call of the model.
 2. `workflow`: the message starts a run of `requirements_engineering` or waits in the run that
    is unfinished, exactly as before. The cost of the decision is kept as it was.
 3. `general`: the recorder writes a run of `assistance` that is already finished: the user message
@@ -105,3 +106,57 @@ and one line in the registry.
   it makes and the names the model may give are the declared ones.
 - `definition.schema.json` no longer asks for artifact kinds, item kinds or link types, since a
   workflow that writes no documents has none.
+
+## 7. Answering in the background
+
+Today the request that sends a message waits for the whole answer, which is one call of the model
+for each read, so the Send button turns for as long as the assistant works, and the client cannot
+tell sending a message from the assistant working on it.
+
+### Rules
+
+- Sending stores the message and ends. The request answers `201 {message, run, commands}` at once,
+  where `run` is a run of `assistance` with status `running` and `commands` is empty.
+- The assistant works as a job of the server, not of the request: a task of the server's event
+  loop with a session of its own, which calls the model off the loop. A server that stops while it
+  works fails the run with `server_restarted`, as it does for any run.
+- The job writes what the recorder writes today, but into the run that exists: its one step is
+  `running` from the start, a note of kind `tool` is written, and committed, as each call of a tool
+  begins, so a client that follows the run sees the calls while they happen, and when the answer is
+  ready the job writes the answer as a message of the run and sets `status = succeeded`.
+- The UI commands of an answer are part of the answer message, as `commands`, so that a client that
+  was not connected when the answer came can still read them. They are run once by the client that
+  saw the run end, never by one that loads the thread later.
+- A message that the assistant decides `workflow` is handled as before after the decision: it
+  starts a run of `requirements_engineering` or waits as `pending` in the one that is unfinished.
+  The run of `assistance` made for it is removed, since it has no answer to show.
+
+### What each side does
+
+- Backend: the route of a message stops calling `decide`; the job calls it. The recorder splits in
+  a start (creates the running run) and a finish (steps, notes, answer, `succeeded`). The message
+  gets `commands`. Sending twice before the first answer ends is allowed: each message has its own
+  run of `assistance`, and the rule of one unfinished run per workflow of a thread is lifted for
+  `assistance`, since its runs do not wait for each other.
+- Frontend: Send is pending only while the message is stored. The chat follows the run of
+  `assistance` as it follows any run, and shows the line of the agent working until it succeeds.
+  When it succeeds, the answer message is read and its commands are run once.
+
+### Decided
+
+- The run of `assistance` made for a message that turns out to be `workflow` is removed.
+- A thread has one unfinished run of `assistance` at a time, as it has one of the main workflow. A
+  message that comes while it works is stored as `pending` in that run, and the assistant takes it
+  in at its next step, as a `<new_message>` that it reads with the first and answers in one reply
+  (it is then `delivered` in that step). When the assistant decides `workflow`, all the messages of
+  the turn go to the main workflow, in the order they came. A message that comes after the last step
+  has no step to be read in: it waits, and the job answers it in a run of its own when the run ends.
+
+### The limit of reads
+
+The definition is a graph of one node, `assistant`, and the loop of reads runs inside that node as
+steps that the code drives, so the limit `max_reads` is the only brake of that loop: each read is a
+call of the model, which costs seconds and money, and no gate of the run counts it. When the answer
+runs as a job of the server it should be walked like any run, with the cost and step limits of its
+run configuration (`max_cost_usd`, `max_steps`) doing that work, and `max_reads` left as a plain
+parameter of the definition with a higher default. That is not built yet.

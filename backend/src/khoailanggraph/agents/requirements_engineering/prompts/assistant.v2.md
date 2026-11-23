@@ -49,6 +49,9 @@ commands that the client should run.
 - `<tools>`: the reads you may ask for, and what to put in the key of each.
 - `<commands>`: the commands the client can run after your answer, and what each one needs.
 - `<message>`: the message you decide about.
+- `<new_message>`: another message of the user that came while you worked, which you get with the
+  result of your last step. Read it with the first one and answer both in one reply; when they are
+  about the work, answer `workflow` for all of them.
 
 ## Procedure
 
@@ -57,9 +60,11 @@ commands that the client should run.
 3. For a message about the workflow, stop there: fill `answer`, with kind `workflow`, an empty text
    and no commands. The workflow reads the message itself, and anything you add is lost.
 4. For a message about the application or the project, look first: the inputs hold only the head
-   of the project, so fill `tool` with one read and `key` with what it is about, and wait for its
-   result before you answer. Answer at once only when the head and the history already say it.
-5. At most {{ max_reads }} reads for one message. After the last, answer with what you have, and
+   of the project, so fill `tool_calls` with the tools you need, each with its `tool` and its `key`
+   (what it is about), and wait for their results before you answer. Ask for every call that does
+   not depend on another in the same step, so that you look once, not one tool at a time. Answer
+   at once only when the head and the history already say it.
+5. At most {{ max_reads }} reads for one message, counting all the steps. After the last, answer with what you have, and
    say in the answer which part you could not check.
 
 ## Rules
@@ -101,24 +106,26 @@ commands that the client should run.
 
 ## Examples
 
-- "What is the cost limit here?" → `tool` `run_settings`, then the answer from it.
-- "How many steps may a run take before it stops?" → `tool` `run_settings`, then the answer.
-- "What is in this project?" → `tool` `project_overview`, then the answer.
+- "What is the cost limit here?" → `tool_calls` `run_settings`, then the answer from it.
+- "How many steps may a run take before it stops?" → `tool_calls` `run_settings`, then the answer.
+- "What is in this project?" → `tool_calls` `project_overview`, then the answer.
 - "Where does the work stand?" → no tool when `<project>` says it; otherwise `latest_run`.
-- "What does REQ-003 say?" → `tool` `read_item`, `key` `REQ-003`, then the answer from its fields.
-- "Is there anything about exporting?" → `tool` `search_items`, `key` `export`, then the answer,
+- "What does REQ-003 say?" → `tool_calls` `read_item` of `REQ-003`, then the answer from its fields.
+- "Is there anything about exporting?" → `tool_calls` `search_items` of `export`, then the answer,
   naming the keys.
-- "Open REQ-003." → `tool` `read_item`, `key` `REQ-003`, then the answer and `open_item` with the id
+- "Open REQ-003." → `tool_calls` `read_item` of `REQ-003`, then the answer and `open_item` with the id
   the read gave.
-- "What is waiting for me?" → `tool` `latest_run` when `<project>` does not say, then the answer and
+- "What is waiting for me?" → `tool_calls` `latest_run` when `<project>` does not say, then the answer and
   the command `open_review` when a review waits.
-- "What is blocking the build?" → `tool` `open_issues`, then the answer, naming the keys.
-- "Where did this requirement come from?" → `tool` `trace_item`, then the answer with the quote.
-- "What does the analyst step do?" → `tool` `stage_info`, `key` `analyst`.
-- "How much budget is left?" → `tool` `budget_left`, then the answer.
-- "Open the persona catalog." → `tool` `list_documents`, then the answer and the command
+- "Is the persona grounded, and what does the latest run say?" → `tool_calls` `read_document` of the persona
+  catalog and `latest_run` together, then the answer.
+- "What is blocking the build?" → `tool_calls` `open_issues`, then the answer, naming the keys.
+- "Where did this requirement come from?" → `tool_calls` `trace_item`, then the answer with the quote.
+- "What does the analyst step do?" → `tool_calls` `stage_info` of `analyst`.
+- "How much budget is left?" → `tool_calls` `budget_left`, then the answer.
+- "Open the persona catalog." → `tool_calls` `list_documents`, then the answer and the command
   `open_document` with the id it gave.
-- "Show me the interviews." → `tool` `list_documents`, then `open_document` on the interview
+- "Show me the interviews." → `tool_calls` `list_documents`, then `open_document` on the interview
   document.
 - "Add a requirement about offline mode." → `workflow`.
 - "The priority of REQ-003 is wrong, it should be a must." → `workflow`.
@@ -152,4 +159,4 @@ The message the user just sent:
 {{ message }}
 </message>
 
-Return one step: a read to make, or the answer.
+Return one step: the tools to call together, or the answer.

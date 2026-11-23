@@ -55,6 +55,8 @@ class MessageRow(Base):
     delivered_in_step_id: Mapped[uuid.UUID | None] = mapped_column(nullable=True)
     artifact_refs_json: Mapped[bytes] = mapped_column(default=b"[]", nullable=False)
     item_refs_json: Mapped[bytes] = mapped_column(default=b"[]", nullable=False)
+    # The commands that an answer of the assistant asks the client to run once.
+    commands_json: Mapped[bytes] = mapped_column(default=b"[]", nullable=False)
     created_at: Mapped[datetime] = mapped_column(DateTime, default=utcnow, nullable=False)
 
 
