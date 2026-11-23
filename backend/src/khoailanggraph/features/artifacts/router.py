@@ -11,7 +11,9 @@ from fastapi import APIRouter, Depends, Header, Query, Response
 from fastapi.responses import JSONResponse
 from pydantic import BaseModel, ConfigDict
 
+from khoailanggraph.agents import workflows
 from khoailanggraph.agents.requirements_engineering import definition as workflow
+from khoailanggraph.agents.shared import catalogs
 from khoailanggraph.api import deps
 from khoailanggraph.api.errors import ApiError
 from khoailanggraph.api.schemas import MAX_LIMIT, Cursor, Page
@@ -248,28 +250,24 @@ async def get_content_schema(
 async def get_workflow_definition(
     user: deps.CurrentUser,
     version: Annotated[int | None, Query()] = None,
+    name: Annotated[str | None, Query()] = None,
 ) -> Any:
-    """The definition JSON; immutable cache when ?version= pins one (§5).
+    """The definition JSON of a workflow (the requirements workflow without `?name=`); immutable
+    cache when ?version= pins one (§5).
 
     API.md: a past run is shown with the definition it ran with — the
-    pinned version serves that definition's own file, 404 when the version
+    pinned version serves that definition's own file, 404 when the workflow or the version
     was never published.
     """
-    raw: bytes
-    headers: dict[str, str] = {}
-    if version is None:
-        raw = workflow.definition_bytes()
-    else:
-        headers["Cache-Control"] = "public, max-age=31536000, immutable"
-        if version == workflow.WORKFLOW_VERSION:
-            raw = workflow.definition_bytes()
-        else:
-            raw_or_none = workflow.definition_bytes_for(version)
-            if raw_or_none is None:
-                raise ApiError(
-                    404, "not_found", "Not found", "The workflow version does not exist."
-                )
-            raw = raw_or_none
+    chosen = workflows.workflow_named(name or workflow.WORKFLOW_NAME)
+    if chosen is None:
+        raise ApiError(404, "not_found", "Not found", "The workflow does not exist.")
+    raw = chosen.definition_bytes_for(version)
+    if raw is None:
+        raise ApiError(404, "not_found", "Not found", "The workflow version does not exist.")
+    headers = (
+        {"Cache-Control": "public, max-age=31536000, immutable"} if version is not None else {}
+    )
     return JSONResponse(content=jsonlib.loads(raw.decode("utf-8")), headers=headers)
 
 
@@ -280,7 +278,7 @@ async def get_act_catalog(user: deps.CurrentUser) -> Any:
     A stage and a tool name acts by key in their `acts`, so the catalog belongs to the same
     contract as the definition and is served with it, instead of shipping a copy that drifts.
     """
-    catalog = workflow.act_catalog()
+    catalog = catalogs.act_catalog()
     return {
         "acts": list(catalog.values()),
         "keys_by_stage": {

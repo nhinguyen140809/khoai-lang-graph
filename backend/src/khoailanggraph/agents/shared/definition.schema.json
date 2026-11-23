@@ -48,19 +48,16 @@
     },
     "artifact_kinds": {
       "type": "array",
-      "minItems": 1,
       "items": { "$ref": "#/$defs/artifactKind" },
       "description": "Every artifact kind a run may create, with the content schema version it uses."
     },
     "item_kinds": {
       "type": "array",
-      "minItems": 1,
       "items": { "$ref": "#/$defs/itemKind" },
       "description": "Every item kind a run may create, with the content schema version it uses."
     },
     "link_types": {
       "type": "array",
-      "minItems": 1,
       "items": { "$ref": "#/$defs/linkType" },
       "description": "Every trace link type, with the pairs of item kinds it may connect."
     },

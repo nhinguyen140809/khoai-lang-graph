@@ -249,7 +249,7 @@ Login and register answer the same way for a wrong password and an unknown email
 | `PUT /me/model-settings` | Replace the model settings of the user. Body `items`, a list of `agent_role`, `model_id` and an optional `temperature`; a role left out uses the server default. Each `agent_role` is an agent role of the current workflow definition, given once; each `model_id` is a model of the catalog whose `allowed_roles` holds the role; `temperature` is null or a number from 0 to 1; otherwise `422 validation_failed` at `items.<index>.agent_role`, `items.<index>.model_id` or `items.<index>.temperature`. Returns `200` with the settings as `GET` lists them | MVP |
 | `GET /models` | Model catalog: allowed models, capabilities, prices, ordered by `model_id` | MVP |
 | `GET /me/usage` | Tokens and cost of the user in one calendar month in UTC, `?month=YYYY-MM`, the current month by default: the total, the budget of the month, and, with `?group_by=` one of `day`, `project`, `agent_role`, `model`, the groups. See the example below | MVP |
-| `GET /workflow/definition` | One version of the workflow definition, see [workflow definition](#workflow-definition). `?version=` reads an older version, so a past run is shown with the definition it ran with | MVP |
+| `GET /workflow/definition` | One version of the workflow definition, see [workflow definition](#workflow-definition). `?name=` names the workflow (`requirements_engineering` without it, or `assistance`), and `?version=` reads an older version, so a past run is shown with the definition of its own `workflow_name` and `workflow_version` | MVP |
 
 Usage of the current month, `GET /me/usage?group_by=project`:
 
@@ -350,13 +350,30 @@ Rules:
 | `PATCH /threads/{thread_id}` | Change `title`, `status`. `title` is a text with more than whitespace and cannot be set back to `null`; `status` is `active` or `archived`; otherwise `422 validation_failed` at the field | MVP |
 | `DELETE /threads/{thread_id}` | Soft delete: the thread is left out of lists, and its endpoints answer `404`. A thread with an unfinished run (`queued`, `running` or `interrupted`) answers `409 invalid_state`; the run is stopped first | MVP |
 | `GET /threads/{thread_id}/messages` | Chat messages; ordered by `sequence` ascending. User messages carry `delivery` | MVP |
-| `POST /threads/{thread_id}/messages` | Send a user message. Body `content`, optional `run_config` with the fields of [RunDefaults](DATA_SHAPE.md#rundefaults-mvp) and optional `models`, a map of agent role to model, both used only when the message starts a run. Each key of `models` is an agent role of the current workflow definition and each value a model of the catalog whose `allowed_roles` holds the role; otherwise `422 validation_failed` at `models.<role>`. Returns `201` with the message and the run it started or was sent to | MVP |
+| `POST /threads/{thread_id}/messages` | Send a user message. Body `content`, optional `run_config` with the fields of [RunDefaults](DATA_SHAPE.md#rundefaults-mvp) and optional `models`, a map of agent role to model, both used only when the message starts a run. Each key of `models` is an agent role of the current workflow definition and each value a model of the catalog whose `allowed_roles` holds the role; otherwise `422 validation_failed` at `models.<role>`. Returns `201` as soon as the message is stored, with the message and `run`: the run of the workflow `assistance` that is answering it, `running` (see [Assistance](architecture/assistance.md)). The assistant decides in the background whether the message is about the application or about the work. A message about the application is answered in that run, which then `succeeded`. A message about the work takes that run away and starts a run of the main workflow, or waits as `pending` in the one that is unfinished, as before; the client reads it from the runs of the thread. A thread has one run of `assistance` unfinished at a time: a message that comes meanwhile has that run as its `run` and is `pending`; the assistant reads it in its next step and answers both together, or, when it came after the last step, answers it in a run of its own when the first ends. A run of `assistance` is never the `active_run_id` of the thread and never the latest run that its status follows | MVP |
 
 Sending a message is the only way the chat box starts work, and it is never rejected because the thread has an unfinished run:
 
 - With no unfinished run, the message starts a new run with the current workflow definition version; `delivery` is `started_run`.
 - With an unfinished run, the message is stored as `pending`. At the next safe point of the run, the intent router decides which node should handle it; `delivery` becomes `delivered`, and the stream sends `message_delivered`.
 - The full behavior, including what happens when the run ends first, is in [Runtime: messages during a run](architecture/runtime.md#5-messages-during-a-run).
+
+Before the message goes to the run, one call decides which of the two it is, and answers the ones
+about the application: about 1–3 sentences, a few reads of the project (`max_reads` of [`assistance.v1.json`](workflow/assistance.v1.json), 5 by default, and the reads that do not depend on each other go in one step:  an item, a document,
+the last run, the open findings, a trace, a step of the definition, the month's budget, the settings), and the
+commands for the client to run. Each command in `commands` of the answer message is
+`{command, artifact_id, item_id, label}`: `command` is a key of
+[`commands.catalog.json`](workflow/commands.catalog.json), which says in `needs` what is checked
+before a command leaves (nothing, a document or an item of the project, or a review that waits).
+A command that is not in the catalog, or that names a record outside the project, is dropped
+and logged; a client skips a key it does not know. The answer is stored as a message of
+the thread with `author: "agent"` and `agent_role: "assistant"`, whose `artifact_refs` and
+`item_refs` name the documents and items that the reads looked at (up to ten of each, each once, in
+the order read), so that a client shows what the answer was read from. The commands are a field of
+the message, `commands`, empty on every other message; a client runs them once, when it saw the
+run end, and not when it loads the thread later. Every classified message writes its cost
+where `GET /me/usage` and the budget of the month read it.
+
 
 The first message of a thread:
 
@@ -405,7 +422,7 @@ Response `201`:
 
 | Method and path | Purpose | Phase |
 |---|---|---|
-| `GET /threads/{thread_id}/runs` | Runs of a thread; ordered by `created_at` descending | MVP |
+| `GET /threads/{thread_id}/runs` | Runs of a thread; ordered by `created_at` descending. `?workflow=` lists only the runs of the workflow it names, such as `requirements_engineering` for the work of the project and `assistance` for the runs that answered one message | MVP |
 | `POST /threads/{thread_id}/runs` | **Compatibility shim**, not part of this contract: body `{ "input": "..." }`, answer `{ "run_id": "..." }`. It starts a run from the text exactly as `POST /threads/{thread_id}/messages` does, for a client that still speaks the older wire. New clients use the messages endpoint | — |
 | `GET /runs/{run_id}` | Number in the thread, status, stage, iteration, step count, usage, error, `workflow_name`, `workflow_version`, `last_event_id`. The status transitions are listed in [Runtime: lifecycle](architecture/runtime.md#3-lifecycle) | MVP |
 | `GET /runs/{run_id}/steps` | Run steps; ordered by `sequence`. A step also carries its `notes` ([StepNote](DATA_SHAPE.md#stepnote-later)) | MVP |

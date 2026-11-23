@@ -9,10 +9,12 @@ from __future__ import annotations
 
 import uuid
 from datetime import UTC, datetime
+from typing import TYPE_CHECKING
 
 from sqlalchemy import DateTime, ForeignKey, Integer, String, Text, Uuid
 from sqlalchemy.orm import Mapped, mapped_column
 
+from khoailanggraph.domain.registry import schema_version
 from khoailanggraph.platform.db import Base
 from khoailanggraph.platform.origin import (
     ChangedOriginMixin,
@@ -20,10 +22,19 @@ from khoailanggraph.platform.origin import (
     UpdatedOriginMixin,
 )
 
+if TYPE_CHECKING:
+    from sqlalchemy.engine.default import DefaultExecutionContext
+
 
 def utcnow() -> datetime:
     """UTC timestamp for every row this feature writes."""
     return datetime.now(UTC)
+
+
+def _current_schema_version(context: DefaultExecutionContext) -> int:
+    """The version of the content schema of the row's kind that a new row is written with."""
+    parameters = context.get_current_parameters()  # type: ignore[no-untyped-call]
+    return schema_version(str(parameters["kind"]))
 
 
 class ArtifactRow(CreatedOriginMixin, UpdatedOriginMixin, Base):
@@ -36,7 +47,9 @@ class ArtifactRow(CreatedOriginMixin, UpdatedOriginMixin, Base):
     kind: Mapped[str] = mapped_column(String, nullable=False, index=True)
     title: Mapped[str] = mapped_column(Text, nullable=False)
     summary: Mapped[str | None] = mapped_column(Text, nullable=True)
-    schema_version: Mapped[int] = mapped_column(Integer, default=1, nullable=False)
+    schema_version: Mapped[int] = mapped_column(
+        Integer, default=_current_schema_version, nullable=False
+    )
     content_json: Mapped[bytes] = mapped_column(default=b"{}", nullable=False)
     subject_item_id: Mapped[uuid.UUID | None] = mapped_column(nullable=True)
     version: Mapped[int] = mapped_column(Integer, default=1, nullable=False)
@@ -60,7 +73,9 @@ class ArtifactItemRow(CreatedOriginMixin, UpdatedOriginMixin, Base):
     key: Mapped[str] = mapped_column(String, nullable=False, index=True)
     parent_item_id: Mapped[uuid.UUID | None] = mapped_column(nullable=True)
     position: Mapped[int] = mapped_column(Integer, default=0, nullable=False)
-    schema_version: Mapped[int] = mapped_column(Integer, default=1, nullable=False)
+    schema_version: Mapped[int] = mapped_column(
+        Integer, default=_current_schema_version, nullable=False
+    )
     content_json: Mapped[bytes] = mapped_column(default=b"{}", nullable=False)
     version: Mapped[int] = mapped_column(Integer, default=1, nullable=False)
     review_status: Mapped[str] = mapped_column(String, default="draft", nullable=False)

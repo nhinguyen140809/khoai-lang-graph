@@ -138,7 +138,11 @@ def _choices(raw: object) -> list[dict[str, Any]]:
         if not _KEY.match(key) or key in seen or not label:
             continue
         seen.add(key)
-        choices.append({"key": key, "label": label, "requires_text": False})
+        choice: dict[str, Any] = {"key": key, "label": label, "requires_text": False}
+        description = _text(entry.get("description"), DESCRIPTION_LENGTH)
+        if description:
+            choice["description"] = description
+        choices.append(choice)
     return choices[:MAX_CHOICES]
 
 

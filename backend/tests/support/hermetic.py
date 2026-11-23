@@ -47,5 +47,10 @@ def install_fake_provider() -> None:
     # run's search tool is the fixture corpus. Any-typed — mypy does not
     # re-check an attribute the patch swaps at runtime.
     service_seam: Any = runs_service
-    service_seam.role_models = lambda: {role: FAKE_MODEL_ID for role in agent_roles()}
+    service_seam.role_models = lambda: {
+        **{role: FAKE_MODEL_ID for role in agent_roles()},
+        # The assistant is not a role of the workflow, but it is answered by the same scripted
+        # model in a test, so that no test reaches a provider.
+        "assistant": FAKE_MODEL_ID,
+    }
     service_seam.make_research_search = lambda _settings: demo_research_search
