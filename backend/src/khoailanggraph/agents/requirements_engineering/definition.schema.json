@@ -363,6 +363,10 @@
       "properties": {
         "key": { "$ref": "#/$defs/name" },
         "label": { "type": "string" },
+        "description": {
+          "type": "string",
+          "description": "What happens if it is picked, when its label does not say so; left out when there is none."
+        },
         "requires_text": {
           "type": "boolean",
           "description": "Choosing it asks the user to explain it in text, for example an Other choice. Never a default."
