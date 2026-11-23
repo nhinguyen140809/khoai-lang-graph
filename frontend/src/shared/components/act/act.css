@@ -1,0 +1,25 @@
+/*
+ * The things around the face of an actor: the layer that holds them takes the width of the face as
+ * its container, so that words size themselves by the face that they stand around.
+ */
+@utility act-layer {
+  container-type: inline-size;
+}
+
+/* A word of the things around the face, as large as a share of the face. */
+@utility act-token {
+  font-size: 20cqw;
+}
+
+/* The color of a thing around the face: primary, so that it stands out from the eyes of the face, unless the act says another. */
+[data-slot='act-prop'] {
+  color: var(--primary);
+}
+
+[data-slot='act-prop'][data-tone='foreground'] {
+  color: var(--foreground);
+}
+
+[data-slot='act-prop'][data-tone='muted'] {
+  color: var(--muted-foreground);
+}

@@ -18,7 +18,6 @@ import { Collapsible, CollapsibleContent } from '@/shared/components/ui/collapsi
 import { Stepper, StepperItem, StepperTitle, StepperTrigger } from '@/shared/components/ui/stepper'
 import { Tooltip, TooltipContent, TooltipTrigger } from '@/shared/components/ui/tooltip'
 import { useOpenKeys } from '@/shared/lib/disclosure'
-import { useView } from '@/shared/lib/view'
 import { routes } from '@/shared/routes'
 
 import { activityPanelMessages, stepMarkerLooks } from '../activity-panel.constants'
@@ -170,6 +169,9 @@ function StageItem({
                 className={cn(
                   'min-w-0 truncate text-sm leading-tight',
                   look.isNotStarted && 'text-muted-foreground',
+                  // A stage that is not over, running or waiting for the user, breathes, in place.
+                  isStageStatusInProgress(stage.status) &&
+                    'animate-breathe motion-reduce:animate-none',
                 )}
               >
                 {stage.title}
@@ -246,7 +248,6 @@ function SubjectItem({
   label: string
   projectId: string
 }) {
-  const view = useView()
   const openPage = useOpenPage()
   const look = useStageStatusLook(subject.status)
   const workId = subject.workId
@@ -285,9 +286,6 @@ function SubjectItem({
                 {subject.subject.title}
               </StepperTitle>
               <span className="sr-only">, {look.label}</span>
-              {view === 'developer' && (
-                <span className="text-3xs text-muted-foreground">{subject.subject.key}</span>
-              )}
             </span>
           </StepperTrigger>
         </TooltipTrigger>

@@ -11,8 +11,9 @@ export const projectKeys = {
   /** One list: the projects with one status, narrowed by the filters. */
   list: (status: ProjectStatus, filters: ProjectFilters) =>
     [...projectKeys.lists(), status, filters] as const,
-  /** The recent projects that the menus offer. */
-  recent: () => [...projectKeys.lists(), 'recent'] as const,
+  /** The active projects with the latest activity, as many as `count`, narrowed by the filters, that the menus offer. */
+  recent: (count: number, filters: ProjectFilters) =>
+    [...projectKeys.lists(), 'recent', count, filters] as const,
   detail: (projectId: string) => [...projectKeys.all(), 'detail', projectId] as const,
   create: () => [...projectKeys.all(), 'create'] as const,
 }

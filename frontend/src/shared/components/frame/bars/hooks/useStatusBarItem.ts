@@ -12,6 +12,7 @@ import type { StatusBarItem } from '../status-bar.types'
  * what it reports, so the item leaves with the component, as a command does with `useCommands`.
  * The item takes a new `content` on each render of the caller; keep it in `useMemo` when it
  * depends on a few values only.
+ * @view developer
  */
 export function useStatusBarItem({ side, order = 0, content }: StatusBarItem) {
   const item = useMemo(() => ({ side, order, content }), [side, order, content])

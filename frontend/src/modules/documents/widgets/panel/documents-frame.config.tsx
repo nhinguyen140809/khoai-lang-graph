@@ -49,7 +49,10 @@ export const documentTabIcons = {
   'documents.item.profile': <UserRoundIcon />,
 } as const satisfies Record<DocumentTabIconName, ReactNode>
 
-/** Documents on the activity bar of a project: the documents, their outline and the items. */
+/**
+ * Documents on the activity bar of a project: the documents, their outline and the items.
+ * @view developer
+ */
 export function documentsDestination(projectId: string): FeatureDestination {
   return {
     id: 'documents',

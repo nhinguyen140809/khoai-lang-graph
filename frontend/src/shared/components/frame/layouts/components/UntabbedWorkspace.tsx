@@ -15,6 +15,7 @@ interface UntabbedWorkspaceProps {
  * The side panel and the page, for the screens outside a project, which have no tabs. The side
  * panel is the one of the feature chosen on the activity bar, else of the page on screen, else of
  * the first feature.
+ * @view developer
  */
 export function UntabbedWorkspace({ children }: UntabbedWorkspaceProps) {
   return (

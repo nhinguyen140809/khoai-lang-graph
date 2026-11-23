@@ -22,6 +22,7 @@ import {
   useArtifactItemKinds,
   useArtifactKinds,
   useIssueKinds,
+  useLinkedKinds,
 } from '@/modules/workflow/entities'
 import { useOpenPage } from '@/shared/components/frame'
 import { ErrorState, LoadingState } from '@/shared/components/state'
@@ -165,13 +166,19 @@ function TraceTreeBody({
     return ofProject
   }, [list.entries, itemKinds])
 
+  const linkedKinds = useLinkedKinds()
+  const isTraceable = useCallback(
+    (kind: string) => linkedKinds === undefined || linkedKinds.has(kind),
+    [linkedKinds],
+  )
+
   const outlines = useMemo(
     () => outlineNodesOf({ documents, items: issues.items, kinds: kindViews, issueKinds }),
     [documents, issues.items, kindViews, issueKinds],
   )
   const rows = useMemo(
-    () => traceRows({ entries: list.entries, outlines, attention, itemTrace }),
-    [list.entries, outlines, attention, itemTrace],
+    () => traceRows({ entries: list.entries, outlines, attention, itemTrace, isTraceable }),
+    [list.entries, outlines, attention, itemTrace, isTraceable],
   )
 
   const { tree, indent } = useTraceTree(rows.rows)

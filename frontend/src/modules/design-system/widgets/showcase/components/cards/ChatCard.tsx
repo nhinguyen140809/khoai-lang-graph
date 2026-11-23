@@ -9,6 +9,7 @@ import {
   XIcon,
 } from 'lucide-react'
 
+import { Glint } from '@/shared/components/animation'
 import {
   Attachment,
   AttachmentAction,
@@ -42,7 +43,6 @@ import {
   MessageScrollerProvider,
   MessageScrollerViewport,
 } from '@/shared/components/ui/message-scroller'
-import { Spinner } from '@/shared/components/ui/spinner'
 import type { Tone } from '@/shared/lib/tone'
 
 /**
@@ -153,7 +153,7 @@ function ThreadRow({ entry }: { entry: ThreadEntry }) {
       return (
         <Marker role="status" color="secondary">
           <MarkerIcon>
-            <Spinner />
+            <Glint aria-hidden variant="mesh" />
           </MarkerIcon>
           <MarkerContent className="shimmer">{entry.text}</MarkerContent>
         </Marker>

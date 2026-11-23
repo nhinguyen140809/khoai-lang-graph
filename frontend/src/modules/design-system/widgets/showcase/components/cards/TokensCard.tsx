@@ -1,3 +1,6 @@
+'use client'
+
+import { useTokenHexes } from '../../hooks/useTokenHexes'
 import { SampleCard, SampleLabel } from '../Sample'
 
 const groups: { title: string; tokens: string[] }[] = [
@@ -21,15 +24,39 @@ const groups: { title: string; tokens: string[] }[] = [
     title: 'Chart',
     tokens: ['chart-1', 'chart-2', 'chart-3', 'chart-4', 'chart-5'],
   },
+  {
+    title: 'Hues',
+    tokens: [
+      'hue-orange',
+      'hue-yellow',
+      'hue-lime',
+      'hue-mint',
+      'hue-sky',
+      'hue-blue',
+      'hue-violet',
+      'hue-pink',
+      'hue-rose',
+      'hue-coral',
+    ],
+  },
+  {
+    title: 'Face',
+    tokens: ['face-features'],
+  },
 ]
 
+const allTokens = groups.flatMap((group) => group.tokens)
+
 export function TokensCard() {
+  const { hexes, probeRef } = useTokenHexes(allTokens)
+
   return (
     <SampleCard
       title="Color tokens"
-      description="Night Owl surfaces and blue, a yellow secondary, and five chart colors."
+      description="Night Owl surfaces and blue, a yellow secondary, five chart colors, and the soft colors of the faces."
       className="flex flex-col gap-4"
     >
+      <span ref={probeRef} aria-hidden className="hidden" />
       {groups.map((group) => (
         <section key={group.title} className="flex flex-col gap-2">
           <h4 className="text-muted-foreground">{group.title}</h4>
@@ -41,6 +68,7 @@ export function TokensCard() {
                   style={{ backgroundColor: `var(--${token})` }}
                 />
                 <SampleLabel className="truncate">{token}</SampleLabel>
+                <SampleLabel className="truncate">{hexes[token] ?? ''}</SampleLabel>
               </div>
             ))}
           </div>

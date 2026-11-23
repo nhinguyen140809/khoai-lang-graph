@@ -90,6 +90,22 @@ A folder name in `src/app/` is a URL segment, so renaming it changes the URL.
 
 A setting that another file needs is exported, and so becomes camelCase: `ME_STALE_TIME` would be `meStaleTime`. ESLint reports an exported value in UPPER_SNAKE_CASE; the case of a private setting stays a convention, since ESLint cannot tell a setting from a schema or from sample data.
 
+## Areas of the app
+
+The app has two views of one project: the user view (`src/app/user/`, the desk) and the developer view (`src/app/developer/`, the workbench). The pages of a view place the frame and the slices of their own view, and what is shared.
+
+A component, a hook, a constant or a type that belongs to one view says so where it is declared, with a tag in its doc comment, and nothing else changes: no new name and no list to keep:
+
+```tsx
+/**
+ * The desk of the user view: the bar at the top and the side list.
+ * @view user
+ */
+export function Desk() {}
+```
+
+`@view user` is placed by the pages of the user view only, `@view developer` by the pages of the developer view only; what has no tag is shared and any page may import it. Tag what a page imports (the component of a widget, the item of a frame), not every file of a slice: ESLint (`local/view-boundary`) follows the name from the page, through the index files, to its declaration and reads the tag there. A name added to a frame or a widget that only one view places gets its tag in the same change.
+
 ## Checklist for a new part
 
 What to check on the diff before it is reviewed, and what a reviewer checks again. It covers `src/`, `src/mocks/` and `src/test/` alike. The rules that a tool can check are in ESLint; this list is for the rest. Where a point fails, fix it in the same PR, except a move, which goes in its own PR (root CONTRIBUTING).

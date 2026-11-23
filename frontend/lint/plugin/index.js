@@ -3,8 +3,9 @@ import { expectSteps } from './expect-steps.js'
 import { findGetName } from './find-get-name.js'
 import { retiredWords } from './retired-words.js'
 import { sliceBoundary } from './slice-boundary.js'
+import { viewBoundary } from './view-boundary.js'
 
-/** The local rules: names that typescript-eslint does not cover, and the boundary of a slice. */
+/** The local rules: names that typescript-eslint does not cover, the boundary of a slice and the boundary of a view. */
 export default {
   rules: {
     'boolean-name': booleanName,
@@ -12,5 +13,6 @@ export default {
     'find-get-name': findGetName,
     'retired-words': retiredWords,
     'slice-boundary': sliceBoundary,
+    'view-boundary': viewBoundary,
   },
 }

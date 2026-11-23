@@ -1,5 +1,6 @@
 import { ScrollArea } from '@/shared/components/ui/scroll-area'
 
+import { ActsCard } from './cards/ActsCard'
 import { AlertsCard } from './cards/AlertsCard'
 import { AnimationCard } from './cards/AnimationCard'
 import { ArtifactTableCard } from './cards/ArtifactTableCard'
@@ -16,19 +17,23 @@ import { CopyButtonCard } from './cards/CopyButtonCard'
 import { DiffViewCard } from './cards/DiffViewCard'
 import { DisclosureCard } from './cards/DisclosureCard'
 import { ExplorerTreeCard } from './cards/ExplorerTreeCard'
+import { FaceCard } from './cards/FaceCard'
 import { FeedEntryCard } from './cards/FeedEntryCard'
 import { FloatingSurfaceCard } from './cards/FloatingSurfaceCard'
 import { FormCard } from './cards/FormCard'
 import { GraphCard } from './cards/GraphCard'
 import { HighlightCard } from './cards/HighlightCard'
+import { IconsCard } from './cards/IconsCard'
 import { ItemsCard } from './cards/ItemsCard'
 import { MarkdownCard } from './cards/MarkdownCard'
+import { MotionsCard } from './cards/MotionsCard'
 import { NavigationCard } from './cards/NavigationCard'
 import { NumbersCard } from './cards/NumbersCard'
 import { OverlaysCard } from './cards/OverlaysCard'
 import { ReviewCard } from './cards/ReviewCard'
 import { SkeletonCard } from './cards/SkeletonCard'
 import { StepperCard } from './cards/StepperCard'
+import { ThumbnailsCard } from './cards/ThumbnailsCard'
 import { TimelineCard } from './cards/TimelineCard'
 import { TokensCard } from './cards/TokensCard'
 import { TraceCard } from './cards/TraceCard'
@@ -86,10 +91,17 @@ export function DesignSystemPage() {
             <StepperCard />
             <TimelineCard />
             <TraceCard />
+            <FaceCard />
+            <ThumbnailsCard />
           </div>
           {/* Outside the columns: the browser shares the cards between columns by their height, so
               a card that changes its own height, as these two do, would send other cards to
               another column each time. */}
+          <div className="grid items-start gap-4">
+            <ActsCard />
+            <MotionsCard />
+            <IconsCard />
+          </div>
           <div className="grid items-start gap-4 lg:grid-cols-2">
             <AnimationCard />
             <SkeletonCard />

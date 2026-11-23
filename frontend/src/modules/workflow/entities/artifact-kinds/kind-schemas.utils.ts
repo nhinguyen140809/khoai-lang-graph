@@ -1,4 +1,4 @@
-import type { ArtifactKinds, ContentSchema, KindSchema } from './artifact-kinds.types'
+import type { ArtifactKinds, ContentSchema, KindMedia, KindSchema } from './artifact-kinds.types'
 
 /**
  * The version and the content schema of every kind, artifact kinds and item kinds alike, by kind
@@ -27,4 +27,27 @@ export function contentSchemasByKind(kinds: ArtifactKinds | undefined): Map<stri
  */
 export function isNavigable(schema: ContentSchema): boolean {
   return schema['x-ui-navigable'] !== false
+}
+
+/** What the content of a kind is: text unless the schema says it is a diagram. */
+export function mediaOf(schema: ContentSchema): KindMedia {
+  return schema['x-ui-media'] ?? 'text'
+}
+
+/** The name of the icon on the block of a kind; null when the schema names none or says there is none. */
+export function iconOf(schema: ContentSchema): string | null {
+  return schema['x-ui-icon'] ?? null
+}
+
+/**
+ * Whether the documents of an artifact kind hold items that open one by one and are more than
+ * sections: such a document is a folder, and one that holds only text is a page.
+ */
+export function hasItemBlocks(kinds: ArtifactKinds | undefined, artifactKind: string): boolean {
+  const defined = kinds?.artifact_kinds.find(({ kind }) => kind === artifactKind)
+  return (
+    defined?.item_kinds.some(
+      ({ schema }) => isNavigable(schema) && schema['x-ui-display'] !== 'heading',
+    ) ?? false
+  )
 }

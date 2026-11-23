@@ -11,7 +11,10 @@ interface DestinationBase {
   placement?: 'top' | 'bottom'
 }
 
-/** A feature on the activity bar, with the side panel it shows. */
+/**
+ * A feature on the activity bar, with the side panel it shows.
+ * @view developer
+ */
 export interface FeatureDestination extends DestinationBase {
   /** The start page of the feature. The pages at this address and under it belong to it. */
   href: Route
@@ -23,11 +26,15 @@ export interface FeatureDestination extends DestinationBase {
   badge?: ReactNode
 }
 
-/** A feature planned for later: shown disabled, with the reason. */
+/**
+ * A feature planned for later: shown disabled, with the reason.
+ * @view developer
+ */
 export interface PlannedDestination extends DestinationBase {
   note: string
 }
 
+/** @view developer */
 export type Destination = FeatureDestination | PlannedDestination
 
 /**
@@ -36,12 +43,14 @@ export type Destination = FeatureDestination | PlannedDestination
  * feature starts the names of its icons with its own name, such as `documents.item.table`, so that
  * two features never share one, and registers them with `useTabIcons`. A tab whose name has no
  * icon shows the icon of its feature.
+ * @view developer
  */
 export type TabIcons = Readonly<Record<string, ReactNode>> | ((name: string) => ReactNode)
 
 /**
  * An item at the bottom of the activity bar, below the features, registered with
  * `useActivityBarItem`, such as the account menu.
+ * @view developer
  */
 export interface ActivityBarItem {
   /**

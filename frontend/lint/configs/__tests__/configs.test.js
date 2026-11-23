@@ -1,6 +1,8 @@
 import { ESLint } from 'eslint'
 import { describe, expect, it } from 'vitest'
 
+import { storageIndexPattern } from '../../lib/imports/folder-index-patterns.constants.js'
+import { viewAreaPattern } from '../../lib/imports/area-patterns.constants.js'
 import { moduleImports } from '../../lib/modules/module-imports.constants.js'
 import { frontendRoot } from '../../lib/paths.utils.js'
 import fileNames from '../file-names.js'
@@ -107,6 +109,44 @@ describe('the resolved config', () => {
       'project',
       'documents',
     ])
+  })
+
+  it('reads the tag of the view in the pages of each view, and keeps their shared patterns', async () => {
+    const pages = ['src/app/user/(home)/layout.tsx', 'src/app/developer/(home)/layout.tsx']
+    for (const page of pages) {
+      expect(await ruleOf(page, 'local/view-boundary')).toEqual([2])
+      expect(JSON.stringify(await ruleOf(page, 'no-restricted-imports'))).toContain(
+        storageIndexPattern.message,
+      )
+    }
+    // Only the pages of a view are checked; the slices that they import are not pages.
+    expect(
+      await ruleOf(
+        'src/modules/project/widgets/sidebar/components/ProjectSidebar.tsx',
+        'local/view-boundary',
+      ),
+    ).toBeUndefined()
+  })
+
+  it('keeps the rule of the hosts and the areas in the proxy and the route helper', async () => {
+    const readers = ['src/proxy.ts', 'src/shared/routes/typed-route/typed-route.utils.ts']
+    const others = [
+      'src/modules/project/widgets/sidebar/components/ProjectSidebar.tsx',
+      'src/modules/project/entities/projects/projects.constants.ts',
+      'src/shared/routes/routes.utils.ts',
+      'src/shared/components/frame/layouts/components/Workbench.tsx',
+      'src/shared/components/ui/sidebar.tsx',
+    ]
+    for (const file of readers) {
+      expect(JSON.stringify(await ruleOf(file, 'no-restricted-imports'))).not.toContain(
+        viewAreaPattern.message,
+      )
+    }
+    for (const file of others) {
+      expect(JSON.stringify(await ruleOf(file, 'no-restricted-imports'))).toContain(
+        viewAreaPattern.message,
+      )
+    }
   })
 
   it('keeps the browser environment in the files that own it', async () => {

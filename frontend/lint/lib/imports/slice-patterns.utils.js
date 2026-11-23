@@ -2,6 +2,7 @@ import { moduleImports, moduleLayers } from '../modules/module-imports.constants
 import { nonEntityPublicApiPatterns, publicApiPatterns } from './public-api-patterns.constants.js'
 import { outsideLayersPatterns } from './layer-patterns.constants.js'
 import { messages } from './messages.constants.js'
+import { viewAreaPattern } from './area-patterns.constants.js'
 /** @import { FileScopeName } from './slice-patterns.constants.js' */
 import { FileScope } from './slice-patterns.constants.js'
 
@@ -92,7 +93,7 @@ function sameLayerPatterns(layer, fileScope) {
 
 /**
  * The patterns of a file of a module: the layers above its own, the other slices of its layer, the
- * modules above its module, and the inside of every slice. A unit test may import another slice of
+ * modules above its module, the inside of every slice, and the rule of the hosts and the areas. A unit test may import another slice of
  * its layer, from its index, to show slices together.
  * @param {string} moduleName
  * @param {string} layer one of moduleLayers
@@ -101,6 +102,7 @@ function sameLayerPatterns(layer, fileScope) {
 export function modulePatterns(moduleName, layer, fileScope) {
   return [
     ...outsideLayersPatterns,
+    viewAreaPattern,
     ...layersAbovePatterns(layer),
     ...modulesAbovePatterns(moduleName),
     ...(layer === 'entities'

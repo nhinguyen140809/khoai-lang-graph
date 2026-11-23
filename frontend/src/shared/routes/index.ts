@@ -8,5 +8,5 @@ export {
 } from './auth'
 export type { RouteParamName } from './route-params'
 export { nextParam, RouteParam, useRouteParam } from './route-params'
-export { routes } from './routes.utils'
-export { routeOfAddress } from './typed-route'
+export { routes, userRoutes } from './routes.utils'
+export { routeOfAddress, useViewStartHref, viewStartHref } from './typed-route'

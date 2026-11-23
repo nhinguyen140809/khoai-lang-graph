@@ -25,7 +25,7 @@ import {
   subjectTitles,
 } from './activity-entries.utils.data'
 
-function entriesOf(view: 'user' | 'developer') {
+function entries() {
   return runEntries({
     messages,
     work: workEntries(steps, run),
@@ -33,24 +33,22 @@ function entriesOf(view: 'user' | 'developer') {
     stageTitles,
     subjectTitles,
     kinds,
-    view,
   })
 }
 
+const look = { isTraceable: true, media: 'text', icon: null } as const
+
 describe('runEntries', () => {
   it('orders the entries by their time', () => {
-    const entries = entriesOf('user')
-
-    expect(entries.map(({ type, id }) => `${type}:${id}`)).toEqual(['message:m1', 'phase:s1'])
+    expect(entries().map(({ type, id }) => `${type}:${id}`)).toEqual(['message:m1', 'phase:s1'])
   })
 
-  it('leaves a phase of a stage the user does not see out of the user view, and keeps it in the developer view', () => {
-    expect(entriesOf('user').map(({ type }) => type)).toEqual(['message', 'phase'])
-    expect(entriesOf('developer').map(({ type }) => type)).toEqual(['message', 'phase', 'phase'])
+  it('leaves a phase of a stage without a title out', () => {
+    expect(entries().map(({ type }) => type)).toEqual(['message', 'phase'])
   })
 
   it('gives each phase the titles of its stage and its subject', () => {
-    const first = entriesOf('user').find(({ type }) => type === 'phase')
+    const first = entries().find(({ type }) => type === 'phase')
 
     expect(first?.type === 'phase' && first.stageTitle).toBe('Planning the interviews')
     expect(first?.type === 'phase' && first.subjectTitle).toBeNull()
@@ -80,10 +78,9 @@ describe('runEntries', () => {
       stageTitles,
       subjectTitles,
       kinds: new Map([
-        ['analyzed_requirement', { title: 'Analysed requirement', isNavigable: true }],
-        ['persona', { title: 'Persona', isNavigable: false }],
+        ['analyzed_requirement', { ...look, title: 'Analysed requirement', isNavigable: true }],
+        ['persona', { ...look, title: 'Persona', isNavigable: false }],
       ]),
-      view: 'user',
     })
 
     expect(entries.map(({ type }) => type)).toEqual(['phase', 'written'])
@@ -167,7 +164,6 @@ describe('hasRunEnded', () => {
       stageTitles: new Map([['research', 'Finding evidence']]),
       subjectTitles,
       kinds,
-      view: 'user',
     })
   }
 
@@ -188,16 +184,12 @@ describe('shownWork', () => {
   const work = [{ stage: 'intent_routing' }, { stage: 'planning' }]
   const titles = new Map([['planning', 'Planning the interviews']])
 
-  it('leaves out the lines of an internal stage for the user', () => {
-    expect(shownWork(work, titles, 'user')).toEqual([{ stage: 'planning' }])
-  })
-
-  it('keeps every line for the developer', () => {
-    expect(shownWork(work, titles, 'developer')).toEqual(work)
+  it('leaves out the lines of an internal stage', () => {
+    expect(shownWork(work, titles)).toEqual([{ stage: 'planning' }])
   })
 
   it('leaves nothing out while the stage titles have not loaded', () => {
-    expect(shownWork(work, new Map(), 'user')).toEqual(work)
+    expect(shownWork(work, new Map())).toEqual(work)
   })
 })
 
@@ -226,7 +218,6 @@ describe('runEntries with phases', () => {
       stageTitles: stages,
       subjectTitles,
       kinds,
-      view: 'user',
     })
   }
 
@@ -331,8 +322,7 @@ describe('runEntries with phases', () => {
       interrupts: [],
       stageTitles: stages,
       subjectTitles,
-      kinds: new Map([['persona', { title: 'Persona', isNavigable: false }]]),
-      view: 'user',
+      kinds: new Map([['persona', { ...look, title: 'Persona', isNavigable: false }]]),
     })
 
     expect(entries.map(({ type }) => type)).toEqual(['phase', 'note', 'written', 'message'])

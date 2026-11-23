@@ -1,3 +1,4 @@
+export type { ArtifactKindDisplay } from './artifact-kinds/artifact-kind-display.types'
 export { getArtifactKinds, getContentSchema } from './artifact-kinds/artifact-kinds.api'
 export { artifactKindKeys } from './artifact-kinds/artifact-kinds.keys'
 export type {
@@ -6,24 +7,28 @@ export type {
   KindSchema,
   SchemaProperty,
 } from './artifact-kinds/artifact-kinds.types'
+export type { KindMedia } from './artifact-kinds/artifact-kinds.types'
+export { useArtifactKindDisplays } from './artifact-kinds/hooks/useArtifactKindDisplays'
 export {
   useArtifactKinds,
   useContentSchema,
   useContentSchemas,
 } from './artifact-kinds/hooks/useArtifactKindQueries'
-export { useKindLooks } from './artifact-kinds/hooks/useKindLooks'
 export { useKindTitleOf } from './artifact-kinds/hooks/useKindTitleOf'
 export { useKindTitles } from './artifact-kinds/hooks/useKindTitles'
-export type { KindLook } from './artifact-kinds/kind-look.types'
 export {
   contentSchemasByKind,
+  hasItemBlocks,
+  iconOf,
   isNavigable,
   kindSchemasByKind,
+  mediaOf,
 } from './artifact-kinds/kind-schemas.utils'
 export type { ReviewableCheckpoint } from './checkpoints/checkpoints.types'
 export { reviewableCheckpoints } from './checkpoints/checkpoints.utils'
 export { useReviewableCheckpoints } from './checkpoints/hooks/useCheckpointQueries'
 export { ContentFieldInput } from './content/components/content-input/ContentFieldInput'
+export { ContentFieldList } from './content/components/ContentFieldList'
 export { ContentFieldValue } from './content/components/ContentFieldValue'
 export { InlineFieldValues } from './content/components/InlineFieldValues'
 export type {
@@ -63,10 +68,13 @@ export { useItemTitleOf } from './content/values/hooks/useItemTitleOf'
 export { extensionFieldText, itemTitle } from './content/values/item-title.utils'
 export type { QuotePlace } from './content/values/quote-place.types'
 export { placeQuote } from './content/values/quote-place.utils'
+export { exportFormatLabels } from './definition/export-templates.constants'
 export type { ExportFormat, ExportTemplate } from './definition/export-templates.types'
 export { exportFormats } from './definition/export-templates.types'
+export { exportTemplatesOf } from './definition/export-templates.utils'
 export { useAgentRoleLabels } from './definition/hooks/useAgentRoleLabels'
 export { useArtifactItemKinds } from './definition/hooks/useArtifactItemKinds'
+export { useLinkedKinds } from './definition/hooks/useLinkedKinds'
 export { useLinkTitleOf } from './definition/hooks/useLinkTitleOf'
 export { useTool } from './definition/hooks/useTool'
 export { useWorkflowDefinition } from './definition/hooks/useWorkflowDefinition'

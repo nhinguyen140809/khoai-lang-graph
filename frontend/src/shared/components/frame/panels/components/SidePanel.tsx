@@ -16,7 +16,10 @@ interface SidePanelProps {
   children: ReactNode
 }
 
-/** Navigation inside one feature, left of the editor. */
+/**
+ * Navigation inside one feature, left of the editor.
+ * @view developer
+ */
 export function SidePanel({
   title,
   actions,

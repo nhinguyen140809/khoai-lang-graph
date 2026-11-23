@@ -74,6 +74,13 @@ export type {
 } from './items/items.types'
 export { subjectTitlesOf } from './items/items.utils'
 export { documentBlocks, hasTranscript } from './outline/document-blocks.utils'
+export type { FolderThumbnail, ThumbnailTarget } from './outline/folder-thumbnails.types'
+export {
+  folderThumbnails,
+  isFolder,
+  overviewTitle,
+  rootThumbnails,
+} from './outline/folder-thumbnails.utils'
 export { useArtifactDocument } from './outline/hooks/useArtifactDocument'
 export { useArtifactOutline } from './outline/hooks/useArtifactOutline'
 export { useKindViews } from './outline/hooks/useKindViews'
@@ -99,6 +106,7 @@ export {
   outlineBreadcrumb,
   outlineItemsOf,
   outlineNeighbors,
+  outlinePath,
   outlineSequence,
   outlineStatuses,
 } from './outline/outline.utils'

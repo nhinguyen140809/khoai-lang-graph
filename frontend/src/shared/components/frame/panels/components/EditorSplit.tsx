@@ -1,17 +1,14 @@
 'use client'
 
-import { cn } from 'cn'
-import { type ReactNode, useState } from 'react'
+import type { ReactNode } from 'react'
 
 import {
-  ResizableHandle,
+  AnimatedResizablePanel,
   ResizablePanel,
   ResizablePanelGroup,
-  usePanelRef,
 } from '@/shared/components/ui/resizable'
 
 import { usePanel } from '../hooks/usePanel'
-import { usePanelMotion } from '../hooks/usePanelMotion'
 import { panelLayouts } from '../panel.constants'
 import type { PanelRegion } from '../panel.types'
 
@@ -63,42 +60,20 @@ interface StoredPanelProps {
 function StoredPanel({ region, children }: StoredPanelProps) {
   const { position, minSize, maxSize } = panelLayouts[region]
   const panel = usePanel(region)
-  const panelRef = usePanelRef()
-  // Read once: a stored size passed back while the user drags makes the panel register again,
-  // which ends the drag after its first step.
-  const [defaultSize] = useState(panel.storedSize)
-  const { isAnimating, isShrunk } = usePanelMotion(panel, panelRef)
-
-  const handle = <ResizableHandle className={cn(isShrunk && !isAnimating && 'hidden')} />
 
   return (
-    <>
-      {position === 'after' && handle}
-      <ResizablePanel
-        id={`${region}-panel`}
-        panelRef={panelRef}
-        animated={isAnimating}
-        collapsible
-        collapsedSize={0}
-        defaultSize={panel.visible ? defaultSize : 0}
-        minSize={minSize}
-        maxSize={maxSize}
-        groupResizeBehavior="preserve-pixel-size"
-        onResize={(size) => {
-          // While it moves, the sizes in between are not the size the user chose.
-          if (isAnimating || !panel.visible) return
-          if (size.inPixels > 0) panel.resize(Math.round(size.inPixels))
-          else if (panelRef.current?.isCollapsed()) panel.toggle()
-        }}
-      >
-        <div
-          className="h-full"
-          style={isShrunk && !isAnimating ? { visibility: 'hidden' } : undefined}
-        >
-          {children}
-        </div>
-      </ResizablePanel>
-      {position === 'before' && handle}
-    </>
+    <AnimatedResizablePanel
+      id={`${region}-panel`}
+      isVisible={panel.visible}
+      // The size is read once, as the panel mounts, and followed by the panel itself afterwards.
+      defaultSize={panel.storedSize()}
+      minSize={minSize}
+      maxSize={maxSize}
+      handle={position === 'after' ? 'before' : 'after'}
+      onResize={panel.resize}
+      onCollapse={panel.toggle}
+    >
+      {children}
+    </AnimatedResizablePanel>
   )
 }

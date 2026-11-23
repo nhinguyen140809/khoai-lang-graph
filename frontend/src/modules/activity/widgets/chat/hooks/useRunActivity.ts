@@ -4,7 +4,7 @@ import { useContext } from 'react'
 
 import { assertPresent } from '@/shared/lib/guards'
 
-import { RunActivityContext } from '../components/RunActivityContext'
+import { RunActivityContext } from '../components/entries/RunActivityContext'
 
 /** What every entry of the run of the closest provider holds. */
 export function useRunActivity() {

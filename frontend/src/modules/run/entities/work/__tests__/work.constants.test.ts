@@ -36,7 +36,6 @@ describe('workStatusLabels', () => {
   it('labels every status of a line of work', () => {
     const statuses: WorkStatus[] = ['running', 'waiting', 'stopped', 'done', 'failed']
     for (const status of statuses) {
-      expect(workStatusLabels[status].user).not.toBe('')
       expect(workStatusLabels[status].developer).not.toBe('')
     }
   })

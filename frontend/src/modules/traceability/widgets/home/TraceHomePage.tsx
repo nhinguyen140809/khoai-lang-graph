@@ -8,6 +8,7 @@ import { traceHomeMessages } from './trace-home.constants'
  * The start page of Trace, shown while no page of it is open: it asks to open one from the side
  * panel, as the start page of Documents does. The overview of what needs attention is in the side
  * panel, and each of its rows opens in a tab.
+ * @view developer
  */
 export function TraceHomePage() {
   return (

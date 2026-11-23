@@ -11,7 +11,7 @@ import {
 } from '@/modules/trace/entities'
 import { ViewTraceButton } from '@/modules/trace/features/view-trace'
 import { useKindTitleOf, useLinkTitleOf } from '@/modules/workflow/entities'
-import { PageLink, useEditorTab } from '@/shared/components/frame'
+import { PageColumn, PageLink, useEditorTab } from '@/shared/components/frame'
 import { EmptyState, ErrorState, LoadingState } from '@/shared/components/state'
 import { Badge } from '@/shared/components/ui/badge'
 import { Item, ItemContent } from '@/shared/components/ui/item'
@@ -25,6 +25,7 @@ import { gapPageMessages } from './gap-page.constants'
  * The items of one gap of the coverage, in a tab named after the gap: each is a card of its own.
  * A key that the coverage does not list is a gap that holds no item, so its page opens as usual,
  * named after the key, and says that its list is empty.
+ * @view developer
  */
 export function GapPage({ projectId, gapKey }: { projectId: string; gapKey: string }) {
   const isWriting = useIsProjectWriting(projectId)
@@ -53,13 +54,18 @@ export function GapPage({ projectId, gapKey }: { projectId: string; gapKey: stri
       />
     )
   }
-  if (coverage.data === undefined)
-    return <LoadingState label={gapPageMessages.loading} layout="cards" rows={4} />
+  if (coverage.data === undefined) {
+    return (
+      <PageColumn isFlush className="h-full">
+        <LoadingState label={gapPageMessages.loading} layout="cards" rows={4} />
+      </PageColumn>
+    )
+  }
 
   const items = gap?.items ?? []
 
   return (
-    <div className="mx-auto max-w-3xl space-y-4 p-6 pb-20">
+    <PageColumn className="space-y-4 pb-20">
       <header className="space-y-1">
         <h1 className="flex items-center gap-3 text-2xl font-semibold">
           {title}
@@ -80,7 +86,7 @@ export function GapPage({ projectId, gapKey }: { projectId: string; gapKey: stri
           ))}
         </ul>
       )}
-    </div>
+    </PageColumn>
   )
 }
 

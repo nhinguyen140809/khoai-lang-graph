@@ -1,6 +1,7 @@
 import type { LucideIcon } from 'lucide-react'
 import type { ReactNode } from 'react'
 
+import { Glow } from '@/shared/components/animation'
 import { cn } from '@/shared/lib/cn'
 
 import { CenteredState } from './CenteredState'
@@ -38,7 +39,18 @@ export function EmptyState({
   }
 
   return (
-    <CenteredState className={className}>
+    <CenteredState className={cn('relative isolate overflow-hidden', className)}>
+      {/* A glow in the primary color, in an uneven shape that leans, behind the state that fills its place. */}
+      <Glow
+        color="primary"
+        strength={12}
+        shape="blob"
+        size="md"
+        rotate={-18}
+        entrance="grow"
+        motion="pulse"
+        className="absolute top-1/2 left-1/2 -z-10 -translate-x-1/2 -translate-y-1/2"
+      />
       <div className="flex flex-col items-center gap-2 text-center">
         {Icon && <Icon className="size-8 text-muted-foreground" aria-hidden />}
         <h2 className="text-lg font-semibold">{title}</h2>

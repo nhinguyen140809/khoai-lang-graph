@@ -25,6 +25,7 @@ interface EditorWithBottomPanelProps {
  * An editor with a panel under it, whose sections show as tabs. The panel can be resized and
  * hidden, with the button at the end of its tabs or Ctrl+`; both are remembered. Neither scrolls:
  * the editor content and each section scroll themselves when they flow.
+ * @view developer
  */
 export function EditorWithBottomPanel({
   sections,

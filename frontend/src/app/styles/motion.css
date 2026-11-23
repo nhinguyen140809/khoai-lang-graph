@@ -99,6 +99,26 @@
 }
 
 /*
+ * A slow, light breath: what it is on dims a little and back, all at once and in place, to show that
+ * it is the one at work. It does not travel over the text, as a `shimmer` does.
+ */
+@theme {
+  --duration-breathe: 1000ms;
+  /* How far it dims: the share of its opacity that is left at the lowest. */
+  --breathe-dim: 0.72;
+  --animate-breathe: breathe var(--duration-breathe) var(--ease-standard) infinite alternate;
+
+  @keyframes breathe {
+    from {
+      opacity: 1;
+    }
+    to {
+      opacity: var(--breathe-dim);
+    }
+  }
+}
+
+/*
  * A row of a tree that has just gone: it fades and folds up to nothing, while the rows below it
  * move up with it. A browser that cannot animate a height from `auto` still fades the row.
  */

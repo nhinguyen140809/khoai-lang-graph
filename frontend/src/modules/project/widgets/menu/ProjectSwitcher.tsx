@@ -12,6 +12,7 @@ import Link from 'next/link'
 
 import {
   projectMessages,
+  ProjectName,
   projectName,
   useProject,
   useRecentProjects,
@@ -21,7 +22,6 @@ import {
   renameProjectMessages,
   useOpenRenameProjectDialog,
 } from '@/modules/project/features/rename'
-import { isNotFoundError } from '@/shared/api/error'
 import { Button } from '@/shared/components/ui/button'
 import {
   DropdownMenu,
@@ -31,7 +31,7 @@ import {
   DropdownMenuSeparator,
   DropdownMenuTrigger,
 } from '@/shared/components/ui/dropdown-menu'
-import { Skeleton } from '@/shared/components/ui/skeleton'
+import { Tooltip, TooltipContent, TooltipTrigger } from '@/shared/components/ui/tooltip'
 import { cn } from '@/shared/lib/cn'
 import { routes } from '@/shared/routes'
 
@@ -43,6 +43,7 @@ interface ProjectSwitcherProps {
  * The name of the open project in the top bar, with a menu to switch to a recent project, and last
  * to rename the open one, in the dialog of `ProjectDialogs`. A project that fails to load again
  * keeps the name it had.
+ * @view developer
  */
 export function ProjectSwitcher({ projectId }: ProjectSwitcherProps) {
   const project = useProject(projectId)
@@ -53,7 +54,7 @@ export function ProjectSwitcher({ projectId }: ProjectSwitcherProps) {
     <DropdownMenu>
       <DropdownMenuTrigger asChild>
         <Button variant="ghost" size="sm" className="min-w-0 px-1.5 text-sm font-bold">
-          <OpenProjectName projectId={projectId} />
+          <ProjectName projectId={projectId} />
           <ChevronDownIcon aria-hidden className="text-muted-foreground" />
         </Button>
       </DropdownMenuTrigger>
@@ -102,28 +103,6 @@ export function ProjectSwitcher({ projectId }: ProjectSwitcherProps) {
   )
 }
 
-/** The name of the open project, while it loads, or why it does not show. */
-function OpenProjectName({ projectId }: ProjectSwitcherProps) {
-  const project = useProject(projectId)
-
-  if (project.data !== undefined) {
-    return <span className="truncate">{projectName(project.data)}</span>
-  }
-  if (project.isPending) {
-    return (
-      <>
-        <Skeleton className="h-3.5 w-24" />
-        <span className="sr-only">Loading the project</span>
-      </>
-    )
-  }
-  return (
-    <span className="truncate text-destructive">
-      {isNotFoundError(project.error) ? projectMessages.notFound : projectMessages.unavailable}
-    </span>
-  )
-}
-
 /**
  * The recent projects to switch to, the open one marked. Those already shown stay when loading them
  * again fails.
@@ -161,7 +140,12 @@ function RecentProjectItems({ openId }: { openId: string }) {
         <DropdownMenuItem key={item.id} asChild>
           <Link href={routes.project(item.id).activity()}>
             <CheckIcon aria-hidden className={cn(item.id !== openId && 'invisible')} />
-            <span className="truncate">{projectName(item)}</span>
+            <Tooltip>
+              <TooltipTrigger asChild>
+                <span className="truncate">{projectName(item)}</span>
+              </TooltipTrigger>
+              <TooltipContent side="right">{projectName(item)}</TooltipContent>
+            </Tooltip>
             {item.id === openId && <span className="sr-only">, open</span>}
           </Link>
         </DropdownMenuItem>

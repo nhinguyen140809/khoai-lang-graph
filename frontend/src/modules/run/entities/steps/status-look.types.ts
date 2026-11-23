@@ -1,5 +1,6 @@
 import type { LucideIcon } from 'lucide-react'
 
+import type { Mood } from '@/shared/components/face'
 import type { Spinner } from '@/shared/components/ui/spinner'
 import type { Tone } from '@/shared/lib/tone'
 
@@ -10,6 +11,8 @@ type StatusMark = LucideIcon | typeof Spinner | null
 export interface StatusLook {
   /** The color of the mark of the status. */
   tone: Tone
+  /** How the face of the agent looks in this status. */
+  mood: Mood
   /** One plain sign, without a box around it; the running mark spins. */
   icon: StatusMark
   /** Whether the user has to act after it. */

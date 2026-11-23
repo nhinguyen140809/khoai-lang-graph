@@ -1,0 +1,8 @@
+/*
+ * The grid of the thumbnails of a folder: as many columns as fit, none narrower than a thumbnail needs to
+ * show its title and icon.
+ */
+@utility thumbnail-grid {
+  display: grid;
+  grid-template-columns: repeat(auto-fill, minmax(6.5rem, 1fr));
+}

@@ -12,7 +12,7 @@ import {
   useListedDocumentTitle,
   useWritingArtifacts,
 } from '@/modules/documents/entities'
-import { useEditorTab } from '@/shared/components/frame'
+import { PageColumn, useEditorTab } from '@/shared/components/frame'
 import { ErrorState, LoadingState, NotFoundState } from '@/shared/components/state'
 import { routes } from '@/shared/routes'
 
@@ -34,7 +34,11 @@ function DocumentBody({
 }) {
   switch (document.state) {
     case 'pending':
-      return <LoadingState label={documentPageMessages.loading} layout="document" rows={4} />
+      return (
+        <PageColumn isFlush className="h-full">
+          <LoadingState label={documentPageMessages.loading} layout="document" rows={4} />
+        </PageColumn>
+      )
     case 'notFound':
       return (
         <NotFoundState
@@ -59,6 +63,7 @@ function DocumentBody({
 /**
  * The page of one document, in a tab of its own: the tab is titled with the document and shows
  * the sign of a review while the document waits for the review of the user.
+ * @view developer
  */
 export function DocumentPage({ projectId, artifactId }: { projectId: string; artifactId: string }) {
   const project = routes.project(projectId)
