@@ -52,6 +52,18 @@ async def get_project_row(session: AsyncSession, project_id: UUID, owner_id: UUI
     return row
 
 
+async def own_project_row(session: AsyncSession, project_id: UUID, user: UserRow) -> ProjectRow:
+    """The project row of this user, or the same 404 a missing id gets.
+
+    A project of another user answers as if it did not exist, so the answer tells nobody that it
+    does. Every path that reaches a project through an id it did not list itself uses this one.
+    """
+    row = await session.get(ProjectRow, project_id)
+    if row is None or row.deleted_at is not None or row.owner_id != user.id:
+        raise ApiError(404, "not_found", "Not found", "The project does not exist.")
+    return row
+
+
 async def _item_counts(session: AsyncSession, project_id: UUID) -> dict[str, int]:
     """Grouped live item counts of one project, one entry for each kind present."""
     statement = (

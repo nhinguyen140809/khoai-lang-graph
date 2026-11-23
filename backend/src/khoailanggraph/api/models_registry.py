@@ -7,6 +7,7 @@ migrations import this module to have the tables on Base.metadata.
 """
 
 from khoailanggraph.features.artifacts.models import *  # noqa: F403
+from khoailanggraph.features.assistant.models import *  # noqa: F403
 from khoailanggraph.features.documents.models import *  # noqa: F403
 from khoailanggraph.features.exports.models import *  # noqa: F403
 from khoailanggraph.features.me.models import *  # noqa: F403

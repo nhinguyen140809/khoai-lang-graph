@@ -181,8 +181,13 @@ async def append_message(
     *,
     thread: ThreadRow,
     content: str,
+    delivery: str = "started_run",
 ) -> MessageRow:
-    """The user's chat message, the only way a run starts (§5)."""
+    """The user's chat message, the only way a run starts (§5).
+
+    A message the assistant answers is stored with `delivery="delivered"` and never becomes the
+    project's initial intent, because no run reads it.
+    """
     count = (
         await session.scalar(
             select(func.count()).select_from(MessageRow).where(MessageRow.thread_id == thread.id)
@@ -193,13 +198,13 @@ async def append_message(
         sequence=int(count) + 1,
         author="user",
         content=content,
-        delivery="started_run",  # or "pending" when a run is still open
+        delivery=delivery,  # "pending" while a run is still open
     )
     session.add(row)
     thread.last_message_at = utcnow()
     await session.flush()
     project = await session.get(ProjectRow, thread.project_id)
-    if project is not None and project.initial_message_id is None:
+    if project is not None and project.initial_message_id is None and delivery == "started_run":
         project.initial_message_id = row.id
     return row
 
@@ -347,7 +352,10 @@ async def ensure_budget(session: AsyncSession, user: UserRow) -> None:
         return
     start, end = usage.month_bounds()
     runs = (await session.scalars(usage.runs_of_user_in(UUID(str(user.id)), start, end))).all()
-    if usage.total_usage(list(runs))["cost_usd"] >= budget:
+    spent = usage.total_usage(list(runs))["cost_usd"] + await usage.assistant_spend_of(
+        session, UUID(str(user.id)), start, end
+    )
+    if spent >= budget:
         raise ApiError(
             429, "budget_exceeded", "Budget exceeded", "The budget of this month is spent."
         )

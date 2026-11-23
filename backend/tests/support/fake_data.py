@@ -1679,6 +1679,22 @@ class DemoData:
     ValidatorOutput = staticmethod(_validation)
     IntentDirectiveOutput = staticmethod(_intent_directive)
     SearchWeb = staticmethod(_search_web)
+    # The scripted assistant always hands a message to the workflow, so the storyline of every test
+    # runs unchanged; a test that wants an answer overrides this with its own dataset.
+    AssistantDecision = staticmethod(
+        lambda system, user, call_number: {"kind": "workflow", "text": "", "actions": []}
+    )
+
+    def AssistantStep(  # noqa: N802 - the name is the schema the model answers
+        self, system: str, user: str, call_number: int
+    ) -> dict[str, Any]:
+        """The scripted assistant reads nothing and answers what the dataset decides.
+
+        A dataset that wants a read first overrides this and counts the call: the same schema is
+        asked again after each tool result, so the number is how the loop is followed.
+        """
+        answer = self.AssistantDecision(system, user, call_number)
+        return {"tool": None, "key": None, "answer": answer}
 
 
 class AlwaysFailValidatorData(DemoData):

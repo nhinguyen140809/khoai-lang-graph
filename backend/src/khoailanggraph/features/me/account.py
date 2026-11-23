@@ -196,17 +196,39 @@ async def usage_of_month(
     ).all()
     total = zero_usage()
     groups: dict[str, Usage] = {}
-    for step, project_id in rows:
-        usage = run_usage.usage_of(step.usage_json)
+
+    def add(
+        usage: Usage, day: str, project_id: Any, agent_role: str | None, model: str | None
+    ) -> None:
+        nonlocal total
         total = add_usage(total, usage)
         key: Any = {
-            "day": step.started_at.strftime("%Y-%m-%d"),
+            "day": day,
             "project": str(project_id),
-            "agent_role": step.agent_role,
-            "model": step.model_id,
+            "agent_role": agent_role,
+            "model": model,
         }.get(group_by or "")
         if key is not None:
             groups[key] = add_usage(groups.get(key, zero_usage()), usage)
+
+    for step, project_id in rows:
+        add(
+            run_usage.usage_of(step.usage_json),
+            step.started_at.strftime("%Y-%m-%d"),
+            project_id,
+            step.agent_role,
+            step.model_id,
+        )
+    # The assistant answers before any run exists, so its turns stand beside the steps rather than
+    # under one: without them the view would show a smaller month than the one that was spent.
+    for turn in await run_usage.assistant_turns_in(session, UUID(str(user.id)), start, end):
+        add(
+            run_usage.usage_of(turn.usage_json),
+            turn.created_at.strftime("%Y-%m-%d"),
+            turn.project_id,
+            "assistant",
+            turn.model_id,
+        )
     ordered = sorted(
         groups.items(),
         key=(lambda pair: pair[0])

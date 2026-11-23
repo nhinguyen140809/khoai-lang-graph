@@ -17,6 +17,8 @@ from khoailanggraph.api import deps, idempotency
 from khoailanggraph.api.errors import ApiError
 from khoailanggraph.api.schemas import MAX_LIMIT, Cursor, Page
 from khoailanggraph.features.artifacts.models import ArtifactItemRow
+from khoailanggraph.features.assistant import service as assistant_service
+from khoailanggraph.features.projects import service as projects_service
 from khoailanggraph.features.projects.models import ProjectRow
 from khoailanggraph.features.projects.schemas import RunDefaults  # noqa: TC001 - body model
 from khoailanggraph.features.runs import config as run_config
@@ -116,7 +118,12 @@ async def _send(
     thread: ThreadRow,
     body: MessageBody,
 ) -> dict[str, Any]:
-    """Store a message of the user; start a run with it, or leave it to the unfinished run."""
+    """Store a message of the user and hand it to what answers it.
+
+    The assistant decides first whether the message belongs to the workflow or to the application.
+    A message about the application is answered and stored, with no run; every other message starts
+    a run, or waits as pending in the run that is unfinished, exactly as before.
+    """
     if not body.content.strip():
         raise ApiError(
             422,
@@ -127,6 +134,27 @@ async def _send(
     run_config.request_problems(body.run_config, body.models)
     await service.ensure_budget(db, user)
     user_id = UUID(str(user.id))
+    # The thread may name any id; only the project of the caller is read, and a thread of another
+    # user answers as missing.
+    project = await projects_service.own_project_row(db, thread.project_id, user)
+
+    outcome = await assistant_service.decide(db, project, thread, body.content, user)
+    await assistant_service.record_turn(db, user, project, thread, outcome)
+    decision = outcome.decision
+    if decision.kind == "general":
+        message = await service.append_message(
+            db, thread=thread, content=body.content, delivery="delivered"
+        )
+        reply = await assistant_service.record_reply(db, thread, decision)
+        return {
+            "message": service.message_output(message).model_dump(mode="json"),
+            "run": None,
+            "assistant": {
+                "text": reply.content,
+                "actions": [action.model_dump(mode="json") for action in decision.actions],
+            },
+        }
+
     unfinished = await service.unfinished_run_of_thread(db, thread.id)
     message = await service.append_message(db, thread=thread, content=body.content)
     if unfinished is not None:
@@ -135,10 +163,10 @@ async def _send(
         return {
             "message": service.message_output(message).model_dump(mode="json"),
             "run": service.runs_output(unfinished).model_dump(mode="json"),
+            "assistant": None,
         }
-    project = await db.get(ProjectRow, thread.project_id)
     resolved = await run_config.resolve_run_config(
-        db, cast("ProjectRow", project), user_id, run_config=body.run_config, models=body.models
+        db, project, user_id, run_config=body.run_config, models=body.models
     )
     run = RunRow(
         id=uuid4(),
@@ -163,6 +191,7 @@ async def _send(
     return {
         "message": service.message_output(message).model_dump(mode="json"),
         "run": service.runs_output(run).model_dump(mode="json"),
+        "assistant": None,
     }
 
 

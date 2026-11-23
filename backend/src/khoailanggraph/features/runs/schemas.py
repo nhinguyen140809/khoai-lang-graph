@@ -6,6 +6,7 @@ from typing import Any, Literal
 
 from pydantic import BaseModel
 
+from khoailanggraph.features.assistant.schemas import AssistantReply
 from khoailanggraph.platform.serialization import IsoDatetime
 
 InterruptStatus = Literal["pending", "resolved", "cancelled"]
@@ -118,8 +119,11 @@ class Message(BaseModel):
 
 
 class SendMessageResponse(BaseModel):
+    """The message, and what answered it: a run, or the assistant with its screen actions."""
+
     message: Message
-    run: Run
+    run: Run | None = None
+    assistant: AssistantReply | None = None
 
 
 class InterruptDecision(BaseModel):
