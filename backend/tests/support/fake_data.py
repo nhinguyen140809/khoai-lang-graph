@@ -25,6 +25,7 @@ import json
 import re
 from typing import Any
 
+from support.fake_assistant import scripted_assistant
 from support.fake_llm import DemoCalls
 from support.fake_search import DEMO_SEARCH_HITS
 
@@ -1664,6 +1665,8 @@ class DemoData:
 
     def __init__(self) -> None:
         self.calls = DemoCalls()
+        # What the scripted assistant was shown of the message it is answering.
+        self.assistant_memory: dict[str, Any] = {}
 
     PlannerOutput = staticmethod(_plain)
     # The idea settles what matters, so the planner has nothing to ask before it plans.
@@ -1679,22 +1682,22 @@ class DemoData:
     ValidatorOutput = staticmethod(_validation)
     IntentDirectiveOutput = staticmethod(_intent_directive)
     SearchWeb = staticmethod(_search_web)
-    # The scripted assistant always hands a message to the workflow, so the storyline of every test
-    # runs unchanged; a test that wants an answer overrides this with its own dataset.
-    AssistantDecision = staticmethod(
-        lambda system, user, call_number: {"kind": "workflow", "text": "", "actions": []}
-    )
 
+    # The scripted assistant reads the prompt it is given, as the model does: it asks for a read
+    # when the answer needs one, answers from the result, and hands a message about the work to the
+    # workflow, so the storyline of every test runs unchanged. A test that wants another answer
+    # overrides `AssistantStep` with its own dataset.
     def AssistantStep(  # noqa: N802 - the name is the schema the model answers
         self, system: str, user: str, call_number: int
     ) -> dict[str, Any]:
-        """The scripted assistant reads nothing and answers what the dataset decides.
+        return scripted_assistant(system, user, call_number, self.assistant_memory)
 
-        A dataset that wants a read first overrides this and counts the call: the same schema is
-        asked again after each tool result, so the number is how the loop is followed.
-        """
-        answer = self.AssistantDecision(system, user, call_number)
-        return {"tool": None, "key": None, "answer": answer}
+    def AssistantDecision(  # noqa: N802 - the name is the schema the model answers
+        self, system: str, user: str, call_number: int
+    ) -> dict[str, Any]:
+        """The answer that is asked for once the reads are used up: what the assistant has says."""
+        step = scripted_assistant(system, user, call_number, self.assistant_memory)
+        return step["answer"] or {"kind": "workflow", "text": "", "commands": []}
 
 
 class AlwaysFailValidatorData(DemoData):

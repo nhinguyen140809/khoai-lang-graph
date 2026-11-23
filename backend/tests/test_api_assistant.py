@@ -468,3 +468,29 @@ async def test_two_messages_sent_together_start_one_run_and_one_waits_for_it(
     assert len(unfinished) <= 1, "a thread never holds two unfinished runs of a workflow"
     numbers = [run["number"] for run in runs]
     assert len(numbers) == len(set(numbers)), "and no two runs share a number"
+    messages = (await client.get(f"{API}/threads/{thread_id}/messages")).json()["items"]
+    sequences = [message["sequence"] for message in messages]
+    assert sequences == list(range(1, len(sequences) + 1)), "the messages are numbered in order"
+
+
+async def test_many_questions_sent_together_are_each_answered_and_numbered_in_order(
+    client: AsyncClient, project_and_thread: tuple[str, str]
+) -> None:
+    _project_id, thread_id = project_and_thread
+    asked = 6
+
+    with _assistant(kind="general", text="You can read the interviews first."):
+        reset_model_cache()
+        responses = await asyncio.gather(
+            *(
+                _send(client, thread_id, f"Which document should I read first? ({n})")
+                for n in range(asked)
+            )
+        )
+
+    assert [response.status_code for response in responses] == [201] * asked
+    runs = (await client.get(f"{API}/threads/{thread_id}/runs")).json()["items"]
+    assert sorted(run["number"] for run in runs) == list(range(1, asked + 1))
+    messages = (await client.get(f"{API}/threads/{thread_id}/messages")).json()["items"]
+    assert [message["sequence"] for message in messages] == list(range(1, 2 * asked + 1))
+    assert len({message["run_id"] for message in messages}) == asked, "one run for each question"
