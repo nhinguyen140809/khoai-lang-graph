@@ -150,12 +150,31 @@ def _review_for(state: REState, checkpoint: str, output: Any) -> dict[str, Any]:
 
 
 def _decisions_of(state: REState, checkpoint: str) -> str:
-    """What the user decided at the latest review of `checkpoint`, when they answered questions of
-    the agent there: the lines that the agents after it read as part of their instruction."""
+    """What the user decided before `checkpoint` goes on, when they answered questions of the
+    agent: the lines that the agents after it read as part of their instruction.
+
+    Those are what the user answered at the latest review of `checkpoint`, and what they answered
+    to the questions that were asked before it (the node with `asks_before` of `checkpoint`), in
+    every round of the run, each line once: an agent that comes back after a rework reads what the
+    user already said, so that it does not ask it again."""
+    asks = {
+        node_id
+        for node_id, spec in definition_nodes().items()
+        if spec.get("asks_before") == checkpoint
+    }
+    lines: list[str] = []
+    for outcome in state["checkpoint_outcomes"]:
+        if outcome["node"] not in asks or outcome.get("automatic"):
+            continue
+        for line in outcome["feedback"].splitlines():
+            if line and line not in lines:
+                lines.append(line)
+    latest = ""
     for outcome in reversed(state["checkpoint_outcomes"]):
         if outcome["node"] == checkpoint:
-            return outcome["feedback"] if not outcome.get("automatic") else ""
-    return ""
+            latest = outcome["feedback"] if not outcome.get("automatic") else ""
+            break
+    return _instruction(latest, "\n".join(lines))
 
 
 def _instruction(*parts: str) -> str:
@@ -2345,6 +2364,7 @@ def requirement_engineer_node(
             "current_specification": current_lines,
             "directive": _instruction(
                 _decisions_of(state, "checkpoint_analysis"),
+                _decisions_of(state, "checkpoint_spec"),
                 _directive_for(state, runnable_config, "checkpoint_spec"),
             ),
         },
@@ -2515,7 +2535,10 @@ def backlog_manager_node(
             "output_language": _language(cfg),
             "specification": spec_lines,
             "current_backlog": current_lines,
-            "directive": _directive_for(state, runnable_config, "checkpoint_spec"),
+            "directive": _instruction(
+                _decisions_of(state, "checkpoint_spec"),
+                _directive_for(state, runnable_config, "checkpoint_spec"),
+            ),
         },
     )
 

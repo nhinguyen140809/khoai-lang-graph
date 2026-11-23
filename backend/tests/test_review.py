@@ -227,3 +227,36 @@ def test_the_questions_before_the_research_are_choices_with_the_assumption_of_th
 
 def test_an_ask_without_a_brief_has_no_question() -> None:
     assert nodes._questions_to_ask(wf.nodes()["ask_personas"], {}) == []  # type: ignore[typeddict-item]
+
+
+def _outcome(node: str, feedback: str, *, automatic: bool = False) -> dict[str, Any]:
+    return {"node": node, "option": "", "feedback": feedback, "automatic": automatic}
+
+
+def test_what_the_user_answered_to_the_questions_before_a_review_is_read_after_it() -> None:
+    state = {
+        "checkpoint_outcomes": [
+            _outcome("ask_spec", "- How long until a room is released? Fifteen minutes"),
+            _outcome("checkpoint_spec", "Split the booking requirement."),
+            # The agent asked again after a rework, and the user said the same.
+            _outcome("ask_spec", "- How long until a room is released? Fifteen minutes"),
+            _outcome("ask_spec", "- How many steps on a phone? Five steps"),
+        ]
+    }
+
+    decided = nodes._decisions_of(state, "checkpoint_spec")  # type: ignore[arg-type]
+
+    assert decided.splitlines().count("- How long until a room is released? Fifteen minutes") == 1
+    assert "- How many steps on a phone? Five steps" in decided
+    assert "Split the booking requirement." in decided
+
+
+def test_questions_that_were_not_answered_are_not_read_as_decisions() -> None:
+    state = {
+        "checkpoint_outcomes": [
+            _outcome("ask_spec", "- A default nobody chose? Fifteen minutes", automatic=True),
+            _outcome("ask_analysis", "- Another review's question? Keep them"),
+        ]
+    }
+
+    assert nodes._decisions_of(state, "checkpoint_spec") == ""  # type: ignore[arg-type]
