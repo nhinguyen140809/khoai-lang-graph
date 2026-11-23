@@ -1,12 +1,10 @@
 'use client'
 
-import { AgentFace, blobShapes, eyeGaps } from '@/shared/components/face'
+import { AgentFace } from '@/shared/components/face'
 
 import type { CardEntry } from '../../../design-system.types'
-import { seedWhere } from '../../../design-system.utils'
+import { useLookSeeds } from '../../../hooks/useLookSeeds'
 import { SampleCard, SampleGroup, SampleLabel } from '../../Sample'
-
-const colorCounts = [1, 2] as const
 
 /** A face with the seed that gives it its look, named under it; nothing when no seed does. */
 function LookFace({ seed, label }: { seed: string | null; label: string }) {
@@ -21,6 +19,7 @@ function LookFace({ seed, label }: { seed: string | null; label: string }) {
 }
 
 export function FaceLooksCard() {
+  const seeds = useLookSeeds()
   return (
     <SampleCard
       title="Face looks"
@@ -29,30 +28,22 @@ export function FaceLooksCard() {
     >
       <SampleGroup label="The shape of the deep blob">
         <div className="flex flex-wrap gap-x-10 gap-y-8">
-          {blobShapes.map((shape) => (
-            <LookFace
-              key={shape}
-              label={shape}
-              seed={seedWhere((look) => look.blobs[0].shape === shape)}
-            />
+          {seeds.blobs.map(({ label, seed }) => (
+            <LookFace key={label} label={label} seed={seed} />
           ))}
         </div>
       </SampleGroup>
       <SampleGroup label="How far apart the eyes are">
         <div className="flex flex-wrap gap-x-10 gap-y-8">
-          {eyeGaps.map((gap) => (
-            <LookFace key={gap} label={gap} seed={seedWhere((look) => look.gap === gap)} />
+          {seeds.gaps.map(({ label, seed }) => (
+            <LookFace key={label} label={label} seed={seed} />
           ))}
         </div>
       </SampleGroup>
       <SampleGroup label="One color, or two">
         <div className="flex flex-wrap gap-x-10 gap-y-8">
-          {colorCounts.map((count) => (
-            <LookFace
-              key={count}
-              label={count === 1 ? 'one color' : 'two colors'}
-              seed={seedWhere((look) => look.colors.length === count)}
-            />
+          {seeds.colors.map(({ label, seed }) => (
+            <LookFace key={label} label={label} seed={seed} />
           ))}
         </div>
       </SampleGroup>
