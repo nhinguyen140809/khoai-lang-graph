@@ -1,0 +1,44 @@
+/*
+ * The motions of a face that do not depend on what it is drawn of: the blink of its eyes, and what
+ * makes a change of mood gentle. A face of any kind sets the classes of these on the group of its
+ * eyes (see `useFaceState`).
+ */
+
+/* A face out of sight holds every animation of its own where it is; the motions that `motion` runs are held by the face itself. */
+@utility face-paused {
+  & * {
+    animation-play-state: paused;
+  }
+}
+
+/* What makes a change of mood gentle: the eyes open slowly again (`face-squash`) after closing quickly (`face-squash-closing`) while the look of the eyes changes. */
+@utility face-squash {
+  transition:
+    transform var(--duration-face-open) var(--ease-standard),
+    scale var(--duration-face-open) var(--ease-standard);
+}
+
+@utility face-squash-closing {
+  transition:
+    transform var(--duration-face-swap) ease-in,
+    scale var(--duration-face-swap) ease-in;
+}
+
+@theme {
+  --duration-face-blink: 380ms;
+  --duration-face-swap: 160ms;
+  --duration-face-open: 360ms;
+
+  --animate-face-blink: face-blink var(--duration-face-blink) ease-in-out;
+
+  /* One blink: the machine of the motions of a face starts it each time that the eyes blink. */
+  @keyframes face-blink {
+    0%,
+    100% {
+      transform: scaleY(1);
+    }
+    40% {
+      transform: scaleY(0.12);
+    }
+  }
+}

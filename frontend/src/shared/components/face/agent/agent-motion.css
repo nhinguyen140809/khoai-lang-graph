@@ -5,9 +5,9 @@
  *              `gazePaths` and `useGaze`.
  *   Loops      the face as a whole (the pose of the head or the face: sway, tilt; the body: pulse, breathe,
  *              bounce, turnaround): not CSS, see `poseLoops`, `bodyLoops` and `useLoop`.
- *   Eye lives  what one eye does by itself: `eye-breathe`, `eye-squint`; and the `blink` of both.
- *   Changes    what covers a change of mood: the eyes close quickly (`face-squash-closing`) and open
- *              slowly (`face-squash`), while the face eases to rest and then eases into the new motion.
+ *   Eye lives  what one eye does by itself: `eye-breathe`, `eye-squint`, `eye-wink`.
+ *
+ * The blink and what covers a change of mood are in `face-motion.css`, as every face has them.
  *
  * The face sets the delay of each, from its phase, so that faces side by side do not move together.
  */
@@ -17,52 +17,17 @@
   transform-origin: bottom;
 }
 
-/* A face out of sight holds every animation of its own where it is; the motions that `motion` runs are held by the face itself. */
-@utility face-paused {
-  & * {
-    animation-play-state: paused;
-  }
-}
-
-/* What makes a change of mood gentle: the eyes open slowly again (`face-squash`) after closing quickly (`face-squash-closing`) while the look of the eyes changes. */
-@utility face-squash {
-  transition:
-    transform var(--duration-face-open) var(--ease-standard),
-    scale var(--duration-face-open) var(--ease-standard);
-}
-
-@utility face-squash-closing {
-  transition:
-    transform var(--duration-face-swap) ease-in,
-    scale var(--duration-face-swap) ease-in;
-}
-
 @theme {
-  --duration-face-blink: 380ms;
   --duration-face-eye-breathe: 3200ms;
   --duration-face-squint: 4300ms;
   --duration-face-wink: 3600ms;
   --duration-face-spin: 1600ms;
-  --duration-face-swap: 160ms;
-  --duration-face-open: 360ms;
 
-  --animate-face-blink: face-blink var(--duration-face-blink) ease-in-out;
   --animate-face-eye-breathe: face-eye-breathe var(--duration-face-eye-breathe) ease-in-out infinite
     alternate;
   --animate-face-eye-squint: face-eye-squint var(--duration-face-squint) ease-in-out infinite;
   --animate-face-eye-wink: face-eye-wink var(--duration-face-wink) ease-in-out infinite;
   --animate-face-spin: face-spin var(--duration-face-spin) linear infinite;
-
-  /* One blink: the machine of the motions of a face starts it each time that the eyes blink. */
-  @keyframes face-blink {
-    0%,
-    100% {
-      transform: scaleY(1);
-    }
-    40% {
-      transform: scaleY(0.12);
-    }
-  }
 
   /* One eye swells and shrinks slowly, as if it were weighing something. */
   @keyframes face-eye-breathe {
