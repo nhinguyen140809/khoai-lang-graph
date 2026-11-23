@@ -359,7 +359,7 @@ Sending a message is the only way the chat box starts work, and it is never reje
 - The full behavior, including what happens when the run ends first, is in [Runtime: messages during a run](architecture/runtime.md#5-messages-during-a-run).
 
 Before the message goes to the run, one call decides which of the two it is, and answers the ones
-about the application: about 1–3 sentences, a few reads of the project (`max_reads` of [`assistance.v1.json`](workflow/assistance.v1.json), 2 by default: an item, a document,
+about the application: about 1–3 sentences, a few reads of the project (`max_reads` of [`assistance.v1.json`](workflow/assistance.v1.json), 3 by default: an item, a document,
 the last run, the open findings, a trace, a step of the definition, the month's budget), and the
 commands for the client to run. `assistant` is `{text, commands}`, and each command is
 `{command, artifact_id, item_id, label}`: `command` is a key of

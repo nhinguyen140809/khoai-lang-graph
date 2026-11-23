@@ -33,19 +33,10 @@ _OPEN_WORDS = ("open", "show")
 
 
 @dataclass(frozen=True)
-class _Document:
-    id: str
-    kind: str
-    title: str
-
-
-@dataclass(frozen=True)
 class _Prompt:
     """What the assistant is shown: the message, its documents, its settings, and what it read."""
 
     message: str
-    documents: list[_Document]
-    settings: str
     reads: dict[str, str]
 
     @property
@@ -67,25 +58,9 @@ def _block(user: str, name: str) -> str:
 
 
 def _read(user: str) -> _Prompt:
-    documents = [
-        _Document(id=match[0], kind=match[1], title=match[2])
-        for match in re.findall(
-            r"- id (\S+) \| (\w+) \| (.*?) \| version", _block(user, "documents")
-        )
-    ]
-    reads = {
-        tool: result
-        for tool, result in re.findall(
-            r'<tool_result tool="(\w+)">\n(.*?)\n</tool_result>', user, re.DOTALL
-        )
-    }
+    reads = dict(re.findall(r'<tool_result tool="(\w+)">\n(.*?)\n</tool_result>', user, re.DOTALL))
     messages = re.findall(r"<message>\n(.*?)\n</message>", user, re.DOTALL)
-    return _Prompt(
-        message=messages[-1] if messages else "",
-        documents=documents,
-        settings=_block(user, "settings"),
-        reads=reads,
-    )
+    return _Prompt(message=messages[-1] if messages else "", reads=reads)
 
 
 def _first_line(text: str) -> str:
@@ -121,15 +96,22 @@ def _about_an_item(prompt: _Prompt, key: str) -> dict[str, Any]:
     return _answer(text)
 
 
-def _about_a_document(prompt: _Prompt) -> dict[str, Any] | None:
-    for document in prompt.documents:
-        words = {document.kind.replace("_", " "), document.title.lower()}
+def _about_a_document(prompt: _Prompt) -> dict[str, Any]:
+    """Opens the document that the message names, once `list_documents` has said which there are."""
+    listed = prompt.reads.get("list_documents")
+    if listed is None:
+        return _read_first("list_documents")
+    for line in listed.splitlines():
+        match = re.match(r"- id (\S+) \| (\w+) \| (.*?) \| version", line)
+        if match is None:
+            continue
+        words = {match[2].replace("_", " "), match[3].lower()}
         if any(word and word in prompt.lowered for word in words):
             return _answer(
-                f"Here is {document.title}.",
-                {"command": "open_document", "artifact_id": document.id, "label": document.title},
+                f"Here is {match[3]}.",
+                {"command": "open_document", "artifact_id": match[1], "label": match[3]},
             )
-    return None
+    return _answer("This project has no such document yet.")
 
 
 def _item_rule(prompt: _Prompt) -> dict[str, Any] | None:
@@ -155,10 +137,6 @@ def _last_run_rule(prompt: _Prompt) -> dict[str, Any] | None:
     return _answer(_first_line(result)) if result else _read_first("latest_run")
 
 
-def _document_rule(prompt: _Prompt) -> dict[str, Any] | None:
-    return _about_a_document(prompt) if prompt.wants_to_open else None
-
-
 def _review_rule(prompt: _Prompt) -> dict[str, Any] | None:
     if not prompt.is_question or not ("waiting" in prompt.lowered or "review" in prompt.lowered):
         return None
@@ -169,19 +147,26 @@ def _review_rule(prompt: _Prompt) -> dict[str, Any] | None:
 
 
 def _settings_rule(prompt: _Prompt) -> dict[str, Any] | None:
-    if not prompt.is_question or not any(
+    if not (prompt.is_question or prompt.wants_to_open) or not any(
         word in prompt.lowered for word in ("limit", "setting", "cost")
     ):
         return None
-    lines = [line.removeprefix("- ") for line in prompt.settings.splitlines()[:2]]
+    settings = prompt.reads.get("run_settings")
+    if settings is None:
+        return _read_first("run_settings")
+    lines = [line.removeprefix("- ") for line in settings.splitlines()[:2]]
     return _answer(
         "The settings say: " + "; ".join(lines) + ".",
         {"command": "open_settings", "label": "Run settings"},
     )
 
 
+def _document_rule(prompt: _Prompt) -> dict[str, Any] | None:
+    return _about_a_document(prompt) if prompt.wants_to_open else None
+
+
 # In the order the assistant considers them; the first that applies decides.
-_RULES = (_item_rule, _budget_rule, _last_run_rule, _document_rule, _review_rule, _settings_rule)
+_RULES = (_item_rule, _budget_rule, _last_run_rule, _review_rule, _settings_rule, _document_rule)
 
 
 def _remembered(user: str, memory: dict[str, _Prompt]) -> _Prompt:
@@ -195,9 +180,7 @@ def _remembered(user: str, memory: dict[str, _Prompt]) -> _Prompt:
         memory["prompt"] = seen
         return seen
     before = memory["prompt"]
-    prompt = _Prompt(
-        before.message, before.documents, before.settings, {**before.reads, **seen.reads}
-    )
+    prompt = _Prompt(before.message, {**before.reads, **seen.reads})
     memory["prompt"] = prompt
     return prompt
 

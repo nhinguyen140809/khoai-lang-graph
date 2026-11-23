@@ -10,6 +10,7 @@ from uuid import UUID
 
 import pytest
 from httpx import ASGITransport, AsyncClient
+from sqlalchemy import select
 
 from khoailanggraph.features.artifacts.models import ArtifactItemRow, ArtifactRow
 from khoailanggraph.features.assistant.tools import ToolContext, run_tool
@@ -199,6 +200,31 @@ async def test_read_item_names_the_fields_of_one_item(
     assert "priority: must" in text
 
 
+async def test_read_item_gives_a_long_item_whole_and_names_what_it_leaves_out(
+    seeded: tuple[AsyncSession, ProjectRow, UserRow],
+) -> None:
+    session, project, user = seeded
+    row = await session.scalar(select(ArtifactItemRow).where(ArtifactItemRow.key == "REQ-004"))
+    assert row is not None
+    row.content_json = json.dumps(
+        {
+            "title": "A profile",
+            "habits": "h" * 900,
+            "priorities": "p" * 900,
+            "background": "b" * 3000,
+            "goals": "g" * 3000,
+            "fears": "f" * 3000,
+        }
+    ).encode("utf-8")
+    await session.commit()
+
+    text = await _tool(session, project, user, "read_item", "REQ-004")
+
+    assert "p" * 900 in text, "a field that fits is not cut"
+    assert "b" * 1500 + " …" in text, "a field that is cut says so"
+    assert "(not shown, too long: fears)" in text, "a field that is left out is named"
+
+
 async def test_read_item_says_so_when_the_key_is_missing(
     seeded: tuple[AsyncSession, ProjectRow, UserRow],
 ) -> None:
@@ -327,3 +353,55 @@ async def test_the_reads_note_what_they_looked_at(
     assert [ref["kind"] for ref in context.reads.artifacts.values()] == [
         "requirement_specification"
     ]
+
+
+async def test_list_documents_gives_the_id_that_a_command_opens_each_one_by(
+    seeded: tuple[AsyncSession, ProjectRow, UserRow],
+) -> None:
+    session, project, user = seeded
+    context = ToolContext(session=session, project=project, user=user)
+
+    text = await run_tool("list_documents", context, None)
+
+    assert "| requirement_specification | Requirement specification | version 3" in text
+    assert text.startswith("- id "), "each line starts with the id"
+    assert len(context.reads.artifacts) >= 1, "what was listed is noted as read"
+
+
+async def test_project_overview_counts_what_the_project_holds_by_kind(
+    seeded: tuple[AsyncSession, ProjectRow, UserRow],
+) -> None:
+    session, project, user = seeded
+
+    text = await _tool(session, project, user, "project_overview")
+
+    assert "documents: " in text
+    assert "- spec_requirement: " in text
+    assert "language of the documents: " in text
+
+
+async def test_search_items_finds_an_item_by_its_words_and_notes_it(
+    seeded: tuple[AsyncSession, ProjectRow, UserRow],
+) -> None:
+    session, project, user = seeded
+    context = ToolContext(session=session, project=project, user=user)
+
+    found = await run_tool("search_items", context, "review round")
+    missing = await run_tool("search_items", context, "zebra")
+    blank = await run_tool("search_items", context, "  ")
+
+    assert "REQ-003 (spec_requirement)" in found
+    assert [ref["key"] for ref in context.reads.items.values()] == ["REQ-003"]
+    assert missing == "No item of this project holds 'zebra'."
+    assert blank.startswith("No text was given")
+
+
+async def test_run_settings_names_the_effective_limit_of_each_setting(
+    seeded: tuple[AsyncSession, ProjectRow, UserRow],
+) -> None:
+    session, project, user = seeded
+
+    text = await _tool(session, project, user, "run_settings")
+
+    assert "- max steps in one run: " in text
+    assert "- cost limit in one run: none" in text

@@ -15,17 +15,16 @@ from __future__ import annotations
 import json
 import time
 from dataclasses import dataclass, field
-from typing import TYPE_CHECKING, Any, cast
+from typing import TYPE_CHECKING, Any
 from uuid import UUID
 
 import structlog
-from sqlalchemy import func, select
+from sqlalchemy import select
 
 from khoailanggraph.agents import prompts as prompt_loader
 from khoailanggraph.agents import workflows
 from khoailanggraph.agents.assistance import definition as assistance
 from khoailanggraph.agents.requirements_engineering import definition as workflow
-from khoailanggraph.domain.run_config import DEFAULT_MAX_STEPS, RunParameters
 from khoailanggraph.features.artifacts.models import ArtifactItemRow, ArtifactRow
 from khoailanggraph.features.assistant.models import AssistantTurnRow
 from khoailanggraph.features.assistant.schemas import (
@@ -89,17 +88,8 @@ async def _documents(session: AsyncSession, project: ProjectRow) -> list[dict[st
 
 
 async def _project_lines(session: AsyncSession, project: ProjectRow) -> str:
-    """What the project is and where its work stands, one line for each part."""
-    counted = (
-        await session.execute(
-            select(ArtifactItemRow.kind, func.count())
-            .where(
-                ArtifactItemRow.project_id == project.id,
-                ArtifactItemRow.deleted_at.is_(None),
-            )
-            .group_by(ArtifactItemRow.kind)
-        )
-    ).all()
+    """The head of the project: what it is called and where its work stands. What it holds, and the
+    rest, the assistant reads with its tools."""
     latest = (
         await session.execute(
             select(RunRow.status, RunRow.current_stage)
@@ -111,41 +101,15 @@ async def _project_lines(session: AsyncSession, project: ProjectRow) -> str:
             .limit(1)
         )
     ).first()
-    lines = [
-        f"- name: {project.name or 'not named yet'}",
-        f"- language of the documents: {project.output_language}",
-    ]
-    lines += [f"- {kind}: {int(count)}" for kind, count in counted] or ["- nothing written yet"]
-    lines.append(
-        "- the latest run: none yet"
-        if latest is None
-        else f"- the latest run: {latest[0]} at {latest[1]}"
+    return "\n".join(
+        [
+            f"- name: {project.name or 'not named yet'}",
+            f"- language of the documents: {project.output_language}",
+            "- the latest run: none yet"
+            if latest is None
+            else f"- the latest run: {latest[0]} at {latest[1]}",
+        ]
     )
-    return "\n".join(lines)
-
-
-def _settings_lines(project: ProjectRow) -> str:
-    """The limits the workflow of this project runs under, the effective value of each one.
-
-    A limit the project does not set falls back to the server default, so the answer names the
-    number that a run would really use.
-    """
-    try:
-        stored = json.loads((project.run_config_json or b"{}").decode("utf-8"))
-    except ValueError:
-        stored = {}
-    config = cast("dict[str, Any]", stored) if isinstance(stored, dict) else {}
-    defaults = RunParameters().model_dump()
-    setted = config.get("parameters")
-    if isinstance(setted, dict):
-        defaults.update(setted)
-    cost = config.get("max_cost_usd")
-    lines = [
-        f"- max steps in one run: {config.get('max_steps', DEFAULT_MAX_STEPS)}",
-        f"- cost limit in one run: {'none' if cost is None else f'{cost} US dollars'}",
-        *[f"- {name.replace('_', ' ')}: {value}" for name, value in defaults.items()],
-    ]
-    return "\n".join(lines)
 
 
 def _history_line(row: MessageRow) -> str:
@@ -163,16 +127,6 @@ async def _history(session: AsyncSession, thread: ThreadRow) -> str:
         )
     ).all()
     return "\n".join(_history_line(row) for row in reversed(rows)) or "(none)"
-
-
-def _document_lines(documents: list[dict[str, Any]]) -> str:
-    if not documents:
-        return "(no document yet)"
-    return "\n".join(
-        f"- id {entry['id']} | {entry['kind']} | {entry['title']} | "
-        f"version {entry['version']} | {entry['status']}"
-        for entry in documents
-    )
 
 
 def _command_lines() -> str:
@@ -319,7 +273,6 @@ async def decide(
     tools that this code does not expect ends the same way as a failure: the message enters the
     workflow, where it is never lost.
     """
-    documents = await _documents(session, project)
     prompt = prompt_loader.load_cached(PROMPTS_PACKAGE, "assistant", ASSISTANT_PROMPT_VERSION)
     messages: list[Any] = list(
         prompt_loader.assemble_prompt(
@@ -327,8 +280,6 @@ async def decide(
             {
                 "output_language": _language(project),
                 "project": await _project_lines(session, project),
-                "documents": _document_lines(documents),
-                "settings": _settings_lines(project),
                 "history": await _history(session, thread),
                 "tools": catalog_of(READ_TOOLS),
                 "commands": _command_lines(),

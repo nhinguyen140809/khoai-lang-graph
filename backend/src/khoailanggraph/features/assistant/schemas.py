@@ -59,6 +59,10 @@ class AssistantDecision(BaseModel):
 # The reads the model may ask for before it answers. Closed, so a name it invents fails here rather
 # than reaching a lookup at run time.
 ToolName = Literal[
+    "project_overview",
+    "list_documents",
+    "search_items",
+    "run_settings",
     "read_item",
     "read_document",
     "latest_run",

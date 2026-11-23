@@ -154,7 +154,7 @@ async def test_asking_to_open_an_item_gives_the_command_with_the_id_that_the_rea
     assert commands[0]["item_id"] == str(item_id), "an id the server checked against the project"
 
 
-async def test_asking_to_open_a_document_names_it_without_a_read(
+async def test_asking_to_open_a_document_lists_the_documents_and_names_the_one_asked_for(
     app: FastAPI, client: AsyncClient, worked_project: tuple[str, str]
 ) -> None:
     project_id, thread_id = worked_project
@@ -165,7 +165,8 @@ async def test_asking_to_open_a_document_names_it_without_a_read(
     assert body["assistant"]["commands"][0]["artifact_id"] == await _specification_id(
         app, project_id
     )
-    assert (await _steps(client, body["run"]["id"]))[0]["notes"] == [], "it needed no read"
+    notes = (await _steps(client, body["run"]["id"]))[0]["notes"]
+    assert [note["tool"] for note in notes] == ["list_documents"], "it looked at what there is"
 
 
 @pytest.mark.parametrize(
@@ -233,3 +234,16 @@ async def test_a_command_for_a_review_is_dropped_when_none_waits(
     body = await _ask(client, thread_id, "What is waiting for me?")
 
     assert body["assistant"]["commands"] == [], "no review waits, so the server keeps it back"
+
+
+async def test_a_question_about_the_settings_reads_them_and_names_the_command_to_open_them(
+    client: AsyncClient, worked_project: tuple[str, str]
+) -> None:
+    _project_id, thread_id = worked_project
+
+    body = await _ask(client, thread_id, "What are the limits of a run?")
+
+    notes = (await _steps(client, body["run"]["id"]))[0]["notes"]
+    assert [note["tool"] for note in notes] == ["run_settings"]
+    assert "max steps" in body["assistant"]["text"], "it answers from what the read gave"
+    assert [command["command"] for command in body["assistant"]["commands"]] == ["open_settings"]

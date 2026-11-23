@@ -255,7 +255,16 @@ async def test_a_repeated_request_answers_once(
 async def test_the_prompt_of_the_assistant_loads() -> None:
     prompt = prompt_loader.load_prompt(PROMPTS_PACKAGE, "assistant", ASSISTANT_PROMPT_VERSION)
     assert prompt.role == "assistant"
-    assert {item.name for item in prompt.inputs} >= {"message", "documents", "settings", "tools"}
+    assert {item.name for item in prompt.inputs} >= {
+        "message",
+        "project",
+        "history",
+        "tools",
+        "commands",
+    }
+    assert not {"documents", "settings"} & {item.name for item in prompt.inputs}, (
+        "what the project holds is read with the tools, not given"
+    )
 
 
 async def test_a_read_comes_back_before_the_answer(
@@ -281,7 +290,7 @@ async def test_a_read_comes_back_before_the_answer(
     run_id = response.json()["run"]["id"]
     steps = (await client.get(f"{API}/runs/{run_id}/steps")).json()["items"]
     assert [(step["node"], step["agent_role"], step["stage"]) for step in steps] == [
-        ("assistant", "assistant", "guidance")
+        ("assistant", "assistant", "lookup")
     ]
     assert [(note["kind"], note["tool"]) for note in steps[0]["notes"]] == [
         ("tool", "read_item")

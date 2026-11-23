@@ -12,10 +12,11 @@ import json
 from typing import TYPE_CHECKING, Any
 from uuid import UUID
 
-from sqlalchemy import select
+from sqlalchemy import func, select
 
 from khoailanggraph.agents import workflows
 from khoailanggraph.agents.requirements_engineering import definition as wf
+from khoailanggraph.domain.run_config import DEFAULT_MAX_STEPS, RunParameters
 from khoailanggraph.features.artifacts.models import ArtifactItemRow, ArtifactRow
 from khoailanggraph.features.artifacts.service import (
     item_trace,
@@ -36,7 +37,15 @@ if TYPE_CHECKING:
 ANSWER_LIMIT = 1800
 LIST_LIMIT = 40
 FIELD_LIMIT = 220
+
+# One item that a person names is read whole, so it has room that a list does not: a profile or a
+# requirement says its priorities and its background in the last fields.
+ITEM_LIMIT = 6000
+ITEM_FIELD_LIMIT = 1500
 ISSUE_LIMIT = 20
+
+# How many items a search looks through, newest first.
+SEARCH_SCAN_LIMIT = 500
 
 # The kinds of item that say something is still open, and the field that says whether it is.
 ISSUE_KINDS = ("validation_issue", "conflict", "ambiguity_issue", "assumption")
@@ -61,17 +70,31 @@ def _one_line(value: Any) -> str:
     return json.dumps(value, ensure_ascii=False)
 
 
-def _fields_of(content: Any) -> list[str]:
-    """The fields of one item as lines, the ones a person reads first at the top."""
+def _fields_of(content: Any) -> list[tuple[str, str]]:
+    """The fields of one item as named lines, the ones a person reads first at the top."""
     if not isinstance(content, dict):
-        return [_one_line(content)[:FIELD_LIMIT]]
+        return [("", _cap(_one_line(content), ITEM_FIELD_LIMIT))]
     named = [name for name in _TITLE_FIELDS if name in content]
     rest = [name for name in content if name not in named]
     return [
-        f"- {name}: {_one_line(content[name])[:FIELD_LIMIT]}"
+        (name, f"- {name}: {_cap(_one_line(content[name]), ITEM_FIELD_LIMIT)}")
         for name in [*named, *rest]
         if content[name] not in (None, "", [], {})
     ]
+
+
+def _fit(head: str, fields: list[tuple[str, str]], limit: int) -> str:
+    """The head and as many whole fields as fit, naming the fields that are left out."""
+    lines = [head]
+    used = len(head)
+    for index, (_, line) in enumerate(fields):
+        if used + len(line) + 1 > limit and index > 0:
+            left = ", ".join(name for name, _ in fields[index:] if name)
+            lines.append(f"(not shown, too long: {left})")
+            break
+        lines.append(line)
+        used += len(line) + 1
+    return "\n".join(lines)
 
 
 def _title_of(content: Any) -> str:
@@ -119,7 +142,7 @@ async def read_item(ctx: ToolContext, key: str | None) -> str:
     ctx.reads.note_item(row)
     content = _loads(row.content_json)
     head = f"{row.key} ({row.kind}), id {row.id}, version {row.version}, {row.review_status}"
-    return _cap("\n".join([head, *_fields_of(content)]))
+    return _fit(head, _fields_of(content), ITEM_LIMIT)
 
 
 async def read_document(ctx: ToolContext, kind: str | None) -> str:
@@ -293,7 +316,123 @@ async def budget_left(ctx: ToolContext, key: str | None) -> str:
     return f"spent {spent:.2f} of {float(budget):.2f} US dollars this month"
 
 
+async def list_documents(ctx: ToolContext, key: str | None) -> str:
+    """The documents of the project, each with the id that a command may open it by."""
+    documents = await _artifacts_of(ctx)
+    if not documents:
+        return "This project has no document yet."
+    for document in documents[:LIST_LIMIT]:
+        ctx.reads.note_artifact(document)
+    return _cap(
+        "\n".join(
+            f"- id {row.id} | {row.kind} | {row.title} | version {row.version} | "
+            f"{row.review_status}"
+            for row in documents[:LIST_LIMIT]
+        )
+    )
+
+
+async def project_overview(ctx: ToolContext, key: str | None) -> str:
+    """What the project is, what it holds and where its work stands."""
+    counted = (
+        await ctx.session.execute(
+            select(ArtifactItemRow.kind, func.count())
+            .where(
+                ArtifactItemRow.project_id == ctx.project.id,
+                ArtifactItemRow.deleted_at.is_(None),
+            )
+            .group_by(ArtifactItemRow.kind)
+        )
+    ).all()
+    documents = await _artifacts_of(ctx)
+    lines = [
+        f"name: {ctx.project.name or 'not named yet'}",
+        f"language of the documents: {ctx.project.output_language}",
+        f"documents: {len(documents)}",
+    ]
+    lines += [f"- {kind}: {int(count)}" for kind, count in counted] or ["nothing written yet"]
+    return _cap("\n".join(lines))
+
+
+async def search_items(ctx: ToolContext, key: str | None) -> str:
+    """The items of the project whose key, kind or words hold the text that was asked for."""
+    if key is None or not key.strip():
+        return "No text was given. Name a word or a phrase to look for in the items."
+    wanted = key.strip().lower()
+    rows = (
+        await ctx.session.scalars(
+            select(ArtifactItemRow)
+            .where(
+                ArtifactItemRow.project_id == ctx.project.id,
+                ArtifactItemRow.deleted_at.is_(None),
+            )
+            .order_by(ArtifactItemRow.updated_at.desc())
+            .limit(SEARCH_SCAN_LIMIT)
+        )
+    ).all()
+    found = [
+        row
+        for row in rows
+        if wanted in f"{row.key} {row.kind} {(row.content_json or b'').decode('utf-8')}".lower()
+    ][:LIST_LIMIT]
+    if not found:
+        return f"No item of this project holds '{key.strip()}'."
+    for row in found:
+        ctx.reads.note_item(row)
+    return _cap(
+        "\n".join(
+            f"- {row.key} ({row.kind}): {_title_of(_loads(row.content_json))}" for row in found
+        )
+    )
+
+
+async def run_settings(ctx: ToolContext, key: str | None) -> str:
+    """The limits the workflow of this project runs under, the effective value of each one.
+
+    A limit the project does not set falls back to the server default, so the answer names the
+    number that a run would really use.
+    """
+    config = _loads(ctx.project.run_config_json)
+    if not isinstance(config, dict):
+        config = {}
+    values = RunParameters().model_dump()
+    setted = config.get("parameters")
+    if isinstance(setted, dict):
+        values.update(setted)
+    cost = config.get("max_cost_usd")
+    lines = [
+        f"- max steps in one run: {config.get('max_steps', DEFAULT_MAX_STEPS)}",
+        f"- cost limit in one run: {'none' if cost is None else f'{cost} US dollars'}",
+        *[f"- {name.replace('_', ' ')}: {value}" for name, value in values.items()],
+    ]
+    return "\n".join(lines)
+
+
 READ_TOOLS: tuple[Tool, ...] = (
+    Tool(
+        name="project_overview",
+        description="what the project is and holds, by kind of item, and where its work stands",
+        arg="nothing",
+        run=project_overview,
+    ),
+    Tool(
+        name="list_documents",
+        description="the documents of the project, each with the id that a command opens it by",
+        arg="nothing",
+        run=list_documents,
+    ),
+    Tool(
+        name="search_items",
+        description="the items of the project whose key, kind or words hold a text",
+        arg="a word or a phrase to look for, such as export or REQ-003",
+        run=search_items,
+    ),
+    Tool(
+        name="run_settings",
+        description="the limits that the runs of this project work under",
+        arg="nothing",
+        run=run_settings,
+    ),
     Tool(
         name="read_item",
         description="one item of the project by its key, with the fields it holds",
