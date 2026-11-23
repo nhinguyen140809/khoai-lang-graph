@@ -146,8 +146,14 @@ async def test_a_message_about_the_application_is_answered_without_a_run(
     assert [run["workflow_name"] for run in runs] == ["assistance"], (
         "the answer is a run of the assistance workflow, and the only one"
     )
-    work = (await client.get(f"{API}/threads/{thread_id}/runs?kind=work")).json()["items"]
-    assert work == [], "it is not a run of the work of the project"
+    main = (
+        await client.get(f"{API}/threads/{thread_id}/runs?workflow=requirements_engineering")
+    ).json()["items"]
+    assert main == [], "it is not a run of the main workflow"
+    answered = (await client.get(f"{API}/threads/{thread_id}/runs?workflow=assistance")).json()[
+        "items"
+    ]
+    assert [run["id"] for run in answered] == [runs[0]["id"]]
     thread = (await client.get(f"{API}/threads/{thread_id}")).json()
     assert thread["active_run_id"] is None, "an answer is over before anyone could follow it"
     assert thread["latest_run_status"] is None, "and it is not the latest run of the thread"

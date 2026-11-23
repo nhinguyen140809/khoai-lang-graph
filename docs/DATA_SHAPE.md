@@ -392,8 +392,8 @@ Workflow definition version 2 keeps these roles and adds two. Before it writes t
 | `title` | string? | Given when the thread is created, or generated from the first message; editable. Null until one of the two |
 | `status` | enum | `active`, `archived` |
 | `current_stage` | Stage? | Stage of the latest run. Null before the first run |
-| `active_run_id` | ref\<Run\>? | The unfinished run of the thread (`queued`, `running` or `interrupted`); at most one, see [Runtime: lifecycle](architecture/runtime.md#3-lifecycle) |
-| `latest_run_status` | enum? | Derived, read-only. The status of the latest [Run](#run-mvp) of the thread, unfinished or ended. The unfinished run of a thread is always its latest, so while `active_run_id` is set, this is its status. Null before the first run of the thread |
+| `active_run_id` | ref\<Run\>? | Derived, read-only. The unfinished run of the main workflow in the thread (`queued`, `running` or `interrupted`); a thread has at most one unfinished run of each workflow, see [Runtime: lifecycle](architecture/runtime.md#3-lifecycle) |
+| `latest_run_status` | enum? | Derived, read-only. The status of the latest [Run](#run-mvp) of the main workflow in the thread, unfinished or ended. The unfinished run of a thread is always its latest, so while `active_run_id` is set, this is its status. Null before the first run of the thread |
 | `last_message_at` | datetime | Time of the newest message; the creation time while the thread has no message |
 
 Deck: `project_id`, `current_stage`. The deck's `initial_intent` belongs to the project, see `Project.initial_message_id`.

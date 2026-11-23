@@ -160,7 +160,7 @@ async def _send(
     # A message about the work has no run of the assistant: what deciding cost is kept apart.
     await assistant_service.record_turn(db, user, project, thread, outcome)
 
-    unfinished = await service.unfinished_run_of_thread(db, thread.id)
+    unfinished = await service.unfinished_run_of_thread(db, thread.id, workflows.MAIN_WORKFLOW.name)
     message = await service.append_message(db, thread=thread, content=body.content)
     if unfinished is not None:
         message.delivery = "pending"
@@ -188,7 +188,6 @@ async def _send(
     )
     db.add(run)
     message.run_id = run.id
-    thread.active_run_id = run.id
     await db.commit()  # the worker's connection must see the queued rows
     await _start_job(request, run.id)
     await db.refresh(run)  # what the worker wrote (status, stage, usage)
@@ -253,17 +252,16 @@ async def list_runs(
     db: deps.DbSession,
     cursor: Cursor = 0,
     limit: Annotated[int, Query(ge=1, le=MAX_LIMIT)] = 50,
-    kind: Annotated[Literal["work", "answer"] | None, Query()] = None,
+    workflow: Annotated[str | None, Query()] = None,
 ) -> Page[schemas.Run]:
-    """The runs of one thread, newest first (§5): every run, or only those of a kind of workflow
-    (`work` for the work of the project, `answer` for the runs that answered one message)."""
+    """The runs of one thread, newest first (§5): every run, or only those of the workflow that
+    `?workflow=` names."""
     await thread_service.get_thread_row(db, thread_id, UUID(str(user.id)))
     statement = (
         select(RunRow).where(RunRow.thread_id == thread_id).order_by(RunRow.created_at.desc())
     )
-    if kind is not None:
-        names = [name for name, flow in workflows.WORKFLOWS.items() if flow.kind == kind]
-        statement = statement.where(RunRow.workflow_name.in_(names))
+    if workflow is not None:
+        statement = statement.where(RunRow.workflow_name == workflow)
     statement = statement.offset(cursor).limit(limit) if cursor else statement.limit(limit)
     rows = list((await db.scalars(statement)).all())
     items = [service.runs_output(row) for row in rows]
@@ -631,7 +629,7 @@ async def retry_run(
             errors=[{"field": "from_step_id", "message": "Not a step of this run."}],
         )
     await service.ensure_budget(db, user)
-    thread = await thread_service.get_thread_row(db, run.thread_id, UUID(str(user.id)))
+    await thread_service.get_thread_row(db, run.thread_id, UUID(str(user.id)))
     project = cast("ProjectRow", await db.get(ProjectRow, run.project_id))
     resolved = await run_config.resolve_run_config(db, project, user_id)
     retry = RunRow(
@@ -650,7 +648,6 @@ async def retry_run(
         input_json=jsonlib.dumps({"retry_from_step_id": str(step.id)}).encode("utf-8"),
     )
     db.add(retry)
-    thread.active_run_id = retry.id
     await db.commit()
     await _start_job(request, retry.id)
     await db.refresh(retry)
@@ -697,7 +694,6 @@ async def cancel_run(
     row.last_event_id = sequence
     thread = await db.get(ThreadRow, row.thread_id)
     if thread is not None:
-        thread.active_run_id = None
         thread.current_stage = row.current_stage
     await service.undeliver_pending(db, row.thread_id)
     await db.flush()

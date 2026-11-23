@@ -161,7 +161,7 @@ async def latest_run(ctx: ToolContext, key: str | None) -> str:
         select(RunRow)
         .where(
             RunRow.project_id == ctx.project.id,
-            RunRow.workflow_name.not_in(workflows.answer_workflow_names()),
+            RunRow.workflow_name == workflows.MAIN_WORKFLOW.name,
         )
         .order_by(RunRow.created_at.desc(), RunRow.number.desc())
         .limit(1)

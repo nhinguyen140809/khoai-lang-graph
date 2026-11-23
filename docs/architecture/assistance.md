@@ -38,18 +38,23 @@ Two things are common to every workflow, and one thing is the workflow's own.
 
 | | Common (abstract) | The workflow's own (concrete) |
 |---|---|---|
-| What it is | `Workflow`: its name, its current version, the definition it serves for any version, and its `kind` | The module of its definition and its agents |
-| Where | `features/runs/workflows.py` | `agents/requirements_engineering/`, `agents/assistance/` |
+| What it is | `Workflow`: its name, its current version and the definition it serves for any version | The module of its definition and its agents |
+| Where | `agents/workflows.py` | `agents/requirements_engineering/`, `agents/assistance/` |
 | Executing a run | none: the way a run executes is the workflow's own | `RunWalker` walks a graph in the background and may pause at a review; `AssistanceRecorder` answers in the request and ends the run |
 
-`Workflow.kind` is `work` or `answer`. A run of a workflow of kind `answer` is a run for the
-client to show, and it is not the run the thread works on: it never becomes `active_run_id`, it is
-not the latest run that the chat follows live, it is not the unfinished run that a message waits
-for, and it does not count as the status of the thread.
+A thread holds at most one unfinished run of each workflow (`queued`, `running` or `interrupted`):
+the database refuses a second one. The unfinished run that a message waits for is the one of the
+workflow that takes it, and the `active_run_id` that a thread shows is its unfinished run of the
+main workflow. A run of `assistance` is over before the request answers, so it is never unfinished.
+
+One workflow is the main workflow of a thread, `MAIN_WORKFLOW` in the registry, which is
+`requirements_engineering`: the status of the thread is the status of its latest run of that
+workflow, and the chat follows the latest run of it. A run of another workflow is a run of the
+thread to show, and it changes none of these.
 
 A registry maps the name of a workflow to its `Workflow`. The endpoint that serves a definition
 reads it (`GET /workflow/definition?name=`, the name defaulting to `requirements_engineering`), and
-so does the code that needs the kind of a run. A new workflow is a definition file, a `Workflow`
+the runs of a thread are listed by workflow (`GET /threads/{id}/runs?workflow=`). A new workflow is a definition file, a `Workflow`
 and one line in the registry.
 
 ## 4. A message, step by step
@@ -73,7 +78,7 @@ and one line in the registry.
 - The chat lists the runs of a thread in order, so an answered message is a run among the others,
   drawn by the same entries: the message, the phase `Guidance` with the acts around the face of the
   agent, the uses of its tools and its answer.
-- What the chat follows live, its prompt and its progress bar use the latest run of kind `work`.
+- What the chat follows live, its prompt and its progress bar use the latest run of the main workflow, which it asks for with `?workflow=requirements_engineering`.
 
 ## 6. What changes for what exists
 

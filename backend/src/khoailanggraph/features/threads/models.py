@@ -27,7 +27,6 @@ class ThreadRow(Base):
     title: Mapped[str | None] = mapped_column(Text, nullable=True)
     status: Mapped[str] = mapped_column(String, default="active", nullable=False)
     current_stage: Mapped[str | None] = mapped_column(String, nullable=True)
-    active_run_id: Mapped[uuid.UUID | None] = mapped_column(Uuid(), nullable=True, unique=True)
     last_message_at: Mapped[datetime] = mapped_column(
         DateTime, default=utcnow, nullable=False, index=True
     )

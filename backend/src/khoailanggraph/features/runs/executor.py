@@ -268,7 +268,6 @@ class RunWalker:
             self.sink.bind(session)
             run.status = "running"
             run.started_at = run.started_at or _now()
-            self.thread.active_run_id = run.id
             try:
                 state = self._entry(resume_interrupt)
                 self.commit()
@@ -988,7 +987,6 @@ class RunWalker:
         return follow_up
 
     def _end_thread(self) -> None:
-        self.thread.active_run_id = None
         self.thread.current_stage = self.run.current_stage
 
     def _undeliver_pending(self) -> None:
@@ -1018,7 +1016,6 @@ class RunWalker:
         for message in waiting:
             message.delivery = "started_run"
             message.run_id = run.id
-        self.thread.active_run_id = run.id
         return run.id
 
 
@@ -1064,8 +1061,5 @@ def recover_runs(engine: Engine) -> list[UUID]:
                 {"message": run.error_message, "code": run.error_code, "stage": run.error_stage},
             )
             run.last_event_id = sink.emit("done", {"status": "failed"})
-            thread = session.get(ThreadRow, run.thread_id)
-            if thread is not None and thread.active_run_id == run.id:
-                thread.active_run_id = None
         session.commit()
     return queued

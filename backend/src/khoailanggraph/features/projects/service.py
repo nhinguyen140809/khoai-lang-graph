@@ -97,7 +97,7 @@ async def rollup_run_status(session: AsyncSession, project_id: UUID) -> schemas.
         await session.execute(
             select(RunRow.thread_id, RunRow.number, RunRow.status).where(
                 RunRow.project_id == project_id,
-                RunRow.workflow_name.not_in(workflows.answer_workflow_names()),
+                RunRow.workflow_name == workflows.MAIN_WORKFLOW.name,
             )
         )
     ).all()
