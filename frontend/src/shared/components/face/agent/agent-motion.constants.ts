@@ -1,4 +1,4 @@
-import type { Body, EyeLife, Gaze, Pose } from '../face.types'
+import type { EyeLife } from '../face.types'
 import type { EyeKind, Pace } from './agent-face.types'
 
 // The classes of the named motions of the face of an agent (see `agent-motion.css`). Every class is written whole,
@@ -27,17 +27,11 @@ export const eyeLifeLooks = {
   },
 } as const satisfies Record<EyeLife, { className: string; durationToken: string | null }>
 
-/** Every motion that a face can have, by kind, for a page that shows them one at a time. A body that is `none` and a gaze that holds the eyes are not listed: they move nothing. */
-export const faceMotions = {
-  poses: ['sway', 'tilt'],
-  bodies: ['pulse', 'breathe', 'bounce', 'turnaround'],
+/** The motions that the eyes of the face of an agent can have, by kind, for a page that shows them one at a time. */
+export const plainEyeMotions = {
   eyes: ['long', 'round', 'tall', 'flat', 'arc', 'shut', 'cross', 'spiral'],
   eyeLives: ['steady', 'breathe', 'squint', 'wink'],
-  gazes: ['wander', 'drift', 'ponder', 'glance', 'scan', 'down', 'toward', 'still'],
 } as const satisfies {
-  poses: readonly Pose[]
-  bodies: readonly Exclude<Body, 'none'>[]
   eyes: readonly EyeKind[]
   eyeLives: readonly EyeLife[]
-  gazes: readonly Gaze[]
 }

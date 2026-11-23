@@ -2,8 +2,7 @@
 
 import type { MotionStyle } from 'motion/react'
 
-import type { GazeValues } from '../../face.types'
-import type { BodyStyle } from '../../motion/hooks/useBodyStyles'
+import type { BodyStyle, GazeValues } from '../../face.types'
 import { useSum } from '../../motion/hooks/useSum'
 
 /**

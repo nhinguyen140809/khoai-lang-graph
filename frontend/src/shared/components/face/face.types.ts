@@ -1,4 +1,4 @@
-import type { MotionValue } from 'motion/react'
+import type { MotionStyle, MotionValue } from 'motion/react'
 
 /**
  * What a face is doing or feeling: nothing in particular, thinking, working on something, waiting
@@ -110,7 +110,7 @@ export interface FaceDrive {
   }
 }
 
-/** When a face moves: where along its rounds it starts, whether its mood is changing, whether it runs at all (not when it is out of sight), and how much of the extra reach of the eyes its outline has room for. */
+/** When a face moves: where along its rounds it starts, whether its mood is changing, whether it runs at all (not when it is out of sight), and how much of the extra reach of the eyes it has room for, from none to all (1: a face whose eyes have all the room that they need). */
 export interface GazeTiming {
   phase: number
   isChanging: boolean
@@ -128,4 +128,26 @@ export interface FaceProps {
   drive?: FaceDrive | undefined
   size?: 'sm' | 'default' | 'lg' | 'xl' | '2xl'
   className?: string
+}
+
+/** When a face moves (see `GazeTiming`; `isRunning` is found here), and how much of its gaze it takes: all of it (1) unless this says less. */
+export type FaceMotionTiming = Omit<GazeTiming, 'isRunning'> & { gazeScale?: number }
+
+/** What moves the body of a face, as the values of its style: where it is, how it is turned and how large it is. */
+export interface BodyStyle {
+  x: MotionValue<string>
+  y: MotionValue<string>
+  rotate: MotionValue<number>
+  rotateX: MotionValue<number>
+  rotateY: MotionValue<number>
+  scale: MotionValue<number>
+  scaleX: MotionValue<number>
+  scaleY: MotionValue<number>
+}
+
+/** What moves a face by its mood, as the style of the element for each part that moves: the pose (the plane of the page, pivoting on the bottom), the head (its turns with the eyes) and the body. */
+export interface FaceStyles {
+  poseStyle: MotionStyle
+  headStyle: GazeValues['head']
+  bodyStyle: BodyStyle
 }

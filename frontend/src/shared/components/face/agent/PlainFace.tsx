@@ -3,7 +3,12 @@ import { motion } from 'motion/react'
 import type { CSSProperties } from 'react'
 
 import { faceSizeClasses } from '../face.constants'
-import { blobShapeClasses, faceLayerCount, faceSilhouetteClasses } from './agent-face.constants'
+import {
+  blobShapeClasses,
+  faceDepthClasses,
+  faceLayerCount,
+  faceSilhouetteClasses,
+} from './agent-face.constants'
 import type { AgentFaceProps } from './agent-face.types'
 import { blobMotionClasses } from './agent-motion.constants'
 import { FaceFeatures } from './FaceFeatures'
@@ -58,6 +63,7 @@ export function PlainFace({
         'relative inline-flex shrink-0 face-stage',
         !isInView && 'face-paused',
         faceSizeClasses[size],
+        faceDepthClasses[size],
         className,
       )}
       style={{ ...blobStyleOf(look), '--face-layers': faceLayerCount } as CSSProperties}

@@ -2,7 +2,7 @@ import { renderHook } from '@testing-library/react'
 import { motionValue } from 'motion/react'
 import { describe, expect, it } from 'vitest'
 
-import type { BodyStyle } from '../../../motion/hooks/useBodyStyles'
+import type { BodyStyle } from '../../../face.types'
 import { useTurnedBody } from '../useTurnedBody'
 
 const body: BodyStyle = {

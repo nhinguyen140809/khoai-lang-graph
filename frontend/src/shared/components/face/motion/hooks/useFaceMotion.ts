@@ -4,14 +4,18 @@ import { type RefObject, useRef } from 'react'
 
 import { useIsInView } from '@/shared/lib/viewport'
 
-import type { EyesMotion, FaceDrive, GazeTiming, GazeValues, MotionLook } from '../../face.types'
+import type {
+  EyesMotion,
+  FaceDrive,
+  FaceMotionTiming,
+  GazeTiming,
+  GazeValues,
+  MotionLook,
+} from '../../face.types'
 import { gazeLooks } from '../face-motion.constants'
-import { useBodyStyles } from './useBodyStyles'
 import { useFaceMotionStates } from './useFaceMotionStates'
+import { useFaceStyles } from './useFaceStyles'
 import { useGaze } from './useGaze'
-
-/** When a face moves (see `GazeTiming`; `isRunning` is found here), and how much of its gaze it takes: all of it (1) unless this says less. */
-export type FaceMotionTiming = Omit<GazeTiming, 'isRunning'> & { gazeShare?: number }
 
 /**
  * Every motion of a face that does not depend on what the face is drawn of: where it looks over
@@ -24,14 +28,14 @@ export type FaceMotionTiming = Omit<GazeTiming, 'isRunning'> & { gazeShare?: num
 export function useFaceMotion(
   moodLook: MotionLook,
   eyes: EyesMotion,
-  { phase, isChanging, reachShare, gazeShare }: FaceMotionTiming,
+  { phase, isChanging, reachShare, gazeScale }: FaceMotionTiming,
   drive?: FaceDrive,
 ) {
   const ref: RefObject<HTMLSpanElement | null> = useRef<HTMLSpanElement>(null)
   const isInView = useIsInView(ref)
   const timing: GazeTiming = { phase, isChanging, isRunning: isInView, reachShare }
-  const gaze: GazeValues = useGaze(gazeLooks[moodLook.gaze], timing, drive?.look, gazeShare)
+  const gaze: GazeValues = useGaze(gazeLooks[moodLook.gaze], timing, drive?.look, gazeScale)
   const motions = useFaceMotionStates(moodLook, eyes, { isHeld: isChanging || !isInView, phase })
-  const { poseStyle, headStyle, bodyStyle } = useBodyStyles(motions, gaze.head, timing, drive?.move)
+  const { poseStyle, headStyle, bodyStyle } = useFaceStyles(motions, gaze.head, timing, drive?.move)
   return { ref, isInView, gaze, motions, poseStyle, headStyle, bodyStyle }
 }

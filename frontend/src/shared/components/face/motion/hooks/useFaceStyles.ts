@@ -1,8 +1,8 @@
 'use client'
 
-import { type MotionStyle, type MotionValue, useMotionValue, useTransform } from 'motion/react'
+import { type MotionValue, useMotionValue, useTransform } from 'motion/react'
 
-import type { Body, FaceDrive, GazeTiming, GazeValues, Pose } from '../../face.types'
+import type { Body, FaceDrive, FaceStyles, GazeTiming, GazeValues, Pose } from '../../face.types'
 import { bodyLoops, poseLoops } from '../face-loop.constants'
 import { useLoop } from './useLoop'
 import { useSum } from './useSum'
@@ -10,18 +10,6 @@ import { useSum } from './useSum'
 /** A value that is a share of the size of the element, as a percentage. */
 function usePercent(share: MotionValue<number>): MotionValue<string> {
   return useTransform(share, (value) => `${String(value * 100)}%`)
-}
-
-/** What moves the body of a face, as the values of its style: where it is, how it is turned and how large it is. */
-export interface BodyStyle {
-  x: MotionValue<string>
-  y: MotionValue<string>
-  rotate: MotionValue<number>
-  rotateX: MotionValue<number>
-  rotateY: MotionValue<number>
-  scale: MotionValue<number>
-  scaleX: MotionValue<number>
-  scaleY: MotionValue<number>
 }
 
 /**
@@ -36,12 +24,12 @@ export interface BodyStyle {
  *
  * A face that has no head apart from its body puts the head on the body (see `useTurnedBody`).
  */
-export function useBodyStyles(
+export function useFaceStyles(
   { pose, body }: { pose?: Pose | undefined; body?: Body | undefined },
   head: GazeValues['head'],
   { phase, isChanging, isRunning }: GazeTiming,
   move?: FaceDrive['move'],
-): { poseStyle: MotionStyle; headStyle: GazeValues['head']; bodyStyle: BodyStyle } {
+): FaceStyles {
   const posed = useLoop(pose === undefined ? null : poseLoops[pose], phase, isChanging, isRunning)
   const bodied = useLoop(bodyLoops[body ?? 'none'], phase, isChanging, isRunning)
   const none = useMotionValue(0)

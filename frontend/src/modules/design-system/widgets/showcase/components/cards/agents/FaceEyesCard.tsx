@@ -1,6 +1,6 @@
 'use client'
 
-import { faceMotions } from '@/shared/components/face'
+import { faceMotions, plainEyeMotions } from '@/shared/components/face'
 
 import type { CardEntry } from '../../../design-system.types'
 import { MotionFaces } from '../../MotionFaces'
@@ -14,11 +14,11 @@ export function FaceEyesCard() {
       className="flex flex-col gap-10"
     >
       <SampleGroup label="Eyes: the kinds of eye; a kind that is open blinks, the shut, the smiling, the cross and the spiral ones do not">
-        <MotionFaces names={faceMotions.eyes} overrideOf={(kind) => ({ eyes: [kind, kind] })} />
+        <MotionFaces names={plainEyeMotions.eyes} overrideOf={(kind) => ({ eyes: [kind, kind] })} />
       </SampleGroup>
       <SampleGroup label="What an eye does by itself, besides the way it looks: still, swelling and shrinking, squinting now and then, or winking (one eye)">
         <MotionFaces
-          names={faceMotions.eyeLives}
+          names={plainEyeMotions.eyeLives}
           overrideOf={(life) => ({
             eyeLives: life === 'wink' ? ['steady', 'wink'] : [life, life],
           })}

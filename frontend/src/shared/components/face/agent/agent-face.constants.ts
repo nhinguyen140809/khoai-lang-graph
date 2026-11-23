@@ -1,3 +1,4 @@
+import type { faceSizeClasses } from '../face.constants'
 import type { EyeGeometry, EyeKind } from './agent-face.types'
 import type { BlobShape, EyeGap, FaceShape } from './look/face-look.types'
 
@@ -82,3 +83,12 @@ export const faceSilhouetteClasses = {
 
 /** How many layers of depth a face has. */
 export const faceLayerCount = 6
+
+/** The depth that the face of an agent has at each size (see `agent-face.css`); whole class names, so that they are generated. */
+export const faceDepthClasses = {
+  sm: 'face-depth-sm',
+  default: 'face-depth-md',
+  lg: 'face-depth-lg',
+  xl: 'face-depth-xl',
+  '2xl': 'face-depth-xl',
+} as const satisfies Record<keyof typeof faceSizeClasses, string>

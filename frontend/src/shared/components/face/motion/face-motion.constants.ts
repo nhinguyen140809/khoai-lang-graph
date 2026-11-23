@@ -1,4 +1,4 @@
-import type { Gaze, GazeLook, GazePath, GazePathLook, HeadTurn } from '../face.types'
+import type { Body, Gaze, GazeLook, GazePath, GazePathLook, HeadTurn, Pose } from '../face.types'
 
 /** The paths of the eyes: where they are at stops of a round, in the units of the face, as `[stop, right, down]`. Between stops they ease in and out. */
 export const gazePaths: Readonly<Record<GazePath, GazePathLook>> = {
@@ -106,3 +106,14 @@ export const blinkMs = 380
 
 /** How long the eyes stay open between two blinks, in milliseconds. */
 export const blinkEveryMs = 3420
+
+/** Every motion of the whole of a face, by kind, whatever the face is drawn of, for a page that shows them one at a time. A body that is `none` moves nothing. */
+export const faceMotions = {
+  poses: ['sway', 'tilt'],
+  bodies: ['pulse', 'breathe', 'bounce', 'turnaround'],
+  gazes: ['wander', 'drift', 'ponder', 'glance', 'scan', 'down', 'toward', 'still'],
+} as const satisfies {
+  poses: readonly Pose[]
+  bodies: readonly Exclude<Body, 'none'>[]
+  gazes: readonly Gaze[]
+}

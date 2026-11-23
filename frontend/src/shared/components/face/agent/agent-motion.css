@@ -3,8 +3,8 @@
  *
  *   Gazes      where the eyes look over time, and the turn of the face with them: not CSS, see
  *              `gazePaths` and `useGaze`.
- *   Loops      the face as a whole (poses and bodies: sway, tilt, pulse, turnaround...): not CSS, see
- *              `poseLoops`, `bodyLoops` and `useLoop`.
+ *   Loops      the face as a whole (the pose of the head or the face: sway, tilt; the body: pulse, breathe,
+ *              bounce, turnaround): not CSS, see `poseLoops`, `bodyLoops` and `useLoop`.
  *   Eye lives  what one eye does by itself: `eye-breathe`, `eye-squint`; and the `blink` of both.
  *   Changes    what covers a change of mood: the eyes close quickly (`face-squash-closing`) and open
  *              slowly (`face-squash`), while the face eases to rest and then eases into the new motion.

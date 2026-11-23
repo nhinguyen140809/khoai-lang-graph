@@ -4,7 +4,7 @@ import { describe, expect, it } from 'vitest'
 
 import type { FaceDrive } from '../../../face.types'
 import { eyeReach, gazeLooks } from '../../face-motion.constants'
-import { useBodyStyles } from '../useBodyStyles'
+import { useFaceStyles } from '../useFaceStyles'
 import { useGaze } from '../useGaze'
 
 const timing = { phase: 0, isChanging: false, isRunning: true, reachShare: 1 }
@@ -35,7 +35,7 @@ describe('useGaze with a drive', () => {
   })
 })
 
-describe('useBodyStyles with a move', () => {
+describe('useFaceStyles with a move', () => {
   const move = {
     x: motionValue(0.1),
     y: motionValue(-0.2),
@@ -46,7 +46,7 @@ describe('useBodyStyles with a move', () => {
   it('adds the move to the body of the face', () => {
     const { result } = renderHook(() => {
       const gaze = useGaze(gazeLooks.still, timing)
-      return useBodyStyles({}, gaze.head, timing, move)
+      return useFaceStyles({}, gaze.head, timing, move)
     })
     const { bodyStyle } = result.current
 
@@ -57,11 +57,11 @@ describe('useBodyStyles with a move', () => {
   })
 })
 
-describe('useBodyStyles with a head', () => {
+describe('useFaceStyles with a head', () => {
   it('keeps the turns of the head apart from those of the body', () => {
     const { result } = renderHook(() => {
       const gaze = useGaze(gazeLooks.still, timing)
-      return useBodyStyles({}, gaze.head, timing)
+      return useFaceStyles({}, gaze.head, timing)
     })
     const { headStyle, bodyStyle } = result.current
 
@@ -70,10 +70,10 @@ describe('useBodyStyles with a head', () => {
   })
 })
 
-describe('useGaze with a share', () => {
+describe('useGaze with a scale', () => {
   const placed = { ...timing, phase: 0.3 }
-  const xOf = (share?: number) => {
-    const { result } = renderHook(() => useGaze(gazeLooks.glance, placed, undefined, share))
+  const xOf = (scale?: number) => {
+    const { result } = renderHook(() => useGaze(gazeLooks.glance, placed, undefined, scale))
     return result.current.eye.x.get()
   }
 

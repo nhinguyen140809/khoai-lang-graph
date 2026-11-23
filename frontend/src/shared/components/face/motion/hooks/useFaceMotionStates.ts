@@ -4,10 +4,10 @@ import { useMachine } from '@xstate/react'
 import { useEffect } from 'react'
 
 import type { Body, EyeLife, EyesMotion, MotionLook, Pose } from '../../face.types'
-import { faceMotionMachine, type FaceMotionValue, type MotionRequest } from '../face-motion.reducer'
+import { faceMotionMachine, type FaceMotionValue, type MotionTarget } from '../face-motion.reducer'
 
 /** What a mood asks of the motions of a face. */
-function requestOf({ pose, body }: MotionLook, { lives, canBlink }: EyesMotion): MotionRequest {
+function targetOf({ pose, body }: MotionLook, { lives, canBlink }: EyesMotion): MotionTarget {
   return { pose: pose ?? 'none', body: body ?? 'none', lives, canBlink }
 }
 
@@ -27,7 +27,7 @@ export function useFaceMotionStates(
   eyes: EyesMotion,
   { isHeld, phase }: { isHeld: boolean; phase: number },
 ): { pose: Pose | undefined; body: Body; lives: readonly [EyeLife, EyeLife]; isBlinking: boolean } {
-  const look = requestOf(moodLook, eyes)
+  const look = targetOf(moodLook, eyes)
   const [snapshot, send] = useMachine(faceMotionMachine, { input: { look, phase } })
   const { pose: askedPose, body, lives, canBlink: isBlinkable } = look
   const [left, right] = lives

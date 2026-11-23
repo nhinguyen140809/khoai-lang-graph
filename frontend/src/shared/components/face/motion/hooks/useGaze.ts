@@ -25,7 +25,7 @@ function blend(from: number, to: number, weight: number): number {
  * outline has room for (`reachShare`), so that they look about more than the face turns. A `drive`
  * gives the look over to something outside: by its weight the gaze goes from the path to the point
  * it names, and the eyes and the face follow either the same way. A user who asked for less motion
- * has the eyes keep still. `share` is how much of every gaze this kind of face takes, as a multiple of
+ * has the eyes keep still. `gazeScale` is how much of every gaze this kind of face takes, as a multiple of
  * the one of the face of an agent (1): a face with drawn eyes takes less, so that it looks about as a
  * picture moves. It is not applied to a look that a `drive` gives, which says where to look.
  */
@@ -33,12 +33,12 @@ export function useGaze(
   look: GazeLook,
   { phase, isChanging, isRunning, reachShare }: GazeTiming,
   drive?: FaceDrive['look'],
-  share = 1,
+  gazeScale = 1,
 ): GazeValues {
   const isStill = usePrefersReducedMotion()
   const path = look.path === null ? null : gazePaths[look.path]
   const stops = path?.stops ?? noStops
-  const gainOfLook = isStill ? 0 : look.gain * share
+  const gainOfLook = isStill ? 0 : look.gain * gazeScale
   const head = look.head
 
   const time = useMotionValue(phase)
