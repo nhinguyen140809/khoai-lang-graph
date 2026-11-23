@@ -307,3 +307,23 @@ async def test_an_unknown_tool_reads_nothing(
     text = await _tool(session, project, user, "delete_everything", "REQ-003")
 
     assert text == "There is no tool called delete_everything."
+
+
+async def test_the_reads_note_what_they_looked_at(
+    seeded: tuple[AsyncSession, ProjectRow, UserRow],
+) -> None:
+    session, project, user = seeded
+    context = ToolContext(session=session, project=project, user=user)
+
+    await run_tool("read_item", context, "REQ-003")
+    await run_tool("read_item", context, "REQ-003")
+    await run_tool("read_document", context, "requirement_specification")
+    await run_tool("open_issues", context, None)
+    await run_tool("budget_left", context, None)
+
+    assert [ref["key"] for ref in context.reads.items.values()] == ["REQ-003", "VLI-001"], (
+        "each item once, in the order it was read, and only an open finding"
+    )
+    assert [ref["kind"] for ref in context.reads.artifacts.values()] == [
+        "requirement_specification"
+    ]

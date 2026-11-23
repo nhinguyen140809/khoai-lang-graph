@@ -367,7 +367,9 @@ commands for the client to run. `assistant` is `{text, commands}`, and each comm
 before a command leaves (nothing, a document or an item of the project, or a review that waits).
 A command that is not in the catalog, or that names a record outside the project, is dropped from the
 response and logged; a client skips a key it does not know. The answer is stored as a message of
-the thread with `author: "agent"` and `agent_role: "assistant"`; the commands are transient and
+the thread with `author: "agent"` and `agent_role: "assistant"`, whose `artifact_refs` and
+`item_refs` name the documents and items that the reads looked at (up to ten of each, each once, in
+the order read), so that a client shows what the answer was read from; the commands are transient and
 travel only in the response. Every classified message writes its cost
 where `GET /me/usage` and the budget of the month read it.
 

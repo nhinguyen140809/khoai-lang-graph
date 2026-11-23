@@ -257,6 +257,14 @@ async def test_a_read_comes_back_before_the_answer(
     )
     assert spec_id is not None
 
+    messages = (await client.get(f"{API}/threads/{thread_id}/messages")).json()["items"]
+    answer_message = messages[-1]
+    assert answer_message["agent_role"] == "assistant"
+    assert [ref["key"] for ref in answer_message["item_refs"]] == ["REQ-003"], (
+        "the answer names the item it was read from"
+    )
+    assert messages[0]["item_refs"] == [], "the question names nothing"
+
 
 async def test_the_message_is_counted_where_the_budget_reads(
     client: AsyncClient, project_and_thread: tuple[str, str]

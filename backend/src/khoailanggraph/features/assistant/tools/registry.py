@@ -7,25 +7,68 @@ user the server already resolved, so a tool cannot reach another project's data.
 
 from __future__ import annotations
 
-from dataclasses import dataclass
-from typing import TYPE_CHECKING
+from dataclasses import dataclass, field
+from typing import TYPE_CHECKING, Any
 
 if TYPE_CHECKING:
     from collections.abc import Awaitable, Callable, Sequence
 
     from sqlalchemy.ext.asyncio import AsyncSession
 
+    from khoailanggraph.features.artifacts.models import ArtifactItemRow, ArtifactRow
     from khoailanggraph.features.me.models import UserRow
     from khoailanggraph.features.projects.models import ProjectRow
 
 
+# How many documents and items one answer may point at: the ones read first.
+MAX_REFS = 10
+
+
+@dataclass
+class ReadLog:
+    """The documents and items the tools looked at while one message was answered.
+
+    They become the references of the answer, so that what it was read from shows under it, the way
+    the messages of an agent name what they were written from. Each is kept once, in the order it
+    was first read, up to `MAX_REFS` of each.
+    """
+
+    artifacts: dict[str, dict[str, Any]] = field(default_factory=dict)
+    items: dict[str, dict[str, Any]] = field(default_factory=dict)
+
+    def note_artifact(self, row: ArtifactRow) -> None:
+        if len(self.artifacts) < MAX_REFS:
+            self.artifacts.setdefault(
+                str(row.id),
+                {
+                    "artifact_id": str(row.id),
+                    "kind": row.kind,
+                    "title": row.title,
+                    "version": row.version,
+                },
+            )
+
+    def note_item(self, row: ArtifactItemRow) -> None:
+        if len(self.items) < MAX_REFS:
+            self.items.setdefault(
+                str(row.id),
+                {
+                    "item_id": str(row.id),
+                    "kind": row.kind,
+                    "key": row.key,
+                    "version": row.version,
+                },
+            )
+
+
 @dataclass(frozen=True)
 class ToolContext:
-    """What every tool reads with: the open session, the project, and who asked."""
+    """What every tool reads with: the open session, the project, who asked, and what was read."""
 
     session: AsyncSession
     project: ProjectRow
     user: UserRow
+    reads: ReadLog = field(default_factory=ReadLog)
 
 
 @dataclass(frozen=True)

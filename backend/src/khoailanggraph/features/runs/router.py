@@ -145,7 +145,7 @@ async def _send(
         message = await service.append_message(
             db, thread=thread, content=body.content, delivery="delivered"
         )
-        reply = await assistant_service.record_reply(db, thread, decision)
+        reply = await assistant_service.record_reply(db, thread, decision, outcome.reads)
         return {
             "message": service.message_output(message).model_dump(mode="json"),
             "run": None,

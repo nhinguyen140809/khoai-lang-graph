@@ -14,7 +14,7 @@ from __future__ import annotations
 
 import json
 import time
-from dataclasses import dataclass
+from dataclasses import dataclass, field
 from typing import TYPE_CHECKING, Any, cast
 from uuid import UUID
 
@@ -33,6 +33,7 @@ from khoailanggraph.features.assistant.schemas import (
 )
 from khoailanggraph.features.assistant.tools import (
     READ_TOOLS,
+    ReadLog,
     ToolContext,
     catalog_of,
     run_tool,
@@ -279,6 +280,8 @@ class AssistantOutcome:
     decision: AssistantDecision
     model_id: str
     usage: Usage
+    # What the reads looked at: the references of the answer.
+    reads: ReadLog = field(default_factory=ReadLog)
 
 
 async def _finish(
@@ -342,7 +345,7 @@ async def decide(
             step = AssistantStep.model_validate(_answered(AssistantStep, model, messages, handler))
             if step.tool is None:
                 answered = await _finish(session, project, step.answer)
-                return _outcome(answered, model_id, handler, started)
+                return _outcome(answered, model_id, handler, started, context.reads)
             result = await run_tool(step.tool, context, step.key)
             messages.append(
                 ("human", f'<tool_result tool="{step.tool}">\n{result}\n</tool_result>')
@@ -355,16 +358,22 @@ async def decide(
             "assistant decision failed; the message goes to the workflow",
             error=f"{type(exc).__name__}: {str(exc)[:200]}",
         )
-        return _outcome(_workflow(), model_id, handler, started)
-    return _outcome(await _finish(session, project, final), model_id, handler, started)
+        return _outcome(_workflow(), model_id, handler, started, context.reads)
+    return _outcome(
+        await _finish(session, project, final), model_id, handler, started, context.reads
+    )
 
 
 def _outcome(
-    decision: AssistantDecision, model_id: str, handler: UsageHandler, started: float
+    decision: AssistantDecision,
+    model_id: str,
+    handler: UsageHandler,
+    started: float,
+    reads: ReadLog,
 ) -> AssistantOutcome:
     elapsed_ms = int((time.monotonic() - started) * 1000)
     usage = handler.usage(model_id, elapsed_ms) if model_id else zero_usage()
-    return AssistantOutcome(decision=decision, model_id=model_id, usage=usage)
+    return AssistantOutcome(decision=decision, model_id=model_id, usage=usage, reads=reads)
 
 
 async def record_turn(
@@ -388,9 +397,13 @@ async def record_turn(
 
 
 async def record_reply(
-    session: AsyncSession, thread: ThreadRow, decision: AssistantDecision
+    session: AsyncSession, thread: ThreadRow, decision: AssistantDecision, reads: ReadLog
 ) -> MessageRow:
-    """The answer as a message of the thread, so it reads with the other lines after a reload."""
+    """The answer as a message of the thread, so it reads with the other lines after a reload.
+
+    It names the documents and items that were read to answer, as the messages of the agents name
+    what they were written from.
+    """
     count = (
         await session.scalar(
             select(func.count()).select_from(MessageRow).where(MessageRow.thread_id == thread.id)
@@ -402,6 +415,8 @@ async def record_reply(
         author="agent",
         agent_role="assistant",
         content=decision.text,
+        artifact_refs_json=json.dumps(list(reads.artifacts.values())).encode("utf-8"),
+        item_refs_json=json.dumps(list(reads.items.values())).encode("utf-8"),
     )
     session.add(row)
     thread.last_message_at = utcnow()

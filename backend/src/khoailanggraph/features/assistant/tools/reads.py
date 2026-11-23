@@ -115,6 +115,7 @@ async def read_item(ctx: ToolContext, key: str | None) -> str:
     row = await _item_by_key(ctx, key.strip())
     if row is None:
         return f"This project has no item with the key {key.strip()}."
+    ctx.reads.note_item(row)
     content = _loads(row.content_json)
     head = f"{row.key} ({row.kind}), id {row.id}, version {row.version}, {row.review_status}"
     return _cap("\n".join([head, *_fields_of(content)]))
@@ -137,6 +138,7 @@ async def read_document(ctx: ToolContext, kind: str | None) -> str:
         limit=LIST_LIMIT,
         cursor=0,
     )
+    ctx.reads.note_artifact(artifact)
     head = (
         f"{artifact.title} ({artifact.kind}), version {artifact.version}, "
         f"{artifact.review_status}, {len(items)} items listed"
@@ -211,6 +213,7 @@ async def open_issues(ctx: ToolContext, key: str | None) -> str:
         return _cap("\n".join(lines))
     lines.append(f"{len(opened)} open:")
     for row in opened:
+        ctx.reads.note_item(row)
         content = _loads(row.content_json)
         severity = content.get("severity") if isinstance(content, dict) else None
         title = _title_of(content)
@@ -225,6 +228,7 @@ async def trace_item(ctx: ToolContext, key: str | None) -> str:
     row = await _item_by_key(ctx, key.strip())
     if row is None:
         return f"This project has no item with the key {key.strip()}."
+    ctx.reads.note_item(row)
     trace = await item_trace(ctx.session, UUID(str(row.id)), direction="both", depth=2)
     if not trace.links:
         return f"{row.key} has no trace link."
