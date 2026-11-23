@@ -1,6 +1,7 @@
 'use client'
 
 import { cn } from 'cn'
+import type { Ref } from 'react'
 
 import { useReferenceOpener } from '@/modules/activity/entities'
 import type { Interrupt } from '@/modules/review/entities'
@@ -24,14 +25,25 @@ import { activityChatMessages, pendingActSlots } from '../../activity-chat.const
  * waiting with the act of the interrupt around it (a question, a page read), above and beside it only, so that it does not cover the card, where the sign of the interrupt would take room from the card; a card whose agent is not
  * known keeps that sign inside.
  */
-export function PendingReview({ interrupt, run }: { interrupt: Interrupt; run: Run }) {
+export function PendingReview({
+  interrupt,
+  run,
+  ref,
+}: {
+  interrupt: Interrupt
+  run: Run
+  /** The card, so that the chat can bring it into view and focus it. */
+  ref?: Ref<HTMLDivElement>
+}) {
   const agentRole = useRunLastWork(run)?.agentRole
   const hasAgent = agentRole !== undefined && agentRole !== ''
 
   return (
     <div
+      ref={ref}
+      tabIndex={-1}
       data-purpose={interrupt.purpose}
-      className={cn('group/pending relative pt-14', toneClasses.secondary)}
+      className={cn('group/pending relative pt-14 outline-none', toneClasses.secondary)}
     >
       {hasAgent && (
         <Actor

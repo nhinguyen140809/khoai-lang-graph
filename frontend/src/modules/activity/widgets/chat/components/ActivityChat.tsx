@@ -25,6 +25,8 @@ import { RouteParam, useRouteParam } from '@/shared/routes'
 
 import { activityChatMessages, emptyMessages } from '../activity-chat.constants'
 import type { ChatState, OlderRuns as OlderRunsLoad } from '../chat-state.types'
+import { useRegisterUiCommands } from '../hooks/useRegisterUiCommands'
+import { useReviewFocus } from '../hooks/useReviewFocus'
 import { useThreadChat } from '../hooks/useThreadChat'
 import { RunActivity } from './entries/RunActivity'
 import { ActivityPrompt } from './prompt/ActivityPrompt'
@@ -85,6 +87,8 @@ function ThreadChat({
     thread !== null,
   )
   const keptScroll = useKeptScroll('chat', { from: 'end' })
+  const { attach: attachReview, show: showReview, hasCard: hasReview } = useReviewFocus()
+  useRegisterUiCommands({ thread, showReview, hasReview })
   const target = useRouteParam(RouteParam.Entry)
   const isEmpty = state === 'empty'
 
@@ -104,7 +108,12 @@ function ThreadChat({
       {runOnScreen !== null && pendingReview !== null && (
         <ChatColumn className="pt-4">
           {/* Each review has its own form: the answers of the question before it are not its own. */}
-          <PendingReview key={pendingReview.id} interrupt={pendingReview} run={runOnScreen} />
+          <PendingReview
+            key={pendingReview.id}
+            ref={attachReview}
+            interrupt={pendingReview}
+            run={runOnScreen}
+          />
         </ChatColumn>
       )}
       <ChatColumn className={cn('pb-1', pendingReview === null ? 'pt-4' : 'pt-2')}>

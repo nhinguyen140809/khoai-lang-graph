@@ -7,7 +7,9 @@ import { server } from '@/mocks/msw-server.setup'
 import { runsOfThread } from '@/mocks/runs/lookup/runs.lookup'
 import { projectIds, threadIds } from '@/mocks/shared/db'
 import { assistanceDefinitionFixture } from '@/mocks/workflow/workflow.fixtures'
+import { uiCommandIds } from '@/modules/activity/entities'
 import { apiEndpoints } from '@/shared/api/endpoints'
+import { canRunCommand, useCommandRegistry } from '@/shared/lib/commands'
 import { assertPresent } from '@/shared/lib/guards'
 import { openPage } from '@/test/msw'
 import { setQuery } from '@/test/next-stubs'
@@ -101,6 +103,17 @@ describe('ActivityChat', () => {
     ).toMatchObject({
       status: 'succeeded',
     })
+  })
+
+  it('registers a command for each UI command that an answer may ask, and lists the settings in the palette', async () => {
+    renderWithProviders(<ActivityChat projectId={projectIds.mentor} />)
+    await expectText('Also ask about group sessions.')
+
+    for (const id of Object.values(uiCommandIds)) expect(canRunCommand(id)).toBe(true)
+    const listed = [...useCommandRegistry.getState().sources.values()]
+      .flat()
+      .filter(({ label }) => label !== undefined)
+    expect(listed.map(({ id }) => id)).toContain(uiCommandIds.openSettings)
   })
 
   it('shows the prompt under the chat', async () => {

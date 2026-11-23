@@ -3,6 +3,7 @@
 import { type ReactNode, useRef } from 'react'
 import { toast } from 'sonner'
 
+import { runUiCommands } from '@/modules/activity/entities'
 import {
   ChooseRunSettingsButton,
   useChosenRunSettings,
@@ -102,6 +103,7 @@ export function ActivityPrompt({
       onSubmit={(content) => {
         send(content, {
           runConfig: chosen,
+          onCommands: runUiCommands,
           onSent: () => {
             setText('')
             if (thread !== null) clearChosen(thread.id)
