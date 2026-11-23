@@ -602,9 +602,17 @@ def _supersede_each(
     source_id: str,
     supersedes: list[str],
 ) -> None:
-    """Link a new item to what it replaces and mark the old ones superseded."""
+    """Link a new item to what it replaces and mark the old ones superseded.
+
+    A key that is not in the artifact is left alone: it is a requirement that was already replaced
+    (and so no longer read) or one the model named from nowhere, and neither is worth failing a run
+    that is otherwise writing what it was asked for.
+    """
     for key in supersedes:
-        replaced = _must_find(current, key)
+        replaced = current.get(key)
+        if replaced is None:
+            logger.warning("supersedes a key that is not in the artifact", key=key)
+            continue
         sink.add_link(source_id=source_id, target_id=replaced["item_id"], link_type="supersedes")
         sink.mark_item_superseded(replaced["item_id"])
 
