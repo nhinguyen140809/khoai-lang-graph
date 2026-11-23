@@ -253,3 +253,11 @@ describe('AgentFace', () => {
     })
   })
 })
+
+describe('AgentFace with a state', () => {
+  it('shows a state that no one sets as it is, at once', () => {
+    const face = renderFace({ seed: 'analyst', mood: 'happy', state: 'resting-happy' })
+
+    expect(face).toHaveAttribute('data-resting', 'true')
+  })
+})

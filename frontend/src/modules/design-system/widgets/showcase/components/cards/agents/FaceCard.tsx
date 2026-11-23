@@ -62,7 +62,7 @@ export function FaceCard() {
           ))}
         </div>
       </SampleGroup>
-      <SampleGroup label="Any other key, and the sizes: sm, default, lg">
+      <SampleGroup label="Any other key, and the sizes: sm, default, lg, xl, 2xl">
         <div className="flex flex-wrap items-end gap-x-10 gap-y-6">
           {otherAgents.map((agent) => (
             <div key={agent} className="flex items-center gap-2">
@@ -73,6 +73,8 @@ export function FaceCard() {
           <AgentFace seed="validator" size="sm" />
           <AgentFace seed="validator" />
           <AgentFace seed="validator" size="lg" />
+          <AgentFace seed="validator" size="xl" />
+          <AgentFace seed="validator" size="2xl" />
         </div>
       </SampleGroup>
     </SampleCard>

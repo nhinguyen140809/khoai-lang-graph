@@ -2,7 +2,7 @@
 
 import { useState } from 'react'
 
-import { AgentFace, type Mood, moods } from '@/shared/components/face'
+import { AgentFace, type FaceState, type Mood, moods, unsetStates } from '@/shared/components/face'
 import { ToggleGroup, ToggleGroupItem } from '@/shared/components/ui/toggle-group'
 
 import type { CardEntry } from '../../../design-system.types'
@@ -18,6 +18,19 @@ const moodUses: Record<Mood, string> = {
   worried: 'failed',
   surprised: 'a new message',
   sleeping: 'stopped',
+}
+
+// What each state that no one sets is, in the words of the run.
+const stateUses: Record<string, string> = {
+  'resting-idle': 'idle for long: looks aside and keeps still',
+  'resting-happy': 'happy for long: stops swaying, keeps its smile',
+  'thinking-long': 'thinking, step 2: long eyes',
+  'thinking-squint': 'thinking, step 3: long eyes that squint',
+}
+
+/** The mood that a state comes from. */
+function moodOfState(state: FaceState): Mood {
+  return moods.find((mood) => state.includes(mood)) ?? 'idle'
 }
 
 export function FaceMoodsCard() {
@@ -63,6 +76,17 @@ export function FaceMoodsCard() {
           ))}
         </div>
       </SampleGroup>
+      <SampleGroup label="States that no one sets: a face comes to rest after a long time of nothing to do, and a thinking face goes through looks">
+        <div className="grid grid-cols-2 gap-x-8 gap-y-10 @xl:grid-cols-3 @3xl:grid-cols-4 @5xl:grid-cols-6">
+          {unsetStates.map((state) => (
+            <div key={state} className="flex flex-col items-start gap-2">
+              <AgentFace seed="analyst" size="lg" mood={moodOfState(state)} state={state} />
+              <SampleLabel>{state}</SampleLabel>
+              <SampleLabel className="opacity-70">{stateUses[state]}</SampleLabel>
+            </div>
+          ))}
+        </div>
+      </SampleGroup>
     </SampleCard>
   )
 }
@@ -72,6 +96,6 @@ export const faceMoodsCardEntry = {
   label: 'Face moods',
   section: 'agents',
   span: 12,
-  keywords: 'face mood expression AgentFace',
+  keywords: 'face mood state resting thinking expression AgentFace',
   View: FaceMoodsCard,
 } satisfies CardEntry

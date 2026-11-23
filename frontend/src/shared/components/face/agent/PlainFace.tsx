@@ -31,6 +31,7 @@ export function PlainFace({
   mood = 'idle',
   drive,
   override,
+  state,
   size = 'default',
   className,
 }: AgentFaceProps) {
@@ -40,6 +41,7 @@ export function PlainFace({
       mood,
       drive,
       override,
+      state,
     })
   const drift = blobMotionClasses[parts.moodLook.pace]
 

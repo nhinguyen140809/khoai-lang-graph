@@ -1,6 +1,7 @@
 import { defaultFilter } from 'cmdk'
 
 import type { MotionDemoMotion } from '@/shared/components/act'
+import { type FaceLook, faceOf } from '@/shared/components/face'
 import { foldText } from '@/shared/lib/text'
 
 /**
@@ -87,4 +88,20 @@ export function lookOf<Name extends string>(
   motionOf: (name: Name) => MotionDemoMotion,
 ): Record<string, MotionDemoMotion> {
   return Object.fromEntries(names.map((name) => [name, motionOf(name)]))
+}
+
+/** How many seeds `seedWhere` tries before it gives up. */
+const seedTries = 600
+
+/**
+ * The first seed of a made-up list whose face has a look that the test accepts, for a page that shows
+ * each look that a face can have (a face takes its look from its seed alone); `null` if none of the
+ * seeds has it.
+ */
+export function seedWhere(accepts: (look: FaceLook) => boolean): string | null {
+  for (let index = 0; index < seedTries; index += 1) {
+    const seed = `look-${String(index)}`
+    if (accepts(faceOf(seed))) return seed
+  }
+  return null
 }

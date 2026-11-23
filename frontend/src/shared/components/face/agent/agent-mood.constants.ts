@@ -78,3 +78,8 @@ export const faceLooks: Readonly<Record<FaceState, AgentMoodLook>> = {
     pace: 'calm',
   },
 }
+
+/** The states of a face that no one sets: the rest that a face of some moods comes to, and the steps of a mood that goes through looks. */
+export const unsetStates: readonly FaceState[] = (Object.keys(faceLooks) as FaceState[]).filter(
+  (state) => !(state in moodLooks),
+)

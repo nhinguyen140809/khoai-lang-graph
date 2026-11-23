@@ -1,8 +1,10 @@
 import { describe, expect, it } from 'vitest'
 
+import { blobShapes, eyeGaps, faceOf } from '@/shared/components/face'
+
 import { cards } from '../components/cards'
 import { sections } from '../design-system.types'
-import { rankCards, sectionOf, toHex } from '../design-system.utils'
+import { rankCards, sectionOf, seedWhere, toHex } from '../design-system.utils'
 
 describe('toHex', () => {
   it('writes an rgb color as hex', () => {
@@ -67,5 +69,27 @@ describe('rankCards', () => {
 
   it('finds nothing for a word that no card has', () => {
     expect(rankCards(cards, labelOf, 'zzzzqq')).toEqual([])
+  })
+})
+
+describe('seedWhere', () => {
+  it.each(blobShapes)('finds a seed for a deep blob that is %s', (shape) => {
+    const seed = seedWhere((look) => look.blobs[0].shape === shape)
+
+    expect(seed).not.toBeNull()
+    expect(faceOf(seed ?? '').blobs[0].shape).toBe(shape)
+  })
+
+  it.each(eyeGaps)('finds a seed for eyes that are %s apart', (gap) => {
+    expect(seedWhere((look) => look.gap === gap)).not.toBeNull()
+  })
+
+  it('finds a seed for one color and for two', () => {
+    expect(seedWhere((look) => look.colors.length === 1)).not.toBeNull()
+    expect(seedWhere((look) => look.colors.length === 2)).not.toBeNull()
+  })
+
+  it('finds none for a look that no face has', () => {
+    expect(seedWhere(() => false)).toBeNull()
   })
 })

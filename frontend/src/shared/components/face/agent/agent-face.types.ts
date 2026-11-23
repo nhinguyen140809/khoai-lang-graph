@@ -1,4 +1,4 @@
-import type { EyeLife, FaceProps, MotionLook } from '../face.types'
+import type { EyeLife, FaceProps, FaceState, MotionLook } from '../face.types'
 
 /** The eyes of a face: long ones, round ones, a long oval one and a flat oval one, closed smiling arcs, or shut ones. */
 export type EyeKind = 'long' | 'round' | 'tall' | 'flat' | 'arc' | 'shut' | 'cross' | 'spiral'
@@ -38,6 +38,8 @@ export type MoodOverride = Partial<
 export interface AgentFaceProps extends FaceProps {
   /** Parts of the look of the mood to say otherwise, each replacing the one that the mood gives; the mood stays its own for the rest. */
   override?: MoodOverride | undefined
+  /** A state to show as it is, in place of the one that the mood gives, for a page that shows every state, even those that no one sets, such as the rest of an idle face. */
+  state?: FaceState | undefined
 }
 
 /** The ways that a face is drawn: plain, in CSS, which needs nothing to load. */

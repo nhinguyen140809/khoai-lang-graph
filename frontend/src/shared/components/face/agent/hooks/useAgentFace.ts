@@ -21,9 +21,10 @@ export function useAgentFace({
   mood = 'idle',
   drive,
   override,
-}: Pick<AgentFaceProps, 'seed' | 'mood' | 'drive' | 'override'>) {
+  state,
+}: Pick<AgentFaceProps, 'seed' | 'mood' | 'drive' | 'override' | 'state'>) {
   const look: FaceLook = faceOf(seed, useFaceRules())
-  const parts = useFaceParts(look, mood, override)
+  const parts = useFaceParts(look, mood, override, state)
   const { moodLook } = parts
   const motion = useFaceMotion(
     moodLook,

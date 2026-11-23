@@ -7,6 +7,7 @@ import { actMoodsCardEntry } from './agents/ActMoodsCard'
 import { actsCardEntry } from './agents/ActsCard'
 import { faceCardEntry } from './agents/FaceCard'
 import { faceEyesCardEntry } from './agents/FaceEyesCard'
+import { faceLooksCardEntry } from './agents/FaceLooksCard'
 import { faceMoodsCardEntry } from './agents/FaceMoodsCard'
 import { faceMotionsCardEntry } from './agents/FaceMotionsCard'
 import { feedEntryCardEntry } from './agents/FeedEntryCard'
@@ -83,6 +84,7 @@ export const cards: readonly CardEntry[] = [
   traceCardEntry,
   feedEntryCardEntry,
   faceCardEntry,
+  faceLooksCardEntry,
   faceMoodsCardEntry,
   faceMotionsCardEntry,
   faceEyesCardEntry,
