@@ -52,6 +52,7 @@ export type IconKey =
   | 'chartSpline'
   | 'check'
   | 'code'
+  | 'dot'
   | 'download'
   | 'eventList'
   | 'fork'

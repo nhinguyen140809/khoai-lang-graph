@@ -7,12 +7,19 @@ import { Face } from '@/shared/components/face'
 import { useIsInView } from '@/shared/lib/viewport'
 
 import { restingLook } from './act.constants'
-import { type Act, type ActProp, type FaceMove, slots } from './act.types'
+import { type Act, type ActProp, type FaceMove, type IconKey, slots } from './act.types'
 import { ActProps } from './ActProps'
 import { useActDrive } from './hooks/useActDrive'
 
 /** How long a round of a demonstration takes: an orbit goes slowly, the rest at the pace of the acts. */
 const demoLoopMs = { orbit: 7200, other: 3200 } as const
+
+/**
+ * The thing that a demonstration moves. An orbit goes round with dots, which read as a ring, and
+ * are the same all round; the other motions use an icon that has a front, a plane, so that a turn,
+ * a flip or a shake can be seen.
+ */
+const demoIcons = { orbit: 'dot', other: 'check' } as const satisfies Record<string, IconKey>
 
 /** How many times a face moves over a round of a demonstration. */
 const demoMoveCycles = 3
@@ -60,7 +67,17 @@ export function MotionDemo({ seed, motion, className }: MotionDemoProps) {
     look: restingLook,
     ...(move !== undefined && { move: { move, cycles: demoMoveCycles } }),
     props:
-      move === undefined ? [{ icon: 'message', from: 0, to: 1, slot: 'right', ...onThing }] : [],
+      move === undefined
+        ? [
+            {
+              icon: demoIcons[motion.course === 'orbit' ? 'orbit' : 'other'],
+              from: 0,
+              to: 1,
+              slot: 'right',
+              ...onThing,
+            },
+          ]
+        : [],
   }))
   const { drive, round } = useActDrive(act, 0, gain, isInView)
 
