@@ -9,9 +9,9 @@ import {
   messageKeys,
   sendFirstMessage,
   sendMessage,
+  type SentMessage,
   type Thread,
   threadKeys,
-  type UiCommand,
 } from '@/modules/thread/entities'
 import { errorMessageOf } from '@/shared/api/error'
 import { newIdempotencyKey } from '@/shared/api/idempotency'
@@ -22,8 +22,8 @@ import { sendMessageMessages } from './send-message.constants'
  * Sends a message of the user to the thread of the activity, or to a new thread of the project
  * when it has none, with the run settings given for a run that it starts. Once sent, `onSent`
  * runs, and the messages of the thread, the thread and its runs load again; a failure shows as a
- * toast. An answer that asks the page to do something, such as opening a document, comes with UI
- * commands: `onCommands` then gets them and the thread the message was sent to.
+ * toast. The message is sent once it is stored: the run that answers it goes on after that, and
+ * `onSent` gets the message and the run that took it.
  */
 export function useSendMessage({
   projectId,
@@ -42,8 +42,7 @@ export function useSendMessage({
     }: {
       content: string
       runConfig: RunDefaults | undefined
-      onSent: () => void
-      onCommands: ((commands: UiCommand[], threadId: string) => void) | undefined
+      onSent: (sent: SentMessage) => void
       idempotencyKey: string
     }) => {
       const body = {
@@ -57,14 +56,13 @@ export function useSendMessage({
         ? sendFirstMessage(projectId, body, idempotencyKey)
         : sendMessage(thread.id, body, idempotencyKey)
     },
-    onSuccess: async (answer, { onSent, onCommands }) => {
+    onSuccess: async (sent, { onSent }) => {
       await Promise.all([
         queryClient.invalidateQueries({ queryKey: messageKeys.all() }),
         queryClient.invalidateQueries({ queryKey: threadKeys.all() }),
         queryClient.invalidateQueries({ queryKey: runKeys.all() }),
       ])
-      onSent()
-      if (answer.commands.length > 0) onCommands?.(answer.commands, answer.message.thread_id)
+      onSent(sent)
     },
     onError: (error) => {
       toast.error(`${sendMessageMessages.notSent} ${errorMessageOf(error)}`)
@@ -77,18 +75,15 @@ export function useSendMessage({
       {
         runConfig,
         onSent,
-        onCommands,
       }: {
         runConfig: RunDefaults | undefined
-        onSent: () => void
-        onCommands?: (commands: UiCommand[], threadId: string) => void
+        onSent: (sent: SentMessage) => void
       },
     ) => {
       mutation.mutate({
         content,
         runConfig,
         onSent,
-        onCommands,
         idempotencyKey: newIdempotencyKey(),
       })
     },

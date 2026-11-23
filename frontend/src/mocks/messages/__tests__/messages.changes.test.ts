@@ -8,11 +8,12 @@ import type { Thread } from '@/modules/thread/entities'
 import { assertPresent } from '@/shared/lib/guards'
 
 import { allArtifacts } from '../../artifacts/artifacts.lookup'
+import { findRun } from '../../runs/lookup/runs.lookup'
 import { projectIds, threadIds } from '../../shared/db'
 import { buildThread } from '../../threads/threads.fixtures'
 import { findThread } from '../../threads/threads.lookup'
 import { createdThreads } from '../../threads/threads.store'
-import { addMessage } from '../messages.changes'
+import { addMessage, finishAnswer } from '../messages.changes'
 import { messagesOfThread } from '../messages.lookup'
 
 describe('addMessage', () => {
@@ -56,25 +57,38 @@ describe('addMessage', () => {
     expect(findThread('t-of-test')).toMatchObject({ title: 'Thesis tracker' })
   })
 
-  it('answers a message about the settings with a finished run of the assistant', () => {
+  it('takes in a message about the settings with a run of the assistant that is working', () => {
     const thread = assertPresent(
       findThread(threadIds.laundryMain),
       'The mock data holds the laundry thread.',
     )
 
-    const { message, run, commands } = addMessage(thread, { content: 'Where are the limits?' })
+    const { message, run } = addMessage(thread, { content: 'Where are the limits?' })
 
     expect(run).toMatchObject({
       workflow_name: assistanceDefinitionFixture.name,
-      status: 'succeeded',
+      status: 'running',
     })
-    expect(commands).toMatchObject([{ command: 'open_settings' }])
-    expect(message).toMatchObject({ author: 'user', run_id: run.id, delivery: null })
+    expect(message).toMatchObject({ author: 'user', run_id: run.id, delivery: 'delivered' })
+    expect(messagesOfThread(thread.id).at(-1)).toBe(message)
+  })
+
+  it('ends the run with the answer, and the commands it asks for, as a message of the run', () => {
+    const thread = assertPresent(
+      findThread(threadIds.laundryMain),
+      'The mock data holds the laundry thread.',
+    )
+    const { run } = addMessage(thread, { content: 'Where are the limits?' })
+
+    finishAnswer(run.id)
+
+    expect(findRun(run.id)).toMatchObject({ status: 'succeeded' })
     const answer = messagesOfThread(thread.id).at(-1)
     expect(answer).toMatchObject({
       author: 'agent',
       agent_role: assistanceAgentFixture.agent_role,
       run_id: run.id,
+      commands: [{ command: 'open_settings' }],
     })
     expect(answer?.content).toContain('limits')
   })
@@ -88,11 +102,13 @@ describe('addMessage', () => {
       allArtifacts().find(({ project_id: owner }) => owner === thread.project_id),
       'The mock data holds a document of the laundry project.',
     )
+    const { run } = addMessage(thread, { content: `Open ${artifact.title}` })
 
-    const { commands } = addMessage(thread, { content: `Open ${artifact.title}` })
+    finishAnswer(run.id)
 
-    expect(commands).toMatchObject([{ command: 'open_document', artifact_id: artifact.id }])
-    expect(messagesOfThread(thread.id).at(-1)?.artifact_refs).toMatchObject([
+    const answer = messagesOfThread(thread.id).at(-1)
+    expect(answer?.commands).toMatchObject([{ command: 'open_document', artifact_id: artifact.id }])
+    expect(answer?.artifact_refs).toMatchObject([
       { artifact_id: artifact.id, title: artifact.title },
     ])
   })

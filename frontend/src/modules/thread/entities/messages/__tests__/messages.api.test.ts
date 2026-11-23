@@ -27,11 +27,10 @@ describe('the message API', () => {
       delivery: 'started_run',
     })
     expect(sent.run).toMatchObject({ number: 4, status: 'running' })
-    expect(sent.commands).toEqual([])
     expect(sent.message.run_id).toBe(sent.run.id)
   })
 
-  it('reads the answer of the assistant to a message about the app, with its finished run', async () => {
+  it('takes in a message about the app with a run of the assistant that is still working', async () => {
     const sent = await sendMessage(
       threadIds.mentorMain,
       { content: 'Where are the limits?' },
@@ -40,12 +39,9 @@ describe('the message API', () => {
 
     expect(sent.run).toMatchObject({
       workflow_name: assistanceDefinitionFixture.name,
-      status: 'succeeded',
+      status: 'running',
     })
-    expect(sent.message).toMatchObject({ run_id: sent.run.id, delivery: null })
-    expect(sent.commands).toMatchObject([
-      { command: 'open_settings', artifact_id: null, item_id: null },
-    ])
+    expect(sent.message).toMatchObject({ run_id: sent.run.id, delivery: 'delivered' })
   })
 
   itSendsRequests(sentMessageRequestCases)

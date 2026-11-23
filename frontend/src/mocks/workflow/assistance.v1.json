@@ -196,7 +196,7 @@
         "title": "Reads for one message",
         "minimum": 1,
         "maximum": 6,
-        "default": 3,
+        "default": 5,
         "description": "How many things the assistant may read of the project before it answers. Each read is one more call of the model, so it adds to the time and the cost of an answer."
       }
     },

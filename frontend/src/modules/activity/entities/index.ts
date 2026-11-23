@@ -15,6 +15,7 @@ export {
 export { ReferenceOpenerProvider } from './components/ReferenceOpenerProvider'
 export { useActivityStream } from './hooks/useActivityStream'
 export { useActivityThread } from './hooks/useActivityThread'
+export { useAnswerPolling } from './hooks/useAnswerPolling'
 export { useReferenceOpener } from './hooks/useReferenceOpener'
 export { useRevealReference } from './hooks/useRevealReference'
 export { useRunEntries } from './hooks/useRunEntries'

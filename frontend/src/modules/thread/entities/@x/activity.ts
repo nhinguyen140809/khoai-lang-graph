@@ -1,5 +1,7 @@
 export { useReloadThreadMessages, useThreadMessages } from '../messages/hooks/useMessageQueries'
-export type { Message, UiCommand } from '../messages/messages.types'
+export { messageKeys } from '../messages/messages.keys'
+export type { Message, SentMessage, UiCommand } from '../messages/messages.types'
 export { useProjectThreads } from '../threads/hooks/useThreadQueries'
+export { threadKeys } from '../threads/threads.keys'
 export type { Thread } from '../threads/threads.types'
 export { hasUnfinishedRun, threadsByAttention } from '../threads/threads.utils'

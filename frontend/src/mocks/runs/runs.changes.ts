@@ -53,14 +53,12 @@ export function addRun(fields: NewRun): Run {
 }
 
 /**
- * The finished run of the assistance workflow that answers a message: one step of its agent, with
- * a note for each read that it made. It is a run of the thread, in its order, and not the work of
- * the project.
+ * The run of the assistance workflow that answers a message, while it works: one step of its agent,
+ * with no note yet. It is a run of the thread, in its order, and not the work of the project.
  */
-export function addAnsweredRun(fields: {
+export function startAnsweringRun(fields: {
   threadId: string
   projectId: string
-  notes: StepNote[]
   now: string
 }): Run {
   const run = buildRun({
@@ -70,14 +68,14 @@ export function addAnsweredRun(fields: {
     number: runsOfThread(fields.threadId).length + 1,
     workflow_name: assistance.name,
     workflow_version: assistance.version,
-    status: 'succeeded',
+    status: 'running',
     current_stage: agent.stage,
     run_config: resolveRunConfig(findProject(fields.projectId)),
     usage: noUsage,
     step_count: 1,
     last_event_id: 0,
     started_at: fields.now,
-    finished_at: fields.now,
+    finished_at: null,
   })
   createdRuns.set([...createdRuns.get(), run])
   createdSteps.set([
@@ -89,11 +87,27 @@ export function addAnsweredRun(fields: {
       node: agent.id,
       agent_role: agent.agent_role,
       stage: agent.stage,
-      llm_calls: fields.notes.length + 1,
-      notes: fields.notes,
+      status: 'running',
       started_at: fields.now,
-      finished_at: fields.now,
     }),
   ])
   return run
+}
+
+/** Ends the run that answers a message: its step holds a note for each read that was made. */
+export function endAnsweringRun(runId: string, fields: { notes: StepNote[]; now: string }) {
+  changeRun(runId, { status: 'succeeded', finished_at: fields.now })
+  createdSteps.set(
+    createdSteps.get().map((step) =>
+      step.run_id === runId
+        ? {
+            ...step,
+            status: 'succeeded',
+            llm_calls: fields.notes.length + 1,
+            notes: fields.notes,
+            finished_at: fields.now,
+          }
+        : step,
+    ),
+  )
 }

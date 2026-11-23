@@ -111,6 +111,7 @@ describe('messagesByRun', () => {
             content: '',
             artifact_refs: [],
             item_refs: [],
+            commands: [],
             delivery: null,
             delivered_in_step_id: null,
             created_at: '2026-10-06T08:00:00Z',

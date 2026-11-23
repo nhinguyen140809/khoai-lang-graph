@@ -1,21 +1,22 @@
 import { describe, expect, it } from 'vitest'
 
 import { sentMessage } from '../../threads/__tests__/threads.api.data'
-import { sentMessageSchema } from '../messages.types'
+import { messageSchema } from '../messages.types'
 
-describe('sentMessageSchema', () => {
-  it('reads an answer that leaves out the commands as one that asks for none', () => {
-    const { message, run } = sentMessage
+describe('messageSchema', () => {
+  it('reads a message that leaves out the commands as one that asks for none', () => {
+    const withoutCommands: Record<string, unknown> = { ...sentMessage.message }
+    delete withoutCommands.commands
 
-    expect(sentMessageSchema.parse({ message, run }).commands).toEqual([])
+    expect(messageSchema.parse(withoutCommands).commands).toEqual([])
   })
 
   it('reads the UI commands that an answer asks for', () => {
     const answered = {
-      ...sentMessage,
+      ...sentMessage.message,
       commands: [{ command: 'open_settings', artifact_id: null, item_id: null, label: null }],
     }
 
-    expect(sentMessageSchema.parse(answered).commands).toHaveLength(1)
+    expect(messageSchema.parse(answered).commands).toHaveLength(1)
   })
 })
