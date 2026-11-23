@@ -5,34 +5,45 @@ import { type MotionStyle, type MotionValue, useMotionValue, useTransform } from
 import type { Body, FaceDrive, GazeTiming, GazeValues, Pose } from '../../face.types'
 import { bodyLoops, poseLoops } from '../face-loop.constants'
 import { useLoop } from './useLoop'
-
-/** The sum of two values that change over time. */
-function useSum(first: MotionValue<number>, second: MotionValue<number>): MotionValue<number> {
-  return useTransform<number, number>([first, second], ([a, b]) => (a ?? 0) + (b ?? 0))
-}
+import { useSum } from './useSum'
 
 /** A value that is a share of the size of the element, as a percentage. */
 function usePercent(share: MotionValue<number>): MotionValue<string> {
   return useTransform(share, (value) => `${String(value * 100)}%`)
 }
 
+/** What moves the body of a face, as the values of its style: where it is, how it is turned and how large it is. */
+export interface BodyStyle {
+  x: MotionValue<string>
+  y: MotionValue<string>
+  rotate: MotionValue<number>
+  rotateX: MotionValue<number>
+  rotateY: MotionValue<number>
+  scale: MotionValue<number>
+  scaleX: MotionValue<number>
+  scaleY: MotionValue<number>
+}
+
 /**
- * What moves the whole face by its mood, as the styles of the two elements that carry it: the pose
- * (the plane of the page, pivoting on the bottom) and the body (the face as a whole, about the middle
- * of its depth, which also turns with the eyes: the turns of the gaze add to those of the body). A
- * `move` from outside is added to the body: its offsets and turn to those of the mood, its scale
- * times that of the mood.
+ * What moves a face by its mood, as three styles, each for an element of its own, so that a kind of
+ * face puts each where it has the part that it moves:
+ *
+ * - `poseStyle`, the pose: the plane of the page, pivoting on the bottom (the neck, for a face of a
+ *   person).
+ * - `headStyle`, the turns of the head with the eyes, which come from the gaze.
+ * - `bodyStyle`, the body: the whole, about the middle of its depth. A `move` from outside is added
+ *   to it: its offsets and turn to those of the mood, its scale times that of the mood.
+ *
+ * A face that has no head apart from its body puts the head on the body (see `useTurnedBody`).
  */
 export function useBodyStyles(
   { pose, body }: { pose?: Pose | undefined; body?: Body | undefined },
   head: GazeValues['head'],
   { phase, isChanging, isRunning }: GazeTiming,
   move?: FaceDrive['move'],
-): { poseStyle: MotionStyle; bodyStyle: MotionStyle } {
+): { poseStyle: MotionStyle; headStyle: GazeValues['head']; bodyStyle: BodyStyle } {
   const posed = useLoop(pose === undefined ? null : poseLoops[pose], phase, isChanging, isRunning)
   const bodied = useLoop(bodyLoops[body ?? 'none'], phase, isChanging, isRunning)
-  const rotateX = useSum(head.rotateX, bodied.rotateX)
-  const rotateY = useSum(head.rotateY, bodied.rotateY)
   const none = useMotionValue(0)
   const whole = useMotionValue(1)
   const x = usePercent(useSum(bodied.x, move?.x ?? none))
@@ -45,13 +56,13 @@ export function useBodyStyles(
 
   return {
     poseStyle: { rotate: posed.rotate, scale: posed.scale, originY: 1 },
+    headStyle: head,
     bodyStyle: {
       x,
       y,
       rotate,
-      rotateX,
-      rotateY,
-      rotateZ: head.rotateZ,
+      rotateX: bodied.rotateX,
+      rotateY: bodied.rotateY,
       scale,
       scaleX: bodied.scaleX,
       scaleY: bodied.scaleY,

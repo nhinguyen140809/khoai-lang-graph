@@ -29,6 +29,6 @@ export function useFaceMotion(
   const timing: GazeTiming = { phase, isChanging, isRunning: isInView, reachShare }
   const gaze: GazeValues = useGaze(gazeLooks[moodLook.gaze], timing, drive?.look)
   const motions = useFaceMotionStates(moodLook, eyes, { isHeld: isChanging || !isInView, phase })
-  const { poseStyle, bodyStyle } = useBodyStyles(motions, gaze.head, timing, drive?.move)
-  return { ref, isInView, gaze, motions, poseStyle, bodyStyle }
+  const { poseStyle, headStyle, bodyStyle } = useBodyStyles(motions, gaze.head, timing, drive?.move)
+  return { ref, isInView, gaze, motions, poseStyle, headStyle, bodyStyle }
 }

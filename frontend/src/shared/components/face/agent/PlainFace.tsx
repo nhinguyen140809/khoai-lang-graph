@@ -8,6 +8,7 @@ import type { AgentFaceProps } from './agent-face.types'
 import { blobMotionClasses } from './agent-motion.constants'
 import { FaceFeatures } from './FaceFeatures'
 import { useAgentFace } from './hooks/useAgentFace'
+import { useTurnedBody } from './hooks/useTurnedBody'
 import { blobStyleOf } from './look/face-style.utils'
 
 /**
@@ -35,7 +36,7 @@ export function PlainFace({
   size = 'default',
   className,
 }: AgentFaceProps) {
-  const { look, ref, isInView, isRested, parts, gaze, motions, poseStyle, bodyStyle } =
+  const { look, ref, isInView, isRested, parts, gaze, motions, poseStyle, headStyle, bodyStyle } =
     useAgentFace({
       seed,
       mood,
@@ -43,6 +44,7 @@ export function PlainFace({
       override,
       state,
     })
+  const turnedStyle = useTurnedBody(bodyStyle, headStyle)
   const drift = blobMotionClasses[parts.moodLook.pace]
 
   return (
@@ -61,7 +63,7 @@ export function PlainFace({
       style={{ ...blobStyleOf(look), '--face-layers': faceLayerCount } as CSSProperties}
     >
       <motion.span className="face-pose" style={poseStyle}>
-        <motion.span data-body={motions.body} className="face-body" style={bodyStyle}>
+        <motion.span data-body={motions.body} className="face-body" style={turnedStyle}>
           {Array.from({ length: faceLayerCount }, (_, layer) => (
             <span
               key={layer}

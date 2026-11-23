@@ -56,3 +56,16 @@ describe('useBodyStyles with a move', () => {
     expect((bodyStyle.scale as { get: () => number }).get()).toBe(1.5)
   })
 })
+
+describe('useBodyStyles with a head', () => {
+  it('keeps the turns of the head apart from those of the body', () => {
+    const { result } = renderHook(() => {
+      const gaze = useGaze(gazeLooks.still, timing)
+      return useBodyStyles({}, gaze.head, timing)
+    })
+    const { headStyle, bodyStyle } = result.current
+
+    expect(headStyle).toHaveProperty('rotateZ')
+    expect(bodyStyle).not.toHaveProperty('rotateZ')
+  })
+})
