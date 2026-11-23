@@ -1,17 +1,23 @@
 'use client'
 
 import { cn } from 'cn'
-import { type ReactNode, useEffect, useEffectEvent, useState } from 'react'
+import {
+  type ReactNode,
+  type RefObject,
+  useEffect,
+  useEffectEvent,
+  useLayoutEffect,
+  useRef,
+  useState,
+} from 'react'
 import * as ResizablePrimitive from 'react-resizable-panels'
-
-import { motionMs } from '@/shared/lib/animation'
 
 function ResizablePanelGroup({ className, ...props }: ResizablePrimitive.GroupProps) {
   return (
     <ResizablePrimitive.Group
       data-slot="resizable-panel-group"
       className={cn(
-        'flex h-full w-full aria-[orientation=vertical]:flex-col *:data-animated:transition-[flex-grow] *:data-animated:duration-200 *:data-animated:ease-in-out motion-reduce:*:data-animated:transition-none',
+        'flex h-full w-full aria-[orientation=vertical]:flex-col *:data-animated:transition-[flex-grow] *:data-animated:duration-300 *:data-animated:ease-[cubic-bezier(0.32,0.72,0,1)] motion-reduce:*:data-animated:transition-none',
         className,
       )}
       {...props}
@@ -58,6 +64,9 @@ function ResizableHandle({
   )
 }
 
+/** How long a panel takes to grow or shrink: slower than a small control, as a whole panel of the page moves, and it comes to rest gently (the same as `duration-300` of the group below). */
+const panelMotionMs = 300
+
 /** Time after the motion for the last size to arrive, before sizes count as the user's again. */
 const settleMs = 50
 
@@ -97,13 +106,45 @@ function usePanelMotion(
     const timer = setTimeout(() => {
       setIsAnimating(false)
       if (!isVisible) setIsShrunk(true)
-    }, motionMs + settleMs)
+    }, panelMotionMs + settleMs)
     return () => {
       clearTimeout(timer)
     }
   }, [isAnimating, isVisible])
 
   return { isAnimating, isShrunk }
+}
+
+/**
+ * The width that what a panel holds keeps while the panel moves, in pixels, so that its layout does
+ * not change at each step of the motion (a grid that fits as many columns as it can would add and
+ * drop a column, and the page would flicker): the width that it is growing to, or the one it has
+ * when it starts to shrink. Null when the panel is at rest.
+ */
+function useLockedWidth(
+  isAnimating: boolean,
+  isVisible: boolean,
+  size: number | string,
+  contentRef: RefObject<HTMLDivElement | null>,
+): number | null {
+  const [lockedWidth, setLockedWidth] = useState<number | null>(null)
+
+  useLayoutEffect(() => {
+    const content = contentRef.current
+    if (!isAnimating || content === null) {
+      setLockedWidth(null)
+      return
+    }
+    if (!isVisible) {
+      setLockedWidth(content.clientWidth)
+      return
+    }
+    const group = content.closest('[data-slot=resizable-panel-group]')
+    const groupWidth = group?.clientWidth ?? 0
+    setLockedWidth(typeof size === 'number' ? size : (Number.parseFloat(size) / 100) * groupWidth)
+  }, [isAnimating, isVisible, size, contentRef])
+
+  return lockedWidth
 }
 
 interface AnimatedPanelProps {
@@ -149,6 +190,8 @@ function AnimatedResizablePanel({
   const [initialSize] = useState(defaultSize)
   const [size, setSize] = useState<number | string>(defaultSize)
   const { isAnimating, isShrunk } = usePanelMotion(isVisible, () => size, panelRef)
+  const contentRef = useRef<HTMLDivElement>(null)
+  const lockedWidth = useLockedWidth(isAnimating, isVisible, size, contentRef)
 
   // A panel that has shrunk to nothing has no handle at all: a handle that is only hidden can still
   // be dragged from the edge of the group, which opens the panel with nothing in it.
@@ -180,8 +223,12 @@ function AnimatedResizablePanel({
         }}
       >
         <div
+          ref={contentRef}
           className="h-full"
-          style={isShrunk && !isAnimating ? { visibility: 'hidden' } : undefined}
+          style={{
+            ...(isShrunk && !isAnimating && { visibility: 'hidden' }),
+            ...(lockedWidth !== null && { width: lockedWidth, minWidth: lockedWidth }),
+          }}
         >
           {children}
         </div>

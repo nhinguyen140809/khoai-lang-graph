@@ -1,4 +1,15 @@
-import type { EyeLife, Gaze, GazeLook, GazePath, GazePathLook, HeadTurn, Pace } from '../face.types'
+import type {
+  Body,
+  EyeKind,
+  EyeLife,
+  Gaze,
+  GazeLook,
+  GazePath,
+  GazePathLook,
+  HeadTurn,
+  Pace,
+  Pose,
+} from '../face.types'
 
 // The classes of the named motions of a face (see `face-motion.css`). Every class is written whole,
 // so that it is generated. A mood chooses among these in `moodLooks`.
@@ -121,4 +132,29 @@ export const eyeLifeLooks = {
     className: 'animate-face-eye-squint motion-reduce:animate-none',
     durationToken: '--duration-face-squint',
   },
+  wink: {
+    className: 'animate-face-eye-wink motion-reduce:animate-none',
+    durationToken: '--duration-face-wink',
+  },
 } as const satisfies Record<EyeLife, { className: string; durationToken: string | null }>
+
+/** How long one blink takes, in milliseconds: the eyes close and open again. It is the time of `--animate-face-blink`. */
+export const blinkMs = 380
+
+/** How long the eyes stay open between two blinks, in milliseconds. */
+export const blinkEveryMs = 3420
+
+/** Every motion that a face can have, by kind, for a page that shows them one at a time. A body that is `none` and a gaze that holds the eyes are not listed: they move nothing. */
+export const faceMotions = {
+  poses: ['sway', 'tilt', 'rest'],
+  bodies: ['pulse', 'breathe', 'bounce', 'turnaround'],
+  eyes: ['long', 'round', 'tall', 'flat', 'arc', 'shut', 'cross', 'spiral'],
+  eyeLives: ['steady', 'breathe', 'squint', 'wink'],
+  gazes: ['wander', 'drift', 'ponder', 'glance', 'scan', 'down', 'toward', 'still'],
+} as const satisfies {
+  poses: readonly Pose[]
+  bodies: readonly Exclude<Body, 'none'>[]
+  eyes: readonly EyeKind[]
+  eyeLives: readonly EyeLife[]
+  gazes: readonly Gaze[]
+}

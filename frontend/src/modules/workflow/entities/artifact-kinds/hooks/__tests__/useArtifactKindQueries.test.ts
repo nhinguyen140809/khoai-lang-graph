@@ -14,9 +14,9 @@ describe('useArtifactKinds', () => {
   })
 
   it('loads the kinds of a workflow version', async () => {
-    const { result } = renderHookWithProviders(() => useArtifactKinds(1))
+    const { result } = renderHookWithProviders(() => useArtifactKinds(2))
 
     await waitForSuccess(result)
-    expect(result.current.data?.workflow_version).toBe(1)
+    expect(result.current.data?.workflow_version).toBe(2)
   })
 })

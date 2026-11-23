@@ -7,13 +7,13 @@ export const schemaRejectedCases: RejectedRequestCase[] = [
   {
     name: 'finds no kinds at another workflow version',
     method: 'GET',
-    path: `${apiEndpoints.artifactKinds.path()}?workflow_version=2`,
+    path: `${apiEndpoints.artifactKinds.path()}?workflow_version=1`,
     status: HttpStatus.NotFound,
   },
   {
     name: 'finds no content schema for another version',
     method: 'GET',
-    path: apiEndpoints.contentSchema.path({ kind: 'persona', version: '2' }),
+    path: apiEndpoints.contentSchema.path({ kind: 'persona', version: '1' }),
     status: HttpStatus.NotFound,
   },
   {

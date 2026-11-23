@@ -62,9 +62,21 @@ export const restingStates = {
   happy: 'resting-happy',
 } as const satisfies Record<RestingMood, FaceState>
 
-/** The looks of every state of a face: the moods, and the rest that a face of some moods comes to. An idle face looks to one side and keeps still; a happy face stops swaying and keeps its smile. */
+/** The looks of every state of a face: the moods, the rest that a face of some moods comes to, and the steps of a mood that goes through looks. An idle face looks to one side and keeps still; a happy face stops swaying and keeps its smile; a thinking face goes on from its large and small round eyes to long ones, and then to long ones that squint. */
 export const faceLooks: Readonly<Record<FaceState, MoodLook>> = {
   ...moodLooks,
+  'thinking-long': {
+    ...moodLooks.thinking,
+    eyes: longEyes,
+    eyeScales: evenEyes,
+    eyeLives: ['steady', 'steady'],
+  },
+  'thinking-squint': {
+    ...moodLooks.thinking,
+    eyes: longEyes,
+    eyeScales: evenEyes,
+    eyeLives: ['squint', 'squint'],
+  },
   'resting-idle': { ...moodLooks.idle, gaze: 'toward' },
   'resting-happy': {
     gaze: 'still',
@@ -77,3 +89,14 @@ export const faceLooks: Readonly<Record<FaceState, MoodLook>> = {
 
 /** How long a face of a mood that comes to rest has nothing to do before it does, in milliseconds. */
 export const restAfterMs = 20000
+
+/** The moods that go through looks one after another while they last, and for how long each look stays, in milliseconds; the first is the look of the mood, and after the last it comes round again. Each change is covered by a blink, as a change of mood is. The squinting look stays for a whole round of a squint (4.3 seconds, which the squint comes late in) so that the eyes squint while it lasts. */
+export const moodCycles: Readonly<
+  Partial<Record<Mood, readonly { state: FaceState; ms: number }[]>>
+> = {
+  thinking: [
+    { state: 'thinking', ms: 6000 },
+    { state: 'thinking-long', ms: 3500 },
+    { state: 'thinking-squint', ms: 4500 },
+  ],
+}

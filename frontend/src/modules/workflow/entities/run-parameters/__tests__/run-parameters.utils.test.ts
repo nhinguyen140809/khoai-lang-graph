@@ -25,6 +25,19 @@ describe('runParameterFields', () => {
     expect(fields.find(({ name }) => name === property)).toMatchObject(field)
   })
 
+  it('reads the audience that the definition gives a property: none when it has no keyword', () => {
+    const [shared, onlyDeveloper] = runParameterFields({
+      type: 'object',
+      properties: {
+        flag: { type: 'boolean' },
+        max_turns: { type: 'integer', 'x-ui-audience': 'developer' },
+      },
+    })
+
+    expect(shared?.audience).toBeNull()
+    expect(onlyDeveloper?.audience).toBe('developer')
+  })
+
   it('makes a text of a property that is not a field schema', () => {
     const [field] = runParameterFields({ type: 'object', properties: { value: 'not a schema' } })
 

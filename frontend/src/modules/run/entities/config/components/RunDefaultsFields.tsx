@@ -15,8 +15,9 @@ import {
   FieldSet,
 } from '@/shared/components/ui/field'
 import { Switch } from '@/shared/components/ui/switch'
+import { useView } from '@/shared/lib/view'
 
-import { runDefaultsMessages } from '../run-defaults.constants'
+import { runDefaultsMessages, runLimitFieldsByView } from '../run-defaults.constants'
 import { selectedCheckpoints, toggledCheckpoints } from '../run-defaults.utils'
 import { ParameterField } from './ParameterField'
 
@@ -110,6 +111,7 @@ export function RunDefaultsFields<T extends FieldValues, TOutput = T>({
   parameterFields,
   showNote = true,
 }: RunDefaultsFieldsProps<T, TOutput>) {
+  const limits = runLimitFieldsByView[useView()]
   return (
     <FieldSet>
       <FieldLegend className="sr-only">{legend}</FieldLegend>
@@ -119,19 +121,23 @@ export function RunDefaultsFields<T extends FieldValues, TOutput = T>({
         name={nameAt<T>(path, 'review_checkpoints')}
         checkpoints={checkpoints}
       />
-      <NumberField
-        control={control}
-        name={nameAt<T>(path, 'max_steps')}
-        label={runDefaultsMessages.maxSteps}
-        min={1}
-        integer
-      />
-      <NumberField
-        control={control}
-        name={nameAt<T>(path, 'max_cost_usd')}
-        label={runDefaultsMessages.maxCostUsd}
-        min={0}
-      />
+      {limits.maxSteps && (
+        <NumberField
+          control={control}
+          name={nameAt<T>(path, 'max_steps')}
+          label={runDefaultsMessages.maxSteps}
+          min={1}
+          integer
+        />
+      )}
+      {limits.maxCostUsd && (
+        <NumberField
+          control={control}
+          name={nameAt<T>(path, 'max_cost_usd')}
+          label={runDefaultsMessages.maxCostUsd}
+          min={0}
+        />
+      )}
       {parameterFields.length > 0 && (
         <FieldSet>
           <FieldLegend variant="label">{runDefaultsMessages.parametersLegend}</FieldLegend>

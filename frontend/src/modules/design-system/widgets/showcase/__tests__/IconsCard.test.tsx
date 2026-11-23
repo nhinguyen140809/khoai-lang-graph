@@ -10,7 +10,16 @@ describe('IconsCard', () => {
   it('names every icon that is drawn by a clock and every icon of our own', async () => {
     renderWithProviders(<IconsCard />)
 
-    for (const name of ['search', 'typed-line', 'ungroup', 'dot', 'exclamation', 'spinning']) {
+    for (const name of [
+      'search',
+      'typed-line',
+      'ungroup',
+      'dot',
+      'exclamation',
+      'pause-solid',
+      'zap-solid',
+      'spinning',
+    ]) {
       await expectText(name)
     }
   })

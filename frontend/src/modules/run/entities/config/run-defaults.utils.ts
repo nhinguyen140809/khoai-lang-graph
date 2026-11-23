@@ -4,6 +4,7 @@ import {
   sentRunParameters,
 } from '@/modules/workflow/entities/@x/run'
 import { isString } from '@/shared/lib/guards'
+import type { View } from '@/shared/lib/view'
 
 import type { RunDefaults } from './run-config.types'
 import { defaultSelectKey, runDefaultsMessages } from './run-defaults.constants'
@@ -92,4 +93,19 @@ export function isRunDefaultsEmpty(defaults: RunDefaults): boolean {
 /** The reviews that a form field holds: a list, or `null` for the default of the next level. */
 export function selectedCheckpoints(value: unknown): string[] | null {
   return Array.isArray(value) ? value.filter(isString) : null
+}
+
+// Which run parameters each view shows: the developer view shows every one, and the user view
+// leaves out those that the definition marks for the developer.
+const parameterShownIn: Record<View, (field: RunParameterField) => boolean> = {
+  developer: () => true,
+  user: (field) => field.audience !== 'developer',
+}
+
+/** The run parameters that a view shows, in the order that the definition lists them. */
+export function parameterFieldsOfView(
+  fields: RunParameterField[],
+  view: View,
+): RunParameterField[] {
+  return fields.filter(parameterShownIn[view])
 }

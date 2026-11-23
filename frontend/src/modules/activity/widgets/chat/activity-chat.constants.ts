@@ -1,5 +1,7 @@
+import type { InterruptPurpose } from '@/modules/review/entities'
 import type { RunStatus } from '@/modules/run/entities'
 import type { Message } from '@/modules/thread/entities'
+import type { Slot } from '@/shared/components/act'
 import { pluralForm } from '@/shared/lib/text'
 
 /** The statuses of a run that show a status line at the end of its entries: the run is going on or about to. */
@@ -23,7 +25,8 @@ export const activityChatMessages = {
   itemMeta: (kind: string, key: string, version: number) =>
     `${kind} - ${key}, version ${String(version)}`,
   quickLook: (key: string) => `Quick look at ${key}`,
-  toReview: 'To review:',
+  /** A sentence around the documents that a review asks to read, so that it is not a label with a colon. */
+  readBeforeAnswering: 'Please read {documents} before you answer.',
   moreReferences: (count: number) =>
     `${String(count)} more ${pluralForm(count, { one: 'item', other: 'items' })}`,
   /** Names the bar of the stages under the prompt, for assistive technology. */
@@ -46,3 +49,14 @@ export const revealDelayMs = 250
 
 /** The messages of a run without any; one list, so that its entries do not compute again. */
 export const emptyMessages: Message[] = []
+
+/**
+ * The slots around the agent on the corner of what waits for the user that its act may use, by what
+ * it asks: a question has its mark above and beside the agent; a review has the lines of text that it
+ * reads at its left, above that and below it (the agent stands a little to the right for them, so
+ * that they stay on the card) and the magnifying glass over its face.
+ */
+export const pendingActSlots: Readonly<Record<InterruptPurpose, readonly Slot[]>> = {
+  ask: ['top', 'top-right', 'right'],
+  review: ['left', 'top-left', 'bottom-left', 'center'],
+}

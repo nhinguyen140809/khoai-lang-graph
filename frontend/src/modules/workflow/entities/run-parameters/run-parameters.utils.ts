@@ -104,6 +104,7 @@ export function runParameterFields(parameters: ObjectSchema): RunParameterField[
       maximum: property.maximum ?? null,
       integer: property.type === 'integer',
       defaultValue: property.default ?? null,
+      audience: property['x-ui-audience'] ?? null,
     }
   })
 }

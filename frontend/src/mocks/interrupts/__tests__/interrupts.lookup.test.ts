@@ -79,6 +79,7 @@ describe('interruptsOfRun', () => {
       'accept',
       'reject_reanalyse',
       'reject_reinterview',
+      'other',
     ])
   })
 

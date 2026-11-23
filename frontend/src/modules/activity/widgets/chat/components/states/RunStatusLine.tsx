@@ -4,28 +4,37 @@ import { cn } from 'cn'
 
 import type { Run } from '@/modules/run/entities'
 import {
+  useRunActs,
   useRunLastWork,
   useRunStageTitle,
   useRunStatusLook,
   workMoodOf,
 } from '@/modules/run/entities'
+import { Actor } from '@/shared/components/act'
 import { Glint, Shimmer } from '@/shared/components/animation'
-import { Face } from '@/shared/components/face'
 import { toneClasses } from '@/shared/lib/tone'
 
 import { runStatusLineStatuses } from '../../activity-chat.constants'
+import { usePartnerSeed } from '../../hooks/usePartnerSeed'
 
 /**
  * The last line of a run that has not ended: what it is doing now, so that the reader at the end
  * of the chat always sees whether the work goes on, whatever came between its lines. It names the
- * status and, when the stage is one the reader sees, its title; the face of the agent at work, in the mood of the status, or a glint where no agent has run yet, comes before the words, which are yellow and shimmer with a band of the foreground.
- * A run that waits for the user, has ended or failed shows none: its review, its
+ * status and, when the stage is one the reader sees, its title, in yellow with a shimmering band of
+ * the foreground. The agent at work stands before the words, large, with what it does drawn around
+ * it, on every side: the acts of the tool that it uses, else those of its stage. It stands a little
+ * to the right, so that what is drawn at its left stays in the chat. When the workflow names none, it
+ * has the mood of its phase, or of the status of the run between two phases. A glint stands where no
+ * agent has run yet, with the words close to it; they slide to the right when an agent takes its place. A phase that works on a persona, such as an interview, draws the persona as a second
+ * agent, whose face comes from its role and its name.  A run that waits for the user, has ended or failed shows none: its review, its
  * answer and its failure are the last things the chat shows.
  */
 export function RunStatusLine({ run }: { run: Run }) {
   const look = useRunStatusLook(run.status)
   const stageTitle = useRunStageTitle(run)
   const lastWork = useRunLastWork(run)
+  const acts = useRunActs(run)
+  const partner = usePartnerSeed(lastWork?.subjectItemId)
   const agentRole = lastWork?.agentRole
   // The mood of the phase at work; between two phases, the mood of the status of the run.
   const mood = lastWork?.status === 'running' ? workMoodOf(lastWork) : look.mood
@@ -33,22 +42,36 @@ export function RunStatusLine({ run }: { run: Run }) {
   if (!runStatusLineStatuses.includes(run.status)) return null
 
   return (
-    <p
+    <div
       role="status"
       aria-live="polite"
       className={cn(
-        'flex items-center gap-2 px-1 pt-4 text-sm text-muted-foreground',
+        'flex items-center px-1 pt-6 text-sm text-muted-foreground',
         toneClasses.secondary,
       )}
     >
       {agentRole === undefined ? (
         <Glint aria-hidden variant="mesh" className="size-6" />
       ) : (
-        <Face seed={agentRole} size="sm" mood={mood} />
+        <Actor
+          seed={agentRole}
+          size="xl"
+          acts={acts}
+          partner={partner}
+          className="ml-3"
+          {...(acts.length === 0 && { mood })}
+        />
       )}
-      <Shimmer color="secondary" variant="solid">
-        {stageTitle === undefined ? look.label : `${look.label}: ${stageTitle}`}
-      </Shimmer>
-    </p>
+      <p
+        className={cn(
+          'transition-all duration-300 ease-out motion-reduce:transition-none',
+          agentRole === undefined ? 'ml-3' : 'ml-12',
+        )}
+      >
+        <Shimmer color="secondary" variant="solid">
+          {stageTitle === undefined ? look.label : `${look.label}: ${stageTitle}`}
+        </Shimmer>
+      </p>
+    </div>
   )
 }

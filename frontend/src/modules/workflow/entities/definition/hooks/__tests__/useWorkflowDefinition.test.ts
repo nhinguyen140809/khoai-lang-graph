@@ -10,11 +10,11 @@ describe('useWorkflowDefinition', () => {
     const { result } = renderHookWithProviders(() => useWorkflowDefinition())
 
     await waitForSuccess(result)
-    expect(result.current.data?.version).toBe(1)
+    expect(result.current.data?.version).toBe(2)
   })
 
   it('loads the definition at a version', async () => {
-    const { result } = renderHookWithProviders(() => useWorkflowDefinition(1))
+    const { result } = renderHookWithProviders(() => useWorkflowDefinition(2))
 
     await waitForSuccess(result)
     expect(result.current.data?.stages.length).toBeGreaterThan(0)

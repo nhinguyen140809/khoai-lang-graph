@@ -1,7 +1,8 @@
 /**
  * The outlines a face can have: a circle, a rounded square, an uneven round one, a pill lying down,
- * a ghost, a drop, a hexagon and an oval (a wide ellipse leaning a little). Each is drawn in the square of the face, so every one of them holds
- * the eyes in the middle.
+ * a ghost, a drop, a hexagon, an oval (a wide ellipse leaning a little), a star with round points, a
+ * mochi (a soft dome with a flat foot) and a clover of four lobes. Each is drawn in the square of the
+ * face, so every one of them holds the eyes in the middle.
  */
 export const faceShapes = [
   'circle',
@@ -12,6 +13,9 @@ export const faceShapes = [
   'drop',
   'hexagon',
   'oval',
+  'star',
+  'mochi',
+  'clover',
 ] as const
 
 export type FaceShape = (typeof faceShapes)[number]

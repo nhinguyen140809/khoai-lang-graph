@@ -83,7 +83,7 @@ export type Entrance = 'zoom-out' | 'fade-in' | 'rise' | 'drop' | 'none'
 /** How a thing goes: zooming in until it is gone, fading out, floating up, or falling. */
 export type Exit = 'zoom-in' | 'fade-out' | 'float-up' | 'fall' | 'none'
 
-/** How a thing moves about its slot: not at all, round it, up and down, from side to side, in hops, up from it (burst), or down onto it (gather); a thing may have the up and down of its course go sideways instead. */
+/** How a thing moves about its slot: not at all, round it, up and down, from side to side, in hops, up from it (burst), or down onto it (gather); a thing may have the up and down of its course go sideways instead, or the sweep go up and down (see `axis`). */
 export type Course = 'stay' | 'orbit' | 'float' | 'sweep' | 'hop' | 'burst' | 'gather'
 
 /** What a thing does in its place: swells, turns round, shakes, blinks, or ticks. */
@@ -133,7 +133,7 @@ export type ActProp = PropContent & {
   tilt?: number
   /** For an `orbit`: how far the plane of the circle is turned about the line of sight, in degrees. */
   turn?: number
-  /** The way that the up and down of its course goes: up and down (the default), or sideways, out from the face on the side of its slot and in toward it. */
+  /** The way that its course goes: up and down, or sideways, out from the face on the side of its slot and in toward it. A course goes the way that suits it (a sweep from side to side, the rest up and down) unless this says another. */
   axis?: 'vertical' | 'horizontal'
   courseCycles?: number
   reach?: number

@@ -13,6 +13,9 @@ export const runParameterWidgets = ['select', 'number', 'boolean', 'text'] as co
 
 export type RunParameterWidget = (typeof runParameterWidgets)[number]
 
+/** Who the definition shows a run parameter to: only the developer view, or (with no audience) every view. */
+export type RunParameterAudience = 'developer'
+
 /** One run parameter, built from one property of `run_parameters_schema`: what a form needs to show and check it. */
 export interface RunParameterField {
   name: string
@@ -28,6 +31,8 @@ export interface RunParameterField {
   integer: boolean
   /** The `default` of the property, the value a run takes when no level sets one; null without one. */
   defaultValue: unknown
+  /** `x-ui-audience` of the property: who it is shown to; null when every view shows it. */
+  audience: RunParameterAudience | null
 }
 
 /** The keywords of a property of `run_parameters_schema` that the app reads. */
@@ -39,6 +44,7 @@ export const runParameterPropertySchema = z.looseObject({
   minimum: z.number().optional(),
   maximum: z.number().optional(),
   default: z.unknown().optional(),
+  'x-ui-audience': z.enum(['developer']).optional(),
 })
 
 export type RunParameterProperty = z.infer<typeof runParameterPropertySchema>

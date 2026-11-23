@@ -11,7 +11,7 @@ describe('getCurrentRunState', () => {
   it('reads the state of a run now, at the stage where it waits', async () => {
     const state = await getCurrentRunState(runIds.mentorMain3)
 
-    expect(state).toMatchObject({ run_id: runIds.mentorMain3, workflow_version: 1 })
+    expect(state).toMatchObject({ run_id: runIds.mentorMain3, workflow_version: 2 })
     expect(state.values).toMatchObject({ current_stage: 'analysis_review', status: 'interrupted' })
   })
 

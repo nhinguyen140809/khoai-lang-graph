@@ -24,6 +24,7 @@ describe('artifactKindFixtures', () => {
   it('lists the artifact kinds of the definition with their item kinds', () => {
     expect(artifactKindFixtures.artifact_kinds.map(({ kind }) => kind)).toEqual([
       'elicitation_plan',
+      'research_corpus',
       'persona_catalog',
       'interview_transcript',
       'requirements_analysis',

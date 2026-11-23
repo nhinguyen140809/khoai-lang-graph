@@ -1,6 +1,6 @@
 /** A stage whose parent is `parent`, for building a definition with stages in a tree. */
 function stage(key: string, parent: string | null = null, isInternal = false) {
-  return { key, title: key.toUpperCase(), internal: isInternal, parent }
+  return { key, title: key.toUpperCase(), internal: isInternal, parent, acts: [] }
 }
 
 /** Stages in workflow order: `a` with two children, an internal `b` with a child, and `e`. */

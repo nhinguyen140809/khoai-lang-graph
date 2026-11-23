@@ -1,3 +1,5 @@
+import type { View } from '@/shared/lib/view'
+
 import type { RunDefaultsFieldValues } from './run-defaults.schema'
 
 /** The words of the fields of the run settings. */
@@ -25,4 +27,13 @@ export const noRunDefaultsFieldValues: RunDefaultsFieldValues = {
   max_steps: undefined,
   max_cost_usd: undefined,
   parameters: {},
+}
+
+/**
+ * The limits that every workflow has, by view: the developer view shows both; the user view shows
+ * the cost limit and leaves out the number of steps.
+ */
+export const runLimitFieldsByView: Record<View, { maxSteps: boolean; maxCostUsd: boolean }> = {
+  developer: { maxSteps: true, maxCostUsd: true },
+  user: { maxSteps: false, maxCostUsd: true },
 }
