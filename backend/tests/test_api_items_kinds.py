@@ -88,6 +88,18 @@ async def test_items_carry_artifact_id(client: AsyncClient) -> None:
     assert item["artifact_id"], "items resolve to their artifact for the tree"
 
 
+async def test_a_persona_is_written_with_the_current_schema_of_its_kind(
+    client: AsyncClient,
+) -> None:
+    project_id, _thread_id = await seeded_run(client)
+
+    response = await client.get(f"/api/v1/projects/{project_id}/items", params={"q": "PER-001"})
+
+    persona = next(item for item in response.json()["items"] if item["kind"] == "persona")
+    assert persona["schema_version"] == 2
+    assert "scores" in persona["content"]
+
+
 async def test_list_project_artifacts_tree(client: AsyncClient) -> None:
     project_id, _thread_id = await seeded_run(client)
 

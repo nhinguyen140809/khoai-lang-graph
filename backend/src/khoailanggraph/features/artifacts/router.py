@@ -13,6 +13,7 @@ from pydantic import BaseModel, ConfigDict
 
 from khoailanggraph.agents import workflows
 from khoailanggraph.agents.requirements_engineering import definition as workflow
+from khoailanggraph.agents.shared import catalogs
 from khoailanggraph.api import deps
 from khoailanggraph.api.errors import ApiError
 from khoailanggraph.api.schemas import MAX_LIMIT, Cursor, Page
@@ -277,7 +278,7 @@ async def get_act_catalog(user: deps.CurrentUser) -> Any:
     A stage and a tool name acts by key in their `acts`, so the catalog belongs to the same
     contract as the definition and is served with it, instead of shipping a copy that drifts.
     """
-    catalog = workflow.act_catalog()
+    catalog = catalogs.act_catalog()
     return {
         "acts": list(catalog.values()),
         "keys_by_stage": {

@@ -4,7 +4,7 @@ from __future__ import annotations
 
 import uuid
 from pathlib import Path
-from typing import TYPE_CHECKING
+from typing import TYPE_CHECKING, Any
 
 import pytest
 import sqlalchemy as sa
@@ -84,3 +84,34 @@ def test_the_quote_of_a_link_becomes_the_quote_of_its_target(
         ).one()
     assert row.source_quote is None
     assert row.target_quote == "the exact words"
+
+
+def test_a_persona_written_with_its_current_schema_takes_that_version(
+    database: tuple[Config, str],
+) -> None:
+    config, url = database
+    command.upgrade(config, "e1f7a4c9b206")
+    project, artifact, with_scores, without_scores = (str(uuid.uuid4()) for _ in range(4))
+    engine = sa.create_engine(url)
+    with engine.begin() as connection:
+        for item, key, content in (
+            (with_scores, "PER-001", b'{"scores": []}'),
+            (without_scores, "PER-002", b"{}"),
+        ):
+            connection.execute(
+                sa.text(
+                    "INSERT INTO artifact_items (id, artifact_id, project_id, kind, key, position,"
+                    " schema_version, content_json, version, review_status, created_at, updated_at,"
+                    " created_actor, updated_actor) VALUES (:id, :artifact, :project, 'persona',"
+                    " :key, 0, 1, :content, 1, 'draft', CURRENT_TIMESTAMP, CURRENT_TIMESTAMP,"
+                    " 'agent', 'agent')"
+                ).bindparams(id=item, artifact=artifact, project=project, key=key, content=content)
+            )
+
+    command.upgrade(config, "head")
+
+    with engine.connect() as connection:
+        versions: dict[Any, Any] = dict(
+            connection.execute(sa.text("SELECT id, schema_version FROM artifact_items")).all()
+        )
+    assert versions == {with_scores: 2, without_scores: 1}
