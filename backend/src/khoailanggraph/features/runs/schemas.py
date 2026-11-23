@@ -119,7 +119,7 @@ class Message(BaseModel):
 
 
 class SendMessageResponse(BaseModel):
-    """The message, and what answered it: a run, or the assistant with its screen actions."""
+    """The message, and what answered it: a run, or the assistant with its commands."""
 
     message: Message
     run: Run | None = None

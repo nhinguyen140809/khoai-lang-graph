@@ -1,8 +1,10 @@
 """Shapes of the assistant: what the client receives, and what the model answers.
 
 The model answers one structured object that says which of the two things a message is, the words
-to show when it is a question about the application, and the UI actions to run. The client only
-knows the actions it is allowed to run, so the type is a closed set.
+to show when it is a question about the application, and the commands for the client to run. A
+command is named by a key of the catalog (`commands.catalog.json`), which says what each one needs
+checked; the key is checked against that catalog when the answer is finished, so a new command is a
+line in the catalog and not a change here.
 
 A second shape, `AssistantStep`, is how the model asks to read one more thing before answering: the
 tools it may name are closed too, so a name it invents fails at validation.
@@ -17,29 +19,19 @@ from typing import Literal
 
 from pydantic import BaseModel, ConfigDict, Field
 
-ActionType = Literal[
-    "open_document",
-    "open_item",
-    "open_review",
-    "open_settings",
-    "send_to_workflow",
-]
 
-
-class AssistantAction(BaseModel):
+class AssistantCommand(BaseModel):
     """One thing the client does after the answer, such as opening a document or an item.
 
-    `artifact_id` and `item_id` name a record of the project, which the server resolves and checks
-    before the action leaves it; the client never receives an id it may not open. `label` is the
-    short phrase the answer uses for the action, in the language of the conversation.
-
-    `open_review` takes no id: the client scrolls to the card of the review that waits, and there is
-    at most one at a time.
+    `command` is a key of the catalog. `artifact_id` and `item_id` name a record of the project,
+    which the server resolves and checks before the command leaves, as the `needs` of the catalog
+    says; the client never receives an id it may not open. `label` is the short phrase the answer
+    uses for the command, in the language of the conversation.
     """
 
     model_config = ConfigDict(extra="forbid")
 
-    type: ActionType
+    command: str
     artifact_id: str | None = None
     item_id: str | None = None
     label: str | None = None
@@ -51,7 +43,7 @@ class AssistantReply(BaseModel):
     model_config = ConfigDict(extra="forbid")
 
     text: str
-    actions: list[AssistantAction] = Field(default_factory=list)
+    commands: list[AssistantCommand] = Field(default_factory=list)
 
 
 class AssistantDecision(BaseModel):
@@ -61,7 +53,7 @@ class AssistantDecision(BaseModel):
 
     kind: Literal["workflow", "general"]
     text: str = ""
-    actions: list[AssistantAction] = Field(default_factory=list)
+    commands: list[AssistantCommand] = Field(default_factory=list)
 
 
 # The reads the model may ask for before it answers. Closed, so a name it invents fails here rather
@@ -89,4 +81,3 @@ class AssistantStep(BaseModel):
     tool: ToolName | None = None
     key: str | None = None
     answer: AssistantDecision | None = None
-

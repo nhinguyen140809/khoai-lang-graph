@@ -350,7 +350,7 @@ Rules:
 | `PATCH /threads/{thread_id}` | Change `title`, `status`. `title` is a text with more than whitespace and cannot be set back to `null`; `status` is `active` or `archived`; otherwise `422 validation_failed` at the field | MVP |
 | `DELETE /threads/{thread_id}` | Soft delete: the thread is left out of lists, and its endpoints answer `404`. A thread with an unfinished run (`queued`, `running` or `interrupted`) answers `409 invalid_state`; the run is stopped first | MVP |
 | `GET /threads/{thread_id}/messages` | Chat messages; ordered by `sequence` ascending. User messages carry `delivery` | MVP |
-| `POST /threads/{thread_id}/messages` | Send a user message. Body `content`, optional `run_config` with the fields of [RunDefaults](DATA_SHAPE.md#rundefaults-mvp) and optional `models`, a map of agent role to model, both used only when the message starts a run. Each key of `models` is an agent role of the current workflow definition and each value a model of the catalog whose `allowed_roles` holds the role; otherwise `422 validation_failed` at `models.<role>`. Returns `201` with the message and what answered it: `run` with the run it started or was sent to, or `assistant` with the words of the assistant and the screen actions to run, when the message is about the application rather than the work. `assistant` is `null` on a message that starts or joins a run; `run` is `null` on an answered one, and no run is created | MVP |
+| `POST /threads/{thread_id}/messages` | Send a user message. Body `content`, optional `run_config` with the fields of [RunDefaults](DATA_SHAPE.md#rundefaults-mvp) and optional `models`, a map of agent role to model, both used only when the message starts a run. Each key of `models` is an agent role of the current workflow definition and each value a model of the catalog whose `allowed_roles` holds the role; otherwise `422 validation_failed` at `models.<role>`. Returns `201` with the message and what answered it: `run` with the run it started or was sent to, or `assistant` with the words of the assistant and the commands to run, when the message is about the application rather than the work. `assistant` is `null` on a message that starts or joins a run; `run` is `null` on an answered one, and no run is created | MVP |
 
 Sending a message is the only way the chat box starts work, and it is never rejected because the thread has an unfinished run:
 
@@ -361,9 +361,14 @@ Sending a message is the only way the chat box starts work, and it is never reje
 Before the message goes to the run, one call decides which of the two it is, and answers the ones
 about the application: about 1–3 sentences, at most two reads of the project (an item, a document,
 the last run, the open findings, a trace, a step of the definition, the month's budget), and the
-actions `open_document`, `open_item`, `open_review`, `open_settings` and `send_to_workflow`. The
-answer is stored as a message of the thread with `author: "agent"` and `agent_role: "assistant"`;
-the actions are transient and travel only in the response. Every classified message writes its cost
+commands for the client to run. `assistant` is `{text, commands}`, and each command is
+`{command, artifact_id, item_id, label}`: `command` is a key of
+[`commands.catalog.json`](workflow/commands.catalog.json), which says in `needs` what is checked
+before a command leaves (nothing, a document or an item of the project, or a review that waits).
+A command that is not in the catalog, or that names a record outside the project, is dropped from the
+response and logged; a client skips a key it does not know. The answer is stored as a message of
+the thread with `author: "agent"` and `agent_role: "assistant"`; the commands are transient and
+travel only in the response. Every classified message writes its cost
 where `GET /me/usage` and the budget of the month read it.
 
 

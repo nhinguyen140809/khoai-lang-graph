@@ -151,7 +151,7 @@ async def _send(
             "run": None,
             "assistant": {
                 "text": reply.content,
-                "actions": [action.model_dump(mode="json") for action in decision.actions],
+                "commands": [command.model_dump(mode="json") for command in decision.commands],
             },
         }
 

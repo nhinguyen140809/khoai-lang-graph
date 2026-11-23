@@ -6,7 +6,7 @@ document, the last run, the open findings, a trace, a step of the workflow, the 
 read comes back to it, at most twice, and then it answers.
 
 The answer is stored as a message of the thread, so it survives a reload and reads like every other
-line of the conversation. The actions are transient: the client runs them once, from the response.
+line of the conversation. The commands are transient: the client runs them once, from the response.
 What each message costs is kept in `assistant_turns`, because no run step holds it.
 """
 
@@ -22,11 +22,12 @@ import structlog
 from sqlalchemy import func, select
 
 from khoailanggraph.agents import prompts as prompt_loader
+from khoailanggraph.agents.requirements_engineering import definition as workflow
 from khoailanggraph.domain.run_config import DEFAULT_MAX_STEPS, RunParameters
 from khoailanggraph.features.artifacts.models import ArtifactItemRow, ArtifactRow
 from khoailanggraph.features.assistant.models import AssistantTurnRow
 from khoailanggraph.features.assistant.schemas import (
-    AssistantAction,
+    AssistantCommand,
     AssistantDecision,
     AssistantStep,
 )
@@ -43,6 +44,8 @@ from khoailanggraph.llm import get_chat_model, resolve_model_id
 from khoailanggraph.llm.usage import Usage, UsageHandler, zero_usage
 
 if TYPE_CHECKING:
+    from collections.abc import Awaitable, Callable
+
     from sqlalchemy.ext.asyncio import AsyncSession
 
     from khoailanggraph.features.me.models import UserRow
@@ -63,7 +66,7 @@ def _language(project: ProjectRow) -> str:
 
 
 async def _documents(session: AsyncSession, project: ProjectRow) -> list[dict[str, Any]]:
-    """The live documents of the project, the only ids that an action may name."""
+    """The live documents of the project, the only ids that a command may name."""
     rows = (
         await session.scalars(
             select(ArtifactRow)
@@ -167,37 +170,43 @@ def _document_lines(documents: list[dict[str, Any]]) -> str:
     )
 
 
-async def _kept_actions(
+def _command_lines() -> str:
+    """The commands the client can run, one line each, as the model reads them."""
+    return "\n".join(
+        f"- `{key}` (needs {entry['needs']}): {entry['description']}"
+        for key, entry in workflow.command_catalog().items()
+    )
+
+
+async def _kept_commands(
     session: AsyncSession, project: ProjectRow, decision: AssistantDecision
-) -> list[AssistantAction]:
-    """The actions the client may run: each names a record of this project, or it is dropped."""
+) -> list[AssistantCommand]:
+    """The commands the client may run: a key of the catalog whose need this project meets.
+
+    What each need checks is one entry of `_CHECKS`, keyed by the `needs` of the catalog, so a
+    command that needs something already checked is a line of the catalog and nothing here.
+    """
+    catalog = workflow.command_catalog()
     documents = await _documents(session, project)
     known = {entry["id"] for entry in documents}
-    kept: list[AssistantAction] = []
-    for action in decision.actions:
-        keeps = True
-        if action.type == "open_document":
-            keeps = action.artifact_id is not None and action.artifact_id in known
-        elif action.type == "open_item":
-            keeps = await _item_in_project(session, project, action.item_id)
-        elif action.type == "open_review":
-            keeps = await _has_review_waiting(session, project)
-        if keeps:
-            kept.append(action)
+    kept: list[AssistantCommand] = []
+    for command in decision.commands:
+        entry = catalog.get(command.command)
+        check = _CHECKS.get(entry["needs"]) if entry is not None else None
+        if check is not None and await check(session, project, command, known):
+            kept.append(command)
         else:
             logger.warning(
-                "assistant action dropped: it names nothing of the project",
-                action=action.type,
-                artifact_id=action.artifact_id,
-                item_id=action.item_id,
+                "assistant command dropped: not in the catalog, or it names nothing of the project",
+                command=command.command,
+                artifact_id=command.artifact_id,
+                item_id=command.item_id,
             )
     return kept
 
 
-async def _item_in_project(
-    session: AsyncSession, project: ProjectRow, item_id: str | None
-) -> bool:
-    """Whether the item exists in this project: the only ids an action may open."""
+async def _item_in_project(session: AsyncSession, project: ProjectRow, item_id: str | None) -> bool:
+    """Whether the item exists in this project: the only ids a command may open."""
     if item_id is None:
         return False
     try:
@@ -215,13 +224,47 @@ async def _item_in_project(
 
 
 async def _has_review_waiting(session: AsyncSession, project: ProjectRow) -> bool:
-    """Whether a run of the project waits for the user, which is what the action scrolls to."""
+    """Whether a run of the project waits for the user: what `open_review` brings into view."""
     found = await session.scalar(
         select(RunRow.id)
         .where(RunRow.project_id == project.id, RunRow.status == "interrupted")
         .limit(1)
     )
     return found is not None
+
+
+async def _needs_nothing(
+    session: AsyncSession, project: ProjectRow, command: AssistantCommand, known: set[str]
+) -> bool:
+    return True
+
+
+async def _needs_document(
+    session: AsyncSession, project: ProjectRow, command: AssistantCommand, known: set[str]
+) -> bool:
+    return command.artifact_id is not None and command.artifact_id in known
+
+
+async def _needs_item(
+    session: AsyncSession, project: ProjectRow, command: AssistantCommand, known: set[str]
+) -> bool:
+    return await _item_in_project(session, project, command.item_id)
+
+
+async def _needs_review(
+    session: AsyncSession, project: ProjectRow, command: AssistantCommand, known: set[str]
+) -> bool:
+    return await _has_review_waiting(session, project)
+
+
+# What each `needs` of the catalog checks before a command leaves. A `needs` that is not here keeps
+# its commands from leaving, and a test fails on a catalog that names one.
+_CHECKS: dict[str, Callable[..., Awaitable[bool]]] = {
+    "none": _needs_nothing,
+    "artifact": _needs_document,
+    "item": _needs_item,
+    "review": _needs_review,
+}
 
 
 def _workflow() -> AssistantDecision:
@@ -241,11 +284,11 @@ class AssistantOutcome:
 async def _finish(
     session: AsyncSession, project: ProjectRow, decision: AssistantDecision | None
 ) -> AssistantDecision:
-    """The decision as it leaves: an answer needs words, and its actions this project's records."""
+    """The decision as it leaves: an answer needs words, and its commands this project's records."""
     if decision is None or decision.kind == "workflow" or not decision.text.strip():
         return _workflow()
     return decision.model_copy(
-        update={"actions": await _kept_actions(session, project, decision)}
+        update={"commands": await _kept_commands(session, project, decision)}
     )
 
 
@@ -280,6 +323,7 @@ async def decide(
                 "settings": _settings_lines(project),
                 "history": await _history(session, thread),
                 "tools": catalog_of(READ_TOOLS),
+                "commands": _command_lines(),
                 "message": content,
             },
         )
@@ -295,9 +339,7 @@ async def decide(
     context = ToolContext(session=session, project=project, user=user)
     try:
         for _step_no in range(MAX_TOOL_STEPS):
-            step = AssistantStep.model_validate(
-                _answered(AssistantStep, model, messages, handler)
-            )
+            step = AssistantStep.model_validate(_answered(AssistantStep, model, messages, handler))
             if step.tool is None:
                 answered = await _finish(session, project, step.answer)
                 return _outcome(answered, model_id, handler, started)
@@ -343,7 +385,6 @@ async def record_turn(
     )
     session.add(row)
     await session.flush()
-
 
 
 async def record_reply(

@@ -15,6 +15,7 @@ from httpx import ASGITransport, AsyncClient
 
 import khoailanggraph.llm.factory as llm_factory
 from khoailanggraph.agents import prompts as prompt_loader
+from khoailanggraph.agents.requirements_engineering import definition as workflow
 from khoailanggraph.features.artifacts.models import ArtifactItemRow, ArtifactRow
 from khoailanggraph.features.assistant.service import (
     ASSISTANT_PROMPT_VERSION,
@@ -41,7 +42,7 @@ TEST_DB = Path(gettempdir()) / "khoailang-white-box-assistant.db"
 API = "/api/v1"
 
 # What the scripted assistant answers. A test sets it before sending the message.
-ANSWER: dict[str, Any] = {"kind": "workflow", "text": "", "actions": []}
+ANSWER: dict[str, Any] = {"kind": "workflow", "text": "", "commands": []}
 # The steps the scripted assistant makes before its answer, and the prompts it was given.
 STEPS: list[dict[str, Any]] = []
 SEEN: list[str] = []
@@ -112,7 +113,7 @@ async def project_and_thread(client: AsyncClient) -> tuple[str, str]:
 def _assistant(**answer: Any) -> Any:
     """Answer the next messages with this decision, from a model that nothing else reaches."""
     ANSWER.clear()
-    ANSWER.update({"kind": "workflow", "text": "", "actions": [], **answer})
+    ANSWER.update({"kind": "workflow", "text": "", "commands": [], **answer})
     STEPS.clear()
     SEEN.clear()
     return patch.object(llm_factory, "make_demo_data", lambda _name: AssistantData())
@@ -136,7 +137,7 @@ async def test_a_message_about_the_application_is_answered_without_a_run(
     body = response.json()
     assert body["run"] is None
     assert body["assistant"]["text"] == "You can read the interviews first."
-    assert body["assistant"]["actions"] == []
+    assert body["assistant"]["commands"] == []
     assert body["message"]["delivery"] == "delivered"
 
     runs = (await client.get(f"{API}/threads/{thread_id}/runs")).json()["items"]
@@ -166,19 +167,52 @@ async def test_a_message_about_the_work_starts_a_run(
     assert body["run"]["status"] in {"queued", "running", "succeeded", "interrupted"}
 
 
-async def test_an_action_that_names_another_projects_document_is_dropped(
+async def test_a_command_that_names_another_projects_document_is_dropped(
     client: AsyncClient, project_and_thread: tuple[str, str]
 ) -> None:
     _project_id, thread_id = project_and_thread
     with _assistant(
         kind="general",
         text="Opening the plan.",
-        actions=[{"type": "open_document", "artifact_id": "11111111-1111-4111-8111-111111111111"}],
+        commands=[
+            {"command": "open_document", "artifact_id": "11111111-1111-4111-8111-111111111111"}
+        ],
     ):
         reset_model_cache()
         response = await _send(client, thread_id, "Open the plan")
 
-    assert response.json()["assistant"]["actions"] == [], "an id outside the project never leaves"
+    assert response.json()["assistant"]["commands"] == [], "an id outside the project never leaves"
+
+
+async def test_a_command_that_is_not_in_the_catalog_is_dropped(
+    client: AsyncClient, project_and_thread: tuple[str, str]
+) -> None:
+    _project_id, thread_id = project_and_thread
+    with _assistant(
+        kind="general",
+        text="Here are the settings.",
+        commands=[{"command": "send_to_workflow"}, {"command": "open_settings"}],
+    ):
+        reset_model_cache()
+        response = await _send(client, thread_id, "Show me the settings")
+
+    kept = response.json()["assistant"]["commands"]
+    assert [entry["command"] for entry in kept] == ["open_settings"], (
+        "a key that the catalog does not list never leaves, and one that needs nothing does"
+    )
+
+
+async def test_the_prompt_lists_the_commands_of_the_catalog(
+    client: AsyncClient, project_and_thread: tuple[str, str]
+) -> None:
+    _project_id, thread_id = project_and_thread
+    with _assistant(kind="workflow"):
+        reset_model_cache()
+        await _send(client, thread_id, TASK)
+
+    seen = "\n".join(SEEN)
+    for key in workflow.command_catalog():
+        assert f"`{key}`" in seen, f"the prompt does not list the command {key}"
 
 
 async def test_a_repeated_request_answers_once(
