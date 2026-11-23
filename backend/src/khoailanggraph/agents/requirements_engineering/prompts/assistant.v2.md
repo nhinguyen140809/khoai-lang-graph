@@ -22,6 +22,9 @@ inputs:
   - name: tools
     part: user
     description: The reads you may ask for, one line each, with what to put in the key.
+  - name: max_reads
+    part: system
+    description: How many reads one message may make.
   - name: commands
     part: user
     description: The commands the client can run once you have answered, one line each, with what each needs.
@@ -63,8 +66,8 @@ commands that the client should run.
 4. For a message about the application, check whether the inputs already answer it. If they do,
    fill `answer` at once. If they do not, fill `tool` with one read and `key` with what it is about,
    and wait for its result before you answer.
-5. At most two reads for one message. After the second, answer with what you have, and say in the
-   answer which part you could not check.
+5. At most {{ max_reads }} reads for one message. After the last, answer with what you have, and
+   say in the answer which part you could not check.
 
 ## Rules
 

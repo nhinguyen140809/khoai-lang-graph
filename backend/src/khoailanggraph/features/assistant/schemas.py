@@ -72,7 +72,7 @@ ToolName = Literal[
 class AssistantStep(BaseModel):
     """One move of the model: either a read to make, or the answer.
 
-    Splitting them keeps the loop honest — the model names at most one read `MAX_TOOL_STEPS` times,
+    Splitting them keeps the loop honest — the model names at most one read `max_reads` times,
     and answers only with `answer`. A step that names a read and no answer is a read, never a guess.
     """
 

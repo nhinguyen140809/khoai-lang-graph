@@ -22,6 +22,7 @@ import structlog
 from sqlalchemy import func, select
 
 from khoailanggraph.agents import prompts as prompt_loader
+from khoailanggraph.agents.assistance import definition as assistance
 from khoailanggraph.agents.requirements_engineering import definition as workflow
 from khoailanggraph.domain.run_config import DEFAULT_MAX_STEPS, RunParameters
 from khoailanggraph.features.artifacts.models import ArtifactItemRow, ArtifactRow
@@ -58,8 +59,6 @@ PROMPTS_PACKAGE = "khoailanggraph.agents.requirements_engineering"
 ASSISTANT_PROMPT_VERSION = 2
 HISTORY_MESSAGES = 8
 HISTORY_LINE_LENGTH = 300
-# How many reads one message may make before the answer is asked for without any.
-MAX_TOOL_STEPS = 2
 
 
 def _language(project: ProjectRow) -> str:
@@ -310,9 +309,10 @@ async def decide(
 ) -> AssistantOutcome:
     """Which kind the message is, and for a question about the application, its answer.
 
-    The model may ask to read one thing it lacks, at most `MAX_TOOL_STEPS` times; after that it
-    answers from what it has. Anything a provider does with the tools that this code does not expect
-    ends the same way as a failure: the message enters the workflow, where it is never lost.
+    The model may ask to read one thing it lacks, as many times as `max_reads` of the assistance
+    definition allows; after that it answers from what it has. Anything a provider does with the
+    tools that this code does not expect ends the same way as a failure: the message enters the
+    workflow, where it is never lost.
     """
     documents = await _documents(session, project)
     prompt = prompt_loader.load_cached(PROMPTS_PACKAGE, "assistant", ASSISTANT_PROMPT_VERSION)
@@ -327,6 +327,7 @@ async def decide(
                 "history": await _history(session, thread),
                 "tools": catalog_of(READ_TOOLS),
                 "commands": _command_lines(),
+                "max_reads": str(assistance.max_reads()),
                 "message": content,
             },
         )
@@ -340,8 +341,9 @@ async def decide(
     handler = UsageHandler()
     started = time.monotonic()
     context = ToolContext(session=session, project=project, user=user)
+    reads_allowed = assistance.max_reads()
     try:
-        for _step_no in range(MAX_TOOL_STEPS):
+        for _step_no in range(reads_allowed):
             step = AssistantStep.model_validate(_answered(AssistantStep, model, messages, handler))
             if step.tool is None:
                 answered = await _finish(session, project, step.answer)
