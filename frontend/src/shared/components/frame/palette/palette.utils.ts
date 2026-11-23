@@ -1,18 +1,24 @@
 import { defaultFilter } from 'cmdk'
 
 import { collectBy } from '@/shared/lib/collections'
+import type { Command } from '@/shared/lib/commands'
 import { hasText } from '@/shared/lib/guards'
 import { foldText } from '@/shared/lib/text'
 
-import type { PaletteCommand, PaletteCommandGroup } from './command.types'
+import type { PaletteCommand, PaletteCommandGroup } from './palette.types'
+
+/** Whether the palette lists a command: it has a label and a group. */
+function isListed(command: Command): command is PaletteCommand {
+  return command.label !== undefined && command.group !== undefined
+}
 
 /**
  * The commands by group. The groups are in alphabetical order, so that the list does not depend on
  * the order in which the components that register them mount; a group keeps the order of its
  * commands.
  */
-export function commandGroups(sources: Iterable<readonly PaletteCommand[]>): PaletteCommandGroup[] {
-  const groups = collectBy([...sources].flat(), ({ group }) => group)
+export function commandGroups(sources: Iterable<readonly Command[]>): PaletteCommandGroup[] {
+  const groups = collectBy([...sources].flat().filter(isListed), ({ group }) => group)
   return [...groups]
     .sort(([a], [b]) => a.localeCompare(b))
     .map(([heading, commands]) => ({ heading, commands }))
@@ -48,17 +54,4 @@ export function groupsBySearch(
     .map((group) => ({ group, score: best(group) }))
     .toSorted((a, b) => b.score - a.score)
     .map(({ group }) => group)
-}
-
-/** What the palette shows of the commands, as text: when it changes, they register again. */
-export function shownCommandsKey(commands: readonly PaletteCommand[]): string {
-  return JSON.stringify(
-    commands.map(({ id, label, group, hotkey, run }) => [
-      id,
-      label,
-      group,
-      hotkey,
-      run !== undefined,
-    ]),
-  )
 }

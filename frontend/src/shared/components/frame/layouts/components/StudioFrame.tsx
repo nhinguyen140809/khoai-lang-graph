@@ -6,7 +6,7 @@ import { ScrollArea } from '@/shared/components/ui/scroll-area'
 import { DeskBar } from '../../bars/components/DeskBar'
 import { DeskRail } from '../../bars/components/DeskRail'
 import { SearchButton } from '../../bars/components/SearchButton'
-import { CommandPalette } from '../../commands/components/CommandPalette'
+import { CommandPalette } from '../../palette/components/CommandPalette'
 import type { DeskFrameProps } from '../desk-frame.types'
 
 /**

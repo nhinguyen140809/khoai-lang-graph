@@ -1,16 +1,16 @@
 import { fireEvent, renderHook } from '@testing-library/react'
 import { describe, expect, it, vi } from 'vitest'
 
-import type { PaletteCommand } from '../../command.types'
-import { useCommandsStore } from '../../commands.store'
+import type { Command } from '../../command.types'
+import { useCommandRegistry } from '../../commands.store'
 import { useCommands } from '../useCommands'
 import { hotkeyCases } from './useCommands.data'
 
-function registered(): PaletteCommand[] {
-  return [...useCommandsStore.getState().sources.values()].flat()
+function registered(): Command[] {
+  return [...useCommandRegistry.getState().sources.values()].flat()
 }
 
-function command(id: string, overrides: Partial<PaletteCommand> = {}): PaletteCommand {
+function command(id: string, overrides: Partial<Command> = {}): Command {
   return { id, label: id, group: 'View', run: vi.fn(), ...overrides }
 }
 
@@ -38,7 +38,7 @@ describe('useCommands', () => {
     )
 
     rerender({ run: latest })
-    registered()[0]?.run?.()
+    registered()[0]?.run?.({})
 
     expect(first).not.toHaveBeenCalled()
     expect(latest).toHaveBeenCalledOnce()

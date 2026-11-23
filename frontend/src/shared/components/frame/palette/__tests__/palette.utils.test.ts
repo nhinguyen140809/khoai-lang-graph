@@ -1,12 +1,7 @@
 import { describe, expect, it } from 'vitest'
 
-import { commandGroups, groupsBySearch, shownCommandsKey } from '../command.utils'
-import {
-  commandGroupCases,
-  groupsBySearchCases,
-  shownCommand,
-  shownKeyCases,
-} from './command.utils.data'
+import { commandGroups, groupsBySearch } from '../palette.utils'
+import { commandGroupCases, groupsBySearchCases } from './palette.utils.data'
 
 describe('commandGroups', () => {
   it.each(commandGroupCases)('$name', ({ sources, groups }) => {
@@ -22,11 +17,5 @@ describe('commandGroups', () => {
 describe('groupsBySearch', () => {
   it.each(groupsBySearchCases)('$name', ({ groups, search, headings }) => {
     expect(groupsBySearch(groups, search).map(({ heading }) => heading)).toEqual(headings)
-  })
-})
-
-describe('shownCommandsKey', () => {
-  it.each(shownKeyCases)('$name', ({ command, same }) => {
-    expect(shownCommandsKey([command]) === shownCommandsKey([shownCommand])).toBe(same)
   })
 })

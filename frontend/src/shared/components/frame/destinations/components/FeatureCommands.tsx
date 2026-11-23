@@ -1,7 +1,8 @@
 'use client'
 
-import { PaletteGroup } from '../../commands/command.constants'
-import { useCommands } from '../../commands/hooks/useCommands'
+import { useCommands } from '@/shared/lib/commands'
+
+import { PaletteGroup } from '../../palette/palette.constants'
 import { isFeatureDestination } from '../destination.utils'
 import { useDestinations } from '../hooks/useDestinations'
 import { useSideFeature } from '../hooks/useSideFeature'

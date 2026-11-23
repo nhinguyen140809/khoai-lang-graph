@@ -14,13 +14,13 @@ import {
   CommandShortcut,
 } from '@/shared/components/ui/command'
 import { Kbd, KbdGroup } from '@/shared/components/ui/kbd'
+import { useCommands } from '@/shared/lib/commands'
 import { hotkeyLabel, useModifierKeyName } from '@/shared/lib/hotkey'
 
-import { PaletteGroup, paletteHotkey, paletteKeyHints } from '../command.constants'
-import type { PaletteCommandGroup } from '../command.types'
-import { commandMatchScore, commandSearchText, groupsBySearch } from '../command.utils'
 import { useCommandPalette } from '../hooks/useCommandPalette'
-import { useCommands } from '../hooks/useCommands'
+import { PaletteGroup, paletteHotkey, paletteKeyHints } from '../palette.constants'
+import type { PaletteCommandGroup } from '../palette.types'
+import { commandMatchScore, commandSearchText, groupsBySearch } from '../palette.utils'
 
 /**
  * Search and commands, opened with Ctrl+K or the search box of the top bar. It lists the commands
@@ -127,7 +127,7 @@ function PaletteSearch({ groups, onChosen }: PaletteSearchProps) {
                   className="min-h-9 text-sm data-[variant=destructive]:text-destructive data-[variant=destructive]:data-selected:bg-destructive/10 data-[variant=destructive]:data-selected:text-destructive dark:data-[variant=destructive]:data-selected:bg-destructive/20 [&_svg:not([class*='size-'])]:size-4"
                   onSelect={() => {
                     onChosen()
-                    run?.()
+                    run?.({})
                   }}
                 >
                   {icon !== undefined && (

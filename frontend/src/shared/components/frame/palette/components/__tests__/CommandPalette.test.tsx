@@ -2,6 +2,7 @@ import { fireEvent, render, screen, waitFor, within } from '@testing-library/rea
 import { useEffect, useRef, useState } from 'react'
 import { describe, expect, it, vi } from 'vitest'
 
+import { useCommands } from '@/shared/lib/commands'
 import {
   expectAttribute,
   expectFocused,
@@ -11,9 +12,8 @@ import {
   typeText,
 } from '@/test/steps'
 
-import type { PaletteCommand } from '../../command.types'
-import { useCommandsStore } from '../../commands.store'
-import { useCommands } from '../../hooks/useCommands'
+import { usePaletteStore } from '../../palette.store'
+import type { PaletteCommand } from '../../palette.types'
 import { CommandPalette } from '../CommandPalette'
 import { searchCases } from './CommandPalette.data'
 
@@ -78,7 +78,7 @@ describe('CommandPalette', () => {
   })
 
   it('closes with Ctrl+K, the hotkey of its own command', () => {
-    useCommandsStore.setState({ open: true })
+    usePaletteStore.setState({ open: true })
     render(<CommandPalette />)
 
     fireEvent.keyDown(document, { key: 'k', ctrlKey: true })
@@ -88,7 +88,7 @@ describe('CommandPalette', () => {
 
   it('runs the command chosen and closes', async () => {
     const run = vi.fn()
-    useCommandsStore.setState({ open: true })
+    usePaletteStore.setState({ open: true })
     render(
       <>
         <CommandPalette />
@@ -103,7 +103,7 @@ describe('CommandPalette', () => {
   })
 
   it('shows the hotkey of a command, and a command without run disabled', () => {
-    useCommandsStore.setState({ open: true })
+    usePaletteStore.setState({ open: true })
     render(
       <>
         <CommandPalette />
@@ -151,7 +151,7 @@ describe('CommandPalette', () => {
   it.each(searchCases)(
     'filters the commands by their label and their group for $search',
     async ({ search, shown, hidden }) => {
-      useCommandsStore.setState({ open: true })
+      usePaletteStore.setState({ open: true })
       render(
         <>
           <CommandPalette />
@@ -177,7 +177,7 @@ describe('CommandPalette', () => {
   )
 
   it('lists first, and selects, the best match of a search, whatever its group', async () => {
-    useCommandsStore.setState({ open: true })
+    usePaletteStore.setState({ open: true })
     render(
       <>
         <CommandPalette />
@@ -205,7 +205,7 @@ describe('CommandPalette', () => {
   })
 
   it('tells the keys that move through it, open a command and close it', () => {
-    useCommandsStore.getState().setOpen(true)
+    usePaletteStore.getState().setOpen(true)
     render(<CommandPalette />)
 
     const dialog = screen.getByRole('dialog')

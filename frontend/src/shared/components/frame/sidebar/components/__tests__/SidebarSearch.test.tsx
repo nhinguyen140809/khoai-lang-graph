@@ -5,11 +5,11 @@ import { SidebarMenu, SidebarProvider } from '@/shared/components/ui/sidebar'
 import { TooltipProvider } from '@/shared/components/ui/tooltip'
 import { press } from '@/test/steps'
 
-import { useCommandsStore } from '../../../commands/commands.store'
+import { usePaletteStore } from '../../../palette/palette.store'
 import { SidebarSearch } from '../SidebarSearch'
 
 afterEach(() => {
-  useCommandsStore.setState(useCommandsStore.getInitialState())
+  usePaletteStore.setState(usePaletteStore.getInitialState())
 })
 
 describe('SidebarSearch', () => {
@@ -29,6 +29,6 @@ describe('SidebarSearch', () => {
 
     await press(button)
 
-    expect(useCommandsStore.getState().open).toBe(true)
+    expect(usePaletteStore.getState().open).toBe(true)
   })
 })

@@ -4,7 +4,8 @@ import { PanelsTopLeftIcon, SettingsIcon } from 'lucide-react'
 import { useRouter } from 'next/navigation'
 
 import { settingsPages, useChooseView, viewLabels } from '@/modules/user/features/view'
-import { type PaletteCommand, PaletteGroup, useCommands } from '@/shared/components/frame'
+import { type PaletteCommand, PaletteGroup } from '@/shared/components/frame'
+import { useCommands } from '@/shared/lib/commands'
 import { useView, views } from '@/shared/lib/view'
 import { useViewStartHref } from '@/shared/routes'
 
