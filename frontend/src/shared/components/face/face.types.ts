@@ -151,3 +151,12 @@ export interface FaceStyles {
   headStyle: GazeValues['head']
   bodyStyle: BodyStyle
 }
+
+/**
+ * The looks of a face by its state, for a kind of face: one for each mood, and for the other states
+ * (the rest that some moods come to, the steps of a mood that goes through looks) only if the kind
+ * of face has a look of its own for them; the others take the look of their mood.
+ */
+export type FaceLooks<Look extends MotionLook> = Readonly<
+  Record<Mood, Look> & Partial<Record<FaceState, Look>>
+>

@@ -1,5 +1,6 @@
+import type { EyesMotion } from '../face.types'
 import { eyeGeometries, eyeSpacing, faceUnits } from './agent-face.constants'
-import type { EyeKind } from './agent-face.types'
+import type { AgentMoodLook, EyeKind } from './agent-face.types'
 import type { EyeGap } from './look/face-look.types'
 
 /**
@@ -22,4 +23,9 @@ export function eyeCentersOf(
 /** Whether eyes of a kind blink: closed eyes do not. */
 export function canBlink(kind: EyeKind): boolean {
   return kind !== 'arc' && kind !== 'shut' && kind !== 'cross' && kind !== 'spiral'
+}
+
+/** What the look of a mood asks of the eyes of the face of an agent: what each does by itself, and whether they may blink. */
+export function eyesMotionOf(look: AgentMoodLook): EyesMotion {
+  return { lives: look.eyeLives ?? ['steady', 'steady'], canBlink: look.eyes.every(canBlink) }
 }
