@@ -4,8 +4,13 @@ import { quoteRange, textOf, type TextRange } from '@/shared/lib/text'
 
 import type { WorkflowDefinition } from '../../definition/workflow-definition.types'
 import { findValueList } from '../../definition/workflow-definition.utils'
-import { type ContentField, hasObjectEntries } from '../fields/content-fields.types'
+import {
+  type ContentField,
+  hasObjectEntries,
+  type RatingFields,
+} from '../fields/content-fields.types'
 import type { ContentValues } from './content-values.types'
+import { fieldText } from './item-title.utils'
 import { widgetValueRules } from './widget-value-rules.utils'
 
 // The values of the fields of a content, given the fields of its schema: the value a field starts
@@ -22,6 +27,29 @@ export function initialValue(field: ContentField): unknown {
 /** Whether the value of a field is a list: it starts empty, and is never stored as null. */
 export function hasListValue(field: Pick<ContentField, 'widget'>): boolean {
   return widgetValueRules[field.widget].hasListValue
+}
+
+/** Whether the entries of a rating list are in groups, each under its own heading: its schema names a group field. */
+export function hasGroupedRatings(field: Pick<ContentField, 'rating'>): boolean {
+  return field.rating !== null && field.rating.group !== null
+}
+
+/** The entries of a rating list in groups by the text of their group field, in the order the groups first appear; the entries with no text there share a group with no heading. */
+export function ratingGroups(
+  rating: Pick<RatingFields, 'group'>,
+  entries: readonly Record<string, unknown>[],
+): { heading: string | null; entries: Record<string, unknown>[] }[] {
+  const groups = new Map<
+    string | null,
+    { heading: string | null; entries: Record<string, unknown>[] }
+  >()
+  for (const entry of entries) {
+    const heading = rating.group === null ? null : fieldText({ content: entry }, rating.group)
+    const group = groups.get(heading)
+    if (group === undefined) groups.set(heading, { heading, entries: [entry] })
+    else group.entries.push(entry)
+  }
+  return [...groups.values()]
 }
 
 /** The problem with a value, in the words of a form, or null when the value is fine. */

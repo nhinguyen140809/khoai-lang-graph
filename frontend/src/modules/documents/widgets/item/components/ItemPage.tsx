@@ -27,6 +27,7 @@ import { ItemArticleHeader } from './ItemArticleHeader'
 import { ItemBody } from './ItemBody'
 import { ItemBreadcrumb } from './ItemBreadcrumb'
 import { ItemNavigator } from './ItemNavigator'
+import { ItemRelated } from './ItemRelated'
 
 /**
  * The page of one item, in a tab of its own, in three modes: Read shows the title with Edit, the
@@ -104,6 +105,7 @@ function ItemPageBody({ projectId, record }: { projectId: string; record: Artifa
               <article className="mx-auto max-w-3xl space-y-4 p-6 pb-20">
                 <ItemArticleHeader />
                 <ItemBody />
+                <ItemRelated />
               </article>
             </ViewTransition>
           </ScrollArea>

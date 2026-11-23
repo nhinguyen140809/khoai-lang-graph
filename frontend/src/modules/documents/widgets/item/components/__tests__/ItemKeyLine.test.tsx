@@ -5,10 +5,10 @@ import { itemFixtureByKey } from '@/mocks/artifacts/fixtures/artifacts.fixtures'
 import { projectIds } from '@/mocks/shared/db'
 import { contentSchemaFixtureByKind } from '@/mocks/workflow/artifact-kinds.fixtures'
 import type { ItemStatus } from '@/modules/artifact/entities'
+import { itemPageViewOf } from '@/modules/documents/entities'
 import { renderWithProviders } from '@/test/render'
 import { expectNoAccessibilityViolations, expectNoText, expectText } from '@/test/steps'
 
-import { itemPageViewOf } from '../../item-layout.utils'
 import { ItemKeyLine } from '../ItemKeyLine'
 
 const requirement = itemFixtureByKey(projectIds.mentor, 'REQ-001')

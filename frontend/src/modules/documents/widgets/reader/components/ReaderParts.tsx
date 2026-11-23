@@ -6,7 +6,7 @@ import { cn } from '@/shared/lib/cn'
 
 import type { RenderReaderTitle } from '../reader.types'
 
-/** The content under its title, in an area that scrolls. */
+/** The content under its title, in an area that scrolls; a state that fills its height, such as an error, is centered in what is left under the title. */
 export function ContentBody({
   title,
   renderTitle,
@@ -19,7 +19,9 @@ export function ContentBody({
   return (
     <>
       {renderTitle(title)}
-      <ScrollArea className="min-h-0 flex-1">{children}</ScrollArea>
+      <ScrollArea fillContent className="min-h-0 flex-1">
+        {children}
+      </ScrollArea>
     </>
   )
 }

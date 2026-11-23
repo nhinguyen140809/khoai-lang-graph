@@ -9,5 +9,14 @@ export { listSentenceParts } from './list.utils'
 export { pluralForm } from './plural.utils'
 export { excerptAround, quoteRange } from './quotes.utils'
 export { rangesOfQuery, splitByRanges } from './ranges.utils'
+export { fillSentence, listSentenceNodes } from './sentence.utils'
 export type { SentencePart, TextRange, TextSegment } from './text.types'
-export { articleOf, firstLineOf, foldText, hasTextPart, joinPresent, textOf } from './text.utils'
+export {
+  articleOf,
+  collapseSpaces,
+  firstLineOf,
+  foldText,
+  hasTextPart,
+  joinPresent,
+  textOf,
+} from './text.utils'

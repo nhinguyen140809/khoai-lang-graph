@@ -4,6 +4,7 @@ import { describe, expect, it, vi } from 'vitest'
 
 import { server } from '@/mocks/msw-server.setup'
 import { createdId, IdPrefix } from '@/mocks/shared/db'
+import { keepAttachedSources, uploadSources, useAttachedSources } from '@/modules/source/entities'
 import { apiEndpoints } from '@/shared/api/endpoints'
 import { HttpMethod } from '@/shared/api/http'
 import { Dialog, DialogContent, DialogTitle } from '@/shared/components/ui/dialog'
@@ -28,17 +29,31 @@ import { createProjectMessages } from '../../new-project.constants'
 import { NewProjectForm } from '../NewProjectForm'
 import { blankIdeas, createCases, failedCreateCases, failedSendCases } from './NewProjectForm.data'
 
+// A file goes up as a multipart form, which a test of the browser cannot send, so the upload is a stand-in.
+vi.mock('@/modules/source/entities', async (importOriginal) => ({
+  ...(await importOriginal<Record<string, unknown>>()),
+  uploadSources: vi.fn(() => Promise.resolve<File[]>([])),
+}))
+
 const IDEA = 'Mentor platform for students.'
 const projectId = createdId(IdPrefix.Project, 1)
 const threadId = createdId(IdPrefix.Thread, 1)
 const activity = `/projects/${projectId}/activity`
 
-function renderForm(onCreated = vi.fn()) {
+/** What stays chosen as sources, as the page that holds the choice shows it. */
+function ChosenSources() {
+  const { files } = useAttachedSources()
+  return <p data-testid="chosen">{files.map(({ name }) => name).join(',')}</p>
+}
+
+function renderForm(onCreated = vi.fn(), sources: File[] = []) {
+  keepAttachedSources(sources)
   renderWithProviders(
     <Dialog open>
       <DialogContent aria-describedby={undefined}>
         <DialogTitle>Create project</DialogTitle>
         <NewProjectForm idea={IDEA} defaultLanguage="vi" onCreated={onCreated} />
+        <ChosenSources />
       </DialogContent>
     </Dialog>,
   )
@@ -69,6 +84,27 @@ describe('NewProjectForm', () => {
     expect(screen.getByRole('combobox', { name: 'Language of the documents' })).toHaveTextContent(
       'Vietnamese',
     )
+  })
+
+  it('uploads the sources to the project before it sends the idea, and says which of them did not go up', async () => {
+    const error = spyOnToast('error')
+    const notes = new File(['notes'], 'notes.md')
+    const brief = new File(['brief'], 'brief.txt')
+    vi.mocked(uploadSources).mockResolvedValueOnce([notes])
+    const requests = recordRequests()
+    renderForm(vi.fn(), [notes, brief])
+
+    await create()
+
+    await expectPushedTo(activity)
+    expect(uploadSources).toHaveBeenCalledWith(projectId, [notes, brief])
+    expect(error).toHaveBeenCalledWith(createProjectMessages.sourcesNotUploaded('notes.md'))
+    // The file that went up is done with; the one that failed stays chosen, to be sent again.
+    expect(screen.getByTestId('chosen')).toHaveTextContent('notes.md')
+    expect(screen.getByTestId('chosen')).not.toHaveTextContent('brief.txt')
+    expect(
+      sentWith(requests, HttpMethod.Post).some(([path]) => String(path).endsWith('/messages')),
+    ).toBe(true)
   })
 
   it('shows the settings of the runs once their section opens', async () => {
@@ -143,6 +179,21 @@ describe('NewProjectForm', () => {
     expect(requests.map(({ path }) => path)).not.toContain(
       apiEndpoints.threadMessages.path({ threadId }),
     )
+  })
+
+  it('keeps the files chosen as sources when the settings do not save, as none of them went up', async () => {
+    const notes = new File(['notes'], 'notes.md')
+    server.use(http.patch(apiEndpoints.project.pattern, () => serverError()))
+    renderForm(vi.fn(), [notes])
+
+    await pressButton('Agent settings')
+    await pressRole('spinbutton', 'Maximum steps')
+    await pasteText('40')
+    await create()
+
+    await expectPushedTo(activity)
+    expect(uploadSources).not.toHaveBeenCalled()
+    expect(screen.getByTestId('chosen')).toHaveTextContent('notes.md')
   })
 
   it.each(blankIdeas)('asks for the idea instead of %j', async (idea) => {

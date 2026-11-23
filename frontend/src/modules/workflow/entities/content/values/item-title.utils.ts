@@ -1,6 +1,7 @@
 import { hasText, isString } from '@/shared/lib/guards'
 
 import type { ContentSchema } from '../../artifact-kinds/artifact-kinds.types'
+import type { FieldExtension } from '../fields/content-fields.types'
 import type { ContentValues } from './content-values.types'
 
 /** What an item is called: its title field, else its key. */
@@ -25,7 +26,7 @@ export function fieldText(item: { content: ContentValues }, name: string): strin
 export function extensionFieldText(
   schema: ContentSchema | undefined,
   item: { content: ContentValues },
-  extension: 'x-ui-title-field' | 'x-ui-role-field',
+  extension: FieldExtension,
 ): string {
   const name = schema?.[extension]
   return name === undefined ? '' : (fieldText(item, name) ?? '')

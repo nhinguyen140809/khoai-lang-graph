@@ -25,9 +25,9 @@ function phaseOf(fields: Parameters<typeof buildStep>[0]) {
   return phase
 }
 
-function inRun(children: React.ReactNode) {
+function inRun(children: React.ReactNode, livePhaseId: string | null = null) {
   return renderWithProviders(
-    <RunActivityProvider value={{ run, thread: null, projectId: projectIds.mentor }}>
+    <RunActivityProvider value={{ run, thread: null, projectId: projectIds.mentor, livePhaseId }}>
       {children}
     </RunActivityProvider>,
   )
@@ -35,6 +35,24 @@ function inRun(children: React.ReactNode) {
 
 describe('PhaseEntryView', () => {
   const work = phaseOf({ sequence: 1, agent_role: 'planner', stage: 'planning' })
+
+  it('shows the face of its agent, except while it goes on at the end of the chat, where the agent shows at work', () => {
+    const phase = (
+      <PhaseEntryView
+        work={work}
+        stageTitle="Planning the interviews"
+        subjectTitle={null}
+        isOpen
+        onToggle={() => undefined}
+      />
+    )
+    const { container, unmount } = inRun(phase)
+    expect(container.querySelector('[data-slot=face]')).not.toBeNull()
+    unmount()
+
+    const live = inRun(phase, work.id)
+    expect(live.container.querySelector('[data-slot=face]')).toBeNull()
+  })
 
   it('shows the title of the phase and whether its items show', () => {
     inRun(

@@ -24,6 +24,69 @@ interface SimpleProject {
   interviews?: ArtifactSpec[]
 }
 
+// What a persona of each of the two stakeholder types of the plan says about itself; the name and the goal come from the project.
+const characteristicsOf = (scores: [number, number, number, number, number]) =>
+  [
+    [
+      'domain_expertise',
+      'Knowledge of the subject',
+      'Knows the daily work well enough to name its problems.',
+    ],
+    ['usage_frequency', 'Frequency of use', 'Meets the product as often as the work asks.'],
+    ['tech_comfort', 'Comfort with technology', 'Learns a tool when it saves time.'],
+    ['pain_severity', 'Severity of the problem', 'Loses time on it each week.'],
+    ['decision_influence', 'Influence on decisions', 'Says what is needed, and others decide.'],
+  ].map(([aspect, title, rationale], index) => ({
+    aspect,
+    title,
+    score: scores[index] ?? 3,
+    rationale,
+    group: 'Standard characteristics',
+  }))
+
+const userProfile = {
+  stakeholder_type: 'user',
+  occupation: 'Uses the product in daily work',
+  age_range: '25-34',
+  evaluative_dimension: 'How little effort the daily task takes',
+  grounded_in: [],
+  background: 'Works with the product every day.',
+  typical_day: 'Meets the product at the start of the day and again when a task comes up.',
+  expertise: 'Knows the daily work.',
+  current_workarounds: ['Keeps notes on paper', 'Asks a colleague when stuck'],
+  vocabulary: ['quick', 'again', 'where is it'],
+  interests: ['A short path to the result'],
+  constraints: ['Little time between tasks'],
+  priorities: ['Speed', 'Fewer steps'],
+  concerns: ['Losing work that was done'],
+  behavioral_tendencies: 'Prefers a short path to the result.',
+  scores: characteristicsOf([3, 5, 4, 3, 2]),
+  evidence: [],
+}
+
+const administratorProfile = {
+  stakeholder_type: 'administrator',
+  occupation: 'Looks after the product for a team',
+  age_range: '35-44',
+  evaluative_dimension: 'Whether the work of the team can be followed',
+  grounded_in: [],
+  background: 'Looks after the product for the team that uses it.',
+  typical_day: 'Reads the activity of the team in the morning and answers questions from users.',
+  expertise: 'Knows the rules of the team and how the product is set up.',
+  current_workarounds: [
+    'Collects the numbers by hand each month',
+    'Answers the same question many times',
+  ],
+  vocabulary: ['report', 'access', 'rule'],
+  interests: ['A team that works without help'],
+  constraints: ['Has to report each month'],
+  priorities: ['Control', 'Reports'],
+  concerns: ['Changes that nobody can trace'],
+  behavioral_tendencies: 'Wants a record of every change.',
+  scores: characteristicsOf([4, 4, 4, 3, 5]),
+  evidence: [],
+}
+
 const section = (key: string, title: string, children: ItemSpec[]): ItemSpec => ({
   key,
   kind: 'section',
@@ -68,15 +131,8 @@ function simpleSpecs({
       status: 'approved',
       content: {
         name,
-        stakeholder_type: index === 0 ? 'user' : 'administrator',
-        background: 'Works with the product every day.',
-        expertise: 'Knows the daily work.',
+        ...(index === 0 ? userProfile : administratorProfile),
         goals: [requirements[index] ?? requirements[0]],
-        interests: [],
-        constraints: [],
-        priorities: [],
-        concerns: [],
-        behavioral_tendencies: 'Prefers a short path to the result.',
         interview_status: interviewStatuses?.[index] ?? 'completed',
       },
     })),

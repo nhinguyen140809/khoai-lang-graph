@@ -47,6 +47,40 @@ function curvedEye(kind: 'arc' | 'shut'): (cx: number, scale: number, line: numb
   }
 }
 
+/** An eye as a cross: two strokes, as a face that is out of its senses has them. */
+function crossEye(cx: number, scale: number, line: number): ReactNode {
+  const reach = eyeGeometries.cross.halfWidth * scale * 0.8
+  return (
+    <path
+      d={`M${String(cx - reach)} ${String(line - reach)}L${String(cx + reach)} ${String(line + reach)}M${String(cx - reach)} ${String(line + reach)}L${String(cx + reach)} ${String(line - reach)}`}
+      fill="none"
+      stroke="currentColor"
+      strokeWidth={1.8}
+      strokeLinecap="round"
+    />
+  )
+}
+
+/** An eye as a spiral, of half circles that grow, which turns round its middle all the while. */
+function spiralEye(cx: number, scale: number, line: number): ReactNode {
+  const unit = (eyeGeometries.spiral.halfWidth * scale) / 4
+  const at = (x: number) => String(cx + x * unit)
+  return (
+    <g
+      className="animate-face-spin motion-reduce:animate-none"
+      style={{ transformBox: 'fill-box', transformOrigin: 'center' }}
+    >
+      <path
+        d={`M${at(0)} ${String(line)}A${String(unit)} ${String(unit)} 0 0 1 ${at(2)} ${String(line)}A${String(2 * unit)} ${String(2 * unit)} 0 0 1 ${at(-2)} ${String(line)}A${String(3 * unit)} ${String(3 * unit)} 0 0 1 ${at(4)} ${String(line)}A${String(4 * unit)} ${String(4 * unit)} 0 0 1 ${at(-4)} ${String(line)}`}
+        fill="none"
+        stroke="currentColor"
+        strokeWidth={0.9}
+        strokeLinecap="round"
+      />
+    </g>
+  )
+}
+
 // The white of an eye by its kind, at a center of the line of the eyes and as large as `scale`
 // says. All of it is worked out from the geometry of the kind, so a new kind needs its geometry
 // and a drawer, and nothing else knows its size.
@@ -59,11 +93,8 @@ const eyeDrawers: Record<EyeKind, (cx: number, scale: number, line: number) => R
   flat: ovalEye('flat'),
   arc: curvedEye('arc'),
   shut: curvedEye('shut'),
-}
-
-/** Whether eyes of a kind blink: closed eyes do not. */
-export function canBlink(kind: EyeKind): boolean {
-  return kind !== 'arc' && kind !== 'shut'
+  cross: crossEye,
+  spiral: spiralEye,
 }
 
 interface EyeProps {
@@ -131,6 +162,8 @@ interface FaceEyesProps {
   gazeValues: GazeValues['eye']
   /** The look of the eyes is about to change, so they are closed. */
   isChanging: boolean
+  /** The eyes are blinking now. */
+  isBlinking: boolean
   /** The eyes have closed, and the look may change. */
   onClosed: () => void
 }
@@ -149,9 +182,9 @@ export function FaceEyes({
   gaze,
   gazeValues,
   isChanging,
+  isBlinking,
   onClosed,
 }: FaceEyesProps) {
-  const canBlinkNow = kinds.every(canBlink) && !isChanging
   return (
     <g
       className={cn('face-squash', isChanging && 'scale-y-10 face-squash-closing')}
@@ -161,12 +194,8 @@ export function FaceEyes({
       }}
     >
       <g
-        className={cn(canBlinkNow && 'animate-face-blink motion-reduce:animate-none')}
-        style={{
-          transformBox: 'view-box',
-          transformOrigin: 'center',
-          ...(kinds.every(canBlink) && delayOf('--duration-face-blink')),
-        }}
+        className={cn(isBlinking && 'animate-face-blink motion-reduce:animate-none')}
+        style={{ transformBox: 'view-box', transformOrigin: 'center' }}
       >
         {centers.map((cx, index) => (
           <Eye

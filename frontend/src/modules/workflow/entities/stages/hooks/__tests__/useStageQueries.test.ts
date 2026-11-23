@@ -8,7 +8,7 @@ import { useStageTitle, useVisibleStages } from '../useStageQueries'
 
 describe('useStageTitle', () => {
   it('gives the title of a stage in a version', async () => {
-    const { result } = renderHookWithProviders(() => useStageTitle(1, 'analysis_review'))
+    const { result } = renderHookWithProviders(() => useStageTitle(2, 'analysis_review'))
 
     await waitFor(() => {
       expect(result.current).toBe('Reviewing the analysis')
@@ -22,7 +22,7 @@ describe('useStageTitle', () => {
   })
 
   it('gives no title without a stage', () => {
-    const { result } = renderHookWithProviders(() => useStageTitle(1, null))
+    const { result } = renderHookWithProviders(() => useStageTitle(2, null))
 
     expect(result.current).toBeUndefined()
   })
@@ -30,7 +30,7 @@ describe('useStageTitle', () => {
 
 describe('useVisibleStages', () => {
   it('gives the stages that the user sees in a version', async () => {
-    const { result } = renderHookWithProviders(() => useVisibleStages(1))
+    const { result } = renderHookWithProviders(() => useVisibleStages(2))
 
     await waitForSuccess(result)
     expect(result.current.data?.map(({ key }) => key)).not.toContain('intent_routing')

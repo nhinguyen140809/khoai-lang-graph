@@ -97,7 +97,7 @@
 }
 
 @utility face-silhouette-blob {
-  mask: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 32 32'%3E%3Cg transform='translate%2816 16%29 scale%280.967%29 translate%28-16 -16%29'%3E%3Cpath d='M16 1.5C23 0.5 31 5 30.5 14C30 20 31.5 25 25 29.5C19 33 10 31 5 27C0.5 23 1.5 15 3.5 10C6 4 10 2.5 16 1.5Z'/%3E%3C/g%3E%3C/svg%3E")
+  mask: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 32 32'%3E%3Cg transform='translate%2816 16%29 scale%281.027%29 translate%28-16 -16%29'%3E%3Cpath d='M16 1.5C23 0.5 31 5 30.5 14C30 20 31.5 25 25 29.5C19 33 10 31 5 27C0.5 23 1.5 15 3.5 10C6 4 10 2.5 16 1.5Z'/%3E%3C/g%3E%3C/svg%3E")
     center / 100% 100% no-repeat;
 }
 
@@ -123,6 +123,21 @@
 
 @utility face-silhouette-hexagon {
   mask: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 32 32'%3E%3Cg transform='translate%2816 16%29 scale%280.978%29 translate%28-16 -16%29'%3E%3Cpath d='M6.5 16L11.25 7.77H20.75L25.5 16L20.75 24.23H11.25Z' stroke='black' stroke-width='12' stroke-linejoin='round'/%3E%3C/g%3E%3C/svg%3E")
+    center / 100% 100% no-repeat;
+}
+
+@utility face-silhouette-star {
+  mask: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 32 32'%3E%3Cpath d='M13.694 1.970A3.0 3.0 0 0 1 18.306 1.970L21.037 5.251A12 12 0 0 0 25.808 8.717L29.772 10.301A3.0 3.0 0 0 1 31.197 14.687L28.921 18.298A12 12 0 0 0 27.098 23.907L26.817 28.166A3.0 3.0 0 0 1 23.087 30.877L18.949 29.828A12 12 0 0 0 13.051 29.828L8.913 30.877A3.0 3.0 0 0 1 5.183 28.166L4.902 23.907A12 12 0 0 0 3.079 18.298L0.803 14.687A3.0 3.0 0 0 1 2.228 10.301L6.192 8.717A12 12 0 0 0 10.963 5.251Z'/%3E%3C/svg%3E")
+    center / 100% 100% no-repeat;
+}
+
+@utility face-silhouette-mochi {
+  mask: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 32 32'%3E%3Cg transform='translate%2816 16%29 scale%281.027%29 translate%28-16 -16%29'%3E%3Cpath d='M1 18.5C1 9.5 7.5 3 16 3C24.5 3 31 9.5 31 18.5C31 25 25 29 16 29C7 29 1 25 1 18.5Z'/%3E%3C/g%3E%3C/svg%3E")
+    center / 100% 100% no-repeat;
+}
+
+@utility face-silhouette-clover {
+  mask: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 32 32'%3E%3Cg transform='translate%2816 16%29 scale%280.969%29 translate%28-16 -16%29'%3E%3Cpath d='M17.777 3.527A7.6 7.6 0 0 1 28.473 14.223A2.8 2.8 0 0 0 28.473 17.777L28.473 17.777A7.6 7.6 0 0 1 17.777 28.473A2.8 2.8 0 0 0 14.223 28.473L14.223 28.473A7.6 7.6 0 0 1 3.527 17.777A2.8 2.8 0 0 0 3.527 14.223L3.527 14.223A7.6 7.6 0 0 1 14.223 3.527A2.8 2.8 0 0 0 17.777 3.527Z'/%3E%3C/g%3E%3C/svg%3E")
     center / 100% 100% no-repeat;
 }
 

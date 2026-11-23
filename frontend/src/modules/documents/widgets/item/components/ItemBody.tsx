@@ -2,10 +2,10 @@ import { ErrorBoundary } from 'react-error-boundary'
 
 import { RevisionContent } from '@/modules/artifact/entities'
 import { EditItemForm } from '@/modules/artifact/features/edit'
+import { ItemDetails } from '@/modules/documents/entities'
 
 import { useItemPageContext } from '../hooks/useItemPageContext'
 import { FieldMarkPopover } from './FieldMarkPopover'
-import { ItemDetails } from './ItemDetails'
 
 /**
  * What the page shows under the title, in the mode it is in: the form to edit the item, the
@@ -42,6 +42,7 @@ export function ItemBody() {
       item={record}
       layout={page.view.layout}
       fields={page.view.bodyFields}
+      sections={page.view.sections}
       fieldMarks={links.state === 'success' ? links.fieldMarks : undefined}
       renderFieldMark={(range, children) => (
         <ErrorBoundary resetKeys={[record.id]} fallbackRender={() => children}>

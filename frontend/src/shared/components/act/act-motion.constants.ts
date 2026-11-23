@@ -38,12 +38,14 @@ export const exits: Readonly<Record<Exit, LoopTracks>> = {
  * How a thing moves about its slot over a round that it comes back from.
  * A `burst` goes up from its slot and a `gather` comes down onto it.
  */
-export const courses: Readonly<Record<Course, { tracks: LoopTracks; isOrbit?: boolean }>> = {
+export const courses: Readonly<
+  Record<Course, { tracks: LoopTracks; isOrbit?: boolean; axis?: 'horizontal' }>
+> = {
   stay: { tracks: {} },
   // Round the middle of the face, as far from it as the slot is: the tracks are not used, the place is worked out from the round.
   orbit: { isOrbit: true, tracks: {} },
   float: { tracks: { y: { values: [0, -0.1, 0], ease: easeInOut } } },
-  sweep: { tracks: { x: { values: [-0.12, 0.12, -0.12], ease: easeInOut } } },
+  sweep: { axis: 'horizontal', tracks: { x: { values: [-0.12, 0.12, -0.12], ease: easeInOut } } },
   hop: {
     tracks: {
       y: {

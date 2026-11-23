@@ -1,6 +1,7 @@
 'use client'
 
-import { type ReactNode, useRef, useState } from 'react'
+import { type ReactNode, useRef } from 'react'
+import { toast } from 'sonner'
 
 import {
   ChooseRunSettingsButton,
@@ -9,9 +10,28 @@ import {
 } from '@/modules/activity/features/choose-run-settings'
 import { isUnfinishedRunStatus, type Run } from '@/modules/run/entities'
 import { StopRunButton } from '@/modules/run/features/stop'
+import { AttachedSources, PickSourceItem, useUploadSources } from '@/modules/source/features/upload'
 import type { Thread } from '@/modules/thread/entities'
 import { useSendMessage } from '@/modules/thread/features/send-message'
-import { PromptInput, type PromptInputSize, PromptSubmitButton } from '@/shared/components/prompt'
+import { dictationProblemMessage } from '@/shared/components/dictation'
+import {
+  PromptAddMenu,
+  PromptAttachments,
+  PromptBar,
+  PromptBarEnd,
+  PromptBox,
+  PromptDictation,
+  PromptDictationProvider,
+  PromptFooter,
+  PromptFooterEnd,
+  PromptFooterStart,
+  PromptInput,
+  type PromptInputSize,
+  PromptListeningGlow,
+  PromptSend,
+  PromptTextarea,
+  usePromptDraft,
+} from '@/shared/components/prompt'
 import { hasText } from '@/shared/lib/guards'
 import { useView, type View } from '@/shared/lib/view'
 import { useFocusWhen } from '@/shared/lib/viewport'
@@ -28,23 +48,19 @@ interface FooterProps {
 /**
  * What each view puts in the row under the prompt. The developer view has the settings of the run
  * at the start, its progress being in the panel beside; the guided view shows the progress as a
- * bar of stages at the start and the settings as an icon at the end.
+ * bar of stages, and has the settings in the bar of the desk (`ChatSettingsBarItem`).
  */
-const footers = {
-  developer: ({ thread }) => ({ footerStart: <ChooseRunSettingsButton thread={thread} /> }),
-  user: ({ projectId, thread, run }) => ({
-    footerStart: <StageProgressBar run={run} projectId={projectId} />,
-    footerEnd: <ChooseRunSettingsButton thread={thread} display="icon" />,
-  }),
-} satisfies Record<
+const footers: Record<
   View,
-  (props: FooterProps) => {
-    footerStart?: ReactNode
-    footerEnd?: ReactNode
-  }
->
+  (props: FooterProps) => { footerStart?: ReactNode; footerEnd?: ReactNode }
+> = {
+  developer: ({ thread }) => ({ footerStart: <ChooseRunSettingsButton thread={thread} /> }),
+  user: ({ projectId, run }) => ({
+    footerStart: <StageProgressBar run={run} projectId={projectId} />,
+  }),
+}
 
-/** The prompt of the chat: it joins Send with the settings of the run the next message starts. */
+/** The prompt of the chat: it joins Send with the settings of the run the next message starts, and its plus uploads sources to the project. */
 export function ActivityPrompt({
   projectId,
   thread,
@@ -61,7 +77,8 @@ export function ActivityPrompt({
   size?: PromptInputSize
 }) {
   const view = useView()
-  const [text, setText] = useState('')
+  // The draft is kept for the chat of the project, so that it is there again when the page loads.
+  const [text, setText] = usePromptDraft(`chat:${projectId}`)
   const inputRef = useRef<HTMLTextAreaElement>(null)
 
   // The prompt takes the focus as the chat opens, so that the next message can be typed at once.
@@ -69,8 +86,12 @@ export function ActivityPrompt({
   const chosen = useChosenRunSettings(thread?.id ?? null)
   const clearChosen = useClearChosenRunSettings()
   const { send, isPending } = useSendMessage({ projectId, thread })
+  // Kept here, not in the menu, so that an upload goes on after the menu has closed.
+  const upload = useUploadSources(projectId)
   const isBlank = !hasText(text)
   const isStoppable = run !== null && isUnfinishedRunStatus(run.status)
+
+  const { footerStart, footerEnd } = footers[view]({ projectId, thread, run })
 
   return (
     <PromptInput
@@ -89,23 +110,42 @@ export function ActivityPrompt({
           },
         })
       }}
-      submitLabel={activityChatMessages.prompt.send}
       keysHint={activityChatMessages.prompt.keys}
-      placeholder={activityChatMessages.prompt.placeholder}
       isPending={isPending}
       inputRef={inputRef}
-      endActions={
-        isBlank && isStoppable ? (
-          <StopRunButton run={run} display="icon" />
-        ) : (
-          <PromptSubmitButton
-            submitLabel={activityChatMessages.prompt.send}
-            isPending={isPending}
-            isDisabled={isBlank}
-          />
-        )
-      }
-      {...footers[view]({ projectId, thread, run })}
-    />
+    >
+      <PromptDictationProvider
+        onProblem={(problem) => {
+          toast.error(dictationProblemMessage(problem))
+        }}
+      >
+        <PromptBox behind={<PromptListeningGlow />}>
+          {/* The files show while they go up, so that the wait has something to look at. */}
+          <PromptAttachments isPresent={upload.isPending}>
+            <AttachedSources files={upload.variables ?? []} state="uploading" />
+          </PromptAttachments>
+          <PromptTextarea placeholder={activityChatMessages.prompt.placeholder} />
+          <PromptBar>
+            <PromptBarEnd>
+              {isBlank && isStoppable ? (
+                <StopRunButton run={run} display="icon" />
+              ) : (
+                <PromptSend label={activityChatMessages.prompt.send} />
+              )}
+            </PromptBarEnd>
+          </PromptBar>
+        </PromptBox>
+        <PromptFooter>
+          <PromptFooterStart>{footerStart}</PromptFooterStart>
+          <PromptFooterEnd>
+            <PromptAddMenu>
+              <PickSourceItem onPick={upload.mutate} />
+            </PromptAddMenu>
+            <PromptDictation />
+            {footerEnd}
+          </PromptFooterEnd>
+        </PromptFooter>
+      </PromptDictationProvider>
+    </PromptInput>
   )
 }

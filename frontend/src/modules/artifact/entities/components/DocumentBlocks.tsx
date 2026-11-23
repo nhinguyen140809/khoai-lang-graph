@@ -5,15 +5,12 @@ import type { ReactNode } from 'react'
 import {
   type ContentField,
   ContentFieldValue,
-  fieldText,
   type ItemDisplay,
-  itemTitle,
   listColumns,
   summaryFields,
   useWorkflowDefinition,
   type ValueDefinition,
 } from '@/modules/workflow/entities/@x/artifact'
-import { Card, CardContent, CardHeader, CardTitle } from '@/shared/components/ui/card'
 import type { HighlightRange } from '@/shared/components/ui/highlight'
 import {
   Table,
@@ -25,10 +22,12 @@ import {
 } from '@/shared/components/ui/table'
 
 import type { OutlineItem } from '../items/items.types'
+import { itemAnchorProps } from '../outline/item-anchor.utils'
+import { itemTitleOf } from '../outline/item-list.utils'
 import type { DocumentBlock, KindView, Participant, RenderItemLink } from '../outline/outline.types'
-import { itemAnchorProps } from '../outline/outline.utils'
 import { artifactViewMessages } from './artifact-view.constants'
 import { ItemAvatarCards } from './ItemAvatarCards'
+import { ItemCards } from './ItemCards'
 import { ItemTranscript } from './ItemTranscript'
 
 interface DocumentBlocksProps<Range extends HighlightRange = HighlightRange> {
@@ -62,10 +61,6 @@ const headings = { 2: 'h2', 3: 'h3', 4: 'h4', 5: 'h5' } as const
 // The size of a section heading by its level: the top level one step above the body text, the
 // levels nested under it at the size of the body, set apart by their weight alone.
 const headingSizes = { 2: 'text-lg', 3: 'text-base', 4: 'text-base', 5: 'text-base' } as const
-
-function itemTitleOf(view: KindView, item: OutlineItem, field: ContentField): ReactNode {
-  return fieldText(item, field.name) ?? itemTitle(view.schema, item)
-}
 
 /** A column of a table of items: what its head says and what each of its cells shows. */
 interface TableColumn {
@@ -141,49 +136,6 @@ function ItemsTable<Range extends HighlightRange = HighlightRange>(props: RunVie
         ))}
       </TableBody>
     </Table>
-  )
-}
-
-function ItemCards<Range extends HighlightRange = HighlightRange>({
-  items,
-  view,
-  renderItemLink,
-  definition,
-  targetItemId,
-}: RunViewProps<Range>) {
-  const fields = summaryFields(view.schema)
-  const [first, ...others] = fields
-  return (
-    <div className="grid gap-3 sm:grid-cols-2">
-      {items.map((item) => (
-        <Card
-          key={item.id}
-          size="sm"
-          className="data-[target]:bg-accent/50"
-          {...itemAnchorProps(item.id, targetItemId)}
-        >
-          <CardHeader>
-            <CardTitle>
-              {renderItemLink(
-                item,
-                first === undefined ? item.key : itemTitleOf(view, item, first),
-              )}
-            </CardTitle>
-          </CardHeader>
-          <CardContent className="space-y-1 text-sm">
-            {others.map((field) => (
-              <div key={field.name}>
-                <ContentFieldValue
-                  field={field}
-                  value={item.content[field.name]}
-                  definition={definition}
-                />
-              </div>
-            ))}
-          </CardContent>
-        </Card>
-      ))}
-    </div>
   )
 }
 

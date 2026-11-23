@@ -1,35 +1,17 @@
 import { describe, expect, it } from 'vitest'
 
-import {
-  artifactKindFixtures,
-  contentSchemaFixtureByKind,
-} from '@/mocks/workflow/artifact-kinds.fixtures'
+import { contentSchemaFixtureByKind } from '@/mocks/workflow/artifact-kinds.fixtures'
 
 import type { ContentSchema, SchemaProperty } from '../../../artifact-kinds/artifact-kinds.types'
-import { itemDisplays, itemPageLayouts } from '../content-fields.types'
-import {
-  artifactDisplayOf,
-  contentDisplayOf,
-  contentFields,
-  documentDisplaysByKind,
-  extensionField,
-  isOneLineField,
-  isSeparatorField,
-  mainField,
-  pageLayoutOf,
-  profileFields,
-  summaryFields,
-} from '../content-fields.utils'
+import { ratingGroups } from '../../values/content-values.utils'
+import { contentFields, extensionField, mainField, shownFields } from '../content-fields.utils'
+import { profileFields } from '../content-profile.utils'
 import {
   contentFieldCases,
-  displayCases,
-  displayFallbackCases,
   fieldOrderCases,
-  listFieldCases,
   messageSchema,
   profileSchema,
   transcriptSchema,
-  widgetRuleCases,
 } from './content-fields.utils.data'
 
 describe('contentFields', () => {
@@ -139,10 +121,36 @@ describe('a rating list', () => {
       label: 'aspect',
       value: 'score',
       note: 'rationale',
+      group: null,
       min: 1,
       max: 5,
     })
     expect(scores?.entryFields.map(({ name }) => name)).toEqual(['aspect', 'score', 'rationale'])
+  })
+
+  it('reads the field that heads the group of an entry, and groups the entries by its text', () => {
+    const [scores] = contentFields(
+      ratingSchema({
+        'x-ui-label-field': 'aspect',
+        'x-ui-value-field': 'score',
+        'x-ui-group-field': 'group',
+      }),
+    )
+    const rating = scores?.rating ?? null
+
+    expect(rating?.group).toBe('group')
+    expect(
+      ratingGroups(rating ?? { group: null }, [
+        { aspect: 'a', group: 'First' },
+        { aspect: 'b', group: 'Second' },
+        { aspect: 'c', group: 'First' },
+        { aspect: 'd' },
+      ]).map(({ heading, entries }) => [heading, entries.length]),
+    ).toEqual([
+      ['First', 2],
+      ['Second', 1],
+      [null, 1],
+    ])
   })
 
   it('has no rating fields when the schema names no label or value field', () => {
@@ -156,13 +164,17 @@ describe('a rating list', () => {
   })
 })
 
-describe('contentDisplayOf', () => {
-  it.each(displayCases)('reads the display of $kind', ({ kind, display }) => {
-    expect(contentDisplayOf(contentSchemaFixtureByKind(kind))).toBe(display)
-  })
+describe('valueList', () => {
+  it('reads the value list that a property names', () => {
+    const fields = contentFields({
+      title: 'Kind',
+      properties: {
+        priority: { type: 'string', 'x-value-list': 'priority' },
+        note: { type: 'string' },
+      },
+    })
 
-  it.each(displayFallbackCases)('falls back for $name', ({ schema, display }) => {
-    expect(contentDisplayOf(schema)).toBe(display)
+    expect(fields.map(({ valueList }) => valueList)).toEqual(['priority', null])
   })
 })
 
@@ -184,116 +196,6 @@ describe('mainField', () => {
   })
 })
 
-describe('summaryFields', () => {
-  it.each(listFieldCases)(
-    'lists the fields of a table of $kind in the order of the schema',
-    ({ kind, names }) => {
-      expect(summaryFields(contentSchemaFixtureByKind(kind)).map(({ name }) => name)).toEqual(names)
-    },
-  )
-
-  it('lists the first three fields when the schema names none', () => {
-    const schema = {
-      title: 'Kind',
-      properties: { a: {}, b: {}, c: {}, d: {} },
-    }
-
-    expect(summaryFields(schema).map(({ name }) => name)).toEqual(['a', 'b', 'c'])
-  })
-})
-
-describe('valueList', () => {
-  it('reads the value list that a property names', () => {
-    const fields = contentFields({
-      title: 'Kind',
-      properties: {
-        priority: { type: 'string', 'x-value-list': 'priority' },
-        note: { type: 'string' },
-      },
-    })
-
-    expect(fields.map(({ valueList }) => valueList)).toEqual(['priority', null])
-  })
-})
-
-describe('documentDisplaysByKind', () => {
-  const displays = documentDisplaysByKind(artifactKindFixtures)
-
-  it('is the display of the first kind of item that holds content, past the sections', () => {
-    expect(displays.get('persona_catalog')).toBe('profile')
-    expect(displays.get('requirements_analysis')).toBe('table')
-  })
-
-  it('is the layout that the artifact kind names, when it is not a document', () => {
-    expect(displays.get('interview_transcript')).toBe('transcript')
-  })
-
-  it('is a document alone for a kind that holds no item', () => {
-    expect(displays.get('elicitation_plan')).toBe('document')
-  })
-
-  it('is empty before the kinds load', () => {
-    expect(documentDisplaysByKind(undefined).size).toBe(0)
-  })
-
-  it('lets the layout that the artifact kind names win over the displays of its items', () => {
-    const kinds = {
-      workflow_version: 1,
-      artifact_kinds: [
-        {
-          kind: 'interview',
-          schema_version: 1,
-          schema: transcriptSchema,
-          item_kinds: [{ kind: 'message', schema_version: 1, schema: messageSchema }],
-        },
-      ],
-    }
-
-    expect(documentDisplaysByKind(kinds).get('interview')).toBe('transcript')
-  })
-})
-
-describe('artifactDisplayOf', () => {
-  it('reads the layout that an artifact kind names', () => {
-    expect(artifactDisplayOf(transcriptSchema)).toBe('transcript')
-  })
-
-  it('reads an artifact that names a display of an item as a document', () => {
-    expect(
-      artifactDisplayOf({ title: 'Kind', 'x-level': 'artifact', 'x-ui-display': 'profile' }),
-    ).toBe('document')
-  })
-
-  it('reads a document when the kind names no layout', () => {
-    expect(artifactDisplayOf({ title: 'Kind', 'x-level': 'artifact' })).toBe('document')
-  })
-})
-
-describe('pageLayoutOf', () => {
-  it('gives a kind with the display profile the page layout of a profile', () => {
-    expect(pageLayoutOf(profileSchema)).toBe('profile')
-  })
-
-  it('gives every other kind the page of today', () => {
-    expect(pageLayoutOf(messageSchema)).toBe('fields')
-    expect(pageLayoutOf(contentSchemaFixtureByKind('spec_requirement'))).toBe('fields')
-  })
-
-  it('has a row for every display of an item', () => {
-    expect(Object.keys(itemPageLayouts).toSorted()).toEqual([...itemDisplays].toSorted())
-  })
-})
-
-describe('the display of a test kind by level', () => {
-  it('reads the display an item kind names', () => {
-    expect(contentDisplayOf(profileSchema)).toBe('profile')
-  })
-
-  it('reads the layout an artifact kind names', () => {
-    expect(contentDisplayOf(transcriptSchema)).toBe('transcript')
-  })
-})
-
 describe('extensionField', () => {
   it('reads the field that each keyword names', () => {
     expect(extensionField(profileSchema, 'x-ui-title-field')?.name).toBe('name')
@@ -312,38 +214,32 @@ describe('extensionField', () => {
   })
 })
 
-describe('the rules of each widget', () => {
-  it.each(widgetRuleCases)('reads the rules of $widget', ({ widget, isOneLine, isSeparator }) => {
-    expect(isOneLineField({ widget })).toBe(isOneLine)
-    expect(isSeparatorField({ widget })).toBe(isSeparator)
+describe('the field that groups the items of a kind', () => {
+  it('is the field that x-ui-group-by names, read as the other extensions are', () => {
+    const observation = contentSchemaFixtureByKind('stakeholder_observation')
+
+    expect(extensionField(observation, 'x-ui-group-by')?.name).toBe('stakeholder_name')
+    expect(extensionField(contentSchemaFixtureByKind('persona'), 'x-ui-group-by')).toBeUndefined()
   })
 })
 
-describe('profileFields', () => {
-  it('splits the fields of a kind whose display is a profile', () => {
-    const fields = profileFields(profileSchema)
+describe('a field that the page hides', () => {
+  const persona = contentSchemaFixtureByKind('persona')
 
-    expect(fields.title?.name).toBe('name')
-    expect(fields.line.map(({ name }) => name)).toEqual(['stakeholder_type', 'interview_status'])
-    expect(fields.card.map(({ name }) => name)).toEqual(['background', 'goals'])
-    expect(fields.body.map(({ name }) => name)).toEqual([
-      'background',
-      'expertise',
-      'goals',
-      'interests',
-    ])
+  it('is known to the schema, and is left out of what a page shows', () => {
+    const hidden = contentFields(persona).filter((field) => field.isHidden)
+
+    expect(hidden.map(({ name }) => name)).toEqual(['grounded_in', 'evidence'])
+    expect(shownFields(persona).map(({ name }) => name)).not.toContain('evidence')
+    const body = profileFields(persona).body.map(({ name }) => name)
+    expect(body).not.toContain('grounded_in')
+    expect(body).not.toContain('evidence')
   })
 
-  it('gives no title for a kind without a title field', () => {
-    const fields = profileFields({
-      title: 'Kind',
-      'x-ui-list-fields': ['a', 'b'],
-      properties: { a: { type: 'string' }, b: { type: 'integer' } },
-    })
+  it('has no block for what a persona is based on, since its links say it', () => {
+    const titles = profileFields(persona).sections.map(({ title }) => title)
 
-    expect(fields.title).toBeUndefined()
-    expect(fields.line.map(({ name }) => name)).toEqual(['a', 'b'])
-    expect(fields.card).toEqual([])
-    expect(fields.body).toEqual([])
+    expect(titles).not.toContain('Supporting evidence')
+    expect(titles).toContain('Product evaluation')
   })
 })

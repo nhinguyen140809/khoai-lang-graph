@@ -12,11 +12,13 @@ import { routerMock } from '@/test/next-stubs'
 import { renderDocumentsFrame } from '@/test/render'
 import {
   advanceTimers,
+  expectAttribute,
   expectDisabled,
   expectEnabled,
   expectNoAccessibilityViolations,
   expectNoRole,
   expectPushedTo,
+  expectRole,
   expectText,
   hoverAway,
   hoverOver,
@@ -73,9 +75,9 @@ describe('ItemPage', () => {
     renderItem(itemFixtureByKey(projectId, 'PER-001').id)
 
     const heading = await screen.findByRole('heading', { level: 1, name: 'Minh' })
-    // The key of the persona sits on the key line, under the title, no longer beside it.
-    expect(heading.parentElement).not.toHaveTextContent('PER-001')
+    // The key line sits right under the title, in one block with it, beside the avatar.
     await expectText('PER-001')
+    expect(heading.parentElement).toHaveTextContent('PER-001')
     // The avatar leads the title, in the tone of the place of the persona among the items.
     expect(screen.getByText('M')).toHaveAttribute('data-color', 'secondary')
     // The fields of one line sit above the label of the status, under the title.
@@ -91,6 +93,16 @@ describe('ItemPage', () => {
     expect(goals).not.toHaveAttribute('data-wide')
     expect(background).toHaveAttribute('data-wide')
     expectNoRole('heading', 'Name')
+  })
+
+  it('folds the links of a profile at its foot, closed until they are opened', async () => {
+    renderItem(itemFixtureByKey(projectId, 'PER-001').id)
+
+    await expectRole('button', 'Related items')
+
+    expectAttribute('button', 'Related items', 'aria-expanded', 'false')
+    await pressButton('Related items')
+    expectAttribute('button', 'Related items', 'aria-expanded', 'true')
   })
 
   it('shows the sections and the group above the item in the breadcrumb, from the top down', async () => {

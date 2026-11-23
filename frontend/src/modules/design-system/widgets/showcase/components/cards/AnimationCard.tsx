@@ -11,11 +11,14 @@ import { Fragment, useState } from 'react'
 
 import {
   AnimatedSize,
+  CardStack,
   DirectionalSwap,
   Flash,
   Glint,
   Glow,
   type GlowShape,
+  Loop,
+  LoopStep,
   Presence,
   Reveal,
   Rings,
@@ -371,6 +374,36 @@ export function AnimationCard() {
             </div>
           ))}
         </div>
+      </SampleGroup>
+      <SampleGroup label="CardStack: cards in a pile; the front one grows and fades away, the others come forward">
+        <CardStack
+          items={[
+            {
+              label: 'Interviews',
+              render: () => <p className="p-3 text-sm">Plan the interviews</p>,
+            },
+            {
+              label: 'Personas',
+              render: () => <p className="p-3 text-sm">Propose the personas</p>,
+            },
+            { label: 'Backlog', render: () => <p className="p-3 text-sm">Write the backlog</p> },
+          ]}
+        />
+      </SampleGroup>
+      <SampleGroup label="Loop and LoopStep: the parts of a drawing come in one after the other, stay, and go together at the end of the cycle">
+        <svg viewBox="0 0 120 32" className="h-10 text-primary" fill="currentColor" aria-hidden>
+          <Loop isPlaying>
+            <LoopStep at={0}>
+              <circle cx="16" cy="16" r="8" />
+            </LoopStep>
+            <LoopStep at={0.2}>
+              <circle cx="60" cy="16" r="8" />
+            </LoopStep>
+            <LoopStep at={0.4}>
+              <circle cx="104" cy="16" r="8" />
+            </LoopStep>
+          </Loop>
+        </svg>
       </SampleGroup>
       <SampleGroup label="Breathe: the stage at work fades down and back in place, where Shimmer travels over the text">
         <p className="animate-breathe text-sm motion-reduce:animate-none">

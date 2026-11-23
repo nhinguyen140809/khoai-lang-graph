@@ -6,7 +6,8 @@ import {
   overviewTitle,
   rootThumbnails,
 } from '../folder-thumbnails.utils'
-import { artifactOutline, isBranch, outlinePath } from '../outline.utils'
+import { artifactOutline } from '../outline.utils'
+import { isBranch, outlinePath } from '../outline-path.utils'
 import { issueKindFixtures, kindViewFixtures, mentorDocument } from './outline.utils.data'
 
 function outlineOf(kind: string) {

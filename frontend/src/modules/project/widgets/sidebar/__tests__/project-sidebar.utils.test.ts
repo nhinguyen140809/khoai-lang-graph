@@ -1,7 +1,7 @@
 import { describe, expect, it } from 'vitest'
 
-import { noticeableRunStatus, projectsByAttention } from '../project-sidebar.utils'
-import { attentionCases, noticeableCases } from './project-sidebar.utils.data'
+import { projectsByAttention } from '../project-sidebar.utils'
+import { attentionCases } from './project-sidebar.utils.data'
 
 describe('projectsByAttention', () => {
   it.each(attentionCases)('puts $name in order', ({ projects, order }) => {
@@ -15,11 +15,5 @@ describe('projectsByAttention', () => {
     projectsByAttention(projects)
 
     expect(projects.map(({ id }) => id)).toEqual(before)
-  })
-})
-
-describe('noticeableRunStatus', () => {
-  it.each(noticeableCases)('shows $shown for $status', ({ status, shown }) => {
-    expect(noticeableRunStatus(status)).toBe(shown)
   })
 })

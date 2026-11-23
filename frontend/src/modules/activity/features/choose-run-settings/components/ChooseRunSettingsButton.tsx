@@ -21,6 +21,7 @@ const displays = {
   full: {
     size: 'sm',
     className: 'px-1.5 text-sm',
+    iconClassName: undefined,
     ariaLabel: undefined,
     label: chooseRunSettingsMessages.button,
     changedClassName: undefined,
@@ -28,7 +29,8 @@ const displays = {
   },
   icon: {
     size: 'icon-sm',
-    className: undefined,
+    className: 'text-foreground',
+    iconClassName: 'size-5',
     ariaLabel: chooseRunSettingsMessages.button,
     label: null,
     changedClassName: 'sr-only',
@@ -70,7 +72,7 @@ export function ChooseRunSettingsButton({
         if (thread !== null) openRunSettings(thread.id)
       }}
     >
-      <Settings2Icon aria-hidden />
+      <Settings2Icon aria-hidden className={look.iconClassName} />
       {look.label}
       {chosen !== undefined && (
         <Badge variant="soft" aria-label={chooseRunSettingsMessages.changed}>

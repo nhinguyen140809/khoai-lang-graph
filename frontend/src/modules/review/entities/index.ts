@@ -6,7 +6,7 @@ export {
 export { useInterruptStatusLook } from './hooks/useInterruptStatusLook'
 export { interruptStatusLooks } from './interrupt-look.constants'
 export { findPendingInterrupt, listRunInterrupts, resumeRun } from './interrupts.api'
-export { interruptStatusLabels } from './interrupts.constants'
+export { interruptActs, interruptStatusLabels } from './interrupts.constants'
 export { interruptKeys } from './interrupts.keys'
 export type {
   AnswerLine,

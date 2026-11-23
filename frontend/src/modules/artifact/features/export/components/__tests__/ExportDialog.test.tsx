@@ -22,7 +22,7 @@ import { ExportProjectButton } from '../ExportProjectButton'
 
 const { downloadFile } = vi.hoisted(() => ({ downloadFile: vi.fn() }))
 
-vi.mock('@/shared/lib/download', () => ({ downloadFile }))
+vi.mock('@/shared/lib/files', () => ({ downloadFile }))
 
 const projectId = projectIds.mentor
 

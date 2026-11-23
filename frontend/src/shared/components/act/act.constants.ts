@@ -1,4 +1,4 @@
-import type { Act, ActKey, Slot } from './act.types'
+import type { Act, ActKey, ActSize, Slot } from './act.types'
 
 /**
  * Where each slot is, as shares of the size of the face from its middle (to the right and down), and
@@ -226,20 +226,41 @@ export const acts: Readonly<Partial<Record<ActKey, Act>>> = {
     ],
   },
   review: {
-    loopMs: 4000,
+    loopMs: 8000,
     look: [
       [0, 'left'],
-      [0.35, 'right'],
-      [0.7, 'right'],
+      [0.33, 'top-left'],
+      [0.66, 'bottom-left'],
       [1, 'left'],
     ],
     props: [
-      { icon: 'check', slot: 'right', from: 0, to: 1, size: 0.8 },
+      // The lines of text that it reads come in turn: at its left, above that and below it.
       {
         icon: 'textLeft',
         slot: 'left',
         from: 0,
+        to: 0.4,
+        size: 1.3,
+        enter: 'rise',
+        exit: 'float-up',
+        effect: 'blink',
+      },
+      {
+        icon: 'textLeft',
+        slot: 'top-left',
+        from: 0.3,
+        to: 0.7,
+        size: 1.3,
+        enter: 'rise',
+        exit: 'float-up',
+        effect: 'blink',
+      },
+      {
+        icon: 'textLeft',
+        slot: 'bottom-left',
+        from: 0.6,
         to: 1,
+        size: 1.3,
         enter: 'rise',
         exit: 'float-up',
         effect: 'blink',
@@ -252,8 +273,10 @@ export const acts: Readonly<Partial<Record<ActKey, Act>>> = {
         from: 0,
         to: 1,
         enter: 'rise',
-        effect: 'pulse',
-        effectCycles: 3,
+        course: 'sweep',
+        axis: 'vertical',
+        courseCycles: 2,
+        reach: 2.5,
       },
     ],
   },
@@ -454,7 +477,7 @@ export const restingLook = [
 ] as const
 
 /** How large a thing around the face is, as a share of the face. */
-export const propSize = 0.42
+export const propSize = 0.5
 
 /**
  * The mood that stands for work in general, such as the mood of the status of a run that works.
@@ -462,3 +485,10 @@ export const propSize = 0.42
  * it only when its act has none.
  */
 export const genericMood = 'working'
+
+/** The frame of an actor by the size of its face; whole class names, so that they are generated. */
+export const actorFrameClasses = {
+  lg: 'actor-frame-lg',
+  xl: 'actor-frame-xl',
+  '2xl': 'actor-frame-2xl',
+} as const satisfies Record<ActSize, string>

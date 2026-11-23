@@ -1,10 +1,11 @@
 'use client'
 
+import { ItemLinkLine } from '@/modules/documents/entities'
 import type { useItemLinks } from '@/modules/trace/entities'
 import { ErrorState } from '@/shared/components/state'
 
 import { itemPageMessages } from '../item-page.constants'
-import { ItemLinkLine } from './ItemLinkLine'
+import { RemoveLinkMenuItem } from './RemoveLinkMenuItem'
 
 /** The link line, with its own error state; nothing while it loads. */
 export function ItemLinkLineBlock({
@@ -17,7 +18,13 @@ export function ItemLinkLineBlock({
   lockedReason: string | null
 }) {
   if (links.state !== 'success' || links.count === 0) return null
-  return <ItemLinkLine projectId={projectId} links={links} lockedReason={lockedReason} />
+  return (
+    <ItemLinkLine
+      projectId={projectId}
+      links={links}
+      renderMenu={(link) => <RemoveLinkMenuItem link={link} lockedReason={lockedReason} />}
+    />
+  )
 }
 
 /** The error of the links block, with its way to try again. */

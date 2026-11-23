@@ -24,6 +24,8 @@ export const workflowStageSchema = z.object({
   internal: z.boolean(),
   /** The stage that this one belongs to, or null at the top level; the stages make a tree. */
   parent: z.string().nullable(),
+  /** The acts shown around the agent while the stage runs, one after another and again from the first; none for a stage that shows only the mood of the face. */
+  acts: z.array(z.string()).default([]),
 })
 
 export type WorkflowStage = z.infer<typeof workflowStageSchema>
@@ -117,6 +119,8 @@ export const toolSchema = z.object({
   /** The line for the uses of the tool in a row: one use, or several, where `{count}` is the number. */
   uses: z.object({ one: z.string(), other: z.string() }),
   icon: z.enum(toolIcons),
+  /** The acts shown around the agent while a use of the tool runs, in place of those of its stage. */
+  acts: z.array(z.string()).default([]),
 })
 
 export type Tool = z.infer<typeof toolSchema>

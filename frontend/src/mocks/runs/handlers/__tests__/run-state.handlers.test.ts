@@ -18,7 +18,7 @@ describe('GET /runs/{run_id}/state', () => {
     expect(body).toMatchObject({
       run_id: runIds.mentorMain3,
       step_id: stepsOfRun3.at(-1)?.id,
-      workflow_version: 1,
+      workflow_version: 2,
     })
     expect(body.values).toMatchObject({ current_stage: 'analysis_review', iteration_count: 0 })
   })

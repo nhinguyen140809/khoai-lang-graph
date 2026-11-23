@@ -27,7 +27,7 @@ export const iconBounds = {
   layers: { x: 12, y: 12, size: 21 },
   library: { x: 9.6, y: 11.8, size: 16.4 },
   link: { x: 12, y: 12, size: 21 },
-  messageSquare: { x: 12, y: 12, size: 21 },
+  messageSquare: { x: 12, y: 12, size: 18 },
   nodes: { x: 12, y: 12, size: 20 },
   // The pen, the glass and the plane move or leave a trail while the round goes: they are measured at rest.
   pen: { x: 12, y: 12, size: 20 },

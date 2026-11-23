@@ -16,20 +16,32 @@ describe('traces api', () => {
 
     expect(keysOf(trace)).toEqual([
       'AR-001',
+      'OBS-001',
+      'OBS-002',
       'PER-001',
       'PER-001#2',
       'RAW-001',
       'REQ-001',
+      'SRC-001',
       'US-001',
     ])
-    expect(trace.links).toHaveLength(5)
+    expect(trace.links).toHaveLength(9)
   })
 
   it('reads what the item was built from going backward, and what was built from it going forward', async () => {
     const backward = await getItemTrace(requirement.id, { direction: 'backward' })
     const forward = await getItemTrace(requirement.id, { direction: 'forward' })
 
-    expect(keysOf(backward)).toEqual(['AR-001', 'PER-001', 'PER-001#2', 'RAW-001', 'REQ-001'])
+    expect(keysOf(backward)).toEqual([
+      'AR-001',
+      'OBS-001',
+      'OBS-002',
+      'PER-001',
+      'PER-001#2',
+      'RAW-001',
+      'REQ-001',
+      'SRC-001',
+    ])
     expect(keysOf(forward)).toEqual(['REQ-001', 'US-001'])
   })
 

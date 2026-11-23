@@ -2,7 +2,7 @@
 
 import { type MotionStyle, type MotionValue, useMotionValue, useTransform } from 'motion/react'
 
-import type { FaceDrive, GazeTiming, GazeValues, MoodLook } from '../../face.types'
+import type { Body, FaceDrive, GazeTiming, GazeValues, Pose } from '../../face.types'
 import { bodyLoops, poseLoops } from '../face-loop.constants'
 import { useLoop } from './useLoop'
 
@@ -24,7 +24,7 @@ function usePercent(share: MotionValue<number>): MotionValue<string> {
  * times that of the mood.
  */
 export function useFaceMotion(
-  { pose, body }: Pick<MoodLook, 'pose' | 'body'>,
+  { pose, body }: { pose?: Pose | undefined; body?: Body | undefined },
   head: GazeValues['head'],
   { phase, isChanging, isRunning }: GazeTiming,
   move?: FaceDrive['move'],

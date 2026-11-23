@@ -8,7 +8,7 @@ import { stretchOf } from '@/shared/lib/animation'
 
 import { propSize, slotPlaces } from './act.constants'
 import type { Act, ActProp, ActSize, IconKey, Slot } from './act.types'
-import { depthScale, placeOf, toneOf } from './act.utils'
+import { courseShift, depthScale, placeOf, toneOf, wayOf } from './act.utils'
 import {
   appearShare,
   courses,
@@ -115,19 +115,21 @@ function Thing({
   )
 
   // Sideways, the up and down of the course go out from the face (up is out) on the side of the slot.
-  const isSideways = item.axis === 'horizontal'
   const side = place.x < 0 ? -1 : 1
+  const way = wayOf(item.axis, course.axis)
   const left = useTransform<number, string>(
     [moved.x, moved.y, orbit.x, enter.x, exit.x],
     ([along, down, round, ...rest]) => {
-      const sideways = isSideways ? -side * (down ?? 0) * reach : 0
-      return `${String(50 + (place.x + (along ?? 0) * reach + sideways + (round ?? 0) + sum(rest)) * 100)}%`
+      const shift = courseShift(way, side, along ?? 0, down ?? 0)
+      return `${String(50 + (place.x + shift.x * reach + (round ?? 0) + sum(rest)) * 100)}%`
     },
   )
   const top = useTransform<number, string>(
-    [moved.y, orbit.y, enter.y, exit.y],
-    ([down, round, ...rest]) =>
-      `${String(50 + (place.y + (isSideways ? 0 : (down ?? 0) * reach) + (round ?? 0) + sum(rest)) * 100)}%`,
+    [moved.x, moved.y, orbit.y, enter.y, exit.y],
+    ([along, down, round, ...rest]) => {
+      const shift = courseShift(way, side, along ?? 0, down ?? 0)
+      return `${String(50 + (place.y + shift.y * reach + (round ?? 0) + sum(rest)) * 100)}%`
+    },
   )
   const scale = useTransform<number, number>(
     [enter.scale, exit.scale, moved.scale, effect.scale, orbit.depth],

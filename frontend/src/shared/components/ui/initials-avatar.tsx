@@ -16,7 +16,7 @@ export function InitialsAvatar({
 }: {
   name: string
   tone: Tone
-  size?: 'sm' | 'default' | 'lg'
+  size?: 'sm' | 'default' | 'lg' | 'xl'
 }) {
   return (
     <Avatar aria-hidden size={size}>

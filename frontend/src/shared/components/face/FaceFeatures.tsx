@@ -1,18 +1,20 @@
 import { faceUnits } from './face.constants'
-import type { EyeLife, GazeValues } from './face.types'
+import type { GazeValues } from './face.types'
 import { FaceEyes } from './FaceEyes'
 import type { useFaceParts } from './hooks/useFaceParts'
-
-const steadyEyes: readonly [EyeLife, EyeLife] = ['steady', 'steady']
+import type { useFaceMotionStates } from './motion/hooks/useFaceMotionStates'
 
 /** The eyes of a face, in the dark color of the features, over whatever the face is filled with. */
 export function FaceFeatures({
   parts: { moodLook, centers, line, isChanging, settle },
   gaze,
+  motion,
 }: {
   parts: ReturnType<typeof useFaceParts>
   /** What follows the gaze of the mood, over time. */
   gaze: GazeValues
+  /** The state of each motion of the face. */
+  motion: ReturnType<typeof useFaceMotionStates>
 }) {
   return (
     <svg
@@ -25,10 +27,11 @@ export function FaceFeatures({
         scales={moodLook.eyeScales}
         line={line}
         tilts={moodLook.tilts}
-        lives={moodLook.eyeLives ?? steadyEyes}
+        lives={motion.lives}
         gaze={moodLook.gaze}
         gazeValues={gaze.eye}
         isChanging={isChanging}
+        isBlinking={motion.isBlinking}
         onClosed={settle}
       />
     </svg>

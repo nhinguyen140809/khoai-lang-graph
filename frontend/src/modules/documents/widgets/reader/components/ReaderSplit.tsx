@@ -1,25 +1,21 @@
 'use client'
 
-import { ArrowLeftIcon } from 'lucide-react'
 import { type ReactNode, useId, useState } from 'react'
 
 import { ReferenceOpenerProvider, type ReferenceRevealer } from '@/modules/activity/entities'
 import { Reveal } from '@/shared/components/animation'
-import { Button } from '@/shared/components/ui/button'
 import {
   AnimatedResizablePanel,
   ResizablePanel,
   ResizablePanelGroup,
 } from '@/shared/components/ui/resizable'
 import { Sheet, SheetContent, SheetTitle } from '@/shared/components/ui/sheet'
-import { Tooltip, TooltipContent, TooltipTrigger } from '@/shared/components/ui/tooltip'
 import { useIsMobile } from '@/shared/lib/viewport'
 
 import { useReaderView } from '../hooks/useReaderView'
-import { readerMessages } from '../reader.constants'
 import type { ReaderView } from '../reader.types'
 import { isSameView, viewKey } from '../reader.utils'
-import { ReaderBreadcrumb } from './ReaderBreadcrumb'
+import { ReaderBar } from './ReaderBreadcrumb'
 import { ReaderContent } from './ReaderContent'
 import { ReaderOffer } from './ReaderOffer'
 
@@ -35,7 +31,7 @@ interface ReaderSplitProps {
 
 /**
  * The chat of a project with the reader, read-only, of the document or the item that the chat
- * names, or of the list of the documents that `DocumentsButton` opens. On a wide screen the reader
+ * names, or of the list of the documents that `DocumentsTool` opens. On a wide screen the reader
  * opens beside the chat, which stays in use: the two share the width, and the handle between them
  * resizes them. On a narrow screen the reader opens in a sheet over the chat. What the reader
  * shows is in the query of the page, so that Back closes it.
@@ -94,8 +90,6 @@ export function ReaderSplit({ projectId, children }: ReaderSplitProps) {
               projectId={projectId}
               view={beside}
               hrefOf={reader.hrefOf}
-              canGoBack={reader.canGoBack}
-              onBack={reader.back}
               offer={offerNote}
             />
           )}
@@ -134,42 +128,20 @@ interface ReaderPaneProps {
   projectId: string
   view: ReaderView
   hrefOf: ReturnType<typeof useReaderView>['hrefOf']
-  canGoBack: boolean
-  onBack: () => void
   /** The note that offers another view, which sits under the path while there is one. */
   offer: ReactNode
 }
 
 /**
- * The reader beside the chat, named after its title. A button floats at its top left, while there
- * is a view before this one, and goes back to it.
+ * The reader beside the chat, named after its title. Under the list of the documents it has a bar
+ * with the path and a button that goes up a level.
  */
-function ReaderPane({ projectId, view, hrefOf, canGoBack, onBack, offer }: ReaderPaneProps) {
+function ReaderPane({ projectId, view, hrefOf, offer }: ReaderPaneProps) {
   const titleId = useId()
 
   return (
     <aside aria-labelledby={titleId} className="relative flex h-full min-w-0 flex-col border-l">
-      {(canGoBack || view.kind !== 'documents') && (
-        <div className="flex min-h-12 items-center gap-2 px-2">
-          {canGoBack && (
-            <Tooltip>
-              <TooltipTrigger asChild>
-                <Button
-                  variant="outline"
-                  size="icon-sm"
-                  className="bg-background shadow-xs"
-                  onClick={onBack}
-                >
-                  <ArrowLeftIcon aria-hidden />
-                  <span className="sr-only">{readerMessages.back}</span>
-                </Button>
-              </TooltipTrigger>
-              <TooltipContent side="right">{readerMessages.back}</TooltipContent>
-            </Tooltip>
-          )}
-          <ReaderBreadcrumb view={view} hrefOf={hrefOf} />
-        </div>
-      )}
+      {view.kind !== 'documents' && <ReaderBar view={view} hrefOf={hrefOf} />}
       {offer}
       <div className="flex min-h-0 flex-1 flex-col">
         <ReaderContent

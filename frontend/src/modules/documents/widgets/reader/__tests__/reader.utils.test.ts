@@ -7,11 +7,10 @@ import {
   isSameView,
   readerAddress,
   readerViewOf,
-  trailAfter,
   viewOfEntry,
   viewOfThumbnail,
 } from '../reader.utils'
-import { addressCases, sameViewCases, trailCases, viewCases } from './reader.utils.data'
+import { addressCases, sameViewCases, viewCases } from './reader.utils.data'
 
 describe('readerViewOf', () => {
   it.each(viewCases)('reads $name', ({ params, view }) => {
@@ -28,12 +27,6 @@ describe('isSameView', () => {
 describe('readerAddress', () => {
   it.each(addressCases)('opens the reader on $name', ({ view, address }) => {
     expect(readerAddress('/projects/p1', view)).toBe(address)
-  })
-})
-
-describe('trailAfter', () => {
-  it.each(trailCases)('keeps $name', ({ trail, view, result }) => {
-    expect(trailAfter(trail, view)).toEqual(result)
   })
 })
 

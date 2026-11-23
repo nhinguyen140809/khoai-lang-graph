@@ -8,10 +8,10 @@ import { ErrorState, LoadingState } from '@/shared/components/state'
 import { Marker } from '@/shared/components/ui/marker'
 import { formatDateTime } from '@/shared/lib/time'
 
-import { activityChatMessages } from '../../activity-chat.constants'
+import { activityChatMessages, runStatusLineStatuses } from '../../activity-chat.constants'
 import { usePhaseOpen } from '../../hooks/usePhaseOpen'
 import { useRevealNewMessage } from '../../hooks/useRevealNewMessage'
-import { phaseBlocks } from '../../phase-blocks.utils'
+import { livePhaseIdOf, phaseBlocks } from '../../phase-blocks.utils'
 import { RunStatusLine } from '../states/RunStatusLine'
 import { ChatEntry } from './ChatEntry'
 import { PhaseBlockView } from './PhaseBlockView'
@@ -69,8 +69,12 @@ export function RunActivity({ run, messages, thread, projectId, targetEntryId }:
       (entry) => entry.type !== 'review' || entry.interrupt.status !== 'pending',
     ),
   )
+  // The status of the run reaches the page a little after its steps do: a run whose last
+  // entry says that it has ended is not shown as working.
+  const isLive = !hasRunEnded(entries.entries) && runStatusLineStatuses.includes(run.status)
+  const livePhaseId = livePhaseIdOf(blocks, isLive)
   return (
-    <RunActivityProvider value={{ run, thread, projectId, targetEntryId }}>
+    <RunActivityProvider value={{ run, thread, projectId, targetEntryId, livePhaseId }}>
       <Marker variant="separator" className="mb-2 text-xs">
         {first !== undefined ? formatDateTime(first.time) : null}
       </Marker>
@@ -93,8 +97,6 @@ export function RunActivity({ run, messages, thread, projectId, targetEntryId }:
           />
         )
       })}
-      {/* The status of the run reaches the page a little after its steps do: a run whose last
-          entry says that it has ended is not shown as working. */}
       {!hasRunEnded(entries.entries) && <RunStatusLine run={run} />}
     </RunActivityProvider>
   )

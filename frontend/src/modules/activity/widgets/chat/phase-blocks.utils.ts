@@ -22,3 +22,15 @@ export function phaseBlocks(entries: readonly ActivityEntry[]): PhaseBlock[] {
   }
   return blocks
 }
+
+/**
+ * The phase that goes on at the end of the chat of a live run: the last block is a phase whose
+ * separator says that it runs. Its agent shows below the last entry, at work, so its separator does
+ * not show the face. A message after it, or its end, makes it none, and its separator then shows the
+ * face as the separators before it do. None for a run that is not live.
+ */
+export function livePhaseIdOf(blocks: readonly PhaseBlock[], isLive: boolean): string | null {
+  const last = blocks.at(-1)
+  if (!isLive || last?.type !== 'phase' || last.header === null) return null
+  return last.header.work.status === 'running' ? last.header.id : null
+}

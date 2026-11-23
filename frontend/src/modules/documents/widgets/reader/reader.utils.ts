@@ -65,18 +65,6 @@ export function isSameView(first: ReaderView | null, second: ReaderView | null):
   return first !== null && second !== null && viewKey(first) === viewKey(second)
 }
 
-/**
- * The views the reader has shown since it opened, the last one on show: opening a view adds it,
- * and going back to the one before it takes the last off. Closing the reader empties it.
- */
-export function trailAfter(trail: readonly ReaderView[], view: ReaderView | null): ReaderView[] {
-  if (view === null) return []
-  const last = trail.at(-1) ?? null
-  if (isSameView(last, view)) return [...trail]
-  if (isSameView(trail.at(-2) ?? null, view)) return trail.slice(0, -1)
-  return [...trail, view]
-}
-
 /** The address of a page with the reader open on a view, in the place of the query before it. */
 export function readerAddress(path: string, view: ReaderView): string {
   switch (view.kind) {

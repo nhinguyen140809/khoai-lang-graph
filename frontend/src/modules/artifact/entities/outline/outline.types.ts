@@ -156,3 +156,10 @@ export type ArtifactDocumentResult =
   | { state: 'notFound' }
   | { state: 'error'; retry: () => void }
   | ({ state: 'success' } & ArtifactDocumentData)
+
+/** The items that share one value of a field, the first such item first and the groups in the order their values first appear. */
+export interface ItemGroup {
+  /** The value that the group shares, as text; empty for the items that have none. */
+  value: string
+  items: OutlineItem[]
+}

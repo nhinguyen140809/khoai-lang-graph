@@ -147,7 +147,7 @@ function StepNav({
 /** How an option of the answer shows, by whether the user chose it. */
 const optionLooks = {
   idle: 'border-border hover:bg-muted/40',
-  chosen: 'border-primary',
+  chosen: 'border-primary ring-half-primary',
 } as const satisfies Record<'idle' | 'chosen', string>
 
 /** How the dot of an option of the answer shows, by the same state. */
@@ -216,12 +216,12 @@ function OptionRow({
           aria-hidden
           className={cn('size-3.5 shrink-0 rounded-full border-2', optionDotLooks[state])}
         />
-        <span className="text-xs font-medium">{option.label}</span>
+        <span className="text-sm font-medium">{option.label}</span>
       </button>
       {option.description !== undefined && (
         <p
           id={descriptionId}
-          className={cn('pl-8 text-xs text-muted-foreground', !option.requires_feedback && 'pb-2')}
+          className={cn('pl-8 text-sm text-muted-foreground', !option.requires_feedback && 'pb-2')}
         >
           {option.description}
         </p>
@@ -246,7 +246,7 @@ function OptionFeedback({ option, isChosen }: { option: InterruptOption; isChose
   if (!option.requires_feedback) return null
   if (!isChosen) {
     if (option.description !== undefined) return null
-    return <p className="pb-2 pl-8 text-xs text-muted-foreground">{words.asksForDescription}</p>
+    return <p className="pb-2 pl-8 text-sm text-muted-foreground">{words.asksForDescription}</p>
   }
   return (
     <div className="px-2 pt-1 pb-2">
