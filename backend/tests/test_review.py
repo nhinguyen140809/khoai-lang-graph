@@ -199,7 +199,11 @@ def test_the_questions_before_the_research_are_choices_with_the_assumption_of_th
                 "kind": "single_select",
                 "prompt": "How do students sign in?",
                 "choices": [
-                    {"key": "campus", "label": "With their campus account"},
+                    {
+                        "key": "campus",
+                        "label": "With their campus account",
+                        "description": "No new password to keep; the campus login does it all.",
+                    },
                     {"key": "own", "label": "With an account of this app"},
                 ],
                 "default_choice_keys": ["campus"],
@@ -216,8 +220,43 @@ def test_the_questions_before_the_research_are_choices_with_the_assumption_of_th
     assert login["default_answer"]["choice_keys"] == ["campus"]
     assert [choice["key"] for choice in login["choices"]] == ["campus", "own", "other"]
     assert login["choices"][-1]["requires_text"] is True
+    assert login["choices"][0]["description"].startswith("No new password")
+    assert "description" not in login["choices"][1], "a choice without words has none"
     assert questions[1]["type"] == "free_text"
 
 
 def test_an_ask_without_a_brief_has_no_question() -> None:
     assert nodes._questions_to_ask(wf.nodes()["ask_personas"], {}) == []  # type: ignore[typeddict-item]
+
+
+def _outcome(node: str, feedback: str, *, automatic: bool = False) -> dict[str, Any]:
+    return {"node": node, "option": "", "feedback": feedback, "automatic": automatic}
+
+
+def test_what_the_user_answered_to_the_questions_before_a_review_is_read_after_it() -> None:
+    state = {
+        "checkpoint_outcomes": [
+            _outcome("ask_spec", "- How long until a room is released? Fifteen minutes"),
+            _outcome("checkpoint_spec", "Split the booking requirement."),
+            # The agent asked again after a rework, and the user said the same.
+            _outcome("ask_spec", "- How long until a room is released? Fifteen minutes"),
+            _outcome("ask_spec", "- How many steps on a phone? Five steps"),
+        ]
+    }
+
+    decided = nodes._decisions_of(state, "checkpoint_spec")  # type: ignore[arg-type]
+
+    assert decided.splitlines().count("- How long until a room is released? Fifteen minutes") == 1
+    assert "- How many steps on a phone? Five steps" in decided
+    assert "Split the booking requirement." in decided
+
+
+def test_questions_that_were_not_answered_are_not_read_as_decisions() -> None:
+    state = {
+        "checkpoint_outcomes": [
+            _outcome("ask_spec", "- A default nobody chose? Fifteen minutes", automatic=True),
+            _outcome("ask_analysis", "- Another review's question? Keep them"),
+        ]
+    }
+
+    assert nodes._decisions_of(state, "checkpoint_spec") == ""  # type: ignore[arg-type]

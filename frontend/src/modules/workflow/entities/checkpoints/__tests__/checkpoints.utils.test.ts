@@ -2,7 +2,7 @@ import { describe, expect, it } from 'vitest'
 
 import { workflowDefinitionFixture } from '@/mocks/workflow/workflow.fixtures'
 
-import { reviewableCheckpoints } from '../checkpoints.utils'
+import { checkpointNodes, reviewableCheckpoints } from '../checkpoints.utils'
 
 describe('reviewableCheckpoints', () => {
   it('names each checkpoint by its title and describes it by its prompt', () => {
@@ -16,5 +16,20 @@ describe('reviewableCheckpoints', () => {
     expect(choices[0]?.description).toBe(
       'Review the personas. Edit them if needed, then approve them.',
     )
+  })
+})
+
+describe('checkpointNodes', () => {
+  it('lists the checkpoints in the order of the definition', () => {
+    expect(checkpointNodes(workflowDefinitionFixture).map(({ id }) => id)).toEqual([
+      'ask_message',
+      'checkpoint_plan',
+      'ask_personas',
+      'checkpoint_personas',
+      'ask_analysis',
+      'checkpoint_analysis',
+      'ask_spec',
+      'checkpoint_spec',
+    ])
   })
 })

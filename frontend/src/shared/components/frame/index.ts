@@ -12,9 +12,6 @@ export { useDeskBarItem } from './bars/hooks/useDeskBarItem'
 export { useDeskTool } from './bars/hooks/useDeskTool'
 export { useStatusBarItem } from './bars/hooks/useStatusBarItem'
 export { type StatusBarItem, StatusBarSide } from './bars/status-bar.types'
-export { PaletteGroup } from './commands/command.constants'
-export type { PaletteCommand } from './commands/command.types'
-export { useCommands } from './commands/hooks/useCommands'
 export type {
   ActivityBarItem,
   Destination,
@@ -30,6 +27,8 @@ export { PageColumn } from './layouts/components/PageColumn'
 export { TabbedWorkspace } from './layouts/components/TabbedWorkspace'
 export { UntabbedWorkspace } from './layouts/components/UntabbedWorkspace'
 export { Workbench } from './layouts/components/Workbench'
+export { PaletteGroup } from './palette/palette.constants'
+export type { PaletteCommand } from './palette/palette.types'
 export { BottomPanelSections } from './panels/components/BottomPanelSections'
 export { EditorWithBottomPanel } from './panels/components/EditorWithBottomPanel'
 export { SidePanel } from './panels/components/SidePanel'

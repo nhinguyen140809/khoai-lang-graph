@@ -2,7 +2,8 @@
 
 import { WaypointsIcon } from 'lucide-react'
 
-import { useCommands, useOpenPage } from '@/shared/components/frame'
+import { useOpenPage } from '@/shared/components/frame'
+import { useCommands } from '@/shared/lib/commands'
 import { routes } from '@/shared/routes'
 
 import { traceCommandsMessages } from './trace-commands.constants'

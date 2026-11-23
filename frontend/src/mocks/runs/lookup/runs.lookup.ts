@@ -5,6 +5,7 @@ import {
   type RunDefaults,
   type RunStep,
 } from '@/modules/run/entities'
+import { mainWorkflowName } from '@/modules/workflow/entities'
 import { newestOfEachGroup } from '@/shared/lib/collections'
 
 import { allArtifacts } from '../../artifacts/artifacts.lookup'
@@ -17,7 +18,7 @@ import { mockRunStatus, mockScenario } from '../../shared/scenario'
 import { currentUserSettings } from '../../user-settings/user-settings.lookup'
 import { workflowDefinitionFixture } from '../../workflow/workflow.fixtures'
 import { defaultRunConfigFixture, runFixtures, runStepFixtures } from '../fixtures/runs.fixtures'
-import { createdRuns, runEdits } from '../runs.store'
+import { createdRuns, createdSteps, runEdits } from '../runs.store'
 
 // The runs and their steps as the mock server holds them now: the fixtures, the runs that messages
 // started, and what changed in them.
@@ -40,7 +41,14 @@ export function findRun(runId: string): Run | undefined {
 
 /** The steps of a run of the fixtures. */
 export function stepsOfRun(runId: string): RunStep[] {
+  const answered = createdSteps.get().filter(({ run_id: owner }) => owner === runId)
+  if (answered.length > 0) return answered
   return generatedRunSteps(runId) ?? runStepFixtures(runId, mockRunStatus())
+}
+
+/** Whether a run is of the main workflow of a thread: the one that gives its status. */
+export function isMainRun({ workflow_name: workflow }: Pick<Run, 'workflow_name'>): boolean {
+  return workflow === mainWorkflowName
 }
 
 /** The runs of a thread. */
@@ -54,7 +62,7 @@ export function runsOfThread(threadId: string): Run[] {
  */
 export function latestRunOfEachThread(runs: Run[] = allRuns()): Map<string, Run> {
   return newestOfEachGroup(
-    runs,
+    runs.filter(isMainRun),
     ({ thread_id: threadId }) => threadId,
     ({ number }) => number,
   )

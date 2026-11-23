@@ -23,7 +23,7 @@ export const sentRunRequestCases = [
     call: () => findLatestRun('thread 1'),
     request: {
       method: 'GET',
-      path: `${apiEndpoints.threadRuns.path({ threadId: 'thread 1' })}?limit=1`,
+      path: `${apiEndpoints.threadRuns.path({ threadId: 'thread 1' })}?workflow=requirements_engineering&limit=1`,
       body: null,
     },
   },

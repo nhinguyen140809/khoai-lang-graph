@@ -8,6 +8,7 @@ from typing import TYPE_CHECKING, Any
 
 from sqlalchemy import select
 
+from khoailanggraph.features.assistant.models import AssistantTurnRow
 from khoailanggraph.features.runs.models import RunRow
 from khoailanggraph.llm.usage import Usage, add_usage, zero_usage
 
@@ -15,6 +16,7 @@ if TYPE_CHECKING:
     from uuid import UUID
 
     from sqlalchemy import Select
+    from sqlalchemy.ext.asyncio import AsyncSession
 
 
 def month_bounds(month: str | None = None) -> tuple[datetime, datetime]:
@@ -59,3 +61,32 @@ def total_usage(runs: list[RunRow]) -> Usage:
     for run in runs:
         total = add_usage(total, usage_of(run.usage_json))
     return total
+
+
+async def assistant_turns_in(
+    session: AsyncSession, user_id: UUID, start: datetime, end: datetime
+) -> list[AssistantTurnRow]:
+    """The messages the assistant answered for the user in a period of time."""
+    return list(
+        (
+            await session.scalars(
+                select(AssistantTurnRow).where(
+                    AssistantTurnRow.user_id == user_id,
+                    AssistantTurnRow.created_at >= start.replace(tzinfo=None),
+                    AssistantTurnRow.created_at < end.replace(tzinfo=None),
+                )
+            )
+        ).all()
+    )
+
+
+async def assistant_spend_of(
+    session: AsyncSession, user_id: UUID, start: datetime, end: datetime
+) -> float:
+    """What the assistant cost this user in the period.
+
+    The assistant is called before any run exists, so its price is on no run step: a budget that
+    counted only runs would let a user spend past it by talking to the assistant.
+    """
+    turns = await assistant_turns_in(session, user_id, start, end)
+    return sum(usage_of(turn.usage_json)["cost_usd"] for turn in turns)

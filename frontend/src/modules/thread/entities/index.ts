@@ -15,6 +15,7 @@ export type {
   MessageDeliveryNote,
   SendMessageBody,
   SentMessage,
+  UiCommand,
 } from './messages/messages.types'
 export { messageAuthors, messageDeliveries } from './messages/messages.types'
 export { isNeverRead, messageDeliveryNote } from './messages/messages.utils'

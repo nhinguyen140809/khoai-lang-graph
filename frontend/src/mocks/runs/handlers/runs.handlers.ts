@@ -22,8 +22,10 @@ import { validateRetryBody } from '../runs.validators'
 export const runHandlers = [
   http.get(apiEndpoints.threadRuns.pattern, async ({ params, request }) => {
     await answerScenario('runs')
+    const workflow = new URL(request.url).searchParams.get('workflow')
     const runs = allRuns()
       .filter((run) => run.thread_id === pathParam(params, 'threadId'))
+      .filter((run) => workflow === null || run.workflow_name === workflow)
       .toSorted((a, b) => b.number - a.number)
     return HttpResponse.json(paginate(runs, request))
   }),

@@ -2,7 +2,13 @@
 
 from __future__ import annotations
 
-from pydantic import BaseModel, ConfigDict, Field
+from typing import Annotated
+
+from pydantic import BaseModel, ConfigDict, Field, StringConstraints
+
+# A type of stakeholder is a name of at most four words, such as "Library staff"; what more there
+# is to say about the type belongs to the persona, not to its name.
+StakeholderType = Annotated[str, StringConstraints(pattern=r"^\S+(?:\s+\S+){0,3}$", max_length=40)]
 
 
 class DataToCollect(BaseModel):
@@ -67,7 +73,13 @@ class ElicitationPlanContent(BaseModel):
         ),
     )
     information_gaps: list[str]
-    stakeholder_types: list[str] = Field(min_length=1)
+    stakeholder_types: list[StakeholderType] = Field(
+        min_length=1,
+        description=(
+            "The types of stakeholder to interview, each a name of two to four words, such as "
+            '"Library staff" or "Night-shift nurse": no sentence, no reason and no example.'
+        ),
+    )
     persona_aspects: list[PersonaAspect] = Field(
         default_factory=list,
         max_length=4,

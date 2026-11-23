@@ -1,7 +1,13 @@
 import type { RunStatus } from '../../../status/run-status.types'
 
 function runAt(status: RunStatus, stage: string) {
-  return { id: 'r1', status, workflow_version: 2, current_stage: stage }
+  return {
+    id: 'r1',
+    status,
+    workflow_name: 'requirements_engineering',
+    workflow_version: 2,
+    current_stage: stage,
+  }
 }
 
 /** A run, or none, and the title of the stage that its status names; undefined when it names none. */

@@ -108,8 +108,8 @@ export interface LinkTypeChoice {
   targetKinds: string[]
 }
 
-/** The marks a client draws for a tool: its own, or the plain one. */
-export const toolIcons = ['search', 'tool'] as const
+/** The marks a client draws for a tool, each an action: to list, read, search, trace, check or look up; or the plain one. */
+export const toolIcons = ['search', 'tool', 'list', 'read', 'trace', 'check', 'lookup'] as const
 
 /** A tool that an agent may use while it works, with the words for its uses in a row. */
 export const toolSchema = z.object({
@@ -119,6 +119,8 @@ export const toolSchema = z.object({
   /** The line for the uses of the tool in a row: one use, or several, where `{count}` is the number. */
   uses: z.object({ one: z.string(), other: z.string() }),
   icon: z.enum(toolIcons),
+  /** Whether the uses of the tool show to the user; a tool that only finds its way about for the agent says false, and one that does not say is shown. */
+  visible: z.boolean().optional(),
   /** The acts shown around the agent while a use of the tool runs, in place of those of its stage. */
   acts: z.array(z.string()).default([]),
 })

@@ -1,5 +1,6 @@
 import { describe, expect, it } from 'vitest'
 
+import { workflowRefFixture } from '@/mocks/workflow/workflow.fixtures'
 import { renderHookWithProviders } from '@/test/render'
 import { waitForSuccess } from '@/test/steps'
 
@@ -18,7 +19,7 @@ describe('useReviewableCheckpoints', () => {
   })
 
   it('lists the checkpoints of a version', async () => {
-    const { result } = renderHookWithProviders(() => useReviewableCheckpoints(2))
+    const { result } = renderHookWithProviders(() => useReviewableCheckpoints(workflowRefFixture))
 
     await waitForSuccess(result)
     expect(result.current.data?.[1]?.title).toBe('Review the analysis')

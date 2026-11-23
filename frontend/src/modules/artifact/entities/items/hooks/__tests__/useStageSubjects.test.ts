@@ -2,13 +2,16 @@ import { waitFor } from '@testing-library/react'
 import { describe, expect, it } from 'vitest'
 
 import { projectIds } from '@/mocks/shared/db'
+import { workflowRefFixture } from '@/mocks/workflow/workflow.fixtures'
 import { renderHookWithProviders } from '@/test/render'
 
 import { useStageSubjects } from '../useStageSubjects'
 
 describe('useStageSubjects', () => {
   it('reads the subjects of each stage that runs once for each, by the key of the stage', async () => {
-    const { result } = renderHookWithProviders(() => useStageSubjects(projectIds.library, 2))
+    const { result } = renderHookWithProviders(() =>
+      useStageSubjects(projectIds.library, workflowRefFixture),
+    )
 
     await waitFor(() => {
       expect(result.current.get('interviewing')).toBeDefined()

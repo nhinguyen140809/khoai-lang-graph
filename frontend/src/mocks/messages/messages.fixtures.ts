@@ -19,6 +19,7 @@ function message(
     content: '',
     artifact_refs: [],
     item_refs: [],
+    commands: [],
     delivery: null,
     delivered_in_step_id: null,
     ...fields,

@@ -18,9 +18,14 @@ from sqlalchemy import text
 
 import khoailanggraph.api.models_registry  # noqa: F401 - registers every table
 from khoailanggraph.api import deps, rate_limit
-from khoailanggraph.api.errors import ApiError, api_error_handler, integrity_error_handler
+from khoailanggraph.api.errors import (
+    ApiError,
+    api_error_handler,
+    integrity_error_handler,
+    not_numbered_handler,
+)
 from khoailanggraph.api.router import api_router
-from khoailanggraph.domain.errors import IntegrityError
+from khoailanggraph.domain.errors import IntegrityError, NotNumberedError
 from khoailanggraph.features.me import service as me_service
 from khoailanggraph.features.runs.executor import RunExecutor, recover_runs, run_job
 from khoailanggraph.platform.db import (
@@ -148,6 +153,7 @@ def create_app(settings: Settings | None = None) -> FastAPI:
 
     app.add_exception_handler(ApiError, api_error_handler)
     app.add_exception_handler(IntegrityError, integrity_error_handler)
+    app.add_exception_handler(NotNumberedError, not_numbered_handler)
 
     async def validation_handler(_request: Request, exc: Exception) -> Response:
         """Render a request-body validation failure as Problem Details."""

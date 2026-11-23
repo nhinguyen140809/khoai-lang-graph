@@ -42,6 +42,8 @@ export type CheckpointOption = z.infer<typeof checkpointOptionSchema>
 const questionChoiceSchema = z.object({
   key: z.string(),
   label: z.string(),
+  /** What happens if it is picked, when its label does not say so; left out when there is none. */
+  description: z.string().optional(),
   /** Choosing it asks the user to explain it in text, as an "Other" choice does. */
   requires_text: z.boolean(),
 })

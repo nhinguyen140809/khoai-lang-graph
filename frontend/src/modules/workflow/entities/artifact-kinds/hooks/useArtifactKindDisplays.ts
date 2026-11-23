@@ -2,7 +2,7 @@
 
 import { useMemo } from 'react'
 
-import { useLinkedKinds } from '../../definition/hooks/useLinkedKinds'
+import { useLinkedKinds } from '../../link-types/hooks/useLinkedKinds'
 import type { ArtifactKindDisplay } from '../artifact-kind-display.types'
 import { iconOf, isNavigable, kindSchemasByKind, mediaOf } from '../kind-schemas.utils'
 import { useArtifactKinds } from './useArtifactKindQueries'

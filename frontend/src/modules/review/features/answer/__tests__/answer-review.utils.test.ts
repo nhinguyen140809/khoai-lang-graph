@@ -11,8 +11,10 @@ import {
   feedbackAfterSelect,
   initialAnswers,
   isChoice,
+  isChooseByEnter,
   isChosen,
   isKeptByField,
+  isSendByEnter,
   isTextLine,
   modifiedItemsOf,
   neighborOf,
@@ -179,11 +181,15 @@ describe('feedbackAfterSelect', () => {
 describe('neighborOf', () => {
   const list = ['a', 'b', 'c']
 
-  it('gives the element before and after, and none past the ends', () => {
+  it('gives the element before and after, going round past the ends', () => {
     expect(neighborOf(list, 'b', 1)).toBe('c')
     expect(neighborOf(list, 'b', -1)).toBe('a')
-    expect(neighborOf(list, 'c', 1)).toBeUndefined()
-    expect(neighborOf(list, 'a', -1)).toBeUndefined()
+    expect(neighborOf(list, 'c', 1)).toBe('a')
+    expect(neighborOf(list, 'a', -1)).toBe('c')
+  })
+
+  it('stays on the only element of a list of one', () => {
+    expect(neighborOf(['a'], 'a', 1)).toBe('a')
   })
 
   it('gives the first going down and the last going up for an element that is not in the list', () => {
@@ -210,6 +216,66 @@ describe('stepKeyOf', () => {
   it('ignores another key and an arrow with a modifier held', () => {
     expect(stepKeyOf(press('a'))).toBeUndefined()
     expect(stepKeyOf(press('ArrowLeft', { shiftKey: true }))).toBeUndefined()
+  })
+})
+
+describe('isChooseByEnter', () => {
+  const enter = {
+    key: 'Enter',
+    altKey: false,
+    ctrlKey: false,
+    metaKey: false,
+    shiftKey: false,
+    isComposing: false,
+  }
+  const box = (isChecked: boolean) =>
+    Object.assign(document.createElement('input'), { type: 'checkbox', checked: isChecked })
+
+  it('chooses a choice that is not chosen yet', () => {
+    expect(isChooseByEnter(enter, box(false))).toBe(true)
+  })
+
+  it('leaves a choice that is chosen, a line of text and another key alone', () => {
+    expect(isChooseByEnter(enter, box(true))).toBe(false)
+    expect(
+      isChooseByEnter(enter, Object.assign(document.createElement('input'), { type: 'text' })),
+    ).toBe(false)
+    expect(isChooseByEnter({ ...enter, key: 'a' }, box(false))).toBe(false)
+    expect(isChooseByEnter({ ...enter, shiftKey: true }, box(false))).toBe(false)
+  })
+})
+
+describe('isSendByEnter', () => {
+  const enter = (held: Partial<KeyboardEvent> = {}) => ({
+    key: 'Enter',
+    altKey: false,
+    ctrlKey: false,
+    metaKey: false,
+    shiftKey: false,
+    isComposing: false,
+    ...held,
+  })
+  const checkbox = Object.assign(document.createElement('input'), { type: 'checkbox' })
+  const line = Object.assign(document.createElement('input'), { type: 'text' })
+  const option = Object.assign(document.createElement('button'), {})
+  option.setAttribute('role', 'radio')
+
+  it('sends on Enter from a choice, a line of text or an option', () => {
+    expect(isSendByEnter(enter(), checkbox)).toBe(true)
+    expect(isSendByEnter(enter(), line)).toBe(true)
+    expect(isSendByEnter(enter(), option)).toBe(true)
+  })
+
+  it('leaves Enter to a box of text, a button and a link', () => {
+    expect(isSendByEnter(enter(), document.createElement('textarea'))).toBe(false)
+    expect(isSendByEnter(enter(), document.createElement('button'))).toBe(false)
+    expect(isSendByEnter(enter(), document.createElement('a'))).toBe(false)
+  })
+
+  it('ignores another key, a modifier and a word still being composed', () => {
+    expect(isSendByEnter({ ...enter(), key: 'a' }, line)).toBe(false)
+    expect(isSendByEnter(enter({ shiftKey: true }), line)).toBe(false)
+    expect(isSendByEnter(enter({ isComposing: true }), line)).toBe(false)
   })
 })
 

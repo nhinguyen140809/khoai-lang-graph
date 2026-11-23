@@ -6,8 +6,8 @@ import { Kbd, KbdGroup } from '@/shared/components/ui/kbd'
 import { SidebarMenuButton, SidebarMenuItem } from '@/shared/components/ui/sidebar'
 import { hotkeyKeys, useModifierKeyName } from '@/shared/lib/hotkey'
 
-import { paletteHotkey } from '../../commands/command.constants'
-import { useCommandPalette } from '../../commands/hooks/useCommandPalette'
+import { useCommandPalette } from '../../palette/hooks/useCommandPalette'
+import { paletteHotkey } from '../../palette/palette.constants'
 
 interface SidebarSearchProps {
   /** The name of the button, and its tooltip on the rail, such as "Search". */

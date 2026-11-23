@@ -1,6 +1,7 @@
 import { http } from 'msw'
 
 import { emptyResponse } from '@/mocks/shared/http/response'
+import { workflowRefFixture } from '@/mocks/workflow/workflow.fixtures'
 import { apiEndpoints } from '@/shared/api/endpoints'
 import { HttpMethod, HttpStatus } from '@/shared/api/http'
 import { serverErrorOn } from '@/test/msw'
@@ -17,10 +18,10 @@ export const sentRequestCases = [
   },
   {
     name: 'reads the workflow definition at a version',
-    call: () => getWorkflowDefinition(2),
+    call: () => getWorkflowDefinition(workflowRefFixture),
     request: {
       method: 'GET',
-      path: `${apiEndpoints.workflowDefinition.path()}?version=2`,
+      path: `${apiEndpoints.workflowDefinition.path()}?version=${String(workflowRefFixture.version)}&name=${workflowRefFixture.name}`,
       body: null,
     },
   },
@@ -42,7 +43,7 @@ export const apiErrorCases = [
     name: 'a version that does not exist',
     refuse: () =>
       http.get(apiEndpoints.workflowDefinition.pattern, () => emptyResponse(HttpStatus.NotFound)),
-    call: () => getWorkflowDefinition(9),
+    call: () => getWorkflowDefinition({ ...workflowRefFixture, version: 9 }),
     error: {
       status: HttpStatus.NotFound,
       code: null,

@@ -11,7 +11,7 @@ from typing import TYPE_CHECKING, Any
 
 from fastapi.responses import JSONResponse
 
-from khoailanggraph.domain.errors import IntegrityError
+from khoailanggraph.domain.errors import IntegrityError, NotNumberedError
 
 if TYPE_CHECKING:
     from fastapi import Request
@@ -77,6 +77,20 @@ async def integrity_error_handler(_request: Request, exc: Exception) -> JSONResp
             "Validation failed",
             "The change breaks a rule of the document.",
             errors=errors,
+        )
+    )
+
+
+async def not_numbered_handler(_request: Request, exc: Exception) -> JSONResponse:
+    """The FastAPI exception handler that renders a record that could not be numbered."""
+    if not isinstance(exc, NotNumberedError):
+        raise exc
+    return problem_response(
+        ApiError(
+            409,
+            "invalid_state",
+            "Invalid state",
+            f"The {exc.what} could not be numbered; try again.",
         )
     )
 

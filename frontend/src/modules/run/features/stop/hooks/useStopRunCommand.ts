@@ -2,7 +2,7 @@ import { SquareIcon } from 'lucide-react'
 import { createElement } from 'react'
 
 import type { Run } from '@/modules/run/entities'
-import { useCommands } from '@/shared/components/frame'
+import { useCommands } from '@/shared/lib/commands'
 
 import { stopRunMessages } from '../stop-run.constants'
 import { stoppableRun } from '../stop-run.utils'

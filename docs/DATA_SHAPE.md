@@ -392,8 +392,8 @@ Workflow definition version 2 keeps these roles and adds two. Before it writes t
 | `title` | string? | Given when the thread is created, or generated from the first message; editable. Null until one of the two |
 | `status` | enum | `active`, `archived` |
 | `current_stage` | Stage? | Stage of the latest run. Null before the first run |
-| `active_run_id` | ref\<Run\>? | The unfinished run of the thread (`queued`, `running` or `interrupted`); at most one, see [Runtime: lifecycle](architecture/runtime.md#3-lifecycle) |
-| `latest_run_status` | enum? | Derived, read-only. The status of the latest [Run](#run-mvp) of the thread, unfinished or ended. The unfinished run of a thread is always its latest, so while `active_run_id` is set, this is its status. Null before the first run of the thread |
+| `active_run_id` | ref\<Run\>? | Derived, read-only. The unfinished run of the main workflow in the thread (`queued`, `running` or `interrupted`); a thread has at most one unfinished run of each workflow, see [Runtime: lifecycle](architecture/runtime.md#3-lifecycle) |
+| `latest_run_status` | enum? | Derived, read-only. The status of the latest [Run](#run-mvp) of the main workflow in the thread, unfinished or ended. The unfinished run of a thread is always its latest, so while `active_run_id` is set, this is its status. Null before the first run of the thread |
 | `last_message_at` | datetime | Time of the newest message; the creation time while the thread has no message |
 
 Deck: `project_id`, `current_stage`. The deck's `initial_intent` belongs to the project, see `Project.initial_message_id`.
@@ -571,7 +571,7 @@ An interrupt has at least one option or one question. One shape serves every use
 - `approves` tells the backend to set the artifacts under review, and their items that are still `draft`, to `approved`.
 - `is_default` marks the option taken without asking. Exactly one option of a checkpoint is the default.
 
-`Question` is `{ key: string, type: enum, prompt: string, required: bool, choices: Choice[], min_selected: int?, max_selected: int?, default_answer: Answer?, source: enum }`, and `Choice` is `{ key: string, label: string, requires_text: bool }`. `Answer` is defined with [HumanDecision](#humandecision-mvp).
+`Question` is `{ key: string, type: enum, prompt: string, required: bool, choices: Choice[], min_selected: int?, max_selected: int?, default_answer: Answer?, source: enum }`, and `Choice` is `{ key: string, label: string, description: string?, requires_text: bool }`, where `description` says what happens if the choice is picked, when its label does not, and is left out when there is none. `Answer` is defined with [HumanDecision](#humandecision-mvp).
 
 | Question field | Rule |
 |---|---|
@@ -609,7 +609,7 @@ The answer to an interrupt, given by the user or taken from the defaults. Kept p
 | `option` | string? | Key of the chosen option. Null only when the interrupt has no options |
 | `feedback` | string? | Required when the chosen option requires feedback |
 | `answers` | map\<string, Answer\> | One entry per answered question, by question key |
-| `modified_items` | ItemRef[] | Items the user edited before answering; each points at the new version. Allowed only when the interrupt allows edits. The deck calls this field `modified_artifacts` |
+| `modified_items` | ItemRef[] | Items the user edited before answering; each points at the new version. Allowed only when the interrupt allows edits. When the chosen option does not approve, these items keep their versions, and the agents read them with the feedback before they write again. The deck calls this field `modified_artifacts` |
 
 `Answer` is `{ choice_keys: string[], text: string?, number: number? }`, one shape for every question type:
 
@@ -800,7 +800,7 @@ One current plan per project. The plan is an artifact with no items; the fields 
 | `data_to_collect` | { topic, needed[] }[] | For each topic, the concrete data an interview must bring back before the topic counts as covered, such as how often the person does it or what they do when it fails. The interviewer checks it to know that it has enough |
 | `opening_questions` | string[] | Two to four open questions that an interview can start with, with one thing in each and none that leads the answer |
 | `information_gaps` | string[] | For example "how students judge mentor quality" |
-| `stakeholder_types` | string[] | For example "Student", "Mentor", "Administrator" |
+| `stakeholder_types` | string[] | The types of stakeholder to interview, each a name of at most four words (40 characters at most), such as "Student", "Mentor", "Library staff"; a longer name is refused when the plan is written |
 | `persona_aspects` | { key, title, description, low, high }[] | The second tier of the [persona aspects](#persona-aspects): up to four aspects that the planner proposes for this project |
 | `strategies` | string[] | How to ask: question styles and techniques |
 | `stopping_conditions` | string[] | When the interviews have gathered enough. Each condition names what must be known, so that it can be checked |

@@ -4,3 +4,5 @@ export { useContentSchemas } from '../artifact-kinds/hooks/useArtifactKindQuerie
 export { useVisibleStages } from '../stages/hooks/useStageQueries'
 export { useStageTitles } from '../stages/hooks/useStageTitles'
 export type { VisibleStage } from '../stages/stages.types'
+export type { WorkflowRef } from '../workflow-ref/workflow-ref.types'
+export { workflowRefOf } from '../workflow-ref/workflow-ref.utils'

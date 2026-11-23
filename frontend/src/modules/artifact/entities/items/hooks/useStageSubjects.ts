@@ -6,6 +6,7 @@ import {
   subjectKindByStage,
   useItemTitleOf,
   useWorkflowDefinition,
+  type WorkflowRef,
 } from '@/modules/workflow/entities/@x/artifact'
 
 import type { StageSubject } from '../items.types'
@@ -18,9 +19,9 @@ import { useProjectItemsOfKinds } from './useItemQueries'
  */
 export function useStageSubjects(
   projectId: string,
-  version: number | undefined,
+  workflow: WorkflowRef | undefined,
 ): ReadonlyMap<string, StageSubject[]> {
-  const { data: definition } = useWorkflowDefinition(version)
+  const { data: definition } = useWorkflowDefinition(workflow)
   const titleOf = useItemTitleOf()
   const subjectsOfStage = useMemo(
     () => (definition === undefined ? new Map<string, string>() : subjectKindByStage(definition)),
@@ -30,7 +31,7 @@ export function useStageSubjects(
   const itemsOfKind = useProjectItemsOfKinds(
     projectId,
     stages.map(([, kind]) => kind),
-    { isEnabled: version !== undefined },
+    { isEnabled: workflow !== undefined },
   )
 
   return useMemo(() => {

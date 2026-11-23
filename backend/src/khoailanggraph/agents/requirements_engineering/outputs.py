@@ -163,6 +163,13 @@ class ReviewOptionOutput(_Output):
 class ReviewChoiceOutput(_Output):
     key: str = Field(description="A short key in lower case with underscores, such as `students`.")
     label: str = Field(description="What the user reads, at most 60 characters, in plain text.")
+    description: str | None = Field(
+        default=None,
+        description=(
+            "What happens if the user picks it, in one sentence of at most 120 characters, in "
+            "plain text. Leave it out when the label already says it."
+        ),
+    )
 
 
 class ReviewQuestionOutput(_Output):

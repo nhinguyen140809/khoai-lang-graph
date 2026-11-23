@@ -116,11 +116,11 @@ export function modifiedItemsOf(
   return items.map(({ id, version }) => ({ item_id: id, version }))
 }
 
-/** The element `by` places from `current` in the list, none beyond its ends; the first or the last when `current` is not in it. */
+/** The element `by` places from `current` in the list, going round past its ends; the first or the last when `current` is not in it. */
 export function neighborOf<T>(list: readonly T[], current: T, by: -1 | 1): T | undefined {
   const index = list.indexOf(current)
   if (index === -1) return by === 1 ? list.at(0) : list.at(-1)
-  return list[index + by]
+  return list[(index + by + list.length) % list.length]
 }
 
 /** Whether an element is a choice of a step: a radio button, a check box, or an option of the review, which reads as a radio button. */
@@ -155,12 +155,18 @@ function isInert(element: Element): boolean {
   return false
 }
 
-/** The controls of a form that match, but only in the step now shown: the one still sliding out of view is inert, and left out. */
+/**
+ * The controls inside an element that match, but only in the step now shown: the one still sliding
+ * out of view is inert, and left out. The controls are read from the element, not from the
+ * `elements` of a form, which leaves out a control that names another form.
+ */
 export function answersOf(
-  form: HTMLFormElement | null,
+  root: ParentNode | null,
   matches: (element: Element) => boolean = isChoice,
 ): HTMLElement[] {
-  return Array.from(form?.elements ?? []).filter(
+  return Array.from(
+    root?.querySelectorAll('input, textarea, select, button, [role="radio"]') ?? [],
+  ).filter(
     (element): element is HTMLElement =>
       element instanceof HTMLElement && matches(element) && !isInert(element),
   )
@@ -183,6 +189,36 @@ export function stepKeyOf(
   return event.key in answerStepKeys
     ? answerStepKeys[event.key as keyof typeof answerStepKeys]
     : undefined
+}
+
+/**
+ * Whether Enter chooses the answer that has the focus: a bare Enter on a choice that is not chosen
+ * does. Once it is chosen, Enter is for sending, as it is on any other control.
+ */
+export function isChooseByEnter(
+  event: Pick<KeyboardEvent, 'key' | 'altKey' | 'ctrlKey' | 'metaKey' | 'shiftKey' | 'isComposing'>,
+  target: EventTarget | null,
+): boolean {
+  if (event.key !== 'Enter' || event.isComposing) return false
+  if (event.altKey || event.ctrlKey || event.metaKey || event.shiftKey) return false
+  return target instanceof HTMLElement && isChoice(target) && !isChosen(target)
+}
+
+/**
+ * Whether Enter sends the answer: a bare Enter on a choice or a line of text does. A box of text
+ * keeps it for a new line, a button or a link keeps it for its own press, and a key held with a
+ * modifier, or pressed while a word is still being composed, is left alone.
+ */
+export function isSendByEnter(
+  event: Pick<KeyboardEvent, 'key' | 'altKey' | 'ctrlKey' | 'metaKey' | 'shiftKey' | 'isComposing'>,
+  target: EventTarget | null,
+): boolean {
+  if (event.key !== 'Enter' || event.isComposing) return false
+  if (event.altKey || event.ctrlKey || event.metaKey || event.shiftKey) return false
+  if (!(target instanceof HTMLElement)) return false
+  if (target instanceof HTMLTextAreaElement || target instanceof HTMLAnchorElement) return false
+  if (target instanceof HTMLButtonElement) return isChoice(target)
+  return true
 }
 
 /**

@@ -17,6 +17,15 @@ class DomainError(Exception):
     """Base class of every error the domain layer raises."""
 
 
+class NotNumberedError(DomainError):
+    """A record that takes the next number of its thread, such as a message or a run, could not get
+    one: other requests kept taking the number it asked for."""
+
+    def __init__(self, what: str) -> None:
+        self.what = what
+        super().__init__(f"the {what} could not be numbered")
+
+
 class Violation:
     """One failed check: where it happened, in words a developer reads."""
 

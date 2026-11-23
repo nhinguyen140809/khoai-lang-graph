@@ -27,6 +27,7 @@ describe('useRunStageTitle', () => {
       useRunStageTitle({
         id: 'r1',
         status: 'running',
+        workflow_name: 'requirements_engineering',
         workflow_version: 2,
         current_stage: 'analysis',
       }),

@@ -3,6 +3,7 @@
 import { type ReactNode, useRef } from 'react'
 import { toast } from 'sonner'
 
+import { useWatchAnswer } from '@/modules/activity/features/answer-commands'
 import {
   ChooseRunSettingsButton,
   useChosenRunSettings,
@@ -86,6 +87,7 @@ export function ActivityPrompt({
   const chosen = useChosenRunSettings(thread?.id ?? null)
   const clearChosen = useClearChosenRunSettings()
   const { send, isPending } = useSendMessage({ projectId, thread })
+  const watchAnswer = useWatchAnswer()
   // Kept here, not in the menu, so that an upload goes on after the menu has closed.
   const upload = useUploadSources(projectId)
   const isBlank = !hasText(text)
@@ -102,7 +104,9 @@ export function ActivityPrompt({
       onSubmit={(content) => {
         send(content, {
           runConfig: chosen,
-          onSent: () => {
+          onSent: (sent) => {
+            // What the answer asks for is done when it arrives, by this page.
+            watchAnswer(sent)
             setText('')
             if (thread !== null) clearChosen(thread.id)
             // A click on Send takes the focus to the button; it goes back to the box.

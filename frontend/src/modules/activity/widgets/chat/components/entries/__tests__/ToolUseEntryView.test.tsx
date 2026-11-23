@@ -1,3 +1,4 @@
+import { waitFor } from '@testing-library/react'
 import { http, HttpResponse } from 'msw'
 import { describe, it } from 'vitest'
 
@@ -46,7 +47,7 @@ function renderUse(use: ToolUse) {
 }
 
 /** Serves the definition with the search tool, which version 1 of the docs does not list. */
-function serveSearchTool() {
+function serveSearchTool(extra: Record<string, unknown> = {}) {
   server.use(
     http.get(apiEndpoints.workflowDefinition.pattern, () =>
       HttpResponse.json({
@@ -58,6 +59,7 @@ function serveSearchTool() {
             description: 'Searches the web.',
             uses: { one: 'Searched once', other: 'Searched {count} times' },
             icon: 'search',
+            ...extra,
           },
         ],
       }),
@@ -90,6 +92,17 @@ describe('ToolUseEntryView', () => {
     renderUse(useOf(true))
 
     await expectText('Looking at librarian forums.')
+  })
+
+  it('shows nothing for a tool that the definition says only finds its way about for the agent', async () => {
+    serveSearchTool({ visible: false })
+    renderUse(useOf(false))
+
+    // The definition loads first, and the line that a tool in use would show never comes.
+    await waitFor(() => {
+      expectNoText('Searched 2 times')
+      expectNoText('Looked up with search, 2 times')
+    })
   })
 
   it('names a tool that the definition does not list in plain words', async () => {

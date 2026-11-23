@@ -2,6 +2,7 @@ import { useCallback } from 'react'
 
 import { useDefinitionQuery } from '../../definition/hooks/useDefinitionQuery'
 import type { WorkflowDefinition } from '../../definition/workflow-definition.types'
+import type { WorkflowRef } from '../../workflow-ref/workflow-ref.types'
 import { visibleStages, visibleStageTitle } from '../stages.utils'
 
 /**
@@ -11,7 +12,7 @@ import { visibleStages, visibleStageTitle } from '../stages.utils'
  * given.
  */
 export function useStageTitle(
-  version: number | undefined,
+  workflow: WorkflowRef | undefined,
   stage: string | null,
 ): string | undefined {
   // A stable function, so that the query does not select again on every render.
@@ -20,9 +21,7 @@ export function useStageTitle(
       stage === null ? null : visibleStageTitle(definition, stage),
     [stage],
   )
-  const title = useDefinitionQuery(version, selectTitle, {
-    isEnabled: version !== undefined,
-  })
+  const title = useDefinitionQuery(workflow, selectTitle, { isEnabled: workflow !== undefined })
 
   return title.data ?? undefined
 }
@@ -31,6 +30,6 @@ export function useStageTitle(
  * The stages the user sees, as a tree, in a version of the workflow. Nothing loads until a version
  * is given, so that a run shows the stages of the version it ran with.
  */
-export function useVisibleStages(version: number | undefined) {
-  return useDefinitionQuery(version, visibleStages, { isEnabled: version !== undefined })
+export function useVisibleStages(workflow: WorkflowRef | undefined) {
+  return useDefinitionQuery(workflow, visibleStages, { isEnabled: workflow !== undefined })
 }

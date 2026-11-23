@@ -1,4 +1,4 @@
-import { useStageTitle } from '@/modules/workflow/entities/@x/run'
+import { useStageTitle, workflowRefOf } from '@/modules/workflow/entities/@x/run'
 
 import type { Run } from '../../runs/runs.types'
 import { hasStageName } from '../../status/run-status.utils'
@@ -10,10 +10,10 @@ import { stageOfRun } from '../stage-of-run.utils'
  * names none and while the definition loads.
  */
 export function useRunStageTitle(
-  run: Pick<Run, 'id' | 'status' | 'workflow_version' | 'current_stage'> | null,
+  run: Pick<Run, 'id' | 'status' | 'workflow_name' | 'workflow_version' | 'current_stage'> | null,
 ): string | undefined {
   const isNamed = run !== null && hasStageName(run.status)
   const steps = useRunSteps(run?.id ?? '', { isEnabled: isNamed })
   const stepList = steps.data?.pages.flatMap(({ items }) => items)
-  return useStageTitle(run?.workflow_version, isNamed ? stageOfRun(run, stepList) : null)
+  return useStageTitle(workflowRefOf(run), isNamed ? stageOfRun(run, stepList) : null)
 }

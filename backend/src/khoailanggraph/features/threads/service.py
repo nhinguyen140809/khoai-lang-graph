@@ -12,6 +12,7 @@ from sqlalchemy import select
 if TYPE_CHECKING:
     from sqlalchemy.ext.asyncio import AsyncSession
 
+from khoailanggraph.agents import workflows
 from khoailanggraph.api.errors import ApiError
 from khoailanggraph.features.projects.models import ProjectRow
 from khoailanggraph.features.projects.service import get_project_row, has_unfinished_thread_run
@@ -28,10 +29,28 @@ async def latest_run_status(session: AsyncSession, thread_id: UUID) -> str | Non
     """The status of the latest run of a thread, unfinished or ended; null before its first run."""
     return await session.scalar(
         select(RunRow.status)
-        .where(RunRow.thread_id == thread_id)
+        .where(
+            RunRow.thread_id == thread_id,
+            RunRow.workflow_name == workflows.MAIN_WORKFLOW.name,
+        )
         .order_by(RunRow.number.desc())
         .limit(1)
     )
+
+
+async def active_run_of_thread(session: AsyncSession, thread_id: UUID) -> str | None:
+    """The run of the main workflow that is queued, running or waiting for a review, if there is
+    one: it comes from the runs of the thread, which hold at most one of each workflow."""
+    found = await session.scalar(
+        select(RunRow.id)
+        .where(
+            RunRow.thread_id == thread_id,
+            RunRow.workflow_name == workflows.MAIN_WORKFLOW.name,
+            RunRow.status.in_(("queued", "running", "interrupted")),
+        )
+        .limit(1)
+    )
+    return str(found) if found is not None else None
 
 
 async def thread_view(session: AsyncSession, row: ThreadRow) -> schemas.ThreadSummary:
@@ -43,7 +62,7 @@ async def thread_view(session: AsyncSession, row: ThreadRow) -> schemas.ThreadSu
         title=row.title,
         status=row.status,
         current_stage=row.current_stage,
-        active_run_id=str(row.active_run_id) if row.active_run_id else None,
+        active_run_id=await active_run_of_thread(session, row.id),
         latest_run_status=cast(
             "schemas.RunStatus | None", await latest_run_status(session, row.id)
         ),

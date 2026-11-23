@@ -17,13 +17,16 @@ from khoailanggraph.api import deps, idempotency
 from khoailanggraph.api.errors import ApiError
 from khoailanggraph.api.schemas import MAX_LIMIT, Cursor, Page
 from khoailanggraph.features.artifacts.models import ArtifactItemRow
+from khoailanggraph.features.assistant import recorder as assistant_recorder
+from khoailanggraph.features.projects import service as projects_service
 from khoailanggraph.features.projects.models import ProjectRow
 from khoailanggraph.features.projects.schemas import RunDefaults  # noqa: TC001 - body model
+from khoailanggraph.features.runs import answering, background, schemas, service
 from khoailanggraph.features.runs import config as run_config
 from khoailanggraph.features.runs import resume as resume_rules
-from khoailanggraph.features.runs import schemas, service
-from khoailanggraph.features.runs.executor import RunExecutor, run_job
+from khoailanggraph.features.runs.executor import RunExecutor
 from khoailanggraph.features.runs.models import (
+    UNFINISHED_RUN_STATUSES,
     DirectiveRow,
     HumanDecisionRow,
     InterruptRow,
@@ -33,7 +36,6 @@ from khoailanggraph.features.runs.models import (
 )
 from khoailanggraph.features.threads import service as thread_service
 from khoailanggraph.features.threads.models import MessageRow, ThreadRow
-from khoailanggraph.platform.db import make_sync_engine
 
 if TYPE_CHECKING:
     from collections.abc import AsyncIterator
@@ -41,17 +43,14 @@ if TYPE_CHECKING:
     from sqlalchemy.ext.asyncio import AsyncSession
 
     from khoailanggraph.features.me.models import UserRow
+    from khoailanggraph.features.runs.executor import RunExecutor
 
 router = APIRouter()
 
 
 def _sync_engine(request: Request) -> Any:
     """The worker engine on app.state, created on first use when missing."""
-    engine = getattr(request.app.state, "sync_engine", None)
-    if engine is None:
-        engine = make_sync_engine(request.app.state.settings)
-        request.app.state.sync_engine = engine
-    return engine
+    return background.sync_engine_of(request.app)
 
 
 @router.get("/threads/{thread_id}/messages")
@@ -95,18 +94,45 @@ class MessageBody(BaseModel):
 
 def _executor(request: Request) -> RunExecutor:
     """The executor on app.state, created on first use when missing."""
-    executor = getattr(request.app.state, "executor", None)
-    if executor is None:
-        executor = RunExecutor(request.app.state.settings.run_execution)
-        request.app.state.executor = executor
-    return cast("RunExecutor", executor)
+    return background.executor_of(request.app)
 
 
 async def _start_job(request: Request, run_id: UUID, resume_interrupt: UUID | None = None) -> None:
-    engine = _sync_engine(request)
-    await _executor(request).submit(
-        lambda: run_job(engine, run_id, resume_interrupt=resume_interrupt)
-    )
+    await background.start_job(request.app, run_id, resume_interrupt)
+
+
+async def _wait_for_run(db: AsyncSession, message: MessageRow, run: RunRow) -> dict[str, Any]:
+    """The answer for a message that waits in the run of its thread that is unfinished."""
+    message.delivery = "pending"
+    await db.flush()
+    return {
+        "message": service.message_output(message).model_dump(mode="json"),
+        "run": service.runs_output(run).model_dump(mode="json"),
+    }
+
+
+async def _start_answer_or_wait(
+    db: AsyncSession, user: UserRow, thread: ThreadRow, message: MessageRow
+) -> RunRow | dict[str, Any]:
+    """The run of the assistant that answers the message, or the response of a message that waits.
+
+    The assistant answers one message of a thread at a time. A message that comes while it answers
+    another waits for that run, and the job of that run answers it when it ends. The wait is
+    committed before the run is looked at again: a run that ended meanwhile did not see the message,
+    and then the message is answered here.
+    """
+    while True:
+        try:
+            return await assistant_recorder.start_answer(db, user, thread, message)
+        except service.RunConflictError as conflict:
+            waiting_for = conflict.existing.id
+        message.run_id = waiting_for
+        message.delivery = "pending"
+        await db.commit()
+        existing = await db.get(RunRow, waiting_for, populate_existing=True)
+        if existing is not None and existing.status in UNFINISHED_RUN_STATUSES:
+            return await _wait_for_run(db, message, existing)
+        message.delivery = "delivered"
 
 
 async def _send(
@@ -116,7 +142,12 @@ async def _send(
     thread: ThreadRow,
     body: MessageBody,
 ) -> dict[str, Any]:
-    """Store a message of the user; start a run with it, or leave it to the unfinished run."""
+    """Store a message of the user and hand it to what answers it.
+
+    The assistant decides first whether the message belongs to the workflow or to the application.
+    A message about the application is answered and stored, with no run; every other message starts
+    a run, or waits as pending in the run that is unfinished, exactly as before.
+    """
     if not body.content.strip():
         raise ApiError(
             422,
@@ -127,39 +158,32 @@ async def _send(
     run_config.request_problems(body.run_config, body.models)
     await service.ensure_budget(db, user)
     user_id = UUID(str(user.id))
-    unfinished = await service.unfinished_run_of_thread(db, thread.id)
-    message = await service.append_message(db, thread=thread, content=body.content)
-    if unfinished is not None:
-        message.delivery = "pending"
-        await db.flush()
-        return {
-            "message": service.message_output(message).model_dump(mode="json"),
-            "run": service.runs_output(unfinished).model_dump(mode="json"),
-        }
-    project = await db.get(ProjectRow, thread.project_id)
-    resolved = await run_config.resolve_run_config(
-        db, cast("ProjectRow", project), user_id, run_config=body.run_config, models=body.models
+    # The thread may name any id; only the project of the caller is read, and a thread of another
+    # user answers as missing.
+    await projects_service.own_project_row(db, thread.project_id, user)
+
+    # The message is stored and the assistant answers it as a job of the server: the request ends
+    # here, and the run that answers is the run that the response names.
+    message = await service.append_message(
+        db, thread=thread, content=body.content, delivery="delivered"
     )
-    run = RunRow(
-        id=uuid4(),
-        thread_id=thread.id,
-        project_id=thread.project_id,
-        number=await service.next_run_number(db, thread.id),
-        started_by=user_id,
-        workflow_name=service.WF_NAME,
-        workflow_version=service.WF_VERSION,
-        status="queued",
-        current_stage="intent_routing",
-        run_config_json=jsonlib.dumps(resolved).encode("utf-8"),
-        usage_json=jsonlib.dumps(service.ZERO_USAGE).encode("utf-8"),
+    run = await _start_answer_or_wait(db, user, thread, message)
+    if isinstance(run, dict):
+        return run
+    await db.commit()  # the job's connection must see the rows
+    await answering.submit(
+        request.app,
+        answering.Answer(
+            user_id=user_id,
+            message_id=message.id,
+            run_id=run.id,
+            choices=answering.RunChoices(run_config=body.run_config, models=body.models),
+        ),
     )
-    db.add(run)
-    message.run_id = run.id
-    thread.active_run_id = run.id
-    await db.commit()  # the worker's connection must see the queued rows
-    await _start_job(request, run.id)
-    await db.refresh(run)  # what the worker wrote (status, stage, usage)
+    # What the job wrote, when it was waited for: a message that went to the work of the project
+    # names the run of the work, and the run of the assistant is gone.
     await db.refresh(message)
+    run = await db.get(RunRow, message.run_id or run.id, populate_existing=True) or run
     return {
         "message": service.message_output(message).model_dump(mode="json"),
         "run": service.runs_output(run).model_dump(mode="json"),
@@ -175,8 +199,9 @@ async def send_message(
     body: MessageBody,
     _origin: Annotated[None, Depends(deps.check_origin)],
 ) -> Any:
-    """201 {message, run}: the message starts a new run, or waits as `pending` in the run that
-    is unfinished (§5). The run executes in the background; the stream follows it."""
+    """201 {message, run}: the run of the assistant that answers the message while it works, which
+    the stream follows. A message about the work then starts a run, or waits as `pending` in the
+    run that is unfinished, as the job of the assistant decides (§5)."""
     thread = await thread_service.get_thread_row(db, thread_id, UUID(str(user.id)))
     key = request.headers.get("Idempotency-Key")
     scope = f"POST {request.url.path}"
@@ -219,12 +244,16 @@ async def list_runs(
     db: deps.DbSession,
     cursor: Cursor = 0,
     limit: Annotated[int, Query(ge=1, le=MAX_LIMIT)] = 50,
+    workflow: Annotated[str | None, Query()] = None,
 ) -> Page[schemas.Run]:
-    """The runs of one thread, newest first (§5)."""
+    """The runs of one thread, newest first (§5): every run, or only those of the workflow that
+    `?workflow=` names."""
     await thread_service.get_thread_row(db, thread_id, UUID(str(user.id)))
     statement = (
         select(RunRow).where(RunRow.thread_id == thread_id).order_by(RunRow.created_at.desc())
     )
+    if workflow is not None:
+        statement = statement.where(RunRow.workflow_name == workflow)
     statement = statement.offset(cursor).limit(limit) if cursor else statement.limit(limit)
     rows = list((await db.scalars(statement)).all())
     items = [service.runs_output(row) for row in rows]
@@ -592,26 +621,37 @@ async def retry_run(
             errors=[{"field": "from_step_id", "message": "Not a step of this run."}],
         )
     await service.ensure_budget(db, user)
-    thread = await thread_service.get_thread_row(db, run.thread_id, UUID(str(user.id)))
+    await thread_service.get_thread_row(db, run.thread_id, UUID(str(user.id)))
     project = cast("ProjectRow", await db.get(ProjectRow, run.project_id))
     resolved = await run_config.resolve_run_config(db, project, user_id)
-    retry = RunRow(
-        id=uuid4(),
-        thread_id=run.thread_id,
-        project_id=run.project_id,
-        number=await service.next_run_number(db, run.thread_id),
-        started_by=user_id,
-        workflow_name=run.workflow_name,
-        workflow_version=run.workflow_version,
-        status="queued",
-        current_stage=step.stage,
-        run_config_json=jsonlib.dumps(resolved).encode("utf-8"),
-        usage_json=jsonlib.dumps(service.ZERO_USAGE).encode("utf-8"),
-        retry_of_run_id=run.id,
-        input_json=jsonlib.dumps({"retry_from_step_id": str(step.id)}).encode("utf-8"),
-    )
-    db.add(retry)
-    thread.active_run_id = retry.id
+    try:
+        retry = await service.create_run(
+            db,
+            run.thread_id,
+            lambda number: RunRow(
+                id=uuid4(),
+                thread_id=run.thread_id,
+                project_id=run.project_id,
+                number=number,
+                started_by=user_id,
+                workflow_name=run.workflow_name,
+                workflow_version=run.workflow_version,
+                status="queued",
+                current_stage=step.stage,
+                run_config_json=jsonlib.dumps(resolved).encode("utf-8"),
+                usage_json=jsonlib.dumps(service.ZERO_USAGE).encode("utf-8"),
+                retry_of_run_id=run.id,
+                input_json=jsonlib.dumps({"retry_from_step_id": str(step.id)}).encode("utf-8"),
+            ),
+        )
+    except service.RunConflictError:
+        # Another request started a run of the thread between the check above and the write.
+        raise ApiError(
+            409,
+            "run_already_active",
+            "Invalid state",
+            "A run of this project is already running or waiting.",
+        ) from None
     await db.commit()
     await _start_job(request, retry.id)
     await db.refresh(retry)
@@ -658,7 +698,6 @@ async def cancel_run(
     row.last_event_id = sequence
     thread = await db.get(ThreadRow, row.thread_id)
     if thread is not None:
-        thread.active_run_id = None
         thread.current_stage = row.current_stage
     await service.undeliver_pending(db, row.thread_id)
     await db.flush()
