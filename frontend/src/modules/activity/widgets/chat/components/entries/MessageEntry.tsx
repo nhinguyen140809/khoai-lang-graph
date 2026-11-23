@@ -8,7 +8,6 @@ import { type MessageAuthor, messageDeliveryNote } from '@/modules/thread/entiti
 import { Markdown } from '@/shared/components/ui/markdown'
 import { useWording, type Wording } from '@/shared/lib/view'
 
-import { RefLinks } from './RefLinks'
 
 
 interface MessageEntryProps {
@@ -26,14 +25,9 @@ function UserWords({ message, runStatus }: MessageEntryProps) {
   )
 }
 
-/** The words of an agent: Markdown, with the documents and the items it names as cards. */
+/** The words of an agent: Markdown. What it names stands under its bubble, on the page. */
 function AgentWords({ message }: MessageEntryProps) {
-  return (
-    <>
-      <Markdown className="[&_p:not(:last-child)]:mb-2.5">{message.content}</Markdown>
-      <RefLinks message={message} />
-    </>
-  )
+  return <Markdown className="[&_p:not(:last-child)]:mb-2.5">{message.content}</Markdown>
 }
 
 /** The words of the app: muted plain text. */
