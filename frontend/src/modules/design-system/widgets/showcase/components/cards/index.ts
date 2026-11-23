@@ -31,6 +31,7 @@ import { calendarCardEntry } from './forms/CalendarCard'
 import { formCardEntry } from './forms/FormCard'
 import { tokensCardEntry } from './foundations/TokensCard'
 import { typographyCardEntry } from './foundations/TypographyCard'
+import { humanFaceCardEntry } from './identity/HumanFaceCard'
 import { iconsCardEntry } from './identity/IconsCard'
 import { thumbnailsCardEntry } from './identity/ThumbnailsCard'
 import { copyButtonCardEntry } from './inputs/CopyButtonCard'
@@ -91,6 +92,7 @@ export const cards: readonly CardEntry[] = [
   actsCardEntry,
   actMoodsCardEntry,
   actCatalogCardEntry,
+  humanFaceCardEntry,
   thumbnailsCardEntry,
   iconsCardEntry,
   numbersCardEntry,
