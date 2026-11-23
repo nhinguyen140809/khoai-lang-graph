@@ -28,9 +28,9 @@ from khoailanggraph.agents.shared import catalogs
 from khoailanggraph.features.artifacts.models import ArtifactItemRow, ArtifactRow
 from khoailanggraph.features.assistant.models import AssistantTurnRow
 from khoailanggraph.features.assistant.schemas import (
-    AssistantCommand,
     AssistantDecision,
     AssistantStep,
+    UiCommand,
 )
 from khoailanggraph.features.assistant.tools import (
     READ_TOOLS,
@@ -139,7 +139,7 @@ def _command_lines() -> str:
 
 async def _kept_commands(
     session: AsyncSession, project: ProjectRow, decision: AssistantDecision
-) -> list[AssistantCommand]:
+) -> list[UiCommand]:
     """The commands the client may run: a key of the catalog whose need this project meets.
 
     What each need checks is one entry of `_CHECKS`, keyed by the `needs` of the catalog, so a
@@ -148,7 +148,7 @@ async def _kept_commands(
     catalog = catalogs.command_catalog()
     documents = await _documents(session, project)
     known = {entry["id"] for entry in documents}
-    kept: list[AssistantCommand] = []
+    kept: list[UiCommand] = []
     for command in decision.commands:
         entry = catalog.get(command.command)
         check = _CHECKS.get(entry["needs"]) if entry is not None else None
@@ -193,25 +193,25 @@ async def _has_review_waiting(session: AsyncSession, project: ProjectRow) -> boo
 
 
 async def _needs_nothing(
-    session: AsyncSession, project: ProjectRow, command: AssistantCommand, known: set[str]
+    session: AsyncSession, project: ProjectRow, command: UiCommand, known: set[str]
 ) -> bool:
     return True
 
 
 async def _needs_document(
-    session: AsyncSession, project: ProjectRow, command: AssistantCommand, known: set[str]
+    session: AsyncSession, project: ProjectRow, command: UiCommand, known: set[str]
 ) -> bool:
     return command.artifact_id is not None and command.artifact_id in known
 
 
 async def _needs_item(
-    session: AsyncSession, project: ProjectRow, command: AssistantCommand, known: set[str]
+    session: AsyncSession, project: ProjectRow, command: UiCommand, known: set[str]
 ) -> bool:
     return await _item_in_project(session, project, command.item_id)
 
 
 async def _needs_review(
-    session: AsyncSession, project: ProjectRow, command: AssistantCommand, known: set[str]
+    session: AsyncSession, project: ProjectRow, command: UiCommand, known: set[str]
 ) -> bool:
     return await _has_review_waiting(session, project)
 

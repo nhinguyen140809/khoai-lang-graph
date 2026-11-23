@@ -20,7 +20,7 @@ from typing import Literal
 from pydantic import BaseModel, ConfigDict, Field
 
 
-class AssistantCommand(BaseModel):
+class UiCommand(BaseModel):
     """One thing the client does after the answer, such as opening a document or an item.
 
     `command` is a key of the catalog. `artifact_id` and `item_id` name a record of the project,
@@ -43,7 +43,7 @@ class AssistantReply(BaseModel):
     model_config = ConfigDict(extra="forbid")
 
     text: str
-    commands: list[AssistantCommand] = Field(default_factory=list)
+    commands: list[UiCommand] = Field(default_factory=list)
 
 
 class AssistantDecision(BaseModel):
@@ -53,7 +53,7 @@ class AssistantDecision(BaseModel):
 
     kind: Literal["workflow", "general"]
     text: str = ""
-    commands: list[AssistantCommand] = Field(default_factory=list)
+    commands: list[UiCommand] = Field(default_factory=list)
 
 
 # The reads the model may ask for before it answers. Closed, so a name it invents fails here rather
