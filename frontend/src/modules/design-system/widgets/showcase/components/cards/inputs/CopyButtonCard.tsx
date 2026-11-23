@@ -3,7 +3,8 @@
 import { Code } from '@/shared/components/ui/code'
 import { CopyButton, type CopyDisplay } from '@/shared/components/ui/copy-button'
 
-import { SampleCard, SampleGroup } from '../Sample'
+import type { CardEntry } from '../../../design-system.types'
+import { SampleCard, SampleGroup } from '../../Sample'
 
 const displays = ['icon', 'text', 'icon-text'] as const satisfies readonly CopyDisplay[]
 
@@ -53,3 +54,12 @@ export function CopyButtonCard() {
     </SampleCard>
   )
 }
+
+export const copyButtonCardEntry = {
+  id: 'copy-button',
+  label: 'Copy button',
+  section: 'inputs',
+  span: 3,
+  keywords: 'copy clipboard button CopyButton',
+  View: CopyButtonCard,
+} satisfies CardEntry

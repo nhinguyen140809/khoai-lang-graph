@@ -1,7 +1,7 @@
 'use client'
 
 import { FileTextIcon, HistoryIcon, RotateCcwIcon, SquareIcon, UploadIcon } from 'lucide-react'
-import { useEffect, useState } from 'react'
+import { useState } from 'react'
 
 import { Button } from '@/shared/components/ui/button'
 import {
@@ -15,27 +15,14 @@ import {
   CommandSeparator,
   CommandShortcut,
 } from '@/shared/components/ui/command'
-import { Kbd, KbdGroup } from '@/shared/components/ui/kbd'
 
-import { specRequirements } from '../../design-system.fixtures'
-import { SampleCard } from '../Sample'
+import { specRequirements } from '../../../design-system.fixtures'
+import type { CardEntry } from '../../../design-system.types'
+import { SampleCard } from '../../Sample'
 
 export function CommandCard() {
   // Shown in a dialog: an inline palette selects its first item on mount and scrolls the page to it.
   const [open, setOpen] = useState(false)
-
-  useEffect(() => {
-    const onKeyDown = (event: KeyboardEvent) => {
-      if (event.key === 'k' && (event.ctrlKey || event.metaKey)) {
-        event.preventDefault()
-        setOpen((value) => !value)
-      }
-    }
-    document.addEventListener('keydown', onKeyDown)
-    return () => {
-      document.removeEventListener('keydown', onKeyDown)
-    }
-  }, [])
 
   return (
     <SampleCard
@@ -51,10 +38,6 @@ export function CommandCard() {
       >
         Open the command palette
       </Button>
-      <KbdGroup>
-        <Kbd>Ctrl</Kbd>
-        <Kbd>K</Kbd>
-      </KbdGroup>
       <CommandDialog open={open} onOpenChange={setOpen}>
         {/* This CommandDialog does not render the Command root itself. */}
         <Command>
@@ -96,3 +79,13 @@ export function CommandCard() {
     </SampleCard>
   )
 }
+
+export const commandCardEntry = {
+  id: 'command',
+  label: 'Command palette',
+  section: 'actions',
+  span: 3,
+  keywords:
+    'command cmdk search menu Command CommandDialog CommandEmpty CommandGroup CommandInput CommandItem CommandList CommandSeparator CommandShortcut',
+  View: CommandCard,
+} satisfies CardEntry

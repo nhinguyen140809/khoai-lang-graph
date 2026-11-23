@@ -31,8 +31,9 @@ import {
   traceEdges,
   type TraceNode,
   traceNodes,
-} from '../../design-system.fixtures'
-import { SampleGroup, SampleLabel } from '../Sample'
+} from '../../../design-system.fixtures'
+import type { CardEntry } from '../../../design-system.types'
+import { SampleGroup, SampleLabel } from '../../Sample'
 
 const nodeVariants = ['outline', 'soft', 'solid'] as const
 const edgeVariants = ['solid', 'dashed', 'dotted'] as const
@@ -220,3 +221,13 @@ export function GraphCard() {
     </Card>
   )
 }
+
+export const graphCardEntry = {
+  id: 'graph',
+  label: 'Graph',
+  section: 'data',
+  span: 6,
+  keywords:
+    'flow node edge handle react flow Edge Flow Handle Node NodeContent NodeHeader NodeHeaderTitle NodeStatusIndicator',
+  View: GraphCard,
+} satisfies CardEntry

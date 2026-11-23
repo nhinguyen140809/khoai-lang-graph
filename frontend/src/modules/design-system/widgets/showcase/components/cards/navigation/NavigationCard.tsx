@@ -27,7 +27,8 @@ import {
 } from '@/shared/components/ui/navigation-menu'
 import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/shared/components/ui/tabs'
 
-import { SampleCard } from '../Sample'
+import type { CardEntry } from '../../../design-system.types'
+import { SampleCard } from '../../Sample'
 
 export function NavigationCard() {
   return (
@@ -119,3 +120,13 @@ export function NavigationCard() {
     </SampleCard>
   )
 }
+
+export const navigationCardEntry = {
+  id: 'navigation',
+  label: 'Navigation',
+  section: 'navigation',
+  span: 3,
+  keywords:
+    'breadcrumb menubar tabs navigation menu Breadcrumb BreadcrumbItem BreadcrumbLink BreadcrumbList BreadcrumbPage BreadcrumbSeparator Menubar MenubarContent MenubarItem MenubarMenu MenubarSeparator MenubarShortcut MenubarTrigger NavigationMenu NavigationMenuContent NavigationMenuItem NavigationMenuLink NavigationMenuList NavigationMenuTrigger Tabs TabsContent TabsList TabsTrigger',
+  View: NavigationCard,
+} satisfies CardEntry

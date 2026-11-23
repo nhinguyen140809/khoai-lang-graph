@@ -14,21 +14,35 @@ export function SampleCard({
   title,
   description,
   className,
+  columns = false,
   children,
 }: {
   title: string
   description: ReactNode
   /** Classes of the card content, which lays out the samples. */
   className?: string
+  /**
+   * Flows the samples into columns by the width of the card, one, two or three, each sample whole
+   * in a column. It replaces `className`.
+   */
+  columns?: boolean
   children: ReactNode
 }) {
   return (
-    <Card>
+    <Card className="@container">
       <CardHeader>
         <CardTitle>{title}</CardTitle>
         <CardDescription>{description}</CardDescription>
       </CardHeader>
-      <CardContent className={className}>{children}</CardContent>
+      <CardContent
+        className={
+          columns
+            ? 'columns-1 gap-x-8 *:mb-5 *:break-inside-avoid @2xl:columns-2 @5xl:columns-3'
+            : className
+        }
+      >
+        {children}
+      </CardContent>
     </Card>
   )
 }

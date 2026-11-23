@@ -66,7 +66,8 @@ import {
 import { Tooltip, TooltipContent, TooltipTrigger } from '@/shared/components/ui/tooltip'
 import { sleep } from '@/shared/lib/scheduling'
 
-import { SampleCard } from '../Sample'
+import type { CardEntry } from '../../../design-system.types'
+import { SampleCard } from '../../Sample'
 
 // One toast per status; each shows the icon and color of its status.
 const toastSamples = [
@@ -246,3 +247,13 @@ export function OverlaysCard() {
     </SampleCard>
   )
 }
+
+export const overlaysCardEntry = {
+  id: 'overlays',
+  label: 'Overlays',
+  section: 'layers',
+  span: 6,
+  keywords:
+    'dialog drawer sheet popover tooltip dropdown context menu hover card modal AlertDialog AlertDialogAction AlertDialogCancel AlertDialogContent AlertDialogDescription AlertDialogFooter AlertDialogHeader AlertDialogTitle AlertDialogTrigger ConfirmDialog ContextMenu ContextMenuContent ContextMenuItem ContextMenuSeparator ContextMenuShortcut ContextMenuTrigger Dialog DialogClose DialogContent DialogDescription DialogFooter DialogHeader DialogTitle DialogTrigger Drawer DrawerClose DrawerContent DrawerDescription DrawerFooter DrawerHeader DrawerTitle DrawerTrigger DropdownMenu DropdownMenuContent DropdownMenuItem DropdownMenuLabel DropdownMenuSeparator DropdownMenuShortcut DropdownMenuTrigger HoverCard HoverCardContent HoverCardTrigger Popover PopoverContent PopoverTrigger Sheet SheetContent SheetDescription SheetHeader SheetTitle SheetTrigger',
+  View: OverlaysCard,
+} satisfies CardEntry

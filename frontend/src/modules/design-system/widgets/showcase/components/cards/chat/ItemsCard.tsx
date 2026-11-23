@@ -26,14 +26,15 @@ import {
   ItemTitle,
 } from '@/shared/components/ui/item'
 
-import { personas } from '../../design-system.fixtures'
-import { SampleCard } from '../Sample'
+import { personas } from '../../../design-system.fixtures'
+import type { CardEntry } from '../../../design-system.types'
+import { SampleCard } from '../../Sample'
 
 export function ItemsCard() {
   return (
     <SampleCard
-      title="Personas"
-      description="Item, avatar, alert, empty state."
+      title="Items and states"
+      description="Item rows with an avatar and an action, a group of avatars, alerts, and an empty state."
       className="flex flex-col gap-4"
     >
       <ItemGroup className="gap-2">
@@ -98,3 +99,13 @@ export function ItemsCard() {
     </SampleCard>
   )
 }
+
+export const itemsCardEntry = {
+  id: 'items',
+  label: 'Items and states',
+  section: 'chat',
+  span: 3,
+  keywords:
+    'item persona list empty avatar Alert AlertDescription AlertTitle Avatar AvatarFallback AvatarGroup AvatarGroupCount Empty EmptyContent EmptyDescription EmptyHeader EmptyMedia EmptyTitle Item ItemActions ItemContent ItemDescription ItemGroup ItemMedia ItemTitle',
+  View: ItemsCard,
+} satisfies CardEntry

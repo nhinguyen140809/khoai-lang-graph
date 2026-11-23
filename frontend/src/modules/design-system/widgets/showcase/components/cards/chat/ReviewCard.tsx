@@ -22,8 +22,9 @@ import {
 } from '@/shared/components/ui/questionnaire'
 import { isString } from '@/shared/lib/guards'
 
-import { personas } from '../../design-system.fixtures'
-import { SampleCard } from '../Sample'
+import { personas } from '../../../design-system.fixtures'
+import type { CardEntry } from '../../../design-system.types'
+import { SampleCard } from '../../Sample'
 
 const items = [
   {
@@ -96,3 +97,13 @@ export function ReviewCard() {
     </SampleCard>
   )
 }
+
+export const reviewCardEntry = {
+  id: 'review',
+  label: 'Review',
+  section: 'chat',
+  span: 6,
+  keywords:
+    'review questionnaire answer requirements Questionnaire QuestionnaireActions QuestionnaireChoice QuestionnaireChoiceDescription QuestionnaireChoices QuestionnaireDescription QuestionnaireError QuestionnaireInput QuestionnaireItem QuestionnaireNext QuestionnairePrevious QuestionnaireProgress QuestionnaireSkip QuestionnaireSubmit QuestionnaireTitle',
+  View: ReviewCard,
+} satisfies CardEntry

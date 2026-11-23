@@ -12,7 +12,8 @@ import {
 } from '@/shared/components/ui/floating-surface'
 import type { Tone } from '@/shared/lib/tone'
 
-import { SampleCard, SampleGroup } from '../Sample'
+import type { CardEntry } from '../../../design-system.types'
+import { SampleCard, SampleGroup } from '../../Sample'
 
 const placements = [
   'top-left',
@@ -111,3 +112,12 @@ export function FloatingSurfaceCard() {
     </SampleCard>
   )
 }
+
+export const floatingSurfaceCardEntry = {
+  id: 'floating-surface',
+  label: 'Floating surface',
+  section: 'content',
+  span: 6,
+  keywords: 'floating surface popover panel FloatingSurface',
+  View: FloatingSurfaceCard,
+} satisfies CardEntry

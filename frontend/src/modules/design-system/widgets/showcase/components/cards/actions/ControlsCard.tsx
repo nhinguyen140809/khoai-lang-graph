@@ -27,7 +27,8 @@ import { ToggleGroup, ToggleGroupItem } from '@/shared/components/ui/toggle-grou
 import { formatCurrency } from '@/shared/lib/numbers'
 import type { Tone } from '@/shared/lib/tone'
 
-import { SampleCard } from '../Sample'
+import type { CardEntry } from '../../../design-system.types'
+import { SampleCard } from '../../Sample'
 
 const runs: { label: string; value: number; color: Tone }[] = [
   { label: 'Run 4, interviewing', value: 45, color: 'primary' },
@@ -149,3 +150,13 @@ export function ControlsCard() {
     </SampleCard>
   )
 }
+
+export const controlsCardEntry = {
+  id: 'controls',
+  label: 'Controls',
+  section: 'actions',
+  span: 3,
+  keywords:
+    'input slider radio toggle progress otp select InputGroup InputGroupAddon InputGroupInput InputGroupText InputOTP InputOTPGroup InputOTPSeparator InputOTPSlot NativeSelect NativeSelectOption Progress RadioGroup RadioGroupItem Slider',
+  View: ControlsCard,
+} satisfies CardEntry

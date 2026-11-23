@@ -8,7 +8,8 @@ import { RelativeTime } from '@/shared/components/ui/relative-time'
 import { Separator } from '@/shared/components/ui/separator'
 import { minuteMs } from '@/shared/lib/time'
 
-import { SampleCard, SampleLabel } from '../Sample'
+import type { CardEntry } from '../../../design-system.types'
+import { SampleCard, SampleLabel } from '../../Sample'
 
 /** A moment this many minutes before now, for the words of a relative time. */
 function minutesAgo(minutes: number): string {
@@ -29,7 +30,7 @@ export function TypographyCard() {
     <SampleCard
       title="Typography"
       description="Mona Sans for the interface, Noto Sans Mono for code."
-      className="flex flex-col gap-3"
+      columns
     >
       <div className="flex flex-col gap-1.5">
         {headings.map(({ Tag, size }) => (
@@ -94,3 +95,12 @@ export function TypographyCard() {
     </SampleCard>
   )
 }
+
+export const typographyCardEntry = {
+  id: 'typography',
+  label: 'Typography',
+  section: 'foundations',
+  span: 6,
+  keywords: 'font heading text size kbd key name time KeyText RecordName RelativeTime',
+  View: TypographyCard,
+} satisfies CardEntry

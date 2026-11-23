@@ -5,7 +5,8 @@ import { ChevronRightIcon, CircleAlertIcon, CircleCheckIcon, DotIcon } from 'luc
 import { FeedEntry } from '@/shared/components/feed'
 import { CopyButton } from '@/shared/components/ui/copy-button'
 
-import { SampleCard } from '../Sample'
+import type { CardEntry } from '../../../design-system.types'
+import { SampleCard } from '../../Sample'
 
 export function FeedEntryCard() {
   return (
@@ -51,3 +52,12 @@ export function FeedEntryCard() {
     </SampleCard>
   )
 }
+
+export const feedEntryCardEntry = {
+  id: 'feed-entries',
+  label: 'Entries of a feed',
+  section: 'agents',
+  span: 3,
+  keywords: 'feed entry message copy CopyButton FeedEntry',
+  View: FeedEntryCard,
+} satisfies CardEntry

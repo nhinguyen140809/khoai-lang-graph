@@ -9,8 +9,9 @@ import {
   ChartTooltipContent,
 } from '@/shared/components/ui/chart'
 
-import { priorityCounts, priorityLabels } from '../../design-system.fixtures'
-import { SampleCard } from '../Sample'
+import { priorityCounts, priorityLabels } from '../../../design-system.fixtures'
+import type { CardEntry } from '../../../design-system.types'
+import { SampleCard } from '../../Sample'
 
 // Each bar takes one of the chart colors; the value of each bar is also written above it.
 const chartConfig = {
@@ -63,3 +64,12 @@ export function ChartCard() {
     </SampleCard>
   )
 }
+
+export const chartCardEntry = {
+  id: 'chart',
+  label: 'Chart',
+  section: 'data',
+  span: 3,
+  keywords: 'chart bar requirements priority ChartContainer ChartTooltip ChartTooltipContent',
+  View: ChartCard,
+} satisfies CardEntry

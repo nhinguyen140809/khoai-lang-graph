@@ -1,7 +1,8 @@
 import { Markdown } from '@/shared/components/ui/markdown'
 
-import { sampleMarkdown } from '../../design-system.fixtures'
-import { SampleCard } from '../Sample'
+import { sampleMarkdown } from '../../../design-system.fixtures'
+import type { CardEntry } from '../../../design-system.types'
+import { SampleCard } from '../../Sample'
 
 export function MarkdownCard() {
   return (
@@ -13,3 +14,12 @@ export function MarkdownCard() {
     </SampleCard>
   )
 }
+
+export const markdownCardEntry = {
+  id: 'markdown',
+  label: 'Markdown',
+  section: 'content',
+  span: 6,
+  keywords: 'markdown render text Markdown',
+  View: MarkdownCard,
+} satisfies CardEntry

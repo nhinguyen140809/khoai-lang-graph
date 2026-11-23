@@ -15,8 +15,9 @@ import {
 } from '@/shared/components/ui/trace'
 import type { Tone } from '@/shared/lib/tone'
 
-import { traceRows } from '../../design-system.fixtures'
-import { SampleCard } from '../Sample'
+import { traceRows } from '../../../design-system.fixtures'
+import type { CardEntry } from '../../../design-system.types'
+import { SampleCard } from '../../Sample'
 
 /** How a line of work shows, by its status: the tone of its color, its mark and the status of its trace line. */
 const looks: Record<
@@ -74,3 +75,13 @@ export function TraceCard() {
     </SampleCard>
   )
 }
+
+export const traceCardEntry = {
+  id: 'trace',
+  label: 'Work of the agents',
+  section: 'agents',
+  span: 3,
+  keywords:
+    'trace agent step run spinner Trace TraceCollapsible TraceCollapsibleContent TraceCollapsibleTrigger TraceDescription TraceIcon TraceLine TraceTitle',
+  View: TraceCard,
+} satisfies CardEntry

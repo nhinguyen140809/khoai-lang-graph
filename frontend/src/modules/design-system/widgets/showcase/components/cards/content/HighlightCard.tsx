@@ -15,8 +15,9 @@ import {
   type QuotedItem,
   quotedItems,
   searchText,
-} from '../../design-system.fixtures'
-import { SampleCard, SampleGroup, SampleLabel } from '../Sample'
+} from '../../../design-system.fixtures'
+import type { CardEntry } from '../../../design-system.types'
+import { SampleCard, SampleGroup, SampleLabel } from '../../Sample'
 
 const highlightVariants = [
   'underline',
@@ -110,3 +111,13 @@ export function HighlightCard() {
     </SampleCard>
   )
 }
+
+export const highlightCardEntry = {
+  id: 'highlight',
+  label: 'Highlight',
+  section: 'content',
+  span: 3,
+  keywords:
+    'highlight search match mark Highlight HighlightMark Popover PopoverContent PopoverTrigger',
+  View: HighlightCard,
+} satisfies CardEntry

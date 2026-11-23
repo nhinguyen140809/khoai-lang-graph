@@ -32,8 +32,9 @@ import {
 import { ScrollArea } from '@/shared/components/ui/scroll-area'
 import { Separator } from '@/shared/components/ui/separator'
 
-import { rationaleV4, statementV3, statementV4 } from '../../design-system.fixtures'
-import { ArtifactTree } from '../ArtifactTree'
+import { rationaleV4, statementV3, statementV4 } from '../../../design-system.fixtures'
+import type { CardEntry } from '../../../design-system.types'
+import { ArtifactTree } from '../../ArtifactTree'
 
 const features = [
   { label: 'Console', Icon: SquareChevronRightIcon },
@@ -200,3 +201,13 @@ function FeatureItem({ label, Icon, active }: FeatureItemProps) {
     </button>
   )
 }
+
+export const workspaceCardEntry = {
+  id: 'workspace',
+  label: 'Workspace',
+  section: 'workspace',
+  span: 12,
+  keywords:
+    'workspace layout resizable sidebar panel diff breadcrumb Breadcrumb BreadcrumbItem BreadcrumbList BreadcrumbPage BreadcrumbSeparator DiffView LogoMark ResizableHandle ResizablePanel ResizablePanelGroup ScrollArea',
+  View: WorkspaceCard,
+} satisfies CardEntry

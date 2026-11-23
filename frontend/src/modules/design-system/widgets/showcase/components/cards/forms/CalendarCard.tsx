@@ -4,7 +4,8 @@ import { useState } from 'react'
 
 import { Calendar } from '@/shared/components/ui/calendar'
 
-import { SampleCard } from '../Sample'
+import type { CardEntry } from '../../../design-system.types'
+import { SampleCard } from '../../Sample'
 
 // A fixed date, so the server-rendered HTML and the first client render agree.
 const reviewDate = new Date(2026, 9, 9)
@@ -28,3 +29,12 @@ export function CalendarCard() {
     </SampleCard>
   )
 }
+
+export const calendarCardEntry = {
+  id: 'calendar',
+  label: 'Review date',
+  section: 'forms',
+  span: 3,
+  keywords: 'calendar date picker Calendar',
+  View: CalendarCard,
+} satisfies CardEntry

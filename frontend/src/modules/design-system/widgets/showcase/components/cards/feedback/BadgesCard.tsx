@@ -2,8 +2,9 @@ import { Badge } from '@/shared/components/ui/badge'
 import { Code } from '@/shared/components/ui/code'
 import { fills, tones } from '@/shared/lib/tone'
 
-import { toneIcons } from '../../design-system.constants'
-import { SampleCard, SampleGroup } from '../Sample'
+import { toneIcons } from '../../../design-system.constants'
+import type { CardEntry } from '../../../design-system.types'
+import { SampleCard, SampleGroup } from '../../Sample'
 
 export function BadgesCard() {
   return (
@@ -34,3 +35,12 @@ export function BadgesCard() {
     </SampleCard>
   )
 }
+
+export const badgesCardEntry = {
+  id: 'badges',
+  label: 'Badges',
+  section: 'feedback',
+  span: 3,
+  keywords: 'badge tag label status tone',
+  View: BadgesCard,
+} satisfies CardEntry

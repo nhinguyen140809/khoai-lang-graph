@@ -7,8 +7,9 @@ import { useState } from 'react'
 import { Badge } from '@/shared/components/ui/badge'
 import { Stepper, StepperItem, StepperTitle, StepperTrigger } from '@/shared/components/ui/stepper'
 
-import { type StepperStep, stepperSteps } from '../../design-system.fixtures'
-import { SampleCard, SampleGroup } from '../Sample'
+import { type StepperStep, stepperSteps } from '../../../design-system.fixtures'
+import type { CardEntry } from '../../../design-system.types'
+import { SampleCard, SampleGroup } from '../../Sample'
 
 /** How the number of a step shows, by its status: the only mark of the step. */
 const markLooks = {
@@ -160,3 +161,12 @@ function StepRow({ step, label, position, isOpen, onToggle }: StepRowProps) {
     </StepperItem>
   )
 }
+
+export const stepperCardEntry = {
+  id: 'stepper',
+  label: 'Progress',
+  section: 'content',
+  span: 3,
+  keywords: 'stepper progress steps badge Stepper StepperItem StepperTitle StepperTrigger',
+  View: StepperCard,
+} satisfies CardEntry

@@ -8,35 +8,11 @@ import { Skeleton } from '@/shared/components/ui/skeleton'
 import { Slider } from '@/shared/components/ui/slider'
 import { ToggleGroup, ToggleGroupItem } from '@/shared/components/ui/toggle-group'
 
-import { SampleCard, SampleGroup, SampleLabel } from '../Sample'
+import { layoutNames } from '../../../design-system.fixtures'
+import type { CardEntry } from '../../../design-system.types'
+import { SampleCard, SampleGroup, SampleLabel } from '../../Sample'
 
 const rows = ['row-1', 'row-2', 'row-3']
-
-const layouts: {
-  layout: LoadingLayout
-  rows: number
-  columns?: number
-  alternate?: boolean
-  note: string
-}[] = [
-  { layout: 'lines', rows: 3, note: 'text rows' },
-  {
-    layout: 'lines',
-    rows: 3,
-    alternate: true,
-    note: 'rows take turns at each side, as a chat does',
-  },
-  { layout: 'list', rows: 3, note: 'a mark and two lines' },
-  { layout: 'cards', rows: 2, note: 'boxes with a title' },
-  { layout: 'grid', rows: 1, columns: 3, note: 'blocks in columns' },
-  { layout: 'table', rows: 3, columns: 3, note: 'rows of cells' },
-  { layout: 'feed', rows: 2, note: 'entries with an avatar' },
-  { layout: 'document', rows: 2, note: 'a heading and paragraphs' },
-  { layout: 'detail', rows: 2, note: 'a title, tags and sections' },
-]
-
-// The layouts once each: a layout may show twice in the samples, with another option.
-const layoutNames = [...new Set(layouts.map((entry) => entry.layout))]
 
 function CustomSample() {
   const [layout, setLayout] = useState<LoadingLayout>('cards')
@@ -135,9 +111,9 @@ function CustomSample() {
 export function SkeletonCard() {
   return (
     <SampleCard
-      title="Loading"
-      description="Skeleton while items load. The placeholder takes the shape of the content it stands in for, fills the width and the height of its container (a layout adds rows, or makes its blocks taller), and lets the caller set the gap and the size of an item, in steps of the spacing scale."
-      className="flex flex-col gap-5"
+      title="Skeleton and custom loading"
+      description="Skeleton while items load, and a placeholder whose gap and item size the caller sets, in steps of the spacing scale."
+      columns
     >
       <SampleGroup label="Skeleton">
         {rows.map((row) => (
@@ -150,23 +126,16 @@ export function SkeletonCard() {
           </div>
         ))}
       </SampleGroup>
-      {layouts.map((entry) => (
-        <SampleGroup
-          key={entry.note}
-          label={`LoadingState layout="${entry.layout}": ${entry.note}`}
-        >
-          <div className="h-72 overflow-hidden rounded-md border">
-            <LoadingState
-              label={`Loading ${entry.layout}`}
-              layout={entry.layout}
-              rows={entry.rows}
-              columns={entry.columns}
-              alternate={entry.alternate}
-            />
-          </div>
-        </SampleGroup>
-      ))}
       <CustomSample />
     </SampleCard>
   )
 }
+
+export const skeletonCardEntry = {
+  id: 'skeleton',
+  label: 'Skeleton',
+  section: 'motion',
+  span: 6,
+  keywords: 'skeleton loading placeholder state LoadingState Skeleton Slider',
+  View: SkeletonCard,
+} satisfies CardEntry

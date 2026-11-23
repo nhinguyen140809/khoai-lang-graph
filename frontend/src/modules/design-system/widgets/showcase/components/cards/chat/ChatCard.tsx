@@ -45,6 +45,8 @@ import {
 } from '@/shared/components/ui/message-scroller'
 import type { Tone } from '@/shared/lib/tone'
 
+import type { CardEntry } from '../../../design-system.types'
+
 /**
  * An entry of the thread. A message without an author is the user's, at the end of the row; a
  * marker notes an event, a separator opens a part of the thread, and `running` is the step that
@@ -185,3 +187,13 @@ export function ChatCard() {
     </Card>
   )
 }
+
+export const chatCardEntry = {
+  id: 'chat',
+  label: 'Chat',
+  section: 'chat',
+  span: 6,
+  keywords:
+    'chat bubble message attachment avatar scroller Attachment AttachmentAction AttachmentActions AttachmentContent AttachmentDescription AttachmentMedia AttachmentTitle Avatar AvatarFallback Bubble BubbleContent Glint Marker MarkerContent MarkerIcon Message MessageAvatar MessageContent MessageFooter MessageHeader MessageScroller MessageScrollerButton MessageScrollerContent MessageScrollerProvider MessageScrollerViewport',
+  View: ChatCard,
+} satisfies CardEntry

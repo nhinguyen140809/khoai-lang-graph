@@ -1,7 +1,8 @@
 import { Code, type CodeSize, type CodeVariant } from '@/shared/components/ui/code'
 import { tones } from '@/shared/lib/tone'
 
-import { SampleCard, SampleGroup, SampleLabel } from '../Sample'
+import type { CardEntry } from '../../../design-system.types'
+import { SampleCard, SampleGroup, SampleLabel } from '../../Sample'
 
 const codeVariants = [
   'solid',
@@ -54,3 +55,12 @@ export function CodeCard() {
     </SampleCard>
   )
 }
+
+export const codeCardEntry = {
+  id: 'code',
+  label: 'Code',
+  section: 'content',
+  span: 3,
+  keywords: 'code mono snippet',
+  View: CodeCard,
+} satisfies CardEntry

@@ -37,6 +37,8 @@ import {
 import { Switch } from '@/shared/components/ui/switch'
 import { Textarea } from '@/shared/components/ui/textarea'
 
+import type { CardEntry } from '../../../design-system.types'
+
 const agentRoles = [
   'planner',
   'persona_generator',
@@ -136,3 +138,13 @@ export function FormCard() {
     </Card>
   )
 }
+
+export const formCardEntry = {
+  id: 'form',
+  label: 'Form',
+  section: 'forms',
+  span: 3,
+  keywords:
+    'field input select checkbox switch textarea combobox CardFooter Checkbox Combobox ComboboxContent ComboboxEmpty ComboboxInput ComboboxItem ComboboxList Field FieldDescription FieldGroup FieldLabel FieldLegend FieldSet Select SelectContent SelectItem SelectTrigger SelectValue Switch Textarea',
+  View: FormCard,
+} satisfies CardEntry

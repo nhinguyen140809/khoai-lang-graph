@@ -1,7 +1,8 @@
 'use client'
 
-import { useTokenHexes } from '../../hooks/useTokenHexes'
-import { SampleCard, SampleLabel } from '../Sample'
+import type { CardEntry } from '../../../design-system.types'
+import { useTokenHexes } from '../../../hooks/useTokenHexes'
+import { SampleCard, SampleLabel } from '../../Sample'
 
 const groups: { title: string; tokens: string[] }[] = [
   {
@@ -54,7 +55,7 @@ export function TokensCard() {
     <SampleCard
       title="Color tokens"
       description="Night Owl surfaces and blue, a yellow secondary, five chart colors, and the soft colors of the faces."
-      className="flex flex-col gap-4"
+      columns
     >
       <span ref={probeRef} aria-hidden className="hidden" />
       {groups.map((group) => (
@@ -77,3 +78,12 @@ export function TokensCard() {
     </SampleCard>
   )
 }
+
+export const tokensCardEntry = {
+  id: 'tokens',
+  label: 'Color tokens',
+  section: 'foundations',
+  span: 8,
+  keywords: 'color palette theme background foreground border',
+  View: TokensCard,
+} satisfies CardEntry

@@ -2,8 +2,9 @@
 
 import { DiffView } from '@/shared/components/ui/diff-view'
 
-import { rationaleV4, statementV3, statementV4 } from '../../design-system.fixtures'
-import { SampleCard, SampleGroup } from '../Sample'
+import { rationaleV4, statementV3, statementV4 } from '../../../design-system.fixtures'
+import type { CardEntry } from '../../../design-system.types'
+import { SampleCard, SampleGroup } from '../../Sample'
 
 export function DiffViewCard() {
   return (
@@ -31,3 +32,12 @@ export function DiffViewCard() {
     </SampleCard>
   )
 }
+
+export const diffViewCardEntry = {
+  id: 'diff-view',
+  label: 'Diff view',
+  section: 'content',
+  span: 6,
+  keywords: 'diff change compare DiffView',
+  View: DiffViewCard,
+} satisfies CardEntry

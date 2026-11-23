@@ -10,7 +10,8 @@ import {
 import { Alert, AlertDescription, AlertTitle } from '@/shared/components/ui/alert'
 import type { Tone } from '@/shared/lib/tone'
 
-import { SampleCard, SampleGroup } from '../Sample'
+import type { CardEntry } from '../../../design-system.types'
+import { SampleCard, SampleGroup } from '../../Sample'
 
 const variants = ['outline', 'soft', 'solid'] as const
 
@@ -28,11 +29,7 @@ const messages: { color: Tone; Icon: LucideIcon; title: string }[] = [
 
 export function AlertsCard() {
   return (
-    <SampleCard
-      title="Alerts"
-      description="Outline, soft, and solid, in every color."
-      className="flex flex-col gap-3"
-    >
+    <SampleCard title="Alerts" description="Outline, soft, and solid, in every color." columns>
       {variants.map((variant) => (
         <SampleGroup key={variant} label={variant}>
           {messages.map(({ color, Icon, title }) => (
@@ -49,3 +46,12 @@ export function AlertsCard() {
     </SampleCard>
   )
 }
+
+export const alertsCardEntry = {
+  id: 'alerts',
+  label: 'Alerts',
+  section: 'feedback',
+  span: 12,
+  keywords: 'alert banner message tone Alert AlertDescription AlertTitle',
+  View: AlertsCard,
+} satisfies CardEntry

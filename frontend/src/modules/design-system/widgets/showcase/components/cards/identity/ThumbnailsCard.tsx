@@ -1,7 +1,8 @@
 import { Thumbnail, ThumbnailGrid } from '@/shared/components/thumbnail'
 
-import { documentBlockKinds, itemBlockKinds } from '../../design-system.fixtures'
-import { SampleCard, SampleGroup } from '../Sample'
+import { documentBlockKinds, itemBlockKinds } from '../../../design-system.fixtures'
+import type { CardEntry } from '../../../design-system.types'
+import { SampleCard, SampleGroup } from '../../Sample'
 
 /**
  * The thumbnails that a folder shows in a grid. The color of a folder comes from its title, and the
@@ -42,3 +43,12 @@ export function ThumbnailsCard() {
     </SampleCard>
   )
 }
+
+export const thumbnailsCardEntry = {
+  id: 'thumbnails',
+  label: 'Thumbnails',
+  section: 'identity',
+  span: 12,
+  keywords: 'thumbnail folder file preview Thumbnail ThumbnailGrid',
+  View: ThumbnailsCard,
+} satisfies CardEntry

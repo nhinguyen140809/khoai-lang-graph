@@ -15,7 +15,8 @@ import {
   CollapsibleTrigger,
 } from '@/shared/components/ui/collapsible'
 
-import { SampleCard } from '../Sample'
+import type { CardEntry } from '../../../design-system.types'
+import { SampleCard } from '../../Sample'
 
 const interviewSteps = ['4 interviewer', '5 persona_agent', '6 interviewer', '7 persona_agent']
 
@@ -64,3 +65,13 @@ export function DisclosureCard() {
     </SampleCard>
   )
 }
+
+export const disclosureCardEntry = {
+  id: 'disclosure',
+  label: 'Disclosure',
+  section: 'layers',
+  span: 3,
+  keywords:
+    'accordion collapsible expand Accordion AccordionContent AccordionItem AccordionTrigger Collapsible CollapsibleContent CollapsibleTrigger',
+  View: DisclosureCard,
+} satisfies CardEntry

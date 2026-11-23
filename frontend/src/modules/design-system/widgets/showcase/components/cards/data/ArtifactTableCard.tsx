@@ -19,8 +19,9 @@ import {
   TableRow,
 } from '@/shared/components/ui/table'
 
-import { type SpecRequirementRow, specRequirements } from '../../design-system.fixtures'
-import { SampleCard } from '../Sample'
+import { type SpecRequirementRow, specRequirements } from '../../../design-system.fixtures'
+import type { CardEntry } from '../../../design-system.types'
+import { SampleCard } from '../../Sample'
 
 const statusBadge = {
   approved: { color: 'success', variant: 'soft' },
@@ -81,3 +82,13 @@ export function ArtifactTableCard() {
     </SampleCard>
   )
 }
+
+export const artifactTableCardEntry = {
+  id: 'artifact-table',
+  label: 'Artifact table',
+  section: 'data',
+  span: 6,
+  keywords:
+    'table pagination rows badge Pagination PaginationContent PaginationEllipsis PaginationItem PaginationLink PaginationNext PaginationPrevious Table TableBody TableCell TableHead TableHeader TableRow',
+  View: ArtifactTableCard,
+} satisfies CardEntry

@@ -1,4 +1,5 @@
 import { notFound } from 'next/navigation'
+import { Suspense } from 'react'
 
 import { DesignSystemPage } from '@/modules/design-system/widgets/showcase'
 import { isProduction } from '@/shared/config/env'
@@ -12,5 +13,10 @@ export default function Page() {
   if (isProduction) {
     notFound()
   }
-  return <DesignSystemPage />
+  // The open tab is read from the address, which needs a boundary above it.
+  return (
+    <Suspense>
+      <DesignSystemPage />
+    </Suspense>
+  )
 }

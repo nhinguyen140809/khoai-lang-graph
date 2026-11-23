@@ -5,7 +5,8 @@ import { useState } from 'react'
 import { NumberInput } from '@/shared/components/form'
 import { Field, FieldError, FieldLabel } from '@/shared/components/ui/field'
 
-import { SampleCard, SampleLabel } from '../Sample'
+import type { CardEntry } from '../../../design-system.types'
+import { SampleCard, SampleLabel } from '../../Sample'
 
 interface NumberSampleProps {
   label: string
@@ -102,3 +103,12 @@ export function NumbersCard() {
     </SampleCard>
   )
 }
+
+export const numbersCardEntry = {
+  id: 'numbers',
+  label: 'Number inputs',
+  section: 'inputs',
+  span: 3,
+  keywords: 'number field input stepper Field FieldError FieldLabel NumberInput',
+  View: NumbersCard,
+} satisfies CardEntry

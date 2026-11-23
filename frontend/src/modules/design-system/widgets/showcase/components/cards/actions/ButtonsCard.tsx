@@ -7,8 +7,9 @@ import { DisabledReason } from '@/shared/components/ui/disabled-reason'
 import { Spinner } from '@/shared/components/ui/spinner'
 import { fills, tones } from '@/shared/lib/tone'
 
-import { toneIcons } from '../../design-system.constants'
-import { SampleCard, SampleGroup } from '../Sample'
+import { toneIcons } from '../../../design-system.constants'
+import type { CardEntry } from '../../../design-system.types'
+import { SampleCard, SampleGroup } from '../../Sample'
 
 const shadcnVariants = ['default', 'secondary', 'outline', 'ghost', 'destructive', 'link'] as const
 
@@ -22,7 +23,7 @@ export function ButtonsCard() {
           states.
         </>
       }
-      className="flex flex-col gap-4"
+      columns
     >
       {fills.map((variant) => (
         <SampleGroup key={variant} label={variant}>
@@ -85,3 +86,12 @@ export function ButtonsCard() {
     </SampleCard>
   )
 }
+
+export const buttonsCardEntry = {
+  id: 'buttons',
+  label: 'Buttons',
+  section: 'actions',
+  span: 6,
+  keywords: 'button variant size group spinner disabled DisabledReason',
+  View: ButtonsCard,
+} satisfies CardEntry

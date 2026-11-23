@@ -9,8 +9,9 @@ import {
   CarouselPrevious,
 } from '@/shared/components/ui/carousel'
 
-import { personas } from '../../design-system.fixtures'
-import { SampleCard } from '../Sample'
+import { personas } from '../../../design-system.fixtures'
+import type { CardEntry } from '../../../design-system.types'
+import { SampleCard } from '../../Sample'
 
 export function CarouselCard() {
   return (
@@ -35,3 +36,13 @@ export function CarouselCard() {
     </SampleCard>
   )
 }
+
+export const carouselCardEntry = {
+  id: 'carousel',
+  label: 'Carousel',
+  section: 'layers',
+  span: 3,
+  keywords:
+    'slides persona carousel AspectRatio Carousel CarouselContent CarouselItem CarouselNext CarouselPrevious',
+  View: CarouselCard,
+} satisfies CardEntry

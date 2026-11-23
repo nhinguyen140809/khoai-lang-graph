@@ -10,8 +10,9 @@ import {
   TimelineTitle,
 } from '@/shared/components/ui/timeline'
 
-import { timelineRows } from '../../design-system.fixtures'
-import { SampleCard } from '../Sample'
+import { timelineRows } from '../../../design-system.fixtures'
+import type { CardEntry } from '../../../design-system.types'
+import { SampleCard } from '../../Sample'
 
 /** The outline as the side panel of the activity draws it: a dot, the first line of the message as a button, and its time. */
 export function TimelineCard() {
@@ -39,3 +40,13 @@ export function TimelineCard() {
     </SampleCard>
   )
 }
+
+export const timelineCardEntry = {
+  id: 'timeline',
+  label: 'Outline',
+  section: 'content',
+  span: 3,
+  keywords:
+    'timeline outline steps Timeline TimelineDate TimelineHeader TimelineIndicator TimelineItem TimelineTitle',
+  View: TimelineCard,
+} satisfies CardEntry

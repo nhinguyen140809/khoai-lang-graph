@@ -2,27 +2,18 @@
 
 import { useState } from 'react'
 
-import { actCatalog, actKeys, Actor, type ActSize, actSizes } from '@/shared/components/act'
+import { actKeys, Actor, type ActSize, actSizes } from '@/shared/components/act'
 import { ToggleGroup, ToggleGroupItem } from '@/shared/components/ui/toggle-group'
 
-import { SampleCard, SampleGroup, SampleLabel } from '../Sample'
+import { personaSeed } from '../../../design-system.fixtures'
+import type { CardEntry } from '../../../design-system.types'
+import { SampleCard, SampleGroup } from '../../Sample'
 
 // What the page can play: each act alone, and a few of them one after another.
 const actChoices: Readonly<Record<string, readonly string[]>> = {
   'in turn': ['write', 'typing', 'question', 'review'],
   ...Object.fromEntries(actKeys.map((key) => [key, [key]])),
 }
-
-// Faces to give a mood to: the mood of work in general leaves the mood of the act, any other takes over.
-const moodSamples = [
-  { label: 'no mood given', mood: undefined },
-  { label: 'working', mood: 'working' },
-  { label: 'worried', mood: 'worried' },
-  { label: 'waiting', mood: 'waiting' },
-] as const
-
-// The persona that an interview talks to: its face comes from its role and its name.
-const personaSeed = 'respondent/Minh'
 
 export function ActsCard() {
   const [choice, setChoice] = useState('in turn')
@@ -76,34 +67,15 @@ export function ActsCard() {
           </div>
         </div>
       </SampleGroup>
-      <SampleGroup label="Every act, each with its own agent">
-        <div className="grid grid-cols-2 gap-x-6 gap-y-8 px-10 py-8 sm:grid-cols-3 lg:grid-cols-4">
-          {actCatalog.acts.map(({ key, title, description }) => (
-            <div key={key} className="flex flex-col items-start gap-10">
-              <Actor
-                seed={key}
-                size="xl"
-                acts={[key]}
-                {...(key === 'interview' && { partner: personaSeed })}
-              />
-              <div className="flex flex-col gap-0.5">
-                <SampleLabel>{title}</SampleLabel>
-                <SampleLabel className="opacity-70">{description}</SampleLabel>
-              </div>
-            </div>
-          ))}
-        </div>
-      </SampleGroup>
-      <SampleGroup label="The mood of the face: work in general leaves the mood of the act (thinking, for a hard problem), any other mood is kept">
-        <div className="flex flex-wrap items-end gap-x-14 gap-y-6 px-10 py-6">
-          {moodSamples.map(({ label, mood }) => (
-            <div key={label} className="flex flex-col items-start gap-4">
-              <Actor seed="validator" size="xl" acts={['analyze']} {...(mood && { mood })} />
-              <SampleLabel>{label}</SampleLabel>
-            </div>
-          ))}
-        </div>
-      </SampleGroup>
     </SampleCard>
   )
 }
+
+export const actsCardEntry = {
+  id: 'acts',
+  label: 'Acts',
+  section: 'agents',
+  span: 6,
+  keywords: 'act agent role Actor',
+  View: ActsCard,
+} satisfies CardEntry

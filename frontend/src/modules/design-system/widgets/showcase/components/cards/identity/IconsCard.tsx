@@ -11,6 +11,7 @@ import {
   CircleHelpIcon,
   CodeIcon,
   DownloadIcon,
+  DrawnDotIcon,
   type DrawnIconProps,
   EventListIcon,
   ForkNodesIcon,
@@ -39,7 +40,8 @@ import { Toggle } from '@/shared/components/ui/toggle'
 import { ToggleGroup, ToggleGroupItem } from '@/shared/components/ui/toggle-group'
 import { useClock } from '@/shared/lib/animation'
 
-import { SampleCard, SampleGroup, SampleLabel } from '../Sample'
+import type { CardEntry } from '../../../design-system.types'
+import { SampleCard, SampleGroup, SampleLabel } from '../../Sample'
 
 // The icons that a clock draws, by the name that the acts call them.
 const drawnIcons: readonly (readonly [string, ComponentType<DrawnIconProps>])[] = [
@@ -68,6 +70,7 @@ const drawnIcons: readonly (readonly [string, ComponentType<DrawnIconProps>])[] 
   ['text-right', TextRightIcon],
   ['typed-line', TypedLineIcon],
   ['ungroup', UngroupIcon],
+  ['drawn-dot', DrawnDotIcon],
   ['zip-file', ZipFileIcon],
 ]
 
@@ -247,3 +250,13 @@ function IconSample({ name, children }: { name: string; children: ReactNode }) {
     </li>
   )
 }
+
+export const iconsCardEntry = {
+  id: 'icons',
+  label: 'Icons',
+  section: 'identity',
+  span: 12,
+  keywords:
+    'icon lucide animated BarsIcon ChartSplineIcon CheckIcon CircleHelpIcon CodeIcon DotIcon DrawnDotIcon DownloadIcon EventListIcon ExclamationIcon ForkNodesIcon GanttChartIcon GlobeIcon KanbanIcon LaptopIcon LayersIcon LibraryIcon LinkIcon MessageSquareIcon NodesIcon PauseSolidIcon PenIcon SearchIcon SendIcon SpinningIcon TextCenterIcon TextLeftIcon TextRightIcon TypedLineIcon UngroupIcon ZapSolidIcon ZipFileIcon',
+  View: IconsCard,
+} satisfies CardEntry
