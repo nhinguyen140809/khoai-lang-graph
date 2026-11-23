@@ -102,7 +102,7 @@ async def get_project(
     db: deps.DbSession,
 ) -> schemas.ProjectSummary:
     """One project with the derived counts the project list shows."""
-    row = await service.get_project_row(db, project_id)
+    row = await service.get_project_row(db, project_id, UUID(str(user.id)))
     return await service.project_view(db, row)
 
 
@@ -115,7 +115,7 @@ async def update_project(
     _origin: Annotated[None, Depends(deps.check_origin)],
 ) -> schemas.ProjectSummary:
     """Change the name, description, status, run settings or model overrides of a project."""
-    row = await service.get_project_row(db, project_id)
+    row = await service.get_project_row(db, project_id, UUID(str(user.id)))
     await service.update_project(db, row, body)
     return await service.project_view(db, row)
 
@@ -128,7 +128,7 @@ async def delete_project(
     _origin: Annotated[None, Depends(deps.check_origin)],
 ) -> Response:
     """Soft delete a project; one with an unfinished run answers 409."""
-    row = await service.get_project_row(db, project_id)
+    row = await service.get_project_row(db, project_id, UUID(str(user.id)))
     await service.delete_project(db, row)
     return Response(status_code=204)
 
@@ -143,7 +143,11 @@ async def list_threads(
 ) -> Page[thread_schemas.ThreadSummary]:
     """The conversation of the project, newest message first (§5)."""
     views, next_cursor = await thread_service.list_threads(
-        db, project_id=project_id, cursor=cursor, limit=limit
+        db,
+        project_id=project_id,
+        owner_id=UUID(str(user.id)),
+        cursor=cursor,
+        limit=limit,
     )
     return Page(items=views, next_cursor=next_cursor)
 
@@ -158,7 +162,10 @@ async def create_thread(
 ) -> thread_schemas.ThreadSummary:
     """Create the empty conversation; 201 + Location (§5)."""
     row = await thread_service.create_thread(
-        db, project_id=project_id, created_by=UUID(str(user.id))
+        db,
+        project_id=project_id,
+        owner_id=UUID(str(user.id)),
+        created_by=UUID(str(user.id)),
     )
     response.headers["Location"] = f"/api/v1/threads/{row.id}"
     return await thread_service.thread_view(db, row)
@@ -189,7 +196,7 @@ async def update_thread(
     _origin: Annotated[None, Depends(deps.check_origin)],
 ) -> thread_schemas.ThreadSummary:
     """Change the title or the status of a thread."""
-    row = await thread_service.get_thread_row(db, thread_id)
+    row = await thread_service.get_thread_row(db, thread_id, UUID(str(user.id)))
     await thread_service.update_thread(db, row, body)
     return await thread_service.thread_view(db, row)
 
@@ -202,7 +209,7 @@ async def delete_thread(
     _origin: Annotated[None, Depends(deps.check_origin)],
 ) -> Response:
     """Soft delete a thread; one with an unfinished run answers 409."""
-    row = await thread_service.get_thread_row(db, thread_id)
+    row = await thread_service.get_thread_row(db, thread_id, UUID(str(user.id)))
     await thread_service.delete_thread(db, row)
     return Response(status_code=204)
 
@@ -214,5 +221,5 @@ async def get_thread(
     db: deps.DbSession,
 ) -> thread_schemas.ThreadSummary:
     """One thread, with its unfinished run and the status of its latest run."""
-    row = await thread_service.get_thread_row(db, thread_id)
+    row = await thread_service.get_thread_row(db, thread_id, UUID(str(user.id)))
     return await thread_service.thread_view(db, row)

@@ -93,6 +93,7 @@ Every list endpoint uses cursor pagination and the same envelope.
 | Request | `?limit=` (default 50, maximum 200) and `?cursor=` (opaque string from the previous page) |
 | Response | `{ "items": [...], "next_cursor": "..." }`; `next_cursor` is `null` on the last page |
 | Order | Stated per endpoint and stable; ties are broken by `id` |
+| Cursor | The cursor is opaque and, in this build, stands for a position in the list rather than a key of the last item. A row inserted or removed between two pages can therefore move an item across the boundary: a client that pages while writing should reload from the first page instead of trusting the next one |
 | Filters | Query parameters named after the field, for example `?kind=spec_requirement&review_status=draft`. A filter given several times matches any of its values, for example `?rollup_run_status=interrupted&rollup_run_status=failed`. A filter on a time is the name of the field with `_after` and an ISO 8601 time, and keeps the items after that time, for example `?last_activity_after=2026-10-15T00:00:00Z` |
 
 ### Errors
@@ -129,6 +130,20 @@ Errors use the Problem Details format (RFC 9457) with media type `application/pr
 | 429 | `budget_exceeded` | The monthly budget of the user is reached; the request would start or continue LLM work |
 | 502 | `provider_error` | The LLM provider failed and the fallback also failed |
 | 500 | `internal_error` | Anything else |
+
+A run that fails stores a code of its own in `run.error.code` and sends it in the `error` event.
+These never arrive as an HTTP response, because the run executes after the request that started it
+has answered.
+
+| `run.error.code` | When |
+|---|---|
+| `node_failed` | A node raised an error that is not one of the limits below |
+| `provider_error` | The LLM provider failed, after the retries and the fallback models of the role |
+| `step_limit_exceeded` | The run reached its maximum number of steps |
+| `cost_limit_exceeded` | The next LLM call would exceed the cost limit of the run |
+| `budget_exceeded` | The next LLM call would exceed the monthly budget of the user |
+| `timeout` | A node or a tool took longer than its time limit |
+| `server_restarted` | The API process stopped while the run was in a step |
 
 ### Concurrent edits
 
@@ -259,6 +274,8 @@ Usage of the current month, `GET /me/usage?group_by=project`:
 
 `GET /workflow/definition` returns one version of the workflow definition: the graph, the names a run may store, the checkpoints with their options and questions, and the schemas of the run parameters and of the workflow state. The web app draws the graph, the stages, the reviews and the run settings from it, and the backend checks every name a run stores against it.
 
+`GET /workflow/acts` returns the acts a client may show around the face of an agent while it works, so a client reads them from the API instead of carrying a copy that drifts. `acts` holds one entry for each act, with its `key`, its `title` and a sentence about the animation; `keys_by_stage` and `keys_by_tool` give the acts that each stage and each tool names, which is what a client plays for the step it is drawing. A tool's acts replace the acts of its stage while a use of the tool runs.
+
 The response is a definition file as described in [Workflow definitions](workflow/README.md), valid against [`definition.schema.json`](workflow/definition.schema.json). Version 1 is written out in full in [`requirements_engineering.v1.json`](workflow/requirements_engineering.v1.json). An excerpt, where `"...": "..."` stands for the rest of the definition:
 
 ```json
@@ -289,7 +306,7 @@ Rules:
 {
   "run_id": "5f2d...",
   "step_id": "e9d1...",
-  "workflow_version": 1,
+  "workflow_version": 2,
   "values": {
     "current_stage": "interviewing",
     "active_persona_index": 1,
@@ -375,7 +392,7 @@ Response `201`:
     "number": 1,
     "status": "queued",
     "workflow_name": "requirements_engineering",
-    "workflow_version": 1,
+    "workflow_version": 2,
     "current_stage": "planning",
     "last_event_id": 0
   }
@@ -389,6 +406,7 @@ Response `201`:
 | Method and path | Purpose | Phase |
 |---|---|---|
 | `GET /threads/{thread_id}/runs` | Runs of a thread; ordered by `created_at` descending | MVP |
+| `POST /threads/{thread_id}/runs` | **Compatibility shim**, not part of this contract: body `{ "input": "..." }`, answer `{ "run_id": "..." }`. It starts a run from the text exactly as `POST /threads/{thread_id}/messages` does, for a client that still speaks the older wire. New clients use the messages endpoint | — |
 | `GET /runs/{run_id}` | Number in the thread, status, stage, iteration, step count, usage, error, `workflow_name`, `workflow_version`, `last_event_id`. The status transitions are listed in [Runtime: lifecycle](architecture/runtime.md#3-lifecycle) | MVP |
 | `GET /runs/{run_id}/steps` | Run steps; ordered by `sequence`. A step also carries its `notes` ([StepNote](DATA_SHAPE.md#stepnote-later)) | MVP |
 | `GET /runs/{run_id}/state` | The current workflow state of the run, see [workflow state](#workflow-state) | MVP |
@@ -410,7 +428,7 @@ Run body, `GET /runs/5f2d...`, while the run waits at the analysis review. It is
   "number": 3,
   "started_by": "11b7...",
   "workflow_name": "requirements_engineering",
-  "workflow_version": 1,
+  "workflow_version": 2,
   "status": "interrupted",
   "current_stage": "analysis_review",
   "iteration_count": 0,
@@ -420,7 +438,7 @@ Run body, `GET /runs/5f2d...`, while the run waits at the analysis review. It is
     "output_language": "en",
     "max_steps": 80,
     "max_cost_usd": 2.0,
-    "parameters": { "target_personas_num": 3, "max_personas": 3, "max_turns": 12, "max_iterations": 2 }
+    "parameters": { "target_personas_num": 3, "max_turns": 12, "max_iterations": 2, "target_sources_num": 3 }
   },
   "retry_of_run_id": "4c18...",
   "error": null,
@@ -607,12 +625,12 @@ An interrupt can ask several questions of different types and is answered at onc
 {
   "id": "8c1d...",
   "step_id": "e1b4...",
-  "node": "clarify_intent",
+  "node": "ask_message",
   "prompt": "Before I plan the interviews, tell me who will use the platform and what the first version must take care of.",
   "options": [],
   "questions": [
     {
-      "key": "users", "type": "multi_select", "prompt": "Who uses the platform in their day, so the interviews ask the right people?", "required": true,
+      "key": "users", "type": "multi_select", "prompt": "Who uses the platform in their day, so the interviews ask the right people?", "required": false,
       "choices": [
         { "key": "students", "label": "Students", "requires_text": false },
         { "key": "mentors", "label": "Mentors", "requires_text": false },
@@ -623,7 +641,7 @@ An interrupt can ask several questions of different types and is answered at onc
       "source": "agent"
     },
     {
-      "key": "payments", "type": "single_select", "prompt": "Should the first version already take payments, or is a free pilot enough?", "required": true,
+      "key": "payments", "type": "single_select", "prompt": "Should the first version already take payments, or is a free pilot enough?", "required": false,
       "choices": [
         { "key": "yes", "label": "Yes", "requires_text": false },
         { "key": "no", "label": "No", "requires_text": false }
@@ -753,7 +771,7 @@ Kinds and their schemas, `GET /artifact-kinds`. The display name of a kind is th
 
 ```json
 {
-  "workflow_version": 1,
+  "workflow_version": 2,
   "artifact_kinds": [
     {
       "kind": "requirement_specification",
@@ -983,7 +1001,7 @@ Rules:
 
 | Method and path | Purpose | Phase |
 |---|---|---|
-| `POST /projects/{project_id}/exports` | Request a document; body `template`, `format`. The template is one of the export templates of the current workflow definition version, and the format one of its formats, otherwise `422 validation_failed`. `202` | MVP |
+| `POST /projects/{project_id}/exports` | Create a document; body `template`, `format`. The template is one of the export templates of the current workflow definition version, and the format one of its formats, otherwise `422 validation_failed`. The file is rendered during the request, so the export answers already `ready`. `201` | MVP |
 | `GET /projects/{project_id}/exports` | Exports of a project; ordered by `created_at` descending | MVP |
 | `GET /exports/{export_id}` | Status; when `ready`, includes `download_url`, valid for a limited time | MVP |
 | `GET /exports/{export_id}/file` | The file of a ready export, as a download; the address that `download_url` gives. `404` while the export is not ready | MVP |

@@ -121,7 +121,7 @@ The entities are grouped into six areas. An area is a group that changes togethe
 | Settings | UserSettings, ModelSettings, ModelCatalogEntry, ProviderCredential | MVP: first three. Later: ProviderCredential |
 | Workspace | Project, ProjectMember, SourceDocument, DocumentVersion, DocumentChunk | MVP: Project, SourceDocument, DocumentVersion. Later: the other two |
 | Conversation and execution | Thread, Message, Run, RunStep, RunEvent, Interrupt, HumanDecision, Directive | MVP |
-| Requirements engineering artifacts | Artifact (7 kinds), ArtifactItem (12 kinds), ItemEmbedding | MVP: Artifact, ArtifactItem. Later: ItemEmbedding |
+| Requirements engineering artifacts | Artifact (7 kinds in version 1, 8 in version 2), ArtifactItem (12, 14), ItemEmbedding | MVP: Artifact, ArtifactItem. Later: ItemEmbedding |
 | Cross-cutting | ArtifactRevision, ItemRevision, TraceLink, Comment, Export, ActivityEvent, Notification | MVP: ArtifactRevision, ItemRevision, TraceLink, Export. Later: the other three |
 
 ### Ownership hierarchy
@@ -437,11 +437,12 @@ Value object stored on each Run: the complete configuration the run uses, resolv
 | Field | Type | Notes |
 |---|---|---|
 | `target_personas_num` | int | How many personas to generate |
-| `max_personas` | int | Upper bound on personas interviewed |
 | `max_turns` | int | Upper bound on question and answer turns per persona |
 | `max_iterations` | int | Upper bound on rework loops |
 
-Deck: `target_personas_num`, `max_turn`, `max_personas`. The deck also has `iteration_count` in the state, which `max_iterations` bounds.
+Deck: `target_personas_num`, `max_turn`. The deck also has `iteration_count` in the state, which `max_iterations` bounds.
+
+Version 2 adds `target_sources_num` and drops `max_personas`: the parameter was declared but no node read it, so it was removed rather than left looking enforced. A run config stored before the removal still parses, because the backend drops the retired key on read.
 
 ### RunDefaults (MVP)
 
@@ -664,6 +665,8 @@ The output of the workflow has two levels, modeled as two separate entities.
 In this document "artifact" always means the upper level and "item" the lower level.
 
 In workflow definition version 1, `ArtifactKind` is the set of 7 kinds in this table, and `ItemKind` the set of 12 kinds: the 11 in this table, each of which belongs to exactly one artifact kind, plus `section`, which groups items inside any artifact kind with items except `interview_transcript`, see [sections and nesting](#sections-and-nesting).
+
+Version 2, which is the definition the backend serves, keeps every name above and adds three: the artifact kind `research_corpus` and the item kinds `source_document` and `stakeholder_observation`. That makes 8 artifact kinds and 14 item kinds, and adds the link type `grounded_in` for a persona built on an observation. The schemas of the three new kinds are in [schemas/](schemas/); the tables below still describe version 1.
 
 | Artifact kind | Per project | Item kinds inside | Produced by |
 |---|---|---|---|

@@ -47,6 +47,9 @@ class Settings(BaseSettings):
     # web app is served by Next.js on :3000, which proxies /api here, so the
     # application origin is the frontend's; production sets its own list.
     csrf_allowed_origins: list[str] = ["http://localhost:3000"]
+    # The session cookie is HTTPS-only when true. False keeps plain `http://localhost` working in
+    # development; a deployment behind TLS sets SESSION_COOKIE_SECURE=true.
+    session_cookie_secure: bool = False
     log_level: str = "INFO"
     log_format: str = "console"
     # The model profiles file (defaults, role mapping, allowlist) for the llm layer.

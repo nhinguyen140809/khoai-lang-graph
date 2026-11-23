@@ -120,7 +120,11 @@ A property of `run_parameters_schema` may carry the keyword `x-ui-audience`, whi
 
 ## 5. Where the definition lives in the code
 
-These files are the specification until the backend exists. After that the source is `agents/<graph_name>/definition.py`, next to the graph, and each file here is exported from it.
+**These files are the source.** The backend carries a copy of each published version in
+`backend/src/khoailanggraph/agents/requirements_engineering/definition.v<N>.json`, and
+`backend/scripts/sync_from_docs.py` copies them there after a change here; `tests/test_schema_parity.py`
+fails when the two differ. `definition.py` beside the graph reads the copy and offers the accessors
+that the workflow uses, so the code never re-declares a name that a file here holds.
 
 | Part | Source in the code |
 |---|---|

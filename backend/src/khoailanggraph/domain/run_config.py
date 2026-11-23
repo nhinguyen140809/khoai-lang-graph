@@ -11,7 +11,15 @@ from __future__ import annotations
 
 from typing import Literal
 
-from pydantic import BaseModel, ConfigDict, Field
+from pydantic import BaseModel, ConfigDict, Field, model_validator
+
+# Parameters that a run stored before their removal still carries. They are dropped on read, so
+# that such a run can still be resumed or retried; nothing reads their value.
+RETIRED_PARAMETERS = frozenset({"max_personas"})
+
+# The step limit of a run that nothing else sets. One number for the model, the resolver and the
+# executor, so a run cannot be bounded by two different limits.
+DEFAULT_MAX_STEPS = 80
 
 
 class RunParameters(BaseModel):
@@ -21,9 +29,16 @@ class RunParameters(BaseModel):
 
     target_sources_num: int = Field(default=3, ge=1, le=10)
     target_personas_num: int = Field(default=3, ge=1, le=10)
-    max_personas: int = Field(default=3, ge=1, le=10)
     max_turns: int = Field(default=6, ge=1, le=20)
     max_iterations: int = Field(default=2, ge=0, le=5)
+
+    @model_validator(mode="before")
+    @classmethod
+    def _drop_retired(cls, value: object) -> object:
+        """A run config written before a parameter was removed still parses."""
+        if not isinstance(value, dict):
+            return value
+        return {name: item for name, item in value.items() if name not in RETIRED_PARAMETERS}
 
 
 class RunConfig(BaseModel):
@@ -34,6 +49,6 @@ class RunConfig(BaseModel):
     models: dict[str, str]
     review_checkpoints: list[str]
     output_language: Literal["en", "vi"] = "en"
-    max_steps: int = Field(default=80, ge=1)
+    max_steps: int = Field(default=DEFAULT_MAX_STEPS, ge=1)
     max_cost_usd: float | None = None
     parameters: RunParameters = Field(default_factory=RunParameters)

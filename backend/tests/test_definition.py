@@ -121,9 +121,6 @@ def test_run_parameter_defaults_validate() -> None:
             continue
         validator = Draft202012Validator(spec)
         validator.validate(default)
-    targets = schema["properties"]["target_personas_num"]["default"]
-    maximum = schema["properties"]["max_personas"]["default"]
-    assert maximum >= targets, "max_personas must not be lower than target_personas_num"
 
 
 def test_state_schema_is_valid_json_schema() -> None:

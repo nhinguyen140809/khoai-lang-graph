@@ -38,6 +38,7 @@ from khoailanggraph.agents.requirements_engineering import review, routing
 from khoailanggraph.agents.requirements_engineering.graph import build_re_graph
 from khoailanggraph.agents.requirements_engineering.ports import RunLimitError
 from khoailanggraph.agents.requirements_engineering.state import REState, make_initial_state
+from khoailanggraph.domain.run_config import DEFAULT_MAX_STEPS
 from khoailanggraph.features.artifacts.models import ArtifactRow
 from khoailanggraph.features.artifacts.service import SqlArtifactSink
 from khoailanggraph.features.documents.service import sync_latest_texts
@@ -595,7 +596,7 @@ class RunWalker:
     def _graph_config(self) -> dict[str, Any]:
         engine = self.engine
         return {
-            "recursion_limit": max(int(self.config.get("max_steps", 400)) * 2, 50),
+            "recursion_limit": max(int(self.config.get("max_steps", DEFAULT_MAX_STEPS)) * 2, 50),
             "configurable": {
                 "run_id": str(self.run.id),
                 "artifact_sink": self.sink,
@@ -723,7 +724,7 @@ class RunWalker:
             return "stop"
         if node != "intent_router" and self._pending_messages():
             return "router"
-        if self.run.step_count >= int(self.config.get("max_steps", 400)):
+        if self.run.step_count >= int(self.config.get("max_steps", DEFAULT_MAX_STEPS)):
             self.failure = (
                 "step_limit_exceeded",
                 f"The run reached its limit of {self.config.get('max_steps')} steps.",

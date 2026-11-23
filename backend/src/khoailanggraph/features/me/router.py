@@ -9,6 +9,7 @@ from fastapi import APIRouter, Depends, Request, Response
 from khoailanggraph.api import deps
 from khoailanggraph.api.errors import ApiError
 from khoailanggraph.features.me import schemas, service
+from khoailanggraph.settings import get_settings as get_app_settings
 
 router = APIRouter()
 
@@ -20,7 +21,7 @@ def _set_session_cookie(response: Response, token: str) -> None:
         value=token,
         httponly=True,
         samesite="lax",
-        secure=False,  # secure=True in production (HTTPS), see settings
+        secure=get_app_settings().session_cookie_secure,
         path="/",
     )
 

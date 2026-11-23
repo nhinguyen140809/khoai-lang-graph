@@ -79,6 +79,7 @@ from khoailanggraph.agents.requirements_engineering.ports import (
     ItemRecord,
     LlmGate,
     RunLimitError,
+    StaleItemError,
 )
 from khoailanggraph.agents.requirements_engineering.state import ArtifactRef, REState
 from khoailanggraph.agents.requirements_engineering.views import (
@@ -477,7 +478,7 @@ def _quotes_of(reference: LinkRef | MessageLink) -> tuple[str | None, str | None
     return reference.source_quote, reference.target_quote
 
 
-def _held_quote(
+def _required_quote(
     sink: ArtifactSink,
     side: str,
     quote: str | None,
@@ -485,8 +486,12 @@ def _held_quote(
     link_type: str,
     item_id: str,
 ) -> str | None:
-    """A quote that the quote rules accept, else none: a model that does not copy the words
-    exactly still links the items, without the words (logged)."""
+    """A quote that the quote rules accept; one that does not fails the node.
+
+    A quote must be copied word for word from a text field of the item it quotes. An evidence link
+    whose words drifted says less than it appears to, so it is refused the same way a persona that
+    alters its evidence is refused: the run stops instead of keeping a link nobody can check.
+    """
     if quote is None:
         return None
     item = sink.read_item(item_id)
@@ -499,15 +504,11 @@ def _held_quote(
         content=item["content"],
     )
     if violations:
-        logger.warning(
-            "link quote dropped",
-            link_type=link_type,
-            side=side,
-            item=item["key"],
-            reason=violations[0].message,
-            quote=quote[:80],
+        msg = (
+            f"the {side} quote of {link_type} is not the words of {item['key']}: "
+            f"{violations[0].message}"
         )
-        return None
+        raise ValueError(msg)
     return quote
 
 
@@ -527,10 +528,10 @@ def _link_each(
             source_id=source_id,
             target_id=target["item_id"],
             link_type=link_type,
-            source_quote=_held_quote(
+            source_quote=_required_quote(
                 sink, "source", source_quote, link_type=link_type, item_id=source_id
             ),
-            target_quote=_held_quote(
+            target_quote=_required_quote(
                 sink, "target", target_quote, link_type=link_type, item_id=target["item_id"]
             ),
         )
@@ -1003,7 +1004,7 @@ def stakeholder_miner_node(
                 source_id=item["item_id"],
                 target_id=record["item_id"],
                 link_type="evidenced_by",
-                target_quote=_held_quote(
+                target_quote=_required_quote(
                     sink,
                     "target",
                     str(mined.evidence),
@@ -1359,9 +1360,30 @@ def _ask_interviewer(
                 _decisions_of(state, "checkpoint_personas"),
                 _directive_for(state, config, "checkpoint_analysis"),
             ),
+            "open_assumptions": open_assumptions_lines(sink, state),
         },
     )
     return turn
+
+
+def open_assumptions_lines(sink: ArtifactSink, state: REState) -> str:
+    """The assumptions the analysis took as true and nobody confirmed, one line each.
+
+    The interviewer reads them, so that a round of interviews closes an assumption with the
+    person who could settle it instead of leaving it unconfirmed for the whole project.
+    """
+    analysis = sink.read_artifact(state["project_id"], "requirements_analysis")
+    if analysis is None:
+        return ""
+    lines = [
+        f"{entry['key']} {entry['content'].get('statement', '')} "
+        f"To confirm: {entry['content'].get('validation_plan', '')}"
+        for entry in sink.read_items(analysis["artifact_id"])
+        if entry["kind"] == "assumption"
+        and str(entry["content"].get("validation_status")) == "unverified"
+        and str(entry["content"].get("validation_plan", "")).strip()
+    ]
+    return "\n".join(lines)
 
 
 def data_items_of(state: REState, sink: ArtifactSink) -> list[str]:
@@ -1590,16 +1612,43 @@ def _coverage_of(
     return [{"data": item, "covered": item in covered} for item in data_items]
 
 
+ITEM_WRITE_ATTEMPTS = 3
+
+
 def _record_what_the_last_answer_gave(
     sink: ArtifactSink, messages: Sequence[ItemRecord], turn: InterviewerTurnOutput
 ) -> None:
     """The interviewer judged what the last answer of the persona told: it is written on that
-    message, which the persona never reads."""
+    message, which the persona never reads.
+
+    Another run of the project may write the same message in between, so the write carries the
+    version it read and is tried again with a fresh read; a message that keeps moving fails the run
+    with `item_conflict` (runtime.md §6).
+    """
     if not messages or messages[-1]["content"]["speaker"] == INTERVIEWER_KEY:
         return
-    last = messages[-1]
-    sink.update_item_content(
-        str(last["item_id"]), {**last["content"], "covers": list(turn.covered_by_last_answer)}
+    answer_id = str(messages[-1]["item_id"])
+    current = messages[-1]
+    for attempt in range(ITEM_WRITE_ATTEMPTS):
+        current = sink.read_item(answer_id)
+        try:
+            sink.update_item_content(
+                answer_id,
+                {**current["content"], "covers": list(turn.covered_by_last_answer)},
+                reason="generated",
+                by_user=False,
+                expected_version=int(current["version"]),
+            )
+            return
+        except StaleItemError:
+            logger.warning(
+                "item changed while the step wrote it",
+                item=current["key"],
+                attempt=attempt + 1,
+            )
+    raise RunLimitError(
+        "item_conflict",
+        f"{current['key']} kept changing while the step wrote it",
     )
 
 
@@ -2003,7 +2052,27 @@ def analyst_node(
         content: dict[str, Any],
         slot: str,
     ) -> dict[str, Any]:
-        item = dict(sink.add_item(artifact_id, kind, content, ref=draft.ref))
+        """Write one item of the response, or rewrite one the analysis already holds.
+
+        The prompt asks the model to name an item it already wrote by its key when it only changes
+        a lifecycle field; that is an update of that item, never a second copy of it.
+        """
+        existing = current_keys.get(str(draft.ref))
+        if existing is not None and str(existing["kind"]) == kind:
+            try:
+                item = dict(
+                    sink.update_item_content(
+                        str(existing["item_id"]),
+                        content,
+                        reason="rework",
+                        by_user=False,
+                        expected_version=int(str(existing["version"])),
+                    )
+                )
+            except StaleItemError as exc:
+                raise RunLimitError("item_conflict", str(exc)) from exc
+        else:
+            item = dict(sink.add_item(artifact_id, kind, content, ref=draft.ref))
         known[str(draft.ref)] = item
         known[str(item["key"])] = item
         refs[slot].append(item)

@@ -40,17 +40,20 @@ def _now() -> datetime:
     return datetime.now(UTC)
 
 
-async def get_project_row(session: AsyncSession, project_id: UUID) -> ProjectRow:
-    """The project row or a 404 Problem (the one answer for missing ids)."""
+async def get_project_row(session: AsyncSession, project_id: UUID, owner_id: UUID) -> ProjectRow:
+    """The project row of this owner, or a 404 Problem.
+
+    A project of another user answers exactly like a missing one, so an id cannot be used to learn
+    that the project exists (docs/API.md §3).
+    """
     row = await session.get(ProjectRow, project_id)
-    if row is None or row.deleted_at is not None:
+    if row is None or row.deleted_at is not None or row.owner_id != owner_id:
         raise ApiError(404, "not_found", "Not found", "The project does not exist.")
     return row
 
 
 async def _item_counts(session: AsyncSession, project_id: UUID) -> dict[str, int]:
-    """Grouped live item counts of one project, censoring zero-sized keys? No—
-    zero-sized keys stay (breaks nothing in TS; keeps the bootstrap cheap)."""
+    """Grouped live item counts of one project, one entry for each kind present."""
     statement = (
         select(ArtifactItemRow.kind, func.count())
         .where(

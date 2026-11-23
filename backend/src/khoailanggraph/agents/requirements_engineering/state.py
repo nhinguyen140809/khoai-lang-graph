@@ -1,4 +1,4 @@
-"""The workflow state of the requirements engineering graph (v1 state_schema).
+"""The workflow state of the requirements engineering graph (the state_schema of version 2).
 
 The state keeps *references*, not copies: every artifact and item appears at
 the version the step used, as an ArtifactRef or ItemRef; the content lives in

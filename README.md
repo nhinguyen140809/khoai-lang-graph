@@ -22,8 +22,12 @@
 </div>
 
 > [!NOTE]
-> **Status: Planning.** This README describes the *target* setup. Items marked TODO and sections marked (planned) are not implemented yet.
-> "Khoailanggraph" is a working name. See [`docs/PLANNING.md`](docs/PLANNING.md) for decisions and open questions.
+> **Status: working.** The backend, the web app and the Docker Compose stack run, and the test
+> suites pass. Where this README still describes a *target* setup, it says so: the roadmap below
+> lists what is not built, and [`docs/PLANNING.md`](docs/PLANNING.md) keeps the decisions and the
+> open questions. What is accurate today lives in [`backend/README.md`](backend/README.md),
+> [`frontend/README.md`](frontend/README.md) and [`docs/`](docs/).
+> "Khoailanggraph" is a working name.
 
 ---
 

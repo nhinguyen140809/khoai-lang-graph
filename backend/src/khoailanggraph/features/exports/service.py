@@ -179,10 +179,13 @@ async def list_exports(
     )
 
 
-async def get_export_row(session: AsyncSession, export_id: UUID) -> ExportRow:
+async def get_export_row(session: AsyncSession, export_id: UUID, owner_id: UUID) -> ExportRow:
+    """The export row of this owner; an export of another user answers like a missing one."""
     row = await session.get(ExportRow, export_id)
     project = None if row is None else await session.get(ProjectRow, row.project_id)
     if row is None or project is None or project.deleted_at is not None:
+        raise ApiError(404, "not_found", "Not found", "The export does not exist.")
+    if project.owner_id != owner_id:
         raise ApiError(404, "not_found", "Not found", "The export does not exist.")
     return row
 

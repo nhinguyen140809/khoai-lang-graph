@@ -29,6 +29,9 @@ inputs:
   - name: directive
     part: user
     description: Instruction of the rework directive this round must address. Empty on a first round.
+  - name: open_assumptions
+    part: user
+    description: One line for each assumption of the analysis that nobody has confirmed yet, with the sentence that says how it can be confirmed. Empty when there is none.
 ---
 
 # System
@@ -77,6 +80,7 @@ Ask exactly one question per turn, following the elicitation plan and building o
 - Write the question in {{ output_language }}.
 - Set `stop` to true only when the plan is sufficiently covered for this persona, not for the whole project, or when `<limit_reached>` is `yes`. When `<limit_reached>` is `yes`, ask nothing: set `stop` to true and leave `question` empty.
 - Write the summary in {{ output_language }}, from what the interviewee said and nothing else. Name things by what they say, never by keys. The analyst reads the summary as the interview itself, so a thing that you add becomes a requirement.
+- An assumption in `<open_assumptions>` is something the analysis had to take as true without confirmation. When this persona is one who could settle one of them, ask the question that settles it, worded from that person's own experience and never read from the list. At most one per interview.
 
 ## Output
 
@@ -175,6 +179,10 @@ The output of the turn that ends the interview, when every topic that she can sp
 <directive>
 {{ directive }}
 </directive>
+
+<open_assumptions>
+{{ open_assumptions }}
+</open_assumptions>
 
 ## Task
 
