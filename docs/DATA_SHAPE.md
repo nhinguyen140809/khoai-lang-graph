@@ -800,7 +800,7 @@ One current plan per project. The plan is an artifact with no items; the fields 
 | `data_to_collect` | { topic, needed[] }[] | For each topic, the concrete data an interview must bring back before the topic counts as covered, such as how often the person does it or what they do when it fails. The interviewer checks it to know that it has enough |
 | `opening_questions` | string[] | Two to four open questions that an interview can start with, with one thing in each and none that leads the answer |
 | `information_gaps` | string[] | For example "how students judge mentor quality" |
-| `stakeholder_types` | string[] | For example "Student", "Mentor", "Administrator" |
+| `stakeholder_types` | string[] | The types of stakeholder to interview, each a name of at most four words (40 characters at most), such as "Student", "Mentor", "Library staff"; a longer name is refused when the plan is written |
 | `persona_aspects` | { key, title, description, low, high }[] | The second tier of the [persona aspects](#persona-aspects): up to four aspects that the planner proposes for this project |
 | `strategies` | string[] | How to ask: question styles and techniques |
 | `stopping_conditions` | string[] | When the interviews have gathered enough. Each condition names what must be known, so that it can be checked |
