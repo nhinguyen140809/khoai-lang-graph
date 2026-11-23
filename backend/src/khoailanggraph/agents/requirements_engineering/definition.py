@@ -75,6 +75,18 @@ def act_catalog() -> dict[str, dict[str, Any]]:
     return {str(entry["key"]): entry for entry in catalog["acts"]}
 
 
+def command_catalog() -> dict[str, dict[str, Any]]:
+    """The commands the assistant may ask a client to run, keyed by command.
+
+    `needs` says what is checked before a command leaves: `none`, a document (`artifact`) or an item
+    (`item`) of the project, or a `review` that waits for the user.
+    """
+    catalog = json.loads(
+        (resources.files(_PACKAGE) / "commands.catalog.json").read_text(encoding="utf-8")
+    )
+    return {str(entry["key"]): entry for entry in catalog["commands"]}
+
+
 def tools() -> dict[str, dict[str, Any]]:
     """The tools of the definition, keyed by tool. A definition may have none."""
     return {str(entry["key"]): entry for entry in DEFINITION.get("tools", [])}

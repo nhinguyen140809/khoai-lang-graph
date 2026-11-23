@@ -166,3 +166,19 @@ def test_a_stage_with_acts_is_not_internal() -> None:
     for stage in wf.DEFINITION["stages"]:
         if stage["internal"]:
             assert not stage.get("acts"), stage["key"]
+
+
+def test_command_catalog_keys_are_unique_described_and_checked() -> None:
+    catalog = json.loads(
+        (
+            resources.files("khoailanggraph.agents.requirements_engineering")
+            / "commands.catalog.json"
+        ).read_text(encoding="utf-8")
+    )
+    keys = [entry["key"] for entry in catalog["commands"]]
+    assert keys, "the catalog holds no command"
+    assert len(keys) == len(set(keys))
+    for entry in catalog["commands"]:
+        assert entry["title"].strip(), entry["key"]
+        assert entry["description"].strip(), entry["key"]
+        assert entry["needs"] in {"none", "artifact", "item", "review"}, entry["key"]
