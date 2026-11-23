@@ -24,7 +24,7 @@ import { RowButton } from './RowButton'
 
 interface RefLinksProps {
   message: {
-    artifact_refs: { artifact_id: string; title: string; version: number }[]
+    artifact_refs: { artifact_id: string; kind: string; title: string; version: number }[]
     item_refs: { item_id: string; key: string; version: number }[]
   }
 }
@@ -36,9 +36,10 @@ interface RefLinksProps {
  */
 export function RefLinks({ message }: RefLinksProps) {
   const references: Reference[] = [
-    ...message.artifact_refs.map(({ artifact_id, title, version }): Reference => ({
+    ...message.artifact_refs.map(({ artifact_id, kind, title, version }): Reference => ({
       type: 'artifact',
       id: artifact_id,
+      kind,
       title,
       version,
     })),
