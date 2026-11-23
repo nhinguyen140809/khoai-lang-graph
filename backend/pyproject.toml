@@ -168,6 +168,7 @@ ignore_imports = [
     "khoailanggraph.features.runs.router -> khoailanggraph.api.idempotency",
     "khoailanggraph.features.runs.router -> khoailanggraph.api.schemas",
     "khoailanggraph.features.runs.service -> khoailanggraph.api.errors",
+    "khoailanggraph.features.threads.sequence -> khoailanggraph.api.errors",
     "khoailanggraph.features.threads.service -> khoailanggraph.api.errors",
 ]
 
