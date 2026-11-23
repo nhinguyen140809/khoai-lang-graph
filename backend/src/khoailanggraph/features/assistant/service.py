@@ -24,7 +24,7 @@ from sqlalchemy import select
 from khoailanggraph.agents import prompts as prompt_loader
 from khoailanggraph.agents import workflows
 from khoailanggraph.agents.assistance import definition as assistance
-from khoailanggraph.agents.requirements_engineering import definition as workflow
+from khoailanggraph.agents.shared import catalogs
 from khoailanggraph.features.artifacts.models import ArtifactItemRow, ArtifactRow
 from khoailanggraph.features.assistant.models import AssistantTurnRow
 from khoailanggraph.features.assistant.schemas import (
@@ -133,7 +133,7 @@ def _command_lines() -> str:
     """The commands the client can run, one line each, as the model reads them."""
     return "\n".join(
         f"- `{key}` (needs {entry['needs']}): {entry['description']}"
-        for key, entry in workflow.command_catalog().items()
+        for key, entry in catalogs.command_catalog().items()
     )
 
 
@@ -145,7 +145,7 @@ async def _kept_commands(
     What each need checks is one entry of `_CHECKS`, keyed by the `needs` of the catalog, so a
     command that needs something already checked is a line of the catalog and nothing here.
     """
-    catalog = workflow.command_catalog()
+    catalog = catalogs.command_catalog()
     documents = await _documents(session, project)
     known = {entry["id"] for entry in documents}
     kept: list[AssistantCommand] = []

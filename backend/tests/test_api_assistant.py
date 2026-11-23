@@ -17,7 +17,7 @@ from httpx import ASGITransport, AsyncClient
 
 import khoailanggraph.llm.factory as llm_factory
 from khoailanggraph.agents import prompts as prompt_loader
-from khoailanggraph.agents.requirements_engineering import definition as workflow
+from khoailanggraph.agents.shared import catalogs
 from khoailanggraph.features.artifacts.models import ArtifactItemRow, ArtifactRow
 from khoailanggraph.features.assistant.service import (
     ASSISTANT_PROMPT_VERSION,
@@ -232,7 +232,7 @@ async def test_the_prompt_lists_the_commands_of_the_catalog(
         await _send(client, thread_id, TASK)
 
     seen = "\n".join(SEEN)
-    for key in workflow.command_catalog():
+    for key in catalogs.command_catalog():
         assert f"`{key}`" in seen, f"the prompt does not list the command {key}"
 
 

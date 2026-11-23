@@ -4,7 +4,7 @@ The committed `definition.v2.json` beside this module is the single description
 of the graph: the name a run records, the entry points, the agent roles and
 their prompt versions, the stages, the nodes with their checkpoint options,
 the edges, the artifact and item kinds, the link types, the tools, the acts that a stage or a tool
-names (their catalog is `acts.catalog.json`), the value lists, the
+names (their catalog is shared by the workflows, see `agents/shared`), the value lists, the
 directive kinds, the export templates, and the schemas of the run parameters
 and the workflow state. The file is a copy of `docs/workflow/`; run
 `scripts/sync_from_docs.py` after a change there. A file never changes once
@@ -65,26 +65,6 @@ def _keyed(name: str) -> dict[str, dict[str, Any]]:
 def value_lists() -> dict[str, list[dict[str, Any]]]:
     """Every named value list of the definition: name -> its value entries."""
     return {str(entry["key"]): list(entry.get("values", [])) for entry in DEFINITION["value_lists"]}
-
-
-def act_catalog() -> dict[str, dict[str, Any]]:
-    """The acts a client may show, keyed by act: the keys that `acts` of a stage or tool name."""
-    catalog = json.loads(
-        (resources.files(_PACKAGE) / "acts.catalog.json").read_text(encoding="utf-8")
-    )
-    return {str(entry["key"]): entry for entry in catalog["acts"]}
-
-
-def command_catalog() -> dict[str, dict[str, Any]]:
-    """The commands the assistant may ask a client to run, keyed by command.
-
-    `needs` says what is checked before a command leaves: `none`, a document (`artifact`) or an item
-    (`item`) of the project, or a `review` that waits for the user.
-    """
-    catalog = json.loads(
-        (resources.files(_PACKAGE) / "commands.catalog.json").read_text(encoding="utf-8")
-    )
-    return {str(entry["key"]): entry for entry in catalog["commands"]}
 
 
 def tools() -> dict[str, dict[str, Any]]:

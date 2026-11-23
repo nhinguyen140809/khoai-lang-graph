@@ -14,7 +14,7 @@ What is copied:
   `agents/requirements_engineering/definition.v<N>.json`;
 - `docs/workflow/assistance.v1.json` to `agents/assistance/definition.v1.json`;
 - `docs/workflow/definition.schema.json`, `docs/workflow/acts.catalog.json` and
-  `docs/workflow/commands.catalog.json` to `agents/requirements_engineering/`;
+  `docs/workflow/commands.catalog.json` to `agents/shared/`, which every workflow reads;
 - every `docs/workflow/prompts/*.md` (the template and the example prompts) to
   `agents/requirements_engineering/prompts/`. The prompts of the other roles live only in the
   package.
@@ -35,6 +35,7 @@ SCHEMAS_SRC = REPO_ROOT / "docs" / "schemas"
 SCHEMAS_DST = PACKAGE / "domain" / "content_schemas"
 WORKFLOW_SRC = REPO_ROOT / "docs" / "workflow"
 WORKFLOW_DST = PACKAGE / "agents" / "requirements_engineering"
+SHARED_DST = PACKAGE / "agents" / "shared"
 ASSISTANCE_DST = PACKAGE / "agents" / "assistance"
 
 _DEFINITION_NAME = re.compile(r"^requirements_engineering\.v(\d+)\.json$")
@@ -51,9 +52,8 @@ def plan() -> dict[Path, Path]:
         if match is not None:
             pairs[WORKFLOW_DST / f"definition.v{match.group(1)}.json"] = source
     pairs[ASSISTANCE_DST / "definition.v1.json"] = WORKFLOW_SRC / "assistance.v1.json"
-    pairs[WORKFLOW_DST / "definition.schema.json"] = WORKFLOW_SRC / "definition.schema.json"
-    pairs[WORKFLOW_DST / "acts.catalog.json"] = WORKFLOW_SRC / "acts.catalog.json"
-    pairs[WORKFLOW_DST / "commands.catalog.json"] = WORKFLOW_SRC / "commands.catalog.json"
+    for shared in ("definition.schema.json", "acts.catalog.json", "commands.catalog.json"):
+        pairs[SHARED_DST / shared] = WORKFLOW_SRC / shared
     for source in sorted((WORKFLOW_SRC / "prompts").glob("*.md")):
         pairs[WORKFLOW_DST / "prompts" / source.name] = source
     return pairs

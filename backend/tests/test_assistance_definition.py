@@ -3,8 +3,6 @@ the tools it names are the reads the assistant makes, and the acts it names are 
 
 from __future__ import annotations
 
-import json
-from importlib import resources
 from typing import Any, get_args
 
 import pytest
@@ -12,16 +10,14 @@ from jsonschema import Draft202012Validator
 
 from khoailanggraph.agents.assistance import definition as assistance
 from khoailanggraph.agents.requirements_engineering import definition as wf
+from khoailanggraph.agents.shared import catalogs
 from khoailanggraph.features.assistant.schemas import ToolName
 from khoailanggraph.features.assistant.tools import READ_TOOLS
 
 
 @pytest.fixture
 def definition_schema() -> dict[str, Any]:
-    raw = (
-        resources.files("khoailanggraph.agents.requirements_engineering") / "definition.schema.json"
-    ).read_text(encoding="utf-8")
-    return dict(json.loads(raw))
+    return catalogs.definition_schema()
 
 
 def test_the_definition_validates_against_the_schema(definition_schema: dict[str, Any]) -> None:
@@ -54,7 +50,7 @@ def test_the_tools_it_names_are_the_reads_that_the_assistant_makes() -> None:
 
 
 def test_every_tool_has_its_words_and_acts_of_the_catalog() -> None:
-    catalog = wf.act_catalog()
+    catalog = catalogs.act_catalog()
     for key, tool in assistance.tools().items():
         assert tool["title"].strip(), key
         assert tool["uses"]["one"].strip(), key
