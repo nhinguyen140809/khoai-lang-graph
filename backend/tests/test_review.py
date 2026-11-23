@@ -199,7 +199,11 @@ def test_the_questions_before_the_research_are_choices_with_the_assumption_of_th
                 "kind": "single_select",
                 "prompt": "How do students sign in?",
                 "choices": [
-                    {"key": "campus", "label": "With their campus account"},
+                    {
+                        "key": "campus",
+                        "label": "With their campus account",
+                        "description": "No new password to keep; the campus login does it all.",
+                    },
                     {"key": "own", "label": "With an account of this app"},
                 ],
                 "default_choice_keys": ["campus"],
@@ -216,6 +220,8 @@ def test_the_questions_before_the_research_are_choices_with_the_assumption_of_th
     assert login["default_answer"]["choice_keys"] == ["campus"]
     assert [choice["key"] for choice in login["choices"]] == ["campus", "own", "other"]
     assert login["choices"][-1]["requires_text"] is True
+    assert login["choices"][0]["description"].startswith("No new password")
+    assert "description" not in login["choices"][1], "a choice without words has none"
     assert questions[1]["type"] == "free_text"
 
 

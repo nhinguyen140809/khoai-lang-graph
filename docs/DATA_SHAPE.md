@@ -571,7 +571,7 @@ An interrupt has at least one option or one question. One shape serves every use
 - `approves` tells the backend to set the artifacts under review, and their items that are still `draft`, to `approved`.
 - `is_default` marks the option taken without asking. Exactly one option of a checkpoint is the default.
 
-`Question` is `{ key: string, type: enum, prompt: string, required: bool, choices: Choice[], min_selected: int?, max_selected: int?, default_answer: Answer?, source: enum }`, and `Choice` is `{ key: string, label: string, requires_text: bool }`. `Answer` is defined with [HumanDecision](#humandecision-mvp).
+`Question` is `{ key: string, type: enum, prompt: string, required: bool, choices: Choice[], min_selected: int?, max_selected: int?, default_answer: Answer?, source: enum }`, and `Choice` is `{ key: string, label: string, description: string?, requires_text: bool }`, where `description` says what happens if the choice is picked, when its label does not, and is left out when there is none. `Answer` is defined with [HumanDecision](#humandecision-mvp).
 
 | Question field | Rule |
 |---|---|
