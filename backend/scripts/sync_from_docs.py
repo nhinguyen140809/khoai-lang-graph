@@ -12,6 +12,7 @@ What is copied:
 - every `docs/schemas/{artifacts,items}/*.json` to `domain/content_schemas/`;
 - every `docs/workflow/requirements_engineering.v<N>.json` to
   `agents/requirements_engineering/definition.v<N>.json`;
+- `docs/workflow/assistance.v1.json` to `agents/assistance/definition.v1.json`;
 - `docs/workflow/definition.schema.json`, `docs/workflow/acts.catalog.json` and
   `docs/workflow/commands.catalog.json` to `agents/requirements_engineering/`;
 - every `docs/workflow/prompts/*.md` (the template and the example prompts) to
@@ -34,6 +35,7 @@ SCHEMAS_SRC = REPO_ROOT / "docs" / "schemas"
 SCHEMAS_DST = PACKAGE / "domain" / "content_schemas"
 WORKFLOW_SRC = REPO_ROOT / "docs" / "workflow"
 WORKFLOW_DST = PACKAGE / "agents" / "requirements_engineering"
+ASSISTANCE_DST = PACKAGE / "agents" / "assistance"
 
 _DEFINITION_NAME = re.compile(r"^requirements_engineering\.v(\d+)\.json$")
 
@@ -48,6 +50,7 @@ def plan() -> dict[Path, Path]:
         match = _DEFINITION_NAME.match(source.name)
         if match is not None:
             pairs[WORKFLOW_DST / f"definition.v{match.group(1)}.json"] = source
+    pairs[ASSISTANCE_DST / "definition.v1.json"] = WORKFLOW_SRC / "assistance.v1.json"
     pairs[WORKFLOW_DST / "definition.schema.json"] = WORKFLOW_SRC / "definition.schema.json"
     pairs[WORKFLOW_DST / "acts.catalog.json"] = WORKFLOW_SRC / "acts.catalog.json"
     pairs[WORKFLOW_DST / "commands.catalog.json"] = WORKFLOW_SRC / "commands.catalog.json"
