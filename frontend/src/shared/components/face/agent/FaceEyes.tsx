@@ -2,10 +2,12 @@ import { cn } from 'cn'
 import { motion } from 'motion/react'
 import type { ReactNode } from 'react'
 
-import { eyeGeometries } from './face.constants'
-import type { EyeKind, EyeLife, Gaze, GazeValues } from './face.types'
+import type { EyeLife, Gaze, GazeValues } from '../face.types'
+import { gazeLooks } from '../motion/face-motion.constants'
+import { eyeGeometries } from './agent-face.constants'
+import type { EyeKind } from './agent-face.types'
+import { eyeLifeLooks } from './agent-motion.constants'
 import { delayOf } from './look/face-style.utils'
-import { eyeLifeLooks, gazeLooks } from './motion/face-motion.constants'
 
 /** A pill of an eye standing up: its corners are as round as its narrow side. */
 function longEye(cx: number, scale: number, line: number): ReactNode {

@@ -29,12 +29,6 @@ export type FaceState = Mood | `resting-${RestingMood}` | CycleStep
 /** Where the eyes look: now and then to the sides (`drift` is the same, much smaller), slowly from side to side only (`glance`), up and to the left and held long with a glance down now and then (`ponder`), along a line as if reading, down, to the side and held there (`toward`), or ahead. */
 export type Gaze = 'wander' | 'drift' | 'ponder' | 'glance' | 'scan' | 'down' | 'toward' | 'still'
 
-/** The eyes of a face: long ones, round ones, a long oval one and a flat oval one, closed smiling arcs, or shut ones. */
-export type EyeKind = 'long' | 'round' | 'tall' | 'flat' | 'arc' | 'shut' | 'cross' | 'spiral'
-
-/** How a mood moves the blobs of a face: not at all, or by drifting. */
-export type Pace = 'calm' | 'busy'
-
 /** What the whole face does: nothing, a pulse that makes it larger and smaller, a slow breath, hops from side to side, or a full turn about its vertical axis now and then. */
 export type Body = 'none' | 'pulse' | 'breathe' | 'bounce' | 'turnaround'
 
@@ -43,31 +37,6 @@ export type Pose = 'sway' | 'tilt' | 'rest'
 
 /** What an eye does by itself: nothing, swells and shrinks slowly, or squints now and then. */
 export type EyeLife = 'steady' | 'breathe' | 'squint' | 'wink'
-
-/** What a mood does to a face. Each of its parts is given for the left eye and for the right eye. */
-export interface MoodLook {
-  gaze: Gaze
-  /** The kind of each eye. */
-  eyes: readonly [EyeKind, EyeKind]
-  /** How large each eye is, as a multiple of its usual size. */
-  eyeScales: readonly [number, number]
-  /** How far each eye leans at rest, in degrees, clockwise; a gaze that moves the eyes leans them as it likes. */
-  tilts: readonly [number, number]
-  /** Whether the blobs drift: they do for a face that is at work. */
-  pace: Pace
-  /** What the whole face does; nothing when it is not given. */
-  body?: Body
-  /** How the whole face moves in the plane of the page, pivoting on its bottom; not at all when it is not given. */
-  pose?: Pose
-  /** What each eye does by itself, besides the way the eyes look; steady when it is not given. */
-  eyeLives?: readonly [EyeLife, EyeLife]
-}
-
-/** The size of an eye of a kind, in the units of the face, as half of its width and half of its height. */
-export interface EyeGeometry {
-  halfWidth: number
-  halfHeight: number
-}
 
 /** The motions that the eyes can follow, each a path over time (see `gazePaths`). */
 export type GazePath = 'wander' | 'ponder' | 'glance' | 'scan' | 'toward'
@@ -108,6 +77,21 @@ export interface GazeValues {
   }
 }
 
+/** What a mood does to the whole of a face, whatever the face is drawn of: where it looks, what it does as a whole, and how it moves in the plane of the page. */
+export interface MotionLook {
+  gaze: Gaze
+  /** What the whole face does; nothing when it is not given. */
+  body?: Body
+  /** How the whole face moves in the plane of the page, pivoting on its bottom; not at all when it is not given. */
+  pose?: Pose
+}
+
+/** What a motion of the eyes needs of a face: what each eye does by itself, and whether the eyes may blink at all. */
+export interface EyesMotion {
+  lives: readonly [EyeLife, EyeLife]
+  canBlink: boolean
+}
+
 /**
  * What something outside the face can steer, each part optional. `look` is where the face looks, in
  * the units of a gaze path (0 is straight ahead; the paths of the moods reach about 2.6 to a side),
@@ -134,12 +118,7 @@ export interface GazeTiming {
   reachShare: number
 }
 
-/** Parts of what a mood does to a face that something else says instead of the mood, such as a design page that shows one motion at a time. */
-export type MoodOverride = Partial<
-  Pick<MoodLook, 'gaze' | 'eyes' | 'eyeScales' | 'tilts' | 'pose' | 'body' | 'eyeLives'>
->
-
-/** What a face is given, whichever way it is drawn. */
+/** What a face is given, whichever kind of face it is: an agent, a person. */
 export interface FaceProps {
   /** What the face comes from, such as the key of an agent: its outline and its colors come from it alone. */
   seed: string
@@ -147,13 +126,6 @@ export interface FaceProps {
   mood?: Mood
   /** What steers the look and the move of the face from outside, such as the acts around it; the mood stays its own. */
   drive?: FaceDrive | undefined
-  /** Parts of the look of the mood to say otherwise, each replacing the one that the mood gives; the mood stays its own for the rest. */
-  override?: MoodOverride | undefined
   size?: 'sm' | 'default' | 'lg' | 'xl' | '2xl'
   className?: string
 }
-
-/** The ways that a face is drawn: plain, in CSS, which needs nothing to load. */
-export const faceStyleKeys = ['plain'] as const
-
-export type FaceStyleKey = (typeof faceStyleKeys)[number]

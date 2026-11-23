@@ -1,7 +1,6 @@
-import { eyeGeometries, eyeSpacing, faceUnits } from './face.constants'
-import type { EyeKind, Mood, RestingMood } from './face.types'
+import { eyeGeometries, eyeSpacing, faceUnits } from './agent-face.constants'
+import type { EyeKind } from './agent-face.types'
 import type { EyeGap } from './look/face-look.types'
-import { restingStates } from './mood/face-mood.constants'
 
 /**
  * The centers of the left and the right eye. The space between the eyes is the same share of the
@@ -18,11 +17,6 @@ export function eyeCentersOf(
   const right = 2 * eyeGeometries[kinds[1]].halfWidth * scales[1]
   const start = (faceUnits - (left + right + eyeSpacing[gap])) / 2
   return [start + left / 2, start + left + eyeSpacing[gap] + right / 2]
-}
-
-/** Whether a face in this mood comes to rest when it has nothing to do. */
-export function isRestingMood(mood: Mood): mood is RestingMood {
-  return mood in restingStates
 }
 
 /** Whether eyes of a kind blink: closed eyes do not. */

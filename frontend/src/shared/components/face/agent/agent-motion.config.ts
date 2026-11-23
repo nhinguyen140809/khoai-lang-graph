@@ -1,9 +1,10 @@
 import type { Loop } from '@/shared/lib/animation'
 
-import { eyeGeometries } from '../face.constants'
-import type { Body, EyeGeometry, EyeKind, EyeLife, FaceStyleKey, Pose } from '../face.types'
-import { bodyLoops, poseLoops } from './face-loop.constants'
-import { eyeLifeLooks } from './face-motion.constants'
+import type { Body, EyeLife, Pose } from '../face.types'
+import { bodyLoops, poseLoops } from '../motion/face-loop.constants'
+import { eyeGeometries } from './agent-face.constants'
+import type { EyeGeometry, EyeKind, FaceStyleKey } from './agent-face.types'
+import { eyeLifeLooks } from './agent-motion.constants'
 
 /**
  * What one motion needs for each way that a face is drawn, as an object with a key for each

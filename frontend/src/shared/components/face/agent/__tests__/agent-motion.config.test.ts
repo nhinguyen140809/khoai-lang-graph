@@ -1,7 +1,7 @@
 import { describe, expect, it } from 'vitest'
 
-import { bodyMotions, eyeLifeMotions, eyeMotions, poseMotions } from '../face-motion.config'
-import { faceMotions } from '../face-motion.constants'
+import { bodyMotions, eyeLifeMotions, eyeMotions, poseMotions } from '../agent-motion.config'
+import { faceMotions } from '../agent-motion.constants'
 
 describe('the motions of a face', () => {
   it('are listed as the page shows them, in the order of the registry', () => {

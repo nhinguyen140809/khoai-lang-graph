@@ -4,7 +4,7 @@ import { describe, expect, it } from 'vitest'
 
 import type { FaceDrive } from '../../../face.types'
 import { eyeReach, gazeLooks } from '../../face-motion.constants'
-import { useFaceMotion } from '../useFaceMotion'
+import { useBodyStyles } from '../useBodyStyles'
 import { useGaze } from '../useGaze'
 
 const timing = { phase: 0, isChanging: false, isRunning: true, reachShare: 1 }
@@ -35,7 +35,7 @@ describe('useGaze with a drive', () => {
   })
 })
 
-describe('useFaceMotion with a move', () => {
+describe('useBodyStyles with a move', () => {
   const move = {
     x: motionValue(0.1),
     y: motionValue(-0.2),
@@ -46,7 +46,7 @@ describe('useFaceMotion with a move', () => {
   it('adds the move to the body of the face', () => {
     const { result } = renderHook(() => {
       const gaze = useGaze(gazeLooks.still, timing)
-      return useFaceMotion({}, gaze.head, timing, move)
+      return useBodyStyles({}, gaze.head, timing, move)
     })
     const { bodyStyle } = result.current
 

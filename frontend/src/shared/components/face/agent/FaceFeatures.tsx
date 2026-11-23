@@ -1,8 +1,8 @@
-import { faceUnits } from './face.constants'
-import type { GazeValues } from './face.types'
+import type { GazeValues } from '../face.types'
+import type { useFaceMotionStates } from '../motion/hooks/useFaceMotionStates'
+import { faceUnits } from './agent-face.constants'
 import { FaceEyes } from './FaceEyes'
 import type { useFaceParts } from './hooks/useFaceParts'
-import type { useFaceMotionStates } from './motion/hooks/useFaceMotionStates'
 
 /** The eyes of a face, in the dark color of the features, over whatever the face is filled with. */
 export function FaceFeatures({

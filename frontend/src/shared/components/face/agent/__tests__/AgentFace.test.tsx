@@ -3,11 +3,12 @@ import { describe, expect, it } from 'vitest'
 
 import { advanceTimers, withFakeTimers } from '@/test/steps'
 
+import { type Mood, moods } from '../../face.types'
+import { restAfterMs } from '../../mood/face-mood.constants'
+import { bodyLoops, poseLoops } from '../../motion/face-loop.constants'
+import { blinkEveryMs, blinkMs, gazeLooks, gazePaths } from '../../motion/face-motion.constants'
+import { faceLooks, moodLooks } from '../agent-mood.constants'
 import { AgentFace } from '../AgentFace'
-import { type Mood, moods } from '../face.types'
-import { faceLooks, moodLooks, restAfterMs } from '../mood/face-mood.constants'
-import { bodyLoops, poseLoops } from '../motion/face-loop.constants'
-import { blinkEveryMs, blinkMs, gazeLooks, gazePaths } from '../motion/face-motion.constants'
 
 function renderFace(props: Parameters<typeof AgentFace>[0]) {
   const { container } = render(<AgentFace {...props} />)

@@ -1,8 +1,8 @@
 import { describe, expect, it } from 'vitest'
 
-import { eyeGeometries } from '../face.constants'
-import type { EyeKind } from '../face.types'
-import { eyeCentersOf } from '../face.utils'
+import { eyeGeometries } from '../agent-face.constants'
+import type { EyeKind } from '../agent-face.types'
+import { eyeCentersOf } from '../agent-face.utils'
 
 const kinds = Object.keys(eyeGeometries) as EyeKind[]
 

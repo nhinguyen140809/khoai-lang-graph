@@ -2,17 +2,13 @@ import { cn } from 'cn'
 import { motion } from 'motion/react'
 import type { CSSProperties } from 'react'
 
-import {
-  blobShapeClasses,
-  faceLayerCount,
-  faceSilhouetteClasses,
-  faceSizeClasses,
-} from './face.constants'
-import type { FaceProps } from './face.types'
+import { faceSizeClasses } from '../face.constants'
+import { blobShapeClasses, faceLayerCount, faceSilhouetteClasses } from './agent-face.constants'
+import type { AgentFaceProps } from './agent-face.types'
+import { blobMotionClasses } from './agent-motion.constants'
 import { FaceFeatures } from './FaceFeatures'
-import { useFace } from './hooks/useFace'
+import { useAgentFace } from './hooks/useAgentFace'
 import { blobStyleOf } from './look/face-style.utils'
-import { blobMotionClasses } from './motion/face-motion.constants'
 
 /**
  * A face: a shape of soft color (a circle, a ghost, a drop...) with two long eyes. The color is a pale
@@ -37,13 +33,14 @@ export function PlainFace({
   override,
   size = 'default',
   className,
-}: FaceProps) {
-  const { look, ref, isInView, isRested, parts, gaze, motions, poseStyle, bodyStyle } = useFace({
-    seed,
-    mood,
-    drive,
-    override,
-  })
+}: AgentFaceProps) {
+  const { look, ref, isInView, isRested, parts, gaze, motions, poseStyle, bodyStyle } =
+    useAgentFace({
+      seed,
+      mood,
+      drive,
+      override,
+    })
   const drift = blobMotionClasses[parts.moodLook.pace]
 
   return (

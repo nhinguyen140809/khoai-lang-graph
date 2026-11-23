@@ -1,60 +1,34 @@
 'use client'
 
-import { type MotionStyle, type MotionValue, useMotionValue, useTransform } from 'motion/react'
+import { type RefObject, useRef } from 'react'
 
-import type { Body, FaceDrive, GazeTiming, GazeValues, Pose } from '../../face.types'
-import { bodyLoops, poseLoops } from '../face-loop.constants'
-import { useLoop } from './useLoop'
+import { useIsInView } from '@/shared/lib/viewport'
 
-/** The sum of two values that change over time. */
-function useSum(first: MotionValue<number>, second: MotionValue<number>): MotionValue<number> {
-  return useTransform<number, number>([first, second], ([a, b]) => (a ?? 0) + (b ?? 0))
-}
-
-/** A value that is a share of the size of the element, as a percentage. */
-function usePercent(share: MotionValue<number>): MotionValue<string> {
-  return useTransform(share, (value) => `${String(value * 100)}%`)
-}
+import type { EyesMotion, FaceDrive, GazeTiming, GazeValues, MotionLook } from '../../face.types'
+import { gazeLooks } from '../face-motion.constants'
+import { useBodyStyles } from './useBodyStyles'
+import { useFaceMotionStates } from './useFaceMotionStates'
+import { useGaze } from './useGaze'
 
 /**
- * What moves the whole face by its mood, as the styles of the two elements that carry it: the pose
- * (the plane of the page, pivoting on the bottom) and the body (the face as a whole, about the middle
- * of its depth, which also turns with the eyes: the turns of the gaze add to those of the body). A
- * `move` from outside is added to the body: its offsets and turn to those of the mood, its scale
- * times that of the mood.
+ * Every motion of a face that does not depend on what the face is drawn of: where it looks over
+ * time, what it does as a whole (its pose and its body, with the turns that follow the gaze), and
+ * the timing of the blink. It is given the look of the state that the face shows, what its eyes
+ * do by themselves, and when it moves (see `GazeTiming`; `isRunning` is not given, since the face
+ * out of sight is found here, from the `ref` that this returns for the face to hold). A way of
+ * drawing a face takes these and draws them.
  */
 export function useFaceMotion(
-  { pose, body }: { pose?: Pose | undefined; body?: Body | undefined },
-  head: GazeValues['head'],
-  { phase, isChanging, isRunning }: GazeTiming,
-  move?: FaceDrive['move'],
-): { poseStyle: MotionStyle; bodyStyle: MotionStyle } {
-  const posed = useLoop(pose === undefined ? null : poseLoops[pose], phase, isChanging, isRunning)
-  const bodied = useLoop(bodyLoops[body ?? 'none'], phase, isChanging, isRunning)
-  const rotateX = useSum(head.rotateX, bodied.rotateX)
-  const rotateY = useSum(head.rotateY, bodied.rotateY)
-  const none = useMotionValue(0)
-  const whole = useMotionValue(1)
-  const x = usePercent(useSum(bodied.x, move?.x ?? none))
-  const y = usePercent(useSum(bodied.y, move?.y ?? none))
-  const rotate = useSum(bodied.rotate, move?.rotate ?? none)
-  const scale = useTransform<number, number>(
-    [bodied.scale, move?.scale ?? whole],
-    ([a, b]) => (a ?? 1) * (b ?? 1),
-  )
-
-  return {
-    poseStyle: { rotate: posed.rotate, scale: posed.scale, originY: 1 },
-    bodyStyle: {
-      x,
-      y,
-      rotate,
-      rotateX,
-      rotateY,
-      rotateZ: head.rotateZ,
-      scale,
-      scaleX: bodied.scaleX,
-      scaleY: bodied.scaleY,
-    },
-  }
+  moodLook: MotionLook,
+  eyes: EyesMotion,
+  { phase, isChanging, reachShare }: Omit<GazeTiming, 'isRunning'>,
+  drive?: FaceDrive,
+) {
+  const ref: RefObject<HTMLSpanElement | null> = useRef<HTMLSpanElement>(null)
+  const isInView = useIsInView(ref)
+  const timing: GazeTiming = { phase, isChanging, isRunning: isInView, reachShare }
+  const gaze: GazeValues = useGaze(gazeLooks[moodLook.gaze], timing, drive?.look)
+  const motions = useFaceMotionStates(moodLook, eyes, { isHeld: isChanging || !isInView, phase })
+  const { poseStyle, bodyStyle } = useBodyStyles(motions, gaze.head, timing, drive?.move)
+  return { ref, isInView, gaze, motions, poseStyle, bodyStyle }
 }
