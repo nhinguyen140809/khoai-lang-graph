@@ -27,12 +27,6 @@ export const poseLoops: Readonly<Record<Pose, Loop>> = {
       },
     },
   },
-  // A waiting face breathes very slowly, hardly at all.
-  rest: {
-    durationMs: 4400,
-    isMirrored: true,
-    tracks: { scale: { values: [0.985, 1.015], ease: easeInOut } },
-  },
 }
 
 const landing = cubicBezier(0.15, 0.7, 0.4, 1)

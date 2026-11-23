@@ -5,7 +5,7 @@ const longEyes = ['long', 'long'] as const
 const evenEyes = [1, 1] as const
 const levelEyes = [0, 0] as const
 
-/** What each mood does to a face: thinking has two round eyes, one large and one half its area, and looks about as an idle face would if it moved more; surprise opens two round eyes wide and pulses; waiting breathes, glances from side to side and turns right around now and then; sleep shuts them. */
+/** What each mood does to a face: thinking has two round eyes, one large and one half its area, and looks about as an idle face would if it moved more; surprise opens two round eyes wide and pulses; waiting glances from side to side and turns right around now and then; sleep shuts them. */
 export const moodLooks: Readonly<Record<Mood, AgentMoodLook>> = {
   idle: { gaze: 'drift', eyes: longEyes, eyeScales: evenEyes, tilts: levelEyes, pace: 'calm' },
   thinking: {
@@ -24,7 +24,6 @@ export const moodLooks: Readonly<Record<Mood, AgentMoodLook>> = {
     eyeScales: evenEyes,
     tilts: levelEyes,
     pace: 'calm',
-    pose: 'rest',
     body: 'turnaround',
   },
   happy: {

@@ -35,7 +35,7 @@ type FaceMotionEvent =
   /** The face moves again. */
   | { type: 'RELEASE' }
 
-const poses = ['none', 'sway', 'tilt', 'rest'] as const satisfies readonly (Pose | 'none')[]
+const poses = ['none', 'sway', 'tilt'] as const satisfies readonly (Pose | 'none')[]
 const bodies = [
   'none',
   'pulse',

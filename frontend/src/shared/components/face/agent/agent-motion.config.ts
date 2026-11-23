@@ -20,7 +20,6 @@ export const poseMotions = {
   none: { plain: null },
   sway: { plain: poseLoops.sway },
   tilt: { plain: poseLoops.tilt },
-  rest: { plain: poseLoops.rest },
 } as const satisfies Record<Pose | 'none', PerStyle<{ plain: Loop | null }>>
 
 /** What the whole face does, by kind. */

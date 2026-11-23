@@ -29,7 +29,7 @@ export const eyeLifeLooks = {
 
 /** Every motion that a face can have, by kind, for a page that shows them one at a time. A body that is `none` and a gaze that holds the eyes are not listed: they move nothing. */
 export const faceMotions = {
-  poses: ['sway', 'tilt', 'rest'],
+  poses: ['sway', 'tilt'],
   bodies: ['pulse', 'breathe', 'bounce', 'turnaround'],
   eyes: ['long', 'round', 'tall', 'flat', 'arc', 'shut', 'cross', 'spiral'],
   eyeLives: ['steady', 'breathe', 'squint', 'wink'],

@@ -87,7 +87,7 @@ describe('AgentFace', () => {
     expect(loops('surprised').body?.tracks.scale).toBeDefined()
     expect(loops('waiting').body?.tracks.rotateY).toBeDefined()
     expect(loops('waiting').body?.tracks.y).toBeUndefined()
-    expect(loops('waiting').pose?.tracks.scale).toBeDefined()
+    expect(loops('waiting').pose).toBeNull()
     expect(loops('sleeping').body?.isMirrored).toBe(true)
     expect(loops('happy').pose?.tracks.rotate).toBeDefined()
     expect(loops('thinking').pose?.tracks.rotate).toBeDefined()

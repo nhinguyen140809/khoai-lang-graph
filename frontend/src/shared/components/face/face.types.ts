@@ -32,8 +32,8 @@ export type Gaze = 'wander' | 'drift' | 'ponder' | 'glance' | 'scan' | 'down' | 
 /** What the whole face does: nothing, a pulse that makes it larger and smaller, a slow breath, hops from side to side, or a full turn about its vertical axis now and then. */
 export type Body = 'none' | 'pulse' | 'breathe' | 'bounce' | 'turnaround'
 
-/** How the whole face moves in the plane of the page: a small sway, a slow tilt to one side and then the other, or a very slow breath. */
-export type Pose = 'sway' | 'tilt' | 'rest'
+/** How the head, or the face, moves in the plane of the page: a small sway, or a slow tilt to one side and then the other. */
+export type Pose = 'sway' | 'tilt'
 
 /** What an eye does by itself: nothing, swells and shrinks slowly, or squints now and then. */
 export type EyeLife = 'steady' | 'breathe' | 'squint' | 'wink'
@@ -80,9 +80,9 @@ export interface GazeValues {
 /** What a mood does to the whole of a face, whatever the face is drawn of: where it looks, what it does as a whole, and how it moves in the plane of the page. */
 export interface MotionLook {
   gaze: Gaze
-  /** What the whole face does; nothing when it is not given. */
+  /** What the whole body does, the whole of the face for a face that has no body apart from it; nothing when it is not given. */
   body?: Body
-  /** How the whole face moves in the plane of the page, pivoting on its bottom; not at all when it is not given. */
+  /** How the head, or the face, moves in the plane of the page, pivoting on its bottom (the neck, for a head); not at all when it is not given. */
   pose?: Pose
 }
 

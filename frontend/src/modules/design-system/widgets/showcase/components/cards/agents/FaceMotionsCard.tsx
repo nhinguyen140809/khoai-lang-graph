@@ -10,7 +10,6 @@ import { SampleCard, SampleGroup } from '../../Sample'
 const motionUses = {
   sway: 'a small sway to each side',
   tilt: 'a tilt to one side, then the other',
-  rest: 'a slow breath in the plane of the page',
   pulse: 'zooms in slowly, then fast',
   breathe: 'a slow breath of the whole face',
   bounce: 'jumps straight up and down',
@@ -21,17 +20,17 @@ export function FaceMotionsCard() {
   return (
     <SampleCard
       title="Face motions"
-      description="How the whole face moves: its pose in the plane of the page, and its body about the middle of its depth."
+      description="How a face moves: the head, or the face, in the plane of the page (its pose), and the whole body about the middle of its depth."
       className="flex flex-col gap-10"
     >
-      <SampleGroup label="Pose: how the whole face moves in the plane of the page, pivoting on its bottom">
+      <SampleGroup label="Pose: how the head, or the face, moves in the plane of the page, pivoting on its bottom">
         <MotionFaces
           names={faceMotions.poses}
           overrideOf={(pose) => ({ pose })}
           uses={motionUses}
         />
       </SampleGroup>
-      <SampleGroup label="Body: what the face does as a whole, about the middle of its depth (the live face turns by a squeeze, as a flat file has no depth)">
+      <SampleGroup label="Body: what the whole body does (for a face with no body apart from it, the whole face), about the middle of its depth (the live face turns by a squeeze, as a flat file has no depth)">
         <MotionFaces
           names={faceMotions.bodies}
           overrideOf={(body) => ({ body })}
