@@ -1,9 +1,9 @@
 'use client'
 
 import { useMotionValue } from 'motion/react'
-import { useRef, useState } from 'react'
+import { type ComponentType, useRef, useState } from 'react'
 
-import { AgentFace } from '@/shared/components/face'
+import { AgentFace, type FaceProps } from '@/shared/components/face'
 import { useIsInView } from '@/shared/lib/viewport'
 
 import { restingLook } from './act.constants'
@@ -49,6 +49,8 @@ export type MotionDemoMotion = Partial<
 interface MotionDemoProps {
   seed: string
   motion: MotionDemoMotion
+  /** How the face is drawn: the face of an agent unless this says another. */
+  face?: ComponentType<FaceProps>
   className?: string
 }
 
@@ -56,7 +58,7 @@ interface MotionDemoProps {
  * One motion alone: a face with one thing beside it that plays the motion over and over, or a
  * face that moves, so that each name of the vocabulary of the acts can be seen by itself.
  */
-export function MotionDemo({ seed, motion, className }: MotionDemoProps) {
+export function MotionDemo({ seed, motion, face: Face = AgentFace, className }: MotionDemoProps) {
   const ref = useRef<HTMLSpanElement>(null)
   const isInView = useIsInView(ref)
   const gain = useMotionValue(1)
@@ -83,8 +85,16 @@ export function MotionDemo({ seed, motion, className }: MotionDemoProps) {
 
   return (
     <span ref={ref} className={className ?? 'relative inline-flex shrink-0'}>
-      <AgentFace seed={seed} mood="working" size="xl" drive={drive} />
-      <ActProps act={act} round={round} gain={gain} allowed={slots} size="xl" partner={undefined} />
+      <Face seed={seed} mood="working" size="xl" drive={drive} />
+      <ActProps
+        act={act}
+        round={round}
+        gain={gain}
+        allowed={slots}
+        size="xl"
+        partner={undefined}
+        face={Face}
+      />
     </span>
   )
 }

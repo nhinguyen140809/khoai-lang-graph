@@ -1,9 +1,9 @@
 'use client'
 
 import { cn } from 'cn'
-import { useRef } from 'react'
+import { type ComponentType, useRef } from 'react'
 
-import { AgentFace, type Mood } from '@/shared/components/face'
+import { AgentFace, type FaceProps, type Mood } from '@/shared/components/face'
 import { useIsInView, usePrefersReducedMotion } from '@/shared/lib/viewport'
 
 import { actorFrameClasses } from './act.constants'
@@ -26,11 +26,13 @@ interface ActorProps {
   acts: readonly string[]
   /** The slots around the face that may be used, all of them by default. */
   slots?: readonly Slot[]
+  /** How a face is drawn, here and for the other agent: the face of an agent unless this says another. It is given what every face is given (`FaceProps`). */
+  face?: ComponentType<FaceProps>
   className?: string
 }
 
 /**
- * A face at work: the face of an agent with what it is doing drawn around it, in the colors of the interface, while
+ * A face at work: a face (the face of an agent unless `face` says another) with what it is doing drawn around it, in the colors of the interface, while
  * its eyes and its body follow the work. The list of acts goes round, each act a few rounds, and
  * one gives way to the next gently. The face has the mood that it is given, else that of its act. It does
  * nothing but show the face for a user who asked for less motion, and stops while out of sight. A frame
@@ -44,6 +46,7 @@ export function Actor({
   partner,
   acts,
   slots = allSlots,
+  face: Face = AgentFace,
   className,
 }: ActorProps) {
   const ref = useRef<HTMLSpanElement>(null)
@@ -65,7 +68,7 @@ export function Actor({
         data-act={shown ?? undefined}
         className="relative inline-flex shrink-0"
       >
-        <AgentFace seed={seed} mood={moodOf(mood, act)} size={size} drive={drive} />
+        <Face seed={seed} mood={moodOf(mood, act)} size={size} drive={drive} />
         {act !== null && (
           <ActProps
             act={act}
@@ -74,6 +77,7 @@ export function Actor({
             allowed={slots}
             size={size}
             partner={partner}
+            face={Face}
           />
         )}
       </span>
