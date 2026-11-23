@@ -17,7 +17,7 @@ from khoailanggraph.features.projects.service import get_project_row
 router = APIRouter()
 
 
-@router.post("/projects/{project_id}/exports", status_code=202)
+@router.post("/projects/{project_id}/exports", status_code=201)
 async def create_export(
     project_id: UUID,
     body: schemas.ExportBody,
@@ -26,14 +26,15 @@ async def create_export(
     db: deps.DbSession,
     _origin: Annotated[None, Depends(deps.check_origin)],
 ) -> Any:
-    """Request a document: a template of the workflow and one of its formats. The file is
-    generated at once from the current versions of the documents; `included_artifacts` names
-    the exact versions it holds. A repeated request with the same `Idempotency-Key` gives the
-    first answer and makes no second export."""
+    """Create a document: a template of the workflow and one of its formats. The file is rendered
+    from the current versions of the documents **during this request**, so the answer is `201`
+    with an export that is already `ready`; `included_artifacts` names the exact versions it holds.
+    A repeated request with the same `Idempotency-Key` gives the first answer and makes no second
+    export."""
     replayed = await idempotency.replay(request, db, UUID(str(user.id)))
     if replayed is not None:
         return replayed
-    project = await get_project_row(db, project_id)
+    project = await get_project_row(db, project_id, UUID(str(user.id)))
     row = await service.create_export(
         db,
         store=Path(request.app.state.settings.exports_dir),
@@ -45,7 +46,7 @@ async def create_export(
         request,
         db,
         UUID(str(user.id)),
-        202,
+        201,
         service.export_view(row).model_dump(mode="json"),
         {"Location": f"/api/v1/exports/{row.id}"},
     )
@@ -60,7 +61,7 @@ async def list_exports(
     limit: Annotated[int, Query(ge=1, le=MAX_LIMIT)] = 50,
 ) -> Page[schemas.Export]:
     """The exports of a project, newest first."""
-    await get_project_row(db, project_id)
+    await get_project_row(db, project_id, UUID(str(user.id)))
     items, next_cursor = await service.list_exports(db, project_id, cursor=cursor, limit=limit)
     return Page(items=items, next_cursor=next_cursor)
 
@@ -72,7 +73,7 @@ async def get_export(
     db: deps.DbSession,
 ) -> schemas.Export:
     """The status of an export; a ready one carries the address of its file."""
-    return service.export_view(await service.get_export_row(db, export_id))
+    return service.export_view(await service.get_export_row(db, export_id, UUID(str(user.id))))
 
 
 @router.get("/exports/{export_id}/file")
@@ -83,7 +84,7 @@ async def download_export(
     db: deps.DbSession,
 ) -> FileResponse:
     """The file of a ready export, as a download."""
-    row = await service.get_export_row(db, export_id)
+    row = await service.get_export_row(db, export_id, UUID(str(user.id)))
     path = service.file_path(Path(request.app.state.settings.exports_dir), row)
     return FileResponse(
         path,

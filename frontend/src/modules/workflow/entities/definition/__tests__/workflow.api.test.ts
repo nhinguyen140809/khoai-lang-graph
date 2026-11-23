@@ -1,5 +1,9 @@
 import { describe, expect, it } from 'vitest'
 
+import {
+  assistanceDefinitionFixture,
+  assistanceRefFixture,
+} from '@/mocks/workflow/workflow.fixtures'
 import { itSendsRequests, itThrowsApiErrors } from '@/test/suites'
 
 import { getWorkflowDefinition } from '../workflow.api'
@@ -13,6 +17,18 @@ describe('workflow api', () => {
     expect(definition.nodes.map(({ id }) => id)).toContain('checkpoint_analysis')
     expect(definition.stages.find(({ key }) => key === 'analysis_review')?.title).toBe(
       'Reviewing the analysis',
+    )
+  })
+
+  it('reads the definition of the workflow that a name gives, such as the one of an answer', async () => {
+    const { name, version, tools, stages } = assistanceDefinitionFixture
+
+    const definition = await getWorkflowDefinition(assistanceRefFixture)
+
+    expect(definition).toMatchObject({ name, version })
+    expect(definition.tools.map(({ key }) => key)).toEqual(tools.map(({ key }) => key))
+    expect(definition.stages.map(({ key, title }) => [key, title])).toEqual(
+      stages.map(({ key, title }) => [key, title]),
     )
   })
 

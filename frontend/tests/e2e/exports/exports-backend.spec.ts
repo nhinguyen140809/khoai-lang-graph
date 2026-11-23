@@ -3,7 +3,7 @@ import { expect } from '@playwright/test'
 import {
   type ApiExport,
   type ApiPage,
-  expectAccepted,
+  expectCreated,
   expectOk,
   expectPage,
   expectProblem,
@@ -15,7 +15,7 @@ for (const { name, template, format, fileName, contentType, contains } of export
   test(`exports ${name} and serves the file`, async ({ api, client }) => {
     const { projectId } = await api.startFinishedRun(idea)
 
-    const file = expectAccepted(await api.createExport(projectId, template, format))
+    const file = expectCreated(await api.createExport(projectId, template, format))
 
     expect(file.status).toBe('ready')
     expect(file.file_name).toBe(fileName)
@@ -42,8 +42,8 @@ for (const format of unsupportedFormats) {
 
 test('lists the exports of a project, the newest first', async ({ api, client }) => {
   const { projectId } = await api.startFinishedRun(idea)
-  const first = expectAccepted(await api.createExport(projectId, 'product_backlog', 'csv'))
-  const second = expectAccepted(await api.createExport(projectId, 'product_backlog', 'json'))
+  const first = expectCreated(await api.createExport(projectId, 'product_backlog', 'csv'))
+  const second = expectCreated(await api.createExport(projectId, 'product_backlog', 'json'))
 
   const page = expectPage(await client.get<ApiPage<ApiExport>>(`/projects/${projectId}/exports`))
 

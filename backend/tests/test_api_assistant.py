@@ -1,0 +1,726 @@
+"""The assistant over HTTP: a message about the application is answered, a message about the work
+starts a run, and nothing about the application touches the workflow."""
+
+from __future__ import annotations
+
+import asyncio
+import json
+import threading
+from pathlib import Path
+from tempfile import gettempdir
+from typing import TYPE_CHECKING, Any
+from unittest.mock import patch
+from uuid import UUID
+
+import pytest
+import sqlalchemy as sa
+from httpx import ASGITransport, AsyncClient
+
+import khoailanggraph.llm.factory as llm_factory
+from khoailanggraph.agents import prompts as prompt_loader
+from khoailanggraph.agents.shared import catalogs
+from khoailanggraph.features.artifacts.models import ArtifactItemRow, ArtifactRow
+from khoailanggraph.features.assistant.service import (
+    ASSISTANT_PROMPT_VERSION,
+    PROMPTS_PACKAGE,
+)
+from khoailanggraph.features.me.models import UserRow
+from khoailanggraph.features.runs import service as runs_service
+from khoailanggraph.features.runs.executor import RunExecutor
+from khoailanggraph.features.runs.models import RunRow
+from khoailanggraph.llm import reset_model_cache
+from khoailanggraph.main import create_app
+from khoailanggraph.platform.db import (
+    ensure_schema,
+    make_async_engine,
+    make_session_factory,
+    make_sync_engine,
+)
+from khoailanggraph.settings import Settings
+from support.api_helpers import REGISTER, TASK
+from support.fake_data import DemoData
+
+if TYPE_CHECKING:
+    from collections.abc import AsyncIterator
+
+    from fastapi import FastAPI
+
+TEST_DB = Path(gettempdir()) / "khoailang-white-box-assistant.db"
+API = "/api/v1"
+
+# What the scripted assistant answers. A test sets it before sending the message.
+ANSWER: dict[str, Any] = {"kind": "workflow", "text": "", "commands": []}
+# The steps the scripted assistant makes before its answer, and the prompts it was given.
+STEPS: list[dict[str, Any]] = []
+SEEN: list[str] = []
+# A test that holds the assistant while it works clears this and sets it to let it go on.
+OPEN = threading.Event()
+OPEN.set()
+# The number of steps the assistant makes before it waits for `OPEN`.
+HOLD = {"after": 0}
+
+
+class AssistantData(DemoData):
+    """The demo dataset, with the assistant answering what the test asked for."""
+
+    @staticmethod
+    def AssistantDecision(  # noqa: N802 - the name is the schema the model answers
+        system: str, user: str, call_number: int
+    ) -> dict[str, Any]:
+        return dict(ANSWER)
+
+    @staticmethod
+    def AssistantStep(  # noqa: N802 - the name is the schema the model answers
+        system: str, user: str, call_number: int
+    ) -> dict[str, Any]:
+        """A step of the scripted loop: the queued reads first, then the answer."""
+        if len(SEEN) >= HOLD["after"]:
+            OPEN.wait(timeout=10)
+        SEEN.append(user)
+        if STEPS:
+            return STEPS.pop(0)
+        return {"tool_calls": [], "answer": dict(ANSWER)}
+
+
+@pytest.fixture
+async def app() -> AsyncIterator[FastAPI]:
+    TEST_DB.unlink(missing_ok=True)
+    settings = Settings(
+        app_env="test",
+        database_url=f"sqlite+aiosqlite:///{TEST_DB}",
+        log_level="WARNING",
+        log_format="json",
+    )
+    application = create_app(settings)
+    engine = make_async_engine(settings)
+    await ensure_schema(engine)
+    application.state.session_factory = make_session_factory(engine)
+    application.state.sync_engine = make_sync_engine(settings)
+    try:
+        yield application
+    finally:
+        await engine.dispose()
+        application.state.sync_engine.dispose()
+        TEST_DB.unlink(missing_ok=True)
+
+
+@pytest.fixture
+async def client(app: FastAPI) -> AsyncIterator[AsyncClient]:
+    transport = ASGITransport(app=app)
+    async with AsyncClient(
+        transport=transport,
+        base_url="http://testserver",
+        headers={"Origin": "http://localhost:3000"},
+    ) as http:
+        yield http
+
+
+@pytest.fixture
+async def project_and_thread(client: AsyncClient) -> tuple[str, str]:
+    await client.post(f"{API}/auth/register", json=REGISTER)
+    await client.post(f"{API}/auth/login", json={"email": REGISTER["email"], "password": "secret"})
+    project = await client.post(f"{API}/projects", json={"name": "Mentors"})
+    thread = await client.post(f"{API}/projects/{project.json()['id']}/threads")
+    return str(project.json()["id"]), str(thread.json()["id"])
+
+
+def _assistant(**answer: Any) -> Any:
+    """Answer the next messages with this decision, from a model that nothing else reaches."""
+    ANSWER.clear()
+    ANSWER.update({"kind": "workflow", "text": "", "commands": [], **answer})
+    STEPS.clear()
+    SEEN.clear()
+    HOLD["after"] = 0
+    return patch.object(llm_factory, "make_demo_data", lambda _name: AssistantData())
+
+
+async def _send(client: AsyncClient, thread_id: str, content: str, **headers: Any) -> Any:
+    return await client.post(
+        f"{API}/threads/{thread_id}/messages", json={"content": content}, headers=headers
+    )
+
+
+async def _answer_text(client: AsyncClient, thread_id: str) -> str:
+    """The words of the last message of the thread: the answer, as it is stored with the run."""
+    messages = (await client.get(f"{API}/threads/{thread_id}/messages")).json()["items"]
+    return str(messages[-1]["content"])
+
+
+async def _commands_of_answer(client: AsyncClient, thread_id: str) -> list[dict[str, Any]]:
+    """The commands that the answer in the thread asks the client to run."""
+    messages = (await client.get(f"{API}/threads/{thread_id}/messages")).json()["items"]
+    return list(messages[-1]["commands"])
+
+
+async def test_a_message_about_the_application_is_answered_without_a_run(
+    client: AsyncClient, project_and_thread: tuple[str, str]
+) -> None:
+    project_id, thread_id = project_and_thread
+    with _assistant(kind="general", text="You can read the interviews first."):
+        reset_model_cache()
+        response = await _send(client, thread_id, "Which document should I read first?")
+
+    assert response.status_code == 201
+    body = response.json()
+    assert body["run"]["workflow_name"] == "assistance"
+    assert body["run"]["status"] == "succeeded"
+    assert body["message"]["run_id"] == body["run"]["id"]
+    assert await _answer_text(client, thread_id) == "You can read the interviews first."
+    assert set(body) == {"message", "run"}
+    assert await _commands_of_answer(client, thread_id) == []
+    assert body["message"]["delivery"] == "delivered"
+
+    runs = (await client.get(f"{API}/threads/{thread_id}/runs")).json()["items"]
+    assert [run["workflow_name"] for run in runs] == ["assistance"], (
+        "the answer is a run of the assistance workflow, and the only one"
+    )
+    main = (
+        await client.get(f"{API}/threads/{thread_id}/runs?workflow=requirements_engineering")
+    ).json()["items"]
+    assert main == [], "it is not a run of the main workflow"
+    answered = (await client.get(f"{API}/threads/{thread_id}/runs?workflow=assistance")).json()[
+        "items"
+    ]
+    assert [run["id"] for run in answered] == [runs[0]["id"]]
+    thread = (await client.get(f"{API}/threads/{thread_id}")).json()
+    assert thread["active_run_id"] is None, "an answer is over before anyone could follow it"
+    assert thread["latest_run_status"] is None, "and it is not the latest run of the thread"
+
+    messages = (await client.get(f"{API}/threads/{thread_id}/messages")).json()["items"]
+    assert [(entry["author"], entry["agent_role"]) for entry in messages] == [
+        ("user", None),
+        ("agent", "assistant"),
+    ], "the answer is stored with the conversation and survives a reload"
+    assert {entry["run_id"] for entry in messages} == {body["run"]["id"]}, "both belong to its run"
+
+    project = (await client.get(f"{API}/projects/{project_id}")).json()
+    assert project["initial_message_id"] is None, "an answered question is not the project's idea"
+
+
+async def test_a_message_about_the_work_starts_a_run(
+    client: AsyncClient, project_and_thread: tuple[str, str]
+) -> None:
+    _project_id, thread_id = project_and_thread
+    with _assistant(kind="workflow"):
+        reset_model_cache()
+        response = await _send(client, thread_id, TASK)
+
+    body = response.json()
+    assert body["run"] is not None
+    assert body["run"]["status"] in {"queued", "running", "succeeded", "interrupted"}
+
+
+async def test_a_command_that_names_another_projects_document_is_dropped(
+    client: AsyncClient, project_and_thread: tuple[str, str]
+) -> None:
+    _project_id, thread_id = project_and_thread
+    with _assistant(
+        kind="general",
+        text="Opening the plan.",
+        commands=[
+            {"command": "open_document", "artifact_id": "11111111-1111-4111-8111-111111111111"}
+        ],
+    ):
+        reset_model_cache()
+        response = await _send(client, thread_id, "Open the plan")
+
+    assert response.status_code == 201
+    assert await _commands_of_answer(client, thread_id) == [], (
+        "an id outside the project never leaves"
+    )
+
+
+async def test_a_command_that_is_not_in_the_catalog_is_dropped(
+    client: AsyncClient, project_and_thread: tuple[str, str]
+) -> None:
+    _project_id, thread_id = project_and_thread
+    with _assistant(
+        kind="general",
+        text="Here are the settings.",
+        commands=[{"command": "send_to_workflow"}, {"command": "open_settings"}],
+    ):
+        reset_model_cache()
+        await _send(client, thread_id, "Show me the settings")
+
+    kept = await _commands_of_answer(client, thread_id)
+    assert [entry["command"] for entry in kept] == ["open_settings"], (
+        "a key that the catalog does not list never leaves, and one that needs nothing does"
+    )
+
+
+async def test_the_prompt_lists_the_commands_of_the_catalog(
+    client: AsyncClient, project_and_thread: tuple[str, str]
+) -> None:
+    _project_id, thread_id = project_and_thread
+    with _assistant(kind="workflow"):
+        reset_model_cache()
+        await _send(client, thread_id, TASK)
+
+    seen = "\n".join(SEEN)
+    for key in catalogs.command_catalog():
+        assert f"`{key}`" in seen, f"the prompt does not list the command {key}"
+
+
+async def test_a_repeated_request_answers_once(
+    client: AsyncClient, project_and_thread: tuple[str, str]
+) -> None:
+    _project_id, thread_id = project_and_thread
+    key = {"Idempotency-Key": "k1"}
+    with _assistant(kind="general", text="The cost limit stops a run that spends too much."):
+        reset_model_cache()
+        first = await _send(client, thread_id, "What is the cost limit?", **key)
+        second = await _send(client, thread_id, "What is the cost limit?", **key)
+
+    assert first.status_code == second.status_code == 201
+    assert first.json() == second.json()
+    messages = (await client.get(f"{API}/threads/{thread_id}/messages")).json()["items"]
+    assert len(messages) == 2, "the replay stores no second answer"
+
+
+async def test_the_prompt_of_the_assistant_loads() -> None:
+    prompt = prompt_loader.load_prompt(PROMPTS_PACKAGE, "assistant", ASSISTANT_PROMPT_VERSION)
+    assert prompt.role == "assistant"
+    assert {item.name for item in prompt.inputs} >= {
+        "message",
+        "project",
+        "history",
+        "tools",
+        "commands",
+    }
+    assert not {"documents", "settings"} & {item.name for item in prompt.inputs}, (
+        "what the project holds is read with the tools, not given"
+    )
+
+
+async def test_reads_that_do_not_depend_on_each_other_cost_one_call_of_the_model(
+    app: FastAPI, client: AsyncClient, project_and_thread: tuple[str, str]
+) -> None:
+    """One step asks for two reads, both results reach the next step, and both are notes."""
+    project_id, thread_id = project_and_thread
+    await _seed_item(app, project_id)
+    answer = {"kind": "general", "text": "REQ-003 shows the review round."}
+    with _assistant(**answer):
+        STEPS.append(
+            {
+                "tool_calls": [
+                    {"tool": "read_item", "key": "REQ-003"},
+                    {"tool": "run_settings", "key": None},
+                ]
+            }
+        )
+        reset_model_cache()
+        response = await _send(client, thread_id, "What does REQ-003 say, and what are the limits?")
+
+    assert response.status_code == 201
+    assert len(SEEN) == 2, "two reads in one step, then the answer: two calls of the model"
+    assert '<tool_result tool="read_item">' in SEEN[-1]
+    assert '<tool_result tool="run_settings">' in SEEN[-1]
+    run_id = response.json()["run"]["id"]
+    steps = (await client.get(f"{API}/runs/{run_id}/steps")).json()["items"]
+    assert [note["tool"] for note in steps[0]["notes"]] == ["read_item", "run_settings"]
+
+
+async def test_a_read_comes_back_before_the_answer(
+    app: FastAPI, client: AsyncClient, project_and_thread: tuple[str, str]
+) -> None:
+    """The model asks for one item, reads it, and answers from what it read."""
+    project_id, thread_id = project_and_thread
+    spec_id = await _seed_item(app, project_id)
+    answer = {"kind": "general", "text": "REQ-003 shows the review round."}
+    with _assistant(**answer):
+        STEPS.append({"tool_calls": [{"tool": "read_item", "key": "REQ-003"}]})
+        reset_model_cache()
+        response = await _send(client, thread_id, "What does REQ-003 say?")
+
+    assert response.status_code == 201
+    assert await _answer_text(client, thread_id) == "REQ-003 shows the review round."
+    assert len(SEEN) == 2, "one step names the read, the next one answers"
+    assert "REQ-003 (spec_requirement), id " in SEEN[-1], (
+        "the tool result reaches the prompt of the next step"
+    )
+    assert spec_id is not None
+
+    run_id = response.json()["run"]["id"]
+    steps = (await client.get(f"{API}/runs/{run_id}/steps")).json()["items"]
+    assert [(step["node"], step["agent_role"], step["stage"]) for step in steps] == [
+        ("assistant", "assistant", "lookup")
+    ]
+    assert [(note["kind"], note["tool"]) for note in steps[0]["notes"]] == [
+        ("tool", "read_item")
+    ], "each read is a note of kind tool, named by a tool of the assistance definition"
+    assert response.json()["run"]["step_count"] == 1
+
+    messages = (await client.get(f"{API}/threads/{thread_id}/messages")).json()["items"]
+    answer_message = messages[-1]
+    assert answer_message["agent_role"] == "assistant"
+    assert [ref["key"] for ref in answer_message["item_refs"]] == ["REQ-003"], (
+        "the answer names the item it was read from"
+    )
+    assert messages[0]["item_refs"] == [], "the question names nothing"
+
+
+async def test_the_message_is_counted_where_the_budget_reads(
+    client: AsyncClient, project_and_thread: tuple[str, str]
+) -> None:
+    """An answered message costs tokens that no run holds, so the usage view must show them."""
+    _project_id, thread_id = project_and_thread
+    with _assistant(kind="general", text="The limit is 80 steps."):
+        reset_model_cache()
+        await _send(client, thread_id, "How many steps may a run take?")
+
+    usage = (await client.get(f"{API}/me/usage?group_by=agent_role")).json()
+    assert usage["total"]["input_tokens"] > 0
+    assert [group["key"] for group in usage["groups"]] == ["assistant"]
+
+
+async def _seed_item(app: FastAPI, project_id: str) -> str:
+    """One specification with one item, as a finished run would leave behind."""
+    factory = app.state.session_factory
+    async with factory() as session:
+        artifact = ArtifactRow(
+            project_id=UUID(project_id),
+            kind="requirement_specification",
+            title="Requirement specification",
+            version=1,
+            content_json=b"{}",
+        )
+        session.add(artifact)
+        await session.flush()
+        session.add(
+            ArtifactItemRow(
+                artifact_id=artifact.id,
+                project_id=UUID(project_id),
+                kind="spec_requirement",
+                key="REQ-003",
+                content_json=json.dumps(
+                    {"title": "Show the review round", "priority": "must"}
+                ).encode("utf-8"),
+                version=4,
+            )
+        )
+        await session.commit()
+        return str(artifact.id)
+
+
+async def test_the_definition_of_each_workflow_is_served_by_its_name(client: AsyncClient) -> None:
+    await client.post(f"{API}/auth/register", json=REGISTER)
+    await client.post(f"{API}/auth/login", json={"email": REGISTER["email"], "password": "secret"})
+
+    assistance = await client.get(f"{API}/workflow/definition?name=assistance")
+    pinned = await client.get(f"{API}/workflow/definition?name=assistance&version=1")
+    default = await client.get(f"{API}/workflow/definition")
+    unknown = await client.get(f"{API}/workflow/definition?name=nothing")
+    missing = await client.get(f"{API}/workflow/definition?name=assistance&version=9")
+
+    assert assistance.json()["name"] == "assistance"
+    assert pinned.json() == assistance.json()
+    assert "immutable" in pinned.headers["cache-control"]
+    assert default.json()["name"] == "requirements_engineering"
+    assert unknown.status_code == 404
+    assert missing.status_code == 404
+
+
+_RUN_CONFIG = json.dumps(
+    {
+        "models": {},
+        "review_checkpoints": [],
+        "output_language": "en",
+        "max_steps": 50,
+        "max_cost_usd": None,
+        "parameters": {},
+    }
+).encode("utf-8")
+
+
+async def _seed_run(
+    app: FastAPI, project_id: str, thread_id: str, *, status: str, number: int = 1
+) -> str:
+    """A run of the requirements workflow that another request wrote."""
+    async with app.state.session_factory() as session:
+        run = RunRow(
+            thread_id=UUID(thread_id),
+            project_id=UUID(project_id),
+            number=number,
+            started_by=(await session.scalar(sa.select(UserRow.id))),
+            workflow_name="requirements_engineering",
+            workflow_version=2,
+            status=status,
+            current_stage="planning",
+            run_config_json=_RUN_CONFIG,
+            usage_json=json.dumps(runs_service.ZERO_USAGE).encode("utf-8"),
+        )
+        session.add(run)
+        await session.commit()
+        return str(run.id)
+
+
+async def test_a_message_that_loses_the_race_to_start_a_run_waits_for_the_winner(
+    app: FastAPI,
+    client: AsyncClient,
+    project_and_thread: tuple[str, str],
+    monkeypatch: pytest.MonkeyPatch,
+) -> None:
+    """Two requests look, both find no unfinished run, and both write: the database refuses the
+    second, which then waits in the run of the first instead of failing."""
+    project_id, thread_id = project_and_thread
+    winner = await _seed_run(app, project_id, thread_id, status="running")
+    real = runs_service.unfinished_run_of_thread
+    looked: list[str] = []
+
+    async def stale_first(*args: Any, **kwargs: Any) -> Any:
+        looked.append("looked")
+        return None if len(looked) == 1 else await real(*args, **kwargs)
+
+    monkeypatch.setattr(runs_service, "unfinished_run_of_thread", stale_first)
+
+    with _assistant(kind="workflow"):
+        reset_model_cache()
+        response = await _send(client, thread_id, TASK)
+
+    assert response.status_code == 201
+    body = response.json()
+    assert body["run"]["id"] == winner, "the message waits in the run that won"
+    assert body["message"]["delivery"] == "pending"
+    runs = (await client.get(f"{API}/threads/{thread_id}/runs")).json()["items"]
+    assert [run["id"] for run in runs] == [winner], "no second unfinished run was written"
+
+
+async def test_a_run_that_loses_its_number_is_written_again_with_the_next_one(
+    app: FastAPI,
+    client: AsyncClient,
+    project_and_thread: tuple[str, str],
+    monkeypatch: pytest.MonkeyPatch,
+) -> None:
+    """A run of the thread took number 1 after this one read the last number."""
+    project_id, thread_id = project_and_thread
+    await _seed_run(app, project_id, thread_id, status="succeeded", number=1)
+    real = runs_service.next_run_number
+    asked: list[int] = []
+
+    async def stale_first(*args: Any, **kwargs: Any) -> int:
+        asked.append(1)
+        return 1 if len(asked) == 1 else await real(*args, **kwargs)
+
+    monkeypatch.setattr(runs_service, "next_run_number", stale_first)
+
+    with _assistant(kind="general", text="You can read the interviews first."):
+        reset_model_cache()
+        response = await _send(client, thread_id, "Which document should I read first?")
+
+    assert response.status_code == 201
+    assert response.json()["run"]["number"] == 2
+    assert len(asked) == 2, "the first number was refused and the next one was asked for"
+
+
+async def test_two_messages_sent_together_start_one_run_and_one_waits_for_it(
+    client: AsyncClient, project_and_thread: tuple[str, str]
+) -> None:
+    _project_id, thread_id = project_and_thread
+
+    with _assistant(kind="workflow"):
+        reset_model_cache()
+        first, second = await asyncio.gather(
+            _send(client, thread_id, TASK, **{"Idempotency-Key": "a"}),
+            _send(client, thread_id, TASK, **{"Idempotency-Key": "b"}),
+        )
+
+    assert first.status_code == second.status_code == 201
+    runs = (await client.get(f"{API}/threads/{thread_id}/runs")).json()["items"]
+    unfinished = [run for run in runs if run["status"] in {"queued", "running", "interrupted"}]
+    assert len(unfinished) <= 1, "a thread never holds two unfinished runs of a workflow"
+    numbers = [run["number"] for run in runs]
+    assert len(numbers) == len(set(numbers)), "and no two runs share a number"
+    messages = (await client.get(f"{API}/threads/{thread_id}/messages")).json()["items"]
+    sequences = [message["sequence"] for message in messages]
+    assert sequences == list(range(1, len(sequences) + 1)), "the messages are numbered in order"
+
+
+async def _wait_until(check: Any) -> None:
+    for _ in range(100):
+        if await check():
+            return
+        await asyncio.sleep(0.05)
+    msg = "the condition did not come true"
+    raise AssertionError(msg)
+
+
+async def test_the_request_ends_while_the_assistant_works_and_the_run_follows_it(
+    app: FastAPI, client: AsyncClient, project_and_thread: tuple[str, str]
+) -> None:
+    _project_id, thread_id = project_and_thread
+    app.state.executor = RunExecutor("background")
+    OPEN.clear()
+    try:
+        with _assistant(kind="general", text="You can read the interviews first."):
+            reset_model_cache()
+            response = await _send(client, thread_id, "Which document should I read first?")
+            body = response.json()
+
+            assert response.status_code == 201
+            assert body["run"]["workflow_name"] == "assistance"
+            assert body["run"]["status"] == "running", "the request did not wait for the answer"
+            assert body["message"]["run_id"] == body["run"]["id"]
+            messages = (await client.get(f"{API}/threads/{thread_id}/messages")).json()["items"]
+            assert [entry["author"] for entry in messages] == ["user"], "no answer yet"
+
+            OPEN.set()
+
+            async def is_answered() -> bool:
+                run = (await client.get(f"{API}/runs/{body['run']['id']}")).json()
+                return bool(run["status"] == "succeeded")
+
+            await _wait_until(is_answered)
+    finally:
+        OPEN.set()
+    assert await _answer_text(client, thread_id) == "You can read the interviews first."
+
+
+async def test_a_question_that_comes_while_the_assistant_answers_waits_for_that_answer(
+    app: FastAPI, client: AsyncClient, project_and_thread: tuple[str, str]
+) -> None:
+    _project_id, thread_id = project_and_thread
+    app.state.executor = RunExecutor("background")
+    OPEN.clear()
+    try:
+        with _assistant(kind="general", text="You can read the interviews first."):
+            reset_model_cache()
+            first = (await _send(client, thread_id, "Which document first?")).json()
+            second = (await _send(client, thread_id, "And which one after that?")).json()
+
+            assert second["run"]["id"] == first["run"]["id"], "it waits in the run that answers"
+            assert second["message"]["delivery"] == "pending"
+
+            OPEN.set()
+
+            async def has_two_answers() -> bool:
+                entries = (await client.get(f"{API}/threads/{thread_id}/messages")).json()["items"]
+                return [entry["author"] for entry in entries].count("agent") == 2
+
+            await _wait_until(has_two_answers)
+    finally:
+        OPEN.set()
+    runs = (await client.get(f"{API}/threads/{thread_id}/runs")).json()["items"]
+    assert sorted(run["number"] for run in runs) == [1, 2], "each question has its own run"
+    assert {run["status"] for run in runs} == {"succeeded"}
+    messages = (await client.get(f"{API}/threads/{thread_id}/messages")).json()["items"]
+    assert [entry["author"] for entry in messages] == ["user", "user", "agent", "agent"]
+    assert messages[1]["delivery"] == "delivered", "answered once its turn came"
+
+
+async def test_a_call_shows_in_the_run_before_the_answer_is_there(
+    app: FastAPI, client: AsyncClient, project_and_thread: tuple[str, str]
+) -> None:
+    project_id, thread_id = project_and_thread
+    await _seed_item(app, project_id)
+    app.state.executor = RunExecutor("background")
+    answer = {"kind": "general", "text": "REQ-003 shows the review round."}
+    with _assistant(**answer):
+        STEPS.append({"tool_calls": [{"tool": "read_item", "key": "REQ-003"}]})
+        reset_model_cache()
+        # The first step makes the call at once; the second, the answer, waits.
+        HOLD["after"] = 1
+        OPEN.clear()
+        sent = (await _send(client, thread_id, "What does REQ-003 say?")).json()
+
+        async def has_the_note() -> bool:
+            steps = (await client.get(f"{API}/runs/{sent['run']['id']}/steps")).json()["items"]
+            return bool(steps and [note["tool"] for note in steps[0]["notes"]] == ["read_item"])
+
+        await _wait_until(has_the_note)
+        run = (await client.get(f"{API}/runs/{sent['run']['id']}")).json()
+        assert run["status"] == "running", "the note is there while the run still works"
+        OPEN.set()
+
+        async def is_answered() -> bool:
+            return bool(
+                (await client.get(f"{API}/runs/{sent['run']['id']}")).json()["status"]
+                == "succeeded"
+            )
+
+        await _wait_until(is_answered)
+
+
+async def test_a_message_that_comes_while_the_assistant_works_is_read_in_its_next_step(
+    app: FastAPI, client: AsyncClient, project_and_thread: tuple[str, str]
+) -> None:
+    project_id, thread_id = project_and_thread
+    await _seed_item(app, project_id)
+    app.state.executor = RunExecutor("background")
+    with _assistant(kind="general", text="REQ-003 shows the review round, and so on."):
+        STEPS.append({"tool_calls": [{"tool": "read_item", "key": "REQ-003"}]})
+        reset_model_cache()
+        # The model is held in its first step while the second message comes.
+        OPEN.clear()
+        first = (await _send(client, thread_id, "What does REQ-003 say?")).json()
+        second = (await _send(client, thread_id, "And what about the limits?")).json()
+        assert second["run"]["id"] == first["run"]["id"], "it comes into the run that works"
+        OPEN.set()
+
+        async def is_answered() -> bool:
+            return bool(
+                (await client.get(f"{API}/runs/{first['run']['id']}")).json()["status"]
+                == "succeeded"
+            )
+
+        await _wait_until(is_answered)
+
+    assert any("<new_message>\nAnd what about the limits?" in seen for seen in SEEN), (
+        "the model read the message in a later step"
+    )
+    messages = (await client.get(f"{API}/threads/{thread_id}/messages")).json()["items"]
+    sent = next(entry for entry in messages if entry["content"] == "And what about the limits?")
+    assert (sent["run_id"], sent["delivery"]) == (first["run"]["id"], "delivered")
+    assert [entry["author"] for entry in messages].count("agent") == 1, "one reply for both"
+
+
+async def test_many_questions_sent_together_are_each_answered_and_numbered_in_order(
+    client: AsyncClient, project_and_thread: tuple[str, str]
+) -> None:
+    _project_id, thread_id = project_and_thread
+    asked = 6
+
+    with _assistant(kind="general", text="You can read the interviews first."):
+        reset_model_cache()
+        responses = await asyncio.gather(
+            *(
+                _send(client, thread_id, f"Which document should I read first? ({n})")
+                for n in range(asked)
+            )
+        )
+
+    assert [response.status_code for response in responses] == [201] * asked
+    runs = (await client.get(f"{API}/threads/{thread_id}/runs")).json()["items"]
+    numbers = sorted(run["number"] for run in runs)
+    assert numbers == list(range(1, len(numbers) + 1)), "the runs are numbered in order, no gaps"
+    messages = (await client.get(f"{API}/threads/{thread_id}/messages")).json()["items"]
+    assert [message["sequence"] for message in messages] == list(range(1, len(messages) + 1))
+    users = [message for message in messages if message["author"] == "user"]
+    agents = [message for message in messages if message["author"] == "agent"]
+    assert len(users) == asked, "every question is stored"
+    assert all(message["delivery"] == "delivered" for message in users), "and taken in"
+    assert len(agents) == len(runs), "each run of the assistant ends with its answer"
+    assert {message["run_id"] for message in users} <= {run["id"] for run in runs}, (
+        "a question that came while the assistant worked is answered in that run"
+    )
+
+
+async def test_a_run_that_cannot_get_a_number_answers_409_and_not_a_server_error(
+    app: FastAPI,
+    client: AsyncClient,
+    project_and_thread: tuple[str, str],
+    monkeypatch: pytest.MonkeyPatch,
+) -> None:
+    project_id, thread_id = project_and_thread
+    await _seed_run(app, project_id, thread_id, status="succeeded", number=1)
+
+    async def always_taken(*_args: Any, **_kwargs: Any) -> int:
+        return 1
+
+    monkeypatch.setattr(runs_service, "next_run_number", always_taken)
+
+    with _assistant(kind="general", text="You can read the interviews first."):
+        reset_model_cache()
+        response = await _send(client, thread_id, "Which document should I read first?")
+
+    assert response.status_code == 409
+    assert response.json()["code"] == "invalid_state"

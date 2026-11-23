@@ -12,6 +12,7 @@ from sqlalchemy import select
 if TYPE_CHECKING:
     from sqlalchemy.ext.asyncio import AsyncSession
 
+from khoailanggraph.agents import workflows
 from khoailanggraph.api.errors import ApiError
 from khoailanggraph.features.projects.models import ProjectRow
 from khoailanggraph.features.projects.service import get_project_row, has_unfinished_thread_run
@@ -28,10 +29,28 @@ async def latest_run_status(session: AsyncSession, thread_id: UUID) -> str | Non
     """The status of the latest run of a thread, unfinished or ended; null before its first run."""
     return await session.scalar(
         select(RunRow.status)
-        .where(RunRow.thread_id == thread_id)
+        .where(
+            RunRow.thread_id == thread_id,
+            RunRow.workflow_name == workflows.MAIN_WORKFLOW.name,
+        )
         .order_by(RunRow.number.desc())
         .limit(1)
     )
+
+
+async def active_run_of_thread(session: AsyncSession, thread_id: UUID) -> str | None:
+    """The run of the main workflow that is queued, running or waiting for a review, if there is
+    one: it comes from the runs of the thread, which hold at most one of each workflow."""
+    found = await session.scalar(
+        select(RunRow.id)
+        .where(
+            RunRow.thread_id == thread_id,
+            RunRow.workflow_name == workflows.MAIN_WORKFLOW.name,
+            RunRow.status.in_(("queued", "running", "interrupted")),
+        )
+        .limit(1)
+    )
+    return str(found) if found is not None else None
 
 
 async def thread_view(session: AsyncSession, row: ThreadRow) -> schemas.ThreadSummary:
@@ -43,7 +62,7 @@ async def thread_view(session: AsyncSession, row: ThreadRow) -> schemas.ThreadSu
         title=row.title,
         status=row.status,
         current_stage=row.current_stage,
-        active_run_id=str(row.active_run_id) if row.active_run_id else None,
+        active_run_id=await active_run_of_thread(session, row.id),
         latest_run_status=cast(
             "schemas.RunStatus | None", await latest_run_status(session, row.id)
         ),
@@ -53,13 +72,13 @@ async def thread_view(session: AsyncSession, row: ThreadRow) -> schemas.ThreadSu
     )
 
 
-async def get_thread_row(session: AsyncSession, thread_id: UUID) -> ThreadRow:
-    """The thread row; 404 Problem carries a message the FE trusts."""
+async def get_thread_row(session: AsyncSession, thread_id: UUID, owner_id: UUID) -> ThreadRow:
+    """The thread row of this owner; a thread of another user answers like a missing one."""
     row = await session.get(ThreadRow, thread_id)
     if row is None or row.deleted_at is not None:
         raise ApiError(404, "not_found", "Not found", "The thread does not exist.")
     project = await session.get(ProjectRow, row.project_id)
-    if project is None or project.deleted_at is not None:
+    if project is None or project.deleted_at is not None or project.owner_id != owner_id:
         raise ApiError(404, "not_found", "Not found", "The thread does not exist.")
     return row
 
@@ -68,11 +87,12 @@ async def list_threads(
     session: AsyncSession,
     *,
     project_id: UUID,
+    owner_id: UUID,
     cursor: int,
     limit: int,
 ) -> tuple[list[schemas.ThreadSummary], int | None]:
     """The threads of a project, newest message first (API.md §5)."""
-    await get_project_row(session, project_id)
+    await get_project_row(session, project_id, owner_id)
     statement = (
         select(ThreadRow)
         .where(
@@ -81,10 +101,10 @@ async def list_threads(
         )
         .order_by(ThreadRow.last_message_at.desc(), ThreadRow.id)
     )
-    statement = statement.offset(cursor).limit(limit) if cursor else statement.limit(limit)
+    statement = statement.offset(cursor).limit(limit + 1) if cursor else statement.limit(limit + 1)
     rows = list((await session.scalars(statement)).all())
-    views = [await thread_view(session, row) for row in rows]
-    next_cursor = cursor + len(views) if len(views) == limit else None
+    views = [await thread_view(session, row) for row in rows[:limit]]
+    next_cursor = cursor + limit if len(rows) > limit else None
     return views, next_cursor
 
 
@@ -92,11 +112,12 @@ async def create_thread(
     session: AsyncSession,
     *,
     project_id: UUID,
+    owner_id: UUID,
     created_by: UUID,
     title: str | None = None,
 ) -> ThreadRow:
     """The empty conversation the first message later fills (§5)."""
-    await get_project_row(session, project_id)
+    await get_project_row(session, project_id, owner_id)
     row = ThreadRow(
         project_id=project_id,
         created_by=created_by,
@@ -106,25 +127,6 @@ async def create_thread(
     session.add(row)
     await session.flush()
     return row
-
-
-async def resolve_or_create_thread(
-    session: AsyncSession,
-    *,
-    project_id: UUID,
-    user_id: UUID,
-) -> ThreadRow:
-    """The project's single conversation; created on the first chat open."""
-    statement = (
-        select(ThreadRow)
-        .where(ThreadRow.project_id == project_id, ThreadRow.deleted_at.is_(None))
-        .order_by(ThreadRow.last_message_at.desc())
-        .limit(1)
-    )
-    existing = await session.scalar(statement)
-    if existing is not None:
-        return existing
-    return await create_thread(session, project_id=project_id, created_by=user_id)
 
 
 async def list_user_threads(

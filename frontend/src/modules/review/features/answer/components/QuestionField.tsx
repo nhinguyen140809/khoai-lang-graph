@@ -1,19 +1,22 @@
 'use client'
 
-import { type ComponentType, type ReactNode } from 'react'
+import { type ComponentType, type ReactNode, useRef } from 'react'
 import { type Control, useController } from 'react-hook-form'
 
 import type { InterruptQuestion } from '@/modules/review/entities'
 import type { QuestionAnswer } from '@/modules/workflow/entities'
 import {
   QuestionnaireChoice,
+  QuestionnaireChoiceDescription,
   QuestionnaireChoices,
   QuestionnaireError,
   QuestionnaireInput,
   QuestionnaireItem,
   QuestionnaireTitle,
 } from '@/shared/components/ui/questionnaire'
+import { useFocusWhen } from '@/shared/lib/viewport'
 
+import { answerReviewMessages as words } from '../answer-review.constants'
 import type { AnswerReviewFormValues } from '../answer-review.types'
 
 interface QuestionFieldProps {
@@ -30,15 +33,49 @@ interface QuestionInputProps {
   onChange: (answer: QuestionAnswer) => void
 }
 
+/**
+ * The text that a choice such as "Other" asks for, inside the box of the choice and above the
+ * overlay that takes the click of the box, and taking the focus as it shows.
+ */
+function ChoiceText({
+  label,
+  text,
+  onText,
+}: {
+  label: string
+  text: string
+  onText: (text: string) => void
+}) {
+  const input = useRef<HTMLInputElement>(null)
+  useFocusWhen(input, true)
+  return (
+    <div className="relative z-20 pt-1 pb-0.5">
+      <QuestionnaireInput
+        ref={input}
+        type="text"
+        aria-label={label}
+        value={text}
+        onChange={(event) => {
+          onText(event.target.value)
+        }}
+      />
+    </div>
+  )
+}
+
 /** The choices of a question, in one list; the input of the type decides what a click does. */
 function Choices({
   question,
   chosen,
+  text,
   onChoose,
+  onText,
 }: {
   question: InterruptQuestion
   chosen: readonly string[]
+  text: string
   onChoose: (key: string) => void
+  onText: (text: string) => void
 }) {
   return (
     <QuestionnaireChoices className="gap-1">
@@ -46,13 +83,32 @@ function Choices({
         <QuestionnaireChoice
           key={choice.key}
           value={choice.key}
-          className="min-h-9 py-1.5"
+          // The focus shows as a ring whatever took it, as the options of the review do.
+          className="min-h-9 py-1.5 has-[>input:focus]:border-ring has-[>input:focus]:ring-3 has-[>input:focus]:ring-ring/50"
           checked={chosen.includes(choice.key)}
           onChange={() => {
             onChoose(choice.key)
           }}
         >
-          {choice.label}
+          <span>
+            {choice.label}
+            {/* The default answer is the one that the agent would act on, so it says so. */}
+            {question.default_answer?.choice_keys.includes(choice.key) === true && (
+              <span className="ml-1.5 font-normal text-muted-foreground">{words.recommended}</span>
+            )}
+          </span>
+          {choice.description !== undefined && (
+            <QuestionnaireChoiceDescription className="text-wrap">
+              {choice.description}
+            </QuestionnaireChoiceDescription>
+          )}
+          {choice.requires_text && chosen.includes(choice.key) && (
+            <ChoiceText
+              label={`${words.moreAbout} "${question.prompt}"`}
+              text={text}
+              onText={onText}
+            />
+          )}
         </QuestionnaireChoice>
       ))}
     </QuestionnaireChoices>
@@ -65,8 +121,12 @@ function SingleSelectInput({ question, answer, onChange }: QuestionInputProps) {
     <Choices
       question={question}
       chosen={answer.choice_keys}
+      text={answer.text ?? ''}
       onChoose={(key) => {
         onChange({ ...answer, choice_keys: [key] })
+      }}
+      onText={(text) => {
+        onChange({ ...answer, text })
       }}
     />
   )
@@ -79,6 +139,7 @@ function MultiSelectInput({ question, answer, onChange }: QuestionInputProps) {
     <Choices
       question={question}
       chosen={chosen}
+      text={answer.text ?? ''}
       onChoose={(key) => {
         onChange({
           ...answer,
@@ -86,6 +147,9 @@ function MultiSelectInput({ question, answer, onChange }: QuestionInputProps) {
             ? chosen.filter((chosenKey) => chosenKey !== key)
             : [...chosen, key],
         })
+      }}
+      onText={(text) => {
+        onChange({ ...answer, text })
       }}
     />
   )
@@ -139,10 +203,6 @@ export function QuestionField({ question, control, actions }: QuestionFieldProps
   } = useController({ control, name: `answers.${question.key}` })
   const isInvalid = error !== undefined
   const { Input, isMultiple } = questionInputs[question.type]
-  const chosen = answer.choice_keys
-  const hasTextChoice = question.choices.some(
-    (choice) => choice.requires_text && chosen.includes(choice.key),
-  )
 
   return (
     <QuestionnaireItem
@@ -160,16 +220,6 @@ export function QuestionField({ question, control, actions }: QuestionFieldProps
         {actions}
       </div>
       <Input question={question} answer={answer} onChange={onChange} />
-      {hasTextChoice && (
-        <QuestionnaireInput
-          type="text"
-          aria-label={`More about your choice for "${question.prompt}"`}
-          value={answer.text ?? ''}
-          onChange={(event) => {
-            onChange({ ...answer, text: event.target.value })
-          }}
-        />
-      )}
       <QuestionnaireError>{isInvalid ? error.message : null}</QuestionnaireError>
     </QuestionnaireItem>
   )

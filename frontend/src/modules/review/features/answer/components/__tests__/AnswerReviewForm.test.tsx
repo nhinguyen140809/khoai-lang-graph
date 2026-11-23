@@ -98,6 +98,74 @@ describe('AnswerReviewForm', () => {
     await sentAnswer(requests)
   })
 
+  it('sends the answer on Enter from the options of the last step', async () => {
+    const requests = recordRequests()
+    const interrupt = await readPending()
+    await formOf(interrupt)
+    await waitFor(() => {
+      expect(screen.getAllByRole('radio')).toContain(document.activeElement)
+    })
+
+    await pressKeys('{Enter}')
+
+    await sentAnswer(requests)
+  })
+
+  it('shows what a choice does under its title, and the text that Other asks for inside its box', async () => {
+    const interrupt = await readPending('?mock-agent-questions=only')
+    await formOf(interrupt)
+
+    await expectText('The interviews ask the mentors who run sessions in the rooms.')
+    expectNoRole('textbox')
+    await pressRole('checkbox', 'Someone else, please specify')
+
+    const box = await screen.findByRole('textbox', { name: /More about your choice/ })
+    expect(box.closest('label')).toContainElement(
+      screen.getByRole('checkbox', { name: /Someone else, please specify/ }),
+    )
+    expect(box).toHaveFocus()
+  })
+
+  it('chooses the answer that has the focus on Enter, when it is not chosen yet', async () => {
+    const interrupt = await readPending('?mock-agent-questions=only')
+    await formOf(interrupt)
+    await pressButton('Next step')
+    await expectText('2 / 4')
+    await waitFor(() => {
+      expect(screen.getAllByRole('radio')).toContain(document.activeElement)
+    })
+
+    const radios = screen.getAllByRole('radio')
+    const start = radios.indexOf(document.activeElement as HTMLElement)
+
+    await pressKeys('{ArrowDown}')
+    const target = assertPresent(radios[(start + 1) % radios.length], 'The step has radios.')
+    expect(target).toHaveFocus()
+    expect(target).not.toBeChecked()
+    await pressKeys('{Enter}')
+
+    expect(target).toBeChecked()
+
+    // Going on past the last answer comes round to the first, and up from the first to the last.
+    await pressKeys('{ArrowDown}'.repeat(radios.length))
+    expect(target).toHaveFocus()
+    await pressKeys('{ArrowUp}')
+    expect(radios.at(radios.indexOf(target) - 1)).toHaveFocus()
+  })
+
+  it('does not send on Enter before the last step', async () => {
+    const requests = recordRequests()
+    const interrupt = await readPending('?mock-agent-questions=only')
+    await formOf(interrupt)
+    await waitFor(() => {
+      expect(screen.getAllByRole('checkbox')).toContain(document.activeElement)
+    })
+
+    await pressKeys('{Enter}')
+
+    expect(requests.filter(({ method }) => method === 'POST').map(({ path }) => path)).toEqual([])
+  })
+
   it('puts the writer straight into the feedback of the option it chooses', async () => {
     const requests = recordRequests()
     const interrupt = await readPending()
@@ -177,8 +245,27 @@ describe('AnswerReviewForm', () => {
     await pressKeys('{ArrowRight}')
 
     await expectText('2 / 4')
+    // The second question takes the focus as it slides in, once the first has slid out.
+    await waitFor(() => {
+      expect(screen.getAllByRole('radio')).toContain(document.activeElement)
+    })
     await pressKeys('{ArrowLeft}')
     await expectText('1 / 4')
+  })
+
+  it('takes the focus into the first question as it shows, and keeps it when a button moves on', async () => {
+    const interrupt = await readPending('?mock-agent-questions=only')
+    await formOf(interrupt)
+
+    await waitFor(() => {
+      expect(screen.getAllByRole('checkbox')).toContain(document.activeElement)
+    })
+    await pressButton('Next step')
+
+    await expectText('2 / 4')
+    await waitFor(() => {
+      expect(screen.getAllByRole('radio')).toContain(document.activeElement)
+    })
   })
 
   it('keeps the values and shows the reason when the send fails', async () => {

@@ -1,5 +1,7 @@
 import { describe, expect, it } from 'vitest'
 
+import { catalogEntries, catalogKeys } from '@/test/docs'
+
 import { acts, slotPlaces } from '../act.constants'
 import { actKeys, slots } from '../act.types'
 import {
@@ -18,6 +20,21 @@ import catalog from '../acts.catalog.json' with { type: 'json' }
 describe('the acts', () => {
   it('have the keys of the catalog of the workflow definition', () => {
     expect([...actKeys].sort()).toEqual(catalog.acts.map(({ key }) => key).sort())
+  })
+
+  // The catalog of the docs is the list that the server checks the acts of a stage or a tool
+  // against: a key added there fails here until the act is drawn, and a key drawn here that the
+  // docs do not list fails too, so the code, its own catalog and the docs never drift apart.
+  it('are the acts of the catalog in the docs, each one drawn', () => {
+    const documented = catalogKeys('acts.catalog.json', 'acts').sort()
+    expect([...actKeys].sort()).toEqual(documented)
+    expect(Object.keys(acts).sort()).toEqual(documented)
+  })
+
+  it('have the title of the catalog in the docs', () => {
+    const titles = (list: readonly { key: string; title: string }[]) =>
+      Object.fromEntries(list.map(({ key, title }) => [key, title]))
+    expect(titles(catalog.acts)).toEqual(titles(catalogEntries('acts.catalog.json', 'acts')))
   })
 
   it('stand in slots that have a place and a look', () => {

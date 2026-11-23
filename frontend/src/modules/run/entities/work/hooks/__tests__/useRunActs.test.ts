@@ -12,6 +12,7 @@ describe('useRunActs', () => {
       useRunActs({
         id: runIds.mentorMain3,
         status: 'running',
+        workflow_name: 'requirements_engineering',
         workflow_version: 2,
         current_stage: 'interviewing',
       }),

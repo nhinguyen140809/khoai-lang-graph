@@ -2,7 +2,7 @@ import { describe, expect, it } from 'vitest'
 
 import { workflowDefinitionFixture } from '@/mocks/workflow/workflow.fixtures'
 
-import { stageTitles, visibleStages, visibleStageTitle } from '../stages.utils'
+import { stageTitles, subjectKindByStage, visibleStages, visibleStageTitle } from '../stages.utils'
 import { expectedVisibleStages, nestedStages, visibleTitleCases } from './stages.utils.data'
 
 describe('stageTitles', () => {
@@ -38,5 +38,15 @@ describe('visibleStageTitle', () => {
 
   it('gives no title for the first stage of version 1, which is internal', () => {
     expect(visibleStageTitle(workflowDefinitionFixture, 'intent_routing')).toBeNull()
+  })
+})
+
+describe('subjectKindByStage', () => {
+  it('gives the subject item kind of each stage that runs once for each subject', () => {
+    const subjectsOfStage = subjectKindByStage(workflowDefinitionFixture)
+
+    expect(subjectsOfStage.get('interviewing')).toBe('persona')
+    // A kind with one artifact for the project gives its stage no subject.
+    expect(subjectsOfStage.has('planning')).toBe(false)
   })
 })

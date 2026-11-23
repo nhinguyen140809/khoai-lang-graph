@@ -5,8 +5,8 @@ import { SearchIcon } from 'lucide-react'
 import { Kbd, KbdGroup } from '@/shared/components/ui/kbd'
 import { ariaKeyShortcuts, hotkeyKeys, useModifierKeyName } from '@/shared/lib/hotkey'
 
-import { paletteHotkey } from '../../commands/command.constants'
-import { useCommandPalette } from '../../commands/hooks/useCommandPalette'
+import { useCommandPalette } from '../../palette/hooks/useCommandPalette'
+import { paletteHotkey } from '../../palette/palette.constants'
 
 /** Looks like a search box and opens the command palette, as its hotkey does. */
 export function SearchButton() {

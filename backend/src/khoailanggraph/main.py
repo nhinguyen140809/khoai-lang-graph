@@ -1,4 +1,9 @@
-"""FastAPI application factory: no side effects until the lifespan runs."""
+"""FastAPI application factory.
+
+Importing this module reads the settings, and with them `backend/.env`; the module-level `app`
+at the bottom therefore does that much at import. Every other side effect — the engines, the
+schema of a dev database, the recovery of interrupted runs — waits for the lifespan.
+"""
 
 from __future__ import annotations
 
@@ -9,12 +14,18 @@ import structlog
 from fastapi import FastAPI, Request, Response
 from fastapi.exceptions import RequestValidationError
 from fastapi.responses import JSONResponse
+from sqlalchemy import text
 
 import khoailanggraph.api.models_registry  # noqa: F401 - registers every table
 from khoailanggraph.api import deps, rate_limit
-from khoailanggraph.api.errors import ApiError, api_error_handler, integrity_error_handler
+from khoailanggraph.api.errors import (
+    ApiError,
+    api_error_handler,
+    integrity_error_handler,
+    not_numbered_handler,
+)
 from khoailanggraph.api.router import api_router
-from khoailanggraph.domain.errors import IntegrityError
+from khoailanggraph.domain.errors import IntegrityError, NotNumberedError
 from khoailanggraph.features.me import service as me_service
 from khoailanggraph.features.runs.executor import RunExecutor, recover_runs, run_job
 from khoailanggraph.platform.db import (
@@ -127,7 +138,13 @@ def create_app(settings: Settings | None = None) -> FastAPI:
 
     @app.get("/ready")
     async def ready() -> dict[str, str]:
+        """Answer only when the backing stores are reachable: the config file and, once the
+        lifespan has built one, a session on the database."""
         await readiness_check(resolved)
+        factory = getattr(app.state, "session_factory", None)
+        if factory is not None:
+            async with factory() as session:
+                await session.execute(text("SELECT 1"))
         return {"status": "ready"}
 
     rate_limit.install(app)  # inside the session middleware: it needs the user
@@ -136,6 +153,7 @@ def create_app(settings: Settings | None = None) -> FastAPI:
 
     app.add_exception_handler(ApiError, api_error_handler)
     app.add_exception_handler(IntegrityError, integrity_error_handler)
+    app.add_exception_handler(NotNumberedError, not_numbered_handler)
 
     async def validation_handler(_request: Request, exc: Exception) -> Response:
         """Render a request-body validation failure as Problem Details."""

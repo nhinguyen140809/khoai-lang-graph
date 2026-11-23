@@ -12,7 +12,7 @@ from __future__ import annotations
 import uuid
 from datetime import UTC, datetime
 
-from sqlalchemy import DateTime, ForeignKey, Integer, String, Text, Uuid
+from sqlalchemy import DateTime, ForeignKey, Index, Integer, String, Text, Uuid, text
 from sqlalchemy.orm import Mapped, mapped_column
 
 from khoailanggraph.platform.db import Base
@@ -23,8 +23,25 @@ def utcnow() -> datetime:
     return datetime.now(UTC)
 
 
+# The statuses of a run that has not ended: a thread has at most one such run of each workflow.
+UNFINISHED_RUN_STATUSES = ("queued", "running", "interrupted")
+_UNFINISHED_SQL = "status IN ('queued', 'running', 'interrupted')"
+
+
 class RunRow(Base):
     __tablename__ = "runs"
+    __table_args__ = (
+        # The number is the order of the run in its thread: two runs never share one.
+        Index("uq_runs_thread_number", "thread_id", "number", unique=True),
+        Index(
+            "uq_runs_one_unfinished_per_workflow",
+            "thread_id",
+            "workflow_name",
+            unique=True,
+            sqlite_where=text(_UNFINISHED_SQL),
+            postgresql_where=text(_UNFINISHED_SQL),
+        ),
+    )
 
     id: Mapped[uuid.UUID] = mapped_column(Uuid(), primary_key=True, default=uuid.uuid4)
     thread_id: Mapped[uuid.UUID] = mapped_column(

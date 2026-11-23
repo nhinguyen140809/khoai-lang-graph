@@ -31,6 +31,7 @@ from typing import TYPE_CHECKING, Any, cast
 from uuid import UUID, uuid4
 
 from sqlalchemy import func, select
+from sqlalchemy.exc import IntegrityError
 from sqlalchemy.orm import Session  # noqa: TC002 - runtime type of the session factory
 
 from khoailanggraph.agents.requirements_engineering import definition as workflow_definition
@@ -38,6 +39,7 @@ from khoailanggraph.agents.requirements_engineering import review, routing
 from khoailanggraph.agents.requirements_engineering.graph import build_re_graph
 from khoailanggraph.agents.requirements_engineering.ports import RunLimitError
 from khoailanggraph.agents.requirements_engineering.state import REState, make_initial_state
+from khoailanggraph.domain.run_config import DEFAULT_MAX_STEPS
 from khoailanggraph.features.artifacts.models import ArtifactRow
 from khoailanggraph.features.artifacts.service import SqlArtifactSink
 from khoailanggraph.features.documents.service import sync_latest_texts
@@ -46,6 +48,7 @@ from khoailanggraph.features.projects.models import ProjectRow
 from khoailanggraph.features.runs import restore, service
 from khoailanggraph.features.runs import usage as run_usage_totals
 from khoailanggraph.features.runs.models import (
+    UNFINISHED_RUN_STATUSES,
     DirectiveRow,
     HumanDecisionRow,
     InterruptRow,
@@ -54,6 +57,7 @@ from khoailanggraph.features.runs.models import (
     RunStepRow,
 )
 from khoailanggraph.features.threads.models import MessageRow, ThreadRow
+from khoailanggraph.features.threads.sequence import add_message_sync
 from khoailanggraph.llm import reset_model_cache
 from khoailanggraph.llm.note_stream import NoteStream
 from khoailanggraph.llm.usage import Usage, add_usage, zero_usage
@@ -267,7 +271,6 @@ class RunWalker:
             self.sink.bind(session)
             run.status = "running"
             run.started_at = run.started_at or _now()
-            self.thread.active_run_id = run.id
             try:
                 state = self._entry(resume_interrupt)
                 self.commit()
@@ -478,19 +481,16 @@ class RunWalker:
     def _say_something_else(self, text: str) -> None:
         """The answer of the user that no option says, as their message in the thread: it waits for
         the intent router, which reads it at the start of the walk."""
-        count = self.session.scalar(
-            select(func.count())
-            .select_from(MessageRow)
-            .where(MessageRow.thread_id == self.thread.id)
-        )
-        self.session.add(
-            MessageRow(
+        add_message_sync(
+            self.session,
+            self.thread.id,
+            lambda sequence: MessageRow(
                 thread_id=self.thread.id,
-                sequence=int(count or 0) + 1,
+                sequence=sequence,
                 author="user",
                 content=text,
                 delivery="pending",
-            )
+            ),
         )
         self.thread.last_message_at = _now()
         self.session.flush()
@@ -595,7 +595,7 @@ class RunWalker:
     def _graph_config(self) -> dict[str, Any]:
         engine = self.engine
         return {
-            "recursion_limit": max(int(self.config.get("max_steps", 400)) * 2, 50),
+            "recursion_limit": max(int(self.config.get("max_steps", DEFAULT_MAX_STEPS)) * 2, 50),
             "configurable": {
                 "run_id": str(self.run.id),
                 "artifact_sink": self.sink,
@@ -723,7 +723,7 @@ class RunWalker:
             return "stop"
         if node != "intent_router" and self._pending_messages():
             return "router"
-        if self.run.step_count >= int(self.config.get("max_steps", 400)):
+        if self.run.step_count >= int(self.config.get("max_steps", DEFAULT_MAX_STEPS)):
             self.failure = (
                 "step_limit_exceeded",
                 f"The run reached its limit of {self.config.get('max_steps')} steps.",
@@ -987,7 +987,6 @@ class RunWalker:
         return follow_up
 
     def _end_thread(self) -> None:
-        self.thread.active_run_id = None
         self.thread.current_stage = self.run.current_stage
 
     def _undeliver_pending(self) -> None:
@@ -995,30 +994,53 @@ class RunWalker:
             message.delivery = "undelivered"
 
     def _start_follow_up(self) -> UUID | None:
-        """Messages left pending by a run that succeeded start the next run together."""
+        """Messages left pending by a run that succeeded start the next run together.
+
+        A request may have started a run of the thread meanwhile, and the database refuses a second
+        unfinished run of the workflow: the messages then wait for that run, as they would have
+        if they had come after it. A run that took the number is written again with the next one.
+        """
         waiting = self._pending_messages()
         if not waiting:
             return None
-        run = RunRow(
-            id=uuid4(),
-            thread_id=self.thread.id,
-            project_id=self.project.id,
-            number=self.run.number + 1,
-            started_by=self.run.started_by,
-            workflow_name=self.run.workflow_name,
-            workflow_version=self.run.workflow_version,
-            status="queued",
-            current_stage="intent_routing",
-            run_config_json=self.run.run_config_json,
-            usage_json=_dumps(zero_usage()),
-        )
-        self.session.add(run)
-        self.session.flush()
-        for message in waiting:
-            message.delivery = "started_run"
-            message.run_id = run.id
-        self.thread.active_run_id = run.id
-        return run.id
+        for _attempt in range(service.RUN_NUMBER_ATTEMPTS):
+            top = self.session.scalar(
+                select(func.max(RunRow.number)).where(RunRow.thread_id == self.thread.id)
+            )
+            run = RunRow(
+                id=uuid4(),
+                thread_id=self.thread.id,
+                project_id=self.project.id,
+                number=int(top or 0) + 1,
+                started_by=self.run.started_by,
+                workflow_name=self.run.workflow_name,
+                workflow_version=self.run.workflow_version,
+                status="queued",
+                current_stage="intent_routing",
+                run_config_json=self.run.run_config_json,
+                usage_json=_dumps(zero_usage()),
+            )
+            try:
+                with self.session.begin_nested():
+                    self.session.add(run)
+            except IntegrityError:
+                existing = self.session.scalar(
+                    select(RunRow).where(
+                        RunRow.thread_id == self.thread.id,
+                        RunRow.workflow_name == self.run.workflow_name,
+                        RunRow.status.in_(UNFINISHED_RUN_STATUSES),
+                    )
+                )
+                if existing is not None:
+                    for message in waiting:
+                        message.run_id = existing.id
+                    return None
+                continue
+            for message in waiting:
+                message.delivery = "started_run"
+                message.run_id = run.id
+            return run.id
+        return None
 
 
 def run_job(engine: Engine, run_id: UUID, *, resume_interrupt: UUID | None = None) -> None:
@@ -1063,8 +1085,5 @@ def recover_runs(engine: Engine) -> list[UUID]:
                 {"message": run.error_message, "code": run.error_code, "stage": run.error_stage},
             )
             run.last_event_id = sink.emit("done", {"status": "failed"})
-            thread = session.get(ThreadRow, run.thread_id)
-            if thread is not None and thread.active_run_id == run.id:
-                thread.active_run_id = None
         session.commit()
     return queued

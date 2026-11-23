@@ -13,13 +13,16 @@ from typing import TYPE_CHECKING, Any, Literal, cast
 from uuid import UUID
 
 from sqlalchemy import func, select
+from sqlalchemy.exc import IntegrityError
 
 from khoailanggraph.agents.requirements_engineering import definition as workflow_definition
 from khoailanggraph.api.errors import ApiError
+from khoailanggraph.domain.errors import NotNumberedError
 from khoailanggraph.features.threads.models import MessageRow, ThreadRow
+from khoailanggraph.features.threads.sequence import add_message
 
 if TYPE_CHECKING:
-    from collections.abc import Mapping
+    from collections.abc import Callable, Mapping
 
     from sqlalchemy.ext.asyncio import AsyncSession
 
@@ -27,9 +30,11 @@ if TYPE_CHECKING:
 
 
 from khoailanggraph.features.artifacts.models import ArtifactItemRow
+from khoailanggraph.features.assistant.schemas import UiCommand
 from khoailanggraph.features.projects.models import ProjectRow
 from khoailanggraph.features.runs import schemas, usage
 from khoailanggraph.features.runs.models import (
+    UNFINISHED_RUN_STATUSES,
     DirectiveRow,
     HumanDecisionRow,
     InterruptRow,
@@ -124,6 +129,10 @@ def message_output(row: MessageRow) -> schemas.Message:
             schemas.ItemRef.model_validate(ref)
             for ref in json.loads((row.item_refs_json or b"[]").decode("utf-8"))
         ],
+        commands=[
+            UiCommand.model_validate(command)
+            for command in json.loads((row.commands_json or b"[]").decode("utf-8"))
+        ],
         created_at=row.created_at,
     )
 
@@ -181,25 +190,28 @@ async def append_message(
     *,
     thread: ThreadRow,
     content: str,
+    delivery: str = "started_run",
 ) -> MessageRow:
-    """The user's chat message, the only way a run starts (§5)."""
-    count = (
-        await session.scalar(
-            select(func.count()).select_from(MessageRow).where(MessageRow.thread_id == thread.id)
-        )
-    ) or 0
-    row = MessageRow(
-        thread_id=thread.id,
-        sequence=int(count) + 1,
-        author="user",
-        content=content,
-        delivery="started_run",  # or "pending" when a run is still open
+    """The user's chat message, the only way a run starts (§5).
+
+    A message the assistant answers is stored with `delivery="delivered"` and never becomes the
+    project's initial intent, because no run reads it.
+    """
+    row = await add_message(
+        session,
+        thread.id,
+        lambda sequence: MessageRow(
+            thread_id=thread.id,
+            sequence=sequence,
+            author="user",
+            content=content,
+            delivery=delivery,  # "pending" while a run is still open
+        ),
     )
-    session.add(row)
     thread.last_message_at = utcnow()
     await session.flush()
     project = await session.get(ProjectRow, thread.project_id)
-    if project is not None and project.initial_message_id is None:
+    if project is not None and project.initial_message_id is None and delivery == "started_run":
         project.initial_message_id = row.id
     return row
 
@@ -250,10 +262,13 @@ def run_step_output(row: RunStepRow) -> schemas.RunStep:
     )
 
 
-async def get_run_row(session: AsyncSession, run_id: UUID) -> RunRow:
+async def get_run_row(session: AsyncSession, run_id: UUID, owner_id: UUID) -> RunRow:
+    """The run row of this owner; a run of another user answers like a missing one."""
     row = await session.get(RunRow, run_id)
     project = None if row is None else await session.get(ProjectRow, row.project_id)
     if row is None or project is None or project.deleted_at is not None:
+        raise ApiError(404, "not_found", "Not found", "The run does not exist.")
+    if project.owner_id != owner_id:
         raise ApiError(404, "not_found", "Not found", "The run does not exist.")
     return row
 
@@ -303,16 +318,60 @@ def run_state_output(run: RunRow, step: RunStepRow | None) -> schemas.RunState:
     )
 
 
-async def unfinished_run_of_thread(session: AsyncSession, thread_id: UUID) -> RunRow | None:
-    """The run of the thread that is queued, running or waiting for a review, if there is one."""
+async def unfinished_run_of_thread(
+    session: AsyncSession, thread_id: UUID, workflow_name: str
+) -> RunRow | None:
+    """The run of a workflow in the thread that is queued, running or waiting for a review, if
+    there is one: a thread has at most one for each workflow."""
     return await session.scalar(
         select(RunRow)
         .where(
-            RunRow.thread_id == thread_id, RunRow.status.in_(("queued", "running", "interrupted"))
+            RunRow.thread_id == thread_id,
+            RunRow.workflow_name == workflow_name,
+            RunRow.status.in_(("queued", "running", "interrupted")),
         )
         .order_by(RunRow.number.desc())
         .limit(1)
     )
+
+
+class RunConflictError(Exception):
+    """A run of the workflow is already unfinished in the thread, which another request started
+    between the moment this one looked and the moment it wrote."""
+
+    def __init__(self, existing: RunRow) -> None:
+        super().__init__("the thread has an unfinished run of this workflow")
+        self.existing = existing
+
+
+# How many times a run is written again with the next number when another run took its number.
+RUN_NUMBER_ATTEMPTS = 5
+
+
+async def create_run(
+    session: AsyncSession, thread_id: UUID, build: Callable[[int], RunRow]
+) -> RunRow:
+    """Write a new run of a thread, with the next number, whatever other requests do meanwhile.
+
+    The database holds two rules, and a run that breaks one is refused: a thread has at most one
+    unfinished run of each workflow, and no two runs of a thread share a number. When another
+    request wrote an unfinished run of the same workflow first, `RunConflictError` carries it, so
+    that the caller can wait for that run. When another request took the number, the run is written
+    again with the next one. `build` makes the run for a number, and is called for each attempt.
+    """
+    for _attempt in range(RUN_NUMBER_ATTEMPTS):
+        row = build(await next_run_number(session, thread_id))
+        try:
+            async with session.begin_nested():
+                session.add(row)
+        except IntegrityError:
+            if row.status in UNFINISHED_RUN_STATUSES:
+                existing = await unfinished_run_of_thread(session, row.thread_id, row.workflow_name)
+                if existing is not None:
+                    raise RunConflictError(existing) from None
+            continue
+        return row
+    raise NotNumberedError("run")
 
 
 async def next_run_number(session: AsyncSession, thread_id: UUID) -> int:
@@ -344,7 +403,10 @@ async def ensure_budget(session: AsyncSession, user: UserRow) -> None:
         return
     start, end = usage.month_bounds()
     runs = (await session.scalars(usage.runs_of_user_in(UUID(str(user.id)), start, end))).all()
-    if usage.total_usage(list(runs))["cost_usd"] >= budget:
+    spent = usage.total_usage(list(runs))["cost_usd"] + await usage.assistant_spend_of(
+        session, UUID(str(user.id)), start, end
+    )
+    if spent >= budget:
         raise ApiError(
             429, "budget_exceeded", "Budget exceeded", "The budget of this month is spent."
         )

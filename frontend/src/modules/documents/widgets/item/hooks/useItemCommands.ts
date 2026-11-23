@@ -1,5 +1,6 @@
 import type { OutlineNeighbors } from '@/modules/artifact/entities'
-import { PaletteGroup, useCommands } from '@/shared/components/frame'
+import { PaletteGroup } from '@/shared/components/frame'
+import { useCommands } from '@/shared/lib/commands'
 
 import { itemPageMessages } from '../item-page.constants'
 import type { ItemMove } from '../item-page.types'

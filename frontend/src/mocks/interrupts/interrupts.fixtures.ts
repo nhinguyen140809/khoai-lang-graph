@@ -15,8 +15,19 @@ export const agentQuestionFixtures: InterruptQuestion[] = [
     prompt: 'Who uses the platform in their day, so the interviews ask the right people?',
     required: true,
     choices: [
-      { key: 'students', label: 'Students', requires_text: false },
-      { key: 'mentors', label: 'Mentors', requires_text: false },
+      {
+        key: 'students',
+        label: 'Students',
+        description:
+          'The interviews ask students who book study rooms, and what stops them from getting one.',
+        requires_text: false,
+      },
+      {
+        key: 'mentors',
+        label: 'Mentors',
+        description: 'The interviews ask the mentors who run sessions in the rooms.',
+        requires_text: false,
+      },
       { key: 'other', label: 'Someone else, please specify', requires_text: true },
     ],
     min_selected: 1,

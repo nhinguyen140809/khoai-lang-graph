@@ -29,13 +29,6 @@ from khoailanggraph.settings import get_settings
 
 DecisionKind = Literal["noul", "choice"]
 
-# The three gate points (source: app/services/decisions.py DECISION_POINTS).
-DECISION_POINTS: dict[str, list[str]] = {
-    "interviewer": ["interview_turn_policy"],
-    "requirement_engineer": ["spec_type_priority_review"],
-    "validator": ["validation_status_review"],
-}
-
 _DEFAULT_AUTO_CONFIDENCE = 0.7
 _DEFAULT_REVIEW_CONFIDENCE = 0.4
 
@@ -345,14 +338,8 @@ class JevDecisionModel:
 
 
 # ---------------------------------------------------------------------------
-# Config, cache, and the confidence policy
+# Config and the confidence policy
 # ---------------------------------------------------------------------------
-
-_decision_cache: dict[str, DecisionModel] = {}
-
-
-def reset_decision_cache() -> None:
-    _decision_cache.clear()
 
 
 def _provider_from_environment() -> str:
@@ -450,7 +437,6 @@ def new_decision_id(prefix: str) -> str:
 
 
 __all__ = [
-    "DECISION_POINTS",
     "AppliedDecision",
     "ConfidencePolicy",
     "DecisionAnswer",
@@ -465,6 +451,5 @@ __all__ = [
     "apply_confidence_policy",
     "new_decision_id",
     "policy_from_environment",
-    "reset_decision_cache",
     "run_decision",
 ]

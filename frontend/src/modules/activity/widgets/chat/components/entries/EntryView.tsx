@@ -7,7 +7,7 @@ import type { ReactNode } from 'react'
 import type { ActivityEntry } from '@/modules/activity/entities'
 import { entryAnchorId } from '@/modules/activity/entities'
 import { isNeverRead, messageAuthorLooks, messageBubbleLooks } from '@/modules/thread/entities'
-import { useAgentRoleLabels } from '@/modules/workflow/entities'
+import { useAgentRoleLabels, workflowRefOf } from '@/modules/workflow/entities'
 import { Face, FaceName } from '@/shared/components/face'
 import { targetFadeMs } from '@/shared/components/feed'
 import { Bubble, BubbleContent } from '@/shared/components/ui/bubble'
@@ -86,7 +86,7 @@ function MessageBody({ entry }: EntryViewProps<'message'>) {
   const author = messageAuthorLooks[entry.message.author]
   const isUser = author.isUser
   const isAgent = author.isAgent
-  const roleLabels = useAgentRoleLabels(run.workflow_version)
+  const roleLabels = useAgentRoleLabels(workflowRefOf(run))
   const roleLabel =
     entry.message.agent_role === null
       ? null

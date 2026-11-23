@@ -357,7 +357,6 @@ Table threads {
   title text [note: 'Given at creation or generated from the first message; null until one of the two']
   status thread_status [not null, default: 'active']
   current_stage text [note: 'Set by the application from the workflow definition; null before the first run starts']
-  active_run_id uuid [unique, ref: -? runs.id]
   last_message_at timestamptz [not null, note: 'The creation time while the thread has no message']
   created_at timestamptz [not null]
   updated_at timestamptz [not null]
@@ -439,6 +438,7 @@ Table runs {
     (thread_id, created_at)
     (thread_id, number) [unique]
     (project_id, status)
+    (thread_id, workflow_name) [unique, note: 'Only while status is queued, running or interrupted: a thread has at most one unfinished run of each workflow']
   }
 }
 

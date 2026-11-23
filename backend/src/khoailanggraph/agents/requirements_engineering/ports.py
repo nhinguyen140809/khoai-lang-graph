@@ -29,6 +29,14 @@ class RunLimitError(Exception):
         self.code = code
 
 
+class StaleItemError(Exception):
+    """The item changed since the node read it, because another run of the project wrote it.
+
+    A node that writes an item it read passes the version it read; the sink refuses the write when
+    the stored version differs, and the node reads the item again and retries.
+    """
+
+
 class LinkRecord(TypedDict):
     """One outgoing trace link of an item, in prompt-view form."""
 
@@ -159,8 +167,22 @@ class ArtifactSink(Protocol):
         """Flip an item's review status to superseded (a rework replacement)."""
         ...
 
-    def update_item_content(self, item_id: str, content: dict[str, object]) -> ItemRef:
-        """Replace the content of an item after a checkpoint edit (a new version)."""
+    def update_item_content(
+        self,
+        item_id: str,
+        content: dict[str, object],
+        *,
+        reason: str,
+        by_user: bool,
+        expected_version: int | None = None,
+    ) -> ItemRef:
+        """Replace the content of an item after a checkpoint edit (a new version).
+
+        `reason` is the change reason of the revision (`user_edit` for a person, `rework` for a
+        node), and `by_user` decides who the rewrite is credited to. `expected_version` is the
+        version the caller read: when the stored version differs, the write raises `StaleItemError`
+        and the caller reads the item again.
+        """
         ...
 
     def add_link(

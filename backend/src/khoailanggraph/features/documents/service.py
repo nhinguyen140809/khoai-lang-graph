@@ -192,6 +192,8 @@ async def list_documents(
                     SourceDocumentRow.deleted_at.is_(None),
                 )
                 .order_by(SourceDocumentRow.created_at.desc())
+                .offset(cursor)
+                .limit(limit + 1)
             )
         ).all()
     )
@@ -206,11 +208,10 @@ async def list_documents(
             created_at=row.created_at,
             updated_at=row.updated_at,
         )
-        for row in rows
+        for row in rows[:limit]
     ]
-    window = views[cursor : cursor + limit]
-    next_cursor = cursor + len(window) if cursor + len(window) < len(views) else None
-    return window, next_cursor
+    next_cursor = cursor + limit if len(rows) > limit else None
+    return views, next_cursor
 
 
 async def delete_document(session: AsyncSession, document_id: UUID) -> None:
@@ -255,41 +256,6 @@ def sync_latest_texts(engine: Any, project_id: UUID) -> list[dict[str, str]]:
                     "url": f"upload://{document.filename}",
                     "publisher": "upload",
                     "year": "",
-                    "text": version.text_extract,
-                }
-            )
-    return seeds
-
-
-async def project_documents_text(session: AsyncSession, project_id: UUID) -> list[dict[str, str]]:
-    """The latest text of every live document — the seed the research stage
-    draws on alongside live-search hits."""
-    documents = list(
-        (
-            await session.scalars(
-                select(SourceDocumentRow)
-                .where(
-                    SourceDocumentRow.project_id == project_id,
-                    SourceDocumentRow.deleted_at.is_(None),
-                )
-                .order_by(SourceDocumentRow.created_at.desc())
-            )
-        ).all()
-    )
-    seeds: list[dict[str, str]] = []
-    for document in documents:
-        version = await session.scalar(
-            select(DocumentVersionRow).where(
-                DocumentVersionRow.document_id == document.id,
-                DocumentVersionRow.version == document.latest_version,
-            )
-        )
-        if version is not None:
-            seeds.append(
-                {
-                    "title": document.title,
-                    "filename": document.filename,
-                    "format": document.format,
                     "text": version.text_extract,
                 }
             )

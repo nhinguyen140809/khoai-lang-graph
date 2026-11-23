@@ -1,5 +1,6 @@
 import { describe, expect, it } from 'vitest'
 
+import { workflowRefFixture } from '@/mocks/workflow/workflow.fixtures'
 import { renderHookWithProviders } from '@/test/render'
 import { waitForSuccess } from '@/test/steps'
 
@@ -14,7 +15,7 @@ describe('useWorkflowDefinition', () => {
   })
 
   it('loads the definition at a version', async () => {
-    const { result } = renderHookWithProviders(() => useWorkflowDefinition(2))
+    const { result } = renderHookWithProviders(() => useWorkflowDefinition(workflowRefFixture))
 
     await waitForSuccess(result)
     expect(result.current.data?.stages.length).toBeGreaterThan(0)

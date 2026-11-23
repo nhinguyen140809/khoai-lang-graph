@@ -1,5 +1,7 @@
 export { useRunProgressEvents } from '../events/hooks/useRunProgressEvents'
+export { runKeys } from '../runs/runs.keys'
 export { type Run, runSchema } from '../runs/runs.types'
+export { isUnfinishedRunStatus } from '../status/run-status.utils'
 export { useReloadRunSteps, useRunSteps } from '../steps/hooks/useRunStepQueries'
 export type { StepNote } from '../steps/run-steps.types'
 export type { PhaseItem, ToolUse, WorkEntry } from '../work/work.types'

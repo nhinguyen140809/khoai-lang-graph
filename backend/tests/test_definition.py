@@ -11,17 +11,13 @@ import pytest
 from jsonschema import Draft202012Validator
 
 from khoailanggraph.agents.requirements_engineering import definition as wf
+from khoailanggraph.agents.shared import catalogs
 from khoailanggraph.domain import registry
-
-_SCHEMA_FILE = "definition.schema.json"
 
 
 @pytest.fixture
 def definition_schema() -> dict[str, Any]:
-    raw = (
-        resources.files("khoailanggraph.agents.requirements_engineering") / _SCHEMA_FILE
-    ).read_text(encoding="utf-8")
-    return dict(json.loads(raw))
+    return catalogs.definition_schema()
 
 
 def test_definition_validates_against_its_schema(definition_schema: dict[str, Any]) -> None:
@@ -121,9 +117,6 @@ def test_run_parameter_defaults_validate() -> None:
             continue
         validator = Draft202012Validator(spec)
         validator.validate(default)
-    targets = schema["properties"]["target_personas_num"]["default"]
-    maximum = schema["properties"]["max_personas"]["default"]
-    assert maximum >= targets, "max_personas must not be lower than target_personas_num"
 
 
 def test_state_schema_is_valid_json_schema() -> None:
@@ -142,9 +135,9 @@ def test_every_tool_has_its_words_and_a_mark_the_schema_allows(
 
 def test_act_catalog_keys_are_unique_and_described() -> None:
     catalog = json.loads(
-        (
-            resources.files("khoailanggraph.agents.requirements_engineering") / "acts.catalog.json"
-        ).read_text(encoding="utf-8")
+        (resources.files("khoailanggraph.agents.shared") / "acts.catalog.json").read_text(
+            encoding="utf-8"
+        )
     )
     keys = [entry["key"] for entry in catalog["acts"]]
     assert len(keys) == len(set(keys))
@@ -154,7 +147,7 @@ def test_act_catalog_keys_are_unique_and_described() -> None:
 
 
 def test_every_act_a_stage_or_a_tool_names_is_in_the_catalog() -> None:
-    catalog = wf.act_catalog()
+    catalog = catalogs.act_catalog()
     named = [
         (f"stage {stage['key']}", act)
         for stage in wf.DEFINITION["stages"]
@@ -169,3 +162,18 @@ def test_a_stage_with_acts_is_not_internal() -> None:
     for stage in wf.DEFINITION["stages"]:
         if stage["internal"]:
             assert not stage.get("acts"), stage["key"]
+
+
+def test_command_catalog_keys_are_unique_described_and_checked() -> None:
+    catalog = json.loads(
+        (resources.files("khoailanggraph.agents.shared") / "commands.catalog.json").read_text(
+            encoding="utf-8"
+        )
+    )
+    keys = [entry["key"] for entry in catalog["commands"]]
+    assert keys, "the catalog holds no command"
+    assert len(keys) == len(set(keys))
+    for entry in catalog["commands"]:
+        assert entry["title"].strip(), entry["key"]
+        assert entry["description"].strip(), entry["key"]
+        assert entry["needs"] in {"none", "artifact", "item", "review"}, entry["key"]

@@ -26,10 +26,6 @@ api_router.include_router(artifacts_router)
 api_router.include_router(documents_router)
 api_router.include_router(exports_router)
 
-# Routes of the feature routers, resolved once, so the catch-all below can
-# answer correctly for anything they do not cover.
-PUBLIC_PATHS = frozenset({"/api/v1/auth/register", "/api/v1/auth/login", "/api/v1/auth/logout"})
-
 
 @api_router.api_route(
     "/{rest:path}",

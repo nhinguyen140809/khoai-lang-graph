@@ -5,12 +5,12 @@ import { type ReactNode, useMemo } from 'react'
 
 import { StatusBar } from '../../bars/components/StatusBar'
 import { TopBar } from '../../bars/components/TopBar'
-import { CommandPalette } from '../../commands/components/CommandPalette'
 import { ActivityBar } from '../../destinations/components/ActivityBar'
 import { FeatureCommands } from '../../destinations/components/FeatureCommands'
 import type { Destination } from '../../destinations/destination.types'
 import { DestinationsContext } from '../../destinations/hooks/useDestinations'
 import { useRestoreFrame } from '../../hooks/useRestoreFrame'
+import { CommandPalette } from '../../palette/components/CommandPalette'
 
 interface WorkbenchProps {
   /** What follows "khoai /" on the top bar: a page name, or the menu of the current project. */

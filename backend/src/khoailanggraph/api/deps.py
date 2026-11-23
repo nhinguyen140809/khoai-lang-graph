@@ -3,8 +3,8 @@
 Every protected endpoint depends on `current_user` (session cookie). Every
 state-changing request passes the origin check: a POST/PATCH/PUT/DELETE with
 a foreign `Origin` is rejected with 403, the browser being the only client
-and the same origin deployed (docs/API.md §3). A missing Origin passes —
-same-origin browser fetches carry it; curl and tests do not.
+and the same origin deployed (docs/API.md §3). A request that carries no
+`Origin` at all is refused too, so a script or a tool must send one.
 """
 
 from __future__ import annotations

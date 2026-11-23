@@ -3,9 +3,10 @@
 import { PanelLeftIcon } from 'lucide-react'
 import type { ReactNode } from 'react'
 
-import { PaletteGroup } from '../../commands/command.constants'
-import { useCommands } from '../../commands/hooks/useCommands'
+import { useCommands } from '@/shared/lib/commands'
+
 import { useSideFeature } from '../../destinations/hooks/useSideFeature'
+import { PaletteGroup } from '../../palette/palette.constants'
 import { EditorSplit } from '../../panels/components/EditorSplit'
 import { usePanel } from '../../panels/hooks/usePanel'
 import { PanelRegion } from '../../panels/panel.types'

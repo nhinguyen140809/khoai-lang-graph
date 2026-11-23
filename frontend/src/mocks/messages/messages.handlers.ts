@@ -7,7 +7,9 @@ import { created, emptyPage, paginate, validationFailed } from '../shared/http/r
 import { answerScenario } from '../shared/scenario'
 import { findThread } from '../threads/threads.lookup'
 import { threadNotFound } from '../threads/threads.problems'
-import { addMessage } from './messages.changes'
+import { assistanceDefinitionFixture } from '../workflow/workflow.fixtures'
+import { addMessage, finishAnswer } from './messages.changes'
+import { answerDelayMs } from './messages.constants'
 import { messagesOfThread } from './messages.lookup'
 import { validateSentMessageBody } from './messages.validators'
 
@@ -20,8 +22,9 @@ export const messageHandlers = [
     return HttpResponse.json(paginate(messagesOfThread(threadId), request))
   }),
 
-  // A message to a thread without an unfinished run starts a run; a message to the unfinished run
-  // of the thread waits for it. The request goes with an idempotency key.
+  // A message about the app is taken in by a run of the assistant, which answers a moment later; a
+  // message about the work to a thread without an unfinished run starts a run, and one to the
+  // unfinished run of the thread waits for it. The request goes with an idempotency key.
   http.post(
     apiEndpoints.threadMessages.pattern,
     idempotent(async ({ params, request }) => {
@@ -30,7 +33,14 @@ export const messageHandlers = [
       if (thread === undefined) return threadNotFound()
       const checked = validateSentMessageBody(await readBodyFields(request))
       if ('problems' in checked) return validationFailed(checked.problems)
-      return created(addMessage(thread, checked.message))
+      const sent = addMessage(thread, checked.message)
+      // The assistant works on an answer after the message is taken in.
+      if (sent.run.workflow_name === assistanceDefinitionFixture.name) {
+        setTimeout(() => {
+          finishAnswer(sent.run.id)
+        }, answerDelayMs)
+      }
+      return created(sent)
     }),
   ),
 ]

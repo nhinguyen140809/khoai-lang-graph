@@ -27,7 +27,7 @@ if TYPE_CHECKING:
 
     from langchain_core.runnables import RunnableConfig
 
-    from khoailanggraph.agents.requirements_engineering.ports import ArtifactSink
+    from khoailanggraph.agents.requirements_engineering.ports import ArtifactSink, ItemRecord
 
 from khoailanggraph.agents import prompts as prompt_loader
 from khoailanggraph.agents.requirements_engineering import definition as wf
@@ -35,6 +35,7 @@ from khoailanggraph.agents.requirements_engineering.definition import agent_role
 from khoailanggraph.agents.requirements_engineering.graph import build_re_graph
 from khoailanggraph.agents.requirements_engineering.nodes import PROMPTS_PACKAGE
 from khoailanggraph.agents.requirements_engineering.outputs import InterviewerTurnOutput
+from khoailanggraph.agents.requirements_engineering.ports import RunLimitError, StaleItemError
 from khoailanggraph.agents.requirements_engineering.state import REState, make_initial_state
 from khoailanggraph.agents.requirements_engineering.views import transcript_lines
 from khoailanggraph.domain import rules as domain_rules
@@ -520,7 +521,8 @@ def test_a_quote_that_is_not_in_the_message_makes_the_sink_refuse_the_link() -> 
         )
 
 
-def test_an_agent_whose_quote_is_not_exact_still_links_the_items() -> None:
+def test_a_quote_that_is_not_in_the_item_fails_the_node() -> None:
+    """A quote that drifted from the item it quotes stops the run, as altered evidence does."""
     sink = _finished_run()
     raw = next(entry for entry in sink.items if entry["kind"] == "raw_requirement")
     messages = [entry for entry in sink.items if entry["kind"] == "interview_message"]
@@ -541,17 +543,18 @@ def test_an_agent_whose_quote_is_not_exact_still_links_the_items() -> None:
             "version": 1,
         }
     }
+    before = len(sink.links)
 
-    nodes._link_each(
-        sink,
-        str(raw["item_id"]),
-        "evidenced_by",
-        known,
-        [MessageLink(message=str(other["key"]), target_quote="words that nobody said")],
-    )
+    with pytest.raises(ValueError, match="not the words of"):
+        nodes._link_each(
+            sink,
+            str(raw["item_id"]),
+            "evidenced_by",
+            known,
+            [MessageLink(message=str(other["key"]), target_quote="words that nobody said")],
+        )
 
-    assert sink.links[-1]["target_id"] == other["item_id"]
-    assert sink.links[-1]["quote"] is None
+    assert len(sink.links) == before, "no link is written for a quote that does not hold"
 
 
 def test_every_agent_step_reports_to_the_user_except_the_persona_answers() -> None:
@@ -983,3 +986,87 @@ def test_the_router_reads_what_the_project_holds_one_line_for_each_stage_of_the_
     assert "personas: 1" in overview
     assert "specification requirements: 1" in overview
     assert "the run was last at: analysis_review" in overview
+
+
+class _AnswerThatKeepsMoving:
+    """An answer item another run of the project keeps writing, seen through the same two calls
+    the interviewer makes."""
+
+    def __init__(self, *, stale_writes: int) -> None:
+        self.stale_writes = stale_writes
+        self.reads = 0
+        self.writes = 0
+
+    def read_item(self, item_id: str) -> dict[str, Any]:
+        self.reads += 1
+        return {
+            "item_id": item_id,
+            "kind": "interview_message",
+            "key": "MSG-002",
+            "version": self.reads,
+            "review_status": "draft",
+            "content": {"speaker": "Minh", "text": "I book on my phone."},
+            "links": [],
+        }
+
+    def update_item_content(
+        self,
+        item_id: str,
+        content: dict[str, Any],
+        *,
+        reason: str,
+        by_user: bool,
+        expected_version: int | None = None,
+    ) -> dict[str, Any]:
+        self.writes += 1
+        if self.writes <= self.stale_writes:
+            raise StaleItemError("MSG-002 is at version 9, not 2")
+        return {"item_id": item_id, "key": "MSG-002", "version": 10}
+
+
+def _answer_messages() -> list[ItemRecord]:
+    return [
+        {
+            "item_id": "a1",
+            "kind": "interview_message",
+            "key": "MSG-002",
+            "version": 1,
+            "review_status": "draft",
+            "content": {"speaker": "Minh", "text": "I book on my phone."},
+            "links": [],
+        }
+    ]
+
+
+def test_a_write_that_loses_a_race_is_tried_again_on_a_fresh_read() -> None:
+    sink = _AnswerThatKeepsMoving(stale_writes=1)
+
+    nodes._record_what_the_last_answer_gave(
+        cast("ArtifactSink", sink),
+        _answer_messages(),
+        InterviewerTurnOutput(
+            question="What else?",
+            question_kind="follow_up",
+            covered_by_last_answer=["phone"],
+        ),
+    )
+
+    assert (sink.reads, sink.writes) == (2, 2)
+
+
+def test_an_answer_that_keeps_moving_fails_the_run_with_item_conflict() -> None:
+    sink = _AnswerThatKeepsMoving(stale_writes=99)
+
+    with pytest.raises(RunLimitError) as raised:
+        nodes._record_what_the_last_answer_gave(
+            cast("ArtifactSink", sink),
+            _answer_messages(),
+            InterviewerTurnOutput(
+                question="What else?",
+                question_kind="follow_up",
+                covered_by_last_answer=["phone"],
+            ),
+        )
+
+    assert raised.value.code == "item_conflict"
+    assert (sink.reads, sink.writes) == (nodes.ITEM_WRITE_ATTEMPTS, nodes.ITEM_WRITE_ATTEMPTS)

@@ -90,7 +90,33 @@ def validate_content(
     ]
     if plan_values is not None:
         violations.extend(_check_value_from(kind, content, plan_values))
+    violations.extend(_check_assumption_plan(kind, content))
     return violations
+
+
+# An assumption that the design rests on has to say how it can be confirmed, or nobody will.
+ASSUMPTION_PLAN_MIN_IMPACT = 4
+
+
+def _check_assumption_plan(kind: str, content: Mapping[str, Any]) -> list[Violation]:
+    """An assumption at impact 4 or 5 names how it is confirmed.
+
+    The JSON Schema cannot express it, and an assumption that high without a plan is one the
+    project will never check: the statement alone looks like a decision that was made.
+    """
+    if kind != "assumption":
+        return []
+    impact = content.get("impact")
+    plan = str(content.get("validation_plan") or "").strip()
+    if isinstance(impact, int) and impact >= ASSUMPTION_PLAN_MIN_IMPACT and not plan:
+        return [
+            Violation(
+                "assumption plan",
+                "an assumption at impact 4 or 5 says how it can be confirmed",
+                path="validation_plan",
+            )
+        ]
+    return []
 
 
 def _check_value_from(

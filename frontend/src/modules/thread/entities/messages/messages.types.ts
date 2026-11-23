@@ -19,6 +19,20 @@ export type MessageDelivery = (typeof messageDeliveries)[number]
 /** Which note a message of the user reads while it waits: in the step that runs, after the review, or never. */
 export type MessageDeliveryNote = 'pendingInStep' | 'pendingInReview' | 'undelivered'
 
+/**
+ * One thing that an answer asks the client to do once, such as opening a document, named by the
+ * key of a command of the catalog (`docs/workflow/commands.catalog.json`). It names the record that
+ * the command needs, and `label` is the short phrase the answer uses for it.
+ */
+export const uiCommandSchema = z.object({
+  command: z.string(),
+  artifact_id: z.string().nullable(),
+  item_id: z.string().nullable(),
+  label: z.string().nullable(),
+})
+
+export type UiCommand = z.infer<typeof uiCommandSchema>
+
 /** A message of the chat between the user and the system, on the thread it belongs to. */
 export const messageSchema = z.object({
   id: z.string(),
@@ -36,6 +50,8 @@ export const messageSchema = z.object({
   artifact_refs: z.array(artifactRefSchema),
   /** Items mentioned. */
   item_refs: z.array(itemRefSchema),
+  /** What an answer of the assistant asks the client to run once; none on any other message. */
+  commands: z.array(uiCommandSchema).default([]),
   /** On the messages of the user only. */
   delivery: z.enum(messageDeliveries).nullable(),
   /** The step that took the message in, once it is delivered. */
@@ -54,7 +70,15 @@ export interface SendMessageBody {
   models?: Record<string, string>
 }
 
-/** The answer of a sent message: the message, and the run that it started or was sent to. */
-export const sentMessageSchema = z.object({ message: messageSchema, run: runSchema })
+/**
+ * The answer of a sent message: the message, and the run that took it. A message about the work
+ * starts a run of the requirements workflow or joins one. A message about the app is answered in a
+ * run of the assistance workflow, which is still running when the answer comes back: the words of
+ * the answer, and the commands it asks the client to run, are a message of that run once it ends.
+ */
+export const sentMessageSchema = z.object({
+  message: messageSchema,
+  run: runSchema,
+})
 
 export type SentMessage = z.infer<typeof sentMessageSchema>

@@ -93,6 +93,7 @@ Every list endpoint uses cursor pagination and the same envelope.
 | Request | `?limit=` (default 50, maximum 200) and `?cursor=` (opaque string from the previous page) |
 | Response | `{ "items": [...], "next_cursor": "..." }`; `next_cursor` is `null` on the last page |
 | Order | Stated per endpoint and stable; ties are broken by `id` |
+| Cursor | The cursor is opaque and, in this build, stands for a position in the list rather than a key of the last item. A row inserted or removed between two pages can therefore move an item across the boundary: a client that pages while writing should reload from the first page instead of trusting the next one |
 | Filters | Query parameters named after the field, for example `?kind=spec_requirement&review_status=draft`. A filter given several times matches any of its values, for example `?rollup_run_status=interrupted&rollup_run_status=failed`. A filter on a time is the name of the field with `_after` and an ISO 8601 time, and keeps the items after that time, for example `?last_activity_after=2026-10-15T00:00:00Z` |
 
 ### Errors
@@ -129,6 +130,20 @@ Errors use the Problem Details format (RFC 9457) with media type `application/pr
 | 429 | `budget_exceeded` | The monthly budget of the user is reached; the request would start or continue LLM work |
 | 502 | `provider_error` | The LLM provider failed and the fallback also failed |
 | 500 | `internal_error` | Anything else |
+
+A run that fails stores a code of its own in `run.error.code` and sends it in the `error` event.
+These never arrive as an HTTP response, because the run executes after the request that started it
+has answered.
+
+| `run.error.code` | When |
+|---|---|
+| `node_failed` | A node raised an error that is not one of the limits below |
+| `provider_error` | The LLM provider failed, after the retries and the fallback models of the role |
+| `step_limit_exceeded` | The run reached its maximum number of steps |
+| `cost_limit_exceeded` | The next LLM call would exceed the cost limit of the run |
+| `budget_exceeded` | The next LLM call would exceed the monthly budget of the user |
+| `timeout` | A node or a tool took longer than its time limit |
+| `server_restarted` | The API process stopped while the run was in a step |
 
 ### Concurrent edits
 
@@ -234,7 +249,7 @@ Login and register answer the same way for a wrong password and an unknown email
 | `PUT /me/model-settings` | Replace the model settings of the user. Body `items`, a list of `agent_role`, `model_id` and an optional `temperature`; a role left out uses the server default. Each `agent_role` is an agent role of the current workflow definition, given once; each `model_id` is a model of the catalog whose `allowed_roles` holds the role; `temperature` is null or a number from 0 to 1; otherwise `422 validation_failed` at `items.<index>.agent_role`, `items.<index>.model_id` or `items.<index>.temperature`. Returns `200` with the settings as `GET` lists them | MVP |
 | `GET /models` | Model catalog: allowed models, capabilities, prices, ordered by `model_id` | MVP |
 | `GET /me/usage` | Tokens and cost of the user in one calendar month in UTC, `?month=YYYY-MM`, the current month by default: the total, the budget of the month, and, with `?group_by=` one of `day`, `project`, `agent_role`, `model`, the groups. See the example below | MVP |
-| `GET /workflow/definition` | One version of the workflow definition, see [workflow definition](#workflow-definition). `?version=` reads an older version, so a past run is shown with the definition it ran with | MVP |
+| `GET /workflow/definition` | One version of the workflow definition, see [workflow definition](#workflow-definition). `?name=` names the workflow (`requirements_engineering` without it, or `assistance`), and `?version=` reads an older version, so a past run is shown with the definition of its own `workflow_name` and `workflow_version` | MVP |
 
 Usage of the current month, `GET /me/usage?group_by=project`:
 
@@ -258,6 +273,8 @@ Usage of the current month, `GET /me/usage?group_by=project`:
 ### Workflow definition
 
 `GET /workflow/definition` returns one version of the workflow definition: the graph, the names a run may store, the checkpoints with their options and questions, and the schemas of the run parameters and of the workflow state. The web app draws the graph, the stages, the reviews and the run settings from it, and the backend checks every name a run stores against it.
+
+`GET /workflow/acts` returns the acts a client may show around the face of an agent while it works, so a client reads them from the API instead of carrying a copy that drifts. `acts` holds one entry for each act, with its `key`, its `title` and a sentence about the animation; `keys_by_stage` and `keys_by_tool` give the acts that each stage and each tool names, which is what a client plays for the step it is drawing. A tool's acts replace the acts of its stage while a use of the tool runs.
 
 The response is a definition file as described in [Workflow definitions](workflow/README.md), valid against [`definition.schema.json`](workflow/definition.schema.json). Version 1 is written out in full in [`requirements_engineering.v1.json`](workflow/requirements_engineering.v1.json). An excerpt, where `"...": "..."` stands for the rest of the definition:
 
@@ -289,7 +306,7 @@ Rules:
 {
   "run_id": "5f2d...",
   "step_id": "e9d1...",
-  "workflow_version": 1,
+  "workflow_version": 2,
   "values": {
     "current_stage": "interviewing",
     "active_persona_index": 1,
@@ -333,13 +350,30 @@ Rules:
 | `PATCH /threads/{thread_id}` | Change `title`, `status`. `title` is a text with more than whitespace and cannot be set back to `null`; `status` is `active` or `archived`; otherwise `422 validation_failed` at the field | MVP |
 | `DELETE /threads/{thread_id}` | Soft delete: the thread is left out of lists, and its endpoints answer `404`. A thread with an unfinished run (`queued`, `running` or `interrupted`) answers `409 invalid_state`; the run is stopped first | MVP |
 | `GET /threads/{thread_id}/messages` | Chat messages; ordered by `sequence` ascending. User messages carry `delivery` | MVP |
-| `POST /threads/{thread_id}/messages` | Send a user message. Body `content`, optional `run_config` with the fields of [RunDefaults](DATA_SHAPE.md#rundefaults-mvp) and optional `models`, a map of agent role to model, both used only when the message starts a run. Each key of `models` is an agent role of the current workflow definition and each value a model of the catalog whose `allowed_roles` holds the role; otherwise `422 validation_failed` at `models.<role>`. Returns `201` with the message and the run it started or was sent to | MVP |
+| `POST /threads/{thread_id}/messages` | Send a user message. Body `content`, optional `run_config` with the fields of [RunDefaults](DATA_SHAPE.md#rundefaults-mvp) and optional `models`, a map of agent role to model, both used only when the message starts a run. Each key of `models` is an agent role of the current workflow definition and each value a model of the catalog whose `allowed_roles` holds the role; otherwise `422 validation_failed` at `models.<role>`. Returns `201` as soon as the message is stored, with the message and `run`: the run of the workflow `assistance` that is answering it, `running` (see [Assistance](architecture/assistance.md)). The assistant decides in the background whether the message is about the application or about the work. A message about the application is answered in that run, which then `succeeded`. A message about the work takes that run away and starts a run of the main workflow, or waits as `pending` in the one that is unfinished, as before; the client reads it from the runs of the thread. A thread has one run of `assistance` unfinished at a time: a message that comes meanwhile has that run as its `run` and is `pending`; the assistant reads it in its next step and answers both together, or, when it came after the last step, answers it in a run of its own when the first ends. A run of `assistance` is never the `active_run_id` of the thread and never the latest run that its status follows | MVP |
 
 Sending a message is the only way the chat box starts work, and it is never rejected because the thread has an unfinished run:
 
 - With no unfinished run, the message starts a new run with the current workflow definition version; `delivery` is `started_run`.
 - With an unfinished run, the message is stored as `pending`. At the next safe point of the run, the intent router decides which node should handle it; `delivery` becomes `delivered`, and the stream sends `message_delivered`.
 - The full behavior, including what happens when the run ends first, is in [Runtime: messages during a run](architecture/runtime.md#5-messages-during-a-run).
+
+Before the message goes to the run, one call decides which of the two it is, and answers the ones
+about the application: about 1–3 sentences, a few reads of the project (`max_reads` of [`assistance.v1.json`](workflow/assistance.v1.json), 5 by default, and the reads that do not depend on each other go in one step:  an item, a document,
+the last run, the open findings, a trace, a step of the definition, the month's budget, the settings), and the
+commands for the client to run. Each command in `commands` of the answer message is
+`{command, artifact_id, item_id, label}`: `command` is a key of
+[`commands.catalog.json`](workflow/commands.catalog.json), which says in `needs` what is checked
+before a command leaves (nothing, a document or an item of the project, or a review that waits).
+A command that is not in the catalog, or that names a record outside the project, is dropped
+and logged; a client skips a key it does not know. The answer is stored as a message of
+the thread with `author: "agent"` and `agent_role: "assistant"`, whose `artifact_refs` and
+`item_refs` name the documents and items that the reads looked at (up to ten of each, each once, in
+the order read), so that a client shows what the answer was read from. The commands are a field of
+the message, `commands`, empty on every other message; a client runs them once, when it saw the
+run end, and not when it loads the thread later. Every classified message writes its cost
+where `GET /me/usage` and the budget of the month read it.
+
 
 The first message of a thread:
 
@@ -375,7 +409,7 @@ Response `201`:
     "number": 1,
     "status": "queued",
     "workflow_name": "requirements_engineering",
-    "workflow_version": 1,
+    "workflow_version": 2,
     "current_stage": "planning",
     "last_event_id": 0
   }
@@ -388,7 +422,8 @@ Response `201`:
 
 | Method and path | Purpose | Phase |
 |---|---|---|
-| `GET /threads/{thread_id}/runs` | Runs of a thread; ordered by `created_at` descending | MVP |
+| `GET /threads/{thread_id}/runs` | Runs of a thread; ordered by `created_at` descending. `?workflow=` lists only the runs of the workflow it names, such as `requirements_engineering` for the work of the project and `assistance` for the runs that answered one message | MVP |
+| `POST /threads/{thread_id}/runs` | **Compatibility shim**, not part of this contract: body `{ "input": "..." }`, answer `{ "run_id": "..." }`. It starts a run from the text exactly as `POST /threads/{thread_id}/messages` does, for a client that still speaks the older wire. New clients use the messages endpoint | — |
 | `GET /runs/{run_id}` | Number in the thread, status, stage, iteration, step count, usage, error, `workflow_name`, `workflow_version`, `last_event_id`. The status transitions are listed in [Runtime: lifecycle](architecture/runtime.md#3-lifecycle) | MVP |
 | `GET /runs/{run_id}/steps` | Run steps; ordered by `sequence`. A step also carries its `notes` ([StepNote](DATA_SHAPE.md#stepnote-later)) | MVP |
 | `GET /runs/{run_id}/state` | The current workflow state of the run, see [workflow state](#workflow-state) | MVP |
@@ -410,7 +445,7 @@ Run body, `GET /runs/5f2d...`, while the run waits at the analysis review. It is
   "number": 3,
   "started_by": "11b7...",
   "workflow_name": "requirements_engineering",
-  "workflow_version": 1,
+  "workflow_version": 2,
   "status": "interrupted",
   "current_stage": "analysis_review",
   "iteration_count": 0,
@@ -420,7 +455,7 @@ Run body, `GET /runs/5f2d...`, while the run waits at the analysis review. It is
     "output_language": "en",
     "max_steps": 80,
     "max_cost_usd": 2.0,
-    "parameters": { "target_personas_num": 3, "max_personas": 3, "max_turns": 12, "max_iterations": 2 }
+    "parameters": { "target_personas_num": 3, "max_turns": 12, "max_iterations": 2, "target_sources_num": 3 }
   },
   "retry_of_run_id": "4c18...",
   "error": null,
@@ -598,6 +633,7 @@ Resume rules:
 - The option `other`, "Something else", asks for `feedback`; the run records it as a message of the user, which the intent router reads, and continues at the step that the router chooses. It creates no rework directive of its own.
 - `modified_items` is accepted only when the interrupt allows edits.
 - When the chosen option approves, the artifacts under review and their items that are still `draft` become `approved`, each as a new version with `change_reason` `reviewed`.
+- When the chosen option does not approve, nothing is approved: the items listed in `modified_items` keep the versions the user saved, and the agents read them together with `feedback` before they write again.
 - The server stores a human decision, marks the interrupt resolved, gives the decision as `decision` of the interrupt, and continues the run. The response is `202` with the run.
 
 An interrupt can ask several questions of different types and is answered at once. The checkpoints of definition version 1 ask none of their own. The questions of the agent and the review of documents are separate interrupts, told apart by `purpose`. A `review` holds the documents and its options and no question of the agent. An `ask` holds up to three questions that the agent chose, each with `source` `agent`, a default that is the agent's own assumption and, for a selection, a last choice `other` that asks for text; it has no option and no document under review (the answer has no `option`), and it is not created at all when the agent has no question. The agent proposes choices for a question, so that the user picks and types only when the proposal is not right. A question of the agent is not required: leaving it alone accepts its default, and the agents after the checkpoint read the answers as part of their instruction. The same node words the `prompt` for the case and may suggest the feedback of an option (`suggested_feedback`). The example comes from a checkpoint that clarifies the intent of a project, see [Runtime: open points](architecture/runtime.md#8-open-points):
@@ -606,12 +642,12 @@ An interrupt can ask several questions of different types and is answered at onc
 {
   "id": "8c1d...",
   "step_id": "e1b4...",
-  "node": "clarify_intent",
+  "node": "ask_message",
   "prompt": "Before I plan the interviews, tell me who will use the platform and what the first version must take care of.",
   "options": [],
   "questions": [
     {
-      "key": "users", "type": "multi_select", "prompt": "Who uses the platform in their day, so the interviews ask the right people?", "required": true,
+      "key": "users", "type": "multi_select", "prompt": "Who uses the platform in their day, so the interviews ask the right people?", "required": false,
       "choices": [
         { "key": "students", "label": "Students", "requires_text": false },
         { "key": "mentors", "label": "Mentors", "requires_text": false },
@@ -622,7 +658,7 @@ An interrupt can ask several questions of different types and is answered at onc
       "source": "agent"
     },
     {
-      "key": "payments", "type": "single_select", "prompt": "Should the first version already take payments, or is a free pilot enough?", "required": true,
+      "key": "payments", "type": "single_select", "prompt": "Should the first version already take payments, or is a free pilot enough?", "required": false,
       "choices": [
         { "key": "yes", "label": "Yes", "requires_text": false },
         { "key": "no", "label": "No", "requires_text": false }
@@ -752,7 +788,7 @@ Kinds and their schemas, `GET /artifact-kinds`. The display name of a kind is th
 
 ```json
 {
-  "workflow_version": 1,
+  "workflow_version": 2,
   "artifact_kinds": [
     {
       "kind": "requirement_specification",
@@ -982,7 +1018,7 @@ Rules:
 
 | Method and path | Purpose | Phase |
 |---|---|---|
-| `POST /projects/{project_id}/exports` | Request a document; body `template`, `format`. The template is one of the export templates of the current workflow definition version, and the format one of its formats, otherwise `422 validation_failed`. `202` | MVP |
+| `POST /projects/{project_id}/exports` | Create a document; body `template`, `format`. The template is one of the export templates of the current workflow definition version, and the format one of its formats, otherwise `422 validation_failed`. The file is rendered during the request, so the export answers already `ready`. `201` | MVP |
 | `GET /projects/{project_id}/exports` | Exports of a project; ordered by `created_at` descending | MVP |
 | `GET /exports/{export_id}` | Status; when `ready`, includes `download_url`, valid for a limited time | MVP |
 | `GET /exports/{export_id}/file` | The file of a ready export, as a download; the address that `download_url` gives. `404` while the export is not ready | MVP |
