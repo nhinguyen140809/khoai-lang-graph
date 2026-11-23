@@ -1,4 +1,4 @@
-"""Shapes of the assistant: what the client receives, and what the model answers.
+"""Shapes of the assistant: what the model answers, and the UI commands that the client receives.
 
 The model answers one structured object that says which of the two things a message is, the words
 to show when it is a question about the application, and the commands for the client to run. A
@@ -9,8 +9,8 @@ line in the catalog and not a change here.
 A second shape, `AssistantStep`, is how the model asks to read one more thing before answering: the
 tools it may name are closed too, so a name it invents fails at validation.
 
-An item is reached through its document or by the key the tools read: the assistant is given the
-documents of the project and the reads it may make, not the whole project at once.
+The assistant is given the head of the project and the reads it may make, not the whole project at
+once: what it needs it looks at with its tools.
 """
 
 from __future__ import annotations
@@ -35,15 +35,6 @@ class UiCommand(BaseModel):
     artifact_id: str | None = None
     item_id: str | None = None
     label: str | None = None
-
-
-class AssistantReply(BaseModel):
-    """The answer of the assistant: what it says, and what the client does next."""
-
-    model_config = ConfigDict(extra="forbid")
-
-    text: str
-    commands: list[UiCommand] = Field(default_factory=list)
 
 
 class AssistantDecision(BaseModel):

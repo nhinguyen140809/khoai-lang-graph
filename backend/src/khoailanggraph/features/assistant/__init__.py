@@ -7,6 +7,6 @@ asks for go back to the client. It never writes an artifact, never starts a run 
 touches the graph.
 """
 
-from khoailanggraph.features.assistant.schemas import AssistantReply, UiCommand
+from khoailanggraph.features.assistant.schemas import UiCommand
 
-__all__ = ["AssistantReply", "UiCommand"]
+__all__ = ["UiCommand"]

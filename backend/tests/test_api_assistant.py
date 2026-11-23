@@ -130,6 +130,12 @@ async def _send(client: AsyncClient, thread_id: str, content: str, **headers: An
     )
 
 
+async def _answer_text(client: AsyncClient, thread_id: str) -> str:
+    """The words of the last message of the thread: the answer, as it is stored with the run."""
+    messages = (await client.get(f"{API}/threads/{thread_id}/messages")).json()["items"]
+    return str(messages[-1]["content"])
+
+
 async def test_a_message_about_the_application_is_answered_without_a_run(
     client: AsyncClient, project_and_thread: tuple[str, str]
 ) -> None:
@@ -143,8 +149,8 @@ async def test_a_message_about_the_application_is_answered_without_a_run(
     assert body["run"]["workflow_name"] == "assistance"
     assert body["run"]["status"] == "succeeded"
     assert body["message"]["run_id"] == body["run"]["id"]
-    assert body["assistant"]["text"] == "You can read the interviews first."
-    assert body["assistant"]["commands"] == []
+    assert await _answer_text(client, thread_id) == "You can read the interviews first."
+    assert body["commands"] == []
     assert body["message"]["delivery"] == "delivered"
 
     runs = (await client.get(f"{API}/threads/{thread_id}/runs")).json()["items"]
@@ -184,7 +190,7 @@ async def test_a_message_about_the_work_starts_a_run(
 
     body = response.json()
     assert body["run"] is not None
-    assert body["assistant"] is None
+    assert body["commands"] == []
     assert body["run"]["status"] in {"queued", "running", "succeeded", "interrupted"}
 
 
@@ -202,7 +208,7 @@ async def test_a_command_that_names_another_projects_document_is_dropped(
         reset_model_cache()
         response = await _send(client, thread_id, "Open the plan")
 
-    assert response.json()["assistant"]["commands"] == [], "an id outside the project never leaves"
+    assert response.json()["commands"] == [], "an id outside the project never leaves"
 
 
 async def test_a_command_that_is_not_in_the_catalog_is_dropped(
@@ -217,7 +223,7 @@ async def test_a_command_that_is_not_in_the_catalog_is_dropped(
         reset_model_cache()
         response = await _send(client, thread_id, "Show me the settings")
 
-    kept = response.json()["assistant"]["commands"]
+    kept = response.json()["commands"]
     assert [entry["command"] for entry in kept] == ["open_settings"], (
         "a key that the catalog does not list never leaves, and one that needs nothing does"
     )
@@ -280,7 +286,7 @@ async def test_a_read_comes_back_before_the_answer(
         response = await _send(client, thread_id, "What does REQ-003 say?")
 
     assert response.status_code == 201
-    assert response.json()["assistant"]["text"] == "REQ-003 shows the review round."
+    assert await _answer_text(client, thread_id) == "REQ-003 shows the review round."
     assert len(SEEN) == 2, "one step names the read, the next one answers"
     assert "REQ-003 (spec_requirement), id " in SEEN[-1], (
         "the tool result reaches the prompt of the next step"

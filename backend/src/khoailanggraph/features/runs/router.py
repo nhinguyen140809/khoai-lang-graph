@@ -120,7 +120,7 @@ async def _wait_for_run(db: AsyncSession, message: MessageRow, run: RunRow) -> d
     return {
         "message": service.message_output(message).model_dump(mode="json"),
         "run": service.runs_output(run).model_dump(mode="json"),
-        "assistant": None,
+        "commands": [],
     }
 
 
@@ -163,10 +163,7 @@ async def _send(
         return {
             "message": service.message_output(message).model_dump(mode="json"),
             "run": service.runs_output(run).model_dump(mode="json"),
-            "assistant": {
-                "text": decision.text,
-                "commands": [command.model_dump(mode="json") for command in decision.commands],
-            },
+            "commands": [command.model_dump(mode="json") for command in decision.commands],
         }
     # A message about the work has no run of the assistant: what deciding cost is kept apart.
     await assistant_service.record_turn(db, user, project, thread, outcome)
@@ -207,7 +204,7 @@ async def _send(
     return {
         "message": service.message_output(message).model_dump(mode="json"),
         "run": service.runs_output(run).model_dump(mode="json"),
-        "assistant": None,
+        "commands": [],
     }
 
 

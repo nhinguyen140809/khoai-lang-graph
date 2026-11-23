@@ -82,9 +82,10 @@ and one line in the registry.
 3. `general`: the recorder writes a run of `assistance` that is already finished: the user message
    and the answer are messages of that run, the step holds one note of kind `tool` for each read
    (named by a tool of the definition), the usage and the cost are those of the step, and the
-   references of the answer name what was read. The response is `{message, run, assistant}`, where
-   `run` is that run and `assistant` carries the words and the commands, which are for the client to
-   run once and are not kept.
+   references of the answer name what was read. The response is `{message, run, commands}`, where
+   `run` is that run and `commands` are the UI commands for the client to run once, which are not
+   kept. The words of the answer are the message of that run that the thread lists, and the response
+   does not repeat them.
 
 ## 5. The client
 

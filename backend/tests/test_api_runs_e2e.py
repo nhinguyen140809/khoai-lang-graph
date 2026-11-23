@@ -96,8 +96,8 @@ async def test_send_message_runs_the_workflow_end_to_end(
     assert response.status_code == 201, response.text
     body = response.json()
     # The third key answers messages about the application; a message about the work leaves it null.
-    assert set(body) == {"message", "run", "assistant"}
-    assert body["assistant"] is None
+    assert set(body) == {"message", "run", "commands"}
+    assert body["commands"] == []
 
     message = body["message"]
     assert message["author"] == "user"

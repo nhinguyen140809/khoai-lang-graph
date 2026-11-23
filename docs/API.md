@@ -350,7 +350,7 @@ Rules:
 | `PATCH /threads/{thread_id}` | Change `title`, `status`. `title` is a text with more than whitespace and cannot be set back to `null`; `status` is `active` or `archived`; otherwise `422 validation_failed` at the field | MVP |
 | `DELETE /threads/{thread_id}` | Soft delete: the thread is left out of lists, and its endpoints answer `404`. A thread with an unfinished run (`queued`, `running` or `interrupted`) answers `409 invalid_state`; the run is stopped first | MVP |
 | `GET /threads/{thread_id}/messages` | Chat messages; ordered by `sequence` ascending. User messages carry `delivery` | MVP |
-| `POST /threads/{thread_id}/messages` | Send a user message. Body `content`, optional `run_config` with the fields of [RunDefaults](DATA_SHAPE.md#rundefaults-mvp) and optional `models`, a map of agent role to model, both used only when the message starts a run. Each key of `models` is an agent role of the current workflow definition and each value a model of the catalog whose `allowed_roles` holds the role; otherwise `422 validation_failed` at `models.<role>`. Returns `201` with the message and what answered it: `run`, the run it started or was sent to, or the finished run of the workflow `assistance` that answered it, when the message is about the application rather than the work (see [Assistance](architecture/assistance.md)). `assistant` is `null` on a message that starts or joins a run, and on an answered one it holds the words of the assistant and the commands to run. An answered message has a run that is over: it is never the `active_run_id` of the thread, never the latest run that its status follows, and no message waits for it | MVP |
+| `POST /threads/{thread_id}/messages` | Send a user message. Body `content`, optional `run_config` with the fields of [RunDefaults](DATA_SHAPE.md#rundefaults-mvp) and optional `models`, a map of agent role to model, both used only when the message starts a run. Each key of `models` is an agent role of the current workflow definition and each value a model of the catalog whose `allowed_roles` holds the role; otherwise `422 validation_failed` at `models.<role>`. Returns `201` with the message and what answered it: `run`, the run it started or was sent to, or the finished run of the workflow `assistance` that answered it, when the message is about the application rather than the work (see [Assistance](architecture/assistance.md)). `commands` lists the UI commands that the answer asks the client to run once: it is empty for a message that starts or joins a run. An answered message has a run that is over: it is never the `active_run_id` of the thread, never the latest run that its status follows, and no message waits for it | MVP |
 
 Sending a message is the only way the chat box starts work, and it is never rejected because the thread has an unfinished run:
 
@@ -360,8 +360,8 @@ Sending a message is the only way the chat box starts work, and it is never reje
 
 Before the message goes to the run, one call decides which of the two it is, and answers the ones
 about the application: about 1–3 sentences, a few reads of the project (`max_reads` of [`assistance.v1.json`](workflow/assistance.v1.json), 3 by default: an item, a document,
-the last run, the open findings, a trace, a step of the definition, the month's budget), and the
-commands for the client to run. `assistant` is `{text, commands}`, and each command is
+the last run, the open findings, a trace, a step of the definition, the month's budget, the settings), and the
+commands for the client to run. Each command in `commands` of the response is
 `{command, artifact_id, item_id, label}`: `command` is a key of
 [`commands.catalog.json`](workflow/commands.catalog.json), which says in `needs` what is checked
 before a command leaves (nothing, a document or an item of the project, or a review that waits).
