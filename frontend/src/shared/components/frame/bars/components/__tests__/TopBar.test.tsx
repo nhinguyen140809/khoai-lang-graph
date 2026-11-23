@@ -4,7 +4,7 @@ import { describe, expect, it } from 'vitest'
 import { routes } from '@/shared/routes'
 import { press } from '@/test/steps'
 
-import { useCommandsStore } from '../../../commands/commands.store'
+import { usePaletteStore } from '../../../palette/palette.store'
 import { TopBar } from '../TopBar'
 
 describe('TopBar', () => {
@@ -25,6 +25,6 @@ describe('TopBar', () => {
 
     await press(search)
 
-    expect(useCommandsStore.getState().open).toBe(true)
+    expect(usePaletteStore.getState().open).toBe(true)
   })
 })

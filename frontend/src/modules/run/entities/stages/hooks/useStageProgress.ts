@@ -4,7 +4,7 @@ import { useQueries } from '@tanstack/react-query'
 import { useMemo } from 'react'
 
 import { useStageSubjects } from '@/modules/artifact/entities/@x/run'
-import { useVisibleStages } from '@/modules/workflow/entities/@x/run'
+import { useVisibleStages, workflowRefOf } from '@/modules/workflow/entities/@x/run'
 
 import { useThreadRuns } from '../../runs/hooks/useRunQueries'
 import type { Run } from '../../runs/runs.types'
@@ -23,13 +23,13 @@ import { stageProgress } from '../stage-progress.utils'
  * switch of the view or a new target entry computes nothing.
  */
 export function useStageProgress(run: Run | null, projectId: string): StageProgressResult {
-  const stages = useVisibleStages(run?.workflow_version)
+  const stages = useVisibleStages(workflowRefOf(run))
   const steps = useRunSteps(run?.id ?? '', {
     isEnabled: run !== null,
     runStatus: run?.status,
   })
   const earlier = useEarlierRuns(run)
-  const subjects = useStageSubjects(projectId, run?.workflow_version)
+  const subjects = useStageSubjects(projectId, workflowRefOf(run))
   const stageTree = stages.data
   const stepPages = steps.data?.pages
   const isError = stages.isError || steps.isError || earlier.isError

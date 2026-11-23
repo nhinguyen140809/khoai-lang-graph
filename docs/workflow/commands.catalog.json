@@ -1,0 +1,29 @@
+{
+  "description": "Every command that the assistant may ask a client to run once it has answered, such as opening a document. The assistant names a command by key in `commands` of its answer. `needs` says what the server checks before the command leaves: `none` checks nothing, `artifact` and `item` name an `artifact_id` and an `item_id` that must belong to the project, and `review` needs a review that waits for the user.",
+  "commands": [
+    {
+      "key": "open_document",
+      "title": "Open a document",
+      "description": "Opens a document of the project beside the chat, when the user asked to see it or the answer reads better next to it. Names the id that the list of documents gives.",
+      "needs": "artifact"
+    },
+    {
+      "key": "open_item",
+      "title": "Open an item",
+      "description": "Opens an item of the project beside the chat, when the user asked to see it. Names the id that a read of the item gave.",
+      "needs": "item"
+    },
+    {
+      "key": "open_review",
+      "title": "Go to the review",
+      "description": "Brings the review that waits for the user into view. There is at most one at a time.",
+      "needs": "review"
+    },
+    {
+      "key": "open_settings",
+      "title": "Open the run settings",
+      "description": "Opens the settings of the run that the next message starts.",
+      "needs": "none"
+    }
+  ]
+}

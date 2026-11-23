@@ -1,4 +1,4 @@
-import { useActsOf } from '@/modules/workflow/entities/@x/run'
+import { useActsOf, workflowRefOf } from '@/modules/workflow/entities/@x/run'
 
 import type { Run } from '../../runs/runs.types'
 import { toolInUse } from '../work-items.utils'
@@ -11,10 +11,10 @@ import { useRunLastWork } from './useRunLastWork'
  * when the workflow names none.
  */
 export function useRunActs(
-  run: Pick<Run, 'id' | 'status' | 'workflow_version' | 'current_stage'> | null,
+  run: Pick<Run, 'id' | 'status' | 'workflow_name' | 'workflow_version' | 'current_stage'> | null,
 ): string[] {
   const work = useRunLastWork(run)
   const isRunning = work?.status === 'running'
   const stage = isRunning ? work.stage : (run?.current_stage ?? null)
-  return useActsOf(run?.workflow_version, stage, isRunning ? toolInUse(work) : null)
+  return useActsOf(workflowRefOf(run), stage, isRunning ? toolInUse(work) : null)
 }

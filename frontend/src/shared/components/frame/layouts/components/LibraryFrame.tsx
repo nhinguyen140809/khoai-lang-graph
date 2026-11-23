@@ -13,7 +13,7 @@ import {
 
 import { DeskBar } from '../../bars/components/DeskBar'
 import { DeskToolsInBar } from '../../bars/components/DeskToolsInBar'
-import { CommandPalette } from '../../commands/components/CommandPalette'
+import { CommandPalette } from '../../palette/components/CommandPalette'
 import { SidebarEdge } from '../../sidebar/components/SidebarEdge'
 import { SidebarToggle } from '../../sidebar/components/SidebarToggle'
 import { useResizableSidebar } from '../../sidebar/hooks/useResizableSidebar'

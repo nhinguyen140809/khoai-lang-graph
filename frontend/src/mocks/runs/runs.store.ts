@@ -1,4 +1,4 @@
-import type { Run } from '@/modules/run/entities'
+import type { Run, RunStep } from '@/modules/run/entities'
 
 import { mockState } from '../shared/db'
 
@@ -7,6 +7,9 @@ import { mockState } from '../shared/db'
 
 /** The runs that the messages sent with POST /threads/{thread_id}/messages started. */
 export const createdRuns = mockState<Run[]>('created-runs', () => [])
+
+/** The steps of the runs that answered a message, by the run they belong to. */
+export const createdSteps = mockState<RunStep[]>('created-steps', () => [])
 
 /** The fields that changed in a run, by run id, such as the status that stopping a run sets. */
 export const runEdits = mockState<Record<string, Partial<Run>>>('run-changes', () => ({}))

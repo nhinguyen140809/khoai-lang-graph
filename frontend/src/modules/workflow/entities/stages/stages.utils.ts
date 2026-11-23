@@ -55,3 +55,19 @@ function isStageVisible(definition: WorkflowDefinition, stage: WorkflowStage): b
 
   return parent === undefined || isStageVisible(definition, parent)
 }
+
+/**
+ * The kind of the subject item that each stage works on one after another: for each artifact kind
+ * with one artifact for each subject, the kind of its subjects, by the key of the stage.
+ */
+export function subjectKindByStage(
+  definition: Pick<WorkflowDefinition, 'artifact_kinds'>,
+): Map<string, string> {
+  return new Map(
+    definition.artifact_kinds.flatMap(({ per_project, stage, subject_item_kind }) =>
+      per_project === 'one_per_subject' && subject_item_kind !== null
+        ? [[stage, subject_item_kind]]
+        : [],
+    ),
+  )
+}

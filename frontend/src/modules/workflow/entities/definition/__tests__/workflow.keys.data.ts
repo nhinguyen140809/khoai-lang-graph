@@ -1,3 +1,5 @@
+import { workflowRefFixture } from '@/mocks/workflow/workflow.fixtures'
+
 import { workflowKeys } from '../workflow.keys'
 
 /** A key, and the wider key it starts with. */
@@ -9,7 +11,7 @@ export const keyCases = [
   },
   {
     name: 'the definition at a version',
-    key: workflowKeys.definition(1),
+    key: workflowKeys.definition({ ...workflowRefFixture, version: 1 }),
     wider: workflowKeys.all(),
   },
 ]
@@ -19,6 +21,6 @@ export const distinctCases = [
   {
     name: 'the current definition and a version',
     first: workflowKeys.definition(),
-    second: workflowKeys.definition(1),
+    second: workflowKeys.definition({ ...workflowRefFixture, version: 1 }),
   },
 ]

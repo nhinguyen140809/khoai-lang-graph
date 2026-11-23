@@ -1,0 +1,247 @@
+{
+  "name": "assistance",
+  "version": 1,
+  "description": "How the app answers a message that is about the app or the project and not about the requirements work. One agent looks around the project (its documents, its items and the evidence behind them, its runs and settings) and around the workflow (what each of its steps does), reads what it needs of them, then answers in a few sentences and names the commands that the client may run, such as opening a document. A message about the work does not enter this workflow; it enters requirements engineering.",
+  "entry": {
+    "first_run": "assistant",
+    "later_runs": "assistant",
+    "pending_messages": "assistant"
+  },
+  "agent_roles": [
+    {
+      "key": "assistant",
+      "label": "Assistant",
+      "description": "Answers a question about the app or the project, looking around the project and the workflow first, and names the commands that the client may run.",
+      "prompt_version": 2
+    }
+  ],
+  "stages": [
+    {
+      "key": "lookup",
+      "title": "Checking the project",
+      "internal": false,
+      "parent": null,
+      "acts": [
+        "read"
+      ]
+    }
+  ],
+  "nodes": [
+    {
+      "id": "__start__",
+      "kind": "start",
+      "label": "Start"
+    },
+    {
+      "id": "assistant",
+      "kind": "agent",
+      "label": "Assistant",
+      "stage": "lookup",
+      "agent_role": "assistant"
+    },
+    {
+      "id": "__end__",
+      "kind": "end",
+      "label": "End"
+    }
+  ],
+  "edges": [
+    {
+      "source": "__start__",
+      "target": "assistant",
+      "label": null,
+      "conditional": false,
+      "option": null
+    },
+    {
+      "source": "assistant",
+      "target": "__end__",
+      "label": null,
+      "conditional": false,
+      "option": null
+    }
+  ],
+  "artifact_kinds": [],
+  "item_kinds": [],
+  "link_types": [],
+  "tools": [
+    {
+      "key": "project_overview",
+      "title": "Look over the project",
+      "description": "Reads what the project is called, what it holds by kind of item, and how many documents it has.",
+      "uses": {
+        "one": "Looked over the project",
+        "other": "Looked over the project {count} times"
+      },
+      "icon": "lookup",
+      "visible": false,
+      "acts": [
+        "read"
+      ]
+    },
+    {
+      "key": "list_documents",
+      "title": "List the documents",
+      "description": "Lists the documents of the project with their kind, version and review status.",
+      "uses": {
+        "one": "Listed the documents",
+        "other": "Listed the documents {count} times"
+      },
+      "icon": "list",
+      "visible": false,
+      "acts": [
+        "read"
+      ]
+    },
+    {
+      "key": "read_document",
+      "title": "Read a document",
+      "description": "Reads the head of one document of the project and the list of its items.",
+      "uses": {
+        "one": "Read a document",
+        "other": "Read {count} documents"
+      },
+      "icon": "read",
+      "acts": [
+        "read"
+      ]
+    },
+    {
+      "key": "search_items",
+      "title": "Search the items",
+      "description": "Looks through the items of the project for a word or a phrase, in their key, kind and content.",
+      "uses": {
+        "one": "Searched the items",
+        "other": "Searched the items {count} times"
+      },
+      "icon": "search",
+      "acts": [
+        "search"
+      ]
+    },
+    {
+      "key": "read_item",
+      "title": "Read an item",
+      "description": "Reads one item of the project by its key and the fields it holds.",
+      "uses": {
+        "one": "Read an item",
+        "other": "Read {count} items"
+      },
+      "icon": "read",
+      "acts": [
+        "read"
+      ]
+    },
+    {
+      "key": "trace_item",
+      "title": "Look up the evidence for an item",
+      "description": "Reads where an item came from: the links to other items and the quotes that carry the evidence.",
+      "uses": {
+        "one": "Looked up the evidence for an item",
+        "other": "Looked up the evidence for {count} items"
+      },
+      "icon": "trace",
+      "acts": [
+        "link"
+      ]
+    },
+    {
+      "key": "open_issues",
+      "title": "Look at the open findings",
+      "description": "Reads what still blocks the work: the open findings and the last validation verdict.",
+      "uses": {
+        "one": "Looked at the open findings",
+        "other": "Looked at the open findings {count} times"
+      },
+      "icon": "check",
+      "acts": [
+        "review"
+      ]
+    },
+    {
+      "key": "latest_run",
+      "title": "Check the last run",
+      "description": "Reads how the last run of the project stands, and why it failed when it did.",
+      "uses": {
+        "one": "Checked the last run",
+        "other": "Checked the last run {count} times"
+      },
+      "icon": "check",
+      "acts": [
+        "review"
+      ]
+    },
+    {
+      "key": "run_settings",
+      "title": "Check the run settings",
+      "description": "Reads the limits that the runs of this project work under, such as the steps and the cost.",
+      "uses": {
+        "one": "Checked the run settings",
+        "other": "Checked the run settings {count} times"
+      },
+      "icon": "check",
+      "acts": [
+        "read"
+      ]
+    },
+    {
+      "key": "stage_info",
+      "title": "Look up a step",
+      "description": "Reads what a step of the requirements workflow does, from its definition.",
+      "uses": {
+        "one": "Looked up a step",
+        "other": "Looked up {count} steps"
+      },
+      "icon": "lookup",
+      "visible": false,
+      "acts": [
+        "read"
+      ]
+    },
+    {
+      "key": "budget_left",
+      "title": "Check the budget",
+      "description": "Reads what the month has cost and how much of the budget is left.",
+      "uses": {
+        "one": "Checked the budget",
+        "other": "Checked the budget {count} times"
+      },
+      "icon": "check",
+      "acts": [
+        "calculate"
+      ]
+    }
+  ],
+  "value_lists": [],
+  "directive_kinds": [],
+  "export_templates": [],
+  "run_parameters_schema": {
+    "type": "object",
+    "properties": {
+      "max_reads": {
+        "type": "integer",
+        "title": "Reads for one message",
+        "minimum": 1,
+        "maximum": 6,
+        "default": 5,
+        "description": "How many things the assistant may read of the project before it answers. Each read is one more call of the model, so it adds to the time and the cost of an answer."
+      }
+    },
+    "required": [
+      "max_reads"
+    ]
+  },
+  "state_schema": {
+    "type": "object",
+    "properties": {
+      "message": {
+        "type": "string",
+        "description": "The message that the assistant answers."
+      },
+      "reads": {
+        "type": "integer",
+        "description": "How many things the assistant has read so far."
+      }
+    }
+  }
+}

@@ -1,0 +1,21 @@
+import { describe, expect, it } from 'vitest'
+
+import { commandGroups, groupsBySearch } from '../palette.utils'
+import { commandGroupCases, groupsBySearchCases } from './palette.utils.data'
+
+describe('commandGroups', () => {
+  it.each(commandGroupCases)('$name', ({ sources, groups }) => {
+    expect(
+      commandGroups(sources).map(({ heading, commands }) => [
+        heading,
+        commands.map(({ id }) => id),
+      ]),
+    ).toEqual(groups)
+  })
+})
+
+describe('groupsBySearch', () => {
+  it.each(groupsBySearchCases)('$name', ({ groups, search, headings }) => {
+    expect(groupsBySearch(groups, search).map(({ heading }) => heading)).toEqual(headings)
+  })
+})

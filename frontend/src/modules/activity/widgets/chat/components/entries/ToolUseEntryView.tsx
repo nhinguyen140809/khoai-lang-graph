@@ -1,12 +1,20 @@
 'use client'
 
 import type { LucideIcon } from 'lucide-react'
-import { SearchIcon, WrenchIcon } from 'lucide-react'
+import {
+  BookOpenIcon,
+  ClipboardCheckIcon,
+  ListIcon,
+  RouteIcon,
+  SearchIcon,
+  TextSearchIcon,
+  WrenchIcon,
+} from 'lucide-react'
 
 import type { ToolUse } from '@/modules/run/entities'
 import { workMessages } from '@/modules/run/entities'
 import type { Tool } from '@/modules/workflow/entities'
-import { toolUsesLine, useTool } from '@/modules/workflow/entities'
+import { toolUsesLine, useTool, workflowRefOf } from '@/modules/workflow/entities'
 import {
   TraceCollapsible,
   TraceCollapsibleContent,
@@ -27,6 +35,11 @@ import { StepNoteLine } from './StepNoteLine'
 const toolMarks = {
   search: SearchIcon,
   tool: WrenchIcon,
+  list: ListIcon,
+  read: BookOpenIcon,
+  trace: RouteIcon,
+  check: ClipboardCheckIcon,
+  lookup: TextSearchIcon,
 } as const satisfies Record<Tool['icon'], LucideIcon>
 
 /**
@@ -36,10 +49,12 @@ const toolMarks = {
  */
 export function ToolUseEntryView({ use }: { use: ToolUse }) {
   const { run } = useRunActivity()
-  const tool = useTool(run.workflow_version, use.tool)
+  const tool = useTool(workflowRefOf(run), use.tool)
   const [open, setOpen] = useOpenWhileWorking(use.isRunning)
   const lastNote = use.notes.at(-1)
   const Mark = toolMarks[tool?.icon ?? 'search']
+  // A tool that only finds its way about for the agent is not shown.
+  if (tool?.visible === false) return null
   const line =
     tool === undefined
       ? workMessages.unknownToolUses(use.tool, use.notes.length)

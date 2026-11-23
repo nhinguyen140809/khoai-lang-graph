@@ -363,6 +363,10 @@
       "properties": {
         "key": { "$ref": "#/$defs/name" },
         "label": { "type": "string" },
+        "description": {
+          "type": "string",
+          "description": "What happens if it is picked, when its label does not say so; left out when there is none."
+        },
         "requires_text": {
           "type": "boolean",
           "description": "Choosing it asks the user to explain it in text, for example an Other choice. Never a default."
@@ -538,8 +542,12 @@
           "required": ["one", "other"]
         },
         "icon": {
-          "enum": ["search", "tool"],
+          "enum": ["search", "tool", "list", "read", "trace", "check", "lookup"],
           "description": "The mark of the tool in a client, from a fixed set that a client draws."
+        },
+        "visible": {
+          "type": "boolean",
+          "description": "Whether a client shows the use of the tool to the user. A tool that does not say shows it; one that only finds its way about for the agent says false."
         },
         "acts": {
           "type": "array",

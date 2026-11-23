@@ -1,3 +1,4 @@
+import type { WorkflowDefinition } from '../definition/workflow-definition.types'
 import type { ArtifactKinds, ContentSchema, KindMedia, KindSchema } from './artifact-kinds.types'
 
 /**
@@ -50,4 +51,11 @@ export function hasItemBlocks(kinds: ArtifactKinds | undefined, artifactKind: st
       ({ schema }) => isNavigable(schema) && schema['x-ui-display'] !== 'heading',
     ) ?? false
   )
+}
+
+/** The kinds of item that each kind of artifact holds, in the order of the definition, by its kind. */
+export function itemKindsByArtifactKind(
+  definition: Pick<WorkflowDefinition, 'artifact_kinds'>,
+): Map<string, string[]> {
+  return new Map(definition.artifact_kinds.map(({ kind, item_kinds }) => [kind, item_kinds]))
 }

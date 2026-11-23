@@ -5,9 +5,9 @@ import { Activity, type ReactNode } from 'react'
 
 import { Button } from '@/shared/components/ui/button'
 import { Surface } from '@/shared/components/ui/surface'
+import { useCommands } from '@/shared/lib/commands'
 
-import { PaletteGroup } from '../../commands/command.constants'
-import { useCommands } from '../../commands/hooks/useCommands'
+import { PaletteGroup } from '../../palette/palette.constants'
 import { usePanel } from '../hooks/usePanel'
 import { type BottomPanelSection, PanelRegion } from '../panel.types'
 import { BottomPanelSections } from './BottomPanelSections'

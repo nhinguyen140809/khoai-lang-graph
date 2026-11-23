@@ -26,6 +26,8 @@ export const answerReviewMessages = {
   writeFeedback: 'Write the feedback.',
   chooseOption: 'Choose an option.',
   agentAsks: 'The agents also ask:',
+  recommended: '(Recommended)',
+  moreAbout: 'More about your choice for',
 } as const
 
 /** The keys that send the answer from a box of the form: Ctrl or Cmd+Enter. */
