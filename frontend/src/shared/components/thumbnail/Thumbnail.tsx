@@ -33,7 +33,7 @@ function ThumbnailGlow() {
   )
 }
 
-/** A folder: one flat shape of one color, its icon at the top right, its title at the bottom left, and papers that rise out of it while it is hovered. */
+/** A folder: one flat shape of one color, its title at the top left, its icon at the bottom right, and papers that rise out of it while it is hovered. */
 function FolderThumbnail({ look, title, icon, seed, className, style, ...props }: ThumbnailProps) {
   const Icon = icon === null ? undefined : thumbnailIcons[icon]
 
@@ -50,7 +50,7 @@ function FolderThumbnail({ look, title, icon, seed, className, style, ...props }
           key={rise}
           aria-hidden
           className={cn(
-            'absolute inset-x-3 top-4 bottom-1/3 rounded-md border bg-card shadow-xs transition-transform duration-300 ease-out motion-reduce:transition-none',
+            'absolute inset-x-3 top-4 bottom-1/3 rounded-md border bg-(--thumbnail-paper) shadow-xs transition-transform duration-300 ease-out motion-reduce:transition-none',
             rise,
           )}
         />
@@ -60,8 +60,8 @@ function FolderThumbnail({ look, title, icon, seed, className, style, ...props }
         className="absolute top-0 left-0 h-6 w-2/5 rounded-t-lg bg-(--thumbnail-color)"
       />
       <div className="absolute inset-x-0 top-4 bottom-0 flex flex-col justify-between rounded-xl rounded-tl-none bg-(--thumbnail-color) p-2.5 text-secondary-foreground">
-        {Icon === undefined ? <span /> : <Icon aria-hidden className="size-5 self-end" />}
         <span className="line-clamp-3 text-left text-3xs leading-tight font-semibold">{title}</span>
+        {Icon === undefined ? <span /> : <Icon aria-hidden className="size-5 self-end" />}
       </div>
     </div>
   )
@@ -84,7 +84,7 @@ function PageThumbnail({ look, title, icon, seed, className, style, ...props }: 
     >
       <div className="relative aspect-4/3 w-full">
         <ThumbnailGlow />
-        <div className="absolute inset-0 flex items-center justify-center rounded-md border border-border bg-card text-(--thumbnail-color) group-data-[look=diagram]/thumbnail:border-dashed group-data-[look=diagram]/thumbnail:border-(--thumbnail-color)">
+        <div className="absolute inset-0 flex items-center justify-center rounded-md border border-border bg-(--thumbnail-paper) text-(--thumbnail-color) group-data-[look=diagram]/thumbnail:border-dashed group-data-[look=diagram]/thumbnail:border-(--thumbnail-color)">
           {Icon === undefined ? null : <Icon aria-hidden className="size-1/4" />}
         </div>
       </div>
@@ -102,8 +102,8 @@ const thumbnailViews = {
 
 /**
  * One thumbnail of a grid: a drawing of a folder, of a page of text or of a diagram, with the icon of
- * its kind on it. A folder is one flat shape of one color: its icon at the top right, its title at
- * the bottom left, and some papers that rise out of it while it is hovered. A page and a diagram
+ * its kind on it. A folder is one flat shape of one color: its title at the top left, its icon at
+ * the bottom right, and some papers that rise out of it while it is hovered. A page and a diagram
  * carry their title below. The color is one of the palette, by its seed, and a glow of that color
  * rises around the thumbnail while it is hovered. The thumbnail opens nothing itself; a link or a button
  * wraps it.
