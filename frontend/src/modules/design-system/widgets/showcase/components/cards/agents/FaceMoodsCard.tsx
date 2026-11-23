@@ -2,7 +2,7 @@
 
 import { useState } from 'react'
 
-import { Face, type Mood, moods } from '@/shared/components/face'
+import { AgentFace, type Mood, moods } from '@/shared/components/face'
 import { ToggleGroup, ToggleGroupItem } from '@/shared/components/ui/toggle-group'
 
 import type { CardEntry } from '../../../design-system.types'
@@ -31,7 +31,7 @@ export function FaceMoodsCard() {
     >
       <SampleGroup label="A change of mood goes gently: the eyes close for an instant">
         <div className="flex flex-wrap items-center gap-6">
-          <Face seed="requirement_engineer" size="lg" mood={mood} />
+          <AgentFace seed="requirement_engineer" size="lg" mood={mood} />
           <ToggleGroup
             type="single"
             variant="outline"
@@ -56,7 +56,7 @@ export function FaceMoodsCard() {
         <div className="grid grid-cols-2 gap-x-8 gap-y-10 @xl:grid-cols-3 @3xl:grid-cols-4 @5xl:grid-cols-6">
           {moods.map((mood) => (
             <div key={mood} className="flex flex-col items-start gap-2">
-              <Face seed="analyst" size="lg" mood={mood} />
+              <AgentFace seed="analyst" size="lg" mood={mood} />
               <SampleLabel>{mood}</SampleLabel>
               <SampleLabel className="opacity-70">{moodUses[mood]}</SampleLabel>
             </div>
@@ -72,6 +72,6 @@ export const faceMoodsCardEntry = {
   label: 'Face moods',
   section: 'agents',
   span: 12,
-  keywords: 'face mood expression Face',
+  keywords: 'face mood expression AgentFace',
   View: FaceMoodsCard,
 } satisfies CardEntry

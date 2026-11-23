@@ -3,7 +3,7 @@
 import { useMotionValue } from 'motion/react'
 import { useRef, useState } from 'react'
 
-import { Face } from '@/shared/components/face'
+import { AgentFace } from '@/shared/components/face'
 import { useIsInView } from '@/shared/lib/viewport'
 
 import { restingLook } from './act.constants'
@@ -83,7 +83,7 @@ export function MotionDemo({ seed, motion, className }: MotionDemoProps) {
 
   return (
     <span ref={ref} className={className ?? 'relative inline-flex shrink-0'}>
-      <Face seed={seed} mood="working" size="xl" drive={drive} />
+      <AgentFace seed={seed} mood="working" size="xl" drive={drive} />
       <ActProps act={act} round={round} gain={gain} allowed={slots} size="xl" partner={undefined} />
     </span>
   )

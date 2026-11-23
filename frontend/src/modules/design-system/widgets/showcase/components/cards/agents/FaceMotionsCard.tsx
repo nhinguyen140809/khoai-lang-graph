@@ -47,6 +47,6 @@ export const faceMotionsCardEntry = {
   label: 'Face motions',
   section: 'agents',
   span: 6,
-  keywords: 'face motion pose body sway tilt pulse bounce Face',
+  keywords: 'face motion pose body sway tilt pulse bounce AgentFace',
   View: FaceMotionsCard,
 } satisfies CardEntry

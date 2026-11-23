@@ -1,4 +1,4 @@
-import { Face, type MoodOverride } from '@/shared/components/face'
+import { AgentFace, type MoodOverride } from '@/shared/components/face'
 
 import { SampleLabel } from './Sample'
 
@@ -16,7 +16,7 @@ export function MotionFaces<Name extends string>({
     <div className="grid grid-cols-2 gap-x-8 gap-y-10 @xl:grid-cols-3 @3xl:grid-cols-4 @5xl:grid-cols-6">
       {names.map((name) => (
         <div key={name} className="flex flex-col items-start gap-2">
-          <Face seed="analyst" size="lg" override={overrideOf(name)} />
+          <AgentFace seed="analyst" size="lg" override={overrideOf(name)} />
           <SampleLabel>{name}</SampleLabel>
           {uses?.[name] !== undefined && (
             <SampleLabel className="opacity-70">{uses[name]}</SampleLabel>

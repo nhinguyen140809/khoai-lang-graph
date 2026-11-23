@@ -1,4 +1,4 @@
-export { Face } from './Face'
+export { AgentFace } from './AgentFace'
 export type { FaceDrive, FaceProps, FaceStyleKey, Mood, MoodOverride } from './face.types'
 export { faceStyleKeys, moods } from './face.types'
 export { FaceName } from './FaceName'

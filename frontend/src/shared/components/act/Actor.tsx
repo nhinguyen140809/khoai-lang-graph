@@ -3,7 +3,7 @@
 import { cn } from 'cn'
 import { useRef } from 'react'
 
-import { Face, type Mood } from '@/shared/components/face'
+import { AgentFace, type Mood } from '@/shared/components/face'
 import { useIsInView, usePrefersReducedMotion } from '@/shared/lib/viewport'
 
 import { actorFrameClasses } from './act.constants'
@@ -65,7 +65,7 @@ export function Actor({
         data-act={shown ?? undefined}
         className="relative inline-flex shrink-0"
       >
-        <Face seed={seed} mood={moodOf(mood, act)} size={size} drive={drive} />
+        <AgentFace seed={seed} mood={moodOf(mood, act)} size={size} drive={drive} />
         {act !== null && (
           <ActProps
             act={act}

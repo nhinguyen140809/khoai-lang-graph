@@ -3,20 +3,20 @@ import { describe, expect, it } from 'vitest'
 
 import { advanceTimers, withFakeTimers } from '@/test/steps'
 
-import { Face } from '../Face'
+import { AgentFace } from '../AgentFace'
 import { type Mood, moods } from '../face.types'
 import { faceLooks, moodLooks, restAfterMs } from '../mood/face-mood.constants'
 import { bodyLoops, poseLoops } from '../motion/face-loop.constants'
 import { blinkEveryMs, blinkMs, gazeLooks, gazePaths } from '../motion/face-motion.constants'
 
-function renderFace(props: Parameters<typeof Face>[0]) {
-  const { container } = render(<Face {...props} />)
+function renderFace(props: Parameters<typeof AgentFace>[0]) {
+  const { container } = render(<AgentFace {...props} />)
   const face = container.querySelector<HTMLElement>('[data-slot=face]')
   if (face === null) throw new Error('The face is not drawn')
   return face
 }
 
-describe('Face', () => {
+describe('AgentFace', () => {
   it('is hidden from assistive technology, which reads the name beside it', () => {
     expect(renderFace({ seed: 'analyst' })).toHaveAttribute('aria-hidden', 'true')
   })
@@ -170,12 +170,12 @@ describe('Face', () => {
   })
 
   it('covers a change of mood: the eyes close first, and the new mood comes when they have', () => {
-    const { container, rerender } = render(<Face seed="analyst" mood="idle" />)
+    const { container, rerender } = render(<AgentFace seed="analyst" mood="idle" />)
     const squash = () => container.querySelector<SVGElement>('.face-squash')
     const eyeTags = () =>
       [...container.querySelectorAll('svg rect, svg circle')].map((eye) => eye.tagName)
 
-    rerender(<Face seed="analyst" mood="thinking" />)
+    rerender(<AgentFace seed="analyst" mood="thinking" />)
 
     expect(squash()).toHaveClass('scale-y-10')
     expect(eyeTags()).toEqual(['rect', 'rect'])
@@ -190,7 +190,7 @@ describe('Face', () => {
     withFakeTimers()
 
     it('blinks now and then, and has its eyes open between two blinks', () => {
-      const { container } = render(<Face seed="analyst" mood="idle" />)
+      const { container } = render(<AgentFace seed="analyst" mood="idle" />)
       const isBlinking = () => container.querySelector('.animate-face-blink') !== null
 
       expect(isBlinking()).toBe(false)
@@ -201,7 +201,7 @@ describe('Face', () => {
     })
 
     it('does not blink with closed eyes', () => {
-      const { container } = render(<Face seed="analyst" mood="happy" />)
+      const { container } = render(<AgentFace seed="analyst" mood="happy" />)
 
       advanceTimers(blinkEveryMs * 3)
 
@@ -213,33 +213,33 @@ describe('Face', () => {
     withFakeTimers()
 
     it('comes to rest, and is busy again as soon as its mood is another', () => {
-      const { container, rerender } = render(<Face seed="analyst" mood="idle" />)
+      const { container, rerender } = render(<AgentFace seed="analyst" mood="idle" />)
       const face = () => container.querySelector('[data-slot=face]')
 
       expect(face()).not.toHaveAttribute('data-resting')
       advanceTimers(restAfterMs)
       expect(face()).toHaveAttribute('data-resting')
 
-      rerender(<Face seed="analyst" mood="thinking" />)
+      rerender(<AgentFace seed="analyst" mood="thinking" />)
       expect(face()).not.toHaveAttribute('data-resting')
     })
 
     it('comes to rest when it is happy, and takes the time again when its mood changes', () => {
-      const { container, rerender } = render(<Face seed="analyst" mood="happy" />)
+      const { container, rerender } = render(<AgentFace seed="analyst" mood="happy" />)
       const face = () => container.querySelector('[data-slot=face]')
 
       advanceTimers(restAfterMs)
       expect(face()).toHaveAttribute('data-resting')
       expect(faceLooks['resting-happy'].pose).toBeUndefined()
 
-      rerender(<Face seed="analyst" mood="idle" />)
+      rerender(<AgentFace seed="analyst" mood="idle" />)
       expect(face()).not.toHaveAttribute('data-resting')
       advanceTimers(restAfterMs - 1)
       expect(face()).not.toHaveAttribute('data-resting')
     })
 
     it('does not come to rest while it is busy', () => {
-      const { container } = render(<Face seed="analyst" mood="working" />)
+      const { container } = render(<AgentFace seed="analyst" mood="working" />)
 
       advanceTimers(restAfterMs * 2)
 

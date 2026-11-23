@@ -5,7 +5,7 @@ import { ChevronRightIcon } from 'lucide-react'
 import type { WorkEntry } from '@/modules/run/entities'
 import { useWorkStatusLook, useWorkWords, workMoodOf } from '@/modules/run/entities'
 import { Shimmer } from '@/shared/components/animation'
-import { Face } from '@/shared/components/face'
+import { AgentFace } from '@/shared/components/face'
 import { Marker } from '@/shared/components/ui/marker'
 import { TraceDescription, TraceIcon, TraceLine, TraceTitle } from '@/shared/components/ui/trace'
 
@@ -52,7 +52,7 @@ export function PhaseEntryView({
           {work.id === livePhaseId ? (
             <span aria-hidden className="size-6 shrink-0" />
           ) : (
-            <Face seed={work.agentRole} size="sm" mood={workMoodOf(work)} />
+            <AgentFace seed={work.agentRole} size="sm" mood={workMoodOf(work)} />
           )}
           <TraceTitle className="text-accent-foreground">
             <Shimmer color="secondary" variant="solid" isActive={look.traceStatus === 'running'}>

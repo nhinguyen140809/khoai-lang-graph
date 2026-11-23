@@ -1,6 +1,11 @@
 'use client'
 
-import { defaultFaceRules, Face, FaceRulesProvider, faceShapes } from '@/shared/components/face'
+import {
+  AgentFace,
+  defaultFaceRules,
+  FaceRulesProvider,
+  faceShapes,
+} from '@/shared/components/face'
 
 import type { CardEntry } from '../../../design-system.types'
 import { SampleCard, SampleGroup, SampleLabel } from '../../Sample'
@@ -39,7 +44,7 @@ export function FaceCard() {
         <div className="grid grid-cols-2 gap-x-8 gap-y-6 @xl:grid-cols-3 @3xl:grid-cols-4 @5xl:grid-cols-6">
           {workflowAgents.map((agent) => (
             <div key={agent} className="flex items-center gap-2">
-              <Face seed={agent} />
+              <AgentFace seed={agent} />
               <SampleLabel>{agent}</SampleLabel>
             </div>
           ))}
@@ -50,7 +55,7 @@ export function FaceCard() {
           {faceShapes.map((shape) => (
             <div key={shape} className="flex items-center gap-2">
               <FaceRulesProvider rules={{ ...defaultFaceRules, shapes: [shape] }}>
-                <Face seed="interviewer" size="lg" />
+                <AgentFace seed="interviewer" size="lg" />
               </FaceRulesProvider>
               <SampleLabel>{shape}</SampleLabel>
             </div>
@@ -61,13 +66,13 @@ export function FaceCard() {
         <div className="flex flex-wrap items-end gap-x-10 gap-y-6">
           {otherAgents.map((agent) => (
             <div key={agent} className="flex items-center gap-2">
-              <Face seed={agent} />
+              <AgentFace seed={agent} />
               <SampleLabel>{agent}</SampleLabel>
             </div>
           ))}
-          <Face seed="validator" size="sm" />
-          <Face seed="validator" />
-          <Face seed="validator" size="lg" />
+          <AgentFace seed="validator" size="sm" />
+          <AgentFace seed="validator" />
+          <AgentFace seed="validator" size="lg" />
         </div>
       </SampleGroup>
     </SampleCard>
@@ -79,6 +84,6 @@ export const faceCardEntry = {
   label: 'Faces',
   section: 'agents',
   span: 12,
-  keywords: 'face avatar agent expression Face FaceRulesProvider',
+  keywords: 'face avatar agent expression AgentFace FaceRulesProvider',
   View: FaceCard,
 } satisfies CardEntry

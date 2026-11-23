@@ -36,6 +36,6 @@ export const faceEyesCardEntry = {
   label: 'Face eyes',
   section: 'agents',
   span: 12,
-  keywords: 'face eyes blink gaze wink look Face',
+  keywords: 'face eyes blink gaze wink look AgentFace',
   View: FaceEyesCard,
 } satisfies CardEntry

@@ -3,7 +3,7 @@
 import { cn } from 'cn'
 import { motion, type MotionValue, useMotionValue, useTransform } from 'motion/react'
 
-import { Face } from '@/shared/components/face'
+import { AgentFace } from '@/shared/components/face'
 import { stretchOf } from '@/shared/lib/animation'
 
 import { propSize, slotPlaces } from './act.constants'
@@ -199,7 +199,7 @@ function PartnerFace({ seed, size }: { seed: string; size: ActSize }) {
   const x = useMotionValue(-2.6)
   const y = useMotionValue(0)
   const weight = useMotionValue(1)
-  return <Face seed={seed} size={size} mood="idle" drive={{ look: { x, y, weight } }} />
+  return <AgentFace seed={seed} size={size} mood="idle" drive={{ look: { x, y, weight } }} />
 }
 
 function PropIcon({
