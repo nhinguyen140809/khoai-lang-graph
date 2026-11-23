@@ -73,7 +73,8 @@
         "one": "Looked over the project",
         "other": "Looked over the project {count} times"
       },
-      "icon": "tool",
+      "icon": "lookup",
+      "visible": false,
       "acts": [
         "read"
       ]
@@ -86,7 +87,8 @@
         "one": "Listed the documents",
         "other": "Listed the documents {count} times"
       },
-      "icon": "tool",
+      "icon": "list",
+      "visible": false,
       "acts": [
         "read"
       ]
@@ -99,7 +101,7 @@
         "one": "Read a document",
         "other": "Read {count} documents"
       },
-      "icon": "tool",
+      "icon": "read",
       "acts": [
         "read"
       ]
@@ -112,7 +114,7 @@
         "one": "Searched the items",
         "other": "Searched the items {count} times"
       },
-      "icon": "tool",
+      "icon": "search",
       "acts": [
         "search"
       ]
@@ -125,7 +127,7 @@
         "one": "Read an item",
         "other": "Read {count} items"
       },
-      "icon": "tool",
+      "icon": "read",
       "acts": [
         "read"
       ]
@@ -138,7 +140,7 @@
         "one": "Looked up the evidence for an item",
         "other": "Looked up the evidence for {count} items"
       },
-      "icon": "tool",
+      "icon": "trace",
       "acts": [
         "link"
       ]
@@ -151,7 +153,7 @@
         "one": "Looked at the open findings",
         "other": "Looked at the open findings {count} times"
       },
-      "icon": "tool",
+      "icon": "check",
       "acts": [
         "review"
       ]
@@ -164,7 +166,7 @@
         "one": "Checked the last run",
         "other": "Checked the last run {count} times"
       },
-      "icon": "tool",
+      "icon": "check",
       "acts": [
         "review"
       ]
@@ -177,7 +179,7 @@
         "one": "Checked the run settings",
         "other": "Checked the run settings {count} times"
       },
-      "icon": "tool",
+      "icon": "check",
       "acts": [
         "read"
       ]
@@ -190,7 +192,8 @@
         "one": "Looked up a step",
         "other": "Looked up {count} steps"
       },
-      "icon": "tool",
+      "icon": "lookup",
+      "visible": false,
       "acts": [
         "read"
       ]
@@ -203,7 +206,7 @@
         "one": "Checked the budget",
         "other": "Checked the budget {count} times"
       },
-      "icon": "tool",
+      "icon": "check",
       "acts": [
         "calculate"
       ]
