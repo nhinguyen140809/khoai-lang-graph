@@ -1,4 +1,6 @@
-"""a thread holds at most one unfinished run of each workflow; its active run is read from its runs
+"""a thread holds one unfinished run of each workflow and no two runs share a number
+
+Its active run is read from its runs.
 
 Revision ID: d6e3b8a1f452
 Revises: b7c41f2d9e30
@@ -21,6 +23,7 @@ _UNFINISHED = "status IN ('queued', 'running', 'interrupted')"
 
 
 def upgrade() -> None:
+    op.create_index("uq_runs_thread_number", "runs", ["thread_id", "number"], unique=True)
     op.create_index(
         "uq_runs_one_unfinished_per_workflow",
         "runs",
@@ -45,3 +48,4 @@ def downgrade() -> None:
         "ORDER BY runs.number DESC LIMIT 1)"
     )
     op.drop_index("uq_runs_one_unfinished_per_workflow", table_name="runs")
+    op.drop_index("uq_runs_thread_number", table_name="runs")

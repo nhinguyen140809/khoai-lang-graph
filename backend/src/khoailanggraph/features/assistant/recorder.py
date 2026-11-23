@@ -73,32 +73,35 @@ async def record_answer(
     stage = _stage()
     notes = _notes_of(outcome)
     usage = dict(outcome.usage)
-    run = RunRow(
-        id=uuid4(),
-        thread_id=thread.id,
-        project_id=thread.project_id,
-        number=await runs_service.next_run_number(session, thread.id),
-        started_by=user.id,
-        workflow_name=workflows.ASSISTANCE.name,
-        workflow_version=workflows.ASSISTANCE.version,
-        status="succeeded",
-        current_stage=stage,
-        run_config_json=_dumps(
-            {
-                "models": {},
-                "review_checkpoints": [],
-                "output_language": language,
-                "max_steps": assistance.max_reads() + 1,
-                "max_cost_usd": None,
-                "parameters": {"max_reads": assistance.max_reads()},
-            }
+    run = await runs_service.create_run(
+        session,
+        thread.id,
+        lambda number: RunRow(
+            id=uuid4(),
+            thread_id=thread.id,
+            project_id=thread.project_id,
+            number=number,
+            started_by=user.id,
+            workflow_name=workflows.ASSISTANCE.name,
+            workflow_version=workflows.ASSISTANCE.version,
+            status="succeeded",
+            current_stage=stage,
+            run_config_json=_dumps(
+                {
+                    "models": {},
+                    "review_checkpoints": [],
+                    "output_language": language,
+                    "max_steps": assistance.max_reads() + 1,
+                    "max_cost_usd": None,
+                    "parameters": {"max_reads": assistance.max_reads()},
+                }
+            ),
+            usage_json=_dumps(usage),
+            step_count=1,
+            started_at=now,
+            finished_at=now,
         ),
-        usage_json=_dumps(usage),
-        step_count=1,
-        started_at=now,
-        finished_at=now,
     )
-    session.add(run)
     await session.flush()
     step = RunStepRow(
         id=uuid4(),

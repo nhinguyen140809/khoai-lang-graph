@@ -31,6 +31,7 @@ from typing import TYPE_CHECKING, Any, cast
 from uuid import UUID, uuid4
 
 from sqlalchemy import func, select
+from sqlalchemy.exc import IntegrityError
 from sqlalchemy.orm import Session  # noqa: TC002 - runtime type of the session factory
 
 from khoailanggraph.agents.requirements_engineering import definition as workflow_definition
@@ -47,6 +48,7 @@ from khoailanggraph.features.projects.models import ProjectRow
 from khoailanggraph.features.runs import restore, service
 from khoailanggraph.features.runs import usage as run_usage_totals
 from khoailanggraph.features.runs.models import (
+    UNFINISHED_RUN_STATUSES,
     DirectiveRow,
     HumanDecisionRow,
     InterruptRow,
@@ -994,29 +996,53 @@ class RunWalker:
             message.delivery = "undelivered"
 
     def _start_follow_up(self) -> UUID | None:
-        """Messages left pending by a run that succeeded start the next run together."""
+        """Messages left pending by a run that succeeded start the next run together.
+
+        A request may have started a run of the thread meanwhile, and the database refuses a second
+        unfinished run of the workflow: the messages then wait for that run, as they would have
+        if they had come after it. A run that took the number is written again with the next one.
+        """
         waiting = self._pending_messages()
         if not waiting:
             return None
-        run = RunRow(
-            id=uuid4(),
-            thread_id=self.thread.id,
-            project_id=self.project.id,
-            number=self.run.number + 1,
-            started_by=self.run.started_by,
-            workflow_name=self.run.workflow_name,
-            workflow_version=self.run.workflow_version,
-            status="queued",
-            current_stage="intent_routing",
-            run_config_json=self.run.run_config_json,
-            usage_json=_dumps(zero_usage()),
-        )
-        self.session.add(run)
-        self.session.flush()
-        for message in waiting:
-            message.delivery = "started_run"
-            message.run_id = run.id
-        return run.id
+        for _attempt in range(service.RUN_NUMBER_ATTEMPTS):
+            top = self.session.scalar(
+                select(func.max(RunRow.number)).where(RunRow.thread_id == self.thread.id)
+            )
+            run = RunRow(
+                id=uuid4(),
+                thread_id=self.thread.id,
+                project_id=self.project.id,
+                number=int(top or 0) + 1,
+                started_by=self.run.started_by,
+                workflow_name=self.run.workflow_name,
+                workflow_version=self.run.workflow_version,
+                status="queued",
+                current_stage="intent_routing",
+                run_config_json=self.run.run_config_json,
+                usage_json=_dumps(zero_usage()),
+            )
+            try:
+                with self.session.begin_nested():
+                    self.session.add(run)
+            except IntegrityError:
+                existing = self.session.scalar(
+                    select(RunRow).where(
+                        RunRow.thread_id == self.thread.id,
+                        RunRow.workflow_name == self.run.workflow_name,
+                        RunRow.status.in_(UNFINISHED_RUN_STATUSES),
+                    )
+                )
+                if existing is not None:
+                    for message in waiting:
+                        message.run_id = existing.id
+                    return None
+                continue
+            for message in waiting:
+                message.delivery = "started_run"
+                message.run_id = run.id
+            return run.id
+        return None
 
 
 def run_job(engine: Engine, run_id: UUID, *, resume_interrupt: UUID | None = None) -> None:

@@ -3,6 +3,7 @@ starts a run, and nothing about the application touches the workflow."""
 
 from __future__ import annotations
 
+import asyncio
 import json
 from pathlib import Path
 from tempfile import gettempdir
@@ -11,6 +12,7 @@ from unittest.mock import patch
 from uuid import UUID
 
 import pytest
+import sqlalchemy as sa
 from httpx import ASGITransport, AsyncClient
 
 import khoailanggraph.llm.factory as llm_factory
@@ -21,6 +23,9 @@ from khoailanggraph.features.assistant.service import (
     ASSISTANT_PROMPT_VERSION,
     PROMPTS_PACKAGE,
 )
+from khoailanggraph.features.me.models import UserRow
+from khoailanggraph.features.runs import service as runs_service
+from khoailanggraph.features.runs.models import RunRow
 from khoailanggraph.llm import reset_model_cache
 from khoailanggraph.main import create_app
 from khoailanggraph.platform.db import (
@@ -351,3 +356,115 @@ async def test_the_definition_of_each_workflow_is_served_by_its_name(client: Asy
     assert default.json()["name"] == "requirements_engineering"
     assert unknown.status_code == 404
     assert missing.status_code == 404
+
+
+_RUN_CONFIG = json.dumps(
+    {
+        "models": {},
+        "review_checkpoints": [],
+        "output_language": "en",
+        "max_steps": 50,
+        "max_cost_usd": None,
+        "parameters": {},
+    }
+).encode("utf-8")
+
+
+async def _seed_run(
+    app: FastAPI, project_id: str, thread_id: str, *, status: str, number: int = 1
+) -> str:
+    """A run of the requirements workflow that another request wrote."""
+    async with app.state.session_factory() as session:
+        run = RunRow(
+            thread_id=UUID(thread_id),
+            project_id=UUID(project_id),
+            number=number,
+            started_by=(await session.scalar(sa.select(UserRow.id))),
+            workflow_name="requirements_engineering",
+            workflow_version=2,
+            status=status,
+            current_stage="planning",
+            run_config_json=_RUN_CONFIG,
+            usage_json=json.dumps(runs_service.ZERO_USAGE).encode("utf-8"),
+        )
+        session.add(run)
+        await session.commit()
+        return str(run.id)
+
+
+async def test_a_message_that_loses_the_race_to_start_a_run_waits_for_the_winner(
+    app: FastAPI,
+    client: AsyncClient,
+    project_and_thread: tuple[str, str],
+    monkeypatch: pytest.MonkeyPatch,
+) -> None:
+    """Two requests look, both find no unfinished run, and both write: the database refuses the
+    second, which then waits in the run of the first instead of failing."""
+    project_id, thread_id = project_and_thread
+    winner = await _seed_run(app, project_id, thread_id, status="running")
+    real = runs_service.unfinished_run_of_thread
+    looked: list[str] = []
+
+    async def stale_first(*args: Any, **kwargs: Any) -> Any:
+        looked.append("looked")
+        return None if len(looked) == 1 else await real(*args, **kwargs)
+
+    monkeypatch.setattr(runs_service, "unfinished_run_of_thread", stale_first)
+
+    with _assistant(kind="workflow"):
+        reset_model_cache()
+        response = await _send(client, thread_id, TASK)
+
+    assert response.status_code == 201
+    body = response.json()
+    assert body["run"]["id"] == winner, "the message waits in the run that won"
+    assert body["message"]["delivery"] == "pending"
+    runs = (await client.get(f"{API}/threads/{thread_id}/runs")).json()["items"]
+    assert [run["id"] for run in runs] == [winner], "no second unfinished run was written"
+
+
+async def test_a_run_that_loses_its_number_is_written_again_with_the_next_one(
+    app: FastAPI,
+    client: AsyncClient,
+    project_and_thread: tuple[str, str],
+    monkeypatch: pytest.MonkeyPatch,
+) -> None:
+    """A run of the thread took number 1 after this one read the last number."""
+    project_id, thread_id = project_and_thread
+    await _seed_run(app, project_id, thread_id, status="succeeded", number=1)
+    real = runs_service.next_run_number
+    asked: list[int] = []
+
+    async def stale_first(*args: Any, **kwargs: Any) -> int:
+        asked.append(1)
+        return 1 if len(asked) == 1 else await real(*args, **kwargs)
+
+    monkeypatch.setattr(runs_service, "next_run_number", stale_first)
+
+    with _assistant(kind="general", text="You can read the interviews first."):
+        reset_model_cache()
+        response = await _send(client, thread_id, "Which document should I read first?")
+
+    assert response.status_code == 201
+    assert response.json()["run"]["number"] == 2
+    assert len(asked) == 2, "the first number was refused and the next one was asked for"
+
+
+async def test_two_messages_sent_together_start_one_run_and_one_waits_for_it(
+    client: AsyncClient, project_and_thread: tuple[str, str]
+) -> None:
+    _project_id, thread_id = project_and_thread
+
+    with _assistant(kind="workflow"):
+        reset_model_cache()
+        first, second = await asyncio.gather(
+            _send(client, thread_id, TASK, **{"Idempotency-Key": "a"}),
+            _send(client, thread_id, TASK, **{"Idempotency-Key": "b"}),
+        )
+
+    assert first.status_code == second.status_code == 201
+    runs = (await client.get(f"{API}/threads/{thread_id}/runs")).json()["items"]
+    unfinished = [run for run in runs if run["status"] in {"queued", "running", "interrupted"}]
+    assert len(unfinished) <= 1, "a thread never holds two unfinished runs of a workflow"
+    numbers = [run["number"] for run in runs]
+    assert len(numbers) == len(set(numbers)), "and no two runs share a number"

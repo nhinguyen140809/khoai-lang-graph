@@ -31,6 +31,8 @@ _UNFINISHED_SQL = "status IN ('queued', 'running', 'interrupted')"
 class RunRow(Base):
     __tablename__ = "runs"
     __table_args__ = (
+        # The number is the order of the run in its thread: two runs never share one.
+        Index("uq_runs_thread_number", "thread_id", "number", unique=True),
         Index(
             "uq_runs_one_unfinished_per_workflow",
             "thread_id",

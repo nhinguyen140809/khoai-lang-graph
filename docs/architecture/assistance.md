@@ -47,6 +47,19 @@ the database refuses a second one. The unfinished run that a message waits for i
 workflow that takes it, and the `active_run_id` that a thread shows is its unfinished run of the
 main workflow. A run of `assistance` is over before the request answers, so it is never unfinished.
 
+Two requests of one thread may write runs at the same moment, so the database holds the rules and
+the code does not trust what it read a moment before:
+
+- A unique index on `(thread_id, workflow_name)` for the runs that are `queued`, `running` or
+  `interrupted` refuses a second unfinished run of a workflow. The request that loses the race
+  gets the winner back and its message waits in that run as `pending`, as it would have if it had
+  come after; it does not fail. The same holds when a run ends and starts the run that its pending
+  messages wait for, while a request has started one: those messages wait for that run.
+- A unique index on `(thread_id, number)` keeps the order of the runs. A run that finds its number
+  taken is written again with the next one, up to five times.
+- Starting a run again after a failure answers `409 run_already_active` when the thread already has an
+  unfinished run of that workflow, also when another request started it a moment after the check.
+
 One workflow is the main workflow of a thread, `MAIN_WORKFLOW` in the registry, which is
 `requirements_engineering`: the status of the thread is the status of its latest run of that
 workflow, and the chat follows the latest run of it. A run of another workflow is a run of the

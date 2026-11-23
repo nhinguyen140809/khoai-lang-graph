@@ -113,6 +113,17 @@ async def _start_job(request: Request, run_id: UUID, resume_interrupt: UUID | No
     )
 
 
+async def _wait_for_run(db: AsyncSession, message: MessageRow, run: RunRow) -> dict[str, Any]:
+    """The answer for a message that waits in the run of its thread that is unfinished."""
+    message.delivery = "pending"
+    await db.flush()
+    return {
+        "message": service.message_output(message).model_dump(mode="json"),
+        "run": service.runs_output(run).model_dump(mode="json"),
+        "assistant": None,
+    }
+
+
 async def _send(
     request: Request,
     db: AsyncSession,
@@ -163,30 +174,31 @@ async def _send(
     unfinished = await service.unfinished_run_of_thread(db, thread.id, workflows.MAIN_WORKFLOW.name)
     message = await service.append_message(db, thread=thread, content=body.content)
     if unfinished is not None:
-        message.delivery = "pending"
-        await db.flush()
-        return {
-            "message": service.message_output(message).model_dump(mode="json"),
-            "run": service.runs_output(unfinished).model_dump(mode="json"),
-            "assistant": None,
-        }
+        return await _wait_for_run(db, message, unfinished)
     resolved = await run_config.resolve_run_config(
         db, project, user_id, run_config=body.run_config, models=body.models
     )
-    run = RunRow(
-        id=uuid4(),
-        thread_id=thread.id,
-        project_id=thread.project_id,
-        number=await service.next_run_number(db, thread.id),
-        started_by=user_id,
-        workflow_name=service.WF_NAME,
-        workflow_version=service.WF_VERSION,
-        status="queued",
-        current_stage="intent_routing",
-        run_config_json=jsonlib.dumps(resolved).encode("utf-8"),
-        usage_json=jsonlib.dumps(service.ZERO_USAGE).encode("utf-8"),
-    )
-    db.add(run)
+    try:
+        run = await service.create_run(
+            db,
+            thread.id,
+            lambda number: RunRow(
+                id=uuid4(),
+                thread_id=thread.id,
+                project_id=thread.project_id,
+                number=number,
+                started_by=user_id,
+                workflow_name=service.WF_NAME,
+                workflow_version=service.WF_VERSION,
+                status="queued",
+                current_stage="intent_routing",
+                run_config_json=jsonlib.dumps(resolved).encode("utf-8"),
+                usage_json=jsonlib.dumps(service.ZERO_USAGE).encode("utf-8"),
+            ),
+        )
+    except service.RunConflictError as conflict:
+        # Another request started the run of this thread first: the message waits for it.
+        return await _wait_for_run(db, message, conflict.existing)
     message.run_id = run.id
     await db.commit()  # the worker's connection must see the queued rows
     await _start_job(request, run.id)
@@ -632,22 +644,34 @@ async def retry_run(
     await thread_service.get_thread_row(db, run.thread_id, UUID(str(user.id)))
     project = cast("ProjectRow", await db.get(ProjectRow, run.project_id))
     resolved = await run_config.resolve_run_config(db, project, user_id)
-    retry = RunRow(
-        id=uuid4(),
-        thread_id=run.thread_id,
-        project_id=run.project_id,
-        number=await service.next_run_number(db, run.thread_id),
-        started_by=user_id,
-        workflow_name=run.workflow_name,
-        workflow_version=run.workflow_version,
-        status="queued",
-        current_stage=step.stage,
-        run_config_json=jsonlib.dumps(resolved).encode("utf-8"),
-        usage_json=jsonlib.dumps(service.ZERO_USAGE).encode("utf-8"),
-        retry_of_run_id=run.id,
-        input_json=jsonlib.dumps({"retry_from_step_id": str(step.id)}).encode("utf-8"),
-    )
-    db.add(retry)
+    try:
+        retry = await service.create_run(
+            db,
+            run.thread_id,
+            lambda number: RunRow(
+                id=uuid4(),
+                thread_id=run.thread_id,
+                project_id=run.project_id,
+                number=number,
+                started_by=user_id,
+                workflow_name=run.workflow_name,
+                workflow_version=run.workflow_version,
+                status="queued",
+                current_stage=step.stage,
+                run_config_json=jsonlib.dumps(resolved).encode("utf-8"),
+                usage_json=jsonlib.dumps(service.ZERO_USAGE).encode("utf-8"),
+                retry_of_run_id=run.id,
+                input_json=jsonlib.dumps({"retry_from_step_id": str(step.id)}).encode("utf-8"),
+            ),
+        )
+    except service.RunConflictError:
+        # Another request started a run of the thread between the check above and the write.
+        raise ApiError(
+            409,
+            "run_already_active",
+            "Invalid state",
+            "A run of this project is already running or waiting.",
+        ) from None
     await db.commit()
     await _start_job(request, retry.id)
     await db.refresh(retry)

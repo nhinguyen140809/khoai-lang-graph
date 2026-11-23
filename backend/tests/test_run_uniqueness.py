@@ -64,3 +64,13 @@ def test_runs_that_ended_and_runs_of_other_workflows_do_not_count(session: Sessi
     )
 
     session.flush()
+
+
+def test_two_runs_of_a_thread_never_share_a_number(session: Session) -> None:
+    thread_id = uuid4()
+    session.add(_run(thread_id, "requirements_engineering", "succeeded", 1))
+    session.flush()
+    session.add(_run(thread_id, "assistance", "succeeded", 1))
+
+    with pytest.raises(IntegrityError):
+        session.flush()
