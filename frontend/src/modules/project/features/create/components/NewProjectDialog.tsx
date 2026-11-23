@@ -15,7 +15,7 @@ interface NewProjectDialogProps {
 
 /**
  * Checks the settings of a new project before it is created, on the idea that the prompt sent.
- * Once created, the project gets the idea as its first message and opens at its activity. The
+ * Once created, the project gets the sources and then the idea as its first message and opens at its activity. The
  * dialog stays open while the project is created, since the project exists either way.
  */
 export function NewProjectDialog({ open, idea, onOpenChange }: NewProjectDialogProps) {

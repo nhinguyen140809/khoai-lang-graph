@@ -1,0 +1,6 @@
+export { useSpeechRecognition } from './hooks/useSpeechRecognition'
+export { useSpeechSynthesis } from './hooks/useSpeechSynthesis'
+export { useVoiceLevel } from './hooks/useVoiceLevel'
+export { plainTextOf } from './plain-text.utils'
+export type { SpeechProblem } from './speech.types'
+export { speechLangOf } from './speech-lang.utils'

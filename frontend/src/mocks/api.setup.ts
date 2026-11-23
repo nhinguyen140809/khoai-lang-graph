@@ -13,6 +13,7 @@ import { projectHandlers } from './projects/projects.handlers'
 import { directiveHandlers } from './runs/handlers/directives.handlers'
 import { runStateHandlers } from './runs/handlers/run-state.handlers'
 import { runHandlers } from './runs/handlers/runs.handlers'
+import { sourceHandlers } from './sources/sources.handlers'
 import { threadHandlers } from './threads/threads.handlers'
 import { chainHandlers } from './trace/handlers/chains.handlers'
 import { traceLinkHandlers } from './trace/handlers/trace-links.handlers'
@@ -41,6 +42,7 @@ export const apiHandlers = [
   ...itemHandlers,
   ...itemEditHandlers,
   ...exportHandlers,
+  ...sourceHandlers,
   ...traceLinkHandlers,
   ...chainHandlers,
   ...traceabilityHandlers,

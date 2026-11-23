@@ -4,6 +4,7 @@ import type { LucideIcon } from 'lucide-react'
 import { usePathname } from 'next/navigation'
 
 import {
+  noticeableRunStatus,
   type Project,
   projectName,
   projectNewsLook,
@@ -13,8 +14,6 @@ import { useProjectNews } from '@/modules/project/features/news'
 import { useRunStatusLook } from '@/modules/run/entities'
 import type { Tone } from '@/shared/lib/tone'
 import { inView, useView, useWording } from '@/shared/lib/view'
-
-import { noticeableRunStatus } from '../project-sidebar.utils'
 
 /**
  * What the row of a project in the side list shows: the address of its chat, its name, the look of

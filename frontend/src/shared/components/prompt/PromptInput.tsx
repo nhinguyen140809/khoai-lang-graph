@@ -1,15 +1,25 @@
 'use client'
 
-import { cn } from 'cn'
-import { type KeyboardEvent, type ReactNode, type Ref, useId } from 'react'
+import {
+  type ReactNode,
+  type Ref,
+  useCallback,
+  useEffect,
+  useId,
+  useMemo,
+  useRef,
+  useState,
+} from 'react'
 
-import { InputGroup, InputGroupAddon, InputGroupTextarea } from '@/shared/components/ui/input-group'
-import { Stack } from '@/shared/components/ui/stack'
 import { hasText } from '@/shared/lib/guards'
-import { isSubmitKey } from '@/shared/lib/hotkey'
 
 import { promptInputLooks, type PromptInputSize } from './prompt-input.types'
-import { PromptSubmitButton } from './PromptSubmitButton'
+import {
+  PromptFieldContext,
+  PromptLooksContext,
+  PromptSubmitContext,
+  PromptTextContext,
+} from './PromptInputContext'
 
 interface PromptInputProps {
   /** The id of the element that names the prompt, such as a heading above it. */
@@ -20,38 +30,28 @@ interface PromptInputProps {
   onValueChange: (value: string) => void
   /** Sends the text, trimmed; never called with a blank text or while `isPending`. */
   onSubmit: (text: string) => void
-  /** The name of the send button, in its tooltip and for assistive technology. */
-  submitLabel: string
   /** The keys, read by assistive technology only, such as "Enter to send, Shift+Enter for a new line". */
   keysHint: string
-  placeholder: string
-  /** While the text is sent: the button is disabled and spins. */
+  /** While the text is sent: the send button is disabled and spins. */
   isPending?: boolean | undefined
   /**
    * Three rows for a prompt that starts a project, one row that grows for the chat, and a slim
    * one whose send sits in the row of the text, for the place a review already fills.
    */
   size?: PromptInputSize | undefined
-  /**
-   * The items at the start of the row inside the box, beside the send button. They take the free
-   * width, and what does not fit is cut, as on the status bar.
-   */
-  startActions?: ReactNode
-  /** The items at the end of the row inside the box, send button included; the default Send without them. */
-  endActions?: ReactNode
-  /**
-   * The items at the start of the row under the box, such as the settings of the work that the
-   * prompt starts. They take the free width, and what does not fit is cut, as on the status bar.
-   */
-  footerStart?: ReactNode
-  /** The items at the end of the row under the box; they keep their width. */
-  footerEnd?: ReactNode
   inputRef?: Ref<HTMLTextAreaElement> | undefined
+  /** The parts of the prompt: a `PromptBox` and, under it, a `PromptFooter`. */
+  children: ReactNode
 }
 
 /**
- * The prompt that starts work: a box with the text and a send button, and a row under it whose
- * two sides hold what the place adds. Enter sends, Shift+Enter adds a line.
+ * The prompt that starts work. It holds what its parts share, the text, how it is sent and how it
+ * looks, and the parts draw it: a `PromptBox` with its `PromptTextarea` and, under it, a
+ * `PromptFooter`. What a place adds, a menu or a button, is one more part put where it belongs, so
+ * that nothing between the place and the prompt has to be told of it. What the parts share is held in
+ * four contexts, one for each thing that changes together, so that a part is drawn again only for
+ * what it reads. Enter sends, Shift+Enter
+ * adds a line.
  */
 export function PromptInput({
   labelledBy,
@@ -59,88 +59,76 @@ export function PromptInput({
   value,
   onValueChange,
   onSubmit,
-  submitLabel,
   keysHint,
-  placeholder,
   isPending = false,
   size = 'comfortable',
-  startActions,
-  endActions,
-  footerStart,
-  footerEnd,
   inputRef,
+  children,
 }: PromptInputProps) {
-  const id = useId()
+  const keysId = `${useId()}-keys`
   const isBlank = !hasText(value)
-  const hasFooter = footerStart !== undefined || footerEnd !== undefined
-  const looks = promptInputLooks[size]
+  const [beforeSubmit] = useState(() => new Set<() => void>())
 
-  const submit = () => {
-    if (!isBlank && !isPending) onSubmit(value.trim())
-  }
+  const addBeforeSubmit = useCallback(
+    (run: () => void) => {
+      beforeSubmit.add(run)
+      return () => {
+        beforeSubmit.delete(run)
+      }
+    },
+    [beforeSubmit],
+  )
 
-  const submitOnEnter = (event: KeyboardEvent<HTMLTextAreaElement>) => {
-    if (!isSubmitKey(event.nativeEvent)) return
-    event.preventDefault()
-    submit()
-  }
+  // What a send reads is kept in a ref, so that `submit` is the same function from one render to
+  // the next and the parts that hold it are not drawn again for it.
+  const latest = useRef({ value, isBlank, isPending, onSubmit })
+  useEffect(() => {
+    latest.current = { value, isBlank, isPending, onSubmit }
+  })
+  const submit = useCallback(() => {
+    const current = latest.current
+    if (current.isBlank || current.isPending) return
+    for (const run of beforeSubmit) run()
+    current.onSubmit(current.value.trim())
+  }, [beforeSubmit])
+
+  const canSubmit = !isBlank && !isPending
+
+  // Each context holds only what changes together, so that a part is drawn again only for what it reads.
+  const looks = useMemo(() => ({ size, looks: promptInputLooks[size] }), [size])
+  const text = useMemo(() => ({ value, onValueChange }), [value, onValueChange])
+  const submitting = useMemo(
+    () => ({ submit, canSubmit, isPending, addBeforeSubmit }),
+    [submit, canSubmit, isPending, addBeforeSubmit],
+  )
+  const field = useMemo(
+    () => ({ labelledBy, label, keysId, inputRef }),
+    [labelledBy, label, keysId, inputRef],
+  )
 
   return (
-    <form
-      aria-labelledby={labelledBy}
-      aria-label={label}
-      onSubmit={(event) => {
-        event.preventDefault()
-        submit()
-      }}
-      className="flex flex-col gap-0"
-    >
-      {/* The box of the prompt keeps the fill of a card, and a line a little thicker than the
-          others, so that it stands out, where other inputs have neither. */}
-      <InputGroup thickness="medium" className="bg-card dark:bg-card">
-        <InputGroupTextarea
-          ref={inputRef}
-          aria-labelledby={labelledBy}
-          aria-label={label}
-          aria-describedby={`${id}-keys`}
-          value={value}
-          rows={looks.rows}
-          placeholder={placeholder}
-          onChange={(event) => {
-            onValueChange(event.target.value)
-          }}
-          onKeyDown={submitOnEnter}
-          className={cn('max-h-48 overflow-y-auto leading-relaxed', looks.minHeight)}
-        />
-        <InputGroupAddon align={looks.addon} className={looks.addonLook}>
-          {/* Only assistive technology reads the keys; on screen, the arrow sends the text. */}
-          <p id={`${id}-keys`} className="sr-only">
-            {keysHint}
-          </p>
-          <Stack direction="row" gap="1" className="min-w-0 flex-1 overflow-hidden">
-            {startActions}
-          </Stack>
-          <Stack direction="row" gap="1" className="shrink-0">
-            {endActions ?? (
-              <PromptSubmitButton
-                submitLabel={submitLabel}
-                isPending={isPending}
-                isDisabled={isBlank}
-              />
-            )}
-          </Stack>
-        </InputGroupAddon>
-      </InputGroup>
-      {hasFooter && (
-        <div className="flex h-7 items-center gap-2 px-0 text-xs text-muted-foreground">
-          <Stack direction="row" gap="1" className="min-w-0 flex-1 overflow-hidden">
-            {footerStart}
-          </Stack>
-          <Stack direction="row" gap="1" className="shrink-0">
-            {footerEnd}
-          </Stack>
-        </div>
-      )}
-    </form>
+    <PromptLooksContext value={looks}>
+      <PromptTextContext value={text}>
+        <PromptSubmitContext value={submitting}>
+          <PromptFieldContext value={field}>
+            <form
+              aria-labelledby={labelledBy}
+              aria-label={label}
+              onSubmit={(event) => {
+                event.preventDefault()
+                submit()
+              }}
+              className="flex flex-col gap-0"
+            >
+              {/* Only assistive technology reads the keys; on screen, the arrow sends the text. */}
+              <p id={keysId} className="sr-only">
+                {keysHint}
+              </p>
+              {children}
+            </form>
+          </PromptFieldContext>
+        </PromptSubmitContext>
+      </PromptTextContext>
+    </PromptLooksContext>
   )
 }

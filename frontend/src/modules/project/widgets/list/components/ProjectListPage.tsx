@@ -10,10 +10,10 @@ import {
   useProjectFilterFields,
 } from '@/modules/project/entities'
 import { NewProjectDialog, NewProjectPrompt } from '@/modules/project/features/create'
+import { AttachedSourcesTray, AttachSourceMenu } from '@/modules/source/features/upload'
 import { GlowStage } from '@/shared/components/animation'
 import { FilterMenu, useFilters } from '@/shared/components/filter'
 import { LoadingState } from '@/shared/components/state'
-import { ScrollArea } from '@/shared/components/ui/scroll-area'
 import { Toggle } from '@/shared/components/ui/toggle'
 
 import { ProjectTable } from './ProjectTable'
@@ -29,23 +29,23 @@ export function ProjectListPage() {
 
   return (
     <>
-      <ScrollArea className="h-full">
-        {/* The glows stay at the top, by the prompt, whatever the length of the list. */}
-        <GlowStage backdropClassName="bottom-auto h-160">
-          {/* The prompt keeps its place under the top, whatever the length of the list. */}
-          <div className="mx-auto flex w-full max-w-3xl flex-col gap-32 px-6 pt-16 pb-8 sm:pt-prompt-top">
-            <NewProjectPrompt
-              onStart={(idea) => {
-                setNewProject({ open: true, idea })
-              }}
-            />
-            {/* The filters are read from the address, which is known in the browser only. */}
-            <Suspense fallback={<ListFallback />}>
-              <ProjectsSection />
-            </Suspense>
-          </div>
-        </GlowStage>
-      </ScrollArea>
+      {/* The glows stay at the top, by the prompt, whatever the length of the list. */}
+      <GlowStage backdropClassName="bottom-auto h-160" className="shrink-0">
+        {/* The prompt keeps its place under the top, whatever the length of the list. */}
+        <div className="mx-auto flex w-full max-w-3xl flex-col gap-32 px-6 pt-16 pb-8 sm:pt-prompt-top">
+          <NewProjectPrompt
+            onStart={(idea) => {
+              setNewProject({ open: true, idea })
+            }}
+            aboveText={<AttachedSourcesTray />}
+            footerEnd={<AttachSourceMenu />}
+          />
+          {/* The filters are read from the address, which is known in the browser only. */}
+          <Suspense fallback={<ListFallback />}>
+            <ProjectsSection />
+          </Suspense>
+        </div>
+      </GlowStage>
       <NewProjectDialog
         open={newProject.open}
         idea={newProject.idea}

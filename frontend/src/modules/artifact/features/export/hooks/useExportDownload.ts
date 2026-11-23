@@ -6,7 +6,7 @@ import { toast } from 'sonner'
 import { useExport } from '@/modules/artifact/entities'
 import { useWorkflowDefinition } from '@/modules/workflow/entities'
 import { actionToastDuration } from '@/shared/components/ui/sonner'
-import { downloadFile } from '@/shared/lib/download'
+import { downloadFile } from '@/shared/lib/files'
 
 import { exportMessages } from '../export.constants'
 import { exportFileLabel, exportToastId } from '../export.utils'

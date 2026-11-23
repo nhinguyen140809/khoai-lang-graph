@@ -42,6 +42,7 @@ export type {
 export {
   emptyProjectListMessage,
   hasNews,
+  noticeableRunStatus,
   projectName,
   projectsMatching,
   unfinishedRunCount,

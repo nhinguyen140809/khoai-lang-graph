@@ -18,6 +18,7 @@ import {
   MessageFooter,
   MessageHeader,
 } from '@/shared/components/ui/message'
+import { ReadAloudButton } from '@/shared/components/ui/read-aloud-button'
 import { RelativeTime } from '@/shared/components/ui/relative-time'
 import { toneClasses } from '@/shared/lib/tone'
 
@@ -149,6 +150,7 @@ function MessageBody({ entry }: EntryViewProps<'message'>) {
             />
           )}
           <CopyButton value={entry.message.content} display="icon" size="icon-sm" />
+          {!isUser && <ReadAloudButton value={entry.message.content} size="icon-sm" />}
         </MessageFooter>
       </MessageContent>
     </Message>

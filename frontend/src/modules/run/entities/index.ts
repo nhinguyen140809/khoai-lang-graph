@@ -36,6 +36,7 @@ export type {
   SubjectProgress,
 } from './stages/stage-progress.types'
 export {
+  stageNowOf,
   stageProgress,
   stageStatusesByAttention,
   stageStatusOfRun,

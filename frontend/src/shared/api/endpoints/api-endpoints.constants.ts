@@ -25,6 +25,7 @@ export const apiEndpoints = {
   projectArtifacts: apiEndpoint('/projects/:projectId/artifacts'),
   projectItems: apiEndpoint('/projects/:projectId/items'),
   projectExports: apiEndpoint('/projects/:projectId/exports'),
+  projectSources: apiEndpoint('/projects/:projectId/documents'),
 
   threads: apiEndpoint('/threads'),
   thread: apiEndpoint('/threads/:threadId'),
@@ -41,6 +42,8 @@ export const apiEndpoints = {
   runRetry: apiEndpoint('/runs/:runId/retry'),
   runCancel: apiEndpoint('/runs/:runId/cancel'),
   runStream: apiEndpoint('/runs/:runId/stream'),
+
+  sourceEntry: apiEndpoint('/documents/:documentId'),
 
   exportEntry: apiEndpoint('/exports/:exportId'),
   exportEntryFile: apiEndpoint('/exports/:exportId/file'),

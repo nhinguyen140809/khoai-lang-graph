@@ -3,7 +3,8 @@ import { describe, expect, it } from 'vitest'
 import { buildStep } from '@/mocks/runs/fixtures/runs.fixtures'
 import { assertPresent } from '@/shared/lib/guards'
 
-import { stageProgress } from '../stage-progress.utils'
+import type { StageProgress } from '../stage-progress.types'
+import { stageNowOf, stageProgress } from '../stage-progress.utils'
 import {
   interviewSteps,
   runWith,
@@ -209,5 +210,48 @@ describe('stageProgress', () => {
     const stages = stageProgress(visibleStages, { steps: [], run: null, subjects: new Map() })
 
     expect(stages.map(({ number }) => number)).toEqual([1, 2, 3, 4, 5, 6])
+  })
+})
+
+/** A stage as far as a run went, with only what the choice of the current one reads. */
+function progressOf(key: string, status: StageProgress['status'], isOpen = false): StageProgress {
+  return {
+    key,
+    title: key,
+    number: 1,
+    status,
+    isOpen,
+    latestWorkId: null,
+    children: [],
+    subjects: [],
+  }
+}
+
+describe('stageNowOf', () => {
+  it('is the open stage', () => {
+    const stages = [
+      progressOf('a', 'done'),
+      progressOf('b', 'running', true),
+      progressOf('c', 'not_started'),
+    ]
+
+    expect(stageNowOf(stages)?.key).toBe('b')
+  })
+
+  it('is the last stage that has begun when none is open', () => {
+    const stages = [
+      progressOf('a', 'done'),
+      progressOf('b', 'done'),
+      progressOf('c', 'not_started'),
+    ]
+
+    expect(stageNowOf(stages)?.key).toBe('b')
+  })
+
+  it('is the first stage when none has begun, and nothing without stages', () => {
+    expect(stageNowOf([progressOf('a', 'not_started'), progressOf('b', 'not_started')])?.key).toBe(
+      'a',
+    )
+    expect(stageNowOf([])).toBeUndefined()
   })
 })

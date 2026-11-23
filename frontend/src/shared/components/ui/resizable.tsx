@@ -150,7 +150,9 @@ function AnimatedResizablePanel({
   const [size, setSize] = useState<number | string>(defaultSize)
   const { isAnimating, isShrunk } = usePanelMotion(isVisible, () => size, panelRef)
 
-  const separator = <ResizableHandle className={cn(isShrunk && !isAnimating && 'hidden')} />
+  // A panel that has shrunk to nothing has no handle at all: a handle that is only hidden can still
+  // be dragged from the edge of the group, which opens the panel with nothing in it.
+  const separator = isShrunk && !isAnimating ? null : <ResizableHandle />
 
   return (
     <>
@@ -159,6 +161,8 @@ function AnimatedResizablePanel({
         id={id}
         panelRef={panelRef}
         animated={isAnimating}
+        // Shrunk to nothing, it cannot be dragged open from the edge of the group either.
+        disabled={isShrunk && !isAnimating}
         collapsible
         collapsedSize={0}
         defaultSize={isVisible ? initialSize : 0}

@@ -15,6 +15,7 @@ export const IdPrefix = {
   Artifact: 'a7f3',
   Item: 'c41e',
   Export: 'e8d0',
+  Source: '5d0c',
   TraceLink: 'd7a1',
   Directive: '3b7c',
   Decision: 'a41e',

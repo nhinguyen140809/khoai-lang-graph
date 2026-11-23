@@ -208,11 +208,11 @@ With `--only theme`, only the theme variables in `src/app/styles/tokens.css` cha
 
 - An element that no component of `ui/` makes takes the corner of the component it is closest to, by what it does and how high it is, not a pill because it looks friendlier:
 
-  | Element                                                      | Closest to              | Corner                                       | Example                                     |
-  | ------------------------------------------------------------ | ----------------------- | -------------------------------------------- | ------------------------------------------- |
-  | A value that the user turns on or off, such as a filter chip | `Toggle`, by its height | `rounded-md` at 28px, `rounded-lg` from 32px | `FilterChip` in `shared/components/filter/` |
-  | An icon button, such as the arrow that sends a prompt        | `Button`, by its size   | Its own: no class                            | The arrow of `NewProjectPrompt`             |
-  | A box that holds a text box and its buttons                  | `InputGroup`            | `rounded-lg`                                 | The prompt of `NewProjectPrompt`            |
+  | Element                                                      | Closest to              | Corner                                                                                              | Example                                                                                |
+  | ------------------------------------------------------------ | ----------------------- | --------------------------------------------------------------------------------------------------- | -------------------------------------------------------------------------------------- |
+  | A value that the user turns on or off, such as a filter chip | `Toggle`, by its height | `rounded-md` at 28px, `rounded-lg` from 32px                                                        | `FilterChip` in `shared/components/filter/`                                            |
+  | An icon button, such as the arrow that sends a prompt        | `Button`, by its size   | Its own: no class                                                                                   | The arrow of `NewProjectPrompt`                                                        |
+  | A box that holds a text box and its buttons                  | `InputGroup`            | `rounded-lg`; `rounded-xl` when the box is three rows high, since it holds a whole part of a screen | The prompt of `NewProjectPrompt` (`rounded-xl`), the prompt of the chat (`rounded-lg`) |
 
   An icon button is better made with `Button` itself, `variant="ghost"` and the `icon` size that fits, than with a `<button>` and classes, so that it takes its corner, its focus ring and its states from the component.
 

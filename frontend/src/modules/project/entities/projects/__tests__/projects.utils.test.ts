@@ -3,6 +3,7 @@ import { describe, expect, it } from 'vitest'
 import {
   emptyProjectListMessage,
   hasNews,
+  noticeableRunStatus,
   projectName,
   projectsMatching,
   unfinishedRunCount,
@@ -10,6 +11,7 @@ import {
 import {
   emptyCases,
   hasNewsCases,
+  noticeableCases,
   projectNameCases,
   searchCases,
   unfinishedRunCountCases,
@@ -45,5 +47,11 @@ describe('emptyProjectListMessage', () => {
 describe('hasNews', () => {
   it.each(hasNewsCases)('is $news for $name', ({ seenAt, activityAt, news }) => {
     expect(hasNews(seenAt, activityAt)).toBe(news)
+  })
+})
+
+describe('noticeableRunStatus', () => {
+  it.each(noticeableCases)('shows $shown for $status', ({ status, shown }) => {
+    expect(noticeableRunStatus(status)).toBe(shown)
   })
 })

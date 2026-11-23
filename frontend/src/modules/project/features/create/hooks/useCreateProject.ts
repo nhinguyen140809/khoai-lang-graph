@@ -10,13 +10,15 @@ import {
   useProjectPages,
 } from '@/modules/project/entities'
 import { isRunDefaultsEmpty, toRunDefaults } from '@/modules/run/entities'
+import { attachedSources, keepAttachedSources, uploadSources } from '@/modules/source/entities'
 import { sendFirstMessage } from '@/modules/thread/entities'
 import type { RunParameterField } from '@/modules/workflow/entities'
 import { errorMessageOf } from '@/shared/api/error'
 import { newIdempotencyKey } from '@/shared/api/idempotency'
 import { formErrorOf, showFieldProblems } from '@/shared/components/form'
+import { forgetPromptDraft } from '@/shared/components/prompt'
 
-import { createProjectMessages } from '../new-project.constants'
+import { createProjectMessages, newProjectDraftName } from '../new-project.constants'
 import type { NewProject, NewProjectForm, NewProjectFormSchema } from '../new-project.schema'
 
 interface CreateProjectOptions {
@@ -56,8 +58,10 @@ export function useCreateProject({
   const pages = useProjectPages()
   const create = useMutation({
     mutationKey: projectKeys.create(),
-    // Resolves to the project and the failure of a later step, if any.
+    // Resolves to the project, the files that stay chosen, the ones that failed to go up and the failure of a later step, if any.
     mutationFn: async ({ idea, run_config: runSettings, ...body }: NewProject) => {
+      // The files chosen as sources, which go up once the project exists, before its idea is sent.
+      const chosen = attachedSources()
       // One key for each submit. The mutation never runs twice for one submit, so the key can be
       // made here; a mutation that retries must make it before, and pass it in its variables.
       const idempotencyKey = newIdempotencyKey()
@@ -67,18 +71,40 @@ export function useCreateProject({
         try {
           await updateProjectRunConfig(project.id, runConfig)
         } catch (error) {
-          return { project, failure: { step: 'settings', error } satisfies FollowUpFailure }
+          return {
+            project,
+            kept: [...chosen],
+            notUploaded: [] as File[],
+            failure: { step: 'settings', error } satisfies FollowUpFailure,
+          }
         }
       }
+      // The sources go up before the idea, so that the first run has them in its corpus; one that
+      // fails does not hold back the rest.
+      const notUploaded = await uploadSources(project.id, chosen)
       try {
         await sendFirstMessage(project.id, { content: idea }, idempotencyKey)
       } catch (error) {
-        return { project, failure: { step: 'idea', error } satisfies FollowUpFailure }
+        return {
+          project,
+          kept: notUploaded,
+          notUploaded,
+          failure: { step: 'idea', error } satisfies FollowUpFailure,
+        }
       }
-      return { project, failure: null }
+      return { project, kept: notUploaded, notUploaded, failure: null }
     },
-    onSuccess: ({ project, failure }) => {
+    onSuccess: ({ project, failure, kept, notUploaded }) => {
+      // The idea has become the project, so the prompt starts empty the next time.
+      forgetPromptDraft(newProjectDraftName)
+      // The files that went up are done with; the ones that did not, or that were never tried, stay.
+      keepAttachedSources(kept)
       void queryClient.invalidateQueries({ queryKey: projectKeys.lists() })
+      if (notUploaded.length > 0) {
+        toast.error(
+          createProjectMessages.sourcesNotUploaded(notUploaded.map(({ name }) => name).join(', ')),
+        )
+      }
       if (failure !== null) {
         toast.error(
           failure.step === 'settings'
