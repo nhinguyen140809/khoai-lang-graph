@@ -76,9 +76,9 @@ def _fields_of(content: Any) -> list[str]:
 def _title_of(content: Any) -> str:
     if not isinstance(content, dict):
         return ""
-    return next(
-        (_one_line(content[name]) for name in _TITLE_FIELDS if content.get(name)), ""
-    )[:FIELD_LIMIT]
+    return next((_one_line(content[name]) for name in _TITLE_FIELDS if content.get(name)), "")[
+        :FIELD_LIMIT
+    ]
 
 
 async def _latest_artifact(ctx: ToolContext, kind: str) -> ArtifactRow | None:
@@ -116,10 +116,7 @@ async def read_item(ctx: ToolContext, key: str | None) -> str:
     if row is None:
         return f"This project has no item with the key {key.strip()}."
     content = _loads(row.content_json)
-    head = (
-        f"{row.key} ({row.kind}), id {row.id}, "
-        f"version {row.version}, {row.review_status}"
-    )
+    head = f"{row.key} ({row.kind}), id {row.id}, version {row.version}, {row.review_status}"
     return _cap("\n".join([head, *_fields_of(content)]))
 
 
@@ -165,9 +162,7 @@ async def latest_run(ctx: ToolContext, key: str | None) -> str:
     )
     if run is None:
         return "This project has not run yet."
-    lines = [
-        f"run {run.number}: {run.status}, stage {run.current_stage}, {run.step_count} steps"
-    ]
+    lines = [f"run {run.number}: {run.status}, stage {run.current_stage}, {run.step_count} steps"]
     if run.error_message:
         lines.append(f"error {run.error_code} at {run.error_stage}: {run.error_message}")
     failed = await ctx.session.scalar(

@@ -74,9 +74,7 @@ async def seeded(
             f"{API}/auth/login", json={"email": REGISTER["email"], "password": "secret"}
         )
         project_id = (await client.post(f"{API}/projects", json={"name": "Mentors"})).json()["id"]
-        thread_id = (
-            await client.post(f"{API}/projects/{project_id}/threads")
-        ).json()["id"]
+        thread_id = (await client.post(f"{API}/projects/{project_id}/threads")).json()["id"]
 
     factory: async_sessionmaker[AsyncSession] = app.state.session_factory
     async with factory() as session:
