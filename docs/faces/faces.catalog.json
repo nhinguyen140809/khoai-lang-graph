@@ -1,0 +1,2420 @@
+{
+  "description": "Every part, color and tag of the human faces the app may draw.",
+  "styles": [
+    {
+      "key": "plain",
+      "title": "Plain",
+      "package": "@dicebear/styles/lorelei.json",
+      "license": "CC0 1.0, by Lisa Wischofsky"
+    }
+  ],
+  "tagCategories": [
+    {
+      "key": "gender",
+      "values": ["feminine", "masculine", "neutral"]
+    },
+    {
+      "key": "age",
+      "values": ["child", "teen", "adult", "elder"]
+    }
+  ],
+  "parts": [
+    {
+      "key": "hair",
+      "style": "plain",
+      "optional": false,
+      "variants": [
+        {
+          "key": "short-side-part",
+          "art": "variant01",
+          "title": "Short side part",
+          "tags": {
+            "gender": ["masculine"],
+            "age": ["adult", "elder"]
+          }
+        },
+        {
+          "key": "short-crop",
+          "art": "variant02",
+          "title": "Short crop",
+          "tags": {
+            "gender": ["masculine"],
+            "age": ["child", "teen", "adult", "elder"]
+          }
+        },
+        {
+          "key": "quiff",
+          "art": "variant03",
+          "title": "Quiff",
+          "tags": {
+            "gender": ["masculine"],
+            "age": ["teen", "adult"]
+          }
+        },
+        {
+          "key": "spiky-swept",
+          "art": "variant04",
+          "title": "Spiky swept",
+          "tags": {
+            "gender": ["masculine"],
+            "age": ["child", "teen", "adult"]
+          }
+        },
+        {
+          "key": "curly-top",
+          "art": "variant05",
+          "title": "Curly top",
+          "tags": {
+            "gender": ["feminine", "masculine", "neutral"],
+            "age": ["child", "teen", "adult", "elder"]
+          }
+        },
+        {
+          "key": "short-fringe",
+          "art": "variant06",
+          "title": "Short fringe",
+          "tags": {
+            "gender": ["masculine"],
+            "age": ["child", "teen", "adult"]
+          }
+        },
+        {
+          "key": "short-bowl",
+          "art": "variant07",
+          "title": "Short bowl",
+          "tags": {
+            "gender": ["feminine", "masculine", "neutral"],
+            "age": ["child", "teen", "adult", "elder"]
+          }
+        },
+        {
+          "key": "pompadour",
+          "art": "variant08",
+          "title": "Pompadour",
+          "tags": {
+            "gender": ["masculine"],
+            "age": ["teen", "adult"]
+          }
+        },
+        {
+          "key": "curly-quiff",
+          "art": "variant09",
+          "title": "Curly quiff",
+          "tags": {
+            "gender": ["masculine"],
+            "age": ["teen", "adult"]
+          }
+        },
+        {
+          "key": "flipped-mid",
+          "art": "variant10",
+          "title": "Flipped mid",
+          "tags": {
+            "gender": ["feminine"],
+            "age": ["teen", "adult"]
+          }
+        },
+        {
+          "key": "mid-fringe",
+          "art": "variant11",
+          "title": "Mid fringe",
+          "tags": {
+            "gender": ["feminine"],
+            "age": ["child", "teen", "adult", "elder"]
+          }
+        },
+        {
+          "key": "short-swept",
+          "art": "variant12",
+          "title": "Short swept",
+          "tags": {
+            "gender": ["masculine"],
+            "age": ["child", "teen", "adult"]
+          }
+        },
+        {
+          "key": "bob-flick",
+          "art": "variant13",
+          "title": "Bob flick",
+          "tags": {
+            "gender": ["feminine"],
+            "age": ["child", "teen", "adult", "elder"]
+          }
+        },
+        {
+          "key": "bun-bangs",
+          "art": "variant14",
+          "title": "Bun bangs",
+          "tags": {
+            "gender": ["feminine"],
+            "age": ["child", "teen", "adult"]
+          }
+        },
+        {
+          "key": "long-straight",
+          "art": "variant15",
+          "title": "Long straight",
+          "tags": {
+            "gender": ["feminine"],
+            "age": ["child", "teen", "adult"]
+          }
+        },
+        {
+          "key": "long-layered",
+          "art": "variant16",
+          "title": "Long layered",
+          "tags": {
+            "gender": ["feminine"],
+            "age": ["teen", "adult"]
+          }
+        },
+        {
+          "key": "mullet",
+          "art": "variant17",
+          "title": "Mullet",
+          "tags": {
+            "gender": ["feminine", "masculine", "neutral"],
+            "age": ["teen", "adult"]
+          }
+        },
+        {
+          "key": "wavy-bob",
+          "art": "variant18",
+          "title": "Wavy bob",
+          "tags": {
+            "gender": ["feminine"],
+            "age": ["teen", "adult", "elder"]
+          }
+        },
+        {
+          "key": "blunt-bob",
+          "art": "variant19",
+          "title": "Blunt bob",
+          "tags": {
+            "gender": ["feminine"],
+            "age": ["child", "teen", "adult"]
+          }
+        },
+        {
+          "key": "messy-layered",
+          "art": "variant20",
+          "title": "Messy layered",
+          "tags": {
+            "gender": ["feminine", "masculine", "neutral"],
+            "age": ["teen", "adult"]
+          }
+        },
+        {
+          "key": "long-messy",
+          "art": "variant21",
+          "title": "Long messy",
+          "tags": {
+            "gender": ["feminine"],
+            "age": ["teen", "adult"]
+          }
+        },
+        {
+          "key": "tufted-short",
+          "art": "variant22",
+          "title": "Tufted short",
+          "tags": {
+            "gender": ["masculine"],
+            "age": ["child", "teen", "adult"]
+          }
+        },
+        {
+          "key": "long-bangs",
+          "art": "variant23",
+          "title": "Long bangs",
+          "tags": {
+            "gender": ["feminine"],
+            "age": ["child", "teen", "adult"]
+          }
+        },
+        {
+          "key": "big-curls",
+          "art": "variant24",
+          "title": "Big curls",
+          "tags": {
+            "gender": ["feminine"],
+            "age": ["child", "teen", "adult", "elder"]
+          }
+        },
+        {
+          "key": "bald-side-patch",
+          "art": "variant25",
+          "title": "Bald side patch",
+          "tags": {
+            "gender": ["masculine"],
+            "age": ["elder"]
+          }
+        },
+        {
+          "key": "double-buns",
+          "art": "variant26",
+          "title": "Double buns",
+          "tags": {
+            "gender": ["feminine"],
+            "age": ["child", "teen", "adult"]
+          }
+        },
+        {
+          "key": "mohawk",
+          "art": "variant27",
+          "title": "Mohawk",
+          "tags": {
+            "gender": ["masculine"],
+            "age": ["teen", "adult"]
+          }
+        },
+        {
+          "key": "bald-side-band",
+          "art": "variant28",
+          "title": "Bald side band",
+          "tags": {
+            "gender": ["masculine"],
+            "age": ["adult", "elder"]
+          }
+        },
+        {
+          "key": "low-ponytail",
+          "art": "variant29",
+          "title": "Low ponytail",
+          "tags": {
+            "gender": ["feminine"],
+            "age": ["child", "teen", "adult"]
+          }
+        },
+        {
+          "key": "braided-tail",
+          "art": "variant30",
+          "title": "Braided tail",
+          "tags": {
+            "gender": ["feminine"],
+            "age": ["child", "teen", "adult"]
+          }
+        },
+        {
+          "key": "side-ponytail",
+          "art": "variant31",
+          "title": "Side ponytail",
+          "tags": {
+            "gender": ["feminine"],
+            "age": ["child", "teen", "adult"]
+          }
+        },
+        {
+          "key": "curly-bob",
+          "art": "variant32",
+          "title": "Curly bob",
+          "tags": {
+            "gender": ["feminine"],
+            "age": ["child", "teen", "adult", "elder"]
+          }
+        },
+        {
+          "key": "swept-back-long",
+          "art": "variant33",
+          "title": "Swept back long",
+          "tags": {
+            "gender": ["feminine"],
+            "age": ["teen", "adult"]
+          }
+        },
+        {
+          "key": "bald-tuft",
+          "art": "variant34",
+          "title": "Bald tuft",
+          "tags": {
+            "gender": ["feminine", "masculine", "neutral"],
+            "age": ["elder"]
+          }
+        },
+        {
+          "key": "long-wavy",
+          "art": "variant35",
+          "title": "Long wavy",
+          "tags": {
+            "gender": ["feminine"],
+            "age": ["teen", "adult"]
+          }
+        },
+        {
+          "key": "spiky-knot",
+          "art": "variant36",
+          "title": "Spiky knot",
+          "tags": {
+            "gender": ["feminine", "masculine", "neutral"],
+            "age": ["teen", "adult"]
+          }
+        },
+        {
+          "key": "wavy-mid",
+          "art": "variant37",
+          "title": "Wavy mid",
+          "tags": {
+            "gender": ["feminine"],
+            "age": ["adult", "elder"]
+          }
+        },
+        {
+          "key": "top-bun",
+          "art": "variant38",
+          "title": "Top bun",
+          "tags": {
+            "gender": ["feminine", "masculine", "neutral"],
+            "age": ["teen", "adult"]
+          }
+        },
+        {
+          "key": "curly-crop",
+          "art": "variant39",
+          "title": "Curly crop",
+          "tags": {
+            "gender": ["masculine"],
+            "age": ["child", "teen", "adult", "elder"]
+          }
+        },
+        {
+          "key": "side-bob",
+          "art": "variant40",
+          "title": "Side bob",
+          "tags": {
+            "gender": ["feminine"],
+            "age": ["adult", "elder"]
+          }
+        },
+        {
+          "key": "long-side-fringe",
+          "art": "variant41",
+          "title": "Long side fringe",
+          "tags": {
+            "gender": ["feminine"],
+            "age": ["teen", "adult"]
+          }
+        },
+        {
+          "key": "high-ponytail",
+          "art": "variant42",
+          "title": "High ponytail",
+          "tags": {
+            "gender": ["feminine"],
+            "age": ["child", "teen", "adult"]
+          }
+        },
+        {
+          "key": "mushroom-messy",
+          "art": "variant43",
+          "title": "Mushroom messy",
+          "tags": {
+            "gender": ["feminine", "masculine", "neutral"],
+            "age": ["child", "teen", "adult"]
+          }
+        },
+        {
+          "key": "braided-sides",
+          "art": "variant44",
+          "title": "Braided sides",
+          "tags": {
+            "gender": ["feminine"],
+            "age": ["teen", "adult"]
+          }
+        },
+        {
+          "key": "messy-bun",
+          "art": "variant45",
+          "title": "Messy bun",
+          "tags": {
+            "gender": ["feminine"],
+            "age": ["adult", "elder"]
+          }
+        },
+        {
+          "key": "fringe-bun",
+          "art": "variant46",
+          "title": "Fringe bun",
+          "tags": {
+            "gender": ["feminine"],
+            "age": ["teen", "adult"]
+          }
+        },
+        {
+          "key": "buzz-cut",
+          "art": "variant47",
+          "title": "Buzz cut",
+          "tags": {
+            "gender": ["masculine"],
+            "age": ["teen", "adult"]
+          }
+        },
+        {
+          "key": "low-tail-fringe",
+          "art": "variant48",
+          "title": "Low tail fringe",
+          "tags": {
+            "gender": ["feminine"],
+            "age": ["adult", "elder"]
+          }
+        }
+      ]
+    },
+    {
+      "key": "eyes",
+      "style": "plain",
+      "optional": false,
+      "variants": [
+        {
+          "key": "closed-lines",
+          "art": "variant01",
+          "title": "Closed lines",
+          "tags": {
+            "gender": ["feminine", "masculine", "neutral"],
+            "age": ["child", "teen", "adult", "elder"]
+          }
+        },
+        {
+          "key": "round-glance",
+          "art": "variant02",
+          "title": "Round glance",
+          "tags": {
+            "gender": ["feminine", "masculine", "neutral"],
+            "age": ["child", "teen", "adult", "elder"]
+          }
+        },
+        {
+          "key": "sleepy-slits",
+          "art": "variant03",
+          "title": "Sleepy slits",
+          "tags": {
+            "gender": ["feminine", "masculine", "neutral"],
+            "age": ["teen", "adult", "elder"]
+          }
+        },
+        {
+          "key": "round-open",
+          "art": "variant04",
+          "title": "Round open",
+          "tags": {
+            "gender": ["feminine", "masculine", "neutral"],
+            "age": ["child", "teen", "adult", "elder"]
+          }
+        },
+        {
+          "key": "oval-glance",
+          "art": "variant05",
+          "title": "Oval glance",
+          "tags": {
+            "gender": ["feminine", "masculine", "neutral"],
+            "age": ["child", "teen", "adult", "elder"]
+          }
+        },
+        {
+          "key": "soft-lids",
+          "art": "variant06",
+          "title": "Soft lids",
+          "tags": {
+            "gender": ["feminine", "masculine", "neutral"],
+            "age": ["child", "teen", "adult", "elder"]
+          }
+        },
+        {
+          "key": "lashed-glance",
+          "art": "variant07",
+          "title": "Lashed glance",
+          "tags": {
+            "gender": ["feminine"],
+            "age": ["teen", "adult", "elder"]
+          }
+        },
+        {
+          "key": "heavy-lids",
+          "art": "variant08",
+          "title": "Heavy lids",
+          "tags": {
+            "gender": ["feminine", "masculine", "neutral"],
+            "age": ["teen", "adult", "elder"]
+          }
+        },
+        {
+          "key": "hearts",
+          "art": "variant09",
+          "title": "Hearts",
+          "tags": {
+            "gender": ["feminine", "masculine", "neutral"],
+            "age": ["teen", "adult"]
+          }
+        },
+        {
+          "key": "pupil-glance",
+          "art": "variant10",
+          "title": "Pupil glance",
+          "tags": {
+            "gender": ["feminine", "masculine", "neutral"],
+            "age": ["child", "teen", "adult", "elder"]
+          }
+        },
+        {
+          "key": "lashes-up",
+          "art": "variant11",
+          "title": "Lashes up",
+          "tags": {
+            "gender": ["feminine"],
+            "age": ["teen", "adult", "elder"]
+          }
+        },
+        {
+          "key": "lashes-brow",
+          "art": "variant12",
+          "title": "Lashes brow",
+          "tags": {
+            "gender": ["feminine"],
+            "age": ["teen", "adult", "elder"]
+          }
+        },
+        {
+          "key": "dots",
+          "art": "variant13",
+          "title": "Dots",
+          "tags": {
+            "gender": ["feminine", "masculine", "neutral"],
+            "age": ["child", "teen", "adult", "elder"]
+          }
+        },
+        {
+          "key": "lashed-round",
+          "art": "variant14",
+          "title": "Lashed round",
+          "tags": {
+            "gender": ["feminine"],
+            "age": ["teen", "adult", "elder"]
+          }
+        },
+        {
+          "key": "wink-right",
+          "art": "variant15",
+          "title": "Wink right",
+          "tags": {
+            "gender": ["feminine", "masculine", "neutral"],
+            "age": ["child", "teen", "adult", "elder"]
+          }
+        },
+        {
+          "key": "wide-open",
+          "art": "variant16",
+          "title": "Wide open",
+          "tags": {
+            "gender": ["feminine", "masculine", "neutral"],
+            "age": ["child", "teen", "adult", "elder"]
+          }
+        },
+        {
+          "key": "side-glance",
+          "art": "variant17",
+          "title": "Side glance",
+          "tags": {
+            "gender": ["feminine", "masculine", "neutral"],
+            "age": ["child", "teen", "adult", "elder"]
+          }
+        },
+        {
+          "key": "wink-left",
+          "art": "variant18",
+          "title": "Wink left",
+          "tags": {
+            "gender": ["feminine", "masculine", "neutral"],
+            "age": ["child", "teen", "adult", "elder"]
+          }
+        },
+        {
+          "key": "relaxed-arcs",
+          "art": "variant19",
+          "title": "Relaxed arcs",
+          "tags": {
+            "gender": ["feminine", "masculine", "neutral"],
+            "age": ["child", "teen", "adult", "elder"]
+          }
+        },
+        {
+          "key": "lined-open",
+          "art": "variant20",
+          "title": "Lined open",
+          "tags": {
+            "gender": ["feminine", "masculine", "neutral"],
+            "age": ["child", "teen", "adult", "elder"]
+          }
+        },
+        {
+          "key": "big-round",
+          "art": "variant21",
+          "title": "Big round",
+          "tags": {
+            "gender": ["feminine", "masculine", "neutral"],
+            "age": ["child", "teen", "adult", "elder"]
+          }
+        },
+        {
+          "key": "squint",
+          "art": "variant22",
+          "title": "Squint",
+          "tags": {
+            "gender": ["feminine", "masculine", "neutral"],
+            "age": ["child", "teen", "adult", "elder"]
+          }
+        },
+        {
+          "key": "winged-lashes",
+          "art": "variant23",
+          "title": "Winged lashes",
+          "tags": {
+            "gender": ["feminine"],
+            "age": ["teen", "adult", "elder"]
+          }
+        },
+        {
+          "key": "curious",
+          "art": "variant24",
+          "title": "Curious",
+          "tags": {
+            "gender": ["feminine", "masculine", "neutral"],
+            "age": ["child", "teen", "adult", "elder"]
+          }
+        }
+      ]
+    },
+    {
+      "key": "eyebrows",
+      "style": "plain",
+      "optional": false,
+      "variants": [
+        {
+          "key": "swept-up",
+          "art": "variant01",
+          "title": "Swept up",
+          "tags": {
+            "gender": ["feminine", "masculine", "neutral"],
+            "age": ["child", "teen", "adult", "elder"]
+          }
+        },
+        {
+          "key": "thin-arched",
+          "art": "variant02",
+          "title": "Thin arched",
+          "tags": {
+            "gender": ["feminine", "masculine", "neutral"],
+            "age": ["child", "teen", "adult", "elder"]
+          }
+        },
+        {
+          "key": "thick-flat",
+          "art": "variant03",
+          "title": "Thick flat",
+          "tags": {
+            "gender": ["feminine", "masculine", "neutral"],
+            "age": ["adult", "elder"]
+          }
+        },
+        {
+          "key": "bushy",
+          "art": "variant04",
+          "title": "Bushy",
+          "tags": {
+            "gender": ["feminine", "masculine", "neutral"],
+            "age": ["adult", "elder"]
+          }
+        },
+        {
+          "key": "round-arched",
+          "art": "variant05",
+          "title": "Round arched",
+          "tags": {
+            "gender": ["feminine", "masculine", "neutral"],
+            "age": ["child", "teen", "adult", "elder"]
+          }
+        },
+        {
+          "key": "scruffy",
+          "art": "variant06",
+          "title": "Scruffy",
+          "tags": {
+            "gender": ["feminine", "masculine", "neutral"],
+            "age": ["adult", "elder"]
+          }
+        },
+        {
+          "key": "soft-arched",
+          "art": "variant07",
+          "title": "Soft arched",
+          "tags": {
+            "gender": ["feminine", "masculine", "neutral"],
+            "age": ["child", "teen", "adult", "elder"]
+          }
+        },
+        {
+          "key": "bold-dots",
+          "art": "variant08",
+          "title": "Bold dots",
+          "tags": {
+            "gender": ["feminine", "masculine", "neutral"],
+            "age": ["child", "teen", "adult", "elder"]
+          }
+        },
+        {
+          "key": "high-arched",
+          "art": "variant09",
+          "title": "High arched",
+          "tags": {
+            "gender": ["feminine", "masculine", "neutral"],
+            "age": ["child", "teen", "adult", "elder"]
+          }
+        },
+        {
+          "key": "angled-thick",
+          "art": "variant10",
+          "title": "Angled thick",
+          "tags": {
+            "gender": ["feminine", "masculine", "neutral"],
+            "age": ["adult", "elder"]
+          }
+        },
+        {
+          "key": "raised-left",
+          "art": "variant11",
+          "title": "Raised left",
+          "tags": {
+            "gender": ["feminine", "masculine", "neutral"],
+            "age": ["child", "teen", "adult", "elder"]
+          }
+        },
+        {
+          "key": "uneven-flat",
+          "art": "variant12",
+          "title": "Uneven flat",
+          "tags": {
+            "gender": ["feminine", "masculine", "neutral"],
+            "age": ["child", "teen", "adult", "elder"]
+          }
+        },
+        {
+          "key": "furrowed",
+          "art": "variant13",
+          "title": "Furrowed",
+          "tags": {
+            "gender": ["feminine", "masculine", "neutral"],
+            "age": ["adult", "elder"]
+          }
+        }
+      ]
+    },
+    {
+      "key": "mouth",
+      "style": "plain",
+      "optional": false,
+      "variants": [
+        {
+          "key": "smile",
+          "art": "happy01",
+          "title": "Smile",
+          "tags": {
+            "gender": ["feminine", "masculine", "neutral"],
+            "age": ["child", "teen", "adult", "elder"]
+          }
+        },
+        {
+          "key": "gentle-smile",
+          "art": "happy02",
+          "title": "Gentle smile",
+          "tags": {
+            "gender": ["feminine", "masculine", "neutral"],
+            "age": ["child", "teen", "adult", "elder"]
+          }
+        },
+        {
+          "key": "smirk-lips",
+          "art": "happy03",
+          "title": "Smirk lips",
+          "tags": {
+            "gender": ["feminine", "masculine", "neutral"],
+            "age": ["teen", "adult"]
+          }
+        },
+        {
+          "key": "half-smirk",
+          "art": "happy04",
+          "title": "Half smirk",
+          "tags": {
+            "gender": ["feminine", "masculine", "neutral"],
+            "age": ["teen", "adult"]
+          }
+        },
+        {
+          "key": "open-smile",
+          "art": "happy05",
+          "title": "Open smile",
+          "tags": {
+            "gender": ["feminine", "masculine", "neutral"],
+            "age": ["child", "teen", "adult", "elder"]
+          }
+        },
+        {
+          "key": "closed-grin",
+          "art": "happy06",
+          "title": "Closed grin",
+          "tags": {
+            "gender": ["feminine", "masculine", "neutral"],
+            "age": ["child", "teen", "adult", "elder"]
+          }
+        },
+        {
+          "key": "toothy-grin",
+          "art": "happy07",
+          "title": "Toothy grin",
+          "tags": {
+            "gender": ["feminine", "masculine", "neutral"],
+            "age": ["child", "teen", "adult"]
+          }
+        },
+        {
+          "key": "small-open",
+          "art": "happy08",
+          "title": "Small open",
+          "tags": {
+            "gender": ["feminine", "masculine", "neutral"],
+            "age": ["child", "teen", "adult", "elder"]
+          }
+        },
+        {
+          "key": "tongue-out",
+          "art": "happy09",
+          "title": "Tongue out",
+          "tags": {
+            "gender": ["feminine", "masculine", "neutral"],
+            "age": ["child", "teen"]
+          }
+        },
+        {
+          "key": "wry",
+          "art": "happy10",
+          "title": "Wry",
+          "tags": {
+            "gender": ["feminine", "masculine", "neutral"],
+            "age": ["teen", "adult", "elder"]
+          }
+        },
+        {
+          "key": "squiggle",
+          "art": "happy11",
+          "title": "Squiggle",
+          "tags": {
+            "gender": ["feminine", "masculine", "neutral"],
+            "age": ["child", "teen"]
+          }
+        },
+        {
+          "key": "drool",
+          "art": "happy12",
+          "title": "Drool",
+          "tags": {
+            "gender": ["feminine", "masculine", "neutral"],
+            "age": ["child", "elder"]
+          }
+        },
+        {
+          "key": "small-smile",
+          "art": "happy13",
+          "title": "Small smile",
+          "tags": {
+            "gender": ["feminine", "masculine", "neutral"],
+            "age": ["child", "teen", "adult", "elder"]
+          }
+        },
+        {
+          "key": "faint-line",
+          "art": "happy14",
+          "title": "Faint line",
+          "tags": {
+            "gender": ["feminine", "masculine", "neutral"],
+            "age": ["adult", "elder"]
+          }
+        },
+        {
+          "key": "wobbly",
+          "art": "happy15",
+          "title": "Wobbly",
+          "tags": {
+            "gender": ["feminine", "masculine", "neutral"],
+            "age": ["child", "elder"]
+          }
+        },
+        {
+          "key": "teeth-grin",
+          "art": "happy16",
+          "title": "Teeth grin",
+          "tags": {
+            "gender": ["feminine", "masculine", "neutral"],
+            "age": ["child", "teen", "adult"]
+          }
+        },
+        {
+          "key": "pout",
+          "art": "happy17",
+          "title": "Pout",
+          "tags": {
+            "gender": ["feminine", "masculine", "neutral"],
+            "age": ["child", "teen"]
+          }
+        },
+        {
+          "key": "lips-side",
+          "art": "happy18",
+          "title": "Lips side",
+          "tags": {
+            "gender": ["feminine", "masculine", "neutral"],
+            "age": ["teen", "adult", "elder"]
+          }
+        },
+        {
+          "key": "open-oh",
+          "art": "sad01",
+          "title": "Open oh",
+          "tags": {
+            "gender": ["feminine", "masculine", "neutral"],
+            "age": ["child", "teen", "adult", "elder"]
+          }
+        },
+        {
+          "key": "droplet",
+          "art": "sad02",
+          "title": "Droplet",
+          "tags": {
+            "gender": ["feminine", "masculine", "neutral"],
+            "age": ["child", "teen", "adult", "elder"]
+          }
+        },
+        {
+          "key": "tiny-line",
+          "art": "sad03",
+          "title": "Tiny line",
+          "tags": {
+            "gender": ["feminine", "masculine", "neutral"],
+            "age": ["adult", "elder"]
+          }
+        },
+        {
+          "key": "frown",
+          "art": "sad04",
+          "title": "Frown",
+          "tags": {
+            "gender": ["feminine", "masculine", "neutral"],
+            "age": ["child", "teen", "adult", "elder"]
+          }
+        },
+        {
+          "key": "flat-line",
+          "art": "sad05",
+          "title": "Flat line",
+          "tags": {
+            "gender": ["feminine", "masculine", "neutral"],
+            "age": ["teen", "adult", "elder"]
+          }
+        },
+        {
+          "key": "clenched-teeth",
+          "art": "sad06",
+          "title": "Clenched teeth",
+          "tags": {
+            "gender": ["feminine", "masculine", "neutral"],
+            "age": ["teen", "adult"]
+          }
+        },
+        {
+          "key": "grimace",
+          "art": "sad07",
+          "title": "Grimace",
+          "tags": {
+            "gender": ["feminine", "masculine", "neutral"],
+            "age": ["teen", "adult", "elder"]
+          }
+        },
+        {
+          "key": "tongue-side",
+          "art": "sad08",
+          "title": "Tongue side",
+          "tags": {
+            "gender": ["feminine", "masculine", "neutral"],
+            "age": ["child", "teen"]
+          }
+        },
+        {
+          "key": "slant-line",
+          "art": "sad09",
+          "title": "Slant line",
+          "tags": {
+            "gender": ["feminine", "masculine", "neutral"],
+            "age": ["adult", "elder"]
+          }
+        }
+      ]
+    },
+    {
+      "key": "nose",
+      "style": "plain",
+      "optional": false,
+      "variants": [
+        {
+          "key": "long-line",
+          "art": "variant01",
+          "title": "Long line",
+          "tags": {
+            "gender": ["feminine", "masculine", "neutral"],
+            "age": ["child", "teen", "adult", "elder"]
+          }
+        },
+        {
+          "key": "tiny-dash",
+          "art": "variant02",
+          "title": "Tiny dash",
+          "tags": {
+            "gender": ["feminine", "masculine", "neutral"],
+            "age": ["child", "teen", "adult", "elder"]
+          }
+        },
+        {
+          "key": "small-hook",
+          "art": "variant03",
+          "title": "Small hook",
+          "tags": {
+            "gender": ["feminine", "masculine", "neutral"],
+            "age": ["child", "teen", "adult", "elder"]
+          }
+        },
+        {
+          "key": "round-tip",
+          "art": "variant04",
+          "title": "Round tip",
+          "tags": {
+            "gender": ["feminine", "masculine", "neutral"],
+            "age": ["child", "teen", "adult", "elder"]
+          }
+        },
+        {
+          "key": "thin-line",
+          "art": "variant05",
+          "title": "Thin line",
+          "tags": {
+            "gender": ["feminine", "masculine", "neutral"],
+            "age": ["child", "teen", "adult", "elder"]
+          }
+        },
+        {
+          "key": "button",
+          "art": "variant06",
+          "title": "Button",
+          "tags": {
+            "gender": ["feminine", "masculine", "neutral"],
+            "age": ["child", "teen", "adult", "elder"]
+          }
+        }
+      ]
+    },
+    {
+      "key": "head",
+      "style": "plain",
+      "optional": false,
+      "variants": [
+        {
+          "key": "oval",
+          "art": "variant01",
+          "title": "Oval",
+          "tags": {
+            "gender": ["feminine", "masculine", "neutral"],
+            "age": ["teen", "adult", "elder"]
+          }
+        },
+        {
+          "key": "round",
+          "art": "variant02",
+          "title": "Round",
+          "tags": {
+            "gender": ["feminine", "masculine", "neutral"],
+            "age": ["child", "teen", "adult", "elder"]
+          }
+        },
+        {
+          "key": "wide",
+          "art": "variant03",
+          "title": "Wide",
+          "tags": {
+            "gender": ["feminine", "masculine", "neutral"],
+            "age": ["teen", "adult"]
+          }
+        },
+        {
+          "key": "pointed-chin",
+          "art": "variant04",
+          "title": "Pointed chin",
+          "tags": {
+            "gender": ["feminine", "masculine", "neutral"],
+            "age": ["teen", "adult"]
+          }
+        }
+      ]
+    },
+    {
+      "key": "glasses",
+      "style": "plain",
+      "optional": true,
+      "variants": [
+        {
+          "key": "round",
+          "art": "variant01",
+          "title": "Round",
+          "tags": {
+            "gender": ["feminine", "masculine", "neutral"],
+            "age": ["child", "teen", "adult", "elder"]
+          }
+        },
+        {
+          "key": "sunglasses",
+          "art": "variant02",
+          "title": "Sunglasses",
+          "tags": {
+            "gender": ["feminine", "masculine", "neutral"],
+            "age": ["teen", "adult", "elder"]
+          }
+        },
+        {
+          "key": "rounded-rect",
+          "art": "variant03",
+          "title": "Rounded rect",
+          "tags": {
+            "gender": ["feminine", "masculine", "neutral"],
+            "age": ["child", "teen", "adult", "elder"]
+          }
+        },
+        {
+          "key": "rectangular",
+          "art": "variant04",
+          "title": "Rectangular",
+          "tags": {
+            "gender": ["feminine", "masculine", "neutral"],
+            "age": ["teen", "adult", "elder"]
+          }
+        },
+        {
+          "key": "half-rim",
+          "art": "variant05",
+          "title": "Half rim",
+          "tags": {
+            "gender": ["feminine", "masculine", "neutral"],
+            "age": ["adult", "elder"]
+          }
+        }
+      ]
+    },
+    {
+      "key": "beard",
+      "style": "plain",
+      "optional": true,
+      "variants": [
+        {
+          "key": "full",
+          "art": "variant01",
+          "title": "Full",
+          "tags": {
+            "gender": ["masculine"],
+            "age": ["adult", "elder"]
+          }
+        },
+        {
+          "key": "pointed",
+          "art": "variant02",
+          "title": "Pointed",
+          "tags": {
+            "gender": ["masculine"],
+            "age": ["adult", "elder"]
+          }
+        }
+      ]
+    },
+    {
+      "key": "earrings",
+      "style": "plain",
+      "optional": true,
+      "variants": [
+        {
+          "key": "stud",
+          "art": "variant01",
+          "title": "Stud",
+          "tags": {
+            "gender": ["feminine"],
+            "age": ["teen", "adult", "elder"]
+          }
+        },
+        {
+          "key": "stud-low",
+          "art": "variant02",
+          "title": "Stud low",
+          "tags": {
+            "gender": ["feminine"],
+            "age": ["teen", "adult", "elder"]
+          }
+        },
+        {
+          "key": "drop",
+          "art": "variant03",
+          "title": "Drop",
+          "tags": {
+            "gender": ["feminine"],
+            "age": ["teen", "adult", "elder"]
+          }
+        }
+      ]
+    },
+    {
+      "key": "freckles",
+      "style": "plain",
+      "optional": true,
+      "variants": [
+        {
+          "key": "freckles",
+          "art": "variant01",
+          "title": "Freckles",
+          "tags": {
+            "gender": ["feminine", "masculine", "neutral"],
+            "age": ["child", "teen", "adult", "elder"]
+          }
+        }
+      ]
+    },
+    {
+      "key": "hairAccessories",
+      "style": "plain",
+      "optional": true,
+      "variants": [
+        {
+          "key": "flowers",
+          "art": "flowers",
+          "title": "Flowers",
+          "tags": {
+            "gender": ["feminine"],
+            "age": ["child", "teen", "adult", "elder"]
+          }
+        }
+      ]
+    }
+  ],
+  "colors": [
+    {
+      "role": "skin",
+      "tokens": [
+        {
+          "key": "warm-light",
+          "title": "Warm light"
+        },
+        {
+          "key": "warm-medium",
+          "title": "Warm medium"
+        },
+        {
+          "key": "warm-deep",
+          "title": "Warm deep"
+        },
+        {
+          "key": "umber",
+          "title": "Umber"
+        },
+        {
+          "key": "umber-deep",
+          "title": "Umber, deep"
+        },
+        {
+          "key": "paper",
+          "title": "Paper"
+        }
+      ]
+    },
+    {
+      "role": "hair",
+      "tokens": [
+        {
+          "key": "ink-black",
+          "title": "Ink black"
+        },
+        {
+          "key": "brown-dark",
+          "title": "Dark brown"
+        },
+        {
+          "key": "brown",
+          "title": "Brown"
+        },
+        {
+          "key": "auburn",
+          "title": "Auburn"
+        },
+        {
+          "key": "blond",
+          "title": "Blond"
+        },
+        {
+          "key": "gray",
+          "title": "Gray",
+          "tags": {
+            "age": ["adult", "elder"]
+          }
+        },
+        {
+          "key": "white",
+          "title": "White",
+          "tags": {
+            "age": ["elder"]
+          }
+        },
+        {
+          "key": "pink",
+          "title": "Pink",
+          "tags": {
+            "age": ["teen"]
+          }
+        },
+        {
+          "key": "blue",
+          "title": "Blue",
+          "tags": {
+            "age": ["teen"]
+          }
+        },
+        {
+          "key": "purple",
+          "title": "Purple",
+          "tags": {
+            "age": ["teen"]
+          }
+        },
+        {
+          "key": "green",
+          "title": "Green",
+          "tags": {
+            "age": ["teen"]
+          }
+        },
+        {
+          "key": "teal",
+          "title": "Teal",
+          "tags": {
+            "age": ["teen"]
+          }
+        },
+        {
+          "key": "orange",
+          "title": "Orange",
+          "tags": {
+            "age": ["teen"]
+          }
+        }
+      ]
+    },
+    {
+      "role": "eyebrows",
+      "tokens": [
+        {
+          "key": "ink-black",
+          "title": "Ink black"
+        },
+        {
+          "key": "brown-dark",
+          "title": "Dark brown"
+        },
+        {
+          "key": "brown",
+          "title": "Brown"
+        },
+        {
+          "key": "gray",
+          "title": "Gray",
+          "tags": {
+            "age": ["adult", "elder"]
+          }
+        }
+      ]
+    },
+    {
+      "role": "eyes",
+      "tokens": [
+        {
+          "key": "ink-black",
+          "title": "Ink black"
+        },
+        {
+          "key": "brown-dark",
+          "title": "Dark brown"
+        },
+        {
+          "key": "brown",
+          "title": "Brown"
+        },
+        {
+          "key": "green",
+          "title": "Green"
+        },
+        {
+          "key": "blue",
+          "title": "Blue"
+        },
+        {
+          "key": "gray",
+          "title": "Gray"
+        },
+        {
+          "key": "amber",
+          "title": "Amber",
+          "tags": {
+            "age": ["teen"]
+          }
+        },
+        {
+          "key": "violet",
+          "title": "Violet",
+          "tags": {
+            "age": ["teen"]
+          }
+        }
+      ]
+    },
+    {
+      "role": "eyelids",
+      "tokens": [
+        {
+          "key": "ink-black",
+          "title": "Ink black"
+        },
+        {
+          "key": "brown-dark",
+          "title": "Dark brown"
+        },
+        {
+          "key": "gray",
+          "title": "Gray"
+        }
+      ]
+    },
+    {
+      "role": "mouth",
+      "tokens": [
+        {
+          "key": "ink-black",
+          "title": "Ink black"
+        },
+        {
+          "key": "brown-dark",
+          "title": "Dark brown"
+        },
+        {
+          "key": "rose",
+          "title": "Rose",
+          "tags": {
+            "gender": ["feminine"],
+            "age": ["child", "teen", "adult", "elder"]
+          }
+        },
+        {
+          "key": "coral",
+          "title": "Coral",
+          "tags": {
+            "gender": ["feminine"],
+            "age": ["child", "teen", "adult", "elder"]
+          }
+        },
+        {
+          "key": "mauve",
+          "title": "Mauve",
+          "tags": {
+            "gender": ["feminine"],
+            "age": ["teen", "adult", "elder"]
+          }
+        },
+        {
+          "key": "red",
+          "title": "Red",
+          "tags": {
+            "gender": ["feminine"],
+            "age": ["teen", "adult", "elder"]
+          }
+        },
+        {
+          "key": "fuchsia",
+          "title": "Fuchsia",
+          "tags": {
+            "gender": ["feminine"],
+            "age": ["teen", "adult", "elder"]
+          }
+        },
+        {
+          "key": "brick",
+          "title": "Brick",
+          "tags": {
+            "gender": ["feminine"],
+            "age": ["teen", "adult", "elder"]
+          }
+        },
+        {
+          "key": "tangerine",
+          "title": "Tangerine",
+          "tags": {
+            "gender": ["feminine"],
+            "age": ["teen", "adult", "elder"]
+          }
+        }
+      ]
+    },
+    {
+      "role": "nose",
+      "tokens": [
+        {
+          "key": "ink-black",
+          "title": "Ink black"
+        },
+        {
+          "key": "brown-dark",
+          "title": "Dark brown"
+        }
+      ]
+    },
+    {
+      "role": "freckles",
+      "tokens": [
+        {
+          "key": "brown-dark",
+          "title": "Dark brown"
+        },
+        {
+          "key": "auburn",
+          "title": "Auburn"
+        },
+        {
+          "key": "ink-black",
+          "title": "Ink black"
+        }
+      ]
+    },
+    {
+      "role": "glasses",
+      "tokens": [
+        {
+          "key": "ink-black",
+          "title": "Ink black"
+        },
+        {
+          "key": "brown-dark",
+          "title": "Dark brown"
+        },
+        {
+          "key": "blue",
+          "title": "Blue"
+        }
+      ]
+    },
+    {
+      "role": "earrings",
+      "tokens": [
+        {
+          "key": "gold",
+          "title": "Gold"
+        },
+        {
+          "key": "silver",
+          "title": "Silver"
+        },
+        {
+          "key": "ink-black",
+          "title": "Ink black"
+        }
+      ]
+    },
+    {
+      "role": "hairAccessories",
+      "tokens": [
+        {
+          "key": "rose",
+          "title": "Rose"
+        },
+        {
+          "key": "blue",
+          "title": "Blue"
+        },
+        {
+          "key": "yellow",
+          "title": "Yellow"
+        },
+        {
+          "key": "ink-black",
+          "title": "Ink black"
+        }
+      ]
+    },
+    {
+      "role": "background",
+      "fromSeed": true,
+      "tokens": [
+        {
+          "key": "peach",
+          "title": "Peach"
+        },
+        {
+          "key": "mint",
+          "title": "Mint"
+        },
+        {
+          "key": "sky",
+          "title": "Sky"
+        },
+        {
+          "key": "lavender",
+          "title": "Lavender"
+        },
+        {
+          "key": "butter",
+          "title": "Butter"
+        },
+        {
+          "key": "rose",
+          "title": "Rose"
+        }
+      ]
+    },
+    {
+      "role": "outline",
+      "tokens": [
+        {
+          "key": "ink-black",
+          "title": "Ink black"
+        },
+        {
+          "key": "soft-gray",
+          "title": "Soft gray"
+        }
+      ]
+    }
+  ],
+  "palettes": [
+    {
+      "key": "ink",
+      "title": "Ink",
+      "tags": {
+        "age": ["child", "teen", "adult", "elder"],
+        "gender": ["feminine", "masculine", "neutral"]
+      },
+      "tokens": {
+        "skin": "paper",
+        "hair": "ink-black",
+        "eyebrows": "ink-black",
+        "eyes": "ink-black",
+        "eyelids": "ink-black",
+        "mouth": "ink-black",
+        "nose": "ink-black",
+        "freckles": "ink-black",
+        "glasses": "ink-black",
+        "earrings": "ink-black",
+        "hairAccessories": "ink-black",
+        "outline": "ink-black"
+      }
+    },
+    {
+      "key": "fair-blond-blue",
+      "title": "Fair skin, blond hair, blue eyes",
+      "tags": {
+        "age": ["child", "teen", "adult", "elder"],
+        "gender": ["feminine", "masculine", "neutral"]
+      },
+      "lips": ["rose", "coral", "mauve", "red"],
+      "tokens": {
+        "nose": "ink-black",
+        "freckles": "brown-dark",
+        "glasses": "ink-black",
+        "earrings": "gold",
+        "hairAccessories": "rose",
+        "outline": "ink-black",
+        "skin": "warm-light",
+        "hair": "blond",
+        "eyebrows": "brown",
+        "eyes": "blue",
+        "eyelids": "brown-dark",
+        "mouth": "brown-dark"
+      },
+      "fromSeed": true
+    },
+    {
+      "key": "fair-auburn-green",
+      "title": "Fair skin, auburn hair, green eyes",
+      "tags": {
+        "age": ["child", "teen", "adult", "elder"],
+        "gender": ["feminine", "masculine", "neutral"]
+      },
+      "lips": ["rose", "coral", "mauve", "red"],
+      "tokens": {
+        "nose": "ink-black",
+        "freckles": "auburn",
+        "glasses": "ink-black",
+        "earrings": "gold",
+        "hairAccessories": "rose",
+        "outline": "ink-black",
+        "skin": "warm-light",
+        "hair": "auburn",
+        "eyebrows": "brown",
+        "eyes": "green",
+        "eyelids": "brown-dark",
+        "mouth": "brown-dark"
+      },
+      "fromSeed": true
+    },
+    {
+      "key": "fair-brown-gray",
+      "title": "Fair skin, brown hair, gray eyes",
+      "tags": {
+        "age": ["child", "teen", "adult", "elder"],
+        "gender": ["feminine", "masculine", "neutral"]
+      },
+      "lips": ["rose", "coral", "mauve", "red"],
+      "tokens": {
+        "nose": "ink-black",
+        "freckles": "brown-dark",
+        "glasses": "ink-black",
+        "earrings": "gold",
+        "hairAccessories": "rose",
+        "outline": "ink-black",
+        "skin": "warm-light",
+        "hair": "brown",
+        "eyebrows": "brown-dark",
+        "eyes": "gray",
+        "eyelids": "brown-dark",
+        "mouth": "brown-dark"
+      },
+      "fromSeed": true
+    },
+    {
+      "key": "fair-black-brown",
+      "title": "Fair skin, black hair, dark brown eyes",
+      "tags": {
+        "age": ["child", "teen", "adult", "elder"],
+        "gender": ["feminine", "masculine", "neutral"]
+      },
+      "lips": ["rose", "coral", "mauve", "red"],
+      "tokens": {
+        "nose": "ink-black",
+        "freckles": "brown-dark",
+        "glasses": "ink-black",
+        "earrings": "gold",
+        "hairAccessories": "rose",
+        "outline": "ink-black",
+        "skin": "warm-light",
+        "hair": "ink-black",
+        "eyebrows": "ink-black",
+        "eyes": "brown-dark",
+        "eyelids": "ink-black",
+        "mouth": "brown-dark"
+      },
+      "fromSeed": true
+    },
+    {
+      "key": "fair-gray-blue",
+      "title": "Fair skin, gray hair, blue eyes",
+      "tags": {
+        "age": ["adult", "elder"],
+        "gender": ["feminine", "masculine", "neutral"]
+      },
+      "lips": ["rose", "coral", "mauve", "red"],
+      "tokens": {
+        "nose": "ink-black",
+        "freckles": "brown-dark",
+        "glasses": "ink-black",
+        "earrings": "gold",
+        "hairAccessories": "rose",
+        "outline": "ink-black",
+        "skin": "warm-light",
+        "hair": "gray",
+        "eyebrows": "gray",
+        "eyes": "blue",
+        "eyelids": "gray",
+        "mouth": "brown-dark"
+      },
+      "fromSeed": true
+    },
+    {
+      "key": "fair-white-gray",
+      "title": "Fair skin, white hair, gray eyes",
+      "tags": {
+        "age": ["elder"],
+        "gender": ["feminine", "masculine", "neutral"]
+      },
+      "lips": ["rose", "coral", "mauve", "red"],
+      "tokens": {
+        "nose": "ink-black",
+        "freckles": "brown-dark",
+        "glasses": "ink-black",
+        "earrings": "gold",
+        "hairAccessories": "rose",
+        "outline": "ink-black",
+        "skin": "warm-light",
+        "hair": "white",
+        "eyebrows": "gray",
+        "eyes": "gray",
+        "eyelids": "gray",
+        "mouth": "brown-dark"
+      },
+      "fromSeed": true
+    },
+    {
+      "key": "medium-brown-brown",
+      "title": "Medium skin, brown hair, brown eyes",
+      "tags": {
+        "age": ["child", "teen", "adult", "elder"],
+        "gender": ["feminine", "masculine", "neutral"]
+      },
+      "lips": ["coral", "rose", "red", "fuchsia", "mauve"],
+      "tokens": {
+        "nose": "ink-black",
+        "freckles": "brown-dark",
+        "glasses": "ink-black",
+        "earrings": "gold",
+        "hairAccessories": "rose",
+        "outline": "ink-black",
+        "skin": "warm-medium",
+        "hair": "brown",
+        "eyebrows": "brown-dark",
+        "eyes": "brown",
+        "eyelids": "brown-dark",
+        "mouth": "brown-dark"
+      },
+      "fromSeed": true
+    },
+    {
+      "key": "medium-black-brown",
+      "title": "Medium skin, black hair, dark brown eyes",
+      "tags": {
+        "age": ["child", "teen", "adult", "elder"],
+        "gender": ["feminine", "masculine", "neutral"]
+      },
+      "lips": ["coral", "rose", "red", "fuchsia", "mauve"],
+      "tokens": {
+        "nose": "ink-black",
+        "freckles": "brown-dark",
+        "glasses": "ink-black",
+        "earrings": "gold",
+        "hairAccessories": "rose",
+        "outline": "ink-black",
+        "skin": "warm-medium",
+        "hair": "ink-black",
+        "eyebrows": "ink-black",
+        "eyes": "brown-dark",
+        "eyelids": "ink-black",
+        "mouth": "brown-dark"
+      },
+      "fromSeed": true
+    },
+    {
+      "key": "medium-gray-brown",
+      "title": "Medium skin, gray hair, brown eyes",
+      "tags": {
+        "age": ["adult", "elder"],
+        "gender": ["feminine", "masculine", "neutral"]
+      },
+      "lips": ["coral", "rose", "red", "fuchsia", "mauve"],
+      "tokens": {
+        "nose": "ink-black",
+        "freckles": "brown-dark",
+        "glasses": "ink-black",
+        "earrings": "gold",
+        "hairAccessories": "rose",
+        "outline": "ink-black",
+        "skin": "warm-medium",
+        "hair": "gray",
+        "eyebrows": "gray",
+        "eyes": "brown",
+        "eyelids": "gray",
+        "mouth": "brown-dark"
+      },
+      "fromSeed": true
+    },
+    {
+      "key": "deep-black-brown",
+      "title": "Deep skin, black hair, dark brown eyes",
+      "tags": {
+        "age": ["child", "teen", "adult", "elder"],
+        "gender": ["feminine", "masculine", "neutral"]
+      },
+      "lips": ["red", "tangerine", "brick"],
+      "tokens": {
+        "nose": "ink-black",
+        "freckles": "brown-dark",
+        "glasses": "ink-black",
+        "earrings": "gold",
+        "hairAccessories": "rose",
+        "outline": "ink-black",
+        "skin": "warm-deep",
+        "hair": "ink-black",
+        "eyebrows": "ink-black",
+        "eyes": "brown-dark",
+        "eyelids": "ink-black",
+        "mouth": "ink-black"
+      },
+      "fromSeed": true
+    },
+    {
+      "key": "deep-brown-brown",
+      "title": "Deep skin, brown hair, brown eyes",
+      "tags": {
+        "age": ["child", "teen", "adult", "elder"],
+        "gender": ["feminine", "masculine", "neutral"]
+      },
+      "lips": ["red", "tangerine", "brick"],
+      "tokens": {
+        "nose": "ink-black",
+        "freckles": "brown-dark",
+        "glasses": "ink-black",
+        "earrings": "gold",
+        "hairAccessories": "rose",
+        "outline": "ink-black",
+        "skin": "warm-deep",
+        "hair": "brown-dark",
+        "eyebrows": "brown-dark",
+        "eyes": "brown",
+        "eyelids": "brown-dark",
+        "mouth": "ink-black"
+      },
+      "fromSeed": true
+    },
+    {
+      "key": "deep-white-brown",
+      "title": "Deep skin, white hair, dark brown eyes",
+      "tags": {
+        "age": ["elder"],
+        "gender": ["feminine", "masculine", "neutral"]
+      },
+      "lips": ["red", "tangerine", "brick"],
+      "tokens": {
+        "nose": "ink-black",
+        "freckles": "brown-dark",
+        "glasses": "ink-black",
+        "earrings": "gold",
+        "hairAccessories": "rose",
+        "outline": "ink-black",
+        "skin": "warm-deep",
+        "hair": "white",
+        "eyebrows": "gray",
+        "eyes": "brown-dark",
+        "eyelids": "gray",
+        "mouth": "ink-black"
+      },
+      "fromSeed": true
+    },
+    {
+      "key": "umber-black-brown",
+      "title": "Umber skin, black hair, dark brown eyes",
+      "tags": {
+        "age": ["child", "teen", "adult", "elder"],
+        "gender": ["feminine", "masculine", "neutral"]
+      },
+      "lips": ["red", "tangerine", "brick"],
+      "tokens": {
+        "nose": "ink-black",
+        "freckles": "brown-dark",
+        "glasses": "ink-black",
+        "earrings": "gold",
+        "hairAccessories": "rose",
+        "outline": "ink-black",
+        "skin": "umber",
+        "hair": "ink-black",
+        "eyebrows": "ink-black",
+        "eyes": "brown-dark",
+        "eyelids": "ink-black",
+        "mouth": "ink-black"
+      },
+      "fromSeed": true
+    },
+    {
+      "key": "umber-gray-brown",
+      "title": "Umber skin, gray hair, dark brown eyes",
+      "tags": {
+        "age": ["adult", "elder"],
+        "gender": ["feminine", "masculine", "neutral"]
+      },
+      "lips": ["red", "tangerine", "brick"],
+      "tokens": {
+        "nose": "ink-black",
+        "freckles": "brown-dark",
+        "glasses": "ink-black",
+        "earrings": "gold",
+        "hairAccessories": "rose",
+        "outline": "ink-black",
+        "skin": "umber",
+        "hair": "gray",
+        "eyebrows": "gray",
+        "eyes": "brown-dark",
+        "eyelids": "gray",
+        "mouth": "ink-black"
+      },
+      "fromSeed": true
+    },
+    {
+      "key": "umber-white-brown",
+      "title": "Umber skin, white hair, dark brown eyes",
+      "tags": {
+        "age": ["elder"],
+        "gender": ["feminine", "masculine", "neutral"]
+      },
+      "lips": ["red", "tangerine", "brick"],
+      "tokens": {
+        "nose": "ink-black",
+        "freckles": "brown-dark",
+        "glasses": "ink-black",
+        "earrings": "gold",
+        "hairAccessories": "rose",
+        "outline": "ink-black",
+        "skin": "umber",
+        "hair": "white",
+        "eyebrows": "gray",
+        "eyes": "brown-dark",
+        "eyelids": "gray",
+        "mouth": "ink-black"
+      },
+      "fromSeed": true
+    },
+    {
+      "key": "umber-deep-black-brown",
+      "title": "Deep umber skin, black hair, dark brown eyes",
+      "tags": {
+        "age": ["child", "teen", "adult", "elder"],
+        "gender": ["feminine", "masculine", "neutral"]
+      },
+      "lips": ["tangerine", "red", "brick"],
+      "tokens": {
+        "nose": "ink-black",
+        "freckles": "brown-dark",
+        "glasses": "ink-black",
+        "earrings": "gold",
+        "hairAccessories": "rose",
+        "outline": "ink-black",
+        "skin": "umber-deep",
+        "hair": "ink-black",
+        "eyebrows": "ink-black",
+        "eyes": "brown-dark",
+        "eyelids": "ink-black",
+        "mouth": "ink-black"
+      },
+      "fromSeed": true
+    },
+    {
+      "key": "umber-deep-white-brown",
+      "title": "Deep umber skin, white hair, dark brown eyes",
+      "tags": {
+        "age": ["elder"],
+        "gender": ["feminine", "masculine", "neutral"]
+      },
+      "lips": ["tangerine", "red", "brick"],
+      "tokens": {
+        "nose": "ink-black",
+        "freckles": "brown-dark",
+        "glasses": "ink-black",
+        "earrings": "gold",
+        "hairAccessories": "rose",
+        "outline": "ink-black",
+        "skin": "umber-deep",
+        "hair": "white",
+        "eyebrows": "gray",
+        "eyes": "brown-dark",
+        "eyelids": "gray",
+        "mouth": "ink-black"
+      },
+      "fromSeed": true
+    },
+    {
+      "key": "dyed-pink",
+      "title": "Dyed pink hair, fair skin",
+      "tags": {
+        "age": ["teen"],
+        "gender": ["feminine", "masculine", "neutral"]
+      },
+      "lips": ["rose", "coral", "mauve", "red"],
+      "tokens": {
+        "nose": "ink-black",
+        "freckles": "brown-dark",
+        "glasses": "ink-black",
+        "earrings": "gold",
+        "hairAccessories": "rose",
+        "outline": "ink-black",
+        "skin": "warm-light",
+        "hair": "pink",
+        "eyebrows": "brown-dark",
+        "eyes": "brown-dark",
+        "eyelids": "brown-dark",
+        "mouth": "brown-dark"
+      }
+    },
+    {
+      "key": "dyed-blue",
+      "title": "Dyed blue hair, medium skin",
+      "tags": {
+        "age": ["teen"],
+        "gender": ["feminine", "masculine", "neutral"]
+      },
+      "lips": ["coral", "rose", "red", "fuchsia", "mauve"],
+      "tokens": {
+        "nose": "ink-black",
+        "freckles": "brown-dark",
+        "glasses": "ink-black",
+        "earrings": "gold",
+        "hairAccessories": "rose",
+        "outline": "ink-black",
+        "skin": "warm-medium",
+        "hair": "blue",
+        "eyebrows": "brown-dark",
+        "eyes": "brown",
+        "eyelids": "ink-black",
+        "mouth": "brown-dark"
+      }
+    },
+    {
+      "key": "dyed-purple",
+      "title": "Dyed purple hair, deep skin",
+      "tags": {
+        "age": ["teen"],
+        "gender": ["feminine", "masculine", "neutral"]
+      },
+      "lips": ["red", "tangerine", "brick"],
+      "tokens": {
+        "nose": "ink-black",
+        "freckles": "brown-dark",
+        "glasses": "ink-black",
+        "earrings": "gold",
+        "hairAccessories": "rose",
+        "outline": "ink-black",
+        "skin": "warm-deep",
+        "hair": "purple",
+        "eyebrows": "ink-black",
+        "eyes": "brown-dark",
+        "eyelids": "ink-black",
+        "mouth": "ink-black"
+      }
+    },
+    {
+      "key": "dyed-green",
+      "title": "Dyed green hair, umber skin",
+      "tags": {
+        "age": ["teen"],
+        "gender": ["feminine", "masculine", "neutral"]
+      },
+      "lips": ["red", "tangerine", "brick"],
+      "tokens": {
+        "nose": "ink-black",
+        "freckles": "brown-dark",
+        "glasses": "ink-black",
+        "earrings": "gold",
+        "hairAccessories": "rose",
+        "outline": "ink-black",
+        "skin": "umber",
+        "hair": "green",
+        "eyebrows": "ink-black",
+        "eyes": "brown-dark",
+        "eyelids": "ink-black",
+        "mouth": "ink-black"
+      }
+    },
+    {
+      "key": "dyed-teal",
+      "title": "Dyed teal hair, fair skin, green eyes",
+      "tags": {
+        "age": ["teen"],
+        "gender": ["feminine", "masculine", "neutral"]
+      },
+      "lips": ["rose", "coral", "mauve", "red"],
+      "tokens": {
+        "nose": "ink-black",
+        "freckles": "brown-dark",
+        "glasses": "ink-black",
+        "earrings": "gold",
+        "hairAccessories": "rose",
+        "outline": "ink-black",
+        "skin": "warm-light",
+        "hair": "teal",
+        "eyebrows": "brown",
+        "eyes": "green",
+        "eyelids": "brown-dark",
+        "mouth": "brown-dark"
+      }
+    },
+    {
+      "key": "dyed-orange",
+      "title": "Dyed orange hair, deep umber skin",
+      "tags": {
+        "age": ["teen"],
+        "gender": ["feminine", "masculine", "neutral"]
+      },
+      "lips": ["tangerine", "red", "brick"],
+      "tokens": {
+        "nose": "ink-black",
+        "freckles": "brown-dark",
+        "glasses": "ink-black",
+        "earrings": "gold",
+        "hairAccessories": "rose",
+        "outline": "ink-black",
+        "skin": "umber-deep",
+        "hair": "orange",
+        "eyebrows": "ink-black",
+        "eyes": "amber",
+        "eyelids": "ink-black",
+        "mouth": "ink-black"
+      }
+    },
+    {
+      "key": "violet-eyes",
+      "title": "Violet eyes, black hair, fair skin",
+      "tags": {
+        "age": ["teen"],
+        "gender": ["feminine", "masculine", "neutral"]
+      },
+      "lips": ["rose", "coral", "mauve", "red"],
+      "tokens": {
+        "nose": "ink-black",
+        "freckles": "brown-dark",
+        "glasses": "ink-black",
+        "earrings": "gold",
+        "hairAccessories": "rose",
+        "outline": "ink-black",
+        "skin": "warm-light",
+        "hair": "ink-black",
+        "eyebrows": "ink-black",
+        "eyes": "violet",
+        "eyelids": "ink-black",
+        "mouth": "brown-dark"
+      }
+    }
+  ],
+  "eyeKinds": ["open", "half", "wide", "shut", "smile"],
+  "eyeFamilies": [
+    {
+      "key": "round",
+      "title": "Round",
+      "members": [
+        {
+          "variant": "round-open",
+          "kind": "open"
+        },
+        {
+          "variant": "round-glance",
+          "kind": "open"
+        },
+        {
+          "variant": "pupil-glance",
+          "kind": "open"
+        },
+        {
+          "variant": "lashed-round",
+          "kind": "open"
+        },
+        {
+          "variant": "curious",
+          "kind": "open"
+        },
+        {
+          "variant": "winged-lashes",
+          "kind": "open"
+        },
+        {
+          "variant": "soft-lids",
+          "kind": "half"
+        },
+        {
+          "variant": "big-round",
+          "kind": "wide"
+        },
+        {
+          "variant": "squint",
+          "kind": "shut"
+        },
+        {
+          "variant": "closed-lines",
+          "kind": "shut"
+        },
+        {
+          "variant": "relaxed-arcs",
+          "kind": "smile",
+          "isFlipped": true
+        }
+      ]
+    },
+    {
+      "key": "lidded",
+      "title": "Lidded",
+      "members": [
+        {
+          "variant": "lined-open",
+          "kind": "open"
+        },
+        {
+          "variant": "lashes-up",
+          "kind": "open"
+        },
+        {
+          "variant": "lashes-brow",
+          "kind": "open"
+        },
+        {
+          "variant": "side-glance",
+          "kind": "open"
+        },
+        {
+          "variant": "lashed-glance",
+          "kind": "open"
+        },
+        {
+          "variant": "oval-glance",
+          "kind": "open"
+        },
+        {
+          "variant": "heavy-lids",
+          "kind": "half"
+        },
+        {
+          "variant": "sleepy-slits",
+          "kind": "half"
+        },
+        {
+          "variant": "squint",
+          "kind": "shut"
+        },
+        {
+          "variant": "closed-lines",
+          "kind": "shut"
+        },
+        {
+          "variant": "relaxed-arcs",
+          "kind": "smile",
+          "isFlipped": true
+        }
+      ]
+    },
+    {
+      "key": "bare",
+      "title": "Bare",
+      "members": [
+        {
+          "variant": "wide-open",
+          "kind": "open"
+        },
+        {
+          "variant": "dots",
+          "kind": "open"
+        },
+        {
+          "variant": "closed-lines",
+          "kind": "shut"
+        },
+        {
+          "variant": "relaxed-arcs",
+          "kind": "smile",
+          "isFlipped": true
+        }
+      ]
+    }
+  ]
+}

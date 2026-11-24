@@ -1,12 +1,12 @@
 name: Frontend CI
 
 # Runs on every pull request so that the required check "Frontend CI result" always reports. A pull
-# request that changes nothing under frontend/, docs/workflow/ or docs/schemas/ skips the checks, and a skipped job counts as passed.
+# request that changes nothing under frontend/, docs/workflow/, docs/faces/ or docs/schemas/ skips the checks, and a skipped job counts as passed.
 on:
   pull_request:
   push:
     branches: [main]
-    paths: ['frontend/**', 'docs/workflow/**', 'docs/schemas/**', '.nvmrc', '.github/workflows/frontend-ci.yml']
+    paths: ['frontend/**', 'docs/workflow/**', 'docs/faces/**', 'docs/schemas/**', '.nvmrc', '.github/workflows/frontend-ci.yml']
   workflow_dispatch:
 
 concurrency:
@@ -45,7 +45,7 @@ jobs:
             exit 0
           fi
           files=$(gh api --paginate "repos/$GITHUB_REPOSITORY/pulls/$PR_NUMBER/files" --jq '.[].filename')
-          if grep -qE '^(frontend/|docs/workflow/|docs/schemas/|\.nvmrc$|\.github/workflows/frontend-ci\.yml$)' <<< "$files"; then
+          if grep -qE '^(frontend/|docs/workflow/|docs/faces/|docs/schemas/|\.nvmrc$|\.github/workflows/frontend-ci\.yml$)' <<< "$files"; then
             echo frontend=true >> "$GITHUB_OUTPUT"
           else
             echo frontend=false >> "$GITHUB_OUTPUT"

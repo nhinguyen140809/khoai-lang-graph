@@ -23,3 +23,10 @@ export function readWorkflowDefinitionName(file: string): string {
   ) as { name: string }
   return definition.name
 }
+
+/** The catalog of the human faces in `docs/faces/`, read from the root of the repository: what the web app has to agree with. */
+export function readFacesCatalog(): unknown {
+  return JSON.parse(
+    readFileSync(resolve(process.cwd(), '../docs/faces/faces.catalog.json'), 'utf8'),
+  )
+}
