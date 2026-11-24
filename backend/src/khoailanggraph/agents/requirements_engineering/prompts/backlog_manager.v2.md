@@ -16,7 +16,7 @@ inputs:
     description: Prompt views of the backlog items so far, one JSON object per line, sorted by key. Empty on the first backlog pass.
   - name: directive
     part: user
-    description: Instruction of the rework directive or the review feedback of this pass. Empty on the first pass.
+    description: Instruction of the rework directive, the review feedback of this pass, or what the validator found wrong in the last one. Empty on the first pass.
 ---
 
 # System
@@ -49,6 +49,7 @@ Turn every specified requirement into actionable backlog items - epics and user 
 4. Group large stories under an epic when several stories serve one goal.
 5. Write acceptance criteria in Given/When/Then form, concrete enough to test.
 6. Align each item's priority with its source requirement, estimate story points, and link each item to the requirements it implements with `derived_from`.
+7. On a rework pass, start from the current backlog and the directive. To change what an item says, create a new item that supersedes it; add only what is new or changed. An item you name by the key it already has is that item, so returning it changes it instead of writing it again.
 
 ## Rules
 
