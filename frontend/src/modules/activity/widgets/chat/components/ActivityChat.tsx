@@ -7,7 +7,7 @@ import { type ComponentProps, type ComponentType, Suspense } from 'react'
 import { entryAnchorId, useActivityThread } from '@/modules/activity/entities'
 import type { Run } from '@/modules/run/entities'
 import { type Message, type MessageAuthor, type Thread } from '@/modules/thread/entities'
-import { Face, FaceName } from '@/shared/components/face'
+import { AgentFace, FaceName } from '@/shared/components/face'
 import { PageColumn } from '@/shared/components/frame'
 import { EmptyState, ErrorState, LoadingState } from '@/shared/components/state'
 import { Bubble, BubbleContent } from '@/shared/components/ui/bubble'
@@ -251,7 +251,7 @@ function AssistantMessageBubble({ message }: { message: Message }) {
         <MessageHeader
           className={cn('items-center gap-1.5 px-0 text-(--tone-strong)', toneClasses.secondary)}
         >
-          <Face seed={seed} size="sm" />
+          <AgentFace seed={seed} size="sm" />
           <FaceName seed={seed} className="text-sm font-semibold">
             {activityChatMessages.assistantName}
           </FaceName>

@@ -3,7 +3,7 @@
 import { ChevronRightIcon } from 'lucide-react'
 
 import { type ChatReference, useReferenceOpener } from '@/modules/activity/entities'
-import { Face } from '@/shared/components/face'
+import { AgentFace } from '@/shared/components/face'
 import { Thumbnail, thumbnailIcons } from '@/shared/components/thumbnail'
 import {
   Collapsible,
@@ -93,30 +93,38 @@ function RefCard({ reference, agentRole }: { reference: Reference; agentRole: st
   const drawing = (
     <span className="relative block">
       <Thumbnail look={look.look} title={look.title} icon={look.icon} seed={look.seed} />
-      {/* The version rides on the folder itself, so the card carries no line of its own. */}
+      {/* The version rides on the drawing itself, where the eye meets it with the kind. */}
       <span className="absolute top-1.5 right-1.5 rounded-md bg-background/75 px-1.5 py-0.5 text-3xs font-semibold text-foreground tabular-nums shadow-xs">
         v{reference.version}
       </span>
     </span>
   )
   return (
-    <div className="flex items-start gap-3">
-      {agentRole !== null && <Face seed={agentRole} size="default" className="mt-1 shrink-0" />}
-      <div className="w-40 shrink-0 animate-folder-in motion-reduce:animate-none">
-        {open === null ? (
-          <div aria-disabled className="opacity-60">
-            {drawing}
+    <div className="agent-card-sway flex w-full items-start justify-center gap-3">
+      {/* The agent leans after the folder once it has pushed it, and stays with it. */}
+      {agentRole !== null && (
+        <AgentFace seed={agentRole} size="default" className="mt-1 shrink-0 agent-push" />
+      )}
+      <div className="w-40 shrink-0">
+        {/* The entrance is the push: the folder comes in from the agent's side and stops here. */}
+        <div className="animate-folder-in motion-reduce:animate-none">
+          <div className="relative">
+            {open === null ? (
+              <div aria-disabled className="opacity-60">
+                {drawing}
+              </div>
+            ) : (
+              <button
+                type="button"
+                aria-label={look.label}
+                onClick={open}
+                className="block w-full rounded-lg text-left outline-none transition-transform duration-200 hover:-translate-y-0.5 focus-visible:ring-3 focus-visible:ring-ring/50 motion-reduce:hover:translate-y-0"
+              >
+                {drawing}
+              </button>
+            )}
           </div>
-        ) : (
-          <button
-            type="button"
-            aria-label={look.label}
-            onClick={open}
-            className="block w-full rounded-lg text-left outline-none transition-transform duration-200 hover:-translate-y-0.5 focus-visible:ring-3 focus-visible:ring-ring/50 motion-reduce:hover:translate-y-0"
-          >
-            {drawing}
-          </button>
-        )}
+        </div>
       </div>
     </div>
   )

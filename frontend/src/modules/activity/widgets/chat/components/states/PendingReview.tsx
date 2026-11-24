@@ -1,9 +1,9 @@
 'use client'
 
 import { cn } from 'cn'
-import type { Ref } from 'react'
+import { type Ref, useEffect, useRef } from 'react'
 
-import { useReferenceOpener } from '@/modules/activity/entities'
+import { useReferenceOpener, useRevealReference } from '@/modules/activity/entities'
 import type { Interrupt } from '@/modules/review/entities'
 import { interruptActs, useInterruptStatusLook } from '@/modules/review/entities'
 import { AnswerReviewForm } from '@/modules/review/features/answer'
@@ -37,6 +37,18 @@ export function PendingReview({
 }) {
   const agentRole = useRunLastWork(run)?.agentRole
   const hasAgent = agentRole !== undefined && agentRole !== ''
+
+  // A review asks the user to look at a document, so the first one it names comes up beside the
+  // chat: the page opens it when it shows nothing yet and asks first when it shows something else,
+  // so a reader is never taken away from what they are reading. Each review does this once.
+  const reveal = useRevealReference()
+  const first = interrupt.review_artifacts[0]
+  const shown = useRef<string | null>(null)
+  useEffect(() => {
+    if (first === undefined || shown.current === first.artifact_id) return
+    shown.current = first.artifact_id
+    reveal({ kind: 'document', artifactId: first.artifact_id }, first.title)
+  }, [first, reveal])
 
   return (
     <div
