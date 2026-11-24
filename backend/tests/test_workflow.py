@@ -560,9 +560,9 @@ def test_a_quote_that_is_not_in_the_item_is_left_out_and_the_link_stands() -> No
     assert len(sink.links) == before + 1, "the link is written without the quote it could not hold"
     written = sink.links[-1]
     assert written["quote"] is None, "the link keeps no quote it could not hold"
-    assert any(
-        "left out a quote" in str(note.get("text", "")) for note in sink.notes
-    ), "the step says that the quote was left out"
+    assert any("left out a quote" in str(note.get("text", "")) for note in sink.notes), (
+        "the step says that the quote was left out"
+    )
 
 
 def test_every_agent_step_reports_to_the_user_except_the_persona_answers() -> None:
@@ -1366,6 +1366,7 @@ def test_a_pass_without_a_validation_report_is_told_nothing() -> None:
     sink = _ReportSink([])
 
     assert nodes.validation_directive(cast("ArtifactSink", sink), {"validation_report": None}) == ""
+
 
 def test_a_search_that_drops_its_connection_is_tried_again() -> None:
     """A transport failure of the search is not a finding: the same query a moment later answers."""
