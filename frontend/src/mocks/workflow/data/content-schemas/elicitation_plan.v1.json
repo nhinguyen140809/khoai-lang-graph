@@ -55,7 +55,6 @@
       "type": "array",
       "items": {
         "type": "string",
-        "maxLength": 40,
         "pattern": "^\\S+(?:\\s+\\S+){0,3}$"
       },
       "description": "Types of stakeholder to interview, each a name of at most four words. Personas are generated from this list.",
