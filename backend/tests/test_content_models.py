@@ -50,11 +50,16 @@ def test_model_fields_match_schema_properties(kind: str) -> None:
                 f"{kind}.{field}: literals {literals} != enum {enum_values}"
             )
 
-        # Base type: the annotation mentions the Python type of the JSON type.
+        # Base type: the annotation mentions the Python type of the JSON type, or is a
+        # model of it (a nested object mirrored by its own BaseModel).
         if enum_values is None or spec.get("x-value-list"):
             expected = {_JSON_TYPE_TO_PY[value] for value in type_list if value in _JSON_TYPE_TO_PY}
             signature = repr(annotation)
-            assert any(marker in signature for marker in expected), (
+            nested = "object" in type_list and any(
+                isinstance(arg, type) and issubclass(arg, BaseModel)
+                for arg in [*get_args(annotation), annotation]
+            )
+            assert nested or any(marker in signature for marker in expected), (
                 f"{kind}.{field}: {signature} does not cover the schema types {types}"
             )
 

@@ -28,7 +28,7 @@ import { useGaze } from './useGaze'
 export function useFaceMotion(
   moodLook: MotionLook,
   eyes: EyesMotion,
-  { phase, isChanging, reachShare, gazeScale }: FaceMotionTiming,
+  { phase, isChanging, reachShare, gazeScale, bodyScale }: FaceMotionTiming,
   drive?: FaceDrive,
 ) {
   const ref: RefObject<HTMLSpanElement | null> = useRef<HTMLSpanElement>(null)
@@ -36,6 +36,11 @@ export function useFaceMotion(
   const timing: GazeTiming = { phase, isChanging, isRunning: isInView, reachShare }
   const gaze: GazeValues = useGaze(gazeLooks[moodLook.gaze], timing, drive?.look, gazeScale)
   const motions = useFaceMotionStates(moodLook, eyes, { isHeld: isChanging || !isInView, phase })
-  const { poseStyle, headStyle, bodyStyle } = useFaceStyles(motions, gaze.head, timing, drive?.move)
+  const { poseStyle, headStyle, bodyStyle } = useFaceStyles(
+    motions,
+    gaze.head,
+    { ...timing, bodyScale },
+    drive?.move,
+  )
   return { ref, isInView, gaze, motions, poseStyle, headStyle, bodyStyle }
 }

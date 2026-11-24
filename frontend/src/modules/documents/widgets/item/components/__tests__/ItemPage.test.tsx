@@ -78,8 +78,8 @@ describe('ItemPage', () => {
     // The key line sits right under the title, in one block with it, beside the avatar.
     await expectText('PER-001')
     expect(heading.parentElement).toHaveTextContent('PER-001')
-    // The avatar leads the title, in the tone of the place of the persona among the items.
-    expect(screen.getByText('M')).toHaveAttribute('data-color', 'secondary')
+    // The face of the persona leads the title, drawn from the spec it carries.
+    expect(document.querySelectorAll('[data-slot="human-face"]').length).toBe(1)
     // The fields of one line sit above the label of the status, under the title.
     const stakeholder = screen.getByText('Student').closest('p')
     expect(stakeholder?.textContent).toContain('Stakeholder type: Student')

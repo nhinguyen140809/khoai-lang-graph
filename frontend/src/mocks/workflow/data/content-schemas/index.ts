@@ -7,7 +7,7 @@ import elicitationPlan from './elicitation_plan.v1.json' with { type: 'json' }
 import interviewMessage from './interview_message.v1.json' with { type: 'json' }
 import interviewTranscript from './interview_transcript.v1.json' with { type: 'json' }
 import latentNeed from './latent_need.v1.json' with { type: 'json' }
-import persona from './persona.v2.json' with { type: 'json' }
+import persona from './persona.v3.json' with { type: 'json' }
 import personaCatalog from './persona_catalog.v2.json' with { type: 'json' }
 import productBacklog from './product_backlog.v1.json' with { type: 'json' }
 import rawRequirement from './raw_requirement.v1.json' with { type: 'json' }

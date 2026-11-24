@@ -50,4 +50,15 @@ describe('useFaceState', () => {
   it('is not at rest in a mood that does not come to rest', () => {
     expect(stateOf({ mood: 'working' }).isRested).toBe(false)
   })
+
+  it('makes only the share of the moves of the body that the kind of face takes', () => {
+    const whole = stateOf({ looks: { ...looks, idle: { gaze: 'still', body: 'breathe' } } })
+    const none = stateOf({
+      looks: { ...looks, idle: { gaze: 'still', body: 'breathe' } },
+      bodyScale: 0,
+    })
+
+    expect(whole.bodyStyle.scale.get()).not.toBe(1)
+    expect(none.bodyStyle.scale.get()).toBe(1)
+  })
 })

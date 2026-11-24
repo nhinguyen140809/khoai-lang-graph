@@ -92,3 +92,22 @@ def test_a_kind_of_source_in_other_words_is_read_as_the_kind_of_the_list() -> No
     assert kind_of_source("complaint") == "complaint_log"
     assert kind_of_source("blog") == "other"
     assert kind_of_source("survey") == "survey"
+
+
+def test_a_persona_carries_the_face_the_generator_picked() -> None:
+    personas = _contents(_finished_run(), "persona")
+
+    assert len(personas) == 3
+    by_type = {str(persona["stakeholder_type"]): persona for persona in personas}
+    # The student's face named a hairstyle the catalog does not hold: dropped,
+    # so the seed of the item draws that part, and the rest stays as picked.
+    student = by_type["Student"]
+    assert "hair" not in student["face"]["parts"]
+    assert student["face"]["palette"] == "medium-black-brown"
+    assert student["face"]["parts"]["glasses"] == "rectangular"
+    mentor = by_type["Mentor"]
+    assert mentor["face"]["palette"] == "deep-brown-brown"
+    assert mentor["face"]["colors"] == {"mouth": "brick"}
+    admin = by_type["Administrator"]
+    assert admin["face"]["parts"]["beard"] == "pointed"
+    assert admin["face"]["parts"]["head"] == "wide"

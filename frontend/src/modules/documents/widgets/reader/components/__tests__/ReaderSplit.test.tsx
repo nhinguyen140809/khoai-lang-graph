@@ -159,8 +159,8 @@ describe('ReaderSplit', () => {
 
     const reader = await screen.findByRole('complementary', { name: 'Minh' })
     const heading = await within(reader).findByRole('heading', { level: 1, name: 'Minh' })
-    // The avatar leads the name, and the role and the status stand under it, with no key.
-    expect(within(reader).getByText('M')).toHaveAttribute('data-color', 'secondary')
+    // The face of the persona leads the name, and the role and the status stand under it, with no key.
+    expect(reader.querySelectorAll('[data-slot="human-face"]').length).toBe(1)
     expect(heading.parentElement).toHaveTextContent('Student')
     expect(heading.parentElement).toHaveTextContent('Interviewed')
     expect(heading.parentElement).not.toHaveTextContent('PER-001')

@@ -1,30 +1,39 @@
 'use client'
 
 import { cn } from 'cn'
-import { motion } from 'motion/react'
+import { motion, type MotionStyle } from 'motion/react'
+import { useCallback, useEffect, useMemo } from 'react'
 
 import { hashOf } from '@/shared/lib/palette'
 
 import { faceSizeClasses } from '../face.constants'
 import { useFaceState } from '../hooks/useFaceState'
-import { humanGazeScale, humanLooks } from './human-face.constants'
+import { useHumanEyes } from './hooks/useHumanEyes'
+import { useHumanFaceArt } from './hooks/useHumanFaceArt'
+import {
+  eyesCloseMs,
+  gazeUnit,
+  humanBodyScale,
+  humanGazeScale,
+  humanLooks,
+  humanSoloMotions,
+} from './human-face.constants'
 import type { HumanFaceProps } from './human-face.types'
-import { eyesMotionOf, phaseOf } from './human-face.utils'
-
-/** The units that the face is drawn in, as a square of this many. */
-const units = 32
+import { eyesMotionOf, eyesOf, phaseOf, tokensOf } from './human-face.utils'
+import { HumanEyes } from './HumanEyes'
 
 /**
- * The face of a person, drawn beside the face of an agent with the same props. It is a sketch for
- * now: a head on shoulders, with two eyes, drawn in the colors of the interface, which stands for
- * the art that will draw it. What it does with its parts is the point: the body (the shoulders)
- * breathes and bounces, the head sways and tilts and turns with the eyes, and the eyes look
- * about, blink and close while a mood changes, all of them from what every face has (see
- * `useFaceState`), with less of the gaze than a face of an agent takes. Like the face of an agent,
- * it is hidden from assistive technology, since the name sits beside it.
+ * The face of a person, drawn beside the face of an agent with the same props. The picture comes
+ * from the catalog of the faces (a part that the spec does not name comes from the seed); what
+ * moves it is what every face has (see `useFaceState`), with less of the gaze than a face of an
+ * agent takes: the body breathes and bounces, the head sways and tilts and turns with the eyes,
+ * and the eyes look about, blink, and close while a mood changes the eyes and the mouth. Like the
+ * face of an agent, it is hidden from assistive technology, since the name sits beside it.
  */
 export function HumanFace({
   seed,
+  spec,
+  frame = 'circle',
   mood = 'idle',
   drive,
   size = 'default',
@@ -49,58 +58,65 @@ export function HumanFace({
     eyesOf: eyesMotionOf,
     phase: phaseOf(hashOf(seed)),
     gazeScale: humanGazeScale,
+    bodyScale: humanBodyScale,
   })
-  const { isEyesShut = false } = look
+  // The eyes have closed after the time that they take to: a change of mood is shown then.
+  useEffect(() => {
+    if (!isChanging) return
+    const timer = setTimeout(settle, eyesCloseMs)
+    return () => {
+      clearTimeout(timer)
+    }
+  }, [isChanging, settle])
+  const rest = eyesOf(seed, spec)
+  const eyes = useHumanEyes(look.eyes, rest, seed)
+  const tokens = useMemo(() => tokensOf(spec, seed), [spec, seed])
+  const soloMotion = humanSoloMotions[rest]
+  const { left, right } = eyes
+  const renderEyes = useCallback(
+    (place: string | undefined) => (
+      <HumanEyes left={left} right={right} place={place} tokens={tokens} motion={soloMotion} />
+    ),
+    [left, right, tokens, soloMotion],
+  )
+  const { picture, background } = useHumanFaceArt(seed, spec, { mouth: look.mouth }, renderEyes)
 
   return (
     <span
       ref={ref}
       aria-hidden
+      data-frame={frame}
+      style={frame === 'none' ? undefined : { backgroundColor: background }}
       data-slot="human-face"
       data-mood={mood}
       data-resting={isRested || undefined}
       className={cn(
-        'relative inline-flex shrink-0 overflow-hidden',
+        'relative inline-flex shrink-0',
+        frame === 'circle' && 'overflow-hidden rounded-full',
         !isInView && 'face-paused',
         faceSizeClasses[size],
         className,
       )}
     >
       <motion.span data-slot="human-face-body" className="absolute inset-0" style={bodyStyle}>
-        <svg viewBox={`0 0 ${String(units)} ${String(units)}`} className="size-full fill-muted">
-          <ellipse cx="16" cy="32" rx="14" ry="9" />
-        </svg>
-      </motion.span>
-      <motion.span data-slot="human-face-pose" className="absolute inset-0" style={poseStyle}>
-        <motion.span data-slot="human-face-head" className="absolute inset-0" style={headStyle}>
-          <svg viewBox={`0 0 ${String(units)} ${String(units)}`} className="size-full">
-            <circle cx="16" cy="14" r="9" className="fill-secondary" />
-            <g
-              className={cn('face-squash', isChanging && 'scale-y-10 face-squash-closing')}
-              style={{ transformBox: 'view-box', transformOrigin: 'center' }}
-              onTransitionEnd={(event) => {
-                if (event.target === event.currentTarget && isChanging) settle()
-              }}
+        <motion.span data-slot="human-face-pose" className="absolute inset-0" style={poseStyle}>
+          <motion.span data-slot="human-face-head" className="absolute inset-0" style={headStyle}>
+            <motion.span
+              data-slot="human-face-picture"
+              data-covered={isChanging || undefined}
+              data-blinking={motions.isBlinking || undefined}
+              className="absolute inset-0"
+              style={
+                {
+                  '--human-face-eye-x': gaze.eye.x,
+                  '--human-face-eye-y': gaze.eye.y,
+                  '--human-face-unit': `${String(gazeUnit)}px`,
+                } as MotionStyle
+              }
             >
-              <g
-                className={cn(
-                  motions.isBlinking && 'animate-face-blink motion-reduce:animate-none',
-                )}
-                style={{ transformBox: 'view-box', transformOrigin: 'center' }}
-              >
-                <motion.g
-                  data-slot="human-face-eyes"
-                  data-shut={isEyesShut || undefined}
-                  className="fill-foreground"
-                  style={{ x: gaze.eye.x, y: gaze.eye.y }}
-                >
-                  {[12, 20].map((cx) => (
-                    <ellipse key={cx} cx={cx} cy="14" rx="1.4" ry={isEyesShut ? 0.3 : 1.8} />
-                  ))}
-                </motion.g>
-              </g>
-            </g>
-          </svg>
+              {picture}
+            </motion.span>
+          </motion.span>
         </motion.span>
       </motion.span>
     </span>

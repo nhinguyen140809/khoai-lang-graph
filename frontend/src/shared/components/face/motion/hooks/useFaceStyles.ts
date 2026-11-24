@@ -23,24 +23,30 @@ function usePercent(share: MotionValue<number>): MotionValue<string> {
  *   to it: its offsets and turn to those of the mood, its scale times that of the mood.
  *
  * A face that has no head apart from its body puts the head on the body (see `useTurnedBody`).
+ * `bodyScale` is how much of the moves of the body of the mood it makes: less for a face that has
+ * a frame to stay in (a jump of a face in a circle would take it out of the circle).
  */
 export function useFaceStyles(
   { pose, body }: { pose?: Pose | undefined; body?: Body | undefined },
   head: GazeValues['head'],
-  { phase, isChanging, isRunning }: GazeTiming,
+  { phase, isChanging, isRunning, bodyScale = 1 }: GazeTiming & { bodyScale?: number | undefined },
   move?: FaceDrive['move'],
 ): FaceStyles {
   const posed = useLoop(pose === undefined ? null : poseLoops[pose], phase, isChanging, isRunning)
   const bodied = useLoop(bodyLoops[body ?? 'none'], phase, isChanging, isRunning)
   const none = useMotionValue(0)
   const whole = useMotionValue(1)
-  const x = usePercent(useSum(bodied.x, move?.x ?? none))
-  const y = usePercent(useSum(bodied.y, move?.y ?? none))
+  const offsetX = useTransform(bodied.x, (value) => value * bodyScale)
+  const offsetY = useTransform(bodied.y, (value) => value * bodyScale)
+  const x = usePercent(useSum(offsetX, move?.x ?? none))
+  const y = usePercent(useSum(offsetY, move?.y ?? none))
   const rotate = useSum(bodied.rotate, move?.rotate ?? none)
   const scale = useTransform<number, number>(
     [bodied.scale, move?.scale ?? whole],
-    ([a, b]) => (a ?? 1) * (b ?? 1),
+    ([a, b]) => (1 + ((a ?? 1) - 1) * bodyScale) * (b ?? 1),
   )
+  const stretchX = useTransform(bodied.scaleX, (value) => 1 + (value - 1) * bodyScale)
+  const stretchY = useTransform(bodied.scaleY, (value) => 1 + (value - 1) * bodyScale)
 
   return {
     poseStyle: { rotate: posed.rotate, scale: posed.scale, originY: 1 },
@@ -52,8 +58,8 @@ export function useFaceStyles(
       rotateX: bodied.rotateX,
       rotateY: bodied.rotateY,
       scale,
-      scaleX: bodied.scaleX,
-      scaleY: bodied.scaleY,
+      scaleX: stretchX,
+      scaleY: stretchY,
     },
   }
 }

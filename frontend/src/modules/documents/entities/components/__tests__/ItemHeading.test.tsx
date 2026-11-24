@@ -20,6 +20,27 @@ describe('ItemHeading', () => {
     expect(screen.getByText('M')).toHaveAttribute('data-variant', 'soft')
   })
 
+  it('draws the face of the item in place of its initials when it has one', () => {
+    renderWithProviders(
+      <ItemHeading
+        hasAvatar
+        title="Minh"
+        place={1}
+        faceSeed="PER-001"
+        face={{
+          style: 'plain',
+          palette: 'medium-black-brown',
+          parts: { hair: 'short-crop', eyes: 'round-open', mouth: 'closed-grin' },
+          colors: {},
+        }}
+      />,
+    )
+
+    const face = document.querySelector('[data-slot="human-face"]')
+    expect(face).toBeInTheDocument()
+    expectNoText('M')
+  })
+
   it('draws the title alone when the page layout has no avatar', () => {
     renderWithProviders(<ItemHeading hasAvatar={false} title="Search mentors" place={1} />)
 

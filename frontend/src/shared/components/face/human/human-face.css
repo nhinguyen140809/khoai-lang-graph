@@ -1,0 +1,194 @@
+/*
+ * What the face of a person is drawn in and how its eyes move. The values of the colors are the
+ * custom properties at the top, one for every token of the catalog and named
+ * `--human-face-<role>-<token>`: the picture paints with them, so a tone is changed here, and for
+ * every face at once. The ink is black and the paper white on a pastel background, which reads on a
+ * light page and on a dark one, so no token changes with the theme. The rest moves the irises in the eyes, which `HumanFace` drives through the
+ * custom properties `--human-face-eye-x` and `--human-face-eye-y` (units of a gaze), and the
+ * attributes `data-covered` (the eyes close while a mood changes) and `data-blinking`.
+ */
+:root {
+  --human-face-skin-warm-light: #ffdbb4;
+  --human-face-skin-warm-medium: #edb98a;
+  --human-face-skin-warm-deep: #d08b5b;
+  --human-face-skin-umber: #ae5d29;
+  --human-face-skin-umber-deep: #694d3d;
+  --human-face-skin-paper: #ffffff;
+
+  --human-face-hair-ink-black: #000000;
+  --human-face-hair-brown-dark: #3a2a1a;
+  --human-face-hair-brown: #6b4423;
+  --human-face-hair-auburn: #a4451f;
+  --human-face-hair-blond: #e0b867;
+  --human-face-hair-gray: #9a9a9a;
+  --human-face-hair-white: #f2f2f2;
+  --human-face-hair-pink: #f4a6c1;
+  --human-face-hair-blue: #8fb4ee;
+  --human-face-hair-purple: #b9a0e6;
+  --human-face-hair-green: #8fd9b0;
+  --human-face-hair-teal: #7fd0cf;
+  --human-face-hair-orange: #ffb98a;
+
+  --human-face-eyebrows-ink-black: #000000;
+  --human-face-eyebrows-brown-dark: #3a2a1a;
+  --human-face-eyebrows-brown: #6b4423;
+  --human-face-eyebrows-gray: #9a9a9a;
+
+  --human-face-eyes-ink-black: #000000;
+  --human-face-eyes-brown-dark: #3a2a1a;
+  --human-face-eyes-brown: #7a4a21;
+  --human-face-eyes-green: #3f7d4e;
+  --human-face-eyes-blue: #2f6fb3;
+  --human-face-eyes-gray: #6f7a85;
+  --human-face-eyes-amber: #b9812a;
+  --human-face-eyes-violet: #7a55b8;
+
+  --human-face-eyelids-ink-black: #000000;
+  --human-face-eyelids-brown-dark: #3a2a1a;
+  --human-face-eyelids-gray: #6f7a85;
+
+  --human-face-mouth-ink-black: #000000;
+  --human-face-mouth-brown-dark: #3a2a1a;
+  --human-face-mouth-rose: #c4616d;
+  --human-face-mouth-coral: #e0705a;
+  --human-face-mouth-mauve: #e3a9c6;
+  --human-face-mouth-red: #e23b4a;
+  --human-face-mouth-fuchsia: #e851a8;
+  --human-face-mouth-brick: #d8553a;
+  --human-face-mouth-tangerine: #f56a2e;
+
+  --human-face-nose-ink-black: #000000;
+  --human-face-nose-brown-dark: #3a2a1a;
+
+  --human-face-freckles-brown-dark: #3a2a1a;
+  --human-face-freckles-auburn: #a4451f;
+  --human-face-freckles-ink-black: #000000;
+
+  --human-face-glasses-ink-black: #000000;
+  --human-face-glasses-brown-dark: #3a2a1a;
+  --human-face-glasses-blue: #2f5fa8;
+
+  --human-face-earrings-gold: #d4a62a;
+  --human-face-earrings-silver: #b8bcc4;
+  --human-face-earrings-ink-black: #000000;
+
+  --human-face-hairAccessories-rose: #e58aa0;
+  --human-face-hairAccessories-blue: #6f9bd6;
+  --human-face-hairAccessories-yellow: #f2c94c;
+  --human-face-hairAccessories-ink-black: #000000;
+
+  --human-face-background-peach: #ffd9c7;
+  --human-face-background-mint: #cdeedd;
+  --human-face-background-sky: #cfe6fb;
+  --human-face-background-lavender: #e0d7f7;
+  --human-face-background-butter: #fbefc2;
+  --human-face-background-rose: #fbd5e0;
+
+  --human-face-outline-ink-black: #000000;
+  --human-face-outline-soft-gray: #6e6e6e;
+}
+
+/* The eyes look about: a gaze of the face, in units of its grid, moves the irises in their lids. */
+.human-face-gaze {
+  transform: translate(
+    calc(var(--human-face-eye-x, 0) * var(--human-face-unit, 24px)),
+    calc(var(--human-face-eye-y, 0) * var(--human-face-unit, 24px))
+  );
+}
+
+/* The iris looks up or down in its lid for a step of a mood, and slides there. */
+.human-face-look {
+  transform: translate(
+    calc(var(--human-face-look-x, 0) * var(--human-face-unit, 8px)),
+    calc(var(--human-face-look-y, 0) * var(--human-face-unit, 8px))
+  );
+  transition: transform 420ms var(--ease-standard);
+}
+
+/* An iris that comes from another eye starts where and as large as that one was, and settles in its place. */
+@keyframes human-face-settle {
+  from {
+    transform: translate(var(--iris-dx, 0), var(--iris-dy, 0)) scale(var(--iris-scale, 1));
+  }
+}
+
+.human-face-settle {
+  animation: human-face-settle 300ms var(--ease-standard) both;
+}
+
+/* The eyes open slowly again after closing quickly, while their look changes with the mood. */
+.human-face-cover {
+  transform-box: fill-box;
+  transform-origin: center;
+  transition: transform 220ms var(--ease-standard);
+}
+
+[data-covered] .human-face-cover {
+  transform: scaleY(0.1);
+  transition-duration: 110ms;
+  transition-timing-function: ease-in;
+}
+
+[data-blinking] .human-face-blink {
+  transform-box: fill-box;
+  transform-origin: center;
+  animation: var(--animate-face-blink);
+}
+
+/* An eye changes into another of its family by fading: the new one in, the one it replaces out. */
+@keyframes human-face-eye-in {
+  from {
+    opacity: 0;
+  }
+  to {
+    opacity: 1;
+  }
+}
+
+@keyframes human-face-eye-out {
+  from {
+    opacity: 1;
+  }
+  to {
+    opacity: 0;
+  }
+}
+
+.human-face-eye-in {
+  animation: human-face-eye-in 180ms ease-out both;
+}
+
+.human-face-eye-out {
+  animation: human-face-eye-out 180ms ease-out both;
+}
+
+/* An eye that no family has moves in its own way: the hearts beat. */
+@keyframes human-face-pulse {
+  0%,
+  100% {
+    scale: 1;
+  }
+  50% {
+    scale: 1.12;
+  }
+}
+
+.human-face-pulse {
+  animation: human-face-pulse 1.2s ease-in-out infinite;
+}
+
+@media (prefers-reduced-motion: reduce) {
+  [data-blinking] .human-face-blink {
+    animation: none;
+  }
+
+  .human-face-eye-in,
+  .human-face-settle,
+  .human-face-pulse {
+    animation: none;
+  }
+
+  .human-face-eye-out {
+    display: none;
+  }
+}

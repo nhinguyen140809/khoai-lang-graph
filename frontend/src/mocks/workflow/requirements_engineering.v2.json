@@ -30,7 +30,7 @@
       "key": "persona_generator",
       "label": "Persona generator",
       "description": "Creates the interviewees from the evidence found in those documents.",
-      "prompt_version": 3
+      "prompt_version": 4
     },
     {
       "key": "interviewer",
@@ -791,7 +791,7 @@
     },
     {
       "kind": "persona",
-      "schema_version": 2,
+      "schema_version": 3,
       "issue": null
     },
     {

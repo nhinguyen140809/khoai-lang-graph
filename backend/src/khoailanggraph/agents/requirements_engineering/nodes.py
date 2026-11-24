@@ -91,6 +91,7 @@ from khoailanggraph.agents.requirements_engineering.views import (
     transcript_lines,
 )
 from khoailanggraph.domain import rules as domain_rules
+from khoailanggraph.domain.faces import age_tag_of, catalog_view_lines, sanitize_face
 from khoailanggraph.domain.run_config import RunConfig
 from khoailanggraph.llm import get_chat_model, resolve_model_id
 from khoailanggraph.llm.usage import UsageHandler
@@ -1195,6 +1196,7 @@ def persona_generator_node(
             ),
             "observations": observations_lines,
             "aspects": aspect_lines(aspects),
+            "faces": "\n".join(catalog_view_lines()),
             "target_personas_num": str(cfg.parameters.target_personas_num),
         },
     )
@@ -1252,7 +1254,23 @@ def persona_generator_node(
             )
             continue
         _check_persona_grounding(persona_draft, known_observations)
+        # The face of the persona is checked against the catalog before it is
+        # stored: a key the model invented, or a choice that does not fit the
+        # age of the persona, is dropped (the seed of the item draws that
+        # part) instead of failing the run, as an altered quote would.
+        face, face_notes = (
+            sanitize_face(persona_draft.face, age_tag_of(persona_draft.age_range))
+            if persona_draft.face is not None
+            else (None, [])
+        )
+        for note in face_notes:
+            logger.warning(
+                "face choice dropped",
+                persona=str(getattr(persona_draft, "name", "?")),
+                note=note,
+            )
         content = persona_draft.model_dump(mode="json", exclude={"ref"})
+        content["face"] = face.model_dump(mode="json") if face is not None else None
         # The trait as the user reads it comes from the aspect, not from the model.
         titles = {entry["key"]: entry["title"] for entry in aspects}
         groups = {entry["key"]: ASPECT_GROUP_TITLES.get(entry["tier"]) for entry in aspects}

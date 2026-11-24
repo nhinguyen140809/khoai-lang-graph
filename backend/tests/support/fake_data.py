@@ -157,6 +157,83 @@ def _corpus(system: str, user: str, call_number: int) -> dict[str, Any]:
     return {"selection_rationale": rationale, "sources": sources}
 
 
+# The faces the fake generator gives its personas, from the catalog of the faces: an adult
+# masculine student with a hairstyle the catalog does not hold (dropped, the seed draws the
+# part), a feminine mentor in the colors of one palette, and a masculine administrator.
+_FACE_STUDENT = {
+    "style": "plain",
+    "palette": "medium-black-brown",
+    "parts": {
+        "hair": "space-helmet",
+        "eyes": "round-open",
+        "eyebrows": "thick-flat",
+        "mouth": "closed-grin",
+        "nose": "tiny-dash",
+        "head": "round",
+        "glasses": "rectangular",
+        "beard": None,
+        "earrings": None,
+        "freckles": None,
+        "hairAccessories": None,
+    },
+    "colors": {},
+}
+_FACE_MENTOR = {
+    "style": "plain",
+    "palette": "deep-brown-brown",
+    "parts": {
+        "hair": "bun-bangs",
+        "eyes": "soft-lids",
+        "eyebrows": "high-arched",
+        "mouth": "smirk-lips",
+        "nose": "thin-line",
+        "head": "oval",
+        "glasses": None,
+        "beard": None,
+        "earrings": "drop",
+        "freckles": None,
+        "hairAccessories": None,
+    },
+    "colors": {"mouth": "brick"},
+}
+_FACE_ADMIN = {
+    "style": "plain",
+    "palette": "fair-black-brown",
+    "parts": {
+        "hair": "short-side-part",
+        "eyes": "oval-glance",
+        "eyebrows": "angled-thick",
+        "mouth": "small-smile",
+        "nose": "long-line",
+        "head": "wide",
+        "glasses": "half-rim",
+        "beard": "pointed",
+        "earrings": None,
+        "freckles": None,
+        "hairAccessories": None,
+    },
+    "colors": {},
+}
+_FACE_UPLOAD = {
+    "style": "plain",
+    "palette": "fair-brown-gray",
+    "parts": {
+        "hair": "curly-top",
+        "eyes": "round-glance",
+        "eyebrows": "round-arched",
+        "mouth": "gentle-smile",
+        "nose": "round-tip",
+        "head": "round",
+        "glasses": None,
+        "beard": None,
+        "earrings": None,
+        "freckles": None,
+        "hairAccessories": None,
+    },
+    "colors": {},
+}
+
+
 def _upload_grounded_personas(observations: list[dict[str, Any]], user: str) -> dict[str, Any]:
     """A single persona built on the first observation the upload produced."""
     first = observations[0] if observations else None
@@ -200,6 +277,7 @@ def _upload_grounded_personas(observations: list[dict[str, Any]], user: str) -> 
                 "priorities": [dimension],
                 "concerns": ["Being misquoted beyond the uploaded record"],
                 "behavioral_tendencies": "Speaks plainly from the uploaded record.",
+                "face": _FACE_UPLOAD,
                 "scores": _scores(user, {}, {}),
                 "evidence": [{"observation": key, "source": source, "quote": quote}],
             }
@@ -556,6 +634,7 @@ def _personas(system: str, user: str, call_number: int) -> dict[str, Any]:
                 "behavioral_tendencies": (
                     "Direct, concise answers; grows impatient with long forms."
                 ),
+                "face": _FACE_STUDENT,
                 "scores": _scores(
                     user,
                     {
@@ -615,6 +694,7 @@ def _personas(system: str, user: str, call_number: int) -> dict[str, Any]:
                 "behavioral_tendencies": (
                     "Asks clarifying questions before accepting anything; sets firm boundaries."
                 ),
+                "face": _FACE_MENTOR,
                 "scores": _scores(
                     user,
                     {
@@ -671,6 +751,7 @@ def _personas(system: str, user: str, call_number: int) -> dict[str, Any]:
                 "behavioral_tendencies": (
                     "Formal, policy-oriented; wants every rule written down."
                 ),
+                "face": _FACE_ADMIN,
                 "scores": _scores(
                     user,
                     {

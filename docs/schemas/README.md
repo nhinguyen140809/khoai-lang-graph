@@ -22,6 +22,7 @@ schemas/
     ├── section.v1.json
     ├── persona.v1.json
     ├── persona.v2.json
+    ├── persona.v3.json
     ├── source_document.v1.json
     ├── stakeholder_observation.v1.json
     ├── interview_message.v1.json
@@ -47,7 +48,7 @@ schemas/
 | Artifact | `product_backlog` | [`artifacts/product_backlog.v1.json`](artifacts/product_backlog.v1.json) | - | - |
 | Artifact | `validation_report` | [`artifacts/validation_report.v1.json`](artifacts/validation_report.v1.json) | - | - |
 | Item | `section` | [`items/section.v1.json`](items/section.v1.json) | `SEC` | Every artifact kind with items, except `interview_transcript` |
-| Item | `persona` | [`items/persona.v1.json`](items/persona.v1.json), version 2 from workflow definition version 2: [`v2`](items/persona.v2.json) | `PER` | `persona_catalog` |
+| Item | `persona` | [`items/persona.v1.json`](items/persona.v1.json), version 2 from workflow definition version 2: [`v2`](items/persona.v2.json), version 3 (its face): [`v3`](items/persona.v3.json) | `PER` | `persona_catalog` |
 | Item | `source_document` | [`items/source_document.v1.json`](items/source_document.v1.json) | `SRC` | `research_corpus` |
 | Item | `stakeholder_observation` | [`items/stakeholder_observation.v1.json`](items/stakeholder_observation.v1.json) | `OBS` | `research_corpus` |
 | Item | `interview_message` | [`items/interview_message.v1.json`](items/interview_message.v1.json) | Persona key, `#`, position | `interview_transcript` |
