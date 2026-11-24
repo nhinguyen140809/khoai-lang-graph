@@ -24,6 +24,7 @@ from pydantic import (
 
 from khoailanggraph.agents.requirements_engineering import definition as workflow_definition
 from khoailanggraph.domain.artifacts import ElicitationPlanContent
+from khoailanggraph.domain.faces import FaceSpec  # noqa: TC001 - pydantic resolves the field annotations at run time
 from khoailanggraph.llm.note_stream import fit_note
 
 if TYPE_CHECKING:
@@ -435,6 +436,15 @@ class NewPersonaV2(_Output):
         description="What the person does for a living or in their studies, in a few words."
     )
     age_range: str = Field(description="A range of age such as 18-24.")
+    face: FaceSpec | None = Field(
+        default=None,
+        description=(
+            "The face of the persona, picked from <faces>: the variant of every part that fits "
+            "the age of the persona and one presentation of it, and a palette whose colors go "
+            "together; a part the person does not have is null. Leave it out to have the seed of "
+            "the item draw the face."
+        ),
+    )
     evaluative_dimension: str
     grounded_in: list[str] = Field(min_length=1)
     background: str

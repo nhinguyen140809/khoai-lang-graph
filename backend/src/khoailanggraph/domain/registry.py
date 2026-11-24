@@ -1,8 +1,8 @@
 """Kind + schema version -> content model and canonical JSON Schema.
 
 The canonical schema files of workflow definition version 2 live beside this
-module (`content_schemas/*.v1.json`, and the v2 files of `persona` and
-`persona_catalog`), copied from `docs/schemas/`; the typed content models
+module (`content_schemas/*.json` at the version of each kind in
+`SCHEMA_VERSIONS`), copied from `docs/schemas/`; the typed content models
 mirror them and a unit test fails when the two drift apart. This module is the
 single place that knows which model and which schema file belong to a kind. The
 versions live in one map so they mirror the `schema_version` of
@@ -48,9 +48,10 @@ if TYPE_CHECKING:
 _DEFAULT_SCHEMA_VERSION = 1
 
 # The canonical schema version of every kind, mirroring the `schema_version`
-# of `definition.v2.json` (persona + persona_catalog moved to v2 there).
+# of `definition.v2.json` (persona + persona_catalog moved to v2, persona to
+# v3 for its face, there).
 SCHEMA_VERSIONS: dict[str, int] = {
-    "persona": 2,
+    "persona": 3,
     "persona_catalog": 2,
 }
 

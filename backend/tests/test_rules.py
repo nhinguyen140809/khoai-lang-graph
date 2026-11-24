@@ -57,6 +57,7 @@ VALID_PERSONA: dict[str, Any] = {
         }
     ],
     "interview_status": "not_started",
+    "face": None,
 }
 
 

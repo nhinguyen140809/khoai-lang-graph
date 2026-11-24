@@ -20,7 +20,7 @@
       "key": "persona_generator",
       "label": "Persona generator",
       "description": "Creates the interviewees from the evidence found in those documents.",
-      "prompt_version": 3
+      "prompt_version": 4
     },
     { "key": "interviewer", "label": "Interviewer", "description": "Asks interview questions.", "prompt_version": 2 },
     { "key": "persona_agent", "label": "Persona agent", "description": "Answers as one persona.", "prompt_version": 2 },
@@ -499,7 +499,7 @@
     },
     {
       "kind": "persona",
-      "schema_version": 2,
+      "schema_version": 3,
       "issue": null
     },
     {

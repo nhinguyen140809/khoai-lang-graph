@@ -6,7 +6,7 @@ on:
   pull_request:
   push:
     branches: [main]
-    paths: ['backend/**', '.github/workflows/backend-ci.yml']
+    paths: ['backend/**', 'docs/faces/**', 'docs/schemas/**', 'docs/workflow/**', '.github/workflows/backend-ci.yml']
   workflow_dispatch:
 
 concurrency:

@@ -96,8 +96,9 @@ async def test_a_persona_is_written_with_the_current_schema_of_its_kind(
     response = await client.get(f"/api/v1/projects/{project_id}/items", params={"q": "PER-001"})
 
     persona = next(item for item in response.json()["items"] if item["kind"] == "persona")
-    assert persona["schema_version"] == 2
+    assert persona["schema_version"] == 3
     assert "scores" in persona["content"]
+    assert "face" in persona["content"]
 
 
 async def test_list_project_artifacts_tree(client: AsyncClient) -> None:
@@ -339,14 +340,16 @@ async def test_artifact_kinds_full_contract(client: AsyncClient) -> None:
     assert "research_corpus" in kinds
     assert "requirements_analysis" in kinds
     assert len(kinds) == 8
-    # The kinds of definition v2: persona + persona_catalog moved to v2, and
-    # the served schema_version of every item kind follows the definition.
+    # The kinds of definition v2: persona + persona_catalog moved to v2, persona
+    # to v3 for its face, and the served schema_version of every item kind
+    # follows the definition.
     catalog = next(k for k in body["artifact_kinds"] if k["kind"] == "persona_catalog")
     assert catalog["schema_version"] == 2
     persona = next(item for item in catalog["item_kinds"] if item["kind"] == "persona")
-    assert persona["schema_version"] == 2
+    assert persona["schema_version"] == 3
     assert "evaluative_dimension" in persona["schema"]["properties"]
     assert "evidence" in persona["schema"]["properties"]
+    assert "face" in persona["schema"]["properties"]
     research = next(k for k in body["artifact_kinds"] if k["kind"] == "research_corpus")
     assert {item["kind"] for item in research["item_kinds"]} == {
         "source_document",
@@ -895,7 +898,7 @@ async def test_a_content_schema_is_served_at_any_version_it_has(client: AsyncCli
     current = await client.get(f"/api/v1/content-schemas/persona/{persona['schema_version']}")
     older = await client.get("/api/v1/content-schemas/persona/1")
 
-    assert persona["schema_version"] == 2
+    assert persona["schema_version"] == 3
     assert current.status_code == 200
     assert current.json() == persona["schema"]
     assert current.headers["cache-control"] == "public, max-age=31536000, immutable"
@@ -903,6 +906,10 @@ async def test_a_content_schema_is_served_at_any_version_it_has(client: AsyncCli
     assert older.json()["x-schema-version"] == 1
     assert "evidence" not in older.json()["properties"]
     assert "evidence" in current.json()["properties"]
+    second = await client.get("/api/v1/content-schemas/persona/2")
+    assert second.status_code == 200
+    assert "face" not in second.json()["properties"]
+    assert "face" in current.json()["properties"]
     stakeholder = older.json()["properties"]["stakeholder_type"]
     assert "x-value-from" in stakeholder or "enum" in stakeholder
     for path in ("/persona/9", "/nothing/1", "/persona/0"):

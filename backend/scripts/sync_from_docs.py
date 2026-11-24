@@ -10,6 +10,8 @@ package holds byte-identical copies so that it runs without the repository:
 What is copied:
 
 - every `docs/schemas/{artifacts,items}/*.json` to `domain/content_schemas/`;
+- `docs/faces/faces.catalog.json` to `domain/faces/`, which the persona
+  generator reads to pick the face of a persona;
 - every `docs/workflow/requirements_engineering.v<N>.json` to
   `agents/requirements_engineering/definition.v<N>.json`;
 - `docs/workflow/assistance.v1.json` to `agents/assistance/definition.v1.json`;
@@ -33,6 +35,8 @@ REPO_ROOT = Path(__file__).resolve().parents[2]
 PACKAGE = REPO_ROOT / "backend" / "src" / "khoailanggraph"
 SCHEMAS_SRC = REPO_ROOT / "docs" / "schemas"
 SCHEMAS_DST = PACKAGE / "domain" / "content_schemas"
+FACES_SRC = REPO_ROOT / "docs" / "faces"
+FACES_DST = PACKAGE / "domain" / "faces"
 WORKFLOW_SRC = REPO_ROOT / "docs" / "workflow"
 WORKFLOW_DST = PACKAGE / "agents" / "requirements_engineering"
 SHARED_DST = PACKAGE / "agents" / "shared"
@@ -47,6 +51,7 @@ def plan() -> dict[Path, Path]:
     for level in ("artifacts", "items"):
         for source in sorted((SCHEMAS_SRC / level).glob("*.json")):
             pairs[SCHEMAS_DST / source.name] = source
+    pairs[FACES_DST / "faces.catalog.json"] = FACES_SRC / "faces.catalog.json"
     for source in sorted(WORKFLOW_SRC.glob("requirements_engineering.v*.json")):
         match = _DEFINITION_NAME.match(source.name)
         if match is not None:
@@ -62,7 +67,11 @@ def plan() -> dict[Path, Path]:
 def stale() -> list[Path]:
     """Copies in the package whose source no longer exists."""
     wanted = set(plan())
-    found = [*SCHEMAS_DST.glob("*.json"), *WORKFLOW_DST.glob("definition*.json")]
+    found = [
+        *SCHEMAS_DST.glob("*.json"),
+        *FACES_DST.glob("*.json"),
+        *WORKFLOW_DST.glob("definition*.json"),
+    ]
     return sorted(path for path in found if path not in wanted)
 
 

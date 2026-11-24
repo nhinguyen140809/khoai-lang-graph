@@ -1,10 +1,12 @@
-"""Content of a persona item, mirroring items/persona/v2.json."""
+"""Content of a persona item, mirroring items/persona/v3.json."""
 
 from __future__ import annotations
 
 from typing import Literal
 
 from pydantic import BaseModel, ConfigDict, Field
+
+from khoailanggraph.domain.faces import FaceSpec  # noqa: TC001 - pydantic resolves the field annotations at run time
 
 
 class PersonaEvidence(BaseModel):
@@ -38,7 +40,9 @@ class PersonaContent(BaseModel):
     system, never written by an agent (readOnly). `evaluative_dimension` is
     what this persona evaluates a product by; `grounded_in` names the
     stakeholder observation keys it is built from and `evidence` carries
-    their quotes, copied exactly, with the source document keys.
+    their quotes, copied exactly, with the source document keys. `face` is
+    how the persona is drawn as a face, picked from the catalog of the faces
+    when the personas are generated; null for a persona drawn from its seed.
     """
 
     model_config = ConfigDict(extra="forbid")
@@ -63,3 +67,4 @@ class PersonaContent(BaseModel):
     scores: list[PersonaScore] = Field(default_factory=list)
     evidence: list[PersonaEvidence]
     interview_status: Literal["not_started", "in_progress", "completed"]
+    face: FaceSpec | None = None
