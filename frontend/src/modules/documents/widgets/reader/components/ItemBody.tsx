@@ -4,12 +4,12 @@ import {
   type ArtifactItem,
   type ItemStatus,
   useItem,
+  useItemSchema,
   useItemStatusLook,
 } from '@/modules/artifact/entities'
 import { ItemDetails, ItemHeading, ItemLinkLine, ItemRelated } from '@/modules/documents/entities'
-import { InlineFieldValues, useWorkflowDefinition } from '@/modules/workflow/entities'
+import { avatarOf, InlineFieldValues, useWorkflowDefinition } from '@/modules/workflow/entities'
 import { isNotFoundError } from '@/shared/api/error'
-import { faceSpecOf } from '@/shared/components/face'
 import { ErrorState, LoadingState, NotFoundState } from '@/shared/components/state'
 import { ColoredText } from '@/shared/components/ui/colored-text'
 
@@ -59,6 +59,7 @@ function LoadedItem({
   renderTitle: RenderReaderTitle
 }) {
   const item = useReaderItem(projectId, record)
+  const { schema } = useItemSchema(record)
 
   const hasAvatar = item.view?.hasAvatar === true
 
@@ -72,7 +73,7 @@ function LoadedItem({
             title={item.title}
             place={item.place}
             faceSeed={record.key}
-            face={faceSpecOf(record.content.face)}
+            face={schema === undefined ? null : avatarOf(schema, record.content)}
           >
             {hasAvatar && <ProfileKeyLine record={record} item={item} />}
           </ItemHeading>

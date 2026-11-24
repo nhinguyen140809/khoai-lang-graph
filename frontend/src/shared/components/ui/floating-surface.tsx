@@ -18,7 +18,8 @@ type FloatingOffset = 'none' | 'sm' | 'default' | 'lg'
 /** The background of the surface: the page, a popover, or a blur of what floats under it. */
 type FloatingVariant = 'default' | 'popover' | 'glass'
 
-/** The padding inside the surface; `none` leaves the padding to what the surface holds. */
+/** The padding inside the surface and the rounding of its corners, both growing with the size;
+ * `none` leaves the padding to what the surface holds. */
 type FloatingSize = 'none' | 'sm' | 'default' | 'lg'
 
 // Tailwind cannot see classes put together at run time, so every placement at every offset is
@@ -66,11 +67,13 @@ const variantStyles: Record<FloatingVariant, string> = {
     'bg-background/80 supports-backdrop-filter:bg-background/60 supports-backdrop-filter:backdrop-blur',
 }
 
+// The padding of each size, and the rounding of the surface with it: a bigger surface rounds
+// wider, as components do across the design system.
 const sizeStyles: Record<FloatingSize, string> = {
-  none: 'p-0',
-  sm: 'p-2',
-  default: 'p-3',
-  lg: 'p-4',
+  none: 'rounded-lg p-0',
+  sm: 'rounded-md p-2',
+  default: 'rounded-lg p-3',
+  lg: 'rounded-xl p-4',
 }
 
 // The width the surface never grows past, so that it fits the area at its own inset.
@@ -91,7 +94,8 @@ interface FloatingSurfaceProps extends Omit<
   offset?: FloatingOffset
   /** The background of the surface: the page, a popover, or a blur of what floats under it. */
   variant?: FloatingVariant
-  /** The padding inside the surface; the third of the scale when left out. */
+  /** The padding inside the surface and the rounding of its corners, both growing with the size;
+   * the third of the scale when left out. */
   size?: FloatingSize
   /**
    * The meaning of the surface, from the colors of the interface: its border and a tint of its

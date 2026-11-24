@@ -37,6 +37,29 @@ describe('folderThumbnails', () => {
     }
   })
 
+  it('marks a thumbnail of an item with its face, which takes the place of the icon of its kind', () => {
+    const nodes = outlineOf('persona_catalog')
+    const groups = nodes.flatMap((node) => (node.type === 'group' ? [node] : []))
+    const personas = folderThumbnails(
+      groups.flatMap(({ children }) => children),
+      kindViewFixtures,
+    ).flatMap((thumbnail) => (thumbnail.target.type === 'item' ? [thumbnail] : []))
+
+    expect(personas.length).toBeGreaterThan(0)
+    for (const thumbnail of personas) {
+      expect(thumbnail.icon).toBe('user')
+      expect(thumbnail.avatar?.seed).toBe(
+        thumbnail.target.type === 'item' ? thumbnail.target.item.key : '',
+      )
+      expect(thumbnail.avatar?.spec).toEqual(
+        thumbnail.target.type === 'item' ? thumbnail.target.item.content.face : null,
+      )
+    }
+    for (const folder of folderThumbnails(nodes, kindViewFixtures)) {
+      if (folder.target.type !== 'item') expect(folder.avatar).toBeNull()
+    }
+  })
+
   it('makes a thumbnail of text of an item, colored by its kind, with the icon of the kind', () => {
     const nodes = outlineOf('persona_catalog')
     const personas = folderThumbnails(nodes, kindViewFixtures).flatMap((thumbnail) =>

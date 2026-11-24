@@ -29,6 +29,7 @@ export function ReaderThumbnails({
             look={thumbnail.look}
             title={thumbnail.title}
             icon={thumbnail.icon}
+            avatar={thumbnail.avatar}
             seed={thumbnail.seed}
           />
         </ReaderLink>

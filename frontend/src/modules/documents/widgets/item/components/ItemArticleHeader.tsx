@@ -1,7 +1,7 @@
 import { ErrorBoundary } from 'react-error-boundary'
 
 import { ItemHeading } from '@/modules/documents/entities'
-import { faceSpecOf } from '@/shared/components/face'
+import { avatarOf } from '@/modules/workflow/entities'
 
 import { useItemPageContext } from '../hooks/useItemPageContext'
 import { ItemActionsMenu } from './ItemActionsMenu'
@@ -30,7 +30,7 @@ export function ItemArticleHeader() {
           title={page.title}
           place={page.neighbors.index}
           faceSeed={record.key}
-          face={faceSpecOf(record.content.face)}
+          face={page.schema === undefined ? null : avatarOf(page.schema, record.content)}
         >
           {hasAvatar && <ItemKeyLineBlock />}
         </ItemHeading>
