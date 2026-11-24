@@ -25,6 +25,11 @@ const jsonTypeSchema = z.enum(['string', 'number', 'integer', 'boolean', 'array'
 /** What the content of a kind is, which decides the block that draws it: text, or a diagram. */
 export const kindMedias = ['text', 'diagram'] as const
 
+/** The formats that the avatar of a kind may draw its value in: a face spec of the catalog of the faces. */
+export const avatarFormats = ['face'] as const
+
+export type AvatarFormat = (typeof avatarFormats)[number]
+
 export type KindMedia = (typeof kindMedias)[number]
 
 /** One field of a content schema, with the keywords that the app reads. */
@@ -80,6 +85,8 @@ export const contentSchemaSchema = z.looseObject({
   'x-ui-media': z.enum(kindMedias).optional(),
   /** The name of the icon on the block of the kind; `null` says there is none. */
   'x-ui-icon': z.string().nullable().optional(),
+  /** The picture of one instance of the kind: the field of the content that holds it, and how it draws. */
+  'x-ui-avatar': z.object({ format: z.enum(avatarFormats), field: z.string() }).optional(),
   'x-ui-title-field': z.string().optional(),
   'x-ui-role-field': z.string().optional(),
   'x-ui-participants-field': z.string().optional(),

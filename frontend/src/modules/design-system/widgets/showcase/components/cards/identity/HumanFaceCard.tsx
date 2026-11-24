@@ -1,7 +1,7 @@
 'use client'
 
 import { Actor } from '@/shared/components/act'
-import { type FaceSpec, HumanFace, moods } from '@/shared/components/face'
+import { type FaceSpec, HumanFace, moods, PersonAvatar } from '@/shared/components/face'
 import { Button } from '@/shared/components/ui/button'
 import { ToggleGroup, ToggleGroupItem } from '@/shared/components/ui/toggle-group'
 
@@ -150,6 +150,28 @@ export function HumanFaceCard() {
           ))}
         </div>
       </SampleGroup>
+      <SampleGroup label="The avatar of a person: the face their spec names, or else the initials of their name on the soft fill of a tone">
+        <div className="flex flex-wrap items-end gap-8">
+          <div className="flex flex-col items-start gap-2">
+            <PersonAvatar
+              name="Fay"
+              tone="primary"
+              spec={specs[0]?.spec ?? null}
+              seed="fay"
+              size="xl"
+            />
+            <SampleLabel>with a face</SampleLabel>
+          </div>
+          <div className="flex flex-col items-start gap-2">
+            <PersonAvatar name="Gus" tone="secondary" spec={null} seed="gus" size="xl" />
+            <SampleLabel>without one</SampleLabel>
+          </div>
+          <div className="flex flex-col items-start gap-2">
+            <PersonAvatar name="Ada" tone="warning" spec={null} seed="ada" size="sm" />
+            <SampleLabel>small</SampleLabel>
+          </div>
+        </div>
+      </SampleGroup>
       <SampleGroup label="Frames: in a circle with the background of the face, or with none, which a place sets with the frame prop">
         <div className="flex items-end gap-8">
           {(['circle', 'none'] as const).map((frame) => (
@@ -172,6 +194,6 @@ export const humanFaceCardEntry = {
   label: 'Human face',
   section: 'identity',
   span: 12,
-  keywords: 'face human person user avatar HumanFace',
+  keywords: 'face human person user avatar HumanFace PersonAvatar',
   View: HumanFaceCard,
 } satisfies CardEntry

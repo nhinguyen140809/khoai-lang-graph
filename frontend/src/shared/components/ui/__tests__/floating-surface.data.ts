@@ -21,6 +21,7 @@ export const surfaceCases: FloatingSurfaceCase[] = [
       'z-20',
       'w-fit',
       'shadow-lg',
+      'rounded-lg',
       'bg-background',
       'p-3',
     ],
@@ -68,12 +69,12 @@ export const surfaceCases: FloatingSurfaceCase[] = [
   {
     name: 'small',
     props: { size: 'sm' },
-    classes: ['p-2'],
+    classes: ['rounded-md', 'p-2'],
   },
   {
     name: 'large',
     props: { size: 'lg' },
-    classes: ['p-4'],
+    classes: ['rounded-xl', 'p-4'],
   },
   {
     name: 'in the middle of the top edge',

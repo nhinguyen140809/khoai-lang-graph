@@ -1,18 +1,17 @@
 'use client'
 
 import {
+  avatarOf,
   InlineFieldValues,
   itemTitle,
   nonStatusTone,
   profileFields,
   type ValueDefinition,
 } from '@/modules/workflow/entities/@x/artifact'
-import { faceSpecOf, HumanFace } from '@/shared/components/face'
+import { PersonAvatar } from '@/shared/components/face'
 import { Card, CardContent, CardDescription, CardHeader } from '@/shared/components/ui/card'
-import { InitialsAvatar } from '@/shared/components/ui/initials-avatar'
 import { isEmpty } from '@/shared/lib/guards'
 import { textOf } from '@/shared/lib/text'
-import type { Tone } from '@/shared/lib/tone'
 
 import type { OutlineItem } from '../items/items.types'
 import { itemAnchorProps } from '../outline/item-anchor.utils'
@@ -24,13 +23,6 @@ interface ItemAvatarCardsProps {
   renderItemLink: RenderItemLink
   definition: ValueDefinition
   targetItemId: string | null
-}
-
-/** The avatar of an item: the face it chose, or else its initials on the tone of its place. */
-function ItemAvatar({ item, title, tone }: { item: OutlineItem; title: string; tone: Tone }) {
-  const face = faceSpecOf(item.content.face)
-  if (face !== null) return <HumanFace seed={item.key} spec={face} size="sm" />
-  return <InitialsAvatar name={title} tone={tone} size="sm" />
 }
 
 /** One field of an avatar card: a text on at most two lines, a list on one line after its title. */
@@ -72,7 +64,13 @@ export function ItemAvatarCards({
           >
             <CardHeader>
               <div className="flex items-center gap-2">
-                <ItemAvatar item={item} title={title} tone={nonStatusTone(place + 1)} />
+                <PersonAvatar
+                  name={title}
+                  tone={nonStatusTone(place + 1)}
+                  spec={avatarOf(view.schema, item.content)}
+                  seed={item.key}
+                  size="sm"
+                />
                 <h3 className="text-base font-semibold">{renderItemLink(item, title)}</h3>
               </div>
               <CardDescription>

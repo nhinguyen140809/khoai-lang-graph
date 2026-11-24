@@ -14,6 +14,7 @@ export type {
 export { shownFields } from '../content/fields/content-fields.utils'
 export { profileFields } from '../content/fields/content-profile.utils'
 export { nonStatusTone } from '../content/value-labels/value-labels.utils'
+export { avatarOf } from '../content/values/avatar.utils'
 export type { ValueDefinition } from '../content/values/content-values.types'
 export { hasGroupedRatings, hasListValue } from '../content/values/content-values.utils'
 export { itemTitle } from '../content/values/item-title.utils'

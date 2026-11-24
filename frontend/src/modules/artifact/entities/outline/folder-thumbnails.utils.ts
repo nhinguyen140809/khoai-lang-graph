@@ -1,4 +1,4 @@
-import { iconOf, mediaOf } from '@/modules/workflow/entities/@x/artifact'
+import { avatarOf, iconOf, mediaOf } from '@/modules/workflow/entities/@x/artifact'
 import type { ThumbnailLook } from '@/shared/components/thumbnail'
 
 import type { FolderThumbnail } from './folder-thumbnails.types'
@@ -12,7 +12,8 @@ export const overviewTitle = 'Overview'
  * The thumbnails of one place of a document, from its rows in the order of the outline. A section or a
  * group that holds items under it is a folder; one that holds none is only text, which the overview
  * of the document reads, so it has no thumbnail. An item is a thumbnail of text or of a diagram, by what
- * its kind says its content is. The color of a folder comes from its title and the color of an item
+ * its kind says its content is, and its face, when its kind names an avatar, is drawn in place of the
+ * icon of its kind. The color of a folder comes from its title and the color of an item
  * from its kind.
  */
 export function folderThumbnails(
@@ -31,6 +32,10 @@ export function folderThumbnails(
           look,
           title: node.title,
           icon: schema === undefined ? null : iconOf(schema),
+          avatar:
+            schema === undefined
+              ? null
+              : { spec: avatarOf(schema, node.item.content), seed: node.item.key },
           seed: node.item.kind,
           target: { type: 'item', item: node.item },
         },
@@ -45,6 +50,7 @@ export function folderThumbnails(
         look: 'folder',
         title: node.title,
         icon: schema === undefined ? null : iconOf(schema),
+        avatar: null,
         seed: node.title,
         target: { type: 'folder', nodeId: node.id },
       },
@@ -76,6 +82,7 @@ export function rootThumbnails(
       look: 'text',
       title: overviewTitle,
       icon: null,
+      avatar: null,
       seed: 'overview',
       target: { type: 'overview' },
     },
