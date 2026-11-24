@@ -31,7 +31,7 @@ export type {
   HumanFaceProps,
   HumanFrame,
 } from './human/human-face.types'
-export { randomOf, randomSpec } from './human/human-face.utils'
+export { faceSpecOf, randomOf, randomSpec } from './human/human-face.utils'
 export { HumanFace } from './human/HumanFace'
 export { moodOfState } from './mood/face-mood.utils'
 export { faceMotions } from './motion/face-motion.constants'

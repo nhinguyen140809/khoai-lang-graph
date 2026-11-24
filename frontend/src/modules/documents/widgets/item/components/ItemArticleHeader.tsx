@@ -1,6 +1,7 @@
 import { ErrorBoundary } from 'react-error-boundary'
 
 import { ItemHeading } from '@/modules/documents/entities'
+import { faceSpecOf } from '@/shared/components/face'
 
 import { useItemPageContext } from '../hooks/useItemPageContext'
 import { ItemActionsMenu } from './ItemActionsMenu'
@@ -24,7 +25,13 @@ export function ItemArticleHeader() {
           hasAvatar ? 'flex flex-wrap items-center gap-4' : 'flex flex-wrap items-end gap-4'
         }
       >
-        <ItemHeading hasAvatar={hasAvatar} title={page.title} place={page.neighbors.index}>
+        <ItemHeading
+          hasAvatar={hasAvatar}
+          title={page.title}
+          place={page.neighbors.index}
+          faceSeed={record.key}
+          face={faceSpecOf(record.content.face)}
+        >
           {hasAvatar && <ItemKeyLineBlock />}
         </ItemHeading>
         {!isEditing && <ItemActionsMenu record={record} lockedReason={page.lockedReason} />}

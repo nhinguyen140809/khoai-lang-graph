@@ -229,7 +229,7 @@ describe('a field that the page hides', () => {
   it('is known to the schema, and is left out of what a page shows', () => {
     const hidden = contentFields(persona).filter((field) => field.isHidden)
 
-    expect(hidden.map(({ name }) => name)).toEqual(['grounded_in', 'evidence'])
+    expect(hidden.map(({ name }) => name)).toEqual(['grounded_in', 'evidence', 'face'])
     expect(shownFields(persona).map(({ name }) => name)).not.toContain('evidence')
     const body = profileFields(persona).body.map(({ name }) => name)
     expect(body).not.toContain('grounded_in')

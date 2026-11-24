@@ -91,6 +91,8 @@ describe('ArtifactDocument', () => {
     expect(links.map((link) => link.textContent)).toContain('Minh')
     expect(screen.getAllByRole('heading', { level: 3 }).length).toBe(3)
     expect(screen.getAllByText('Interviewed').length).toBe(3)
+    // Each card leads with the face the persona chose, in place of its initials.
+    expect(document.querySelectorAll('[data-slot="human-face"]').length).toBe(3)
     await expectText(
       'In the third year of the degree, and thinking about a career in research after it.',
     )

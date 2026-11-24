@@ -1,6 +1,7 @@
 import { Avatar, Style } from '@dicebear/core'
 import { createElement, type ReactNode } from 'react'
 
+import { isRecord, isString } from '@/shared/lib/guards'
 import { hashOf } from '@/shared/lib/palette'
 
 import type { EyesMotion } from '../face.types'
@@ -408,6 +409,34 @@ export function randomOf(text: string): () => number {
     let mixed = Math.imul(state ^ (state >>> 15), 1 | state)
     mixed = (mixed + Math.imul(mixed ^ (mixed >>> 7), 61 | mixed)) ^ mixed
     return ((mixed ^ (mixed >>> 14)) >>> 0) / 4294967296
+  }
+}
+
+/**
+ * The face spec that a value holds, when it is one: the choice of a person's face as the catalog
+ * names it. Null for any other value: no face, or a shape that is not one.
+ */
+export function faceSpecOf(value: unknown): FaceSpec | null {
+  if (!isRecord(value) || !isString(value.style)) return null
+  const { style, palette } = value
+  const { parts, colors } = value
+  if (palette !== undefined && !isString(palette)) return null
+  if (!isRecord(parts) || !isRecord(colors)) return null
+  const partKeys: Record<string, string | null> = {}
+  for (const [part, variant] of Object.entries(parts)) {
+    if (variant !== null && !isString(variant)) return null
+    partKeys[part] = variant
+  }
+  const colorKeys: Record<string, string> = {}
+  for (const [role, token] of Object.entries(colors)) {
+    if (!isString(token)) return null
+    colorKeys[role] = token
+  }
+  return {
+    style,
+    ...(palette === undefined ? {} : { palette }),
+    parts: partKeys,
+    colors: colorKeys,
   }
 }
 

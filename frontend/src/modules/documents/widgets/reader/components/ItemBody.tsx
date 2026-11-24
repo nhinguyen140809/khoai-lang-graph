@@ -9,6 +9,7 @@ import {
 import { ItemDetails, ItemHeading, ItemLinkLine, ItemRelated } from '@/modules/documents/entities'
 import { InlineFieldValues, useWorkflowDefinition } from '@/modules/workflow/entities'
 import { isNotFoundError } from '@/shared/api/error'
+import { faceSpecOf } from '@/shared/components/face'
 import { ErrorState, LoadingState, NotFoundState } from '@/shared/components/state'
 import { ColoredText } from '@/shared/components/ui/colored-text'
 
@@ -66,7 +67,13 @@ function LoadedItem({
       <article className="space-y-6 p-6">
         <header className="space-y-1">
           <p className="text-sm text-muted-foreground">{item.kindTitle}</p>
-          <ItemHeading hasAvatar={hasAvatar} title={item.title} place={item.place}>
+          <ItemHeading
+            hasAvatar={hasAvatar}
+            title={item.title}
+            place={item.place}
+            faceSeed={record.key}
+            face={faceSpecOf(record.content.face)}
+          >
             {hasAvatar && <ProfileKeyLine record={record} item={item} />}
           </ItemHeading>
           {!hasAvatar && item.status !== undefined && (
