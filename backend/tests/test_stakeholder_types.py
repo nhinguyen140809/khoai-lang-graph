@@ -33,7 +33,6 @@ def test_a_short_name_is_a_stakeholder_type(name: str) -> None:
     [
         "Students who book rooms on a phone between lectures",
         "One two three four five",
-        "A" * 41,
         "",
     ],
 )

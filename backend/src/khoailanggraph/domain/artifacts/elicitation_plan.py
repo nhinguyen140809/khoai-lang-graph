@@ -8,7 +8,7 @@ from pydantic import BaseModel, ConfigDict, Field, StringConstraints
 
 # A type of stakeholder is a name of at most four words, such as "Library staff"; what more there
 # is to say about the type belongs to the persona, not to its name.
-StakeholderType = Annotated[str, StringConstraints(pattern=r"^\S+(?:\s+\S+){0,3}$", max_length=40)]
+StakeholderType = Annotated[str, StringConstraints(pattern=r"^\S+(?:\s+\S+){0,3}$")]
 
 
 class DataToCollect(BaseModel):

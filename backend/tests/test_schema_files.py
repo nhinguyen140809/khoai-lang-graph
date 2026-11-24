@@ -71,6 +71,8 @@ def test_named_fields_are_properties(path: Path) -> None:
         for key in ("x-ui-title-field", "x-ui-role-field", "x-ui-participants-field")
         if key in schema
     ]
+    if "x-ui-avatar" in schema:
+        named.append(schema["x-ui-avatar"]["field"])
     named += [name for name in schema.get("x-ui-list-fields", []) if name != ITEM_KEY_COLUMN]
 
     assert set(named) <= names
