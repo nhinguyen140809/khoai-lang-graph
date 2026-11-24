@@ -12,7 +12,11 @@ import { PageColumn } from '@/shared/components/frame'
 import { EmptyState, ErrorState, LoadingState } from '@/shared/components/state'
 import { Bubble, BubbleContent } from '@/shared/components/ui/bubble'
 import { Markdown } from '@/shared/components/ui/markdown'
-import { Message as MessageRow, MessageContent, MessageHeader } from '@/shared/components/ui/message'
+import {
+  Message as MessageRow,
+  MessageContent,
+  MessageHeader,
+} from '@/shared/components/ui/message'
 import {
   MessageScroller,
   MessageScrollerButton,
@@ -288,12 +292,12 @@ const looseMessageLooks = {
 function UserMessageBubble({ message }: { message: Message }) {
   return (
     <MessageRow align="end">
-        <MessageContent>
-          <Bubble align="end" variant="tinted">
-            <BubbleContent>
-              <p className="whitespace-pre-wrap">{message.content}</p>
-            </BubbleContent>
-          </Bubble>
+      <MessageContent>
+        <Bubble align="end" variant="tinted">
+          <BubbleContent>
+            <p className="whitespace-pre-wrap">{message.content}</p>
+          </BubbleContent>
+        </Bubble>
       </MessageContent>
     </MessageRow>
   )

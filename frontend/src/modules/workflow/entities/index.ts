@@ -41,7 +41,11 @@ export {
   documentMarks,
   itemMarkOf,
 } from './content/DisplayMarks'
-export { contentDisplayOf, documentDisplaysByKind, pageLayoutOf } from './content/fields/content-display.utils'
+export {
+  contentDisplayOf,
+  documentDisplaysByKind,
+  pageLayoutOf,
+} from './content/fields/content-display.utils'
 export type {
   ContentDisplay,
   ContentField,

@@ -1,7 +1,7 @@
 import { FilesIcon } from 'lucide-react'
 import type { ReactNode } from 'react'
 
-import { documentMarks,type DocumentTabIconName } from '@/modules/documents/entities'
+import { documentMarks, type DocumentTabIconName } from '@/modules/documents/entities'
 import type { FeatureDestination } from '@/shared/components/frame'
 import { encodeId } from '@/shared/lib/url'
 import { routes } from '@/shared/routes'

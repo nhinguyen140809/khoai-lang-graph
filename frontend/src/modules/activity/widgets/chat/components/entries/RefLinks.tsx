@@ -100,7 +100,7 @@ function RefCard({ reference, agentRole }: { reference: Reference; agentRole: st
     </span>
   )
   return (
-    <div className="agent-card-sway flex w-full items-start justify-center gap-3">
+    <div className="flex w-full agent-card-sway items-start justify-center gap-3">
       {/* The agent leans after the folder once it has pushed it, and stays with it. */}
       {agentRole !== null && (
         <AgentFace seed={agentRole} size="default" className="mt-1 shrink-0 agent-push" />
@@ -118,7 +118,7 @@ function RefCard({ reference, agentRole }: { reference: Reference; agentRole: st
                 type="button"
                 aria-label={look.label}
                 onClick={open}
-                className="block w-full rounded-lg text-left outline-none transition-transform duration-200 hover:-translate-y-0.5 focus-visible:ring-3 focus-visible:ring-ring/50 motion-reduce:hover:translate-y-0"
+                className="block w-full rounded-lg text-left transition-transform duration-200 outline-none hover:-translate-y-0.5 focus-visible:ring-3 focus-visible:ring-ring/50 motion-reduce:hover:translate-y-0"
               >
                 {drawing}
               </button>

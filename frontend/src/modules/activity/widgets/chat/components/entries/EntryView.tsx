@@ -108,7 +108,7 @@ function MessageBody({ entry }: EntryViewProps<'message'>) {
               'items-center gap-1.5 px-0 text-(--tone-strong)',
               // The name is there first, the words a moment after it: the message arrives like a
               // line being said, not like a block landing whole.
-              'animate-in fade-in-0 duration-150 motion-reduce:animate-none',
+              'animate-in duration-150 fade-in-0 motion-reduce:animate-none',
               toneClasses.secondary,
             )}
           >
@@ -141,7 +141,7 @@ function MessageBody({ entry }: EntryViewProps<'message'>) {
                   'w-full rounded-2xl rounded-bl-sm px-3.5 py-2.5',
                   // It lands in one short breath, and stops: no motion is left running over words
                   // that a person is already reading.
-                  'animate-in fade-in-0 slide-in-from-bottom-1 duration-200 motion-reduce:animate-none',
+                  'animate-in duration-200 fade-in-0 slide-in-from-bottom-1 motion-reduce:animate-none',
                 )}
               >
                 <MessageEntry message={entry.message} runStatus={run.status} />

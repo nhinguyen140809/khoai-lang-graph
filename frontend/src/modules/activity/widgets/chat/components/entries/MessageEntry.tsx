@@ -8,8 +8,6 @@ import { type MessageAuthor, messageDeliveryNote } from '@/modules/thread/entiti
 import { Markdown } from '@/shared/components/ui/markdown'
 import { useWording, type Wording } from '@/shared/lib/view'
 
-
-
 interface MessageEntryProps {
   message: Extract<ActivityEntry, { type: 'message' }>['message']
   runStatus: RunStatus | null
