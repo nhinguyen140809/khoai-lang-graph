@@ -1,8 +1,24 @@
-import { FilesIcon } from 'lucide-react'
+import {
+  CircleAlertIcon,
+  FilesIcon,
+  FileTextIcon,
+  HeadingIcon,
+  IdCardIcon,
+  LayoutGridIcon,
+  ListTreeIcon,
+  MessageSquareIcon,
+  MessagesSquareIcon,
+  RowsIcon,
+  TableIcon,
+  TextIcon,
+  UserRoundIcon,
+  UsersIcon,
+} from 'lucide-react'
 import type { ReactNode } from 'react'
 
-import { documentMarks, type DocumentTabIconName } from '@/modules/documents/entities'
+import type { DocumentTabIconName } from '@/modules/documents/entities'
 import type { FeatureDestination } from '@/shared/components/frame'
+import { ColoredText } from '@/shared/components/ui/colored-text'
 import { encodeId } from '@/shared/lib/url'
 import { routes } from '@/shared/routes'
 
@@ -13,7 +29,25 @@ import { DocumentsPanel } from './components/DocumentsPanel'
  * the display of its first part, an item the icon of the display of its kind, and a document that
  * waits for the review of the user an icon in the color of what asks something.
  */
-export const documentTabIcons: Record<DocumentTabIconName, ReactNode> = documentMarks
+export const documentTabIcons = {
+  'documents.review': (
+    <ColoredText color="warning" className="flex">
+      <CircleAlertIcon />
+    </ColoredText>
+  ),
+  'documents.document.document': <FileTextIcon />,
+  'documents.document.heading': <ListTreeIcon />,
+  'documents.document.table': <TableIcon />,
+  'documents.document.cards': <LayoutGridIcon />,
+  'documents.document.transcript': <MessagesSquareIcon />,
+  'documents.document.profile': <UsersIcon />,
+  'documents.item.document': <TextIcon />,
+  'documents.item.heading': <HeadingIcon />,
+  'documents.item.table': <RowsIcon />,
+  'documents.item.cards': <IdCardIcon />,
+  'documents.item.transcript': <MessageSquareIcon />,
+  'documents.item.profile': <UserRoundIcon />,
+} as const satisfies Record<DocumentTabIconName, ReactNode>
 
 /**
  * Documents on the activity bar of a project: the documents, their outline and the items.

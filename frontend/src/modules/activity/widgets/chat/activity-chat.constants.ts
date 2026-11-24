@@ -38,8 +38,6 @@ export const activityChatMessages = {
   /** Names the bar of the stages under the prompt, for assistive technology. */
   progress: 'Progress',
   showDetails: 'Show what it noted and wrote',
-  /** The name the assistant answers under: it is not a role of the workflow, so the definition names none. */
-  assistantName: 'Assistant',
   prompt: {
     label: 'Message to the agents',
     placeholder: 'Ask or request a change',

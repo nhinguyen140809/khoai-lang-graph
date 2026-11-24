@@ -33,4 +33,3 @@ export { documentTabIconName, itemTabIconName } from './utils/document-tab-icons
 export { documentEntries, documentMark, documentMarkLook, groupMark } from './utils/documents.utils'
 export { editAccessOf } from './utils/edit-access.utils'
 export { filledFields, filledSections, itemPageViewOf } from './utils/item-layout.utils'
-export { documentMarks } from '@/modules/workflow/entities/@x/documents'

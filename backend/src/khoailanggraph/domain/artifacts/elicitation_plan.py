@@ -4,28 +4,11 @@ from __future__ import annotations
 
 from typing import Annotated
 
-from pydantic import AfterValidator, BaseModel, ConfigDict, Field, StringConstraints
+from pydantic import BaseModel, ConfigDict, Field, StringConstraints
 
-# A type of stakeholder is a name of at most four words, such as "Library staff", and of at most
-# forty characters; what more there is to say belongs to the persona, not to its name. The pattern
-# stays in the schema the model is given, which is what holds the shape; the length is checked after
-# the answer arrives, because the gateway compiles that schema with xgrammar and refuses a pattern
-# together with a length bound on the same string.
-_LONGEST_NAME = 40
-
-
-def _short_enough(value: str) -> str:
-    if len(value) > _LONGEST_NAME:
-        msg = f"a type of stakeholder is at most {_LONGEST_NAME} characters"
-        raise ValueError(msg)
-    return value
-
-
-StakeholderType = Annotated[
-    str,
-    StringConstraints(pattern=r"^\S+(?:\s+\S+){0,3}$"),
-    AfterValidator(_short_enough),
-]
+# A type of stakeholder is a name of at most four words, such as "Library staff"; what more there
+# is to say about the type belongs to the persona, not to its name.
+StakeholderType = Annotated[str, StringConstraints(pattern=r"^\S+(?:\s+\S+){0,3}$", max_length=40)]
 
 
 class DataToCollect(BaseModel):
