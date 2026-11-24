@@ -12,7 +12,8 @@ which variant of each part, and which color token of each role.
 - [4. Who reads it](#4-who-reads-it)
 - [5. Agreement with the clients](#5-agreement-with-the-clients)
 - [6. The eyes](#6-the-eyes)
-- [7. Credits](#7-credits)
+- [7. The face of a persona](#7-the-face-of-a-persona)
+- [8. Credits](#8-credits)
 
 ## 1. Files
 
@@ -38,7 +39,7 @@ A token carries no color value. The values live in one CSS file of the web app, 
 per token, named `--human-face-<role>-<token-key>`, so that a tone is changed in one place and a
 later theme can change it again.
 
-A face spec is the data of a user:
+A face spec is the data of a user, or of a persona:
 
 ```ts
 interface FaceSpec {
@@ -80,6 +81,7 @@ differ, and a pastel reads on a light page and on a dark one alike.
 | Reader                                 | Uses it for                                                                                                                    |
 | -------------------------------------- | ------------------------------------------------------------------------------------------------------------------------------ |
 | The web app                            | Draws a face from a spec: maps each variant key to its art, and each token to its custom property                              |
+| The persona generator of the workflow  | Reads the parts, tags, titles and tokens to pick the face of each persona, as the section "The face of a persona" says          |
 | The assistant tool that creates a face | Reads the parts, tags, titles and tokens to pick a spec from a request, and checks a spec against the catalog before it leaves |
 
 ## 5. Agreement with the clients
@@ -100,7 +102,21 @@ eyes in the catalog still name the drawings of the art, and the cut follows them
 script is `frontend/scripts/faces/split-eyes.py`, which says how to run it and how to give an eye
 that comes out wrong parameters of its own.
 
-## 7. Credits
+## 7. The face of a persona
+
+A persona item carries its face in the `face` field of its content, written by the workflow when the
+personas are generated. The generator picks the spec from this catalog; the age of the person comes
+from the persona itself, and the system, not the generator, turns it into the tag that the choices
+must fit: the first number of the age range of the persona, below eleven a `child`, below twenty a
+`teen`, below sixty-five an `adult`, and an `elder` above.
+
+Before the spec is stored, the system checks it against this catalog and drops what does not hold,
+so that the web app never reads a key that it cannot draw: a style, a palette, a part, a variant or
+a token that the catalog does not list; a variant of a part that is not the part it is named for;
+`null` for a part that a face may not go without; and a variant or a palette whose tags do not
+carry the age of the persona. The seed of the item then draws what the spec does not name.
+
+## 8. Credits
 
 The art of the `plain` style is "Lorelei" by Lisa Wischofsky, released under CC0 1.0, as published in
 the open style definitions of DiceBear. CC0 asks for nothing; the credit is a courtesy.
