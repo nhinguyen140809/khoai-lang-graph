@@ -2,16 +2,16 @@ import { describe, expect, it } from 'vitest'
 import { createActor, SimulatedClock } from 'xstate'
 
 import { blinkEveryMs, blinkMs } from '../face-motion.constants'
-import { faceMotionMachine, type FaceMotionValue, type MotionLook } from '../face-motion.reducer'
+import { faceMotionMachine, type FaceMotionValue, type MotionTarget } from '../face-motion.reducer'
 
-const still: MotionLook = {
+const still: MotionTarget = {
   pose: 'none',
   body: 'none',
   lives: ['steady', 'steady'],
   canBlink: true,
 }
 
-function started(look: MotionLook, phase = 0) {
+function started(look: MotionTarget, phase = 0) {
   const clock = new SimulatedClock()
   const actor = createActor(faceMotionMachine, { input: { look, phase }, clock }).start()
   const value = (): FaceMotionValue => actor.getSnapshot().value

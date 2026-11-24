@@ -1,18 +1,26 @@
 'use client'
 
 import { useMotionValue } from 'motion/react'
-import { useRef, useState } from 'react'
+import { type ComponentType, useMemo, useRef, useState } from 'react'
 
-import { Face } from '@/shared/components/face'
+import { AgentFace, type FaceProps } from '@/shared/components/face'
 import { useIsInView } from '@/shared/lib/viewport'
 
 import { restingLook } from './act.constants'
-import { type Act, type ActProp, type FaceMove, slots } from './act.types'
+import { type Act, type ActProp, type FaceMove, type IconKey, slots } from './act.types'
+import { ActCastContext } from './ActCastContext'
 import { ActProps } from './ActProps'
 import { useActDrive } from './hooks/useActDrive'
 
 /** How long a round of a demonstration takes: an orbit goes slowly, the rest at the pace of the acts. */
 const demoLoopMs = { orbit: 7200, other: 3200 } as const
+
+/**
+ * The thing that a demonstration moves. An orbit goes round with dots, which read as a ring, and
+ * are the same all round; the other motions use an icon that has a front, a plane, so that a turn,
+ * a flip or a shake can be seen.
+ */
+const demoIcons = { orbit: 'dot', other: 'check' } as const satisfies Record<string, IconKey>
 
 /** How many times a face moves over a round of a demonstration. */
 const demoMoveCycles = 3
@@ -42,6 +50,8 @@ export type MotionDemoMotion = Partial<
 interface MotionDemoProps {
   seed: string
   motion: MotionDemoMotion
+  /** How the face is drawn: the face of an agent unless this says another. */
+  face?: ComponentType<FaceProps>
   className?: string
 }
 
@@ -49,7 +59,7 @@ interface MotionDemoProps {
  * One motion alone: a face with one thing beside it that plays the motion over and over, or a
  * face that moves, so that each name of the vocabulary of the acts can be seen by itself.
  */
-export function MotionDemo({ seed, motion, className }: MotionDemoProps) {
+export function MotionDemo({ seed, motion, face: Face = AgentFace, className }: MotionDemoProps) {
   const ref = useRef<HTMLSpanElement>(null)
   const isInView = useIsInView(ref)
   const gain = useMotionValue(1)
@@ -60,14 +70,27 @@ export function MotionDemo({ seed, motion, className }: MotionDemoProps) {
     look: restingLook,
     ...(move !== undefined && { move: { move, cycles: demoMoveCycles } }),
     props:
-      move === undefined ? [{ icon: 'message', from: 0, to: 1, slot: 'right', ...onThing }] : [],
+      move === undefined
+        ? [
+            {
+              icon: demoIcons[motion.course === 'orbit' ? 'orbit' : 'other'],
+              from: 0,
+              to: 1,
+              slot: 'right',
+              ...onThing,
+            },
+          ]
+        : [],
   }))
   const { drive, round } = useActDrive(act, 0, gain, isInView)
+  const cast = useMemo(() => ({ face: Face, partner: undefined }), [Face])
 
   return (
     <span ref={ref} className={className ?? 'relative inline-flex shrink-0'}>
       <Face seed={seed} mood="working" size="xl" drive={drive} />
-      <ActProps act={act} round={round} gain={gain} allowed={slots} size="xl" partner={undefined} />
+      <ActCastContext value={cast}>
+        <ActProps act={act} round={round} gain={gain} allowed={slots} size="xl" />
+      </ActCastContext>
     </span>
   )
 }

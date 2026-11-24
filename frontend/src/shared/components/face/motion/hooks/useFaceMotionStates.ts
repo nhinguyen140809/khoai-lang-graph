@@ -3,18 +3,12 @@
 import { useMachine } from '@xstate/react'
 import { useEffect } from 'react'
 
-import type { Body, EyeLife, MoodLook, Pose } from '../../face.types'
-import { canBlink } from '../../face.utils'
-import { faceMotionMachine, type FaceMotionValue, type MotionLook } from '../face-motion.reducer'
+import type { Body, EyeLife, EyesMotion, MotionLook, Pose } from '../../face.types'
+import { faceMotionMachine, type FaceMotionValue, type MotionTarget } from '../face-motion.reducer'
 
 /** What a mood asks of the motions of a face. */
-function motionLookOf({ pose, body, eyes, eyeLives }: MoodLook): MotionLook {
-  return {
-    pose: pose ?? 'none',
-    body: body ?? 'none',
-    lives: eyeLives ?? ['steady', 'steady'],
-    canBlink: eyes.every(canBlink),
-  }
+function targetOf({ pose, body }: MotionLook, { lives, canBlink }: EyesMotion): MotionTarget {
+  return { pose: pose ?? 'none', body: body ?? 'none', lives, canBlink }
 }
 
 /** The state of a motion; its state at no time, before it has gone to its place, is read as the one that the look asks for. */
@@ -29,10 +23,11 @@ function settled<State extends string>(state: State | 'start', asked: State): St
  * out of sight; `phase` is where along its wait the first blink of the face falls.
  */
 export function useFaceMotionStates(
-  moodLook: MoodLook,
+  moodLook: MotionLook,
+  eyes: EyesMotion,
   { isHeld, phase }: { isHeld: boolean; phase: number },
 ): { pose: Pose | undefined; body: Body; lives: readonly [EyeLife, EyeLife]; isBlinking: boolean } {
-  const look = motionLookOf(moodLook)
+  const look = targetOf(moodLook, eyes)
   const [snapshot, send] = useMachine(faceMotionMachine, { input: { look, phase } })
   const { pose: askedPose, body, lives, canBlink: isBlinkable } = look
   const [left, right] = lives

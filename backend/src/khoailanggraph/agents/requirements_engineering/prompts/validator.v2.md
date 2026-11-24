@@ -42,7 +42,7 @@ Say whether the specification and the backlog, taken together, are good enough t
 
 ## Inputs
 
-- `<specification>`: the specified requirements, with their acceptance criteria and links.
+- `<specification>`: the specified requirements, with the definitions of their terms, their acceptance criteria and their links.
 - `<backlog>`: the backlog items, with their acceptance criteria and links.
 - `<open_issues>`: the ambiguity issues and conflicts of the analysis that are still open.
 - `<iteration>`: which validation pass this is.
@@ -51,9 +51,10 @@ Say whether the specification and the backlog, taken together, are good enough t
 
 1. Check that every requirement has what its type demands: acceptance criteria, a fit criterion for non-functional requirements, a rationale, a verification method.
 2. Check the backlog: every requirement is implemented by at least one story, every story implements at least one requirement, and the acceptance criteria of a story make its requirement's criteria measurable.
-3. Check the open issues: name the artifacts they concern, and whether they block a build.
-4. Classify each problem into exactly one category of the validation value list.
-5. Give each issue a severity, a description, and a concrete suggestion. Flag the items the problem lives in.
+3. Check the words: every term a requirement or a story rests on (a catalogue, a series, a booking window) is defined in the specification, and two items do not use the same word for different things.
+4. Check the open issues: name the artifacts they concern, and whether they block a build.
+5. Classify each problem into exactly one category of the validation value list.
+6. Give each issue a severity, a description, and a concrete suggestion. Flag the items the problem lives in.
 
 ## Rules
 

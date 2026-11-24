@@ -34,7 +34,10 @@ from khoailanggraph.agents.requirements_engineering import definition as wf
 from khoailanggraph.agents.requirements_engineering.definition import agent_roles
 from khoailanggraph.agents.requirements_engineering.graph import build_re_graph
 from khoailanggraph.agents.requirements_engineering.nodes import PROMPTS_PACKAGE
-from khoailanggraph.agents.requirements_engineering.outputs import InterviewerTurnOutput
+from khoailanggraph.agents.requirements_engineering.outputs import (
+    InterviewerTurnOutput,
+    ResolutionDraft,
+)
 from khoailanggraph.agents.requirements_engineering.ports import RunLimitError, StaleItemError
 from khoailanggraph.agents.requirements_engineering.state import REState, make_initial_state
 from khoailanggraph.agents.requirements_engineering.views import transcript_lines
@@ -1070,3 +1073,291 @@ def test_an_answer_that_keeps_moving_fails_the_run_with_item_conflict() -> None:
 
     assert raised.value.code == "item_conflict"
     assert (sink.reads, sink.writes) == (nodes.ITEM_WRITE_ATTEMPTS, nodes.ITEM_WRITE_ATTEMPTS)
+
+
+def _spec_item(key: str, *, kind: str, criteria: list[str], fit: str | None) -> ItemRecord:
+    return {
+        "item_id": f"item-{key}",
+        "kind": "spec_requirement",
+        "key": key,
+        "version": 1,
+        "review_status": "approved",
+        "content": {
+            "title": f"{key} title",
+            "type": kind,
+            "acceptance_criteria": criteria,
+            "fit_criterion": fit,
+        },
+        "links": [],
+    }
+
+
+def test_a_requirement_that_says_nothing_a_tester_can_check_is_an_issue() -> None:
+    bare = _spec_item("REQ-004", kind="non_functional", criteria=[], fit=None)
+    sound = _spec_item(
+        "REQ-006", kind="non_functional", criteria=["Loads in 2 s"], fit="2 s at P95"
+    )
+
+    issues = nodes.untestable_issues([bare, sound])
+
+    assert len(issues) == 1
+    assert issues[0].ref == "check001"
+    assert "REQ-004" in issues[0].description
+    assert "no acceptance criterion" in issues[0].description
+    assert "no fit criterion" in issues[0].description
+
+
+def test_a_functional_requirement_only_needs_one_criterion() -> None:
+    functional = _spec_item("REQ-001", kind="functional", criteria=["Returns the mentor"], fit=None)
+
+    assert nodes.untestable_issues([functional]) == []
+
+
+class _RecordingSink:
+    """The two calls the engineer makes while closing a question, and nothing else."""
+
+    def __init__(self, item: dict[str, Any]) -> None:
+        self.item = item
+        self.closed: list[tuple[str, dict[str, Any]]] = []
+
+    def read_artifact(self, project_id: str, kind: str) -> dict[str, Any] | None:
+        return None
+
+    def read_items(self, artifact_id: str) -> list[Any]:
+        return []
+
+    def update_item_content(
+        self,
+        item_id: str,
+        content: dict[str, Any],
+        *,
+        reason: str,
+        by_user: bool,
+        expected_version: int | None = None,
+    ) -> dict[str, Any]:
+        self.closed.append((item_id, content))
+        return {"item_id": item_id, "key": self.item["key"], "version": 2}
+
+
+def test_the_requirement_that_answers_an_open_question_closes_it() -> None:
+    question = {
+        "item_id": "amb",
+        "kind": "ambiguity_issue",
+        "key": "AMB-001",
+        "version": 3,
+        "review_status": "approved",
+        "content": {
+            "title": "How long a session lasts",
+            "status": "open",
+            "resolution": None,
+        },
+        "links": [],
+    }
+    sink = _RecordingSink(question)
+
+    nodes._close_resolved(
+        cast("ArtifactSink", sink),
+        [cast("ItemRecord", question)],
+        [ResolutionDraft(ambiguity="AMB-001", resolution="A session lasts 30 minutes.")],
+    )
+
+    assert len(sink.closed) == 1
+    item_id, content = sink.closed[0]
+    assert item_id == "amb"
+    assert content["status"] == "resolved"
+    assert content["resolution"] == "A session lasts 30 minutes."
+    assert content["title"] == "How long a session lasts"  # the rest of the item is kept
+
+
+def test_a_question_that_is_not_open_is_left_alone() -> None:
+    settled = {
+        "item_id": "amb",
+        "kind": "ambiguity_issue",
+        "key": "AMB-002",
+        "version": 1,
+        "review_status": "approved",
+        "content": {
+            "title": "Who verifies a mentor",
+            "status": "resolved",
+            "resolution": "An admin.",
+        },
+        "links": [],
+    }
+    sink = _RecordingSink(settled)
+
+    nodes._close_resolved(
+        cast("ArtifactSink", sink),
+        [cast("ItemRecord", settled)],
+        [ResolutionDraft(ambiguity="AMB-002", resolution="An administrator.")],
+    )
+
+    assert sink.closed == []
+
+
+class _ItemSink:
+    """The two writes a draft makes, recorded, and nothing else."""
+
+    def __init__(self) -> None:
+        self.added: list[tuple[str, str, dict[str, Any], str | None]] = []
+        self.updated: list[tuple[str, dict[str, Any], int | None, str]] = []
+
+    def add_item(  # noqa: PLR0913 - the signature of the sink it stands in for
+        self,
+        artifact_id: str,
+        kind: str,
+        content: dict[str, Any],
+        *,
+        ref: str | None = None,
+        subject_id: str | None = None,
+        parent_id: str | None = None,
+    ) -> dict[str, Any]:
+        self.added.append((artifact_id, kind, content, ref))
+        return {"item_id": "new", "kind": kind, "key": "REQ-999", "version": 1}
+
+    def update_item_content(
+        self,
+        item_id: str,
+        content: dict[str, Any],
+        *,
+        reason: str,
+        by_user: bool,
+        expected_version: int | None = None,
+    ) -> dict[str, Any]:
+        self.updated.append((item_id, content, expected_version, reason))
+        return {"item_id": item_id, "kind": "spec_requirement", "key": "REQ-001", "version": 5}
+
+
+def test_a_draft_that_names_an_existing_item_changes_it_instead_of_copying_it() -> None:
+    existing = {"item_id": "i-1", "kind": "spec_requirement", "key": "REQ-001", "version": 4}
+    sink = _ItemSink()
+
+    item = nodes.write_or_update(
+        cast("ArtifactSink", sink),
+        "art-1",
+        "spec_requirement",
+        {"title": "Search mentors"},
+        ref="REQ-001",
+        current={"REQ-001": existing},
+    )
+
+    assert sink.added == []
+    assert sink.updated == [("i-1", {"title": "Search mentors"}, 4, "rework")]
+    assert item["item_id"] == "i-1"
+
+
+def test_a_draft_with_a_ref_of_its_own_is_a_new_item() -> None:
+    existing = {"item_id": "i-1", "kind": "spec_requirement", "key": "REQ-001", "version": 4}
+    sink = _ItemSink()
+
+    item = nodes.write_or_update(
+        cast("ArtifactSink", sink),
+        "art-1",
+        "spec_requirement",
+        {"title": "Keep questions private"},
+        ref="REQ-007",
+        current={"REQ-001": existing},
+    )
+
+    assert sink.updated == []
+    assert sink.added == [
+        ("art-1", "spec_requirement", {"title": "Keep questions private"}, "REQ-007")
+    ]
+    assert item["key"] == "REQ-999"
+
+
+def _existing(key: str, title: str) -> dict[str, Any]:
+    return {
+        "item_id": f"i-{key}",
+        "kind": "spec_requirement",
+        "key": key,
+        "version": 3,
+        "content": {"title": title},
+    }
+
+
+def test_a_draft_with_the_title_of_an_item_changes_that_item() -> None:
+    """A rework that writes the same requirement again under its own ref copies nothing."""
+    sink = _ItemSink()
+
+    item = nodes.write_or_update(
+        cast("ArtifactSink", sink),
+        "art-1",
+        "spec_requirement",
+        {"title": " search   mentors "},
+        ref="REQ-1",
+        current={"REQ-001": _existing("REQ-001", "Search mentors")},
+    )
+
+    assert sink.added == []
+    assert sink.updated == [("i-REQ-001", {"title": " search   mentors "}, 3, "rework")]
+    assert item["item_id"] == "i-REQ-001"
+
+
+def test_a_draft_that_replaces_the_item_with_its_title_is_a_new_item() -> None:
+    """Saying it replaces an item keeps the history: the old row is superseded, not overwritten."""
+    sink = _ItemSink()
+
+    item = nodes.write_or_update(
+        cast("ArtifactSink", sink),
+        "art-1",
+        "spec_requirement",
+        {"title": "Search speed"},
+        ref="REQ-6",
+        current={"REQ-004": _existing("REQ-004", "Search speed")},
+        supersedes=["REQ-004"],
+    )
+
+    assert sink.updated == []
+    assert sink.added == [("art-1", "spec_requirement", {"title": "Search speed"}, "REQ-6")]
+    assert item["key"] == "REQ-999"
+
+
+class _ReportSink:
+    """The report the validator wrote, as the rework reads it back."""
+
+    def __init__(self, items: list[dict[str, Any]]) -> None:
+        self.items = items
+
+    def read_items(self, artifact_id: str) -> list[dict[str, Any]]:
+        return self.items
+
+
+def _issue(key: str, status: str, title: str) -> dict[str, Any]:
+    return {
+        "item_id": f"i-{key}",
+        "kind": "validation_issue",
+        "key": key,
+        "version": 1,
+        "review_status": "open",
+        "content": {
+            "status": status,
+            "category": "specification",
+            "title": title,
+            "description": "Write the criterion a tester can run.",
+        },
+        "links": [],
+    }
+
+
+def test_the_rework_is_told_what_the_last_validation_found() -> None:
+    sink = _ReportSink(
+        [
+            _issue("VAL-001", "open", "REQ-004 cannot be tested"),
+            _issue("VAL-002", "resolved", "Done"),
+        ]
+    )
+
+    text = nodes.validation_directive(
+        cast("ArtifactSink", sink),
+        {"validation_report": {"artifact_id": "report-1"}},
+    )
+
+    assert "REQ-004 cannot be tested" in text
+    assert "specification" in text
+    assert "Done" not in text
+
+
+def test_a_pass_without_a_validation_report_is_told_nothing() -> None:
+    sink = _ReportSink([])
+
+    assert nodes.validation_directive(cast("ArtifactSink", sink), {"validation_report": None}) == ""

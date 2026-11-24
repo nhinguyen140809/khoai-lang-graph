@@ -68,11 +68,14 @@ from khoailanggraph.agents.requirements_engineering.outputs import (
     PersonaAnswerOutput,
     PlannerOutput,
     PlannerQuestionsOutput,
+    ResolutionDraft,
+    ValidationIssueDraft,
     ValidatorOutput,
     generator_output_for,
     interviewer_output_for,
 )
 from khoailanggraph.agents.requirements_engineering.ports import (
+    ArtifactRecord,
     ArtifactSink,
     DirectiveItem,
     DirectiveSink,
@@ -175,6 +178,28 @@ def _decisions_of(state: REState, checkpoint: str) -> str:
             latest = outcome["feedback"] if not outcome.get("automatic") else ""
             break
     return _instruction(latest, "\n".join(lines))
+
+
+def validation_directive(sink: ArtifactSink, state: Mapping[str, Any]) -> str:
+    """What the last validation pass found wrong, as the instruction of a rework.
+
+    A rework that follows a failed validation has no human feedback and no directive row behind it.
+    Without this the model is asked to write the document again with no word about what failed, and
+    writing all of it again is what it then does.
+    """
+    ref = state.get("validation_report")
+    if not ref:
+        return ""
+    issues = [
+        item
+        for item in sink.read_items(str(ref["artifact_id"]))
+        if str(item["content"].get("status")) == "open"
+    ]
+    return "\n".join(
+        f"- [{item['content'].get('category')}] {item['content'].get('title')}: "
+        f"{item['content'].get('description')}"
+        for item in issues
+    )
 
 
 def _instruction(*parts: str) -> str:
@@ -577,9 +602,17 @@ def _supersede_each(
     source_id: str,
     supersedes: list[str],
 ) -> None:
-    """Link a new item to what it replaces and mark the old ones superseded."""
+    """Link a new item to what it replaces and mark the old ones superseded.
+
+    A key that is not in the artifact is left alone: it is a requirement that was already replaced
+    (and so no longer read) or one the model named from nowhere, and neither is worth failing a run
+    that is otherwise writing what it was asked for.
+    """
     for key in supersedes:
-        replaced = _must_find(current, key)
+        replaced = current.get(key)
+        if replaced is None:
+            logger.warning("supersedes a key that is not in the artifact", key=key)
+            continue
         sink.add_link(source_id=source_id, target_id=replaced["item_id"], link_type="supersedes")
         sink.mark_item_superseded(replaced["item_id"])
 
@@ -2016,7 +2049,9 @@ def analyst_node(
     current_items = (
         sink.read_items(analysis_record["artifact_id"]) if analysis_record is not None else []
     )
-    current_keys = {entry["key"]: dict(entry) for entry in current_items}
+    current_keys: dict[str, dict[str, Any]] = {
+        str(entry["key"]): dict(entry) for entry in current_items
+    }
     current_lines = prompt_views(current_items) if current_items else "(empty)"
 
     analysis: AnalystOutput = _invoke(
@@ -2303,6 +2338,116 @@ def _normalize_engineer_derived_from(draft: EngineerOutput, known: Known) -> Non
             spec_draft.derived_from = lawful
 
 
+def live_items(sink: ArtifactSink, record: ArtifactRecord | None) -> list[ItemRecord]:
+    """The items of an artifact without the superseded history.
+
+    A superseded item is what a requirement used to say: judging it, or writing it again, would
+    work on a row no reader of the present document sees.
+    """
+    if record is None:
+        return []
+    items = sink.read_items(str(record["artifact_id"]))
+    return [item for item in items if item["review_status"] != "superseded"]
+
+
+def _title_of(item: Mapping[str, Any]) -> str:
+    """The title of an item as a value to compare: case and spacing do not make another item."""
+    content = item.get("content")
+    title = content.get("title") if isinstance(content, Mapping) else None
+    return " ".join(str(title or "").split()).casefold()
+
+
+def write_or_update(  # noqa: PLR0913 - the sink, the artifact, the kind, the words and the ref
+    sink: ArtifactSink,
+    artifact_id: str,
+    kind: str,
+    content: dict[str, Any],
+    *,
+    ref: str,
+    current: Mapping[str, Any],
+    supersedes: Sequence[str] = (),
+) -> dict[str, Any]:
+    """The item a draft stands for: the one it names in the artifact, or a new one.
+
+    A ref that is the key of an item already there is a change to that item, and so is a draft
+    that carries the title of one, unless it says it replaces that item: writing either as a new
+    row is how one requirement ends up in the document twice, saying two things.
+    """
+    entry = current.get(ref)
+    if not isinstance(entry, Mapping) or str(entry.get("kind")) != kind:
+        wanted = " ".join(str(content.get("title") or "").split()).casefold()
+        entry = next(
+            (
+                item
+                for item in current.values()
+                if isinstance(item, Mapping)
+                and str(item.get("kind")) == kind
+                and _title_of(item) == wanted
+                and str(item.get("key")) not in supersedes
+            ),
+            None,
+        )
+    if not isinstance(entry, Mapping):
+        return dict(sink.add_item(artifact_id, kind, content, ref=ref))
+    try:
+        return dict(
+            sink.update_item_content(
+                str(entry["item_id"]),
+                content,
+                reason="rework",
+                by_user=False,
+                expected_version=int(entry["version"]),
+            )
+        )
+    except StaleItemError as exc:
+        raise RunLimitError("item_conflict", str(exc)) from exc
+
+
+def _close_resolved(
+    sink: ArtifactSink,
+    analysis_items: Sequence[ItemRecord],
+    resolutions: Sequence[ResolutionDraft],
+) -> None:
+    """The questions this specification answers are closed on the analysis itself.
+
+    An ambiguity left open is a hole the validator reports again in every iteration and a tester
+    can never fill, so the requirement that settles it records the decision where the question was
+    raised. A question that is not open (already resolved, dismissed, or written by another run) is
+    left as it is.
+    """
+    open_questions: dict[str, ItemRecord] = {
+        str(entry["key"]): entry
+        for entry in analysis_items
+        if entry["kind"] in {"ambiguity_issue", "conflict"}
+        and str(entry["content"].get("status")) == "open"
+    }
+    for resolution in resolutions:
+        entry = open_questions.get(str(resolution.ambiguity))
+        if entry is None:
+            logger.warning(
+                "resolution of a question that is not open",
+                ambiguity=resolution.ambiguity,
+            )
+            continue
+        try:
+            sink.update_item_content(
+                str(entry["item_id"]),
+                {
+                    **entry["content"],
+                    "status": "resolved",
+                    "resolution": str(resolution.resolution),
+                },
+                reason="generated",
+                by_user=False,
+                expected_version=int(entry["version"]),
+            )
+        except StaleItemError:
+            logger.warning(
+                "question changed while the step closed it",
+                ambiguity=resolution.ambiguity,
+            )
+
+
 @safe_node
 def requirement_engineer_node(
     state: REState,
@@ -2326,8 +2471,10 @@ def requirement_engineer_node(
         }
 
     spec_record = sink.read_artifact(state["project_id"], "requirement_specification")
-    current_items = sink.read_items(spec_record["artifact_id"]) if spec_record else []
-    current_keys = {entry["key"]: dict(entry) for entry in current_items}
+    current_items = live_items(sink, spec_record)
+    current_keys: dict[str, dict[str, Any]] = {
+        str(entry["key"]): dict(entry) for entry in current_items
+    }
     current_lines = prompt_views(current_items) if current_items else "(empty)"
 
     # Only verified analysis flows back into the law the way analyst.v1 demands.
@@ -2361,11 +2508,21 @@ def requirement_engineer_node(
                 ]
             )
             or "(none)",
+            "open_questions": prompt_views(
+                [
+                    entry
+                    for entry in analysis_items
+                    if entry["kind"] in {"ambiguity_issue", "conflict"}
+                    and entry["content"].get("status") == "open"
+                ]
+            )
+            or "(none)",
             "current_specification": current_lines,
             "directive": _instruction(
                 _decisions_of(state, "checkpoint_analysis"),
                 _decisions_of(state, "checkpoint_spec"),
                 _directive_for(state, runnable_config, "checkpoint_spec"),
+                validation_directive(sink, state),
             ),
         },
     )
@@ -2488,8 +2645,15 @@ def requirement_engineer_node(
             mode="json",
             exclude={"ref", "supersedes", "derived_from", "depends_on"},
         )
-        item_ref = sink.add_item(artifact_id, "spec_requirement", content, ref=spec_draft.ref)
-        item = dict(item_ref)
+        item = write_or_update(
+            sink,
+            artifact_id,
+            "spec_requirement",
+            content,
+            ref=str(spec_draft.ref),
+            current=current_keys,
+            supersedes=spec_draft.supersedes,
+        )
         known[str(spec_draft.ref)] = item
         known[str(item["key"])] = item
         placeholder[spec_draft.ref] = item
@@ -2500,6 +2664,7 @@ def requirement_engineer_node(
     for spec_draft, item in zip(draft.requirements, written, strict=True):
         _link_each(sink, str(item["item_id"]), "depends_on", placeholder, spec_draft.depends_on)
 
+    _close_resolved(sink, analysis_items, draft.resolutions)
     _tell_user(sink, draft)
     return {
         "requirement_specification": written,
@@ -2523,8 +2688,10 @@ def backlog_manager_node(
     spec_lines = prompt_views(spec_items) if spec_items else "(none)"
 
     backlog_record = sink.read_artifact(state["project_id"], "product_backlog")
-    current_items = sink.read_items(backlog_record["artifact_id"]) if backlog_record else []
-    current_keys = {entry["key"]: dict(entry) for entry in current_items}
+    current_items = live_items(sink, backlog_record)
+    current_keys: dict[str, dict[str, Any]] = {
+        str(entry["key"]): dict(entry) for entry in current_items
+    }
     current_lines = prompt_views(current_items) if current_items else "(empty)"
 
     draft: BacklogOutput = _invoke(
@@ -2538,6 +2705,7 @@ def backlog_manager_node(
             "directive": _instruction(
                 _decisions_of(state, "checkpoint_spec"),
                 _directive_for(state, runnable_config, "checkpoint_spec"),
+                validation_directive(sink, state),
             ),
         },
     )
@@ -2585,9 +2753,23 @@ def backlog_manager_node(
             mode="json",
             exclude={"ref", "supersedes", "derived_from", "depends_on"},
         )
-        content["delivery_status"] = "todo"
-        item_ref = sink.add_item(artifact_id, "backlog_item", content, ref=draft_item.ref)
-        item = dict(item_ref)
+        existing = current_keys.get(str(draft_item.ref))
+        # A story already in flight keeps the state it reached: a rework changes its words, not
+        # how far the team has got with it.
+        content["delivery_status"] = (
+            str(existing["content"].get("delivery_status") or "todo")
+            if existing is not None
+            else "todo"
+        )
+        item = write_or_update(
+            sink,
+            artifact_id,
+            "backlog_item",
+            content,
+            ref=str(draft_item.ref),
+            current=current_keys,
+            supersedes=draft_item.supersedes,
+        )
         known[str(draft_item.ref)] = item
         known[str(item["key"])] = item
         placeholder[draft_item.ref] = item
@@ -2611,6 +2793,55 @@ def _normalized_check(check: Any) -> dict[str, str]:
     return {"check": str(check.check), "result": result, "note": str(check.note)}
 
 
+def _fail_on_untestable(draft: ValidatorOutput, spec_items: Sequence[ItemRecord]) -> None:
+    """Turn the checks the code can make into issues of this report, and fail it when one fires."""
+    unchecked = untestable_issues(spec_items)
+    if not unchecked:
+        return
+    draft.issues = [*draft.issues, *unchecked]
+    draft.status = "fail"
+
+
+def untestable_issues(spec_items: Sequence[ItemRecord]) -> list[ValidationIssueDraft]:
+    """The requirements that cannot be tested, read off the items instead of trusted to an eye.
+
+    A requirement without an acceptance criterion, and a quality requirement without a number to
+    check it against, always fail a test; the validator's model usually says so, but a model that
+    misses one lets an untestable requirement into the law. These are appended to the issues of the
+    report, so the rework loop of the run handles them every time and no run fails over a sentence.
+    """
+    issues: list[ValidationIssueDraft] = []
+    for index, item in enumerate(spec_items, start=1):
+        content = item["content"]
+        raw_criteria = content.get("acceptance_criteria")
+        listed = raw_criteria if isinstance(raw_criteria, list) else []
+        criteria = [str(entry).strip() for entry in listed if str(entry).strip()]
+        fit = str(content.get("fit_criterion") or "").strip()
+        missing: list[str] = []
+        if not criteria:
+            missing.append("no acceptance criterion")
+        if str(content.get("type")) == "non_functional" and not fit:
+            missing.append("no fit criterion with a number to check it against")
+        if not missing:
+            continue
+        key = str(item["key"])
+        issues.append(
+            ValidationIssueDraft(
+                ref=f"check{index:03d}",
+                title=f"{key} cannot be tested",
+                category="specification",
+                severity="high",
+                description=f"{key} '{content.get('title')}' has {' and '.join(missing)}.",
+                suggestion=(
+                    "Write the criterion a tester can run, with the number the sources gave; "
+                    "when no number was given, say at the review what has to be decided."
+                ),
+                flags=[key],
+            )
+        )
+    return issues
+
+
 @safe_node
 def validator_node(
     state: REState,
@@ -2620,10 +2851,10 @@ def validator_node(
     sink = _sink(config or {})
     runnable_config = config or {}
 
-    spec_record = sink.read_artifact(state["project_id"], "requirement_specification")
-    backlog_record = sink.read_artifact(state["project_id"], "product_backlog")
-    spec_items = sink.read_items(spec_record["artifact_id"]) if spec_record else []
-    backlog_items = sink.read_items(backlog_record["artifact_id"]) if backlog_record else []
+    spec_items = live_items(
+        sink, sink.read_artifact(state["project_id"], "requirement_specification")
+    )
+    backlog_items = live_items(sink, sink.read_artifact(state["project_id"], "product_backlog"))
     analysis_items: list[ItemRecord] = []
     analysis_record = sink.read_artifact(state["project_id"], "requirements_analysis")
     if analysis_record is not None:
@@ -2648,6 +2879,10 @@ def validator_node(
             "iteration": str(iteration),
         },
     )
+
+    # The shapes that always fail a test are checked here, so a model that looked past one cannot
+    # pass it: the issues join the report and the run takes the rework path it already has.
+    _fail_on_untestable(draft, spec_items)
 
     # Gate point 3/3 — validation_status_review: the bounded decision layer
     # (Jev/mock via DECISION_PROVIDER, off by default) reviews the validator's

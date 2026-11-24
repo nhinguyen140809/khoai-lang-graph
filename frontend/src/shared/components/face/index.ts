@@ -1,11 +1,27 @@
-export { Face } from './Face'
-export type { FaceDrive, FaceProps, FaceStyleKey, Mood, MoodOverride } from './face.types'
-export { faceStyleKeys, moods } from './face.types'
-export { FaceName } from './FaceName'
-export { FaceRulesProvider } from './FaceRulesProvider'
-export { FaceStyleProvider } from './FaceStyleProvider'
-export { useFaceRules } from './hooks/useFaceRules'
-export { defaultFaceRules } from './look/face-look.constants'
-export type { BlobLayout, FaceRules, FaceShape, Range } from './look/face-look.types'
-export { faceShapes } from './look/face-look.types'
+export type { AgentFaceProps, FaceStyleKey, MoodOverride } from './agent/agent-face.types'
+export { faceStyleKeys } from './agent/agent-face.types'
+export { unsetStates } from './agent/agent-mood.constants'
+export { plainEyeMotions } from './agent/agent-motion.constants'
+export { AgentFace } from './agent/AgentFace'
+export { FaceName } from './agent/FaceName'
+export { FaceRulesProvider } from './agent/FaceRulesProvider'
+export { FaceStyleProvider } from './agent/FaceStyleProvider'
+export { useFaceRules } from './agent/hooks/useFaceRules'
+export { defaultFaceRules } from './agent/look/face-look.constants'
+export type {
+  BlobLayout,
+  BlobShape,
+  EyeGap,
+  FaceLook,
+  FaceRules,
+  FaceShape,
+  Range,
+} from './agent/look/face-look.types'
+export { blobShapes, eyeGaps, faceShapes } from './agent/look/face-look.types'
+export { faceOf } from './agent/look/face-look.utils'
+export type { FaceDrive, FaceProps, FaceState, Mood } from './face.types'
+export { moods } from './face.types'
+export type { HumanFaceProps } from './human/human-face.types'
+export { HumanFace } from './human/HumanFace'
+export { moodOfState } from './mood/face-mood.utils'
 export { faceMotions } from './motion/face-motion.constants'

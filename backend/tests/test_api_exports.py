@@ -290,3 +290,20 @@ async def test_an_export_that_does_not_exist_or_whose_project_is_gone_answers_40
     assert (await client.get(f"{API}/projects/{uuid4()}/exports")).status_code == 404
     await client.delete(f"{API}/projects/{project_id}")
     assert (await client.get(f"{API}/exports/{created['id']}")).status_code == 404
+
+
+async def test_the_document_leaves_out_what_an_earlier_pass_replaced(
+    client: AsyncClient,
+) -> None:
+    """A rework supersedes a requirement: the file says what the specification is now.
+
+    The demo run fails once over REQ-004 ('simple and fast to use', no criterion) and passes after
+    the engineer replaces it with a requirement that holds the numbers, so the old row is history.
+    """
+    project_id, _thread_id = await seeded_run(client)
+
+    text = await _download(client, project_id, "requirement_specification", "markdown")
+
+    assert "simple and fast to use" not in text
+    assert "at most 5 steps" in text
+    assert "### 5 Search speed (REQ-006)" in text  # the fifth of a file that counts its own rows

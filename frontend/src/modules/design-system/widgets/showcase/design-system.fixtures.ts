@@ -1,11 +1,14 @@
 // Sample data for the design system page, taken from the mentor platform example project.
-
 import type { Edge, Node } from '@xyflow/react'
 
+import { courses, type MotionDemoMotion } from '@/shared/components/act'
+import type { LoadingLayout } from '@/shared/components/state'
 import type { EdgeVariant, EdgeWeight } from '@/shared/components/ui/edge'
 import type { NodeVariant } from '@/shared/components/ui/node'
 import type { NodeStatus } from '@/shared/components/ui/node-status-indicator'
 import type { Tone } from '@/shared/lib/tone'
+
+import { keysOf, lookOf } from './design-system.utils'
 
 export type Priority = 'must' | 'should' | 'could' | 'wont'
 
@@ -405,3 +408,93 @@ export const itemBlockKinds: BlockKind[] = [
   { kind: 'backlog_item', title: 'User story', icon: 'list-todo', look: 'text' },
   { kind: 'validation_issue', title: 'Problem to solve', icon: 'shield-alert', look: 'text' },
 ]
+
+// The orbits to see, each by its name: how it leans (tilt) and turns, how wide it goes, where it
+// starts, how many things are on it and how fast it goes round.
+export const orbitLooks: Record<string, MotionDemoMotion> = {
+  flat: { copies: 1 },
+  'flat, three': { copies: 3 },
+  'leaned 30': { tilt: 30, copies: 2 },
+  'leaned 65': { tilt: 65, copies: 2 },
+  'leaned 80': { tilt: 80, copies: 3 },
+  'leaned 65, turned 45': { tilt: 65, turn: 45, copies: 2 },
+  'leaned 65, turned -45': { tilt: 65, turn: -45, copies: 2 },
+  'leaned 80, turned 90': { tilt: 80, turn: 90, copies: 3 },
+  wide: { tilt: 60, reach: 1.6, copies: 2 },
+  tight: { reach: 0.6, copies: 2 },
+  'five on a ring': { tilt: 55, turn: -20, copies: 5 },
+  'from the top': { slot: 'top', tilt: 60, copies: 2 },
+  'from the left': { slot: 'left', tilt: 70, copies: 2 },
+  'fast, twice round': { tilt: 60, courseCycles: 2, copies: 2 },
+}
+
+// Where a thing may stand, each by its name: the nine slots, nearer and farther, and moved from a slot.
+export const positionLooks: Record<string, MotionDemoMotion> = {
+  'top-left': { slot: 'top-left' },
+  top: { slot: 'top' },
+  'top-right': { slot: 'top-right' },
+  left: { slot: 'left' },
+  'center (on the face)': { slot: 'center' },
+  right: { slot: 'right' },
+  'bottom-left': { slot: 'bottom-left' },
+  bottom: { slot: 'bottom' },
+  'bottom-right': { slot: 'bottom-right' },
+  'right, distance 0.6': { slot: 'right', distance: 0.6 },
+  'right, distance 1.5': { slot: 'right', distance: 1.5 },
+  'top-right, distance 0.6 (over the corner)': { slot: 'top-right', distance: 0.6 },
+  'top-left, distance 0.6 (over the corner)': { slot: 'top-left', distance: 0.6 },
+  'bottom, distance 0.4 (over the chin)': { slot: 'bottom', distance: 0.4 },
+  'top, distance 0.4 (over the brow)': { slot: 'top', distance: 0.4 },
+  'center, large (covers the face)': { slot: 'center', size: 2.4 },
+  'center, moved up (forehead)': { slot: 'center', offset: { x: 0, y: -0.3 } },
+  'center, moved down (chin)': { slot: 'center', offset: { x: 0, y: 0.3 } },
+  'center, moved to the side': { slot: 'center', offset: { x: 0.25, y: 0 } },
+  'right, moved up': { slot: 'right', offset: { x: 0, y: -0.3 } },
+}
+
+/** The courses that go on as copies one after another, or as a ring, so that one copy shows nothing of them. */
+const courseCopies: Partial<Record<keyof typeof courses, number>> = {
+  orbit: 3,
+  burst: 3,
+  gather: 3,
+}
+
+/** The demonstrations of the courses, and of burst and gather turned to go sideways. */
+export const courseLooks: Record<string, MotionDemoMotion> = {
+  ...lookOf(keysOf(courses), (course) => ({
+    course,
+    courseCycles: course === 'orbit' ? 1 : 2,
+    copies: courseCopies[course] ?? 1,
+  })),
+  'burst sideways': { course: 'burst', courseCycles: 2, copies: 3, axis: 'horizontal' },
+  'gather sideways': { course: 'gather', courseCycles: 2, copies: 3, axis: 'horizontal' },
+}
+
+export const layouts: {
+  layout: LoadingLayout
+  rows: number
+  columns?: number
+  alternate?: boolean
+  note: string
+}[] = [
+  { layout: 'lines', rows: 3, note: 'text rows' },
+  {
+    layout: 'lines',
+    rows: 3,
+    alternate: true,
+    note: 'rows take turns at each side, as a chat does',
+  },
+  { layout: 'list', rows: 3, note: 'a mark and two lines' },
+  { layout: 'cards', rows: 2, note: 'boxes with a title' },
+  { layout: 'grid', rows: 1, columns: 3, note: 'blocks in columns' },
+  { layout: 'table', rows: 3, columns: 3, note: 'rows of cells' },
+  { layout: 'feed', rows: 2, note: 'entries with an avatar' },
+  { layout: 'document', rows: 2, note: 'a heading and paragraphs' },
+  { layout: 'detail', rows: 2, note: 'a title, tags and sections' },
+]
+
+// The layouts once each: a layout may show twice in the samples, with another option.
+export const layoutNames = [...new Set(layouts.map((entry) => entry.layout))]
+
+// The persona that an interview talks to: its face comes from its role and its name.
+export const personaSeed = 'respondent/Minh'

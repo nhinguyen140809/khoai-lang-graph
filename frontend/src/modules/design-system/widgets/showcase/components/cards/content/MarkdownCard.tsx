@@ -1,0 +1,25 @@
+import { Markdown } from '@/shared/components/ui/markdown'
+
+import { sampleMarkdown } from '../../../design-system.fixtures'
+import type { CardEntry } from '../../../design-system.types'
+import { SampleCard } from '../../Sample'
+
+export function MarkdownCard() {
+  return (
+    <SampleCard
+      title="Markdown"
+      description="Streamdown; code blocks in Night Owl Light and Night Owl."
+    >
+      <Markdown>{sampleMarkdown}</Markdown>
+    </SampleCard>
+  )
+}
+
+export const markdownCardEntry = {
+  id: 'markdown',
+  label: 'Markdown',
+  section: 'content',
+  span: 6,
+  keywords: 'markdown render text Markdown',
+  View: MarkdownCard,
+} satisfies CardEntry

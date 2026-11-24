@@ -47,3 +47,12 @@
   caret-shape: block;
   caret-animation: manual;
 }
+
+/*
+ * A grid of thin rows, where each item takes as many rows as its height needs, with the gap
+ * between two items made of rows: items of any height pack without a gap under them. The row
+ * height is the one of `gridRowPx` in the design system page.
+ */
+@utility card-grid {
+  grid-auto-rows: 8px;
+}

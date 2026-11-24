@@ -1,52 +1,24 @@
-import { ScrollArea } from '@/shared/components/ui/scroll-area'
+'use client'
 
-import { ActsCard } from './cards/ActsCard'
-import { AlertsCard } from './cards/AlertsCard'
-import { AnimationCard } from './cards/AnimationCard'
-import { ArtifactTableCard } from './cards/ArtifactTableCard'
-import { BadgesCard } from './cards/BadgesCard'
-import { ButtonsCard } from './cards/ButtonsCard'
-import { CalendarCard } from './cards/CalendarCard'
-import { CarouselCard } from './cards/CarouselCard'
-import { ChartCard } from './cards/ChartCard'
-import { ChatCard } from './cards/ChatCard'
-import { CodeCard } from './cards/CodeCard'
-import { CommandCard } from './cards/CommandCard'
-import { ControlsCard } from './cards/ControlsCard'
-import { CopyButtonCard } from './cards/CopyButtonCard'
-import { DiffViewCard } from './cards/DiffViewCard'
-import { DisclosureCard } from './cards/DisclosureCard'
-import { ExplorerTreeCard } from './cards/ExplorerTreeCard'
-import { FaceCard } from './cards/FaceCard'
-import { FeedEntryCard } from './cards/FeedEntryCard'
-import { FloatingSurfaceCard } from './cards/FloatingSurfaceCard'
-import { FormCard } from './cards/FormCard'
-import { GraphCard } from './cards/GraphCard'
-import { HighlightCard } from './cards/HighlightCard'
-import { IconsCard } from './cards/IconsCard'
-import { ItemsCard } from './cards/ItemsCard'
-import { MarkdownCard } from './cards/MarkdownCard'
-import { MotionsCard } from './cards/MotionsCard'
-import { NavigationCard } from './cards/NavigationCard'
-import { NumbersCard } from './cards/NumbersCard'
-import { OverlaysCard } from './cards/OverlaysCard'
-import { ReviewCard } from './cards/ReviewCard'
-import { SkeletonCard } from './cards/SkeletonCard'
-import { StepperCard } from './cards/StepperCard'
-import { ThumbnailsCard } from './cards/ThumbnailsCard'
-import { TimelineCard } from './cards/TimelineCard'
-import { TokensCard } from './cards/TokensCard'
-import { TraceCard } from './cards/TraceCard'
-import { TypographyCard } from './cards/TypographyCard'
-import { WorkspaceCard } from './cards/WorkspaceCard'
+import { ScrollArea } from '@/shared/components/ui/scroll-area'
+import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/shared/components/ui/tabs'
+
+import { sectionGroups, sections } from '../design-system.types'
+import { useActiveSection } from '../hooks/useActiveSection'
+import { useCardFocus } from '../hooks/useCardFocus'
+import { DesignSystemSearch } from './DesignSystemSearch'
+import { SectionCards } from './DesignSystemSections'
 import { ThemeToggle } from './ThemeToggle'
 
-/** Every component of src/shared/components/ui on one page, as cards, to review the design system. */
+const sectionIds = sections.map((section) => section.id)
+
+/** Every component of src/shared/components/ui, as cards in tabs by purpose, to review the design system. */
 export function DesignSystemPage() {
+  const [active, select] = useActiveSection(sectionIds, 'foundations')
+  const [focus, setFocus] = useCardFocus()
+
   return (
-    // The header stays at the top and the cards scroll below it, in a ScrollArea instead of the
-    // native page scroll.
-    <div className="flex h-svh flex-col bg-background">
+    <Tabs value={active} onValueChange={select} className="h-svh gap-0 bg-background">
       <header className="flex shrink-0 items-center justify-between gap-4 border-b px-6 py-3">
         <div className="flex flex-col gap-0.5">
           <h1>Design system</h1>
@@ -54,60 +26,40 @@ export function DesignSystemPage() {
             shadcn/ui radix-nova | Night Owl surfaces | Mona Sans and Noto Sans Mono
           </p>
         </div>
-        <ThemeToggle />
+        <div className="flex items-center gap-2">
+          <DesignSystemSearch
+            onChoose={(card, section) => {
+              select(section)
+              setFocus(card)
+            }}
+          />
+          <ThemeToggle />
+        </div>
       </header>
+      {/* One list per group, side by side; the row scrolls sideways when the window is too narrow. */}
+      <div className="flex shrink-0 items-center gap-4 overflow-x-auto border-b px-6 py-2">
+        {sectionGroups.map((group) => (
+          <div key={group.id} className="flex items-center gap-2">
+            <span className="text-xs text-muted-foreground">{group.label}</span>
+            <TabsList>
+              {sections
+                .filter((section) => section.group === group.id)
+                .map(({ id, label }) => (
+                  <TabsTrigger key={id} value={id} className="px-3">
+                    {label}
+                  </TabsTrigger>
+                ))}
+            </TabsList>
+          </div>
+        ))}
+      </div>
       <ScrollArea className="min-h-0 flex-1">
-        <main className="flex flex-col gap-4 p-6">
-          <WorkspaceCard />
-          <div className="columns-1 gap-4 *:mb-4 *:break-inside-avoid md:columns-2 xl:columns-3 2xl:columns-4">
-            <TokensCard />
-            <TypographyCard />
-            <ChartCard />
-            <ReviewCard />
-            <ButtonsCard />
-            <CopyButtonCard />
-            <BadgesCard />
-            <HighlightCard />
-            <DiffViewCard />
-            <CodeCard />
-            <FloatingSurfaceCard />
-            <AlertsCard />
-            <FormCard />
-            <NumbersCard />
-            <ExplorerTreeCard />
-            <GraphCard />
-            <ArtifactTableCard />
-            <ChatCard />
-            <MarkdownCard />
-            <ControlsCard />
-            <OverlaysCard />
-            <NavigationCard />
-            <DisclosureCard />
-            <FeedEntryCard />
-            <ItemsCard />
-            <CommandCard />
-            <CalendarCard />
-            <CarouselCard />
-            <StepperCard />
-            <TimelineCard />
-            <TraceCard />
-            <FaceCard />
-            <ThumbnailsCard />
-          </div>
-          {/* Outside the columns: the browser shares the cards between columns by their height, so
-              a card that changes its own height, as these two do, would send other cards to
-              another column each time. */}
-          <div className="grid items-start gap-4">
-            <ActsCard />
-            <MotionsCard />
-            <IconsCard />
-          </div>
-          <div className="grid items-start gap-4 lg:grid-cols-2">
-            <AnimationCard />
-            <SkeletonCard />
-          </div>
-        </main>
+        {sections.map(({ id }) => (
+          <TabsContent key={id} value={id} className="flex flex-col gap-4 p-6">
+            <SectionCards section={id} focus={focus} />
+          </TabsContent>
+        ))}
       </ScrollArea>
-    </div>
+    </Tabs>
   )
 }

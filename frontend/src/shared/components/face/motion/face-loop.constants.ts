@@ -6,7 +6,7 @@ import type { Body, Pose } from '../face.types'
 
 // The motions of the whole face that repeat, by pose (in the plane of the page, pivoting on the
 // bottom) and by body (the face as a whole, about the middle of its depth). A mood chooses among
-// them in `moodLooks`. Sizes and turns are as the face sees them: a scale of 1 and a turn of 0 are rest.
+// them in the looks of the moods of a face. Sizes and turns are as the face sees them: a scale of 1 and a turn of 0 are rest.
 
 /** How the face moves in the plane of the page. */
 export const poseLoops: Readonly<Record<Pose, Loop>> = {
@@ -26,12 +26,6 @@ export const poseLoops: Readonly<Record<Pose, Loop>> = {
         ease: easeInOut,
       },
     },
-  },
-  // A waiting face breathes very slowly, hardly at all.
-  rest: {
-    durationMs: 4400,
-    isMirrored: true,
-    tracks: { scale: { values: [0.985, 1.015], ease: easeInOut } },
   },
 }
 
