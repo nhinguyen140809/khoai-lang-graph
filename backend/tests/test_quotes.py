@@ -1,39 +1,41 @@
-"""The quote a link carries is kept word for word, and cut to the length the rules allow."""
+"""The quote rules of a link, and what an agent's quote becomes when it breaks them."""
 
 from __future__ import annotations
 
-from khoailanggraph.agents.requirements_engineering.nodes import _clip_quote, _words_of
-from khoailanggraph.domain.rules import MAX_QUOTE_LENGTH
+import pytest
 
-_PARAGRAPH = (
-    "Most readers open the app in the morning and again after work, and they read the "
-    "headlines on the phone while they commute, then come back to the long pieces at "
-    "night when the children are asleep and the house is quiet, which is the only hour "
-    "they say they have for the news."
-)
-# Two of them: a paragraph the model quotes whole runs past the limit of one quote.
-LONG = f"{_PARAGRAPH} {_PARAGRAPH}"
+from khoailanggraph.agents.requirements_engineering import definition as wf
+from khoailanggraph.agents.requirements_engineering import nodes
+from khoailanggraph.agents.requirements_engineering.outputs import ItemLink, MessageLink
+from khoailanggraph.domain import rules
+from support.quote_cases import CASES, QuoteCase
 
 
-def test_an_over_long_quote_is_cut_at_a_word_and_stays_a_prefix() -> None:
-    clipped = _clip_quote(LONG)
+@pytest.mark.parametrize("case", CASES, ids=[case.name for case in CASES])
+def test_a_quote_holds_or_breaks_a_rule(case: QuoteCase) -> None:
+    violations = rules.check_quote(
+        case.side,
+        case.quote,
+        link_type=case.link_type,
+        link_type_definition=wf.link_types()[case.link_type],
+        kind=case.kind,
+        content=case.content,
+    )
 
-    assert len(LONG) > MAX_QUOTE_LENGTH
-    assert len(clipped) <= MAX_QUOTE_LENGTH
-    assert LONG.startswith(clipped)
-    assert not clipped.endswith((" ", ",", ";", ":", "."))
-
-
-def test_a_quote_within_the_limit_is_kept_as_it_is() -> None:
-    assert _clip_quote("  One sentence.  ") == "One sentence."
-
-
-def test_a_quote_that_differs_only_in_spacing_is_written_as_the_document_writes_it() -> None:
-    field = "Readers open the app \u2014 usually before coffee \u2014 and read at night."
-    found = _words_of(field, "Readers  open the app - usually before coffee")
-
-    assert found == "Readers open the app \u2014 usually before coffee"
+    if case.problem is None:
+        assert violations == []
+    else:
+        assert [case.problem in violation.message for violation in violations] == [True]
 
 
-def test_a_quote_whose_words_changed_is_not_recovered() -> None:
-    assert _words_of("Readers open the app.", "Readers never open the app") is None
+def test_an_agent_names_a_link_by_a_key_or_an_object() -> None:
+    by_key = "R1"
+    by_object = ItemLink(item="R2", source_quote="a", target_quote="b")
+    by_message = MessageLink(message="M1", target_quote="c")
+
+    assert [nodes._key_of(ref) for ref in (by_key, by_object, by_message)] == ["R1", "R2", "M1"]
+    assert [nodes._quotes_of(ref) for ref in (by_key, by_object, by_message)] == [
+        (None, None),
+        ("a", "b"),
+        (None, "c"),
+    ]

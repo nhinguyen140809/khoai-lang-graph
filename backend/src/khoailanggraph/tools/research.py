@@ -31,12 +31,8 @@ from concurrent.futures import ThreadPoolExecutor
 from concurrent.futures import TimeoutError as FutureTimeout
 from typing import TYPE_CHECKING, Any
 
-import structlog
-
 if TYPE_CHECKING:
     from khoailanggraph.settings.base import Settings
-
-logger = structlog.get_logger(__name__)
 
 # A search takes the queries and, optionally, the options of the search tool: `allowed_domains`,
 # `blocked_domains`, `news` and `max_results`.
@@ -422,24 +418,14 @@ def _wiki_page_text(title: str) -> str:
 
 
 def live_research_search(queries: Sequence[str]) -> list[dict[str, Any]]:
-    """The keyless live chain: Wikipedia first, DuckDuckGo when it answers nothing.
-
-    Wikipedia's API is fast and stable, while the DuckDuckGo HTML endpoint throttles, stalls and
-    sometimes closes the connection without an answer. That last kind of failure is not a finding:
-    it is logged, and the run goes on with the hits the corpus already has, because a search that
-    could not be made says nothing about the web.
-    """
+    """The keyless live chain: DuckDuckGo's web results, Wikipedia when the
+    open web answers with nothing (its anomaly page, a captive portal, ...)."""
+    # Wikipedia first: its API is fast and stable, while the DuckDuckGo HTML
+    # endpoint throttles and can stall a run for minutes.
     hits = wikipedia_research_search(queries)
     if hits:
         return hits
-    try:
-        return duckduckgo_research_search(queries)
-    except Exception as exc:
-        logger.warning(
-            "duckduckgo search failed; the run goes on without its hits",
-            error=f"{type(exc).__name__}: {str(exc)[:120]}",
-        )
-        return []
+    return duckduckgo_research_search(queries)
 
 
 def research_search_of(config: Mapping[str, Any]) -> ResearchSearch:

@@ -69,12 +69,6 @@
   /* How the deep color of a face is made from its token: the share of its chroma that it keeps, and a ceiling on the chroma, so that a vivid color does not glare. Its light is the light of the token, which is never lowered. The light theme keeps nearly all the chroma, as its colors are deep enough that more turns into a hard spot. */
   --face-core-chroma: 1.16;
   --face-core-chroma-max: 0.13;
-  /*
-   * The paper of the papers that rise out of a folder thumbnail and of the frame of a page
-   * thumbnail: paper reads white on the colored folder whatever the theme is, so it stays light in
-   * the dark theme too, as the light ink of that theme.
-   */
-  --thumbnail-paper: #ffffff;
   --card: #efeff4;
   --card-foreground: #403f53;
   --popover: #efeff4;
@@ -145,7 +139,6 @@
   --face-base-lift: 22%;
   --face-core-chroma: 1.3;
   --face-core-chroma-max: 0.16;
-  --thumbnail-paper: #d6deeb;
 
   --background: #011627;
   --foreground: #d6deeb;

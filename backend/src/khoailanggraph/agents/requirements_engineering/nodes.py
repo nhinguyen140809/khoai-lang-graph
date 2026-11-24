@@ -522,75 +522,7 @@ def _quotes_of(reference: LinkRef | MessageLink) -> tuple[str | None, str | None
     return reference.source_quote, reference.target_quote
 
 
-_TYPOGRAPHIC = str.maketrans(
-    {
-        "\u2018": "'",
-        "\u2019": "'",
-        "\u201c": '"',
-        "\u201d": '"',
-        "\u2013": "-",
-        "\u2014": "-",
-        "\u2026": "...",
-    }
-)
-
-
-def _folded(text: str) -> tuple[str, list[int]]:
-    """The text with its spacing and its typography evened out, and where each character came from:
-    two ways of writing the same sentence fold to the same string."""
-    folded: list[str] = []
-    origin: list[int] = []
-    space = False
-    for index, character in enumerate(text.translate(_TYPOGRAPHIC)):
-        if character.isspace():
-            space = True
-            continue
-        if space and folded:
-            folded.append(" ")
-            origin.append(index)
-        space = False
-        folded.append(character)
-        origin.append(index)
-    origin.append(len(text))
-    return "".join(folded), origin
-
-
-def _words_of(text: str, quote: str) -> str | None:
-    """The slice of `text` that the quote names, as `text` writes it, or None when the words are not
-    there. Spacing and typographic marks differ between a model and a document; the words do not."""
-    if quote in text:
-        return quote
-    wanted, _ = _folded(quote)
-    if not wanted:
-        return None
-    haystack, origin = _folded(text)
-    start = haystack.find(wanted)
-    if start < 0:
-        return None
-    return text[origin[start] : origin[start + len(wanted) - 1] + 1]
-
-
-def _clip_quote(quote: str) -> str:
-    """The quote as the rules will take it: one over the limit is cut at a word boundary.
-
-    The cut keeps it word for word — a prefix of what the model copied is still found in the field
-    it quotes — so the link keeps its evidence and the run does not stop over a paragraph the model
-    quoted whole. Trailing punctuation goes, since a quote a word long reads better than one cut in
-    the middle of a clause.
-    """
-    text = quote.strip()
-    limit = domain_rules.MAX_QUOTE_LENGTH
-    if len(text) <= limit:
-        return text
-    cut = text[:limit]
-    space = cut.rfind(" ")
-    if space >= limit // 2:
-        cut = cut[:space]
-    # The dashes and the ellipsis are written as escapes, since the file must read in one script.
-    return cut.rstrip(" ,;:.\u2026\u2014\u2013")
-
-
-def _held_quote(
+def _required_quote(
     sink: ArtifactSink,
     side: str,
     quote: str | None,
@@ -598,29 +530,15 @@ def _held_quote(
     link_type: str,
     item_id: str,
 ) -> str | None:
-    """A quote that the quote rules accept, and nothing when they do not.
+    """A quote that the quote rules accept; one that does not fails the node.
 
-    A quote must be copied word for word from a text field of the item it quotes. One that drifted
-    says less than it appears to, so it never enters the store: the link keeps the item it points at
-    and loses only its words, and the step tells the user that it did — a run does not stop over one
-    sentence a model did not copy exactly, and nothing fabricated is kept either.
+    A quote must be copied word for word from a text field of the item it quotes. An evidence link
+    whose words drifted says less than it appears to, so it is refused the same way a persona that
+    alters its evidence is refused: the run stops instead of keeping a link nobody can check.
     """
     if quote is None:
         return None
     item = sink.read_item(item_id)
-    quote = _clip_quote(quote)
-    # The words may differ from the document only in their spacing or their typographic marks; the
-    # quote is then written as the document writes it, and the rules judge the words themselves.
-    recovered = next(
-        (
-            found
-            for text in domain_rules.quotable_texts(item["kind"], item["content"])
-            if (found := _words_of(text, quote)) is not None
-        ),
-        None,
-    )
-    if recovered is not None:
-        quote = recovered
     violations = domain_rules.check_quote(
         side,
         quote,
@@ -629,28 +547,13 @@ def _held_quote(
         kind=item["kind"],
         content=item["content"],
     )
-    if not violations:
-        return quote
-    logger.warning(
-        "link quote dropped",
-        link_type=link_type,
-        side=side,
-        item=item["key"],
-        reason=violations[0].message,
-        quote=quote[:80],
-    )
-    sink.add_notes(
-        [
-            {
-                "kind": "finding",
-                "text": (
-                    f"I left out a quote on {link_type} to {item['key']}: its words are not the "
-                    f"words of the {item['kind']}."
-                ),
-            }
-        ]
-    )
-    return None
+    if violations:
+        msg = (
+            f"the {side} quote of {link_type} is not the words of {item['key']}: "
+            f"{violations[0].message}"
+        )
+        raise ValueError(msg)
+    return quote
 
 
 def _link_each(
@@ -669,10 +572,10 @@ def _link_each(
             source_id=source_id,
             target_id=target["item_id"],
             link_type=link_type,
-            source_quote=_held_quote(
+            source_quote=_required_quote(
                 sink, "source", source_quote, link_type=link_type, item_id=source_id
             ),
-            target_quote=_held_quote(
+            target_quote=_required_quote(
                 sink, "target", target_quote, link_type=link_type, item_id=target["item_id"]
             ),
         )
@@ -861,39 +764,6 @@ def _stop_prior_failure(state: REState) -> bool:
     return bool(state.get("status") == "failed")
 
 
-# A search that drops its connection is tried again: a transport failure says nothing about the web.
-_SEARCH_ATTEMPTS = 3
-_SEARCH_PAUSE_SECONDS = 0.5
-
-
-def _retrying_search(
-    search: Callable[..., list[dict[str, Any]]],
-) -> Callable[..., list[dict[str, Any]]]:
-    """The search of the run, tried again when the far end drops the connection.
-
-    The provider closes the socket now and then without an answer; the same query a moment later
-    returns, so one failed call is not a finding and does not end the run.
-    """
-
-    def call(*args: Any, **kwargs: Any) -> list[dict[str, Any]]:
-        for attempt in range(1, _SEARCH_ATTEMPTS + 1):
-            try:
-                return search(*args, **kwargs)
-            except Exception as exc:
-                if attempt == _SEARCH_ATTEMPTS:
-                    raise
-                logger.warning(
-                    "search retry",
-                    attempt=attempt,
-                    error=f"{type(exc).__name__}: {str(exc)[:120]}",
-                )
-                time.sleep(_SEARCH_PAUSE_SECONDS * attempt)
-        msg = "the search loop ended without an answer"
-        raise RuntimeError(msg)
-
-    return call
-
-
 def _search_for_corpus(
     state: REState,
     config: RunnableConfig | None,
@@ -931,7 +801,7 @@ def corpus_builder_node(
     sink = _sink(config or {})
     plan_record, topics, stakeholder_types = _plan_terms(sink, state)
 
-    search = _retrying_search(research_search_of(config or {}))
+    search = research_search_of(config or {})
     documents_tool = _configurable(config).get("project_documents")
     uploaded = documents_tool(str(state["project_id"])) if documents_tool is not None else []
     plan_json = (
@@ -1186,7 +1056,7 @@ def stakeholder_miner_node(
                 source_id=item["item_id"],
                 target_id=record["item_id"],
                 link_type="evidenced_by",
-                target_quote=_held_quote(
+                target_quote=_required_quote(
                     sink,
                     "target",
                     str(mined.evidence),
