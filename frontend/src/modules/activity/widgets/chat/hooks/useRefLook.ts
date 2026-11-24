@@ -1,46 +1,55 @@
 'use client'
 
-import { FileTextIcon, TextIcon } from 'lucide-react'
-
 import { useItem, useItemSchema } from '@/modules/artifact/entities'
-import { iconOf, itemTitle, kindSchemasByKind, useArtifactKinds } from '@/modules/workflow/entities'
-import { thumbnailIconNamed } from '@/shared/components/thumbnail'
+import {
+  hasItemBlocks,
+  iconOf,
+  itemTitle,
+  kindSchemasByKind,
+  useArtifactKinds,
+} from '@/modules/workflow/entities'
 
 import { activityChatMessages } from '../activity-chat.constants'
 import type { Reference, RefLook } from '../ref-links.types'
 
 /**
- * The look of a reference: a document reads from the message, an item from the item itself. The
- * mark is the icon that the kind of the document or item names, as the reader draws it, and a page
- * or a line of text when the kind names none.
+ * The look of a reference: a document reads from the message, an item from the item itself.
+ *
+ * The drawing is the one the grid of the documents uses — a folder or a page, the icon of its kind,
+ * and the text its color comes from — so the card of the chat and the card of Documents are the same
+ * picture of the same kind, and a change in that grid shows here without a second edit.
  */
 export function useRefLook(reference: Reference): RefLook {
+  const { data: kinds } = useArtifactKinds()
   const isItem = reference.type === 'item'
   const item = useItem(isItem ? reference.id : '', isItem ? reference.version : undefined, {
     isEnabled: isItem,
   })
-  const { schema } = useItemSchema(isItem ? item.data : undefined)
-  const { data: kinds } = useArtifactKinds()
+  const { schema: itemSchema } = useItemSchema(isItem ? item.data : undefined)
 
   if (reference.type === 'artifact') {
-    const kindSchema = kindSchemasByKind(kinds).get(reference.kind)?.schema
-    const version = activityChatMessages.version(reference.version)
+    const schema = kindSchemasByKind(kinds).get(reference.kind)?.schema
+    const isFolder = hasItemBlocks(kinds, reference.kind)
     return {
-      label: `${reference.title}, ${version}`,
-      Mark:
-        (kindSchema === undefined ? undefined : thumbnailIconNamed(iconOf(kindSchema))) ??
-        FileTextIcon,
+      label: `${reference.title}, ${activityChatMessages.version(reference.version)}`,
       title: reference.title,
-      description: version,
+      description: activityChatMessages.version(reference.version),
+      version: reference.version,
+      look: isFolder ? 'folder' : 'text',
+      icon: schema === undefined ? null : iconOf(schema),
+      seed: isFolder ? reference.title : reference.kind,
     }
   }
   return {
     label: activityChatMessages.quickLook(reference.key),
-    Mark: (schema === undefined ? undefined : thumbnailIconNamed(iconOf(schema))) ?? TextIcon,
-    title: item.data === undefined ? reference.key : itemTitle(schema, item.data),
+    version: reference.version,
+    title: item.data === undefined ? reference.key : itemTitle(itemSchema, item.data),
     description:
-      schema === undefined
+      itemSchema === undefined
         ? activityChatMessages.version(reference.version)
-        : activityChatMessages.itemMeta(schema.title, reference.key, reference.version),
+        : activityChatMessages.itemMeta(itemSchema.title, reference.key, reference.version),
+    look: 'text',
+    icon: itemSchema === undefined ? null : iconOf(itemSchema),
+    seed: itemSchema?.title ?? reference.key,
   }
 }

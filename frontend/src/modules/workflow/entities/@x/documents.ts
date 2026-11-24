@@ -4,6 +4,7 @@ export { useKindTitleOf } from '../artifact-kinds/hooks/useKindTitleOf'
 export { kindSchemasByKind } from '../artifact-kinds/kind-schemas.utils'
 export { ContentFieldList } from '../content/components/ContentFieldList'
 export { ContentFieldValue } from '../content/components/ContentFieldValue'
+export { type DocumentMarkName, documentMarks } from '../content/DisplayMarks'
 export { documentDisplaysByKind, pageLayoutOf } from '../content/fields/content-display.utils'
 export type {
   ContentDisplay,

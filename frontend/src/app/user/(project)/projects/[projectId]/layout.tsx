@@ -6,6 +6,7 @@ import { DocumentsTool } from '@/modules/documents/widgets/reader'
 import { ProjectGate, ProjectNotFound } from '@/modules/project/entities'
 import { ProjectCommands } from '@/modules/project/widgets/commands'
 import { ProjectHeading } from '@/modules/project/widgets/heading'
+import { StopRunDialog } from '@/modules/run/features/stop'
 import { DeskBarItem, DeskBarSide } from '@/shared/components/frame'
 
 // Pages are kept, hidden, when the user leaves them (Cache Components), so a page that is visited
@@ -43,6 +44,8 @@ export default async function ProjectLayout({
       <ChatSettingsBarItem projectId={projectId} />
       {children}
       <ActivityDialogs />
+      {/* The stop button of the chat is here as well: its dialog is what asks before stopping. */}
+      <StopRunDialog />
       <ExportDialogs projectId={projectId} />
     </ProjectGate>
   )

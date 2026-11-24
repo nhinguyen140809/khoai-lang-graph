@@ -200,3 +200,15 @@ def test_tavily_takes_the_domains_the_news_flag_and_the_count_of_a_search() -> N
     assert aimed["exclude_domains"] == ["a.test"]
     assert aimed["topic"] == "news"
     assert aimed["max_results"] == 3
+
+
+def test_a_blocked_duckduckgo_does_not_end_the_search(monkeypatch: pytest.MonkeyPatch) -> None:
+    """The keyless chain goes on without the web endpoint when it closes the connection."""
+    monkeypatch.setattr(research, "wikipedia_research_search", lambda queries: [])
+    monkeypatch.setattr(
+        research,
+        "duckduckgo_research_search",
+        lambda queries: (_ for _ in ()).throw(ConnectionError("Remote end closed")),
+    )
+
+    assert research.live_research_search(["playlists"]) == []

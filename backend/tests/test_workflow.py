@@ -524,8 +524,9 @@ def test_a_quote_that_is_not_in_the_message_makes_the_sink_refuse_the_link() -> 
         )
 
 
-def test_a_quote_that_is_not_in_the_item_fails_the_node() -> None:
-    """A quote that drifted from the item it quotes stops the run, as altered evidence does."""
+def test_a_quote_that_is_not_in_the_item_is_left_out_and_the_link_stands() -> None:
+    """A quote that drifted from the item it quotes never enters the store, and the run goes on: the
+    link keeps the item it points at, loses only its words, and the step tells the user."""
     sink = _finished_run()
     raw = next(entry for entry in sink.items if entry["kind"] == "raw_requirement")
     messages = [entry for entry in sink.items if entry["kind"] == "interview_message"]
@@ -548,16 +549,20 @@ def test_a_quote_that_is_not_in_the_item_fails_the_node() -> None:
     }
     before = len(sink.links)
 
-    with pytest.raises(ValueError, match="not the words of"):
-        nodes._link_each(
-            sink,
-            str(raw["item_id"]),
-            "evidenced_by",
-            known,
-            [MessageLink(message=str(other["key"]), target_quote="words that nobody said")],
-        )
+    nodes._link_each(
+        sink,
+        str(raw["item_id"]),
+        "evidenced_by",
+        known,
+        [MessageLink(message=str(other["key"]), target_quote="words that nobody said")],
+    )
 
-    assert len(sink.links) == before, "no link is written for a quote that does not hold"
+    assert len(sink.links) == before + 1, "the link is written without the quote it could not hold"
+    written = sink.links[-1]
+    assert written["quote"] is None, "the link keeps no quote it could not hold"
+    assert any("left out a quote" in str(note.get("text", "")) for note in sink.notes), (
+        "the step says that the quote was left out"
+    )
 
 
 def test_every_agent_step_reports_to_the_user_except_the_persona_answers() -> None:
@@ -1361,3 +1366,31 @@ def test_a_pass_without_a_validation_report_is_told_nothing() -> None:
     sink = _ReportSink([])
 
     assert nodes.validation_directive(cast("ArtifactSink", sink), {"validation_report": None}) == ""
+
+
+def test_a_search_that_drops_its_connection_is_tried_again() -> None:
+    """A transport failure of the search is not a finding: the same query a moment later answers."""
+    calls = {"count": 0}
+
+    def flaky(query: str) -> list[dict[str, Any]]:
+        calls["count"] += 1
+        if calls["count"] < 3:
+            msg = "Remote end closed connection without response"
+            raise ConnectionError(msg)
+        return [{"title": "One", "url": "https://example.org", "text": "A listener speaks."}]
+
+    search = nodes._retrying_search(flaky)
+
+    assert search("playlists")[0]["title"] == "One"
+    assert calls["count"] == 3
+
+
+def test_a_search_that_never_answers_fails_the_node() -> None:
+    def broken(query: str) -> list[dict[str, Any]]:
+        msg = "Remote end closed connection without response"
+        raise ConnectionError(msg)
+
+    search = nodes._retrying_search(broken)
+
+    with pytest.raises(ConnectionError):
+        search("playlists")
