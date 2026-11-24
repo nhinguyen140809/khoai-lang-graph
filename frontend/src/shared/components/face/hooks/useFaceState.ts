@@ -22,6 +22,8 @@ interface FaceStateInput<Look extends MotionLook> {
   reachShare?: number
   /** How much of every gaze the kind of face takes (see `useGaze`); all of it by default. */
   gazeScale?: number
+  /** How much of the moves of the body the kind of face makes (see `useFaceStyles`); all of it by default. */
+  bodyScale?: number
 }
 
 /**
@@ -42,6 +44,7 @@ export function useFaceState<Look extends MotionLook>({
   phase,
   reachShare = 1,
   gazeScale = 1,
+  bodyScale = 1,
 }: FaceStateInput<Look>) {
   const { shown: given, isChanging, settle } = useFaceMood(mood)
   const shown = state ?? given
@@ -49,7 +52,7 @@ export function useFaceState<Look extends MotionLook>({
   const motion = useFaceMotion(
     look,
     eyesOf(look),
-    { phase, isChanging, reachShare, gazeScale },
+    { phase, isChanging, reachShare, gazeScale, bodyScale },
     drive,
   )
   // A face that has been given another mood is busy again at once, while the eyes are still closing.

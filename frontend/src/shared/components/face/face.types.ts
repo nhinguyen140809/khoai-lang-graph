@@ -130,8 +130,15 @@ export interface FaceProps {
   className?: string
 }
 
-/** When a face moves (see `GazeTiming`; `isRunning` is found here), and how much of its gaze it takes: all of it (1) unless this says less. */
-export type FaceMotionTiming = Omit<GazeTiming, 'isRunning'> & { gazeScale?: number }
+/**
+ * When a face moves (see `GazeTiming`; `isRunning` is found here), how much of its gaze it takes,
+ * and how much of the moves of its body (a jump, a swelling): all of it (1) unless this says less,
+ * for a face that has a frame to stay in.
+ */
+export type FaceMotionTiming = Omit<GazeTiming, 'isRunning'> & {
+  gazeScale?: number
+  bodyScale?: number
+}
 
 /** What moves the body of a face, as the values of its style: where it is, how it is turned and how large it is. */
 export interface BodyStyle {

@@ -1,4 +1,4 @@
-import { fireEvent, render } from '@testing-library/react'
+import { render } from '@testing-library/react'
 import { describe, expect, it } from 'vitest'
 
 import { Actor } from '@/shared/components/act'
@@ -6,7 +6,7 @@ import { advanceTimers, withFakeTimers } from '@/test/steps'
 
 import { moods } from '../../face.types'
 import { blinkEveryMs, blinkMs } from '../../motion/face-motion.constants'
-import { humanLooks } from '../human-face.constants'
+import { eyesCloseMs, humanLooks } from '../human-face.constants'
 import { eyesMotionOf } from '../human-face.utils'
 import { HumanFace } from '../HumanFace'
 
@@ -36,37 +36,105 @@ describe('HumanFace', () => {
     expect(eyesMotionOf(humanLooks.sleeping).canBlink).toBe(false)
   })
 
-  it('has the head and the body to move apart: the body is the shoulders, the head turns on them', () => {
+  it('has the body, the pose and the head to move apart, one in the other', () => {
     const face = renderFace({ seed: 'ada' })
 
-    expect(face.querySelector('[data-slot=human-face-body]')).not.toBeNull()
     expect(
-      face.querySelector('[data-slot=human-face-pose] [data-slot=human-face-head]'),
+      face.querySelector(
+        '[data-slot=human-face-body] [data-slot=human-face-pose] [data-slot=human-face-head] [data-slot=human-face-picture]',
+      ),
     ).not.toBeNull()
   })
 
-  it('shuts the eyes in the mood of sleep', () => {
+  it('draws a picture with an eye on each side, whose iris the page can move', () => {
+    const face = renderFace({ seed: 'ada' })
+
+    expect(face.querySelector('svg')).not.toBeNull()
+    expect(face.querySelector('use')).toBeNull()
+    expect(face.querySelectorAll('.human-face-gaze')).toHaveLength(2)
     expect(
-      renderFace({ seed: 'ada', mood: 'sleeping' }).querySelector('[data-shut]'),
-    ).not.toBeNull()
-    expect(renderFace({ seed: 'ada', mood: 'idle' }).querySelector('[data-shut]')).toBeNull()
+      face.querySelectorAll('.human-face-cover .human-face-blink .human-face-gaze'),
+    ).toHaveLength(2)
   })
 
-  it('covers a change of mood: the eyes close first, and the new mood comes when they have', () => {
-    const { container, rerender } = render(<HumanFace seed="ada" mood="idle" />)
-    const squash = () => container.querySelector<SVGElement>('.face-squash')
-    const face = () => container.querySelector('[data-slot=human-face]')
+  it('draws the colors of the spec over those of its palette', () => {
+    const plain = renderFace({ seed: 'ada' })
+    const painted = renderFace({
+      seed: 'ada',
+      spec: { style: 'plain', palette: 'ink', parts: {}, colors: { skin: 'umber' } },
+    })
 
-    rerender(<HumanFace seed="ada" mood="sleeping" />)
+    expect(plain.innerHTML).toMatch(/var\(--human-face-skin-(warm|umber)/)
+    expect(painted.innerHTML).toContain('var(--human-face-skin-umber)')
+    expect(painted.innerHTML).toContain('var(--human-face-hair-ink-black)')
+  })
 
-    expect(squash()).toHaveClass('scale-y-10')
-    expect(container.querySelector('[data-shut]')).toBeNull()
+  it('keeps the background in place as the frame, a pastel that the seed or the spec picks', () => {
+    const plain = renderFace({ seed: 'ada' })
+    const named = renderFace({
+      seed: 'ada',
+      spec: { style: 'plain', parts: {}, colors: { background: 'mint' } },
+    })
 
-    fireEvent.transitionEnd(squash() ?? container)
+    expect(plain.getAttribute('style')).toContain('--human-face-background-')
+    expect(named.getAttribute('style')).toContain('--human-face-background-mint')
+    expect(named.querySelector('rect[fill]')).toBeNull()
+  })
 
-    expect(squash()).not.toHaveClass('scale-y-10')
-    expect(container.querySelector('[data-shut]')).not.toBeNull()
-    expect(face()).toHaveAttribute('data-mood', 'sleeping')
+  it('is in a circle with its background by default, and with none when it is given no frame', () => {
+    const framed = renderFace({ seed: 'ada' })
+    const bare = renderFace({ seed: 'ada', frame: 'none' })
+
+    expect(framed).toHaveAttribute('data-frame', 'circle')
+    expect(framed).toHaveClass('rounded-full', 'overflow-hidden')
+    expect(framed.getAttribute('style')).toContain('--human-face-background-')
+    expect(bare).toHaveAttribute('data-frame', 'none')
+    expect(bare).not.toHaveClass('rounded-full')
+    expect(bare.getAttribute('style') ?? '').not.toContain('background')
+    expect(bare.querySelector('svg')).not.toBeNull()
+  })
+
+  it('draws the parts of the spec, and the others from the seed', () => {
+    const own = renderFace({ seed: 'ada' }).innerHTML
+    const chosen = renderFace({
+      seed: 'ada',
+      spec: { style: 'plain', parts: { hair: 'mohawk' }, colors: {} },
+    }).innerHTML
+
+    expect(chosen).not.toBe(own)
+  })
+
+  it('draws other eyes of the family in the mood of surprise than in the mood of idleness', () => {
+    const spec = { style: 'plain', parts: { eyes: 'round-open' }, colors: {} }
+    const eyesOf = (mood: 'idle' | 'surprised') =>
+      renderFace({ seed: 'ada', spec, mood }).querySelector('.human-face-blink')?.innerHTML
+
+    expect(eyesOf('surprised')).not.toBe(eyesOf('idle'))
+  })
+
+  describe('a change of mood', () => {
+    withFakeTimers()
+
+    it('covers a change of mood: the eyes close first, and the new mood comes when they have', () => {
+      const spec = { style: 'plain', parts: { eyes: 'round-open' }, colors: {} }
+      const { container, rerender } = render(<HumanFace seed="ada" spec={spec} mood="idle" />)
+      const picture = () => container.querySelector('[data-slot=human-face-picture]')
+      const eyes = () =>
+        [...container.querySelectorAll('.human-face-blink')].map((eye) => eye.innerHTML).join()
+      const face = () => container.querySelector('[data-slot=human-face]')
+      const before = eyes()
+
+      rerender(<HumanFace seed="ada" spec={spec} mood="sleeping" />)
+
+      expect(picture()).toHaveAttribute('data-covered')
+      expect(eyes()).toBe(before)
+
+      advanceTimers(eyesCloseMs)
+
+      expect(picture()).not.toHaveAttribute('data-covered')
+      expect(eyes()).not.toBe(before)
+      expect(face()).toHaveAttribute('data-mood', 'sleeping')
+    })
   })
 
   describe('blinking', () => {
@@ -74,7 +142,9 @@ describe('HumanFace', () => {
 
     it('blinks now and then, as every face does', () => {
       const { container } = render(<HumanFace seed="ada" mood="idle" />)
-      const isBlinking = () => container.querySelector('.animate-face-blink') !== null
+      const isBlinking = () =>
+        container.querySelector('[data-slot=human-face-picture]')?.hasAttribute('data-blinking') ===
+        true
 
       expect(isBlinking()).toBe(false)
       advanceTimers(blinkEveryMs)
