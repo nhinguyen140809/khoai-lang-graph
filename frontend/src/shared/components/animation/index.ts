@@ -53,7 +53,6 @@ export {
   KanbanIcon,
   LinkIcon,
   NodesIcon,
-  SendIcon,
   SpinningIcon,
   TextCenterIcon,
   TextLeftIcon,

@@ -17,7 +17,6 @@ import {
   KanbanIcon,
   LinkIcon,
   NodesIcon,
-  SendIcon,
   TextCenterIcon,
   TextLeftIcon,
   TextRightIcon,
@@ -46,7 +45,6 @@ const drawnIcons: readonly (readonly [string, ComponentType<DrawnIconProps>])[] 
   ['kanban', KanbanIcon],
   ['link', LinkIcon],
   ['nodes', NodesIcon],
-  ['send', SendIcon],
   ['text-left', TextLeftIcon],
   ['text-center', TextCenterIcon],
   ['text-right', TextRightIcon],
@@ -102,6 +100,6 @@ export const drawnIconsCardEntry = {
   section: 'identity',
   span: 6,
   keywords:
-    'icon lucide animated clock stroke BarsIcon ChartSplineIcon CheckIcon CircleHelpIcon CodeIcon DotIcon DrawnDotIcon DownloadIcon EventListIcon ExclamationIcon ForkNodesIcon GanttChartIcon KanbanIcon LinkIcon NodesIcon SendIcon TextCenterIcon TextLeftIcon TextRightIcon TypedLineIcon UngroupIcon',
+    'icon lucide animated clock stroke BarsIcon ChartSplineIcon CheckIcon CircleHelpIcon CodeIcon DotIcon DrawnDotIcon DownloadIcon EventListIcon ExclamationIcon ForkNodesIcon GanttChartIcon KanbanIcon LinkIcon NodesIcon TextCenterIcon TextLeftIcon TextRightIcon TypedLineIcon UngroupIcon',
   View: DrawnIconsCard,
 } satisfies CardEntry
