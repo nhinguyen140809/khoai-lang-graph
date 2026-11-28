@@ -9,6 +9,7 @@ import { BarsIcon } from '../../icon/BarsIcon'
 import * as assets from '..'
 import { Board } from '../boards/Board'
 import { DocumentAsset } from '../boards/DocumentAsset'
+import { GanttBoard } from '../boards/GanttBoard'
 import { LaptopAsset } from '../LaptopAsset'
 import { PenAsset } from '../PenAsset'
 
@@ -53,7 +54,16 @@ describe('the board, drawn as an asset', () => {
 })
 
 describe('the boards told as data', () => {
-  it('stands still over its round when its marks say nothing of how they move', async () => {
+  it('moves its marks with the clock when they say how, and stands still when none of them does', async () => {
+    const progress = motionValue(0)
+    const { container } = render(<GanttBoard progress={progress} />)
+    const atStart = drawnBy(container)
+    progress.set(0.3)
+    await nextFrame()
+    await nextFrame()
+    expect(drawnBy(container)).not.toBe(atStart)
+
+    // A board whose marks say nothing of how they move is drawn once and stays.
     const still = motionValue(0)
     const document = render(<DocumentAsset progress={still} />)
     const documentAtStart = drawnBy(document.container)
