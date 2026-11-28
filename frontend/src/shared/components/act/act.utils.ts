@@ -1,3 +1,4 @@
+import { type AssetView, defaultAssetView } from '@/shared/components/animation/asset'
 import type { Mood } from '@/shared/components/face'
 
 import {
@@ -6,7 +7,10 @@ import {
   orbitDepthScale,
   orbitFarSide,
   orbitRadius,
+  pitchAlongPlace,
   slotPlaces,
+  stageDepth,
+  turnTowardFace,
 } from './act.constants'
 import {
   type Act,
@@ -58,6 +62,43 @@ export function placeOf(item: Pick<ActProp, 'slot' | 'distance' | 'offset'>): {
     y: slot.y * distance + (item.offset?.y ?? 0),
   }
 }
+
+/**
+ * The view a thing of an act is drawn from, as an asset: the camera of the stage stands in front
+ * and looks down as the default view does, and the thing itself turns toward the face of the
+ * actor that works on it, by how far to the side of the act it stands; how far up or down it
+ * stands only tips the camera over it. The face stands a little behind the front of the stage,
+ * so the turn stays within a side of the thing, never its back to the one that looks at the act.
+ */
+export function viewOf(place: { x: number; y: number }): AssetView {
+  const rad = Math.PI / 180
+  // The way the front of a thing points when the default view shows it, as a direction on the
+  // ground. The two ways are mixed as directions, not as angles, so the turn never runs the long
+  // way round through the back of the thing.
+  const pose = {
+    x: Math.sin(defaultAssetView.yaw * rad),
+    y: Math.cos(defaultAssetView.yaw * rad),
+  }
+  // The way from the thing to the face, on the ground of the stage: the face stands behind the
+  // front of it, so the way only turns by how far to the side the thing stands.
+  const toward = { x: -place.x, y: stageDepth }
+  const reach = Math.hypot(toward.x, toward.y)
+  const face = {
+    x: (toward.x / reach) * turnTowardFace + pose.x * (1 - turnTowardFace),
+    y: (toward.y / reach) * turnTowardFace + pose.y * (1 - turnTowardFace),
+  }
+  return {
+    yaw: Math.atan2(face.x, face.y) / rad,
+    pitch: Math.min(
+      pitchCeiling,
+      Math.max(pitchFloor, defaultAssetView.pitch + place.y * pitchAlongPlace),
+    ),
+  }
+}
+
+/** The least and the most the camera may tip over a thing of the act, in degrees: never from under the stage, never straight down on it. */
+const pitchFloor = 12
+const pitchCeiling = 68
 
 /**
  * The point of a thing on a ring round the middle of the face at `value` of a turn (from 0 to 1): the ring starts at `place`

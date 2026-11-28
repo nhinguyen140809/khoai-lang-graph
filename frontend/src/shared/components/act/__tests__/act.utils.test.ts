@@ -1,5 +1,6 @@
 import { describe, expect, it } from 'vitest'
 
+import { defaultAssetView } from '@/shared/components/animation/asset'
 import { catalogEntries, catalogKeys } from '@/test/docs'
 
 import { acts, slotPlaces } from '../act.constants'
@@ -13,6 +14,7 @@ import {
   moodOf,
   orbitPoint,
   toneOf,
+  viewOf,
   wayOf,
 } from '../act.utils'
 import catalog from '../acts.catalog.json' with { type: 'json' }
@@ -191,6 +193,28 @@ describe('depthScale', () => {
     expect(depthScale(0)).toBe(1)
     expect(depthScale(1)).toBeGreaterThan(1)
     expect(depthScale(-1)).toBeLessThan(1)
+  })
+})
+
+describe('viewOf', () => {
+  it('turns a thing toward the face by the side of the act it stands on, and never past its side', () => {
+    // A thing at the right of the face turns to its left, toward it; one at the left, to its right.
+    expect(viewOf({ x: 0.66, y: 0 }).yaw).toBeLessThan(0)
+    expect(viewOf({ x: -0.66, y: 0 }).yaw).toBeGreaterThan(0)
+    // Wherever it stands, it keeps a side open to the one that looks at the act.
+    for (const { x, y } of Object.values(slotPlaces)) {
+      const view = viewOf({ x, y })
+      expect(view.yaw).toBeGreaterThan(-80)
+      expect(view.yaw).toBeLessThan(80)
+      // The camera never looks from under the stage nor straight down on it.
+      expect(view.pitch).toBeGreaterThanOrEqual(12)
+      expect(view.pitch).toBeLessThanOrEqual(68)
+    }
+  })
+
+  it('tips the camera more over a thing the lower it stands, toward the one that looks', () => {
+    expect(viewOf({ x: 0, y: -0.62 }).pitch).toBeLessThan(defaultAssetView.pitch)
+    expect(viewOf({ x: 0, y: 0.64 }).pitch).toBeGreaterThan(defaultAssetView.pitch)
   })
 })
 
