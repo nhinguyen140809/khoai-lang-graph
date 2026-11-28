@@ -2,3 +2,4 @@ export { assetBounds, assetSizeClasses, defaultAssetView } from './asset.constan
 export type { AssetSize, AssetView } from './asset.types'
 export { assetSizes } from './asset.types'
 export { useTurnableView } from './hooks/useTurnableView'
+export { LaptopAsset } from './LaptopAsset'
