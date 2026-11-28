@@ -70,7 +70,6 @@ export type IconKey =
   | 'nodes'
   | 'pen'
   | 'search'
-  | 'send'
   | 'typed'
   | 'ungroup'
   | 'zip'

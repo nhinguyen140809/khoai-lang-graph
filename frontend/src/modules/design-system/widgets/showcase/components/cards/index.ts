@@ -31,8 +31,11 @@ import { calendarCardEntry } from './forms/CalendarCard'
 import { formCardEntry } from './forms/FormCard'
 import { tokensCardEntry } from './foundations/TokensCard'
 import { typographyCardEntry } from './foundations/TypographyCard'
+import { assetsCardEntry } from './identity/AssetsCard'
+import { boardsCardEntry } from './identity/BoardsCard'
+import { drawnIconsCardEntry } from './identity/DrawnIconsCard'
 import { humanFaceCardEntry } from './identity/HumanFaceCard'
-import { iconsCardEntry } from './identity/IconsCard'
+import { ownIconsCardEntry } from './identity/OwnIconsCard'
 import { thumbnailsCardEntry } from './identity/ThumbnailsCard'
 import { copyButtonCardEntry } from './inputs/CopyButtonCard'
 import { numbersCardEntry } from './inputs/NumbersCard'
@@ -94,7 +97,10 @@ export const cards: readonly CardEntry[] = [
   actCatalogCardEntry,
   humanFaceCardEntry,
   thumbnailsCardEntry,
-  iconsCardEntry,
+  drawnIconsCardEntry,
+  assetsCardEntry,
+  boardsCardEntry,
+  ownIconsCardEntry,
   numbersCardEntry,
   copyButtonCardEntry,
   markdownCardEntry,

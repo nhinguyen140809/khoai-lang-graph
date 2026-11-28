@@ -43,7 +43,7 @@ describe('rankCards', () => {
   const best = (search: string) => rankCards(cards, labelOf, search)[0]?.id
 
   it('puts the card that is named by the search first', () => {
-    expect(best('icon')).toBe('icons')
+    expect(best('icon')).toBe('drawn-icons')
     expect(best('badge')).toBe('badges')
     expect(best('thumbnail')).toBe('thumbnails')
   })

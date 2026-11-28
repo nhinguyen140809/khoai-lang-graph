@@ -1,4 +1,5 @@
 export { expectNoAccessibilityViolations } from './accessibility.utils'
+export { nextFrame } from './animation.utils'
 export {
   cancelAction,
   confirmAction,

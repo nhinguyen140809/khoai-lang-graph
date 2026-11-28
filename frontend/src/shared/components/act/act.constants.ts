@@ -1,5 +1,14 @@
 import type { Act, ActKey, ActSize, Slot } from './act.types'
 
+/** How far a thing around the face turns toward it, over standing as the default view draws it: the rest of the way keeps it open to the one that looks at the act. */
+export const turnTowardFace = 0.6
+
+/** How much the view of a thing follows its place up and down the act, in degrees over the whole height of it: the lower it stands, the more from above it is seen. */
+export const pitchAlongPlace = 25
+
+/** How deep the face of the actor stands behind the front of the stage, in shares of the size of the face: the way from a thing to it turns the thing by how far to the side of the act it stands, and no farther, so that a thing never turns its back on the one that looks. */
+export const stageDepth = 0.6
+
 /**
  * Where each slot is, as shares of the size of the face from its middle (to the right and down), and
  * where the eyes look to see it, in the units of a gaze path. The slots are close, so that what

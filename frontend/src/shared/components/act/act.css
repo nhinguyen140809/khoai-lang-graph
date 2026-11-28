@@ -11,17 +11,28 @@
   font-size: 20cqw;
 }
 
-/* The color of a thing around the face: primary, so that it stands out from the eyes of the face, unless the act says another. */
+/*
+ * The color of a thing around the face: primary, so that it stands out from the eyes of the face,
+ * unless the act says another. A thing drawn as an asset is two solid tones with no line around its
+ * faces: the color of the tone for its body, and a light of that color for the face that shows a
+ * light of its own, as a screen does, the two stepping down together as the tone quiets.
+ */
 [data-slot='act-prop'] {
   color: var(--primary);
+  --icon-a: var(--primary);
+  --icon-b: color-mix(in oklch, var(--primary), white 60%);
 }
 
 [data-slot='act-prop'][data-tone='foreground'] {
   color: var(--foreground);
+  --icon-a: var(--foreground);
+  --icon-b: color-mix(in oklch, var(--foreground), white 60%);
 }
 
 [data-slot='act-prop'][data-tone='muted'] {
   color: var(--muted-foreground);
+  --icon-a: var(--muted-foreground);
+  --icon-b: color-mix(in oklch, var(--muted-foreground), white 60%);
 }
 
 /*

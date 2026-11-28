@@ -3,11 +3,12 @@
 import { cn } from 'cn'
 import { motion, type MotionValue, useMotionValue, useTransform } from 'motion/react'
 
+import type { AssetView } from '@/shared/components/animation/asset'
 import { stretchOf } from '@/shared/lib/animation'
 
 import { propSize, slotPlaces } from './act.constants'
 import type { Act, ActProp, ActSize, IconKey, Slot } from './act.types'
-import { courseShift, depthScale, placeOf, toneOf, wayOf } from './act.utils'
+import { courseShift, depthScale, placeOf, toneOf, viewOf, wayOf } from './act.utils'
 import {
   appearShare,
   courses,
@@ -163,6 +164,7 @@ function Thing({
         progress={progress}
         size={size}
         lean={Math.sign(slot.x) as -1 | 0 | 1}
+        view={viewOf(place)}
       />
     </motion.span>
   )
@@ -173,14 +175,17 @@ function ThingContent({
   progress,
   size,
   lean,
+  view,
 }: {
   item: ActProp
   progress: MotionValue<number>
   size: ActSize
   lean: -1 | 0 | 1
+  /** The angle an icon of the thing is seen from, worked out from where the thing stands. */
+  view: AssetView
 }) {
   if (item.icon !== undefined) {
-    return <PropIcon icon={item.icon} progress={progress} stroke={item.stroke} />
+    return <PropIcon icon={item.icon} progress={progress} stroke={item.stroke} view={view} />
   }
   if (item.tokens !== undefined)
     return <ActTokens progress={progress} tokens={item.tokens} lean={lean} />
@@ -201,13 +206,15 @@ function PropIcon({
   icon,
   progress,
   stroke,
+  view,
 }: {
   icon: IconKey
   progress: MotionValue<number>
   stroke: number | undefined
+  view: AssetView
 }) {
   const Icon = propIcons[icon]
-  return <Icon progress={progress} stroke={stroke} />
+  return <Icon progress={progress} stroke={stroke} view={view} />
 }
 
 function sum(values: readonly (number | undefined)[]): number {

@@ -1,4 +1,39 @@
 export { AnimatedSize } from './animated-size/AnimatedSize'
+export type { AssetSize, AssetView, BoardMark, BoardShape } from './asset'
+export {
+  assetBounds,
+  assetSizeClasses,
+  assetSizes,
+  defaultAssetView,
+  useTurnableView,
+} from './asset'
+export {
+  BarChartBoard,
+  Board,
+  boardShapes,
+  DocumentAsset,
+  EventListBoard,
+  ForkNodesBoard,
+  GanttBoard,
+  GlobeAsset,
+  KanbanBoard,
+  LaptopAsset,
+  LayersAsset,
+  LibraryAsset,
+  LineChartBoard,
+  MessageSquareAsset,
+  NodesBoard,
+  PenAsset,
+  ScatterAsset,
+  SearchAsset,
+  StackAsset,
+  TextCenterBoard,
+  TextLeftBoard,
+  TextRightBoard,
+  TypedLineBoard,
+  UngroupBoard,
+  ZipFileAsset,
+} from './asset'
 export { CardStack } from './card-stack/CardStack'
 export type {
   SlideDirection,
@@ -25,24 +60,15 @@ export {
   EventListIcon,
   ForkNodesIcon,
   GanttChartIcon,
-  GlobeIcon,
   KanbanIcon,
-  LaptopIcon,
-  LayersIcon,
-  LibraryIcon,
   LinkIcon,
-  MessageSquareIcon,
   NodesIcon,
-  PenIcon,
-  SearchIcon,
-  SendIcon,
   SpinningIcon,
   TextCenterIcon,
   TextLeftIcon,
   TextRightIcon,
   TypedLineIcon,
   UngroupIcon,
-  ZipFileIcon,
 } from './icon'
 export { Loop, LoopStep } from './loop-step/LoopStep'
 export { usePresence } from './presence/hooks/usePresence'
