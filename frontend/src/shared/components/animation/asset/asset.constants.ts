@@ -36,7 +36,7 @@ export const assetBounds = {
   boardPanel: { x: 12.51, y: 8.18, size: 10.87 },
   boardBanner: { x: 12.3, y: 9.75, size: 10.13 },
   // Measured as it comes out at the default view, over the whole swing of the pen about its point.
-  pen: { x: 11.82, y: 11.58, size: 13.63 },
+  pen: { x: 12.51, y: 13.16, size: 15.73 },
   // Measured as they come out at the default view; the library, the search glass and the message stand still.
   library: { x: 12.32, y: 8.03, size: 9.67 },
   search: { x: 11.41, y: 8.51, size: 9.45 },
