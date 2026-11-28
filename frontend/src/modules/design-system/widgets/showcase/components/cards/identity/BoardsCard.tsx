@@ -73,7 +73,7 @@ export function BoardsCard() {
   return (
     <SampleCard
       title="Boards"
-      description="The board, the sheet a drawing stands on, in the shapes it comes in, with the marks it is given and with an icon it carries. The marks are told as data, and say how they move: they slide and drift with the clock, as the icons a clock draws stroke by stroke do. The sliders, or a drag on the board itself, turn it about and tip the camera over it."
+      description="The board, the sheet a drawing stands on, in the shapes it comes in, with the marks it is given and with an icon it carries. The marks are told as data, and say how they move: they slide, grow, drift and light up with the clock, as the icons a clock draws stroke by stroke do. The sliders, or a drag on the board itself, turn it about and tip the camera over it."
       className="flex flex-col gap-6"
     >
       <IconControls

@@ -54,6 +54,16 @@ const assetIcons: readonly (readonly [string, ComponentType<DrawnIconProps>])[] 
   ['document', DocumentAsset],
   ['gantt-board', GanttBoard],
   ['kanban-board', KanbanBoard],
+  ['bars-board', BarChartBoard],
+  ['chart-spline-board', LineChartBoard],
+  ['event-list-board', EventListBoard],
+  ['fork-nodes-board', ForkNodesBoard],
+  ['nodes-board', NodesBoard],
+  ['text-left-board', TextLeftBoard],
+  ['text-center-board', TextCenterBoard],
+  ['text-right-board', TextRightBoard],
+  ['typed-line-board', TypedLineBoard],
+  ['ungroup-board', UngroupBoard],
 ]
 
 /** The icons drawn as assets of thin plates, in every one of their sizes, turning with the angle they are seen from. */
@@ -66,7 +76,7 @@ export function AssetsCard() {
   return (
     <SampleCard
       title="Assets"
-      description="The icons drawn as assets of thin plates, by name, every asset as large at a size as another. The gantt and kanban boards among them are told as data that moves with the clock: their marks say how they move. The sliders, or a drag on the asset itself, turn it about and tip the camera over it; the color is the one that an act can give a thing around the face, and the guide marks the area that an icon should keep to."
+      description="The icons drawn as assets of thin plates, by name, every asset as large at a size as another. The boards among them are told as data that moves with the clock: their marks say how they move, in the words of the icons a clock draws stroke by stroke. The sliders, or a drag on the asset itself, turn it about and tip the camera over it; the color is the one that an act can give a thing around the face, and the guide marks the area that an icon should keep to."
       className="flex flex-col gap-6"
     >
       <IconControls
@@ -101,6 +111,6 @@ export const assetsCardEntry = {
   section: 'identity',
   span: 12,
   keywords:
-    'asset 2.5D view yaw pitch drag turn sizes lg xl 2xl DocumentAsset GanttBoard GlobeAsset KanbanBoard LaptopAsset LayersAsset LibraryAsset MessageSquareAsset PenAsset ScatterAsset SearchAsset StackAsset ZipFileAsset gantt-board kanban-board ungroup-board',
+    'asset 2.5D view yaw pitch drag turn sizes lg xl 2xl BarChartBoard DocumentAsset EventListBoard ForkNodesBoard GanttBoard GlobeAsset KanbanBoard LaptopAsset LayersAsset LibraryAsset LineChartBoard MessageSquareAsset NodesBoard PenAsset ScatterAsset SearchAsset StackAsset TextCenterBoard TextLeftBoard TextRightBoard TypedLineBoard UngroupBoard ZipFileAsset gantt-board kanban-board bars-board chart-spline-board event-list-board fork-nodes-board nodes-board text-left-board text-center-board text-right-board typed-line-board ungroup-board',
   View: AssetsCard,
 } satisfies CardEntry
