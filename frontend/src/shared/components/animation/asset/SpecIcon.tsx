@@ -6,6 +6,8 @@ import type { DrawnIconProps } from '../icon/icon.types'
 import { defaultAssetView } from './asset.constants'
 import type { AssetSpec } from './asset.types'
 import { AssetFrame } from './AssetFrame'
+import { Board } from './boards/Board'
+import type { BoardMark, BoardShape } from './boards/board.types'
 import { assetOf } from './draw/asset.utils'
 import { plateOfSpec } from './draw/shape.utils'
 
@@ -27,4 +29,27 @@ export function assetIconOf(spec: AssetSpec): ComponentType<DrawnIconProps> {
     )
   }
   return SpecIcon
+}
+
+/**
+ * A board told as data: the sheet of one of its shapes with marks on it, drawn like any other
+ * asset. It stands still over its clock unless one of its marks says how it moves, and then the
+ * marks move as the point of the clock has come to them.
+ */
+export function boardAssetOf(
+  shape: BoardShape,
+  marks: readonly BoardMark[],
+): ComponentType<DrawnIconProps> {
+  function SpecBoard({ progress, className, view }: DrawnIconProps) {
+    return (
+      <Board
+        className={className}
+        progress={progress}
+        view={view ?? defaultAssetView}
+        shape={shape}
+        marks={marks}
+      />
+    )
+  }
+  return SpecBoard
 }
